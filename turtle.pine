@@ -9,88 +9,103 @@ max_bars_back(high, 300)
 // ─── 0. Account ──────────────────────────
 grpAccount = "💼 My Account"
 initialMoney = input.float(30.0, 'My Starting Capital ($)', minval = 1.0, step = 10.0, group = grpAccount, tooltip = 'Enter your current account balance. Used to calculate how many trades you need to double your money, and how many losing trades you can absorb before running out of capital.', display = display.none)
-// NOTE: PineScript requires a compile-time constant here, so we keep 0 as the default.
-// Set this to your desired reset date/time manually in the UI the first time you use the script.
-statsResetDate = input.time(0, '🔄 Reset Statistics — set to current date/time to wipe history from that point', group = grpAccount, tooltip = 'Only trades closed AFTER this date/time are counted in all stats, P&L, win/loss, and recommendations. To reset: click the calendar icon and set it to right now. Leave at 0 to count all trades ever.', confirm = false, display = display.none)
+_resetNow = input.bool(false, '🔄 Reset Stats', group = grpAccount, tooltip = 'Toggle ON to wipe historical stats — only trades closed more than 1 hour from the moment you toggle will count. Toggle OFF then ON again to pick a fresh reset point.')
+var int _resetCapture = 0
+if not _resetNow
+    _resetCapture := 0
+else if _resetCapture == 0
+    _resetCapture := timenow + 3600000
+statsResetDate = _resetCapture
 
 // ─── 1. Points of Interest ───────────────
 grpPOI = "🎯 Points of Interest"
 requireFvgTouch = input.bool(true, 'Require POI Touch Before Signal', group = grpPOI, tooltip = 'ON: price must retrace to at least one enabled Point of Interest before a signal fires. OFF: signal fires on UHV sweep alone without requiring any zone touch.', display = display.none)
 poiFVG      = input.bool(true,  'Higher Time Frame Fair Value Gap (imbalance zone)', group = grpPOI, tooltip = 'Price retraces into the Higher Time Frame Fair Value Gap — an unfilled imbalance zone from the higher timeframe. Classic supply/demand area.', display = display.none)
-poiHL       = input.bool(false, 'Previous Higher Low (above the deeper low)', group = grpPOI, tooltip = 'Bull: price retraces to the most recent higher swing low — the shallower low that sits above the previous deeper low. Bear: retraces to the most recent lower swing high.', display = display.none)
-poiSup      = input.bool(false, 'Broken High / Low (now flipped to S or R)', group = grpPOI, tooltip = 'Bull: price breaks above a previous swing high, then retraces back to test it as new support. Bear: price breaks below a previous swing low, then retraces back to test it as new resistance.', display = display.none)
+poiHL       = input.bool(true,  'Previous Higher Low (above the deeper low)', group = grpPOI, tooltip = 'Bull: price retraces to the most recent higher swing low — the shallower low that sits above the previous deeper low. Bear: retraces to the most recent lower swing high.', display = display.none)
+poiSup      = input.bool(true,  'Broken High / Low (now flipped to S or R)', group = grpPOI, tooltip = 'Bull: price breaks above a previous swing high, then retraces back to test it as new support. Bear: price breaks below a previous swing low, then retraces back to test it as new resistance.', display = display.none)
 poiLookback = input.int(50, 'POI Lookback (bars)', minval = 10, maxval = 300, step = 5, group = grpPOI, tooltip = 'How many bars back to scan when locating the Higher Low or Broken High/Low level.', display = display.none)
 
 // ─── 2. Strategy: UHV Breakout ───────────
 grpUHV = "📊 Strategy: Ultra High Volume Breakout"
 enableUHV             = input.bool(true,  'Use this strategy?', group = grpUHV, tooltip = 'Fires a signal when a breakout candle sweeps and closes above/below the highest-volume candle from the retracement. Turn OFF to disable this strategy entirely.', display = display.none)
+uhvDirection          = input.string("Bull only", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = grpUHV, tooltip = 'Both: take bull and bear signals. Bull only: only take long entries. Bear only: only take short entries.', display = display.none)
 uhvStatsInfo          = input.bool(false, '📊 Wins / Trades: see Stats Panel → Strategy Breakdown', group = grpUHV, tooltip = 'The Stats Panel shows live win count, total trades and win rate for this strategy. A warning appears in Recommendations if win rate drops below 40% after 5+ trades.', display = display.none)
-requireUHVSweep       = input.bool(true,  'Must entry candle first wick through the UHV candle?', group = grpUHV, tooltip = 'ON: price must first wick past the high-volume candle low/high before the signal fires — confirms the level was tested and rejected. OFF: signal fires as soon as price closes beyond the level without needing a prior wick.', display = display.none)
-requireUHVLowerVol    = input.bool(false, 'Must the breakout candle have lower volume than the previous candle?', group = grpUHV, tooltip = 'ON: the breakout candle must have less volume than the candle before it — low-effort breakout confirms the move is not exhausting itself on entry. OFF: any valid close beyond the level fires regardless of relative volume.', display = display.none)
-uhvLookback           = input.int(9,      'How many bars back to check for Ultra High Volume?', minval = 3, maxval = 50, group = grpUHV, tooltip = 'The high-volume candle must have more volume than all N bars before it to qualify. Higher = stricter — only truly extreme volume events count.', display = display.none)
-uhvSettleBars         = input.int(2,      'How many bars must pass after the UHV candle before entry?', minval = 0, maxval = 20, group = grpUHV, tooltip = 'Waits this many bars after the high-volume candle before allowing an entry. Prevents jumping in on the very next bar when an even larger volume candle may still be forming.', display = display.none)
+requireUHVSweep       = input.bool(false, 'Must entry candle first wick through the UHV candle?', group = grpUHV, tooltip = 'ON: price must first wick past the high-volume candle low/high before the signal fires — confirms the level was tested and rejected. OFF: signal fires as soon as price closes beyond the level without needing a prior wick.', display = display.none)
+requireUHVLowerVol    = input.bool(true,  'Must the breakout candle have lower volume than the previous candle?', group = grpUHV, tooltip = 'ON: the breakout candle must have less volume than the candle before it — low-effort breakout confirms the move is not exhausting itself on entry. OFF: any valid close beyond the level fires regardless of relative volume.', display = display.none)
+uhvLookback           = input.int(4,      'How many bars back to check for Ultra High Volume?', minval = 3, maxval = 50, group = grpUHV, tooltip = 'The high-volume candle must have more volume than all N bars before it to qualify. Higher = stricter — only truly extreme volume events count.', display = display.none)
+uhvSettleBars         = input.int(0,      'How many bars must pass after the UHV candle before entry?', minval = 0, maxval = 20, group = grpUHV, tooltip = 'Waits this many bars after the high-volume candle before allowing an entry. Prevents jumping in on the very next bar when an even larger volume candle may still be forming.', display = display.none)
 uhvDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, step = 0.5, group = grpUHV, tooltip = 'Lot size is auto-calculated so that hitting the SL costs exactly this many dollars. Set to 0 to use the fixed lot size below instead.', display = display.none)
-uhvLotSize    = input.float(0.03, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpUHV, tooltip = 'Only used when Dollar Risk = 0. This lot size is applied to every UHV trade.', display = display.none)
+uhvLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpUHV, tooltip = 'Only used when Dollar Risk = 0. This lot size is applied to every UHV trade.', display = display.none)
 uhvTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpUHV, tooltip = 'R:R Ratio: TP = entry + SL distance × multiplier. Structural High/Low: TP at the retracement ceiling (buy) or floor (sell) — the structural level price must break to confirm the move. Dollar Amount: TP is placed a fixed dollar amount from entry.', display = display.none)
-uhvTp1Mult    = input.float(0.5,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpUHV, tooltip = 'Only used when TP Method = R:R Ratio.', display = display.none)
-uhvTpDollar   = input.float(1.6,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpUHV, tooltip = 'TP is placed exactly this many dollars from entry. Only used when TP Method = Dollar Amount.', display = display.none)
-uhvSlType    = input.string("Dollar",  '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "CandleWick", "SwingLow", "Dollar"], group = grpUHV, tooltip = 'UHV = behind the high-volume pullback candle. ATR = automatic width from recent volatility. CandleWick = tight, behind the entry candle wick. SwingLow = behind the nearest swing high/low. Dollar = you set the exact dollar distance.', display = display.none)
+uhvTp1Mult    = input.float(7.0,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpUHV, tooltip = 'Only used when TP Method = R:R Ratio.', display = display.none)
+uhvTpDollar   = input.float(9.0,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpUHV, tooltip = 'TP is placed exactly this many dollars from entry. Only used when TP Method = Dollar Amount.', display = display.none)
+uhvSlType    = input.string("SwingLow", '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "CandleWick", "SwingLow", "Dollar"], group = grpUHV, tooltip = 'UHV = behind the high-volume pullback candle. ATR = automatic width from recent volatility. CandleWick = tight, behind the entry candle wick. SwingLow = behind the nearest swing high/low. Dollar = you set the exact dollar distance.', display = display.none)
 uhvSlBuffer  = input.float(0.4,    '──── Stop Loss: How much extra room past the structure? ($)', minval = 0.0, maxval = 20.0, step = 0.2, group = grpUHV, tooltip = 'Adds this many dollars of breathing room beyond the raw structure level. e.g. 0.40 = SL sits $0.40 further away than the strict candle low/high.', display = display.none)
 uhvSlMinDist = input.float(1.4,    '──── Stop Loss: Closest it can ever be to entry? ($)', minval = 0.1, maxval = 50.0, step = 0.1, group = grpUHV, tooltip = 'The SL is never placed closer than this dollar amount from entry, regardless of the method. Prevents the SL from sitting in the noise zone where it gets clipped on every small wick.', display = display.none)
 uhvSlAtrMult = input.float(0.5,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, maxval = 5.0, step = 0.25, group = grpUHV, tooltip = 'When SL Method = ATR: SL distance = ATR(14) × this value.', display = display.none)
-uhvSlDollar  = input.float(16.4,   '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.1, group = grpUHV, tooltip = 'Only used when SL Method = Dollar. The stop loss is placed exactly this many dollars from the entry price, regardless of candle structure or volatility.', display = display.none)
-uhvSlSwingLb = input.int(3,       '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, maxval = 50, group = grpUHV, tooltip = 'When SL Method = SwingLow: looks back this many bars to find the nearest swing high/low and places SL just beyond it.', display = display.none)
+uhvSlDollar  = input.float(2.7,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.1, group = grpUHV, tooltip = 'Only used when SL Method = Dollar. The stop loss is placed exactly this many dollars from the entry price, regardless of candle structure or volatility.', display = display.none)
+uhvSlSwingLb = input.int(19,      '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, maxval = 50, group = grpUHV, tooltip = 'When SL Method = SwingLow: looks back this many bars to find the nearest swing high/low and places SL just beyond it.', display = display.none)
 
 // ─── 3. Strategy: Two Bar Reversal ───────
 grpTBR = "📊 Strategy: Two Bar Reversal"
 enableTBR          = input.bool(true,  'Use this strategy?', group = grpTBR, tooltip = 'Fires a signal when one candle fully engulfs the body of the previous candle, showing strong absorption. Turn OFF to disable this strategy entirely.', display = display.none)
+tbrDirection       = input.string("Bull only", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = grpTBR, tooltip = 'Both: take bull and bear signals. Bull only: only take long entries. Bear only: only take short entries.', display = display.none)
 tbrStatsInfo       = input.bool(false, '📊 Wins / Trades: see Stats Panel → Strategy Breakdown', group = grpTBR, tooltip = 'The Stats Panel (bottom-right) shows live win count, total trades, and win rate for this strategy. If win rate is below 40% after 5+ trades, a warning appears in the Recommendations section.', display = display.none)
 show2BR            = input.bool(true, 'Show signals on the chart?', group = grpTBR, tooltip = 'Display an entry label on the chart each time a Two Bar Reversal fires.', display = display.none)
-require2BRLowerVol = input.bool(true,  'Must the engulfing candle have lower volume than the one it engulfs?', group = grpTBR, tooltip = 'ON: confirms absorption — the market moved more with less effort, showing sellers (or buyers) are exhausted. OFF: any candle that engulfs the prior body fires regardless of volume.', display = display.none)
+require2BRLowerVol = input.bool(true, 'Must the engulfing candle have lower volume than the one it engulfs?', group = grpTBR, tooltip = 'ON: confirms absorption — the market moved more with less effort, showing sellers (or buyers) are exhausted. OFF: any candle that engulfs the prior body fires regardless of volume.', display = display.none)
 tbrDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, step = 0.5, group = grpTBR, tooltip = 'Lot size is auto-calculated so that hitting the SL costs exactly this many dollars. Set to 0 to use the fixed lot size below instead.', display = display.none)
-tbrLotSize    = input.float(0.4, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpTBR, tooltip = 'Only used when Dollar Risk = 0. This lot size is applied to every 2BR trade.', display = display.none)
+tbrLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpTBR, tooltip = 'Only used when Dollar Risk = 0. This lot size is applied to every 2BR trade.', display = display.none)
 tbrTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpTBR, tooltip = 'R:R Ratio: TP = entry ± SL distance × multiplier. Structural High/Low: TP at the structural ceiling/floor. Dollar Amount: fixed dollar distance from entry.', display = display.none)
-tbrTp1Mult    = input.float(10.0,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpTBR, tooltip = 'Only used when TP Method = R:R Ratio.', display = display.none)
-tbrTpDollar   = input.float(2.0,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpTBR, tooltip = 'TP placed exactly this many dollars from entry. Only used when TP Method = Dollar Amount.', display = display.none)
+tbrTp1Mult    = input.float(3.5,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpTBR, tooltip = 'Only used when TP Method = R:R Ratio.', display = display.none)
+tbrTpDollar   = input.float(3.5,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpTBR, tooltip = 'TP placed exactly this many dollars from entry. Only used when TP Method = Dollar Amount.', display = display.none)
 tbrSlType    = input.string("SwingLow", '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "CandleWick", "SwingLow", "Dollar"], group = grpTBR, tooltip = 'CandleWick = tight, behind the engulfing candle wick (default — the entry candle itself defines the invalidation). UHV = behind the high-volume pullback candle. ATR = automatic from volatility. SwingLow = behind the nearest swing. Dollar = exact distance.', display = display.none)
-tbrSlBuffer  = input.float(0.4,    '──── Stop Loss: How much extra room past the structure? ($)', minval = 0.0, maxval = 20.0, step = 0.2, group = grpTBR, tooltip = 'Adds this many dollars of breathing room beyond the raw structure level.', display = display.none)
+tbrSlBuffer  = input.float(0.0,    '──── Stop Loss: How much extra room past the structure? ($)', minval = 0.0, maxval = 20.0, step = 0.2, group = grpTBR, tooltip = 'Adds this many dollars of breathing room beyond the raw structure level.', display = display.none)
 tbrSlMinDist = input.float(0.5,    '──── Stop Loss: Closest it can ever be to entry? ($)', minval = 0.1, maxval = 50.0, step = 0.1, group = grpTBR, tooltip = 'The SL is never placed closer than this dollar amount from entry, regardless of the method.', display = display.none)
-tbrSlAtrMult = input.float(4.75,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, maxval = 5.0, step = 0.25, group = grpTBR, tooltip = 'When SL Method = ATR: SL distance = ATR(14) × this value.', display = display.none)
-tbrSlDollar  = input.float(5.7,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.1, group = grpTBR, tooltip = 'Only used when SL Method = Dollar. The stop loss is placed exactly this many dollars from the entry price.', display = display.none)
-tbrSlSwingLb = input.int(8,       '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, maxval = 50, group = grpTBR, tooltip = 'When SL Method = SwingLow: looks back this many bars to find the nearest swing high/low.', display = display.none)
+tbrSlAtrMult = input.float(2.25,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, maxval = 5.0, step = 0.25, group = grpTBR, tooltip = 'When SL Method = ATR: SL distance = ATR(14) × this value.', display = display.none)
+tbrSlDollar  = input.float(0.6,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.1, group = grpTBR, tooltip = 'Only used when SL Method = Dollar. The stop loss is placed exactly this many dollars from the entry price.', display = display.none)
+tbrSlSwingLb = input.int(10,       '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, maxval = 50, group = grpTBR, tooltip = 'When SL Method = SwingLow: looks back this many bars to find the nearest swing high/low.', display = display.none)
 
 // ─── 4. Strategy: Effort vs Result ───────
 grpEVR = "📊 Strategy: Effort vs Result"
 enableEVR           = input.bool(true,  'Use this strategy?', group = grpEVR, tooltip = 'Fires a signal when a candle sweeps past the prior candle high/low and closes back inside with higher volume — showing absorption. Turn OFF to disable this strategy entirely.', display = display.none)
+evrDirection        = input.string("Bull only", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = grpEVR, tooltip = 'Both: take bull and bear signals. Bull only: only take long entries. Bear only: only take short entries.', display = display.none)
 evrStatsInfo        = input.bool(false, '📊 Wins / Trades: see Stats Panel → Strategy Breakdown', group = grpEVR, tooltip = 'The Stats Panel shows live win count, total trades and win rate for this strategy. A warning appears in Recommendations if win rate drops below 40% after 5+ trades.', display = display.none)
 showVSA             = input.bool(true,  'Show signals on the chart?', group = grpEVR, tooltip = 'Display an entry label on the chart each time an Effort vs Result signal fires.', display = display.none)
-requireEVRHigherVol  = input.bool(true,  'Must the sweep candle have higher volume than the candle it sweeps?', group = grpEVR, tooltip = 'ON: confirms strong absorption — big effort to push price through, but it closed back. OFF: any sweep-and-close fires regardless of volume.', display = display.none)
+requireEVRHigherVol  = input.bool(false, 'Must the sweep candle have higher volume than the candle it sweeps?', group = grpEVR, tooltip = 'ON: confirms strong absorption — big effort to push price through, but it closed back. OFF: any sweep-and-close fires regardless of volume.', display = display.none)
+requireEVRLowerVol   = input.bool(false, 'Must the sweep candle have lower volume than the previous candle?', group = grpEVR, tooltip = 'ON: the sweep candle must have less volume than the candle before it — low-effort sweep confirms the move is not exhausting itself on entry. OFF: any valid sweep fires regardless of relative volume.', display = display.none)
 avoidEVRTrendWick    = input.bool(false, 'If sweep candle has rejection wick, wait for next candle to confirm?', group = grpEVR, tooltip = 'ON: if the sweep candle closes with a wick larger than its body pointing in the trade direction (bull = upper wick, bear = lower wick), the signal does NOT fire immediately. Instead it waits: the NEXT candle must close above the wick candle high (bull) or below the wick candle low (bear) to confirm. OFF: the signal fires on the sweep candle itself regardless of any wick.', display = display.none)
 evrDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, step = 0.5, group = grpEVR, tooltip = 'Lot size is auto-calculated so that hitting the SL costs exactly this many dollars. Set to 0 to use the fixed lot size below instead.', display = display.none)
-evrLotSize    = input.float(0.4, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpEVR, tooltip = 'Only used when Dollar Risk = 0. This lot size is applied to every EVR trade.', display = display.none)
+evrLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpEVR, tooltip = 'Only used when Dollar Risk = 0. This lot size is applied to every EVR trade.', display = display.none)
 evrTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpEVR, tooltip = 'R:R Ratio: TP = entry ± SL distance × multiplier. Structural High/Low: TP at the structural ceiling/floor. Dollar Amount: fixed dollar distance from entry.', display = display.none)
-evrTp1Mult    = input.float(0.5,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpEVR, tooltip = '1.5 = TP is 1.5× the SL distance from entry. Only used when TP Method = R:R Ratio.', display = display.none)
-evrTpDollar   = input.float(0.5,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpEVR, tooltip = 'TP placed exactly this many dollars from entry. Only used when TP Method = Dollar Amount.', display = display.none)
+evrTp1Mult    = input.float(1.0,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpEVR, tooltip = '1.5 = TP is 1.5× the SL distance from entry. Only used when TP Method = R:R Ratio.', display = display.none)
+evrTpDollar   = input.float(28.0,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpEVR, tooltip = 'TP placed exactly this many dollars from entry. Only used when TP Method = Dollar Amount.', display = display.none)
 evrSlType    = input.string("SwingLow",  '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "CandleWick", "SwingLow", "Dollar"], group = grpEVR, tooltip = 'UHV = behind the high-volume pullback candle. ATR = automatic from volatility. CandleWick = tight, behind the entry candle wick. SwingLow = behind the nearest swing. Dollar = exact distance.', display = display.none)
 evrSlBuffer  = input.float(0.4,    '──── Stop Loss: How much extra room past the structure? ($)', minval = 0.0, maxval = 20.0, step = 0.2, group = grpEVR, tooltip = 'Adds this many dollars of breathing room beyond the raw structure level.', display = display.none)
 evrSlMinDist = input.float(0.5,    '──── Stop Loss: Closest it can ever be to entry? ($)', minval = 0.1, maxval = 50.0, step = 0.1, group = grpEVR, tooltip = 'The SL is never placed closer than this dollar amount from entry, regardless of the method.', display = display.none)
-evrSlAtrMult = input.float(0.5,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, maxval = 5.0, step = 0.25, group = grpEVR, tooltip = 'When SL Method = ATR: SL distance = ATR(14) × this value.', display = display.none)
-evrSlDollar  = input.float(1.8,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.1, group = grpEVR, tooltip = 'Only used when SL Method = Dollar. The stop loss is placed exactly this many dollars from the entry price.', display = display.none)
-evrSlSwingLb = input.int(10,       '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, maxval = 50, group = grpEVR, tooltip = 'When SL Method = SwingLow: looks back this many bars to find the nearest swing high/low.', display = display.none)
+evrSlAtrMult = input.float(5.0,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, maxval = 5.0, step = 0.25, group = grpEVR, tooltip = 'When SL Method = ATR: SL distance = ATR(14) × this value.', display = display.none)
+evrSlDollar  = input.float(2.0,   '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.1, group = grpEVR, tooltip = 'Only used when SL Method = Dollar. The stop loss is placed exactly this many dollars from the entry price.', display = display.none)
+evrSlSwingLb = input.int(11,       '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, maxval = 50, group = grpEVR, tooltip = 'When SL Method = SwingLow: looks back this many bars to find the nearest swing high/low.', display = display.none)
 
 // ─── 7. Trend & Filters ───────────────────
 grpTrend = "📈 Trend & Filters"
 // Per-strategy cooldowns (replacing old shared signalCooldown)
-uhvCooldown    = input.int(40,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, maxval = 200, group = grpUHV, tooltip = 'Minimum bars that must pass after a UHV Breakout signal before this strategy can fire again. Set to 0 to disable. Does not affect the other strategies.', display = display.none)
-tbrCooldown    = input.int(60,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, maxval = 200, group = grpTBR, tooltip = 'Minimum bars that must pass after a Two Bar Reversal signal before this strategy can fire again. Set to 0 to disable. Does not affect the other strategies.', display = display.none)
+uhvCooldown    = input.int(45,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, maxval = 200, group = grpUHV, tooltip = 'Minimum bars that must pass after a UHV Breakout signal before this strategy can fire again. Set to 0 to disable. Does not affect the other strategies.', display = display.none)
+tbrCooldown    = input.int(8,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, maxval = 200, group = grpTBR, tooltip = 'Minimum bars that must pass after a Two Bar Reversal signal before this strategy can fire again. Set to 0 to disable. Does not affect the other strategies.', display = display.none)
 evrCooldown    = input.int(50,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, maxval = 200, group = grpEVR, tooltip = 'Minimum bars that must pass after an Effort vs Result signal before this strategy can fire again. Set to 0 to disable. Does not affect the other strategies.', display = display.none)
 minTrendStrength  = input.int(15, 'Min Trend Strength at Signal', minval = 0, maxval = 100, group = grpTrend, tooltip = 'Trend strength (0–100) must be at or above this value when a signal fires. Increase to filter out weak-trend entries.', display = display.none)
 trendPersistBars  = input.int(8, 'Trend Persistence Lookback (bars)', minval = 1, maxval = 20, group = grpTrend, tooltip = 'isBull/isBear must have been true for at least this many of the last N bars. Prevents signals when the trend has been flickering.', display = display.none)
-avoidTrendShift   = input.bool(true, 'Avoid trading when trend is shifting?', group = grpTrend, tooltip = 'ON: blocks any signal when trend strength has dropped by 15+ points over the last 3 bars — indicating the trend is losing momentum and potentially reversing. Useful to avoid getting caught in chop at turning points.', display = display.none)
-strictTrendCheck  = input.bool(true, 'Strict Trend Check (original mode)', group = grpTrend, tooltip = 'ON: requires htfBull + full trend persistence at breakout time (original). OFF: only blocks if trend has actively flipped opposite — more signals.', display = display.none)
-useRetraceExpiry  = input.bool(false, 'Cancel Setup on Early Bounce-Back', group = grpTrend, tooltip = 'ON: if price bounces back above the IB ceiling before touching the POI, the setup is cancelled. OFF: setup stays open until trend flips or 100-bar timeout.', display = display.none)
+avoidTrendShift      = input.bool(true,  'Avoid trading when trend is shifting?', group = grpTrend, tooltip = 'Master toggle. When ON: blocks signals for the strategies selected below whenever trend strength has dropped by the threshold since the setup began. Turn OFF to disable for all strategies at once.', display = display.none)
+avoidTrendShiftUHV   = input.bool(false, '──── Apply to UHV Breakout?', group = grpTrend, tooltip = 'Only active when the master toggle above is ON. When checked, the trend-shift filter blocks UHV Breakout signals. Uncheck to let UHV fire even when trend momentum is fading.', display = display.none)
+avoidTrendShiftTBR   = input.bool(true,  '──── Apply to Two Bar Reversal?', group = grpTrend, tooltip = 'Only active when the master toggle above is ON. When checked, the trend-shift filter blocks Two Bar Reversal signals. Uncheck to let TBR fire even when trend momentum is fading.', display = display.none)
+avoidTrendShiftEVR   = input.bool(false, '──── Apply to Effort vs Result?', group = grpTrend, tooltip = 'Only active when the master toggle above is ON. When checked, the trend-shift filter blocks Effort vs Result signals. Default OFF — EVR is a counter-move signal so fading momentum is often intentional.', display = display.none)
+trendShiftThreshold  = input.int(15, '──── Shift Threshold (strength drop to trigger)', minval = 1, maxval = 50, group = grpTrend, tooltip = 'Applies to all strategies selected above. If trend strength drops by this many points or more since the setup began, the signal is blocked. Lower = more sensitive. Higher = only blocks sharp collapses.', display = display.none)
+strictTrendCheck     = input.bool(true,  'Require Full Trend Confirmation at Entry?',  group = grpTrend, tooltip = 'Master toggle. When ON: a signal requires both higher-timeframe alignment (htfBull/htfBear) AND trend persistence at the entry bar. When OFF: only blocks if trend has actively flipped the wrong way (relaxed mode — more signals). Use the sub-checkboxes below to apply per strategy.', display = display.none)
+strictTrendCheckUHV  = input.bool(false, '──── Apply to UHV Breakout?',               group = grpTrend, tooltip = 'Only active when the master toggle above is ON. When checked, UHV Breakout requires full HTF + persistence confirmation. Uncheck to let UHV fire in relaxed mode (only blocks on active trend flip).', display = display.none)
+strictTrendCheckTBR  = input.bool(false,  '──── Apply to Two Bar Reversal?',            group = grpTrend, tooltip = 'Only active when the master toggle above is ON. When checked, Two Bar Reversal requires full HTF + persistence confirmation. Uncheck to let TBR fire in relaxed mode.', display = display.none)
+strictTrendCheckEVR  = input.bool(true, '──── Apply to Effort vs Result?',            group = grpTrend, tooltip = 'Only active when the master toggle above is ON. When checked, Effort vs Result requires full HTF + persistence confirmation. Uncheck to let EVR fire in relaxed mode.', display = display.none)
+useRetraceExpiry  = input.bool(true, 'Cancel Setup on Early Bounce-Back', group = grpTrend, tooltip = 'ON: if price bounces back above the IB ceiling before touching the POI, the setup is cancelled. OFF: setup stays open until trend flips or 100-bar timeout.', display = display.none)
 trendShowMA       = input.bool(true, 'Show Trend MA Line on Chart', group = grpTrend, display = display.none)
-requireOpposingCandle = input.bool(false,  'Must there be an opposing candle before the entry bar?', group = grpTrend, tooltip = 'ON: a red candle must appear before a bull entry (green before bear entry) since the last impulse bar — prevents two consecutive entries on the same move with no pullback between them. Applies to all three strategies.', display = display.none)
+requireOpposingCandle = input.bool(false,  'Must there be an opposing candle before the entry bar?', group = grpTBR, tooltip = 'ON: a red candle must appear during the retracement before a bull 2BR fires (green before bear 2BR) — prevents an engulfing candle firing without any prior pullback candle. Applies to Two Bar Reversal only.', display = display.none)
 
 // ─── 8. HTF Fair Value Gap ────────────────
 grpHTF = "🔭 Higher Time Frame Fair Value Gap"
@@ -101,6 +116,9 @@ htfFvgTf       = htfFvgTfChoice == "Auto" ? htfAutoTf : htfFvgTfChoice
 htfFvgColor    = input.color(color.new(#f5a623, 60), 'Higher Time Frame FVG Zone Color', group = grpHTF, display = display.none)
 fvgTT          = 'Filters FVGs narrower than this multiple of ATR(144). Set to 0 for no filter.'
 fvgTH          = input.float(0.3, 'FVG Width Filter (ATR multiple)', minval = 0, step = .1, group = grpHTF, tooltip = fvgTT, display = display.none)
+uhvFvgTH       = input.float(0.3, '──── UHV Breakout: FVG Width Filter (ATR multiple)', minval = 0, step = .1, group = grpHTF, tooltip = fvgTT, display = display.none)
+tbrFvgTH       = input.float(0.3, '──── Two Bar Reversal: FVG Width Filter (ATR multiple)', minval = 0, step = .1, group = grpHTF, tooltip = fvgTT, display = display.none)
+evrFvgTH       = input.float(0.2, '──── Effort vs Result: FVG Width Filter (ATR multiple)', minval = 0, step = .1, group = grpHTF, tooltip = fvgTT, display = display.none)
 fvgPR          = input.bool(true, 'Show Mitigation %', group = grpHTF, display = display.none)
 fvgVF          = input.bool(true, 'Show Historical FVGs', inline = 'FL', group = grpHTF, display = display.none)
 fvgBC          = input.color(color.new(#089981, 55), 'Bullish  Imbalance', inline = 'VA', group = grpHTF, display = display.none)
@@ -188,6 +206,10 @@ var int   [] tradeSlBars   = array.new_int()      // bar_index when SL was hit (
 // Breakout line
 var float brkLevel      = na
 var bool  brkTriggered  = false
+var bool  uhvFiredThisSetup = false  // UHV has fired from the current setup
+var bool  uhvWasBlocked     = false  // UHV would have fired but lower-vol filter blocked it
+var bool  tbrFiredThisSetup = false  // TBR has fired from the current setup
+var bool  evrFiredThisSetup = false  // EVR has fired from the current setup
 
 // ── Stats tracking ──
 var int   signalsToday      = 0       // signals fired today
@@ -222,7 +244,8 @@ var int blockedBySwept    = 0   // UHV blocked only by no-sweep
 var int blockedUHVVol     = 0   // UHV blocked only by volume check
 var int blockedByOpposing = 0   // IB blocked only by no opposing candle
 var int blocked2BRVol     = 0   // 2BR blocked only by volume check
-var int blockedEVRVol     = 0   // EVR blocked only by volume check
+var int blockedEVRVol      = 0   // EVR blocked only by higher-vol check
+var int blockedEVRLowerVol = 0   // EVR blocked only by lower-vol-than-prev-candle check
 var int blockedByCooldown = 0   // any signal blocked only by cooldown
 var int blockedByStrength = 0   // any signal blocked only by trend strength
 // Yesterday stats computed from tradeCloseTS in panel block
@@ -251,8 +274,13 @@ var int   retraceStartBar = na
 // IB = Independent Bar: close breaks ABOVE prev candle high (bull) / BELOW prev candle low (bear)
 // seenBear/GreenSinceIB guards prevent consecutive IBs without a real pullback between them
 var bool ibTracking        = false   // true from IB detection until retracement fires
-var bool seenBearSinceIB   = true    // start true so first IB can fire immediately
-var bool seenGreenSinceIB  = true    // bear side equivalent
+var bool seenBearSinceIB      = true    // start true so first IB can fire immediately
+var bool seenGreenSinceIB     = true    // bear side equivalent
+var bool seenBearSinceRetrace  = false  // red candle seen during current bull retracement (for 2BR opposing candle filter)
+var bool seenGreenSinceRetrace = false  // green candle seen during current bear retracement (for 2BR opposing candle filter)
+var bool  _2brSeenThisSetup       = false  // structural 2BR candle appeared this setup (regardless of vol filter) — keeps bounceCancel suppressed
+var bool  _evrSeenThisSetup       = false  // structural EVR sweep candle appeared this setup (regardless of vol filter) — keeps bounceCancel suppressed
+var float _setupStartStrength     = na     // trendStrength at the moment this retracement began (for trend-shift threshold)
 
 // Cooldown tracking
 var int   lastUHVSignalBar = -999   // last bar UHV fired (for per-strategy cooldown)
@@ -787,18 +815,14 @@ f_statsText(_sigPerDay, _avgPnL, _tgt, _wash, _maxLoss, _dblPnL) =>
 //
 // Bull IB: trend is up, green candle closes above previous bar HIGH, bear seen since last IB
 _bullFvgAvail = (poiHL or poiSup) or (hadFVG and (not fvgUsed or (not na(htf_zIsBull) and htf_zIsBull)))
-_bullIB = isBull and _bullFvgAvail and not inRetracement and isGreen and not na(high[1]) and close > high[1] and (requireOpposingCandle ? seenBearSinceIB : true)
+_bullIB = isBull and _bullFvgAvail and not inRetracement and isGreen and not na(high[1]) and close > high[1]
 
 // Bear IB: trend is down, red candle closes below previous bar LOW, green seen since last IB
 // Allow even if fvgUsed=true (from old bull trade) as long as bear HTF zone exists
 _bearFvgAvail = (poiHL or poiSup) or (hadFVG and (not fvgUsed or (not na(htf_zIsBull) and not htf_zIsBull)))
-_bearIB = isBear and _bearFvgAvail and not inRetracement and isRed and not na(low[1]) and close < low[1] and (requireOpposingCandle ? seenGreenSinceIB : true)
+_bearIB = isBear and _bearFvgAvail and not inRetracement and isRed and not na(low[1]) and close < low[1]
 
 // Count IBs blocked only by opposing-candle requirement
-_bullIBWithout = isBull and _bullFvgAvail and not inRetracement and isGreen and not na(high[1]) and close > high[1]
-_bearIBWithout = isBear and _bearFvgAvail and not inRetracement and isRed  and not na(low[1]) and close < low[1]
-if requireOpposingCandle and (_bullIBWithout and not seenBearSinceIB or _bearIBWithout and not seenGreenSinceIB)
-    blockedByOpposing += 1
 
 if _bullIB and not ibTracking
     ibTracking       := true
@@ -937,7 +961,19 @@ if bullRetrace
     retraceLow    := low
     retraceHigh   := high
     brkLevel     := na
-    brkTriggered := false
+    brkTriggered          := false
+    uhvFiredThisSetup     := false
+    uhvWasBlocked         := false
+    // If UHV is already on cooldown when this setup starts, immediately mark as "serviced"
+    // so _allStratsFired doesn't wait for UHV and EVR/TBR aren't held up indefinitely
+    if (bar_index - lastUHVSignalBar) < uhvCooldown
+        uhvWasBlocked := true
+    tbrFiredThisSetup    := false
+    evrFiredThisSetup    := false
+    seenBearSinceRetrace := false
+    _2brSeenThisSetup    := false
+    _evrSeenThisSetup    := false
+    _setupStartStrength  := trendStrength  // snapshot strength at setup start for trend-shift check
     if showDebug
         label.new(bar_index, high, "↘ Retrace", style = label.style_label_down, color = color.new(#f23645, 10), textcolor = color.white, size = size.tiny)
 
@@ -968,7 +1004,19 @@ if bearRetrace
         label.delete(uhvLabel)
     if showLabels or showDebug
         uhvLabel := label.new(bar_index, low, "⚡ UHV Green", style = label.style_label_up, color = color.new(color.green, 0), textcolor = color.white, size = size.small)
-    brkTriggered := false
+    brkTriggered          := false
+    uhvFiredThisSetup     := false
+    uhvWasBlocked         := false
+    // If UHV is already on cooldown when this setup starts, immediately mark as "serviced"
+    // so _allStratsFired doesn't wait for UHV and EVR/TBR aren't held up indefinitely
+    if (bar_index - lastUHVSignalBar) < uhvCooldown
+        uhvWasBlocked := true
+    tbrFiredThisSetup     := false
+    evrFiredThisSetup     := false
+    seenGreenSinceRetrace := false
+    _2brSeenThisSetup     := false
+    _evrSeenThisSetup     := false
+    _setupStartStrength   := trendStrength  // snapshot strength at setup start for trend-shift check
     if showDebug
         label.new(bar_index, low, "↗ Retrace", style = label.style_label_up, color = color.new(#089981, 10), textcolor = color.white, size = size.tiny)
 
@@ -1005,8 +1053,12 @@ for _pi = 0 to trendPersistBars - 1
     bearPersistCount += isBear[_pi] ? 1 : 0
 bullTrendPersists = bullPersistCount >= math.round(trendPersistBars * 0.6)
 bearTrendPersists = bearPersistCount >= math.round(trendPersistBars * 0.6)
-// Trend shifting: strength dropped 15+ points over last 3 bars
-trendShifting = avoidTrendShift and (trendStrength[0] < trendStrength[3] - 15)
+// Trend shifting: strength has dropped by threshold or more since this setup began
+// Per-strategy so each can be toggled independently
+_trendShiftActive = inRetracement and not na(_setupStartStrength) and (_setupStartStrength - trendStrength >= trendShiftThreshold)
+_trendShiftUHV    = avoidTrendShift and avoidTrendShiftUHV and _trendShiftActive
+_trendShiftTBR    = avoidTrendShift and avoidTrendShiftTBR and _trendShiftActive
+_trendShiftEVR    = avoidTrendShift and avoidTrendShiftEVR and _trendShiftActive
 
 // STEP 3b: TREND FLIP CANCELLATION + RETRACEMENT EXPIRY
 if inRetracement
@@ -1029,14 +1081,21 @@ if inRetracement
     // Suppress bounceCancel if a 2BR or VSA signal would fire this bar — the engulfing
     // green candle naturally closes above the ceiling but that is the signal, not a reset
     // Suppress bounceCancel if any signal type would fire this bar
-    _2brBullFire = isGreen and open <= math.min(open[1], close[1]) and close >= math.max(open[1], close[1]) and (require2BRLowerVol ? volume < volume[1] : true)
-    _2brBearFire = isRed  and open >= math.max(open[1], close[1]) and close <= math.min(open[1], close[1]) and (require2BRLowerVol ? volume < volume[1] : true)
+    _2brBullFire = isGreen and open <= math.min(open[1], close[1]) and close >= math.max(open[1], close[1])
+    _2brBearFire = isRed  and open >= math.max(open[1], close[1]) and close <= math.min(open[1], close[1])
+    // Persist 2BR structural appearance so bounceCancel stays suppressed on bars AFTER the 2BR candle
+    // Without this, when require2BRLowerVol=ON blocks TBR, tbrFiredThisSetup stays false and bounceCancel
+    // can fire on the very next bar (when _anySignalFires reverts to false), wiping UHV/EVR setups
+    if enableTBR and (_2brBullFire or _2brBearFire)
+        _2brSeenThisSetup := true
     _vsaBullFire = isGreen and not na(vsaRedLow)  and low  < vsaRedLow  and close > vsaRedLow  and volume > vsaRedVol
     _vsaBearFire = isRed   and not na(vsaGrnHigh) and high > vsaGrnHigh and close < vsaGrnHigh and volume > vsaGrnVol
-    _uhvBearFire = isRed and not na(brkLevel) and not na(uhvBar) and close < brkLevel
-    _uhvBullFire = isGreen and not na(brkLevel) and not na(uhvBar) and close > brkLevel
-    _anySignalFires = _2brBullFire or _2brBearFire or _vsaBullFire or _vsaBearFire or _uhvBearFire or _uhvBullFire
-    bounceCancel    = (_bouncedOutBull or _bouncedOutBear) and not _anySignalFires
+    _uhvBearFire = isRed and not na(brkLevel) and not na(uhvBar) and close < brkLevel and not uhvFiredThisSetup
+    _uhvBullFire = isGreen and not na(brkLevel) and not na(uhvBar) and close > brkLevel and not uhvFiredThisSetup
+    _anySignalFires  = _2brBullFire or _2brBearFire or _vsaBullFire or _vsaBearFire or _uhvBearFire or _uhvBullFire
+    _uhvDoneOrBlocked = uhvFiredThisSetup or uhvWasBlocked
+    _noneYetFired    = not _uhvDoneOrBlocked and not tbrFiredThisSetup and not evrFiredThisSetup and not _2brSeenThisSetup and not _evrSeenThisSetup
+    bounceCancel     = (_bouncedOutBull or _bouncedOutBear) and not _anySignalFires and _noneYetFired
 
     if trendFlipped or retraceExpired or bounceCancel
         inRetracement := false
@@ -1077,6 +1136,11 @@ if inRetracement
         retraceLow  := low
     if not lastIsBull and (na(retraceHigh) or high > retraceHigh)
         retraceHigh := high
+    // Track opposing candles during retracement for TBR opposing candle filter
+    if isRed
+        seenBearSinceRetrace  := true
+    if isGreen
+        seenGreenSinceRetrace := true
     // Keep POI lines extended to current bar so they always reach the right edge
     if not na(poiLineHL) and not na(poiLevelHL)
         line.set_x2(poiLineHL, bar_index + 20)
@@ -1087,7 +1151,7 @@ if inRetracement
 // Compare volume WITHIN the retracement only (not vs prior impulse bars)
 // uhvVolume starts at 0.0 when retracement begins, so first red/green candle always qualifies
 // UHV = highest volume candle during retracement (any color — fast 1m pullbacks often have no clean red candle)
-if inRetracement and lastIsBull and isRed and not brkTriggered and volume > uhvVolume and volume > ta.highest(volume[1], uhvLookback)
+if inRetracement and lastIsBull and isRed and not uhvFiredThisSetup and volume > uhvVolume and volume > ta.highest(volume[1], uhvLookback)
     uhvVolume   := volume
     uhvHigh     := high
     uhvSL       := low
@@ -1099,7 +1163,7 @@ if inRetracement and lastIsBull and isRed and not brkTriggered and volume > uhvV
         uhvLabel := label.new(bar_index, high, "⚡ UHV Red", style = label.style_label_down, color = color.new(color.red, 0), textcolor = color.white, size = size.small)
     brkLevel := high
 
-if inRetracement and not lastIsBull and isGreen and not brkTriggered and volume > uhvVolume and volume > ta.highest(volume[1], uhvLookback)
+if inRetracement and not lastIsBull and isGreen and not uhvFiredThisSetup and volume > uhvVolume and volume > ta.highest(volume[1], uhvLookback)
     uhvVolume    := volume
     uhvLow       := low
     uhvSL        := high
@@ -1131,28 +1195,54 @@ if inRetracement and not lastIsBull and not na(uhvSL) and not uhvHighSwept
     if high > uhvSL or close > uhvSL
         uhvHighSwept := true
 
+// Per-strategy direction filters
+_uhvBullDir  = uhvDirection != "Bear only"
+_uhvBearDir  = uhvDirection != "Bull only"
+_tbrBullDir  = tbrDirection != "Bear only"
+_tbrBearDir  = tbrDirection != "Bull only"
+_evrBullDir  = evrDirection != "Bear only"
+_evrBearDir  = evrDirection != "Bull only"
+
+// Per-strategy FVG width + touch checks
+_atr144Sig   = nz(ta.atr(144))
+_fvgW        = nz(fvgZoneTop, 0.0) - nz(fvgZoneBot, 0.0)
+_uhvFvgWide  = uhvFvgTH == 0 or _fvgW >= _atr144Sig * uhvFvgTH
+_tbrFvgWide  = tbrFvgTH == 0 or _fvgW >= _atr144Sig * tbrFvgTH
+_evrFvgWide  = evrFvgTH == 0 or _fvgW >= _atr144Sig * evrFvgTH
+_uhvFvgCheck = requireFvgTouch ? (fvgReached and _uhvFvgWide) : true
+_tbrFvgCheck = requireFvgTouch ? (fvgReached and _tbrFvgWide) : true
+_evrFvgCheck = requireFvgTouch ? (fvgReached and _evrFvgWide) : true
+
 // STEP 5: BREAKOUT — Absorption Signal
-bullBreakout = enableUHV and inRetracement and lastIsBull and retraceWasBull and (strictTrendCheck ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and (requireFvgTouch ? fvgReached : true) and not na(brkLevel) and not brkTriggered and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and (requireUHVSweep ? uhvLowSwept : true) and (requireUHVLowerVol ? volume < volume[1] : true) and not trendShifting and isGreen and low <= brkLevel and close > brkLevel and (bar_index - lastUHVSignalBar) >= uhvCooldown
+bullBreakout = _uhvBullDir and enableUHV and inRetracement and lastIsBull and retraceWasBull and ((strictTrendCheck and strictTrendCheckUHV) ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and (requireUHVSweep ? uhvLowSwept : true) and (requireUHVLowerVol ? volume < volume[1] : true) and not _trendShiftUHV and isGreen and low <= brkLevel and close > brkLevel and (bar_index - lastUHVSignalBar) >= uhvCooldown
 
 // ── Blocked-signal detection (for recommendation engine) ──
 // UHV bull: would have fired without sweep requirement
-_uhvBullBase = enableUHV and inRetracement and lastIsBull and retraceWasBull and (strictTrendCheck ? (htfBull and bullTrendPersists) : not bearTrendPersists) and (requireFvgTouch ? fvgReached : true) and not na(brkLevel) and not brkTriggered and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and isGreen and low <= brkLevel and close > brkLevel
+_uhvBullBase = _uhvBullDir and enableUHV and inRetracement and lastIsBull and retraceWasBull and ((strictTrendCheck and strictTrendCheckUHV) ? (htfBull and bullTrendPersists) : not bearTrendPersists) and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and isGreen and low <= brkLevel and close > brkLevel
 if _uhvBullBase and requireUHVSweep and not uhvLowSwept and trendStrength >= minTrendStrength
     blockedBySwept += 1
 // UHV bull: would have fired without volume requirement
-if _uhvBullBase and (requireUHVSweep ? uhvLowSwept : true) and requireUHVLowerVol and volume >= volume[1] and trendStrength >= minTrendStrength and (bar_index - lastUHVSignalBar) >= uhvCooldown
+if _uhvBullBase and (requireUHVSweep ? uhvLowSwept : true) and requireUHVLowerVol and volume >= volume[1] and trendStrength >= minTrendStrength and (bar_index - lastUHVSignalBar) >= uhvCooldown and not _trendShiftUHV
     blockedUHVVol += 1
+    uhvWasBlocked := true
 // Blocked by trend strength (sweep ok, everything else ok, only strength fails)
 if _uhvBullBase and (requireUHVSweep ? uhvLowSwept : true) and trendStrength < minTrendStrength and (bar_index - lastUHVSignalBar) >= uhvCooldown
     blockedByStrength += 1
 // Blocked by cooldown (everything ok except cooldown)
 if _uhvBullBase and (requireUHVSweep ? uhvLowSwept : true) and trendStrength >= minTrendStrength and (bar_index - lastUHVSignalBar) < uhvCooldown
     blockedByCooldown += 1
+    uhvWasBlocked := true  // treat cooldown-blocked as "serviced" so setup ends on time and EVR/TBR aren't held up
+// Blocked by trend shift — mark serviced so TBR/EVR don't get extra bars from extended retracement
+if _uhvBullBase and (requireUHVSweep ? uhvLowSwept : true) and (bar_index - lastUHVSignalBar) >= uhvCooldown and _trendShiftUHV
+    uhvWasBlocked := true
+// Blocked by strict trend check — relaxed mode would pass (not bearTrendPersists) but htfBull+persistence fails
+if enableUHV and inRetracement and lastIsBull and retraceWasBull and not bearTrendPersists and (strictTrendCheck and strictTrendCheckUHV) and not (htfBull and bullTrendPersists) and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and isGreen and low <= brkLevel and close > brkLevel and (requireUHVSweep ? uhvLowSwept : true) and (bar_index - lastUHVSignalBar) >= uhvCooldown
+    uhvWasBlocked := true
 
 // Debug: show which condition blocked bull breakout when close > brkLevel but signal didn't fire
-if showDebug and inRetracement and lastIsBull and isGreen and not na(brkLevel) and close > brkLevel and not bullBreakout
+if showDebug and inRetracement and lastIsBull and isGreen and not na(brkLevel) and close > brkLevel and not bullBreakout and not uhvFiredThisSetup
     _why = not retraceWasBull                                                       ? "✗ retraceWasBull" :
-           not (strictTrendCheck ? (htfBull and bullTrendPersists) : not bearTrendPersists) ? "✗ trend" :
+           not ((strictTrendCheck and strictTrendCheckUHV) ? (htfBull and bullTrendPersists) : not bearTrendPersists) ? "✗ trend" :
            trendStrength < minTrendStrength                                         ? "✗ strength:" + str.tostring(trendStrength) :
            (requireFvgTouch and not fvgReached)                                      ? "✗ no FVGtouch" :
            na(brkLevel) or brkTriggered                                             ? "✗ brkLevel" :
@@ -1165,19 +1255,9 @@ if bullBreakout
     signalsToday += 1
     array.push(signalBarTimes, bar_index)
     alert("🟢 BUY Signal — FVG Absorption\nEntry: " + str.tostring(close, "#.###") + "  |  Symbol: " + syminfo.ticker, alert.freq_once_per_bar)
+    uhvFiredThisSetup := true
     brkTriggered  := true
     fvgUsed       := true
-    inRetracement := false
-    ibTracking    := false
-    fvgReached    := false
-    if not na(poiLineHL)
-        line.delete(poiLineHL)
-    if not na(poiLineSup)
-        line.delete(poiLineSup)
-    poiLineHL    := na
-    poiLineSup   := na
-    poiLevelHL   := na
-    poiLevelSup  := na
     lastUHVSignalBar := bar_index
     totalSignals  += 1
     _entry    = close
@@ -1231,43 +1311,41 @@ if bullBreakout
     lastRedClose   := na
 
 // UHV bear: base condition (without sweep/vol/strength/cooldown) for blocked-counter tracking
-_uhvBearBase = enableUHV and inRetracement and not lastIsBull and not retraceWasBull and (strictTrendCheck ? (htfBear and bearTrendPersists) : not bullTrendPersists) and (requireFvgTouch ? fvgReached : true) and not na(brkLevel) and not brkTriggered and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and isRed and close < brkLevel
+_uhvBearBase = _uhvBearDir and enableUHV and inRetracement and not lastIsBull and not retraceWasBull and ((strictTrendCheck and strictTrendCheckUHV) ? (htfBear and bearTrendPersists) : not bullTrendPersists) and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and isRed and close < brkLevel
 if _uhvBearBase and requireUHVSweep and not uhvHighSwept and trendStrength >= minTrendStrength
     blockedBySwept += 1
 // UHV bear: would have fired without volume requirement
-if _uhvBearBase and (requireUHVSweep ? uhvHighSwept : true) and requireUHVLowerVol and volume >= volume[1] and trendStrength >= minTrendStrength and (bar_index - lastUHVSignalBar) >= uhvCooldown
+if _uhvBearBase and (requireUHVSweep ? uhvHighSwept : true) and requireUHVLowerVol and volume >= volume[1] and trendStrength >= minTrendStrength and (bar_index - lastUHVSignalBar) >= uhvCooldown and not _trendShiftUHV
     blockedUHVVol += 1
+    uhvWasBlocked := true
 // Blocked by trend strength
 if _uhvBearBase and (requireUHVSweep ? uhvHighSwept : true) and trendStrength < minTrendStrength and (bar_index - lastUHVSignalBar) >= uhvCooldown
     blockedByStrength += 1
 // Blocked by cooldown
 if _uhvBearBase and (requireUHVSweep ? uhvHighSwept : true) and trendStrength >= minTrendStrength and (bar_index - lastUHVSignalBar) < uhvCooldown
     blockedByCooldown += 1
+    uhvWasBlocked := true  // treat cooldown-blocked as "serviced" so setup ends on time and EVR/TBR aren't held up
+// Blocked by trend shift — mark serviced so TBR/EVR don't get extra bars from extended retracement
+if _uhvBearBase and (requireUHVSweep ? uhvHighSwept : true) and (bar_index - lastUHVSignalBar) >= uhvCooldown and _trendShiftUHV
+    uhvWasBlocked := true
+// Blocked by strict trend check — relaxed mode would pass (not bullTrendPersists) but htfBear+persistence fails
+if enableUHV and inRetracement and not lastIsBull and not retraceWasBull and not bullTrendPersists and (strictTrendCheck and strictTrendCheckUHV) and not (htfBear and bearTrendPersists) and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and isRed and close < brkLevel and (requireUHVSweep ? uhvHighSwept : true) and (bar_index - lastUHVSignalBar) >= uhvCooldown
+    uhvWasBlocked := true
 
-bearBreakout = enableUHV and inRetracement and not lastIsBull and not retraceWasBull and (strictTrendCheck ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and (requireFvgTouch ? fvgReached : true) and not na(brkLevel) and not brkTriggered and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and (requireUHVSweep ? uhvHighSwept : true) and (requireUHVLowerVol ? volume < volume[1] : true) and not trendShifting and isRed and close < brkLevel and (bar_index - lastUHVSignalBar) >= uhvCooldown
+bearBreakout = _uhvBearDir and enableUHV and inRetracement and not lastIsBull and not retraceWasBull and ((strictTrendCheck and strictTrendCheckUHV) ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and (requireUHVSweep ? uhvHighSwept : true) and (requireUHVLowerVol ? volume < volume[1] : true) and not _trendShiftUHV and isRed and close < brkLevel and (bar_index - lastUHVSignalBar) >= uhvCooldown
 
 // Debug: show which condition blocked bear breakout when close < brkLevel but signal didn't fire
-if showDebug and inRetracement and not lastIsBull and isRed and not na(brkLevel) and close < brkLevel and not bearBreakout
-    _whyB = retraceWasBull ? "✗ retraceWasBull" : not (strictTrendCheck ? (htfBear and bearTrendPersists) : not bullTrendPersists) ? "✗ trend" : trendStrength < minTrendStrength ? "✗ strength:" + str.tostring(trendStrength) : (requireFvgTouch and not fvgReached) ? "✗ no FVGtouch" : na(brkLevel) or brkTriggered ? "✗ brkLevel" : na(uhvBar) or (bar_index - uhvBar) < uhvSettleBars ? "✗ uhvSettle" : high < brkLevel ? "✗ no brk wick" : "✗ unknown"
+if showDebug and inRetracement and not lastIsBull and isRed and not na(brkLevel) and close < brkLevel and not bearBreakout and not uhvFiredThisSetup
+    _whyB = retraceWasBull ? "✗ retraceWasBull" : not ((strictTrendCheck and strictTrendCheckUHV) ? (htfBear and bearTrendPersists) : not bullTrendPersists) ? "✗ trend" : trendStrength < minTrendStrength ? "✗ strength:" + str.tostring(trendStrength) : (requireFvgTouch and not fvgReached) ? "✗ no FVGtouch" : na(brkLevel) or brkTriggered ? "✗ brkLevel" : na(uhvBar) or (bar_index - uhvBar) < uhvSettleBars ? "✗ uhvSettle" : high < brkLevel ? "✗ no brk wick" : "✗ unknown"
     label.new(bar_index, low, _whyB, style = label.style_label_up, color = color.new(color.orange, 10), textcolor = color.white, size = size.tiny)
 
 if bearBreakout
     signalsToday += 1
     array.push(signalBarTimes, bar_index)
     alert("🔴 SELL Signal — FVG Absorption\nEntry: " + str.tostring(close, "#.###") + "  |  Symbol: " + syminfo.ticker, alert.freq_once_per_bar)
+    uhvFiredThisSetup := true
     brkTriggered  := true
     fvgUsed       := true
-    inRetracement := false
-    ibTracking    := false
-    fvgReached    := false
-    if not na(poiLineHL)
-        line.delete(poiLineHL)
-    if not na(poiLineSup)
-        line.delete(poiLineSup)
-    poiLineHL    := na
-    poiLineSup   := na
-    poiLevelHL   := na
-    poiLevelSup  := na
     lastUHVSignalBar := bar_index
     totalSignals  += 1
     _entry      = close
@@ -1325,33 +1403,25 @@ if bearBreakout
 _prevBodyHigh = math.max(open[1], close[1])
 _prevBodyLow  = math.min(open[1], close[1])
 
-bull2BR = enableTBR and show2BR and inRetracement and lastIsBull and retraceWasBull and (requireFvgTouch ? fvgReached : true) and not brkTriggered and (strictTrendCheck ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and not trendShifting and isGreen and open <= _prevBodyLow and close >= _prevBodyHigh and (require2BRLowerVol ? volume < volume[1] : true) and (bar_index - lastTBRSignalBar) >= tbrCooldown
+bull2BR = _tbrBullDir and enableTBR and show2BR and inRetracement and lastIsBull and retraceWasBull and _tbrFvgCheck and not tbrFiredThisSetup and ((strictTrendCheck and strictTrendCheckTBR) ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and not _trendShiftTBR and isGreen and open <= _prevBodyLow and close >= _prevBodyHigh and (require2BRLowerVol ? volume < volume[1] : true) and (requireOpposingCandle ? seenBearSinceRetrace : true) and (bar_index - lastTBRSignalBar) >= tbrCooldown
 
-bear2BR = enableTBR and show2BR and inRetracement and not lastIsBull and not retraceWasBull and (requireFvgTouch ? fvgReached : true) and not brkTriggered and (strictTrendCheck ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and not trendShifting and isRed and open >= _prevBodyHigh and close <= _prevBodyLow and (require2BRLowerVol ? volume < volume[1] : true) and (bar_index - lastTBRSignalBar) >= tbrCooldown
+bear2BR = _tbrBearDir and enableTBR and show2BR and inRetracement and not lastIsBull and not retraceWasBull and _tbrFvgCheck and not tbrFiredThisSetup and ((strictTrendCheck and strictTrendCheckTBR) ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and not _trendShiftTBR and isRed and open >= _prevBodyHigh and close <= _prevBodyLow and (require2BRLowerVol ? volume < volume[1] : true) and (requireOpposingCandle ? seenGreenSinceRetrace : true) and (bar_index - lastTBRSignalBar) >= tbrCooldown
 
 // 2BR blocked by volume check
-_2brBullBaseNoVol = enableTBR and show2BR and inRetracement and lastIsBull and retraceWasBull and (requireFvgTouch ? fvgReached : true) and not brkTriggered and (strictTrendCheck ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and isGreen and open <= _prevBodyLow and close >= _prevBodyHigh
-_2brBearBaseNoVol = enableTBR and show2BR and inRetracement and not lastIsBull and not retraceWasBull and (requireFvgTouch ? fvgReached : true) and not brkTriggered and (strictTrendCheck ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and isRed and open >= _prevBodyHigh and close <= _prevBodyLow
+_2brBullBaseNoVol = _tbrBullDir and enableTBR and show2BR and inRetracement and lastIsBull and retraceWasBull and _tbrFvgCheck and not tbrFiredThisSetup and ((strictTrendCheck and strictTrendCheckTBR) ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and isGreen and open <= _prevBodyLow and close >= _prevBodyHigh
+_2brBearBaseNoVol = _tbrBearDir and enableTBR and show2BR and inRetracement and not lastIsBull and not retraceWasBull and _tbrFvgCheck and not tbrFiredThisSetup and ((strictTrendCheck and strictTrendCheckTBR) ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and isRed and open >= _prevBodyHigh and close <= _prevBodyLow
 if require2BRLowerVol and (_2brBullBaseNoVol or _2brBearBaseNoVol) and volume >= volume[1]
     blocked2BRVol += 1
+if requireOpposingCandle and (_2brBullBaseNoVol and not seenBearSinceRetrace or _2brBearBaseNoVol and not seenGreenSinceRetrace)
+    blockedByOpposing += 1
 
 if bull2BR
     signalsToday += 1
     array.push(signalBarTimes, bar_index)
     alert("🟢 BUY Signal — 2BR\nEntry: " + str.tostring(close, "#.###") + "  |  Symbol: " + syminfo.ticker, alert.freq_once_per_bar)
+    tbrFiredThisSetup := true
     brkTriggered  := true
     fvgUsed       := true
-    inRetracement := false
-    ibTracking    := false
-    fvgReached    := false
-    if not na(poiLineHL)
-        line.delete(poiLineHL)
-    if not na(poiLineSup)
-        line.delete(poiLineSup)
-    poiLineHL    := na
-    poiLineSup   := na
-    poiLevelHL   := na
-    poiLevelSup  := na
     lastTBRSignalBar := bar_index
     totalSignals  += 1
     _entry    = close
@@ -1392,19 +1462,9 @@ if bear2BR
     signalsToday += 1
     array.push(signalBarTimes, bar_index)
     alert("🔴 SELL Signal — 2BR\nEntry: " + str.tostring(close, "#.###") + "  |  Symbol: " + syminfo.ticker, alert.freq_once_per_bar)
+    tbrFiredThisSetup := true
     brkTriggered  := true
     fvgUsed       := true
-    inRetracement := false
-    ibTracking    := false
-    fvgReached    := false
-    if not na(poiLineHL)
-        line.delete(poiLineHL)
-    if not na(poiLineSup)
-        line.delete(poiLineSup)
-    poiLineHL    := na
-    poiLineSup   := na
-    poiLevelHL   := na
-    poiLevelSup  := na
     lastTBRSignalBar := bar_index
     totalSignals  += 1
     _entry      = close
@@ -1450,7 +1510,7 @@ if bear2BR
 // Bull EVR: two paths depending on avoidEVRTrendWick
 // Path A — no wick filter OR wick is clean: fire immediately
 // Path B — wick filter ON and wick > body: set pending, wait for next bar confirmation
-_evrBullBase    = enableEVR and showVSA and inRetracement and lastIsBull and retraceWasBull and (requireFvgTouch ? fvgReached : true) and not brkTriggered and not na(vsaRedLow) and vsaRedVol > 0 and (strictTrendCheck ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and not trendShifting and isGreen and low < vsaRedLow and close > vsaRedLow and (requireEVRHigherVol ? volume > vsaRedVol : true) and (bar_index - lastEVRSignalBar) >= evrCooldown
+_evrBullBase    = _evrBullDir and enableEVR and showVSA and inRetracement and lastIsBull and retraceWasBull and _evrFvgCheck and not evrFiredThisSetup and not na(vsaRedLow) and vsaRedVol > 0 and ((strictTrendCheck and strictTrendCheckEVR) ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and not _trendShiftEVR and isGreen and low < vsaRedLow and close > vsaRedLow and (requireEVRHigherVol ? volume > vsaRedVol : true) and (requireEVRLowerVol ? volume < volume[1] : true) and (bar_index - lastEVRSignalBar) >= evrCooldown
 _evrBullHasWick = (high - close) > (close - open)   // upper wick larger than body
 bullVSA         = _evrBullBase and (avoidEVRTrendWick ? not _evrBullHasWick : true)
 // When wick detected and filter is ON: arm pending confirmation
@@ -1459,7 +1519,7 @@ if _evrBullBase and avoidEVRTrendWick and _evrBullHasWick and not evrBullWickPen
     evrWickCandleHigh  := high
 
 // Bear EVR: same two-path logic
-_evrBearBase    = enableEVR and showVSA and inRetracement and not lastIsBull and not retraceWasBull and (requireFvgTouch ? fvgReached : true) and not brkTriggered and not na(vsaGrnHigh) and vsaGrnVol > 0 and (strictTrendCheck ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and not trendShifting and isRed and high > vsaGrnHigh and close < vsaGrnHigh and (requireEVRHigherVol ? volume > vsaGrnVol : true) and (bar_index - lastEVRSignalBar) >= evrCooldown
+_evrBearBase    = _evrBearDir and enableEVR and showVSA and inRetracement and not lastIsBull and not retraceWasBull and _evrFvgCheck and not evrFiredThisSetup and not na(vsaGrnHigh) and vsaGrnVol > 0 and ((strictTrendCheck and strictTrendCheckEVR) ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and not _trendShiftEVR and isRed and high > vsaGrnHigh and close < vsaGrnHigh and (requireEVRHigherVol ? volume > vsaGrnVol : true) and (requireEVRLowerVol ? volume < volume[1] : true) and (bar_index - lastEVRSignalBar) >= evrCooldown
 _evrBearHasWick = (close - low) > (open - close)    // lower wick larger than body
 bearVSA         = _evrBearBase and (avoidEVRTrendWick ? not _evrBearHasWick : true)
 // When wick detected and filter is ON: arm pending confirmation
@@ -1468,28 +1528,25 @@ if _evrBearBase and avoidEVRTrendWick and _evrBearHasWick and not evrBearWickPen
     evrWickCandleLow   := low
 
 // EVR blocked by volume check
-_evrBullBaseNoVol = enableEVR and showVSA and inRetracement and lastIsBull and retraceWasBull and (requireFvgTouch ? fvgReached : true) and not brkTriggered and not na(vsaRedLow) and vsaRedVol > 0 and (strictTrendCheck ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and isGreen and low < vsaRedLow and close > vsaRedLow
-_evrBearBaseNoVol = enableEVR and showVSA and inRetracement and not lastIsBull and not retraceWasBull and (requireFvgTouch ? fvgReached : true) and not brkTriggered and not na(vsaGrnHigh) and vsaGrnVol > 0 and (strictTrendCheck ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and isRed and high > vsaGrnHigh and close < vsaGrnHigh
+_evrBullBaseNoVol = _evrBullDir and enableEVR and showVSA and inRetracement and lastIsBull and retraceWasBull and _evrFvgCheck and not evrFiredThisSetup and not na(vsaRedLow) and vsaRedVol > 0 and ((strictTrendCheck and strictTrendCheckEVR) ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and isGreen and low < vsaRedLow and close > vsaRedLow
+_evrBearBaseNoVol = _evrBearDir and enableEVR and showVSA and inRetracement and not lastIsBull and not retraceWasBull and _evrFvgCheck and not evrFiredThisSetup and not na(vsaGrnHigh) and vsaGrnVol > 0 and ((strictTrendCheck and strictTrendCheckEVR) ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and isRed and high > vsaGrnHigh and close < vsaGrnHigh
+// Persist EVR structural appearance so bounceCancel stays suppressed on bars AFTER the sweep candle
+// Without this, when requireEVRHigherVol=ON blocks EVR, evrFiredThisSetup stays false and bounceCancel
+// can fire on the very next bar, wiping UHV/TBR setups
+if _evrBullBaseNoVol or _evrBearBaseNoVol
+    _evrSeenThisSetup := true
 if requireEVRHigherVol and (_evrBullBaseNoVol or _evrBearBaseNoVol) and not (_evrBullBaseNoVol and volume > vsaRedVol) and not (_evrBearBaseNoVol and volume > vsaGrnVol)
     blockedEVRVol += 1
+if requireEVRLowerVol and (_evrBullBaseNoVol or _evrBearBaseNoVol) and volume >= volume[1]
+    blockedEVRLowerVol += 1
 
 if bullVSA
     signalsToday += 1
     array.push(signalBarTimes, bar_index)
     alert("BUY Signal - Effort vs Result | Entry: " + str.tostring(close, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    evrFiredThisSetup := true
     brkTriggered  := true
     fvgUsed       := true
-    inRetracement := false
-    ibTracking    := false
-    fvgReached    := false
-    if not na(poiLineHL)
-        line.delete(poiLineHL)
-    if not na(poiLineSup)
-        line.delete(poiLineSup)
-    poiLineHL    := na
-    poiLineSup   := na
-    poiLevelHL   := na
-    poiLevelSup  := na
     lastEVRSignalBar := bar_index
     totalSignals  += 1
     _entry    = close
@@ -1530,19 +1587,9 @@ if bearVSA
     signalsToday += 1
     array.push(signalBarTimes, bar_index)
     alert("SELL Signal - Effort vs Result | Entry: " + str.tostring(close, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    evrFiredThisSetup := true
     brkTriggered  := true
     fvgUsed       := true
-    inRetracement := false
-    ibTracking    := false
-    fvgReached    := false
-    if not na(poiLineHL)
-        line.delete(poiLineHL)
-    if not na(poiLineSup)
-        line.delete(poiLineSup)
-    poiLineHL    := na
-    poiLineSup   := na
-    poiLevelHL   := na
-    poiLevelSup  := na
     lastEVRSignalBar := bar_index
     totalSignals  += 1
     _entry      = close
@@ -1582,32 +1629,22 @@ if bearVSA
 // EVR WICK CONFIRMATION — pending entries waiting for breakout of wick candle
 
 // Cancel pending if retracement ends or trend flipped
-if evrBullWickPending and (not inRetracement or brkTriggered or bearTrendPersists)
+if evrBullWickPending and (not inRetracement or evrFiredThisSetup or bearTrendPersists)
     evrBullWickPending := false
     evrWickCandleHigh  := na
-if evrBearWickPending and (not inRetracement or brkTriggered or bullTrendPersists)
+if evrBearWickPending and (not inRetracement or evrFiredThisSetup or bullTrendPersists)
     evrBearWickPending := false
     evrWickCandleLow   := na
 
 // Bull confirmation: next candle closes above the wick candle high
-if evrBullWickPending and not na(evrWickCandleHigh) and not brkTriggered and inRetracement and lastIsBull and close > evrWickCandleHigh
+if evrBullWickPending and not na(evrWickCandleHigh) and not evrFiredThisSetup and inRetracement and lastIsBull and close > evrWickCandleHigh
     evrBullWickPending := false
     signalsToday += 1
     array.push(signalBarTimes, bar_index)
     alert("BUY Signal - EVR Wick Confirmed | Entry: " + str.tostring(close, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    evrFiredThisSetup := true
     brkTriggered  := true
     fvgUsed       := true
-    inRetracement := false
-    ibTracking    := false
-    fvgReached    := false
-    if not na(poiLineHL)
-        line.delete(poiLineHL)
-    if not na(poiLineSup)
-        line.delete(poiLineSup)
-    poiLineHL    := na
-    poiLineSup   := na
-    poiLevelHL   := na
-    poiLevelSup  := na
     lastEVRSignalBar := bar_index
     totalSignals  += 1
     _entry    = close
@@ -1642,24 +1679,14 @@ if evrBullWickPending and not na(evrWickCandleHigh) and not brkTriggered and inR
     evrWickCandleHigh := na
 
 // Bear confirmation: next candle closes below the wick candle low
-if evrBearWickPending and not na(evrWickCandleLow) and not brkTriggered and inRetracement and not lastIsBull and close < evrWickCandleLow
+if evrBearWickPending and not na(evrWickCandleLow) and not evrFiredThisSetup and inRetracement and not lastIsBull and close < evrWickCandleLow
     evrBearWickPending := false
     signalsToday += 1
     array.push(signalBarTimes, bar_index)
     alert("SELL Signal - EVR Wick Confirmed | Entry: " + str.tostring(close, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    evrFiredThisSetup := true
     brkTriggered  := true
     fvgUsed       := true
-    inRetracement := false
-    ibTracking    := false
-    fvgReached    := false
-    if not na(poiLineHL)
-        line.delete(poiLineHL)
-    if not na(poiLineSup)
-        line.delete(poiLineSup)
-    poiLineHL    := na
-    poiLineSup   := na
-    poiLevelHL   := na
-    poiLevelSup  := na
     lastEVRSignalBar := bar_index
     totalSignals  += 1
     _entry    = close
@@ -1692,6 +1719,26 @@ if evrBearWickPending and not na(evrWickCandleLow) and not brkTriggered and inRe
     array.push(tradeLabel,    _sigLblW2)
     array.push(tradeEntryBar, bar_index)
     evrWickCandleLow := na
+
+// End setup when all enabled strategies have fired from this setup
+if inRetracement
+    // _2brSeenThisSetup: a structural 2BR candle appeared this setup (regardless of vol filter)
+    // When require2BRLowerVol=ON blocks TBR on a high-vol bar, the setup must not keep running
+    // indefinitely waiting for TBR — that would delay UHV/EVR from freeing up the next setup.
+    // Treating a seen-but-blocked 2BR as "TBR serviced" makes setup duration identical to OFF case.
+    _allStratsFired = (not enableUHV or uhvFiredThisSetup or uhvWasBlocked) and (not enableTBR or tbrFiredThisSetup or _2brSeenThisSetup) and (not enableEVR or evrFiredThisSetup or _evrSeenThisSetup)
+    if _allStratsFired
+        inRetracement := false
+        ibTracking    := false
+        fvgReached    := false
+        if not na(poiLineHL)
+            line.delete(poiLineHL)
+        if not na(poiLineSup)
+            line.delete(poiLineSup)
+        poiLineHL   := na
+        poiLineSup  := na
+        poiLevelHL  := na
+        poiLevelSup := na
 
 // DAILY RESET
 _today = dayofmonth(time)
@@ -2512,7 +2559,7 @@ f_drawPanel() =>
     if requireOpposingCandle and blockedByOpposing >= 3 and _canEstimate
         float _estGainOpp = math.round(blockedByOpposing / _daysBase * _avgPnLPerTrade * 100) / 100
         float _oppPerDay  = math.round(blockedByOpposing / _daysBase * 10) / 10
-        _rUnlock2 := "🔓 Opposing candle filter blocked " + str.tostring(blockedByOpposing) + " signals (" + str.tostring(_oppPerDay) + "/day avg) — turning OFF 'Must there be an opposing candle' could add ~$" + str.tostring(_estGainOpp, "#.##") + "/day"
+        _rUnlock2 := "🔓 Opposing candle filter blocked " + str.tostring(blockedByOpposing) + " 2BR signals (" + str.tostring(_oppPerDay) + "/day avg) — turning OFF 'Must there be an opposing candle' (Two Bar Reversal settings) could add ~$" + str.tostring(_estGainOpp, "#.##") + "/day"
     if require2BRLowerVol and blocked2BRVol >= 3 and _canEstimate
         float _estGain2BR = math.round(blocked2BRVol / _daysBase * _avgPnLPerTrade * 100) / 100
         float _tbrPerDay  = math.round(blocked2BRVol / _daysBase * 10) / 10
@@ -2521,6 +2568,10 @@ f_drawPanel() =>
         float _estGainEVR = math.round(blockedEVRVol / _daysBase * _avgPnLPerTrade * 100) / 100
         float _evrPerDay  = math.round(blockedEVRVol / _daysBase * 10) / 10
         _rUnlock4 := "🔓 EVR Volume filter blocked " + str.tostring(blockedEVRVol) + " signals (" + str.tostring(_evrPerDay) + "/day avg) — turning OFF 'Must sweep candle have higher volume' could add ~$" + str.tostring(_estGainEVR, "#.##") + "/day"
+    if requireEVRLowerVol and blockedEVRLowerVol >= 3 and _canEstimate and na(_rUnlock4)
+        float _estGainEVRLow = math.round(blockedEVRLowerVol / _daysBase * _avgPnLPerTrade * 100) / 100
+        float _evrLowPerDay  = math.round(blockedEVRLowerVol / _daysBase * 10) / 10
+        _rUnlock4 := "🔓 EVR Lower Vol filter blocked " + str.tostring(blockedEVRLowerVol) + " signals (" + str.tostring(_evrLowPerDay) + "/day avg) — turning OFF 'Must sweep candle have lower volume' could add ~$" + str.tostring(_estGainEVRLow, "#.##") + "/day"
     if blockedByCooldown >= 5 and _canEstimate
         float _estGainCD = math.round(blockedByCooldown / _daysBase * _avgPnLPerTrade * 100) / 100
         float _cdPerDay  = math.round(blockedByCooldown / _daysBase * 10) / 10
