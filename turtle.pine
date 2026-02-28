@@ -74,6 +74,7 @@ showVSA             = input.bool(true,  'Show signals on the chart?', group = gr
 requireEVRHigherVol  = input.bool(false, 'Must the sweep candle have higher volume than the candle it sweeps?', group = grpEVR, tooltip = 'ON: confirms strong absorption — big effort to push price through, but it closed back. OFF: any sweep-and-close fires regardless of volume.', display = display.none)
 requireEVRLowerVol   = input.bool(false, 'Must the sweep candle have lower volume than the previous candle?', group = grpEVR, tooltip = 'ON: the sweep candle must have less volume than the candle before it — low-effort sweep confirms the move is not exhausting itself on entry. OFF: any valid sweep fires regardless of relative volume.', display = display.none)
 avoidEVRTrendWick    = input.bool(false, 'If sweep candle has rejection wick, wait for next candle to confirm?', group = grpEVR, tooltip = 'ON: if the sweep candle closes with a wick larger than its body pointing in the trade direction (bull = upper wick, bear = lower wick), the signal does NOT fire immediately. Instead it waits: the NEXT candle must close above the wick candle high (bull) or below the wick candle low (bear) to confirm. OFF: the signal fires on the sweep candle itself regardless of any wick.', display = display.none)
+evrUseStrongestCandle = input.bool(false, 'Track highest-volume candle (not most recent)?', group = grpEVR, tooltip = 'ON: the VSA tracker remembers the red/green candle with the HIGHEST volume during the retracement — so EVR fires off the strongest absorption candle seen. OFF (default): tracks the most recent red/green candle, which is the original behavior.', display = display.none)
 evrDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, step = 0.5, group = grpEVR, tooltip = 'Lot size is auto-calculated so that hitting the SL costs exactly this many dollars. Set to 0 to use the fixed lot size below instead.', display = display.none)
 evrLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpEVR, tooltip = 'Only used when Dollar Risk = 0. This lot size is applied to every EVR trade.', display = display.none)
 evrTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpEVR, tooltip = 'R:R Ratio: TP = entry ± SL distance × multiplier. Structural High/Low: TP at the structural ceiling/floor. Dollar Amount: fixed dollar distance from entry.', display = display.none)
@@ -1177,12 +1178,14 @@ if inRetracement and not lastIsBull and isGreen and not uhvFiredThisSetup and vo
 
 // STEP 4a: VSA TRACKER — biggest red/green candle during retracement (independent of UHV)
 if inRetracement and lastIsBull and isRed
-    vsaRedVol := volume
-    vsaRedLow := low
+    if not evrUseStrongestCandle or volume > vsaRedVol
+        vsaRedVol := volume
+        vsaRedLow := low
 
 if inRetracement and not lastIsBull and isGreen
-    vsaGrnVol  := volume
-    vsaGrnHigh := high
+    if not evrUseStrongestCandle or volume > vsaGrnVol
+        vsaGrnVol  := volume
+        vsaGrnHigh := high
 
 // STEP 4b: TRACK UHV LOW SWEEP
 // Bull: UHV red low must be swept (wick or close below) before breakout fires
