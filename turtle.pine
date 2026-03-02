@@ -8,10 +8,10 @@ max_bars_back(high, 300)
 
 // ─── 0. Account ──────────────────────────
 grpAccount = "💼 My Account"
-initialMoney = input.float(30.0, 'My Starting Capital ($)', minval = 1.0, step = 10.0, group = grpAccount, display = display.none)
-cMult        = input.float(100.0,  'Contract size ($/point/lot)', minval = 0.001, step = 1.0, group = grpAccount, display = display.none)
-lotAmp       = input.float(1.0,   'Position Size Multiplier  ＋ / − to scale all lot sizes (1.0 = optimizer sizing, 2.0 = double lots/profit, etc.)', minval = 0.1, maxval = 50.0, step = 0.5, group = grpAccount, display = display.none)
-_resetNow = input.bool(false, '🔄 Reset Stats', group = grpAccount, display = display.none)
+initialMoney = input.float(30.0, 'My Starting Capital ($)', minval = 1.0, group = grpAccount)
+cMult        = input.float(100.0,  'Contract size ($/point/lot)', minval = 0.001, group = grpAccount)
+lotAmp       = input.float(1.0,   'Position Size Multiplier  ＋ / − to scale all lot sizes (1.0 = optimizer sizing, 2.0 = double lots/profit, etc.)', minval = 0.1, group = grpAccount)
+_resetNow = input.bool(false, '🔄 Reset Stats', group = grpAccount)
 var int _resetCapture = 0
 if not _resetNow
     _resetCapture := 0
@@ -21,165 +21,161 @@ statsResetDate = _resetCapture
 
 // ─── 1. Points of Interest ───────────────
 grpPOI = "🎯 Points of Interest"
-requireFvgTouch = input.bool(true, 'Require POI Touch Before Signal', group = grpPOI, display = display.none)
-poiFVG      = input.bool(true,  'Higher Time Frame Fair Value Gap (imbalance zone)', group = grpPOI, display = display.none)
-poiHL       = input.bool(true,  'Previous Higher Low (above the deeper low)', group = grpPOI, display = display.none)
-poiSup      = input.bool(true,  'Broken High / Low (now flipped to S or R)', group = grpPOI, display = display.none)
-poiLookback = input.int(50, 'POI Lookback (bars)', minval = 10, maxval = 300, step = 5, group = grpPOI, display = display.none)
+requireFvgTouch = input.bool(true, 'Require POI Touch Before Signal', group = grpPOI)
+poiFVG      = input.bool(true,  'Higher Time Frame Fair Value Gap (imbalance zone)', group = grpPOI)
+poiHL       = input.bool(true,  'Previous Higher Low (above the deeper low)', group = grpPOI)
+poiSup      = input.bool(true,  'Broken High / Low (now flipped to S or R)', group = grpPOI)
+poiLookback = input.int(50, 'POI Lookback (bars)', minval = 10, group = grpPOI)
 
 // ─── 2. Strategy: UHV Breakout ───────────
 grpUHV = "📊 Strategy: Ultra High Volume Breakout"
-enableUHV             = input.bool(true,  'Use this strategy?', group = grpUHV, display = display.none)
-uhvDirection          = input.string("Bull only", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = grpUHV, display = display.none)
-uhvStatsInfo          = input.bool(false, '📊 Wins / Trades: see Stats Panel → Strategy Breakdown', group = grpUHV, display = display.none)
-requireUHVSweep       = input.bool(false, 'Must entry candle first wick through the UHV candle?', group = grpUHV, display = display.none)
-requireUHVLowerVol    = input.bool(true,  'Must the breakout candle have lower volume than the previous candle?', group = grpUHV, display = display.none)
-uhvLookback           = input.int(4,      'How many bars back to check for Ultra High Volume?', minval = 3, maxval = 50, group = grpUHV, display = display.none)
-uhvSettleBars         = input.int(0,      'How many bars must pass after the UHV candle before entry?', minval = 0, maxval = 20, group = grpUHV, display = display.none)
-uhvDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, step = 0.5, group = grpUHV, display = display.none)
-uhvLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpUHV, display = display.none)
-uhvTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpUHV, display = display.none)
-uhvTp1Mult    = input.float(7.0,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpUHV, display = display.none)
-uhvTpDollar   = input.float(9.0,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpUHV, display = display.none)
-uhvSlType    = input.string("SwingLow", '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "CandleWick", "SwingLow", "Dollar"], group = grpUHV, display = display.none)
-uhvSlBuffer  = input.float(0.4,    '──── Stop Loss: How much extra room past the structure? ($)', minval = 0.0, maxval = 20.0, step = 0.2, group = grpUHV, display = display.none)
-uhvSlMinDist = input.float(1.4,    '──── Stop Loss: Closest it can ever be to entry? ($)', minval = 0.1, maxval = 50.0, step = 0.1, group = grpUHV, display = display.none)
-uhvSlAtrMult = input.float(0.5,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, maxval = 5.0, step = 0.25, group = grpUHV, display = display.none)
-uhvSlDollar  = input.float(2.7,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.1, group = grpUHV, display = display.none)
-uhvSlSwingLb = input.int(19,      '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, maxval = 50, group = grpUHV, display = display.none)
+enableUHV             = input.bool(true,  'Use this strategy?', group = grpUHV)
+uhvDirection          = input.string("Bull only", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = grpUHV)
+requireUHVSweep       = input.bool(false, 'Must entry candle first wick through the UHV candle?', group = grpUHV)
+requireUHVLowerVol    = input.bool(true,  'Must the breakout candle have lower volume than the previous candle?', group = grpUHV)
+uhvLookback           = input.int(4,      'How many bars back to check for Ultra High Volume?', minval = 3, group = grpUHV)
+uhvSettleBars         = input.int(0,      'How many bars must pass after the UHV candle before entry?', minval = 0, group = grpUHV)
+uhvDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, group = grpUHV)
+uhvLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, group = grpUHV)
+uhvTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpUHV)
+uhvTp1Mult    = input.float(7.0,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, group = grpUHV)
+uhvTpDollar   = input.float(9.0,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, group = grpUHV)
+uhvSlType    = input.string("SwingLow", '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "CandleWick", "SwingLow", "Dollar"], group = grpUHV)
+uhvSlBuffer  = input.float(0.4,    '──── Stop Loss: How much extra room past the structure? ($)', minval = 0.0, group = grpUHV)
+uhvSlMinDist = input.float(1.4,    '──── Stop Loss: Closest it can ever be to entry? ($)', minval = 0.1, group = grpUHV)
+uhvSlAtrMult = input.float(0.5,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, group = grpUHV)
+uhvSlDollar  = input.float(2.7,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, group = grpUHV)
+uhvSlSwingLb = input.int(19,      '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, group = grpUHV)
 
 // ─── 3. Strategy: Two Bar Reversal ───────
 grpTBR = "📊 Strategy: Two Bar Reversal"
-enableTBR          = input.bool(true,  'Use this strategy?', group = grpTBR, display = display.none)
-tbrDirection       = input.string("Bull only", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = grpTBR, display = display.none)
-tbrStatsInfo       = input.bool(false, '📊 Wins / Trades: see Stats Panel → Strategy Breakdown', group = grpTBR, display = display.none)
-show2BR            = input.bool(true, 'Show signals on the chart?', group = grpTBR, display = display.none)
-require2BRLowerVol = input.bool(true, 'Must the engulfing candle have lower volume than the one it engulfs?', group = grpTBR, display = display.none)
-tbrDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, step = 0.5, group = grpTBR, display = display.none)
-tbrLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpTBR, display = display.none)
-tbrTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpTBR, display = display.none)
-tbrTp1Mult    = input.float(3.5,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpTBR, display = display.none)
-tbrTpDollar   = input.float(3.5,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpTBR, display = display.none)
-tbrSlType    = input.string("SwingLow", '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "CandleWick", "SwingLow", "Dollar"], group = grpTBR, display = display.none)
-tbrSlBuffer  = input.float(0.0,    '──── Stop Loss: How much extra room past the structure? ($)', minval = 0.0, maxval = 20.0, step = 0.2, group = grpTBR, display = display.none)
-tbrSlMinDist = input.float(0.5,    '──── Stop Loss: Closest it can ever be to entry? ($)', minval = 0.1, maxval = 50.0, step = 0.1, group = grpTBR, display = display.none)
-tbrSlAtrMult = input.float(2.25,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, maxval = 5.0, step = 0.25, group = grpTBR, display = display.none)
-tbrSlDollar  = input.float(0.6,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.1, group = grpTBR, display = display.none)
-tbrSlSwingLb = input.int(10,       '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, maxval = 50, group = grpTBR, display = display.none)
+enableTBR          = input.bool(true,  'Use this strategy?', group = grpTBR)
+tbrDirection       = input.string("Bull only", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = grpTBR)
+show2BR            = input.bool(true, 'Show signals on the chart?', group = grpTBR)
+require2BRLowerVol = input.bool(true, 'Must the engulfing candle have lower volume than the one it engulfs?', group = grpTBR)
+tbrDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, group = grpTBR)
+tbrLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, group = grpTBR)
+tbrTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpTBR)
+tbrTp1Mult    = input.float(3.5,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, group = grpTBR)
+tbrTpDollar   = input.float(3.5,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, group = grpTBR)
+tbrSlType    = input.string("SwingLow", '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "CandleWick", "SwingLow", "Dollar"], group = grpTBR)
+tbrSlBuffer  = input.float(0.0,    '──── Stop Loss: How much extra room past the structure? ($)', minval = 0.0, group = grpTBR)
+tbrSlMinDist = input.float(0.5,    '──── Stop Loss: Closest it can ever be to entry? ($)', minval = 0.1, group = grpTBR)
+tbrSlAtrMult = input.float(2.25,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, group = grpTBR)
+tbrSlDollar  = input.float(0.6,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, group = grpTBR)
+tbrSlSwingLb = input.int(10,       '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, group = grpTBR)
 
 // ─── 4. Strategy: Effort vs Result ───────
 grpEVR = "📊 Strategy: Effort vs Result"
-enableEVR           = input.bool(true,  'Use this strategy?', group = grpEVR, display = display.none)
-evrDirection        = input.string("Bull only", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = grpEVR, display = display.none)
-evrStatsInfo        = input.bool(false, '📊 Wins / Trades: see Stats Panel → Strategy Breakdown', group = grpEVR, display = display.none)
-showVSA             = input.bool(true,  'Show signals on the chart?', group = grpEVR, display = display.none)
-requireEVRHigherVol  = input.bool(false, 'Must the sweep candle have higher volume than the candle it sweeps?', group = grpEVR, display = display.none)
-requireEVRLowerVol   = input.bool(false, 'Must the sweep candle have lower volume than the previous candle?', group = grpEVR, display = display.none)
-avoidEVRTrendWick    = input.bool(false, 'If sweep candle has rejection wick, wait for next candle to confirm?', group = grpEVR, display = display.none)
-evrUseStrongestCandle = input.bool(false, 'Track highest-volume candle (not most recent)?', group = grpEVR, display = display.none)
-evrDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, step = 0.5, group = grpEVR, display = display.none)
-evrLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpEVR, display = display.none)
-evrTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpEVR, display = display.none)
-evrTp1Mult    = input.float(1.0,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpEVR, display = display.none)
-evrTpDollar   = input.float(28.0,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpEVR, display = display.none)
-evrSlType    = input.string("SwingLow",  '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "CandleWick", "SwingLow", "Dollar"], group = grpEVR, display = display.none)
-evrSlBuffer  = input.float(0.4,    '──── Stop Loss: How much extra room past the structure? ($)', minval = 0.0, maxval = 20.0, step = 0.2, group = grpEVR, display = display.none)
-evrSlMinDist = input.float(0.5,    '──── Stop Loss: Closest it can ever be to entry? ($)', minval = 0.1, maxval = 50.0, step = 0.1, group = grpEVR, display = display.none)
-evrSlAtrMult = input.float(5.0,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, maxval = 5.0, step = 0.25, group = grpEVR, display = display.none)
-evrSlDollar  = input.float(2.0,   '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.1, group = grpEVR, display = display.none)
-evrSlSwingLb = input.int(11,       '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, maxval = 50, group = grpEVR, display = display.none)
+enableEVR           = input.bool(true,  'Use this strategy?', group = grpEVR)
+evrDirection        = input.string("Bull only", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = grpEVR)
+showVSA             = input.bool(true,  'Show signals on the chart?', group = grpEVR)
+requireEVRHigherVol  = input.bool(false, 'Must the sweep candle have higher volume than the candle it sweeps?', group = grpEVR)
+requireEVRLowerVol   = input.bool(false, 'Must the sweep candle have lower volume than the previous candle?', group = grpEVR)
+avoidEVRTrendWick    = input.bool(false, 'If sweep candle has rejection wick, wait for next candle to confirm?', group = grpEVR)
+evrUseStrongestCandle = input.bool(false, 'Track highest-volume candle (not most recent)?', group = grpEVR)
+evrDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, group = grpEVR)
+evrLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, group = grpEVR)
+evrTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpEVR)
+evrTp1Mult    = input.float(1.0,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, group = grpEVR)
+evrTpDollar   = input.float(28.0,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, group = grpEVR)
+evrSlType    = input.string("SwingLow",  '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "CandleWick", "SwingLow", "Dollar"], group = grpEVR)
+evrSlBuffer  = input.float(0.4,    '──── Stop Loss: How much extra room past the structure? ($)', minval = 0.0, group = grpEVR)
+evrSlMinDist = input.float(0.5,    '──── Stop Loss: Closest it can ever be to entry? ($)', minval = 0.1, group = grpEVR)
+evrSlAtrMult = input.float(5.0,    '──── Stop Loss: Volatility width? (ATR method only)', minval = 0.5, group = grpEVR)
+evrSlDollar  = input.float(2.0,   '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', minval = 0.1, group = grpEVR)
+evrSlSwingLb = input.int(11,       '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', minval = 3, group = grpEVR)
 
 // ─── 7. Trend & Filters ───────────────────
 grpTrend = "📈 Trend & Filters"
 // Per-strategy cooldowns (replacing old shared signalCooldown)
-uhvCooldown    = input.int(45,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, maxval = 200, group = grpUHV, display = display.none)
-tbrCooldown    = input.int(8,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, maxval = 200, group = grpTBR, display = display.none)
-evrCooldown    = input.int(50,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, maxval = 200, group = grpEVR, display = display.none)
-minTrendStrength  = input.int(15, 'Min Trend Strength at Signal', minval = 0, maxval = 100, group = grpTrend, display = display.none)
-trendPersistBars  = input.int(8, 'Trend Persistence Lookback (bars)', minval = 1, maxval = 20, group = grpTrend, display = display.none)
-avoidTrendShift      = input.bool(true,  'Avoid trading when trend is shifting?', group = grpTrend, display = display.none)
-avoidTrendShiftUHV   = input.bool(false, '──── Apply to UHV Breakout?', group = grpTrend, display = display.none)
-avoidTrendShiftTBR   = input.bool(true,  '──── Apply to Two Bar Reversal?', group = grpTrend, display = display.none)
-avoidTrendShiftEVR   = input.bool(false, '──── Apply to Effort vs Result?', group = grpTrend, display = display.none)
-trendShiftThreshold  = input.int(15, '──── Shift Threshold (strength drop to trigger)', minval = 1, maxval = 50, group = grpTrend, display = display.none)
-strictTrendCheck     = input.bool(true,  'Require Full Trend Confirmation at Entry?',  group = grpTrend, display = display.none)
-strictTrendCheckUHV  = input.bool(false, '──── Apply to UHV Breakout?',               group = grpTrend, display = display.none)
-strictTrendCheckTBR  = input.bool(false,  '──── Apply to Two Bar Reversal?',            group = grpTrend, display = display.none)
-strictTrendCheckEVR  = input.bool(true, '──── Apply to Effort vs Result?',            group = grpTrend, display = display.none)
-useRetraceExpiry  = input.bool(true, 'Cancel Setup on Early Bounce-Back', group = grpTrend, display = display.none)
-trendShowMA       = input.bool(true, 'Show Trend MA Line on Chart', group = grpTrend, display = display.none)
-requireOpposingCandle = input.bool(false,  'Must there be an opposing candle before the entry bar?', group = grpTBR, display = display.none)
+uhvCooldown    = input.int(45,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, group = grpUHV)
+tbrCooldown    = input.int(8,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, group = grpTBR)
+evrCooldown    = input.int(50,  '──── Cooldown: Bars after a signal before another can fire?', minval = 0, group = grpEVR)
+minTrendStrength  = input.int(15, 'Min Trend Strength at Signal', minval = 0, group = grpTrend)
+trendPersistBars  = input.int(8, 'Trend Persistence Lookback (bars)', minval = 1, group = grpTrend)
+avoidTrendShift      = input.bool(true,  'Avoid trading when trend is shifting?', group = grpTrend)
+avoidTrendShiftUHV   = input.bool(false, '──── Apply to UHV Breakout?', group = grpTrend)
+avoidTrendShiftTBR   = input.bool(true,  '──── Apply to Two Bar Reversal?', group = grpTrend)
+avoidTrendShiftEVR   = input.bool(false, '──── Apply to Effort vs Result?', group = grpTrend)
+trendShiftThreshold  = input.int(15, '──── Shift Threshold (strength drop to trigger)', minval = 1, group = grpTrend)
+strictTrendCheck     = input.bool(true,  'Require Full Trend Confirmation at Entry?',  group = grpTrend)
+strictTrendCheckUHV  = input.bool(false, '──── Apply to UHV Breakout?',               group = grpTrend)
+strictTrendCheckTBR  = input.bool(false,  '──── Apply to Two Bar Reversal?',            group = grpTrend)
+strictTrendCheckEVR  = input.bool(true, '──── Apply to Effort vs Result?',            group = grpTrend)
+useRetraceExpiry  = input.bool(true, 'Cancel Setup on Early Bounce-Back', group = grpTrend)
+trendShowMA       = input.bool(true, 'Show Trend MA Line on Chart', group = grpTrend)
+requireOpposingCandle = input.bool(false,  'Must there be an opposing candle before the entry bar?', group = grpTBR)
 
 // ─── 8. HTF Fair Value Gap ────────────────
 grpHTF = "🔭 Higher Time Frame Fair Value Gap"
-useHtfFvg      = input.bool(true, 'Use Higher Time Frame FVG for Signals', group = grpHTF, display = display.none)
-htfFvgTfChoice = input.string("Auto", 'Higher Time Frame', options = ["Auto", "1", "5", "15", "60", "240"], group = grpHTF, display = display.none)
+useHtfFvg      = input.bool(true, 'Use Higher Time Frame FVG for Signals', group = grpHTF)
+htfFvgTfChoice = input.string("Auto", 'Higher Time Frame', options = ["Auto", "1", "5", "15", "60", "240"], group = grpHTF)
 htfAutoTf      = timeframe.period  // AUTO = same as the chart's current timeframe
 htfFvgTf       = htfFvgTfChoice == "Auto" ? htfAutoTf : htfFvgTfChoice
-htfFvgColor    = input.color(color.new(#f5a623, 60), 'Higher Time Frame FVG Zone Color', group = grpHTF, display = display.none)
-fvgTH          = input.float(0.3, 'FVG Width Filter (ATR multiple)', minval = 0, step = .1, group = grpHTF, display = display.none)
-uhvFvgTH       = input.float(0.3, '──── UHV Breakout: FVG Width Filter (ATR multiple)', minval = 0, step = .1, group = grpHTF, display = display.none)
-tbrFvgTH       = input.float(0.3, '──── Two Bar Reversal: FVG Width Filter (ATR multiple)', minval = 0, step = .1, group = grpHTF, display = display.none)
-evrFvgTH       = input.float(0.2, '──── Effort vs Result: FVG Width Filter (ATR multiple)', minval = 0, step = .1, group = grpHTF, display = display.none)
-fvgPR          = input.bool(true, 'Show Mitigation %', group = grpHTF, display = display.none)
-fvgVF          = input.bool(true, 'Show Historical FVGs', inline = 'FL', group = grpHTF, display = display.none)
-fvgBC          = input.color(color.new(#089981, 55), 'Bullish  Imbalance', inline = 'VA', group = grpHTF, display = display.none)
-fvgAC          = input.color(color.new(#787b86, 77), 'Mitigated', inline = 'VA', group = grpHTF, display = display.none)
-fvgSC          = input.color(color.new(#f23645, 55), 'Bearish  Imbalance', inline = 'VD', group = grpHTF, display = display.none)
-fvgFC          = input.color(color.new(#787b86, 77), 'Mitigated', inline = 'VD', group = grpHTF, display = display.none)
+htfFvgColor    = input.color(color.new(#f5a623, 60), 'Higher Time Frame FVG Zone Color', group = grpHTF)
+fvgTH          = input.float(0.3, 'FVG Width Filter (ATR multiple)', minval = 0, group = grpHTF)
+uhvFvgTH       = input.float(0.3, '──── UHV Breakout: FVG Width Filter (ATR multiple)', minval = 0, group = grpHTF)
+tbrFvgTH       = input.float(0.3, '──── Two Bar Reversal: FVG Width Filter (ATR multiple)', minval = 0, group = grpHTF)
+evrFvgTH       = input.float(0.2, '──── Effort vs Result: FVG Width Filter (ATR multiple)', minval = 0, group = grpHTF)
+fvgPR          = input.bool(true, 'Show Mitigation %', group = grpHTF)
+fvgVF          = input.bool(true, 'Show Historical FVGs', inline = 'FL', group = grpHTF)
+fvgBC          = input.color(color.new(#089981, 55), 'Bullish  Imbalance', inline = 'VA', group = grpHTF)
+fvgAC          = input.color(color.new(#787b86, 77), 'Mitigated', inline = 'VA', group = grpHTF)
+fvgSC          = input.color(color.new(#f23645, 55), 'Bearish  Imbalance', inline = 'VD', group = grpHTF)
+fvgFC          = input.color(color.new(#787b86, 77), 'Mitigated', inline = 'VD', group = grpHTF)
 
 // ─── 9. Display ───────────────────────────
 grpDisplay = "🖥️ Display"
-showLabels     = input.bool(true,  'Show Signal Labels', group = grpDisplay, display = display.none)
-showDebug      = input.bool(true, 'Show Debug Labels', group = grpDisplay, display = display.none)
-showStatsPanel = input.bool(true,  'Show Stats Panel', group = grpDisplay, display = display.none)
+showLabels     = input.bool(true,  'Show Signal Labels', group = grpDisplay)
+showDebug      = input.bool(true, 'Show Debug Labels', group = grpDisplay)
+showStatsPanel = input.bool(true,  'Show Stats Panel', group = grpDisplay)
 
 // ─── 10. PineConnector Automation ─────────
 grpPC = "🤖 PineConnector Automation"
-pcEnable    = input.bool(true,   'Send signals to PineConnector (MT5)?', group = grpPC, display = display.none)
-pcLicenseId = input.string("8778286989525", 'PineConnector License ID', group = grpPC, display = display.none)
-pcSymbol    = input.string("XAUUSD",         'MT5 Symbol Name', group = grpPC, display = display.none)
+pcEnable    = input.bool(true,   'Send signals to PineConnector (MT5)?', group = grpPC)
+pcLicenseId = input.string("8778286989525", 'PineConnector License ID', group = grpPC)
+pcSymbol    = input.string("XAUUSD",         'MT5 Symbol Name', group = grpPC)
 
 // ─── 11. Optimize ────────
 grpOpt  = "⚡ Optimize"
-optSmart = input.bool(false, '⚡ OPTIMIZE  —  click to auto-apply best settings', group = grpOpt, display = display.none)
-optLevel        = input.int(1,    '⚡ Optimization level — raise by 1 for each new batch of changes (1 = filter removals → 5 = max loss cap)', minval = 1, maxval = 10, group = grpOpt, display = display.none)
-reduceLoss      = input.bool(false, '🎯 Reduce Max Loss Per Trade  —  cap SL to limit dollar loss', group = grpOpt, display = display.none)
-reduceLossMode  = input.string("Auto (avg win per strategy)", '──── Cap Mode', options = ["Auto (avg win per strategy)", "Fixed $ for all strategies"], group = grpOpt, display = display.none)
-reduceLossFixed = input.float(50.0, '──── Fixed cap ($) — used when mode is Fixed', minval = 1.0, maxval = 500.0, step = 5.0, group = grpOpt, display = display.none)
-_optToolHdr  = input.bool(false, '🧭 Optimizer Tool — How to use: select strategy → enable → check Apply Setting #1-5 → run 10+ trades → enter best # in Round Best Setting below → repeat 6 rounds per strategy', group = grpOpt, display = display.none)
-optGuideStrategy = input.string("UHV Breakout", '   Step 1: Select 1 Strategy to Optimize:', options = ["UHV Breakout", "Two Bar Reversal", "Effort vs Result"], group = grpOpt, display = display.none)
-optGuideEnable  = input.bool(false, '   Step 2: Enable Guided Optimizer', group = grpOpt, display = display.none)
-optGuideTry1    = input.bool(false, '   ☐ Apply Setting #1 — if best, enter 1 in Round Best Setting below', group = grpOpt, display = display.none)
-optGuideTry2    = input.bool(false, '   ☐ Apply Setting #2 — if best, enter 2 in Round Best Setting below', group = grpOpt, display = display.none)
-optGuideTry3    = input.bool(false, '   ☐ Apply Setting #3 — if best, enter 3 in Round Best Setting below', group = grpOpt, display = display.none)
-optGuideTry4    = input.bool(false, '   ☐ Apply Setting #4 — if best, enter 4 in Round Best Setting below', group = grpOpt, display = display.none)
-optGuideTry5    = input.bool(false, '   ☐ Apply Setting #5 — if best, enter 5 in Round Best Setting below', group = grpOpt, display = display.none)
-optGuideNoneAbove = input.bool(false, '   ☐ None of the above settings improves profits — Proceed to next round (enter 3 in Round Best Setting below)', group = grpOpt, display = display.none)
-_optStep3Hdr = input.bool(false, 'Step 3: After trying the 5 settings above, select the best setting number below for each round (Rounds are shown in the bottom-left Optimizer panel on the chart):', group = grpOpt, display = display.none)
-optUhvW1 = input.int(0, '   UHV Strategy Round 1 Best Setting (0 = not done yet)', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optUhvW2 = input.int(0, '   UHV Strategy Round 2 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optUhvW3 = input.int(0, '   UHV Strategy Round 3 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optUhvW4 = input.int(0, '   UHV Strategy Round 4 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optUhvW5 = input.int(0, '   UHV Strategy Round 5 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optUhvW6 = input.int(0, '   UHV Strategy Round 6 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW1 = input.int(0, '   2BR Strategy Round 1 Best Setting (0 = not done yet)', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW2 = input.int(0, '   2BR Strategy Round 2 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW3 = input.int(0, '   2BR Strategy Round 3 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW4 = input.int(0, '   2BR Strategy Round 4 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW5 = input.int(0, '   2BR Strategy Round 5 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW6 = input.int(0, '   2BR Strategy Round 6 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW1 = input.int(0, '   EVR Strategy Round 1 Best Setting (0 = not done yet)', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW2 = input.int(0, '   EVR Strategy Round 2 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW3 = input.int(0, '   EVR Strategy Round 3 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW4 = input.int(0, '   EVR Strategy Round 4 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW5 = input.int(0, '   EVR Strategy Round 5 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW6 = input.int(0, '   EVR Strategy Round 6 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optGuideReset   = input.bool(false, 'Reset Optimizer → Start New Optimization Rounds (check or uncheck — both clear all round history and restart from Round 1)', group = grpOpt, display = display.none)
+optSmart = input.bool(false, '⚡ OPTIMIZE  —  click to auto-apply best settings', group = grpOpt)
+optLevel        = input.int(1,    '⚡ Optimization level — raise by 1 for each new batch of changes (1 = filter removals → 5 = max loss cap)', minval = 1, group = grpOpt)
+reduceLoss      = input.bool(false, '🎯 Reduce Max Loss Per Trade  —  cap SL to limit dollar loss', group = grpOpt)
+reduceLossMode  = input.string("Auto (avg win per strategy)", '──── Cap Mode', options = ["Auto (avg win per strategy)", "Fixed $ for all strategies"], group = grpOpt)
+reduceLossFixed = input.float(50.0, '──── Fixed cap ($) — used when mode is Fixed', minval = 1.0, group = grpOpt)
+optGuideStrategy = input.string("UHV Breakout", '   Step 1: Select 1 Strategy to Optimize:', options = ["UHV Breakout", "Two Bar Reversal", "Effort vs Result"], group = grpOpt)
+optGuideEnable  = input.bool(false, '   Step 2: Enable Guided Optimizer', group = grpOpt)
+optGuideTry1    = input.bool(false, '   ☐ Apply Setting #1 — if best, enter 1 in Round Best Setting below', group = grpOpt)
+optGuideTry2    = input.bool(false, '   ☐ Apply Setting #2 — if best, enter 2 in Round Best Setting below', group = grpOpt)
+optGuideTry3    = input.bool(false, '   ☐ Apply Setting #3 — if best, enter 3 in Round Best Setting below', group = grpOpt)
+optGuideTry4    = input.bool(false, '   ☐ Apply Setting #4 — if best, enter 4 in Round Best Setting below', group = grpOpt)
+optGuideTry5    = input.bool(false, '   ☐ Apply Setting #5 — if best, enter 5 in Round Best Setting below', group = grpOpt)
+optGuideNoneAbove = input.bool(false, '   ☐ None of the above settings improves profits — Proceed to next round (enter 3 in Round Best Setting below)', group = grpOpt)
+optUhvW1 = input.int(0, '   UHV Strategy Round 1 Best Setting (0 = not done yet)', minval = 0, group = grpOpt)
+optUhvW2 = input.int(0, '   UHV Strategy Round 2 Best Setting', minval = 0, group = grpOpt)
+optUhvW3 = input.int(0, '   UHV Strategy Round 3 Best Setting', minval = 0, group = grpOpt)
+optUhvW4 = input.int(0, '   UHV Strategy Round 4 Best Setting', minval = 0, group = grpOpt)
+optUhvW5 = input.int(0, '   UHV Strategy Round 5 Best Setting', minval = 0, group = grpOpt)
+optUhvW6 = input.int(0, '   UHV Strategy Round 6 Best Setting', minval = 0, group = grpOpt)
+optTbrW1 = input.int(0, '   2BR Strategy Round 1 Best Setting (0 = not done yet)', minval = 0, group = grpOpt)
+optTbrW2 = input.int(0, '   2BR Strategy Round 2 Best Setting', minval = 0, group = grpOpt)
+optTbrW3 = input.int(0, '   2BR Strategy Round 3 Best Setting', minval = 0, group = grpOpt)
+optTbrW4 = input.int(0, '   2BR Strategy Round 4 Best Setting', minval = 0, group = grpOpt)
+optTbrW5 = input.int(0, '   2BR Strategy Round 5 Best Setting', minval = 0, group = grpOpt)
+optTbrW6 = input.int(0, '   2BR Strategy Round 6 Best Setting', minval = 0, group = grpOpt)
+optEvrW1 = input.int(0, '   EVR Strategy Round 1 Best Setting (0 = not done yet)', minval = 0, group = grpOpt)
+optEvrW2 = input.int(0, '   EVR Strategy Round 2 Best Setting', minval = 0, group = grpOpt)
+optEvrW3 = input.int(0, '   EVR Strategy Round 3 Best Setting', minval = 0, group = grpOpt)
+optEvrW4 = input.int(0, '   EVR Strategy Round 4 Best Setting', minval = 0, group = grpOpt)
+optEvrW5 = input.int(0, '   EVR Strategy Round 5 Best Setting', minval = 0, group = grpOpt)
+optEvrW6 = input.int(0, '   EVR Strategy Round 6 Best Setting', minval = 0, group = grpOpt)
+optGuideReset   = input.bool(false, 'New Optimization Pass — resets panel to Round 1 for a fresh pass; previously converged settings stay applied', group = grpOpt)
+applyWinHour    = input.bool(false, 'Apply winning hour settings learnt from Live trades  (auto-updates in background when a full clock-hour closes with 100% wins)', group = grpOpt)
+maxTradesMode   = input.bool(false, 'Maximize Trades — remove all cooldowns and optional filters to fire on every valid setup (uses trade history analysis to unlock blocked signals)', group = grpOpt)
 
 // Pre-computed timeframe constants — derived from timeframe.period string (global scope safe)
 tfMinutes   = timeframe.period == "D" ? 1440.0 : timeframe.period == "W" ? 10080.0 : str.tonumber(timeframe.period)
-tfSeconds   = tfMinutes * 60.0
 barsPerHour = math.max(1, math.round(60.0 / tfMinutes))
 
 // TYPES
@@ -268,6 +264,10 @@ var int[] tradeCloseTime    = array.new_int()   // bar_index when trade closed
 var int[] tradeCloseTS      = array.new_int()   // actual unix timestamp when trade closed (for date/hour filtering)
 var float[] tradePnLArr     = array.new_float() // P&L parallel to tradeCloseTime
 var string[] tradePnLType   = array.new_string() // strategy type at CLOSE time, parallel to tradePnLArr (tradeType is at OPEN time and may be misaligned)
+var float[] tradeTpU  = array.new_float()  // _effUhvTpDollar at entry (for winning hour learner)
+var float[] tradeTpT  = array.new_float()  // _effTbrTpDollar at entry
+var float[] tradeTpE  = array.new_float()  // _effEvrTpDollar at entry
+var int  [] tradeDurBars = array.new_int()   // trade duration in bars (pushed at SL+TP close)
 var int[] signalBarTimes    = array.new_int()   // bar_index of each signal (for signals/day)
 var int   totalDaysSeen       = 1
 var int   totalSignalsAllDays = 0
@@ -294,6 +294,18 @@ var int blockedEVRLowerVol = 0   // EVR blocked only by lower-vol-than-prev-cand
 var int blockedByCooldown = 0   // any signal blocked only by cooldown
 var int blockedByStrength = 0   // any signal blocked only by trend strength
 
+// ── Winning hour learner — tracks 100% win clock-hours and saves their effective settings ──
+var float _whlTpU       = na   // best winning-hour UHV TP dollar target
+var float _whlTpT       = na   // best winning-hour 2BR TP dollar target
+var float _whlTpE       = na   // best winning-hour EVR TP dollar target
+var int   _whlCount     = 0    // number of 100% winning hours found so far
+var int   _whlCurHour   = -1   // UTC hour currently being tracked
+var int   _whlCurWins   = 0    // wins in current UTC hour
+var int   _whlCurTrades = 0    // closed trades in current UTC hour
+var float _whlCurTpU    = na   // last seen UHV TP in current hour
+var float _whlCurTpT    = na   // last seen 2BR TP in current hour
+var float _whlCurTpE    = na   // last seen EVR TP in current hour
+
 // ── Smart optimizer accumulators (updated at trade close, used for proof computation) ──
 // Per-strategy win/loss sums — allow computing avg win, avg loss, and EV per strategy
 var float uhvWinSum  = 0.0   // sum of all winning UHV trade P&L
@@ -305,22 +317,16 @@ var float evrLossSum = 0.0
 // Per-strategy per-direction P&L — for direction optimization proof
 var float uhvBullPnL = 0.0
 var int   uhvBullT   = 0
-var int   uhvBullW   = 0
 var float uhvBearPnL = 0.0
 var int   uhvBearT   = 0
-var int   uhvBearW   = 0
 var float tbrBullPnL = 0.0
 var int   tbrBullT   = 0
-var int   tbrBullW   = 0
 var float tbrBearPnL = 0.0
 var int   tbrBearT   = 0
-var int   tbrBearW   = 0
 var float evrBullPnL = 0.0
 var int   evrBullT   = 0
-var int   evrBullW   = 0
 var float evrBearPnL = 0.0
 var int   evrBearT   = 0
-var int   evrBearW   = 0
 // TP+1 proof: track wins where price continued past TP+$1 on the same bar (same-bar confirmation)
 var int   tp1SameBarWins   = 0   // TP wins where high (bull) / low (bear) ALSO hit TP+$1 on that bar
 var int   tp1SameBarChecks = 0   // total TP wins checked (denominator)
@@ -841,25 +847,6 @@ f_calcSL(_isBull, _entryPrice, _structLow, _structHigh, _slType, _slBuffer, _slA
     math.max(syminfo.mintick, _result)
 
 // ── Signal block helpers (replace repeated code in all 8 signal entry blocks) ──
-f_totalPnL() =>
-    float _s = 0.0
-    int _sz = math.min(array.size(tradePnLArr), array.size(tradeCloseTS))
-    if _sz > 0
-        for _i = 0 to _sz - 1
-            if array.get(tradeCloseTS, _i) >= statsResetDate
-                _s += array.get(tradePnLArr, _i)
-    _s
-
-f_hourPnL() =>
-    float _s = 0.0
-    int _hSz = math.min(array.size(tradeCloseTime), math.min(array.size(tradePnLArr), array.size(tradeCloseTS)))
-    if _hSz > 0
-        for _i = 0 to _hSz - 1
-            if bar_index - array.get(tradeCloseTime, _i) <= barsPerHour and array.get(tradeCloseTS, _i) >= statsResetDate
-                _s += array.get(tradePnLArr, _i)
-    _s
-
-
 f_accStr(_w, _t) =>
     _t > 0 ? str.tostring(_w) + "/" + str.tostring(_t) + " won (" + str.tostring(math.round(_w / _t * 100)) + "%)" : "No trades yet"
 
@@ -1064,9 +1051,7 @@ if bullRetrace
     retraceWasBull  := true
     vsaRedLow       := na
     vsaRedVol       := 0.0
-    retraceCeiling  := retraceCeiling   // keep IB high as ceiling
     retraceStartBar := bar_index
-    fvgReached      := fvgReached
     uhvVolume     := 0.0
     uhvHigh       := na
     uhvLow        := na
@@ -1099,11 +1084,9 @@ if bearRetrace
     retraceWasBull  := false
     vsaGrnHigh      := na
     vsaGrnVol       := 0.0
-    retraceFloor    := retraceFloor     // keep IB low as floor
     retraceStartBar := bar_index
     // If price already touched the FVG zone during the prior bull cycle, carry fvgReached forward
     // This covers: IB↑ → Retrace → FVG Touch → UHV Green → IB↓ → bearRetrace (already at FVG)
-    fvgReached      := fvgReached
     // brkLevel is set from uhvLow (prior UHV green low) as the breakout target
     // Seed UHV from this retrace candle itself (it's green and often the highest volume)
     uhvVolume    := volume
@@ -1218,7 +1201,6 @@ if inRetracement
         ibTracking    := false
         fvgReached    := false
         fvgUsed       := false
-        ibTracking    := false
         uhvVolume     := 0.0
         uhvHigh       := na
         uhvLow        := na
@@ -1362,6 +1344,24 @@ bool   _effTbrBearDir      = _tbrBearDir and not (_smartDirActive and _smart_tbr
 bool   _effEvrBullDir      = _evrBullDir and not (_smartDirActive and _smart_evrBullOff)
 bool   _effEvrBearDir      = _evrBearDir and not (_smartDirActive and _smart_evrBearOff)
 
+// ── Max Trades Mode — override all optional filters and cooldowns ──
+bool _effStrictUHV = not maxTradesMode and (strictTrendCheck and strictTrendCheckUHV)
+bool _effStrictTBR = not maxTradesMode and (strictTrendCheck and strictTrendCheckTBR)
+bool _effStrictEVR = not maxTradesMode and (strictTrendCheck and strictTrendCheckEVR)
+int  _effMinStr    = maxTradesMode ? 0 : minTrendStrength
+bool _effTsUHV     = not maxTradesMode and _trendShiftUHV
+bool _effTsTBR     = not maxTradesMode and _trendShiftTBR
+bool _effTsEVR     = not maxTradesMode and _trendShiftEVR
+if maxTradesMode
+    _effUhvCooldown     := 0
+    _effTbrCooldown     := 0
+    _effEvrCooldown     := 0
+    _effReqUHVSweep     := false
+    _effReqUHVLowerVol  := false
+    _effReq2BRLowerVol  := false
+    _effReqOpposing     := false
+    _effReqEVRHigherVol := false
+
 // ── Reduce Max Loss — per-strategy SL dollar cap ──
 // Auto mode: cap = historical avg win amount per strategy (requires 3+ wins).
 // Fixed mode: cap = user-defined amount for all strategies.
@@ -1387,6 +1387,10 @@ bool _gIsEvr = not _gIsUhv and not _gIsTbr
 int _gHLu = optGuideReset ? 0 : optUhvW1 > 0 ? optUhvW2 > 0 ? optUhvW3 > 0 ? optUhvW4 > 0 ? optUhvW5 > 0 ? optUhvW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
 int _gHLb = optGuideReset ? 0 : optTbrW1 > 0 ? optTbrW2 > 0 ? optTbrW3 > 0 ? optTbrW4 > 0 ? optTbrW5 > 0 ? optTbrW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
 int _gHLe = optGuideReset ? 0 : optEvrW1 > 0 ? optEvrW2 > 0 ? optEvrW3 > 0 ? optEvrW4 > 0 ? optEvrW5 > 0 ? optEvrW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
+// Apply-side history — same count but never zeroed by reset; converged settings remain active during a new pass
+int _gHLuA = optUhvW1 > 0 ? optUhvW2 > 0 ? optUhvW3 > 0 ? optUhvW4 > 0 ? optUhvW5 > 0 ? optUhvW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
+int _gHLbA = optTbrW1 > 0 ? optTbrW2 > 0 ? optTbrW3 > 0 ? optTbrW4 > 0 ? optTbrW5 > 0 ? optTbrW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
+int _gHLeA = optEvrW1 > 0 ? optEvrW2 > 0 ? optEvrW3 > 0 ? optEvrW4 > 0 ? optEvrW5 > 0 ? optEvrW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
 int _gHL    = _gIsUhv ? _gHLu : _gIsTbr ? _gHLb : _gHLe   // Active strategy history length
 int _gRound = _gHL + 1                                       // Auto-derived round number
 string _gRndLabel = _gRound == 1 ? "Round 1: Global Style" :
@@ -1504,9 +1508,9 @@ int   _gCdVal = int(array.get(_g5cd, _gCIdx))
 float _gRlVal = array.get(_g5rl, _gCIdx)
 bool  _gActive = _gAny  // Tune removed — converged centers auto-apply from history
 // RL cap per strategy: testing → use choice RL; history exists → converged RL; else → no cap (preserve user settings)
-float _guideRlFixedUhv = _gActive and _gIsUhv ? _gRlVal : _gHLu >= 1 ? _gCrlU : 1e10
-float _guideRlFixedTbr = _gActive and _gIsTbr ? _gRlVal : _gHLb >= 1 ? _gCrlB : 1e10
-float _guideRlFixedEvr = _gActive and _gIsEvr ? _gRlVal : _gHLe >= 1 ? _gCrlE : 1e10
+float _guideRlFixedUhv = _gActive and _gIsUhv ? _gRlVal : _gHLuA >= 1 ? _gCrlU : 1e10
+float _guideRlFixedTbr = _gActive and _gIsTbr ? _gRlVal : _gHLbA >= 1 ? _gCrlB : 1e10
+float _guideRlFixedEvr = _gActive and _gIsEvr ? _gRlVal : _gHLeA >= 1 ? _gCrlE : 1e10
 
 // Effective loss cap per strategy: reduceLoss button OR optLevel 6+ auto-cap OR guide (whichever applies)
 float _uhvLossCap = reduceLoss ? (reduceLossMode == "Auto (avg win per strategy)" ? _uhvAutoWin : _guideRlFixedUhv) : (_autoCapOn ? _uhvAutoWin * _levelMult : (optGuideEnable ? _guideRlFixedUhv : 1e10))
@@ -1518,23 +1522,32 @@ if optGuideEnable
     if _gIsUhv and _gAny
         _effUhvTpDollar := _gTpVal
         _effUhvCooldown := _gCdVal
-    else if _gHLu >= 1
+    else if _gHLuA >= 1
         _effUhvTpDollar := _gCtpU
         _effUhvCooldown := int(_gCcdU)
     // 2BR: test choice if selected+active, else apply converged center if history exists
     if _gIsTbr and _gAny
         _effTbrTpDollar := _gTpVal
         _effTbrCooldown := _gCdVal
-    else if _gHLb >= 1
+    else if _gHLbA >= 1
         _effTbrTpDollar := _gCtpB
         _effTbrCooldown := int(_gCcdB)
     // EVR: test choice if selected+active, else apply converged center if history exists
     if _gIsEvr and _gAny
         _effEvrTpDollar := _gTpVal
         _effEvrCooldown := _gCdVal
-    else if _gHLe >= 1
+    else if _gHLeA >= 1
         _effEvrTpDollar := _gCtpE
         _effEvrCooldown := int(_gCcdE)
+
+// ── Winning hour override: apply saved 100%-win-hour TP settings when toggle is on ──
+if applyWinHour and _whlCount > 0
+    if not na(_whlTpU) and uhvTpMethod == "Dollar Amount"
+        _effUhvTpDollar := _whlTpU
+    if not na(_whlTpT) and tbrTpMethod == "Dollar Amount"
+        _effTbrTpDollar := _whlTpT
+    if not na(_whlTpE) and evrTpMethod == "Dollar Amount"
+        _effEvrTpDollar := _whlTpE
 
 // Per-strategy FVG width + touch checks
 _atr144Sig   = nz(ta.atr(144))
@@ -1542,12 +1555,12 @@ _fvgW        = nz(fvgZoneTop, 0.0) - nz(fvgZoneBot, 0.0)
 _uhvFvgWide  = uhvFvgTH == 0 or _fvgW >= _atr144Sig * uhvFvgTH
 _tbrFvgWide  = tbrFvgTH == 0 or _fvgW >= _atr144Sig * tbrFvgTH
 _evrFvgWide  = evrFvgTH == 0 or _fvgW >= _atr144Sig * evrFvgTH
-_uhvFvgCheck = requireFvgTouch ? (fvgReached and _uhvFvgWide) : true
-_tbrFvgCheck = requireFvgTouch ? (fvgReached and _tbrFvgWide) : true
-_evrFvgCheck = requireFvgTouch ? (fvgReached and _evrFvgWide) : true
+_uhvFvgCheck = maxTradesMode ? true : requireFvgTouch ? (fvgReached and _uhvFvgWide) : true
+_tbrFvgCheck = maxTradesMode ? true : requireFvgTouch ? (fvgReached and _tbrFvgWide) : true
+_evrFvgCheck = maxTradesMode ? true : requireFvgTouch ? (fvgReached and _evrFvgWide) : true
 
 // STEP 5: BREAKOUT — Absorption Signal
-bullBreakout = _effUhvBullDir and enableUHV and inRetracement and lastIsBull and retraceWasBull and ((strictTrendCheck and strictTrendCheckUHV) ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and (_effReqUHVSweep ? uhvLowSwept : true) and (_effReqUHVLowerVol ? volume < volume[1] : true) and not _trendShiftUHV and isGreen and low <= brkLevel and close > brkLevel and (bar_index - lastUHVSignalBar) >= _effUhvCooldown and barstate.isconfirmed
+bullBreakout = _effUhvBullDir and enableUHV and inRetracement and lastIsBull and retraceWasBull and (_effStrictUHV ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= _effMinStr and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and (_effReqUHVSweep ? uhvLowSwept : true) and (_effReqUHVLowerVol ? volume < volume[1] : true) and not _effTsUHV and isGreen and low <= brkLevel and close > brkLevel and (bar_index - lastUHVSignalBar) >= _effUhvCooldown and barstate.isconfirmed
 
 // ── Blocked-signal detection (for recommendation engine) ──
 // UHV bull: would have fired without sweep requirement
@@ -1594,25 +1607,17 @@ if bullBreakout
     lastUHVSignalBar := bar_index
     totalSignals  += 1
     _entry    = close
-    _slStructRef = _effUhvSlType == "UHV" ? nz(uhvSL, nz(retraceLow, low)) : nz(retraceLow, nz(uhvSL, low))
-    _sl       = f_calcSL(true, close, _slStructRef, high, _effUhvSlType, uhvSlBuffer, uhvSlAtrMult, uhvSlSwingLb, uhvSlMinDist, uhvDollarRisk, uhvLotSize, uhvSlDollar)
+    _sl       = f_calcSL(true, close, _effUhvSlType == "UHV" ? nz(uhvSL, nz(retraceLow, low)) : nz(retraceLow, nz(uhvSL, low)), high, _effUhvSlType, uhvSlBuffer, uhvSlAtrMult, uhvSlSwingLb, uhvSlMinDist, uhvDollarRisk, uhvLotSize, uhvSlDollar)
     _slDist   = math.max(_entry - _sl, syminfo.mintick)
     float _effLots  = (uhvDollarRisk > 0 ? math.max(uhvDollarRisk / (_slDist * cMult), 0.001) : uhvLotSize) * lotAmp
     if _slDist * _effLots * cMult > _uhvLossCap
         _slDist := math.max(_uhvLossCap / math.max(_effLots * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry - _slDist
     _tp1      = uhvTpMethod == "Structural High/Low" ? nz(retraceCeiling, _entry + _slDist * uhvTp1Mult) : uhvTpMethod == "Dollar Amount" ? _entry + _effUhvTpDollar : _entry + _slDist * uhvTp1Mult
-    string _pcStr = pcLicenseId + ",buy," + pcSymbol + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=UHV"
-
-    alert(pcEnable ? _pcStr : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
-    _lotLabel = f_lotLabel(uhvDollarRisk, _effLots)
-    _acc = f_accStr(uhvWins, uhvTrades)
-    _pnlText = f_pnlTodayStr(uhvPnLToday)
-    _tpProfit = math.round(math.abs(_tp1 - _entry) * _effLots * cMult * 100) / 100
-    label _sigLbl = label.new(bar_index, high, "Result: Waiting for TP", style = label.style_none, size = size.tiny)
+    alert(pcEnable ? pcLicenseId + ",buy," + pcSymbol + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=UHV" : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    label _sigLbl = na
     if showLabels
-        label.delete(_sigLbl)
-        _sigLbl := label.new(bar_index, high, "🟢 BUY NOW  #" + str.tostring(totalSignals) + "\n(Ultra Highs Breakout)\n━━━━━━━━━━━━━━━━\nBuy:  " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _effUhvSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLots * cMult * 100) / 100, "#.##") + "]\nLots: " + _lotLabel + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uhvTpMethod == "Structural High/Low" ? "Struct." : uhvTpMethod == "Dollar Amount" ? "$fixed" : str.tostring(uhvTp1Mult, "#.#") + "R") + ")  +$" + str.tostring(_tpProfit, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + _acc + "\n" + _pnlText, style = label.style_label_down, color = color.new(#089981, 0), textcolor = color.white, size = size.normal)
+        _sigLbl := label.new(bar_index, high, "🟢 BUY NOW  #" + str.tostring(totalSignals) + "\n(Ultra Highs Breakout)\n━━━━━━━━━━━━━━━━\nBuy:  " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _effUhvSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLots * cMult * 100) / 100, "#.##") + "]\nLots: " + f_lotLabel(uhvDollarRisk, _effLots) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uhvTpMethod == "Structural High/Low" ? "Struct." : uhvTpMethod == "Dollar Amount" ? "$fixed" : str.tostring(uhvTp1Mult, "#.#") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cMult * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + f_accStr(uhvWins, uhvTrades) + "\n" + f_pnlTodayStr(uhvPnLToday), style = label.style_label_down, color = color.new(#089981, 0), textcolor = color.white, size = size.normal)
     array.push(tradeEntry,  _entry)
     array.push(tradeSL,     _sl)
     array.push(tradeTP1,    _tp1)
@@ -1628,6 +1633,9 @@ if bullBreakout
     array.push(tradeSlBars,   -1)
     array.push(tradeLabel,    _sigLbl)
     array.push(tradeEntryBar, bar_index)
+    array.push(tradeTpU, _effUhvTpDollar)
+    array.push(tradeTpT, _effTbrTpDollar)
+    array.push(tradeTpE, _effEvrTpDollar)
     prevHigh       := runningHigh
     runningHigh    := high
     lastGreenLow   := low
@@ -1658,7 +1666,7 @@ if _uhvBearBase and (_effReqUHVSweep ? uhvHighSwept : true) and (bar_index - las
 if enableUHV and inRetracement and not lastIsBull and not retraceWasBull and not bullTrendPersists and (strictTrendCheck and strictTrendCheckUHV) and not (htfBear and bearTrendPersists) and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and isRed and close < brkLevel and (_effReqUHVSweep ? uhvHighSwept : true) and (bar_index - lastUHVSignalBar) >= _effUhvCooldown
     uhvWasBlocked := true
 
-bearBreakout = _effUhvBearDir and enableUHV and inRetracement and not lastIsBull and not retraceWasBull and ((strictTrendCheck and strictTrendCheckUHV) ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and (_effReqUHVSweep ? uhvHighSwept : true) and (_effReqUHVLowerVol ? volume < volume[1] : true) and not _trendShiftUHV and isRed and close < brkLevel and (bar_index - lastUHVSignalBar) >= _effUhvCooldown and barstate.isconfirmed
+bearBreakout = _effUhvBearDir and enableUHV and inRetracement and not lastIsBull and not retraceWasBull and (_effStrictUHV ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= _effMinStr and _uhvFvgCheck and not na(brkLevel) and not uhvFiredThisSetup and not na(uhvBar) and (bar_index - uhvBar) >= uhvSettleBars and (_effReqUHVSweep ? uhvHighSwept : true) and (_effReqUHVLowerVol ? volume < volume[1] : true) and not _effTsUHV and isRed and close < brkLevel and (bar_index - lastUHVSignalBar) >= _effUhvCooldown and barstate.isconfirmed
 
 // Debug: show which condition blocked bear breakout when close < brkLevel but signal didn't fire
 if showDebug and inRetracement and not lastIsBull and isRed and not na(brkLevel) and close < brkLevel and not bearBreakout and not uhvFiredThisSetup
@@ -1674,25 +1682,17 @@ if bearBreakout
     lastUHVSignalBar := bar_index
     totalSignals  += 1
     _entry      = close
-    _slStructRef2 = _effUhvSlType == "UHV" ? nz(uhvSL, nz(retraceHigh, high)) : nz(retraceHigh, nz(uhvSL, high))
-    _sl         = f_calcSL(false, close, low, _slStructRef2, _effUhvSlType, uhvSlBuffer, uhvSlAtrMult, uhvSlSwingLb, uhvSlMinDist, uhvDollarRisk, uhvLotSize, uhvSlDollar)
+    _sl         = f_calcSL(false, close, low, _effUhvSlType == "UHV" ? nz(uhvSL, nz(retraceHigh, high)) : nz(retraceHigh, nz(uhvSL, high)), _effUhvSlType, uhvSlBuffer, uhvSlAtrMult, uhvSlSwingLb, uhvSlMinDist, uhvDollarRisk, uhvLotSize, uhvSlDollar)
     _slDist     = math.max(_sl - _entry, syminfo.mintick)
     float _effLots    = (uhvDollarRisk > 0 ? math.max(uhvDollarRisk / (_slDist * cMult), 0.001) : uhvLotSize) * lotAmp
     if _slDist * _effLots * cMult > _uhvLossCap
         _slDist := math.max(_uhvLossCap / math.max(_effLots * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry + _slDist
     _tp1        = uhvTpMethod == "Structural High/Low" ? nz(retraceFloor, _entry - _slDist * uhvTp1Mult) : uhvTpMethod == "Dollar Amount" ? _entry - _effUhvTpDollar : _entry - _slDist * uhvTp1Mult
-    string _pcStr = pcLicenseId + ",sell," + pcSymbol + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=UHV"
-
-    alert(pcEnable ? _pcStr : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
-    _lotLabel   = f_lotLabel(uhvDollarRisk, _effLots)
-    _acc = f_accStr(uhvWins, uhvTrades)
-    _pnlText = f_pnlTodayStr(uhvPnLToday)
-    _tpProfit = math.round(math.abs(_tp1 - _entry) * _effLots * cMult * 100) / 100
-    label _sigLbl = label.new(bar_index, low, "Result: Waiting for TP", style = label.style_none, size = size.tiny)
+    alert(pcEnable ? pcLicenseId + ",sell," + pcSymbol + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=UHV" : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    label _sigLbl = na
     if showLabels
-        label.delete(_sigLbl)
-        _sigLbl := label.new(bar_index, low, "🔴 SELL NOW  #" + str.tostring(totalSignals) + "\n(Ultra Highs Breakout)\n━━━━━━━━━━━━━━━━\nSell: " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _effUhvSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLots * cMult * 100) / 100, "#.##") + "]\nLots: " + _lotLabel + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uhvTpMethod == "Structural High/Low" ? "Struct." : uhvTpMethod == "Dollar Amount" ? "$fixed" : str.tostring(uhvTp1Mult, "#.#") + "R") + ")  +$" + str.tostring(_tpProfit, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + _acc + "\n" + _pnlText, style = label.style_label_up, color = color.new(#f23645, 0), textcolor = color.white, size = size.normal)
+        _sigLbl := label.new(bar_index, low, "🔴 SELL NOW  #" + str.tostring(totalSignals) + "\n(Ultra Highs Breakout)\n━━━━━━━━━━━━━━━━\nSell: " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _effUhvSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLots * cMult * 100) / 100, "#.##") + "]\nLots: " + f_lotLabel(uhvDollarRisk, _effLots) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uhvTpMethod == "Structural High/Low" ? "Struct." : uhvTpMethod == "Dollar Amount" ? "$fixed" : str.tostring(uhvTp1Mult, "#.#") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cMult * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + f_accStr(uhvWins, uhvTrades) + "\n" + f_pnlTodayStr(uhvPnLToday), style = label.style_label_up, color = color.new(#f23645, 0), textcolor = color.white, size = size.normal)
     array.push(tradeEntry,  _entry)
     array.push(tradeSL,     _sl)
     array.push(tradeTP1,    _tp1)
@@ -1708,6 +1708,9 @@ if bearBreakout
     array.push(tradeSlBars,   -1)
     array.push(tradeLabel,    _sigLbl)
     array.push(tradeEntryBar, bar_index)
+    array.push(tradeTpU, _effUhvTpDollar)
+    array.push(tradeTpT, _effTbrTpDollar)
+    array.push(tradeTpE, _effEvrTpDollar)
     prevLow        := runningLow
     runningLow     := low
     lastRedHigh    := high
@@ -1723,9 +1726,9 @@ if bearBreakout
 _prevBodyHigh = math.max(open[1], close[1])
 _prevBodyLow  = math.min(open[1], close[1])
 
-bull2BR = _effTbrBullDir and enableTBR and show2BR and inRetracement and lastIsBull and retraceWasBull and _tbrFvgCheck and not tbrFiredThisSetup and ((strictTrendCheck and strictTrendCheckTBR) ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and not _trendShiftTBR and isGreen and open <= _prevBodyLow and close >= _prevBodyHigh and (_effReq2BRLowerVol ? volume < volume[1] : true) and (_effReqOpposing ? seenBearSinceRetrace : true) and (bar_index - lastTBRSignalBar) >= _effTbrCooldown and barstate.isconfirmed
+bull2BR = _effTbrBullDir and enableTBR and show2BR and inRetracement and lastIsBull and retraceWasBull and _tbrFvgCheck and not tbrFiredThisSetup and (_effStrictTBR ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= _effMinStr and not _effTsTBR and isGreen and open <= _prevBodyLow and close >= _prevBodyHigh and (_effReq2BRLowerVol ? volume < volume[1] : true) and (_effReqOpposing ? seenBearSinceRetrace : true) and (bar_index - lastTBRSignalBar) >= _effTbrCooldown and barstate.isconfirmed
 
-bear2BR = _effTbrBearDir and enableTBR and show2BR and inRetracement and not lastIsBull and not retraceWasBull and _tbrFvgCheck and not tbrFiredThisSetup and ((strictTrendCheck and strictTrendCheckTBR) ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and not _trendShiftTBR and isRed and open >= _prevBodyHigh and close <= _prevBodyLow and (_effReq2BRLowerVol ? volume < volume[1] : true) and (_effReqOpposing ? seenGreenSinceRetrace : true) and (bar_index - lastTBRSignalBar) >= _effTbrCooldown and barstate.isconfirmed
+bear2BR = _effTbrBearDir and enableTBR and show2BR and inRetracement and not lastIsBull and not retraceWasBull and _tbrFvgCheck and not tbrFiredThisSetup and (_effStrictTBR ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= _effMinStr and not _effTsTBR and isRed and open >= _prevBodyHigh and close <= _prevBodyLow and (_effReq2BRLowerVol ? volume < volume[1] : true) and (_effReqOpposing ? seenGreenSinceRetrace : true) and (bar_index - lastTBRSignalBar) >= _effTbrCooldown and barstate.isconfirmed
 
 // 2BR blocked by volume check
 _2brBullBaseNoVol = _effTbrBullDir and enableTBR and show2BR and inRetracement and lastIsBull and retraceWasBull and _tbrFvgCheck and not tbrFiredThisSetup and ((strictTrendCheck and strictTrendCheckTBR) ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and isGreen and open <= _prevBodyLow and close >= _prevBodyHigh
@@ -1751,16 +1754,10 @@ if bull2BR
         _slDist := math.max(_tbrLossCap / math.max(_effLots * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry - _slDist
     _tp1      = tbrTpMethod == "Structural High/Low" ? nz(retraceCeiling, _entry + _slDist * tbrTp1Mult) : tbrTpMethod == "Dollar Amount" ? _entry + _effTbrTpDollar : _entry + _slDist * tbrTp1Mult
-    string _pcStr = pcLicenseId + ",buy," + pcSymbol + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=2BR"
-
-    alert(pcEnable ? _pcStr : "🟢 BUY Signal — 2BR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
-    _lotLabel = f_lotLabel(tbrDollarRisk, _effLots)
-    _acc = f_accStr(tbrWins, tbrTrades)
-    _pnlText = f_pnlTodayStr(tbrPnLToday)
-    label _sigLbl = label.new(bar_index, high, "Result: Waiting for TP", style = label.style_none, size = size.tiny)
+    alert(pcEnable ? pcLicenseId + ",buy," + pcSymbol + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=2BR" : "🟢 BUY Signal — 2BR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    label _sigLbl = na
     if showLabels
-        label.delete(_sigLbl)
-        _sigLbl := label.new(bar_index, high, "🟢 BUY NOW  #" + str.tostring(totalSignals) + "\n(Two Bar Reversal)\n━━━━━━━━━━━━━━━━\nBuy:  " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _effTbrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLots * cMult * 100) / 100, "#.##") + "]\nLots: " + _lotLabel + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (tbrTpMethod == "Structural High/Low" ? "Struct." : tbrTpMethod == "Dollar Amount" ? "$fixed" : str.tostring(tbrTp1Mult, "#.#") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cMult * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + _acc + "\n" + _pnlText, style = label.style_label_down, color = color.new(color.teal, 10), textcolor = color.white, size = size.normal)
+        _sigLbl := label.new(bar_index, high, "🟢 BUY NOW  #" + str.tostring(totalSignals) + "\n(Two Bar Reversal)\n━━━━━━━━━━━━━━━━\nBuy:  " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _effTbrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLots * cMult * 100) / 100, "#.##") + "]\nLots: " + f_lotLabel(tbrDollarRisk, _effLots) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (tbrTpMethod == "Structural High/Low" ? "Struct." : tbrTpMethod == "Dollar Amount" ? "$fixed" : str.tostring(tbrTp1Mult, "#.#") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cMult * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + f_accStr(tbrWins, tbrTrades) + "\n" + f_pnlTodayStr(tbrPnLToday), style = label.style_label_down, color = color.new(color.teal, 10), textcolor = color.white, size = size.normal)
     array.push(tradeEntry,    _entry)
     array.push(tradeSL,       _sl)
     array.push(tradeTP1,      _tp1)
@@ -1776,6 +1773,9 @@ if bull2BR
     array.push(tradeSlBars,   -1)
     array.push(tradeLabel,    _sigLbl)
     array.push(tradeEntryBar, bar_index)
+    array.push(tradeTpU, _effUhvTpDollar)
+    array.push(tradeTpT, _effTbrTpDollar)
+    array.push(tradeTpE, _effEvrTpDollar)
 
 if bear2BR
     signalsToday += 1
@@ -1793,16 +1793,10 @@ if bear2BR
         _slDist := math.max(_tbrLossCap / math.max(_effLots2 * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry + _slDist
     _tp1        = tbrTpMethod == "Structural High/Low" ? nz(retraceFloor, _entry - _slDist * tbrTp1Mult) : tbrTpMethod == "Dollar Amount" ? _entry - _effTbrTpDollar : _entry - _slDist * tbrTp1Mult
-    string _pcStr = pcLicenseId + ",sell," + pcSymbol + ",vol_lots=" + str.tostring(_effLots2, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=2BR"
-
-    alert(pcEnable ? _pcStr : "🔴 SELL Signal — 2BR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
-    _lotLabel   = tbrDollarRisk > 0 ? "auto (" + str.tostring(_effLots2, "#.####") + " lots)" : "user-defined (" + str.tostring(_effLots2, "#.##") + " lots)"
-    _acc = f_accStr(tbrWins, tbrTrades)
-    _pnlText = f_pnlTodayStr(tbrPnLToday)
-    label _sigLbl = label.new(bar_index, low, "Result: Waiting for TP", style = label.style_none, size = size.tiny)
+    alert(pcEnable ? pcLicenseId + ",sell," + pcSymbol + ",vol_lots=" + str.tostring(_effLots2, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=2BR" : "🔴 SELL Signal — 2BR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    label _sigLbl = na
     if showLabels
-        label.delete(_sigLbl)
-        _sigLbl := label.new(bar_index, low, "🔴 SELL NOW  #" + str.tostring(totalSignals) + "\n(Two Bar Reversal)\n━━━━━━━━━━━━━━━━\nSell: " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _effTbrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLots2 * cMult * 100) / 100, "#.##") + "]\nLots: " + _lotLabel + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (tbrTpMethod == "Structural High/Low" ? "Struct." : tbrTpMethod == "Dollar Amount" ? "$fixed" : str.tostring(tbrTp1Mult, "#.#") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots2 * cMult * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + _acc + "\n" + _pnlText, style = label.style_label_up, color = color.new(color.orange, 10), textcolor = color.white, size = size.normal)
+        _sigLbl := label.new(bar_index, low, "🔴 SELL NOW  #" + str.tostring(totalSignals) + "\n(Two Bar Reversal)\n━━━━━━━━━━━━━━━━\nSell: " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _effTbrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLots2 * cMult * 100) / 100, "#.##") + "]\nLots: " + (tbrDollarRisk > 0 ? "auto (" + str.tostring(_effLots2, "#.####") + " lots)" : "user-defined (" + str.tostring(_effLots2, "#.##") + " lots)") + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (tbrTpMethod == "Structural High/Low" ? "Struct." : tbrTpMethod == "Dollar Amount" ? "$fixed" : str.tostring(tbrTp1Mult, "#.#") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots2 * cMult * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + f_accStr(tbrWins, tbrTrades) + "\n" + f_pnlTodayStr(tbrPnLToday), style = label.style_label_up, color = color.new(color.orange, 10), textcolor = color.white, size = size.normal)
     array.push(tradeEntry,    _entry)
     array.push(tradeSL,       _sl)
     array.push(tradeTP1,      _tp1)
@@ -1818,6 +1812,9 @@ if bear2BR
     array.push(tradeSlBars,   -1)
     array.push(tradeLabel,    _sigLbl)
     array.push(tradeEntryBar, bar_index)
+    array.push(tradeTpU, _effUhvTpDollar)
+    array.push(tradeTpT, _effTbrTpDollar)
+    array.push(tradeTpE, _effEvrTpDollar)
 
 // STEP 5c: EFFORT VS RESULT (VSA) — Block C integration
 // Entry fires when breakout candle:
@@ -1828,7 +1825,7 @@ if bear2BR
 // Bull EVR: two paths depending on avoidEVRTrendWick
 // Path A — no wick filter OR wick is clean: fire immediately
 // Path B — wick filter ON and wick > body: set pending, wait for next bar confirmation
-_evrBullBase    = _effEvrBullDir and enableEVR and showVSA and inRetracement and lastIsBull and retraceWasBull and _evrFvgCheck and not evrFiredThisSetup and not na(vsaRedLow) and vsaRedVol > 0 and ((strictTrendCheck and strictTrendCheckEVR) ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= minTrendStrength and not _trendShiftEVR and isGreen and low < vsaRedLow and close > vsaRedLow and (_effReqEVRHigherVol ? volume > vsaRedVol : true) and (requireEVRLowerVol ? volume < volume[1] : true) and (bar_index - lastEVRSignalBar) >= _effEvrCooldown
+_evrBullBase    = _effEvrBullDir and enableEVR and showVSA and inRetracement and lastIsBull and retraceWasBull and _evrFvgCheck and not evrFiredThisSetup and not na(vsaRedLow) and vsaRedVol > 0 and (_effStrictEVR ? (htfBull and bullTrendPersists) : not bearTrendPersists) and trendStrength >= _effMinStr and not _effTsEVR and isGreen and low < vsaRedLow and close > vsaRedLow and (_effReqEVRHigherVol ? volume > vsaRedVol : true) and (requireEVRLowerVol ? volume < volume[1] : true) and (bar_index - lastEVRSignalBar) >= _effEvrCooldown
 _evrBullHasWick = (high - close) > (close - open)   // upper wick larger than body
 bullVSA         = _evrBullBase and (avoidEVRTrendWick ? not _evrBullHasWick : true) and barstate.isconfirmed
 // When wick detected and filter is ON: arm pending confirmation
@@ -1837,7 +1834,7 @@ if _evrBullBase and avoidEVRTrendWick and _evrBullHasWick and not evrBullWickPen
     evrWickCandleHigh  := high
 
 // Bear EVR: same two-path logic
-_evrBearBase    = _effEvrBearDir and enableEVR and showVSA and inRetracement and not lastIsBull and not retraceWasBull and _evrFvgCheck and not evrFiredThisSetup and not na(vsaGrnHigh) and vsaGrnVol > 0 and ((strictTrendCheck and strictTrendCheckEVR) ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= minTrendStrength and not _trendShiftEVR and isRed and high > vsaGrnHigh and close < vsaGrnHigh and (_effReqEVRHigherVol ? volume > vsaGrnVol : true) and (requireEVRLowerVol ? volume < volume[1] : true) and (bar_index - lastEVRSignalBar) >= _effEvrCooldown
+_evrBearBase    = _effEvrBearDir and enableEVR and showVSA and inRetracement and not lastIsBull and not retraceWasBull and _evrFvgCheck and not evrFiredThisSetup and not na(vsaGrnHigh) and vsaGrnVol > 0 and (_effStrictEVR ? (htfBear and bearTrendPersists) : not bullTrendPersists) and trendStrength >= _effMinStr and not _effTsEVR and isRed and high > vsaGrnHigh and close < vsaGrnHigh and (_effReqEVRHigherVol ? volume > vsaGrnVol : true) and (requireEVRLowerVol ? volume < volume[1] : true) and (bar_index - lastEVRSignalBar) >= _effEvrCooldown
 _evrBearHasWick = (close - low) > (open - close)    // lower wick larger than body
 bearVSA         = _evrBearBase and (avoidEVRTrendWick ? not _evrBearHasWick : true) and barstate.isconfirmed
 // When wick detected and filter is ON: arm pending confirmation
@@ -1874,16 +1871,10 @@ if bullVSA
         _slDist := math.max(_evrLossCap / math.max(_effLotsV * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry - _slDist
     _tp1      = evrTpMethod == "Structural High/Low" ? nz(retraceCeiling, _entry + _slDist * evrTp1Mult) : evrTpMethod == "Dollar Amount" ? _entry + _effEvrTpDollar : _entry + _slDist * evrTp1Mult
-    string _pcStr = pcLicenseId + ",buy," + pcSymbol + ",vol_lots=" + str.tostring(_effLotsV, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=EVR"
-
-    alert(pcEnable ? _pcStr : "🟢 BUY Signal — EVR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
-    _lotLabel = f_lotLabel(evrDollarRisk, _effLotsV)
-    _acc = f_accStr(evrWins, evrTrades)
-    _pnlText = f_pnlTodayStr(evrPnLToday)
-    label _sigLbl = label.new(bar_index, high, "Result: Waiting for TP", style = label.style_none, size = size.tiny)
+    alert(pcEnable ? pcLicenseId + ",buy," + pcSymbol + ",vol_lots=" + str.tostring(_effLotsV, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=EVR" : "🟢 BUY Signal — EVR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    label _sigLbl = na
     if showLabels
-        label.delete(_sigLbl)
-        _sigLbl := label.new(bar_index, high, "BUY NOW  #" + str.tostring(totalSignals) + "\n(Effort vs Result)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _effEvrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLotsV * cMult * 100) / 100, "#.##") + "]" + "\nLots:  " + _lotLabel + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsV * cMult * 100) / 100, "#.##") + "\n" + _acc + "\n" + _pnlText, style = label.style_label_down, color = color.new(color.lime, 10), textcolor = color.black, size = size.normal)
+        _sigLbl := label.new(bar_index, high, "BUY NOW  #" + str.tostring(totalSignals) + "\n(Effort vs Result)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _effEvrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLotsV * cMult * 100) / 100, "#.##") + "]" + "\nLots:  " + f_lotLabel(evrDollarRisk, _effLotsV) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsV * cMult * 100) / 100, "#.##") + "\n" + f_accStr(evrWins, evrTrades) + "\n" + f_pnlTodayStr(evrPnLToday), style = label.style_label_down, color = color.new(color.lime, 10), textcolor = color.black, size = size.normal)
     array.push(tradeEntry,    _entry)
     array.push(tradeSL,       _sl)
     array.push(tradeTP1,      _tp1)
@@ -1899,6 +1890,9 @@ if bullVSA
     array.push(tradeSlBars,   -1)
     array.push(tradeLabel,    _sigLbl)
     array.push(tradeEntryBar, bar_index)
+    array.push(tradeTpU, _effUhvTpDollar)
+    array.push(tradeTpT, _effTbrTpDollar)
+    array.push(tradeTpE, _effEvrTpDollar)
 
 if bearVSA
     signalsToday += 1
@@ -1916,16 +1910,10 @@ if bearVSA
         _slDist := math.max(_evrLossCap / math.max(_effLotsV2 * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry + _slDist
     _tp1        = evrTpMethod == "Structural High/Low" ? nz(retraceFloor, _entry - _slDist * evrTp1Mult) : evrTpMethod == "Dollar Amount" ? _entry - _effEvrTpDollar : _entry - _slDist * evrTp1Mult
-    string _pcStr = pcLicenseId + ",sell," + pcSymbol + ",vol_lots=" + str.tostring(_effLotsV2, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=EVR"
-
-    alert(pcEnable ? _pcStr : "🔴 SELL Signal — EVR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
-    _lotLabel   = f_lotLabel(evrDollarRisk, _effLotsV2)
-    _acc = f_accStr(evrWins, evrTrades)
-    _pnlText = f_pnlTodayStr(evrPnLToday)
-    label _sigLbl = label.new(bar_index, low, "Result: Waiting for TP", style = label.style_none, size = size.tiny)
+    alert(pcEnable ? pcLicenseId + ",sell," + pcSymbol + ",vol_lots=" + str.tostring(_effLotsV2, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=EVR" : "🔴 SELL Signal — EVR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    label _sigLbl = na
     if showLabels
-        label.delete(_sigLbl)
-        _sigLbl := label.new(bar_index, low, "SELL NOW  #" + str.tostring(totalSignals) + "\n(Effort vs Result)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _effEvrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLotsV2 * cMult * 100) / 100, "#.##") + "]" + "\nLots:  " + _lotLabel + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsV2 * cMult * 100) / 100, "#.##") + "\n" + _acc + "\n" + _pnlText, style = label.style_label_up, color = color.new(color.red, 10), textcolor = color.white, size = size.normal)
+        _sigLbl := label.new(bar_index, low, "SELL NOW  #" + str.tostring(totalSignals) + "\n(Effort vs Result)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _effEvrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLotsV2 * cMult * 100) / 100, "#.##") + "]" + "\nLots:  " + f_lotLabel(evrDollarRisk, _effLotsV2) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsV2 * cMult * 100) / 100, "#.##") + "\n" + f_accStr(evrWins, evrTrades) + "\n" + f_pnlTodayStr(evrPnLToday), style = label.style_label_up, color = color.new(color.red, 10), textcolor = color.white, size = size.normal)
     array.push(tradeEntry,    _entry)
     array.push(tradeSL,       _sl)
     array.push(tradeTP1,      _tp1)
@@ -1941,6 +1929,9 @@ if bearVSA
     array.push(tradeSlBars,   -1)
     array.push(tradeLabel,    _sigLbl)
     array.push(tradeEntryBar, bar_index)
+    array.push(tradeTpU, _effUhvTpDollar)
+    array.push(tradeTpT, _effTbrTpDollar)
+    array.push(tradeTpE, _effEvrTpDollar)
 
 // EVR WICK CONFIRMATION — pending entries waiting for breakout of wick candle
 
@@ -1970,16 +1961,10 @@ if evrBullWickPending and not na(evrWickCandleHigh) and not evrFiredThisSetup an
         _slDist := math.max(_evrLossCap / math.max(_effLotsVW * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry - _slDist
     _tp1      = evrTpMethod == "Structural High/Low" ? nz(retraceCeiling, _entry + _slDist * evrTp1Mult) : evrTpMethod == "Dollar Amount" ? _entry + _effEvrTpDollar : _entry + _slDist * evrTp1Mult
-    string _pcStr = pcLicenseId + ",buy," + pcSymbol + ",vol_lots=" + str.tostring(_effLotsVW, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=EVR"
-
-    alert(pcEnable ? _pcStr : "🟢 BUY Signal — EVR Wick Confirmed | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
-    _lotLabel = f_lotLabel(evrDollarRisk, _effLotsVW)
-    _acc = f_accStr(evrWins, evrTrades)
-    _pnlText = f_pnlTodayStr(evrPnLToday)
-    label _sigLblW = label.new(bar_index, high, "Result: Waiting for TP", style = label.style_none, size = size.tiny)
+    alert(pcEnable ? pcLicenseId + ",buy," + pcSymbol + ",vol_lots=" + str.tostring(_effLotsVW, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=EVR" : "🟢 BUY Signal — EVR Wick Confirmed | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    label _sigLblW = na
     if showLabels
-        label.delete(_sigLblW)
-        _sigLblW := label.new(bar_index, high, "BUY NOW  #" + str.tostring(totalSignals) + "\n(EVR — Wick Confirmed)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _effEvrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLotsVW * cMult * 100) / 100, "#.##") + "]\nLots:  " + _lotLabel + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsVW * cMult * 100) / 100, "#.##") + "\n" + _acc + "\n" + _pnlText, style = label.style_label_down, color = color.new(color.lime, 10), textcolor = color.black, size = size.normal)
+        _sigLblW := label.new(bar_index, high, "BUY NOW  #" + str.tostring(totalSignals) + "\n(EVR — Wick Confirmed)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _effEvrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLotsVW * cMult * 100) / 100, "#.##") + "]\nLots:  " + f_lotLabel(evrDollarRisk, _effLotsVW) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsVW * cMult * 100) / 100, "#.##") + "\n" + f_accStr(evrWins, evrTrades) + "\n" + f_pnlTodayStr(evrPnLToday), style = label.style_label_down, color = color.new(color.lime, 10), textcolor = color.black, size = size.normal)
     if showDebug
         label.new(bar_index, low, "✅ EVR Wick Confirmed ↑", style = label.style_label_up, color = color.new(color.lime, 20), textcolor = color.black, size = size.tiny)
     array.push(tradeEntry,    _entry)
@@ -1997,6 +1982,9 @@ if evrBullWickPending and not na(evrWickCandleHigh) and not evrFiredThisSetup an
     array.push(tradeSlBars,   -1)
     array.push(tradeLabel,    _sigLblW)
     array.push(tradeEntryBar, bar_index)
+    array.push(tradeTpU, _effUhvTpDollar)
+    array.push(tradeTpT, _effTbrTpDollar)
+    array.push(tradeTpE, _effEvrTpDollar)
     evrWickCandleHigh := na
 
 // Bear confirmation: next candle closes below the wick candle low
@@ -2017,16 +2005,10 @@ if evrBearWickPending and not na(evrWickCandleLow) and not evrFiredThisSetup and
         _slDist := math.max(_evrLossCap / math.max(_effLotsVW2 * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry + _slDist
     _tp1      = evrTpMethod == "Structural High/Low" ? nz(retraceFloor, _entry - _slDist * evrTp1Mult) : evrTpMethod == "Dollar Amount" ? _entry - _effEvrTpDollar : _entry - _slDist * evrTp1Mult
-    string _pcStr = pcLicenseId + ",sell," + pcSymbol + ",vol_lots=" + str.tostring(_effLotsVW2, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=EVR"
-
-    alert(pcEnable ? _pcStr : "🔴 SELL Signal — EVR Wick Confirmed | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
-    _lotLabel = f_lotLabel(evrDollarRisk, _effLotsVW2)
-    _acc = f_accStr(evrWins, evrTrades)
-    _pnlText = f_pnlTodayStr(evrPnLToday)
-    label _sigLblW2 = label.new(bar_index, low, "Result: Waiting for TP", style = label.style_none, size = size.tiny)
+    alert(pcEnable ? pcLicenseId + ",sell," + pcSymbol + ",vol_lots=" + str.tostring(_effLotsVW2, "0.####") + ",sl_price=" + str.tostring(_sl, "#.##") + ",tp_price=" + str.tostring(_tp1, "#.##") + ",comment=EVR" : "🔴 SELL Signal — EVR Wick Confirmed | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+    label _sigLblW2 = na
     if showLabels
-        label.delete(_sigLblW2)
-        _sigLblW2 := label.new(bar_index, low, "SELL NOW  #" + str.tostring(totalSignals) + "\n(EVR — Wick Confirmed)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _effEvrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLotsVW2 * cMult * 100) / 100, "#.##") + "]\nLots:  " + _lotLabel + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsVW2 * cMult * 100) / 100, "#.##") + "\n" + _acc + "\n" + _pnlText, style = label.style_label_up, color = color.new(color.red, 10), textcolor = color.white, size = size.normal)
+        _sigLblW2 := label.new(bar_index, low, "SELL NOW  #" + str.tostring(totalSignals) + "\n(EVR — Wick Confirmed)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _effEvrSlType + ", risk: $" + str.tostring(math.round(_slDist * _effLotsVW2 * cMult * 100) / 100, "#.##") + "]\nLots:  " + f_lotLabel(evrDollarRisk, _effLotsVW2) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsVW2 * cMult * 100) / 100, "#.##") + "\n" + f_accStr(evrWins, evrTrades) + "\n" + f_pnlTodayStr(evrPnLToday), style = label.style_label_up, color = color.new(color.red, 10), textcolor = color.white, size = size.normal)
     if showDebug
         label.new(bar_index, high, "✅ EVR Wick Confirmed ↓", style = label.style_label_down, color = color.new(color.red, 20), textcolor = color.white, size = size.tiny)
     array.push(tradeEntry,    _entry)
@@ -2044,6 +2026,9 @@ if evrBearWickPending and not na(evrWickCandleLow) and not evrFiredThisSetup and
     array.push(tradeSlBars,   -1)
     array.push(tradeLabel,    _sigLblW2)
     array.push(tradeEntryBar, bar_index)
+    array.push(tradeTpU, _effUhvTpDollar)
+    array.push(tradeTpT, _effTbrTpDollar)
+    array.push(tradeTpE, _effEvrTpDollar)
     evrWickCandleLow := na
 
 // End setup when all enabled strategies have fired from this setup
@@ -2080,6 +2065,21 @@ if _today != lastTradeDay
     maxLossStreakToday   := 0
     lastTradeDay         := _today
 
+// WINNING HOUR BOUNDARY — when UTC hour rolls over, check if previous hour was 100% wins
+_whlNowHour = hour(time, "UTC")
+if _whlNowHour != _whlCurHour
+    if _whlCurTrades >= 1 and _whlCurWins == _whlCurTrades
+        _whlTpU   := nz(_whlCurTpU, uhvTpDollar)
+        _whlTpT   := nz(_whlCurTpT, tbrTpDollar)
+        _whlTpE   := nz(_whlCurTpE, evrTpDollar)
+        _whlCount += 1
+    _whlCurHour   := _whlNowHour
+    _whlCurWins   := 0
+    _whlCurTrades := 0
+    _whlCurTpU    := na
+    _whlCurTpT    := na
+    _whlCurTpE    := na
+
 // TRADE MONITORING
 if array.size(tradeEntry) > 0
     for _ti = array.size(tradeEntry) - 1 to 0
@@ -2105,54 +2105,56 @@ if array.size(tradeEntry) > 0
                         array.push(tradePnLArr, _pnl)
                         array.push(tradePnLType, array.size(tradeType) > _ti ? array.get(tradeType, _ti) : "uhv")
                         completedTrades += 1
+                        _whlCurTrades += 1
+                        _whlCurTpU := array.get(tradeTpU, _ti)
+                        _whlCurTpT := array.get(tradeTpT, _ti)
+                        _whlCurTpE := array.get(tradeTpE, _ti)
                         pnlToday             += _pnl
                         todayLossStreak += 1
                         if todayLossStreak > maxLossStreakToday
                             maxLossStreakToday := todayLossStreak
                         label.new(bar_index, _sl, "🛑 #" + str.tostring(_tNum) + " SL Hit  -$" + str.tostring(math.abs(_pnl), "#.##") + " (" + str.tostring(array.get(tradeEffLots,_ti),"#.####") + " lots)", style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 0), textcolor = color.white, size = size.tiny)
-                        if array.size(tradeSlBars) > _ti
-                            array.set(tradeSlBars, _ti, bar_index - _entryBar)
-                        if array.size(tradeType) > _ti
-                            _stype = array.get(tradeType, _ti)
-                            _sbull = array.size(tradeBull) > _ti ? array.get(tradeBull, _ti) : true
-                            if _stype == "uhv"
-                                uhvPnL += _pnl
-                                uhvPnLToday += _pnl
-                                uhvTrades += 1
-                                uhvLossSum += math.abs(_pnl)
-                                if _sbull
-                                    uhvBullPnL += _pnl
-                                    uhvBullT += 1
-                                else
-                                    uhvBearPnL += _pnl
-                                    uhvBearT += 1
-                            else if _stype == "tbr"
-                                tbrPnL += _pnl
-                                tbrPnLToday += _pnl
-                                tbrTrades += 1
-                                tbrLossSum += math.abs(_pnl)
-                                if _sbull
-                                    tbrBullPnL += _pnl
-                                    tbrBullT += 1
-                                else
-                                    tbrBearPnL += _pnl
-                                    tbrBearT += 1
-                            else if _stype == "evr"
-                                evrPnL += _pnl
-                                evrPnLToday += _pnl
-                                evrTrades += 1
-                                evrLossSum += math.abs(_pnl)
-                                if _sbull
-                                    evrBullPnL += _pnl
-                                    evrBullT += 1
-                                else
-                                    evrBearPnL += _pnl
-                                    evrBearT += 1
-                        if array.size(tradeLabel) > _ti
-                            _origLbl = array.get(tradeLabel, _ti)
-                            if not na(_origLbl)
-                                _origTxt = label.get_text(_origLbl)
-                                label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_pnl), "#.##") + " Loss")
+                        array.set(tradeSlBars, _ti, bar_index - _entryBar)
+                        array.push(tradeDurBars, bar_index - _entryBar)
+                        _stype = array.get(tradeType, _ti)
+                        _sbull = array.size(tradeBull) > _ti ? array.get(tradeBull, _ti) : true
+                        if _stype == "uhv"
+                            uhvPnL += _pnl
+                            uhvPnLToday += _pnl
+                            uhvTrades += 1
+                            uhvLossSum += math.abs(_pnl)
+                            if _sbull
+                                uhvBullPnL += _pnl
+                                uhvBullT += 1
+                            else
+                                uhvBearPnL += _pnl
+                                uhvBearT += 1
+                        else if _stype == "tbr"
+                            tbrPnL += _pnl
+                            tbrPnLToday += _pnl
+                            tbrTrades += 1
+                            tbrLossSum += math.abs(_pnl)
+                            if _sbull
+                                tbrBullPnL += _pnl
+                                tbrBullT += 1
+                            else
+                                tbrBearPnL += _pnl
+                                tbrBearT += 1
+                        else if _stype == "evr"
+                            evrPnL += _pnl
+                            evrPnLToday += _pnl
+                            evrTrades += 1
+                            evrLossSum += math.abs(_pnl)
+                            if _sbull
+                                evrBullPnL += _pnl
+                                evrBullT += 1
+                            else
+                                evrBearPnL += _pnl
+                                evrBearT += 1
+                        _origLbl = array.get(tradeLabel, _ti)
+                        if not na(_origLbl)
+                            _origTxt = label.get_text(_origLbl)
+                            label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_pnl), "#.##") + " Loss")
 
             if not _t1hit and not array.get(tradeSLHit, _ti) and bar_index > _entryBar
                 _tp1Triggered = _bull ? high >= _tp1 : low <= _tp1
@@ -2167,65 +2169,62 @@ if array.size(tradeEntry) > 0
                     array.push(tradePnLArr, _pnl)
                     array.push(tradePnLType, array.size(tradeType) > _ti ? array.get(tradeType, _ti) : "uhv")
                     completedTrades += 1
+                    _whlCurTrades += 1
+                    _whlCurWins   += 1
+                    _whlCurTpU := array.get(tradeTpU, _ti)
+                    _whlCurTpT := array.get(tradeTpT, _ti)
+                    _whlCurTpE := array.get(tradeTpE, _ti)
                     pnlToday             += _pnl
                     todayLossStreak := 0
                     // ── TP+1 same-bar proof: did price go $1 past TP on this bar? ──
                     tp1SameBarChecks += 1
                     if _bull ? high >= _tp1 + 1.0 : low <= _tp1 - 1.0
                         tp1SameBarWins += 1
+                    array.push(tradeDurBars, bar_index - _entryBar)
                     label.new(bar_index, _tp1, "✅ #" + str.tostring(_tNum) + " TP Hit  +$" + str.tostring(_pnl, "#.##") + " (" + str.tostring(array.get(tradeEffLots,_ti),"#.####") + " lots)", style = _bull ? label.style_label_down : label.style_label_up, color = color.new(color.green, 20), textcolor = color.white, size = size.tiny)
-                    if array.size(tradeType) > _ti
-                        _stype = array.get(tradeType, _ti)
-                        _sbull = array.size(tradeBull) > _ti ? array.get(tradeBull, _ti) : true
-                        if array.size(tradeWon) > _ti
-                            array.set(tradeWon, _ti, true)
-                        if _stype == "uhv"
-                            uhvPnL += _pnl
-                            uhvPnLToday += _pnl
-                            uhvTrades += 1
-                            uhvWins += 1
-                            uhvWinSum += _pnl
-                            if _sbull
-                                uhvBullPnL += _pnl
-                                uhvBullT += 1
-                                uhvBullW += 1
-                            else
-                                uhvBearPnL += _pnl
-                                uhvBearT += 1
-                                uhvBearW += 1
-                        else if _stype == "tbr"
-                            tbrPnL += _pnl
-                            tbrPnLToday += _pnl
-                            tbrTrades += 1
-                            tbrWins += 1
-                            tbrWinSum += _pnl
-                            if _sbull
-                                tbrBullPnL += _pnl
-                                tbrBullT += 1
-                                tbrBullW += 1
-                            else
-                                tbrBearPnL += _pnl
-                                tbrBearT += 1
-                                tbrBearW += 1
-                        else if _stype == "evr"
-                            evrPnL += _pnl
-                            evrPnLToday += _pnl
-                            evrTrades += 1
-                            evrWins += 1
-                            evrWinSum += _pnl
-                            if _sbull
-                                evrBullPnL += _pnl
-                                evrBullT += 1
-                                evrBullW += 1
-                            else
-                                evrBearPnL += _pnl
-                                evrBearT += 1
-                                evrBearW += 1
-                    if array.size(tradeLabel) > _ti
-                        _origLbl = array.get(tradeLabel, _ti)
-                        if not na(_origLbl)
-                            _origTxt = label.get_text(_origLbl)
-                            label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_pnl, "#.##") + " Profit")
+                    _stype = array.get(tradeType, _ti)
+                    _sbull = array.size(tradeBull) > _ti ? array.get(tradeBull, _ti) : true
+                    array.set(tradeWon, _ti, true)
+                    if _stype == "uhv"
+                        uhvPnL += _pnl
+                        uhvPnLToday += _pnl
+                        uhvTrades += 1
+                        uhvWins += 1
+                        uhvWinSum += _pnl
+                        if _sbull
+                            uhvBullPnL += _pnl
+                            uhvBullT += 1
+                        else
+                            uhvBearPnL += _pnl
+                            uhvBearT += 1
+                    else if _stype == "tbr"
+                        tbrPnL += _pnl
+                        tbrPnLToday += _pnl
+                        tbrTrades += 1
+                        tbrWins += 1
+                        tbrWinSum += _pnl
+                        if _sbull
+                            tbrBullPnL += _pnl
+                            tbrBullT += 1
+                        else
+                            tbrBearPnL += _pnl
+                            tbrBearT += 1
+                    else if _stype == "evr"
+                        evrPnL += _pnl
+                        evrPnLToday += _pnl
+                        evrTrades += 1
+                        evrWins += 1
+                        evrWinSum += _pnl
+                        if _sbull
+                            evrBullPnL += _pnl
+                            evrBullT += 1
+                        else
+                            evrBearPnL += _pnl
+                            evrBearT += 1
+                    _origLbl = array.get(tradeLabel, _ti)
+                    if not na(_origLbl)
+                        _origTxt = label.get_text(_origLbl)
+                        label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_pnl, "#.##") + " Profit")
 
 
 // STATS PANEL (top-right table)
@@ -2264,9 +2263,8 @@ f_drawPanel() =>
     _avgMinsPerSignal = 30.0
     if array.size(signalBarTimes) > 1
         _totalGap = 0
-        if array.size(signalBarTimes) >= 2
-            for _si = 1 to array.size(signalBarTimes) - 1
-                _totalGap += array.get(signalBarTimes, _si) - array.get(signalBarTimes, _si - 1)
+        for _si = 1 to array.size(signalBarTimes) - 1
+            _totalGap += array.get(signalBarTimes, _si) - array.get(signalBarTimes, _si - 1)
         _avgMinsPerSignal := (_totalGap / (array.size(signalBarTimes) - 1)) * tfMinutes
     _hoursToDouble = _tradesToDouble > 0 and _avgMinsPerSignal > 0 ? math.round(_tradesToDouble * _avgMinsPerSignal / 60.0 * 10) / 10 : 0
 
@@ -2274,13 +2272,9 @@ f_drawPanel() =>
     _allDaySignals  = totalSignalsAllDays + signalsToday
     _avgSigPerDay   = totalDaysSeen > 0 ? math.round(_allDaySignals / totalDaysSeen) : signalsToday
 
-    // ── Trades to reach $100 from initial money ──
-    _tradesToTarget = _avgPnL > 0 ? math.ceil((100.0 - initialMoney) / _avgPnL) : 0
-
     // ── Washout ──
     // Use actual observed avg loss (not the input setting) — avoids showing 0 when fixed-lot mode is on
-    float _washoutLoss = _lossAmt > 0 ? _lossAmt : (_avgDollarRisk > 0 ? _avgDollarRisk : 1.0)
-    _washout = math.floor(initialMoney / _washoutLoss)
+    _washout = math.floor(initialMoney / (_lossAmt > 0 ? _lossAmt : (_avgDollarRisk > 0 ? _avgDollarRisk : 1.0)))
 
     // ── Last hour P&L ──
     _hourPnL = 0.0
@@ -2292,12 +2286,6 @@ f_drawPanel() =>
     // ── Avg time to next signal ──
     _minsToNextSignal = math.round(_avgMinsPerSignal)
 
-    // ── Profit at 0.02 lots (same dollar risk, double lots) ──
-    _doubleLotPnL = _totalPnL * 2.0
-
-    // ── "Started with $X today morning" P&L ──
-    _todayStartPnL = initialMoney + pnlToday
-
     // ── Session detection (UTC hour) ──
     _utcHour = hour(time, "UTC")
     _session = _utcHour >= 22 or _utcHour < 7  ? "🌏 Sydney Session" :
@@ -2307,12 +2295,6 @@ f_drawPanel() =>
     // overlap labels
     _session := (_utcHour >= 8 and _utcHour < 9)   ? "🏦🌸 London/Tokyo Overlap"   : _session
     _session := (_utcHour >= 13 and _utcHour < 17)  ? "🗽🏦 New York/London Overlap" : _session
-
-    // ── Worst streak risk ──
-    _pLoss        = 1.0 - _acc
-    _streakAt5pct = _pLoss > 0 and _pLoss < 1 ? math.ceil(math.log(0.05) / math.log(_pLoss)) : 99
-    _streakRisk   = _streakAt5pct * _lossAmt
-    _pctCapital   = initialMoney > 0 ? _streakRisk / initialMoney * 100 : 0
 
     // ── Pre-panel: today completed wins/trades ──
     int _winsToday            = 0
@@ -2334,7 +2316,7 @@ f_drawPanel() =>
 
     // ── Pre-panel: current win/loss streak ──
     int  _currentStreak = 0
-    int _streakSz = math.min(array.size(tradePnLArr), array.size(tradeCloseTS))
+    int _streakSz = array.size(tradePnLArr)
     if _streakSz > 0
         // find last filtered trade
         int _lastIdx = -1
@@ -2355,19 +2337,13 @@ f_drawPanel() =>
             _currentStreak := _lastIsWin ? _currentStreak : -_currentStreak
 
     // ── Pre-panel: yesterday P&L (moved here for early use) ──
-    int   _msPerDay   = 86400000
-    int   _ydayStart  = _todayStartMs - _msPerDay
-    int   _ydayEnd    = _todayStartMs
+    int   _ydayStart  = _todayStartMs - 86400000
     float _pnlYday    = 0.0
-    float _pnlYdayNY  = 0.0
     if array.size(tradeCloseTS) > 0
         for _iyd = 0 to array.size(tradeCloseTS) - 1
             int _ts = array.get(tradeCloseTS, _iyd)
-            if _ts >= _ydayStart and _ts < _ydayEnd and _ts >= statsResetDate
-                float _yp = array.get(tradePnLArr, _iyd)
-                _pnlYday += _yp
-                if hour(_ts, "UTC") >= 13 and hour(_ts, "UTC") < 22
-                    _pnlYdayNY += _yp
+            if _ts >= _ydayStart and _ts < _todayStartMs and _ts >= statsResetDate
+                _pnlYday += array.get(tradePnLArr, _iyd)
 
     // ── Per-strategy avg win and avg loss amounts ──
     float _uhvWinSum = 0.0
@@ -2396,7 +2372,7 @@ f_drawPanel() =>
     int   _uhvWinsCalc   = 0
     int   _tbrWinsCalc   = 0
     int   _evrWinsCalc   = 0
-    int _stratSize2 = math.min(array.size(tradePnLType), math.min(array.size(tradePnLArr), array.size(tradeCloseTS)))
+    int _stratSize2 = array.size(tradePnLArr)
     if _stratSize2 > 0
         for _ist = 0 to _stratSize2 - 1
             if array.get(tradeCloseTS, _ist) < statsResetDate
@@ -2446,22 +2422,15 @@ f_drawPanel() =>
         for _isb = 0 to array.size(signalBarTimes) - 1
             if bar_index - array.get(signalBarTimes, _isb) <= barsPerHour
                 _sigLastHour += 1
-    // Projected next-hour P&L uses last-hour signal rate if available, else avg
-    int   _projNextHrSigs = _sigLastHour > 0 ? _sigLastHour : math.max(1, math.round(60.0 / math.max(_avgMinsPerSignal, 1)))
-    float _projNextHrPnL  = math.round(_projNextHrSigs * _avgPnL * 100) / 100
-
     // ── Build panel (18 rows) ──
-    table statsPanel = table.new(position.top_right, 1, 18,
+    table statsPanel = table.new(position.bottom_right, 1, 18,
          bgcolor = color.new(color.black, 15),
          border_color = color.new(color.gray, 70),
          border_width = 1, frame_color = color.new(color.gray, 50), frame_width = 2)
 
     // ── Shared colors ──
     color _bgDark    = color.new(color.black,   25)
-    color _bgMid     = color.new(color.navy,    55)
     color _bgDeep    = color.new(color.navy,    40)
-    color _hdrBg     = color.new(color.gray,    10)
-    color _txtWhite  = color.white
     color _txtDim    = color.new(color.silver,  10)
     color _txtGreen  = color.new(color.lime,    10)
     color _txtRed    = color.new(color.red,      0)
@@ -2470,13 +2439,11 @@ f_drawPanel() =>
     color _txtYellow = color.new(color.yellow,  10)
 
     // ── Pre-compute display vars ──
-    float  _ydayGrowthPct = initialMoney > 0 ? math.round(_pnlYday / initialMoney * 100 * 10) / 10 : 0.0
     int    _uhvAcc  = _uhvTradesCalc > 0 ? math.round(_uhvWinsCalc / _uhvTradesCalc * 100) : 0
     int    _tbrAcc  = _tbrTradesCalc > 0 ? math.round(_tbrWinsCalc / _tbrTradesCalc * 100) : 0
     int    _evrAcc  = _evrTradesCalc > 0 ? math.round(_evrWinsCalc / _evrTradesCalc * 100) : 0
     string _best    = _uhvPnLCalc >= _tbrPnLCalc and _uhvPnLCalc >= _evrPnLCalc ? "UHV" : _tbrPnLCalc >= _uhvPnLCalc and _tbrPnLCalc >= _evrPnLCalc ? "2BR" : "EVR"
-    string _evBadge = _ev >= 0.01 ? "Positive EV" : _ev <= -0.01 ? "Negative EV" : "Breakeven"
-    string _toDoubleTime = _hoursToDouble >= 24 ? str.tostring(math.round(_hoursToDouble / 24.0 * 10) / 10) + " days" : str.tostring(_hoursToDouble) + " hrs"
+    float  _ydayGrowthPct = initialMoney > 0 ? math.round(_pnlYday / initialMoney * 100 * 10) / 10 : 0.0
     // Next-hour projection (priority: last hour → today's pace → all-time avg)
     float  _trueNextHrSigs = _avgMinsPerSignal > 0 ? 60.0 / _avgMinsPerSignal : 0.0
     string _basisLbl = "all-time avg"
@@ -2484,9 +2451,7 @@ f_drawPanel() =>
         _trueNextHrSigs := float(_sigLastHour)
         _basisLbl := "last hour pace"
     else if signalsToday >= 2
-        int _stSz = array.size(signalBarTimes)
-        int _firstTodayBar = array.get(signalBarTimes, _stSz - signalsToday)
-        float _hrsElapsed = (bar_index - _firstTodayBar) * tfMinutes / 60.0
+        float _hrsElapsed = (bar_index - array.get(signalBarTimes, array.size(signalBarTimes) - signalsToday)) * tfMinutes / 60.0
         if _hrsElapsed > 0
             _trueNextHrSigs := math.round(signalsToday / _hrsElapsed * 10) / 10
             _basisLbl := "today's pace"
@@ -2534,57 +2499,69 @@ f_drawPanel() =>
          _todaySign + "$" + str.tostring(_todayPnLDisp, "#.##") + "  |  Balance: $" + str.tostring(_todayBalDisp, "#.##"),
          text_color = _todayFg, text_size = size.normal, bgcolor = _todayBg)
 
-    // ROW 5 — STRATEGY SUB-TOTALS (tiny, secondary detail under today P&L)
+    // ── Avg trade duration ──
+    float _avgDurMins = 0.0
+    int _durSz = array.size(tradeDurBars)
+    if _durSz > 0
+        int _durSum = 0
+        for _di = 0 to _durSz - 1
+            _durSum += array.get(tradeDurBars, _di)
+        _avgDurMins := math.round(_durSum / _durSz * tfMinutes * 10) / 10
+    string _avgDurStr = _durSz == 0 ? "—" : _avgDurMins >= 60.0 ? str.tostring(math.round(_avgDurMins / 60.0 * 10) / 10) + " hr" : str.tostring(_avgDurMins) + " min"
+    string _maxTradeTxt = maxTradesMode ? "  [MAX TRADES ON]" : ""
+
+    // ROW 5 — STRATEGY SUB-TOTALS + AVG DURATION (tiny, secondary detail under today P&L)
     table.cell(statsPanel, 0, 5,
          "UHV " + (uhvPnLToday >= 0 ? "+" : "") + "$" + str.tostring(math.round(uhvPnLToday * 100) / 100, "#.##") +
          "  |  2BR " + (tbrPnLToday >= 0 ? "+" : "") + "$" + str.tostring(math.round(tbrPnLToday * 100) / 100, "#.##") +
-         "  |  EVR " + (evrPnLToday >= 0 ? "+" : "") + "$" + str.tostring(math.round(evrPnLToday * 100) / 100, "#.##"),
+         "  |  EVR " + (evrPnLToday >= 0 ? "+" : "") + "$" + str.tostring(math.round(evrPnLToday * 100) / 100, "#.##") +
+         "\nAvg trade duration: " + _avgDurStr + "  (" + str.tostring(_durSz) + " trades)" + _maxTradeTxt,
          text_color = _txtDim, text_size = size.tiny, bgcolor = _bgDark)
 
     // ROW 6 — TRADE COUNT + STREAK
-    string _streakTxt2 = _currentStreak > 1 ? str.tostring(_currentStreak) + " wins in a row" : _currentStreak == 1 ? "Last: win" : _currentStreak < -1 ? str.tostring(math.abs(_currentStreak)) + " losses in a row" : "Last: loss"
     table.cell(statsPanel, 0, 6,
          str.tostring(signalsToday) + " signals  |  " + str.tostring(_tradesCompletedToday) + " closed  |  " + str.tostring(_winsToday) + " won" +
          (_tradesCompletedToday > 0 ? "  (" + str.tostring(math.round(_winsToday / math.max(_tradesCompletedToday, 1) * 100)) + "%)" : "") +
-         "  |  " + _streakTxt2,
+         "  |  " + (_currentStreak > 1 ? str.tostring(_currentStreak) + " wins in a row" : _currentStreak == 1 ? "Last: win" : _currentStreak < -1 ? str.tostring(math.abs(_currentStreak)) + " losses in a row" : "Last: loss"),
          text_color = _currentStreak >= 0 ? _txtGreen : _txtOrange, text_size = size.small, bgcolor = _bgDark)
 
     // ROW 7 — LAST HOUR RESULT + NEXT HOUR EV PROJECTION
-    string _hourLbl2  = _hourPnL >= 0.01 ? "+$" + str.tostring(_hourPnL, "#.##") : _hourPnL <= -0.01 ? "-$" + str.tostring(math.abs(_hourPnL), "#.##") : "—"
-    string _projSign2 = _projNextHrPnLEV >= 0 ? "+" : ""
     table.cell(statsPanel, 0, 7,
-         "Last hr: " + _hourLbl2 + "  (" + str.tostring(_hourTrades) + " trades)  |  Next hr EV: " + _projSign2 + "$" + str.tostring(math.abs(_projNextHrPnLEV), "#.##") + "  (" + _basisLbl + ")\nEV: $" + str.tostring(_ev, "#.##") + "/trade  |  " + str.tostring(_avgSigPerDay) + " signals/day avg",
+         "Last hr: " + (_hourPnL >= 0.01 ? "+$" + str.tostring(_hourPnL, "#.##") : _hourPnL <= -0.01 ? "-$" + str.tostring(math.abs(_hourPnL), "#.##") : "—") + "  (" + str.tostring(_hourTrades) + " trades)  |  Next hr EV: " + (_projNextHrPnLEV >= 0 ? "+" : "") + "$" + str.tostring(math.abs(_projNextHrPnLEV), "#.##") + "  (" + _basisLbl + ")\nEV: $" + str.tostring(_ev, "#.##") + "/trade  |  " + str.tostring(_avgSigPerDay) + " signals/day avg",
          text_color = _txtAqua, text_size = size.small, bgcolor = _bgDark)
 
     // ROW 8 — STRATEGIES DIVIDER
     table.cell(statsPanel, 0, 8, "STRATEGIES",
          text_color = _txtDim, text_size = size.tiny, bgcolor = color.new(color.black, 5))
 
-    // ROW 9 — UHV BREAKOUT
+    // ROW 9 — UHV BREAKOUT (+ effective lot size when multiplier is active)
     string _uhvWLStr = _uhvAvgWin > 0 or _uhvAvgLoss > 0 ? "  avg +" + str.tostring(_uhvAvgWin, "#.##") + " / -" + str.tostring(_uhvAvgLoss, "#.##") : ""
+    string _uhvLotStr = lotAmp != 1.0 ? "\n  lots: " + (uhvDollarRisk > 0 ? "auto" : str.tostring(uhvLotSize * lotAmp, "0.####") + "  (base " + str.tostring(uhvLotSize, "0.####") + " x" + str.tostring(lotAmp, "#.#") + ")") : ""
     table.cell(statsPanel, 0, 9,
          "UHV  W/L: " + str.tostring(_uhvWinsCalc) + "/" + str.tostring(_uhvTradesCalc) + " (" + str.tostring(_uhvAcc) + "%)" +
          "  All-time: " + (_uhvPnLCalc >= 0 ? "+" : "") + "$" + str.tostring(_uhvPnLCalc, "#.##") +
          "  Today: " + (uhvPnLToday >= 0 ? "+" : "") + "$" + str.tostring(uhvPnLToday, "#.##") +
-         _uhvWLStr + (_best == "UHV" ? "  [BEST]" : ""),
+         _uhvWLStr + (_best == "UHV" ? "  [BEST]" : "") + _uhvLotStr,
          text_color = _uhvPnLCalc >= 0 ? _txtGreen : _txtRed, text_size = size.normal, bgcolor = _bgDeep)
 
     // ROW 10 — TWO BAR REVERSAL
     string _tbrWLStr = _tbrAvgWin > 0 or _tbrAvgLoss > 0 ? "  avg +" + str.tostring(_tbrAvgWin, "#.##") + " / -" + str.tostring(_tbrAvgLoss, "#.##") : ""
+    string _tbrLotStr = lotAmp != 1.0 ? "\n  lots: " + (tbrDollarRisk > 0 ? "auto" : str.tostring(tbrLotSize * lotAmp, "0.####") + "  (base " + str.tostring(tbrLotSize, "0.####") + " x" + str.tostring(lotAmp, "#.#") + ")") : ""
     table.cell(statsPanel, 0, 10,
          "2BR  W/L: " + str.tostring(_tbrWinsCalc) + "/" + str.tostring(_tbrTradesCalc) + " (" + str.tostring(_tbrAcc) + "%)" +
          "  All-time: " + (_tbrPnLCalc >= 0 ? "+" : "") + "$" + str.tostring(_tbrPnLCalc, "#.##") +
          "  Today: " + (tbrPnLToday >= 0 ? "+" : "") + "$" + str.tostring(tbrPnLToday, "#.##") +
-         _tbrWLStr + (_best == "2BR" ? "  [BEST]" : ""),
+         _tbrWLStr + (_best == "2BR" ? "  [BEST]" : "") + _tbrLotStr,
          text_color = _tbrPnLCalc >= 0 ? _txtGreen : _txtRed, text_size = size.normal, bgcolor = _bgDeep)
 
     // ROW 11 — EFFORT VS RESULT
     string _evrWLStr = _evrAvgWin > 0 or _evrAvgLoss > 0 ? "  avg +" + str.tostring(_evrAvgWin, "#.##") + " / -" + str.tostring(_evrAvgLoss, "#.##") : ""
+    string _evrLotStr = lotAmp != 1.0 ? "\n  lots: " + (evrDollarRisk > 0 ? "auto" : str.tostring(evrLotSize * lotAmp, "0.####") + "  (base " + str.tostring(evrLotSize, "0.####") + " x" + str.tostring(lotAmp, "#.#") + ")") : ""
     table.cell(statsPanel, 0, 11,
          "EVR  W/L: " + str.tostring(_evrWinsCalc) + "/" + str.tostring(_evrTradesCalc) + " (" + str.tostring(_evrAcc) + "%)" +
          "  All-time: " + (_evrPnLCalc >= 0 ? "+" : "") + "$" + str.tostring(_evrPnLCalc, "#.##") +
          "  Today: " + (evrPnLToday >= 0 ? "+" : "") + "$" + str.tostring(evrPnLToday, "#.##") +
-         _evrWLStr + (_best == "EVR" ? "  [BEST]" : ""),
+         _evrWLStr + (_best == "EVR" ? "  [BEST]" : "") + _evrLotStr,
          text_color = _evrPnLCalc >= 0 ? _txtGreen : _txtRed, text_size = size.normal, bgcolor = _bgDeep)
 
     // ROW 12 — ALL-TIME DIVIDER
@@ -2595,13 +2572,13 @@ f_drawPanel() =>
     table.cell(statsPanel, 0, 13,
          "P&L: " + (_totalPnL >= 0 ? "+" : "") + "$" + str.tostring(_totalPnL, "#.##") +
          "  |  " + str.tostring(winCount) + "/" + str.tostring(completedTrades) + " won (" + str.tostring(_accPct) + "%)" +
-         "  |  " + _evBadge + ": $" + str.tostring(_ev, "#.##") + "/trade" +
+         "  |  " + (_ev >= 0.01 ? "Positive EV" : _ev <= -0.01 ? "Negative EV" : "Breakeven") + ": $" + str.tostring(_ev, "#.##") + "/trade" +
          "\navg win: +$" + str.tostring(_winAmt, "#.##") + "  |  avg loss: -$" + str.tostring(_lossAmt, "#.##"),
          text_color = _ev >= 0 ? _txtGreen : _txtRed, text_size = size.small, bgcolor = _bgDark)
 
     // ROW 14 — MILESTONES + RISK + YESTERDAY (condensed, tiny)
     table.cell(statsPanel, 0, 14,
-         "To double: " + (_avgPnL > 0 ? str.tostring(_tradesToDouble) + " trades (~" + _toDoubleTime + ")" : "—") +
+         "To double: " + (_avgPnL > 0 ? str.tostring(_tradesToDouble) + " trades (~" + (_hoursToDouble >= 24 ? str.tostring(math.round(_hoursToDouble / 24.0 * 10) / 10) + " days" : str.tostring(_hoursToDouble) + " hrs") + ")" : "—") +
          "  |  Washout: " + str.tostring(_washout) + " losses" +
          "  |  Yesterday: " + (_pnlYday >= 0 ? "+" : "") + "$" + str.tostring(math.round(_pnlYday * 100) / 100, "#.##") + "  (" + (_ydayGrowthPct >= 0 ? "+" : "") + str.tostring(_ydayGrowthPct) + "%)",
          text_color = _txtDim, text_size = size.tiny, bgcolor = _bgDark)
@@ -2612,48 +2589,17 @@ f_drawPanel() =>
     _winTScount  = 0
     _loseTSsum   = 0.0
     _loseTScount = 0
-    _uhvWinTS  = 0.0
-    _uhvWinN   = 0
-    _uhvLoseTS = 0.0
-    _uhvLoseN  = 0
-    _tbrWinTS  = 0.0
-    _tbrWinN   = 0
-    _tbrLoseTS = 0.0
-    _tbrLoseN  = 0
-    _evrWinTS  = 0.0
-    _evrWinN   = 0
-    _evrLoseTS = 0.0
-    _evrLoseN  = 0
-    _tsSize = math.min(array.size(tradeTrendStr), math.min(array.size(tradeWon), array.size(tradeType)))
+    _tsSize = array.size(tradeWon)
     if _tsSize > 0
         for _ri = 0 to _tsSize - 1
             _rts   = array.get(tradeTrendStr, _ri)
             _rwon  = array.get(tradeWon,      _ri)
-            _rtype = array.get(tradeType,     _ri)
             if _rwon
                 _winTSsum   += _rts
                 _winTScount += 1
-                if _rtype == "uhv"
-                    _uhvWinTS += _rts
-                    _uhvWinN  += 1
-                else if _rtype == "tbr"
-                    _tbrWinTS += _rts
-                    _tbrWinN  += 1
-                else
-                    _evrWinTS += _rts
-                    _evrWinN  += 1
             else
                 _loseTSsum   += _rts
                 _loseTScount += 1
-                if _rtype == "uhv"
-                    _uhvLoseTS += _rts
-                    _uhvLoseN  += 1
-                else if _rtype == "tbr"
-                    _tbrLoseTS += _rts
-                    _tbrLoseN  += 1
-                else
-                    _evrLoseTS += _rts
-                    _evrLoseN  += 1
     _avgWinTS  = _winTScount  > 0 ? _winTSsum  / _winTScount  : na
     _avgLoseTS = _loseTScount > 0 ? _loseTSsum / _loseTScount : na
 
@@ -2677,7 +2623,7 @@ f_drawPanel() =>
     int   _bullTrades = 0
     int   _bearWins   = 0
     int   _bearTrades = 0
-    int   _bbSize = math.min(array.size(tradeBull), math.min(array.size(tradeWon), array.size(tradePnLArr)))
+    int   _bbSize = array.size(tradeWon)
     if _bbSize > 0
         for _bi = 0 to _bbSize - 1
             bool _bBull = array.get(tradeBull, _bi)
@@ -2751,9 +2697,7 @@ f_drawPanel() =>
     int   _loseSlDistN   = 0
     int   _quickSlCount  = 0
     int   _totalSlHits   = 0
-    float _slBarsSum     = 0.0
-    int   _slBarsN       = 0
-    int   _slSize = math.min(array.size(tradeSlDist), math.min(array.size(tradeWon), array.size(tradeBull)))
+    int   _slSize = array.size(tradeWon)
     if _slSize > 0
         for _si2 = 0 to _slSize - 1
             float _sd  = array.get(tradeSlDist, _si2)
@@ -2766,251 +2710,101 @@ f_drawPanel() =>
                 _loseSlDistSum += _sd
                 _loseSlDistN   += 1
                 _totalSlHits   += 1
-                if _sb >= 0
-                    if _sb <= 2
-                        _quickSlCount += 1
-                    _slBarsSum += _sb
-                    _slBarsN   += 1
+                if _sb >= 0 and _sb <= 2
+                    _quickSlCount += 1
     float _avgWinSlDist  = _winSlDistN  > 0 ? _winSlDistSum  / _winSlDistN  : na
     float _avgLoseSlDist = _loseSlDistN > 0 ? _loseSlDistSum / _loseSlDistN : na
-    float _avgSlBars     = _slBarsN     > 0 ? _slBarsSum     / _slBarsN     : na
     float _slHitRate     = completedTrades > 0 ? _totalSlHits / completedTrades : 0.0
     float _quickSlRate   = _totalSlHits > 0 ? _quickSlCount / _totalSlHits : 0.0
 
     // BUILD RECOMMENDATION STRINGS — ordered by priority
-    // 🚨 CRITICAL  ⚠️ WARNING  💡 OPTIMIZE  🔓 UNLOCK  📊 INSIGHT
-
-    // ── 🚨 CRITICAL: Today large loss ──
-    string _rCrit1 = na
+    string[] _recs = array.new_string()
+    // 🚨 CRITICAL
     if initialMoney > 0 and pnlToday < -(initialMoney * 0.10)
-        _rCrit1 := "🚨 Down " + str.tostring(math.round(math.abs(pnlToday) / initialMoney * 100)) + "% today (-$" + str.tostring(math.abs(pnlToday), "#.##") + ")\nconsider stopping for the day to protect your capital"
-
-    // ── 🚨 CRITICAL: Negative EV per strategy ──
-    string _rCrit2 = na
-    string _rCrit3 = na
-    string _rCrit4 = na
+        array.push(_recs, "🚨 Down " + str.tostring(math.round(math.abs(pnlToday) / initialMoney * 100)) + "% today (-$" + str.tostring(math.abs(pnlToday), "#.##") + ")\nconsider stopping for the day to protect your capital")
     if not na(_uhvEV) and _uhvEV < -0.05
-        _rCrit2 := "🚨 UHV Breakout has negative EV: -$" + str.tostring(math.abs(_uhvEV), "#.##") + "/trade avg (" + str.tostring(_uhvWinsCalc) + "/" + str.tostring(_uhvTradesCalc) + " won, avg win $" + str.tostring(_uhvAvgWin, "#.##") + " vs avg loss -$" + str.tostring(_uhvAvgLoss, "#.##") + ")\ndisable or adjust settings"
+        array.push(_recs, "🚨 UHV Breakout has negative EV: -$" + str.tostring(math.abs(_uhvEV), "#.##") + "/trade avg (" + str.tostring(_uhvWinsCalc) + "/" + str.tostring(_uhvTradesCalc) + " won, avg win $" + str.tostring(_uhvAvgWin, "#.##") + " vs avg loss -$" + str.tostring(_uhvAvgLoss, "#.##") + ")\ndisable or adjust settings")
     if not na(_tbrEV) and _tbrEV < -0.05
-        _rCrit3 := "🚨 Two Bar Reversal has negative EV: -$" + str.tostring(math.abs(_tbrEV), "#.##") + "/trade avg (" + str.tostring(_tbrWinsCalc) + "/" + str.tostring(_tbrTradesCalc) + " won, avg win $" + str.tostring(_tbrAvgWin, "#.##") + " vs avg loss -$" + str.tostring(_tbrAvgLoss, "#.##") + ")\ndisable or adjust settings"
+        array.push(_recs, "🚨 Two Bar Reversal has negative EV: -$" + str.tostring(math.abs(_tbrEV), "#.##") + "/trade avg (" + str.tostring(_tbrWinsCalc) + "/" + str.tostring(_tbrTradesCalc) + " won, avg win $" + str.tostring(_tbrAvgWin, "#.##") + " vs avg loss -$" + str.tostring(_tbrAvgLoss, "#.##") + ")\ndisable or adjust settings")
     if not na(_evrEV) and _evrEV < -0.05
-        _rCrit4 := "🚨 Effort vs Result has negative EV: -$" + str.tostring(math.abs(_evrEV), "#.##") + "/trade avg (" + str.tostring(_evrWinsCalc) + "/" + str.tostring(_evrTradesCalc) + " won, avg win $" + str.tostring(_evrAvgWin, "#.##") + " vs avg loss -$" + str.tostring(_evrAvgLoss, "#.##") + ")\ndisable or adjust settings"
-
-    // ── ⚠️ WARNING: Strategy win rate < 40% ──
-    string _rWarn1 = na
-    string _rWarn2 = na
-    string _rWarn3 = na
-    if _uhvTradesCalc >= 5 and _uhvWinsCalc / _uhvTradesCalc < 0.40 and na(_rCrit2)
-        _rWarn1 := "⚠️ UHV Breakout: " + str.tostring(_uhvWinsCalc) + "/" + str.tostring(_uhvTradesCalc) + " won (" + str.tostring(math.round(_uhvWinsCalc / _uhvTradesCalc * 100)) + "%)\nbelow break-even. Try: raise Min Trend Strength, enable Require UHV Sweep, or disable this strategy"
-    if _tbrTradesCalc >= 5 and _tbrWinsCalc / _tbrTradesCalc < 0.40 and na(_rCrit3)
-        _rWarn2 := "⚠️ Two Bar Reversal: " + str.tostring(_tbrWinsCalc) + "/" + str.tostring(_tbrTradesCalc) + " won (" + str.tostring(math.round(_tbrWinsCalc / _tbrTradesCalc * 100)) + "%)\nbelow break-even. Try: enable Lower Volume filter, tighten Min Trend Strength, or disable this strategy"
-    if _evrTradesCalc >= 5 and _evrWinsCalc / _evrTradesCalc < 0.40 and na(_rCrit4)
-        _rWarn3 := "⚠️ Effort vs Result: " + str.tostring(_evrWinsCalc) + "/" + str.tostring(_evrTradesCalc) + " won (" + str.tostring(math.round(_evrWinsCalc / _evrTradesCalc * 100)) + "%)\nbelow break-even. Try: enable Higher Volume filter, or disable this strategy"
-
-    // ── ⚠️ WARNING: SL hit rate too high ──
-    string _rWarn4 = na
+        array.push(_recs, "🚨 Effort vs Result has negative EV: -$" + str.tostring(math.abs(_evrEV), "#.##") + "/trade avg (" + str.tostring(_evrWinsCalc) + "/" + str.tostring(_evrTradesCalc) + " won, avg win $" + str.tostring(_evrAvgWin, "#.##") + " vs avg loss -$" + str.tostring(_evrAvgLoss, "#.##") + ")\ndisable or adjust settings")
+    // ⚠️ WARNING
+    if _uhvTradesCalc >= 5 and _uhvWinsCalc / _uhvTradesCalc < 0.40 and _uhvEV >= -0.05
+        array.push(_recs, "⚠️ UHV Breakout: " + str.tostring(_uhvWinsCalc) + "/" + str.tostring(_uhvTradesCalc) + " won (" + str.tostring(math.round(_uhvWinsCalc / _uhvTradesCalc * 100)) + "%)\nbelow break-even. Try: raise Min Trend Strength, enable Require UHV Sweep, or disable this strategy")
+    if _tbrTradesCalc >= 5 and _tbrWinsCalc / _tbrTradesCalc < 0.40 and _tbrEV >= -0.05
+        array.push(_recs, "⚠️ Two Bar Reversal: " + str.tostring(_tbrWinsCalc) + "/" + str.tostring(_tbrTradesCalc) + " won (" + str.tostring(math.round(_tbrWinsCalc / _tbrTradesCalc * 100)) + "%)\nbelow break-even. Try: enable Lower Volume filter, tighten Min Trend Strength, or disable this strategy")
+    if _evrTradesCalc >= 5 and _evrWinsCalc / _evrTradesCalc < 0.40 and _evrEV >= -0.05
+        array.push(_recs, "⚠️ Effort vs Result: " + str.tostring(_evrWinsCalc) + "/" + str.tostring(_evrTradesCalc) + " won (" + str.tostring(math.round(_evrWinsCalc / _evrTradesCalc * 100)) + "%)\nbelow break-even. Try: enable Higher Volume filter, or disable this strategy")
     if _totalSlHits >= 5 and _slHitRate > 0.60 and completedTrades >= 8
-        _rWarn4 := "⚠️ " + str.tostring(math.round(_slHitRate * 100)) + "% of trades are hitting SL (" + str.tostring(_totalSlHits) + "/" + str.tostring(completedTrades) + ")\nentries may be too early. Try: increase SL Buffer, switch to ATR stop, or raise Min Trend Strength"
-
-    // ── ⚠️ WARNING: SL clipped in noise (< 2 bars) ──
-    string _rWarn5 = na
+        array.push(_recs, "⚠️ " + str.tostring(math.round(_slHitRate * 100)) + "% of trades are hitting SL (" + str.tostring(_totalSlHits) + "/" + str.tostring(completedTrades) + ")\nentries may be too early. Try: increase SL Buffer, switch to ATR stop, or raise Min Trend Strength")
     if _totalSlHits >= 4 and _quickSlRate > 0.5
-        _rWarn5 := "⚠️ " + str.tostring(_quickSlCount) + "/" + str.tostring(_totalSlHits) + " SL hits happen within 2 bars\nSL is inside the noise zone. Fix: open each strategy's settings → 'How much extra room past the structure?' and increase by $0.20–$0.50, or switch to ATR stop"
-
-    // ── ⚠️ WARNING: Declining performance ──
-    string _rWarn6 = na
-    if not na(_recentAvg) and not na(_avgPnL) and completedTrades >= 15 and _recentN >= 5
-        float _declinePct = _avgPnL > 0 ? (_avgPnL - _recentAvg) / _avgPnL * 100 : 0.0
-        if _declinePct > 40 and _recentAvg < _avgPnL * 0.6
-            _rWarn6 := "⚠️ Performance declining: last " + str.tostring(_recentN) + " trades avg $" + str.tostring(_recentAvg, "#.##") + " vs all-time avg $" + str.tostring(_avgPnL, "#.##") + "\nmarket conditions may have changed. Review recent losses for a common pattern"
-
-    // ── 💡 OPTIMIZE: Win rate heavily biased to one direction ──
-    string _rOpt1 = na
-    if not na(_bullWinRate) and not na(_bearWinRate) and completedTrades >= 10
-        float _dirGap = math.abs(_bullWinRate - _bearWinRate)
-        if _dirGap > 0.25
-            string _strongDir = _bullWinRate > _bearWinRate ? "Bull (📈)" : "Bear (📉)"
-            string _weakDir   = _bullWinRate > _bearWinRate ? "Bear" : "Bull"
-            int    _strongPct = _bullWinRate > _bearWinRate ? math.round(_bullWinRate * 100) : math.round(_bearWinRate * 100)
-            int    _weakPct   = _bullWinRate > _bearWinRate ? math.round(_bearWinRate * 100) : math.round(_bullWinRate * 100)
-            _rOpt1 := "💡 " + _strongDir + " trades win " + str.tostring(_strongPct) + "% vs " + _weakDir + " " + str.tostring(_weakPct) + "%\n" + _weakDir + " setups are dragging down results. Consider only taking " + _strongDir + " signals when the session aligns"
-
-    // ── 💡 OPTIMIZE: Session win rate skew ──
-    string _rOpt2 = na
-    if not na(_lonWR) and not na(_nyWR)
-        float _sessGap = math.abs(_lonWR - _nyWR)
-        if _sessGap > 0.25
-            string _bestSess  = _lonWR > _nyWR ? "🏦 London (" + str.tostring(math.round(_lonWR * 100)) + "%, " + str.tostring(_lonTrades) + " trades)" : "🗽 NY (" + str.tostring(math.round(_nyWR * 100)) + "%, " + str.tostring(_nyTrades) + " trades)"
-            string _worstSess = _lonWR > _nyWR ? "NY (" + str.tostring(math.round(_nyWR * 100)) + "%)" : "London (" + str.tostring(math.round(_lonWR * 100)) + "%)"
-            _rOpt2 := "💡 Session gap: " + _bestSess + " wins more than " + _worstSess + "\nyou could focus trading hours on the better session"
-    if na(_rOpt2) and not na(_asWR) and not na(_nyWR) and math.abs(_asWR - _nyWR) > 0.25
-        string _bestSess2  = _asWR > _nyWR ? "🌏 Asia (" + str.tostring(math.round(_asWR * 100)) + "%)" : "🗽 NY (" + str.tostring(math.round(_nyWR * 100)) + "%)"
-        string _worstSess2 = _asWR > _nyWR ? "NY (" + str.tostring(math.round(_nyWR * 100)) + "%)" : "Asia (" + str.tostring(math.round(_asWR * 100)) + "%)"
-        _rOpt2 := "💡 Session gap: " + _bestSess2 + " outperforms " + _worstSess2 + "\ntrade more during the better session"
-
-    // ── 💡 OPTIMIZE: Trend strength filter ──
-    string _rOpt3 = na
+        array.push(_recs, "⚠️ " + str.tostring(_quickSlCount) + "/" + str.tostring(_totalSlHits) + " SL hits happen within 2 bars\nSL is inside the noise zone. Fix: open each strategy's settings → 'How much extra room past the structure?' and increase by $0.20–$0.50, or switch to ATR stop")
+    if not na(_recentAvg) and not na(_avgPnL) and completedTrades >= 15 and _recentN >= 5 and (_avgPnL > 0 ? (_avgPnL - _recentAvg) / _avgPnL * 100 : 0.0) > 40 and _recentAvg < _avgPnL * 0.6
+        array.push(_recs, "⚠️ Performance declining: last " + str.tostring(_recentN) + " trades avg $" + str.tostring(_recentAvg, "#.##") + " vs all-time avg $" + str.tostring(_avgPnL, "#.##") + "\nmarket conditions may have changed. Review recent losses for a common pattern")
+    // 💡 OPTIMIZE
+    if not na(_bullWinRate) and not na(_bearWinRate) and completedTrades >= 10 and math.abs(_bullWinRate - _bearWinRate) > 0.25
+        _sDir = _bullWinRate > _bearWinRate ? "Bull (📈)" : "Bear (📉)"
+        _wDir = _bullWinRate > _bearWinRate ? "Bear" : "Bull"
+        array.push(_recs, "💡 " + _sDir + " trades win " + str.tostring(_bullWinRate > _bearWinRate ? math.round(_bullWinRate * 100) : math.round(_bearWinRate * 100)) + "% vs " + _wDir + " " + str.tostring(_bullWinRate > _bearWinRate ? math.round(_bearWinRate * 100) : math.round(_bullWinRate * 100)) + "%\n" + _wDir + " setups are dragging down results. Consider only taking " + _sDir + " signals when the session aligns")
+    if not na(_lonWR) and not na(_nyWR) and math.abs(_lonWR - _nyWR) > 0.25
+        array.push(_recs, "💡 Session gap: " + (_lonWR > _nyWR ? "🏦 London (" + str.tostring(math.round(_lonWR * 100)) + "%, " + str.tostring(_lonTrades) + " trades)" : "🗽 NY (" + str.tostring(math.round(_nyWR * 100)) + "%, " + str.tostring(_nyTrades) + " trades)") + " wins more than " + (_lonWR > _nyWR ? "NY (" + str.tostring(math.round(_nyWR * 100)) + "%)" : "London (" + str.tostring(math.round(_lonWR * 100)) + "%)") + "\nyou could focus trading hours on the better session")
+    else if not na(_asWR) and not na(_nyWR) and math.abs(_asWR - _nyWR) > 0.25
+        array.push(_recs, "💡 Session gap: " + (_asWR > _nyWR ? "🌏 Asia (" + str.tostring(math.round(_asWR * 100)) + "%)" : "🗽 NY (" + str.tostring(math.round(_nyWR * 100)) + "%)") + " outperforms " + (_asWR > _nyWR ? "NY (" + str.tostring(math.round(_nyWR * 100)) + "%)" : "Asia (" + str.tostring(math.round(_asWR * 100)) + "%)") + "\ntrade more during the better session")
     if not na(_avgWinTS) and not na(_avgLoseTS) and _winTScount >= 3 and _loseTScount >= 3
-        float _tsDiff = _avgWinTS - _avgLoseTS
+        _tsDiff = _avgWinTS - _avgLoseTS
         if _tsDiff > 8
-            int _suggestTS = math.round(_avgWinTS * 0.85)
-            float _filteredLosses = _loseTScount > 0 ? math.round((_loseTScount * (_suggestTS - _avgLoseTS) / math.max(_avgLoseTS, 1)) * 100) / 100 : 0.0
-            _rOpt3 := "💡 Winners fire at avg trend strength " + str.tostring(math.round(_avgWinTS)) + " vs losers at " + str.tostring(math.round(_avgLoseTS)) + "\nraise 'Min Trend Strength' to ~" + str.tostring(_suggestTS) + " to pre-filter weak setups (setting is in the Trend Engine group)"
+            array.push(_recs, "💡 Winners fire at avg trend strength " + str.tostring(math.round(_avgWinTS)) + " vs losers at " + str.tostring(math.round(_avgLoseTS)) + "\nraise 'Min Trend Strength' to ~" + str.tostring(math.round(_avgWinTS * 0.85)) + " to pre-filter weak setups (setting is in the Trend Engine group)")
         else if _tsDiff < -8
-            _rOpt3 := "💡 Wins happen at lower trend strength (" + str.tostring(math.round(_avgWinTS)) + ") than losses (" + str.tostring(math.round(_avgLoseTS)) + ")\nlower 'Min Trend Strength' to catch more quality setups"
-
-    // ── 💡 OPTIMIZE: TP R:R vs actual break-even ──
-    string _rOpt4 = na
+            array.push(_recs, "💡 Wins happen at lower trend strength (" + str.tostring(math.round(_avgWinTS)) + ") than losses (" + str.tostring(math.round(_avgLoseTS)) + ")\nlower 'Min Trend Strength' to catch more quality setups")
     if completedTrades >= 10
         if _overallWinRate > _beWinRate + 0.10 and _avgTp1Mult < 2.2
-            // Winning more than needed — can push TP further
-            float _suggestRR = math.round(_avgRealizedRR * 1.3 * 10) / 10
-            _rOpt4 := "💡 Win rate " + str.tostring(math.round(_overallWinRate * 100)) + "% beats break-even (" + str.tostring(math.round(_beWinRate * 100)) + "% needed at " + str.tostring(math.round(_avgRealizedRR * 10) / 10) + "R)\nraise TP R:R to ~" + str.tostring(_suggestRR) + "R to earn more per winner without affecting your hit rate"
+            array.push(_recs, "💡 Win rate " + str.tostring(math.round(_overallWinRate * 100)) + "% beats break-even (" + str.tostring(math.round(_beWinRate * 100)) + "% needed at " + str.tostring(math.round(_avgRealizedRR * 10) / 10) + "R)\nraise TP R:R to ~" + str.tostring(math.round(_avgRealizedRR * 1.3 * 10) / 10) + "R to earn more per winner without affecting your hit rate")
         else if _overallWinRate < _beWinRate - 0.08 and _avgTp1Mult > 1.2
-            // Losing more than break-even demands — lower TP to close faster
-            float _suggestRR2 = math.round(_avgRealizedRR * 0.75 * 10) / 10
-            _rOpt4 := "💡 Win rate " + str.tostring(math.round(_overallWinRate * 100)) + "% is below break-even (" + str.tostring(math.round(_beWinRate * 100)) + "% needed at " + str.tostring(math.round(_avgRealizedRR * 10) / 10) + "R)\nlower TP R:R to ~" + str.tostring(_suggestRR2) + "R so TP is easier to reach"
-
-    // ── 💡 OPTIMIZE: SL distance comparison — show in dollars (not ticks, which are meaningless on XAUUSD) ──
-    string _rOpt5 = na
+            array.push(_recs, "💡 Win rate " + str.tostring(math.round(_overallWinRate * 100)) + "% is below break-even (" + str.tostring(math.round(_beWinRate * 100)) + "% needed at " + str.tostring(math.round(_avgRealizedRR * 10) / 10) + "R)\nlower TP R:R to ~" + str.tostring(math.round(_avgRealizedRR * 0.75 * 10) / 10) + "R so TP is easier to reach")
     if not na(_avgWinSlDist) and not na(_avgLoseSlDist) and _winSlDistN >= 3 and _loseSlDistN >= 3
-        // SL distances are stored as price (e.g. 0.22 = $0.22 on XAUUSD). Convert to dollar impact for clarity.
-        float _slDiffDlr = _avgLoseSlDist - _avgWinSlDist
-        float _slThresh  = syminfo.mintick * 20  // meaningful difference threshold
+        _slDiffDlr = _avgLoseSlDist - _avgWinSlDist
+        _slThresh  = syminfo.mintick * 20
         if _slDiffDlr > _slThresh
-            // Losers had WIDER SL — given more room and still lost
-            _rOpt5 := "💡 Losing trades had wider avg SL ($" + str.tostring(_avgLoseSlDist, "#.####") + ") vs winners ($" + str.tostring(_avgWinSlDist, "#.####") + ")\nextra room didn't help. Reduce SL Buffer or switch to CandleWick SL"
+            array.push(_recs, "💡 Losing trades had wider avg SL ($" + str.tostring(_avgLoseSlDist, "#.####") + ") vs winners ($" + str.tostring(_avgWinSlDist, "#.####") + ")\nextra room didn't help. Reduce SL Buffer or switch to CandleWick SL")
         else if -_slDiffDlr > _slThresh
-            // Winners had WIDER SL — losers stopped out too tight
-            float _suggestBufDlr = math.round((_avgWinSlDist - _avgLoseSlDist) * 0.5 * 100) / 100
-            _rOpt5 := "💡 Winners had wider avg SL ($" + str.tostring(_avgWinSlDist, "#.####") + ") vs losers ($" + str.tostring(_avgLoseSlDist, "#.####") + ")\nSL too tight on losing trades. Try increasing SL Buffer by ~$" + str.tostring(_suggestBufDlr, "#.##") + " in strategy settings"
-
-    // ── 💡 OPTIMIZE: ATR vs current SL method ──
-    string _rOpt6 = na
+            array.push(_recs, "💡 Winners had wider avg SL ($" + str.tostring(_avgWinSlDist, "#.####") + ") vs losers ($" + str.tostring(_avgLoseSlDist, "#.####") + ")\nSL too tight on losing trades. Try increasing SL Buffer by ~$" + str.tostring(math.round((_avgWinSlDist - _avgLoseSlDist) * 0.5 * 100) / 100, "#.##") + " in strategy settings")
     if (uhvSlType == "UHV" or uhvSlType == "CandleWick" or tbrSlType == "CandleWick" or evrSlType == "UHV" or evrSlType == "CandleWick") and not na(_avgLoseSlDist) and _loseSlDistN >= 4
-        float _currentAtr2 = nz(_atr14, 1.0)
-        if _avgLoseSlDist < _currentAtr2 * 0.75
-            float _suggestedMult2 = math.round(_currentAtr2 * 1.2 / syminfo.mintick * 10) / 10
-            _rOpt6 := "💡 Avg SL distance ($" + str.tostring(_avgLoseSlDist, "#.####") + ") is below ATR ($" + str.tostring(_currentAtr2, "#.####") + ")\nyour SL sits inside normal price noise. Try 'ATR' SL method (each strategy → Stop Loss → ATR) which auto-widens in volatile markets"
-
-    // ── 🔓 UNLOCK: Filter settings blocking profitable signals ──
-    string _rUnlock1 = na
-    string _rUnlock2 = na
-    string _rUnlock3 = na
-    string _rUnlock4 = na
-    string _rUnlock5 = na
-    string _rUnlock6 = na
+        _curAtr = nz(_atr14, 1.0)
+        if _avgLoseSlDist < _curAtr * 0.75
+            array.push(_recs, "💡 Avg SL distance ($" + str.tostring(_avgLoseSlDist, "#.####") + ") is below ATR ($" + str.tostring(_curAtr, "#.####") + ")\nyour SL sits inside normal price noise. Try 'ATR' SL method (each strategy → Stop Loss → ATR) which auto-widens in volatile markets")
+    // 🔓 UNLOCK
     if requireUHVSweep and blockedBySwept >= 3 and _canEstimate
-        float _estGainSweep = math.round(blockedBySwept / _daysBase * _avgPnLPerTrade * 100) / 100
-        float _sweepPerDay  = math.round(blockedBySwept / _daysBase * 10) / 10
-        _rUnlock1 := "🔓 UHV Sweep filter blocked " + str.tostring(blockedBySwept) + " signals (" + str.tostring(_sweepPerDay) + "/day avg)\nturning OFF 'Must entry candle wick through UHV' could add ~$" + str.tostring(_estGainSweep, "#.##") + "/day"
-    if requireUHVLowerVol and blockedUHVVol >= 3 and _canEstimate and na(_rUnlock1)
-        float _estGainUHVVol = math.round(blockedUHVVol / _daysBase * _avgPnLPerTrade * 100) / 100
-        float _uhvVolPerDay  = math.round(blockedUHVVol / _daysBase * 10) / 10
-        _rUnlock1 := "🔓 UHV Volume filter blocked " + str.tostring(blockedUHVVol) + " signals (" + str.tostring(_uhvVolPerDay) + "/day avg)\nturning OFF 'Must breakout candle have lower volume' could add ~$" + str.tostring(_estGainUHVVol, "#.##") + "/day"
+        array.push(_recs, "🔓 UHV Sweep filter blocked " + str.tostring(blockedBySwept) + " signals (" + str.tostring(math.round(blockedBySwept / _daysBase * 10) / 10) + "/day avg)\nturning OFF 'Must entry candle wick through UHV' could add ~$" + str.tostring(math.round(blockedBySwept / _daysBase * _avgPnLPerTrade * 100) / 100, "#.##") + "/day")
+    else if requireUHVLowerVol and blockedUHVVol >= 3 and _canEstimate
+        array.push(_recs, "🔓 UHV Volume filter blocked " + str.tostring(blockedUHVVol) + " signals (" + str.tostring(math.round(blockedUHVVol / _daysBase * 10) / 10) + "/day avg)\nturning OFF 'Must breakout candle have lower volume' could add ~$" + str.tostring(math.round(blockedUHVVol / _daysBase * _avgPnLPerTrade * 100) / 100, "#.##") + "/day")
     if requireOpposingCandle and blockedByOpposing >= 3 and _canEstimate
-        float _estGainOpp = math.round(blockedByOpposing / _daysBase * _avgPnLPerTrade * 100) / 100
-        float _oppPerDay  = math.round(blockedByOpposing / _daysBase * 10) / 10
-        _rUnlock2 := "🔓 Opposing candle filter blocked " + str.tostring(blockedByOpposing) + " 2BR signals (" + str.tostring(_oppPerDay) + "/day avg)\nturning OFF 'Must there be an opposing candle' (Two Bar Reversal settings) could add ~$" + str.tostring(_estGainOpp, "#.##") + "/day"
+        array.push(_recs, "🔓 Opposing candle filter blocked " + str.tostring(blockedByOpposing) + " 2BR signals (" + str.tostring(math.round(blockedByOpposing / _daysBase * 10) / 10) + "/day avg)\nturning OFF 'Must there be an opposing candle' (Two Bar Reversal settings) could add ~$" + str.tostring(math.round(blockedByOpposing / _daysBase * _avgPnLPerTrade * 100) / 100, "#.##") + "/day")
     if require2BRLowerVol and blocked2BRVol >= 3 and _canEstimate
-        float _estGain2BR = math.round(blocked2BRVol / _daysBase * _avgPnLPerTrade * 100) / 100
-        float _tbrPerDay  = math.round(blocked2BRVol / _daysBase * 10) / 10
-        _rUnlock3 := "🔓 2BR Volume filter blocked " + str.tostring(blocked2BRVol) + " signals (" + str.tostring(_tbrPerDay) + "/day avg)\nturning OFF 'Must engulfing candle have lower volume' could add ~$" + str.tostring(_estGain2BR, "#.##") + "/day"
+        array.push(_recs, "🔓 2BR Volume filter blocked " + str.tostring(blocked2BRVol) + " signals (" + str.tostring(math.round(blocked2BRVol / _daysBase * 10) / 10) + "/day avg)\nturning OFF 'Must engulfing candle have lower volume' could add ~$" + str.tostring(math.round(blocked2BRVol / _daysBase * _avgPnLPerTrade * 100) / 100, "#.##") + "/day")
     if requireEVRHigherVol and blockedEVRVol >= 3 and _canEstimate
-        float _estGainEVR = math.round(blockedEVRVol / _daysBase * _avgPnLPerTrade * 100) / 100
-        float _evrPerDay  = math.round(blockedEVRVol / _daysBase * 10) / 10
-        _rUnlock4 := "🔓 EVR Volume filter blocked " + str.tostring(blockedEVRVol) + " signals (" + str.tostring(_evrPerDay) + "/day avg)\nturning OFF 'Must sweep candle have higher volume' could add ~$" + str.tostring(_estGainEVR, "#.##") + "/day"
-    if requireEVRLowerVol and blockedEVRLowerVol >= 3 and _canEstimate and na(_rUnlock4)
-        float _estGainEVRLow = math.round(blockedEVRLowerVol / _daysBase * _avgPnLPerTrade * 100) / 100
-        float _evrLowPerDay  = math.round(blockedEVRLowerVol / _daysBase * 10) / 10
-        _rUnlock4 := "🔓 EVR Lower Vol filter blocked " + str.tostring(blockedEVRLowerVol) + " signals (" + str.tostring(_evrLowPerDay) + "/day avg)\nturning OFF 'Must sweep candle have lower volume' could add ~$" + str.tostring(_estGainEVRLow, "#.##") + "/day"
+        array.push(_recs, "🔓 EVR Volume filter blocked " + str.tostring(blockedEVRVol) + " signals (" + str.tostring(math.round(blockedEVRVol / _daysBase * 10) / 10) + "/day avg)\nturning OFF 'Must sweep candle have higher volume' could add ~$" + str.tostring(math.round(blockedEVRVol / _daysBase * _avgPnLPerTrade * 100) / 100, "#.##") + "/day")
+    else if requireEVRLowerVol and blockedEVRLowerVol >= 3 and _canEstimate
+        array.push(_recs, "🔓 EVR Lower Vol filter blocked " + str.tostring(blockedEVRLowerVol) + " signals (" + str.tostring(math.round(blockedEVRLowerVol / _daysBase * 10) / 10) + "/day avg)\nturning OFF 'Must sweep candle have lower volume' could add ~$" + str.tostring(math.round(blockedEVRLowerVol / _daysBase * _avgPnLPerTrade * 100) / 100, "#.##") + "/day")
     if blockedByCooldown >= 5 and _canEstimate
-        float _estGainCD = math.round(blockedByCooldown / _daysBase * _avgPnLPerTrade * 100) / 100
-        float _cdPerDay  = math.round(blockedByCooldown / _daysBase * 10) / 10
-        _rUnlock5 := "🔓 Cooldown blocked " + str.tostring(blockedByCooldown) + " signals (" + str.tostring(_cdPerDay) + "/day avg)\nlower 'Signal Cooldown (bars)' in General Settings to add ~$" + str.tostring(_estGainCD, "#.##") + "/day"
+        array.push(_recs, "🔓 Cooldown blocked " + str.tostring(blockedByCooldown) + " signals (" + str.tostring(math.round(blockedByCooldown / _daysBase * 10) / 10) + "/day avg)\nlower 'Signal Cooldown (bars)' in General Settings to add ~$" + str.tostring(math.round(blockedByCooldown / _daysBase * _avgPnLPerTrade * 100) / 100, "#.##") + "/day")
     if blockedByStrength >= 4 and _canEstimate
-        float _estGainTS = math.round(blockedByStrength / _daysBase * _avgPnLPerTrade * 100) / 100
-        float _tsPerDay  = math.round(blockedByStrength / _daysBase * 10) / 10
-        _rUnlock6 := "🔓 Min Trend Strength blocked " + str.tostring(blockedByStrength) + " signals (" + str.tostring(_tsPerDay) + "/day avg)\nlower 'Min Trend Strength' in General Settings for ~$" + str.tostring(_estGainTS, "#.##") + "/day more (only do this if trend quality stays high)"
-
-    // ─── Assemble final list in priority order ───────────────────
-    string[] _recs = array.new_string()
-    // Critical first
-    if not na(_rCrit1)
-        array.push(_recs, _rCrit1)
-    if not na(_rCrit2)
-        array.push(_recs, _rCrit2)
-    if not na(_rCrit3)
-        array.push(_recs, _rCrit3)
-    if not na(_rCrit4)
-        array.push(_recs, _rCrit4)
-    // Warnings
-    if not na(_rWarn1)
-        array.push(_recs, _rWarn1)
-    if not na(_rWarn2)
-        array.push(_recs, _rWarn2)
-    if not na(_rWarn3)
-        array.push(_recs, _rWarn3)
-    if not na(_rWarn4)
-        array.push(_recs, _rWarn4)
-    if not na(_rWarn5)
-        array.push(_recs, _rWarn5)
-    if not na(_rWarn6)
-        array.push(_recs, _rWarn6)
-    // Optimizations
-    if not na(_rOpt1)
-        array.push(_recs, _rOpt1)
-    if not na(_rOpt2)
-        array.push(_recs, _rOpt2)
-    if not na(_rOpt3)
-        array.push(_recs, _rOpt3)
-    if not na(_rOpt4)
-        array.push(_recs, _rOpt4)
-    if not na(_rOpt5)
-        array.push(_recs, _rOpt5)
-    if not na(_rOpt6)
-        array.push(_recs, _rOpt6)
-    // Unlocks
-    if not na(_rUnlock1)
-        array.push(_recs, _rUnlock1)
-    if not na(_rUnlock2)
-        array.push(_recs, _rUnlock2)
-    if not na(_rUnlock3)
-        array.push(_recs, _rUnlock3)
-    if not na(_rUnlock4)
-        array.push(_recs, _rUnlock4)
-    if not na(_rUnlock5)
-        array.push(_recs, _rUnlock5)
-    if not na(_rUnlock6)
-        array.push(_recs, _rUnlock6)
+        array.push(_recs, "🔓 Min Trend Strength blocked " + str.tostring(blockedByStrength) + " signals (" + str.tostring(math.round(blockedByStrength / _daysBase * 10) / 10) + "/day avg)\nlower 'Min Trend Strength' in General Settings for ~$" + str.tostring(math.round(blockedByStrength / _daysBase * _avgPnLPerTrade * 100) / 100, "#.##") + "/day more (only do this if trend quality stays high)")
     // ROW 15 — OPTIMIZER & TOOLS DIVIDER
     table.cell(statsPanel, 0, 15, "OPTIMIZER & TOOLS",
          text_color = _txtDim, text_size = size.tiny, bgcolor = color.new(color.black, 5))
 
     // ROW 16 — TOP RECOMMENDATIONS (surfacing computed _recs array)
     int    _recsSize = array.size(_recs)
-    string _rec1     = _recsSize > 0 ? array.get(_recs, 0) : "No recommendations yet — need more trade data"
-    string _rec2     = _recsSize > 1 ? "\n" + array.get(_recs, 1) : ""
-    table.cell(statsPanel, 0, 16, _rec1 + _rec2,
+    table.cell(statsPanel, 0, 16, (_recsSize > 0 ? array.get(_recs, 0) : "No recommendations yet — need more trade data") + (_recsSize > 1 ? "\n" + array.get(_recs, 1) : ""),
          text_color = _txtYellow, text_size = size.tiny, bgcolor = color.new(#1a2a1a, 10))
     // ROW 17 — GUIDED OPTIMIZER
-    string _gStratCode = _gIsUhv ? "UHV" : _gIsTbr ? "2BR" : "EVR"
-    string _gPanelHdr  = "GUIDED OPTIMIZER [" + _gStratCode + "] — " + _gRndLabel + "\n"
     string _gPanelBody = ""
-    string _gUhvSt = _gHLu == 0 ? "not started" : "R" + str.tostring(_gHLu) + " done"
-    string _gTbrSt = _gHLb == 0 ? "not started" : "R" + str.tostring(_gHLb) + " done"
-    string _gEvrSt = _gHLe == 0 ? "not started" : "R" + str.tostring(_gHLe) + " done"
     if optGuideReset
-        _gPanelBody := "RESET — all round history cleared. Ready to start new optimization.\nUncheck 'Reset Optimizer' in Settings → Optimize to begin Round 1 again.\n(Winner integers in Settings are ignored while reset is active)"
+        _gPanelBody := "NEW PASS — panel reset to Round 1. Previously converged settings stay applied.\nUncheck in Settings → Optimize to begin testing new variations."
     else if not optGuideEnable
         _gPanelBody := "Off — enable Guided Optimizer in Settings → Optimize"
     else
         string _gSlot   = (_gIsUhv ? "UHV" : _gIsTbr ? "2BR" : "EVR") + " Strategy Round " + str.tostring(_gRound) + " Best Setting"
-        bool   _gNoneOnly = optGuideNoneAbove and not (optGuideTry1 or optGuideTry2 or optGuideTry3 or optGuideTry4 or optGuideTry5)
-        string _gStatus = _gNoneOnly ? "None improved — current settings are already optimal for this round\nEnter 3 in '" + _gSlot + "' to advance to next round\n" :
-             _gAny ? "Testing Setting #" + str.tostring(_gChoice) + " — run 10+ trades then compare P&L\n" :
-             "Check an Apply Setting box in Settings → Optimize to begin\n"
-        string _gTblHdr = "         TP        Cooldown  RL Cap\n"
         string _gRows = ""
         for _gi = 0 to 4
             string _gMk = _gAny and _gChoice == _gi + 1 ? ">" : " "
@@ -3021,12 +2815,10 @@ f_drawPanel() =>
                  "  $" + str.tostring(_tp, "#.#") +
                  "  " + str.tostring(_cd) + " bars" +
                  "  $" + str.tostring(_rl, "#") + "\n"
-        string _gAllSt  = "UHV: " + _gUhvSt + "  |  2BR: " + _gTbrSt + "  |  EVR: " + _gEvrSt + "\n"
-        string _gFooter = "Best found → enter number in '" + _gSlot + "' in Settings → next round auto-starts"
-        _gPanelBody := _gStatus + _gTblHdr + _gRows + _gAllSt + _gFooter
+        _gPanelBody := (optGuideNoneAbove and not (optGuideTry1 or optGuideTry2 or optGuideTry3 or optGuideTry4 or optGuideTry5) ? "None improved — current settings are already optimal for this round\nEnter 3 in '" + _gSlot + "' to advance to next round\n" : _gAny ? "Testing Setting #" + str.tostring(_gChoice) + " — run 10+ trades then compare P&L\n" : "Check an Apply Setting box in Settings → Optimize to begin\n") + "         TP        Cooldown  RL Cap\n" + _gRows + "UHV: " + (_gHLu == 0 ? "not started" : "R" + str.tostring(_gHLu) + " done") + "  |  2BR: " + (_gHLb == 0 ? "not started" : "R" + str.tostring(_gHLb) + " done") + "  |  EVR: " + (_gHLe == 0 ? "not started" : "R" + str.tostring(_gHLe) + " done") + "\nBest found → enter number in '" + _gSlot + "' in Settings → next round auto-starts"
     color _gBg = optGuideReset ? color.new(#4a2000, 5) : optGuideEnable ? color.new(#003838, 5) : color.new(color.black, 20)
     color _gFg = optGuideReset ? color.new(#ffaa44, 5) : optGuideEnable ? color.white : color.new(color.silver, 5)
-    table.cell(statsPanel, 0, 17, _gPanelHdr + _gPanelBody, text_color = _gFg, text_size = size.tiny, bgcolor = _gBg)
+    table.cell(statsPanel, 0, 17, "GUIDED OPTIMIZER [" + (_gIsUhv ? "UHV" : _gIsTbr ? "2BR" : "EVR") + "] — " + _gRndLabel + "\n" + _gPanelBody + (_whlCount == 0 ? "\nWIN HOUR LEARNER: watching — no 100% win hour yet" : applyWinHour ? "\nWIN HOUR LEARNER [ACTIVE]: " + str.tostring(_whlCount) + " winning hrs found  UHV TP $" + str.tostring(_whlTpU, "#.#") + "  2BR TP $" + str.tostring(_whlTpT, "#.#") + "  EVR TP $" + str.tostring(_whlTpE, "#.#") : "\nWIN HOUR LEARNER: " + str.tostring(_whlCount) + " winning hr(s) stored — enable 'Apply winning hour settings' to use"), text_color = _gFg, text_size = size.tiny, bgcolor = _gBg)
 
 
 if barstate.islast and showStatsPanel
@@ -3041,34 +2833,24 @@ f_dots(hl) =>
     _d
 
 if barstate.islast and optGuideEnable
-    string _uDots = f_dots(_gHLu)
-    string _bDots = f_dots(_gHLb)
-    string _eDots = f_dots(_gHLe)
-    string _uLbl  = _gHLu == 0 ? "  Start" : "  Round " + str.tostring(_gHLu + 1)
-    string _bLbl  = _gHLb == 0 ? "  Start" : "  Round " + str.tostring(_gHLb + 1)
-    string _eLbl  = _gHLe == 0 ? "  Start" : "  Round " + str.tostring(_gHLe + 1)
-    string _curStrat = _gIsUhv ? "UHV" : _gIsTbr ? "2BR" : "EVR"
-    string _instrLine = _gAny ? "Testing Setting #" + str.tostring(_gChoice) + " — compare P&L" :
-         "Check an Apply Setting box to test"
-    color _gpBg     = color.new(color.black, 10)
     color _gpHdrBg  = color.new(#001830, 5)
     color _gpRowBg  = color.new(#0a0a14, 8)
     gamePanel = table.new(position.bottom_left, 2, 6,
          border_color = color.new(color.gray, 40), border_width = 1,
-         bgcolor = _gpBg)
+         bgcolor = color.new(color.black, 10))
     table.cell(gamePanel, 0, 0, "OPTIMIZER", text_color = color.new(color.aqua, 0), text_size = size.small, bgcolor = _gpHdrBg)
     table.cell(gamePanel, 1, 0, "", text_size = size.small, bgcolor = _gpHdrBg)
     table.merge_cells(gamePanel, 0, 0, 1, 0)
-    table.cell(gamePanel, 0, 1, "UHV  " + _uDots, text_color = _gHLu >= 4 ? color.new(color.lime, 0) : color.silver, text_size = size.small, bgcolor = _gpRowBg)
-    table.cell(gamePanel, 1, 1, _uLbl, text_color = color.silver, text_size = size.small, bgcolor = _gpRowBg)
-    table.cell(gamePanel, 0, 2, "2BR  " + _bDots, text_color = _gHLb >= 4 ? color.new(color.lime, 0) : color.silver, text_size = size.small, bgcolor = _gpRowBg)
-    table.cell(gamePanel, 1, 2, _bLbl, text_color = color.silver, text_size = size.small, bgcolor = _gpRowBg)
-    table.cell(gamePanel, 0, 3, "EVR  " + _eDots, text_color = _gHLe >= 4 ? color.new(color.lime, 0) : color.silver, text_size = size.small, bgcolor = _gpRowBg)
-    table.cell(gamePanel, 1, 3, _eLbl, text_color = color.silver, text_size = size.small, bgcolor = _gpRowBg)
-    table.cell(gamePanel, 0, 4, "── " + _curStrat + ": " + _gRndLabel + " ──", text_color = color.new(color.aqua, 0), text_size = size.small, bgcolor = _gpHdrBg)
+    table.cell(gamePanel, 0, 1, "UHV  " + f_dots(_gHLu), text_color = _gHLu >= 4 ? color.new(color.lime, 0) : color.silver, text_size = size.small, bgcolor = _gpRowBg)
+    table.cell(gamePanel, 1, 1, _gHLu == 0 ? "  Start" : "  Round " + str.tostring(_gHLu + 1), text_color = color.silver, text_size = size.small, bgcolor = _gpRowBg)
+    table.cell(gamePanel, 0, 2, "2BR  " + f_dots(_gHLb), text_color = _gHLb >= 4 ? color.new(color.lime, 0) : color.silver, text_size = size.small, bgcolor = _gpRowBg)
+    table.cell(gamePanel, 1, 2, _gHLb == 0 ? "  Start" : "  Round " + str.tostring(_gHLb + 1), text_color = color.silver, text_size = size.small, bgcolor = _gpRowBg)
+    table.cell(gamePanel, 0, 3, "EVR  " + f_dots(_gHLe), text_color = _gHLe >= 4 ? color.new(color.lime, 0) : color.silver, text_size = size.small, bgcolor = _gpRowBg)
+    table.cell(gamePanel, 1, 3, _gHLe == 0 ? "  Start" : "  Round " + str.tostring(_gHLe + 1), text_color = color.silver, text_size = size.small, bgcolor = _gpRowBg)
+    table.cell(gamePanel, 0, 4, "── " + (_gIsUhv ? "UHV" : _gIsTbr ? "2BR" : "EVR") + ": " + _gRndLabel + " ──", text_color = color.new(color.aqua, 0), text_size = size.small, bgcolor = _gpHdrBg)
     table.cell(gamePanel, 1, 4, "", text_size = size.small, bgcolor = _gpHdrBg)
     table.merge_cells(gamePanel, 0, 4, 1, 4)
-    table.cell(gamePanel, 0, 5, _instrLine, text_color = _gAny ? color.new(color.lime, 0) : color.new(color.yellow, 0), text_size = size.small, bgcolor = _gpRowBg)
+    table.cell(gamePanel, 0, 5, _gAny ? "Testing Setting #" + str.tostring(_gChoice) + " — compare P&L" : "Check an Apply Setting box to test", text_color = _gAny ? color.new(color.lime, 0) : color.new(color.yellow, 0), text_size = size.small, bgcolor = _gpRowBg)
     table.cell(gamePanel, 1, 5, "", text_size = size.small, bgcolor = _gpRowBg)
     table.merge_cells(gamePanel, 0, 5, 1, 5)
 
