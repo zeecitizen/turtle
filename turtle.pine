@@ -9,7 +9,8 @@ max_bars_back(high, 300)
 // ─── 0. Account ──────────────────────────
 grpAccount = "💼 My Account"
 initialMoney = input.float(30.0, 'My Starting Capital ($)', minval = 1.0, step = 10.0, group = grpAccount, display = display.none)
-cMult        = input.float(1.0,  'Contract size ($/point/lot)', minval = 0.001, step = 1.0, group = grpAccount, display = display.none)
+cMult        = input.float(100.0,  'Contract size ($/point/lot)', minval = 0.001, step = 1.0, group = grpAccount, display = display.none)
+lotAmp       = input.float(1.0,   'Position Size Multiplier  ＋ / − to scale all lot sizes (1.0 = optimizer sizing, 2.0 = double lots/profit, etc.)', minval = 0.1, maxval = 50.0, step = 0.5, group = grpAccount, display = display.none)
 _resetNow = input.bool(false, '🔄 Reset Stats', group = grpAccount, display = display.none)
 var int _resetCapture = 0
 if not _resetNow
@@ -36,7 +37,7 @@ requireUHVLowerVol    = input.bool(true,  'Must the breakout candle have lower v
 uhvLookback           = input.int(4,      'How many bars back to check for Ultra High Volume?', minval = 3, maxval = 50, group = grpUHV, display = display.none)
 uhvSettleBars         = input.int(0,      'How many bars must pass after the UHV candle before entry?', minval = 0, maxval = 20, group = grpUHV, display = display.none)
 uhvDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, step = 0.5, group = grpUHV, display = display.none)
-uhvLotSize    = input.float(0.1, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpUHV, display = display.none)
+uhvLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpUHV, display = display.none)
 uhvTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpUHV, display = display.none)
 uhvTp1Mult    = input.float(7.0,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpUHV, display = display.none)
 uhvTpDollar   = input.float(9.0,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpUHV, display = display.none)
@@ -55,7 +56,7 @@ tbrStatsInfo       = input.bool(false, '📊 Wins / Trades: see Stats Panel → 
 show2BR            = input.bool(true, 'Show signals on the chart?', group = grpTBR, display = display.none)
 require2BRLowerVol = input.bool(true, 'Must the engulfing candle have lower volume than the one it engulfs?', group = grpTBR, display = display.none)
 tbrDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, step = 0.5, group = grpTBR, display = display.none)
-tbrLotSize    = input.float(0.1, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpTBR, display = display.none)
+tbrLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpTBR, display = display.none)
 tbrTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpTBR, display = display.none)
 tbrTp1Mult    = input.float(3.5,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpTBR, display = display.none)
 tbrTpDollar   = input.float(3.5,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpTBR, display = display.none)
@@ -77,7 +78,7 @@ requireEVRLowerVol   = input.bool(false, 'Must the sweep candle have lower volum
 avoidEVRTrendWick    = input.bool(false, 'If sweep candle has rejection wick, wait for next candle to confirm?', group = grpEVR, display = display.none)
 evrUseStrongestCandle = input.bool(false, 'Track highest-volume candle (not most recent)?', group = grpEVR, display = display.none)
 evrDollarRisk = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', minval = 0.0, step = 0.5, group = grpEVR, display = display.none)
-evrLotSize    = input.float(0.1, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpEVR, display = display.none)
+evrLotSize    = input.float(0.01, '──── Risk: Fixed lot size? (when $Risk = 0)', minval = 0.01, maxval = 100.0, step = 0.01, group = grpEVR, display = display.none)
 evrTpMethod   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = grpEVR, display = display.none)
 evrTp1Mult    = input.float(1.0,  '──── Take Profit: R:R Ratio (R:R method only)', minval = 0.5, maxval = 10.0, step = 0.5, group = grpEVR, display = display.none)
 evrTpDollar   = input.float(28.0,  '──── Take Profit: Fixed $ target (Dollar method only)', minval = 0.1, maxval = 500.0, step = 0.5, group = grpEVR, display = display.none)
@@ -137,7 +138,7 @@ showStatsPanel = input.bool(true,  'Show Stats Panel', group = grpDisplay, displ
 grpPC = "🤖 PineConnector Automation"
 pcEnable    = input.bool(true,   'Send signals to PineConnector (MT5)?', group = grpPC, display = display.none)
 pcLicenseId = input.string("8778286989525", 'PineConnector License ID', group = grpPC, display = display.none)
-pcSymbol    = input.string("ETHUSD",         'MT5 Symbol Name', group = grpPC, display = display.none)
+pcSymbol    = input.string("XAUUSD",         'MT5 Symbol Name', group = grpPC, display = display.none)
 
 // ─── 11. Optimize ────────
 grpOpt  = "⚡ Optimize"
@@ -146,31 +147,35 @@ optLevel        = input.int(1,    '⚡ Optimization level — raise by 1 for eac
 reduceLoss      = input.bool(false, '🎯 Reduce Max Loss Per Trade  —  cap SL to limit dollar loss', group = grpOpt, display = display.none)
 reduceLossMode  = input.string("Auto (avg win per strategy)", '──── Cap Mode', options = ["Auto (avg win per strategy)", "Fixed $ for all strategies"], group = grpOpt, display = display.none)
 reduceLossFixed = input.float(50.0, '──── Fixed cap ($) — used when mode is Fixed', minval = 1.0, maxval = 500.0, step = 5.0, group = grpOpt, display = display.none)
-optGuideEnable  = input.bool(false, '🧭 Guided Optimizer — narrow down best settings in 4-5 rounds', group = grpOpt, display = display.none)
-optGuideStrategy = input.string("UHV Breakout", '   Strategy to optimize', options = ["UHV Breakout", "Two Bar Reversal", "Effort vs Result"], group = grpOpt, display = display.none)
-optGuideTry1    = input.bool(false, '   ☐ Try Choice 1', group = grpOpt, display = display.none)
-optGuideTry2    = input.bool(false, '   ☐ Try Choice 2', group = grpOpt, display = display.none)
-optGuideTry3    = input.bool(false, '   ☐ Try Choice 3', group = grpOpt, display = display.none)
-optGuideTry4    = input.bool(false, '   ☐ Try Choice 4', group = grpOpt, display = display.none)
-optGuideTry5    = input.bool(false, '   ☐ Try Choice 5', group = grpOpt, display = display.none)
-optUhvW1 = input.int(0, '   UHV R1 winner (0 = not done yet)', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optUhvW2 = input.int(0, '   UHV R2 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optUhvW3 = input.int(0, '   UHV R3 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optUhvW4 = input.int(0, '   UHV R4 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optUhvW5 = input.int(0, '   UHV R5 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optUhvW6 = input.int(0, '   UHV R6 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW1 = input.int(0, '   2BR R1 winner (0 = not done)', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW2 = input.int(0, '   2BR R2 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW3 = input.int(0, '   2BR R3 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW4 = input.int(0, '   2BR R4 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW5 = input.int(0, '   2BR R5 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optTbrW6 = input.int(0, '   2BR R6 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW1 = input.int(0, '   EVR R1 winner (0 = not done)', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW2 = input.int(0, '   EVR R2 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW3 = input.int(0, '   EVR R3 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW4 = input.int(0, '   EVR R4 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW5 = input.int(0, '   EVR R5 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
-optEvrW6 = input.int(0, '   EVR R6 winner', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+_optToolHdr  = input.bool(false, '🧭 Optimizer Tool — How to use: select strategy → enable → check Apply Setting #1-5 → run 10+ trades → enter best # in Round Best Setting below → repeat 6 rounds per strategy', group = grpOpt, display = display.none)
+optGuideStrategy = input.string("UHV Breakout", '   Step 1: Select 1 Strategy to Optimize:', options = ["UHV Breakout", "Two Bar Reversal", "Effort vs Result"], group = grpOpt, display = display.none)
+optGuideEnable  = input.bool(false, '   Step 2: Enable Guided Optimizer', group = grpOpt, display = display.none)
+optGuideTry1    = input.bool(false, '   ☐ Apply Setting #1 — if best, enter 1 in Round Best Setting below', group = grpOpt, display = display.none)
+optGuideTry2    = input.bool(false, '   ☐ Apply Setting #2 — if best, enter 2 in Round Best Setting below', group = grpOpt, display = display.none)
+optGuideTry3    = input.bool(false, '   ☐ Apply Setting #3 — if best, enter 3 in Round Best Setting below', group = grpOpt, display = display.none)
+optGuideTry4    = input.bool(false, '   ☐ Apply Setting #4 — if best, enter 4 in Round Best Setting below', group = grpOpt, display = display.none)
+optGuideTry5    = input.bool(false, '   ☐ Apply Setting #5 — if best, enter 5 in Round Best Setting below', group = grpOpt, display = display.none)
+optGuideNoneAbove = input.bool(false, '   ☐ None of the above settings improves profits — Proceed to next round (enter 3 in Round Best Setting below)', group = grpOpt, display = display.none)
+_optStep3Hdr = input.bool(false, 'Step 3: After trying the 5 settings above, select the best setting number below for each round (Rounds are shown in the bottom-left Optimizer panel on the chart):', group = grpOpt, display = display.none)
+optUhvW1 = input.int(0, '   UHV Strategy Round 1 Best Setting (0 = not done yet)', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optUhvW2 = input.int(0, '   UHV Strategy Round 2 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optUhvW3 = input.int(0, '   UHV Strategy Round 3 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optUhvW4 = input.int(0, '   UHV Strategy Round 4 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optUhvW5 = input.int(0, '   UHV Strategy Round 5 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optUhvW6 = input.int(0, '   UHV Strategy Round 6 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optTbrW1 = input.int(0, '   2BR Strategy Round 1 Best Setting (0 = not done yet)', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optTbrW2 = input.int(0, '   2BR Strategy Round 2 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optTbrW3 = input.int(0, '   2BR Strategy Round 3 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optTbrW4 = input.int(0, '   2BR Strategy Round 4 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optTbrW5 = input.int(0, '   2BR Strategy Round 5 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optTbrW6 = input.int(0, '   2BR Strategy Round 6 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optEvrW1 = input.int(0, '   EVR Strategy Round 1 Best Setting (0 = not done yet)', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optEvrW2 = input.int(0, '   EVR Strategy Round 2 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optEvrW3 = input.int(0, '   EVR Strategy Round 3 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optEvrW4 = input.int(0, '   EVR Strategy Round 4 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optEvrW5 = input.int(0, '   EVR Strategy Round 5 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optEvrW6 = input.int(0, '   EVR Strategy Round 6 Best Setting', minval = 0, maxval = 5, group = grpOpt, display = display.none)
+optGuideReset   = input.bool(false, 'Reset Optimizer → Start New Optimization Rounds (check or uncheck — both clear all round history and restart from Round 1)', group = grpOpt, display = display.none)
 
 // Pre-computed timeframe constants — derived from timeframe.period string (global scope safe)
 tfMinutes   = timeframe.period == "D" ? 1440.0 : timeframe.period == "W" ? 10080.0 : str.tonumber(timeframe.period)
@@ -1370,8 +1375,8 @@ bool  _autoCapOn   = optSmart and optLevel >= 6
 // ── Guided Optimizer — per-strategy focused rounds ──
 // Workflow: select strategy, try choices, declare winner, append to that strategy's history.
 // Round # is auto-derived from history length. Completed strategies stay optimized automatically.
-bool _gAny     = optGuideEnable and (optGuideTry1 or optGuideTry2 or optGuideTry3 or optGuideTry4 or optGuideTry5)
-int  _gChoice  = _gAny ? (optGuideTry1 ? 1 : optGuideTry2 ? 2 : optGuideTry3 ? 3 : optGuideTry4 ? 4 : 5) : 0
+bool _gAny     = optGuideEnable and (optGuideTry1 or optGuideTry2 or optGuideTry3 or optGuideTry4 or optGuideTry5 or optGuideNoneAbove)
+int  _gChoice  = _gAny ? (optGuideTry1 ? 1 : optGuideTry2 ? 2 : optGuideTry3 ? 3 : optGuideTry4 ? 4 : optGuideTry5 ? 5 : 3) : 0
 int  _gCIdx    = math.max(0, _gChoice - 1)
 // Strategy selector
 bool _gIsUhv = optGuideStrategy == "UHV Breakout"
@@ -1379,9 +1384,9 @@ bool _gIsTbr = optGuideStrategy == "Two Bar Reversal"
 bool _gIsEvr = not _gIsUhv and not _gIsTbr
 // Per-strategy round winners — integer inputs (0=not done, 1-5=winning choice)
 // History length = count of sequential non-zero entries starting from R1
-int _gHLu = optUhvW1 > 0 ? optUhvW2 > 0 ? optUhvW3 > 0 ? optUhvW4 > 0 ? optUhvW5 > 0 ? optUhvW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
-int _gHLb = optTbrW1 > 0 ? optTbrW2 > 0 ? optTbrW3 > 0 ? optTbrW4 > 0 ? optTbrW5 > 0 ? optTbrW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
-int _gHLe = optEvrW1 > 0 ? optEvrW2 > 0 ? optEvrW3 > 0 ? optEvrW4 > 0 ? optEvrW5 > 0 ? optEvrW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
+int _gHLu = optGuideReset ? 0 : optUhvW1 > 0 ? optUhvW2 > 0 ? optUhvW3 > 0 ? optUhvW4 > 0 ? optUhvW5 > 0 ? optUhvW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
+int _gHLb = optGuideReset ? 0 : optTbrW1 > 0 ? optTbrW2 > 0 ? optTbrW3 > 0 ? optTbrW4 > 0 ? optTbrW5 > 0 ? optTbrW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
+int _gHLe = optGuideReset ? 0 : optEvrW1 > 0 ? optEvrW2 > 0 ? optEvrW3 > 0 ? optEvrW4 > 0 ? optEvrW5 > 0 ? optEvrW6 > 0 ? 6 : 5 : 4 : 3 : 2 : 1 : 0
 int _gHL    = _gIsUhv ? _gHLu : _gIsTbr ? _gHLb : _gHLe   // Active strategy history length
 int _gRound = _gHL + 1                                       // Auto-derived round number
 string _gRndLabel = _gRound == 1 ? "Round 1: Global Style" :
@@ -1498,10 +1503,10 @@ float _gTpVal = array.get(_g5tp, _gCIdx)
 int   _gCdVal = int(array.get(_g5cd, _gCIdx))
 float _gRlVal = array.get(_g5rl, _gCIdx)
 bool  _gActive = _gAny  // Tune removed — converged centers auto-apply from history
-// RL cap per strategy: testing → use choice RL; history exists → converged RL; else → reduceLossFixed
-float _guideRlFixedUhv = _gActive and _gIsUhv ? _gRlVal : _gHLu >= 1 ? _gCrlU : reduceLossFixed
-float _guideRlFixedTbr = _gActive and _gIsTbr ? _gRlVal : _gHLb >= 1 ? _gCrlB : reduceLossFixed
-float _guideRlFixedEvr = _gActive and _gIsEvr ? _gRlVal : _gHLe >= 1 ? _gCrlE : reduceLossFixed
+// RL cap per strategy: testing → use choice RL; history exists → converged RL; else → no cap (preserve user settings)
+float _guideRlFixedUhv = _gActive and _gIsUhv ? _gRlVal : _gHLu >= 1 ? _gCrlU : 1e10
+float _guideRlFixedTbr = _gActive and _gIsTbr ? _gRlVal : _gHLb >= 1 ? _gCrlB : 1e10
+float _guideRlFixedEvr = _gActive and _gIsEvr ? _gRlVal : _gHLe >= 1 ? _gCrlE : 1e10
 
 // Effective loss cap per strategy: reduceLoss button OR optLevel 6+ auto-cap OR guide (whichever applies)
 float _uhvLossCap = reduceLoss ? (reduceLossMode == "Auto (avg win per strategy)" ? _uhvAutoWin : _guideRlFixedUhv) : (_autoCapOn ? _uhvAutoWin * _levelMult : (optGuideEnable ? _guideRlFixedUhv : 1e10))
@@ -1592,7 +1597,7 @@ if bullBreakout
     _slStructRef = _effUhvSlType == "UHV" ? nz(uhvSL, nz(retraceLow, low)) : nz(retraceLow, nz(uhvSL, low))
     _sl       = f_calcSL(true, close, _slStructRef, high, _effUhvSlType, uhvSlBuffer, uhvSlAtrMult, uhvSlSwingLb, uhvSlMinDist, uhvDollarRisk, uhvLotSize, uhvSlDollar)
     _slDist   = math.max(_entry - _sl, syminfo.mintick)
-    float _effLots  = uhvDollarRisk > 0 ? math.max(uhvDollarRisk / (_slDist * cMult), 0.001) : uhvLotSize
+    float _effLots  = (uhvDollarRisk > 0 ? math.max(uhvDollarRisk / (_slDist * cMult), 0.001) : uhvLotSize) * lotAmp
     if _slDist * _effLots * cMult > _uhvLossCap
         _slDist := math.max(_uhvLossCap / math.max(_effLots * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry - _slDist
@@ -1672,7 +1677,7 @@ if bearBreakout
     _slStructRef2 = _effUhvSlType == "UHV" ? nz(uhvSL, nz(retraceHigh, high)) : nz(retraceHigh, nz(uhvSL, high))
     _sl         = f_calcSL(false, close, low, _slStructRef2, _effUhvSlType, uhvSlBuffer, uhvSlAtrMult, uhvSlSwingLb, uhvSlMinDist, uhvDollarRisk, uhvLotSize, uhvSlDollar)
     _slDist     = math.max(_sl - _entry, syminfo.mintick)
-    float _effLots    = uhvDollarRisk > 0 ? math.max(uhvDollarRisk / (_slDist * cMult), 0.001) : uhvLotSize
+    float _effLots    = (uhvDollarRisk > 0 ? math.max(uhvDollarRisk / (_slDist * cMult), 0.001) : uhvLotSize) * lotAmp
     if _slDist * _effLots * cMult > _uhvLossCap
         _slDist := math.max(_uhvLossCap / math.max(_effLots * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry + _slDist
@@ -1741,7 +1746,7 @@ if bull2BR
     _entry    = close
     _sl       = f_calcSL(true, close, math.min(low[1], low), math.max(high[1], high), _effTbrSlType, tbrSlBuffer, tbrSlAtrMult, tbrSlSwingLb, tbrSlMinDist, tbrDollarRisk, tbrLotSize, tbrSlDollar)
     _slDist   = math.max(_entry - _sl, syminfo.mintick)
-    float _effLots = tbrDollarRisk > 0 ? math.max(tbrDollarRisk / (_slDist * cMult), 0.001) : tbrLotSize
+    float _effLots = (tbrDollarRisk > 0 ? math.max(tbrDollarRisk / (_slDist * cMult), 0.001) : tbrLotSize) * lotAmp
     if _slDist * _effLots * cMult > _tbrLossCap
         _slDist := math.max(_tbrLossCap / math.max(_effLots * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry - _slDist
@@ -1783,7 +1788,7 @@ if bear2BR
     _entry      = close
     _sl         = f_calcSL(false, close, math.min(low[1], low), math.max(high[1], high), _effTbrSlType, tbrSlBuffer, tbrSlAtrMult, tbrSlSwingLb, tbrSlMinDist, tbrDollarRisk, tbrLotSize, tbrSlDollar)
     _slDist     = math.max(_sl - _entry, syminfo.mintick)
-    float _effLots2 = tbrDollarRisk > 0 ? math.max(tbrDollarRisk / (_slDist * cMult), 0.001) : tbrLotSize
+    float _effLots2 = (tbrDollarRisk > 0 ? math.max(tbrDollarRisk / (_slDist * cMult), 0.001) : tbrLotSize) * lotAmp
     if _slDist * _effLots2 * cMult > _tbrLossCap
         _slDist := math.max(_tbrLossCap / math.max(_effLots2 * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry + _slDist
@@ -1864,7 +1869,7 @@ if bullVSA
     _entry    = close
     _sl       = f_calcSL(true, close, nz(retraceLow, nz(vsaRedLow, low)), high, _effEvrSlType, evrSlBuffer, evrSlAtrMult, evrSlSwingLb, evrSlMinDist, evrDollarRisk, evrLotSize, evrSlDollar)
     _slDist   = math.max(_entry - _sl, syminfo.mintick)
-    float _effLotsV = evrDollarRisk > 0 ? math.max(evrDollarRisk / (_slDist * cMult), 0.001) : evrLotSize
+    float _effLotsV = (evrDollarRisk > 0 ? math.max(evrDollarRisk / (_slDist * cMult), 0.001) : evrLotSize) * lotAmp
     if _slDist * _effLotsV * cMult > _evrLossCap
         _slDist := math.max(_evrLossCap / math.max(_effLotsV * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry - _slDist
@@ -1906,7 +1911,7 @@ if bearVSA
     _entry      = close
     _sl         = f_calcSL(false, close, low, nz(retraceHigh, nz(vsaGrnHigh, high)), _effEvrSlType, evrSlBuffer, evrSlAtrMult, evrSlSwingLb, evrSlMinDist, evrDollarRisk, evrLotSize, evrSlDollar)
     _slDist     = math.max(_sl - _entry, syminfo.mintick)
-    float _effLotsV2 = evrDollarRisk > 0 ? math.max(evrDollarRisk / (_slDist * cMult), 0.001) : evrLotSize
+    float _effLotsV2 = (evrDollarRisk > 0 ? math.max(evrDollarRisk / (_slDist * cMult), 0.001) : evrLotSize) * lotAmp
     if _slDist * _effLotsV2 * cMult > _evrLossCap
         _slDist := math.max(_evrLossCap / math.max(_effLotsV2 * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry + _slDist
@@ -1960,7 +1965,7 @@ if evrBullWickPending and not na(evrWickCandleHigh) and not evrFiredThisSetup an
     _entry    = close
     _sl       = f_calcSL(true, close, nz(retraceLow, nz(vsaRedLow, low)), high, _effEvrSlType, evrSlBuffer, evrSlAtrMult, evrSlSwingLb, evrSlMinDist, evrDollarRisk, evrLotSize, evrSlDollar)
     _slDist   = math.max(_entry - _sl, syminfo.mintick)
-    float _effLotsVW = evrDollarRisk > 0 ? math.max(evrDollarRisk / (_slDist * cMult), 0.001) : evrLotSize
+    float _effLotsVW = (evrDollarRisk > 0 ? math.max(evrDollarRisk / (_slDist * cMult), 0.001) : evrLotSize) * lotAmp
     if _slDist * _effLotsVW * cMult > _evrLossCap
         _slDist := math.max(_evrLossCap / math.max(_effLotsVW * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry - _slDist
@@ -2007,7 +2012,7 @@ if evrBearWickPending and not na(evrWickCandleLow) and not evrFiredThisSetup and
     _entry    = close
     _sl       = f_calcSL(false, close, low, nz(retraceHigh, nz(vsaGrnHigh, high)), _effEvrSlType, evrSlBuffer, evrSlAtrMult, evrSlSwingLb, evrSlMinDist, evrDollarRisk, evrLotSize, evrSlDollar)
     _slDist   = math.max(_sl - _entry, syminfo.mintick)
-    float _effLotsVW2 = evrDollarRisk > 0 ? math.max(evrDollarRisk / (_slDist * cMult), 0.001) : evrLotSize
+    float _effLotsVW2 = (evrDollarRisk > 0 ? math.max(evrDollarRisk / (_slDist * cMult), 0.001) : evrLotSize) * lotAmp
     if _slDist * _effLotsVW2 * cMult > _evrLossCap
         _slDist := math.max(_evrLossCap / math.max(_effLotsVW2 * cMult, syminfo.mintick), syminfo.mintick)
         _sl     := _entry + _slDist
@@ -2995,12 +3000,16 @@ f_drawPanel() =>
     string _gUhvSt = _gHLu == 0 ? "not started" : "R" + str.tostring(_gHLu) + " done"
     string _gTbrSt = _gHLb == 0 ? "not started" : "R" + str.tostring(_gHLb) + " done"
     string _gEvrSt = _gHLe == 0 ? "not started" : "R" + str.tostring(_gHLe) + " done"
-    if not optGuideEnable
+    if optGuideReset
+        _gPanelBody := "RESET — all round history cleared. Ready to start new optimization.\nUncheck 'Reset Optimizer' in Settings → Optimize to begin Round 1 again.\n(Winner integers in Settings are ignored while reset is active)"
+    else if not optGuideEnable
         _gPanelBody := "Off — enable Guided Optimizer in Settings → Optimize"
     else
-        string _gSlot   = (_gIsUhv ? "UHV" : _gIsTbr ? "2BR" : "EVR") + " R" + str.tostring(_gRound) + " winner"
-        string _gStatus = _gAny ? "Testing Choice " + str.tostring(_gChoice) + " — run 10+ trades then compare P&L\n" :
-             "Check a Try Choice box in Settings → Optimize to begin\n"
+        string _gSlot   = (_gIsUhv ? "UHV" : _gIsTbr ? "2BR" : "EVR") + " Strategy Round " + str.tostring(_gRound) + " Best Setting"
+        bool   _gNoneOnly = optGuideNoneAbove and not (optGuideTry1 or optGuideTry2 or optGuideTry3 or optGuideTry4 or optGuideTry5)
+        string _gStatus = _gNoneOnly ? "None improved — current settings are already optimal for this round\nEnter 3 in '" + _gSlot + "' to advance to next round\n" :
+             _gAny ? "Testing Setting #" + str.tostring(_gChoice) + " — run 10+ trades then compare P&L\n" :
+             "Check an Apply Setting box in Settings → Optimize to begin\n"
         string _gTblHdr = "         TP        Cooldown  RL Cap\n"
         string _gRows = ""
         for _gi = 0 to 4
@@ -3013,10 +3022,10 @@ f_drawPanel() =>
                  "  " + str.tostring(_cd) + " bars" +
                  "  $" + str.tostring(_rl, "#") + "\n"
         string _gAllSt  = "UHV: " + _gUhvSt + "  |  2BR: " + _gTbrSt + "  |  EVR: " + _gEvrSt + "\n"
-        string _gFooter = "Best found → set '" + _gSlot + "' (1-5) in Settings → next round auto-starts"
+        string _gFooter = "Best found → enter number in '" + _gSlot + "' in Settings → next round auto-starts"
         _gPanelBody := _gStatus + _gTblHdr + _gRows + _gAllSt + _gFooter
-    color _gBg = optGuideEnable ? color.new(#003838, 5) : color.new(color.black, 20)
-    color _gFg = optGuideEnable ? color.white : color.new(color.silver, 5)
+    color _gBg = optGuideReset ? color.new(#4a2000, 5) : optGuideEnable ? color.new(#003838, 5) : color.new(color.black, 20)
+    color _gFg = optGuideReset ? color.new(#ffaa44, 5) : optGuideEnable ? color.white : color.new(color.silver, 5)
     table.cell(statsPanel, 0, 17, _gPanelHdr + _gPanelBody, text_color = _gFg, text_size = size.tiny, bgcolor = _gBg)
 
 
@@ -3039,8 +3048,8 @@ if barstate.islast and optGuideEnable
     string _bLbl  = _gHLb == 0 ? "  Start" : "  Round " + str.tostring(_gHLb + 1)
     string _eLbl  = _gHLe == 0 ? "  Start" : "  Round " + str.tostring(_gHLe + 1)
     string _curStrat = _gIsUhv ? "UHV" : _gIsTbr ? "2BR" : "EVR"
-    string _instrLine = _gAny ? "Testing Ch" + str.tostring(_gChoice) + " — compare P&L" :
-         "Check a Try Choice to test"
+    string _instrLine = _gAny ? "Testing Setting #" + str.tostring(_gChoice) + " — compare P&L" :
+         "Check an Apply Setting box to test"
     color _gpBg     = color.new(color.black, 10)
     color _gpHdrBg  = color.new(#001830, 5)
     color _gpRowBg  = color.new(#0a0a14, 8)
