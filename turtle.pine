@@ -1734,7 +1734,7 @@ if _be2BR
 // Bull EVR: two paths depending on aETW
 // Path A — no wick filter OR wick is clean: fire immediately
 // Path B — wick filter ON and wick > body: set pending, wait for next bar confirmation
-_eBBase    = _eeBD and eEVR and sVsa and _iR and _lb and _rwb and not _eReBnc and _eFC and not _eF and not na(_vRL) and _vRV > 0 and (_eStE ? (_hb and _bTP) : not _beTP) and _tS >= _eMS and not _eTsE and _iGr and low < _vRL and close > _vRL and (_erEHV ? volume > _vRV : true) and (bar_index - _leSB) >= _eeCd
+_eBBase    = _eeBD and eEVR and sVsa and _iR and _lb and _rwb and not _eReBnc and _eFC and not _eF and not na(_vRL) and _vRV > 0 and (_eStE ? (_hb and _bTP) : not _beTP) and _tS >= _eMS and not _eTsE and _iGr and low < _vRL and close > _vRL and close <= _vRHi and (_erEHV ? volume > _vRV : true) and (bar_index - _leSB) >= _eeCd
 _eBHW = (high - close) > (close - open)   // upper wick larger than body
 _bVSA         = _eBBase and (aETW ? not _eBHW : true) and (eRHL ? _hlWick : true) and not _cEB and barstate.isconfirmed
 // When wick detected and filter is ON: arm pending confirmation
@@ -1760,8 +1760,8 @@ if _eBeBase and aETW and _eBrHW and not _eBrWP
     _eBrWL   := low
 
 // EVR blocked by volume check
-_eBBNV = _eeBD and eEVR and sVsa and _iR and _lb and _rwb and _eFC and not _eF and not na(_vRL) and _vRV > 0 and ((sTC and sTCE) ? (_hb and _bTP) : not _beTP) and _tS >= mTS and _iGr and low < _vRL and close > _vRL
-_eBeBNV = _eeBeD and eEVR and sVsa and _iR and not _lb and not _rwb and _eFC and not _eF and not na(_vGH) and _vGV > 0 and ((sTC and sTCE) ? (_hbr and _beTP) : not _bTP) and _tS >= mTS and _iRd and high > _vGH and close < _vGH
+_eBBNV = _eeBD and eEVR and sVsa and _iR and _lb and _rwb and _eFC and not _eF and not na(_vRL) and _vRV > 0 and ((sTC and sTCE) ? (_hb and _bTP) : not _beTP) and _tS >= mTS and _iGr and low < _vRL and close > _vRL and close <= _vRHi
+_eBeBNV = _eeBeD and eEVR and sVsa and _iR and not _lb and not _rwb and _eFC and not _eF and not na(_vGH) and _vGV > 0 and ((sTC and sTCE) ? (_hbr and _beTP) : not _bTP) and _tS >= mTS and _iRd and high > _vGH and close < _vGH and close >= _vGLo
 // Persist EVR structural appearance so _bnC stays suppressed on bars AFTER the sweep candle
 // Without this, when rEHV=ON blocks EVR, _eF stays false and _bnC
 // can fire on the very next bar, wiping UHV/TBR setups
