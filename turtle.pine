@@ -341,6 +341,7 @@ var _fR     = false
 var _rwb = false
 var float _rCeil  = na
 var float _rFlr    = na
+var string _lastAlertMsg = "—"
 var int   _rSB = na
 
 // ── Block A improved IB + retracement logic ──
@@ -1522,7 +1523,8 @@ if _bBrk
         _fU       := true
         _luSB := bar_index
         _totS  += 1
-        alert(pE ? pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=UHV" : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+        _lastAlertMsg := pE ? pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=UHV" : "🟢 BUY — UHV | entry=" + str.tostring(_entry, "#.###") + " sl=" + str.tostring(_sl, "#.###") + " tp=" + str.tostring(_tp1, "#.###")
+        alert(_lastAlertMsg, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
             _sigLbl := label.new(bar_index, high, "🟢 BUY NOW  #" + str.tostring(_totS) + "\n(Ultra Highs Breakout)\n━━━━━━━━━━━━━━━━\nBuy:  " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _euST + ", risk: $" + str.tostring(math.round(_slDist * _effLots * cM * 100) / 100, "#.##") + "]\nLots: " + fLL(uDR, _effLots, uRp > 0) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uTM == "Structural High/Low" ? "Struct." : uTM == "Dollar Amount" ? "$fixed" : str.tostring(uT1, "#.#") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cM * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT), style = label.style_label_down, color = color.new(#089981, 0), textcolor = color.white, size = size.normal)
@@ -1605,7 +1607,8 @@ if _beBrk
         _fU       := true
         _luSB := bar_index
         _totS  += 1
-        alert(pE ? pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=UHV" : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+        _lastAlertMsg := pE ? pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=UHV" : "🔴 SELL — UHV | entry=" + str.tostring(_entry, "#.###") + " sl=" + str.tostring(_sl, "#.###") + " tp=" + str.tostring(_tp1, "#.###")
+        alert(_lastAlertMsg, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
             _sigLbl := label.new(bar_index, low, "🔴 SELL NOW  #" + str.tostring(_totS) + "\n(Ultra Highs Breakout)\n━━━━━━━━━━━━━━━━\nSell: " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _euST + ", risk: $" + str.tostring(math.round(_slDist * _effLots * cM * 100) / 100, "#.##") + "]\nLots: " + fLL(uDR, _effLots, uRp > 0) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uTM == "Structural High/Low" ? "Struct." : uTM == "Dollar Amount" ? "$fixed" : str.tostring(uT1, "#.#") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cM * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT), style = label.style_label_up, color = color.new(#f23645, 0), textcolor = color.white, size = size.normal)
@@ -1683,7 +1686,8 @@ if _b2BR
         _fU       := true
         _ltSB := bar_index
         _totS  += 1
-        alert(pE ? pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=2BR" : "🟢 BUY Signal — 2BR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+        _lastAlertMsg := pE ? pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=2BR" : "🟢 BUY — 2BR | entry=" + str.tostring(_entry, "#.###") + " sl=" + str.tostring(_sl, "#.###") + " tp=" + str.tostring(_tp1, "#.###")
+        alert(_lastAlertMsg, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
             _sigLbl := label.new(bar_index, high, "🟢 BUY NOW  #" + str.tostring(_totS) + "\n(Two Bar Reversal)\n━━━━━━━━━━━━━━━━\nBuy:  " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _etST + ", risk: $" + str.tostring(math.round(_slDist * _effLots * cM * 100) / 100, "#.##") + "]\nLots: " + fLL(tDR, _effLots, tRp > 0) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (tTM == "Structural High/Low" ? "Struct." : tTM == "Dollar Amount" ? "$fixed" : str.tostring(tT1, "#.#") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cM * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + fAS(_bWn, _bTr) + "\n" + fPTS(_bPT), style = label.style_label_down, color = color.new(color.teal, 10), textcolor = color.white, size = size.normal)
@@ -1729,7 +1733,8 @@ if _be2BR
         _fU       := true
         _ltSB := bar_index
         _totS  += 1
-        alert(pE ? pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLots2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=2BR" : "🔴 SELL Signal — 2BR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+        _lastAlertMsg := pE ? pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLots2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=2BR" : "🔴 SELL — 2BR | entry=" + str.tostring(_entry, "#.###") + " sl=" + str.tostring(_sl, "#.###") + " tp=" + str.tostring(_tp1, "#.###")
+        alert(_lastAlertMsg, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
             _sigLbl := label.new(bar_index, low, "🔴 SELL NOW  #" + str.tostring(_totS) + "\n(Two Bar Reversal)\n━━━━━━━━━━━━━━━━\nSell: " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _etST + ", risk: $" + str.tostring(math.round(_slDist * _effLots2 * cM * 100) / 100, "#.##") + "]\nLots: " + fLL(tDR, _effLots2, tRp > 0) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (tTM == "Structural High/Low" ? "Struct." : tTM == "Dollar Amount" ? "$fixed" : str.tostring(tT1, "#.#") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots2 * cM * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + fAS(_bWn, _bTr) + "\n" + fPTS(_bPT), style = label.style_label_up, color = color.new(color.orange, 10), textcolor = color.white, size = size.normal)
@@ -1820,7 +1825,8 @@ if _bVSA
         _fU       := true
         _leSB := bar_index
         _totS  += 1
-        alert(pE ? pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLotsV, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR" : "🟢 BUY Signal — EVR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+        _lastAlertMsg := pE ? pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLotsV, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR" : "🟢 BUY — EVR | entry=" + str.tostring(_entry, "#.###") + " sl=" + str.tostring(_sl, "#.###") + " tp=" + str.tostring(_tp1, "#.###")
+        alert(_lastAlertMsg, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
             _sigLbl := label.new(bar_index, high, "BUY NOW  #" + str.tostring(_totS) + "\n(Effort vs Result)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _eeST + ", risk: $" + str.tostring(math.round(_slDist * _effLotsV * cM * 100) / 100, "#.##") + "]" + "\nLots:  " + fLL(eDR, _effLotsV, eRp > 0) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsV * cM * 100) / 100, "#.##") + "\n" + fAS(_eWn, _eTr) + "\n" + fPTS(_ePT), style = label.style_label_down, color = color.new(color.lime, 10), textcolor = color.black, size = size.normal)
@@ -1867,7 +1873,8 @@ if _beVSA
         _fU       := true
         _leSB := bar_index
         _totS  += 1
-        alert(pE ? pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLotsV2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR" : "🔴 SELL Signal — EVR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+        _lastAlertMsg := pE ? pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLotsV2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR" : "🔴 SELL — EVR | entry=" + str.tostring(_entry, "#.###") + " sl=" + str.tostring(_sl, "#.###") + " tp=" + str.tostring(_tp1, "#.###")
+        alert(_lastAlertMsg, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
             _sigLbl := label.new(bar_index, low, "SELL NOW  #" + str.tostring(_totS) + "\n(Effort vs Result)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _eeST + ", risk: $" + str.tostring(math.round(_slDist * _effLotsV2 * cM * 100) / 100, "#.##") + "]" + "\nLots:  " + fLL(eDR, _effLotsV2, eRp > 0) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsV2 * cM * 100) / 100, "#.##") + "\n" + fAS(_eWn, _eTr) + "\n" + fPTS(_ePT), style = label.style_label_up, color = color.new(color.red, 10), textcolor = color.white, size = size.normal)
@@ -1928,7 +1935,8 @@ if _eBWP and not na(_eWCH) and not _eF and not _eReBnc and eEVR and sVsa and _iR
         _fU       := true
         _leSB := bar_index
         _totS  += 1
-        alert(pE ? pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLotsVW, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR" : "🟢 BUY Signal — EVR Wick Confirmed | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+        _lastAlertMsg := pE ? pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLotsVW, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR" : "🟢 BUY — EVR Wick | entry=" + str.tostring(_entry, "#.###") + " sl=" + str.tostring(_sl, "#.###") + " tp=" + str.tostring(_tp1, "#.###")
+        alert(_lastAlertMsg, alert.freq_once_per_bar)
         _sigLblW = label(na)
         if sL
             _sigLblW := label.new(bar_index, high, "BUY NOW  #" + str.tostring(_totS) + "\n(EVR — Wick Confirmed)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _eeST + ", risk: $" + str.tostring(math.round(_slDist * _effLotsVW * cM * 100) / 100, "#.##") + "]\nLots:  " + fLL(eDR, _effLotsVW, eRp > 0) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsVW * cM * 100) / 100, "#.##") + "\n" + fAS(_eWn, _eTr) + "\n" + fPTS(_ePT), style = label.style_label_down, color = color.new(color.lime, 10), textcolor = color.black, size = size.normal)
@@ -1981,7 +1989,8 @@ if _eBrWP and not na(_eWCL) and not _eF and not _eReBnc and eEVR and sVsa and _i
         _fU       := true
         _leSB := bar_index
         _totS  += 1
-        alert(pE ? pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLotsVW2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR" : "🔴 SELL Signal — EVR Wick Confirmed | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
+        _lastAlertMsg := pE ? pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLotsVW2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR" : "🔴 SELL — EVR Wick | entry=" + str.tostring(_entry, "#.###") + " sl=" + str.tostring(_sl, "#.###") + " tp=" + str.tostring(_tp1, "#.###")
+        alert(_lastAlertMsg, alert.freq_once_per_bar)
         _sigLblW2 = label(na)
         if sL
             _sigLblW2 := label.new(bar_index, low, "SELL NOW  #" + str.tostring(_totS) + "\n(EVR — Wick Confirmed)\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _eeST + ", risk: $" + str.tostring(math.round(_slDist * _effLotsVW2 * cM * 100) / 100, "#.##") + "]\nLots:  " + fLL(eDR, _effLotsVW2, eRp > 0) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsVW2 * cM * 100) / 100, "#.##") + "\n" + fAS(_eWn, _eTr) + "\n" + fPTS(_ePT), style = label.style_label_up, color = color.new(color.red, 10), textcolor = color.white, size = size.normal)
@@ -2419,7 +2428,7 @@ fDP() =>
             if bar_index - array.get(_sBT, _isb) <= bPH
                 _sigLastHour += 1
     // ── Build panel (17 rows) ──
-    table statsPanel = table.new(position.bottom_right, 1, 17,
+    table statsPanel = table.new(position.bottom_right, 1, 18,
          bgcolor = color.new(color.black, 15),
          border_color = color.new(color.gray, 70),
          border_width = 1, frame_color = color.new(color.gray, 50), frame_width = 2)
@@ -2719,6 +2728,10 @@ fDP() =>
     _recsSize = array.size(_recs)
     table.cell(statsPanel, 0, 16, (_recsSize > 0 ? array.get(_recs, 0) : "No recommendations yet — need more trade data") + (_recsSize > 1 ? "\n" + array.get(_recs, 1) : ""),
          text_color = _txtYellow, text_size = size.tiny, bgcolor = color.new(#1a2a1a, 10))
+
+    // ROW 17 — LAST ALERT MESSAGE SENT
+    table.cell(statsPanel, 0, 17, "LAST SIGNAL SENT:\n" + _lastAlertMsg,
+         text_color = color.new(color.silver, 20), text_size = size.tiny, bgcolor = color.new(#0a0a1a, 10))
 
 
 if barstate.islast and sSP
