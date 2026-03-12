@@ -867,10 +867,7 @@ fPTS(_pnl) =>
     _pnl >= 0.01 ? "💰 This strategy brought in: $" + str.tostring(_pnl, "#.##") + " in profits today" : _pnl <= -0.01 ? "📉 This strategy is down $" + str.tostring(math.abs(_pnl), "#.##") + " today" : "No completed trades yet today"
 
 fTS() =>
-    _h = hour(time, "UTC")
-    _m = minute(time, "UTC")
-    _s = second(time, "UTC")
-    (_h < 10 ? "0" : "") + str.tostring(_h) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + ":" + (_s < 10 ? "0" : "") + str.tostring(_s) + " UTC"
+    str.tostring(_utcH)+":"+str.tostring(minute(time,"UTC"))+" UTC"
 
 fSU(int b, float sl, float a, color c) =>
     polyline.new(array.from(chart.point.from_index(b-1,sl),chart.point.from_index(b+2,sl+a*0.06),chart.point.from_index(b+5,sl-a*0.02)),curved=true,line_color=c,line_width=2)
@@ -2292,14 +2289,13 @@ fDP() =>
     _minsToNextSignal = math.round(_avgMinsPerSignal)
 
     // ── Session detection (UTC hour) ──
-    _utcHour = hour(time, "UTC")
-    _session = _utcHour >= 22 or _utcHour < 7  ? "🌏 Sydney Session" :
-               _utcHour >= 0  and _utcHour < 9  ? "🌸 Tokyo Session"  :
-               _utcHour >= 8  and _utcHour < 13 ? "🏦 London Session" :
-               _utcHour >= 13 and _utcHour < 22 ? "🗽 New York Session" : "📊 Market"
+    _session = _utcH >= 22 or _utcH < 7  ? "🌏 Sydney Session" :
+               _utcH < 9                ? "🌸 Tokyo Session"  :
+               _utcH < 13              ? "🏦 London Session" :
+               _utcH < 22              ? "🗽 New York Session" : "📊 Market"
     // overlap labels
-    _session := (_utcHour >= 8 and _utcHour < 9)   ? "🏦🌸 London/Tokyo Overlap"   : _session
-    _session := (_utcHour >= 13 and _utcHour < 17)  ? "🗽🏦 New York/London Overlap" : _session
+    _session := (_utcH >= 8 and _utcH < 9)   ? "🏦🌸 London/Tokyo Overlap"   : _session
+    _session := (_utcH >= 13 and _utcH < 17)  ? "🗽🏦 New York/London Overlap" : _session
 
     // ── Pre-panel: today completed wins/trades ──
     _winsToday            = 0
