@@ -1523,7 +1523,7 @@ if _bBrk
         _fU       := true
         _luSB := bar_index
         _totS  += 1
-        _lastAlertMsg := pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=UHV"
+        _lastAlertMsg := pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / 0.01), "0") + ",comment=UHV"
         alert(pE ? _lastAlertMsg : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
@@ -1607,7 +1607,7 @@ if _beBrk
         _fU       := true
         _luSB := bar_index
         _totS  += 1
-        _lastAlertMsg := pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=UHV"
+        _lastAlertMsg := pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / 0.01), "0") + ",comment=UHV"
         alert(pE ? _lastAlertMsg : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
@@ -1686,7 +1686,7 @@ if _b2BR
         _fU       := true
         _ltSB := bar_index
         _totS  += 1
-        _lastAlertMsg := pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=2BR"
+        _lastAlertMsg := pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLots, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / 0.01), "0") + ",comment=2BR"
         alert(pE ? _lastAlertMsg : "🟢 BUY Signal — 2BR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
@@ -1733,7 +1733,7 @@ if _be2BR
         _fU       := true
         _ltSB := bar_index
         _totS  += 1
-        _lastAlertMsg := pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLots2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=2BR"
+        _lastAlertMsg := pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLots2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / 0.01), "0") + ",comment=2BR"
         alert(pE ? _lastAlertMsg : "🔴 SELL Signal — 2BR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
@@ -1825,7 +1825,7 @@ if _bVSA
         _fU       := true
         _leSB := bar_index
         _totS  += 1
-        _lastAlertMsg := pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLotsV, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR"
+        _lastAlertMsg := pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLotsV, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / 0.01), "0") + ",comment=EVR"
         alert(pE ? _lastAlertMsg : "🟢 BUY Signal — EVR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
@@ -1873,7 +1873,7 @@ if _beVSA
         _fU       := true
         _leSB := bar_index
         _totS  += 1
-        _lastAlertMsg := pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLotsV2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR"
+        _lastAlertMsg := pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLotsV2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / 0.01), "0") + ",comment=EVR"
         alert(pE ? _lastAlertMsg : "🔴 SELL Signal — EVR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
         _sigLbl = label(na)
         if sL
@@ -1935,7 +1935,7 @@ if _eBWP and not na(_eWCH) and not _eF and not _eReBnc and eEVR and sVsa and _iR
         _fU       := true
         _leSB := bar_index
         _totS  += 1
-        _lastAlertMsg := pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLotsVW, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR"
+        _lastAlertMsg := pLid + ",buy," + pSym + ",vol_lots=" + str.tostring(_effLotsVW, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / 0.01), "0") + ",comment=EVR"
         alert(pE ? _lastAlertMsg : "🟢 BUY Signal — EVR Wick Confirmed | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
         _sigLblW = label(na)
         if sL
@@ -1989,7 +1989,7 @@ if _eBrWP and not na(_eWCL) and not _eF and not _eReBnc and eEVR and sVsa and _i
         _fU       := true
         _leSB := bar_index
         _totS  += 1
-        _lastAlertMsg := pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLotsVW2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / syminfo.mintick), "0") + ",comment=EVR"
+        _lastAlertMsg := pLid + ",sell," + pSym + ",vol_lots=" + str.tostring(_effLotsVW2, "0.####") + ",sl_pips=" + str.tostring(math.round(_slDist / 0.01), "0") + ",tp_pips=" + str.tostring(math.round(math.abs(_tp1 - _entry) / 0.01), "0") + ",comment=EVR"
         alert(pE ? _lastAlertMsg : "🔴 SELL Signal — EVR Wick Confirmed | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_once_per_bar)
         _sigLblW2 = label(na)
         if sL
