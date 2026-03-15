@@ -1528,7 +1528,7 @@ _uPBMbok  = uPBD <= 0.0 or uOE == "Instant at Breakout" or close < close[1]   //
 bool _uIOE = uOE == "Instant at Breakout"
 bool _tIOE = tOE == "Instant at Breakout"
 bool _eIOE = eOE == "Instant at Breakout"
-_bBrk = _euBD and eUHV and _iR and _lb and _rwb and not _uReBnc and (_eStU ? (_hb and _bTP) : not _beTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uLSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and (_uIOE or _iGr) and (_uIOE ? high > _bL - uPBD : close > _bL - uPBD) and (bar_index - _luSB) >= _euCd and not _cUB and _strUp and _uMomBOk and _uBVOk and _uPBMok and (uHTD == "Off" or _uHTFB) and (_uIOE or barstate.isconfirmed)
+_bBrk = _euBD and eUHV and _iR and _lb and _rwb and not _uReBnc and (_eStU ? (_hb and _bTP) : not _beTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uLSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and _iGr and (_uIOE ? high > _bL - uPBD : close > _bL - uPBD) and (bar_index - _luSB) >= _euCd and not _cUB and _strUp and _uMomBOk and _uBVOk and _uPBMok and (uHTD == "Off" or _uHTFB) and (_uIOE or barstate.isconfirmed)
 
 // -- Blocked-signal detection (for recommendation engine) --
 // UHV bull: would have fired without sweep requirement
@@ -1640,7 +1640,7 @@ if _uBeBase and (_erUS ? _uHSw : true) and (bar_index - _luSB) >= _euCd and _tsU
 if eUHV and _iR and not _lb and not _rwb and not _bTP and (sTC and sTCU) and not (_hbr and _beTP) and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and _iRd and close < _bL and (_erUS ? _uHSw : true) and (bar_index - _luSB) >= _euCd
     _uWB := true
 
-_beBrk = _euBeD and eUHV and _iR and not _lb and not _rwb and not _uReBnc and (_eStU ? (_hbr and _beTP) : not _bTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uHSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and (_uIOE or _iRd) and (_uIOE ? low < _bL + uPBD : close < _bL + uPBD) and (bar_index - _luSB) >= _euCd and not _cUBe and _strDn and _uMomBeOk and _uBVOk and _uPBMbok and (uHTD == "Off" or not _uHTFB) and (_uIOE or barstate.isconfirmed)
+_beBrk = _euBeD and eUHV and _iR and not _lb and not _rwb and not _uReBnc and (_eStU ? (_hbr and _beTP) : not _bTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uHSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and _iRd and (_uIOE ? low < _bL + uPBD : close < _bL + uPBD) and (bar_index - _luSB) >= _euCd and not _cUBe and _strDn and _uMomBeOk and _uBVOk and _uPBMbok and (uHTD == "Off" or not _uHTFB) and (_uIOE or barstate.isconfirmed)
 
 if _beBrk
     _entry      = _uIOE ? _bL + uPBD : close
