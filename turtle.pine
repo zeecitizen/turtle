@@ -1520,8 +1520,8 @@ bool _cEBe = cLP and _eBeT >= 10 and _eBeP < 0.0
 
 // STEP 5: BREAKOUT — Absorption Signal
 _uHTFB = request.security(syminfo.tickerid, uHTD == "Off" ? timeframe.period : uHTD, close >= open)
-_uMomBOk  = uOE == "Instant at Breakout" or ((not uMomB or (_cRng > 0 and (close-open)/_cRng >= uMomBR/100.0)) and (not uMomW or (_cRng > 0 and (high-close)/_cRng <= uMomWk/100.0 and (open-low)/_cRng <= uMomWk/100.0)))   // skipped for IOE: bar hasn't closed, wick/body ratios are mid-bar noise
-_uMomBeOk = uOE == "Instant at Breakout" or ((not uMomB or (_cRng > 0 and (open-close)/_cRng >= uMomBR/100.0)) and (not uMomW or (_cRng > 0 and (high-open)/_cRng <= uMomWk/100.0 and (close-low)/_cRng <= uMomWk/100.0)))   // skipped for IOE: bar hasn't closed, wick/body ratios are mid-bar noise
+_uMomBOk  = (not uMomB or (uOE == "Instant at Breakout" ? (_cRng[1] > 0 and (close[1]-open[1])/_cRng[1] >= uMomBR/100.0) : (_cRng > 0 and (close-open)/_cRng >= uMomBR/100.0))) and (not uMomW or (uOE == "Instant at Breakout" ? (_cRng[1] > 0 and (high[1]-close[1])/_cRng[1] <= uMomWk/100.0 and (open[1]-low[1])/_cRng[1] <= uMomWk/100.0) : (_cRng > 0 and (high-close)/_cRng <= uMomWk/100.0 and (open-low)/_cRng <= uMomWk/100.0)))
+_uMomBeOk = (not uMomB or (uOE == "Instant at Breakout" ? (_cRng[1] > 0 and (open[1]-close[1])/_cRng[1] >= uMomBR/100.0) : (_cRng > 0 and (open-close)/_cRng >= uMomBR/100.0))) and (not uMomW or (uOE == "Instant at Breakout" ? (_cRng[1] > 0 and (high[1]-open[1])/_cRng[1] <= uMomWk/100.0 and (close[1]-low[1])/_cRng[1] <= uMomWk/100.0) : (_cRng > 0 and (high-open)/_cRng <= uMomWk/100.0 and (close-low)/_cRng <= uMomWk/100.0)))
 _uBVOk    = not uBrkVROn or volume <= _uVol * (1.0 - uBrkVR/100.0)
 _uPBMok   = uPBD <= 0.0 or uOE == "Instant at Breakout" or close > close[1]   // pre-breakout momentum guard: bull — price must be rising bar-over-bar (skipped for IOE: bar hasn't closed yet)
 _uPBMbok  = uPBD <= 0.0 or uOE == "Instant at Breakout" or close < close[1]   // pre-breakout momentum guard: bear — price must be falling bar-over-bar (skipped for IOE: bar hasn't closed yet)
