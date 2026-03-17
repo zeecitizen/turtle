@@ -2326,7 +2326,7 @@ fDP(string _settingsExport) =>
     _nextSigEta = _minsToNextSignal >= 60 ? str.tostring(math.round(_minsToNextSignal / 60.0 * 10) / 10) + " hrs" : str.tostring(_minsToNextSignal) + " min"
     table.cell(statsPanel, 0, 2,
          _tDir + "  |  " + _tBar + "  " + _tStL + " (" + str.tostring(_tS) + ")" +
-         "  |  Next signal: ~" + _nextSigEta,
+         "\nNext signal: ~" + _nextSigEta,
          text_color = _tColor, text_size = size.small, bgcolor = _bgDark)
 
     // ROW 3 — TODAY DIVIDER
@@ -2365,12 +2365,14 @@ fDP(string _settingsExport) =>
     table.cell(statsPanel, 0, 6,
          str.tostring(_sigT) + " signals  |  " + str.tostring(_tradesCompletedToday) + " closed  |  " + str.tostring(_winsToday) + " won" +
          (_tradesCompletedToday > 0 ? "  (" + str.tostring(math.round(_winsToday / math.max(_tradesCompletedToday, 1) * 100)) + "%)" : "") +
-         "  |  " + (_currentStreak > 1 ? str.tostring(_currentStreak) + " wins in a row" : _currentStreak == 1 ? "Last: win" : _currentStreak < -1 ? str.tostring(math.abs(_currentStreak)) + " losses in a row" : "Last: loss"),
+         "\n" + (_currentStreak > 1 ? str.tostring(_currentStreak) + " wins in a row" : _currentStreak == 1 ? "Last: win" : _currentStreak < -1 ? str.tostring(math.abs(_currentStreak)) + " losses in a row" : "Last: loss"),
          text_color = _currentStreak >= 0 ? _txtGreen : _txtOrange, text_size = size.small, bgcolor = _bgDark)
 
     // ROW 7 — LAST HOUR RESULT + NEXT HOUR EV PROJECTION
     table.cell(statsPanel, 0, 7,
-         "Last hr: " + (_hourPnL >= 0.01 ? "+$" + str.tostring(_hourPnL, "#.##") : _hourPnL <= -0.01 ? "-$" + str.tostring(math.abs(_hourPnL), "#.##") : "—") + "  (" + str.tostring(_hourTrades) + " trades)  |  Next hr EV: " + (_projNextHrPnLEV >= 0 ? "+" : "") + "$" + str.tostring(math.abs(_projNextHrPnLEV), "#.##") + "  (" + _basisLbl + ")\nEV: $" + str.tostring(_ev, "#.##") + "/trade  |  " + str.tostring(_avgSigPerDay) + " signals/day avg",
+         "Last hr: " + (_hourPnL >= 0.01 ? "+$" + str.tostring(_hourPnL, "#.##") : _hourPnL <= -0.01 ? "-$" + str.tostring(math.abs(_hourPnL), "#.##") : "—") + "  (" + str.tostring(_hourTrades) + " trades)" +
+         "\nNext hr EV: " + (_projNextHrPnLEV >= 0 ? "+" : "") + "$" + str.tostring(math.abs(_projNextHrPnLEV), "#.##") + "  (" + _basisLbl + ")" +
+         "\nEV: $" + str.tostring(_ev, "#.##") + "/trade  |  " + str.tostring(_avgSigPerDay) + " signals/day avg",
          text_color = _txtAqua, text_size = size.small, bgcolor = _bgDark)
 
     // ROW 8 — STRATEGIES DIVIDER
@@ -2408,22 +2410,22 @@ fDP(string _settingsExport) =>
                     _evrLR := nz(_evrLR, 0.0) + _oDR
     _uhvLS = not na(_uhvLR) ? "\n  [LIVE SL risk: -$" + str.tostring(math.round(_uhvLR * 100) / 100, "#.##") + "]" : ""
     _evrLS = not na(_evrLR) ? "\n  [LIVE SL risk: -$" + str.tostring(math.round(_evrLR * 100) / 100, "#.##") + "]" : ""
-    _uhvWLStr = (_uhvAvgWin > 0 or _uhvAvgLoss > 0 ? "  avg +" + str.tostring(_uhvAvgWin, "#.##") + " / -" + str.tostring(_uhvAvgLoss, "#.##") : "") + f_mxL(_uhvMaxLoss, uST) + _uhvLS
-    _uhvLotStr = "  |  " + (not na(_lastUhvLots) ? str.tostring(_lastUhvLots, "0.####") : uDR > 0 ? "auto" : uRp > 0 ? str.tostring(uRp, "0.#") + "% cap" : str.tostring(uLS * lA, "0.####")) + " lots" + _uhvRiskTag
+    _uhvWLStr = (_uhvAvgWin > 0 or _uhvAvgLoss > 0 ? "\navg +" + str.tostring(_uhvAvgWin, "#.##") + " / -" + str.tostring(_uhvAvgLoss, "#.##") : "") + f_mxL(_uhvMaxLoss, uST) + _uhvLS
+    _uhvLotStr = "\n" + (not na(_lastUhvLots) ? str.tostring(_lastUhvLots, "0.####") : uDR > 0 ? "auto" : uRp > 0 ? str.tostring(uRp, "0.#") + "% cap" : str.tostring(uLS * lA, "0.####")) + " lots" + _uhvRiskTag
     table.cell(statsPanel, 0, 9,
          "UHV  W/L: " + str.tostring(_uhvWinsCalc) + "/" + str.tostring(_uhvTradesCalc) + " (" + str.tostring(_uhvAcc) + "%)" + (_best == "UHV" ? "  [BEST]" : "") +
          "\nAll-time: " + (_uhvPnLCalc >= 0 ? "+" : "") + "$" + str.tostring(_uhvPnLCalc, "#.##") +
-         "  Today: " + (_uPT >= 0 ? "+" : "") + "$" + str.tostring(_uPT, "#.##") +
+         "  |  Today: " + (_uPT >= 0 ? "+" : "") + "$" + str.tostring(_uPT, "#.##") +
          _uhvWLStr + _uhvLotStr,
          text_color = _uhvPnLCalc >= 0 ? _txtGreen : _txtRed, text_size = size.normal, bgcolor = _bgDeep)
 
     // ROW 11 — EFFORT VS RESULT
-    _evrWLStr = (_evrAvgWin > 0 or _evrAvgLoss > 0 ? "  avg +" + str.tostring(_evrAvgWin, "#.##") + " / -" + str.tostring(_evrAvgLoss, "#.##") : "") + f_mxL(_evrMaxLoss, eST) + _evrLS
-    _evrLotStr = "  |  " + (not na(_lastEvrLots) ? str.tostring(_lastEvrLots, "0.####") : eDR > 0 ? "auto" : eRp > 0 ? str.tostring(eRp, "0.#") + "% cap" : str.tostring(eLS * lA, "0.####")) + " lots" + _evrRiskTag
+    _evrWLStr = (_evrAvgWin > 0 or _evrAvgLoss > 0 ? "\navg +" + str.tostring(_evrAvgWin, "#.##") + " / -" + str.tostring(_evrAvgLoss, "#.##") : "") + f_mxL(_evrMaxLoss, eST) + _evrLS
+    _evrLotStr = "\n" + (not na(_lastEvrLots) ? str.tostring(_lastEvrLots, "0.####") : eDR > 0 ? "auto" : eRp > 0 ? str.tostring(eRp, "0.#") + "% cap" : str.tostring(eLS * lA, "0.####")) + " lots" + _evrRiskTag
     table.cell(statsPanel, 0, 11,
          "EVR  W/L: " + str.tostring(_evrWinsCalc) + "/" + str.tostring(_evrTradesCalc) + " (" + str.tostring(_evrAcc) + "%)" + (_best == "EVR" ? "  [BEST]" : "") +
          "\nAll-time: " + (_evrPnLCalc >= 0 ? "+" : "") + "$" + str.tostring(_evrPnLCalc, "#.##") +
-         "  Today: " + (_ePT >= 0 ? "+" : "") + "$" + str.tostring(_ePT, "#.##") +
+         "  |  Today: " + (_ePT >= 0 ? "+" : "") + "$" + str.tostring(_ePT, "#.##") +
          _evrWLStr + _evrLotStr,
          text_color = _evrPnLCalc >= 0 ? _txtGreen : _txtRed, text_size = size.normal, bgcolor = _bgDeep)
 
@@ -2435,15 +2437,15 @@ fDP(string _settingsExport) =>
     table.cell(statsPanel, 0, 13,
          "P&L: " + (_totalPnL >= 0 ? "+" : "") + "$" + str.tostring(_totalPnL, "#.##") +
          "  |  " + str.tostring(_wC) + "/" + str.tostring(_cTr) + " won (" + str.tostring(_accPct) + "%)" +
-         "  |  " + (_ev >= 0.01 ? "Positive EV" : _ev <= -0.01 ? "Negative EV" : "Breakeven") + ": $" + str.tostring(_ev, "#.##") + "/trade" +
-         "\navg win: +$" + str.tostring(_winAmt, "#.##") + "  |  avg loss: -$" + str.tostring(_lossAmt, "#.##"),
+         "\n" + (_ev >= 0.01 ? "Positive EV" : _ev <= -0.01 ? "Negative EV" : "Breakeven") + ": $" + str.tostring(_ev, "#.##") + "/trade" +
+         "  |  avg win: +$" + str.tostring(_winAmt, "#.##") + "  /  -$" + str.tostring(_lossAmt, "#.##"),
          text_color = _ev >= 0 ? _txtGreen : _txtRed, text_size = size.small, bgcolor = _bgDark)
 
     // ROW 14 — MILESTONES + RISK + YESTERDAY (condensed, tiny)
     table.cell(statsPanel, 0, 14,
          "To double: " + (_avgPnL > 0 ? str.tostring(_tradesToDouble) + " trades (~" + (_hoursToDouble >= 24 ? str.tostring(math.round(_hoursToDouble / 24.0 * 10) / 10) + " days" : str.tostring(_hoursToDouble) + " hrs") + ")" : "—") +
          "  |  Washout: " + str.tostring(_washout) + " losses" +
-         "  |  Yesterday: " + (_pnlYday >= 0 ? "+" : "") + "$" + str.tostring(math.round(_pnlYday * 100) / 100, "#.##") + "  (" + (_ydayGrowthPct >= 0 ? "+" : "") + str.tostring(_ydayGrowthPct) + "%)",
+         "\nYesterday: " + (_pnlYday >= 0 ? "+" : "") + "$" + str.tostring(math.round(_pnlYday * 100) / 100, "#.##") + "  (" + (_ydayGrowthPct >= 0 ? "+" : "") + str.tostring(_ydayGrowthPct) + "%)",
          text_color = _txtDim, text_size = size.tiny, bgcolor = _bgDark)
 
     // Recommendations / optimize calculations derived from trade statistics
