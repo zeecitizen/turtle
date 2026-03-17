@@ -149,7 +149,7 @@ mLot  = input.float(0.01, 'Minimum lot size allowed by your broker', group = gPc
 pPip  = input.float(0.01, 'MT5 pip size for this symbol (XAUUSD=0.01, ETHUSD=0.1, BTCUSD=1.0)', minval = 0.00001, group = gPc)
 pLat  = input.string("151,135,155,142,144", 'Signal→MT5 latency ms (comma-sep, copy from PineConnector Bridge logs)', group = gPc)
 pcSL  = input.string("Pips",   '──── Stop Loss format sent to MT5',        options = ["Pips", "Price"], group = gPc)
-pcTP  = input.string("Pips",   '──── Take Profit format sent to MT5',      options = ["Pips", "Price"], group = gPc)
+pcTP  = input.string("Price",  '──── Take Profit format sent to MT5',      options = ["Pips", "Price"], group = gPc)
 pcOT  = input.string("Market", '──── Order type sent to MT5',              options = ["Market", "Limit"], group = gPc)
 
 // --- 11. Optimize --------
@@ -835,9 +835,10 @@ fPTS(_pnl) =>
     _pnl >= 0.01 ? "💰 This strategy brought in: $" + str.tostring(_pnl, "#.##") + " in profits today" : _pnl <= -0.01 ? "📉 This strategy is down $" + str.tostring(math.abs(_pnl), "#.##") + " today" : "No completed trades yet today"
 
 fTS() =>
-    _m = minute(time, "UTC")
-    _s = second(time, "UTC")
-    str.tostring(_utcH) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + ":" + (_s < 10 ? "0" : "") + str.tostring(_s) + " UTC"
+    _h = hour(timenow, "UTC")
+    _m = minute(timenow, "UTC")
+    _s = second(timenow, "UTC")
+    str.tostring(_h) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + ":" + (_s < 10 ? "0" : "") + str.tostring(_s) + " UTC"
 
 // Round TP to pip boundary so Pine monitors exact same price MT5 places
 fTP(_e, _t) => _e + math.sign(_t - _e) * math.round(math.abs(_t - _e) / pPip) * pPip
@@ -865,8 +866,9 @@ fBits(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7, bo
 // Alert comment tag: strategy name + exact price at alert fire + UTC time + trade number + 16-bit condition bitmask
 // Format: "UHV@5115.4_1:09_#42#0110100001100000"
 fCT(_strat, _num, _bits) =>
-    _m = minute(time, "UTC")
-    _strat + "@" + str.tostring(close, "#.##") + "_" + str.tostring(_utcH) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + "_#" + str.tostring(_num) + "#" + _bits
+    _h = hour(timenow, "UTC")
+    _m = minute(timenow, "UTC")
+    _strat + "@" + str.tostring(close, "#.##") + "_" + str.tostring(_h) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + "_#" + str.tostring(_num) + "#" + _bits
 
 // PineConnector alert message builder — respects pcSL / pcTP / pcOT settings
 // _isBull: true = buy, false = sell | _lots: effective lot size | _entry/_sl/_tp: computed prices | _bits: 16-bit condition bitmask
