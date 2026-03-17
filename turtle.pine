@@ -2547,7 +2547,13 @@ fDP(string _settingsExport) =>
          text_color = color.new(color.silver, 20), text_size = size.tiny, bgcolor = color.new(#0a0a1a, 10))
 
     // ROW 18 — SETTINGS EXPORT (string built at global scope to stay under 254-element limit)
-    table.cell(statsPanel, 0, 18, "SETTINGS EXPORT — copy & save, paste to Claude to restore:\n" + _settingsExport,
+    // Split across 4 lines by section so no single line is too wide
+    table.cell(statsPanel, 0, 18,
+         "SETTINGS EXPORT — copy all 4 lines, paste to Claude to restore:\n" +
+         _gSAc + _gSPoi + "\n" +
+         _gSUhv + "\n" +
+         _gSEvr + "\n" +
+         _gSTr + _gSHtf + _gSPc,
          text_color = color.new(color.gray, 30), text_size = size.tiny, bgcolor = color.new(#0a0a0a, 10))
 
 
