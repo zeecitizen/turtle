@@ -51,7 +51,7 @@ uTM   = input.string("R:R Ratio", '──── Take Profit: Which method?', opt
 uT1    = input.float(0.34,  '──── Take Profit: R:R Ratio (R:R method only)', group = gU)
 uTD   = input.float(8.0,  '──── Take Profit: Fixed $ target (Dollar method only)', group = gU)
 uST    = input.string("ATR", '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "Breakout Wick", "SwingLow", "Dollar", "Retracement's Min/Max", "Prev Candle"], group = gU)
-uSBf  = input.float(3.1,    '──── Stop Loss: Distance $ below SL level? [UHV=below UHV candle low | Breakout Wick=below entry candle wick | SwingLow=below swing | Retracement\'s Min/Max=below lowest point touched from IB candle to breakout (bull) / above highest point (bear) | Prev Candle=below/above previous candle low/high | not used for ATR or Dollar]', group = gU)
+uSBf  = input.float(3.1,    '──── Stop Loss: Offset from SL level (+ = below the level for tighter protection, − = above the level for a tighter stop inside the candle) [UHV=relative to UHV candle low | Breakout Wick=relative to entry candle wick | SwingLow=relative to swing | Retracement\'s Min/Max=relative to lowest/highest retracement point | Prev Candle=relative to previous candle low/high | not used for ATR or Dollar]', group = gU)
 uSMn = input.float(-2.5,    '──── Stop Loss: Closest it can ever be to entry? ($)', group = gU)
 uSAm = input.float(1.92,    '──── Stop Loss: Volatility width? (ATR method only)', group = gU)
 uSDo  = input.float(1.0,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', group = gU)
