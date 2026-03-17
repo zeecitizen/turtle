@@ -2299,8 +2299,35 @@ f_rTag(float d) =>
     p == 0.0 ? "" : p <= 0.5 ? " (risk-free)" : p <= 2.0 ? " (safe)" : p <= 5.0 ? " (moderate)" : p <= 10.0 ? " (high risk)" : " (risk-max)"
 f_mxL(float m, simple string slT) => m > 0 ? "  Avg. max drawdown: -$" + str.tostring(m, "#.##") : slT == "SwingLow" ? "  Avg. max drawdown: unknown (swing SL — consider $ Risk mode)" : ""
 
+// SETTINGS EXPORT STRING — built at global scope (not inside fDP) to avoid exceeding
+// Pine's 254 external-element limit per function. Inputs are referenced here once;
+// fDP() receives the finished string as a single parameter.
+// Format T1: Account|POI|UHV|2BR|EVR|Trend|HTF|PC  (pipe-delimited, fixed order)
+// Account:  iMon|cM|lA|uSpread
+// POI:      rPOI|rFT|pFvg|pHL|pSup|pLb
+// UHV:      eUHV|uDir|rUS|rULV|uHTD|uVTOn|uVT|uVLB|uSB|uOE|uPBD|uPBsD|uPBCo|uDR|uRp|uLS|uTM|uT1|uTD|uST|uSBf|uSMn|uSAm|uSDo|uSSw|uSLPips|uTPPips|uREU|uMomB|uMomBR|uMomW|uMomWk|uBrkVROn|uBrkVR|uCd
+// 2BR:      eTBR|tDir|s2|r2LV|tDR|tRp|tLS|tTM|tT1|tTD|tST|tSBf|tSMn|tSAm|tSDo|tSSw|uRET|tOE|tCd
+// EVR:      eEVR|eDir|sVsa|rEHV|eVMD|aETW|eDR|eRp|eLS|eTM|eT1|eTD|eST|eSBf|eSMn|eSAm|eSDo|eSSw|uREE|eRCn|eMinCP|eMxBR|eMinWD|eMinVP|eOE|eCd
+// Trend:    mTS|tPB|sFilt|cLP|aTS|aTSU|aTST|aTSE|tSTh|sTC|sTCU|sTCT|sTCE|tSMA|rSwT|avoidRng|rngTh|bRW|rOC
+// HTF:      uHF|hFC|fTH|uFTH|tFTH|eFTH
+// PC:       pE|pSym|mLot|pPip|pcSL|pcTP|pcOT|mTM
+// Enums — uDir/tDir/eDir: 0=Both 1=BullOnly 2=BearOnly | uHTD/hFC: 0=Off/Auto 1=1 2=5 3=15 4=60 5=240
+//         uOE/tOE/eOE: 0=Close 1=IOE | uTM/tTM/eTM: 0=RR 1=Struct 2=Dollar
+//         uST: 0=UHV 1=ATR 2=Wick 3=Swing 4=Dollar 5=RetracMinMax 6=PrevCandle
+//         tST: 0=UHV 1=ATR 2=Wick 3=Swing 4=Dollar | eST: 0=UHV 1=ATR 2=Wick 3=Swing 4=Dollar 5=HVWick
+//         pcSL/pcTP: 0=Pips 1=Price | pcOT: 0=Market 1=Limit
+string _gSAc  = "T1|" + str.tostring(iMon) + "|" + str.tostring(cM) + "|" + str.tostring(lA) + "|" + str.tostring(uSpread)
+string _gSPoi = "|" + (rPOI?"1":"0") + "|" + (rFT?"1":"0") + "|" + (pFvg?"1":"0") + "|" + (pHL?"1":"0") + "|" + (pSup?"1":"0") + "|" + str.tostring(pLb)
+string _gSUhv = "|" + (eUHV?"1":"0") + "|" + (uDir=="Both"?"0":uDir=="Bull only"?"1":"2") + "|" + (rUS?"1":"0") + "|" + (rULV?"1":"0") + "|" + (uHTD=="Off"?"0":uHTD=="1"?"1":uHTD=="5"?"2":uHTD=="15"?"3":uHTD=="60"?"4":"5") + "|" + (uVTOn?"1":"0") + "|" + str.tostring(uVT) + "|" + str.tostring(uVLB) + "|" + str.tostring(uSB) + "|" + (uOE=="Candle Close"?"0":"1") + "|" + str.tostring(uPBD) + "|" + str.tostring(uPBsD) + "|" + (uPBCo?"1":"0") + "|" + str.tostring(uDR) + "|" + str.tostring(uRp) + "|" + str.tostring(uLS) + "|" + (uTM=="R:R Ratio"?"0":uTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(uT1) + "|" + str.tostring(uTD) + "|" + (uST=="UHV"?"0":uST=="ATR"?"1":uST=="Breakout Wick"?"2":uST=="SwingLow"?"3":uST=="Dollar"?"4":uST=="Retracement's Min/Max"?"5":"6") + "|" + str.tostring(uSBf) + "|" + str.tostring(uSMn) + "|" + str.tostring(uSAm) + "|" + str.tostring(uSDo) + "|" + str.tostring(uSSw) + "|" + str.tostring(uSLPips) + "|" + str.tostring(uTPPips) + "|" + (uREU?"1":"0") + "|" + (uMomB?"1":"0") + "|" + str.tostring(uMomBR) + "|" + (uMomW?"1":"0") + "|" + str.tostring(uMomWk) + "|" + (uBrkVROn?"1":"0") + "|" + str.tostring(uBrkVR) + "|" + str.tostring(uCd)
+string _gS2br = "|" + (eTBR?"1":"0") + "|" + (tDir=="Both"?"0":tDir=="Bull only"?"1":"2") + "|" + (s2?"1":"0") + "|" + (r2LV?"1":"0") + "|" + str.tostring(tDR) + "|" + str.tostring(tRp) + "|" + str.tostring(tLS) + "|" + (tTM=="R:R Ratio"?"0":tTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(tT1) + "|" + str.tostring(tTD) + "|" + (tST=="UHV"?"0":tST=="ATR"?"1":tST=="Breakout Wick"?"2":tST=="SwingLow"?"3":"4") + "|" + str.tostring(tSBf) + "|" + str.tostring(tSMn) + "|" + str.tostring(tSAm) + "|" + str.tostring(tSDo) + "|" + str.tostring(tSSw) + "|" + (uRET?"1":"0") + "|" + (tOE=="Candle Close"?"0":"1") + "|" + str.tostring(tCd)
+string _gSEvr = "|" + (eEVR?"1":"0") + "|" + (eDir=="Both"?"0":eDir=="Bull only"?"1":"2") + "|" + (sVsa?"1":"0") + "|" + (rEHV?"1":"0") + "|" + str.tostring(eVMD) + "|" + (aETW?"1":"0") + "|" + str.tostring(eDR) + "|" + str.tostring(eRp) + "|" + str.tostring(eLS) + "|" + (eTM=="R:R Ratio"?"0":eTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(eT1) + "|" + str.tostring(eTD) + "|" + (eST=="UHV"?"0":eST=="ATR"?"1":eST=="Breakout Wick"?"2":eST=="SwingLow"?"3":eST=="Dollar"?"4":"5") + "|" + str.tostring(eSBf) + "|" + str.tostring(eSMn) + "|" + str.tostring(eSAm) + "|" + str.tostring(eSDo) + "|" + str.tostring(eSSw) + "|" + (uREE?"1":"0") + "|" + (eRCn?"1":"0") + "|" + str.tostring(eMinCP) + "|" + str.tostring(eMxBR) + "|" + str.tostring(eMinWD) + "|" + str.tostring(eMinVP) + "|" + (eOE=="Candle Close"?"0":"1") + "|" + str.tostring(eCd)
+string _gSTr  = "|" + str.tostring(mTS) + "|" + str.tostring(tPB) + "|" + (sFilt?"1":"0") + "|" + (cLP?"1":"0") + "|" + (aTS?"1":"0") + "|" + (aTSU?"1":"0") + "|" + (aTST?"1":"0") + "|" + (aTSE?"1":"0") + "|" + str.tostring(tSTh) + "|" + (sTC?"1":"0") + "|" + (sTCU?"1":"0") + "|" + (sTCT?"1":"0") + "|" + (sTCE?"1":"0") + "|" + (tSMA?"1":"0") + "|" + (rSwT?"1":"0") + "|" + (avoidRng?"1":"0") + "|" + str.tostring(rngTh) + "|" + (bRW?"1":"0") + "|" + (rOC?"1":"0")
+string _gSHtf = "|" + (uHF?"1":"0") + "|" + (hFC=="Auto"?"0":hFC=="1"?"1":hFC=="5"?"2":hFC=="15"?"3":hFC=="60"?"4":"5") + "|" + str.tostring(fTH) + "|" + str.tostring(uFTH) + "|" + str.tostring(tFTH) + "|" + str.tostring(eFTH)
+string _gSPc  = "|" + (pE?"1":"0") + "|" + pSym + "|" + str.tostring(mLot) + "|" + str.tostring(pPip) + "|" + (pcSL=="Pips"?"0":"1") + "|" + (pcTP=="Pips"?"0":"1") + "|" + (pcOT=="Market"?"0":"1") + "|" + (mTM?"1":"0")
+string _settingsExport = _gSAc + _gSPoi + _gSUhv + _gS2br + _gSEvr + _gSTr + _gSHtf + _gSPc
+
 // STATS PANEL (top-right table)
-fDP() =>
+fDP(string _settingsExport) =>
     // -- Core stats --
     _totalPnL    = 0.0
     _avgDollarRisk = (uDR + tDR + eDR) / 3.0
@@ -2805,35 +2832,13 @@ fDP() =>
     table.cell(statsPanel, 0, 17, "LAST SIGNAL SENT:\n" + _lastAlertMsg,
          text_color = color.new(color.silver, 20), text_size = size.tiny, bgcolor = color.new(#0a0a1a, 10))
 
-    // ROW 18 — SETTINGS EXPORT (paste to Claude to restore full config)
-    // Format T1: Account|POI|UHV|2BR|EVR|Trend|HTF|PC  (pipe-delimited, fixed order)
-    // Account:  iMon|cM|lA|uSpread
-    // POI:      rPOI|rFT|pFvg|pHL|pSup|pLb
-    // UHV:      eUHV|uDir|rUS|rULV|uHTD|uVTOn|uVT|uVLB|uSB|uOE|uPBD|uPBsD|uPBCo|uDR|uRp|uLS|uTM|uT1|uTD|uST|uSBf|uSMn|uSAm|uSDo|uSSw|uSLPips|uTPPips|uREU|uMomB|uMomBR|uMomW|uMomWk|uBrkVROn|uBrkVR|uCd
-    // 2BR:      eTBR|tDir|s2|r2LV|tDR|tRp|tLS|tTM|tT1|tTD|tST|tSBf|tSMn|tSAm|tSDo|tSSw|uRET|tOE|tCd
-    // EVR:      eEVR|eDir|sVsa|rEHV|eVMD|aETW|eDR|eRp|eLS|eTM|eT1|eTD|eST|eSBf|eSMn|eSAm|eSDo|eSSw|uREE|eRCn|eMinCP|eMxBR|eMinWD|eMinVP|eOE|eCd
-    // Trend:    mTS|tPB|sFilt|cLP|aTS|aTSU|aTST|aTSE|tSTh|sTC|sTCU|sTCT|sTCE|tSMA|rSwT|avoidRng|rngTh|bRW|rOC
-    // HTF:      uHF|hFC|fTH|uFTH|tFTH|eFTH
-    // PC:       pE|pSym|mLot|pPip|pcSL|pcTP|pcOT|mTM
-    // Enums — uDir/tDir/eDir: 0=Both 1=BullOnly 2=BearOnly | uHTD/hFC: 0=Off/Auto 1=1 2=5 3=15 4=60 5=240
-    //         uOE/tOE/eOE: 0=Close 1=IOE | uTM/tTM/eTM: 0=RR 1=Struct 2=Dollar
-    //         uST: 0=UHV 1=ATR 2=Wick 3=Swing 4=Dollar 5=RetracMinMax 6=PrevCandle
-    //         tST: 0=UHV 1=ATR 2=Wick 3=Swing 4=Dollar | eST: 0=UHV 1=ATR 2=Wick 3=Swing 4=Dollar 5=HVWick
-    //         pcSL/pcTP: 0=Pips 1=Price | pcOT: 0=Market 1=Limit
-    string _sAc  = "T1|" + str.tostring(iMon) + "|" + str.tostring(cM) + "|" + str.tostring(lA) + "|" + str.tostring(uSpread)
-    string _sPoi = "|" + (rPOI?"1":"0") + "|" + (rFT?"1":"0") + "|" + (pFvg?"1":"0") + "|" + (pHL?"1":"0") + "|" + (pSup?"1":"0") + "|" + str.tostring(pLb)
-    string _sUhv = "|" + (eUHV?"1":"0") + "|" + (uDir=="Both"?"0":uDir=="Bull only"?"1":"2") + "|" + (rUS?"1":"0") + "|" + (rULV?"1":"0") + "|" + (uHTD=="Off"?"0":uHTD=="1"?"1":uHTD=="5"?"2":uHTD=="15"?"3":uHTD=="60"?"4":"5") + "|" + (uVTOn?"1":"0") + "|" + str.tostring(uVT) + "|" + str.tostring(uVLB) + "|" + str.tostring(uSB) + "|" + (uOE=="Candle Close"?"0":"1") + "|" + str.tostring(uPBD) + "|" + str.tostring(uPBsD) + "|" + (uPBCo?"1":"0") + "|" + str.tostring(uDR) + "|" + str.tostring(uRp) + "|" + str.tostring(uLS) + "|" + (uTM=="R:R Ratio"?"0":uTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(uT1) + "|" + str.tostring(uTD) + "|" + (uST=="UHV"?"0":uST=="ATR"?"1":uST=="Breakout Wick"?"2":uST=="SwingLow"?"3":uST=="Dollar"?"4":uST=="Retracement's Min/Max"?"5":"6") + "|" + str.tostring(uSBf) + "|" + str.tostring(uSMn) + "|" + str.tostring(uSAm) + "|" + str.tostring(uSDo) + "|" + str.tostring(uSSw) + "|" + str.tostring(uSLPips) + "|" + str.tostring(uTPPips) + "|" + (uREU?"1":"0") + "|" + (uMomB?"1":"0") + "|" + str.tostring(uMomBR) + "|" + (uMomW?"1":"0") + "|" + str.tostring(uMomWk) + "|" + (uBrkVROn?"1":"0") + "|" + str.tostring(uBrkVR) + "|" + str.tostring(uCd)
-    string _s2br = "|" + (eTBR?"1":"0") + "|" + (tDir=="Both"?"0":tDir=="Bull only"?"1":"2") + "|" + (s2?"1":"0") + "|" + (r2LV?"1":"0") + "|" + str.tostring(tDR) + "|" + str.tostring(tRp) + "|" + str.tostring(tLS) + "|" + (tTM=="R:R Ratio"?"0":tTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(tT1) + "|" + str.tostring(tTD) + "|" + (tST=="UHV"?"0":tST=="ATR"?"1":tST=="Breakout Wick"?"2":tST=="SwingLow"?"3":"4") + "|" + str.tostring(tSBf) + "|" + str.tostring(tSMn) + "|" + str.tostring(tSAm) + "|" + str.tostring(tSDo) + "|" + str.tostring(tSSw) + "|" + (uRET?"1":"0") + "|" + (tOE=="Candle Close"?"0":"1") + "|" + str.tostring(tCd)
-    string _sEvr = "|" + (eEVR?"1":"0") + "|" + (eDir=="Both"?"0":eDir=="Bull only"?"1":"2") + "|" + (sVsa?"1":"0") + "|" + (rEHV?"1":"0") + "|" + str.tostring(eVMD) + "|" + (aETW?"1":"0") + "|" + str.tostring(eDR) + "|" + str.tostring(eRp) + "|" + str.tostring(eLS) + "|" + (eTM=="R:R Ratio"?"0":eTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(eT1) + "|" + str.tostring(eTD) + "|" + (eST=="UHV"?"0":eST=="ATR"?"1":eST=="Breakout Wick"?"2":eST=="SwingLow"?"3":eST=="Dollar"?"4":"5") + "|" + str.tostring(eSBf) + "|" + str.tostring(eSMn) + "|" + str.tostring(eSAm) + "|" + str.tostring(eSDo) + "|" + str.tostring(eSSw) + "|" + (uREE?"1":"0") + "|" + (eRCn?"1":"0") + "|" + str.tostring(eMinCP) + "|" + str.tostring(eMxBR) + "|" + str.tostring(eMinWD) + "|" + str.tostring(eMinVP) + "|" + (eOE=="Candle Close"?"0":"1") + "|" + str.tostring(eCd)
-    string _sTr  = "|" + str.tostring(mTS) + "|" + str.tostring(tPB) + "|" + (sFilt?"1":"0") + "|" + (cLP?"1":"0") + "|" + (aTS?"1":"0") + "|" + (aTSU?"1":"0") + "|" + (aTST?"1":"0") + "|" + (aTSE?"1":"0") + "|" + str.tostring(tSTh) + "|" + (sTC?"1":"0") + "|" + (sTCU?"1":"0") + "|" + (sTCT?"1":"0") + "|" + (sTCE?"1":"0") + "|" + (tSMA?"1":"0") + "|" + (rSwT?"1":"0") + "|" + (avoidRng?"1":"0") + "|" + str.tostring(rngTh) + "|" + (bRW?"1":"0") + "|" + (rOC?"1":"0")
-    string _sHtf = "|" + (uHF?"1":"0") + "|" + (hFC=="Auto"?"0":hFC=="1"?"1":hFC=="5"?"2":hFC=="15"?"3":hFC=="60"?"4":"5") + "|" + str.tostring(fTH) + "|" + str.tostring(uFTH) + "|" + str.tostring(tFTH) + "|" + str.tostring(eFTH)
-    string _sPc  = "|" + (pE?"1":"0") + "|" + pSym + "|" + str.tostring(mLot) + "|" + str.tostring(pPip) + "|" + (pcSL=="Pips"?"0":"1") + "|" + (pcTP=="Pips"?"0":"1") + "|" + (pcOT=="Market"?"0":"1") + "|" + (mTM?"1":"0")
-    table.cell(statsPanel, 0, 18, "SETTINGS EXPORT — copy & save, paste to Claude to restore:\n" + _sAc + _sPoi + _sUhv + _s2br + _sEvr + _sTr + _sHtf + _sPc,
+    // ROW 18 — SETTINGS EXPORT (string built at global scope to stay under 254-element limit)
+    table.cell(statsPanel, 0, 18, "SETTINGS EXPORT — copy & save, paste to Claude to restore:\n" + _settingsExport,
          text_color = color.new(color.gray, 30), text_size = size.tiny, bgcolor = color.new(#0a0a0a, 10))
 
 
 if barstate.islast and sSP
-    fDP()
+    fDP(_settingsExport)
 
 // -- Optimizer Status Panel (bottom-left) --
 if barstate.islast
