@@ -57,7 +57,7 @@ uSMn = input.float(0.1,    '──── Stop Loss: Closest it can ever be to en
 uSAm = input.float(1.92,    '──── Stop Loss: Volatility width? (ATR method only)', group = gU)
 uSDo  = input.float(0.3,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', group = gU)
 uSSw = input.int(11,      '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', group = gU)
-uSLPips = input.float(30.0, '──── Stop Loss: Override with fixed pips (0 = off, uses SL method above)', group = gU)
+uSLPips = input.float(0.0, '──── Stop Loss: Override with fixed pips (0 = off, uses SL method above)', group = gU)
 uTPPips = input.float(50.0, '──── Take Profit: Override with fixed pips (0 = off, uses TP method above)', group = gU)
 uREU   = input.bool(false,  '──── Cancel this strategy on early bounce-back (price returns to IB level before touching POI)?', group = gU)
 uMomB    = input.bool(false,  '──── Momentum Candle: Require min body size (strong body)?', group = gU)
