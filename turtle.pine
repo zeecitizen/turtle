@@ -842,10 +842,10 @@ fPTS(_pnl) =>
     _pnl >= 0.01 ? "💰 This strategy brought in: $" + str.tostring(_pnl, "#.##") + " in profits today" : _pnl <= -0.01 ? "📉 This strategy is down $" + str.tostring(math.abs(_pnl), "#.##") + " today" : "No completed trades yet today"
 
 fTS() =>
-    _h = hour(timenow, "UTC")
-    _m = minute(timenow, "UTC")
-    _s = second(timenow, "UTC")
-    str.tostring(_h) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + ":" + (_s < 10 ? "0" : "") + str.tostring(_s) + " UTC"
+    _h = hour(timenow, "Europe/Berlin")
+    _m = minute(timenow, "Europe/Berlin")
+    _s = second(timenow, "Europe/Berlin")
+    str.tostring(_h) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + ":" + (_s < 10 ? "0" : "") + str.tostring(_s) + " Berlin"
 
 // Round TP to pip boundary so Pine monitors exact same price MT5 places
 fTP(_e, _t) => _e + math.sign(_t - _e) * math.round(math.abs(_t - _e) / pPip) * pPip
