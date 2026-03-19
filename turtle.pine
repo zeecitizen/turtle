@@ -1564,7 +1564,7 @@ if _bBrk
     float _tp1 = uTPPips > 0 ? _entry + uTPPips * pPip : fTP(_entry, uTM == "Structural High/Low" ? nz(_rCeil, _entry + _slDist * uT1) : uTM == "Dollar Amount" ? _entry + _euTD : _entry + _slDist * uT1)
     if _tp1 <= _entry  // TP at or below entry for buy → structural ceiling below entry; force dollar fallback
         _tp1 := fTP(_entry, _entry + _euTD)
-    if _uIOE and pcOT != "Limit" and _tp1 <= close + uSpread * pPip  // IOE guard: TP at or below close+spread → fill slippage could push TP below fill; rebase from close
+    if _uIOE and pcOT != "Limit" and _tp1 <= close + uSpread  // IOE guard: TP within spread of close → fill slippage could push TP below fill; rebase from close
         _tp1 := fTP(close, uTM == "Dollar Amount" ? close + _euTD : close + _slDist * uT1)
     bool _safe = _inSess and _lOp + _slDist * _effLots * cM <= iMon * 0.5
     if not _uAlF  // once-per-bar gate: varip prevents all side-effects from re-firing on every IOE tick
@@ -1655,7 +1655,7 @@ if _beBrk
     float _tp1 = uTPPips > 0 ? _entry - uTPPips * pPip : fTP(_entry, uTM == "Structural High/Low" ? nz(_rFlr, _entry - _slDist * uT1) : uTM == "Dollar Amount" ? _entry - _euTD : _entry - _slDist * uT1)
     if _tp1 >= _entry  // TP at or above entry for sell → structural floor above entry; force dollar fallback
         _tp1 := fTP(_entry, _entry - _euTD)
-    if _uIOE and pcOT != "Limit" and _tp1 >= close - uSpread * pPip  // IOE guard: TP at or above close-spread → fill slippage could push TP above fill; rebase from close
+    if _uIOE and pcOT != "Limit" and _tp1 >= close - uSpread  // IOE guard: TP within spread of close → fill slippage could push TP above fill; rebase from close
         _tp1 := fTP(close, uTM == "Dollar Amount" ? close - _euTD : close - _slDist * uT1)
     bool _safe = _inSess and _lOp + _slDist * _effLots * cM <= iMon * 0.5
     if not _uAlF
@@ -1767,7 +1767,7 @@ if _bVSA
     _tp1 := fTP(_entry, _tp1)
     if _tp1 <= _entry  // TP at or below entry for buy → structural ceiling below entry; force RR fallback
         _tp1 := fTP(_entry, _entry + _slDist * eT1)
-    if _eIOE and pcOT != "Limit" and _tp1 <= close + uSpread * pPip  // IOE guard: TP within spread of close → fill slippage could push TP below fill; rebase from close
+    if _eIOE and pcOT != "Limit" and _tp1 <= close + uSpread  // IOE guard: TP within spread of close → fill slippage could push TP below fill; rebase from close
         _tp1 := fTP(close, eTM == "Dollar Amount" ? close + _eeTD : close + _slDist * eT1)
     bool _safe = _inSess and _lOp + _slDist * _effLotsV * cM <= iMon * 0.5
     if _safe
@@ -1817,7 +1817,7 @@ if _beVSA
     _tp1 := fTP(_entry, _tp1)
     if _tp1 >= _entry  // TP at or above entry for sell → structural floor above entry; force RR fallback
         _tp1 := fTP(_entry, _entry - _slDist * eT1)
-    if _eIOE and pcOT != "Limit" and _tp1 >= close - uSpread * pPip  // IOE guard: TP within spread of close → fill slippage could push TP above fill; rebase from close
+    if _eIOE and pcOT != "Limit" and _tp1 >= close - uSpread  // IOE guard: TP within spread of close → fill slippage could push TP above fill; rebase from close
         _tp1 := fTP(close, eTM == "Dollar Amount" ? close - _eeTD : close - _slDist * eT1)
     bool _safe = _inSess and _lOp + _slDist * _effLotsV2 * cM <= iMon * 0.5
     if _safe
