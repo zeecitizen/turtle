@@ -102,6 +102,7 @@ gTr = "📈 Trend & Filters"
 // Per-strategy cooldowns (replacing old shared signalCooldown)
 uCd    = input.int(0,  '──── Cooldown: Bars after a signal before another can fire?', group = gU)
 uAlGt  = input.float(-0.05, '──── Alert Gate ($): min gap from current price to TP before alert fires (−1 = always fire, 0 = block only if price already past TP, >0 = require X$ gap — protects against fast-candle fills past TP)', minval = -1.0, step = 0.05, group = gU)
+uIOEGrd = input.float(1.0,  '──── IOE TP Guard: spread multiplier (0 = off, 1 = guard triggers when TP within 1× spread of close, 2 = stricter — within 2× spread)', minval = 0.0, step = 0.5, group = gU)
 eCd    = input.int(22,  '──── Cooldown: Bars after a signal before another can fire?', group = gE)
 mTS  = input.int(15, 'Min Trend Strength at Signal', group = gTr)
 tPB  = input.int(8, 'Trend Persistence Lookback (bars)', group = gTr)
@@ -1564,7 +1565,7 @@ if _bBrk
     float _tp1 = uTPPips > 0 ? _entry + uTPPips * pPip : fTP(_entry, uTM == "Structural High/Low" ? nz(_rCeil, _entry + _slDist * uT1) : uTM == "Dollar Amount" ? _entry + _euTD : _entry + _slDist * uT1)
     if _tp1 <= _entry  // TP at or below entry for buy → structural ceiling below entry; force dollar fallback
         _tp1 := fTP(_entry, _entry + _euTD)
-    if _uIOE and pcOT != "Limit" and _tp1 <= close + uSpread  // IOE guard: TP within spread of close → fill slippage could push TP below fill; rebase from close
+    if _uIOE and pcOT != "Limit" and uIOEGrd > 0 and _tp1 <= close + uSpread * uIOEGrd  // IOE guard: TP within guard range of close → fill slippage could push TP below fill; rebase from close
         _tp1 := fTP(close, uTPPips > 0 ? close + uTPPips * pPip : (uTM == "Dollar Amount" ? close + _euTD : close + _slDist * uT1))
     bool _safe = _inSess and _lOp + _slDist * _effLots * cM <= iMon * 0.5
     if not _uAlF  // once-per-bar gate: varip prevents all side-effects from re-firing on every IOE tick
@@ -1655,7 +1656,7 @@ if _beBrk
     float _tp1 = uTPPips > 0 ? _entry - uTPPips * pPip : fTP(_entry, uTM == "Structural High/Low" ? nz(_rFlr, _entry - _slDist * uT1) : uTM == "Dollar Amount" ? _entry - _euTD : _entry - _slDist * uT1)
     if _tp1 >= _entry  // TP at or above entry for sell → structural floor above entry; force dollar fallback
         _tp1 := fTP(_entry, _entry - _euTD)
-    if _uIOE and pcOT != "Limit" and _tp1 >= close - uSpread  // IOE guard: TP within spread of close → fill slippage could push TP above fill; rebase from close
+    if _uIOE and pcOT != "Limit" and uIOEGrd > 0 and _tp1 >= close - uSpread * uIOEGrd  // IOE guard: TP within guard range of close → fill slippage could push TP above fill; rebase from close
         _tp1 := fTP(close, uTPPips > 0 ? close - uTPPips * pPip : (uTM == "Dollar Amount" ? close - _euTD : close - _slDist * uT1))
     bool _safe = _inSess and _lOp + _slDist * _effLots * cM <= iMon * 0.5
     if not _uAlF
@@ -2130,7 +2131,7 @@ f_mxL(float m, simple string slT) => m > 0 ? "  Avg. max drawdown: -$" + str.tos
 // Format T1: Account|POI|UHV|EVR|Trend|HTF|PC  (pipe-delimited, fixed order)
 // Account:  iMon|cM|lA|uSpread|uLev
 // POI:      rPOI|rFT|pFvg|pHL|pSup|pLb
-// UHV:      eUHV|uDir|rUS|rULV|uHTD|uVTOn|uVT|uVLB|uSB|uOE|uPBD|uPBsD|uPBCo|uDR|uRp|uLS|uTM|uT1|uTD|uST|uSBf|uSMn|uSAm|uSDo|uSSw|uSLPips|uTPPips|uREU|uMomB|uMomBR|uMomW|uMomWk|uBrkVROn|uBrkVR|uBrkBody|uCd
+// UHV:      eUHV|uDir|rUS|rULV|uHTD|uVTOn|uVT|uVLB|uSB|uOE|uPBD|uPBsD|uPBCo|uDR|uRp|uLS|uTM|uT1|uTD|uST|uSBf|uSMn|uSAm|uSDo|uSSw|uSLPips|uTPPips|uREU|uMomB|uMomBR|uMomW|uMomWk|uBrkVROn|uBrkVR|uBrkBody|uCd|uAlGt|uIOEGrd
 // EVR:      eEVR|eDir|sVsa|rEHV|eVMD|aETW|eDR|eRp|eLS|eTM|eT1|eTD|eST|eSBf|eSMn|eSAm|eSDo|eSSw|uREE|eRCn|eMinCP|eMxBR|eMinWD|eMinVP|eOE|eCd
 // Trend:    mTS|tPB|sFilt|cLP|aTS|aTSU|aTSE|tSTh|sTC|sTCU|sTCE|tSMA|rSwT|avoidRng|rngTh|bRW
 // HTF:      uHF|hFC|fTH|uFTH|eFTH
@@ -2142,7 +2143,7 @@ f_mxL(float m, simple string slT) => m > 0 ? "  Avg. max drawdown: -$" + str.tos
 //         pcSL/pcTP: 0=Pips 1=Price | pcOT: 0=Market 1=Limit
 string _gSAc  = "T1|" + str.tostring(iMon) + "|" + str.tostring(cM) + "|" + str.tostring(lA) + "|" + str.tostring(uSpread) + "|" + str.tostring(uLev)
 string _gSPoi = "|" + (rPOI?"1":"0") + "|" + (rFT?"1":"0") + "|" + (pFvg?"1":"0") + "|" + (pHL?"1":"0") + "|" + (pSup?"1":"0") + "|" + str.tostring(pLb)
-string _gSUhv = "|" + (eUHV?"1":"0") + "|" + (uDir=="Both"?"0":uDir=="Bull only"?"1":"2") + "|" + (rUS?"1":"0") + "|" + (rULV?"1":"0") + "|" + (uHTD=="Off"?"0":uHTD=="1"?"1":uHTD=="5"?"2":uHTD=="15"?"3":uHTD=="60"?"4":"5") + "|" + (uVTOn?"1":"0") + "|" + str.tostring(uVT) + "|" + str.tostring(uVLB) + "|" + str.tostring(uSB) + "|" + (uOE=="Candle Close"?"0":"1") + "|" + str.tostring(uPBD) + "|" + str.tostring(uPBsD) + "|" + (uPBCo?"1":"0") + "|" + str.tostring(uDR) + "|" + str.tostring(uRp) + "|" + str.tostring(uLS) + "|" + (uTM=="R:R Ratio"?"0":uTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(uT1) + "|" + str.tostring(uTD) + "|" + (uST=="UHV"?"0":uST=="ATR"?"1":uST=="Breakout Wick"?"2":uST=="SwingLow"?"3":uST=="Dollar"?"4":uST=="Retracement's Min/Max"?"5":"6") + "|" + str.tostring(uSBf) + "|" + str.tostring(uSMn) + "|" + str.tostring(uSAm) + "|" + str.tostring(uSDo) + "|" + str.tostring(uSSw) + "|" + str.tostring(uSLPips) + "|" + str.tostring(uTPPips) + "|" + (uREU?"1":"0") + "|" + (uMomB?"1":"0") + "|" + str.tostring(uMomBR) + "|" + (uMomW?"1":"0") + "|" + str.tostring(uMomWk) + "|" + (uBrkVROn?"1":"0") + "|" + str.tostring(uBrkVR) + "|" + (uBrkBody?"1":"0") + "|" + str.tostring(uCd) + "|" + str.tostring(uAlGt)
+string _gSUhv = "|" + (eUHV?"1":"0") + "|" + (uDir=="Both"?"0":uDir=="Bull only"?"1":"2") + "|" + (rUS?"1":"0") + "|" + (rULV?"1":"0") + "|" + (uHTD=="Off"?"0":uHTD=="1"?"1":uHTD=="5"?"2":uHTD=="15"?"3":uHTD=="60"?"4":"5") + "|" + (uVTOn?"1":"0") + "|" + str.tostring(uVT) + "|" + str.tostring(uVLB) + "|" + str.tostring(uSB) + "|" + (uOE=="Candle Close"?"0":"1") + "|" + str.tostring(uPBD) + "|" + str.tostring(uPBsD) + "|" + (uPBCo?"1":"0") + "|" + str.tostring(uDR) + "|" + str.tostring(uRp) + "|" + str.tostring(uLS) + "|" + (uTM=="R:R Ratio"?"0":uTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(uT1) + "|" + str.tostring(uTD) + "|" + (uST=="UHV"?"0":uST=="ATR"?"1":uST=="Breakout Wick"?"2":uST=="SwingLow"?"3":uST=="Dollar"?"4":uST=="Retracement's Min/Max"?"5":"6") + "|" + str.tostring(uSBf) + "|" + str.tostring(uSMn) + "|" + str.tostring(uSAm) + "|" + str.tostring(uSDo) + "|" + str.tostring(uSSw) + "|" + str.tostring(uSLPips) + "|" + str.tostring(uTPPips) + "|" + (uREU?"1":"0") + "|" + (uMomB?"1":"0") + "|" + str.tostring(uMomBR) + "|" + (uMomW?"1":"0") + "|" + str.tostring(uMomWk) + "|" + (uBrkVROn?"1":"0") + "|" + str.tostring(uBrkVR) + "|" + (uBrkBody?"1":"0") + "|" + str.tostring(uCd) + "|" + str.tostring(uAlGt) + "|" + str.tostring(uIOEGrd)
 string _gSEvr = "|" + (eEVR?"1":"0") + "|" + (eDir=="Both"?"0":eDir=="Bull only"?"1":"2") + "|" + (sVsa?"1":"0") + "|" + (rEHV?"1":"0") + "|" + str.tostring(eVMD) + "|" + (aETW?"1":"0") + "|" + str.tostring(eDR) + "|" + str.tostring(eRp) + "|" + str.tostring(eLS) + "|" + (eTM=="R:R Ratio"?"0":eTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(eT1) + "|" + str.tostring(eTD) + "|" + (eST=="UHV"?"0":eST=="ATR"?"1":eST=="Breakout Wick"?"2":eST=="SwingLow"?"3":eST=="Dollar"?"4":"5") + "|" + str.tostring(eSBf) + "|" + str.tostring(eSMn) + "|" + str.tostring(eSAm) + "|" + str.tostring(eSDo) + "|" + str.tostring(eSSw) + "|" + (uREE?"1":"0") + "|" + (eRCn?"1":"0") + "|" + str.tostring(eMinCP) + "|" + str.tostring(eMxBR) + "|" + str.tostring(eMinWD) + "|" + str.tostring(eMinVP) + "|" + (eOE=="Candle Close"?"0":"1") + "|" + str.tostring(eCd)
 string _gSTr  = "|" + str.tostring(mTS) + "|" + str.tostring(tPB) + "|" + (sFilt?"1":"0") + "|" + (cLP?"1":"0") + "|" + (aTS?"1":"0") + "|" + (aTSU?"1":"0") + "|" + (aTSE?"1":"0") + "|" + str.tostring(tSTh) + "|" + (sTC?"1":"0") + "|" + (sTCU?"1":"0") + "|" + (sTCE?"1":"0") + "|" + (tSMA?"1":"0") + "|" + (rSwT?"1":"0") + "|" + (avoidRng?"1":"0") + "|" + str.tostring(rngTh) + "|" + (bRW?"1":"0")
 string _gSHtf = "|" + (uHF?"1":"0") + "|" + (hFC=="Auto"?"0":hFC=="1"?"1":hFC=="5"?"2":hFC=="15"?"3":hFC=="60"?"4":"5") + "|" + str.tostring(fTH) + "|" + str.tostring(uFTH) + "|" + str.tostring(eFTH)
