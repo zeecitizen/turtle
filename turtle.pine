@@ -1585,12 +1585,10 @@ if _bBrk
                 _alT += 1
                 array.push(_sABT, bar_index)
                 alert(pE ? _lastAlertMsg : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_all)
-            string _alNoteU = _gateOkU ? "✅ Alert sent to MT5" : uAlGt == 0.0 ? "❌ No alert: close already past TP" : "❌ No alert: price within $" + str.tostring(uAlGt, "#.##") + " of TP (gate)"
-            string _devNote = uDev ? fDevLabel(_bits, _lastAlertMsg, close) : ""
-            _sigLbl = label(na)
-            if sL
-                _sigLbl := label.new(bar_index, high, "🟢 BUY NOW  #" + str.tostring(_totS) + "\n(Ultra Highs Breakout)  ⏰ " + fTS() + "\n━━━━━━━━━━━━━━━━\nBuy:  " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _euST + ", risk: " + str.tostring(_slDist * _effLots * cM / iMon * 100, "#.##") + "%" + "]\nLots: " + fLL(uDR, _effLots, uRp > 0) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uTM == "Structural High/Low" ? "Struct." : uTM == "Dollar Amount" ? "$fixed" : str.tostring(uT1, "#.##") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cM * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + "\n" + _alNoteU + _devNote, style = label.style_label_down, color = color.new(#089981, 0), textcolor = color.white, size = size.normal)
-            if _gateOkU
+                string _devNote = uDev ? fDevLabel(_bits, _lastAlertMsg, close) : ""
+                _sigLbl = label(na)
+                if sL
+                    _sigLbl := label.new(bar_index, high, "🟢 BUY NOW  #" + str.tostring(_totS) + "\n(Ultra Highs Breakout)  ⏰ " + fTS() + "\n━━━━━━━━━━━━━━━━\nBuy:  " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _euST + ", risk: " + str.tostring(_slDist * _effLots * cM / iMon * 100, "#.##") + "%" + "]\nLots: " + fLL(uDR, _effLots, uRp > 0) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uTM == "Structural High/Low" ? "Struct." : uTM == "Dollar Amount" ? "$fixed" : str.tostring(uT1, "#.##") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cM * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + "\n✅ Alert sent to MT5" + _devNote, style = label.style_label_down, color = color.new(#089981, 0), textcolor = color.white, size = size.normal)
                 array.push(_tEn,  _entry)
                 array.push(_tSl,     _sl)
                 array.push(_tTP,    _tp1)
@@ -1611,17 +1609,17 @@ if _bBrk
                 _lgC := close
                 _lrH    := na
                 _lrC   := na
+                if sCH
+                    box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.lime, 0), 2, bgcolor=color.new(color.lime, 90))
+                    box.new(_uBar - 1, _uHi, _uBar + 1, _uSl, color.new(color.yellow, 0), 2, bgcolor=color.new(color.yellow, 90))
+                if sL
+                    float _ahU = ta.atr(14) * 1.2
+                    int _gU = bar_index - _uBar
+                    float _pkU = math.max(_uHi, high) + _ahU
+                    polyline.new(array.from(chart.point.from_index(_uBar, _uHi), chart.point.from_index(_uBar + _gU / 2, _pkU), chart.point.from_index(bar_index, high)), curved = true, line_color = color.new(#00ff88, 0), line_width = 3)
+                    label.new(bar_index, high, "", style = label.style_arrowdown, color = color.new(#00ff88, 0), size = size.small)
         else
             label.new(bar_index, high, "⚠️ Margin risk — raise capital/lower lots", color=color.red, textcolor=color.white)
-        if sCH
-            box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.lime, 0), 2, bgcolor=color.new(color.lime, 90))
-            box.new(_uBar - 1, _uHi, _uBar + 1, _uSl, color.new(color.yellow, 0), 2, bgcolor=color.new(color.yellow, 90))
-        if sL
-            float _ahU = ta.atr(14) * 1.2
-            int _gU = bar_index - _uBar
-            float _pkU = math.max(_uHi, high) + _ahU
-            polyline.new(array.from(chart.point.from_index(_uBar, _uHi), chart.point.from_index(_uBar + _gU / 2, _pkU), chart.point.from_index(bar_index, high)), curved = true, line_color = color.new(#00ff88, 0), line_width = 3)
-            label.new(bar_index, high, "", style = label.style_arrowdown, color = color.new(#00ff88, 0), size = size.small)
 
 // UHV bear: base condition (without sweep/vol/strength/cooldown) for blocked-counter tracking
 _uBeBase = _euBeD and eUHV and _iR and not _lb and not _rwb and ((sTC and sTCU) ? (_hbr and _beTP) : not _bTP) and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and _iRd and close < _bL
@@ -1676,12 +1674,10 @@ if _beBrk
                 _alT += 1
                 array.push(_sABT, bar_index)
                 alert(pE ? _lastAlertMsg : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_all)
-            string _alNoteUe = _gateOkUe ? "✅ Alert sent to MT5" : uAlGt == 0.0 ? "❌ No alert: close already past TP" : "❌ No alert: price within $" + str.tostring(uAlGt, "#.##") + " of TP (gate)"
-            string _devNote = uDev ? fDevLabel(_bits, _lastAlertMsg, close) : ""
-            _sigLbl = label(na)
-            if sL
-                _sigLbl := label.new(bar_index, low, "🔴 SELL NOW  #" + str.tostring(_totS) + "\n(Ultra Highs Breakout)  ⏰ " + fTS() + "\n━━━━━━━━━━━━━━━━\nSell: " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _euST + ", risk: " + str.tostring(_slDist * _effLots * cM / iMon * 100, "#.##") + "%" + "]\nLots: " + fLL(uDR, _effLots, uRp > 0) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uTM == "Structural High/Low" ? "Struct." : uTM == "Dollar Amount" ? "$fixed" : str.tostring(uT1, "#.##") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cM * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + "\n" + _alNoteUe + _devNote, style = label.style_label_up, color = color.new(#f23645, 0), textcolor = color.white, size = size.normal)
-            if _gateOkUe
+                string _devNote = uDev ? fDevLabel(_bits, _lastAlertMsg, close) : ""
+                _sigLbl = label(na)
+                if sL
+                    _sigLbl := label.new(bar_index, low, "🔴 SELL NOW  #" + str.tostring(_totS) + "\n(Ultra Highs Breakout)  ⏰ " + fTS() + "\n━━━━━━━━━━━━━━━━\nSell: " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _euST + ", risk: " + str.tostring(_slDist * _effLots * cM / iMon * 100, "#.##") + "%" + "]\nLots: " + fLL(uDR, _effLots, uRp > 0) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uTM == "Structural High/Low" ? "Struct." : uTM == "Dollar Amount" ? "$fixed" : str.tostring(uT1, "#.##") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cM * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + "\n✅ Alert sent to MT5" + _devNote, style = label.style_label_up, color = color.new(#f23645, 0), textcolor = color.white, size = size.normal)
                 array.push(_tEn,  _entry)
                 array.push(_tSl,     _sl)
                 array.push(_tTP,    _tp1)
@@ -1702,17 +1698,17 @@ if _beBrk
                 _lrC   := close
                 _lgL   := na
                 _lgC := na
+                if sCH
+                    box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.red, 0), 2, bgcolor=color.new(color.red, 90))
+                    box.new(_uBar - 1, _uSl, _uBar + 1, _uLo, color.new(color.yellow, 0), 2, bgcolor=color.new(color.yellow, 90))
+                if sL
+                    float _ahUe = ta.atr(14) * 2.5
+                    int _gUe = bar_index - _uBar
+                    float _pkUe = math.min(_uLo, low) - _ahUe
+                    polyline.new(array.from(chart.point.from_index(_uBar, _uLo), chart.point.from_index(_uBar + _gUe / 2, _pkUe), chart.point.from_index(bar_index, low)), curved = true, line_color = color.new(#ff4444, 0), line_width = 3)
+                    label.new(bar_index, low, "", style = label.style_arrowup, color = color.new(#ff4444, 0), size = size.small)
         else
             label.new(bar_index, low, "⚠️ Margin risk — raise capital/lower lots", color=color.red, textcolor=color.white)
-        if sCH
-            box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.red, 0), 2, bgcolor=color.new(color.red, 90))
-            box.new(_uBar - 1, _uSl, _uBar + 1, _uLo, color.new(color.yellow, 0), 2, bgcolor=color.new(color.yellow, 90))
-        if sL
-            float _ahUe = ta.atr(14) * 2.5
-            int _gUe = bar_index - _uBar
-            float _pkUe = math.min(_uLo, low) - _ahUe
-            polyline.new(array.from(chart.point.from_index(_uBar, _uLo), chart.point.from_index(_uBar + _gUe / 2, _pkUe), chart.point.from_index(bar_index, low)), curved = true, line_color = color.new(#ff4444, 0), line_width = 3)
-            label.new(bar_index, low, "", style = label.style_arrowup, color = color.new(#ff4444, 0), size = size.small)
 
 // STEP 5c: EFFORT VS RESULT (VSA) — Block C integration
 // Entry fires when breakout candle:
