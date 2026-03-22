@@ -152,6 +152,8 @@ pSym    = input.string("XAUUSDm",         'MT5 Symbol Name', group = gPc)
 mLot  = input.float(0.01, 'Minimum lot size allowed by your broker', group = gPc)
 pPip  = input.float(0.01, 'MT5 pip size for this symbol (XAUUSD=0.01, ETHUSD=0.1, BTCUSD=1.0)', minval = 0.00001, group = gPc)
 pLat  = input.string("151,135,155,142,144", 'Signal→MT5 latency ms (comma-sep, copy from PineConnector Bridge logs)', group = gPc)
+pAT   = input.string("", "Derive optimizations from Claude's analysis — Enter Token:", group = gPc)
+pATon = input.bool(false, "Apply token corrections to labels (slip-adjusted entry & P&L)", group = gPc)
 pcSL  = input.string("Price",   '──── Stop Loss format sent to MT5',        options = ["Pips", "Price"], group = gPc)
 pcTP  = input.string("Price",   '──── Take Profit format sent to MT5',      options = ["Pips", "Price"], group = gPc)
 pcOT  = input.string("Market", '──── Order type sent to MT5',              options = ["Market", "Limit"], group = gPc)
@@ -210,7 +212,7 @@ var float _rceLo    = na     // bull: lowest low during retracement — used as 
 var float _rceHi   = na     // bear: highest high during retracement — used as structural SL
 
 // Accuracy tracking
-var _totS  = 0
+varip int _totS  = 0
 var _wC      = 0
 
 // Dollar P&L per trade
@@ -234,16 +236,27 @@ var bool  [] _tW      = array.new_bool()     // true = TP hit, false = SL hit (s
 // Breakout line
 var float _bL      = na
 var _bT  = false
-var _uF = false  // UHV has fired from the current setup
+varip bool _uF = false  // UHV has fired from the current setup
 var _uWB     = false  // UHV would have fired but lower-vol filter blocked it
 var _eF = false  // EVR has fired from the current setup
 varip bool _uAlF  = false  // UHV alert sent this bar (varip: persists across realtime ticks)
 varip bool _eAlF  = false  // EVR alert sent this bar
 varip int  _uAlBi = -1     // bar_index of last _uAlF reset
 varip int  _eAlBi = -1     // bar_index of last _eAlF reset
+// Deferred label+array creation: set when UHV alert fires intra-bar; processed at barstate.isconfirmed
+varip bool   _uPendBull = false
+varip bool   _uPendBear = false
+varip float  _uPndEn   = 0.
+varip float  _uPndSL   = 0.
+varip float  _uPndTP   = 0.
+varip float  _uPndLt   = 0.
+varip float  _uPndTS   = 0.
+varip int    _uPndN    = 0
+varip string _uPndBits = ""
+varip string _uPndMsg  = "—"
 
 // -- Stats tracking --
-var _sigT      = 0       // signals fired today
+varip int _sigT      = 0       // signals fired today
 var _pT          = 0.0     // P&L closed today
 var _pLH       = 0.0     // P&L closed in last 60 min
 var _tLSt   = 0       // current consecutive losses today
@@ -256,7 +269,7 @@ var _tPTy   = array.new_string() // strategy type at CLOSE time, parallel to _tP
 var int  [] _tDB = array.new_int()   // trade duration in bars (pushed at SL+TP close)
 var _sBT    = array.new_int()   // bar_index of each signal label printed (for signals/day)
 var int [] _sABT = array.new_int()  // bar_index of each alert actually fired (subset of _sBT, gated)
-var _alT    = 0   // alerts fired today
+varip int _alT    = 0   // alerts fired today
 var _tAAD   = 0   // total alerts across all days (for daily avg)
 var _tDS       = 1
 var _tSAD = 0
@@ -324,7 +337,7 @@ var float _sL1 = na   // most recent confirmed swing low
 var float _sL2 = na   // previous confirmed swing low
 
 // Cooldown tracking
-var _luSB = -999   // last bar UHV fired (for per-strategy cooldown)
+varip int _luSB = -999   // last bar UHV fired (for per-strategy cooldown)
 var _leSB = -999   // last bar EVR fired
 
 // VSA (Effort vs Result) tracking — independent of UHV breakout system
@@ -372,6 +385,27 @@ for _s in _latArr
         _latSum += _v
         _latCnt += 1
 _avgLat = _latCnt > 0 ? _latSum / float(_latCnt) : 175.0
+
+// Analysis token parse: v1,wins,total,avgWin($),avgLoss($)[,lots,slipB,slipS]
+int   _atWins  = 0
+int   _atTotal = 0
+float _atAvgW  = 0.
+float _atAvgL  = 0.
+float _atSlipB = 0.
+float _atSlipS = 0.
+bool  _atValid = false
+if str.length(pAT) > 2
+    _atParts = str.split(pAT, ",")
+    if array.size(_atParts) >= 5 and array.get(_atParts, 0) == "v1"
+        _aw = str.tonumber(array.get(_atParts, 1))
+        _at = str.tonumber(array.get(_atParts, 2))
+        _atWins  := not na(_aw) ? int(_aw) : 0
+        _atTotal := not na(_at) ? int(_at) : 0
+        _atAvgW  := nz(str.tonumber(array.get(_atParts, 3)))
+        _atAvgL  := nz(str.tonumber(array.get(_atParts, 4)))
+        _atSlipB := array.size(_atParts) > 6 ? nz(str.tonumber(array.get(_atParts, 6))) : 0.
+        _atSlipS := array.size(_atParts) > 7 ? nz(str.tonumber(array.get(_atParts, 7))) : 0.
+        _atValid := _atTotal > 0
 
 // STEP 1: TREND DETECTION
 _iGr = close > open
@@ -1571,53 +1605,25 @@ if _bBrk
     if not _uAlF  // once-per-bar gate: varip prevents all side-effects from re-firing on every IOE tick
         _uAlF := true
         if _safe
-            _sigT += 1
-            array.push(_sBT, bar_index)
             _uF := true
-            _bT  := true
-            _fU       := true
             _luSB := bar_index
             _totS  += 1
             string _bits = fBits(false, _uIOE, false, false, _eStU, _eStU and _hb and _bTP, _erUS, _erUS and _uLSw, uPBD > 0, uPBCo and uPBD > 0 and not (low <= _bL + uPBsD - uPBD), true, _inSess, false, false, false, false)
             _lastAlertMsg := fPC(true, _effLots, _entry, _sl, _tp1, "UHV", _totS, _bits)
             bool _gateOkU = uAlGt < 0.0 or close < _tp1 - math.max(uAlGt, 0.0)
             if _gateOkU
+                _sigT += 1
                 _alT += 1
-                array.push(_sABT, bar_index)
                 alert(pE ? _lastAlertMsg : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_all)
-                string _devNote = uDev ? fDevLabel(_bits, _lastAlertMsg, close) : ""
-                _sigLbl = label(na)
-                if sL
-                    _sigLbl := label.new(bar_index, high, "🟢 BUY NOW  #" + str.tostring(_totS) + "\n(Ultra Highs Breakout)  ⏰ " + fTS() + "\n━━━━━━━━━━━━━━━━\nBuy:  " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _euST + ", risk: " + str.tostring(_slDist * _effLots * cM / iMon * 100, "#.##") + "%" + "]\nLots: " + fLL(uDR, _effLots, uRp > 0) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uTM == "Structural High/Low" ? "Struct." : uTM == "Dollar Amount" ? "$fixed" : str.tostring(uT1, "#.##") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cM * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + "\n✅ Alert sent to MT5" + _devNote, style = label.style_label_down, color = color.new(#089981, 0), textcolor = color.white, size = size.normal)
-                array.push(_tEn,  _entry)
-                array.push(_tSl,     _sl)
-                array.push(_tTP,    _tp1)
-                array.push(_tBl,   true)
-                array.push(_tTH, false)
-                array.push(_tSH,    false)
-                array.push(_tEL,  _effLots)
-                array.push(_tTy,     "uhv")
-                array.push(_tN,      _totS)
-                array.push(_tTS, _tS)
-                array.push(_tW,      false)
-                array.push(_tLbl,    _sigLbl)
-                array.push(_tEB, bar_index)
-                array.push(_tFT, timenow)
-                _pvHi       := _rnHi
-                _rnHi    := high
-                _lgL   := low
-                _lgC := close
-                _lrH    := na
-                _lrC   := na
-                if sCH
-                    box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.lime, 0), 2, bgcolor=color.new(color.lime, 90))
-                    box.new(_uBar - 1, _uHi, _uBar + 1, _uSl, color.new(color.yellow, 0), 2, bgcolor=color.new(color.yellow, 90))
-                if sL
-                    float _ahU = ta.atr(14) * 1.2
-                    int _gU = bar_index - _uBar
-                    float _pkU = math.max(_uHi, high) + _ahU
-                    polyline.new(array.from(chart.point.from_index(_uBar, _uHi), chart.point.from_index(_uBar + _gU / 2, _pkU), chart.point.from_index(bar_index, high)), curved = true, line_color = color.new(#00ff88, 0), line_width = 3)
-                    label.new(bar_index, high, "", style = label.style_arrowdown, color = color.new(#00ff88, 0), size = size.small)
+                _uPendBull := true
+                _uPndEn   := _entry
+                _uPndSL   := _sl
+                _uPndTP   := _tp1
+                _uPndLt   := _effLots
+                _uPndTS   := _tS
+                _uPndN    := _totS
+                _uPndBits := _bits
+                _uPndMsg  := _lastAlertMsg
         else
             label.new(bar_index, high, "⚠️ Margin risk — raise capital/lower lots", color=color.red, textcolor=color.white)
 
@@ -1660,55 +1666,107 @@ if _beBrk
     if not _uAlF
         _uAlF := true
         if _safe
-            _sigT += 1
-            array.push(_sBT, bar_index)
             _uF := true
-            _bT  := true
-            _fU       := true
             _luSB := bar_index
             _totS  += 1
             string _bits = fBits(true, _uIOE, false, false, _eStU, _eStU and _hbr and _beTP, _erUS, _erUS and _uHSw, uPBD > 0, uPBCo and uPBD > 0 and not (high >= _bL - uPBsD + uPBD), false, _inSess, false, false, false, false)
             _lastAlertMsg := fPC(false, _effLots, _entry, _sl, _tp1, "UHV", _totS, _bits)
             bool _gateOkUe = uAlGt < 0.0 or close > _tp1 + math.max(uAlGt, 0.0)
             if _gateOkUe
+                _sigT += 1
                 _alT += 1
-                array.push(_sABT, bar_index)
                 alert(pE ? _lastAlertMsg : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_all)
-                string _devNote = uDev ? fDevLabel(_bits, _lastAlertMsg, close) : ""
-                _sigLbl = label(na)
-                if sL
-                    _sigLbl := label.new(bar_index, low, "🔴 SELL NOW  #" + str.tostring(_totS) + "\n(Ultra Highs Breakout)  ⏰ " + fTS() + "\n━━━━━━━━━━━━━━━━\nSell: " + str.tostring(_entry, "#.###") + "\nSL:   " + str.tostring(_sl, "#.###") + "  [" + _euST + ", risk: " + str.tostring(_slDist * _effLots * cM / iMon * 100, "#.##") + "%" + "]\nLots: " + fLL(uDR, _effLots, uRp > 0) + "\nTP:   " + str.tostring(_tp1, "#.###") + " (" + (uTM == "Structural High/Low" ? "Struct." : uTM == "Dollar Amount" ? "$fixed" : str.tostring(uT1, "#.##") + "R") + ")  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLots * cM * 100) / 100, "#.##") + "\n━━━━━━━━━━━━━━━━\n📊 " + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + "\n✅ Alert sent to MT5" + _devNote, style = label.style_label_up, color = color.new(#f23645, 0), textcolor = color.white, size = size.normal)
-                array.push(_tEn,  _entry)
-                array.push(_tSl,     _sl)
-                array.push(_tTP,    _tp1)
-                array.push(_tBl,   false)
-                array.push(_tTH, false)
-                array.push(_tSH,    false)
-                array.push(_tEL,  _effLots)
-                array.push(_tTy,     "uhv")
-                array.push(_tN,      _totS)
-                array.push(_tTS, _tS)
-                array.push(_tW,      false)
-                array.push(_tLbl,    _sigLbl)
-                array.push(_tEB, bar_index)
-                array.push(_tFT, timenow)
-                _pvLo        := _rnLo
-                _rnLo     := low
-                _lrH    := high
-                _lrC   := close
-                _lgL   := na
-                _lgC := na
-                if sCH
-                    box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.red, 0), 2, bgcolor=color.new(color.red, 90))
-                    box.new(_uBar - 1, _uSl, _uBar + 1, _uLo, color.new(color.yellow, 0), 2, bgcolor=color.new(color.yellow, 90))
-                if sL
-                    float _ahUe = ta.atr(14) * 2.5
-                    int _gUe = bar_index - _uBar
-                    float _pkUe = math.min(_uLo, low) - _ahUe
-                    polyline.new(array.from(chart.point.from_index(_uBar, _uLo), chart.point.from_index(_uBar + _gUe / 2, _pkUe), chart.point.from_index(bar_index, low)), curved = true, line_color = color.new(#ff4444, 0), line_width = 3)
-                    label.new(bar_index, low, "", style = label.style_arrowup, color = color.new(#ff4444, 0), size = size.small)
+                _uPendBear := true
+                _uPndEn   := _entry
+                _uPndSL   := _sl
+                _uPndTP   := _tp1
+                _uPndLt   := _effLots
+                _uPndTS   := _tS
+                _uPndN    := _totS
+                _uPndBits := _bits
+                _uPndMsg  := _lastAlertMsg
         else
             label.new(bar_index, low, "⚠️ Margin risk — raise capital/lower lots", color=color.red, textcolor=color.white)
+
+// Deferred UHV label+array creation — runs at bar close for signals that fired intra-bar
+if (_uPendBull or _uPendBear) and barstate.isconfirmed
+    bool _dIsBull = _uPendBull
+    _sigLbl = label(na)
+    float _uPndSlDist = math.abs(_uPndEn - _uPndSL)
+    string _uDevNote = uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : ""
+    float  _slip  = pATon and _atValid ? (_dIsBull ? _atSlipB : _atSlipS) : 0.
+    float  _dEn   = _uPndEn + _slip
+    if sL
+        if _dIsBull
+            _sigLbl := label.new(bar_index, high,
+                 "BUY NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() +
+                 "\nEntry: " + str.tostring(_dEn, "#.###") + (_slip != 0. ? " (Pine: " + str.tostring(_uPndEn, "#.###") + ")" : "") +
+                 "\nSL:    " + str.tostring(_uPndSL, "#.###") + "  [" + _euST + ", risk: " + str.tostring(_uPndSlDist * _uPndLt * cM / iMon * 100, "#.##") + "%]" +
+                 "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) +
+                 "\nTP:    " + str.tostring(_uPndTP, "#.###") + "  +$" + str.tostring(math.round(math.abs(_uPndTP - _dEn) * _uPndLt * cM * 100) / 100, "#.##") +
+                 "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + _uDevNote,
+                 style = label.style_label_down, color = color.new(#089981, 0), textcolor = color.white, size = size.normal)
+        else
+            _sigLbl := label.new(bar_index, low,
+                 "SELL NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() +
+                 "\nEntry: " + str.tostring(_dEn, "#.###") + (_slip != 0. ? " (Pine: " + str.tostring(_uPndEn, "#.###") + ")" : "") +
+                 "\nSL:    " + str.tostring(_uPndSL, "#.###") + "  [" + _euST + ", risk: " + str.tostring(_uPndSlDist * _uPndLt * cM / iMon * 100, "#.##") + "%]" +
+                 "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) +
+                 "\nTP:    " + str.tostring(_uPndTP, "#.###") + "  +$" + str.tostring(math.round(math.abs(_dEn - _uPndTP) * _uPndLt * cM * 100) / 100, "#.##") +
+                 "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + _uDevNote,
+                 style = label.style_label_up, color = color.new(#f23645, 0), textcolor = color.white, size = size.normal)
+    array.push(_tEn,  _uPndEn)
+    array.push(_tSl,  _uPndSL)
+    array.push(_tTP,  _uPndTP)
+    array.push(_tBl,  _dIsBull)
+    array.push(_tTH,  false)
+    array.push(_tSH,  false)
+    array.push(_tEL,  _uPndLt)
+    array.push(_tTy,  "uhv")
+    array.push(_tN,   _uPndN)
+    array.push(_tTS,  _uPndTS)
+    array.push(_tW,   false)
+    array.push(_tLbl, _sigLbl)
+    array.push(_tEB,  bar_index)
+    array.push(_tFT,  timenow)
+    array.push(_sBT,  bar_index)
+    array.push(_sABT, bar_index)
+    _bT  := true
+    _fU  := true
+    if _dIsBull
+        _pvHi := _rnHi
+        _rnHi := high
+        _lgL  := low
+        _lgC  := close
+        _lrH  := na
+        _lrC  := na
+        if sCH
+            box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.lime, 0), 2, bgcolor=color.new(color.lime, 90))
+            box.new(_uBar - 1, _uHi, _uBar + 1, _uSl, color.new(color.yellow, 0), 2, bgcolor=color.new(color.yellow, 90))
+        if sL
+            float _ahU  = ta.atr(14) * 1.2
+            int   _gU   = bar_index - _uBar
+            float _pkU  = math.max(_uHi, high) + _ahU
+            polyline.new(array.from(chart.point.from_index(_uBar, _uHi), chart.point.from_index(_uBar + _gU / 2, _pkU), chart.point.from_index(bar_index, high)), curved = true, line_color = color.new(#00ff88, 0), line_width = 3)
+            label.new(bar_index, high, "", style = label.style_arrowdown, color = color.new(#00ff88, 0), size = size.small)
+    else
+        _pvLo := _rnLo
+        _rnLo := low
+        _lrH  := high
+        _lrC  := close
+        _lgL  := na
+        _lgC  := na
+        if sCH
+            box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.red, 0), 2, bgcolor=color.new(color.red, 90))
+            box.new(_uBar - 1, _uSl, _uBar + 1, _uLo, color.new(color.yellow, 0), 2, bgcolor=color.new(color.yellow, 90))
+        if sL
+            float _ahUe = ta.atr(14) * 2.5
+            int   _gUe  = bar_index - _uBar
+            float _pkUe = math.min(_uLo, low) - _ahUe
+            polyline.new(array.from(chart.point.from_index(_uBar, _uLo), chart.point.from_index(_uBar + _gUe / 2, _pkUe), chart.point.from_index(bar_index, low)), curved = true, line_color = color.new(#ff4444, 0), line_width = 3)
+            label.new(bar_index, low, "", style = label.style_arrowup, color = color.new(#ff4444, 0), size = size.small)
+    _uPendBull := false
+    _uPendBear := false
 
 // STEP 5c: EFFORT VS RESULT (VSA) — Block C integration
 // Entry fires when breakout candle:
@@ -1781,9 +1839,11 @@ if _bVSA
             _eAlF := true
             alert(pE ? _lastAlertMsg : "🟢 BUY Signal — EVR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_all)
         string _devNote = uDev ? fDevLabel(_bits, _lastAlertMsg, close) : ""
+        float _eSl = pATon and _atValid and _eIOE ? _atSlipB : 0.
+        float _eDEn = _entry + _eSl
         _sigLbl = label(na)
         if sL
-            _sigLbl := label.new(bar_index, high, "BUY NOW  #" + str.tostring(_totS) + "\n(Effort vs Result)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _eeST + ", risk: " + str.tostring(_slDist * _effLotsV * cM / iMon * 100, "#.##") + "%" + "]" + "\nLots:  " + fLL(eDR, _effLotsV, eRp > 0) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsV * cM * 100) / 100, "#.##") + "\n" + fAS(_eWn, _eTr) + "\n" + fPTS(_ePT) + _devNote, style =label.style_label_down, color = color.new(color.lime, 10), textcolor = color.black, size = size.normal)
+            _sigLbl := label.new(bar_index, high, "BUY NOW  #" + str.tostring(_totS) + "\n(Effort vs Result)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_eDEn, "#.###") + (_eSl != 0. ? " (Pine: " + str.tostring(_entry, "#.###") + ")" : "") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _eeST + ", risk: " + str.tostring(_slDist * _effLotsV * cM / iMon * 100, "#.##") + "%" + "]" + "\nLots:  " + fLL(eDR, _effLotsV, eRp > 0) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _eDEn) * _effLotsV * cM * 100) / 100, "#.##") + "\n" + fAS(_eWn, _eTr) + "\n" + fPTS(_ePT) + _devNote, style =label.style_label_down, color = color.new(color.lime, 10), textcolor = color.black, size = size.normal)
         array.push(_tEn,    _entry)
         array.push(_tSl,       _sl)
         array.push(_tTP,      _tp1)
@@ -1831,9 +1891,11 @@ if _beVSA
             _eAlF := true
             alert(pE ? _lastAlertMsg : "🔴 SELL Signal — EVR | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_all)
         string _devNote = uDev ? fDevLabel(_bits, _lastAlertMsg, close) : ""
+        float _eSle = pATon and _atValid and _eIOE ? _atSlipS : 0.
+        float _eDEne = _entry + _eSle
         _sigLbl = label(na)
         if sL
-            _sigLbl := label.new(bar_index, low, "SELL NOW  #" + str.tostring(_totS) + "\n(Effort vs Result)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_entry, "#.###") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _eeST + ", risk: " + str.tostring(_slDist * _effLotsV2 * cM / iMon * 100, "#.##") + "%" + "]" + "\nLots:  " + fLL(eDR, _effLotsV2, eRp > 0) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_tp1 - _entry) * _effLotsV2 * cM * 100) / 100, "#.##") + "\n" + fAS(_eWn, _eTr) + "\n" + fPTS(_ePT) + _devNote, style =label.style_label_up, color = color.new(color.red, 10), textcolor = color.white, size = size.normal)
+            _sigLbl := label.new(bar_index, low, "SELL NOW  #" + str.tostring(_totS) + "\n(Effort vs Result)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_eDEne, "#.###") + (_eSle != 0. ? " (Pine: " + str.tostring(_entry, "#.###") + ")" : "") + "\nSL:    " + str.tostring(_sl, "#.###") + "  [" + _eeST + ", risk: " + str.tostring(_slDist * _effLotsV2 * cM / iMon * 100, "#.##") + "%" + "]" + "\nLots:  " + fLL(eDR, _effLotsV2, eRp > 0) + "\nTP:    " + str.tostring(_tp1, "#.###") + "  +$" + str.tostring(math.round(math.abs(_eDEne - _tp1) * _effLotsV2 * cM * 100) / 100, "#.##") + "\n" + fAS(_eWn, _eTr) + "\n" + fPTS(_ePT) + _devNote, style =label.style_label_up, color = color.new(color.red, 10), textcolor = color.white, size = size.normal)
         array.push(_tEn,    _entry)
         array.push(_tSl,       _sl)
         array.push(_tTP,      _tp1)
@@ -2064,7 +2126,8 @@ if array.size(_tEn) > 0
                         _origLbl = array.get(_tLbl, _ti)
                         if not na(_origLbl)
                             _origTxt = label.get_text(_origLbl)
-                            label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_pnl), "#.##") + " Loss")
+                            _dPnlSL = pATon and _atValid ? (_bull ? (_sl - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _sl)) * array.get(_tEL, _ti) * cM : _pnl
+                            label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss")
 
             if not _t1hit and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
                 _fireTime = array.size(_tFT) > _ti ? array.get(_tFT, _ti) : int(na)
@@ -2111,7 +2174,8 @@ if array.size(_tEn) > 0
                     _origLbl = array.get(_tLbl, _ti)
                     if not na(_origLbl)
                         _origTxt = label.get_text(_origLbl)
-                        label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_pnl, "#.##") + " Profit")
+                        _dPnlTP = pATon and _atValid ? (_bull ? (_tp1 - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _tp1)) * _lots * cM : _pnl
+                        label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit")
 
 
 
@@ -2495,17 +2559,17 @@ fDP(string _settingsExport) =>
     _uhvLS = not na(_uhvLR) ? "\n  [LIVE SL risk: -$" + str.tostring(math.round(_uhvLR * 100) / 100, "#.##") + "]" : ""
     _evrLS = not na(_evrLR) ? "\n  [LIVE SL risk: -$" + str.tostring(math.round(_evrLR * 100) / 100, "#.##") + "]" : ""
     _uhvWLStr = (_uhvAvgWin > 0 or _uhvAvgLoss > 0 ? "\navg +" + str.tostring(_uhvAvgWin, "#.##") + " / -" + str.tostring(_uhvAvgLoss, "#.##") : "") + f_mxL(_uhvMaxLoss, uST) + _uhvLS
-    _uhvLotStr = "\n" + (not na(_lastUhvLots) ? str.tostring(_lastUhvLots, "0.####") : uDR > 0 ? "auto" : uRp > 0 ? str.tostring(uRp, "0.#") + "% cap" : str.tostring(uLS * lA, "0.####")) + " lots" + _uhvRiskTag
+    _uhvLotStr = "\n" + (not na(_lastUhvLots) ? str.tostring(_lastUhvLots, "0.####") : uDR > 0 ? "auto" : uRp > 0 ? str.tostring(uRp, "0.#") + "% cap" : str.tostring(uLS * lA, "0.####")) + " lots" + _uhvRiskTag + (not na(_lastUhvLots) and uLev > 0 ? " | margin ~$" + str.tostring(math.round(_lastUhvLots * cM * close / uLev * 100) / 100, "#.##") + " (" + str.tostring(uLev) + ":1)" : "")
     table.cell(statsPanel, 0, 9,
          "UHV  W/L: " + str.tostring(_uhvWinsCalc) + "/" + str.tostring(_uhvTradesCalc) + " (" + str.tostring(_uhvAcc) + "%)" + (_best == "UHV" ? "  [BEST]" : "") +
          "\nAll-time: " + (_uhvPnLCalc >= 0 ? "+" : "") + "$" + str.tostring(_uhvPnLCalc, "#.##") +
          "  |  Today: " + (_uPT >= 0 ? "+" : "") + "$" + str.tostring(_uPT, "#.##") +
-         _uhvWLStr + _uhvLotStr,
+         _uhvWLStr + _uhvLotStr + (_atValid ? "\nReal MT5: " + str.tostring(_atWins) + "/" + str.tostring(_atTotal) + " (" + str.tostring(math.round(_atWins / float(_atTotal) * 100)) + "%)  avg +" + str.tostring(_atAvgW, "#.##") + " / -" + str.tostring(math.abs(_atAvgL), "#.##") : ""),
          text_color = _uhvPnLCalc >= 0 ? _txtGreen : _txtRed, text_size = size.normal, bgcolor = _bgDeep)
 
     // ROW 11 — EFFORT VS RESULT
     _evrWLStr = (_evrAvgWin > 0 or _evrAvgLoss > 0 ? "\navg +" + str.tostring(_evrAvgWin, "#.##") + " / -" + str.tostring(_evrAvgLoss, "#.##") : "") + f_mxL(_evrMaxLoss, eST) + _evrLS
-    _evrLotStr = "\n" + (not na(_lastEvrLots) ? str.tostring(_lastEvrLots, "0.####") : eDR > 0 ? "auto" : eRp > 0 ? str.tostring(eRp, "0.#") + "% cap" : str.tostring(eLS * lA, "0.####")) + " lots" + _evrRiskTag
+    _evrLotStr = "\n" + (not na(_lastEvrLots) ? str.tostring(_lastEvrLots, "0.####") : eDR > 0 ? "auto" : eRp > 0 ? str.tostring(eRp, "0.#") + "% cap" : str.tostring(eLS * lA, "0.####")) + " lots" + _evrRiskTag + (not na(_lastEvrLots) and uLev > 0 ? " | margin ~$" + str.tostring(math.round(_lastEvrLots * cM * close / uLev * 100) / 100, "#.##") + " (" + str.tostring(uLev) + ":1)" : "")
     table.cell(statsPanel, 0, 11,
          "EVR  W/L: " + str.tostring(_evrWinsCalc) + "/" + str.tostring(_evrTradesCalc) + " (" + str.tostring(_evrAcc) + "%)" + (_best == "EVR" ? "  [BEST]" : "") +
          "\nAll-time: " + (_evrPnLCalc >= 0 ? "+" : "") + "$" + str.tostring(_evrPnLCalc, "#.##") +
