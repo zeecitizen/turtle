@@ -321,6 +321,7 @@ var _rwb = false
 var float _rCeil  = na
 var float _rFlr    = na
 var string _lastAlertMsg = "—"
+var string _lastSigTxt   = ""
 var int   _rSB = na
 
 // -- Block A improved IB + retracement logic --
@@ -1755,25 +1756,18 @@ if (_uPendBull or _uPendBear) and barstate.isconfirmed
     float _tpPrice    = _dIsBull ? _uPndEn + _uPndTP * pPip : _uPndEn - _uPndTP * pPip
     float _uPndSlDist = _uPndSL * pPip
     string _uDevNote = uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : ""
+    string _lblTxt = (_dIsBull ? "BUY NOW" : "SELL NOW") + "  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() +
+         "\nEntry: " + str.tostring(_uPndEn, "#.###") +
+         "\nSL:    " + str.tostring(_slPrice, "#.###") + "  -$" + str.tostring(math.round(_uPndSlDist * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSlDist * _uPndLt * cM / iMon * 100, "#.##") + "%]" +
+         "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) +
+         "\nTP:    " + str.tostring(_tpPrice, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") +
+         "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + _uDevNote
+    _lastSigTxt := _lblTxt
     if sL
         if _dIsBull
-            _sigLbl := label.new(bar_index, high,
-                 "BUY NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() +
-                 "\nEntry: " + str.tostring(_uPndEn, "#.###") +
-                 "\nSL:    " + str.tostring(_slPrice, "#.###") + "  -$" + str.tostring(math.round(_uPndSlDist * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSlDist * _uPndLt * cM / iMon * 100, "#.##") + "%]" +
-                 "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) +
-                 "\nTP:    " + str.tostring(_tpPrice, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") +
-                 "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + _uDevNote,
-                 style = label.style_label_down, color = color.new(#089981, 0), textcolor = color.white, size = size.normal)
+            _sigLbl := label.new(bar_index, high, _lblTxt, style = label.style_label_down, color = color.new(#089981, 0), textcolor = color.white, size = size.normal)
         else
-            _sigLbl := label.new(bar_index, low,
-                 "SELL NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() +
-                 "\nEntry: " + str.tostring(_uPndEn, "#.###") +
-                 "\nSL:    " + str.tostring(_slPrice, "#.###") + "  -$" + str.tostring(math.round(_uPndSlDist * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSlDist * _uPndLt * cM / iMon * 100, "#.##") + "%]" +
-                 "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) +
-                 "\nTP:    " + str.tostring(_tpPrice, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") +
-                 "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + _uDevNote,
-                 style = label.style_label_up, color = color.new(#f23645, 0), textcolor = color.white, size = size.normal)
+            _sigLbl := label.new(bar_index, low,  _lblTxt, style = label.style_label_up,   color = color.new(#f23645, 0), textcolor = color.white, size = size.normal)
     array.push(_tEn,  _uPndEn)
     array.push(_tSl,  _slPrice)
     array.push(_tTP,  _tpPrice)
@@ -2747,9 +2741,12 @@ fDP(string _settingsExport) =>
         array.push(_recs, "🔓 Cooldown blocked " + str.tostring(_bCd) + " signals (" + str.tostring(math.round(_bCd / _daysBase * 10) / 10) + "/day avg)\nlower 'Signal Cooldown (bars)' may add ~$" + str.tostring(math.round(_bCd / _daysBase * _avgPnLPerTrade * 100) / 100, "#.##") + "/day if quality holds (test first)")
     if _bStr >= 4 and _canEstimate and _ftOK
         array.push(_recs, "🔓 Min Trend Strength blocked " + str.tostring(_bStr) + " signals (" + str.tostring(math.round(_bStr / _daysBase * 10) / 10) + "/day avg)\nlower 'Min Trend Strength' may add ~$" + str.tostring(math.round(_bStr / _daysBase * _avgPnLPerTrade * 100) / 100, "#.##") + "/day if quality holds (only if trend stays strong)")
-    // ROW 15 — OPTIMIZER & TOOLS DIVIDER
-    table.cell(statsPanel, 0, 15, "OPTIMIZER & TOOLS",
-         text_color = _txtDim, text_size = size.tiny, bgcolor = color.new(color.black, 5))
+    // ROW 15 — OPTIMIZER & TOOLS DIVIDER + smiley
+    _r15AP  = _cTr > 0 ? (_uPnL + _ePnL) / _cTr : 0.
+    _r15Rel = _r15AP / math.max((uTD + eTD) / 2.0, 1.0)
+    _r15Sm  = _cTr == 0 ? "⌛ Waiting..." : _r15Rel > 0.35 ? "😄  Loving it!" : _r15Rel > 0.05 ? "🙂  Profitable" : _r15Rel >= -0.05 ? "😐  Breaking even" : "😟  Try different values"
+    table.cell(statsPanel, 0, 15, "OPTIMIZER & TOOLS  |  " + _r15Sm + "  ($" + str.tostring(math.round(_r15AP * 100) / 100, "#.##") + "/trade avg)",
+         text_color = _r15AP >= 0. ? color.new(color.lime, 30) : color.new(color.red, 20), text_size = size.tiny, bgcolor = color.new(color.black, 5))
 
     // ROW 16 — TOP RECOMMENDATIONS (surfacing computed _recs array)
     _recsSize = array.size(_recs)
@@ -2774,15 +2771,11 @@ fDP(string _settingsExport) =>
 if barstate.islast and sSP
     fDP(_settingsExport)
 
-// -- Optimizer Status Panel (bottom-left) --
+// -- Last Signal Panel (bottom-left) — always shows most recent signal label text --
 if barstate.islast
-    _opAP  = _cTr > 0 ? (_uPnL + _ePnL) / _cTr : 0.
-    _baseRef = math.max((uTD + eTD) / 2.0, 1.0)
-    _opRel = _opAP / _baseRef
-    _smile = _cTr == 0 ? "⌛  Waiting for results..." : _opRel > 0.35 ? "😄  Loving it!" : _opRel > 0.05 ? "🙂  Profitable" : _opRel >= -0.05 ? "😐  Breaking even" : "😟  Try different values"
-    opPanel = table.new(position.bottom_left, 1, 2, bgcolor = color.new(color.black, 10), border_color = color.new(color.gray, 40), border_width = 1)
-    table.cell(opPanel, 0, 0, "OPTIMIZER", text_color = color.new(color.aqua, 0), text_size = size.small, bgcolor = color.new(#001830, 5))
-    table.cell(opPanel, 0, 1, _smile + "  ($" + str.tostring(math.round(_opAP * 100) / 100, "#.##") + "/trade avg)", text_color = _opAP >= 0. ? color.new(color.lime, 0) : color.red, text_size = size.huge, bgcolor = color.new(#0a0a14, 8))
+    _lsP = table.new(position.bottom_left, 1, 2, bgcolor = color.new(color.black, 10), border_color = color.new(color.gray, 40), border_width = 1)
+    table.cell(_lsP, 0, 0, "LAST SIGNAL", text_color = color.new(color.aqua, 0), text_size = size.small, bgcolor = color.new(#001830, 5))
+    table.cell(_lsP, 0, 1, _lastSigTxt == "" ? "No signal yet" : _lastSigTxt, text_color = color.new(color.white, 0), text_size = size.small, bgcolor = color.new(#0a0a14, 8))
 
 // ALERT CONDITIONS
 // Create alerts via: right-click chart ? Add Alert ? Condition ? FVG Absorption
