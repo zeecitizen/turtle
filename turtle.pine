@@ -1675,6 +1675,7 @@ if _bBrk
             _sigChkW  := _uPndEn + _uPndSL + _uPndTP + _uPndLt
             _lastAlertMsg := fPC(true, _uPndLt, _uPndEn, _uPndSL, _uPndTP, "UHV", _uPndN, _uPndBits)
             _uPndMsg  := _lastAlertMsg
+            _lastSigTxt := "BUY NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_uPndEn, "#.###") + "\nSL:    " + str.tostring(_uPndEn - _uPndSL * pPip, "#.###") + "  -$" + str.tostring(math.round(_uPndSL * pPip * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSL * pPip * _uPndLt * cM / iMon * 100, "#.##") + "%]" + "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) + "\nTP:    " + str.tostring(_uPndEn + _uPndTP * pPip, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") + "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + (uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : "")
             bool _gateOkU = uAlGt < 0.0 or close < (_uPndEn + _uPndTP * pPip) - math.max(uAlGt, 0.0)
             if _gateOkU
                 _sigT += 1
@@ -1738,6 +1739,7 @@ if _beBrk
             _sigChkW  := _uPndEn + _uPndSL + _uPndTP + _uPndLt
             _lastAlertMsg := fPC(false, _uPndLt, _uPndEn, _uPndSL, _uPndTP, "UHV", _uPndN, _uPndBits)
             _uPndMsg  := _lastAlertMsg
+            _lastSigTxt := "SELL NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_uPndEn, "#.###") + "\nSL:    " + str.tostring(_uPndEn + _uPndSL * pPip, "#.###") + "  -$" + str.tostring(math.round(_uPndSL * pPip * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSL * pPip * _uPndLt * cM / iMon * 100, "#.##") + "%]" + "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) + "\nTP:    " + str.tostring(_uPndEn - _uPndTP * pPip, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") + "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + (uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : "")
             bool _gateOkUe = uAlGt < 0.0 or close > (_uPndEn - _uPndTP * pPip) + math.max(uAlGt, 0.0)
             if _gateOkUe
                 _sigT += 1
