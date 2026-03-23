@@ -254,6 +254,8 @@ varip float  _uPndTS   = 0.
 varip int    _uPndN    = 0
 varip string _uPndBits = ""
 varip string _uPndMsg  = "—"
+var float _sigChkW = 0.  // checksum written at signal formation
+var float _sigChkR = 0.  // checksum read at deferred block (before arrays/label)
 
 // -- Stats tracking --
 varip int _sigT      = 0       // signals fired today
@@ -860,10 +862,11 @@ fSL(_isBull, _entryPrice, _structLow, _structHigh, _slType, _slBuffer, _slAtrMul
            _slType == "Breakout Wick" or _slType == "Below High Vol. Candle Wick" ? _wickSL :
            _slType == "SwingLow"   ? _swingSL :
            _slType == "Dollar"     ? _dollarSLv : _structSLv
-    // Enforce minimum distance for ALL SL types including Dollar
-    // Dollar previously skipped this, causing SL to sit inside the spread when uSDo < uSpread
-    // Now: SL is always at least (uSMn + uSpread) away from entry, so spread can't trigger it instantly
-    _result = _isBull ? math.min(_entryPrice - _slMinDist, _raw) : math.max(_entryPrice + _slMinDist, _raw)
+    // Candle-anchored types: SL is fixed at the candle level; skip min-distance enforcement so
+    // pre/post breakout entry offset cannot push the SL away from its candle anchor.
+    // Other types (ATR, SwingLow, Dollar, structural) still enforce minimum distance from entry.
+    _candleAnch = _slType == "Breakout Wick" or _slType == "Below High Vol. Candle Wick" or _slType == "Prev Candle"
+    _result = _candleAnch ? _raw : (_isBull ? math.min(_entryPrice - _slMinDist, _raw) : math.max(_entryPrice + _slMinDist, _raw))
     math.max(syminfo.mintick, _result)
 
 // -- Signal block helpers (replace repeated code in all 8 signal entry blocks) --
@@ -877,9 +880,10 @@ fPTS(_pnl) =>
     _pnl >= 0.01 ? "💰 This strategy brought in: $" + str.tostring(_pnl, "#.##") + " in profits today" : _pnl <= -0.01 ? "📉 This strategy is down $" + str.tostring(math.abs(_pnl), "#.##") + " today" : "No completed trades yet today"
 
 fTS() =>
-    _h = hour(timenow, "Europe/Berlin")
-    _m = minute(timenow, "Europe/Berlin")
-    _s = second(timenow, "Europe/Berlin")
+    _t = barstate.isrealtime ? timenow : time
+    _h = hour(_t, "Europe/Berlin")
+    _m = minute(_t, "Europe/Berlin")
+    _s = second(_t, "Europe/Berlin")
     str.tostring(_h) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + ":" + (_s < 10 ? "0" : "") + str.tostring(_s) + " Berlin"
 
 // Round TP to pip boundary so Pine monitors exact same price MT5 places
@@ -907,19 +911,19 @@ fBits(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7, bo
 
 // Alert comment tag: strategy name + exact price at alert fire + UTC time + trade number + 16-bit condition bitmask
 // Format: "UHV@5115.4_1:09_#42#0110100001100000"
-fCT(_strat, _num, _bits) =>
+fCT(_strat, _num, _bits, float _en = na) =>
     _h = hour(timenow, "UTC")
     _m = minute(timenow, "UTC")
-    _strat + "@" + str.tostring(close, "#.##") + "_" + str.tostring(_h) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + "_#" + str.tostring(_num) + "#" + _bits
+    _strat + "@" + str.tostring(na(_en) ? close : _en, "#.##") + "_" + str.tostring(_h) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + "_#" + str.tostring(_num) + "#" + _bits
 
 // PineConnector alert message builder — respects pcSL / pcTP / pcOT settings
 // _isBull: true = buy, false = sell | _lots: effective lot size | _entry/_sl/_tp: computed prices | _bits: 16-bit condition bitmask
 fPC(_isBull, _lots, _entry, _sl, _tp, _strat, _num, _bits) =>
     _dir     = _isBull ? "buy" : "sell"
-    _slPart  = pcSL == "Price" ? ",sl_price=" + str.tostring(_sl,  "#.####") : ",sl_pips=" + str.tostring(math.round(math.abs(_entry - _sl)  / pPip), "0")
-    _tpPart  = pcTP == "Price" ? ",tp_price=" + str.tostring(_tp,  "#.####") : ",tp_pips=" + str.tostring(math.round(math.abs(_tp  - _entry) / pPip), "0")
+    _slPart  = pcSL == "Price" ? ",sl_price=" + str.tostring(_isBull ? _entry - _sl * pPip : _entry + _sl * pPip, "#.####") : ",sl_pips=" + str.tostring(_sl, "0")
+    _tpPart  = pcTP == "Price" ? ",tp_price=" + str.tostring(_isBull ? _entry + _tp * pPip : _entry - _tp * pPip, "#.####") : ",tp_pips=" + str.tostring(_tp, "0")
     _otPart  = pcOT == "Limit" ? ",ordertype=limit,price=" + str.tostring(_entry, "#.####") : ""
-    pLid + "," + _dir + "," + pSym + _otPart + ",vol_lots=" + str.tostring(math.round(_lots, 2), "0.00") + _slPart + _tpPart + ",comment=" + fCT(_strat, _num, _bits)
+    pLid + "," + _dir + "," + pSym + _otPart + ",vol_lots=" + str.tostring(_lots, "0.00") + _slPart + _tpPart + ",comment=" + fCT(_strat, _num, _bits, _entry)
 
 // Developer mode: decode 16-bit condition bitmask + append full alert string to label
 fDevLabel(string _bits, string _alertMsg, float _clsAtFire) =>
@@ -1593,7 +1597,7 @@ if array.size(_tEn) > 0
 
 if _bBrk
     _entry    = _uIOE ? _bTrigEff : close
-    _sl       = uSLPips > 0 ? _entry - uSLPips * pPip : fSL(true, _entry, _euST == "Prev Candle" ? low[1] : _euST == "UHV" ? nz(_uSl, nz(_rceLo, low)) : nz(_rceLo, nz(_uSl, low)), high, _euST, uSBf, uSAm, uSSw, uSMn + uSpread, uDR, uLS, uSDo, _uIOE ? low[1] : float(na))
+    _sl       = uSLPips > 0 ? _entry - uSLPips * pPip : fSL(true, _entry, _euST == "Prev Candle" ? low[1] : _euST == "UHV" ? nz(_uSl, nz(_rceLo, low)) : nz(_rceLo, nz(_uSl, low)), high, _euST, uSBf, uSAm, uSSw, uSMn + uSpread, uDR, uLS, uSDo, float(na))
     _slDist   = math.max(_entry - _sl, syminfo.mintick)
     _effLots  = (uDR > 0 ? math.max(uDR / (_slDist * cM), mLot) : uRp > 0 ? math.max(iMon * uRp / 100.0 / math.max(_slDist * cM, syminfo.mintick), mLot) : uLS) * lA
     float _tp1 = uTPPips > 0 ? _entry + uTPPips * pPip : fTP(_entry, uTM == "Structural High/Low" ? nz(_rCeil, _entry + _slDist * uT1) : uTM == "Dollar Amount" ? _entry + _euTD : _entry + _slDist * uT1)
@@ -1609,21 +1613,23 @@ if _bBrk
             _luSB := bar_index
             _totS  += 1
             string _bits = fBits(false, _uIOE, false, false, _eStU, _eStU and _hb and _bTP, _erUS, _erUS and _uLSw, uPBD > 0, uPBCo and uPBD > 0 and not (low <= _bL + uPBsD - uPBD), true, _inSess, false, false, false, false)
-            _lastAlertMsg := fPC(true, _effLots, _entry, _sl, _tp1, "UHV", _totS, _bits)
-            bool _gateOkU = uAlGt < 0.0 or close < _tp1 - math.max(uAlGt, 0.0)
+            float _aSlB = pATon and _atValid and _uIOE ? _atSlipB : 0.
+            _uPndEn   := _entry
+            _uPndSL   := math.round(math.abs(_entry - (_sl + _aSlB)) / pPip)
+            _uPndTP   := math.round(math.abs((_tp1 + _aSlB) - _entry) / pPip)
+            _uPndLt   := math.round(_effLots, 2)
+            _uPndTS   := _tS
+            _uPndN    := _totS
+            _uPndBits := _bits
+            _sigChkW  := _uPndEn + _uPndSL + _uPndTP + _uPndLt
+            _lastAlertMsg := fPC(true, _uPndLt, _uPndEn, _uPndSL, _uPndTP, "UHV", _uPndN, _uPndBits)
+            _uPndMsg  := _lastAlertMsg
+            bool _gateOkU = uAlGt < 0.0 or close < (_uPndEn + _uPndTP * pPip) - math.max(uAlGt, 0.0)
             if _gateOkU
                 _sigT += 1
                 _alT += 1
-                alert(pE ? _lastAlertMsg : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_all)
+                alert(pE ? _lastAlertMsg : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_uPndEn, "#.###") + " | " + syminfo.ticker, alert.freq_all)
                 _uPendBull := true
-                _uPndEn   := _entry
-                _uPndSL   := _sl
-                _uPndTP   := _tp1
-                _uPndLt   := _effLots
-                _uPndTS   := _tS
-                _uPndN    := _totS
-                _uPndBits := _bits
-                _uPndMsg  := _lastAlertMsg
         else
             label.new(bar_index, high, "⚠️ Margin risk — raise capital/lower lots", color=color.red, textcolor=color.white)
 
@@ -1654,7 +1660,7 @@ _beBrk = _euBeD and eUHV and _iR and not _lb and not _rwb and not _uReBnc and (_
 
 if _beBrk
     _entry      = _uIOE ? _beTrigEff : close
-    _sl         = uSLPips > 0 ? _entry + uSLPips * pPip : fSL(false, _entry, low, _euST == "Prev Candle" ? high[1] : _euST == "UHV" ? nz(_uSl, nz(_rceHi, high)) : nz(_rceHi, nz(_uSl, high)), _euST, uSBf, uSAm, uSSw, uSMn + uSpread, uDR, uLS, uSDo, float(na), _uIOE ? high[1] : float(na))
+    _sl         = uSLPips > 0 ? _entry + uSLPips * pPip : fSL(false, _entry, low, _euST == "Prev Candle" ? high[1] : _euST == "UHV" ? nz(_uSl, nz(_rceHi, high)) : nz(_rceHi, nz(_uSl, high)), _euST, uSBf, uSAm, uSSw, uSMn + uSpread, uDR, uLS, uSDo, float(na), float(na))
     _slDist     = math.max(_sl - _entry, syminfo.mintick)
     _effLots    = (uDR > 0 ? math.max(uDR / (_slDist * cM), mLot) : uRp > 0 ? math.max(iMon * uRp / 100.0 / math.max(_slDist * cM, syminfo.mintick), mLot) : uLS) * lA
     float _tp1 = uTPPips > 0 ? _entry - uTPPips * pPip : fTP(_entry, uTM == "Structural High/Low" ? nz(_rFlr, _entry - _slDist * uT1) : uTM == "Dollar Amount" ? _entry - _euTD : _entry - _slDist * uT1)
@@ -1670,54 +1676,57 @@ if _beBrk
             _luSB := bar_index
             _totS  += 1
             string _bits = fBits(true, _uIOE, false, false, _eStU, _eStU and _hbr and _beTP, _erUS, _erUS and _uHSw, uPBD > 0, uPBCo and uPBD > 0 and not (high >= _bL - uPBsD + uPBD), false, _inSess, false, false, false, false)
-            _lastAlertMsg := fPC(false, _effLots, _entry, _sl, _tp1, "UHV", _totS, _bits)
-            bool _gateOkUe = uAlGt < 0.0 or close > _tp1 + math.max(uAlGt, 0.0)
+            float _aSlBe = pATon and _atValid and _uIOE ? _atSlipS : 0.
+            _uPndEn   := _entry
+            _uPndSL   := math.round(math.abs((_sl + _aSlBe) - _entry) / pPip)
+            _uPndTP   := math.round(math.abs(_entry - (_tp1 + _aSlBe)) / pPip)
+            _uPndLt   := math.round(_effLots, 2)
+            _uPndTS   := _tS
+            _uPndN    := _totS
+            _uPndBits := _bits
+            _sigChkW  := _uPndEn + _uPndSL + _uPndTP + _uPndLt
+            _lastAlertMsg := fPC(false, _uPndLt, _uPndEn, _uPndSL, _uPndTP, "UHV", _uPndN, _uPndBits)
+            _uPndMsg  := _lastAlertMsg
+            bool _gateOkUe = uAlGt < 0.0 or close > (_uPndEn - _uPndTP * pPip) + math.max(uAlGt, 0.0)
             if _gateOkUe
                 _sigT += 1
                 _alT += 1
-                alert(pE ? _lastAlertMsg : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_entry, "#.###") + " | " + syminfo.ticker, alert.freq_all)
+                alert(pE ? _lastAlertMsg : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_uPndEn, "#.###") + " | " + syminfo.ticker, alert.freq_all)
                 _uPendBear := true
-                _uPndEn   := _entry
-                _uPndSL   := _sl
-                _uPndTP   := _tp1
-                _uPndLt   := _effLots
-                _uPndTS   := _tS
-                _uPndN    := _totS
-                _uPndBits := _bits
-                _uPndMsg  := _lastAlertMsg
         else
             label.new(bar_index, low, "⚠️ Margin risk — raise capital/lower lots", color=color.red, textcolor=color.white)
 
-// Deferred UHV label+array creation — runs at bar close for signals that fired intra-bar
+// Deferred UHV label+array creation — runs at bar close (barstate.isconfirmed only; realtime objects are ephemeral)
 if (_uPendBull or _uPendBear) and barstate.isconfirmed
     bool _dIsBull = _uPendBull
+    _sigChkR  := _uPndEn + _uPndSL + _uPndTP + _uPndLt  // read signal before any use — must equal _sigChkW
     _sigLbl = label(na)
-    float _uPndSlDist = math.abs(_uPndEn - _uPndSL)
+    float _slPrice    = _dIsBull ? _uPndEn - _uPndSL * pPip : _uPndEn + _uPndSL * pPip
+    float _tpPrice    = _dIsBull ? _uPndEn + _uPndTP * pPip : _uPndEn - _uPndTP * pPip
+    float _uPndSlDist = _uPndSL * pPip
     string _uDevNote = uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : ""
-    float  _slip  = pATon and _atValid ? (_dIsBull ? _atSlipB : _atSlipS) : 0.
-    float  _dEn   = _uPndEn + _slip
     if sL
         if _dIsBull
             _sigLbl := label.new(bar_index, high,
                  "BUY NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() +
-                 "\nEntry: " + str.tostring(_dEn, "#.###") + (_slip != 0. ? " (Pine: " + str.tostring(_uPndEn, "#.###") + ")" : "") +
-                 "\nSL:    " + str.tostring(_uPndSL, "#.###") + "  [" + _euST + ", risk: " + str.tostring(_uPndSlDist * _uPndLt * cM / iMon * 100, "#.##") + "%]" +
+                 "\nEntry: " + str.tostring(_uPndEn, "#.###") +
+                 "\nSL:    " + str.tostring(_slPrice, "#.###") + "  -$" + str.tostring(math.round(_uPndSlDist * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSlDist * _uPndLt * cM / iMon * 100, "#.##") + "%]" +
                  "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) +
-                 "\nTP:    " + str.tostring(_uPndTP, "#.###") + "  +$" + str.tostring(math.round(math.abs(_uPndTP - _dEn) * _uPndLt * cM * 100) / 100, "#.##") +
+                 "\nTP:    " + str.tostring(_tpPrice, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") +
                  "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + _uDevNote,
                  style = label.style_label_down, color = color.new(#089981, 0), textcolor = color.white, size = size.normal)
         else
             _sigLbl := label.new(bar_index, low,
                  "SELL NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() +
-                 "\nEntry: " + str.tostring(_dEn, "#.###") + (_slip != 0. ? " (Pine: " + str.tostring(_uPndEn, "#.###") + ")" : "") +
-                 "\nSL:    " + str.tostring(_uPndSL, "#.###") + "  [" + _euST + ", risk: " + str.tostring(_uPndSlDist * _uPndLt * cM / iMon * 100, "#.##") + "%]" +
+                 "\nEntry: " + str.tostring(_uPndEn, "#.###") +
+                 "\nSL:    " + str.tostring(_slPrice, "#.###") + "  -$" + str.tostring(math.round(_uPndSlDist * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSlDist * _uPndLt * cM / iMon * 100, "#.##") + "%]" +
                  "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) +
-                 "\nTP:    " + str.tostring(_uPndTP, "#.###") + "  +$" + str.tostring(math.round(math.abs(_dEn - _uPndTP) * _uPndLt * cM * 100) / 100, "#.##") +
+                 "\nTP:    " + str.tostring(_tpPrice, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") +
                  "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + _uDevNote,
                  style = label.style_label_up, color = color.new(#f23645, 0), textcolor = color.white, size = size.normal)
     array.push(_tEn,  _uPndEn)
-    array.push(_tSl,  _uPndSL)
-    array.push(_tTP,  _uPndTP)
+    array.push(_tSl,  _slPrice)
+    array.push(_tTP,  _tpPrice)
     array.push(_tBl,  _dIsBull)
     array.push(_tTH,  false)
     array.push(_tSH,  false)
@@ -1749,6 +1758,7 @@ if (_uPendBull or _uPendBear) and barstate.isconfirmed
             float _pkU  = math.max(_uHi, high) + _ahU
             polyline.new(array.from(chart.point.from_index(_uBar, _uHi), chart.point.from_index(_uBar + _gU / 2, _pkU), chart.point.from_index(bar_index, high)), curved = true, line_color = color.new(#00ff88, 0), line_width = 3)
             label.new(bar_index, high, "", style = label.style_arrowdown, color = color.new(#00ff88, 0), size = size.small)
+            fSU2(bar_index, _slPrice, _tpPrice, _uPndEn, _a14)
     else
         _pvLo := _rnLo
         _rnLo := low
@@ -1765,6 +1775,7 @@ if (_uPendBull or _uPendBear) and barstate.isconfirmed
             float _pkUe = math.min(_uLo, low) - _ahUe
             polyline.new(array.from(chart.point.from_index(_uBar, _uLo), chart.point.from_index(_uBar + _gUe / 2, _pkUe), chart.point.from_index(bar_index, low)), curved = true, line_color = color.new(#ff4444, 0), line_width = 3)
             label.new(bar_index, low, "", style = label.style_arrowup, color = color.new(#ff4444, 0), size = size.small)
+            fSU2(bar_index, _slPrice, _tpPrice, _uPndEn, _a14)
     _uPendBull := false
     _uPendBear := false
 
@@ -2446,8 +2457,9 @@ fDP(string _settingsExport) =>
             _basisLbl := "today's pace"
     _projNextHrPnLEV = math.round(_trueNextHrSigs * _ev * 100) / 100
     // ROW 0 — HEADER
+    string _integrityStr = _sigChkW == 0. ? "" : (_sigChkW == _sigChkR ? "  |  Signal integrity is preserved." : "  |  Signal integrity compromised")
     table.cell(statsPanel, 0, 0,
-         "TURTLE TRADER DESK  |  " + syminfo.ticker + "  |  " + str.tostring(tFm) + "m  |  " + _session + "  |  Exness Std " + str.tostring(uLev) + ":1",
+         "TURTLE TRADER DESK  |  " + syminfo.ticker + "  |  " + str.tostring(tFm) + "m  |  " + _session + "  |  Exness Std " + str.tostring(uLev) + ":1" + _integrityStr,
          text_color = color.white, text_size = size.small, bgcolor = color.new(#0a7a6a, 5))
 
     // ROW 1 — SIGNAL STATUS (largest text, highest priority)
