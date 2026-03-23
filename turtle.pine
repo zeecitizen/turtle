@@ -1,6 +1,6 @@
 ﻿//@version=5
 
-indicator("Turtle Trader Desk v1.0, by M. Zeeshan MIT Alumni", "Turtle Trader Desk", overlay = true, max_boxes_count = 500, max_labels_count = 500, max_lines_count = 500, max_polylines_count = 100)
+indicator("Turtle Trader Desk v1.0, by M. Zeeshan MIT Alumni", "Turtle Trader Desk", overlay = true, max_boxes_count = 500, max_labels_count = 500, max_lines_count = 500, max_polylines_count = 500)
 max_bars_back(low, 300)
 max_bars_back(high, 300)
 
@@ -946,16 +946,29 @@ fDevLabel(string _bits, string _alertMsg, float _clsAtFire) =>
     _d
 
 fSU(int b, float sl, float a, color c) =>
-    _v1 = math.abs(math.sin(float(b) * 7.391 + 1.17))
-    _v2 = math.sin(float(b) * 13.71 + 2.33)
-    _v3 = math.sin(float(b) * 5.13  + 0.71)
-    _ph = a * (0.035 + 0.028 * _v1)
-    _lO = a * _v2 * 0.012
-    _rO = a * _v3 * 0.012
-    polyline.new(array.from(chart.point.from_index(b-2,sl+_lO),chart.point.from_index(b,sl+_ph),chart.point.from_index(b+2,sl+_rO)),curved=true,line_color=c,line_width=2)
-    polyline.new(array.from(chart.point.from_index(b-1,sl+_ph*0.5+_lO*0.5),chart.point.from_index(b,sl+_ph),chart.point.from_index(b+1,sl+_ph*0.4+_rO*0.5)),curved=true,line_color=c,line_width=5)
-    label.new(b+3,sl-a*0.02,"?",style=label.style_none,textcolor=c,size=size.small)
-    label.new(b+3+(1+b%2),sl-a*0.02+math.sin(float(b)*1.7)*a*0.035,"?",style=label.style_none,textcolor=c,size=size.tiny)
+    // Pseudo-random ink noise seeded by bar + price — 5 independent sine waves
+    _p  = float(b) * 7.391 + sl * 0.031
+    _q  = float(b) * 13.71 + sl * 0.053
+    _r  = float(b) * 5.13  + sl * 0.019
+    _t  = float(b) * 3.77  + sl * 0.041
+    _u  = float(b) * 11.23 + sl * 0.027
+    _n1 = math.sin(_p + 1.17)
+    _n2 = math.sin(_q + 2.33)
+    _n3 = math.sin(_r + 0.71)
+    _n4 = math.sin(_t + 3.14)
+    _n5 = math.cos(_u + 0.53)
+    _jt = a * 0.009
+    _ph = a * (0.032 + 0.024 * math.abs(_n1))
+    // Opaque left stroke — pen pressing down, arches to peak (4 pts, width 2)
+    polyline.new(array.from(chart.point.from_index(b-2,sl+(_n2+_n4*0.4)*_jt*1.4),chart.point.from_index(b-1,sl+_ph*0.52+(_n3+_n5*0.3)*_jt),chart.point.from_index(b,sl+_ph+_n1*_jt*0.6),chart.point.from_index(b+1,sl+_ph*0.44+(_n4+_n2*0.35)*_jt)),curved=true,line_color=c,line_width=2)
+    // Faded right stroke — ink running out, pen lifting (3 pts, width 1, 55% transparent)
+    polyline.new(array.from(chart.point.from_index(b+1,sl+_ph*0.38+_n4*_jt*0.9),chart.point.from_index(b+2,sl+(_n5+_n3*0.4)*_jt*1.2),chart.point.from_index(b+3,sl-a*0.007+_n2*_jt*0.6)),curved=true,line_color=color.new(c,55),line_width=1)
+    // Thick ink pressure blob at peak — semi-transparent, slightly above main arc (3 pts, width 5)
+    polyline.new(array.from(chart.point.from_index(b-1,sl+_ph*0.70+_n3*_jt*0.7),chart.point.from_index(b,sl+_ph*1.07+_n2*_jt*0.35),chart.point.from_index(b+1,sl+_ph*0.58+_n4*_jt*0.55)),curved=true,line_color=color.new(c,28),line_width=5)
+    // Ink splatter: main dot, near satellite, far stray — opacity falls off
+    label.new(b+4,    sl-a*0.011+_n4*a*0.020,"•",style=label.style_none,textcolor=c,size=size.small)
+    label.new(b+4+b%2,sl+_n2*a*0.025,        "•",style=label.style_none,textcolor=color.new(c,40),size=size.tiny)
+    label.new(b+3+b%3,sl+_ph*0.18+_n3*a*0.033,"•",style=label.style_none,textcolor=color.new(c,65),size=size.tiny)
 
 fSU2(int b, float sl, float tp, float en, float a) =>
     fSU(b, sl, a, color.red)
@@ -2135,10 +2148,12 @@ if array.size(_tEn) > 0
                                 _eBeP += _pnl
                                 _eBeT += 1
                         _origLbl = array.get(_tLbl, _ti)
+                        _dPnlSL  = pATon and _atValid ? (_bull ? (_sl - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _sl)) * array.get(_tEL, _ti) * cM : _pnl
                         if not na(_origLbl)
                             _origTxt = label.get_text(_origLbl)
-                            _dPnlSL = pATon and _atValid ? (_bull ? (_sl - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _sl)) * array.get(_tEL, _ti) * cM : _pnl
                             label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss")
+                        label.new(bar_index, _bull ? low : high, "⭕ #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss", style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 10), textcolor = color.white, size = size.small)
+                        fSU(bar_index, _sl, _a14, color.red)
 
             if not _t1hit and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
                 _fireTime = array.size(_tFT) > _ti ? array.get(_tFT, _ti) : int(na)
@@ -2183,10 +2198,12 @@ if array.size(_tEn) > 0
                             _eBeP += _pnl
                             _eBeT += 1
                     _origLbl = array.get(_tLbl, _ti)
+                    _dPnlTP  = pATon and _atValid ? (_bull ? (_tp1 - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _tp1)) * _lots * cM : _pnl
                     if not na(_origLbl)
                         _origTxt = label.get_text(_origLbl)
-                        _dPnlTP = pATon and _atValid ? (_bull ? (_tp1 - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _tp1)) * _lots * cM : _pnl
                         label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit")
+                    label.new(bar_index, _bull ? high : low, "✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit", style = _bull ? label.style_label_down : label.style_label_up, color = color.new(color.green, 10), textcolor = color.white, size = size.small)
+                    fSU(bar_index, _tp1, _a14, color.lime)
 
 
 
