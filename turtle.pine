@@ -2775,7 +2775,7 @@ if barstate.islast and sSP
 if barstate.islast
     _lsP = table.new(position.bottom_left, 1, 2, bgcolor = color.new(color.black, 10), border_color = color.new(color.gray, 40), border_width = 1)
     table.cell(_lsP, 0, 0, "LAST SIGNAL", text_color = color.new(color.aqua, 0), text_size = size.small, bgcolor = color.new(#001830, 5))
-    table.cell(_lsP, 0, 1, _lastSigTxt == "" ? "No signal yet" : _lastSigTxt, text_color = color.new(color.white, 0), text_size = size.small, bgcolor = color.new(#0a0a14, 8))
+    table.cell(_lsP, 0, 1, _lastSigTxt == "" ? "No signal yet" : _lastSigTxt, text_color = color.new(color.white, 0), text_size = size.normal, bgcolor = color.new(#0a0a14, 8))
 
 // ALERT CONDITIONS
 // Create alerts via: right-click chart ? Add Alert ? Condition ? FVG Absorption
