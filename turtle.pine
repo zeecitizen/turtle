@@ -973,6 +973,45 @@ fSU2(int b, float sl, float tp, float en, float a) =>
     fSU(b, tp, a, color.lime)
     fSU(b, en, a, color.black)
 
+// Hand-drawn tick (✓) in pink — used at TP hit candle
+fTick(int b, float pr, float a) =>
+    _p  = float(b)*7.391+pr*0.031
+    _q  = float(b)*13.71+pr*0.053
+    _r  = float(b)*5.13 +pr*0.019
+    _t  = float(b)*3.77 +pr*0.041
+    _n1 = math.sin(_p+1.17)
+    _n2 = math.sin(_q+2.33)
+    _n3 = math.sin(_r+0.71)
+    _n4 = math.sin(_t+3.14)
+    _jt  = a*0.008
+    _dip = a*0.038
+    _ris = a*0.068
+    _c   = color.new(#FF69B4,0)
+    polyline.new(array.from(chart.point.from_index(b-2,pr+_n1*_jt*1.2),chart.point.from_index(b-1,pr-_dip+(_n2+_n3*0.3)*_jt*0.7),chart.point.from_index(b+1,pr+_ris*0.55+(_n4+_n1*0.25)*_jt),chart.point.from_index(b+2,pr+_ris+_n3*_jt*0.9)),curved=true,line_color=_c,line_width=3)
+    polyline.new(array.from(chart.point.from_index(b-1,pr-_dip*0.62+_n2*_jt*0.8),chart.point.from_index(b,pr-_dip*1.1+_n1*_jt*0.3),chart.point.from_index(b+1,pr-_dip*0.48+_n3*_jt*0.7)),curved=true,line_color=color.new(_c,30),line_width=4)
+    label.new(b+3,    pr+_ris*0.85+_n4*a*0.018,"•",style=label.style_none,textcolor=_c,size=size.small)
+    label.new(b+3+b%2,pr+_n2*a*0.022,          "•",style=label.style_none,textcolor=color.new(_c,45),size=size.tiny)
+    label.new(b+2+b%3,pr-_dip*0.3+_n1*a*0.015, "•",style=label.style_none,textcolor=color.new(_c,65),size=size.tiny)
+
+// Hand-drawn cross (✗) in blood red — used at SL hit candle
+fCross(int b, float pr, float a) =>
+    _p  = float(b)*7.391+pr*0.031
+    _q  = float(b)*13.71+pr*0.053
+    _r  = float(b)*5.13 +pr*0.019
+    _t  = float(b)*3.77 +pr*0.041
+    _n1 = math.sin(_p+1.17)
+    _n2 = math.sin(_q+2.33)
+    _n3 = math.sin(_r+0.71)
+    _n4 = math.sin(_t+3.14)
+    _jt  = a*0.008
+    _arm = a*0.042
+    _c   = color.new(#8B0000,0)
+    polyline.new(array.from(chart.point.from_index(b-2,pr+_arm+(_n1+_n3*0.3)*_jt),chart.point.from_index(b,pr+(_n2+_n4*0.25)*_jt*0.5),chart.point.from_index(b+2,pr-_arm+(_n3+_n1*0.3)*_jt*0.8)),curved=true,line_color=_c,line_width=2)
+    polyline.new(array.from(chart.point.from_index(b-2,pr-_arm+(_n2+_n4*0.3)*_jt*0.9),chart.point.from_index(b,pr+(_n1+_n3*0.25)*_jt*0.4),chart.point.from_index(b+2,pr+_arm+(_n4+_n2*0.3)*_jt*0.7)),curved=true,line_color=_c,line_width=2)
+    label.new(b+3,    pr-_arm*0.4+_n1*a*0.018,"•",style=label.style_none,textcolor=_c,size=size.small)
+    label.new(b+3+b%2,pr+_n3*a*0.022,         "•",style=label.style_none,textcolor=color.new(_c,45),size=size.tiny)
+    label.new(b+2+b%3,pr+_arm*0.5+_n2*a*0.016,"•",style=label.style_none,textcolor=color.new(_c,65),size=size.tiny)
+
 // -- Independent Bar detection (Block A) --
 // Use trend engine direction (_ib/_ibr) — NOT _lb — so the IB
 // fires based on current momentum, not the lagging FVG zone direction.
@@ -2151,7 +2190,7 @@ if array.size(_tEn) > 0
                             _origTxt = label.get_text(_origLbl)
                             label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss")
                         label.new(bar_index, _bull ? low : high, "⭕ #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss", style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 10), textcolor = color.white, size = size.small)
-                        fSU(bar_index, _sl, _a14, color.red)
+                        fCross(bar_index, _sl, _a14)
 
             if not _t1hit and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
                 _fireTime = array.size(_tFT) > _ti ? array.get(_tFT, _ti) : int(na)
@@ -2201,7 +2240,7 @@ if array.size(_tEn) > 0
                         _origTxt = label.get_text(_origLbl)
                         label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit")
                     label.new(bar_index, _bull ? high : low, "✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit", style = _bull ? label.style_label_down : label.style_label_up, color = color.new(color.green, 10), textcolor = color.white, size = size.small)
-                    fSU(bar_index, _tp1, _a14, color.lime)
+                    fTick(bar_index, _tp1, _a14)
 
 
 
