@@ -1,6 +1,6 @@
 ﻿//@version=5
 
-indicator("Turtle Trader Desk v1.0, by M. Zeeshan MIT Alumni", "Turtle Trader Desk", overlay = true, max_boxes_count = 500, max_labels_count = 500, max_lines_count = 500, max_polylines_count = 500)
+indicator("Turtle Trader Desk v1.0, by M. Zeeshan MIT Alumni", "Turtle Trader Desk", overlay = true, max_boxes_count = 500, max_labels_count = 500, max_lines_count = 500, max_polylines_count = 100)
 max_bars_back(low, 300)
 max_bars_back(high, 300)
 
@@ -959,11 +959,9 @@ fSU(int b, float sl, float a, color c) =>
     _n5 = math.cos(_u + 0.53)
     _jt = a * 0.009
     _ph = a * (0.032 + 0.024 * math.abs(_n1))
-    // Opaque left stroke — pen pressing down, arches to peak (4 pts, width 2)
-    polyline.new(array.from(chart.point.from_index(b-2,sl+(_n2+_n4*0.4)*_jt*1.4),chart.point.from_index(b-1,sl+_ph*0.52+(_n3+_n5*0.3)*_jt),chart.point.from_index(b,sl+_ph+_n1*_jt*0.6),chart.point.from_index(b+1,sl+_ph*0.44+(_n4+_n2*0.35)*_jt)),curved=true,line_color=c,line_width=2)
-    // Faded right stroke — ink running out, pen lifting (3 pts, width 1, 55% transparent)
-    polyline.new(array.from(chart.point.from_index(b+1,sl+_ph*0.38+_n4*_jt*0.9),chart.point.from_index(b+2,sl+(_n5+_n3*0.4)*_jt*1.2),chart.point.from_index(b+3,sl-a*0.007+_n2*_jt*0.6)),curved=true,line_color=color.new(c,55),line_width=1)
-    // Thick ink pressure blob at peak — semi-transparent, slightly above main arc (3 pts, width 5)
+    // Main wobbly stroke — 6 pts with mixed noise per point, fades right (width 2)
+    polyline.new(array.from(chart.point.from_index(b-2,sl+(_n2+_n4*0.4)*_jt*1.4),chart.point.from_index(b-1,sl+_ph*0.52+(_n3+_n5*0.3)*_jt),chart.point.from_index(b,sl+_ph+_n1*_jt*0.6),chart.point.from_index(b+1,sl+_ph*0.44+(_n4+_n2*0.35)*_jt),chart.point.from_index(b+2,sl+(_n5+_n3*0.4)*_jt*1.2),chart.point.from_index(b+3,sl-a*0.007+_n2*_jt*0.6)),curved=true,line_color=c,line_width=2)
+    // Thick ink pressure blob at peak — semi-transparent, slightly above arc (3 pts, width 5)
     polyline.new(array.from(chart.point.from_index(b-1,sl+_ph*0.70+_n3*_jt*0.7),chart.point.from_index(b,sl+_ph*1.07+_n2*_jt*0.35),chart.point.from_index(b+1,sl+_ph*0.58+_n4*_jt*0.55)),curved=true,line_color=color.new(c,28),line_width=5)
     // Ink splatter: main dot, near satellite, far stray — opacity falls off
     label.new(b+4,    sl-a*0.011+_n4*a*0.020,"•",style=label.style_none,textcolor=c,size=size.small)
