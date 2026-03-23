@@ -75,7 +75,6 @@ eEVR           = input.bool(false,  'Use this strategy?', group = gE)
 eDir        = input.string("Both", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = gE)
 sVsa             = input.bool(false,  'Show signals on the chart?', group = gE)
 rEHV  = input.bool(false, 'Must the sweep candle have higher volume than the candle it sweeps?', group = gE)
-eVMD  = input.float(0.0, '──── Minimum volume excess (%): sweep candle must have at least this much MORE volume than the red candle being swept (0 = any higher is enough; 20 = must be 20% higher)', minval = 0, maxval = 200, step = 5, group = gE)
 aETW    = input.bool(false, 'If sweep candle has rejection wick, wait for next candle to confirm?', group = gE)
 eDR = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', group = gE)
 eRp = input.float(7.0,  '──── Risk: % of capital per trade (when $Risk = 0) — sizes lots so each trade risks this % of your starting capital', minval = 0.0, maxval = 100.0, step = 0.1, group = gE)
@@ -89,8 +88,6 @@ eSMn = input.float(0.2,    '──── Stop Loss: Closest it can ever be to en
 eSAm = input.float(4.0,    '──── Stop Loss: Volatility width? (ATR method only)', group = gE)
 eSDo  = input.float(2.0,   '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', group = gE)
 eSSw = input.int(11,       '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', group = gE)
-uREE = input.bool(false, '──── Cancel this strategy on early bounce-back (price returns to IB level before touching POI)?', group = gE)
-eRCn   = input.bool(false,  '──── Must the sweep candle immediately follow the high-volume candle (consecutive bars only)?', group = gE)
 eMinCP = input.float(0.0,  '──── Min close level within swept candle (%): 0 = anywhere inside, 50 = must close above midpoint, 100 = must reach red candle high', minval = 0, maxval = 100, step = 10, group = gE)
 eMxBR  = input.int(0,      '──── Max bars since the high-vol candle (0 = off, 1 = consecutive, 3 = within 3 bars)', minval = 0, maxval = 10, group = gE)
 eMinWD = input.float(0.0,  '──── Min wick penetration below swept candle low ($): sweep candle wick must extend at least this far below the swept candle low', minval = 0, step = 0.5, group = gE)
@@ -332,7 +329,6 @@ var _sbIB      = true    // start true so first IB can fire immediately
 var _sgIB     = true    // bear side equivalent
 var _eS       = false  // structural EVR sweep candle appeared this setup (regardless of vol filter) — keeps _bnC suppressed
 var bool _uReBnc = false  // UHV blocked by per-strategy early bounce-back
-var bool _eReBnc = false  // EVR blocked by per-strategy early bounce-back
 var float _sStr     = na     // _tS at the moment this retracement began (for trend-shift threshold)
 var float _sH1 = na   // most recent confirmed swing high (structural trend tracking)
 var float _sH2 = na   // previous confirmed swing high
@@ -1240,7 +1236,6 @@ if _bRet
     _eF    := false
     _eS    := false
     _uReBnc := false
-    _eReBnc := false
     _sStr  := _tS  // snapshot strength at setup start for trend-shift check
 
 if _beRet
@@ -1280,7 +1275,6 @@ if _beRet
     _eF     := false
     _eS     := false
     _uReBnc := false
-    _eReBnc := false
     _sStr   := _tS  // snapshot strength at setup start for trend-shift check
 
 // BYPASS RETRACEMENT — fires when bRW is ON, skipping IB phase + trend check
@@ -1318,7 +1312,6 @@ if bRW and not _iR and not _ibT and _iRd and close[1] > open[1] and close < low[
     _eF     := false
     _eS     := false
     _uReBnc := false
-    _eReBnc := false
     _sStr   := _tS
 
 // Bear: green candle closes above prior red candle's high
@@ -1355,7 +1348,6 @@ if bRW and not _iR and not _ibT and _iGr and close[1] < open[1] and close > high
     _eF     := false
     _eS     := false
     _uReBnc := false
-    _eReBnc := false
     _sStr   := _tS
 
 // STEP 3: Retracement touches any enabled Point of Interest
@@ -1420,8 +1412,6 @@ if _iR
         if uREU
             _uReBnc := true
             _uWB    := true  // mark UHV as serviced so setup can end via _aSFrd
-        if uREE
-            _eReBnc := true
 
     // Only cancel retracement if trend has persistently flipped (not just one candle flicker)
     // Use _bePC / _bPC so short 1m noise doesn't kill the setup
@@ -1476,7 +1466,6 @@ if _iR
         _eWCL  := na
         _eWCSH := na
         _uReBnc := false
-        _eReBnc := false
         if sDb and _bnC
             _lbl = _lb ? _rCeil : _rFlr
             label.new(bar_index, _lbl, "↺ Reset", style = label.style_label_down, color = color.new(color.gray, 20), textcolor = color.white, size = size.tiny)
@@ -1555,7 +1544,6 @@ _eBeDir  = eDir != "Bull only"
 bool   _erUS  = rUS
 bool   _erULV = rULV
 bool   _erEHV = rEHV
-float  _eVMT  = 1.0 + eVMD / 100.0
 string _euST  = uST
 string _eeST  = eST
 float  _euTD  = uTD
@@ -1834,7 +1822,7 @@ if (_uPendBull or _uPendBear) and barstate.isconfirmed
 // Bull EVR: two paths depending on aETW
 // Path A — no wick filter OR wick is clean: fire immediately
 // Path B — wick filter ON and wick > body: set pending, wait for next bar confirmation
-_eBBase    = _eeBD and eEVR and sVsa and _iR and _lb and _rwb and not _eReBnc and _eFC and not _eF and not na(_vRL) and _vRV > 0 and (_eStE ? (_hb and _bTP) : not _beTP) and _tS >= _eMS and not _eTsE and _iGr and low < _vRL and (_eIOE ? high > _vRL : close > _vRL) and close <= _vRHi and (_erEHV ? volume >= _vRV * _eVMT : true) and (bar_index - _leSB) >= _eeCd and (eRCn ? bar_index == _vRBar + 1 : true) and (eMxBR == 0 or bar_index - _vRBar <= eMxBR) and (eMinWD == 0 or _vRL - low >= eMinWD) and (eMinCP == 0 or (_vRHi - _vRL) <= 0 or (close - _vRL) / (_vRHi - _vRL) >= eMinCP / 100.0) and (eMinVP == 0 or ta.percentrank(volume, 20) >= float(eMinVP))
+_eBBase    = _eeBD and eEVR and sVsa and _iR and _lb and _rwb and _eFC and not _eF and not na(_vRL) and _vRV > 0 and (_eStE ? (_hb and _bTP) : not _beTP) and _tS >= _eMS and not _eTsE and _iGr and low < _vRL and (_eIOE ? high > _vRL : close > _vRL) and close <= _vRHi and (_erEHV ? volume >= _vRV : true) and (bar_index - _leSB) >= _eeCd and (eMxBR == 0 or bar_index - _vRBar <= eMxBR) and (eMinWD == 0 or _vRL - low >= eMinWD) and (eMinCP == 0 or (_vRHi - _vRL) <= 0 or (close - _vRL) / (_vRHi - _vRL) >= eMinCP / 100.0) and (eMinVP == 0 or ta.percentrank(volume, 20) >= float(eMinVP))
 _eBHW = (high - close) > (close - open)   // upper wick larger than body
 _bVSA         = _eBBase and (aETW ? not _eBHW : true) and not _cEB and _strUp and not _isRng and (_eIOE or barstate.isconfirmed)
 // When wick detected and filter is ON: arm pending confirmation
@@ -1847,7 +1835,7 @@ if _eBBase and aETW and _eBHW and not _eBWP
     _eBWL   := low
 
 // Bear EVR: same two-path logic
-_eBeBase    = _eeBeD and eEVR and sVsa and _iR and not _lb and not _rwb and not _eReBnc and _eFC and not _eF and not na(_vGH) and _vGV > 0 and (_eStE ? (_hbr and _beTP) : not _bTP) and _tS >= _eMS and not _eTsE and _iRd and high > _vGH and (_eIOE ? low < _vGH : close < _vGH) and (_erEHV ? volume >= _vGV * _eVMT : true) and (bar_index - _leSB) >= _eeCd and (eRCn ? bar_index == _vGBar + 1 : true) and (eMxBR == 0 or bar_index - _vGBar <= eMxBR) and (eMinWD == 0 or high - _vGH >= eMinWD) and (eMinCP == 0 or (_vGH - _vGLo) <= 0 or (_vGH - close) / (_vGH - _vGLo) >= eMinCP / 100.0) and (eMinVP == 0 or ta.percentrank(volume, 20) >= float(eMinVP))
+_eBeBase    = _eeBeD and eEVR and sVsa and _iR and not _lb and not _rwb and _eFC and not _eF and not na(_vGH) and _vGV > 0 and (_eStE ? (_hbr and _beTP) : not _bTP) and _tS >= _eMS and not _eTsE and _iRd and high > _vGH and (_eIOE ? low < _vGH : close < _vGH) and (_erEHV ? volume >= _vGV : true) and (bar_index - _leSB) >= _eeCd and (eMxBR == 0 or bar_index - _vGBar <= eMxBR) and (eMinWD == 0 or high - _vGH >= eMinWD) and (eMinCP == 0 or (_vGH - _vGLo) <= 0 or (_vGH - close) / (_vGH - _vGLo) >= eMinCP / 100.0) and (eMinVP == 0 or ta.percentrank(volume, 20) >= float(eMinVP))
 _eBrHW = (close - low) > (open - close)    // lower wick larger than body
 _beVSA         = _eBeBase and (aETW ? not _eBrHW : true) and not _cEBe and _strDn and not _isRng and (_eIOE or barstate.isconfirmed)
 // When wick detected and filter is ON: arm pending confirmation
@@ -1867,7 +1855,7 @@ _eBeBNV = _eeBeD and eEVR and sVsa and _iR and not _lb and not _rwb and _eFC and
 // can fire on the very next bar, wiping UHV/TBR setups
 if _eBBNV or _eBeBNV
     _eS := true
-if _erEHV and (_eBBNV or _eBeBNV) and not (_eBBNV and volume >= _vRV * _eVMT) and not (_eBeBNV and volume >= _vGV * _eVMT)
+if _erEHV and (_eBBNV or _eBeBNV) and not (_eBBNV and volume >= _vRV) and not (_eBeBNV and volume >= _vGV)
     _bEV += 1
 
 if _bVSA
@@ -1890,7 +1878,7 @@ if _bVSA
         _fU       := true
         _leSB := bar_index
         _totS  += 1
-        string _bits = fBits(false, _eIOE, false, true, _eStE, _eStE and _hb and _bTP, false, false, false, false, true, _inSess, _erEHV, _erEHV and volume >= _vRV * _eVMT, false, false)
+        string _bits = fBits(false, _eIOE, false, true, _eStE, _eStE and _hb and _bTP, false, false, false, false, true, _inSess, _erEHV, _erEHV and volume >= _vRV, false, false)
         _lastAlertMsg := fPC(true, _effLotsV, _entry, _sl, _tp1, "EVR", _totS, _bits)
         if not _eAlF
             _eAlF := true
@@ -1942,7 +1930,7 @@ if _beVSA
         _fU       := true
         _leSB := bar_index
         _totS  += 1
-        string _bits = fBits(true, _eIOE, false, true, _eStE, _eStE and _hbr and _beTP, false, false, false, false, false, _inSess, _erEHV, _erEHV and volume >= _vGV * _eVMT, false, false)
+        string _bits = fBits(true, _eIOE, false, true, _eStE, _eStE and _hbr and _beTP, false, false, false, false, false, _inSess, _erEHV, _erEHV and volume >= _vGV, false, false)
         _lastAlertMsg := fPC(false, _effLotsV2, _entry, _sl, _tp1, "EVR", _totS, _bits)
         if not _eAlF
             _eAlF := true
@@ -1987,7 +1975,7 @@ if _eBrWP and (not _iR or _eF or _bTP or not eEVR or not sVsa)
     _eWCSH := na
 
 // Bull confirmation: next candle closes above the wick candle high
-if _eBWP and not na(_eWCH) and not _eF and not _eReBnc and eEVR and sVsa and _iR and _lb and close > _eWCH and not _cEB and _strUp and barstate.isconfirmed
+if _eBWP and not na(_eWCH) and not _eF and eEVR and sVsa and _iR and _lb and close > _eWCH and not _cEB and _strUp and barstate.isconfirmed
     _eBWP := false
     _entry    = close
     _sl       = _eeST == "Below High Vol. Candle Wick" ? math.max(syminfo.mintick, nz(_eWCSL, low) - eSBf) : fSL(true, close, nz(_rceLo, nz(_vRL, low)), high, _eeST, eSBf, eSAm, eSSw, eSMn + uSpread, eDR, eLS, eSDo)
@@ -2041,7 +2029,7 @@ if _eBWP and not na(_eWCH) and not _eF and not _eReBnc and eEVR and sVsa and _iR
         box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.lime, 0), 2, bgcolor=color.new(color.lime, 90))
 
 // Bear confirmation: next candle closes below the wick candle low
-if _eBrWP and not na(_eWCL) and not _eF and not _eReBnc and eEVR and sVsa and _iR and not _lb and close < _eWCL and not _cEBe and _strDn and barstate.isconfirmed
+if _eBrWP and not na(_eWCL) and not _eF and eEVR and sVsa and _iR and not _lb and close < _eWCL and not _cEBe and _strDn and barstate.isconfirmed
     _eBrWP := false
     _entry    = close
     _sl       = _eeST == "Below High Vol. Candle Wick" ? nz(_eWCSH, high) + eSBf : fSL(false, close, low, nz(_rceHi, nz(_vGH, high)), _eeST, eSBf, eSAm, eSSw, eSMn + uSpread, eDR, eLS, eSDo)
@@ -2096,7 +2084,7 @@ if _eBrWP and not na(_eWCL) and not _eF and not _eReBnc and eEVR and sVsa and _i
 
 // End setup when all enabled strategies have fired from this setup
 if _iR
-    _aSFrd = (not eUHV or _uF or _uWB) and (not eEVR or _eF or _eS or _eReBnc)
+    _aSFrd = (not eUHV or _uF or _uWB) and (not eEVR or _eF or _eS)
     if _aSFrd
         _iR := false
         _ibT    := false
@@ -2253,7 +2241,7 @@ f_mxL(float m, simple string slT) => m > 0 ? "  Avg. max drawdown: -$" + str.tos
 // Account:  iMon|cM|lA|uSpread|uLev
 // POI:      rPOI|rFT|pFvg|pHL|pSup|pLb
 // UHV:      eUHV|uDir|rUS|rULV|uHTD|uVTOn|uVT|uVLB|uSB|uOE|uPBD|uPBsD|uPBCo|uDR|uRp|uLS|uTM|uT1|uTD|uST|uSBf|uSMn|uSAm|uSDo|uSSw|uSLPips|uTPPips|uREU|uMomB|uMomBR|uMomW|uMomWk|uBrkVROn|uBrkVR|uBrkBody|uCd|uAlGt|uIOEGrd
-// EVR:      eEVR|eDir|sVsa|rEHV|eVMD|aETW|eDR|eRp|eLS|eTM|eT1|eTD|eST|eSBf|eSMn|eSAm|eSDo|eSSw|uREE|eRCn|eMinCP|eMxBR|eMinWD|eMinVP|eOE|eCd
+// EVR:      eEVR|eDir|sVsa|rEHV|aETW|eDR|eRp|eLS|eTM|eT1|eTD|eST|eSBf|eSMn|eSAm|eSDo|eSSw|eMinCP|eMxBR|eMinWD|eMinVP|eOE|eCd
 // Trend:    mTS|tPB|sFilt|cLP|aTS|aTSU|aTSE|tSTh|sTC|sTCU|sTCE|tSMA|rSwT|avoidRng|rngTh|bRW
 // HTF:      uHF|hFC|fTH|uFTH|eFTH
 // PC:       pE|pSym|mLot|pPip|pcSL|pcTP|pcOT|mTM
@@ -2265,7 +2253,7 @@ f_mxL(float m, simple string slT) => m > 0 ? "  Avg. max drawdown: -$" + str.tos
 string _gSAc  = "T1|" + str.tostring(iMon) + "|" + str.tostring(cM) + "|" + str.tostring(lA) + "|" + str.tostring(uSpread) + "|" + str.tostring(uLev)
 string _gSPoi = "|" + (rPOI?"1":"0") + "|" + (rFT?"1":"0") + "|" + (pFvg?"1":"0") + "|" + (pHL?"1":"0") + "|" + (pSup?"1":"0") + "|" + str.tostring(pLb)
 string _gSUhv = "|" + (eUHV?"1":"0") + "|" + (uDir=="Both"?"0":uDir=="Bull only"?"1":"2") + "|" + (rUS?"1":"0") + "|" + (rULV?"1":"0") + "|" + (uHTD=="Off"?"0":uHTD=="1"?"1":uHTD=="5"?"2":uHTD=="15"?"3":uHTD=="60"?"4":"5") + "|" + (uVTOn?"1":"0") + "|" + str.tostring(uVT) + "|" + str.tostring(uVLB) + "|" + str.tostring(uSB) + "|" + (uOE=="Candle Close"?"0":"1") + "|" + str.tostring(uPBD) + "|" + str.tostring(uPBsD) + "|" + (uPBCo?"1":"0") + "|" + str.tostring(uDR) + "|" + str.tostring(uRp) + "|" + str.tostring(uLS) + "|" + (uTM=="R:R Ratio"?"0":uTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(uT1) + "|" + str.tostring(uTD) + "|" + (uST=="UHV"?"0":uST=="ATR"?"1":uST=="Breakout Wick"?"2":uST=="SwingLow"?"3":uST=="Dollar"?"4":uST=="Retracement's Min/Max"?"5":"6") + "|" + str.tostring(uSBf) + "|" + str.tostring(uSMn) + "|" + str.tostring(uSAm) + "|" + str.tostring(uSDo) + "|" + str.tostring(uSSw) + "|" + str.tostring(uSLPips) + "|" + str.tostring(uTPPips) + "|" + (uREU?"1":"0") + "|" + (uMomB?"1":"0") + "|" + str.tostring(uMomBR) + "|" + (uMomW?"1":"0") + "|" + str.tostring(uMomWk) + "|" + (uBrkVROn?"1":"0") + "|" + str.tostring(uBrkVR) + "|" + (uBrkBody?"1":"0") + "|" + str.tostring(uCd) + "|" + str.tostring(uAlGt) + "|" + str.tostring(uIOEGrd)
-string _gSEvr = "|" + (eEVR?"1":"0") + "|" + (eDir=="Both"?"0":eDir=="Bull only"?"1":"2") + "|" + (sVsa?"1":"0") + "|" + (rEHV?"1":"0") + "|" + str.tostring(eVMD) + "|" + (aETW?"1":"0") + "|" + str.tostring(eDR) + "|" + str.tostring(eRp) + "|" + str.tostring(eLS) + "|" + (eTM=="R:R Ratio"?"0":eTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(eT1) + "|" + str.tostring(eTD) + "|" + (eST=="UHV"?"0":eST=="ATR"?"1":eST=="Breakout Wick"?"2":eST=="SwingLow"?"3":eST=="Dollar"?"4":"5") + "|" + str.tostring(eSBf) + "|" + str.tostring(eSMn) + "|" + str.tostring(eSAm) + "|" + str.tostring(eSDo) + "|" + str.tostring(eSSw) + "|" + (uREE?"1":"0") + "|" + (eRCn?"1":"0") + "|" + str.tostring(eMinCP) + "|" + str.tostring(eMxBR) + "|" + str.tostring(eMinWD) + "|" + str.tostring(eMinVP) + "|" + (eOE=="Candle Close"?"0":"1") + "|" + str.tostring(eCd)
+string _gSEvr = "|" + (eEVR?"1":"0") + "|" + (eDir=="Both"?"0":eDir=="Bull only"?"1":"2") + "|" + (sVsa?"1":"0") + "|" + (rEHV?"1":"0") + "|" + (aETW?"1":"0") + "|" + str.tostring(eDR) + "|" + str.tostring(eRp) + "|" + str.tostring(eLS) + "|" + (eTM=="R:R Ratio"?"0":eTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(eT1) + "|" + str.tostring(eTD) + "|" + (eST=="UHV"?"0":eST=="ATR"?"1":eST=="Breakout Wick"?"2":eST=="SwingLow"?"3":eST=="Dollar"?"4":"5") + "|" + str.tostring(eSBf) + "|" + str.tostring(eSMn) + "|" + str.tostring(eSAm) + "|" + str.tostring(eSDo) + "|" + str.tostring(eSSw) + "|" + str.tostring(eMinCP) + "|" + str.tostring(eMxBR) + "|" + str.tostring(eMinWD) + "|" + str.tostring(eMinVP) + "|" + (eOE=="Candle Close"?"0":"1") + "|" + str.tostring(eCd)
 string _gSTr  = "|" + str.tostring(mTS) + "|" + str.tostring(tPB) + "|" + (sFilt?"1":"0") + "|" + (cLP?"1":"0") + "|" + (aTS?"1":"0") + "|" + (aTSU?"1":"0") + "|" + (aTSE?"1":"0") + "|" + str.tostring(tSTh) + "|" + (sTC?"1":"0") + "|" + (sTCU?"1":"0") + "|" + (sTCE?"1":"0") + "|" + (tSMA?"1":"0") + "|" + (rSwT?"1":"0") + "|" + (avoidRng?"1":"0") + "|" + str.tostring(rngTh) + "|" + (bRW?"1":"0")
 string _gSHtf = "|" + (uHF?"1":"0") + "|" + (hFC=="Auto"?"0":hFC=="1"?"1":hFC=="5"?"2":hFC=="15"?"3":hFC=="60"?"4":"5") + "|" + str.tostring(fTH) + "|" + str.tostring(uFTH) + "|" + str.tostring(eFTH)
 string _gSPc  = "|" + (pE?"1":"0") + "|" + pSym + "|" + str.tostring(mLot) + "|" + str.tostring(pPip) + "|" + (pcSL=="Pips"?"0":"1") + "|" + (pcTP=="Pips"?"0":"1") + "|" + (pcOT=="Market"?"0":"1") + "|" + (mTM?"1":"0")
@@ -2755,9 +2743,6 @@ fDP(string _settingsExport) =>
     table.cell(statsPanel, 0, 16, (_recsSize > 0 ? array.get(_recs, 0) : "No recommendations yet — need more trade data") + (_recsSize > 1 ? "\n" + array.get(_recs, 1) : ""),
          text_color = _txtYellow, text_size = size.tiny, bgcolor = color.new(#1a2a1a, 10))
 
-    // ROW 17 — LAST ALERT MESSAGE SENT
-    table.cell(statsPanel, 0, 17, "LAST SIGNAL SENT:\n" + _lastAlertMsg,
-         text_color = color.new(color.silver, 20), text_size = size.tiny, bgcolor = color.new(#0a0a1a, 10))
 
     // ROW 18 — SETTINGS EXPORT (string built at global scope to stay under 254-element limit)
     // Split across 4 lines by section so no single line is too wide
