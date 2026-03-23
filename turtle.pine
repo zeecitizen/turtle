@@ -920,8 +920,9 @@ fCT(_strat, _num, _bits, float _en = na) =>
 // _isBull: true = buy, false = sell | _lots: effective lot size | _entry/_sl/_tp: computed prices | _bits: 16-bit condition bitmask
 fPC(_isBull, _lots, _entry, _sl, _tp, _strat, _num, _bits) =>
     _dir     = _isBull ? "buy" : "sell"
-    _slPart  = pcSL == "Price" ? ",sl_price=" + str.tostring(_isBull ? _entry - _sl * pPip : _entry + _sl * pPip, "#.####") : ",sl_pips=" + str.tostring(_sl, "0")
-    _tpPart  = pcTP == "Price" ? ",tp_price=" + str.tostring(_isBull ? _entry + _tp * pPip : _entry - _tp * pPip, "#.####") : ",tp_pips=" + str.tostring(_tp, "0")
+    // pPip=0.01 internally; PineConnector's XAUUSD pip unit = 0.10 → divide stored pips by 10
+    _slPart  = pcSL == "Price" ? ",sl_price=" + str.tostring(_isBull ? _entry - _sl * pPip : _entry + _sl * pPip, "#.####") : ",sl_pips=" + str.tostring(math.round(_sl / 10.0), "0")
+    _tpPart  = pcTP == "Price" ? ",tp_price=" + str.tostring(_isBull ? _entry + _tp * pPip : _entry - _tp * pPip, "#.####") : ",tp_pips=" + str.tostring(math.round(_tp / 10.0), "0")
     _otPart  = pcOT == "Limit" ? ",ordertype=limit,price=" + str.tostring(_entry, "#.####") : ""
     pLid + "," + _dir + "," + pSym + _otPart + ",vol_lots=" + str.tostring(_lots, "0.00") + _slPart + _tpPart + ",comment=" + fCT(_strat, _num, _bits, _entry)
 
