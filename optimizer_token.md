@@ -140,6 +140,7 @@ v1,3,7,5.97,-5.10,8,0.29,-0.74
 
 ## Token history
 
-| Date       | Token                               | Trades | Notes |
-|------------|-------------------------------------|--------|-------|
-| 2026-03-22 | `v1,3,7,5.97,-5.10,8,0.29,-0.74`  | 7      | First real token; XAUUSD 1m, 8 lots fixed, UHV Bear Only |
+| Date       | Token                                    | Trades | Notes |
+|------------|------------------------------------------|--------|-------|
+| 2026-03-22 | `v1,3,7,5.97,-5.10,8,0.29,-0.74`       | 7      | XAUUSD 1m, 8 lots, UHV Bear Only |
+| 2026-03-22 | `v1,16,26,6.44,-8.90,8,-0.14,0.03`     | 26     | ETHUSD 1m, 8 lots, Both directions; 62% WR; slippage near-zero vs XAUUSD |
