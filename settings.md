@@ -1,5 +1,5 @@
 # Turtle Trader Desk — Last Known Good Settings
-Last updated: 2026-03-27 (Session 30 end)
+Last updated: 2026-03-31 (Session 31)
 Source: Friday 27 Mar settings export + session 30 manual fix
 
 ## How to restore
@@ -8,9 +8,8 @@ Source: Friday 27 Mar settings export + session 30 manual fix
 3. **Apply the one manual fix noted below**
 4. Delete and recreate the TradingView alert (any alert() function call, webhook enabled)
 
-## ⚠️ One Manual Fix Required
-The CSV below was exported BEFORE the final session 30 change:
-- **"Invalidation Exit: Hard SL sent to MT5 (pips)"** → must be **150** (CSV says 50 — outdated)
+## ✅ No Manual Fixes Required
+All defaults in code now match live settings exactly.
 
 ## Settings CSV (paste into TradingView import or enter manually)
 
@@ -54,7 +53,7 @@ The CSV below was exported BEFORE the final session 30 change:
 | Breakeven trigger: % of TP distance | 33 |
 | Lock SL at BE trigger price | true |
 | Invalidation Exit | true |
-| **Invalidation Exit: Hard SL (pips)** | **150** ← manually set this |
+| Invalidation Exit: Hard SL (pips) | 50 |
 | Invalidation Exit: Tolerance ($) | 0 |
 | Cancel on early bounce-back | false |
 | Momentum Candle: min body size | false |
