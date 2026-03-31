@@ -42,7 +42,7 @@ uPBCo = input.bool(true, '──── Also allow signal at actual breakout leve
 uDR = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', group = gU)
 uRp = input.float(1.0,  '──── Risk: % of capital per trade (when $Risk = 0) — sizes lots so each trade risks this % of your starting capital', group = gU)
 uLS    = input.float(0.011, '──── Risk: Fixed lot size? (when $Risk = 0 and % = 0)', group = gU)
-uTM   = input.string("Dollar Amount", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = gU)
+uTM   = input.string("R:R Ratio", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = gU)
 uT1    = input.float(2.0,  '──── Take Profit: R:R Ratio (R:R method only)', group = gU)
 uTD   = input.float(0.1,  '──── Take Profit: Fixed $ target (Dollar method only)', group = gU)
 uSHLOff = input.float(0.5, '──── Take Profit: Structural offset ($): target this much before the structural level (0 = at level, 1 = $1 before; applies to Structural High/Low method only)', group = gU, step = 0.5)
