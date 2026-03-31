@@ -1779,7 +1779,44 @@ if array.size(_tEn) > 0
                     if pE
                         alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
 
-            if not _slhit and not _invExited and (bar_index > _entryBar or _isIOE)
+            // HARD SL SIMULATION — mirrors iExHSL sent to MT5 when invalidation mode is on
+            // Without this, Pine uses the wide wick SL while MT5 uses the narrow hard SL,
+            // causing Pine to show wins on trades MT5 already closed as losses.
+            bool _hardSLExited = false
+            if useInvalidation and not _invExited and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
+                float _hardSLPrice = _bull ? array.get(_tEn, _ti) - iExHSL * pPip : array.get(_tEn, _ti) + iExHSL * pPip
+                bool  _hardSLHit   = _bull ? low <= _hardSLPrice : high >= _hardSLPrice
+                if _hardSLHit
+                    _hardSLExited := true
+                    array.set(_tSH, _ti, true)
+                    float _hEn   = array.get(_tEn, _ti)
+                    float _hLots = array.get(_tEL, _ti)
+                    float _hPnl  = (_bull ? (_hardSLPrice - _hEn) : (_hEn - _hardSLPrice)) * _hLots * cM
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _hPnl)
+                    _cTr  += 1
+                    _pT   += _hPnl
+                    _tLSt += 1
+                    if _tLSt > _mLST
+                        _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    _uPnL += _hPnl
+                    _uPT  += _hPnl
+                    _uTr  += 1
+                    if _bull
+                        _uBP += _hPnl
+                        _uBT += 1
+                    else
+                        _uBeP += _hPnl
+                        _uBeT += 1
+                    label _hOrigLbl = array.get(_tLbl, _ti)
+                    string _hExt = "🔴 #" + str.tostring(_tNum) + " Hard SL — -$" + str.tostring(math.abs(_hPnl), "#.##")
+                    if not na(_hOrigLbl)
+                        label.set_text(_hOrigLbl, label.get_text(_hOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _hExt)
+                    label.new(bar_index, _bull ? low : high, _hExt, style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 10), textcolor = color.white, size = size.small)
+
+            if not _slhit and not _invExited and not _hardSLExited and (bar_index > _entryBar or _isIOE)
                 _slTriggered = _bull ? low <= _sl : high >= _sl
                 if _slTriggered
                     array.set(_tSH, _ti, true)
