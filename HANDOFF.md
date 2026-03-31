@@ -26,7 +26,7 @@ One strategy only: **UHV Breakout** (Ultra High Volume candle breakout).
 - Symbol: XAUUSD (no suffix needed)
 - PineConnector License ID: 8778286989525
 - Signal format confirmed working:
-  `8778286989525,buy,XAUUSD,vol_lots=0.03,sl_pips=150,tp_pips=54,...`
+  `8778286989525,buy,XAUUSD,vol_lots=0.03,sl_pips=50,tp_pips=8,...`
 - Close format confirmed working:
   `8778286989525,closelong,XAUUSD` (buys) / `8778286989525,closeshort,XAUUSD` (sells)
 
@@ -55,7 +55,7 @@ One strategy only: **UHV Breakout** (Ultra High Volume candle breakout).
 - `uBEon` — breakeven ON/OFF; `uBEPct = 33` — trigger at 33% of TP
 - `uBELkTP = true` — lock SL at exact trigger price (not entry+spread)
 - `useInvalidation = true` — invalidation exit ON
-- `iExHSL = 150` — hard disaster SL sent to MT5 (150 pips wide)
+- `iExHSL = 50` — hard disaster SL sent to MT5 (50 pips = ~$20 max disaster loss at typical lots)
 - `iExOff = 0` — tolerance for invalidation trigger
 
 ---
