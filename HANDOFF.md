@@ -1,5 +1,5 @@
 # Turtle Trader Desk — Full Session Handoff
-Last updated: 2026-03-30 (Session 30 end)
+Last updated: 2026-03-31 (Session 31 end)
 For: Claude on new computer — read this first before anything else.
 
 ---
@@ -57,6 +57,31 @@ One strategy only: **UHV Breakout** (Ultra High Volume candle breakout).
 - `useInvalidation = true` — invalidation exit ON
 - `iExHSL = 50` — hard disaster SL sent to MT5 (50 pips = ~$20 max disaster loss at typical lots)
 - `iExOff = 0` — tolerance for invalidation trigger
+
+---
+
+## Session 31 Changes (2026-03-31)
+
+### 1. All 33 live settings baked as code defaults
+Settings import (CSV) was intermittently failing in TradingView. All live values now match code defaults exactly — fresh indicator load works without import. See `settings.md` for the full list.
+
+### 2. iExHSL reduced 150 → 50 pips
+Old 150-pip hard SL was causing -$60/-$75 disaster losses on fast moves. Reduced to 50 pips (~$20 max disaster loss at typical lots). Safe to do because current structural TPs are only 8-14 pips (much narrower than the old 48-63 pips that originally forced the 50→150 change).
+
+### 3. Hard SL simulation block added to Pine
+**Root cause fixed**: Pine stats showed 100% win rate while MT5 had real losses. The gap was because:
+- Pine used structural wick SL (wide) for P&L tracking
+- MT5 used iExHSL=150 pip hard SL (narrow) for actual execution
+- Fast moves blew through $60+ before any bar closed → MT5 closed as loss, Pine showed as open/win
+
+**Fix**: Added a hard SL simulation block in the trade monitoring loop (inserted between the invalidation exit check and the wick SL check, ~line 1782):
+- Only runs when `useInvalidation = true`
+- Computes `_hardSLPrice = entry ± iExHSL * pPip`
+- If price touches this level, marks trade as closed with 🔴 Hard SL label
+- Updates all stats arrays exactly like a real loss (P&L, streaks, durations, uPnL, etc.)
+- The downstream wick SL check guards with `not _hardSLExited`
+
+Result: Pine stats panel now reflects true realized P&L matching MT5 reality.
 
 ---
 
@@ -173,10 +198,11 @@ All OFF by default (London/NY session trades unaffected).
 ---
 
 ## What To Work On Next
-No specific pending tasks. Possible next items:
-1. Monitor whether iExHSL=150 improves real-world avg loss (should drop from -$15 to -$3/-$4)
-2. Consider switching from Blueberry demo to Blueberry live or Exness Raw Spread (saves ~$4.60/lot)
-3. Token reduction pass on turtle.pine (unused fCT function, unused _strat/_num/_bits params in fPC)
+Possible next items:
+1. **Monitor iExHSL=50 in live trading** — avg loss should now be ~$20 max (was -$60/-$75 at 150 pips)
+2. **iExOff tolerance buffer** — currently 0; user asked about setting to 0.10-0.20 to avoid killing trades on price just touching the UHV level. Not changed yet — confirm with user first.
+3. Consider switching from Blueberry demo to Blueberry live or Exness Raw Spread (saves ~$4.60/lot)
+4. Token reduction pass on turtle.pine (unused fCT function, unused _strat/_num/_bits params in fPC)
 
 ---
 
