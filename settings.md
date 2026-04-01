@@ -50,11 +50,11 @@ All defaults in code now match live settings exactly.
 | Stop Loss: Override with fixed pips | 0 |
 | Take Profit: Override with fixed pips | 0 |
 | Breakeven: move SL to entry+spread | true |
-| Breakeven trigger: % of TP distance | 33 |
-| Lock SL at BE trigger price | true |
+| Breakeven trigger: % of TP distance | 10 |
+| Lock SL at BE trigger price | false |
 | Invalidation Exit | true |
 | Invalidation Exit: Hard SL (pips) | 50 |
-| Invalidation Exit: Tolerance ($) | 0 |
+| Invalidation Exit: Tolerance ($) | 0.3 |
 | Cancel on early bounce-back | false |
 | Momentum Candle: min body size | false |
 | Min body size % | 30 |
@@ -101,9 +101,9 @@ All defaults in code now match live settings exactly.
 | Spread filter (broker pips) | 30 |
 | Breakeven: move SL after X pips | 0 |
 | Breakeven offset (pips) | 0 |
-| Trailing stop distance (pips) | 15 |
-| Trailing trigger (pips) | 25 |
-| Trailing step (pips) | 5 |
+| Trailing stop distance (pips) | 40 |
+| Trailing trigger (pips) | 100 |
+| Trailing step (pips) | 10 |
 | Signal→MT5 latency ms | 200 |
 | Apply token corrections | false |
 | Maximize Trades | false |
