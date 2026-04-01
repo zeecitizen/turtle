@@ -68,6 +68,9 @@ uMomWk   = input.float(5.0, '──────── Max wick size as % of cand
 uBrkVROn = input.bool(false,  '──── Require volume drop vs UHV candle?', group = gU)
 uBrkVR   = input.float(5.0, '──────── Volume drop % — breakout candle must have at least this much less volume than UHV candle', minval = 5, maxval = 90, step = 5, group = gU)
 uBrkBody = input.bool(true, '──── Require body breakout: only enter if the candle body crosses the breakout level (close must be above/below the trigger — wick-only crossings are ignored) [IOE mode only — bar-close already uses close]', group = gU)
+uTVOn  = input.bool(false, '──── Tick Velocity Filter: only enter if breakout candle has above-average participation density (ticks/pip — filters lazy drift breakouts, keeps institutional-pressure moves)', group = gU)
+uTVK   = input.float(1.2,  '──────── Velocity multiplier threshold (1.2 = must exceed 1.2× the N-bar average; higher = stricter — 1.2 preserves most signals, 1.5+ cuts significantly)', minval = 1.0, maxval = 3.0, step = 0.1, group = gU)
+uTVN   = input.int(20,     '──────── Velocity baseline lookback (bars) — SMA window for average participation density', minval = 5, maxval = 100, step = 5, group = gU)
 
 
 // --- 7. Trend & Filters -------------------
@@ -1464,6 +1467,12 @@ _uHTFB = request.security(syminfo.tickerid, uHTD == "Off" ? timeframe.period : u
 _uMomBOk  = (not uMomB or (uOE == "Instant at Breakout" ? (_cRng[1] > 0 and (close[1]-open[1])/_cRng[1] >= uMomBR/100.0) : (_cRng > 0 and (close-open)/_cRng >= uMomBR/100.0))) and (not uMomW or (uOE == "Instant at Breakout" ? (_cRng[1] > 0 and (high[1]-close[1])/_cRng[1] <= uMomWk/100.0 and (open[1]-low[1])/_cRng[1] <= uMomWk/100.0) : (_cRng > 0 and (high-close)/_cRng <= uMomWk/100.0 and (open-low)/_cRng <= uMomWk/100.0)))
 _uMomBeOk = (not uMomB or (uOE == "Instant at Breakout" ? (_cRng[1] > 0 and (open[1]-close[1])/_cRng[1] >= uMomBR/100.0) : (_cRng > 0 and (open-close)/_cRng >= uMomBR/100.0))) and (not uMomW or (uOE == "Instant at Breakout" ? (_cRng[1] > 0 and (high[1]-open[1])/_cRng[1] <= uMomWk/100.0 and (close[1]-low[1])/_cRng[1] <= uMomWk/100.0) : (_cRng > 0 and (high-open)/_cRng <= uMomWk/100.0 and (close-low)/_cRng <= uMomWk/100.0)))
 _uBVOk    = not uBrkVROn or volume <= _uVol * (1.0 - uBrkVR/100.0)
+// Tick Velocity Filter — participation density = ticks per pip of movement
+// IOE mode: uses previous bar (completed) to avoid partial-bar noise; bar-close mode: uses current bar
+float _tvRng  = math.max(high - low, syminfo.mintick)
+float _tvVel  = volume / _tvRng
+float _tvBase = ta.sma(_tvVel, uTVN)
+bool  _uVelOk = not uTVOn or (_uIOE ? (volume[1] / math.max(high[1] - low[1], syminfo.mintick)) > uTVK * _tvBase[1] : _tvVel > uTVK * _tvBase)
 _uPBMok   = uPBD <= 0.0 or uOE == "Instant at Breakout" or close > close[1]   // pre-breakout momentum guard: bull — price must be rising bar-over-bar (skipped for IOE: bar hasn't closed yet)
 _uPBMbok  = uPBD <= 0.0 or uOE == "Instant at Breakout" or close < close[1]   // pre-breakout momentum guard: bear — price must be falling bar-over-bar (skipped for IOE: bar hasn't closed yet)
 bool _uIOE = uOE == "Instant at Breakout"
@@ -1474,7 +1483,7 @@ bool  _beBrkPO   = high >= _beTrigEff and (_uIOE ? (uBrkBody ? close < _beTrigEf
 if bar_index != _uAlBi
     _uAlF  := false
     _uAlBi := bar_index
-_bBrk = _euBD and eUHV and _iR and _lb and _rwb and not _uReBnc and (_eStU ? (_hb and _bTP) : not _beTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uLSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and _iGr and _bBrkPO and (bar_index - _luSB) >= _euCd and not _cUB and _strUp and _uMomBOk and _uBVOk and _uPBMok and (uHTD == "Off" or _uHTFB) and not _isRng and not _ntBlock and (_uIOE or barstate.isconfirmed)
+_bBrk = _euBD and eUHV and _iR and _lb and _rwb and not _uReBnc and (_eStU ? (_hb and _bTP) : not _beTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uLSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and _iGr and _bBrkPO and (bar_index - _luSB) >= _euCd and not _cUB and _strUp and _uMomBOk and _uBVOk and _uPBMok and _uVelOk and (uHTD == "Off" or _uHTFB) and not _isRng and not _ntBlock and (_uIOE or barstate.isconfirmed)
 
 // -- Blocked-signal detection (for recommendation engine) --
 // UHV bull: would have fired without sweep requirement
@@ -1568,7 +1577,7 @@ if _uBeBase and (_erUS ? _uHSw : true) and (bar_index - _luSB) >= _euCd and _tsU
 if eUHV and _iR and not _lb and not _rwb and not _bTP and (sTC and sTCU) and not (_hbr and _beTP) and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and _iRd and close < _bL and (_erUS ? _uHSw : true) and (bar_index - _luSB) >= _euCd
     _uWB := true
 
-_beBrk = _euBeD and eUHV and _iR and not _lb and not _rwb and not _uReBnc and (_eStU ? (_hbr and _beTP) : not _bTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uHSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and _iRd and _beBrkPO and (bar_index - _luSB) >= _euCd and not _cUBe and _strDn and _uMomBeOk and _uBVOk and _uPBMbok and (uHTD == "Off" or not _uHTFB) and not _isRng and not _ntBlock and (_uIOE or barstate.isconfirmed)
+_beBrk = _euBeD and eUHV and _iR and not _lb and not _rwb and not _uReBnc and (_eStU ? (_hbr and _beTP) : not _bTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uHSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and _iRd and _beBrkPO and (bar_index - _luSB) >= _euCd and not _cUBe and _strDn and _uMomBeOk and _uBVOk and _uPBMbok and _uVelOk and (uHTD == "Off" or not _uHTFB) and not _isRng and not _ntBlock and (_uIOE or barstate.isconfirmed)
 
 if _beBrk
     _entry      = _uIOE ? _beTrigEff : close
