@@ -68,7 +68,7 @@ uMomWk   = input.float(5.0, '──────── Max wick size as % of cand
 uBrkVROn = input.bool(false,  '──── Require volume drop vs UHV candle?', group = gU)
 uBrkVR   = input.float(5.0, '──────── Volume drop % — breakout candle must have at least this much less volume than UHV candle', minval = 5, maxval = 90, step = 5, group = gU)
 uBrkBody = input.bool(true, '──── Require body breakout: only enter if the candle body crosses the breakout level (close must be above/below the trigger — wick-only crossings are ignored) [IOE mode only — bar-close already uses close]', group = gU)
-uTVOn  = input.bool(false, '──── Tick Velocity Filter: only enter if breakout candle has above-average participation density (ticks/pip — filters lazy drift breakouts, keeps institutional-pressure moves)', group = gU)
+uTVOn  = input.bool(true, '──── Tick Velocity Filter: only enter if breakout candle has above-average participation density (ticks/pip — filters lazy drift breakouts, keeps institutional-pressure moves)', group = gU)
 uTVK   = input.float(1.2,  '──────── Velocity multiplier threshold (1.2 = must exceed 1.2× the N-bar average; higher = stricter — 1.2 preserves most signals, 1.5+ cuts significantly)', minval = 1.0, maxval = 3.0, step = 0.1, group = gU)
 uTVN   = input.int(20,     '──────── Velocity baseline lookback (bars) — SMA window for average participation density', minval = 5, maxval = 100, step = 5, group = gU)
 
@@ -83,7 +83,7 @@ mTS  = input.int(3, 'Min Trend Strength at Signal', group = gTr)
 tPB  = input.int(8, 'Trend Persistence Lookback (bars)', group = gTr)
 sFilt = input.bool(false, 'Only trade London + NY sessions? (8–12 GMT and 13–17 GMT)', group = gTr)
 cLP   = input.bool(false, 'Cut Low Probability Trades — suppress directions with ≥10 trades and negative all-time P&L', group = gTr)
-aTS      = input.bool(false,  'Avoid trading when trend is shifting?', group = gTr)
+aTS      = input.bool(true,  'Avoid trading when trend is shifting?', group = gTr)
 aTSU   = input.bool(false, '──── Apply to UHV Breakout?', group = gTr)
 tSTh  = input.int(53, '──── Shift Threshold (strength drop to trigger)', group = gTr)
 sTC     = input.bool(false,  'Require Full Trend Confirmation at Entry?',  group = gTr)
@@ -1794,7 +1794,10 @@ if array.size(_tEn) > 0
             bool _hardSLExited = false
             if useInvalidation and not _invExited and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
                 float _hardSLPrice = _bull ? array.get(_tEn, _ti) - iExHSL * pPip : array.get(_tEn, _ti) + iExHSL * pPip
-                bool  _hardSLHit   = _bull ? low <= _hardSLPrice : high >= _hardSLPrice
+                // On the IOE entry bar, low/high includes price action BEFORE the entry tick fired.
+                // Use close (current realtime tick) on the entry bar to avoid false hard SL triggers.
+                bool  _onEntryBar  = (bar_index == _entryBar)
+                bool  _hardSLHit   = _bull ? ((_onEntryBar ? close : low)  <= _hardSLPrice) : ((_onEntryBar ? close : high) >= _hardSLPrice)
                 if _hardSLHit
                     _hardSLExited := true
                     array.set(_tSH, _ti, true)
@@ -1826,7 +1829,8 @@ if array.size(_tEn) > 0
                     label.new(bar_index, _bull ? low : high, _hExt, style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 10), textcolor = color.white, size = size.small)
 
             if not _slhit and not _invExited and not _hardSLExited and (bar_index > _entryBar or _isIOE)
-                _slTriggered = _bull ? low <= _sl : high >= _sl
+                bool _onEB2      = (bar_index == _entryBar)
+                _slTriggered = _bull ? ((_onEB2 ? close : low) <= _sl) : ((_onEB2 ? close : high) >= _sl)
                 if _slTriggered
                     array.set(_tSH, _ti, true)
                     if not _t1hit
