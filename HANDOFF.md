@@ -1,5 +1,5 @@
 # Turtle Trader Desk — Full Session Handoff
-Last updated: 2026-03-31 (Session 31 end)
+Last updated: 2026-04-01 (Session 32 end)
 For: Claude on new computer — read this first before anything else.
 
 ---
@@ -52,11 +52,15 @@ One strategy only: **UHV Breakout** (Ultra High Volume candle breakout).
 ### Key inputs:
 - `pPip = 0.10` — XAUUSD pip size (CRITICAL — must be 0.10, not 0.01)
 - `pcBrkPip = 0.10` — PineConnector broker pip size
-- `uBEon` — breakeven ON/OFF; `uBEPct = 33` — trigger at 33% of TP
-- `uBELkTP = true` — lock SL at exact trigger price (not entry+spread)
+- `uBEon` — breakeven ON/OFF; `uBEPct = 10` — trigger at 10% of TP (early protection)
+- `uBELkTP = false` — SL moves to entry+spread only (not locked at trigger — lets runners breathe)
 - `useInvalidation = true` — invalidation exit ON
 - `iExHSL = 50` — hard disaster SL sent to MT5 (50 pips = ~$20 max disaster loss at typical lots)
-- `iExOff = 0` — tolerance for invalidation trigger
+- `iExOff = 0.3` — $0.30 tolerance buffer for invalidation trigger
+- `uTVOn = true` — Tick Velocity Filter ON; `uTVK = 1.2` — 1.2× threshold; `uTVN = 20` — 20-bar SMA
+- `aTS = true` — avoid trading when trend is shifting
+- `uT1 = 10.0` — R:R Ratio 10 (runner mode)
+- `pcTTrig = 100` — trail activates after 100 pips profit; `pcTDist = 40` — 40-pip leash
 
 ---
 
@@ -197,10 +201,29 @@ All OFF by default (London/NY session trades unaffected).
 
 ---
 
+## Session 32 Changes (2026-04-01)
+
+### 1. Tick Velocity Filter compile error fixed
+`_uIOE` was used on line 1475 before it was declared on line 1478. Fixed by replacing `_uIOE` with inline `uOE == "Instant at Breakout"` — semantically identical, no forward reference.
+
+### 2. Tick Velocity Filter confirmed working + enabled
+Tested at multipliers 1.0, 1.05, 1.1, 1.2, 3.0. Results:
+- 1.2× is the confirmed sweet spot: 64% signal reduction, win rate 23%→27%, EV $9.95→$14.10/trade
+- Quality cliff exists between 1.1 and 1.2: trades filtered in that band only earn $5.10/trade vs $14.10 for 1.2+ trades
+- Default set to ON, multiplier 1.2, lookback 20
+
+### 3. uT1 default corrected: 2.0 → 10.0 (R:R Ratio)
+Code was still defaulting to 2.0 even though live setting has been 10.0 since Session 31.
+
+### 4. Avoid trading when trend is shifting → ON
+Zee observed strategy was catching sells right at downtrend exhaustion / trend reversal points. Turning this filter ON suppresses signals when trend momentum is fading.
+
+### 5. Runner mode confirmed working live
+Trade #48010319: sell 0.04 lots at 4692.12, trail activated at 100 pips, trail SL followed price down 4683.43→4682.34, closed +$39.08 when 1-pip bounce hit trail. Without runner setup would have been BE stop at -$1.50.
+
 ## What To Work On Next
-Possible next items:
-1. **Monitor iExHSL=50 in live trading** — avg loss should now be ~$20 max (was -$60/-$75 at 150 pips)
-2. **iExOff tolerance buffer** — currently 0; user asked about setting to 0.10-0.20 to avoid killing trades on price just touching the UHV level. Not changed yet — confirm with user first.
+1. **Monitor Tick Velocity Filter live** — expect ~30 signals/day (down from 83), watch if win rate holds at 27%+ in live conditions
+2. **Monitor trend-shift filter** — confirm it's blocking the reversal-zone trap trades without cutting too many valid signals
 3. Consider switching from Blueberry demo to Blueberry live or Exness Raw Spread (saves ~$4.60/lot)
 4. Token reduction pass on turtle.pine (unused fCT function, unused _strat/_num/_bits params in fPC)
 
