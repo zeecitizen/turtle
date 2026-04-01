@@ -213,6 +213,8 @@ var bool [] _tTH = array.new_bool()
 var bool  [] _tSH    = array.new_bool()
 var bool  [] _tBE    = array.new_bool()    // true = breakeven already triggered for this trade
 var float [] _tIL    = array.new_float()   // invalidation level per trade (UHV candle high for bull / low for bear)
+var bool  [] _tTrA   = array.new_bool()    // true = trailing stop trigger reached (pcTTrig pips)
+var float [] _tTrH   = array.new_float()   // trail water mark: highest high (bull) / lowest low (bear) since trail activated
 var float [] _tEL  = array.new_float()
 var int   [] _tEB = array.new_int()
 var int   [] _tFT = array.new_int()  // timenow (ms wall-clock) when each signal alert fired
@@ -1645,6 +1647,8 @@ if (_uPendBull or _uPendBear) and barstate.isconfirmed
     array.push(_tTH,  false)
     array.push(_tSH,  false)
     array.push(_tBE,  false)
+    array.push(_tTrA, false)
+    array.push(_tTrH, float(na))
     array.push(_tEL,  _uPndLt)
     array.push(_tTy,  "uhv")
     array.push(_tN,   _uPndN)
@@ -1828,7 +1832,66 @@ if array.size(_tEn) > 0
                         label.set_text(_hOrigLbl, label.get_text(_hOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _hExt)
                     label.new(bar_index, _bull ? low : high, _hExt, style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 10), textcolor = color.white, size = size.small)
 
-            if not _slhit and not _invExited and not _hardSLExited and (bar_index > _entryBar or _isIOE)
+            // TRAIL SIMULATION — mirrors pcTDist/pcTTrig managed by MT5
+            // Tracks highest high (bull) / lowest low (bear) since trail activated,
+            // then closes when price reverses pcTDist pips from the peak.
+            bool _trailExited = false
+            if pcTDist > 0 and not _invExited and not _hardSLExited and not array.get(_tSH, _ti) and not _t1hit and (bar_index > _entryBar or _isIOE)
+                float _trEn   = array.get(_tEn, _ti)
+                float _trTrig = _bull ? _trEn + pcTTrig * pPip : _trEn - pcTTrig * pPip
+                if not array.get(_tTrA, _ti)
+                    // Activate trail when price reaches the trigger level
+                    if (_bull ? high >= _trTrig : low <= _trTrig)
+                        array.set(_tTrA, _ti, true)
+                        array.set(_tTrH, _ti, _bull ? high : low)
+                else
+                    // Update water mark
+                    if _bull and high > array.get(_tTrH, _ti)
+                        array.set(_tTrH, _ti, high)
+                    if not _bull and low < array.get(_tTrH, _ti)
+                        array.set(_tTrH, _ti, low)
+                    float _trPeak  = array.get(_tTrH, _ti)
+                    float _trSLPrc = _bull ? _trPeak - pcTDist * pPip : _trPeak + pcTDist * pPip
+                    bool  _trHit   = _bull ? low <= _trSLPrc : high >= _trSLPrc
+                    if _trHit
+                        _trailExited := true
+                        array.set(_tSH, _ti, true)
+                        float _trLots = array.get(_tEL, _ti)
+                        float _trPnl  = (_bull ? (_trSLPrc - _trEn) : (_trEn - _trSLPrc)) * _trLots * cM
+                        bool  _trWin  = _trPnl > 0
+                        array.push(_tCTi, bar_index)
+                        array.push(_tCTs, time)
+                        array.push(_tPA,  _trPnl)
+                        _cTr  += 1
+                        _pT   += _trPnl
+                        if _trWin
+                            _wC   += 1
+                            _tLSt := 0
+                            array.set(_tW, _ti, true)
+                        else
+                            _tLSt += 1
+                            if _tLSt > _mLST
+                                _mLST := _tLSt
+                        array.push(_tDB, bar_index - _entryBar)
+                        if array.get(_tTy, _ti) == "uhv"
+                            _uPnL += _trPnl
+                            _uPT  += _trPnl
+                            _uTr  += 1
+                            if _trWin
+                                _uWn += 1
+                            if _bull
+                                _uBP += _trPnl
+                                _uBT += 1
+                            else
+                                _uBeP += _trPnl
+                                _uBeT += 1
+                        label _trOrigLbl = array.get(_tLbl, _ti)
+                        string _trExt = "🏃 #" + str.tostring(_tNum) + " Trail Stop — " + (_trWin ? "+$" : "-$") + str.tostring(math.abs(_trPnl), "#.##")
+                        if not na(_trOrigLbl)
+                            label.set_text(_trOrigLbl, label.get_text(_trOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _trExt)
+                        label.new(bar_index, _bull ? low : high, _trExt, style = _bull ? label.style_label_up : label.style_label_down, color = _trWin ? color.new(color.green, 10) : color.new(color.orange, 10), textcolor = color.white, size = size.small)
+
+            if not _slhit and not _invExited and not _hardSLExited and not _trailExited and (bar_index > _entryBar or _isIOE)
                 bool _onEB2      = (bar_index == _entryBar)
                 _slTriggered = _bull ? ((_onEB2 ? close : low) <= _sl) : ((_onEB2 ? close : high) >= _sl)
                 if _slTriggered
