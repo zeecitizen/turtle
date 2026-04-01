@@ -1,615 +1,612 @@
-# Turtle Trader Desk — User Manual
+# Turtle Trader Desk — Feature Documentation
 
-**Pine Script v5 | TradingView Indicator | PineConnector → MT5 Automation**
+**Pine Script v5 | TradingView 1m Chart | PineConnector → MT5 Automation**
+**Symbol: XAUUSD (Gold) | Strategy: UHV Breakout | Author: M. Zeeshan**
 
 ---
 
 ## Table of Contents
 
-1. [What Is the UHV Strategy?](#1-what-is-the-uhv-strategy)
-2. [Visual Elements on the Chart](#2-visual-elements-on-the-chart)
-3. [The Stats Panel Explained](#3-the-stats-panel-explained)
-4. [The Optimizer Panel (Smiley)](#4-the-optimizer-panel-smiley)
-5. [UHV Strategy Settings — Step-by-Step Setup](#5-uhv-strategy-settings--step-by-step-setup)
-6. [Alert Condition Bitmask — Decoding a Trade](#6-alert-condition-bitmask--decoding-a-trade)
-7. [Settings Export String — Saving and Restoring Your Config](#7-settings-export-string--saving-and-restoring-your-config)
-8. [PineConnector Automation](#8-pineconnector-automation)
-9. [Recommended Settings for XAUUSD (Gold)](#9-recommended-settings-for-xauusd-gold)
+1. [Overview](#1-overview)
+2. [Feature Summary](#2-feature-summary)
+3. [Ultra High Volume Candle (UHVC) Detection](#3-ultra-high-volume-candle-uhvc-detection)
+4. [Retracement Validation Engine](#4-retracement-validation-engine)
+5. [Breakout Confirmation Module](#5-breakout-confirmation-module)
+6. [Tick-Velocity Filter (Participation Density Gate)](#6-tick-velocity-filter-participation-density-gate)
+7. [Dynamic Baseline Engine](#7-dynamic-baseline-engine)
+8. [Real-Time Execution Logic (IOE-Safe)](#8-real-time-execution-logic-ioe-safe)
+9. [Risk Management Layer](#9-risk-management-layer)
+10. [Breakeven & Trailing System](#10-breakeven--trailing-system)
+11. [Invalidation Exit Engine](#11-invalidation-exit-engine)
+12. [Session-Aware Behavior Controls](#12-session-aware-behavior-controls)
+13. [PineConnector Automation](#13-pineconnector-automation)
+14. [Stats Panel & Optimizer](#14-stats-panel--optimizer)
+15. [Parameter Sensitivity Framework](#15-parameter-sensitivity-framework)
+16. [Recommended Defaults (XAUUSD, 1m)](#16-recommended-defaults-xauusd-1m)
+17. [Settings Export & Restore](#17-settings-export--restore)
+18. [Alert Condition Bitmask](#18-alert-condition-bitmask)
 
 ---
 
-## 1. What Is the UHV Strategy?
+## 1. Overview
 
-**UHV stands for Ultra High Volume Breakout.**
+Turtle Trader Desk implements a single institutional-grade trading strategy: the **Ultra High Volume Breakout (UHV)**. The system detects candles exhibiting abnormal volume (institutional footprints), waits for a retracement, then enters on confirmed breakout of that retracement structure.
 
-The idea is simple: when institutions (banks, hedge funds) are building a large position, they leave a footprint — a candle with unusually high volume that usually ends in a retracement. They buy in size, which pushes the price up aggressively, but the market then pulls back as retail traders take profit. That pullback is your entry opportunity.
+Signals fire via `alert()` → TradingView webhook → PineConnector EA → MetaTrader 5 broker.
 
-### The logic, step by step:
-
+**Pipeline:**
 ```
-1. A candle appears with ULTRA HIGH VOLUME → this is the "UHV candle"
-   (much more volume than the surrounding candles)
-
-2. After the UHV candle, price RETRACES back down
-   (the IB phase — Institutional Buildup phase)
-
-3. Price touches a POINT OF INTEREST (POI) during the retracement
-   (a Fair Value Gap, a previous High/Low, or a Support/Resistance level)
-
-4. Price then BREAKS OUT above the high of the UHV candle (bull)
-   or below the low of the UHV candle (bear)
-
-5. → SIGNAL FIRES. Enter the trade.
+TradingView 1m chart
+  → Pine Script detects UHV setup
+  → Breakout confirmed (IOE or bar-close)
+  → alert() fires webhook
+  → PineConnector receives signal
+  → MT5 places order with SL/TP/BE/Trail
+  → Pine monitors trade (invalidation, BE, hard SL simulation)
+  → closelong / closeshort sent on exit
 ```
 
-### Why it works:
-
-- The UHV candle shows WHERE institutions were active
-- The retracement shows WHERE they wanted to add to their position
-- The breakout shows CONFIRMATION that the institutional order flow is resuming
-- The POI touch confirms the market found buyers/sellers at a meaningful price level
-
-### What UHV is NOT:
-
-- It is not a momentum strategy (chasing strong candles)
-- It is not a reversal strategy (fading moves)
-- It is a **continuation** strategy — you join the institutional order flow after it has paused and confirmed
+**Live configuration (as of Session 31, 2026-04-01):**
+- Broker: Exness / Blueberry Markets, MT5, demo → live
+- Symbol: XAUUSD
+- PineConnector License: `8778286989525`
+- Timeframe: 1m chart
 
 ---
 
-## 2. Visual Elements on the Chart
+## 2. Feature Summary
 
-### Signal Labels
-
-| Label Color | Meaning |
-|---|---|
-| **Green label** | Bull (BUY) signal — price broke above UHV candle high |
-| **Red label** | Bear (SELL) signal — price broke below UHV candle low |
-| **Gray/dim label** | Signal was blocked by a filter (e.g. sweep not confirmed, wrong trend) |
-
-### Label Text Format
-
-Each signal label shows:
-```
-UHV #42
-SL: $4998.50  (ATR method)
-TP: $5008.20  (0.34R)
-Lots: 0.033
-```
-
-- `#42` — trade number, increments with every signal fired
-- `SL` — where the stop loss was placed
-- `TP` — where the take profit was placed
-- `Lots` — the lot size calculated for this trade
-
-### After a Trade Closes
-
-The label updates with the result:
-```
-✅ #42 TP Hit — +$8.40 Profit
-```
-or
-```
-❌ #42 SL Hit — -$4.20 Loss
-```
-
-### Candle Highlights
-
-When **"Highlight signal candles"** is ON, a thin colored outline draws on candles that were studied by the engine. This lets you see exactly which candles triggered the setup detection logic.
-
-### Fair Value Gap (FVG) Zones
-
-Colored horizontal zones on the chart show where Higher Time Frame FVGs exist:
-- **Green zone** — bullish FVG (gap in sell-side candles, demand area)
-- **Red zone** — bearish FVG (gap in buy-side candles, supply area)
-- **Gray zone** — FVG that has been filled or neutralized
-
-These are the **Points of Interest** the strategy uses to qualify entries.
-
-### Trend MA Line
-
-A colored line (EMA 34) shows the current trend:
-- **Thick green line** — strong uptrend
-- **Thin green line** — weak uptrend
-- **Thick red line** — strong downtrend
-- **Thin red line** — weak downtrend
-
-The line color fades as trend strength decreases.
-
-### Min Spread Value
-
-At the bottom of some labels you may see a value like `min spread: $0.28`. This is the live Exness gold spread. The script uses this to ensure no SL is placed so tight that it would be instantly hit by the spread cost on entry.
-
----
-
-## 3. The Stats Panel Explained
-
-The panel appears in the **bottom-right corner** of the chart. It updates on every bar close.
-
-### Row by Row
-
-| Row | What It Shows |
-|---|---|
-| **Header** | Ticker, timeframe, current trading session |
-| **Signal Status** | `STANDING BY` / `SETUP IN PROGRESS` / `POI REACHED` / `SIGNAL FIRED` |
-| **Trend** | Direction (BULLISH/BEARISH), strength bar, and estimated time to next signal |
-| **TODAY divider** | — |
-| **Today P&L** | Dollar gain/loss today, and current account balance |
-| **Strategy subtotals** | UHV / 2BR / EVR individual P&L for today, plus avg trade duration |
-| **Trade count + streak** | Signals fired, trades closed, wins, win%, and current win/loss streak |
-| **Last hour + Next hour EV** | P&L from last hour, projected next-hour earnings based on EV |
-| **STRATEGIES divider** | — |
-| **UHV row** | All-time W/L, %, P&L, today's P&L, avg win/loss, lot size used |
-| **2BR row** | Same for Two Bar Reversal strategy |
-| **EVR row** | Same for Effort vs Result strategy |
-| **ALL-TIME divider** | — |
-| **All-time P&L** | Total P&L, win rate, EV per trade, avg win and avg loss dollar amounts |
-| **Milestones** | Trades needed to double account, hours to double, washout (how many losses wipe account), yesterday P&L |
-| **OPTIMIZER divider** | — |
-| **Recommendations** | Smart suggestions based on your trade history (see below) |
-| **Last Signal Sent** | The exact PineConnector alert string from your most recent signal |
-| **Settings Export** | Full encoded settings string — copy and save externally |
-
-### Recommendation Icons
-
-| Icon | Priority | Meaning |
+| Module | Status | Purpose |
 |---|---|---|
-| 🚨 | Critical | Negative EV detected or large daily drawdown — stop trading until resolved |
-| ⚠️ | Warning | Win rate below break-even — strategy may need adjustment |
-| 💡 | Optimize | A data-driven suggestion to improve R:R or trend filtering |
-| 🔓 | Unlock | A filter is blocking signals — estimate of extra P&L if you relax it |
+| UHVC Detection | Active | Identify institutional-level volume candles |
+| Retracement Validation | Active | Confirm controlled pullback into UHVC range |
+| Breakout Confirmation | Active | Detect breakout from retracement structure |
+| Tick-Velocity Filter | Optional (OFF by default) | Participation density gate — filters lazy drift |
+| Dynamic Baseline Engine | Active | Adaptive velocity / volume normalisation |
+| IOE Execution | Active | Mid-candle real-time entry |
+| Invalidation Exit | Active | Close trade when bar closes back inside UHVC range |
+| Hard SL Simulation | Active | Pine mirrors MT5 hard SL for accurate P&L stats |
+| Breakeven System | Active | Move SL to protect profit at configurable trigger % |
+| Trailing Stop | Active (via PineConnector) | Ride runners beyond fixed TP |
+| Session Windows | Optional | Block signals during low-liquidity UTC periods |
+| Stats Panel | Active | 16-row live dashboard: P&L, EV, streaks, optimizer |
+| PineConnector Bridge | Active | Full signal + close command automation to MT5 |
 
 ---
 
-## 4. The Optimizer Panel (Smiley)
+## 3. Ultra High Volume Candle (UHVC) Detection
 
-In the **bottom-left corner** a smaller panel shows:
+### Purpose
+Identify candles exhibiting institutional-level activity, forming the foundation of the VSA-based continuation model.
 
-```
-OPTIMIZER
-😄 Loving it!  ($4.22/trade avg)
-```
+### Behavior
+- Scans each candle's volume against a rolling baseline of the retracement window.
+- Selects the highest-volume candle within the current retracement as the UHVC.
+- Optionally requires the UHVC to rank in the top N-th percentile of the last `uVLB` bars (configurable via `UHV Detection: Require percentile rank`).
+- Marks the UHVC high and low as the breakout reference levels.
+- Stores UHVC bar index and volume for downstream filters.
 
-The smiley is based on your **average P&L per trade** compared to your target dollar-per-trade (average of uTD/tTD/eTD settings):
-
-| Smiley | Meaning |
-|---|---|
-| ⌛ | No trades yet — waiting for results |
-| 😄 | Average P&L per trade > 35% of target — excellent |
-| 🙂 | Profitable but below target — good |
-| 😐 | Near breakeven |
-| 😟 | Losing on average — try different settings |
-
----
-
-## 5. UHV Strategy Settings — Step-by-Step Setup
-
-Work through these settings **in order**. Each step builds on the previous one.
-
----
-
-### Step 1 — Enable the Strategy
-
-**Setting:** `Use this strategy?` → `ON`
-
-**What it does:** Activates the UHV Breakout engine. When OFF, no UHV signals fire and no UHV trades are tracked.
-
-**How to set it:** Turn ON before doing anything else.
-
----
-
-### Step 2 — Choose Trade Direction
-
-**Setting:** `Trade direction?` → `Both` / `Bull only` / `Bear only`
-
-**What it does:**
-- `Both` — takes buy and sell signals
-- `Bull only` — takes only buy (upside breakout) signals
-- `Bear only` — takes only sell (downside breakout) signals
-
-**How to set it:** Start with `Both`. After 20+ trades, check your stats panel to see if buys or sells are losing. If one direction has consistently negative P&L, switch to the other direction only.
-
-**Impact:** Restricting direction reduces signal frequency but can improve win rate in trending markets.
-
----
-
-### Step 3 — Set Your Risk Per Trade
-
-Choose **one** of the three risk modes (the others are ignored):
-
-#### Option A — Dollar Risk (recommended for beginners)
-
-**Setting:** `Risk: Dollar risk per trade? ($)` → e.g. `5.00`
-
-**What it does:** Automatically calculates the lot size so that if the SL is hit, you lose exactly $5 (before spread). Lot size adjusts dynamically based on how far away the SL is.
-
-**How to set it:** Set this to an amount you are comfortable losing on a single trade. A good starting point is 1–2% of your account. For a $200 account: `$2.00` to `$4.00`.
-
-**Impact:** This is the safest mode. Your risk is capped regardless of how wide the SL is.
-
----
-
-#### Option B — % of Capital
-
-**Setting:** `Risk: % of capital per trade (when $Risk = 0)` → e.g. `2.0`
-
-**What it does:** Sizes lots so each trade risks this percentage of your starting capital (the `My Starting Capital` setting). If capital = $200 and % = 2, risk = $4 per trade.
-
-**How to set it:** Set `Dollar risk per trade` to `0`, then set this %. Useful if you want risk to scale as your account grows.
-
----
-
-#### Option C — Fixed Lots
-
-**Setting:** `Risk: Fixed lot size?` → e.g. `0.033`
-
-**What it does:** Uses the same lot size every trade, regardless of SL distance. Simple but can result in variable dollar risk.
-
-**How to set it:** Set both `Dollar risk` and `%` to `0`, then enter your lot size.
-
----
-
-### Step 4 — Set Stop Loss Placement
-
-**Setting:** `Stop Loss: Where to place it?`
-
-Options and when to use each:
-
-| Option | Description | Best for |
+### Key Inputs
+| Input | Default | Description |
 |---|---|---|
-| `ATR` | SL = entry ± (ATR × multiplier). Adapts to current volatility. | Gold — most recommended |
-| `UHV` | SL below/above the UHV candle low/high + buffer. | When you want SL anchored to the institutional candle |
-| `Breakout Wick` | SL below/above the breakout candle's wick. | Tight SL, higher risk of getting stopped |
-| `SwingLow` | SL below/above recent swing low/high. | When trend structure is clear |
-| `Dollar` | SL exactly $X from entry. | Simple fixed risk, ignores market structure |
-| `Retracement's Min/Max` | SL at the lowest/highest point touched during the retracement. | Captures full range of the retracement |
-| `Prev Candle` | SL below/above the previous candle's low/high + buffer. | Very tight, use with caution |
+| `UHV Detection: Require percentile rank` | OFF | Require UHVC to be top-N% volume vs lookback |
+| `Min volume percentile threshold` | 95 | Percentile floor when rank mode is ON |
+| `Lookback bars for percentile` | 20 | Rolling window for percentile calculation |
 
-**How to set it for gold (XAUUSD):** Start with `ATR`. Set `Volatility width` to `1.9` to `2.5` — this means SL = 1.9× to 2.5× the Average True Range. On gold with ATR ≈ $1.50, that places SL about $2.85–$3.75 from entry.
+### Notes
+The UHVC is re-evaluated on every bar during the retracement phase. If a higher-volume candle appears, it replaces the previous UHVC candidate. Only the final candidate at breakout time is used.
 
 ---
 
-### Step 5 — Set SL Buffer and Minimum
-
-**Setting:** `Stop Loss: Distance $ below SL level?` (used by UHV, Breakout Wick, SwingLow, Retracement, Prev Candle modes)
-
-**What it does:** Adds extra distance below the calculated SL reference point. For example, if SL mode is `UHV` and buffer = `$0.70`, the SL is placed $0.70 below the UHV candle's low.
-
-**How to set it:** For gold, use `$0.50` to `$2.00`. More buffer = harder to get stopped by normal volatility, but larger loss if SL is hit.
-
----
-
-**Setting:** `Stop Loss: Closest it can ever be to entry? ($)`
-
-**What it does:** Hard floor. No SL can ever be placed closer to entry than this value, regardless of what the SL method calculates. Prevents degenerate $0.10 SL scenarios.
-
-**How to set it for gold:** Set to at least `$1.50`. The gold spread is ~$0.28, so anything below $1.00 will be eaten by spread and slippage on entry. A value of `$1.50` to `$3.00` is safe.
-
-**Impact:** Too low = SL gets hit by spread noise. Too high = every trade risks more than intended.
-
----
-
-### Step 6 — Set Take Profit
-
-**Setting:** `Take Profit: Which method?`
-
-| Option | Description |
-|---|---|
-| `R:R Ratio` | TP = entry + (SL distance × R multiplier). E.g. 0.34R means TP is 34% of the SL distance from entry. |
-| `Structural High/Low` | TP at the next swing high (bull) or swing low (bear). |
-| `Dollar Amount` | TP exactly $X from entry. |
-
-**Setting:** `Take Profit: R:R Ratio` → e.g. `0.34`
-
-**How to set it:** For gold on a 5-minute chart with tight SLs, a ratio of `0.3` to `0.5` works well. Higher R:R means bigger wins but lower win rate. The stats panel shows your break-even win rate — match your R:R to what your actual win rate supports.
-
-**Impact:**
-- Low R:R (0.2–0.4) = more wins, smaller profit per win, win rate matters less
-- High R:R (2.0+) = fewer wins, big profit per win, requires high accuracy
-
----
-
-### Step 7 — Set the UHV Volume Filter (Optional but recommended)
-
-**Setting:** `UHV Detection: Require candle to rank in top percentile?` → `ON`
-
-**What it does:** Instead of picking any candle that is the highest volume in the retracement, this requires the UHV candle to rank in the top N% of all recent candles. Filters out weak setups where "high volume" was actually just average.
-
-**Setting:** `Min volume percentile threshold` → e.g. `71`
-
-**What it does:** The UHV candle must be in the top 29% of volume over the last N bars (lookback). 71 means top 29%, 90 means top 10%.
-
-**How to set it:** Start with `71`. If you see too many weak signals, raise to `80`. If signals are too rare, lower to `60`.
-
----
-
-### Step 8 — Set the Sweep Requirement
-
-**Setting:** `Must any candle wick through or break the UHV low before the entry candle breaks its high?` → `ON` (recommended)
-
-**What it does:** Requires that before the breakout happens, at least one candle's wick (or close) must dip below the UHV candle's low. This is the "sweep" — institutions shake out weak longs before the real move up. Without this, you can get stopped out by the sweep after you enter.
-
-**Impact:**
-- ON → fewer signals, but higher quality. You miss some trades but avoid entering before the shake-out.
-- OFF → more signals, but you may enter before the sweep and get stopped.
-
-**How to set it:** Turn ON as your default. If the stats panel shows `Sweep filter blocked N signals/day` in the recommendations section and your win rate is already high, you can consider turning it OFF.
-
----
-
-### Step 9 — Set Entry Mode
-
-**Setting:** `Open trade at` → `Candle Close` or `Instant at Breakout`
-
-| Mode | Description |
-|---|---|
-| `Candle Close` | Signal fires when the breakout candle closes above the UHV high. Standard. Prevents false breakouts. |
-| `Instant at Breakout` (IOE) | Signal fires the moment price ticks above the UHV high, mid-bar. Earlier fill, but candle may not confirm. |
-
-**How to set it:** Use `Candle Close` for backtesting accuracy. Use `Instant at Breakout` for better live fills on fast markets like gold.
-
----
-
-### Step 10 — Set Pre-Breakout Offset (Advanced)
-
-**Setting:** `Pre-breakout offset ($)` → e.g. `0.05`
-
-**What it does:** In IOE mode, this fires the signal slightly BEFORE the breakout level. If gold's UHV high is $5000.00 and offset = $0.05, the signal fires when price reaches $4999.95. This gives a better fill price.
-
-**How to set it:** Start with `0` (disabled). If you are in IOE mode and consistently getting filled $0.10–$0.20 worse than the breakout level, try `0.05` to `0.15`.
-
-**Setting:** `Also allow signal at actual breakout level` → `ON`
-
-**What it does:** If you have a pre-breakout offset set but price never dips to the offset level before breaking out, this fires the signal at the actual breakout level instead of missing the trade entirely.
-
-**How to set it:** Keep ON when using pre-breakout offset.
-
----
-
-### Step 11 — Set Cooldown
-
-**Setting:** `Cooldown: Bars after a signal before another can fire?` → e.g. `14`
-
-**What it does:** After a UHV signal fires, the engine waits this many bars before it can fire again. Prevents signal spamming during choppy markets.
-
-**How to set it:** On a 5-minute chart, `14` bars = 70 minutes cooldown. For gold where setups can repeat in the same session, try `10`–`20`. Longer cooldown = fewer trades but possibly better quality.
-
----
-
-### Step 12 — Set Momentum Candle Filters (Optional)
-
-**Setting:** `Momentum Candle: Require min body size?` → `ON` / `OFF`
-
-**What it does:** Requires the breakout candle to have a strong body (the filled portion of the candle). Filters out candles that moved mostly on wicks.
-
-**Setting:** `Min body size as % of candle range` → e.g. `60`
-
-**What it does:** The candle body must be at least 60% of the full high-to-low range. A candle with lots of wicks and a small body scores low — these are indecision candles, not strong breakouts.
-
----
-
-**Setting:** `Momentum Candle: Require max wick size?` → `ON` / `OFF`
-
-**What it does:** Rejects breakout candles that have large wicks, since large wicks indicate the breakout was rejected at the extremes.
-
-**Setting:** `Max wick size as % of candle range` → e.g. `15`
-
-**What it does:** Neither the upper nor lower wick can be more than 15% of the full candle range.
-
----
-
-### Step 13 — Cancel on Early Bounce (Optional)
-
-**Setting:** `Cancel this strategy on early bounce-back?` → `ON` / `OFF`
-
-**What it does:** If price returns to the Institutional Buildup (IB) level before touching the POI, the entire setup is cancelled. This prevents entering setups that have "failed" the retracement structure.
-
-**How to set it:** `ON` for cleaner setups, fewer but higher-quality signals. `OFF` for more signals.
-
----
-
-## 6. Alert Condition Bitmask — Decoding a Trade
-
-Every alert sent to PineConnector includes a 16-character binary string at the end of the `comment=` field. This lets you paste any alert string to Claude and instantly decode exactly which conditions triggered (or didn't trigger) for that specific trade.
-
-### Alert String Format
-
-```
-87782869895251,sell,XAUUSD,vol_lots=1.04,sl_price=5000.055,tp_pips=80,comment=UHV@4996.66_1:03_#1231#0110100001100000
-```
-
-Breaking down `comment=UHV@4996.66_1:03_#1231#0110100001100000`:
-
-| Part | Value | Meaning |
+## 4. Retracement Validation Engine
+
+### Purpose
+Confirm that price retraces into the UHVC range in a controlled manner before breakout entry is armed.
+
+### Behavior
+- Monitors for a retracement phase following the UHVC candle.
+- Two modes:
+  - **Standard**: requires IB (Institutional Buildup) phase — trend confirmation, then retracement into structure.
+  - **Bypass mode** (`bRW = true`): retracement starts whenever a red candle closes below the prior green candle's low. Removes trend/IB phase requirements.
+- Wick trigger (`bRWW = true`): a wick piercing below the prior green low is sufficient (no close required).
+- Validates that retracement does not fully invalidate the UHVC structure.
+
+### Key Inputs
+| Input | Default | Description |
 |---|---|---|
-| `UHV` | strategy name | Which strategy fired (UHV / 2BR / EVR / EVR-W) |
-| `@4996.66` | price | Chart close price when signal fired |
-| `1:03` | UTC time | Hour:minute in UTC when signal fired |
-| `#1231` | trade number | Sequential trade counter |
-| `#0110100001100000` | bitmask | 16-bit condition code — see table below |
+| `Bypass retracement rules` | ON | Simplified retracement detection |
+| `Wick trigger` | ON | Wick pierce sufficient (no close required) |
+| `POI Lookback (bars)` | 50 | Bars to search for Points of Interest |
 
-### Bitmask Bit Reference
-
-Each character is a bit (0=OFF, 1=ON), read left to right:
-
-| Bit | Position | Meaning when 1 |
-|---|---|---|
-| 0 | 1st char | Direction: **1=SELL**, 0=BUY |
-| 1 | 2nd char | Entry mode: **1=IOE** (Instant at Breakout), 0=Candle Close |
-| 2 | 3rd char | Strategy bit (low): combined with bit 3 — see strategy table |
-| 3 | 4th char | Strategy bit (high): combined with bit 2 — see strategy table |
-| 4 | 5th char | Strict trend mode is **ON** for this strategy |
-| 5 | 6th char | Strict trend condition was **MET** (higher-high + TP cross) |
-| 6 | 7th char | Sweep requirement is **ON** |
-| 7 | 8th char | Sweep was **confirmed** (wick swept UHV low before breakout) |
-| 8 | 9th char | Pre-breakout offset is **ON** (uPBD > 0) |
-| 9 | 10th char | Co-exist path used — fired at breakout level (pre-offset fallback) |
-| 10 | 11th char | Trend direction: **1=uptrend**, 0=downtrend |
-| 11 | 12th char | In session: **1=within allowed session window** |
-| 12 | 13th char | Volume filter is **ON** for this strategy |
-| 13 | 14th char | Volume filter condition was **MET** |
-| 14 | 15th char | Opposing candle filter is **ON** (2BR only) |
-| 15 | 16th char | Opposing candle condition was **MET** (2BR only) |
-
-**Strategy encoding (bits 2–3):**
-
-| Bit 3 | Bit 2 | Strategy |
-|---|---|---|
-| 0 | 0 | UHV Breakout |
-| 0 | 1 | Two Bar Reversal (2BR) |
-| 1 | 0 | Effort vs Result (EVR) |
-| 1 | 1 | EVR Weak (EVR-W) |
-
-### Example Decode
-
-Bitmask: `0110100001100000`
-
-```
-Bit  0: 0 → BUY
-Bit  1: 1 → IOE mode
-Bit  2: 1 ╮
-Bit  3: 0 ╯ → 2BR strategy
-Bit  4: 1 → strict trend ON
-Bit  5: 0 → strict trend NOT met (but trade fired anyway — strict trend not required for 2BR by default)
-Bit  6: 0 → sweep not required
-Bit  7: 0 → sweep not confirmed
-Bit  8: 0 → no pre-offset
-Bit  9: 0 → co-exist path not used
-Bit 10: 1 → uptrend at entry
-Bit 11: 1 → in session
-Bit 12: 0 → volume filter OFF
-Bit 13: 0 → volume filter not checked
-Bit 14: 0 → opposing candle filter OFF
-Bit 15: 0 → opposing candle not checked
-```
-
-**To decode any trade:** paste the full alert string to Claude and say "decode the bitmask".
+### Notes
+Bypass + Wick mode maximises signal frequency on XAUUSD 1m. Standard mode adds structure requirements but significantly reduces signal count.
 
 ---
 
-## 7. Settings Export String — Saving and Restoring Your Config
+## 5. Breakout Confirmation Module
 
-TradingView does not allow you to export or download your indicator settings. The **Settings Export** row in the stats panel solves this.
+### Purpose
+Detect breakouts from validated retracement structures and trigger entry logic.
 
-### How to Save Your Settings
+### Behavior
+- Monitors price relative to `_bL` (breakout level = UHVC high for bull, UHVC low for bear).
+- Supports pre-breakout offset (`uPBsD`): signal fires N dollars before the breakout level for better fill.
+- `uPBCo` (Co-exist): if price breaks through without reaching the pre-offset level, fires at actual breakout price instead of missing the trade.
+- Body breakout mode (`uBrkBody`): in IOE mode, requires candle body (close) to cross the trigger, not just a wick.
+- Cooldown (`uCd`): minimum bars between consecutive signals.
 
-1. Open TradingView → click on your chart → open the **Data Window** (right-click → Data Window, or press `D`)
-2. Find the **SETTINGS EXPORT** row in the data window
-3. Copy the full string — it starts with `T1|` and contains all your settings
+### Key Inputs
+| Input | Default | Description |
+|---|---|---|
+| `Pre-breakout offset ($)` | 5 | Fire signal $5 before breakout level (better fill) |
+| `Post-breakout offset ($)` | 0 | Wait for price to move past breakout before entry |
+| `Also allow signal at actual breakout level` | ON | Co-exist fallback if pre-offset level not reached |
+| `Require body breakout` | ON | Close must cross trigger (IOE mode only) |
+| `Cooldown: bars after signal` | 0 | Minimum bars between signals |
+| `Alert Gate ($)` | -0.05 | Min gap from price to TP before alert fires |
 
-Example (abbreviated):
+### Notes
+Breakout detection is event-driven and optimised for low latency. IOE mode evaluates on every tick; bar-close mode only evaluates on confirmed candle close (`barstate.isconfirmed`).
+
+---
+
+## 6. Tick-Velocity Filter (Participation Density Gate)
+
+### Purpose
+Ensure breakout candles exhibit above-normal market participation, filtering out lazy drift breakouts and keeping only institutional-pressure moves.
+
+### Concept
+Tick-velocity measures **ticks per unit of price movement** — the density of market activity:
+
 ```
-T1|262|100|1|0|1|1|1|1|1|50|1|0|1|0|0|71|20|0|0|0|0|0|...
+velocity = tickVolume / max(high - low, syminfo.mintick)
 ```
 
-4. Save this string in a text file, notes app, or any external storage
+- **High velocity** → many ticks concentrated in a small range → strong participation → institutional pressure
+- **Low velocity** → few ticks across a wide range → weak participation → thin or drift breakout
 
-### How to Restore Settings
+This aligns with VSA's *effort vs result* principle.
 
-Paste the string to Claude and say: **"restore my settings from this export string"**
+### Behavior
+- Computes `_tvVel = volume / max(high - low, mintick)` on the breakout candle.
+- Computes `_tvBase = ta.sma(_tvVel, uTVN)` as the dynamic baseline.
+- Gate condition: `_tvVel > uTVK * _tvBase`
+- **IOE protection**: in Instant at Breakout mode, velocity is evaluated on the **previous completed bar** to avoid partial-candle noise. Current bar volume and range are still accumulating mid-candle — using them would produce unreliable readings.
+- Applied to both bull (`_bBrk`) and bear (`_beBrk`) signal conditions.
+- Default OFF — zero impact on existing behavior until enabled.
 
-Claude will decode every field and tell you exactly what value each setting should be set to.
+### Key Inputs
+| Input | Default | Description |
+|---|---|---|
+| `Tick Velocity Filter` | OFF | Enable/disable participation density gate |
+| `Velocity multiplier threshold (k)` | 1.2 | Must exceed k× baseline; 1.2 preserves most signals |
+| `Velocity baseline lookback (N)` | 20 | SMA window for average participation density |
 
-### String Format Reference
+### Recommended Settings
+| Parameter | Value | Notes |
+|---|---|---|
+| k (multiplier) | 1.2 | Best starting point — preserves signals, improves quality |
+| N (baseline) | 20 | Stable across London/NY/Asia sessions |
+| Mode | IOE-safe (prev bar) | Avoids partial-candle noise on 1m IOE execution |
 
-The string is pipe-delimited (`|`) in this fixed order:
+### Expected Impact
+Any filter reduces signals. Empirical testing on this system showed:
+- Momentum body filter (40%): signals reduced from 88/day → 34/day, daily EV $1085 → $290
+- Velocity filter at k=1.2 is expected to have a smaller impact than body size filters
+
+**Validation plan before enabling in production:**
+1. Baseline: run 1 session with filter OFF, record EV and signal count
+2. Filter ON at k=1.2: compare win rate, avg win, avg loss, daily signal count
+3. Sweep k = 1.1, 1.2, 1.3, 1.4 across London + NY sessions
+4. Decision criterion: filter is beneficial only if `EV_filter × signals_filter > EV_base × signals_base`
+
+### Notes
+This filter is a **participation confirmation layer**, not a momentum filter. It does not measure the size of the move — it measures the density of activity behind the move. A large candle with low tick density may be a thin liquidity spike; a smaller candle with high tick density indicates real institutional participation.
+
+---
+
+## 7. Dynamic Baseline Engine
+
+### Purpose
+Adapt velocity and volume expectations to current market conditions, ensuring the EA remains robust across sessions and volatility regimes.
+
+### Behavior
+- Maintains rolling SMA of tick-velocity over the last N bars (`uTVN`).
+- Baseline updates on every bar, automatically adjusting for London open spikes, NY session volume, and Asian quiet periods.
+- The same SMA approach is used for UHV volume baseline in percentile mode.
+
+### Notes
+Session-relative baselines prevent false triggers during quiet markets and avoid over-filtering during high-activity periods. The N=20 default is stable across all major gold sessions.
+
+---
+
+## 8. Real-Time Execution Logic (IOE-Safe)
+
+### Purpose
+Ensure all filters and signals operate correctly in mid-candle execution environments.
+
+### Behavior
+- **IOE mode** (`uOE = "Instant at Breakout"`): signal fires on the tick when price crosses the breakout level, without waiting for bar close.
+- All filters that use current-bar data (`volume`, `high`, `low`, `close`) have IOE-safe variants that use `[1]` (previous confirmed bar) to avoid partial-candle noise.
+- `barstate.isconfirmed` guard in bar-close mode prevents double-firing on the same candle.
+- `varip` variables track IOE-specific state that must persist across ticks within the same bar.
+
+### IOE vs Bar-Close Comparison
+| Dimension | Instant at Breakout (IOE) | Candle Close |
+|---|---|---|
+| Entry timing | Mid-bar tick | On bar close |
+| Fill quality | Better (earlier) | Standard |
+| False breakout risk | Higher | Lower |
+| Velocity filter | Uses previous bar | Uses current bar |
+| Body breakout check | Close > trigger on current tick | Bar close > trigger |
+
+### Notes
+IOE mode is recommended for XAUUSD 1m. Gold moves rapidly and waiting for bar close can result in entries $3–$8 worse than the breakout level.
+
+---
+
+## 9. Risk Management Layer
+
+### Purpose
+Provide multi-layered position protection with a clear separation between Pine-side logical risk and broker-side disaster protection.
+
+### Architecture
 
 ```
-T1 | Account | POI | UHV | 2BR | EVR | Trend | HTF | PC
+Entry
+  │
+  ├─ Pine Logical SL (Breakout Wick mode)
+  │    Calculated from breakout candle wick + offset
+  │    Used for lot sizing and Pine P&L simulation
+  │
+  ├─ Invalidation Exit (primary exit)
+  │    Fires when 1m bar CLOSES back inside UHVC range
+  │    Sends closelong / closeshort to MT5 via PineConnector
+  │
+  ├─ Hard SL Simulation (Pine mirrors MT5)
+  │    Pine checks if price hits entry ± iExHSL × pPip
+  │    Records as loss in stats (🔴 Hard SL label)
+  │    Keeps Pine stats aligned with MT5 reality
+  │
+  └─ Broker Hard SL (MT5 disaster backstop)
+       iExHSL pips wide — only fires if:
+       - Connection fails and Pine cannot send closelong
+       - Price spikes > iExHSL pips in < 1 bar (flash event)
 ```
 
-Where each section contains:
+### Components
 
-| Section | Fields |
+**Logical Stop-Loss (Pine-side)**
+- Method: `Breakout Wick` — SL placed below the breakout candle's wick
+- Offset: `uSBf = 0.7` ($0.70 below the wick)
+- Minimum: `uSMn = 0.2` (SL can never be closer than $0.20 to entry)
+- Used for lot sizing: `lots = dollar_risk / (SL_distance × contract_size)`
+
+**Broker Hard SL (MT5-side)**
+- `iExHSL = 50` pips → ~$5.00 per pip × lots
+- At 0.04 lots: max disaster loss ≈ $20
+- Sent as `sl_pips=50` in PineConnector alert string
+- Not used for lot sizing — purely disaster protection
+
+**Hard SL Simulation (Pine-side)**
+- Added Session 31 to close the Pine vs MT5 stats gap
+- Activates only when `useInvalidation = true`
+- Formula: `_hardSLPrice = entry ± iExHSL × pPip`
+- If `low <= _hardSLPrice` (bull) or `high >= _hardSLPrice` (bear): marks trade as closed, records P&L, appends 🔴 Hard SL label
+
+### Key Inputs
+| Input | Default | Description |
+|---|---|---|
+| `Stop Loss: Offset from SL level` | 0.7 | Buffer below breakout wick |
+| `Stop Loss: Closest it can ever be ($)` | 0.2 | Hard floor on SL distance |
+| `Invalidation Exit: Hard SL sent to MT5 (pips)` | 50 | Disaster backstop width |
+| `Risk: % of capital per trade` | 1 | Lot sizing method (active when $Risk = 0) |
+| `Risk: Fixed lot size` | 0.011 | Fixed fallback when both % and $ = 0 |
+
+### Notes
+The decoupling of Pine logical SL from broker hard SL is critical. Using the same value for both would eliminate the invalidation exit's role and result in either over-tight disaster SLs (MT5 stops trades that Pine would have managed) or over-wide logical SLs (poor R:R).
+
+---
+
+## 10. Breakeven & Trailing System
+
+### Purpose
+Protect profits on winning trades while allowing runners to extend to maximum capture.
+
+### Breakeven Behavior
+- Trigger: when price reaches `uBEPct`% of the TP distance from entry
+- With `uBELkTP = false` (current default): SL moves to `entry + spread` (~$0.13 profit lock)
+- With `uBELkTP = true`: SL moves to exact trigger price (locks in uBEPct% of TP)
+- Once BE fires: invalidation exit is disabled (trade is protected, no need for early exit)
+
+**Current setting rationale (uBELkTP = false):**
+At 10R TP (e.g. 161 pips), BE at 10% = 16 pips. Gold breathes 15–20 pips continuously. Locking SL at +16 pips means any normal retracement stops out the trade before the trail can activate. Setting Lock OFF moves SL to entry+spread only — the trade is risk-free but the trail handles the real profit lock.
+
+### Trailing Stop Behavior (MT5 via PineConnector)
+| Phase | What happens |
 |---|---|
-| Account | Starting Capital, Contract Size, Lot Multiplier, Spread |
-| POI | Require POI, Require Touch, FVG, Prev High/Low, Sup/Res, Lookback |
-| UHV | 35 fields — all UHV settings in input declaration order |
-| 2BR | 19 fields — all Two Bar Reversal settings |
-| EVR | 26 fields — all Effort vs Result settings |
-| Trend | 19 fields — all Trend & Filter settings |
-| HTF | 6 fields — Higher Time Frame settings |
-| PC | 8 fields — PineConnector automation settings |
+| Entry → +10% TP | SL at entry+spread (BE zone), no trailing |
+| +100 pips profit | PineConnector activates trailing stop |
+| Trailing active | SL = current price − 40 pips, moves every 10 pips gained |
+| Market reverses 40 pips from peak | Trade exits at trail SL |
+| TP ceiling (10R) reached | Trade exits at TP |
 
-**Enum encoding** (integers represent dropdown selections):
+### Key Inputs
+| Input | Default | Description |
+|---|---|---|
+| `Breakeven: move SL to entry+spread` | ON | Enable BE system |
+| `Breakeven trigger: % of TP distance` | 10 | BE fires at 10% of TP distance from entry |
+| `Lock SL at BE trigger price` | OFF | Move to entry+spread only (not locked at trigger) |
+| `Trailing stop distance (pips)` | 40 | SL trails price by 40 pips |
+| `Trailing: activate after X pips profit` | 100 | Trail only starts once confirmed runner |
+| `Trailing: move SL every X pips gained` | 10 | Step size for trail advancement |
+
+---
+
+## 11. Invalidation Exit Engine
+
+### Purpose
+Close losing trades early when the breakout fails — before the Pine logical SL or broker hard SL is reached.
+
+### Behavior
+- On every bar close: checks if the close price re-enters the UHVC range.
+- Invalidation condition (bull): `close < _iLvl - iExOff` where `_iLvl = UHVC high`
+- Tolerance `iExOff = 0.3`: close must be $0.30 past the level to trigger (avoids false exits on shaved levels)
+- On invalidation: sets `_tSH[i] = true`, sends `closelong` or `closeshort` via `alert()`
+- Label updated: ⚡ for loss, ✅ for profit
+- **Post-BE deactivation**: once `_tBE[i] = true`, invalidation is permanently disabled for that trade
+
+### Key Inputs
+| Input | Default | Description |
+|---|---|---|
+| `Invalidation Exit` | ON | Enable engine |
+| `Invalidation Exit: Hard SL sent to MT5 (pips)` | 50 | Broker disaster backstop |
+| `Invalidation Exit: Tolerance ($)` | 0.3 | Buffer to avoid noise exits |
+
+### Notes
+Invalidation fires at **bar close**, not on tick. This prevents exit on intrabar wicks that briefly re-enter the UHVC range before recovering. The tolerance of $0.30 adds a second layer of noise protection. Typical invalidation loss: $3–$5.
+
+---
+
+## 12. Session-Aware Behavior Controls
+
+### Purpose
+Prevent entries during low-liquidity UTC periods where spread cost exceeds potential TP or fakeout rates spike.
+
+### No-Trade Windows
+| Window | UTC Hours | Reason |
+|---|---|---|
+| ntW1 | 21:00–23:00 | NY Rollover — spreads spike 5–10× |
+| ntW2 | 23:00–03:00 | Late Asia lull — slow drift, high fakeout risk |
+| ntW3 | 04:00–07:00 | Pre-London trap — thin liquidity |
+| ntW4 | 19:00–21:00 | Volume fade / Friday profit-taking |
+
+All OFF by default. London (08:00–12:00) and NY (13:00–17:00) sessions are unaffected.
+
+### Trend Filters
+| Input | Default | Description |
+|---|---|---|
+| `Min Trend Strength at Signal` | 3 | Minimum trend strength score (0–5 scale) |
+| `Trend Persistence Lookback (bars)` | 8 | Bars to evaluate trend consistency |
+| `Avoid trading when trend is shifting` | OFF | Block signals during trend transitions |
+| `Shift Threshold` | 53 | Strength drop % to classify as shifting |
+| `Require structural trend` | OFF | HH+HL for buys, LH+LL for sells |
+| `Avoid signals during ranging market (ADX)` | OFF | ADX-based ranging filter |
+
+---
+
+## 13. PineConnector Automation
+
+### Signal Format
+```
+{licenseID},buy,XAUUSD,vol_lots={lots},sl_pips=50,tp_pips={tp},
+spread=30,betrigger={bt},beoffset={bo},traildist=40,trailtrig=100,trailstep=10,
+comment={lots}#sl=50#tp={tp}#sd=30#bt={bt}#bo={bo}#td=40#tt=100#ts=10
+```
+
+### Close Command Format
+```
+{licenseID},closelong,XAUUSD    ← close buy position
+{licenseID},closeshort,XAUUSD   ← close sell position
+```
+
+### Parameter Breakdown
+| Parameter | Value | Source |
+|---|---|---|
+| `vol_lots` | Dynamic | Pine lot sizing (% risk or fixed) |
+| `sl_pips=50` | Fixed | Hard disaster SL — NOT Pine logical SL |
+| `tp_pips` | Dynamic | Calculated from R:R ratio × SL distance |
+| `spread=30` | Fixed | Broker pip spread filter |
+| `betrigger` | Dynamic | `tp_pips × 0.10` (10% of TP) |
+| `beoffset` | = betrigger | When `uBELkTP = false`, beoffset = betrigger |
+| `traildist=40` | Fixed | Trail distance in broker pips |
+| `trailtrig=100` | Fixed | Trail activates after 100 pips profit |
+| `trailstep=10` | Fixed | Trail moves every 10 pips gained |
+
+### Critical Parameters
+| Parameter | Value | Warning |
+|---|---|---|
+| `pPip` | 0.10 | XAUUSD pip size — MUST be 0.10, not 0.01 |
+| `pcBrkPip` | 0.10 | Broker pip size for PineConnector |
+| `pSym` | XAUUSD | Must match MT5 symbol name exactly |
+
+### Known Issues (Fixed)
+- `closebuy`/`closesell` are invalid PineConnector v3 commands — use `closelong`/`closeshort`
+- TradingView alert webhooks cache at creation time — must delete and recreate alert after any settings change
+- `pPip = 0.01` causes SL calculation error: `sl_pips = round(50 × 0.01 / 0.10) = 5` → instant stop-outs
+
+---
+
+## 14. Stats Panel & Optimizer
+
+### Panel Layout (16 rows)
+| Row | Content |
+|---|---|
+| 0 | Header: ticker, timeframe, session, signal integrity |
+| 1 | Status: STANDING BY / SETUP IN PROGRESS / SIGNAL FIRED |
+| 2 | Trend direction, strength bar, next signal ETA |
+| 3 | TODAY divider |
+| 4 | Today P&L + current balance (large, green) |
+| 5 | UHV subtotals + avg trade duration |
+| 6 | Trade count + win streak |
+| 7 | Last hour P&L + next hour EV projection |
+| 8 | STRATEGIES divider |
+| 9–10 | UHV W/L%, all-time, today, avg win/loss |
+| 11 | ALL-TIME divider |
+| 12 | All-time P&L + accuracy + EV per trade |
+| 13 | To-double + washout + yesterday % |
+| 14 | OPTIMIZER & TOOLS divider |
+| 15 | Top 2 optimizer recommendations |
+
+### Optimizer Recommendations
+| Icon | Priority | Trigger |
+|---|---|---|
+| 🚨 | Critical | Negative EV or >10% daily drawdown |
+| ⚠️ | Warning | Win rate below break-even for strategy |
+| 💡 | Optimize | Data-driven R:R or filter suggestion |
+| 🔓 | Unlock | Filter blocking signals — estimate of lost P&L |
+
+---
+
+## 15. Parameter Sensitivity Framework
+
+### Velocity Filter Sweep (recommended before enabling uTVOn)
+| k value | Expected signal retention | Use case |
+|---|---|---|
+| 1.1 | ~85% | Very loose — minimal filtering |
+| 1.2 | ~70% | Recommended starting point |
+| 1.3 | ~55% | Moderate filtering |
+| 1.5+ | <40% | Aggressive — significant signal loss |
+
+### R:R and Trailing Interaction
+| TP R:R | BE trigger | Trail trigger | Expected behavior |
+|---|---|---|---|
+| 2R | 33% | 25 pips | BE fires at ~8 pips, trail conflicts |
+| 10R | 10% | 100 pips | BE fires at ~16 pips, trail runs freely |
+| 10R | 10% | 100 pips, dist=40 | Optimal runner config (current) |
+
+### Daily EV Impact of Filters
+| Filter | Signals/day | Avg EV/trade | Daily EV |
+|---|---|---|---|
+| No filters | 88 | $9.20 | $810 |
+| Momentum body 40% | 34 | $10.03 | $341 |
+| Tick velocity k=1.2 | ~60 (est.) | TBD | TBD |
+
+### Notes
+Always evaluate filters by `EV_per_trade × signals_per_day`, not by win rate alone. A filter that raises win rate but cuts signal count 60% will reduce total daily P&L.
+
+---
+
+## 16. Recommended Defaults (XAUUSD, 1m)
+
+### Account & Risk
+| Setting | Value |
+|---|---|
+| My Starting Capital ($) | 865 |
+| Contract size ($/point/lot) | 100 |
+| Position Size Multiplier | 1 |
+| Spread ($) | 0.13 |
+| Account Leverage | 500 |
+| Risk: % of capital per trade | 1 |
+| Risk: Fixed lot size | 0.011 |
+
+### Strategy: UHV Breakout
+| Setting | Value |
+|---|---|
+| Use this strategy? | ON |
+| Open trade at | Instant at Breakout |
+| Pre-breakout offset ($) | 5 |
+| Post-breakout offset ($) | 0 |
+| Also allow signal at actual breakout level | ON |
+| Require body breakout | ON |
+| Stop Loss method | Breakout Wick |
+| SL Offset from level | 0.7 |
+| SL minimum distance ($) | 0.2 |
+| Take Profit method | R:R Ratio |
+| Take Profit R:R | 10 |
+| Tick Velocity Filter | OFF |
+| Velocity multiplier (k) | 1.2 |
+| Velocity baseline lookback (N) | 20 |
+
+### Breakeven & Exits
+| Setting | Value |
+|---|---|
+| Breakeven: ON | true |
+| Breakeven trigger: % of TP | 10 |
+| Lock SL at BE trigger price | false |
+| Invalidation Exit | true |
+| Invalidation Exit: Hard SL (pips) | 50 |
+| Invalidation Exit: Tolerance ($) | 0.3 |
+
+### PineConnector
+| Setting | Value |
+|---|---|
+| MT5 pip size (XAUUSD) | **0.10** (critical) |
+| Broker pip size | **0.10** (critical) |
+| Spread filter (pips) | 30 |
+| Trailing stop distance (pips) | 40 |
+| Trailing trigger (pips) | 100 |
+| Trailing step (pips) | 10 |
+
+---
+
+## 17. Settings Export & Restore
+
+The **SETTINGS EXPORT** row at the bottom of the stats panel outputs a full `T1|...` encoded string of all settings. Copy this string and save externally — TradingView does not persist indicator settings across devices.
+
+### String Format
+```
+T1|{Account}|{POI}|{UHV}|{Trend}|{HTF}|{PC}
+```
+
+Each section is pipe-delimited. Booleans are 0/1. Enums are integer-encoded:
 - Direction: `0=Both`, `1=Bull only`, `2=Bear only`
 - Entry mode: `0=Candle Close`, `1=Instant at Breakout`
-- Take profit method: `0=R:R Ratio`, `1=Structural High/Low`, `2=Dollar Amount`
-- Stop loss method (UHV): `0=UHV`, `1=ATR`, `2=Breakout Wick`, `3=SwingLow`, `4=Dollar`, `5=Retracement's Min/Max`, `6=Prev Candle`
-- SL/TP format to MT5: `0=Pips`, `1=Price`
-- Order type: `0=Market`, `1=Limit`
-- Booleans: `0=OFF`, `1=ON`
+- TP method: `0=R:R Ratio`, `1=Structural High/Low`, `2=Dollar Amount`
+- SL method: `0=UHV`, `1=ATR`, `2=Breakout Wick`, `3=SwingLow`, `4=Dollar`, `5=Retracement Min/Max`, `6=Prev Candle`
+
+### Restore Procedure
+1. Copy the T1 export string from the stats panel
+2. Paste to Claude: "restore my settings from this export string"
+3. Claude decodes every field and provides the exact value for each setting
+4. After restoring: delete and recreate the TradingView alert (webhooks cache at creation time)
 
 ---
 
-## 8. PineConnector Automation
+## 18. Alert Condition Bitmask
 
-The script sends trade signals directly to **PineConnector**, which forwards them to **MetaTrader 5 (MT5)**.
+Every signal `comment=` field includes a 16-bit binary string encoding the exact conditions at entry.
 
-### Alert String Format
-
+### Format
 ```
-{license_id},{direction},{symbol},vol_lots={lots},sl_price={sl},tp_price={tp},comment={tag}
-```
-
-or with pip format:
-
-```
-{license_id},{direction},{symbol},vol_lots={lots},sl_pips={sl},tp_pips={tp},comment={tag}
+comment=0.04#sl=50#tp=161#sd=30#bt=16#bo=16#td=40#tt=100#ts=10
 ```
 
-### Critical: Price vs Pips Format
+The label on-chart also shows the full condition bitmask in Developer mode.
 
-PineConnector interprets `sl=` and `tp=` parameters differently depending on their name:
-
-| Parameter name | Interpretation |
-|---|---|
-| `sl_pips=50` | Stop Loss is 50 pips away from entry (relative distance) |
-| `sl_price=5000.05` | Stop Loss is at the absolute price 5000.05 |
-
-**This script uses `sl_price=` when Price mode is selected.** Never confuse the two — using `sl=` for a price value sends a pips value to MT5 and can result in catastrophically wide stops.
-
-### Setup Steps
-
-1. In indicator settings → `PineConnector Automation` group:
-   - Enter your `PineConnector License ID`
-   - Set `MT5 Symbol Name` to match exactly what your MT5 broker uses (e.g. `XAUUSD`)
-   - Set `MT5 pip size` → Gold = `0.01`, ETH = `0.1`, BTC = `1.0`
-   - Set `Stop Loss format` → `Price` recommended (avoids pip rounding errors)
-   - Set `Take Profit format` → `Price` or `Pips`
-   - Set `Order type` → `Market` (standard) or `Limit` (uses limit order at entry level)
-
-2. In TradingView, create an alert:
-   - Condition: `UHV Bull Signal` or `UHV Bear Signal`
-   - Message: leave blank or use `{{strategy.order.alert_message}}`
-   - Use webhook to your PineConnector endpoint
-
----
-
-## 9. Recommended Settings for XAUUSD (Gold)
-
-These settings have been tuned for gold on a 5-minute chart. Use as a starting point and adjust based on your backtest results.
-
-| Setting | Recommended Value | Reason |
+### Bit Reference
+| Bit | Position | Meaning when 1 |
 |---|---|---|
-| Spread ($) | `0.28` | Exness standard gold spread |
-| Min SL distance | `1.50` | Below 1.50 gets eaten by spread + slippage |
-| SL method | `ATR` | Adapts to gold volatility sessions |
-| ATR multiplier | `1.92` | ~$2.88 SL on avg ATR of $1.50 |
-| SL buffer | `0.70` | Extra margin below structure |
-| TP method | `R:R Ratio` | Simple, predictable |
-| TP ratio | `0.34` | Quick TP, high win rate |
-| Entry mode | `Instant at Breakout` | Better fills on gold |
-| Require sweep | `ON` | Filters out most false breakouts |
-| UHV percentile | `ON`, threshold `71` | Top 29% volume only |
-| Risk mode | Dollar risk `$2–5` | Fixed dollar risk per account size |
-| Cooldown | `14 bars` | 70 min on 5m chart |
-| SL format to MT5 | `Price` | Use `sl_price=` not `sl_pips=` — critical for gold |
+| 0 | 1 | Direction: SELL (0 = BUY) |
+| 1 | 2 | Entry mode: IOE (0 = Candle Close) |
+| 2–3 | 3–4 | Strategy: 00=UHV, 01=2BR, 10=EVR, 11=EVR-W |
+| 4 | 5 | Strict trend mode ON |
+| 5 | 6 | Strict trend condition MET |
+| 6 | 7 | Sweep requirement ON |
+| 7 | 8 | Sweep confirmed |
+| 8 | 9 | Pre-breakout offset ON |
+| 9 | 10 | Co-exist path used |
+| 10 | 11 | Trend direction: uptrend |
+| 11 | 12 | In allowed session window |
+| 12 | 13 | Volume filter ON |
+| 13 | 14 | Volume filter condition MET |
+| 14 | 15 | Opposing candle filter ON |
+| 15 | 16 | Opposing candle condition MET |
 
-### Gold-Specific Warning
-
-Gold moves approximately `$0.28` per pip, and typical spread is `$0.28` (28 pips). Any SL closer than `$1.00` to entry will be hit by normal spread noise or slippage on entry. The `uSMn` (SL minimum) setting enforces this floor.
+**To decode any trade:** paste the alert string to Claude and say "decode the bitmask".
 
 ---
 
-*Documentation version: 2026-03-17*
+*Documentation version: 2026-04-01 (Session 31)*
+*Architecture: ~2400 lines Pine Script v5*
+*Last major changes: Hard SL simulation, runner mode settings, Tick Velocity Filter*
