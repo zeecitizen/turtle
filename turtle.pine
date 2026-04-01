@@ -1551,7 +1551,7 @@ if _bBrk
                 _sigT += 1
                 _alT += 1
                 alert(pE ? _lastAlertMsg : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_uPndEn, "#.###") + " | " + syminfo.ticker, alert.freq_all)
-                _lastSigTxt := "BUY NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_uPndEn, "#.###") + "\nSL:    " + str.tostring(_uPndEn - _uPndSL * pPip, "#.###") + "  -$" + str.tostring(math.round(_uPndSL * pPip * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSL * pPip * _uPndLt * cM / iMon * 100, "#.##") + "%]" + "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) + "\nTP:    " + str.tostring(_uPndEn + _uPndTP * pPip, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") + "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + (uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : "")
+                _lastSigTxt := "BUY NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_uPndEn, "#.###") + "\nSL:    " + str.tostring(_uPndEn - _uPndSL * pPip, "#.###") + "  -$" + str.tostring(math.round(_uPndSL * pPip * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSL * pPip * _uPndLt * cM / iMon * 100, "#.##") + "%]" + "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) + "\nTP:    " + str.tostring(_uPndEn + _uPndTP * pPip, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") + "\n" + fAS(_uWn, _uTr) + (uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : "")
                 _uPendBull := true
         else
             label.new(bar_index, high, "⚠️ Margin risk — raise capital/lower lots", color=color.red, textcolor=color.white)
@@ -1614,7 +1614,7 @@ if _beBrk
                 _sigT += 1
                 _alT += 1
                 alert(pE ? _lastAlertMsg : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_uPndEn, "#.###") + " | " + syminfo.ticker, alert.freq_all)
-                _lastSigTxt := "SELL NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_uPndEn, "#.###") + "\nSL:    " + str.tostring(_uPndEn + _uPndSL * pPip, "#.###") + "  -$" + str.tostring(math.round(_uPndSL * pPip * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSL * pPip * _uPndLt * cM / iMon * 100, "#.##") + "%]" + "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) + "\nTP:    " + str.tostring(_uPndEn - _uPndTP * pPip, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") + "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + (uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : "")
+                _lastSigTxt := "SELL NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_uPndEn, "#.###") + "\nSL:    " + str.tostring(_uPndEn + _uPndSL * pPip, "#.###") + "  -$" + str.tostring(math.round(_uPndSL * pPip * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSL * pPip * _uPndLt * cM / iMon * 100, "#.##") + "%]" + "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) + "\nTP:    " + str.tostring(_uPndEn - _uPndTP * pPip, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") + "\n" + fAS(_uWn, _uTr) + (uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : "")
                 _uPendBear := true
         else
             label.new(bar_index, low, "⚠️ Margin risk — raise capital/lower lots", color=color.red, textcolor=color.white)
@@ -1633,7 +1633,7 @@ if (_uPendBull or _uPendBear) and barstate.isconfirmed
          "\nSL:    " + str.tostring(_slPrice, "#.###") + "  -$" + str.tostring(math.round(_uPndSlDist * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSlDist * _uPndLt * cM / iMon * 100, "#.##") + "%]" +
          "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) +
          "\nTP:    " + str.tostring(_tpPrice, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") +
-         "\n" + fAS(_uWn, _uTr) + "\n" + fPTS(_uPT) + _uDevNote
+         "\n" + fAS(_uWn, _uTr) + _uDevNote
     _lastSigTxt := _lblTxt
     if sL
         if _dIsBull
