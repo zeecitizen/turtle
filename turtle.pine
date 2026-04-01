@@ -1893,11 +1893,14 @@ if array.size(_tEn) > 0
 
             if not _slhit and not _invExited and not _hardSLExited and not _trailExited and (bar_index > _entryBar or _isIOE)
                 bool _onEB2      = (bar_index == _entryBar)
-                _slTriggered = _bull ? ((_onEB2 ? close : low) <= _sl) : ((_onEB2 ? close : high) >= _sl)
+                // When invalidation mode is on, MT5 uses the hard SL (iExHSL pips) not the structural wick SL.
+                // Use the same price here so Pine matches MT5 — wick through breakout candle low no longer counts.
+                float _effectiveSL = useInvalidation ? (_bull ? array.get(_tEn, _ti) - iExHSL * pPip : array.get(_tEn, _ti) + iExHSL * pPip) : _sl
+                _slTriggered = _bull ? ((_onEB2 ? close : low) <= _effectiveSL) : ((_onEB2 ? close : high) >= _effectiveSL)
                 if _slTriggered
                     array.set(_tSH, _ti, true)
                     if not _t1hit
-                        _pnl = (_bull ? (_sl - array.get(_tEn, _ti)) : (array.get(_tEn, _ti) - _sl)) * array.get(_tEL, _ti) * cM
+                        _pnl = (_bull ? (_effectiveSL - array.get(_tEn, _ti)) : (array.get(_tEn, _ti) - _effectiveSL)) * array.get(_tEL, _ti) * cM
                         bool _isBEWin = _pnl > 0
                         array.push(_tCTi, bar_index)
                         array.push(_tCTs,   time)
@@ -1928,12 +1931,12 @@ if array.size(_tEn) > 0
                                 _uBeP += _pnl
                                 _uBeT += 1
                         _origLbl = array.get(_tLbl, _ti)
-                        _dPnlSL  = pATon and _atValid ? (_bull ? (_sl - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _sl)) * array.get(_tEL, _ti) * cM : _pnl
+                        _dPnlSL  = pATon and _atValid ? (_bull ? (_effectiveSL - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _effectiveSL)) * array.get(_tEL, _ti) * cM : _pnl
                         if not na(_origLbl)
                             _origTxt = label.get_text(_origLbl)
                             label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n" + (_isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss"))
                         label.new(bar_index, _bull ? low : high, _isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "⭕ #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss", style = _bull ? label.style_label_up : label.style_label_down, color = _isBEWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
-                        fCross(bar_index, _sl, _a14)
+                        fCross(bar_index, _effectiveSL, _a14)
 
             if uBEon and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and not _t1hit and (bar_index > _entryBar or _isIOE)
                 _en   = array.get(_tEn, _ti)
