@@ -1478,8 +1478,8 @@ _uPBMbok  = uPBD <= 0.0 or uOE == "Instant at Breakout" or close < close[1]   //
 bool _uIOE = uOE == "Instant at Breakout"
 float _bTrigEff  = uPBCo and uPBD > 0 and not (low  <= _bL + uPBsD - uPBD) ? _bL + uPBsD : _bL + uPBsD - uPBD
 float _beTrigEff = uPBCo and uPBD > 0 and not (high >= _bL - uPBsD + uPBD) ? _bL - uPBsD : _bL - uPBsD + uPBD
-bool  _bBrkPO    = low  <= _bTrigEff  and (_uIOE ? (uBrkBody ? close > _bTrigEff  : high > _bTrigEff)  : close > _bTrigEff)
-bool  _beBrkPO   = high >= _beTrigEff and (_uIOE ? (uBrkBody ? close < _beTrigEff : low  < _beTrigEff) : close < _beTrigEff)
+bool  _bBrkPO    = low  <= _bTrigEff  and (_uIOE ? (uBrkBody ? close > _bTrigEff  : high > _bTrigEff)  : close > _bL + uPBsD)   // Candle-Close: always require close above actual UHV level (not just pre-offset zone)
+bool  _beBrkPO   = high >= _beTrigEff and (_uIOE ? (uBrkBody ? close < _beTrigEff : low  < _beTrigEff) : close < _bL - uPBsD)   // Candle-Close: always require close below actual UHV level
 if bar_index != _uAlBi
     _uAlF  := false
     _uAlBi := bar_index
