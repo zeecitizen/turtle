@@ -43,7 +43,7 @@ uDR = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', group =
 uRp = input.float(1.0,  '──── Risk: % of capital per trade (when $Risk = 0) — sizes lots so each trade risks this % of your starting capital', group = gU)
 uLS    = input.float(0.011, '──── Risk: Fixed lot size? (when $Risk = 0 and % = 0)', group = gU)
 uTM   = input.string("R:R Ratio", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = gU)
-uT1    = input.float(2.0,  '──── Take Profit: R:R Ratio (R:R method only)', group = gU)
+uT1    = input.float(10.0, '──── Take Profit: R:R Ratio (R:R method only)', group = gU)
 uTD   = input.float(0.1,  '──── Take Profit: Fixed $ target (Dollar method only)', group = gU)
 uSHLOff = input.float(0.5, '──── Take Profit: Structural offset ($): target this much before the structural level (0 = at level, 1 = $1 before; applies to Structural High/Low method only)', group = gU, step = 0.5)
 uST    = input.string("Breakout Wick", '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "Breakout Wick", "SwingLow", "Dollar", "Retracement's Min/Max", "Prev Candle"], group = gU)
@@ -1472,7 +1472,7 @@ _uBVOk    = not uBrkVROn or volume <= _uVol * (1.0 - uBrkVR/100.0)
 float _tvRng  = math.max(high - low, syminfo.mintick)
 float _tvVel  = volume / _tvRng
 float _tvBase = ta.sma(_tvVel, uTVN)
-bool  _uVelOk = not uTVOn or (_uIOE ? (volume[1] / math.max(high[1] - low[1], syminfo.mintick)) > uTVK * _tvBase[1] : _tvVel > uTVK * _tvBase)
+bool  _uVelOk = not uTVOn or (uOE == "Instant at Breakout" ? (volume[1] / math.max(high[1] - low[1], syminfo.mintick)) > uTVK * _tvBase[1] : _tvVel > uTVK * _tvBase)
 _uPBMok   = uPBD <= 0.0 or uOE == "Instant at Breakout" or close > close[1]   // pre-breakout momentum guard: bull — price must be rising bar-over-bar (skipped for IOE: bar hasn't closed yet)
 _uPBMbok  = uPBD <= 0.0 or uOE == "Instant at Breakout" or close < close[1]   // pre-breakout momentum guard: bear — price must be falling bar-over-bar (skipped for IOE: bar hasn't closed yet)
 bool _uIOE = uOE == "Instant at Breakout"

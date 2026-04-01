@@ -1,5 +1,5 @@
 # Turtle Trader Desk — Last Known Good Settings
-Last updated: 2026-03-31 (Session 31)
+Last updated: 2026-04-01 (Session 32)
 Source: Friday 27 Mar settings export + session 30 manual fix
 
 ## How to restore
@@ -39,7 +39,7 @@ All defaults in code now match live settings exactly.
 | Risk: Dollar risk per trade ($) | 0 |
 | Risk: % of capital per trade | 1 |
 | Risk: Fixed lot size | 0.011 |
-| Take Profit: R:R Ratio | 2 |
+| Take Profit: R:R Ratio | 10 |
 | Take Profit: Fixed $ target | 0.1 |
 | Take Profit: Structural offset ($) | 0.5 |
 | Stop Loss: Offset from SL level | 0.7 |
@@ -76,6 +76,7 @@ All defaults in code now match live settings exactly.
 | Require Full Trend Confirmation | false |
 | Show Trend MA Line | true |
 | Require structural trend | false |
+| Avoid trading when trend shifting | true |
 | Avoid ranging market (ADX) | false |
 | Ranging threshold (ADX) | 10 |
 | No-Trade Window 21:00–23:00 UTC | false |
@@ -88,6 +89,9 @@ All defaults in code now match live settings exactly.
 | FVG Width Filter (ATR multiple) | 0.3 |
 | UHV FVG Width Filter | 0.3 |
 | Show Historical FVGs | true |
+| Tick Velocity Filter | true |
+| Velocity multiplier threshold | 1.2 |
+| Velocity baseline lookback (bars) | 20 |
 | Show Signal Labels | true |
 | Show Debug Labels | false |
 | Show Stats Panel | true |
