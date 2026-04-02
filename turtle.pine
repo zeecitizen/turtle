@@ -29,27 +29,27 @@ gU = "📊 Strategy: Ultra High Volume Breakout"
 eUHV             = input.bool(true,  'Use this strategy?', group = gU)
 uDir          = input.string("Both", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = gU)
 rUS       = input.bool(false, 'Must any candle wick through or break the UHV low before the entry candle breaks its high?', group = gU)
-rULV    = input.bool(false,  'Must the breakout candle have lower volume than the UHV candle?', group = gU)
+rULV    = input.bool(true,  'Must the breakout candle have lower volume than the UHV candle?', group = gU)
 uHTD    = input.string("Off", '──── Align direction to higher timeframe? (bull if HTF bullish / bear if HTF bearish)', options = ["Off", "1", "5", "15", "60", "240"], group = gU)
 uVTOn      = input.bool(false, '──── UHV Detection: Require candle to rank in top percentile vs last N bars? (OFF = pick highest volume candle from this retracement only)', group = gU)
 uVT        = input.int(95,    '──────── Min volume percentile threshold', minval = 1, maxval = 100, group = gU)
 uVLB       = input.int(20,    '──────── Lookback bars for percentile calculation', group = gU)
 uSB         = input.int(0,      'How many bars must pass after the UHV candle before entry?', group = gU)
-uOE = input.string("Instant at Breakout", '──── Open trade at', options = ["Candle Close", "Instant at Breakout"], group = gU)
-uPBD = input.float(5.0, '──── Pre-breakout offset ($): fire signal this many $ BEFORE the breakout level (0 = at breakout, 0.05 = 5 cents early = better fill)', group = gU)
+uOE = input.string("Candle Close", '──── Open trade at', options = ["Candle Close", "Instant at Breakout"], group = gU)
+uPBD = input.float(0.0, '──── Pre-breakout offset ($): fire signal this many $ BEFORE the breakout level (0 = at breakout, 0.05 = 5 cents early = better fill)', group = gU)
 uPBsD = input.float(0.0, '──── Post-breakout offset ($): wait for price to move this many $ PAST the breakout level before entering (0 = off, 0.5 = wait for 50¢ confirmation — combines with pre-offset)', group = gU)
 uPBCo = input.bool(true, '──── Also allow signal at actual breakout level: when pre-offset is set and price breaks out without reaching the offset level, fire at the actual breakout price instead of missing the trade', group = gU)
 uDR = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', group = gU)
-uRp = input.float(1.0,  '──── Risk: % of capital per trade (when $Risk = 0) — sizes lots so each trade risks this % of your starting capital', group = gU)
+uRp = input.float(4.0,  '──── Risk: % of capital per trade (when $Risk = 0) — sizes lots so each trade risks this % of your starting capital', group = gU)
 uLS    = input.float(0.011, '──── Risk: Fixed lot size? (when $Risk = 0 and % = 0)', group = gU)
 uTM   = input.string("R:R Ratio", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = gU)
-uT1    = input.float(10.0, '──── Take Profit: R:R Ratio (R:R method only)', group = gU)
-uTD   = input.float(0.1,  '──── Take Profit: Fixed $ target (Dollar method only)', group = gU)
+uT1    = input.float(7.0, '──── Take Profit: R:R Ratio (R:R method only)', group = gU)
+uTD   = input.float(1.1,  '──── Take Profit: Fixed $ target (Dollar method only)', group = gU)
 uSHLOff = input.float(0.5, '──── Take Profit: Structural offset ($): target this much before the structural level (0 = at level, 1 = $1 before; applies to Structural High/Low method only)', group = gU, step = 0.5)
 uST    = input.string("Breakout Wick", '──── Stop Loss: Where to place it?', options = ["UHV", "ATR", "Breakout Wick", "SwingLow", "Dollar", "Retracement's Min/Max", "Prev Candle"], group = gU)
-uSBf  = input.float(0.7,    '──── Stop Loss: Offset from SL level (+ = below the level for tighter protection, − = above the level for a tighter stop inside the candle) [UHV=relative to UHV candle low | Breakout Wick=relative to entry candle wick | SwingLow=relative to swing | Retracement\'s Min/Max=relative to lowest/highest retracement point | Prev Candle=relative to previous candle low/high | not used for ATR or Dollar]', group = gU)
+uSBf  = input.float(0.4,    '──── Stop Loss: Offset from SL level (+ = below the level for tighter protection, − = above the level for a tighter stop inside the candle) [UHV=relative to UHV candle low | Breakout Wick=relative to entry candle wick | SwingLow=relative to swing | Retracement\'s Min/Max=relative to lowest/highest retracement point | Prev Candle=relative to previous candle low/high | not used for ATR or Dollar]', group = gU)
 uSMn = input.float(0.2,    '──── Stop Loss: Closest it can ever be to entry? ($)', group = gU)
-uSAm = input.float(4.0,    '──── Stop Loss: Volatility width? (ATR method only)', group = gU)
+uSAm = input.float(1.0,    '──── Stop Loss: Volatility width? (ATR method only)', group = gU)
 uSDo  = input.float(2.0,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', group = gU)
 uSSw = input.int(11,      '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', group = gU)
 uSLPips = input.float(0.0, '──── Stop Loss: Override with fixed pips (0 = off, uses SL method above)', group = gU)
@@ -58,19 +58,26 @@ uBEon  = input.bool(true,  '──── Breakeven: move SL to entry+spread when
 uBEPct = input.float(10.0, '──────── Breakeven trigger: % of TP distance (10 = early, 50 = halfway, 100 = at TP)', group = gU, minval = 1, maxval = 100, step = 5)
 uBELkTP = input.bool(false, '──────── Lock SL at BE trigger price: move SL to the exact 50% TP level instead of entry+offset (locks in 50% of potential profit when BE fires)', group = gU)
 useInvalidation = input.bool(true, '──── Invalidation Exit: close trade when a 1-min candle closes back inside the UHV candle range — prevents stop hunts, exits early when breakout fails (MT5 uses wide Hard SL as disaster insurance; Pine simulation keeps wick SL for accurate R:R stats)', group = gU)
-iExHSL = input.int(50, '──────── Invalidation Exit: Hard SL sent to MT5 (pips) — wide disaster SL for broker-side safety if connection fails (default 150 pips; does NOT affect lot sizing or Pine stats)', group = gU, minval = 10, step = 5)
+iExHSL = input.int(120, '──────── Invalidation Exit: Hard SL sent to MT5 (pips) — wide disaster SL for broker-side safety if connection fails (default 150 pips; does NOT affect lot sizing or Pine stats)', group = gU, minval = 10, step = 5)
 iExOff = input.float(0.3, '──────── Invalidation Exit: Tolerance ($) — only exit if close is this much past the UHV level (0 = strictly below/above, 0.05 = small buffer against shaved levels)', group = gU, step = 0.05, minval = 0.0)
+iExMode  = input.string("UHV Midpoint", '──────── Invalidation rule — UHV Range: current bar closes back inside UHV candle range (original) | UHV Midpoint: close crosses the midpoint of the UHV candle (VSA rule — below midpoint = absorption, not accumulation) | Breakout Body: close crosses the midpoint of the breakout candle body (prop-firm structural failure rule)', options = ["UHV Range", "UHV Midpoint", "Breakout Body"], group = gU)
+uMAEPips = input.int(60, '──────── Emergency MAE stop: close if trade moves X pips against entry (0 = off) — tick-based, fires immediately on every price update without waiting for bar close or UHV logic. Primary shield against instant dumps.', group = gU, minval = 0, step = 5)
+uMAEDol  = input.float(40.0, '──────── Emergency MAE stop: close if unrealised loss exceeds $X (0 = off) — fires on every tick regardless of SL, invalidation, or trailing status. Disabled once breakeven fires.', group = gU, minval = 0.0, step = 5.0)
+uKillSec = input.int(90, '──────── Kill timer: close trade if still open after X seconds (0 = off) — tick-based, fires the moment elapsed wall-clock time exceeds the limit. Good trades move fast; stagnant trades bleed slowly. Disabled once breakeven fires.', group = gU, minval = 0, step = 10)
+ptpOn   = input.bool(false, '──── Partial Take-Profit + Runner: lock in profit on part of the position, then let the rest run with breakeven protection. Captures the long tail of big UHV extensions without adding risk.', group = gU)
+ptpPips = input.int(40,    '──────── Partial TP trigger: pips in profit before firing (40 = close partial when +40 pips; set to your typical quick-win distance)', group = gU, minval = 1, step = 5)
+ptpPct  = input.float(50.0,'──────── Partial TP: % of position to close (50 = close half, keep half as runner; 25 = small lock, 75 = large lock)', group = gU, minval = 10.0, maxval = 90.0, step = 10.0)
 uREU   = input.bool(false,  '──── Cancel this strategy on early bounce-back (price returns to IB level before touching POI)?', group = gU)
 uMomB    = input.bool(false,  '──── Momentum Candle: Require min body size (strong body)?', group = gU)
-uMomBR   = input.float(30.0, '──────── Min body size as % of candle range (60 = body must be =60% of high-low range)', minval = 10, maxval = 100, step = 5, group = gU)
+uMomBR   = input.float(80.0, '──────── Min body size as % of candle range (60 = body must be =60% of high-low range)', minval = 10, maxval = 100, step = 5, group = gU)
 uMomW    = input.bool(false,  '──── Momentum Candle: Require max wick size (small wicks)?', group = gU)
-uMomWk   = input.float(5.0, '──────── Max wick size as % of candle range — applies to both upper and lower wick (15 = each wick ≤15% of range)', minval = 0, maxval = 50, step = 5, group = gU)
+uMomWk   = input.float(30.0, '──────── Max wick size as % of candle range — applies to both upper and lower wick (15 = each wick ≤15% of range)', minval = 0, maxval = 50, step = 5, group = gU)
 uBrkVROn = input.bool(false,  '──── Require volume drop vs UHV candle?', group = gU)
 uBrkVR   = input.float(5.0, '──────── Volume drop % — breakout candle must have at least this much less volume than UHV candle', minval = 5, maxval = 90, step = 5, group = gU)
 uBrkBody = input.bool(true, '──── Require body breakout: only enter if the candle body crosses the breakout level (close must be above/below the trigger — wick-only crossings are ignored) [IOE mode only — bar-close already uses close]', group = gU)
-uTVOn  = input.bool(true, '──── Tick Velocity Filter: only enter if breakout candle has above-average participation density (ticks/pip — filters lazy drift breakouts, keeps institutional-pressure moves)', group = gU)
+uTVOn  = input.bool(false, '──── Tick Velocity Filter: only enter if breakout candle has above-average participation density (ticks/pip — filters lazy drift breakouts, keeps institutional-pressure moves)', group = gU)
 uTVK   = input.float(1.2,  '──────── Velocity multiplier threshold (1.2 = must exceed 1.2× the N-bar average; higher = stricter — 1.2 preserves most signals, 1.5+ cuts significantly)', minval = 1.0, maxval = 3.0, step = 0.1, group = gU)
-uTVN   = input.int(20,     '──────── Velocity baseline lookback (bars) — SMA window for average participation density', minval = 5, maxval = 100, step = 5, group = gU)
+uTVN   = input.int(5,     '──────── Velocity baseline lookback (bars) — SMA window for average participation density', minval = 5, maxval = 100, step = 5, group = gU)
 
 
 // --- 7. Trend & Filters -------------------
@@ -83,21 +90,74 @@ mTS  = input.int(3, 'Min Trend Strength at Signal', group = gTr)
 tPB  = input.int(8, 'Trend Persistence Lookback (bars)', group = gTr)
 sFilt = input.bool(false, 'Only trade London + NY sessions? (8–12 GMT and 13–17 GMT)', group = gTr)
 cLP   = input.bool(false, 'Cut Low Probability Trades — suppress directions with ≥10 trades and negative all-time P&L', group = gTr)
-aTS      = input.bool(true,  'Avoid trading when trend is shifting?', group = gTr)
-aTSU   = input.bool(false, '──── Apply to UHV Breakout?', group = gTr)
+aTS      = input.bool(false,  'Avoid trading when trend is shifting?', group = gTr)
+aTSU   = input.bool(true, '──── Apply to UHV Breakout?', group = gTr)
 tSTh  = input.int(53, '──── Shift Threshold (strength drop to trigger)', group = gTr)
 sTC     = input.bool(false,  'Require Full Trend Confirmation at Entry?',  group = gTr)
 sTCU  = input.bool(true, '──── Apply to UHV Breakout?',               group = gTr)
 tSMA       = input.bool(true, 'Show Trend MA Line on Chart', group = gTr)
 rSwT  = input.bool(false, 'Require structural trend — buy only when HH+HL confirmed, sell only when LH+LL confirmed (prevents taking buys in a downtrend or sells in an uptrend)', group = gTr)
 avoidRng  = input.bool(false,  'Avoid signals during ranging market (ADX-based — suppresses entries when trend strength is too weak for a breakout to follow through)', group = gTr)
-rngTh     = input.int(10,    '──── Ranging threshold: ADX below this = ranging (14 = very strict, 18 = balanced, 25 = aggressive)', minval = 5, maxval = 40, group = gTr)
+rngTh     = input.int(14,    '──── Ranging threshold: ADX below this = ranging (14 = very strict, 18 = balanced, 25 = aggressive)', minval = 5, maxval = 40, group = gTr)
 ntW1 = input.bool(false,  '🚫 No-Trade Window: 21:00–23:00 UTC — NY Rollover (spreads spike 5–10×, spread cost can exceed entire TP)', group = gTr)
 ntW2 = input.bool(false, '🚫 No-Trade Window: 23:00–03:00 UTC — Late Asia lull (slow drift, high fakeout risk, no institutional flow)', group = gTr)
 ntW3 = input.bool(false, '🚫 No-Trade Window: 04:00–07:00 UTC — Pre-London trap (thin liquidity, breakouts fail before London volume arrives)', group = gTr)
-ntW4 = input.bool(false, '🚫 No-Trade Window: 19:00–21:00 UTC — Volume fade / Friday profit-taking (institutions closing, reversals unpredictable)', group = gTr)
+ntW4 = input.bool(true, '🚫 No-Trade Window: 19:00–21:00 UTC — Volume fade / Friday profit-taking (institutions closing, reversals unpredictable)', group = gTr)
+ntKill = input.bool(false, '⚡ Force-close open trades when a no-trade window begins — prevents being caught in rollover/news spikes while holding an open position', group = gTr)
 bRW = input.bool(true, 'Bypass retracement rules — retracement starts whenever a red candle closes below the prior green candle\'s low (removes trend/IB phase requirements)', group = gTr)
-bRWW = input.bool(true, '──── Wick trigger: wick piercing below prior green low is enough (default = body close required)', group = gTr)
+bRWW = input.bool(false, '──── Wick trigger: wick piercing below prior green low is enough (default = body close required)', group = gTr)
+
+// --- 7b. Risk Management ------------------
+gRM = "🛡️ Risk Management"
+vbOn    = input.bool(false, 'Volatility Blocker: suppress entries during chaotic conditions (news spikes, spread explosions) — ATR range-based, completely independent of volume', group = gRM)
+vbATR   = input.float(4.0,  '──── ATR chaos threshold: block if current bar true range > X × 14-bar ATR baseline (4 = very volatile, 5 = extreme only — does NOT fire on clean high-volume momentum moves)', group = gRM, minval = 1.0, step = 0.5)
+vbSprd  = input.bool(false, '──── Also block on synthetic spread: block if current candle range > X × ATR baseline (catches broker spread explosions that ATR ratio alone misses)', group = gRM)
+vbSprdK = input.float(3.0,  '──────── Synthetic spread multiplier (3 = block when candle range > 3× ATR baseline)', group = gRM, minval = 1.0, step = 0.5)
+mtphOn  = input.bool(false, 'Max trades per hour: limit new entries in any rolling 60-minute window to prevent overtrading in chop', group = gRM)
+mtphMax = input.int(3,      '──── Max new trades per rolling 60-min window (0 = no hourly cap — only spacing enforced)', group = gRM, minval = 0)
+mtphGap = input.int(5,      '──── Min minutes between any two entries (0 = off)', group = gRM, minval = 0)
+dllOn   = input.bool(false, 'Daily loss limit: equity-based kill switch — soft = block new entries, hard = close all open trades + disable EA for rest of day', group = gRM)
+dllSoft = input.float(2.0,  '──── Soft limit (% of capital): block new entries only — e.g. 2 = stop new trades at -2% daily loss. Exits (SL, MAE, invalidation) always execute regardless.', group = gRM, minval = 0.0, step = 0.5)
+dllHard = input.float(5.0,  '──── Hard limit (% of capital): close ALL open trades + block new entries for the day — e.g. 5 = full shutdown at -5% daily loss (0 = no hard limit — soft only)', group = gRM, minval = 0.0, step = 0.5)
+
+// Spread Spike Filter — blocks new entries when the current 1m candle range is abnormally wide.
+// Wide candles = news spike, liquidity grab, or broker spread explosion. Breakouts during these are
+// usually traps: price moves fast but spread eats profit and stop gets hit on the retrace.
+ssOn   = input.bool(false, 'Spread Spike Filter: block entries when 1m candle range is unusually wide (proxy for news spikes / spread explosions — wide candles = traps, not breakouts)', group = gRM)
+ssPips = input.float(50.0, '──── Max candle range (pips) to allow entry — 50 = news spike filter, 30 = stricter for low-volatility sessions', group = gRM, minval = 5.0, step = 5.0)
+
+// Volatility Collapse Exit — closes a trade when ATR(14) drops far below what it was at entry.
+// After a real breakout, volatility stays elevated as price moves with purpose. If ATR collapses
+// back to pre-breakout levels, the move has died — holding is hoping, not trading.
+vcOn   = input.bool(false, 'Volatility Collapse Exit: close trade if market volatility collapses to a fraction of what it was when you entered (dead breakout — momentum has evaporated)', group = gRM)
+vcFact = input.float(0.6,  '──── Collapse factor — close when current ATR < X × ATR-at-entry (0.6 = exit when ATR drops to 60% of entry level, 0.5 = stricter)', group = gRM, minval = 0.2, maxval = 0.9, step = 0.05)
+
+// Opposite UHV Exit — closes when a high-volume candle in the opposite direction appears after entry.
+// Institutional footprint: if the same high-volume signature that triggered your entry now appears
+// in the opposite direction, the smart money has flipped. Your thesis is invalidated.
+ouOn   = input.bool(false, 'Opposite UHV Exit: close if a high-volume candle in the opposite direction appears after entry (smart-money reversal signal — the institutional tide has turned against you)', group = gRM)
+ouK    = input.float(2.0,  '──── Volume multiple: candle must exceed X × 20-bar average volume to qualify (2 = twice average — filters random spikes, requires genuine institutional volume)', group = gRM, minval = 1.5, step = 0.5)
+
+// Breakout Failure Pattern Exit — closes when price fails to extend beyond the breakout level
+// within a defined window and then closes back inside. This is the classic "bull trap" pattern:
+// price breaks out, momentum traders enter, then it reverses and traps everyone above the level.
+bfOn   = input.bool(false, 'Breakout Failure Exit: close if price fails to extend past the breakout level within N bars and closes back inside (classic bull/bear trap — the breakout had no follow-through)', group = gRM)
+bfBars = input.int(3,      '──── Failure window (bars) — how many bars after entry to watch for extension before declaring failure', group = gRM, minval = 1, maxval = 10)
+bfPips = input.float(5.0,  '──── Extension threshold (pips) — price must reach at least this far past the breakout level within the window to confirm the breakout (0 = any new high/low counts)', group = gRM, minval = 0.0, step = 1.0)
+
+// Volume Drop Exit — closes when post-breakout bar volume collapses below a fraction of the 20-bar average.
+// Volume is the fuel behind a move. A breakout candle has extreme volume; follow-through bars should
+// stay above average. If volume vanishes immediately after entry, institutions aren't participating —
+// retail-only move that will fade as fast as it started.
+vdOn   = input.bool(false, 'Volume Drop Exit: close if the bar after entry shows volume collapse (institutions not following through — retail-only move that will fade)', group = gRM)
+vdFact = input.float(0.5,  '──── Drop factor — close when current bar volume < X × 20-bar average volume (0.5 = exit when volume drops below 50% of average)', group = gRM, minval = 0.1, maxval = 0.9, step = 0.05)
+
+// Micro-Structure Break Exit — closes when a post-entry swing low (bull) or swing high (bear) is broken.
+// After a breakout, price should print higher lows (bull) or lower highs (bear) on each bar.
+// The first time a recent swing is broken, the micro-structure has failed — exit before the full reversal.
+msOn   = input.bool(false, 'Micro-Structure Break Exit: close when the most recent post-entry swing low (bull) or swing high (bear) is broken — first crack in the structure = exit before the reversal', group = gRM)
+msBuf  = input.float(3.0,  '──── Buffer pips beyond the swing level before triggering (prevents whipsaw on tight markets — 3 = need 3 pips through the swing to confirm)', group = gRM, minval = 0.0, step = 1.0)
+msLb   = input.int(3,      '──── Micro swing lookback bars — how many bars back to find the swing low/high to protect (3 = protect the last 3-bar swing)', group = gRM, minval = 2, maxval = 10)
 
 // --- 8. HTF Fair Value Gap ----------------
 gH = "🔭 Higher Time Frame Fair Value Gap"
@@ -132,14 +192,14 @@ pcBrkPip = input.float(0.10, 'Broker pip size for PineConnector pips mode (XAUUS
 pcSpread = input.int(30, '──── Spread filter: only enter if spread ≤ X broker pips (0 = off)', group = gPc, minval = 0)
 pcBETrig = input.int(0, '──── Breakeven: move SL to entry after X broker pips profit (0 = off)', group = gPc, minval = 0)
 pcBEOff  = input.int(0, '──── Breakeven offset: SL placed X pips above/below entry (0 = at entry)', group = gPc, minval = 0)
-pcTDist  = input.int(40, '──── Trailing stop: maintain SL X broker pips from price (0 = off)', group = gPc, minval = 0)
-pcTTrig  = input.int(100, '──── Trailing: activate after X broker pips profit (0 = immediate when pcTDist>0)', group = gPc, minval = 0)
-pcTStep  = input.int(10, '──── Trailing: move SL every X additional broker pips gained', group = gPc, minval = 1)
+pcTDist  = input.int(20, '──── Trailing stop: maintain SL X broker pips from price (0 = off)', group = gPc, minval = 0)
+pcTTrig  = input.int(60, '──── Trailing: activate after X broker pips profit (0 = immediate when pcTDist>0)', group = gPc, minval = 0)
+pcTStep  = input.int(3, '──── Trailing: move SL every X additional broker pips gained', group = gPc, minval = 1)
 pLat  = input.string("200", 'Signal→MT5 latency ms (comma-sep, copy from PineConnector Bridge logs)', group = gPc)
 pAT   = input.string("", "Derive optimizations from Claude's analysis — Enter Token:", group = gPc)
 pATon = input.bool(false, "Apply token corrections to labels (slip-adjusted entry & P&L)", group = gPc)
-pcSL  = input.string("Price",   '──── Stop Loss format sent to MT5',        options = ["Pips", "Price"], group = gPc)
-pcTP  = input.string("Price",   '──── Take Profit format sent to MT5',      options = ["Pips", "Price"], group = gPc)
+pcSL  = input.string("Pips",   '──── Stop Loss format sent to MT5',        options = ["Pips", "Price"], group = gPc)
+pcTP  = input.string("Pips",   '──── Take Profit format sent to MT5',      options = ["Pips", "Price"], group = gPc)
 pcOT  = input.string("Market", '──── Order type sent to MT5',              options = ["Market", "Limit"], group = gPc)
 
 // --- 11. Optimize --------
@@ -213,8 +273,13 @@ var bool [] _tTH = array.new_bool()
 var bool  [] _tSH    = array.new_bool()
 var bool  [] _tBE    = array.new_bool()    // true = breakeven already triggered for this trade
 var float [] _tIL    = array.new_float()   // invalidation level per trade (UHV candle high for bull / low for bear)
+var float [] _tILM   = array.new_float()   // UHV midpoint per trade: (uhv_high + uhv_low) / 2
+var float [] _tBrkMid = array.new_float()  // breakout candle body midpoint per trade: (open + close) / 2 at signal fire
+var bool  [] _tPTP   = array.new_bool()    // true = partial TP already fired for this trade (one-shot flag)
 var bool  [] _tTrA   = array.new_bool()    // true = trailing stop trigger reached (pcTTrig pips)
 var float [] _tTrH   = array.new_float()   // trail water mark: highest high (bull) / lowest low (bear) since trail activated
+var float [] _tATE   = array.new_float()   // ATR(14) at entry bar — used by Volatility Collapse Exit to detect dead breakouts
+var bool  [] _tBFX   = array.new_bool()    // true = price has extended past breakout level (Breakout Failure Pattern Exit one-shot)
 var float [] _tEL  = array.new_float()
 var int   [] _tEB = array.new_int()
 var int   [] _tFT = array.new_int()  // timenow (ms wall-clock) when each signal alert fired
@@ -1464,6 +1529,832 @@ _uFC = mTM ? true : rFT ? (_fR and _uFW) : true
 bool _cUB  = cLP and _uBT  >= 10 and _uBP  < 0.0
 bool _cUBe = cLP and _uBeT >= 10 and _uBeP < 0.0
 
+// --- Risk Management: computed entry-gate flags ---
+// Volatility Blocker — ATR range-based, fires on chaos not momentum
+// Uses ta.tr(true) for current bar true range vs 14-bar ATR baseline
+float _vbATRBase = ta.atr(14)
+float _vbTR      = ta.tr(true)
+bool  _vbBlock   = vbOn and _vbATRBase > 0 and (_vbTR / _vbATRBase > vbATR or (vbSprd and (high - low) > vbSprdK * _vbATRBase))
+
+// Max Trades Per Hour — rolling 60-min window using _tFT (timenow at signal fire)
+// Historical replay guard: timenow is always the current wall-clock during historical execution,
+// so _tFT stamps are identical to timenow → all historical trades appear to be in the last hour.
+// Guard with barstate.isrealtime so MTPH only applies to live ticks.
+int  _mtphCount  = 0
+if mtphOn and barstate.isrealtime and array.size(_tFT) > 0
+    for _fi = 0 to array.size(_tFT) - 1
+        if timenow - array.get(_tFT, _fi) <= 3600000
+            _mtphCount += 1
+int  _mtphLastMs = array.size(_tFT) > 0 ? array.get(_tFT, array.size(_tFT) - 1) : 0
+bool _mtphBlock  = mtphOn and barstate.isrealtime and ((mtphMax > 0 and _mtphCount >= mtphMax) or (mtphGap > 0 and _mtphLastMs > 0 and (timenow - _mtphLastMs) < mtphGap * 60000))
+
+// Daily Loss Limit — uses _pT (today's realized P&L, reset at midnight)
+bool _dllSoftBlock = dllOn and dllSoft > 0.0 and _pT <= -(dllSoft / 100.0 * iMon)
+bool _dllHardBlock = dllOn and dllHard > 0.0 and _pT <= -(dllHard / 100.0 * iMon)
+bool _dllBlock     = _dllSoftBlock or _dllHardBlock
+
+// Spread Spike Filter — computed every bar; blocks entry when current candle range is too wide.
+// (high - low) / pPip converts price range to pips. Compared against ssPips threshold.
+float _ssRange = (high - low) / pPip
+bool  _ssBlock = ssOn and ssPips > 0 and _ssRange > ssPips
+
+// No-Trade Window kill flag — true on the first bar we enter a no-trade window (edge detection).
+// Used by ntKill to close open trades exactly once as the window starts.
+bool _inNtWindow  = _ntBlock  // reuse the same computed value from line above
+bool _ntKillFire  = ntKill and _inNtWindow
+
+// TRADE MONITORING
+// Runs BEFORE entry signal so closelong/closeshort alerts fire first.
+// TradingView delivers only one alert() per bar execution — closelong must win over buy.
+if array.size(_tEn) > 0
+    for _ti = array.size(_tEn) - 1 to 0
+        _done  = array.get(_tSH, _ti) or array.get(_tTH, _ti)
+        if not _done
+            _bull  = array.get(_tBl,  _ti)
+            _sl    = array.get(_tSl,    _ti)
+            _tp1   = array.get(_tTP,   _ti)
+            _t1hit = array.get(_tTH, _ti)
+            _slhit = array.get(_tSH,  _ti)
+            _tNum  = array.get(_tN, _ti)
+
+            _entryBar = array.get(_tEB, _ti)
+            _trType = array.get(_tTy, _ti)
+            _isIOE = _trType == "uhv" and uOE == "Instant at Breakout"
+
+            // EMERGENCY MAE STOP — tick-based (NO barstate.isconfirmed gate)
+            // Fires on every price tick the moment adverse move exceeds uMAEPips or uMAEDol.
+            // This is the only exit fast enough to catch instant dumps before bar close.
+            // Disabled once breakeven fires (trade is already protected at entry).
+            bool _maeExited = false
+            if (uMAEPips > 0 or uMAEDol > 0) and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
+                float _maeEn   = array.get(_tEn, _ti)
+                float _maeLots = array.get(_tEL, _ti)
+                float _maeAdv  = _bull ? (_maeEn - close) / pPip : (close - _maeEn) / pPip
+                float _maePnl  = (_bull ? (close - _maeEn) : (_maeEn - close)) * _maeLots * cM
+                bool  _maeHit  = (uMAEPips > 0 and _maeAdv >= float(uMAEPips)) or (uMAEDol > 0 and _maePnl <= -uMAEDol)
+                if _maeHit
+                    _maeExited := true
+                    array.set(_tSH, _ti, true)
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _maePnl)
+                    _cTr  += 1
+                    _pT   += _maePnl
+                    _tLSt += 1
+                    if _tLSt > _mLST
+                        _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    _uPnL += _maePnl
+                    _uPT  += _maePnl
+                    _uTr  += 1
+                    if _bull
+                        _uBP += _maePnl
+                        _uBT += 1
+                    else
+                        _uBeP += _maePnl
+                        _uBeT += 1
+                    label _maeOrigLbl = array.get(_tLbl, _ti)
+                    string _maeExt = "🚨 #" + str.tostring(_tNum) + " MAE Stop — -$" + str.tostring(math.abs(_maePnl), "#.##") + " [" + str.tostring(math.round(_maeAdv)) + " pips]"
+                    if not na(_maeOrigLbl)
+                        label.set_text(_maeOrigLbl, label.get_text(_maeOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _maeExt)
+                    label.new(bar_index, _bull ? low : high, _maeExt, style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 0), textcolor = color.white, size = size.small)
+                    if pE
+                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // KILL TIMER — tick-based: close if trade still open after uKillSec seconds
+            // Uses _tFT (timenow at signal fire) to measure elapsed wall-clock time on every tick.
+            // A good trade moves within seconds; anything stuck past the limit is a dead zone trade.
+            // Disabled once breakeven fires (trade is already protected at entry level).
+            bool _killExited = false
+            if uKillSec > 0 and not _maeExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
+                bool _timeHit = (timenow - array.get(_tFT, _ti)) >= uKillSec * 1000
+                if _timeHit
+                    _killExited := true
+                    array.set(_tSH, _ti, true)
+                    float _kEn   = array.get(_tEn, _ti)
+                    float _kLots = array.get(_tEL, _ti)
+                    float _kPnl  = (_bull ? (close - _kEn) : (_kEn - close)) * _kLots * cM
+                    bool  _kWin  = _kPnl > 0
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _kPnl)
+                    _cTr += 1
+                    _pT  += _kPnl
+                    if _kWin
+                        _wC   += 1
+                        _tLSt := 0
+                    else
+                        _tLSt += 1
+                        if _tLSt > _mLST
+                            _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    _uPnL += _kPnl
+                    _uPT  += _kPnl
+                    _uTr  += 1
+                    if _kWin
+                        _uWn += 1
+                        array.set(_tW, _ti, true)
+                    if _bull
+                        _uBP += _kPnl
+                        _uBT += 1
+                    else
+                        _uBeP += _kPnl
+                        _uBeT += 1
+                    label _killOrigLbl = array.get(_tLbl, _ti)
+                    int   _kElapsed    = math.round((timenow - array.get(_tFT, _ti)) / 1000)
+                    string _killExt = (_kWin ? "✅" : "⏱") + " #" + str.tostring(_tNum) + " Kill Timer " + str.tostring(_kElapsed) + "s — " + (_kWin ? "+$" : "-$") + str.tostring(math.abs(_kPnl), "#.##")
+                    if not na(_killOrigLbl)
+                        label.set_text(_killOrigLbl, label.get_text(_killOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _killExt)
+                    label.new(bar_index, _bull ? low : high, _killExt, style = _bull ? label.style_label_up : label.style_label_down, color = _kWin ? color.new(color.green, 10) : color.new(color.orange, 10), textcolor = color.white, size = size.small)
+                    if pE
+                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // DAILY LOSS HARD SHUTDOWN — close all remaining open trades when hard daily limit is hit
+            // Does NOT respect _tBE — when the day is lost, ALL positions close regardless of BE status.
+            // Exits are always processed; only new entries are blocked by _dllBlock.
+            bool _dllExited = false
+            if _dllHardBlock and not _maeExited and not _killExited and not array.get(_tSH, _ti) and not array.get(_tTH, _ti)
+                _dllExited := true
+                array.set(_tSH, _ti, true)
+                float _dEn   = array.get(_tEn, _ti)
+                float _dLots = array.get(_tEL, _ti)
+                float _dPnl  = (_bull ? (close - _dEn) : (_dEn - close)) * _dLots * cM
+                bool  _dWin  = _dPnl > 0
+                array.push(_tCTi, bar_index)
+                array.push(_tCTs, time)
+                array.push(_tPA,  _dPnl)
+                _cTr += 1
+                _pT  += _dPnl
+                if _dWin
+                    _wC   += 1
+                    _tLSt := 0
+                else
+                    _tLSt += 1
+                    if _tLSt > _mLST
+                        _mLST := _tLSt
+                array.push(_tDB, bar_index - _entryBar)
+                _uPnL += _dPnl
+                _uPT  += _dPnl
+                _uTr  += 1
+                if _dWin
+                    _uWn += 1
+                    array.set(_tW, _ti, true)
+                if _bull
+                    _uBP += _dPnl
+                    _uBT += 1
+                else
+                    _uBeP += _dPnl
+                    _uBeT += 1
+                label _dllOrigLbl = array.get(_tLbl, _ti)
+                string _dllExt = (_dWin ? "✅" : "🛑") + " #" + str.tostring(_tNum) + " Daily Limit — " + (_dWin ? "+$" : "-$") + str.tostring(math.abs(_dPnl), "#.##")
+                if not na(_dllOrigLbl)
+                    label.set_text(_dllOrigLbl, label.get_text(_dllOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _dllExt)
+                label.new(bar_index, _bull ? low : high, _dllExt, style = _bull ? label.style_label_up : label.style_label_down, color = _dWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
+                if pE
+                    alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // PARTIAL TAKE-PROFIT + RUNNER — tick-based, fires once when profit >= ptpPips
+            // Closes ptpPct% of the position, moves SL to breakeven, lets the runner continue.
+            // Runner is protected by existing trail/wick SL/hard SL — invalidation disabled
+            // after BE fires (existing behaviour: price back to entry = worst case breakeven exit).
+            if ptpOn and not _maeExited and not _killExited and not _dllExited and not array.get(_tPTP, _ti) and not array.get(_tSH, _ti) and not array.get(_tTH, _ti) and (bar_index > _entryBar or _isIOE)
+                float _ptpEn      = array.get(_tEn, _ti)
+                float _ptpLots    = array.get(_tEL, _ti)
+                float _ptpProfPip = _bull ? (close - _ptpEn) / pPip : (_ptpEn - close) / pPip
+                if _ptpProfPip >= float(ptpPips)
+                    // Compute partial and remaining lots — if remainder < mLot, close everything
+                    float _ptpClose  = math.max(math.round(_ptpLots * ptpPct / 100.0, 2), mLot)
+                    float _ptpRemain = math.round(_ptpLots - _ptpClose, 2)
+                    bool  _ptpFull   = _ptpRemain < mLot  // can't leave sub-minimum runner
+                    if _ptpFull
+                        _ptpClose := _ptpLots
+                    float _ptpPnl = (_bull ? (close - _ptpEn) : (_ptpEn - close)) * _ptpClose * cM
+                    // One-shot flag — must be set before any further checks on this trade
+                    array.set(_tPTP, _ti, true)
+                    if _ptpFull
+                        array.set(_tSH, _ti, true)  // no runner — trade fully closed
+                    else
+                        // Reduce to runner lots, move SL to breakeven
+                        array.set(_tEL, _ti, _ptpRemain)
+                        array.set(_tSl, _ti, _bull ? _ptpEn - uSpread : _ptpEn + uSpread)
+                        array.set(_tBE, _ti, true)
+                    // Stats — partial P&L is a real win event
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _ptpPnl)
+                    _cTr  += 1
+                    _pT   += _ptpPnl
+                    _wC   += 1
+                    _tLSt := 0
+                    _uPnL += _ptpPnl
+                    _uPT  += _ptpPnl
+                    _uTr  += 1
+                    _uWn  += 1
+                    if _ptpFull
+                        array.set(_tW, _ti, true)  // full close — mark win for recommendation engine
+                    if _bull
+                        _uBP += _ptpPnl
+                        _uBT += 1
+                    else
+                        _uBeP += _ptpPnl
+                        _uBeT += 1
+                    // Labels
+                    label _ptpOrigLbl = array.get(_tLbl, _ti)
+                    string _ptpNote   = _ptpFull ? " (full close — no runner)" : " → Runner at BE"
+                    string _ptpExt    = "💰 #" + str.tostring(_tNum) + " Partial TP +" + str.tostring(math.round(_ptpProfPip)) + "p — +$" + str.tostring(_ptpPnl, "#.##") + " (" + str.tostring(int(ptpPct), "#") + "%)" + _ptpNote
+                    if not na(_ptpOrigLbl)
+                        label.set_text(_ptpOrigLbl, label.get_text(_ptpOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _ptpExt)
+                    label.new(bar_index, _bull ? high : low, _ptpExt, style = _bull ? label.style_label_down : label.style_label_up, color = color.new(color.teal, 10), textcolor = color.white, size = size.small)
+                    // PineConnector partial close: vol_lots= closes that specific lot count
+                    if pE and _ptpClose >= mLot
+                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym + ",vol_lots=" + str.tostring(_ptpClose, "#.##"), alert.freq_all)
+
+            // INVALIDATION EXIT — bar-close logic: exit when candle closes back inside UHV range (not triggered once BE has fired)
+            bool _invExited = false
+            if useInvalidation and not _maeExited and not _killExited and not _dllExited and barstate.isconfirmed and not array.get(_tBE, _ti) and bar_index > _entryBar and array.size(_tIL) > _ti
+                float _iLvl = iExMode == "UHV Midpoint"  ? array.get(_tILM,    _ti) :
+                              iExMode == "Breakout Body" ? array.get(_tBrkMid, _ti) :
+                              array.get(_tIL, _ti)
+                bool  _iHit = _bull ? close < _iLvl - iExOff : close > _iLvl + iExOff
+                if _iHit
+                    _invExited := true
+                    array.set(_tSH, _ti, true)
+                    float _iEn   = array.get(_tEn, _ti)
+                    float _iLots = array.get(_tEL, _ti)
+                    float _iPnl  = (_bull ? (close - _iEn) : (_iEn - close)) * _iLots * cM
+                    bool  _iWin  = _iPnl > 0
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _iPnl)
+                    _cTr += 1
+                    _pT  += _iPnl
+                    if _iWin
+                        _wC   += 1
+                        _tLSt := 0
+                    else
+                        _tLSt += 1
+                        if _tLSt > _mLST
+                            _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    _uPnL += _iPnl
+                    _uPT  += _iPnl
+                    _uTr  += 1
+                    if _iWin
+                        _uWn += 1
+                        array.set(_tW, _ti, true)
+                    if _bull
+                        _uBP += _iPnl
+                        _uBT += 1
+                    else
+                        _uBeP += _iPnl
+                        _uBeT += 1
+                    label _iOrigLbl = array.get(_tLbl, _ti)
+                    string _modeNote = iExMode == "UHV Range" ? "" : " [" + iExMode + "]"
+                    string _iExt = (_iWin ? "✅" : "⚡") + " #" + str.tostring(_tNum) + " Invalidation Exit" + _modeNote + " — " + (_iWin ? "+$" : "-$") + str.tostring(math.abs(_iPnl), "#.##")
+                    if not na(_iOrigLbl)
+                        label.set_text(_iOrigLbl, label.get_text(_iOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _iExt)
+                    label.new(bar_index, _bull ? low : high, _iExt, style = _bull ? label.style_label_up : label.style_label_down, color = _iWin ? color.new(color.green, 10) : color.new(color.orange, 10), textcolor = color.white, size = size.small)
+                    if pE
+                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // STRUCTURAL SL — logic-based exit: bar closes beyond structural SL (breakout wick low/high).
+            // MT5 does not hold this level — Pine must send closelong/closeshort.
+            // Bar-close only (barstate.isconfirmed) — avoids false exits on intra-bar wick sweeps.
+            // Disabled once BE fires (MT5 BE stop would close it first anyway).
+            bool _structSLExited = false
+            if barstate.isconfirmed and not _maeExited and not _killExited and not _dllExited and not _invExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and bar_index > _entryBar
+                bool _structHit = _bull ? close <= _sl : close >= _sl
+                if _structHit
+                    _structSLExited := true
+                    array.set(_tSH, _ti, true)
+                    float _sEn   = array.get(_tEn, _ti)
+                    float _sLots = array.get(_tEL, _ti)
+                    float _sPnl  = (_bull ? (close - _sEn) : (_sEn - close)) * _sLots * cM
+                    bool  _sWin  = _sPnl > 0
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _sPnl)
+                    _cTr  += 1
+                    _pT   += _sPnl
+                    if _sWin
+                        _wC   += 1
+                        _tLSt := 0
+                        array.set(_tW, _ti, true)
+                    else
+                        _tLSt += 1
+                        if _tLSt > _mLST
+                            _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    if array.get(_tTy, _ti) == "uhv"
+                        _uPnL += _sPnl
+                        _uPT  += _sPnl
+                        _uTr  += 1
+                        if _sWin
+                            _uWn += 1
+                        if _bull
+                            _uBP += _sPnl
+                            _uBT += 1
+                        else
+                            _uBeP += _sPnl
+                            _uBeT += 1
+                    label _sOrigLbl = array.get(_tLbl, _ti)
+                    string _sExt = "🔻 #" + str.tostring(_tNum) + " Structure SL — " + (_sWin ? "+$" : "-$") + str.tostring(math.abs(_sPnl), "#.##")
+                    if not na(_sOrigLbl)
+                        label.set_text(_sOrigLbl, label.get_text(_sOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _sExt)
+                    label.new(bar_index, _bull ? low : high, _sExt, style = _bull ? label.style_label_up : label.style_label_down, color = _sWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
+                    if pE
+                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // OPPOSITE UHV EXIT — close when a high-volume candle in the opposite direction appears.
+            // Bar-close only. Disabled once BE fires (trade is protected; let it run).
+            // Volume test: current bar volume must be >= ouK × 20-bar average.
+            // Direction test: bear candle (close < open) after bull entry, bull candle (close > open) after bear entry.
+            bool _ouExited = false
+            if ouOn and barstate.isconfirmed and not _maeExited and not _killExited and not _dllExited and not _invExited and not _structSLExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and bar_index > _entryBar
+                float _ouVolAvg = ta.sma(volume, 20)
+                bool  _ouVolHit = _ouVolAvg > 0 and volume >= ouK * _ouVolAvg
+                bool  _ouDirHit = _bull ? close < open : close > open
+                if _ouVolHit and _ouDirHit
+                    _ouExited := true
+                    array.set(_tSH, _ti, true)
+                    float _ouEn   = array.get(_tEn, _ti)
+                    float _ouLots = array.get(_tEL, _ti)
+                    float _ouPnl  = (_bull ? (close - _ouEn) : (_ouEn - close)) * _ouLots * cM
+                    bool  _ouWin  = _ouPnl > 0
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _ouPnl)
+                    _cTr  += 1
+                    _pT   += _ouPnl
+                    if _ouWin
+                        _wC   += 1
+                        _tLSt := 0
+                        array.set(_tW, _ti, true)
+                    else
+                        _tLSt += 1
+                        if _tLSt > _mLST
+                            _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    if array.get(_tTy, _ti) == "uhv"
+                        _uPnL += _ouPnl
+                        _uPT  += _ouPnl
+                        _uTr  += 1
+                        if _ouWin
+                            _uWn += 1
+                        if _bull
+                            _uBP += _ouPnl
+                            _uBT += 1
+                        else
+                            _uBeP += _ouPnl
+                            _uBeT += 1
+                    label _ouOrigLbl = array.get(_tLbl, _ti)
+                    string _ouExt = "🔄 #" + str.tostring(_tNum) + " Opposite UHV — " + (_ouWin ? "+$" : "-$") + str.tostring(math.abs(_ouPnl), "#.##")
+                    if not na(_ouOrigLbl)
+                        label.set_text(_ouOrigLbl, label.get_text(_ouOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _ouExt)
+                    label.new(bar_index, _bull ? low : high, _ouExt, style = _bull ? label.style_label_up : label.style_label_down, color = _ouWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
+                    if pE
+                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // BREAKOUT FAILURE PATTERN EXIT — close when price fails to extend past the breakout level
+            // within bfBars bars AND closes back below (bull) or above (bear) the breakout level.
+            // One-shot: _tBFX tracks whether extension was confirmed. Once extended, this exit never fires.
+            // Bar-close only. Gated by _tBE (if BE already moved SL, structural close is redundant).
+            bool _bfExited = false
+            if bfOn and barstate.isconfirmed and not _maeExited and not _killExited and not _dllExited and not _invExited and not _structSLExited and not _ouExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and bar_index > _entryBar
+                float _bfLevel = array.get(_tIL, _ti)   // reuse _tIL (invalidation level = UHV candle high/low = breakout level)
+                int   _bfBarsSince = bar_index - _entryBar
+                // Mark extension confirmed once price clears bfPips beyond the breakout level
+                if not array.get(_tBFX, _ti)
+                    bool _bfExtReached = _bull ? high >= _bfLevel + bfPips * pPip : low <= _bfLevel - bfPips * pPip
+                    if _bfExtReached
+                        array.set(_tBFX, _ti, true)
+                // Fire exit: window expired without extension AND close is back inside
+                bool _bfFailed  = not array.get(_tBFX, _ti) and _bfBarsSince >= bfBars
+                bool _bfInside  = _bull ? close < _bfLevel : close > _bfLevel
+                if _bfFailed and _bfInside
+                    _bfExited := true
+                    array.set(_tSH, _ti, true)
+                    float _bfEn   = array.get(_tEn, _ti)
+                    float _bfLots = array.get(_tEL, _ti)
+                    float _bfPnl  = (_bull ? (close - _bfEn) : (_bfEn - close)) * _bfLots * cM
+                    bool  _bfWin  = _bfPnl > 0
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _bfPnl)
+                    _cTr  += 1
+                    _pT   += _bfPnl
+                    if _bfWin
+                        _wC   += 1
+                        _tLSt := 0
+                        array.set(_tW, _ti, true)
+                    else
+                        _tLSt += 1
+                        if _tLSt > _mLST
+                            _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    if array.get(_tTy, _ti) == "uhv"
+                        _uPnL += _bfPnl
+                        _uPT  += _bfPnl
+                        _uTr  += 1
+                        if _bfWin
+                            _uWn += 1
+                        if _bull
+                            _uBP += _bfPnl
+                            _uBT += 1
+                        else
+                            _uBeP += _bfPnl
+                            _uBeT += 1
+                    label _bfOrigLbl = array.get(_tLbl, _ti)
+                    string _bfExt = "💥 #" + str.tostring(_tNum) + " BF Pattern — " + (_bfWin ? "+$" : "-$") + str.tostring(math.abs(_bfPnl), "#.##")
+                    if not na(_bfOrigLbl)
+                        label.set_text(_bfOrigLbl, label.get_text(_bfOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _bfExt)
+                    label.new(bar_index, _bull ? low : high, _bfExt, style = _bull ? label.style_label_up : label.style_label_down, color = _bfWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
+                    if pE
+                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // VOLATILITY COLLAPSE EXIT — close when ATR(14) drops below vcFact × ATR at entry.
+            // Uses _tATE (ATR recorded at entry bar) to detect when momentum has evaporated.
+            // Bar-close only. After BE fires, trade is protected — let volatility normalize.
+            bool _vcExited = false
+            if vcOn and barstate.isconfirmed and not _maeExited and not _killExited and not _dllExited and not _invExited and not _structSLExited and not _ouExited and not _bfExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and bar_index > _entryBar
+                float _vcATE = array.get(_tATE, _ti)
+                float _vcCurATR = ta.atr(14)
+                if not na(_vcATE) and _vcATE > 0 and not na(_vcCurATR) and _vcCurATR < vcFact * _vcATE
+                    _vcExited := true
+                    array.set(_tSH, _ti, true)
+                    float _vcEn   = array.get(_tEn, _ti)
+                    float _vcLots = array.get(_tEL, _ti)
+                    float _vcPnl  = (_bull ? (close - _vcEn) : (_vcEn - close)) * _vcLots * cM
+                    bool  _vcWin  = _vcPnl > 0
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _vcPnl)
+                    _cTr  += 1
+                    _pT   += _vcPnl
+                    if _vcWin
+                        _wC   += 1
+                        _tLSt := 0
+                        array.set(_tW, _ti, true)
+                    else
+                        _tLSt += 1
+                        if _tLSt > _mLST
+                            _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    if array.get(_tTy, _ti) == "uhv"
+                        _uPnL += _vcPnl
+                        _uPT  += _vcPnl
+                        _uTr  += 1
+                        if _vcWin
+                            _uWn += 1
+                        if _bull
+                            _uBP += _vcPnl
+                            _uBT += 1
+                        else
+                            _uBeP += _vcPnl
+                            _uBeT += 1
+                    label _vcOrigLbl = array.get(_tLbl, _ti)
+                    string _vcExt = "📉 #" + str.tostring(_tNum) + " Vol Collapse — " + (_vcWin ? "+$" : "-$") + str.tostring(math.abs(_vcPnl), "#.##")
+                    if not na(_vcOrigLbl)
+                        label.set_text(_vcOrigLbl, label.get_text(_vcOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _vcExt)
+                    label.new(bar_index, _bull ? low : high, _vcExt, style = _bull ? label.style_label_up : label.style_label_down, color = _vcWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
+                    if pE
+                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // VOLUME DROP EXIT — close when current bar volume collapses below vdFact × 20-bar average.
+            // Only fires on bar AFTER entry (bar_index > _entryBar + 1) to ignore the entry bar itself
+            // (which may have low volume if entry was near close).
+            // Bar-close only. Gated by _tBE.
+            bool _vdExited = false
+            if vdOn and barstate.isconfirmed and not _maeExited and not _killExited and not _dllExited and not _invExited and not _structSLExited and not _ouExited and not _bfExited and not _vcExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and bar_index > _entryBar + 1
+                float _vdAvgVol = ta.sma(volume, 20)
+                if _vdAvgVol > 0 and volume < vdFact * _vdAvgVol
+                    _vdExited := true
+                    array.set(_tSH, _ti, true)
+                    float _vdEn   = array.get(_tEn, _ti)
+                    float _vdLots = array.get(_tEL, _ti)
+                    float _vdPnl  = (_bull ? (close - _vdEn) : (_vdEn - close)) * _vdLots * cM
+                    bool  _vdWin  = _vdPnl > 0
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _vdPnl)
+                    _cTr  += 1
+                    _pT   += _vdPnl
+                    if _vdWin
+                        _wC   += 1
+                        _tLSt := 0
+                        array.set(_tW, _ti, true)
+                    else
+                        _tLSt += 1
+                        if _tLSt > _mLST
+                            _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    if array.get(_tTy, _ti) == "uhv"
+                        _uPnL += _vdPnl
+                        _uPT  += _vdPnl
+                        _uTr  += 1
+                        if _vdWin
+                            _uWn += 1
+                        if _bull
+                            _uBP += _vdPnl
+                            _uBT += 1
+                        else
+                            _uBeP += _vdPnl
+                            _uBeT += 1
+                    label _vdOrigLbl = array.get(_tLbl, _ti)
+                    string _vdExt = "📊 #" + str.tostring(_tNum) + " Volume Drop — " + (_vdWin ? "+$" : "-$") + str.tostring(math.abs(_vdPnl), "#.##")
+                    if not na(_vdOrigLbl)
+                        label.set_text(_vdOrigLbl, label.get_text(_vdOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _vdExt)
+                    label.new(bar_index, _bull ? low : high, _vdExt, style = _bull ? label.style_label_up : label.style_label_down, color = _vdWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
+                    if pE
+                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // MICRO-STRUCTURE BREAK EXIT — close when a post-entry swing low (bull) or swing high (bear) is broken.
+            // Looks back msLb bars (from current bar) for the lowest low (bull) / highest high (bear).
+            // If close breaks below that swing by msBuf pips, structure has cracked — exit before full reversal.
+            // Bar-close only. Gated by _tBE (if BE has moved SL up, MT5 already handles this).
+            bool _msExited = false
+            if msOn and barstate.isconfirmed and not _maeExited and not _killExited and not _dllExited and not _invExited and not _structSLExited and not _ouExited and not _bfExited and not _vcExited and not _vdExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and bar_index > _entryBar + msLb
+                float _msSwing = _bull ? ta.lowest(low, msLb) : ta.highest(high, msLb)
+                float _msTrig  = _bull ? _msSwing - msBuf * pPip : _msSwing + msBuf * pPip
+                bool  _msHit   = _bull ? close <= _msTrig : close >= _msTrig
+                if _msHit
+                    _msExited := true
+                    array.set(_tSH, _ti, true)
+                    float _msEn   = array.get(_tEn, _ti)
+                    float _msLots = array.get(_tEL, _ti)
+                    float _msPnl  = (_bull ? (close - _msEn) : (_msEn - close)) * _msLots * cM
+                    bool  _msWin  = _msPnl > 0
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _msPnl)
+                    _cTr  += 1
+                    _pT   += _msPnl
+                    if _msWin
+                        _wC   += 1
+                        _tLSt := 0
+                        array.set(_tW, _ti, true)
+                    else
+                        _tLSt += 1
+                        if _tLSt > _mLST
+                            _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    if array.get(_tTy, _ti) == "uhv"
+                        _uPnL += _msPnl
+                        _uPT  += _msPnl
+                        _uTr  += 1
+                        if _msWin
+                            _uWn += 1
+                        if _bull
+                            _uBP += _msPnl
+                            _uBT += 1
+                        else
+                            _uBeP += _msPnl
+                            _uBeT += 1
+                    label _msOrigLbl = array.get(_tLbl, _ti)
+                    string _msExt = "🏗️ #" + str.tostring(_tNum) + " Micro-Structure — " + (_msWin ? "+$" : "-$") + str.tostring(math.abs(_msPnl), "#.##")
+                    if not na(_msOrigLbl)
+                        label.set_text(_msOrigLbl, label.get_text(_msOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _msExt)
+                    label.new(bar_index, _bull ? low : high, _msExt, style = _bull ? label.style_label_up : label.style_label_down, color = _msWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
+                    if pE
+                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // TIME-OF-DAY KILL SWITCH — force-close open trade when a no-trade window begins.
+            // Tick-based (no barstate.isconfirmed gate) so it fires as soon as the clock crosses the window boundary.
+            // Does NOT respect _tBE — when the clock says danger zone, close regardless.
+            // _ntKillFire is true every tick inside the window so we gate with _tSH to fire only once.
+            bool _todKillExited = false
+            if ntKill and _ntKillFire and not _maeExited and not _killExited and not _dllExited and not array.get(_tSH, _ti) and not array.get(_tTH, _ti)
+                _todKillExited := true
+                array.set(_tSH, _ti, true)
+                float _todEn   = array.get(_tEn, _ti)
+                float _todLots = array.get(_tEL, _ti)
+                float _todPnl  = (_bull ? (close - _todEn) : (_todEn - close)) * _todLots * cM
+                bool  _todWin  = _todPnl > 0
+                array.push(_tCTi, bar_index)
+                array.push(_tCTs, time)
+                array.push(_tPA,  _todPnl)
+                _cTr  += 1
+                _pT   += _todPnl
+                if _todWin
+                    _wC   += 1
+                    _tLSt := 0
+                    array.set(_tW, _ti, true)
+                else
+                    _tLSt += 1
+                    if _tLSt > _mLST
+                        _mLST := _tLSt
+                array.push(_tDB, bar_index - _entryBar)
+                if array.get(_tTy, _ti) == "uhv"
+                    _uPnL += _todPnl
+                    _uPT  += _todPnl
+                    _uTr  += 1
+                    if _todWin
+                        _uWn += 1
+                    if _bull
+                        _uBP += _todPnl
+                        _uBT += 1
+                    else
+                        _uBeP += _todPnl
+                        _uBeT += 1
+                label _todOrigLbl = array.get(_tLbl, _ti)
+                string _todExt = "🚫 #" + str.tostring(_tNum) + " ToD Kill — " + (_todWin ? "+$" : "-$") + str.tostring(math.abs(_todPnl), "#.##")
+                if not na(_todOrigLbl)
+                    label.set_text(_todOrigLbl, label.get_text(_todOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _todExt)
+                label.new(bar_index, _bull ? low : high, _todExt, style = _bull ? label.style_label_up : label.style_label_down, color = _todWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
+                if pE
+                    alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+
+            // HARD SL SIMULATION — mirrors iExHSL sent to MT5 when invalidation mode is on
+            // Without this, Pine uses the wide wick SL while MT5 uses the narrow hard SL,
+            // causing Pine to show wins on trades MT5 already closed as losses.
+            bool _hardSLExited = false
+            if useInvalidation and not _maeExited and not _killExited and not _dllExited and not _invExited and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
+                float _hardSLPrice = _bull ? array.get(_tEn, _ti) - iExHSL * pPip : array.get(_tEn, _ti) + iExHSL * pPip
+                // On the IOE entry bar, low/high includes price action BEFORE the entry tick fired.
+                // Use close (current realtime tick) on the entry bar to avoid false hard SL triggers.
+                bool  _onEntryBar  = (bar_index == _entryBar)
+                bool  _hardSLHit   = _bull ? ((_onEntryBar ? close : low)  <= _hardSLPrice) : ((_onEntryBar ? close : high) >= _hardSLPrice)
+                if _hardSLHit
+                    _hardSLExited := true
+                    array.set(_tSH, _ti, true)
+                    float _hEn   = array.get(_tEn, _ti)
+                    float _hLots = array.get(_tEL, _ti)
+                    float _hPnl  = (_bull ? (_hardSLPrice - _hEn) : (_hEn - _hardSLPrice)) * _hLots * cM
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs, time)
+                    array.push(_tPA,  _hPnl)
+                    _cTr  += 1
+                    _pT   += _hPnl
+                    _tLSt += 1
+                    if _tLSt > _mLST
+                        _mLST := _tLSt
+                    array.push(_tDB, bar_index - _entryBar)
+                    _uPnL += _hPnl
+                    _uPT  += _hPnl
+                    _uTr  += 1
+                    if _bull
+                        _uBP += _hPnl
+                        _uBT += 1
+                    else
+                        _uBeP += _hPnl
+                        _uBeT += 1
+                    label _hOrigLbl = array.get(_tLbl, _ti)
+                    string _hExt = "🔴 #" + str.tostring(_tNum) + " Hard SL — -$" + str.tostring(math.abs(_hPnl), "#.##")
+                    if not na(_hOrigLbl)
+                        label.set_text(_hOrigLbl, label.get_text(_hOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _hExt)
+                    label.new(bar_index, _bull ? low : high, _hExt, style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 10), textcolor = color.white, size = size.small)
+
+            // TRAIL SIMULATION — mirrors pcTDist/pcTTrig managed by MT5
+            // Tracks highest high (bull) / lowest low (bear) since trail activated,
+            // then closes when price reverses pcTDist pips from the peak.
+            bool _trailExited = false
+            if pcTDist > 0 and not _maeExited and not _killExited and not _dllExited and not _invExited and not _hardSLExited and not array.get(_tSH, _ti) and not _t1hit and (bar_index > _entryBar or _isIOE)
+                float _trEn   = array.get(_tEn, _ti)
+                float _trTrig = _bull ? _trEn + pcTTrig * pPip : _trEn - pcTTrig * pPip
+                if not array.get(_tTrA, _ti)
+                    // Activate trail when price reaches the trigger level
+                    if (_bull ? high >= _trTrig : low <= _trTrig)
+                        array.set(_tTrA, _ti, true)
+                        array.set(_tTrH, _ti, _bull ? high : low)
+                else
+                    // Update water mark
+                    if _bull and high > array.get(_tTrH, _ti)
+                        array.set(_tTrH, _ti, high)
+                    if not _bull and low < array.get(_tTrH, _ti)
+                        array.set(_tTrH, _ti, low)
+                    float _trPeak  = array.get(_tTrH, _ti)
+                    float _trSLPrc = _bull ? _trPeak - pcTDist * pPip : _trPeak + pcTDist * pPip
+                    bool  _trHit   = _bull ? low <= _trSLPrc : high >= _trSLPrc
+                    if _trHit
+                        _trailExited := true
+                        array.set(_tSH, _ti, true)
+                        float _trLots = array.get(_tEL, _ti)
+                        float _trPnl  = (_bull ? (_trSLPrc - _trEn) : (_trEn - _trSLPrc)) * _trLots * cM
+                        bool  _trWin  = _trPnl > 0
+                        array.push(_tCTi, bar_index)
+                        array.push(_tCTs, time)
+                        array.push(_tPA,  _trPnl)
+                        _cTr  += 1
+                        _pT   += _trPnl
+                        if _trWin
+                            _wC   += 1
+                            _tLSt := 0
+                            array.set(_tW, _ti, true)
+                        else
+                            _tLSt += 1
+                            if _tLSt > _mLST
+                                _mLST := _tLSt
+                        array.push(_tDB, bar_index - _entryBar)
+                        if array.get(_tTy, _ti) == "uhv"
+                            _uPnL += _trPnl
+                            _uPT  += _trPnl
+                            _uTr  += 1
+                            if _trWin
+                                _uWn += 1
+                            if _bull
+                                _uBP += _trPnl
+                                _uBT += 1
+                            else
+                                _uBeP += _trPnl
+                                _uBeT += 1
+                        label _trOrigLbl = array.get(_tLbl, _ti)
+                        string _trExt = "🏃 #" + str.tostring(_tNum) + " Trail Stop — " + (_trWin ? "+$" : "-$") + str.tostring(math.abs(_trPnl), "#.##")
+                        if not na(_trOrigLbl)
+                            label.set_text(_trOrigLbl, label.get_text(_trOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _trExt)
+                        label.new(bar_index, _bull ? low : high, _trExt, style = _bull ? label.style_label_up : label.style_label_down, color = _trWin ? color.new(color.green, 10) : color.new(color.orange, 10), textcolor = color.white, size = size.small)
+
+            if not _slhit and not _maeExited and not _killExited and not _dllExited and not _invExited and not _structSLExited and not _ouExited and not _bfExited and not _vcExited and not _vdExited and not _msExited and not _todKillExited and not _hardSLExited and not _trailExited and (bar_index > _entryBar or _isIOE)
+                bool _onEB2      = (bar_index == _entryBar)
+                // When invalidation mode is on, MT5 uses the hard SL (iExHSL pips) not the structural wick SL.
+                // Use the same price here so Pine matches MT5 — wick through breakout candle low no longer counts.
+                float _effectiveSL = useInvalidation ? (_bull ? array.get(_tEn, _ti) - iExHSL * pPip : array.get(_tEn, _ti) + iExHSL * pPip) : _sl
+                _slTriggered = _bull ? ((_onEB2 ? close : low) <= _effectiveSL) : ((_onEB2 ? close : high) >= _effectiveSL)
+                if _slTriggered
+                    array.set(_tSH, _ti, true)
+                    if not _t1hit
+                        _pnl = (_bull ? (_effectiveSL - array.get(_tEn, _ti)) : (array.get(_tEn, _ti) - _effectiveSL)) * array.get(_tEL, _ti) * cM
+                        bool _isBEWin = _pnl > 0
+                        array.push(_tCTi, bar_index)
+                        array.push(_tCTs,   time)
+                        array.push(_tPA, _pnl)
+                        _cTr += 1
+                        _pT             += _pnl
+                        if _isBEWin
+                            _wC += 1
+                            _tLSt := 0
+                        else
+                            _tLSt += 1
+                            if _tLSt > _mLST
+                                _mLST := _tLSt
+                        array.push(_tDB, bar_index - _entryBar)
+                        _stype = array.get(_tTy, _ti)
+                        _sbull = array.get(_tBl, _ti)
+                        if _stype == "uhv"
+                            _uPnL += _pnl
+                            _uPT += _pnl
+                            _uTr += 1
+                            if _isBEWin
+                                _uWn += 1
+                                array.set(_tW, _ti, true)
+                            if _sbull
+                                _uBP += _pnl
+                                _uBT += 1
+                            else
+                                _uBeP += _pnl
+                                _uBeT += 1
+                        _origLbl = array.get(_tLbl, _ti)
+                        _dPnlSL  = pATon and _atValid ? (_bull ? (_effectiveSL - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _effectiveSL)) * array.get(_tEL, _ti) * cM : _pnl
+                        if not na(_origLbl)
+                            _origTxt = label.get_text(_origLbl)
+                            label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n" + (_isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss"))
+                        label.new(bar_index, _bull ? low : high, _isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "⭕ #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss", style = _bull ? label.style_label_up : label.style_label_down, color = _isBEWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
+                        fCross(bar_index, _effectiveSL, _a14)
+
+            if uBEon and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and not _t1hit and (bar_index > _entryBar or _isIOE)
+                _en   = array.get(_tEn, _ti)
+                _be50 = _en + (_tp1 - _en) * (uBEPct / 100.0)
+                if (_bull ? high >= _be50 : low <= _be50)
+                    array.set(_tBE, _ti, true)
+                    array.set(_tSl, _ti, uBELkTP ? _be50 : (_bull ? _en - uSpread : _en + uSpread))
+
+            if not _t1hit and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
+                _fireTime = array.size(_tFT) > _ti ? array.get(_tFT, _ti) : int(na)
+                _postFill = not barstate.isrealtime or na(_fireTime) or timenow >= _fireTime + int(_avgLat)
+                _tp1Triggered = _postFill and (bar_index == _entryBar ? (_bull ? close >= _tp1 : close <= _tp1) : (_bull ? high >= _tp1 : low <= _tp1))
+                if _tp1Triggered
+                    array.set(_tTH, _ti, true)
+                    _wC += 1
+                    _lots = array.get(_tEL, _ti)
+                    _pnl  = (_bull ? (_tp1 - array.get(_tEn, _ti)) : (array.get(_tEn, _ti) - _tp1)) * _lots * cM
+                    array.push(_tCTi, bar_index)
+                    array.push(_tCTs,   time)
+                    array.push(_tPA, _pnl)
+                    _cTr += 1
+                    _pT             += _pnl
+                    _tLSt := 0
+                    array.push(_tDB, bar_index - _entryBar)
+                    _stype = array.get(_tTy, _ti)
+                    _sbull = array.size(_tBl) > _ti ? array.get(_tBl, _ti) : true
+                    array.set(_tW, _ti, true)
+                    if _stype == "uhv"
+                        _uPnL += _pnl
+                        _uPT += _pnl
+                        _uTr += 1
+                        _uWn += 1
+                        if _sbull
+                            _uBP += _pnl
+                            _uBT += 1
+                        else
+                            _uBeP += _pnl
+                            _uBeT += 1
+                    _origLbl = array.get(_tLbl, _ti)
+                    _dPnlTP  = pATon and _atValid ? (_bull ? (_tp1 - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _tp1)) * _lots * cM : _pnl
+                    if not na(_origLbl)
+                        _origTxt = label.get_text(_origLbl)
+                        label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit")
+                    label.new(bar_index, _bull ? high : low, "✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit", style = _bull ? label.style_label_down : label.style_label_up, color = color.new(color.green, 10), textcolor = color.white, size = size.small)
+                    fTick(bar_index, _tp1, _a14)
+
 // STEP 5: BREAKOUT — Absorption Signal
 _uHTFB = request.security(syminfo.tickerid, uHTD == "Off" ? timeframe.period : uHTD, close >= open)
 _uMomBOk  = (not uMomB or (uOE == "Instant at Breakout" ? (_cRng[1] > 0 and (close[1]-open[1])/_cRng[1] >= uMomBR/100.0) : (_cRng > 0 and (close-open)/_cRng >= uMomBR/100.0))) and (not uMomW or (uOE == "Instant at Breakout" ? (_cRng[1] > 0 and (high[1]-close[1])/_cRng[1] <= uMomWk/100.0 and (open[1]-low[1])/_cRng[1] <= uMomWk/100.0) : (_cRng > 0 and (high-close)/_cRng <= uMomWk/100.0 and (open-low)/_cRng <= uMomWk/100.0)))
@@ -1478,6 +2369,7 @@ bool  _uVelOk = not uTVOn or (uOE == "Instant at Breakout" ? (volume[1] / math.m
 _uPBMok   = uPBD <= 0.0 or uOE == "Instant at Breakout" or close > close[1]   // pre-breakout momentum guard: bull — price must be rising bar-over-bar (skipped for IOE: bar hasn't closed yet)
 _uPBMbok  = uPBD <= 0.0 or uOE == "Instant at Breakout" or close < close[1]   // pre-breakout momentum guard: bear — price must be falling bar-over-bar (skipped for IOE: bar hasn't closed yet)
 bool _uIOE = uOE == "Instant at Breakout"
+
 float _bTrigEff  = uPBCo and uPBD > 0 and not (low  <= _bL + uPBsD - uPBD) ? _bL + uPBsD : _bL + uPBsD - uPBD
 float _beTrigEff = uPBCo and uPBD > 0 and not (high >= _bL - uPBsD + uPBD) ? _bL - uPBsD : _bL - uPBsD + uPBD
 bool  _bBrkPO    = low  <= _bTrigEff  and (_uIOE ? (uBrkBody ? close > _bTrigEff  : high > _bTrigEff)  : close > _bL + uPBsD)   // Candle-Close: always require close above actual UHV level (not just pre-offset zone)
@@ -1485,7 +2377,7 @@ bool  _beBrkPO   = high >= _beTrigEff and (_uIOE ? (uBrkBody ? close < _beTrigEf
 if bar_index != _uAlBi
     _uAlF  := false
     _uAlBi := bar_index
-_bBrk = _euBD and eUHV and _iR and _lb and _rwb and not _uReBnc and (_eStU ? (_hb and _bTP) : not _beTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uLSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and _iGr and _bBrkPO and (bar_index - _luSB) >= _euCd and not _cUB and _strUp and _uMomBOk and _uBVOk and _uPBMok and _uVelOk and (uHTD == "Off" or _uHTFB) and not _isRng and not _ntBlock and (_uIOE or barstate.isconfirmed)
+_bBrk = _euBD and eUHV and _iR and _lb and _rwb and not _uReBnc and (_eStU ? (_hb and _bTP) : not _beTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uLSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and _iGr and _bBrkPO and (bar_index - _luSB) >= _euCd and not _cUB and _strUp and _uMomBOk and _uBVOk and _uPBMok and _uVelOk and (uHTD == "Off" or _uHTFB) and not _isRng and not _ntBlock and not _vbBlock and not _mtphBlock and not _dllBlock and not _ssBlock and (_uIOE or barstate.isconfirmed)
 
 // -- Blocked-signal detection (for recommendation engine) --
 // UHV bull: would have fired without sweep requirement
@@ -1579,7 +2471,7 @@ if _uBeBase and (_erUS ? _uHSw : true) and (bar_index - _luSB) >= _euCd and _tsU
 if eUHV and _iR and not _lb and not _rwb and not _bTP and (sTC and sTCU) and not (_hbr and _beTP) and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and _iRd and close < _bL and (_erUS ? _uHSw : true) and (bar_index - _luSB) >= _euCd
     _uWB := true
 
-_beBrk = _euBeD and eUHV and _iR and not _lb and not _rwb and not _uReBnc and (_eStU ? (_hbr and _beTP) : not _bTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uHSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and _iRd and _beBrkPO and (bar_index - _luSB) >= _euCd and not _cUBe and _strDn and _uMomBeOk and _uBVOk and _uPBMbok and _uVelOk and (uHTD == "Off" or not _uHTFB) and not _isRng and not _ntBlock and (_uIOE or barstate.isconfirmed)
+_beBrk = _euBeD and eUHV and _iR and not _lb and not _rwb and not _uReBnc and (_eStU ? (_hbr and _beTP) : not _bTP) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uHSw : true) and (_erULV ? volume < _uVol : true) and not _eTsU and _iRd and _beBrkPO and (bar_index - _luSB) >= _euCd and not _cUBe and _strDn and _uMomBeOk and _uBVOk and _uPBMbok and _uVelOk and (uHTD == "Off" or not _uHTFB) and not _isRng and not _ntBlock and not _vbBlock and not _mtphBlock and not _dllBlock and not _ssBlock and (_uIOE or barstate.isconfirmed)
 
 if _beBrk
     _entry      = _uIOE ? _beTrigEff : close
@@ -1656,7 +2548,12 @@ if (_uPendBull or _uPendBear) and barstate.isconfirmed
     array.push(_tW,   false)
     array.push(_tLbl, _sigLbl)
     array.push(_tEB,  bar_index)
-    array.push(_tIL,  _bL)
+    array.push(_tIL,    _bL)
+    array.push(_tILM,   (_bL + _uSl) / 2)
+    array.push(_tBrkMid, (open + close) / 2)
+    array.push(_tATE,  ta.atr(14))
+    array.push(_tBFX,  false)
+    array.push(_tPTP,  false)
     array.push(_tFT,  timenow)
     array.push(_sBT,  bar_index)
     array.push(_sABT, bar_index)
@@ -1730,260 +2627,6 @@ if _today != _ltd
     _tLSt      := 0
     _mLST   := 0
     _ltd         := _today
-
-// TRADE MONITORING
-if array.size(_tEn) > 0
-    for _ti = array.size(_tEn) - 1 to 0
-        _done  = array.get(_tSH, _ti) or array.get(_tTH, _ti)
-        if not _done
-            _bull  = array.get(_tBl,  _ti)
-            _sl    = array.get(_tSl,    _ti)
-            _tp1   = array.get(_tTP,   _ti)
-            _t1hit = array.get(_tTH, _ti)
-            _slhit = array.get(_tSH,  _ti)
-            _tNum  = array.get(_tN, _ti)
-
-            _entryBar = array.get(_tEB, _ti)
-            _trType = array.get(_tTy, _ti)
-            _isIOE = _trType == "uhv" and _uIOE
-
-            // INVALIDATION EXIT — bar-close logic: exit when candle closes back inside UHV range (not triggered once BE has fired)
-            bool _invExited = false
-            if useInvalidation and barstate.isconfirmed and not array.get(_tBE, _ti) and bar_index > _entryBar and array.size(_tIL) > _ti
-                float _iLvl = array.get(_tIL, _ti)
-                bool  _iHit = _bull ? close < _iLvl - iExOff : close > _iLvl + iExOff
-                if _iHit
-                    _invExited := true
-                    array.set(_tSH, _ti, true)
-                    float _iEn   = array.get(_tEn, _ti)
-                    float _iLots = array.get(_tEL, _ti)
-                    float _iPnl  = (_bull ? (close - _iEn) : (_iEn - close)) * _iLots * cM
-                    bool  _iWin  = _iPnl > 0
-                    array.push(_tCTi, bar_index)
-                    array.push(_tCTs, time)
-                    array.push(_tPA,  _iPnl)
-                    _cTr += 1
-                    _pT  += _iPnl
-                    if _iWin
-                        _wC   += 1
-                        _tLSt := 0
-                    else
-                        _tLSt += 1
-                        if _tLSt > _mLST
-                            _mLST := _tLSt
-                    array.push(_tDB, bar_index - _entryBar)
-                    _uPnL += _iPnl
-                    _uPT  += _iPnl
-                    _uTr  += 1
-                    if _iWin
-                        _uWn += 1
-                        array.set(_tW, _ti, true)
-                    if _bull
-                        _uBP += _iPnl
-                        _uBT += 1
-                    else
-                        _uBeP += _iPnl
-                        _uBeT += 1
-                    label _iOrigLbl = array.get(_tLbl, _ti)
-                    string _iExt = (_iWin ? "✅" : "⚡") + " #" + str.tostring(_tNum) + " Invalidation Exit — " + (_iWin ? "+$" : "-$") + str.tostring(math.abs(_iPnl), "#.##")
-                    if not na(_iOrigLbl)
-                        label.set_text(_iOrigLbl, label.get_text(_iOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _iExt)
-                    label.new(bar_index, _bull ? low : high, _iExt, style = _bull ? label.style_label_up : label.style_label_down, color = _iWin ? color.new(color.green, 10) : color.new(color.orange, 10), textcolor = color.white, size = size.small)
-                    if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
-
-            // HARD SL SIMULATION — mirrors iExHSL sent to MT5 when invalidation mode is on
-            // Without this, Pine uses the wide wick SL while MT5 uses the narrow hard SL,
-            // causing Pine to show wins on trades MT5 already closed as losses.
-            bool _hardSLExited = false
-            if useInvalidation and not _invExited and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
-                float _hardSLPrice = _bull ? array.get(_tEn, _ti) - iExHSL * pPip : array.get(_tEn, _ti) + iExHSL * pPip
-                // On the IOE entry bar, low/high includes price action BEFORE the entry tick fired.
-                // Use close (current realtime tick) on the entry bar to avoid false hard SL triggers.
-                bool  _onEntryBar  = (bar_index == _entryBar)
-                bool  _hardSLHit   = _bull ? ((_onEntryBar ? close : low)  <= _hardSLPrice) : ((_onEntryBar ? close : high) >= _hardSLPrice)
-                if _hardSLHit
-                    _hardSLExited := true
-                    array.set(_tSH, _ti, true)
-                    float _hEn   = array.get(_tEn, _ti)
-                    float _hLots = array.get(_tEL, _ti)
-                    float _hPnl  = (_bull ? (_hardSLPrice - _hEn) : (_hEn - _hardSLPrice)) * _hLots * cM
-                    array.push(_tCTi, bar_index)
-                    array.push(_tCTs, time)
-                    array.push(_tPA,  _hPnl)
-                    _cTr  += 1
-                    _pT   += _hPnl
-                    _tLSt += 1
-                    if _tLSt > _mLST
-                        _mLST := _tLSt
-                    array.push(_tDB, bar_index - _entryBar)
-                    _uPnL += _hPnl
-                    _uPT  += _hPnl
-                    _uTr  += 1
-                    if _bull
-                        _uBP += _hPnl
-                        _uBT += 1
-                    else
-                        _uBeP += _hPnl
-                        _uBeT += 1
-                    label _hOrigLbl = array.get(_tLbl, _ti)
-                    string _hExt = "🔴 #" + str.tostring(_tNum) + " Hard SL — -$" + str.tostring(math.abs(_hPnl), "#.##")
-                    if not na(_hOrigLbl)
-                        label.set_text(_hOrigLbl, label.get_text(_hOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _hExt)
-                    label.new(bar_index, _bull ? low : high, _hExt, style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 10), textcolor = color.white, size = size.small)
-
-            // TRAIL SIMULATION — mirrors pcTDist/pcTTrig managed by MT5
-            // Tracks highest high (bull) / lowest low (bear) since trail activated,
-            // then closes when price reverses pcTDist pips from the peak.
-            bool _trailExited = false
-            if pcTDist > 0 and not _invExited and not _hardSLExited and not array.get(_tSH, _ti) and not _t1hit and (bar_index > _entryBar or _isIOE)
-                float _trEn   = array.get(_tEn, _ti)
-                float _trTrig = _bull ? _trEn + pcTTrig * pPip : _trEn - pcTTrig * pPip
-                if not array.get(_tTrA, _ti)
-                    // Activate trail when price reaches the trigger level
-                    if (_bull ? high >= _trTrig : low <= _trTrig)
-                        array.set(_tTrA, _ti, true)
-                        array.set(_tTrH, _ti, _bull ? high : low)
-                else
-                    // Update water mark
-                    if _bull and high > array.get(_tTrH, _ti)
-                        array.set(_tTrH, _ti, high)
-                    if not _bull and low < array.get(_tTrH, _ti)
-                        array.set(_tTrH, _ti, low)
-                    float _trPeak  = array.get(_tTrH, _ti)
-                    float _trSLPrc = _bull ? _trPeak - pcTDist * pPip : _trPeak + pcTDist * pPip
-                    bool  _trHit   = _bull ? low <= _trSLPrc : high >= _trSLPrc
-                    if _trHit
-                        _trailExited := true
-                        array.set(_tSH, _ti, true)
-                        float _trLots = array.get(_tEL, _ti)
-                        float _trPnl  = (_bull ? (_trSLPrc - _trEn) : (_trEn - _trSLPrc)) * _trLots * cM
-                        bool  _trWin  = _trPnl > 0
-                        array.push(_tCTi, bar_index)
-                        array.push(_tCTs, time)
-                        array.push(_tPA,  _trPnl)
-                        _cTr  += 1
-                        _pT   += _trPnl
-                        if _trWin
-                            _wC   += 1
-                            _tLSt := 0
-                            array.set(_tW, _ti, true)
-                        else
-                            _tLSt += 1
-                            if _tLSt > _mLST
-                                _mLST := _tLSt
-                        array.push(_tDB, bar_index - _entryBar)
-                        if array.get(_tTy, _ti) == "uhv"
-                            _uPnL += _trPnl
-                            _uPT  += _trPnl
-                            _uTr  += 1
-                            if _trWin
-                                _uWn += 1
-                            if _bull
-                                _uBP += _trPnl
-                                _uBT += 1
-                            else
-                                _uBeP += _trPnl
-                                _uBeT += 1
-                        label _trOrigLbl = array.get(_tLbl, _ti)
-                        string _trExt = "🏃 #" + str.tostring(_tNum) + " Trail Stop — " + (_trWin ? "+$" : "-$") + str.tostring(math.abs(_trPnl), "#.##")
-                        if not na(_trOrigLbl)
-                            label.set_text(_trOrigLbl, label.get_text(_trOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _trExt)
-                        label.new(bar_index, _bull ? low : high, _trExt, style = _bull ? label.style_label_up : label.style_label_down, color = _trWin ? color.new(color.green, 10) : color.new(color.orange, 10), textcolor = color.white, size = size.small)
-
-            if not _slhit and not _invExited and not _hardSLExited and not _trailExited and (bar_index > _entryBar or _isIOE)
-                bool _onEB2      = (bar_index == _entryBar)
-                // When invalidation mode is on, MT5 uses the hard SL (iExHSL pips) not the structural wick SL.
-                // Use the same price here so Pine matches MT5 — wick through breakout candle low no longer counts.
-                float _effectiveSL = useInvalidation ? (_bull ? array.get(_tEn, _ti) - iExHSL * pPip : array.get(_tEn, _ti) + iExHSL * pPip) : _sl
-                _slTriggered = _bull ? ((_onEB2 ? close : low) <= _effectiveSL) : ((_onEB2 ? close : high) >= _effectiveSL)
-                if _slTriggered
-                    array.set(_tSH, _ti, true)
-                    if not _t1hit
-                        _pnl = (_bull ? (_effectiveSL - array.get(_tEn, _ti)) : (array.get(_tEn, _ti) - _effectiveSL)) * array.get(_tEL, _ti) * cM
-                        bool _isBEWin = _pnl > 0
-                        array.push(_tCTi, bar_index)
-                        array.push(_tCTs,   time)
-                        array.push(_tPA, _pnl)
-                        _cTr += 1
-                        _pT             += _pnl
-                        if _isBEWin
-                            _wC += 1
-                            _tLSt := 0
-                        else
-                            _tLSt += 1
-                            if _tLSt > _mLST
-                                _mLST := _tLSt
-                        array.push(_tDB, bar_index - _entryBar)
-                        _stype = array.get(_tTy, _ti)
-                        _sbull = array.get(_tBl, _ti)
-                        if _stype == "uhv"
-                            _uPnL += _pnl
-                            _uPT += _pnl
-                            _uTr += 1
-                            if _isBEWin
-                                _uWn += 1
-                                array.set(_tW, _ti, true)
-                            if _sbull
-                                _uBP += _pnl
-                                _uBT += 1
-                            else
-                                _uBeP += _pnl
-                                _uBeT += 1
-                        _origLbl = array.get(_tLbl, _ti)
-                        _dPnlSL  = pATon and _atValid ? (_bull ? (_effectiveSL - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _effectiveSL)) * array.get(_tEL, _ti) * cM : _pnl
-                        if not na(_origLbl)
-                            _origTxt = label.get_text(_origLbl)
-                            label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n" + (_isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss"))
-                        label.new(bar_index, _bull ? low : high, _isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "⭕ #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss", style = _bull ? label.style_label_up : label.style_label_down, color = _isBEWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
-                        fCross(bar_index, _effectiveSL, _a14)
-
-            if uBEon and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and not _t1hit and (bar_index > _entryBar or _isIOE)
-                _en   = array.get(_tEn, _ti)
-                _be50 = _en + (_tp1 - _en) * (uBEPct / 100.0)
-                if (_bull ? high >= _be50 : low <= _be50)
-                    array.set(_tBE, _ti, true)
-                    array.set(_tSl, _ti, uBELkTP ? _be50 : (_bull ? _en - uSpread : _en + uSpread))
-
-            if not _t1hit and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
-                _fireTime = array.size(_tFT) > _ti ? array.get(_tFT, _ti) : int(na)
-                _postFill = not barstate.isrealtime or na(_fireTime) or timenow >= _fireTime + int(_avgLat)
-                _tp1Triggered = _postFill and (bar_index == _entryBar ? (_bull ? close >= _tp1 : close <= _tp1) : (_bull ? high >= _tp1 : low <= _tp1))
-                if _tp1Triggered
-                    array.set(_tTH, _ti, true)
-                    _wC += 1
-                    _lots = array.get(_tEL, _ti)
-                    _pnl  = (_bull ? (_tp1 - array.get(_tEn, _ti)) : (array.get(_tEn, _ti) - _tp1)) * _lots * cM
-                    array.push(_tCTi, bar_index)
-                    array.push(_tCTs,   time)
-                    array.push(_tPA, _pnl)
-                    _cTr += 1
-                    _pT             += _pnl
-                    _tLSt := 0
-                    array.push(_tDB, bar_index - _entryBar)
-                    _stype = array.get(_tTy, _ti)
-                    _sbull = array.size(_tBl) > _ti ? array.get(_tBl, _ti) : true
-                    array.set(_tW, _ti, true)
-                    if _stype == "uhv"
-                        _uPnL += _pnl
-                        _uPT += _pnl
-                        _uTr += 1
-                        _uWn += 1
-                        if _sbull
-                            _uBP += _pnl
-                            _uBT += 1
-                        else
-                            _uBeP += _pnl
-                            _uBeT += 1
-                    _origLbl = array.get(_tLbl, _ti)
-                    _dPnlTP  = pATon and _atValid ? (_bull ? (_tp1 - (array.get(_tEn, _ti) + _atSlipB)) : ((array.get(_tEn, _ti) + _atSlipS) - _tp1)) * _lots * cM : _pnl
-                    if not na(_origLbl)
-                        _origTxt = label.get_text(_origLbl)
-                        label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit")
-                    label.new(bar_index, _bull ? high : low, "✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit", style = _bull ? label.style_label_down : label.style_label_up, color = color.new(color.green, 10), textcolor = color.white, size = size.small)
-                    fTick(bar_index, _tp1, _a14)
-
-
 
 // Risk classification helper: dollar risk as % of account
 f_rTag(float d) =>
