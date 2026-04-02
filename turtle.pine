@@ -15,15 +15,6 @@ uSpread  = input.float(0.13,  'Spread ($) — enter live broker spread to simula
 uLev     = input.int(500, 'Account Leverage (e.g. 2000 for 2000:1)', minval = 1, group = gAc)
 _sRD = 0
 
-// --- 1. Points of Interest ---------------
-gPi = "🎯 Points of Interest"
-rPOI = input.bool(false, 'Require POI zone to exist before retracement starts', group = gPi)
-rFT = input.bool(false, 'Require POI Touch Before Signal', group = gPi)
-pFvg      = input.bool(false,  'Higher Time Frame Fair Value Gap (imbalance zone)', group = gPi)
-pHL       = input.bool(false,  'Previous Higher Low (above the deeper low)', group = gPi)
-pSup      = input.bool(false,  'Broken High / Low (now flipped to S or R)', group = gPi)
-pLb = input.int(50, 'POI Lookback (bars)', group = gPi)
-
 // --- 2. Strategy: UHV Breakout -----------
 gU = "📊 Strategy: Ultra High Volume Breakout"
 eUHV             = input.bool(true,  'Use this strategy?', group = gU)
@@ -159,21 +150,6 @@ msOn   = input.bool(false, 'Micro-Structure Break Exit: close when the most rece
 msBuf  = input.float(3.0,  '──── Buffer pips beyond the swing level before triggering (prevents whipsaw on tight markets — 3 = need 3 pips through the swing to confirm)', group = gRM, minval = 0.0, step = 1.0)
 msLb   = input.int(3,      '──── Micro swing lookback bars — how many bars back to find the swing low/high to protect (3 = protect the last 3-bar swing)', group = gRM, minval = 2, maxval = 10)
 
-// --- 8. HTF Fair Value Gap ----------------
-gH = "🔭 Higher Time Frame Fair Value Gap"
-uHF      = input.bool(false, 'Use Higher Time Frame FVG for Signals', group = gH)
-hFC = input.string("1", 'Higher Time Frame', options = ["Auto", "1", "5", "15", "60", "240"], group = gH)
-hAT      = timeframe.period  // AUTO = same as the chart's current timeframe
-hFT       = hFC == "Auto" ? hAT : hFC
-hFCol    = input.color(color.new(#f5a623, 60), 'Higher Time Frame FVG Zone Color', group = gH)
-fTH          = input.float(0.3, 'FVG Width Filter (ATR multiple)', group = gH)
-uFTH       = input.float(0.3, '──── UHV Breakout: FVG Width Filter (ATR multiple)', group = gH)
-fVF          = input.bool(true, 'Show Historical FVGs', inline = 'FL', group = gH)
-fBC          = color.new(#089981, 55)
-fAC          = color.new(#787b86, 77)
-fSC          = color.new(#f23645, 55)
-fFC          = color.new(#787b86, 77)
-
 // --- 9. Display ---------------------------
 gDi = "🖥️ Display"
 sL     = input.bool(true,  'Show Signal Labels', group = gDi)
@@ -226,24 +202,8 @@ type bar
 // VARS
 bar b = bar.new()
 
-// -- Multi-FVG visual arrays --
-var box  [] _aUF = array.new<box>(0)
-var box  [] _aMF = array.new<box>(0)
-var box  [] _aTF = array.new<box>(0)
-var line [] _aLF = array.new<line>(0)
-var bool [] _aD  = array.new<bool>(0)
-
-// -- Signal-tracking FVG --
-// Initialize as false instead of na to avoid type error on some Pine versions
+// -- Signal-tracking --
 var _lb    = false
-var float _fZT    = na
-var float _fZB    = na
-var float _plHL    = na   // Higher Low / Lower High POI level
-var float _plSp   = na   // Support / Resistance flip POI level
-var line  _pnHL     = na   // chart line for Higher Low POI
-var line  _pnSp    = na   // chart line for Support POI
-var int   _fCB = na
-var _hFvg        = false
 var _fU       = false
 
 // UHV tracking
@@ -382,13 +342,6 @@ var float _sL2 = na   // previous confirmed swing low
 
 // Cooldown tracking
 varip int _luSB = -999   // last bar UHV fired (for per-strategy cooldown)
-
-// BASE FVG CALCULATIONS
-_bG = b.l > b.h[1]
-_beG = b.h < b.l[1]
-atr   = nz(ta.atr(144)) * fTH
-bull  = (b.l - b.h[2]) > atr and b.l > b.h[2] and b.c[1] > b.h[2] and not (_bG or _bG[1])
-bear  = (b.l[2] - b.h) > atr and b.h < b.l[2] and b.c[1] < b.l[2] and not (_beG or _beG[1])
 
 // Latency parse: average ms from signal fire to MT5 fill (from PineConnector Bridge logs)
 _latArr = str.split(pLat, ",")
@@ -529,278 +482,11 @@ _a14 = ta.atr(14)
 [_, _dmM, _adxV] = ta.dmi(14, 14)
 _isRng = avoidRng and _adxV < float(rngTh)
 
-// HTF FVG DETECTION
-// Detection runs INSIDE request.security so [2] means 2 HTF bars ago
-// This is the only correct way — [2] on current TF would be 2 current bars
-fHF(_th) =>
-    _atr  = nz(ta.atr(144)) * _th
-    _bull = (low - high[2]) > _atr and low > high[2] and close[1] > high[2]
-    _bear = (low[2] - high) > _atr and high < low[2] and close[1] < low[2]
-    // Persist the most recent zone levels across HTF bars
-    var float _zTop    = na
-    var float _zBot    = na
-    var bool  _zIsBull = na
-    if _bull
-        _zTop    := low
-        _zBot    := high[2]
-        _zIsBull := true
-    if _bear
-        _zTop    := low[2]
-        _zBot    := high
-        _zIsBull := false
-    [_bull, _bear, _zTop, _zBot, _zIsBull]
-
-// Fetch all 5 values from HTF — [2] inside runs on HTF bars, not current TF bars
-[_hRB, _hRBr, _hZT, _hZB, _hZIB] =
-     request.security(syminfo.tickerid, hFT, fHF(fTH), barmerge.gaps_off, barmerge.lookahead_on)
-
-// Detect rising edge on current TF (_hRB stays true for all lower-TF bars in that HTF candle)
-var _pRB = false
-var _pRBr = false
-_hNB = _hRB and not _pRB
-_hNBr = _hRBr and not _pRBr
-_pRB := _hRB
-_pRBr := _hRBr
-
-// Draw ALL HTF FVG zones as boxes — one per FVG, auto-removed when filled
-var box[]   _hFBx      = array.new<box>()
-var _hFTp       = array.new_float()
-var _hFBt       = array.new_float()
-var _hFBl       = array.new_bool()
-var _hFTC = array.new_int()    // 0=untouched, 1=first touch, 2=retested
-var _hFIZ     = array.new_bool()   // true when price is currently inside zone
-var _hFRB  = array.new_int()    // bar_index when retest began (-1 = not yet)
-
-if uHF
-    if _hNB
-        _top = _hZT
-        _bot = _hZB
-        _b   = box.new(bar_index, _top, bar_index + 1, _bot,
-             border_color = color.new(hFCol, 10), border_width = 1,
-             bgcolor = color.new(hFCol, 80))
-        array.push(_hFBx,      _b)
-        array.push(_hFTp,       _top)
-        array.push(_hFBt,       _bot)
-        array.push(_hFBl,       true)
-        array.push(_hFTC, 0)
-        array.push(_hFIZ,     false)
-        array.push(_hFRB,  -1)
-
-    if _hNBr
-        _top = _hZT
-        _bot = _hZB
-        _b   = box.new(bar_index, _top, bar_index + 1, _bot,
-             border_color = color.new(color.red, 10), border_width = 1,
-             bgcolor = color.new(color.red, 80))
-        array.push(_hFBx,      _b)
-        array.push(_hFTp,       _top)
-        array.push(_hFBt,       _bot)
-        array.push(_hFBl,       false)
-        array.push(_hFTC, 0)
-        array.push(_hFIZ,     false)
-        array.push(_hFRB,  -1)
-
-    // Extend boxes, track touches, freeze box 3 bars after retest
-    _htfSize = array.size(_hFBx)
-    if _htfSize > 0
-        for _hfi = _htfSize - 1 to 0
-            // Guard: array may have shrunk due to mid-loop removals
-            if _hfi < array.size(_hFBx)
-                _hBx        = array.get(_hFBx,      _hfi)
-                _ht         = array.get(_hFTp,        _hfi)
-                _hbo        = array.get(_hFBt,        _hfi)
-                _hbull      = array.get(_hFBl,        _hfi)
-                _touches    = array.get(_hFTC,  _hfi)
-                _wasInZone  = array.get(_hFIZ,      _hfi)
-                _retestBar  = array.get(_hFRB,   _hfi)
-
-                // Is price currently inside the zone?
-                _inZoneNow  = low <= _ht and high >= _hbo
-
-                // Detect entry into zone (new touch)
-                if _inZoneNow and not _wasInZone
-                    _touches += 1
-                    array.set(_hFTC, _hfi, _touches)
-                    if _touches == 2
-                        array.set(_hFRB, _hfi, bar_index)
-
-                array.set(_hFIZ, _hfi, _inZoneNow)
-
-                // Full invalidation: price closed well beyond zone
-                _invalidated = _hbull ? close < _hbo - (_ht - _hbo) : close > _ht + (_ht - _hbo)
-                // Retest done: 3 bars have passed since second touch
-                _retestDone  = _retestBar >= 0 and (bar_index - _retestBar) >= 3
-
-                if _invalidated
-                    box.delete(_hBx)
-                    array.remove(_hFBx,     _hfi)
-                    array.remove(_hFTp,      _hfi)
-                    array.remove(_hFBt,      _hfi)
-                    array.remove(_hFBl,      _hfi)
-                    array.remove(_hFTC,_hfi)
-                    array.remove(_hFIZ,    _hfi)
-                    array.remove(_hFRB, _hfi)
-                else if _retestDone
-                    // Freeze box: fade colors, stop extending
-                    _fadedBg     = _hbull ? color.new(hFCol, 92) : color.new(color.red, 92)
-                    _fadedBorder = _hbull ? color.new(hFCol, 60) : color.new(color.red, 60)
-                    box.set_bgcolor(_hBx, _fadedBg)
-                    box.set_border_color(_hBx, _fadedBorder)
-                    array.remove(_hFBx,     _hfi)
-                    array.remove(_hFTp,      _hfi)
-                    array.remove(_hFBt,      _hfi)
-                    array.remove(_hFBl,      _hfi)
-                    array.remove(_hFTC,_hfi)
-                    array.remove(_hFIZ,    _hfi)
-                    array.remove(_hFRB, _hfi)
-                else
-                    box.set_right(_hBx, bar_index + 1)
-
-// FVG BOX CREATION
-if bull
-    // Only draw current-TF FVG boxes when HTF mode is OFF
-    if not uHF
-        _aUF.unshift(box.new(b.i - 1, b.l,    b.i, b.h[2], border_color = na, bgcolor = fBC))
-        _aMF.unshift(box.new(b.i - 1, b.l,    b.i, b.l,    border_color = na, bgcolor = fAC))
-        _aTF.unshift(box.new(b.i - 1, b.l,    b.i, b.h[2], border_color = na, bgcolor = color(na), text_color = chart.fg_color, text_size = size.small))
-        _aLF.unshift(line.new(b.i - 1, b.h[2], b.i, b.h[2], color = fBC, width = 2))
-        _aD.unshift(true)
-    // Signal-tracking: only update from current-TF FVG when HTF mode is OFF
-    if not uHF and not _iR
-        _fZT    := b.l
-        _fZB    := b.h[2]
-        _fCB := b.i
-        _hFvg        := true
-        _lb    := true
-        _fU       := false
-        _uVol     := 0.0
-        _uHi       := na
-        _uLo        := na
-        _uBar        := na
-        _uLbl      := na
-        _bL      := na
-        _bT  := false
-        _iR := false
-        _ibT    := false
-        _fR    := false
-
-if bear
-    // Only draw current-TF FVG boxes when HTF mode is OFF
-    if not uHF
-        _aUF.unshift(box.new(b.i - 1, b.l[2], b.i, b.h,    border_color = na, bgcolor = fSC))
-        _aMF.unshift(box.new(b.i - 1, b.h,    b.i, b.h,    border_color = na, bgcolor = fFC))
-        _aTF.unshift(box.new(b.i - 1, b.l[2], b.i, b.h,    border_color = na, bgcolor = color(na), text_color = chart.fg_color, text_size = size.small))
-        _aLF.unshift(line.new(b.i - 1, b.l[2], b.i, b.l[2], color = fSC, width = 2))
-        _aD.unshift(false)
-    // Signal-tracking: only update from current-TF FVG when HTF mode is OFF
-    if not uHF and not _iR
-        _fZT    := b.l[2]
-        _fZB    := b.h
-        _fCB := b.i
-        _hFvg        := true
-        _lb    := false
-        _fU       := false
-        _uVol     := 0.0
-        _uHi       := na
-        _uLo        := na
-        _uBar        := na
-        _uLbl      := na
-        _bL      := na
-        _bT  := false
-        _iR := false
-        _ibT    := false
-        _fR    := false
-
-// -- HTF FVG signal-tracking update --
-// When HTF mode is ON: signal-tracking zone is driven by the HTF FVG
-// On every bar: ensure _hFvg=true whenever a valid HTF zone exists
-// This fixes 1m (and other lower-TF) charts where _hNB/Bear only fires once
-// historically and _hFvg would otherwise stay false indefinitely
-if uHF and not na(_hZT) and not na(_hZB) and not na(_hZIB)
-    // Always keep zone synced — even if the FVG formed long ago
-    if not _hFvg or (_fZT != _hZT and _fZB != _hZB and not _iR)
-        _fZT := _hZT
-        _fZB := _hZB
-        _lb := _hZIB
-        _hFvg     := true
-    // On a brand-new HTF FVG: full reset of retracement state
-    if (_hNB or _hNBr) and not _iR
-        _fZT    := _hZT
-        _fZB    := _hZB
-        _fCB := b.i
-        _hFvg        := true
-        _lb    := _hZIB
-        _fU       := false
-        _uVol     := 0.0
-        _uHi       := na
-        _uLo        := na
-        _uBar        := na
-        _uLbl      := na
-        _bL      := na
-        _bT  := false
-        _iR := false
-        _ibT    := false
-        _fR    := false
-
-// UPDATE ALL FVGs
-if _aUF.size() > 0
-    _sz = _aUF.size()
-    for _k = _sz - 1 to 0
-        cUB = _aUF.get(_k)
-        tUB = cUB.get_top()
-        bUB = cUB.get_bottom()
-        cMB = _aMF.get(_k)
-        tMB = cMB.get_top()
-        bMB = cMB.get_bottom()
-        cTB = _aTF.get(_k)
-        cL  = _aLF.get(_k)
-        _p  = _aD.get(_k)
-        _remove = false
-
-        if b.h > bUB and b.l < tUB
-            if _p
-                if b.l > bUB
-                    cMB.set_bottom(math.min(b.l, bMB))
-                    cUB.set_top(math.min(b.l, bMB))
-                    cTB.set_text(str.tostring((tMB - math.min(b.l, bMB)) / (tMB - bUB), '#.#%'))
-                else
-                    cMB.set_bottom(bUB)
-                    cUB.set_top(bUB)
-                    cTB.set_text('')
-                    _remove := true
-            else
-                if b.h < tUB
-                    cMB.set_top(math.max(b.h, tMB))
-                    cUB.set_bottom(math.max(b.h, tMB))
-                    cTB.set_text(str.tostring((math.max(b.h, tMB) - bMB) / (tUB - bMB), '#.#%'))
-                else
-                    cMB.set_top(tUB)
-                    cUB.set_bottom(tUB)
-                    cTB.set_text('')
-                    _remove := true
-
-        if _remove
-            if not fVF
-                cUB.delete()
-                cMB.delete()
-                cTB.delete()
-                cL.delete()
-            _aUF.remove(_k)
-            _aMF.remove(_k)
-            _aTF.remove(_k)
-            _aLF.remove(_k)
-            _aD.remove(_k)
-        else
-            cUB.set_right(b.i)
-            cMB.set_right(b.i)
-            cTB.set_right(b.i)
-            cL.set_x2(b.i)
-
 // POST-SIGNAL AUTO-RESET
 if _fU and not _iR
-    if _lb and _hFvg and high > nz(_rnHi, high - 1)
+    if _lb and high > nz(_rnHi, high - 1)
         _fU := false
-    if not _lb and _hFvg and low < nz(_rnLo, low + 1)
+    if not _lb and low < nz(_rnLo, low + 1)
         _fU := false
 
 // STEP 2: RETRACEMENT START  (Block A improved logic)
@@ -813,53 +499,6 @@ if not _iR
         _sbIB  := true
     if _iGr
         _sgIB := true
-
-// -- POI helper functions: find Higher Low / Support level for zone touch mode --
-fHL(_lb) =>
-    float _sw1 = na
-    float _sw2 = na
-    float _result = na
-    for _i = 2 to _lb - 1
-        if low[_i] < low[_i - 1] and low[_i] < low[_i + 1]
-            if na(_sw1)
-                _sw1 := low[_i]
-            else
-                _sw2 := low[_i]
-                break
-    if not na(_sw1) and not na(_sw2) and _sw1 > _sw2
-        _result := _sw1
-    _result
-
-fLH(_lb) =>
-    float _sh1 = na
-    float _sh2 = na
-    float _result = na
-    for _i = 2 to _lb - 1
-        if high[_i] > high[_i - 1] and high[_i] > high[_i + 1]
-            if na(_sh1)
-                _sh1 := high[_i]
-            else
-                _sh2 := high[_i]
-                break
-    if not na(_sh1) and not na(_sh2) and _sh1 < _sh2
-        _result := _sh1
-    _result
-
-fSup(_lb) =>
-    float _result = na
-    for _i = 2 to _lb - 1
-        if high[_i] > high[_i - 1] and high[_i] > high[_i + 1] and high[_i] < close
-            _result := high[_i]
-            break
-    _result
-
-fRes(_lb) =>
-    float _result = na
-    for _i = 2 to _lb - 1
-        if low[_i] < low[_i - 1] and low[_i] < low[_i + 1] and low[_i] > close
-            _result := low[_i]
-            break
-    _result
 
 // -- SL calculation helper: all SL params passed per-strategy --
 fSL(_isBull, _entryPrice, _structLow, _structHigh, _slType, _slBuffer, _slAtrMult, _slSwingLb, _slMinDist, _dollarRisk, _lotSize, _slDollar = 2.0, float _wL = na, float _wH = na) =>
@@ -1042,15 +681,14 @@ fCross(int b, float pr, float a) =>
 // This fixes the case where the big initial drop happens before _lb has flipped.
 //
 // Bull IB: trend is up, green candle closes above previous bar HIGH, bear seen since last IB
-_bFA = not rPOI or (pHL or pSup) or (_hFvg and (not _fU or (not na(_hZIB) and _hZIB)))
+_bFA = true
 // Allow bull IB to cancel an active bear retracement (and vice versa) so we get
 // a fresh setup immediately instead of waiting for the old one to fully expire.
 _bIB = _ib and _bFA and (not _iR or (_iR and not _rwb)) and _iGr and not na(high[1]) and close > high[1]
 
 // Bear IB: trend is down, red candle closes below previous bar LOW, green seen since last IB
-// Allow even if _fU=true (from old bull trade) as long as bear HTF zone exists
 // Allow bear IB to cancel an active bull retracement so we don't miss bear setups.
-_beFA = not rPOI or (pHL or pSup) or (_hFvg and (not _fU or (not na(_hZIB) and not _hZIB)))
+_beFA = true
 _beIB = _ibr and _beFA and (not _iR or (_iR and _rwb)) and _iRd and not na(low[1]) and close < low[1]
 
 // Count IBs blocked only by opposing-candle requirement
@@ -1071,14 +709,6 @@ if _bIB and not _ibT
         _bL := na
         _bT := false
         _uF := false
-        if not na(_pnHL)
-            line.delete(_pnHL)
-        if not na(_pnSp)
-            line.delete(_pnSp)
-        _pnHL := na
-        _pnSp := na
-        _plHL := na
-        _plSp := na
     _rceLo  := na
     _rceHi  := na
     _ibT       := true
@@ -1086,49 +716,6 @@ if _bIB and not _ibT
     _rCeil   := high
     _sbIB  := false
     _lb       := true
-    // FVG zone refresh (only when FVG POI is enabled)
-    if pFvg
-        _bullZoneFound = false
-        _bSize2 = array.size(_hFBx)
-        if _bSize2 > 0
-            float _bestTop2 = na
-            float _bestBot2 = na
-            _bestDist2 = 1e10
-            for _bzi2 = 0 to _bSize2 - 1
-                if array.get(_hFBl, _bzi2)
-                    _zt2 = array.get(_hFTp, _bzi2)
-                    _zb2 = array.get(_hFBt, _bzi2)
-                    if _zt2 < close
-                        _dist2 = close - _zt2
-                        if _dist2 < _bestDist2
-                            _bestDist2 := _dist2
-                            _bestTop2  := _zt2
-                            _bestBot2  := _zb2
-                            _bullZoneFound := true
-            if _bullZoneFound
-                _fZT := _bestTop2
-                _fZB := _bestBot2
-                _fU    := false
-                _hFvg     := true
-        if not _bullZoneFound and not na(_hZIB) and _hZIB and not na(_hZT) and not na(_hZB)
-            _fZT := _hZT
-            _fZB := _hZB
-            _fU    := false
-            _hFvg     := true
-    // Higher Low POI line
-    if pHL
-        if not na(_pnHL)
-            line.delete(_pnHL)
-        _plHL := fHL(pLb)
-        if not na(_plHL)
-            _pnHL := line.new(bar_index, _plHL, bar_index + 50, _plHL, extend = extend.right, style = line.style_dashed, color = color.new(color.yellow, 20), width = 2)
-    // Support flip POI line
-    if pSup
-        if not na(_pnSp)
-            line.delete(_pnSp)
-        _plSp := fSup(pLb)
-        if not na(_plSp)
-            _pnSp := line.new(bar_index, _plSp, bar_index + 50, _plSp, extend = extend.right, style = line.style_dashed, color = color.new(color.orange, 20), width = 2)
     if sDb
         label.new(bar_index, low, "IB↑", style = label.style_label_up, color = color.new(color.blue, 10), textcolor = color.white, size = size.tiny)
 
@@ -1148,14 +735,6 @@ if _beIB and not _ibT
         _bL := na
         _bT := false
         _uF := false
-        if not na(_pnHL)
-            line.delete(_pnHL)
-        if not na(_pnSp)
-            line.delete(_pnSp)
-        _pnHL := na
-        _pnSp := na
-        _plHL := na
-        _plSp := na
     _rceLo  := na
     _rceHi  := na
     _ibT       := true
@@ -1163,55 +742,10 @@ if _beIB and not _ibT
     _rFlr     := low
     _sgIB := false
     _lb       := false
-    // FVG zone refresh (only when FVG POI is enabled)
-    if pFvg
-        _bearZoneFound = false
-        _bSize = array.size(_hFBx)
-        if _bSize > 0
-            float _bestTop = na
-            float _bestBot = na
-            _bestDist = 1e10
-            for _bzi = 0 to _bSize - 1
-                if not array.get(_hFBl, _bzi)
-                    _zt = array.get(_hFTp, _bzi)
-                    _zb = array.get(_hFBt, _bzi)
-                    if _zb > close
-                        _dist = _zb - close
-                        if _dist < _bestDist
-                            _bestDist := _dist
-                            _bestTop  := _zt
-                            _bestBot  := _zb
-                            _bearZoneFound := true
-            if _bearZoneFound
-                _fZT := _bestTop
-                _fZB := _bestBot
-                _fU    := false
-                _hFvg     := true
-        if not _bearZoneFound and not na(_hZIB) and not _hZIB and not na(_hZT) and not na(_hZB)
-            _fZT := _hZT
-            _fZB := _hZB
-            _fU    := false
-            _hFvg     := true
-    // Lower High POI line
-    if pHL
-        if not na(_pnHL)
-            line.delete(_pnHL)
-        _plHL := fLH(pLb)
-        if not na(_plHL)
-            _pnHL := line.new(bar_index, _plHL, bar_index + 50, _plHL, extend = extend.right, style = line.style_dashed, color = color.new(color.yellow, 20), width = 2)
-    // Resistance flip POI line
-    if pSup
-        if not na(_pnSp)
-            line.delete(_pnSp)
-        _plSp := fRes(pLb)
-        if not na(_plSp)
-            _pnSp := line.new(bar_index, _plSp, bar_index + 50, _plSp, extend = extend.right, style = line.style_dashed, color = color.new(color.orange, 20), width = 2)
     if sDb
         label.new(bar_index, high, "IB↓", style = label.style_label_down, color = color.new(color.blue, 10), textcolor = color.white, size = size.tiny)
 
-// Reset IB tracking if trend flips opposite, or no FVG zone (FVG mode only)
-if _ibT and not _hFvg and pFvg
-    _ibT := false
+// Reset IB tracking if trend flips opposite
 if _ibT and _rwb and _ibr
     _ibT := false
 if _ibT and not _rwb and _ib
@@ -1340,31 +874,6 @@ if bRW and not _iR and not _ibT and _iGr and close[1] < open[1] and (bRWW ? high
     _uReBnc := false
     _sStr   := _tS
 
-// STEP 3: Retracement touches any enabled Point of Interest
-// _fR = true when ANY one of the enabled POI types is touched
-if (_iR or _ibT) and not _fR
-    // FVG zone touch
-    if pFvg and not na(_fZT) and not na(_fZB)
-        if low <= _fZT and high >= _fZB
-            _fR := true
-            if sDb
-                if _lb
-                    label.new(bar_index, _fZT, "📍 FVG", style = label.style_label_down, color = color.new(#787b86, 10), textcolor = color.white, size = size.tiny)
-                else
-                    label.new(bar_index, _fZB, "📍 FVG", style = label.style_label_up, color = color.new(#787b86, 10), textcolor = color.white, size = size.tiny)
-    // Higher Low / Lower High touch
-    if pHL and not na(_plHL) and not _fR
-        if _lb ? low <= _plHL : high >= _plHL
-            _fR := true
-            if sDb
-                label.new(bar_index, _plHL, "📍 HL", style = label.style_label_down, color = color.new(color.yellow, 10), textcolor = color.black, size = size.tiny)
-    // Support / Resistance flip touch
-    if pSup and not na(_plSp) and not _fR
-        if _lb ? low <= _plSp : high >= _plSp
-            _fR := true
-            if sDb
-                label.new(bar_index, _plSp, "📍 S/R", style = label.style_label_down, color = color.new(color.orange, 10), textcolor = color.white, size = size.tiny)
-
 // TREND PERSISTENCE (needed by both _tFlp and breakout checks)
 _bPC = 0
 _bePC = 0
@@ -1436,14 +945,6 @@ if _iR
         _uLbl      := na
         _bL      := na
         _bT  := false
-        if not na(_pnHL)
-            line.delete(_pnHL)
-        if not na(_pnSp)
-            line.delete(_pnSp)
-        _pnHL          := na
-        _pnSp         := na
-        _plHL         := na
-        _plSp        := na
         _uReBnc := false
         if sDb and _bnC
             _lbl = _lb ? _rCeil : _rFlr
@@ -1456,11 +957,6 @@ if _iR
         _rceLo  := low
     if not _lb and (na(_rceHi) or high > _rceHi)
         _rceHi := high
-    // Keep POI lines extended to current bar so they always reach the right edge
-    if not na(_pnHL) and not na(_plHL)
-        line.set_x2(_pnHL, bar_index + 20)
-    if not na(_pnSp) and not na(_plSp)
-        line.set_x2(_pnSp, bar_index + 20)
 
 // STEP 4: UHV — Highest Volume Candle During Retracement
 // Compare volume WITHIN the retracement only (not vs prior impulse bars)
@@ -1521,11 +1017,7 @@ if mTM
     _erUS     := false
 
 
-// Per-strategy FVG width + touch checks
-_a144   = nz(ta.atr(144))
-_fW        = nz(_fZT, 0.0) - nz(_fZB, 0.0)
-_uFW  = uFTH == 0 or _fW >= _a144 * uFTH
-_uFC = mTM ? true : rFT ? (_fR and _uFW) : true
+bool _uFC = true
 bool _cUB  = cLP and _uBT  >= 10 and _uBP  < 0.0
 bool _cUBe = cLP and _uBeT >= 10 and _uBeP < 0.0
 
@@ -2603,14 +2095,6 @@ if _iR
         _iR := false
         _ibT    := false
         _fR    := false
-        if not na(_pnHL)
-            line.delete(_pnHL)
-        if not na(_pnSp)
-            line.delete(_pnSp)
-        _pnHL   := na
-        _pnSp  := na
-        _plHL  := na
-        _plSp := na
         _rceLo  := na
         _rceHi  := na
 
@@ -2637,24 +2121,20 @@ f_mxL(float m, simple string slT) => m > 0 ? "  Avg. max drawdown: -$" + str.tos
 // SETTINGS EXPORT STRING — built at global scope (not inside fDP) to avoid exceeding
 // Pine's 254 external-element limit per function. Inputs are referenced here once;
 // fDP() receives the finished string as a single parameter.
-// Format T1: Account|POI|UHV|Trend|HTF|PC  (pipe-delimited, fixed order)
+// Format T1: Account|UHV|Trend|PC  (pipe-delimited, fixed order)
 // Account:  iMon|cM|lA|uSpread|uLev
-// POI:      rPOI|rFT|pFvg|pHL|pSup|pLb
 // UHV:      eUHV|uDir|rUS|rULV|uHTD|uVTOn|uVT|uVLB|uSB|uOE|uPBD|uPBsD|uPBCo|uDR|uRp|uLS|uTM|uT1|uTD|uST|uSBf|uSMn|uSAm|uSDo|uSSw|uSLPips|uTPPips|uREU|uMomB|uMomBR|uMomW|uMomWk|uBrkVROn|uBrkVR|uBrkBody|uCd|uAlGt|uIOEGrd
 // Trend:    mTS|tPB|sFilt|cLP|aTS|aTSU|tSTh|sTC|sTCU|tSMA|rSwT|avoidRng|rngTh|bRW
-// HTF:      uHF|hFC|fTH|uFTH
 // PC:       pE|pSym|mLot|pPip|pcSL|pcTP|pcOT|mTM|pcBrkPip|pcSpread|pcBETrig|pcBEOff|pcTDist|pcTTrig|pcTStep
-// Enums — uDir: 0=Both 1=BullOnly 2=BearOnly | uHTD/hFC: 0=Off/Auto 1=1 2=5 3=15 4=60 5=240
+// Enums — uDir: 0=Both 1=BullOnly 2=BearOnly | uHTD: 0=Off 1=1 2=5 3=15 4=60 5=240
 //         uOE: 0=Close 1=IOE | uTM: 0=RR 1=Struct 2=Dollar
 //         uST: 0=UHV 1=ATR 2=Wick 3=Swing 4=Dollar 5=RetracMinMax 6=PrevCandle
 //         pcSL/pcTP: 0=Pips 1=Price | pcOT: 0=Market 1=Limit
 string _gSAc  = "T1|" + str.tostring(iMon) + "|" + str.tostring(cM) + "|" + str.tostring(lA) + "|" + str.tostring(uSpread) + "|" + str.tostring(uLev)
-string _gSPoi = "|" + (rPOI?"1":"0") + "|" + (rFT?"1":"0") + "|" + (pFvg?"1":"0") + "|" + (pHL?"1":"0") + "|" + (pSup?"1":"0") + "|" + str.tostring(pLb)
 string _gSUhv = "|" + (eUHV?"1":"0") + "|" + (uDir=="Both"?"0":uDir=="Bull only"?"1":"2") + "|" + (rUS?"1":"0") + "|" + (rULV?"1":"0") + "|" + (uHTD=="Off"?"0":uHTD=="1"?"1":uHTD=="5"?"2":uHTD=="15"?"3":uHTD=="60"?"4":"5") + "|" + (uVTOn?"1":"0") + "|" + str.tostring(uVT) + "|" + str.tostring(uVLB) + "|" + str.tostring(uSB) + "|" + (uOE=="Candle Close"?"0":"1") + "|" + str.tostring(uPBD) + "|" + str.tostring(uPBsD) + "|" + (uPBCo?"1":"0") + "|" + str.tostring(uDR) + "|" + str.tostring(uRp) + "|" + str.tostring(uLS) + "|" + (uTM=="R:R Ratio"?"0":uTM=="Structural High/Low"?"1":"2") + "|" + str.tostring(uT1) + "|" + str.tostring(uTD) + "|" + (uST=="UHV"?"0":uST=="ATR"?"1":uST=="Breakout Wick"?"2":uST=="SwingLow"?"3":uST=="Dollar"?"4":uST=="Retracement's Min/Max"?"5":"6") + "|" + str.tostring(uSBf) + "|" + str.tostring(uSMn) + "|" + str.tostring(uSAm) + "|" + str.tostring(uSDo) + "|" + str.tostring(uSSw) + "|" + str.tostring(uSLPips) + "|" + str.tostring(uTPPips) + "|" + (uREU?"1":"0") + "|" + (uMomB?"1":"0") + "|" + str.tostring(uMomBR) + "|" + (uMomW?"1":"0") + "|" + str.tostring(uMomWk) + "|" + (uBrkVROn?"1":"0") + "|" + str.tostring(uBrkVR) + "|" + (uBrkBody?"1":"0") + "|" + str.tostring(uCd) + "|" + str.tostring(uAlGt) + "|" + str.tostring(uIOEGrd) + "|" + str.tostring(uSHLOff)
 string _gSTr  = "|" + str.tostring(mTS) + "|" + str.tostring(tPB) + "|" + (sFilt?"1":"0") + "|" + (cLP?"1":"0") + "|" + (aTS?"1":"0") + "|" + (aTSU?"1":"0") + "|" + str.tostring(tSTh) + "|" + (sTC?"1":"0") + "|" + (sTCU?"1":"0") + "|" + (tSMA?"1":"0") + "|" + (rSwT?"1":"0") + "|" + (avoidRng?"1":"0") + "|" + str.tostring(rngTh) + "|" + (bRW?"1":"0") + "|" + (bRWW?"1":"0")
-string _gSHtf = "|" + (uHF?"1":"0") + "|" + (hFC=="Auto"?"0":hFC=="1"?"1":hFC=="5"?"2":hFC=="15"?"3":hFC=="60"?"4":"5") + "|" + str.tostring(fTH) + "|" + str.tostring(uFTH)
 string _gSPc  = "|" + (pE?"1":"0") + "|" + pSym + "|" + str.tostring(mLot) + "|" + str.tostring(pPip) + "|" + (pcSL=="Pips"?"0":"1") + "|" + (pcTP=="Pips"?"0":"1") + "|" + (pcOT=="Market"?"0":"1") + "|" + (mTM?"1":"0") + "|" + str.tostring(pcBrkPip) + "|" + str.tostring(pcSpread) + "|" + str.tostring(pcBETrig) + "|" + str.tostring(pcBEOff) + "|" + str.tostring(pcTDist) + "|" + str.tostring(pcTTrig) + "|" + str.tostring(pcTStep)
-string _settingsExport = _gSAc + _gSPoi + _gSUhv + _gSTr + _gSHtf + _gSPc
+string _settingsExport = _gSAc + _gSUhv + _gSTr + _gSPc
 
 // STATS PANEL (top-right table)
 fDP(string _settingsExport) =>
@@ -2868,14 +2348,11 @@ fDP(string _settingsExport) =>
          text_color = color.white, text_size = size.small, bgcolor = color.new(#0a7a6a, 5))
 
     // ROW 1 — SIGNAL STATUS (largest text, highest priority)
-    _sigStatus = _iR and _fR ? "POI REACHED — WATCHING FOR ENTRY" :
-         _iR ? "SETUP IN PROGRESS — AWAITING POI" :
+    _sigStatus = _iR ? "SETUP IN PROGRESS — WATCHING FOR ENTRY" :
          _bT  ? "SIGNAL FIRED — MONITORING" : "STANDING BY"
-    _sigBg = _iR and _fR ? color.new(color.green,  30) :
-         _iR ? color.new(color.blue,   40) :
+    _sigBg = _iR ? color.new(color.blue,   40) :
          _bT  ? color.new(color.orange, 30) : color.new(color.gray, 50)
-    _sigFg = _iR and _fR ? color.new(color.lime,   0) :
-         _iR ? color.new(color.aqua,   0) :
+    _sigFg = _iR ? color.new(color.aqua,   0) :
          _bT  ? color.new(color.orange, 0) : color.new(color.silver, 10)
     table.cell(statsPanel, 0, 1, _sigStatus,
          text_color = _sigFg, text_size = size.normal, bgcolor = _sigBg)
@@ -3086,9 +2563,9 @@ fDP(string _settingsExport) =>
     // Split across 3 lines by section so no single line is too wide
     table.cell(statsPanel, 0, 15,
          "SETTINGS EXPORT — copy all 3 lines, paste to Claude to restore:\n" +
-         _gSAc + _gSPoi + "\n" +
+         _gSAc + "\n" +
          _gSUhv + "\n" +
-         _gSTr + _gSHtf + _gSPc,
+         _gSTr + _gSPc,
          text_color = color.white, text_size = size.tiny, bgcolor = color.new(#0a0a0a, 10))
 
 

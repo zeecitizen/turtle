@@ -1,5 +1,5 @@
 # Turtle Trader Desk — Last Known Good Settings
-Last updated: 2026-04-02 (Session 35)
+Last updated: 2026-04-02 (Session 35b)
 Source: Screenshot-verified from TradingView settings panel
 
 ## How to restore
@@ -19,12 +19,8 @@ All defaults in code now match live settings exactly (verified against screensho
 | Position Size Multiplier | 1 |
 | Spread ($) | 0.13 |
 | Account Leverage | 500 |
-| Require POI zone | false |
-| Require POI Touch Before Signal | false |
-| Higher Time Frame FVG | false |
 | Previous Higher Low | false |
 | Broken High / Low | false |
-| POI Lookback (bars) | 50 |
 | Use this strategy? | true |
 | Must candle wick sweep UHV low | false |
 | Must breakout candle have lower volume | **true** |
@@ -122,10 +118,6 @@ All defaults in code now match live settings exactly (verified against screensho
 | Force-close on no-trade window start | false |
 | Bypass retracement rules | true |
 | Wick trigger | **false** |
-| Use Higher Time Frame FVG | false |
-| FVG Width Filter (ATR multiple) | 0.3 |
-| UHV FVG Width Filter | 0.3 |
-| Show Historical FVGs | true |
 | Show Signal Labels | true |
 | Show Debug Labels | false |
 | Show Stats Panel | true |
