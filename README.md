@@ -348,23 +348,39 @@ At 10R TP (e.g. 161 pips), BE at 10% = 16 pips. Gold breathes 15–20 pips conti
 ### Purpose
 Close losing trades early when the breakout fails — before the Pine logical SL or broker hard SL is reached.
 
+### Invalidation Modes (`iExMode`)
+Three rules are available, selectable per-session:
+
+| Mode | Trigger condition (bull) | Rationale |
+|---|---|---|
+| **UHV Range** | `close < uhv_high - tolerance` | Original rule: close re-enters the full UHV candle range |
+| **UHV Midpoint** ⭐ | `close < (uhv_high + uhv_low) / 2 - tolerance` | VSA rule: price below the UHV candle midpoint means the candle was absorption not accumulation. More selective — only exits when structure truly fails |
+| **Breakout Body** | `close < (breakout_open + breakout_close) / 2 - tolerance` | Prop-firm structural failure rule: if the breakout candle loses >50% of its body, the breakout has failed regardless of the UHV candle |
+
+Bear direction mirrors each condition (above instead of below).
+
+⭐ = recommended live default (UHV Midpoint). Ignores shallow pullbacks that still respect structure.
+
 ### Behavior
-- On every bar close: checks if the close price re-enters the UHVC range.
-- Invalidation condition (bull): `close < _iLvl - iExOff` where `_iLvl = UHVC high`
-- Tolerance `iExOff = 0.3`: close must be $0.30 past the level to trigger (avoids false exits on shaved levels)
+- Fires at **bar close only** — intrabar wicks that re-enter the range are ignored
+- Tolerance `iExOff = 0.3`: close must be $0.30 past the invalidation level (noise buffer)
 - On invalidation: sets `_tSH[i] = true`, sends `closelong` or `closeshort` via `alert()`
-- Label updated: ⚡ for loss, ✅ for profit
+- Label updated: ⚡ for loss, ✅ for profit; non-default mode appended e.g. `[UHV Midpoint]`
 - **Post-BE deactivation**: once `_tBE[i] = true`, invalidation is permanently disabled for that trade
+
+### Pine/MT5 SL Alignment
+When `useInvalidation = true`, the wick SL simulation block uses `_effectiveSL = entry ± iExHSL * pPip` instead of the structural breakout wick SL. This ensures Pine stats reflect the same stop price MT5 actually has — structural wick crossings that don't reach the hard SL level are correctly ignored.
 
 ### Key Inputs
 | Input | Default | Description |
 |---|---|---|
 | `Invalidation Exit` | ON | Enable engine |
-| `Invalidation Exit: Hard SL sent to MT5 (pips)` | 50 | Broker disaster backstop |
+| `Invalidation rule` | UHV Midpoint | Exit condition: UHV Range / UHV Midpoint / Breakout Body |
+| `Invalidation Exit: Hard SL sent to MT5 (pips)` | 120 | Broker disaster backstop (sent in signal, not used by Pine P&L) |
 | `Invalidation Exit: Tolerance ($)` | 0.3 | Buffer to avoid noise exits |
 
 ### Notes
-Invalidation fires at **bar close**, not on tick. This prevents exit on intrabar wicks that briefly re-enter the UHVC range before recovering. The tolerance of $0.30 adds a second layer of noise protection. Typical invalidation loss: $3–$5.
+Typical invalidation loss with UHV Midpoint mode: $3–$8. The UHV Midpoint rule is more stable and less noisy than the full range rule because it ignores pullbacks that still respect the "effort" half of the candle. The Breakout Body rule is the strictest — only exits when the entire breakout momentum candle has been negated.
 
 ---
 
@@ -499,34 +515,40 @@ Always evaluate filters by `EV_per_trade × signals_per_day`, not by win rate al
 
 ## 16. Recommended Defaults (XAUUSD, 1m)
 
+> Last verified: 2026-04-01 (Session 33). All values match live code defaults.
+
 ### Account & Risk
 | Setting | Value |
 |---|---|
-| My Starting Capital ($) | 865 |
+| My Starting Capital ($) | 866 |
 | Contract size ($/point/lot) | 100 |
 | Position Size Multiplier | 1 |
 | Spread ($) | 0.13 |
 | Account Leverage | 500 |
-| Risk: % of capital per trade | 1 |
+| Risk: % of capital per trade | 4 |
 | Risk: Fixed lot size | 0.011 |
 
 ### Strategy: UHV Breakout
 | Setting | Value |
 |---|---|
 | Use this strategy? | ON |
-| Open trade at | Instant at Breakout |
-| Pre-breakout offset ($) | 5 |
+| Must breakout candle have lower volume than UHV? | ON |
+| Open trade at | Candle Close |
+| Pre-breakout offset ($) | 0 |
 | Post-breakout offset ($) | 0 |
 | Also allow signal at actual breakout level | ON |
 | Require body breakout | ON |
 | Stop Loss method | Breakout Wick |
-| SL Offset from level | 0.7 |
+| SL Offset from level | 0.4 |
 | SL minimum distance ($) | 0.2 |
+| SL Volatility width (ATR) | 1 |
 | Take Profit method | R:R Ratio |
-| Take Profit R:R | 10 |
+| Take Profit R:R | 7 |
 | Tick Velocity Filter | OFF |
 | Velocity multiplier (k) | 1.2 |
-| Velocity baseline lookback (N) | 20 |
+| Velocity baseline lookback (N) | 5 |
+| Bypass retracement rules | ON |
+| Wick trigger | OFF |
 
 ### Breakeven & Exits
 | Setting | Value |
@@ -535,8 +557,21 @@ Always evaluate filters by `EV_per_trade × signals_per_day`, not by win rate al
 | Breakeven trigger: % of TP | 10 |
 | Lock SL at BE trigger price | false |
 | Invalidation Exit | true |
-| Invalidation Exit: Hard SL (pips) | 50 |
+| Invalidation Exit: Hard SL (pips) | 120 |
 | Invalidation Exit: Tolerance ($) | 0.3 |
+| Invalidation rule | UHV Midpoint |
+
+### Trend & Filters
+| Setting | Value |
+|---|---|
+| Avoid trading when trend shifting | OFF |
+| Apply trend-shift filter to UHV | ON |
+| Shift Threshold | 53 |
+| Require Full Trend Confirmation | OFF |
+| Apply full-trend filter to UHV | ON |
+| Ranging threshold (ADX) | 14 |
+| No-Trade Window 19:00–21:00 UTC | ON |
+| All other No-Trade Windows | OFF |
 
 ### PineConnector
 | Setting | Value |
@@ -544,6 +579,8 @@ Always evaluate filters by `EV_per_trade × signals_per_day`, not by win rate al
 | MT5 pip size (XAUUSD) | **0.10** (critical) |
 | Broker pip size | **0.10** (critical) |
 | Spread filter (pips) | 30 |
+| Stop Loss format sent to MT5 | Pips |
+| Take Profit format sent to MT5 | Pips |
 | Trailing stop distance (pips) | 40 |
 | Trailing trigger (pips) | 100 |
 | Trailing step (pips) | 10 |
