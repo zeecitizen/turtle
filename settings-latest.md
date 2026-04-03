@@ -141,7 +141,7 @@ Source: Screenshot-verified from TradingView settings panel
 | Show Stats Panel | true |
 | Highlight signal candles | true |
 | Send signals to PineConnector | true |
-| PineConnector License ID | 8778286989525 |
+| PineConnector License ID | 87782869895251 |
 | MT5 Symbol Name | XAUUSD |
 | Minimum lot size | 0.01 |
 | MT5 pip size (XAUUSD=0.10) | **0.10** ← critical |
