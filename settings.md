@@ -57,6 +57,7 @@ All defaults in code now match live settings exactly (verified against screensho
 | Emergency MAE stop: pips against entry (0=off) | **60** |
 | Emergency MAE stop: max loss $ (0=off) | **40.0** |
 | Kill timer: close after X seconds (0=off) | **90** |
+| Kill timer (loss only): close if in loss after X seconds (0=off) | 0 |
 | Partial TP: enabled | false |
 | Partial TP trigger (pips) | 40 |
 | Partial TP close % | 50.0 |
@@ -82,6 +83,8 @@ All defaults in code now match live settings exactly (verified against screensho
 | Max trades per hour | false |
 | Max trades per rolling 60-min window | 3 |
 | Min minutes between entries | 5 |
+| Drawdown Protection | false |
+| Max SL risk per trade (% of current equity) | 50.0 |
 | Daily loss limit | false |
 | Soft limit (% of capital) | 2.0 |
 | Hard limit (% of capital) | 5.0 |
@@ -104,7 +107,7 @@ All defaults in code now match live settings exactly (verified against screensho
 | Cut Low Probability Trades | false |
 | Avoid trading when trend shifting | **false** |
 | Apply to UHV Breakout (trend shift) | **true** |
-| Shift Threshold | 53 |
+| How much can trend weaken before blocking the entry? | 53 |
 | Require Full Trend Confirmation | false |
 | Apply to UHV Breakout (full trend) | true |
 | Show Trend MA Line | true |
@@ -123,7 +126,7 @@ All defaults in code now match live settings exactly (verified against screensho
 | Show Stats Panel | true |
 | Highlight signal candles | true |
 | Send signals to PineConnector | true |
-| PineConnector License ID | 8778286989525 |
+| PineConnector License ID | 87782869895251 |
 | MT5 Symbol Name | XAUUSD |
 | Minimum lot size | 0.01 |
 | MT5 pip size (XAUUSD=0.10) | **0.10** ← critical |
