@@ -1,6 +1,6 @@
 # Turtle Trader Desk — Last Known Good Settings
-Last updated: 2026-04-02 (Session 35b)
-Source: Screenshot-verified from TradingView settings panel
+Last updated: 2026-04-04 (Session 36)
+Source: Screenshot-verified + live alert string cross-reference
 
 ## How to restore
 1. Open indicator settings in TradingView
@@ -14,7 +14,7 @@ All defaults in code now match live settings exactly (verified against screensho
 
 | Setting | Value |
 |---|---|
-| My Starting Capital ($) | 866 |
+| My Starting Capital ($) | 865 |
 | Contract size ($/point/lot) | 100 |
 | Position Size Multiplier | 1 |
 | Spread ($) | 0.13 |
@@ -51,12 +51,12 @@ All defaults in code now match live settings exactly (verified against screensho
 | Breakeven trigger: % of TP distance | 10 |
 | Lock SL at BE trigger price | false |
 | Invalidation Exit | true |
-| Invalidation Exit: Hard SL (pips) | **120** |
+| Invalidation Exit: Hard SL (pips) | **1500** |
 | Invalidation Exit: Tolerance ($) | 0.3 |
 | Invalidation rule | **UHV Midpoint** |
 | Emergency MAE stop: pips against entry (0=off) | **60** |
 | Emergency MAE stop: max loss $ (0=off) | **40.0** |
-| Kill timer: close after X seconds (0=off) | **90** |
+| Kill timer: close after X seconds (0=off) | **10** |
 | Kill timer (loss only): close if in loss after X seconds (0=off) | 0 |
 | Partial TP: enabled | false |
 | Partial TP trigger (pips) | 40 |
