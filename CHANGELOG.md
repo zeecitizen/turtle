@@ -1,5 +1,70 @@
 # Turtle Trader Desk — Change Log
 
+## 2026-04-14 — Session 37: Retracement Bug Fix, UHV Filter Hardening, Background Context Rework, BE Lock-in R, Slippage Simplification
+
+### 1. Invalid retracement bug fix (`_rIBLo` / `_rIBHi`)
+**Bug:** A BUY signal could fire after two consecutive red candles following a green IB candle, even though neither red candle broke below the green candle's low — only the second red broke the first red's low.
+
+**Root cause:** `_bRet` used `close < low[1]` (prior bar's low, any colour). When bar sequence is green → red → red, the second red closes below the first red's low and falsely triggered retracement.
+
+**Fix:** Added two new state variables:
+- `var float _rIBLo = na` — stores the IB green candle's low at IB detection
+- `var float _rIBHi = na` — stores the IB red candle's high at IB detection
+
+Retracement triggers now check against the IB candle's extreme directly:
+```pine
+_bRet  = _ibT and _rwb     and _iRd and not na(_rIBLo) and close < _rIBLo
+_beRet = _ibT and not _rwb and _iGr and not na(_rIBHi) and close > _rIBHi
+```
+Both variables reset to `na` when the IB phase cancels due to trend flip and when retracement fires.
+
+### 2. UHV filter gate hardened — all 4 retracement-start blocks
+Previously `_uVol`, `_uBar`, `_uLbl` were assigned unconditionally even when the UHV volume filter (`uVTOn`) was ON, meaning the UHV label would fire on the trigger candle even if it didn't exceed the lookback volume. All 4 blocks now gate those assignments:
+```pine
+if not uVTOn or volume > ta.highest(volume[1], uVLB)
+    _uVol := volume
+    _uBar := bar_index
+    if sL or sDb
+        _uLbl := label.new(...)
+```
+Blocks fixed: `_bRet`, `_beRet`, bRW bull bypass, bRW bear bypass.
+
+### 3. Background context: candle-count logic replaces price-level comparison
+**Old logic:** `close[uSBgN] > close` — was price higher N bars ago? (single-point comparison, fragile).
+
+**New logic:** Count coloured candles in the last N bars:
+- Bull (UHV red = selling climax): `math.sum(close < open ? 1 : 0, uSBgN) > uSBgN / 2`
+- Bear (UHV green = buying climax): `math.sum(close > open ? 1 : 0, uSBgN) > uSBgN / 2`
+
+With `N = 5`, at least 3 of the last 5 candles must be the required colour. Applied to all 6 `_uSBg` assignment sites. Input labels updated to reflect the new semantics.
+
+### 4. Breakeven lock-in at X×R profit (`uBELkR`)
+New setting under the BE group:
+```
+──────── Lock SL at X×R profit when BE fires
+  (0 = off; 1.0 = move SL to 1×R above entry)
+```
+**"Plus One" scalper rule:** set BE trigger to `1.5–2R`, set lock to `1.0`. When price hits the trigger, SL moves to exactly 1R of profit above entry — minor pullbacks don't stop you out, and the trade is guaranteed at least 1R gain.
+
+Priority: `uBELkR > 0` → `uBELkTP` → entry+spread.
+
+PineConnector `beoffset` updated: `math.round(_structSL * uBELkR * pPip / pcBrkPip)`.
+
+### 5. Token encoding system removed → simple slippage input
+Removed `pAT` ("Enter Token") and `pATon` ("Apply token corrections") inputs along with the full `v1,wins,total,...` token decoding block (~20 lines). Replaced with:
+```pine
+pSlip = input.float(0.0, "Slippage: X USD:", group = gPc)
+```
+- `_dPnlSL` and `_dPnlTP` (label P&L display) now use `_pnl - pSlip`
+- Pip-level slippage adjustments (`_aSlB`/`_aSlBe`) removed from alert blocks
+- "Real MT5" dashboard row removed from stats panel
+- `pATon` bit in SS SNAPSHOT replaced with `(0)`
+
+### 6. Token budget
+All changes compile within Pine's 80,000 token limit.
+
+---
+
 ## 2026-04-02 — Session 35: 7 New Risk Management Features + Trail Tuning + Structural SL
 
 ### 1. Trail stop retuned — 60/20/3 (trigger/distance/step)
