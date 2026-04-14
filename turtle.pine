@@ -667,7 +667,7 @@ fPC(_isBull, _lots, _entry, _sl, _tp, _strat, _num, _bits, _structSL, string _cf
     _trPart  = pcTDist > 0 ? ",traildist=" + str.tostring(pcTDist) + (pcTTrig > 0 ? ",trailtrig=" + str.tostring(pcTTrig) : "") + ",trailstep=" + str.tostring(pcTStep) : ""
     _slVal   = pcSL == "Price" ? str.tostring(_isBull ? _entry - _sl * pPip : _entry + _sl * pPip, "#.##") : str.tostring(math.round(_sl * pPip / pcBrkPip), "0")
     _tpVal   = pcTP == "Price" ? str.tostring(_isBull ? _entry + _tp * pPip : _entry - _tp * pPip, "#.##") : str.tostring(math.round(_tp * pPip / pcBrkPip), "0")
-    _cmt     = str.tostring(_lots, "0.00") + "#sl=" + _slVal + "#tp=" + _tpVal + (pcSpread > 0 ? "#sd=" + str.tostring(pcSpread) : "") + (_beTrig > 0 ? "#bt=" + str.tostring(_beTrig) + (_beOff > 0 ? "#bo=" + str.tostring(_beOff) : "") : "") + (pcTDist > 0 ? "#td=" + str.tostring(pcTDist) + (pcTTrig > 0 ? "#tt=" + str.tostring(pcTTrig) : "") + "#ts=" + str.tostring(pcTStep) : "") + "|" + _cfg
+    _cmt     = str.tostring(_lots, "0.00") + "#sl=" + _slVal + "#tp=" + _tpVal + (pcSpread > 0 ? "#sd=" + str.tostring(pcSpread) : "") + (_beTrig > 0 ? "#bt=" + str.tostring(_beTrig) + (_beOff > 0 ? "#bo=" + str.tostring(_beOff) : "") : "") + (pcTDist > 0 ? "#td=" + str.tostring(pcTDist) + (pcTTrig > 0 ? "#tt=" + str.tostring(pcTTrig) : "") + "#ts=" + str.tostring(pcTStep) : "") + "|" + str.replace_all(_cfg, ",", "#")
     _base = pLid + "," + _dir + "," + pSym + _otPart + ",vol_lots=" + str.tostring(_lots, "0.00") + _slPart + _tpPart + _spPart + _bePart + _trPart
     _base + ",comment=" + _cmt
 
