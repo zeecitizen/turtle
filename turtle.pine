@@ -578,82 +578,82 @@ fCfg() =>
     _slI = pcSL == "Pips" ? 0 : 1
     _tpI = pcTP == "Pips" ? 0 : 1
     _oTI = pcOT == "Market" ? 0 : 1
-    _n  = str.tostring(iMon,      "#.##")      + ","
-    _n += str.tostring(cM,        "#.##")      + ","
-    _n += str.tostring(lA,        "#.##")      + ","
-    _n += str.tostring(uSpread,   "#.##")      + ","
-    _n += str.tostring(uLev)                   + ","
-    _n += str.tostring(_dI)                    + ","
-    _n += str.tostring(_hI)                    + ","
-    _n += str.tostring(0)                      + ","
-    _n += str.tostring(uVLB)                   + ","
-    _n += str.tostring(uSBgN)                  + ","
-    _n += str.tostring(uWSpK,     "#.##")      + ","
-    _n += str.tostring(uSB)                    + ","
-    _n += str.tostring(_oI)                    + ","
-    _n += str.tostring(uPBD,      "#.##")      + ","
-    _n += str.tostring(uPBsD,     "#.##")      + ","
-    _n += str.tostring(uDR,       "#.##")      + ","
-    _n += str.tostring(uRp,       "#.##")      + ","
-    _n += str.tostring(uLS,       "#.####")    + ","
-    _n += str.tostring(_tI)                    + ","
-    _n += str.tostring(uT1,       "#.##")      + ","
-    _n += str.tostring(uTD,       "#.##")      + ","
-    _n += str.tostring(uSHLOff,   "#.##")      + ","
-    _n += str.tostring(_sI)                    + ","
-    _n += str.tostring(uSBf,      "#.##")      + ","
-    _n += str.tostring(uSMn,      "#.##")      + ","
-    _n += str.tostring(uSAm,      "#.##")      + ","
-    _n += str.tostring(uSDo,      "#.##")      + ","
-    _n += str.tostring(uSSw)                   + ","
-    _n += str.tostring(uSLPips,   "#.##")      + ","
-    _n += str.tostring(uTPPips,   "#.##")      + ","
-    _n += str.tostring(uBEPct,    "#.##")      + ","
-    _n += str.tostring(uBERR,     "#.##")      + ","
-    _n += str.tostring(iExHSL)                 + ","
-    _n += str.tostring(iExOff,    "#.##")      + ","
-    _n += str.tostring(_eI)                    + ","
-    _n += str.tostring(uMAEPips)               + ","
-    _n += str.tostring(uMAEDol,   "#.##")      + ","
-    _n += str.tostring(uKillSec)               + ","
-    _n += str.tostring(uKillLossSec)           + ","
-    _n += str.tostring(ptpPips)                + ","
-    _n += str.tostring(ptpPct,    "#.##")      + ","
-    _n += str.tostring(uMomBR,    "#.##")      + ","
-    _n += str.tostring(uMomWkD,   "#.##")      + ","
-    _n += str.tostring(uMomWkO,   "#.##")      + ","
-    _n += str.tostring(uBrkVR,    "#.##")      + ","
-    _n += str.tostring(uTVK,      "#.##")      + ","
-    _n += str.tostring(uTVN)                   + ","
-    _n += str.tostring(uCd)                    + ","
-    _n += str.tostring(uAlGt,     "#.##")      + ","
-    _n += str.tostring(uIOEGrd,   "#.##")      + ","
-    _n += str.tostring(mTS)                    + ","
-    _n += str.tostring(tPB)                    + ","
-    _n += str.tostring(tSTh)                   + ","
-    _n += str.tostring(rngTh)                  + ","
-    _n += str.tostring(vbATR,     "#.##")      + ","
-    _n += str.tostring(vbSprdK,   "#.##")      + ","
-    _n += str.tostring(mtphMax)                + ","
-    _n += str.tostring(mtphGap)                + ","
-    _n += str.tostring(dllSoft,   "#.##")      + ","
-    _n += str.tostring(dllHard,   "#.##")      + ","
-    _n += str.tostring(ddProtPct, "#.##")      + ","
-    _n += str.tostring(ssPips,    "#.##")      + ","
-    _n += str.tostring(vcFact,    "#.##")      + ","
-    _n += str.tostring(ouK,       "#.##")      + ","
-    _n += str.tostring(bfBars)                 + ","
-    _n += str.tostring(bfPips,    "#.##")      + ","
-    _n += str.tostring(vdFact,    "#.##")      + ","
-    _n += str.tostring(msBuf,     "#.##")      + ","
-    _n += str.tostring(msLb)                   + ","
-    _n += str.tostring(mLot,      "#.####")    + ","
-    _n += str.tostring(pPip,      "#.#####")   + ","
-    _n += str.tostring(pcBrkPip,  "#.#####")   + ","
-    _n += str.tostring(_slI)                   + ","
-    _n += str.tostring(_tpI)                   + ","
+    _n  = str.tostring(iMon,      "#.##")      + "#"
+    _n += str.tostring(cM,        "#.##")      + "#"
+    _n += str.tostring(lA,        "#.##")      + "#"
+    _n += str.tostring(uSpread,   "#.##")      + "#"
+    _n += str.tostring(uLev)                   + "#"
+    _n += str.tostring(_dI)                    + "#"
+    _n += str.tostring(_hI)                    + "#"
+    _n += str.tostring(0)                      + "#"
+    _n += str.tostring(uVLB)                   + "#"
+    _n += str.tostring(uSBgN)                  + "#"
+    _n += str.tostring(uWSpK,     "#.##")      + "#"
+    _n += str.tostring(uSB)                    + "#"
+    _n += str.tostring(_oI)                    + "#"
+    _n += str.tostring(uPBD,      "#.##")      + "#"
+    _n += str.tostring(uPBsD,     "#.##")      + "#"
+    _n += str.tostring(uDR,       "#.##")      + "#"
+    _n += str.tostring(uRp,       "#.##")      + "#"
+    _n += str.tostring(uLS,       "#.####")    + "#"
+    _n += str.tostring(_tI)                    + "#"
+    _n += str.tostring(uT1,       "#.##")      + "#"
+    _n += str.tostring(uTD,       "#.##")      + "#"
+    _n += str.tostring(uSHLOff,   "#.##")      + "#"
+    _n += str.tostring(_sI)                    + "#"
+    _n += str.tostring(uSBf,      "#.##")      + "#"
+    _n += str.tostring(uSMn,      "#.##")      + "#"
+    _n += str.tostring(uSAm,      "#.##")      + "#"
+    _n += str.tostring(uSDo,      "#.##")      + "#"
+    _n += str.tostring(uSSw)                   + "#"
+    _n += str.tostring(uSLPips,   "#.##")      + "#"
+    _n += str.tostring(uTPPips,   "#.##")      + "#"
+    _n += str.tostring(uBEPct,    "#.##")      + "#"
+    _n += str.tostring(uBERR,     "#.##")      + "#"
+    _n += str.tostring(iExHSL)                 + "#"
+    _n += str.tostring(iExOff,    "#.##")      + "#"
+    _n += str.tostring(_eI)                    + "#"
+    _n += str.tostring(uMAEPips)               + "#"
+    _n += str.tostring(uMAEDol,   "#.##")      + "#"
+    _n += str.tostring(uKillSec)               + "#"
+    _n += str.tostring(uKillLossSec)           + "#"
+    _n += str.tostring(ptpPips)                + "#"
+    _n += str.tostring(ptpPct,    "#.##")      + "#"
+    _n += str.tostring(uMomBR,    "#.##")      + "#"
+    _n += str.tostring(uMomWkD,   "#.##")      + "#"
+    _n += str.tostring(uMomWkO,   "#.##")      + "#"
+    _n += str.tostring(uBrkVR,    "#.##")      + "#"
+    _n += str.tostring(uTVK,      "#.##")      + "#"
+    _n += str.tostring(uTVN)                   + "#"
+    _n += str.tostring(uCd)                    + "#"
+    _n += str.tostring(uAlGt,     "#.##")      + "#"
+    _n += str.tostring(uIOEGrd,   "#.##")      + "#"
+    _n += str.tostring(mTS)                    + "#"
+    _n += str.tostring(tPB)                    + "#"
+    _n += str.tostring(tSTh)                   + "#"
+    _n += str.tostring(rngTh)                  + "#"
+    _n += str.tostring(vbATR,     "#.##")      + "#"
+    _n += str.tostring(vbSprdK,   "#.##")      + "#"
+    _n += str.tostring(mtphMax)                + "#"
+    _n += str.tostring(mtphGap)                + "#"
+    _n += str.tostring(dllSoft,   "#.##")      + "#"
+    _n += str.tostring(dllHard,   "#.##")      + "#"
+    _n += str.tostring(ddProtPct, "#.##")      + "#"
+    _n += str.tostring(ssPips,    "#.##")      + "#"
+    _n += str.tostring(vcFact,    "#.##")      + "#"
+    _n += str.tostring(ouK,       "#.##")      + "#"
+    _n += str.tostring(bfBars)                 + "#"
+    _n += str.tostring(bfPips,    "#.##")      + "#"
+    _n += str.tostring(vdFact,    "#.##")      + "#"
+    _n += str.tostring(msBuf,     "#.##")      + "#"
+    _n += str.tostring(msLb)                   + "#"
+    _n += str.tostring(mLot,      "#.####")    + "#"
+    _n += str.tostring(pPip,      "#.#####")   + "#"
+    _n += str.tostring(pcBrkPip,  "#.#####")   + "#"
+    _n += str.tostring(_slI)                   + "#"
+    _n += str.tostring(_tpI)                   + "#"
     _n += str.tostring(_oTI)
-    "SS:" + _bh + "," + _n
+    "SS:" + _bh + "#" + _n
 
 fPC(_isBull, _lots, _entry, _sl, _tp, _strat, _num, _bits, _structSL, string _cfg = "") =>
     _dir     = _isBull ? "buy" : "sell"
@@ -667,7 +667,7 @@ fPC(_isBull, _lots, _entry, _sl, _tp, _strat, _num, _bits, _structSL, string _cf
     _trPart  = pcTDist > 0 ? ",traildist=" + str.tostring(pcTDist) + (pcTTrig > 0 ? ",trailtrig=" + str.tostring(pcTTrig) : "") + ",trailstep=" + str.tostring(pcTStep) : ""
     _slVal   = pcSL == "Price" ? str.tostring(_isBull ? _entry - _sl * pPip : _entry + _sl * pPip, "#.##") : str.tostring(math.round(_sl * pPip / pcBrkPip), "0")
     _tpVal   = pcTP == "Price" ? str.tostring(_isBull ? _entry + _tp * pPip : _entry - _tp * pPip, "#.##") : str.tostring(math.round(_tp * pPip / pcBrkPip), "0")
-    _cmt     = str.tostring(_lots, "0.00") + "#sl=" + _slVal + "#tp=" + _tpVal + (pcSpread > 0 ? "#sd=" + str.tostring(pcSpread) : "") + (_beTrig > 0 ? "#bt=" + str.tostring(_beTrig) + (_beOff > 0 ? "#bo=" + str.tostring(_beOff) : "") : "") + (pcTDist > 0 ? "#td=" + str.tostring(pcTDist) + (pcTTrig > 0 ? "#tt=" + str.tostring(pcTTrig) : "") + "#ts=" + str.tostring(pcTStep) : "") + "|" + str.replace_all(_cfg, ",", "#")
+    _cmt     = str.tostring(_lots, "0.00") + "#sl=" + _slVal + "#tp=" + _tpVal + (pcSpread > 0 ? "#sd=" + str.tostring(pcSpread) : "") + (_beTrig > 0 ? "#bt=" + str.tostring(_beTrig) + (_beOff > 0 ? "#bo=" + str.tostring(_beOff) : "") : "") + (pcTDist > 0 ? "#td=" + str.tostring(pcTDist) + (pcTTrig > 0 ? "#tt=" + str.tostring(pcTTrig) : "") + "#ts=" + str.tostring(pcTStep) : "") + "#" + _cfg
     _base = pLid + "," + _dir + "," + pSym + _otPart + ",vol_lots=" + str.tostring(_lots, "0.00") + _slPart + _tpPart + _spPart + _bePart + _trPart
     _base + ",comment=" + _cmt
 
@@ -688,11 +688,12 @@ fDevLabel(string _bits, string _alertMsg, float _clsAtFire) =>
     _d += " Sess:" + (str.substring(_bits, 11, 12) == "1" ? "✓" : "✗")
     _d += " Vol:" + (str.substring(_bits, 12, 13) == "1" ? (str.substring(_bits, 13, 14) == "1" ? "ON✓" : "ON✗") : "off")
     _d += " OC:" + (str.substring(_bits, 14, 15) == "1" ? (str.substring(_bits, 15, 16) == "1" ? "ON✓" : "ON✗") : "off")
-    _alertShort = str.contains(_alertMsg, "|SS:") ? str.substring(_alertMsg, 0, str.pos(_alertMsg, "|SS:")) : _alertMsg
+    _alertShort = str.contains(_alertMsg, "#SS:") ? str.substring(_alertMsg, 0, str.pos(_alertMsg, "#SS:")) : _alertMsg
     _alertFmt = str.replace_all(_alertShort, ",vol_lots=", "\nvol_lots=")
     _alertFmt := str.replace_all(_alertFmt, ",spread=", "\nspread=")
     _alertFmt := str.replace_all(_alertFmt, ",traildist=", "\ntraildist=")
     _alertFmt := str.replace_all(_alertFmt, ",comment=", "\ncomment=")
+    _alertFmt := str.replace_all(_alertFmt, "#", "\n")
     _d += "\n" + _alertFmt
     _d
 
@@ -1232,7 +1233,7 @@ if array.size(_tEn) > 0
             // Disabled once breakeven fires (trade is already protected at entry level).
             bool _killExited = false
             if uKillSec > 0 and not _maeExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
-                bool _timeHit = barstate.isrealtime and ((timenow - array.get(_tFT, _ti)) >= uKillSec * 1000 or (bar_index - _entryBar) * int(tFm) * 60 >= uKillSec)
+                bool _timeHit = barstate.isrealtime and (timenow - array.get(_tFT, _ti)) >= uKillSec * 1000
                 if _timeHit
                     _killExited := true
                     array.set(_tSH, _ti, true)
@@ -1279,7 +1280,7 @@ if array.size(_tEn) > 0
             // Disabled once breakeven fires.
             bool _killLossExited = false
             if uKillLossSec > 0 and not _maeExited and not _killExited and not _killLossExited and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
-                bool _klTimeHit = barstate.isrealtime and ((timenow - array.get(_tFT, _ti)) >= uKillLossSec * 1000 or (bar_index - _entryBar) * int(tFm) * 60 >= uKillLossSec)
+                bool _klTimeHit = barstate.isrealtime and (timenow - array.get(_tFT, _ti)) >= uKillLossSec * 1000
                 float _klEn     = array.get(_tEn, _ti)
                 float _klLots   = array.get(_tEL, _ti)
                 float _klPnl    = (_bull ? (close - _klEn) : (_klEn - close)) * _klLots * cM
