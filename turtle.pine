@@ -2558,18 +2558,19 @@ fDP() =>
     table.cell(statsPanel, 0, 3, "TODAY",
          text_color = _txtDim, text_size = size.tiny, bgcolor = color.new(color.black, 5))
 
-    // ROW 4 — TODAY P&L (large font — shows live P&L; Pine sim shown as reference)
-    // Live P&L = only trades whose alert actually fired on a realtime bar (sent to MT5)
-    // Pine sim  = all trades incl. historical bar replay — useful for strategy tuning but ≠ MT5 actual
-    _todayPnLDisp = math.round(_livePnLToday * 100) / 100
+    // ROW 4 — TODAY P&L (single best value: live if any live trades exist, else Pine sim)
+    // Live = alerts that actually fired to MT5 (barstate.isrealtime at signal time)
+    // Sim  = Pine historical replay (no live data yet — used as best estimate until live trades accumulate)
+    _bestPnL      = _liveClosedToday > 0 ? _livePnLToday : _uPT
+    _bestCount    = _liveClosedToday > 0 ? _liveClosedToday : _tradesCompletedToday
+    _bestWins     = _liveClosedToday > 0 ? _liveWinsToday : _winsToday
+    _todayPnLDisp = math.round(_bestPnL * 100) / 100
     _todayBalDisp = iMon + _todayPnLDisp
     _todaySign    = _todayPnLDisp >= 0.01 ? "+" : ""
-    _simDiff      = math.round((_uPT - _livePnLToday) * 100) / 100
-    _simNote      = _liveClosedToday < _tradesCompletedToday ? "  |  Pine sim: " + (_uPT >= 0 ? "+" : "") + "$" + str.tostring(math.round(_uPT * 100) / 100, "#.##") + " (+" + str.tostring(_tradesCompletedToday - _liveClosedToday) + " hist)" : ""
     _todayBg      = _todayPnLDisp >= 0.01 ? color.new(color.green, 55) : _todayPnLDisp <= -0.01 ? color.new(color.red, 55) : color.new(color.gray, 55)
     _todayFg      = _todayPnLDisp >= 0.01 ? _txtGreen : _todayPnLDisp <= -0.01 ? _txtRed : _txtDim
     table.cell(statsPanel, 0, 4,
-         _todaySign + "$" + str.tostring(_todayPnLDisp, "#.##") + "  |  Balance: $" + str.tostring(_todayBalDisp, "#.##") + _simNote,
+         _todaySign + "$" + str.tostring(_todayPnLDisp, "#.##") + "  |  Balance: $" + str.tostring(_todayBalDisp, "#.##"),
          text_color = _todayFg, text_size = size.normal, bgcolor = _todayBg)
 
     // -- Avg trade duration --
@@ -2582,9 +2583,10 @@ fDP() =>
         _avgDurMins := math.round(_durSum / _durSz * tFm * 10) / 10
     _avgDurStr = _durSz == 0 ? "—" : _avgDurMins >= 60.0 ? str.tostring(math.round(_avgDurMins / 60.0 * 10) / 10) + " hr" : str.tostring(_avgDurMins) + " min"
     // ROW 5 — STRATEGY SUB-TOTALS + AVG DURATION (tiny, secondary detail under today P&L)
+    _srcLbl = _liveClosedToday > 0 ? "live" : "sim"
     table.cell(statsPanel, 0, 5,
-         "UHV live " + (_livePnLToday >= 0 ? "+" : "") + "$" + str.tostring(math.round(_livePnLToday * 100) / 100, "#.##") +
-         "  (" + str.tostring(_liveClosedToday) + " trades, " + str.tostring(_liveWinsToday) + " won)" +
+         "UHV " + _srcLbl + " " + (_bestPnL >= 0 ? "+" : "") + "$" + str.tostring(math.round(_bestPnL * 100) / 100, "#.##") +
+         "  (" + str.tostring(_bestCount) + " trades, " + str.tostring(_bestWins) + " won)" +
          "\nAvg trade duration: " + _avgDurStr + "  (" + str.tostring(_durSz) + " all-time trades)",
          text_color = _txtDim, text_size = size.tiny, bgcolor = _bgDark)
 
@@ -2639,7 +2641,7 @@ fDP() =>
     table.cell(statsPanel, 0, 9,
          "UHV  W/L: " + str.tostring(_uhvWinsCalc) + "/" + str.tostring(_uhvTradesCalc) + " (" + str.tostring(_uhvAcc) + "%)" +
          "\nAll-time: " + (_uhvPnLCalc >= 0 ? "+" : "") + "$" + str.tostring(_uhvPnLCalc, "#.##") +
-         "  |  Today: " + (_livePnLToday >= 0 ? "+" : "") + "$" + str.tostring(math.round(_livePnLToday * 100) / 100, "#.##") + " (live)" +
+         "  |  Today: " + (_bestPnL >= 0 ? "+" : "") + "$" + str.tostring(math.round(_bestPnL * 100) / 100, "#.##") +
          _uhvWLStr + _uhvLotStr,
          text_color = _uhvPnLCalc >= 0 ? _txtGreen : _txtRed, text_size = size.normal, bgcolor = _bgDeep)
 
