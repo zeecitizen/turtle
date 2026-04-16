@@ -260,6 +260,7 @@ var bool  [] _tBFX   = array.new_bool()    // true = price has extended past bre
 var float [] _tEL  = array.new_float()
 var int   [] _tEB = array.new_int()
 var int   [] _tFT = array.new_int()  // timenow (ms wall-clock) when each signal alert fired
+var bool  [] _tLive = array.new_bool()  // true = trade was entered on a realtime bar (alert actually sent to MT5)
 var label [] _tLbl    = array.new<label>()  // signal label ref for post-trade update
 var _tTy     = array.new_string()   // "uhv"
 var int   [] _tN      = array.new_int()       // sequential trade number (#1, #2, ...)
@@ -282,6 +283,7 @@ varip float  _uPndLt   = 0.
 varip float  _uPndTS   = 0.
 varip int    _uPndN    = 0
 varip int    _uPndFT   = 0   // timenow at alert fire — used by _tFT so kill timer counts from MT5 send time, not bar close
+varip bool   _uPndLive = false  // true when alert fired on a realtime bar (actually sent to MT5)
 varip string _uPndBits = ""
 varip string _uPndMsg  = "—"
 var float _sigChkW = 0.  // checksum written at signal formation
@@ -2093,7 +2095,8 @@ if _bBrk
             if _gateOkU
                 _sigT += 1
                 _alT += 1
-                _uPndFT := timenow  // capture alert fire time — used by kill timer via _tFT (IOE: bar close ≠ fill time)
+                _uPndFT   := timenow  // capture alert fire time — used by kill timer via _tFT (IOE: bar close ≠ fill time)
+                _uPndLive := barstate.isrealtime  // tag: live bar = alert actually sent to MT5
                 alert(pE ? _lastAlertMsg : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_uPndEn, "#.###") + " | " + syminfo.ticker, alert.freq_all)
                 _lastSigTxt := "BUY NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_uPndEn, "#.###") + "\nSL:    " + str.tostring(_uPndEn - _uPndSL * pPip, "#.###") + "  -$" + str.tostring(math.round(_uPndSL * pPip * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSL * pPip * _uPndLt * cM / iMon * 100, "#.##") + "%]" + "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) + "\nTP:    " + str.tostring(_uPndEn + _uPndTP * pPip, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") + "\n" + fAS(_uWn, _uTr) + (uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : "")
                 _uPendBull := true
@@ -2161,7 +2164,8 @@ if _beBrk
             if _gateOkUe
                 _sigT += 1
                 _alT += 1
-                _uPndFT := timenow  // capture alert fire time — used by kill timer via _tFT (IOE: bar close ≠ fill time)
+                _uPndFT   := timenow  // capture alert fire time — used by kill timer via _tFT (IOE: bar close ≠ fill time)
+                _uPndLive := barstate.isrealtime  // tag: live bar = alert actually sent to MT5
                 alert(pE ? _lastAlertMsg : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_uPndEn, "#.###") + " | " + syminfo.ticker, alert.freq_all)
                 _lastSigTxt := "SELL NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_uPndEn, "#.###") + "\nSL:    " + str.tostring(_uPndEn + _uPndSL * pPip, "#.###") + "  -$" + str.tostring(math.round(_uPndSL * pPip * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSL * pPip * _uPndLt * cM / iMon * 100, "#.##") + "%]" + "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) + "\nTP:    " + str.tostring(_uPndEn - _uPndTP * pPip, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") + "\n" + fAS(_uWn, _uTr) + (uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : "")
                 _uPendBear := true
@@ -2209,7 +2213,9 @@ if (_uPendBull or _uPendBear) and barstate.isconfirmed
     array.push(_tATE,  ta.atr(14))
     array.push(_tBFX,  false)
     array.push(_tPTP,  false)
-    array.push(_tFT,  _uPndFT > 0 ? _uPndFT : timenow)  // IOE: use alert fire time, not bar close time
+    array.push(_tFT,   _uPndFT > 0 ? _uPndFT : timenow)  // IOE: use alert fire time, not bar close time
+    array.push(_tLive, _uPndLive)  // true = live realtime bar → alert actually sent to MT5
+    _uPndLive := false             // reset for next signal
     array.push(_sBT,  bar_index)
     array.push(_sABT, bar_index)
     _bT  := true
@@ -2378,13 +2384,22 @@ fDP() =>
     // -- Pre-panel: today completed wins/trades --
     _winsToday            = 0
     _tradesCompletedToday = 0
+    _livePnLToday         = 0.0   // live-only P&L (signals that actually fired to MT5)
+    _liveClosedToday      = 0     // live-only closed trade count
+    _liveWinsToday        = 0     // live-only win count
     _todayStartMs         = timenow - (timenow % 86400000)
     if array.size(_tCTs) > 0
         for _ict = 0 to array.size(_tCTs) - 1
             if array.get(_tCTs, _ict) >= _todayStartMs and array.get(_tCTs, _ict) >= _sRD
+                _isLive = array.size(_tLive) > _ict and array.get(_tLive, _ict)
                 _tradesCompletedToday += 1
                 if array.get(_tPA, _ict) > 0
                     _winsToday += 1
+                if _isLive
+                    _liveClosedToday += 1
+                    _livePnLToday    += array.get(_tPA, _ict)
+                    if array.get(_tPA, _ict) > 0
+                        _liveWinsToday += 1
 
     // -- Pre-panel: trades closed in last hour --
     _hourTrades = 0
@@ -2543,14 +2558,18 @@ fDP() =>
     table.cell(statsPanel, 0, 3, "TODAY",
          text_color = _txtDim, text_size = size.tiny, bgcolor = color.new(color.black, 5))
 
-    // ROW 4 — TODAY P&L (large font — most visible number)
-    _todayPnLDisp = math.round(_uPT * 100) / 100
+    // ROW 4 — TODAY P&L (large font — shows live P&L; Pine sim shown as reference)
+    // Live P&L = only trades whose alert actually fired on a realtime bar (sent to MT5)
+    // Pine sim  = all trades incl. historical bar replay — useful for strategy tuning but ≠ MT5 actual
+    _todayPnLDisp = math.round(_livePnLToday * 100) / 100
     _todayBalDisp = iMon + _todayPnLDisp
     _todaySign    = _todayPnLDisp >= 0.01 ? "+" : ""
+    _simDiff      = math.round((_uPT - _livePnLToday) * 100) / 100
+    _simNote      = _liveClosedToday < _tradesCompletedToday ? "  |  Pine sim: " + (_uPT >= 0 ? "+" : "") + "$" + str.tostring(math.round(_uPT * 100) / 100, "#.##") + " (+" + str.tostring(_tradesCompletedToday - _liveClosedToday) + " hist)" : ""
     _todayBg      = _todayPnLDisp >= 0.01 ? color.new(color.green, 55) : _todayPnLDisp <= -0.01 ? color.new(color.red, 55) : color.new(color.gray, 55)
     _todayFg      = _todayPnLDisp >= 0.01 ? _txtGreen : _todayPnLDisp <= -0.01 ? _txtRed : _txtDim
     table.cell(statsPanel, 0, 4,
-         _todaySign + "$" + str.tostring(_todayPnLDisp, "#.##") + "  |  Balance: $" + str.tostring(_todayBalDisp, "#.##"),
+         _todaySign + "$" + str.tostring(_todayPnLDisp, "#.##") + "  |  Balance: $" + str.tostring(_todayBalDisp, "#.##") + _simNote,
          text_color = _todayFg, text_size = size.normal, bgcolor = _todayBg)
 
     // -- Avg trade duration --
@@ -2564,16 +2583,20 @@ fDP() =>
     _avgDurStr = _durSz == 0 ? "—" : _avgDurMins >= 60.0 ? str.tostring(math.round(_avgDurMins / 60.0 * 10) / 10) + " hr" : str.tostring(_avgDurMins) + " min"
     // ROW 5 — STRATEGY SUB-TOTALS + AVG DURATION (tiny, secondary detail under today P&L)
     table.cell(statsPanel, 0, 5,
-         "UHV " + (_uPT >= 0 ? "+" : "") + "$" + str.tostring(math.round(_uPT * 100) / 100, "#.##") +
-         "\nAvg trade duration: " + _avgDurStr + "  (" + str.tostring(_durSz) + " trades)",
+         "UHV live " + (_livePnLToday >= 0 ? "+" : "") + "$" + str.tostring(math.round(_livePnLToday * 100) / 100, "#.##") +
+         "  (" + str.tostring(_liveClosedToday) + " trades, " + str.tostring(_liveWinsToday) + " won)" +
+         "\nAvg trade duration: " + _avgDurStr + "  (" + str.tostring(_durSz) + " all-time trades)",
          text_color = _txtDim, text_size = size.tiny, bgcolor = _bgDark)
 
     // ROW 6 — TRADE COUNT + STREAK + ALERT GATE STATUS
+    // "live" = realtime alerts sent to MT5 | "hist" = historical bar replay (Pine sim only, never reached MT5)
     _gated = _sigT - _alT
+    _histClosed = _tradesCompletedToday - _liveClosedToday
+    _histNote   = _histClosed > 0 ? "  +  " + str.tostring(_histClosed) + " hist sim" : ""
     table.cell(statsPanel, 0, 6,
          str.tostring(_sigT) + " labels  |  " + str.tostring(_alT) + " alerts" + (_gated > 0 ? "  |  ⚠️ " + str.tostring(_gated) + " gated" : "") +
-         "  |  " + str.tostring(_tradesCompletedToday) + " closed  |  " + str.tostring(_winsToday) + " won" +
-         (_tradesCompletedToday > 0 ? "  (" + str.tostring(math.round(_winsToday / math.max(_tradesCompletedToday, 1) * 100)) + "%)" : "") +
+         "  |  " + str.tostring(_liveClosedToday) + " live closed  |  " + str.tostring(_liveWinsToday) + " won" +
+         (_liveClosedToday > 0 ? "  (" + str.tostring(math.round(_liveWinsToday / math.max(_liveClosedToday, 1) * 100)) + "%)" : "") + _histNote +
          "\n" + (_currentStreak > 1 ? str.tostring(_currentStreak) + " wins in a row" : _currentStreak == 1 ? "Last: win" : _currentStreak < -1 ? str.tostring(math.abs(_currentStreak)) + " losses in a row" : "Last: loss"),
          text_color = _currentStreak >= 0 ? _txtGreen : _txtOrange, text_size = size.small, bgcolor = _bgDark)
 
@@ -2616,7 +2639,7 @@ fDP() =>
     table.cell(statsPanel, 0, 9,
          "UHV  W/L: " + str.tostring(_uhvWinsCalc) + "/" + str.tostring(_uhvTradesCalc) + " (" + str.tostring(_uhvAcc) + "%)" +
          "\nAll-time: " + (_uhvPnLCalc >= 0 ? "+" : "") + "$" + str.tostring(_uhvPnLCalc, "#.##") +
-         "  |  Today: " + (_uPT >= 0 ? "+" : "") + "$" + str.tostring(_uPT, "#.##") +
+         "  |  Today: " + (_livePnLToday >= 0 ? "+" : "") + "$" + str.tostring(math.round(_livePnLToday * 100) / 100, "#.##") + " (live)" +
          _uhvWLStr + _uhvLotStr,
          text_color = _uhvPnLCalc >= 0 ? _txtGreen : _txtRed, text_size = size.normal, bgcolor = _bgDeep)
 
