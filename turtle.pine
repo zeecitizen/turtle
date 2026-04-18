@@ -1149,6 +1149,19 @@ if array.size(_tEn) > 0
                     if pE
                         alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
 
+            // BREAKEVEN CHECK — runs before kill timer so the kill timer sees _tBE=true and skips.
+            // In real MT5, price ticks trigger BE immediately when the trigger is touched; the 5-second
+            // kill timer then finds _tBE=true and does not fire. Moving this check here replicates
+            // that ordering in historical sim: if bar N+1 touches the BE trigger before the simulated
+            // "5-second" kill, BE fires first and the trade becomes a runner instead of a kill exit.
+            if uBEon and not _maeExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and not _t1hit and (bar_index > _entryBar or _isIOE)
+                float _beEn     = array.get(_tEn, _ti)
+                float _beSlDist = math.abs(_beEn - array.get(_tSl, _ti))
+                float _beTrig   = uBERR > 0 ? (_bull ? _beEn + _beSlDist * uBERR : _beEn - _beSlDist * uBERR) : _beEn + (_tp1 - _beEn) * (uBEPct / 100.0)
+                if (_bull ? high >= _beTrig : low <= _beTrig)
+                    array.set(_tBE, _ti, true)
+                    array.set(_tSl, _ti, uBELkR > 0 ? (_bull ? _beEn + uBELkR * _beSlDist : _beEn - uBELkR * _beSlDist) : uBELkTP ? _beTrig : (_bull ? _beEn - uSpread : _beEn + uSpread))
+
             // KILL TIMER — tick-based: close if trade still open after uKillSec seconds
             // Uses _tFT (timenow at signal fire) to measure elapsed wall-clock time on every tick.
             // A good trade moves within seconds; anything stuck past the limit is a dead zone trade.
@@ -1852,9 +1865,11 @@ if array.size(_tEn) > 0
 
             if not _slhit and not _maeExited and not _killExited and not _killLossExited and not _dllExited and not _invExited and not _structSLExited and not _ouExited and not _bfExited and not _vcExited and not _vdExited and not _msExited and not _todKillExited and not _hardSLExited and not _trailExited and (bar_index > _entryBar or _isIOE)
                 bool _onEB2      = (bar_index == _entryBar)
-                // When invalidation mode is on, MT5 uses the hard SL (iExHSL pips) not the structural wick SL.
-                // Use the same price here so Pine matches MT5 — wick through breakout candle low no longer counts.
-                float _effectiveSL = useInvalidation ? (_bull ? array.get(_tEn, _ti) - iExHSL * pPip : array.get(_tEn, _ti) + iExHSL * pPip) : _sl
+                // When invalidation mode is on, MT5 holds a hard SL at iExHSL pips (not the structural wick SL).
+                // After BE fires, MT5's SL is moved to entry level — use _tSl (the updated BE stop) instead.
+                // Read directly from the array (not the local _sl var) so we get the post-BE-update value.
+                bool  _beActive    = array.get(_tBE, _ti)
+                float _effectiveSL = (useInvalidation and not _beActive) ? (_bull ? array.get(_tEn, _ti) - iExHSL * pPip : array.get(_tEn, _ti) + iExHSL * pPip) : array.get(_tSl, _ti)
                 float _slTP1Ref    = array.get(_tTP, _ti)
                 bool  _tpAlsoHitSL = not _onEB2 and (_bull ? high >= _slTP1Ref : low <= _slTP1Ref)
                 _slTriggered = not _tpAlsoHitSL and (_bull ? ((_onEB2 ? close : low) <= _effectiveSL) : ((_onEB2 ? close : high) >= _effectiveSL))
@@ -1893,18 +1908,15 @@ if array.size(_tEn) > 0
                                 _uBeT += 1
                         _origLbl = array.get(_tLbl, _ti)
                         _dPnlSL  = _pnl - pSlip
+                        // _beActive is true when BE had already moved SL to entry level — label as "BE Stop" not "SL Hit"
+                        string _slExitTxt = _beActive ? ("🔵 #" + str.tostring(_tNum) + " BE Stop — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss") : (_isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss")
+                        color  _slExitCol = _beActive ? color.new(color.blue, 10) : (_isBEWin ? color.new(color.green, 10) : color.new(color.red, 10))
                         if not na(_origLbl)
                             _origTxt = label.get_text(_origLbl)
-                            label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n" + (_isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss"))
-                        label.new(bar_index, _bull ? low : high, _isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "⭕ #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss", style = _bull ? label.style_label_up : label.style_label_down, color = _isBEWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
+                            label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n" + _slExitTxt)
+                        label.new(bar_index, _bull ? low : high, _slExitTxt, style = _bull ? label.style_label_up : label.style_label_down, color = _slExitCol, textcolor = color.white, size = size.small)
 
-            if uBEon and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and not _t1hit and (bar_index > _entryBar or _isIOE)
-                _en   = array.get(_tEn, _ti)
-                _slDist = math.abs(_en - array.get(_tSl, _ti))
-                _be50 = uBERR > 0 ? (_bull ? _en + _slDist * uBERR : _en - _slDist * uBERR) : _en + (_tp1 - _en) * (uBEPct / 100.0)
-                if (_bull ? high >= _be50 : low <= _be50)
-                    array.set(_tBE, _ti, true)
-                    array.set(_tSl, _ti, uBELkR > 0 ? (_bull ? _en + uBELkR * _slDist : _en - uBELkR * _slDist) : uBELkTP ? _be50 : (_bull ? _en - uSpread : _en + uSpread))
+            // BE check moved above kill timer — see "BREAKEVEN CHECK" block earlier in this loop.
 
             if not _t1hit and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
                 _fireTime = array.size(_tFT) > _ti ? array.get(_tFT, _ti) : int(na)
