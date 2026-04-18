@@ -1,30 +1,48 @@
 # Turtle Trader Desk — Last Known Good Settings
-Last updated: 2026-04-18 (Session 43/44)
+Last updated: 2026-04-18 (Session 44/45)
 Source: Live indicator via MCP — `data_get_indicator` on entity_id `PgkQBd`
 
-## Performance (Session 42/43 — Best All-Time)
+## Performance (Session 44/45 — Best All-Time)
 | Metric | Value |
 |---|---|
-| Trades | 539 all-time (~22/day) |
-| Win rate | **73%** (395/539) |
-| EV/trade | **$33.82** |
-| Avg win | +$62.97 |
-| Avg loss | -$46.16 |
-| All-time P&L | **+$18,226** |
+| Trades | 545 all-time (~23/day) |
+| Win rate | **81%** (441/545) |
+| EV/trade | **$67.43** |
+| Avg win | +$92.81 |
+| Avg loss | -$40.16 |
+| All-time P&L | **+$36,751** |
 | Max loss per trade | -$60 (hard-capped by iExHSL=15) |
+| To double balance | **13 trades (~10.3 hrs)** |
+| Washout threshold | 21 consecutive losses |
 
-## Key optimisation: Kill ALL Timer (uKillSec = 5)
+## Key optimisations
+
+### 1. Kill ALL Timer (uKillSec = 5)
 Close ANY open trade 5 seconds after entry, regardless of P&L direction.
 - Fires at bar N+1 close in historical sim; at exactly 5 sec in live MT5
 - Avg loss drops from -$60 → -$46 by cutting stagnant trades early
-- Net EV improves by $2.73/trade vs no kill timer
+- Disabled once breakeven fires (trade is protected)
+
+### 2. BE + Runner (uBEon = true, uBERR = 0.2, uTPPips = 10)
+Once price moves 3 pips in profit (= uBERR × uSLPips = 0.2 × 15), SL moves to entry+spread.
+- Trade is now risk-free; kill timer disabled; TP target extends to 10 pips
+- Kill timer + BE are complementary: kill handles stagnant trades, BE handles winners
+- PineConnector alert includes `betrigger=3` — instructs MT5 to move SL after 3 pips
+- EV nearly doubles vs kill-timer-only baseline ($67.43 vs $33.82)
 
 ## How to restore
 1. Open indicator settings in TradingView
 2. Click "Defaults" to reset — code defaults now match these values exactly
 3. Delete and recreate the TradingView alert (any alert() function call, webhook enabled)
 
-## Changes vs previous snapshot (2026-04-03)
+## Changes vs previous snapshot (2026-04-18 Session 43/44)
+| Setting | Old | New |
+|---|---|---|
+| Take Profit: Override with fixed pips | 3 | **10** |
+| Breakeven: move SL to entry+spread | false | **true** |
+| Breakeven at R:R ratio | 0 | **0.2** |
+
+## Changes vs earlier snapshot (2026-04-03)
 | Setting | Old | New |
 |---|---|---|
 | Pre-breakout offset ($) | 6 | **1** |
@@ -34,8 +52,9 @@ Close ANY open trade 5 seconds after entry, regardless of P&L direction.
 | Take Profit R:R | 9 | **7** |
 | Take Profit Fixed $ target | 0.1 | **1.1** |
 | Stop Loss: Override with fixed pips | 0 | **15** |
-| Take Profit: Override with fixed pips | 0 | **3** |
-| Breakeven: move SL to entry+spread | true | **false** |
+| Take Profit: Override with fixed pips | 0 | **10** |
+| Breakeven: move SL to entry+spread | true | **true** |
+| Breakeven at R:R ratio | 0 | **0.2** |
 | Invalidation Exit: Hard SL (pips) | 120 | **15** |
 | Invalidation offset ($) | 0 | **1.0** |
 | Emergency MAE stop: max loss $ | 40 | **0** |
@@ -96,10 +115,10 @@ Close ANY open trade 5 seconds after entry, regardless of P&L direction.
 | Stop Loss: Fixed $ distance | 2 |
 | Stop Loss: Swing lookback bars | 11 |
 | Stop Loss: Override with fixed pips | **15** |
-| Take Profit: Override with fixed pips | **3** |
-| Breakeven: move SL to entry+spread | **false** |
+| Take Profit: Override with fixed pips | **10** |
+| Breakeven: move SL to entry+spread | **true** |
 | Breakeven trigger: % of TP distance | 10 |
-| Breakeven at R:R ratio | 0 |
+| Breakeven at R:R ratio | **0.2** |
 | Lock SL at BE trigger price | false |
 | Lock SL at X×R profit when BE fires | 0 |
 | Invalidation Exit | true |
@@ -221,7 +240,11 @@ Close ANY open trade 5 seconds after entry, regardless of P&L direction.
 ## SS Snapshot
 Paste into indicator_set_inputs to restore all settings at once:
 ```
-SS:900100800201#865#100#1#0.13#500#0#0#0#20#5#1.5#0#1#0#0#0#0#0.4#0#7#1.1#0.5#2#0.4#0.2#1#2#11#15#3#10#0#15#0#0#0.4#0#7#1.1#0.5#2#0.4#0.2#1#2#11#15#3#10#0#15#0.3#1#60#0#5#0#40#50#80#30#30#5#1.2#5#0#-0.05#1#0#8#53#14#4#3#3#5#2#5#50#50#0.6#2#3#5#0.5#3#3#0.01#0.1#0.1#0#0#0
+SS:900100808281#
+865#100#1#0.13#500#0#0#0#20#5#1.5#0#1#1#0#0#0#0.4#0#7#1.1#0.5#2#0.4#0.2#1#2#11#15#10#10#0.2#15#0.3#1#60#0#5#0#40#50#80#30#30#5#1.2#5#0#-0.05#1#0#8#53#14#4#3#3#5#2#5#50#50#0.6#2#3#5#0.5#3#3#0.01#0.1#0.1#0#0#0
 ```
 
-To restore kill timer via MCP: `indicator_set_inputs(entity_id="PgkQBd", inputs={"in_52": 5, "in_53": 0})`
+To restore via MCP:
+```
+indicator_set_inputs(entity_id="PgkQBd", inputs={"in_39": 10, "in_40": true, "in_42": 0.2, "in_52": 5, "in_53": 0})
+```
