@@ -20,7 +20,7 @@ gU = "📊 Strategy: Ultra High Volume Breakout"
 eUHV             = input.bool(true,  'Use this strategy?', group = gU)
 uDir          = input.string("Both", 'Trade direction?', options = ["Both", "Bull only", "Bear only"], group = gU)
 rUS       = input.bool(false, 'Must any candle wick through or break the UHV low before the entry candle breaks its high?', group = gU)
-rULV    = input.bool(true,  'Must the breakout candle have lower volume than the UHV candle?', group = gU)
+rULV    = input.bool(false, 'Must the breakout candle have lower volume than the UHV candle?', group = gU)
 uHTD    = input.string("Off", '──── Align direction to higher timeframe? (bull if HTF bullish / bear if HTF bearish)', options = ["Off", "1", "5", "15", "60", "240"], group = gU)
 uVTOn      = input.bool(false, '──── UHV Detection: Require UHV candle to have higher volume than the last N candles? (OFF = pick highest volume candle from this retracement only)', group = gU)
 uVLB       = input.int(20,    '──────── N — how many previous candles the UHV volume must exceed', minval = 1, maxval = 500, group = gU)
@@ -33,13 +33,13 @@ uUHVWkPct = input.float(60.0, '──────── Max combined wick % of c
 uUHVBdOn  = input.bool(false, '──── UHV Candle: Require minimum body strength? — body as % of total range (1 = any body allowed, 100 = body must fill entire candle; filters weak indecision bars that lack directional intent)', group = gU)
 uUHVBdPct = input.float(40.0, '──────── Min body strength (% of candle range): 40 = body fills ≥ 40% of high-low; higher = stricter — use 50–70 to require clearly directional UHV candles', group = gU, minval = 1.0, maxval = 100.0, step = 5.0)
 uSB         = input.int(0,      'How many bars must pass after the UHV candle before entry?', group = gU)
-uOE = input.string("Candle Close", '──── Open trade at', options = ["Candle Close", "Instant at Breakout"], group = gU)
-uPBD = input.float(0.0, '──── Pre-breakout offset ($): fire signal this many $ BEFORE the breakout level (0 = at breakout, 0.05 = 5 cents early = better fill)', group = gU)
+uOE = input.string("Instant at Breakout", '──── Open trade at', options = ["Candle Close", "Instant at Breakout"], group = gU)
+uPBD = input.float(1.0, '──── Pre-breakout offset ($): fire signal this many $ BEFORE the breakout level (0 = at breakout, 0.05 = 5 cents early = better fill)', group = gU)
 uPBsD = input.float(0.0, '──── Post-breakout offset ($): wait for price to move this many $ PAST the breakout level before entering (0 = off, 0.5 = wait for 50¢ confirmation — combines with pre-offset)', group = gU)
-uPBCo = input.bool(true, '──── Also allow signal at actual breakout level: when pre-offset is set and price breaks out without reaching the offset level, fire at the actual breakout price instead of missing the trade', group = gU)
+uPBCo = input.bool(false, '──── Also allow signal at actual breakout level: when pre-offset is set and price breaks out without reaching the offset level, fire at the actual breakout price instead of missing the trade', group = gU)
 uDR = input.float(0.0,  '──── Risk: Dollar risk per trade? ($)', group = gU)
-uRp = input.float(4.0,  '──── Risk: % of capital per trade (when $Risk = 0) — sizes lots so each trade risks this % of your starting capital', group = gU)
-uLS    = input.float(0.011, '──── Risk: Fixed lot size? (when $Risk = 0 and % = 0)', group = gU)
+uRp = input.float(0.0,  '──── Risk: % of capital per trade (when $Risk = 0) — sizes lots so each trade risks this % of your starting capital', group = gU)
+uLS    = input.float(0.4, '──── Risk: Fixed lot size? (when $Risk = 0 and % = 0)', group = gU)
 uTM   = input.string("R:R Ratio", '──── Take Profit: Which method?', options = ["R:R Ratio", "Structural High/Low", "Dollar Amount"], group = gU)
 uT1    = input.float(7.0, '──── Take Profit: R:R Ratio (R:R method only)', group = gU)
 uTD   = input.float(1.1,  '──── Take Profit: Fixed $ target (Dollar method only)', group = gU)
@@ -50,20 +50,21 @@ uSMn = input.float(0.2,    '──── Stop Loss: Closest it can ever be to en
 uSAm = input.float(1.0,    '──── Stop Loss: Volatility width? (ATR method only)', group = gU)
 uSDo  = input.float(2.0,    '──── Stop Loss: Fixed $ distance from entry? (Dollar method only)', group = gU)
 uSSw = input.int(11,      '──── Stop Loss: How many bars back to find the swing? (SwingLow method only)', group = gU)
-uSLPips = input.float(0.0, '──── Stop Loss: Override with fixed pips (0 = off, uses SL method above)', group = gU)
-uTPPips = input.float(0.0, '──── Take Profit: Override with fixed pips (0 = off, uses TP method above)', group = gU)
-uBEon  = input.bool(true,  '──── Breakeven: move SL to entry+spread when price hits X% of TP', group = gU)
+uSLPips = input.float(15.0, '──── Stop Loss: Override with fixed pips (0 = off, uses SL method above)', group = gU)
+uTPPips = input.float(3.0, '──── Take Profit: Override with fixed pips (0 = off, uses TP method above)', group = gU)
+uBEon  = input.bool(false,  '──── Breakeven: move SL to entry+spread when price hits X% of TP', group = gU)
 uBEPct = input.float(10.0, '──────── Breakeven trigger: % of TP distance (10 = early, 50 = halfway, 100 = at TP) — ignored when R:R ratio below is set', group = gU, minval = 1, maxval = 100, step = 5)
 uBERR  = input.float(0.0,  '──────── Breakeven at R:R ratio (0 = off; 1.0 = BE triggers when profit = 1× structural SL distance; 0.5 = half the risk; overrides % of TP trigger above)', group = gU, minval = 0.0, maxval = 10.0, step = 0.5)
 uBELkTP = input.bool(false, '──────── Lock SL at BE trigger price: move SL to the exact 50% TP level instead of entry+offset (locks in 50% of potential profit when BE fires)', group = gU)
 uBELkR  = input.float(0.0, '──────── Lock SL at X×R profit when BE fires (0 = off; 1.0 = move SL to 1R above entry — "Plus One" rule: set BE trigger to 1.5–2R, lock here at 1R so minor pullbacks don\'t stop you out)', group = gU, minval = 0.0, maxval = 5.0, step = 0.25)
 useInvalidation = input.bool(true, '──── Invalidation Exit: close trade when a 1-min candle closes back inside the UHV candle range — prevents stop hunts, exits early when breakout fails (MT5 uses wide Hard SL as disaster insurance; Pine simulation keeps wick SL for accurate R:R stats)', group = gU)
-iExHSL = input.int(120, '──────── Invalidation Exit: Hard SL sent to MT5 (pips) — wide disaster SL for broker-side safety if connection fails (default 150 pips; does NOT affect lot sizing or Pine stats)', group = gU, minval = 10, step = 5)
+iExHSL = input.int(15, '──────── Invalidation Exit: Hard SL sent to MT5 (pips) — wide disaster SL for broker-side safety if connection fails (default 150 pips; does NOT affect lot sizing or Pine stats)', group = gU, minval = 10, step = 5)
 iExOff = input.float(0.3, '──────── Invalidation Exit: Tolerance ($) — only exit if close is this much past the UHV level (0 = strictly below/above, 0.05 = small buffer against shaved levels)', group = gU, step = 0.05, minval = 0.0)
 iExMode  = input.string("UHV Midpoint", '──────── Invalidation rule — UHV Range: current bar closes back inside UHV candle range (original) | UHV Midpoint: close crosses the midpoint of the UHV candle (VSA rule — below midpoint = absorption, not accumulation) | Breakout Body: close crosses the midpoint of the breakout candle body (prop-firm structural failure rule)', options = ["UHV Range", "UHV Midpoint", "Breakout Body"], group = gU)
+iExModeOff = input.float(1.0, '──────────── Invalidation offset ($): shift the trigger level further from entry — adds to Tolerance above (0 = at trigger level, 0.5 = needs to close $0.50 beyond midpoint/range/body before invalidating; larger = more room, fewer exits)', group = gU, step = 0.1, minval = 0.0)
 uMAEPips = input.int(60, '──────── Emergency MAE stop: close if trade moves X pips against entry (0 = off) — tick-based, fires immediately on every price update without waiting for bar close or UHV logic. Primary shield against instant dumps.', group = gU, minval = 0, step = 5)
-uMAEDol  = input.float(40.0, '──────── Emergency MAE stop: close if unrealised loss exceeds $X (0 = off) — fires on every tick regardless of SL, invalidation, or trailing status. Disabled once breakeven fires.', group = gU, minval = 0.0, step = 5.0)
-uKillSec = input.int(90, '──────── Kill timer: close trade if still open after X seconds (0 = off) — tick-based, fires the moment elapsed wall-clock time exceeds the limit. Good trades move fast; stagnant trades bleed slowly. Disabled once breakeven fires.', group = gU, minval = 0, step = 10)
+uMAEDol  = input.float(0.0, '──────── Emergency MAE stop: close if unrealised loss exceeds $X (0 = off) — fires on every tick regardless of SL, invalidation, or trailing status. Disabled once breakeven fires.', group = gU, minval = 0.0, step = 5.0)
+uKillSec = input.int(5, '──────── Kill timer: close trade if still open after X seconds (0 = off) — tick-based, fires the moment elapsed wall-clock time exceeds the limit. Good trades move fast; stagnant trades bleed slowly. Disabled once breakeven fires.', group = gU, minval = 0, step = 10)
 uKillLossSec = input.int(0, '──────── Kill timer (loss only): close trade if still in loss after X seconds (0 = off) — same as kill timer but only fires when current P&L is negative. Lets winning trades run freely while cutting losers that haven\'t moved. Disabled once breakeven fires.', group = gU, minval = 0, step = 10)
 ptpOn   = input.bool(false, '──── Partial Take-Profit + Runner: lock in profit on part of the position, then let the rest run with breakeven protection. Captures the long tail of big UHV extensions without adding risk.', group = gU)
 ptpPips = input.int(40,    '──────── Partial TP trigger: pips in profit before firing (40 = close partial when +40 pips; set to your typical quick-win distance)', group = gU, minval = 1, step = 5)
@@ -88,14 +89,14 @@ gTr = "📈 Trend & Filters"
 uCd    = input.int(0,  '──── Cooldown: Bars after a signal before another can fire?', group = gU)
 uAlGt  = input.float(-0.05, '──── Alert Gate ($): min gap from current price to TP before alert fires (−1 = always fire, 0 = block only if price already past TP, >0 = require X$ gap — protects against fast-candle fills past TP)', minval = -1.0, step = 0.05, group = gU)
 uIOEGrd = input.float(1.0,  '──── IOE TP Guard: spread multiplier (0 = off, 1 = guard triggers when TP within 1× spread of close, 2 = stricter — within 2× spread)', minval = 0.0, step = 0.5, group = gU)
-mTS  = input.int(3, 'Min Trend Strength at Signal', group = gTr)
+mTS  = input.int(0, 'Min Trend Strength at Signal', group = gTr)
 tPB  = input.int(8, 'Trend Persistence Lookback (bars)', group = gTr)
 sFilt = input.bool(false, 'Only trade London + NY sessions? (8–12 GMT and 13–17 GMT)', group = gTr)
 aTS      = input.bool(false,  'Avoid trading when trend is shifting?', group = gTr)
-aTSU   = input.bool(true, '──── Apply to UHV Breakout?', group = gTr)
+aTSU   = input.bool(false, '──── Apply to UHV Breakout?', group = gTr)
 tSTh  = input.int(53, '──── How much can trend weaken before blocking the entry? — compares trend strength now vs when the UHV candle (⚡) first printed for this setup. If it has fallen by this many points or more by the time the breakout fires, the signal is blocked. Each new ⚡ candle resets the comparison (e.g. 53 = only block if strength fell 53+ points, like from 70 down to 17 or less). Higher = more lenient. 100 = never block.', group = gTr)
 sTC     = input.bool(false,  'Require Full Trend Confirmation at Entry?',  group = gTr)
-sTCU  = input.bool(true, '──── Apply to UHV Breakout?',               group = gTr)
+sTCU  = input.bool(false, '──── Apply to UHV Breakout?',               group = gTr)
 tSMA       = input.bool(true, 'Show Trend MA Line on Chart', group = gTr)
 rSwT  = input.bool(false, 'Require structural trend — buy only when HH+HL confirmed, sell only when LH+LL confirmed (prevents taking buys in a downtrend or sells in an uptrend)', group = gTr)
 avoidRng  = input.bool(false,  'Avoid signals during ranging market (ADX-based — suppresses entries when trend strength is too weak for a breakout to follow through)', group = gTr)
@@ -103,10 +104,11 @@ rngTh     = input.int(14,    '──── Ranging threshold: ADX below this = r
 ntW1 = input.bool(false,  '🚫 No-Trade Window: 21:00–23:00 UTC — NY Rollover (spreads spike 5–10×, spread cost can exceed entire TP)', group = gTr)
 ntW2 = input.bool(false, '🚫 No-Trade Window: 23:00–03:00 UTC — Late Asia lull (slow drift, high fakeout risk, no institutional flow)', group = gTr)
 ntW3 = input.bool(false, '🚫 No-Trade Window: 04:00–07:00 UTC — Pre-London trap (thin liquidity, breakouts fail before London volume arrives)', group = gTr)
-ntW4 = input.bool(true, '🚫 No-Trade Window: 19:00–21:00 UTC — Volume fade / Friday profit-taking (institutions closing, reversals unpredictable)', group = gTr)
+ntW4 = input.bool(false, '🚫 No-Trade Window: 19:00–21:00 UTC — Volume fade / Friday profit-taking (institutions closing, reversals unpredictable)', group = gTr)
 ntKill = input.bool(false, '⚡ Force-close open trades when a no-trade window begins — prevents being caught in rollover/news spikes while holding an open position', group = gTr)
 bRW = input.bool(true, 'Bypass retracement rules — retracement starts whenever a red candle closes below the prior green candle\'s low (removes trend/IB phase requirements)', group = gTr)
 bRWW = input.bool(false, '──── Wick trigger: wick piercing below prior green low is enough (default = body close required)', group = gTr)
+bRWLB = input.int(3, '──── bRW lookback (bars): find the most recent opposite-colored candle within this many bars — 1 = prior candle only, 3 = looks back 3 bars. Higher = more signals in trending markets', group = gTr, minval = 1, maxval = 10)
 
 // --- 7b. Risk Management ------------------
 gRM = "🛡️ Risk Management"
@@ -121,48 +123,19 @@ dllOn   = input.bool(false, 'Daily loss limit: equity-based kill switch — soft
 dllSoft = input.float(2.0,  '──── Soft limit (% of capital): block new entries only — e.g. 2 = stop new trades at -2% daily loss. Exits (SL, MAE, invalidation) always execute regardless.', group = gRM, minval = 0.0, step = 0.5)
 dllHard = input.float(5.0,  '──── Hard limit (% of capital): close ALL open trades + block new entries for the day — e.g. 5 = full shutdown at -5% daily loss (0 = no hard limit — soft only)', group = gRM, minval = 0.0, step = 0.5)
 
-// Drawdown Protection — caps each new trade's SL-distance risk to X% of current equity (capital + today's P&L).
-// As the account shrinks from losses, lots automatically scale down to keep each trade's max loss proportional.
-// Example: capital=$391, threshold=50% → each new trade risks at most $195.50 on its SL. After -$100 today,
-// equity=$291 so new trades risk at most $145.50 on SL — lots shrink automatically. No cliff-edge trigger.
 ddProtOn  = input.bool(false, 'Drawdown Protection: cap each trade\'s SL risk to X% of current equity — lots shrink as account loses money, protecting against washout. Uses live equity (capital + today\'s P&L) so protection tightens after losses (e.g. capital $391, set 50 = each trade risks at most 50% of current equity on SL)', group = gRM)
 ddProtPct = input.float(50.0, '──── Max SL risk per trade (% of current equity): each new trade\'s lot size is capped so worst-case SL loss ≤ this % of your live equity. Lower = more protection. 50 = never risk more than half your equity on any single trade\'s SL.', group = gRM, minval = 5.0, maxval = 90.0, step = 5.0)
-
-// Spread Spike Filter — blocks new entries when the current 1m candle range is abnormally wide.
-// Wide candles = news spike, liquidity grab, or broker spread explosion. Breakouts during these are
-// usually traps: price moves fast but spread eats profit and stop gets hit on the retrace.
 ssOn   = input.bool(false, 'Spread Spike Filter: block entries when 1m candle range is unusually wide (proxy for news spikes / spread explosions — wide candles = traps, not breakouts)', group = gRM)
 ssPips = input.float(50.0, '──── Max candle range (pips) to allow entry — 50 = news spike filter, 30 = stricter for low-volatility sessions', group = gRM, minval = 5.0, step = 5.0)
-
-// Volatility Collapse Exit — closes a trade when ATR(14) drops far below what it was at entry.
-// After a real breakout, volatility stays elevated as price moves with purpose. If ATR collapses
-// back to pre-breakout levels, the move has died — holding is hoping, not trading.
 vcOn   = input.bool(false, 'Volatility Collapse Exit: close trade if market volatility collapses to a fraction of what it was when you entered (dead breakout — momentum has evaporated)', group = gRM)
 vcFact = input.float(0.6,  '──── Collapse factor — close when current ATR < X × ATR-at-entry (0.6 = exit when ATR drops to 60% of entry level, 0.5 = stricter)', group = gRM, minval = 0.2, maxval = 0.9, step = 0.05)
-
-// Opposite UHV Exit — closes when a high-volume candle in the opposite direction appears after entry.
-// Institutional footprint: if the same high-volume signature that triggered your entry now appears
-// in the opposite direction, the smart money has flipped. Your thesis is invalidated.
 ouOn   = input.bool(false, 'Opposite UHV Exit: close if a high-volume candle in the opposite direction appears after entry (smart-money reversal signal — the institutional tide has turned against you)', group = gRM)
 ouK    = input.float(2.0,  '──── Volume multiple: candle must exceed X × 20-bar average volume to qualify (2 = twice average — filters random spikes, requires genuine institutional volume)', group = gRM, minval = 1.5, step = 0.5)
-
-// Breakout Failure Pattern Exit — closes when price fails to extend beyond the breakout level
-// within a defined window and then closes back inside. This is the classic "bull trap" pattern:
-// price breaks out, momentum traders enter, then it reverses and traps everyone above the level.
 bfOn   = input.bool(false, 'Breakout Failure Exit: close if price fails to extend past the breakout level within N bars and closes back inside (classic bull/bear trap — the breakout had no follow-through)', group = gRM)
 bfBars = input.int(3,      '──── Failure window (bars) — how many bars after entry to watch for extension before declaring failure', group = gRM, minval = 1, maxval = 10)
 bfPips = input.float(5.0,  '──── Extension threshold (pips) — price must reach at least this far past the breakout level within the window to confirm the breakout (0 = any new high/low counts)', group = gRM, minval = 0.0, step = 1.0)
-
-// Volume Drop Exit — closes when post-breakout bar volume collapses below a fraction of the 20-bar average.
-// Volume is the fuel behind a move. A breakout candle has extreme volume; follow-through bars should
-// stay above average. If volume vanishes immediately after entry, institutions aren't participating —
-// retail-only move that will fade as fast as it started.
 vdOn   = input.bool(false, 'Volume Drop Exit: close if the bar after entry shows volume collapse (institutions not following through — retail-only move that will fade)', group = gRM)
 vdFact = input.float(0.5,  '──── Drop factor — close when current bar volume < X × 20-bar average volume (0.5 = exit when volume drops below 50% of average)', group = gRM, minval = 0.1, maxval = 0.9, step = 0.05)
-
-// Micro-Structure Break Exit — closes when a post-entry swing low (bull) or swing high (bear) is broken.
-// After a breakout, price should print higher lows (bull) or lower highs (bear) on each bar.
-// The first time a recent swing is broken, the micro-structure has failed — exit before the full reversal.
 msOn   = input.bool(false, 'Micro-Structure Break Exit: close when the most recent post-entry swing low (bull) or swing high (bear) is broken — first crack in the structure = exit before the reversal', group = gRM)
 msBuf  = input.float(3.0,  '──── Buffer pips beyond the swing level before triggering (prevents whipsaw on tight markets — 3 = need 3 pips through the swing to confirm)', group = gRM, minval = 0.0, step = 1.0)
 msLb   = input.int(3,      '──── Micro swing lookback bars — how many bars back to find the swing low/high to protect (3 = protect the last 3-bar swing)', group = gRM, minval = 2, maxval = 10)
@@ -170,7 +143,7 @@ msLb   = input.int(3,      '──── Micro swing lookback bars — how many 
 // --- 9. Display ---------------------------
 gDi = "🖥️ Display"
 sL     = input.bool(true,  'Show Signal Labels', group = gDi)
-sDb      = input.bool(false, 'Show Debug Labels', group = gDi)
+sDb      = input.bool(true, 'Show Debug Labels', group = gDi)
 sSP = input.bool(true,  'Show Stats Panel', group = gDi)
 sCH = input.bool(true,  'Highlight signal candles (outline which candles were studied)', group = gDi)
 
@@ -185,8 +158,8 @@ pcBrkPip = input.float(0.10, 'Broker pip size for PineConnector pips mode (XAUUS
 pcSpread = input.int(30, '──── Spread filter: only enter if spread ≤ X broker pips (0 = off)', group = gPc, minval = 0)
 pcBETrig = input.int(0, '──── Breakeven: move SL to entry after X broker pips profit (0 = off)', group = gPc, minval = 0)
 pcBEOff  = input.int(0, '──── Breakeven offset: SL placed X pips above/below entry (0 = at entry)', group = gPc, minval = 0)
-pcTDist  = input.int(20, '──── Trailing stop: maintain SL X broker pips from price (0 = off)', group = gPc, minval = 0)
-pcTTrig  = input.int(60, '──── Trailing: activate after X broker pips profit (0 = immediate when pcTDist>0)', group = gPc, minval = 0)
+pcTDist  = input.int(0, '──── Trailing stop: maintain SL X broker pips from price (0 = off)', group = gPc, minval = 0)
+pcTTrig  = input.int(0, '──── Trailing: activate after X broker pips profit (0 = immediate when pcTDist>0)', group = gPc, minval = 0)
 pcTStep  = input.int(3, '──── Trailing: move SL every X additional broker pips gained', group = gPc, minval = 1)
 pLat  = input.string("200", 'Signal→MT5 latency ms (comma-sep, copy from PineConnector Bridge logs)', group = gPc)
 pSlip = input.float(0.0, "Slippage: X USD:", group = gPc)
@@ -351,10 +324,8 @@ var string _lastAlertMsg = "—"
 varip string _lastSigTxt = ""
 var int   _rSB = na
 
-// -- Block A improved IB + retracement logic --
-// IB = Independent Bar: close breaks ABOVE prev candle high (bull) / BELOW prev candle low (bear)
-// seenBear/GreenSinceIB guards prevent consecutive IBs without a real pullback between them
 var _ibT        = false   // true from IB detection until retracement fires
+var int _ibTBar = na      // bar_index when _ibT was last set — used for timeout
 var _sbIB      = true    // start true so first IB can fire immediately
 var _sgIB     = true    // bear side equivalent
 var bool _uReBnc = false  // UHV blocked by per-strategy early bounce-back
@@ -481,9 +452,6 @@ _w5 = _tS > 75                               ? _fEma : na
 // -- ATR for SL calculations --
 _a14 = ta.atr(14)
 
-// -- Ranging market detection (ADX) --
-// ADX < threshold = price is oscillating without directional conviction
-// ta.dmi() returns [+DI, -DI, ADX]
 [_, _dmM, _adxV] = ta.dmi(14, 14)
 _isRng = avoidRng and _adxV < float(rngTh)
 
@@ -540,10 +508,8 @@ fTS() =>
     _s = second(_t, "UTC+3")
     str.tostring(_h) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + ":" + (_s < 10 ? "0" : "") + str.tostring(_s) + " Moscow"
 
-// Round TP to pip boundary so Pine monitors exact same price MT5 places
 fTP(_e, _t) => _e + math.sign(_t - _e) * math.round(math.abs(_t - _e) / pPip) * pPip
 
-// bits[0-15]: dir IOE res res strictOn strictOk sweepReq sweepOk preOff coExist tDir inSess volOn volOk res res
 fBits(bool b0, bool b1, bool b2, bool b3, bool b4, bool b5, bool b6, bool b7, bool b8, bool b9, bool b10, bool b11, bool b12, bool b13, bool b14, bool b15) =>
     (b0?"1":"0")+(b1?"1":"0")+(b2?"1":"0")+(b3?"1":"0")+(b4?"1":"0")+(b5?"1":"0")+(b6?"1":"0")+(b7?"1":"0")+(b8?"1":"0")+(b9?"1":"0")+(b10?"1":"0")+(b11?"1":"0")+(b12?"1":"0")+(b13?"1":"0")+(b14?"1":"0")+(b15?"1":"0")
 
@@ -552,8 +518,6 @@ fCT(_strat, _num, _bits, float _en = na) =>
     _m = minute(timenow, "UTC")
     _strat + "@" + str.tostring(na(_en) ? close : _en, "#.##") + "_" + str.tostring(_h) + ":" + (_m < 10 ? "0" : "") + str.tostring(_m) + "_#" + str.tostring(_num) + "#" + _bits
 
-// SS SNAPSHOT — 12 hex digits (48 bools MSB→LSB per digit): uDev (0) (0) pE | msOn vdOn bfOn ouOn | vcOn ssOn ddProtOn dllOn | mtphOn vbSprd vbOn bRWW | bRW ntKill ntW4 ntW3 | ntW2 ntW1 avoidRng rSwT | tSMA sTCU sTC aTSU | aTS (0) sFilt uTVOn | uBrkBody uBrkVROn uMomW uMomB | uREU ptpOn useInv uBELkTP | uBEon uPBCo uWSpOn uSBgOn | uVTOn rULV rUS eUHV
-// 75-CSV[0-74]: iMon cM lA uSpread uLev uDir(0=Both/1=Bull/2=Bear) uHTD(0=Off/1-5=1m-240m) uVT uVLB uSBgN uWSpK uSB uOE(0=CC/1=IB) uPBD uPBsD uDR uRp uLS uTM(0=RR/1=SHL/2=Dol) uT1 uTD uSHLOff uST(0=UHV/1=ATR/2=BkWk/3=SwLo/4=Dol/5=RetMM/6=Prev) uSBf uSMn uSAm uSDo uSSw uSLPips uTPPips uBEPct uBERR iExHSL iExOff iExMode(0=URng/1=UMid/2=BkBdy) uMAEPips uMAEDol uKillSec uKillLossSec ptpPips ptpPct uMomBR uMomWkU uMomWkL uBrkVR uTVK uTVN uCd uAlGt uIOEGrd mTS tPB tSTh rngTh vbATR vbSprdK mtphMax mtphGap dllSoft dllHard ddProtPct ssPips vcFact ouK bfBars bfPips vdFact msBuf msLb mLot pPip pcBrkPip pcSL(0=Pips/1=Price) pcTP(0=Pips/1=Price) pcOT(0=Mkt/1=Lmt)
 fH4(bool b3, bool b2, bool b1, bool b0) =>
     _v = (b3 ? 8 : 0) + (b2 ? 4 : 0) + (b1 ? 2 : 0) + (b0 ? 1 : 0)
     _v == 0 ? "0" : _v == 1 ? "1" : _v == 2 ? "2" : _v == 3 ? "3" : _v == 4 ? "4" : _v == 5 ? "5" : _v == 6 ? "6" : _v == 7 ? "7" : _v == 8 ? "8" : _v == 9 ? "9" : _v == 10 ? "a" : _v == 11 ? "b" : _v == 12 ? "c" : _v == 13 ? "d" : _v == 14 ? "e" : "f"
@@ -699,90 +663,31 @@ fDevLabel(string _bits, string _alertMsg, float _clsAtFire) =>
     _d += "\n" + _alertFmt
     _d
 
-fSU(int b, float sl, float a, color c) =>
-    // Pseudo-random ink noise seeded by bar + price — 5 independent sine waves
-    _p  = float(b) * 7.391 + sl * 0.031
-    _q  = float(b) * 13.71 + sl * 0.053
-    _r  = float(b) * 5.13  + sl * 0.019
-    _t  = float(b) * 3.77  + sl * 0.041
-    _u  = float(b) * 11.23 + sl * 0.027
-    _n1 = math.sin(_p + 1.17)
-    _n2 = math.sin(_q + 2.33)
-    _n3 = math.sin(_r + 0.71)
-    _n4 = math.sin(_t + 3.14)
-    _n5 = math.cos(_u + 0.53)
-    _jt = a * 0.009
-    _ph = a * (0.032 + 0.024 * math.abs(_n1))
-    // Main wobbly stroke — 6 pts with mixed noise per point, fades right (width 2)
-    polyline.new(array.from(chart.point.from_index(b-2,sl+(_n2+_n4*0.4)*_jt*1.4),chart.point.from_index(b-1,sl+_ph*0.52+(_n3+_n5*0.3)*_jt),chart.point.from_index(b,sl+_ph+_n1*_jt*0.6),chart.point.from_index(b+1,sl+_ph*0.44+(_n4+_n2*0.35)*_jt),chart.point.from_index(b+2,sl+(_n5+_n3*0.4)*_jt*1.2),chart.point.from_index(b+3,sl-a*0.007+_n2*_jt*0.6)),curved=true,line_color=c,line_width=2)
-    // Thick ink pressure blob at peak — semi-transparent, slightly above arc (3 pts, width 5)
-    polyline.new(array.from(chart.point.from_index(b-1,sl+_ph*0.70+_n3*_jt*0.7),chart.point.from_index(b,sl+_ph*1.07+_n2*_jt*0.35),chart.point.from_index(b+1,sl+_ph*0.58+_n4*_jt*0.55)),curved=true,line_color=color.new(c,28),line_width=5)
-    // Ink splatter: main dot, near satellite, far stray — opacity falls off
-    label.new(b+4,    sl-a*0.011+_n4*a*0.020,"•",style=label.style_none,textcolor=c,size=size.small)
-    label.new(b+4+b%2,sl+_n2*a*0.025,        "•",style=label.style_none,textcolor=color.new(c,40),size=size.tiny)
-    label.new(b+3+b%3,sl+_ph*0.18+_n3*a*0.033,"•",style=label.style_none,textcolor=color.new(c,65),size=size.tiny)
 
-fSU2(int b, float sl, float tp, float en, float a) =>
-    fSU(b, sl, a, color.red)
-    fSU(b, tp, a, color.lime)
-    fSU(b, en, a, color.black)
+// Multi-bar bRW lookback: find most recent opposite-colored candle within bRWLB bars
+float _bRWPGL = na  // most recent green candle's low (bull bRW trigger reference)
+float _bRWPGH = na  // most recent green candle's high (rCeil for bull bRW)
+float _bRWPRH = na  // most recent red candle's high (bear bRW trigger reference)
+float _bRWPRL = na  // most recent red candle's low (rFlr for bear bRW)
+if bRW
+    for _bi = 1 to bRWLB
+        if na(_bRWPGL) and close[_bi] >= open[_bi]
+            _bRWPGL := low[_bi]
+            _bRWPGH := high[_bi]
+        if na(_bRWPRH) and close[_bi] < open[_bi]
+            _bRWPRH := high[_bi]
+            _bRWPRL := low[_bi]
+        if not na(_bRWPGL) and not na(_bRWPRH)
+            break
 
-// Hand-drawn tick (✓) in pink — used at TP hit candle
-fTick(int b, float pr, float a) =>
-    _p  = float(b)*7.391+pr*0.031
-    _q  = float(b)*13.71+pr*0.053
-    _r  = float(b)*5.13 +pr*0.019
-    _t  = float(b)*3.77 +pr*0.041
-    _n1 = math.sin(_p+1.17)
-    _n2 = math.sin(_q+2.33)
-    _n3 = math.sin(_r+0.71)
-    _n4 = math.sin(_t+3.14)
-    _jt  = a*0.008
-    _dip = a*0.038
-    _ris = a*0.068
-    _c   = color.new(#FF69B4,0)
-    polyline.new(array.from(chart.point.from_index(b-2,pr+_n1*_jt*1.2),chart.point.from_index(b-1,pr-_dip+(_n2+_n3*0.3)*_jt*0.7),chart.point.from_index(b+1,pr+_ris*0.55+(_n4+_n1*0.25)*_jt),chart.point.from_index(b+2,pr+_ris+_n3*_jt*0.9)),curved=true,line_color=_c,line_width=3)
-    polyline.new(array.from(chart.point.from_index(b-1,pr-_dip*0.62+_n2*_jt*0.8),chart.point.from_index(b,pr-_dip*1.1+_n1*_jt*0.3),chart.point.from_index(b+1,pr-_dip*0.48+_n3*_jt*0.7)),curved=true,line_color=color.new(_c,30),line_width=4)
-    label.new(b+3,    pr+_ris*0.85+_n4*a*0.018,"•",style=label.style_none,textcolor=_c,size=size.small)
-    label.new(b+3+b%2,pr+_n2*a*0.022,          "•",style=label.style_none,textcolor=color.new(_c,45),size=size.tiny)
-    label.new(b+2+b%3,pr-_dip*0.3+_n1*a*0.015, "•",style=label.style_none,textcolor=color.new(_c,65),size=size.tiny)
-
-// Hand-drawn cross (✗) in blood red — used at SL hit candle
-fCross(int b, float pr, float a) =>
-    _p  = float(b)*7.391+pr*0.031
-    _q  = float(b)*13.71+pr*0.053
-    _r  = float(b)*5.13 +pr*0.019
-    _t  = float(b)*3.77 +pr*0.041
-    _n1 = math.sin(_p+1.17)
-    _n2 = math.sin(_q+2.33)
-    _n3 = math.sin(_r+0.71)
-    _n4 = math.sin(_t+3.14)
-    _jt  = a*0.008
-    _arm = a*0.042
-    _c   = color.new(#8B0000,0)
-    polyline.new(array.from(chart.point.from_index(b-2,pr+_arm+(_n1+_n3*0.3)*_jt),chart.point.from_index(b,pr+(_n2+_n4*0.25)*_jt*0.5),chart.point.from_index(b+2,pr-_arm+(_n3+_n1*0.3)*_jt*0.8)),curved=true,line_color=_c,line_width=2)
-    polyline.new(array.from(chart.point.from_index(b-2,pr-_arm+(_n2+_n4*0.3)*_jt*0.9),chart.point.from_index(b,pr+(_n1+_n3*0.25)*_jt*0.4),chart.point.from_index(b+2,pr+_arm+(_n4+_n2*0.3)*_jt*0.7)),curved=true,line_color=_c,line_width=2)
-    label.new(b+3,    pr-_arm*0.4+_n1*a*0.018,"•",style=label.style_none,textcolor=_c,size=size.small)
-    label.new(b+3+b%2,pr+_n3*a*0.022,         "•",style=label.style_none,textcolor=color.new(_c,45),size=size.tiny)
-    label.new(b+2+b%3,pr+_arm*0.5+_n2*a*0.016,"•",style=label.style_none,textcolor=color.new(_c,65),size=size.tiny)
-
-// -- Independent Bar detection (Block A) --
-// Use trend engine direction (_ib/_ibr) — NOT _lb — so the IB
-// fires based on current momentum, not the lagging FVG zone direction.
-// This fixes the case where the big initial drop happens before _lb has flipped.
-//
-// Bull IB: trend is up, green candle closes above previous bar HIGH, bear seen since last IB
 _bFA = true
-// Allow bull IB to cancel an active bear retracement (and vice versa) so we get
-// a fresh setup immediately instead of waiting for the old one to fully expire.
-_bIB = _ib and _bFA and (not _iR or (_iR and not _rwb)) and _iGr and not na(high[1]) and close > high[1]
-
-// Bear IB: trend is down, red candle closes below previous bar LOW, green seen since last IB
-// Allow bear IB to cancel an active bull retracement so we don't miss bear setups.
+// bRW guard: if bRW mode would start a bear retracement on this candle, don't let _bIB steal it for a bull IB phase
+_bRWBearCand = bRW and not _iR and not _ibT and _iGr and not na(_bRWPRH) and (bRWW ? high > _bRWPRH : close > _bRWPRH)
+_bIB = _ib and _bFA and (not _iR or (_iR and not _rwb)) and _iGr and not na(high[1]) and close > high[1] and not _bRWBearCand
 _beFA = true
-_beIB = _ibr and _beFA and (not _iR or (_iR and _rwb)) and _iRd and not na(low[1]) and close < low[1]
-
-// Count IBs blocked only by opposing-candle requirement
+// bRW guard: if bRW mode would start a bull retracement on this candle, don't let _beIB steal it for a bear IB phase
+_bRWBullCand = bRW and not _iR and not _ibT and _iRd and not na(_bRWPGL) and (bRWW ? low < _bRWPGL : close < _bRWPGL)
+_beIB = _ibr and _beFA and (not _iR or (_iR and _rwb)) and _iRd and not na(low[1]) and close < low[1] and not _bRWBullCand
 
 if _bIB and not _ibT
     // Cancel any active opposite (bear) retracement before starting bull IB phase
@@ -802,9 +707,13 @@ if _bIB and not _ibT
         _uF := false
         _uWSp := false
         _uSBg := false
+        if not na(_uLbl)
+            label.delete(_uLbl)
+        _uLbl := na
     _rceLo  := na
     _rceHi  := na
     _ibT       := true
+    _ibTBar  := bar_index
     _rwb   := true
     _rCeil   := high
     _rIBLo  := low
@@ -831,9 +740,13 @@ if _beIB and not _ibT
         _uF := false
         _uWSp := false
         _uSBg := false
+        if not na(_uLbl)
+            label.delete(_uLbl)
+        _uLbl := na
     _rceLo  := na
     _rceHi  := na
     _ibT       := true
+    _ibTBar  := bar_index
     _rwb   := false
     _rFlr     := low
     _rIBHi  := high
@@ -844,23 +757,27 @@ if _beIB and not _ibT
 
 // Reset IB tracking if trend flips opposite
 if _ibT and _rwb and _ibr
-    _ibT  := false
-    _rIBLo := na
+    _ibT    := false
+    _ibTBar := na
+    _rIBLo  := na
 if _ibT and not _rwb and _ib
-    _ibT  := false
-    _rIBHi := na
+    _ibT    := false
+    _ibTBar := na
+    _rIBHi  := na
+
+// IBt timeout: if retracement hasn't started within 3 bars, release the lock so bRW can try
+if _ibT and not na(_ibTBar) and (bar_index - _ibTBar) >= 3
+    _ibT    := false
+    _ibTBar := na
 
 int _euCd = uCd
 
-// -- Retracement trigger (Block A): close breaks the IB candle's extreme --
-// Bull retrace: a red candle closes below the IB green candle's LOW (not just prior bar low —
-//   that would allow 2 consecutive reds where only the 2nd breaks the 1st's low to trigger)
-// Bear retrace: a green candle closes above the IB red candle's HIGH
 _bRet = _ibT and _rwb and _iRd and not na(_rIBLo) and close < _rIBLo
 _beRet = _ibT and not _rwb and _iGr and not na(_rIBHi) and close > _rIBHi
 
 if _bRet
     _ibT      := false
+    _ibTBar   := na
     _iR   := true
     _rwb  := true
     _rSB := bar_index
@@ -891,6 +808,7 @@ if _bRet
 
 if _beRet
     _ibT      := false
+    _ibTBar   := na
     _iR   := true
     _rwb  := false
     _rSB := bar_index
@@ -919,13 +837,11 @@ if _beRet
     if sL or sDb
         label.new(bar_index, high, "Ret↑", style = label.style_label_down, color = color.new(color.gray, 60), textcolor = color.new(color.white, 20), size = size.tiny)
 
-// BYPASS RETRACEMENT — fires when bRW is ON, skipping IB phase + trend check
-// Bull: red candle closes below prior green candle's low
-if bRW and not _iR and not _ibT and _iRd and close[1] > open[1] and (bRWW ? low < low[1] : close < low[1])
+if bRW and not _iR and not _ibT and _iRd and not na(_bRWPGL) and (bRWW ? low < _bRWPGL : close < _bRWPGL)
     _iR     := true
     _rwb    := true
     _lb     := true
-    _rCeil  := high[1]
+    _rCeil  := _bRWPGH
     _fR     := false
     _rSB    := bar_index
     _uHi    := high
@@ -937,6 +853,8 @@ if bRW and not _iR and not _ibT and _iRd and close[1] > open[1] and (bRWW ? low 
         _uVol   := volume
         _uBar   := bar_index
         if sL or sDb
+            if not na(_uLbl)
+                label.delete(_uLbl)
             _uLbl := label.new(bar_index, high, "⚡ UHV Red", style = label.style_label_down, color = color.new(color.red, 0), textcolor = color.white, size = size.small)
     _rceLo  := low
     _rceHi  := high
@@ -953,12 +871,11 @@ if bRW and not _iR and not _ibT and _iRd and close[1] > open[1] and (bRWW ? low 
     if sL or sDb
         label.new(bar_index, low, "Ret↓", style = label.style_label_up, color = color.new(color.gray, 60), textcolor = color.new(color.white, 20), size = size.tiny)
 
-// Bear: green candle closes above prior red candle's high
-if bRW and not _iR and not _ibT and _iGr and close[1] < open[1] and (bRWW ? high > high[1] : close > high[1])
+if bRW and not _iR and not _ibT and _iGr and not na(_bRWPRH) and (bRWW ? high > _bRWPRH : close > _bRWPRH)
     _iR     := true
     _rwb    := false
     _lb     := false
-    _rFlr   := low[1]
+    _rFlr   := _bRWPRL
     _fR     := false
     _rSB    := bar_index
     _uLo    := low
@@ -995,7 +912,6 @@ for _pi = 0 to tPB - 1
 _bTP = _bPC >= math.round(tPB * 0.6)
 _beTP = _bePC >= math.round(tPB * 0.6)
 
-// Structural trend via confirmed swing pivots (HH+HL = uptrend, LH+LL = downtrend)
 _swPH = ta.pivothigh(high, 5, 5)
 _swPL = ta.pivotlow(low,  5, 5)
 if not na(_swPH)
@@ -1007,8 +923,6 @@ if not na(_swPL)
 _strUp = not rSwT or (not na(_sH1) and not na(_sH2) and not na(_sL1) and not na(_sL2) and _sH1 > _sH2 and _sL1 > _sL2)
 _strDn = not rSwT or (not na(_sH1) and not na(_sH2) and not na(_sL1) and not na(_sL2) and _sH1 < _sH2 and _sL1 < _sL2)
 
-// Trend shifting: strength has dropped by threshold or more since this setup began
-// Per-strategy so each can be toggled independently
 _tsA = _iR and not na(_sStr) and (_sStr - _tS >= tSTh)
 _tsU    = aTS and aTSU and _tsA
 
@@ -1058,6 +972,8 @@ if _iR
         _uHSw  := false
         _rceLo    := na
         _rceHi   := na
+        if not na(_uLbl)
+            label.delete(_uLbl)
         _uLbl      := na
         _bL      := na
         _bT  := false
@@ -1202,27 +1118,31 @@ if array.size(_tEn) > 0
                 bool  _maeHit  = (uMAEPips > 0 and _maeAdv >= float(uMAEPips)) or (uMAEDol > 0 and _maePnl <= -uMAEDol)
                 if _maeHit
                     _maeExited := true
+                    // Cap MAE loss at iExHSL pips when invalidation mode is on.
+                    // In MT5, the broker-side hard SL fires at iExHSL pips, so the trade
+                    // is already closed before bar close reflects the full adverse move.
+                    float _maePnlCapped = useInvalidation and _maePnl < 0 ? math.max(_maePnl, -iExHSL * pPip * _maeLots * cM) : _maePnl
                     array.set(_tSH, _ti, true)
                     array.push(_tCTi, bar_index)
                     array.push(_tCTs, time)
-                    array.push(_tPA,  _maePnl)
+                    array.push(_tPA,  _maePnlCapped)
                     _cTr  += 1
-                    _pT   += _maePnl
+                    _pT   += _maePnlCapped
                     _tLSt += 1
                     if _tLSt > _mLST
                         _mLST := _tLSt
                     array.push(_tDB, bar_index - _entryBar)
-                    _uPnL += _maePnl
-                    _uPT  += _maePnl
+                    _uPnL += _maePnlCapped
+                    _uPT  += _maePnlCapped
                     _uTr  += 1
                     if _bull
-                        _uBP += _maePnl
+                        _uBP += _maePnlCapped
                         _uBT += 1
                     else
-                        _uBeP += _maePnl
+                        _uBeP += _maePnlCapped
                         _uBeT += 1
                     label _maeOrigLbl = array.get(_tLbl, _ti)
-                    string _maeExt = "🚨 #" + str.tostring(_tNum) + " MAE Stop — -$" + str.tostring(math.abs(_maePnl), "#.##") + " [" + str.tostring(math.round(_maeAdv)) + " pips]"
+                    string _maeExt = "🚨 #" + str.tostring(_tNum) + " MAE Stop — -$" + str.tostring(math.abs(_maePnlCapped), "#.##") + " [" + str.tostring(math.round(_maeAdv)) + " pips]"
                     if not na(_maeOrigLbl)
                         label.set_text(_maeOrigLbl, label.get_text(_maeOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _maeExt)
                     label.new(bar_index, _bull ? low : high, _maeExt, style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 0), textcolor = color.white, size = size.small)
@@ -1235,13 +1155,19 @@ if array.size(_tEn) > 0
             // Disabled once breakeven fires (trade is already protected at entry level).
             bool _killExited = false
             if uKillSec > 0 and not _maeExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
-                bool _timeHit = barstate.isrealtime and (timenow - array.get(_tFT, _ti)) >= uKillSec * 1000
+                // Historical sim: fire at bar close (simulates quick manual exit within seconds).
+                // Guard: skip if TP is already hit on this bar — let the TP exit handle it instead.
+                float _ktTP = array.get(_tTP, _ti)
+                bool _histTPHit = not barstate.isrealtime and bar_index > _entryBar and (_bull ? high >= _ktTP : low <= _ktTP)
+                bool _timeHit = (barstate.isrealtime and (timenow - array.get(_tFT, _ti)) >= uKillSec * 1000) or (not barstate.isrealtime and bar_index > _entryBar and not _histTPHit)
                 if _timeHit
                     _killExited := true
                     array.set(_tSH, _ti, true)
-                    float _kEn   = array.get(_tEn, _ti)
-                    float _kLots = array.get(_tEL, _ti)
-                    float _kPnl  = (_bull ? (close - _kEn) : (_kEn - close)) * _kLots * cM
+                    float _kEn     = array.get(_tEn, _ti)
+                    float _kLots   = array.get(_tEL, _ti)
+                    float _kPnlRaw = (_bull ? (close - _kEn) : (_kEn - close)) * _kLots * cM
+                    // In historical sim, cap loss at iExHSL pips — mirrors the MT5 hard SL that fires before bar close
+                    float _kPnl  = not barstate.isrealtime and _kPnlRaw < 0 ? math.max(_kPnlRaw, -iExHSL * pPip * _kLots * cM) : _kPnlRaw
                     bool  _kWin  = _kPnl > 0
                     array.push(_tCTi, bar_index)
                     array.push(_tCTs, time)
@@ -1282,10 +1208,16 @@ if array.size(_tEn) > 0
             // Disabled once breakeven fires.
             bool _killLossExited = false
             if uKillLossSec > 0 and not _maeExited and not _killExited and not _killLossExited and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
-                bool _klTimeHit = barstate.isrealtime and (timenow - array.get(_tFT, _ti)) >= uKillLossSec * 1000
+                // Historical sim: fire at bar N+1 close ONLY — simulates the one-shot 5-sec check.
+                // The real timer fires once; if price was profitable at that moment it never fires again.
+                // Using bar_index > _entryBar (any bar) is too aggressive: trades that recover after N+1
+                // would get killed on a later down-bar, converting wins into losses.
+                bool _klTimeHit = (barstate.isrealtime and (timenow - array.get(_tFT, _ti)) >= uKillLossSec * 1000) or (not barstate.isrealtime and bar_index == _entryBar + 1)
                 float _klEn     = array.get(_tEn, _ti)
                 float _klLots   = array.get(_tEL, _ti)
-                float _klPnl    = (_bull ? (close - _klEn) : (_klEn - close)) * _klLots * cM
+                float _klPnlRaw = (_bull ? (close - _klEn) : (_klEn - close)) * _klLots * cM
+                // Cap historical loss at iExHSL pips — matches MT5 hard SL
+                float _klPnl    = not barstate.isrealtime and _klPnlRaw < 0 ? math.max(_klPnlRaw, -iExHSL * pPip * _klLots * cM) : _klPnlRaw
                 if _klTimeHit and _klPnl < 0
                     _killLossExited := true
                     array.set(_tSH, _ti, true)
@@ -1422,13 +1354,17 @@ if array.size(_tEn) > 0
                 float _iLvl = iExMode == "UHV Midpoint"  ? array.get(_tILM,    _ti) :
                               iExMode == "Breakout Body" ? array.get(_tBrkMid, _ti) :
                               array.get(_tIL, _ti)
-                bool  _iHit = _bull ? close < _iLvl - iExOff : close > _iLvl + iExOff
+                float _iTot = iExOff + iExModeOff
+                bool  _iHit = _bull ? close < _iLvl - _iTot : close > _iLvl + _iTot
                 if _iHit
                     _invExited := true
                     array.set(_tSH, _ti, true)
                     float _iEn   = array.get(_tEn, _ti)
                     float _iLots = array.get(_tEL, _ti)
-                    float _iPnl  = (_bull ? (close - _iEn) : (_iEn - close)) * _iLots * cM
+                    float _iPnlRaw = (_bull ? (close - _iEn) : (_iEn - close)) * _iLots * cM
+                    // Cap loss at iExHSL pips — MT5 holds a hard SL at this level, so in reality
+                    // the position would already be closed before a big close-beyond-midpoint bar.
+                    float _iPnl  = _iPnlRaw < 0 ? math.max(_iPnlRaw, -iExHSL * pPip * _iLots * cM) : _iPnlRaw
                     bool  _iWin  = _iPnl > 0
                     array.push(_tCTi, bar_index)
                     array.push(_tCTs, time)
@@ -1468,8 +1404,10 @@ if array.size(_tEn) > 0
             // MT5 does not hold this level — Pine must send closelong/closeshort.
             // Bar-close only (barstate.isconfirmed) — avoids false exits on intra-bar wick sweeps.
             // Disabled once BE fires (MT5 BE stop would close it first anyway).
+            // Disabled when useInvalidation=true — in that mode MT5 holds a hard limit at iExHSL pips,
+            // so Hard SL Simulation (wick-based, P&L at SL price) handles all SL exits instead.
             bool _structSLExited = false
-            if barstate.isconfirmed and not _maeExited and not _killExited and not _killLossExited and not _dllExited and not _invExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and bar_index > _entryBar
+            if barstate.isconfirmed and not useInvalidation and not _maeExited and not _killExited and not _killLossExited and not _dllExited and not _invExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and bar_index > _entryBar
                 bool _structHit = _bull ? close <= _sl : close >= _sl
                 if _structHit
                     _structSLExited := true
@@ -1820,7 +1758,9 @@ if array.size(_tEn) > 0
                 // On the IOE entry bar, low/high includes price action BEFORE the entry tick fired.
                 // Use close (current realtime tick) on the entry bar to avoid false hard SL triggers.
                 bool  _onEntryBar  = (bar_index == _entryBar)
-                bool  _hardSLHit   = _bull ? ((_onEntryBar ? close : low)  <= _hardSLPrice) : ((_onEntryBar ? close : high) >= _hardSLPrice)
+                float _hardSLTP    = array.get(_tTP, _ti)
+                bool  _tpAlsoHit   = not _onEntryBar and (_bull ? high >= _hardSLTP : low <= _hardSLTP)
+                bool  _hardSLHit   = not _tpAlsoHit and (_bull ? ((_onEntryBar ? close : low)  <= _hardSLPrice) : ((_onEntryBar ? close : high) >= _hardSLPrice))
                 if _hardSLHit
                     _hardSLExited := true
                     array.set(_tSH, _ti, true)
@@ -1915,7 +1855,9 @@ if array.size(_tEn) > 0
                 // When invalidation mode is on, MT5 uses the hard SL (iExHSL pips) not the structural wick SL.
                 // Use the same price here so Pine matches MT5 — wick through breakout candle low no longer counts.
                 float _effectiveSL = useInvalidation ? (_bull ? array.get(_tEn, _ti) - iExHSL * pPip : array.get(_tEn, _ti) + iExHSL * pPip) : _sl
-                _slTriggered = _bull ? ((_onEB2 ? close : low) <= _effectiveSL) : ((_onEB2 ? close : high) >= _effectiveSL)
+                float _slTP1Ref    = array.get(_tTP, _ti)
+                bool  _tpAlsoHitSL = not _onEB2 and (_bull ? high >= _slTP1Ref : low <= _slTP1Ref)
+                _slTriggered = not _tpAlsoHitSL and (_bull ? ((_onEB2 ? close : low) <= _effectiveSL) : ((_onEB2 ? close : high) >= _effectiveSL))
                 if _slTriggered
                     array.set(_tSH, _ti, true)
                     if not _t1hit
@@ -1955,7 +1897,6 @@ if array.size(_tEn) > 0
                             _origTxt = label.get_text(_origLbl)
                             label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n" + (_isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "🛑 #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss"))
                         label.new(bar_index, _bull ? low : high, _isBEWin ? "✅ #" + str.tostring(_tNum) + " BE Close — +$" + str.tostring(_pnl, "#.##") + " Profit" : "⭕ #" + str.tostring(_tNum) + " SL Hit — -$" + str.tostring(math.abs(_dPnlSL), "#.##") + " Loss", style = _bull ? label.style_label_up : label.style_label_down, color = _isBEWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
-                        fCross(bar_index, _effectiveSL, _a14)
 
             if uBEon and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and not _t1hit and (bar_index > _entryBar or _isIOE)
                 _en   = array.get(_tEn, _ti)
@@ -2001,7 +1942,6 @@ if array.size(_tEn) > 0
                         _origTxt = label.get_text(_origLbl)
                         label.set_text(_origLbl, _origTxt + "\n━━━━━━━━━━━━━━━━\n✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit")
                     label.new(bar_index, _bull ? high : low, "✅ #" + str.tostring(_tNum) + " TP Hit — +$" + str.tostring(_dPnlTP, "#.##") + " Profit", style = _bull ? label.style_label_down : label.style_label_up, color = color.new(color.green, 10), textcolor = color.white, size = size.small)
-                    fTick(bar_index, _tp1, _a14)
 
 // STEP 5: BREAKOUT — Absorption Signal
 _uHTFB = request.security(syminfo.tickerid, uHTD == "Off" ? timeframe.period : uHTD, close >= open)
@@ -2050,6 +1990,14 @@ if _uBBase and (_erUS ? _uLSw : true) and (bar_index - _luSB) >= _euCd and _tsU
 // Blocked by strict trend check — relaxed mode would pass (not _beTP) but _hb+persistence fails
 if eUHV and _iR and _lb and _rwb and not _beTP and (sTC and sTCU) and not (_hb and _bTP) and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and _iGr and low <= _bL and close > _bL and (_erUS ? _uLSw : true) and (bar_index - _luSB) >= _euCd
     _uWB := true
+
+// sDb: bRW?=bRW-off-would-ret  BLK:sTC/tStr/rUS/rULV/brk/aTS/bg/wSp/NTW/MTPH/DLL/VB/SS/vel/REU/?
+if sDb and barstate.isconfirmed
+    if not bRW and not _iR and not _ibT and _iRd and close[1]>=open[1] and close<low[1]
+        label.new(bar_index,high,"bRW?",style=label.style_label_down,color=color.new(color.gray,30),textcolor=color.white,size=size.tiny)
+    if _iR and _lb and _rwb and not _uF and not na(_bL) and not na(_uBar) and _iGr and close>_bL and not _bBrk
+        string _bw=not((sTC and sTCU)?(_hb and _bTP):not _beTP)?"sTC":not(_tS>=_eMS)?"tStr":_erUS and not _uLSw?"rUS":_erULV and volume>=_uVol?"rULV":not _bBrkPO?"brk":_eTsU?"aTS":not _uSBg?"bg":not _uWSp?"wSp":_ntBlock?"NTW":_mtphBlock?"MTPH":_dllBlock?"DLL":_vbBlock?"VB":_ssBlock?"SS":not _uVelOk?"vel":_uReBnc?"REU":"?"
+        label.new(bar_index,_bL,"BLK:"+_bw,style=label.style_label_up,color=color.new(color.orange,15),textcolor=color.white,size=size.small)
 
 int _nU = math.max(1, _uTr > 19 ? _uWn * 50 / _uTr - 44 : 0)
 float _lOp = 0.
@@ -2236,7 +2184,6 @@ if (_uPendBull or _uPendBear) and barstate.isconfirmed
             float _pkU  = math.max(_uHi, high) + _ahU
             polyline.new(array.from(chart.point.from_index(_uBar, _uHi), chart.point.from_index(_uBar + _gU / 2, _pkU), chart.point.from_index(bar_index, high)), curved = true, line_color = color.new(#00ff88, 0), line_width = 3)
             label.new(bar_index, high, "", style = label.style_arrowdown, color = color.new(#00ff88, 0), size = size.small)
-            fSU2(bar_index, _slPrice, _tpPrice, _uPndEn, _a14)
     else
         _pvLo := _rnLo
         _rnLo := low
@@ -2253,7 +2200,6 @@ if (_uPendBull or _uPendBear) and barstate.isconfirmed
             float _pkUe = math.min(_uLo, low) - _ahUe
             polyline.new(array.from(chart.point.from_index(_uBar, _uLo), chart.point.from_index(_uBar + _gUe / 2, _pkUe), chart.point.from_index(bar_index, low)), curved = true, line_color = color.new(#ff4444, 0), line_width = 3)
             label.new(bar_index, low, "", style = label.style_arrowup, color = color.new(#ff4444, 0), size = size.small)
-            fSU2(bar_index, _slPrice, _tpPrice, _uPndEn, _a14)
     _uPendBull := false
     _uPendBear := false
 
@@ -2292,6 +2238,7 @@ if _iR
         _fR    := false
         _rceLo  := na
         _rceHi  := na
+        _uLbl   := na
 
 // DAILY RESET
 _today = dayofmonth(time)

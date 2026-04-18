@@ -499,54 +499,79 @@ Always evaluate filters by `EV_per_trade × signals_per_day`, not by win rate al
 
 ## 16. Recommended Defaults (XAUUSD, 1m)
 
+> **Session 42/43 optimal configuration** — 539 trades, 73% WR, $33.82 EV/trade, +$18,226 all-time P&L.
+> These are the code defaults. Click "Defaults" in settings to restore them instantly.
+
 ### Account & Risk
-| Setting | Value |
-|---|---|
-| My Starting Capital ($) | 865 |
-| Contract size ($/point/lot) | 100 |
-| Position Size Multiplier | 1 |
-| Spread ($) | 0.13 |
-| Account Leverage | 500 |
-| Risk: % of capital per trade | 1 |
-| Risk: Fixed lot size | 0.011 |
+| Setting | Value | Notes |
+|---|---|---|
+| My Starting Capital ($) | 865 | Update to current equity |
+| Contract size ($/point/lot) | 100 | Exness standard |
+| Position Size Multiplier | 1 | |
+| Spread ($) | 0.13 | |
+| Account Leverage | 500 | |
+| Risk: Fixed lot size | **0.4** | Gives -$60 max loss on 15-pip SL |
 
 ### Strategy: UHV Breakout
-| Setting | Value |
-|---|---|
-| Use this strategy? | ON |
-| Open trade at | Instant at Breakout |
-| Pre-breakout offset ($) | 5 |
-| Post-breakout offset ($) | 0 |
-| Also allow signal at actual breakout level | ON |
-| Require body breakout | ON |
-| Stop Loss method | Breakout Wick |
-| SL Offset from level | 0.7 |
-| SL minimum distance ($) | 0.2 |
-| Take Profit method | R:R Ratio |
-| Take Profit R:R | 10 |
-| Tick Velocity Filter | OFF |
-| Velocity multiplier (k) | 1.2 |
-| Velocity baseline lookback (N) | 20 |
+| Setting | Value | Notes |
+|---|---|---|
+| Use this strategy? | ON | |
+| Must breakout candle have lower volume | **OFF** | Removing this filter increases trade count |
+| Open trade at | **Instant at Breakout** | IOE mode — enters at exact trigger |
+| Pre-breakout offset ($) | **1.0** | Fires $1 before level for better fill |
+| Also allow signal at actual breakout level | **OFF** | Pre-offset fires or trade is skipped |
+| Require body breakout | ON | Prevents wick-only false entries |
+| Stop Loss method | Breakout Wick | |
+| SL Offset from level | 0.4 | |
+| SL minimum distance ($) | 0.2 | |
+| **Stop Loss: Override with fixed pips** | **15** | Fixed 15-pip SL = -$60 max at 0.4 lots |
+| **Take Profit: Override with fixed pips** | **3** | Fixed 3-pip TP (IOE guard often extends to ~8 pips) |
+| Take Profit method | R:R Ratio (R:R = 7) | Backup when pip override = 0 |
 
-### Breakeven & Exits
-| Setting | Value |
-|---|---|
-| Breakeven: ON | true |
-| Breakeven trigger: % of TP | 10 |
-| Lock SL at BE trigger price | false |
-| Invalidation Exit | true |
-| Invalidation Exit: Hard SL (pips) | 50 |
-| Invalidation Exit: Tolerance ($) | 0.3 |
+### Kill Timer (key optimisation)
+| Setting | Value | Notes |
+|---|---|---|
+| **Kill timer: close after X seconds** | **5** | Close ANY open trade 5 sec after entry |
+| Kill timer (loss only) | 0 | OFF — kill-ALL outperforms kill-loss-only |
+
+Kill ALL at 5 sec: avg loss -$60 → -$46, net EV +$2.73/trade vs no timer.
+
+### Invalidation Exit
+| Setting | Value | Notes |
+|---|---|---|
+| Invalidation Exit | ON | |
+| Invalidation Exit: Hard SL (pips) | **15** | Matches uSLPips — no gap between Pine sim and MT5 hard SL |
+| Invalidation Exit: Tolerance ($) | 0.3 | |
+| Invalidation rule | UHV Midpoint | VSA absorption rule |
+| Invalidation offset ($) | **1.0** | Close must be $1 past midpoint before invalidating |
+
+### Trend & Filters (all disabled for maximum trade count)
+| Setting | Value | Notes |
+|---|---|---|
+| Min Trend Strength at Signal | **0** | No trend strength requirement |
+| Avoid trend shifting | OFF | |
+| Apply trend shift to UHV | **OFF** | |
+| Require Full Trend Confirmation | OFF | |
+| Apply full trend to UHV | **OFF** | |
+| No-Trade Window 19:00–21:00 UTC | **OFF** | Trade all hours |
+| Bypass retracement rules | ON | |
+| Wick trigger | **OFF** | Body close required for bRW trigger |
+
+### IOE Guard
+| Setting | Value | Notes |
+|---|---|---|
+| IOE TP Guard spread multiplier | **1** | Guards against TP being too close at entry bar close |
+| Alert Gate ($) | -0.05 | Small tolerance for fast candles |
 
 ### PineConnector
-| Setting | Value |
-|---|---|
-| MT5 pip size (XAUUSD) | **0.10** (critical) |
-| Broker pip size | **0.10** (critical) |
-| Spread filter (pips) | 30 |
-| Trailing stop distance (pips) | 40 |
-| Trailing trigger (pips) | 100 |
-| Trailing step (pips) | 10 |
+| Setting | Value | Notes |
+|---|---|---|
+| MT5 pip size (XAUUSD) | **0.10** | Critical — wrong value breaks all pip calculations |
+| Broker pip size | **0.10** | Critical |
+| Spread filter (pips) | 30 | |
+| Trailing stop | **OFF** (0) | No trailing — kill timer handles exit timing |
+| Stop Loss format | Pips | |
+| Take Profit format | Pips | |
 
 ---
 
@@ -607,6 +632,6 @@ The label on-chart also shows the full condition bitmask in Developer mode.
 
 ---
 
-*Documentation version: 2026-04-01 (Session 31)*
-*Architecture: ~2400 lines Pine Script v5*
-*Last major changes: Hard SL simulation, runner mode settings, Tick Velocity Filter*
+*Documentation version: 2026-04-18 (Session 44)*
+*Architecture: ~2730 lines Pine Script v5*
+*Last major changes: Kill ALL timer (uKillSec=5), fixed pip SL/TP (15/3), all defaults updated to match Session 42/43 optimal config*
