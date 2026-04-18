@@ -1087,6 +1087,13 @@ bool  _ssBlock = ssOn and ssPips > 0 and _ssRange > ssPips
 bool _inNtWindow  = _ntBlock  // reuse the same computed value from line above
 bool _ntKillFire  = ntKill and _inNtWindow
 
+// 1-second sub-bar data for accurate kill timer simulation (Premium/Professional plan required).
+// Returns arrays of up to 60 values (one per second) for each closed 1-minute bar.
+// Falls back gracefully when unavailable — array will be empty (size 0).
+float[] _1sC = request.security_lower_tf(syminfo.tickerid, "1S", close)
+float[] _1sH = request.security_lower_tf(syminfo.tickerid, "1S", high)
+float[] _1sL = request.security_lower_tf(syminfo.tickerid, "1S", low)
+
 // TRADE MONITORING
 // Runs BEFORE entry signal so closelong/closeshort alerts fire first.
 // TradingView delivers only one alert() per bar execution — closelong must win over buy.
@@ -1152,13 +1159,27 @@ if array.size(_tEn) > 0
             // BREAKEVEN CHECK — runs before kill timer so the kill timer sees _tBE=true and skips.
             // In real MT5, price ticks trigger BE immediately when the trigger is touched; the 5-second
             // kill timer then finds _tBE=true and does not fire. Moving this check here replicates
-            // that ordering in historical sim: if bar N+1 touches the BE trigger before the simulated
-            // "5-second" kill, BE fires first and the trade becomes a runner instead of a kill exit.
+            // that ordering in historical sim: if bar N+1 touches the BE trigger BEFORE the kill window
+            // (within the first uKillSec seconds), BE fires first and the trade becomes a runner.
+            // If the trigger is only hit AFTER second uKillSec, the kill timer fires first — BE cannot
+            // save a trade that MT5 already closed. With 1S data we enforce this timing exactly.
             if uBEon and not _maeExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and not _t1hit and (bar_index > _entryBar or _isIOE)
                 float _beEn     = array.get(_tEn, _ti)
                 float _beSlDist = math.abs(_beEn - array.get(_tSl, _ti))
                 float _beTrig   = uBERR > 0 ? (_bull ? _beEn + _beSlDist * uBERR : _beEn - _beSlDist * uBERR) : _beEn + (_tp1 - _beEn) * (uBEPct / 100.0)
-                if (_bull ? high >= _beTrig : low <= _beTrig)
+                // On the kill-timer bar (N+1) with 1S data: only fire BE if trigger was hit within the
+                // kill window (seconds 0 to uKillSec-1). A trigger hit at second 8 cannot save a trade
+                // that the kill timer already closed at second 5.
+                bool _beOnKillBar = not barstate.isrealtime and uKillSec > 0 and bar_index == _entryBar + 1 and array.size(_1sH) >= uKillSec
+                bool _beTriggered = false
+                if _beOnKillBar
+                    for _bs = 0 to uKillSec - 1
+                        if _bull ? array.get(_1sH, _bs) >= _beTrig : array.get(_1sL, _bs) <= _beTrig
+                            _beTriggered := true
+                            break
+                else
+                    _beTriggered := _bull ? high >= _beTrig : low <= _beTrig
+                if _beTriggered
                     array.set(_tBE, _ti, true)
                     array.set(_tSl, _ti, uBELkR > 0 ? (_bull ? _beEn + uBELkR * _beSlDist : _beEn - uBELkR * _beSlDist) : uBELkTP ? _beTrig : (_bull ? _beEn - uSpread : _beEn + uSpread))
 
@@ -1168,17 +1189,30 @@ if array.size(_tEn) > 0
             // Disabled once breakeven fires (trade is already protected at entry level).
             bool _killExited = false
             if uKillSec > 0 and not _maeExited and not array.get(_tBE, _ti) and not array.get(_tSH, _ti) and (bar_index > _entryBar or _isIOE)
-                // Historical sim: fire at bar close (simulates quick manual exit within seconds).
-                // Guard: skip if TP is already hit on this bar — let the TP exit handle it instead.
-                float _ktTP = array.get(_tTP, _ti)
-                bool _histTPHit = not barstate.isrealtime and bar_index > _entryBar and (_bull ? high >= _ktTP : low <= _ktTP)
-                bool _timeHit = (barstate.isrealtime and (timenow - array.get(_tFT, _ti)) >= uKillSec * 1000) or (not barstate.isrealtime and bar_index > _entryBar and not _histTPHit)
+                // Historical sim: fire at second uKillSec using 1S sub-bar data when available.
+                // 1S data gives the exact price at ~5 seconds into bar N+1 (vs bar close = ~55 seconds late).
+                // Falls back to bar close if 1S data unavailable (non-Premium plan or pre-history limit).
+                float _ktTP    = array.get(_tTP, _ti)
+                int   _1sAvN   = array.size(_1sC)
+                bool  _1sReady = not barstate.isrealtime and bar_index == _entryBar + 1 and _1sAvN >= uKillSec
+                // TP check: was TP hit within the first uKillSec seconds? Use 1S high/low if available.
+                bool _histTPHit1S = false
+                if _1sReady
+                    for _s = 0 to uKillSec - 1
+                        if _bull ? array.get(_1sH, _s) >= _ktTP : array.get(_1sL, _s) <= _ktTP
+                            _histTPHit1S := true
+                            break
+                bool _histTPHit = not barstate.isrealtime and bar_index == _entryBar + 1 and (
+                    _1sReady ? _histTPHit1S : (_bull ? high >= _ktTP : low <= _ktTP))
+                bool _timeHit = (barstate.isrealtime and (timenow - array.get(_tFT, _ti)) >= uKillSec * 1000) or (not barstate.isrealtime and bar_index == _entryBar + 1 and not _histTPHit)
                 if _timeHit
                     _killExited := true
                     array.set(_tSH, _ti, true)
-                    float _kEn     = array.get(_tEn, _ti)
-                    float _kLots   = array.get(_tEL, _ti)
-                    float _kPnlRaw = (_bull ? (close - _kEn) : (_kEn - close)) * _kLots * cM
+                    float _kEn   = array.get(_tEn, _ti)
+                    float _kLots = array.get(_tEL, _ti)
+                    // Use 1S close at second uKillSec for accurate exit price; fallback to bar close
+                    float _kExit   = _1sReady ? array.get(_1sC, uKillSec - 1) : close
+                    float _kPnlRaw = (_bull ? (_kExit - _kEn) : (_kEn - _kExit)) * _kLots * cM
                     // In historical sim, cap loss at iExHSL pips — mirrors the MT5 hard SL that fires before bar close
                     float _kPnl  = not barstate.isrealtime and _kPnlRaw < 0 ? math.max(_kPnlRaw, -iExHSL * pPip * _kLots * cM) : _kPnlRaw
                     bool  _kWin  = _kPnl > 0
@@ -1208,8 +1242,8 @@ if array.size(_tEn) > 0
                         _uBeP += _kPnl
                         _uBeT += 1
                     label _killOrigLbl = array.get(_tLbl, _ti)
-                    int   _kElapsed    = math.round((timenow - array.get(_tFT, _ti)) / 1000)
-                    string _killExt = (_kWin ? "✅" : "⏱") + " #" + str.tostring(_tNum) + " Exit: Kill Timer " + str.tostring(_kElapsed) + "s — " + (_kWin ? "+$" : "-$") + str.tostring(math.abs(_kPnl), "#.##")
+                    int   _kElapsed    = barstate.isrealtime ? math.round((timenow - array.get(_tFT, _ti)) / 1000) : (_1sReady ? uKillSec : 60)
+                    string _killExt = (_kWin ? "✅" : "⏱") + " #" + str.tostring(_tNum) + " Exit: Kill Timer " + str.tostring(_kElapsed) + "s" + (_1sReady ? "" : " [sim≈bar close]") + " — " + (_kWin ? "+$" : "-$") + str.tostring(math.abs(_kPnl), "#.##")
                     if not na(_killOrigLbl)
                         label.set_text(_killOrigLbl, label.get_text(_killOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _killExt)
                     label.new(bar_index, _bull ? low : high, _killExt, style = _bull ? label.style_label_up : label.style_label_down, color = _kWin ? color.new(color.green, 10) : color.new(color.orange, 10), textcolor = color.white, size = size.small)
@@ -2033,7 +2067,9 @@ if _bBrk
     if _tp1 <= _entry  // TP at or below entry for buy → structural ceiling below entry; force dollar fallback
         _tp1 := fTP(_entry, _entry + _euTD)
     if _uIOE and pcOT != "Limit" and uIOEGrd > 0 and _tp1 <= close + uSpread * uIOEGrd  // IOE guard: recalc TP from current close if too close — applies regardless of alert format
-        _tp1 := fTP(close, uTPPips > 0 ? close + uTPPips * pPip : (uTM == "Dollar Amount" ? close + _euTD : close + _slDist * uT1))
+        _tp1   := fTP(close, uTPPips > 0 ? close + uTPPips * pPip : (uTM == "Dollar Amount" ? close + _euTD : close + _slDist * uT1))
+        _entry := close  // sim accuracy: MT5 fills at market (close) when IOE guard fires — not _bTrigEff
+        _sl    := uSLPips > 0 ? _entry - uSLPips * pPip : _sl
     bool _safe = _inSess and _lOp + _slDist * _effLots * cM <= iMon * 0.5
     if not _uAlF  // once-per-bar gate: varip prevents all side-effects from re-firing on every IOE tick
         _uAlF := true
@@ -2102,7 +2138,9 @@ if _beBrk
     if _tp1 >= _entry  // TP at or above entry for sell → structural floor above entry; force dollar fallback
         _tp1 := fTP(_entry, _entry - _euTD)
     if _uIOE and pcOT != "Limit" and uIOEGrd > 0 and _tp1 >= close - uSpread * uIOEGrd  // IOE guard: recalc TP from current close if too close — applies regardless of alert format
-        _tp1 := fTP(close, uTPPips > 0 ? close - uTPPips * pPip : (uTM == "Dollar Amount" ? close - _euTD : close - _slDist * uT1))
+        _tp1   := fTP(close, uTPPips > 0 ? close - uTPPips * pPip : (uTM == "Dollar Amount" ? close - _euTD : close - _slDist * uT1))
+        _entry := close  // sim accuracy: MT5 fills at market (close) when IOE guard fires — not _beTrigEff
+        _sl    := uSLPips > 0 ? _entry + uSLPips * pPip : _sl
     bool _safe = _inSess and _lOp + _slDist * _effLots * cM <= iMon * 0.5
     if not _uAlF
         _uAlF := true
