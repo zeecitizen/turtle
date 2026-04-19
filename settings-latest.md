@@ -1,73 +1,91 @@
 # Turtle Trader Desk — Last Known Good Settings
-Last updated: 2026-04-18 (Session 44/45)
-Source: Live indicator via MCP — `data_get_indicator` on entity_id `PgkQBd`
+Last updated: 2026-04-19 (Session 48)
+Source: Exhaustive sweep via MCP — TP pips, BE trigger, kill timer, SL pips all tested
 
-## Performance (Session 44/45 — Best All-Time)
+---
+
+## Strategy Mode Comparison — Choose Your Style
+
+| Metric | High-WR Mode | High-EV Mode (CURRENT) |
+|---|---|---|
+| **uTPPips** | 10 | **52** |
+| **uBERR** | 0.2 | **0.1** |
+| betrigger sent to MT5 | 3 pips | **2 pips** |
+| Win rate | **64%** (348/544) | 29% (158/544) |
+| EV/trade | $17.15 | **$53.94** |
+| Avg win | +$39 | **+$204** |
+| Avg loss | -$22 | **-$7.53** |
+| All-time P&L | $9,344 | **$29,343** |
+| Washout threshold | 39 losses | **114 losses** |
+| To double balance | 51 trades | **17 trades** |
+| Max loss/trade | -$60 | -$60 |
+| Trades/day | ~23 | ~23 |
+| Feel | Many small wins | Fewer but large wins |
+
+> **Why EV triples despite lower WR**: BE fires at 1.5 pips (uBERR=0.1) instead of 3 pips.
+> Losers exit near $0 via 5s kill timer. Winners that trigger BE run freely to 52-pip TP (+$208).
+> The wide TP captures the full extension of real UHV moves instead of capping early.
+
+**To switch back to High-WR mode:**
+```
+indicator_set_inputs(entity_id="<from chart_get_state>", inputs={"in_39": 10, "in_42": 0.2})
+```
+
+---
+
+## Current Performance (Session 48 — High-EV Mode)
 | Metric | Value |
 |---|---|
-| Trades | 545 all-time (~23/day) |
-| Win rate | **81%** (441/545) |
-| EV/trade | **$67.43** |
-| Avg win | +$92.81 |
-| Avg loss | -$40.16 |
-| All-time P&L | **+$36,751** |
+| Trades | 544 all-time (~23/day) |
+| Win rate | **29%** (158/544) |
+| EV/trade | **$53.94** |
+| Avg win | +$204.11 |
+| Avg loss | -$7.53 |
+| All-time P&L | **+$29,343** |
 | Max loss per trade | -$60 (hard-capped by iExHSL=15) |
-| To double balance | **13 trades (~10.3 hrs)** |
-| Washout threshold | 21 consecutive losses |
+| To double balance | **17 trades (~13.6 hrs)** |
+| Washout threshold | **114 consecutive losses** |
 
-## Key optimisations
+## Key Optimisations
 
 ### 1. Kill ALL Timer (uKillSec = 5)
 Close ANY open trade 5 seconds after entry, regardless of P&L direction.
 - Fires at bar N+1 close in historical sim; at exactly 5 sec in live MT5
-- Avg loss drops from -$60 → -$46 by cutting stagnant trades early
+- Exit price ≈ entry → avg loss only -$7.53 (not -$60)
 - Disabled once breakeven fires (trade is protected)
 
-### 2. BE + Runner (uBEon = true, uBERR = 0.2, uTPPips = 10)
-Once price moves 3 pips in profit (= uBERR × uSLPips = 0.2 × 15), SL moves to entry+spread.
-- Trade is now risk-free; kill timer disabled; TP target extends to 10 pips
-- Kill timer + BE are complementary: kill handles stagnant trades, BE handles winners
-- PineConnector alert includes `betrigger=3` — instructs MT5 to move SL after 3 pips
-- EV nearly doubles vs kill-timer-only baseline ($67.43 vs $33.82)
+### 2. BE + Wide Runner (uBEon = true, uBERR = 0.1, uTPPips = 52)
+Once price moves **1.5 pips** in profit (uBERR=0.1 × uSLPips=15), SL moves to entry+spread.
+- Trade is now risk-free; kill timer disabled; TP target extends to **52 pips (+$208)**
+- PineConnector alert includes `betrigger=2` — instructs MT5 to move SL after 2 pips
+- Asymmetric payout: losers ≈ $0 (kill timer), winners ≈ $204 (TP hit)
 
 ## How to restore
 1. Open indicator settings in TradingView
 2. Click "Defaults" to reset — code defaults now match these values exactly
 3. Delete and recreate the TradingView alert (any alert() function call, webhook enabled)
 
-## Changes vs previous snapshot (2026-04-18 Session 43/44)
-| Setting | Old | New |
+## Changes vs Session 47 (2026-04-18)
+| Setting | Session 47 | Session 48 |
 |---|---|---|
-| Take Profit: Override with fixed pips | 3 | **10** |
-| Breakeven: move SL to entry+spread | false | **true** |
-| Breakeven at R:R ratio | 0 | **0.2** |
+| Take Profit: Override with fixed pips | 10 | **52** |
+| Breakeven at R:R ratio | 0.2 | **0.1** |
+| betrigger (MT5 alert) | 3 | **2** |
 
-## Changes vs earlier snapshot (2026-04-03)
-| Setting | Old | New |
-|---|---|---|
-| Pre-breakout offset ($) | 6 | **1** |
-| Also allow signal at actual breakout level | true | **false** |
-| Risk: % of capital per trade | 1 | **0** |
-| Risk: Fixed lot size | 0.011 | **0.4** |
-| Take Profit R:R | 9 | **7** |
-| Take Profit Fixed $ target | 0.1 | **1.1** |
-| Stop Loss: Override with fixed pips | 0 | **15** |
-| Take Profit: Override with fixed pips | 0 | **10** |
-| Breakeven: move SL to entry+spread | true | **true** |
-| Breakeven at R:R ratio | 0 | **0.2** |
-| Invalidation Exit: Hard SL (pips) | 120 | **15** |
-| Invalidation offset ($) | 0 | **1.0** |
-| Emergency MAE stop: max loss $ | 40 | **0** |
-| Kill timer: close after X seconds | 90 | **5** |
-| IOE TP Guard spread multiplier | 0 | **1** |
-| Alert Gate ($) | 0 | **-0.05** |
-| Min Trend Strength at Signal | 3 | **0** |
-| Apply to UHV Breakout (trend shift) | true | **false** |
-| Apply to UHV Breakout (full trend) | true | **false** |
-| Wick trigger | true | **false** |
-| Show Debug Labels | false | **true** |
+## Session 48 — What Was Tested
+All tests used kill=5s, SL=15, XAUUSD 1m OANDA, 544 all-time trades.
 
-## Settings (complete — all 140 inputs)
+**TP pips sweep** (uBERR=0.2 baseline):
+10→$17 | 20→$33 | 30→$38 | 40→$42 | 50→$48 | **52→$53** | 55→$52 | 60→$52 | 75→$50 | 100→$49
+
+**BE trigger sweep** (TP=52):
+uBERR=0.2→$53.05 | **uBERR=0.1→$53.94** | uBERR=0.05→$53.97 (betrigger=1, risky)
+
+**Kill timer sweep** (TP=52, uBERR=0.1): 5s/10s/20s/30s all within $0.10 — neutral, keep at 5s
+
+**SL pips sweep** (TP=52, uBERR=0.1): 10/15/20 pips all within $0.04 — neutral, keep at 15
+
+## Settings (complete — all inputs)
 
 ### 💼 My Account
 | Setting | Value |
@@ -84,7 +102,7 @@ Once price moves 3 pips in profit (= uBERR × uSLPips = 0.2 × 15), SL moves to 
 | Use this strategy? | true |
 | Trade direction? | Both |
 | Must candle wick sweep UHV low | false |
-| Must breakout candle have lower volume | **false** |
+| Must breakout candle have lower volume | false |
 | Align direction to higher timeframe | Off |
 | UHV Detection: Require percentile rank | false |
 | Lookback bars for percentile | 20 |
@@ -100,12 +118,12 @@ Once price moves 3 pips in profit (= uBERR × uSLPips = 0.2 × 15), SL moves to 
 | Open trade at | **Instant at Breakout** |
 | Pre-breakout offset ($) | **1.0** |
 | Post-breakout offset ($) | 0 |
-| Also allow signal at actual breakout level | **false** |
+| Also allow signal at actual breakout level | false |
 | Dollar risk per trade ($) | 0 |
 | % of capital per trade | 0 |
 | Fixed lot size | **0.4** |
 | Take Profit: Which method? | R:R Ratio |
-| Take Profit R:R | **7** |
+| Take Profit R:R | 7 |
 | Take Profit Fixed $ target | 1.1 |
 | Take Profit Structural offset ($) | 0.5 |
 | Stop Loss: Where to place it? | Breakout Wick |
@@ -115,10 +133,10 @@ Once price moves 3 pips in profit (= uBERR × uSLPips = 0.2 × 15), SL moves to 
 | Stop Loss: Fixed $ distance | 2 |
 | Stop Loss: Swing lookback bars | 11 |
 | Stop Loss: Override with fixed pips | **15** |
-| Take Profit: Override with fixed pips | **10** |
+| Take Profit: Override with fixed pips | **52** ← changed from 10 |
 | Breakeven: move SL to entry+spread | **true** |
 | Breakeven trigger: % of TP distance | 10 |
-| Breakeven at R:R ratio | **0.2** |
+| Breakeven at R:R ratio | **0.1** ← changed from 0.2 |
 | Lock SL at BE trigger price | false |
 | Lock SL at X×R profit when BE fires | 0 |
 | Invalidation Exit | true |
@@ -127,7 +145,7 @@ Once price moves 3 pips in profit (= uBERR × uSLPips = 0.2 × 15), SL moves to 
 | Invalidation rule | UHV Midpoint |
 | Invalidation offset ($) | **1.0** |
 | Emergency MAE stop: pips against entry (0=off) | 60 |
-| Emergency MAE stop: max loss $ (0=off) | **0** |
+| Emergency MAE stop: max loss $ (0=off) | 0 |
 | Kill timer: close after X seconds (0=off) | **5** |
 | Kill timer (loss only): close if in loss after X seconds (0=off) | 0 |
 | Partial TP: enabled | false |
@@ -152,14 +170,14 @@ Once price moves 3 pips in profit (= uBERR × uSLPips = 0.2 × 15), SL moves to 
 ### 📈 Trend & Filters
 | Setting | Value |
 |---|---|
-| Min Trend Strength at Signal | **0** |
+| Min Trend Strength at Signal | 0 |
 | Trend Persistence Lookback (bars) | 8 |
 | Only trade London + NY sessions | false |
 | Avoid trading when trend is shifting? | false |
-| Apply to UHV Breakout (trend shift) | **false** |
+| Apply to UHV Breakout (trend shift) | false |
 | Trend shift threshold | 53 |
 | Require Full Trend Confirmation | false |
-| Apply to UHV Breakout (full trend) | **false** |
+| Apply to UHV Breakout (full trend) | false |
 | Show Trend MA Line | true |
 | Require structural trend | false |
 | Avoid ranging market (ADX) | false |
@@ -167,10 +185,10 @@ Once price moves 3 pips in profit (= uBERR × uSLPips = 0.2 × 15), SL moves to 
 | No-Trade Window 21:00–23:00 UTC | false |
 | No-Trade Window 23:00–03:00 UTC | false |
 | No-Trade Window 04:00–07:00 UTC | false |
-| No-Trade Window 19:00–21:00 UTC | **false** |
+| No-Trade Window 19:00–21:00 UTC | false |
 | Force-close on no-trade window start | false |
 | Bypass retracement rules | true |
-| Wick trigger | **false** |
+| Wick trigger | false |
 | bRW lookback (bars) | 3 |
 
 ### 🛡️ Risk Management
@@ -207,7 +225,7 @@ Once price moves 3 pips in profit (= uBERR × uSLPips = 0.2 × 15), SL moves to 
 | Setting | Value |
 |---|---|
 | Show Signal Labels | true |
-| Show Debug Labels | **true** |
+| Show Debug Labels | true |
 | Show Stats Panel | true |
 | Highlight signal candles | true |
 
@@ -237,14 +255,12 @@ Once price moves 3 pips in profit (= uBERR × uSLPips = 0.2 × 15), SL moves to 
 |---|---|
 | Developer mode | true |
 
-## SS Snapshot
-Paste into indicator_set_inputs to restore all settings at once:
+## Restore via MCP
 ```
-SS:900100808281#
-865#100#1#0.13#500#0#0#0#20#5#1.5#0#1#1#0#0#0#0.4#0#7#1.1#0.5#2#0.4#0.2#1#2#11#15#10#10#0.2#15#0.3#1#60#0#5#0#40#50#80#30#30#5#1.2#5#0#-0.05#1#0#8#53#14#4#3#3#5#2#5#50#50#0.6#2#3#5#0.5#3#3#0.01#0.1#0.1#0#0#0
+indicator_set_inputs(entity_id="<get from chart_get_state>", inputs={"in_39": 52, "in_42": 0.1})
 ```
 
-To restore via MCP:
+To switch to High-WR mode (TP=10, 64% WR):
 ```
-indicator_set_inputs(entity_id="PgkQBd", inputs={"in_39": 10, "in_40": true, "in_42": 0.2, "in_52": 5, "in_53": 0})
+indicator_set_inputs(entity_id="<get from chart_get_state>", inputs={"in_39": 10, "in_42": 0.2})
 ```
