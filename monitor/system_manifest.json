@@ -1,0 +1,33 @@
+{
+  "last_sheriff_check": "2026-04-28T09:35:23Z",
+  "status": {
+    "tradingview": "ALIVE",
+    "sniper_daemon": "ALIVE",
+    "shano_hawk": "ALIVE",
+    "mt5": "ALIVE",
+    "heartbeat_age": "0 min ago",
+    "silver_hawk_learner": "ALIVE",
+    "silver_hawk": "Teenager gen2 health=75.0",
+    "patterns": 3563,
+    "theories": "10 total, 0 proven",
+    "interns_today": "NOT_RUN",
+    "recent_trades": "4/20 (20% WR) total P&L=$-446.40",
+    "sniper_errors": 0,
+    "verdict": "NEEDS_ATTENTION",
+    "recovery_ready": true,
+    "sheriff_bp": 210,
+    "sheriff_mood": "cardiac_arrest"
+  },
+  "issues": [
+    "Win rate is only 20% on last 20 trades \u2014 system needs improvement"
+  ],
+  "processes_alive": {
+    "sniper_daemon": true,
+    "silver_hawk_learner": true
+  },
+  "sheriff": {
+    "blood_pressure": 210,
+    "mood": "cardiac_arrest",
+    "alive": true
+  }
+}

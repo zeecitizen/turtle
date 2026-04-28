@@ -1,6 +1,6 @@
 # Turtle Trader Desk — Last Known Good Settings
-Last updated: 2026-04-19 (Session 48)
-Source: Exhaustive sweep via MCP — TP pips, BE trigger, kill timer, SL pips all tested
+Last updated: 2026-04-19 (Session 49)
+Source: Session 48 exhaustive sweep (TP, BE, kill, SL); Session 49 spike protection (iExHSL 15→10)
 
 ---
 
@@ -64,6 +64,15 @@ Once price moves **1.5 pips** in profit (uBERR=0.1 × uSLPips=15), SL moves to e
 1. Open indicator settings in TradingView
 2. Click "Defaults" to reset — code defaults now match these values exactly
 3. Delete and recreate the TradingView alert (any alert() function call, webhook enabled)
+
+## Changes vs Session 48 (2026-04-19)
+| Setting | Session 48 | Session 49 |
+|---|---|---|
+| Invalidation Exit: Hard SL (pips) — MT5 spike stop | 15 | **10** |
+
+> **Why**: A spike event (Trade 5, Apr 20 08:27 Moscow) moved 15 pips against entry in <5 seconds,
+> triggering iExHSL=15 → **-$62** before the 5s kill timer could exit. iExHSL=10 caps this at **~-$40**.
+> Pine sim EV is UNCHANGED (iExHSL does not affect lot sizing or Pine stats per code design).
 
 ## Changes vs Session 47 (2026-04-18)
 | Setting | Session 47 | Session 48 |
@@ -140,7 +149,7 @@ uBERR=0.2→$53.05 | **uBERR=0.1→$53.94** | uBERR=0.05→$53.97 (betrigger=1, 
 | Lock SL at BE trigger price | false |
 | Lock SL at X×R profit when BE fires | 0 |
 | Invalidation Exit | true |
-| Invalidation Exit: Hard SL (pips) | **15** |
+| Invalidation Exit: Hard SL (pips) | **10** ← changed from 15 (spike protection: caps MT5 loss at ~-$40 vs -$62; zero sim impact) |
 | Invalidation Exit: Tolerance ($) | 0.3 |
 | Invalidation rule | UHV Midpoint |
 | Invalidation offset ($) | **1.0** |
@@ -257,7 +266,7 @@ uBERR=0.2→$53.05 | **uBERR=0.1→$53.94** | uBERR=0.05→$53.97 (betrigger=1, 
 
 ## Restore via MCP
 ```
-indicator_set_inputs(entity_id="<get from chart_get_state>", inputs={"in_39": 52, "in_42": 0.1})
+indicator_set_inputs(entity_id="<get from chart_get_state>", inputs={"in_39": 52, "in_42": 0.1, "in_46": 10})
 ```
 
 To switch to High-WR mode (TP=10, 64% WR):
