@@ -1,0 +1,463 @@
+// This Pine Script™ is subject to the terms of the Mozilla Public License 2.0
+// https://mozilla.org/MPL/2.0/
+// Shano Momentum Scalper — 2-Candle Detection (RELAXED rule)
+//
+// HISTORY:
+//   v3 (2026-04-27 evening) — RELAXED prev-candle rule. Source of truth on disk.
+//     Strict 1.20x interview rule produced almost zero signals during quiet
+//     periods because real continuations often shrink vs the trigger candle.
+//     Relaxed rule: CURRENT bar is the BIG one (1.5x prev 2 enforced via
+//     isBigCandle), PREV bar just needs to be SAME DIRECTION.
+//     Validated: 11 EA-managed trades on Blueberry demo 2026-04-27, +$70.85 net,
+//     73% WR (3 of 3 losses were correct probe-fail $3 cuts).
+//
+//   DECISION POINT: revert to strict 1.20x if demo WR drops below 70% over next
+//   10+ trades, OR if Shano herself says these aren't candles she'd take.
+//
+//@version=6
+indicator("Shano Momentum Scalper", "Shano", overlay=true,
+     max_labels_count=500, max_lines_count=500, max_boxes_count=200)
+
+grpDet      = "Detection"
+iBodyMult   = input.float(1.5, "Body Multiplier", minval=1.0, step=0.05, group=grpDet)
+iLookback   = input.int(2, "Lookback Candles", minval=1, maxval=5, group=grpDet)
+iMinBody    = input.float(0.0, "Min Body (points, 0=disabled)", minval=0.0, step=0.1, group=grpDet)
+iCooldown   = input.int(1, "Signal Cooldown (bars)", minval=0, maxval=20, group=grpDet)
+iMidBar     = input.bool(true, "Mid-Bar Entry", group=grpDet)
+iSquareBar  = input.float(0.50, "Square Bar Filter (body/range, 0=disabled)", minval=0.0, maxval=1.0, step=0.05, group=grpDet)
+iEntryDepth = input.float(0.7, "Entry Depth (0-1)", minval=0.1, maxval=0.9, step=0.1, group=grpDet)
+
+grpProbe    = "Probe System"
+iProbeLots  = input.float(0.01, "Probe Lots", minval=0.01, step=0.01, group=grpProbe)
+iProbeConf  = input.float(0.58, "Confirm Threshold (points)", minval=0.01, step=0.01, group=grpProbe)
+iProbeFail  = input.float(3.00, "Fail Threshold (points)", minval=0.01, step=0.01, group=grpProbe)
+iProbeMaxB  = input.int(2, "Probe Max Bars", minval=1, maxval=5, group=grpProbe)
+iContractSz = input.float(100.0, "Contract Size", group=grpProbe)
+
+grpTrade    = "Real Trade"
+iRealLots   = input.float(0.40, "Real Lots", minval=0.01, step=0.01, group=grpTrade)
+iTradeTP    = input.float(10.0, "Trade TP", minval=1.0, group=grpTrade)
+iTradeSL    = input.float(999.0, "Trade SL", minval=1.0, group=grpTrade)
+
+grpFilt     = "Filters"
+iSellOnly   = input.bool(false, "Sell Only Mode", group=grpFilt)
+iFadeMode   = input.bool(false, "Fade Mode", group=grpFilt)
+iPullbackN  = input.int(2, "Pullback Reds Required", minval=1, maxval=5, group=grpFilt)
+iPostLossCD = input.int(3, "Post-Loss Cooldown (bars)", minval=1, maxval=20, group=grpFilt)
+iDailyCap   = input.float(500.0, "Daily P&L Cap", minval=0.0, group=grpFilt)
+
+grpPC       = "PineConnector"
+iPCEnabled  = input.bool(true, "Enable PineConnector Alerts", group=grpPC)
+iPCLicense  = input.string("87782869895251", "License ID", group=grpPC)
+iPCLots     = input.float(0.40, "Lots", minval=0.01, step=0.01, group=grpPC)
+iPCTP       = input.int(2000, "TP (pips)", group=grpPC)
+iPCSL       = input.int(300, "SL (pips)", group=grpPC)
+iPCSymbol   = input.string("XAUUSD", "MT5 Symbol", group=grpPC)
+
+grpTime     = "Timing Filters"
+iSkipReopen = input.int(20, "Skip After Reopen (min)", minval=0, maxval=60, group=grpTime)
+iStopBefore = input.int(60, "Stop Before Close (min)", minval=0, maxval=120, group=grpTime)
+
+grpDisp     = "Display"
+iShowSig    = input.bool(true, "Show Signal Labels", group=grpDisp)
+iShowDebug  = input.bool(false, "Show Per-Bar Body Debug", group=grpDisp)
+iShowStats  = input.bool(true, "Show Stats Table", group=grpDisp)
+iShowBg     = input.bool(true, "Background on Signals", group=grpDisp)
+iShowHist   = input.bool(true, "Show Body Histogram", group=grpDisp)
+iShowSim    = input.bool(true, "Show Simulated Trades", group=grpDisp)
+iShowLines  = input.bool(true, "Show Cluster Lines", group=grpDisp)
+iDbgBars    = input.int(50, "Debug Labels: Last N Bars", minval=10, maxval=200, group=grpDisp)
+
+grpSess     = "Session Filter"
+iSessFilt   = input.bool(false, "Enable Session Filter", group=grpSess)
+iSessTime   = input.session("1100-1800", "Session (UTC)", group=grpSess)
+
+// ============================================================================
+// DETECTION
+// ============================================================================
+body        = math.abs(close - open)
+body1       = math.abs(close[1] - open[1])
+body2       = math.abs(close[2] - open[2])
+body3       = iLookback >= 3 ? math.abs(close[3] - open[3]) : 0.0
+body4       = iLookback >= 4 ? math.abs(close[4] - open[4]) : 0.0
+
+inSession   = iSessFilt ? not na(time(timeframe.period, iSessTime)) : true
+
+bigVsPrev   = body > body1 * iBodyMult and body > body2 * iBodyMult
+              and (iLookback < 3 or body > body3 * iBodyMult)
+              and (iLookback < 4 or body > body4 * iBodyMult)
+
+var int lastSigBar = 0
+cooldownOk  = bar_index - lastSigBar >= iCooldown
+
+candleRange = high - low
+squareOk    = iSquareBar <= 0 or candleRange <= 0 or (body / candleRange) >= iSquareBar
+minBodyOk   = iMinBody <= 0 or body >= iMinBody
+
+isBigCandle = minBodyOk and bigVsPrev and inSession and cooldownOk and squareOk
+isBull      = isBigCandle and close > open
+isBear      = isBigCandle and close < open
+
+// 2-candle pattern (RELAXED 2026-04-27 evening, validated on demo +$70.85):
+prevIsBear  = close[1] < open[1]
+prevIsBull  = close[1] > open[1]
+
+isBear2     = isBear and prevIsBear
+isBull2     = isBull and prevIsBull
+
+maxPrev     = math.max(body1, body2)
+bodyRatio   = maxPrev > 0 ? body / maxPrev : 0.0
+
+entryPrice  = iMidBar ? open + (close - open) * iEntryDepth : close
+
+if isBull2 or isBear2
+    lastSigBar := bar_index
+
+// ============================================================================
+// SIM
+// ============================================================================
+var int     simState      = 0
+var int     simDir        = 0
+var float   probeEntry    = na
+var float   tradeEntry    = na
+var int     probeBar      = 0
+var int     tradeBar      = 0
+var float   probeBestPts  = 0.0
+var int     tradeNum      = 0
+var float   tradePnL      = 0.0
+var int     cooldownBar   = 0
+
+var int     bigGreenBar   = 0
+var int     redCountSince = 0
+
+var int     statSignals   = 0
+var int     statBuys      = 0
+var int     statSells     = 0
+var int     statTrades    = 0
+var int     statWins      = 0
+var int     statLosses    = 0
+var float   statTotalPnL  = 0.0
+var float   statBestTrade = 0.0
+var float   statWorstTrade= 0.0
+var float   statWinSum    = 0.0
+var float   statLossSum   = 0.0
+
+var int     statProbes     = 0
+var int     statConfirmed  = 0
+var int     statProbeFail  = 0
+var int     statProbeTimeout = 0
+var int     statSkipped    = 0
+
+var int     statTodayTrades = 0
+var int     statTodayWins   = 0
+var float   statTodayPnL    = 0.0
+isNewDay    = dayofweek != dayofweek[1]
+if isNewDay
+    statTodayTrades := 0
+    statTodayWins   := 0
+    statTodayPnL    := 0.0
+
+barH        = hour(time, "UTC")
+barM        = minute(time, "UTC")
+barTotalMin = barH * 60 + barM
+afterReopen = barTotalMin >= 11 * 60 + iSkipReopen
+beforeClose = barTotalMin < 18 * 60 - iStopBefore
+timingOk    = (not iSessFilt) or (afterReopen and beforeClose)
+
+if isBull
+    bigGreenBar   := bar_index
+    redCountSince := 0
+
+if close < open and bigGreenBar > 0
+    redCountSince += 1
+
+pullbackOk  = redCountSince >= iPullbackN or bigGreenBar == 0
+
+f_pnl(_entry, _lots, _dir) =>
+    na(_entry) ? 0.0 : (close - _entry) * _dir * iContractSz * _lots
+
+var float exitPnL     = na
+var int   exitBar     = 0
+var int   exitDir     = 0
+var float exitEntry   = na
+var int   exitTrdNum  = 0
+var string exitType   = ""
+exitPnL := na
+
+if iShowSim
+    if simState == 1
+        _probeFav  = simDir == -1 ? (probeEntry - low) : (high - probeEntry)
+        _probeAdv  = simDir == -1 ? (high - probeEntry) : (probeEntry - low)
+        if _probeFav > probeBestPts
+            probeBestPts := _probeFav
+        if probeBestPts >= iProbeConf
+            tradeEntry    := close
+            tradeBar      := bar_index
+            tradePnL      := 0.0
+            simState      := 2
+            statConfirmed += 1
+            if iPCEnabled
+                _pcDir = simDir == 1 ? "buy" : "sell"
+                _pcMsg = iPCLicense + "," + _pcDir + "," + iPCSymbol + ",risk=" + str.tostring(iPCLots, "#.##")
+                alert(_pcMsg, alert.freq_once_per_bar)
+        else if _probeAdv >= iProbeFail and probeBestPts >= iProbeFail
+            exitPnL       := f_pnl(probeEntry, iProbeLots, simDir)
+            exitBar       := bar_index
+            exitDir       := simDir
+            exitEntry     := probeEntry
+            exitTrdNum    := tradeNum
+            exitType      := "PROBE FAIL"
+            statProbeFail += 1
+            simState      := 4
+            simDir        := 0
+            probeEntry    := na
+            probeBestPts  := 0.0
+        else if bar_index - probeBar >= iProbeMaxB
+            exitPnL          := f_pnl(probeEntry, iProbeLots, simDir)
+            exitBar          := bar_index
+            exitDir          := simDir
+            exitEntry        := probeEntry
+            exitTrdNum       := tradeNum
+            exitType         := "PROBE TIMEOUT"
+            statProbeTimeout += 1
+            simState         := 0
+            simDir           := 0
+            probeEntry       := na
+            probeBestPts     := 0.0
+
+    else if simState == 2
+        tradePnL := f_pnl(tradeEntry, iRealLots, simDir)
+        if tradePnL >= iTradeTP
+            exitPnL       := iTradeTP
+            exitBar       := bar_index
+            exitDir       := simDir
+            exitEntry     := tradeEntry
+            exitTrdNum    := tradeNum
+            exitType      := "TP HIT"
+            statTrades    += 1
+            statTotalPnL  += iTradeTP
+            statWins      += 1
+            statWinSum    += iTradeTP
+            statBestTrade := math.max(statBestTrade, iTradeTP)
+            statTodayTrades += 1
+            statTodayWins   += 1
+            statTodayPnL    += iTradeTP
+            if iPCEnabled
+                _closeDir = simDir == 1 ? "closelong" : "closeshort"
+                alert(iPCLicense + "," + _closeDir + "," + iPCSymbol, alert.freq_once_per_bar)
+            simState      := 0
+            simDir        := 0
+            tradeEntry    := na
+            probeEntry    := na
+            tradePnL      := 0.0
+            probeBestPts  := 0.0
+            if statTodayPnL >= iDailyCap
+                simState := 5
+        else if tradePnL <= -iTradeSL
+            exitPnL        := -iTradeSL
+            exitBar        := bar_index
+            exitDir        := simDir
+            exitEntry      := tradeEntry
+            exitTrdNum     := tradeNum
+            exitType       := "SL HIT"
+            statTrades     += 1
+            statTotalPnL   += -iTradeSL
+            statLosses     += 1
+            statLossSum    += -iTradeSL
+            statWorstTrade := math.min(statWorstTrade, -iTradeSL)
+            statTodayTrades += 1
+            statTodayPnL    += -iTradeSL
+            if iPCEnabled
+                _closeDir2 = simDir == 1 ? "closelong" : "closeshort"
+                alert(iPCLicense + "," + _closeDir2 + "," + iPCSymbol, alert.freq_once_per_bar)
+            cooldownBar   := bar_index
+            simState      := 3
+            simDir        := 0
+            tradeEntry    := na
+            probeEntry    := na
+            tradePnL      := 0.0
+            probeBestPts  := 0.0
+
+    else if simState == 3
+        if bar_index - cooldownBar >= iPostLossCD
+            simState := 0
+
+    else if simState == 4
+        if isBull or isBear
+            statSkipped += 1
+            simState    := 0
+
+    else if simState == 5
+        if isNewDay
+            simState := 0
+
+    if simState == 0
+        _qualBear = isBear2 and (not iSellOnly or true) and pullbackOk and timingOk
+        _qualBull = isBull2 and (not iSellOnly) and timingOk
+        if _qualBear
+            tradeNum     += 1
+            simState     := 1
+            simDir       := iFadeMode ? 1 : -1
+            probeEntry   := entryPrice
+            probeBar     := bar_index
+            probeBestPts := 0.0
+            tradePnL     := 0.0
+            statSignals  += 1
+            statSells    += iFadeMode ? 0 : 1
+            statBuys     += iFadeMode ? 1 : 0
+            statProbes   += 1
+        else if _qualBull
+            tradeNum     += 1
+            simState     := 1
+            simDir       := iFadeMode ? -1 : 1
+            probeEntry   := entryPrice
+            probeBar     := bar_index
+            probeBestPts := 0.0
+            tradePnL     := 0.0
+            statSignals  += 1
+            statBuys     += iFadeMode ? 0 : 1
+            statSells    += iFadeMode ? 1 : 0
+            statProbes   += 1
+
+// ============================================================================
+// VISUALS
+// ============================================================================
+if iShowSig and simState == 1 and bar_index == probeBar
+    _probeCol = simDir == -1 ? color.new(color.orange, 10) : color.new(color.teal, 10)
+    _probePos = simDir == -1 ? high : low
+    _probeSty = simDir == -1 ? label.style_label_down : label.style_label_up
+    _dirTxt   = simDir == -1 ? "SELL" : "BUY"
+    label.new(bar_index, _probePos,
+         "PROBE " + _dirTxt + "  #" + str.tostring(tradeNum) +
+         "\n" + str.tostring(iProbeLots, "#.##") + " lots",
+         style=_probeSty, color=_probeCol, textcolor=color.white, size=size.small)
+
+if iShowSig and simState == 2 and bar_index == tradeBar
+    _confCol = simDir == -1 ? color.new(color.red, 0) : color.new(color.green, 0)
+    _confPos = simDir == -1 ? high : low
+    _confSty = simDir == -1 ? label.style_label_down : label.style_label_up
+    _dirTxt2 = simDir == -1 ? "SELL" : "BUY"
+    label.new(bar_index, _confPos,
+         "CONFIRMED " + _dirTxt2 + "  #" + str.tostring(tradeNum) +
+         "\n" + str.tostring(iRealLots, "#.##") + " lots",
+         style=_confSty, color=_confCol, textcolor=color.white, size=size.small)
+
+if iShowSim and not na(exitPnL)
+    _exitCol = exitType == "TP HIT" ? color.new(color.green, 10) : exitType == "SL HIT" ? color.new(color.red, 10) : exitType == "PROBE FAIL" ? color.new(color.purple, 10) : exitType == "PROBE TIMEOUT" ? color.new(color.gray, 10) : color.new(color.orange, 10)
+    _exitTag = exitType == "TP HIT" ? "TP" : exitType == "SL HIT" ? "SL" : exitType == "PROBE FAIL" ? "PF" : exitType == "PROBE TIMEOUT" ? "PT" : "?"
+    _exitSgn = exitPnL >= 0 ? "+" : ""
+    _exitTxt = _exitTag + " #" + str.tostring(exitTrdNum) + "\n" + _exitSgn + "$" + str.tostring(exitPnL, "#.##")
+    _exitPos = exitDir == -1 ? low : high
+    _exitSty = exitDir == -1 ? label.style_label_up : label.style_label_down
+    label.new(bar_index, _exitPos, _exitTxt, style=_exitSty, color=_exitCol, textcolor=color.white, size=size.small)
+
+barcolor(isBull2 ? color.new(#00FF00, 0) : isBear2 ? color.new(#FF0000, 0) :
+         isBull  ? color.new(#00FF00, 70) : isBear  ? color.new(#FF0000, 70) : na, title="Big Candle Color")
+
+plotshape(isBull and not isBull2, title="WATCH BUY", style=shape.triangleup, location=location.belowbar, color=color.new(#00FF00, 60), size=size.tiny)
+plotshape(isBear and not isBear2, title="WATCH SELL", style=shape.triangledown, location=location.abovebar, color=color.new(#FF0000, 60), size=size.tiny)
+plotshape(isBull2, title="SIGNAL BUY", style=shape.triangleup, location=location.belowbar, color=color.new(#00FF00, 0), size=size.small)
+plotshape(isBear2, title="SIGNAL SELL", style=shape.triangledown, location=location.abovebar, color=color.new(#FF0000, 0), size=size.small)
+
+_watchBg = iShowBg and isBull and not isBull2 ? color.new(color.green, 92) :
+           iShowBg and isBear and not isBear2 ? color.new(color.red, 92) : na
+_sigBg   = iShowBg and isBull2 ? color.new(color.green, 80) :
+           iShowBg and isBear2 ? color.new(color.red, 80) : na
+bgcolor(_watchBg, title="Watch BG")
+bgcolor(_sigBg, title="Signal BG")
+_sessBg = iSessFilt and not inSession ? color.new(color.gray, 95) : na
+bgcolor(_sessBg, title="Out-of-Session")
+
+// ============================================================================
+// STATS TABLE
+// ============================================================================
+var table tbl = table.new(position.bottom_right, 2, 16,
+     bgcolor=color.new(color.black, 15),
+     border_width=1, border_color=color.new(color.gray, 60),
+     frame_color=color.new(color.gray, 50), frame_width=2)
+
+if barstate.islast and iShowStats
+    _hdrBg  = color.new(#0a7a6a, 5)
+    _bgDark = color.new(color.black, 25)
+    _txtDim = color.new(color.silver, 10)
+    _valCol = #00d4ff
+
+    table.cell(tbl, 0, 0, "SHANO MOMENTUM SCALPER v3", text_color=color.yellow, text_size=size.small, bgcolor=_hdrBg, text_halign=text.align_left)
+    table.cell(tbl, 1, 0, syminfo.ticker + " " + timeframe.period, text_color=color.white, text_size=size.small, bgcolor=_hdrBg)
+
+    var string _stateStr = "IDLE"
+    var color  _statusCol = color.gray
+    if simState == 0
+        _stateStr  := "IDLE"
+        _statusCol := color.gray
+    else if simState == 1
+        _stateStr  := "PROBING #" + str.tostring(tradeNum) + " (" + (simDir == 1 ? "LONG" : "SHORT") + " " + str.tostring(iProbeLots, "#.##") + ")"
+        _statusCol := color.orange
+    else if simState == 2
+        _stateStr  := "TRADING #" + str.tostring(tradeNum) + " (" + (simDir == 1 ? "LONG" : "SHORT") + " " + str.tostring(iRealLots, "#.##") + ")"
+        _statusCol := color.lime
+    else if simState == 3
+        _stateStr  := "COOLDOWN (" + str.tostring(math.max(0, iPostLossCD - (bar_index - cooldownBar))) + " bars)"
+        _statusCol := color.red
+    else if simState == 4
+        _stateStr  := "SKIP NEXT"
+        _statusCol := color.yellow
+    else if simState == 5
+        _stateStr  := "DAILY CAP REACHED"
+        _statusCol := color.fuchsia
+    _statusBg  = simState > 0 ? color.new(color.green, 70) : _bgDark
+    table.cell(tbl, 0, 1, "Status", text_color=_txtDim, text_size=size.tiny, bgcolor=_bgDark)
+    table.cell(tbl, 1, 1, _stateStr, text_color=_statusCol, text_size=size.tiny, bgcolor=_statusBg)
+
+    _todayWR  = statTodayTrades > 0 ? statTodayWins * 100.0 / statTodayTrades : 0.0
+    _todayCol = statTodayPnL >= 0 ? color.lime : color.red
+    _todaySgn = statTodayPnL >= 0 ? "+" : ""
+    table.cell(tbl, 0, 2, "TODAY", text_color=_txtDim, text_size=size.tiny, bgcolor=color.new(color.black, 5))
+    table.cell(tbl, 1, 2, _todaySgn + "$" + str.tostring(statTodayPnL, "#.##") + "  |  " + str.tostring(statTodayTrades) + " trades  |  " + str.tostring(_todayWR, "#.#") + "% WR", text_color=_todayCol, text_size=size.tiny, bgcolor=statTodayPnL >= 0.01 ? color.new(color.green, 70) : statTodayPnL <= -0.01 ? color.new(color.red, 70) : _bgDark)
+
+    table.cell(tbl, 0, 3, "Signals", text_color=_txtDim, text_size=size.tiny, bgcolor=_bgDark)
+    table.cell(tbl, 1, 3, str.tostring(statSignals) + "  (B:" + str.tostring(statBuys) + " S:" + str.tostring(statSells) + ")", text_color=_valCol, text_size=size.tiny, bgcolor=_bgDark)
+
+    table.cell(tbl, 0, 4, "Probes", text_color=_txtDim, text_size=size.tiny, bgcolor=_bgDark)
+    table.cell(tbl, 1, 4, str.tostring(statProbes) + " total | " + str.tostring(statConfirmed) + " confirmed | " + str.tostring(statProbeFail) + " failed | " + str.tostring(statProbeTimeout) + " timeout", text_color=_valCol, text_size=size.tiny, bgcolor=_bgDark)
+
+    table.cell(tbl, 0, 5, "Trades", text_color=_txtDim, text_size=size.tiny, bgcolor=_bgDark)
+    table.cell(tbl, 1, 5, str.tostring(statTrades) + " completed | " + str.tostring(statSkipped) + " skipped", text_color=_valCol, text_size=size.tiny, bgcolor=_bgDark)
+
+    _wr = statTrades > 0 ? statWins * 100.0 / statTrades : 0.0
+    _wrCol = _wr >= 60 ? color.lime : _wr >= 40 ? color.yellow : color.red
+    table.cell(tbl, 0, 6, "Win Rate", text_color=_txtDim, text_size=size.tiny, bgcolor=_bgDark)
+    table.cell(tbl, 1, 6, str.tostring(_wr, "#.#") + "%  (" + str.tostring(statWins) + "W / " + str.tostring(statLosses) + "L)", text_color=_wrCol, text_size=size.tiny, bgcolor=_bgDark)
+
+    _pnlCol = statTotalPnL >= 0 ? color.lime : color.red
+    _pnlSgn = statTotalPnL >= 0 ? "+" : ""
+    table.cell(tbl, 0, 7, "Total P&L", text_color=_txtDim, text_size=size.tiny, bgcolor=_bgDark)
+    table.cell(tbl, 1, 7, _pnlSgn + "$" + str.tostring(statTotalPnL, "#.##"), text_color=_pnlCol, text_size=size.normal, bgcolor=statTotalPnL >= 0 ? color.new(color.green, 70) : color.new(color.red, 70))
+
+    _curPnL  = simState == 2 ? tradePnL : simState == 1 ? f_pnl(probeEntry, iProbeLots, simDir) : 0.0
+    _curCol  = _curPnL >= 0 ? color.lime : color.red
+    _curBars = (simState == 1 or simState == 2) ? bar_index - probeBar : 0
+    table.cell(tbl, 0, 8, "Live Trade", text_color=_txtDim, text_size=size.tiny, bgcolor=_bgDark)
+    table.cell(tbl, 1, 8, (simState == 1 or simState == 2) ? "$" + str.tostring(_curPnL, "#.##") + " | " + str.tostring(_curBars) + " bars" : "---", text_color=_curCol, text_size=size.tiny, bgcolor=(simState == 1 or simState == 2) ? color.new(simDir == 1 ? color.green : color.red, 70) : _bgDark)
+
+    table.cell(tbl, 0, 9, "Detection", text_color=_txtDim, text_size=size.tiny, bgcolor=_bgDark)
+    table.cell(tbl, 1, 9, "2-CANDLE: " + str.tostring(iBodyMult, "#.##") + "x prev | prev same dir | min " + str.tostring(iMinBody, "#.#") + "pt | sq>=" + str.tostring(iSquareBar * 100, "#") + "%", text_color=color.gray, text_size=size.tiny, bgcolor=_bgDark)
+
+    _sessStatus = iSessFilt ? (inSession ? "IN SESSION" : "OUT OF SESSION") : "SESSION FILTER OFF"
+    _sessFg = iSessFilt ? (inSession ? color.lime : color.red) : color.orange
+    table.cell(tbl, 0, 10, "Session", text_color=_txtDim, text_size=size.tiny, bgcolor=_bgDark)
+    table.cell(tbl, 1, 10, _sessStatus, text_color=_sessFg, text_size=size.tiny, bgcolor=_bgDark)
+
+plot(iShowHist ? body : na, "Body Size", color=close > open ? color.green : close < open ? color.red : color.gray, style=plot.style_columns, display=display.pane)
+_threshold = math.max(body1, body2) * iBodyMult
+plot(iShowHist ? _threshold : na, "Signal Threshold", color=color.new(color.orange, 30), linewidth=1, display=display.pane)
+
+plot(body, "Current Body", display=display.data_window)
+plot(bodyRatio, "Body Ratio", display=display.data_window)
+plot(simState * 1.0, "Sim State", display=display.data_window)
+
+alertcondition(isBull and not isBull2, title="WATCH BUY (1st)", message="1st BIG GREEN | {{ticker}} {{close}}")
+alertcondition(isBear and not isBear2, title="WATCH SELL (1st)", message="1st BIG RED | {{ticker}} {{close}}")
+alertcondition(isBull2, title="SIGNAL BUY (2nd)", message="2nd GREEN CONFIRMED | {{ticker}} {{close}}")
+alertcondition(isBear2, title="SIGNAL SELL (2nd)", message="2nd RED CONFIRMED | {{ticker}} {{close}}")
+alertcondition(isBull2 or isBear2, title="Shano Any Signal", message="2-CANDLE SIGNAL | {{ticker}} {{close}}")

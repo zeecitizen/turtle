@@ -1,5 +1,15 @@
 ﻿//@version=5
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CLAUDE — READ THIS ON SESSION START:
+//   monitor/automatic_monitoring_cron.md      — how to resume 5-min auto-monitoring
+//   monitor/start_all.bat                     — start MT5 + TradingView (run first)
+//   pine/save_and_refresh_alert.md            — BEFORE any pine_save, read this
+//   pine/inputs_map.json                      — named input map (in_0..in_139)
+//   dashboard/start.bat                       — Indicator dashboard → http://localhost:3456
+//   dashboard/claude_trader/start.bat         — Claude Trader dashboard → http://localhost:3457
+// ═══════════════════════════════════════════════════════════════════════════
+
 indicator("Turtle Trader Desk v1.0, by M. Zeeshan MIT Alumni", "Turtle Trader Desk", overlay = true, max_boxes_count = 500, max_labels_count = 500, max_lines_count = 500, max_polylines_count = 100)
 max_bars_back(low, 300)
 max_bars_back(high, 300)
@@ -570,7 +580,7 @@ fCfg() =>
     _n += str.tostring(uSBf,      "#.##")      + "#"
     _n += str.tostring(uSMn,      "#.##")      + "#"
     _n += str.tostring(uSAm,      "#.##")      + "#"
-    _n += str.tostring(uSDo,      "#.##")      + "#"
+    _n += str.tostring(uSDo,      "#.##")      + "#\n"
     _n += str.tostring(uSSw)                   + "#"
     _n += str.tostring(uSLPips,   "#.##")      + "#"
     _n += str.tostring(uTPPips,   "#.##")      + "#"
@@ -593,7 +603,7 @@ fCfg() =>
     _n += str.tostring(uTVN)                   + "#"
     _n += str.tostring(uCd)                    + "#"
     _n += str.tostring(uAlGt,     "#.##")      + "#"
-    _n += str.tostring(uIOEGrd,   "#.##")      + "#"
+    _n += str.tostring(uIOEGrd,   "#.##")      + "#\n"
     _n += str.tostring(mTS)                    + "#"
     _n += str.tostring(tPB)                    + "#"
     _n += str.tostring(tSTh)                   + "#"
@@ -959,7 +969,7 @@ if _iR
     _nYF    = not _uDOB
     _bnC     = (_boB or _boBr) and not _aSF and _nYF
 
-    if _tFlp or _retExp or _bnC
+    if (_tFlp and not bRW) or _retExp or _bnC
         _iR := false
         _ibT    := false
         _fR    := false

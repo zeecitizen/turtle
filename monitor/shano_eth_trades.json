@@ -1,0 +1,30 @@
+{
+  "symbol": "ETHUSD",
+  "mode": "fade",
+  "started": "2026-04-26",
+  "settings": {
+    "body_mult": 2.0,
+    "min_body": 2.5,
+    "square_bar": 0.70,
+    "cooldown": 5,
+    "probe_conf": 0.30,
+    "probe_max_bars": 4,
+    "contract_sz": 1,
+    "real_lots": 1.0,
+    "tp": 5,
+    "sl": 3,
+    "post_loss_cd": 10,
+    "fade_mode": true,
+    "session_filter": false
+  },
+  "backtest": {
+    "trades": 404,
+    "win_rate": 43.3,
+    "total_pnl": 188,
+    "ev_per_trade": 0.47,
+    "profit_factor": 1.27
+  },
+  "live_trades": [],
+  "daily_pnl": 0,
+  "last_fired_trade_num": 0
+}

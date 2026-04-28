@@ -1,0 +1,41 @@
+# ─── Secrets & credentials ─────────────────────────────────────
+monitor/.claude_api_key
+monitor/.whatsapp_config.json
+.mcp.json
+*.api_key
+*.api_token
+.env
+.env.*
+
+# ─── Local Claude / IDE state ──────────────────────────────────
+.claude/
+
+# ─── Python caches ─────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+
+# ─── Runtime state (regenerated on startup) ────────────────────
+monitor/.shano_state.json
+monitor/.shano_hawk.pid
+monitor/.shano_hawk_stdout.log
+monitor/.last_uhv_id
+monitor/sniper_target.json
+monitor/.tv_indicator_snapshot.json
+monitor/*_stdout.log
+
+# ─── Logs ──────────────────────────────────────────────────────
+*.log
+mt5/install_eas.log
+
+# ─── Windows / shell artifacts ─────────────────────────────────
+nul
+null
+PyWhatKit_DB.txt
+*.tmp
+
+# ─── Editor / OS junk ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*~

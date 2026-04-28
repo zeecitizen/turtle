@@ -1,0 +1,16 @@
+{
+  "contacts": [
+    {
+      "name": "shano",
+      "phone": "923364863368",
+      "chat_id": "923364863368@c.us",
+      "active": false
+    },
+    {
+      "name": "zeeshan",
+      "phone": "4915119175329",
+      "chat_id": "4915119175329@c.us",
+      "active": true
+    }
+  ]
+}
