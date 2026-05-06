@@ -270,19 +270,35 @@ def _file_age_minutes(path: Path) -> float | None:
 
 
 def _process_alive(keyword: str) -> bool:
-    """Check if a Python process with this keyword in its command line is running."""
+    """Check if a Python process with this keyword in its command line is running.
+
+    Uses psutil (fast, reliable). On ANY error returns True (conservative) so
+    we never spawn duplicate daemons on transient failures. Patriarch uses
+    the same convention. Spawning a duplicate is much worse than skipping a
+    revive cycle — duplicates race on state files and both hang.
+    """
     try:
-        import subprocess
-        result = subprocess.run(
-            ["powershell", "-Command",
-             f"Get-Process python* -EA SilentlyContinue | "
-             f"Where-Object {{ (Get-CimInstance Win32_Process -Filter ('ProcessId='+$_.Id)).CommandLine -like '*{keyword}*' }} | "
-             f"Measure-Object | Select-Object -ExpandProperty Count"],
-            capture_output=True, text=True, timeout=10
-        )
-        return int(result.stdout.strip() or "0") > 0
-    except Exception:
+        import psutil
+        for p in psutil.process_iter(["cmdline", "name"]):
+            try:
+                cl = p.info.get("cmdline") or []
+                cmd = " ".join(str(x) for x in cl)
+                if "ensure_daemon" in cmd:
+                    continue  # don't count the launcher itself
+                if keyword in cmd:
+                    pname = (p.info.get("name") or "").lower()
+                    if "python" in pname:
+                        return True
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                continue
         return False
+    except Exception as e:
+        # On psutil error: assume alive — conservative, prevents duplicate spawns
+        try:
+            log(f"_process_alive({keyword}) errored ({e}); assuming alive")
+        except Exception:
+            pass
+        return True
 
 
 # ── Health Checks ────────────────────────────────────────────────
@@ -674,17 +690,22 @@ def _auto_restart_dead_processes(status: dict, revived: list):
         "shano_hawk": ("shano_hawk.py", []),
     }
 
+    # Delegate to ensure_daemon.py — it's the single source of truth for
+    # "spawn if not alive". It does its OWN cmdline-match check, so even if
+    # Sheriff thought "DEAD" wrongly, ensure_daemon won't spawn a duplicate.
+    ensure_script = SCRIPT_DIR / "ensure_daemon.py"
     for name, (script, args) in process_map.items():
         if not _process_alive(name):
             script_path = SCRIPT_DIR / script
-            if script_path.exists() and python.exists():
+            if script_path.exists() and python.exists() and ensure_script.exists():
                 try:
-                    cmd_args = [str(script_path)] + args
+                    cmd_args = [str(ensure_script), script] + args
                     subprocess.Popen(
                         [str(python)] + cmd_args,
                         creationflags=0x08000000,
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                     )
-                    log(f"  AUTO-RESTART: {name} relaunched")
+                    log(f"  AUTO-RESTART: {name} relaunched (via ensure_daemon)")
                     revived.append(name)
                     time.sleep(2)
                 except Exception as e:

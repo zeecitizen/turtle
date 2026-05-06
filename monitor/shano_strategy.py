@@ -74,7 +74,7 @@ DEFAULT_CONFIG = {
     "session_end_utc": "14:00",         # 17:00 Moscow
     "late_session_end_utc": "18:00",
     # Execution
-    "pineconnector_id": "8778286989525",
+    "pineconnector_id": "87782869895251",
     "symbol": "XAUUSD",
     "sl_pips": 15,
     "tp_pips": 52,

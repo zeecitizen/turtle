@@ -17,12 +17,26 @@ __pycache__/
 
 # ─── Runtime state (regenerated on startup) ────────────────────
 monitor/.shano_state.json
+monitor/.shano_state.json.backup-*
 monitor/.shano_hawk.pid
 monitor/.shano_hawk_stdout.log
 monitor/.last_uhv_id
 monitor/sniper_target.json
 monitor/.tv_indicator_snapshot.json
 monitor/*_stdout.log
+monitor/.*.lock
+monitor/.shano_trade_notifier_state.json
+monitor/auto_uhv_trader_heartbeat.json
+monitor/sniper_heartbeat.json
+monitor/forward_test_per_bar.jsonl
+monitor/forward_test_seen_bars.json
+monitor/forward_test_summary.json
+monitor/intern_journal/
+monitor/strategy_lab/.probe_shadow_state.json
+monitor/strategy_lab/.runner_state.json
+
+# ─── Build artifacts (rebuild from .mq5 source) ────────────────
+mt5/*.ex5
 
 # ─── Logs ──────────────────────────────────────────────────────
 *.log

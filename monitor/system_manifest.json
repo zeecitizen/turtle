@@ -1,11 +1,11 @@
 {
-  "last_sheriff_check": "2026-04-28T09:35:23Z",
+  "last_sheriff_check": "2026-05-06T21:24:11Z",
   "status": {
     "tradingview": "ALIVE",
     "sniper_daemon": "ALIVE",
     "shano_hawk": "ALIVE",
     "mt5": "ALIVE",
-    "heartbeat_age": "0 min ago",
+    "heartbeat_age": "24 min ago",
     "silver_hawk_learner": "ALIVE",
     "silver_hawk": "Teenager gen2 health=75.0",
     "patterns": 3563,
@@ -19,6 +19,7 @@
     "sheriff_mood": "cardiac_arrest"
   },
   "issues": [
+    "Heartbeat is 24 min stale \u2014 daemon may be stuck",
     "Win rate is only 20% on last 20 trades \u2014 system needs improvement"
   ],
   "processes_alive": {

@@ -22,7 +22,7 @@ $CONFIG_PATH = "$SCRIPT_DIR\.alert_config.json"
 $LOG_PATH    = "$SCRIPT_DIR\claude_signals.csv"
 $DEDUP_PATH  = "$SCRIPT_DIR\.claude_last_uhv"
 
-$PC_ID      = "8778286989525"
+$PC_ID      = "87782869895251"
 $SL_PIPS    = "15"   # increased from 10 — gives room past spread noise on XAUUSD
 $TP_PIPS    = "52"   # Session 49 optimised value: 52 pips = ~$208 target at 0.40 lots
 $SPREAD     = "30"

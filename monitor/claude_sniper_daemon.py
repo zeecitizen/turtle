@@ -51,7 +51,7 @@ SNIPER_LOG    = SCRIPT_DIR / "sniper.log"
 REFLECTIONS   = SCRIPT_DIR / "reflections.json"
 HEARTBEAT     = SCRIPT_DIR / "sniper_heartbeat.json"
 
-PC_ID      = "8778286989525"
+PC_ID      = "87782869895251"
 SYMBOL     = "XAUUSD"
 LOTS       = "0.40"
 SL_PIPS    = "15"

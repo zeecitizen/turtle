@@ -4,26 +4,33 @@ When Zeeshan says **"Claude go hawking"**, run the full startup sequence below. 
 
 ## Startup Sequence
 
+**Self-sufficient mode (2026-05-02)**: `startup.bat` now spawns `auto_uhv_trader.py`
+(Python replacement for the old Claude-driven UHV cron) and `forward_tester.py`.
+Trades flow Claude-free. The old "register the trading cron" step is OBSOLETE —
+the Python daemon does it autonomously.
+
 ### Step 1: Run startup.bat
+Run directly from cmd / VS Code terminal (NOT via `powershell -File` — that flag
+only accepts .ps1):
 ```
-powershell -ExecutionPolicy Bypass -File "c:\Users\zeesh\Documents\GitHub\turtle\startup.bat"
+c:\Users\zeesh\Documents\GitHub\turtle\startup.bat
 ```
-This launches: dashboard, sniper daemon, Silver Hawk learner, Intern Hawks, Sheriff Hawk.
+Launches: dashboard, shano_hawk (signal sniper), auto_uhv_trader (Claude-free UHV
+detector), forward_tester (intra-candle diagnostics), Silver Hawk learner, Intern
+Hawks, Sheriff Hawk, Sexy Hawk WhatsApp reporter, Meeting Hawks, vscode_watchdog.
 
-### Step 2: Register the trading cron
-Read `crons/jobs/claude_trader.md` then:
-```
-CronCreate(cron="* * * * *", recurring=true, durable=true, prompt=<contents of claude_trader.md>)
-```
+### Step 2: Attach EAs in MT5 manually
+Drag `ShanoExitManager`, `TurtleTradeLogger`, `ShanoTickLogger` onto XAUUSD chart.
+Hot-reload picks up `shano_config.json` every 5s — no reattach needed for config edits.
 
-### Step 3: Verify everything is alive
+### Step 3 (optional): Verify everything is alive
 ```
-powershell -Command "C:\Users\zeesh\AppData\Local\Programs\Python\Python313-arm64\python.exe C:\Users\zeesh\Documents\GitHub\turtle\monitor\sheriff_hawk.py"
+C:\Users\zeesh\AppData\Local\Programs\Python\Python313-arm64\python.exe C:\Users\zeesh\Documents\GitHub\turtle\monitor\sheriff_hawk.py
 ```
 Check the Sheriff output — all components should show ALIVE.
 
-### Step 4: Confirm to user
-Tell Zee: "All hawks are flying. Sniper watching, Silver Hawk learning, Interns researching, Sheriff patrolling."
+### Step 4 (optional): Confirm
+"All hawks are flying. Sniper watching, auto-UHV-trader running, forward-tester collecting, Sheriff patrolling. Trades flow Claude-free."
 
 ---
 
@@ -32,7 +39,11 @@ Tell Zee: "All hawks are flying. Sniper watching, Silver Hawk learning, Interns 
 | Hawk | File | Schedule | Purpose |
 |------|------|----------|---------|
 | **Sniper Daemon** | `monitor/claude_sniper_daemon.py` | Always on | Watches price via CDP, fires trades via PineConnector, manages P&L with bid/ask spread |
-| **Claude Trader Cron** | `crons/jobs/claude_trader.md` | Every minute | Detects new UHV labels, writes sniper target for daemon |
+| **Auto UHV Trader** | `monitor/auto_uhv_trader.py` | Every 60s | Claude-free UHV detector: builds M1 bars from tick CSV, writes sniper_target.json or fires direct |
+| **Forward Tester** | `monitor/forward_tester.py` | Every 30s | Intra-candle theory validator: spread/slippage/probe-confirm/burst stats |
+| **Calibration Pipeline** | `monitor/strategy_lab/build_slip_calibration.py` + `pdf5_quick_compare.py` | On demand (weekly) | Builds empirical slippage distribution from `turtle_fills.csv`, runs calibrated backtest. Run after each ~50 new fills accumulate. |
+| **Open Log (NEW)** | `Common/Files/shano_open_log.csv` | Per main open | Rich open log: send_ts, fill_ts, latency_us, intended_bid/ask, actual_fill, slip_pts. Used by calibration pipeline. |
+| **Claude Trader Cron** | `crons/jobs/claude_trader.md` | OBSOLETE | Replaced by auto_uhv_trader.py — kept for reference only |
 | **Silver Hawk Learner** | `monitor/silver_hawk_learner.py` | Every 15 min | Takes chart screenshots, learns visual patterns, VSA research |
 | **Intern Hawks** | `monitor/intern_hawks.py` | Daily | 3 interns browse internet for trading theories, write journal |
 | **Meeting Room** | `monitor/meeting_hawks.py --loop` | 9am + 9pm PKT | Full team standup — every engine presents with personality, Secretary delivers summary |

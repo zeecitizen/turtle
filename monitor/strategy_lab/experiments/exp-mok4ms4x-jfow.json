@@ -1,0 +1,16 @@
+{
+  "id": "exp-mok4ms4x-jfow",
+  "name": "sweep pc=0.58 fi=35.0",
+  "created": "2026-04-29T14:04:51.057Z",
+  "params": {
+    "probeConfirm": 0.58,
+    "probeFail": 3,
+    "fearIdeal": 35,
+    "fearWashout": 180,
+    "trailTrigger": 8,
+    "trailDrop": 2,
+    "mainLots": 0.4,
+    "probeTimeout": 50
+  },
+  "updated": "2026-04-29T14:05:01.525Z"
+}

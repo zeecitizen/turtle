@@ -42,7 +42,7 @@ if ([string]::IsNullOrEmpty($WEBHOOK_URL) -or $WEBHOOK_URL -like "REPLACE*") {
     exit 1
 }
 
-$PC_ID = "8778286989525"
+$PC_ID = "87782869895251"
 
 # PineConnector: closelong closes buy positions, closeshort closes sell positions
 $closeCmd = if ($Direction -eq "buy") { "closelong" } else { "closeshort" }

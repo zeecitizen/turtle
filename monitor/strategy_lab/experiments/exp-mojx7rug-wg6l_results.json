@@ -1,0 +1,18 @@
+{
+  "experiment_id": "exp-mojx7rug-wg6l",
+  "name": "tight cut test",
+  "params": {
+    "probeConfirm": 0.45,
+    "probeFail": 3,
+    "fearIdeal": 35,
+    "fearWashout": 180,
+    "trailTrigger": 8,
+    "trailDrop": 2,
+    "mainLots": 0.4,
+    "probeTimeout": 50
+  },
+  "computed_at": "2026-04-29T12:37:30",
+  "n_probes_analyzed": 0,
+  "warning": "No shadow analyzer data yet. Wait for probe_shadow.py to log a few probes (5-10 min minimum).",
+  "metrics": {}
+}

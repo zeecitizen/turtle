@@ -1,0 +1,29 @@
+{
+  "experiment_id": "exp-mok4lyvq-q76k",
+  "name": "sweep pc=0.45 fi=35.0",
+  "params": {
+    "probeConfirm": 0.45,
+    "probeFail": 3,
+    "fearIdeal": 35,
+    "fearWashout": 180,
+    "trailTrigger": 8,
+    "trailDrop": 2,
+    "mainLots": 0.4,
+    "probeTimeout": 50
+  },
+  "computed_at": "2026-04-29T16:04:38",
+  "n_probes_analyzed": 22,
+  "metrics": {
+    "actual_confirmed_058": 13,
+    "would_confirm_at_threshold": 13,
+    "extra_confirms_vs_058": 0,
+    "actual_total_pnl": 0.89,
+    "sim_main_total_pnl": 133.2,
+    "missed_potential_pnl": 0,
+    "sim_win_rate_pct": 84.6,
+    "sim_avg_win": 18.47,
+    "sim_avg_loss": -35.0,
+    "avg_after_close_continuation": 0.92
+  },
+  "thresholds_assumed": "MFE & sim_main outputs from probe_shadow.py at [0.20, 0.30, 0.45, 0.58] \u2014 script picks the closest to your experiment's probeConfirm and adjusts for your fearIdeal/mainLots"
+}

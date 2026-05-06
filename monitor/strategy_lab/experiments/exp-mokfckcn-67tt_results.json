@@ -1,0 +1,29 @@
+{
+  "experiment_id": "exp-mokfckcn-67tt",
+  "name": "sweep pc=0.3 fi=120.0",
+  "params": {
+    "probeConfirm": 0.3,
+    "probeFail": 3,
+    "fearIdeal": 120,
+    "fearWashout": 180,
+    "trailTrigger": 8,
+    "trailDrop": 2,
+    "mainLots": 0.4,
+    "probeTimeout": 50
+  },
+  "computed_at": "2026-04-29T21:04:54",
+  "n_probes_analyzed": 59,
+  "metrics": {
+    "actual_confirmed_058": 38,
+    "would_confirm_at_threshold": 45,
+    "extra_confirms_vs_058": 7,
+    "actual_total_pnl": -2.05,
+    "sim_main_total_pnl": -370.0,
+    "missed_potential_pnl": -452.8,
+    "sim_win_rate_pct": 66.7,
+    "sim_avg_win": 18.41,
+    "sim_avg_loss": -61.49,
+    "avg_after_close_continuation": 0.89
+  },
+  "thresholds_assumed": "MFE & sim_main outputs from probe_shadow.py at [0.20, 0.30, 0.45, 0.58] \u2014 script picks the closest to your experiment's probeConfirm and adjusts for your fearIdeal/mainLots"
+}

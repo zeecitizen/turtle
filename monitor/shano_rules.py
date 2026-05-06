@@ -153,11 +153,18 @@ def main():
         "pine/turtle-shano.pine")
 
     add("detection",
-        "pichli 2 candle se bari visibly bari",
-        "Current bar must be 1.5x bigger than previous 2 bar bodies",
+        "current bar sirf pichli 1 candle (2nd-to-current) se 1.5x bari ho — 2 peeche wali ko ignore karo",
+        "Current bar must be 1.5x bigger than ONLY the immediately previous bar (do NOT compare to 2-back)",
         *check_pine_input(pine_src, "BodyMult", 1.5, tv_snap)[:1] + (check_pine_input(pine_src, "BodyMult", 1.5, tv_snap)[1],),
-        "iBodyMult input")
-    rules[-1]["source"] = "pine iBodyMult"
+        "iBodyMult input + iLookback=1 (Shano correction 2026-04-28)")
+    rules[-1]["source"] = "pine iBodyMult + iLookback"
+
+    add("detection",
+        "1 candle peeche se compare karo, 2 candle peeche se nahin",
+        "Lookback = 1 (compare current body only to body[1], not body[2])",
+        *check_pine_input(pine_src, "Lookback", 1, tv_snap)[:1] + (check_pine_input(pine_src, "Lookback", 1, tv_snap)[1],),
+        "iLookback input")
+    rules[-1]["source"] = "pine iLookback"
 
     add("detection",
         "sirf dekhti hun kuch ni karti pehli red candle pe. haan dusri red candle pe 0.01 lot lagati hu",
@@ -292,14 +299,14 @@ def main():
     # ─── TIMING ─────────────────────────────────────────────────────────
     ok, ev = check_pine_input(pine_src, "SkipReopen", 20, tv_snap)
     add("timing",
-        "first 20 minutes after market open on Monday absolutely no trade",
-        "Skip first 20 min after week open",
+        "har din session open ke pehle 20 minute koi trade nahin (not just Monday)",
+        "Skip first 20 min after every daily session open",
         ok, ev, "pine iSkipReopen")
 
     ok, ev = check_pine_input(pine_src, "StopBefore", 60, tv_snap)
     add("timing",
-        "before 2:00 AM pakistani time i dont trade at 1-2AM (1 hour before close)",
-        "Stop new trades 60 min before week close",
+        "har din session close se 1 ghanta pehle koi trade nahin (not just Friday)",
+        "Stop new trades 60 min before every daily session close",
         ok, ev, "pine iStopBefore")
 
     # ─── INSTRUMENT ─────────────────────────────────────────────────────
