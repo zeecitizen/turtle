@@ -33,7 +33,7 @@ SCRIPT_DIR  = Path(__file__).parent
 LIVE_TRADE  = SCRIPT_DIR / "live_trade_open.json"
 ALERT_CFG   = SCRIPT_DIR / ".alert_config.json"
 HAWK_LOG    = SCRIPT_DIR / "hawk.log"
-PC_ID       = "8778286989525"
+PC_ID       = "87782869895251"
 PNL_FACTOR  = 40.0   # $40 per 1.0 price-unit at 0.40 lots XAUUSD
 
 # JS that reads real-time price from TV's internal quote session

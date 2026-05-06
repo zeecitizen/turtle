@@ -297,31 +297,52 @@ def main():
     if ea_burst_count is not None and ea_burst_max:
         burst_str = f"{ea_burst_count}/{ea_burst_max}"
 
-    # Win-rate calculation — MAIN TRADES ONLY (probes excluded by default).
+    # Win-rate calculation — ALL closed trades (probes + mains).
+    # Probe-trail v1 (2026-05-04) makes probes real income, so they count.
+    # Main-only winrate kept as separate field for traders who want it.
     PROBE_LOT = 0.01
     is_main = lambda lots: lots > PROBE_LOT + 0.001
 
-    # TODAY: prefer EA's full count (today_main_wins/losses) — based on full HistorySelect.
-    # Fallback to walking the history list (limited to 30 entries).
-    today_wins = today_losses = 0
-    today_probes_skipped = 0
+    # Main-only stats — preferred from EA's full HistorySelect tally
+    today_main_wins = today_main_losses = 0
     if ea_live and ea_live.get("today_main_wins") is not None:
-        today_wins = int(ea_live.get("today_main_wins", 0))
-        today_losses = int(ea_live.get("today_main_losses", 0))
-        today_probes_skipped = max(0, int(ea_live.get("closes_today", 0)) - today_wins - today_losses)
-    elif ea_live and ea_live.get("history"):
+        today_main_wins = int(ea_live.get("today_main_wins", 0))
+        today_main_losses = int(ea_live.get("today_main_losses", 0))
+    today_main_total = today_main_wins + today_main_losses
+    today_main_wr = round(100.0 * today_main_wins / today_main_total, 1) if today_main_total else None
+
+    # All-trade stats — full-day scan of EA log file (today's date only).
+    # Captures every "CLOSED ticket=X | ... | $Y" line and counts wins (pnl>0) vs losses (pnl<0).
+    # Falls back to the EA history buffer (~30 entries) if log read fails.
+    today_wins = today_losses = 0
+    today_log_scanned = False
+    if LOG.exists():
+        try:
+            raw = LOG.read_bytes().replace(b"\x00", b"").decode("utf-8", errors="ignore")
+            close_re = re.compile(r"ShanoEA:\s+CLOSED\s+ticket=\d+\s*\|.*?\|\s*\$(-?\d+(?:\.\d+)?)\s*$")
+            for line in raw.splitlines():
+                m = close_re.search(line)
+                if not m:
+                    continue
+                p = float(m.group(1))
+                if p > 0.0001:
+                    today_wins += 1
+                elif p < -0.0001:
+                    today_losses += 1
+            today_log_scanned = True
+        except Exception:
+            today_log_scanned = False
+    if not today_log_scanned and ea_live and ea_live.get("history"):
+        # Fallback: 30-entry buffer
         for h in ea_live["history"]:
-            lots = float(h.get("lots", 0))
             p = float(h.get("pnl", 0))
-            if not is_main(lots):
-                today_probes_skipped += 1
-                continue
             if p > 0.0001:
                 today_wins += 1
             elif p < -0.0001:
                 today_losses += 1
     today_total = today_wins + today_losses
     today_wr = round(100.0 * today_wins / today_total, 1) if today_total else None
+    today_probes_skipped = max(0, int((ea_live or {}).get("closes_today", 0)) - today_total) if ea_live else 0
 
     # OVERALL (last 7 days from EA's HistorySelect — bypasses CSV which has err=5004 gaps)
     # Falls back to CSV+date-filter only if EA hasn't dumped 7-day stats yet.
@@ -377,6 +398,7 @@ def main():
         "balance": ea_balance,
         "equity": ea_equity,
         "burst": burst_str,
+        "filter_stats": (ea_live.get("config", {}) or {}).get("filter_stats") if ea_live else None,
         "last_ea_event": log_state["last_event"],
         "recent_events": log_state["recent_events"],
         "recent_fills": recent_fills,
@@ -387,6 +409,9 @@ def main():
         "today_losses": today_losses,
         "today_winrate": today_wr,
         "today_probes_skipped": today_probes_skipped,
+        "today_main_wins": today_main_wins,
+        "today_main_losses": today_main_losses,
+        "today_main_winrate": today_main_wr,
         "overall_wins": overall_wins,
         "overall_losses": overall_losses,
         "overall_winrate": overall_wr,

@@ -352,6 +352,22 @@ const server = http.createServer(async (req, res) => {
       shano.processes.meeting_hawks = psOut.includes('meeting_hawks.py');
     } catch (e) { shano.processes.error = e.message; }
 
+    // Log freshness — a hung daemon's process exists but its log stops
+    // updating. Frontend uses these to mark stale dots as RED.
+    shano.log_ages_sec = {};
+    const MON = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\';
+    const logFiles = {
+      shano_hawk:    MON + 'shano_hawk.log',
+      sheriff_hawk:  MON + 'sheriff_hawk.log',
+      sniper_daemon: MON + 'sniper.log',
+      silver_hawk:   MON + 'silver_hawk_learner.log',
+    };
+    const nowMs = Date.now();
+    for (const [k, p] of Object.entries(logFiles)) {
+      try { shano.log_ages_sec[k] = Math.round((nowMs - fs.statSync(p).mtimeMs) / 1000); }
+      catch { shano.log_ages_sec[k] = null; }
+    }
+
     shano.tv_cdp = await checkCDP();
 
     try {
@@ -396,6 +412,19 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // HUB - simple landing page with big buttons (Shano-friendly nav)
+  if (url === '/' || url === '/home') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'hub.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('hub.html missing: ' + e.message);
+    }
+    return;
+  }
+
   // SHANO DASHBOARD - Apple-style live UI served from shano.html
   if (url === '/shano') {
     try {
@@ -408,6 +437,160 @@ const server = http.createServer(async (req, res) => {
       res.end('shano.html missing: ' + e.message);
     }
     return;
+  }
+
+  // SHADOW DASHBOARD - copy of /shano for running UI experiments without
+  // affecting the production dashboard. Each /shadow/<id> path is a separate
+  // experiment with its own param config saved at monitor/strategy_lab/experiments/<id>.json.
+  if (url === '/shadow' || url.startsWith('/shadow/')) {
+    try {
+      const htmlPath = path.join(__dirname, 'shadow.html');
+      const html = fs.readFileSync(htmlPath, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('shadow.html missing: ' + e.message);
+    }
+    return;
+  }
+
+  // SHADOW EXPERIMENT API
+  // ─ POST /api/shadow/create        → mints a new experiment, returns {id, url}
+  // ─ GET  /api/shadow/list          → list all experiments
+  // ─ GET  /api/shadow/<id>          → fetch one experiment's config
+  // ─ POST /api/shadow/<id>          → update config (params, name)
+  // ─ DELETE /api/shadow/<id>        → remove experiment
+  const EXP_DIR = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\experiments';
+  try { fs.mkdirSync(EXP_DIR, { recursive: true }); } catch {}
+
+  function _expPath(id) { return path.join(EXP_DIR, id + '.json'); }
+  function _genExpId() {
+    return 'exp-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+  }
+  const DEFAULT_PARAMS = {
+    probeConfirm: 0.58,
+    probeFail:    3.0,
+    fearIdeal:   70.0,
+    fearWashout: 180.0,
+    trailTrigger: 8.0,
+    trailDrop:    2.0,
+    mainLots:     0.40,
+    probeTimeout: 50,
+  };
+
+  if (url === '/api/shadow/create' && req.method === 'POST') {
+    const id = _genExpId();
+    const cfg = {
+      id, name: 'Experiment ' + id.slice(-4),
+      created: new Date().toISOString(),
+      params: { ...DEFAULT_PARAMS },
+    };
+    try {
+      fs.writeFileSync(_expPath(id), JSON.stringify(cfg, null, 2));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ id, url: `/shadow/${id}` }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
+  if (url === '/api/shadow/list') {
+    try {
+      const files = fs.readdirSync(EXP_DIR).filter(f => f.endsWith('.json'));
+      const experiments = files.map(f => {
+        try { return JSON.parse(fs.readFileSync(path.join(EXP_DIR, f), 'utf8')); }
+        catch { return null; }
+      }).filter(Boolean).sort((a,b) => (b.created||'').localeCompare(a.created||''));
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ experiments }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message, experiments: [] }));
+    }
+    return;
+  }
+
+  // POST /api/shadow/<id>/compute — run the backtest with this experiment's params
+  // GET  /api/shadow/<id>/compute — return the cached results JSON
+  const computeMatch = url.match(/^\/api\/shadow\/([\w-]+)\/compute$/);
+  if (computeMatch) {
+    const id = computeMatch[1];
+    const cacheFile = path.join(EXP_DIR, id + '_results.json');
+    if (req.method === 'GET') {
+      try {
+        if (fs.existsSync(cacheFile)) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(fs.readFileSync(cacheFile, 'utf8'));
+        } else {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'no_results_yet', hint: 'POST to this endpoint to compute' }));
+        }
+      } catch (e) { res.writeHead(500); res.end(JSON.stringify({error: e.message})); }
+      return;
+    }
+    if (req.method === 'POST') {
+      try {
+        const PY = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python313-arm64\\python.exe';
+        const SCRIPT = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\compute_experiment.py';
+        const out = execSync(`"${PY}" "${SCRIPT}" "${id}"`, { timeout: 30000 }).toString();
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(out);
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: String(e.message || e) }));
+      }
+      return;
+    }
+  }
+
+  const expMatch = url.match(/^\/api\/shadow\/([\w-]+)$/);
+  if (expMatch && !['create', 'list'].includes(expMatch[1])) {
+    const id = expMatch[1];
+    const file = _expPath(id);
+    if (req.method === 'GET') {
+      if (!fs.existsSync(file)) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'not_found' }));
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(fs.readFileSync(file, 'utf8'));
+      return;
+    }
+    if (req.method === 'POST' || req.method === 'PUT') {
+      let body = '';
+      req.on('data', chunk => body += chunk);
+      req.on('end', () => {
+        try {
+          const incoming = JSON.parse(body || '{}');
+          let existing = {};
+          if (fs.existsSync(file)) existing = JSON.parse(fs.readFileSync(file, 'utf8'));
+          const merged = {
+            ...existing,
+            ...incoming,
+            id,
+            params: { ...(existing.params || {}), ...(incoming.params || {}) },
+            updated: new Date().toISOString(),
+          };
+          fs.writeFileSync(file, JSON.stringify(merged, null, 2));
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(merged));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: e.message }));
+        }
+      });
+      return;
+    }
+    if (req.method === 'DELETE') {
+      try { if (fs.existsSync(file)) fs.unlinkSync(file); } catch {}
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ deleted: true }));
+      return;
+    }
   }
 
   // PWA manifest — makes /shano installable on iOS/Android home screen

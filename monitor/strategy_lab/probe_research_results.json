@@ -1,0 +1,1173 @@
+{
+  "computed_at": "2026-04-30T05:19:43",
+  "n_probes": 105,
+  "results": [
+    {
+      "fired": 59,
+      "skipped": 0,
+      "wins": 40,
+      "losses": 19,
+      "big_losses": 19,
+      "total": -398.8,
+      "wr": 67.8,
+      "avg_win": 16.9,
+      "avg_loss": -56.57,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": -300.8,
+        "2026-04-30": -98.0
+      },
+      "worst_day": -300.8,
+      "best_day": -98.0,
+      "config": {
+        "name": "A0 baseline pc=.45 fi=50 (CURRENT LIVE)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 56,
+      "skipped": 0,
+      "wins": 39,
+      "losses": 17,
+      "big_losses": 16,
+      "total": -567.2,
+      "wr": 69.6,
+      "avg_win": 16.41,
+      "avg_loss": -71.01,
+      "max_loss": -91.6,
+      "daily": {
+        "2026-04-29": -444.0,
+        "2026-04-30": -123.2
+      },
+      "worst_day": -444.0,
+      "best_day": -123.2,
+      "config": {
+        "name": "A1 baseline pc=.58 fi=70 (ORIGINAL)",
+        "probeConfirm": 0.58,
+        "fearIdeal": 70,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 59,
+      "skipped": 0,
+      "wins": 43,
+      "losses": 16,
+      "big_losses": 16,
+      "total": -480.0,
+      "wr": 72.9,
+      "avg_win": 16.88,
+      "avg_loss": -75.38,
+      "max_loss": -87.2,
+      "daily": {
+        "2026-04-29": -320.0,
+        "2026-04-30": -160.0
+      },
+      "worst_day": -320.0,
+      "best_day": -160.0,
+      "config": {
+        "name": "A2 pc=.45 fi=70",
+        "probeConfirm": 0.45,
+        "fearIdeal": 70,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 59,
+      "skipped": 0,
+      "wins": 33,
+      "losses": 26,
+      "big_losses": 26,
+      "total": -569.6,
+      "wr": 55.9,
+      "avg_win": 14.51,
+      "avg_loss": -40.32,
+      "max_loss": -55.6,
+      "daily": {
+        "2026-04-29": -443.2,
+        "2026-04-30": -126.4
+      },
+      "worst_day": -443.2,
+      "best_day": -126.4,
+      "config": {
+        "name": "A3 pc=.45 fi=35",
+        "probeConfirm": 0.45,
+        "fearIdeal": 35,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 59,
+      "skipped": 0,
+      "wins": 40,
+      "losses": 19,
+      "big_losses": 19,
+      "total": -398.8,
+      "wr": 67.8,
+      "avg_win": 16.9,
+      "avg_loss": -56.57,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": -300.8,
+        "2026-04-30": -98.0
+      },
+      "worst_day": -300.8,
+      "best_day": -98.0,
+      "config": {
+        "name": "B postBigLoss skip 1 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 47,
+      "skipped": 12,
+      "wins": 35,
+      "losses": 12,
+      "big_losses": 12,
+      "total": -70.0,
+      "wr": 74.5,
+      "avg_win": 17.71,
+      "avg_loss": -57.5,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": 9.2,
+        "2026-04-30": -79.2
+      },
+      "worst_day": -79.2,
+      "best_day": 9.2,
+      "config": {
+        "name": "B postBigLoss skip 2 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 2,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 39,
+      "skipped": 20,
+      "wins": 29,
+      "losses": 10,
+      "big_losses": 10,
+      "total": -90.4,
+      "wr": 74.4,
+      "avg_win": 16.47,
+      "avg_loss": -56.8,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": -67.2,
+        "2026-04-30": -23.2
+      },
+      "worst_day": -67.2,
+      "best_day": -23.2,
+      "config": {
+        "name": "B postBigLoss skip 3 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 3,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 22,
+      "skipped": 37,
+      "wins": 18,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 68.0,
+      "wr": 81.8,
+      "avg_win": 16.2,
+      "avg_loss": -55.9,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 71.6,
+        "2026-04-30": -3.6
+      },
+      "worst_day": -3.6,
+      "best_day": 71.6,
+      "config": {
+        "name": "C dailyBigLossHalt after 2 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 31,
+      "skipped": 28,
+      "wins": 25,
+      "losses": 6,
+      "big_losses": 6,
+      "total": 111.2,
+      "wr": 80.6,
+      "avg_win": 17.57,
+      "avg_loss": -54.67,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 166.4,
+        "2026-04-30": -55.2
+      },
+      "worst_day": -55.2,
+      "best_day": 166.4,
+      "config": {
+        "name": "C dailyBigLossHalt after 3 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 3,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 38,
+      "skipped": 21,
+      "wins": 30,
+      "losses": 8,
+      "big_losses": 8,
+      "total": 77.2,
+      "wr": 78.9,
+      "avg_win": 16.97,
+      "avg_loss": -54.0,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 184.4,
+        "2026-04-30": -107.2
+      },
+      "worst_day": -107.2,
+      "best_day": 184.4,
+      "config": {
+        "name": "C dailyBigLossHalt after 4 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 4,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 12,
+      "skipped": 47,
+      "wins": 10,
+      "losses": 2,
+      "big_losses": 2,
+      "total": 71.6,
+      "wr": 83.3,
+      "avg_win": 18.0,
+      "avg_loss": -54.2,
+      "max_loss": -54.4,
+      "daily": {
+        "2026-04-29": 71.6
+      },
+      "worst_day": 71.6,
+      "best_day": 71.6,
+      "config": {
+        "name": "D consecLossSkip after 2 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 2,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 43,
+      "skipped": 16,
+      "wins": 30,
+      "losses": 13,
+      "big_losses": 13,
+      "total": -190.8,
+      "wr": 69.8,
+      "avg_win": 18.21,
+      "avg_loss": -56.71,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": -190.8
+      },
+      "worst_day": -190.8,
+      "best_day": -190.8,
+      "config": {
+        "name": "D consecLossSkip after 3 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 3,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 44,
+      "skipped": 15,
+      "wins": 30,
+      "losses": 14,
+      "big_losses": 14,
+      "total": -242.4,
+      "wr": 68.2,
+      "avg_win": 18.21,
+      "avg_loss": -56.34,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": -242.4
+      },
+      "worst_day": -242.4,
+      "best_day": -242.4,
+      "config": {
+        "name": "D consecLossSkip after 4 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 4,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 45,
+      "skipped": 14,
+      "wins": 30,
+      "losses": 15,
+      "big_losses": 15,
+      "total": -284.4,
+      "wr": 66.7,
+      "avg_win": 19.07,
+      "avg_loss": -57.09,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": -233.6,
+        "2026-04-30": -50.8
+      },
+      "worst_day": -233.6,
+      "best_day": -50.8,
+      "config": {
+        "name": "E directionFlipSkip after 2 same-dir wins",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 2,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 52,
+      "skipped": 7,
+      "wins": 36,
+      "losses": 16,
+      "big_losses": 16,
+      "total": -272.4,
+      "wr": 69.2,
+      "avg_win": 17.72,
+      "avg_loss": -56.9,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": -221.6,
+        "2026-04-30": -50.8
+      },
+      "worst_day": -221.6,
+      "best_day": -50.8,
+      "config": {
+        "name": "E directionFlipSkip after 3 same-dir wins",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 3,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 59,
+      "skipped": 0,
+      "wins": 40,
+      "losses": 19,
+      "big_losses": 19,
+      "total": -398.8,
+      "wr": 67.8,
+      "avg_win": 16.9,
+      "avg_loss": -56.57,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": -300.8,
+        "2026-04-30": -98.0
+      },
+      "worst_day": -300.8,
+      "best_day": -98.0,
+      "config": {
+        "name": "F burstPositionMax 2 (after burst of N wins)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 2
+      }
+    },
+    {
+      "fired": 59,
+      "skipped": 0,
+      "wins": 40,
+      "losses": 19,
+      "big_losses": 19,
+      "total": -398.8,
+      "wr": 67.8,
+      "avg_win": 16.9,
+      "avg_loss": -56.57,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": -300.8,
+        "2026-04-30": -98.0
+      },
+      "worst_day": -300.8,
+      "best_day": -98.0,
+      "config": {
+        "name": "F burstPositionMax 3 (after burst of N wins)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 0,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 3
+      }
+    },
+    {
+      "fired": 22,
+      "skipped": 37,
+      "wins": 18,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 68.0,
+      "wr": 81.8,
+      "avg_win": 16.2,
+      "avg_loss": -55.9,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 71.6,
+        "2026-04-30": -3.6
+      },
+      "worst_day": -3.6,
+      "best_day": 71.6,
+      "config": {
+        "name": "G postLoss=1 + dailyHalt=2",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 28,
+      "skipped": 31,
+      "wins": 24,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 193.6,
+      "wr": 85.7,
+      "avg_win": 17.32,
+      "avg_loss": -55.5,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 220.8,
+        "2026-04-30": -27.2
+      },
+      "worst_day": -27.2,
+      "best_day": 220.8,
+      "config": {
+        "name": "G postLoss=2 + dailyHalt=2",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 2,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 31,
+      "skipped": 28,
+      "wins": 25,
+      "losses": 6,
+      "big_losses": 6,
+      "total": 111.2,
+      "wr": 80.6,
+      "avg_win": 17.57,
+      "avg_loss": -54.67,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 166.4,
+        "2026-04-30": -55.2
+      },
+      "worst_day": -55.2,
+      "best_day": 166.4,
+      "config": {
+        "name": "G postLoss=1 + dailyHalt=3",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 3,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 45,
+      "skipped": 14,
+      "wins": 30,
+      "losses": 15,
+      "big_losses": 15,
+      "total": -284.4,
+      "wr": 66.7,
+      "avg_win": 19.07,
+      "avg_loss": -57.09,
+      "max_loss": -82.4,
+      "daily": {
+        "2026-04-29": -233.6,
+        "2026-04-30": -50.8
+      },
+      "worst_day": -233.6,
+      "best_day": -50.8,
+      "config": {
+        "name": "H postLoss=1 + flipSkip=2",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 2,
+        "dailyBigLossHalt": 99,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 28,
+      "skipped": 31,
+      "wins": 24,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 239.2,
+      "wr": 85.7,
+      "avg_win": 18.78,
+      "avg_loss": -52.9,
+      "max_loss": -55.6,
+      "daily": {
+        "2026-04-29": 247.2,
+        "2026-04-30": -8.0
+      },
+      "worst_day": -8.0,
+      "best_day": 247.2,
+      "config": {
+        "name": "I postLoss=1 + dailyHalt=2 + flipSkip=2",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 2,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 10,
+      "skipped": 49,
+      "wins": 6,
+      "losses": 4,
+      "big_losses": 1,
+      "total": 28.0,
+      "wr": 60.0,
+      "avg_win": 23.87,
+      "avg_loss": -28.8,
+      "max_loss": -32.4,
+      "daily": {
+        "2026-04-29": 66.0,
+        "2026-04-30": -38.0
+      },
+      "worst_day": -38.0,
+      "best_day": 66.0,
+      "config": {
+        "name": "J fi=25 + postLoss=1 + dailyHalt=2",
+        "probeConfirm": 0.45,
+        "fearIdeal": 25,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 20,
+      "skipped": 39,
+      "wins": 16,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 62.0,
+      "wr": 80.0,
+      "avg_win": 15.03,
+      "avg_loss": -44.6,
+      "max_loss": -48.8,
+      "daily": {
+        "2026-04-29": 89.2,
+        "2026-04-30": -27.2
+      },
+      "worst_day": -27.2,
+      "best_day": 89.2,
+      "config": {
+        "name": "J fi=35 + postLoss=1 + dailyHalt=2",
+        "probeConfirm": 0.45,
+        "fearIdeal": 35,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 22,
+      "skipped": 37,
+      "wins": 18,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 68.0,
+      "wr": 81.8,
+      "avg_win": 16.2,
+      "avg_loss": -55.9,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 71.6,
+        "2026-04-30": -3.6
+      },
+      "worst_day": -3.6,
+      "best_day": 71.6,
+      "config": {
+        "name": "J fi=50 + postLoss=1 + dailyHalt=2",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 22,
+      "skipped": 37,
+      "wins": 18,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 42.8,
+      "wr": 81.8,
+      "avg_win": 14.8,
+      "avg_loss": -55.9,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 71.6,
+        "2026-04-30": -28.8
+      },
+      "worst_day": -28.8,
+      "best_day": 71.6,
+      "config": {
+        "name": "K trail=4/1.5 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 4,
+        "trailDrop": 1.5,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 22,
+      "skipped": 37,
+      "wins": 18,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 41.2,
+      "wr": 81.8,
+      "avg_win": 14.71,
+      "avg_loss": -55.9,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 71.6,
+        "2026-04-30": -30.4
+      },
+      "worst_day": -30.4,
+      "best_day": 71.6,
+      "config": {
+        "name": "K trail=5/2.0 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 5,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 22,
+      "skipped": 37,
+      "wins": 18,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 45.6,
+      "wr": 81.8,
+      "avg_win": 14.96,
+      "avg_loss": -55.9,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 71.6,
+        "2026-04-30": -26.0
+      },
+      "worst_day": -26.0,
+      "best_day": 71.6,
+      "config": {
+        "name": "K trail=6/2.0 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 6,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 22,
+      "skipped": 37,
+      "wins": 18,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 112.8,
+      "wr": 81.8,
+      "avg_win": 18.69,
+      "avg_loss": -55.9,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 89.6,
+        "2026-04-30": 23.2
+      },
+      "worst_day": 23.2,
+      "best_day": 89.6,
+      "config": {
+        "name": "K trail=10/3.0 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 10,
+        "trailDrop": 3.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 22,
+      "skipped": 37,
+      "wins": 18,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 171.6,
+      "wr": 81.8,
+      "avg_win": 21.96,
+      "avg_loss": -55.9,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 140.8,
+        "2026-04-30": 30.8
+      },
+      "worst_day": 30.8,
+      "best_day": 140.8,
+      "config": {
+        "name": "K trail=12/4.0 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 12,
+        "trailDrop": 4.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 16,
+      "skipped": 52,
+      "wins": 12,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 27.2,
+      "wr": 75.0,
+      "avg_win": 20.07,
+      "avg_loss": -53.4,
+      "max_loss": -57.6,
+      "daily": {
+        "2026-04-29": 38.0,
+        "2026-04-30": -10.8
+      },
+      "worst_day": -10.8,
+      "best_day": 38.0,
+      "config": {
+        "name": "L pc=0.3 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.3,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 20,
+      "skipped": 41,
+      "wins": 16,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 30.4,
+      "wr": 80.0,
+      "avg_win": 15.97,
+      "avg_loss": -56.3,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 48.4,
+        "2026-04-30": -18.0
+      },
+      "worst_day": -18.0,
+      "best_day": 48.4,
+      "config": {
+        "name": "L pc=0.4 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.4,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 22,
+      "skipped": 37,
+      "wins": 18,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 68.0,
+      "wr": 81.8,
+      "avg_win": 16.2,
+      "avg_loss": -55.9,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 71.6,
+        "2026-04-30": -3.6
+      },
+      "worst_day": -3.6,
+      "best_day": 71.6,
+      "config": {
+        "name": "L pc=0.45 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.45,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 22,
+      "skipped": 37,
+      "wins": 18,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 64.0,
+      "wr": 81.8,
+      "avg_win": 16.13,
+      "avg_loss": -56.6,
+      "max_loss": -59.6,
+      "daily": {
+        "2026-04-29": 79.6,
+        "2026-04-30": -15.6
+      },
+      "worst_day": -15.6,
+      "best_day": 79.6,
+      "config": {
+        "name": "L pc=0.5 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.5,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 21,
+      "skipped": 35,
+      "wins": 17,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 25.6,
+      "wr": 81.0,
+      "avg_win": 14.75,
+      "avg_loss": -56.3,
+      "max_loss": -60.8,
+      "daily": {
+        "2026-04-29": 61.2,
+        "2026-04-30": -35.6
+      },
+      "worst_day": -35.6,
+      "best_day": 61.2,
+      "config": {
+        "name": "L pc=0.58 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.58,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 15,
+      "skipped": 34,
+      "wins": 11,
+      "losses": 4,
+      "big_losses": 4,
+      "total": -31.6,
+      "wr": 73.3,
+      "avg_win": 16.15,
+      "avg_loss": -52.3,
+      "max_loss": -56.8,
+      "daily": {
+        "2026-04-29": 2.4,
+        "2026-04-30": -34.0
+      },
+      "worst_day": -34.0,
+      "best_day": 2.4,
+      "config": {
+        "name": "L pc=0.7 + postLoss=1 + dailyHalt=2 (fi=50)",
+        "probeConfirm": 0.7,
+        "fearIdeal": 50,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 1,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 17,
+      "skipped": 42,
+      "wins": 13,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 56.0,
+      "wr": 76.5,
+      "avg_win": 17.91,
+      "avg_loss": -44.2,
+      "max_loss": -55.6,
+      "daily": {
+        "2026-04-29": 84.0,
+        "2026-04-30": -28.0
+      },
+      "worst_day": -28.0,
+      "best_day": 84.0,
+      "config": {
+        "name": "M aggressive: fi=35 + postLoss=2 + dailyHalt=2 + flipSkip=2",
+        "probeConfirm": 0.45,
+        "fearIdeal": 35,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 2,
+        "directionFlipSkip": 2,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 12,
+      "skipped": 47,
+      "wins": 8,
+      "losses": 4,
+      "big_losses": 0,
+      "total": 63.2,
+      "wr": 66.7,
+      "avg_win": 21.45,
+      "avg_loss": -27.1,
+      "max_loss": -29.6,
+      "daily": {
+        "2026-04-29": 107.2,
+        "2026-04-30": -44.0
+      },
+      "worst_day": -44.0,
+      "best_day": 107.2,
+      "config": {
+        "name": "N defensive: fi=25 + postLoss=2 + dailyHalt=2 + flipSkip=2",
+        "probeConfirm": 0.45,
+        "fearIdeal": 25,
+        "trailTrigger": 8.0,
+        "trailDrop": 2.0,
+        "postBigLossCooldown": 2,
+        "directionFlipSkip": 2,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    },
+    {
+      "fired": 24,
+      "skipped": 35,
+      "wins": 20,
+      "losses": 4,
+      "big_losses": 4,
+      "total": 96.0,
+      "wr": 83.3,
+      "avg_win": 13.98,
+      "avg_loss": -45.9,
+      "max_loss": -55.6,
+      "daily": {
+        "2026-04-29": 136.8,
+        "2026-04-30": -40.8
+      },
+      "worst_day": -40.8,
+      "best_day": 136.8,
+      "config": {
+        "name": "O ultra: trail=5/1.5 + fi=35 + postLoss=2 + dailyHalt=2",
+        "probeConfirm": 0.45,
+        "fearIdeal": 35,
+        "trailTrigger": 5,
+        "trailDrop": 1.5,
+        "postBigLossCooldown": 2,
+        "directionFlipSkip": 0,
+        "dailyBigLossHalt": 2,
+        "consecLossSkip": 0,
+        "burstPositionMax": 99
+      }
+    }
+  ]
+}

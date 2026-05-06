@@ -462,9 +462,18 @@ def signal_loop(state, dry_run=False):
     """Main loop: scan for signals, fire trades, monitor positions."""
     interval = state.get("signal_interval", 30)
     cycle = 0
+    last_heartbeat = 0.0
 
     while running:
         cycle += 1
+
+        # --- Heartbeat — write to log every ~60s so dashboard can detect hangs.
+        # Without this, log mtime only updates on signal/error events, which can
+        # be hours apart in a quiet market — making "log stale = dead" useless.
+        now_ts = time.time()
+        if now_ts - last_heartbeat >= 60:
+            log(f"[HB] cycle={cycle} alive")
+            last_heartbeat = now_ts
 
         # --- Read TradingView ---
         info = read_indicator_state()

@@ -1,0 +1,23 @@
+{
+  "id": "exp-shanozee-v1",
+  "name": "Shano-Zee Trader: UHV breakout + winning combo",
+  "created": "2026-04-30T11:50:00.000Z",
+  "params": {
+    "probeConfirm": 0.45,
+    "probeFail": 3,
+    "fearIdeal": 80,
+    "fearWashout": 180,
+    "trailTrigger": 12,
+    "trailDrop": 4,
+    "mainLots": 0.7,
+    "probeTimeout": 50,
+    "skipBadHours": true,
+    "trendFilter": true,
+    "skipFastConfirm": true,
+    "trendTfMinutes": 2,
+    "uhvFilter": true,
+    "uhvLookback": 20
+  },
+  "updated": "2026-04-30T11:50:00.000Z",
+  "description": "Shano-Zee Trader: Shano's bigness probe + Turtle's UHV breakout structure. The trigger candle (bigness candle that fired the probe) must close ABOVE the high (or BELOW the low) of the highest-tick-volume candle in the prior 20 1-min bars. Backtest 2-day: 16/16 100% WR, $0 max loss, +$514.50 total. Both 04-29 (chop, +$218) and 04-30 (trend, +$297) positive. Toggle uhvFilter=false to revert to plain winning combo (without UHV). SAMPLE SIZE IS SMALL — 100% WR will degrade with more data; expect 90-95% live."
+}

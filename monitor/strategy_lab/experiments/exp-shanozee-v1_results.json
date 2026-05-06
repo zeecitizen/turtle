@@ -1,0 +1,45 @@
+{
+  "experiment_id": "exp-shanozee-v1",
+  "name": "Shano-Zee Trader: UHV breakout + winning combo",
+  "params": {
+    "probeConfirm": 0.45,
+    "probeFail": 3,
+    "fearIdeal": 80,
+    "fearWashout": 180,
+    "trailTrigger": 12,
+    "trailDrop": 4,
+    "mainLots": 0.7,
+    "probeTimeout": 50,
+    "skipBadHours": true,
+    "trendFilter": true,
+    "skipFastConfirm": true,
+    "trendTfMinutes": 2,
+    "uhvFilter": true,
+    "uhvLookback": 20
+  },
+  "computed_at": "2026-04-30T13:27:13",
+  "n_probes_analyzed": 154,
+  "metrics": {
+    "fired": 17,
+    "skipped_no_confirm": 71,
+    "skipped_filtered": 66,
+    "wins": 17,
+    "losses": 0,
+    "big_losses": 0,
+    "actual_confirmed_058": 83,
+    "would_confirm_at_threshold": 83,
+    "extra_confirms_vs_058": 66,
+    "actual_total_pnl": null,
+    "sim_main_total_pnl": 592.2,
+    "missed_potential_pnl": 0,
+    "sim_win_rate_pct": 100.0,
+    "sim_avg_win": 34.84,
+    "sim_avg_loss": 0.0,
+    "max_loss": 0,
+    "daily": {
+      "2026-04-29": 217.7,
+      "2026-04-30": 374.5
+    }
+  },
+  "engine": "unified_backtester (full tick-replay with filter logic)"
+}

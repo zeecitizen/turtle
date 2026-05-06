@@ -11,6 +11,17 @@
 //     Validated: 11 EA-managed trades on Blueberry demo 2026-04-27, +$70.85 net,
 //     73% WR (3 of 3 losses were correct probe-fail $3 cuts).
 //
+//   v3.1 (2026-04-28, Shano in-person clarification) — bigness rule corrected.
+//     Current bar must be 1.5× the IMMEDIATELY PREVIOUS bar only. Do NOT
+//     compare to the 2-bars-back. Default iLookback dropped 2 → 1.
+//
+//   v3.2 (2026-04-28 evening, Shano clarified again) — bigness on FIRST bar,
+//     not second. Prior code missed signals when the 2nd (continuation) candle
+//     was smaller than the 1st big trigger. Now: isBear2/isBull2 fire when
+//     the PREVIOUS bar was big (isBear/isBull) AND the current bar is just
+//     same direction (any size). Matches her interview: "1st big red,
+//     2nd red (any size) → probe."
+//
 //   DECISION POINT: revert to strict 1.20x if demo WR drops below 70% over next
 //   10+ trades, OR if Shano herself says these aren't candles she'd take.
 //
@@ -20,7 +31,7 @@ indicator("Shano Momentum Scalper", "Shano", overlay=true,
 
 grpDet      = "Detection"
 iBodyMult   = input.float(1.5, "Body Multiplier", minval=1.0, step=0.05, group=grpDet)
-iLookback   = input.int(2, "Lookback Candles", minval=1, maxval=5, group=grpDet)
+iLookback   = input.int(1, "Lookback Candles", minval=1, maxval=5, group=grpDet)
 iMinBody    = input.float(0.0, "Min Body (points, 0=disabled)", minval=0.0, step=0.1, group=grpDet)
 iCooldown   = input.int(1, "Signal Cooldown (bars)", minval=0, maxval=20, group=grpDet)
 iMidBar     = input.bool(true, "Mid-Bar Entry", group=grpDet)
@@ -37,7 +48,10 @@ iContractSz = input.float(100.0, "Contract Size", group=grpProbe)
 grpTrade    = "Real Trade"
 iRealLots   = input.float(0.40, "Real Lots", minval=0.01, step=0.01, group=grpTrade)
 iTradeTP    = input.float(10.0, "Trade TP", minval=1.0, group=grpTrade)
-iTradeSL    = input.float(999.0, "Trade SL", minval=1.0, group=grpTrade)
+iTradeSL    = input.float(30.0, "Trade SL", minval=1.0, group=grpTrade)
+// SL=999 (the old default) made the sim stick in state 2 indefinitely whenever
+// a trade went negative for many bars — freezing the signal counter and
+// starving the sniper of new fires. 30 lets the sim cut and reset cleanly.
 
 grpFilt     = "Filters"
 iSellOnly   = input.bool(false, "Sell Only Mode", group=grpFilt)
@@ -83,7 +97,12 @@ body4       = iLookback >= 4 ? math.abs(close[4] - open[4]) : 0.0
 
 inSession   = iSessFilt ? not na(time(timeframe.period, iSessTime)) : true
 
-bigVsPrev   = body > body1 * iBodyMult and body > body2 * iBodyMult
+// Shano correction (2026-04-28, sister sitting in person):
+//   "current bar must be 1.5x bigger than ONLY the IMMEDIATELY PREVIOUS bar.
+//    do NOT compare to the bar 2-back. 3rd bar compared only to 2nd bar."
+// iLookback now controls how many prev bars to require (default 1 = Shano's rule).
+bigVsPrev   = body > body1 * iBodyMult
+              and (iLookback < 2 or body > body2 * iBodyMult)
               and (iLookback < 3 or body > body3 * iBodyMult)
               and (iLookback < 4 or body > body4 * iBodyMult)
 
@@ -98,12 +117,18 @@ isBigCandle = minBodyOk and bigVsPrev and inSession and cooldownOk and squareOk
 isBull      = isBigCandle and close > open
 isBear      = isBigCandle and close < open
 
-// 2-candle pattern (RELAXED 2026-04-27 evening, validated on demo +$70.85):
-prevIsBear  = close[1] < open[1]
-prevIsBull  = close[1] > open[1]
+// 2-candle pattern (Shano correction 2026-04-28, in person):
+//   "1st bar big (isBull/isBear), 2nd bar just same direction (any size).
+//    Probe fires on 2nd bar."
+// Prior version had bigness on the wrong bar — required 2nd bar to also be 1.5x,
+// which missed continuations where the 2nd bar shrinks vs the trigger candle.
+prevIsBigBear  = isBear[1]
+prevIsBigBull  = isBull[1]
+currentIsBear  = close < open
+currentIsBull  = close > open
 
-isBear2     = isBear and prevIsBear
-isBull2     = isBull and prevIsBull
+isBear2     = prevIsBigBear and currentIsBear
+isBull2     = prevIsBigBull and currentIsBull
 
 maxPrev     = math.max(body1, body2)
 bodyRatio   = maxPrev > 0 ? body / maxPrev : 0.0

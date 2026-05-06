@@ -1,0 +1,21 @@
+{
+  "id": "exp-mol4phap-v7pt",
+  "name": "Winning Combo: 0.70 lots + 2-min EMA + hour + skip-fast-confirm",
+  "created": "2026-04-30T06:54:43.153Z",
+  "params": {
+    "probeConfirm": 0.45,
+    "probeFail": 3,
+    "fearIdeal": 80,
+    "fearWashout": 180,
+    "trailTrigger": 12,
+    "trailDrop": 4,
+    "mainLots": 0.7,
+    "probeTimeout": 50,
+    "skipBadHours": true,
+    "trendFilter": true,
+    "skipFastConfirm": true,
+    "trendTfMinutes": 2
+  },
+  "updated": "2026-04-30T11:30:00.000Z",
+  "description": "Upgraded to 0.70 lots + fearIdeal=$80. Backtest: 24 fires, 95.8% WR, +$589 (vs +$444 at 0.40 = +33%). Trade-off: max loss $90 vs $52. The +$30 fearIdeal lets us scale lots without the stop tripping on noise. Small sample (24 fires) — monitor carefully."
+}

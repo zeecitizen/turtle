@@ -281,6 +281,31 @@
   }
   @keyframes burst-pulse { 0%,100%{transform:scale(1.2)} 50%{transform:scale(1.35)} }
 
+  /* ── filter compliance card ── */
+  .filter-compliance {
+    width: 100%; max-width: 480px; margin-bottom: 20px;
+    padding: 14px 18px; border-radius: 14px; background: var(--bg-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .filter-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--text-3); margin-bottom: 10px;
+  }
+  .filter-rows { display: flex; flex-direction: column; gap: 6px; }
+  .filter-row {
+    display: grid; grid-template-columns: 1fr auto auto; gap: 12px;
+    align-items: center; padding: 6px 8px; border-radius: 6px;
+    font-size: 12px;
+  }
+  .filter-row.inactive { opacity: 0.4; }
+  .filter-row.high-block { background: rgba(255, 80, 80, 0.08); }
+  .filter-row .name { font-weight: 600; color: var(--text); text-transform: capitalize; }
+  .filter-row .stats { color: var(--text-3); font-size: 11px; }
+  .filter-row .pct { font-weight: 700; min-width: 42px; text-align: right; }
+  .filter-row .pct.high { color: var(--red); }
+  .filter-row .pct.med { color: #d97706; }
+  .filter-row .pct.low { color: var(--green); }
+
   /* ── signal counter card ── */
   .signal-row {
     width: 100%; max-width: 480px; margin-bottom: 20px;
@@ -566,6 +591,8 @@
 </head>
 <body>
 
+<a href="/" style="position:fixed;top:10px;left:14px;color:#666;text-decoration:none;font-size:13px;font-weight:600;z-index:9998;padding:4px 10px;background:rgba(255,255,255,0.85);border-radius:6px;backdrop-filter:blur(8px);">← Home</a>
+
 <div class="live-pill" id="livePillBox"><span id="livePill">live</span></div>
 
 <div class="earned-wrap">
@@ -641,6 +668,11 @@
 
 <div class="stat-strip" id="statStrip"></div>
 
+<div class="filter-compliance" id="filterCompliance" style="display:none">
+  <div class="filter-title">Filter Compliance · today</div>
+  <div class="filter-rows" id="filterRows"></div>
+</div>
+
 <div class="signal-row" id="signalRow">
   <div class="left">Pine signals · since open</div>
   <div class="count" id="signalCount">—</div>
@@ -653,9 +685,8 @@
 <div class="status-row" id="statusRow">
   <div class="status-item" id="siTV">     <div class="status-dot" id="dotTV"></div><span>TradingView</span></div>
   <div class="status-item" id="siMT5">    <div class="status-dot" id="dotMT5"></div><span>MT5</span></div>
-  <div class="status-item" id="siHawk">   <div class="status-dot" id="dotHawk"></div><span>Hawk</span></div>
-  <div class="status-item" id="siSheriff"><div class="status-dot" id="dotSheriff"></div><span>Sheriff</span></div>
   <div class="status-item" id="siSniper"> <div class="status-dot" id="dotSniper"></div><span>Sniper</span></div>
+  <div class="status-item" id="siSheriff"><div class="status-dot" id="dotSheriff"></div><span>Sheriff</span></div>
   <div class="status-item" id="siSilver"> <div class="status-dot" id="dotSilver"></div><span>Silver</span></div>
 </div>
 
@@ -897,6 +928,33 @@
       `<div class="stat"><div class="stat-label">XAUUSD</div><div class="stat-value">${price}</div><div class="stat-sub">live mid</div></div>` +
       `<div class="stat"><div class="stat-label">Margin</div><div class="stat-value">${margin}</div><div class="stat-sub">available</div></div>` +
       `<div class="stat"><div class="stat-label">Burst</div><div class="stat-value">${burst}</div><div class="stat-sub">machine gun</div></div>`;
+  }
+
+  function updateFilterCompliance(live) {
+    const root = $('filterCompliance');
+    const stats = live.filter_stats;
+    if (!stats || typeof stats !== 'object') { root.style.display = 'none'; return; }
+    const rows = $('filterRows');
+    rows.innerHTML = '';
+    const order = ['daily_halt','chain_stop','big_loss_cooldown','fast_confirm','bad_hours','trend_2min','uhv_breakout','tick_speed','spread','m15_trend','sell_only'];
+    let anyReached = false;
+    for (const name of order) {
+      const s = stats[name];
+      if (!s) continue;
+      const reached = s.reached || 0;
+      const blocked = s.blocked || 0;
+      if (reached > 0) anyReached = true;
+      const passed = reached - blocked;
+      const blockPct = reached > 0 ? Math.round(blocked / reached * 100) : 0;
+      const inactive = reached === 0;
+      const high = blockPct >= 70;
+      const med = blockPct >= 40 && blockPct < 70;
+      const cls = ['filter-row', inactive ? 'inactive' : '', high ? 'high-block' : ''].join(' ').trim();
+      const pctCls = blockPct >= 70 ? 'high' : blockPct >= 40 ? 'med' : 'low';
+      const display = name.replace(/_/g, ' ');
+      rows.innerHTML += `<div class="${cls}"><span class="name">${display}</span><span class="stats">${passed}p / ${blocked}b · ${reached} hits</span><span class="pct ${pctCls}">${blockPct}%</span></div>`;
+    }
+    root.style.display = anyReached ? 'block' : 'none';
   }
 
   function updateEarned(live) {
@@ -1157,6 +1215,7 @@
     updateStageVisuals(stage, sub);
     updateEarned(live);
     updateStats(live);
+    updateFilterCompliance(live);
     updateMeter(live);
     updateRoller(live);
     updateBurstDots(live, stage);
@@ -1165,12 +1224,42 @@
     updateRules(d.rules);
     detectClosedTradeEmojis(live);
 
+    // A daemon is "healthy" only if its process exists AND its log has been
+    // touched in the last 120s. Hung processes still exist but their log
+    // freezes — that's the failure mode that bit us repeatedly.
+    const ages = d.log_ages_sec || {};
+    // Per-daemon staleness thresholds. shano_hawk writes [HB] every 60s, so
+    // 90s = 1.5 missed beats = stale. Others have natural cadences.
+    const STALE = {
+      shano_hawk:    90,    // heartbeat every 60s
+      sheriff_hawk:  600,   // runs every 5 min
+      sniper_daemon: 600,   // legacy UHV daemon, lower-frequency
+      silver_hawk:  1200,   // runs every 15 min by design
+    };
+    const fresh = (procFlag, key) => {
+      // Log heartbeat is the most reliable signal — a fresh log can ONLY exist
+      // if the daemon is actively writing it. Trust that over the proc check
+      // (which uses a flaky PowerShell CIM call that times out under load).
+      const age = ages[key];
+      if (age != null && age < (STALE[key] || 600)) return true;
+      // No fresh log evidence — fall back to proc check
+      return !!procFlag;
+    };
     setDot('dotTV',     'siTV',     !!d.tv_cdp);
     setDot('dotMT5',    'siMT5',    !!d.mt5);
-    setDot('dotHawk',   'siHawk',   !!procs.shano_hawk);
-    setDot('dotSheriff','siSheriff',!!procs.sheriff_hawk);
-    setDot('dotSniper', 'siSniper', !!procs.sniper_daemon);
-    setDot('dotSilver', 'siSilver', !!procs.silver_hawk);
+    setDot('dotSniper', 'siSniper', fresh(procs.shano_hawk,   'shano_hawk'));
+    setDot('dotSheriff','siSheriff',fresh(procs.sheriff_hawk, 'sheriff_hawk'));
+    setDot('dotSilver', 'siSilver', fresh(procs.silver_hawk,  'silver_hawk'));
+
+    // Big stage text: if the live signal-hunter (shano_hawk) is dead or hung,
+    // override the WATCHING/PROBING/TRADING text with a loud "SNIPER DEAD".
+    const hawkHealthy = fresh(procs.shano_hawk, 'shano_hawk');
+    if (!hawkHealthy) {
+      $('stageMain').textContent = 'SNIPER DEAD';
+      $('stageMain').style.color = 'var(--red)';
+    } else {
+      $('stageMain').style.color = '';
+    }
 
     if (d.ts) {
       const dt = new Date(d.ts);

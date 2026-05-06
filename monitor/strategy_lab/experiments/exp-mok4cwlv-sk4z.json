@@ -1,0 +1,16 @@
+{
+  "id": "exp-mok4cwlv-sk4z",
+  "name": "sweep pc=0.3 fi=35.0",
+  "created": "2026-04-29T13:57:10.291Z",
+  "params": {
+    "probeConfirm": 0.3,
+    "probeFail": 3,
+    "fearIdeal": 35,
+    "fearWashout": 180,
+    "trailTrigger": 8,
+    "trailDrop": 2,
+    "mainLots": 0.4,
+    "probeTimeout": 50
+  },
+  "updated": "2026-04-29T13:57:18.600Z"
+}

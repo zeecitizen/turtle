@@ -1,0 +1,16 @@
+{
+  "id": "exp-mok4gb5e-avtx",
+  "name": "sweep pc=0.3 fi=70.0",
+  "created": "2026-04-29T13:59:49.106Z",
+  "params": {
+    "probeConfirm": 0.3,
+    "probeFail": 3,
+    "fearIdeal": 70,
+    "fearWashout": 180,
+    "trailTrigger": 8,
+    "trailDrop": 2,
+    "mainLots": 0.4,
+    "probeTimeout": 50
+  },
+  "updated": "2026-04-29T14:00:03.372Z"
+}

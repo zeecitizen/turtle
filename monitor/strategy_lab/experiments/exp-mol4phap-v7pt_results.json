@@ -1,0 +1,43 @@
+{
+  "experiment_id": "exp-mol4phap-v7pt",
+  "name": "Winning Combo: 0.70 lots + 2-min EMA + hour + skip-fast-confirm",
+  "params": {
+    "probeConfirm": 0.45,
+    "probeFail": 3,
+    "fearIdeal": 80,
+    "fearWashout": 180,
+    "trailTrigger": 12,
+    "trailDrop": 4,
+    "mainLots": 0.7,
+    "probeTimeout": 50,
+    "skipBadHours": true,
+    "trendFilter": true,
+    "skipFastConfirm": true,
+    "trendTfMinutes": 2
+  },
+  "computed_at": "2026-04-30T10:33:47",
+  "n_probes_analyzed": 138,
+  "metrics": {
+    "fired": 24,
+    "skipped_no_confirm": 64,
+    "skipped_filtered": 50,
+    "wins": 23,
+    "losses": 1,
+    "big_losses": 1,
+    "actual_confirmed_058": 74,
+    "would_confirm_at_threshold": 74,
+    "extra_confirms_vs_058": 50,
+    "actual_total_pnl": null,
+    "sim_main_total_pnl": 589.4,
+    "missed_potential_pnl": 0,
+    "sim_win_rate_pct": 95.8,
+    "sim_avg_win": 29.55,
+    "sim_avg_loss": -90.3,
+    "max_loss": -90.3,
+    "daily": {
+      "2026-04-29": 331.1,
+      "2026-04-30": 258.3
+    }
+  },
+  "engine": "unified_backtester (full tick-replay with filter logic)"
+}

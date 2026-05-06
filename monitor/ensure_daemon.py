@@ -25,7 +25,48 @@ MON = ROOT / "monitor"
 PY = r"C:\Users\zeesh\AppData\Local\Programs\Python\Python313-arm64\python.exe"
 
 
+def _lockfile_path(script_name: str) -> Path:
+    """Per-script lockfile: monitor/.<script>.lock holding the daemon's PID."""
+    return MON / f".{Path(script_name).stem}.lock"
+
+
+def _read_lockfile_pid(script_name: str):
+    f = _lockfile_path(script_name)
+    if not f.exists():
+        return None
+    try:
+        return int(f.read_text().strip())
+    except (ValueError, OSError):
+        return None
+
+
+def _write_lockfile(script_name: str, pid: int) -> None:
+    try:
+        _lockfile_path(script_name).write_text(str(pid))
+    except OSError:
+        pass
+
+
+def _pid_is_alive(pid: int, script_name: str) -> bool:
+    """Verify pid is alive AND its cmdline references our script (not a recycled pid)."""
+    try:
+        import psutil
+        if not psutil.pid_exists(pid):
+            return False
+        p = psutil.Process(pid)
+        cmd = " ".join(p.cmdline() or []).lower()
+        return script_name.lower() in cmd
+    except Exception:
+        return False
+
+
 def find_running_pid(script_name: str):
+    # Lockfile fast-path: if a fresh PID is recorded for this script and it's alive, use it.
+    # Atomic spawn-then-record means concurrent ensure_daemon calls can't both spawn.
+    locked = _read_lockfile_pid(script_name)
+    if locked and _pid_is_alive(locked, script_name):
+        return locked
+
     try:
         import psutil
     except ImportError:
@@ -49,6 +90,8 @@ def find_running_pid(script_name: str):
             if "python" not in pname:
                 continue
             if target in cmdstr:
+                # Heal lockfile so future calls hit the fast-path.
+                _write_lockfile(script_name, pid)
                 return pid
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             continue
@@ -131,6 +174,7 @@ def main():
 
     try:
         new_pid = spawn_detached(script_path, extra_args)
+        _write_lockfile(script_name, new_pid)
         suffix = f" {' '.join(extra_args)}" if extra_args else ""
         print(f"  [OK] {label}{suffix} launched (pid {new_pid})")
     except PermissionError as e:

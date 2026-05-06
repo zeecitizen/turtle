@@ -1,0 +1,16 @@
+{
+  "id": "exp-mok4iob1-2e0o",
+  "name": "sweep pc=0.58 fi=70.0",
+  "created": "2026-04-29T14:01:39.469Z",
+  "params": {
+    "probeConfirm": 0.58,
+    "probeFail": 3,
+    "fearIdeal": 70,
+    "fearWashout": 180,
+    "trailTrigger": 8,
+    "trailDrop": 2,
+    "mainLots": 0.4,
+    "probeTimeout": 50
+  },
+  "updated": "2026-04-29T14:01:51.910Z"
+}
