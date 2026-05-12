@@ -1,0 +1,21 @@
+{
+  "big_pct": 0.8,
+  "low_pct": 0.6,
+  "body_cov": 0.9,
+  "lookback_bars": 100,
+  "tp_r": 3.0,
+  "use_h1": true,
+  "use_fib": false,
+  "fib_swing": 20,
+  "fib_lo": 0.5,
+  "fib_hi": 0.618,
+  "stats": {
+    "n": 30,
+    "wr": 50.0,
+    "net": 5439.08,
+    "avg_R": 1.0,
+    "pf": 3.1,
+    "max_dd": 841.0
+  },
+  "tuned_at": "2026-05-07T14:29:59"
+}
