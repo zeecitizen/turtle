@@ -32,10 +32,16 @@ REM  │     → live dashboard at https://me.claudezeeshan.com/uhv-sweep      �
 REM  │                                                                     │
 REM  │  5. If dashboard returns "no heartbeat" or EA isn't running:        │
 REM  │     a. Run this startup.bat (idempotent — won't duplicate anything) │
-REM  │     b. Then MANUALLY in MT5: Navigator → Experts → drag             │
+REM  │     b. If the user has done the one-time "save default template"    │
+REM  │        step (see AUTO-ATTACH SETUP block printed at end of script), │
+REM  │        the EA loads itself on every new XAUUSD M1 chart.            │
+REM  │        Otherwise: MANUALLY in MT5 → Navigator → Experts → drag      │
 REM  │        UhvSweepExhaustion onto XAUUSD M1 chart.                     │
 REM  │     c. AutoTrading button GREEN.                                    │
 REM  │     d. Smiley face on chart = EA alive.                             │
+REM  │     e. uhv_autotrade_watchdog.py will WhatsApp Zee if the heartbeat │
+REM  │        file stops updating for >90s — alert-only, never toggles     │
+REM  │        AutoTrading state itself (toggle command is unsafe blind).   │
 REM  │                                                                     │
 REM  │  6. If a previous session was working and you see a stuck position: │
 REM  │     UhvSweepExhaustion has OnInit amnesia recovery — re-attach the  │
@@ -90,6 +96,7 @@ REM    │ forward_tester.py        │ py    │ Intra-candle theory validator 
 REM    │ shano_trade_notifier.py  │ py    │ WhatsApp fill alerts to Shano      │
 REM    │ vsisa_paper_trader.py    │ py    │ Paper-trade research (no real $)   │
 REM    │ vscode_watchdog.py       │ py    │ Relaunches VS Code if it dies      │
+REM    │ uhv_autotrade_watchdog.py│ py    │ WhatsApp-alerts if EA heartbeat dies│
 REM    │ TradingView Desktop      │ exe   │ CDP :9222, UhvSweep Visualizer Pine│
 REM    │ MT5 terminal64.exe       │ exe   │ Runs UhvSweepExhaustion + loggers  │
 REM    └──────────────────────────┴───────┴────────────────────────────────────┘
@@ -230,6 +237,12 @@ REM   Separate VSISA paper-trade strategy (no real money). Independent of EA.
 "%ENSURE%" vscode_watchdog.py
 REM   Restarts VS Code if it crashes. Pure UX nicety.
 
+"%ENSURE%" uhv_autotrade_watchdog.py
+REM   Watches Common\Files\uhv_sweep_state.json mtime. If EA heartbeat goes
+REM   stale ^>90s, WhatsApp-alerts Zee that the EA detached / AutoTrading off /
+REM   MT5 crashed. Alert-only (no auto-toggle — WM_COMMAND 32851 is a toggle,
+REM   not a setter, so blind retry could disable a healthy ON state).
+
 REM "%ENSURE%" intern_hawks.py
 REM   ↑ disabled — was scraping random trading sites; output stale.
 
@@ -276,11 +289,20 @@ if exist "%ROOT%\mt5\install_eas.ps1" (
 )
 
 REM ── MT5 (skip if already running) ───────────────────────────────
+REM   Boot config: mt5\uhv_sweep_boot.ini sets login=12640543 + Blueberry server
+REM   + auto-enables live trading. It does NOT auto-attach the EA — that needs
+REM   the one-time chart-template setup described in the "MANUAL STEPS" block
+REM   at the end of this script (look for "AUTO-ATTACH SETUP").
 tasklist /FI "IMAGENAME eq terminal64.exe" 2>nul | find /I "terminal64.exe" >nul
 if errorlevel 1 (
     if exist "C:\Program Files\Blueberry Markets MetaTrader 5\terminal64.exe" (
-        start "" "C:\Program Files\Blueberry Markets MetaTrader 5\terminal64.exe"
-        echo  [OK] MT5 launched
+        if exist "%ROOT%\mt5\uhv_sweep_boot.ini" (
+            start "" "C:\Program Files\Blueberry Markets MetaTrader 5\terminal64.exe" /config:"%ROOT%\mt5\uhv_sweep_boot.ini"
+            echo  [OK] MT5 launched with uhv_sweep_boot.ini config
+        ) else (
+            start "" "C:\Program Files\Blueberry Markets MetaTrader 5\terminal64.exe"
+            echo  [OK] MT5 launched (no boot config found)
+        )
     ) else (
         echo  [SKIP] MT5 not at default path - launch manually
     )
@@ -301,6 +323,25 @@ echo   3. Click AutoTrading button (top toolbar) - MUST turn GREEN.
 echo   4. Verify smiley icon on chart - EA is alive.
 echo   5. Watch Experts log for "UhvSweep Init done." line and a
 echo      heartbeat update every 5s in dashboard /uhv-sweep tile.
+echo.
+echo  ═══════════════════════════════════════════════════════════════
+echo   ONE-TIME AUTO-ATTACH SETUP (do steps 1-4 above, then once)
+echo  ═══════════════════════════════════════════════════════════════
+echo.
+echo   After dragging UhvSweepExhaustion on the chart, save it as the
+echo   default template so MT5 auto-attaches the EA on every startup:
+echo.
+echo     a. Right-click the XAUUSD M1 chart -^> Template -^> Save Template
+echo     b. Filename: default     (literally that, lowercase, no .tpl)
+echo     c. Click Save. Confirm overwrite if prompted.
+echo.
+echo   From now on, every new XAUUSD M1 chart will auto-load the EA with
+echo   all your inputs preserved. Combined with the /config:uhv_sweep_boot.ini
+echo   bootstrap above, this gives you a full cold-start to live-trading
+echo   in a single double-click of startup.bat.
+echo.
+echo   To verify it worked: close the XAUUSD chart, then File -^> New Chart
+echo   -^> XAUUSD M1. The EA should appear automatically with smiley icon.
 echo.
 echo   Optional: drag TurtleTradeLogger onto any chart so all fills
 echo   get logged to Common\Files\turtle_fills.csv.

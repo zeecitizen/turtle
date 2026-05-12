@@ -705,6 +705,7 @@ def _auto_restart_dead_processes(status: dict, revived: list):
         "silver_hawk_learner": ("silver_hawk_learner.py", []),
         "sexy_hawk": ("sexy_hawk.py", ["--loop"]),
         "meeting_hawks": ("meeting_hawks.py", ["--loop"]),
+        "uhv_autotrade_watchdog": ("uhv_autotrade_watchdog.py", []),  # heartbeat-stale WhatsApp alerter
         # "shano_hawk": ("shano_hawk.py", []),                  # DISABLED: replaced by UhvSweepExhaustion.ex5
     }
 
