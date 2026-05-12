@@ -1,6 +1,14 @@
 # ─── Secrets & credentials ─────────────────────────────────────
 monitor/.claude_api_key
+monitor/.openai_api_key
 monitor/.whatsapp_config.json
+monitor/.dashboard_password
+monitor/cc_chat.jsonl
+monitor/hammad_chat.jsonl
+monitor/.hammad_typing.json
+monitor/.cc_typing.json
+monitor/shano_chat.jsonl
+monitor/.shano_typing.json
 .mcp.json
 *.api_key
 *.api_token
@@ -53,3 +61,32 @@ PyWhatKit_DB.txt
 Thumbs.db
 *.swp
 *~
+
+# ─── Large media (transcripts kept, raw audio/video excluded) ──
+monitor/_loom_audio/*.mp3
+monitor/_loom_audio/*.mp4
+monitor/_loom_audio/*.raw.*
+monitor/_loom_audio/*.chunk*.mp3
+monitor/_vsa_audio/
+monitor/_csm_audio.webm
+*.webm
+*.opus
+
+# ─── Local-only chat config (has passwords) ───────────────────
+monitor/.chat_pages.json
+
+# ─── Daemon/process state (regenerated) ────────────────────────
+monitor/cloudflared_daemon.pid
+monitor/cloudflared_heartbeat.json
+monitor/cloudflared_url.txt
+monitor/cloudflared_vsisa.err
+monitor/london_sajid_live.json
+monitor/london_sajid_persist.json
+monitor/london_sajid_trader.pid
+
+# ─── Strategy lab intermediates (regenerable) ──────────────────
+monitor/strategy_lab/_*.csv
+monitor/strategy_lab/_*.json
+monitor/strategy_lab/_*.out
+monitor/strategy_lab/_*.txt
+monitor/strategy_lab/_xauusd_ticks.parquet

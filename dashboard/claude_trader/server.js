@@ -316,15 +316,120 @@ function buildState() {
 
 // ── HTTP server ─────────────────────────────────────────────────────────────
 
+// Password gates — per-user. Zee (/me + /api/cc-chat*) and Hammad (/hammad + /api/hammad-chat*)
+// are separate; each user can only access their own gated routes.
+const PASSWORD_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.dashboard_password';
+let DASHBOARD_PASSWORD = '28973';
+try {
+  const stored = fs.readFileSync(PASSWORD_FILE, 'utf8').trim();
+  if (stored) DASHBOARD_PASSWORD = stored;
+} catch {
+  try { fs.writeFileSync(PASSWORD_FILE, DASHBOARD_PASSWORD, 'utf8'); } catch {}
+}
+const HAMMAD_PASSWORD = '123456';
+const SHANO_PASSWORD  = '1234';
+const AUTH_GATES = [
+  {
+    test: (u) => u === '/me' || u === '/chat'
+              || u === '/api/cc-chat' || u.startsWith('/api/cc-chat/')
+              || u.startsWith('/api/cc-chat?'),
+    user: 'zee', pass: DASHBOARD_PASSWORD, realm: 'You & me',
+  },
+  {
+    test: (u) => u === '/hammad'
+              || u === '/api/hammad-chat' || u.startsWith('/api/hammad-chat/')
+              || u.startsWith('/api/hammad-chat?'),
+    user: 'hammad', pass: HAMMAD_PASSWORD, realm: 'Hammad Strategy Lab',
+  },
+  {
+    test: (u) => u === '/shano-chat'
+              || u === '/api/shano-chat' || u.startsWith('/api/shano-chat/')
+              || u.startsWith('/api/shano-chat?'),
+    user: 'shano', pass: SHANO_PASSWORD, realm: 'Shano private chat',
+  },
+  // Zee can read-only view both Hammad's and Shano's chats
+  {
+    test: (u) => u === '/hammad-view'
+              || u === '/api/hammad-chat-readonly' || u.startsWith('/api/hammad-chat-readonly?'),
+    user: 'zee', pass: DASHBOARD_PASSWORD, realm: 'Zee: Hammad view',
+  },
+  {
+    test: (u) => u === '/shano-view'
+              || u === '/api/shano-chat-readonly' || u.startsWith('/api/shano-chat-readonly?'),
+    user: 'zee', pass: DASHBOARD_PASSWORD, realm: 'Zee: Shano view',
+  },
+];
+function findAuthGate(url) {
+  return AUTH_GATES.find((g) => g.test(url));
+}
+function isAuthorized(req, gate) {
+  const auth = req.headers['authorization'] || '';
+  if (!auth.startsWith('Basic ')) return false;
+  try {
+    const decoded = Buffer.from(auth.slice(6), 'base64').toString('utf8');
+    const idx = decoded.indexOf(':');
+    if (idx < 0) return false;
+    const user = decoded.slice(0, idx);
+    const pass = decoded.slice(idx + 1);
+    return user === gate.user && pass === gate.pass;
+  } catch { return false; }
+}
+function denyAuth(res, gate) {
+  res.writeHead(401, {
+    'WWW-Authenticate': `Basic realm="${gate.realm}"`,
+    'Content-Type': 'text/plain; charset=utf-8',
+  });
+  res.end('Auth required');
+}
+
 const server = http.createServer(async (req, res) => {
   const url = req.url.split('?')[0];
+
+  // Per-user gates — Zee or Hammad based on URL. Others stay open.
+  const gate = findAuthGate(url);
+  if (gate && !isAuthorized(req, gate)) {
+    return denyAuth(res, gate);
+  }
 
   if (url === '/api/state') {
     const state = buildState();
     const cdp   = await checkCDP();
     state.health = { cdp, alert: checkAlert(), config: checkConfig() };
-    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(state));
+    return;
+  }
+
+  // UhvSweepExhaustion live dashboard page
+  if (url === '/uhv-sweep' || url === '/live') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'uhv_sweep.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('uhv_sweep.html missing: ' + e.message);
+    }
+    return;
+  }
+
+  // UHV-SWEEP EXHAUSTION EA — live status from MT5 Common\Files\uhv_sweep_state.json
+  if (url === '/api/uhv-sweep') {
+    const stateFile = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\uhv_sweep_state.json';
+    let payload = { alive: false, error: 'no state file' };
+    try {
+      const raw = fs.readFileSync(stateFile, 'utf8');
+      const parsed = JSON.parse(raw);
+      const stat = fs.statSync(stateFile);
+      const age_sec = Math.floor((Date.now() - stat.mtimeMs) / 1000);
+      payload = parsed;
+      payload.heartbeat_age_sec = age_sec;
+      payload.alive = age_sec < 30;  // <30s = healthy
+    } catch (e) {
+      payload.error = e.message;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify(payload));
     return;
   }
 
@@ -407,7 +512,7 @@ const server = http.createServer(async (req, res) => {
     }
     shano.rules = global._rulesCache;
 
-    res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(shano));
     return;
   }
@@ -425,6 +530,118 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // /me — private chat-only page (no other UI). Bookmark target for phone use.
+  if (url === '/me' || url === '/chat') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'me.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('me.html missing: ' + e.message);
+    }
+    return;
+  }
+
+  // /hammad — separate chat page for Hammad bhai. Gated with hammad:123456 above.
+  if (url === '/hammad') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'hammad.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('hammad.html missing: ' + e.message);
+    }
+    return;
+  }
+
+  // /hammad-view — Zee's read-only window into Hammad's chat (gated zee:28973)
+  if (url === '/hammad-view') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'hammad_view.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('hammad_view.html missing: ' + e.message);
+    }
+    return;
+  }
+
+  // /shano-chat — Shano's private chat with Claude (gated shano:1234)
+  if (url === '/shano-chat') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'shano_chat.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('shano_chat.html missing: ' + e.message);
+    }
+    return;
+  }
+  // /shano-view — Zee's read-only window into Shano's chat (gated zee:28973)
+  if (url === '/shano-view') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'shano_view.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('shano_view.html missing: ' + e.message);
+    }
+    return;
+  }
+  // /api/shano-chat-readonly — Zee's read-only feed of Shano's chat
+  if (url === '/api/shano-chat-readonly' || url.startsWith('/api/shano-chat-readonly?')) {
+    const since = parseInt((url.split('since=')[1] || '0'), 10) || 0;
+    let all = [];
+    try {
+      const raw = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\shano_chat.jsonl', 'utf8');
+      all = raw.split('\n').filter(l => l.trim()).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    } catch {}
+    const filtered = since ? all.filter(e => e.ts > since) : all;
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify(filtered));
+    return;
+  }
+  // /api/hammad-chat-readonly — read-only feed of Hammad's chat for Zee
+  if (url === '/api/hammad-chat-readonly' || url.startsWith('/api/hammad-chat-readonly?')) {
+    const since = parseInt((url.split('since=')[1] || '0'), 10) || 0;
+    let all = [];
+    try {
+      const raw = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\hammad_chat.jsonl', 'utf8');
+      all = raw.split('\n').filter(l => l.trim()).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    } catch {}
+    const filtered = since ? all.filter(e => e.ts > since) : all;
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify(filtered));
+    return;
+  }
+
+  // /mebg.jpg — background image for the /me chat page (camouflage / coding-vibe wallpaper)
+  // Served from ../mebg.jpg (parent dashboard/ folder, where Zee will drop the file)
+  if (url === '/mebg.jpg' || url === '/mebg.jpeg' || url === '/mebg.png') {
+    try {
+      const ext = url.split('.').pop().toLowerCase();
+      const candidates = [
+        path.join(__dirname, '..', 'mebg.jpg'),
+        path.join(__dirname, '..', 'mebg.jpeg'),
+        path.join(__dirname, '..', 'mebg.png'),
+      ];
+      const file = candidates.find(c => { try { return fs.existsSync(c); } catch { return false; } });
+      if (!file) { res.writeHead(404); res.end('mebg not found'); return; }
+      const data = fs.readFileSync(file);
+      const mimeType = file.endsWith('.png') ? 'image/png' : 'image/jpeg';
+      res.writeHead(200, { 'Content-Type': mimeType, 'Cache-Control': 'public, max-age=3600' });
+      res.end(data);
+    } catch (e) {
+      res.writeHead(500); res.end('mebg error: ' + e.message);
+    }
+    return;
+  }
+
   // SHANO DASHBOARD - Apple-style live UI served from shano.html
   if (url === '/shano') {
     try {
@@ -435,6 +652,109 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end('shano.html missing: ' + e.message);
+    }
+    return;
+  }
+
+  // VSISA DASHBOARD - paper-trader live results from vsisa_paper_trader.py
+  if (url === '/vsisa') {
+    try {
+      const htmlPath = path.join(__dirname, 'vsisa.html');
+      const html = fs.readFileSync(htmlPath, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('vsisa.html missing: ' + e.message);
+    }
+    return;
+  }
+
+  // VSISA API - live state from monitor/vsisa_live.json
+  if (url === '/api/vsisa') {
+    try {
+      const vsisaPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\vsisa_live.json';
+      const data = fs.existsSync(vsisaPath) ? JSON.parse(fs.readFileSync(vsisaPath, 'utf8')) : { error: 'vsisa_live.json missing' };
+      // Read backtest report summary if available
+      const cfgPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\vsisa_live_config.json';
+      if (fs.existsSync(cfgPath)) {
+        try { data.backtest = JSON.parse(fs.readFileSync(cfgPath, 'utf8')).stats; } catch {}
+      }
+      data.ts = new Date().toISOString();
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(data));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
+    }
+    return;
+  }
+
+  // London-Sajid combined live dashboard
+  if (url === '/london-sajid') {
+    try {
+      const htmlPath = path.join(__dirname, 'london_sajid.html');
+      const html = fs.readFileSync(htmlPath, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('london_sajid.html missing: ' + e.message);
+    }
+    return;
+  }
+
+  // London-Sajid API
+  if (url === '/api/london-sajid') {
+    try {
+      const livePath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\london_sajid_live.json';
+      const lbBtPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_london_breakout_results.json';
+      const vsisaBtPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_vsisa_m5_proper_results.json';
+      const nyBtPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_ny_breakout_results.json';
+      const data = fs.existsSync(livePath) ? JSON.parse(fs.readFileSync(livePath, 'utf8')) : { error: 'live state missing — daemon not running?' };
+      data.backtest = {};
+      try {
+        if (fs.existsSync(lbBtPath)) {
+          const lb = JSON.parse(fs.readFileSync(lbBtPath, 'utf8'));
+          data.backtest.london_breakout = lb.best;
+        }
+      } catch (e) { data.backtest.lb_error = e.message; }
+      try {
+        if (fs.existsSync(vsisaBtPath)) {
+          const v = JSON.parse(fs.readFileSync(vsisaBtPath, 'utf8'));
+          data.backtest.vsisa_m5 = v.train_test_top20 ? v.train_test_top20.slice(0, 5) : v.top15;
+        }
+      } catch (e) { data.backtest.vsisa_error = e.message; }
+      try {
+        if (fs.existsSync(nyBtPath)) {
+          const ny = JSON.parse(fs.readFileSync(nyBtPath, 'utf8'));
+          data.backtest.ny_breakout = ny.best;
+        }
+      } catch (e) { /* ny breakout backtest may not be done yet */ }
+      try {
+        const wfPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_walk_forward_results.json';
+        if (fs.existsSync(wfPath)) {
+          data.backtest.walk_forward = JSON.parse(fs.readFileSync(wfPath, 'utf8'));
+        }
+      } catch (e) { /* walk-forward optional */ }
+      try {
+        const pPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_portfolio_results.json';
+        if (fs.existsSync(pPath)) {
+          data.backtest.portfolio = JSON.parse(fs.readFileSync(pPath, 'utf8'));
+        }
+      } catch (e) { /* portfolio optional */ }
+      try {
+        const ubPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_lb_ny_uhv_burst_results.json';
+        if (fs.existsSync(ubPath)) {
+          data.backtest.uhv_burst = JSON.parse(fs.readFileSync(ubPath, 'utf8'));
+        }
+      } catch (e) { /* uhv_burst optional */ }
+      data.ts = new Date().toISOString();
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(data));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: e.message }));
     }
     return;
   }
@@ -664,7 +984,7 @@ self.addEventListener('fetch',e=>{/* network only */});`;
             { role: 'assistant', content: reply, ts: new Date().toISOString() },
           ].slice(-50);
           try { fs.writeFileSync(CHAT_LOG_FILE, JSON.stringify(newHistory, null, 2)); } catch {}
-          res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
           res.end(JSON.stringify({ reply, mode: 'local' }));
         };
         if (localReply) {
@@ -721,7 +1041,7 @@ Keep replies under 60 words unless he asks for detail. If something is broken, s
                 { role: 'assistant', content: reply, ts: new Date().toISOString() },
               ].slice(-50);
               try { fs.writeFileSync(CHAT_LOG_FILE, JSON.stringify(newHistory, null, 2)); } catch {}
-              res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
+              res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
               res.end(JSON.stringify({ reply }));
             } catch (e) {
               res.writeHead(500, { 'Content-Type': 'application/json' });
@@ -750,6 +1070,209 @@ Keep replies under 60 words unless he asks for detail. If something is broken, s
     } catch {}
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(history));
+    return;
+  }
+
+  // ─── CHAT-TO-CLAUDE-CODE BRIDGE ────────────────────────────────────────
+  // File-based async chat with the active Claude Code session (this Claude,
+  // not the dashboard Haiku). Zee writes from phone -> file. Claude Code polls
+  // the file via Read tool, responds by appending to the same file.
+  // Single log: monitor/cc_chat.jsonl (one JSON per line).
+  const CC_CHAT_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\cc_chat.jsonl';
+  const readCcChat = () => {
+    try {
+      const raw = fs.readFileSync(CC_CHAT_FILE, 'utf8');
+      return raw.split('\n').filter(l => l.trim()).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    } catch { return []; }
+  };
+  const appendCcChat = (entry) => {
+    try { fs.appendFileSync(CC_CHAT_FILE, JSON.stringify(entry) + '\n'); return true; } catch { return false; }
+  };
+  if (url === '/api/cc-chat/send' && req.method === 'POST') {
+    let body = '';
+    req.on('data', d => body += d);
+    req.on('end', () => {
+      try {
+        const { text, from } = JSON.parse(body || '{}');
+        if (!text || !text.trim()) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: 'empty' }));
+        }
+        const entry = { ts: Date.now(), from: from || 'zee', text: text.trim() };
+        appendCcChat(entry);
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: true, entry }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: String(e.message) }));
+      }
+    });
+    return;
+  }
+  if (url === '/api/cc-chat' || url.startsWith('/api/cc-chat?')) {
+    const since = parseInt((url.split('since=')[1] || '0'), 10) || 0;
+    const all = readCcChat();
+    const filtered = since ? all.filter(e => e.ts > since) : all;
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify(filtered));
+    return;
+  }
+
+  // ─── HAMMAD CHAT (parallel to cc-chat) ───────────────────────────────────
+  const HAMMAD_CHAT_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\hammad_chat.jsonl';
+  const HAMMAD_TYPING_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.hammad_typing.json';
+  const readHammadChat = () => {
+    try {
+      const raw = fs.readFileSync(HAMMAD_CHAT_FILE, 'utf8');
+      return raw.split('\n').filter(l => l.trim()).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    } catch { return []; }
+  };
+  if (url === '/api/hammad-chat/send' && req.method === 'POST') {
+    let body = '';
+    req.on('data', d => body += d);
+    req.on('end', () => {
+      try {
+        const { text, from } = JSON.parse(body || '{}');
+        if (!text || !text.trim()) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: 'empty' }));
+        }
+        const entry = { ts: Date.now(), from: from || 'hammad', text: text.trim() };
+        try { fs.appendFileSync(HAMMAD_CHAT_FILE, JSON.stringify(entry) + '\n'); } catch {}
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: true, entry }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: String(e.message) }));
+      }
+    });
+    return;
+  }
+  if (url === '/api/hammad-chat' || url.startsWith('/api/hammad-chat?')) {
+    const since = parseInt((url.split('since=')[1] || '0'), 10) || 0;
+    const all = readHammadChat();
+    const filtered = since ? all.filter(e => e.ts > since) : all;
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify(filtered));
+    return;
+  }
+  if (url === '/api/hammad-chat/typing') {
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const { state } = JSON.parse(body || '{}');
+          fs.writeFileSync(HAMMAD_TYPING_FILE, JSON.stringify({ typing: !!state, since: Date.now() }));
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, typing: !!state }));
+        } catch (e) {
+          res.writeHead(500); res.end(JSON.stringify({ error: String(e.message) }));
+        }
+      });
+      return;
+    }
+    let s = { typing: false, since: 0 };
+    try {
+      s = JSON.parse(fs.readFileSync(HAMMAD_TYPING_FILE, 'utf8'));
+      if (s.typing && (Date.now() - s.since) > 90000) s = { typing: false, since: 0 };
+    } catch {}
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(s));
+    return;
+  }
+
+  // ─── SHANO CHAT (parallel to cc-chat + hammad-chat) ────────────────────
+  const SHANO_CHAT_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\shano_chat.jsonl';
+  const SHANO_TYPING_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.shano_typing.json';
+  const readShanoChat = () => {
+    try {
+      const raw = fs.readFileSync(SHANO_CHAT_FILE, 'utf8');
+      return raw.split('\n').filter(l => l.trim()).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+    } catch { return []; }
+  };
+  if (url === '/api/shano-chat/send' && req.method === 'POST') {
+    let body = '';
+    req.on('data', d => body += d);
+    req.on('end', () => {
+      try {
+        const { text, from } = JSON.parse(body || '{}');
+        if (!text || !text.trim()) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ error: 'empty' }));
+        }
+        const entry = { ts: Date.now(), from: from || 'shano', text: text.trim() };
+        try { fs.appendFileSync(SHANO_CHAT_FILE, JSON.stringify(entry) + '\n'); } catch {}
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+        res.end(JSON.stringify({ ok: true, entry }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: String(e.message) }));
+      }
+    });
+    return;
+  }
+  if (url === '/api/shano-chat' || url.startsWith('/api/shano-chat?')) {
+    const since = parseInt((url.split('since=')[1] || '0'), 10) || 0;
+    const all = readShanoChat();
+    const filtered = since ? all.filter(e => e.ts > since) : all;
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Access-Control-Allow-Origin': '*' });
+    res.end(JSON.stringify(filtered));
+    return;
+  }
+  if (url === '/api/shano-chat/typing') {
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const { state } = JSON.parse(body || '{}');
+          fs.writeFileSync(SHANO_TYPING_FILE, JSON.stringify({ typing: !!state, since: Date.now() }));
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, typing: !!state }));
+        } catch (e) {
+          res.writeHead(500); res.end(JSON.stringify({ error: String(e.message) }));
+        }
+      });
+      return;
+    }
+    let s = { typing: false, since: 0 };
+    try {
+      s = JSON.parse(fs.readFileSync(SHANO_TYPING_FILE, 'utf8'));
+      if (s.typing && (Date.now() - s.since) > 90000) s = { typing: false, since: 0 };
+    } catch {}
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(s));
+    return;
+  }
+  // Typing indicator: GET reads {typing, since}, POST sets {state: true|false}
+  // Auto-expires after 90s of staleness so a crashed setter doesn't show forever.
+  const TYPING_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.cc_typing.json';
+  if (req.url.split('?')[0] === '/api/cc-chat/typing') {
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const { state } = JSON.parse(body || '{}');
+          fs.writeFileSync(TYPING_FILE, JSON.stringify({ typing: !!state, since: Date.now() }));
+          res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+          res.end(JSON.stringify({ ok: true, typing: !!state }));
+        } catch (e) {
+          res.writeHead(500); res.end(JSON.stringify({ error: String(e.message) }));
+        }
+      });
+      return;
+    }
+    // GET
+    let s = { typing: false, since: 0 };
+    try {
+      s = JSON.parse(fs.readFileSync(TYPING_FILE, 'utf8'));
+      // Auto-expire after 90s — crashed setter shouldn't leave indicator on forever
+      if (s.typing && (Date.now() - s.since) > 90000) s = { typing: false, since: 0 };
+    } catch {}
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(s));
     return;
   }
 
