@@ -26,7 +26,7 @@ def parse_today_trades():
         return []
     text = log_file.read_bytes().decode("utf-16-le", errors="replace")
     trades = []
-    open_ticket = None; open_signal = None
+    open_signal = None; pending_exit_reason = None; pending_peak = None
     for ln in text.splitlines():
         if "UhvL2" not in ln or "UhvSweepExhaustion" not in ln: continue
         time_m = re.search(r"(\d{2}:\d{2}:\d{2})\.\d+", ln)
@@ -36,19 +36,25 @@ def parse_today_trades():
             if m:
                 open_signal = {"time": ts, "side": m.group(1), "price": float(m.group(2)),
                                "sl": float(m.group(3)), "r": float(m.group(4))}
-        elif "[FILLED]" in ln:
-            m = re.search(r"ticket=(\d+)", ln)
-            if m: open_ticket = int(m.group(1))
+                pending_exit_reason = None; pending_peak = None
         elif "[EXIT" in ln:
             m = re.search(r"\[EXIT\s+(\w+)\].*?pnl=\$(-?\d+\.\d+).*?peak=\$(-?\d+\.\d+)", ln)
+            if m and open_signal:
+                pending_exit_reason = m.group(1)
+                pending_peak = float(m.group(3))
+        elif "[CLOSED] net P&L:" in ln:
+            # Authoritative P&L from history. Combine with prior [EXIT] info if any.
+            m = re.search(r"net P&L:\s+\$(-?\d+\.\d+)", ln)
             if m and open_signal:
                 trades.append({
                     "open_time": open_signal["time"], "side": open_signal["side"],
                     "open_price": open_signal["price"], "r": open_signal["r"],
-                    "close_time": ts, "exit_reason": m.group(1),
-                    "pnl": float(m.group(2)), "peak": float(m.group(3)),
+                    "close_time": ts,
+                    "exit_reason": pending_exit_reason or "sl",  # if no [EXIT], must be broker-side SL
+                    "pnl": float(m.group(1)),
+                    "peak": pending_peak if pending_peak is not None else 0,
                 })
-                open_signal = None; open_ticket = None
+                open_signal = None; pending_exit_reason = None; pending_peak = None
     return trades
 
 
