@@ -63,6 +63,23 @@ were predictive of *something* but not Zee's discretionary criteria.
 5. **Strategy IS profitable mechanically** — 94.4% WR with peak-trail
    logic. Net positive even without loss-cap improvements.
 
+## ⭐⭐ REAL-DATA validation (Iter 9)
+
+Live v3.30 today: 8 trades, 6W/2L, 75% WR, net **−$23.10**.
+
+Both losing trades had peak = $0 (never showed any profit):
+  - 01:01 SELL @ 4716.49: SL hit at **−$29.60**
+  - 01:20 SELL @ 4717.39: SL hit at **−$15.00**
+
+Smart cut (−$2, peak<$1) would have caught BOTH:
+  - 01:01 → −$2 instead of −$29.60 (saved $27.60)
+  - 01:20 → −$2 instead of −$15.00 (saved $13.00)
+  - **Total real-data saving: $40.60**
+  - With smart cut: today's net would be **+$17.50** (vs actual −$23.10)
+
+This is **independent confirmation** of the smart cut hypothesis from
+real broker fills, not OHLC sim. Strong recommendation to deploy v3.40.
+
 ## ⭐ Iteration 6 breakthrough — SMART CUT proposal
 
 After all the dead ends, found one mechanically-validated improvement:
