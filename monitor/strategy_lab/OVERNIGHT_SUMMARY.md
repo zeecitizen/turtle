@@ -72,11 +72,18 @@ were predictive of *something* but not Zee's discretionary criteria.
 
 ## What Zee can do when awake
 
-1. **Run MT5 Strategy Tester on 4-5 more days** matching Feb 11
+1. **REMOVE the H1 chart's EA FIRST.** Right-click XAUUSD H1 → Expert
+   Advisors → Remove. There's a leftover v1.00 still attached there
+   that's racing with the M1 v3.30. Both use magic 88001 so they
+   step on each other's trades. The heartbeat shows v1.00 only
+   because that EA writes the file more recently — the M1 EA IS
+   running v3.30 correctly.
+2. **Run MT5 Strategy Tester on 4-5 more days** matching Feb 11
    methodology. Save HTMLs to `mt5/results/`. I'll batch-analyze.
-2. **Check live v3.30 day P&L** — see how the actual EA performed
-   overnight on Blueberry demo.
-3. **Decision time**: if v3.30 multi-day shows consistent profit,
+3. **Check live v3.30 day P&L** — see how the actual EA performed
+   overnight on Blueberry demo. So far (~00:33 + 00:53) two
+   peak-trail wins, +$6.80 and +$0.60. v3.30 logic is correct.
+4. **Decision time**: if v3.30 multi-day shows consistent profit,
    commit + push + scale to real money capped at $500 per memory.
 
 ## Files committed tonight (not pushed)
