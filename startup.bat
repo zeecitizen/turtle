@@ -32,11 +32,12 @@ REM  │     → live dashboard at https://me.claudezeeshan.com/uhv-sweep      �
 REM  │                                                                     │
 REM  │  5. If dashboard returns "no heartbeat" or EA isn't running:        │
 REM  │     a. Run this startup.bat (idempotent — won't duplicate anything) │
-REM  │     b. If the user has done the one-time "save default template"    │
-REM  │        step (see AUTO-ATTACH SETUP block printed at end of script), │
-REM  │        the EA loads itself on every new XAUUSD M1 chart.            │
-REM  │        Otherwise: MANUALLY in MT5 → Navigator → Experts → drag      │
-REM  │        UhvSweepExhaustion onto XAUUSD M1 chart.                     │
+REM  │     b. install_eas.ps1 already copied mt5\configs\default.tpl into  │
+REM  │        every MT5 terminal's Profiles\Templates\ folder, so in MT5:  │
+REM  │        File → New Chart → XAUUSD M1 — the EA self-attaches with     │
+REM  │        all inputs (Magic 88001 / 0.10 lots / Tier1 $2 / Tier2 $5).  │
+REM  │        Only fall back to manual drag from Navigator if the template │
+REM  │        is somehow missing — extremely unlikely.                     │
 REM  │     c. AutoTrading button GREEN.                                    │
 REM  │     d. Smiley face on chart = EA alive.                             │
 REM  │     e. uhv_autotrade_watchdog.py will WhatsApp Zee if the heartbeat │
@@ -325,23 +326,24 @@ echo   5. Watch Experts log for "UhvSweep Init done." line and a
 echo      heartbeat update every 5s in dashboard /uhv-sweep tile.
 echo.
 echo  ═══════════════════════════════════════════════════════════════
-echo   ONE-TIME AUTO-ATTACH SETUP (do steps 1-4 above, then once)
+echo   AUTO-ATTACH (already installed — no manual step needed)
 echo  ═══════════════════════════════════════════════════════════════
 echo.
-echo   After dragging UhvSweepExhaustion on the chart, save it as the
-echo   default template so MT5 auto-attaches the EA on every startup:
+echo   install_eas.ps1 has copied mt5\configs\default.tpl into the
+echo   MT5 Profiles\Templates folder of every detected terminal.
+echo   MT5 auto-applies default.tpl to every new chart, so on a fresh
+echo   restart you just need to:
 echo.
-echo     a. Right-click the XAUUSD M1 chart -^> Template -^> Save Template
-echo     b. Filename: default     (literally that, lowercase, no .tpl)
-echo     c. Click Save. Confirm overwrite if prompted.
+echo     File -^> New Chart -^> XAUUSD M1
 echo.
-echo   From now on, every new XAUUSD M1 chart will auto-load the EA with
-echo   all your inputs preserved. Combined with the /config:uhv_sweep_boot.ini
-echo   bootstrap above, this gives you a full cold-start to live-trading
-echo   in a single double-click of startup.bat.
+echo   ...and UhvSweepExhaustion attaches itself with all inputs
+echo   (Magic 88001, Lots 0.10, Tier1 $2, Tier2 $5, HardSL $15) plus
+echo   the saved chart appearance + Bid line.
 echo.
-echo   To verify it worked: close the XAUUSD chart, then File -^> New Chart
-echo   -^> XAUUSD M1. The EA should appear automatically with smiley icon.
+echo   If you later tune EA inputs, save a new default.tpl:
+echo     right-click chart -^> Template -^> Save Template -^> filename "default"
+echo   Then copy back to the repo with:
+echo     copy "C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\DBE9B8B347D025DD139E103EE3B63FD8\MQL5\Profiles\Templates\default.tpl" "%ROOT%\mt5\configs\default.tpl"
 echo.
 echo   Optional: drag TurtleTradeLogger onto any chart so all fills
 echo   get logged to Common\Files\turtle_fills.csv.

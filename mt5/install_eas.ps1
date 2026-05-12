@@ -122,6 +122,8 @@ if ($metaEditor) {
 }
 
 # --- Step 4: Process each terminal ---
+$defaultTplSrc = Join-Path $SourceDir "configs\default.tpl"
+
 foreach ($term in $terminals) {
     $expertsDir = Join-Path $term.FullName "MQL5\Experts"
     Log ""
@@ -131,6 +133,21 @@ foreach ($term in $terminals) {
     if (-not (Test-Path $expertsDir)) {
         Report-Failure "Terminal $($term.Name)" "Experts directory missing"
         continue
+    }
+
+    # Install default chart template (auto-attaches UhvSweepExhaustion on every new XAUUSD M1 chart)
+    if (Test-Path $defaultTplSrc) {
+        $tplDir = Join-Path $term.FullName "MQL5\Profiles\Templates"
+        $tplDst = Join-Path $tplDir "default.tpl"
+        try {
+            if (-not (Test-Path $tplDir)) {
+                New-Item -ItemType Directory -Path $tplDir -Force -ErrorAction Stop | Out-Null
+            }
+            Copy-Item -Path $defaultTplSrc -Destination $tplDst -Force -ErrorAction Stop
+            Report-Success "Installed default.tpl -> $($term.Name)"
+        } catch {
+            Report-Failure "Install default.tpl -> $($term.Name)" "$_"
+        }
     }
 
     foreach ($ea in $EAs) {
