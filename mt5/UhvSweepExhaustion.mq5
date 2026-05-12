@@ -1,9 +1,11 @@
 //+------------------------------------------------------------------+
-//| UhvSweepExhaustion.mq5  v2.00 — lesson-2 rewrite (2026-05-12)    |
+//| UhvSweepExhaustion.mq5  v3.00 — lesson-2 entry + Zee-style exits |
 //|                                                                  |
-//| Implements Zee's lessons 1+2 ONLY (M1 UHV breakout). No FVG,     |
-//| no sweep, no NSC, no DOM, no ATR trail. Validated on Feb 11      |
-//| to capture 20/20 of his strict textbook setups.                  |
+//| Implements Zee's lesson-2 ENTRY: M1 UHV breakout (validated      |
+//| 20/20 on Feb 11). Strict-1:1 R:R from lesson 2 was textbook —    |
+//| in practice Zee banks small profits aggressively. v3 replaces    |
+//| the 1:1 TP with active peak-trail exit (proven $3/$1) + a 30-min |
+//| time stop. SL stays at UHV.low as catastrophic backstop.         |
 //|                                                                  |
 //| BUY logic (SELL mirrors):                                        |
 //|   1. Just-closed M1 bar is GREEN (close > open).                 |
@@ -22,8 +24,8 @@
 //| Magic 88001 (production). Heartbeat to Common\Files matches v1   |
 //| schema so the dashboard keeps working unchanged.                 |
 //+------------------------------------------------------------------+
-#property copyright "Zee + Claude — lesson-2 rewrite, Feb 11 validated"
-#property version   "2.00"
+#property copyright "Zee + Claude — lesson-2 + peak-trail exit"
+#property version   "3.00"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -35,9 +37,15 @@ input int    InpMaxLookback        = 60;   // bars back to find swing high
 input int    InpMaxBarsBack        = 60;   // max bars from UHV to breakout
 input int    InpMagicNumber        = 88001;
 
-input group "── Exit: 1R per lesson 2 ──"
+input group "── Exit: Zee-style active management (NOT lesson-2 1:1) ──"
 input double InpMinR_Points        = 0.10; // reject if R < this
 input double InpMaxR_Points        = 30.0; // reject if R > this (catastrophic SL)
+input double InpPeakBankUSD        = 1.0;  // "grab profit fast": engage trail as soon as P&L peaks at this
+input double InpPeakDropUSD        = 0.5;  // exit on tiny reversal from peak — Zee's "breakout may fail, grab and run"
+input double InpEarlyStopUSD       = 0.0;  // 0 = disabled. Mechanical cuts on M1 XAU consistently kill more winners than they save. Trust UHV.low SL as the only backstop.
+input double InpEarlyCutPeakGuard  = 0.5;  // (unused when InpEarlyStopUSD=0)
+input int    InpMaxHoldSec         = 1800; // 30-min time stop
+input double InpTpMultR            = 10.0; // TP placed wide; peak-trail handles real exits
 
 input group "── Logging ──"
 input bool   InpVerbose            = true;
@@ -50,6 +58,8 @@ ulong    g_open_ticket          = 0;
 double   g_open_entry           = 0;
 double   g_open_lots            = 0;
 int      g_open_side            = 0;       // +1 buy, -1 sell, 0 none
+datetime g_open_time            = 0;
+double   g_peak_pnl_usd         = 0;       // for active peak-trail exit
 datetime g_last_signal_uhv_time = 0;
 int      g_last_signal_side     = 0;
 datetime g_last_check_m1        = 0;
@@ -164,13 +174,13 @@ void FireEntry(int side, double uhv_high, double uhv_low, datetime uhv_time, lon
       entry = ask;
       sl    = uhv_low;
       r     = entry - sl;
-      tp    = entry + r;
+      tp    = entry + r * InpTpMultR;  // wide TP — peak-trail handles real exit
       side_str = "BUY";
    } else {
       entry = bid;
       sl    = uhv_high;
       r     = sl - entry;
-      tp    = entry - r;
+      tp    = entry - r * InpTpMultR;
       side_str = "SELL";
    }
 
@@ -224,7 +234,7 @@ void WriteHeartbeat() {
    string json = "{";
    json += "\"ts\":" + IntegerToString(TimeCurrent()) + ",";
    json += "\"symbol\":\"" + _Symbol + "\",";
-   json += "\"ea\":\"UhvSweepExhaustion v2.00\",";
+   json += "\"ea\":\"UhvSweepExhaustion v3.30\",";
    json += "\"alive\":true,";
    json += "\"bid\":" + DoubleToString(bid, _Digits) + ",";
    json += "\"ask\":" + DoubleToString(ask, _Digits) + ",";
@@ -280,10 +290,12 @@ int OnInit() {
       if(!PositionSelectByTicket(tkt)) continue;
       if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
       if(PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
-      g_open_ticket = tkt;
-      g_open_entry  = PositionGetDouble(POSITION_PRICE_OPEN);
-      g_open_lots   = PositionGetDouble(POSITION_VOLUME);
-      g_open_side   = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? +1 : -1;
+      g_open_ticket  = tkt;
+      g_open_entry   = PositionGetDouble(POSITION_PRICE_OPEN);
+      g_open_lots    = PositionGetDouble(POSITION_VOLUME);
+      g_open_side    = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? +1 : -1;
+      g_open_time    = (datetime)PositionGetInteger(POSITION_TIME);
+      g_peak_pnl_usd = MathMax(0.0, PositionGetDouble(POSITION_PROFIT));
       Log("[REBIND] Resumed ticket=" + IntegerToString((long)tkt) +
           " entry=" + DoubleToString(g_open_entry, _Digits) +
           " side=" + (g_open_side > 0 ? "BUY" : "SELL") +
@@ -305,12 +317,54 @@ void OnTimer() {
    WriteHeartbeat();
 }
 
+//── Active exit: peak-trail + time stop. Per-tick when position open.
+//   Models Zee's actual exit behavior: bank small profits aggressively,
+//   let runners run with $1 drawdown trail, cap holds at 30 min.
+void ManageOpenPosition() {
+   if(g_open_ticket == 0) return;
+   if(!PositionSelectByTicket(g_open_ticket)) return;
+
+   double pnl = PositionGetDouble(POSITION_PROFIT);
+   if(pnl > g_peak_pnl_usd) g_peak_pnl_usd = pnl;
+
+   // 1. Catastrophic early-cut — fires ONLY if trade never reached protective profit peak.
+   //    If peak >= guard, peak-trail rule below handles exit (don't double-cut winners-in-drawdown).
+   if(InpEarlyStopUSD > 0 &&
+      g_peak_pnl_usd < InpEarlyCutPeakGuard &&
+      pnl <= -InpEarlyStopUSD) {
+      Log("[EXIT catastrophic] pnl=$" + DoubleToString(pnl, 2) +
+          " (never reached $" + DoubleToString(InpEarlyCutPeakGuard, 2) + " peak)");
+      g_trade.PositionClose(g_open_ticket);
+      return;
+   }
+
+   // 2. Time stop
+   datetime now = TimeCurrent();
+   if(InpMaxHoldSec > 0 && (now - g_open_time) >= InpMaxHoldSec) {
+      Log("[EXIT time_stop] pnl=$" + DoubleToString(pnl, 2) +
+          " peak=$" + DoubleToString(g_peak_pnl_usd, 2) +
+          " held=" + IntegerToString((int)(now - g_open_time)) + "s");
+      g_trade.PositionClose(g_open_ticket);
+      return;
+   }
+
+   // 3. Peak-trail: after peak >= bank threshold, close on drawdown from peak
+   if(g_peak_pnl_usd >= InpPeakBankUSD && pnl <= (g_peak_pnl_usd - InpPeakDropUSD)) {
+      Log("[EXIT peak_trail] pnl=$" + DoubleToString(pnl, 2) +
+          " peak=$" + DoubleToString(g_peak_pnl_usd, 2) +
+          " drop=$" + DoubleToString(g_peak_pnl_usd - pnl, 2));
+      g_trade.PositionClose(g_open_ticket);
+      return;
+   }
+}
+
 //── OnTick: detect on every new M1 bar close ──────────────────────
 void OnTick() {
    // Reconcile open position state (handles SL/TP closes which fire silently)
    if(g_open_ticket != 0 && !PositionSelectByTicket(g_open_ticket)) {
-      // Position closed (TP/SL hit). Look up last closed deal for P&L.
-      Log("[CLOSED] ticket=" + IntegerToString((long)g_open_ticket) + " (position no longer exists)");
+      // Position closed (TP/SL hit or active exit). Look up last closed deal for P&L.
+      Log("[CLOSED] ticket=" + IntegerToString((long)g_open_ticket) +
+          " peak_was=$" + DoubleToString(g_peak_pnl_usd, 2));
       // Pull realized P&L from history
       if(HistorySelectByPosition(g_open_ticket)) {
          double total_profit = 0, total_swap = 0, total_comm = 0;
@@ -326,10 +380,18 @@ void OnTick() {
          g_exits_today++;
          Log("[CLOSED] net P&L: $" + DoubleToString(net, 2));
       }
-      g_open_ticket = 0;
-      g_open_entry  = 0;
-      g_open_lots   = 0;
-      g_open_side   = 0;
+      g_open_ticket   = 0;
+      g_open_entry    = 0;
+      g_open_lots     = 0;
+      g_open_side     = 0;
+      g_open_time     = 0;
+      g_peak_pnl_usd  = 0;
+   }
+
+   // Active exit management when position is open
+   if(g_open_ticket != 0) {
+      ManageOpenPosition();
+      return;   // don't try to detect entries while in a position
    }
 
    // Detect only on new M1 bar close
@@ -338,9 +400,6 @@ void OnTick() {
    if(CopyRates(_Symbol, PERIOD_M1, 0, 1, r0) < 1) return;
    if(r0[0].time == g_last_check_m1) return;
    g_last_check_m1 = r0[0].time;
-
-   // Only detect if no position is open (one-at-a-time per lesson 2)
-   if(g_open_ticket != 0) return;
 
    double uhv_high, uhv_low;
    datetime uhv_time;
@@ -366,10 +425,12 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
    double vol   = HistoryDealGetDouble(deal_ticket, DEAL_VOLUME);
 
    if(entry_type == DEAL_ENTRY_IN) {
-      g_open_ticket = pos_id;
-      g_open_entry  = price;
-      g_open_lots   = vol;
-      g_open_side   = ((ENUM_DEAL_TYPE)HistoryDealGetInteger(deal_ticket, DEAL_TYPE) == DEAL_TYPE_BUY) ? +1 : -1;
+      g_open_ticket  = pos_id;
+      g_open_entry   = price;
+      g_open_lots    = vol;
+      g_open_side    = ((ENUM_DEAL_TYPE)HistoryDealGetInteger(deal_ticket, DEAL_TYPE) == DEAL_TYPE_BUY) ? +1 : -1;
+      g_open_time    = TimeCurrent();
+      g_peak_pnl_usd = 0;
       g_entries_today++;
       Log("[FILLED] " + (g_open_side > 0 ? "BUY" : "SELL") +
           " ticket=" + IntegerToString((long)pos_id) +
