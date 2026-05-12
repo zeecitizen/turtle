@@ -63,6 +63,34 @@ were predictive of *something* but not Zee's discretionary criteria.
 5. **Strategy IS profitable mechanically** — 94.4% WR with peak-trail
    logic. Net positive even without loss-cap improvements.
 
+## ⭐ Iteration 6 breakthrough — SMART CUT proposal
+
+After all the dead ends, found one mechanically-validated improvement:
+
+**Conditional early-cut rule:**
+```
+if pnl <= -$2 AND peak < $1.00:  close
+```
+
+The peak<$1 guard is the KEY innovation — earlier flat cuts (-$3, -$10)
+killed too many winners that briefly dipped before recovering. The
+guard ensures only trades that NEVER showed any profit get cut.
+
+Across 17.8K signals on 64 days:
+  - Saved 600 catastrophic losses (avg -$50 → -$2)
+  - Killed 1230 marginal winners (had been on track but didn't qualify)
+  - **Net: +$10,909 (~+$170/day improvement)**
+
+This is the first config improvement that survived sanity-checking.
+For v3.40 proposal:
+  - `InpEarlyStopUSD = 2.0`
+  - `InpEarlyCutPeakGuard = 1.0` (was 0.5 — too tight)
+  - `InpEarlyStopMinBars = 1`  (NEW)
+
+⚠️ Caveat: OHLC sim is optimistic (94% baseline vs MT5's 83%).
+Real-world delta likely smaller. Test via MT5 Strategy Tester on
+Feb 11 first to confirm it doesn't regress the existing +$165 result.
+
 ## Blockers
 
 - Without tick data, Python simulators can't accurately model exits.
