@@ -276,7 +276,7 @@ int OnInit() {
    g_contract_size = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    if(g_contract_size <= 0) g_contract_size = 100.0;
    int fill = (int)SymbolInfoInteger(_Symbol, SYMBOL_FILLING_MODE);
-   Log("Init v2.00 (lesson-2). MaxLookback=" + IntegerToString(InpMaxLookback) +
+   Log("Init v3.30 (lesson-2 + Zee-style exits). MaxLookback=" + IntegerToString(InpMaxLookback) +
        " MaxBarsBack=" + IntegerToString(InpMaxBarsBack) +
        " Lots=" + DoubleToString(InpLots, 2) +
        " Magic=" + IntegerToString(InpMagicNumber) +
