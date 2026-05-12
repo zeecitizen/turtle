@@ -2,8 +2,62 @@
 REM ═════════════════════════════════════════════════════════════════════════
 REM  UHV SWEEP TRADER — STARTUP & ORIENTATION    (rewritten 2026-05-12)
 REM ═════════════════════════════════════════════════════════════════════════
-REM  Reading this in a new session? Welcome. This file is the cheat-sheet
-REM  for what's running on this machine. Full memory at:
+REM
+REM  ┌─────────────────────────────────────────────────────────────────────┐
+REM  │  CLAUDE: IF YOU ARE READING THIS IN A FRESH SESSION                 │
+REM  │  ───────────────────────────────────────────────────                │
+REM  │  This file is the entry point for resuming the trading system.      │
+REM  │  Do these steps IN ORDER before doing anything else:                │
+REM  │                                                                     │
+REM  │  1. Your MEMORY.md auto-loads at session start. Look for the entry: │
+REM  │     "UhvSweep EA LIVE STATE (2026-05-12)" → read it first.          │
+REM  │     File: ~/.claude/projects/c--Users-zeesh-Documents-GitHub-turtle │
+REM  │            /memory/project_uhv_sweep_ea_live_state.md               │
+REM  │                                                                     │
+REM  │  2. Also recommended (related context):                             │
+REM  │     - project_mechanical_capture_deficit_solution.md (why the EA)   │
+REM  │     - project_zee_feb11_lessons_synth.md (the 10-lesson strategy)   │
+REM  │     - feedback_zee_strategy_is_real_capture_it.md (verified edge)   │
+REM  │                                                                     │
+REM  │  3. The trading engine is now a SINGLE native MQL5 EA:              │
+REM  │     mt5/UhvSweepExhaustion.mq5  (Magic 88001)                       │
+REM  │     All Python snipers + old EAs are deliberately DISABLED.         │
+REM  │     Do NOT re-enable claude_sniper_daemon, shano_hawk, or           │
+REM  │     auto_uhv_trader — they would CONFLICT with the EA.              │
+REM  │                                                                     │
+REM  │  4. To verify everything is alive RIGHT NOW (read-only):            │
+REM  │     curl http://localhost:3457/api/uhv-sweep                        │
+REM  │     → expects alive:true, heartbeat_age_sec < 10                    │
+REM  │     → live dashboard at https://me.claudezeeshan.com/uhv-sweep      │
+REM  │                                                                     │
+REM  │  5. If dashboard returns "no heartbeat" or EA isn't running:        │
+REM  │     a. Run this startup.bat (idempotent — won't duplicate anything) │
+REM  │     b. Then MANUALLY in MT5: Navigator → Experts → drag             │
+REM  │        UhvSweepExhaustion onto XAUUSD M1 chart.                     │
+REM  │     c. AutoTrading button GREEN.                                    │
+REM  │     d. Smiley face on chart = EA alive.                             │
+REM  │                                                                     │
+REM  │  6. If a previous session was working and you see a stuck position: │
+REM  │     UhvSweepExhaustion has OnInit amnesia recovery — re-attach the  │
+REM  │     EA and it scans PositionsTotal for Magic 88001 + XAUUSD and     │
+REM  │     auto-rebinds trail state (entry, peak, side, lots).             │
+REM  │                                                                     │
+REM  │  7. For full debugging (entry/exit lifecycle):                      │
+REM  │     mt5/UhvSweepDiag.mq5 (Magic 99001, SEPARATE chart) — smoke      │
+REM  │     test that exercises OrderSendAsync, DEAL_ADD bind, BE modify,   │
+REM  │     and close in 16 seconds. Set InpRunTest=true to fire.           │
+REM  │                                                                     │
+REM  │  8. Git state:                                                      │
+REM  │     `git log --oneline -5` to see recent commits.                   │
+REM  │     Latest production commit: "UhvSweepExhaustion: native MQL5 EA"  │
+REM  │                                                                     │
+REM  │  IF YOU'RE STILL UNSURE: just run this script. It logs every        │
+REM  │  step. Then read the manual-steps printed at the end and execute    │
+REM  │  them in MT5. The system will be back online within ~30 seconds     │
+REM  │  of the EA being dragged onto the chart.                            │
+REM  └─────────────────────────────────────────────────────────────────────┘
+REM
+REM  Full memory directory:
 REM    ~/.claude/projects/c--Users-zeesh-Documents-GitHub-turtle/memory/
 REM    → MEMORY.md (index) → project_uhv_sweep_ea_live_state.md (this state)
 REM
@@ -257,5 +311,31 @@ echo.
 echo  Live dashboard: https://me.claudezeeshan.com/uhv-sweep
 echo  (Or local: http://localhost:3457/uhv-sweep)
 echo.
+echo  ═══════════════════════════════════════════════════════════════
+echo   QUICK VERIFICATION (for Claude or human)
+echo  ═══════════════════════════════════════════════════════════════
+echo.
+echo   Once UhvSweepExhaustion is attached, verify it's alive:
+echo.
+echo     curl -s http://localhost:3457/api/uhv-sweep
+echo.
+echo   Expect: {"alive":true, "ea":"UhvSweepExhaustion v1.00",
+echo            "heartbeat_age_sec":^<10, "position_open":false/true, ...}
+echo.
+echo   To see signals as they fire, watch the MT5 Experts log:
+echo     C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\^<TERMINAL^>\MQL5\Logs\
+echo     grep "UhvSweep" YYYYMMDD.log
+echo.
+echo   Signal lifecycle log markers:
+echo     [SIGNAL]         → Entry condition detected
+echo     [ENTRY FILLED]   → DEAL_ADD captured, position open
+echo     [TRAIL BIND]     → Trail state bound to ticket
+echo     [TRAIL tier=1]   → SL moved to break-even at +$2 peak
+echo     [TRAIL tier=2]   → ATR×1.5 trail engaged at +$5 peak
+echo     [EXHAUST EXIT]   → DOM imbalance/velocity decay triggered close
+echo     [HARD SL]        → -$15 catastrophic stop hit
+echo     [CLOSE FILLED]   → Position closed cleanly
+echo.
+echo  ═══════════════════════════════════════════════════════════════
 
 endlocal
