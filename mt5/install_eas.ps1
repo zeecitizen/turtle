@@ -20,7 +20,8 @@ $EAs = @(
     "ShanoTickLogger.mq5",
     "UhvNativeTrader.mq5",
     "UhvSweepExhaustion.mq5",
-    "UhvSweepDiag.mq5"
+    "UhvSweepDiag.mq5",
+    "ExportFeb11Bars.mq5"
 )
 
 $failures   = @()
