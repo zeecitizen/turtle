@@ -380,6 +380,21 @@ def check_system_health() -> dict:
     if not learner_alive:
         issues.append("Silver Hawk learner is dead — no pattern learning happening")
 
+    # 3b. Cloudflared tunnel daemon (added 2026-05-10) — keeps /me chat URL alive
+    cf_alive = _process_alive("cloudflared_daemon")
+    cf_hb = SCRIPT_DIR / "cloudflared_heartbeat.json"
+    cf_hb_age = _file_age_minutes(cf_hb)
+    status["cloudflared_daemon"] = "ALIVE" if cf_alive else "DEAD"
+    if cf_hb_age is not None:
+        status["cloudflared_heartbeat_age"] = f"{cf_hb_age:.0f} min ago"
+        log(f"  Cloudflared daemon: {'ALIVE' if cf_alive else 'DEAD'} (heartbeat {cf_hb_age:.0f}m ago)")
+    else:
+        log(f"  Cloudflared daemon: {'ALIVE' if cf_alive else 'DEAD'} (no heartbeat file)")
+    if not cf_alive:
+        issues.append("cloudflared_daemon is DEAD — /me chat public URL is offline")
+    elif cf_hb_age is not None and cf_hb_age > 5:
+        issues.append(f"cloudflared heartbeat stale ({cf_hb_age:.0f}m) — daemon may be hung")
+
     # 4. Silver Hawk health
     try:
         sh_state = json.loads(SILVER_STATE.read_text("utf-8"))
@@ -682,12 +697,15 @@ def _auto_restart_dead_processes(status: dict, revived: list):
             log(f"  MT5_RESTART_ERR: {e}")
 
     # Python hawk processes
+    # 2026-05-12: claude_sniper_daemon + shano_hawk DISABLED — replaced by
+    # native MQL5 EA UhvSweepExhaustion which owns full entry+exit lifecycle.
+    # Re-enable only if rolling back to the Python-bridge architecture.
     process_map = {
-        "sniper_daemon": ("claude_sniper_daemon.py", []),
+        # "sniper_daemon": ("claude_sniper_daemon.py", []),     # DISABLED: replaced by UhvSweepExhaustion.ex5
         "silver_hawk_learner": ("silver_hawk_learner.py", []),
         "sexy_hawk": ("sexy_hawk.py", ["--loop"]),
         "meeting_hawks": ("meeting_hawks.py", ["--loop"]),
-        "shano_hawk": ("shano_hawk.py", []),
+        # "shano_hawk": ("shano_hawk.py", []),                  # DISABLED: replaced by UhvSweepExhaustion.ex5
     }
 
     # Delegate to ensure_daemon.py — it's the single source of truth for

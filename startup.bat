@@ -120,7 +120,13 @@ REM     Old-Turtle-Volume-Based branch. Re-enable here to revive UHV trading.
 "%ENSURE%" sheriff_hawk.py --loop
 "%ENSURE%" shano_hawk.py
 "%ENSURE%" shano_trade_notifier.py
+"%ENSURE%" vsisa_paper_trader.py
 "%ENSURE%" vscode_watchdog.py
+"%ENSURE%" cloudflared_daemon.py
+REM   ↑ added 2026-05-10: persistent public-tunnel daemon. Wraps cloudflared.exe,
+REM     auto-restarts on death, WhatsApps Zee whenever URL rotates (quick tunnels
+REM     change daily). Heartbeat at monitor/cloudflared_heartbeat.json — Sheriff
+REM     Hawk monitors freshness. Public URL stored in monitor/cloudflared_url.txt.
 REM "%ENSURE%" auto_uhv_trader.py
 REM   ↑ DISABLED 2026-05-04: implements LEGACY reversal direction (Green UHV → SELL,
 REM     Red UHV → BUY) which CONTRADICTS the live Shano-Zee strategy (Green UHV → BUY

@@ -17,7 +17,10 @@ $LogFile    = Join-Path $SourceDir "install_eas.log"
 $EAs = @(
     "TurtleTradeLogger.mq5",
     "ShanoExitManager.mq5",
-    "ShanoTickLogger.mq5"
+    "ShanoTickLogger.mq5",
+    "UhvNativeTrader.mq5",
+    "UhvSweepExhaustion.mq5",
+    "UhvSweepDiag.mq5"
 )
 
 $failures   = @()

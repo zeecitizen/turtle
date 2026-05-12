@@ -1,0 +1,207 @@
+// UhvSweep Visualizer — mirrors the UhvSweepExhaustion.mq5 detection logic.
+// Plots a label at every M1 bar where the EA WOULD have fired a signal.
+//
+// PATH A (separate sweep bar):
+//   • UHV: body% ≥ 40%, vol ≥ 1.5× avg-20, inside M5 FVG zone
+//   • Sweep bar wicks past UHV low/high by ≥ 0.10pt
+//   • Break bar closes above UHV.high (buy) or below UHV.low (sell)
+//
+// PATH B (wick-CAB / climactic action bar — NEW):
+//   • UHV at shift 1 (just-closed bar): body% ≤ 30%, opposing wick ≥ 1.5pt
+//   • Vol ≥ 1.5× avg-20, inside M5 FVG zone
+//   • Next bar (current) closes past UHV high/low
+//
+// Apply to XAUUSD M1. Labels appear at the BREAK bar (where entry would happen).
+//@version=5
+indicator("UhvSweep Visualizer", overlay=true, max_labels_count=500, max_boxes_count=500)
+
+// ── Inputs (mirror EA defaults) ─────────────────────────────────────
+grp_a = "── Path A (sweep-bar) ──"
+uhvVolMultMin = input.float(1.5, "UHV vol ≥ X × avg-20", group=grp_a, step=0.1)
+uhvMinBody    = input.float(0.40, "UHV body% min", group=grp_a, step=0.05)
+sweepMinPts   = input.float(0.10, "Sweep wick min depth (pts)", group=grp_a, step=0.05)
+maxLookahead  = input.int(8, "Max bars UHV→sweep", group=grp_a)
+maxSweepBreak = input.int(5, "Max bars sweep→break", group=grp_a)
+
+grp_b = "── Path B (wick-CAB) ──"
+pathBEnabled  = input.bool(true, "Enable Path B", group=grp_b)
+pathBBodyMax  = input.float(0.30, "UHV body% max (wicky)", group=grp_b, step=0.05)
+pathBWickMin  = input.float(1.50, "UHV opposing wick min (pts)", group=grp_b, step=0.1)
+
+grp_fvg = "── M5 FVG ──"
+fvgMaxAge     = input.int(30, "FVG max age (M5 bars)", group=grp_fvg)
+fvgShowZones  = input.bool(true, "Show M5 FVG zones", group=grp_fvg)
+
+grp_viz = "── Display ──"
+showPathA     = input.bool(true, "Show Path A signals", group=grp_viz)
+showPathB     = input.bool(true, "Show Path B signals", group=grp_viz)
+
+// ── M5 FVG detection ────────────────────────────────────────────────
+m5_h1 = request.security(syminfo.tickerid, "5", high[1], lookahead=barmerge.lookahead_off)
+m5_l1 = request.security(syminfo.tickerid, "5", low[1], lookahead=barmerge.lookahead_off)
+m5_h3 = request.security(syminfo.tickerid, "5", high[3], lookahead=barmerge.lookahead_off)
+m5_l3 = request.security(syminfo.tickerid, "5", low[3], lookahead=barmerge.lookahead_off)
+m5_time1 = request.security(syminfo.tickerid, "5", time[1], lookahead=barmerge.lookahead_off)
+
+// Track latest FVG zones (using arrays as ring buffer-like storage)
+var array<float> fvg_hi  = array.new<float>()
+var array<float> fvg_lo  = array.new<float>()
+var array<int>   fvg_side = array.new<int>() // +1 buy, -1 sell
+var array<int>   fvg_time = array.new<int>()
+
+// Detect new FVG on each M5 bar close
+var int last_m5_time = 0
+isNewM5 = m5_time1 != last_m5_time and not na(m5_time1)
+if isNewM5
+    last_m5_time := m5_time1
+    if m5_h3 < m5_l1
+        // Buy FVG
+        array.push(fvg_hi, m5_l1)
+        array.push(fvg_lo, m5_h3)
+        array.push(fvg_side, 1)
+        array.push(fvg_time, m5_time1)
+        if fvgShowZones
+            box.new(left=m5_time1, top=m5_l1, right=m5_time1 + fvgMaxAge * 300_000, bottom=m5_h3, xloc=xloc.bar_time, bgcolor=color.new(color.green, 90), border_color=color.new(color.green, 70))
+    if m5_l3 > m5_h1
+        // Sell FVG
+        array.push(fvg_hi, m5_l3)
+        array.push(fvg_lo, m5_h1)
+        array.push(fvg_side, -1)
+        array.push(fvg_time, m5_time1)
+        if fvgShowZones
+            box.new(left=m5_time1, top=m5_l3, right=m5_time1 + fvgMaxAge * 300_000, bottom=m5_h1, xloc=xloc.bar_time, bgcolor=color.new(color.red, 90), border_color=color.new(color.red, 70))
+
+// ── Helper: is current bar inside active FVG zone of given side ────
+insideFvg(int side, float bar_lo, float bar_hi) =>
+    cutoff = time - fvgMaxAge * 5 * 60_000
+    found = false
+    n = array.size(fvg_hi)
+    if n > 0
+        for i = n - 1 to 0
+            if array.get(fvg_time, i) < cutoff
+                continue
+            if array.get(fvg_side, i) != side
+                continue
+            zh = array.get(fvg_hi, i)
+            zl = array.get(fvg_lo, i)
+            if bar_lo <= zh and bar_hi >= zl
+                found := true
+                break
+    found
+
+// ── Volume average (last 20 bars before reference) ─────────────────
+volAvg20(int back) =>
+    sum = 0.0
+    for i = back + 1 to back + 20
+        sum += nz(volume[i], 0)
+    sum / 20.0
+
+// ── PATH A check: UHV at shift k, sweep at j<k, break at shift 0 ──
+var bool sig_a_buy = false
+var bool sig_a_sell = false
+var float sig_a_uhv_lo = na
+var float sig_a_uhv_hi = na
+
+sig_a_buy := false
+sig_a_sell := false
+sig_a_uhv_lo := na
+sig_a_uhv_hi := na
+
+if showPathA and barstate.isconfirmed
+    break_close = close
+    for k = 1 to maxLookahead + maxSweepBreak
+        uhv_h = high[k]
+        uhv_l = low[k]
+        uhv_o = open[k]
+        uhv_c = close[k]
+        uhv_v = volume[k]
+        rng = uhv_h - uhv_l
+        if rng <= 0
+            continue
+        body_pct = math.abs(uhv_c - uhv_o) / rng
+        if body_pct < uhvMinBody
+            continue
+        avg_v = volAvg20(k)
+        if avg_v <= 0 or uhv_v < uhvVolMultMin * avg_v
+            continue
+        // BUY: UHV red + inside buy FVG + sweep + break
+        if uhv_c < uhv_o and insideFvg(1, uhv_l, uhv_h)
+            sweep = false
+            for j = k - 1 to 1
+                if low[j] < uhv_l - sweepMinPts
+                    sweep := true
+                    break
+            if sweep and break_close > uhv_h
+                sig_a_buy := true
+                sig_a_uhv_lo := uhv_l
+                sig_a_uhv_hi := uhv_h
+                break
+        // SELL: mirror
+        if uhv_c > uhv_o and insideFvg(-1, uhv_l, uhv_h)
+            sweep = false
+            for j = k - 1 to 1
+                if high[j] > uhv_h + sweepMinPts
+                    sweep := true
+                    break
+            if sweep and break_close < uhv_l
+                sig_a_sell := true
+                sig_a_uhv_lo := uhv_l
+                sig_a_uhv_hi := uhv_h
+                break
+
+// ── PATH B check: UHV at shift 1 (just-closed), break at shift 0 ──
+var bool sig_b_buy = false
+var bool sig_b_sell = false
+var float sig_b_uhv_lo = na
+var float sig_b_uhv_hi = na
+
+sig_b_buy := false
+sig_b_sell := false
+sig_b_uhv_lo := na
+sig_b_uhv_hi := na
+
+if showPathB and pathBEnabled and barstate.isconfirmed
+    uhv_h = high[1]
+    uhv_l = low[1]
+    uhv_o = open[1]
+    uhv_c = close[1]
+    uhv_v = volume[1]
+    rng = uhv_h - uhv_l
+    if rng > 0
+        body_pct = math.abs(uhv_c - uhv_o) / rng
+        avg_v = volAvg20(1)
+        if body_pct <= pathBBodyMax and avg_v > 0 and uhv_v >= uhvVolMultMin * avg_v
+            body_lo = math.min(uhv_o, uhv_c)
+            body_hi = math.max(uhv_o, uhv_c)
+            lower_wick = body_lo - uhv_l
+            upper_wick = uhv_h - body_hi
+            // BUY Path B
+            if lower_wick >= pathBWickMin and insideFvg(1, uhv_l, uhv_h) and close > uhv_h
+                sig_b_buy := true
+                sig_b_uhv_lo := uhv_l
+                sig_b_uhv_hi := uhv_h
+            // SELL Path B
+            if upper_wick >= pathBWickMin and insideFvg(-1, uhv_l, uhv_h) and close < uhv_l
+                sig_b_sell := true
+                sig_b_uhv_lo := uhv_l
+                sig_b_uhv_hi := uhv_h
+
+// ── Plot labels at break bar (entry candle) ───────────────────────
+// Path A — solid color
+if sig_a_buy
+    label.new(bar_index, low, "BUY-A\nUHV " + str.tostring(sig_a_uhv_lo, "#.##") + "-" + str.tostring(sig_a_uhv_hi, "#.##"), color=color.green, textcolor=color.white, style=label.style_label_up, size=size.small)
+if sig_a_sell
+    label.new(bar_index, high, "SELL-A\nUHV " + str.tostring(sig_a_uhv_lo, "#.##") + "-" + str.tostring(sig_a_uhv_hi, "#.##"), color=color.red, textcolor=color.white, style=label.style_label_down, size=size.small)
+// Path B — lighter color, marked as wick-CAB
+if sig_b_buy
+    label.new(bar_index, low, "BUY-B (wick)\nUHV " + str.tostring(sig_b_uhv_lo, "#.##") + "-" + str.tostring(sig_b_uhv_hi, "#.##"), color=color.new(color.lime, 30), textcolor=color.black, style=label.style_label_up, size=size.small)
+if sig_b_sell
+    label.new(bar_index, high, "SELL-B (wick)\nUHV " + str.tostring(sig_b_uhv_lo, "#.##") + "-" + str.tostring(sig_b_uhv_hi, "#.##"), color=color.new(color.orange, 30), textcolor=color.black, style=label.style_label_down, size=size.small)
+
+// Visual SL marker line for visible signals (1 bar)
+plotshape(sig_a_buy or sig_b_buy, title="BUY signal", style=shape.triangleup, location=location.belowbar, color=color.green, size=size.tiny)
+plotshape(sig_a_sell or sig_b_sell, title="SELL signal", style=shape.triangledown, location=location.abovebar, color=color.red, size=size.tiny)
+
+// Alert conditions
+alertcondition(sig_a_buy or sig_b_buy, title="UhvSweep BUY signal", message="UhvSweep BUY")
+alertcondition(sig_a_sell or sig_b_sell, title="UhvSweep SELL signal", message="UhvSweep SELL")

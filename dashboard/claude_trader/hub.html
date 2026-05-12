@@ -193,10 +193,10 @@
   </div>
 
   <div class="tiles">
-    <a href="/shano" class="tile featured">
-      <span class="tile-icon">📊</span>
+    <a href="/uhv-sweep" class="tile featured">
+      <span class="tile-icon">⚡</span>
       <div class="tile-title">Live Dashboard</div>
-      <div class="tile-desc">Today's P&L, open positions, recent trades, sniper status</div>
+      <div class="tile-desc">UhvSweepExhaustion · today's P&L, open position, exhaustion exits</div>
       <div class="tile-stat" id="liveStat">—</div>
     </a>
 
@@ -220,6 +220,13 @@
       <div class="tile-desc">Probes and mains — newest first</div>
       <div class="tile-stat" id="tradesStat">—</div>
     </a>
+
+    <a href="javascript:void(0)" class="tile" id="uhvSweepTile">
+      <span class="tile-icon">⚡</span>
+      <div class="tile-title">UhvSweep EA <span style="font-size:10px;color:#888;">LIVE</span></div>
+      <div class="tile-desc">Tick-velocity + DOM exhaustion exit engine</div>
+      <div class="tile-stat" id="uhvSweepStat">checking…</div>
+    </a>
   </div>
 
   <div class="section-h">Your Experiments</div>
@@ -235,32 +242,75 @@
 </div>
 
 <script>
+async function loadUhvSweep() {
+  try {
+    const r = await fetch('/api/uhv-sweep');
+    if (!r.ok) return;
+    const d = await r.json();
+    const tile = document.getElementById('uhvSweepStat');
+    if (!d.alive) {
+      tile.innerHTML = '<span style="color:#999;">⚠ no heartbeat</span>';
+      return;
+    }
+    const age = d.heartbeat_age_sec;
+    let line;
+    if (d.position_open) {
+      const pnl = d.cur_pnl_usd;
+      const peak = d.peak_pnl_usd;
+      const sgn = pnl >= 0 ? '+' : '−';
+      const color = pnl >= 0 ? '#34c759' : '#ff3b30';
+      line = `<span style="color:${color};">${sgn}$${Math.abs(pnl).toFixed(2)}</span> · tier ${d.tier} · peak +$${peak.toFixed(2)}`;
+    } else {
+      const signals = d.signals_today || 0;
+      const entries = d.entries_today || 0;
+      const real = d.realized_today_usd || 0;
+      const sgn = real >= 0 ? '+' : '−';
+      const color = real >= 0 ? '#34c759' : '#ff3b30';
+      line = `${signals} sig / ${entries} fills · today <span style="color:${color};">${sgn}$${Math.abs(real).toFixed(2)}</span>`;
+    }
+    tile.innerHTML = line + ` <span style="color:#999;font-size:10px;">${age}s</span>`;
+  } catch (e) {
+    const tile = document.getElementById('uhvSweepStat');
+    if (tile) tile.innerHTML = '<span style="color:#999;">—</span>';
+  }
+}
+setInterval(loadUhvSweep, 5000);
+loadUhvSweep();
+
 async function loadStats() {
   try {
     const r = await fetch('/api/shano');
     if (!r.ok) return;
     const d = await r.json();
-    const live = d.live || {};
-    const realized = live.realized_today;
-    if (realized != null) {
-      const sgn = realized >= 0 ? '+' : '−';
-      document.getElementById('liveStat').textContent =
-        `today: ${sgn}$${Math.abs(realized).toFixed(2)} · ${live.closes_today || 0} trades`;
-    }
-    const procs = d.processes || {};
-    const ages = d.log_ages_sec || {};
-    const sniperHealthy = procs.shano_hawk && (ages.shano_hawk == null || ages.shano_hawk < 90);
+    // Live stat now driven by UhvSweep (the new live engine)
+    try {
+      const u = await (await fetch('/api/uhv-sweep')).json();
+      if (u.alive) {
+        const r = u.realized_today_usd;
+        const sgn = r >= 0 ? '+' : '−';
+        document.getElementById('liveStat').textContent =
+          `today: ${sgn}$${Math.abs(r).toFixed(2)} · ${u.entries_today || 0} entries${u.position_open ? ' · OPEN' : ''}`;
+      } else {
+        document.getElementById('liveStat').textContent = 'EA offline';
+      }
+    } catch (e) {}
+
     const badge = document.getElementById('liveBadge');
-    if (sniperHealthy && d.tv_cdp && d.mt5) {
-      badge.textContent = 'all systems live';
-      badge.style.background = 'rgba(52,199,89,0.12)';
-      badge.style.color = '#1c8a3a';
-    } else {
-      badge.textContent = 'system needs attention';
-      badge.style.background = 'rgba(255,59,48,0.12)';
-      badge.style.color = '#c92a23';
-      badge.style.setProperty('--dot', '#ff3b30');
-    }
+    try {
+      const u2 = await (await fetch('/api/uhv-sweep')).json();
+      if (u2.alive && d.tv_cdp && d.mt5) {
+        badge.textContent = 'UhvSweep live';
+        badge.style.background = 'rgba(52,199,89,0.12)';
+        badge.style.color = '#1c8a3a';
+      } else {
+        badge.textContent = 'system needs attention';
+        badge.style.background = 'rgba(255,59,48,0.12)';
+        badge.style.color = '#c92a23';
+        badge.style.setProperty('--dot', '#ff3b30');
+      }
+    } catch (e) {}
+
+    const live = d.live || {};
     if (d.rules?.passed != null) {
       document.getElementById('rulesStat').textContent =
         `${d.rules.passed}/${d.rules.total} rules passing`;

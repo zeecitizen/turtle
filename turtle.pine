@@ -175,7 +175,7 @@ pLat  = input.string("200", 'Signal→MT5 latency ms (comma-sep, copy from PineC
 pSlip = input.float(0.0, "Slippage: X USD:", group = gPc)
 pcSL  = input.string("Pips",   '──── Stop Loss format sent to MT5',        options = ["Pips", "Price"], group = gPc)
 pcTP  = input.string("Pips",   '──── Take Profit format sent to MT5',      options = ["Pips", "Price"], group = gPc)
-pcOT  = input.string("Market", '──── Order type sent to MT5',              options = ["Market", "Limit"], group = gPc)
+pcOT  = input.string("Market", '──── Order type sent to MT5 (Stop = pre-positioned pending order at breakout level — broker fills millisecond price hits, bypasses webhook latency)', options = ["Market", "Limit", "Stop"], group = gPc)
 
 // --- 11. Optimize --------
 gO  = "⚡ Optimize"
@@ -269,6 +269,12 @@ varip int    _uPndFT   = 0   // timenow at alert fire — used by _tFT so kill t
 varip bool   _uPndLive = false  // true when alert fired on a realtime bar (actually sent to MT5)
 varip string _uPndBits = ""
 varip string _uPndMsg  = "—"
+// Stop-mode pending-order tracking — used to emit cancellong/cancelshort instead of
+// closelong/closeshort when invalidation fires before the broker fills our pending order.
+// Set to the trigger price when a Stop-mode entry alert fires; cleared to 0 when price
+// touches the level (broker assumed filled) OR the cancellation has been emitted.
+varip float _uStPndB = 0.  // bull stop pending level (0 = no active pending)
+varip float _uStPndS = 0.  // sell stop pending level (0 = no active pending)
 var float _sigChkW = 0.  // checksum written at signal formation
 var float _sigChkR = 0.  // checksum read at deferred block (before arrays/label)
 var label _uLblBull = na  // persistent BUY label — recreated each signal, survives reloads
@@ -635,7 +641,7 @@ fPC(_isBull, _lots, _entry, _sl, _tp, _strat, _num, _bits, _structSL, string _cf
     _dir     = _isBull ? "buy" : "sell"
     _slPart  = pcSL == "Price" ? ",sl_price=" + str.tostring(_isBull ? _entry - _sl * pPip : _entry + _sl * pPip, "#.####") : ",sl_pips=" + str.tostring(math.round(_sl * pPip / pcBrkPip), "0")
     _tpPart  = pcTP == "Price" ? ",tp_price=" + str.tostring(_isBull ? _entry + _tp * pPip : _entry - _tp * pPip, "#.####") : ",tp_pips=" + str.tostring(math.round(_tp * pPip / pcBrkPip), "0")
-    _otPart  = pcOT == "Limit" ? ",ordertype=limit,price=" + str.tostring(_entry, "#.####") : ""
+    _otPart  = pcOT == "Limit" ? ",ordertype=limit,price=" + str.tostring(_entry, "#.####") : pcOT == "Stop" ? ",ordertype=stop,price=" + str.tostring(_entry, "#.####") : ""
     _spPart  = pcSpread > 0 ? ",spread=" + str.tostring(pcSpread) : ""
     _beTrig  = uBERR > 0 ? math.round(_structSL * uBERR * pPip / pcBrkPip) : uBEon ? math.round(_tp * (uBEPct / 100.0) * pPip / pcBrkPip) : pcBETrig
     _beOff   = uBELkR > 0 ? math.round(_structSL * uBELkR * pPip / pcBrkPip) : uBELkTP ? _beTrig : pcBEOff
@@ -646,6 +652,16 @@ fPC(_isBull, _lots, _entry, _sl, _tp, _strat, _num, _bits, _structSL, string _cf
     _cmt     = str.tostring(_lots, "0.00") + "#sl=" + _slVal + "#tp=" + _tpVal + (pcSpread > 0 ? "#sd=" + str.tostring(pcSpread) : "") + (_beTrig > 0 ? "#bt=" + str.tostring(_beTrig) + (_beOff > 0 ? "#bo=" + str.tostring(_beOff) : "") : "") + (pcTDist > 0 ? "#td=" + str.tostring(pcTDist) + (pcTTrig > 0 ? "#tt=" + str.tostring(pcTTrig) : "") + "#ts=" + str.tostring(pcTStep) : "") + "#" + _cfg
     _base = pLid + "," + _dir + "," + pSym + _otPart + ",vol_lots=" + str.tostring(_lots, "0.00") + _slPart + _tpPart + _spPart + _bePart + _trPart
     _base + ",comment=" + _cmt
+
+// Exit-command resolver — picks cancellong/cancelshort when a Stop-mode pending order
+// is still unfilled (orphan-prevention), else closelong/closeshort to flatten an open position.
+// Reads varips _uStPndB and _uStPndS which are set to the trigger price at entry-alert
+// fire and cleared to 0 once price has touched the level (broker assumed filled).
+fExitCmd(bool _bull) =>
+    if _bull
+        _uStPndB > 0 ? "cancellong" : "closelong"
+    else
+        _uStPndS > 0 ? "cancelshort" : "closeshort"
 
 string _cfgSnap = fCfg()
 
@@ -1104,6 +1120,15 @@ float[] _1sC = request.security_lower_tf(syminfo.tickerid, "1S", close)
 float[] _1sH = request.security_lower_tf(syminfo.tickerid, "1S", high)
 float[] _1sL = request.security_lower_tf(syminfo.tickerid, "1S", low)
 
+// Stop-mode fill detection — clear pending-flag once price has touched the trigger level.
+// Runs every bar (and intra-bar via varip) BEFORE close-alert logic so fExitCmd sees correct state.
+// Bull stop fills when ASK rises to level; we use high as a proxy. Sell stop fills when BID drops
+// to level; we use low. Conservative: only clear when fully crossed, not just touched.
+if _uStPndB > 0 and high >= _uStPndB
+    _uStPndB := 0.  // bull pending assumed filled — subsequent invalidations emit closelong
+if _uStPndS > 0 and low <= _uStPndS
+    _uStPndS := 0.  // sell pending assumed filled — subsequent invalidations emit closeshort
+
 // TRADE MONITORING
 // Runs BEFORE entry signal so closelong/closeshort alerts fire first.
 // TradingView delivers only one alert() per bar execution — closelong must win over buy.
@@ -1164,7 +1189,7 @@ if array.size(_tEn) > 0
                         label.set_text(_maeOrigLbl, label.get_text(_maeOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _maeExt)
                     label.new(bar_index, _bull ? low : high, _maeExt, style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.red, 0), textcolor = color.white, size = size.small)
                     if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // BREAKEVEN CHECK — runs before kill timer so the kill timer sees _tBE=true and skips.
             // In real MT5, price ticks trigger BE immediately when the trigger is touched; the 5-second
@@ -1258,7 +1283,7 @@ if array.size(_tEn) > 0
                         label.set_text(_killOrigLbl, label.get_text(_killOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _killExt)
                     label.new(bar_index, _bull ? low : high, _killExt, style = _bull ? label.style_label_up : label.style_label_down, color = _kWin ? color.new(color.green, 10) : color.new(color.orange, 10), textcolor = color.white, size = size.small)
                     if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // KILL TIMER (LOSS ONLY) — same as kill timer but only fires when currently in loss
             // Lets winners run freely; cuts losers that stagnate without recovering.
@@ -1303,7 +1328,7 @@ if array.size(_tEn) > 0
                         label.set_text(_klOrigLbl, label.get_text(_klOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _klExt)
                     label.new(bar_index, _bull ? low : high, _klExt, style = _bull ? label.style_label_up : label.style_label_down, color = color.new(color.orange, 10), textcolor = color.white, size = size.small)
                     if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // DAILY LOSS HARD SHUTDOWN — close all remaining open trades when hard daily limit is hit
             // Does NOT respect _tBE — when the day is lost, ALL positions close regardless of BE status.
@@ -1347,7 +1372,7 @@ if array.size(_tEn) > 0
                     label.set_text(_dllOrigLbl, label.get_text(_dllOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _dllExt)
                 label.new(bar_index, _bull ? low : high, _dllExt, style = _bull ? label.style_label_up : label.style_label_down, color = _dWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
                 if pE
-                    alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                    alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // PARTIAL TAKE-PROFIT + RUNNER — tick-based, fires once when profit >= ptpPips
             // Closes ptpPct% of the position, moves SL to breakeven, lets the runner continue.
@@ -1403,7 +1428,7 @@ if array.size(_tEn) > 0
                     label.new(bar_index, _bull ? high : low, _ptpExt, style = _bull ? label.style_label_down : label.style_label_up, color = color.new(color.teal, 10), textcolor = color.white, size = size.small)
                     // PineConnector partial close: vol_lots= closes that specific lot count
                     if pE and _ptpClose >= mLot
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym + ",vol_lots=" + str.tostring(_ptpClose, "#.##"), alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym + ",vol_lots=" + str.tostring(_ptpClose, "#.##"), alert.freq_all)
 
             // INVALIDATION EXIT — bar-close logic: exit when candle closes back inside UHV range (not triggered once BE has fired)
             bool _invExited = false
@@ -1455,7 +1480,7 @@ if array.size(_tEn) > 0
                         label.set_text(_iOrigLbl, label.get_text(_iOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _iExt)
                     label.new(bar_index, _bull ? low : high, _iExt, style = _bull ? label.style_label_up : label.style_label_down, color = _iWin ? color.new(color.green, 10) : color.new(color.orange, 10), textcolor = color.white, size = size.small)
                     if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // STRUCTURAL SL — logic-based exit: bar closes beyond structural SL (breakout wick low/high).
             // MT5 does not hold this level — Pine must send closelong/closeshort.
@@ -1505,7 +1530,7 @@ if array.size(_tEn) > 0
                         label.set_text(_sOrigLbl, label.get_text(_sOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _sExt)
                     label.new(bar_index, _bull ? low : high, _sExt, style = _bull ? label.style_label_up : label.style_label_down, color = _sWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
                     if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // OPPOSITE UHV EXIT — close when a high-volume candle in the opposite direction appears.
             // Bar-close only. Disabled once BE fires (trade is protected; let it run).
@@ -1555,7 +1580,7 @@ if array.size(_tEn) > 0
                         label.set_text(_ouOrigLbl, label.get_text(_ouOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _ouExt)
                     label.new(bar_index, _bull ? low : high, _ouExt, style = _bull ? label.style_label_up : label.style_label_down, color = _ouWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
                     if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // BREAKOUT FAILURE PATTERN EXIT — close when price fails to extend past the breakout level
             // within bfBars bars AND closes back below (bull) or above (bear) the breakout level.
@@ -1612,7 +1637,7 @@ if array.size(_tEn) > 0
                         label.set_text(_bfOrigLbl, label.get_text(_bfOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _bfExt)
                     label.new(bar_index, _bull ? low : high, _bfExt, style = _bull ? label.style_label_up : label.style_label_down, color = _bfWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
                     if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // VOLATILITY COLLAPSE EXIT — close when ATR(14) drops below vcFact × ATR at entry.
             // Uses _tATE (ATR recorded at entry bar) to detect when momentum has evaporated.
@@ -1660,7 +1685,7 @@ if array.size(_tEn) > 0
                         label.set_text(_vcOrigLbl, label.get_text(_vcOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _vcExt)
                     label.new(bar_index, _bull ? low : high, _vcExt, style = _bull ? label.style_label_up : label.style_label_down, color = _vcWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
                     if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // VOLUME DROP EXIT — close when current bar volume collapses below vdFact × 20-bar average.
             // Only fires on bar AFTER entry (bar_index > _entryBar + 1) to ignore the entry bar itself
@@ -1708,7 +1733,7 @@ if array.size(_tEn) > 0
                         label.set_text(_vdOrigLbl, label.get_text(_vdOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _vdExt)
                     label.new(bar_index, _bull ? low : high, _vdExt, style = _bull ? label.style_label_up : label.style_label_down, color = _vdWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
                     if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // MICRO-STRUCTURE BREAK EXIT — close when a post-entry swing low (bull) or swing high (bear) is broken.
             // Looks back msLb bars (from current bar) for the lowest low (bull) / highest high (bear).
@@ -1758,7 +1783,7 @@ if array.size(_tEn) > 0
                         label.set_text(_msOrigLbl, label.get_text(_msOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _msExt)
                     label.new(bar_index, _bull ? low : high, _msExt, style = _bull ? label.style_label_up : label.style_label_down, color = _msWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
                     if pE
-                        alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                        alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // TIME-OF-DAY KILL SWITCH — force-close open trade when a no-trade window begins.
             // Tick-based (no barstate.isconfirmed gate) so it fires as soon as the clock crosses the window boundary.
@@ -1804,7 +1829,7 @@ if array.size(_tEn) > 0
                     label.set_text(_todOrigLbl, label.get_text(_todOrigLbl) + "\n━━━━━━━━━━━━━━━━\n" + _todExt)
                 label.new(bar_index, _bull ? low : high, _todExt, style = _bull ? label.style_label_up : label.style_label_down, color = _todWin ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
                 if pE
-                    alert(pLid + "," + (_bull ? "closelong" : "closeshort") + "," + pSym, alert.freq_all)
+                    alert(pLid + "," + (fExitCmd(_bull)) + "," + pSym, alert.freq_all)
 
             // HARD SL SIMULATION — mirrors iExHSL sent to MT5 when invalidation mode is on
             // Without this, Pine uses the wide wick SL while MT5 uses the narrow hard SL,
@@ -2068,7 +2093,7 @@ float _fSLWarmB  = fSL(true,  close, nz(_rceLo, low),  high, _euST, uSBf, uSAm, 
 float _fSLWarmBe = fSL(false, close, low, nz(_rceHi, high), _euST, uSBf, uSAm, uSSw, uSMn + uSpread, uDR, uLS, uSDo, float(na), float(na))
 
 if _bBrk
-    _entry    = _uIOE ? _bTrigEff : close
+    _entry    = pcOT == "Stop" ? _bTrigEff : _uIOE ? _bTrigEff : close
     _sl       = uSLPips > 0 ? _entry - uSLPips * pPip : fSL(true, _entry, _euST == "Prev Candle" ? low[1] : _euST == "UHV" ? nz(_uSl, nz(_rceLo, low)) : nz(_rceLo, nz(_uSl, low)), high, _euST, uSBf, uSAm, uSSw, uSMn + uSpread, uDR, uLS, uSDo, float(na))
     _slDist   = math.max(useInvalidation ? math.max(_entry - _sl, iExHSL * pPip) : _entry - _sl, uSMn)
     _effLots  = (uDR > 0 ? math.max(uDR / (_slDist * cM), mLot) : uRp > 0 ? math.max(iMon * uRp / 100.0 / math.max(_slDist * cM, syminfo.mintick), mLot) : uLS) * lA
@@ -2076,7 +2101,7 @@ if _bBrk
     float _tp1 = uTPPips > 0 ? _entry + uTPPips * pPip : fTP(_entry, uTM == "Structural High/Low" ? nz(_rCeil, _entry + _slDist * uT1) - uSHLOff : uTM == "Dollar Amount" ? _entry + _euTD : _entry + _slDist * uT1)
     if _tp1 <= _entry  // TP at or below entry for buy → structural ceiling below entry; force dollar fallback
         _tp1 := fTP(_entry, _entry + _euTD)
-    if _uIOE and pcOT != "Limit" and uIOEGrd > 0 and _tp1 <= close + uSpread * uIOEGrd  // IOE guard: recalc TP from current close if too close — applies regardless of alert format
+    if _uIOE and pcOT != "Limit" and pcOT != "Stop" and uIOEGrd > 0 and _tp1 <= close + uSpread * uIOEGrd  // IOE guard: recalc TP from current close if too close — Stop pending orders fill at trigger price, not close, so guard skipped
         _tp1   := fTP(close, uTPPips > 0 ? close + uTPPips * pPip : (uTM == "Dollar Amount" ? close + _euTD : close + _slDist * uT1))
         _entry := close  // sim accuracy: MT5 fills at market (close) when IOE guard fires — not _bTrigEff
         _sl    := uSLPips > 0 ? _entry - uSLPips * pPip : _sl
@@ -2104,6 +2129,8 @@ if _bBrk
                 _uPndFT   := timenow  // capture alert fire time — used by kill timer via _tFT (IOE: bar close ≠ fill time)
                 _uPndLive := barstate.isrealtime  // tag: live bar = alert actually sent to MT5
                 alert(pE ? _lastAlertMsg : "🟢 BUY Signal — UHV Breakout | Entry: " + str.tostring(_uPndEn, "#.###") + " | " + syminfo.ticker, alert.freq_all)
+                if pcOT == "Stop"
+                    _uStPndB := _uPndEn  // mark bull stop pending awaiting fill — invalidations now emit cancellong instead of closelong until ASK touches this level
                 _lastSigTxt := "BUY NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_uPndEn, "#.###") + "\nSL:    " + str.tostring(_uPndEn - _uPndSL * pPip, "#.###") + "  -$" + str.tostring(math.round(_uPndSL * pPip * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSL * pPip * _uPndLt * cM / iMon * 100, "#.##") + "%]" + "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) + "\nTP:    " + str.tostring(_uPndEn + _uPndTP * pPip, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") + "\n" + fAS(_uWn, _uTr) + (uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : "")
                 _uPendBull := true
                 if sL
@@ -2139,7 +2166,7 @@ if eUHV and _iR and not _lb and not _rwb and not _bTP and (sTC and sTCU) and not
 _beBrk = _euBeD and eUHV and _iR and not _lb and not _rwb and not _uReBnc and (bRW or (_eStU ? (_hbr and _beTP) : not _bTP)) and _tS >= _eMS and _uFC and not na(_bL) and not _uF and not na(_uBar) and (bar_index - _uBar) >= uSB and (_erUS ? _uHSw : true) and (_erULV ? volume < _uVol : true) and _uWSp and _uSBg and not _eTsU and _iRd and _beBrkPO and (bar_index - _luSB) >= _euCd and _strDn and _uMomBeOk and _uBVOk and _uPBMbok and _uVelOk and (uHTD == "Off" or not _uHTFB) and not _isRng and not _ntBlock and not _vbBlock and not _mtphBlock and not _dllBlock and not _ssBlock and (_uIOE or barstate.isconfirmed)
 
 if _beBrk
-    _entry      = _uIOE ? _beTrigEff : close
+    _entry      = pcOT == "Stop" ? _beTrigEff : _uIOE ? _beTrigEff : close
     _sl         = uSLPips > 0 ? _entry + uSLPips * pPip : fSL(false, _entry, low, _euST == "Prev Candle" ? high[1] : _euST == "UHV" ? nz(_uSl, nz(_rceHi, high)) : nz(_rceHi, nz(_uSl, high)), _euST, uSBf, uSAm, uSSw, uSMn + uSpread, uDR, uLS, uSDo, float(na), float(na))
     _slDist     = math.max(useInvalidation ? math.max(_sl - _entry, iExHSL * pPip) : _sl - _entry, uSMn)
     _effLots    = (uDR > 0 ? math.max(uDR / (_slDist * cM), mLot) : uRp > 0 ? math.max(iMon * uRp / 100.0 / math.max(_slDist * cM, syminfo.mintick), mLot) : uLS) * lA
@@ -2147,7 +2174,7 @@ if _beBrk
     float _tp1 = uTPPips > 0 ? _entry - uTPPips * pPip : fTP(_entry, uTM == "Structural High/Low" ? nz(_rFlr, _entry - _slDist * uT1) + uSHLOff : uTM == "Dollar Amount" ? _entry - _euTD : _entry - _slDist * uT1)
     if _tp1 >= _entry  // TP at or above entry for sell → structural floor above entry; force dollar fallback
         _tp1 := fTP(_entry, _entry - _euTD)
-    if _uIOE and pcOT != "Limit" and uIOEGrd > 0 and _tp1 >= close - uSpread * uIOEGrd  // IOE guard: recalc TP from current close if too close — applies regardless of alert format
+    if _uIOE and pcOT != "Limit" and pcOT != "Stop" and uIOEGrd > 0 and _tp1 >= close - uSpread * uIOEGrd  // IOE guard: recalc TP from current close if too close — Stop pending orders fill at trigger price, not close, so guard skipped
         _tp1   := fTP(close, uTPPips > 0 ? close - uTPPips * pPip : (uTM == "Dollar Amount" ? close - _euTD : close - _slDist * uT1))
         _entry := close  // sim accuracy: MT5 fills at market (close) when IOE guard fires — not _beTrigEff
         _sl    := uSLPips > 0 ? _entry + uSLPips * pPip : _sl
@@ -2175,6 +2202,8 @@ if _beBrk
                 _uPndFT   := timenow  // capture alert fire time — used by kill timer via _tFT (IOE: bar close ≠ fill time)
                 _uPndLive := barstate.isrealtime  // tag: live bar = alert actually sent to MT5
                 alert(pE ? _lastAlertMsg : "🔴 SELL Signal — UHV Breakout | Entry: " + str.tostring(_uPndEn, "#.###") + " | " + syminfo.ticker, alert.freq_all)
+                if pcOT == "Stop"
+                    _uStPndS := _uPndEn  // mark sell stop pending awaiting fill — invalidations now emit cancelshort instead of closeshort until BID touches this level
                 _lastSigTxt := "SELL NOW  #" + str.tostring(_uPndN) + "\n(UHV Breakout)  ⏰ " + fTS() + "\nEntry: " + str.tostring(_uPndEn, "#.###") + "\nSL:    " + str.tostring(_uPndEn + _uPndSL * pPip, "#.###") + "  -$" + str.tostring(math.round(_uPndSL * pPip * _uPndLt * cM * 100) / 100, "#.##") + "  [" + _euST + ", risk: " + str.tostring(_uPndSL * pPip * _uPndLt * cM / iMon * 100, "#.##") + "%]" + "\nLots:  " + fLL(uDR, _uPndLt, uRp > 0) + "\nTP:    " + str.tostring(_uPndEn - _uPndTP * pPip, "#.###") + "  +$" + str.tostring(math.round(_uPndTP * pPip * _uPndLt * cM * 100) / 100, "#.##") + "\n" + fAS(_uWn, _uTr) + (uDev and str.length(_uPndBits) > 0 ? fDevLabel(_uPndBits, _uPndMsg, _uPndEn) : "")
                 _uPendBear := true
                 if sL

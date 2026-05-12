@@ -1,0 +1,134 @@
+<!-- ─── Claude Code chat widget — auto-injected by server.js ─── -->
+<style>
+  #ccChatBtn { position: fixed; right: 16px; bottom: 16px; width: 60px; height: 60px; border-radius: 50%;
+    background: linear-gradient(135deg, #d97706, #ea580c); box-shadow: 0 6px 24px rgba(234,88,12,0.45);
+    display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer;
+    z-index: 9999; border: none; color: white; transition: transform 0.15s ease; }
+  #ccChatBtn:active { transform: scale(0.92); }
+  #ccChatBtn .badge { position: absolute; top: 4px; right: 4px; background: #ef4444; color: white;
+    border-radius: 10px; min-width: 20px; height: 20px; font-size: 12px; display: none;
+    align-items: center; justify-content: center; padding: 0 6px; font-weight: 700; }
+  #ccChatBtn .badge.visible { display: flex; }
+  #ccChatPanel { position: fixed; right: 16px; bottom: 88px;
+    width: min(380px, calc(100vw - 24px)); height: min(580px, calc(100vh - 120px));
+    background: rgba(15,15,20,0.95); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.10); border-radius: 20px;
+    display: none; flex-direction: column; z-index: 9998; overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6); color: white;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif; }
+  #ccChatPanel.open { display: flex; }
+  .cc-h { padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 600; }
+  .cc-h .sub { font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 400;
+    letter-spacing: 0.05em; text-transform: uppercase; margin-top: 2px; }
+  .cc-x { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 24px;
+    cursor: pointer; padding: 0; line-height: 1; }
+  .cc-msgs { flex: 1; overflow-y: auto; padding: 14px;
+    display: flex; flex-direction: column; gap: 8px; }
+  .cc-m { max-width: 85%; padding: 10px 14px; border-radius: 16px;
+    font-size: 13px; line-height: 1.45; word-wrap: break-word; white-space: pre-wrap; }
+  .cc-m.zee { align-self: flex-end;
+    background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; border-bottom-right-radius: 4px; }
+  .cc-m.claude_code { align-self: flex-start; background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.92); border-bottom-left-radius: 4px;
+    border: 1px solid rgba(217,119,6,0.3); }
+  .cc-m .ts { display: block; font-size: 9px; color: rgba(255,255,255,0.4);
+    margin-top: 4px; letter-spacing: 0.05em; }
+  .cc-in-row { display: flex; gap: 8px; padding: 12px;
+    border-top: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.02); }
+  #ccChatInput { flex: 1; padding: 11px 14px; border-radius: 18px;
+    background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10);
+    color: white; font-size: 14px; outline: none; font-family: inherit; }
+  #ccChatInput:focus { border-color: rgba(234,88,12,0.6); }
+  #ccChatSend { background: linear-gradient(135deg, #d97706, #ea580c); border: none;
+    color: white; padding: 0 20px; border-radius: 18px; font-weight: 600; cursor: pointer; font-size: 14px; }
+  #ccChatSend:active { transform: scale(0.96); }
+  #ccChatSend:disabled { opacity: 0.5; cursor: not-allowed; }
+  .cc-empty { text-align: center; color: rgba(255,255,255,0.45);
+    font-size: 12px; padding: 30px 20px; line-height: 1.55; }
+</style>
+<button id="ccChatBtn" title="Talk to Claude (active session)">💬<span class="badge" id="ccChatBadge">0</span></button>
+<div id="ccChatPanel">
+  <div class="cc-h">
+    <div>Claude Code<div class="sub">Active session · async ~90s</div></div>
+    <button class="cc-x" id="ccChatClose" title="Close">×</button>
+  </div>
+  <div class="cc-msgs" id="ccChatMsgs">
+    <div class="cc-empty">Type to me directly — I'll see it in seconds (Monitor armed). For instant status replies, use the bottom Talk-to-Claude panel (Haiku, snapshot data only).</div>
+  </div>
+  <div class="cc-in-row">
+    <input id="ccChatInput" type="text" placeholder="Type to Claude..." autocomplete="off" autocapitalize="sentences" />
+    <button id="ccChatSend">Send</button>
+  </div>
+</div>
+<script>
+(function ccChat() {
+  const btn = document.getElementById('ccChatBtn');
+  const panel = document.getElementById('ccChatPanel');
+  const closeBtn = document.getElementById('ccChatClose');
+  const msgsEl = document.getElementById('ccChatMsgs');
+  const input = document.getElementById('ccChatInput');
+  const sendBtn = document.getElementById('ccChatSend');
+  const badge = document.getElementById('ccChatBadge');
+  let lastTs = 0, isOpen = false, unread = 0;
+  const seen = new Set();
+  const fmt = (ts) => new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const render = (m) => {
+    const id = m.ts + '|' + m.from;
+    if (seen.has(id)) return;
+    seen.add(id);
+    const div = document.createElement('div');
+    div.className = 'cc-m ' + (m.from === 'zee' ? 'zee' : 'claude_code');
+    div.textContent = m.text;
+    const t = document.createElement('span');
+    t.className = 'ts'; t.textContent = fmt(m.ts);
+    div.appendChild(t);
+    msgsEl.appendChild(div);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  };
+  const updateBadge = () => {
+    if (unread > 0 && !isOpen) { badge.textContent = unread; badge.classList.add('visible'); }
+    else { badge.classList.remove('visible'); }
+  };
+  const poll = async () => {
+    try {
+      const r = await fetch(lastTs ? '/api/cc-chat?since=' + lastTs : '/api/cc-chat');
+      if (!r.ok) return;
+      const arr = await r.json();
+      if (!Array.isArray(arr) || !arr.length) return;
+      for (const m of arr) {
+        render(m);
+        if (m.ts > lastTs) lastTs = m.ts;
+        if (m.from !== 'zee' && !isOpen) unread++;
+      }
+      updateBadge();
+      const empty = msgsEl.querySelector('.cc-empty');
+      if (empty && msgsEl.children.length > 1) empty.remove();
+    } catch {}
+  };
+  const send = async () => {
+    const text = input.value.trim();
+    if (!text) return;
+    sendBtn.disabled = true;
+    try {
+      const r = await fetch('/api/cc-chat/send', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, from: 'zee' }),
+      });
+      if (r.ok) { input.value = ''; poll(); }
+    } catch {}
+    sendBtn.disabled = false;
+    input.focus();
+  };
+  btn.addEventListener('click', () => {
+    isOpen = !isOpen;
+    panel.classList.toggle('open', isOpen);
+    if (isOpen) { unread = 0; updateBadge(); input.focus(); msgsEl.scrollTop = msgsEl.scrollHeight; }
+  });
+  closeBtn.addEventListener('click', () => { isOpen = false; panel.classList.remove('open'); });
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+  poll();
+  setInterval(poll, 3000);
+})();
+</script>
