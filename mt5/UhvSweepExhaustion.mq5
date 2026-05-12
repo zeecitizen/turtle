@@ -778,14 +778,30 @@ int OnInit() {
           " lots=" + DoubleToString(lots, 2));
       break;
    }
+
+   // FIX (2026-05-12): heartbeat was tick-driven from OnTick, so XAUUSD's daily
+   // settlement break (~22:00-23:00 broker time) froze heartbeats and tripped the
+   // watchdog with a false positive. Drive heartbeat from OnTimer so it fires
+   // every InpHeartbeatSec regardless of tick flow.
+   EventSetTimer(InpHeartbeatSec > 0 ? InpHeartbeatSec : 5);
+
    return INIT_SUCCEEDED;
 }
 
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason) {
+   EventKillTimer();
    MarketBookRelease(_Symbol);
    if(g_atr_handle != INVALID_HANDLE) IndicatorRelease(g_atr_handle);
    Log("Deinit reason=" + IntegerToString(reason));
+}
+
+//+------------------------------------------------------------------+
+//  OnTimer — tick-independent heartbeat so the watchdog doesn't false-alarm
+//  during XAUUSD daily breaks or any quiet market period.
+//+------------------------------------------------------------------+
+void OnTimer() {
+   WriteHeartbeat();
 }
 
 //+------------------------------------------------------------------+
