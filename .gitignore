@@ -69,6 +69,7 @@ monitor/_loom_audio/*.raw.*
 monitor/_loom_audio/*.chunk*.mp3
 monitor/_vsa_audio/
 monitor/_csm_audio.webm
+monitor/_playlist.html
 *.webm
 *.opus
 
@@ -83,6 +84,7 @@ monitor/cloudflared_vsisa.err
 monitor/london_sajid_live.json
 monitor/london_sajid_persist.json
 monitor/london_sajid_trader.pid
+monitor/vsisa_live.json
 
 # ─── Strategy lab intermediates (regenerable) ──────────────────
 monitor/strategy_lab/_*.csv
