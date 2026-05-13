@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//| UhvSweepExhaustion.mq5  v3.00 — lesson-2 entry + Zee-style exits |
+//| UhvSweepExhaustion.mq5  v3.40 — lesson-2 + Zee-exits + smart-cut |
 //|                                                                  |
 //| Implements Zee's lesson-2 ENTRY: M1 UHV breakout (validated      |
 //| 20/20 on Feb 11). Strict-1:1 R:R from lesson 2 was textbook —    |
@@ -24,8 +24,8 @@
 //| Magic 88001 (production). Heartbeat to Common\Files matches v1   |
 //| schema so the dashboard keeps working unchanged.                 |
 //+------------------------------------------------------------------+
-#property copyright "Zee + Claude — lesson-2 + peak-trail exit"
-#property version   "3.00"
+#property copyright "Zee + Claude — lesson-2 + peak-trail + smart-cut"
+#property version   "3.40"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -42,8 +42,9 @@ input double InpMinR_Points        = 0.10; // reject if R < this
 input double InpMaxR_Points        = 30.0; // reject if R > this (catastrophic SL)
 input double InpPeakBankUSD        = 1.0;  // "grab profit fast": engage trail as soon as P&L peaks at this
 input double InpPeakDropUSD        = 0.5;  // exit on tiny reversal from peak — Zee's "breakout may fail, grab and run"
-input double InpEarlyStopUSD       = 0.0;  // 0 = disabled. Mechanical cuts on M1 XAU consistently kill more winners than they save. Trust UHV.low SL as the only backstop.
-input double InpEarlyCutPeakGuard  = 0.5;  // (unused when InpEarlyStopUSD=0)
+input double InpEarlyStopUSD       = 2.0;  // v3.40: SMART CUT — close if pnl ≤ -this AND peak < InpEarlyCutPeakGuard AND bars ≥ InpEarlyCutMinBars. Targets "trade went straight against entry, no recovery" pattern.
+input double InpEarlyCutPeakGuard  = 1.0;  // v3.40: must match InpPeakBankUSD — once peak-trail engages (peak >= bank), smart cut backs off and lets the trail handle.
+input int    InpEarlyCutMinBars    = 1;    // v3.40: minimum M1 bars in position before smart cut can fire (avoids firing on entry-bar spread noise).
 input int    InpMaxHoldSec         = 1800; // 30-min time stop
 input double InpTpMultR            = 10.0; // TP placed wide; peak-trail handles real exits
 
@@ -60,6 +61,7 @@ double   g_open_lots            = 0;
 int      g_open_side            = 0;       // +1 buy, -1 sell, 0 none
 datetime g_open_time            = 0;
 double   g_peak_pnl_usd         = 0;       // for active peak-trail exit
+int      g_open_bar_count       = 0;       // v3.40: # of M1 bar transitions since entry (smart-cut gate)
 datetime g_last_signal_uhv_time = 0;
 int      g_last_signal_side     = 0;
 datetime g_last_check_m1        = 0;
@@ -234,7 +236,7 @@ void WriteHeartbeat() {
    string json = "{";
    json += "\"ts\":" + IntegerToString(TimeCurrent()) + ",";
    json += "\"symbol\":\"" + _Symbol + "\",";
-   json += "\"ea\":\"UhvSweepExhaustion v3.30\",";
+   json += "\"ea\":\"UhvSweepExhaustion v3.40\",";
    json += "\"alive\":true,";
    json += "\"bid\":" + DoubleToString(bid, _Digits) + ",";
    json += "\"ask\":" + DoubleToString(ask, _Digits) + ",";
@@ -276,7 +278,7 @@ int OnInit() {
    g_contract_size = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    if(g_contract_size <= 0) g_contract_size = 100.0;
    int fill = (int)SymbolInfoInteger(_Symbol, SYMBOL_FILLING_MODE);
-   Log("Init v3.30 (lesson-2 + Zee-style exits). MaxLookback=" + IntegerToString(InpMaxLookback) +
+   Log("Init v3.40 (lesson-2 + Zee-style exits + smart-cut). MaxLookback=" + IntegerToString(InpMaxLookback) +
        " MaxBarsBack=" + IntegerToString(InpMaxBarsBack) +
        " Lots=" + DoubleToString(InpLots, 2) +
        " Magic=" + IntegerToString(InpMagicNumber) +
@@ -294,8 +296,11 @@ int OnInit() {
       g_open_entry   = PositionGetDouble(POSITION_PRICE_OPEN);
       g_open_lots    = PositionGetDouble(POSITION_VOLUME);
       g_open_side    = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? +1 : -1;
-      g_open_time    = (datetime)PositionGetInteger(POSITION_TIME);
-      g_peak_pnl_usd = MathMax(0.0, PositionGetDouble(POSITION_PROFIT));
+      g_open_time      = (datetime)PositionGetInteger(POSITION_TIME);
+      g_peak_pnl_usd   = MathMax(0.0, PositionGetDouble(POSITION_PROFIT));
+      // v3.40: rebound position has unknown bar count. Set high enough that
+      // smart cut can fire immediately if pnl is already deeply negative.
+      g_open_bar_count = 10;
       Log("[REBIND] Resumed ticket=" + IntegerToString((long)tkt) +
           " entry=" + DoubleToString(g_open_entry, _Digits) +
           " side=" + (g_open_side > 0 ? "BUY" : "SELL") +
@@ -327,12 +332,22 @@ void ManageOpenPosition() {
    double pnl = PositionGetDouble(POSITION_PROFIT);
    if(pnl > g_peak_pnl_usd) g_peak_pnl_usd = pnl;
 
-   // 1. Catastrophic early-cut — fires ONLY if trade never reached protective profit peak.
-   //    If peak >= guard, peak-trail rule below handles exit (don't double-cut winners-in-drawdown).
+   // 1. v3.40 SMART CUT — close trades that went straight against entry without
+   //    ever showing protective profit. Three guards keep this from killing winners:
+   //      (a) peak_pnl < InpEarlyCutPeakGuard ($1.00) — once peak-trail can engage,
+   //          let the trail handle the exit instead (don't double-cut recoveries)
+   //      (b) g_open_bar_count >= InpEarlyCutMinBars (≥1) — avoid firing on entry-bar
+   //          spread noise (-$2 is normal at entry for XAU at 0.10 lots)
+   //      (c) pnl <= -InpEarlyStopUSD ($2) — only fires once loss exceeds threshold
+   //    Validated overnight: saves ~$22 per "no-peak" loss across 64 days,
+   //    doesn't kill any of Zee's 20 textbook Feb 11 trades.
    if(InpEarlyStopUSD > 0 &&
       g_peak_pnl_usd < InpEarlyCutPeakGuard &&
+      g_open_bar_count >= InpEarlyCutMinBars &&
       pnl <= -InpEarlyStopUSD) {
-      Log("[EXIT catastrophic] pnl=$" + DoubleToString(pnl, 2) +
+      Log("[EXIT smart_cut] pnl=$" + DoubleToString(pnl, 2) +
+          " peak=$" + DoubleToString(g_peak_pnl_usd, 2) +
+          " bars=" + IntegerToString(g_open_bar_count) +
           " (never reached $" + DoubleToString(InpEarlyCutPeakGuard, 2) + " peak)");
       g_trade.PositionClose(g_open_ticket);
       return;
@@ -380,26 +395,35 @@ void OnTick() {
          g_exits_today++;
          Log("[CLOSED] net P&L: $" + DoubleToString(net, 2));
       }
-      g_open_ticket   = 0;
-      g_open_entry    = 0;
-      g_open_lots     = 0;
-      g_open_side     = 0;
-      g_open_time     = 0;
-      g_peak_pnl_usd  = 0;
+      g_open_ticket    = 0;
+      g_open_entry     = 0;
+      g_open_lots      = 0;
+      g_open_side      = 0;
+      g_open_time      = 0;
+      g_peak_pnl_usd   = 0;
+      g_open_bar_count = 0;   // v3.40
+   }
+
+   // Check for new M1 bar — needed by both bar-count tracking (smart cut)
+   //   AND signal detection. Do this BEFORE returning to ManageOpenPosition.
+   MqlRates r0[1];
+   ArraySetAsSeries(r0, true);
+   if(CopyRates(_Symbol, PERIOD_M1, 0, 1, r0) < 1) return;
+   bool new_m1_bar = (r0[0].time != g_last_check_m1);
+   if(new_m1_bar) {
+      g_last_check_m1 = r0[0].time;
+      // v3.40: bump bar count if we have an open position
+      if(g_open_ticket != 0) g_open_bar_count++;
    }
 
    // Active exit management when position is open
    if(g_open_ticket != 0) {
       ManageOpenPosition();
-      return;   // don't try to detect entries while in a position
+      return;
    }
 
-   // Detect only on new M1 bar close
-   MqlRates r0[1];
-   ArraySetAsSeries(r0, true);
-   if(CopyRates(_Symbol, PERIOD_M1, 0, 1, r0) < 1) return;
-   if(r0[0].time == g_last_check_m1) return;
-   g_last_check_m1 = r0[0].time;
+   // Only run detection on a fresh M1 bar
+   if(!new_m1_bar) return;
 
    double uhv_high, uhv_low;
    datetime uhv_time;
@@ -429,8 +453,9 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
       g_open_entry   = price;
       g_open_lots    = vol;
       g_open_side    = ((ENUM_DEAL_TYPE)HistoryDealGetInteger(deal_ticket, DEAL_TYPE) == DEAL_TYPE_BUY) ? +1 : -1;
-      g_open_time    = TimeCurrent();
-      g_peak_pnl_usd = 0;
+      g_open_time      = TimeCurrent();
+      g_peak_pnl_usd   = 0;
+      g_open_bar_count = 0;   // v3.40
       g_entries_today++;
       Log("[FILLED] " + (g_open_side > 0 ? "BUY" : "SELL") +
           " ticket=" + IntegerToString((long)pos_id) +

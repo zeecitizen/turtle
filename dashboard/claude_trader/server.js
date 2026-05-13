@@ -400,6 +400,37 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Overnight Work page — exposes ZEE_MORNING.md / OVERNIGHT_SUMMARY.md / v3_40_proposed_patch.md
+  if (url === '/morning') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'morning.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('morning.html missing: ' + e.message);
+    }
+    return;
+  }
+  if (url.startsWith('/api/morning/')) {
+    const docs = {
+      'ZEE_MORNING':            'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\ZEE_MORNING.md',
+      'OVERNIGHT_SUMMARY':      'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\OVERNIGHT_SUMMARY.md',
+      'v3_40_proposed_patch':   'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\v3_40_proposed_patch.md',
+    };
+    const name = url.replace('/api/morning/', '');
+    if (!docs[name]) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('not found'); return; }
+    try {
+      const md = fs.readFileSync(docs[name], 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(md);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('read err: ' + e.message);
+    }
+    return;
+  }
+
   // UhvSweepExhaustion live dashboard page
   if (url === '/uhv-sweep' || url === '/live') {
     try {
