@@ -13,8 +13,8 @@
 #property description "Export XAUUSD M1+H1 bars for Feb 11 reverse engineering"
 
 input string   InpSymbol     = "XAUUSD";
-input datetime InpFromUtc    = D'2026.02.01 00:00';   // wide default — covers Feb 11 + adjacent weeks for multi-day tuning
-input datetime InpToUtc      = D'2026.05.13 00:00';   // through today
+input datetime InpFromUtc    = D'2026.02.01 00:00';   // wide default — covers Feb 11 + adjacent weeks
+input datetime InpToUtc      = D'2026.05.14 00:00';   // extends through today (was 05.13)
 input string   InpM1FileName = "rev_eng_m1.csv";
 input string   InpH1FileName = "rev_eng_h1.csv";
 
