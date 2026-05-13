@@ -1,31 +1,24 @@
 //+------------------------------------------------------------------+
-//| UhvSweepExhaustion.mq5  v3.43 — Shano-rate detector relaxation   |
+//| UhvSweepExhaustion.mq5  v3.44 — pyramiding (up to N concurrent)  |
 //|                                                                  |
 //| Implements Zee's lesson-2 ENTRY: M1 UHV breakout (validated      |
 //| 20/20 on Feb 11). Strict-1:1 R:R from lesson 2 was textbook —    |
 //| in practice Zee banks small profits aggressively. v3 replaces    |
-//| the 1:1 TP with active peak-trail exit (proven $3/$1) + a 30-min |
-//| time stop. SL stays at UHV.low as catastrophic backstop.         |
+//| the 1:1 TP with active peak-trail exit + smart-cut.              |
 //|                                                                  |
-//| BUY logic (SELL mirrors):                                        |
-//|   1. Just-closed M1 bar is GREEN (close > open).                 |
-//|   2. Walk back ≤ MAX_LOOKBACK M1 bars; first bar whose high      |
-//|      ≥ breakout.close = swing high. Retracement is between       |
-//|      swing high and breakout.                                    |
-//|   3. UHV = highest-volume RED bar in retracement.                |
-//|   4. Confirm breakout.close > UHV.high AND breakout.vol <        |
-//|      UHV.vol.                                                    |
-//|   5. Fire BUY at market: SL = UHV.low, TP = entry + (entry-SL)   |
-//|      (1:1 R:R per lesson 2).                                     |
+//| v3.43 → v3.44 change: allow MULTIPLE concurrent positions.       |
+//|   Sim showed v3.43 detector finds Shano-rate signals (30/hr)     |
+//|   but one-position-at-a-time blocked 9 of her 18 fires because   |
+//|   the EA was holding an unrelated trade. Pyramiding to N=2 sim-  |
+//|   captures 14/18 (78%) vs 9/18 (50%); Feb 11 jumps to 20/20.     |
 //|                                                                  |
-//| Dedup: don't re-fire on the same UHV time + side until a new     |
-//|        UHV emerges.                                              |
+//| Each position has independent peak/trail/smart-cut state.        |
 //|                                                                  |
 //| Magic 88001 (production). Heartbeat to Common\Files matches v1   |
-//| schema so the dashboard keeps working unchanged.                 |
+//| schema for primary (newest) position; adds positions[] array.    |
 //+------------------------------------------------------------------+
-#property copyright "Zee + Claude — lesson-2 + smart-cut + broker-trail SL"
-#property version   "3.43"
+#property copyright "Zee + Claude — lesson-2 + smart-cut + broker-trail + pyramid"
+#property version   "3.44"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -33,21 +26,22 @@
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Entry: lesson-2 UHV breakout ──"
 input double InpLots               = 0.10;
-input int    InpMaxLookback        = 60;   // bars back to find swing high
-input int    InpMaxBarsBack        = 60;   // max bars from UHV to breakout
+input int    InpMaxLookback        = 60;
+input int    InpMaxBarsBack        = 60;
 input int    InpMagicNumber        = 88001;
+input int    InpMaxConcurrent      = 2;    // v3.44: max concurrent open positions
 
-input group "── Exit: Zee-style active management (NOT lesson-2 1:1) ──"
-input double InpMinR_Points        = 0.10; // reject if R < this
-input double InpMaxR_Points        = 30.0; // reject if R > this (catastrophic SL)
-input double InpPeakBankUSD        = 1.0;  // engage broker-side trail as soon as P&L peaks at this
-input double InpPeakDropUSD        = 0.5;  // SL locks profit at (peak - this); broker fills exactly here
-input double InpTrailUpdateStep    = 0.5;  // v3.42: only modify SL when peak grew this much from last lock (rate-limit)
-input double InpEarlyStopUSD       = 2.0;  // v3.42: SMART CUT — close if pnl ≤ -this AND peak < InpEarlyCutPeakGuard AND bars ≥ InpEarlyCutMinBars. Targets "trade went straight against entry, no recovery" pattern.
-input double InpEarlyCutPeakGuard  = 1.0;  // v3.42: must match InpPeakBankUSD — once peak-trail engages (peak >= bank), smart cut backs off and lets the trail handle.
-input int    InpEarlyCutMinBars    = 1;    // v3.42: minimum M1 bars in position before smart cut can fire (avoids firing on entry-bar spread noise).
-input int    InpMaxHoldSec         = 1800; // 30-min time stop
-input double InpTpMultR            = 10.0; // TP placed wide; peak-trail handles real exits
+input group "── Exit: Zee-style active management ──"
+input double InpMinR_Points        = 0.10;
+input double InpMaxR_Points        = 30.0;
+input double InpPeakBankUSD        = 1.0;
+input double InpPeakDropUSD        = 0.5;
+input double InpTrailUpdateStep    = 0.5;
+input double InpEarlyStopUSD       = 2.0;
+input double InpEarlyCutPeakGuard  = 1.0;
+input int    InpEarlyCutMinBars    = 1;
+input int    InpMaxHoldSec         = 1800;
+input double InpTpMultR            = 10.0;
 
 input group "── Logging ──"
 input bool   InpVerbose            = true;
@@ -56,25 +50,33 @@ input int    InpHeartbeatSec       = 5;
 input string InpStateFile          = "uhv_sweep_state.json";
 
 //── State ───────────────────────────────────────────────────────────
-ulong    g_open_ticket          = 0;
-double   g_open_entry           = 0;
-double   g_open_lots            = 0;
-int      g_open_side            = 0;       // +1 buy, -1 sell, 0 none
-datetime g_open_time            = 0;
-double   g_peak_pnl_usd         = 0;       // for active peak-trail exit
-double   g_locked_pnl_usd       = 0;       // v3.42: profit currently locked by broker-side trailing SL
-int      g_open_bar_count       = 0;       // v3.42: # of M1 bar transitions since entry (smart-cut gate)
-datetime g_last_signal_uhv_time = 0;   // (v3.42 informational only — no longer used to block fires)
-int      g_last_signal_side     = 0;   // (v3.42 informational only)
-datetime g_last_fire_time       = 0;   // v3.42: rate-limit min 2s between fires
-datetime g_last_check_m1        = 0;
-datetime g_last_heartbeat       = 0;
-int      g_signals_today        = 0;
-int      g_entries_today        = 0;
-int      g_exits_today          = 0;
-double   g_realized_today_usd   = 0;
-int      g_today_day            = 0;
-double   g_contract_size        = 100.0;
+#define MAX_POS_SLOTS 10
+
+struct PosState {
+   ulong    ticket;
+   double   entry;
+   double   lots;
+   int      side;            // +1 buy, -1 sell
+   datetime open_time;
+   double   peak_pnl_usd;
+   double   locked_pnl_usd;
+   int      bar_count;
+   datetime uhv_time;
+};
+
+PosState g_pos[MAX_POS_SLOTS];
+int      g_pos_count           = 0;
+
+datetime g_last_fire_time      = 0;
+int      g_pending_fires       = 0;   // orders sent, not yet acknowledged via OnTradeTransaction
+datetime g_last_check_m1       = 0;
+datetime g_last_heartbeat      = 0;
+int      g_signals_today       = 0;
+int      g_entries_today       = 0;
+int      g_exits_today         = 0;
+double   g_realized_today_usd  = 0;
+int      g_today_day           = 0;
+double   g_contract_size       = 100.0;
 
 CTrade g_trade;
 
@@ -96,7 +98,33 @@ void RollDailyCountersIfNeeded() {
    }
 }
 
-//── Detection: returns +1 buy, -1 sell, 0 none ───────────────────────
+int FindPosByTicket(ulong tkt) {
+   for(int i = 0; i < g_pos_count; i++) if(g_pos[i].ticket == tkt) return i;
+   return -1;
+}
+
+void RemovePosAt(int idx) {
+   if(idx < 0 || idx >= g_pos_count) return;
+   for(int j = idx; j < g_pos_count - 1; j++) g_pos[j] = g_pos[j + 1];
+   g_pos_count--;
+}
+
+bool AddPos(ulong tkt, double entry, double lots, int side, datetime open_time, datetime uhv_time, double init_peak = 0, int init_bar_count = 0) {
+   if(g_pos_count >= MAX_POS_SLOTS) return false;
+   g_pos[g_pos_count].ticket         = tkt;
+   g_pos[g_pos_count].entry          = entry;
+   g_pos[g_pos_count].lots           = lots;
+   g_pos[g_pos_count].side           = side;
+   g_pos[g_pos_count].open_time      = open_time;
+   g_pos[g_pos_count].peak_pnl_usd   = init_peak;
+   g_pos[g_pos_count].locked_pnl_usd = 0;
+   g_pos[g_pos_count].bar_count      = init_bar_count;
+   g_pos[g_pos_count].uhv_time       = uhv_time;
+   g_pos_count++;
+   return true;
+}
+
+//── Detection: returns +1 buy, -1 sell, 0 none (v3.43 relaxed) ──────
 int DetectSignal(double &out_uhv_high, double &out_uhv_low,
                  datetime &out_uhv_time, long &out_uhv_vol) {
    int bars_needed = InpMaxLookback + 5;
@@ -105,18 +133,15 @@ int DetectSignal(double &out_uhv_high, double &out_uhv_low,
    int got = CopyRates(_Symbol, PERIOD_M1, 0, bars_needed, rates);
    if(got < bars_needed) return 0;
 
-   // Breakout candle = just-closed bar (shift 1). Shift 0 is the forming bar.
    MqlRates bo = rates[1];
 
    // ── BUY ──
-   // v3.43 RELAX: drop bo.vol < uhv.vol (Shano fires on high-vol breakouts too)
-   //              and treat overlap bars as non-fatal (continue instead of break)
    if(IsGreenBar(bo)) {
       int  uhv_idx = -1;
       long uhv_vol = -1;
       for(int j = 2; j <= InpMaxLookback + 1 && j < got; j++) {
          MqlRates c = rates[j];
-         if(c.high >= bo.close) continue;   // skip overlap candidates, keep walking
+         if(c.high >= bo.close) continue;
          if(IsRedBar(c) && (long)c.tick_volume > uhv_vol) {
             uhv_idx = j;
             uhv_vol = (long)c.tick_volume;
@@ -135,7 +160,6 @@ int DetectSignal(double &out_uhv_high, double &out_uhv_low,
    }
 
    // ── SELL (mirror) ──
-   // v3.43 RELAX: same two relaxations as buy side.
    if(IsRedBar(bo)) {
       int  uhv_idx = -1;
       long uhv_vol = -1;
@@ -162,14 +186,13 @@ int DetectSignal(double &out_uhv_high, double &out_uhv_low,
    return 0;
 }
 
-//── Fire entry with SL+TP per lesson 2 (1:1 R:R) ───────────────────
+//── Fire entry with SL+TP. v3.44: gated by InpMaxConcurrent ─────────
+//   Race-safe: g_last_fire_time + g_pending_fires are bumped BEFORE
+//   the synchronous Buy/Sell call so consecutive ticks block immediately,
+//   and the pending counter caps total positions including in-flight orders
+//   (OnTradeTransaction decrements + adds to g_pos[]).
 void FireEntry(int side, double uhv_high, double uhv_low, datetime uhv_time, long uhv_vol) {
-   // v3.42: REMOVED forever-dedup on (UHV time, side). Shano scales in on the
-   //   same UHV setup multiple times per minute. The only constraints now are:
-   //     (a) no concurrent positions (one-at-a-time)
-   //     (b) min 2-second gap between fires (rate-limit, not signal-block)
-   // The peak-trail / smart-cut exits handle the per-trade lifecycle.
-   if(g_open_ticket != 0) return;
+   if((g_pos_count + g_pending_fires) >= InpMaxConcurrent) return;
    datetime now_t = TimeCurrent();
    if(g_last_fire_time != 0 && (now_t - g_last_fire_time) < 2) return;
 
@@ -182,7 +205,7 @@ void FireEntry(int side, double uhv_high, double uhv_low, datetime uhv_time, lon
       entry = ask;
       sl    = uhv_low;
       r     = entry - sl;
-      tp    = entry + r * InpTpMultR;  // wide TP — peak-trail handles real exit
+      tp    = entry + r * InpTpMultR;
       side_str = "BUY";
    } else {
       entry = bid;
@@ -194,19 +217,20 @@ void FireEntry(int side, double uhv_high, double uhv_low, datetime uhv_time, lon
 
    if(r < InpMinR_Points) {
       Log("[REJECT] R too small: " + DoubleToString(r, 2) + " < " + DoubleToString(InpMinR_Points, 2));
-      g_last_signal_uhv_time = uhv_time;  // suppress retries on this UHV
-      g_last_signal_side     = side;
       return;
    }
    if(r > InpMaxR_Points) {
       Log("[REJECT] R too large: " + DoubleToString(r, 2) + " > " + DoubleToString(InpMaxR_Points, 2));
-      g_last_signal_uhv_time = uhv_time;
-      g_last_signal_side     = side;
       return;
    }
 
    RollDailyCountersIfNeeded();
    g_signals_today++;
+
+   // RESERVE the slot BEFORE the Buy/Sell call so concurrent ticks see the
+   // cap and rate-limit immediately. OnTradeTransaction will decrement on fill.
+   g_last_fire_time = now_t;
+   g_pending_fires++;
 
    g_trade.SetExpertMagicNumber(InpMagicNumber);
    g_trade.SetTypeFillingBySymbol(_Symbol);
@@ -216,22 +240,24 @@ void FireEntry(int side, double uhv_high, double uhv_low, datetime uhv_time, lon
    else         ok = g_trade.Sell(InpLots, _Symbol, entry, sl, tp, InpLogPrefix);
 
    if(ok) {
-      g_last_signal_uhv_time = uhv_time;
-      g_last_signal_side     = side;
-      g_last_fire_time       = TimeCurrent();   // v3.42
       Log("[SIGNAL] " + side_str + " @ " + DoubleToString(entry, _Digits) +
           " SL=" + DoubleToString(sl, _Digits) +
           " TP=" + DoubleToString(tp, _Digits) +
           " R="  + DoubleToString(r, 2) +
           " UHV=" + TimeToString(uhv_time, TIME_DATE|TIME_MINUTES) +
-          " (uhv_vol=" + IntegerToString(uhv_vol) + ")");
+          " (uhv_vol=" + IntegerToString(uhv_vol) + ", concurrent=" + IntegerToString(g_pos_count) +
+          ", pending=" + IntegerToString(g_pending_fires) + ")");
+      // The actual PosState row is added in OnTradeTransaction when the deal fills.
    } else {
+      // Order rejected — release the reserved slot
+      g_pending_fires--;
+      if(g_pending_fires < 0) g_pending_fires = 0;
       Log("[ORDER_FAIL] retcode=" + IntegerToString(g_trade.ResultRetcode()) +
-          " " + g_trade.ResultComment());
+          " " + g_trade.ResultComment() + " (pending released)");
    }
 }
 
-//── Heartbeat (5s, OnTimer-driven, tick-independent) ───────────────
+//── Heartbeat ───────────────────────────────────────────────────────
 void WriteHeartbeat() {
    if((TimeCurrent() - g_last_heartbeat) < InpHeartbeatSec) return;
    g_last_heartbeat = TimeCurrent();
@@ -240,10 +266,18 @@ void WriteHeartbeat() {
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    RollDailyCountersIfNeeded();
 
+   // Aggregate PnL of all open positions
+   double total_open_pnl = 0;
+   for(int i = 0; i < g_pos_count; i++) {
+      if(PositionSelectByTicket(g_pos[i].ticket)) {
+         total_open_pnl += PositionGetDouble(POSITION_PROFIT);
+      }
+   }
+
    string json = "{";
    json += "\"ts\":" + IntegerToString(TimeCurrent()) + ",";
    json += "\"symbol\":\"" + _Symbol + "\",";
-   json += "\"ea\":\"UhvSweepExhaustion v3.43\",";
+   json += "\"ea\":\"UhvSweepExhaustion v3.44\",";
    json += "\"alive\":true,";
    json += "\"bid\":" + DoubleToString(bid, _Digits) + ",";
    json += "\"ask\":" + DoubleToString(ask, _Digits) + ",";
@@ -252,22 +286,45 @@ void WriteHeartbeat() {
    json += "\"entries_today\":" + IntegerToString(g_entries_today) + ",";
    json += "\"exits_today\":" + IntegerToString(g_exits_today) + ",";
    json += "\"realized_today_usd\":" + DoubleToString(g_realized_today_usd, 2) + ",";
-   json += "\"position_open\":" + (g_open_ticket != 0 ? "true" : "false") + ",";
-   if(g_open_ticket != 0) {
-      json += "\"open_ticket\":" + IntegerToString((long)g_open_ticket) + ",";
-      json += "\"open_entry\":"  + DoubleToString(g_open_entry, _Digits) + ",";
-      json += "\"open_side\":\"" + (g_open_side > 0 ? "BUY" : "SELL") + "\",";
-      json += "\"open_lots\":"   + DoubleToString(g_open_lots, 2) + ",";
-      if(PositionSelectByTicket(g_open_ticket)) {
+   json += "\"position_open\":" + (g_pos_count > 0 ? "true" : "false") + ",";
+   json += "\"open_count\":" + IntegerToString(g_pos_count) + ",";
+   json += "\"open_pnl_total\":" + DoubleToString(total_open_pnl, 2) + ",";
+
+   // Primary (newest) position for legacy dashboard compat
+   if(g_pos_count > 0) {
+      int idx = g_pos_count - 1;
+      json += "\"open_ticket\":" + IntegerToString((long)g_pos[idx].ticket) + ",";
+      json += "\"open_entry\":"  + DoubleToString(g_pos[idx].entry, _Digits) + ",";
+      json += "\"open_side\":\"" + (g_pos[idx].side > 0 ? "BUY" : "SELL") + "\",";
+      json += "\"open_lots\":"   + DoubleToString(g_pos[idx].lots, 2) + ",";
+      if(PositionSelectByTicket(g_pos[idx].ticket)) {
          json += "\"open_pnl\":" + DoubleToString(PositionGetDouble(POSITION_PROFIT), 2) + ",";
          json += "\"open_sl\":"  + DoubleToString(PositionGetDouble(POSITION_SL), _Digits) + ",";
          json += "\"open_tp\":"  + DoubleToString(PositionGetDouble(POSITION_TP), _Digits) + ",";
       }
    }
+
+   // Per-position array (v3.44)
+   json += "\"positions\":[";
+   for(int i = 0; i < g_pos_count; i++) {
+      if(i > 0) json += ",";
+      double p_pnl = 0;
+      if(PositionSelectByTicket(g_pos[i].ticket)) p_pnl = PositionGetDouble(POSITION_PROFIT);
+      json += "{\"ticket\":" + IntegerToString((long)g_pos[i].ticket) +
+              ",\"side\":\"" + (g_pos[i].side > 0 ? "BUY" : "SELL") + "\"" +
+              ",\"entry\":" + DoubleToString(g_pos[i].entry, _Digits) +
+              ",\"pnl\":" + DoubleToString(p_pnl, 2) +
+              ",\"peak\":" + DoubleToString(g_pos[i].peak_pnl_usd, 2) +
+              ",\"locked\":" + DoubleToString(g_pos[i].locked_pnl_usd, 2) +
+              ",\"bars\":" + IntegerToString(g_pos[i].bar_count) + "}";
+   }
+   json += "],";
+
    json += "\"params\":{";
    json += "\"lots\":"     + DoubleToString(InpLots, 2) + ",";
    json += "\"max_lookback\":" + IntegerToString(InpMaxLookback) + ",";
    json += "\"max_bars_back\":" + IntegerToString(InpMaxBarsBack) + ",";
+   json += "\"max_concurrent\":" + IntegerToString(InpMaxConcurrent) + ",";
    json += "\"min_r_pts\":" + DoubleToString(InpMinR_Points, 2) + ",";
    json += "\"max_r_pts\":" + DoubleToString(InpMaxR_Points, 2);
    json += "}";
@@ -280,40 +337,35 @@ void WriteHeartbeat() {
    }
 }
 
-//── OnInit: amnesia recovery + timer setup ──────────────────────────
+//── OnInit: amnesia recovery ────────────────────────────────────────
 int OnInit() {
    g_contract_size = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    if(g_contract_size <= 0) g_contract_size = 100.0;
    int fill = (int)SymbolInfoInteger(_Symbol, SYMBOL_FILLING_MODE);
-   Log("Init v3.43 (detector relax: drop vol-check + non-fatal lookback). MaxLookback=" + IntegerToString(InpMaxLookback) +
-       " MaxBarsBack=" + IntegerToString(InpMaxBarsBack) +
-       " Lots=" + DoubleToString(InpLots, 2) +
+   Log("Init v3.44 (pyramid, max_concurrent=" + IntegerToString(InpMaxConcurrent) + "). " +
+       "Lots=" + DoubleToString(InpLots, 2) +
        " Magic=" + IntegerToString(InpMagicNumber) +
-       " Filling: FOK=" + ((fill & SYMBOL_FILLING_FOK)?"Y":"N") +
-       " IOC=" + ((fill & SYMBOL_FILLING_IOC)?"Y":"N"));
+       " Filling: FOK=" + (((fill & SYMBOL_FILLING_FOK) != 0)?"Y":"N") +
+       " IOC=" + (((fill & SYMBOL_FILLING_IOC) != 0)?"Y":"N"));
 
-   // Amnesia recovery: scan for existing position with our magic
+   g_pos_count = 0;
+   // Rebind ALL existing positions with our magic
    for(int i = 0; i < PositionsTotal(); i++) {
       ulong tkt = PositionGetTicket(i);
       if(tkt == 0) continue;
       if(!PositionSelectByTicket(tkt)) continue;
       if(PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
       if(PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
-      g_open_ticket  = tkt;
-      g_open_entry   = PositionGetDouble(POSITION_PRICE_OPEN);
-      g_open_lots    = PositionGetDouble(POSITION_VOLUME);
-      g_open_side    = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? +1 : -1;
-      g_open_time      = (datetime)PositionGetInteger(POSITION_TIME);
-      g_peak_pnl_usd   = MathMax(0.0, PositionGetDouble(POSITION_PROFIT));
-      g_locked_pnl_usd = 0;   // v3.42 — let trail re-lock from scratch
-      // v3.42: rebound position has unknown bar count. Set high enough that
-      // smart cut can fire immediately if pnl is already deeply negative.
-      g_open_bar_count = 10;
+      double entry = PositionGetDouble(POSITION_PRICE_OPEN);
+      double lots  = PositionGetDouble(POSITION_VOLUME);
+      int    side  = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? +1 : -1;
+      datetime ot  = (datetime)PositionGetInteger(POSITION_TIME);
+      double peak  = MathMax(0.0, PositionGetDouble(POSITION_PROFIT));
+      AddPos(tkt, entry, lots, side, ot, 0, peak, /*init_bar_count=*/10);
       Log("[REBIND] Resumed ticket=" + IntegerToString((long)tkt) +
-          " entry=" + DoubleToString(g_open_entry, _Digits) +
-          " side=" + (g_open_side > 0 ? "BUY" : "SELL") +
-          " lots=" + DoubleToString(g_open_lots, 2));
-      break;
+          " entry=" + DoubleToString(entry, _Digits) +
+          " side=" + (side > 0 ? "BUY" : "SELL") +
+          " lots=" + DoubleToString(lots, 2));
    }
 
    EventSetTimer(InpHeartbeatSec > 0 ? InpHeartbeatSec : 5);
@@ -325,150 +377,125 @@ void OnDeinit(const int reason) {
    Log("Deinit reason=" + IntegerToString(reason));
 }
 
-//── OnTimer: heartbeat (tick-independent) ──────────────────────────
 void OnTimer() {
    WriteHeartbeat();
 }
 
-//── Active exit: peak-trail + time stop. Per-tick when position open.
-//   Models Zee's actual exit behavior: bank small profits aggressively,
-//   let runners run with $1 drawdown trail, cap holds at 30 min.
-void ManageOpenPosition() {
-   if(g_open_ticket == 0) return;
-   if(!PositionSelectByTicket(g_open_ticket)) return;
+//── Manage ONE position: peak/trail/smart-cut/time-stop ─────────────
+//   Returns true if position was closed (caller should prune array).
+//   MQL5 doesn't allow `PosState &p = g_pos[pi]`, so we index directly.
+bool ManageOne(int pi) {
+   if(!PositionSelectByTicket(g_pos[pi].ticket)) return true;
 
    double pnl = PositionGetDouble(POSITION_PROFIT);
-   if(pnl > g_peak_pnl_usd) g_peak_pnl_usd = pnl;
+   if(pnl > g_pos[pi].peak_pnl_usd) g_pos[pi].peak_pnl_usd = pnl;
 
-   // 1. v3.42 SMART CUT — close trades that went straight against entry without
-   //    ever showing protective profit. Three guards keep this from killing winners:
-   //      (a) peak_pnl < InpEarlyCutPeakGuard ($1.00) — once peak-trail can engage,
-   //          let the trail handle the exit instead (don't double-cut recoveries)
-   //      (b) g_open_bar_count >= InpEarlyCutMinBars (≥1) — avoid firing on entry-bar
-   //          spread noise (-$2 is normal at entry for XAU at 0.10 lots)
-   //      (c) pnl <= -InpEarlyStopUSD ($2) — only fires once loss exceeds threshold
-   //    Validated overnight: saves ~$22 per "no-peak" loss across 64 days,
-   //    doesn't kill any of Zee's 20 textbook Feb 11 trades.
+   // 1. SMART CUT
    if(InpEarlyStopUSD > 0 &&
-      g_peak_pnl_usd < InpEarlyCutPeakGuard &&
-      g_open_bar_count >= InpEarlyCutMinBars &&
+      g_pos[pi].peak_pnl_usd < InpEarlyCutPeakGuard &&
+      g_pos[pi].bar_count >= InpEarlyCutMinBars &&
       pnl <= -InpEarlyStopUSD) {
-      Log("[EXIT smart_cut] pnl=$" + DoubleToString(pnl, 2) +
-          " peak=$" + DoubleToString(g_peak_pnl_usd, 2) +
-          " bars=" + IntegerToString(g_open_bar_count) +
-          " (never reached $" + DoubleToString(InpEarlyCutPeakGuard, 2) + " peak)");
-      g_trade.PositionClose(g_open_ticket);
-      return;
+      Log("[EXIT smart_cut] tkt=" + IntegerToString((long)g_pos[pi].ticket) +
+          " pnl=$" + DoubleToString(pnl, 2) +
+          " peak=$" + DoubleToString(g_pos[pi].peak_pnl_usd, 2) +
+          " bars=" + IntegerToString(g_pos[pi].bar_count));
+      g_trade.PositionClose(g_pos[pi].ticket);
+      return true;
    }
 
    // 2. Time stop
    datetime now = TimeCurrent();
-   if(InpMaxHoldSec > 0 && (now - g_open_time) >= InpMaxHoldSec) {
-      Log("[EXIT time_stop] pnl=$" + DoubleToString(pnl, 2) +
-          " peak=$" + DoubleToString(g_peak_pnl_usd, 2) +
-          " held=" + IntegerToString((int)(now - g_open_time)) + "s");
-      g_trade.PositionClose(g_open_ticket);
-      return;
+   if(InpMaxHoldSec > 0 && (now - g_pos[pi].open_time) >= InpMaxHoldSec) {
+      Log("[EXIT time_stop] tkt=" + IntegerToString((long)g_pos[pi].ticket) +
+          " pnl=$" + DoubleToString(pnl, 2));
+      g_trade.PositionClose(g_pos[pi].ticket);
+      return true;
    }
 
-   // 3. v3.42 BROKER-SIDE TRAILING SL — once peak hits bank threshold, lock
-   //    (peak - drop) USD profit as a broker-side stop loss. Broker fills
-   //    exactly at the locked price regardless of tick gaps that previously
-   //    caused 1-2 USD slippage on fast reversals (the Shano-vs-EA gap).
-   if(g_peak_pnl_usd >= InpPeakBankUSD) {
-      double target_lock = g_peak_pnl_usd - InpPeakDropUSD;
-      if(target_lock > g_locked_pnl_usd + InpTrailUpdateStep - 1e-9) {
-         double pnl_per_point = g_open_lots * g_contract_size;  // e.g. 0.10 * 100 = $10/pt for XAUUSD
+   // 3. Broker-side trailing SL
+   if(g_pos[pi].peak_pnl_usd >= InpPeakBankUSD) {
+      double target_lock = g_pos[pi].peak_pnl_usd - InpPeakDropUSD;
+      if(target_lock > g_pos[pi].locked_pnl_usd + InpTrailUpdateStep - 1e-9) {
+         double pnl_per_point = g_pos[pi].lots * g_contract_size;
          if(pnl_per_point > 0) {
             double sl_distance_pts = target_lock / pnl_per_point;
             double new_sl;
-            if(g_open_side > 0) {
-               new_sl = g_open_entry + sl_distance_pts;
-            } else {
-               new_sl = g_open_entry - sl_distance_pts;
-            }
+            if(g_pos[pi].side > 0) new_sl = g_pos[pi].entry + sl_distance_pts;
+            else                   new_sl = g_pos[pi].entry - sl_distance_pts;
             new_sl = NormalizeDouble(new_sl, _Digits);
             double cur_tp = PositionGetDouble(POSITION_TP);
             double cur_sl = PositionGetDouble(POSITION_SL);
-            // Only modify if the new SL improves (locks more profit)
-            bool better = (g_open_side > 0 && new_sl > cur_sl) || (g_open_side < 0 && new_sl < cur_sl);
+            bool better = (g_pos[pi].side > 0 && new_sl > cur_sl) || (g_pos[pi].side < 0 && new_sl < cur_sl);
             if(better) {
-               if(g_trade.PositionModify(g_open_ticket, new_sl, cur_tp)) {
-                  g_locked_pnl_usd = target_lock;
-                  Log("[TRAIL_LOCK] peak=$" + DoubleToString(g_peak_pnl_usd, 2) +
+               if(g_trade.PositionModify(g_pos[pi].ticket, new_sl, cur_tp)) {
+                  g_pos[pi].locked_pnl_usd = target_lock;
+                  Log("[TRAIL_LOCK] tkt=" + IntegerToString((long)g_pos[pi].ticket) +
+                      " peak=$" + DoubleToString(g_pos[pi].peak_pnl_usd, 2) +
                       " locked=$" + DoubleToString(target_lock, 2) +
                       " sl=" + DoubleToString(new_sl, _Digits));
                } else {
-                  // Failed modify: fall back to immediate close on big drawdown
-                  if(pnl <= (g_peak_pnl_usd - InpPeakDropUSD * 4)) {
-                     Log("[EXIT fallback] PositionModify failed, pnl=$" + DoubleToString(pnl, 2));
-                     g_trade.PositionClose(g_open_ticket);
-                     return;
+                  if(pnl <= (g_pos[pi].peak_pnl_usd - InpPeakDropUSD * 4)) {
+                     Log("[EXIT fallback] tkt=" + IntegerToString((long)g_pos[pi].ticket) +
+                         " modify failed, pnl=$" + DoubleToString(pnl, 2));
+                     g_trade.PositionClose(g_pos[pi].ticket);
+                     return true;
                   }
                }
             }
          }
       }
    }
+   return false;
 }
 
-//── OnTick: detect on every new M1 bar close ──────────────────────
-void OnTick() {
-   // Reconcile open position state (handles SL/TP closes which fire silently)
-   if(g_open_ticket != 0 && !PositionSelectByTicket(g_open_ticket)) {
-      // Position closed (TP/SL hit or active exit). Look up last closed deal for P&L.
-      Log("[CLOSED] ticket=" + IntegerToString((long)g_open_ticket) +
-          " peak_was=$" + DoubleToString(g_peak_pnl_usd, 2));
-      // Pull realized P&L from history
-      if(HistorySelectByPosition(g_open_ticket)) {
-         double total_profit = 0, total_swap = 0, total_comm = 0;
-         for(int i = 0; i < HistoryDealsTotal(); i++) {
-            ulong dt = HistoryDealGetTicket(i);
-            if(dt == 0) continue;
-            total_profit += HistoryDealGetDouble(dt, DEAL_PROFIT);
-            total_swap   += HistoryDealGetDouble(dt, DEAL_SWAP);
-            total_comm   += HistoryDealGetDouble(dt, DEAL_COMMISSION);
+//── Reconcile closed positions: scan g_pos[], log & prune any whose
+//   ticket no longer exists in MT5.
+void ReconcileClosed() {
+   for(int i = g_pos_count - 1; i >= 0; i--) {
+      if(!PositionSelectByTicket(g_pos[i].ticket)) {
+         // Position closed (SL/TP/manual). Pull realized P&L from history.
+         Log("[CLOSED] tkt=" + IntegerToString((long)g_pos[i].ticket) +
+             " peak_was=$" + DoubleToString(g_pos[i].peak_pnl_usd, 2));
+         if(HistorySelectByPosition(g_pos[i].ticket)) {
+            double total_profit = 0, total_swap = 0, total_comm = 0;
+            for(int k = 0; k < HistoryDealsTotal(); k++) {
+               ulong dt = HistoryDealGetTicket(k);
+               if(dt == 0) continue;
+               total_profit += HistoryDealGetDouble(dt, DEAL_PROFIT);
+               total_swap   += HistoryDealGetDouble(dt, DEAL_SWAP);
+               total_comm   += HistoryDealGetDouble(dt, DEAL_COMMISSION);
+            }
+            double net = total_profit + total_swap + total_comm;
+            g_realized_today_usd += net;
+            g_exits_today++;
+            Log("[CLOSED] tkt=" + IntegerToString((long)g_pos[i].ticket) +
+                " net P&L: $" + DoubleToString(net, 2));
          }
-         double net = total_profit + total_swap + total_comm;
-         g_realized_today_usd += net;
-         g_exits_today++;
-         Log("[CLOSED] net P&L: $" + DoubleToString(net, 2));
+         RemovePosAt(i);
       }
-      g_open_ticket    = 0;
-      g_open_entry     = 0;
-      g_open_lots      = 0;
-      g_open_side      = 0;
-      g_open_time      = 0;
-      g_peak_pnl_usd   = 0;
-      g_locked_pnl_usd = 0;   // v3.42
-      g_open_bar_count = 0;   // v3.42
    }
+}
 
-   // Check for new M1 bar — needed by both bar-count tracking (smart cut)
-   //   AND signal detection. Do this BEFORE returning to ManageOpenPosition.
-   MqlRates r0[1];
+void OnTick() {
+   ReconcileClosed();
+
+   // Check for new M1 bar — needed for bar-count tracking (smart-cut gate)
+   MqlRates r0[];
    ArraySetAsSeries(r0, true);
    if(CopyRates(_Symbol, PERIOD_M1, 0, 1, r0) < 1) return;
    bool new_m1_bar = (r0[0].time != g_last_check_m1);
    if(new_m1_bar) {
       g_last_check_m1 = r0[0].time;
-      // v3.42: bump bar count if we have an open position
-      if(g_open_ticket != 0) g_open_bar_count++;
+      for(int i = 0; i < g_pos_count; i++) g_pos[i].bar_count++;
    }
 
-   // Active exit management when position is open
-   if(g_open_ticket != 0) {
-      ManageOpenPosition();
-      return;
+   // Manage every open position
+   for(int i = g_pos_count - 1; i >= 0; i--) {
+      if(ManageOne(i)) RemovePosAt(i);
    }
 
-   // v3.42: detect on EVERY tick when no position open (was: only new M1 bar).
-   //   The detector still reads bar shift 1 (the just-closed bar), so the
-   //   *signal* only changes on new bars — but checking every tick means we
-   //   fire immediately after exit instead of waiting up to 60s for the
-   //   next bar close. Combined with removed UHV-dedup, this lets the EA
-   //   rapid-fire on the same setup like Shano does.
-
+   // Detect + fire new entry if capacity remaining
+   if(g_pos_count >= InpMaxConcurrent) return;
    double uhv_high, uhv_low;
    datetime uhv_time;
    long uhv_vol;
@@ -476,7 +503,7 @@ void OnTick() {
    if(sig != 0) FireEntry(sig, uhv_high, uhv_low, uhv_time, uhv_vol);
 }
 
-//── OnTradeTransaction: track fills for state update ──────────────
+//── OnTradeTransaction: track fills to add new PosState rows ──────
 void OnTradeTransaction(const MqlTradeTransaction &trans,
                         const MqlTradeRequest &req,
                         const MqlTradeResult &res) {
@@ -493,18 +520,17 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
    double vol   = HistoryDealGetDouble(deal_ticket, DEAL_VOLUME);
 
    if(entry_type == DEAL_ENTRY_IN) {
-      g_open_ticket  = pos_id;
-      g_open_entry   = price;
-      g_open_lots    = vol;
-      g_open_side    = ((ENUM_DEAL_TYPE)HistoryDealGetInteger(deal_ticket, DEAL_TYPE) == DEAL_TYPE_BUY) ? +1 : -1;
-      g_open_time       = TimeCurrent();
-      g_peak_pnl_usd    = 0;
-      g_locked_pnl_usd  = 0;   // v3.42
-      g_open_bar_count  = 0;   // v3.42
+      // Release the pending-fires slot now that the order is acknowledged
+      if(g_pending_fires > 0) g_pending_fires--;
+      // Skip if already tracked (defensive — should not happen)
+      if(FindPosByTicket(pos_id) >= 0) return;
+      int side = ((ENUM_DEAL_TYPE)HistoryDealGetInteger(deal_ticket, DEAL_TYPE) == DEAL_TYPE_BUY) ? +1 : -1;
+      AddPos(pos_id, price, vol, side, TimeCurrent(), 0, 0, 0);
       g_entries_today++;
-      Log("[FILLED] " + (g_open_side > 0 ? "BUY" : "SELL") +
+      Log("[FILLED] " + (side > 0 ? "BUY" : "SELL") +
           " ticket=" + IntegerToString((long)pos_id) +
           " @ " + DoubleToString(price, _Digits) +
-          " lots=" + DoubleToString(vol, 2));
+          " lots=" + DoubleToString(vol, 2) +
+          " (open_count=" + IntegerToString(g_pos_count) + ", pending=" + IntegerToString(g_pending_fires) + ")");
    }
 }
