@@ -1,35 +1,48 @@
 //+------------------------------------------------------------------+
-//| UhvSweepExhaustion.mq5  v3.44 — pyramiding (up to N concurrent)  |
+//| UhvSweepExhaustion.mq5  v3.48 — PROBE-to-trade (Shano's method)  |
 //|                                                                  |
 //| Implements Zee's lesson-2 ENTRY: M1 UHV breakout (validated      |
-//| 20/20 on Feb 11). Strict-1:1 R:R from lesson 2 was textbook —    |
-//| in practice Zee banks small profits aggressively. v3 replaces    |
-//| the 1:1 TP with active peak-trail exit + smart-cut.              |
+//| 20/20 on Feb 11), fired on EVERY breakout (every few minutes).   |
 //|                                                                  |
-//| v3.43 → v3.44 change: allow MULTIPLE concurrent positions.       |
-//|   Sim showed v3.43 detector finds Shano-rate signals (30/hr)     |
-//|   but one-position-at-a-time blocked 9 of her 18 fires because   |
-//|   the EA was holding an unrelated trade. Pyramiding to N=2 sim-  |
-//|   captures 14/18 (78%) vs 9/18 (50%); Feb 11 jumps to 20/20.     |
+//| v3.47 → v3.48: add the PROBE. Live trading showed the relaxed    |
+//|   detector fires Shano-rate but at 32% WR — trades come in       |
+//|   regime streaks (win-run in trend, loss-run in chop). Shano     |
+//|   handles this with a 0.01 PROBE: fire on every breakout tiny,   |
+//|   scale to full 0.40 ONLY when the probe confirms momentum is    |
+//|   real. Chop → probe fails for ~$1, never commits. Trend → probe |
+//|   confirms in seconds, commits big.                              |
 //|                                                                  |
-//| Each position has independent peak/trail/smart-cut state.        |
+//|   PROBE  : InpProbeLots (0.01), broker SL at -InpProbeFailUSD.   |
+//|     confirm: price moves +InpProbeConfirmPts in favor → close    |
+//|              probe, open InpRealLots real trade.                 |
+//|     fail  : pnl <= -InpProbeFailUSD OR InpProbeTimeoutSec elapsed |
+//|             → close probe, done.                                 |
+//|   REAL   : InpRealLots (0.40), resting smart-cut SL + trail-lock |
+//|            (all $ thresholds scale by lots/0.10 → constant pts). |
 //|                                                                  |
-//| Magic 88001 (production). Heartbeat to Common\Files matches v1   |
-//| schema for primary (newest) position; adds positions[] array.    |
+//| Magic 88001 (production). Heartbeat positions[] now tags probe.  |
 //+------------------------------------------------------------------+
-#property copyright "Zee + Claude — lesson-2 + smart-cut + broker-trail + pyramid"
-#property version   "3.44"
+#property copyright "Zee + Claude — lesson-2 + probe-to-trade + smart-cut + trail"
+#property version   "3.48"
 #property strict
 
 #include <Trade/Trade.mqh>
 
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Entry: lesson-2 UHV breakout ──"
-input double InpLots               = 0.10;
+input double InpLots               = 0.10;  // (legacy — probe/real lots below override actual sizing)
 input int    InpMaxLookback        = 60;
 input int    InpMaxBarsBack        = 60;
 input int    InpMagicNumber        = 88001;
-input int    InpMaxConcurrent      = 2;    // v3.44: max concurrent open positions
+input int    InpMaxConcurrent      = 2;    // v3.44: max concurrent open positions (probes + reals combined)
+input double InpMaxDailyLossUSD    = 300.0; // v3.46: CIRCUIT BREAKER — stop firing for the rest of the broker day when realized loss exceeds this. 0 = disabled.
+
+input group "── Probe-to-trade (v3.48 — Shano's method) ──"
+input double InpProbeLots          = 0.01;  // probe size — fired on every UHV breakout
+input double InpRealLots           = 0.40;  // real-trade size after a probe confirms
+input double InpProbeConfirmPts    = 0.45;  // probe CONFIRMS (→ scale to real) when price moves this many points in favor
+input double InpProbeFailUSD       = 3.0;   // probe FAILS (closes) at this loss — also placed as a resting broker SL
+input int    InpProbeTimeoutSec    = 50;    // probe FAILS (closes) after this many seconds if not yet confirmed
 
 input group "── Exit: Zee-style active management ──"
 input double InpMinR_Points        = 0.10;
@@ -37,9 +50,10 @@ input double InpMaxR_Points        = 30.0;
 input double InpPeakBankUSD        = 1.0;
 input double InpPeakDropUSD        = 0.5;
 input double InpTrailUpdateStep    = 0.5;
-input double InpEarlyStopUSD       = 2.0;
+input double InpEarlyStopUSD       = 4.0;  // v3.45: was 2.0; bumped to clear spread noise (~$1.40-$2)
 input double InpEarlyCutPeakGuard  = 1.0;
-input int    InpEarlyCutMinBars    = 1;
+input int    InpEarlyCutMinBars    = 0;    // v3.45: deprecated (left for compat); seconds gate replaces it
+input int    InpEarlyCutMinSec     = 3;    // v3.45: smart-cut waits this many seconds after entry (lets spread settle, fires fast)
 input int    InpMaxHoldSec         = 1800;
 input double InpTpMultR            = 10.0;
 
@@ -62,6 +76,7 @@ struct PosState {
    double   locked_pnl_usd;
    int      bar_count;
    datetime uhv_time;
+   bool     is_probe;        // v3.48: true while this is a 0.01 probe awaiting confirm/fail
 };
 
 PosState g_pos[MAX_POS_SLOTS];
@@ -109,7 +124,7 @@ void RemovePosAt(int idx) {
    g_pos_count--;
 }
 
-bool AddPos(ulong tkt, double entry, double lots, int side, datetime open_time, datetime uhv_time, double init_peak = 0, int init_bar_count = 0) {
+bool AddPos(ulong tkt, double entry, double lots, int side, datetime open_time, datetime uhv_time, bool is_probe, double init_peak = 0, int init_bar_count = 0) {
    if(g_pos_count >= MAX_POS_SLOTS) return false;
    g_pos[g_pos_count].ticket         = tkt;
    g_pos[g_pos_count].entry          = entry;
@@ -120,6 +135,7 @@ bool AddPos(ulong tkt, double entry, double lots, int side, datetime open_time, 
    g_pos[g_pos_count].locked_pnl_usd = 0;
    g_pos[g_pos_count].bar_count      = init_bar_count;
    g_pos[g_pos_count].uhv_time       = uhv_time;
+   g_pos[g_pos_count].is_probe       = is_probe;
    g_pos_count++;
    return true;
 }
@@ -186,32 +202,40 @@ int DetectSignal(double &out_uhv_high, double &out_uhv_low,
    return 0;
 }
 
-//── Fire entry with SL+TP. v3.44: gated by InpMaxConcurrent ─────────
-//   Race-safe: g_last_fire_time + g_pending_fires are bumped BEFORE
-//   the synchronous Buy/Sell call so consecutive ticks block immediately,
-//   and the pending counter caps total positions including in-flight orders
-//   (OnTradeTransaction decrements + adds to g_pos[]).
+//── Fire a PROBE on a UHV breakout. v3.48 — every breakout fires a
+//   0.01 probe; it only scales to a real trade if it confirms momentum.
+//   Race-safe: g_last_fire_time + g_pending_fires bumped BEFORE the
+//   synchronous order so concurrent ticks block immediately.
 void FireEntry(int side, double uhv_high, double uhv_low, datetime uhv_time, long uhv_vol) {
    if((g_pos_count + g_pending_fires) >= InpMaxConcurrent) return;
    datetime now_t = TimeCurrent();
    if(g_last_fire_time != 0 && (now_t - g_last_fire_time) < 2) return;
+   // v3.46: CIRCUIT BREAKER — stop firing once daily realized loss hits the cap.
+   if(InpMaxDailyLossUSD > 0 && g_realized_today_usd <= -InpMaxDailyLossUSD) {
+      if(g_last_fire_time != 0 && (now_t - g_last_fire_time) >= 60) {
+         Log("[CIRCUIT_BREAKER] realized=$" + DoubleToString(g_realized_today_usd, 2) +
+             " <= -$" + DoubleToString(InpMaxDailyLossUSD, 2) + " — firing disabled for today");
+         g_last_fire_time = now_t;  // throttle log to once/min
+      }
+      return;
+   }
 
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   double entry, sl, tp, r;
+   double entry, sl, r, cat_sl;
    string side_str;
 
+   // R measured against the catastrophic UHV level — that's what the
+   // min/max-R reject filter validates (setup quality).
    if(side > 0) {
-      entry = ask;
-      sl    = uhv_low;
-      r     = entry - sl;
-      tp    = entry + r * InpTpMultR;
+      entry  = ask;
+      cat_sl = uhv_low;
+      r      = entry - cat_sl;
       side_str = "BUY";
    } else {
-      entry = bid;
-      sl    = uhv_high;
-      r     = sl - entry;
-      tp    = entry - r * InpTpMultR;
+      entry  = bid;
+      cat_sl = uhv_high;
+      r      = cat_sl - entry;
       side_str = "SELL";
    }
 
@@ -224,11 +248,19 @@ void FireEntry(int side, double uhv_high, double uhv_low, datetime uhv_time, lon
       return;
    }
 
+   // v3.48: PROBE — tiny 0.01 position. Resting broker SL at -InpProbeFailUSD
+   //   (no chase slippage). No TP — the probe is closed by confirm/fail logic
+   //   in ManageOne, not by a take-profit.
+   double probe_ppp = InpProbeLots * g_contract_size;   // $/point for the probe
+   double fail_pts  = (probe_ppp > 0) ? (InpProbeFailUSD / probe_ppp) : r;
+   if(side > 0) sl = entry - fail_pts;
+   else         sl = entry + fail_pts;
+   sl = NormalizeDouble(sl, _Digits);
+
    RollDailyCountersIfNeeded();
    g_signals_today++;
 
-   // RESERVE the slot BEFORE the Buy/Sell call so concurrent ticks see the
-   // cap and rate-limit immediately. OnTradeTransaction will decrement on fill.
+   // RESERVE the slot BEFORE the order so concurrent ticks see the cap.
    g_last_fire_time = now_t;
    g_pending_fires++;
 
@@ -236,28 +268,88 @@ void FireEntry(int side, double uhv_high, double uhv_low, datetime uhv_time, lon
    g_trade.SetTypeFillingBySymbol(_Symbol);
 
    bool ok;
-   if(side > 0) ok = g_trade.Buy (InpLots, _Symbol, entry, sl, tp, InpLogPrefix);
-   else         ok = g_trade.Sell(InpLots, _Symbol, entry, sl, tp, InpLogPrefix);
+   if(side > 0) ok = g_trade.Buy (InpProbeLots, _Symbol, entry, sl, 0.0, InpLogPrefix + "_probe");
+   else         ok = g_trade.Sell(InpProbeLots, _Symbol, entry, sl, 0.0, InpLogPrefix + "_probe");
 
    if(ok) {
-      Log("[SIGNAL] " + side_str + " @ " + DoubleToString(entry, _Digits) +
-          " SL=" + DoubleToString(sl, _Digits) +
-          " TP=" + DoubleToString(tp, _Digits) +
-          " R="  + DoubleToString(r, 2) +
+      Log("[PROBE] " + side_str + " " + DoubleToString(InpProbeLots, 2) + " @ " + DoubleToString(entry, _Digits) +
+          " SL=" + DoubleToString(sl, _Digits) + " (-$" + DoubleToString(InpProbeFailUSD, 2) + ")" +
+          " confirm@+" + DoubleToString(InpProbeConfirmPts, 2) + "pt" +
+          " R=" + DoubleToString(r, 2) + " catSL=" + DoubleToString(cat_sl, _Digits) +
           " UHV=" + TimeToString(uhv_time, TIME_DATE|TIME_MINUTES) +
           " (uhv_vol=" + IntegerToString(uhv_vol) + ", concurrent=" + IntegerToString(g_pos_count) +
           ", pending=" + IntegerToString(g_pending_fires) + ")");
-      // The actual PosState row is added in OnTradeTransaction when the deal fills.
    } else {
-      // Order rejected — release the reserved slot
       g_pending_fires--;
       if(g_pending_fires < 0) g_pending_fires = 0;
-      Log("[ORDER_FAIL] retcode=" + IntegerToString(g_trade.ResultRetcode()) +
+      Log("[ORDER_FAIL] probe retcode=" + IntegerToString(g_trade.ResultRetcode()) +
           " " + g_trade.ResultComment() + " (pending released)");
    }
 }
 
+//── Scale a confirmed probe up to a REAL trade. v3.48 — called from
+//   ManageOne when a probe hits the confirm threshold. Opens InpRealLots
+//   with a RESTING smart-cut SL at the constant point-distance the 0.10-lot
+//   tuning implies (InpEarlyStopUSD scaled by lots/0.10 → same pts).
+void OpenRealTrade(int side, datetime uhv_time) {
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double entry = (side > 0) ? ask : bid;
+
+   // smart-cut SL distance in POINTS — constant regardless of lot size:
+   //   (InpEarlyStopUSD * lots/0.10) / (lots * contract) = InpEarlyStopUSD / (0.10*contract)
+   double sc_points = InpEarlyStopUSD / (0.10 * g_contract_size);
+   double sl = (side > 0) ? entry - sc_points : entry + sc_points;
+   double tp = (side > 0) ? entry + sc_points * InpTpMultR * 10.0
+                          : entry - sc_points * InpTpMultR * 10.0;
+   sl = NormalizeDouble(sl, _Digits);
+   tp = NormalizeDouble(tp, _Digits);
+
+   g_pending_fires++;
+   g_trade.SetExpertMagicNumber(InpMagicNumber);
+   g_trade.SetTypeFillingBySymbol(_Symbol);
+
+   bool ok;
+   if(side > 0) ok = g_trade.Buy (InpRealLots, _Symbol, entry, sl, tp, InpLogPrefix + "_real");
+   else         ok = g_trade.Sell(InpRealLots, _Symbol, entry, sl, tp, InpLogPrefix + "_real");
+
+   if(ok) {
+      Log("[PROBE_CONFIRM→REAL] " + (side > 0 ? "BUY" : "SELL") + " " +
+          DoubleToString(InpRealLots, 2) + " @ " + DoubleToString(entry, _Digits) +
+          " SL=" + DoubleToString(sl, _Digits) + " (resting smart-cut)");
+   } else {
+      g_pending_fires--;
+      if(g_pending_fires < 0) g_pending_fires = 0;
+      Log("[ORDER_FAIL] real retcode=" + IntegerToString(g_trade.ResultRetcode()) +
+          " " + g_trade.ResultComment() + " (probe confirmed but real-trade order rejected)");
+   }
+}
+
 //── Heartbeat ───────────────────────────────────────────────────────
+// v3.46: Recompute today's realized P&L from MT5 history. Authoritative — survives
+//        reattach (which used to bias the accumulator toward post-reattach trades).
+//        Sums profit + swap + commission for all closed deals with our magic, from
+//        broker-day-start to now.
+void RefreshRealizedFromHistory() {
+   MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
+   dt.hour = 0; dt.min = 0; dt.sec = 0;
+   datetime day_start = StructToTime(dt);
+   if(!HistorySelect(day_start, TimeCurrent())) return;
+   double total = 0;
+   int deals_n = HistoryDealsTotal();
+   for(int i = 0; i < deals_n; i++) {
+      ulong dt_ticket = HistoryDealGetTicket(i);
+      if(dt_ticket == 0) continue;
+      if(HistoryDealGetInteger(dt_ticket, DEAL_MAGIC) != InpMagicNumber) continue;
+      if(HistoryDealGetString(dt_ticket, DEAL_SYMBOL) != _Symbol) continue;
+      // Only "out" deals carry realized P&L (in deals always have profit=0)
+      total += HistoryDealGetDouble(dt_ticket, DEAL_PROFIT);
+      total += HistoryDealGetDouble(dt_ticket, DEAL_SWAP);
+      total += HistoryDealGetDouble(dt_ticket, DEAL_COMMISSION);
+   }
+   g_realized_today_usd = total;
+}
+
 void WriteHeartbeat() {
    if((TimeCurrent() - g_last_heartbeat) < InpHeartbeatSec) return;
    g_last_heartbeat = TimeCurrent();
@@ -265,6 +357,7 @@ void WriteHeartbeat() {
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    RollDailyCountersIfNeeded();
+   RefreshRealizedFromHistory();   // v3.46: always read from authoritative source
 
    // Aggregate PnL of all open positions
    double total_open_pnl = 0;
@@ -277,7 +370,7 @@ void WriteHeartbeat() {
    string json = "{";
    json += "\"ts\":" + IntegerToString(TimeCurrent()) + ",";
    json += "\"symbol\":\"" + _Symbol + "\",";
-   json += "\"ea\":\"UhvSweepExhaustion v3.44\",";
+   json += "\"ea\":\"UhvSweepExhaustion v3.48\",";
    json += "\"alive\":true,";
    json += "\"bid\":" + DoubleToString(bid, _Digits) + ",";
    json += "\"ask\":" + DoubleToString(ask, _Digits) + ",";
@@ -286,6 +379,9 @@ void WriteHeartbeat() {
    json += "\"entries_today\":" + IntegerToString(g_entries_today) + ",";
    json += "\"exits_today\":" + IntegerToString(g_exits_today) + ",";
    json += "\"realized_today_usd\":" + DoubleToString(g_realized_today_usd, 2) + ",";
+   json += "\"max_daily_loss_usd\":" + DoubleToString(InpMaxDailyLossUSD, 2) + ",";
+   json += "\"circuit_breaker_tripped\":" +
+           ((InpMaxDailyLossUSD > 0 && g_realized_today_usd <= -InpMaxDailyLossUSD) ? "true" : "false") + ",";
    json += "\"position_open\":" + (g_pos_count > 0 ? "true" : "false") + ",";
    json += "\"open_count\":" + IntegerToString(g_pos_count) + ",";
    json += "\"open_pnl_total\":" + DoubleToString(total_open_pnl, 2) + ",";
@@ -312,6 +408,8 @@ void WriteHeartbeat() {
       if(PositionSelectByTicket(g_pos[i].ticket)) p_pnl = PositionGetDouble(POSITION_PROFIT);
       json += "{\"ticket\":" + IntegerToString((long)g_pos[i].ticket) +
               ",\"side\":\"" + (g_pos[i].side > 0 ? "BUY" : "SELL") + "\"" +
+              ",\"is_probe\":" + (g_pos[i].is_probe ? "true" : "false") +
+              ",\"lots\":" + DoubleToString(g_pos[i].lots, 2) +
               ",\"entry\":" + DoubleToString(g_pos[i].entry, _Digits) +
               ",\"pnl\":" + DoubleToString(p_pnl, 2) +
               ",\"peak\":" + DoubleToString(g_pos[i].peak_pnl_usd, 2) +
@@ -342,7 +440,9 @@ int OnInit() {
    g_contract_size = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    if(g_contract_size <= 0) g_contract_size = 100.0;
    int fill = (int)SymbolInfoInteger(_Symbol, SYMBOL_FILLING_MODE);
-   Log("Init v3.44 (pyramid, max_concurrent=" + IntegerToString(InpMaxConcurrent) + "). " +
+   Log("Init v3.48 (PROBE-to-trade, circuit_breaker=$" + DoubleToString(InpMaxDailyLossUSD, 2) +
+       ", smart-cut " + IntegerToString(InpEarlyCutMinSec) + "s/$" + DoubleToString(InpEarlyStopUSD, 2) +
+       ", pyramid max=" + IntegerToString(InpMaxConcurrent) + "). " +
        "Lots=" + DoubleToString(InpLots, 2) +
        " Magic=" + IntegerToString(InpMagicNumber) +
        " Filling: FOK=" + (((fill & SYMBOL_FILLING_FOK) != 0)?"Y":"N") +
@@ -361,11 +461,13 @@ int OnInit() {
       int    side  = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? +1 : -1;
       datetime ot  = (datetime)PositionGetInteger(POSITION_TIME);
       double peak  = MathMax(0.0, PositionGetDouble(POSITION_PROFIT));
-      AddPos(tkt, entry, lots, side, ot, 0, peak, /*init_bar_count=*/10);
+      bool is_probe = (lots < (InpProbeLots + InpRealLots) / 2.0);
+      AddPos(tkt, entry, lots, side, ot, 0, is_probe, peak, /*init_bar_count=*/10);
       Log("[REBIND] Resumed ticket=" + IntegerToString((long)tkt) +
           " entry=" + DoubleToString(entry, _Digits) +
           " side=" + (side > 0 ? "BUY" : "SELL") +
-          " lots=" + DoubleToString(lots, 2));
+          " lots=" + DoubleToString(lots, 2) +
+          " (" + (is_probe ? "probe" : "real") + ")");
    }
 
    EventSetTimer(InpHeartbeatSec > 0 ? InpHeartbeatSec : 5);
@@ -381,31 +483,78 @@ void OnTimer() {
    WriteHeartbeat();
 }
 
-//── Manage ONE position: peak/trail/smart-cut/time-stop ─────────────
-//   Returns true if position was closed (caller should prune array).
+//── Manage ONE position. Returns true if the position was closed
+//   (caller prunes the array). v3.48: branches on is_probe.
 //   MQL5 doesn't allow `PosState &p = g_pos[pi]`, so we index directly.
 bool ManageOne(int pi) {
    if(!PositionSelectByTicket(g_pos[pi].ticket)) return true;
 
    double pnl = PositionGetDouble(POSITION_PROFIT);
    if(pnl > g_pos[pi].peak_pnl_usd) g_pos[pi].peak_pnl_usd = pnl;
+   int elapsed_sec = (int)(TimeCurrent() - g_pos[pi].open_time);
 
-   // 1. SMART CUT
-   if(InpEarlyStopUSD > 0 &&
-      g_pos[pi].peak_pnl_usd < InpEarlyCutPeakGuard &&
-      g_pos[pi].bar_count >= InpEarlyCutMinBars &&
-      pnl <= -InpEarlyStopUSD) {
-      Log("[EXIT smart_cut] tkt=" + IntegerToString((long)g_pos[pi].ticket) +
-          " pnl=$" + DoubleToString(pnl, 2) +
+   // ════════════════ PROBE LIFECYCLE (v3.48) ════════════════
+   if(g_pos[pi].is_probe) {
+      double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      // favorable move in POINTS (sell measured on ask, buy on bid — the side
+      // we'd close against; conservative)
+      double fav_pts = (g_pos[pi].side > 0) ? (bid - g_pos[pi].entry)
+                                            : (g_pos[pi].entry - ask);
+
+      // CONFIRM → close probe, open real trade
+      if(fav_pts >= InpProbeConfirmPts) {
+         int side = g_pos[pi].side;
+         datetime uhv_t = g_pos[pi].uhv_time;
+         Log("[PROBE_CONFIRM] tkt=" + IntegerToString((long)g_pos[pi].ticket) +
+             " fav=" + DoubleToString(fav_pts, 2) + "pt (>= " + DoubleToString(InpProbeConfirmPts, 2) +
+             ") elapsed=" + IntegerToString(elapsed_sec) + "s pnl=$" + DoubleToString(pnl, 2));
+         g_trade.PositionClose(g_pos[pi].ticket);
+         OpenRealTrade(side, uhv_t);
+         return true;
+      }
+      // FAIL → timeout or loss (the -$ loss is also a resting broker SL backstop)
+      if(elapsed_sec >= InpProbeTimeoutSec || pnl <= -InpProbeFailUSD) {
+         string why = (pnl <= -InpProbeFailUSD) ? "loss" : "timeout";
+         Log("[PROBE_FAIL " + why + "] tkt=" + IntegerToString((long)g_pos[pi].ticket) +
+             " pnl=$" + DoubleToString(pnl, 2) + " fav=" + DoubleToString(fav_pts, 2) +
+             "pt elapsed=" + IntegerToString(elapsed_sec) + "s");
+         g_trade.PositionClose(g_pos[pi].ticket);
+         return true;
+      }
+      return false;   // probe still pending
+   }
+
+   // ════════════════ REAL-TRADE LIFECYCLE ════════════════
+   // $ thresholds scale by lots/0.10 so the POINT distances stay constant
+   // regardless of whether the real trade is 0.10, 0.20 or 0.40 lots.
+   double lot_scale  = g_pos[pi].lots / 0.10;
+   double early_stop = InpEarlyStopUSD      * lot_scale;
+   double peak_guard = InpEarlyCutPeakGuard * lot_scale;
+   double peak_bank  = InpPeakBankUSD       * lot_scale;
+   double peak_drop  = InpPeakDropUSD       * lot_scale;
+   double trail_step = InpTrailUpdateStep   * lot_scale;
+
+   // 1. SMART CUT — v3.48: DEEP BACKSTOP ONLY. The real-trade's resting broker SL
+   //    already sits at -early_stop and fills cleanly without chase slippage.
+   //    A software market-close at the SAME level races the broker SL and (we saw
+   //    live 2026-05-14) chases to -$19 instead of -$14. So the software check now
+   //    fires only at 2x the SL distance — i.e. "the broker SL didn't fire, emergency."
+   double smartcut_backstop = early_stop * 2.0;
+   if(smartcut_backstop > 0 &&
+      g_pos[pi].peak_pnl_usd < peak_guard &&
+      elapsed_sec >= InpEarlyCutMinSec &&
+      pnl <= -smartcut_backstop) {
+      Log("[EXIT smart_cut BACKSTOP] tkt=" + IntegerToString((long)g_pos[pi].ticket) +
+          " pnl=$" + DoubleToString(pnl, 2) + " (broker SL failed to fire?)" +
           " peak=$" + DoubleToString(g_pos[pi].peak_pnl_usd, 2) +
-          " bars=" + IntegerToString(g_pos[pi].bar_count));
+          " elapsed=" + IntegerToString(elapsed_sec) + "s");
       g_trade.PositionClose(g_pos[pi].ticket);
       return true;
    }
 
    // 2. Time stop
-   datetime now = TimeCurrent();
-   if(InpMaxHoldSec > 0 && (now - g_pos[pi].open_time) >= InpMaxHoldSec) {
+   if(InpMaxHoldSec > 0 && elapsed_sec >= InpMaxHoldSec) {
       Log("[EXIT time_stop] tkt=" + IntegerToString((long)g_pos[pi].ticket) +
           " pnl=$" + DoubleToString(pnl, 2));
       g_trade.PositionClose(g_pos[pi].ticket);
@@ -413,9 +562,9 @@ bool ManageOne(int pi) {
    }
 
    // 3. Broker-side trailing SL
-   if(g_pos[pi].peak_pnl_usd >= InpPeakBankUSD) {
-      double target_lock = g_pos[pi].peak_pnl_usd - InpPeakDropUSD;
-      if(target_lock > g_pos[pi].locked_pnl_usd + InpTrailUpdateStep - 1e-9) {
+   if(g_pos[pi].peak_pnl_usd >= peak_bank) {
+      double target_lock = g_pos[pi].peak_pnl_usd - peak_drop;
+      if(target_lock > g_pos[pi].locked_pnl_usd + trail_step - 1e-9) {
          double pnl_per_point = g_pos[pi].lots * g_contract_size;
          if(pnl_per_point > 0) {
             double sl_distance_pts = target_lock / pnl_per_point;
@@ -434,7 +583,7 @@ bool ManageOne(int pi) {
                       " locked=$" + DoubleToString(target_lock, 2) +
                       " sl=" + DoubleToString(new_sl, _Digits));
                } else {
-                  if(pnl <= (g_pos[pi].peak_pnl_usd - InpPeakDropUSD * 4)) {
+                  if(pnl <= (g_pos[pi].peak_pnl_usd - peak_drop * 4)) {
                      Log("[EXIT fallback] tkt=" + IntegerToString((long)g_pos[pi].ticket) +
                          " modify failed, pnl=$" + DoubleToString(pnl, 2));
                      g_trade.PositionClose(g_pos[pi].ticket);
@@ -456,6 +605,9 @@ void ReconcileClosed() {
          // Position closed (SL/TP/manual). Pull realized P&L from history.
          Log("[CLOSED] tkt=" + IntegerToString((long)g_pos[i].ticket) +
              " peak_was=$" + DoubleToString(g_pos[i].peak_pnl_usd, 2));
+         // v3.46: per-position P&L log only — running total is now refreshed
+         //   from MT5 history every heartbeat (RefreshRealizedFromHistory),
+         //   so we no longer accumulate here (which caused double-count / drift).
          if(HistorySelectByPosition(g_pos[i].ticket)) {
             double total_profit = 0, total_swap = 0, total_comm = 0;
             for(int k = 0; k < HistoryDealsTotal(); k++) {
@@ -466,7 +618,6 @@ void ReconcileClosed() {
                total_comm   += HistoryDealGetDouble(dt, DEAL_COMMISSION);
             }
             double net = total_profit + total_swap + total_comm;
-            g_realized_today_usd += net;
             g_exits_today++;
             Log("[CLOSED] tkt=" + IntegerToString((long)g_pos[i].ticket) +
                 " net P&L: $" + DoubleToString(net, 2));
@@ -525,9 +676,11 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
       // Skip if already tracked (defensive — should not happen)
       if(FindPosByTicket(pos_id) >= 0) return;
       int side = ((ENUM_DEAL_TYPE)HistoryDealGetInteger(deal_ticket, DEAL_TYPE) == DEAL_TYPE_BUY) ? +1 : -1;
-      AddPos(pos_id, price, vol, side, TimeCurrent(), 0, 0, 0);
+      // v3.48: classify probe vs real by lot size (probe 0.01, real 0.40 — midpoint split)
+      bool is_probe = (vol < (InpProbeLots + InpRealLots) / 2.0);
+      AddPos(pos_id, price, vol, side, TimeCurrent(), 0, is_probe, 0, 0);
       g_entries_today++;
-      Log("[FILLED] " + (side > 0 ? "BUY" : "SELL") +
+      Log("[FILLED] " + (is_probe ? "PROBE " : "REAL ") + (side > 0 ? "BUY" : "SELL") +
           " ticket=" + IntegerToString((long)pos_id) +
           " @ " + DoubleToString(price, _Digits) +
           " lots=" + DoubleToString(vol, 2) +
