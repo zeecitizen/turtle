@@ -53,9 +53,10 @@ def load_ticks(path):
 
 
 def detect_on_bar(bars, idx_bo, strict=False):
-    """strict=False : v3.43 RELAXED (drop vol-check, non-fatal overlap).
+    """Returns (side, uhv_high, uhv_low) or (0,0,0).
+       strict=False : v3.43 RELAXED (drop vol-check, non-fatal overlap).
        strict=True  : v3.42 STRICT (require bo.vol<uhv.vol, fatal overlap break,
-                      require a swing-back). Far more selective."""
+                      require a swing-back)."""
     bo = bars[idx_bo]
     if bo["close"] > bo["open"]:
         ui, uv = -1, -1
@@ -68,11 +69,11 @@ def detect_on_bar(bars, idx_bo, strict=False):
                 if strict: found_swing = True; break
                 else: continue
             if c["close"] < c["open"] and c["vol"] > uv: ui, uv = k, c["vol"]
-        if ui < 0 or (idx_bo - ui) > MAX_BARS_BACK: return 0
-        if bo["close"] <= bars[ui]["high"]: return 0
-        if strict and not found_swing: return 0
-        if strict and bo["vol"] >= uv: return 0
-        return +1
+        if ui < 0 or (idx_bo - ui) > MAX_BARS_BACK: return (0, 0, 0)
+        if bo["close"] <= bars[ui]["high"]: return (0, 0, 0)
+        if strict and not found_swing: return (0, 0, 0)
+        if strict and bo["vol"] >= uv: return (0, 0, 0)
+        return (+1, bars[ui]["high"], bars[ui]["low"])
     if bo["close"] < bo["open"]:
         ui, uv = -1, -1
         found_swing = False
@@ -84,20 +85,124 @@ def detect_on_bar(bars, idx_bo, strict=False):
                 if strict: found_swing = True; break
                 else: continue
             if c["close"] > c["open"] and c["vol"] > uv: ui, uv = k, c["vol"]
-        if ui < 0 or (idx_bo - ui) > MAX_BARS_BACK: return 0
-        if bo["close"] >= bars[ui]["low"]: return 0
-        if strict and not found_swing: return 0
-        if strict and bo["vol"] >= uv: return 0
-        return -1
-    return 0
+        if ui < 0 or (idx_bo - ui) > MAX_BARS_BACK: return (0, 0, 0)
+        if bo["close"] >= bars[ui]["low"]: return (0, 0, 0)
+        if strict and not found_swing: return (0, 0, 0)
+        if strict and bo["vol"] >= uv: return (0, 0, 0)
+        return (-1, bars[ui]["high"], bars[ui]["low"])
+    return (0, 0, 0)
 
 
 def build_signals(bars, strict=False):
+    """{minute: (side, uhv_high, uhv_low)} — side 0 means no signal."""
     sig = {}
     for i, b in enumerate(bars):
         if i < MAX_LOOKBACK + 2: continue
         sig[b["time"] + timedelta(minutes=1)] = detect_on_bar(bars, i, strict=strict)
     return sig
+
+
+# ── SIMPLE-EXIT replay: strict detector + a basic (non-probe) exit ──
+def replay_simple(ticks, sig, exit_mode, lots,
+                  rr_mult=1.0, sc_loss=2.0, sc_peak=1.0,
+                  bank=1.0, drop=0.5, cap_floor=30.0):
+    """Fire ONE position of `lots` on each strict signal. Exits:
+       'rr'         : SL=UHV level, TP=entry + rr_mult * R   (lesson-2 style)
+       'peak_trail' : smart-cut (pnl<=-sc_loss & peak<sc_peak) + peak-trail
+                      (peak>=bank -> lock peak-drop) + catastrophe SL at UHV.
+    All $ thresholds scale by lots/0.10 so point distances stay constant."""
+    ppp = lots * CONTRACT
+    scale = lots / 0.10
+    units, last_fire, done = [], None, []
+
+    def pnl_of(u, bid, ask):
+        return ((bid - u["e"]) if u["side"] > 0 else (u["e"] - ask)) * ppp
+
+    for tk in ticks:
+        t, bid, ask = tk["t"], tk["bid"], tk["ask"]
+        for u in units[:]:
+            pnl = pnl_of(u, bid, ask)
+            if pnl > u["peak"]: u["peak"] = pnl
+            exit_pnl = why = None
+            cur = bid if u["side"] > 0 else ask   # side we mark/exit against
+            # catastrophic UHV-level stop (both modes)
+            if u["side"] > 0 and cur <= u["cat_sl"]:
+                exit_pnl, why = (u["cat_sl"] - u["e"]) * ppp, "cat_sl"
+            elif u["side"] < 0 and cur >= u["cat_sl"]:
+                exit_pnl, why = (u["e"] - u["cat_sl"]) * ppp, "cat_sl"
+            if exit_pnl is None and exit_mode == "rr":
+                if u["side"] > 0 and cur >= u["tp"]:
+                    exit_pnl, why = (u["tp"] - u["e"]) * ppp, "tp"
+                elif u["side"] < 0 and cur <= u["tp"]:
+                    exit_pnl, why = (u["e"] - u["tp"]) * ppp, "tp"
+            if exit_pnl is None and exit_mode == "peak_trail":
+                # smart-cut
+                if u["peak"] < sc_peak * scale and pnl <= -sc_loss * scale:
+                    exit_pnl, why = pnl, "smart_cut"
+                else:
+                    # peak-trail lock
+                    if u["peak"] >= bank * scale:
+                        tgt = u["peak"] - drop * scale
+                        if tgt > u["locked"]: u["locked"] = tgt
+                    if u["locked"] > 0 and pnl <= u["locked"]:
+                        exit_pnl, why = u["locked"], "trail"
+            if exit_pnl is not None:
+                u["pnl"] = exit_pnl; u["why"] = why
+                done.append(u); units.remove(u)
+        if len(units) >= MAX_UNITS: continue
+        if last_fire and (t - last_fire).total_seconds() < RATE_LIMIT_S: continue
+        s = sig.get(t.replace(second=0), (0, 0, 0))
+        side, uhv_h, uhv_l = s
+        if side == 0: continue
+        e = ask if side > 0 else bid
+        cat = uhv_l if side > 0 else uhv_h
+        r = abs(e - cat)
+        if r < 0.10 or r > 30.0: continue   # min/max R reject (lesson-2)
+        tp = e + rr_mult * r if side > 0 else e - rr_mult * r
+        units.append({"side": side, "e": e, "cat_sl": cat, "tp": tp,
+                      "peak": 0.0, "locked": 0.0})
+        last_fire = t
+
+    last = ticks[-1]
+    for u in units:
+        u["pnl"] = pnl_of(u, last["bid"], last["ask"]); u["why"] = "eod"
+        done.append(u)
+    total = sum(u["pnl"] for u in done)
+    wins = sum(1 for u in done if u["pnl"] > 0)
+    losses = sum(1 for u in done if u["pnl"] < 0)
+    wr = 100 * wins / (wins + losses) if (wins + losses) else 0
+    return dict(total=total, n=len(done), wins=wins, losses=losses, wr=wr)
+
+
+def run_strict_simple_sweep(tick_files, bars):
+    print("\n" + "=" * 80)
+    print("STRICT detector (v3.42: vol-check + momentum candle) + SIMPLE exits")
+    print("  this is the combination that was NEVER multi-day-tested")
+    print("=" * 80)
+    sig = build_signals(bars, strict=True)
+    configs = [
+        ("rr",          0.10, dict(rr_mult=1.0)),
+        ("rr",          0.10, dict(rr_mult=1.5)),
+        ("rr",          0.10, dict(rr_mult=2.0)),
+        ("peak_trail",  0.10, dict(sc_loss=2.0, sc_peak=1.0, bank=1.0, drop=0.5)),
+        ("peak_trail",  0.10, dict(sc_loss=3.0, sc_peak=1.0, bank=2.0, drop=1.0)),
+        ("peak_trail",  0.10, dict(sc_loss=4.0, sc_peak=1.0, bank=3.0, drop=1.5)),
+        ("rr",          0.40, dict(rr_mult=1.0)),
+        ("peak_trail",  0.40, dict(sc_loss=2.0, sc_peak=1.0, bank=1.0, drop=0.5)),
+    ]
+    for (mode, lots, kw) in configs:
+        agg = 0.0; gw = gl = 0; days_green = 0; nd = 0
+        for tf in tick_files:
+            ticks = load_ticks(tf)
+            if len(ticks) < 100: continue
+            r = replay_simple(ticks, sig, mode, lots, **kw)
+            agg += r["total"]; gw += r["wins"]; gl += r["losses"]
+            if r["total"] > 0: days_green += 1
+            nd += 1
+        wr = 100 * gw / (gw + gl) if (gw + gl) else 0
+        kws = ",".join(f"{k}={v}" for k, v in kw.items())
+        print(f"  {mode:<11} {lots:.2f}lot [{kws:<42}] "
+              f"${agg:<+10.2f} {days_green}/{nd}d green WR{wr:.0f}%")
 
 
 def replay(ticks, sig, probe_confirm, main_floor=150.0, main_bank=8.0, main_drop=3.0):
@@ -136,7 +241,7 @@ def replay(ticks, sig, probe_confirm, main_floor=150.0, main_bank=8.0, main_drop
                     done.append(u); units.remove(u)
         if len(units) >= MAX_UNITS: continue
         if last_fire and (t - last_fire).total_seconds() < RATE_LIMIT_S: continue
-        s = sig.get(t.replace(second=0), 0)
+        s = sig.get(t.replace(second=0), (0, 0, 0))[0]
         if s == 0: continue
         units.append({"state": "PROBING", "side": s, "pe": ask if s > 0 else bid, "open_t": t})
         last_fire = t
@@ -187,7 +292,7 @@ def replay_single(ticks, sig, lots, floor_usd, bank_usd, drop_usd):
                 done.append(u); units.remove(u)
         if len(units) >= MAX_UNITS: continue
         if last_fire and (t - last_fire).total_seconds() < RATE_LIMIT_S: continue
-        s = sig.get(t.replace(second=0), 0)
+        s = sig.get(t.replace(second=0), (0, 0, 0))[0]
         if s == 0: continue
         units.append({"side": s, "e": ask if s > 0 else bid,
                       "peak": 0.0, "locked": 0.0})
@@ -285,8 +390,8 @@ def main():
     print("  far more selective: fires only on the cleanest UHV breakouts")
     print("=" * 80)
     sig_strict = build_signals(bars, strict=True)
-    n_relaxed = sum(1 for v in sig.values() if v != 0)
-    n_strict = sum(1 for v in sig_strict.values() if v != 0)
+    n_relaxed = sum(1 for v in sig.values() if v[0] != 0)
+    n_strict = sum(1 for v in sig_strict.values() if v[0] != 0)
     print(f"  signal-bars: relaxed={n_relaxed}  strict={n_strict}  "
           f"({100*n_strict/n_relaxed:.0f}% as many)\n")
     print(f"  {'day':<12} | {'confirm +$1':<22} | {'confirm +$2'}")
@@ -312,6 +417,8 @@ def main():
           f"${sa2['total']:<+9.2f} {swr2:.0f}% fl{sa2['floor']}")
     print(f"\n  strict+confirm$1: {sd1}/12 green, ${sa1['total']:+.2f}")
     print(f"  strict+confirm$2: {sd2}/12 green, ${sa2['total']:+.2f}")
+
+    run_strict_simple_sweep(tick_files, bars)
 
 
 if __name__ == "__main__":
