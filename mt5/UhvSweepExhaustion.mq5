@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//| UhvSweepExhaustion.mq5  v3.49 — Shano probe-to-trade (verified)  |
+//| UhvSweepExhaustion.mq5  v3.50 — Shano probe-to-trade (verified)  |
 //|                                                                  |
 //| ENTRY: Zee's lesson-2 M1 UHV breakout (validated 20/20 Feb 11),  |
 //| fired on EVERY breakout. But size is committed Shano's way:      |
@@ -23,15 +23,14 @@
 //|     • probe + main are one linked UNIT — closing the main also  |
 //|       closes the probe.                                          |
 //|                                                                  |
-//| The circuit breaker (InpMaxDailyLossUSD) stays ONLY as a         |
-//| catastrophe seatbelt — good trades, not the breaker, keep us     |
-//| alive. The main-floor bounds per-trade risk; finding the OPTIMAL |
-//| floor is an open empirical question (test different values).     |
+//| v3.50: REMOVED the daily-loss circuit breaker — it was halting   |
+//| the EA and costing us trade data for analysis. The main-floor    |
+//| (-$150) is the only bounded risk; per-trade safety lives there.  |
 //|                                                                  |
 //| Magic 88001 (production).                                        |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — lesson-2 + Shano probe-to-trade"
-#property version   "3.49"
+#property version   "3.50"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -42,7 +41,7 @@ input int    InpMaxLookback        = 60;
 input int    InpMaxBarsBack        = 60;
 input int    InpMagicNumber        = 88001;
 input int    InpMaxConcurrent      = 2;     // max concurrent UNITS (each unit = probe + optional main)
-input double InpMaxDailyLossUSD    = 800.0; // CIRCUIT BREAKER — catastrophe seatbelt only. Halts firing for the broker day past this realized loss. 0 = disabled.
+// (v3.50: InpMaxDailyLossUSD removed — was halting data collection)
 
 input group "── Probe-to-trade (v3.49 — Shano's verified method) ──"
 input double InpProbeLots          = 0.01;  // probe size — fired on every UHV breakout
@@ -203,14 +202,7 @@ void OpenProbe(int side, double uhv_high, double uhv_low, datetime uhv_time, lon
    if(g_unit_count >= InpMaxConcurrent) return;
    datetime now_t = TimeCurrent();
    if(g_last_fire_time != 0 && (now_t - g_last_fire_time) < 2) return;   // rate-limit
-   if(InpMaxDailyLossUSD > 0 && g_realized_today_usd <= -InpMaxDailyLossUSD) {
-      if(g_last_fire_time != 0 && (now_t - g_last_fire_time) >= 60) {
-         Log("[CIRCUIT_BREAKER] realized=$" + DoubleToString(g_realized_today_usd, 2) +
-             " <= -$" + DoubleToString(InpMaxDailyLossUSD, 2) + " — firing disabled for today");
-         g_last_fire_time = now_t;
-      }
-      return;
-   }
+   // v3.50: circuit breaker removed — keep collecting data.
 
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
@@ -473,7 +465,7 @@ void WriteHeartbeat() {
    string json = "{";
    json += "\"ts\":" + IntegerToString(TimeCurrent()) + ",";
    json += "\"symbol\":\"" + _Symbol + "\",";
-   json += "\"ea\":\"UhvSweepExhaustion v3.49\",";
+   json += "\"ea\":\"UhvSweepExhaustion v3.50\",";
    json += "\"alive\":true,";
    json += "\"bid\":" + DoubleToString(bid, _Digits) + ",";
    json += "\"ask\":" + DoubleToString(ask, _Digits) + ",";
@@ -482,9 +474,8 @@ void WriteHeartbeat() {
    json += "\"entries_today\":" + IntegerToString(g_entries_today) + ",";
    json += "\"exits_today\":" + IntegerToString(g_exits_today) + ",";
    json += "\"realized_today_usd\":" + DoubleToString(g_realized_today_usd, 2) + ",";
-   json += "\"max_daily_loss_usd\":" + DoubleToString(InpMaxDailyLossUSD, 2) + ",";
-   json += "\"circuit_breaker_tripped\":" +
-           ((InpMaxDailyLossUSD > 0 && g_realized_today_usd <= -InpMaxDailyLossUSD) ? "true" : "false") + ",";
+   json += "\"max_daily_loss_usd\":0.00,";              // v3.50: breaker removed
+   json += "\"circuit_breaker_tripped\":false,";
    json += "\"position_open\":" + (g_unit_count > 0 ? "true" : "false") + ",";
    json += "\"unit_count\":" + IntegerToString(g_unit_count) + ",";
    json += "\"probing\":" + IntegerToString(probing) + ",";
@@ -533,10 +524,10 @@ int OnInit() {
    g_contract_size = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    if(g_contract_size <= 0) g_contract_size = 100.0;
    int fill = (int)SymbolInfoInteger(_Symbol, SYMBOL_FILLING_MODE);
-   Log("Init v3.49 (Shano probe-to-trade: probe " + DoubleToString(InpProbeLots, 2) +
+   Log("Init v3.50 (Shano probe-to-trade, breaker REMOVED: probe " + DoubleToString(InpProbeLots, 2) +
        " floor -$" + DoubleToString(InpProbeFloorUSD, 0) + " confirm +$" + DoubleToString(InpProbeConfirmUSD, 0) +
        " → main " + DoubleToString(InpRealLots, 2) + " rollover " + DoubleToString(InpMainBankUSD, 0) +
-       "/" + DoubleToString(InpMainDropUSD, 0) + "; breaker $" + DoubleToString(InpMaxDailyLossUSD, 0) +
+       "/" + DoubleToString(InpMainDropUSD, 0) +
        "; max " + IntegerToString(InpMaxConcurrent) + " units). Magic=" + IntegerToString(InpMagicNumber) +
        " Fill: FOK=" + (((fill & SYMBOL_FILLING_FOK) != 0)?"Y":"N") +
        " IOC=" + (((fill & SYMBOL_FILLING_IOC) != 0)?"Y":"N"));
