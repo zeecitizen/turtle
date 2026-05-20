@@ -629,14 +629,78 @@ const server = http.createServer(async (req, res) => {
       }
     } catch (e) { pnl.error = e.code || e.message; }
 
+    // ── EA attribution: position_ticket -> EA name (from decision logs) ──
+    const ticketEA = {};
+    for (const [dfile, label] of [['s3_decisions.csv','S3'],['nsnd_decisions.csv','NSND'],['s1_decisions.csv','S1']]) {
+      try {
+        const raw = fs.readFileSync(COMMON + dfile, 'utf8');
+        for (const line of raw.trim().split(/\r?\n/)) {
+          const p = line.split(',');
+          // ticket is the 2nd-to-last-ish numeric col; scan for a long int
+          for (const tok of p) { if (/^\d{6,}$/.test(tok)) ticketEA[tok] = label; }
+        }
+      } catch {}
+    }
+    function eaForFill(p) {
+      const tk = p[2];
+      if (ticketEA[tk]) return ticketEA[tk];
+      const lot = parseFloat(p[5]);
+      if (lot === 0.03) return 'S3';
+      if (lot === 0.01) return 'NSND';
+      if (lot === 0.02) return 'S1?';
+      return '?';
+    }
+
+    // ── Per-EA today P&L + recent-trades feed + today's equity curve ──
+    const per_ea = { S3:{n:0,w:0,l:0,pnl:0}, S1:{n:0,w:0,l:0,pnl:0}, NSND:{n:0,w:0,l:0,pnl:0} };
+    const recent = [];
+    const equity = [];
+    try {
+      const raw = fs.readFileSync(COMMON + 'turtle_fills.csv', 'utf8');
+      const lines = raw.trim().split(/\r?\n/);
+      const todayRows = [];
+      for (const line of lines) {
+        const p = line.split(',');
+        if (p.length < 11 || !pnl.date || p[0].slice(0,10) !== pnl.date) continue;
+        const v = parseFloat(p[10]); if (isNaN(v)) continue;
+        todayRows.push(p);
+        const ea = eaForFill(p);
+        const key = ea.replace('?','');
+        if (per_ea[key]) { per_ea[key].n++; per_ea[key].pnl += v; if (v>0) per_ea[key].w++; else if (v<0) per_ea[key].l++; }
+      }
+      let cum = 0;
+      for (const p of todayRows) {
+        const v = parseFloat(p[10]); cum += v;
+        equity.push(Math.round(cum*100)/100);
+      }
+      for (const k of Object.keys(per_ea)) per_ea[k].pnl = Math.round(per_ea[k].pnl*100)/100;
+      // last 15 trades, newest first
+      for (let i = todayRows.length-1; i >= 0 && recent.length < 15; i--) {
+        const p = todayRows[i]; const v = parseFloat(p[10]);
+        const m = (p[11]||'').match(/(tp|sl)/i);
+        recent.push({ time: p[0].slice(11), ea: eaForFill(p),
+          side: (p[4]||'').replace('_closed','').toUpperCase(),
+          pnl: Math.round(v*100)/100, exit: m ? m[1].toUpperCase() : '' });
+      }
+    } catch {}
+
+    // ── Market status (tick file freshness) ──
+    let market = { status: 'unknown', tick_age_sec: null };
+    try {
+      const tlc = components.shano_tick_logger || {};
+      const age = tlc.last_write_age_sec;
+      if (age != null) {
+        market.tick_age_sec = age;
+        market.status = age < 120 ? 'live' : (age < 3600 ? 'break' : 'closed');
+      }
+    } catch {}
+
     const all_systems_go = warnings.length === 0;
     const payload = {
       ts: new Date().toISOString(),
       all_systems_go,
       headline: all_systems_go ? 'All Systems Online' : `Something is wrong — ${warnings.length} issue${warnings.length === 1 ? '' : 's'}`,
-      warnings,
-      pnl,
-      components,
+      warnings, pnl, per_ea, recent, equity, market, components,
     };
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(payload));
