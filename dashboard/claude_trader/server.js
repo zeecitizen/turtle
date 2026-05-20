@@ -457,6 +457,18 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // STRATEGY PLAYBOOK — static page with the exact steps of each EA
+  if (url === '/strategies' || url === '/playbook') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'strategies.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' }); res.end('strategies.html missing: ' + e.message);
+    }
+    return;
+  }
+
   // UHV-SWEEP EXHAUSTION EA — live status from MT5 Common\Files\uhv_sweep_state.json
   if (url === '/api/uhv-sweep') {
     const stateFile = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\uhv_sweep_state.json';
