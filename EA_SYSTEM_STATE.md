@@ -99,8 +99,13 @@ NSND  0.66  -0.26   1.00
 
 - **EV-weighted (tilt to S3 ~0.03) gives +9% more return AND lower drawdown** ($8 vs $12.5).
 - **Sharpe/inverse-vol (tilt to S1) give the smoothest equity** (Sharpe ~1.1) at slightly less total.
-- Equal 0.02-each is already excellent and simplest. NOT auto-changed — lot size is Zee's
-  risk decision. Suggested next step: EV-weighted, but only with Zee's OK.
+
+### DEPLOYED 2026-05-20 (Zee approved): EV-weighted lots, total budget UNCHANGED at 0.06
+- **S3 = 0.03** (highest EV), **S1 = 0.02** (diversifier, kept), **NSND = 0.01** (most volatile, underweighted).
+- Total exposure identical to old equal-0.02 (0.06), just redistributed → same worst-case day,
+  ~+9% expected return. Reattach S3 + NSND in MT5 to load (S1 unchanged).
+- Honest caveat: this is in-sample weighting; the robust facts (S1 diversifies, S3 highest EV,
+  NSND most volatile) justify the tilt, but don't over-trust the exact +9%.
 
 ---
 
