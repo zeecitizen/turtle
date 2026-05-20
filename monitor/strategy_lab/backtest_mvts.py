@@ -1,24 +1,21 @@
-"""backtest_mvts.py — multi-day validation of the Momentum-Validity Time Stop
-hypothesis from the deep-research report.
+"""backtest_mvts.py — multi-day validation of the Momentum-Validity Time
+Stop hypothesis, with full EV(t) decomposition.
 
-Rule under test:
-  if MAIN has been open >= N seconds AND main_peak < InpMainBankUSD ($8)
+Hypothesis under test (from the deep-research report):
+  if MAIN open >= N seconds AND main_peak < InpMainBankUSD ($8)
     → force-close at current market price ('mvts' exit)
-  optionally: after an MVTS trigger, suspend new probe fires for `cooldown` seconds
+  optionally suspend new probe fires for `cooldown` seconds after an MVTS exit
 
-Sweeps: cut-time N in {15, 25, 30, 45, 60}, cooldown in {0, 60, 180, 300}.
-Compares each config to the v3.49 baseline (no MVTS, floor $150) across all
-12 days of real bid/ask tick data.
-
-Important: we report not just net P&L but the DISTRIBUTION of MVTS exits —
-the report assumes 'cuts will average ~-$35'. We measure it.
+For each (cut-time, cooldown) we report not just total P&L but the explicit
+EV decomposition — P_win(t), W_avg(t), L_avg(t), EV per trade — so the
+multivariate function EV(t) = P_win·W_avg - P_loss·L_avg is visible.
 """
 import csv
 import glob
 import statistics
+import sys
 from datetime import datetime, timedelta
 from pathlib import Path
-import sys
 
 sys.path.insert(0, str(Path(__file__).parent))
 from backtest_v349_multiday import (
@@ -27,12 +24,12 @@ from backtest_v349_multiday import (
 )
 
 
-def replay_mvts(ticks, sig, probe_confirm=1.0,
+def replay_full(ticks, sig, probe_confirm=1.0,
                 main_floor=150.0, main_bank=8.0, main_drop=3.0,
                 mvts_secs=0, cooldown_secs=0):
-    """Full v3.49 replay + optional MVTS exit + optional post-MVTS cooldown."""
-    units, last_fire, last_mvts, done = [], None, None, []
-    mvts_pnls = []   # capture the P&L at the moment MVTS fires
+    """Returns the FULL list of closed units (each with pnl + why) so the
+    caller can compute any stat. Handles MVTS + post-MVTS cooldown."""
+    units, last_fire, last_mvts_t, done = [], None, None, []
 
     def p_pnl(u, bid, ask):
         return ((bid - u["pe"]) if u["side"] > 0 else (u["pe"] - ask)) * PROBE_LOTS * CONTRACT
@@ -48,43 +45,31 @@ def replay_mvts(ticks, sig, probe_confirm=1.0,
                     u["pnl"] = -PROBE_FLOOR; u["why"] = "probe_floor"
                     done.append(u); units.remove(u)
                 elif pp >= probe_confirm:
-                    u["state"] = "TRADING"
-                    u["me"] = ask if u["side"] > 0 else bid
-                    u["pcp"] = pp; u["peak"] = 0.0; u["locked"] = 0.0
-                    u["mopen"] = t
+                    u["state"] = "TRADING"; u["me"] = ask if u["side"] > 0 else bid
+                    u["pcp"] = pp; u["peak"] = 0.0; u["locked"] = 0.0; u["mopen"] = t
             else:
                 pnl = m_pnl(u, bid, ask)
                 if pnl > u["peak"]: u["peak"] = pnl
                 exit_pnl = exit_why = None
                 elapsed = (t - u["mopen"]).total_seconds()
-
-                # MVTS check FIRST (the hypothesis under test)
                 if mvts_secs > 0 and elapsed >= mvts_secs and u["peak"] < main_bank:
                     exit_pnl, exit_why = pnl, "mvts"
-                    mvts_pnls.append(pnl)
-
-                # roll-over trail
                 if exit_pnl is None:
                     if u["peak"] >= main_bank:
                         tgt = u["peak"] - main_drop
                         if tgt > u["locked"]: u["locked"] = tgt
                     if u["locked"] > 0 and pnl <= u["locked"]:
                         exit_pnl, exit_why = u["locked"], "rollover"
-
-                # bounded floor (fallback only — MVTS should fire first)
                 if exit_pnl is None and pnl <= -main_floor:
                     exit_pnl, exit_why = -main_floor, "main_floor"
-
                 if exit_pnl is not None:
                     u["pnl"] = u["pcp"] + exit_pnl; u["why"] = exit_why
                     done.append(u); units.remove(u)
-                    if exit_why == "mvts" and cooldown_secs > 0:
-                        last_mvts = t
+                    if exit_why == "mvts": last_mvts_t = t
 
-        # detect + fire
         if len(units) >= MAX_UNITS: continue
         if last_fire and (t - last_fire).total_seconds() < RATE_LIMIT_S: continue
-        if last_mvts and cooldown_secs > 0 and (t - last_mvts).total_seconds() < cooldown_secs:
+        if last_mvts_t and cooldown_secs > 0 and (t - last_mvts_t).total_seconds() < cooldown_secs:
             continue
         s = sig.get(t.replace(second=0), (0, 0, 0))[0]
         if s == 0: continue
@@ -92,7 +77,6 @@ def replay_mvts(ticks, sig, probe_confirm=1.0,
                       "pe": ask if s > 0 else bid, "open_t": t})
         last_fire = t
 
-    # close remaining at EOD
     last = ticks[-1]
     for u in units:
         if u["state"] == "PROBING":
@@ -100,77 +84,92 @@ def replay_mvts(ticks, sig, probe_confirm=1.0,
         else:
             u["pnl"] = u["pcp"] + m_pnl(u, last["bid"], last["ask"]); u["why"] = "main_eod"
         done.append(u)
-
-    total = sum(u["pnl"] for u in done)
-    wins = sum(1 for u in done if u["pnl"] > 0)
-    losses = sum(1 for u in done if u["pnl"] < 0)
-    wr = 100 * wins / (wins + losses) if (wins + losses) else 0
-    floor_hits = sum(1 for u in done if u["why"] == "main_floor")
-    mvts_hits  = sum(1 for u in done if u["why"] == "mvts")
-    rollover   = sum(1 for u in done if u["why"] == "rollover")
-    worst = min((u["pnl"] for u in done), default=0.0)
-    return dict(total=total, n=len(done), wins=wins, losses=losses, wr=wr,
-                worst=worst, floor_hits=floor_hits, mvts_hits=mvts_hits,
-                rollover=rollover, mvts_pnls=mvts_pnls)
+    return done
 
 
-def run_config(label, tick_files, sig, **kw):
-    agg = {"total": 0.0, "n": 0, "wins": 0, "losses": 0,
-           "floor": 0, "mvts": 0, "rollover": 0, "worst": 0.0}
+def ev_decomposition(tick_files, sig, mvts_secs, cooldown_secs):
+    """Run all 12 days at this config, return EV components."""
+    win_pnls, loss_pnls = [], []
+    mvts_pnls = []
+    total = 0.0
     days_green = 0; nd = 0
-    all_mvts_pnls = []
+    why_counts = {"rollover": 0, "mvts": 0, "main_floor": 0,
+                  "probe_floor": 0, "probe_eod": 0, "main_eod": 0}
     for tf in tick_files:
         ticks = load_ticks(tf)
         if len(ticks) < 100: continue
         nd += 1
-        r = replay_mvts(ticks, sig, **kw)
-        agg["total"]    += r["total"]
-        agg["n"]        += r["n"]
-        agg["wins"]     += r["wins"]
-        agg["losses"]   += r["losses"]
-        agg["floor"]    += r["floor_hits"]
-        agg["mvts"]     += r["mvts_hits"]
-        agg["rollover"] += r["rollover"]
-        agg["worst"] = min(agg["worst"], r["worst"])
-        all_mvts_pnls.extend(r["mvts_pnls"])
-        if r["total"] > 0: days_green += 1
-    wr = 100 * agg["wins"] / (agg["wins"] + agg["losses"]) if (agg["wins"] + agg["losses"]) else 0
-    mvts_stats = ""
-    if all_mvts_pnls:
-        avg = statistics.mean(all_mvts_pnls)
-        med = statistics.median(all_mvts_pnls)
-        mvts_stats = (f"  MVTS cuts: avg=${avg:+.2f} med=${med:+.2f} "
-                      f"min=${min(all_mvts_pnls):+.2f} max=${max(all_mvts_pnls):+.2f}")
-    print(f"  {label:<38} ${agg['total']:<+10.2f} {days_green}/{nd}d  WR{wr:.0f}%  "
-          f"worst${agg['worst']:<+8.2f}  [roll {agg['rollover']} | mvts {agg['mvts']} | floor {agg['floor']}]")
-    if mvts_stats: print(mvts_stats)
-    return agg["total"], days_green, agg["mvts"], all_mvts_pnls
+        done = replay_full(ticks, sig, mvts_secs=mvts_secs, cooldown_secs=cooldown_secs)
+        day_total = 0.0
+        for u in done:
+            day_total += u["pnl"]
+            if u["pnl"] > 0: win_pnls.append(u["pnl"])
+            elif u["pnl"] < 0: loss_pnls.append(u["pnl"])
+            why_counts[u["why"]] = why_counts.get(u["why"], 0) + 1
+            if u["why"] == "mvts": mvts_pnls.append(u["pnl"] - u.get("pcp", 0))
+        total += day_total
+        if day_total > 0: days_green += 1
+    n_w, n_l = len(win_pnls), len(loss_pnls)
+    p_win = n_w / (n_w + n_l) if (n_w + n_l) else 0
+    w_avg = sum(win_pnls) / n_w if n_w else 0
+    l_avg = -sum(loss_pnls) / n_l if n_l else 0   # positive
+    ev = p_win * w_avg - (1 - p_win) * l_avg
+    return dict(total=total, n=n_w+n_l, days_green=days_green, nd=nd,
+                p_win=p_win, w_avg=w_avg, l_avg=l_avg, ev=ev,
+                why=why_counts, mvts_pnls=mvts_pnls)
 
 
 def main():
     bars = load_m1_merged()
-    sig = build_signals(bars, strict=False)   # current v3.50 detector
+    sig = build_signals(bars, strict=False)
     tick_files = sorted(glob.glob(str(COMMON / "shano_ticks_2026-*.csv")))
-    print(f"Tick files: {len(tick_files)}  Signals: {sum(1 for v in sig.values() if v[0] != 0)}\n")
+    print(f"12 days × full v3.49 replay × MVTS grid — measuring EV(t,cd) decomposition\n")
 
+    # Baseline
     print("=" * 100)
-    print("BASELINE (no MVTS, $150 floor) — what we already know")
+    print("BASELINE (no MVTS, $150 floor):")
     print("=" * 100)
-    run_config("baseline ($150 floor)", tick_files, sig, mvts_secs=0)
+    r = ev_decomposition(tick_files, sig, mvts_secs=0, cooldown_secs=0)
+    print(f"  n={r['n']:<5} P_win={r['p_win']:.3f}  W_avg=${r['w_avg']:.2f}  "
+          f"L_avg=${r['l_avg']:.2f}  EV=${r['ev']:+.2f}/trade  "
+          f"total=${r['total']:+.2f}  days_green={r['days_green']}/{r['nd']}")
+    baseline_ev = r['ev']; baseline_total = r['total']
 
+    # Full Cartesian grid
     print("\n" + "=" * 100)
-    print("MVTS sweep — cut-time, NO cooldown")
+    print("MVTS grid: cut-time {15, 25, 30, 45, 60}s × cooldown {0, 60, 300}s")
     print("=" * 100)
-    for n in (15, 20, 25, 30, 45, 60):
-        run_config(f"MVTS {n}s, no cooldown",
-                   tick_files, sig, mvts_secs=n, cooldown_secs=0)
+    print(f"{'cut':<5} {'cd':<5} {'n':<5} {'P_win':<7} {'W_avg':<9} {'L_avg':<9} "
+          f"{'EV/trade':<11} {'12d total':<12} {'green':<8} {'mvts-cut $ avg'}")
+    print("-" * 100)
+    results = []
+    for cut in (15, 25, 30, 45, 60):
+        for cd in (0, 60, 300):
+            r = ev_decomposition(tick_files, sig, mvts_secs=cut, cooldown_secs=cd)
+            mvts_avg = (statistics.mean(r["mvts_pnls"])
+                        if r["mvts_pnls"] else 0.0)
+            print(f"{cut:<5} {cd:<5} {r['n']:<5} {r['p_win']:.3f}  "
+                  f"${r['w_avg']:<7.2f} ${r['l_avg']:<7.2f} "
+                  f"${r['ev']:<+9.2f} ${r['total']:<+10.2f} {r['days_green']}/{r['nd']:<5} "
+                  f"${mvts_avg:+.2f}")
+            results.append((cut, cd, r))
 
+    # Decay analysis: holding cooldown=0, how does each component move with cut-time?
     print("\n" + "=" * 100)
-    print("MVTS sweep — cut-time + post-MVTS cooldown (the report's full spec)")
+    print("EV(t) decay analysis @ cooldown=0 — how each component shifts vs baseline:")
     print("=" * 100)
-    for (n, cd) in [(25, 60), (25, 180), (25, 300), (30, 60), (30, 300), (45, 300)]:
-        run_config(f"MVTS {n}s + {cd}s cooldown",
-                   tick_files, sig, mvts_secs=n, cooldown_secs=cd)
+    print(f"{'cut t':<7} {'ΔP_win':<10} {'ΔW_avg':<10} {'ΔL_avg':<10} {'ΔEV/trade':<12} {'verdict'}")
+    print("-" * 80)
+    base = ev_decomposition(tick_files, sig, mvts_secs=0, cooldown_secs=0)
+    for cut, cd, r in results:
+        if cd != 0: continue
+        d_pwin = r['p_win'] - base['p_win']
+        d_wavg = r['w_avg'] - base['w_avg']
+        d_lavg = r['l_avg'] - base['l_avg']
+        d_ev   = r['ev']   - base['ev']
+        verdict = "BETTER" if d_ev > 0 else "worse"
+        print(f"{cut}s    {d_pwin:+.3f}     ${d_wavg:+.2f}    "
+              f"${d_lavg:+.2f}    ${d_ev:+.2f}      {verdict}")
 
 
 if __name__ == "__main__":

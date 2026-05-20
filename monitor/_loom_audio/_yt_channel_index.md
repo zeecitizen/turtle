@@ -1,0 +1,110 @@
+# Channel transcripts — 108 videos
+
+- [ZiM3cEvf_ws] Don’t trade until you know these 7 rules! — 6419 chars
+- [tgnw67qJlHQ] 90% of Traders Fail Because of These 7 Mistakes — 8371 chars
+- [ftT24hu0gpk] How to make your own risk calculator? — 11121 chars
+- [wjaXGJTisGQ] Why your stop losses are huge & what's the fix? — 6023 chars
+- [mu9v2gzhMDU] Volume concepts failed this month? — 6215 chars
+- [EkRrv15fckQ] Why are you still losing with the most successful strategies? — 6250 chars
+- [kb-h5npP7ko] Types of trading explained! — 6091 chars
+- [VoaaPUt1uQI] Applying our strategies to Forex & Crypto (All Pairs) — 6149 chars
+- [_PPoHRmrQkA] We teach modified VSA? | Podcast #7 — 13995 chars
+- [85RcVVM2o2k] Trade Confirmations | Power of 03, Part 03 — 9951 chars
+- [r3qO2PQ-tsI] Level Marking & Powerful POIs | Power of 03, Part 02 — 12310 chars
+- [4ytPyiZybJw] Read structure like a pro | Power of 03 part 01 — 21433 chars
+- [NvXo1pQmQnU] Top myths about trading and their reality | Ahmad Umair Akhtar with @SalahuddinTurabi — 24297 chars
+- [Uj_zZnr85eY] How to trade No Supply - No Demand Candles with CAB | Small SL Setups — 20880B (done)
+- [iMUMfAVMQsY] Support & Resistance tips for beginners. — 6103 chars
+- [ddvZYdA2ETo] Simple entry (03 Step) using absorption candle. — 8851 chars
+- [NR7ReNPsZa0] Bearish Entries using Wyckoff Rally Pattern | Part 02 — 5986 chars
+- [Ud-QYdNXOFI] Orientation session for physical classes in Islamabad. — 12748 chars
+- [q2Arjx0u0r0] Wyckoff Rally Pattern - Part 01 — 12512 chars
+- [SnfFewUovHM] VSA Trading, Expert Podcast # 02 — 17390 chars
+- [U_3sV-Pxuzs] High-probability setups by RSI Hidden Divergence | Part 02 — 9049 chars
+- [Qy-c5TQxcY4] Only 1% know these Secret RSI Setups | Part 01 — 12012 chars
+- [I3suJ1z_ku8] How it works? | Everything You Need to Know Before You Start Trading — 20195 chars
+- [K0lEDiPOPgg] Live Class 1 Batch 40: The Roadmap to Success — 19809 chars
+- [lH5_60O1I-U] My psychology after losing 3,400,000 PKR — 6424 chars
+- [XZER1V9PcP8] My 50 days live trading history! — 8352 chars
+- [lKQokZdNsmM] Crazy features of our Discord Trading Channel | Updated Version — 5905 chars
+- [MOMuSJrVkoY] Easiest Trading Strategy | How to Trade Session's Liquidity? — 13670 chars
+- [8Ra445jPIzw] Top down analysis | conceptual guide — 10962 chars
+- [vHZ39MsGlTI] The Roadmap To Success | Batch 38 Class 01, LIVE #vsa — 12421 chars
+- [UdRqz77CJjE] Top 07 ICT Concepts in 46 Minutes — 21174 chars
+- [_zmg5Z-KUCo] 08 secrets to dominate the trading game! — 8687 chars
+- [BEkjgePTwjw] VSA in Action: Decoding charts with real examples | Power of 4, Last Part — 14807B (done)
+- [DUM1tO_0HEE] Core liquidity concepts explained | Power of 4, Part 3 — 6084 chars
+- [U9O6TDivK8Y] The Smart Money | Power of Four Series, Part 02 — 8001 chars
+- [fpHd9kraGuA] Combined Power of FOUR | Ramazan Exclusive Series — 12322 chars
+- [oGOu93YYJuI] Enjoy the Trend Using RSI like never before | RSI Part 3 — 7591 chars
+- [ODUh1yFKti0] VSA Trading, Experts Podcast! — 24188 chars
+- [1_g6nFJkkA4] How to Calculate Lot Size & Manage Risk on MT5 | Forex Risk Management — 6039 chars
+- [WWwJj1HGY78] Best Trade Setups using RSI Hidden Divergence | Part 2 — 9598 chars
+- [oR7PtTaf2z8] Profitable & Simple RSI Strategy | Profits in Buy & Sell Both — 13874 chars
+- [pUXZCKc6qgA] Why I Started Physical Trading Classes | The Real Difference It Makes — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [OONiWogl9Lo] I failed on my trades | My best podcast ever! — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [YvBYWhAGm0Q] Top 3 Liquidity Secrets & how to track FAKE breakout! — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [JWmETwP7sx0] How to Short Gold Using VSA | Sell Side Scalping Strategy Part 2 — 10798B (done)
+- [2mKEfO85D04] VSA Buy Side Scalping Strategy for Gold | 1-Minute Setup Part 1 — 21401B (done)
+- [YJmZYdxvWQM] Trading vs Traditional Business Which Is More Profitable? l The Truth About Trading vs Business — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [B2PWH5tlvfw] Perfecting Your Trades with the Two-Bar Reversal Technique l Master Two-Bar Reversals — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [eqotu5ycfdk] How to Avoid Losses and Focus on Profitable Trading l Top Strategies and Points for Trading Success — 42590B (done)
+- [d7hNl0BHvGw] How to Find High Probability Trade Entry Points with POI l Mastering Trade Entries🔥 — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [gNeWsjFhWBI] How to Build a Trading Strategy (Of Your Own) | Master a New Trading Method l The Forex Guide — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [Mpe_eVmq9Do] How to Take Profitable Sell Entries in Gold (XAU/USD) | Master Sell Entry Techniques — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [jSHqcI1vRa8] Smart Ways to Invest Your Money l Best Investment Strategies for 2025 — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [JY7e8p3Ioqw] How to Calculate Equity and Balance Drawdowns in Your Trading Account l Equity vs Balance Drawdown — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [Utr_qjJp7Mo] My VSA Trading Journey From Beginner to Profitable Trader l My Trading Journey — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [v2VcTm6oc2k] How to Get a Funded Account A Step by Step Tutorial l Funded Trading Account Explained — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [Ti7LA2Jau38] What is Crypto Forex? l Forex and Crypto Explained in Urdu l Live at ABN News! — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [TO9RIFTSNZA] Mastering Trade Entry Points and Candlestick Patterns l Perfect Entry Points — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [eypnHPfJ7i0] Funded (Prop) Firms A-Z explained | How & what to do? — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [h0zfMD4DMIU] From Zero to Hero My Journey to Trading Success l How I Became a Successful Trader — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [ctasrXSupMo] YouTube 100K Subscribers Silver Play Button UNBOXING! l We Hit 100,000 Traders Community Milestone — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [_Y9vdDmzGj8] My Trading POV | Speech at NCFCT Karachi — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [TFPArm0Y0vg] 5 MUST DO Things Before Trading Forex l Trading Psychology Series — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [7eaj4rLx31c] Level Marking Trade Entry Risk Management Tips l How to Manage Risk in Trading l The Forex Guide — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [c8LcGA1kBeA] How to Use Gold Supreme VSA Strategy | Grow your accounts like a PRO — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [fpod5Ww70BY] How Smart Money Traps Retail Traders | VSA Scenario 3 Full Breakdown — 22627B (done)
+- [2iKTi1KgJWQ] How to Trade the Climatic Action Bar | VSA Scenario 2 Full Breakdown — 25479B (done)
+- [H3tWGmJ1Xcw] Premium VSA (Volume) Series | Part 03 — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [iIeI_556lk8] Secrets of VSA Trading | Part 02 — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [LS_9YetZ3m4] GupShup With Students | Surprises & Reviews #skillcentric — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [qnEtKoVP_S4] Why Most Traders Fail | The VSA Strategy That Actually Works — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [u6BwXYyNP6w] Advanced Market Structure & Level Marking | Premium Session Part 02 — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [2c0Db0zfSmw] Mastering Market Structure Part 01 | Premium Session — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [LWjRyAWD4YM] Class 01 Premium Session Batch 30 VSA | New Updates — 10989B (done)
+- [dXnhO2Yb8N8] How to go Zoom LIVE with me while I trade? — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [WotmPcPxQXc] Inside our discord trading server? | Daily Live Trading — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [TJu8ISz2umc] VSA Live Premium Session Batch 27 — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [LTiO4lY-BiA] The Forex Guide 2.0: Our New Learning Portal & Live Trading Batch Announcement — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [L1ZTZuzKp-A] Premium VSA Strategy Live Trade Session Batch 25 — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [1iVxcEwDefQ] VSA Live Session and Trade Entry Method, Detailed Discussion — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [zBeS5L5Chq8] Maximum risk per trade? how to adjust lot size? | Risk Management Last Part — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [Dgt0dk2I3x8] How to draw market structure | Zoom Session — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [mQsrG2afJRw] Premium VSA Trading ZOOM Session Batch 22. — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [CrG2QzVFY-g] Most Important Rules to trade | Batch 24 Phase 1 and 2. — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [rWK5yy_YO1E] VSA Live Session Batch 21 #forextrading #gold Volume Spread Analysis — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [VRJt9IS6s3M] VSA and SMC Discussion, Batch 22 #forextrading #gold #trading — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [P1D8iJjqGEI] Risk Management Series Part II. Pips count and lot size calculation. #gold #forex #forextrading — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [OvMRMML2fUE] Manage your trading risk, Use of MT 5 | Part 01 #riskmanagement — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [J8rJlQ3l3Sk] Live Session Batch 21. Phase 1 and 2 #forex #tradingstrategy #gold — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [3Nh8X11WSFQ] Why you should learn volume (VSA) before trading? — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [dYppzThKYRM] VSA Final Live Session Batch 18 #forex #vsa #forextrading #goldtrading — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [E8JKIsq0_kc] Live Session Batch 19 Phase 1 and 2 #forex #gold #smc — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [stBj57fRY-o] Live Session 2 Batch 18 (Price Action + SMC) #forextrading #forex #gold — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [a7BFv-AdCkM] Volume Spread Analysis Live Session Batch 17 (Final Q/A Session) #forex #forextrading — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [Hy_2shSEKKU] Live Session 1 Batch 19 — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [nv8CqlBaRHo] A Brief Introduction of My Trading Strategy and Its Accuracy Level. How to Join Discord Community? — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [kyvSpyftaWs] Combined Live Session Batch 17 and 18. PRE VSA SESSION #forex #gold #forextrading — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [N3tKJwf1g4c] Live Session 4 Batch 17 A combination of VSA and SMC #forextrading #gold — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [8gwnT-kXJSM] Live session 3 Batch 17 A combination of SMC + VSA — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [4_rz-bwDGno] Live session (Phase 2 SMC) Liquidity, Order Block and Fair Value Gap #forextrading — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [iAaMW4nZQCo] True Concept of ORDER BLOCK | Find & Trade — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [Uj8iDiPb0X4] My most Favorite Scalping Strategy #forex — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [aeWiIohA1Ow] BEST RSI STRATEGY with high accuracy level — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [ub_zumAib_E] Volume Based 5 Minutes Gold Scalping Strategy — 10562B (done)
+- [cPaLNRvnjlI] Candle Formation and Famous P/A Candle Patterns | 03 — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [77i2vIQ_qu8] Drawing correct Fibonacci levels — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [HB8fVZPAcL4] Trading View Complete Tutorial — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
+- [qnP01YhrPMA] Basics you should know about Forex Trading — FAILED: Error code: 429 - {'error': {'message': 'You exceeded your current quota, please
