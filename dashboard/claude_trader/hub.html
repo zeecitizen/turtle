@@ -3,461 +3,203 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Shano Trading</title>
+<title>Shano Trading Desk</title>
 <link rel="manifest" href="/shano/manifest.json" />
 <style>
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
-    background: linear-gradient(180deg, #fafafa 0%, #f0f0f0 100%);
-    min-height: 100vh;
-    color: #1d1d1f;
-    -webkit-font-smoothing: antialiased;
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#0a0e17; --bg2:#0f1521; --card:#141b2b; --card2:#1a2336;
+    --line:rgba(255,255,255,0.07); --txt:#e6ebf5; --dim:#8a96ad; --faint:#5a6478;
+    --green:#2bd576; --red:#ff5a6a; --amber:#ffb33e; --blue:#4d9fff; --purple:#b07cff;
   }
-  .wrap {
-    max-width: 720px;
-    margin: 0 auto;
-    padding: 32px 20px 80px;
-  }
-  .header {
-    text-align: center;
-    margin-bottom: 36px;
-  }
-  .logo {
-    font-size: 56px;
-    line-height: 1;
-    margin-bottom: 6px;
-  }
-  h1 {
-    font-size: 28px;
-    font-weight: 600;
-    letter-spacing: -0.5px;
-    margin: 0 0 4px;
-  }
-  .sub {
-    color: #6e6e73;
-    font-size: 15px;
-    margin: 0;
-  }
-  .live-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: rgba(52,199,89,0.12);
-    color: #1c8a3a;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-    margin-top: 10px;
-  }
-  .live-badge::before {
-    content: ''; display: inline-block;
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #34c759;
-    animation: pulse 1.6s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.6;transform:scale(1.3);} }
-
-  /* Combined EA online status panel */
-  .systems-status {
-    margin: 14px auto 0;
-    max-width: 540px;
-    padding: 12px 16px;
-    border-radius: 14px;
-    text-align: left;
-    font-size: 13px;
-    line-height: 1.4;
-    background: rgba(52,199,89,0.10);
-    border: 1px solid rgba(52,199,89,0.30);
-    color: #1c8a3a;
-    transition: background 0.2s, border-color 0.2s, color 0.2s;
-  }
-  .systems-status[data-state="warn"] {
-    background: rgba(255,149,0,0.12);
-    border-color: rgba(255,149,0,0.35);
-    color: #b35900;
-  }
-  .systems-status[data-state="error"] {
-    background: rgba(255,59,48,0.12);
-    border-color: rgba(255,59,48,0.40);
-    color: #b32424;
-  }
-  .systems-status[data-state="loading"] {
-    background: rgba(0,0,0,0.04);
-    border-color: rgba(0,0,0,0.10);
-    color: #6e6e73;
-  }
-  .systems-headline {
-    font-weight: 600;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .systems-headline::before {
-    content: '●';
-    font-size: 12px;
-  }
-  .systems-detail {
-    margin-top: 6px;
-    font-size: 12px;
-    color: inherit;
-    opacity: 0.85;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-    white-space: pre-line;
-  }
-
-  .tiles {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  @media (max-width: 480px) {
-    .tiles { grid-template-columns: 1fr; }
-  }
-  .tile {
-    background: white;
-    border: 1px solid rgba(0,0,0,0.06);
-    border-radius: 18px;
-    padding: 24px 20px;
-    text-decoration: none;
-    color: inherit;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    display: block;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
-    position: relative;
-    overflow: hidden;
-  }
-  .tile:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
-  }
-  .tile:active { transform: translateY(0); }
-  .tile-icon {
-    font-size: 40px;
-    line-height: 1;
-    margin-bottom: 12px;
-    display: block;
-  }
-  .tile-title {
-    font-size: 19px;
-    font-weight: 600;
-    margin-bottom: 4px;
-    letter-spacing: -0.3px;
-  }
-  .tile-desc {
-    font-size: 13px;
-    color: #6e6e73;
-    line-height: 1.4;
-  }
-  .tile-stat {
-    margin-top: 12px;
-    font-size: 12px;
-    color: #8e8e93;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  }
-
-  .tile.featured {
-    background: linear-gradient(135deg, #fff 0%, #fff5e6 100%);
-    border-color: rgba(255,149,0,0.20);
-  }
-  .tile.shadow-tile {
-    background: linear-gradient(135deg, #fff 0%, #fef3c7 100%);
-    border-color: rgba(217,119,6,0.18);
-  }
-
-  .section-h {
-    font-size: 13px;
-    font-weight: 600;
-    color: #6e6e73;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin: 36px 0 12px;
-    padding: 0 4px;
-  }
-
-  .exp-list {
-    background: white;
-    border-radius: 14px;
-    border: 1px solid rgba(0,0,0,0.06);
-    overflow: hidden;
-  }
-  .exp-row {
-    display: flex;
-    align-items: center;
-    padding: 12px 18px;
-    text-decoration: none;
-    color: inherit;
-    border-bottom: 1px solid rgba(0,0,0,0.05);
-    transition: background 0.1s;
-  }
-  .exp-row:hover { background: #f5f5f7; }
-  .exp-row:last-child { border-bottom: none; }
-  .exp-row .name { flex: 1; font-weight: 500; font-size: 14px; }
-  .exp-row .id { font-family: ui-monospace, monospace; font-size: 11px; color: #8e8e93; margin-right: 12px; }
-  .exp-row .arrow { color: #c7c7cc; font-size: 18px; }
-  .exp-empty {
-    padding: 28px 18px;
-    text-align: center;
-    color: #8e8e93;
-    font-size: 13px;
-  }
-  .new-btn {
-    display: block;
-    text-align: center;
-    background: #007aff;
-    color: white;
-    padding: 12px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 600;
-    margin-top: 12px;
-    font-size: 14px;
-    border: none;
-    width: 100%;
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .new-btn:hover { background: #006fe6; }
-
-  .footer {
-    text-align: center;
-    color: #8e8e93;
-    font-size: 11px;
-    margin-top: 40px;
-    line-height: 1.6;
-  }
+  body{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",system-ui,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -100px,#16203a 0%,var(--bg) 60%);
+    color:var(--txt);-webkit-font-smoothing:antialiased;min-height:100vh}
+  .wrap{max-width:760px;margin:0 auto;padding:20px 16px 90px}
+  /* header */
+  .hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .brand{display:flex;align-items:center;gap:10px}
+  .brand .logo{font-size:26px}
+  .brand h1{font-size:18px;font-weight:700;letter-spacing:-.3px}
+  .brand .sub{font-size:11px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase}
+  .mkt{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;
+    padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+  .mkt .dot{width:8px;height:8px;border-radius:50%}
+  .mkt[data-s="live"]{color:var(--green)} .mkt[data-s="live"] .dot{background:var(--green);animation:pulse 1.6s infinite}
+  .mkt[data-s="break"]{color:var(--amber)} .mkt[data-s="break"] .dot{background:var(--amber)}
+  .mkt[data-s="closed"],.mkt[data-s="unknown"]{color:var(--faint)} .mkt[data-s="closed"] .dot{background:var(--faint)}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.4)}}
+  /* hero */
+  .hero{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);
+    border-radius:22px;padding:22px;margin-bottom:16px;position:relative;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+  .hero .lbl{font-size:11px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
+  .hero .big{font-size:46px;font-weight:800;letter-spacing:-1.5px;line-height:1}
+  .hero .big.pos{color:var(--green)} .hero .big.neg{color:var(--red)} .hero .big.flat{color:var(--txt)}
+  .hero .meta{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap}
+  .hero .meta .m{font-size:13px;color:var(--dim)} .hero .meta .m b{color:var(--txt);font-size:15px}
+  .spark{position:absolute;right:0;bottom:0;width:55%;height:70px;opacity:.9}
+  /* section title */
+  .st{font-size:11px;font-weight:700;color:var(--faint);letter-spacing:1.5px;text-transform:uppercase;margin:22px 4px 10px}
+  /* EA cards */
+  .eas{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  @media(max-width:560px){.eas{grid-template-columns:1fr}}
+  .ea{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;position:relative}
+  .ea .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .ea .nm{font-size:15px;font-weight:700} .ea .nm.s3{color:var(--amber)} .ea .nm.s1{color:var(--blue)} .ea .nm.ns{color:var(--purple)}
+  .ea .sd{width:9px;height:9px;border-radius:50%;background:var(--faint)}
+  .ea .sd.on{background:var(--green);box-shadow:0 0 8px var(--green)}
+  .ea .pnl{font-size:22px;font-weight:800;letter-spacing:-.5px}
+  .ea .pnl.pos{color:var(--green)} .ea .pnl.neg{color:var(--red)} .ea .pnl.flat{color:var(--faint)}
+  .ea .row{font-size:11.5px;color:var(--dim);margin-top:6px}
+  .ea .tag{font-size:10px;color:var(--faint);margin-top:2px}
+  /* systems strip */
+  .sys{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+  .sys .chip{font-size:11px;font-family:ui-monospace,Menlo,monospace;padding:5px 9px;border-radius:8px;
+    background:var(--card);border:1px solid var(--line);color:var(--dim)}
+  .sys .chip.ok{color:var(--green)} .sys .chip.bad{color:var(--red);border-color:rgba(255,90,106,.4)}
+  .banner{margin-top:10px;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:600}
+  .banner.ok{background:rgba(43,213,118,.08);border:1px solid rgba(43,213,118,.25);color:var(--green)}
+  .banner.warn{background:rgba(255,179,62,.1);border:1px solid rgba(255,179,62,.3);color:var(--amber)}
+  /* trade feed */
+  .feed{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .tr{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px}
+  .tr:last-child{border-bottom:none}
+  .tr .t{color:var(--faint);font-family:ui-monospace,monospace;font-size:11px;width:60px}
+  .tr .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--card2)}
+  .tr .badge.S3{color:var(--amber)} .tr .badge.S1{color:var(--blue)} .tr .badge.NSND{color:var(--purple)}
+  .tr .sd{color:var(--dim);flex:1;font-size:12px}
+  .tr .ex{font-size:10px;color:var(--faint)}
+  .tr .v{font-weight:700;font-variant-numeric:tabular-nums}
+  .tr .v.pos{color:var(--green)} .tr .v.neg{color:var(--red)}
+  .feed .empty{padding:22px;text-align:center;color:var(--faint);font-size:13px}
+  /* tiles */
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;
+    text-decoration:none;color:inherit;transition:transform .12s,border-color .12s;display:block}
+  .tile:active{transform:scale(.98)} .tile:hover{border-color:rgba(255,255,255,.18)}
+  .tile .ic{font-size:24px} .tile .tt{font-weight:700;font-size:15px;margin-top:8px}
+  .tile .ds{font-size:12px;color:var(--dim);margin-top:3px;line-height:1.4}
+  .foot{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;line-height:1.6}
 </style>
 </head>
 <body>
-
 <div class="wrap">
-  <div class="header">
-    <div class="logo">🔥</div>
-    <h1>Shano Trading</h1>
-    <p class="sub">XAUUSD momentum scalper</p>
-    <span class="live-badge" id="liveBadge">checking...</span>
-    <div id="systemsStatus" class="systems-status" data-state="loading">
-      <div class="systems-headline">checking systems…</div>
-      <div class="systems-detail" id="systemsDetail"></div>
+  <div class="hdr">
+    <div class="brand">
+      <div class="logo">🔥</div>
+      <div><h1>Shano Trading Desk</h1><div class="sub">XAUUSD · VSA EAs</div></div>
     </div>
+    <span class="mkt" id="mkt" data-s="unknown"><span class="dot"></span><span id="mktTxt">…</span></span>
   </div>
 
+  <!-- HERO: today's P&L -->
+  <div class="hero">
+    <div class="lbl" id="heroDate">TODAY</div>
+    <div class="big flat" id="heroPnl">$0.00</div>
+    <div class="meta">
+      <span class="m">WR <b id="hWr">—</b></span>
+      <span class="m">Trades <b id="hN">—</b></span>
+      <span class="m">W/L <b id="hWL">—</b></span>
+    </div>
+    <svg class="spark" id="spark" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>
+  </div>
+
+  <!-- per-EA cards -->
+  <div class="st">Engines</div>
+  <div class="eas" id="eas"></div>
+
+  <!-- systems health -->
+  <div class="st">System Health</div>
+  <div class="sys" id="sys"></div>
+  <div class="banner ok" id="banner">checking…</div>
+
+  <!-- live trade feed -->
+  <div class="st">Today's Trades</div>
+  <div class="feed" id="feed"><div class="empty">loading…</div></div>
+
+  <!-- tiles -->
+  <div class="st">Tools</div>
   <div class="tiles">
-    <a href="/shano#trades" class="tile featured">
-      <span class="tile-icon">⚡</span>
-      <div class="tile-title">Live Trading</div>
-      <div class="tile-desc">S1 · S3 · NSND — 3 VSA EAs · today's P&L &amp; recent fills</div>
-      <div class="tile-stat" id="liveStat">—</div>
-    </a>
-
-    <a href="/strategies" class="tile">
-      <span class="tile-icon">📖</span>
-      <div class="tile-title">Strategy Playbook</div>
-      <div class="tile-desc">Exact step-by-step rules for S1, S3 &amp; NSND — remember them forever</div>
-      <div class="tile-stat">3 EAs · VSA</div>
-    </a>
-
-    <a href="/shadow" class="tile shadow-tile">
-      <span class="tile-icon">🧪</span>
-      <div class="tile-title">Experiment Lab</div>
-      <div class="tile-desc">Tune parameters, run side-by-side what-if comparisons</div>
-      <div class="tile-stat" id="expCount">—</div>
-    </a>
-
-    <a href="/shano#rules" class="tile">
-      <span class="tile-icon">📋</span>
-      <div class="tile-title">Rule Compliance</div>
-      <div class="tile-desc">Shano's rules vs running code — should all be ✓</div>
-      <div class="tile-stat" id="rulesStat">—</div>
-    </a>
-
-    <a href="/shano#trades" class="tile">
-      <span class="tile-icon">💹</span>
-      <div class="tile-title">Recent Trades</div>
-      <div class="tile-desc">Probes and mains — newest first</div>
-      <div class="tile-stat" id="tradesStat">—</div>
-    </a>
-
-    <a href="javascript:void(0)" class="tile" id="uhvSweepTile">
-      <span class="tile-icon">🤖</span>
-      <div class="tile-title">Trading EAs <span style="font-size:10px;color:#888;">LIVE</span></div>
-      <div class="tile-desc">S1 big-spread climax · S3 liquidity sweep · NSND no-supply/demand</div>
-      <div class="tile-stat" id="uhvSweepStat">checking…</div>
-    </a>
+    <a class="tile" href="/strategies"><div class="ic">📖</div><div class="tt">Strategy Playbook</div><div class="ds">Exact step-by-step rules for S1 · S3 · NSND</div></a>
+    <a class="tile" href="/shano#trades"><div class="ic">💹</div><div class="tt">Trade History</div><div class="ds">Full fills, win rate, P&amp;L breakdown</div></a>
+    <a class="tile" href="/shadow"><div class="ic">🧪</div><div class="tt">Experiment Lab</div><div class="ds" id="expDs">Backtests &amp; what-if comparisons</div></a>
+    <a class="tile" href="/shano#rules"><div class="ic">✅</div><div class="tt">Rule Compliance</div><div class="ds" id="rulesDs">Rules vs running code</div></a>
   </div>
 
-  <div class="section-h">Your Experiments</div>
-  <div class="exp-list" id="expList">
-    <div class="exp-empty">loading…</div>
-  </div>
-  <button class="new-btn" id="newExpBtn">+ New experiment</button>
-
-  <div class="footer">
-    Live system runs on this Mac · Reach from phone:
-    <a href="http://192.168.1.7:3457/" style="color:#007aff;">192.168.1.7:3457</a>
-  </div>
+  <div class="foot">Auto-refreshes every 5s · runs on this machine<br>EV-weighted: S3 0.03 · S1 0.02 · NSND 0.01</div>
 </div>
 
 <script>
-async function loadUhvSweep() {
-  try {
-    const r = await fetch('/api/ea-status');
-    if (!r.ok) return;
-    const d = await r.json();
-    const tile = document.getElementById('uhvSweepStat');
-    const c = d.components || {};
-    const eas = ['s3_trader', 's1_trader', 'nsnd_trader'];
-    const aliveN = eas.filter(k => c[k] && c[k].alive).length;
-    const ents = eas.reduce((s, k) => s + ((c[k] && c[k].entries_today) || 0), 0);
-    const color = aliveN === 3 ? '#34c759' : '#ff9500';
-    let line = `<span style="color:${color};">${aliveN}/3 EAs live</span> · ${ents} fills today`;
-    if (d.pnl && d.pnl.n != null) {
-      const real = d.pnl.today_total;
-      const sgn = real >= 0 ? '+' : '−';
-      const pc = real >= 0 ? '#34c759' : '#ff3b30';
-      line += ` · <span style="color:${pc};">${sgn}$${Math.abs(real).toFixed(2)}</span>`;
-    }
-    tile.innerHTML = line;
-  } catch (e) {
-    const tile = document.getElementById('uhvSweepStat');
-    if (tile) tile.innerHTML = '<span style="color:#999;">—</span>';
-  }
-}
-setInterval(loadUhvSweep, 5000);
-loadUhvSweep();
+const $=id=>document.getElementById(id);
+const money=v=>(v>0?'+':v<0?'−':'')+'$'+Math.abs(v).toFixed(2);
+const EAMETA={S3:{cls:'s3',full:'Liquidity Sweep'},S1:{cls:'s1',full:'UHV Breakout'},NSND:{cls:'ns',full:'No Supply/Demand'}};
 
-// Combined EA online status (S3, NSND, S1, TurtleTradeLogger, ShanoTickLogger)
-async function loadSystemsStatus() {
-  const wrap = document.getElementById('systemsStatus');
-  const headline = wrap && wrap.querySelector('.systems-headline');
-  const detail = document.getElementById('systemsDetail');
-  if (!wrap || !headline || !detail) return;
-  try {
-    const r = await fetch('/api/ea-status');
-    if (!r.ok) throw new Error('http ' + r.status);
-    const d = await r.json();
-    const comps = d.components || {};
-    const order = ['s3_trader', 'nsnd_trader', 's1_trader', 'turtle_trade_logger', 'shano_tick_logger'];
-    const labels = { s3_trader: 'S3', nsnd_trader: 'NSND', s1_trader: 'S1',
-                     turtle_trade_logger: 'Fills', shano_tick_logger: 'Ticks' };
-    const lines = order.map(k => {
-      const c = comps[k];
-      if (!c) return `${labels[k]}: ?`;
-      const dot = c.alive ? '✓' : '✗';
-      const age = (c.heartbeat_age_sec ?? c.last_write_age_sec);
-      const ageStr = (age != null) ? ` (${age < 60 ? age + 's' : Math.floor(age/60) + 'm'} ago)` : '';
-      return `${dot} ${labels[k]}${ageStr}`;
-    });
-    // today's P&L line
-    let pnlLine = '';
-    if (d.pnl && d.pnl.n != null) {
-      const p = d.pnl;
-      const sign = p.today_total > 0 ? '+' : (p.today_total < 0 ? '−' : '');
-      pnlLine = `\n${p.date || 'today'}: ${sign}$${Math.abs(p.today_total).toFixed(2)}  ·  ${p.n} trades  ${p.wins}W/${p.losses}L  (${p.wr}% WR)`;
-    }
-    if (d.all_systems_go) {
-      wrap.dataset.state = 'ok';
-      headline.textContent = d.headline || 'All Systems Online';
-      detail.textContent = lines.join('   ') + pnlLine;
-    } else {
-      wrap.dataset.state = (d.warnings && d.warnings.length > 1) ? 'error' : 'warn';
-      headline.textContent = d.headline || 'Something is wrong';
-      detail.textContent = lines.join('   ') + pnlLine + '\n' + (d.warnings || []).join('\n');
-    }
-  } catch (e) {
-    wrap.dataset.state = 'error';
-    headline.textContent = 'Status check failed';
-    detail.textContent = e.message;
-  }
-}
-setInterval(loadSystemsStatus, 5000);
-loadSystemsStatus();
-
-async function loadStats() {
-  try {
-    const r = await fetch('/api/shano');
-    if (!r.ok) return;
-    const d = await r.json();
-    // Live stat now driven by UhvSweep (the new live engine)
-    try {
-      const u = await (await fetch('/api/uhv-sweep')).json();
-      // Live Dashboard tile now reflects the 3 live EAs (S1/S3/NSND), not retired UhvSweep
-      const es = await (await fetch('/api/ea-status')).json();
-      if (es.pnl && es.pnl.n != null) {
-        const r = es.pnl.today_total;
-        const sgn = r >= 0 ? '+' : '−';
-        document.getElementById('liveStat').textContent =
-          `${es.pnl.date}: ${sgn}$${Math.abs(r).toFixed(2)} · ${es.pnl.n} trades ${es.pnl.wins}W/${es.pnl.losses}L`;
-      }
-      // top badge driven by the real 3-EA health
-      const badge = document.getElementById('liveBadge');
-      if (es.all_systems_go) {
-        badge.textContent = '3 EAs live';
-        badge.style.background = 'rgba(52,199,89,0.12)';
-        badge.style.color = '#1c8a3a';
-        badge.style.setProperty('--dot', '#34c759');
-      } else {
-        badge.textContent = (es.warnings && es.warnings.length) ? es.warnings[0].slice(0, 40) : 'system needs attention';
-        badge.style.background = 'rgba(255,149,0,0.12)';
-        badge.style.color = '#b35900';
-        badge.style.setProperty('--dot', '#ff9500');
-      }
-    } catch (e) {}
-
-    const live = d.live || {};
-    if (d.rules?.passed != null) {
-      document.getElementById('rulesStat').textContent =
-        `${d.rules.passed}/${d.rules.total} rules passing`;
-    }
-    document.getElementById('tradesStat').textContent =
-      `today: ${live.today_main_wins || 0}W / ${live.today_main_losses || 0}L`;
-  } catch (e) {}
+function drawSpark(eq){
+  const svg=$('spark'); if(!eq||eq.length<2){svg.innerHTML='';return;}
+  const min=Math.min(0,...eq),max=Math.max(0,...eq),rng=(max-min)||1;
+  const W=300,H=70,pad=6;
+  const pts=eq.map((v,i)=>[pad+i*(W-2*pad)/(eq.length-1),H-pad-(v-min)/rng*(H-2*pad)]);
+  const last=eq[eq.length-1],col=last>=0?'var(--green)':'var(--red)';
+  const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const area=line+` L${pts[pts.length-1][0].toFixed(1)} ${H} L${pts[0][0].toFixed(1)} ${H} Z`;
+  svg.innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="${col}" stop-opacity="0.35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#g)"/><path d="${line}" fill="none" stroke="${col}" stroke-width="2"/>`;
 }
 
-async function loadExperiments() {
-  try {
-    const r = await fetch('/api/shadow/list');
-    const data = await r.json();
-    const list = data.experiments || [];
-    document.getElementById('expCount').textContent =
-      `${list.length} experiment${list.length === 1 ? '' : 's'}`;
-
-    const el = document.getElementById('expList');
-    if (list.length === 0) {
-      el.innerHTML = '<div class="exp-empty">no experiments yet — click below to create one</div>';
-      return;
-    }
-    el.innerHTML = list.map(e => `
-      <a href="/shadow/${e.id}" class="exp-row">
-        <span class="name">${escapeHtml(e.name || 'unnamed')}</span>
-        <span class="id">${e.id.slice(-6)}</span>
-        <span class="arrow">›</span>
-      </a>
-    `).join('');
-  } catch (e) {
-    document.getElementById('expList').innerHTML = '<div class="exp-empty">failed to load</div>';
-  }
+async function load(){
+  let d; try{ d=await (await fetch('/api/ea-status',{cache:'no-store'})).json(); }catch(e){return;}
+  // market
+  const mkt=$('mkt'),mt=d.market||{}; mkt.dataset.s=mt.status||'unknown';
+  $('mktTxt').textContent={live:'Market Live',break:'Daily Break',closed:'Market Closed',unknown:'…'}[mt.status||'unknown'];
+  // hero
+  const p=d.pnl||{}; const tot=p.today_total||0;
+  $('heroDate').textContent=(p.date||'TODAY')+' · realized';
+  const hp=$('heroPnl'); hp.textContent=money(tot); hp.className='big '+(tot>0?'pos':tot<0?'neg':'flat');
+  $('hWr').textContent=(p.wr!=null?p.wr+'%':'—');
+  $('hN').textContent=(p.n!=null?p.n:'—');
+  $('hWL').textContent=(p.wins!=null?p.wins+'W / '+p.losses+'L':'—');
+  drawSpark(d.equity);
+  // EA cards
+  const c=d.components||{}, pe=d.per_ea||{};
+  const map=[['S3','s3_trader'],['S1','s1_trader'],['NSND','nsnd_trader']];
+  $('eas').innerHTML=map.map(([k,ck])=>{
+    const comp=c[ck]||{}, e=pe[k]||{n:0,w:0,l:0,pnl:0}, meta=EAMETA[k];
+    const pc=e.pnl>0?'pos':e.pnl<0?'neg':'flat';
+    return `<div class="ea"><div class="top"><span class="nm ${meta.cls}">${k}</span>
+      <span class="sd ${comp.alive?'on':''}"></span></div>
+      <div class="pnl ${pc}">${money(e.pnl||0)}</div>
+      <div class="row">${e.n||0} trades · ${e.w||0}W/${e.l||0}L</div>
+      <div class="tag">${meta.full} · ${comp.lots!=null?comp.lots+' lots':''}</div></div>`;
+  }).join('');
+  // systems strip
+  const order=[['s3_trader','S3'],['s1_trader','S1'],['nsnd_trader','NSND'],['turtle_trade_logger','Fills'],['shano_tick_logger','Ticks']];
+  $('sys').innerHTML=order.map(([ck,lbl])=>{
+    const x=c[ck]||{}; const age=x.heartbeat_age_sec??x.last_write_age_sec;
+    const a=age!=null?(age<60?age+'s':Math.floor(age/60)+'m'):'';
+    return `<span class="chip ${x.alive?'ok':'bad'}">${x.alive?'●':'○'} ${lbl} ${a}</span>`;
+  }).join('');
+  const b=$('banner');
+  const onBreak=(mt.status==='break'||mt.status==='closed');
+  // during a market break the heartbeats freeze (no ticks) — that's normal, not a fault
+  const onlyHb=(d.warnings||[]).every(w=>/heartbeat stale|tick file stale|NOT writing today/.test(w));
+  if(d.all_systems_go){b.className='banner ok';b.textContent='✓ '+(d.headline||'All Systems Online');}
+  else if(onBreak&&onlyHb){b.className='banner ok';b.textContent='✓ '+(mt.status==='break'?'Market on daily break — EAs paused, will auto-resume':'Market closed — EAs idle until open');}
+  else{b.className='banner warn';b.textContent='⚠ '+(d.warnings&&d.warnings[0]||d.headline);}
+  // trade feed
+  const f=$('feed'), rec=d.recent||[];
+  if(!rec.length){f.innerHTML='<div class="empty">No trades yet today</div>';}
+  else{f.innerHTML=rec.map(t=>`<div class="tr"><span class="t">${t.time}</span>
+    <span class="badge ${t.ea.replace('?','')}">${t.ea}</span>
+    <span class="sd">${t.side} ${t.exit?'· '+t.exit:''}</span>
+    <span class="v ${t.pnl>=0?'pos':'neg'}">${money(t.pnl)}</span></div>`).join('');}
 }
+load(); setInterval(load,5000);
 
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-}
-
-document.getElementById('newExpBtn').onclick = async () => {
-  try {
-    const r = await fetch('/api/shadow/create', { method: 'POST', headers: {'Content-Type':'application/json'}, body:'{}' });
-    const data = await r.json();
-    if (data.url) window.location.href = data.url;
-  } catch (e) { alert('create failed: ' + e.message); }
-};
-
-loadStats();
-loadExperiments();
-setInterval(loadStats, 5000);
+// experiments count
+fetch('/api/shadow/list').then(r=>r.json()).then(d=>{
+  const n=(d.experiments||[]).length; if(n) $('expDs').textContent=n+' experiments · backtests & what-ifs';
+}).catch(()=>{});
 </script>
-
 </body>
 </html>
