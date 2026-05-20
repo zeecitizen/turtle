@@ -392,28 +392,26 @@ async function loadStats() {
     // Live stat now driven by UhvSweep (the new live engine)
     try {
       const u = await (await fetch('/api/uhv-sweep')).json();
-      if (u.alive) {
-        const r = u.realized_today_usd;
+      // Live Dashboard tile now reflects the 3 live EAs (S1/S3/NSND), not retired UhvSweep
+      const es = await (await fetch('/api/ea-status')).json();
+      if (es.pnl && es.pnl.n != null) {
+        const r = es.pnl.today_total;
         const sgn = r >= 0 ? '+' : '−';
         document.getElementById('liveStat').textContent =
-          `today: ${sgn}$${Math.abs(r).toFixed(2)} · ${u.entries_today || 0} entries${u.position_open ? ' · OPEN' : ''}`;
-      } else {
-        document.getElementById('liveStat').textContent = 'EA offline';
+          `${es.pnl.date}: ${sgn}$${Math.abs(r).toFixed(2)} · ${es.pnl.n} trades ${es.pnl.wins}W/${es.pnl.losses}L`;
       }
-    } catch (e) {}
-
-    const badge = document.getElementById('liveBadge');
-    try {
-      const u2 = await (await fetch('/api/uhv-sweep')).json();
-      if (u2.alive && d.tv_cdp && d.mt5) {
-        badge.textContent = 'UhvSweep live';
+      // top badge driven by the real 3-EA health
+      const badge = document.getElementById('liveBadge');
+      if (es.all_systems_go) {
+        badge.textContent = '3 EAs live';
         badge.style.background = 'rgba(52,199,89,0.12)';
         badge.style.color = '#1c8a3a';
+        badge.style.setProperty('--dot', '#34c759');
       } else {
-        badge.textContent = 'system needs attention';
-        badge.style.background = 'rgba(255,59,48,0.12)';
-        badge.style.color = '#c92a23';
-        badge.style.setProperty('--dot', '#ff3b30');
+        badge.textContent = (es.warnings && es.warnings.length) ? es.warnings[0].slice(0, 40) : 'system needs attention';
+        badge.style.background = 'rgba(255,149,0,0.12)';
+        badge.style.color = '#b35900';
+        badge.style.setProperty('--dot', '#ff9500');
       }
     } catch (e) {}
 
