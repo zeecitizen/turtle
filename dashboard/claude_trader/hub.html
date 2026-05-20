@@ -246,10 +246,10 @@
   </div>
 
   <div class="tiles">
-    <a href="/uhv-sweep" class="tile featured">
+    <a href="/shano#trades" class="tile featured">
       <span class="tile-icon">⚡</span>
-      <div class="tile-title">Live Dashboard</div>
-      <div class="tile-desc">UhvSweepExhaustion · today's P&L, open position, exhaustion exits</div>
+      <div class="tile-title">Live Trading</div>
+      <div class="tile-desc">S1 · S3 · NSND — 3 VSA EAs · today's P&L &amp; recent fills</div>
       <div class="tile-stat" id="liveStat">—</div>
     </a>
 
@@ -282,9 +282,9 @@
     </a>
 
     <a href="javascript:void(0)" class="tile" id="uhvSweepTile">
-      <span class="tile-icon">⚡</span>
-      <div class="tile-title">UhvSweep EA <span style="font-size:10px;color:#888;">LIVE</span></div>
-      <div class="tile-desc">Tick-velocity + DOM exhaustion exit engine</div>
+      <span class="tile-icon">🤖</span>
+      <div class="tile-title">Trading EAs <span style="font-size:10px;color:#888;">LIVE</span></div>
+      <div class="tile-desc">S1 big-spread climax · S3 liquidity sweep · NSND no-supply/demand</div>
       <div class="tile-stat" id="uhvSweepStat">checking…</div>
     </a>
   </div>
@@ -304,31 +304,23 @@
 <script>
 async function loadUhvSweep() {
   try {
-    const r = await fetch('/api/uhv-sweep');
+    const r = await fetch('/api/ea-status');
     if (!r.ok) return;
     const d = await r.json();
     const tile = document.getElementById('uhvSweepStat');
-    if (!d.alive) {
-      tile.innerHTML = '<span style="color:#999;">⚠ no heartbeat</span>';
-      return;
-    }
-    const age = d.heartbeat_age_sec;
-    let line;
-    if (d.position_open) {
-      const pnl = d.cur_pnl_usd;
-      const peak = d.peak_pnl_usd;
-      const sgn = pnl >= 0 ? '+' : '−';
-      const color = pnl >= 0 ? '#34c759' : '#ff3b30';
-      line = `<span style="color:${color};">${sgn}$${Math.abs(pnl).toFixed(2)}</span> · tier ${d.tier} · peak +$${peak.toFixed(2)}`;
-    } else {
-      const signals = d.signals_today || 0;
-      const entries = d.entries_today || 0;
-      const real = d.realized_today_usd || 0;
+    const c = d.components || {};
+    const eas = ['s3_trader', 's1_trader', 'nsnd_trader'];
+    const aliveN = eas.filter(k => c[k] && c[k].alive).length;
+    const ents = eas.reduce((s, k) => s + ((c[k] && c[k].entries_today) || 0), 0);
+    const color = aliveN === 3 ? '#34c759' : '#ff9500';
+    let line = `<span style="color:${color};">${aliveN}/3 EAs live</span> · ${ents} fills today`;
+    if (d.pnl && d.pnl.n != null) {
+      const real = d.pnl.today_total;
       const sgn = real >= 0 ? '+' : '−';
-      const color = real >= 0 ? '#34c759' : '#ff3b30';
-      line = `${signals} sig / ${entries} fills · today <span style="color:${color};">${sgn}$${Math.abs(real).toFixed(2)}</span>`;
+      const pc = real >= 0 ? '#34c759' : '#ff3b30';
+      line += ` · <span style="color:${pc};">${sgn}$${Math.abs(real).toFixed(2)}</span>`;
     }
-    tile.innerHTML = line + ` <span style="color:#999;font-size:10px;">${age}s</span>`;
+    tile.innerHTML = line;
   } catch (e) {
     const tile = document.getElementById('uhvSweepStat');
     if (tile) tile.innerHTML = '<span style="color:#999;">—</span>';
