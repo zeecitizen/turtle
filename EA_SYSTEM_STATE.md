@@ -153,3 +153,23 @@ Hypothesis: add Shano's probe (enter only if price moves +confirm in our favor b
 - REVISIT WHEN: ShanoTickLogger has accumulated ~30+ tick-days (collecting daily now).
   Then the OOS sample is big enough to truly judge. The probe DOES raise in-sample WR on
   reversal EAs (S3/NSND) — promising, just unproven on current 12d.
+
+---
+
+## ICHIMOKU CONFLUENCE SCALP — tested 2026-05-20, REJECTED (loses on XAUUSD)
+Source: "Systematizing Alpha" Ichimoku scalping PDF (Strategy II: Kumo + EMA21 + RSI9
+confluence, M5). Genuine backtest: real Ichimoku math (Tenkan/Kijun/Kumo/SpanA-B + 26
+shift), EMA21, RSI9, real tick fills (buy/sell-stop trigger + bracket), both param sets
+(std 9/26/52 and accelerated 5/13/26), TP sweep, walk-forward. Script: ichimoku_backtest.py.
+
+RESULT — does NOT work on gold:
+- High-WR fixed-TP configs (up to 78% WR) all have Profit Factor 0.47-0.96 -> net LOSS
+  (tiny $2-5 wins vs $17-20 losses = the high-WR/tiny-TP trap the PDF itself warns about).
+- Only R:R 2.0 showed a small positive on full 12d (PF ~1.08) BUT walk-forward destroyed it:
+  std R:R2.0 TRAIN +$404 (PF 2.23) -> TEST -$321 (PF 0.58); acc R:R2.0 TRAIN +$485 -> TEST -$373.
+  Regime-dependent (worked only on trending train half), not a real edge.
+WHY: Ichimoku lags on M5 gold (buys top of impulse); small TPs eaten by spread/noise;
+R:R 2.0 needs sustained trends gold's chop rarely gives. The PDF's 80%/6.0-PF/2944% claims
+are forex majors / crypto / cherry-picked trend conditions, NOT validated OOS on gold.
+VERDICT: do not deploy. Confirms VSA reversal EAs (S1/S3/NSND) are the right tool for gold;
+trend-following Ichimoku is not. Do not re-test unless on a different (trending FX) instrument.
