@@ -35,7 +35,7 @@
 
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
-input double InpLots          = 0.02;  // safe for $500 account; raise carefully
+input double InpLots          = 0.01;  // 2026-05-20: EV-weighted allocation — NSND is most volatile / lowest Sharpe, underweight it. Total budget unchanged at 0.06 (S3 0.03 / S1 0.02 / NSND 0.01).
 input int    InpMagicNumber   = 88006;
 
 input group "── Detection ──"

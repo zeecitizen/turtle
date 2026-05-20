@@ -37,7 +37,7 @@
 
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
-input double InpLots          = 0.02;  // v2: lowered from 0.40 — drawdown analysis showed $500 account would blow at 0.40. 0.02 caps max DD ≈ 20% of $500.
+input double InpLots          = 0.03;  // 2026-05-20: EV-weighted portfolio allocation (S3 highest EV $23/day). Total budget unchanged at 0.06 across 3 EAs (S3 0.03 / S1 0.02 / NSND 0.01). v2 note: 0.40 would blow a $500 acct.
 input int    InpMagicNumber   = 88003;
 
 input group "── Detection ──"
