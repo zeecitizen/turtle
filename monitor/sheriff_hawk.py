@@ -757,26 +757,18 @@ def _auto_restart_dead_processes(status: dict, revived: list):
         except Exception as e:
             log(f"  DASHBOARD_RESTART_ERR: {e}")
 
-    # Critical: shano_live.json freshness — if EA stops dumping live state for >120s
-    # while MT5 is alive, the EA is hung or AutoTrading was disabled. Restarting MT5
-    # is the heaviest hammer; only do it if file is severely stale (>5 min).
+    # DISABLED 2026-05-16: this block was force-restarting MT5 every ~5 min based on
+    # shano_live.json freshness (162 restarts/day, killed all active EAs each cycle).
+    # The Shano EA is retired; shano_live.json is permanently stale by design.
+    # Current EAs (S3Trader, S1Trader, BtcS3M30Trader) write to different state
+    # files. If a health check is needed in the future, monitor those instead and
+    # LOG-ONLY — do not force-restart MT5 (let user/uhv_autotrade_watchdog handle).
     try:
         live_file = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files\shano_live.json")
         if live_file.exists() and mt5_alive:
             age = time.time() - live_file.stat().st_mtime
-            if age > 300:  # 5 minutes
-                log(f"  CRITICAL: shano_live.json is {age:.0f}s stale — EA hung. Restarting MT5...")
-                subprocess.run(["taskkill", "/f", "/im", "terminal64.exe"],
-                               capture_output=True, timeout=10)
-                time.sleep(5)
-                mt5_exe = r"C:\Program Files\Blueberry Markets MetaTrader 5\terminal64.exe"
-                if Path(mt5_exe).exists():
-                    subprocess.Popen([mt5_exe], creationflags=0x08000000)
-                    log("  AUTO-RESTART: MT5 force-restarted due to stale EA heartbeat")
-                    revived.append("mt5_force")
-                    time.sleep(15)
-            elif age > 120:
-                log(f"  WARNING: shano_live.json is {age:.0f}s stale (still under 5min threshold)")
+            if age > 300:
+                log(f"  INFO: shano_live.json {age:.0f}s stale (Shano EA retired — ignoring)")
     except Exception as e:
         log(f"  EA_HEARTBEAT_CHECK_ERR: {e}")
 

@@ -1,29 +1,34 @@
 {
-  "last_sheriff_check": "2026-05-06T21:24:11Z",
+  "last_sheriff_check": "2026-05-20T09:08:44Z",
   "status": {
-    "tradingview": "ALIVE",
-    "sniper_daemon": "ALIVE",
-    "shano_hawk": "ALIVE",
+    "tradingview": "DEAD",
+    "sniper_daemon": "DEAD",
+    "shano_hawk": "DEAD",
     "mt5": "ALIVE",
-    "heartbeat_age": "24 min ago",
+    "heartbeat_age": "10600 min ago",
     "silver_hawk_learner": "ALIVE",
+    "cloudflared_daemon": "ALIVE",
+    "cloudflared_heartbeat_age": "0 min ago",
     "silver_hawk": "Teenager gen2 health=75.0",
     "patterns": 3563,
     "theories": "10 total, 0 proven",
     "interns_today": "NOT_RUN",
     "recent_trades": "4/20 (20% WR) total P&L=$-446.40",
-    "sniper_errors": 0,
+    "sniper_errors": 24,
     "verdict": "NEEDS_ATTENTION",
     "recovery_ready": true,
     "sheriff_bp": 210,
     "sheriff_mood": "cardiac_arrest"
   },
   "issues": [
-    "Heartbeat is 24 min stale \u2014 daemon may be stuck",
-    "Win rate is only 20% on last 20 trades \u2014 system needs improvement"
+    "TradingView Desktop is DOWN \u2014 no price data, no trades, no UHV detection!",
+    "Sniper daemon is NOT running! No trades will fire.",
+    "Shano Hawk is NOT running! Shano strategy paused.",
+    "Win rate is only 20% on last 20 trades \u2014 system needs improvement",
+    "24 errors in sniper log \u2014 check for bugs"
   ],
   "processes_alive": {
-    "sniper_daemon": true,
+    "sniper_daemon": false,
     "silver_hawk_learner": true
   },
   "sheriff": {

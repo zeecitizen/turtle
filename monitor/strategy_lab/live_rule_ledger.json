@@ -1,0 +1,128 @@
+{
+  "updated": "2026-05-20T13:13:52",
+  "candles_scored": 74,
+  "rules": {
+    "BUY:is_green": {
+      "n": 33,
+      "win": 11,
+      "loss": 22,
+      "wr": 33.3
+    },
+    "BUY:uptrend": {
+      "n": 31,
+      "win": 11,
+      "loss": 20,
+      "wr": 35.5
+    },
+    "BUY:has_retrace_reds": {
+      "n": 74,
+      "win": 32,
+      "loss": 42,
+      "wr": 43.2
+    },
+    "BUY:uhv_big_spread": {
+      "n": 44,
+      "win": 17,
+      "loss": 27,
+      "wr": 38.6
+    },
+    "BUY:swept_uhv_low": {
+      "n": 44,
+      "win": 20,
+      "loss": 24,
+      "wr": 45.5
+    },
+    "SELL:has_retrace_greens": {
+      "n": 74,
+      "win": 42,
+      "loss": 32,
+      "wr": 56.8
+    },
+    "SELL:uhv_big_spread": {
+      "n": 49,
+      "win": 34,
+      "loss": 15,
+      "wr": 69.4
+    },
+    "SELL:swept_uhv_high": {
+      "n": 46,
+      "win": 23,
+      "loss": 23,
+      "wr": 50.0
+    },
+    "SELL:small_lower_wick": {
+      "n": 46,
+      "win": 25,
+      "loss": 21,
+      "wr": 54.3
+    },
+    "BUY:m5_fvg_tap": {
+      "n": 35,
+      "win": 10,
+      "loss": 25,
+      "wr": 28.6
+    },
+    "SELL:is_red": {
+      "n": 41,
+      "win": 20,
+      "loss": 21,
+      "wr": 48.8
+    },
+    "BUY:small_upper_wick": {
+      "n": 58,
+      "win": 27,
+      "loss": 31,
+      "wr": 46.6
+    },
+    "BUY:wick_reclaim": {
+      "n": 28,
+      "win": 9,
+      "loss": 19,
+      "wr": 32.1
+    },
+    "SELL:wick_reclaim": {
+      "n": 15,
+      "win": 8,
+      "loss": 7,
+      "wr": 53.3
+    },
+    "SELL:downtrend": {
+      "n": 42,
+      "win": 21,
+      "loss": 21,
+      "wr": 50.0
+    },
+    "SELL:m5_fvg_tap": {
+      "n": 50,
+      "win": 24,
+      "loss": 26,
+      "wr": 48.0
+    }
+  },
+  "combos": {
+    "S1_bigspread_climax": {
+      "n": 13,
+      "win": 2,
+      "loss": 11,
+      "wr": 15.4
+    },
+    "S1sell_bigspread_climax": {
+      "n": 6,
+      "win": 3,
+      "loss": 3,
+      "wr": 50.0
+    },
+    "S3sell_liq_sweep(M5fvg)": {
+      "n": 3,
+      "win": 3,
+      "loss": 0,
+      "wr": 100.0
+    },
+    "S3_liq_sweep(M5fvg)": {
+      "n": 6,
+      "win": 0,
+      "loss": 6,
+      "wr": 0.0
+    }
+  }
+}

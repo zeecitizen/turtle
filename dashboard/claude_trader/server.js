@@ -444,6 +444,19 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Feb 11 Lab — TradingView-clone chart of Zee's verified profitable day
+  if (url === '/feb11-lab' || url === '/feb11') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'feb11_lab.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('feb11_lab.html missing: ' + e.message);
+    }
+    return;
+  }
+
   // UHV-SWEEP EXHAUSTION EA — live status from MT5 Common\Files\uhv_sweep_state.json
   if (url === '/api/uhv-sweep') {
     const stateFile = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\uhv_sweep_state.json';
@@ -459,6 +472,131 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       payload.error = e.message;
     }
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify(payload));
+    return;
+  }
+
+  // ────────────────────────────────────────────────────────────────────
+  // EA STATUS — combined health snapshot for all EAs + tick logger
+  // Returns: all_systems_go, warnings[], per-component state
+  // ────────────────────────────────────────────────────────────────────
+  if (url === '/api/ea-status') {
+    const COMMON = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
+    // Helper: MT5 FILE_TXT writes UTF-16 LE w/ BOM. JSON.parse needs decoded text.
+    function readMt5Json(filePath) {
+      const buf = fs.readFileSync(filePath);
+      let text;
+      if (buf.length >= 2 && buf[0] === 0xFF && buf[1] === 0xFE) {
+        text = buf.slice(2).toString('utf16le');
+      } else if (buf.length >= 3 && buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF) {
+        text = buf.slice(3).toString('utf8');
+      } else {
+        text = buf.toString('utf8');
+      }
+      return JSON.parse(text);
+    }
+
+    const HEARTBEAT_STALE_S = 30;          // heartbeats older than this → dead
+    const FILL_LOGGER_STALE_S = 60 * 60 * 24; // turtle_fills idle >24h = logger detached (XAU open Mon-Fri so 24h gap on weekend OK)
+
+    const components = {};
+    const warnings = [];
+
+    // EAs that write JSON heartbeats
+    const eas = [
+      { key: 's3_trader',   file: 's3_trader_state.json',    name: 'S3Trader (Effort vs Result)' },
+      { key: 'nsnd_trader', file: 'nsnd_trader_state.json',  name: 'NsndTrader (NS/ND breaks)' },
+      { key: 's1_trader',   file: 's1_trader_state.json',    name: 'S1Trader (UHV Breakout)' },
+    ];
+    for (const ea of eas) {
+      const p = COMMON + ea.file;
+      try {
+        const stat = fs.statSync(p);
+        const age_sec = Math.floor((Date.now() - stat.mtimeMs) / 1000);
+        const parsed = readMt5Json(p);
+        const alive = age_sec < HEARTBEAT_STALE_S && parsed.alive === true;
+        components[ea.key] = {
+          name: ea.name,
+          alive,
+          heartbeat_age_sec: age_sec,
+          magic: parsed.magic,
+          lots: parsed.lots,
+          version: parsed.version,
+          signals_today: parsed.signals_today,
+          entries_today: parsed.entries_today,
+          last_signal_t: parsed.last_signal_t,
+        };
+        if (!alive) warnings.push(`${ea.name} heartbeat stale (${age_sec}s) — detach/reattach in MT5`);
+      } catch (e) {
+        components[ea.key] = { name: ea.name, alive: false, error: e.code || e.message };
+        warnings.push(`${ea.name} heartbeat MISSING — EA not attached`);
+      }
+    }
+
+    // TurtleTradeLogger — logs closed trades. No heartbeat, so we check file age.
+    try {
+      const fp = COMMON + 'turtle_fills.csv';
+      const stat = fs.statSync(fp);
+      const age_sec = Math.floor((Date.now() - stat.mtimeMs) / 1000);
+      const alive = age_sec < FILL_LOGGER_STALE_S;
+      components.turtle_trade_logger = {
+        name: 'TurtleTradeLogger',
+        alive,
+        last_write_age_sec: age_sec,
+      };
+      if (!alive) warnings.push(`TurtleTradeLogger idle ${Math.floor(age_sec/3600)}h — may be detached (turtle_fills.csv not updating)`);
+    } catch (e) {
+      components.turtle_trade_logger = { name: 'TurtleTradeLogger', alive: false, error: e.code || e.message };
+      warnings.push('TurtleTradeLogger fills file MISSING');
+    }
+
+    // ShanoTickLogger — writes shano_ticks_YYYY-MM-DD.csv daily. We check today's file.
+    try {
+      const d = new Date();
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+      const today_file = `shano_ticks_${y}-${m}-${day}.csv`;
+      const fp = COMMON + today_file;
+      let alive = false, age_sec = null;
+      try {
+        const stat = fs.statSync(fp);
+        age_sec = Math.floor((Date.now() - stat.mtimeMs) / 1000);
+        alive = age_sec < 600;  // file modified in last 10 min while market open = healthy
+        components.shano_tick_logger = {
+          name: 'ShanoTickLogger',
+          alive,
+          today_file,
+          last_write_age_sec: age_sec,
+        };
+        if (!alive) warnings.push(`ShanoTickLogger today's file stale (${age_sec}s) — may be detached`);
+      } catch {
+        // today's file missing — check latest tick file age
+        const files = fs.readdirSync(COMMON).filter(f => /^shano_ticks_2026-\d{2}-\d{2}\.csv$/.test(f));
+        files.sort();
+        const latest = files[files.length - 1];
+        components.shano_tick_logger = {
+          name: 'ShanoTickLogger',
+          alive: false,
+          today_file_expected: today_file,
+          latest_existing: latest,
+        };
+        warnings.push(`ShanoTickLogger NOT writing today's tick file (${today_file}). Re-attach in MT5 — without ticks we can't backtest recent days.`);
+      }
+    } catch (e) {
+      components.shano_tick_logger = { name: 'ShanoTickLogger', alive: false, error: e.message };
+      warnings.push('ShanoTickLogger check failed: ' + e.message);
+    }
+
+    const all_systems_go = warnings.length === 0;
+    const payload = {
+      ts: new Date().toISOString(),
+      all_systems_go,
+      headline: all_systems_go ? 'All Systems Online' : `Something is wrong — ${warnings.length} issue${warnings.length === 1 ? '' : 's'}`,
+      warnings,
+      components,
+    };
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(payload));
     return;
