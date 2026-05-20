@@ -589,12 +589,41 @@ const server = http.createServer(async (req, res) => {
       warnings.push('ShanoTickLogger check failed: ' + e.message);
     }
 
+    // Today's realized P&L across all EAs (from turtle_fills.csv, broker-date today)
+    let pnl = { today_total: 0, wins: 0, losses: 0, n: 0, last_close: null };
+    try {
+      const raw = fs.readFileSync(COMMON + 'turtle_fills.csv', 'utf8');
+      const lines = raw.trim().split(/\r?\n/);
+      // broker date "today" = the date of the most recent fill row
+      let lastDate = null;
+      for (let i = lines.length - 1; i >= 0; i--) {
+        const p = lines[i].split(',');
+        if (p.length < 11 || !/^\d{4}\.\d{2}\.\d{2}/.test(p[0])) continue;
+        lastDate = p[0].slice(0, 10); break;
+      }
+      if (lastDate) {
+        for (const line of lines) {
+          const p = line.split(',');
+          if (p.length < 11 || p[0].slice(0, 10) !== lastDate) continue;
+          const v = parseFloat(p[10]);
+          if (isNaN(v)) continue;
+          pnl.today_total += v; pnl.n++;
+          if (v > 0) pnl.wins++; else if (v < 0) pnl.losses++;
+          pnl.last_close = p[0];
+        }
+        pnl.date = lastDate;
+        pnl.today_total = Math.round(pnl.today_total * 100) / 100;
+        pnl.wr = (pnl.wins + pnl.losses) ? Math.round(pnl.wins / (pnl.wins + pnl.losses) * 100) : 0;
+      }
+    } catch (e) { pnl.error = e.code || e.message; }
+
     const all_systems_go = warnings.length === 0;
     const payload = {
       ts: new Date().toISOString(),
       all_systems_go,
       headline: all_systems_go ? 'All Systems Online' : `Something is wrong — ${warnings.length} issue${warnings.length === 1 ? '' : 's'}`,
       warnings,
+      pnl,
       components,
     };
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });

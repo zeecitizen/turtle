@@ -359,14 +359,21 @@ async function loadSystemsStatus() {
       const ageStr = (age != null) ? ` (${age < 60 ? age + 's' : Math.floor(age/60) + 'm'} ago)` : '';
       return `${dot} ${labels[k]}${ageStr}`;
     });
+    // today's P&L line
+    let pnlLine = '';
+    if (d.pnl && d.pnl.n != null) {
+      const p = d.pnl;
+      const sign = p.today_total > 0 ? '+' : (p.today_total < 0 ? '−' : '');
+      pnlLine = `\n${p.date || 'today'}: ${sign}$${Math.abs(p.today_total).toFixed(2)}  ·  ${p.n} trades  ${p.wins}W/${p.losses}L  (${p.wr}% WR)`;
+    }
     if (d.all_systems_go) {
       wrap.dataset.state = 'ok';
       headline.textContent = d.headline || 'All Systems Online';
-      detail.textContent = lines.join('   ');
+      detail.textContent = lines.join('   ') + pnlLine;
     } else {
       wrap.dataset.state = (d.warnings && d.warnings.length > 1) ? 'error' : 'warn';
       headline.textContent = d.headline || 'Something is wrong';
-      detail.textContent = lines.join('   ') + '\n' + (d.warnings || []).join('\n');
+      detail.textContent = lines.join('   ') + pnlLine + '\n' + (d.warnings || []).join('\n');
     }
   } catch (e) {
     wrap.dataset.state = 'error';
