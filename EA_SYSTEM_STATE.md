@@ -132,3 +132,24 @@ transcribed (monitor/_loom_audio/yt_*.txt); rest blocked on OpenAI credits.
 - `monitor/strategy_lab/live_rule_ledger.py` — forward-tests atomic rules on live candles
 - `monitor/strategy_lab/NIGHT_PLAN_2026-05-20.md` — full overnight work log
 - recompile EAs: `powershell mt5/install_eas.ps1` (then detach+reattach in MT5 to load)
+
+---
+
+## SHANO-PROBE OVERLAY — tested 2026-05-20, SHELVED (not deployed, revisit w/ more data)
+Hypothesis: add Shano's probe (enter only if price moves +confirm in our favor before
+−fail, within a short window) as a momentum-confirmation gate on our EA entries.
+
+- Optimistic first cut (probe as pure filter, entry at signal price): S3 WR 68→83%,
+  NSND 55→79%. Looked great.
+- HONEST re-test (realistic: enter at the confirmed price paying the move+spread, same
+  engine for baseline & probe, + walk-forward train6d/test6d):
+  - S3 probe 0.30/0.30/30s: in-sample WR 68→78% BUT OOS test EV $4.64 ≈ baseline $5.38,
+    total LOWER ($42 vs $97). In-sample mirage, no real OOS edge.
+  - NSND probe 0.45/0.45/60s: OOS WR 75% / EV $8.11 looks great BUT test sample = only
+    n=4 trades (probe cut frequency ~half). Statistically meaningless.
+  - Both reduce TOTAL $ at fixed lots. S1 (already a breakout) is HURT by the probe.
+- VERDICT: do NOT deploy. Classic in-sample-WR trap that walk-forward + realistic entry
+  strip away. Script: shano_probe_realistic.py (honest), shano_probe_overlay.py (optimistic).
+- REVISIT WHEN: ShanoTickLogger has accumulated ~30+ tick-days (collecting daily now).
+  Then the OOS sample is big enough to truly judge. The probe DOES raise in-sample WR on
+  reversal EAs (S3/NSND) — promising, just unproven on current 12d.
