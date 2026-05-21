@@ -35,7 +35,7 @@
 
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
-input double InpLots          = 0.01;  // 2026-05-20: EV-weighted allocation — NSND is most volatile / lowest Sharpe, underweight it. Total budget unchanged at 0.06 (S3 0.03 / S1 0.02 / NSND 0.01).
+input double InpLots          = 0.03;  // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). NSND underweighted (most volatile). Was 0.01 on the $500 Blueberry acct.
 input int    InpMagicNumber   = 88006;
 
 input group "── Detection ──"

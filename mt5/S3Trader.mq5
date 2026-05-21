@@ -37,7 +37,7 @@
 
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
-input double InpLots          = 0.03;  // 2026-05-20: EV-weighted portfolio allocation (S3 highest EV $23/day). Total budget unchanged at 0.06 across 3 EAs (S3 0.03 / S1 0.02 / NSND 0.01). v2 note: 0.40 would blow a $500 acct.
+input double InpLots          = 0.09;  // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). Targets +$500 in ~3 days; realistic worst day ~-$150-200 vs FTMO -$300 daily limit (~50% buffer). Was 0.03 on the $500 Blueberry acct.
 input int    InpMagicNumber   = 88003;
 
 input group "── Detection ──"
