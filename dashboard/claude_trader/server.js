@@ -708,38 +708,27 @@ const server = http.createServer(async (req, res) => {
       warnings.push('TurtleTradeLogger fills file MISSING');
     }
 
-    // ShanoTickLogger — writes shano_ticks_YYYY-MM-DD.csv daily. We check today's file.
+    // ShanoTickLogger — writes shano_ticks_YYYY-MM-DD.csv. The logger names the file
+    // by BROKER time (GMT+3), so after ~21:00 UTC its file is already on the next
+    // calendar day while the server's UTC date is still the previous day. So we judge
+    // freshness by the MOST-RECENTLY-WRITTEN tick file (by mtime), not a date-derived
+    // name — robust to the broker/UTC date gap that used to produce a false "closed".
     try {
-      const d = new Date();
-      const y = d.getUTCFullYear();
-      const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(d.getUTCDate()).padStart(2, '0');
-      const today_file = `shano_ticks_${y}-${m}-${day}.csv`;
-      const fp = COMMON + today_file;
-      let alive = false, age_sec = null;
-      try {
-        const stat = fs.statSync(fp);
-        age_sec = Math.floor((Date.now() - stat.mtimeMs) / 1000);
-        alive = age_sec < 600;  // file modified in last 10 min while market open = healthy
+      const files = fs.readdirSync(COMMON).filter(f => /^shano_ticks_\d{4}-\d{2}-\d{2}\.csv$/.test(f));
+      let newest = null, newestMs = 0;
+      for (const f of files) {
+        try { const st = fs.statSync(COMMON + f); if (st.mtimeMs > newestMs) { newestMs = st.mtimeMs; newest = f; } } catch {}
+      }
+      if (newest) {
+        const age_sec = Math.floor((Date.now() - newestMs) / 1000);
+        const alive = age_sec < 600;  // written in last 10 min while market open = healthy
         components.shano_tick_logger = {
-          name: 'ShanoTickLogger',
-          alive,
-          today_file,
-          last_write_age_sec: age_sec,
+          name: 'ShanoTickLogger', alive, today_file: newest, last_write_age_sec: age_sec,
         };
-        if (!alive) warnings.push(`ShanoTickLogger today's file stale (${age_sec}s) — may be detached`);
-      } catch {
-        // today's file missing — check latest tick file age
-        const files = fs.readdirSync(COMMON).filter(f => /^shano_ticks_2026-\d{2}-\d{2}\.csv$/.test(f));
-        files.sort();
-        const latest = files[files.length - 1];
-        components.shano_tick_logger = {
-          name: 'ShanoTickLogger',
-          alive: false,
-          today_file_expected: today_file,
-          latest_existing: latest,
-        };
-        warnings.push(`ShanoTickLogger NOT writing today's tick file (${today_file}). Re-attach in MT5 — without ticks we can't backtest recent days.`);
+        if (!alive) warnings.push(`ShanoTickLogger stale (${age_sec}s, newest file ${newest}) — may be detached, or market closed`);
+      } else {
+        components.shano_tick_logger = { name: 'ShanoTickLogger', alive: false, error: 'no tick files' };
+        warnings.push('ShanoTickLogger: no tick files found — attach it in MT5');
       }
     } catch (e) {
       components.shano_tick_logger = { name: 'ShanoTickLogger', alive: false, error: e.message };
