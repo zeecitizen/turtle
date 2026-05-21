@@ -41,6 +41,7 @@
 input group "── Sizing ──"
 input double InpLots          = 0.06;     // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). Was 0.02 on the $500 Blueberry acct.
 input int    InpMagicNumber   = 88004;
+input double InpDailyLossHalt = 200.0;    // FTMO: halt NEW entries if account EQUITY down this much today (incl floating). Account-wide -$300 daily-limit protection. 0=off.
 
 input group "── Sides ──"
 input bool   InpDoBuys        = true;     // BUY side enabled (UHV red + bullish FVG)
@@ -80,15 +81,24 @@ void Log(string msg) {
    PrintFormat("[%s] %s", InpLogPrefix, msg);
 }
 
+double g_day_start_equity = 0;
+
 bool IsNewDay() {
    MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
    if (dt.day != g_today_day) {
       g_today_day = dt.day;
       g_signals_today = 0;
       g_entries_today = 0;
+      g_day_start_equity = AccountInfoDouble(ACCOUNT_EQUITY);  // FTMO daily-loss baseline
       return true;
    }
    return false;
+}
+
+// FTMO circuit breaker (account-wide, equity-based incl. floating). Blocks NEW entries.
+bool DailyLossHalted() {
+   if (InpDailyLossHalt <= 0 || g_day_start_equity <= 0) return false;
+   return (AccountInfoDouble(ACCOUNT_EQUITY) - g_day_start_equity) <= -InpDailyLossHalt;
 }
 
 bool IsUptrendM5(int from_shift) {
@@ -176,6 +186,7 @@ bool H1BearFvgTappedDuringRetracement(int retrace_back_shift) {
 //── S1 BUY signal check on M5 bar at shift 1 (just-closed) ─────────
 bool TryS1BuySignal() {
    if (!InpDoBuys) return false;
+   if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
    double bo_o = iOpen (_Symbol, PERIOD_M5, 1);
    double bo_h = iHigh (_Symbol, PERIOD_M5, 1);
    double bo_l = iLow  (_Symbol, PERIOD_M5, 1);
@@ -269,6 +280,7 @@ bool TryS1BuySignal() {
 //   or above UHV.low — fresh transition). Bearish H1 FVG required.
 bool TryS1SellSignal() {
    if (!InpDoSells) return false;
+   if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
    double bo_o = iOpen (_Symbol, PERIOD_M5, 1);
    double bo_h = iHigh (_Symbol, PERIOD_M5, 1);
    double bo_l = iLow  (_Symbol, PERIOD_M5, 1);

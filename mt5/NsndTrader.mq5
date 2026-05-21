@@ -37,6 +37,7 @@
 input group "── Sizing ──"
 input double InpLots          = 0.03;  // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). NSND underweighted (most volatile). Was 0.01 on the $500 Blueberry acct.
 input int    InpMagicNumber   = 88006;
+input double InpDailyLossHalt = 200.0; // FTMO: halt NEW entries if account EQUITY down this much today (incl floating). Account-wide -$300 daily-limit protection. 0=off.
 
 input group "── Detection ──"
 input int    InpNsLookback        = 15;    // M1 bars searched for NS/ND
@@ -90,15 +91,24 @@ void Log(string msg) {
    PrintFormat("[%s] %s", InpLogPrefix, msg);
 }
 
+double g_day_start_equity = 0;
+
 bool IsNewDay() {
    MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
    if (dt.day != g_today_day) {
       g_today_day = dt.day;
       g_signals_today = 0;
       g_entries_today = 0;
+      g_day_start_equity = AccountInfoDouble(ACCOUNT_EQUITY);  // FTMO daily-loss baseline
       return true;
    }
    return false;
+}
+
+// FTMO circuit breaker (account-wide, equity-based incl. floating). Blocks NEW entries.
+bool DailyLossHalted() {
+   if (InpDailyLossHalt <= 0 || g_day_start_equity <= 0) return false;
+   return (AccountInfoDouble(ACCOUNT_EQUITY) - g_day_start_equity) <= -InpDailyLossHalt;
 }
 
 //── M1 intraday trend ──────────────────────────────────────────────
@@ -247,6 +257,7 @@ bool FvgOverlap(ENUM_TIMEFRAMES period, int lookback, bool bullish,
 
 //── Try NS/ND signal on M1 bar at shift 1 ──────────────────────────
 bool TryNsndSignal() {
+   if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
    datetime bo_t = iTime(_Symbol, PERIOD_M1, 1);
    if (bo_t == g_last_signal_t) return false;
 
