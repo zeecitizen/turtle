@@ -122,6 +122,41 @@ def grab_url():
     return f"{GRAB_BASE}?key={pw}"
 
 
+def push_payload(tier, floating, n_open, bigness, url):
+    pos = f"{n_open} trade{'s' if n_open != 1 else ''}"
+    if tier == 3:
+        title = f"🤑🤑 HUGE — +${floating:.0f} floating"
+        body = f"{bigness:.1f}× your average winner on {pos}. The urge to grab is REAL. Breakeven's locked."
+    elif tier == 2:
+        title = f"🤑 +${floating:.0f} floating — that's a LOT"
+        body = f"{bigness:.1f}× a normal winner on {pos}. Grab it, or let it ride (breakeven locked)."
+    else:
+        title = f"👀 +${floating:.0f} floating"
+        body = f"{bigness:.1f}× your average winner on {pos}. A nice chunk is building."
+    return {"title": title, "body": body, "tag": "profit-pulse",
+            "grabUrl": url, "requireInteraction": tier >= 2}
+
+
+def send_push(payload):
+    import urllib.request
+    try:
+        pw = PW_FILE.read_text("utf-8").strip()
+    except Exception:
+        pw = ""
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        f"http://localhost:3457/api/notify?key={pw}", data=data,
+        headers={"Content-Type": "application/json"}, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=8) as r:
+            j = json.loads(r.read().decode("utf-8"))
+            log(f"PUSH: sent={j.get('sent')} devices={j.get('devices')}")
+            return True
+    except Exception as e:
+        log(f"PUSH_ERR: {e}")
+        return False
+
+
 def send_whatsapp(msg):
     try:
         sys.path.insert(0, str(SCRIPT_DIR))
@@ -151,8 +186,9 @@ def check_once():
     climbed = tier > st.get("last_tier", 0)
     cooled = (now - st.get("last_alert_ts", 0)) > TIER_COOLDOWN_S
     if climbed or cooled:
-        msg = message_for(tier, floating, n_open, bigness, grab_url())
-        send_whatsapp(msg)
+        url = grab_url()
+        send_whatsapp(message_for(tier, floating, n_open, bigness, url))   # WhatsApp
+        send_push(push_payload(tier, floating, n_open, bigness, url))      # Android push w/ action buttons
         log(f"ALERT tier={tier} floating=${floating} bigness={bigness}x n={n_open}")
         save_state({"last_tier": tier, "last_alert_ts": now})
     else:

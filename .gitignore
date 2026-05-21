@@ -92,3 +92,11 @@ monitor/strategy_lab/_*.json
 monitor/strategy_lab/_*.out
 monitor/strategy_lab/_*.txt
 monitor/strategy_lab/_xauusd_ticks.parquet
+
+# PWA push (secrets / generated / deps) — never commit
+dashboard/claude_trader/.vapid.json
+dashboard/claude_trader/push_subscriptions.json
+dashboard/claude_trader/node_modules/
+dashboard/claude_trader/package-lock.json
+monitor/.profit_pulse_state.json
+monitor/profit_pulse_hawk.log
