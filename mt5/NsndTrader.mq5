@@ -28,7 +28,7 @@
 //| Magic 88006 (distinct from S3=88003 / BTC=88005).                |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — NS/ND VSA"
-#property version   "1.10"
+#property version   "1.20"
 #property strict
 
 // v1.10 (2026-05-22): "2R Free Roll" breakeven added (ManageOpenPositions, tick-
@@ -54,6 +54,11 @@ input bool   InpEnablePartial   = false; // OFF for NSND: backtest showed partia
 input double InpPartialR        = 1.5;   // R-multiple to bank the partial (if enabled).
 input double InpPartialFrac     = 0.5;   // fraction of volume to bank (rounded to lot step).
 input double InpBEBufferPts     = 0.30;  // SL set this far beyond entry (price units) to cover spread/swap.
+
+input group "── Human profit-pulse + one-tap GRAB ──"
+input bool   InpEnableGrab = true;       // honor a GRAB command (close ALL this EA's positions at market) from WhatsApp/dashboard one tap.
+input double InpAvgWinUsd  = 14.0;       // reference avg winning trade ($) for the heartbeat 'bigness' read (NSND ~$13.7 avg win @0.03).
+input string InpGrabFile   = "grab_command.txt"; // shared command file (epoch id). EA grabs on a NEWER id than last seen.
 
 input group "── Detection ──"
 input int    InpNsLookback        = 15;    // M1 bars searched for NS/ND
@@ -116,6 +121,10 @@ ulong  g_mng_ticket[256];
 double g_mng_sl0[256];
 bool   g_mng_partialed[256];
 int    g_mng_count = 0;
+
+//── One-tap GRAB state ──────────────────────────────────────────────
+long     g_last_grab_id = 0;
+datetime g_last_grab_check = 0;
 
 bool IsNewDay() {
    MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
@@ -418,15 +427,20 @@ void WriteHeartbeat() {
    g_last_heartbeat = TimeCurrent();
    int fh = FileOpen(InpStateFile, FILE_WRITE | FILE_TXT | FILE_COMMON);
    if (fh == INVALID_HANDLE) return;
+   int n_open = 0;
+   double floating = FloatingPnL(n_open);
+   double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"NsndTrader\",\"version\":\"1.00\",\"alive\":true,"
+      "{\"ea\":\"NsndTrader\",\"version\":\"1.20\",\"alive\":true,"
       "\"symbol\":\"%s\",\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
-      "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.4f,\"tp_usd\":%.0f}",
+      "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.4f,\"tp_usd\":%.0f,"
+      "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f}",
       _Symbol,
       TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
       g_signals_today, g_entries_today,
       TimeToString(g_last_signal_t, TIME_DATE | TIME_SECONDS),
-      InpMagicNumber, InpLots, InpTPUsd));
+      InpMagicNumber, InpLots, InpTPUsd,
+      floating, n_open, bigness, InpAvgWinUsd));
    FileClose(fh);
 }
 
@@ -434,8 +448,9 @@ int OnInit() {
    g_trade.SetExpertMagicNumber(InpMagicNumber);
    g_trade.SetTypeFillingBySymbol(_Symbol);
    IsNewDay();
-   Log(StringFormat("NsndTrader Init — symbol=%s magic=%d lots=%.4f TP=$%.0f",
-                    _Symbol, InpMagicNumber, InpLots, InpTPUsd));
+   g_last_grab_id = ReadGrabId();   // ignore any pre-existing grab command on attach
+   Log(StringFormat("NsndTrader Init — symbol=%s magic=%d lots=%.4f TP=$%.0f grab_base=%I64d",
+                    _Symbol, InpMagicNumber, InpLots, InpTPUsd, g_last_grab_id));
    return INIT_SUCCEEDED;
 }
 
@@ -515,6 +530,46 @@ void ManageOpenPositions() {
    }
 }
 
+//── Floating P&L + one-tap GRAB (close all this EA's positions on a newer id) ──
+double FloatingPnL(int &n_open) {
+   double sum = 0; n_open = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      sum += PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP);
+      n_open++;
+   }
+   return sum;
+}
+long ReadGrabId() {
+   if (!FileIsExist(InpGrabFile, FILE_COMMON)) return 0;
+   int fh = FileOpen(InpGrabFile, FILE_READ | FILE_TXT | FILE_COMMON | FILE_ANSI);
+   if (fh == INVALID_HANDLE) return 0;
+   string s = FileIsEnding(fh) ? "" : FileReadString(fh);
+   FileClose(fh);
+   return (long)StringToInteger(s);
+}
+void CheckGrabCommand() {
+   if (!InpEnableGrab) return;
+   if ((TimeCurrent() - g_last_grab_check) < 2) return;
+   g_last_grab_check = TimeCurrent();
+   long id = ReadGrabId();
+   if (id <= g_last_grab_id) return;
+   g_last_grab_id = id;
+   int closed = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      if (g_trade.PositionClose(tk)) closed++;
+   }
+   if (closed > 0)
+      Log(StringFormat("[GRAB] one-tap grab id=%I64d — closed %d position(s) at market", id, closed));
+}
+
 void OnTick() {
    IsNewDay();
    datetime cur = iTime(_Symbol, PERIOD_M1, 0);
@@ -523,5 +578,6 @@ void OnTick() {
    }
    g_last_m1_time = cur;
    ManageOpenPositions();   // 2R Free Roll: breakeven on open trades (every tick)
+   CheckGrabCommand();      // one-tap GRAB (close all) from WhatsApp/dashboard
    WriteHeartbeat();
 }

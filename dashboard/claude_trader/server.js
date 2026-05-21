@@ -413,6 +413,19 @@ function loadSubs() { try { return JSON.parse(fs.readFileSync(SUBS_FILE, 'utf8')
 function saveSubs(s) { try { fs.writeFileSync(SUBS_FILE, JSON.stringify(s)); } catch {} }
 function readBody(req) { return new Promise((resolve) => { let b = ''; req.on('data', c => b += c); req.on('end', () => resolve(b)); }); }
 
+// Cached scan of running python.exe command lines (so the dashboard can show
+// live status dots for the hawks). Refreshed at most every 15s — the CIM query
+// is heavy and /api/ea-status is polled every 5s.
+let _pyScan = { t: 0, cmd: '' };
+function runningPython() {
+  if (Date.now() - _pyScan.t < 15000 && _pyScan.cmd) return _pyScan.cmd;
+  try {
+    _pyScan.cmd = execSync('powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \\"name=\'python.exe\'\\" | ForEach-Object { Write-Host $_.CommandLine }"', { timeout: 6000 }).toString().toLowerCase();
+  } catch { /* keep last good scan */ }
+  _pyScan.t = Date.now();
+  return _pyScan.cmd;
+}
+
 const server = http.createServer(async (req, res) => {
   const url = req.url.split('?')[0];
   const query = new URLSearchParams((req.url.split('?')[1]) || '');
@@ -846,8 +859,19 @@ const server = http.createServer(async (req, res) => {
     pulse.floating_total = Math.round(pulse.floating_total * 100) / 100;
     pulse.bigness = Math.round(pulse.bigness * 100) / 100;
 
-    // restartable Python services (so the dashboard can offer restart buttons)
-    const restartable = Object.entries(RESTARTABLE).map(([k, v]) => ({ key: k, label: v.label }));
+    // restartable Python services + live status (running?) so the dashboard can
+    // show a dot and let you restart a downed one.
+    // always_on services warrant a warning if down; periodic ones (run on a
+    // schedule then exit) just show a dot and don't break "all systems go".
+    const ALWAYS_ON = new Set(['sheriff_hawk', 'profit_pulse']);
+    const _scan = runningPython();
+    const restartable = Object.entries(RESTARTABLE).map(([k, v]) => {
+      const base = v.script.split('\\').pop().toLowerCase();
+      const running = _scan.includes(base);
+      const always_on = ALWAYS_ON.has(k);
+      if (!running && always_on) warnings.push(`${v.label} is DOWN — tap to restart on the dashboard`);
+      return { key: k, label: v.label, running, always_on };
+    });
 
     const all_systems_go = warnings.length === 0;
     const payload = {

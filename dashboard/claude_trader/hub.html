@@ -256,9 +256,15 @@ async function load(){
       (big>=1.5?`<button onclick="doGrab()" style="width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#1f9d55,#2ea043);color:#fff;font-size:17px;font-weight:700;cursor:pointer">🫡 GRAB IT — close all now</button>
       <div style="font-size:11px;color:#6b7280;margin-top:7px">Breakeven’s locked — it can’t round-trip to a loss. Backtests say riding to TP wins; this button is yours if the urge is real.</div>`:'');
   } else { pcard.style.display='none'; }
-  // restartable services
+  // restartable services with live status dot (green=running, red=down)
   const sv=$('svc'), rs=d.restartable||[];
-  sv.innerHTML=rs.length?rs.map(s=>`<button onclick="doRestart('${s.key}','${(s.label||'').replace(/'/g,'')}')" style="padding:8px 12px;border:1px solid #30363d;border-radius:10px;background:#161b22;color:#c9d1d9;font-size:13px;cursor:pointer">⟳ ${s.label}</button>`).join(''):'<span style="font-size:12px;color:#6b7280">no restartable services</span>';
+  sv.innerHTML=rs.length?rs.map(s=>{
+    const up=s.running, dot=up?'#2ea043':'#f85149';
+    const bd=up?'#30363d':(s.always_on?'#7d2b2b':'#3d2a12');
+    const bg=up?'#161b22':(s.always_on?'#2a1416':'#221a10');
+    const tip=up?'running — tap to restart':(s.always_on?'DOWN — tap to start':'idle (scheduled) — tap to run now');
+    return `<button onclick="doRestart('${s.key}','${(s.label||'').replace(/'/g,'')}')" title="${tip}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 11px;border:1px solid ${bd};border-radius:10px;background:${bg};color:#c9d1d9;font-size:13px;cursor:pointer"><span style="color:${dot};font-size:10px">●</span>${s.label}<span style="opacity:.5;font-size:11px">⟳</span></button>`;
+  }).join(''):'<span style="font-size:12px;color:#6b7280">no restartable services</span>';
   const b=$('banner');
   const onBreak=(mt.status==='break'||mt.status==='closed');
   // during a market break the heartbeats freeze (no ticks) — that's normal, not a fault
