@@ -114,6 +114,50 @@ def replay(ticks, sigs, skim, sl, scratch_s, max_conc=3):
     return done
 
 
+def replay_trail(ticks, sigs, trail_give, skim_cap=None, max_conc=3):
+    """Zee's real exit: track the PEAK favorable price; exit the instant price
+    reverses `trail_give` from that peak ('profit starts decreasing -> out').
+    Optional skim_cap = grab +$ immediately if a spike reaches it. Losers end tiny
+    (exit on first reversal ~ breakeven minus spread). Spread is real: buy fills at
+    ask, exits at bid (and vice-versa)."""
+    ppp = LOTS * CONTRACT
+    done = []
+    it = iter(sorted(sigs, key=lambda x: x["fire_time"]))
+    pend = next(it, None)
+    units = []
+    for tk in ticks:
+        t, bid, ask = tk["t"], tk["bid"], tk["ask"]
+        for u in units[:]:
+            s = u["side"]
+            fav = bid if s > 0 else ask                 # favourable-direction price
+            # update running peak (best favourable excursion)
+            if s > 0:
+                u["peak"] = max(u["peak"], bid)
+                prof = bid - u["e"]
+                if skim_cap is not None and prof >= skim_cap:
+                    u["pnl"] = skim_cap * ppp; done.append(u); units.remove(u); continue
+                if bid <= u["peak"] - trail_give:        # reversed from the high
+                    u["pnl"] = (bid - u["e"]) * ppp; done.append(u); units.remove(u); continue
+            else:
+                u["peak"] = min(u["peak"], ask)
+                prof = u["e"] - ask
+                if skim_cap is not None and prof >= skim_cap:
+                    u["pnl"] = skim_cap * ppp; done.append(u); units.remove(u); continue
+                if ask >= u["peak"] + trail_give:
+                    u["pnl"] = (u["e"] - ask) * ppp; done.append(u); units.remove(u); continue
+        while pend is not None and t >= pend["fire_time"]:
+            if len(units) < max_conc:
+                e = ask if pend["side"] > 0 else bid
+                units.append({"side": pend["side"], "e": e, "peak": (bid if pend["side"] > 0 else ask)})
+            pend = next(it, None)
+    if ticks:
+        last = ticks[-1]
+        for u in units:
+            u["pnl"] = ((last["bid"] - u["e"]) if u["side"] > 0 else (u["e"] - last["ask"])) * ppp
+            done.append(u)
+    return done
+
+
 def stat(trades):
     n = len(trades)
     if not n:
@@ -141,6 +185,29 @@ def main():
     days = sorted(cache); mid = len(days) // 2
     print(f"FEB-11 SIMPLE UHV-BREAKOUT + SCALP exit — broker ticks, {len(days)} days, "
           f"{LOTS} lots, BUY+SELL\n")
+
+    # ── Zee's REAL exit: peak-reversal trail (exit on first tick down from the high) ──
+    sigT = {d: detect(cache[d]["m1"], require_trend=True) for d in days}
+    ne = sum(len(sigT[d]) for d in days)
+    print(f"=== PEAK-REVERSAL TRAIL (Zee's actual exit) — trend ON, {ne/len(days):.0f}/day ===")
+    print(f"    {'exit':<30}{'ALL':<42}OOS (test half)")
+    for lbl, kw in [
+        ("trail $0.2 (hair-trigger)",      dict(trail_give=0.2)),
+        ("trail $0.3",                     dict(trail_give=0.3)),
+        ("trail $0.5",                     dict(trail_give=0.5)),
+        ("trail $0.3 + skim$1 cap",        dict(trail_give=0.3, skim_cap=1.0)),
+        ("trail $0.3 + skim$2 cap",        dict(trail_give=0.3, skim_cap=2.0)),
+        ("trail $0.5 + skim$2 cap",        dict(trail_give=0.5, skim_cap=2.0)),
+    ]:
+        allt, testt = [], []
+        for k, d in enumerate(days):
+            tr = replay_trail(cache[d]["ticks"], sigT[d], **kw)
+            allt += tr
+            if k >= mid:
+                testt += tr
+        print(f"    {lbl:<30}{stat(allt):<42}{stat(testt)}")
+    print()
+
     for rt in (True, False):
         sig = {d: detect(cache[d]["m1"], require_trend=rt) for d in days}
         nb = sum(1 for d in days for s in sig[d] if s["side"] > 0)
