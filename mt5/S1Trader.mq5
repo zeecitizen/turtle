@@ -39,7 +39,7 @@
 
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
-input double InpLots          = 0.02;     // 2026-05-19: dropped from 0.40 to match live risk on $500 capital
+input double InpLots          = 0.06;     // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). Was 0.02 on the $500 Blueberry acct.
 input int    InpMagicNumber   = 88004;
 
 input group "── Sides ──"
