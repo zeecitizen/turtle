@@ -1,0 +1,168 @@
+"""backtest_feb11_simple_scalp.py — Zee's ACTUAL Feb-11 method (his own words, 2026-05-21).
+
+ENTRY = the simple Lesson-2 "our strategy" UHV breakout (NO sweep, NO big-spread,
+NO FVG — those were added later onto S1):
+  - confirm trend
+  - find the ultra-high-volume candle in a retracement
+  - a LOW-volume MOMENTUM candle breaks its line (high for buy / low for sell)
+  - enter at that candle's close
+
+EXIT = manual SCALP/SKIM (not TP 1:1): grab a few points fast, and scratch out
+quickly if it goes against (a few seconds' grace, then cut; no fixed SL).
+
+Runs on the BROKER tick feed (shano_ticks) at M1. Sweeps skim-target + scratch
+behaviour, BUY+SELL, walk-forward. The question: is his real entry+scalp profitable?
+
+Run:  py backtest_feb11_simple_scalp.py
+"""
+import sys, glob
+from datetime import timedelta
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+sys.stdout.reconfigure(encoding="utf-8")
+from backtest_v349_multiday import load_m1_merged, load_ticks, COMMON
+from backtest_s3_teacher_spec import group_bars_by_day
+
+CONTRACT = 100.0
+LOTS = 0.10
+TREND_LB = 30                    # bars of same-TF structure used to read trend
+RETRACE_LB = 12
+MOM_BODY_FRAC = 0.55             # momentum candle: body/range >= this (small wicks)
+
+
+def trend_dir(win):
+    """Same-timeframe market structure ('camel humps'): HH+HL = uptrend (+1),
+    LH+LL = downtrend (-1), else 0. Compares the recent half vs the older half."""
+    h = len(win) // 2
+    older, recent = win[:h], win[h:]
+    if not older or not recent:
+        return 0
+    hh = max(b["high"] for b in recent) > max(b["high"] for b in older)
+    hl = min(b["low"] for b in recent) > min(b["low"] for b in older)
+    lh = max(b["high"] for b in recent) < max(b["high"] for b in older)
+    ll = min(b["low"] for b in recent) < min(b["low"] for b in older)
+    if hh and hl:
+        return 1
+    if lh and ll:
+        return -1
+    return 0
+
+
+def detect(m1, require_trend=True):
+    """Simple Lesson-2 UHV breakout signals (BUY+SELL). One per breakout bar."""
+    sigs = []
+    start = TREND_LB + RETRACE_LB + 2
+    for i in range(start, len(m1)):
+        bo = m1[i]
+        rng = bo["high"] - bo["low"]
+        if rng <= 0:
+            continue
+        body = abs(bo["close"] - bo["open"])
+        if body / rng < MOM_BODY_FRAC:        # momentum candle: small wicks
+            continue
+        win = m1[i - RETRACE_LB:i]
+        avgbody = sum(abs(b["close"] - b["open"]) for b in win) / len(win)
+        if body < avgbody:                    # strong candle
+            continue
+        td = trend_dir(m1[i - TREND_LB:i])     # same-TF HH/HL structure
+        # BUY: green momentum breaks above the UHV RED candle's high, low vol
+        if bo["close"] > bo["open"]:
+            reds = [b for b in win if b["close"] < b["open"]]
+            if reds and (not require_trend or td == 1):
+                uhv = max(reds, key=lambda b: b["vol"])
+                if bo["vol"] < uhv["vol"] and bo["close"] > uhv["high"] and bo["open"] <= uhv["high"]:
+                    sigs.append({"side": +1, "fire_time": bo["time"] + timedelta(minutes=1)})
+                    continue
+        # SELL: red momentum breaks below the UHV GREEN candle's low, low vol
+        if bo["close"] < bo["open"]:
+            greens = [b for b in win if b["close"] > b["open"]]
+            if greens and (not require_trend or td == -1):
+                uhv = max(greens, key=lambda b: b["vol"])
+                if bo["vol"] < uhv["vol"] and bo["close"] < uhv["low"] and bo["open"] >= uhv["low"]:
+                    sigs.append({"side": -1, "fire_time": bo["time"] + timedelta(minutes=1)})
+    return sigs
+
+
+def replay(ticks, sigs, skim, sl, scratch_s, max_conc=3):
+    """Scalp: exit at +skim (skim profit). Cut at -sl (fast manual cut, if sl>0).
+    If scratch_s set: once that many seconds pass and not in profit, exit at market."""
+    ppp = LOTS * CONTRACT
+    done = []
+    it = iter(sorted(sigs, key=lambda x: x["fire_time"]))
+    pend = next(it, None)
+    units = []
+    for tk in ticks:
+        t, bid, ask = tk["t"], tk["bid"], tk["ask"]
+        for u in units[:]:
+            s = u["side"]
+            prof = (bid - u["e"]) if s > 0 else (u["e"] - ask)   # current $ distance
+            if prof >= skim:
+                u["pnl"] = skim * ppp; done.append(u); units.remove(u); continue
+            if sl > 0 and prof <= -sl:
+                u["pnl"] = -sl * ppp; done.append(u); units.remove(u); continue
+            if scratch_s is not None and (t - u["open_t"]).total_seconds() >= scratch_s and prof < 0:
+                u["pnl"] = prof * ppp; done.append(u); units.remove(u); continue
+        while pend is not None and t >= pend["fire_time"]:
+            if len(units) < max_conc:
+                units.append({"side": pend["side"], "e": ask if pend["side"] > 0 else bid, "open_t": t})
+            pend = next(it, None)
+    if ticks:
+        last = ticks[-1]
+        for u in units:
+            u["pnl"] = ((last["bid"] - u["e"]) if u["side"] > 0 else (u["e"] - last["ask"])) * ppp
+            done.append(u)
+    return done
+
+
+def stat(trades):
+    n = len(trades)
+    if not n:
+        return "n=0"
+    w = [x["pnl"] for x in trades if x["pnl"] > 0]
+    l = [x["pnl"] for x in trades if x["pnl"] < 0]
+    tot = sum(x["pnl"] for x in trades)
+    wr = len(w) / (len(w) + len(l)) if (w or l) else 0
+    return (f"n={n:>4} {n/13:>4.1f}/d  WR={wr:.2f}  W=${(sum(w)/len(w) if w else 0):>4.1f} "
+            f"L=${(-sum(l)/len(l) if l else 0):>4.1f}  TOT=${tot:>+8.1f}")
+
+
+def main():
+    bars = load_m1_merged()
+    days_b = group_bars_by_day(bars)
+    cache = {}
+    for tf in sorted(glob.glob(str(COMMON / "shano_ticks_2026-*.csv"))):
+        d = Path(tf).stem.split("_")[-1]
+        if d not in days_b or len(days_b[d]) < 200:
+            continue
+        ticks = load_ticks(tf)
+        if len(ticks) < 100:
+            continue
+        cache[d] = {"m1": days_b[d], "ticks": ticks}
+    days = sorted(cache); mid = len(days) // 2
+    print(f"FEB-11 SIMPLE UHV-BREAKOUT + SCALP exit — broker ticks, {len(days)} days, "
+          f"{LOTS} lots, BUY+SELL\n")
+    for rt in (True, False):
+        sig = {d: detect(cache[d]["m1"], require_trend=rt) for d in days}
+        nb = sum(1 for d in days for s in sig[d] if s["side"] > 0)
+        ns = sum(1 for d in days for s in sig[d] if s["side"] < 0)
+        print(f"--- trend filter {'ON' if rt else 'OFF'} --- entries: {nb} buy + {ns} sell "
+              f"= {(nb+ns)/len(days):.1f}/day\n    {'exit':<28}{'ALL':<42}OOS")
+        for lbl, kw in [
+            ("skim$1, cut$2",            dict(skim=1.0, sl=2.0, scratch_s=None)),
+            ("skim$2, cut$3",            dict(skim=2.0, sl=3.0, scratch_s=None)),
+            ("skim$3, cut$3",            dict(skim=3.0, sl=3.0, scratch_s=None)),
+            ("skim$2, no SL, scratch10s",dict(skim=2.0, sl=0.0, scratch_s=10)),
+            ("skim$2, cut$4, scratch15s",dict(skim=2.0, sl=4.0, scratch_s=15)),
+        ]:
+            allt, testt = [], []
+            for k, d in enumerate(days):
+                tr = replay(cache[d]["ticks"], sig[d], **kw)
+                allt += tr
+                if k >= mid:
+                    testt += tr
+            print(f"    {lbl:<28}{stat(allt):<42}{stat(testt)}")
+        print()
+
+
+if __name__ == "__main__":
+    main()
