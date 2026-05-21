@@ -224,6 +224,11 @@ REM   See monitor\sheriff_hawk.py lines 701-706.
 "%ENSURE%" silver_hawk_learner.py
 REM   15-min visual pattern learner. Not trading — research only. Keep enabled.
 
+"%ENSURE%" profit_pulse_hawk.py --loop
+REM   "Feels like a lot" hawk: watches EA floating P&L (bigness = floating/avg-win)
+REM   and WhatsApps Zee a human-voiced alert + one-tap GRAB link when it's big.
+REM   Restartable from the dashboard Services row too.
+
 "%ENSURE%" forward_tester.py
 REM   Intra-candle theory validator (spread/slippage/probe-confirm stats).
 REM   Writes monitor\forward_test_*.json. Useful diagnostic, no real trading.
