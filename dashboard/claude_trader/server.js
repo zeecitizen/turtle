@@ -400,9 +400,72 @@ const RESTARTABLE = {
   forward_tester: { label: 'Forward Tester', script: 'monitor\\forward_tester.py',      args: [] },
 };
 
+// ── Web Push (PWA notifications) ──
+let webpush = null, VAPID = null;
+try {
+  webpush = require('web-push');
+  VAPID = JSON.parse(fs.readFileSync(path.join(__dirname, '.vapid.json'), 'utf8'));
+  webpush.setVapidDetails('mailto:zeecitizen@gmail.com', VAPID.publicKey, VAPID.privateKey);
+  console.log('[push] enabled');
+} catch (e) { console.log('[push] disabled:', e.message); }
+const SUBS_FILE = path.join(__dirname, 'push_subscriptions.json');
+function loadSubs() { try { return JSON.parse(fs.readFileSync(SUBS_FILE, 'utf8')); } catch { return []; } }
+function saveSubs(s) { try { fs.writeFileSync(SUBS_FILE, JSON.stringify(s)); } catch {} }
+function readBody(req) { return new Promise((resolve) => { let b = ''; req.on('data', c => b += c); req.on('end', () => resolve(b)); }); }
+
 const server = http.createServer(async (req, res) => {
   const url = req.url.split('?')[0];
   const query = new URLSearchParams((req.url.split('?')[1]) || '');
+
+  // ── Service worker (must be served at root scope to control / and /grab) ──
+  if (url === '/sw.js') {
+    try {
+      const js = fs.readFileSync(path.join(__dirname, 'sw.js'));
+      res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8',
+        'Service-Worker-Allowed': '/', 'Cache-Control': 'no-store' });
+      res.end(js);
+    } catch (e) { res.writeHead(404); res.end('// no sw'); }
+    return;
+  }
+
+  // ── PWA push: public VAPID key for client subscription ──
+  if (url === '/api/vapid-public') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ key: VAPID ? VAPID.publicKey : null }));
+    return;
+  }
+
+  // ── PWA push: register a device subscription (key-gated) ──
+  if (url === '/api/push-subscribe') {
+    if (query.get('key') !== DASHBOARD_PASSWORD) { res.writeHead(403); res.end('{"ok":false}'); return; }
+    try {
+      const sub = JSON.parse(await readBody(req));
+      const subs = loadSubs();
+      if (!subs.find(s => s.endpoint === sub.endpoint)) { subs.push(sub); saveSubs(subs); }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, count: subs.length }));
+    } catch (e) { res.writeHead(400, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: false, error: e.message })); }
+    return;
+  }
+
+  // ── PWA push: send a notification to all devices (key-gated; called by the pulse hawk) ──
+  if (url === '/api/notify') {
+    if (query.get('key') !== DASHBOARD_PASSWORD) { res.writeHead(403); res.end('{"ok":false}'); return; }
+    if (!webpush) { res.writeHead(503, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ ok: false, error: 'push disabled' })); return; }
+    let payload;
+    try { payload = JSON.parse(await readBody(req)); } catch { payload = {}; }
+    const subs = loadSubs();
+    const body = JSON.stringify(payload);
+    let sent = 0; const keep = [];
+    await Promise.all(subs.map(async (s) => {
+      try { await webpush.sendNotification(s, body); sent++; keep.push(s); }
+      catch (err) { if (!(err && (err.statusCode === 404 || err.statusCode === 410))) keep.push(s); } // prune dead subs
+    }));
+    if (keep.length !== subs.length) saveSubs(keep);
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true, sent, devices: keep.length }));
+    return;
+  }
 
   // ── One-tap GRAB: write a fresh epoch id; each EA closes its positions on next tick ──
   if (url === '/grab') {
@@ -1280,14 +1343,15 @@ const server = http.createServer(async (req, res) => {
 
   // PWA manifest — makes /shano installable on iOS/Android home screen
   if (url === '/shano/manifest.json' || url === '/manifest.json') {
+    const isHub = (url === '/manifest.json');   // hub install opens the trading desk; /shano keeps its own
     const manifest = {
-      name: 'Shano Trader',
-      short_name: 'Shano',
-      description: 'Live Shano trading system dashboard',
-      start_url: '/shano',
+      name: isHub ? 'Turtle Trader' : 'Shano Trader',
+      short_name: isHub ? 'Turtle' : 'Shano',
+      description: 'Live trading system dashboard',
+      start_url: isHub ? '/' : '/shano',
       display: 'standalone',
-      background_color: '#ffffff',
-      theme_color: '#1d1d1f',
+      background_color: isHub ? '#0b0e14' : '#ffffff',
+      theme_color: isHub ? '#0b0e14' : '#1d1d1f',
       orientation: 'portrait',
       icons: [
         { src: '/shano/icon.svg', sizes: '512x512', type: 'image/svg+xml', purpose: 'any maskable' }

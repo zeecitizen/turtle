@@ -4,7 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Shano Trading Desk</title>
-<link rel="manifest" href="/shano/manifest.json" />
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0b0e14" />
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
   :root{
@@ -131,6 +132,7 @@
   <!-- restart a downed service -->
   <div class="st">Services <span style="font-weight:400;font-size:11px;color:#6b7280">· tap to restart a Python hawk · MT5 EAs need manual reattach in MetaTrader</span></div>
   <div id="svc" style="display:flex;flex-wrap:wrap;gap:2px"></div>
+  <button id="notifBtn" onclick="enableNotifs()" style="margin-top:8px;padding:9px 13px;border:1px solid #30363d;border-radius:10px;background:#161b22;color:#c9d1d9;font-size:13px;cursor:pointer">🔔 Enable phone alerts</button>
 
   <!-- live trade feed -->
   <div class="st">Today's Trades</div>
@@ -174,6 +176,27 @@ async function doRestart(svc,label){
     alert(j.ok?('⟳ Restarted '+label+(j.pid?' (pid '+j.pid+')':'')):('Could not restart: '+(j.error||'?')));
   }catch(e){alert('Restart failed: '+e);}
 }
+// PWA push: register service worker + subscribe this device to notifications
+function urlB64ToUint8(b64){const pad='='.repeat((4-b64.length%4)%4);const s=(b64+pad).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(s);return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));}
+async function enableNotifs(){
+  try{
+    if(!('serviceWorker' in navigator)||!('PushManager' in window)){alert('Push needs Chrome on Android (and "Add to Home screen" first). This browser doesn\'t support it.');return;}
+    const k=dashKey(); if(!k)return;
+    const reg=await navigator.serviceWorker.register('/sw.js');
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted'){alert('Notifications are blocked — enable them in the site settings.');return;}
+    const vp=await (await fetch('/api/vapid-public')).json();
+    if(!vp.key){alert('Push isn\'t configured on the server.');return;}
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlB64ToUint8(vp.key)});
+    const r=await fetch('/api/push-subscribe?key='+encodeURIComponent(k),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(sub)});
+    if(r.status===403){localStorage.removeItem('dashKey');alert('Wrong password — try again');return;}
+    const j=await r.json();
+    if(j.ok){$('notifBtn').textContent='🔔 Alerts ON ('+j.count+')';alert('🔔 Phone alerts ON. When profit gets big you\'ll get a notification with 🫡 Grab / Let-it-ride buttons — no need to open the app.');}
+    else alert('Subscribe failed: '+(j.error||'?'));
+  }catch(e){alert('Could not enable alerts: '+e);}
+}
+if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
 const EAMETA={S3:{cls:'s3',full:'Liquidity Sweep'},S1:{cls:'s1',full:'UHV Breakout'},NSND:{cls:'ns',full:'No Supply/Demand'}};
 
 function drawSpark(eq){
