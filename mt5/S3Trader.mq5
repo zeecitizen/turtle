@@ -62,6 +62,11 @@ input double InpBEBufferPts     = 0.30;  // SL set this far ABOVE entry (price u
 // TP to trail the runner on 3×H1-ATR (Chandelier) scored +$187 vs +$250 for
 // partial+BE-with-TP. Our peak-TP scalp beats the trend-runner trail. Do not add.
 
+input group "── Human profit-pulse + one-tap GRAB ──"
+input bool   InpEnableGrab = true;       // honor a GRAB command (close ALL this EA's positions at market). Fired from WhatsApp/dashboard one tap. The system 'feels' a big profit and lets YOU grab it.
+input double InpAvgWinUsd  = 60.0;       // reference avg winning trade ($) for the 'bigness' read written to the heartbeat. bigness = floating / this = how-big-it-feels-like.
+input string InpGrabFile   = "grab_command.txt"; // shared command file (epoch id). EA grabs on a NEWER id than last seen.
+
 input group "── Detection ──"
 input int    InpTrendLookback     = 24;   // M5 bars: ~2 hours for trend
 input double InpTrendThreshold    = 1.0;  // min price units of move (v2: was 2.0)
@@ -117,6 +122,10 @@ ulong  g_mng_ticket[256];
 double g_mng_sl0[256];
 bool   g_mng_partialed[256];
 int    g_mng_count = 0;
+
+//── One-tap GRAB state ──────────────────────────────────────────────
+long     g_last_grab_id = 0;       // highest grab-command id we've already acted on
+datetime g_last_grab_check = 0;    // throttle the file read
 
 bool IsNewDay() {
    MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
@@ -438,14 +447,19 @@ void WriteHeartbeat() {
    string path = InpStateFile;
    int fh = FileOpen(path, FILE_WRITE | FILE_TXT | FILE_COMMON);
    if (fh == INVALID_HANDLE) return;
+   int n_open = 0;
+   double floating = FloatingPnL(n_open);
+   double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S3Trader\",\"version\":\"2.00\",\"alive\":true,"
+      "{\"ea\":\"S3Trader\",\"version\":\"2.20\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
-      "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f}",
+      "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
+      "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f}",
       TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
       g_signals_today, g_entries_today,
       TimeToString(g_last_signal_t, TIME_DATE | TIME_SECONDS),
-      InpMagicNumber, InpLots));
+      InpMagicNumber, InpLots,
+      floating, n_open, bigness, InpAvgWinUsd));
    FileClose(fh);
 }
 
@@ -519,14 +533,58 @@ void ManageOpenPositions() {
    }
 }
 
+//── Floating P&L (this EA's open positions) ────────────────────────
+double FloatingPnL(int &n_open) {
+   double sum = 0; n_open = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      sum += PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP);
+      n_open++;
+   }
+   return sum;
+}
+
+//── One-tap GRAB: read shared command id; if newer, close everything ─
+long ReadGrabId() {
+   if (!FileIsExist(InpGrabFile, FILE_COMMON)) return 0;
+   int fh = FileOpen(InpGrabFile, FILE_READ | FILE_TXT | FILE_COMMON | FILE_ANSI);
+   if (fh == INVALID_HANDLE) return 0;
+   string s = FileIsEnding(fh) ? "" : FileReadString(fh);
+   FileClose(fh);
+   return (long)StringToInteger(s);
+}
+
+void CheckGrabCommand() {
+   if (!InpEnableGrab) return;
+   if ((TimeCurrent() - g_last_grab_check) < 2) return;   // throttle file IO
+   g_last_grab_check = TimeCurrent();
+   long id = ReadGrabId();
+   if (id <= g_last_grab_id) return;
+   g_last_grab_id = id;                                   // mark seen (even if 0 closed)
+   int closed = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      if (g_trade.PositionClose(tk)) closed++;
+   }
+   if (closed > 0)
+      Log(StringFormat("[GRAB] one-tap grab id=%I64d — closed %d position(s) at market", id, closed));
+}
+
 //── EA hooks ────────────────────────────────────────────────────────
 int OnInit() {
    g_trade.SetExpertMagicNumber(InpMagicNumber);
    g_trade.SetTypeFillingBySymbol(_Symbol);
    IsNewDay();
-   Log(StringFormat("S3Trader Init — magic=%d lots=%.2f trendLB=%d retraceLB=%d tpLB=%d",
+   g_last_grab_id = ReadGrabId();   // ignore any pre-existing grab command on attach (no restart-refire)
+   Log(StringFormat("S3Trader Init — magic=%d lots=%.2f trendLB=%d retraceLB=%d tpLB=%d grab_base_id=%I64d",
                      InpMagicNumber, InpLots, InpTrendLookback,
-                     InpRetraceLookback, InpTPPeakLookback));
+                     InpRetraceLookback, InpTPPeakLookback, g_last_grab_id));
    return INIT_SUCCEEDED;
 }
 
@@ -544,5 +602,6 @@ void OnTick() {
    }
    g_last_m5_time = cur_m5;
    ManageOpenPositions();   // 2R Free Roll: breakeven + partial on open trades (every tick)
+   CheckGrabCommand();      // honor a one-tap GRAB (close all) from WhatsApp/dashboard
    WriteHeartbeat();
 }

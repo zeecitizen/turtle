@@ -382,8 +382,73 @@ function denyAuth(res, gate) {
   res.end('Auth required');
 }
 
+const COMMON_DIR = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
+const PY_EXE = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python313-arm64\\python.exe';
+const REPO = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\';
+
+// Python-backed services that CAN be restarted by spawning their script.
+// (MT5 EAs/loggers — S3/S1/NSND/TurtleTradeLogger/ShanoTickLogger — run INSIDE
+//  MetaTrader and CANNOT be restarted externally; those need a manual reattach.)
+const RESTARTABLE = {
+  sheriff_hawk:   { label: 'Sheriff Hawk',   script: 'monitor\\sheriff_hawk.py',        args: ['--loop'] },
+  sexy_hawk:      { label: 'Sexy Hawk',      script: 'monitor\\sexy_hawk.py',           args: ['--loop'] },
+  silver_hawk:    { label: 'Silver Hawk',    script: 'monitor\\silver_hawk_learner.py', args: [] },
+  intern_hawks:   { label: 'Intern Hawks',   script: 'monitor\\intern_hawks.py',        args: [] },
+  meeting_hawks:  { label: 'Meeting Hawks',  script: 'monitor\\meeting_hawks.py',        args: ['--loop'] },
+  profit_pulse:   { label: 'Profit Pulse',   script: 'monitor\\profit_pulse_hawk.py',   args: ['--loop'] },
+  auto_uhv:       { label: 'Auto UHV Trader',script: 'monitor\\auto_uhv_trader.py',     args: [] },
+  forward_tester: { label: 'Forward Tester', script: 'monitor\\forward_tester.py',      args: [] },
+};
+
 const server = http.createServer(async (req, res) => {
   const url = req.url.split('?')[0];
+  const query = new URLSearchParams((req.url.split('?')[1]) || '');
+
+  // ── One-tap GRAB: write a fresh epoch id; each EA closes its positions on next tick ──
+  if (url === '/grab') {
+    if (query.get('key') !== DASHBOARD_PASSWORD) {
+      res.writeHead(403, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end('<body style="font-family:system-ui;background:#0b0e14;color:#e6edf3;text-align:center;padding-top:20vh"><h2>🔒 wrong key</h2></body>');
+      return;
+    }
+    const id = Math.floor(Date.now() / 1000);
+    try { fs.writeFileSync(COMMON_DIR + 'grab_command.txt', String(id), 'utf8'); }
+    catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end('<body style="font-family:system-ui;background:#0b0e14;color:#e6edf3;text-align:center;padding-top:20vh"><h2>grab failed</h2><p>' + e.message + '</p></body>');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end('<!doctype html><meta name="viewport" content="width=device-width,initial-scale=1"><body style="font-family:system-ui;background:#0b0e14;color:#e6edf3;text-align:center;padding-top:16vh"><div style="font-size:64px">🫡</div><h2>Grab sent</h2><p>EAs will close all open positions at market within ~2 seconds.</p><p style="opacity:.5;font-size:13px">command id ' + id + '</p><a href="/" style="color:#58a6ff">← back to dashboard</a></body>');
+    return;
+  }
+
+  // ── Restart a Python-backed service (spawn detached). Key-gated. ──
+  if (url === '/api/restart') {
+    if (query.get('key') !== DASHBOARD_PASSWORD) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: 'wrong key' }));
+      return;
+    }
+    const svc = query.get('svc');
+    const def = RESTARTABLE[svc];
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    if (!def) {
+      res.end(JSON.stringify({ ok: false, error: 'unknown or non-restartable service: ' + svc,
+        hint: 'MT5 EAs (S3/S1/NSND/loggers) run inside MetaTrader and must be reattached manually.' }));
+      return;
+    }
+    try {
+      const { spawn } = require('child_process');
+      const child = spawn(PY_EXE, [REPO + def.script, ...def.args],
+        { detached: true, stdio: 'ignore', windowsHide: true, cwd: REPO });
+      child.unref();
+      res.end(JSON.stringify({ ok: true, service: svc, label: def.label, pid: child.pid }));
+    } catch (e) {
+      res.end(JSON.stringify({ ok: false, error: e.message }));
+    }
+    return;
+  }
 
   // Per-user gates — Zee or Hammad based on URL. Others stay open.
   const gate = findAuthGate(url);
@@ -538,6 +603,9 @@ const server = http.createServer(async (req, res) => {
           signals_today: parsed.signals_today,
           entries_today: parsed.entries_today,
           last_signal_t: parsed.last_signal_t,
+          floating_usd: parsed.floating_usd ?? null,
+          n_open: parsed.n_open ?? null,
+          bigness: parsed.bigness ?? null,
         };
         if (!alive) warnings.push(`${ea.name} heartbeat stale (${age_sec}s) — detach/reattach in MT5`);
       } catch (e) {
@@ -702,12 +770,28 @@ const server = http.createServer(async (req, res) => {
       }
     } catch {}
 
+    // ── Profit pulse: how big does the open floating profit "feel"? ──
+    let pulse = { floating_total: 0, n_open: 0, bigness: 0 };
+    for (const k of ['s3_trader', 's1_trader', 'nsnd_trader']) {
+      const c = components[k];
+      if (c && typeof c.floating_usd === 'number') {
+        pulse.floating_total += c.floating_usd;
+        pulse.n_open += (c.n_open || 0);
+        if ((c.bigness || 0) > pulse.bigness) pulse.bigness = c.bigness;
+      }
+    }
+    pulse.floating_total = Math.round(pulse.floating_total * 100) / 100;
+    pulse.bigness = Math.round(pulse.bigness * 100) / 100;
+
+    // restartable Python services (so the dashboard can offer restart buttons)
+    const restartable = Object.entries(RESTARTABLE).map(([k, v]) => ({ key: k, label: v.label }));
+
     const all_systems_go = warnings.length === 0;
     const payload = {
       ts: new Date().toISOString(),
       all_systems_go,
       headline: all_systems_go ? 'All Systems Online' : `Something is wrong — ${warnings.length} issue${warnings.length === 1 ? '' : 's'}`,
-      warnings, pnl, per_ea, recent, equity, whatif, market, components,
+      warnings, pnl, per_ea, recent, equity, whatif, market, components, pulse, restartable,
     };
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(payload));

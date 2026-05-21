@@ -125,6 +125,13 @@
   <div class="sys" id="sys"></div>
   <div class="banner ok" id="banner">checking…</div>
 
+  <!-- profit pulse + one-tap grab (shows only when floating profit feels big) -->
+  <div id="pulseCard" style="display:none;background:#11161f;border:1px solid #243042;border-radius:14px;padding:14px;margin:12px 0"></div>
+
+  <!-- restart a downed service -->
+  <div class="st">Services <span style="font-weight:400;font-size:11px;color:#6b7280">· tap to restart a Python hawk · MT5 EAs need manual reattach in MetaTrader</span></div>
+  <div id="svc" style="display:flex;flex-wrap:wrap;gap:2px"></div>
+
   <!-- live trade feed -->
   <div class="st">Today's Trades</div>
   <div class="feed" id="feed"><div class="empty">loading…</div></div>
@@ -148,6 +155,25 @@
 <script>
 const $=id=>document.getElementById(id);
 const money=v=>(v>0?'+':v<0?'−':'')+'$'+Math.abs(v).toFixed(2);
+
+// dashboard password (kept out of page source; cached after first prompt)
+function dashKey(){let k=localStorage.getItem('dashKey');if(!k){k=prompt('Dashboard password:');if(k)localStorage.setItem('dashKey',k);}return k;}
+async function doGrab(){
+  if(!confirm('GRAB — close ALL open positions at market right now?'))return;
+  const k=dashKey(); if(!k)return;
+  try{const r=await fetch('/grab?key='+encodeURIComponent(k));
+    if(r.status===403){localStorage.removeItem('dashKey');alert('Wrong password — try again');return;}
+    alert('🫡 Grab sent — EAs will close all open positions within ~2s.');
+  }catch(e){alert('Grab failed: '+e);}
+}
+async function doRestart(svc,label){
+  const k=dashKey(); if(!k)return;
+  try{const r=await fetch('/api/restart?key='+encodeURIComponent(k)+'&svc='+encodeURIComponent(svc));
+    if(r.status===403){localStorage.removeItem('dashKey');alert('Wrong password — try again');return;}
+    const j=await r.json();
+    alert(j.ok?('⟳ Restarted '+label+(j.pid?' (pid '+j.pid+')':'')):('Could not restart: '+(j.error||'?')));
+  }catch(e){alert('Restart failed: '+e);}
+}
 const EAMETA={S3:{cls:'s3',full:'Liquidity Sweep'},S1:{cls:'s1',full:'UHV Breakout'},NSND:{cls:'ns',full:'No Supply/Demand'}};
 
 function drawSpark(eq){
@@ -195,6 +221,21 @@ async function load(){
     const a=age!=null?(age<60?age+'s':Math.floor(age/60)+'m'):'';
     return `<span class="chip ${x.alive?'ok':'bad'}">${x.alive?'●':'○'} ${lbl} ${a}</span>`;
   }).join('');
+  // profit pulse + grab button (only when floating profit is meaningfully positive)
+  const pulse=d.pulse||{}; const pcard=$('pulseCard');
+  if((pulse.n_open||0)>0 && (pulse.floating_total||0)>0){
+    const big=pulse.bigness||0;
+    const feel=big>=4?'🤑🤑 HUGE':big>=2.5?'🤑 that’s a LOT':big>=1.5?'👀 nice chunk building':'';
+    const hot=big>=2.5;
+    pcard.style.display='block';
+    pcard.style.borderColor=hot?'#2ea043':'#243042';
+    pcard.innerHTML=`<div style="font-size:13px;color:#9aa4b2;margin-bottom:8px"><b style="color:#2ea043;font-size:18px">${money(pulse.floating_total)}</b> floating · ${pulse.n_open} open · ${big.toFixed(1)}× avg winner ${feel}</div>`+
+      (big>=1.5?`<button onclick="doGrab()" style="width:100%;padding:14px;border:0;border-radius:12px;background:linear-gradient(135deg,#1f9d55,#2ea043);color:#fff;font-size:17px;font-weight:700;cursor:pointer">🫡 GRAB IT — close all now</button>
+      <div style="font-size:11px;color:#6b7280;margin-top:7px">Breakeven’s locked — it can’t round-trip to a loss. Backtests say riding to TP wins; this button is yours if the urge is real.</div>`:'');
+  } else { pcard.style.display='none'; }
+  // restartable services
+  const sv=$('svc'), rs=d.restartable||[];
+  sv.innerHTML=rs.length?rs.map(s=>`<button onclick="doRestart('${s.key}','${(s.label||'').replace(/'/g,'')}')" style="padding:8px 12px;border:1px solid #30363d;border-radius:10px;background:#161b22;color:#c9d1d9;font-size:13px;cursor:pointer">⟳ ${s.label}</button>`).join(''):'<span style="font-size:12px;color:#6b7280">no restartable services</span>';
   const b=$('banner');
   const onBreak=(mt.status==='break'||mt.status==='closed');
   // during a market break the heartbeats freeze (no ticks) — that's normal, not a fault
