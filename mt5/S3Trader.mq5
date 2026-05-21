@@ -23,8 +23,16 @@
 //| Fires once per qualifying M5 bar close; deduped by bar timestamp.|
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 3 Effort vs Result (Teacher Spec v2)"
-#property version   "2.00"
+#property version   "2.10"
 #property strict
+
+// v2.10 (2026-05-22): "2R Free Roll" profit protection added (ManageOpenPositions,
+// tick-level). Backtest (backtest_exit_protocols.py, same S3 signals, 13 real-tick
+// days @ 0.09): baseline +$115 / WR .60 / worst -$87.8 → partial+BE (keep TP)
+// +$250 / WR .80 / worst -$62.9. The give-back that scared us (a +profit trade
+// round-tripping to -$87.8) is caught by breakeven. DELIBERATELY NOT implemented:
+// the doc's drop-static-TP + 3×ATR-Chandelier trail — it scored +$187 < +$250,
+// i.e. WORSE than keeping our peak-TP. n=5 trades → treat as PROVISIONAL.
 
 // v2 (2026-05-16): faithful teacher-spec upgrade. Retracement defined as
 // "reds that broke last green's low" (was swing-high break — fires 10× more
@@ -42,6 +50,17 @@ input int    InpMagicNumber   = 88003;
 
 input group "── FTMO daily-loss circuit breaker ──"
 input double InpDailyLossHalt = 200.0; // halt NEW entries if account EQUITY is down this much today (incl. floating). Account-wide FTMO -$300 daily-limit protection. 0 = off.
+
+input group "── Profit protection: 2R Free Roll (backtest-validated 2026-05-22) ──"
+input bool   InpEnableBreakeven = true;  // move SL to breakeven once +InpBreakevenR reached (caps the 'give back to zero' risk). On reattach, applies to ALREADY-OPEN trades too.
+input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
+input bool   InpEnablePartial   = true;  // bank InpPartialFrac of the position at +InpPartialR, then BE the rest (Income tranche). NOTE: on reattach, any open trade already past +1.5R is partialed+BE'd immediately.
+input double InpPartialR        = 1.5;   // R-multiple to bank the partial.
+input double InpPartialFrac     = 0.5;   // fraction of position volume to bank (rounded to lot step).
+input double InpBEBufferPts     = 0.30;  // SL set this far ABOVE entry (price units) to cover spread/swap. Matches backtest BE buffer.
+// REJECTED by backtest (kept here as a note, NOT implemented): dropping the static
+// TP to trail the runner on 3×H1-ATR (Chandelier) scored +$187 vs +$250 for
+// partial+BE-with-TP. Our peak-TP scalp beats the trend-runner trail. Do not add.
 
 input group "── Detection ──"
 input int    InpTrendLookback     = 24;   // M5 bars: ~2 hours for trend
@@ -88,6 +107,16 @@ void Log(string msg) {
 }
 
 double g_day_start_equity = 0;   // account equity at the start of the broker day
+
+//── Per-position management state (2R Free Roll) ───────────────────
+//   Captures each position's ORIGINAL SL on first sighting (so R survives the
+//   breakeven move) and remembers whether we've already banked the partial.
+//   On reattach this table is empty, but the volume/SL on the live position is
+//   still original, so the first sighting captures true R correctly.
+ulong  g_mng_ticket[256];
+double g_mng_sl0[256];
+bool   g_mng_partialed[256];
+int    g_mng_count = 0;
 
 bool IsNewDay() {
    MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
@@ -420,6 +449,76 @@ void WriteHeartbeat() {
    FileClose(fh);
 }
 
+//── 2R Free Roll: per-position management ──────────────────────────
+//   Find this ticket's slot, or create one — capturing the position's CURRENT
+//   SL as the original (valid because first sighting precedes any BE move).
+//   Assumes the position is already selected via PositionSelectByTicket.
+int MngIndex(ulong ticket) {
+   for (int i = 0; i < g_mng_count; i++)
+      if (g_mng_ticket[i] == ticket) return i;
+   int idx = (g_mng_count < 256) ? g_mng_count++ : 0;  // overwrite slot 0 if full (rare)
+   g_mng_ticket[idx]    = ticket;
+   g_mng_sl0[idx]       = PositionGetDouble(POSITION_SL);
+   g_mng_partialed[idx] = false;
+   return idx;
+}
+
+//   Walk this EA's open BUY positions every tick. At +BreakevenR move SL to
+//   entry+buffer (firewall). At +PartialR bank a fraction (Income tranche) and
+//   ensure the runner is at breakeven. Static TP is left untouched (validated).
+void ManageOpenPositions() {
+   if (!InpEnableBreakeven && !InpEnablePartial) return;
+   double bid  = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   double vmin = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   if (step <= 0) step = 0.01;
+
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong ticket = PositionGetTicket(i);
+      if (ticket == 0 || !PositionSelectByTicket(ticket)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      if (PositionGetInteger(POSITION_TYPE) != POSITION_TYPE_BUY) continue; // S3 buy-only
+
+      double entry  = PositionGetDouble(POSITION_PRICE_OPEN);
+      double cur_sl = PositionGetDouble(POSITION_SL);
+      double cur_tp = PositionGetDouble(POSITION_TP);
+      double vol    = PositionGetDouble(POSITION_VOLUME);
+
+      int mi = MngIndex(ticket);          // captures original SL on first sight
+      double R = entry - g_mng_sl0[mi];
+      if (R <= 0) continue;               // no measurable risk → leave alone
+
+      double be_sl = NormalizeDouble(entry + InpBEBufferPts, _Digits);
+
+      // 1. Partial bank at +PartialR (once), then breakeven the remainder.
+      if (InpEnablePartial && !g_mng_partialed[mi] && bid >= entry + InpPartialR * R) {
+         double close_vol = NormalizeDouble(MathFloor((vol * InpPartialFrac) / step) * step, 2);
+         if (close_vol >= vmin && (vol - close_vol) >= vmin) {
+            if (g_trade.PositionClosePartial(ticket, close_vol)) {
+               g_mng_partialed[mi] = true;
+               Log(StringFormat("[2R] Banked %.2f of #%I64u @ bid=%.2f (+%.2fR) — runner=%.2f",
+                                close_vol, ticket, bid, (bid - entry) / R, vol - close_vol));
+            }
+         } else {
+            g_mng_partialed[mi] = true;   // too small to split — don't retry, just BE below
+         }
+         if (InpEnableBreakeven && cur_sl < be_sl &&
+             g_trade.PositionModify(ticket, be_sl, cur_tp))
+            Log(StringFormat("[2R] Breakeven firewall #%I64u SL→%.2f (TP kept %.2f)",
+                             ticket, be_sl, cur_tp));
+         continue;
+      }
+
+      // 2. Plain breakeven at +BreakevenR (fires before PartialR, or if partial off).
+      if (InpEnableBreakeven && cur_sl < be_sl && bid >= entry + InpBreakevenR * R) {
+         if (g_trade.PositionModify(ticket, be_sl, cur_tp))
+            Log(StringFormat("[BE] #%I64u SL→%.2f (+%.2fR, TP kept %.2f)",
+                             ticket, be_sl, (bid - entry) / R, cur_tp));
+      }
+   }
+}
+
 //── EA hooks ────────────────────────────────────────────────────────
 int OnInit() {
    g_trade.SetExpertMagicNumber(InpMagicNumber);
@@ -444,5 +543,6 @@ void OnTick() {
       TryS3BuySignal();
    }
    g_last_m5_time = cur_m5;
+   ManageOpenPositions();   // 2R Free Roll: breakeven + partial on open trades (every tick)
    WriteHeartbeat();
 }

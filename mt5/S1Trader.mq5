@@ -32,8 +32,15 @@
 //| Magic 88004.                                                     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 1 UHV Breakout v2"
-#property version   "2.00"
+#property version   "2.10"
 #property strict
+
+// v2.10 (2026-05-22): "2R Free Roll" management code added for parity with S3/NSND,
+// but DEFAULT OFF — backtest (backtest_exit_protocols_multi.py, S1 deployed signals,
+// 13 real-tick days, n=34) showed it is STRUCTURALLY INERT on S1: the SL sits at the
+// UHV-red low (often $5-15 below entry), so 1R is usually wider than the $7.5 TP and
+// breakeven/partial can never arm before TP resolves — every policy was byte-identical
+// to baseline (+$431.8). Left as a toggle in case S1's TP/SL geometry is widened later.
 
 #include <Trade/Trade.mqh>
 
@@ -42,6 +49,14 @@ input group "── Sizing ──"
 input double InpLots          = 0.06;     // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). Was 0.02 on the $500 Blueberry acct.
 input int    InpMagicNumber   = 88004;
 input double InpDailyLossHalt = 200.0;    // FTMO: halt NEW entries if account EQUITY down this much today (incl floating). Account-wide -$300 daily-limit protection. 0=off.
+
+input group "── Profit protection: 2R Free Roll (backtest 2026-05-22) ──"
+input bool   InpEnableBreakeven = false; // OFF — backtest showed INERT on S1 (SL at UHV-red low is usually wider than the $7.5 TP, so +1R can't arm before TP; identical to baseline +$431.8). Enable only if you widen TP / tighten SL.
+input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
+input bool   InpEnablePartial   = false; // OFF — inert on S1 for the same geometry reason.
+input double InpPartialR        = 1.5;
+input double InpPartialFrac     = 0.5;
+input double InpBEBufferPts     = 0.30;  // SL set this far beyond entry (price units) to cover spread/swap.
 
 input group "── Sides ──"
 input bool   InpDoBuys        = true;     // BUY side enabled (UHV red + bullish FVG)
@@ -82,6 +97,12 @@ void Log(string msg) {
 }
 
 double g_day_start_equity = 0;
+
+//── Per-position management state (2R Free Roll) ───────────────────
+ulong  g_mng_ticket[256];
+double g_mng_sl0[256];
+bool   g_mng_partialed[256];
+int    g_mng_count = 0;
 
 bool IsNewDay() {
    MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
@@ -400,6 +421,74 @@ void OnDeinit(const int reason) {
                      reason, g_signals_today, g_entries_today));
 }
 
+//── 2R Free Roll: side-aware per-position management ───────────────
+int MngIndex(ulong ticket) {
+   for (int i = 0; i < g_mng_count; i++)
+      if (g_mng_ticket[i] == ticket) return i;
+   int idx = (g_mng_count < 256) ? g_mng_count++ : 0;
+   g_mng_ticket[idx]    = ticket;
+   g_mng_sl0[idx]       = PositionGetDouble(POSITION_SL);
+   g_mng_partialed[idx] = false;
+   return idx;
+}
+
+//   Walk this EA's open positions (BUY or SELL) each tick. At +BreakevenR move SL
+//   to breakeven. Optional partial at +PartialR. Static TP untouched. (Default OFF
+//   on S1 — see header note; inert because 1R is usually wider than the $7.5 TP.)
+void ManageOpenPositions() {
+   if (!InpEnableBreakeven && !InpEnablePartial) return;
+   double bid  = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double ask  = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   double vmin = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   if (step <= 0) step = 0.01;
+
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong ticket = PositionGetTicket(i);
+      if (ticket == 0 || !PositionSelectByTicket(ticket)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      bool is_buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+
+      double entry  = PositionGetDouble(POSITION_PRICE_OPEN);
+      double cur_sl = PositionGetDouble(POSITION_SL);
+      double cur_tp = PositionGetDouble(POSITION_TP);
+      double vol    = PositionGetDouble(POSITION_VOLUME);
+
+      int mi = MngIndex(ticket);
+      double R = MathAbs(entry - g_mng_sl0[mi]);
+      if (R <= 0) continue;
+
+      double prof  = is_buy ? (bid - entry) : (entry - ask);
+      double be_sl = NormalizeDouble(is_buy ? entry + InpBEBufferPts
+                                            : entry - InpBEBufferPts, _Digits);
+      bool can_raise = is_buy ? (cur_sl < be_sl) : (cur_sl == 0.0 || cur_sl > be_sl);
+
+      if (InpEnablePartial && !g_mng_partialed[mi] && prof >= InpPartialR * R) {
+         double close_vol = NormalizeDouble(MathFloor((vol * InpPartialFrac) / step) * step, 2);
+         if (close_vol >= vmin && (vol - close_vol) >= vmin) {
+            if (g_trade.PositionClosePartial(ticket, close_vol)) {
+               g_mng_partialed[mi] = true;
+               Log(StringFormat("[2R] Banked %.2f of #%I64u (+%.2fR) runner=%.2f",
+                                close_vol, ticket, prof / R, vol - close_vol));
+            }
+         } else {
+            g_mng_partialed[mi] = true;
+         }
+         if (InpEnableBreakeven && can_raise &&
+             g_trade.PositionModify(ticket, be_sl, cur_tp))
+            Log(StringFormat("[2R] Breakeven #%I64u SL→%.2f (TP kept %.2f)", ticket, be_sl, cur_tp));
+         continue;
+      }
+
+      if (InpEnableBreakeven && can_raise && prof >= InpBreakevenR * R) {
+         if (g_trade.PositionModify(ticket, be_sl, cur_tp))
+            Log(StringFormat("[BE] #%I64u SL→%.2f (+%.2fR, TP kept %.2f)",
+                             ticket, be_sl, prof / R, cur_tp));
+      }
+   }
+}
+
 void OnTick() {
    IsNewDay();
    datetime cur_m5 = iTime(_Symbol, PERIOD_M5, 0);
@@ -408,5 +497,6 @@ void OnTick() {
       if (!TryS1BuySignal()) TryS1SellSignal();
    }
    g_last_m5_time = cur_m5;
+   ManageOpenPositions();   // 2R Free Roll (default off on S1 — see header)
    WriteHeartbeat();
 }

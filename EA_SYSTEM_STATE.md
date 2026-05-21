@@ -1,10 +1,35 @@
 # EA System State & Results — for future Claude (and Zee)
 
-**Last updated: 2026-05-20** after a full autonomous optimization night driven by
-the teacher's (Ahmad Umair Akhtar / The Forex Guide) VSA video transcripts.
+**Last updated: 2026-05-22** — added "2R Free Roll" profit protection (breakeven /
+partial scale-out) after a research doc (Protecting Peak Trading Profits.pdf) and a
+live scare (two S3 buys floating +$168 with no trailing). Prior full update 2026-05-20.
 
 This is the single source of truth for what's deployed, what was rejected, and the
 real validated numbers. Read this first before changing any EA.
+
+---
+
+## 2R FREE ROLL — profit protection (added 2026-05-22)
+
+Tested per-EA on 13 real-tick days, same deployed signals, only the exit varies.
+Harnesses: `monitor/strategy_lab/backtest_exit_protocols.py` (S3),
+`backtest_exit_protocols_multi.py` (S1 + NSND). Side-aware tick-level manager
+`ManageOpenPositions()` added to all three EAs (magic-scoped, manages already-open
+trades on reattach by capturing each position's ORIGINAL SL on first sight).
+
+| EA | Deployed | baseline → chosen | Why |
+|----|----------|-------------------|-----|
+| **S3** (88003) | **BE@+1R + partial 50%@+1.5R, keep TP** (both ON) | +$115 → **+$250**, worst −$87.8→−$62.9, WR .60→.80 | catches the give-back-to-zero. **n=5 — PROVISIONAL.** |
+| **NSND** (88006) | **breakeven ON, partial OFF** | +$475 → **+$518**, WR 31%→53%, PF 3.13→4.13, OOS +$311→+$330, **n=93** | partial DILUTES (+$488, caps big runners); BE-only is best & robust |
+| **S1** (88004) | **both OFF (inert)** | +$431.8 → +$431.8 (identical) | SL at UHV-red low ⇒ 1R usually wider than the $7.5 TP, so BE/partial can't arm before TP. n=34. Toggle left in code. |
+
+**REJECTED for all three:** the doc's headline move — drop the static TP and trail the
+runner on 3×H1-ATR (Chandelier). It scored *worse* than keeping our TP every time
+(S3 +$187<+$250; NSND +$443<+$475 = below baseline). Our small-TP scalps beat a
+trend-runner trail on XAU. Do not add it.
+
+Inputs (all EAs): `InpEnableBreakeven`, `InpBreakevenR`, `InpEnablePartial`,
+`InpPartialR`, `InpPartialFrac`, `InpBEBufferPts` ($0.30 above/below entry).
 
 ---
 
