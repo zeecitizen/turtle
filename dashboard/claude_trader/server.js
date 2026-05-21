@@ -682,6 +682,7 @@ const server = http.createServer(async (req, res) => {
           floating_usd: parsed.floating_usd ?? null,
           n_open: parsed.n_open ?? null,
           bigness: parsed.bigness ?? null,
+          open: Array.isArray(parsed.open) ? parsed.open : [],
         };
         if (!alive) warnings.push(`${ea.name} heartbeat stale (${age_sec}s) — detach/reattach in MT5`);
       } catch (e) {

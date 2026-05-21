@@ -126,6 +126,10 @@
   <div class="sys" id="sys"></div>
   <div class="banner ok" id="banner">checking…</div>
 
+  <!-- live open positions (what the system is holding RIGHT NOW) -->
+  <div class="st">Open Positions <span id="openTot" style="font-weight:400;font-size:11px;color:#6b7280"></span></div>
+  <div id="openPos"></div>
+
   <!-- profit pulse + one-tap grab (shows only when floating profit feels big) -->
   <div id="pulseCard" style="display:none;background:#11161f;border:1px solid #243042;border-radius:14px;padding:14px;margin:12px 0"></div>
 
@@ -244,6 +248,27 @@ async function load(){
     const a=age!=null?(age<60?age+'s':Math.floor(age/60)+'m'):'';
     return `<span class="chip ${x.alive?'ok':'bad'}">${x.alive?'●':'○'} ${lbl} ${a}</span>`;
   }).join('');
+  // open positions — what the system is holding right now (any side, any P&L)
+  const opEl=$('openPos'), opTot=$('openTot');
+  let allOpen=[];
+  for (const [k,ck] of map){ const comp=c[ck]||{}; (comp.open||[]).forEach(o=>allOpen.push(Object.assign({ea:k},o))); }
+  if(allOpen.length){
+    const flt=allOpen.reduce((s,o)=>s+(o.pnl||0),0);
+    opTot.textContent='· '+allOpen.length+' open · floating '+money(flt);
+    opEl.innerHTML=allOpen.map(o=>{
+      const toTP=o.tp&&o.cur?(o.side==='BUY'?o.tp-o.cur:o.cur-o.tp):null;
+      return `<div style="display:flex;align-items:center;gap:8px;padding:9px 11px;margin:4px 0;background:#11161f;border:1px solid #243042;border-radius:10px;font-size:13px">
+        <span class="badge ${o.ea}" style="min-width:38px">${o.ea}</span>
+        <span style="color:${o.side==='BUY'?'#2ea043':'#f85149'};font-weight:600">${o.side}</span>
+        <span style="color:#9aa4b2">${o.lots} @ ${o.entry}</span>
+        <span style="color:#6b7280;font-size:11px">SL ${o.sl||'—'} · TP ${o.tp||'—'}${toTP!=null?' ('+toTP.toFixed(2)+' to TP)':''}</span>
+        <span style="margin-left:auto;font-weight:700;color:${(o.pnl||0)>=0?'#2ea043':'#f85149'}">${money(o.pnl||0)}</span></div>`;
+    }).join('');
+  } else {
+    opTot.textContent='';
+    const onBrk=(mt.status==='break'||mt.status==='closed');
+    opEl.innerHTML='<div style="font-size:12px;color:#6b7280;padding:6px 2px">'+(onBrk?'Market '+(mt.status==='break'?'on daily break':'closed')+' — EAs paused. Open positions appear here when trading resumes.':'No open positions right now — the system is flat (waiting for a signal).')+'</div>';
+  }
   // profit pulse + grab button (only when floating profit is meaningfully positive)
   const pulse=d.pulse||{}; const pcard=$('pulseCard');
   if((pulse.n_open||0)>0 && (pulse.floating_total||0)>0){

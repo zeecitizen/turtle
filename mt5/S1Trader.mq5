@@ -406,15 +406,15 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S1Trader\",\"version\":\"2.20\",\"alive\":true,"
+      "{\"ea\":\"S1Trader\",\"version\":\"2.21\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
-      "\"tp_points\":%.2f,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f}",
+      "\"tp_points\":%.2f,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
       TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
       g_signals_today, g_entries_today,
       TimeToString(g_last_signal_t, TIME_DATE | TIME_SECONDS),
       InpMagicNumber, InpLots, InpTPPoints,
-      floating, n_open, bigness, InpAvgWinUsd));
+      floating, n_open, bigness, InpAvgWinUsd, BuildOpenJson()));
    FileClose(fh);
 }
 
@@ -516,6 +516,26 @@ double FloatingPnL(int &n_open) {
    }
    return sum;
 }
+//── Open positions as a JSON array (for the dashboard's live Open Positions view) ──
+string BuildOpenJson() {
+   string arr = "["; int n = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      bool buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+      if (n > 0) arr += ",";
+      arr += StringFormat("{\"side\":\"%s\",\"lots\":%.2f,\"entry\":%.2f,\"cur\":%.2f,\"pnl\":%.2f,\"sl\":%.2f,\"tp\":%.2f}",
+                          buy ? "BUY" : "SELL", PositionGetDouble(POSITION_VOLUME),
+                          PositionGetDouble(POSITION_PRICE_OPEN), PositionGetDouble(POSITION_PRICE_CURRENT),
+                          PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP),
+                          PositionGetDouble(POSITION_SL), PositionGetDouble(POSITION_TP));
+      n++;
+   }
+   return arr + "]";
+}
+
 long ReadGrabId() {
    if (!FileIsExist(InpGrabFile, FILE_COMMON)) return 0;
    int fh = FileOpen(InpGrabFile, FILE_READ | FILE_TXT | FILE_COMMON | FILE_ANSI);
