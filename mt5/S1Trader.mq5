@@ -32,7 +32,7 @@
 //| Magic 88004.                                                     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 1 UHV Breakout v2"
-#property version   "2.20"
+#property version   "2.22"
 #property strict
 
 // v2.10 (2026-05-22): "2R Free Roll" management code added for parity with S3/NSND,
@@ -113,12 +113,18 @@ int    g_mng_count = 0;
 long     g_last_grab_id = 0;
 datetime g_last_grab_check = 0;
 
+//── Diagnostic: setups that passed every filter EXCEPT the H1-FVG gate today.
+//   If this is >0 while entries=0, the H1-FVG check is the live blocker; if it's
+//   0, no qualifying setups occurred (rarity, not a bug). Reset daily.
+int g_reached_late = 0;
+
 bool IsNewDay() {
    MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
    if (dt.day != g_today_day) {
       g_today_day = dt.day;
       g_signals_today = 0;
       g_entries_today = 0;
+      g_reached_late = 0;
       g_day_start_equity = AccountInfoDouble(ACCOUNT_EQUITY);  // FTMO daily-loss baseline
       return true;
    }
@@ -279,6 +285,7 @@ bool TryS1BuySignal() {
    }
    if (!swept) return false;
 
+   g_reached_late++;   // diagnostic: passed all filters except the H1-FVG gate
    // 7. H1 FVG tap during retracement
    if (!H1FvgTappedDuringRetracement(max_red_shift)) return false;
 
@@ -371,6 +378,7 @@ bool TryS1SellSignal() {
    }
    if (!swept) return false;
 
+   g_reached_late++;   // diagnostic: passed all filters except the H1-FVG gate
    // 7. Bearish H1 FVG tap during retracement
    if (!H1BearFvgTappedDuringRetracement(max_green_shift)) return false;
 
@@ -406,12 +414,12 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S1Trader\",\"version\":\"2.21\",\"alive\":true,"
-      "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
+      "{\"ea\":\"S1Trader\",\"version\":\"2.22\",\"alive\":true,"
+      "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,\"late_setups\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"tp_points\":%.2f,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
       TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
-      g_signals_today, g_entries_today,
+      g_signals_today, g_entries_today, g_reached_late,
       TimeToString(g_last_signal_t, TIME_DATE | TIME_SECONDS),
       InpMagicNumber, InpLots, InpTPPoints,
       floating, n_open, bigness, InpAvgWinUsd, BuildOpenJson()));
@@ -575,3 +583,4 @@ void OnTick() {
    CheckGrabCommand();      // one-tap GRAB (close all) from WhatsApp/dashboard
    WriteHeartbeat();
 }
+
