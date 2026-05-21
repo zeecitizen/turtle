@@ -97,6 +97,7 @@ Log "Found $($terminals.Count) MT5 terminal(s)"
 
 # --- Step 3: Find MetaEditor for compilation ---
 $editorPaths = @(
+    "C:\Program Files\FTMO Global Markets MT5 Terminal\metaeditor64.exe",
     "C:\Program Files\MetaTrader 5\metaeditor64.exe",
     "C:\Program Files (x86)\MetaTrader 5\metaeditor64.exe",
     "C:\Program Files\Blueberry Markets MetaTrader 5\metaeditor64.exe",
