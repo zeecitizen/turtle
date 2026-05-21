@@ -655,6 +655,9 @@ const server = http.createServer(async (req, res) => {
     const per_ea = { S3:{n:0,w:0,l:0,pnl:0}, S1:{n:0,w:0,l:0,pnl:0}, NSND:{n:0,w:0,l:0,pnl:0} };
     const recent = [];
     const equity = [];
+    const WHATIF_LOTS = [0.10, 0.30, 0.50, 1.00];   // "what if every trade were this lot?"
+    const whatif = {};                              // lot -> scaled today P&L
+    for (const L of WHATIF_LOTS) whatif[L.toFixed(2)] = 0;
     try {
       const raw = fs.readFileSync(COMMON + 'turtle_fills.csv', 'utf8');
       const lines = raw.trim().split(/\r?\n/);
@@ -667,7 +670,11 @@ const server = http.createServer(async (req, res) => {
         const ea = eaForFill(p);
         const key = ea.replace('?','');
         if (per_ea[key]) { per_ea[key].n++; per_ea[key].pnl += v; if (v>0) per_ea[key].w++; else if (v<0) per_ea[key].l++; }
+        // what-if: scale this fill's P&L from its actual lot to each target lot
+        const lot = parseFloat(p[5]);
+        if (lot > 0) for (const L of WHATIF_LOTS) whatif[L.toFixed(2)] += v * (L / lot);
       }
+      for (const k of Object.keys(whatif)) whatif[k] = Math.round(whatif[k]*100)/100;
       let cum = 0;
       for (const p of todayRows) {
         const v = parseFloat(p[10]); cum += v;
@@ -700,7 +707,7 @@ const server = http.createServer(async (req, res) => {
       ts: new Date().toISOString(),
       all_systems_go,
       headline: all_systems_go ? 'All Systems Online' : `Something is wrong — ${warnings.length} issue${warnings.length === 1 ? '' : 's'}`,
-      warnings, pnl, per_ea, recent, equity, market, components,
+      warnings, pnl, per_ea, recent, equity, whatif, market, components,
     };
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(payload));
