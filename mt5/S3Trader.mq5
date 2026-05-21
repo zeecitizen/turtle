@@ -40,6 +40,9 @@ input group "── Sizing ──"
 input double InpLots          = 0.09;  // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). Targets +$500 in ~3 days; realistic worst day ~-$150-200 vs FTMO -$300 daily limit (~50% buffer). Was 0.03 on the $500 Blueberry acct.
 input int    InpMagicNumber   = 88003;
 
+input group "── FTMO daily-loss circuit breaker ──"
+input double InpDailyLossHalt = 200.0; // halt NEW entries if account EQUITY is down this much today (incl. floating). Account-wide FTMO -$300 daily-limit protection. 0 = off.
+
 input group "── Detection ──"
 input int    InpTrendLookback     = 24;   // M5 bars: ~2 hours for trend
 input double InpTrendThreshold    = 1.0;  // min price units of move (v2: was 2.0)
@@ -84,6 +87,8 @@ void Log(string msg) {
    PrintFormat("[%s] %s", InpLogPrefix, msg);
 }
 
+double g_day_start_equity = 0;   // account equity at the start of the broker day
+
 bool IsNewDay() {
    MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
    if (dt.day != g_today_day) {
@@ -91,9 +96,19 @@ bool IsNewDay() {
       g_signals_today = 0;
       g_entries_today = 0;
       g_fired_reds_count = 0;   // BUGFIX: clear fired-red dedup set daily
+      g_day_start_equity = AccountInfoDouble(ACCOUNT_EQUITY);  // FTMO daily-loss baseline
       return true;
    }
    return false;
+}
+
+// FTMO circuit breaker: true if the account is down >= InpDailyLossHalt today
+// (equity-based, so it counts floating losses too). Blocks NEW entries only;
+// open positions keep their SL/TP. Account-wide because equity is account-wide.
+bool DailyLossHalted() {
+   if (InpDailyLossHalt <= 0 || g_day_start_equity <= 0) return false;
+   double day_pl = AccountInfoDouble(ACCOUNT_EQUITY) - g_day_start_equity;
+   return day_pl <= -InpDailyLossHalt;
 }
 
 bool IsRedAlreadyFired(datetime red_t) {
@@ -200,6 +215,7 @@ bool M5FvgTappedDuringRetracement(int retrace_back_shift) {
 //── S3 BUY signal check on M5 bar at shift 1 (just-closed) ─────────
 //   Returns true if signal fired (and order sent).
 bool TryS3BuySignal() {
+   if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
    double bo_o = iOpen (_Symbol, PERIOD_M5, 1);
    double bo_h = iHigh (_Symbol, PERIOD_M5, 1);
    double bo_l = iLow  (_Symbol, PERIOD_M5, 1);
