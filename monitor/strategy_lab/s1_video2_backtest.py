@@ -60,7 +60,8 @@ def detect_buy(m5, idx, h1_bull, tp_points=7.5, sl_buf=2.0,
         sl = def_low - sl_buf
     tp = entry + tp_points
     return {"fire_time": bo["time"] + timedelta(minutes=5), "side": +1,
-            "sl": sl, "tp": tp, "ref": uhv["time"]}
+            "sl": sl, "tp": tp, "ref": uhv["time"],
+            "uhv_level": uhv["high"], "bo_time": bo["time"]}
 
 
 def detect_sell(m5, idx, h1_bear, tp_points=7.5, sl_buf=2.0,
@@ -92,7 +93,8 @@ def detect_sell(m5, idx, h1_bear, tp_points=7.5, sl_buf=2.0,
         sl = def_high + sl_buf
     tp = entry - tp_points
     return {"fire_time": bo["time"] + timedelta(minutes=5), "side": -1,
-            "sl": sl, "tp": tp, "ref": uhv["time"]}
+            "sl": sl, "tp": tp, "ref": uhv["time"],
+            "uhv_level": uhv["low"], "bo_time": bo["time"]}
 
 
 def run(cache, h1_bull, h1_bear, **kw):

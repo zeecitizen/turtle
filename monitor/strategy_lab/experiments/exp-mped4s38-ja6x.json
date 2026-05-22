@@ -1,0 +1,15 @@
+{
+  "id": "exp-mped4s38-ja6x",
+  "name": "Experiment ja6x",
+  "created": "2026-05-20T17:55:53.012Z",
+  "params": {
+    "probeConfirm": 0.58,
+    "probeFail": 3,
+    "fearIdeal": 70,
+    "fearWashout": 180,
+    "trailTrigger": 8,
+    "trailDrop": 2,
+    "mainLots": 0.4,
+    "probeTimeout": 50
+  }
+}
