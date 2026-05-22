@@ -208,6 +208,42 @@ def main():
         print(f"    {lbl:<30}{stat(allt):<42}{stat(testt)}")
     print()
 
+    # ── Zee's entry + SENSIBLE fixed TP/SL, walk-forward robustness (both halves +?) ──
+    print("=== SIMPLE-UHV + STRUCTURE entry, fixed TP/SL — walk-forward (need BOTH halves +) ===")
+    for lbl, (tp, sl) in [("TP5/SL5", (5, 5)), ("TP7/SL5", (7, 5)), ("TP10/SL7", (10, 7)),
+                          ("TP5/SL3", (5, 3)), ("TP8/SL4", (8, 4)), ("TP12/SL6", (12, 6))]:
+        train, test = [], []
+        for k, d in enumerate(days):
+            tr = replay(cache[d]["ticks"], sigT[d], skim=tp, sl=sl, scratch_s=None)
+            (train if k < mid else test).extend(tr)
+        print(f"    {lbl:<10} TRAIN {stat(train):<40} TEST {stat(test)}")
+    print()
+
+    # ── Stability: is the 2:1 region BROADLY positive in both halves (not 1 lucky cell)? ──
+    print("=== Grid stability (TRAIN / TEST totals, $) — robust = both > 0 across the region ===")
+    print(f"    {'':6}" + "".join(f"SL{sl:<10}" for sl in (5, 6, 7)))
+    for tp in (9, 10, 11, 12, 13, 14):
+        cells = []
+        for sl in (5, 6, 7):
+            tr_tr, tr_te = [], []
+            for k, d in enumerate(days):
+                tr = replay(cache[d]["ticks"], sigT[d], skim=tp, sl=sl, scratch_s=None)
+                (tr_tr if k < mid else tr_te).extend(tr)
+            a = sum(x["pnl"] for x in tr_tr); b = sum(x["pnl"] for x in tr_te)
+            cells.append(f"{a:>+5.0f}/{b:>+5.0f}")
+        print(f"    TP{tp:<4}" + "  ".join(cells))
+    # per-day P&L for TP12/SL6 (is it broad or 1-2 days?)
+    print("\n=== Per-day P&L, TP12/SL6 (2:1) ===")
+    pos = 0
+    for d in days:
+        tr = replay(cache[d]["ticks"], sigT[d], skim=12, sl=6, scratch_s=None)
+        tot = sum(x["pnl"] for x in tr)
+        if tot > 0:
+            pos += 1
+        print(f"    {d}: {len(tr):>3} tr  ${tot:>+8.1f}")
+    print(f"    => {pos}/{len(days)} green days")
+    print()
+
     for rt in (True, False):
         sig = {d: detect(cache[d]["m1"], require_trend=rt) for d in days}
         nb = sum(1 for d in days for s in sig[d] if s["side"] > 0)
