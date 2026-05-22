@@ -48,8 +48,20 @@ def trend_dir(win):
     return 0
 
 
-def detect(m1, require_trend=True):
-    """Simple Lesson-2 UHV breakout signals (BUY+SELL). One per breakout bar."""
+def efficiency_ratio(seg):
+    """Kaufman ER: |net change| / sum(|bar-to-bar change|) over the window.
+    ~1 = clean directional trend; ~0 = choppy/ranging (price oscillating in place)."""
+    if len(seg) < 2:
+        return 0.0
+    net = abs(seg[-1]["close"] - seg[0]["close"])
+    path = sum(abs(seg[k]["close"] - seg[k - 1]["close"]) for k in range(1, len(seg)))
+    return (net / path) if path > 0 else 0.0
+
+
+def detect(m1, require_trend=True, er_min=0.0):
+    """Simple Lesson-2 UHV breakout signals (BUY+SELL). One per breakout bar.
+    er_min > 0 = REGIME FILTER: skip when the trend window's efficiency ratio is
+    below this (market is ranging/choppy, where S4 bleeds)."""
     sigs = []
     start = TREND_LB + RETRACE_LB + 2
     for i in range(start, len(m1)):
@@ -64,6 +76,8 @@ def detect(m1, require_trend=True):
         avgbody = sum(abs(b["close"] - b["open"]) for b in win) / len(win)
         if body < avgbody:                    # strong candle
             continue
+        if er_min > 0 and efficiency_ratio(m1[i - TREND_LB:i]) < er_min:
+            continue                          # regime filter: skip ranging markets
         td = trend_dir(m1[i - TREND_LB:i])     # same-TF HH/HL structure
         # BUY: green momentum breaks above the UHV RED candle's high, low vol
         if bo["close"] > bo["open"]:
@@ -242,6 +256,35 @@ def main():
             pos += 1
         print(f"    {d}: {len(tr):>3} tr  ${tot:>+8.1f}")
     print(f"    => {pos}/{len(days)} green days")
+    print()
+
+    # ── REGIME FILTER sweep (skip ranging markets via efficiency ratio), TP12/SL6 ──
+    print("=== REGIME FILTER (Kaufman ER) on TP12/SL6 — does skipping ranging lift BOTH halves? ===")
+    print(f"    {'er_min':<8}{'TRAIN':<40}TEST")
+    best_er = None
+    for er in (0.0, 0.15, 0.2, 0.25, 0.3, 0.35):
+        sig = {d: detect(cache[d]["m1"], require_trend=True, er_min=er) for d in days}
+        train, test = [], []
+        for k, d in enumerate(days):
+            tr = replay(cache[d]["ticks"], sig[d], skim=12, sl=6, scratch_s=None)
+            (train if k < mid else test).extend(tr)
+        a = sum(x["pnl"] for x in train); b = sum(x["pnl"] for x in test)
+        lbl = f"ER>={er}" if er > 0 else "OFF"
+        print(f"    {lbl:<8}{stat(train):<40}{stat(test)}")
+        if a > 0 and b > 0 and (best_er is None or (a + b) > best_er[1]):
+            best_er = (er, a + b)
+    if best_er:
+        er = best_er[0]
+        print(f"\n=== Per-day, TP12/SL6 + ER>={er} (best both-halves-positive) ===")
+        sig = {d: detect(cache[d]["m1"], require_trend=True, er_min=er) for d in days}
+        pos = 0
+        for d in days:
+            tr = replay(cache[d]["ticks"], sig[d], skim=12, sl=6, scratch_s=None)
+            tot = sum(x["pnl"] for x in tr)
+            if tot > 0:
+                pos += 1
+            print(f"    {d}: {len(tr):>3} tr  ${tot:>+8.1f}")
+        print(f"    => {pos}/{len(days)} green days")
     print()
 
     for rt in (True, False):

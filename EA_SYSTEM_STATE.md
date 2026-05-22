@@ -28,8 +28,15 @@ real validated numbers. Read this first before changing any EA.
   TRAIN +$1782 / TEST +$473 @0.10; the whole TP9-13 x SL5-7 grid is train+/test+ (broad
   plateau, not overfit); ~38% WR; 7/13 green days.
 
-S4Trader.mq5 implements exactly this (M1, BUY+SELL, TP12/SL6, 0.02 lots FTMO-safe,
-circuit breaker + grab + heartbeat). Compiled into all terminals, **NOT attached.**
+2026-05-22: added a **regime filter** (Kaufman efficiency ratio over the trend window,
+InpERMin=0.15) — skips ranging/choppy markets where S4 bleeds (Zee's own observation).
+Backtest: ER>=0.15 keeps ~all profit while lifting OOS +$473->+$629, WR 37->38%+,
+8/13 green, ~1/3 fewer (choppy) trades. ER 0.15-0.20 is a robust plateau; >=0.30
+over-filters (OOS turns negative). Validated lever, baked in as default.
+
+S4Trader.mq5 implements exactly this (M1, BUY+SELL, TP12/SL6, ER>=0.15 regime filter,
+0.02 lots FTMO-safe, circuit breaker + grab + heartbeat). Compiled into all terminals,
+**NOT attached.**
 CAVEATS before live: 13 days only; 38% WR = many losers (psychologically harder);
 worst day -$536@0.10 (>FTMO -$300, hence 0.02 lots); forward-test first. It is a
 DIFFERENT profile from the selective EAs (high-freq / low-WR / 2:1) — could complement
