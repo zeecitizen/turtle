@@ -358,6 +358,11 @@ const AUTH_GATES = [
               || u === '/api/shano-chat-readonly' || u.startsWith('/api/shano-chat-readonly?'),
     user: 'zee', pass: DASHBOARD_PASSWORD, realm: 'Zee: Shano view',
   },
+  // Strategy Playbook — Zee only (private strategy IP)
+  {
+    test: (u) => u === '/strategies' || u === '/playbook',
+    user: 'zee', pass: DASHBOARD_PASSWORD, realm: 'Zee: Strategy Playbook',
+  },
 ];
 function findAuthGate(url) {
   return AUTH_GATES.find((g) => g.test(url));
@@ -391,7 +396,7 @@ const REPO = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\';
 //  MetaTrader and CANNOT be restarted externally; those need a manual reattach.)
 const RESTARTABLE = {
   sheriff_hawk:   { label: 'Sheriff Hawk',   script: 'monitor\\sheriff_hawk.py',        args: ['--loop'] },
-  sexy_hawk:      { label: 'Sexy Hawk',      script: 'monitor\\sexy_hawk.py',           args: ['--loop'] },
+  sexy_hawk:      { label: 'Spirit Hawk',    script: 'monitor\\sexy_hawk.py',           args: ['--loop'] },
   silver_hawk:    { label: 'Silver Hawk',    script: 'monitor\\silver_hawk_learner.py', args: [] },
   intern_hawks:   { label: 'Intern Hawks',   script: 'monitor\\intern_hawks.py',        args: [] },
   meeting_hawks:  { label: 'Meeting Hawks',  script: 'monitor\\meeting_hawks.py',        args: ['--loop'] },
