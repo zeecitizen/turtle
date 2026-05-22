@@ -317,7 +317,7 @@ async function load(){
   if(!rec.length){f.innerHTML='<div class="empty">No trades yet today</div>';}
   else{f.innerHTML=rec.map(t=>`<div class="tr"><span class="t">${t.time}</span>
     <span class="badge ${t.ea.replace('?','')}">${t.ea}</span>
-    <span class="sd">${t.side} ${t.exit?'· '+t.exit:''}</span>
+    <span class="sd">${t.side} ${t.lot?'· '+t.lot+' lot':''} ${t.exit?'· '+t.exit:''}</span>
     <span class="v ${t.pnl>=0?'pos':'neg'}">${money(t.pnl)}</span></div>`).join('');}
 }
 load(); setInterval(load,5000);
