@@ -24,6 +24,7 @@ $EAs = @(
     "S3Trader.mq5",
     "S1Trader.mq5",
     "S4Trader.mq5",
+    "S4bTrader.mq5",
     "BtcS3M30Trader.mq5",
     "NsndTrader.mq5",
     "ExportFeb11Bars.mq5",
