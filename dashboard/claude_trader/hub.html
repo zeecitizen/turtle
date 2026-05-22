@@ -318,7 +318,7 @@ async function load(){
   else{f.innerHTML=rec.map(t=>`<div class="tr"><span class="t">${t.time}</span>
     <span class="badge ${t.ea.replace('?','')}">${t.ea}</span>
     <span class="sd">${t.side} ${t.lot?'· '+t.lot+' lot':''} ${t.exit?'· '+t.exit:''}</span>
-    <span class="v ${t.pnl>=0?'pos':'neg'}">${money(t.pnl)}</span></div>`).join('');}
+    <span style="text-align:right"><span class="v ${t.gross>=0?'pos':'neg'}">${money(t.gross)}</span><span style="display:block;font-size:10px;color:var(--faint);font-weight:400">net ${money(t.pnl)}</span></span></div>`).join('');}
 }
 load(); setInterval(load,5000);
 

@@ -827,7 +827,8 @@ const server = http.createServer(async (req, res) => {
         recent.push({ time: p[0].slice(11), ea: eaForFill(p),
           side: (p[4]||'').replace('_closed','').toUpperCase(),
           lot: parseFloat(p[5]) || 0,
-          pnl: Math.round(v*100)/100, exit: m ? m[1].toUpperCase() : '' });
+          gross: Math.round((parseFloat(p[7])||0)*100)/100,   // MT5 "Profit" column
+          pnl: Math.round(v*100)/100, exit: m ? m[1].toUpperCase() : '' }); // net (incl swap+comm)
       }
     } catch {}
 
