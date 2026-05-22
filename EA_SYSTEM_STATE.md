@@ -42,6 +42,25 @@ worst day -$536@0.10 (>FTMO -$300, hence 0.02 lots); forward-test first. It is a
 DIFFERENT profile from the selective EAs (high-freq / low-WR / 2:1) — could complement
 or replace S1. Awaiting Zee's review + a forward-test before deployment.
 
+### S4bTrader (magic 88008) — CANDIDATE, same entry, closer TP
+
+2026-05-23: follow-up study from Zee's hypothesis ("reduce TP, get ~95% WR, small wins
+on bigger lots"). Swept TP from $0.5 to $12 across 3 SL structures (fixed $6, 1:1, 2:1).
+
+Findings (backtest_s4_tp_sweep_and_trend.py):
+- WR **does** climb to 87–92% at tiny TPs ($0.5–$1) — Zee's intuition is correct.
+- BUT it's net negative: at TP$0.5/SL$6, you need 93% WR just to break even; the spread
+  alone (~$0.30) eats the entire tiny win. The math kills it at sub-$2 TPs.
+- **Sweet spot: TP$5/SL$6** — WR 56% all / **65% OOS**, TOT +$564 / **OOS +$1,257**
+  (vs S4's TP12/SL6 = 38% WR OOS, +$629 OOS). Better OOS, higher WR, psychologically
+  easier (fewer losing streaks). Same entry count (~17/day).
+- Also tested TP$5/SL$5 (1:1): WR 54%/64%, OOS +$1,363 — slightly better OOS but
+  tighter SL means more fills clipped by noise.
+
+S4bTrader.mq5 implements TP$5/SL$6, magic 88008, 0.02 lots, all other settings identical
+to S4 (same entry, same ER regime filter, same trend gate). **NOT attached — forward-test
+alongside S4 to compare.**
+
 ---
 
 ## 2R FREE ROLL — profit protection (added 2026-05-22)
@@ -126,6 +145,8 @@ The old "H1 FVG for everything" was the systematic mistake. Matching each fixed 
 | NSND 1-Day trend filter | Turned +$784 into −$68. |
 | NSND asymmetric sell-TP | Marginal −$6 OOS. |
 | S2 Engulfing as standalone EA | Net negative on 12d. |
+| S4 trend filter OFF (100 trades/day quest) | Trend OFF + ER OFF → 96/day but OOS -$906 at TP12/SL6. Even ER≥0.15 alone can't replace HH/HL (OOS -$318). The trend gate is structural quality control, not just selectivity. |
+| S4 tiny TP ($0.5–$2, any SL) | WR 87–92% at TP$0.5 but net negative (need 93% to beat SL$6). Spread eats the win. Sub-$3 TPs are a math trap on gold. |
 
 ---
 
