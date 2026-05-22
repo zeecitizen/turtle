@@ -9,6 +9,34 @@ real validated numbers. Read this first before changing any EA.
 
 ---
 
+## S4Trader (magic 88007) — CANDIDATE, NOT DEPLOYED — Zee's Feb-11 entry mechanized
+
+2026-05-21 overnight: full investigation of why Zee's Feb-11 day (~27 fills, manual,
+~94% WR) couldn't be reproduced. Findings (all committed, see backtest_feb11_*.py):
+
+- Zee's Feb-11 method = the simple **Lesson-2 "our strategy" UHV breakout** (he names
+  it in lesson02.txt right after the Qatar/Doha-airport anecdote — "$70k in one day on
+  a $200k account, just this strategy"). It is NOT S1/S3/NSND mechanics: classify_feb11.py
+  showed only ~12/27 matched those.
+- Trend = **same-TF HH/HL structure** ("camel humps"), NOT 1H+5min.
+- His **exit (scalp/skim + scratch on first reversal) does NOT mechanize** — needs his
+  94% discretionary hand. Mechanical proxies (peak-trail, intrabar, velocity-gated) all
+  land 12-32% WR vs his 94%. The edge there is tape-reading, not a rule.
+- BUT his **ENTRY does mechanize**, and over-filtering is why S1 is rare: the simple UHV
+  breakout (NO sweep/big-spread/FVG) + HH/HL structure fires **~14/day** (vs S1 1.5/day).
+- Paired with a mechanical **2:1 exit (TP12/SL6)** it is **walk-forward robust**:
+  TRAIN +$1782 / TEST +$473 @0.10; the whole TP9-13 x SL5-7 grid is train+/test+ (broad
+  plateau, not overfit); ~38% WR; 7/13 green days.
+
+S4Trader.mq5 implements exactly this (M1, BUY+SELL, TP12/SL6, 0.02 lots FTMO-safe,
+circuit breaker + grab + heartbeat). Compiled into all terminals, **NOT attached.**
+CAVEATS before live: 13 days only; 38% WR = many losers (psychologically harder);
+worst day -$536@0.10 (>FTMO -$300, hence 0.02 lots); forward-test first. It is a
+DIFFERENT profile from the selective EAs (high-freq / low-WR / 2:1) — could complement
+or replace S1. Awaiting Zee's review + a forward-test before deployment.
+
+---
+
 ## 2R FREE ROLL — profit protection (added 2026-05-22)
 
 Tested per-EA on 13 real-tick days, same deployed signals, only the exit varies.
