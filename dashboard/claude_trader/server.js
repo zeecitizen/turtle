@@ -826,6 +826,7 @@ const server = http.createServer(async (req, res) => {
         const m = (p[11]||'').match(/(tp|sl)/i);
         recent.push({ time: p[0].slice(11), ea: eaForFill(p),
           side: (p[4]||'').replace('_closed','').toUpperCase(),
+          lot: parseFloat(p[5]) || 0,
           pnl: Math.round(v*100)/100, exit: m ? m[1].toUpperCase() : '' });
       }
     } catch {}
