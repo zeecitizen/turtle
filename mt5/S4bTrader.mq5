@@ -4,19 +4,19 @@
 //| Same entry as S4 (Lesson-2 UHV breakout + HH/HL structure +      |
 //| Kaufman ER≥0.15 regime filter), but CLOSER TP for higher WR.     |
 //|                                                                  |
-//| VALIDATION (backtest_s4_tp_sweep_and_trend.py, 13 real-tick days,|
+//| VALIDATION (backtest_s4b_uhv_quality.py, 13 real-tick days,       |
 //|   broker feed, bar-close detect + next-tick fill, spread modeled):|
-//|   TP5/SL6 @0.10: ALL +$564 / OOS +$1,257 (beats TP12/SL6 OOS)   |
-//|   WR: 56% all / 65% OOS (vs 40%/38% at TP12).                   |
-//|   Higher WR = psychologically easier, fewer losing streaks.      |
-//|   ~17/day, same entry count as S4, just exits faster.            |
+//|   TP5/SL6 + UHV_range>=1.0 @0.10:                                |
+//|     ALL +$684 / OOS +$1,427 (beats base S4b OOS +$1,257)         |
+//|     WR: 56.6% all / 67.0% OOS (vs 65.4% without UHV filter).    |
+//|   UHV range filter ensures only real institutional candles count. |
 //|                                                                  |
 //| ⚠️ CANDIDATE — forward-test alongside S4 before trusting.        |
 //| Magic 88008 (distinct from S4=88007 / S3=88003 / S1=88004 /      |
 //| NSND=88006).                                                     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — S4b UHV Breakout (TP5/SL6 closer-take variant)"
-#property version   "1.00"
+#property version   "1.01"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -33,6 +33,7 @@ input int    InpRetraceLookback = 12;   // M1 bars to scan for the UHV candle
 input double InpMomBodyFrac     = 0.55; // breakout candle body/range >= this (momentum, small wicks)
 input bool   InpRequireTrend    = true; // require HH/HL structure in the trade direction
 input double InpERMin           = 0.15; // REGIME FILTER: Kaufman efficiency ratio minimum. 0=off.
+input double InpUHVRangeMin     = 1.0;  // UHV candle range minimum (pts). Rejects tiny/doji UHVs. 0=off.
 input bool   InpDoBuys          = true;
 input bool   InpDoSells         = true;
 
@@ -138,6 +139,8 @@ void TrySignal() {
       double uhv_h = 0; long uhv_v = -1;
       for (int s = 2; s <= 1 + InpRetraceLookback; s++) {
          if (iClose(_Symbol,PERIOD_M1,s) < iOpen(_Symbol,PERIOD_M1,s)) {   // red
+            double c_rng = iHigh(_Symbol,PERIOD_M1,s) - iLow(_Symbol,PERIOD_M1,s);
+            if (InpUHVRangeMin > 0 && c_rng < InpUHVRangeMin) continue;  // skip tiny UHV candles
             long v = iVolume(_Symbol, PERIOD_M1, s);
             if (v > uhv_v) { uhv_v = v; uhv_h = iHigh(_Symbol, PERIOD_M1, s); }
          }
@@ -152,6 +155,8 @@ void TrySignal() {
       double uhv_l = 0; long uhv_v = -1;
       for (int s = 2; s <= 1 + InpRetraceLookback; s++) {
          if (iClose(_Symbol,PERIOD_M1,s) > iOpen(_Symbol,PERIOD_M1,s)) {   // green
+            double c_rng = iHigh(_Symbol,PERIOD_M1,s) - iLow(_Symbol,PERIOD_M1,s);
+            if (InpUHVRangeMin > 0 && c_rng < InpUHVRangeMin) continue;  // skip tiny UHV candles
             long v = iVolume(_Symbol, PERIOD_M1, s);
             if (v > uhv_v) { uhv_v = v; uhv_l = iLow(_Symbol, PERIOD_M1, s); }
          }
@@ -257,7 +262,7 @@ void WriteHeartbeat() {
    int n_open = 0; double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S4bTrader\",\"version\":\"1.00\",\"alive\":true,"
+      "{\"ea\":\"S4bTrader\",\"version\":\"1.01\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
@@ -272,8 +277,8 @@ int OnInit() {
    g_trade.SetTypeFillingBySymbol(_Symbol);
    IsNewDay();
    g_last_grab_id = ReadGrabId();
-   Log(StringFormat("S4bTrader Init — magic=%d lots=%.2f TP=%.1f SL=%.1f (UHV breakout, closer-take variant)",
-                    InpMagicNumber, InpLots, InpTPPts, InpSLPts));
+   Log(StringFormat("S4bTrader v1.01 Init — magic=%d lots=%.2f TP=%.1f SL=%.1f UHVrng>=%.1f",
+                    InpMagicNumber, InpLots, InpTPPts, InpSLPts, InpUHVRangeMin));
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int reason) { Log(StringFormat("S4b Deinit reason=%d", reason)); }
