@@ -1,11 +1,11 @@
 {
-  "last_sheriff_check": "2026-05-23T18:55:13Z",
+  "last_sheriff_check": "2026-05-23T20:43:31Z",
   "status": {
     "tradingview": "DEAD",
     "sniper_daemon": "DEAD",
     "shano_hawk": "DEAD",
     "mt5": "ALIVE",
-    "heartbeat_age": "15506 min ago",
+    "heartbeat_age": "15614 min ago",
     "silver_hawk_learner": "ALIVE",
     "cloudflared_daemon": "ALIVE",
     "cloudflared_heartbeat_age": "0 min ago",
