@@ -23,7 +23,7 @@
 //| Fires once per qualifying M5 bar close; deduped by bar timestamp.|
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 3 Effort vs Result (Teacher Spec v2)"
-#property version   "2.30"
+#property version   "2.31"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -88,7 +88,7 @@ input int    InpH1FvgLookback     = 50;   // H1 bars (only used if InpRequireH1F
 input bool   InpRequireM5Fvg      = false; // 2026-05-27: DISABLED. 18-day backtest shows FVG makes OOS 5x worse (-$321 vs -$60). Was validated on 12d but failed on 18d. Re-enable after further validation.
 input int    InpM5FvgLookback     = 60;   // M5 bars to scan back for an unfilled bullish FVG (only used if InpRequireM5Fvg)
 input double InpMinTPDistPts      = 0.2;  // min TP distance in price-pts (2 pips). BUGFIX 2026-05-17: was 0.5, but backtest uses sl_buf*2=0.20. The stricter 0.5 was rejecting valid trades and cutting backtest P&L by ~50%.
-input double InpSLBufferPts       = 2.00; // SL = wicking-green.low − this. 2026-05-18: raised from 0.10 → 2.00 after sweep showed +17% improvement on 12-day backtest (104→100 trades, 56%→63% WR, +$1,184 → +$1,386). Saves single-wick stop-outs like Trade 3 on 2026-05-18.
+input double InpSLBufferPts       = 5.00; // 2026-05-27: raised from 2.00 → 5.00 after deep sweep (s3_deep_sweep.py, 150+ configs, 18 tick days). OOS improved +$115 → +$199, DD $80→$67. Wider SL absorbs noise, lets more trades survive to peak TP.
 input double InpMaxUpperWickFrac  = 0.35; // 2026-05-19 teacher-faithful (lesson 10): reject wicking green if upper_wick/range > this (=rejection). Backtest: WR 63%->69%, EV +$13.78->+$16.46. Set 0 to disable.
 
 input group "── Time-of-day filter (broker time) ──"
@@ -535,7 +535,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S3Trader\",\"version\":\"2.30\",\"alive\":true,"
+      "{\"ea\":\"S3Trader\",\"version\":\"2.31\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
