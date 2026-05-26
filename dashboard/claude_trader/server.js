@@ -102,6 +102,10 @@ function getMarketState() {
 function isMaintenanceBreak() { return getMarketState() === 'maintenance'; }
 
 const FILLS_CSV       = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\turtle_fills.csv';
+// 2026-05-27: the shared MT5 Common\Files folder gets fills from BOTH the old FTMO
+// terminal (symbol "XAUUSD") and the live Exness one ("XAUUSDm"). Dashboard reflects
+// the ACTIVE account only by filtering on this symbol.
+const ACTIVE_SYMBOL   = 'XAUUSDm';
 const LIVE_TRADE_JSON = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\live_trade_open.json';
 const WATCH_STATE_JSON= 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\watch_state.json';
 const LAST_UHV_ID     = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.last_uhv_id';
@@ -749,13 +753,13 @@ const server = http.createServer(async (req, res) => {
       let lastDate = null;
       for (let i = lines.length - 1; i >= 0; i--) {
         const p = lines[i].split(',');
-        if (p.length < 11 || !/^\d{4}\.\d{2}\.\d{2}/.test(p[0])) continue;
+        if (p.length < 11 || !/^\d{4}\.\d{2}\.\d{2}/.test(p[0]) || p[3] !== ACTIVE_SYMBOL) continue;
         lastDate = p[0].slice(0, 10); break;
       }
       if (lastDate) {
         for (const line of lines) {
           const p = line.split(',');
-          if (p.length < 11 || p[0].slice(0, 10) !== lastDate) continue;
+          if (p.length < 11 || p[0].slice(0, 10) !== lastDate || p[3] !== ACTIVE_SYMBOL) continue;
           const v = parseFloat(p[10]);
           if (isNaN(v)) continue;
           pnl.today_total += v; pnl.n++;
@@ -803,7 +807,7 @@ const server = http.createServer(async (req, res) => {
       const todayRows = [];
       for (const line of lines) {
         const p = line.split(',');
-        if (p.length < 11 || !pnl.date || p[0].slice(0,10) !== pnl.date) continue;
+        if (p.length < 11 || !pnl.date || p[0].slice(0,10) !== pnl.date || p[3] !== ACTIVE_SYMBOL) continue;
         const v = parseFloat(p[10]); if (isNaN(v)) continue;
         todayRows.push(p);
         const ea = eaForFill(p);
