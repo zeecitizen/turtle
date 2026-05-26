@@ -30,6 +30,13 @@
 #property version   "2.00"
 #property strict
 
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  📄 STRATEGY DOCUMENTATION: docs/S4_STRATEGY.md                 ║
+// ║  Contains: Feb-11 investigation, deep parameter sweep results,  ║
+// ║  walk-forward validation, and teacher's Lesson 02 comparison.   ║
+// ║  READ THAT FILE FIRST before modifying this EA.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
 #include <Trade/Trade.mqh>
 
 //── Inputs ──────────────────────────────────────────────────────────

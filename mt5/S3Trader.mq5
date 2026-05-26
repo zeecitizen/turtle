@@ -26,6 +26,13 @@
 #property version   "2.30"
 #property strict
 
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  📄 STRATEGY DOCUMENTATION: docs/S3_STRATEGY.md                 ║
+// ║  Contains: full strategy logic, backtest results, parameter     ║
+// ║  rationale, walk-forward validation, and change history.        ║
+// ║  READ THAT FILE FIRST before modifying this EA.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
 // v2.10 (2026-05-22): "2R Free Roll" profit protection added (ManageOpenPositions,
 // tick-level). Backtest (backtest_exit_protocols.py, same S3 signals, 13 real-tick
 // days @ 0.09): baseline +$115 / WR .60 / worst -$87.8 → partial+BE (keep TP)

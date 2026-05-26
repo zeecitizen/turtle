@@ -35,6 +35,13 @@
 #property version   "2.30"
 #property strict
 
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  📄 STRATEGY DOCUMENTATION: docs/S1_STRATEGY.md                 ║
+// ║  Contains: full strategy logic, backtest results, parameter     ║
+// ║  rationale, walk-forward validation, and change history.        ║
+// ║  READ THAT FILE FIRST before modifying this EA.                 ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
 // v2.10 (2026-05-22): "2R Free Roll" management code added for parity with S3/NSND,
 // but DEFAULT OFF — backtest (backtest_exit_protocols_multi.py, S1 deployed signals,
 // 13 real-tick days, n=34) showed it is STRUCTURALLY INERT on S1: the SL sits at the
