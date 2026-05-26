@@ -1,6 +1,8 @@
 # S3 Strategy — Effort vs Result (Wicking Green Breakout)
 
-> **File**: `mt5/S3Trader.mq5` | **Magic**: 88003 | **Version**: 2.31 | **Timeframe**: M5
+> **File**: `mt5/S3Trader.mq5` | **Magic**: 88003 | **Version**: 2.31  
+> **Chart timeframe**: M5 | **Symbol**: XAUUSD | **Lot size**: 0.01  
+> **Attach to**: XAUUSD M5 chart on Exness terminal
 
 ## Origin
 S3 is based on the teacher's "effort vs result" concept — when price tries hard (high volume red during pullback) but fails to go down (price holds), and then a green candle with BIGGER volume but smaller range wicks through the red's low and closes back above it, that's exhaustion → the trend resumes.
@@ -36,7 +38,11 @@ Mirror of buy: downtrend → find a recent red → collect greens that broke abo
 | Retrace lookback | 30 bars | M5 bars to search for pivot candle |
 | TP peak lookback | 10 bars | M5 bars for structural peak TP target |
 
-## Backtest Results (v2.31, 18 real-tick days, 0.01 lots)
+## Backtest Results (v2.31, 0.01 lots)
+
+> **Data**: 18 real-tick days from Exness (2026-04-29 → 2026-05-26)  
+> **Source**: `ticks_for_testing.csv` (70,000 M1 bars) + `shano_ticks_*.csv` (18 tick files)  
+> **Method**: bar-close signal detection on M5 + next-tick fill on real tick stream  
 
 | Metric | v2.30 (SL $2) | v2.31 (SL $5) |
 |---|---|---|
@@ -61,14 +67,28 @@ Mirror of buy: downtrend → find a recent red → collect greens that broke abo
 - **Upper wick filter** (0.35) is validated — removing it (1.0) adds noise trades but doesn't help OOS
 - **Trend threshold** $1.0 is sweet spot — $0.5 adds noise, $3.0 cuts too many valid signals
 
-## Current Status
-- **Ready to re-attach to Exness** alongside S1 v2.30 and S4 v2.00
-- Risk per trade at 0.01 lots: max loss = SL $5 + buffer = ~$7-10 depending on structure
+## Version History
 
-## Key Finding: SELL side dominates
-The sell side (+$491, ~75% WR) is 40x stronger than BUY (+$12). This is consistent across all configs and appears structural during the test period (gold bearish bias). Both sides remain enabled because the buy side is still slightly positive and may perform differently in other market conditions.
+| Version | Date | Change | Impact |
+|---|---|---|---|
+| v2.00 | 2026-05-17 | Initial teacher-faithful build | Baseline |
+| v2.10 | 2026-05-22 | Added 2R Free Roll exit management | +$202 improvement |
+| v2.20 | 2026-05-22 | Added SELL side (bidirectional) | Sell side 4x stronger than buy |
+| v2.30 | 2026-05-27 | Removed M5 FVG filter (failed on 18d OOS) | OOS stabilized |
+| v2.31 | 2026-05-27 | SL buffer $2.00→$5.00 (deep sweep) | OOS +$115→+$199, DD $80→$67 |
+
+## Deployment
+
+| Setting | Value |
+|---|---|
+| Terminal | Exness (or any MT5 broker) |
+| Chart | XAUUSD, M5 timeframe |
+| Lots | 0.01 (for $126 account) |
+| Magic | 88003 |
+| All inputs | Use defaults — SL buffer 5.0, wick 0.35, trend 1.0 all baked in |
 
 ## Files
 - EA: [S3Trader.mq5](file:///C:/Users/zeesh/Documents/GitHub/turtle/mt5/S3Trader.mq5)
 - Deep sweep: [s3_deep_sweep.py](file:///C:/Users/zeesh/Documents/GitHub/turtle/monitor/strategy_lab/s3_deep_sweep.py)
 - Earlier backtest: [v230_backtest.py](file:///C:/Users/zeesh/Documents/GitHub/turtle/monitor/strategy_lab/v230_backtest.py)
+- Teacher's lessons: [_loom_audio/](file:///C:/Users/zeesh/Documents/GitHub/turtle/monitor/_loom_audio)

@@ -1,6 +1,8 @@
 # S4 Strategy — Zee's Feb-11 Entry Mechanized (UHV Breakout)
 
-> **File**: `mt5/S4Trader.mq5` | **Magic**: 88007 | **Version**: 2.00 | **Timeframe**: M5
+> **File**: `mt5/S4Trader.mq5` | **Magic**: 88007 | **Version**: 2.00  
+> **Chart timeframe**: M5 | **Symbol**: XAUUSD | **Lot size**: 0.01  
+> **Attach to**: XAUUSD M5 chart on Exness terminal
 
 ## Origin
 S4 is the mechanical version of Zee's actual Feb 11, 2026 trading strategy — the day a $200 Blueberry account became $1,035 (+$835, ~100 trades, 94% WR). The strategy comes directly from the teacher's **Lesson 02 "Introduction to Our Strategy"** (Loom video transcribed in `monitor/_loom_audio/lesson02.txt`).
@@ -58,7 +60,11 @@ S4 is the "purest" version of the teacher's strategy — no extra filters, no sw
 - **WR gap**: Zee hit 94% WR; the bot hits 85.6% — close but not identical
 - **The math**: at 0.01 lots and $2 wins, each trade makes $2. At 1.0 lots and $2 wins, each makes $200. That explains the $835.
 
-## Backtest Results (v2.00, 18 real-tick days, 0.01 lots)
+## Backtest Results (v2.00, 0.01 lots)
+
+> **Data**: 18 real-tick days from Exness (2026-04-29 → 2026-05-26)  
+> **Source**: `ticks_for_testing.csv` (70,000 M1 bars) + `shano_ticks_*.csv` (18 tick files)  
+> **Method**: bar-close signal detection on M5 + next-tick fill on real tick stream  
 
 | Metric | Value |
 |---|---|
@@ -96,7 +102,24 @@ S4 is the "purest" version of the teacher's strategy — no extra filters, no sw
 
 **S1 is the stronger money-maker. S4 is the safer, higher-WR option with lower drawdown.**
 
-They can potentially run together since they use different entry criteria (S1 = sweep-based, S4 = pure UHV breakout). Combined max DD would need monitoring.
+They can run together since they use different entry criteria (S1 = sweep-based, S3 = wicking pattern, S4 = pure UHV breakout). Combined max DD needs monitoring.
+
+## Version History
+
+| Version | Date | Change | Impact |
+|---|---|---|---|
+| v1.00 | 2026-05-26 | Initial M1 build (TP12/SL6, 2:1 R:R) | WF failed on 18d OOS |
+| v2.00 | 2026-05-27 | Rebuilt for M5 (TP2/SL7.5, 85.6% WR) | WF passed, both sides positive |
+
+## Deployment
+
+| Setting | Value |
+|---|---|
+| Terminal | Exness (or any MT5 broker) |
+| Chart | XAUUSD, M5 timeframe |
+| Lots | 0.01 (for $126 account) |
+| Magic | 88007 |
+| All inputs | Use defaults — TP 2.0, SL 7.5, ER=0 all baked in |
 
 ## Files
 - EA: [S4Trader.mq5](file:///C:/Users/zeesh/Documents/GitHub/turtle/mt5/S4Trader.mq5)
