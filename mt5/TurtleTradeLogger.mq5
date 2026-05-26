@@ -26,7 +26,19 @@ input string InpFileName    = "turtle_fills.csv";   // Output filename (in Commo
 input bool   InpLogOpens    = false;                // Also log trade opens (DEAL_ENTRY_IN)
 
 //--- CSV header
-const string HEADER = "broker_time,deal_ticket,position_ticket,symbol,direction,volume,close_price,profit,commission,swap,net_pnl,comment\n";
+const string HEADER = "broker_time,deal_ticket,position_ticket,symbol,direction,volume,close_price,profit,commission,swap,net_pnl,comment,magic,ea\n";
+
+// Map a deal's magic number to the EA that opened it (magic 0 = manual/Human).
+string EaNameForMagic(long m) {
+   if (m == 88003) return "S3";
+   if (m == 88004) return "S1";
+   if (m == 88005) return "BTC_S3";
+   if (m == 88006) return "NSND";
+   if (m == 88007) return "S4";
+   if (m == 88010) return "BTC_S4b";
+   if (m == 0)     return "Human";
+   return "EA_" + IntegerToString(m);
+}
 
 //+------------------------------------------------------------------+
 //| EA init — write header if file is new                            |
@@ -99,6 +111,8 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
     double   commission  = HistoryDealGetDouble(trans.deal,  DEAL_COMMISSION);
     double   swap        = HistoryDealGetDouble(trans.deal,  DEAL_SWAP);
     string   comment     = HistoryDealGetString(trans.deal,  DEAL_COMMENT);
+    long     magic       = HistoryDealGetInteger(trans.deal,  DEAL_MAGIC);
+    string   ea_name     = EaNameForMagic(magic);
 
     // Direction: closing deal type is OPPOSITE to the position direction
     // DEAL_TYPE_BUY = buying back a short (closing short) → position was SELL
@@ -118,7 +132,7 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
     string time_str = TimeToString(deal_time, TIME_DATE|TIME_SECONDS);
 
     // Build CSV line
-    string line = StringFormat("%s,%I64u,%I64u,%s,%s,%.2f,%.5f,%.2f,%.2f,%.2f,%.2f,%s\n",
+    string line = StringFormat("%s,%I64u,%I64u,%s,%s,%.2f,%.5f,%.2f,%.2f,%.2f,%.2f,%s,%I64d,%s\n",
                                time_str,
                                deal_ticket,
                                pos_ticket,
@@ -130,7 +144,9 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
                                commission,
                                swap,
                                net_pnl,
-                               comment);
+                               comment,
+                               magic,
+                               ea_name);
 
     // Append to CSV (open, seek to end, write, close)
     int h = FileOpen(InpFileName, FILE_READ|FILE_WRITE|FILE_TXT|FILE_COMMON|FILE_ANSI);
