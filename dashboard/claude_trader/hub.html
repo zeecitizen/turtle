@@ -100,7 +100,7 @@
   <div class="hdr">
     <div class="brand">
       <div class="logo">🔥</div>
-      <div><h1>Shano Trading Desk</h1><div class="sub">XAUUSD · VSA EAs</div></div>
+      <div><h1>Shano Trading Desk</h1><div class="sub" id="subInfo">XAUUSD · VSA EAs</div></div>
     </div>
     <span class="mkt" id="mkt" data-s="unknown"><span class="dot"></span><span id="mktTxt">…</span></span>
   </div>
@@ -220,7 +220,12 @@ async function load(){
   let d; try{ d=await (await fetch('/api/ea-status',{cache:'no-store'})).json(); }catch(e){return;}
   // market
   const mkt=$('mkt'),mt=d.market||{}; mkt.dataset.s=mt.status||'unknown';
-  $('mktTxt').textContent={live:'Market Live',break:'Daily Break',closed:'Market Closed',unknown:'…'}[mt.status||'unknown'];
+  const mktLbl={live:'Market OPEN',break:'Daily Break',closed:'Market Closed',unknown:'…'}[mt.status||'unknown'];
+  $('mktTxt').textContent=mt.pk_time?(mktLbl+' · '+mt.pk_time):mktLbl;
+  // subheading: live PK time + authoritative (clock-based) market state, so it's
+  // never confused by a lagging tick feed. data_status shows tick-feed health separately.
+  const dataNote=(mt.data_status&&mt.data_status!=='live'&&mt.is_open)?(' · ticks '+mt.data_status):'';
+  $('subInfo').textContent='XAUUSD · VSA EAs'+(mt.pk_time?(' · '+mt.pk_time):'')+' · '+(mt.is_open?'Market OPEN':mktLbl)+dataNote;
   // hero
   const p=d.pnl||{}; const tot=p.today_total||0;
   $('heroDate').textContent=(p.date||'TODAY')+' · realized';

@@ -836,14 +836,32 @@ const server = http.createServer(async (req, res) => {
       }
     } catch {}
 
-    // ── Market status (tick file freshness) ──
-    let market = { status: 'unknown', tick_age_sec: null };
+    // ── Market status ──
+    // Authoritative open/closed = the TRADING SCHEDULE (clock-based), NOT tick
+    // freshness. A lagging/detached tick logger must never read as "market closed"
+    // — that bug confused both the dashboard banner and AI agents reading this API.
+    //   open → 'live' · maintenance → 'break' · weekend → 'closed'
+    // Tick freshness is reported separately as data health (data_status).
+    const _ms = getMarketState();                       // 'open'|'maintenance'|'weekend'
+    const _pk = new Date(Date.now() + 5 * 3600 * 1000); // PKT = UTC+5, no DST
+    const _day = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][_pk.getUTCDay()];
+    const _pkStr = _day + ' ' +
+      String(_pk.getUTCHours()).padStart(2, '0') + ':' +
+      String(_pk.getUTCMinutes()).padStart(2, '0') + ' PKT';
+    let market = {
+      status: _ms === 'open' ? 'live' : _ms === 'maintenance' ? 'break' : 'closed',
+      is_open: _ms === 'open',
+      schedule_state: _ms,
+      pk_time: _pkStr,
+      tick_age_sec: null,
+      data_status: 'unknown',                           // tick freshness (data health, NOT market open)
+    };
     try {
       const tlc = components.shano_tick_logger || {};
       const age = tlc.last_write_age_sec;
       if (age != null) {
         market.tick_age_sec = age;
-        market.status = age < 120 ? 'live' : (age < 3600 ? 'break' : 'closed');
+        market.data_status = age < 120 ? 'live' : (age < 3600 ? 'lagging' : 'stale');
       }
     } catch {}
 
