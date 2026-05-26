@@ -16,7 +16,7 @@
 #property version   "1.00"
 #property strict
 
-input string InpSymbolFilter   = "XAUUSD";
+input string InpSymbolFilter   = "XAUUSDm";  // Exness gold symbol (was "XAUUSD" — FTMO-era; mismatch silently dropped every tick)
 input int    InpFlushEverySec  = 5;
 
 int      g_handle      = INVALID_HANDLE;
