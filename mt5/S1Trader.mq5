@@ -55,7 +55,7 @@
 input group "── Sizing ──"
 input double InpLots          = 0.06;     // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). Was 0.02 on the $500 Blueberry acct.
 input int    InpMagicNumber   = 88004;
-input double InpDailyLossHalt = 200.0;    // FTMO: halt NEW entries if account EQUITY down this much today (incl floating). Account-wide -$300 daily-limit protection. 0=off.
+input double InpDailyLossHalt = 25.0;   // 2026-05-27 Shano $126 acct: ~20% daily-loss cap — halt NEW entries if equity is down this much today (incl. floating). Was FTMO-era $200/$50. Tighten to 15 for stricter. 0=off.
 
 input group "── Profit protection: 2R Free Roll (backtest 2026-05-22) ──"
 input bool   InpEnableBreakeven = false; // OFF — backtest showed INERT on S1 (SL at UHV-red low is usually wider than the $7.5 TP, so +1R can't arm before TP; identical to baseline +$431.8). Enable only if you widen TP / tighten SL.
