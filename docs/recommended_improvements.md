@@ -1,166 +1,209 @@
-# Recommended Improvements for S1, S3, S4 EAs
+# Exhaustive Improvement Analysis — All Findings
 
 > **Generated**: 2026-05-27 by Antigravity (Gemini)  
-> **Data**: 18 real-tick days from Exness (2026-04-29 → 2026-05-26)  
-> **Script**: `monitor/strategy_lab/winrate_improvement.py`  
-> **Method**: Full tick replay of all 3 EAs, analyzing trade-level features vs win/loss outcomes
+> **Data**: 18 real-tick days from Exness (2026-04-29 → 2026-05-26), walk-forward split at day 9  
+> **Scripts**: `monitor/strategy_lab/winrate_improvement.py` + `exhaustive_improvements.py`  
+> **Raw output**: `docs/exhaustive_results.txt`
 
 ---
 
-## Priority 1: Trend Strength Filter (HIGHEST IMPACT)
+## Phase 1: Breakeven SL (NET Effect — Full Tick Simulation)
 
-### Problem
-All 3 EAs fire signals in weak trends where they lose money. The data clearly shows that stronger trend = higher win rate, and weak-trend trades are net negative.
+The previous analysis showed 79% of S1 losses went positive first. But the **full simulation** (which also accounts for winners that get stopped at breakeven) tells a very different story:
 
-### S1 — Add minimum 24-bar trend delta
+### S1 — Breakeven DESTROYS profitability
 
-| Trend Strength (24-bar price delta) | Trades | WR | P&L |
-|---|---|---|---|
-| Weak (≤ $9.10) | 107 | **55.1%** | **-$37.1** |
-| Medium ($9.10 – $17.10) | 106 | 74.5% | +$337.3 |
-| Strong (> $17.10) | 106 | 78.3% | +$329.1 |
+| Config | WR | P&L | OOS | DD | BE'd trades | WF |
+|---|---|---|---|---|---|---|
+| BASELINE | 69.3% | **+$629** | +$344 | $78 | — | ✅ |
+| BE@+$0.50 | 93.4% | +$71 | -$17 | $58 | 264 | ❌ |
+| BE@+$1.00 | 90.6% | +$97 | -$41 | $62 | 236 | ❌ |
+| BE@+$1.50 | 89.0% | +$194 | +$16 | $66 | 208 | ✅ |
+| BE@+$3.00 | 81.5% | +$204 | +$88 | $86 | 148 | ✅ |
 
-**Recommendation**: Increase `InpTrendThreshold` from $2.00 to $9.00.  
-**Expected impact**: Remove 107 losing trades, keep 212 profitable ones. WR rises from ~69% to ~76%. P&L improves by ~$37.
+> **⛔ VERDICT: DO NOT ADD BREAKEVEN TO S1.** It kills too many winners. P&L drops from $629 to $71-$204. The WR goes up but the P&L collapses because S1's TP ($7.50) requires letting winners run far.
 
-**Code change** in `S1Trader.mq5`:
-```diff
--input double InpTrendThreshold    = 2.0;
-+input double InpTrendThreshold    = 9.0;   // 2026-05-27: raised from 2.0. Weak trend (<$9) had 55% WR and -$37 P&L over 107 trades.
-```
+### S3 — Breakeven also hurts
 
-### S3 — Add minimum 60-bar trend delta
+| Config | WR | P&L | OOS | DD | BE'd trades | WF |
+|---|---|---|---|---|---|---|
+| BASELINE | 71.9% | **+$504** | +$199 | $67 | — | ✅ |
+| BE@+$0.50 | 94.9% | +$151 | +$56 | $23 | 252 | ✅ |
+| BE@+$1.00 | 89.1% | +$125 | +$47 | $66 | 192 | ✅ |
+| BE@+$3.00 | 81.0% | +$260 | +$120 | $58 | 95 | ✅ |
 
-| Trend Strength (60-bar price delta) | Trades | WR | P&L |
-|---|---|---|---|
-| Weak (≤ $9.10) | 111 | 65.8% | **-$1.4** |
-| Medium ($9.10 – $23.10) | 110 | 70.9% | +$110.0 |
-| Strong (> $23.10) | 110 | **79.1%** | **+$395.0** |
+> **⛔ VERDICT: DO NOT ADD BREAKEVEN TO S3.** Same problem — P&L drops from $504 to $125-$260. Not worth it.
 
-**Recommendation**: Add a 60-bar trend delta filter (minimum ~$9). S3 currently only checks 24-bar trend. Adding a longer-term confirmation would filter out the breakeven weak-trend trades.
+### S4 — Breakeven is neutral/slightly negative
 
-**Code change** in `S3Trader.mq5`: Add a new input `InpTrend60Threshold = 9.0` and check `abs(close[0] - close[60]) >= threshold` before firing.
-
-### S4 — Add minimum 60-bar trend delta
-
-| Trend Strength (60-bar price delta) | Trades | WR | P&L |
-|---|---|---|---|
-| Weak (≤ $8.70) | 38 | 76.3% | **-$9.5** |
-| Medium ($8.70 – $24.20) | 37 | 89.2% | +$35.2 |
-| Strong (> $24.20) | 36 | **91.7%** | **+$43.5** |
-
-**Recommendation**: Add `InpTrend60Min = 9.0` to S4. Would eliminate the weak-trend third (n=38, -$9.5) and keep the 89-92% WR configs.
-
----
-
-## Priority 2: Breakeven SL Move (LARGEST $ IMPACT)
-
-### Problem
-The vast majority of losing trades go into profit before reversing into a loss. This is money being left on the table.
-
-| EA | % of losses that went +$0.50 first | % that went +$1.00 first | Losses recoverable at +$1.00 BE | $ recoverable |
-|---|---|---|---|---|
-| **S1** | **79%** | **70%** | 68 of 97 losses | **$686** |
-| **S3** | **82%** | **62%** | 57 of 93 losses | **$528** |
-| S4 | 56% | 31% | 5 of 16 losses | $38 |
-
-### How it works
-When a trade reaches +$X.XX profit, move the stop-loss to the entry price (breakeven). If the trade reverses back to entry, it closes at $0 instead of a full loss.
-
-### Recommendation
-- **S1**: Move SL to breakeven after +$1.00 of favorable excursion
-- **S3**: Move SL to breakeven after +$1.00 of favorable excursion  
-- **S4**: Skip — only 5 trades affected, not worth the complexity
-
-### ⚠️ IMPORTANT CAVEAT
-This analysis only counts losses saved. It does NOT account for **winners that would be killed** — trades that go +$1.00, dip back to breakeven (getting stopped at $0), and then would have continued to TP. 
-
-**Before implementing**: Run a full simulation that replays the breakeven logic on ALL trades (wins + losses) tick-by-tick to measure the NET effect. The raw $686 recovery is an upper bound — the real improvement will be smaller because some winners will be stopped at breakeven.
-
-### Code pattern (for the EA)
-```mql5
-// In OnTick(), after checking TP/SL:
-if (position_profit >= InpBreakevenTrigger) {
-   if (current_sl != entry_price) {
-      trade.PositionModify(ticket, entry_price, current_tp);
-   }
-}
-```
-
----
-
-## Priority 3: Time-of-Day Filter
-
-### Problem
-Hours 12-13 (broker time) are the weakest across all EAs. This corresponds to lunchtime during the London-NY overlap when markets tend to be choppy/ranging.
-
-### S4 hourly breakdown (all hours with 3+ trades)
-
-| Hour | Trades | WR | P&L | Status |
-|---|---|---|---|---|
-| 3:00 | 4 | 75.0% | -$1.5 | 🟢 Golden |
-| 4:00 | 5 | 100% | +$10.0 | 🟢 Golden |
-| 5:00 | 4 | 100% | +$8.0 | 🟢 Golden |
-| 6:00 | 5 | 80.0% | +$0.5 | 🟢 Golden |
-| 7:00 | 13 | 84.6% | +$7.0 | 🟢 Golden |
-| 11:00 | 8 | 75.0% | -$3.0 | 🟢 Golden |
-| **12:00** | **5** | **60.0%** | **-$9.0** | ⚠️ Weak |
-| **13:00** | **7** | **57.1%** | **-$14.5** | ⚠️ Weak |
-| 14:00 | 4 | 100% | +$8.0 | 🟢 Golden |
-| 16:00 | 5 | 100% | +$10.0 | 🟢 Golden |
-| 20:00 | 5 | 100% | +$10.0 | 🟢 Golden |
-
-### Recommendation
-Add a time-of-day filter to skip hours 12-13 broker time. S3 already has a time filter infrastructure (`InpStartHour`, `InpEndHour`). S1 and S4 would need it added.
-
-**Expected impact**: Small — only ~10-15 trades affected per EA. But it removes the weakest-WR period at zero cost.
-
----
-
-## Priority 4: Findings That DON'T Help (Don't Implement)
-
-### ❌ Time-based exits
-Closing trades after N minutes universally hurts performance:
-- S1: Closing after 60min → P&L drops from $629 to $207 (−$422)
-- S3: Closing after 60min → P&L drops from $504 to $232 (−$271)
-- S4: Already resolves in 10-14 min, time exit has no effect
-
-**Why**: Winners need time to develop. Cutting them early kills the edge.
-
-### ❌ Pause after consecutive losses
-- S1: WR after 3+ losses = 56.2% (still positive EV)
-- S3: WR after 3+ losses = 71.4% (**higher** than baseline — mean reversion!)
-- S4: Too rare to measure
-
-**Why**: The strategies don't exhibit tilt behavior. S3 actually performs better after a losing streak.
-
-### ❌ ATR filter (volatility)
-Medium ATR is slightly better than high or low, but the effect is inconsistent across EAs and not robust enough to filter on. Would likely overfit.
-
----
-
-## Trade Speed Characteristics
-
-Understanding how fast each EA resolves helps with position management:
-
-| EA | Avg Win Speed | Avg Loss Speed | Insight |
-|---|---|---|---|
-| S1 | 53 min | 42 min | Slowest. Losses resolve faster than wins |
-| S3 | 29 min | 36 min | Medium. Losses are slower (good — gives them time to recover) |
-| **S4** | **10 min** | **14 min** | Very fast scalp-like. Resolves within 2-3 M5 bars |
-
----
-
-## Summary: Implementation Priority
-
-| # | Improvement | EAs | Effort | Impact | Risk |
+| Config | WR | P&L | OOS | DD | WF |
 |---|---|---|---|---|---|
-| **1** | **Raise S1 trend threshold to $9** | S1 | 1 line change | High (+$37, +7% WR) | Low (clear data) |
-| **2** | **Add 60-bar trend filter** | S3, S4 | New input + check | Medium | Low |
-| **3** | **Breakeven SL after +$1** | S1, S3 | OnTick logic | **Very High** ($686+$528 upper bound) | **Medium** (needs full sim first) |
-| **4** | **Skip hours 12-13** | All | Time filter | Small | Low |
+| BASELINE | 85.6% | **+$69** | +$27 | $25 | ✅ |
+| BE@+$1.50 | 88.3% | +$70 | +$15 | $21 | ✅ |
 
-> **Note**: All recommendations are based on 18 days of data. More data would increase confidence. Always re-validate after implementing changes — the walk-forward test should still pass with these filters added.
+> **→ VERDICT: Skip breakeven on S4 too.** The TP is only $2.00 — breakeven trigger can't be lower than TP.
+
+### 🚨 KEY INSIGHT: Breakeven is a TRAP for these strategies
+The MFE analysis made breakeven look amazing (+$686 recoverable for S1), but the full tick simulation shows it kills far more in winning trades than it saves in losing trades. **Do not implement breakeven on any EA.**
+
+---
+
+## Phase 2: Trend Threshold Optimization
+
+### S1 — Best filter: `td24 >= $7`
+
+| Filter | Trades | WR | Total P&L | OOS | DD | WF |
+|---|---|---|---|---|---|---|
+| None (baseline) | 319 | 69.3% | +$629 | +$344 | $78 | ✅ |
+| td24 >= $5 | 276 | 72.8% | +$690 | +$351 | $61 | ✅ |
+| **td24 >= $7** | **254** | **75.6%** | **+$745** | **+$369** | **$51** | ✅ |
+| td24 >= $9 | 213 | 76.5% | +$674 | +$303 | $58 | ✅ |
+| td24 >= $11 | 181 | 77.3% | +$589 | +$268 | $49 | ✅ |
+
+> **🏆 WINNER: `td24 >= $7`** — highest TOTAL P&L (+$745), highest OOS (+$369), lowest DD ($51). WR jumps to 75.6%. Removes 65 weak-trend trades that were net -$116.
+
+**Code change**: `InpTrendThreshold = 7.0` (currently 2.0)
+
+### S3 — Best filter: `td60 >= $5` or `skip h12-13`
+
+| Filter | Trades | WR | Total P&L | OOS | DD | WF |
+|---|---|---|---|---|---|---|
+| None (baseline) | 331 | 71.9% | +$504 | +$199 | $67 | ✅ |
+| **td60 >= $5** | **269** | **74.7%** | **+$571** | **+$216** | **$55** | ✅ |
+| td60 >= $7 | 246 | 75.2% | +$538 | +$208 | $53 | ✅ |
+| **skip h12-13** | **303** | **73.6%** | **+$579** | **+$204** | **$67** | ✅ |
+| td60>=9 + skip h12-13 | 206 | 76.2% | +$539 | +$194 | $44 | ✅ |
+
+> **🏆 WINNER: `skip h12-13`** — highest total P&L (+$579), minimal trade reduction (303 vs 331). Or **`td60 >= $5`** for higher WR and lower DD.  
+> **Best combo for safety: `td60>=9 + skip h12-13`** — WR=76.2%, DD=$44 (safest for $126 account).
+
+### S4 — Best filter: `skip h12-13` or `td24 >= $9 + skip h12-13`
+
+| Filter | Trades | WR | Total P&L | OOS | DD | WF |
+|---|---|---|---|---|---|---|
+| None (baseline) | 111 | 85.6% | +$69 | +$27 | $25 | ✅ |
+| td24 >= $7 | 101 | 88.1% | +$87 | +$29 | $21 | ✅ |
+| **skip h12-13** | **99** | **88.9%** | **+$93** | **+$34** | **$15** | ✅ |
+| **td24>=9 + skip h12-13** | **77** | **92.2%** | **+$96** | **+$37** | **$7.5** | ✅ |
+| td24>=7 + td60>=9 + skip h12-13 | 61 | **93.4%** | +$83 | +$29 | **$7.5** | ✅ |
+
+> **🏆 WINNER: `td24>=9 + skip h12-13`** — WR jumps to **92.2%**, P&L +$96 (+39% improvement), DD drops to **$7.50** (6% of account). Only 1 max loss possible before recovery.
+> **Ultra-safe: `td24>=7 + td60>=9 + skip h12-13`** — **93.4% WR**, DD=$7.50.
+
+---
+
+## Phase 3: Candle Quality Features
+
+### S4 — Body ratio ≥ 90% = 100% WR
+- Body ratio >90%: n=12, **100% WR**, +$24 — these are the strongest momentum candles
+
+### S4 — Green candle momentum
+- 2 green candles in last 5: n=49, **91.8% WR**, +$60 (best)
+- 3 green candles in last 5: n=36, 75.0% WR, -$14 (overextended, starts losing)
+
+> **Insight**: S4 works best when momentum is building (2 greens) but not when it's overextended (3+ greens). This could be a filter but the sample sizes are small.
+
+---
+
+## Phase 4: Session Filter
+
+### S1 — NY session is the problem
+
+| Session | Trades | WR | P&L | OOS |
+|---|---|---|---|---|
+| **Asian (0-7)** | 121 | **72.7%** | **+$344** | **+$194** |
+| London (7-14) | 118 | 69.5% | +$245 | +$135 |
+| **NY (14-21)** | **65** | **61.5%** | **+$13** | **-$13** |
+| Late (21-24) | 15 | 73.3% | +$27 | +$29 |
+
+> **S1's NY session (14-21) is nearly breakeven with negative OOS.** Skipping it would improve robustness.
+
+### S4 — London session is the problem
+
+| Session | Trades | WR | P&L | OOS |
+|---|---|---|---|---|
+| **Asian (0-7)** | 38 | **92.1%** | **+$48** | **+$26** |
+| **London (7-14)** | **41** | **75.6%** | **-$13** | **-$10** |
+| NY (14-21) | 25 | **92.0%** | +$31 | +$1 |
+
+> **S4 LOSES money during London session.** All of S4's edge comes from Asian + NY.
+
+---
+
+## Phase 5: Trailing Stops
+
+### All EAs — Trailing stops HURT
+
+| EA | Baseline P&L | Best Trail P&L | Verdict |
+|---|---|---|---|
+| S1 | **+$629** | +$317 (trail +$5/$2.5) | ❌ -50% P&L |
+| S3 | **+$504** | +$259 (trail +$4/$2) | ❌ -49% P&L |
+| S4 | **+$69** | +$69 (no effect — TP too small) | ➖ Neutral |
+
+> **⛔ VERDICT: DO NOT ADD TRAILING STOPS.** They universally cut P&L by ~50%. These strategies need fixed TP to capture their edge. Trailing stops turn big winners into small winners.
+
+---
+
+## Phase 6: Multi-EA Confirmation
+
+| Pair | Confirmed WR | Unconfirmed WR | Verdict |
+|---|---|---|---|
+| S1 confirmed by S4 | 72.6% | 67.2% | +5.4% WR ✅ (but loses unconfirmed P&L) |
+| S1 confirmed by S3 | 67.1% | 71.4% | -4.3% WR ❌ (confirmation HURTS) |
+| S3 confirmed by S4 | 71.6% | 72.0% | Neutral |
+
+> **→ Only S1+S4 confirmation shows benefit**, but requiring confirmation would drop 195 trades (+$291 P&L). Not worth it. **Run all EAs independently.**
+
+---
+
+## FINAL RECOMMENDATIONS — Ranked by Confidence
+
+### ✅ Implement (High Confidence)
+
+| # | Change | EA | Code | Before | After | Impact |
+|---|---|---|---|---|---|---|
+| **1** | **Raise trend threshold to $7** | S1 | `InpTrendThreshold = 7.0` | WR 69%, DD $78 | **WR 76%, DD $51** | +$116 P&L, +6.3% WR |
+| **2** | **Skip hours 12-13** | S4 | Add time filter | WR 86%, DD $25 | **WR 89%, DD $15** | +$24 P&L, +3.3% WR |
+| **3** | **Skip hours 12-13** | S3 | Enable time filter | WR 72%, DD $67 | **WR 74%, DD $67** | +$75 P&L, +1.7% WR |
+
+### ⚠️ Consider (Medium Confidence — tighter filter, fewer trades)
+
+| # | Change | EA | Before | After | Tradeoff |
+|---|---|---|---|---|---|
+| 4 | td24>=9 + skip h12-13 | S4 | WR 86% | **WR 92%, DD $7.5** | Fewer trades (77 vs 111) |
+| 5 | td60>=5 | S3 | WR 72% | **WR 75%, DD $55** | Fewer trades (269 vs 331) |
+| 6 | Skip NY session (14-21) | S1 | OOS +$344 | OOS **+$358** | Removes 65 trades |
+
+### ❌ Do NOT Implement (Proven Harmful)
+
+| Change | Verdict | Why |
+|---|---|---|
+| **Breakeven SL** | ❌ DESTROYS P&L | Kills winners. S1: $629→$71. S3: $504→$125 |
+| **Trailing stops** | ❌ Cuts P&L by 50% | Turns big winners into small winners |
+| **Time-based exits** | ❌ Hurts everything | Winners need time to develop |
+| **Multi-EA confirmation** | ❌ Not robust | Only S1+S4 shows marginal benefit, not worth the lost trades |
+
+---
+
+## Optimal Configs (If All Recommendations Applied)
+
+| EA | Version | WR | Total P&L | OOS | DD | Changes |
+|---|---|---|---|---|---|---|
+| **S1** | v2.31 | **75.6%** | **+$745** | +$369 | $51 | Trend threshold $2→$7 |
+| **S3** | v2.32 | **73.6%** | **+$579** | +$204 | $67 | Skip h12-13 |
+| **S4** | v2.01 | **92.2%** | **+$96** | +$37 | $7.5 | td24>=9, skip h12-13 |
+| **Combined** | — | — | **+$1,420** | **+$610** | ~$126 worst | All 3 on XAUUSD M5 |
+
+vs current configs:
+
+| EA | Current WR | Current P&L | Current DD |
+|---|---|---|---|
+| S1 | 69.3% | +$629 | $78 |
+| S3 | 71.9% | +$504 | $67 |
+| S4 | 85.6% | +$69 | $25 |
+| Combined | — | +$1,202 | ~$170 |
+
+**Net improvement: +$218 P&L (+18%), -$44 DD (-26%).**
 
 ---
 
@@ -168,9 +211,9 @@ Understanding how fast each EA resolves helps with position management:
 
 | File | Purpose |
 |---|---|
-| `monitor/strategy_lab/winrate_improvement.py` | The analysis script that generated these findings |
-| `monitor/strategy_lab/s4_deep_sweep.py` | S4 parameter sweep (150+ configs) |
-| `monitor/strategy_lab/s3_deep_sweep.py` | S3 parameter sweep (150+ configs) |
-| `docs/S1_STRATEGY.md` | S1 full strategy documentation |
-| `docs/S3_STRATEGY.md` | S3 full strategy documentation |
-| `docs/S4_STRATEGY.md` | S4 full strategy documentation |
+| `docs/exhaustive_results.txt` | Full raw output of all 7 phases |
+| `monitor/strategy_lab/exhaustive_improvements.py` | The exhaustive analysis script |
+| `monitor/strategy_lab/winrate_improvement.py` | Initial improvement analysis (time/trend/MFE) |
+| `docs/S1_STRATEGY.md` | S1 strategy documentation |
+| `docs/S3_STRATEGY.md` | S3 strategy documentation |
+| `docs/S4_STRATEGY.md` | S4 strategy documentation |
