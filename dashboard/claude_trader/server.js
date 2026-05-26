@@ -786,10 +786,11 @@ const server = http.createServer(async (req, res) => {
       } catch {}
     }
     function eaForFill(p) {
-      // Attribution is by the EA's OWN trade log (ticket-join) — authoritative.
-      // The old lot-size heuristic is dead: S1/S3/S4/NSND are all 0.01 now, so it
-      // mislabeled everything (incl. Shano's manual 0.01s) as "NSND". Any fill whose
-      // ticket isn't in a decisions CSV = not from our EAs = a manual (Human) trade.
+      // Best source: the EA-name column the logger now writes from the deal's magic
+      // number (col 13) — definitive, incl. "Human" for manual (magic 0). Falls back
+      // to the decisions-CSV ticket-join for older rows that predate the column, then
+      // "Human" for anything still unmatched. (Lot-size heuristic retired: all 0.01.)
+      if (p[13]) return p[13];
       return ticketEA[p[2]] || 'Human';
     }
 
