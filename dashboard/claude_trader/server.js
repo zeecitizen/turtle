@@ -786,13 +786,11 @@ const server = http.createServer(async (req, res) => {
       } catch {}
     }
     function eaForFill(p) {
-      const tk = p[2];
-      if (ticketEA[tk]) return ticketEA[tk];
-      const lot = parseFloat(p[5]);
-      if (lot === 0.03) return 'S3';
-      if (lot === 0.01) return 'NSND';
-      if (lot === 0.02) return 'S1?';
-      return '?';
+      // Attribution is by the EA's OWN trade log (ticket-join) — authoritative.
+      // The old lot-size heuristic is dead: S1/S3/S4/NSND are all 0.01 now, so it
+      // mislabeled everything (incl. Shano's manual 0.01s) as "NSND". Any fill whose
+      // ticket isn't in a decisions CSV = not from our EAs = a manual (Human) trade.
+      return ticketEA[p[2]] || 'Human';
     }
 
     // ── Per-EA today P&L + recent-trades feed + today's equity curve ──
