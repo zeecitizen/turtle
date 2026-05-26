@@ -27,7 +27,7 @@
 //| Magic 88007 (distinct from S3=88003 / S1=88004 / NSND=88006).    |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Antigravity — S4 UHV Breakout v2 (M5, 85% WR)"
-#property version   "2.00"
+#property version   "2.01"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -50,6 +50,7 @@ input int    InpTrendLookback   = 30;   // M5 bars for HH/HL structure (recent 1
 input int    InpRetraceLookback = 12;   // M5 bars to scan for the UHV candle
 input double InpMomBodyFrac     = 0.55; // breakout candle body/range >= this (momentum, small wicks)
 input bool   InpRequireTrend    = true; // require HH/HL structure in the trade direction
+input double InpTrend24Min       = 7.0;  // 2026-05-27: min 24-bar M5 price move in trade direction. VERIFIED (verify_s4_hours.py): +$69->+$87, DD $24.5->$20.5, 5/7 WF splits. (Hour-filter 'skip 12-13' tested too — only 4/7 marginal, NOT added.) 0=off.
 input double InpERMin           = 0.0;  // 2026-05-27: DISABLED. Deep sweep showed ER filter HURTS on M5 — best configs all have ER=0.
 input bool   InpDoBuys          = true;
 input bool   InpDoSells         = true;
@@ -149,11 +150,12 @@ void TrySignal() {
    if (InpERMin > 0 && EfficiencyRatio() < InpERMin) return;  // regime filter (OFF by default)
 
    int td = TrendDir();
+   double td24 = iClose(_Symbol, PERIOD_M5, 1) - iClose(_Symbol, PERIOD_M5, 25);  // 24-bar M5 trend delta
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
 
    // BUY: green momentum breaks above the UHV RED candle's high, low vol
-   if (InpDoBuys && bo_c > bo_o && (!InpRequireTrend || td == 1)) {
+   if (InpDoBuys && bo_c > bo_o && (!InpRequireTrend || td == 1) && td24 >= InpTrend24Min) {
       double uhv_h = 0; long uhv_v = -1;
       for (int s = 2; s <= 1 + InpRetraceLookback; s++) {
          if (iClose(_Symbol,PERIOD_M5,s) < iOpen(_Symbol,PERIOD_M5,s)) {   // red
@@ -167,7 +169,7 @@ void TrySignal() {
       }
    }
    // SELL: red momentum breaks below the UHV GREEN candle's low, low vol
-   if (InpDoSells && bo_c < bo_o && (!InpRequireTrend || td == -1)) {
+   if (InpDoSells && bo_c < bo_o && (!InpRequireTrend || td == -1) && td24 <= -InpTrend24Min) {
       double uhv_l = 0; long uhv_v = -1;
       for (int s = 2; s <= 1 + InpRetraceLookback; s++) {
          if (iClose(_Symbol,PERIOD_M5,s) > iOpen(_Symbol,PERIOD_M5,s)) {   // green
@@ -276,7 +278,7 @@ void WriteHeartbeat() {
    int n_open = 0; double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S4Trader\",\"version\":\"2.00\",\"alive\":true,"
+      "{\"ea\":\"S4Trader\",\"version\":\"2.01\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
