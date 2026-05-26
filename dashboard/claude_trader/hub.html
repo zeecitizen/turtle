@@ -61,6 +61,33 @@
   .banner{margin-top:10px;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:600}
   .banner.ok{background:rgba(43,213,118,.08);border:1px solid rgba(43,213,118,.25);color:var(--green)}
   .banner.warn{background:rgba(255,179,62,.1);border:1px solid rgba(255,179,62,.3);color:var(--amber)}
+  /* LIVE open positions */
+  .live-hd{display:flex;align-items:center;gap:8px}
+  .live-pill{display:none;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.8px;
+    padding:3px 9px;border-radius:999px;background:rgba(255,90,106,.14);color:var(--red);border:1px solid rgba(255,90,106,.35)}
+  .live-pill.on{display:inline-flex}
+  .live-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--red);animation:lpulse 1.2s infinite}
+  @keyframes lpulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(1.5)}}
+  .lt{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 15px;margin:6px 0;
+    position:relative;overflow:hidden}
+  .lt.glow-pos{border-color:rgba(43,213,118,.4);animation:glowpos 2.4s ease-in-out infinite}
+  .lt.glow-neg{border-color:rgba(255,90,106,.4);animation:glowneg 2.4s ease-in-out infinite}
+  @keyframes glowpos{0%,100%{box-shadow:0 0 0 rgba(43,213,118,0)}50%{box-shadow:0 0 18px rgba(43,213,118,.28)}}
+  @keyframes glowneg{0%,100%{box-shadow:0 0 0 rgba(255,90,106,0)}50%{box-shadow:0 0 18px rgba(255,90,106,.28)}}
+  .lt-top{display:flex;align-items:center;gap:9px;font-size:13px}
+  .lt-top .badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:6px;background:var(--card2)}
+  .lt-top .badge.S3{color:var(--amber)} .lt-top .badge.S1{color:var(--blue)} .lt-top .badge.NSND{color:var(--purple)} .lt-top .badge.S4{color:var(--green)} .lt-top .badge.Human{color:var(--dim)}
+  .lt-side{font-weight:700} .lt-side.BUY{color:var(--green)} .lt-side.SELL{color:var(--red)}
+  .lt-meta{color:var(--dim);font-size:12px}
+  .lt-pnl{margin-left:auto;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
+  .lt-pnl.pos{color:var(--green)} .lt-pnl.neg{color:var(--red)}
+  /* SL ←→ TP gauge */
+  .lt-track{position:relative;height:8px;border-radius:6px;margin:11px 0 4px;
+    background:linear-gradient(90deg,rgba(255,90,106,.25),rgba(255,255,255,.06) 50%,rgba(43,213,118,.25))}
+  .lt-entry{position:absolute;top:-3px;width:2px;height:14px;background:var(--faint);left:50%}
+  .lt-needle{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:#fff;
+    box-shadow:0 0 6px rgba(255,255,255,.7);transition:left .6s ease}
+  .lt-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);font-family:ui-monospace,monospace}
   /* trade feed */
   .feed{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
   .tr{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px}
@@ -127,7 +154,9 @@
   <div class="banner ok" id="banner">checking…</div>
 
   <!-- live open positions (what the system is holding RIGHT NOW) -->
-  <div class="st">Open Positions <span id="openTot" style="font-weight:400;font-size:11px;color:#6b7280"></span></div>
+  <div class="st live-hd">Open Positions
+    <span class="live-pill" id="livePill"><span class="dot"></span>LIVE</span>
+    <span id="openTot" style="font-weight:400;font-size:11px;color:#6b7280"></span></div>
   <div id="openPos"></div>
 
   <!-- profit pulse + one-tap grab (shows only when floating profit feels big) -->
@@ -225,7 +254,8 @@ async function load(){
   // subheading: live PK time + authoritative (clock-based) market state, so it's
   // never confused by a lagging tick feed. data_status shows tick-feed health separately.
   const dataNote=(mt.data_status&&mt.data_status!=='live'&&mt.is_open)?(' · ticks '+mt.data_status):'';
-  $('subInfo').textContent='XAUUSD · VSA EAs'+(mt.pk_time?(' · '+mt.pk_time):'')+' · '+(mt.is_open?'Market OPEN':mktLbl)+dataNote;
+  const acct=d.account||{}; const acctTxt=(acct.broker||'')+(acct.symbol?(' · '+acct.symbol):'');
+  $('subInfo').textContent=(acctTxt||'XAUUSD · VSA EAs')+(mt.pk_time?(' · '+mt.pk_time):'')+' · '+(mt.is_open?'Market OPEN':mktLbl)+dataNote;
   // hero
   const p=d.pnl||{}; const tot=p.today_total||0;
   $('heroDate').textContent=(p.date||'TODAY')+' · realized';
@@ -253,23 +283,40 @@ async function load(){
     const a=age!=null?(age<60?age+'s':Math.floor(age/60)+'m'):'';
     return `<span class="chip ${x.alive?'ok':'bad'}">${x.alive?'●':'○'} ${lbl} ${a}</span>`;
   }).join('');
-  // open positions — what the system is holding right now (any side, any P&L)
-  const opEl=$('openPos'), opTot=$('openTot');
+  // open positions — what the system is holding RIGHT NOW (any side, any P&L)
+  const opEl=$('openPos'), opTot=$('openTot'), livePill=$('livePill');
   let allOpen=[];
   for (const [k,ck] of map){ const comp=c[ck]||{}; (comp.open||[]).forEach(o=>allOpen.push(Object.assign({ea:k},o))); }
   if(allOpen.length){
+    livePill.classList.add('on');
     const flt=allOpen.reduce((s,o)=>s+(o.pnl||0),0);
     opTot.textContent='· '+allOpen.length+' open · floating '+money(flt);
     opEl.innerHTML=allOpen.map(o=>{
-      const toTP=o.tp&&o.cur?(o.side==='BUY'?o.tp-o.cur:o.cur-o.tp):null;
-      return `<div style="display:flex;align-items:center;gap:8px;padding:9px 11px;margin:4px 0;background:#11161f;border:1px solid #243042;border-radius:10px;font-size:13px">
-        <span class="badge ${o.ea}" style="min-width:38px">${o.ea}</span>
-        <span style="color:${o.side==='BUY'?'#2ea043':'#f85149'};font-weight:600">${o.side}</span>
-        <span style="color:#9aa4b2">${o.lots} @ ${o.entry}</span>
-        <span style="color:#6b7280;font-size:11px">SL ${o.sl||'—'} · TP ${o.tp||'—'}${toTP!=null?' ('+toTP.toFixed(2)+' to TP)':''}</span>
-        <span style="margin-left:auto;font-weight:700;color:${(o.pnl||0)>=0?'#2ea043':'#f85149'}">${money(o.pnl||0)}</span></div>`;
+      const pos=(o.pnl||0)>=0;
+      // gauge: place the live-price needle between SL (0%) and TP (100%) along entry→target
+      let nd=50;
+      if(o.sl!=null&&o.tp!=null&&o.cur!=null){
+        const lo=Math.min(o.sl,o.tp), hi=Math.max(o.sl,o.tp);
+        if(hi>lo) nd=Math.max(2,Math.min(98,((o.cur-lo)/(hi-lo))*100));
+      }
+      const entPct=(o.sl!=null&&o.tp!=null)?(()=>{const lo=Math.min(o.sl,o.tp),hi=Math.max(o.sl,o.tp);return hi>lo?Math.max(2,Math.min(98,((o.entry-lo)/(hi-lo))*100)):50;})():50;
+      const toTP=(o.tp!=null&&o.cur!=null)?(o.side==='BUY'?o.tp-o.cur:o.cur-o.tp):null;
+      return `<div class="lt ${pos?'glow-pos':'glow-neg'}">
+        <div class="lt-top">
+          <span class="badge ${o.ea}">${o.ea}</span>
+          <span class="lt-side ${o.side}">${o.side}</span>
+          <span class="lt-meta">${o.lots} @ ${o.entry}${o.cur!=null?' · now '+o.cur:''}</span>
+          <span class="lt-pnl ${pos?'pos':'neg'}">${money(o.pnl||0)}</span>
+        </div>
+        <div class="lt-track">
+          <div class="lt-entry" style="left:${entPct}%"></div>
+          <div class="lt-needle" style="left:${nd}%"></div>
+        </div>
+        <div class="lt-scale"><span>SL ${o.sl!=null?o.sl:'—'}</span>${toTP!=null?'<span>'+toTP.toFixed(2)+' to TP</span>':'<span></span>'}<span>TP ${o.tp!=null?o.tp:'—'}</span></div>
+      </div>`;
     }).join('');
   } else {
+    livePill.classList.remove('on');
     opTot.textContent='';
     const onBrk=(mt.status==='break'||mt.status==='closed');
     opEl.innerHTML='<div style="font-size:12px;color:#6b7280;padding:6px 2px">'+(onBrk?'Market '+(mt.status==='break'?'on daily break':'closed')+' — EAs paused. Open positions appear here when trading resumes.':'No open positions right now — the system is flat (waiting for a signal).')+'</div>';
