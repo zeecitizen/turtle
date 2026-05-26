@@ -43,7 +43,7 @@
 input group "── Sizing ──"
 input double InpLots          = 0.01;   // Exness $126 account: conservative. MaxDD $25 = 20% of account.
 input int    InpMagicNumber   = 88007;
-input double InpDailyLossHalt = 50.0;   // halt NEW entries if account EQUITY down this much today. Exness: $50 = ~40% of $126.
+input double InpDailyLossHalt = 25.0;   // 2026-05-27 Shano $126 acct: ~20% daily-loss cap — halt NEW entries if equity is down this much today (incl. floating). Was FTMO-era $200/$50. Tighten to 15 for stricter. 0=off.
 
 input group "── Detection (M5) ──"
 input int    InpTrendLookback   = 30;   // M5 bars for HH/HL structure (recent 15 vs prior 15)
