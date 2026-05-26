@@ -23,7 +23,7 @@
 //| Fires once per qualifying M5 bar close; deduped by bar timestamp.|
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 3 Effort vs Result (Teacher Spec v2)"
-#property version   "2.31"
+#property version   "2.32"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -52,7 +52,7 @@
 
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
-input double InpLots          = 0.09;  // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). Targets +$500 in ~3 days; realistic worst day ~-$150-200 vs FTMO -$300 daily limit (~50% buffer). Was 0.03 on the $500 Blueberry acct.
+input double InpLots          = 0.01;  // 2026-05-27: Shano Exness $126 account (was 0.09 FTMO-era — that'd be ~$45-135 risk/trade = account-ending on $126). 0.01 = ~$5-15/trade.
 input int    InpMagicNumber   = 88003;
 
 input group "── Sides ──"
@@ -81,6 +81,7 @@ input string InpGrabFile   = "grab_command.txt"; // shared command file (epoch i
 input group "── Detection ──"
 input int    InpTrendLookback     = 24;   // M5 bars: ~2 hours for trend
 input double InpTrendThreshold    = 1.0;  // min price units of move (v2: was 2.0)
+input double InpTrend60Threshold  = 5.0;  // 2026-05-27: NEW 60-bar trend filter. VERIFIED robust (prove_all_improvements.py, reproduced): 6/7 walk-forward splits; +$504->+$571, DD $67->$55. Min |close[1]-close[61]| in trade direction. 0=off.
 input int    InpRetraceLookback   = 30;   // M5 bars to look back for retracement
 input int    InpTPPeakLookback    = 10;   // M5 bars for "recent peak" TP (v2: was 30)
 input bool   InpRequireH1Fvg      = false;// v2: default OFF — backtest improved without
@@ -210,6 +211,15 @@ bool IsDowntrendM5(int from_shift) {
    return (back_close - now_close) > InpTrendThreshold;
 }
 
+// 60-bar trend-strength filter (verified robust 6/7 splits, 2026-05-27)
+bool Trend60OK(bool isBuy) {
+   if (InpTrend60Threshold <= 0) return true;
+   double now  = iClose(_Symbol, PERIOD_M5, 1);
+   double back = iClose(_Symbol, PERIOD_M5, 61);
+   if (back == 0) return false;
+   return isBuy ? (now - back >= InpTrend60Threshold) : (back - now >= InpTrend60Threshold);
+}
+
 //── H1 unfilled bullish FVG tapped during the retracement ──────────
 //   retrace_back_shift = how many M5 bars back the retracement extends
 bool H1FvgTappedDuringRetracement(int retrace_back_shift) {
@@ -299,6 +309,7 @@ bool TryS3BuySignal() {
 
    // 2. Uptrend on M5
    if (!IsUptrendM5(1)) return false;
+   if (!Trend60OK(true)) return false;   // 60-bar trend-strength filter (verified)
 
    // 3. v2: find retracement = "reds that broke the last green candle's low"
    //   Walk back looking for a green whose low got broken by subsequent reds.
@@ -439,6 +450,7 @@ bool TryS3SellSignal() {
 
    if (bo_c >= bo_o) return false;
    if (!IsDowntrendM5(1)) return false;
+   if (!Trend60OK(false)) return false;   // 60-bar trend-strength filter (verified)
 
    int reds[30]; int reds_count = 0; int max_red_shift = 1;
    for (int back_g = 2; back_g <= 1 + InpRetraceLookback; back_g++) {
@@ -535,7 +547,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S3Trader\",\"version\":\"2.31\",\"alive\":true,"
+      "{\"ea\":\"S3Trader\",\"version\":\"2.32\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",

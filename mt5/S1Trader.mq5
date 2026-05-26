@@ -53,7 +53,7 @@
 
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
-input double InpLots          = 0.06;     // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). Was 0.02 on the $500 Blueberry acct.
+input double InpLots          = 0.01;     // 2026-05-27: Shano Exness $126 account (was 0.06 FTMO-era — that'd be ~$30-90 risk/trade = account-ending on $126). 0.01 = ~$5-15/trade.
 input int    InpMagicNumber   = 88004;
 input double InpDailyLossHalt = 25.0;   // 2026-05-27 Shano $126 acct: ~20% daily-loss cap — halt NEW entries if equity is down this much today (incl. floating). Was FTMO-era $200/$50. Tighten to 15 for stricter. 0=off.
 
