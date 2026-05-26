@@ -670,6 +670,7 @@ const server = http.createServer(async (req, res) => {
       { key: 's3_trader',   file: 's3_trader_state.json',    name: 'S3Trader (Effort vs Result)' },
       { key: 'nsnd_trader', file: 'nsnd_trader_state.json',  name: 'NsndTrader (NS/ND breaks)' },
       { key: 's1_trader',   file: 's1_trader_state.json',    name: 'S1Trader (UHV Breakout)' },
+      { key: 's4_trader',   file: 's4_trader_state.json',    name: 'S4Trader (Feb-11 UHV)' },
     ];
     for (const ea of eas) {
       const p = COMMON + ea.file;
@@ -774,7 +775,7 @@ const server = http.createServer(async (req, res) => {
 
     // ── EA attribution: position_ticket -> EA name (from decision logs) ──
     const ticketEA = {};
-    for (const [dfile, label] of [['s3_decisions.csv','S3'],['nsnd_decisions.csv','NSND'],['s1_decisions.csv','S1']]) {
+    for (const [dfile, label] of [['s3_decisions.csv','S3'],['nsnd_decisions.csv','NSND'],['s1_decisions.csv','S1'],['s4_decisions.csv','S4']]) {
       try {
         const raw = fs.readFileSync(COMMON + dfile, 'utf8');
         for (const line of raw.trim().split(/\r?\n/)) {
@@ -795,7 +796,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ── Per-EA today P&L + recent-trades feed + today's equity curve ──
-    const per_ea = { S3:{n:0,w:0,l:0,pnl:0}, S1:{n:0,w:0,l:0,pnl:0}, NSND:{n:0,w:0,l:0,pnl:0} };
+    const per_ea = { S3:{n:0,w:0,l:0,pnl:0}, S1:{n:0,w:0,l:0,pnl:0}, NSND:{n:0,w:0,l:0,pnl:0}, S4:{n:0,w:0,l:0,pnl:0} };
     const recent = [];
     const equity = [];
     const WHATIF_LOTS = [0.10, 0.30, 0.50, 1.00];   // "what if every trade were this lot?"
