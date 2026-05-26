@@ -76,7 +76,7 @@ input bool   InpDoSells       = true;     // 2026-05-19: SELL side enabled — a
 
 input group "── Detection ──"
 input int    InpTrendLookback     = 24;   // M5 bars (~2 hours)
-input double InpTrendThreshold    = 2.0;  // min price units of move
+input double InpTrendThreshold    = 7.0;  // 2026-05-27: raised 2.0->7.0. VERIFIED robust (verify_thorough.py): beats $2 baseline OOS in 7/7 walk-forward splits; +$629->+$745, WR 69->76%, DD $78->$51, 18/18 green. $5 also robust, $9 fragile. Min move over 24 M5 bars.
 input int    InpRetraceLookback   = 15;   // M5 bars searched for UHV red/green
 input bool   InpRequireH1Fvg      = false; // 2026-05-27: DISABLED. The +$2166 backtest ran without H1 FVG; stacking it with BigSpread killed all signals. Re-enable after live data proves it helps.
 input int    InpH1FvgLookback     = 50;   // H1 bars searched for unfilled FVG (only used if InpRequireH1Fvg)
