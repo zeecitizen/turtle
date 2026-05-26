@@ -201,7 +201,7 @@ async function enableNotifs(){
   }catch(e){alert('Could not enable alerts: '+e);}
 }
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
-const EAMETA={S3:{cls:'s3',full:'Liquidity Sweep'},S1:{cls:'s1',full:'UHV Breakout'},NSND:{cls:'ns',full:'No Supply/Demand'}};
+const EAMETA={S3:{cls:'s3',full:'Liquidity Sweep'},S1:{cls:'s1',full:'UHV Breakout'},NSND:{cls:'ns',full:'No Supply/Demand'},S4:{cls:'s4',full:'Feb-11 UHV'}};
 
 function drawSpark(eq){
   const svg=$('spark'); if(!eq||eq.length<2){svg.innerHTML='';return;}
@@ -231,7 +231,7 @@ async function load(){
   drawSpark(d.equity);
   // EA cards
   const c=d.components||{}, pe=d.per_ea||{};
-  const map=[['S3','s3_trader'],['S1','s1_trader'],['NSND','nsnd_trader']];
+  const map=[['S3','s3_trader'],['S1','s1_trader'],['NSND','nsnd_trader'],['S4','s4_trader']];
   $('eas').innerHTML=map.map(([k,ck])=>{
     const comp=c[ck]||{}, e=pe[k]||{n:0,w:0,l:0,pnl:0}, meta=EAMETA[k];
     const pc=e.pnl>0?'pos':e.pnl<0?'neg':'flat';
@@ -242,7 +242,7 @@ async function load(){
       <div class="tag">${meta.full} · ${comp.lots!=null?comp.lots+' lots':''}</div></div>`;
   }).join('');
   // systems strip
-  const order=[['s3_trader','S3'],['s1_trader','S1'],['nsnd_trader','NSND'],['turtle_trade_logger','Fills'],['shano_tick_logger','Ticks']];
+  const order=[['s3_trader','S3'],['s1_trader','S1'],['s4_trader','S4'],['nsnd_trader','NSND'],['turtle_trade_logger','Fills'],['shano_tick_logger','Ticks']];
   $('sys').innerHTML=order.map(([ck,lbl])=>{
     const x=c[ck]||{}; const age=x.heartbeat_age_sec??x.last_write_age_sec;
     const a=age!=null?(age<60?age+'s':Math.floor(age/60)+'m'):'';
