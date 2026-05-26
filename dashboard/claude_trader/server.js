@@ -106,6 +106,9 @@ const FILLS_CSV       = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Termina
 // terminal (symbol "XAUUSD") and the live Exness one ("XAUUSDm"). Dashboard reflects
 // the ACTIVE account only by filtering on this symbol.
 const ACTIVE_SYMBOL   = 'XAUUSDm';
+// Live account/terminal label shown on the dashboard (Exness real, Shano's money).
+// See memory reference_mt5_terminal_mapping. Login intentionally omitted from the UI.
+const ACCOUNT_BROKER  = 'Exness-MT5Real35';
 const LIVE_TRADE_JSON = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\live_trade_open.json';
 const WATCH_STATE_JSON= 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\watch_state.json';
 const LAST_UHV_ID     = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.last_uhv_id';
@@ -898,6 +901,7 @@ const server = http.createServer(async (req, res) => {
       all_systems_go,
       headline: all_systems_go ? 'All Systems Online' : `Something is wrong — ${warnings.length} issue${warnings.length === 1 ? '' : 's'}`,
       warnings, pnl, per_ea, recent, equity, whatif, market, components, pulse, restartable,
+      account: { broker: ACCOUNT_BROKER, symbol: ACTIVE_SYMBOL },
     };
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(payload));
