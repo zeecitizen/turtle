@@ -23,7 +23,7 @@
 //| Fires once per qualifying M5 bar close; deduped by bar timestamp.|
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 3 Effort vs Result (Teacher Spec v2)"
-#property version   "2.10"
+#property version   "2.30"
 #property strict
 
 // v2.10 (2026-05-22): "2R Free Roll" profit protection added (ManageOpenPositions,
@@ -47,6 +47,10 @@
 input group "── Sizing ──"
 input double InpLots          = 0.09;  // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). Targets +$500 in ~3 days; realistic worst day ~-$150-200 vs FTMO -$300 daily limit (~50% buffer). Was 0.03 on the $500 Blueberry acct.
 input int    InpMagicNumber   = 88003;
+
+input group "── Sides ──"
+input bool   InpDoBuys        = true;     // BUY side enabled
+input bool   InpDoSells       = true;     // 2026-05-27: SELL side added. Backtest shows SELL WR=81.7% EV=+$10.41 vs BUY WR=72.9% EV=-$6.70. Sells are the stronger direction.
 
 input group "── FTMO daily-loss circuit breaker ──"
 input double InpDailyLossHalt = 200.0; // halt NEW entries if account EQUITY is down this much today (incl. floating). Account-wide FTMO -$300 daily-limit protection. 0 = off.
@@ -74,7 +78,7 @@ input int    InpRetraceLookback   = 30;   // M5 bars to look back for retracemen
 input int    InpTPPeakLookback    = 10;   // M5 bars for "recent peak" TP (v2: was 30)
 input bool   InpRequireH1Fvg      = false;// v2: default OFF — backtest improved without
 input int    InpH1FvgLookback     = 50;   // H1 bars (only used if InpRequireH1Fvg)
-input bool   InpRequireM5Fvg      = true; // 2026-05-19 walk-forward validated: require a same-TF (M5) bullish FVG tap during retracement. WR 63%->68%, EV/tr $13.78->$26.24 over 12d, holds OOS (~2x EV both halves). H1 was too coarse (7 trades/12d); M5 keeps ~57.
+input bool   InpRequireM5Fvg      = false; // 2026-05-27: DISABLED. 18-day backtest shows FVG makes OOS 5x worse (-$321 vs -$60). Was validated on 12d but failed on 18d. Re-enable after further validation.
 input int    InpM5FvgLookback     = 60;   // M5 bars to scan back for an unfilled bullish FVG (only used if InpRequireM5Fvg)
 input double InpMinTPDistPts      = 0.2;  // min TP distance in price-pts (2 pips). BUGFIX 2026-05-17: was 0.5, but backtest uses sl_buf*2=0.20. The stricter 0.5 was rejecting valid trades and cutting backtest P&L by ~50%.
 input double InpSLBufferPts       = 2.00; // SL = wicking-green.low − this. 2026-05-18: raised from 0.10 → 2.00 after sweep showed +17% improvement on 12-day backtest (104→100 trades, 56%→63% WR, +$1,184 → +$1,386). Saves single-wick stop-outs like Trade 3 on 2026-05-18.
@@ -192,6 +196,13 @@ bool IsUptrendM5(int from_shift) {
    return (now_close - back_close) > InpTrendThreshold;
 }
 
+bool IsDowntrendM5(int from_shift) {
+   double now_close   = iClose(_Symbol, PERIOD_M5, from_shift);
+   double back_close  = iClose(_Symbol, PERIOD_M5, from_shift + InpTrendLookback);
+   if (back_close == 0) return false;
+   return (back_close - now_close) > InpTrendThreshold;
+}
+
 //── H1 unfilled bullish FVG tapped during the retracement ──────────
 //   retrace_back_shift = how many M5 bars back the retracement extends
 bool H1FvgTappedDuringRetracement(int retrace_back_shift) {
@@ -253,6 +264,7 @@ bool M5FvgTappedDuringRetracement(int retrace_back_shift) {
 //── S3 BUY signal check on M5 bar at shift 1 (just-closed) ─────────
 //   Returns true if signal fired (and order sent).
 bool TryS3BuySignal() {
+   if (!InpDoBuys) return false;
    if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
    double bo_o = iOpen (_Symbol, PERIOD_M5, 1);
    double bo_h = iHigh (_Symbol, PERIOD_M5, 1);
@@ -397,7 +409,72 @@ bool TryS3BuySignal() {
    double red_l_log = iLow(_Symbol, PERIOD_M5, matching_red_shift);
    long   red_v_log = iVolume(_Symbol, PERIOD_M5, matching_red_shift);
    LogDecisionCsv(bo_t, bo_c, bo_l, bo_v, matching_red_t, red_l_log, red_v_log,
-                  ask, sl, tp, actual_fill, ticket);
+                  ask, sl, tp, actual_fill, ticket, "buy");
+   return true;
+}
+
+//── S3 SELL signal check (mirror of Buy) ──────────────────────────
+bool TryS3SellSignal() {
+   if (!InpDoSells) return false;
+   if (DailyLossHalted()) return false;
+   double bo_o = iOpen (_Symbol, PERIOD_M5, 1);
+   double bo_h = iHigh (_Symbol, PERIOD_M5, 1);
+   double bo_l = iLow  (_Symbol, PERIOD_M5, 1);
+   double bo_c = iClose(_Symbol, PERIOD_M5, 1);
+   long   bo_v = iVolume(_Symbol, PERIOD_M5, 1);
+   datetime bo_t = iTime(_Symbol, PERIOD_M5, 1);
+
+   if (bo_t == g_last_signal_t) return false;
+   if (InpUseHourFilter) {
+      MqlDateTime bdt; TimeToStruct(bo_t, bdt);
+      if (IsHourInSkipList(bdt.hour)) { g_last_signal_t = bo_t; return false; }
+   }
+
+   if (bo_c >= bo_o) return false;
+   if (!IsDowntrendM5(1)) return false;
+
+   int reds[30]; int reds_count = 0; int max_red_shift = 1;
+   for (int back_g = 2; back_g <= 1 + InpRetraceLookback; back_g++) {
+      double g_o = iOpen (_Symbol, PERIOD_M5, back_g);
+      double g_c = iClose(_Symbol, PERIOD_M5, back_g);
+      double g_h = iHigh (_Symbol, PERIOD_M5, back_g);
+      if (g_c >= g_o) continue; 
+      bool any_broke = false; int found_reds = 0; int tmp_reds[30]; int tmp_max_shift = 1;
+      for (int j = back_g - 1; j >= 2; j--) {
+         double r_o = iOpen (_Symbol, PERIOD_M5, j);
+         double r_c = iClose(_Symbol, PERIOD_M5, j);
+         double r_h = iHigh (_Symbol, PERIOD_M5, j);
+         if (r_c > r_o) {
+            if (r_c > g_h || r_h > g_h) any_broke = true;
+            if (found_reds < 30) { tmp_reds[found_reds++] = j; if (j > tmp_max_shift) tmp_max_shift = j; }
+         }
+      }
+      if (any_broke && found_reds > 0) {
+         for (int k = 0; k < found_reds; k++) reds[k] = tmp_reds[k];
+         reds_count = found_reds; max_red_shift = tmp_max_shift; break;
+      }
+   }
+   if (reds_count == 0) return false;
+
+   int matching_red_shift = -1; datetime matching_red_t = 0;
+   for (int r = 0; r < reds_count; r++) {
+      int rs = reds[r]; double r_h = iHigh(_Symbol, PERIOD_M5, rs); long r_v = iVolume(_Symbol, PERIOD_M5, rs);
+      if (bo_h <= r_h) continue; if (bo_c >= r_h) continue; if (bo_v <= r_v) continue;
+      matching_red_shift = rs; matching_red_t = iTime(_Symbol, PERIOD_M5, rs); break;
+   }
+   if (matching_red_shift < 0) return false;
+   if (IsRedAlreadyFired(matching_red_t)) return false;
+
+   double sl = bo_h + InpSLBufferPts; double tp = 99999999.0;
+   for (int j = 2; j <= 1 + InpTPPeakLookback; j++) { double l = iLow(_Symbol, PERIOD_M5, j); if (l < tp) tp = l; }
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   if (tp >= bid - MathMin(InpMinTPDistPts, InpSLBufferPts * 2.0)) return false;
+
+   g_signals_today++;
+   if (!g_trade.Sell(InpLots, _Symbol, 0, sl, tp, "S3_sell")) return false;
+   g_entries_today++; g_last_signal_t = bo_t; RememberFiredRed(matching_red_t);
+   ulong ticket = g_trade.ResultOrder(); double actual_fill = g_trade.ResultPrice();
+   LogDecisionCsv(bo_t, bo_c, bo_h, bo_v, matching_red_t, iHigh(_Symbol, PERIOD_M5, matching_red_shift), 0, bid, sl, tp, actual_fill, ticket, "sell");
    return true;
 }
 
@@ -406,7 +483,7 @@ bool TryS3BuySignal() {
 void LogDecisionCsv(datetime bo_t, double bo_c, double bo_l, long bo_v,
                     datetime red_t, double red_l, double red_v,
                     double intended_entry, double sl, double tp,
-                    double actual_fill, ulong ticket) {
+                    double actual_fill, ulong ticket, string side="buy") {
    int fh = FileOpen(InpDecisionCsv, FILE_READ | FILE_WRITE | FILE_CSV | FILE_COMMON | FILE_ANSI, ',');
    if (fh == INVALID_HANDLE) {
       // Create with header
@@ -421,7 +498,7 @@ void LogDecisionCsv(datetime bo_t, double bo_c, double bo_l, long bo_v,
    FileWrite(fh,
       TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
       "S3",
-      "buy",
+      side,
       TimeToString(bo_t,  TIME_DATE | TIME_SECONDS),
       DoubleToString(bo_c, 2),
       DoubleToString(bo_l, 2),
@@ -451,7 +528,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S3Trader\",\"version\":\"2.21\",\"alive\":true,"
+      "{\"ea\":\"S3Trader\",\"version\":\"2.30\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
@@ -477,12 +554,13 @@ int MngIndex(ulong ticket) {
    return idx;
 }
 
-//   Walk this EA's open BUY positions every tick. At +BreakevenR move SL to
+//   Walk this EA's open positions (BUY or SELL) every tick. At +BreakevenR move SL to
 //   entry+buffer (firewall). At +PartialR bank a fraction (Income tranche) and
 //   ensure the runner is at breakeven. Static TP is left untouched (validated).
 void ManageOpenPositions() {
    if (!InpEnableBreakeven && !InpEnablePartial) return;
    double bid  = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double ask  = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
    double vmin = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
    if (step <= 0) step = 0.01;
@@ -492,7 +570,7 @@ void ManageOpenPositions() {
       if (ticket == 0 || !PositionSelectByTicket(ticket)) continue;
       if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
       if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
-      if (PositionGetInteger(POSITION_TYPE) != POSITION_TYPE_BUY) continue; // S3 buy-only
+      bool is_buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
 
       double entry  = PositionGetDouble(POSITION_PRICE_OPEN);
       double cur_sl = PositionGetDouble(POSITION_SL);
@@ -500,24 +578,27 @@ void ManageOpenPositions() {
       double vol    = PositionGetDouble(POSITION_VOLUME);
 
       int mi = MngIndex(ticket);          // captures original SL on first sight
-      double R = entry - g_mng_sl0[mi];
+      double R = MathAbs(entry - g_mng_sl0[mi]);
       if (R <= 0) continue;               // no measurable risk → leave alone
 
-      double be_sl = NormalizeDouble(entry + InpBEBufferPts, _Digits);
+      double prof  = is_buy ? (bid - entry) : (entry - ask);
+      double be_sl = NormalizeDouble(is_buy ? entry + InpBEBufferPts
+                                            : entry - InpBEBufferPts, _Digits);
+      bool can_raise = is_buy ? (cur_sl < be_sl) : (cur_sl == 0.0 || cur_sl > be_sl);
 
       // 1. Partial bank at +PartialR (once), then breakeven the remainder.
-      if (InpEnablePartial && !g_mng_partialed[mi] && bid >= entry + InpPartialR * R) {
+      if (InpEnablePartial && !g_mng_partialed[mi] && prof >= InpPartialR * R) {
          double close_vol = NormalizeDouble(MathFloor((vol * InpPartialFrac) / step) * step, 2);
          if (close_vol >= vmin && (vol - close_vol) >= vmin) {
             if (g_trade.PositionClosePartial(ticket, close_vol)) {
                g_mng_partialed[mi] = true;
-               Log(StringFormat("[2R] Banked %.2f of #%I64u @ bid=%.2f (+%.2fR) — runner=%.2f",
-                                close_vol, ticket, bid, (bid - entry) / R, vol - close_vol));
+               Log(StringFormat("[2R] Banked %.2f of #%I64u (+%.2fR) — runner=%.2f",
+                                close_vol, ticket, prof / R, vol - close_vol));
             }
          } else {
             g_mng_partialed[mi] = true;   // too small to split — don't retry, just BE below
          }
-         if (InpEnableBreakeven && cur_sl < be_sl &&
+         if (InpEnableBreakeven && can_raise &&
              g_trade.PositionModify(ticket, be_sl, cur_tp))
             Log(StringFormat("[2R] Breakeven firewall #%I64u SL→%.2f (TP kept %.2f)",
                              ticket, be_sl, cur_tp));
@@ -525,10 +606,10 @@ void ManageOpenPositions() {
       }
 
       // 2. Plain breakeven at +BreakevenR (fires before PartialR, or if partial off).
-      if (InpEnableBreakeven && cur_sl < be_sl && bid >= entry + InpBreakevenR * R) {
+      if (InpEnableBreakeven && can_raise && prof >= InpBreakevenR * R) {
          if (g_trade.PositionModify(ticket, be_sl, cur_tp))
             Log(StringFormat("[BE] #%I64u SL→%.2f (+%.2fR, TP kept %.2f)",
-                             ticket, be_sl, (bid - entry) / R, cur_tp));
+                             ticket, be_sl, prof / R, cur_tp));
       }
    }
 }
@@ -618,7 +699,7 @@ void OnTick() {
    datetime cur_m5 = iTime(_Symbol, PERIOD_M5, 0);
    if (cur_m5 != g_last_m5_time && g_last_m5_time != 0) {
       // A new M5 bar opened — the previous one just closed. Evaluate.
-      TryS3BuySignal();
+      if (!TryS3BuySignal()) TryS3SellSignal();
    }
    g_last_m5_time = cur_m5;
    ManageOpenPositions();   // 2R Free Roll: breakeven + partial on open trades (every tick)

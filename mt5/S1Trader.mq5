@@ -32,7 +32,7 @@
 //| Magic 88004.                                                     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 1 UHV Breakout v2"
-#property version   "2.22"
+#property version   "2.30"
 #property strict
 
 // v2.10 (2026-05-22): "2R Free Roll" management code added for parity with S3/NSND,
@@ -71,8 +71,9 @@ input group "── Detection ──"
 input int    InpTrendLookback     = 24;   // M5 bars (~2 hours)
 input double InpTrendThreshold    = 2.0;  // min price units of move
 input int    InpRetraceLookback   = 15;   // M5 bars searched for UHV red/green
-input int    InpH1FvgLookback     = 50;   // H1 bars searched for unfilled FVG
-input bool   InpRequireBigSpread  = true; // 2026-05-19 teacher VSA Selling-Climax: the climax (UHV) bar must be a BIG-SPREAD candle, not just highest-volume. Walk-forward: OOS test +$413 vs +$168 baseline, 80% WR, EV $11.98->$41.30. Robust.
+input bool   InpRequireH1Fvg      = false; // 2026-05-27: DISABLED. The +$2166 backtest ran without H1 FVG; stacking it with BigSpread killed all signals. Re-enable after live data proves it helps.
+input int    InpH1FvgLookback     = 50;   // H1 bars searched for unfilled FVG (only used if InpRequireH1Fvg)
+input bool   InpRequireBigSpread  = false; // 2026-05-27: DISABLED. Was blocking 100% of live trades (0 entries in 5 days). The WF validation was on a model that didn't include this filter. Re-enable only after live calibration.
 input double InpBigSpreadMult     = 1.3;  // UHV bar range must be >= this x avg range of prior 10 M5 bars
 input int    InpSpreadAvgBars     = 10;   // bars used for the avg-range baseline
 input double InpSLBufferPts       = 2.00; // 2026-05-19: walk-forward winner. Was 0.10, but tighter SL configs all BROKE OOS (curve-fit). Wider SL absorbs noise.
@@ -286,8 +287,8 @@ bool TryS1BuySignal() {
    if (!swept) return false;
 
    g_reached_late++;   // diagnostic: passed all filters except the H1-FVG gate
-   // 7. H1 FVG tap during retracement
-   if (!H1FvgTappedDuringRetracement(max_red_shift)) return false;
+   // 7. H1 FVG tap during retracement (optional — default OFF since 2026-05-27)
+   if (InpRequireH1Fvg && !H1FvgTappedDuringRetracement(max_red_shift)) return false;
 
    // 8. Compute SL/TP/entry
    double sl  = uhv_l - InpSLBufferPts;
@@ -379,8 +380,8 @@ bool TryS1SellSignal() {
    if (!swept) return false;
 
    g_reached_late++;   // diagnostic: passed all filters except the H1-FVG gate
-   // 7. Bearish H1 FVG tap during retracement
-   if (!H1BearFvgTappedDuringRetracement(max_green_shift)) return false;
+   // 7. Bearish H1 FVG tap during retracement (optional — default OFF since 2026-05-27)
+   if (InpRequireH1Fvg && !H1BearFvgTappedDuringRetracement(max_green_shift)) return false;
 
    // 8. Compute SL/TP/entry
    double sl  = uhv_h + InpSLBufferPts;
@@ -414,7 +415,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S1Trader\",\"version\":\"2.22\",\"alive\":true,"
+      "{\"ea\":\"S1Trader\",\"version\":\"2.30\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,\"late_setups\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"tp_points\":%.2f,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
