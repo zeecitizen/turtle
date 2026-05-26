@@ -31,6 +31,14 @@
 #property version   "1.20"
 #property strict
 
+// ╔══════════════════════════════════════════════════════════════════╗
+// ║  ⚠️  WARNING: NSND's backtest model does NOT match the live EA.  ║
+// ║  The backtest generated 1800+ signals; live EA fired only 18.   ║
+// ║  Live result: -$6.15 after 18 trades (16.7% WR). DO NOT TRUST  ║
+// ║  backtest results for this EA without rebuilding the detector.  ║
+// ║  Currently DISABLED on all accounts (2026-05-27).               ║
+// ╚══════════════════════════════════════════════════════════════════╝
+
 // v1.10 (2026-05-22): "2R Free Roll" breakeven added (ManageOpenPositions, tick-
 // level, side-aware). Backtest (backtest_exit_protocols_multi.py, NSND deployed
 // signals, 13 real-tick days @ 0.03, n=93): baseline +$475 / WR 31% / PF 3.13 →
