@@ -32,7 +32,7 @@
 //| Magic 88004.                                                     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 1 UHV Breakout v2"
-#property version   "2.30"
+#property version   "2.40"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -75,7 +75,8 @@ input bool   InpDoBuys        = true;     // BUY side enabled (UHV red + bullish
 input bool   InpDoSells       = true;     // 2026-05-19: SELL side enabled — adds +$243/12d in walk-forward train (+/-$0 OOS net)
 
 input group "── Detection ──"
-input int    InpTrendLookback     = 24;   // M5 bars (~2 hours)
+input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M5;  // chart timeframe to trade. 2026-05-27: M1 validated robust (5/5 splits OOS+ after cost, +$3088/19d vs +$877 on M5). For M1 set InpTrendThreshold=2.0.
+input int    InpTrendLookback     = 24;   // bars (M5: ~2h; M1: ~24min)
 input double InpTrendThreshold    = 7.0;  // 2026-05-27: raised 2.0->7.0. VERIFIED robust (verify_thorough.py): beats $2 baseline OOS in 7/7 walk-forward splits; +$629->+$745, WR 69->76%, DD $78->$51, 18/18 green. $5 also robust, $9 fragile. Min move over 24 M5 bars.
 input int    InpRetraceLookback   = 15;   // M5 bars searched for UHV red/green
 input bool   InpRequireH1Fvg      = false; // 2026-05-27: DISABLED. The +$2166 backtest ran without H1 FVG; stacking it with BigSpread killed all signals. Re-enable after live data proves it helps.
@@ -146,8 +147,8 @@ bool DailyLossHalted() {
 }
 
 bool IsUptrendM5(int from_shift) {
-   double now_close   = iClose(_Symbol, PERIOD_M5, from_shift);
-   double back_close  = iClose(_Symbol, PERIOD_M5, from_shift + InpTrendLookback);
+   double now_close   = iClose(_Symbol, InpTimeframe, from_shift);
+   double back_close  = iClose(_Symbol, InpTimeframe, from_shift + InpTrendLookback);
    if (back_close == 0) return false;
    return (now_close - back_close) > InpTrendThreshold;
 }
@@ -156,7 +157,7 @@ bool IsUptrendM5(int from_shift) {
 double AvgRangeM5(int from_shift, int n) {
    double sum = 0; int cnt = 0;
    for (int j = from_shift + 1; j <= from_shift + n; j++) {
-      sum += iHigh(_Symbol, PERIOD_M5, j) - iLow(_Symbol, PERIOD_M5, j);
+      sum += iHigh(_Symbol, InpTimeframe, j) - iLow(_Symbol, InpTimeframe, j);
       cnt++;
    }
    return (cnt > 0) ? sum / cnt : 0.0;
@@ -166,15 +167,15 @@ double AvgRangeM5(int from_shift, int n) {
 // large candle vs the recent average. Walk-forward validated 2026-05-19.
 bool IsBigSpreadClimax(int uhv_shift) {
    if (!InpRequireBigSpread) return true;
-   double rng = iHigh(_Symbol, PERIOD_M5, uhv_shift) - iLow(_Symbol, PERIOD_M5, uhv_shift);
+   double rng = iHigh(_Symbol, InpTimeframe, uhv_shift) - iLow(_Symbol, InpTimeframe, uhv_shift);
    double avg = AvgRangeM5(uhv_shift, InpSpreadAvgBars);
    if (avg <= 0) return false;
    return rng >= InpBigSpreadMult * avg;
 }
 
 bool IsDowntrendM5(int from_shift) {
-   double now_close   = iClose(_Symbol, PERIOD_M5, from_shift);
-   double back_close  = iClose(_Symbol, PERIOD_M5, from_shift + InpTrendLookback);
+   double now_close   = iClose(_Symbol, InpTimeframe, from_shift);
+   double back_close  = iClose(_Symbol, InpTimeframe, from_shift + InpTrendLookback);
    if (back_close == 0) return false;
    return (back_close - now_close) > InpTrendThreshold;
 }
@@ -194,8 +195,8 @@ bool H1FvgTappedDuringRetracement(int retrace_back_shift) {
       }
       if (filled) continue;
       for (int k = 1; k <= retrace_back_shift; k++) {
-         double mlow  = iLow(_Symbol, PERIOD_M5, k);
-         double mhigh = iHigh(_Symbol, PERIOD_M5, k);
+         double mlow  = iLow(_Symbol, InpTimeframe, k);
+         double mhigh = iHigh(_Symbol, InpTimeframe, k);
          if (mlow <= newer_low && mhigh >= older_high) return true;
       }
    }
@@ -218,8 +219,8 @@ bool H1BearFvgTappedDuringRetracement(int retrace_back_shift) {
       }
       if (filled) continue;
       for (int k = 1; k <= retrace_back_shift; k++) {
-         double mlow  = iLow (_Symbol, PERIOD_M5, k);
-         double mhigh = iHigh(_Symbol, PERIOD_M5, k);
+         double mlow  = iLow (_Symbol, InpTimeframe, k);
+         double mhigh = iHigh(_Symbol, InpTimeframe, k);
          // Bear FVG zone is [newer_high, older_low]. Overlap: m5.low<=older_low && m5.high>=newer_high
          if (mlow <= older_low && mhigh >= newer_high) return true;
       }
@@ -231,11 +232,11 @@ bool H1BearFvgTappedDuringRetracement(int retrace_back_shift) {
 bool TryS1BuySignal() {
    if (!InpDoBuys) return false;
    if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
-   double bo_o = iOpen (_Symbol, PERIOD_M5, 1);
-   double bo_h = iHigh (_Symbol, PERIOD_M5, 1);
-   double bo_l = iLow  (_Symbol, PERIOD_M5, 1);
-   double bo_c = iClose(_Symbol, PERIOD_M5, 1);
-   datetime bo_t = iTime(_Symbol, PERIOD_M5, 1);
+   double bo_o = iOpen (_Symbol, InpTimeframe, 1);
+   double bo_h = iHigh (_Symbol, InpTimeframe, 1);
+   double bo_l = iLow  (_Symbol, InpTimeframe, 1);
+   double bo_c = iClose(_Symbol, InpTimeframe, 1);
+   datetime bo_t = iTime(_Symbol, InpTimeframe, 1);
 
    if (bo_t == g_last_signal_t) return false;
 
@@ -252,8 +253,8 @@ bool TryS1BuySignal() {
    int reds_count = 0;
    int max_red_shift = 1;
    for (int j = 2; j <= 1 + InpRetraceLookback; j++) {
-      double r_o = iOpen (_Symbol, PERIOD_M5, j);
-      double r_c = iClose(_Symbol, PERIOD_M5, j);
+      double r_o = iOpen (_Symbol, InpTimeframe, j);
+      double r_c = iClose(_Symbol, InpTimeframe, j);
       if (r_c < r_o) {
          if (reds_count < 15) {
             reds[reds_count++] = j;
@@ -265,16 +266,16 @@ bool TryS1BuySignal() {
 
    // 4. UHV red = highest-volume red in the retracement
    int uhv_shift = reds[0];
-   long uhv_vol = iVolume(_Symbol, PERIOD_M5, uhv_shift);
+   long uhv_vol = iVolume(_Symbol, InpTimeframe, uhv_shift);
    for (int r = 1; r < reds_count; r++) {
-      long v = iVolume(_Symbol, PERIOD_M5, reds[r]);
+      long v = iVolume(_Symbol, InpTimeframe, reds[r]);
       if (v > uhv_vol) {
          uhv_vol = v;
          uhv_shift = reds[r];
       }
    }
-   double uhv_h = iHigh(_Symbol, PERIOD_M5, uhv_shift);
-   double uhv_l = iLow (_Symbol, PERIOD_M5, uhv_shift);
+   double uhv_h = iHigh(_Symbol, InpTimeframe, uhv_shift);
+   double uhv_l = iLow (_Symbol, InpTimeframe, uhv_shift);
 
    // 4b. TEACHER (VSA Selling-Climax): climax bar must be a BIG-SPREAD candle.
    if (!IsBigSpreadClimax(uhv_shift)) return false;
@@ -287,7 +288,7 @@ bool TryS1BuySignal() {
    //    (uhv_shift is a higher shift = older bar. shift goes 1..uhv_shift-1)
    bool swept = false;
    for (int k = uhv_shift - 1; k >= 1; k--) {
-      if (iLow(_Symbol, PERIOD_M5, k) < uhv_l) {
+      if (iLow(_Symbol, InpTimeframe, k) < uhv_l) {
          swept = true; break;
       }
    }
@@ -326,11 +327,11 @@ bool TryS1BuySignal() {
 bool TryS1SellSignal() {
    if (!InpDoSells) return false;
    if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
-   double bo_o = iOpen (_Symbol, PERIOD_M5, 1);
-   double bo_h = iHigh (_Symbol, PERIOD_M5, 1);
-   double bo_l = iLow  (_Symbol, PERIOD_M5, 1);
-   double bo_c = iClose(_Symbol, PERIOD_M5, 1);
-   datetime bo_t = iTime(_Symbol, PERIOD_M5, 1);
+   double bo_o = iOpen (_Symbol, InpTimeframe, 1);
+   double bo_h = iHigh (_Symbol, InpTimeframe, 1);
+   double bo_l = iLow  (_Symbol, InpTimeframe, 1);
+   double bo_c = iClose(_Symbol, InpTimeframe, 1);
+   datetime bo_t = iTime(_Symbol, InpTimeframe, 1);
 
    if (bo_t == g_last_signal_t) return false;
 
@@ -346,8 +347,8 @@ bool TryS1SellSignal() {
    int greens_count = 0;
    int max_green_shift = 1;
    for (int j = 2; j <= 1 + InpRetraceLookback; j++) {
-      double g_o = iOpen (_Symbol, PERIOD_M5, j);
-      double g_c = iClose(_Symbol, PERIOD_M5, j);
+      double g_o = iOpen (_Symbol, InpTimeframe, j);
+      double g_c = iClose(_Symbol, InpTimeframe, j);
       if (g_c > g_o) {
          if (greens_count < 15) {
             greens[greens_count++] = j;
@@ -359,16 +360,16 @@ bool TryS1SellSignal() {
 
    // 4. UHV green = highest-volume green in the retracement
    int uhv_shift = greens[0];
-   long uhv_vol = iVolume(_Symbol, PERIOD_M5, uhv_shift);
+   long uhv_vol = iVolume(_Symbol, InpTimeframe, uhv_shift);
    for (int r = 1; r < greens_count; r++) {
-      long v = iVolume(_Symbol, PERIOD_M5, greens[r]);
+      long v = iVolume(_Symbol, InpTimeframe, greens[r]);
       if (v > uhv_vol) {
          uhv_vol = v;
          uhv_shift = greens[r];
       }
    }
-   double uhv_h = iHigh(_Symbol, PERIOD_M5, uhv_shift);
-   double uhv_l = iLow (_Symbol, PERIOD_M5, uhv_shift);
+   double uhv_h = iHigh(_Symbol, InpTimeframe, uhv_shift);
+   double uhv_l = iLow (_Symbol, InpTimeframe, uhv_shift);
 
    // 4b. TEACHER (VSA Buying-Climax): climax bar must be a BIG-SPREAD candle.
    if (!IsBigSpreadClimax(uhv_shift)) return false;
@@ -380,7 +381,7 @@ bool TryS1SellSignal() {
    // 6. Sweep: some M5 bar between (uhv_shift) and 1 has high > uhv_h
    bool swept = false;
    for (int k = uhv_shift - 1; k >= 1; k--) {
-      if (iHigh(_Symbol, PERIOD_M5, k) > uhv_h) {
+      if (iHigh(_Symbol, InpTimeframe, k) > uhv_h) {
          swept = true; break;
       }
    }
@@ -424,23 +425,23 @@ string BuildWatchJson() {
 
    int uhv_shift = -1; long uhv_vol = -1;
    for (int j = 2; j <= 1 + InpRetraceLookback; j++) {
-      double o = iOpen(_Symbol, PERIOD_M5, j), c = iClose(_Symbol, PERIOD_M5, j);
+      double o = iOpen(_Symbol, InpTimeframe, j), c = iClose(_Symbol, InpTimeframe, j);
       bool match = (dir == 1) ? (c < o) : (c > o);     // red for buy, green for sell
       if (!match) continue;
-      long v = iVolume(_Symbol, PERIOD_M5, j);
+      long v = iVolume(_Symbol, InpTimeframe, j);
       if (v > uhv_vol) { uhv_vol = v; uhv_shift = j; }
    }
    if (uhv_shift < 0) return "null";
 
-   double uhv_h = iHigh(_Symbol, PERIOD_M5, uhv_shift);
-   double uhv_l = iLow (_Symbol, PERIOD_M5, uhv_shift);
+   double uhv_h = iHigh(_Symbol, InpTimeframe, uhv_shift);
+   double uhv_l = iLow (_Symbol, InpTimeframe, uhv_shift);
    return StringFormat(
       "{\"dir\":\"%s\",\"ref_bar_t\":\"%s\",\"ref_high\":%.3f,\"ref_low\":%.3f,"
       "\"level\":%.3f,\"setup_bar_t\":\"%s\"}",
       dir == 1 ? "buy" : "sell",
-      TimeToString(iTime(_Symbol, PERIOD_M5, uhv_shift), TIME_DATE|TIME_SECONDS),
+      TimeToString(iTime(_Symbol, InpTimeframe, uhv_shift), TIME_DATE|TIME_SECONDS),
       uhv_h, uhv_l, (dir == 1 ? uhv_h : uhv_l),
-      TimeToString(iTime(_Symbol, PERIOD_M5, 1), TIME_DATE|TIME_SECONDS));
+      TimeToString(iTime(_Symbol, InpTimeframe, 1), TIME_DATE|TIME_SECONDS));
 }
 
 void WriteHeartbeat() {
@@ -452,7 +453,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S1Trader\",\"version\":\"2.30\",\"alive\":true,"
+      "{\"ea\":\"S1Trader\",\"version\":\"2.40\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,\"late_setups\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"tp_points\":%.2f,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,"
@@ -612,7 +613,7 @@ void CheckGrabCommand() {
 
 void OnTick() {
    IsNewDay();
-   datetime cur_m5 = iTime(_Symbol, PERIOD_M5, 0);
+   datetime cur_m5 = iTime(_Symbol, InpTimeframe, 0);
    if (cur_m5 != g_last_m5_time && g_last_m5_time != 0) {
       // BUY first; if it fires, SELL on same bar is blocked by dedup (g_last_signal_t).
       if (!TryS1BuySignal()) TryS1SellSignal();
