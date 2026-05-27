@@ -1032,11 +1032,12 @@ const server = http.createServer(async (req, res) => {
         const px = parseFloat(p[2]); if (!(px > 0)) continue;   // bid
         const b = Math.floor(ms / 1000 / tf) * tf;
         const c = buckets.get(b);
-        if (!c) buckets.set(b, { t: b, o: px, h: px, l: px, c: px });
-        else { if (px > c.h) c.h = px; if (px < c.l) c.l = px; c.c = px; }
+        // v = tick count in the bar = MT5 "tick volume" (the same iVolume the EAs use for UHV)
+        if (!c) buckets.set(b, { t: b, o: px, h: px, l: px, c: px, v: 1 });
+        else { if (px > c.h) c.h = px; if (px < c.l) c.l = px; c.c = px; c.v++; }
       }
       const all = [...buckets.values()].sort((a, b) => a.t - b.t).slice(-N)
-        .map(c => ({ t: c.t, o: +c.o.toFixed(3), h: +c.h.toFixed(3), l: +c.l.toFixed(3), c: +c.c.toFixed(3) }));
+        .map(c => ({ t: c.t, o: +c.o.toFixed(3), h: +c.h.toFixed(3), l: +c.l.toFixed(3), c: +c.c.toFixed(3), v: c.v }));
       const data = { candles: all, tf, symbol: ACTIVE_SYMBOL };
       _candleCache = { data, at: Date.now(), tf, n: N };
       res.end(JSON.stringify(data));
