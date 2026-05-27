@@ -108,5 +108,6 @@ def report(label,perday,ntr):
     tot=sum(perday.values()); ok=sum(1 for f in [0.4,0.5,0.6,0.7,0.8] if oos(f)>0)
     print(f"  {label:<10} n={ntr:>3}  NET=${tot:>+7.0f}  OOS@50%=${oos(0.5):>+6.0f}  splits {ok}/5 OOS+  {'OK' if ok>=4 and tot>0 else 'weak'}")
 
-print("FULL S3 (buy+sell, Trend60, upper-wick) — native, 0.01 lots, net of cost\n")
-report("S3 @ M5", *run(5)); report("S3 @ M1", *run(1))
+if __name__ == "__main__":   # guard so `import s3_full_m1` only exposes detect(), no backtest run
+    print("FULL S3 (buy+sell, Trend60, upper-wick) — native, 0.01 lots, net of cost\n")
+    report("S3 @ M5", *run(5)); report("S3 @ M1", *run(1))

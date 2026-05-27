@@ -58,13 +58,13 @@ def s3_sigs(db):
             if r and r["ref_t"] not in fired:
                 out.append({"side":r["side"],"sl":r["sl"],"fire_time":r["bo_t"]+timedelta(minutes=1)}); fired.add(r["ref_t"])
     return out
-def nsnd_sigs_day(full_m1, day):
-    m15=aggregate_to_tf(full_m1,15)
-    sg=nsnd_signals(full_m1,[(m15,15)])
-    return [{"side":s["side"],"sl":s["sl"],"fire_time":s["fire_time"]} for s in sg if s["fire_time"].strftime("%Y-%m-%d")==day]
-
 ENG={"S1":s1_sigs,"S3":s3_sigs}
 peaks={k:[] for k in ENG}; peaks["NSND"]=[]
+# NSND: compute signals ONCE on full history, then group by fire day (was O(days^2))
+m15=aggregate_to_tf(bars,15)
+nsnd_all={}
+for s in nsnd_signals(bars,[(m15,15)]):
+    nsnd_all.setdefault(s["fire_time"].strftime("%Y-%m-%d"),[]).append({"side":s["side"],"sl":s["sl"],"fire_time":s["fire_time"]})
 for day in sorted(days):
     if day not in td: continue
     db=days[day]
@@ -74,8 +74,7 @@ for day in sorted(days):
         for s in fn(db):
             p=peak(s,ticks)
             if p is not None: peaks[k].append(p)
-    full=[b for b in bars if b["time"].strftime("%Y-%m-%d")<=day]
-    for s in nsnd_sigs_day(full, day):
+    for s in nsnd_all.get(day,[]):
         p=peak(s,ticks)
         if p is not None: peaks["NSND"].append(p)
 
