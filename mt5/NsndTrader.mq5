@@ -55,7 +55,7 @@
 input group "── Sizing ──"
 input double InpLots          = 0.01;  // 2026-05-27: Shano Exness $126 account ONLY. Was 0.03 (FTMO 3x) = ~$36 risk/trade = account-ending. 0.01.
 input int    InpMagicNumber   = 88006;
-input double InpDailyLossHalt = 25.0;  // 2026-05-27 Shano $126: ~20% daily-loss cap (incl floating). Was 200 (FTMO). 0=off.
+input double InpDailyLossHalt = 50.0;  // 2026-05-27 Shano $126: ~20% daily-loss cap (incl floating). Was 200 (FTMO). 0=off.
 
 input group "── Profit protection: 2R Free Roll (backtest-validated 2026-05-22) ──"
 input bool   InpEnableBreakeven = true;  // VALIDATED for NSND: +$43/12d (+$518 vs +$475 baseline), WR 31%->53%, PF 3.13->4.13, holds OOS (+$311->+$330), n=93. Moves SL to breakeven at +InpBreakevenR. Applies to already-open trades on reattach.
