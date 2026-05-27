@@ -288,12 +288,20 @@ function drawSpark(eq){
   const min=Math.min(0,...eq),max=Math.max(0,...eq),rng=(max-min)||1;
   const W=300,H=70,pad=6;
   const pts=eq.map((v,i)=>[pad+i*(W-2*pad)/(eq.length-1),H-pad-(v-min)/rng*(H-2*pad)]);
-  const last=eq[eq.length-1],col=last>=0?'var(--green)':'var(--red)';
+  const G='var(--green)',R='var(--red)';
   const line=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
   const area=line+` L${pts[pts.length-1][0].toFixed(1)} ${H} L${pts[0][0].toFixed(1)} ${H} Z`;
+  // per-segment colour: green where the curve rises (recovering), red where it falls
+  let segs='';
+  for(let i=1;i<pts.length;i++){
+    const rising=eq[i]>=eq[i-1];
+    segs+=`<path d="M${pts[i-1][0].toFixed(1)} ${pts[i-1][1].toFixed(1)} L${pts[i][0].toFixed(1)} ${pts[i][1].toFixed(1)}" fill="none" stroke="${rising?G:R}" stroke-width="2" stroke-linecap="round"/>`;
+  }
+  // area fill follows the overall first→last direction (subtle backdrop)
+  const areaCol=eq[eq.length-1]>=eq[0]?G:R;
   svg.innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
-    <stop offset="0" stop-color="${col}" stop-opacity="0.35"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
-    <path d="${area}" fill="url(#g)"/><path d="${line}" fill="none" stroke="${col}" stroke-width="2"/>`;
+    <stop offset="0" stop-color="${areaCol}" stop-opacity="0.28"/><stop offset="1" stop-color="${areaCol}" stop-opacity="0"/></linearGradient></defs>
+    <path d="${area}" fill="url(#g)"/>${segs}`;
 }
 
 async function load(){
