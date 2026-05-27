@@ -236,3 +236,36 @@ it's a minor add-on, not a workhorse. No change needed.
 - S1 ✅ strong (OOS +$235, WF✓) · S3 ✅ solid (+$298, WF✓, SELL-heavy) · S4 ✅ small+robust (+$87, 6/7)
 - BtcS4b ⚠️ net-negative (−$56/51d, no edge — review) · NSND ⏸ disabled
 - ER filter ❌ rejected for all (hurts S1, overfit on S3)
+
+---
+
+## Cycle 9 — 2026-05-27 ~09:16 PKT
+
+**Health:** ✅ engines alive (1s), ticks live, market OPEN. NSND stale = expected. 0 open.
+Today recovered slightly to −$16.31, 12 trades, 75% WR (open from cycle 8 closed +$2).
+
+**Research — LIVE vs BACKTEST reconciliation (real fills).** Ran `s3_live_performance.py`
+(matches s3_decisions tickets → turtle_fills) then normalized P&L to uniform 0.01 lots:
+
+| Measure | Value |
+|---------|-------|
+| Live S3, 43 trades, 65.1% WR | — |
+| RAW net (as-traded, MIXED lots) | **−$27.32** |
+| NORMALIZED to 0.01 lots | **+$3.67** |
+
+By lot size (raw $): 0.09 lots → **−$99.5** (11 trades) · 0.03 → +$41.9 · 0.02 → +$20.9 ·
+0.04 → +$23.6 · 0.01 (recent) → −$15.9.
+
+**Verdict: KEY INSIGHT — the live loss was a POSITION-SIZING artifact, not a broken edge.**
+- The −$27 raw is dominated by 0.09-lot trades (9× the correct size for a $126 acct, FTMO-era
+  sizing from before the fix). At the now-deployed 0.01 lots, the SAME trades net **+$3.67**
+  (~breakeven). → The 0.01-lot correction we applied was exactly the right protective call;
+  it's the single biggest P&L-protection lever, bigger than any filter tested this session.
+- BUT: normalized live (~breakeven over 8 days) is still well BELOW the backtest's implied
+  ~+$15/day (cycle 7's +$298/19d). So the backtest>live gap is REAL — slippage/spread/execution
+  thin the edge to roughly flat live. Honest read: S3's live edge is marginal, not the rosy
+  backtest. Recent 0.01-lot days (05-26/27) are slightly negative — current variance, small n.
+
+**Implications for Zee (morning):** (1) confirms keeping lots at 0.01 (don't size up on backtest
+$). (2) The backtest overstates edge ~3-4×; the calibration pipeline should quantify this before
+trusting any "+$X/day" projection. No change made.
