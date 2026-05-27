@@ -90,3 +90,27 @@ old 0.06/0.09 lots so read RELATIVELY (vs-base column).
 with memory (feedback_validate_profitability_not_capture).
 
 Next cycle: switch angle to BTC (backtest_btc_friday.py) since gold filters are well-explored.
+
+---
+
+## Cycle 4 — 2026-05-27 ~06:46 PKT
+
+**Health:** ✅ engines alive (2s), ticks live, market OPEN. NSND stale = expected.
+1 open (S3 BUY −$8.53, near stop). **Today turned slightly red: −$14.66, 5 trades, 60% WR**
+(was +$2.24 last cycle) — normal live variance, no action (can't touch live trades at night).
+
+**Research:** BTC angle. Ran `backtest_btc_friday.py` (despite the name it sims a 10-day
+window 2026-05-15→05-24) on `btc_m1_recent.csv` (which actually spans 51 days, 04-04→05-24).
+BtcS4b v2.00 config (UHV≥$100, ATR(7) SL=2x/trail=2x/BE@1x), 0.01 lots:
+
+  10 days: n=15, WR 20.0%, avgW $0.35, avgL −$1.06, **TOTAL −$11.72**
+
+**Verdict: NEEDS MORE — mild concern flagged.** BtcS4b (deployed, magic 88010, weekend BTC)
+is net-negative over this recent 10-day window with poor R:R (avg loss 3× avg win). BUT:
+(a) small sample (15 trades), (b) the window includes weekdays — BtcS4b's intended use is
+WEEKEND-only (when gold's closed), so this isn't an apples-to-apples test of its real job,
+(c) only 10 of the 51 available days were used. Not a rejection yet — but the deployed EA
+showing red deserves a proper test. **No change made.**
+
+Next cycle: build/run a full-span (51-day) BTC backtest that ISOLATES weekend sessions
+(Fri post-gold-close → Sun), to judge BtcS4b on the job it's actually deployed for.
