@@ -101,17 +101,33 @@ function getMarketState() {
 }
 function isMaintenanceBreak() { return getMarketState() === 'maintenance'; }
 
-// Parse a broker-time string "YYYY.MM.DD HH:MM:SS" → ms. Broker = GMT+3; all such
-// strings share that offset so diffs between them are valid without conversion.
+// Parse a broker-time string "YYYY.MM.DD HH:MM:SS" → ms, interpreting the wall-clock
+// AS IF UTC. Diffs between two broker strings are valid regardless of the real offset.
 function parseBrokerTs(s) {
   const m = (s || '').match(/(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
   return m ? Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]) : null;
 }
-// Format broker-time string as a PKT 12-hour clock (broker GMT+3 → PKT GMT+5 = +2h).
+// Hours to add to a broker-time string to get PKT. AUTO-DETECTED each request from a
+// fresh EA heartbeat vs real UTC (the Exness server is empirically GMT+0, not the GMT+3
+// the old code assumed — so this was off by 3h). PKT = UTC+5 (no DST). Recomputed in the
+// handler via updatePktOffset(); default assumes broker=UTC.
+let _pktAddHrs = 5;
+function updatePktOffset(components) {
+  let freshBroker = 0;
+  for (const c of Object.values(components || {})) {
+    const ms = parseBrokerTs(c && c.t);
+    if (ms && ms > freshBroker) freshBroker = ms;
+  }
+  if (freshBroker > 0) {
+    const brokerAheadOfUtcHrs = Math.round((freshBroker - Date.now()) / 3600000);
+    _pktAddHrs = 5 - brokerAheadOfUtcHrs;   // PKT(UTC+5) = brokerWall − brokerOffset + 5
+  }
+}
+// Format a broker-time string as a PKT 12-hour clock using the detected offset.
 function brokerToPkt(s) {
   const ms = parseBrokerTs(s);
   if (!ms) return null;
-  const pk = new Date(ms + 2 * 3600 * 1000);
+  const pk = new Date(ms + _pktAddHrs * 3600 * 1000);
   const h = pk.getUTCHours(); const mn = pk.getUTCMinutes();
   const ampm = h >= 12 ? 'PM' : 'AM'; const h12 = ((h + 11) % 12) + 1;
   return `${h12}:${String(mn).padStart(2, '0')} ${ampm}`;
@@ -957,6 +973,7 @@ const server = http.createServer(async (req, res) => {
     const _pkStr = _day + ' ' +
       String(_pk.getUTCHours()).padStart(2, '0') + ':' +
       String(_pk.getUTCMinutes()).padStart(2, '0') + ' PKT';
+    updatePktOffset(components);   // auto-detect broker→PKT offset from a live heartbeat
     let market = {
       status: _ms === 'open' ? 'live' : _ms === 'maintenance' ? 'break' : 'closed',
       is_open: _ms === 'open',
@@ -1079,6 +1096,7 @@ const server = http.createServer(async (req, res) => {
       warnings, pnl, per_ea, recent, equity, whatif, market, components, pulse, restartable,
       account: { broker: ACCOUNT_BROKER, symbol: ACTIVE_SYMBOL },
       open_positions,
+      pkt_add_hrs: _pktAddHrs,   // hours to add to a broker-time string for PKT (auto-detected)
       mfe_curves: mfeCurves().curves,
       mfe_n: mfeCurves().counts,
       lifecycle,
