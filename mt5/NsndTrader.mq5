@@ -60,6 +60,7 @@ input double InpDailyLossHalt = 50.0;  // 2026-05-27 Shano $126: ~20% daily-loss
 input group "── Profit protection: 2R Free Roll (backtest-validated 2026-05-22) ──"
 input bool   InpEnableBreakeven = true;  // VALIDATED for NSND: +$43/12d (+$518 vs +$475 baseline), WR 31%->53%, PF 3.13->4.13, holds OOS (+$311->+$330), n=93. Moves SL to breakeven at +InpBreakevenR. Applies to already-open trades on reattach.
 input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
+input double InpBEArmUsd        = 1.5;   // 2026-05-27 GIVE-BACK KILLER: at +$this floating, SL->breakeven so a green trade cannot become a full loss. $-based (not R) to arm on M1 quick pops. Validated S3 +$3817 vs +$3697, lower DD. 0=off.
 input bool   InpEnablePartial   = false; // OFF for NSND: backtest showed partial scale-out DILUTES the edge (+$488 < +$518 BE-only) by capping NSND's big asymmetric runners. Enable only after re-testing.
 input double InpPartialR        = 1.5;   // R-multiple to bank the partial (if enabled).
 input double InpPartialFrac     = 0.5;   // fraction of volume to bank (rounded to lot step).
@@ -511,7 +512,7 @@ int MngIndex(ulong ticket) {
 //   SL to breakeven (entry ∓ buffer). Optional partial bank at +PartialR. Static
 //   TP is left untouched (validated: keeping TP beats trailing on NSND).
 void ManageOpenPositions() {
-   if (!InpEnableBreakeven && !InpEnablePartial) return;
+   if (!InpEnableBreakeven && !InpEnablePartial && InpBEArmUsd <= 0) return;
    double bid  = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask  = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
@@ -539,6 +540,14 @@ void ManageOpenPositions() {
                                             : entry - InpBEBufferPts, _Digits);
       // a move is protective if it pulls the stop toward/through breakeven
       bool can_raise = is_buy ? (cur_sl < be_sl) : (cur_sl == 0.0 || cur_sl > be_sl);
+      // GIVE-BACK KILLER ($-based breakeven): once +$InpBEArmUsd floating, lock breakeven.
+      // Catches M1 quick pops the TP never reaches (peaked +$1.7 then reversed = today's losses).
+      if (InpBEArmUsd > 0 && can_raise && (prof * vol * 100.0) >= InpBEArmUsd) {
+         if (g_trade.PositionModify(ticket, be_sl, cur_tp))
+            Log(StringFormat("[BE$] #%I64u SL->%.2f (+$%.2f locked)", ticket, be_sl, prof*vol*100.0));
+         continue;
+      }
+
 
       // 1. partial bank + breakeven at +PartialR (once)
       if (InpEnablePartial && !g_mng_partialed[mi] && prof >= InpPartialR * R) {
