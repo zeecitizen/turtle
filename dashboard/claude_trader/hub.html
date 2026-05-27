@@ -155,6 +155,7 @@
   .lt-secured .shield{font-size:20px;line-height:1}
   .lt-secured .msg{font-size:15px;font-weight:900;letter-spacing:-.2px;color:var(--green);text-transform:uppercase}
   .lt-secured .sub{font-size:11px;font-weight:600;color:var(--dim);margin-top:1px;text-transform:none;letter-spacing:0}
+  .lt-mfe-note{font-size:10px;color:var(--faint);margin:5px 0 2px;letter-spacing:.2px}
   /* SL ←→ TP gauge */
   .lt-track{position:relative;height:8px;border-radius:6px;margin:11px 0 4px;
     background:linear-gradient(90deg,rgba(255,90,106,.25),rgba(255,255,255,.06) 50%,rgba(43,213,118,.25))}
@@ -485,13 +486,18 @@ async function load(){
       const nd=(o.cur!=null&&span!==0)?clamp(prog(o.cur)):50;
       const entPct=(span!==0)?clamp(prog(o.entry)):50;
       const toTP=(o.tp!=null&&o.cur!=null)?(o.side==='BUY'?o.tp-o.cur:o.cur-o.tp):null;
-      // probability "book here" markers from this EA's MFE curve (% of trades that reached each level)
+      // "reached here" markers from REAL closed-trade peaks: P% of this EA's trades got to +$X
       const curve=(d.mfe_curves||{})[o.ea]||[];
+      const mfeN=(d.mfe_n||{})[o.ea]||0;
       let lastGp=-9;
-      const marks=curve.map(L=>{const price=o.side==='BUY'?o.entry+L.usd:o.entry-L.usd;return {pct:L.pct,gp:clamp(prog(price)),hit:nd>=clamp(prog(price))};})
+      const marks=curve.map(L=>{const price=o.side==='BUY'?o.entry+L.usd:o.entry-L.usd;return {pct:L.pct,usd:L.usd,gp:clamp(prog(price)),hit:nd>=clamp(prog(price))};})
         .filter(m=>m.gp>entPct+2 && m.gp<99)
         .filter(m=>{if(m.gp-lastGp<6)return false;lastGp=m.gp;return true;});  // de-clutter overlapping
-      const markHtml=marks.map(m=>`<div class="lt-mark ${m.hit?'hit':''}" style="left:${m.gp}%" onclick="bookTrade('${o.ea}',${m.pct})" title="${m.pct}% of ${o.ea} trades reached here — tap to book now"><div class="tick"></div><div class="pl">${m.pct}%</div></div>`).join('');
+      const markHtml=marks.map(m=>`<div class="lt-mark ${m.hit?'hit':''}" style="left:${m.gp}%" onclick="bookTrade('${o.ea}',${m.pct})" title="${m.pct}% of the last ${mfeN} ${eaName(o.ea)} trades reached +$${m.usd.toFixed(2)} — tap to book here"><div class="tick"></div><div class="pl">${m.pct}%</div></div>`).join('');
+      // caption: explain the markers (real data) or show the collecting progress
+      const mfeNote = curve.length
+        ? `<div class="lt-mfe-note">📊 markers = % of the last ${mfeN} real ${eaName(o.ea)} trades that reached each point</div>`
+        : (mfeN>0 ? `<div class="lt-mfe-note">📊 learning from live trades — ${mfeN}/8 logged before markers appear</div>` : '');
       // PROTECTED = the trailing profit-lock has armed (EA's `secured` flag at +$0.3 peak),
       // or — as a fallback — the SL has been pulled across entry. Once here, the trade is
       // trailing in profit and can no longer turn into a full loss.
@@ -511,6 +517,7 @@ async function load(){
           <div class="lt-needle" style="left:${nd}%"></div>
         </div>
         <div class="lt-scale"><span>SL ${o.sl!=null?o.sl:'—'}</span>${toTP!=null?'<span>'+toTP.toFixed(2)+' to TP</span>':'<span></span>'}<span>TP ${o.tp!=null?o.tp:'—'}</span></div>
+        ${mfeNote}
         <button class="lt-book ${pos?'show':''}" onclick="bookTrade('${o.ea}',null)">📕 Book now — close at ${money(o.pnl||0)}</button>
       </div>`;
     }).join('');

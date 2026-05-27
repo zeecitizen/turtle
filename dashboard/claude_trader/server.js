@@ -494,14 +494,41 @@ function readBody(req) { return new Promise((resolve) => { let b = ''; req.on('d
 // live status dots for the hawks). Refreshed at most every 15s — the CIM query
 // is heavy and /api/ea-status is polled every 5s.
 let _candleCache = { data: null, at: 0, tf: 0, n: 0 };  // /api/candles TTL cache
-// per-EA MFE "reach %" probability curves (from monitor/mfe_curves.json) for the gauge
-let _mfeCache = { at: 0, data: {} };
+// per-EA MFE "reach %" markers for the live slider — built from REAL closed-trade peaks
+// the EAs log to Common\Files\trade_peaks_<EA>.csv (one row per closed trade: time,side,
+// entry,peak$). For each EA we turn the peak distribution into "P% of trades reached +$X"
+// points: usd = the (100-P)th-from-bottom percentile, i.e. the level P% of trades got to.
+// Needs MIN real trades before showing (no backtest fallback — accumulated live data only).
+const MFE_MIN_TRADES = 8;
+let _mfeCache = { at: 0, data: { curves: {}, counts: {} } };
 function mfeCurves() {
-  if (Date.now() - _mfeCache.at < 60000) return _mfeCache.data;
-  let data = {};
-  try { data = JSON.parse(fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\mfe_curves.json', 'utf8')); } catch {}
-  _mfeCache = { at: Date.now(), data };
-  return data;
+  if (Date.now() - _mfeCache.at < 30000) return _mfeCache.data;
+  const dir = path.dirname(FILLS_CSV);
+  const curves = {}, counts = {};
+  for (const [tag, file] of [['S1','trade_peaks_S1.csv'], ['S3','trade_peaks_S3.csv'], ['NSND','trade_peaks_NSND.csv']]) {
+    let peaks = [];
+    try {
+      const txt = fs.readFileSync(path.join(dir, file), 'utf8');
+      for (const line of txt.split(/\r?\n/)) {
+        const c = line.split(',');
+        if (c.length >= 4) { const p = parseFloat(c[3]); if (!isNaN(p)) peaks.push(Math.max(0, p)); }
+      }
+    } catch {}
+    counts[tag] = peaks.length;
+    if (peaks.length >= MFE_MIN_TRADES) {
+      peaks.sort((a, b) => a - b);
+      const pts = []; const seen = {};
+      for (const P of [90, 75, 50, 25, 10]) {
+        const idx = Math.min(peaks.length - 1, Math.floor((1 - P / 100) * peaks.length));
+        const usd = Math.round(peaks[idx] * 100) / 100;
+        const k = usd.toFixed(2);
+        if (usd > 0.05 && !seen[k]) { seen[k] = 1; pts.push({ pct: P, usd }); }
+      }
+      if (pts.length) curves[tag] = pts;
+    }
+  }
+  _mfeCache = { at: Date.now(), data: { curves, counts } };
+  return _mfeCache.data;
 }
 let _pyScan = { t: 0, cmd: '' };
 function runningPython() {
@@ -1052,7 +1079,8 @@ const server = http.createServer(async (req, res) => {
       warnings, pnl, per_ea, recent, equity, whatif, market, components, pulse, restartable,
       account: { broker: ACCOUNT_BROKER, symbol: ACTIVE_SYMBOL },
       open_positions,
-      mfe_curves: mfeCurves(),
+      mfe_curves: mfeCurves().curves,
+      mfe_n: mfeCurves().counts,
       lifecycle,
       ea_status: (() => { const tfs = actualTfs(); return EA_MANIFEST.map(e => {
         const c = components[e.key] || {};
