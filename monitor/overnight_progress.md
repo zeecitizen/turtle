@@ -353,3 +353,26 @@ are ~breakeven (consistent with cycle 9's thin-edge live read). No change made.
 This closes the last open optimization thread from the session — every candidate change tested
 (ER filter, S3 side filter, BtcS4b) was either rejected or flagged; the validated live configs
 (S1/S3/S4 @0.01) stand unchanged, which is the correct outcome.
+
+---
+
+## Cycle 12 — 2026-05-27 ~10:48 PKT
+
+**Health:** ✅ engines alive (3s), ticks live, market OPEN. NSND stale = expected. 1 open.
+Today still −$16.31 (~2h no closes — quiet market).
+
+**Research:** Re-ran `verify_thorough.py` to close the loop on the WORKHORSE S1 (validated S3/S4
+via dedicated multi-split earlier; S1 only had v230's single split so far).
+
+- **S1 td24 trend threshold × 7 split points:** thr=**7.0 (deployed) beats $2 baseline in 7/7
+  splits**, highest total +$744.9, OOS +274.7..+509.9. thr=5 also 7/7 (lower total); thr=9
+  fragile (2/7). → **S1's deployed 7.0 is the robust optimum. Confirmed, no change.** ✅
+- **S3 2R-Free-Roll (deployed) vs plain SL/TP:** PLAIN +$503.5 vs 2R-ON +$466.2 (−$37), splits
+  4 PLAIN-better / 3 2R-better → a wash, slight lean to PLAIN. Reconfirms it's ~neutral.
+
+**Verdict: S1 deployed config VALIDATED 7/7 (robust optimum).** The workhorse is correctly tuned.
+S3's 2R-free-roll is marginally negative-to-neutral — a low-priority candidate to turn OFF for a
+tiny gain, but within noise (4/3) so NOT worth a recompile without more evidence. No change made.
+
+This completes multi-split validation of ALL THREE live engines: S1 ✅ 7/7, S3 ✅ (+$298, WF✓),
+S4 ✅ 6/7. The deployed gold portfolio is on robust, validated settings.
