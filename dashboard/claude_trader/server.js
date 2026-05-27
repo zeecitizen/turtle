@@ -494,6 +494,15 @@ function readBody(req) { return new Promise((resolve) => { let b = ''; req.on('d
 // live status dots for the hawks). Refreshed at most every 15s — the CIM query
 // is heavy and /api/ea-status is polled every 5s.
 let _candleCache = { data: null, at: 0, tf: 0, n: 0 };  // /api/candles TTL cache
+// per-EA MFE "reach %" probability curves (from monitor/mfe_curves.json) for the gauge
+let _mfeCache = { at: 0, data: {} };
+function mfeCurves() {
+  if (Date.now() - _mfeCache.at < 60000) return _mfeCache.data;
+  let data = {};
+  try { data = JSON.parse(fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\mfe_curves.json', 'utf8')); } catch {}
+  _mfeCache = { at: Date.now(), data };
+  return data;
+}
 let _pyScan = { t: 0, cmd: '' };
 function runningPython() {
   if (Date.now() - _pyScan.t < 15000 && _pyScan.cmd) return _pyScan.cmd;
@@ -1031,6 +1040,7 @@ const server = http.createServer(async (req, res) => {
       warnings, pnl, per_ea, recent, equity, whatif, market, components, pulse, restartable,
       account: { broker: ACCOUNT_BROKER, symbol: ACTIVE_SYMBOL },
       open_positions,
+      mfe_curves: mfeCurves(),
       lifecycle,
       ea_status: (() => { const tfs = actualTfs(); return EA_MANIFEST.map(e => {
         const c = components[e.key] || {};
