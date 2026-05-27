@@ -134,6 +134,10 @@
   .tr .v{font-weight:700;font-variant-numeric:tabular-nums}
   .tr .v.pos{color:var(--green)} .tr .v.neg{color:var(--red)}
   .feed .empty{padding:22px;text-align:center;color:var(--faint);font-size:13px}
+  .feed .story{padding:11px 15px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.55;color:var(--dim)}
+  .feed .story:last-child{border-bottom:none}
+  .feed .story b{color:var(--txt);font-weight:600}
+  .feed .story .pos{color:var(--green)} .feed .story .neg{color:var(--red)}
   /* what-if */
   .whatif{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:16px;padding:16px 18px}
   .wf-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
@@ -469,13 +473,22 @@ async function load(){
     rows+=`<div class="wf-note">Scaled per-fill by (target lot ÷ its actual lot). Same trades, bigger size — wins AND losses scale together.</div>`;
     wf.innerHTML=rows;
   }
-  // trade feed
+  // trade feed — natural-language story per trade
   const f=$('feed'), rec=d.recent||[];
+  const COLR={S1:'var(--blue)',S3:'var(--amber)',S4:'var(--green)',NSND:'var(--purple)',Human:'var(--dim)'};
+  const toPkt12=hms=>{ const m=(hms||'').match(/(\d{2}):(\d{2})/); if(!m)return hms||''; let h=(+m[1]+2)%24; const ap=h>=12?'PM':'AM'; return `${((h+11)%12)+1}:${m[2]} ${ap}`; };
   if(!rec.length){f.innerHTML='<div class="empty">No trades yet today</div>';}
-  else{f.innerHTML=rec.map(t=>`<div class="tr"><span class="t">${t.time}</span>
-    <span class="badge ${t.ea.replace('?','')}">${eaName(t.ea.replace('?',''))}</span>
-    <span class="sd">${t.side} ${t.lot?'· '+t.lot+' lot':''} ${t.exit?'· '+t.exit:''}</span>
-    <span style="text-align:right"><span class="v ${t.gross>=0?'pos':'neg'}">${money(t.gross)}</span><span style="display:block;font-size:10px;color:var(--faint);font-weight:400">net ${money(t.pnl)}</span></span></div>`).join('');}
+  else{f.innerHTML=rec.map(t=>{
+    const code=t.ea.replace('?','');
+    const who=code==='Human'?'a <b>manual</b> trade':`the <b style="color:${COLR[code]||'var(--txt)'}">${eaName(code)}</b> engine`;
+    const verb=t.side==='BUY'?'bought':'sold';
+    const outcome=t.exit==='TP'?'hitting take-profit':t.exit==='SL'?'hitting stop-loss':'on close';
+    const win=t.pnl>=0;
+    const result=`<b class="${win?'pos':'neg'}">${win?'earned':'lost'} ${money(t.pnl)}</b>`;
+    const fee=Math.round((t.gross-t.pnl)*100)/100;   // gross minus net = commission+swap cost
+    const feeTxt=Math.abs(fee)<0.005?'No commission.':`$${Math.abs(fee).toFixed(2)} in commission.`;
+    return `<div class="story">At <b>${toPkt12(t.time)} PKT</b>, ${who} ${verb} <b>${t.lot} lot</b> of gold (XAUUSD) and ${result} (${outcome}). ${feeTxt}</div>`;
+  }).join('');}
 }
 load(); setInterval(load,5000);
 
