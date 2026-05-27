@@ -60,7 +60,7 @@ input double InpDailyLossHalt = 50.0;  // 2026-05-27 Shano $126: ~20% daily-loss
 input group "── Profit protection: 2R Free Roll (backtest-validated 2026-05-22) ──"
 input bool   InpEnableBreakeven = true;  // VALIDATED for NSND: +$43/12d (+$518 vs +$475 baseline), WR 31%->53%, PF 3.13->4.13, holds OOS (+$311->+$330), n=93. Moves SL to breakeven at +InpBreakevenR. Applies to already-open trades on reattach.
 input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
-input double InpBEArmUsd        = 1.5;   // 2026-05-27 GIVE-BACK KILLER: at +$this floating, SL->breakeven so a green trade cannot become a full loss. $-based (not R) to arm on M1 quick pops. Validated S3 +$3817 vs +$3697, lower DD. 0=off.
+input double InpBEArmUsd        = 1.0;   // 2026-05-27 GIVE-BACK KILLER: at +$this floating, SL->breakeven so a green trade cannot become a full loss. nsnd_be_test: INERT for NSND (tiny SL resolves fast; identical +$814/DD89 at every arm level) — set $1.0 for consistency with S1/S3, harmless. 0=off.
 input bool   InpEnablePartial   = false; // OFF for NSND: backtest showed partial scale-out DILUTES the edge (+$488 < +$518 BE-only) by capping NSND's big asymmetric runners. Enable only after re-testing.
 input double InpPartialR        = 1.5;   // R-multiple to bank the partial (if enabled).
 input double InpPartialFrac     = 0.5;   // fraction of volume to bank (rounded to lot step).

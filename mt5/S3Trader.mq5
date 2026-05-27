@@ -65,7 +65,7 @@ input double InpDailyLossHalt = 50.0;   // 2026-05-27 Shano $126 acct: ~20% dail
 input group "── Profit protection: 2R Free Roll (backtest-validated 2026-05-22) ──"
 input bool   InpEnableBreakeven = true;  // move SL to breakeven once +InpBreakevenR reached (caps the 'give back to zero' risk). On reattach, applies to ALREADY-OPEN trades too.
 input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
-input double InpBEArmUsd        = 1.5;   // 2026-05-27 GIVE-BACK KILLER: at +$this floating, SL->breakeven so a green trade cannot become a full loss. $-based (not R) to arm on M1 quick pops. Validated S3 +$3817 vs +$3697, lower DD. 0=off.
+input double InpBEArmUsd        = 1.0;   // 2026-05-27 GIVE-BACK KILLER: at +$this floating, SL->breakeven so a green trade cannot become a full loss. $-based (not R) to arm on M1 quick pops. s3_be_test: $1.0=+$3810/DD190 ≈ $1.5=+$3817/DD196 (diff=noise, $1.0 lower DD) — lowered to $1 (more reachable; all 3 EAs share one threshold). 0=off.
 input bool   InpEnablePartial   = true;  // bank InpPartialFrac of the position at +InpPartialR, then BE the rest (Income tranche). NOTE: on reattach, any open trade already past +1.5R is partialed+BE'd immediately.
 input double InpPartialR        = 1.5;   // R-multiple to bank the partial.
 input double InpPartialFrac     = 0.5;   // fraction of position volume to bank (rounded to lot step).
