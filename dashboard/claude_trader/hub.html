@@ -445,13 +445,13 @@ async function load(){
     opTot.textContent='· '+allOpen.length+' open · floating '+money(flt);
     opEl.innerHTML=allOpen.map(o=>{
       const pos=(o.pnl||0)>=0;
-      // gauge: place the live-price needle between SL (0%) and TP (100%) along entry→target
-      let nd=50;
-      if(o.sl!=null&&o.tp!=null&&o.cur!=null){
-        const lo=Math.min(o.sl,o.tp), hi=Math.max(o.sl,o.tp);
-        if(hi>lo) nd=Math.max(2,Math.min(98,((o.cur-lo)/(hi-lo))*100));
-      }
-      const entPct=(o.sl!=null&&o.tp!=null)?(()=>{const lo=Math.min(o.sl,o.tp),hi=Math.max(o.sl,o.tp);return hi>lo?Math.max(2,Math.min(98,((o.entry-lo)/(hi-lo))*100)):50;})():50;
+      // gauge: ALWAYS SL=left(0%), TP=right(100%); needle moves RIGHT as profit grows
+      // (direction-aware: works for both BUY and SELL). progress = SL→price as fraction of SL→TP.
+      const span=(o.sl!=null&&o.tp!=null)?(o.side==='BUY'?(o.tp-o.sl):(o.sl-o.tp)):0;
+      const prog=v=>span!==0?(o.side==='BUY'?(v-o.sl):(o.sl-v))/span:0.5;
+      const clamp=p=>Math.max(2,Math.min(98,p*100));
+      const nd=(o.cur!=null&&span!==0)?clamp(prog(o.cur)):50;
+      const entPct=(span!==0)?clamp(prog(o.entry)):50;
       const toTP=(o.tp!=null&&o.cur!=null)?(o.side==='BUY'?o.tp-o.cur:o.cur-o.tp):null;
       return `<div class="lt ${pos?'glow-pos':'glow-neg'}">
         <div class="lt-top">
