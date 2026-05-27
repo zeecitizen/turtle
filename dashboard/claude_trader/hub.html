@@ -50,6 +50,9 @@
   .hero .meta{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap}
   .hero .meta .m{font-size:13px;color:var(--dim)} .hero .meta .m b{color:var(--txt);font-size:15px}
   .spark{position:absolute;right:0;bottom:0;width:55%;height:70px;opacity:.9}
+  /* live candle chart */
+  .chartbox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 6px}
+  .chartbox svg{width:100%;height:200px;display:block}
   /* world session clocks */
   .clocks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
   @media(max-width:560px){.clocks{grid-template-columns:repeat(2,1fr)}}
@@ -222,6 +225,10 @@
 
   <!-- profit pulse + one-tap grab (shows only when floating profit feels big) -->
   <div id="pulseCard" style="display:none;background:#11161f;border:1px solid #243042;border-radius:14px;padding:14px;margin:12px 0"></div>
+
+  <!-- live candle chart: real ticks aggregated to M5 candles -->
+  <div class="st">Live Chart <span id="chartMeta" style="font-weight:400;font-size:11px;color:#6b7280"></span></div>
+  <div class="chartbox"><svg id="candles" viewBox="0 0 700 220" preserveAspectRatio="xMidYMid meet"></svg></div>
 
   <!-- per-EA cards -->
   <div class="st">Engines</div>
@@ -543,6 +550,37 @@ function renderClocks(){
   }).join('');
 }
 renderClocks(); setInterval(renderClocks,1000);
+
+// ── Live candle chart: real ticks → M5 candles ──
+function drawCandles(d){
+  const svg=$('candles'); if(!svg) return;
+  const cs=(d&&d.candles)||[];
+  if(cs.length<2){svg.innerHTML='<text x="350" y="110" text-anchor="middle" fill="#5a6478" font-size="13">waiting for ticks…</text>';return;}
+  const W=700,H=220,padX=10,padT=12,padB=18;
+  const hi=Math.max(...cs.map(c=>c.h)), lo=Math.min(...cs.map(c=>c.l)), rng=(hi-lo)||1;
+  const step=(W-2*padX)/cs.length, bw=Math.max(2,step*0.62);
+  const y=p=>padT+(hi-p)/rng*(H-padT-padB);
+  let out='';
+  cs.forEach((c,i)=>{
+    const cx=padX+(i+0.5)*step, up=c.c>=c.o, col=up?'#2bd576':'#ff5a6a';
+    const yh=y(c.h),yl=y(c.l),top=Math.min(y(c.o),y(c.c)),bh=Math.max(1,Math.abs(y(c.c)-y(c.o)));
+    out+=`<line x1="${cx.toFixed(1)}" y1="${yh.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${yl.toFixed(1)}" stroke="${col}" stroke-width="1.2"/>`;
+    out+=`<rect x="${(cx-bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}" rx="1"/>`;
+  });
+  const last=cs[cs.length-1].c, yL=y(last);
+  out+=`<line x1="${padX}" y1="${yL.toFixed(1)}" x2="${W-padX}" y2="${yL.toFixed(1)}" stroke="rgba(255,255,255,.16)" stroke-dasharray="3 3"/>`;
+  out+=`<text x="${(W-padX).toFixed(1)}" y="${(yL-3).toFixed(1)}" text-anchor="end" font-size="11" fill="#9aa4b2">${last.toFixed(2)}</text>`;
+  svg.innerHTML=out;
+}
+function loadCandles(){
+  fetch('/api/candles?n=28',{cache:'no-store'}).then(r=>r.json()).then(d=>{
+    drawCandles(d);
+    const cs=d.candles||[];
+    if(cs.length){ const pk=t=>{const dt=new Date((t+2*3600)*1000);return ('0'+dt.getUTCHours()).slice(-2)+':'+('0'+dt.getUTCMinutes()).slice(-2);};
+      $('chartMeta').textContent='· '+(d.symbol||'')+' · M5 · '+pk(cs[0].t)+'–'+pk(cs[cs.length-1].t)+' PKT'; }
+  }).catch(()=>{});
+}
+loadCandles(); setInterval(loadCandles,5000);
 
 // experiments count
 fetch('/api/shadow/list').then(r=>r.json()).then(d=>{

@@ -459,6 +459,7 @@ function readBody(req) { return new Promise((resolve) => { let b = ''; req.on('d
 // Cached scan of running python.exe command lines (so the dashboard can show
 // live status dots for the hawks). Refreshed at most every 15s — the CIM query
 // is heavy and /api/ea-status is polled every 5s.
+let _candleCache = { data: null, at: 0, tf: 0, n: 0 };  // /api/candles TTL cache
 let _pyScan = { t: 0, cmd: '' };
 function runningPython() {
   if (Date.now() - _pyScan.t < 15000 && _pyScan.cmd) return _pyScan.cmd;
@@ -1004,6 +1005,41 @@ const server = http.createServer(async (req, res) => {
     };
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(payload));
+    return;
+  }
+
+  // LIVE CANDLES — aggregate the live tick CSV into recent M5 bars for the dashboard chart.
+  // Cached ~8s (the file grows every tick; re-aggregating 80k+ rows each 5s poll is wasteful).
+  if (url === '/api/candles' || url.startsWith('/api/candles?')) {
+    const tf = parseInt(query.get('tf')) || 300;   // seconds per candle (M5 default)
+    const N  = parseInt(query.get('n'))  || 26;     // how many recent candles
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    try {
+      if (_candleCache.data && Date.now() - _candleCache.at < 8000 && _candleCache.tf === tf && _candleCache.n === N) {
+        res.end(JSON.stringify(_candleCache.data)); return;
+      }
+      const dir = path.dirname(FILLS_CSV);
+      const files = fs.readdirSync(dir).filter(f => /^shano_ticks_.*\.csv$/.test(f))
+        .map(f => ({ f, m: fs.statSync(path.join(dir, f)).mtimeMs })).sort((a, b) => b.m - a.m);
+      if (!files.length) { res.end(JSON.stringify({ candles: [], tf, symbol: ACTIVE_SYMBOL })); return; }
+      const lines = fs.readFileSync(path.join(dir, files[0].f), 'utf8').split(/\r?\n/);
+      const buckets = new Map();
+      for (let i = 1; i < lines.length; i++) {
+        const p = lines[i].split(',');               // ts_broker,ms,bid,ask,last,volume
+        if (p.length < 3) continue;
+        const ms = parseBrokerTs(p[0]); if (ms == null) continue;
+        const px = parseFloat(p[2]); if (!(px > 0)) continue;   // bid
+        const b = Math.floor(ms / 1000 / tf) * tf;
+        const c = buckets.get(b);
+        if (!c) buckets.set(b, { t: b, o: px, h: px, l: px, c: px });
+        else { if (px > c.h) c.h = px; if (px < c.l) c.l = px; c.c = px; }
+      }
+      const all = [...buckets.values()].sort((a, b) => a.t - b.t).slice(-N)
+        .map(c => ({ t: c.t, o: +c.o.toFixed(3), h: +c.h.toFixed(3), l: +c.l.toFixed(3), c: +c.c.toFixed(3) }));
+      const data = { candles: all, tf, symbol: ACTIVE_SYMBOL };
+      _candleCache = { data, at: Date.now(), tf, n: N };
+      res.end(JSON.stringify(data));
+    } catch (e) { res.end(JSON.stringify({ candles: [], error: e.message })); }
     return;
   }
 
