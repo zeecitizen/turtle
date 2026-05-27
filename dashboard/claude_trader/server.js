@@ -868,6 +868,34 @@ const server = http.createServer(async (req, res) => {
       }
     } catch {}
 
+    // ── Live open positions (ALL magics, incl. manual "Human") ──
+    // Primary source: TurtleTradeLogger's open_positions.json snapshot — it sees
+    // every position regardless of magic, so manual trades show up too. Falls back
+    // to the per-EA heartbeats (EA trades only) if the snapshot is stale/missing.
+    let open_positions = [];
+    let snapFresh = false;
+    try {
+      const posFile = path.join(path.dirname(FILLS_CSV), 'open_positions.json');
+      const ageMs = Date.now() - fs.statSync(posFile).mtimeMs;
+      if (ageMs < 30000) {
+        const parsed = JSON.parse(fs.readFileSync(posFile, 'utf8').replace(/^﻿/, ''));
+        open_positions = (parsed.positions || [])
+          .filter(p => p.symbol === ACTIVE_SYMBOL)
+          .map(p => ({ ea: p.ea || 'Human', side: p.side, lots: p.lots, entry: p.entry,
+                       cur: p.cur, pnl: p.pnl, sl: p.sl || null, tp: p.tp || null }));
+        snapFresh = true;
+      }
+    } catch {}
+    if (!snapFresh) {
+      const EA_OF = { s3_trader: 'S3', s1_trader: 'S1', s4_trader: 'S4', nsnd_trader: 'NSND' };
+      for (const k of Object.keys(EA_OF)) {
+        const c = components[k];
+        (c && Array.isArray(c.open) ? c.open : []).forEach(o => open_positions.push({
+          ea: EA_OF[k], side: o.side, lots: o.lots, entry: o.entry,
+          cur: o.cur, pnl: o.pnl, sl: o.sl || null, tp: o.tp || null }));
+      }
+    }
+
     // ── Profit pulse: how big does the open floating profit "feel"? ──
     let pulse = { floating_total: 0, n_open: 0, bigness: 0 };
     for (const k of ['s3_trader', 's1_trader', 'nsnd_trader']) {
@@ -902,6 +930,7 @@ const server = http.createServer(async (req, res) => {
       headline: all_systems_go ? 'All Systems Online' : `Something is wrong — ${warnings.length} issue${warnings.length === 1 ? '' : 's'}`,
       warnings, pnl, per_ea, recent, equity, whatif, market, components, pulse, restartable,
       account: { broker: ACCOUNT_BROKER, symbol: ACTIVE_SYMBOL },
+      open_positions,
     };
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(payload));
