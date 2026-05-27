@@ -19,9 +19,9 @@ circuit breaker is verified wired (cycle 5), and all live fills are now uniforml
 1. **🟢 The 0.01-lot fix was the biggest win.** Live S3 looked like −$27, but that was almost
    entirely 11 oversized 0.09-lot trades (−$99) from before the fix. Normalized to 0.01 it's
    +$3.67 (~breakeven). The sizing correction protected the account more than any filter could. (cycle 9)
-2. **⚠️ BtcS4b has no edge + no weekend gate.** Modeled over 51 days it's −$56 (21% WR), trades
-   weekdays despite its "weekend" label, and its weekend niche is ~empty (9 trades). Recommend:
-   check if it's attached live; if so, consider pausing it. (cycle 6)
+2. **✅ BtcS4b — flagged then cleared.** Modeled over 51 days it's −$56 (21% WR), no edge, no
+   weekend gate. BUT its heartbeat is frozen since 2026-05-24 → **it is NOT attached live** (nor
+   is BtcS3M30). Zero live risk. Just don't reattach BTC EAs until one shows a real edge. (cycles 6, 13)
 3. **📉 Backtests overstate edge ~3-4×.** S1/S3/S4 are all walk-forward-positive in backtest
    (combined +$749/18d idealized), but live is ~breakeven-to-thin. Real edge is small; don't size
    up on backtest $. The new 14-col magic/ea labels now give clean per-EA live tracking to settle
@@ -376,3 +376,25 @@ tiny gain, but within noise (4/3) so NOT worth a recompile without more evidence
 
 This completes multi-split validation of ALL THREE live engines: S1 ✅ 7/7, S3 ✅ (+$298, WF✓),
 S4 ✅ 6/7. The deployed gold portfolio is on robust, validated settings.
+
+---
+
+## Cycle 13 — 2026-05-27 ~11:16 PKT
+
+**Health:** ✅ S1/S3/S4 alive (2s), ticks live, market OPEN. NSND stale = expected. 1 open.
+Today still −$16.31 (~3.5h no closes — very quiet, gold flat ~4520).
+
+**Research — resolved the night's one open flag: is BtcS4b attached live?** Checked the BTC EA
+heartbeats:
+- `btc_s4b_trader_state.json`: last write **2026-05-24 12:54** (frozen ~3 days), entries_today=0,
+  last_signal=never. → **BtcS4b is NOT running live.**
+- `btc_s3_m30_state.json`: last write 2026-05-16 (~11 days stale). → BtcS3M30 also NOT running.
+
+**Verdict: cycle-6 BtcS4b concern is MOOT — zero live risk.** The net-negative BtcS4b isn't
+attached anywhere, so its bad profile costs nothing right now. Recommendation downgrades from
+"consider pausing" to simply "don't reattach it until it shows a real edge." The LIVE trading
+system is purely **S1/S3/S4 on XAUUSDm** — all three multi-split validated this session.
+
+This resolves every open item. Net session outcome: system healthy, all live configs validated &
+unchanged, the one risk (BtcS4b) confirmed dormant, and the 0.01-lot sizing fix confirmed as the
+key protective lever.
