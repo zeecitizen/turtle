@@ -28,15 +28,17 @@
 //| Magic 88006 (distinct from S3=88003 / BTC=88005).                |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — NS/ND VSA"
-#property version   "1.20"
+#property version   "1.30"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
-// ║  ⚠️  WARNING: NSND's backtest model does NOT match the live EA.  ║
-// ║  The backtest generated 1800+ signals; live EA fired only 18.   ║
-// ║  Live result: -$6.15 after 18 trades (16.7% WR). DO NOT TRUST  ║
-// ║  backtest results for this EA without rebuilding the detector.  ║
-// ║  Currently DISABLED on all accounts (2026-05-27).               ║
+// ║  2026-05-27 RE-VALIDATION (nsnd_native_validation.py): the old     ║
+// ║  "backtest≠live" was a DATA bug — the backtest read reverse-       ║
+// ║  engineered M1 volume; the live EA reads NATIVE iVolume (differ on ║
+// ║  99.9% of bars). Re-run on NATIVE bars (latest_for_claude.csv):    ║
+// ║  122 trades, 67.2% WR, +$8079/18d @0.10, walk-forward OOS +$3532.  ║
+// ║  The edge is REAL on native volume. Revive at 0.01 lots and        ║
+// ║  CONFIRM the live win-rate holds before trusting full size.        ║
 // ╚══════════════════════════════════════════════════════════════════╝
 
 // v1.10 (2026-05-22): "2R Free Roll" breakeven added (ManageOpenPositions, tick-
@@ -51,9 +53,9 @@
 
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
-input double InpLots          = 0.03;  // 2026-05-21: FTMO $10k challenge, 3x EV-weighted (S3 0.09/S1 0.06/NSND 0.03). NSND underweighted (most volatile). Was 0.01 on the $500 Blueberry acct.
+input double InpLots          = 0.01;  // 2026-05-27: Shano Exness $126 account ONLY. Was 0.03 (FTMO 3x) = ~$36 risk/trade = account-ending. 0.01.
 input int    InpMagicNumber   = 88006;
-input double InpDailyLossHalt = 200.0; // FTMO: halt NEW entries if account EQUITY down this much today (incl floating). Account-wide -$300 daily-limit protection. 0=off.
+input double InpDailyLossHalt = 25.0;  // 2026-05-27 Shano $126: ~20% daily-loss cap (incl floating). Was 200 (FTMO). 0=off.
 
 input group "── Profit protection: 2R Free Roll (backtest-validated 2026-05-22) ──"
 input bool   InpEnableBreakeven = true;  // VALIDATED for NSND: +$43/12d (+$518 vs +$475 baseline), WR 31%->53%, PF 3.13->4.13, holds OOS (+$311->+$330), n=93. Moves SL to breakeven at +InpBreakevenR. Applies to already-open trades on reattach.
