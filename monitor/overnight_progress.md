@@ -141,3 +141,39 @@ Adding `day_pnl` + `halted` to each EA's state write would let the dashboard sur
 breaker visually. Small, safe, but requires a reattach — leaving it for Zee to approve.
 
 Next cycle: return to the full-span weekend-isolated BTC test (deferred from cycle 4).
+
+---
+
+## Cycle 6 — 2026-05-27 ~07:46 PKT
+
+**Health:** ✅ engines alive (3s), ticks live, market OPEN. NSND stale = expected. 0 open.
+Today recovered to −$18.31, 11 trades, 73% WR (was −$23.52) — EAs clawed back, below the halt.
+
+**Research:** Built `backtest_btc_weekend_fullspan.py` (reuses BtcS4b's exact signal +
+ATR-trail logic) and ran it over the FULL 51-day btc_m1_recent span, isolating weekend vs
+weekday. Modeled BtcS4b v2.00 @0.01 lots:
+
+| Segment | n | WR | avgW | avgL | TOTAL |
+|---------|---|----|------|------|-------|
+| ALL | 139 | 20.9% | $1.05 | −$0.79 | **−$56.58** |
+| WEEKEND (Sat+Sun) | 9 | 11.1% | $0.12 | −$0.38 | −$2.90 |
+| WEEKDAY | 130 | 21.5% | $1.08 | −$0.82 | −$53.68 |
+
+Weekend walk-forward: only 9 weekend trades / 51 days — too thin to prove anything.
+
+**Source check:** `BtcS4bTrader.mq5` has **NO weekend/session gate** (line 81 `IsNewDay` is just
+a daily-counter reset; no day-of-week filter anywhere). So despite the "weekend trading" label,
+the live EA fires any day its UHV+trend+ATR setup triggers.
+
+**Verdict: ROBUST CONCERN — recommend review (no change made).** Confirms cycle 4 across the full
+span: modeled BtcS4b is net-negative (−$56.58 / 51 days, 21% WR, avgW only 1.3× avgL — the ATR
+trail isn't capturing big trends). The intended weekend niche barely produces signals (9 trades)
+and is ~flat. Two honest caveats: (1) this is my reconstruction of the config, not the deployed
+binary; (2) unknown whether BtcS4bTrader is currently ATTACHED on a live BTC chart — the dashboard
+doesn't track it, so live risk may be zero.
+
+**Recommendation for Zee (morning):** confirm whether BtcS4b is attached anywhere live. If yes,
+strongly consider pausing it — it has no edge in this data and (lacking a session gate) bleeds on
+weekdays. A weekend-only gate won't rescue it: the weekend sample is too thin and also negative.
+
+Committed the new full-span script for reuse.
