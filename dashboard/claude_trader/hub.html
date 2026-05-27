@@ -383,8 +383,10 @@ function drawSpark(eq){
     <path d="${area}" fill="url(#g)"/>${segs}`;
 }
 
+let PKT_ADD=5;   // hours to add to a broker-time string for PKT. Server auto-detects (Exness=GMT+0 → +5). Updated each load.
 async function load(){
   let d; try{ d=await (await fetch('/api/ea-status',{cache:'no-store'})).json(); }catch(e){return;}
+  if(typeof d.pkt_add_hrs==='number') PKT_ADD=d.pkt_add_hrs;
   // market
   const mkt=$('mkt'),mt=d.market||{}; mkt.dataset.s=mt.status||'unknown';
   const mktLbl={live:'Market OPEN',break:'Daily Break',closed:'Market Closed',unknown:'…'}[mt.status||'unknown'];
@@ -569,7 +571,7 @@ async function load(){
   // trade feed — natural-language story per trade
   const f=$('feed'), rec=d.recent||[];
   const COLR={S1:'var(--blue)',S3:'var(--amber)',S4:'var(--green)',NSND:'var(--purple)',Human:'var(--dim)'};
-  const toPkt12=hms=>{ const m=(hms||'').match(/(\d{2}):(\d{2})/); if(!m)return hms||''; let h=(+m[1]+2)%24; const ap=h>=12?'PM':'AM'; return `${((h+11)%12)+1}:${m[2]} ${ap}`; };
+  const toPkt12=hms=>{ const m=(hms||'').match(/(\d{2}):(\d{2})/); if(!m)return hms||''; let h=(+m[1]+PKT_ADD)%24; const ap=h>=12?'PM':'AM'; return `${((h+11)%12)+1}:${m[2]} ${ap}`; };
   if(!rec.length){f.innerHTML='<div class="empty">No trades yet today</div>';}
   else{f.innerHTML=rec.map(t=>{
     const code=t.ea.replace('?','');
@@ -722,7 +724,7 @@ function loadCandles(){
     if(cs.length) LAST_PRICE=cs[cs.length-1].c;   // live price → stale-level detection
     drawCandles(d);
     const mt=$('chartMeta');
-    if(mt&&cs.length){ const pk=t=>{const dt=new Date((t+2*3600)*1000);return ('0'+dt.getUTCHours()).slice(-2)+':'+('0'+dt.getUTCMinutes()).slice(-2);};
+    if(mt&&cs.length){ const pk=t=>{const dt=new Date((t+PKT_ADD*3600)*1000);return ('0'+dt.getUTCHours()).slice(-2)+':'+('0'+dt.getUTCMinutes()).slice(-2);};
       mt.textContent='· '+(d.symbol||'')+' · '+(d.tf===60?'M1':d.tf===300?'M5':(d.tf/60)+'m')+' · '+pk(cs[0].t)+'–'+pk(cs[cs.length-1].t)+' PKT'; }
   }).catch(()=>{});
 }
