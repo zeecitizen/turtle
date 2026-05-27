@@ -17,13 +17,15 @@
 //|  Claude reads this file every 5 minutes for actual P&L.         |
 //+------------------------------------------------------------------+
 #property copyright "Turtle Trader by M. Zeeshan"
-#property version   "1.01"
+#property version   "1.02"
 #property description "Logs every closed trade fill to Common/Files/turtle_fills.csv"
 #property strict
 
 //--- inputs
 input string InpFileName    = "turtle_fills.csv";   // Output filename (in Common\Files)
 input bool   InpLogOpens    = false;                // Also log trade opens (DEAL_ENTRY_IN)
+input string InpPosFile     = "open_positions.json";// Live open-positions snapshot (in Common\Files)
+input int    InpPosRefresh  = 2;                    // How often to refresh that snapshot (seconds)
 
 //--- CSV header
 const string HEADER = "broker_time,deal_ticket,position_ticket,symbol,direction,volume,close_price,profit,commission,swap,net_pnl,comment,magic,ea\n";
@@ -62,8 +64,57 @@ int OnInit()
                     InpFileName, GetLastError());
     }
 
-    PrintFormat("TurtleTradeLogger v1.01 ready → Common\\Files\\%s", InpFileName);
+    // Timer drives the live open-positions snapshot (covers EVERY magic incl.
+    // manual/Human trades — the per-EA heartbeats only see their own magic).
+    EventSetTimer(InpPosRefresh > 0 ? InpPosRefresh : 2);
+
+    PrintFormat("TurtleTradeLogger v1.02 ready → fills=%s, positions=%s every %ds",
+                InpFileName, InpPosFile, InpPosRefresh);
     return INIT_SUCCEEDED;
+}
+
+//+------------------------------------------------------------------+
+//| Timer — write ALL open positions (any magic) to a JSON snapshot  |
+//| so the dashboard's LIVE panel can show EA + manual trades alike. |
+//+------------------------------------------------------------------+
+void OnTimer()
+{
+    string arr = "[";
+    int n = 0;
+    for (int i = PositionsTotal() - 1; i >= 0; i--)
+    {
+        ulong tk = PositionGetTicket(i);
+        if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+
+        long   magic = PositionGetInteger(POSITION_MAGIC);
+        bool   buy   = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+        string sym   = PositionGetString(POSITION_SYMBOL);
+        double pnl   = PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP);
+
+        if (n > 0) arr += ",";
+        arr += StringFormat(
+            "{\"ticket\":%I64u,\"symbol\":\"%s\",\"side\":\"%s\",\"lots\":%.2f,\"entry\":%.5f,\"cur\":%.5f,\"pnl\":%.2f,\"sl\":%.5f,\"tp\":%.5f,\"magic\":%I64d,\"ea\":\"%s\"}",
+            tk, sym, buy ? "BUY" : "SELL",
+            PositionGetDouble(POSITION_VOLUME),
+            PositionGetDouble(POSITION_PRICE_OPEN),
+            PositionGetDouble(POSITION_PRICE_CURRENT),
+            pnl,
+            PositionGetDouble(POSITION_SL),
+            PositionGetDouble(POSITION_TP),
+            magic, EaNameForMagic(magic));
+        n++;
+    }
+    arr += "]";
+
+    string out = StringFormat("{\"ts\":\"%s\",\"positions\":%s}",
+                              TimeToString(TimeCurrent(), TIME_DATE|TIME_SECONDS), arr);
+
+    int h = FileOpen(InpPosFile, FILE_WRITE|FILE_TXT|FILE_COMMON|FILE_ANSI);
+    if (h != INVALID_HANDLE)
+    {
+        FileWriteString(h, out);
+        FileClose(h);
+    }
 }
 
 //+------------------------------------------------------------------+
@@ -71,6 +122,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+    EventKillTimer();
     PrintFormat("TurtleTradeLogger: stopped (reason=%d)", reason);
 }
 

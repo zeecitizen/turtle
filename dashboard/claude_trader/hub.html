@@ -285,8 +285,9 @@ async function load(){
   }).join('');
   // open positions — what the system is holding RIGHT NOW (any side, any P&L)
   const opEl=$('openPos'), opTot=$('openTot'), livePill=$('livePill');
-  let allOpen=[];
-  for (const [k,ck] of map){ const comp=c[ck]||{}; (comp.open||[]).forEach(o=>allOpen.push(Object.assign({ea:k},o))); }
+  // unified source: server merges ALL open positions (EA + manual "Human") from
+  // TurtleTradeLogger's snapshot, falling back to per-EA heartbeats if it's stale.
+  let allOpen=(d.open_positions||[]).slice();
   if(allOpen.length){
     livePill.classList.add('on');
     const flt=allOpen.reduce((s,o)=>s+(o.pnl||0),0);
