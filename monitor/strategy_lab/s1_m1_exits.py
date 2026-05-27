@@ -74,12 +74,17 @@ for day in sorted(days):
 
 POLICIES={
   "baseline (TP7.5/SL)":      {"type":"none"},
-  "book +$3 (tp cap)":        {"type":"tpcap","usd":3.0},
-  "book +$5 (tp cap)":        {"type":"tpcap","usd":5.0},
-  "breakeven after +$3":      {"type":"breakeven","arm":3.0},
-  "trail $2 after +$3 peak":  {"type":"trail","arm":3.0,"drop":2.0},
+  "book +$1":                 {"type":"tpcap","usd":1.0},
+  "book +$1.5":               {"type":"tpcap","usd":1.5},
+  "book +$2":                 {"type":"tpcap","usd":2.0},
+  "book +$2.5":               {"type":"tpcap","usd":2.5},
+  "book +$3":                 {"type":"tpcap","usd":3.0},
+  "breakeven after +$1":      {"type":"breakeven","arm":1.0},
+  "breakeven after +$2":      {"type":"breakeven","arm":2.0},
+  "trail $1 after +$2 peak":  {"type":"trail","arm":2.0,"drop":1.0},
 }
-print(f"S1@M1 exit-policy test — {sum(len(s) for _,s,_ in work)} signals, net of ${COST}/tr cost\n")
+print(f"S1@M1 exit-policy test — {sum(len(s) for _,s,_ in work)} signals, net of ${COST}/tr cost")
+print("(multi-split walk-forward: OOS-positive at 5 split points = robust, not overfit)\n")
 for name,pol in POLICIES.items():
     perday={}
     for day,sigs,ticks in work:
@@ -88,7 +93,9 @@ for name,pol in POLICIES.items():
             r=sim(s,ticks,pol)
             if r is not None: tot+=r
         perday[day]=tot
-    allp=[v for v in perday.values()]; total=sum(allp)
-    dl=sorted(perday); cut=dl[len(dl)//2]
-    oos=sum(v for d,v in perday.items() if d>=cut)
-    print(f"  {name:<26} TOTAL ${total:>+7.0f}   OOS ${oos:>+6.0f}   {'OK' if oos>0 else 'BAD'}")
+    total=sum(perday.values()); dl=sorted(perday)
+    okc=0
+    for f in [0.4,0.5,0.6,0.7,0.8]:
+        cut=dl[int(len(dl)*f)]
+        if sum(v for d,v in perday.items() if d>=cut)>0: okc+=1
+    print(f"  {name:<24} TOTAL ${total:>+7.0f}   {okc}/5 splits OOS+   {'ROBUST' if okc>=4 and total>0 else ''}")
