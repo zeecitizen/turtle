@@ -5,7 +5,7 @@ After a live day where 5/5 losers peaked green first (summed +$29) then bled to 
 full SL (-$45), added `InpBEArmUsd` — once a trade floats +$X, SL→entry+buffer so a
 green trade can no longer become a full loss. $-based (NOT R) because all 3 run M1
 now, where 1R is far wider than the scalp TP so the old R-based BE never armed.
-Levels: S1=$1.0, S3=$1.5, NSND=$1.5. Also S1 TP→$2 (s1_m1_exits: +$2 book beats +$3),
+Levels: all three arm at +$1.0 (lowered S3/NSND from $1.5 on 2026-05-27 — s3_be_test: $1.0 lower DD, nsnd_be_test: inert; one reachable threshold). Also S1 TP→$2 (s1_m1_exits: +$2 book beats +$3),
 and InpDailyLossHalt 25→50 on all (~20% of the $126 acct; halt_test showed tighter
 hurts EV). Validated native M1 + real ticks, multi-split (S3 BE@$1.5 = +$3817 vs
 +$3697 baseline, lower maxDD). Compiled 0 errors → all 4 terminals. **Reattach
@@ -116,7 +116,7 @@ Inputs (all EAs): `InpEnableBreakeven`, `InpBreakevenR`, `InpEnablePartial`,
 - **`InpMaxUpperWickFrac=0.35`** — reject if the green's upper wick > 35% of range (teacher
   "no rejection" rule). WR 63→69%, EV +19%.
 - SL = wicking-green.low − $2.00; TP = peak of last 10 M5 bars.
-- **TF=M1** (was M5). **`InpBEArmUsd=1.5`** give-back killer (see top of doc). Halt=$50.
+- **TF=M1** (was M5). **`InpBEArmUsd=1.0`** give-back killer (see top of doc). Halt=$50.
 
 ### S1Trader.mq5 (magic 88004) — UHV/Climactic-Action-Bar breakout = Lesson 2 / VSA Scenario 3
 - BUY+SELL. Highest-volume bar in retracement, sweep of its extreme, break of its other side.
@@ -131,7 +131,7 @@ Inputs (all EAs): `InpEnableBreakeven`, `InpBreakevenR`, `InpEnablePartial`,
 - **`InpUseH1Fvg=false`** → M15-only FVG. Walk-forward: WR 54→62%, train +$489→+$598,
   identical on test (every H1-FVG signal also had M15 FVG). Strictly ≥ old M15+H1.
 - SL tiny (past the NS/ND candle); TP $12. **TF=M1**, lots 0.01.
-- **`InpBEArmUsd=1.5`** give-back killer (see top of doc). Halt=$50.
+- **`InpBEArmUsd=1.0`** give-back killer (see top of doc). Halt=$50.
 
 ### THE UNIFYING INSIGHT (most important takeaway)
 **Each setup's FVG must come from its OWN structure timeframe**, not a one-size H1:
