@@ -50,6 +50,24 @@
   .hero .meta{display:flex;gap:18px;margin-top:14px;flex-wrap:wrap}
   .hero .meta .m{font-size:13px;color:var(--dim)} .hero .meta .m b{color:var(--txt);font-size:15px}
   .spark{position:absolute;right:0;bottom:0;width:55%;height:70px;opacity:.9}
+  /* world session clocks */
+  .clocks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+  @media(max-width:560px){.clocks{grid-template-columns:repeat(2,1fr)}}
+  .clock{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 8px 9px;text-align:center}
+  .clock.open{border-color:rgba(43,213,118,.4);box-shadow:0 0 14px rgba(43,213,118,.12)}
+  .clock svg{width:62px;height:62px;display:block;margin:0 auto 6px}
+  .clock .face{fill:var(--bg2);stroke:var(--line);stroke-width:2}
+  .clock.open .face{stroke:rgba(43,213,118,.55)}
+  .clock .hh{stroke:var(--txt);stroke-width:3;stroke-linecap:round}
+  .clock .mh{stroke:var(--dim);stroke-width:2;stroke-linecap:round}
+  .clock .sh{stroke:var(--amber);stroke-width:1;stroke-linecap:round}
+  .clock.open .sh{stroke:var(--green)}
+  .clock .pin{fill:var(--txt)}
+  .clock .tk{stroke:var(--faint);stroke-width:1}
+  .clock .city{font-size:12px;font-weight:700;color:var(--txt)}
+  .clock .ltime{font-size:10px;color:var(--dim);font-variant-numeric:tabular-nums}
+  .clock .sess{font-size:10px;font-weight:700;margin-top:3px}
+  .clock .sess.on{color:var(--green)} .clock .sess.off{color:var(--faint)}
   /* section title */
   .st{font-size:11px;font-weight:700;color:var(--faint);letter-spacing:1.5px;text-transform:uppercase;margin:22px 4px 10px}
   /* EA cards */
@@ -191,6 +209,9 @@
     </div>
     <svg class="spark" id="spark" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>
   </div>
+
+  <!-- world session clocks (live-ticking, countdown to each session) -->
+  <div class="clocks" id="clocks"></div>
 
   <!-- live open positions (what the system is holding RIGHT NOW) -->
   <div class="st live-hd">What's up?
@@ -487,6 +508,41 @@ async function load(){
   }).join('');}
 }
 load(); setInterval(load,5000);
+
+// ── World session clocks: live-ticking analog faces + session countdowns ──
+// UTC session windows (May: AU off DST → UTC+10; London BST; New York EDT)
+const SESSIONS=[
+  {city:'Sydney',  off:10, o:22, c:7},
+  {city:'Tokyo',   off:9,  o:0,  c:9},
+  {city:'London',  off:1,  o:7,  c:16},
+  {city:'New York',off:-4, o:12, c:21},
+];
+const fmtDur=min=>{const h=Math.floor(min/60),m=min%60;return (h?h+'h ':'')+m+'m';};
+const hand=(len,deg)=>{const r=(deg-90)*Math.PI/180;return [50+len*Math.cos(r),50+len*Math.sin(r)];};
+function renderClocks(){
+  const el=$('clocks'); if(!el) return;
+  const now=new Date(), uMin=now.getUTCHours()*60+now.getUTCMinutes();
+  el.innerHTML=SESSIONS.map(s=>{
+    const lh=(now.getUTCHours()+s.off+24)%24, lm=now.getUTCMinutes(), ls=now.getUTCSeconds();
+    const [hx,hy]=hand(22,(lh%12)*30+lm*0.5), [mx,my]=hand(32,lm*6+ls*0.1), [sx,sy]=hand(36,ls*6);
+    const oMin=s.o*60,cMin=s.c*60;
+    const open=oMin<cMin?(uMin>=oMin&&uMin<cMin):(uMin>=oMin||uMin<cMin);
+    const sess=open?`<div class="sess on">● OPEN · ${fmtDur((cMin-uMin+1440)%1440)} left</div>`
+                   :`<div class="sess off">opens in ${fmtDur((oMin-uMin+1440)%1440)}</div>`;
+    const ampm=lh>=12?'PM':'AM', h12=((lh+11)%12)+1;
+    return `<div class="clock ${open?'open':''}"><svg viewBox="0 0 100 100">
+      <circle class="face" cx="50" cy="50" r="46"/>
+      <line class="tk" x1="50" y1="6" x2="50" y2="12"/><line class="tk" x1="50" y1="88" x2="50" y2="94"/>
+      <line class="tk" x1="6" y1="50" x2="12" y2="50"/><line class="tk" x1="88" y1="50" x2="94" y2="50"/>
+      <line class="hh" x1="50" y1="50" x2="${hx.toFixed(1)}" y2="${hy.toFixed(1)}"/>
+      <line class="mh" x1="50" y1="50" x2="${mx.toFixed(1)}" y2="${my.toFixed(1)}"/>
+      <line class="sh" x1="50" y1="50" x2="${sx.toFixed(1)}" y2="${sy.toFixed(1)}"/>
+      <circle class="pin" cx="50" cy="50" r="2.5"/></svg>
+      <div class="city">${s.city}</div>
+      <div class="ltime">${h12}:${String(lm).padStart(2,'0')} ${ampm}</div>${sess}</div>`;
+  }).join('');
+}
+renderClocks(); setInterval(renderClocks,1000);
 
 // experiments count
 fetch('/api/shadow/list').then(r=>r.json()).then(d=>{
