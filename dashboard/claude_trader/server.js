@@ -430,18 +430,52 @@ const RESTARTABLE = {
 // EA deployment manifest — drives the dashboard "EA Status" table. Version is read
 // live from each EA's heartbeat when present (parsed.version), else from repo source.
 const MT5_SRC = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\mt5\\';
+// tf = EXPECTED chart timeframe (validated). 'ANY' = TF doesn't matter (loggers).
 const EA_MANIFEST = [
-  { key: 's1_trader',          label: 'S1Trader',          name: 'UHV Breakout Engine',   file: 'S1Trader.mq5',          tf: 'M5' },
-  { key: 's3_trader',          label: 'S3Trader',          name: 'Liquidity Sweep Engine',file: 'S3Trader.mq5',          tf: 'M5' },
-  { key: 's4_trader',          label: 'S4Trader',          name: 'Feb-11 UHV Engine',     file: 'S4Trader.mq5',          tf: 'M5' },
-  { key: 'turtle_trade_logger',label: 'TurtleTradeLogger', name: 'Trade Fills Logger',    file: 'TurtleTradeLogger.mq5', tf: 'M5' },
-  { key: 'shano_tick_logger',  label: 'ShanoTickLogger',   name: 'Price Tick Logger',     file: 'ShanoTickLogger.mq5',   tf: 'M5' },
+  { key: 's1_trader',          label: 'S1Trader',          name: 'UHV Breakout Engine',   file: 'S1Trader.mq5',          mt5: 'S1Trader',          tf: 'M1'  },
+  { key: 's3_trader',          label: 'S3Trader',          name: 'Liquidity Sweep Engine',file: 'S3Trader.mq5',          mt5: 'S3Trader',          tf: 'M1'  },
+  { key: 's4_trader',          label: 'S4Trader',          name: 'Feb-11 UHV Engine',     file: 'S4Trader.mq5',          mt5: 'S4Trader',          tf: 'M5'  },
+  { key: 'nsnd_trader',        label: 'NsndTrader',        name: 'No Supply/Demand Engine',file:'NsndTrader.mq5',         mt5: 'NsndTrader',        tf: 'M1'  },
+  { key: 'turtle_trade_logger',label: 'TurtleTradeLogger', name: 'Trade Fills Logger',    file: 'TurtleTradeLogger.mq5', mt5: 'TurtleTradeLogger', tf: 'ANY' },
+  { key: 'shano_tick_logger',  label: 'ShanoTickLogger',   name: 'Price Tick Logger',     file: 'ShanoTickLogger.mq5',   mt5: 'ShanoTickLogger',   tf: 'ANY' },
 ];
 function eaSrcVersion(file) {
   try { const m = fs.readFileSync(MT5_SRC + file, 'utf8').match(/#property version\s+"([^"]+)"/); return m ? m[1] : '?'; }
   catch { return '?'; }
 }
 const EA_SRC_VERSIONS = Object.fromEntries(EA_MANIFEST.map(e => [e.key, eaSrcVersion(e.file)]));
+
+// Read each EA's ACTUAL attached chart timeframe from the freshest MT5 terminal log
+// ("expert <Name> (SYMBOL,TF) loaded successfully"). Cached 30s (log reads are heavy).
+let _tfCache = { t: 0, map: {} };
+function actualTfs() {
+  if (Date.now() - _tfCache.t < 30000) return _tfCache.map;
+  const map = {};
+  try {
+    const root = path.join(process.env.APPDATA, 'MetaQuotes', 'Terminal');
+    let best = null, bestM = 0;
+    for (const g of fs.readdirSync(root)) {
+      if (!/^[0-9A-F]{32}$/.test(g)) continue;
+      const ld = path.join(root, g, 'logs');
+      try {
+        for (const f of fs.readdirSync(ld)) {
+          if (!/^\d{8}\.log$/.test(f)) continue;
+          const m = fs.statSync(path.join(ld, f)).mtimeMs;
+          if (m > bestM) { bestM = m; best = path.join(ld, f); }
+        }
+      } catch {}
+    }
+    if (best) {
+      // MT5 logs are UTF-16LE
+      const txt = fs.readFileSync(best, 'utf16le');
+      const re = /expert\s+(\w+)\s+\(([A-Za-z0-9]+),(\w+)\)\s+loaded successfully/g;
+      let mm;
+      while ((mm = re.exec(txt)) !== null) map[mm[1]] = mm[3];   // latest wins
+    }
+  } catch {}
+  _tfCache = { t: Date.now(), map };
+  return map;
+}
 
 // ── Web Push (PWA notifications) ──
 let webpush = null, VAPID = null;
@@ -998,11 +1032,13 @@ const server = http.createServer(async (req, res) => {
       account: { broker: ACCOUNT_BROKER, symbol: ACTIVE_SYMBOL },
       open_positions,
       lifecycle,
-      ea_status: EA_MANIFEST.map(e => {
+      ea_status: (() => { const tfs = actualTfs(); return EA_MANIFEST.map(e => {
         const c = components[e.key] || {};
+        const actual = tfs[e.mt5] || null;                 // actual attached chart TF (from MT5 log)
+        const tf_ok = e.tf === 'ANY' ? true : (actual ? actual === e.tf : null);  // null = unknown
         return { label: e.label, name: e.name, version: c.version || EA_SRC_VERSIONS[e.key],
-                 symbol: ACTIVE_SYMBOL, tf: e.tf, alive: !!c.alive };
-      }),
+                 symbol: ACTIVE_SYMBOL, tf: e.tf, actual_tf: actual, tf_ok, alive: !!c.alive };
+      }); })(),
     };
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(payload));
