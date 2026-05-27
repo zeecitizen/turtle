@@ -34,3 +34,32 @@ walk-forward (train→OOS) baseline of all EAs:
 - S4 / S4b / S4-old all fail walk-forward at 0.10 lots — OOS negative. Not deploy-worthy as-is.
 
 Next cycle: dig into S3's win/loss asymmetry (R:R), since high-WR-but-losing = exit problem.
+
+---
+
+## Cycle 2 — 2026-05-27 ~05:46 PKT
+
+**Health:** ✅ S1/S3/S4 alive (4s), ticks live, market OPEN. NSND stale = expected (disabled).
+**1 open position** (S3 BUY 0.01 @4518.38, +$3.56, SL 4508.82 / TP 4527.96) — confirms the new
+LIVE panel + open_positions.json snapshot render with a real trade. Good.
+
+**Research:** Ran `v230_backtest.py` — the EXACT live v2.30 config (proper SL buffer) at 0.01 lots,
+19 days real ticks, walk-forward:
+
+| EA (v2.30 live config) | n | WR | AvgW | AvgL | Total | TRAIN | OOS | WF |
+|----|---|----|------|------|-------|-------|-----|----|
+| S1 | 197 | ~72% | — | — | — | +$216 | **+$235** | ✅ |
+| S3 | 290 | 61.0% | $5.7 | $6.2 | **+$298.6** | +$184 | **+$115** | ✅ |
+
+S3 by side: SELL +$240 (EV +$1.47) carries it; BUY only +$58 (EV +$0.46).
+
+**Verdict — CORRECTION to Cycle 1:** Cycle 1 flagged "S3 loses money / R:R asymmetry."
+That was a **mismatched variant** (peak-TP, no-FVG, different SL) — NOT the deployed config.
+The actual live **S3 v2.30 is profitable AND walk-forward-positive** (+$298, OOS +$115),
+with balanced R:R (AvgW $5.7 ≈ AvgL $6.2). False alarm — retracted. Lesson: always backtest
+the EXACT live config, not a lab variant. Both deployed S1 and S3 are healthy.
+
+**Real (smaller) thread:** S3's edge is almost entirely the SELL side (BUY EV +$0.46 vs SELL
++$1.47). Worth *carefully* exploring whether S3 BUYs need a stronger filter — but per-side n is
+small, high overfitting risk, so this needs multi-split proof before any change. Next cycle:
+test an S3 BUY-side filter idea with multi-split, or move to a fresh BTC/S4 angle.
