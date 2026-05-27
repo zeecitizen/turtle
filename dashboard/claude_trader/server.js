@@ -728,6 +728,7 @@ const server = http.createServer(async (req, res) => {
           floating_usd: parsed.floating_usd ?? null,
           n_open: parsed.n_open ?? null,
           bigness: parsed.bigness ?? null,
+          watch: parsed.watch ?? null,   // setup the EA is currently eyeing (for the live chart)
           open: Array.isArray(parsed.open) ? parsed.open : [],
         };
         if (!alive) warnings.push(`${ea.name} heartbeat stale (${age_sec}s) — detach/reattach in MT5`);

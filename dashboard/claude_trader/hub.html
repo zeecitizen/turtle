@@ -274,6 +274,7 @@
 const $=id=>document.getElementById(id);
 const money=v=>(v>0?'+':v<0?'−':'')+'$'+Math.abs(v).toFixed(2);
 let CHART_OVERLAY=[];   // live open positions {side,entry,sl,tp,ea} overlaid on the candle chart
+let CHART_WATCH=[];     // setups each engine is currently eyeing {dir,ref_bar_t,level,ea,...}
 
 // dashboard password (kept out of page source; cached after first prompt)
 function dashKey(){let k=localStorage.getItem('dashKey');if(!k){k=prompt('Dashboard password:');if(k)localStorage.setItem('dashKey',k);}return k;}
@@ -426,6 +427,11 @@ async function load(){
   // TurtleTradeLogger's snapshot, falling back to per-EA heartbeats if it's stale.
   let allOpen=(d.open_positions||[]).slice();
   CHART_OVERLAY=allOpen.map(o=>({side:o.side,entry:o.entry,sl:o.sl,tp:o.tp,ea:o.ea}));  // for the live chart
+  // setups each engine is eyeing right now (for the chart's watch highlight)
+  CHART_WATCH=[];
+  [['s1_trader','S1'],['s3_trader','S3'],['s4_trader','S4']].forEach(([ck,code])=>{
+    const w=(c[ck]||{}).watch; if(w&&w.dir&&w.dir!=='none') CHART_WATCH.push(Object.assign({ea:code},w));
+  });
   if(allOpen.length){
     livePill.classList.add('on');
     const flt=allOpen.reduce((s,o)=>s+(o.pnl||0),0);
@@ -559,17 +565,34 @@ function drawCandles(d){
   const cs=(d&&d.candles)||[];
   if(cs.length<2){svg.innerHTML='<text x="350" y="110" text-anchor="middle" fill="#5a6478" font-size="13">waiting for ticks…</text>';return;}
   const W=700,H=220,padX=10,padT=12,padB=18,labX=W-padX;
-  // include any live entry/SL/TP prices in the range so the overlay lines are visible
-  const extra=[]; CHART_OVERLAY.forEach(o=>{[o.entry,o.sl,o.tp].forEach(v=>{if(v)extra.push(v);});});
+  const ECOL={S1:'#4d9fff',S3:'#ffb33e',S4:'#2bd576'};
+  const pBroker=s=>{const m=(s||'').match(/(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}):(\d{2})/);return m?Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6])/1000:null;};
+  const bucket=secs=>secs==null?null:Math.floor(secs/(d.tf||300))*(d.tf||300);
+  // include live entry/SL/TP AND watched breakout levels in the price range so all overlays show
+  const extra=[]; CHART_OVERLAY.forEach(o=>[o.entry,o.sl,o.tp].forEach(v=>{if(v)extra.push(v);}));
+  CHART_WATCH.forEach(w=>{if(w.level)extra.push(w.level);});
   const hi=Math.max(...cs.map(c=>c.h),...extra), lo=Math.min(...cs.map(c=>c.l),...extra), rng=(hi-lo)||1;
   const step=(W-2*padX)/cs.length, bw=Math.max(2,step*0.62);
   const y=p=>padT+(hi-p)/rng*(H-padT-padB);
+  const cxOf=t=>{const i=cs.findIndex(c=>c.t===t);return i<0?null:padX+(i+0.5)*step;};
   let out='';
+  // watch highlight (behind candles): ring the UHV/reference candle each engine is eyeing
+  CHART_WATCH.forEach(w=>{
+    const col=ECOL[w.ea]||'#9aa4b2', rcx=cxOf(bucket(pBroker(w.ref_bar_t)));
+    if(rcx!=null){ out+=`<rect x="${(rcx-bw/2-2).toFixed(1)}" y="2" width="${(bw+4).toFixed(1)}" height="${H-4}" fill="${col}" fill-opacity="0.10" stroke="${col}" stroke-opacity="0.5" stroke-width="1" rx="3"/>`; }
+  });
   cs.forEach((c,i)=>{
     const cx=padX+(i+0.5)*step, up=c.c>=c.o, col=up?'#2bd576':'#ff5a6a';
     const yh=y(c.h),yl=y(c.l),top=Math.min(y(c.o),y(c.c)),bh=Math.max(1,Math.abs(y(c.c)-y(c.o)));
     out+=`<line x1="${cx.toFixed(1)}" y1="${yh.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${yl.toFixed(1)}" stroke="${col}" stroke-width="1.2"/>`;
     out+=`<rect x="${(cx-bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}" rx="1"/>`;
+  });
+  // watched breakout level lines (the price each engine needs to clear to fire)
+  CHART_WATCH.forEach(w=>{
+    if(!w.level) return; const col=ECOL[w.ea]||'#9aa4b2', yy=y(w.level).toFixed(1);
+    const arrow=w.dir==='buy'?'▲':'▼';
+    out+=`<line x1="${padX}" y1="${yy}" x2="${labX}" y2="${yy}" stroke="${col}" stroke-width="1.1" stroke-dasharray="2 3"/>`;
+    out+=`<text x="${padX+2}" y="${(y(w.level)-3).toFixed(1)}" font-size="9.5" font-weight="700" fill="${col}">${w.ea} watch ${arrow} ${w.level.toFixed(2)}</text>`;
   });
   // live trade overlay: entry / SL / TP price lines, drawn over the real candles
   const lvl=(p,color,label,dash)=>{const yy=y(p).toFixed(1);return `<line x1="${padX}" y1="${yy}" x2="${labX}" y2="${yy}" stroke="${color}" stroke-width="1.3" ${dash?'stroke-dasharray="5 3"':''}/><text x="${padX+2}" y="${(y(p)-3).toFixed(1)}" font-size="10" font-weight="700" fill="${color}">${label} ${p.toFixed(2)}</text>`;};
