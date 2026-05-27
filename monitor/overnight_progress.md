@@ -177,3 +177,36 @@ strongly consider pausing it — it has no edge in this data and (lacking a sess
 weekdays. A weekend-only gate won't rescue it: the weekend sample is too thin and also negative.
 
 Committed the new full-span script for reuse.
+
+---
+
+## Cycle 7 — 2026-05-27 ~08:16 PKT
+
+**Health:** ✅ engines alive (0s), ticks live, market OPEN. NSND stale = expected. 0 open.
+Today flat at −$18.31 since last cycle (quiet patch, no new trades).
+
+**Research — PORTFOLIO view of the deployed pair (S1+S3 v2.30 @0.01).** Pure aggregation of
+already-validated configs (no overfitting risk), combined into one equity curve over 19 days:
+
+| Metric | Value |
+|--------|-------|
+| Combined TOTAL | **+$749.7** / 18 active days |
+| Win-days | 15 / 18 (83%) |
+| Avg/day | +$41.65 |
+| Max drawdown | $28.1 (worst single dip: 2026-05-14, −$28) |
+| Both sides contribute | S1 and S3 each positive across TRAIN + OOS |
+
+Equity curve is steadily up; only 3 losing days (−8, −17, −28), all quickly recovered.
+
+**Verdict: SHAPE robust & positive, MAGNITUDE idealized — discount hard for live.**
+The *profile* is exactly what you want: high win-day rate, small controlled DD, diversified
+across two walk-forward-positive engines. BUT these $ are an OPTIMISTIC backtest (no slippage/
+spread modeled). Reality check: **live today = −$18.31** while the backtest implies a strongly
+positive day — that IS the backtest>live gap the memory warns about. So treat +$41/day as a
+ceiling, not an expectation; the real edge is smaller and noisier (today proves it).
+
+**Open question for a future cycle / Zee:** reconcile backtest vs live using the calibration
+pipeline (`build_slip_calibration.py` + `pdf5_quick_compare.py`) once enough live fills
+accumulate — that's the honest way to size expectations. No change made.
+
+(Used an inline parse of v230_backtest output; no new script committed.)
