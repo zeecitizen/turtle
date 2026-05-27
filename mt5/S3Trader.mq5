@@ -23,7 +23,7 @@
 //| Fires once per qualifying M5 bar close; deduped by bar timestamp.|
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 3 Effort vs Result (Teacher Spec v2)"
-#property version   "2.32"
+#property version   "2.40"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -79,6 +79,7 @@ input double InpAvgWinUsd  = 60.0;       // reference avg winning trade ($) for 
 input string InpGrabFile   = "grab_command.txt"; // shared command file (epoch id). EA grabs on a NEWER id than last seen.
 
 input group "── Detection ──"
+input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M1;  // 2026-05-27: DEFAULT M1 — full-logic validated +$3677/558tr 5/5 OOS+ vs M5 +$1068. Set PERIOD_M5 to revert.
 input int    InpTrendLookback     = 24;   // M5 bars: ~2 hours for trend
 input double InpTrendThreshold    = 1.0;  // min price units of move (v2: was 2.0)
 input double InpTrend60Threshold  = 5.0;  // 2026-05-27: NEW 60-bar trend filter. VERIFIED robust (prove_all_improvements.py, reproduced): 6/7 walk-forward splits; +$504->+$571, DD $67->$55. Min |close[1]-close[61]| in trade direction. 0=off.
@@ -198,15 +199,15 @@ bool IsHourInSkipList(int hour) {
 
 //── Trend check on M5 ───────────────────────────────────────────────
 bool IsUptrendM5(int from_shift) {
-   double now_close   = iClose(_Symbol, PERIOD_M5, from_shift);
-   double back_close  = iClose(_Symbol, PERIOD_M5, from_shift + InpTrendLookback);
+   double now_close   = iClose(_Symbol, InpTimeframe, from_shift);
+   double back_close  = iClose(_Symbol, InpTimeframe, from_shift + InpTrendLookback);
    if (back_close == 0) return false;
    return (now_close - back_close) > InpTrendThreshold;
 }
 
 bool IsDowntrendM5(int from_shift) {
-   double now_close   = iClose(_Symbol, PERIOD_M5, from_shift);
-   double back_close  = iClose(_Symbol, PERIOD_M5, from_shift + InpTrendLookback);
+   double now_close   = iClose(_Symbol, InpTimeframe, from_shift);
+   double back_close  = iClose(_Symbol, InpTimeframe, from_shift + InpTrendLookback);
    if (back_close == 0) return false;
    return (back_close - now_close) > InpTrendThreshold;
 }
@@ -214,8 +215,8 @@ bool IsDowntrendM5(int from_shift) {
 // 60-bar trend-strength filter (verified robust 6/7 splits, 2026-05-27)
 bool Trend60OK(bool isBuy) {
    if (InpTrend60Threshold <= 0) return true;
-   double now  = iClose(_Symbol, PERIOD_M5, 1);
-   double back = iClose(_Symbol, PERIOD_M5, 61);
+   double now  = iClose(_Symbol, InpTimeframe, 1);
+   double back = iClose(_Symbol, InpTimeframe, 61);
    if (back == 0) return false;
    return isBuy ? (now - back >= InpTrend60Threshold) : (back - now >= InpTrend60Threshold);
 }
@@ -241,8 +242,8 @@ bool H1FvgTappedDuringRetracement(int retrace_back_shift) {
       // Tap check: any M5 bar in [1, retrace_back_shift] has range overlap
       // with the FVG zone [older_high, newer_low].
       for (int k = 1; k <= retrace_back_shift; k++) {
-         double mlow  = iLow(_Symbol, PERIOD_M5, k);
-         double mhigh = iHigh(_Symbol, PERIOD_M5, k);
+         double mlow  = iLow(_Symbol, InpTimeframe, k);
+         double mhigh = iHigh(_Symbol, InpTimeframe, k);
          if (mlow <= newer_low && mhigh >= older_high) return true;
       }
    }
@@ -258,17 +259,17 @@ bool H1FvgTappedDuringRetracement(int retrace_back_shift) {
 //   whose zone bar k's range overlaps.
 bool M5FvgTappedDuringRetracement(int retrace_back_shift) {
    for (int k = 1; k <= retrace_back_shift; k++) {
-      double mlow  = iLow (_Symbol, PERIOD_M5, k);
-      double mhigh = iHigh(_Symbol, PERIOD_M5, k);
+      double mlow  = iLow (_Symbol, InpTimeframe, k);
+      double mhigh = iHigh(_Symbol, InpTimeframe, k);
       // candidate FVG: newer bar at shift i (older than tap bar k), gap between i+2 and i
       for (int i = k + 1; i <= k + InpM5FvgLookback; i++) {
-         double older_high = iHigh(_Symbol, PERIOD_M5, i + 2);
-         double newer_low  = iLow (_Symbol, PERIOD_M5, i);
+         double older_high = iHigh(_Symbol, InpTimeframe, i + 2);
+         double newer_low  = iLow (_Symbol, InpTimeframe, i);
          if (newer_low <= older_high) continue;       // no bullish gap
          // unfilled up to the tap bar: no bar between (i-1) and (k+1) has low < older_high
          bool filled = false;
          for (int j = i - 1; j > k; j--) {
-            if (iLow(_Symbol, PERIOD_M5, j) < older_high) { filled = true; break; }
+            if (iLow(_Symbol, InpTimeframe, j) < older_high) { filled = true; break; }
          }
          if (filled) continue;
          // tap: bar k's range overlaps the FVG zone [older_high, newer_low]
@@ -283,12 +284,12 @@ bool M5FvgTappedDuringRetracement(int retrace_back_shift) {
 bool TryS3BuySignal() {
    if (!InpDoBuys) return false;
    if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
-   double bo_o = iOpen (_Symbol, PERIOD_M5, 1);
-   double bo_h = iHigh (_Symbol, PERIOD_M5, 1);
-   double bo_l = iLow  (_Symbol, PERIOD_M5, 1);
-   double bo_c = iClose(_Symbol, PERIOD_M5, 1);
-   long   bo_v = iVolume(_Symbol, PERIOD_M5, 1);
-   datetime bo_t = iTime(_Symbol, PERIOD_M5, 1);
+   double bo_o = iOpen (_Symbol, InpTimeframe, 1);
+   double bo_h = iHigh (_Symbol, InpTimeframe, 1);
+   double bo_l = iLow  (_Symbol, InpTimeframe, 1);
+   double bo_c = iClose(_Symbol, InpTimeframe, 1);
+   long   bo_v = iVolume(_Symbol, InpTimeframe, 1);
+   datetime bo_t = iTime(_Symbol, InpTimeframe, 1);
 
    // Dedup
    if (bo_t == g_last_signal_t) return false;
@@ -318,9 +319,9 @@ bool TryS3BuySignal() {
    int reds_count = 0;
    int max_red_shift = 1;
    for (int back_g = 2; back_g <= 1 + InpRetraceLookback; back_g++) {
-      double g_o = iOpen (_Symbol, PERIOD_M5, back_g);
-      double g_c = iClose(_Symbol, PERIOD_M5, back_g);
-      double g_l = iLow  (_Symbol, PERIOD_M5, back_g);
+      double g_o = iOpen (_Symbol, InpTimeframe, back_g);
+      double g_c = iClose(_Symbol, InpTimeframe, back_g);
+      double g_l = iLow  (_Symbol, InpTimeframe, back_g);
       if (g_c <= g_o) continue;          // not green — keep looking
       // Found a candidate green. Check subsequent reds (shifts back_g-1 down to 2)
       // for any whose low/close went BELOW g_l.
@@ -329,9 +330,9 @@ bool TryS3BuySignal() {
       int  tmp_reds[30];
       int  tmp_max_shift = 1;
       for (int j = back_g - 1; j >= 2; j--) {
-         double r_o = iOpen (_Symbol, PERIOD_M5, j);
-         double r_c = iClose(_Symbol, PERIOD_M5, j);
-         double r_l = iLow  (_Symbol, PERIOD_M5, j);
+         double r_o = iOpen (_Symbol, InpTimeframe, j);
+         double r_c = iClose(_Symbol, InpTimeframe, j);
+         double r_l = iLow  (_Symbol, InpTimeframe, j);
          if (r_c < r_o) {
             if (r_c < g_l || r_l < g_l) any_broke = true;
             if (found_reds < 30) {
@@ -355,13 +356,13 @@ bool TryS3BuySignal() {
    datetime matching_red_t = 0;
    for (int r = 0; r < reds_count; r++) {
       int rs = reds[r];
-      double r_l = iLow   (_Symbol, PERIOD_M5, rs);
-      long   r_v = iVolume(_Symbol, PERIOD_M5, rs);
+      double r_l = iLow   (_Symbol, InpTimeframe, rs);
+      long   r_v = iVolume(_Symbol, InpTimeframe, rs);
       if (bo_l >= r_l)   continue;      // didn't wick below
       if (bo_c <= r_l)   continue;      // didn't close back inside
       if (bo_v <= r_v)   continue;      // need higher green vol
       matching_red_shift = rs;
-      matching_red_t = iTime(_Symbol, PERIOD_M5, rs);
+      matching_red_t = iTime(_Symbol, InpTimeframe, rs);
       break;
    }
    if (matching_red_shift < 0) return false;
@@ -397,7 +398,7 @@ bool TryS3BuySignal() {
    double sl = bo_l - InpSLBufferPts;
    double tp = 0.0;
    for (int j = 2; j <= 1 + InpTPPeakLookback; j++) {
-      double h = iHigh(_Symbol, PERIOD_M5, j);
+      double h = iHigh(_Symbol, InpTimeframe, j);
       if (h > tp) tp = h;
    }
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
@@ -424,8 +425,8 @@ bool TryS3BuySignal() {
    Log(StringFormat("[FILLED] ticket=%d fill=%.2f (intended=%.2f Δ=%.2f)",
                     ticket, actual_fill, ask, actual_fill - ask));
    // Log the decision for the live-vs-backtest reconciler
-   double red_l_log = iLow(_Symbol, PERIOD_M5, matching_red_shift);
-   long   red_v_log = iVolume(_Symbol, PERIOD_M5, matching_red_shift);
+   double red_l_log = iLow(_Symbol, InpTimeframe, matching_red_shift);
+   long   red_v_log = iVolume(_Symbol, InpTimeframe, matching_red_shift);
    LogDecisionCsv(bo_t, bo_c, bo_l, bo_v, matching_red_t, red_l_log, red_v_log,
                   ask, sl, tp, actual_fill, ticket, "buy");
    return true;
@@ -435,12 +436,12 @@ bool TryS3BuySignal() {
 bool TryS3SellSignal() {
    if (!InpDoSells) return false;
    if (DailyLossHalted()) return false;
-   double bo_o = iOpen (_Symbol, PERIOD_M5, 1);
-   double bo_h = iHigh (_Symbol, PERIOD_M5, 1);
-   double bo_l = iLow  (_Symbol, PERIOD_M5, 1);
-   double bo_c = iClose(_Symbol, PERIOD_M5, 1);
-   long   bo_v = iVolume(_Symbol, PERIOD_M5, 1);
-   datetime bo_t = iTime(_Symbol, PERIOD_M5, 1);
+   double bo_o = iOpen (_Symbol, InpTimeframe, 1);
+   double bo_h = iHigh (_Symbol, InpTimeframe, 1);
+   double bo_l = iLow  (_Symbol, InpTimeframe, 1);
+   double bo_c = iClose(_Symbol, InpTimeframe, 1);
+   long   bo_v = iVolume(_Symbol, InpTimeframe, 1);
+   datetime bo_t = iTime(_Symbol, InpTimeframe, 1);
 
    if (bo_t == g_last_signal_t) return false;
    if (InpUseHourFilter) {
@@ -454,15 +455,15 @@ bool TryS3SellSignal() {
 
    int reds[30]; int reds_count = 0; int max_red_shift = 1;
    for (int back_g = 2; back_g <= 1 + InpRetraceLookback; back_g++) {
-      double g_o = iOpen (_Symbol, PERIOD_M5, back_g);
-      double g_c = iClose(_Symbol, PERIOD_M5, back_g);
-      double g_h = iHigh (_Symbol, PERIOD_M5, back_g);
+      double g_o = iOpen (_Symbol, InpTimeframe, back_g);
+      double g_c = iClose(_Symbol, InpTimeframe, back_g);
+      double g_h = iHigh (_Symbol, InpTimeframe, back_g);
       if (g_c >= g_o) continue; 
       bool any_broke = false; int found_reds = 0; int tmp_reds[30]; int tmp_max_shift = 1;
       for (int j = back_g - 1; j >= 2; j--) {
-         double r_o = iOpen (_Symbol, PERIOD_M5, j);
-         double r_c = iClose(_Symbol, PERIOD_M5, j);
-         double r_h = iHigh (_Symbol, PERIOD_M5, j);
+         double r_o = iOpen (_Symbol, InpTimeframe, j);
+         double r_c = iClose(_Symbol, InpTimeframe, j);
+         double r_h = iHigh (_Symbol, InpTimeframe, j);
          if (r_c > r_o) {
             if (r_c > g_h || r_h > g_h) any_broke = true;
             if (found_reds < 30) { tmp_reds[found_reds++] = j; if (j > tmp_max_shift) tmp_max_shift = j; }
@@ -477,15 +478,15 @@ bool TryS3SellSignal() {
 
    int matching_red_shift = -1; datetime matching_red_t = 0;
    for (int r = 0; r < reds_count; r++) {
-      int rs = reds[r]; double r_h = iHigh(_Symbol, PERIOD_M5, rs); long r_v = iVolume(_Symbol, PERIOD_M5, rs);
+      int rs = reds[r]; double r_h = iHigh(_Symbol, InpTimeframe, rs); long r_v = iVolume(_Symbol, InpTimeframe, rs);
       if (bo_h <= r_h) continue; if (bo_c >= r_h) continue; if (bo_v <= r_v) continue;
-      matching_red_shift = rs; matching_red_t = iTime(_Symbol, PERIOD_M5, rs); break;
+      matching_red_shift = rs; matching_red_t = iTime(_Symbol, InpTimeframe, rs); break;
    }
    if (matching_red_shift < 0) return false;
    if (IsRedAlreadyFired(matching_red_t)) return false;
 
    double sl = bo_h + InpSLBufferPts; double tp = 99999999.0;
-   for (int j = 2; j <= 1 + InpTPPeakLookback; j++) { double l = iLow(_Symbol, PERIOD_M5, j); if (l < tp) tp = l; }
+   for (int j = 2; j <= 1 + InpTPPeakLookback; j++) { double l = iLow(_Symbol, InpTimeframe, j); if (l < tp) tp = l; }
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    if (tp >= bid - MathMin(InpMinTPDistPts, InpSLBufferPts * 2.0)) return false;
 
@@ -493,7 +494,7 @@ bool TryS3SellSignal() {
    if (!g_trade.Sell(InpLots, _Symbol, 0, sl, tp, "S3_sell")) return false;
    g_entries_today++; g_last_signal_t = bo_t; RememberFiredRed(matching_red_t);
    ulong ticket = g_trade.ResultOrder(); double actual_fill = g_trade.ResultPrice();
-   LogDecisionCsv(bo_t, bo_c, bo_h, bo_v, matching_red_t, iHigh(_Symbol, PERIOD_M5, matching_red_shift), 0, bid, sl, tp, actual_fill, ticket, "sell");
+   LogDecisionCsv(bo_t, bo_c, bo_h, bo_v, matching_red_t, iHigh(_Symbol, InpTimeframe, matching_red_shift), 0, bid, sl, tp, actual_fill, ticket, "sell");
    return true;
 }
 
@@ -548,14 +549,14 @@ string BuildWatchJson() {
 
    int reds[30]; int reds_count = 0;
    for (int back_g = 2; back_g <= 1 + InpRetraceLookback; back_g++) {
-      double g_o = iOpen(_Symbol, PERIOD_M5, back_g), g_c = iClose(_Symbol, PERIOD_M5, back_g);
-      double g_l = iLow(_Symbol, PERIOD_M5, back_g),  g_h = iHigh(_Symbol, PERIOD_M5, back_g);
+      double g_o = iOpen(_Symbol, InpTimeframe, back_g), g_c = iClose(_Symbol, InpTimeframe, back_g);
+      double g_l = iLow(_Symbol, InpTimeframe, back_g),  g_h = iHigh(_Symbol, InpTimeframe, back_g);
       bool green = (g_c > g_o);
       if (dir == 1 ? !green : green) continue;     // buy seeks a prior green; sell a prior red
       bool any_broke = false; int tmp[30]; int found = 0;
       for (int j = back_g - 1; j >= 2; j--) {
-         double r_o = iOpen(_Symbol, PERIOD_M5, j), r_c = iClose(_Symbol, PERIOD_M5, j);
-         double r_l = iLow(_Symbol, PERIOD_M5, j),  r_h = iHigh(_Symbol, PERIOD_M5, j);
+         double r_o = iOpen(_Symbol, InpTimeframe, j), r_c = iClose(_Symbol, InpTimeframe, j);
+         double r_l = iLow(_Symbol, InpTimeframe, j),  r_h = iHigh(_Symbol, InpTimeframe, j);
          bool isRed = (r_c < r_o);
          if (dir == 1 ? isRed : !isRed) {
             if (dir == 1) { if (r_c < g_l || r_l < g_l) any_broke = true; }
@@ -568,17 +569,17 @@ string BuildWatchJson() {
    if (reds_count == 0) return "null";
 
    int ref_shift = reds[0];
-   double level = (dir == 1) ? iLow(_Symbol, PERIOD_M5, reds[0]) : iHigh(_Symbol, PERIOD_M5, reds[0]);
+   double level = (dir == 1) ? iLow(_Symbol, InpTimeframe, reds[0]) : iHigh(_Symbol, InpTimeframe, reds[0]);
    for (int r = 1; r < reds_count; r++) {
-      double v = (dir == 1) ? iLow(_Symbol, PERIOD_M5, reds[r]) : iHigh(_Symbol, PERIOD_M5, reds[r]);
+      double v = (dir == 1) ? iLow(_Symbol, InpTimeframe, reds[r]) : iHigh(_Symbol, InpTimeframe, reds[r]);
       if (dir == 1 ? (v < level) : (v > level)) { level = v; ref_shift = reds[r]; }
    }
    return StringFormat(
       "{\"dir\":\"%s\",\"ref_bar_t\":\"%s\",\"ref_high\":%.3f,\"ref_low\":%.3f,\"level\":%.3f,\"setup_bar_t\":\"%s\"}",
       dir == 1 ? "buy" : "sell",
-      TimeToString(iTime(_Symbol, PERIOD_M5, ref_shift), TIME_DATE|TIME_SECONDS),
-      iHigh(_Symbol, PERIOD_M5, ref_shift), iLow(_Symbol, PERIOD_M5, ref_shift), level,
-      TimeToString(iTime(_Symbol, PERIOD_M5, 1), TIME_DATE|TIME_SECONDS));
+      TimeToString(iTime(_Symbol, InpTimeframe, ref_shift), TIME_DATE|TIME_SECONDS),
+      iHigh(_Symbol, InpTimeframe, ref_shift), iLow(_Symbol, InpTimeframe, ref_shift), level,
+      TimeToString(iTime(_Symbol, InpTimeframe, 1), TIME_DATE|TIME_SECONDS));
 }
 
 void WriteHeartbeat() {
@@ -591,7 +592,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S3Trader\",\"version\":\"2.32\",\"alive\":true,"
+      "{\"ea\":\"S3Trader\",\"version\":\"2.40\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"watch\":%s,\"open\":%s}",
@@ -759,7 +760,7 @@ void OnDeinit(const int reason) {
 
 void OnTick() {
    IsNewDay();
-   datetime cur_m5 = iTime(_Symbol, PERIOD_M5, 0);
+   datetime cur_m5 = iTime(_Symbol, InpTimeframe, 0);
    if (cur_m5 != g_last_m5_time && g_last_m5_time != 0) {
       // A new M5 bar opened — the previous one just closed. Evaluate.
       if (!TryS3BuySignal()) TryS3SellSignal();
