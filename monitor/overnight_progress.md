@@ -6,6 +6,33 @@ Rules: research/propose only, no live deploys, no config changes, validate FULL 
 
 ---
 
+## ☀️ MORNING BRIEFING (read this first) — 11 cycles, 2026-05-27 02:40→10:16 PKT
+
+**System health:** green all night. S1/S3/S4 heartbeating every cycle, ticks live, market OPEN,
+loggers fresh. Only standing warning = NsndTrader stale, which is EXPECTED (NSND is disabled).
+No service ever went down; nothing needed restarting.
+
+**Live result today:** −$16.31 (12 trades, 75% WR) — a mild red day. Bounded: the $25 daily-loss
+circuit breaker is verified wired (cycle 5), and all live fills are now uniformly 0.01 lots.
+
+**3 things worth your attention:**
+1. **🟢 The 0.01-lot fix was the biggest win.** Live S3 looked like −$27, but that was almost
+   entirely 11 oversized 0.09-lot trades (−$99) from before the fix. Normalized to 0.01 it's
+   +$3.67 (~breakeven). The sizing correction protected the account more than any filter could. (cycle 9)
+2. **⚠️ BtcS4b has no edge + no weekend gate.** Modeled over 51 days it's −$56 (21% WR), trades
+   weekdays despite its "weekend" label, and its weekend niche is ~empty (9 trades). Recommend:
+   check if it's attached live; if so, consider pausing it. (cycle 6)
+3. **📉 Backtests overstate edge ~3-4×.** S1/S3/S4 are all walk-forward-positive in backtest
+   (combined +$749/18d idealized), but live is ~breakeven-to-thin. Real edge is small; don't size
+   up on backtest $. The new 14-col magic/ea labels now give clean per-EA live tracking to settle
+   this once ~30-50 fills/EA accumulate. (cycles 7, 9, 10)
+
+**Every change tested was rejected or flagged** (ER filter ❌, S3 BUY-filter ❌ regime-artifact,
+BtcS4b ⚠️) — so the validated live configs (S1/S3/S4 @0.01) stand UNCHANGED, which is correct.
+Nothing was deployed or altered. Full detail per cycle below.
+
+---
+
 ## Cycle 1 — 2026-05-27 ~05:09 PKT
 
 **Health:** ✅ S1/S3/S4 alive (0s), ticks live (data_status=live, tick_age 0s),
@@ -304,3 +331,25 @@ from here on, which is what cycle 7/9 said we needed to size expectations proper
 **Proposal for Zee (morning):** rely on the 14-col ea label for all future live-vs-backtest
 tracking (S1 lacks a decisions CSV, but the magic column covers it). Once ~30-50 clean 0.01-lot
 fills accumulate per EA, re-run the cycle-9 normalized comparison for a real edge read.
+
+---
+
+## Cycle 11 — 2026-05-27 ~10:16 PKT
+
+**Health:** ✅ engines alive (1s), ticks live, market OPEN. NSND stale = expected. 0 open.
+Today flat at −$16.31 (~80min no fills — quiet pre-morning).
+
+**Research — tested cycle 2's "S3 is SELL-heavy" thread on LIVE fills (not backtest).**
+Split the 43 live S3 trades by side, normalized to 0.01:
+- LIVE: **BUY n=42 (64.3% WR, EV +$0.06)** vs **SELL n=1**.
+- Backtest (cycle 2) was the OPPOSITE: SELL n=164 > BUY n=126.
+
+**Verdict: cycle-2 SELL-heavy thread RETIRED — it was regime-specific, not structural.**
+S3's side mix simply follows the trend regime (its td filter only fires BUYs in an uptrend);
+gold trended up these ~9 days → almost all live signals were BUYs. A "filter the weak BUY side"
+change would have eliminated ~all live S3 activity. So: do NOT add a BUY-side filter. Live BUYs
+are ~breakeven (consistent with cycle 9's thin-edge live read). No change made.
+
+This closes the last open optimization thread from the session — every candidate change tested
+(ER filter, S3 side filter, BtcS4b) was either rejected or flagged; the validated live configs
+(S1/S3/S4 @0.01) stand unchanged, which is the correct outcome.
