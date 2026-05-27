@@ -53,6 +53,12 @@
   .ea .pnl.pos{color:var(--green)} .ea .pnl.neg{color:var(--red)} .ea .pnl.flat{color:var(--faint)}
   .ea .row{font-size:11.5px;color:var(--dim);margin-top:6px}
   .ea .tag{font-size:10px;color:var(--faint);margin-top:2px}
+  .ea .health{font-size:10.5px;font-weight:700;margin-top:7px;padding-top:6px;border-top:1px solid var(--line)}
+  .ea .health.up{color:var(--green)} .ea .health.down{color:var(--red)} .ea .health.off{color:var(--faint)}
+  /* service descriptions */
+  .svc-desc{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+  .svc-desc .d{font-size:12px;color:var(--dim);line-height:1.4;display:flex;gap:7px}
+  .svc-desc .d b{color:var(--txt);font-weight:600;white-space:nowrap}
   /* systems strip */
   .sys{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
   .sys .chip{font-size:11px;font-family:ui-monospace,Menlo,monospace;padding:5px 9px;border-radius:8px;
@@ -171,14 +177,15 @@
   <div class="st">Engines</div>
   <div class="eas" id="eas"></div>
 
-  <!-- systems health -->
-  <div class="st">System Health</div>
+  <!-- logging & monitoring: the data pipeline (fills + ticks) feeding the dashboard -->
+  <div class="st">Logging &amp; Monitoring</div>
   <div class="sys" id="sys"></div>
   <div class="banner ok" id="banner">checking…</div>
 
   <!-- restart a downed service -->
   <div class="st">Services <span style="font-weight:400;font-size:11px;color:#6b7280">· tap to restart a downed service</span></div>
   <div id="svc" style="display:flex;flex-wrap:wrap;gap:2px"></div>
+  <div class="svc-desc" id="svcDesc"></div>
   <button id="notifBtn" onclick="enableNotifs()" style="margin-top:8px;padding:9px 13px;border:1px solid #30363d;border-radius:10px;background:#161b22;color:#c9d1d9;font-size:13px;cursor:pointer">🔔 Enable phone alerts</button>
 
   <!-- EA deployment status — live attachment check (are we ONLINE?) -->
@@ -284,18 +291,37 @@ async function load(){
   $('eas').innerHTML=map.map(([k,ck])=>{
     const comp=c[ck]||{}, e=pe[k]||{n:0,w:0,l:0,pnl:0}, meta=EAMETA[k];
     const pc=e.pnl>0?'pos':e.pnl<0?'neg':'flat';
+    const age=comp.heartbeat_age_sec;
+    const ageStr=age!=null?(age<60?age+'s':Math.floor(age/60)+'m'):'';
+    // per-engine health: live (green), disabled-by-design (grey, e.g. NSND), or offline (red)
+    let health;
+    if(comp.alive) health=`<div class="health up">● online · ${ageStr} ago</div>`;
+    else if(k==='NSND') health=`<div class="health off">○ disabled (off by design)</div>`;
+    else health=`<div class="health down">🔴 offline${ageStr?' · '+ageStr+' ago':''} — reattach in MT5</div>`;
     return `<div class="ea"><div class="top"><span class="nm ${meta.cls}">${k}</span>
       <span class="sd ${comp.alive?'on':''}"></span></div>
       <div class="pnl ${pc}">${money(e.pnl||0)}</div>
       <div class="row">${e.n||0} trades · ${e.w||0}W/${e.l||0}L</div>
-      <div class="tag">${meta.full} · ${comp.lots!=null?comp.lots+' lots':''}</div></div>`;
+      <div class="tag">${meta.full} · ${comp.lots!=null?comp.lots+' lots':''}</div>
+      ${health}</div>`;
   }).join('');
-  // systems strip
-  const order=[['s3_trader','S3'],['s1_trader','S1'],['s4_trader','S4'],['nsnd_trader','NSND'],['turtle_trade_logger','Fills'],['shano_tick_logger','Ticks']];
+  // logging & monitoring strip — the data pipeline feeding the dashboard
+  const order=[['turtle_trade_logger','Fills log'],['shano_tick_logger','Tick log']];
   $('sys').innerHTML=order.map(([ck,lbl])=>{
     const x=c[ck]||{}; const age=x.heartbeat_age_sec??x.last_write_age_sec;
     const a=age!=null?(age<60?age+'s':Math.floor(age/60)+'m'):'';
     return `<span class="chip ${x.alive?'ok':'bad'}">${x.alive?'●':'○'} ${lbl} ${a}</span>`;
+  }).join('');
+  // service descriptions (layman-friendly)
+  const SVC_DESC={
+    'Sheriff Hawk':'Hourly QA watchdog — auto-restarts any service that dies and raises an alert if the win-rate collapses.',
+    'Profit Pulse':'Watches floating profit on open trades and pings your phone when a position grows big enough to consider grabbing.',
+    'Cloudflare Tunnel':'Keeps this dashboard reachable at me.claudezeeshan.com from anywhere (phone, away from home).',
+  };
+  const svcList=(d.restartable||[]);
+  $('svcDesc').innerHTML=svcList.map(s=>{
+    const dot=s.running?'🟢':'🔴';
+    return `<div class="d">${dot} <b>${s.label}</b> — ${SVC_DESC[s.label]||'support service.'}</div>`;
   }).join('');
   // EA Status table — live attachment check (version / symbol / timeframe / online?)
   const eas=d.ea_status||[]; const allUp=eas.length&&eas.every(e=>e.alive);
