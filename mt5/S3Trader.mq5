@@ -60,7 +60,7 @@ input bool   InpDoBuys        = true;     // BUY side enabled
 input bool   InpDoSells       = true;     // 2026-05-27: SELL side added. Backtest shows SELL WR=81.7% EV=+$10.41 vs BUY WR=72.9% EV=-$6.70. Sells are the stronger direction.
 
 input group "── FTMO daily-loss circuit breaker ──"
-input double InpDailyLossHalt = 25.0;   // 2026-05-27 Shano $126 acct: ~20% daily-loss cap — halt NEW entries if equity is down this much today (incl. floating). Was FTMO-era $200/$50. Tighten to 15 for stricter. 0=off.
+input double InpDailyLossHalt = 50.0;   // 2026-05-27 Shano $126 acct: ~20% daily-loss cap — halt NEW entries if equity is down this much today (incl. floating). Was FTMO-era $200/$50. Tighten to 15 for stricter. 0=off.
 
 input group "── Profit protection: 2R Free Roll (backtest-validated 2026-05-22) ──"
 input bool   InpEnableBreakeven = true;  // move SL to breakeven once +InpBreakevenR reached (caps the 'give back to zero' risk). On reattach, applies to ALREADY-OPEN trades too.
