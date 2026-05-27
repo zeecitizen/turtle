@@ -60,6 +60,7 @@ input double InpDailyLossHalt = 50.0;   // 2026-05-27 Shano $126 acct: ~20% dail
 input group "── Profit protection: 2R Free Roll (backtest 2026-05-22) ──"
 input bool   InpEnableBreakeven = false; // OFF — backtest showed INERT on S1 (SL at UHV-red low is usually wider than the $7.5 TP, so +1R can't arm before TP; identical to baseline +$431.8). Enable only if you widen TP / tighten SL.
 input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
+input double InpBEArmUsd        = 1.0;   // 2026-05-27 GIVE-BACK KILLER: once a trade is +$this (floating), move SL to breakeven so a green trade can't flip to a full loss. $-based (not R) so it arms on M1's quick pops. 0=off.
 input bool   InpEnablePartial   = false; // OFF — inert on S1 for the same geometry reason.
 input double InpPartialR        = 1.5;
 input double InpPartialFrac     = 0.5;
@@ -87,7 +88,7 @@ input int    InpSpreadAvgBars     = 10;   // bars used for the avg-range baselin
 input double InpSLBufferPts       = 2.00; // 2026-05-19: walk-forward winner. Was 0.10, but tighter SL configs all BROKE OOS (curve-fit). Wider SL absorbs noise.
 
 input group "── Exit ──"
-input double InpTPPoints          = 3.0;  // 2026-05-27: M1 quick-scalp (=$3 @0.01). s1_m1_exits.py: book+$3 beats ride-to-7.5 (+$3431 vs +$3362, OOS +$1094 vs +$1018) and kills give-backs. On M5 use 7.5 (its WF winner).
+input double InpTPPoints          = 2.0;  // 2026-05-27: M1 quick-scalp (=$2 @0.01). s1_m1_exits.py: book+$2 (+$3499) > +$3 (+$3431); paired with BE-after-$1 for full give-back protection. On M5 use 7.5.
 
 input group "── Logging ──"
 input bool   InpVerbose       = true;
@@ -498,7 +499,7 @@ int MngIndex(ulong ticket) {
 //   to breakeven. Optional partial at +PartialR. Static TP untouched. (Default OFF
 //   on S1 — see header note; inert because 1R is usually wider than the $7.5 TP.)
 void ManageOpenPositions() {
-   if (!InpEnableBreakeven && !InpEnablePartial) return;
+   if (!InpEnableBreakeven && !InpEnablePartial && InpBEArmUsd <= 0) return;
    double bid  = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask  = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
@@ -525,6 +526,14 @@ void ManageOpenPositions() {
       double be_sl = NormalizeDouble(is_buy ? entry + InpBEBufferPts
                                             : entry - InpBEBufferPts, _Digits);
       bool can_raise = is_buy ? (cur_sl < be_sl) : (cur_sl == 0.0 || cur_sl > be_sl);
+
+      // GIVE-BACK KILLER ($-based breakeven): once +$InpBEArmUsd, lock breakeven.
+      // Catches M1 quick pops that the TP never reaches (e.g. peaked +$1.7 then reversed).
+      if (InpBEArmUsd > 0 && can_raise && (prof * vol * 100.0) >= InpBEArmUsd) {
+         if (g_trade.PositionModify(ticket, be_sl, cur_tp))
+            Log(StringFormat("[BE$] #%I64u SL→%.2f (+$%.2f locked)", ticket, be_sl, prof*vol*100.0));
+         continue;
+      }
 
       if (InpEnablePartial && !g_mng_partialed[mi] && prof >= InpPartialR * R) {
          double close_vol = NormalizeDouble(MathFloor((vol * InpPartialFrac) / step) * step, 2);
