@@ -591,7 +591,7 @@ function drawCandles(d){
     out+=`<text x="${(labX+4).toFixed(1)}" y="${(y(pr)+4).toFixed(1)}" font-size="11" fill="#7c879b">${pr.toFixed(2)}</text>`;
   }
   out+=`<line x1="${labX}" y1="${padT}" x2="${labX}" y2="${volBase}" stroke="rgba(255,255,255,.12)"/>`;
-  out+=`<text x="${padX}" y="13" font-size="11" font-weight="700" fill="#7c879b">XAUUSD · M5</text>`;
+  out+=`<text x="${padX}" y="13" font-size="11" font-weight="700" fill="#7c879b">XAUUSD · ${d.tf===60?'M1':d.tf===300?'M5':(d.tf/60)+'m'}</text>`;
   // watch highlight (behind candles): ring the UHV/reference candle each engine is eyeing
   CHART_WATCH.forEach(w=>{
     const col=ECOL[w.ea]||'#9aa4b2', rcx=cxOf(bucket(pBroker(w.ref_bar_t)));
@@ -663,13 +663,13 @@ function renderEaLifecycle(d){
   }).join('');
 }
 function loadCandles(){
-  fetch('/api/candles?n=28',{cache:'no-store'}).then(r=>r.json()).then(d=>{
+  fetch('/api/candles?n=60&tf=60',{cache:'no-store'}).then(r=>r.json()).then(d=>{
     const cs=d.candles||[];
     if(cs.length) LAST_PRICE=cs[cs.length-1].c;   // live price → stale-level detection
     drawCandles(d);
     const mt=$('chartMeta');
     if(mt&&cs.length){ const pk=t=>{const dt=new Date((t+2*3600)*1000);return ('0'+dt.getUTCHours()).slice(-2)+':'+('0'+dt.getUTCMinutes()).slice(-2);};
-      mt.textContent='· '+(d.symbol||'')+' · M5 · '+pk(cs[0].t)+'–'+pk(cs[cs.length-1].t)+' PKT'; }
+      mt.textContent='· '+(d.symbol||'')+' · '+(d.tf===60?'M1':d.tf===300?'M5':(d.tf/60)+'m')+' · '+pk(cs[0].t)+'–'+pk(cs[cs.length-1].t)+' PKT'; }
   }).catch(()=>{});
 }
 loadCandles(); setInterval(loadCandles,5000);
