@@ -75,9 +75,9 @@ input bool   InpDoBuys        = true;     // BUY side enabled (UHV red + bullish
 input bool   InpDoSells       = true;     // 2026-05-19: SELL side enabled — adds +$243/12d in walk-forward train (+/-$0 OOS net)
 
 input group "── Detection ──"
-input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M5;  // chart timeframe to trade. 2026-05-27: M1 validated robust (5/5 splits OOS+ after cost, +$3088/19d vs +$877 on M5). For M1 set InpTrendThreshold=2.0.
-input int    InpTrendLookback     = 24;   // bars (M5: ~2h; M1: ~24min)
-input double InpTrendThreshold    = 7.0;  // 2026-05-27: raised 2.0->7.0. VERIFIED robust (verify_thorough.py): beats $2 baseline OOS in 7/7 walk-forward splits; +$629->+$745, WR 69->76%, DD $78->$51, 18/18 green. $5 also robust, $9 fragile. Min move over 24 M5 bars.
+input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M1;  // 2026-05-27: DEFAULT M1 — validated far stronger (644 tr/19d, 62% WR, +$3088 NET after cost, 5/5 splits OOS+, EV +$4.79/tr) vs M5 (+$877). Set PERIOD_M5 + InpTrendThreshold=7.0 to revert.
+input int    InpTrendLookback     = 24;   // bars (M1 default: ~24min; M5: ~2h)
+input double InpTrendThreshold    = 2.0;  // 2026-05-27: 2.0 for the M1 default (min move over 24 M1 bars). On M5 use 7.0 (verify_thorough.py: 7/7 splits, +$629->+$745, WR 69->76%).
 input int    InpRetraceLookback   = 15;   // M5 bars searched for UHV red/green
 input bool   InpRequireH1Fvg      = false; // 2026-05-27: DISABLED. The +$2166 backtest ran without H1 FVG; stacking it with BigSpread killed all signals. Re-enable after live data proves it helps.
 input int    InpH1FvgLookback     = 50;   // H1 bars searched for unfilled FVG (only used if InpRequireH1Fvg)
