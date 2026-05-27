@@ -210,22 +210,11 @@
   <div class="st">Engines</div>
   <div class="eas" id="eas"></div>
 
-  <!-- logging & monitoring: the data pipeline (fills + ticks) feeding the dashboard -->
-  <div class="st">Logging &amp; Monitoring</div>
-  <div class="sys" id="sys"></div>
-  <div class="banner ok" id="banner">checking…</div>
-
-  <!-- restart a downed service -->
-  <div class="st">Services <span style="font-weight:400;font-size:11px;color:#6b7280">· tap to restart a downed service</span></div>
-  <div id="svc" style="display:flex;flex-wrap:wrap;gap:2px"></div>
-  <div class="svc-desc" id="svcDesc"></div>
-  <button id="notifBtn" onclick="enableNotifs()" style="margin-top:8px;padding:9px 13px;border:1px solid #30363d;border-radius:10px;background:#161b22;color:#c9d1d9;font-size:13px;cursor:pointer">🔔 Enable phone alerts</button>
-
   <!-- EA deployment status — live attachment check (are we ONLINE?) -->
   <div class="st">EA Status <span id="eaAllGood" style="font-weight:400;font-size:11px;color:#6b7280"></span></div>
   <div class="eatbl-wrap"><table class="eatbl" id="eaTable"></table></div>
 
-  <!-- what-if lot scaling -->
+  <!-- what-if lot scaling — one-line summary -->
   <div class="st">What If — Bigger Lots</div>
   <div class="whatif" id="whatif"><div class="wf-note">loading…</div></div>
 
@@ -237,6 +226,18 @@
     <a class="tile" href="/shadow"><div class="ic">🧪</div><div class="tt">Experiment Lab</div><div class="ds" id="expDs">Backtests &amp; what-if comparisons</div></a>
     <a class="tile" href="/shano#rules"><div class="ic">✅</div><div class="tt">Rule Compliance</div><div class="ds" id="rulesDs">Rules vs running code</div></a>
   </div>
+
+  <!-- ops/technical sections — kept at the very end -->
+  <!-- logging & monitoring: the data pipeline (fills + ticks) feeding the dashboard -->
+  <div class="st">Logging &amp; Monitoring</div>
+  <div class="sys" id="sys"></div>
+  <div class="banner ok" id="banner">checking…</div>
+
+  <!-- restart a downed service -->
+  <div class="st">Services <span style="font-weight:400;font-size:11px;color:#6b7280">· tap to restart a downed service</span></div>
+  <div id="svc" style="display:flex;flex-wrap:wrap;gap:2px"></div>
+  <div class="svc-desc" id="svcDesc"></div>
+  <button id="notifBtn" onclick="enableNotifs()" style="margin-top:8px;padding:9px 13px;border:1px solid #30363d;border-radius:10px;background:#161b22;color:#c9d1d9;font-size:13px;cursor:pointer">🔔 Enable phone alerts</button>
 
   <div class="foot">Auto-refreshes every 5s · runs on this machine<br>EV-weighted: S3 0.03 · S1 0.02 · NSND 0.01</div>
 </div>
@@ -463,15 +464,10 @@ async function load(){
   const keys=Object.keys(wi);
   if(!keys.length||(p.n||0)===0){wf.innerHTML='<div class="wf-note">No trades closed today yet — projection appears once trades fill.</div>';}
   else{
-    let rows=`<div class="wf-row cur"><span class="lot">actual blended <span class="badge2">S3 .09/S1 .06/NSND .03</span></span><span class="amt ${tot>=0?'pos':'neg'}">${money(tot)}</span></div>`;
-    rows+=keys.map(L=>{const v=wi[L];return `<div class="wf-row"><span class="lot">${L} lots (every trade)</span><span class="amt ${v>=0?'pos':'neg'}">${money(v)}</span></div>`;}).join('');
-    // headline sentence using the biggest profitable lot the user mentioned (1.00 if positive else 0.10)
-    const big=wi['1.00'], v01=wi['0.10'];
-    const pick = big>=0 ? {L:'1.00',v:big} : {L:'0.10',v:v01};
-    const verb = pick.v>=0 ? 'Profit of' : 'A loss of';
-    rows+=`<div class="wf-line ${pick.v<0?'neg':''}">${verb} <b>${money(pick.v)}</b> was possible today trading <b>${pick.L} lots</b> on every trade.</div>`;
-    rows+=`<div class="wf-note">Scaled per-fill by (target lot ÷ its actual lot). Same trades, bigger size — wins AND losses scale together.</div>`;
-    wf.innerHTML=rows;
+    // one-line summary at 0.10 lots (10× today's 0.01 size) — same trades, scaled
+    const v=wi['0.10'];
+    const verb=v>=0?'A profit of':'A loss of';
+    wf.innerHTML=`<div class="wf-line ${v<0?'neg':''}">${verb} <b>${money(v)}</b> was possible today trading <b>0.10 lots</b> on every trade <span style="opacity:.6">(you traded ~0.01 — wins & losses scale together).</span></div>`;
   }
   // trade feed — natural-language story per trade
   const f=$('feed'), rec=d.recent||[];
