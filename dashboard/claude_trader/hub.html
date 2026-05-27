@@ -119,6 +119,16 @@
   .tile:active{transform:scale(.98)} .tile:hover{border-color:rgba(255,255,255,.18)}
   .tile .ic{font-size:24px} .tile .tt{font-weight:700;font-size:15px;margin-top:8px}
   .tile .ds{font-size:12px;color:var(--dim);margin-top:3px;line-height:1.4}
+  /* EA status table */
+  .eatbl-wrap{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+  .eatbl{width:100%;border-collapse:collapse;font-size:13px}
+  .eatbl th{text-align:left;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--faint);
+    font-weight:700;padding:10px 12px;border-bottom:1px solid var(--line)}
+  .eatbl td{padding:10px 12px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+  .eatbl tr:last-child td{border-bottom:none}
+  .eatbl .nm{font-weight:700}
+  .eatbl .ok{color:var(--green)} .eatbl .bad{color:var(--red)}
+  .eatbl .v{font-family:ui-monospace,Menlo,monospace;color:var(--dim)}
   .foot{text-align:center;color:var(--faint);font-size:11px;margin-top:26px;line-height:1.6}
 </style>
 </head>
@@ -144,15 +154,6 @@
     <svg class="spark" id="spark" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>
   </div>
 
-  <!-- per-EA cards -->
-  <div class="st">Engines</div>
-  <div class="eas" id="eas"></div>
-
-  <!-- systems health -->
-  <div class="st">System Health</div>
-  <div class="sys" id="sys"></div>
-  <div class="banner ok" id="banner">checking…</div>
-
   <!-- live open positions (what the system is holding RIGHT NOW) -->
   <div class="st live-hd">Open Positions
     <span class="live-pill" id="livePill"><span class="dot"></span>LIVE</span>
@@ -162,14 +163,27 @@
   <!-- profit pulse + one-tap grab (shows only when floating profit feels big) -->
   <div id="pulseCard" style="display:none;background:#11161f;border:1px solid #243042;border-radius:14px;padding:14px;margin:12px 0"></div>
 
-  <!-- restart a downed service -->
-  <div class="st">Services <span style="font-weight:400;font-size:11px;color:#6b7280">· tap to restart a Python hawk · MT5 EAs need manual reattach in MetaTrader</span></div>
-  <div id="svc" style="display:flex;flex-wrap:wrap;gap:2px"></div>
-  <button id="notifBtn" onclick="enableNotifs()" style="margin-top:8px;padding:9px 13px;border:1px solid #30363d;border-radius:10px;background:#161b22;color:#c9d1d9;font-size:13px;cursor:pointer">🔔 Enable phone alerts</button>
-
   <!-- live trade feed -->
   <div class="st">Today's Trades</div>
   <div class="feed" id="feed"><div class="empty">loading…</div></div>
+
+  <!-- per-EA cards -->
+  <div class="st">Engines</div>
+  <div class="eas" id="eas"></div>
+
+  <!-- systems health -->
+  <div class="st">System Health</div>
+  <div class="sys" id="sys"></div>
+  <div class="banner ok" id="banner">checking…</div>
+
+  <!-- restart a downed service -->
+  <div class="st">Services <span style="font-weight:400;font-size:11px;color:#6b7280">· tap to restart a downed service</span></div>
+  <div id="svc" style="display:flex;flex-wrap:wrap;gap:2px"></div>
+  <button id="notifBtn" onclick="enableNotifs()" style="margin-top:8px;padding:9px 13px;border:1px solid #30363d;border-radius:10px;background:#161b22;color:#c9d1d9;font-size:13px;cursor:pointer">🔔 Enable phone alerts</button>
+
+  <!-- EA deployment status — live attachment check (are we ONLINE?) -->
+  <div class="st">EA Status <span id="eaAllGood" style="font-weight:400;font-size:11px;color:#6b7280"></span></div>
+  <div class="eatbl-wrap"><table class="eatbl" id="eaTable"></table></div>
 
   <!-- what-if lot scaling -->
   <div class="st">What If — Bigger Lots</div>
@@ -283,6 +297,18 @@ async function load(){
     const a=age!=null?(age<60?age+'s':Math.floor(age/60)+'m'):'';
     return `<span class="chip ${x.alive?'ok':'bad'}">${x.alive?'●':'○'} ${lbl} ${a}</span>`;
   }).join('');
+  // EA Status table — live attachment check (version / symbol / timeframe / online?)
+  const eas=d.ea_status||[]; const allUp=eas.length&&eas.every(e=>e.alive);
+  $('eaAllGood').textContent=eas.length?(allUp?'· ✅ all online':'· ⚠️ check red rows'):'';
+  $('eaTable').innerHTML=
+    '<tr><th>EA</th><th>Version</th><th>Symbol</th><th>TF</th><th>Status</th></tr>'+
+    eas.map(e=>`<tr>
+      <td class="nm">${e.label}</td>
+      <td class="v">v${e.version}</td>
+      <td class="v">${e.symbol}</td>
+      <td class="v">${e.tf}</td>
+      <td class="${e.alive?'ok':'bad'}">${e.alive?'✅ online':'🔴 down'}</td>
+    </tr>`).join('');
   // open positions — what the system is holding RIGHT NOW (any side, any P&L)
   const opEl=$('openPos'), opTot=$('openTot'), livePill=$('livePill');
   // unified source: server merges ALL open positions (EA + manual "Human") from

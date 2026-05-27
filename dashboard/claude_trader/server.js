@@ -401,16 +401,31 @@ const REPO = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\';
 // Python-backed services that CAN be restarted by spawning their script.
 // (MT5 EAs/loggers — S3/S1/NSND/TurtleTradeLogger/ShanoTickLogger — run INSIDE
 //  MetaTrader and CANNOT be restarted externally; those need a manual reattach.)
+// Only the services the CURRENT live system actually uses. The legacy
+// PineConnector/Shano-era daemons (auto_uhv_trader, forward_tester, intern_hawks,
+// silver_hawk, meeting_hawks, sexy_hawk) were retired 2026-05-27 — the live system
+// is native MQL5 EAs + these 3 support services. Re-add a script here if revived.
 const RESTARTABLE = {
-  sheriff_hawk:   { label: 'Sheriff Hawk',   script: 'monitor\\sheriff_hawk.py',        args: ['--loop'] },
-  sexy_hawk:      { label: 'Spirit Hawk',    script: 'monitor\\sexy_hawk.py',           args: ['--loop'] },
-  silver_hawk:    { label: 'Silver Hawk',    script: 'monitor\\silver_hawk_learner.py', args: [] },
-  intern_hawks:   { label: 'Intern Hawks',   script: 'monitor\\intern_hawks.py',        args: [] },
-  meeting_hawks:  { label: 'Meeting Hawks',  script: 'monitor\\meeting_hawks.py',        args: ['--loop'] },
-  profit_pulse:   { label: 'Profit Pulse',   script: 'monitor\\profit_pulse_hawk.py',   args: ['--loop'] },
-  auto_uhv:       { label: 'Auto UHV Trader',script: 'monitor\\auto_uhv_trader.py',     args: [] },
-  forward_tester: { label: 'Forward Tester', script: 'monitor\\forward_tester.py',      args: [] },
+  sheriff_hawk:   { label: 'Sheriff Hawk',     script: 'monitor\\sheriff_hawk.py',       args: ['--loop'] },
+  profit_pulse:   { label: 'Profit Pulse',     script: 'monitor\\profit_pulse_hawk.py',  args: ['--loop'] },
+  cloudflared:    { label: 'Cloudflare Tunnel',script: 'monitor\\cloudflared_daemon.py', args: [] },
 };
+
+// EA deployment manifest — drives the dashboard "EA Status" table. Version is read
+// live from each EA's heartbeat when present (parsed.version), else from repo source.
+const MT5_SRC = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\mt5\\';
+const EA_MANIFEST = [
+  { key: 's1_trader',          label: 'S1Trader',          file: 'S1Trader.mq5',          tf: 'M5' },
+  { key: 's3_trader',          label: 'S3Trader',          file: 'S3Trader.mq5',          tf: 'M5' },
+  { key: 's4_trader',          label: 'S4Trader',          file: 'S4Trader.mq5',          tf: 'M5' },
+  { key: 'turtle_trade_logger',label: 'TurtleTradeLogger', file: 'TurtleTradeLogger.mq5', tf: 'M5' },
+  { key: 'shano_tick_logger',  label: 'ShanoTickLogger',   file: 'ShanoTickLogger.mq5',   tf: 'M5' },
+];
+function eaSrcVersion(file) {
+  try { const m = fs.readFileSync(MT5_SRC + file, 'utf8').match(/#property version\s+"([^"]+)"/); return m ? m[1] : '?'; }
+  catch { return '?'; }
+}
+const EA_SRC_VERSIONS = Object.fromEntries(EA_MANIFEST.map(e => [e.key, eaSrcVersion(e.file)]));
 
 // ── Web Push (PWA notifications) ──
 let webpush = null, VAPID = null;
@@ -913,7 +928,7 @@ const server = http.createServer(async (req, res) => {
     // show a dot and let you restart a downed one.
     // always_on services warrant a warning if down; periodic ones (run on a
     // schedule then exit) just show a dot and don't break "all systems go".
-    const ALWAYS_ON = new Set(['sheriff_hawk', 'profit_pulse']);
+    const ALWAYS_ON = new Set(['sheriff_hawk', 'profit_pulse', 'cloudflared']);
     const _scan = runningPython();
     const restartable = Object.entries(RESTARTABLE).map(([k, v]) => {
       const base = v.script.split('\\').pop().toLowerCase();
@@ -931,6 +946,11 @@ const server = http.createServer(async (req, res) => {
       warnings, pnl, per_ea, recent, equity, whatif, market, components, pulse, restartable,
       account: { broker: ACCOUNT_BROKER, symbol: ACTIVE_SYMBOL },
       open_positions,
+      ea_status: EA_MANIFEST.map(e => {
+        const c = components[e.key] || {};
+        return { label: e.label, version: c.version || EA_SRC_VERSIONS[e.key],
+                 symbol: ACTIVE_SYMBOL, tf: e.tf, alive: !!c.alive };
+      }),
     };
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify(payload));
