@@ -433,7 +433,7 @@ async function load(){
   // setups each engine is eyeing right now (for the chart) — only show levels NOT yet
   // crossed; once price runs past without a clean trigger the setup is stale (don't mislead).
   CHART_WATCH=[];
-  [['s1_trader','S1'],['s3_trader','S3'],['s4_trader','S4']].forEach(([ck,code])=>{
+  [['s1_trader','S1'],['s3_trader','S3'],['s4_trader','S4'],['nsnd_trader','NSND']].forEach(([ck,code])=>{
     const w=(c[ck]||{}).watch; if(!(w&&w.dir&&w.dir!=='none')) return;
     const crossed=LAST_PRICE>0 && (w.dir==='buy'?LAST_PRICE>=w.level:LAST_PRICE<=w.level);
     if(!crossed) CHART_WATCH.push(Object.assign({ea:code},w));
@@ -573,7 +573,7 @@ function drawCandles(d){
   if(cs.length<2){svg.innerHTML='<text x="350" y="110" text-anchor="middle" fill="#5a6478" font-size="13">waiting for ticks…</text>';return;}
   const W=700,H=250,padX=10,padT=20,padB=12,padR=58,labX=W-padR,volH=42;  // labX=chart right edge; ruler beyond
   const priceB=H-padB-volH, volBase=H-padB;       // price area bottom / volume baseline
-  const ECOL={S1:'#4d9fff',S3:'#ffb33e',S4:'#2bd576'};
+  const ECOL={S1:'#4d9fff',S3:'#ffb33e',S4:'#2bd576',NSND:'#b07cff'};
   const pBroker=s=>{const m=(s||'').match(/(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}):(\d{2})/);return m?Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6])/1000:null;};
   const bucket=secs=>secs==null?null:Math.floor(secs/(d.tf||300))*(d.tf||300);
   const extra=[]; CHART_OVERLAY.forEach(o=>[o.entry,o.sl,o.tp].forEach(v=>{if(v)extra.push(v);}));
@@ -638,8 +638,8 @@ function drawCandles(d){
 // 🔍 Looking · 🎯 Approaching (a live, not-yet-crossed setup) · 📈 In a trade · ⚪ Offline
 function renderEaLifecycle(d){
   const el=$('eaLifecycle'); if(!el) return;
-  const c=d.components||{}, COL={S1:'#4d9fff',S3:'#ffb33e',S4:'#2bd576'};
-  el.innerHTML=[['s1_trader','S1'],['s3_trader','S3'],['s4_trader','S4']].map(([ck,code])=>{
+  const c=d.components||{}, COL={S1:'#4d9fff',S3:'#ffb33e',S4:'#2bd576',NSND:'#b07cff'};
+  el.innerHTML=[['s1_trader','S1'],['s3_trader','S3'],['s4_trader','S4'],['nsnd_trader','NSND']].map(([ck,code])=>{
     const comp=c[ck]||{}, col=COL[code];
     const opens=(d.open_positions||[]).filter(o=>o.ea===code);
     const w=comp.watch;

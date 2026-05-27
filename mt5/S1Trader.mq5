@@ -87,7 +87,7 @@ input int    InpSpreadAvgBars     = 10;   // bars used for the avg-range baselin
 input double InpSLBufferPts       = 2.00; // 2026-05-19: walk-forward winner. Was 0.10, but tighter SL configs all BROKE OOS (curve-fit). Wider SL absorbs noise.
 
 input group "── Exit ──"
-input double InpTPPoints          = 7.5;  // 2026-05-19: walk-forward winner. Was 5.0, but TP=7.5 gave best OOS hold (+$193 test). TP=$10 broke. = $15 @ 0.02 lots / $75 @ 0.10 / $300 @ 0.40.
+input double InpTPPoints          = 3.0;  // 2026-05-27: M1 quick-scalp (=$3 @0.01). s1_m1_exits.py: book+$3 beats ride-to-7.5 (+$3431 vs +$3362, OOS +$1094 vs +$1018) and kills give-backs. On M5 use 7.5 (its WF winner).
 
 input group "── Logging ──"
 input bool   InpVerbose       = true;
