@@ -146,6 +146,15 @@
   .lt-meta{color:var(--dim);font-size:12px}
   .lt-pnl{margin-left:auto;font-weight:800;font-size:18px;font-variant-numeric:tabular-nums}
   .lt-pnl.pos{color:var(--green)} .lt-pnl.neg{color:var(--red)}
+  /* PROFIT SECURED banner — shows when SL has been pulled to breakeven (give-back killer armed) */
+  .lt-secured{display:flex;align-items:center;gap:9px;margin:11px 0 2px;padding:10px 13px;border-radius:11px;
+    background:linear-gradient(90deg,rgba(43,213,118,.20),rgba(43,213,118,.06));
+    border:1px solid rgba(43,213,118,.5);box-shadow:0 0 16px rgba(43,213,118,.18);
+    animation:securedPulse 1.8s ease-in-out infinite}
+  @keyframes securedPulse{0%,100%{box-shadow:0 0 10px rgba(43,213,118,.14)}50%{box-shadow:0 0 22px rgba(43,213,118,.34)}}
+  .lt-secured .shield{font-size:20px;line-height:1}
+  .lt-secured .msg{font-size:15px;font-weight:900;letter-spacing:-.2px;color:var(--green);text-transform:uppercase}
+  .lt-secured .sub{font-size:11px;font-weight:600;color:var(--dim);margin-top:1px;text-transform:none;letter-spacing:0}
   /* SL ←→ TP gauge */
   .lt-track{position:relative;height:8px;border-radius:6px;margin:11px 0 4px;
     background:linear-gradient(90deg,rgba(255,90,106,.25),rgba(255,255,255,.06) 50%,rgba(43,213,118,.25))}
@@ -483,13 +492,19 @@ async function load(){
         .filter(m=>m.gp>entPct+2 && m.gp<99)
         .filter(m=>{if(m.gp-lastGp<6)return false;lastGp=m.gp;return true;});  // de-clutter overlapping
       const markHtml=marks.map(m=>`<div class="lt-mark ${m.hit?'hit':''}" style="left:${m.gp}%" onclick="bookTrade('${o.ea}',${m.pct})" title="${m.pct}% of ${o.ea} trades reached here — tap to book now"><div class="tick"></div><div class="pl">${m.pct}%</div></div>`).join('');
-      return `<div class="lt ${pos?'glow-pos':'glow-neg'}">
+      // PROTECTED = the trailing profit-lock has armed (EA's `secured` flag at +$0.3 peak),
+      // or — as a fallback — the SL has been pulled across entry. Once here, the trade is
+      // trailing in profit and can no longer turn into a full loss.
+      const secured=(o.secured===true)||((o.sl!=null&&o.entry!=null)&&(o.side==='BUY'?o.sl>=o.entry:o.sl<=o.entry));
+      const securedHtml=secured?`<div class="lt-secured"><span class="shield">🛡️</span><div><div class="msg">Profit secured — letting it run</div><div class="sub">Locked in the green · trailing the gains · this trade can no longer become a loss</div></div></div>`:'';
+      return `<div class="lt ${secured?'glow-pos':(pos?'glow-pos':'glow-neg')}">
         <div class="lt-top">
           <span class="badge ${o.ea}">${eaName(o.ea)}</span>
           <span class="lt-side ${o.side}">${o.side}</span>
           <span class="lt-meta">${o.lots} @ ${o.entry}${o.cur!=null?' · now '+o.cur:''}</span>
           <span class="lt-pnl ${pos?'pos':'neg'}">${money(o.pnl||0)}</span>
         </div>
+        ${securedHtml}
         <div class="lt-track">
           <div class="lt-entry" style="left:${entPct}%"></div>
           ${markHtml}
