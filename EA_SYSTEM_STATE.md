@@ -1,8 +1,15 @@
 # EA System State & Results — for future Claude (and Zee)
 
-**Last updated: 2026-05-22** — added "2R Free Roll" profit protection (breakeven /
-partial scale-out) after a research doc (Protecting Peak Trading Profits.pdf) and a
-live scare (two S3 buys floating +$168 with no trailing). Prior full update 2026-05-20.
+**Last updated: 2026-05-27** — GIVE-BACK KILLER: $-based breakeven on S1/S3/NSND.
+After a live day where 5/5 losers peaked green first (summed +$29) then bled to a
+full SL (-$45), added `InpBEArmUsd` — once a trade floats +$X, SL→entry+buffer so a
+green trade can no longer become a full loss. $-based (NOT R) because all 3 run M1
+now, where 1R is far wider than the scalp TP so the old R-based BE never armed.
+Levels: S1=$1.0, S3=$1.5, NSND=$1.5. Also S1 TP→$2 (s1_m1_exits: +$2 book beats +$3),
+and InpDailyLossHalt 25→50 on all (~20% of the $126 acct; halt_test showed tighter
+hurts EV). Validated native M1 + real ticks, multi-split (S3 BE@$1.5 = +$3817 vs
++$3697 baseline, lower maxDD). Compiled 0 errors → all 4 terminals. **Reattach
+required for the new BE code to load.** Prior update 2026-05-22 (2R Free Roll).
 
 This is the single source of truth for what's deployed, what was rejected, and the
 real validated numbers. Read this first before changing any EA.
@@ -109,19 +116,22 @@ Inputs (all EAs): `InpEnableBreakeven`, `InpBreakevenR`, `InpEnablePartial`,
 - **`InpMaxUpperWickFrac=0.35`** — reject if the green's upper wick > 35% of range (teacher
   "no rejection" rule). WR 63→69%, EV +19%.
 - SL = wicking-green.low − $2.00; TP = peak of last 10 M5 bars.
+- **TF=M1** (was M5). **`InpBEArmUsd=1.5`** give-back killer (see top of doc). Halt=$50.
 
 ### S1Trader.mq5 (magic 88004) — UHV/Climactic-Action-Bar breakout = Lesson 2 / VSA Scenario 3
 - BUY+SELL. Highest-volume bar in retracement, sweep of its extreme, break of its other side.
 - **`InpRequireBigSpread=true`, `InpBigSpreadMult=1.3`** — the climax bar must be a BIG-SPREAD
   candle (range ≥ 1.3× avg of prior 10), not just highest-volume. Walk-forward: OOS test
   +$413 vs +$168 baseline, **80% WR, EV $41.30** (3.4× baseline). Strongest single win of the night.
-- SL = UHV extreme ± $2.00; TP = $7.5 pts.
+- SL = UHV extreme ± $2.00; **TF=M1**, **TP=$2** (M1 scalp; was $7.5 on M5).
+- **`InpBEArmUsd=1.0`** give-back killer (see top of doc). Halt=$50.
 
 ### NsndTrader.mq5 (magic 88006) — No Supply/No Demand = Lessons 6-7
 - M1 NS/ND candle (small spread, vol < prev2), prior UHV, sweep+break entry.
 - **`InpUseH1Fvg=false`** → M15-only FVG. Walk-forward: WR 54→62%, train +$489→+$598,
   identical on test (every H1-FVG signal also had M15 FVG). Strictly ≥ old M15+H1.
-- SL tiny (past the NS/ND candle); TP $12.
+- SL tiny (past the NS/ND candle); TP $12. **TF=M1**, lots 0.01.
+- **`InpBEArmUsd=1.5`** give-back killer (see top of doc). Halt=$50.
 
 ### THE UNIFYING INSIGHT (most important takeaway)
 **Each setup's FVG must come from its OWN structure timeframe**, not a one-size H1:
