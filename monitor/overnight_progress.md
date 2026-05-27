@@ -269,3 +269,38 @@ By lot size (raw $): 0.09 lots → **−$99.5** (11 trades) · 0.03 → +$41.9 �
 **Implications for Zee (morning):** (1) confirms keeping lots at 0.01 (don't size up on backtest
 $). (2) The backtest overstates edge ~3-4×; the calibration pipeline should quantify this before
 trusting any "+$X/day" projection. No change made.
+
+---
+
+## Cycle 10 — 2026-05-27 ~09:46 PKT
+
+**Health:** ✅ engines alive (3s), ticks live, market OPEN. NSND stale = expected. 0 open.
+Today flat at −$16.31 (quiet patch, no new closes).
+
+**Research — live-attribution audit + going-forward baseline.** Tried to extend cycle 9's
+live-vs-backtest reconciliation to S1/S4. Found data gaps:
+- **S1 has NO decisions CSV** — can't ticket-join S1 historically.
+- **S4 has only 3 decisions logged** (s4_decisions.csv, all today) — too few to analyze.
+- S3's 43 (cycle 9) is the only sizeable per-EA history.
+- (Note: csv.DictReader is BLIND to the new magic/ea columns — the 12-col header truncates
+  them; must raw-split to read cols 12-13.)
+
+So the unified attribution source going forward is the **14-col magic/ea label** (live since the
+v1.02 reattach). First clean snapshot, last ~9h, all at 0.01 lots (raw == normalized):
+
+| Source | n | net @0.01 |
+|--------|---|-----------|
+| Human (Shano manual) | 6 | +$4.49 |
+| S1 | 1 | −$7.34 |
+| S3 | 3 | −$17.40 |
+| S4 | 2 | +$3.94 |
+
+**Verdict: baseline established (n too small for edge claims).** Confirms (a) all live fills are
+now uniformly 0.01 lots — the sizing fix is fully in effect; (b) the magic→EA attribution works
+end-to-end; (c) Shano's manual trades are net-positive over this window. EAs are slightly red on
+n=12 — pure variance, not signal. The honest takeaway: we now have CLEAN per-EA live tracking
+from here on, which is what cycle 7/9 said we needed to size expectations properly.
+
+**Proposal for Zee (morning):** rely on the 14-col ea label for all future live-vs-backtest
+tracking (S1 lacks a decisions CSV, but the magic column covers it). Once ~30-50 clean 0.01-lot
+fills accumulate per EA, re-run the cycle-9 normalized comparison for a real edge read.
