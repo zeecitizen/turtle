@@ -46,7 +46,7 @@
   @media(max-width:560px){.eas{grid-template-columns:1fr}}
   .ea{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;position:relative}
   .ea .top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-  .ea .nm{font-size:15px;font-weight:700} .ea .nm.s3{color:var(--amber)} .ea .nm.s1{color:var(--blue)} .ea .nm.ns{color:var(--purple)}
+  .ea .nm{font-size:13.5px;font-weight:700;line-height:1.2} .ea .nm.s3{color:var(--amber)} .ea .nm.s1{color:var(--blue)} .ea .nm.ns{color:var(--purple)} .ea .nm.s4{color:var(--green)}
   .ea .sd{width:9px;height:9px;border-radius:50%;background:var(--faint)}
   .ea .sd.on{background:var(--green);box-shadow:0 0 8px var(--green)}
   .ea .pnl{font-size:22px;font-weight:800;letter-spacing:-.5px}
@@ -67,6 +67,22 @@
   .banner{margin-top:10px;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:600}
   .banner.ok{background:rgba(43,213,118,.08);border:1px solid rgba(43,213,118,.25);color:var(--green)}
   .banner.warn{background:rgba(255,179,62,.1);border:1px solid rgba(255,179,62,.3);color:var(--amber)}
+  /* trade lifecycle stepper */
+  .lifecycle{display:flex;gap:4px;margin:4px 0 12px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:15px 10px;overflow-x:auto}
+  .lc-step{flex:1;min-width:62px;display:flex;flex-direction:column;align-items:center;text-align:center;
+    gap:7px;opacity:.32;transition:opacity .3s}
+  .lc-step .ic{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:19px;background:var(--card2);border:2px solid var(--line);filter:grayscale(1)}
+  .lc-step .lbl{font-size:10px;line-height:1.25;color:var(--dim);font-weight:600}
+  .lc-step.done{opacity:.7} .lc-step.done .ic{border-color:var(--green);filter:none}
+  .lc-step.active{opacity:1}
+  .lc-step.active .ic{filter:none;border-color:var(--amber);background:rgba(255,179,62,.16);
+    box-shadow:0 0 16px rgba(255,179,62,.45);animation:lcpulse 1.7s infinite}
+  .lc-step.active .lbl{color:var(--txt)}
+  .lc-step.active.win .ic{border-color:var(--green);background:rgba(43,213,118,.18);box-shadow:0 0 16px rgba(43,213,118,.5)}
+  .lc-step.active.loss .ic{border-color:var(--red);background:rgba(255,90,106,.18);box-shadow:0 0 16px rgba(255,90,106,.5)}
+  @keyframes lcpulse{0%,100%{box-shadow:0 0 9px rgba(255,179,62,.3)}50%{box-shadow:0 0 20px rgba(255,179,62,.6)}}
   /* LIVE open positions */
   .live-hd{display:flex;align-items:center;gap:8px}
   .live-pill{display:none;align-items:center;gap:6px;font-size:10px;font-weight:800;letter-spacing:.8px;
@@ -164,6 +180,7 @@
   <div class="st live-hd">Open Positions
     <span class="live-pill" id="livePill"><span class="dot"></span>LIVE</span>
     <span id="openTot" style="font-weight:400;font-size:11px;color:#6b7280"></span></div>
+  <div class="lifecycle" id="lifecycle"></div>
   <div id="openPos"></div>
 
   <!-- profit pulse + one-tap grab (shows only when floating profit feels big) -->
@@ -252,6 +269,7 @@ async function enableNotifs(){
 }
 if('serviceWorker' in navigator){navigator.serviceWorker.register('/sw.js').catch(()=>{});}
 const EAMETA={S3:{cls:'s3',full:'Liquidity Sweep'},S1:{cls:'s1',full:'UHV Breakout'},NSND:{cls:'ns',full:'No Supply/Demand'},S4:{cls:'s4',full:'Feb-11 UHV'}};
+const eaName=code=>({S1:'UHV Breakout',S3:'Liquidity Sweep',S4:'Feb-11 UHV',NSND:'No Supply/Demand',Human:'Manual'}[code]||code);
 
 function drawSpark(eq){
   const svg=$('spark'); if(!eq||eq.length<2){svg.innerHTML='';return;}
@@ -276,7 +294,17 @@ async function load(){
   // never confused by a lagging tick feed. data_status shows tick-feed health separately.
   const dataNote=(mt.data_status&&mt.data_status!=='live'&&mt.is_open)?(' · ticks '+mt.data_status):'';
   const acct=d.account||{}; const acctTxt=(acct.broker||'')+(acct.symbol?(' · '+acct.symbol):'');
-  $('subInfo').textContent=(acctTxt||'XAUUSD · VSA EAs')+(mt.pk_time?(' · '+mt.pk_time):'')+' · '+(mt.is_open?'Market OPEN':mktLbl)+dataNote;
+  const lastTradeTxt=mt.last_trade_pkt?(' · last trade '+mt.last_trade_pkt+' PKT'):' · no trades yet today';
+  $('subInfo').textContent=(acctTxt||'XAUUSD · VSA EAs')+(mt.pk_time?(' · '+mt.pk_time):'')+' · '+(mt.is_open?'Market OPEN':mktLbl)+dataNote+lastTradeTxt;
+  // trade lifecycle stepper — which stage is the live trade in right now
+  const LC=[{ic:'🔍',l:'Looking for a trade'},{ic:'🎯',l:'Approaching setup'},{ic:'📈',l:'Trade open'},{ic:'🧠',l:'Synthesizing exit'},{ic:'✅',l:'Closed'}];
+  const lc=d.lifecycle||{stage:1}, stg=lc.stage||1;
+  $('lifecycle').innerHTML=LC.map((s,i)=>{
+    const n=i+1; let cls=n<stg?'done':n===stg?'active':'';
+    let ic=s.ic,l=s.l;
+    if(n===5){ if(stg===5){cls+=(lc.outcome==='loss'?' loss':' win'); ic=lc.outcome==='loss'?'🔻':'✅'; l=lc.outcome==='loss'?'Closed — loss':'Closed — profit';} }
+    return `<div class="lc-step ${cls}"><div class="ic">${ic}</div><div class="lbl">${l}</div></div>`;
+  }).join('');
   // hero
   const p=d.pnl||{}; const tot=p.today_total||0;
   $('heroDate').textContent=(p.date||'TODAY')+' · realized';
@@ -298,11 +326,11 @@ async function load(){
     if(comp.alive) health=`<div class="health up">● online · ${ageStr} ago</div>`;
     else if(k==='NSND') health=`<div class="health off">○ disabled (off by design)</div>`;
     else health=`<div class="health down">🔴 offline${ageStr?' · '+ageStr+' ago':''} — reattach in MT5</div>`;
-    return `<div class="ea"><div class="top"><span class="nm ${meta.cls}">${k}</span>
+    return `<div class="ea"><div class="top"><span class="nm ${meta.cls}">${meta.full}</span>
       <span class="sd ${comp.alive?'on':''}"></span></div>
       <div class="pnl ${pc}">${money(e.pnl||0)}</div>
       <div class="row">${e.n||0} trades · ${e.w||0}W/${e.l||0}L</div>
-      <div class="tag">${meta.full} · ${comp.lots!=null?comp.lots+' lots':''}</div>
+      <div class="tag">${k} engine · ${comp.lots!=null?comp.lots+' lots':''}</div>
       ${health}</div>`;
   }).join('');
   // logging & monitoring strip — the data pipeline feeding the dashboard
@@ -327,9 +355,9 @@ async function load(){
   const eas=d.ea_status||[]; const allUp=eas.length&&eas.every(e=>e.alive);
   $('eaAllGood').textContent=eas.length?(allUp?'· ✅ all online':'· ⚠️ check red rows'):'';
   $('eaTable').innerHTML=
-    '<tr><th>EA</th><th>Version</th><th>Symbol</th><th>TF</th><th>Status</th></tr>'+
+    '<tr><th>Engine</th><th>Version</th><th>Symbol</th><th>TF</th><th>Status</th></tr>'+
     eas.map(e=>`<tr>
-      <td class="nm">${e.label}</td>
+      <td class="nm">${e.name||e.label}<span style="display:block;font-weight:400;font-size:10px;color:var(--faint)">${e.label}</span></td>
       <td class="v">v${e.version}</td>
       <td class="v">${e.symbol}</td>
       <td class="v">${e.tf}</td>
@@ -356,7 +384,7 @@ async function load(){
       const toTP=(o.tp!=null&&o.cur!=null)?(o.side==='BUY'?o.tp-o.cur:o.cur-o.tp):null;
       return `<div class="lt ${pos?'glow-pos':'glow-neg'}">
         <div class="lt-top">
-          <span class="badge ${o.ea}">${o.ea}</span>
+          <span class="badge ${o.ea}">${eaName(o.ea)}</span>
           <span class="lt-side ${o.side}">${o.side}</span>
           <span class="lt-meta">${o.lots} @ ${o.entry}${o.cur!=null?' · now '+o.cur:''}</span>
           <span class="lt-pnl ${pos?'pos':'neg'}">${money(o.pnl||0)}</span>
@@ -421,7 +449,7 @@ async function load(){
   const f=$('feed'), rec=d.recent||[];
   if(!rec.length){f.innerHTML='<div class="empty">No trades yet today</div>';}
   else{f.innerHTML=rec.map(t=>`<div class="tr"><span class="t">${t.time}</span>
-    <span class="badge ${t.ea.replace('?','')}">${t.ea}</span>
+    <span class="badge ${t.ea.replace('?','')}">${eaName(t.ea.replace('?',''))}</span>
     <span class="sd">${t.side} ${t.lot?'· '+t.lot+' lot':''} ${t.exit?'· '+t.exit:''}</span>
     <span style="text-align:right"><span class="v ${t.gross>=0?'pos':'neg'}">${money(t.gross)}</span><span style="display:block;font-size:10px;color:var(--faint);font-weight:400">net ${money(t.pnl)}</span></span></div>`).join('');}
 }

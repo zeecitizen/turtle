@@ -101,6 +101,22 @@ function getMarketState() {
 }
 function isMaintenanceBreak() { return getMarketState() === 'maintenance'; }
 
+// Parse a broker-time string "YYYY.MM.DD HH:MM:SS" → ms. Broker = GMT+3; all such
+// strings share that offset so diffs between them are valid without conversion.
+function parseBrokerTs(s) {
+  const m = (s || '').match(/(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+  return m ? Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]) : null;
+}
+// Format broker-time string as a PKT 12-hour clock (broker GMT+3 → PKT GMT+5 = +2h).
+function brokerToPkt(s) {
+  const ms = parseBrokerTs(s);
+  if (!ms) return null;
+  const pk = new Date(ms + 2 * 3600 * 1000);
+  const h = pk.getUTCHours(); const mn = pk.getUTCMinutes();
+  const ampm = h >= 12 ? 'PM' : 'AM'; const h12 = ((h + 11) % 12) + 1;
+  return `${h12}:${String(mn).padStart(2, '0')} ${ampm}`;
+}
+
 const FILLS_CSV       = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\turtle_fills.csv';
 // 2026-05-27: the shared MT5 Common\Files folder gets fills from BOTH the old FTMO
 // terminal (symbol "XAUUSD") and the live Exness one ("XAUUSDm"). Dashboard reflects
@@ -415,11 +431,11 @@ const RESTARTABLE = {
 // live from each EA's heartbeat when present (parsed.version), else from repo source.
 const MT5_SRC = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\mt5\\';
 const EA_MANIFEST = [
-  { key: 's1_trader',          label: 'S1Trader',          file: 'S1Trader.mq5',          tf: 'M5' },
-  { key: 's3_trader',          label: 'S3Trader',          file: 'S3Trader.mq5',          tf: 'M5' },
-  { key: 's4_trader',          label: 'S4Trader',          file: 'S4Trader.mq5',          tf: 'M5' },
-  { key: 'turtle_trade_logger',label: 'TurtleTradeLogger', file: 'TurtleTradeLogger.mq5', tf: 'M5' },
-  { key: 'shano_tick_logger',  label: 'ShanoTickLogger',   file: 'ShanoTickLogger.mq5',   tf: 'M5' },
+  { key: 's1_trader',          label: 'S1Trader',          name: 'UHV Breakout Engine',   file: 'S1Trader.mq5',          tf: 'M5' },
+  { key: 's3_trader',          label: 'S3Trader',          name: 'Liquidity Sweep Engine',file: 'S3Trader.mq5',          tf: 'M5' },
+  { key: 's4_trader',          label: 'S4Trader',          name: 'Feb-11 UHV Engine',     file: 'S4Trader.mq5',          tf: 'M5' },
+  { key: 'turtle_trade_logger',label: 'TurtleTradeLogger', name: 'Trade Fills Logger',    file: 'TurtleTradeLogger.mq5', tf: 'M5' },
+  { key: 'shano_tick_logger',  label: 'ShanoTickLogger',   name: 'Price Tick Logger',     file: 'ShanoTickLogger.mq5',   tf: 'M5' },
 ];
 function eaSrcVersion(file) {
   try { const m = fs.readFileSync(MT5_SRC + file, 'utf8').match(/#property version\s+"([^"]+)"/); return m ? m[1] : '?'; }
@@ -704,6 +720,7 @@ const server = http.createServer(async (req, res) => {
           magic: parsed.magic,
           lots: parsed.lots,
           version: parsed.version,
+          t: parsed.t,
           signals_today: parsed.signals_today,
           entries_today: parsed.entries_today,
           last_signal_t: parsed.last_signal_t,
@@ -815,6 +832,7 @@ const server = http.createServer(async (req, res) => {
     // ── Per-EA today P&L + recent-trades feed + today's equity curve ──
     const per_ea = { S3:{n:0,w:0,l:0,pnl:0}, S1:{n:0,w:0,l:0,pnl:0}, NSND:{n:0,w:0,l:0,pnl:0}, S4:{n:0,w:0,l:0,pnl:0} };
     const recent = [];
+    let lastFill = null;                             // {ts, pnl} of newest fill today — for lifecycle "just closed"
     const equity = [];
     const WHATIF_LOTS = [0.10, 0.30, 0.50, 1.00];   // "what if every trade were this lot?"
     const whatif = {};                              // lot -> scaled today P&L
@@ -842,6 +860,7 @@ const server = http.createServer(async (req, res) => {
         equity.push(Math.round(cum*100)/100);
       }
       for (const k of Object.keys(per_ea)) per_ea[k].pnl = Math.round(per_ea[k].pnl*100)/100;
+      if (todayRows.length) { const lp = todayRows[todayRows.length-1]; lastFill = { ts: lp[0], pnl: parseFloat(lp[10]) }; }
       // last 15 trades, newest first
       for (let i = todayRows.length-1; i >= 0 && recent.length < 15; i--) {
         const p = todayRows[i]; const v = parseFloat(p[10]);
@@ -871,6 +890,7 @@ const server = http.createServer(async (req, res) => {
       is_open: _ms === 'open',
       schedule_state: _ms,
       pk_time: _pkStr,
+      last_trade_pkt: lastFill ? brokerToPkt(lastFill.ts) : null,  // when the last fill closed (PKT)
       tick_age_sec: null,
       data_status: 'unknown',                           // tick freshness (data health, NOT market open)
     };
@@ -911,6 +931,35 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    // ── Trade lifecycle stage (drives the dashboard stepper) ──
+    // 1 Looking · 2 Approaching Setup · 3 Trade Open · 4 Synthesizing Exit · 5 Just Closed
+    let lifecycle = { stage: 1, outcome: null };
+    const parseBroker = parseBrokerTs;
+    if (open_positions.length) {
+      let prog = 0;  // furthest progress toward TP across open positions (0=at entry, 1=at TP)
+      for (const p of open_positions) {
+        if (p.tp != null && p.cur != null && p.entry != null && p.tp !== p.entry) {
+          const t = p.side === 'BUY' ? (p.cur - p.entry) / (p.tp - p.entry)
+                                     : (p.entry - p.cur) / (p.entry - p.tp);
+          prog = Math.max(prog, t);
+        }
+      }
+      lifecycle.stage = prog >= 0.6 ? 4 : 3;   // near target → "synthesizing exit"
+    } else {
+      const hbT = Math.max(0, ...Object.values(components).map(c => parseBroker(c.t) || 0));
+      const fillT = lastFill ? parseBroker(lastFill.ts) : null;
+      if (fillT && hbT && (hbT - fillT) < 4 * 60 * 1000) {
+        lifecycle = { stage: 5, outcome: lastFill.pnl >= 0 ? 'win' : 'loss' };  // just closed
+      } else {
+        let approaching = false;   // an EA logged a signal in the last ~4 min but we're flat
+        for (const c of Object.values(components)) {
+          const sigT = parseBroker(c.last_signal_t), tt = parseBroker(c.t);
+          if (sigT && tt && (tt - sigT) < 4 * 60 * 1000) { approaching = true; break; }
+        }
+        lifecycle.stage = approaching ? 2 : 1;
+      }
+    }
+
     // ── Profit pulse: how big does the open floating profit "feel"? ──
     let pulse = { floating_total: 0, n_open: 0, bigness: 0 };
     for (const k of ['s3_trader', 's1_trader', 'nsnd_trader']) {
@@ -946,9 +995,10 @@ const server = http.createServer(async (req, res) => {
       warnings, pnl, per_ea, recent, equity, whatif, market, components, pulse, restartable,
       account: { broker: ACCOUNT_BROKER, symbol: ACTIVE_SYMBOL },
       open_positions,
+      lifecycle,
       ea_status: EA_MANIFEST.map(e => {
         const c = components[e.key] || {};
-        return { label: e.label, version: c.version || EA_SRC_VERSIONS[e.key],
+        return { label: e.label, name: e.name, version: c.version || EA_SRC_VERSIONS[e.key],
                  symbol: ACTIVE_SYMBOL, tf: e.tf, alive: !!c.alive };
       }),
     };
