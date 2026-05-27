@@ -12,7 +12,8 @@ Rules: research/propose only, no live deploys, no config changes, validate FULL 
 loggers fresh. Only standing warning = NsndTrader stale, which is EXPECTED (NSND is disabled).
 No service ever went down; nothing needed restarting.
 
-**Live result today:** −$16.31 (12 trades, 75% WR) — a mild red day. Bounded: the $25 daily-loss
+**Live result today:** recovered to −$1.33 (14 trades, 79% WR) by ~11:46 PKT — was −$16.31 mid-night,
+clawed back by S1+S4 wins (today's red was all S3 variance, cycle 14). Bounded: the $25 daily-loss
 circuit breaker is verified wired (cycle 5), and all live fills are now uniformly 0.01 lots.
 
 **3 things worth your attention:**
