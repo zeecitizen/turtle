@@ -273,6 +273,7 @@
 <script>
 const $=id=>document.getElementById(id);
 const money=v=>(v>0?'+':v<0?'−':'')+'$'+Math.abs(v).toFixed(2);
+let CHART_OVERLAY=[];   // live open positions {side,entry,sl,tp,ea} overlaid on the candle chart
 
 // dashboard password (kept out of page source; cached after first prompt)
 function dashKey(){let k=localStorage.getItem('dashKey');if(!k){k=prompt('Dashboard password:');if(k)localStorage.setItem('dashKey',k);}return k;}
@@ -424,6 +425,7 @@ async function load(){
   // unified source: server merges ALL open positions (EA + manual "Human") from
   // TurtleTradeLogger's snapshot, falling back to per-EA heartbeats if it's stale.
   let allOpen=(d.open_positions||[]).slice();
+  CHART_OVERLAY=allOpen.map(o=>({side:o.side,entry:o.entry,sl:o.sl,tp:o.tp,ea:o.ea}));  // for the live chart
   if(allOpen.length){
     livePill.classList.add('on');
     const flt=allOpen.reduce((s,o)=>s+(o.pnl||0),0);
@@ -551,13 +553,15 @@ function renderClocks(){
 }
 renderClocks(); setInterval(renderClocks,1000);
 
-// ── Live candle chart: real ticks → M5 candles ──
+// ── Live candle chart: real ticks → M5 candles (+ live entry/SL/TP overlay) ──
 function drawCandles(d){
   const svg=$('candles'); if(!svg) return;
   const cs=(d&&d.candles)||[];
   if(cs.length<2){svg.innerHTML='<text x="350" y="110" text-anchor="middle" fill="#5a6478" font-size="13">waiting for ticks…</text>';return;}
-  const W=700,H=220,padX=10,padT=12,padB=18;
-  const hi=Math.max(...cs.map(c=>c.h)), lo=Math.min(...cs.map(c=>c.l)), rng=(hi-lo)||1;
+  const W=700,H=220,padX=10,padT=12,padB=18,labX=W-padX;
+  // include any live entry/SL/TP prices in the range so the overlay lines are visible
+  const extra=[]; CHART_OVERLAY.forEach(o=>{[o.entry,o.sl,o.tp].forEach(v=>{if(v)extra.push(v);});});
+  const hi=Math.max(...cs.map(c=>c.h),...extra), lo=Math.min(...cs.map(c=>c.l),...extra), rng=(hi-lo)||1;
   const step=(W-2*padX)/cs.length, bw=Math.max(2,step*0.62);
   const y=p=>padT+(hi-p)/rng*(H-padT-padB);
   let out='';
@@ -567,9 +571,16 @@ function drawCandles(d){
     out+=`<line x1="${cx.toFixed(1)}" y1="${yh.toFixed(1)}" x2="${cx.toFixed(1)}" y2="${yl.toFixed(1)}" stroke="${col}" stroke-width="1.2"/>`;
     out+=`<rect x="${(cx-bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}" rx="1"/>`;
   });
+  // live trade overlay: entry / SL / TP price lines, drawn over the real candles
+  const lvl=(p,color,label,dash)=>{const yy=y(p).toFixed(1);return `<line x1="${padX}" y1="${yy}" x2="${labX}" y2="${yy}" stroke="${color}" stroke-width="1.3" ${dash?'stroke-dasharray="5 3"':''}/><text x="${padX+2}" y="${(y(p)-3).toFixed(1)}" font-size="10" font-weight="700" fill="${color}">${label} ${p.toFixed(2)}</text>`;};
+  CHART_OVERLAY.forEach(o=>{
+    if(o.entry) out+=lvl(o.entry,'#e6ebf5','▶ '+o.side,true);
+    if(o.tp)    out+=lvl(o.tp,'#2bd576','TP',false);
+    if(o.sl)    out+=lvl(o.sl,'#ff5a6a','SL',false);
+  });
   const last=cs[cs.length-1].c, yL=y(last);
-  out+=`<line x1="${padX}" y1="${yL.toFixed(1)}" x2="${W-padX}" y2="${yL.toFixed(1)}" stroke="rgba(255,255,255,.16)" stroke-dasharray="3 3"/>`;
-  out+=`<text x="${(W-padX).toFixed(1)}" y="${(yL-3).toFixed(1)}" text-anchor="end" font-size="11" fill="#9aa4b2">${last.toFixed(2)}</text>`;
+  out+=`<line x1="${padX}" y1="${yL.toFixed(1)}" x2="${labX}" y2="${yL.toFixed(1)}" stroke="rgba(255,255,255,.16)" stroke-dasharray="3 3"/>`;
+  out+=`<text x="${labX.toFixed(1)}" y="${(yL-3).toFixed(1)}" text-anchor="end" font-size="11" fill="#9aa4b2">${last.toFixed(2)}</text>`;
   svg.innerHTML=out;
 }
 function loadCandles(){
