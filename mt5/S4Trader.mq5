@@ -270,6 +270,33 @@ void CheckGrabCommand() {
    if (closed > 0) Log(StringFormat("[GRAB] id=%I64d closed %d", id, closed));
 }
 
+// READ-ONLY: the momentum-UHV setup S4 is currently watching, for the live chart.
+// Mirrors TrySignal: td24 momentum direction → highest-volume opposite-colour UHV bar
+// in the retracement → its breakout level. No trade logic touched.
+string BuildWatchJson() {
+   double td24 = iClose(_Symbol,PERIOD_M5,1) - iClose(_Symbol,PERIOD_M5,25);
+   int td = TrendDir(), dir = 0;
+   if (InpDoBuys && td24 >= InpTrend24Min && (!InpRequireTrend || td == 1)) dir = 1;
+   else if (InpDoSells && td24 <= -InpTrend24Min && (!InpRequireTrend || td == -1)) dir = -1;
+   if (dir == 0) return "null";
+   int uhv_shift = -1; long uhv_v = -1;
+   for (int s = 2; s <= 1 + InpRetraceLookback; s++) {
+      double o = iOpen(_Symbol,PERIOD_M5,s), c = iClose(_Symbol,PERIOD_M5,s);
+      bool match = (dir == 1) ? (c < o) : (c > o);   // buy→UHV red; sell→UHV green
+      if (!match) continue;
+      long v = iVolume(_Symbol,PERIOD_M5,s);
+      if (v > uhv_v) { uhv_v = v; uhv_shift = s; }
+   }
+   if (uhv_shift < 0) return "null";
+   double uhv_h = iHigh(_Symbol,PERIOD_M5,uhv_shift), uhv_l = iLow(_Symbol,PERIOD_M5,uhv_shift);
+   return StringFormat(
+      "{\"dir\":\"%s\",\"ref_bar_t\":\"%s\",\"ref_high\":%.3f,\"ref_low\":%.3f,\"level\":%.3f,\"setup_bar_t\":\"%s\"}",
+      dir == 1 ? "buy" : "sell",
+      TimeToString(iTime(_Symbol,PERIOD_M5,uhv_shift),TIME_DATE|TIME_SECONDS),
+      uhv_h, uhv_l, (dir == 1 ? uhv_h : uhv_l),
+      TimeToString(iTime(_Symbol,PERIOD_M5,1),TIME_DATE|TIME_SECONDS));
+}
+
 void WriteHeartbeat() {
    if ((TimeCurrent() - g_last_heartbeat) < InpHeartbeatSec) return;
    g_last_heartbeat = TimeCurrent();
@@ -281,10 +308,10 @@ void WriteHeartbeat() {
       "{\"ea\":\"S4Trader\",\"version\":\"2.01\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
-      "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
+      "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"watch\":%s,\"open\":%s}",
       TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS), g_signals_today, g_entries_today,
       TimeToString(g_last_signal_t,TIME_DATE|TIME_SECONDS), InpMagicNumber, InpLots,
-      floating, n_open, bigness, InpAvgWinUsd, BuildOpenJson()));
+      floating, n_open, bigness, InpAvgWinUsd, BuildWatchJson(), BuildOpenJson()));
    FileClose(fh);
 }
 

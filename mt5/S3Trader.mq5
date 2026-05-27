@@ -537,6 +537,50 @@ void LogDecisionCsv(datetime bo_t, double bo_c, double bo_l, long bo_v,
 }
 
 //── State JSON heartbeat for dashboards / watchdog ─────────────────
+// READ-ONLY: the liquidity-sweep setup S3 is currently watching, for the live chart.
+// Mirrors the detection: trend → retracement (green-low broken by reds for buy / red-high
+// broken by greens for sell) → the extreme level S3 wants swept & reclaimed. No trade logic.
+string BuildWatchJson() {
+   int dir = 0;
+   if (InpDoBuys && IsUptrendM5(1) && Trend60OK(true)) dir = 1;
+   else if (InpDoSells && IsDowntrendM5(1) && Trend60OK(false)) dir = -1;
+   if (dir == 0) return "null";
+
+   int reds[30]; int reds_count = 0;
+   for (int back_g = 2; back_g <= 1 + InpRetraceLookback; back_g++) {
+      double g_o = iOpen(_Symbol, PERIOD_M5, back_g), g_c = iClose(_Symbol, PERIOD_M5, back_g);
+      double g_l = iLow(_Symbol, PERIOD_M5, back_g),  g_h = iHigh(_Symbol, PERIOD_M5, back_g);
+      bool green = (g_c > g_o);
+      if (dir == 1 ? !green : green) continue;     // buy seeks a prior green; sell a prior red
+      bool any_broke = false; int tmp[30]; int found = 0;
+      for (int j = back_g - 1; j >= 2; j--) {
+         double r_o = iOpen(_Symbol, PERIOD_M5, j), r_c = iClose(_Symbol, PERIOD_M5, j);
+         double r_l = iLow(_Symbol, PERIOD_M5, j),  r_h = iHigh(_Symbol, PERIOD_M5, j);
+         bool isRed = (r_c < r_o);
+         if (dir == 1 ? isRed : !isRed) {
+            if (dir == 1) { if (r_c < g_l || r_l < g_l) any_broke = true; }
+            else          { if (r_c > g_h || r_h > g_h) any_broke = true; }
+            if (found < 30) tmp[found++] = j;
+         }
+      }
+      if (any_broke && found > 0) { for (int k = 0; k < found; k++) reds[k] = tmp[k]; reds_count = found; break; }
+   }
+   if (reds_count == 0) return "null";
+
+   int ref_shift = reds[0];
+   double level = (dir == 1) ? iLow(_Symbol, PERIOD_M5, reds[0]) : iHigh(_Symbol, PERIOD_M5, reds[0]);
+   for (int r = 1; r < reds_count; r++) {
+      double v = (dir == 1) ? iLow(_Symbol, PERIOD_M5, reds[r]) : iHigh(_Symbol, PERIOD_M5, reds[r]);
+      if (dir == 1 ? (v < level) : (v > level)) { level = v; ref_shift = reds[r]; }
+   }
+   return StringFormat(
+      "{\"dir\":\"%s\",\"ref_bar_t\":\"%s\",\"ref_high\":%.3f,\"ref_low\":%.3f,\"level\":%.3f,\"setup_bar_t\":\"%s\"}",
+      dir == 1 ? "buy" : "sell",
+      TimeToString(iTime(_Symbol, PERIOD_M5, ref_shift), TIME_DATE|TIME_SECONDS),
+      iHigh(_Symbol, PERIOD_M5, ref_shift), iLow(_Symbol, PERIOD_M5, ref_shift), level,
+      TimeToString(iTime(_Symbol, PERIOD_M5, 1), TIME_DATE|TIME_SECONDS));
+}
+
 void WriteHeartbeat() {
    if ((TimeCurrent() - g_last_heartbeat) < InpHeartbeatSec) return;
    g_last_heartbeat = TimeCurrent();
@@ -550,12 +594,12 @@ void WriteHeartbeat() {
       "{\"ea\":\"S3Trader\",\"version\":\"2.32\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
-      "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
+      "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"watch\":%s,\"open\":%s}",
       TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
       g_signals_today, g_entries_today,
       TimeToString(g_last_signal_t, TIME_DATE | TIME_SECONDS),
       InpMagicNumber, InpLots,
-      floating, n_open, bigness, InpAvgWinUsd, BuildOpenJson()));
+      floating, n_open, bigness, InpAvgWinUsd, BuildWatchJson(), BuildOpenJson()));
    FileClose(fh);
 }
 

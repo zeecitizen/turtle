@@ -55,6 +55,14 @@
   .chartbox svg{width:100%;height:200px;display:block}
   .chart-cap{font-size:12.5px;line-height:1.5;color:var(--dim);margin:8px 4px 0}
   .chart-cap div{margin:3px 0} .chart-cap b{color:var(--txt);font-weight:600}
+  /* per-strategy lifecycle rows */
+  #eaLifecycle{margin:10px 0 4px}
+  .ealc{display:flex;align-items:center;gap:9px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
+    border-radius:12px;padding:10px 13px;margin:6px 0;font-size:13px}
+  .ealc .ealc-dot{width:9px;height:9px;border-radius:50%;flex:none}
+  .ealc .ph{font-weight:700;color:var(--txt)}
+  .ealc .dt{color:var(--dim);font-size:12px;margin-left:auto;text-align:right}
+  @media(max-width:560px){.ealc .dt{margin-left:0;width:100%}}
   /* world session clocks */
   .clocks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
   @media(max-width:560px){.clocks{grid-template-columns:repeat(2,1fr)}}
@@ -218,20 +226,19 @@
   <!-- world session clocks (live-ticking, countdown to each session) -->
   <div class="clocks" id="clocks"></div>
 
-  <!-- live open positions (what the system is holding RIGHT NOW) -->
+  <!-- WHAT'S UP — live chart + each engine's own lifecycle phase, merged -->
   <div class="st live-hd">What's up?
     <span class="live-pill" id="livePill"><span class="dot"></span>LIVE</span>
+    <span id="chartMeta" style="font-weight:400;font-size:11px;color:#6b7280"></span>
     <span id="openTot" style="font-weight:400;font-size:11px;color:#6b7280"></span></div>
-  <div class="lifecycle" id="lifecycle"></div>
+  <div class="chartbox"><svg id="candles" viewBox="0 0 700 220" preserveAspectRatio="xMidYMid meet"></svg></div>
+  <!-- per-strategy lifecycle: which phase each engine is in right now -->
+  <div id="eaLifecycle"></div>
+  <!-- open-trade gauge cards (appear only when a position is open) -->
   <div id="openPos"></div>
 
   <!-- profit pulse + one-tap grab (shows only when floating profit feels big) -->
   <div id="pulseCard" style="display:none;background:#11161f;border:1px solid #243042;border-radius:14px;padding:14px;margin:12px 0"></div>
-
-  <!-- live candle chart: real ticks aggregated to M5 candles -->
-  <div class="st">Live Chart <span id="chartMeta" style="font-weight:400;font-size:11px;color:#6b7280"></span></div>
-  <div class="chartbox"><svg id="candles" viewBox="0 0 700 220" preserveAspectRatio="xMidYMid meet"></svg></div>
-  <div class="chart-cap" id="chartWatch"></div>
 
   <!-- per-EA cards -->
   <div class="st">Engines</div>
@@ -278,6 +285,7 @@ const $=id=>document.getElementById(id);
 const money=v=>(v>0?'+':v<0?'−':'')+'$'+Math.abs(v).toFixed(2);
 let CHART_OVERLAY=[];   // live open positions {side,entry,sl,tp,ea} overlaid on the candle chart
 let CHART_WATCH=[];     // setups each engine is currently eyeing {dir,ref_bar_t,level,ea,...}
+let LAST_PRICE=0;       // latest live price (from the candle feed) — used to detect stale levels
 
 // dashboard password (kept out of page source; cached after first prompt)
 function dashKey(){let k=localStorage.getItem('dashKey');if(!k){k=prompt('Dashboard password:');if(k)localStorage.setItem('dashKey',k);}return k;}
@@ -355,15 +363,7 @@ async function load(){
   const lastTradeTxt=mt.last_trade_pkt?(' · last trade '+mt.last_trade_pkt+' PKT'):' · no trades yet today';
   // market state + PK time live in the top-right chip — don't duplicate them here
   $('subInfo').textContent=(acctTxt||'XAUUSD · VSA EAs')+dataNote+lastTradeTxt;
-  // trade lifecycle stepper — which stage is the live trade in right now
-  const LC=[{ic:'🔍',l:'Looking for a trade'},{ic:'🎯',l:'Approaching setup'},{ic:'📈',l:'Trade open'},{ic:'🧠',l:'Synthesizing exit'},{ic:'✅',l:'Closed'}];
-  const lc=d.lifecycle||{stage:1}, stg=lc.stage||1;
-  $('lifecycle').innerHTML=LC.map((s,i)=>{
-    const n=i+1; let cls=n<stg?'done':n===stg?'active':'';
-    let ic=s.ic,l=s.l;
-    if(n===5){ if(stg===5){cls+=(lc.outcome==='loss'?' loss':' win'); ic=lc.outcome==='loss'?'🔻':'✅'; l=lc.outcome==='loss'?'Closed — loss':'Closed — profit';} }
-    return `<div class="lc-step ${cls}"><div class="ic">${ic}</div><div class="lbl">${l}</div></div>`;
-  }).join('');
+  // (per-strategy lifecycle is rendered below, after each engine's watch is known)
   // hero
   const p=d.pnl||{}; const tot=p.today_total||0;
   $('heroDate').textContent=(p.date||'TODAY')+' · realized';
@@ -430,12 +430,15 @@ async function load(){
   // TurtleTradeLogger's snapshot, falling back to per-EA heartbeats if it's stale.
   let allOpen=(d.open_positions||[]).slice();
   CHART_OVERLAY=allOpen.map(o=>({side:o.side,entry:o.entry,sl:o.sl,tp:o.tp,ea:o.ea}));  // for the live chart
-  // setups each engine is eyeing right now (for the chart's watch highlight)
+  // setups each engine is eyeing right now (for the chart) — only show levels NOT yet
+  // crossed; once price runs past without a clean trigger the setup is stale (don't mislead).
   CHART_WATCH=[];
   [['s1_trader','S1'],['s3_trader','S3'],['s4_trader','S4']].forEach(([ck,code])=>{
-    const w=(c[ck]||{}).watch; if(w&&w.dir&&w.dir!=='none') CHART_WATCH.push(Object.assign({ea:code},w));
+    const w=(c[ck]||{}).watch; if(!(w&&w.dir&&w.dir!=='none')) return;
+    const crossed=LAST_PRICE>0 && (w.dir==='buy'?LAST_PRICE>=w.level:LAST_PRICE<=w.level);
+    if(!crossed) CHART_WATCH.push(Object.assign({ea:code},w));
   });
-  watchCaption();
+  renderEaLifecycle(d);
   if(allOpen.length){
     livePill.classList.add('on');
     const flt=allOpen.reduce((s,o)=>s+(o.pnl||0),0);
@@ -623,28 +626,42 @@ function drawCandles(d){
   out+=`<text x="${(labX+4).toFixed(1)}" y="${(yL+3).toFixed(1)}" font-size="9" font-weight="800" fill="#0a0e17">${last.toFixed(2)}</text>`;
   svg.innerHTML=out;
 }
-// plain-English caption under the chart explaining what each engine is doing
-function watchCaption(){
-  const el=$('chartWatch'); if(!el) return;
-  let html='';
-  CHART_OVERLAY.forEach(o=>{
-    html+=`<div>📈 <b>${eaName(o.ea)}</b> is <b>in a ${o.side} trade</b> — entered ${(+o.entry).toFixed(2)}, stop-loss ${o.sl?(+o.sl).toFixed(2):'—'}, target ${o.tp?(+o.tp).toFixed(2):'—'}.</div>`;
-  });
-  CHART_WATCH.forEach(w=>{
-    const dirTxt=w.dir==='buy'
-      ? `a <b>BUY</b> — it will enter only if price breaks <b>above ${w.level.toFixed(2)}</b>`
-      : `a <b>SELL</b> — it will enter only if price breaks <b>below ${w.level.toFixed(2)}</b>`;
-    html+=`<div>👀 <b>${eaName(w.ea)}</b> is watching for ${dirTxt} (eyeing the ${toPkt12(w.ref_bar_t)} PKT candle, ringed above).</div>`;
-  });
-  if(!html) html='<span style="color:var(--faint)">No setup forming right now — the engines are quietly scanning each new candle.</span>';
-  el.innerHTML=html;
+// per-strategy lifecycle: one plain-English row per engine showing its exact phase.
+// 🔍 Looking · 🎯 Approaching (a live, not-yet-crossed setup) · 📈 In a trade · ⚪ Offline
+function renderEaLifecycle(d){
+  const el=$('eaLifecycle'); if(!el) return;
+  const c=d.components||{}, COL={S1:'#4d9fff',S3:'#ffb33e',S4:'#2bd576'};
+  el.innerHTML=[['s1_trader','S1'],['s3_trader','S3'],['s4_trader','S4']].map(([ck,code])=>{
+    const comp=c[ck]||{}, col=COL[code];
+    const opens=(d.open_positions||[]).filter(o=>o.ea===code);
+    const w=comp.watch;
+    let icon,phase,detail;
+    if(opens.length){
+      const o=opens[0], flt=opens.reduce((s,x)=>s+(x.pnl||0),0);
+      icon='📈'; phase='In a '+o.side+' trade';
+      detail='floating '+money(flt)+' · target '+(o.tp?(+o.tp).toFixed(2):'—')+' · stop '+(o.sl?(+o.sl).toFixed(2):'—');
+    } else if(!comp.alive){
+      icon='⚪'; phase='Offline'; detail='reattach in MT5';
+    } else if(w&&w.dir){
+      const crossed=LAST_PRICE>0 && (w.dir==='buy'?LAST_PRICE>=w.level:LAST_PRICE<=w.level);
+      if(crossed){ icon='🔍'; phase='Looking for a setup'; detail='(its '+w.dir+' level '+(+w.level).toFixed(2)+' was passed without a clean trigger)'; }
+      else { icon='🎯'; phase='Approaching a '+w.dir.toUpperCase(); detail='enters only if price breaks '+(w.dir==='buy'?'above':'below')+' '+(+w.level).toFixed(2); }
+    } else {
+      icon='🔍'; phase='Looking for a setup'; detail='scanning each new candle';
+    }
+    return `<div class="ealc"><span class="ealc-dot" style="background:${col}"></span>`+
+      `<b style="color:${col}">${eaName(code)}</b><span class="ph">${icon} ${phase}</span>`+
+      `<span class="dt">${detail}</span></div>`;
+  }).join('');
 }
 function loadCandles(){
   fetch('/api/candles?n=28',{cache:'no-store'}).then(r=>r.json()).then(d=>{
-    drawCandles(d);
     const cs=d.candles||[];
-    if(cs.length){ const pk=t=>{const dt=new Date((t+2*3600)*1000);return ('0'+dt.getUTCHours()).slice(-2)+':'+('0'+dt.getUTCMinutes()).slice(-2);};
-      $('chartMeta').textContent='· '+(d.symbol||'')+' · M5 · '+pk(cs[0].t)+'–'+pk(cs[cs.length-1].t)+' PKT'; }
+    if(cs.length) LAST_PRICE=cs[cs.length-1].c;   // live price → stale-level detection
+    drawCandles(d);
+    const mt=$('chartMeta');
+    if(mt&&cs.length){ const pk=t=>{const dt=new Date((t+2*3600)*1000);return ('0'+dt.getUTCHours()).slice(-2)+':'+('0'+dt.getUTCMinutes()).slice(-2);};
+      mt.textContent='· '+(d.symbol||'')+' · M5 · '+pk(cs[0].t)+'–'+pk(cs[cs.length-1].t)+' PKT'; }
   }).catch(()=>{});
 }
 loadCandles(); setInterval(loadCandles,5000);
