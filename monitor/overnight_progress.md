@@ -210,3 +210,29 @@ pipeline (`build_slip_calibration.py` + `pdf5_quick_compare.py`) once enough liv
 accumulate — that's the honest way to size expectations. No change made.
 
 (Used an inline parse of v230_backtest output; no new script committed.)
+
+---
+
+## Cycle 8 — 2026-05-27 ~08:46 PKT
+
+**Health:** ✅ engines alive (1s), ticks live, market OPEN. NSND stale = expected. 1 open.
+Today still −$18.31 (flat, no new closes).
+
+**Research:** Validated the DEPLOYED S4 config (M5, TP2/SL7.5, td24≥7, ER off — confirmed from
+S4Trader.mq5 source) via `verify_s4_trend_only.py`, multi-split walk-forward on real ticks:
+
+- **td24≥7 (deployed): 6/7 splits beat baseline ✅ ROBUST.** td24≥5 also 5/7 ✅.
+- Totals ≈ +$58 TRAIN + ~+$28 OOS ≈ **+$87 / 19 days @ 0.01** (~+$4.6/day). Small but positive.
+- The trend filter earns its keep on choppy days: 05-04 −$7.0→+$0.5, 05-05 −$1.0→+$6.5,
+  05-14 −$7.5→skipped (0 trades). It removes losers, not winners.
+- Worst day −$15 (05-25, 2 trades both lost) — within the $25 daily halt.
+
+**Verdict: VALIDATED — keep.** S4 is a legitimate small contributor with a robust trend filter.
+Unlike BtcS4b (cycle 6, net-negative, no edge), S4's live config is walk-forward-positive. Honest
+limit: the edge is small (~$4.6/day backtest, less live) and one −$15 day erases ~3 good days, so
+it's a minor add-on, not a workhorse. No change needed.
+
+**Per-EA scorecard so far (backtest, real ticks, 0.01 lots):**
+- S1 ✅ strong (OOS +$235, WF✓) · S3 ✅ solid (+$298, WF✓, SELL-heavy) · S4 ✅ small+robust (+$87, 6/7)
+- BtcS4b ⚠️ net-negative (−$56/51d, no edge — review) · NSND ⏸ disabled
+- ER filter ❌ rejected for all (hurts S1, overfit on S3)
