@@ -68,6 +68,7 @@ input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = 
 input double InpBEArmUsd        = 0.0;   // Breakeven: lock SL at entry once trade is +$this profit. SUPERSEDED by the trailing lock below (0=off). Set >0 only to use fixed BE instead of the trail.
 input double InpTrailActUsd     = 0.3;   // Trailing lock: arm once trade is +$this profit, then trail its peak. Validated best-or-tied on S1/S3/NSND. 0=off.
 input double InpTrailGiveUsd    = 0.3;   // Trailing lock: bank & exit if profit falls $this back from its peak ($0.3 keeps it outside gold spread so noise can't shake you out).
+input string InpPeakLogFile     = "trade_peaks_S3.csv";  // closed-trade peak (MFE) log in Common\Files — feeds the live "% of trades reached here" slider markers.
 input bool   InpEnablePartial   = true;  // bank InpPartialFrac of the position at +InpPartialR, then BE the rest (Income tranche). NOTE: on reattach, any open trade already past +1.5R is partialed+BE'd immediately.
 input double InpPartialR        = 1.5;   // R-multiple to bank the partial.
 input double InpPartialFrac     = 0.5;   // fraction of position volume to bank (rounded to lot step).
@@ -138,6 +139,9 @@ ulong  g_mng_ticket[256];
 double g_mng_sl0[256];
 bool   g_mng_partialed[256];
 double g_mng_peak[256];      // per-position peak floating profit ($) — drives the trailing lock
+double g_mng_entry[256];     // entry price (for the closed-trade peak log)
+int    g_mng_side[256];      // +1 buy / -1 sell (for the log)
+bool   g_mng_logged[256];    // has this closed trade's peak been written to the MFE log yet
 int    g_mng_count = 0;
 
 //── One-tap GRAB state ──────────────────────────────────────────────
@@ -620,6 +624,9 @@ int MngIndex(ulong ticket) {
    g_mng_sl0[idx]       = PositionGetDouble(POSITION_SL);
    g_mng_partialed[idx] = false;
    g_mng_peak[idx]      = 0.0;
+   g_mng_entry[idx]     = PositionGetDouble(POSITION_PRICE_OPEN);
+   g_mng_side[idx]      = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? 1 : -1;
+   g_mng_logged[idx]    = false;
    return idx;
 }
 
@@ -709,6 +716,28 @@ void ManageOpenPositions() {
                              ticket, be_sl, prof / R, cur_tp));
       }
    }
+
+   // ── Closed-trade peak (MFE) logging ───────────────────────────────
+   // Any ticket we were tracking that is no longer open has closed — write its
+   // peak floating profit once. The dashboard turns these into the live
+   // "X% of trades reached here" markers on the trade slider (real data, not backtest).
+   for (int j = 0; j < g_mng_count; j++) {
+      if (g_mng_logged[j] || g_mng_ticket[j] == 0) continue;
+      if (PositionSelectByTicket(g_mng_ticket[j])) continue;   // still open → skip
+      AppendPeakLog(g_mng_side[j], g_mng_entry[j], g_mng_peak[j]);
+      g_mng_logged[j] = true;
+   }
+}
+
+//── Append one closed trade's peak (MFE) to the per-EA log in Common\Files ──
+void AppendPeakLog(int side, double entry, double peak) {
+   int fh = FileOpen(InpPeakLogFile, FILE_READ | FILE_WRITE | FILE_TXT | FILE_COMMON | FILE_ANSI);
+   if (fh == INVALID_HANDLE) return;
+   FileSeek(fh, 0, SEEK_END);
+   FileWriteString(fh, StringFormat("%s,%s,%.2f,%.2f\n",
+       TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
+       side > 0 ? "BUY" : "SELL", entry, peak));
+   FileClose(fh);
 }
 
 //── Floating P&L (this EA's open positions) ────────────────────────
