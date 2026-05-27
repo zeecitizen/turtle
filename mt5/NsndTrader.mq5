@@ -28,7 +28,7 @@
 //| Magic 88006 (distinct from S3=88003 / BTC=88005).                |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — NS/ND VSA"
-#property version   "1.31"
+#property version   "1.32"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -108,6 +108,10 @@ input bool   InpVerbose       = true;
 input string InpLogPrefix     = "NSND";
 input string InpStateFile     = "nsnd_trader_state.json";
 input string InpDecisionCsv   = "nsnd_decisions.csv";  // per-trade log for reconciler
+input bool   InpMaxOneSameDir = true;  // ANTI-CLUSTER: don't open if S1/S3/NSND already hold a position the SAME direction. Validated on real ticks. 0=off.
+input bool   InpSkipOvernight = true;  // skip NEW entries during thin 00:00-06:00 broker hours. 0=off.
+input int    InpOvernightStart= 0;     // broker hour: block new entries from here ...
+input int    InpOvernightEnd  = 6;     // ... until here (exclusive).
 input int    InpHeartbeatSec  = 5;
 
 //── State ───────────────────────────────────────────────────────────
@@ -378,6 +382,7 @@ bool TryNsndSignal() {
       Log(StringFormat("%s — entry=%.2f sl=%.2f tp=%.2f ns_shift=%d",
                        buy_setup ? "NS BUY" : "ND SELL", entry, sl, tp, k));
 
+      if (ClusterBlocked(buy_setup ? +1 : -1)) return false;
       bool ok;
       if (buy_setup) ok = g_trade.Buy(InpLots, _Symbol, 0, sl, tp, "NS_buy");
       else           ok = g_trade.Sell(InpLots, _Symbol, 0, sl, tp, "ND_sell");
@@ -478,7 +483,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"NsndTrader\",\"version\":\"1.31\",\"alive\":true,"
+      "{\"ea\":\"NsndTrader\",\"version\":\"1.32\",\"alive\":true,"
       "\"symbol\":\"%s\",\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.4f,\"tp_usd\":%.0f,"
       "\"watch\":%s,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
@@ -634,6 +639,34 @@ void AppendPeakLog(int side, double entry, double peak, double trough, double la
        TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
        side > 0 ? "BUY" : "SELL", entry, peak, trough, last));
    FileClose(fh);
+}
+
+//── ANTI-CLUSTER GUARD (shared logic with S1/S3): block a new entry during the thin
+//   overnight window, or if S1/S3/NSND already hold a SAME-DIRECTION position. All three
+//   run in one terminal so PositionsTotal() sees every magic. Reversible inputs.
+bool ClusterBlocked(int side) {
+   if (InpSkipOvernight) {
+      MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
+      if (dt.hour >= InpOvernightStart && dt.hour < InpOvernightEnd) {
+         Log(StringFormat("[GUARD] skip entry — overnight window (broker hour %d)", dt.hour));
+         return true;
+      }
+   }
+   if (InpMaxOneSameDir) {
+      for (int i = PositionsTotal() - 1; i >= 0; i--) {
+         ulong tk = PositionGetTicket(i);
+         if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+         if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+         long mg = PositionGetInteger(POSITION_MAGIC);
+         if (mg != 88003 && mg != 88004 && mg != 88006) continue;
+         bool is_buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+         if ((side > 0 && is_buy) || (side < 0 && !is_buy)) {
+            Log("[GUARD] skip entry — cluster group already holds a same-direction position");
+            return true;
+         }
+      }
+   }
+   return false;
 }
 
 //── Floating P&L + one-tap GRAB (close all this EA's positions on a newer id) ──

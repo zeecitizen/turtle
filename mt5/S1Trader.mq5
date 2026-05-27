@@ -32,7 +32,7 @@
 //| Magic 88004.                                                     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 1 UHV Breakout v2"
-#property version   "2.41"
+#property version   "2.42"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -64,6 +64,11 @@ input double InpBEArmUsd        = 0.0;   // Breakeven: lock SL at entry once tra
 input double InpTrailActUsd     = 0.3;   // Trailing lock: arm once trade is +$this profit, then trail its peak. Validated best-or-tied on S1/S3/NSND. 0=off.
 input double InpTrailGiveUsd    = 0.3;   // Trailing lock: bank & exit if profit falls $this back from its peak ($0.3 keeps it outside gold spread so noise can't shake you out).
 input string InpPeakLogFile     = "trade_peaks_S1.csv";  // closed-trade peak (MFE) log in Common\Files — feeds the live "% of trades reached here" slider markers.
+input bool   InpMaxOneSameDir   = true;  // ANTI-CLUSTER: don't open if S1/S3/NSND already hold a position the SAME direction. Kills correlated pile-ups (validated: today's 01:46 double + 14:33 triple = most of the day's loss). 0=off.
+input bool   InpSkipOvernight   = true;  // skip NEW entries during thin 00:00-06:00 broker hours (where the clustered overnight losses happened). 0=off.
+input int    InpOvernightStart  = 0;     // broker hour: block new entries from here ...
+input int    InpOvernightEnd    = 6;     // ... until here (exclusive).
+input string InpDecisionCsv     = "s1_decisions.csv";  // entry log (time,ea,side,entry,sl,tp,ticket,magic) so days are precisely auditable like S3/S4.
 input bool   InpEnablePartial   = false; // OFF — inert on S1 for the same geometry reason.
 input double InpPartialR        = 1.5;
 input double InpPartialFrac     = 0.5;
@@ -318,6 +323,9 @@ bool TryS1BuySignal() {
                      ask, sl, tp, uhv_shift, (int)uhv_vol,
                      InpTPPoints / MathMax(0.0001, ask - sl)));
 
+   // 8.5 Anti-cluster / overnight guard
+   if (ClusterBlocked(+1)) return false;
+
    // 9. Fire
    if (!g_trade.Buy(InpLots, _Symbol, 0, sl, tp, "S1_buy")) {
       Log(StringFormat("[ERR] Buy failed: ret=%d %s",
@@ -326,7 +334,9 @@ bool TryS1BuySignal() {
    }
    g_entries_today++;
    g_last_signal_t = bo_t;
-   Log(StringFormat("[FILLED] ticket=%d", g_trade.ResultOrder()));
+   ulong tkt = g_trade.ResultOrder();
+   Log(StringFormat("[FILLED] ticket=%d", tkt));
+   LogEntryCsv("buy", ask, sl, tp, tkt);
    return true;
 }
 
@@ -412,6 +422,8 @@ bool TryS1SellSignal() {
                      bid, sl, tp, uhv_shift, (int)uhv_vol,
                      InpTPPoints / MathMax(0.0001, sl - bid)));
 
+   if (ClusterBlocked(-1)) return false;
+
    if (!g_trade.Sell(InpLots, _Symbol, 0, sl, tp, "S1_sell")) {
       Log(StringFormat("[ERR] Sell failed: ret=%d %s",
                        g_trade.ResultRetcode(), g_trade.ResultRetcodeDescription()));
@@ -419,7 +431,9 @@ bool TryS1SellSignal() {
    }
    g_entries_today++;
    g_last_signal_t = bo_t;
-   Log(StringFormat("[FILLED] ticket=%d", g_trade.ResultOrder()));
+   ulong tkt = g_trade.ResultOrder();
+   Log(StringFormat("[FILLED] ticket=%d", tkt));
+   LogEntryCsv("sell", bid, sl, tp, tkt);
    return true;
 }
 
@@ -463,7 +477,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S1Trader\",\"version\":\"2.41\",\"alive\":true,"
+      "{\"ea\":\"S1Trader\",\"version\":\"2.42\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,\"late_setups\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"tp_points\":%.2f,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,"
@@ -616,6 +630,46 @@ void AppendPeakLog(int side, double entry, double peak, double trough, double la
    FileWriteString(fh, StringFormat("%s,%s,%.2f,%.2f,%.2f,%.2f\n",
        TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
        side > 0 ? "BUY" : "SELL", entry, peak, trough, last));
+   FileClose(fh);
+}
+
+//── ANTI-CLUSTER GUARD: block a new entry if (a) it's the thin overnight window, or
+//   (b) S1/S3/NSND already hold a SAME-DIRECTION position (correlated pile-up). All
+//   three engines run in one terminal, so PositionsTotal() sees every magic. Validated
+//   on real ticks (cluster_guard_tick.py): cuts drawdown + worst day. Reversible inputs.
+bool ClusterBlocked(int side) {
+   if (InpSkipOvernight) {
+      MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
+      if (dt.hour >= InpOvernightStart && dt.hour < InpOvernightEnd) {
+         Log(StringFormat("[GUARD] skip entry — overnight window (broker hour %d)", dt.hour));
+         return true;
+      }
+   }
+   if (InpMaxOneSameDir) {
+      for (int i = PositionsTotal() - 1; i >= 0; i--) {
+         ulong tk = PositionGetTicket(i);
+         if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+         if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+         long mg = PositionGetInteger(POSITION_MAGIC);
+         if (mg != 88003 && mg != 88004 && mg != 88006) continue;   // S3 / S1 / NSND cluster group
+         bool is_buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+         if ((side > 0 && is_buy) || (side < 0 && !is_buy)) {
+            Log("[GUARD] skip entry — cluster group already holds a same-direction position");
+            return true;
+         }
+      }
+   }
+   return false;
+}
+
+//── Entry log (ticket-stamped) so each day's trades can be reconciled precisely. ──
+void LogEntryCsv(string side_s, double entry, double sl, double tp, ulong ticket) {
+   int fh = FileOpen(InpDecisionCsv, FILE_READ | FILE_WRITE | FILE_TXT | FILE_COMMON | FILE_ANSI);
+   if (fh == INVALID_HANDLE) return;
+   FileSeek(fh, 0, SEEK_END);
+   FileWriteString(fh, StringFormat("%s,S1,%s,%.2f,%.2f,%.2f,%I64u,%d\n",
+       TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
+       side_s, entry, sl, tp, ticket, InpMagicNumber));
    FileClose(fh);
 }
 

@@ -23,7 +23,7 @@
 //| Fires once per qualifying M5 bar close; deduped by bar timestamp.|
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 3 Effort vs Result (Teacher Spec v2)"
-#property version   "2.41"
+#property version   "2.42"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -106,6 +106,10 @@ input bool   InpVerbose       = true;
 input string InpLogPrefix     = "S3";
 input string InpStateFile     = "s3_trader_state.json";
 input string InpDecisionCsv   = "s3_decisions.csv";  // per-trade decision log for reconciler
+input bool   InpMaxOneSameDir = true;  // ANTI-CLUSTER: don't open if S1/S3/NSND already hold a position the SAME direction. Validated on real ticks. 0=off.
+input bool   InpSkipOvernight = true;  // skip NEW entries during thin 00:00-06:00 broker hours. 0=off.
+input int    InpOvernightStart= 0;     // broker hour: block new entries from here ...
+input int    InpOvernightEnd  = 6;     // ... until here (exclusive).
 input int    InpHeartbeatSec  = 5;
 
 //── State ───────────────────────────────────────────────────────────
@@ -421,6 +425,8 @@ bool TryS3BuySignal() {
    Log(StringFormat("S3 BUY signal — entry=%.2f sl=%.2f tp=%.2f red_at_shift=%d (R:R=%.2f)",
                      ask, sl, tp, matching_red_shift, (tp - ask) / MathMax(0.0001, ask - sl)));
 
+   // 6.5 Anti-cluster / overnight guard
+   if (ClusterBlocked(+1)) return false;
    // 7. Fire
    if (!g_trade.Buy(InpLots, _Symbol, 0, sl, tp, "S3_buy")) {
       Log(StringFormat("[ERR] Buy failed: ret=%d %s",
@@ -501,6 +507,7 @@ bool TryS3SellSignal() {
    if (tp >= bid - MathMin(InpMinTPDistPts, InpSLBufferPts * 2.0)) return false;
 
    g_signals_today++;
+   if (ClusterBlocked(-1)) return false;
    if (!g_trade.Sell(InpLots, _Symbol, 0, sl, tp, "S3_sell")) return false;
    g_entries_today++; g_last_signal_t = bo_t; RememberFiredRed(matching_red_t);
    ulong ticket = g_trade.ResultOrder(); double actual_fill = g_trade.ResultPrice();
@@ -602,7 +609,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S3Trader\",\"version\":\"2.41\",\"alive\":true,"
+      "{\"ea\":\"S3Trader\",\"version\":\"2.42\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"watch\":%s,\"open\":%s}",
@@ -745,6 +752,34 @@ void AppendPeakLog(int side, double entry, double peak, double trough, double la
        TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
        side > 0 ? "BUY" : "SELL", entry, peak, trough, last));
    FileClose(fh);
+}
+
+//── ANTI-CLUSTER GUARD (shared logic with S1/NSND): block a new entry during the thin
+//   overnight window, or if S1/S3/NSND already hold a SAME-DIRECTION position. All three
+//   run in one terminal so PositionsTotal() sees every magic. Reversible inputs.
+bool ClusterBlocked(int side) {
+   if (InpSkipOvernight) {
+      MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
+      if (dt.hour >= InpOvernightStart && dt.hour < InpOvernightEnd) {
+         Log(StringFormat("[GUARD] skip entry — overnight window (broker hour %d)", dt.hour));
+         return true;
+      }
+   }
+   if (InpMaxOneSameDir) {
+      for (int i = PositionsTotal() - 1; i >= 0; i--) {
+         ulong tk = PositionGetTicket(i);
+         if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+         if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+         long mg = PositionGetInteger(POSITION_MAGIC);
+         if (mg != 88003 && mg != 88004 && mg != 88006) continue;
+         bool is_buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+         if ((side > 0 && is_buy) || (side < 0 && !is_buy)) {
+            Log("[GUARD] skip entry — cluster group already holds a same-direction position");
+            return true;
+         }
+      }
+   }
+   return false;
 }
 
 //── Floating P&L (this EA's open positions) ────────────────────────
