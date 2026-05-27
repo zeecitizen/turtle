@@ -114,3 +114,30 @@ showing red deserves a proper test. **No change made.**
 
 Next cycle: build/run a full-span (51-day) BTC backtest that ISOLATES weekend sessions
 (Fri post-gold-close → Sun), to judge BtcS4b on the job it's actually deployed for.
+
+---
+
+## Cycle 5 — 2026-05-27 ~07:16 PKT
+
+**Health:** ✅ engines alive (3s), ticks live, market OPEN. NSND stale = expected. 0 open.
+**Today −$23.52, 7 trades, 57% WR** (down from −$14.66) → ~19% of the $126 account.
+
+**Research — protection validation (given the red day):** Verified the daily-loss circuit
+breaker is real and about to engage:
+- Source `S3Trader.mq5`: `InpDailyLossHalt = 25.0` (comment: Shano $126 ~20% cap).
+  `DailyLossHalted()` returns true when day P&L (incl. floating) ≤ −$25, and it's wired into
+  BOTH entry gates (lines 285, 437) — blocks NEW entries. Same pattern in S1/S4 (all $25, 0.01 lots).
+- Behaviour: halt stops NEW entries; it does NOT force-close open positions (those run to SL/TP).
+- Status: at −$23.52 realized, the breaker is ~$1.50 away. **Account is bounded** — today can't
+  run away. This is the safety working as designed, not a bug.
+
+**Verdict: PROTECTION CONFIRMED — no action.** Today's drawdown is within the designed cap and
+the EAs are validated (S1/S3 walk-forward positive, cycles 1-2); 7 trades is variance, not a
+broken edge. Nothing to change at night.
+
+**Proposal for Zee (morning, needs EA recompile+reattach — NOT done):** the EA heartbeat JSON
+doesn't expose live day-P&L or halt status, so the dashboard can't show "halt armed/engaged".
+Adding `day_pnl` + `halted` to each EA's state write would let the dashboard surface the circuit
+breaker visually. Small, safe, but requires a reattach — leaving it for Zee to approve.
+
+Next cycle: return to the full-span weekend-isolated BTC test (deferred from cycle 4).
