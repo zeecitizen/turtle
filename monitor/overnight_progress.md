@@ -398,3 +398,28 @@ system is purely **S1/S3/S4 on XAUUSDm** — all three multi-split validated thi
 This resolves every open item. Net session outcome: system healthy, all live configs validated &
 unchanged, the one risk (BtcS4b) confirmed dormant, and the 0.01-lot sizing fix confirmed as the
 key protective lever.
+
+---
+
+## Cycle 14 — 2026-05-27 ~11:46 PKT
+
+**Health:** ✅ S1/S3/S4 alive (4s), ticks live, market OPEN. NSND stale = expected. 0 open.
+**Today recovered to −$1.33 (14 trades, 79% WR)** — up ~$15 since cycle 13. Red was variance.
+
+**Research — today's recovery, broken down by engine (live fills, normalized 0.01):**
+
+| Source | n | WR | net @0.01 |
+|--------|---|----|-----------|
+| S1 (workhorse) | 3 | 67% | **+$7.64** |
+| S4 | 2 | 100% | +$3.94 |
+| Human (Shano manual) | 6 | 100% | +$4.49 |
+| S3 | 3 | 33% | **−$17.40** |
+| **TOTAL** | | | **−$1.33** |
+
+Today's tick file `shano_ticks_2026-05-27.csv` = 3.2MB and writing → dataset growing for future
+validation (data integrity OK).
+
+**Verdict: today's red was ENTIRELY S3 (−$17.40, 2 wide-stop SL hits); everything else positive.**
+S1 led (+$7.64, consistent with its backtest dominance), S4 clean (2/2), Shano's manual 6/6. All
+samples tiny (n=2-3) so this is variance, not signal — but it lines up with the session's findings:
+S1 is the reliable workhorse, S3's live edge is thin/choppy. Nothing actionable. No change made.
