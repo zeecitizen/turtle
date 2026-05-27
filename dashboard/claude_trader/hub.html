@@ -153,6 +153,17 @@
   .lt-needle{position:absolute;top:-4px;width:4px;height:16px;border-radius:2px;background:#fff;
     box-shadow:0 0 6px rgba(255,255,255,.7);transition:left .6s ease}
   .lt-scale{display:flex;justify-content:space-between;font-size:10px;color:var(--faint);font-family:ui-monospace,monospace}
+  /* probability "book here" markers on the gauge — tap to close & book now */
+  .lt-track{margin-bottom:20px}                       /* room for % labels below */
+  .lt-mark{position:absolute;top:-3px;width:0;cursor:pointer;transform:translateX(-50%)}
+  .lt-mark .tick{width:2px;height:14px;margin:0 auto;background:var(--faint);border-radius:1px}
+  .lt-mark .pl{position:absolute;top:15px;left:50%;transform:translateX(-50%);font-size:8.5px;font-weight:700;color:var(--faint);white-space:nowrap}
+  .lt-mark.hit .tick{background:var(--green);box-shadow:0 0 5px var(--green)}
+  .lt-mark.hit .pl{color:var(--green)}
+  .lt-mark:hover .pl{color:var(--txt)} .lt-mark:hover .tick{background:var(--amber)}
+  .lt-book{margin-top:6px;width:100%;padding:9px;border:0;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;
+    background:linear-gradient(135deg,#1f9d55,#2ea043);color:#fff;display:none}
+  .lt-book.show{display:block}
   /* trade feed */
   .feed{background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
   .tr{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font-size:13px}
@@ -296,6 +307,18 @@ async function doGrab(){
     if(r.status===403){localStorage.removeItem('dashKey');alert('Wrong password — try again');return;}
     alert('🫡 Grab sent — EAs will close all open positions within ~2s.');
   }catch(e){alert('Grab failed: '+e);}
+}
+// Book/close an open trade now (taps a probability marker or the Book button).
+// NOTE: the GRAB mechanism closes ALL open positions at market (per-trade close is
+// a future EA change), so the confirm says so explicitly.
+async function bookTrade(ea,pct){
+  const at=pct?(' (you\'re at the '+pct+'% band — '+pct+'% of '+ea+' trades reached this far)'):'';
+  if(!confirm('Book profit now — close ALL open trades at market?'+at))return;
+  const k=dashKey(); if(!k)return;
+  try{const r=await fetch('/grab?key='+encodeURIComponent(k));
+    if(r.status===403){localStorage.removeItem('dashKey');alert('Wrong password — try again');return;}
+    alert('📕 Booked — closing open trades at market within ~2s.');
+  }catch(e){alert('Book failed: '+e);}
 }
 async function doRestart(svc,label){
   const k=dashKey(); if(!k)return;
@@ -453,6 +476,13 @@ async function load(){
       const nd=(o.cur!=null&&span!==0)?clamp(prog(o.cur)):50;
       const entPct=(span!==0)?clamp(prog(o.entry)):50;
       const toTP=(o.tp!=null&&o.cur!=null)?(o.side==='BUY'?o.tp-o.cur:o.cur-o.tp):null;
+      // probability "book here" markers from this EA's MFE curve (% of trades that reached each level)
+      const curve=(d.mfe_curves||{})[o.ea]||[];
+      let lastGp=-9;
+      const marks=curve.map(L=>{const price=o.side==='BUY'?o.entry+L.usd:o.entry-L.usd;return {pct:L.pct,gp:clamp(prog(price)),hit:nd>=clamp(prog(price))};})
+        .filter(m=>m.gp>entPct+2 && m.gp<99)
+        .filter(m=>{if(m.gp-lastGp<6)return false;lastGp=m.gp;return true;});  // de-clutter overlapping
+      const markHtml=marks.map(m=>`<div class="lt-mark ${m.hit?'hit':''}" style="left:${m.gp}%" onclick="bookTrade('${o.ea}',${m.pct})" title="${m.pct}% of ${o.ea} trades reached here — tap to book now"><div class="tick"></div><div class="pl">${m.pct}%</div></div>`).join('');
       return `<div class="lt ${pos?'glow-pos':'glow-neg'}">
         <div class="lt-top">
           <span class="badge ${o.ea}">${eaName(o.ea)}</span>
@@ -462,9 +492,11 @@ async function load(){
         </div>
         <div class="lt-track">
           <div class="lt-entry" style="left:${entPct}%"></div>
+          ${markHtml}
           <div class="lt-needle" style="left:${nd}%"></div>
         </div>
         <div class="lt-scale"><span>SL ${o.sl!=null?o.sl:'—'}</span>${toTP!=null?'<span>'+toTP.toFixed(2)+' to TP</span>':'<span></span>'}<span>TP ${o.tp!=null?o.tp:'—'}</span></div>
+        <button class="lt-book ${pos?'show':''}" onclick="bookTrade('${o.ea}',null)">📕 Book now — close at ${money(o.pnl||0)}</button>
       </div>`;
     }).join('');
   } else {
