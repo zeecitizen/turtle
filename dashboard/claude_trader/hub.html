@@ -53,6 +53,8 @@
   /* live candle chart */
   .chartbox{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:8px 6px}
   .chartbox svg{width:100%;height:200px;display:block}
+  .chart-cap{font-size:12.5px;line-height:1.5;color:var(--dim);margin:8px 4px 0}
+  .chart-cap div{margin:3px 0} .chart-cap b{color:var(--txt);font-weight:600}
   /* world session clocks */
   .clocks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
   @media(max-width:560px){.clocks{grid-template-columns:repeat(2,1fr)}}
@@ -229,6 +231,7 @@
   <!-- live candle chart: real ticks aggregated to M5 candles -->
   <div class="st">Live Chart <span id="chartMeta" style="font-weight:400;font-size:11px;color:#6b7280"></span></div>
   <div class="chartbox"><svg id="candles" viewBox="0 0 700 220" preserveAspectRatio="xMidYMid meet"></svg></div>
+  <div class="chart-cap" id="chartWatch"></div>
 
   <!-- per-EA cards -->
   <div class="st">Engines</div>
@@ -432,6 +435,7 @@ async function load(){
   [['s1_trader','S1'],['s3_trader','S3'],['s4_trader','S4']].forEach(([ck,code])=>{
     const w=(c[ck]||{}).watch; if(w&&w.dir&&w.dir!=='none') CHART_WATCH.push(Object.assign({ea:code},w));
   });
+  watchCaption();
   if(allOpen.length){
     livePill.classList.add('on');
     const flt=allOpen.reduce((s,o)=>s+(o.pnl||0),0);
@@ -564,7 +568,7 @@ function drawCandles(d){
   const svg=$('candles'); if(!svg) return;
   const cs=(d&&d.candles)||[];
   if(cs.length<2){svg.innerHTML='<text x="350" y="110" text-anchor="middle" fill="#5a6478" font-size="13">waiting for ticks…</text>';return;}
-  const W=700,H=220,padX=10,padT=12,padB=18,labX=W-padX;
+  const W=700,H=220,padX=10,padT=16,padB=12,padR=54,labX=W-padR;  // labX = chart right edge; ruler beyond it
   const ECOL={S1:'#4d9fff',S3:'#ffb33e',S4:'#2bd576'};
   const pBroker=s=>{const m=(s||'').match(/(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}):(\d{2})/);return m?Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6])/1000:null;};
   const bucket=secs=>secs==null?null:Math.floor(secs/(d.tf||300))*(d.tf||300);
@@ -572,10 +576,17 @@ function drawCandles(d){
   const extra=[]; CHART_OVERLAY.forEach(o=>[o.entry,o.sl,o.tp].forEach(v=>{if(v)extra.push(v);}));
   CHART_WATCH.forEach(w=>{if(w.level)extra.push(w.level);});
   const hi=Math.max(...cs.map(c=>c.h),...extra), lo=Math.min(...cs.map(c=>c.l),...extra), rng=(hi-lo)||1;
-  const step=(W-2*padX)/cs.length, bw=Math.max(2,step*0.62);
+  const step=(labX-padX)/cs.length, bw=Math.max(2,step*0.62);
   const y=p=>padT+(hi-p)/rng*(H-padT-padB);
   const cxOf=t=>{const i=cs.findIndex(c=>c.t===t);return i<0?null:padX+(i+0.5)*step;};
   let out='';
+  // right price ruler — gridlines + price labels so every level/line is readable
+  for(let g=0;g<=5;g++){ const pr=lo+rng*g/5;
+    out+=`<line x1="${padX}" y1="${y(pr).toFixed(1)}" x2="${labX}" y2="${y(pr).toFixed(1)}" stroke="rgba(255,255,255,.05)"/>`;
+    out+=`<text x="${(labX+4).toFixed(1)}" y="${(y(pr)+3).toFixed(1)}" font-size="9" fill="#5a6478">${pr.toFixed(2)}</text>`;
+  }
+  out+=`<line x1="${labX}" y1="${padT}" x2="${labX}" y2="${H-padB}" stroke="rgba(255,255,255,.12)"/>`;
+  out+=`<text x="${padX}" y="10" font-size="9" fill="#5a6478">XAUUSD · M5</text>`;
   // watch highlight (behind candles): ring the UHV/reference candle each engine is eyeing
   CHART_WATCH.forEach(w=>{
     const col=ECOL[w.ea]||'#9aa4b2', rcx=cxOf(bucket(pBroker(w.ref_bar_t)));
@@ -590,9 +601,9 @@ function drawCandles(d){
   // watched breakout level lines (the price each engine needs to clear to fire)
   CHART_WATCH.forEach(w=>{
     if(!w.level) return; const col=ECOL[w.ea]||'#9aa4b2', yy=y(w.level).toFixed(1);
-    const arrow=w.dir==='buy'?'▲':'▼';
+    const txt=w.dir==='buy'?'▲ buy if above':'▼ sell if below';
     out+=`<line x1="${padX}" y1="${yy}" x2="${labX}" y2="${yy}" stroke="${col}" stroke-width="1.1" stroke-dasharray="2 3"/>`;
-    out+=`<text x="${padX+2}" y="${(y(w.level)-3).toFixed(1)}" font-size="9.5" font-weight="700" fill="${col}">${w.ea} watch ${arrow} ${w.level.toFixed(2)}</text>`;
+    out+=`<text x="${padX+2}" y="${(y(w.level)-3).toFixed(1)}" font-size="9.5" font-weight="700" fill="${col}">${eaName(w.ea)} · ${txt} ${w.level.toFixed(2)}</text>`;
   });
   // live trade overlay: entry / SL / TP price lines, drawn over the real candles
   const lvl=(p,color,label,dash)=>{const yy=y(p).toFixed(1);return `<line x1="${padX}" y1="${yy}" x2="${labX}" y2="${yy}" stroke="${color}" stroke-width="1.3" ${dash?'stroke-dasharray="5 3"':''}/><text x="${padX+2}" y="${(y(p)-3).toFixed(1)}" font-size="10" font-weight="700" fill="${color}">${label} ${p.toFixed(2)}</text>`;};
@@ -602,9 +613,31 @@ function drawCandles(d){
     if(o.sl)    out+=lvl(o.sl,'#ff5a6a','SL',false);
   });
   const last=cs[cs.length-1].c, yL=y(last);
-  out+=`<line x1="${padX}" y1="${yL.toFixed(1)}" x2="${labX}" y2="${yL.toFixed(1)}" stroke="rgba(255,255,255,.16)" stroke-dasharray="3 3"/>`;
-  out+=`<text x="${labX.toFixed(1)}" y="${(yL-3).toFixed(1)}" text-anchor="end" font-size="11" fill="#9aa4b2">${last.toFixed(2)}</text>`;
+  out+=`<line x1="${padX}" y1="${yL.toFixed(1)}" x2="${labX}" y2="${yL.toFixed(1)}" stroke="rgba(255,255,255,.5)" stroke-dasharray="3 3"/>`;
+  // pulsing dot at the line end — shows this is a LIVE, breathing price (not a static image)
+  out+=`<circle cx="${labX.toFixed(1)}" cy="${yL.toFixed(1)}" r="3" fill="#fff">
+    <animate attributeName="r" values="3;6;3" dur="1.4s" repeatCount="indefinite"/>
+    <animate attributeName="fill-opacity" values="1;0.25;1" dur="1.4s" repeatCount="indefinite"/></circle>`;
+  // bright price chip on the ruler = the real current XAUUSD price
+  out+=`<rect x="${labX}" y="${(yL-6.5).toFixed(1)}" width="${padR}" height="13" fill="#e6ebf5" rx="2"/>`;
+  out+=`<text x="${(labX+4).toFixed(1)}" y="${(yL+3).toFixed(1)}" font-size="9" font-weight="800" fill="#0a0e17">${last.toFixed(2)}</text>`;
   svg.innerHTML=out;
+}
+// plain-English caption under the chart explaining what each engine is doing
+function watchCaption(){
+  const el=$('chartWatch'); if(!el) return;
+  let html='';
+  CHART_OVERLAY.forEach(o=>{
+    html+=`<div>📈 <b>${eaName(o.ea)}</b> is <b>in a ${o.side} trade</b> — entered ${(+o.entry).toFixed(2)}, stop-loss ${o.sl?(+o.sl).toFixed(2):'—'}, target ${o.tp?(+o.tp).toFixed(2):'—'}.</div>`;
+  });
+  CHART_WATCH.forEach(w=>{
+    const dirTxt=w.dir==='buy'
+      ? `a <b>BUY</b> — it will enter only if price breaks <b>above ${w.level.toFixed(2)}</b>`
+      : `a <b>SELL</b> — it will enter only if price breaks <b>below ${w.level.toFixed(2)}</b>`;
+    html+=`<div>👀 <b>${eaName(w.ea)}</b> is watching for ${dirTxt} (eyeing the ${toPkt12(w.ref_bar_t)} PKT candle, ringed above).</div>`;
+  });
+  if(!html) html='<span style="color:var(--faint)">No setup forming right now — the engines are quietly scanning each new candle.</span>';
+  el.innerHTML=html;
 }
 function loadCandles(){
   fetch('/api/candles?n=28',{cache:'no-store'}).then(r=>r.json()).then(d=>{
