@@ -23,7 +23,7 @@
 //| Fires once per qualifying M5 bar close; deduped by bar timestamp.|
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 3 Effort vs Result (Teacher Spec v2)"
-#property version   "2.40"
+#property version   "2.41"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -139,6 +139,8 @@ ulong  g_mng_ticket[256];
 double g_mng_sl0[256];
 bool   g_mng_partialed[256];
 double g_mng_peak[256];      // per-position peak floating profit ($) — drives the trailing lock
+double g_mng_trough[256];    // per-position worst floating loss ($, <=0) — MAE, for loss-side study
+double g_mng_lastprof[256];  // last floating P&L ($) seen before close — outcome proxy (win/loss)
 double g_mng_entry[256];     // entry price (for the closed-trade peak log)
 int    g_mng_side[256];      // +1 buy / -1 sell (for the log)
 bool   g_mng_logged[256];    // has this closed trade's peak been written to the MFE log yet
@@ -600,7 +602,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S3Trader\",\"version\":\"2.40\",\"alive\":true,"
+      "{\"ea\":\"S3Trader\",\"version\":\"2.41\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"watch\":%s,\"open\":%s}",
@@ -624,6 +626,8 @@ int MngIndex(ulong ticket) {
    g_mng_sl0[idx]       = PositionGetDouble(POSITION_SL);
    g_mng_partialed[idx] = false;
    g_mng_peak[idx]      = 0.0;
+   g_mng_trough[idx]    = 0.0;
+   g_mng_lastprof[idx]  = 0.0;
    g_mng_entry[idx]     = PositionGetDouble(POSITION_PRICE_OPEN);
    g_mng_side[idx]      = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY) ? 1 : -1;
    g_mng_logged[idx]    = false;
@@ -668,7 +672,9 @@ void ManageOpenPositions() {
       // reverse. Keeps the TP (a runner still reaches it). Slides hard SL to entry as a
       // backstop, which also lights the dashboard "profit secured" banner.
       double prof_usd = prof * vol * 100.0;
-      if (prof_usd > g_mng_peak[mi]) g_mng_peak[mi] = prof_usd;
+      if (prof_usd > g_mng_peak[mi])   g_mng_peak[mi]   = prof_usd;
+      if (prof_usd < g_mng_trough[mi]) g_mng_trough[mi] = prof_usd;   // MAE (worst dip)
+      g_mng_lastprof[mi] = prof_usd;                                  // outcome proxy
       if (InpTrailActUsd > 0 && g_mng_peak[mi] >= InpTrailActUsd) {
          bool need_be = is_buy ? (cur_sl < entry) : (cur_sl == 0.0 || cur_sl > entry);
          if (need_be) g_trade.PositionModify(ticket, NormalizeDouble(entry, _Digits), cur_tp);
@@ -724,19 +730,20 @@ void ManageOpenPositions() {
    for (int j = 0; j < g_mng_count; j++) {
       if (g_mng_logged[j] || g_mng_ticket[j] == 0) continue;
       if (PositionSelectByTicket(g_mng_ticket[j])) continue;   // still open → skip
-      AppendPeakLog(g_mng_side[j], g_mng_entry[j], g_mng_peak[j]);
+      AppendPeakLog(g_mng_side[j], g_mng_entry[j], g_mng_peak[j], g_mng_trough[j], g_mng_lastprof[j]);
       g_mng_logged[j] = true;
    }
 }
 
-//── Append one closed trade's peak (MFE) to the per-EA log in Common\Files ──
-void AppendPeakLog(int side, double entry, double peak) {
+//── Append one closed trade's peak (MFE) + trough (MAE) + outcome to the per-EA log ──
+// Columns: time, side, entry, peak$, trough$, last$ (last floating ≈ realized outcome).
+void AppendPeakLog(int side, double entry, double peak, double trough, double last) {
    int fh = FileOpen(InpPeakLogFile, FILE_READ | FILE_WRITE | FILE_TXT | FILE_COMMON | FILE_ANSI);
    if (fh == INVALID_HANDLE) return;
    FileSeek(fh, 0, SEEK_END);
-   FileWriteString(fh, StringFormat("%s,%s,%.2f,%.2f\n",
+   FileWriteString(fh, StringFormat("%s,%s,%.2f,%.2f,%.2f,%.2f\n",
        TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
-       side > 0 ? "BUY" : "SELL", entry, peak));
+       side > 0 ? "BUY" : "SELL", entry, peak, trough, last));
    FileClose(fh);
 }
 
