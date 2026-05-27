@@ -964,6 +964,18 @@ const server = http.createServer(async (req, res) => {
           .map(p => ({ ea: p.ea || 'Human', side: p.side, lots: p.lots, entry: p.entry,
                        cur: p.cur, pnl: p.pnl, sl: p.sl || null, tp: p.tp || null }));
         snapFresh = true;
+        // Enrich with the trailing-lock "secured" flag, which only the per-EA heartbeats
+        // carry (the logger snapshot has no peak). Match by ea + side + entry (2dp).
+        const secLookup = {};
+        for (const [k, eaTag] of Object.entries({ s3_trader:'S3', s1_trader:'S1', s4_trader:'S4', nsnd_trader:'NSND' })) {
+          const c = components[k];
+          (c && Array.isArray(c.open) ? c.open : []).forEach(o => {
+            if (o.secured) secLookup[`${eaTag}|${o.side}|${Number(o.entry).toFixed(2)}`] = true;
+          });
+        }
+        open_positions.forEach(p => {
+          if (secLookup[`${p.ea}|${p.side}|${Number(p.entry).toFixed(2)}`]) p.secured = true;
+        });
       }
     } catch {}
     if (!snapFresh) {
@@ -972,7 +984,7 @@ const server = http.createServer(async (req, res) => {
         const c = components[k];
         (c && Array.isArray(c.open) ? c.open : []).forEach(o => open_positions.push({
           ea: EA_OF[k], side: o.side, lots: o.lots, entry: o.entry,
-          cur: o.cur, pnl: o.pnl, sl: o.sl || null, tp: o.tp || null }));
+          cur: o.cur, pnl: o.pnl, sl: o.sl || null, tp: o.tp || null, secured: o.secured === true }));
       }
     }
 

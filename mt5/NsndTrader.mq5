@@ -55,12 +55,14 @@
 input group "── Sizing ──"
 input double InpLots          = 0.01;  // 2026-05-27: Shano Exness $126 account ONLY. Was 0.03 (FTMO 3x) = ~$36 risk/trade = account-ending. 0.01.
 input int    InpMagicNumber   = 88006;
-input double InpDailyLossHalt = 50.0;  // 2026-05-27 Shano $126: ~20% daily-loss cap (incl floating). Was 200 (FTMO). 0=off.
+input double InpDailyLossHalt = 50.0;  // Daily stop: halt NEW entries if down $this today (incl. floating). ~20% of $126 acct. 0=off.
 
 input group "── Profit protection: 2R Free Roll (backtest-validated 2026-05-22) ──"
 input bool   InpEnableBreakeven = true;  // VALIDATED for NSND: +$43/12d (+$518 vs +$475 baseline), WR 31%->53%, PF 3.13->4.13, holds OOS (+$311->+$330), n=93. Moves SL to breakeven at +InpBreakevenR. Applies to already-open trades on reattach.
 input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
-input double InpBEArmUsd        = 1.0;   // 2026-05-27 GIVE-BACK KILLER: at +$this floating, SL->breakeven so a green trade cannot become a full loss. nsnd_be_test: INERT for NSND (tiny SL resolves fast; identical +$814/DD89 at every arm level) — set $1.0 for consistency with S1/S3, harmless. 0=off.
+input double InpBEArmUsd        = 0.0;   // Breakeven: lock SL at entry once trade is +$this profit. SUPERSEDED by the trailing lock below (0=off). Set >0 only to use fixed BE instead of the trail.
+input double InpTrailActUsd     = 0.3;   // Trailing lock: arm once trade is +$this profit, then trail its peak. Validated best-or-tied on S1/S3/NSND. 0=off.
+input double InpTrailGiveUsd    = 0.3;   // Trailing lock: bank & exit if profit falls $this back from its peak ($0.3 keeps it outside gold spread so noise can't shake you out).
 input bool   InpEnablePartial   = false; // OFF for NSND: backtest showed partial scale-out DILUTES the edge (+$488 < +$518 BE-only) by capping NSND's big asymmetric runners. Enable only after re-testing.
 input double InpPartialR        = 1.5;   // R-multiple to bank the partial (if enabled).
 input double InpPartialFrac     = 0.5;   // fraction of volume to bank (rounded to lot step).
@@ -131,6 +133,7 @@ double g_day_start_equity = 0;
 ulong  g_mng_ticket[256];
 double g_mng_sl0[256];
 bool   g_mng_partialed[256];
+double g_mng_peak[256];      // per-position peak floating profit ($) — drives the trailing lock
 int    g_mng_count = 0;
 
 //── One-tap GRAB state ──────────────────────────────────────────────
@@ -505,6 +508,7 @@ int MngIndex(ulong ticket) {
    g_mng_ticket[idx]    = ticket;
    g_mng_sl0[idx]       = PositionGetDouble(POSITION_SL);
    g_mng_partialed[idx] = false;
+   g_mng_peak[idx]      = 0.0;
    return idx;
 }
 
@@ -512,7 +516,7 @@ int MngIndex(ulong ticket) {
 //   SL to breakeven (entry ∓ buffer). Optional partial bank at +PartialR. Static
 //   TP is left untouched (validated: keeping TP beats trailing on NSND).
 void ManageOpenPositions() {
-   if (!InpEnableBreakeven && !InpEnablePartial && InpBEArmUsd <= 0) return;
+   if (!InpEnableBreakeven && !InpEnablePartial && InpBEArmUsd <= 0 && InpTrailActUsd <= 0) return;
    double bid  = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask  = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
@@ -540,8 +544,28 @@ void ManageOpenPositions() {
                                             : entry - InpBEBufferPts, _Digits);
       // a move is protective if it pulls the stop toward/through breakeven
       bool can_raise = is_buy ? (cur_sl < be_sl) : (cur_sl == 0.0 || cur_sl > be_sl);
+
+      // TRAILING PROFIT-LOCK (Zee's idea, validated trail_all.py: best-or-tied on all 3 EAs).
+      // Once +$Act, ratchet a floor under the peak and bank the instant profit gives back
+      // $Give from peak — catches green trades that peak BELOW the old +$1 breakeven and
+      // reverse. Keeps the TP (a runner still reaches it). Slides hard SL to entry as a
+      // backstop, which also lights the dashboard "profit secured" banner.
+      double prof_usd = prof * vol * 100.0;
+      if (prof_usd > g_mng_peak[mi]) g_mng_peak[mi] = prof_usd;
+      if (InpTrailActUsd > 0 && g_mng_peak[mi] >= InpTrailActUsd) {
+         bool need_be = is_buy ? (cur_sl < entry) : (cur_sl == 0.0 || cur_sl > entry);
+         if (need_be) g_trade.PositionModify(ticket, NormalizeDouble(entry, _Digits), cur_tp);
+         double floor_usd = MathMax(0.0, g_mng_peak[mi] - InpTrailGiveUsd);
+         if (prof_usd <= floor_usd) {
+            if (g_trade.PositionClose(ticket))
+               Log(StringFormat("[TRAIL] #%I64u banked +$%.2f (peak +$%.2f, gave back $%.2f)",
+                   ticket, prof_usd, g_mng_peak[mi], g_mng_peak[mi] - prof_usd));
+            continue;
+         }
+      }
+
       // GIVE-BACK KILLER ($-based breakeven): once +$InpBEArmUsd floating, lock breakeven.
-      // Catches M1 quick pops the TP never reaches (peaked +$1.7 then reversed = today's losses).
+      // (Superseded by the trailing lock above; only runs if InpBEArmUsd>0 & trail off.)
       if (InpBEArmUsd > 0 && can_raise && (prof * vol * 100.0) >= InpBEArmUsd) {
          if (g_trade.PositionModify(ticket, be_sl, cur_tp))
             Log(StringFormat("[BE$] #%I64u SL->%.2f (+$%.2f locked)", ticket, be_sl, prof*vol*100.0));
@@ -598,12 +622,15 @@ string BuildOpenJson() {
       if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
       if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
       bool buy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+      int  mi  = MngIndex(tk);
+      bool secured = (InpTrailActUsd > 0 && g_mng_peak[mi] >= InpTrailActUsd);
       if (n > 0) arr += ",";
-      arr += StringFormat("{\"side\":\"%s\",\"lots\":%.2f,\"entry\":%.2f,\"cur\":%.2f,\"pnl\":%.2f,\"sl\":%.2f,\"tp\":%.2f}",
+      arr += StringFormat("{\"side\":\"%s\",\"lots\":%.2f,\"entry\":%.2f,\"cur\":%.2f,\"pnl\":%.2f,\"sl\":%.2f,\"tp\":%.2f,\"peak\":%.2f,\"secured\":%s}",
                           buy ? "BUY" : "SELL", PositionGetDouble(POSITION_VOLUME),
                           PositionGetDouble(POSITION_PRICE_OPEN), PositionGetDouble(POSITION_PRICE_CURRENT),
                           PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP),
-                          PositionGetDouble(POSITION_SL), PositionGetDouble(POSITION_TP));
+                          PositionGetDouble(POSITION_SL), PositionGetDouble(POSITION_TP),
+                          g_mng_peak[mi], secured ? "true" : "false");
       n++;
    }
    return arr + "]";
