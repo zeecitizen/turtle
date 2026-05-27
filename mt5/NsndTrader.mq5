@@ -432,6 +432,33 @@ void LogDecisionCsv(datetime bo_t, double bo_h, double bo_l, long bo_v,
    FileClose(fh);
 }
 
+// READ-ONLY: the NS/ND setup NSND is currently watching, for the dashboard chart.
+// Mirrors the entry scan (trend → NS/ND candidate + prior UHV + M15 FVG); the
+// "level" is the candidate's low (buy) / high (sell) that price must SWEEP to fire.
+string BuildWatchJson() {
+   int dir = IntradayTrend();
+   if (dir == 0) return "null";
+   bool buy = (dir > 0);
+   double avg20 = AvgVol20();
+   if (avg20 <= 0) return "null";
+   for (int k = 2; k <= 1 + InpNsLookback; k++) {
+      if (!IsNsCandidate(k, buy)) continue;
+      if (!HasPriorUhv(k, buy, avg20)) continue;
+      double ns_low = iLow(_Symbol, PERIOD_M1, k), ns_high = iHigh(_Symbol, PERIOD_M1, k);
+      bool fvg_ok = FvgOverlap(PERIOD_M15, InpFvgLookbackM15, buy, ns_low, ns_high)
+                 || (InpUseH1Fvg && FvgOverlap(PERIOD_H1, InpFvgLookbackH1, buy, ns_low, ns_high));
+      if (!fvg_ok) continue;
+      return StringFormat(
+         "{\"dir\":\"%s\",\"ref_bar_t\":\"%s\",\"ref_high\":%.3f,\"ref_low\":%.3f,"
+         "\"level\":%.3f,\"setup_bar_t\":\"%s\"}",
+         buy ? "buy" : "sell",
+         TimeToString(iTime(_Symbol, PERIOD_M1, k), TIME_DATE|TIME_SECONDS),
+         ns_high, ns_low, (buy ? ns_low : ns_high),
+         TimeToString(iTime(_Symbol, PERIOD_M1, 1), TIME_DATE|TIME_SECONDS));
+   }
+   return "null";
+}
+
 void WriteHeartbeat() {
    if ((TimeCurrent() - g_last_heartbeat) < InpHeartbeatSec) return;
    g_last_heartbeat = TimeCurrent();
@@ -441,16 +468,16 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"NsndTrader\",\"version\":\"1.21\",\"alive\":true,"
+      "{\"ea\":\"NsndTrader\",\"version\":\"1.30\",\"alive\":true,"
       "\"symbol\":\"%s\",\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.4f,\"tp_usd\":%.0f,"
-      "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
+      "\"watch\":%s,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
       _Symbol,
       TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
       g_signals_today, g_entries_today,
       TimeToString(g_last_signal_t, TIME_DATE | TIME_SECONDS),
       InpMagicNumber, InpLots, InpTPUsd,
-      floating, n_open, bigness, InpAvgWinUsd, BuildOpenJson()));
+      BuildWatchJson(), floating, n_open, bigness, InpAvgWinUsd, BuildOpenJson()));
    FileClose(fh);
 }
 
