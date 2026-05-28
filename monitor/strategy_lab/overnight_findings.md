@@ -37,12 +37,16 @@ honest ACCEPT/REJECT. 7 cycles run; conclusion converged.
 5. **Nothing was changed live overnight.** All conclusions await your reattach +
    approval. Scripts on disk and committed for re-running yourself.
 
-6. **Live overnight (UTC ~05:18 / PKT ~10:18):** the guards are working as designed —
-   33 S1/S3 signals fired during UTC 00–05 (the thin-Asian window), **all blocked**
-   by the overnight filter / anti-cluster guard. Zero M1-scalper damage in that window.
-   S4 (unfiltered) took 3 trades: −7.50 (00:18 SL), +2.00, +1.76 → net −3.74. A
-   large **manual loss of −$25.72 at 01:17** (a Human trade, not the system) also in
-   the fills — worth flagging if it wasn't intentional.
+6. **Live overnight (latest check UTC ~05:47 / PKT ~10:47):** the guards are working —
+   **35 S1/S3 signals fired during UTC 00–06, all blocked** by the overnight filter /
+   anti-cluster guard. Zero M1-scalper damage in that window. S4 (unfiltered) took 3
+   trades: −7.50 (00:18 SL) / +2.00 / +1.76 → net −3.74. A large **manual loss of
+   −$25.72 at 01:17** (Human trade, not the system) — flagging if it wasn't intentional.
+
+7. **Filter window ends UTC 06:00 (PKT 11:00 AM).** From there on, S1/S3/NSND will
+   actually enter — that's the *first real test* of the protected M1 scalpers on a
+   regular session. Given the backtest verdict, watching closely (and being ready
+   to pause if it bleeds) is the prudent posture for today.
 
 ---
 
