@@ -40,6 +40,15 @@ in this (mostly ranging, Feb–May) market is rearranging deck chairs.
 Honest caveat both ways: 19 days is one regime (choppy). The engines *might* profit in
 a trend — but on a $126 account we cannot afford to bleed proving that. Capital first.
 
+**UPDATE (cycle 5): a regime/trend gate does NOT rescue them.** Tested Kaufman ER gate
+on the aligned oracle: S1 stays net-negative at every threshold (gate just cuts volume;
+EV even worsens −0.67→−0.82). S3 at ER≥0.3 reaches ~breakeven (−$6/161tr, 2nd half +$4)
+— it stops the chop bleed but makes no money. So there is no quick gate that turns these
+profitable on current data. The least-bad "keep trading" option would be **S3 only, with
+an ER≥0.3 gate (≈breakeven)** — but that's not a green light, it's a tourniquet.
+**Recommendation holds: protect the $126 (pause/minimize the M1 scalpers); re-establishing
+real entry edge is a project, not a one-line filter.** S4 was the only green engine today.
+
 ---
 
 ## MORNING SUMMARY (read this first)
@@ -110,3 +119,9 @@ study once the exit question is settled.
   backtest EV == live EV exactly → the entries lack edge on current data. Exit-tuning
   is secondary. Pivot to: protect capital + test a regime/trend gate on aligned data.
 - Script: `s1_nsnd_aligned_test.py`. No deploy.
+
+### Cycle 5 — regime (ER) gate: does NOT rescue the engines
+- S1: net-negative at all ER thresholds; EV worsens (gate only cuts volume). REJECT.
+- S3: ER≥0.3 → ~breakeven (−$6/161tr, 2nd half +$4); removes chop losses, no edge. ER≥0.4 worse.
+- Verdict: no quick gate restores profitability. Least-bad keep-trading option = S3-only
+  with ER≥0.3 (tourniquet, ≈flat). Real fix = rebuild entry edge. Script: `regime_gate_test.py`.
