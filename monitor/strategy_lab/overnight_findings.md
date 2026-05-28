@@ -43,10 +43,12 @@ honest ACCEPT/REJECT. 7 cycles run; conclusion converged.
    trades: −7.50 (00:18 SL) / +2.00 / +1.76 → net −3.74. A large **manual loss of
    −$25.72 at 01:17** (Human trade, not the system) — flagging if it wasn't intentional.
 
-7. **Filter window ends UTC 06:00 (PKT 11:00 AM).** From there on, S1/S3/NSND will
-   actually enter — that's the *first real test* of the protected M1 scalpers on a
-   regular session. Given the backtest verdict, watching closely (and being ready
-   to pause if it bleeds) is the prudent posture for today.
+7. **Filter window ended UTC 06:00 (PKT 11:00 AM).** First post-filter entry:
+   **06:33 S1 BUY → closed at exactly $0.00** (breakeven scratch — trail armed, stop
+   moved to entry, reversed, banked at breakeven). The protection mechanism *worked*.
+   Honest caveat: this is also the "scratched winner" pattern the aligned backtest
+   says loses on net. One trade isn't a verdict. Watch closely; ready to pause if
+   it bleeds.
 
 ---
 
