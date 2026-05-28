@@ -125,3 +125,23 @@ study once the exit question is settled.
 - S3: ER≥0.3 → ~breakeven (−$6/161tr, 2nd half +$4); removes chop losses, no edge. ER≥0.4 worse.
 - Verdict: no quick gate restores profitability. Least-bad keep-trading option = S3-only
   with ER≥0.3 (tourniquet, ≈flat). Real fix = rebuild entry edge. Script: `regime_gate_test.py`.
+
+### Cycle 6 — S4 on aligned oracle: also net-negative; today was variance
+- Mirrored S4's detector (M5 UHV breakout + HH/HL + 24-bar trend ≥7 + momentum body 0.55,
+  TP $2 / SL $7.5) on tick-derived bars → 99 trades, **63% WR, −$164, EV −$1.66,
+  both halves negative**.
+- Structural read: S4's R:R needs **79% WR to break even**; backtest 63% → fragile.
+- Today's 86% WR (+$11.55) sits 23pp above backtest → variance, not robust edge.
+- Caveat: mid-price M1 vs broker-bid affects the 0.55 body/range threshold slightly,
+  so this isn't as airtight as S1's (S1 backtest EV matched live EV exactly). But the
+  direction is consistent with the structural fragility. Script: `s4_aligned_test.py`.
+
+---
+
+### MORNING CONCLUSION (locked after 6 cycles)
+Every engine on the trustworthy aligned + live-volume oracle is net-negative over
+~20 days. Live results corroborate (S1 backtest EV = live EV exactly). No quick fix —
+not the trail, not a regime gate, not S4 by itself — restores robust edge. The honest
+recommendation, capital first: **pause or minimise the M1 scalpers at the open;
+keep S4 only if you accept it as a high-variance / fragile-R:R engine. Then we rebuild
+entry edge as the real project, on the trustworthy oracle going forward.**
