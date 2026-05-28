@@ -32,7 +32,7 @@
 //| Magic 88004.                                                     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 1 UHV Breakout v2"
-#property version   "2.42"
+#property version   "2.43"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -61,7 +61,7 @@ input group "── Profit protection: 2R Free Roll (backtest 2026-05-22) ──
 input bool   InpEnableBreakeven = false; // OFF — backtest showed INERT on S1 (SL at UHV-red low is usually wider than the $7.5 TP, so +1R can't arm before TP; identical to baseline +$431.8). Enable only if you widen TP / tighten SL.
 input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
 input double InpBEArmUsd        = 0.0;   // Breakeven: lock SL at entry once trade is +$this profit. SUPERSEDED by the trailing lock below (0=off). Set >0 only to use fixed BE instead of the trail.
-input double InpTrailActUsd     = 0.3;   // Trailing lock: arm once trade is +$this profit, then trail its peak. Validated best-or-tied on S1/S3/NSND. 0=off.
+input double InpTrailActUsd     = 0.0;   // 2026-05-29 REVERTED to OFF — May-27 trail "validation" was on misaligned data; on the aligned oracle trail HURTS S3/S4 (scratches winners). Disabled.
 input double InpTrailGiveUsd    = 0.3;   // Trailing lock: bank & exit if profit falls $this back from its peak ($0.3 keeps it outside gold spread so noise can't shake you out).
 input string InpPeakLogFile     = "trade_peaks_S1.csv";  // closed-trade peak (MFE) log in Common\Files — feeds the live "% of trades reached here" slider markers.
 input bool   InpMaxOneSameDir   = true;  // ANTI-CLUSTER: don't open if S1/S3/NSND already hold a position the SAME direction. Kills correlated pile-ups (validated: today's 01:46 double + 14:33 triple = most of the day's loss). 0=off.
@@ -84,9 +84,9 @@ input bool   InpDoBuys        = true;     // BUY side enabled (UHV red + bullish
 input bool   InpDoSells       = true;     // 2026-05-19: SELL side enabled — adds +$243/12d in walk-forward train (+/-$0 OOS net)
 
 input group "── Detection ──"
-input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M1;  // 2026-05-27: DEFAULT M1 — validated far stronger (644 tr/19d, 62% WR, +$3088 NET after cost, 5/5 splits OOS+, EV +$4.79/tr) vs M5 (+$877). Set PERIOD_M5 + InpTrendThreshold=7.0 to revert.
+input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M5;  // 2026-05-29 REVERTED to M5 (original validated). The May-27 M1 switch was based on a backtest with the alignment bug; revert to the validated M5 default.
 input int    InpTrendLookback     = 24;   // bars (M1 default: ~24min; M5: ~2h)
-input double InpTrendThreshold    = 2.0;  // 2026-05-27: 2.0 for the M1 default (min move over 24 M1 bars). On M5 use 7.0 (verify_thorough.py: 7/7 splits, +$629->+$745, WR 69->76%).
+input double InpTrendThreshold    = 7.0;  // 2026-05-29 REVERTED to M5 validated value (verify_thorough.py: 7/7 splits, +$629->+$745, WR 69->76%).
 input int    InpRetraceLookback   = 15;   // M5 bars searched for UHV red/green
 input bool   InpRequireH1Fvg      = false; // 2026-05-27: DISABLED. The +$2166 backtest ran without H1 FVG; stacking it with BigSpread killed all signals. Re-enable after live data proves it helps.
 input int    InpH1FvgLookback     = 50;   // H1 bars searched for unfilled FVG (only used if InpRequireH1Fvg)
@@ -96,7 +96,7 @@ input int    InpSpreadAvgBars     = 10;   // bars used for the avg-range baselin
 input double InpSLBufferPts       = 2.00; // 2026-05-19: walk-forward winner. Was 0.10, but tighter SL configs all BROKE OOS (curve-fit). Wider SL absorbs noise.
 
 input group "── Exit ──"
-input double InpTPPoints          = 2.0;  // Take-profit: close at +$this profit (M1 scalp, =$2 @0.01 lots). On M5 use 7.5.
+input double InpTPPoints          = 7.5;  // 2026-05-29 REVERTED to validated original (walk-forward winner: TP=7.5 best OOS hold). Was 2.0 (May-27 micro-scalp; broke R:R, lost capital).
 
 input group "── Logging ──"
 input bool   InpVerbose       = true;
@@ -477,7 +477,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S1Trader\",\"version\":\"2.42\",\"alive\":true,"
+      "{\"ea\":\"S1Trader\",\"version\":\"2.43\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,\"late_setups\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"tp_points\":%.2f,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,"

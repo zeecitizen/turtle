@@ -27,7 +27,7 @@
 //| Magic 88007 (distinct from S3=88003 / S1=88004 / NSND=88006).    |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Antigravity — S4 UHV Breakout v2 (M5, 85% WR)"
-#property version   "2.01"
+#property version   "2.10"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -51,13 +51,13 @@ input int    InpRetraceLookback = 12;   // M5 bars to scan for the UHV candle
 input double InpMomBodyFrac     = 0.55; // breakout candle body/range >= this (momentum, small wicks)
 input bool   InpRequireTrend    = true; // require HH/HL structure in the trade direction
 input double InpTrend24Min       = 7.0;  // 2026-05-27: min 24-bar M5 price move in trade direction. VERIFIED (verify_s4_hours.py): +$69->+$87, DD $24.5->$20.5, 5/7 WF splits. (Hour-filter 'skip 12-13' tested too — only 4/7 marginal, NOT added.) 0=off.
-input double InpERMin           = 0.0;  // 2026-05-27: DISABLED. Deep sweep showed ER filter HURTS on M5 — best configs all have ER=0.
+input double InpERMin           = 0.15; // 2026-05-29 REVERTED to validated 0.15 (regime filter, skips chop). EA_SYSTEM_STATE: lifted OOS +$473→+$629, 8/13 green days. May-27 disable rode on misaligned harness.
 input bool   InpDoBuys          = true;
 input bool   InpDoSells         = true;
 
 input group "── Exit (wide SL, small TP → 85% WR) ──"
-input double InpTPPts           = 2.0;  // 2026-05-27: small TP for high WR. Deep sweep: M5 TP2/SL7.5 → 85.6% WR, WF+ ✅
-input double InpSLPts           = 7.5;  // wide SL absorbs noise. Risk per trade = $7.50 @ 0.01 lots.
+input double InpTPPts           = 12.0; // 2026-05-29 REVERTED to validated 2:1 (TP12/SL6). May-27 TP2/SL7.5 inverted R:R (breakeven WR went 33%→79%, math broken). At entry's real 63% WR: TP12/SL6 = +$5.34/tr; TP2/SL7.5 = −$1.52/tr.
+input double InpSLPts           = 6.0;  // 2026-05-29 REVERTED to validated 6.0 (paired with TP=12 for 2:1 R:R, breakeven WR = 33%).
 
 input group "── One-tap GRAB ──"
 input bool   InpEnableGrab = true;
@@ -305,7 +305,7 @@ void WriteHeartbeat() {
    int n_open = 0; double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S4Trader\",\"version\":\"2.01\",\"alive\":true,"
+      "{\"ea\":\"S4Trader\",\"version\":\"2.10\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"watch\":%s,\"open\":%s}",
