@@ -1,12 +1,39 @@
 # Overnight Profitability Research — for Zee's morning ☀️
 
-**Loop:** every ~30 min while the session is alive. Each cycle tests ONE idea on
-correctly-aligned data (bars-from-ticks or rev_eng_m1; NEVER latest_for_claude+ticks)
-and records an honest ACCEPT/REJECT here.
+**Loop:** every ~30 min, session-only. Each cycle tested ONE idea on the trustworthy
+oracle (bars-built-FROM-ticks = aligned + live-matching tick-volume) and recorded an
+honest ACCEPT/REJECT. 7 cycles run; conclusion converged.
 
 ---
 
-## 🚨 URGENT — READ FIRST (cycle 4, the real issue)
+## ☕ THE 60-SECOND READ (look here first, jaan)
+
+1. **Today (−$70) wasn't the *system breaking*. The system likely *doesn't currently
+   have edge on choppy data.*** Three independent angles all agreed: every M1 engine
+   is net-negative over 20 days on the trustworthy oracle, AND **S1's backtest EV
+   exactly matches its live EV today** (−$0.67/trade in both). That's not a coincidence
+   — it's confirmation.
+
+2. **Nothing tested tonight restored real profitability.** Trail (mixed: helps S1,
+   hurts S3/S4/NSND), regime gate (S3 → ~breakeven only, S1 still loses), H1-FVG
+   filter (just trades less, same EV), S4 alone (today was variance). The pattern is
+   consistent across every test: filters cut count, not losses-per-trade.
+
+3. **Recommendation, capital-first:** at the open, **pause or minimise the M1
+   scalpers** (S1/S3/NSND) to protect the $126. S4 was today's only winner but its
+   backtest is also negative and its R:R is fragile (needs 79% WR to break even),
+   so don't lean on it. Then treat **rebuilding entry edge as a real project** —
+   not a one-line filter.
+
+4. **Caveat both ways:** 20 days is one (mostly choppy) regime. The engines *might*
+   profit in a strong trend regime — but the $126 can't afford to bleed proving that.
+
+5. **Nothing was changed live overnight.** All conclusions await your reattach +
+   approval. Scripts on disk and committed for re-running yourself.
+
+---
+
+## 🚨 URGENT — DETAIL (cycle 4, the real issue)
 
 **On the TRUSTWORTHY oracle (M1 bars built from ticks = aligned AND live-matching
 tick-volume), all four engines are net-NEGATIVE over ~19 days — and the LIVE results
