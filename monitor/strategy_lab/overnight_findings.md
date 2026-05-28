@@ -19,11 +19,16 @@ honest ACCEPT/REJECT. 7 cycles run; conclusion converged.
    filter (just trades less, same EV), S4 alone (today was variance). The pattern is
    consistent across every test: filters cut count, not losses-per-trade.
 
-3. **Recommendation, capital-first:** at the open, **pause or minimise the M1
-   scalpers** (S1/S3/NSND) to protect the $126. S4 was today's only winner but its
-   backtest is also negative and its R:R is fragile (needs 79% WR to break even),
-   so don't lean on it. Then treat **rebuilding entry edge as a real project** —
-   not a one-line filter.
+3. **Recommendation, capital-first — GRADED by how strong the negative signal is:**
+
+   | engine | EV/tr | n | strength of negative | morning move |
+   |---|---|---|---|---|
+   | **S1** | −0.67 | 741 | **−5σ, matches live exactly** | **pause or hard minimise** |
+   | **S4** | −1.66 | 99 | **−3σ, fragile 7.5:2 R:R** | **pause or hard minimise** |
+   | S3 | −0.24 | 575 | −1.8σ borderline | reduce size; ER≥0.3 ≈ flat if keeping |
+   | NSND | −0.22 | 96 | −0.7σ inconclusive | reduce size; collect more data |
+
+   Then treat **rebuilding entry edge as a real project** — not a one-line filter.
 
 4. **Caveat both ways:** 20 days is one (mostly choppy) regime. The engines *might*
    profit in a strong trend regime — but the $126 can't afford to bleed proving that.
@@ -170,7 +175,14 @@ study once the exit question is settled.
 - Same story as the regime gate: cuts ~88% of trades but EV barely budges → fewer
   trades = less total bleed, but no profitable subset found. Script: `s1_filter_test.py`.
 
-### MORNING CONCLUSION (locked after 7 cycles)
+### Cycle 9 — statistical nuance refinement (no new test)
+- S1's EV −0.67 (n=741) ≈ −5σ from zero AND matches live EV exactly → strong negative.
+- S4's EV −1.66 (n=99) ≈ −3σ + fragile R:R → strong negative.
+- S3's EV −0.24 (n=575) ≈ −1.8σ → borderline / could be ~breakeven.
+- NSND's EV −0.22 (n=96) ≈ −0.7σ → inconclusive (need more data).
+- Recommendation now graded by signal strength (see top of file), not blanket.
+
+### MORNING CONCLUSION (locked after 9 cycles)
 Every engine on the trustworthy aligned + live-volume oracle is net-negative over
 ~20 days. Live results corroborate (S1 backtest EV = live EV exactly). No quick fix —
 not the trail, not a regime gate, not S4 by itself — restores robust edge. The honest
