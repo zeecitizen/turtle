@@ -43,12 +43,15 @@ honest ACCEPT/REJECT. 7 cycles run; conclusion converged.
    trades: −7.50 (00:18 SL) / +2.00 / +1.76 → net −3.74. A large **manual loss of
    −$25.72 at 01:17** (Human trade, not the system) — flagging if it wasn't intentional.
 
-7. **Filter window ended UTC 06:00 (PKT 11:00 AM).** First post-filter entry:
-   **06:33 S1 BUY → closed at exactly $0.00** (breakeven scratch — trail armed, stop
-   moved to entry, reversed, banked at breakeven). The protection mechanism *worked*.
-   Honest caveat: this is also the "scratched winner" pattern the aligned backtest
-   says loses on net. One trade isn't a verdict. Watch closely; ready to pause if
-   it bleeds.
+7. **Filter window ended UTC 06:00 (PKT 11:00 AM).** Live update at UTC 08:18
+   (~2hrs into post-filter trading) — **the backtest pattern is playing out live**:
+   - 5 small scratch-trades from the trail (+/−$0.07 range, net ~+$0.90)
+   - **Then 2 full-SL losses**: 07:52 S3 BUY −$8.59 + 08:00 S1 SELL −$6.86
+     (didn't reach trail-arm → ate the full stop, exactly the predicted failure mode)
+   - **EA day so far: −$17.52 over 11 trades.**
+   This is exactly what the aligned-oracle backtest predicted (trail scratches +
+   occasional full-SL losses → net-negative EV). Not a surprise — it's confirmation.
+   **Strong case to pause / minimise the M1 scalpers** when you sit down.
 
 ---
 
