@@ -23,7 +23,7 @@
 //| Fires once per qualifying M5 bar close; deduped by bar timestamp.|
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 3 Effort vs Result (Teacher Spec v2)"
-#property version   "2.42"
+#property version   "2.43"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -66,7 +66,7 @@ input group "── Profit protection: 2R Free Roll (backtest-validated 2026-05-
 input bool   InpEnableBreakeven = true;  // move SL to breakeven once +InpBreakevenR reached (caps the 'give back to zero' risk). On reattach, applies to ALREADY-OPEN trades too.
 input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
 input double InpBEArmUsd        = 0.0;   // Breakeven: lock SL at entry once trade is +$this profit. SUPERSEDED by the trailing lock below (0=off). Set >0 only to use fixed BE instead of the trail.
-input double InpTrailActUsd     = 0.3;   // Trailing lock: arm once trade is +$this profit, then trail its peak. Validated best-or-tied on S1/S3/NSND. 0=off.
+input double InpTrailActUsd     = 0.0;   // 2026-05-29 REVERTED to OFF — the trail's S1/S3/NSND "win" was measured on misaligned data; on aligned oracle it scratches winners (S3 −$139→−$289 worse).
 input double InpTrailGiveUsd    = 0.3;   // Trailing lock: bank & exit if profit falls $this back from its peak ($0.3 keeps it outside gold spread so noise can't shake you out).
 input string InpPeakLogFile     = "trade_peaks_S3.csv";  // closed-trade peak (MFE) log in Common\Files — feeds the live "% of trades reached here" slider markers.
 input bool   InpEnablePartial   = true;  // bank InpPartialFrac of the position at +InpPartialR, then BE the rest (Income tranche). NOTE: on reattach, any open trade already past +1.5R is partialed+BE'd immediately.
@@ -83,7 +83,7 @@ input double InpAvgWinUsd  = 60.0;       // reference avg winning trade ($) for 
 input string InpGrabFile   = "grab_command.txt"; // shared command file (epoch id). EA grabs on a NEWER id than last seen.
 
 input group "── Detection ──"
-input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M1;  // 2026-05-27: DEFAULT M1 — full-logic validated +$3677/558tr 5/5 OOS+ vs M5 +$1068. Set PERIOD_M5 to revert.
+input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M5;  // 2026-05-29 REVERTED to M5 (original validated). The May-27 M1 backtest may have ridden on the misaligned harness.
 input int    InpTrendLookback     = 24;   // M5 bars: ~2 hours for trend
 input double InpTrendThreshold    = 1.0;  // min price units of move (v2: was 2.0)
 input double InpTrend60Threshold  = 5.0;  // 2026-05-27: NEW 60-bar trend filter. VERIFIED robust (prove_all_improvements.py, reproduced): 6/7 walk-forward splits; +$504->+$571, DD $67->$55. Min |close[1]-close[61]| in trade direction. 0=off.
@@ -91,10 +91,10 @@ input int    InpRetraceLookback   = 30;   // M5 bars to look back for retracemen
 input int    InpTPPeakLookback    = 10;   // M5 bars for "recent peak" TP (v2: was 30)
 input bool   InpRequireH1Fvg      = false;// v2: default OFF — backtest improved without
 input int    InpH1FvgLookback     = 50;   // H1 bars (only used if InpRequireH1Fvg)
-input bool   InpRequireM5Fvg      = false; // 2026-05-27: DISABLED. 18-day backtest shows FVG makes OOS 5x worse (-$321 vs -$60). Was validated on 12d but failed on 18d. Re-enable after further validation.
+input bool   InpRequireM5Fvg      = true;  // 2026-05-29 REVERTED to validated original (EA_SYSTEM_STATE: walk-forward EV +$13.78→+$26.24, WR 63→69%, holds OOS). May-27 "DISABLED" decision used the misaligned harness.
 input int    InpM5FvgLookback     = 60;   // M5 bars to scan back for an unfilled bullish FVG (only used if InpRequireM5Fvg)
 input double InpMinTPDistPts      = 0.2;  // min TP distance in price-pts (2 pips). BUGFIX 2026-05-17: was 0.5, but backtest uses sl_buf*2=0.20. The stricter 0.5 was rejecting valid trades and cutting backtest P&L by ~50%.
-input double InpSLBufferPts       = 5.00; // 2026-05-27: raised from 2.00 → 5.00 after deep sweep (s3_deep_sweep.py, 150+ configs, 18 tick days). OOS improved +$115 → +$199, DD $80→$67. Wider SL absorbs noise, lets more trades survive to peak TP.
+input double InpSLBufferPts       = 2.00; // 2026-05-29 REVERTED to validated original. 2026-05-18 sweep showed 0.10→2.00 was +17% (104→100tr, 56→63% WR, +$1,184→+$1,386). The 2.00→5.00 May-27 change rode on the misaligned harness.
 input double InpMaxUpperWickFrac  = 0.35; // 2026-05-19 teacher-faithful (lesson 10): reject wicking green if upper_wick/range > this (=rejection). Backtest: WR 63%->69%, EV +$13.78->+$16.46. Set 0 to disable.
 
 input group "── Time-of-day filter (broker time) ──"
@@ -609,7 +609,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S3Trader\",\"version\":\"2.42\",\"alive\":true,"
+      "{\"ea\":\"S3Trader\",\"version\":\"2.43\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"watch\":%s,\"open\":%s}",

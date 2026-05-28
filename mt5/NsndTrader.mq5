@@ -28,7 +28,7 @@
 //| Magic 88006 (distinct from S3=88003 / BTC=88005).                |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — NS/ND VSA"
-#property version   "1.32"
+#property version   "1.33"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -61,7 +61,7 @@ input group "── Profit protection: 2R Free Roll (backtest-validated 2026-05-
 input bool   InpEnableBreakeven = true;  // VALIDATED for NSND: +$43/12d (+$518 vs +$475 baseline), WR 31%->53%, PF 3.13->4.13, holds OOS (+$311->+$330), n=93. Moves SL to breakeven at +InpBreakevenR. Applies to already-open trades on reattach.
 input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
 input double InpBEArmUsd        = 0.0;   // Breakeven: lock SL at entry once trade is +$this profit. SUPERSEDED by the trailing lock below (0=off). Set >0 only to use fixed BE instead of the trail.
-input double InpTrailActUsd     = 0.3;   // Trailing lock: arm once trade is +$this profit, then trail its peak. Validated best-or-tied on S1/S3/NSND. 0=off.
+input double InpTrailActUsd     = 0.0;   // 2026-05-29 REVERTED to OFF — trail's S1/S3/NSND "win" was measured on misaligned data; original validated NSND uses InpEnableBreakeven=true (2R Free Roll) which stays on.
 input double InpTrailGiveUsd    = 0.3;   // Trailing lock: bank & exit if profit falls $this back from its peak ($0.3 keeps it outside gold spread so noise can't shake you out).
 input string InpPeakLogFile     = "trade_peaks_NSND.csv";  // closed-trade peak (MFE) log in Common\Files — feeds the live "% of trades reached here" slider markers.
 input bool   InpEnablePartial   = false; // OFF for NSND: backtest showed partial scale-out DILUTES the edge (+$488 < +$518 BE-only) by capping NSND's big asymmetric runners. Enable only after re-testing.
@@ -483,7 +483,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"NsndTrader\",\"version\":\"1.32\",\"alive\":true,"
+      "{\"ea\":\"NsndTrader\",\"version\":\"1.33\",\"alive\":true,"
       "\"symbol\":\"%s\",\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.4f,\"tp_usd\":%.0f,"
       "\"watch\":%s,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",
