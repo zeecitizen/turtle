@@ -37,6 +37,13 @@ honest ACCEPT/REJECT. 7 cycles run; conclusion converged.
 5. **Nothing was changed live overnight.** All conclusions await your reattach +
    approval. Scripts on disk and committed for re-running yourself.
 
+6. **Live overnight (UTC ~05:18 / PKT ~10:18):** the guards are working as designed —
+   33 S1/S3 signals fired during UTC 00–05 (the thin-Asian window), **all blocked**
+   by the overnight filter / anti-cluster guard. Zero M1-scalper damage in that window.
+   S4 (unfiltered) took 3 trades: −7.50 (00:18 SL), +2.00, +1.76 → net −3.74. A
+   large **manual loss of −$25.72 at 01:17** (a Human trade, not the system) also in
+   the fills — worth flagging if it wasn't intentional.
+
 ---
 
 ## 🚨 URGENT — DETAIL (cycle 4, the real issue)
@@ -175,6 +182,15 @@ study once the exit question is settled.
 - FVG off (live): 745 tr, EV −0.67, −$498. FVG required: 86 tr, EV −0.57, −$49.
 - Same story as the regime gate: cuts ~88% of trades but EV barely budges → fewer
   trades = less total bleed, but no profitable subset found. Script: `s1_filter_test.py`.
+
+### Cycle 11 — live overnight check (the guards are working)
+- S1: 14 signals, **0 entries**. S3: 19 signals, **0 entries**. NSND: 0 signals.
+  Overnight filter + anti-cluster guard blocked all 33 M1-scalper signals during the
+  UTC 00–06 window — zero damage from S1/S3/NSND there. The protections are doing
+  exactly what they were built for.
+- S4 unfiltered: 3 entries → −7.50 / +2.00 / +1.76 = net −3.74 overnight (consistent
+  with its fragile R:R; matches the backtest's negative read on S4).
+- Human (manual) −$25.72 at 01:17 broker — not the system; flagged for Zee in the brief.
 
 ### Cycle 10 — honesty refinement on the "live EV matches backtest" claim
 - Live EV today (S1, n=24) has SE ≈ $0.71; the −$0.67 point-estimate match with the
