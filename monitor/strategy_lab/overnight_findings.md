@@ -138,7 +138,12 @@ study once the exit question is settled.
 
 ---
 
-### MORNING CONCLUSION (locked after 6 cycles)
+### Cycle 7 — S1 H1-FVG filter: doesn't help either (REJECT)
+- FVG off (live): 745 tr, EV −0.67, −$498. FVG required: 86 tr, EV −0.57, −$49.
+- Same story as the regime gate: cuts ~88% of trades but EV barely budges → fewer
+  trades = less total bleed, but no profitable subset found. Script: `s1_filter_test.py`.
+
+### MORNING CONCLUSION (locked after 7 cycles)
 Every engine on the trustworthy aligned + live-volume oracle is net-negative over
 ~20 days. Live results corroborate (S1 backtest EV = live EV exactly). No quick fix —
 not the trail, not a regime gate, not S4 by itself — restores robust edge. The honest
