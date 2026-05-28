@@ -9,10 +9,11 @@ honest ACCEPT/REJECT. 7 cycles run; conclusion converged.
 ## ☕ THE 60-SECOND READ (look here first, jaan)
 
 1. **Today (−$70) wasn't the *system breaking*. The system likely *doesn't currently
-   have edge on choppy data.*** Three independent angles all agreed: every M1 engine
-   is net-negative over 20 days on the trustworthy oracle, AND **S1's backtest EV
-   exactly matches its live EV today** (−$0.67/trade in both). That's not a coincidence
-   — it's confirmation.
+   have edge on choppy data.*** The hard evidence is the **20-day backtest on the
+   trustworthy oracle**: S1/S4 strongly net-negative across BOTH halves, S3/NSND
+   borderline/inconclusive. Live today's S1 point-estimate (−$0.67/tr over 24 trades)
+   *matches* the backtest, which is suggestive corroboration — though one day's SE
+   is ~$0.71, so the live match alone isn't iron proof. The 20-day backtest is.
 
 2. **Nothing tested tonight restored real profitability.** Trail (mixed: helps S1,
    hurts S3/S4/NSND), regime gate (S3 → ~breakeven only, S1 still loses), H1-FVG
@@ -174,6 +175,12 @@ study once the exit question is settled.
 - FVG off (live): 745 tr, EV −0.67, −$498. FVG required: 86 tr, EV −0.57, −$49.
 - Same story as the regime gate: cuts ~88% of trades but EV barely budges → fewer
   trades = less total bleed, but no profitable subset found. Script: `s1_filter_test.py`.
+
+### Cycle 10 — honesty refinement on the "live EV matches backtest" claim
+- Live EV today (S1, n=24) has SE ≈ $0.71; the −$0.67 point-estimate match with the
+  backtest is suggestive but not iron-clad on its own. The 20-day multi-engine backtest
+  (both halves negative) is the real evidence. Brief tightened to say so.
+- No new test (disciplined stand-down).
 
 ### Cycle 9 — statistical nuance refinement (no new test)
 - S1's EV −0.67 (n=741) ≈ −5σ from zero AND matches live EV exactly → strong negative.
