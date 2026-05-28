@@ -27,6 +27,23 @@ Today traded *naked* (protections built mid-day). Tomorrow is the first clean te
 
 ---
 
+## ⚠️ BIGGEST FINDING SO FAR (needs your eyes before next deploy)
+
+**The trailing profit-lock may be a NET LOSER on correct data — it likely should be
+reverted.** On tick-derived bars (aligned + real tick-volume = the trustworthy oracle),
+S3 with its plain structural SL/TP did **−$139 (69% WR)**, but **with the trail it did
+−$289 (51% WR)**. The trail scratches S3's winners on their retrace (same mechanism that
+got it REJECTED on S4). The trail's original S1/S3/NSND "win" was measured on the
+*misaligned* latest_for_claude data — so it can't be trusted.
+
+**DO NOT panic / nothing auto-changes.** Action plan: next cycles re-test the trail on
+S1 and NSND on aligned data. If it hurts them too, the recommendation is to set
+`InpTrailActUsd=0` (revert to plain structural SL/TP, which preserves the engines'
+natural high WR) — but that's a *morning* decision with you, and needs your reattach.
+Note: baseline S3 itself was only −$139 over 19d (1st half +70, 2nd half −208) — softer
+than the trail, but S3 is still the weakest engine; worth a fewer-but-better entry filter
+study once the exit question is settled.
+
 ## FINDINGS LOG
 
 ### Cycle 1 — loss categorisation (baseline map)
@@ -36,3 +53,15 @@ Today traded *naked* (protections built mid-day). Tomorrow is the first clean te
   S3's underlying weakness (worst engine today) — next cycles will dig into whether
   S3 needs a tighter entry filter / fewer-but-better trades, validated on aligned ticks.
 - Status: foundation set. No deploy.
+
+### Cycle 2 — method unlock: bars-from-ticks gives CORRECT volume too
+- Native MT5 `tick_volume` = count of ticks per bar. So building M1 bars from the tick
+  files (counting ticks/min) yields volume that matches live `iVolume` AND is time-aligned.
+  This dissolves the rev-eng-volume mismatch — `s3_aligned_test.py` is now a fully
+  trustworthy S3 oracle (alignment + volume both correct).
+- (S3 real-fill history is only 16 trades / 1 day → too thin for direct fill analysis.)
+
+### Cycle 3 — TRAIL re-validated on correct data → HURTS S3 (see ⚠️ above)
+- baseline 69% WR −$139  vs  trail 51% WR −$289 (both halves worse with trail). ACCEPT:
+  trail is net-negative for S3. Pending S1/NSND check before recommending fleet revert.
+- Script: `s3_aligned_test.py`. No deploy (morning decision + reattach).
