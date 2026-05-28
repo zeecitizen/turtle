@@ -6,6 +6,42 @@ and records an honest ACCEPT/REJECT here.
 
 ---
 
+## 🚨 URGENT — READ FIRST (cycle 4, the real issue)
+
+**On the TRUSTWORTHY oracle (M1 bars built from ticks = aligned AND live-matching
+tick-volume), all four engines are net-NEGATIVE over ~19 days — and the LIVE results
+confirm it, not contradict it.**
+
+| engine | baseline (its real exit) | with trail | live today |
+|---|---|---|---|
+| S1 | 68% WR, **−$498** (EV −0.67/tr) | −$329 | EV **−0.67/tr** (−16/24) ← matches backtest exactly |
+| S3 | 69% WR, **−$139** | −$289 | −$43.88 (bad day) |
+| NSND | 43% WR, **−$21** (n=96) | −$34 | −$2.49 |
+| S4 | (rejected trail earlier) | — | +$11.55 (only green one) |
+
+**S1's backtest EV (−$0.67/trade) is IDENTICAL to its live EV today.** That means this
+backtest is faithful — so its verdict (the entries are not profitable on current data)
+is real, and it explains the account bleeding. The old "+$3,677 S3 / +$3,088 S1" came
+from `rev_eng_m1`'s *reconstructed* volume, which does NOT match the live `iVolume`
+(tick-count) the EAs actually trade on — so those numbers were overstated.
+
+**This is bigger than the trail.** Tweaking exits on engines whose *entries* lack edge
+in this (mostly ranging, Feb–May) market is rearranging deck chairs.
+
+**RECOMMENDATION for the open (your call, needs you):**
+1. **Protect the $126 first** — strongly consider pausing the 3 M1 scalpers (S1/S3/NSND)
+   or cutting to the broker minimum, until we re-establish edge. S4 was the only green
+   engine today; it can keep running.
+2. Then **rethink entries / regime**, not exits. Likely next test (aligned): a trend/
+   regime gate — do these engines only profit in trending sessions and bleed in chop?
+   (The old "regime filter rejected" verdict was on the misaligned data — must re-test.)
+3. I did NOT change anything live. This is a decision to make together, awake.
+
+Honest caveat both ways: 19 days is one regime (choppy). The engines *might* profit in
+a trend — but on a $126 account we cannot afford to bleed proving that. Capital first.
+
+---
+
 ## MORNING SUMMARY (read this first)
 
 **27th-May day: −$70.51 realized, 61% WR (37W/24L).** Losers totalled −$122.34; the
@@ -65,3 +101,12 @@ study once the exit question is settled.
 - baseline 69% WR −$139  vs  trail 51% WR −$289 (both halves worse with trail). ACCEPT:
   trail is net-negative for S3. Pending S1/NSND check before recommending fleet revert.
 - Script: `s3_aligned_test.py`. No deploy (morning decision + reattach).
+
+### Cycle 4 — trail on S1/NSND + the BIG picture (see 🚨 at top)
+- S1: baseline −$498 (68%) vs trail −$329 (48%) → trail HELPS S1 but both negative.
+- NSND: baseline −$21 vs trail −$34 (n=96, ~flat). 
+- Trail verdict = MIXED (helps S1, hurts S3/S4/NSND) → not a clean fleet rule.
+- But the real signal: ALL engines net-negative on the faithful oracle, and S1's
+  backtest EV == live EV exactly → the entries lack edge on current data. Exit-tuning
+  is secondary. Pivot to: protect capital + test a regime/trend gate on aligned data.
+- Script: `s1_nsnd_aligned_test.py`. No deploy.
