@@ -23,7 +23,7 @@
 //| Fires once per qualifying M5 bar close; deduped by bar timestamp.|
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 3 Effort vs Result (Teacher Spec v2)"
-#property version   "2.44"
+#property version   "2.45"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -86,7 +86,7 @@ input group "── Detection ──"
 input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M5;  // 2026-05-29 REVERTED to M5 (original validated). The May-27 M1 backtest may have ridden on the misaligned harness.
 input int    InpTrendLookback     = 24;   // M5 bars: ~2 hours for trend
 input double InpTrendThreshold    = 1.0;  // min price units of move (v2: was 2.0)
-input double InpERMin             = 0.0;  // 2026-05-29 NEW: Kaufman Efficiency Ratio chop filter (same math as S4). 0=OFF. Threshold to be validated on aligned oracle before enabling.
+input double InpERMin             = 0.30; // 2026-05-29 VALIDATED on aligned oracle (er_threshold_validation.py): without gate S3 loses −$108/21d; at 0.30 turns +$30/50tr/72% WR, BOTH halves positive (+$28/+$2). At 0.40 even better EV (+$1.90) but only 21 trades. 0=OFF.
 input int    InpERLookback        = 30;   // bars over InpTimeframe for the ER calc.
 input double InpTrend60Threshold  = 5.0;  // 2026-05-27: NEW 60-bar trend filter. VERIFIED robust (prove_all_improvements.py, reproduced): 6/7 walk-forward splits; +$504->+$571, DD $67->$55. Min |close[1]-close[61]| in trade direction. 0=off.
 input int    InpRetraceLookback   = 30;   // M5 bars to look back for retracement
@@ -628,7 +628,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S3Trader\",\"version\":\"2.44\",\"alive\":true,"
+      "{\"ea\":\"S3Trader\",\"version\":\"2.45\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"watch\":%s,\"open\":%s}",
