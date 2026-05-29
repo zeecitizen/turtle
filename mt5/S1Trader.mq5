@@ -32,7 +32,7 @@
 //| Magic 88004.                                                     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 1 UHV Breakout v2"
-#property version   "2.43"
+#property version   "2.44"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -87,6 +87,8 @@ input group "── Detection ──"
 input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M5;  // 2026-05-29 REVERTED to M5 (original validated). The May-27 M1 switch was based on a backtest with the alignment bug; revert to the validated M5 default.
 input int    InpTrendLookback     = 24;   // bars (M1 default: ~24min; M5: ~2h)
 input double InpTrendThreshold    = 7.0;  // 2026-05-29 REVERTED to M5 validated value (verify_thorough.py: 7/7 splits, +$629->+$745, WR 69->76%).
+input double InpERMin             = 0.0;  // 2026-05-29 NEW: Kaufman Efficiency Ratio chop filter (same math as S4). 0=OFF. Threshold to be validated on aligned oracle before enabling.
+input int    InpERLookback        = 30;   // bars over InpTimeframe for the ER calc.
 input int    InpRetraceLookback   = 15;   // M5 bars searched for UHV red/green
 input bool   InpRequireH1Fvg      = false; // 2026-05-27: DISABLED. The +$2166 backtest ran without H1 FVG; stacking it with BigSpread killed all signals. Re-enable after live data proves it helps.
 input int    InpH1FvgLookback     = 50;   // H1 bars searched for unfilled FVG (only used if InpRequireH1Fvg)
@@ -117,6 +119,22 @@ int      g_today_day = 0;
 void Log(string msg) {
    if (!InpVerbose) return;
    PrintFormat("[%s] %s", InpLogPrefix, msg);
+}
+
+// Kaufman Efficiency Ratio over InpERLookback bars of InpTimeframe. Returns net/path
+// (0=pure chop / 1=perfect trend). Used as a chop filter when InpERMin>0.
+double EfficiencyRatio() {
+   double net = MathAbs(iClose(_Symbol,InpTimeframe,1) - iClose(_Symbol,InpTimeframe,InpERLookback));
+   double path = 0;
+   for (int s = 1; s < InpERLookback; s++)
+      path += MathAbs(iClose(_Symbol,InpTimeframe,s) - iClose(_Symbol,InpTimeframe,s+1));
+   return (path > 0) ? net / path : 0.0;
+}
+
+// Spread in price points at the current tick — for the regime-state log so we can later
+// tell if a losing trade fired during a wide-spread (low-liquidity / chop) micro-window.
+double CurrentSpreadPts() {
+   return SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID);
 }
 
 double g_day_start_equity = 0;
@@ -247,6 +265,7 @@ bool H1BearFvgTappedDuringRetracement(int retrace_back_shift) {
 bool TryS1BuySignal() {
    if (!InpDoBuys) return false;
    if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
+   if (InpERMin > 0 && EfficiencyRatio() < InpERMin) return false;   // Chop filter (OFF by default)
    double bo_o = iOpen (_Symbol, InpTimeframe, 1);
    double bo_h = iHigh (_Symbol, InpTimeframe, 1);
    double bo_l = iLow  (_Symbol, InpTimeframe, 1);
@@ -347,6 +366,7 @@ bool TryS1BuySignal() {
 bool TryS1SellSignal() {
    if (!InpDoSells) return false;
    if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
+   if (InpERMin > 0 && EfficiencyRatio() < InpERMin) return false;   // Chop filter (OFF by default)
    double bo_o = iOpen (_Symbol, InpTimeframe, 1);
    double bo_h = iHigh (_Symbol, InpTimeframe, 1);
    double bo_l = iLow  (_Symbol, InpTimeframe, 1);
@@ -477,7 +497,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S1Trader\",\"version\":\"2.43\",\"alive\":true,"
+      "{\"ea\":\"S1Trader\",\"version\":\"2.44\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,\"late_setups\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"tp_points\":%.2f,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,"
@@ -662,14 +682,19 @@ bool ClusterBlocked(int side) {
    return false;
 }
 
-//── Entry log (ticket-stamped) so each day's trades can be reconciled precisely. ──
+//── Entry log (ticket-stamped + regime state at execution) so each day's trades can be
+//   reconciled precisely AND post-hoc analyzed for "did the gate let through a marginal
+//   setup, or a great one that got shocked?". Columns: time,ea,side,entry,sl,tp,ticket,
+//   magic, er, spread_pts (the last two appended 2026-05-29 per architecture review).
 void LogEntryCsv(string side_s, double entry, double sl, double tp, ulong ticket) {
+   double er = EfficiencyRatio();
+   double sp = CurrentSpreadPts();
    int fh = FileOpen(InpDecisionCsv, FILE_READ | FILE_WRITE | FILE_TXT | FILE_COMMON | FILE_ANSI);
    if (fh == INVALID_HANDLE) return;
    FileSeek(fh, 0, SEEK_END);
-   FileWriteString(fh, StringFormat("%s,S1,%s,%.2f,%.2f,%.2f,%I64u,%d\n",
+   FileWriteString(fh, StringFormat("%s,S1,%s,%.2f,%.2f,%.2f,%I64u,%d,%.3f,%.3f\n",
        TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS),
-       side_s, entry, sl, tp, ticket, InpMagicNumber));
+       side_s, entry, sl, tp, ticket, InpMagicNumber, er, sp));
    FileClose(fh);
 }
 
