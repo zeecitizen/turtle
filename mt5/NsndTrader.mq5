@@ -28,7 +28,7 @@
 //| Magic 88006 (distinct from S3=88003 / BTC=88005).                |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — NS/ND VSA"
-#property version   "1.33"
+#property version   "1.34"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -83,6 +83,8 @@ input int    InpUhvLookback       = 20;    // bars before NS that must have a UH
 input double InpUhvVolMult        = 1.30;  // UHV vol > this × avg-20
 input int    InpTrendLookback     = 60;    // M1 bars for trend (~1 hour)
 input double InpTrendThreshold    = 2.0;   // BUGFIX 2026-05-17: was 1.0; clock-aligned sweep best at 2.0 (filters more noise)
+input double InpERMin             = 0.0;   // 2026-05-29 NEW: Kaufman Efficiency Ratio chop filter (same math as S4). 0=OFF. Threshold to be validated on aligned oracle before enabling.
+input int    InpERLookback        = 30;    // M1 bars for the ER calc.
 
 input group "── FVG context ──"
 input int    InpFvgLookbackM15    = 30;    // M15 bars searched for FVG
@@ -128,6 +130,18 @@ const double CONTRACT_SIZE = 100.0;  // XAU $1/oz/lot
 void Log(string msg) {
    if (!InpVerbose) return;
    PrintFormat("[%s] %s", InpLogPrefix, msg);
+}
+
+// Kaufman Efficiency Ratio over InpERLookback M1 bars. 0=chop / 1=trend.
+double EfficiencyRatio() {
+   double net = MathAbs(iClose(_Symbol,PERIOD_M1,1) - iClose(_Symbol,PERIOD_M1,InpERLookback));
+   double path = 0;
+   for (int s = 1; s < InpERLookback; s++)
+      path += MathAbs(iClose(_Symbol,PERIOD_M1,s) - iClose(_Symbol,PERIOD_M1,s+1));
+   return (path > 0) ? net / path : 0.0;
+}
+double CurrentSpreadPts() {
+   return SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID);
 }
 
 double g_day_start_equity = 0;
@@ -315,6 +329,7 @@ bool FvgOverlap(ENUM_TIMEFRAMES period, int lookback, bool bullish,
 //── Try NS/ND signal on M1 bar at shift 1 ──────────────────────────
 bool TryNsndSignal() {
    if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
+   if (InpERMin > 0 && EfficiencyRatio() < InpERMin) return false;   // Chop filter (OFF by default)
    datetime bo_t = iTime(_Symbol, PERIOD_M1, 1);
    if (bo_t == g_last_signal_t) return false;
 
@@ -420,7 +435,8 @@ void LogDecisionCsv(datetime bo_t, double bo_h, double bo_l, long bo_v,
       if (fh == INVALID_HANDLE) return;
       FileWrite(fh, "fire_iso","ea","side","bo_time_iso","bo_high","bo_low","bo_volume",
                     "ns_time_iso","ns_low","ns_high","ns_volume",
-                    "intended_entry","intended_sl","intended_tp","actual_fill","ticket","magic","lots");
+                    "intended_entry","intended_sl","intended_tp","actual_fill","ticket","magic","lots",
+                    "er","spread_pts");
    } else {
       FileSeek(fh, 0, SEEK_END);
    }
@@ -442,7 +458,9 @@ void LogDecisionCsv(datetime bo_t, double bo_h, double bo_l, long bo_v,
       DoubleToString(actual_fill, 2),
       IntegerToString((long)ticket),
       IntegerToString((long)InpMagicNumber),
-      DoubleToString(InpLots, 2)
+      DoubleToString(InpLots, 2),
+      DoubleToString(EfficiencyRatio(), 3),
+      DoubleToString(CurrentSpreadPts(), 3)
    );
    FileClose(fh);
 }
@@ -483,7 +501,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"NsndTrader\",\"version\":\"1.33\",\"alive\":true,"
+      "{\"ea\":\"NsndTrader\",\"version\":\"1.34\",\"alive\":true,"
       "\"symbol\":\"%s\",\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.4f,\"tp_usd\":%.0f,"
       "\"watch\":%s,\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"open\":%s}",

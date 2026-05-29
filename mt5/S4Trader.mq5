@@ -27,7 +27,7 @@
 //| Magic 88007 (distinct from S3=88003 / S1=88004 / NSND=88006).    |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Antigravity — S4 UHV Breakout v2 (M5, 85% WR)"
-#property version   "2.10"
+#property version   "2.11"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -203,12 +203,15 @@ void LogDecision(bool isBuy, datetime bo_t, double px, double sl, double tp, ulo
    if (fh == INVALID_HANDLE) {
       fh = FileOpen(InpDecisionCsv, FILE_WRITE|FILE_CSV|FILE_COMMON|FILE_ANSI, ',');
       if (fh == INVALID_HANDLE) return;
-      FileWrite(fh, "fire_iso","ea","side","bo_time_iso","entry","sl","tp","ticket","magic","lots");
+      FileWrite(fh, "fire_iso","ea","side","bo_time_iso","entry","sl","tp","ticket","magic","lots",
+                    "er","spread_pts");
    } else FileSeek(fh, 0, SEEK_END);
+   double sp = SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID);
    FileWrite(fh, TimeToString(TimeCurrent(),TIME_DATE|TIME_SECONDS), "S4", isBuy?"buy":"sell",
              TimeToString(bo_t,TIME_DATE|TIME_SECONDS), DoubleToString(px,2),
              DoubleToString(sl,2), DoubleToString(tp,2), IntegerToString((long)ticket),
-             IntegerToString((long)InpMagicNumber), DoubleToString(InpLots,2));
+             IntegerToString((long)InpMagicNumber), DoubleToString(InpLots,2),
+             DoubleToString(EfficiencyRatio(),3), DoubleToString(sp,3));
    FileClose(fh);
 }
 
@@ -305,7 +308,7 @@ void WriteHeartbeat() {
    int n_open = 0; double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S4Trader\",\"version\":\"2.10\",\"alive\":true,"
+      "{\"ea\":\"S4Trader\",\"version\":\"2.11\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"watch\":%s,\"open\":%s}",

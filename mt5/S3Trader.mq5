@@ -23,7 +23,7 @@
 //| Fires once per qualifying M5 bar close; deduped by bar timestamp.|
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude — Setup 3 Effort vs Result (Teacher Spec v2)"
-#property version   "2.43"
+#property version   "2.44"
 #property strict
 
 // ╔══════════════════════════════════════════════════════════════════╗
@@ -86,6 +86,8 @@ input group "── Detection ──"
 input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M5;  // 2026-05-29 REVERTED to M5 (original validated). The May-27 M1 backtest may have ridden on the misaligned harness.
 input int    InpTrendLookback     = 24;   // M5 bars: ~2 hours for trend
 input double InpTrendThreshold    = 1.0;  // min price units of move (v2: was 2.0)
+input double InpERMin             = 0.0;  // 2026-05-29 NEW: Kaufman Efficiency Ratio chop filter (same math as S4). 0=OFF. Threshold to be validated on aligned oracle before enabling.
+input int    InpERLookback        = 30;   // bars over InpTimeframe for the ER calc.
 input double InpTrend60Threshold  = 5.0;  // 2026-05-27: NEW 60-bar trend filter. VERIFIED robust (prove_all_improvements.py, reproduced): 6/7 walk-forward splits; +$504->+$571, DD $67->$55. Min |close[1]-close[61]| in trade direction. 0=off.
 input int    InpRetraceLookback   = 30;   // M5 bars to look back for retracement
 input int    InpTPPeakLookback    = 10;   // M5 bars for "recent peak" TP (v2: was 30)
@@ -130,6 +132,18 @@ int      g_today_day = 0;
 void Log(string msg) {
    if (!InpVerbose) return;
    PrintFormat("[%s] %s", InpLogPrefix, msg);
+}
+
+// Kaufman Efficiency Ratio over InpERLookback bars of InpTimeframe. 0=chop / 1=trend.
+double EfficiencyRatio() {
+   double net = MathAbs(iClose(_Symbol,InpTimeframe,1) - iClose(_Symbol,InpTimeframe,InpERLookback));
+   double path = 0;
+   for (int s = 1; s < InpERLookback; s++)
+      path += MathAbs(iClose(_Symbol,InpTimeframe,s) - iClose(_Symbol,InpTimeframe,s+1));
+   return (path > 0) ? net / path : 0.0;
+}
+double CurrentSpreadPts() {
+   return SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID);
 }
 
 double g_day_start_equity = 0;   // account equity at the start of the broker day
@@ -298,6 +312,7 @@ bool M5FvgTappedDuringRetracement(int retrace_back_shift) {
 bool TryS3BuySignal() {
    if (!InpDoBuys) return false;
    if (DailyLossHalted()) return false;   // FTMO daily-loss circuit breaker
+   if (InpERMin > 0 && EfficiencyRatio() < InpERMin) return false;   // Chop filter (OFF by default)
    double bo_o = iOpen (_Symbol, InpTimeframe, 1);
    double bo_h = iHigh (_Symbol, InpTimeframe, 1);
    double bo_l = iLow  (_Symbol, InpTimeframe, 1);
@@ -452,6 +467,7 @@ bool TryS3BuySignal() {
 bool TryS3SellSignal() {
    if (!InpDoSells) return false;
    if (DailyLossHalted()) return false;
+   if (InpERMin > 0 && EfficiencyRatio() < InpERMin) return false;   // Chop filter (OFF by default)
    double bo_o = iOpen (_Symbol, InpTimeframe, 1);
    double bo_h = iHigh (_Symbol, InpTimeframe, 1);
    double bo_l = iLow  (_Symbol, InpTimeframe, 1);
@@ -528,7 +544,8 @@ void LogDecisionCsv(datetime bo_t, double bo_c, double bo_l, long bo_v,
       if (fh == INVALID_HANDLE) return;
       FileWrite(fh, "fire_iso","ea","side","bo_time_iso","bo_close","bo_low","bo_volume",
                     "red_time_iso","red_low","red_volume",
-                    "intended_entry","intended_sl","intended_tp","actual_fill","ticket","magic","lots");
+                    "intended_entry","intended_sl","intended_tp","actual_fill","ticket","magic","lots",
+                    "er","spread_pts");
    } else {
       FileSeek(fh, 0, SEEK_END);
    }
@@ -549,7 +566,9 @@ void LogDecisionCsv(datetime bo_t, double bo_c, double bo_l, long bo_v,
       DoubleToString(actual_fill, 2),
       IntegerToString((long)ticket),
       IntegerToString((long)InpMagicNumber),
-      DoubleToString(InpLots, 2)
+      DoubleToString(InpLots, 2),
+      DoubleToString(EfficiencyRatio(), 3),
+      DoubleToString(CurrentSpreadPts(), 3)
    );
    FileClose(fh);
 }
@@ -609,7 +628,7 @@ void WriteHeartbeat() {
    double floating = FloatingPnL(n_open);
    double bigness = (InpAvgWinUsd > 0 && floating > 0) ? floating / InpAvgWinUsd : 0.0;
    FileWriteString(fh, StringFormat(
-      "{\"ea\":\"S3Trader\",\"version\":\"2.43\",\"alive\":true,"
+      "{\"ea\":\"S3Trader\",\"version\":\"2.44\",\"alive\":true,"
       "\"t\":\"%s\",\"signals_today\":%d,\"entries_today\":%d,"
       "\"last_signal_t\":\"%s\",\"magic\":%d,\"lots\":%.2f,"
       "\"floating_usd\":%.2f,\"n_open\":%d,\"bigness\":%.2f,\"avg_win\":%.2f,\"watch\":%s,\"open\":%s}",
