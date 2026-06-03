@@ -100,3 +100,23 @@ IMPLICATIONS for Atmos NOVA goal:
   - REAL next step: search for filter combinations with PF >= 1.25 in state-machine backtest
 
 Saved zee_tick_detector_realistic.py — the canonical 'no future-peek' version for future verification.
+- 2026-06-04 02:03 PKT — MEDIUM under state-machine: PF=0.93 (WORSE than AGGRESSIVE 0.99). -$295/27d (-$10.96/day).
+
+SUMMARY of all variants:
+                            Trades  WR     PF    $/day(0.05L)
+  AGGRESSIVE state-machine    196   48.5%  0.99   -$1.69    (no edge)
+  MEDIUM     state-machine    197   45.7%  0.93   -$10.96   (worse)
+  AGGRESSIVE mirror (w/ SL=25) 254  39.0%  1.20   +$11.50   (broker SL = strategy)
+  MEDIUM     mirror (w/ SL=25) 254  39.0%  1.20   +$14.02   (best, but broker-dependent)
+  Canonical Python (parallel)  N/A  94%    inflated +$3,100/day (mirage)
+
+FINAL INSIGHT: The broker-side SL=$25 is the ACTUAL strategy. The EA's rng60+M5 filter picks entry timing but the broker's 1:2 R:R parachute (loss $25 / win $50) is what creates positive expectancy. Without the broker tightening losses, the EA filter is break-even.
+
+WHAT THIS MEANS FOR TOMORROW'S SESSION1:
+  - Live EA with v1.18 GMT+0 sessions + broker SL=$25 SHOULD produce ~$0-$15/day
+  - At 0.05 lots this is a SLOW path to $500 (33-43 days)
+  - Filter changes won't help (state-machine shows no real edge)
+  - Broker SL tightening (e.g. $20 or $15) might INCREASE expectancy IF win rate stays
+  - Need to find a NEW strategy, not tune existing filters, for >$30/day at 0.05L
+
+This is the final TASK-005 verdict. Waiting on Zee close 005.
