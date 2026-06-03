@@ -83,3 +83,20 @@ Implication: to clear Atmos NOVA target on realistic backtest expectations, lot 
 Alternative: find a filter combo that produces >$14/day at 0.05L.
 - 2026-06-04 01:47 PKT — Setup recipe written to monitor/gemini_dr_setup.md. uv (Astral pkg mgr) installed. google-generativeai SDK available. AWAITING: Zee to generate GEMINI_API_KEY at https://aistudio.google.com/app/apikey and drop to monitor/.gemini_api_key. Then either uvx gemini-research-mcp (community pkg) OR custom FastMCP wrapper using Interactions API. Stays OPEN per Rule 10 until first deep research round-trip completes.
 - 2026-06-04 01:50 PKT — PEAK PARALLEL COUNT: canonical Python with no parallel cap hit peak_concurrent = 233 simultaneous trades across the 27-day backtest. At 0.05 lots each = 11.65 total XAUUSD lots exposure = $11.6k to $58k margin required on a $10k account. UNATTAINABLE on any broker (margin reject + position cap of 100-200 typical). The +$15,886/27d at max_par=∞ is a mirage. Even capped at 20 (broker-feasible), the backtest produces NEGATIVE results due to clustered-reversal floating-DD (your Path A floating-DD insight). One-position-at-a-time is the only realistically deployable mode.
+- 2026-06-04 02:00 PKT — GEMINI'S 5-METRIC VERDICT (realistic state-machine AGGRESSIVE, no broker parachute):
+  Trade count:    196 / 27d = 7.3/day  ⚠ (Gemini expected 10-40)
+  Win Rate:       48.5%                 ✗ (Gemini: 62%+ profitable)
+  Profit Factor:  0.99                  ✗ (Gemini: ≤1.0 = edge was fake)
+  Avg hold:       1340s = 22 min        ✓ realistic
+  Max DD:         $665.65              ✓ within Atmos $800 limit
+  TOTAL:          -$45.66/27d = -$1.69/day at 0.05L
+
+PROFIT FACTOR 0.99 = NO REAL EDGE. The +$477k AGGRESSIVE claim was entirely chronological-leak. The MQL5-mirror's +$312/27d came from the BROKER SL=$25 cap doing the work of cutting losses tighter than EA's internal CB=$50. Without that parachute, AGGRESSIVE is break-even at best.
+
+IMPLICATIONS for Atmos NOVA goal:
+  - The +500 USD target on a 10k account is harder than we thought
+  - Current EA needs FILTER refinement (not just lot scaling) to get PF > 1.25
+  - Lot scaling on PF 0.99 strategy just amplifies losses
+  - REAL next step: search for filter combinations with PF >= 1.25 in state-machine backtest
+
+Saved zee_tick_detector_realistic.py — the canonical 'no future-peek' version for future verification.
