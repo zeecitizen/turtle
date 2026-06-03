@@ -29,6 +29,10 @@ from backtest_v349_multiday import detect_on_bar, MAX_LOOKBACK
 
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
 M1_CSV = COMMON / "rev_eng_m1.csv"
+TICK_CSV_FALLBACK = COMMON / "shano_ticks_2026-02-11.csv"   # 2026-06-03: rev_eng_m1 no
+                                                            # longer contains Feb 11 (window
+                                                            # shifted). Tick file IS available
+                                                            # — build M1 from ticks instead.
 OUT_HTML = Path(r"C:\Users\zeesh\Documents\GitHub\turtle\dashboard\claude_trader\feb11_lab.html")
 TARGET_DATE = "2026.02.11"
 
@@ -108,10 +112,34 @@ ZEE_TRADES = [
 ]
 
 
-def build_zee_markers():
+def _caught_lookup(det_signals, window_sec):
+    """Return a set of (entry_minute_ts, side_token) that have a same-side detector
+    signal within ±window_sec. side_token in {'buy','sell'} to match ZEE_TRADES side."""
+    caught = set()
+    for (open_hms, side, *_ ) in ZEE_TRADES:
+        t_o = int(datetime.strptime(f"2026.02.11 {open_hms}", "%Y.%m.%d %H:%M:%S")
+                  .replace(tzinfo=UTC).timestamp())
+        want = +1 if side == "buy" else -1
+        for s in det_signals:
+            if s["side"] != want: continue
+            if abs(s["time"] - t_o) <= window_sec:
+                # Use second=0 minute floor to match the per-minute marker bucket
+                m_ts = t_o - (t_o % 60)
+                caught.add((m_ts, side))
+                break
+    return caught
+
+
+def build_zee_markers(uhv_signals=None, nsnd_signals=None):
     """Per minute, aggregate Zee's trades into ONE marker (lightweight-charts
-    only supports ONE marker per time on a series). Same-minute trades
-    summed into a single label like '3× BUY (+$24)' or 'BUY (+$7)'."""
+    only supports ONE marker per time on a series). Same-minute trades summed
+    into a single label like '3× BUY (+$24)' or 'BUY (+$7)'.
+
+    Visual-diff (2026-06-03): marker color now signals whether the entry
+    was caught by ANY mechanical detector (UHV within ±3 min OR NS/ND
+    within ±5 min, same side). Blue = caught, magenta = MISSED. This lets
+    us scroll the chart and immediately see which minutes the detector
+    failed on, so we can iterate on detector params with visible feedback."""
     by_open  = {}   # minute → list of (is_buy, pnl)
     by_close = {}   # minute → list of pnl (for exit dots)
     for (open_hms, side, entry, close_hms, close_price, pnl) in ZEE_TRADES:
@@ -122,20 +150,28 @@ def build_zee_markers():
         by_open.setdefault(int(t_o.timestamp()), []).append((side, pnl))
         by_close.setdefault(int(t_c.timestamp()), []).append(pnl)
 
+    caught_uhv  = _caught_lookup(uhv_signals  or [], 3 * 60)
+    caught_nsnd = _caught_lookup(nsnd_signals or [], 5 * 60)
+
     markers = []
     # entry markers
     for ts, trades in by_open.items():
         sides = set(t[0] for t in trades)
         n = len(trades)
-        net = sum(t[1] for t in trades)
         if "buy" in sides and "sell" not in sides:
-            shape, pos, label = "arrowUp", "belowBar", "BUY"
+            shape, pos, label, side_token = "arrowUp", "belowBar", "BUY", "buy"
         elif "sell" in sides and "buy" not in sides:
-            shape, pos, label = "arrowDown", "aboveBar", "SELL"
+            shape, pos, label, side_token = "arrowDown", "aboveBar", "SELL", "sell"
         else:
-            shape, pos, label = "square", "inBar", "MIXED"
-        text = label if n == 1 else f"{n}× {label}"
-        markers.append({"time": ts, "position": pos, "color": "#3179f5",
+            shape, pos, label, side_token = "square", "inBar", "MIXED", None
+        is_caught_uhv  = side_token is not None and (ts, side_token) in caught_uhv
+        is_caught_nsnd = side_token is not None and (ts, side_token) in caught_nsnd
+        is_caught = is_caught_uhv or is_caught_nsnd
+        # Coverage tag in the marker text so it's readable at a glance
+        prefix = "✓" if is_caught else "✗"
+        text = f"{prefix}{label}" if n == 1 else f"{prefix}{n}× {label}"
+        color = "#3179f5" if is_caught else "#ff4081"  # blue caught, magenta missed
+        markers.append({"time": ts, "position": pos, "color": color,
                         "shape": shape, "text": text})
     # exit markers (aggregate P&L for that minute)
     for ts, pnls in by_close.items():
@@ -149,6 +185,136 @@ def build_zee_markers():
                         "shape": "circle", "text": text})
     markers.sort(key=lambda m: m["time"])
     return markers
+
+
+def build_alignment_data(bars, uhv_signals, nsnd_signals):
+    """For EACH Zee entry-minute, build a rich record the modal can use:
+      - time, side, all trades at that minute (entry/close/pnl)
+      - bar context (5 before + entry + 5 after) with OHLCV
+      - Claude's verdict: caught? by which detector? if missed, WHY
+
+    Keyed by entry-minute unix; the front-end maps marker.time -> record."""
+    by_minute = {}
+    for (open_hms, side, entry, close_hms, close_price, pnl) in ZEE_TRADES:
+        t_o = (datetime.strptime(f"2026.02.11 {open_hms}",  "%Y.%m.%d %H:%M:%S")
+               .replace(second=0, tzinfo=UTC))
+        m_ts = int(t_o.timestamp())
+        rec = by_minute.setdefault(m_ts, {
+            "time": m_ts, "side": side, "trades": [], "bar_context": None,
+            "claude_verdict": None,
+        })
+        rec["trades"].append({
+            "open_hms": open_hms, "side": side, "entry": entry,
+            "close_hms": close_hms, "close_price": close_price, "pnl": pnl,
+        })
+
+    # find bar idx per minute (one-shot)
+    time_to_idx = {b["time"]: i for i, b in enumerate(bars)}
+    caught_uhv  = _caught_lookup(uhv_signals  or [], 3 * 60)
+    caught_nsnd = _caught_lookup(nsnd_signals or [], 5 * 60)
+
+    for m_ts, rec in by_minute.items():
+        side = rec["side"]
+        # Bar context: 5 before + entry + 5 after on M1
+        idx = time_to_idx.get(m_ts)
+        if idx is None:
+            # closest
+            idx = min(range(len(bars)), key=lambda i: abs(bars[i]["time"] - m_ts))
+        lo = max(0, idx - 5); hi = min(len(bars), idx + 6)
+        rec["bar_context"] = []
+        for j in range(lo, hi):
+            b = bars[j]
+            rec["bar_context"].append({
+                "time": b["time"], "idx_offset": j - idx,
+                "open":  round(b["open"],  2),
+                "high":  round(b["high"],  2),
+                "low":   round(b["low"],   2),
+                "close": round(b["close"], 2),
+                "vol":   b["vol"],
+                "body":  round(b["close"] - b["open"], 2),
+                "upper_wick": round(b["high"] - max(b["open"], b["close"]), 2),
+                "lower_wick": round(min(b["open"], b["close"]) - b["low"], 2),
+                "color": "green" if b["close"] > b["open"] else ("red" if b["close"] < b["open"] else "doji"),
+            })
+        # Claude's verdict
+        is_uhv = (m_ts, side) in caught_uhv
+        is_nsnd = (m_ts, side) in caught_nsnd
+        verdict = {
+            "caught": is_uhv or is_nsnd,
+            "by_uhv": is_uhv, "by_nsnd": is_nsnd,
+            "rejection_reason": None,
+            "rule_checks": None,
+        }
+        if not (is_uhv or is_nsnd):
+            # Re-run the entry-bar diagnosis (mirrors analyze_feb11_misses.diagnose_bar)
+            want = +1 if side == "buy" else -1
+            verdict["rejection_reason"] = _quick_diagnose(bars, idx, want)
+            verdict["rule_checks"] = _rule_checklist(bars, idx, want)
+        else:
+            verdict["rule_checks"] = _rule_checklist(bars, idx, +1 if side == "buy" else -1)
+        rec["claude_verdict"] = verdict
+
+    return sorted(by_minute.values(), key=lambda r: r["time"])
+
+
+def _quick_diagnose(bars, idx, want):
+    """Short tag explaining why the UHV-breakout detector did NOT fire at this
+    bar. Same logic as analyze_feb11_misses.diagnose_bar but compact."""
+    if idx < MAX_LOOKBACK + 2: return "too_early_in_session"
+    bo = bars[idx]
+    body = bo["close"] - bo["open"]
+    if want > 0 and body <= 0: return "entry_bar_not_green (BUY but red bar)"
+    if want < 0 and body >= 0: return "entry_bar_not_red (SELL but green bar)"
+    return "bar_direction_ok_but_no_UHV_match"
+
+
+def _rule_checklist(bars, idx, want):
+    """Return checks the front-end can render as a checklist showing which
+    of Claude's rules pass/fail at this exact bar. Useful for the LEFT
+    column of the modal."""
+    if idx < 30:
+        return {"trend_lookback_ok": False, "note": "too early in session"}
+    b = bars[idx]
+    body = b["close"] - b["open"]
+    upper_wick = b["high"] - max(b["open"], b["close"])
+    lower_wick = min(b["open"], b["close"]) - b["low"]
+    trend_up_30 = bars[idx]["close"] - bars[idx - 30]["close"] >= 0.5
+    trend_dn_30 = bars[idx - 30]["close"] - bars[idx]["close"] >= 0.5
+    return {
+        "side_wanted": "BUY" if want > 0 else "SELL",
+        "bar_color":   "green" if body > 0 else ("red" if body < 0 else "doji"),
+        "body_size":   round(body, 2),
+        "upper_wick":  round(upper_wick, 2),
+        "lower_wick":  round(lower_wick, 2),
+        "volume":      b["vol"],
+        "trend_up_30bar":   trend_up_30,
+        "trend_dn_30bar":   trend_dn_30,
+        "bar_is_with_trend": (want > 0 and body > 0) or (want < 0 and body < 0),
+        "bar_is_counter_trend": (want > 0 and body < 0) or (want < 0 and body > 0),
+        "sweep_wick_ratio_buy":  round(lower_wick / abs(body), 2) if body != 0 else None,
+        "sweep_wick_ratio_sell": round(upper_wick / abs(body), 2) if body != 0 else None,
+    }
+
+
+def coverage_stats(uhv_signals, nsnd_signals):
+    """For every Zee trade, was it caught by UHV (±3min same side), NS/ND
+    (±5min same side), both, or neither. Returns counts at trade-level
+    (not minute-level), so pyramid entries each count separately."""
+    by_uhv = by_nsnd = both = neither = 0
+    for (open_hms, side, *_ ) in ZEE_TRADES:
+        t_o = int(datetime.strptime(f"2026.02.11 {open_hms}", "%Y.%m.%d %H:%M:%S")
+                  .replace(tzinfo=UTC).timestamp())
+        want = +1 if side == "buy" else -1
+        hit_u = any(s["side"] == want and abs(s["time"] - t_o) <= 3 * 60 for s in uhv_signals)
+        hit_n = any(s["side"] == want and abs(s["time"] - t_o) <= 5 * 60 for s in nsnd_signals)
+        if   hit_u and hit_n: both     += 1
+        elif hit_u:           by_uhv   += 1
+        elif hit_n:           by_nsnd  += 1
+        else:                 neither  += 1
+    return {"total": len(ZEE_TRADES),
+            "by_uhv": by_uhv, "by_nsnd": by_nsnd, "both": both,
+            "by_any": by_uhv + by_nsnd + both,
+            "missed": neither}
 
 
 def detect_with_uhv_time(bars, idx_bo, lookback_floor_time=None):
@@ -684,8 +850,10 @@ def trade_stats():
             "best": best, "worst": worst}
 
 
-def load_feb11_bars():
+def _load_from_rev_eng_m1():
     bars = []
+    if not M1_CSV.exists():
+        return bars
     with open(M1_CSV, encoding="ascii", errors="replace") as f:
         for r in csv.DictReader(f):
             if not r["time_iso"].startswith(TARGET_DATE):
@@ -703,6 +871,57 @@ def load_feb11_bars():
             })
     bars.sort(key=lambda b: b["time"])
     return bars
+
+
+def _load_from_ticks():
+    """Build M1 OHLC from `shano_ticks_2026-02-11.csv`. Format: t,bid,ask
+    with t = `YYYY.MM.DD HH:MM:SS.fff` (broker time, treated as UTC frame
+    to match the rest of the page). OHLC computed from MID = (bid+ask)/2.
+    tick_volume = number of ticks per minute (matches rev_eng_m1 convention)."""
+    if not TICK_CSV_FALLBACK.exists():
+        return []
+    by_min = {}
+    with open(TICK_CSV_FALLBACK, encoding="ascii", errors="replace") as f:
+        next(f)  # header
+        for line in f:
+            parts = line.rstrip("\n").split(",")
+            if len(parts) < 3: continue
+            try:
+                # parts[0] = 'YYYY.MM.DD HH:MM:SS.fff' — date contains dots too,
+                # so partition on space first, then strip the fractional secs.
+                date_p, _, time_p = parts[0].partition(" ")
+                hms = time_p.split(".", 1)[0]
+                t = datetime.strptime(date_p + " " + hms, "%Y.%m.%d %H:%M:%S").replace(tzinfo=UTC)
+                bid = float(parts[1]); ask = float(parts[2])
+            except (ValueError, IndexError):
+                continue
+            mid = (bid + ask) / 2.0
+            mkey = (t.year, t.month, t.day, t.hour, t.minute)
+            b = by_min.get(mkey)
+            if b is None:
+                # Bucket time = minute floor as UTC unix
+                mt = datetime(t.year, t.month, t.day, t.hour, t.minute, 0, tzinfo=UTC)
+                by_min[mkey] = {
+                    "time": int(mt.timestamp()),
+                    "open": mid, "high": mid, "low": mid, "close": mid,
+                    "vol": 1,
+                }
+            else:
+                if mid > b["high"]: b["high"] = mid
+                if mid < b["low"]:  b["low"]  = mid
+                b["close"] = mid
+                b["vol"] += 1
+    return sorted(by_min.values(), key=lambda b: b["time"])
+
+
+def load_feb11_bars():
+    """Try rev_eng_m1.csv first; fall back to building M1 from the tick file
+    if rev_eng_m1 no longer holds Feb 11 (its window can shift as MT5 refreshes
+    the broker export)."""
+    bars = _load_from_rev_eng_m1()
+    if bars:
+        return bars
+    return _load_from_ticks()
 
 
 HTML_TEMPLATE = r"""<!doctype html>
@@ -766,6 +985,67 @@ HTML_TEMPLATE = r"""<!doctype html>
     background: var(--bg); border: 1px solid var(--border); font-size: 11px;
   }
   .footnote { color: var(--muted); font-size: 11px; line-height: 1.5; margin-top: 14px; }
+
+  /* Alignment modal */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+    display: none; align-items: center; justify-content: center; z-index: 100;
+  }
+  .modal-backdrop.show { display: flex; }
+  .modal {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 8px; width: min(960px, 95vw); max-height: 92vh; overflow-y: auto;
+    padding: 18px; color: var(--text);
+  }
+  .modal h2 { margin: 0 0 4px; font-size: 16px; }
+  .modal .sub { color: var(--muted); font-size: 12px; margin-bottom: 14px; }
+  .modal .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .col { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 12px; }
+  .col h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px;
+            color: var(--muted); margin: 0 0 10px; }
+  .ctx-table { width: 100%; font-size: 11px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .ctx-table td, .ctx-table th { padding: 3px 5px; text-align: right; border-bottom: 1px solid var(--border); }
+  .ctx-table th { color: var(--muted); font-weight: 500; text-align: right; }
+  .ctx-table td:first-child, .ctx-table th:first-child { text-align: left; }
+  .ctx-table tr.entry-row { background: rgba(50,121,245,0.18); font-weight: 600; }
+  .ctx-table td.green { color: var(--green); }
+  .ctx-table td.red   { color: var(--red);   }
+  .check { display: flex; justify-content: space-between; padding: 3px 0; font-size: 12px; }
+  .check .v.pass { color: var(--green); }
+  .check .v.fail { color: var(--red);   }
+  .verdict-tag {
+    display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px;
+    font-weight: 600; margin-bottom: 8px;
+  }
+  .verdict-tag.caught { background: rgba(38,166,154,0.22); color: var(--green); }
+  .verdict-tag.missed { background: rgba(239,83,80,0.22);  color: var(--red); }
+  .strategy-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+  .strategy-tags label {
+    padding: 4px 10px; border: 1px solid var(--border); border-radius: 14px;
+    font-size: 11px; cursor: pointer; user-select: none;
+  }
+  .strategy-tags input { display: none; }
+  .strategy-tags input:checked + span {
+    background: var(--accent); color: white; padding: 4px 10px;
+    border-radius: 14px; margin: -4px -10px;
+  }
+  .modal textarea {
+    width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: 4px; padding: 8px; font-family: inherit; font-size: 12px; min-height: 80px;
+    resize: vertical;
+  }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+  .btn {
+    padding: 7px 14px; border-radius: 4px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); cursor: pointer; font-size: 12px;
+  }
+  .btn:hover { background: var(--border); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+  .btn.primary:hover { opacity: 0.9; }
+  .saved-label {
+    margin-top: 8px; padding: 6px 10px; background: rgba(38,166,154,0.12);
+    border-left: 3px solid var(--green); border-radius: 4px; font-size: 11px;
+  }
 </style>
 </head>
 <body>
@@ -796,6 +1076,19 @@ HTML_TEMPLATE = r"""<!doctype html>
       <div class="stat"><span class="k">Net P&L (full day)</span><span class="v green">+$835</span></div>
       <div class="stat"><span class="k">Wins / Losses</span><span class="v">65 / 4</span></div>
       <div class="stat"><span class="k">Win rate</span><span class="v">94%</span></div>
+    </div>
+    <div class="section">
+      <h3>Coverage map (visual diff)</h3>
+      <div class="stat"><span class="k">Caught by ANY</span><span class="v green" id="cov-any">—</span></div>
+      <div class="stat"><span class="k">By both (UHV + NS/ND)</span><span class="v" id="cov-both">—</span></div>
+      <div class="stat"><span class="k">By UHV only</span><span class="v" id="cov-uhv">—</span></div>
+      <div class="stat"><span class="k">By NS/ND only</span><span class="v" id="cov-ns">—</span></div>
+      <div class="stat"><span class="k">Missed by all</span><span class="v red" id="cov-miss">—</span></div>
+      <div class="footnote">
+        <span style="color:#3179f5;font-weight:600;">●</span> blue Zee arrow = caught by at least one detector &nbsp;
+        <span style="color:#ff4081;font-weight:600;">●</span> magenta = MISSED by all detectors.
+        The "✓" / "✗" prefix on each arrow's label echoes the same status.
+      </div>
     </div>
     <div class="section">
       <h3>Layers</h3>
@@ -851,6 +1144,43 @@ HTML_TEMPLATE = r"""<!doctype html>
   </div>
 </div>
 
+<!-- Alignment modal: click any Zee arrow to compare Claude's view vs Zee's view -->
+<div class="modal-backdrop" id="align-modal">
+  <div class="modal">
+    <h2 id="align-title">—</h2>
+    <div class="sub" id="align-sub">—</div>
+    <div class="cols">
+      <div class="col">
+        <h3>Claude's view</h3>
+        <div id="align-verdict-tag"></div>
+        <div id="align-rejection"></div>
+        <div id="align-checks"></div>
+        <h3 style="margin-top:14px;">Bar context (5 before / entry / 5 after)</h3>
+        <table class="ctx-table" id="align-ctx"></table>
+      </div>
+      <div class="col">
+        <h3>Zee's view</h3>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Strategy tag (pick one):</div>
+        <div class="strategy-tags" id="align-tags">
+          <label><input type="radio" name="strat" value="UHV"><span>UHV breakout</span></label>
+          <label><input type="radio" name="strat" value="SweepEngulf"><span>Sweep + Engulf</span></label>
+          <label><input type="radio" name="strat" value="NSND"><span>NS / ND</span></label>
+          <label><input type="radio" name="strat" value="Momentum"><span>Momentum</span></label>
+          <label><input type="radio" name="strat" value="TapeRead"><span>Tape read</span></label>
+          <label><input type="radio" name="strat" value="Other"><span>Other</span></label>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">What did you SEE here? (free text)</div>
+        <textarea id="align-notes" placeholder="e.g. 'NS candle at 17:01 swept by 17:02 wick, body close 5057 above NS high 5060 — fading the failed pop'"></textarea>
+        <div id="align-saved-prev"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="align-close">Close</button>
+      <button class="btn primary" id="align-save">Save label</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const BARS        = __BARS_JSON__;
 const ZEE_MARKERS = __ZEE_MARKERS_JSON__;
@@ -859,6 +1189,11 @@ const NS_MARKERS  = __NS_MARKERS_JSON__;
 const STATS       = __STATS_JSON__;
 const ALIGN       = __ALIGN_JSON__;
 const NS_ALIGN    = __NS_ALIGN_JSON__;
+const COVERAGE    = __COVERAGE_JSON__;
+const ALIGNMENT_DATA = __ALIGNMENT_JSON__;  // rich per-minute records
+const ALIGN_BY_TIME  = Object.fromEntries(ALIGNMENT_DATA.map(r => [r.time, r]));
+// Declared early — buildTeachMarkers() reads TEACH_LABELS, must avoid TDZ
+let TEACH_LABELS = {};
 let SHOW_ZEE = true;
 let SHOW_DET = false;
 let SHOW_NS  = true;
@@ -909,10 +1244,28 @@ const volumeData = BARS.map(b => ({
 }));
 volumeSeries.setData(volumeData);
 
+function buildTeachMarkers() {
+  // One amber star per labeled minute that isn't already a Zee broker entry
+  // (those minutes use the existing blue/magenta arrows). Always show teach
+  // marks — they're Zee's ground truth and should be visible at a glance.
+  const zeeMinutes = new Set(ZEE_MARKERS.map(m => m.time));
+  const out = [];
+  for (const [tStr, lbl] of Object.entries(TEACH_LABELS)) {
+    const t = Number(tStr);
+    if (zeeMinutes.has(t)) continue;
+    if (!lbl || (!lbl.strategy && !lbl.notes)) continue;
+    out.push({
+      time: t, position: 'aboveBar', color: '#ffc107', shape: 'circle',
+      text: '★ ' + (lbl.strategy || 'TEACH'),
+    });
+  }
+  return out;
+}
+
 function refreshMarkers() {
   // lightweight-charts only accepts ONE marker per time-stamp per series.
   // Merge layer markers and, on collisions, keep the FIRST (priority by
-  // insertion order: Zee → NS → DET).
+  // insertion order: TEACH → Zee → NS → DET).
   let merged = [];
   const seen = new Set();
   function add(arr) {
@@ -922,12 +1275,20 @@ function refreshMarkers() {
       merged.push(m);
     }
   }
+  add(buildTeachMarkers());   // Zee's manual teach marks always visible
   if (SHOW_ZEE) add(ZEE_MARKERS);
   if (SHOW_NS)  add(NS_MARKERS);
   if (SHOW_DET) add(DET_MARKERS);
   merged.sort((a, b) => a.time - b.time);
   series.setMarkers(merged);
 }
+
+// Initial labels load → render teach markers on first paint
+fetch('/api/feb11-label').then(r => r.json()).then(data => {
+  if (data && data.labels) TEACH_LABELS = data.labels;
+  refreshMarkers();
+}).catch(() => refreshMarkers());
+
 refreshMarkers();
 
 // Layer toggle handlers
@@ -968,6 +1329,15 @@ if (NS_ALIGN) {
   document.getElementById('ns-mp').textContent =
     (100 * NS_ALIGN.matched / Math.max(1, NS_ALIGN.n_zee)).toFixed(0) + '%';
   document.getElementById('ns-miss').textContent = NS_ALIGN.missed;
+}
+if (COVERAGE) {
+  const anyPct = (100 * COVERAGE.by_any / Math.max(1, COVERAGE.total)).toFixed(0);
+  document.getElementById('cov-any').textContent  =
+    COVERAGE.by_any + ' / ' + COVERAGE.total + ' (' + anyPct + '%)';
+  document.getElementById('cov-both').textContent = COVERAGE.both;
+  document.getElementById('cov-uhv').textContent  = COVERAGE.by_uhv;
+  document.getElementById('cov-ns').textContent   = COVERAGE.by_nsnd;
+  document.getElementById('cov-miss').textContent = COVERAGE.missed;
 }
 
 // Top-bar OHLC + TIME crosshair sync — read the actual hovered candle's time
@@ -1018,6 +1388,215 @@ window.addEventListener('resize', () => {
   chart.resize(document.getElementById('chart').clientWidth,
                document.getElementById('chart').clientHeight);
 });
+
+// ============================================================
+// ALIGNMENT MODAL — click ANY candle to mark + teach
+// ============================================================
+const modalEl = document.getElementById('align-modal');
+let currentMinuteTs = null;
+const BARS_BY_TIME = Object.fromEntries(BARS.map(b => [b.time, b]));
+// NOTE: TEACH_LABELS declared above refreshMarkers (near constants) to avoid TDZ
+
+// Build a synthetic alignment record for ANY clicked candle (used when click
+// is NOT within 90s of an existing Zee broker entry — Zee's teach mode).
+function buildRecForBar(t) {
+  const bar = BARS_BY_TIME[t];
+  if (!bar) return null;
+  // 5 bars before + entry + 5 after (lookup by index in BARS array)
+  const idx = BARS.findIndex(b => b.time === t);
+  const ctx = [];
+  for (let j = Math.max(0, idx - 5); j < Math.min(BARS.length, idx + 6); j++) {
+    const b = BARS[j];
+    const body = b.close - b.open;
+    ctx.push({
+      time: b.time, idx_offset: j - idx,
+      open: Number(b.open.toFixed(2)),
+      high: Number(b.high.toFixed(2)),
+      low:  Number(b.low.toFixed(2)),
+      close: Number(b.close.toFixed(2)),
+      vol: b.vol,
+      body: Number(body.toFixed(2)),
+      upper_wick: Number((b.high - Math.max(b.open, b.close)).toFixed(2)),
+      lower_wick: Number((Math.min(b.open, b.close) - b.low).toFixed(2)),
+      color: body > 0 ? 'green' : (body < 0 ? 'red' : 'doji'),
+    });
+  }
+  // Synthetic verdict — no preset side, just bar info
+  return {
+    time: t, side: 'teach', trades: [],
+    bar_context: ctx,
+    claude_verdict: { caught: false, by_uhv: false, by_nsnd: false,
+                      rejection_reason: null,
+                      rule_checks: {
+                        side_wanted: 'TEACH',
+                        bar_color: ctx[5] ? ctx[5].color : '—',
+                        body_size: ctx[5] ? ctx[5].body : 0,
+                        upper_wick: ctx[5] ? ctx[5].upper_wick : 0,
+                        lower_wick: ctx[5] ? ctx[5].lower_wick : 0,
+                        volume: ctx[5] ? ctx[5].vol : 0,
+                      } },
+  };
+}
+
+// Click on chart → if near Zee broker arrow, open alignment mode; else open teach mode.
+chart.subscribeClick(param => {
+  if (!param || !param.time) return;
+  const t = param.time;
+  // 1) Existing broker entry within 90 seconds → alignment mode
+  let nearest = null, bestDt = 999999;
+  for (const rec of ALIGNMENT_DATA) {
+    const dt = Math.abs(rec.time - t);
+    if (dt < bestDt && dt <= 90) { bestDt = dt; nearest = rec; }
+  }
+  if (nearest) { openModal(nearest); return; }
+  // 2) Otherwise → teach-mark mode on the clicked bar
+  // Snap t to nearest bar's time
+  let bestBar = null, bestDt2 = 999999;
+  for (const b of BARS) {
+    const dt = Math.abs(b.time - t);
+    if (dt < bestDt2) { bestDt2 = dt; bestBar = b; }
+  }
+  if (bestBar) {
+    const rec = buildRecForBar(bestBar.time);
+    if (rec) openModal(rec);
+  }
+});
+
+function openModal(rec) {
+  currentMinuteTs = rec.time;
+  const d = new Date(rec.time * 1000);
+  const hms = String(d.getUTCHours()).padStart(2,'0') + ':' +
+              String(d.getUTCMinutes()).padStart(2,'0');
+  if (rec.side === 'teach') {
+    // Teach mode — Zee marking an arbitrary candle to teach Claude
+    const bar = BARS_BY_TIME[rec.time];
+    document.getElementById('align-title').textContent =
+      `${hms} UTC — ZEE TEACH MARK on M1 candle`;
+    document.getElementById('align-sub').innerHTML =
+      bar ? `Bar OHLC: O ${bar.open.toFixed(2)} · H ${bar.high.toFixed(2)} · L ${bar.low.toFixed(2)} · C ${bar.close.toFixed(2)} · vol ${bar.vol}`
+          : '(bar lookup failed)';
+  } else {
+    const sideLabel = rec.side.toUpperCase();
+    const nTr = rec.trades.length;
+    const totPnl = rec.trades.reduce((s,t) => s + t.pnl, 0);
+    document.getElementById('align-title').textContent =
+      `${hms} UTC — ${sideLabel} × ${nTr} (net ${totPnl >= 0 ? '+' : ''}$${totPnl.toFixed(2)})`;
+    const subParts = rec.trades.map(t =>
+      `${t.open_hms} ${t.side.toUpperCase()} @ ${t.entry.toFixed(2)} → ${t.close_hms} ${t.close_price.toFixed(2)} (${t.pnl >= 0 ? '+' : ''}$${t.pnl.toFixed(2)})`
+    );
+    document.getElementById('align-sub').innerHTML = subParts.join('<br>');
+  }
+
+  // Verdict
+  const v = rec.claude_verdict || {};
+  const tagEl = document.getElementById('align-verdict-tag');
+  if (v.caught) {
+    const which = v.by_uhv && v.by_nsnd ? 'UHV + NS/ND' : (v.by_uhv ? 'UHV' : 'NS/ND');
+    tagEl.innerHTML = `<div class="verdict-tag caught">✓ CAUGHT by ${which}</div>`;
+  } else {
+    tagEl.innerHTML = `<div class="verdict-tag missed">✗ MISSED by all detectors</div>`;
+  }
+
+  const rejEl = document.getElementById('align-rejection');
+  if (v.rejection_reason) {
+    rejEl.innerHTML = `<div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Why missed:</div>` +
+                      `<div style="font-size:12px;color:var(--red);">${v.rejection_reason}</div>`;
+  } else {
+    rejEl.innerHTML = '';
+  }
+
+  // Rule checks
+  const rc = v.rule_checks || {};
+  const checks = document.getElementById('align-checks');
+  let html = '<div style="font-size:11px;color:var(--muted);margin-top:8px;margin-bottom:4px;">Rule checklist at this bar:</div>';
+  function row(k, val, ok) {
+    const cls = ok === true ? 'pass' : (ok === false ? 'fail' : '');
+    return `<div class="check"><span class="k">${k}</span><span class="v ${cls}">${val}</span></div>`;
+  }
+  html += row('side wanted',         rc.side_wanted || '—');
+  html += row('bar color',           rc.bar_color || '—', rc.bar_is_with_trend);
+  html += row('body size',           (rc.body_size ?? '—') + ' pts');
+  html += row('upper wick',          (rc.upper_wick ?? '—') + ' pts');
+  html += row('lower wick',          (rc.lower_wick ?? '—') + ' pts');
+  html += row('volume',              rc.volume ?? '—');
+  html += row('trend up (30bar)',    rc.trend_up_30bar ? 'yes' : 'no', rc.trend_up_30bar);
+  html += row('trend down (30bar)',  rc.trend_dn_30bar ? 'yes' : 'no', rc.trend_dn_30bar);
+  if (rc.sweep_wick_ratio_buy  != null) html += row('lower-wick ÷ body', rc.sweep_wick_ratio_buy + 'x');
+  if (rc.sweep_wick_ratio_sell != null) html += row('upper-wick ÷ body', rc.sweep_wick_ratio_sell + 'x');
+  checks.innerHTML = html;
+
+  // Bar context table
+  const ctx = document.getElementById('align-ctx');
+  let rows = '<tr><th>Δ</th><th>UTC</th><th>O</th><th>H</th><th>L</th><th>C</th><th>body</th><th>upWk</th><th>loWk</th><th>vol</th></tr>';
+  for (const b of (rec.bar_context || [])) {
+    const td = new Date(b.time * 1000);
+    const hh = String(td.getUTCHours()).padStart(2,'0') + ':' + String(td.getUTCMinutes()).padStart(2,'0');
+    const isEntry = b.idx_offset === 0;
+    const bodyCls = b.body > 0 ? 'green' : (b.body < 0 ? 'red' : '');
+    rows += `<tr class="${isEntry ? 'entry-row' : ''}">` +
+      `<td>${b.idx_offset >= 0 ? '+' + b.idx_offset : b.idx_offset}</td>` +
+      `<td>${hh}</td><td>${b.open}</td><td>${b.high}</td><td>${b.low}</td><td>${b.close}</td>` +
+      `<td class="${bodyCls}">${b.body > 0 ? '+' : ''}${b.body}</td>` +
+      `<td>${b.upper_wick}</td><td>${b.lower_wick}</td><td>${b.vol}</td></tr>`;
+  }
+  ctx.innerHTML = rows;
+
+  // Reset inputs + try loading existing label
+  document.querySelectorAll('input[name="strat"]').forEach(r => r.checked = false);
+  document.getElementById('align-notes').value = '';
+  document.getElementById('align-saved-prev').innerHTML = '';
+  fetch('/api/feb11-label?t=' + rec.time).then(r => r.json()).then(data => {
+    if (data && data.label) {
+      const lbl = data.label;
+      if (lbl.strategy) {
+        const r = document.querySelector(`input[name="strat"][value="${lbl.strategy}"]`);
+        if (r) r.checked = true;
+      }
+      if (lbl.notes) document.getElementById('align-notes').value = lbl.notes;
+      if (lbl.saved_at) {
+        document.getElementById('align-saved-prev').innerHTML =
+          `<div class="saved-label">Previously saved: ${new Date(lbl.saved_at).toLocaleString()}</div>`;
+      }
+    }
+  }).catch(() => {});
+
+  modalEl.classList.add('show');
+}
+
+function closeModal() {
+  modalEl.classList.remove('show');
+  currentMinuteTs = null;
+}
+
+document.getElementById('align-close').addEventListener('click', closeModal);
+modalEl.addEventListener('click', e => { if (e.target === modalEl) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+document.getElementById('align-save').addEventListener('click', async () => {
+  if (currentMinuteTs == null) return;
+  const strategy = (document.querySelector('input[name="strat"]:checked') || {}).value || null;
+  const notes = document.getElementById('align-notes').value.trim();
+  const body = { t: currentMinuteTs, strategy, notes };
+  try {
+    const r = await fetch('/api/feb11-label', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const j = await r.json();
+    if (j && j.ok) {
+      document.getElementById('align-saved-prev').innerHTML =
+        `<div class="saved-label">Saved ✓ at ${new Date().toLocaleString()}</div>`;
+      // Update local cache + re-render markers so the new ★ appears on chart
+      TEACH_LABELS[String(currentMinuteTs)] = j.label;
+      refreshMarkers();
+    } else {
+      alert('Save failed: ' + JSON.stringify(j));
+    }
+  } catch (e) {
+    alert('Save error: ' + e);
+  }
+});
 </script>
 </body>
 </html>
@@ -1027,16 +1606,19 @@ window.addEventListener('resize', () => {
 def main():
     bars = load_feb11_bars()
     if not bars:
-        print(f"NO Feb 11 bars in {M1_CSV}")
+        print(f"NO Feb 11 bars in {M1_CSV} (and tick fallback empty)")
         return
-    zee_markers     = build_zee_markers()
     det_signals     = run_detector_on_feb11(bars)
     det_markers     = build_detector_markers(det_signals)
     ns_signals      = run_ns_nd_detector(bars)
     ns_markers      = build_ns_nd_markers(ns_signals)
+    # Build Zee markers AFTER detector signals so caught/missed colouring works
+    zee_markers     = build_zee_markers(uhv_signals=det_signals, nsnd_signals=ns_signals)
     stats           = trade_stats()
     alignment       = detector_alignment(det_signals)
     ns_align        = ns_nd_alignment(ns_signals)
+    coverage        = coverage_stats(det_signals, ns_signals)
+    alignment_data  = build_alignment_data(bars, det_signals, ns_signals)
 
     html = (HTML_TEMPLATE
             .replace("__BARS_JSON__",        json.dumps(bars))
@@ -1045,7 +1627,9 @@ def main():
             .replace("__NS_MARKERS_JSON__",  json.dumps(ns_markers))
             .replace("__STATS_JSON__",       json.dumps(stats))
             .replace("__ALIGN_JSON__",       json.dumps(alignment))
-            .replace("__NS_ALIGN_JSON__",    json.dumps(ns_align)))
+            .replace("__NS_ALIGN_JSON__",    json.dumps(ns_align))
+            .replace("__COVERAGE_JSON__",    json.dumps(coverage))
+            .replace("__ALIGNMENT_JSON__",   json.dumps(alignment_data)))
     OUT_HTML.write_text(html, encoding="utf-8")
     first_t = datetime.fromtimestamp(bars[0]["time"], tz=UTC).strftime("%H:%M")
     last_t  = datetime.fromtimestamp(bars[-1]["time"], tz=UTC).strftime("%H:%M")
@@ -1056,6 +1640,9 @@ def main():
           f"alignment {alignment['matched']}/{alignment['n_zee']}")
     print(f"  NS/ND det:  {ns_align['n_det']} signals  "
           f"alignment {ns_align['matched']}/{ns_align['n_zee']}")
+    print(f"  Coverage:   any={coverage['by_any']}/{coverage['total']}  "
+          f"both={coverage['both']}  uhv-only={coverage['by_uhv']}  "
+          f"nsnd-only={coverage['by_nsnd']}  MISSED={coverage['missed']}")
     print(f"  -> {OUT_HTML}")
 
 

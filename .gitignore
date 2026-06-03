@@ -3,6 +3,18 @@ monitor/.claude_api_key
 monitor/.openai_api_key
 monitor/.whatsapp_config.json
 monitor/.dashboard_password
+
+# ─── Claude brain (PLAINTEXT must never enter git; encrypted bundle in brain_vault/ IS pushed)
+monitor/.claude_brain.db
+monitor/.claude_brain.db-*
+monitor/.brain_lock_tmp/
+monitor/.brain_unlock_tmp/
+monitor/.memory_hawk_state.json
+monitor/.chat_monitor_last_ts
+monitor/.memory_hawk.log
+monitor/feb11_labels.json
+monitor/.cloudflared_chat_watchdog.json
+# brain_vault/ — encrypted bundles ARE committed; do NOT ignore.
 monitor/cc_chat.jsonl
 monitor/hammad_chat.jsonl
 monitor/.hammad_typing.json
