@@ -40,5 +40,19 @@
       "C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\feb11_state_88011.json",
       "C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\turtle_fills.csv"
     ]
+  },
+  "2026-06-03-1935": {
+    "ts_utc": "2026-06-03T19:35:04.275359+00:00",
+    "file": "turtle-brain-2026-06-03-1935.tar.xz.enc",
+    "size_mb": 58.84,
+    "files_included": [
+      "monitor\\.claude_brain.db",
+      "monitor\\.memory_hawk_state.json",
+      "monitor\\.chat_monitor_last_ts",
+      "monitor\\feb11_labels.json",
+      "memory.md",
+      "C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\feb11_state_88011.json",
+      "C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\turtle_fills.csv"
+    ]
   }
 }
