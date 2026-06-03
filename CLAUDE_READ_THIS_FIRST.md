@@ -62,13 +62,81 @@ When you find yourself about to do one of these, STOP and search the table.
 | "Setting `cooldown_sec=86400` to pause EA then forgetting to reset" | Use `apply_runtime.py --reset` to fall back to Inp defaults. |
 | "Writing strings with em-dash (—) to PowerShell scripts" | PS 5.1 reads .ps1 as Windows-1252, breaks UTF-8 bytes. Use ASCII `--`. |
 
-## The 5 rules from startup.bat — internalize them
+## The 8 rules from startup.bat — internalize them
 
 1. APPEND to memory.md, never overwrite.
 2. Run memory_hawk.py --loop every session.
 3. The only goal is REAL MONEY ON A LIVE EA. Anything else is early halt.
 4. Your root-cause analysis is weaker than a human's. Enumerate ≥3 hypotheses; suspect your reimpl first.
 5. Never declare validated work "fake/imagined/unreproducible" before running the canonical directly.
+6. Every word Zee types is precious. Save verbatim. Use `python monitor/claude_brain.py zee-said "<topic>"` to recall.
+7. Daily report at end of each UTC day. Numbered globally. Never delete.
+8. This system is a legacy for Zeeshan's children. Document for them. USB pack via `monitor/pack_to_usb.py` (also fires automatically when USB inserted, via `usb_hawk.py`).
+
+## How to recreate this entire setup on a fresh computer
+
+This is the contract Claude must honour: even if Zee's laptop is destroyed,
+a new Claude session on a new machine can rebuild everything from this repo
++ the two security questions. Steps:
+
+1. Install prerequisites on the new machine:
+   - Git for Windows (includes Bash + openssl + python3 path utilities)
+   - Python 3.13 at `C:/Users/<user>/AppData/Local/Programs/Python/Python313-arm64/`
+   - Node.js (for the dashboard server)
+   - MetaTrader 5 (for the live EA)
+
+2. Clone the repo:
+   ```
+   git clone https://github.com/zeecitizen/turtle
+   cd turtle
+   ```
+
+3. Unlock the brain (decrypts every conversation + state):
+   ```
+   python monitor/brain_unlock.py
+   ```
+   Answer the two security questions (Jalwana / Kamboh — accepts variants).
+   This restores `monitor/.claude_brain.db` + `memory.md` + EA state files.
+
+4. Run `startup.bat` — this auto-spawns:
+   - `memory_hawk.py --loop` (hourly journal)
+   - `claude_brain.py index --watch` (continuous indexing of new sessions)
+   - `brain_lock.py --loop --interval 3600` (encrypt + push every hour)
+   - `daily_report_hawk.py --loop` (daily numbered report)
+   - `usb_hawk.py` (auto-pack on new USB insertion)
+   - Plus the dashboard server, sheriff_hawk, etc.
+
+5. Compile and attach the EA:
+   - In MetaEditor, open `mt5/Feb11TickMedium.mq5`, press F7 to compile.
+   - **Don't forget the dual-source gotcha**: the file Claude edits is in
+     the repo. The file MetaEditor compiles is in
+     `C:/Users/<user>/AppData/Roaming/MetaQuotes/Terminal/<GUID>/MQL5/Experts/`.
+     Always `cp` repo → terminal folder BEFORE compiling.
+   - Attach to XAUUSD M1 chart in the right broker terminal (Atmos GMT+0
+     wants session inputs 90/150/1005/1185).
+
+6. Verify state:
+   ```
+   python monitor/memory_hawk.py        # writes a fresh journal entry
+   python monitor/claude_brain.py session-start    # shows recent context
+   ```
+
+You should see hourly entries appearing in `memory.md`, encrypted bundles
+appearing in `brain_vault/`, and (within 24h) a numbered daily report in
+`daily_reports/`.
+
+## Zee should NOT have to manage any of this
+
+Per Zee's 2026-06-04 instruction: Claude self-manages the brain, the USB
+backups, the daily reports, the encrypted GitHub pushes. Zee's only role
+in the system maintenance is:
+
+- Run `startup.bat` once per laptop reboot (or never if the daemons survive).
+- Plug in a USB occasionally for an offline copy (or click the gold button
+  on `enter_this_door.html` if he prefers explicit action).
+- Read the daily reports.
+
+Everything else is automatic.
 
 ## Quick session-start script
 

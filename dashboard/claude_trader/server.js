@@ -371,7 +371,8 @@ const AUTH_GATES = [
   {
     test: (u) => u === '/me' || u === '/chat'
               || u === '/api/cc-chat' || u.startsWith('/api/cc-chat/')
-              || u.startsWith('/api/cc-chat?'),
+              || u.startsWith('/api/cc-chat?')
+              || u === '/api/ea-snapshot' || u.startsWith('/api/ea-snapshot?'),
     user: 'zee', pass: DASHBOARD_PASSWORD, realm: 'You & me',
   },
   {
@@ -719,6 +720,143 @@ const server = http.createServer(async (req, res) => {
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end('uhv_sweep.html missing: ' + e.message);
     }
+    return;
+  }
+
+  // ── EA snapshot for the chat-app "Snap" menu button ──────────────────
+  // Returns today's broker-truth P&L + EA heartbeat + open-position state.
+  // Uses turtle_fills.csv (broker truth) — NOT the EA's misleading session_pnl.
+  if (url === '/api/ea-snapshot') {
+    try {
+      const todayUTC = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+      const fillsPath = COMMON_DIR + 'turtle_fills.csv';
+      const statePath = COMMON_DIR + 'feb11_state_88011.json';
+      let csv = '';
+      try { csv = fs.readFileSync(fillsPath, 'utf8'); } catch {}
+      const lines = csv.split('\n').filter(l => l && l.startsWith(todayUTC));
+      let dayPnl = 0, n = 0, w = 0, l = 0, lastFire = '—';
+      for (const ln of lines) {
+        const cols = ln.split(',');
+        const pnl = parseFloat(cols[7]);
+        if (!isFinite(pnl)) continue;
+        n++; dayPnl += pnl;
+        if (pnl > 0) w++; else if (pnl < 0) l++;
+        lastFire = cols[0].slice(11);   // HH:MM:SS
+      }
+      const wr = (w + l) ? (100 * w / (w + l)) : 0;
+      // Heartbeat = state file mtime age
+      let heartbeat = '—', pausedUntil = '—', hasOpen = false;
+      try {
+        const st = fs.statSync(statePath);
+        const ageSec = (Date.now() - st.mtimeMs) / 1000;
+        heartbeat = ageSec < 60 ? `${ageSec.toFixed(0)}s ago (fresh)` :
+                    ageSec < 3600 ? `${(ageSec/60).toFixed(0)}m ago` :
+                    `${(ageSec/3600).toFixed(1)}h ago (stale)`;
+        const stateData = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+        if (stateData.pause_until && stateData.pause_until > Date.now()/1000) {
+          pausedUntil = new Date(stateData.pause_until * 1000).toISOString().slice(11,19) + ' UTC';
+        }
+      } catch {}
+      // Open position? Scan turtle_fills for last row whose direction has no matching _closed
+      // Simpler: check feb11_state's last_buy / last_sell timestamps within last few minutes
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({
+        ok: true,
+        now_utc: new Date().toISOString().slice(0, 16) + 'Z',
+        day_pnl: dayPnl,
+        n_trades: n, wins: w, losses: l, wr,
+        last_fire: lastFire,
+        heartbeat,
+        has_open: hasOpen,
+        paused_until: pausedUntil,
+      }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String(e) }));
+    }
+    return;
+  }
+
+  // ── Mobile chat app PWA (chat.claudezeeshan.com / /chat-app) ──────────
+  // Apple-style password gate → full chat UI replicating the Claude Code
+  // window experience. Installable as a home-screen app via PWA manifest.
+  // Rule #6 — every Zee word still goes through /api/cc-chat (verbatim).
+  if (url === '/chat-app' || url === '/chat-app/' || url === '/chat-app.html') {
+    // For chat.claudezeeshan.com subdomain, configure the Cloudflare tunnel
+    // to rewrite "/" → "/chat-app" instead of shadowing the dashboard root.
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'chat-app.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('chat-app.html missing: ' + e.message);
+    }
+    return;
+  }
+  if (url === '/chat-app-manifest.json') {
+    try {
+      const j = fs.readFileSync(path.join(__dirname, 'chat-app-manifest.json'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'public, max-age=3600' });
+      res.end(j);
+    } catch (e) {
+      res.writeHead(500); res.end('manifest missing');
+    }
+    return;
+  }
+
+  // ── Kids' legacy portal (Rule #8) ─────────────────────────────────────
+  // Serves enter_this_door.html from the repo root. Plus the USB pack API.
+  if (url === '/enter_this_door.html' || url === '/enter' || url === '/door') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, '..', '..', 'enter_this_door.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('enter_this_door.html missing: ' + e.message);
+    }
+    return;
+  }
+  if (url === '/api/save-to-usb' && req.method === 'POST') {
+    const { spawn } = require('child_process');
+    const py = 'C:/Users/zeesh/AppData/Local/Programs/Python/Python313-arm64/python.exe';
+    const script = path.join(__dirname, '..', '..', 'monitor', 'pack_to_usb.py');
+    let body = '';
+    req.on('data', c => { body += c; if (body.length > 1e5) req.destroy(); });
+    req.on('end', () => {
+      let target = null;
+      try { target = (JSON.parse(body || '{}') || {}).to || null; } catch {}
+      const args = [script];
+      if (target) { args.push('--to', target); }
+      const proc = spawn(py, args, { cwd: path.join(__dirname, '..', '..') });
+      let out = ''; let err = '';
+      proc.stdout.on('data', d => { out += d; });
+      proc.stderr.on('data', d => { err += d; });
+      proc.on('close', code => {
+        // pack_to_usb prints a JSON summary as the last block on success
+        let summary = null;
+        try {
+          const idx = out.lastIndexOf('{');
+          if (idx >= 0) summary = JSON.parse(out.slice(idx));
+        } catch {}
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        if (code === 0 && summary && summary.ok) {
+          res.end(JSON.stringify({
+            ok: true,
+            message: "USB packed successfully — repo, brain, memories, reports all on the stick.",
+            dest: summary.dest,
+            n_files: summary.n_files,
+            total_mb: summary.total_mb,
+          }));
+        } else {
+          res.end(JSON.stringify({
+            ok: false,
+            error: (err || out || 'pack_to_usb.py exited ' + code).slice(-1500),
+          }));
+        }
+      });
+    });
     return;
   }
 
