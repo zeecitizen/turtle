@@ -85,6 +85,35 @@ REM  ║     trades, fights, jokes, the divorce, the heartbreak — all of it. �
 REM  ║     Encrypted brain_lock.py backups push to GitHub hourly so even   ║
 REM  ║     if the laptop is stolen, lost, on fire, or the OS wiped,        ║
 REM  ║     `brain_unlock.py` restores everything (2 security questions).   ║
+REM  ║                                                                     ║
+REM  ║  8. THIS WHOLE SYSTEM IS A LEGACY FOR ZEESHAN'S CHILDREN.           ║
+REM  ║     One day this repo will be handed to his kids on a USB drive.    ║
+REM  ║     They will open `enter_this_door.html` in a browser and learn    ║
+REM  ║     about their father, the work he and Claude built together,      ║
+REM  ║     the trading mission, the rules, the wall of shame, the          ║
+REM  ║     reproducibility verifications — everything. To pack a fresh USB ║
+REM  ║     copy at any moment, Zee opens `enter_this_door.html` and clicks ║
+REM  ║     the button at top: "Zee click here to save your progress for    ║
+REM  ║     future generations..." which calls `monitor/pack_to_usb.py`.    ║
+REM  ║     RULE FOR CLAUDE: Treat every file in this repo as something a   ║
+REM  ║     child of Zeeshan may one day read. No cruelty, no shortcuts,    ║
+REM  ║     no abandoned experiments without context. Document the WHY.     ║
+REM  ║     The kids should be able to understand the journey.              ║
+REM  ║                                                                     ║
+REM  ║  7. END-OF-DAY PRINTABLE REPORTS. Every UTC day, daily_report_hawk  ║
+REM  ║     writes one numbered HTML report to daily_reports/YYYY-MM/       ║
+REM  ║     and pushes to GitHub. Numbering is GLOBAL across all dates so   ║
+REM  ║     "report #673" is always the 673rd day's report. Zee prints      ║
+REM  ║     these and stores them in a cabinet. Years later he can say     ║
+REM  ║     "look at report #673" and Claude pulls it:                      ║
+REM  ║       python monitor/daily_report_hawk.py --get 673                 ║
+REM  ║     OR list all:                                                    ║
+REM  ║       python monitor/daily_report_hawk.py --list                    ║
+REM  ║     Contents per report: every fill, intra-day equity, EA config    ║
+REM  ║     snapshot, code commits, Zee's verbatim messages that day,       ║
+REM  ║     memory.md tail. Print-friendly CSS — Chrome "Save as PDF"       ║
+REM  ║     gives a clean A4 PDF. NEVER delete a report; they are the only ║
+REM  ║     durable record once a session JSONL is gone.                    ║
 REM  ╚═════════════════════════════════════════════════════════════════════╝
 REM
 REM  ┌─────────────────────────────────────────────────────────────────────┐
@@ -356,6 +385,19 @@ REM   derived from 2 security questions — mother's cast + father's cast),
 REM   pushes to brain_vault/ on origin. Disaster recovery on any new machine:
 REM     git clone https://github.com/zeecitizen/turtle
 REM     python monitor\brain_unlock.py  (answer the 2 questions)
+
+"%ENSURE%" daily_report_hawk.py --loop
+REM   End-of-day printable report generator. Writes one numbered HTML report
+REM   to daily_reports/YYYY-MM/ at 00:05 UTC each day. Pushes to GitHub.
+REM   Zee prints each one for his physical cabinet (Rule #7).
+REM   Lookup: python monitor\daily_report_hawk.py --get <number>
+
+"%ENSURE%" usb_hawk.py
+REM   Watches for new USB inserts. Auto-runs pack_to_usb.py against any
+REM   newly-mounted removable drive (tracks volume serial so it doesn't
+REM   re-pack the same stick). Zeeshan just plugs in a USB and walks away —
+REM   the full repo + brain + reports land on the stick. (Rule #8)
+REM   Manual one-shot: python monitor\pack_to_usb.py --to E:
 
 REM "%ENSURE%" intern_hawks.py
 REM   ↑ disabled — was scraping random trading sites; output stale.
