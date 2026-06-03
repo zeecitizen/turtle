@@ -120,3 +120,9 @@ WHAT THIS MEANS FOR TOMORROW'S SESSION1:
   - Need to find a NEW strategy, not tune existing filters, for >$30/day at 0.05L
 
 This is the final TASK-005 verdict. Waiting on Zee close 005.
+- 2026-06-04 02:04 PKT — **CLOSED**  (Zee marked complete 02:03 PKT. Key finding: PF 0.99 (no real edge) without broker SL parachute. Broker SL = de-facto strategy.)
+
+## TASK-010  opened 2026-06-04 02:04 PKT — Repair UHV EA — awaiting Zee's instructions on scope. Per memory: project_uhv_sweep_ea_live_state describes the prior live UHV EA (Magic 88001, mt5/UhvSweepExhaustion.mq5) which Zee plans to revisit.
+
+- 2026-06-04 02:07 PKT — **CLOSED TASK-005**  (re-tagged: the prior legacy **CLOSED** event was mis-attributed by the parser — actual target was TASK-005)
+- 2026-06-04 02:07 PKT — **REOPEN TASK-009**  (the legacy CLOSED event above was for TASK-005, not 009; tasks.py parser fixed to handle tagged closes)
