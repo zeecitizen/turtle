@@ -83,25 +83,50 @@ def read_all():
 
 
 def parse_tasks():
-    """Return dict {number_int: {'desc': str, 'status': 'open'|'closed', 'events': [lines]}}"""
+    """Return dict {number_int: {'desc': str, 'status': 'open'|'closed', 'events': [lines]}}.
+
+    Close events are tagged "**CLOSED TASK-NNN**" so the parser can attribute
+    them to the correct task even when appended at file end (append-only)."""
     tasks = {}
+    cur_block = None
+    import re
+    closed_re = re.compile(r"\*\*CLOSED TASK-(\d+)\*\*", re.IGNORECASE)
+    reopen_re = re.compile(r"\*\*REOPEN TASK-(\d+)\*\*", re.IGNORECASE)
+    legacy_close_re = re.compile(r"\*\*CLOSED\*\*", re.IGNORECASE)
     for line in read_all():
-        # Match opening: "## TASK-NNN  opened YYYY-MM-DD HH:MM PKT — <desc>"
         if line.startswith("## TASK-"):
             try:
                 n = int(line.split("TASK-")[1].split(" ")[0].split(":")[0])
-                # desc after em-dash
                 desc = line.split("—", 1)[1].strip() if "—" in line else ""
                 tasks[n] = {"desc": desc, "status": "open", "events": [line]}
+                cur_block = n
             except Exception:
                 pass
         elif line.startswith("- "):
-            # event under current task — find the latest task and append
-            if tasks:
-                latest = max(tasks.keys())
-                tasks[latest]["events"].append(line)
-                if "closed" in line.lower() and ("**closed**" in line.lower() or "[closed]" in line.lower()):
-                    tasks[latest]["status"] = "closed"
+            # First: tagged-close event applies to the named task regardless of position
+            m = closed_re.search(line)
+            if m:
+                target_n = int(m.group(1))
+                if target_n in tasks:
+                    tasks[target_n]["events"].append(line)
+                    tasks[target_n]["status"] = "closed"
+                continue
+            # REOPEN tag
+            mr = reopen_re.search(line)
+            if mr:
+                target_n = int(mr.group(1))
+                if target_n in tasks:
+                    tasks[target_n]["events"].append(line)
+                    tasks[target_n]["status"] = "open"
+                continue
+            # Legacy untagged **CLOSED** → assume current block
+            if legacy_close_re.search(line) and cur_block is not None:
+                tasks[cur_block]["events"].append(line)
+                tasks[cur_block]["status"] = "closed"
+                continue
+            # Normal note → current block
+            if cur_block is not None:
+                tasks[cur_block]["events"].append(line)
     return tasks
 
 
@@ -124,8 +149,10 @@ def cmd_note(num, text):
 
 
 def cmd_close(num, reason):
+    """Close event is tagged with the task number explicitly so the parser
+    matches even when the event is appended at file end (append-only)."""
     n = int(num)
-    line = f"- {stamp()} — **CLOSED**  ({reason})"
+    line = f"- {stamp()} — **CLOSED TASK-{n:03d}**  ({reason})"
     append(line)
     print(f"Closed TASK-{n:03d}: {reason}")
 
