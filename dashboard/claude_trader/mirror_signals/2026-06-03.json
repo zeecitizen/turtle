@@ -1,0 +1,32 @@
+{
+  "date": "2026-06-03",
+  "config": "MQL5-mirror v1.18 (one-position, broker SL=$25.0/TP=$50.0)",
+  "lots": 0.05,
+  "n_trades": 2,
+  "wins": 1,
+  "losses": 1,
+  "wr_pct": 50.0,
+  "total_usd": 24.6,
+  "trades": [
+    {
+      "entry_ts": 1780452929,
+      "exit_ts": 1780453723,
+      "side": "sell",
+      "entry_px": 4475.83,
+      "pnl_price": 10.0,
+      "pnl_usd": 49.8,
+      "reason": "BROKER_TP",
+      "hold_s": 793
+    },
+    {
+      "entry_ts": 1780453726,
+      "exit_ts": 1780453809,
+      "side": "sell",
+      "entry_px": 4463.97,
+      "pnl_price": -5.0,
+      "pnl_usd": -25.2,
+      "reason": "BROKER_SL",
+      "hold_s": 82
+    }
+  ]
+}

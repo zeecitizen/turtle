@@ -1,0 +1,92 @@
+{
+  "date": "2026-05-21",
+  "config": "MQL5-mirror v1.18 (one-position, broker SL=$25.0/TP=$50.0)",
+  "lots": 0.05,
+  "n_trades": 8,
+  "wins": 5,
+  "losses": 3,
+  "wr_pct": 62.5,
+  "total_usd": 107.9,
+  "trades": [
+    {
+      "entry_ts": 1779330000,
+      "exit_ts": 1779332400,
+      "side": "buy",
+      "entry_px": 4539.26,
+      "pnl_price": 7.58,
+      "pnl_usd": 37.7,
+      "reason": "EOH",
+      "hold_s": 2400
+    },
+    {
+      "entry_ts": 1779381900,
+      "exit_ts": 1779382133,
+      "side": "sell",
+      "entry_px": 4497.67,
+      "pnl_price": -5.0,
+      "pnl_usd": -25.2,
+      "reason": "BROKER_SL",
+      "hold_s": 233
+    },
+    {
+      "entry_ts": 1779382480,
+      "exit_ts": 1779382849,
+      "side": "sell",
+      "entry_px": 4520.08,
+      "pnl_price": 10.0,
+      "pnl_usd": 49.8,
+      "reason": "BROKER_TP",
+      "hold_s": 368
+    },
+    {
+      "entry_ts": 1779383702,
+      "exit_ts": 1779383760,
+      "side": "buy",
+      "entry_px": 4508.6,
+      "pnl_price": -5.0,
+      "pnl_usd": -25.2,
+      "reason": "BROKER_SL",
+      "hold_s": 57
+    },
+    {
+      "entry_ts": 1779384134,
+      "exit_ts": 1779386535,
+      "side": "buy",
+      "entry_px": 4501.2,
+      "pnl_price": 6.35,
+      "pnl_usd": 31.55,
+      "reason": "EOH",
+      "hold_s": 2400
+    },
+    {
+      "entry_ts": 1779387002,
+      "exit_ts": 1779387052,
+      "side": "sell",
+      "entry_px": 4499.91,
+      "pnl_price": -5.0,
+      "pnl_usd": -25.2,
+      "reason": "BROKER_SL",
+      "hold_s": 50
+    },
+    {
+      "entry_ts": 1779389102,
+      "exit_ts": 1779390080,
+      "side": "buy",
+      "entry_px": 4507.53,
+      "pnl_price": 10.0,
+      "pnl_usd": 49.8,
+      "reason": "BROKER_TP",
+      "hold_s": 978
+    },
+    {
+      "entry_ts": 1779390300,
+      "exit_ts": 1779392700,
+      "side": "buy",
+      "entry_px": 4516.12,
+      "pnl_price": 2.97,
+      "pnl_usd": 14.65,
+      "reason": "EOH",
+      "hold_s": 2400
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "date": "2026-05-25",
+  "config": "MQL5-mirror v1.18 (one-position, broker SL=$25.0/TP=$50.0)",
+  "lots": 0.05,
+  "n_trades": 0,
+  "wins": 0,
+  "losses": 0,
+  "wr_pct": 0.0,
+  "total_usd": 0,
+  "trades": []
+}
