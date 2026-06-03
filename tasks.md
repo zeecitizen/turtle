@@ -70,3 +70,15 @@ NEXT lever to test: lot sizing (0.05 -> 0.10 doubles to ~28/day at SL=25 TP=75).
 
 ## TASK-009  opened 2026-06-04 01:36 PKT — Visualizer: highlight MQL5-mirror trade candles on feb11-lab (Zee 2026-06-04). Gold ★ entry + green/red circle exit markers. Toggle in Layers panel. Live now.
 - 2026-06-04 01:36 PKT — Generated feb11_mirror_signals.json (16 trades, +$46.80 at 0.05L Feb 11). build_feb11_lab.py extended with new MIRROR layer + toggle + fetch. Page hard-refresh on phone to see new gold stars on the right candles.
+- 2026-06-04 01:44 PKT — TIME-TO-TARGET PROJECTION (Atmos NOVA = +$500 target):
+At MQL5-mirror baseline ~$11.50/day at 0.05 lots:
+  Lots 0.05 → 43 days to +$500 (way past Atmos challenge cutoff)
+  Lots 0.10 → 22 days
+  Lots 0.20 → 11 days
+  Lots 0.30 → 7 days ← clears 8-day phase
+  Lots 0.50 → 4 days
+
+Implication: to clear Atmos NOVA target on realistic backtest expectations, lot size needs to be ~0.20-0.30. Zee currently at 0.05 (his explicit cap). Need his OK to scale.
+
+Alternative: find a filter combo that produces >$14/day at 0.05L.
+- 2026-06-04 01:47 PKT — Setup recipe written to monitor/gemini_dr_setup.md. uv (Astral pkg mgr) installed. google-generativeai SDK available. AWAITING: Zee to generate GEMINI_API_KEY at https://aistudio.google.com/app/apikey and drop to monitor/.gemini_api_key. Then either uvx gemini-research-mcp (community pkg) OR custom FastMCP wrapper using Interactions API. Stays OPEN per Rule 10 until first deep research round-trip completes.
