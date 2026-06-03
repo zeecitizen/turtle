@@ -16,3 +16,5 @@ A task is OPEN until Zee explicitly says it's complete.
 - 2026-06-04 00:31 PKT — DNS CNAME added via cloudflared route, tunnel ingress updated, cert provisioned, HTTPS 200 verified from machine. Awaiting Zee's phone test.
 - 2026-06-04 00:33 PKT — Rule #9 implemented in memory_hawk.py — entry headers now show PKT primary, UTC secondary. Latest hourly entry confirms: '## 2026-06-04 00:32 PKT (2026-06-03 19:32 UTC)'. All new chat messages to Zee also use PKT. Old entries left untouched (append-only).
 - 2026-06-04 00:33 PKT — Infrastructure round done. EA paused on Atmos at -224.82 day P&L. Validated Python predicts +253 at 0.05 lots on June 3 ticks. Next test = tomorrow's Session1 at 06:30 PKT. Daemons all alive: dd_watch will alert on any fill within seconds.
+
+## TASK-004  opened 2026-06-04 00:34 PKT — Daily 06:25 PKT pre-Session1 brief — morning_brief_hawk daemon
