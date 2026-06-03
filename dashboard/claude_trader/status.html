@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Zee · Claude — Live Status</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  :root {
+    --bg: #0d0d0e; --panel: #1a1a1c; --panel2: #2a2a2d; --text: #e8e8e8;
+    --muted: #888; --accent: #f5c842; --gold: #d9a300;
+    --green: #30d158; --red: #ff453a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased; line-height: 1.5;
+    padding: env(safe-area-inset-top, 0) 0 env(safe-area-inset-bottom, 0);
+  }
+  .container { max-width: 720px; margin: 0 auto; padding: 18px; }
+  header h1 { font-size: 22px; margin: 0 0 4px; color: var(--gold); font-weight: 600; letter-spacing: -0.3px; }
+  header .sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  .ask-btn {
+    display: block; width: 100%;
+    background: linear-gradient(180deg, #f5c842, #d9a300);
+    color: #000; padding: 14px 18px; border-radius: 12px;
+    text-align: center; font-weight: 600; font-size: 15px;
+    text-decoration: none; cursor: pointer; border: none;
+    font-family: inherit;
+    box-shadow: 0 2px 12px rgba(217, 163, 0, 0.3);
+    margin-bottom: 20px;
+  }
+  .ask-btn:active { transform: scale(0.98); }
+  h2 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--muted); border-bottom: 1px solid #333;
+    padding-bottom: 6px; margin: 24px 0 10px;
+  }
+  .ea-card {
+    background: var(--panel); border-radius: 10px; padding: 14px;
+    margin-bottom: 16px; border: 1px solid #333;
+  }
+  .ea-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 14px; }
+  .ea-row .v { font-variant-numeric: tabular-nums; }
+  .ea-row .v.pos { color: var(--green); font-weight: 600; }
+  .ea-row .v.neg { color: var(--red); font-weight: 600; }
+  .task {
+    background: var(--panel); border-left: 3px solid var(--accent);
+    border-radius: 8px; padding: 10px 14px; margin: 8px 0;
+    cursor: pointer;
+  }
+  .task.closed { border-left-color: #444; opacity: 0.55; }
+  .task .num { color: var(--accent); font-weight: 600; font-size: 13px; }
+  .task.closed .num { color: var(--muted); }
+  .task .desc { font-size: 14px; margin-top: 4px; }
+  .task .meta { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .task-details { display: none; margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .task.expanded .task-details { display: block; }
+  .task-details .event { padding: 3px 0; border-top: 1px solid #333; }
+  .footer {
+    color: var(--muted); font-size: 11px; text-align: center; margin-top: 32px;
+    border-top: 1px solid #2a2a2d; padding-top: 16px;
+  }
+  .footer a { color: var(--accent); }
+  .pkt { color: var(--accent); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Zee · Claude</h1>
+    <div class="sub" id="now">loading…</div>
+  </header>
+
+  <button class="ask-btn" onclick="window.location.href='https://chat.claudezeeshan.com/chat-app'">
+    🤖  Ask Claude for status
+  </button>
+
+  <h2>Today (broker truth)</h2>
+  <div class="ea-card" id="ea-card">loading…</div>
+
+  <h2>Open tasks</h2>
+  <div id="open-tasks">loading…</div>
+
+  <h2 style="margin-top:24px;">Closed tasks</h2>
+  <div id="closed-tasks">(none)</div>
+
+  <div class="footer">
+    Live dashboard at <a href="https://claudezeeshan.com">claudezeeshan.com</a> ·
+    Chat at <a href="https://chat.claudezeeshan.com/chat-app">chat.claudezeeshan.com</a> ·
+    Per Rule #10, only Zee can close a task.
+  </div>
+</div>
+
+<script>
+function pktNow() {
+  const d = new Date();
+  const utc = d.getTime() + d.getTimezoneOffset() * 60000;
+  const pkt = new Date(utc + 5 * 3600000);
+  const pad = n => String(n).padStart(2, '0');
+  return `${pkt.getFullYear()}-${pad(pkt.getMonth()+1)}-${pad(pkt.getDate())} ${pad(pkt.getHours())}:${pad(pkt.getMinutes())} PKT`;
+}
+
+async function load() {
+  document.getElementById('now').innerHTML = `<span class="pkt">${pktNow()}</span> · refreshes every 30s`;
+  try {
+    const r = await fetch('/api/status');
+    if (!r.ok) throw new Error('http ' + r.status);
+    const s = await r.json();
+
+    // EA card
+    const ea = s.ea || {};
+    const pnlSign = ea.day_pnl >= 0 ? '+' : '−';
+    const pnlCls = ea.day_pnl >= 0 ? 'pos' : 'neg';
+    const heartbeat = ea.heartbeat_age_sec == null ? '—' :
+                      ea.heartbeat_age_sec < 60 ? `${Math.round(ea.heartbeat_age_sec)}s ago` :
+                      ea.heartbeat_age_sec < 3600 ? `${Math.round(ea.heartbeat_age_sec/60)}m ago` :
+                      `${(ea.heartbeat_age_sec/3600).toFixed(1)}h ago (stale)`;
+    document.getElementById('ea-card').innerHTML =
+      `<div class="ea-row"><span>Day P&L</span><span class="v ${pnlCls}">${pnlSign}$${Math.abs(ea.day_pnl || 0).toFixed(2)}</span></div>` +
+      `<div class="ea-row"><span>Trades</span><span class="v">${ea.n_trades || 0}</span></div>` +
+      `<div class="ea-row"><span>Wins / Losses</span><span class="v">${ea.wins || 0} / ${ea.losses || 0}</span></div>` +
+      `<div class="ea-row"><span>Win rate</span><span class="v">${(ea.wr || 0).toFixed(1)}%</span></div>` +
+      `<div class="ea-row"><span>EA heartbeat</span><span class="v">${heartbeat}</span></div>`;
+
+    // Tasks
+    const openTasks = (s.tasks || []).filter(t => t.status === 'open');
+    const closedTasks = (s.tasks || []).filter(t => t.status === 'closed');
+    function renderTask(t, container) {
+      const el = document.createElement('div');
+      el.className = 'task ' + (t.status === 'closed' ? 'closed' : 'open');
+      const numStr = String(t.number).padStart(3, '0');
+      el.innerHTML =
+        `<div><span class="num">TASK-${numStr}</span> · <span class="meta">${t.opened || ''}</span></div>` +
+        `<div class="desc">${t.desc}</div>` +
+        (t.events && t.events.length ?
+          `<div class="task-details">${t.events.slice(-5).map(e => `<div class="event">${e}</div>`).join('')}</div>` : '');
+      el.addEventListener('click', () => el.classList.toggle('expanded'));
+      container.appendChild(el);
+    }
+    const oc = document.getElementById('open-tasks'); oc.innerHTML = '';
+    if (openTasks.length === 0) oc.innerHTML = '<div style="color:#888;">(no open tasks)</div>';
+    else openTasks.forEach(t => renderTask(t, oc));
+    const cc = document.getElementById('closed-tasks'); cc.innerHTML = '';
+    if (closedTasks.length === 0) cc.innerHTML = '<div style="color:#888;">(none)</div>';
+    else closedTasks.forEach(t => renderTask(t, cc));
+  } catch (e) {
+    document.getElementById('ea-card').textContent = 'unreachable: ' + e.message;
+  }
+}
+
+load();
+setInterval(load, 30000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') load(); });
+</script>
+</body></html>

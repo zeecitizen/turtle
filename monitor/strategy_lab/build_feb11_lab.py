@@ -1107,6 +1107,11 @@ HTML_TEMPLATE = r"""<!doctype html>
         <span><span style="color:#00bcd4;">▲</span><span style="color:#e91e63;">▼</span></span>
         <span>NS / ND detector <span style="color:#787b86;">(VSA — Zee's method)</span></span>
       </label>
+      <label style="display:flex;align-items:center;gap:8px;padding:4px 0;cursor:pointer;">
+        <input type="checkbox" id="tog-mirror" checked>
+        <span style="color:#ffd700;font-weight:600;">★</span>
+        <span>MQL5-mirror trades <span style="color:#787b86;">(realistic backtest, +$46.80 Feb11)</span></span>
+      </label>
     </div>
     <div class="section">
       <h3>Zee's trades (markers on chart)</h3>
@@ -1197,6 +1202,8 @@ let TEACH_LABELS = {};
 let SHOW_ZEE = true;
 let SHOW_DET = false;
 let SHOW_NS  = true;
+let SHOW_MIRROR = true;
+let MIRROR_MARKERS = [];   // populated by fetch /feb11_mirror_signals.json
 
 const chart = LightweightCharts.createChart(document.getElementById('chart'), {
   layout: {
@@ -1276,12 +1283,47 @@ function refreshMarkers() {
     }
   }
   add(buildTeachMarkers());   // Zee's manual teach marks always visible
+  if (SHOW_MIRROR) add(MIRROR_MARKERS);
   if (SHOW_ZEE) add(ZEE_MARKERS);
   if (SHOW_NS)  add(NS_MARKERS);
   if (SHOW_DET) add(DET_MARKERS);
   merged.sort((a, b) => a.time - b.time);
   series.setMarkers(merged);
 }
+
+// Fetch + render the realistic MQL5-mirror trades (one-position-at-a-time,
+// broker-SL/TP included). These are the candles where the LIVE EA would
+// actually fire — not the canonical Python's parallel-overlap signals.
+fetch('/feb11_mirror_signals.json').then(r => r.json()).then(data => {
+  const marks = [];
+  for (const t of (data.trades || [])) {
+    const isBuy = t.side === 'buy';
+    const win = t.pnl_price > 0;
+    // Entry marker — gold star with R/L
+    marks.push({
+      time: t.entry_ts,
+      position: isBuy ? 'belowBar' : 'aboveBar',
+      color: '#ffd700',
+      shape: isBuy ? 'arrowUp' : 'arrowDown',
+      text: '★ ' + t.side.toUpperCase() + ' ' + t.reason,
+    });
+    // Exit marker — green check if win, red x if loss
+    marks.push({
+      time: t.exit_ts,
+      position: isBuy ? 'aboveBar' : 'belowBar',
+      color: win ? '#1a7f37' : '#cf222e',
+      shape: 'circle',
+      text: (win ? '+' : '') + '$' + t.pnl_usd.toFixed(2),
+    });
+  }
+  MIRROR_MARKERS = marks;
+  refreshMarkers();
+  // Update Layers footer with the mirror total
+  const cardTitle = document.querySelector('#mirror-summary');
+  if (cardTitle && data.total_usd != null) {
+    cardTitle.textContent = `${data.n_trades} trades · ${data.wr_pct}% WR · $${data.total_usd.toFixed(2)} (0.05L)`;
+  }
+}).catch(e => console.error('mirror signals load failed:', e));
 
 // Initial labels load → render teach markers on first paint
 fetch('/api/feb11-label').then(r => r.json()).then(data => {
@@ -1300,6 +1342,10 @@ document.getElementById('tog-det').addEventListener('change', (e) => {
 });
 document.getElementById('tog-ns').addEventListener('change', (e) => {
   SHOW_NS = e.target.checked; refreshMarkers();
+});
+const togMirror = document.getElementById('tog-mirror');
+if (togMirror) togMirror.addEventListener('change', (e) => {
+  SHOW_MIRROR = e.target.checked; refreshMarkers();
 });
 
 // Stats panel
