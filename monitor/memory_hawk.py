@@ -43,9 +43,15 @@ def utc_now():
     return datetime.now(tz=UTC)
 
 
+def pkt_str(dt_utc):
+    # Pakistan Standard Time = UTC+5, no DST. Per Rule #9 in startup.bat —
+    # always show Zee times in PKT until he tells us he's back in Germany.
+    return (dt_utc + timedelta(hours=5)).strftime("%Y-%m-%d %H:%M PKT")
+
+
 def berlin_str(dt_utc):
-    # Berlin = UTC+2 in summer (DST). Cheap approximation; correct enough for a journal.
-    return (dt_utc + timedelta(hours=2)).strftime("%Y-%m-%d %H:%M")
+    # Retained for reference; do NOT use as Zee's primary display per Rule #9.
+    return (dt_utc + timedelta(hours=2)).strftime("%Y-%m-%d %H:%M Berlin")
 
 
 def load_fills(today_only=True, last_n_days=None):
@@ -132,7 +138,7 @@ def confidence_assessment(today_fills_pnl, week_wr, week_n):
 def build_entry(achieved_lines=None):
     now = utc_now()
     ts_utc = now.strftime("%Y-%m-%d %H:%M UTC")
-    ts_berlin = berlin_str(now)
+    ts_pkt = pkt_str(now)   # Rule #9: PKT is primary for Zee
     today_fills = load_fills(today_only=True)
     week_fills = load_fills(today_only=False, last_n_days=7)
     today_wr, today_w, today_l, today_pnl = winrate(today_fills)
@@ -153,7 +159,7 @@ def build_entry(achieved_lines=None):
     lines.append("")
     lines.append("---")
     lines.append("")
-    lines.append(f"## {ts_utc}  ({ts_berlin} Berlin)")
+    lines.append(f"## {ts_pkt}  ({ts_utc})")
     lines.append("")
     lines.append("### 📊 Live state")
     lines.append(f"- EA source: Feb11TickMedium v{ea_version}, magic 88011, 0.05 lots, Atmos LIVE")

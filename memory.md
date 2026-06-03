@@ -159,3 +159,47 @@ corrects/retracts it. History of the reasoning matters as much as the verdict.
 - (Runtime override file absent — EA on raw Inp defaults)
 - Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
 
+
+---
+
+## 2026-06-03 19:24 UTC  (2026-06-03 21:24 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+7.37  consec_losses=0  pause_until=1780517165
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-225.14  (6W / 17L = 26.1% WR, n=23)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-250.74  (106W / 83L = 56.1% WR, n=190)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — today P&L $-225.14 is significantly negative
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- Mobile chat-app PWA shipped at /chat-app + manifest (Android home-screen installable)
+- 4-button menu in chat-app: Snap (EA snapshot) / Listen / Auto / Update
+- API /api/ea-snapshot returns broker-truth day P&L (gated by 28973)
+- Rule #6 (Zee's words = gold) + Rule #7 (daily printable reports) + Rule #8 (kids legacy) in startup.bat
+- memory.md system + memory_hawk daemon writing hourly journal
+- claude_brain.py SQLite FTS5 index over 270k turns; zee-said search live
+- brain_lock.py encrypted backups to GitHub every hour (3 bundles in brain_vault/)
+- brain_unlock.py disaster recovery via 2 security questions (Jalwana / Kamboh)
+- enter_this_door.html kids portal with gold button → pack_to_usb.py
+- usb_hawk.py auto-detect daemon for offline USB backups
+- daily_report_hawk.py daemon for numbered printable HTML reports
+- CLAUDE_READ_THIS_FIRST.md canonical-file index for new sessions
+- BOTH Python backtests verified reproducible: AGGR +$548k / MED +$167k across 27d
+- Wall-of-shame restructured append-only with 10 entries including my own retracted misinformation
+
+### ⚠️ Risks / red flags
+- ❗ Today's loss $-225.14 approaching halt-line −$250
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+

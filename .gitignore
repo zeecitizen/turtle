@@ -112,3 +112,4 @@ dashboard/claude_trader/node_modules/
 dashboard/claude_trader/package-lock.json
 monitor/.profit_pulse_state.json
 monitor/profit_pulse_hawk.log
+monitor/.tasks_state.json
