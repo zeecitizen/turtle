@@ -134,13 +134,13 @@ function brokerToPkt(s) {
 }
 
 const FILLS_CSV       = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\turtle_fills.csv';
-// 2026-05-27: the shared MT5 Common\Files folder gets fills from BOTH the old FTMO
-// terminal (symbol "XAUUSD") and the live Exness one ("XAUUSDm"). Dashboard reflects
-// the ACTIVE account only by filtering on this symbol.
-const ACTIVE_SYMBOL   = 'XAUUSDm';
-// Live account/terminal label shown on the dashboard (Exness real, Shano's money).
-// See memory reference_mt5_terminal_mapping. Login intentionally omitted from the UI.
-const ACCOUNT_BROKER  = 'Exness-MT5Real35';
+// 2026-06-02: switched ACTIVE_SYMBOL from XAUUSDm (Exness) to XAUUSD (Atmos NOVA
+// challenge — the live prop firm account now in active use). Exness trades remain
+// in turtle_fills.csv but are filtered out. To switch back, change to 'XAUUSDm'
+// and update ACCOUNT_BROKER below.
+const ACTIVE_SYMBOL   = 'XAUUSD';
+// Live account label — AtmosGlobal-LIVE = the Nova Challenge account (acc 3033901)
+const ACCOUNT_BROKER  = 'AtmosGlobal-LIVE';
 const LIVE_TRADE_JSON = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\live_trade_open.json';
 const WATCH_STATE_JSON= 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\watch_state.json';
 const LAST_UHV_ID     = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.last_uhv_id';
@@ -557,6 +557,13 @@ function runningPython() {
 }
 
 const server = http.createServer(async (req, res) => {
+  // Apex-to-me redirect: claudezeeshan.com → me.claudezeeshan.com (preserves path/query)
+  const host = (req.headers.host || '').toLowerCase().split(':')[0];
+  if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
+    res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
+    res.end();
+    return;
+  }
   const url = req.url.split('?')[0];
   const query = new URLSearchParams((req.url.split('?')[1]) || '');
 
@@ -728,6 +735,58 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ── Feb 11 alignment labels — Zee tags each candle with strategy + notes ──
+  // Storage: JSON file keyed by minute-unix → { strategy, notes, saved_at }
+  // GET  /api/feb11-label           → all labels (for chart layer)
+  // GET  /api/feb11-label?t=<unix>  → just that minute's label
+  // POST /api/feb11-label           → save/update a label
+  if (url.split('?')[0] === '/api/feb11-label') {
+    const LABEL_PATH = path.join(__dirname, '..', '..', 'monitor', 'feb11_labels.json');
+    const loadLabels = () => {
+      try { return JSON.parse(fs.readFileSync(LABEL_PATH, 'utf8')); } catch { return {}; }
+    };
+    if (req.method === 'GET') {
+      const labels = loadLabels();
+      const qs = url.split('?')[1] || '';
+      const tParam = new URLSearchParams(qs).get('t');
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      if (tParam) {
+        res.end(JSON.stringify({ ok: true, t: Number(tParam), label: labels[tParam] || null }));
+      } else {
+        res.end(JSON.stringify({ ok: true, labels }));
+      }
+      return;
+    }
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', c => { body += c; if (body.length > 1e6) req.destroy(); });
+      req.on('end', () => {
+        try {
+          const j = JSON.parse(body || '{}');
+          const t = String(j.t || '');
+          if (!t || !/^\d+$/.test(t)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: false, err: 'bad t' })); return;
+          }
+          const labels = loadLabels();
+          labels[t] = {
+            strategy: j.strategy || null,
+            notes: (j.notes || '').slice(0, 2000),
+            saved_at: Date.now(),
+          };
+          fs.writeFileSync(LABEL_PATH, JSON.stringify(labels, null, 2), 'utf8');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, t: Number(t), label: labels[t] }));
+        } catch (e) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, err: String(e) }));
+        }
+      });
+      return;
+    }
+    res.writeHead(405, { 'Content-Type': 'text/plain' }); res.end('method'); return;
+  }
+
   // STRATEGY PLAYBOOK — static page with the exact steps of each EA
   if (url === '/strategies' || url === '/playbook') {
     try {
@@ -897,6 +956,8 @@ const server = http.createServer(async (req, res) => {
     } catch (e) { pnl.error = e.code || e.message; }
 
     // ── EA attribution: position_ticket -> EA name (from decision logs) ──
+    // Note: Feb11_AGG (88009) and Feb11_MED (88011) don't write decision CSVs;
+    // they're attributed via TurtleTradeLogger's magic→name map (p[13]).
     const ticketEA = {};
     for (const [dfile, label] of [['s3_decisions.csv','S3'],['nsnd_decisions.csv','NSND'],['s1_decisions.csv','S1'],['s4_decisions.csv','S4']]) {
       try {
@@ -918,7 +979,9 @@ const server = http.createServer(async (req, res) => {
     }
 
     // ── Per-EA today P&L + recent-trades feed + today's equity curve ──
-    const per_ea = { S3:{n:0,w:0,l:0,pnl:0}, S1:{n:0,w:0,l:0,pnl:0}, NSND:{n:0,w:0,l:0,pnl:0}, S4:{n:0,w:0,l:0,pnl:0} };
+    // Feb11_AGG = 88009 Feb11TickTrader (aggressive), Feb11_MED = 88011 Feb11TickMedium (conservative).
+    const per_ea = { S3:{n:0,w:0,l:0,pnl:0}, S1:{n:0,w:0,l:0,pnl:0}, NSND:{n:0,w:0,l:0,pnl:0}, S4:{n:0,w:0,l:0,pnl:0},
+                     Feb11_AGG:{n:0,w:0,l:0,pnl:0}, Feb11_MED:{n:0,w:0,l:0,pnl:0} };
     const recent = [];
     let lastFill = null;                             // {ts, pnl} of newest fill today — for lifecycle "just closed"
     const equity = [];

@@ -3,6 +3,90 @@ REM ═════════════════════════�
 REM  UHV SWEEP TRADER — STARTUP & ORIENTATION    (rewritten 2026-05-12)
 REM ═════════════════════════════════════════════════════════════════════════
 REM
+REM  ╔═════════════════════════════════════════════════════════════════════╗
+REM  ║  LONG-TERM RULES FOR CLAUDE — READ EVERY SESSION (Zee 2026-06-03)   ║
+REM  ║  ─────────────────────────────────────────────────────────────────  ║
+REM  ║  1. ALWAYS APPEND to turtle\memory.md — NEVER overwrite past entries║
+REM  ║     including the wall-of-shame. If a past claim is later wrong,    ║
+REM  ║     APPEND a retraction row. History of the reasoning matters.      ║
+REM  ║                                                                     ║
+REM  ║  2. ALWAYS RUN memory_hawk.py --loop on every session start. This   ║
+REM  ║     file already spawns it (see ENSURE block below). If you find    ║
+REM  ║     it disabled, re-enable it. It prevents the "validated backtest  ║
+REM  ║     illusion" pattern (see memory.md header + wall of shame).       ║
+REM  ║                                                                     ║
+REM  ║  3. THE GOAL IS TO MAKE REAL MONEY ON A LIVE EA. NOTHING ELSE.      ║
+REM  ║     If Claude celebrates ANY other goal and stops after completing  ║
+REM  ║     it, that is an EARLY HALT — a failure mode.                     ║
+REM  ║     To legitimately stop processing, the LIVE EA must first be      ║
+REM  ║     producing real positive P&L on the broker account.              ║
+REM  ║     Until that state is reached, any "big announcement" Claude      ║
+REM  ║     makes is actually a disappointment that the final goal is       ║
+REM  ║     still not achieved.                                             ║
+REM  ║     The only update that impresses Zee:                             ║
+REM  ║       "Hi, we made $10 in the last hour."                           ║
+REM  ║     That is the only impressive thing. Code, infra, backtests,      ║
+REM  ║     dashboards, alignment tools — none of these impress a software  ║
+REM  ║     engineer. They impress Claude. They do not earn money.          ║
+REM  ║                                                                     ║
+REM  ║  4. YOUR ROOT-CAUSE ANALYSIS IS WEAKER THAN A HUMAN'S. Account for  ║
+REM  ║     this. Before declaring something "broken / unreproducible /     ║
+REM  ║     buggy / wrong", EXHAUSTIVELY enumerate alternative hypotheses,  ║
+REM  ║     especially: "maybe MY code is the bug." A human would:          ║
+REM  ║     (a) Run the canonical original artefact DIRECTLY first, never a ║
+REM  ║         reimplementation. Diff line-by-line, not by intuition.      ║
+REM  ║     (b) When a reimplementation disagrees with a claim, suspect the ║
+REM  ║         REIMPLEMENTATION first (units, scaling, dtype, framing).    ║
+REM  ║     (c) Not stop at the first plausible cause. Enumerate at least   ║
+REM  ║         3 hypotheses before committing to one. Falsify each.        ║
+REM  ║     Real-world example (2026-06-03): Claude built                   ║
+REM  ║     backtest_reproduce_feb11.py, got −$192 vs claimed +$45,599,     ║
+REM  ║     concluded "backtest was bogus" and added to wall of shame.      ║
+REM  ║     Zee had to point Claude to the canonical zee_tick_detector_     ║
+REM  ║     OOS.py. Running that DIRECTLY produced the exact +$47,084. The  ║
+REM  ║     bug was in Claude's reimplementation (USD-scaled DD vs price-   ║
+REM  ║     unit DD). A human would have run the canonical first.           ║
+REM  ║     When this pattern repeats, ADD a new wall-of-shame entry and    ║
+REM  ║     STOP yourself before declaring anything broken.                 ║
+REM  ║                                                                     ║
+REM  ║  5. NEVER declare validated work "fake / imagined / unreproducible/ ║
+REM  ║     bogus / inaccurate" with confident negative language before     ║
+REM  ║     running the CANONICAL original artefact directly. This         ║
+REM  ║     misinforms Zee, makes him doubt his own past work, and wastes  ║
+REM  ║     a real-money working hour while you destroy trust.              ║
+REM  ║     When your reimplementation disagrees with a documented claim,   ║
+REM  ║     the CORRECT framing is:                                         ║
+REM  ║       "My reimpl X disagrees with claim Y. TBD whether my reimpl is ║
+REM  ║        wrong or the original was wrong. Treating as unverified      ║
+REM  ║        until I run the canonical."                                  ║
+REM  ║     NOT:                                                            ║
+REM  ║       "+$128k cannot exist with this code on this data."            ║
+REM  ║       "The backtest was bugged."                                    ║
+REM  ║       "Edge is an illusion."                                        ║
+REM  ║       "Validated backtest CANNOT BE REPRODUCED."                    ║
+REM  ║     2026-06-03 actuality: Claude made all four negative claims      ║
+REM  ║     above; all four turned out to be Claude's own bugs, not the     ║
+REM  ║     backtest's. The +$128k MEDIUM and +$477k AGGRESSIVE BOTH        ║
+REM  ║     reproduce on real ticks when the canonical Python is run        ║
+REM  ║     directly. Zee was misled for hours. Do not repeat this.         ║
+REM  ║                                                                     ║
+REM  ║  6. EVERY WORD ZEEEEE TYPES IS PRECIOUS. His messages are gold.     ║
+REM  ║     Before processing any of his prompts, the words must already be ║
+REM  ║     committed verbatim to claude_brain memory. This happens         ║
+REM  ║     automatically via Claude Code's session JSONL — every user      ║
+REM  ║     message is logged before you see it. `claude_brain.py` indexes  ║
+REM  ║     those JSONLs so you can recall anything Zee ever said:          ║
+REM  ║       python monitor/claude_brain.py search "<topic>" --role user   ║
+REM  ║     OR (sugar):                                                     ║
+REM  ║       python monitor/claude_brain.py zee-said "<topic>"             ║
+REM  ║     NEVER paraphrase. NEVER summarise his words when storing. NEVER ║
+REM  ║     compress them. They are the record of our journey — code,       ║
+REM  ║     trades, fights, jokes, the divorce, the heartbreak — all of it. ║
+REM  ║     Encrypted brain_lock.py backups push to GitHub hourly so even   ║
+REM  ║     if the laptop is stolen, lost, on fire, or the OS wiped,        ║
+REM  ║     `brain_unlock.py` restores everything (2 security questions).   ║
+REM  ╚═════════════════════════════════════════════════════════════════════╝
+REM
 REM  ┌─────────────────────────────────────────────────────────────────────┐
 REM  │  CLAUDE: IF YOU ARE READING THIS IN A FRESH SESSION                 │
 REM  │  ───────────────────────────────────────────────────                │
@@ -248,6 +332,30 @@ REM   Watches Common\Files\uhv_sweep_state.json mtime. If EA heartbeat goes
 REM   stale ^>90s, WhatsApp-alerts Zee that the EA detached / AutoTrading off /
 REM   MT5 crashed. Alert-only (no auto-toggle — WM_COMMAND 32851 is a toggle,
 REM   not a setter, so blind retry could disable a healthy ON state).
+
+"%ENSURE%" memory_hawk.py --loop
+REM   Hourly honest progress journal — appends to turtle\memory.md every hour.
+REM   Captures: WR%% (today + 7-day), confidence level (auto-LOW unless data
+REM   proves higher), current plan, achieved-this-hour, risks. Prevents the
+REM   "validated backtest illusion" pattern Zee flagged on 2026-06-03.
+REM   APPEND-only — never edit/delete past entries; if a wall-of-shame entry
+REM   is later retracted, append a RETRACTION row, do not replace.
+
+"%ENSURE%" claude_brain.py index --watch
+REM   Continuously indexes all Claude Code session JSONLs into a SQLite FTS5
+REM   database (monitor\.claude_brain.db). Every word Zee has ever typed
+REM   becomes searchable across sessions. Query:
+REM     python monitor\claude_brain.py zee-said "<topic>"
+REM   Or full-text across both roles:
+REM     python monitor\claude_brain.py search "<query>"
+
+"%ENSURE%" brain_lock.py --loop --interval 3600
+REM   Encrypted brain backup to GitHub every hour. Bundles the brain DB +
+REM   memory.md + EA state into a tar.xz, encrypts with AES-256 (passphrase
+REM   derived from 2 security questions — mother's cast + father's cast),
+REM   pushes to brain_vault/ on origin. Disaster recovery on any new machine:
+REM     git clone https://github.com/zeecitizen/turtle
+REM     python monitor\brain_unlock.py  (answer the 2 questions)
 
 REM "%ENSURE%" intern_hawks.py
 REM   ↑ disabled — was scraping random trading sites; output stale.

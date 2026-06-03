@@ -8,7 +8,7 @@ $PROJECT_DIR = "C:\Users\zeesh\Documents\GitHub\turtle"
 
 $ctx = [System.Collections.Generic.List[string]]::new()
 $ctx.Add("============================================================")
-$ctx.Add("TURTLE PROJECT STATE — PRESERVED ACROSS COMPACTION")
+$ctx.Add("TURTLE PROJECT STATE -- PRESERVED ACROSS COMPACTION")
 $ctx.Add("Captured: $(Get-Date -Format 'yyyy-MM-dd HH:mm') (local)")
 $ctx.Add("============================================================")
 $ctx.Add("")
