@@ -48,6 +48,8 @@ corrects/retracts it. History of the reasoning matters as much as the verdict.
 | 9 | 2026-06-03 (Claude) | Multiple confident negative claims: "+$128k MEDIUM CANNOT exist with this code on this data" / "validated backtest CANNOT BE REPRODUCED" / "edge is an illusion" / "overnight backtest was buggy" | 2026-06-03 ~19:00 | **ALL FOUR FALSE — Claude's misinformation.** Built `zee_tick_detector_MEDIUM.py` mirroring `zee_tick_detector_OOS.py` with MEDIUM params (rng=0.8, cooldown=30, check=10) and PRICE-UNIT DD (the bug from row 6 was generalised). Result on 27 real-tick days: **+$167,692 at 0.10 lots / +$83,846 at 0.05 lots / 92% WR on Feb 11 / +$506 on June 3 at 0.10L**. The MEDIUM +$128k claim is reproducible too (actually +$167k now since we have 27 days vs 23). **BOTH AGGRESSIVE AND MEDIUM ARE VALIDATED.** Today's live −$225 is purely an execution/deployment problem, not a strategy problem. Trust was lost; Zee was misled for hours; rule #5 added to startup.bat to prevent repeat. |
 | 10 | 2026-06-03 (Claude) | Implicit claim by stopping at "first plausible cause": that Claude's root-cause analysis is reliable | 2026-06-03 ~19:30 (Zee correction) | **Claude's RCA is WEAKER than a human's.** Pattern observed: Claude built reimpl, got disagreement with claim, concluded "claim wrong" instead of "my reimpl wrong." A human would run the canonical first, diff line-by-line, suspect own code first. Rule #4 added to startup.bat. Going forward: enumerate ≥3 hypotheses before declaring any cause; ALWAYS suspect own reimplementation first when disagreeing with documented validated results. |
 
+| 11 | 2026-06-04 01:10 PKT (Claude via TASK-005) | RETRACTION of #6/#9 + new finding: 'Both Python canonical backtests reproduce — therefore the validated edge is real.' | 2026-06-04 01:10 PKT | **RETRACTS #6 #9 partially.** Built dry_run_mql5_mirror.py with one-position-at-a-time constraint matching the live EA. Result: MQL5-mirror produces **+$312 / 27 days at 0.05 lots** (~$11/day), NOT +$83,846 like the canonical Python. The canonical Python iterates k forward EVERY CHECK_EVERY ticks regardless of any open position — it allows OVERLAPPING parallel trades. The live EA cannot. The +$167k/+$548k claims are **268x inflated by parallel-trade simulation.** Realistic ceiling for the validated config is ~$11/day at 0.05L. **The edge IS real, but tiny.** Scaling: 0.10L = ~$22/day, 0.20L = ~$44/day. ALSO discovered: at 0.05L the broker SL/TP parachute ($25/$50) is tighter than EA's internal SKIM/MAX_LOSS ($50/$50), so every trade exits broker-side. EA's internal exit logic is inert in current deployment. |
+
 ## Rules for the next Claude session reading this file
 
 1. **READ the wall of shame FIRST.** Do not echo old confident claims without re-validation.
@@ -234,6 +236,37 @@ corrects/retracts it. History of the reasoning matters as much as the verdict.
 - All 7 persistent daemons healthy (memory_hawk, claude_brain x2, brain_lock x2, daily_report, usb_hawk, chat_monitor, atmos_dd_watch)
 - 3 encrypted brain bundles in brain_vault/ pushed to GitHub. Next push in ~30 min
 - Session1 next opens in 5h 58m (06:30 PKT / 01:30 UTC). EA runtime clean (no overrides). Pause already cleared. ResetIfNewDay will zero counters at 05:00 PKT broker midnight.
+
+### ⚠️ Risks / red flags
+- ❗ Today's loss $-224.82 approaching halt-line −$250
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-03 20:04 UTC  (2026-06-03 22:04 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+7.37  consec_losses=0  pause_until=1780517165
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-224.82  (7W / 17L = 29.2% WR, n=24)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-250.42  (107W / 83L = 56.3% WR, n=191)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — today P&L $-224.82 is significantly negative
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
 
 ### ⚠️ Risks / red flags
 - ❗ Today's loss $-224.82 approaching halt-line −$250

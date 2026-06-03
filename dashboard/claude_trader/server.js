@@ -559,11 +559,17 @@ function runningPython() {
 
 const server = http.createServer(async (req, res) => {
   // Apex-to-me redirect: claudezeeshan.com → me.claudezeeshan.com (preserves path/query)
+  // EXCEPT root path "/" and "/status" — those serve the live status dashboard
+  // (Rule #10 numbered tasks + live EA state). Per Zee 2026-06-04 TASK-008.
   const host = (req.headers.host || '').toLowerCase().split(':')[0];
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
-    res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
-    res.end();
-    return;
+    const apexUrl = req.url.split('?')[0];
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status') {
+      res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
+      res.end();
+      return;
+    }
+    // Fall through — '/' on apex serves the status dashboard
   }
   const url = req.url.split('?')[0];
   const query = new URLSearchParams((req.url.split('?')[1]) || '');
@@ -777,6 +783,75 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ── Status dashboard (claudezeeshan.com root + /status) — TASK-008 ───
+  // Lives at claudezeeshan.com/ (apex skip-redirect above) AND me.../status.
+  // Lists open tasks + EA snapshot + "Ask Claude for status" button.
+  if (url === '/' || url === '/status' || url === '/status.html') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'status.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('status.html missing: ' + e.message);
+    }
+    return;
+  }
+  if (url === '/api/status') {
+    try {
+      // Parse tasks.md
+      const tasksPath = path.join(__dirname, '..', '..', 'tasks.md');
+      let tasksMd = ''; try { tasksMd = fs.readFileSync(tasksPath, 'utf8'); } catch {}
+      const tasks = [];
+      const lines = tasksMd.split(/\r?\n/);
+      let cur = null;
+      const taskRe = /## TASK-(\d+)\s+opened\s+(.+?)\s+[—\-]\s+(.+)/;
+      for (const line of lines) {
+        const m = line.match(taskRe);
+        if (m) {
+          if (cur) tasks.push(cur);
+          cur = { number: parseInt(m[1], 10), opened: m[2].trim(), desc: m[3].trim(),
+                  status: 'open', events: [] };
+        } else if (cur && line.startsWith('- ')) {
+          cur.events.push(line.replace(/^- /, ''));
+          if (line.includes('**CLOSED**') || line.includes('[CLOSED]')) {
+            cur.status = 'closed';
+          }
+        }
+      }
+      if (cur) tasks.push(cur);
+      // EA snapshot (broker truth)
+      const todayUTC = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+      const fillsPath = COMMON_DIR + 'turtle_fills.csv';
+      const statePath = COMMON_DIR + 'feb11_state_88011.json';
+      let csv = ''; try { csv = fs.readFileSync(fillsPath, 'utf8'); } catch {}
+      const fillsToday = csv.split('\n').filter(l => l && l.startsWith(todayUTC));
+      let dayPnl = 0, n = 0, w = 0, l = 0;
+      for (const ln of fillsToday) {
+        const cols = ln.split(','); const p = parseFloat(cols[7]);
+        if (!isFinite(p)) continue;
+        n++; dayPnl += p; if (p > 0) w++; else if (p < 0) l++;
+      }
+      let heartbeatAge = null;
+      try { heartbeatAge = (Date.now() - fs.statSync(statePath).mtimeMs) / 1000; } catch {}
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({
+        ok: true,
+        now_utc: new Date().toISOString().slice(0, 16) + 'Z',
+        tasks,
+        ea: {
+          day_pnl: dayPnl, n_trades: n, wins: w, losses: l,
+          wr: (w + l) ? (100 * w / (w + l)) : 0,
+          heartbeat_age_sec: heartbeatAge,
+        },
+      }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String(e) }));
+    }
+    return;
+  }
+
   // ── Mobile chat app PWA (chat.claudezeeshan.com / /chat-app) ──────────
   // Apple-style password gate → full chat UI replicating the Claude Code
   // window experience. Installable as a home-screen app via PWA manifest.
@@ -857,6 +932,18 @@ const server = http.createServer(async (req, res) => {
         }
       });
     });
+    return;
+  }
+
+  // MQL5-mirror Feb 11 signals JSON (consumed by feb11_lab visualizer)
+  if (url === '/feb11_mirror_signals.json') {
+    try {
+      const j = fs.readFileSync(path.join(__dirname, 'feb11_mirror_signals.json'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(j);
+    } catch (e) {
+      res.writeHead(404); res.end('not generated yet');
+    }
     return;
   }
 
