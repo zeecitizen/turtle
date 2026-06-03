@@ -423,6 +423,12 @@ REM   re-pack the same stick). Zeeshan just plugs in a USB and walks away —
 REM   the full repo + brain + reports land on the stick. (Rule #8)
 REM   Manual one-shot: python monitor\pack_to_usb.py --to E:
 
+"%ENSURE%" morning_brief_hawk.py --loop
+REM   Fires once per day at 06:25 PKT (01:25 UTC), 5 minutes before
+REM   validated Session1 opens. Sends Zee a chat ping with yesterday's
+REM   P&L, 7-day rolling, EA heartbeat, open tasks. Zee wakes up to a
+REM   pre-Session1 brief on his phone (chat.claudezeeshan.com).
+
 REM "%ENSURE%" intern_hawks.py
 REM   ↑ disabled — was scraping random trading sites; output stale.
 
