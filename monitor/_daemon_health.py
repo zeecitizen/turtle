@@ -4,7 +4,7 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 NEEDED = [
     "memory_hawk.py", "claude_brain.py", "brain_lock.py",
-    "daily_report_hawk.py", "usb_hawk.py",
+    "daily_report_hawk.py", "usb_hawk.py", "morning_brief_hawk.py",
     "_chat_monitor_oneline.py", "_atmos_dd_watch.py",
 ]
 
