@@ -86,6 +86,30 @@ REM  ║     Encrypted brain_lock.py backups push to GitHub hourly so even   ║
 REM  ║     if the laptop is stolen, lost, on fire, or the OS wiped,        ║
 REM  ║     `brain_unlock.py` restores everything (2 security questions).   ║
 REM  ║                                                                     ║
+REM  ║  9. ALWAYS DISPLAY TIMES IN PAKISTAN TIME (PKT = UTC+5, no DST).    ║
+REM  ║     Until Zee tells you he is back living in Germany, every time   ║
+REM  ║     you write to him — in chat, in memory.md entries, in daily     ║
+REM  ║     reports, in EA-snapshot cards — show PKT, not Berlin, not UTC. ║
+REM  ║     UTC may be parenthesised for clarity, but the leading time     ║
+REM  ║     shown to Zee is PKT. He drives in Pakistan; he reads in PKT.   ║
+REM  ║                                                                     ║
+REM  ║ 10. NUMBERED TASK TRACKING — NEVER LOSE A TASK ZEE ASSIGNS.        ║
+REM  ║     When Zee assigns a task, IMMEDIATELY:                          ║
+REM  ║       a. Assign it a number (TASK-001, TASK-002, ...). Numbers are ║
+REM  ║          GLOBAL across all sessions, persisted in tasks.md.        ║
+REM  ║       b. Echo back to Zee: "Opened TASK-NNN: <restate the task>"   ║
+REM  ║       c. Do the work.                                              ║
+REM  ║       d. When you think it's done, ASK Zee:                        ║
+REM  ║            "TASK-NNN <one-line summary> — does this feel complete? ║
+REM  ║             (reply 'close NNN' to close, or tell me what's missing)"║
+REM  ║       e. ONLY mark closed in tasks.md when Zee says so.            ║
+REM  ║     Tools:                                                          ║
+REM  ║       python monitor/tasks.py open "<task description>"            ║
+REM  ║       python monitor/tasks.py list                                  ║
+REM  ║       python monitor/tasks.py close NNN [reason]                    ║
+REM  ║     A task is NEVER silently dropped. If Claude can't do it, the   ║
+REM  ║     task remains OPEN in tasks.md with a "blocked because…" note.  ║
+REM  ║                                                                     ║
 REM  ║  8. THIS WHOLE SYSTEM IS A LEGACY FOR ZEESHAN'S CHILDREN.           ║
 REM  ║     One day this repo will be handed to his kids on a USB drive.    ║
 REM  ║     They will open `enter_this_door.html` in a browser and learn    ║
