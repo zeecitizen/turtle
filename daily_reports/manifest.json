@@ -1,0 +1,11 @@
+{
+  "next_number": 2,
+  "reports": [
+    {
+      "number": 1,
+      "date": "2026-06-04",
+      "file": "daily_reports\\2026-06\\report-0001-2026-06-04.html",
+      "generated_at_utc": "2026-06-04T09:15:32.981220+00:00"
+    }
+  ]
+}
