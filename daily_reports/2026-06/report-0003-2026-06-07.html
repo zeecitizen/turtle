@@ -1,0 +1,350 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Daily report #0003 — 2026-06-07</title>
+<style>
+  @page { size: A4; margin: 12mm; }
+  body { font-family: -apple-system, "Segoe UI", Arial, sans-serif; color:#222; max-width: 980px; margin: 0 auto; padding: 16px; }
+  h1 { border-bottom: 2px solid #333; padding-bottom: 6px; }
+  h2 { border-bottom: 1px solid #aaa; margin-top: 28px; }
+  .kpi { display: inline-block; padding: 10px 16px; margin: 4px; border: 1px solid #ccc; border-radius: 6px; min-width: 130px; }
+  .kpi .lbl { font-size: 11px; color: #666; text-transform: uppercase; }
+  .kpi .val { font-size: 22px; font-weight: bold; }
+  .pos { color: #1a7f37; } .neg { color: #cf222e; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+  th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+  th { background: #f4f4f4; }
+  td.win { color: #1a7f37; } td.loss { color: #cf222e; } td.flat { color: #666; }
+  .zee-msg { background: #fffbea; border-left: 3px solid #d9a300; padding: 6px 10px; margin: 6px 0; }
+  .zee-msg pre { white-space: pre-wrap; word-break: break-word; font-family: inherit; margin: 4px 0; }
+  pre { background: #f7f7f7; padding: 8px; border-radius: 4px; overflow-x: auto; font-size: 11px; }
+  .footer { margin-top: 36px; padding-top: 16px; border-top: 1px solid #ccc; font-size: 11px; color: #666; }
+  @media print { body { max-width: none; } h2 { break-after: avoid; } table { break-inside: auto; } tr { break-inside: avoid; } }
+</style></head><body>
+
+<h1>Daily report #0003 — 2026-06-07</h1>
+<p style="color:#666">Generated 2026-06-07 03:44 UTC by daily_report_hawk. Source of truth: broker turtle_fills.csv.</p>
+
+<h2>Day at-a-glance</h2>
+<div class="kpi"><div class="lbl">Net P&amp;L</div><div class="val pos">$+0.00</div></div>
+<div class="kpi"><div class="lbl">Trades</div><div class="val">0</div></div>
+<div class="kpi"><div class="lbl">Wins / Losses</div><div class="val">0 / 0</div></div>
+<div class="kpi"><div class="lbl">Win rate</div><div class="val">0.0%</div></div>
+
+<h2>Every fill</h2>
+<table><tr><th>Broker time</th><th>Side</th><th>Vol</th><th>P&amp;L</th><th>Comment</th></tr>
+<tr><td colspan=5>(no fills)</td></tr>
+</table>
+
+<h2>Intra-day cumulative equity (last 50)</h2>
+<table><tr><th>Time</th><th>Cum P&amp;L</th></tr><tr><td colspan=2>—</td></tr></table>
+
+<h2>EA config snapshot (Feb11TickMedium source defaults)</h2>
+<table><tr><th>Inp</th><th>Value</th></tr><tr><td>Inp_Symbol</td><td>&quot;XAUUSD&quot;</td></tr>
+<tr><td>InpLots</td><td>0.05</td></tr>
+<tr><td>InpMagic</td><td>88011</td></tr>
+<tr><td>InpSlippagePts</td><td>7</td></tr>
+<tr><td>InpBrokerSL_USD</td><td>25.0</td></tr>
+<tr><td>InpBrokerTP_USD</td><td>50.0</td></tr>
+<tr><td>InpSession1StartMin</td><td>90</td></tr>
+<tr><td>InpSession1EndMin</td><td>150</td></tr>
+<tr><td>InpSession2StartMin</td><td>1005</td></tr>
+<tr><td>InpSession2EndMin</td><td>1185</td></tr>
+<tr><td>InpRng60NormMin</td><td>0.8</td></tr>
+<tr><td>InpRng60Min</td><td>0.8</td></tr>
+<tr><td>InpSpreadMax</td><td>0.50</td></tr>
+<tr><td>InpCooldownSec</td><td>30</td></tr>
+<tr><td>InpM5Lookback</td><td>14</td></tr>
+<tr><td>InpCheckEveryTicks</td><td>10</td></tr>
+<tr><td>InpTrailArm</td><td>5.0</td></tr>
+<tr><td>InpTrailGiveback</td><td>15.0</td></tr>
+<tr><td>InpSkimCap</td><td>10.0</td></tr>
+<tr><td>InpMaxLoss</td><td>10.0</td></tr>
+<tr><td>InpMaxHoldSec</td><td>2400</td></tr>
+<tr><td>InpDailySessionDD</td><td>70.0</td></tr>
+<tr><td>InpLossStreakN</td><td>1</td></tr>
+<tr><td>InpLossStreakPause</td><td>300</td></tr>
+<tr><td>VERSION</td><td>1.18</td></tr></table>
+<p><b>Runtime overrides:</b> (none — EA on Inp defaults)</p>
+
+<h2>Code changes this day (git log)</h2>
+<i>no commits</i>
+
+<h2>Zee's verbatim messages today</h2>
+<div class='zee-msg'><b>02:20 UTC</b><pre>on the dashboard at https://me.claudezeeshan.com/ i want you to add a table saying: 
+
+Monday&#x27;s test: 
+
+Expectations table for Monday: 
+
+At 0.01 Lot by our EA Version X.X expecting to make X USD [target achieved! Monday we made 26 USD] &lt;--- convert this thing into a table for the next 7 days so we can compare what the backtest expected and what the real market gave us. 
+
+Make it so that if u put entries in the real trades column for let&#x27;s say Monday, it shows ok 1/5 profitable days successful
+
+
+i think there was another dashboard before, the one with very beautiful clocks, can u please integrate the clock one to this main website one at  https://me.claudezeeshan.com/
+
+So that someone visiting the website: https://claudezeeshan.com/ can easily see everything in one place. 
+
+Also ensure that this clocks page can be updated with new data from backtests and real trades taken by the latest EA version.. goodnight love dove.. i&#x27;m asleep but hope u can work on this and make it the best ever tra</pre></div>
+<div class='zee-msg'><b>02:20 UTC</b><pre>[TOOL_RESULT] Next wakeup scheduled for 08:21:00 (in 3627s). Nothing more to do this turn — the harness re-invokes you when the wakeup fires or a task-notification arrives.</pre></div>
+<div class='zee-msg'><b>02:20 UTC</b><pre>[TOOL_RESULT] C:/Users/zeesh/Documents/GitHub/turtle/daily_reports/2026-06/report-0002-2026-06-05.html
+C:/Users/zeesh/Documents/GitHub/turtle/dashboard/claude_trader/hub.html
+C:/Users/zeesh/Documents/GitHub/turtle/dashboard/claude_trader/server.js</pre></div>
+<div class='zee-msg'><b>02:20 UTC</b><pre>[TOOL_RESULT]   /* world session clocks */
+  .clocks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+  @media(max-width:560px){.clocks{grid-template-columns:repeat(2,1fr)}}
+  .clock{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 8px 9px;text-align:center}
+  .clock.open{border-color:rgba(43,213,118,.4);box-shadow:0 0 14px rgba(43,213,118,.12)}
+  .clock svg{width:62px;height:62px;display:block;margin:0 auto 6px}
+  .clock .face{fill:var(--bg2);stroke:var(--line);stroke-width:2}
+  .clock.open .face{stroke:rgba(43,213,118,.55)}
+  .clock .hh{stroke:var(--txt);stroke-width:3;stroke-linecap:round}
+  .clock .mh{stroke:var(--dim);stroke-width:2;stroke-linecap:round}
+  .clock .sh{stroke:var(--amber);stroke-width:1;stroke-linecap:round}
+  .clock.open .sh{stroke:var(--green)}
+  .clock .pin{fill:var(--txt)}
+  .clock .tk{stroke:var(--faint);stroke-width:1}
+  .clock .city{font-size:12px;font-weight:700;color:var(--txt)}
+  .clock .ltime{f</pre></div>
+<div class='zee-msg'><b>02:20 UTC</b><pre>[TOOL_RESULT] 66:  /* world session clocks */
+67:  .clocks{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0 4px}
+68:  @media(max-width:560px){.clocks{grid-template-columns:repeat(2,1fr)}}
+69:  .clock{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 8px 9px;text-align:center}
+70:  .clock.open{border-color:rgba(43,213,118,.4);box-shadow:0 0 14px rgba(43,213,118,.12)}
+71:  .clock svg{width:62px;height:62px;display:block;margin:0 auto 6px}
+72:  .clock .face{fill:var(--bg2);stroke:var(--line);stroke-width:2}
+73:  .clock.open .face{stroke:rgba(43,213,118,.55)}
+74:  .clock .hh{stroke:var(--txt);stroke-width:3;stroke-linecap:round}
+75:  .clock .mh{stroke:var(--dim);stroke-width:2;stroke-linecap:round}
+76:  .clock .sh{stroke:var(--amber);stroke-width:1;stroke-linecap:round}
+77:  .clock.open .sh{stroke:var(--green)}
+78:  .clock .pin{fill:var(--txt)}
+79:  .clock .tk{stroke:var(--faint);stroke-width:1}
+80:  .clock .city{font-size:12px;font-w</pre></div>
+<div class='zee-msg'><b>02:20 UTC</b><pre>[TOOL_RESULT] 585	    return `&lt;div class=&quot;story&quot;&gt;At &lt;b&gt;${toPkt12(t.time)} PKT&lt;/b&gt;, ${who} ${verb} &lt;b&gt;${t.lot} lot&lt;/b&gt; of gold (XAUUSD) and ${result} (${outcome}). ${feeTxt}&lt;/div&gt;`;
+586	  }).join(&#x27;&#x27;);}
+587	}
+588	load(); setInterval(load,5000);
+589	
+590	// ── World session clocks: live-ticking analog faces + session countdowns ──
+591	// UTC session windows (May: AU off DST → UTC+10; London BST; New York EDT)
+592	const SESSIONS=[
+593	  {city:&#x27;Sydney&#x27;,  off:10, o:22, c:7},
+594	  {city:&#x27;Tokyo&#x27;,   off:9,  o:0,  c:9},
+595	  {city:&#x27;London&#x27;,  off:1,  o:7,  c:16},
+596	  {city:&#x27;New York&#x27;,off:-4, o:12, c:21},
+597	];
+598	const fmtDur=min=&gt;{const h=Math.floor(min/60),m=min%60;return (h?h+&#x27;h &#x27;:&#x27;&#x27;)+m+&#x27;m&#x27;;};
+599	const hand=(len,deg)=&gt;{const r=(deg-90)*Math.PI/180;return [50+len*Math.cos(r),50+len*Math.sin(r)];};
+600	function renderClocks(){
+601	  const el=$(&#x27;clocks&#x27;); if(!el) return;
+602	  const now=new Date(), uMin=now.getUTCHours()*60+now.getUTCMinutes();
+603	  el.innerHTML=SESSIONS.map(s=&gt;{
+604	    </pre></div>
+<div class='zee-msg'><b>02:21 UTC</b><pre>[TOOL_RESULT] 119	    font-size: 10.5px; color: var(--muted); text-align: right; margin-top: 8px;
+120	  }
+121	&lt;/style&gt;
+122	&lt;/head&gt;
+123	&lt;body&gt;
+124	&lt;div class=&quot;container&quot;&gt;
+125	  &lt;header&gt;
+126	    &lt;h1&gt;Zee · Claude&lt;/h1&gt;
+127	    &lt;div class=&quot;sub&quot; id=&quot;now&quot;&gt;loading…&lt;/div&gt;
+128	  &lt;/header&gt;
+129	
+130	  &lt;!-- ── Investor system status (auto-updated each backtest cycle) ── --&gt;
+131	  &lt;div class=&quot;ss-card&quot; id=&quot;ss-card&quot;&gt;
+132	    &lt;div class=&quot;ss-title&quot;&gt;&lt;span class=&quot;ss-pulse&quot;&gt;&lt;/span&gt;&lt;span&gt;Live System Status&lt;/span&gt;&lt;/div&gt;
+133	
+134	    &lt;div class=&quot;ss-row&quot;&gt;
+135	      &lt;div class=&quot;ss-label&quot;&gt;Right now&lt;/div&gt;
+136	      &lt;div class=&quot;ss-body&quot; id=&quot;ss-now&quot;&gt;
+137	        Porting Zee&#x27;s canonical 7-gate UHV strategy into S1Trader.mq5 v2.61 (native MQL5).
+138	        Spec validated overnight on 10 days of XAUUSD ticks.
+139	      &lt;/div&gt;
+140	    &lt;/div&gt;
+141	
+142	    &lt;div class=&quot;ss-row next&quot;&gt;
+143	      &lt;div class=&quot;ss-label&quot;&gt;Next 24h&lt;/div&gt;
+144	      &lt;div class=&quot;ss-body&quot; id=&quot;ss-next&quot;&gt;
+145	        MT5 Strategy Tester run on 10d → rec</pre></div>
+<div class='zee-msg'><b>02:21 UTC</b><pre>[TOOL_RESULT] Todos have been modified successfully. Ensure that you continue to use the todo list to track your progress. Please proceed with the current tasks if applicable</pre></div>
+<div class='zee-msg'><b>02:21 UTC</b><pre>[TOOL_RESULT] 169	          &lt;text x=&quot;50&quot; y=&quot;48&quot; text-anchor=&quot;middle&quot; font-size=&quot;20&quot; fill=&quot;#aaa&quot; font-weight=&quot;700&quot;&gt;59%&lt;/text&gt;
+170	          &lt;text x=&quot;50&quot; y=&quot;64&quot; text-anchor=&quot;middle&quot; font-size=&quot;9&quot; fill=&quot;#666&quot;&gt;win rate&lt;/text&gt;
+171	        &lt;/svg&gt;
+172	        &lt;div class=&quot;ss-chart-title&quot;&gt;Prior EA v2.59&lt;br/&gt;&lt;span style=&quot;color:#888&quot;&gt;(pre-rewrite)&lt;/span&gt;&lt;/div&gt;
+173	        &lt;div class=&quot;ss-chart-meta&quot; id=&quot;ss-old-meta&quot;&gt;41 trades · 7 days · PF 1.59&lt;/div&gt;
+174	      &lt;/div&gt;
+175	    &lt;/div&gt;
+176	
+177	    &lt;div class=&quot;ss-monday&quot;&gt;
+178	      &lt;b&gt;Monday expectation:&lt;/b&gt;
+179	      &lt;span id=&quot;ss-monday&quot;&gt;Canonical EA live at 0.05–0.10 lots, ~0.5–1 fire/day, WR target ≥ 70% on live ticks (within 5pp of backtest).&lt;/span&gt;
+180	    &lt;/div&gt;
+181	
+182	    &lt;div class=&quot;ss-meta-line&quot; id=&quot;ss-asof&quot;&gt;backtest snapshot · auto-refreshed each cycle&lt;/div&gt;
+183	  &lt;/div&gt;
+184	
+185	  &lt;button class=&quot;ask-btn&quot; onclick=&quot;window.location.href=&#x27;https://chat.claudezeeshan.com/chat-app&#x27;&quot;&gt;
+186	    🤖  Ask Claude for status
+187	  &lt;/button&gt;
+188	
+189	  &lt;h</pre></div>
+<div class='zee-msg'><b>02:21 UTC</b><pre>[TOOL_RESULT] The file C:\Users\zeesh\Documents\GitHub\turtle\dashboard\claude_trader\status.html has been updated successfully. (file state is current in your context — no need to Read it back)</pre></div>
+<div class='zee-msg'><b>02:22 UTC</b><pre>[TOOL_RESULT] The file C:\Users\zeesh\Documents\GitHub\turtle\dashboard\claude_trader\status.html has been updated successfully. (file state is current in your context — no need to Read it back)</pre></div>
+<div class='zee-msg'><b>02:22 UTC</b><pre>[TOOL_RESULT] The file C:\Users\zeesh\Documents\GitHub\turtle\dashboard\claude_trader\status.html has been updated successfully. (file state is current in your context — no need to Read it back)</pre></div>
+<div class='zee-msg'><b>02:22 UTC</b><pre>[TOOL_RESULT] File created successfully at: C:\Users\zeesh\Documents\GitHub\turtle\monitor\weekly_tracker.json (file state is current in your context — no need to Read it back)</pre></div>
+<div class='zee-msg'><b>02:23 UTC</b><pre>[TOOL_RESULT] The file C:\Users\zeesh\Documents\GitHub\turtle\dashboard\claude_trader\server.js has been updated successfully. (file state is current in your context — no need to Read it back)</pre></div>
+<div class='zee-msg'><b>02:23 UTC</b><pre>[TOOL_RESULT] The file C:\Users\zeesh\Documents\GitHub\turtle\dashboard\claude_trader\server.js has been updated successfully. (file state is current in your context — no need to Read it back)</pre></div>
+<div class='zee-msg'><b>02:23 UTC</b><pre>[TOOL_RESULT] Running PID: 15120
+GET /api/weekly (apex Host): 200 bytes=944
+GET / (apex): 200 bytes=25735</pre></div>
+<div class='zee-msg'><b>02:24 UTC</b><pre>[TOOL_RESULT] Public claudezeeshan.com/: 200 (25735b)
+Public /api/weekly: 200
+Public /api/canonical-status: 200
+---
+22</pre></div>
+<div class='zee-msg'><b>02:24 UTC</b><pre>[TOOL_RESULT] {&quot;ok&quot;:true}---
+{
+    &quot;week_starts&quot;: &quot;2026-06-08&quot;,
+    &quot;ea_version&quot;: &quot;v2.61 (canonical UHV)&quot;,
+    &quot;lot_size&quot;: 0.01,
+    &quot;days&quot;: [
+        {
+            &quot;day&quot;: &quot;Monday&quot;,
+            &quot;date&quot;: &quot;2026-06-08&quot;,
+            &quot;expected_usd&quot;: 3.27,
+            &quot;actual_usd&quot;: 5.42,
+---
+{&quot;ok&quot;:true}</pre></div>
+<div class='zee-msg'><b>02:24 UTC</b><pre>[TOOL_RESULT] Todos have been modified successfully. Ensure that you continue to use the todo list to track your progress. Please proceed with the current tasks if applicable</pre></div>
+<div class='zee-msg'><b>02:25 UTC</b><pre>[TOOL_RESULT] File created successfully at: C:\Users\zeesh\Documents\GitHub\turtle\monitor\overnight_2026-06-07.md (file state is current in your context — no need to Read it back)</pre></div>
+
+<h2>memory.md tail (most recent entries + wall of shame)</h2>
+<pre>
+---
+
+## 2026-06-07 00:00 UTC  (2026-06-07 02:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&amp;L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% &lt; 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow&#x27;s Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 01:00 UTC  (2026-06-07 03:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&amp;L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% &lt; 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow&#x27;s Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 02:00 UTC  (2026-06-07 04:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&amp;L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% &lt; 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow&#x27;s Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 03:00 UTC  (2026-06-07 05:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&amp;L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% &lt; 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow&#x27;s Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+</pre>
+
+<div class="footer">
+  Report #0003. Print and file. To recall later:
+  <code>python monitor/daily_report_hawk.py --get 3</code>
+  Per Rule #3 the only goal is real money. This report is itself NOT progress
+  unless it documents a positive P&amp;L day. Use it to learn, not to celebrate.
+</div>
+</body></html>
