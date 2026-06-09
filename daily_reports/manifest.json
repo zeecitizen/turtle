@@ -1,5 +1,5 @@
 {
-  "next_number": 4,
+  "next_number": 5,
   "reports": [
     {
       "number": 1,
@@ -18,6 +18,12 @@
       "date": "2026-06-07",
       "file": "daily_reports\\2026-06\\report-0003-2026-06-07.html",
       "generated_at_utc": "2026-06-07T03:44:33.814073+00:00"
+    },
+    {
+      "number": 4,
+      "date": "2026-06-09",
+      "file": "daily_reports\\2026-06\\report-0004-2026-06-09.html",
+      "generated_at_utc": "2026-06-09T03:27:55.750935+00:00"
     }
   ]
 }
