@@ -9,6 +9,8 @@ monitor/.claude_brain.db
 monitor/.claude_brain.db-*
 monitor/.brain_lock_tmp/
 monitor/.brain_unlock_tmp/
+# 2026-06-10: brain_lock answers cached locally for unattended runs. NEVER commit.
+monitor/.brain_key
 monitor/.memory_hawk_state.json
 monitor/.chat_monitor_last_ts
 monitor/.memory_hawk.log
