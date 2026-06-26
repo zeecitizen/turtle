@@ -1,0 +1,15 @@
+Peak-trail (act +$0.3, giveback $0.3) vs fixed BE@$1 vs baseline — per engine, real ticks, net cost
+
+  engine / policy                  TOTAL   WR%  maxDD  worst    n  split
+  S1  baseline (SL/TP)             +2528    58    206   -117  743    5/5
+  S1  fixed BE @ +$1.0             +2574    55    187   -118  743    5/5
+  S1  TRAIL act$0.3 give$0.3       +2579    56    201   -109  743    5/5
+
+  S3  baseline (SL/TP)             +3697    65    203   -178  618    4/5
+  S3  fixed BE @ +$1.0             +3810    62    190   -170  618    4/5
+  S3  TRAIL act$0.3 give$0.3       +3867    66    184   -160  618    4/5
+
+  NSND  baseline (SL/TP)            +814    64     89    -20  135    5/5
+  NSND  fixed BE @ +$1.0            +814    64     89    -20  135    5/5
+  NSND  TRAIL act$0.3 give$0.3      +817    63     89    -20  135    5/5
+

@@ -1,0 +1,5 @@
+S3 on tick-derived bars (aligned + real tick-volume), 19 days — does the TRAIL help?
+
+  exit            n   WR%    TOTAL      EV   maxDD    1stH    2ndH
+  baseline      575    69%     -139   -0.24     249     +70    -208
+  trail 0.3     575    51%     -289   -0.50     296     -84    -205

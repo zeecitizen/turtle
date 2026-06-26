@@ -1,0 +1,116 @@
+{
+  "week_starts": "2026-06-22",
+  "ea_version": "v3.01 (canonical UHV + 4 quality gates + time-window)",
+  "lot_size": 0.3,
+  "days": [
+    {
+      "day": "Monday",
+      "date": "2026-06-22",
+      "expected_usd": null,
+      "actual_usd": -7.2,
+      "notes": "v3.00 attached. Auto-close bug fired at 596ms despite runtime=0. Caused -$7.20. v3.01 source hard-codes auto_close=0."
+    },
+    {
+      "day": "Tuesday",
+      "date": "2026-06-23",
+      "expected_usd": null,
+      "actual_usd": 0,
+      "notes": "v3.01 LIVE. Mehboob bhai supervising. Fills so far: 0."
+    },
+    {
+      "day": "Wednesday",
+      "date": "2026-06-24",
+      "expected_usd": null,
+      "actual_usd": null,
+      "notes": ""
+    },
+    {
+      "day": "Thursday",
+      "date": "2026-06-25",
+      "expected_usd": null,
+      "actual_usd": null,
+      "notes": ""
+    },
+    {
+      "day": "Friday",
+      "date": "2026-06-26",
+      "expected_usd": null,
+      "actual_usd": null,
+      "notes": ""
+    },
+    {
+      "day": "Saturday",
+      "date": "2026-06-27",
+      "expected_usd": 0,
+      "actual_usd": null,
+      "notes": "market closed"
+    },
+    {
+      "day": "Sunday",
+      "date": "2026-06-28",
+      "expected_usd": 0,
+      "actual_usd": null,
+      "notes": "market closed"
+    }
+  ],
+  "archive": [
+    {
+      "week_starts": "2026-06-08",
+      "ea_version": "v2.61 (canonical UHV)",
+      "lot_size": 0.01,
+      "days": [
+        {
+          "day": "Monday",
+          "date": "2026-06-08",
+          "expected_usd": 3.27,
+          "actual_usd": null,
+          "notes": "live deploy Mon open ï¿½ canonical detector backtest avg"
+        },
+        {
+          "day": "Tuesday",
+          "date": "2026-06-09",
+          "expected_usd": 3.27,
+          "actual_usd": -11.82,
+          "notes": "",
+          "_auto_filled": true
+        },
+        {
+          "day": "Wednesday",
+          "date": "2026-06-10",
+          "expected_usd": 3.27,
+          "actual_usd": 106.4,
+          "notes": "",
+          "_auto_filled": true
+        },
+        {
+          "day": "Thursday",
+          "date": "2026-06-11",
+          "expected_usd": 3.27,
+          "actual_usd": null,
+          "notes": ""
+        },
+        {
+          "day": "Friday",
+          "date": "2026-06-12",
+          "expected_usd": 3.27,
+          "actual_usd": null,
+          "notes": ""
+        },
+        {
+          "day": "Saturday",
+          "date": "2026-06-13",
+          "expected_usd": 0,
+          "actual_usd": null,
+          "notes": "market closed"
+        },
+        {
+          "day": "Sunday",
+          "date": "2026-06-14",
+          "expected_usd": 0,
+          "actual_usd": null,
+          "notes": "market closed"
+        }
+      ]
+    }
+  ]
+}

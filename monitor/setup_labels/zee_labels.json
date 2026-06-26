@@ -1,0 +1,296 @@
+{
+  "1": {
+    "zee": "umm i don't understand.. this is not the correct UHV marked in yellow. its not larger than its peers such as not larger than 4:40.. a correct UHV should have been the largest volume at 5:30..  and then the 5:30s bottom line would've been broken by the 6:10 which it failed to break.. anyways.. even if u take the 4:55 candle as the yellow marked UHV, then u didnot mark the correct breakout candle in this case as the red arrow marked candle DOESNOT at all break the low of the UHV candle. So this setup is primarily invalid. "
+  },
+  "2": {
+    "zee": "umm (in sell case) a valid retracement starts when a red candle breaks the high of the previous green candle WITH ITS BODY. the yellow marked UHV didnot satisfy this condition and thus cannot be considered a UHV since its not inside a valid retracement. Also for a sell setup we take a green colored candle as UHV whereas the considered candle with yellow marker is not green (not a retracement and not a green candle within the retracement) and the cherry on top is that the yellow marked candle is not a UHV at all. Its volume is infact smaller than the 6:10 neighboring candle's volume. Thus even if we consider this wrongly yellow marked as the UHV, the reds are not breaking its low at all with their body (therefore the red marked candles are not valid breakout candles). This is an invalid setup in its very core, nothing is right about it.  "
+  },
+  "3": {
+    "zee": "invalid setup because: \n1. the UHV is not a valid UHV because its not a valid retracement (a valid retracement in sell entries is the one that is found as a green candle in a DOWN TREND (a down trend confirmed by HH HL LH etc) such that the green candle breaks the high of the previous red (in case of sell) to begin a retracement, since no green candle broke the high of the previous red, the yellow marked candle is not inside a valid retracement and thus cannot be considered as a UHV also because its even smaller than its previous candle whereas UHV means Ultra high volume, means its larger than atleast its closest neighbors. And then even if we consider the yellow marked candle as a UHV the red ones donot break the LOW of the green uhv so they are not valid breakouts. i'm surprised our EA is so immature. This is an invalid to the core kind of setup. "
+  },
+  "4": {
+    "zee": "the green candle is a valid retracement at 10:05 so the yellow marker is correctly placed. unfortunately the red arrows are not correctly marking the breakout candles. the red arrows are on candles that dont even share their body with the UHV. so they're not even a breakout candle. then again these red arrow candles even if they were breaking out (crossing the low of the green candle) they should've been a momentum candle. as we need 2 things from a breakout candle: 1. it should be a momentum candle 2. it should be lowe volume than the original UHV one "
+  },
+  "5": {
+    "zee": "Y has the lowest volume among its neighbors, its not a valid uhv because its not having highest volume. the B is not breaking above the HIGH of the Y so its not a valid Breakout candle. this setup is invalid to the core. "
+  },
+  "6": {
+    "zee": "Y is not a UHV as its not in a valid retracement.. B is not a valid breakout as it didnot breakout above the high of the uhv .  "
+  },
+  "7": {
+    "zee": "invalid Y because its volume is lower of the two reds in this invalid retracement (the retracmeent has not yet begun because no red broke below last greens low).. the Bs are not valid breakouts as they donot share body with the high of the invalid uhv Y. the candle at 1640 would have been a valid B since it breaks the high of the invalid uhv red (but only if the Bs volume was lesser than the Y which it is not) "
+  },
+  "8": {
+    "zee": "In uptrend we take a buy -> in uptrend we find a retracement OF RED COLORED CANDLES, since the Y is in green colored candle, its not a valid retracement candle, so its not a valid UHV for a buy setup. again the Bs marked are two of two diff colors.. for a buy setup the breakout should be with a green colored candle (a breakout of the red colored UHV which appears inside a valid retracement)"
+  },
+  "9": {
+    "zee": "Y is not red, therefore its not in a valid red tracement therefore its not a valid UHV .. a uhv for a buy trade should be in red color with a red colored volume. THE COLORS OF VOLUME AND CANDLES SHOWN BY OANDA'S VOLUME IN TRADING VIEW is the right colors, we must check if these MT5 volumes are the same color scheme as the OANDA volumes on the tradingview chart.. anuyways.. even if the Y were considered as the UHV, in that case the B should have broken above the high of the Y which not only its not breaking but the B is literally 10 dollars below the uhv (so i'm not sure why we would EVER consider the B as the breakout candle. the entire B candle is entirely 3 grid boxes below the uhv (not breakout above its high) "
+  },
+  "10": {
+    "zee": "the red candle Y is not a UHV as its smaller than its previous candle where as the H in UHV means HIGH. There's no B seen here so can't comment on that."
+  },
+  "11": {
+    "zee": "for a buy setup the uhv should be a red candle, since the Y is on a green candle, it cannot be considered a UHV for this buy setup. and even if it were considered as valid mistakenly, in that case the B at 9:55 is not breaking its high (its not crossing through the high of the Y)"
+  },
+  "12": {
+    "zee": "Y is a valid uhv since its inside a valid red retracement inside an UPTREND? (ummmm... the trend doesnot look up here... its more like ranging sideways.. ) .. anyways even if Y were correct, then the B has literally no breaking out crossing of the high of the Y. so the B is literally even flying high above in another grid box separated away from the UHV Y. a valid breakout could be the candle at 10:30 if it had a lower volume than the UHV."
+  },
+  "13": {
+    "zee": "Correct Y. Correct B at 12:10, no need for a second B. we mark only 1 Breakout (as the high of the UHV is crossed by a breakout candle only once) the second B cannot be a breakout candle because its red in color and because its not sharing body with the high of the uhv."
+  },
+  "14": {
+    "zee": "the uhv Y is correct. the first B is incorrect as its body didnot close above high of Y. the second B is also incorrect for the same reason. (first B also has invalid color for a breakout candle to break above the high of the Y it should be green in color) "
+  },
+  "15": {
+    "zee": "correct Y, incorrect B (B should be green for a buy trade) .. 14:50 would be a valid breakout candle if its volume were lower than the Y which it is not."
+  },
+  "16": {
+    "zee": "umm this chart's candle colors look messed up.. anyways for a uhv for a buy setup, the uhv has to be red, so Y is invalid. then the B doesnot break its high with its body so its not a valid B."
+  },
+  "17": {
+    "zee": "invalid Y coz of candle color, then invalid B cz B cannot be same candle as Y, second B is not breakout above the high of the Y so its not a breakout candle ."
+  },
+  "18": {
+    "zee": "correct Y, incorrect R since R doesnot cross the lowest point of Y with its body.. invalid setup. maybe the candle around est. 2235 would be more suited as it crossed below the low of Y (if its volume is lower than the Y).."
+  },
+  "19": {
+    "zee": "The Y is invalid as its not the highest in this green retracement (in a downtrend) .. invalid R as its body doesnot break below Ys low."
+  },
+  "20": {
+    "zee": "the y is invalid as its not the highest candle in this retracement. the R1 is invalid coz it doesnot cross below the low of Y, same for R2 .."
+  },
+  "21": {
+    "zee": "Y is invalid as its not red candle. B1, B2 donot cross Y's high so they're invalid"
+  },
+  "22": {
+    "zee": "Y is not the UHV, its next candle has higher volume than it so the next one was the UHV, clearly visible ultra high volume. the R doesnot break with its body the low of Y so invalid R."
+  },
+  "23": {
+    "zee": "not a valid retracement as Y (the only candle in this green retracement) is green but doesnot break above the last red so its not a valid retracement. thus cannot be considered UHV. a valid retracement starts at 16:45 if u consider this a downtrend (which it is not) . the R's dont break below the invalid Y, so they're both invalid Rs"
+  },
+  "24": {
+    "zee": "invalid Y as red in color. invalid Rs as candle color is green. breakout candle in sell case must be red. and uhv candle for sell case must be a green."
+  },
+  "26": {
+    "zee": "no setup shown in photo."
+  },
+  "27": {
+    "zee": "Y doesnot have sufficient volume strength to be considered an ULTRA HIGH VOLUME candle. the B1 is invalid as its a breakout candle with volume which is higher than the volume of the UHV. B2 is invalid as its red in color. breakout candle must be green in color in BUY case."
+  },
+  "28": {
+    "zee": "invalid Y as green.. valid retracement starts on the candle next to the Y. UHV forms at 8:55.. broken by 8:20 candle (but ah that one has a higher volume than UHV).. we need a low volume breakout candle. .. the B2 is invalid entirely as it doesnot share its body, doesnot cross the high of the UHV Y  "
+  },
+  "29": {
+    "zee": "invalid Y as candle is not red in color.. invalid Bs as they dont breakout the high of the invalid Y"
+  },
+  "30": {
+    "zee": "valid Y, invalid R as its body doesnot cross through the low of the Y"
+  },
+  "31": {
+    "zee": "invalid Y as candle color should be green in sell setups.. the R is not valid breakout of the low of the Y. "
+  },
+  "32": {
+    "zee": "invalid Y, as a valid retracement has not yet begun at the appearance of this UHV. .. the R doesnot break below the low of the Y with a mommentum, n low volume, so its not a valid R "
+  },
+  "33": {
+    "zee": "the Y is not valid as the 7 am candle was the one with highest volume in this green retracement of a sell setup.. the R cannot be considered as breakout candle since its body doesnot break/cross below the Y's lowest point (wick's end)"
+  },
+  "34": {
+    "zee": "valid Y (tho i'd prefer it to be strong bodied UHV, the weak body of the UHV here represents indecision), anyways.. the R1 is invalid coz it doesnot have lower volume than the one its breaking below (Y).. the second R cannot be a breakout candle as in sell setups a red candle has to break below the green uhv's low, which in the case of second R is green color.  "
+  },
+  "35": {
+    "zee": "valid Y (tho weak bodied UHV must be tested), and its breakout candle was the one at 10:25, not the ones marked Red arrows.. the first red arrow is not a valid color breakout candle for sell setup it should be red in color to break below the greens low.. and second R is not valid cox the 10:25 one had already broken below.. "
+  },
+  "36": {
+    "zee": "the Y is invalid uhv as its previous candle was the one with highest volume. the reds dont share body/crossing thru the low of the marked uhv Yellow arrow candle, so these are invalid Rs"
+  },
+  "41": {
+    "zee": "no setups shown in photo."
+  },
+  "c1": {
+    "zee": "the Green UHV is correct (although it barely starts the retracement by breaking a slight pint above the last red), the breakout of this UHVs low is a low volume red is correct. however, as we notice, the trend is maybe shifting, or weakeend from downtrend.. see at 00:55 the bars have moved up.. so maybe this setup is the ONE setup during trend shift where the strategy fails after 9 out of 10 wins.. "
+  },
+  "c2": {
+    "zee": "the green uhv in this case is the highest green volume in retracement so its a correct uhv in a correct retracement (green breaks above last red).. the red arrow candle doesnot break the low as it doesnot share any body with the green's lowest point. the correct downward breakout would be at the candle ONE candle BEFORE the currently marked red candle. (although that one is a mini candle, its breaking out the lowest point of the lowest wick of the uhv)"
+  },
+  "c3": {
+    "zee": "the marked red arrow doesnot denote the UHV candle because the highest volume in this particular retracement is seen at 2:30 PM candle.. and the green candle with Blue arrow beneath it is correctly breaking the wrong uhv's top .. "
+  },
+  "c4": {
+    "zee": "the green UHV is correctly marked with a highlighter blue.. the green arrow on 16:35 candle is not a valid retracement as the body of green candle doesnot break above the last red at 1630. the red arrow marked candle at 1715 is not a correct breakout candle as it doesnot cross the horizontal line if drawn under the low of the marked green arrow candle at 1635 "
+  },
+  "c5": {
+    "zee": "the green candle marked as UHV is correct, the red with lower volume breaks its low so its correct. "
+  },
+  "m1": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"umm setup doesnot work in ranging market\"}"
+  },
+  "m2": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"price made a lower low, and broke its last low at 5065, so downtrend confirmed, therefore we cannot take a buy. we only taken buys during uptrend's retracement.\"}"
+  },
+  "m3": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"retracements highest volume is at 11:05 so uhv is marked correctly, but since the price broke its last highest peak at 1005 at 5072 we say that it made a new higher high, so its an uptrend, therefore cannot sell, we sell only in downtrend.\"}"
+  },
+  "m4": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"ranging market. we dont take trades in ranging market. secondly the green candle marked with blue arrow is one candle too late, the breakout was at previous candle (one before the marked blue)\"}"
+  },
+  "m5": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"trend issue.\"}"
+  },
+  "m6": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "m7": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"selling in an uptrend.. G marks a new HH which shows uptrend has begun, why would we sell in an uptrend?\"}"
+  },
+  "m8": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"was there an uptrend before the cyan occured? cz i can see prices ranging/falling before the cyan appeared. so its not a retracement in an uptrend, its rather a downtrend that has begun after a ranging market.\"}"
+  },
+  "m9": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"only B marked, no cyan marked in photo, no uhv marked in photo.. even if B is marked, B does go into profit momentarily atleast.. wish we could've booked that profit..\"}"
+  },
+  "m10": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"at cyan price broke its last high peak from 23:45 and so a new higher high was confirmed at the candle where we marked the cyan.. in this case since this is an uptrend, we cannot sell.\"}"
+  },
+  "m11": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"umm how can we be in loss when price fell after we took the sell trade, we should be in profit by now as we sold at around 4699 and now its 4692\"}"
+  },
+  "m12": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"cyan doesnot mark a valid retracement in a downtrend, rather the trend before cyan is ranging. we dont trade in ranging market.\"}"
+  },
+  "m13": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"breakout was at 1710 not 1745\"}"
+  },
+  "m14": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"photo says Loss -6.91 points whereas price clearly moved in directly of our detected breakout + BUY .. infact it shooted straight up in our direction in one strongest candle after our buy.. (the strongest candle being 1530)\"}"
+  },
+  "m15": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"price was making lower lows prio to cyan so it was not in an uptrend,, therefore we cannot buy unless a proper uptrend is confirmed. for example at 6:00 price broke the lower low of 5:05 forming a new lower low\"}"
+  },
+  "m16": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "m17": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"can buy only if downtrend was confirmed before cyan.. if that's the case, then the uhv marked is correctly marked, however the breakout of this UHV was at 1015 not at the later marked Blue arrow\"}"
+  },
+  "m18": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"if we placed SL with a Buffer we wouldn't hit this SL and get profit from the freefall that began 3 candles after we took SHORT sell trade (fell from 4705 straight to 4684\"}"
+  },
+  "m19": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "m20": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "m21": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"weak uptrend.. price didnot break its last peak of 2045 rather it made a lower high at 2115\"}"
+  },
+  "m22": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"price didnot break its last peak seen at 2135 so its not making higher highs therefore its not a confirmed uptrend, and we dont trade in ranging\"}"
+  },
+  "m23": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"the uhv broke its last high peak of  2335 (or before that), therefore at time of UHV, the uhv itself forms a higher high, confirming the uptrend, therefore we cannot sell in an uptrend. rather we'd mark the red arrow candle as UHV (retracement in uptrend) and then its breakout candle at 01:20 and we'd be in profit then!\"}"
+  },
+  "m24": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"the breakout was at 1355 i think? no? anyways even if were at B the trend is not strong enough to take this buy (or maybe the chart is too zoomed out so i cant see HH HL to confirm the uptrend\"}"
+  },
+  "m25": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"correct cyan.. correct uhv, correct entry, but wait.. umm why are we saying its a loss trade when price clearly climbed up after buying at 1250? this is a correct profitable trade entry *(shouldnt write on the photo that we made loss)\"}"
+  },
+  "m26": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"before uhv price made higher low at 1520, and last high was broken at the uhv candle itself at 1530, so we're in a confirmed uptrend, therefore we wouldn't sell. rather we'd wait for valid retracement R with uhv at R+1 candle and its breakout at 1610 but rejected because not low volume breakout in that hypothetical case\"}"
+  },
+  "m27": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"price making lower lows, at cyan a new lower low formed, therefore we're in a downtrend, therefore the uhv would b at 1600 and we'd wait for price to break its low which happens at 1615.. and if we took that sell we'd be in profit.\"}"
+  },
+  "m28": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"even if it were downtrend, which it is not so we'd take a buy, anyways even if it were, the retracement's highest volume was at 1640 green candle not the one we marked late at 1710 missing out on the 1640 whose low wasnt broken so we wouldnt have sold.. the issue is this is not a valid downtrend before the uhv. because its not, we can't sell. its rather an uptrend forming beccause the strongest candle at 1650 broke last peak of 1545, therefore the retracement should've begun for us at 1655 and its UHV at 1700 whose high is not yet broken so we wait to take buy entry.\"}"
+  },
+  "m29": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"the cyan marks a break of the low of last lowest peak Lower Low at 4:40, therefore we're in an downtrend, therefore we wouldnt buy.\"}"
+  },
+  "m30": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"not valid uhv as price didnot break with its body the previous candle's high.. also the trend here is uptrend as it formed a new HH at 0540, so we wont sell.. overall weak trend.\"}"
+  },
+  "m31": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"breakout candle is not momentum (large body candle)\"}"
+  },
+  "m32": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"before cyan was ranging market.  even if we took a buy.. the price is rising VERY CLEARLY after our entry of BUY, therefore its impossible to say that its a Loss of minus 13 as wrongly written on top left of setup photo.\"}"
+  },
+  "m33": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"price is in downtrend, uhv should've been at 01:00, its low broken at 01:35 after which if we sold we'd have made alot of profit. even if we bought at the indicated setup price moved UP CLEARLY after the entry shown so i dont know why its reporting a loss on this against-trend trade entry shown.\"}"
+  },
+  "m34": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"umm did price clearly moved past the uhv low? we must study the impact of a breakout candle close that's only a few micro points past the uhv low\"}"
+  },
+  "m35": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"umm the UHV high was broken after 10 minutes at 620, not sure why we didnt mark that one as the breakout candle.. maybe it wasnt a momentum candle, but then we can't just mark the Blue arrow candle as breakout candle since IT DOESNOT SHARE A BODY BREAKOUT with the UHV's high, infact the breakout B candles open is much distance above (separated) from the uhv high\"}"
+  },
+  "m36": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"ranging market before entry.. not strong trend.\"}"
+  },
+  "m37": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"why didnt we mark the uhv in the retracement (1700 - 1710 the 3 red candles).. uhv being  first at 1700 (in  a strong uptrend even weak bodied UHV will work), because IF WE ARE GOING WITH THE TREND, EVEN WEAK SETUPS WORK IN OUR FAVOR. anyways the BUY entry shown in photo did make profit as price clearly moved up after entry, so not sure why it says Loss -7.36 points on photo's top left\"}"
+  },
+  "m38": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"uhv breaks previous HH peak, so uptrend confirmed, can't sell in uptrend..\"}"
+  },
+  "m39": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"strong bottom wicks on retracement greens shows rejection.\"}"
+  },
+  "m40": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"zoomed out photo is unclear chart. skip\"}"
+  },
+  "m41": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"uhv is not strong bodied, suggesting that sellers are not exhausted, therefore setup failed.\"}"
+  },
+  "m42": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"price at G formed HH -> uptrend -> cannot sell in uptrend.\"}"
+  },
+  "m43": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"can't buy in clear downtrend\"}"
+  },
+  "m44": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"dont know why its written loss, price CLEARLY moves up after entry.. price goes u from 4497 to 4505 in next 1 hour\"}"
+  },
+  "m45": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"marked uhv is not a valid retracement as this standalone green didnot break above the 1630 previous candle's high sufficiently enough.. the cyan retracement shown at 1600 ended on that single candle, the new retracement begun at 1635 (still a single candle retracement but invalid retracement because of no breakout of last red candle's high.\"}"
+  },
+  "m46": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"since 2125 candle made new HH we're in uptrend, thus retracement begins when 2135 breaks below last green of 2125, therefore, the uhv is the large red at 2140, whose high is broken by next candle at 2145 where if we took a BUY entry around 4487 we'd be in profit as price ran up till 4491 (4 USD upwards)\"}"
+  },
+  "m47": {
+    "zee": "{\"verdict\":\"incorrect\",\"reason\":\"correct but breakout B is marked late, the breakout was at 2:40 large green momentum candle..\"}"
+  },
+  "m48": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "n10": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "n8": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "n7": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "n6": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "n5": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "n4": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "n3": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "n2": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "n1": {
+    "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  }
+}

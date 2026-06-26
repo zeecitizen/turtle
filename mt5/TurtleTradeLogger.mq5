@@ -17,7 +17,11 @@
 //|  Claude reads this file every 5 minutes for actual P&L.         |
 //+------------------------------------------------------------------+
 #property copyright "Turtle Trader by M. Zeeshan"
-#property version   "1.02"
+#property version   "1.03"
+// v1.03 (2026-06-09): magic 88005 re-mapped BTC_S3 → S1_M1 (S1Trader M1 scalp instance).
+//   Magic 88005 was originally for BtcS3M30Trader but that EA is dead; we re-used 88005
+//   for S1Trader's M1 instance. CSV labels were misleading (showed "BTC_S3" for XAUUSD
+//   trades). Also clarified 88004 → "S1_M5" for symmetry.
 #property description "Logs every closed trade fill to Common/Files/turtle_fills.csv"
 #property strict
 
@@ -33,11 +37,14 @@ const string HEADER = "broker_time,deal_ticket,position_ticket,symbol,direction,
 // Map a deal's magic number to the EA that opened it (magic 0 = manual/Human).
 string EaNameForMagic(long m) {
    if (m == 88003) return "S3";
-   if (m == 88004) return "S1";
-   if (m == 88005) return "BTC_S3";
+   if (m == 88004) return "S1_M5";    // S1Trader on M5 chart
+   if (m == 88005) return "S1_M1";    // 2026-06-09: re-purposed from BTC_S3 → S1Trader M1 instance (scalp)
    if (m == 88006) return "NSND";
    if (m == 88007) return "S4";
+   if (m == 88009) return "Feb11_AGG";    // Feb11TickTrader (aggressive)
    if (m == 88010) return "BTC_S4b";
+   if (m == 88011) return "Feb11_MED";    // Feb11TickMedium on FTMO DEMO (paper validation)
+   if (m == 88012) return "Feb11_LIVE";   // Feb11TickMedium on AtmosGlobal LIVE (real prop firm)
    if (m == 0)     return "Human";
    return "EA_" + IntegerToString(m);
 }

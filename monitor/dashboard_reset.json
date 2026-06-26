@@ -1,0 +1,6 @@
+{
+  "reset_at_broker_ts": "2026.06.15 20:53:00",
+  "current_ea_version": "2.75",
+  "lots": 0.80,
+  "reason": "v2.75 attached (SL cap = 2.0pt). Hero card starts fresh from this broker timestamp — earlier 06-15 trades (the −$65 and −$505 from v2.74 wide-SL bug) excluded so the dashboard reflects ONLY v2.75's behavior."
+}

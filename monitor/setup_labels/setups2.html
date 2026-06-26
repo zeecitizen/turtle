@@ -1,0 +1,171 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Canonical UHV Setups — review</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; background: #0b0e14; color: #e6edf3;
+    margin: 0; padding: 16px; }
+  h1 { font-size: 22px; margin: 6px 0; }
+  .intro { background: #161b22; padding: 14px; border-radius: 10px; margin-bottom: 18px;
+    font-size: 14px; line-height: 1.5; border-left: 4px solid #3fb950; }
+  .intro b { color: #ffd166; }
+  .card { background: #161b22; padding: 16px; border-radius: 10px; margin-bottom: 22px; }
+  .hdr { display: flex; align-items: center; justify-content: space-between; }
+  .hdr h2 { font-size: 17px; margin: 0; }
+  .badge { padding: 4px 10px; border-radius: 6px; color: #000; font-weight: 600; font-size: 13px; }
+  img { width: 100%; max-width: 1200px; display: block; margin: 12px 0; border-radius: 6px; }
+  .comment-block { margin-top: 12px; }
+  label { display: block; margin-bottom: 6px; font-size: 14px; }
+  textarea { width: 100%; min-height: 70px; background: #0d1117; color: #e6edf3;
+    border: 1px solid #30363d; padding: 8px; font-family: inherit; font-size: 14px; border-radius: 6px; resize: vertical; }
+  .save-btn { background: #238636; color: #fff; border: 0; padding: 8px 14px;
+    font-size: 14px; border-radius: 6px; margin-top: 6px; cursor: pointer; font-weight: 600; }
+  .save-btn:hover { background: #2ea043; }
+  .status { font-size: 12px; color: #7d8590; margin-left: 8px; }
+  .legend { font-size: 13px; color: #c9d1d9; }
+  .legend span { margin-right: 14px; }
+</style>
+</head><body>
+
+<h1>Canonical UHV Setups (75% WR, PF 5.13)</h1>
+<div class="intro">
+  <b>What this is:</b> These are the <b>5 setups my new canonical detector found in the last 10 days of XAUUSD ticks</b>,
+  built strictly per your spec + your 36-label feedback. Result: <b>75% WR / PF 5.13 / +32.67 pts</b>.
+  Versus the old EA's 59% WR / PF 1.59 from 41 trades on a similar window.<br/><br/>
+  <b>Markers:</b>
+  <span class="legend">
+    <span>🟦 Cyan ■ = retracement origin (opposite-colour body breaks prior extreme)</span>
+    <span>🔴 Red ▼ above bar = UHV for BUY setup (bearish, max-vol)</span>
+    <span>🟢 Green ▼ above bar = UHV for SELL setup (bullish, max-vol)</span>
+    <span>🔵 Blue ▲ below bar = BUY breakout (closes above UHV high, opposite colour, lower vol, momentum)</span>
+    <span>🔴 Red ▼ above bar = SELL breakout (closes below UHV low)</span>
+    <span>⬜ White dashed = entry</span>
+    <span>🟥 Red dotted = SL</span>
+    <span>🟩 Green dotted = TP</span>
+  </span>
+  <br/><br/>
+  <b>Your verdict per card:</b> say "canonical" if this would have been a setup you'd take, or note which gate is wrong using Y/B/R shorthand.
+</div>
+
+
+        <div class="card">
+          <div class="hdr">
+            <h2>Canonical Setup #1 — SELL</h2>
+            <span class="badge" style="background:#ef4444">LOSS -7.91pts</span>
+          </div>
+          <img src="setup2_001.png" loading="lazy"/>
+          <div class="comment-block">
+            <label>🧔 <b>Zeeshan's verdict</b> <span class="status" id="status-zee-1"></span></label>
+            <textarea id="text-zee-1" data-idx="1" data-who="zee" placeholder="Is this canonical? Y/B/R shorthand…"></textarea>
+            <button class="save-btn" data-idx="1" data-who="zee">💾 Save Zee's verdict</button>
+          </div>
+          <div class="comment-block">
+            <label>👩 <b>Shano baji's verdict</b> <span class="status" id="status-shano-1"></span></label>
+            <textarea id="text-shano-1" data-idx="1" data-who="shano" placeholder="Shano baji ka feedback…"></textarea>
+            <button class="save-btn" data-idx="1" data-who="shano">💾 Save Shano's verdict</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="hdr">
+            <h2>Canonical Setup #2 — SELL</h2>
+            <span class="badge" style="background:#4ade80">WIN +16.68pts</span>
+          </div>
+          <img src="setup2_002.png" loading="lazy"/>
+          <div class="comment-block">
+            <label>🧔 <b>Zeeshan's verdict</b> <span class="status" id="status-zee-2"></span></label>
+            <textarea id="text-zee-2" data-idx="2" data-who="zee" placeholder="Is this canonical? Y/B/R shorthand…"></textarea>
+            <button class="save-btn" data-idx="2" data-who="zee">💾 Save Zee's verdict</button>
+          </div>
+          <div class="comment-block">
+            <label>👩 <b>Shano baji's verdict</b> <span class="status" id="status-shano-2"></span></label>
+            <textarea id="text-shano-2" data-idx="2" data-who="shano" placeholder="Shano baji ka feedback…"></textarea>
+            <button class="save-btn" data-idx="2" data-who="shano">💾 Save Shano's verdict</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="hdr">
+            <h2>Canonical Setup #3 — BUY</h2>
+            <span class="badge" style="background:#4ade80">WIN +18.60pts</span>
+          </div>
+          <img src="setup2_003.png" loading="lazy"/>
+          <div class="comment-block">
+            <label>🧔 <b>Zeeshan's verdict</b> <span class="status" id="status-zee-3"></span></label>
+            <textarea id="text-zee-3" data-idx="3" data-who="zee" placeholder="Is this canonical? Y/B/R shorthand…"></textarea>
+            <button class="save-btn" data-idx="3" data-who="zee">💾 Save Zee's verdict</button>
+          </div>
+          <div class="comment-block">
+            <label>👩 <b>Shano baji's verdict</b> <span class="status" id="status-shano-3"></span></label>
+            <textarea id="text-shano-3" data-idx="3" data-who="shano" placeholder="Shano baji ka feedback…"></textarea>
+            <button class="save-btn" data-idx="3" data-who="shano">💾 Save Shano's verdict</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="hdr">
+            <h2>Canonical Setup #4 — SELL</h2>
+            <span class="badge" style="background:#aaa">OPEN open</span>
+          </div>
+          <img src="setup2_004.png" loading="lazy"/>
+          <div class="comment-block">
+            <label>🧔 <b>Zeeshan's verdict</b> <span class="status" id="status-zee-4"></span></label>
+            <textarea id="text-zee-4" data-idx="4" data-who="zee" placeholder="Is this canonical? Y/B/R shorthand…"></textarea>
+            <button class="save-btn" data-idx="4" data-who="zee">💾 Save Zee's verdict</button>
+          </div>
+          <div class="comment-block">
+            <label>👩 <b>Shano baji's verdict</b> <span class="status" id="status-shano-4"></span></label>
+            <textarea id="text-shano-4" data-idx="4" data-who="shano" placeholder="Shano baji ka feedback…"></textarea>
+            <button class="save-btn" data-idx="4" data-who="shano">💾 Save Shano's verdict</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="hdr">
+            <h2>Canonical Setup #5 — SELL</h2>
+            <span class="badge" style="background:#4ade80">WIN +5.30pts</span>
+          </div>
+          <img src="setup2_005.png" loading="lazy"/>
+          <div class="comment-block">
+            <label>🧔 <b>Zeeshan's verdict</b> <span class="status" id="status-zee-5"></span></label>
+            <textarea id="text-zee-5" data-idx="5" data-who="zee" placeholder="Is this canonical? Y/B/R shorthand…"></textarea>
+            <button class="save-btn" data-idx="5" data-who="zee">💾 Save Zee's verdict</button>
+          </div>
+          <div class="comment-block">
+            <label>👩 <b>Shano baji's verdict</b> <span class="status" id="status-shano-5"></span></label>
+            <textarea id="text-shano-5" data-idx="5" data-who="shano" placeholder="Shano baji ka feedback…"></textarea>
+            <button class="save-btn" data-idx="5" data-who="shano">💾 Save Shano's verdict</button>
+          </div>
+        </div>
+
+<script>
+async function save(idx, who) {
+  const text = document.getElementById('text-'+who+'-'+idx).value;
+  const st = document.getElementById('status-'+who+'-'+idx);
+  st.textContent = 'saving…';
+  try {
+    const r = await fetch('/api/labels', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idx: 'c'+idx, who, label: text })
+    });
+    const d = await r.json();
+    st.textContent = d.ok ? 'saved ✓' : 'save failed';
+    setTimeout(()=> st.textContent = '', 2000);
+  } catch (e) { st.textContent = 'error: ' + e.message; }
+}
+document.querySelectorAll('.save-btn').forEach(b => {
+  b.addEventListener('click', () => save(b.dataset.idx, b.dataset.who));
+});
+// Pre-load existing labels
+fetch('/api/labels').then(r => r.json()).then(d => {
+  Object.entries(d).forEach(([key, comments]) => {
+    if (!key.startsWith('c')) return;
+    const idx = key.substring(1);
+    ['zee','shano'].forEach(who => {
+      if (comments[who]) {
+        const ta = document.getElementById('text-'+who+'-'+idx);
+        if (ta) ta.value = comments[who];
+      }
+    });
+  });
+});
+</script>
+</body></html>

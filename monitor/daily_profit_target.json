@@ -1,0 +1,6 @@
+{
+  "target_usd": 60.0,
+  "harvest_locked_date_broker": null,
+  "lots": 0.30,
+  "note": "v2.76 scaling: harvest at +$60 (= 150 × 0.30/0.80). Locks earlier in absolute dollars but same risk-adjusted ratio. Dashboard hero card triggers at this number now."
+}

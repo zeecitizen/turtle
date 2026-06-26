@@ -1,0 +1,12 @@
+built 20853 tick-derived M1 bars over 20 days
+
+S1 (UHV breakout):
+  exit                  n   WR%    TOTAL      EV    1stH    2ndH
+  baseline            741    68%     -498   -0.67    -237    -261
+  trail 0.3/0.3       741    48%     -329   -0.44    -110    -219
+
+NSND (No Supply/Demand):
+  exit                  n   WR%    TOTAL      EV    1stH    2ndH
+  baseline             96    43%      -21   -0.22      -6     -16
+  trail 0.3/0.3        96    33%      -34   -0.35     -19     -15
+

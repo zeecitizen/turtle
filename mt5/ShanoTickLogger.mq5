@@ -13,10 +13,15 @@
 //| up to ~150 ticks/sec on XAUUSD without dropping ticks.           |
 //+------------------------------------------------------------------+
 #property copyright "Shano Trading System"
-#property version   "1.00"
+#property version   "1.10"
 #property strict
 
-input string InpSymbolFilter   = "XAUUSDm";  // Exness gold symbol (was "XAUUSD" — FTMO-era; mismatch silently dropped every tick)
+// Empty default = log whatever symbol the chart shows. OnTick() only fires for
+// _Symbol anyway, so this filter is only useful if you DELIBERATELY want to
+// restrict logging (e.g. "only XAUUSDm, ignore charts on other instruments
+// running this same EA"). For Atmos use chart symbol = XAUUSD; for Exness
+// chart symbol = XAUUSDm — empty default Just Works in both cases.
+input string InpSymbolFilter   = "";
 input int    InpFlushEverySec  = 5;
 
 int      g_handle      = INVALID_HANDLE;
@@ -102,7 +107,10 @@ void OnDeinit(const int reason)
 void OnTick()
 {
     if(g_handle == INVALID_HANDLE) return;
-    if(InpSymbolFilter != "" && _Symbol != InpSymbolFilter) return;
+    // v1.10: filter check removed. OnTick() always fires for _Symbol (the chart's
+    // own symbol), so the filter was redundant. The old check silently dropped
+    // every tick when InpSymbolFilter was stale (e.g. "XAUUSDm" on Atmos's
+    // XAUUSD chart). Filter value is now ignored; we log whatever the chart is.
 
     datetime now = TimeCurrent();
 

@@ -1,0 +1,33 @@
+{
+  "fvg_mode": "none",
+  "days": 7,
+  "bars": 743,
+  "setups": 1,
+  "wins": 1,
+  "losses": 0,
+  "open": 0,
+  "wr_pct": 100.0,
+  "pnl_pts": 45.1,
+  "pf": Infinity,
+  "fires": [
+    {
+      "side": "SELL",
+      "open_t": "2026-06-02 17:15",
+      "entry": 4496.08,
+      "sl": 4514.11,
+      "tp": 4450.98,
+      "uhv_t": "2026-06-02 16:35",
+      "uhv_vol": 1208,
+      "breakout_t": "2026-06-02 17:15",
+      "breakout_vol": 878,
+      "origin_t": "2026-06-02 16:00",
+      "soft_trend": true,
+      "soft_sweep": true,
+      "uhv_body_strong": true,
+      "notes": [],
+      "outcome": "WIN",
+      "pnl_usd": 45.1,
+      "close_t": "2026-06-03 11:20"
+    }
+  ]
+}

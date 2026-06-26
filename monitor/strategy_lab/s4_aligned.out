@@ -1,0 +1,5 @@
+20916 M1 bars → 4208 M5 bars over 20 days
+
+S4 (Feb-11 UHV, M5) on aligned oracle, baseline exit (SL $7.5 / TP $2)
+      n   WR%    TOTAL      EV   maxDD    1stH    2ndH
+     99   63%     -164   -1.66     170     -78     -86

@@ -1,0 +1,5 @@
+S1 filter test on aligned oracle (baseline exit, real tick-volume)
+
+  config                  n   WR%    TOTAL      EV    1stH    2ndH
+  FVG off (current)     745   68%     -498   -0.67    -240    -259
+  FVG required           86   69%      -49   -0.57     -20     -29

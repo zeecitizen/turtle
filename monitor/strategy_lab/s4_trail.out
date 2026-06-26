@@ -1,0 +1,21 @@
+PART A — today's ACTUAL S4 trades replayed on real ticks (baseline vs trail)
+
+  time     side   baseline    trail   BE@0.5
+  02:40    SELL      +1.80    -0.21    -0.20
+  03:40    SELL      +1.81    -0.05    -0.20
+  13:00    SELL      +1.80    -0.14    -0.20
+  17:35    BUY       +1.80    +0.96    +1.80
+  17:55    BUY       +1.80    -0.02    -0.20
+  18:15    BUY       +1.80    +0.42    +1.80
+  22:40    BUY       -7.70    +0.27    -0.20
+  TOTAL              +3.10    +1.24    +2.60
+  → trail -1.87 vs base · BE@0.5 -0.50 vs base
+
+PART B — generic breakouts, S4 geometry (SL $7.5 / TP $2), 19 days, net cost
+  policy            n   WR%   TOTAL$    avg$
+  baseline       2648   73%    -1801   -0.68
+  trail 0.3/0.3  2648   53%    -1150   -0.43
+  BE@0.3         2648   21%    -1124   -0.42
+  BE@0.5         2648   28%    -1275   -0.48
+  BE@0.75        2648   37%    -1279   -0.48
+  BE@1.0         2648   46%    -1467   -0.55

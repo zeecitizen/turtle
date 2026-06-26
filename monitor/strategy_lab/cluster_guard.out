@@ -1,0 +1,9 @@
+days=19  total signals=1382
+
+  guard                    trades   TOTAL  maxDD worstDay
+  baseline (no guard)        1382    -641    641      -64
+  max 1 same-direction       1258    -577    577      -54
+  max 2 concurrent           1362    -628    628      -63
+  cooldown 5m same-dir       1104    -445    445      -53
+  skip 00:00-06:00           1116    -494    494      -58
+  max1dir + skip 00-06       1023    -445    445      -49

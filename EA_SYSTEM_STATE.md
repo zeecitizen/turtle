@@ -21,10 +21,11 @@ real validated numbers. Read this first before changing any EA.
 2026-05-21 overnight: full investigation of why Zee's Feb-11 day (~27 fills, manual,
 ~94% WR) couldn't be reproduced. Findings (all committed, see backtest_feb11_*.py):
 
-- Zee's Feb-11 method = the simple **Lesson-2 "our strategy" UHV breakout** (he names
-  it in lesson02.txt right after the Qatar/Doha-airport anecdote — "$70k in one day on
-  a $200k account, just this strategy"). It is NOT S1/S3/NSND mechanics: classify_feb11.py
-  showed only ~12/27 matched those.
+- Zee's Feb-11 method = the simple **Lesson-2 "our strategy" UHV breakout** (Zee himself
+  teaches it in lesson02.txt — `monitor/_loom_audio/` is HIS own course, not an external
+  teacher's. The Qatar/Doha-airport "$70k on $200k in one day, just this strategy" anecdote
+  is Zee's own real trade. Feb 11 = same method at smaller account scale.)
+  It is NOT S1/S3/NSND mechanics: classify_feb11.py showed only ~12/27 matched those.
 - Trend = **same-TF HH/HL structure** ("camel humps"), NOT 1H+5min.
 - His **exit (scalp/skim + scratch on first reversal) does NOT mechanize** — needs his
   94% discretionary hand. Mechanical proxies (peak-trail, intrabar, velocity-gated) all

@@ -1,0 +1,403 @@
+<!doctype html>
+<html><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>M1 Tuned Setups — verify before scaling</title>
+<style>
+  body { font-family: -apple-system, system-ui, sans-serif; background: #0b0e14; color: #e6edf3; margin: 0; padding: 16px; }
+  h1 { font-size: 22px; margin: 6px 0; }
+  .intro { background: #161b22; padding: 14px; border-radius: 10px; margin-bottom: 18px;
+    font-size: 13px; line-height: 1.5; border-left: 4px solid #58a6ff; }
+  .intro b { color: #58a6ff; }
+  .card { background: #161b22; padding: 16px; border-radius: 10px; margin-bottom: 22px; }
+  .hdr { display: flex; align-items: center; justify-content: space-between; }
+  .hdr h2 { font-size: 16px; margin: 0; }
+  .badge { padding: 4px 10px; border-radius: 6px; color: #000; font-weight: 600; font-size: 12px; }
+  img { width: 100%; max-width: 1200px; display: block; margin: 12px 0; border-radius: 6px; }
+  .verdict-row { display: flex; gap: 12px; margin-bottom: 10px; }
+  .verdict-opt { flex: 1; display: flex; align-items: center; padding: 12px 14px;
+    background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
+    cursor: pointer; font-size: 15px; font-weight: 600; gap: 8px; transition: all 0.15s; }
+  .verdict-opt:hover { background: #1f242c; }
+  .verdict-opt input { width: 18px; height: 18px; margin: 0; cursor: pointer; }
+  .verdict-correct:has(input:checked) { background: rgba(63,185,80,0.12); border-color: #3fb950; }
+  .verdict-incorrect:has(input:checked) { background: rgba(248,81,73,0.10); border-color: #f85149; }
+  .reason-row { margin: 12px 0; }
+  .reason-row label { display: block; font-size: 12px; color: #f85149; margin-bottom: 4px; font-weight: 600; }
+  .reason-row textarea { width: 100%; min-height: 60px; background: #0d1117; color: #e6edf3;
+    border: 1px solid #30363d; padding: 10px; font-family: inherit; font-size: 14px; border-radius: 6px;
+    line-height: 1.4; box-sizing: border-box; }
+  .save-btn { background: #238636; color: #fff; border: 0; padding: 8px 16px;
+    font-size: 14px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+  .save-btn.saved { background: #1f6feb; }
+  .status { margin-left: 12px; font-size: 12px; color: #888; }
+  .progress { position: sticky; top: 0; background: #161b22; padding: 8px 14px; border-radius: 8px;
+    margin-bottom: 14px; z-index: 100; border: 1px solid #30363d; }
+  .progress .bar { height: 6px; background: #30363d; border-radius: 3px; margin-top: 6px; overflow: hidden; }
+  .progress .fill { height: 100%; background: linear-gradient(90deg, #3fb950, #58a6ff); width: 0%; transition: width 0.3s; }
+</style>
+</head><body>
+<h1>M1 Tuned Setups — verify before scaling (11 setups)</h1>
+<div class="progress"><span id="progress-text">0 / 11 labelled</span><div class="bar"><div class="fill" id="progress-fill"></div></div></div>
+<div class="intro">
+  <b>What this is:</b> The M1 instance you just attached (magic 88005, SL 1.5/TP 3.0) would have fired these
+  11 trades in the LAST 7 DAYS of XAUUSD ticks. Backtest result: <b>8W / 3L = 72.7% WR, +14.21 pts</b>.
+  <br/>If you mark most as correct, the M1 config is safe to keep live. If many are wrong, tell me what gate's off and
+  I'll tune the M1 EA accordingly.<br/><br/>
+  <b>Markers:</b> 🟦 cyan ■ = retracement origin · 🔴 red ▼ = UHV (BUY) · 🟢 green ▼ = UHV (SELL) ·
+  🔵 blue ▲ = BUY breakout · 🔴 red ▼ above = SELL breakout · white dashed = entry · red dotted = SL · green dotted = TP.
+</div>
+
+
+        <div class="card" id="card-1">
+          <div class="hdr">
+            <h2>M1 Setup #1 — BUY · 2026-06-01 05:11</h2>
+            <span class="badge" style="background:#4ade80">WIN +3.00pts</span>
+          </div>
+          <img src="setup4_001.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-1" value="correct" data-idx="1"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-1" value="incorrect" data-idx="1"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-1" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-1" data-idx="1" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="1">💾 Save</button>
+            <span class="status" id="status-1"></span>
+          </div>
+        </div>
+        <div class="card" id="card-2">
+          <div class="hdr">
+            <h2>M1 Setup #2 — BUY · 2026-06-01 09:00</h2>
+            <span class="badge" style="background:#4ade80">WIN +3.00pts</span>
+          </div>
+          <img src="setup4_002.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-2" value="correct" data-idx="2"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-2" value="incorrect" data-idx="2"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-2" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-2" data-idx="2" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="2">💾 Save</button>
+            <span class="status" id="status-2"></span>
+          </div>
+        </div>
+        <div class="card" id="card-3">
+          <div class="hdr">
+            <h2>M1 Setup #3 — BUY · 2026-06-01 10:26</h2>
+            <span class="badge" style="background:#4ade80">WIN +3.00pts</span>
+          </div>
+          <img src="setup4_003.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-3" value="correct" data-idx="3"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-3" value="incorrect" data-idx="3"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-3" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-3" data-idx="3" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="3">💾 Save</button>
+            <span class="status" id="status-3"></span>
+          </div>
+        </div>
+        <div class="card" id="card-4">
+          <div class="hdr">
+            <h2>M1 Setup #4 — SELL · 2026-06-01 16:03</h2>
+            <span class="badge" style="background:#4ade80">WIN +3.00pts</span>
+          </div>
+          <img src="setup4_004.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-4" value="correct" data-idx="4"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-4" value="incorrect" data-idx="4"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-4" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-4" data-idx="4" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="4">💾 Save</button>
+            <span class="status" id="status-4"></span>
+          </div>
+        </div>
+        <div class="card" id="card-5">
+          <div class="hdr">
+            <h2>M1 Setup #5 — BUY · 2026-06-01 23:15</h2>
+            <span class="badge" style="background:#ef4444">LOSS -4.12pts</span>
+          </div>
+          <img src="setup4_005.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-5" value="correct" data-idx="5"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-5" value="incorrect" data-idx="5"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-5" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-5" data-idx="5" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="5">💾 Save</button>
+            <span class="status" id="status-5"></span>
+          </div>
+        </div>
+        <div class="card" id="card-6">
+          <div class="hdr">
+            <h2>M1 Setup #6 — SELL · 2026-06-02 22:21</h2>
+            <span class="badge" style="background:#ef4444">LOSS -2.78pts</span>
+          </div>
+          <img src="setup4_006.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-6" value="correct" data-idx="6"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-6" value="incorrect" data-idx="6"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-6" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-6" data-idx="6" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="6">💾 Save</button>
+            <span class="status" id="status-6"></span>
+          </div>
+        </div>
+        <div class="card" id="card-7">
+          <div class="hdr">
+            <h2>M1 Setup #7 — SELL · 2026-06-03 01:33</h2>
+            <span class="badge" style="background:#4ade80">WIN +3.00pts</span>
+          </div>
+          <img src="setup4_007.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-7" value="correct" data-idx="7"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-7" value="incorrect" data-idx="7"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-7" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-7" data-idx="7" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="7">💾 Save</button>
+            <span class="status" id="status-7"></span>
+          </div>
+        </div>
+        <div class="card" id="card-8">
+          <div class="hdr">
+            <h2>M1 Setup #8 — SELL · 2026-06-03 02:07</h2>
+            <span class="badge" style="background:#4ade80">WIN +3.00pts</span>
+          </div>
+          <img src="setup4_008.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-8" value="correct" data-idx="8"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-8" value="incorrect" data-idx="8"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-8" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-8" data-idx="8" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="8">💾 Save</button>
+            <span class="status" id="status-8"></span>
+          </div>
+        </div>
+        <div class="card" id="card-9">
+          <div class="hdr">
+            <h2>M1 Setup #9 — BUY · 2026-06-03 03:39</h2>
+            <span class="badge" style="background:#4ade80">WIN +3.00pts</span>
+          </div>
+          <img src="setup4_009.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-9" value="correct" data-idx="9"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-9" value="incorrect" data-idx="9"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-9" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-9" data-idx="9" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="9">💾 Save</button>
+            <span class="status" id="status-9"></span>
+          </div>
+        </div>
+        <div class="card" id="card-10">
+          <div class="hdr">
+            <h2>M1 Setup #10 — BUY · 2026-06-03 06:13</h2>
+            <span class="badge" style="background:#ef4444">LOSS -2.89pts</span>
+          </div>
+          <img src="setup4_010.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-10" value="correct" data-idx="10"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-10" value="incorrect" data-idx="10"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-10" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-10" data-idx="10" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="10">💾 Save</button>
+            <span class="status" id="status-10"></span>
+          </div>
+        </div>
+        <div class="card" id="card-11">
+          <div class="hdr">
+            <h2>M1 Setup #11 — SELL · 2026-06-03 08:41</h2>
+            <span class="badge" style="background:#4ade80">WIN +3.00pts</span>
+          </div>
+          <img src="setup4_011.png" loading="lazy"/>
+          <div class="quiz">
+            <div class="verdict-row">
+              <label class="verdict-opt verdict-correct">
+                <input type="radio" name="v-11" value="correct" data-idx="11"/>
+                <span>✅ Correct</span>
+              </label>
+              <label class="verdict-opt verdict-incorrect">
+                <input type="radio" name="v-11" value="incorrect" data-idx="11"/>
+                <span>❌ Incorrect</span>
+              </label>
+            </div>
+            <div class="reason-row" id="reason-row-11" style="display:none;">
+              <label>Reason for incorrect:</label>
+              <textarea id="reason-11" data-idx="11" placeholder="Y/B/R shorthand, or what gate failed…"></textarea>
+            </div>
+            <button class="save-btn" data-idx="11">💾 Save</button>
+            <span class="status" id="status-11"></span>
+          </div>
+        </div>
+
+<script>
+const TOTAL = 11;
+async function save(idx) {
+  const card = document.getElementById('card-' + idx);
+  const picked = card.querySelector(`input[name="v-${idx}"]:checked`);
+  const verdict = picked ? picked.value : null;
+  const reason = (document.getElementById('reason-' + idx) || {value:''}).value.trim();
+  if (!verdict) {
+    document.getElementById('status-' + idx).textContent = 'pick Correct or Incorrect first';
+    return;
+  }
+  const payload = { idx: 'n' + idx, who: 'zee', label: JSON.stringify({ verdict, reason }) };
+  const st = document.getElementById('status-' + idx);
+  const btn = card.querySelector('.save-btn');
+  st.textContent = 'saving…';
+  try {
+    const r = await fetch('/api/labels', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      st.textContent = verdict === 'correct' ? 'saved ✓' : 'saved ✓ (reason logged)';
+      btn.classList.add('saved');
+      btn.textContent = '✓ Saved';
+      updateProgress();
+    } else st.textContent = 'save failed';
+  } catch (e) { st.textContent = 'err: ' + e.message; }
+}
+function updateProgress() {
+  const saved = document.querySelectorAll('.save-btn.saved').length;
+  document.getElementById('progress-text').textContent = saved + ' / ' + TOTAL + ' labelled';
+  document.getElementById('progress-fill').style.width = (saved/TOTAL*100) + '%';
+}
+document.querySelectorAll('input[type=radio][name^="v-"]').forEach(r => {
+  r.addEventListener('change', () => {
+    const idx = r.dataset.idx;
+    const row = document.getElementById('reason-row-' + idx);
+    if (row) row.style.display = r.value === 'incorrect' ? 'block' : 'none';
+    if (r.value === 'incorrect') {
+      const ta = document.getElementById('reason-' + idx);
+      if (ta) setTimeout(() => ta.focus(), 50);
+    }
+  });
+});
+document.querySelectorAll('.save-btn').forEach(b => {
+  b.addEventListener('click', () => save(b.dataset.idx));
+});
+fetch('/api/labels').then(r => r.json()).then(d => {
+  Object.entries(d).forEach(([key, comments]) => {
+    if (!key.startsWith('n')) return;
+    const idx = key.substring(1);
+    if (!comments.zee) return;
+    try {
+      const data = JSON.parse(comments.zee);
+      const card = document.getElementById('card-' + idx);
+      if (!card) return;
+      if (data.verdict) {
+        const sel = card.querySelector(`input[name="v-${idx}"][value="${data.verdict}"]`);
+        if (sel) { sel.checked = true;
+          const row = document.getElementById('reason-row-' + idx);
+          if (row && data.verdict === 'incorrect') row.style.display = 'block';
+        }
+        if (data.reason) {
+          const ta = document.getElementById('reason-' + idx);
+          if (ta) ta.value = data.reason;
+        }
+      }
+      const btn = card.querySelector('.save-btn');
+      btn.classList.add('saved'); btn.textContent = '✓ Saved';
+    } catch (_) {}
+  });
+  updateProgress();
+});
+</script>
+</body></html>
