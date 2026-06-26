@@ -15,7 +15,7 @@ from backtest_s3_teacher_spec import aggregate_to_tf
 from backtest_v349_multiday import load_ticks, COMMON
 import bisect
 PPP=1.0; COST=0.20
-MOM=0.55; RETRO=12; TRENDLB=30; TRENDMIN=7.0; TP=2.0; SL=7.5
+MOM=0.55; RETRO=12; TRENDLB=30; TRENDMIN=7.0; TP=float(sys.argv[1]) if len(sys.argv)>1 else 2.0; SL=float(sys.argv[2]) if len(sys.argv)>2 else 7.5; ERMIN=float(sys.argv[3]) if len(sys.argv)>3 else 0.0; ERN=30
 
 ALLBARS=[]; DAYTICKS={}
 for path in sorted(glob.glob(str(COMMON/"shano_ticks_2026-*.csv"))):
@@ -96,8 +96,20 @@ def walk(tk,k,side,sl,tp):
     return (((px-e) if side>0 else (e-px))*PPP)-COST
 
 sigs=signals()
+# precompute ER over M1 bars for the gate
+BT=[b["time"] for b in ALLBARS]; CL=[b["close"] for b in ALLBARS]; ER=[0.0]*len(ALLBARS)
+for i in range(ERN,len(ALLBARS)):
+    direction=abs(CL[i]-CL[i-ERN])
+    vol=sum(abs(CL[j]-CL[j-1]) for j in range(i-ERN+1,i+1))
+    ER[i]=direction/vol if vol>1e-9 else 0.0
+def er_at(t):
+    i=bisect.bisect_left(BT,t)-1
+    return ER[i] if 0<=i<len(ER) else 0.0
+
 res=[]
+gated=0
 for s in sigs:
+    if ERMIN>0 and er_at(s["fire_time"])<ERMIN: gated+=1; continue
     tk=ticks_for(s["fire_time"])
     if not tk: continue
     T=[x["t"] for x in tk]; k=bisect.bisect_left(T,s["fire_time"])
@@ -107,7 +119,7 @@ for s in sigs:
     tp = e_intent+TP if s["side"]>0 else e_intent-TP
     res.append((s["fire_time"], walk(tk,k,s["side"],sl,tp)))
 
-print(f"S4 (Feb-11 UHV, M5) on aligned oracle, baseline exit (SL $7.5 / TP $2)")
+print(f"S4 (Feb-11 UHV, M5) on aligned oracle, exit TP=${TP} / SL=${SL}, ER>=${ERMIN} (gated {gated})")
 if not res: print("  no signals"); sys.exit()
 res.sort(); n=len(res); tot=sum(p for _,p in res); w=sum(1 for _,p in res if p>0)
 half=res[n//2][0]; t1=sum(p for d,p in res if d<half); t2=sum(p for d,p in res if d>=half)

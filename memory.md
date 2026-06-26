@@ -275,3 +275,3275 @@ corrects/retracts it. History of the reasoning matters as much as the verdict.
 - (Runtime override file absent — EA on raw Inp defaults)
 - Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
 
+
+---
+
+## 2026-06-03 21:00 UTC  (2026-06-03 23:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+7.37  consec_losses=0  pause_until=1780517165
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-224.82  (7W / 17L = 29.2% WR, n=24)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-250.42  (107W / 83L = 56.3% WR, n=191)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — today P&L $-224.82 is significantly negative
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- ❗ Today's loss $-224.82 approaching halt-line −$250
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-03 22:00 UTC  (2026-06-04 00:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+7.37  consec_losses=0  pause_until=1780517165
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-224.82  (7W / 17L = 29.2% WR, n=24)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-250.42  (107W / 83L = 56.3% WR, n=191)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — today P&L $-224.82 is significantly negative
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- ❗ Today's loss $-224.82 approaching halt-line −$250
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 08:49 UTC  (2026-06-04 10:49 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+7.37  consec_losses=0  pause_until=1780517165
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-187.41  (70W / 60L = 53.8% WR, n=131)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 54% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 09:00 UTC  (2026-06-04 11:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+7.37  consec_losses=0  pause_until=1780517165
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-187.41  (70W / 60L = 53.8% WR, n=131)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 54% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 12:14 UTC  (2026-06-04 14:14 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+7.37  consec_losses=0  pause_until=1780517165
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-187.41  (70W / 60L = 53.8% WR, n=131)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 54% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 13:49 UTC  (2026-06-04 15:49 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+7.37  consec_losses=0  pause_until=1780517165
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-187.41  (70W / 60L = 53.8% WR, n=131)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 54% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 14:00 UTC  (2026-06-04 16:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-187.41  (70W / 60L = 53.8% WR, n=131)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 54% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 15:23 UTC  (2026-06-04 17:23 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-187.41  (70W / 60L = 53.8% WR, n=131)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 54% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 16:00 UTC  (2026-06-04 18:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-187.41  (70W / 60L = 53.8% WR, n=131)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 54% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 17:46 UTC  (2026-06-04 19:46 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-187.41  (70W / 60L = 53.8% WR, n=131)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 54% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 18:00 UTC  (2026-06-04 20:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-187.41  (70W / 60L = 53.8% WR, n=131)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 54% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 19:00 UTC  (2026-06-04 21:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-187.41  (70W / 60L = 53.8% WR, n=131)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 54% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 20:02 UTC  (2026-06-04 22:02 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$-7.64  consec_losses=0  pause_until=1780610833
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-7.64  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-195.05  (70W / 61L = 53.4% WR, n=132)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 53% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 1 new fills this hour, $-7.64 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 21:04 UTC  (2026-06-04 23:04 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$-7.64  consec_losses=0  pause_until=1780610833
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-7.64  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-195.05  (70W / 61L = 53.4% WR, n=132)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 53% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-04 22:18 UTC  (2026-06-05 00:18 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$-7.64  consec_losses=0  pause_until=1780610833
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-7.64  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-195.05  (70W / 61L = 53.4% WR, n=132)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 53% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-05 06:53 UTC  (2026-06-05 08:53 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$-7.64  consec_losses=0  pause_until=1780610833
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-137.94  (43W / 47L = 47.8% WR, n=90)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-05 07:16 UTC  (2026-06-05 09:16 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-137.94  (43W / 47L = 47.8% WR, n=90)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-05 15:12 UTC  (2026-06-05 17:12 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-137.94  (43W / 47L = 47.8% WR, n=90)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-05 18:54 UTC  (2026-06-05 20:54 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-137.94  (43W / 47L = 47.8% WR, n=90)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-05 19:00 UTC  (2026-06-05 21:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-137.94  (43W / 47L = 47.8% WR, n=90)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-05 20:00 UTC  (2026-06-05 22:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-137.94  (43W / 47L = 47.8% WR, n=90)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-05 22:44 UTC  (2026-06-06 00:44 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-137.94  (43W / 47L = 47.8% WR, n=90)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-05 23:00 UTC  (2026-06-06 01:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-137.94  (43W / 47L = 47.8% WR, n=90)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 00:00 UTC  (2026-06-06 02:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 01:00 UTC  (2026-06-06 03:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 02:00 UTC  (2026-06-06 04:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 03:00 UTC  (2026-06-06 05:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 04:00 UTC  (2026-06-06 06:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 05:00 UTC  (2026-06-06 07:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 06:00 UTC  (2026-06-06 08:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 07:00 UTC  (2026-06-06 09:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 08:00 UTC  (2026-06-06 10:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 09:00 UTC  (2026-06-06 11:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 10:00 UTC  (2026-06-06 12:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 11:00 UTC  (2026-06-06 13:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 12:00 UTC  (2026-06-06 14:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 13:00 UTC  (2026-06-06 15:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 17:39 UTC  (2026-06-06 19:39 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 18:00 UTC  (2026-06-06 20:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 19:00 UTC  (2026-06-06 21:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 20:00 UTC  (2026-06-06 22:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 21:00 UTC  (2026-06-06 23:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 22:00 UTC  (2026-06-07 00:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-06 23:00 UTC  (2026-06-07 01:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.75  (36W / 39L = 48.0% WR, n=75)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 48% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 00:00 UTC  (2026-06-07 02:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 01:00 UTC  (2026-06-07 03:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 02:00 UTC  (2026-06-07 04:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 03:00 UTC  (2026-06-07 05:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 04:00 UTC  (2026-06-07 06:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 05:00 UTC  (2026-06-07 07:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 06:00 UTC  (2026-06-07 08:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 07:00 UTC  (2026-06-07 09:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 08:00 UTC  (2026-06-07 10:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 09:00 UTC  (2026-06-07 11:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 10:00 UTC  (2026-06-07 12:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 11:00 UTC  (2026-06-07 13:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 12:00 UTC  (2026-06-07 14:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 13:00 UTC  (2026-06-07 15:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 14:00 UTC  (2026-06-07 16:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 15:00 UTC  (2026-06-07 17:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 16:00 UTC  (2026-06-07 18:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 17:00 UTC  (2026-06-07 19:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 18:00 UTC  (2026-06-07 20:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 19:00 UTC  (2026-06-07 21:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 20:00 UTC  (2026-06-07 22:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 21:00 UTC  (2026-06-07 23:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 22:00 UTC  (2026-06-08 00:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-07 23:00 UTC  (2026-06-08 01:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-143.71  (36W / 38L = 48.6% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 00:00 UTC  (2026-06-08 02:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 1 new fills this hour, $-21.24 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 01:00 UTC  (2026-06-08 03:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 02:00 UTC  (2026-06-08 04:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 03:00 UTC  (2026-06-08 05:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 04:00 UTC  (2026-06-08 06:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 05:00 UTC  (2026-06-08 07:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 06:00 UTC  (2026-06-08 08:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 07:00 UTC  (2026-06-08 09:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 08:00 UTC  (2026-06-08 10:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 09:00 UTC  (2026-06-08 11:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 10:00 UTC  (2026-06-08 12:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 11:00 UTC  (2026-06-08 13:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-21.24  (0W / 1L = 0.0% WR, n=1)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-157.82  (36W / 37L = 49.3% WR, n=73)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 12:00 UTC  (2026-06-08 14:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-12.06  (1W / 1L = 50.0% WR, n=2)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.64  (37W / 37L = 50.0% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 1 new fills this hour, $+9.18 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 13:00 UTC  (2026-06-08 15:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-12.06  (1W / 1L = 50.0% WR, n=2)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.64  (37W / 37L = 50.0% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 14:00 UTC  (2026-06-08 16:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-12.06  (1W / 1L = 50.0% WR, n=2)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.64  (37W / 37L = 50.0% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 18:22 UTC  (2026-06-08 20:22 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-12.06  (1W / 1L = 50.0% WR, n=2)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.64  (37W / 37L = 50.0% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 19:00 UTC  (2026-06-08 21:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-12.06  (1W / 1L = 50.0% WR, n=2)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.64  (37W / 37L = 50.0% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 20:00 UTC  (2026-06-08 22:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-12.06  (1W / 1L = 50.0% WR, n=2)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.64  (37W / 37L = 50.0% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 21:00 UTC  (2026-06-08 23:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-12.06  (1W / 1L = 50.0% WR, n=2)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.64  (37W / 37L = 50.0% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 22:00 UTC  (2026-06-09 00:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-12.06  (1W / 1L = 50.0% WR, n=2)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.64  (37W / 37L = 50.0% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-08 23:00 UTC  (2026-06-09 01:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-12.06  (1W / 1L = 50.0% WR, n=2)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.64  (37W / 37L = 50.0% WR, n=74)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 00:00 UTC  (2026-06-09 02:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.46  (33W / 33L = 50.0% WR, n=66)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 01:00 UTC  (2026-06-09 03:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.46  (33W / 33L = 50.0% WR, n=66)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 02:00 UTC  (2026-06-09 04:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- No fills yet today
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-148.46  (33W / 33L = 50.0% WR, n=66)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 03:00 UTC  (2026-06-09 05:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-51.40  (1W / 1L = 50.0% WR, n=2)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-199.86  (34W / 34L = 50.0% WR, n=68)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 2 new fills this hour, $-51.40 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 04:00 UTC  (2026-06-09 06:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-39.70  (2W / 2L = 50.0% WR, n=4)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-188.16  (35W / 35L = 50.0% WR, n=70)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **MEDIUM** — 7-day WR 50% (50-60%) — positive but marginal
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 2 new fills this hour, $+11.70 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 05:00 UTC  (2026-06-09 07:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-49.10  (2W / 4L = 33.3% WR, n=6)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-197.56  (35W / 37L = 48.6% WR, n=72)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 2 new fills this hour, $-9.40 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 06:00 UTC  (2026-06-09 08:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-49.10  (2W / 4L = 33.3% WR, n=6)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-197.56  (35W / 37L = 48.6% WR, n=72)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 07:38 UTC  (2026-06-09 09:38 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-49.10  (2W / 4L = 33.3% WR, n=6)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-197.56  (35W / 37L = 48.6% WR, n=72)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 08:00 UTC  (2026-06-09 10:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-49.10  (2W / 4L = 33.3% WR, n=6)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-197.56  (35W / 37L = 48.6% WR, n=72)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 09:30 UTC  (2026-06-09 11:30 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-45.90  (4W / 6L = 40.0% WR, n=10)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-194.36  (37W / 39L = 48.7% WR, n=76)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 4 new fills this hour, $+3.20 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 10:00 UTC  (2026-06-09 12:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-37.10  (5W / 7L = 41.7% WR, n=12)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-185.56  (38W / 40L = 48.7% WR, n=78)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 2 new fills this hour, $+8.80 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 13:45 UTC  (2026-06-09 15:45 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-39.60  (6W / 8L = 42.9% WR, n=14)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-188.06  (39W / 41L = 48.8% WR, n=80)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 2 new fills this hour, $-2.50 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 14:00 UTC  (2026-06-09 16:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-29.50  (7W / 8L = 46.7% WR, n=15)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-177.96  (40W / 41L = 49.4% WR, n=81)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 1 new fills this hour, $+10.10 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 15:00 UTC  (2026-06-09 17:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-29.50  (7W / 8L = 46.7% WR, n=15)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-177.96  (40W / 41L = 49.4% WR, n=81)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 16:00 UTC  (2026-06-09 18:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-29.50  (7W / 8L = 46.7% WR, n=15)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-177.96  (40W / 41L = 49.4% WR, n=81)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 18:25 UTC  (2026-06-09 20:25 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-40.10  (9W / 11L = 45.0% WR, n=20)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-188.56  (42W / 44L = 48.8% WR, n=86)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 5 new fills this hour, $-10.60 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 19:00 UTC  (2026-06-09 21:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-40.40  (10W / 12L = 45.5% WR, n=22)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-188.86  (43W / 45L = 48.9% WR, n=88)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — 7-day WR 49% < 50%, no statistical edge
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 2 new fills this hour, $-0.30 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 20:00 UTC  (2026-06-09 22:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-127.40  (13W / 16L = 44.8% WR, n=29)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-275.86  (46W / 49L = 48.4% WR, n=95)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — today P&L $-127.40 is significantly negative
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 7 new fills this hour, $-87.00 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 21:00 UTC  (2026-06-09 23:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-172.20  (14W / 18L = 43.8% WR, n=32)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-320.66  (47W / 51L = 48.0% WR, n=98)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — today P&L $-172.20 is significantly negative
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- 3 new fills this hour, $-44.80 net change
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+
+
+---
+
+## 2026-06-09 22:00 UTC  (2026-06-10 00:00 Berlin)
+
+### 📊 Live state
+- EA source: Feb11TickMedium v1.18, magic 88011, 0.05 lots, Atmos LIVE
+- Runtime overrides: (none — EA on Inp defaults)
+- State file: session_pnl=$+0.00  consec_losses=0  pause_until=0
+
+### 💰 Today P&L (broker truth from turtle_fills.csv)
+- Net: $-172.20  (14W / 18L = 43.8% WR, n=32)
+
+### 📈 Last 7 days (live, broker truth)
+- Net: $-320.66  (47W / 51L = 48.0% WR, n=98)
+
+### 🔒 Confidence level (auto-assessed, conservative bias)
+- **LOW** — today P&L $-172.20 is significantly negative
+- (Human override allowed — Zee can edit this line directly)
+
+### 📋 Current plan
+- EA paused, fully calibrated for Atmos GMT+0. v1.18 attached. Cooldown reset to defaults. Tomorrow's Session1 (UTC 01:30-02:30) is the first true test of validated config on Atmos. Python AGGRESSIVE predicts +$869 / 86% WR at 0.05L. Live MEDIUM at 0.05L should reproduce closer to +$253. Watch the 01:30 UTC opening tick.
+
+### ✅ Achieved this hour
+- No new fills this hour (EA paused or quiet)
+
+### ⚠️ Risks / red flags
+- (Runtime override file absent — EA on raw Inp defaults)
+- Note: confidence above is auto-set conservatively. Do NOT promote to HIGH without backtest-vs-live reconciliation.
+

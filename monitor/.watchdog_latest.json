@@ -1,0 +1,20 @@
+{
+  "now_utc": "2026-06-26T08:05:33.884266+00:00",
+  "market_open": true,
+  "alerts": [
+    "HEARTBEAT_STALE_69min"
+  ],
+  "ea_version": "3.02",
+  "broker_t": "2026.06.26 09:56:07",
+  "signals": 0,
+  "entries": 0,
+  "heartbeat_age_sec": 4152,
+  "log_file": "20260626.log",
+  "fills": 0,
+  "auto_closes": 0,
+  "sl_hits": 0,
+  "day_pnl_auto_close": 0,
+  "sl_streak": 0,
+  "alert_sent": false,
+  "ts_utc": "2026-06-26T08:05:33.939629+00:00"
+}

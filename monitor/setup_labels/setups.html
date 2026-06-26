@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>S1Trader Setup Labels</title>
+<style>
+  body { font-family: -apple-system, sans-serif; background:#1e1e1e; color:#ddd; margin:0; padding:20px; }
+  h1 { color:#fff; }
+  .setup { background:#2a2a2a; margin: 20px 0; padding: 16px; border-radius:8px; }
+  .setup h2 { margin: 0 0 10px 0; }
+  .setup .meta { color:#888; font-size:12px; margin-bottom:10px; }
+  .setup img { max-width:100%; border:1px solid #444; border-radius:4px; }
+  .setup textarea { width:100%; min-height:60px; margin: 4px 0; background:#1a1a1a; color:#fff; border:1px solid #444; padding:8px; font-family:monospace; font-size:13px; }
+  .setup .comment-block { margin-top: 12px; padding: 8px; background:#222; border-left: 3px solid #555; border-radius:4px; }
+  .setup .comment-block label { color:#bbb; font-size:13px; display:block; margin-bottom:4px; }
+  .setup .save-btn { background:#3b5fcc; color:#fff; border:none; padding:6px 14px; border-radius:4px; cursor:pointer; font-size:13px; }
+  .setup .save-btn:hover { background:#4a70dd; }
+  .setup .save-btn:disabled { background:#555; cursor:not-allowed; }
+  .setup .status { margin-left: 10px; font-size:11px; color:#888; }
+  .setup .saved { color:#4ade80; }
+  .nav { position:fixed; top:10px; right:10px; background:#2a2a2a; padding:10px; border-radius:6px; }
+  .nav a { color:#aaa; margin: 0 6px; text-decoration:none; }
+</style>
+</head><body>
+<h1>S1Trader Setup Review — 36 setups from v2.59 backtest</h1>
+<p>For each setup, type your analysis. Saves automatically. Examples:
+<br/>&nbsp; ✅ <b>"correct UHV — entry timing good"</b>
+<br/>&nbsp; ❌ <b>"wrong UHV — should be the bigger volume bar 3 candles earlier"</b>
+<br/>&nbsp; ⚠️ <b>"UHV correct but EA entered before sweep completed; should wait for sweep wick"</b>
+</p>
+<div class='nav'><a href='#top'>Top</a> · <a href='#bottom'>Bottom</a></div>
+<a id='top'></a>
+
+<div class='setup' id='setup-1'>
+  <h2>Setup #1</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.05.28 06:00:00 | entry=4394.23 sl=4413.21 tp=4375.25
+    | UHV shift=13 vol=1213
+    | exit=TP @ 4375.25
+    | <span style='color:#4ade80;'><b>WIN +18.98$</b></span>
+  </div>
+  <img src='setup_001.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-1'></span></label>
+    <textarea id='text-zee-1' data-idx='1' data-who='zee' placeholder='Zee, your analysis of setup #1...'></textarea>
+    <button class='save-btn' data-idx='1' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-1'></span></label>
+    <textarea id='text-shano-1' data-idx='1' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='1' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-2'>
+  <h2>Setup #2</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.05.28 06:38:19 | entry=4374.82 sl=4389.68 tp=4359.96
+    | UHV shift=3 vol=1158
+    | exit=SL @ 4389.68
+    | <span style='color:#ef4444;'><b>LOSS -14.86$</b></span>
+  </div>
+  <img src='setup_002.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-2'></span></label>
+    <textarea id='text-zee-2' data-idx='2' data-who='zee' placeholder='Zee, your analysis of setup #2...'></textarea>
+    <button class='save-btn' data-idx='2' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-2'></span></label>
+    <textarea id='text-shano-2' data-idx='2' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='2' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-3'>
+  <h2>Setup #3</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.05.28 09:12:04 | entry=4375.15 sl=4389.58 tp=4360.72
+    | UHV shift=8 vol=1418
+    | exit=SL @ 4389.58
+    | <span style='color:#ef4444;'><b>LOSS -14.43$</b></span>
+  </div>
+  <img src='setup_003.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-3'></span></label>
+    <textarea id='text-zee-3' data-idx='3' data-who='zee' placeholder='Zee, your analysis of setup #3...'></textarea>
+    <button class='save-btn' data-idx='3' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-3'></span></label>
+    <textarea id='text-shano-3' data-idx='3' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='3' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-4'>
+  <h2>Setup #4</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.05.28 10:52:36 | entry=4383.34 sl=4391.53 tp=4375.15
+    | UHV shift=10 vol=1118
+    | exit=SL @ 4391.53
+    | <span style='color:#ef4444;'><b>LOSS -8.19$</b></span>
+  </div>
+  <img src='setup_004.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-4'></span></label>
+    <textarea id='text-zee-4' data-idx='4' data-who='zee' placeholder='Zee, your analysis of setup #4...'></textarea>
+    <button class='save-btn' data-idx='4' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-4'></span></label>
+    <textarea id='text-shano-4' data-idx='4' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='4' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-5'>
+  <h2>Setup #5</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.28 12:25:00 | entry=4395.61 sl=4385.53 tp=4405.69
+    | UHV shift=12 vol=826
+    | exit=SL @ 4385.53
+    | <span style='color:#ef4444;'><b>LOSS -10.08$</b></span>
+  </div>
+  <img src='setup_005.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-5'></span></label>
+    <textarea id='text-zee-5' data-idx='5' data-who='zee' placeholder='Zee, your analysis of setup #5...'></textarea>
+    <button class='save-btn' data-idx='5' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-5'></span></label>
+    <textarea id='text-shano-5' data-idx='5' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='5' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-6'>
+  <h2>Setup #6</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.28 15:15:00 | entry=4392.93 sl=4381.00 tp=4404.86
+    | UHV shift=6 vol=843
+    | exit=SL @ 4381.0
+    | <span style='color:#ef4444;'><b>LOSS -11.93$</b></span>
+  </div>
+  <img src='setup_006.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-6'></span></label>
+    <textarea id='text-zee-6' data-idx='6' data-who='zee' placeholder='Zee, your analysis of setup #6...'></textarea>
+    <button class='save-btn' data-idx='6' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-6'></span></label>
+    <textarea id='text-shano-6' data-idx='6' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='6' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-7'>
+  <h2>Setup #7</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.28 16:50:25 | entry=4430.72 sl=4416.35 tp=4445.09
+    | UHV shift=4 vol=1612
+    | exit=TP @ 4445.09
+    | <span style='color:#4ade80;'><b>WIN +14.37$</b></span>
+  </div>
+  <img src='setup_007.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-7'></span></label>
+    <textarea id='text-zee-7' data-idx='7' data-who='zee' placeholder='Zee, your analysis of setup #7...'></textarea>
+    <button class='save-btn' data-idx='7' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-7'></span></label>
+    <textarea id='text-shano-7' data-idx='7' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='7' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-8'>
+  <h2>Setup #8</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.28 17:41:38 | entry=4466.99 sl=4451.60 tp=4482.38
+    | UHV shift=4 vol=1816
+    | exit=TP @ 4482.38
+    | <span style='color:#4ade80;'><b>WIN +15.39$</b></span>
+  </div>
+  <img src='setup_008.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-8'></span></label>
+    <textarea id='text-zee-8' data-idx='8' data-who='zee' placeholder='Zee, your analysis of setup #8...'></textarea>
+    <button class='save-btn' data-idx='8' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-8'></span></label>
+    <textarea id='text-shano-8' data-idx='8' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='8' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-9'>
+  <h2>Setup #9</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.28 18:40:30 | entry=4480.27 sl=4464.11 tp=4496.43
+    | UHV shift=11 vol=1795
+    | exit=TP @ 4496.43
+    | <span style='color:#4ade80;'><b>WIN +16.16$</b></span>
+  </div>
+  <img src='setup_009.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-9'></span></label>
+    <textarea id='text-zee-9' data-idx='9' data-who='zee' placeholder='Zee, your analysis of setup #9...'></textarea>
+    <button class='save-btn' data-idx='9' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-9'></span></label>
+    <textarea id='text-shano-9' data-idx='9' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='9' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-10'>
+  <h2>Setup #10</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.28 19:19:39 | entry=4496.91 sl=4470.37 tp=4523.45
+    | UHV shift=14 vol=1463
+    | exit=TP @ 4523.45
+    | <span style='color:#4ade80;'><b>WIN +26.54$</b></span>
+  </div>
+  <img src='setup_010.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-10'></span></label>
+    <textarea id='text-zee-10' data-idx='10' data-who='zee' placeholder='Zee, your analysis of setup #10...'></textarea>
+    <button class='save-btn' data-idx='10' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-10'></span></label>
+    <textarea id='text-shano-10' data-idx='10' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='10' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-11'>
+  <h2>Setup #11</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.29 09:57:37 | entry=4523.82 sl=4514.09 tp=4533.55
+    | UHV shift=6 vol=1009
+    | exit=SL @ 4514.09
+    | <span style='color:#ef4444;'><b>LOSS -9.73$</b></span>
+  </div>
+  <img src='setup_011.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-11'></span></label>
+    <textarea id='text-zee-11' data-idx='11' data-who='zee' placeholder='Zee, your analysis of setup #11...'></textarea>
+    <button class='save-btn' data-idx='11' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-11'></span></label>
+    <textarea id='text-shano-11' data-idx='11' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='11' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-12'>
+  <h2>Setup #12</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.29 10:45:00 | entry=4525.66 sl=4511.66 tp=4539.66
+    | UHV shift=14 vol=972
+    | exit=SL @ 4511.66
+    | <span style='color:#ef4444;'><b>LOSS -14.00$</b></span>
+  </div>
+  <img src='setup_012.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-12'></span></label>
+    <textarea id='text-zee-12' data-idx='12' data-who='zee' placeholder='Zee, your analysis of setup #12...'></textarea>
+    <button class='save-btn' data-idx='12' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-12'></span></label>
+    <textarea id='text-shano-12' data-idx='12' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='12' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-13'>
+  <h2>Setup #13</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.29 12:10:36 | entry=4524.72 sl=4516.87 tp=4532.57
+    | UHV shift=14 vol=923
+    | exit=TP @ 4532.57
+    | <span style='color:#4ade80;'><b>WIN +7.85$</b></span>
+  </div>
+  <img src='setup_013.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-13'></span></label>
+    <textarea id='text-zee-13' data-idx='13' data-who='zee' placeholder='Zee, your analysis of setup #13...'></textarea>
+    <button class='save-btn' data-idx='13' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-13'></span></label>
+    <textarea id='text-shano-13' data-idx='13' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='13' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-14'>
+  <h2>Setup #14</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.29 13:51:04 | entry=4539.21 sl=4529.26 tp=4549.16
+    | UHV shift=12 vol=890
+    | exit=SL @ 4529.26
+    | <span style='color:#ef4444;'><b>LOSS -9.95$</b></span>
+  </div>
+  <img src='setup_014.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-14'></span></label>
+    <textarea id='text-zee-14' data-idx='14' data-who='zee' placeholder='Zee, your analysis of setup #14...'></textarea>
+    <button class='save-btn' data-idx='14' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-14'></span></label>
+    <textarea id='text-shano-14' data-idx='14' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='14' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-15'>
+  <h2>Setup #15</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.29 15:00:00 | entry=4538.73 sl=4524.81 tp=4552.65
+    | UHV shift=7 vol=813
+    | exit=SL @ 4524.81
+    | <span style='color:#ef4444;'><b>LOSS -13.92$</b></span>
+  </div>
+  <img src='setup_015.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-15'></span></label>
+    <textarea id='text-zee-15' data-idx='15' data-who='zee' placeholder='Zee, your analysis of setup #15...'></textarea>
+    <button class='save-btn' data-idx='15' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-15'></span></label>
+    <textarea id='text-shano-15' data-idx='15' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='15' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-16'>
+  <h2>Setup #16</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.29 17:00:00 | entry=4537.20 sl=4522.99 tp=4551.41
+    | UHV shift=6 vol=1604
+    | exit=TP @ 4551.41
+    | <span style='color:#4ade80;'><b>WIN +14.21$</b></span>
+  </div>
+  <img src='setup_016.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-16'></span></label>
+    <textarea id='text-zee-16' data-idx='16' data-who='zee' placeholder='Zee, your analysis of setup #16...'></textarea>
+    <button class='save-btn' data-idx='16' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-16'></span></label>
+    <textarea id='text-shano-16' data-idx='16' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='16' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-17'>
+  <h2>Setup #17</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.05.29 17:33:42 | entry=4533.12 sl=4524.17 tp=4542.07
+    | UHV shift=1 vol=1700
+    | exit=TP @ 4542.07
+    | <span style='color:#4ade80;'><b>WIN +8.95$</b></span>
+  </div>
+  <img src='setup_017.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-17'></span></label>
+    <textarea id='text-zee-17' data-idx='17' data-who='zee' placeholder='Zee, your analysis of setup #17...'></textarea>
+    <button class='save-btn' data-idx='17' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-17'></span></label>
+    <textarea id='text-shano-17' data-idx='17' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='17' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-18'>
+  <h2>Setup #18</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.05.29 23:00:00 | entry=4545.34 sl=4556.83 tp=4533.85
+    | UHV shift=12 vol=841
+    | exit=TP @ 4533.85
+    | <span style='color:#4ade80;'><b>WIN +11.49$</b></span>
+  </div>
+  <img src='setup_018.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-18'></span></label>
+    <textarea id='text-zee-18' data-idx='18' data-who='zee' placeholder='Zee, your analysis of setup #18...'></textarea>
+    <button class='save-btn' data-idx='18' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-18'></span></label>
+    <textarea id='text-shano-18' data-idx='18' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='18' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-19'>
+  <h2>Setup #19</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.01 06:00:00 | entry=4521.26 sl=4535.78 tp=4506.74
+    | UHV shift=10 vol=849
+    | exit=TP @ 4506.74
+    | <span style='color:#4ade80;'><b>WIN +14.52$</b></span>
+  </div>
+  <img src='setup_019.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-19'></span></label>
+    <textarea id='text-zee-19' data-idx='19' data-who='zee' placeholder='Zee, your analysis of setup #19...'></textarea>
+    <button class='save-btn' data-idx='19' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-19'></span></label>
+    <textarea id='text-shano-19' data-idx='19' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='19' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-20'>
+  <h2>Setup #20</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.01 09:22:37 | entry=4506.29 sl=4523.80 tp=4488.78
+    | UHV shift=9 vol=864
+    | exit=TP @ 4488.78
+    | <span style='color:#4ade80;'><b>WIN +17.51$</b></span>
+  </div>
+  <img src='setup_020.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-20'></span></label>
+    <textarea id='text-zee-20' data-idx='20' data-who='zee' placeholder='Zee, your analysis of setup #20...'></textarea>
+    <button class='save-btn' data-idx='20' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-20'></span></label>
+    <textarea id='text-shano-20' data-idx='20' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='20' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-21'>
+  <h2>Setup #21</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.06.01 15:00:42 | entry=4506.59 sl=4498.07 tp=4515.11
+    | UHV shift=12 vol=885
+    | exit=SL @ 4498.07
+    | <span style='color:#ef4444;'><b>LOSS -8.52$</b></span>
+  </div>
+  <img src='setup_021.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-21'></span></label>
+    <textarea id='text-zee-21' data-idx='21' data-who='zee' placeholder='Zee, your analysis of setup #21...'></textarea>
+    <button class='save-btn' data-idx='21' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-21'></span></label>
+    <textarea id='text-shano-21' data-idx='21' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='21' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-22'>
+  <h2>Setup #22</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.01 16:15:00 | entry=4484.07 sl=4509.52 tp=4458.62
+    | UHV shift=10 vol=958
+    | exit=TP @ 4458.62
+    | <span style='color:#4ade80;'><b>WIN +25.45$</b></span>
+  </div>
+  <img src='setup_022.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-22'></span></label>
+    <textarea id='text-zee-22' data-idx='22' data-who='zee' placeholder='Zee, your analysis of setup #22...'></textarea>
+    <button class='save-btn' data-idx='22' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-22'></span></label>
+    <textarea id='text-shano-22' data-idx='22' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='22' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-23'>
+  <h2>Setup #23</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.01 16:51:38 | entry=4458.18 sl=4471.80 tp=4444.56
+    | UHV shift=4 vol=1928
+    | exit=SL @ 4471.8
+    | <span style='color:#ef4444;'><b>LOSS -13.62$</b></span>
+  </div>
+  <img src='setup_023.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-23'></span></label>
+    <textarea id='text-zee-23' data-idx='23' data-who='zee' placeholder='Zee, your analysis of setup #23...'></textarea>
+    <button class='save-btn' data-idx='23' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-23'></span></label>
+    <textarea id='text-shano-23' data-idx='23' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='23' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-24'>
+  <h2>Setup #24</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.01 19:10:18 | entry=4468.01 sl=4480.71 tp=4455.31
+    | UHV shift=8 vol=1612
+    | exit=SL @ 4480.71
+    | <span style='color:#ef4444;'><b>LOSS -12.70$</b></span>
+  </div>
+  <img src='setup_024.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-24'></span></label>
+    <textarea id='text-zee-24' data-idx='24' data-who='zee' placeholder='Zee, your analysis of setup #24...'></textarea>
+    <button class='save-btn' data-idx='24' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-24'></span></label>
+    <textarea id='text-shano-24' data-idx='24' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='24' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-26'>
+  <h2>Setup #26</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.06.02 07:50:00 | entry=4512.79 sl=4502.96 tp=4522.62
+    | UHV shift=6 vol=600
+    | exit=TP @ 4522.62
+    | <span style='color:#4ade80;'><b>WIN +9.83$</b></span>
+  </div>
+  <img src='setup_026.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-26'></span></label>
+    <textarea id='text-zee-26' data-idx='26' data-who='zee' placeholder='Zee, your analysis of setup #26...'></textarea>
+    <button class='save-btn' data-idx='26' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-26'></span></label>
+    <textarea id='text-shano-26' data-idx='26' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='26' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-27'>
+  <h2>Setup #27</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.06.02 08:30:29 | entry=4523.15 sl=4515.62 tp=4530.68
+    | UHV shift=2 vol=609
+    | exit=TP @ 4530.68
+    | <span style='color:#4ade80;'><b>WIN +7.53$</b></span>
+  </div>
+  <img src='setup_027.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-27'></span></label>
+    <textarea id='text-zee-27' data-idx='27' data-who='zee' placeholder='Zee, your analysis of setup #27...'></textarea>
+    <button class='save-btn' data-idx='27' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-27'></span></label>
+    <textarea id='text-shano-27' data-idx='27' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='27' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-28'>
+  <h2>Setup #28</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.06.02 09:27:41 | entry=4531.15 sl=4521.08 tp=4541.22
+    | UHV shift=10 vol=1063
+    | exit=TP @ 4541.22
+    | <span style='color:#4ade80;'><b>WIN +10.07$</b></span>
+  </div>
+  <img src='setup_028.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-28'></span></label>
+    <textarea id='text-zee-28' data-idx='28' data-who='zee' placeholder='Zee, your analysis of setup #28...'></textarea>
+    <button class='save-btn' data-idx='28' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-28'></span></label>
+    <textarea id='text-shano-28' data-idx='28' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='28' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-29'>
+  <h2>Setup #29</h2>
+  <div class='meta'>
+    <b>BUY</b> at 2026.06.02 10:14:41 | entry=4541.70 sl=4516.70 tp=4566.70
+    | UHV shift=12 vol=905
+    | exit=SL @ 4516.7
+    | <span style='color:#ef4444;'><b>LOSS -25.00$</b></span>
+  </div>
+  <img src='setup_029.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-29'></span></label>
+    <textarea id='text-zee-29' data-idx='29' data-who='zee' placeholder='Zee, your analysis of setup #29...'></textarea>
+    <button class='save-btn' data-idx='29' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-29'></span></label>
+    <textarea id='text-shano-29' data-idx='29' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='29' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-30'>
+  <h2>Setup #30</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.02 15:50:00 | entry=4520.17 sl=4534.09 tp=4506.25
+    | UHV shift=6 vol=917
+    | exit=TP @ 4506.25
+    | <span style='color:#4ade80;'><b>WIN +13.92$</b></span>
+  </div>
+  <img src='setup_030.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-30'></span></label>
+    <textarea id='text-zee-30' data-idx='30' data-who='zee' placeholder='Zee, your analysis of setup #30...'></textarea>
+    <button class='save-btn' data-idx='30' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-30'></span></label>
+    <textarea id='text-shano-30' data-idx='30' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='30' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-31'>
+  <h2>Setup #31</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.02 16:54:38 | entry=4505.84 sl=4513.90 tp=4497.78
+    | UHV shift=3 vol=1469
+    | exit=TP @ 4497.78
+    | <span style='color:#4ade80;'><b>WIN +8.06$</b></span>
+  </div>
+  <img src='setup_031.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-31'></span></label>
+    <textarea id='text-zee-31' data-idx='31' data-who='zee' placeholder='Zee, your analysis of setup #31...'></textarea>
+    <button class='save-btn' data-idx='31' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-31'></span></label>
+    <textarea id='text-shano-31' data-idx='31' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='31' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-32'>
+  <h2>Setup #32</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.02 19:05:00 | entry=4500.70 sl=4508.67 tp=4492.73
+    | UHV shift=7 vol=1000
+    | exit=TP @ 4492.73
+    | <span style='color:#4ade80;'><b>WIN +7.97$</b></span>
+  </div>
+  <img src='setup_032.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-32'></span></label>
+    <textarea id='text-zee-32' data-idx='32' data-who='zee' placeholder='Zee, your analysis of setup #32...'></textarea>
+    <button class='save-btn' data-idx='32' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-32'></span></label>
+    <textarea id='text-shano-32' data-idx='32' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='32' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-33'>
+  <h2>Setup #33</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.03 07:30:00 | entry=4476.80 sl=4488.75 tp=4464.85
+    | UHV shift=4 vol=380
+    | exit=TP @ 4464.85
+    | <span style='color:#4ade80;'><b>WIN +11.95$</b></span>
+  </div>
+  <img src='setup_033.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-33'></span></label>
+    <textarea id='text-zee-33' data-idx='33' data-who='zee' placeholder='Zee, your analysis of setup #33...'></textarea>
+    <button class='save-btn' data-idx='33' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-33'></span></label>
+    <textarea id='text-shano-33' data-idx='33' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='33' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-34'>
+  <h2>Setup #34</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.03 08:30:31 | entry=4464.43 sl=4473.53 tp=4455.33
+    | UHV shift=6 vol=689
+    | exit=TP @ 4455.33
+    | <span style='color:#4ade80;'><b>WIN +9.10$</b></span>
+  </div>
+  <img src='setup_034.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-34'></span></label>
+    <textarea id='text-zee-34' data-idx='34' data-who='zee' placeholder='Zee, your analysis of setup #34...'></textarea>
+    <button class='save-btn' data-idx='34' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-34'></span></label>
+    <textarea id='text-shano-34' data-idx='34' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='34' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-35'>
+  <h2>Setup #35</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.03 10:30:04 | entry=4454.85 sl=4468.79 tp=4440.91
+    | UHV shift=6 vol=1058
+    | exit=TP @ 4440.91
+    | <span style='color:#4ade80;'><b>WIN +13.94$</b></span>
+  </div>
+  <img src='setup_035.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-35'></span></label>
+    <textarea id='text-zee-35' data-idx='35' data-who='zee' placeholder='Zee, your analysis of setup #35...'></textarea>
+    <button class='save-btn' data-idx='35' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-35'></span></label>
+    <textarea id='text-shano-35' data-idx='35' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='35' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-36'>
+  <h2>Setup #36</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.03 12:29:31 | entry=4441.57 sl=4453.89 tp=4429.25
+    | UHV shift=5 vol=1037
+    | exit=SL @ 4453.89
+    | <span style='color:#ef4444;'><b>LOSS -12.32$</b></span>
+  </div>
+  <img src='setup_036.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-36'></span></label>
+    <textarea id='text-zee-36' data-idx='36' data-who='zee' placeholder='Zee, your analysis of setup #36...'></textarea>
+    <button class='save-btn' data-idx='36' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-36'></span></label>
+    <textarea id='text-shano-36' data-idx='36' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='36' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<div class='setup' id='setup-41'>
+  <h2>Setup #41</h2>
+  <div class='meta'>
+    <b>SELL</b> at 2026.06.03 19:10:00 | entry=4439.26 sl=4446.79 tp=4431.73
+    | UHV shift=9 vol=1375
+    | exit=? @ ?
+    | <span style='color:#aaa;'><b>OPEN +0.00$</b></span>
+  </div>
+  <img src='setup_041.png' />
+  <div class='comment-block'>
+    <label>🧔 <b>Zeeshan's analysis</b> <span class='status' id='status-zee-41'></span></label>
+    <textarea id='text-zee-41' data-idx='41' data-who='zee' placeholder='Zee, your analysis of setup #41...'></textarea>
+    <button class='save-btn' data-idx='41' data-who='zee'>💾 Save Zee's comment</button>
+  </div>
+  <div class='comment-block'>
+    <label>👩 <b>Shano baji's analysis</b> <span class='status' id='status-shano-41'></span></label>
+    <textarea id='text-shano-41' data-idx='41' data-who='shano' placeholder='Shano baji, your analysis...'></textarea>
+    <button class='save-btn' data-idx='41' data-who='shano'>💾 Save Shano's comment</button>
+  </div>
+</div>
+
+<a id='bottom'></a>
+<script>
+async function loadLabels() {
+  try {
+    const r = await fetch('/api/labels');
+    if (r.ok) {
+      const j = await r.json();
+      for (const idx in j) {
+        const data = j[idx] || {};
+        for (const who of ['zee','shano']) {
+          const ta = document.getElementById('text-'+who+'-'+idx);
+          if (ta && data[who]) {
+            ta.value = data[who];
+            document.getElementById('status-'+who+'-'+idx).innerHTML = '<span class="saved">✓ saved</span>';
+          }
+        }
+      }
+    }
+  } catch (e) {}
+}
+async function saveLabel(idx, who, val, btn) {
+  const status = document.getElementById('status-'+who+'-'+idx);
+  status.innerHTML = 'saving...';
+  if (btn) btn.disabled = true;
+  try {
+    await fetch('/api/labels', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({idx, who, label: val})});
+    status.innerHTML = '<span class="saved">✓ saved</span>';
+  } catch (e) {
+    status.innerHTML = 'save failed';
+  }
+  if (btn) btn.disabled = false;
+}
+document.querySelectorAll('.save-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const idx = btn.dataset.idx;
+    const who = btn.dataset.who;
+    const ta  = document.getElementById('text-'+who+'-'+idx);
+    saveLabel(idx, who, ta.value, btn);
+  });
+});
+// Also keyboard shortcut Ctrl+Enter in any textarea = save that one
+document.querySelectorAll('textarea').forEach(ta => {
+  ta.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 'Enter') {
+      saveLabel(ta.dataset.idx, ta.dataset.who, ta.value);
+    }
+  });
+});
+loadLabels();
+</script>
+</body></html>

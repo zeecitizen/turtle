@@ -1,0 +1,92 @@
+[
+  {
+    "tag": "softer-body+mom",
+    "fires": 14,
+    "W": 9,
+    "L": 5,
+    "WR": 64.3,
+    "PF": 1.63,
+    "PNL": 10.4
+  },
+  {
+    "tag": "softest-body+mom",
+    "fires": 24,
+    "W": 13,
+    "L": 11,
+    "WR": 54.2,
+    "PF": 0.96,
+    "PNL": -1.43
+  },
+  {
+    "tag": "soft-mom-only",
+    "fires": 13,
+    "W": 9,
+    "L": 4,
+    "WR": 69.2,
+    "PF": 2.03,
+    "PNL": 13.72
+  },
+  {
+    "tag": "soft-vrat-only",
+    "fires": 11,
+    "W": 8,
+    "L": 3,
+    "WR": 72.7,
+    "PF": 2.45,
+    "PNL": 14.21
+  },
+  {
+    "tag": "soft+shorttrend",
+    "fires": 11,
+    "W": 7,
+    "L": 4,
+    "WR": 63.6,
+    "PF": 1.68,
+    "PNL": 8.52
+  },
+  {
+    "tag": "soft+verytrend",
+    "fires": 7,
+    "W": 6,
+    "L": 1,
+    "WR": 85.7,
+    "PF": 6.47,
+    "PNL": 15.22
+  },
+  {
+    "tag": "wider-SL-TP",
+    "fires": 24,
+    "W": 13,
+    "L": 11,
+    "WR": 54.2,
+    "PF": 1.13,
+    "PNL": 6.07
+  },
+  {
+    "tag": "tight-scalp",
+    "fires": 8,
+    "W": 7,
+    "L": 1,
+    "WR": 87.5,
+    "PF": 4.61,
+    "PNL": 8.22
+  },
+  {
+    "tag": "soft-tight",
+    "fires": 14,
+    "W": 9,
+    "L": 5,
+    "WR": 64.3,
+    "PF": 1.28,
+    "PNL": 3.9
+  },
+  {
+    "tag": "longer-retrace",
+    "fires": 14,
+    "W": 9,
+    "L": 5,
+    "WR": 64.3,
+    "PF": 1.63,
+    "PNL": 10.4
+  }
+]

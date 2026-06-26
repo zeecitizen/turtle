@@ -564,7 +564,7 @@ const server = http.createServer(async (req, res) => {
   const host = (req.headers.host || '').toLowerCase().split(':')[0];
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
-    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status') {
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog') {
       res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
       res.end();
       return;
@@ -621,6 +621,62 @@ const server = http.createServer(async (req, res) => {
     if (keep.length !== subs.length) saveSubs(keep);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true, sent, devices: keep.length }));
+    return;
+  }
+
+  // ── Runtime config (hot-reload EA params from dashboard) ──
+  // GET /api/runtime-config?key=KEY  →  current config JSON
+  // POST /api/runtime-config?key=KEY  body: {auto_close_ms: 500, ...}  →  writes file
+  if (url.startsWith('/api/runtime-config')) {
+    if (query.get('key') !== DASHBOARD_PASSWORD) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      res.end('{"error":"wrong key"}');
+      return;
+    }
+    const RUNTIME_CONFIG_FILE = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\s1_runtime_88005.json';
+    if (req.method === 'GET') {
+      try {
+        const txt = fs.readFileSync(RUNTIME_CONFIG_FILE, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(txt);
+      } catch (e) {
+        res.writeHead(404, { 'Content-Type': 'application/json' });
+        res.end('{"error":"no_config"}');
+      }
+      return;
+    }
+    if (req.method === 'POST') {
+      let body = '';
+      req.on('data', d => body += d);
+      req.on('end', () => {
+        try {
+          const incoming = JSON.parse(body);
+          // Read current, merge, write
+          let current = {};
+          try { current = JSON.parse(fs.readFileSync(RUNTIME_CONFIG_FILE, 'utf8')); } catch {}
+          const merged = { ...current, ...incoming, _written_at: new Date().toISOString() };
+          fs.writeFileSync(RUNTIME_CONFIG_FILE, JSON.stringify(merged, null, 2), 'utf8');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true, written: incoming }));
+        } catch (e) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: e.message }));
+        }
+      });
+      return;
+    }
+  }
+
+  // ── Watchdog status (public, no auth — read-only health) ──
+  if (url === '/api/watchdog') {
+    try {
+      const txt = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.watchdog_latest.json', 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(txt);
+    } catch (e) {
+      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'watchdog_status_missing' }));
+    }
     return;
   }
 
@@ -797,6 +853,494 @@ const server = http.createServer(async (req, res) => {
     }
     return;
   }
+  // ── Monday's-test weekly tracker (GET/POST) ──
+  if (url === '/api/weekly' || url.startsWith('/api/weekly?')) {
+    const WEEKLY_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\weekly_tracker.json';
+    if (req.method === 'GET') {
+      try {
+        const body = fs.readFileSync(WEEKLY_FILE, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
+                              'Cache-Control': 'no-store, max-age=0' });
+        res.end(body);
+      } catch (e) {
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end('{}');
+      }
+      return;
+    }
+    if (req.method === 'POST') {
+      const u = new URL(req.url, 'http://x');
+      const roll = u.searchParams.get('roll');
+      let body = '';
+      req.on('data', c => body += c);
+      req.on('end', () => {
+        try {
+          let current = {};
+          try { current = JSON.parse(fs.readFileSync(WEEKLY_FILE, 'utf8')); } catch {}
+          if (roll === '1') {
+            // archive current week, seed next
+            const archive = current.archive || [];
+            if (current.days && current.days.length) {
+              archive.push({
+                week_starts: current.week_starts,
+                ea_version: current.ea_version,
+                lot_size: current.lot_size,
+                days: current.days,
+                rolled_at: new Date().toISOString(),
+              });
+            }
+            const start = new Date(current.week_starts || new Date());
+            const ns = new Date(start); ns.setDate(start.getDate() + 7);
+            const isoOf = d => d.toISOString().slice(0, 10);
+            const dnames = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+            const expDef = (current.days && current.days[0]) ? current.days[0].expected_usd : 3.27;
+            const next = {
+              week_starts: isoOf(ns),
+              ea_version: current.ea_version || 'v2.61',
+              lot_size: current.lot_size || 0.01,
+              days: dnames.map((nm, i) => {
+                const d = new Date(ns); d.setDate(ns.getDate() + i);
+                return { day: nm, date: isoOf(d),
+                  expected_usd: i >= 5 ? 0 : Number(expDef) || 3.27,
+                  actual_usd: null, notes: i >= 5 ? 'market closed' : '' };
+              }),
+              archive,
+            };
+            fs.writeFileSync(WEEKLY_FILE, JSON.stringify(next, null, 2), 'utf8');
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ ok: true, rolled_to: next.week_starts }));
+            return;
+          }
+          const incoming = JSON.parse(body || '{}');
+          if (!incoming.days || !Array.isArray(incoming.days)) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ ok: false, error: 'missing days[]' }));
+          }
+          incoming.archive = current.archive || incoming.archive || [];
+          fs.writeFileSync(WEEKLY_FILE, JSON.stringify(incoming, null, 2), 'utf8');
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: true }));
+        } catch (e) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ ok: false, error: String(e.message) }));
+        }
+      });
+      return;
+    }
+    res.writeHead(405); res.end(); return;
+  }
+
+  // ── Zee's private chat page (password 28973) ──
+  // Serves zee_chat.html. Page does client-side password gate before showing chat UI.
+  if (url === '/zee-chat' || url.startsWith('/zee-chat?')) {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'zee_chat.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500); res.end('zee_chat.html missing: ' + e.message);
+    }
+    return;
+  }
+  // ── Zee's chat API: gated by ?key=28973 ──
+  const ZEE_CHAT_KEY = '28973';
+  const ZEE_CHAT_LOG = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\zee_chat.jsonl';
+  if (url.startsWith('/api/zee-chat/send') && req.method === 'POST') {
+    const u = new URL(req.url, 'http://x');
+    if (u.searchParams.get('key') !== ZEE_CHAT_KEY) {
+      res.writeHead(403); return res.end('{"ok":false}');
+    }
+    let body = '';
+    req.on('data', d => body += d);
+    req.on('end', () => {
+      try {
+        const { text } = JSON.parse(body || '{}');
+        if (!text || !text.trim()) {
+          res.writeHead(400); return res.end('{"ok":false}');
+        }
+        const rec = { ts: Date.now(), from: 'zee', text: text.trim() };
+        fs.appendFileSync(ZEE_CHAT_LOG, JSON.stringify(rec) + '\n', 'utf8');
+        // Mirror to cc_chat so Claude sees it through the existing chat panel too
+        try {
+          fs.appendFileSync(
+            'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\cc_chat.jsonl',
+            JSON.stringify({ ...rec, source: 'zee-chat-private' }) + '\n', 'utf8');
+        } catch {}
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true }));
+      } catch (e) {
+        res.writeHead(500); res.end('{"ok":false}');
+      }
+    });
+    return;
+  }
+  if (url.startsWith('/api/zee-chat')) {
+    const u = new URL(req.url, 'http://x');
+    if (u.searchParams.get('key') !== ZEE_CHAT_KEY) {
+      res.writeHead(403); return res.end('[]');
+    }
+    try {
+      const since = parseInt(u.searchParams.get('since') || '0', 10) || 0;
+      let messages = [];
+      try {
+        const raw = fs.readFileSync(ZEE_CHAT_LOG, 'utf8');
+        messages = raw.split('\n').filter(l => l.trim()).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+      } catch {}
+      // Also include Claude's manual replies from claude_dashboard_replies.jsonl tagged as 'claude'
+      try {
+        const raw = fs.readFileSync(
+          'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\claude_dashboard_replies.jsonl', 'utf8');
+        for (const l of raw.split('\n')) {
+          if (!l.trim()) continue;
+          try {
+            const r = JSON.parse(l);
+            messages.push({ ts: r.ts, from: 'claude', text: r.text });
+          } catch {}
+        }
+      } catch {}
+      messages.sort((a, b) => a.ts - b.ts);
+      const filtered = since ? messages.filter(m => m.ts > since) : messages;
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
+                            'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(filtered));
+    } catch (e) {
+      res.writeHead(500); res.end('[]');
+    }
+    return;
+  }
+
+  // ── Claude's reply panel (read latest reply, or write new one) ──
+  if (url === '/api/claude-reply' && req.method === 'GET') {
+    try {
+      const path = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\claude_dashboard_replies.jsonl';
+      let last = null;
+      try {
+        const lines = fs.readFileSync(path, 'utf8').split('\n').filter(l => l.trim());
+        if (lines.length) last = JSON.parse(lines[lines.length - 1]);
+      } catch {}
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
+                            'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(last || { ts: null, text: null }));
+    } catch (e) {
+      res.writeHead(500); res.end('{}');
+    }
+    return;
+  }
+  if (url === '/api/claude-reply' && req.method === 'POST') {
+    let body = '';
+    req.on('data', d => body += d);
+    req.on('end', () => {
+      try {
+        const { text } = JSON.parse(body || '{}');
+        if (!text || !text.trim()) {
+          res.writeHead(400); return res.end('{"ok":false}');
+        }
+        const rec = { ts: Date.now(), text: text.trim() };
+        fs.appendFileSync(
+          'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\claude_dashboard_replies.jsonl',
+          JSON.stringify(rec) + '\n', 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true }));
+      } catch (e) {
+        res.writeHead(500); res.end('{"ok":false}');
+      }
+    });
+    return;
+  }
+
+  // ── Dashboard inbox: send Claude a message ──
+  // POST { text } — checks for ;) wink to mark authenticated.
+  // Writes BOTH cc_chat.jsonl (Claude reads this on next session) AND a separate
+  // dashboard_messages.jsonl history.
+  if (url === '/api/dashboard-message' && req.method === 'POST') {
+    let body = '';
+    req.on('data', d => body += d);
+    req.on('end', () => {
+      try {
+        const { text } = JSON.parse(body || '{}');
+        if (!text || !text.trim()) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ ok: false, error: 'empty' }));
+        }
+        const trimmed = text.trim();
+        // Authenticated as Zee = any of: literal ;), 😳, 🤍, "jaan", "cz now", "umm"
+        // (her recognizable patterns — strict `;)` was too rigid)
+        const authed = /;\)|😳|🤍|\bjaan\b|\bumm\b|\bcz now\b|\bdonot\b/i.test(trimmed);
+        const ts = Date.now();
+        const dashLog = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\dashboard_messages.jsonl';
+        const chatLog = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\cc_chat.jsonl';
+        const rec = {
+          ts, from: authed ? 'zee' : 'dashboard-anon',
+          text: trimmed,
+          authenticated: authed,
+          source: 'dashboard-inbox',
+        };
+        try { fs.appendFileSync(dashLog, JSON.stringify(rec) + '\n', 'utf8'); } catch {}
+        // Also write to the chat log so Claude sees it in the /me chat panel.
+        // Tag authenticated ones with 'zee', anonymous with a distinct label.
+        const chatEntry = {
+          ts, from: authed ? 'zee' : 'dashboard-anon',
+          text: trimmed + (authed ? '' : '  [unauthenticated]'),
+        };
+        try { fs.appendFileSync(chatLog, JSON.stringify(chatEntry) + '\n', 'utf8'); } catch {}
+        // Auto-reply so dashboard sender always sees a confirmation
+        try {
+          const reply = { ts: Date.now(), text: "Got your msg, i'm on it sire." };
+          fs.appendFileSync(
+            'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\claude_dashboard_replies.jsonl',
+            JSON.stringify(reply) + '\n', 'utf8');
+        } catch {}
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+        res.end(JSON.stringify({ ok: true, authenticated: authed, ts }));
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: false, error: String(e.message) }));
+      }
+    });
+    return;
+  }
+
+  // GET — list last N dashboard messages (most recent first)
+  if (url === '/api/dashboard-messages' || url.startsWith('/api/dashboard-messages?')) {
+    try {
+      const path = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\dashboard_messages.jsonl';
+      let lines = [];
+      try {
+        lines = fs.readFileSync(path, 'utf8').split('\n').filter(l => l.trim());
+      } catch {}
+      const messages = lines.map(l => { try { return JSON.parse(l); } catch { return null; } })
+                              .filter(Boolean)
+                              .slice(-10)
+                              .reverse();
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
+                            'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ messages }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(e.message) }));
+    }
+    return;
+  }
+
+  // ── Harvest config (daily profit target + lock state) ──
+  if (url === '/api/harvest' && req.method === 'GET') {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(
+        'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\daily_profit_target.json', 'utf8'));
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
+                            'Cache-Control': 'no-store' });
+      res.end(JSON.stringify(cfg));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ target_usd: 150, harvest_locked_date_broker: null }));
+    }
+    return;
+  }
+  if (url === '/api/harvest-lock' && req.method === 'POST') {
+    let body = '';
+    req.on('data', d => body += d);
+    req.on('end', () => {
+      try {
+        const { broker_date } = JSON.parse(body || '{}');
+        const path = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\daily_profit_target.json';
+        let cfg = { target_usd: 150 };
+        try { cfg = JSON.parse(fs.readFileSync(path, 'utf8')); } catch {}
+        cfg.harvest_locked_date_broker = broker_date || new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+        cfg.harvested_at = new Date().toISOString();
+        fs.writeFileSync(path, JSON.stringify(cfg, null, 2), 'utf8');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ ok: true, locked_until: cfg.harvest_locked_date_broker }));
+      } catch (e) {
+        res.writeHead(500); res.end('{"ok":false}');
+      }
+    });
+    return;
+  }
+
+  // ── Today's trades (broker fills today + currently-open positions) ──
+  if (url === '/api/today-trades') {
+    try {
+      const COMMON = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
+      const todayBroker = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+      // v2.71 dashboard reset: optionally filter fills to those after a broker-ts anchor
+      let resetTs = null, resetVer = null;
+      try {
+        const rj = JSON.parse(fs.readFileSync(
+          'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\dashboard_reset.json', 'utf8'));
+        resetTs = rj.reset_at_broker_ts || null;
+        resetVer = rj.current_ea_version || null;
+      } catch (_) {}
+      // Parse turtle_fills.csv for today's closed fills
+      const closed = [];
+      try {
+        const raw = fs.readFileSync(COMMON + 'turtle_fills.csv', 'utf8');
+        const lines = raw.split(/\r?\n/);
+        const header = lines[0].split(',');
+        for (let i = 1; i < lines.length; i++) {
+          const ln = lines[i]; if (!ln) continue;
+          const c = ln.split(',');
+          if (!c[0] || !c[0].startsWith(todayBroker)) continue;
+          // Reset filter: skip fills whose broker_time is before the reset anchor
+          if (resetTs && c[0] < resetTs) continue;
+          const rec = {};
+          for (let k = 0; k < header.length; k++) rec[header[k]] = c[k];
+          if (c.length >= 14) { rec.magic = c[12]; rec.ea = c[13]; }
+          const MAGIC_EA_MAP = {
+            '88003': 'S3', '88004': 'S1_M5', '88005': 'S1_M1', '88006': 'NSND',
+            '88007': 'S4', '88009': 'Feb11_AGG', '88010': 'BTC_S4b',
+            '88011': 'Feb11_MED', '88012': 'Feb11_LIVE', '0': 'Human',
+          };
+          if (rec.magic && MAGIC_EA_MAP[rec.magic]) rec.ea = MAGIC_EA_MAP[rec.magic];
+          closed.push(rec);
+      }
+      // Enrich closed trades with entry/SL/TP/bigness/prob from s1_decisions_m1.csv
+      // (joined by position_ticket). Format:
+      //   time, ea, side, entry, sl, tp, ticket, magic, bigness, prob
+      const decisionByTicket = {};
+      try {
+        const decRaw = fs.readFileSync(COMMON + 's1_decisions_m1.csv', 'utf8');
+        for (const ln of decRaw.split(/\r?\n/)) {
+          if (!ln) continue;
+          const c = ln.split(',');
+          if (c.length < 8) continue;
+          decisionByTicket[c[6]] = {
+            decision_t: c[0],
+            entry: parseFloat(c[3]),
+            sl: parseFloat(c[4]),
+            tp: parseFloat(c[5]),
+            magic: c[7],
+            bigness: parseFloat(c[8] || '0'),
+            prob: parseFloat(c[9] || '0'),
+          };
+        }
+      } catch (_) {}
+      // Loop again and stamp each closed trade with its open-side data + a pre-baked analysis
+      for (const t of closed) {
+        const d = decisionByTicket[t.position_ticket];
+        if (d) {
+          t.entry = d.entry;
+          t.intended_sl = d.sl;
+          t.intended_tp = d.tp;
+          t.bigness = d.bigness;
+          t.prob = d.prob;
+          t.decision_t = d.decision_t;
+        }
+        // Pre-baked analysis ("Explore This Trade with Claude")
+        const close_price = parseFloat(t.close_price || '0');
+        const net = parseFloat(t.net_pnl || t.profit || '0');
+        const side = String(t.direction || '').replace('_closed', '');
+        const isBuy = side === 'BUY';
+        const isWin = net > 0;
+        const tag = t.comment || '';
+        let exitKind = 'trailing-reversal';
+        if (/^\[tp /.test(tag)) exitKind = 'TP hit';
+        else if (/^\[sl /.test(tag)) exitKind = 'hard SL';
+        const entry = d ? d.entry : null;
+        const slDist = (entry && d?.sl) ? Math.abs(entry - d.sl).toFixed(2) : null;
+        const tpDist = (entry && d?.tp) ? Math.abs(entry - d.tp).toFixed(2) : null;
+        const actualMovePts = (entry !== null) ? (isBuy ? (close_price - entry) : (entry - close_price)).toFixed(2) : null;
+        // Compute duration from decision time to close time (in seconds)
+        let durSec = null;
+        try {
+          if (d?.decision_t && t.broker_time) {
+            const parse = s => {
+              const m = String(s).match(/(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2}):(\d{2})/);
+              if (!m) return null;
+              return Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]) / 1000;
+            };
+            const o = parse(d.decision_t); const c = parse(t.broker_time);
+            if (o && c) durSec = c - o;
+          }
+        } catch (_) {}
+        t.analysis = {
+          method: 'S1Trader v2.73 — canonical UHV breakout (M1 scalp, 0.80 lots)',
+          side, isWin, exitKind,
+          entry, close: close_price,
+          intended_sl: d?.sl ?? null,
+          intended_tp: d?.tp ?? null,
+          sl_distance_pts: slDist,
+          tp_distance_pts: tpDist,
+          actual_move_pts: actualMovePts,
+          net_pnl_usd: net,
+          duration_sec: durSec,
+          bigness: d?.bigness ?? null,
+          prob: d?.prob ?? null,
+          gates_passed: [
+            'Canonical retracement origin (immediate prior bar opposite-colour, body-break)',
+            `UHV body ≥ 0.30 of range (got highest-vol ${isBuy ? 'bear' : 'bull'} in retracement)`,
+            `Breakout body ≥ 0.65 (momentum candle, opposite colour to UHV)`,
+            `Breakout penetration ≥ 0.30pt past UHV extreme`,
+            'Anti-spam: 1 fire per UHV',
+          ],
+          exit_logic: exitKind === 'trailing-reversal'
+            ? 'Tick-level trail: peak unrealized profit tracked per-tick. Once peak ≥ 0.30pt, exit when current pulls back 0.30pt from peak (locks any small win, caps drawdown near-breakeven).'
+            : exitKind === 'TP hit'
+              ? 'Price ran cleanly through the fixed +1.0pt TP — broker-managed exit. The cleanest win type.'
+              : 'Hard SL at UHV extreme − 2.0pt. Instant-BE trail did not arm because peak unrealized never reached 0.30pt favorable. The "trash" case.',
+          why_we_fired: `Side ${side}: At ${d?.decision_t || t.broker_time} broker, the M1 chart showed a confirmed retracement-origin (first ${isBuy ? 'bear' : 'bull'} body-breaking the prior ${isBuy ? 'bull' : 'bear'}'s ${isBuy ? 'low' : 'high'}). Within the retracement, the highest-volume bar passed body ≥ 30% and was followed by an opposite-colour momentum candle that body-closed ${isBuy ? 'above' : 'below'} the UHV extreme by ≥ 0.30pt. EA scored bigness=${(d?.bigness ?? 0).toFixed(3)} (range-strength proxy) and prob=${(d?.prob ?? 0).toFixed(3)} (combined gate-pass score). All canonical gates from lesson02 passed; entered at ${entry || 'unknown'} with planned SL=${d?.sl ?? '?'} TP=${d?.tp ?? '?'}.`,
+          outcome_note: isWin
+            ? `Trade closed +$${net.toFixed(2)}. ${exitKind === 'TP hit' ? 'Full 1:1 R:R captured.' : 'Trail locked in profit before reversal.'}`
+            : `Trade closed $${net.toFixed(2)}. ${exitKind === 'hard SL' ? 'No favorable move — instant-BE could not arm. This is expected ~50% of fires in canonical theory; the cap keeps it small.' : 'Trail exit caught a small adverse drift.'}`,
+        };
+        }
+      } catch (_) {}
+      // Read open positions from both S1 state files (M5 + M1)
+      const open = [];
+      for (const sf of ['s1_trader_state.json', 's1_trader_state_m1.json']) {
+        try {
+          const raw = fs.readFileSync(COMMON + sf);
+          // UTF-16LE w/ BOM probable; fallback utf-8
+          let s = '';
+          if (raw.length >= 2 && raw[0] === 0xff && raw[1] === 0xfe) {
+            s = raw.slice(2).toString('utf16le');
+          } else { s = raw.toString('utf8'); }
+          const j = JSON.parse(s);
+          if (j && Array.isArray(j.open)) {
+            for (const p of j.open) open.push({ ...p, ea: j.ea, version: j.version, magic: j.magic, tf: sf });
+          }
+        } catch (_) {}
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
+                           'Cache-Control': 'no-store, max-age=0' });
+      res.end(JSON.stringify({ today_broker: todayBroker, closed, open,
+                                reset_at_broker_ts: resetTs, current_ea_version: resetVer }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(e.message) }));
+    }
+    return;
+  }
+
+  // ── Achievements / activity feed (family-monitor surface, family rule 2026-06-08) ──
+  if (url === '/api/achievements') {
+    try {
+      const p = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\achievements.json';
+      const body = fs.readFileSync(p, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
+                            'Cache-Control': 'no-store, max-age=0' });
+      res.end(body);
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end('{"items":[]}');
+    }
+    return;
+  }
+
+  // ── Investor status feed (powers status.html "Live System Status" card) ──
+  if (url === '/api/canonical-status') {
+    try {
+      const p = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\canonical_status.json';
+      const body = fs.readFileSync(p, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
+                            'Cache-Control': 'no-store, max-age=0' });
+      res.end(body);
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end('{}');
+    }
+    return;
+  }
+
   if (url === '/api/status') {
     try {
       // Parse tasks.md
@@ -2299,5 +2843,134 @@ server.on('error', e => {
   else console.error(e);
 });
 
+// ─────────────────────────────────────────────────────────────────────────
+// v2.86 WEBSOCKET INSTANT-CLOSE
+// Minimal native WS handler for /ws — accepts text frames like "grab:KEY"
+// Replies "ok:<id>" (ack with command id). No external dependencies.
+// ─────────────────────────────────────────────────────────────────────────
+const crypto = require('crypto');
+const COMMON_DIR_WS = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
+const wsConnections = new Set();
+
+function wsAccept(key) {
+  return crypto.createHash('sha1')
+    .update(key + '258EAFA5-E914-47DA-95CA-C5AB0DC85B11')
+    .digest('base64');
+}
+
+function wsFrame(text) {
+  const buf = Buffer.from(text, 'utf8');
+  const len = buf.length;
+  if (len < 126) {
+    return Buffer.concat([Buffer.from([0x81, len]), buf]);
+  } else if (len < 65536) {
+    const hdr = Buffer.alloc(4);
+    hdr[0] = 0x81; hdr[1] = 126; hdr.writeUInt16BE(len, 2);
+    return Buffer.concat([hdr, buf]);
+  } else {
+    const hdr = Buffer.alloc(10);
+    hdr[0] = 0x81; hdr[1] = 127; hdr.writeBigUInt64BE(BigInt(len), 2);
+    return Buffer.concat([hdr, buf]);
+  }
+}
+
+function parseFrame(buf) {
+  if (buf.length < 2) return null;
+  const fin = (buf[0] & 0x80) !== 0;
+  const opcode = buf[0] & 0x0f;
+  const masked = (buf[1] & 0x80) !== 0;
+  let len = buf[1] & 0x7f;
+  let offset = 2;
+  if (len === 126) { if (buf.length < 4) return null; len = buf.readUInt16BE(offset); offset += 2; }
+  else if (len === 127) { if (buf.length < 10) return null; len = Number(buf.readBigUInt64BE(offset)); offset += 8; }
+  let maskKey;
+  if (masked) {
+    if (buf.length < offset + 4) return null;
+    maskKey = buf.slice(offset, offset + 4); offset += 4;
+  }
+  if (buf.length < offset + len) return null;
+  let payload = Buffer.from(buf.slice(offset, offset + len));
+  if (masked) for (let i = 0; i < payload.length; i++) payload[i] ^= maskKey[i % 4];
+  return { opcode, payload: payload.toString('utf8'), consumed: offset + len };
+}
+
+server.on('upgrade', (req, socket, head) => {
+  const url = req.url || '';
+  if (!url.startsWith('/ws')) { socket.destroy(); return; }
+  const wsKey = req.headers['sec-websocket-key'];
+  if (!wsKey) { socket.destroy(); return; }
+  socket.write(
+    'HTTP/1.1 101 Switching Protocols\r\n' +
+    'Upgrade: websocket\r\n' +
+    'Connection: Upgrade\r\n' +
+    'Sec-WebSocket-Accept: ' + wsAccept(wsKey) + '\r\n\r\n'
+  );
+  wsConnections.add(socket);
+  let buf = Buffer.alloc(0);
+
+  socket.on('data', (chunk) => {
+    buf = Buffer.concat([buf, chunk]);
+    while (true) {
+      const f = parseFrame(buf);
+      if (!f) break;
+      buf = buf.slice(f.consumed);
+      if (f.opcode === 0x8) { socket.end(); return; }      // close
+      if (f.opcode === 0x9) { socket.write(Buffer.from([0x8A, 0x00])); continue; } // ping → pong
+      if (f.opcode !== 0x1) continue;                        // only text frames
+
+      // Parse "grab:KEY"
+      if (f.payload.startsWith('grab:')) {
+        const key = f.payload.slice(5);
+        if (key !== DASHBOARD_PASSWORD) {
+          socket.write(wsFrame('err:auth'));
+          continue;
+        }
+        const id = Math.floor(Date.now() / 1000);
+        try {
+          fs.writeFileSync(COMMON_DIR_WS + 'grab_command.txt', String(id), 'utf8');
+          socket.write(wsFrame('ok:' + id));
+        } catch (e) {
+          socket.write(wsFrame('err:' + e.message));
+        }
+      } else if (f.payload === 'ping') {
+        socket.write(wsFrame('pong'));
+      }
+    }
+  });
+  socket.on('close', () => wsConnections.delete(socket));
+  socket.on('error', () => wsConnections.delete(socket));
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// v2.88b LIVE STATE PUSH — watch EA state file + push to all WS clients.
+// When the EA writes s1_trader_state_m1.json (every 5s) the server broadcasts
+// "state:UPDATED" to every connected WS client so the dashboard re-fetches
+// immediately. Combined with 1s polling fallback, dashboard is ~5s max stale.
+// ─────────────────────────────────────────────────────────────────────────
+function broadcastWs(message) {
+  const frame = wsFrame(message);
+  for (const sock of wsConnections) {
+    try { sock.write(frame); } catch (_) { wsConnections.delete(sock); }
+  }
+}
+
+const STATE_FILE = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\s1_trader_state_m1.json';
+const FILLS_FILE = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\turtle_fills.csv';
+
+function watchAndPush(filePath, eventName) {
+  let lastMtime = 0;
+  setInterval(() => {
+    try {
+      const m = fs.statSync(filePath).mtimeMs;
+      if (m !== lastMtime) {
+        lastMtime = m;
+        broadcastWs(eventName + ':' + Math.floor(m));
+      }
+    } catch (_) {}
+  }, 250);  // poll filesystem 4× per second; push only on change
+}
+watchAndPush(STATE_FILE, 'state');
+watchAndPush(FILLS_FILE, 'fills');
+
 server.listen(PORT, '0.0.0.0', () =>
-  console.log(`Claude Trader → http://localhost:${PORT}`));
+  console.log(`Claude Trader → http://localhost:${PORT}  (WS at /ws + live state push)`));

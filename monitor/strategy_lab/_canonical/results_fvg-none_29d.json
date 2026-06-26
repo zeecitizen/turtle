@@ -1,0 +1,52 @@
+{
+  "fvg_mode": "none",
+  "days": 29,
+  "bars": 5742,
+  "setups": 2,
+  "wins": 1,
+  "losses": 1,
+  "open": 0,
+  "wr_pct": 50.0,
+  "pnl_pts": 3.540000000000001,
+  "pf": 1.3440233236151604,
+  "fires": [
+    {
+      "side": "SELL",
+      "open_t": "2026-05-06 23:30",
+      "entry": 4690.23,
+      "sl": 4700.52,
+      "tp": 4679.03,
+      "uhv_t": "2026-05-06 22:50",
+      "uhv_vol": 1133,
+      "breakout_t": "2026-05-06 23:30",
+      "breakout_vol": 550,
+      "origin_t": "2026-05-06 22:50",
+      "soft_trend": true,
+      "soft_sweep": true,
+      "uhv_body_strong": true,
+      "notes": [],
+      "outcome": "LOSS",
+      "pnl_usd": -10.29,
+      "close_t": "2026-05-07 03:00"
+    },
+    {
+      "side": "SELL",
+      "open_t": "2026-05-28 22:55",
+      "entry": 4491.25,
+      "sl": 4503.89,
+      "tp": 4477.42,
+      "uhv_t": "2026-05-28 22:10",
+      "uhv_vol": 1023,
+      "breakout_t": "2026-05-28 22:55",
+      "breakout_vol": 304,
+      "origin_t": "2026-05-28 21:50",
+      "soft_trend": true,
+      "soft_sweep": true,
+      "uhv_body_strong": true,
+      "notes": [],
+      "outcome": "WIN",
+      "pnl_usd": 13.83,
+      "close_t": "2026-05-29 03:20"
+    }
+  ]
+}
