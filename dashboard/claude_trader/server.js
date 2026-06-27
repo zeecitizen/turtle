@@ -562,6 +562,17 @@ const server = http.createServer(async (req, res) => {
   // EXCEPT root path "/" and "/status" — those serve the live status dashboard
   // (Rule #10 numbered tasks + live EA state). Per Zee 2026-06-04 TASK-008.
   const host = (req.headers.host || '').toLowerCase().split(':')[0];
+
+  // home.claudezeeshan.com — rewrite root path to /home so the subdomain lands directly on the home page
+  if (host === 'home.claudezeeshan.com') {
+    const homeUrl = req.url.split('?')[0];
+    // If they hit /, route to /home. Otherwise pass through (so /api/home/memory works)
+    if (homeUrl === '/' || homeUrl === '') {
+      req.url = '/home' + (req.url.includes('?') ? req.url.slice(req.url.indexOf('?')) : '');
+    }
+    // Fall through to normal handling
+  }
+
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
     if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && !apexUrl.startsWith('/api/home/')) {
