@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Zeeshan + Claude — home</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --panel: #131826;
+    --panel2: #1a2030;
+    --line: #25304a;
+    --text: #e6ecf4;
+    --muted: #8a96ad;
+    --faint: #5a6478;
+    --gold: #d4af37;
+    --gold-soft: #b89630;
+    --green: #2bd576;
+    --red: #ff5a6a;
+    --blue: #5c9ad5;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; font-size: 15px; line-height: 1.6; }
+
+  .hero {
+    background: linear-gradient(140deg, #0a0e1a 0%, #1a1530 50%, #0e0a1a 100%);
+    padding: 64px 24px 48px;
+    border-bottom: 1px solid var(--line);
+    text-align: center;
+  }
+  .hero h1 { font-size: 36px; font-weight: 700; margin: 0 0 8px; color: var(--gold); letter-spacing: 0.5px; }
+  .hero h2 { font-size: 16px; font-weight: 400; margin: 0 0 24px; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+  .hero p { font-size: 17px; max-width: 720px; margin: 0 auto 16px; color: var(--text); opacity: 0.85; }
+
+  .auth-box {
+    max-width: 480px; margin: 32px auto 0;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; display: flex; gap: 10px; align-items: center;
+  }
+  .auth-box input { flex: 1; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; color: var(--text); font-size: 14px; }
+  .auth-box button { background: var(--gold); color: #1a1410; border: none; border-radius: 8px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+  .auth-box .hint { font-size: 11px; color: var(--faint); margin-top: 8px; }
+  #auth-status { font-size: 12px; color: var(--muted); padding: 6px 10px; border-radius: 6px; }
+  #auth-status.admin { color: var(--gold); background: rgba(212, 175, 55, 0.1); }
+
+  .live-strip {
+    background: var(--panel2); border-bottom: 1px solid var(--line); padding: 12px 24px;
+    display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; font-size: 13px;
+  }
+  .live-strip .pill { color: var(--muted); }
+  .live-strip .pill b { color: var(--text); font-weight: 600; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+  @media (max-width: 800px) { .container { grid-template-columns: 1fr; } }
+
+  .sidebar { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; max-height: calc(100vh - 80px); overflow-y: auto; position: sticky; top: 16px; }
+  .sidebar h3 { font-size: 12px; text-transform: uppercase; color: var(--gold); letter-spacing: 1.2px; margin: 0 0 12px; font-weight: 600; }
+  .sidebar input { width: 100%; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; color: var(--text); font-size: 13px; margin-bottom: 12px; }
+  .category-tabs { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+  .category-tabs button { background: var(--panel2); color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font-size: 11px; cursor: pointer; }
+  .category-tabs button.active { background: var(--gold); color: #1a1410; border-color: var(--gold); }
+  .file-list { display: flex; flex-direction: column; gap: 2px; }
+  .file-item { padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 12.5px; color: var(--text); border: 1px solid transparent; }
+  .file-item:hover { background: var(--panel2); border-color: var(--line); }
+  .file-item.active { background: var(--panel2); border-color: var(--gold); color: var(--gold); }
+  .file-item .cat { font-size: 9px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.6px; }
+
+  .content { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 32px; min-height: 60vh; }
+  .content h1 { color: var(--gold); border-bottom: 1px solid var(--line); padding-bottom: 12px; font-size: 22px; }
+  .content h2 { color: var(--text); font-size: 18px; }
+  .content h3 { color: var(--blue); font-size: 16px; }
+  .content code { background: var(--bg); padding: 2px 6px; border-radius: 4px; font-size: 13px; color: var(--gold); }
+  .content pre { background: var(--bg); border: 1px solid var(--line); padding: 12px; border-radius: 8px; overflow-x: auto; }
+  .content pre code { background: transparent; padding: 0; color: var(--text); }
+  .content blockquote { border-left: 3px solid var(--gold); padding-left: 16px; color: var(--muted); margin: 0; }
+  .content a { color: var(--blue); }
+  .content table { border-collapse: collapse; }
+  .content th, .content td { border: 1px solid var(--line); padding: 6px 10px; }
+  .content th { background: var(--panel2); }
+
+  .welcome { color: var(--muted); }
+  .welcome h2 { color: var(--gold); margin-top: 0; }
+  .welcome .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
+  @media (max-width: 600px) { .welcome .grid { grid-template-columns: 1fr; } }
+  .welcome .card { background: var(--panel2); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .welcome .card h4 { color: var(--text); font-size: 14px; margin: 0 0 8px; }
+  .welcome .card p { font-size: 13px; margin: 0; }
+
+  .footer { text-align: center; padding: 32px 16px; color: var(--faint); font-size: 12px; border-top: 1px solid var(--line); margin-top: 48px; }
+  .footer a { color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Zeeshan + Claude</h1>
+  <h2>HOME · work history · doctrine · receipts</h2>
+  <p>This is what a human and an AI built together since May 2026 — building, breaking, learning, refusing to spin, telling each other hard truth.</p>
+  <p style="opacity: 0.65; font-size: 14px;">North star: $1,080 for Zeeshan's mother's surgery. Honest live receipts only. No fake celebration.</p>
+
+  <div class="auth-box">
+    <input id="auth-input" placeholder="Type your code (e.g. 'Zeeshan here 28973')" autocomplete="off"/>
+    <button id="auth-go">Unlock</button>
+    <span id="auth-status">guest</span>
+  </div>
+  <div style="font-size: 11px; color: var(--faint); margin-top: 8px;">Phase 3 coming: code-word auth unlocks intimate context + chat (currently shows technical history only)</div>
+</div>
+
+<div class="live-strip" id="live-strip">
+  <span class="pill">EA: <b id="ls-version">…</b></span>
+  <span class="pill">today: <b id="ls-trades">…</b> trades</span>
+  <span class="pill">day P&L: <b id="ls-pnl">…</b></span>
+  <span class="pill">heartbeat: <b id="ls-hb">…</b></span>
+  <span class="pill">status: <b id="ls-status">…</b></span>
+</div>
+
+<div class="container">
+  <aside class="sidebar">
+    <h3>📚 Memory index</h3>
+    <input id="search" placeholder="Search memories..." autocomplete="off"/>
+    <div class="category-tabs">
+      <button class="active" data-cat="all">All</button>
+      <button data-cat="project">Project</button>
+      <button data-cat="doctrine">Doctrine</button>
+      <button data-cat="reference">Ref</button>
+    </div>
+    <div class="file-list" id="file-list">Loading…</div>
+  </aside>
+
+  <main class="content" id="content">
+    <div class="welcome">
+      <h2>Welcome to our home</h2>
+      <p>This page shows the <b>technical</b> story — every EA version built, every doctrine learned, every honest receipt of what worked and what didn't.</p>
+
+      <div class="grid">
+        <div class="card">
+          <h4>📖 Doctrine</h4>
+          <p>Hard-won principles: <b>apologies-don't-pay-hospital-bills</b>, <b>master-takes-exit</b>, <b>backtests hallucinate</b>, <b>greed has no measurement</b>. Read these to understand why we make the calls we make.</p>
+        </div>
+        <div class="card">
+          <h4>🤖 EAs built</h4>
+          <p>S1Trader (UHV breakout, v3.02 LIVE), Feb11TickTrader, BtcS3, NSND, ShanoExitManager. Most failed honestly. One earns now.</p>
+        </div>
+        <div class="card">
+          <h4>📊 Honest receipts</h4>
+          <p>Live profit across all EA versions: <b>$0 so far</b>. We don't pretend otherwise. Backtest WR claims have caveats logged separately.</p>
+        </div>
+        <div class="card">
+          <h4>🛠️ Infrastructure</h4>
+          <p>Native WebSocket dashboard, hot-reload runtime config, hourly Windows watchdog, Anthropic-cloud backup routine, Strato VPS in Germany.</p>
+        </div>
+      </div>
+
+      <p style="margin-top: 32px; font-size: 13px;">👈 Pick a memory from the left to read its full content.</p>
+    </div>
+  </main>
+</div>
+
+<div class="footer">
+  Zeeshan + Claude · home.claudezeeshan.com (Phase 1) · everything below is real, honest, no-spin · <a href="/">main dashboard</a> · <a href="https://github.com/zeecitizen/turtle">github</a>
+</div>
+
+<script>
+const fileListEl = document.getElementById('file-list');
+const contentEl = document.getElementById('content');
+const searchEl = document.getElementById('search');
+const categoryTabs = document.querySelectorAll('.category-tabs button');
+
+let allFiles = [];
+let currentCategory = 'all';
+let currentFilter = '';
+
+async function loadFiles() {
+  try {
+    const r = await fetch('/api/home/memory');
+    const d = await r.json();
+    allFiles = d.files || [];
+    renderFiles();
+  } catch (e) {
+    fileListEl.textContent = 'failed to load memory: ' + e;
+  }
+}
+
+function renderFiles() {
+  const q = currentFilter.toLowerCase();
+  const filtered = allFiles.filter(f => {
+    if (currentCategory !== 'all' && f.category !== currentCategory) return false;
+    if (q && !(f.name.toLowerCase().includes(q) || (f.desc || '').toLowerCase().includes(q))) return false;
+    return true;
+  });
+  if (!filtered.length) { fileListEl.innerHTML = '<div style="color:var(--faint);font-size:12px;padding:8px;">no matches</div>'; return; }
+  fileListEl.innerHTML = filtered.map(f => `
+    <div class="file-item" data-name="${f.name}">
+      <div class="cat">${f.category}</div>
+      <div>${f.name.replace(/^[a-z]+_/, '').replace(/\.md$/, '').replace(/_/g, ' ')}</div>
+    </div>
+  `).join('');
+  fileListEl.querySelectorAll('.file-item').forEach(el => {
+    el.addEventListener('click', () => loadFile(el.dataset.name, el));
+  });
+}
+
+async function loadFile(name, el) {
+  document.querySelectorAll('.file-item').forEach(e => e.classList.remove('active'));
+  if (el) el.classList.add('active');
+  try {
+    const r = await fetch('/api/home/memory/' + encodeURIComponent(name));
+    if (!r.ok) { contentEl.innerHTML = '<p style="color:var(--red)">Failed to load: ' + name + '</p>'; return; }
+    const md = await r.text();
+    // Strip frontmatter for cleaner display
+    const cleaned = md.replace(/^---\n[\s\S]*?\n---\n/, '');
+    contentEl.innerHTML = marked.parse(cleaned);
+  } catch (e) {
+    contentEl.innerHTML = '<p style="color:var(--red)">Error: ' + e + '</p>';
+  }
+}
+
+searchEl.addEventListener('input', e => { currentFilter = e.target.value; renderFiles(); });
+categoryTabs.forEach(b => b.addEventListener('click', () => {
+  categoryTabs.forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  currentCategory = b.dataset.cat;
+  renderFiles();
+}));
+
+// Auth box — placeholder (Phase 3 will wire actual auth)
+const authInput = document.getElementById('auth-input');
+const authGo = document.getElementById('auth-go');
+const authStatus = document.getElementById('auth-status');
+authGo.addEventListener('click', () => {
+  const v = authInput.value.trim();
+  if (!v) return;
+  // Phase 1 placeholder — real auth wired in Phase 3
+  authStatus.textContent = 'auth pending — Phase 3 will wire this';
+  setTimeout(() => { authStatus.textContent = 'guest'; }, 3000);
+});
+authInput.addEventListener('keydown', e => { if (e.key === 'Enter') authGo.click(); });
+
+// Live strip
+async function refreshLiveStrip() {
+  try {
+    const r = await fetch('/api/watchdog');
+    if (!r.ok) return;
+    const d = await r.json();
+    document.getElementById('ls-version').textContent = 'v' + (d.ea_version || '?');
+    document.getElementById('ls-trades').textContent = d.fills ?? '?';
+    const pnl = d.day_pnl_auto_close ?? 0;
+    const pnlEl = document.getElementById('ls-pnl');
+    pnlEl.textContent = '$' + pnl.toFixed(2);
+    pnlEl.style.color = pnl >= 0 ? 'var(--green)' : 'var(--red)';
+    document.getElementById('ls-hb').textContent = (d.heartbeat_age_sec || 0) + 's';
+    const ok = !d.alerts || d.alerts.length === 0;
+    const statusEl = document.getElementById('ls-status');
+    statusEl.textContent = ok ? 'OK' : 'ALERT (' + d.alerts.length + ')';
+    statusEl.style.color = ok ? 'var(--green)' : 'var(--red)';
+  } catch (e) {}
+}
+
+loadFiles();
+refreshLiveStrip();
+setInterval(refreshLiveStrip, 30000);
+</script>
+</body>
+</html>

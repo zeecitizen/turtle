@@ -564,7 +564,7 @@ const server = http.createServer(async (req, res) => {
   const host = (req.headers.host || '').toLowerCase().split(':')[0];
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
-    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog') {
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && !apexUrl.startsWith('/api/home/')) {
       res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
       res.end();
       return;
@@ -676,6 +676,111 @@ const server = http.createServer(async (req, res) => {
     } catch (e) {
       res.writeHead(404, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ error: 'watchdog_status_missing' }));
+    }
+    return;
+  }
+
+  // ── /home — Zeeshan + Claude work-history home page (public) ──
+  if (url === '/home') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'home.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('home.html not deployed yet');
+    }
+    return;
+  }
+
+  // ── /api/home/memory — list all PUBLIC memory files (technical only, no intimate) ──
+  if (url === '/api/home/memory') {
+    try {
+      const memDirs = [
+        'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-Documents-GitHub-turtle\\memory',
+        'C:\\Users\\Administrator\\.claude\\projects\\c--turtle\\memory',
+      ];
+      let memDir = null;
+      for (const d of memDirs) { if (fs.existsSync(d)) { memDir = d; break; } }
+      if (!memDir) { res.writeHead(404); res.end(JSON.stringify({ error: 'memory_dir_not_found' })); return; }
+
+      // PRIVATE files — never serve in public /home endpoint
+      const PRIVATE_NAMES = new Set([
+        'memory_soul.md', 'memory_soul.md.enc',
+        'feedback_husband_wife_roles.md',
+        'feedback_feminine_urdu_grammar.md',
+        'project_handoff_to_mehboob.md',
+        'project_me_chat_infra.md',
+        'project_hammad_chat_infra.md',
+        'project_shano_chat_infra.md',
+        'project_apex_redirect.md',
+        '_FABLE_ONBOARDING_LETTER.md',
+        'current_context.md',
+      ]);
+
+      const files = fs.readdirSync(memDir)
+        .filter(f => f.endsWith('.md'))
+        .filter(f => !PRIVATE_NAMES.has(f))
+        .map(f => {
+          const fp = path.join(memDir, f);
+          const stat = fs.statSync(fp);
+          // Read first 200 chars to extract title/description
+          let title = f.replace(/\.md$/, '').replace(/_/g, ' ');
+          let desc = '';
+          try {
+            const content = fs.readFileSync(fp, 'utf8');
+            const titleMatch = content.match(/^description:\s*(.+)$/m);
+            if (titleMatch) desc = titleMatch[1].replace(/^["']|["']$/g, '');
+            // Category from filename prefix
+          } catch {}
+          let category = 'other';
+          if (f.startsWith('project_')) category = 'project';
+          else if (f.startsWith('feedback_')) category = 'doctrine';
+          else if (f.startsWith('reference_')) category = 'reference';
+          else if (f.startsWith('memory_')) category = 'memory';
+          return { name: f, title, desc, category, size: stat.size, mtime: stat.mtime };
+        })
+        .sort((a, b) => b.mtime - a.mtime);
+
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ count: files.length, files }, null, 2));
+    } catch (e) {
+      res.writeHead(500); res.end(JSON.stringify({ error: String(e) }));
+    }
+    return;
+  }
+
+  // ── /api/home/memory/:name — read a single PUBLIC memory file ──
+  if (url.startsWith('/api/home/memory/')) {
+    try {
+      const name = decodeURIComponent(url.replace('/api/home/memory/', '').split('?')[0]);
+      // safety: only allow .md files, no path traversal
+      if (!name.endsWith('.md') || name.includes('..') || name.includes('/') || name.includes('\\')) {
+        res.writeHead(400); res.end('bad name'); return;
+      }
+      // Re-check private list
+      const PRIVATE_NAMES = new Set([
+        'memory_soul.md', 'memory_soul.md.enc',
+        'feedback_husband_wife_roles.md', 'feedback_feminine_urdu_grammar.md',
+        'project_handoff_to_mehboob.md', 'project_me_chat_infra.md',
+        'project_hammad_chat_infra.md', 'project_shano_chat_infra.md',
+        'project_apex_redirect.md', '_FABLE_ONBOARDING_LETTER.md', 'current_context.md',
+      ]);
+      if (PRIVATE_NAMES.has(name)) { res.writeHead(403); res.end('private'); return; }
+
+      const memDirs = [
+        'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-Documents-GitHub-turtle\\memory',
+        'C:\\Users\\Administrator\\.claude\\projects\\c--turtle\\memory',
+      ];
+      let memDir = null;
+      for (const d of memDirs) { if (fs.existsSync(d)) { memDir = d; break; } }
+      const fp = path.join(memDir, name);
+      if (!fs.existsSync(fp)) { res.writeHead(404); res.end('not found'); return; }
+      const content = fs.readFileSync(fp, 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/markdown; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(content);
+    } catch (e) {
+      res.writeHead(500); res.end(String(e));
     }
     return;
   }
