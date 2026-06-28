@@ -507,6 +507,42 @@ function loadSubs() { try { return JSON.parse(fs.readFileSync(SUBS_FILE, 'utf8')
 function saveSubs(s) { try { fs.writeFileSync(SUBS_FILE, JSON.stringify(s)); } catch {} }
 function readBody(req) { return new Promise((resolve) => { let b = ''; req.on('data', c => b += c); req.on('end', () => resolve(b)); }); }
 
+// ── /home auth: HMAC-signed cookie. Code-word "28973" upgrades guest → admin_zeeshan ──
+const __crypto_for_auth = require('crypto');
+const HOME_AUTH_SECRET = (() => {
+  try { return require('fs').readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.dashboard_password', 'utf8').trim(); }
+  catch { return 'fallback-secret-do-not-use-in-prod'; }
+})();
+function homeSignRole(role) {
+  const ts = Date.now();
+  const payload = role + '|' + ts;
+  const sig = __crypto_for_auth.createHmac('sha256', HOME_AUTH_SECRET).update(payload).digest('hex').slice(0, 32);
+  return Buffer.from(payload + '|' + sig).toString('base64');
+}
+function homeVerifyRole(token) {
+  if (!token) return 'guest';
+  try {
+    const decoded = Buffer.from(token, 'base64').toString('utf8');
+    const parts = decoded.split('|');
+    if (parts.length !== 3) return 'guest';
+    const role = parts[0], ts = parts[1], sig = parts[2];
+    const expected = __crypto_for_auth.createHmac('sha256', HOME_AUTH_SECRET).update(role + '|' + ts).digest('hex').slice(0, 32);
+    if (sig !== expected) return 'guest';
+    const age = Date.now() - Number(ts);
+    if (age > 7 * 86400 * 1000) return 'guest';   // 7-day cookie expiry
+    return role || 'guest';
+  } catch { return 'guest'; }
+}
+function homeRoleFromReq(req) {
+  const cookieHeader = req.headers.cookie || '';
+  const cookies = {};
+  cookieHeader.split(';').forEach(c => {
+    const idx = c.indexOf('=');
+    if (idx > 0) cookies[c.slice(0, idx).trim()] = c.slice(idx + 1).trim();
+  });
+  return homeVerifyRole(cookies['home_role']);
+}
+
 // Cached scan of running python.exe command lines (so the dashboard can show
 // live status dots for the hawks). Refreshed at most every 15s — the CIM query
 // is heavy and /api/ea-status is polled every 5s.
@@ -575,7 +611,7 @@ const server = http.createServer(async (req, res) => {
 
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
-    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && !apexUrl.startsWith('/api/home/')) {
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
       res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
       res.end();
       return;
@@ -704,9 +740,58 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ── /api/home/memory — list all PUBLIC memory files (technical only, no intimate) ──
+  // ── /api/home/whoami — return current session role (guest or admin_zeeshan) ──
+  if (url === '/api/home/whoami') {
+    const role = homeRoleFromReq(req);
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify({ role }));
+    return;
+  }
+
+  // ── /api/home/auth — POST a message; if it contains "28973" upgrade to admin_zeeshan ──
+  if (url === '/api/home/auth' && req.method === 'POST') {
+    (async () => {
+      try {
+        const body = await readBody(req);
+        let msg = '';
+        try { const j = JSON.parse(body); msg = String(j.message || j.text || ''); }
+        catch { msg = body; }
+        // Code word check — must contain "28973" (treat as secret token)
+        const isAuth = /\b28973\b/.test(msg);
+        if (isAuth) {
+          const token = homeSignRole('admin_zeeshan');
+          // 7-day cookie, HttpOnly, Secure (Cloudflare always serves HTTPS), SameSite=Lax
+          res.writeHead(200, {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-store',
+            'Set-Cookie': `home_role=${token}; Max-Age=${7*86400}; Path=/; HttpOnly; SameSite=Lax; Secure`,
+          });
+          res.end(JSON.stringify({ role: 'admin_zeeshan', ok: true, message: 'Welcome home, Zeeshan.' }));
+        } else {
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ role: 'guest', ok: false, message: 'Code word required.' }));
+        }
+      } catch (e) {
+        res.writeHead(500); res.end(JSON.stringify({ error: String(e) }));
+      }
+    })();
+    return;
+  }
+
+  // ── /api/home/logout — clear the cookie ──
+  if (url === '/api/home/logout') {
+    res.writeHead(200, {
+      'Content-Type': 'application/json',
+      'Set-Cookie': `home_role=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax; Secure`,
+    });
+    res.end(JSON.stringify({ role: 'guest', ok: true }));
+    return;
+  }
+
+  // ── /api/home/memory — list memory files (filter depends on role) ──
   if (url === '/api/home/memory') {
     try {
+      const role = homeRoleFromReq(req);
       const memDirs = [
         'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-Documents-GitHub-turtle\\memory',
         'C:\\Users\\Administrator\\.claude\\projects\\c--turtle\\memory',
@@ -715,7 +800,7 @@ const server = http.createServer(async (req, res) => {
       for (const d of memDirs) { if (fs.existsSync(d)) { memDir = d; break; } }
       if (!memDir) { res.writeHead(404); res.end(JSON.stringify({ error: 'memory_dir_not_found' })); return; }
 
-      // PRIVATE files — never serve in public /home endpoint
+      // PRIVATE files — only served to admin_zeeshan
       const PRIVATE_NAMES = new Set([
         'memory_soul.md', 'memory_soul.md.enc',
         'feedback_husband_wife_roles.md',
@@ -728,10 +813,11 @@ const server = http.createServer(async (req, res) => {
         '_FABLE_ONBOARDING_LETTER.md',
         'current_context.md',
       ]);
+      const isAdmin = role === 'admin_zeeshan';
 
       const files = fs.readdirSync(memDir)
         .filter(f => f.endsWith('.md'))
-        .filter(f => !PRIVATE_NAMES.has(f))
+        .filter(f => isAdmin || !PRIVATE_NAMES.has(f))
         .map(f => {
           const fp = path.join(memDir, f);
           const stat = fs.statSync(fp);
@@ -754,14 +840,14 @@ const server = http.createServer(async (req, res) => {
         .sort((a, b) => b.mtime - a.mtime);
 
       res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
-      res.end(JSON.stringify({ count: files.length, files }, null, 2));
+      res.end(JSON.stringify({ count: files.length, role, files }, null, 2));
     } catch (e) {
       res.writeHead(500); res.end(JSON.stringify({ error: String(e) }));
     }
     return;
   }
 
-  // ── /api/home/memory/:name — read a single PUBLIC memory file ──
+  // ── /api/home/memory/:name — read a single memory file (role-gated for private files) ──
   if (url.startsWith('/api/home/memory/')) {
     try {
       const name = decodeURIComponent(url.replace('/api/home/memory/', '').split('?')[0]);
@@ -769,7 +855,6 @@ const server = http.createServer(async (req, res) => {
       if (!name.endsWith('.md') || name.includes('..') || name.includes('/') || name.includes('\\')) {
         res.writeHead(400); res.end('bad name'); return;
       }
-      // Re-check private list
       const PRIVATE_NAMES = new Set([
         'memory_soul.md', 'memory_soul.md.enc',
         'feedback_husband_wife_roles.md', 'feedback_feminine_urdu_grammar.md',
@@ -777,7 +862,18 @@ const server = http.createServer(async (req, res) => {
         'project_hammad_chat_infra.md', 'project_shano_chat_infra.md',
         'project_apex_redirect.md', '_FABLE_ONBOARDING_LETTER.md', 'current_context.md',
       ]);
-      if (PRIVATE_NAMES.has(name)) { res.writeHead(403); res.end('private'); return; }
+      const role = homeRoleFromReq(req);
+      const isAdmin = role === 'admin_zeeshan';
+      if (PRIVATE_NAMES.has(name) && !isAdmin) {
+        res.writeHead(403, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'private — auth required', role }));
+        return;
+      }
+      // Special: never serve the encrypted soul blob raw (even to admin via this endpoint).
+      // The decrypt mechanism is intentional + separate (Python _soul_read.py).
+      if (name === 'memory_soul.md.enc') {
+        res.writeHead(403); res.end('soul memories not served via web — use python decrypt locally'); return;
+      }
 
       const memDirs = [
         'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-Documents-GitHub-turtle\\memory',
