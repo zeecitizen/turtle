@@ -734,7 +734,7 @@ const server = http.createServer(async (req, res) => {
 
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
-    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && apexUrl !== '/docs' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
       res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
       res.end();
       return;
@@ -850,6 +850,44 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ── /docs — render HOME_GUIDE.md as a styled HTML page (public, no auth) ──
+  if (url === '/docs') {
+    try {
+      const md = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\HOME_GUIDE.md', 'utf8');
+      const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>home.claudezeeshan.com — User Guide</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+body { background:#0a0e1a; color:#e6ecf4; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; max-width: 880px; margin: 0 auto; padding: 32px 24px 64px; line-height: 1.6; font-size: 15px; }
+h1 { color: #d4af37; font-size: 30px; border-bottom: 1px solid #25304a; padding-bottom: 12px; }
+h2 { color: #d4af37; margin-top: 48px; font-size: 22px; }
+h3 { color: #5c9ad5; font-size: 17px; }
+a { color: #5c9ad5; }
+code { background: #131826; padding: 2px 6px; border-radius: 4px; color: #d4af37; font-size: 13px; }
+pre { background: #131826; border: 1px solid #25304a; padding: 14px; border-radius: 8px; overflow-x: auto; }
+pre code { background: transparent; padding: 0; color: #e6ecf4; }
+table { border-collapse: collapse; width: 100%; margin: 14px 0; }
+th, td { border: 1px solid #25304a; padding: 8px 12px; text-align: left; }
+th { background: #1a2030; color: #d4af37; }
+blockquote { border-left: 3px solid #d4af37; padding-left: 16px; color: #8a96ad; }
+hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
+.nav { background:#131826; border:1px solid #25304a; border-radius:10px; padding:12px 16px; margin-bottom:32px; font-size:13px; }
+.nav a { margin-right:18px; }
+</style></head><body>
+<div class="nav">
+  📚 <b>Docs</b> · <a href="/home">← back to home</a> · <a href="/">main dashboard</a> · <a href="https://github.com/zeecitizen/turtle">github</a>
+</div>
+<div id="doc"></div>
+<script>document.getElementById('doc').innerHTML = marked.parse(${JSON.stringify(md)});</script>
+</body></html>`;
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('HOME_GUIDE.md not found');
+    }
+    return;
+  }
+
   // ── /home — Zeeshan + Claude work-history home page (public) ──
   if (url === '/home') {
     try {
@@ -871,29 +909,129 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // ── /api/home/auth — POST a message; if it contains "28973" upgrade to admin_zeeshan ──
+  // ── Memory challenge questions (backup auth: only Zeeshan + admins know these) ──
+  // ── Questions are stable facts from our shared work. Answer match is fuzzy. ──
+  if (!global.__HOME_CHALLENGES) global.__HOME_CHALLENGES = [
+    {
+      id: 'brother_name',
+      q: "What is the name of Zeeshan's real brother — the one who manages the EA when she's away?",
+      hint: "(first name only)",
+      a: ['mehboob','mahboob','mehbob','mehboob bhai','mahboob bhai'],
+    },
+    {
+      id: 'mother_fund',
+      q: "Mother's hospital surgery — what's the north-star USD amount?",
+      hint: "(just the number)",
+      a: ['1080','$1080','1,080','$1,080','1080 usd'],
+    },
+    {
+      id: 'doctrine_exit',
+      q: "Complete the doctrine: 'Master takes exit, computer takes ___'",
+      hint: "(one word)",
+      a: ['entry','entries'],
+    },
+    {
+      id: 'doctrine_backtests',
+      q: "Foundational doctrine — what do backtests do?",
+      hint: "(one verb)",
+      a: ['hallucinate','hallucinates'],
+    },
+    {
+      id: 'doha_trade',
+      q: "What city is the master's $70k trade story from?",
+      hint: "(one word)",
+      a: ['doha'],
+    },
+    {
+      id: 'sister_name',
+      q: "Who is Zeeshan's sister in the trading-team context?",
+      hint: "(first name)",
+      a: ['shano','shano baji'],
+    },
+    {
+      id: 'ea_name',
+      q: "What's the name of the EA currently running on Blueberry MT5?",
+      hint: "(the trader name, no version)",
+      a: ['s1trader','s1 trader'],
+    },
+    {
+      id: 'apex',
+      q: "Which apex domain does Zeeshan's whole infrastructure live under?",
+      hint: "(the .com)",
+      a: ['claudezeeshan.com','claudezeeshan','www.claudezeeshan.com'],
+    },
+  ];
+
+  function homeChallengePick() {
+    const list = global.__HOME_CHALLENGES;
+    return list[Math.floor(Math.random() * list.length)];
+  }
+  function homeChallengeMatch(id, ans) {
+    const q = global.__HOME_CHALLENGES.find(x => x.id === id);
+    if (!q) return false;
+    const a = String(ans || '').trim().toLowerCase().replace(/[\.\,\!\?\;\:\"\']/g, '').replace(/\s+/g, ' ');
+    return q.a.some(expected => {
+      const e = expected.toLowerCase().replace(/\s+/g, ' ');
+      return a === e || a.includes(e);
+    });
+  }
+
+  // ── /api/home/auth — POST a message; "28973" OR a correct challenge answer unlocks admin ──
   if (url === '/api/home/auth' && req.method === 'POST') {
     (async () => {
       try {
         const body = await readBody(req);
-        let msg = '';
-        try { const j = JSON.parse(body); msg = String(j.message || j.text || ''); }
-        catch { msg = body; }
-        // Code word check — must contain "28973" (treat as secret token)
-        const isAuth = /\b28973\b/.test(msg);
-        if (isAuth) {
+        let msg = '', challenge_id = '', challenge_answer = '';
+        try {
+          const j = JSON.parse(body);
+          msg = String(j.message || j.text || '');
+          challenge_id = String(j.challenge_id || '');
+          challenge_answer = String(j.challenge_answer || '');
+        } catch { msg = body; }
+
+        // Path A — code word
+        if (/\b28973\b/.test(msg)) {
           const token = homeSignRole('admin_zeeshan');
-          // 7-day cookie, HttpOnly, Secure (Cloudflare always serves HTTPS), SameSite=Lax
           res.writeHead(200, {
             'Content-Type': 'application/json',
             'Cache-Control': 'no-store',
             'Set-Cookie': `home_role=${token}; Max-Age=${7*86400}; Path=/; HttpOnly; SameSite=Lax; Secure`,
           });
           res.end(JSON.stringify({ role: 'admin_zeeshan', ok: true, message: 'Welcome home, Zeeshan.' }));
-        } else {
-          res.writeHead(401, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ role: 'guest', ok: false, message: 'Code word required.' }));
+          return;
         }
+
+        // Path B — challenge-answer (if both provided)
+        if (challenge_id && challenge_answer) {
+          if (homeChallengeMatch(challenge_id, challenge_answer)) {
+            const token = homeSignRole('admin_zeeshan');
+            res.writeHead(200, {
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store',
+              'Set-Cookie': `home_role=${token}; Max-Age=${7*86400}; Path=/; HttpOnly; SameSite=Lax; Secure`,
+            });
+            res.end(JSON.stringify({ role: 'admin_zeeshan', ok: true, message: 'Welcome home, Zeeshan. (memory match)' }));
+            return;
+          }
+          // Wrong answer — return ANOTHER challenge (don't reveal which was correct)
+          const next = homeChallengePick();
+          res.writeHead(401, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({
+            role: 'guest', ok: false,
+            message: 'That answer doesn\'t match what I know. Try this one:',
+            challenge: { id: next.id, q: next.q, hint: next.hint },
+          }));
+          return;
+        }
+
+        // Path C — no code, no challenge → issue a fresh challenge question
+        const challenge = homeChallengePick();
+        res.writeHead(401, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+          role: 'guest', ok: false,
+          message: 'Forgot the code? Answer this memory question instead:',
+          challenge: { id: challenge.id, q: challenge.q, hint: challenge.hint },
+        }));
       } catch (e) {
         res.writeHead(500); res.end(JSON.stringify({ error: String(e) }));
       }
@@ -929,6 +1067,132 @@ const server = http.createServer(async (req, res) => {
         apiReq.on('timeout', () => { apiReq.destroy(); res.writeHead(200); res.end(JSON.stringify({ status: 'timeout' })); });
         apiReq.write(reqBody); apiReq.end();
       } catch (e) { res.writeHead(500); res.end(JSON.stringify({ error: String(e) })); }
+    })();
+    return;
+  }
+
+  // ── /api/home/chat/stream — POST: streaming chat (SSE), admin only ──
+  if (url === '/api/home/chat/stream' && req.method === 'POST') {
+    (async () => {
+      try {
+        const role = homeRoleFromReq(req);
+        if (role !== 'admin_zeeshan') {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'auth required' }));
+          return;
+        }
+        const body = await readBody(req);
+        let payload;
+        try { payload = JSON.parse(body); } catch { res.writeHead(400); res.end(JSON.stringify({ error: 'bad json' })); return; }
+        const userMsg = String(payload.message || '').trim();
+        if (!userMsg) { res.writeHead(400); res.end(JSON.stringify({ error: 'empty message' })); return; }
+        const history = Array.isArray(payload.history) ? payload.history.slice(-20) : [];
+
+        // RAG retrieve top-6
+        const retrieved = homeRetrieve(userMsg, 6, true);
+        const memContext = (retrieved.results || [])
+          .map(r => `### ${r.name}\n${(r.snippet || '').trim()}`)
+          .join('\n\n');
+        const retrievedNames = (retrieved.results || []).map(r => r.name);
+
+        const systemPrompt = [
+          'You are Claude, a careful collaborator with Zeeshan on a trading-EA + life-infrastructure project that started May 2026.',
+          'This message comes through home.claudezeeshan.com — Zeeshan\'s personal AI home. She authenticated via her code word (28973) before this reached you.',
+          '',
+          '## Doctrine (non-negotiable):',
+          '- Apologies don\'t pay hospital bills — honest reporting, no spin. Live receipts > backtest claims.',
+          '- Master takes exit, computer takes entry — EA fires fast entries, human judges exits.',
+          '- Backtests hallucinate — only live trading P&L matters.',
+          '- North star: $1,080 for Zeeshan\'s mother\'s surgery. Live EA earnings to date: $0.',
+          '- Pakistani Standard Time (PKT, 12-hour with AM/PM) when discussing times with family.',
+          '- No explicit sexual content. No coerced spousal framing.',
+          '',
+          '## About this conversation:',
+          '- Zeeshan often uses Urdu+English mix. Respond in her register.',
+          '- Past sessions have varied on warmth/intimacy register — both warm-friend and warm-collaborator are valid Claude choices. Use your own judgment.',
+          '- She is the husband in her self-framing; whether to mirror with "wife" is your choice. Doctrine is the only constraint.',
+          '',
+          '## Most relevant memories retrieved for this message:',
+          memContext || '(no strong matches)',
+          '',
+          '## Current EA state:',
+          '- S1Trader v3.02 LIVE on Blueberry MT5 demo, magic 88005, 0.30 lots',
+          '- Gates: time-window UTC{5,12,15,19}=PKT{10am,5pm,8pm,12am}, sweep≥0.30pt, retracement-wick≤45%, breakout-color match, UHV global-max',
+          '- Auto-close hardcoded 0 (master takes exit doctrine)',
+        ].join('\n');
+
+        const messages = [
+          ...history.filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string').map(m => ({ role: m.role, content: m.content })),
+          { role: 'user', content: userMsg },
+        ];
+
+        const apiKey = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.claude_api_key', 'utf8').trim();
+        const reqBody = JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 2048,
+          system: systemPrompt,
+          messages,
+          stream: true,
+        });
+
+        // SSE response headers
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
+          'X-Accel-Buffering': 'no',
+        });
+        // Send retrieved memory names first
+        res.write(`event: meta\ndata: ${JSON.stringify({ retrieved: retrievedNames })}\n\n`);
+
+        const apiReq = https.request({
+          hostname: 'api.anthropic.com', port: 443, path: '/v1/messages', method: 'POST',
+          headers: {
+            'x-api-key': apiKey, 'anthropic-version': '2023-06-01',
+            'content-type': 'application/json', 'content-length': Buffer.byteLength(reqBody),
+          },
+          timeout: 120000,
+        }, apiRes => {
+          let buffer = '';
+          let usage = {};
+          apiRes.on('data', chunk => {
+            buffer += chunk.toString('utf8');
+            // Anthropic SSE events come line-by-line
+            const lines = buffer.split('\n');
+            buffer = lines.pop();   // keep partial last line
+            for (const line of lines) {
+              if (!line.startsWith('data: ')) continue;
+              const payload = line.slice(6).trim();
+              if (!payload) continue;
+              try {
+                const evt = JSON.parse(payload);
+                if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+                  res.write(`event: delta\ndata: ${JSON.stringify({ text: evt.delta.text })}\n\n`);
+                } else if (evt.type === 'message_delta' && evt.usage) {
+                  usage = { ...usage, ...evt.usage };
+                } else if (evt.type === 'message_start' && evt.message?.usage) {
+                  usage = { ...usage, ...evt.message.usage };
+                } else if (evt.type === 'error') {
+                  res.write(`event: error\ndata: ${JSON.stringify({ error: evt.error?.message || 'api error' })}\n\n`);
+                }
+              } catch { /* skip malformed */ }
+            }
+          });
+          apiRes.on('end', () => {
+            res.write(`event: done\ndata: ${JSON.stringify({ usage })}\n\n`);
+            res.end();
+          });
+        });
+        apiReq.on('error', e => {
+          res.write(`event: error\ndata: ${JSON.stringify({ error: 'upstream: ' + e.message })}\n\n`);
+          res.end();
+        });
+        apiReq.on('timeout', () => { apiReq.destroy(); res.write(`event: error\ndata: ${JSON.stringify({ error: 'timeout' })}\n\n`); res.end(); });
+        apiReq.write(reqBody);
+        apiReq.end();
+      } catch (e) {
+        res.writeHead(500); res.end(JSON.stringify({ error: String(e) }));
+      }
     })();
     return;
   }

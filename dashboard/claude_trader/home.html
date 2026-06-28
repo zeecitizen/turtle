@@ -112,6 +112,29 @@
 
   .footer { text-align: center; padding: 32px 16px; color: var(--faint); font-size: 12px; border-top: 1px solid var(--line); margin-top: 48px; }
   .footer a { color: var(--muted); }
+
+  /* Mobile responsive */
+  @media (max-width: 700px) {
+    .hero { padding: 32px 16px 24px; }
+    .hero h1 { font-size: 26px; }
+    .hero p { font-size: 14px; }
+    .auth-box { flex-direction: column; padding: 12px; }
+    .auth-box input { width: 100%; font-size: 13px; }
+    .live-strip { gap: 14px; padding: 10px 12px; font-size: 11px; }
+    .container { padding: 16px 12px; gap: 12px; }
+    .sidebar { position: static; max-height: 280px; padding: 12px; }
+    .content { padding: 18px; }
+    .chat-section { padding: 0 12px; }
+    .chat-messages { padding: 12px 14px; max-height: 50vh; font-size: 13px; }
+    .chat-msg { max-width: 95%; padding: 8px 12px; font-size: 13px; }
+    .chat-input-row { padding: 8px; gap: 6px; flex-wrap: wrap; }
+    .chat-input-row textarea { min-height: 36px; font-size: 13px; }
+    .chat-input-row button { padding: 0 12px; font-size: 13px; }
+    .chat-header { font-size: 11px; padding: 10px 12px; flex-wrap: wrap; gap: 6px; }
+    .chat-header span { font-size: 11px; }
+    .chat-header .clear-btn { font-size: 10px; padding: 2px 6px; }
+    .welcome .grid { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
@@ -135,12 +158,17 @@
   <div class="chat-box">
     <div class="chat-header">
       <span>💬 Chat with Claude (RAG-grounded, your context loaded)</span>
-      <button class="clear-btn" id="chat-clear">Clear</button>
+      <span style="display:flex; gap:6px;">
+        <button class="clear-btn" id="chat-speak-toggle" title="Toggle voice output">🔇 Speak</button>
+        <button class="clear-btn" id="chat-export" title="Download conversation">⬇ Export</button>
+        <button class="clear-btn" id="chat-clear">Clear</button>
+      </span>
     </div>
     <div id="chat-api-status" style="padding: 10px 16px; background: rgba(255, 90, 106, 0.1); border-bottom: 1px solid rgba(255, 90, 106, 0.3); color: var(--red); font-size: 12px; display: none;"></div>
     <div class="chat-messages" id="chat-messages">
       <div class="chat-msg assistant">Hi Zeeshan. Yeh home.claudezeeshan.com pe chat hai — top-K memories auto-load hoti hain har message ke saath. Doctrine maintained: honest reporting, no spin, mother's hospital fund is the north star.<span class="retrieved">Type a message or use the mic 🎙️ for voice input.</span></div>
     </div>
+    <div id="chat-cost" style="padding: 6px 16px; font-size: 11px; color: var(--faint); border-top: 1px solid var(--line); text-align: right;">Session tokens: <span id="cost-in">0</span> in · <span id="cost-out">0</span> out · ~<span id="cost-usd">$0.0000</span></div>
     <div class="chat-input-row">
       <textarea id="chat-input" placeholder="Type or speak..." rows="1"></textarea>
       <button class="mic" id="chat-mic" title="Voice input (browser Web Speech API)">🎙️</button>
@@ -200,7 +228,7 @@
 </div>
 
 <div class="footer">
-  Zeeshan + Claude · home.claudezeeshan.com (Phase 1) · everything below is real, honest, no-spin · <a href="/">main dashboard</a> · <a href="https://github.com/zeecitizen/turtle">github</a>
+  Zeeshan + Claude · home.claudezeeshan.com · everything below is real, honest, no-spin · <a href="/docs">📚 user guide</a> · <a href="/">main dashboard</a> · <a href="https://github.com/zeecitizen/turtle">github</a>
 </div>
 
 <script>
@@ -335,6 +363,25 @@ function chatRender() {
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 }
 
+let speakEnabled = false;
+let sessionTokensIn = 0, sessionTokensOut = 0;
+
+function updateCostStrip() {
+  document.getElementById('cost-in').textContent = sessionTokensIn.toLocaleString();
+  document.getElementById('cost-out').textContent = sessionTokensOut.toLocaleString();
+  // Sonnet 4.6 pricing approx: $3/MTok input + $15/MTok output
+  const usd = (sessionTokensIn * 3 + sessionTokensOut * 15) / 1_000_000;
+  document.getElementById('cost-usd').textContent = '$' + usd.toFixed(4);
+}
+
+function speakText(text) {
+  if (!speakEnabled || !window.speechSynthesis) return;
+  try { window.speechSynthesis.cancel(); } catch {}
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 1.0; u.pitch = 1.0;
+  window.speechSynthesis.speak(u);
+}
+
 async function chatSend() {
   const msg = chatInputEl.value.trim();
   if (!msg) return;
@@ -346,54 +393,94 @@ async function chatSend() {
   userDiv.textContent = msg;
   chatMessagesEl.appendChild(userDiv);
 
-  const thinkingDiv = document.createElement('div');
-  thinkingDiv.className = 'chat-msg assistant thinking';
-  thinkingDiv.textContent = 'Claude is thinking...';
-  chatMessagesEl.appendChild(thinkingDiv);
+  const replyDiv = document.createElement('div');
+  replyDiv.className = 'chat-msg assistant';
+  replyDiv.textContent = '';
+  const cursor = document.createElement('span');
+  cursor.textContent = '▍';
+  cursor.style.opacity = '0.6';
+  replyDiv.appendChild(cursor);
+  chatMessagesEl.appendChild(replyDiv);
   chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 
   const history = chatLoadHistory();
+  let fullText = '', retrieved = [];
+
   try {
-    const r = await fetch('/api/home/chat', {
+    const r = await fetch('/api/home/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
       body: JSON.stringify({ message: msg, history }),
     });
-    const d = await r.json();
-    thinkingDiv.remove();
     if (!r.ok) {
-      const errDiv = document.createElement('div');
-      errDiv.className = 'chat-msg assistant';
-      errDiv.style.color = 'var(--red)';
-      errDiv.textContent = 'Error: ' + (d.error?.message || d.error || 'unknown');
-      chatMessagesEl.appendChild(errDiv);
+      cursor.remove();
+      const d = await r.json().catch(() => ({ error: 'http ' + r.status }));
+      replyDiv.style.color = 'var(--red)';
+      replyDiv.textContent = 'Error: ' + (d.error?.message || d.error || 'unknown');
       return;
     }
-    const reply = d.reply || '(empty response)';
-    const replyDiv = document.createElement('div');
-    replyDiv.className = 'chat-msg assistant';
-    replyDiv.textContent = reply;
-    if (d.retrieved && d.retrieved.length) {
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      // SSE events end with \n\n
+      const events = buffer.split('\n\n');
+      buffer = events.pop();
+      for (const eblock of events) {
+        const lines = eblock.split('\n');
+        let evt = 'message', data = '';
+        for (const ln of lines) {
+          if (ln.startsWith('event:')) evt = ln.slice(6).trim();
+          else if (ln.startsWith('data:')) data = ln.slice(5).trim();
+        }
+        if (!data) continue;
+        try {
+          const j = JSON.parse(data);
+          if (evt === 'meta') {
+            retrieved = j.retrieved || [];
+          } else if (evt === 'delta') {
+            fullText += j.text || '';
+            cursor.before(document.createTextNode(j.text || ''));
+            // Strip and re-add cursor at end for clean look
+            chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+          } else if (evt === 'done') {
+            if (j.usage) {
+              sessionTokensIn += j.usage.input_tokens || 0;
+              sessionTokensOut += j.usage.output_tokens || 0;
+              updateCostStrip();
+            }
+          } else if (evt === 'error') {
+            const errSpan = document.createElement('div');
+            errSpan.style.color = 'var(--red)';
+            errSpan.textContent = '\n[stream error: ' + (j.error || 'unknown') + ']';
+            replyDiv.appendChild(errSpan);
+          }
+        } catch {}
+      }
+    }
+    cursor.remove();
+    if (retrieved.length) {
       const span = document.createElement('span');
       span.className = 'retrieved';
-      span.textContent = 'Context loaded: ' + d.retrieved.join(', ');
+      span.textContent = 'Context loaded: ' + retrieved.join(', ');
       replyDiv.appendChild(span);
     }
-    chatMessagesEl.appendChild(replyDiv);
-    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
 
-    // Save to history
+    // Save to history (full text)
     history.push({ role: 'user', content: msg });
-    history.push({ role: 'assistant', content: reply, retrieved: d.retrieved });
+    history.push({ role: 'assistant', content: fullText, retrieved });
     chatSaveHistory(history);
+
+    // Voice output (if enabled)
+    if (speakEnabled && fullText) speakText(fullText);
   } catch (e) {
-    thinkingDiv.remove();
-    const errDiv = document.createElement('div');
-    errDiv.className = 'chat-msg assistant';
-    errDiv.style.color = 'var(--red)';
-    errDiv.textContent = 'Network error: ' + e.message;
-    chatMessagesEl.appendChild(errDiv);
+    cursor.remove();
+    replyDiv.style.color = 'var(--red)';
+    replyDiv.textContent = 'Network error: ' + e.message;
   }
 }
 
@@ -409,7 +496,47 @@ chatClearBtn.addEventListener('click', () => {
   if (confirm('Clear chat history?')) {
     localStorage.removeItem(CHAT_HISTORY_KEY);
     chatMessagesEl.innerHTML = '<div class="chat-msg assistant">History cleared. Fresh start.</div>';
+    sessionTokensIn = 0; sessionTokensOut = 0; updateCostStrip();
   }
+});
+
+// Speak (voice output) toggle
+const speakToggleBtn = document.getElementById('chat-speak-toggle');
+speakToggleBtn.addEventListener('click', () => {
+  speakEnabled = !speakEnabled;
+  speakToggleBtn.textContent = speakEnabled ? '🔊 Speak' : '🔇 Speak';
+  speakToggleBtn.style.color = speakEnabled ? 'var(--gold)' : '';
+  if (!speakEnabled) try { window.speechSynthesis.cancel(); } catch {}
+});
+if (!('speechSynthesis' in window)) speakToggleBtn.disabled = true;
+
+// Export chat as markdown
+const exportBtn = document.getElementById('chat-export');
+exportBtn.addEventListener('click', () => {
+  const h = chatLoadHistory();
+  if (!h.length) { alert('No conversation to export.'); return; }
+  const ts = new Date().toISOString().replace(/[:.]/g, '-');
+  const md = [
+    '# Chat — home.claudezeeshan.com',
+    `Exported: ${new Date().toString()}`,
+    '',
+    '---',
+    '',
+    ...h.map(m => {
+      const who = m.role === 'user' ? '**You (Zeeshan)**' : '**Claude**';
+      let body = `### ${who}\n\n${m.content}`;
+      if (m.retrieved && m.retrieved.length) body += `\n\n*Context: ${m.retrieved.join(', ')}*`;
+      return body;
+    }),
+    '',
+    '---',
+    `Session tokens — in: ${sessionTokensIn} · out: ${sessionTokensOut}`,
+  ].join('\n\n');
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `chat-${ts}.md`;
+  a.click();
 });
 
 // Web Speech API — voice input
@@ -459,10 +586,13 @@ async function chatHealthCheck() {
   }
 }
 
+let activeChallenge = null;   // when set, next submit is a challenge answer
+
 async function doAuth() {
   if (currentRole === 'admin_zeeshan') {
-    // Logout flow
     await fetch('/api/home/logout', { credentials: 'same-origin' });
+    activeChallenge = null;
+    setAuthPlaceholder();
     await refreshAuthStatus();
     await loadFiles();
     return;
@@ -470,24 +600,43 @@ async function doAuth() {
   const v = authInput.value.trim();
   if (!v) return;
   try {
+    const body = activeChallenge
+      ? { challenge_id: activeChallenge.id, challenge_answer: v }
+      : { message: v };
     const r = await fetch('/api/home/auth', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'same-origin',
-      body: JSON.stringify({ message: v }),
+      body: JSON.stringify(body),
     });
     const d = await r.json();
     if (d.ok) {
       authInput.value = '';
+      activeChallenge = null;
+      setAuthPlaceholder();
       await refreshAuthStatus();
-      await loadFiles();   // reload — admin sees private files now
+      await loadFiles();
+    } else if (d.challenge) {
+      // Wrong code or wrong challenge — show new challenge question
+      activeChallenge = d.challenge;
+      authInput.value = '';
+      authInput.placeholder = `${d.challenge.q}  ${d.challenge.hint || ''}`;
+      authStatus.textContent = activeChallenge ? '🧠 memory challenge' : '✗ wrong code';
+      // Brief flash
+      authInput.style.borderColor = 'var(--gold)';
+      setTimeout(() => authInput.style.borderColor = '', 1500);
+      authInput.focus();
     } else {
-      authStatus.textContent = '✗ wrong code';
+      authStatus.textContent = '✗ ' + (d.message || 'denied');
       setTimeout(() => refreshAuthStatus(), 2500);
     }
   } catch (e) {
     authStatus.textContent = '✗ error: ' + e.message;
   }
+}
+
+function setAuthPlaceholder() {
+  authInput.placeholder = "Type your code (e.g. 'Zeeshan here 28973')";
 }
 
 authGo.addEventListener('click', doAuth);
