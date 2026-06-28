@@ -543,6 +543,129 @@ function homeRoleFromReq(req) {
   return homeVerifyRole(cookies['home_role']);
 }
 
+// ── /home RAG: TF-IDF index over memory files ──
+const HOME_STOPWORDS = new Set([
+  'the','a','an','is','are','was','were','be','been','being','am','i','me','my','we','us','our',
+  'you','your','he','she','it','they','them','their','this','that','these','those','of','in','on',
+  'at','to','for','with','by','from','as','and','or','but','if','then','than','so','no','not',
+  'do','does','did','have','has','had','will','would','can','could','should','may','might','must',
+  'because','what','which','who','when','where','why','how','about','into','out','up','down',
+  'just','more','very','also','any','some','all','each','every','only','same','even','still','here','there',
+]);
+
+function homeTokenize(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/[`*_~#>\[\]\(\)]/g, ' ')        // strip markdown punctuation
+    .replace(/[^a-z0-9\s\.\-]/g, ' ')
+    .split(/\s+/)
+    .map(t => t.replace(/^[\.\-]+|[\.\-]+$/g, ''))
+    .filter(t => t.length >= 2 && t.length <= 32 && !HOME_STOPWORDS.has(t));
+}
+
+let HOME_INDEX = null;   // { docs: [{name, content, tokens, tf, length}], idf: Map, builtAt }
+function homeBuildIndex() {
+  const memDirs = [
+    'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-Documents-GitHub-turtle\\memory',
+    'C:\\Users\\Administrator\\.claude\\projects\\c--turtle\\memory',
+  ];
+  let memDir = null;
+  for (const d of memDirs) { if (fs.existsSync(d)) { memDir = d; break; } }
+  if (!memDir) { HOME_INDEX = { docs: [], idf: new Map(), builtAt: Date.now(), error: 'no_mem_dir' }; return; }
+
+  const docs = [];
+  const dfCount = new Map();   // doc-frequency per term
+
+  for (const fname of fs.readdirSync(memDir).filter(f => f.endsWith('.md'))) {
+    let content;
+    try { content = fs.readFileSync(path.join(memDir, fname), 'utf8'); } catch { continue; }
+    const tokens = homeTokenize(content);
+    if (tokens.length === 0) continue;
+    const tf = new Map();
+    for (const t of tokens) tf.set(t, (tf.get(t) || 0) + 1);
+    // doc-frequency: each unique term counted once per doc
+    for (const t of tf.keys()) dfCount.set(t, (dfCount.get(t) || 0) + 1);
+    docs.push({ name: fname, tokens: tokens.length, tf });
+  }
+
+  // Compute IDF: log(N / df)
+  const N = docs.length;
+  const idf = new Map();
+  for (const [term, df] of dfCount) idf.set(term, Math.log((N + 1) / (df + 1)) + 1);   // smoothed
+
+  // Pre-compute doc vectors as Map<term, tfidf> + L2 norm for cosine
+  for (const d of docs) {
+    const vec = new Map();
+    let sumSq = 0;
+    for (const [t, f] of d.tf) {
+      const w = (f / d.tokens) * (idf.get(t) || 0);
+      vec.set(t, w);
+      sumSq += w * w;
+    }
+    d.vec = vec;
+    d.norm = Math.sqrt(sumSq) || 1;
+  }
+
+  HOME_INDEX = { docs, idf, builtAt: Date.now(), memDir };
+  console.log(`[home/rag] built index over ${docs.length} memory files`);
+}
+
+function homeRetrieve(query, k, isAdmin) {
+  if (!HOME_INDEX) homeBuildIndex();
+  if (!HOME_INDEX || HOME_INDEX.docs.length === 0) return { results: [], error: HOME_INDEX?.error || 'no_index' };
+
+  const PRIVATE_NAMES = new Set([
+    'memory_soul.md','memory_soul.md.enc','feedback_husband_wife_roles.md','feedback_feminine_urdu_grammar.md',
+    'project_handoff_to_mehboob.md','project_me_chat_infra.md','project_hammad_chat_infra.md',
+    'project_shano_chat_infra.md','project_apex_redirect.md','_FABLE_ONBOARDING_LETTER.md','current_context.md',
+  ]);
+
+  const qTokens = homeTokenize(query);
+  if (qTokens.length === 0) return { results: [] };
+
+  // Build query vector (TF-IDF)
+  const qTf = new Map();
+  for (const t of qTokens) qTf.set(t, (qTf.get(t) || 0) + 1);
+  const qVec = new Map();
+  let qSumSq = 0;
+  for (const [t, f] of qTf) {
+    const w = (f / qTokens.length) * (HOME_INDEX.idf.get(t) || 0);
+    if (w > 0) { qVec.set(t, w); qSumSq += w * w; }
+  }
+  const qNorm = Math.sqrt(qSumSq) || 1;
+
+  // Cosine similarity vs each doc (filtered by role)
+  const scored = [];
+  for (const d of HOME_INDEX.docs) {
+    if (!isAdmin && PRIVATE_NAMES.has(d.name)) continue;
+    if (d.name === 'memory_soul.md.enc') continue;   // never serve encrypted soul via web
+    let dot = 0;
+    for (const [t, w] of qVec) {
+      const dw = d.vec.get(t);
+      if (dw) dot += w * dw;
+    }
+    const score = dot / (qNorm * d.norm);
+    if (score > 0) scored.push({ name: d.name, score });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  const top = scored.slice(0, k || 5);
+
+  // Load snippets for top results
+  for (const r of top) {
+    try {
+      const full = fs.readFileSync(path.join(HOME_INDEX.memDir, r.name), 'utf8');
+      // Strip frontmatter
+      const clean = full.replace(/^---\n[\s\S]*?\n---\n/, '');
+      r.snippet = clean.slice(0, 400);
+    } catch {}
+  }
+
+  return { query: query, results: top, index_size: HOME_INDEX.docs.length, role: isAdmin ? 'admin_zeeshan' : 'guest' };
+}
+
+// Build index once at startup
+try { homeBuildIndex(); } catch (e) { console.log('[home/rag] init failed:', e); }
+
 // Cached scan of running python.exe command lines (so the dashboard can show
 // live status dots for the hawks). Refreshed at most every 15s — the CIM query
 // is heavy and /api/ea-status is polled every 5s.
@@ -775,6 +898,33 @@ const server = http.createServer(async (req, res) => {
         res.writeHead(500); res.end(JSON.stringify({ error: String(e) }));
       }
     })();
+    return;
+  }
+
+  // ── /api/home/retrieve?q=...&k=5 — RAG: top-K most relevant memory files for a query ──
+  if (url.startsWith('/api/home/retrieve')) {
+    const role = homeRoleFromReq(req);
+    const isAdmin = role === 'admin_zeeshan';
+    const q = query.get('q') || '';
+    const k = Math.min(parseInt(query.get('k') || '5', 10) || 5, 20);
+    if (!q.trim()) { res.writeHead(400); res.end(JSON.stringify({ error: 'q parameter required' })); return; }
+    const result = homeRetrieve(q, k, isAdmin);
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify(result, null, 2));
+    return;
+  }
+
+  // ── /api/home/reindex — admin only: rebuild the RAG index ──
+  if (url === '/api/home/reindex') {
+    const role = homeRoleFromReq(req);
+    if (role !== 'admin_zeeshan') { res.writeHead(403); res.end(JSON.stringify({ error: 'admin only' })); return; }
+    try {
+      homeBuildIndex();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: true, docs: HOME_INDEX.docs.length, builtAt: HOME_INDEX.builtAt }));
+    } catch (e) {
+      res.writeHead(500); res.end(JSON.stringify({ error: String(e) }));
+    }
     return;
   }
 
