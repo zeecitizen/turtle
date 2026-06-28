@@ -173,9 +173,16 @@ let currentFilter = '';
 
 async function loadFiles() {
   try {
-    const r = await fetch('/api/home/memory');
+    const r = await fetch('/api/home/memory', { credentials: 'same-origin' });
     const d = await r.json();
     allFiles = d.files || [];
+    // Tag private files visually for admin
+    const PRIVATE_NAMES = new Set([
+      'memory_soul.md','memory_soul.md.enc','feedback_husband_wife_roles.md','feedback_feminine_urdu_grammar.md',
+      'project_handoff_to_mehboob.md','project_me_chat_infra.md','project_hammad_chat_infra.md',
+      'project_shano_chat_infra.md','project_apex_redirect.md','_FABLE_ONBOARDING_LETTER.md','current_context.md',
+    ]);
+    allFiles.forEach(f => { f.private = PRIVATE_NAMES.has(f.name); });
     renderFiles();
   } catch (e) {
     fileListEl.textContent = 'failed to load memory: ' + e;
@@ -192,7 +199,7 @@ function renderFiles() {
   if (!filtered.length) { fileListEl.innerHTML = '<div style="color:var(--faint);font-size:12px;padding:8px;">no matches</div>'; return; }
   fileListEl.innerHTML = filtered.map(f => `
     <div class="file-item" data-name="${f.name}">
-      <div class="cat">${f.category}</div>
+      <div class="cat">${f.category}${f.private ? ' · 🔒 PRIVATE' : ''}</div>
       <div>${f.name.replace(/^[a-z]+_/, '').replace(/\.md$/, '').replace(/_/g, ' ')}</div>
     </div>
   `).join('');
@@ -205,7 +212,7 @@ async function loadFile(name, el) {
   document.querySelectorAll('.file-item').forEach(e => e.classList.remove('active'));
   if (el) el.classList.add('active');
   try {
-    const r = await fetch('/api/home/memory/' + encodeURIComponent(name));
+    const r = await fetch('/api/home/memory/' + encodeURIComponent(name), { credentials: 'same-origin' });
     if (!r.ok) { contentEl.innerHTML = '<p style="color:var(--red)">Failed to load: ' + name + '</p>'; return; }
     const md = await r.text();
     // Strip frontmatter for cleaner display
@@ -224,18 +231,65 @@ categoryTabs.forEach(b => b.addEventListener('click', () => {
   renderFiles();
 }));
 
-// Auth box — placeholder (Phase 3 will wire actual auth)
+// Auth box — Phase 3: real code-word auth via HMAC-signed cookie
 const authInput = document.getElementById('auth-input');
 const authGo = document.getElementById('auth-go');
 const authStatus = document.getElementById('auth-status');
-authGo.addEventListener('click', () => {
+
+let currentRole = 'guest';
+
+async function refreshAuthStatus() {
+  try {
+    const r = await fetch('/api/home/whoami', { credentials: 'same-origin' });
+    const d = await r.json();
+    currentRole = d.role || 'guest';
+    if (currentRole === 'admin_zeeshan') {
+      authStatus.textContent = '✓ Zeeshan';
+      authStatus.classList.add('admin');
+      authGo.textContent = 'Logout';
+    } else {
+      authStatus.textContent = 'guest';
+      authStatus.classList.remove('admin');
+      authGo.textContent = 'Unlock';
+    }
+  } catch {}
+}
+
+async function doAuth() {
+  if (currentRole === 'admin_zeeshan') {
+    // Logout flow
+    await fetch('/api/home/logout', { credentials: 'same-origin' });
+    await refreshAuthStatus();
+    await loadFiles();
+    return;
+  }
   const v = authInput.value.trim();
   if (!v) return;
-  // Phase 1 placeholder — real auth wired in Phase 3
-  authStatus.textContent = 'auth pending — Phase 3 will wire this';
-  setTimeout(() => { authStatus.textContent = 'guest'; }, 3000);
-});
-authInput.addEventListener('keydown', e => { if (e.key === 'Enter') authGo.click(); });
+  try {
+    const r = await fetch('/api/home/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ message: v }),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      authInput.value = '';
+      await refreshAuthStatus();
+      await loadFiles();   // reload — admin sees private files now
+    } else {
+      authStatus.textContent = '✗ wrong code';
+      setTimeout(() => refreshAuthStatus(), 2500);
+    }
+  } catch (e) {
+    authStatus.textContent = '✗ error: ' + e.message;
+  }
+}
+
+authGo.addEventListener('click', doAuth);
+authInput.addEventListener('keydown', e => { if (e.key === 'Enter') doAuth(); });
+
+refreshAuthStatus();
 
 // Live strip
 async function refreshLiveStrip() {
