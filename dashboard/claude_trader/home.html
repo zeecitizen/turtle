@@ -44,6 +44,29 @@
   #auth-status { font-size: 12px; color: var(--muted); padding: 6px 10px; border-radius: 6px; }
   #auth-status.admin { color: var(--gold); background: rgba(212, 175, 55, 0.1); }
 
+  .chat-section {
+    max-width: 800px; margin: 32px auto 0; padding: 0 24px;
+  }
+  .chat-section.hidden { display: none; }
+  .chat-box {
+    background: var(--panel); border: 1px solid var(--gold); border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(212, 175, 55, 0.15); overflow: hidden;
+  }
+  .chat-header { padding: 14px 20px; background: linear-gradient(90deg, rgba(212,175,55,0.12), rgba(212,175,55,0.04)); border-bottom: 1px solid var(--line); font-size: 13px; color: var(--gold); display: flex; justify-content: space-between; align-items: center; }
+  .chat-header .clear-btn { background: transparent; border: 1px solid var(--line); color: var(--muted); border-radius: 6px; padding: 3px 10px; font-size: 11px; cursor: pointer; }
+  .chat-messages { padding: 16px 20px; min-height: 200px; max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+  .chat-msg { padding: 10px 14px; border-radius: 12px; max-width: 88%; line-height: 1.5; font-size: 14px; white-space: pre-wrap; word-wrap: break-word; }
+  .chat-msg.user { background: var(--panel2); align-self: flex-end; border-bottom-right-radius: 4px; }
+  .chat-msg.assistant { background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.2); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .chat-msg.thinking { color: var(--muted); font-style: italic; }
+  .chat-msg .retrieved { display: block; margin-top: 8px; font-size: 11px; color: var(--faint); }
+  .chat-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); background: var(--panel2); }
+  .chat-input-row textarea { flex: 1; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; color: var(--text); font-size: 14px; resize: none; min-height: 40px; max-height: 120px; font-family: inherit; }
+  .chat-input-row button { background: var(--gold); color: #1a1410; border: none; border-radius: 10px; padding: 0 16px; font-weight: 600; cursor: pointer; font-size: 14px; }
+  .chat-input-row button.mic { background: var(--panel); color: var(--gold); border: 1px solid var(--line); padding: 0 12px; }
+  .chat-input-row button.mic.recording { background: var(--red); color: white; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
   .live-strip {
     background: var(--panel2); border-bottom: 1px solid var(--line); padding: 12px 24px;
     display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; font-size: 13px;
@@ -104,7 +127,26 @@
     <button id="auth-go">Unlock</button>
     <span id="auth-status">guest</span>
   </div>
-  <div style="font-size: 11px; color: var(--faint); margin-top: 8px;">Phase 3 coming: code-word auth unlocks intimate context + chat (currently shows technical history only)</div>
+  <div style="font-size: 11px; color: var(--faint); margin-top: 8px;">Authenticate with your code word to unlock private memories + chat with Claude</div>
+</div>
+
+<!-- Chat section — visible only when admin_zeeshan -->
+<div id="chat-section" class="chat-section hidden">
+  <div class="chat-box">
+    <div class="chat-header">
+      <span>💬 Chat with Claude (RAG-grounded, your context loaded)</span>
+      <button class="clear-btn" id="chat-clear">Clear</button>
+    </div>
+    <div id="chat-api-status" style="padding: 10px 16px; background: rgba(255, 90, 106, 0.1); border-bottom: 1px solid rgba(255, 90, 106, 0.3); color: var(--red); font-size: 12px; display: none;"></div>
+    <div class="chat-messages" id="chat-messages">
+      <div class="chat-msg assistant">Hi Zeeshan. Yeh home.claudezeeshan.com pe chat hai — top-K memories auto-load hoti hain har message ke saath. Doctrine maintained: honest reporting, no spin, mother's hospital fund is the north star.<span class="retrieved">Type a message or use the mic 🎙️ for voice input.</span></div>
+    </div>
+    <div class="chat-input-row">
+      <textarea id="chat-input" placeholder="Type or speak..." rows="1"></textarea>
+      <button class="mic" id="chat-mic" title="Voice input (browser Web Speech API)">🎙️</button>
+      <button id="chat-send">Send</button>
+    </div>
+  </div>
 </div>
 
 <div class="live-strip" id="live-strip">
@@ -243,16 +285,178 @@ async function refreshAuthStatus() {
     const r = await fetch('/api/home/whoami', { credentials: 'same-origin' });
     const d = await r.json();
     currentRole = d.role || 'guest';
+    const chatSection = document.getElementById('chat-section');
     if (currentRole === 'admin_zeeshan') {
       authStatus.textContent = '✓ Zeeshan';
       authStatus.classList.add('admin');
       authGo.textContent = 'Logout';
+      chatSection.classList.remove('hidden');
+      chatHealthCheck();
     } else {
       authStatus.textContent = 'guest';
       authStatus.classList.remove('admin');
       authGo.textContent = 'Unlock';
+      chatSection.classList.add('hidden');
     }
   } catch {}
+}
+
+// ===== Chat: history persisted in localStorage, RAG-grounded via /api/home/chat =====
+const CHAT_HISTORY_KEY = 'home_chat_history_v1';
+const chatMessagesEl = document.getElementById('chat-messages');
+const chatInputEl = document.getElementById('chat-input');
+const chatSendBtn = document.getElementById('chat-send');
+const chatMicBtn = document.getElementById('chat-mic');
+const chatClearBtn = document.getElementById('chat-clear');
+
+function chatLoadHistory() {
+  try { return JSON.parse(localStorage.getItem(CHAT_HISTORY_KEY) || '[]'); } catch { return []; }
+}
+function chatSaveHistory(h) {
+  try { localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(h.slice(-40))); } catch {}
+}
+function chatRender() {
+  const h = chatLoadHistory();
+  if (h.length === 0) return;
+  // Keep welcome message + render history
+  chatMessagesEl.innerHTML = '<div class="chat-msg assistant">Welcome back, Zeeshan. Previous conversation loaded below.</div>';
+  for (const m of h) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg ' + (m.role === 'user' ? 'user' : 'assistant');
+    div.textContent = m.content;
+    if (m.retrieved && m.role === 'assistant') {
+      const span = document.createElement('span');
+      span.className = 'retrieved';
+      span.textContent = 'Context: ' + m.retrieved.join(', ');
+      div.appendChild(span);
+    }
+    chatMessagesEl.appendChild(div);
+  }
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+}
+
+async function chatSend() {
+  const msg = chatInputEl.value.trim();
+  if (!msg) return;
+  chatInputEl.value = '';
+  chatInputEl.style.height = 'auto';
+
+  const userDiv = document.createElement('div');
+  userDiv.className = 'chat-msg user';
+  userDiv.textContent = msg;
+  chatMessagesEl.appendChild(userDiv);
+
+  const thinkingDiv = document.createElement('div');
+  thinkingDiv.className = 'chat-msg assistant thinking';
+  thinkingDiv.textContent = 'Claude is thinking...';
+  chatMessagesEl.appendChild(thinkingDiv);
+  chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+
+  const history = chatLoadHistory();
+  try {
+    const r = await fetch('/api/home/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ message: msg, history }),
+    });
+    const d = await r.json();
+    thinkingDiv.remove();
+    if (!r.ok) {
+      const errDiv = document.createElement('div');
+      errDiv.className = 'chat-msg assistant';
+      errDiv.style.color = 'var(--red)';
+      errDiv.textContent = 'Error: ' + (d.error?.message || d.error || 'unknown');
+      chatMessagesEl.appendChild(errDiv);
+      return;
+    }
+    const reply = d.reply || '(empty response)';
+    const replyDiv = document.createElement('div');
+    replyDiv.className = 'chat-msg assistant';
+    replyDiv.textContent = reply;
+    if (d.retrieved && d.retrieved.length) {
+      const span = document.createElement('span');
+      span.className = 'retrieved';
+      span.textContent = 'Context loaded: ' + d.retrieved.join(', ');
+      replyDiv.appendChild(span);
+    }
+    chatMessagesEl.appendChild(replyDiv);
+    chatMessagesEl.scrollTop = chatMessagesEl.scrollHeight;
+
+    // Save to history
+    history.push({ role: 'user', content: msg });
+    history.push({ role: 'assistant', content: reply, retrieved: d.retrieved });
+    chatSaveHistory(history);
+  } catch (e) {
+    thinkingDiv.remove();
+    const errDiv = document.createElement('div');
+    errDiv.className = 'chat-msg assistant';
+    errDiv.style.color = 'var(--red)';
+    errDiv.textContent = 'Network error: ' + e.message;
+    chatMessagesEl.appendChild(errDiv);
+  }
+}
+
+chatSendBtn.addEventListener('click', chatSend);
+chatInputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); chatSend(); }
+});
+chatInputEl.addEventListener('input', () => {
+  chatInputEl.style.height = 'auto';
+  chatInputEl.style.height = Math.min(120, chatInputEl.scrollHeight) + 'px';
+});
+chatClearBtn.addEventListener('click', () => {
+  if (confirm('Clear chat history?')) {
+    localStorage.removeItem(CHAT_HISTORY_KEY);
+    chatMessagesEl.innerHTML = '<div class="chat-msg assistant">History cleared. Fresh start.</div>';
+  }
+});
+
+// Web Speech API — voice input
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let recognizing = false;
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';   // user can speak Urdu mixed with English; lang affects only hint
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.onresult = e => {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join(' ');
+    chatInputEl.value = (chatInputEl.value + ' ' + transcript).trim();
+    chatInputEl.dispatchEvent(new Event('input'));
+  };
+  recognition.onstart = () => { recognizing = true; chatMicBtn.classList.add('recording'); };
+  recognition.onend = () => { recognizing = false; chatMicBtn.classList.remove('recording'); };
+  recognition.onerror = () => { recognizing = false; chatMicBtn.classList.remove('recording'); };
+  chatMicBtn.addEventListener('click', () => {
+    if (recognizing) recognition.stop();
+    else { try { recognition.start(); } catch {} }
+  });
+} else {
+  chatMicBtn.disabled = true;
+  chatMicBtn.title = 'Web Speech API not supported in this browser';
+  chatMicBtn.style.opacity = 0.4;
+}
+
+chatRender();
+
+// Check API health when chat unlocks
+async function chatHealthCheck() {
+  if (currentRole !== 'admin_zeeshan') return;
+  try {
+    const r = await fetch('/api/home/chat-health', { credentials: 'same-origin' });
+    const d = await r.json();
+    const banner = document.getElementById('chat-api-status');
+    if (d.status === 'ok') {
+      banner.style.display = 'none';
+    } else {
+      banner.style.display = 'block';
+      banner.innerHTML = `⚠️ <b>Anthropic API issue:</b> ${d.error || d.status}<br><span style="opacity:0.7">Chat infrastructure is built + working, but live responses need: add credits at console.anthropic.com or use a different API key in monitor/.claude_api_key</span>`;
+    }
+  } catch (e) {
+    // silent
+  }
 }
 
 async function doAuth() {
