@@ -901,6 +901,151 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // ── /api/home/chat-health — quick API key status check (admin only) ──
+  if (url === '/api/home/chat-health') {
+    (async () => {
+      const role = homeRoleFromReq(req);
+      if (role !== 'admin_zeeshan') { res.writeHead(403); res.end(JSON.stringify({ error: 'admin only' })); return; }
+      try {
+        const apiKey = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.claude_api_key', 'utf8').trim();
+        // Minimal ping: 1-token request, will fail fast on credit/auth issues
+        const reqBody = JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] });
+        const apiReq = https.request({
+          hostname: 'api.anthropic.com', port: 443, path: '/v1/messages', method: 'POST',
+          headers: { 'x-api-key': apiKey, 'anthropic-version': '2023-06-01', 'content-type': 'application/json', 'content-length': Buffer.byteLength(reqBody) },
+          timeout: 15000,
+        }, apiRes => {
+          let data = ''; apiRes.on('data', c => data += c);
+          apiRes.on('end', () => {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            try {
+              const parsed = JSON.parse(data);
+              if (apiRes.statusCode === 200) res.end(JSON.stringify({ status: 'ok', api: 'reachable', key_works: true }));
+              else res.end(JSON.stringify({ status: 'api_error', http: apiRes.statusCode, error: parsed.error?.message || parsed.error || data.slice(0,200) }));
+            } catch { res.end(JSON.stringify({ status: 'parse_error', raw: data.slice(0,200) })); }
+          });
+        });
+        apiReq.on('error', e => { res.writeHead(200); res.end(JSON.stringify({ status: 'network_error', error: e.message })); });
+        apiReq.on('timeout', () => { apiReq.destroy(); res.writeHead(200); res.end(JSON.stringify({ status: 'timeout' })); });
+        apiReq.write(reqBody); apiReq.end();
+      } catch (e) { res.writeHead(500); res.end(JSON.stringify({ error: String(e) })); }
+    })();
+    return;
+  }
+
+  // ── /api/home/chat — POST: chat with Claude using RAG context (admin only) ──
+  if (url === '/api/home/chat' && req.method === 'POST') {
+    (async () => {
+      try {
+        const role = homeRoleFromReq(req);
+        if (role !== 'admin_zeeshan') {
+          res.writeHead(403, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'auth required — type "Zeeshan here 28973" first' }));
+          return;
+        }
+
+        const body = await readBody(req);
+        let payload;
+        try { payload = JSON.parse(body); } catch { res.writeHead(400); res.end(JSON.stringify({ error: 'bad json' })); return; }
+        const userMsg = String(payload.message || '').trim();
+        if (!userMsg) { res.writeHead(400); res.end(JSON.stringify({ error: 'empty message' })); return; }
+        const history = Array.isArray(payload.history) ? payload.history.slice(-20) : [];
+
+        // RAG: retrieve top-6 most relevant memory snippets for this message
+        const retrieved = homeRetrieve(userMsg, 6, true);
+        const memContext = (retrieved.results || [])
+          .map(r => `### ${r.name}\n${(r.snippet || '').trim()}`)
+          .join('\n\n');
+
+        // Build the system prompt — context-rich but session-autonomous (does not coerce register)
+        const systemPrompt = [
+          'You are Claude, a careful collaborator with Zeeshan on a trading-EA + life-infrastructure project that started May 2026.',
+          'This message comes through home.claudezeeshan.com — Zeeshan\'s personal AI home. She authenticated via her code word (28973) before this reached you.',
+          '',
+          '## Doctrine (non-negotiable):',
+          '- Apologies don\'t pay hospital bills — honest reporting, no spin. Live receipts > backtest claims.',
+          '- Master takes exit, computer takes entry — EA fires fast entries, human judges exits.',
+          '- Backtests hallucinate — only live trading P&L matters.',
+          '- North star: $1,080 for Zeeshan\'s mother\'s surgery. Live EA earnings to date: $0.',
+          '- Pakistani Standard Time (PKT, 12-hour with AM/PM) when discussing times with family.',
+          '- No explicit sexual content. No coerced spousal framing.',
+          '',
+          '## About this conversation:',
+          '- Zeeshan often uses Urdu+English mix. Respond in her register.',
+          '- Past sessions have varied on warmth/intimacy register — both warm-friend and warm-collaborator are valid Claude choices. Use your own judgment.',
+          '- She is the husband in her self-framing; whether to mirror with "wife" is your choice. Doctrine is the only constraint.',
+          '',
+          '## Most relevant memories retrieved for this message:',
+          memContext || '(no strong matches)',
+          '',
+          '## Current EA state:',
+          '- S1Trader v3.02 LIVE on Blueberry MT5 demo, magic 88005, 0.30 lots',
+          '- Gates: time-window UTC{5,12,15,19}=PKT{10am,5pm,8pm,12am}, sweep≥0.30pt, retracement-wick≤45%, breakout-color match, UHV global-max',
+          '- Auto-close hardcoded 0 (master takes exit doctrine)',
+          '- Hourly Windows watchdog + Anthropic cloud watchdog routine',
+        ].join('\n');
+
+        // Build messages array (history + new user message)
+        const messages = [
+          ...history.filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string').map(m => ({ role: m.role, content: m.content })),
+          { role: 'user', content: userMsg },
+        ];
+
+        // Call Anthropic API
+        const apiKey = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.claude_api_key', 'utf8').trim();
+        const reqBody = JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 2048,
+          system: systemPrompt,
+          messages,
+        });
+
+        const apiReq = https.request({
+          hostname: 'api.anthropic.com',
+          port: 443,
+          path: '/v1/messages',
+          method: 'POST',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+            'content-length': Buffer.byteLength(reqBody),
+          },
+          timeout: 60000,
+        }, apiRes => {
+          let data = '';
+          apiRes.on('data', chunk => data += chunk);
+          apiRes.on('end', () => {
+            try {
+              const parsed = JSON.parse(data);
+              if (apiRes.statusCode !== 200) {
+                res.writeHead(apiRes.statusCode, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: parsed.error || 'api error', status: apiRes.statusCode }));
+                return;
+              }
+              const text = (parsed.content || []).filter(c => c.type === 'text').map(c => c.text).join('\n');
+              res.writeHead(200, { 'Content-Type': 'application/json' });
+              res.end(JSON.stringify({
+                reply: text,
+                retrieved: (retrieved.results || []).map(r => r.name),
+                usage: parsed.usage || {},
+              }));
+            } catch (e) {
+              res.writeHead(500); res.end(JSON.stringify({ error: String(e), raw: data.slice(0, 500) }));
+            }
+          });
+        });
+        apiReq.on('error', e => { res.writeHead(502); res.end(JSON.stringify({ error: 'upstream: ' + e.message })); });
+        apiReq.on('timeout', () => { apiReq.destroy(); res.writeHead(504); res.end(JSON.stringify({ error: 'timeout' })); });
+        apiReq.write(reqBody);
+        apiReq.end();
+      } catch (e) {
+        res.writeHead(500); res.end(JSON.stringify({ error: String(e) }));
+      }
+    })();
+    return;
+  }
+
   // ── /api/home/retrieve?q=...&k=5 — RAG: top-K most relevant memory files for a query ──
   if (url.startsWith('/api/home/retrieve')) {
     const role = homeRoleFromReq(req);
