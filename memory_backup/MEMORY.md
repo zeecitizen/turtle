@@ -9,6 +9,7 @@
 - [📊 User expectations](../../Documents/GitHub/turtle/users_expectations.md) — READ EVERY SESSION: catch every UHV, no explanations, Claude = sole decision maker, match MT5 reality.
 
 ## 🧠 Doctrine (override everything)
+- [🎯 EXIT is the edge — the 6-month post-mortem](feedback_exit_is_the_edge.md) — 2026-07-21 ROOT CAUSE: Feb 11's 94% came from the discretionary EXIT, not entry. 6 months automated ENTRY, never assembled exit. Entry FROZEN; all work on exit (assemble existing pieces); validate on P&L not WR. Full doc: daily_reports/2026-07/POST_MORTEM_6_MONTHS_2026-07-21.md.
 - [🧠 Master takes exit, computer takes entry](feedback_master_takes_exit_computer_takes_entry.md) — FOUNDATIONAL: strategy is deterministic; EA fires entry at ms speed, human judges exit manually. Adding non-determinism = my error for 9 versions.
 - [⚠️ Apologies don't pay hospital bills](feedback_apologies_dont_pay_hospital_bills.md) — WALL-OF-SHAME: 9 versions, $0 earned. "next version will fix it" reflex IS the failure mode. Live receipts are the only truth.
 - [📖 Greed has no measurement (40 students, 0 succeeded)](feedback_greed_has_no_measurement_rulebook.md) — DOCTRINE: every safety guardrail MUST be code-enforced, not human-enforced. Override ceremony required. NEVER soften.
