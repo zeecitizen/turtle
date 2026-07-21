@@ -1,188 +1,139 @@
-# Daily report — 2026-06-09 (Tuesday)
+# POST-MORTEM — 6 months, $0 profit. The honest document.
 
-> **READ ME FIRST** before doing any EA work tomorrow. Six months of "discover →
-> abandon → rediscover" stops here. This document is the canonical brain-dump
-> of what's live, what works, what failed, and what NOT to repeat.
+> **Date:** 2026-07-21
+> **Author:** Claude (laptop session, Opus 4.8), with Zeeshan.
+> **Purpose:** Break the hallucination. This is the sober, receipt-driven account
+> of WHY six months of work never produced a single profitable day. Any Claude
+> (laptop, VPS, future model) MUST read this before touching the strategy again.
+> No hype. No "next version will fix it." Only what the receipts show.
 
 ---
 
-## 1. LIVE STATE AS OF END-OF-DAY
+## 0. The brutal fact
 
-| Component | Status | Details |
+- **Duration:** ~2026-02 → 2026-07 (6 months).
+- **Result:** **$0 net profit. No overall profitable day.** Recent live run
+  (VPS Blueberry, 2026-06-29 → 07-01): 9 trades, 66% WR, **net −$177**. Then the
+  VPS stopped (unpaid) and it went silent for 20 days.
+- Zeeshan is an MIT software engineer. His cousins mock him: "he can't even build
+  one EA." **This document exists to prove the failure was a specific, fixable
+  methodology error — not incompetence, and not a fake strategy.**
+
+## 1. The strategy is REAL
+
+Feb 11, 2026 (Blueberry-Live02, account 5118408, **real money**): **69 trades,
+65W / 4L = 94.2% WR, net positive.** This is not a backtest. It happened. The
+edge is real. The question was never "is the strategy real" — it was "why can't
+we reproduce it mechanically."
+
+## 2. The root cause (three independent investigations converged)
+
+> **The 94% was a property of the EXIT, not the ENTRY. We spent six months
+> perfecting the ENTRY and never faithfully built the EXIT.**
+
+### 2a. What the Feb 11 receipts actually show (measured 2026-07-21, first time ever)
+Every trade had **NO S/L and NO T/P set** — all opened and closed **by hand**.
+- **Winners RAN:** held to large moves. Big ones +$50–$55 on 0.1 lot ≈ **+6 points**
+  (17:02 basket +$153, 17:49 basket +$157). Small scalps +$5–$17.
+- **Losers were CUT tiny:** the only 4 losses were −$0.76, −$1.43, −$1.51, −$1.60.
+  Biggest loss of the whole day = **−$1.60**. Biggest win = **+$54.93**.
+- **Positions were STACKED** (2–4 lots per signal) and **closed as a basket at one
+  instant** (all of 17:02 closed 17:03:51; all of 18:41 closed 19:06:41).
+- **No fixed target.** Profit ranged +$0.17 → +$54.93. He exited when the
+  **momentum stalled/reversed**, judged by eye — not at a number.
+
+**The insight that makes it click:** the 94% WR and the asymmetric R:R are the
+SAME thing — both produced by the discretionary exit. Cutting a would-be-loser
+near breakeven keeps it out of the "loss" column (raises WR) AND keeps losses
+tiny (fixes R:R). Letting winners run creates the big average win. Entry is
+ordinary; **the exit is the entire edge.**
+
+### 2b. What we actually built for 6 months
+- **Era 1 — TradingView Pine indicator** (Feb → early May): UHV breakout signals
+  via PineConnector. Hit platform limits; signal-vs-fill parity never trustworthy.
+- **Era 2 — Python backtests** (May): glowing numbers ("+$8079/18d", "94% WR",
+  "85.6% WR") that **never reproduced live**. Birth of the doctrine
+  *"all backtests hallucinate."*
+- **Era 3 — native MQL5 EA** (May 12 → now): S1Trader family. Still oscillating
+  between over-strict (fires nothing / all-MISS) and over-loose (~50% noise).
+  Never closed successfully.
+
+Across all three eras the effort went into **ENTRY DETECTION** — dozens of gates
+(HHHL, H1Bias, slow-trend, big-spread-climax, UHV body/color/global-max, sweep,
+FVG, volume-source). Most tested negative or redundant.
+
+### 2c. We even DIAGNOSED this correctly once — then threw it away
+- **2026-05-22 commit:** *"Feb-11: gap is ENTRY TIMING, not exit"* and *"Zee's
+  entry + mechanical exit is walk-forward robust."* → abandoned in the next rewrite.
+- **v2.84 (2026-06-18):** stripped all auto-exits, implemented "master takes exit
+  manually" (catastrophe SL only, human closes). → reverted within days back to a
+  fixed 1.3pt TP.
+
+This is **the rediscovery loop**: progress → failure → abandon prior learning →
+rewrite → repeat. Six months, three rewrites, the one correct finding erased each time.
+
+## 3. The current live EA is the EXACT INVERSE of Feb 11
+
+v3.02 (live config): **`InpTPPoints = 1.3`** (winner capped at 1.3pt),
+**SL = UHV-extreme ± 2pt** (loser runs 2–6pt), trail/BE/auto-close all **0 / off**.
+
+| | Zee (Feb 11) | EA (v3.02 live) |
 |---|---|---|
-| **S1Trader v2.67** | M1 instance LIVE on Blueberry-Demo, magic 88005, 0.10 lots | Waiting for first fire — Zee compiled + reattached at end of session |
-| M5 instance (88004) | INTENTIONALLY DROPPED | Zee verbatim: "we don't need such EA. i'm wanting to build ONLY an EA that fires EXACTLY or SIMILAR to my feb 11 frequency" |
-| Tick logger (ShanoTickLogger) | DEAD since 2026-06-05 | No tick CSVs since `shano_ticks_2026-06-08.csv` |
-| Trade logger (TurtleTradeLogger) | Functional | `turtle_fills.csv` populating today's fills |
-| Other EAs (S3/NSND/UhvNative/BTCs3/BTCs4b) | NOT deployed | Zee verbatim: "they were built using hallucinating backtests of python (inaccurate), so they are not profitable" |
-| Dashboard claudezeeshan.com | All live | activity feed, today's trades, world clocks, Monday-test table |
+| Winner | runs to ~6pt | **capped at 1.3pt** |
+| Loser | cut ~−1.5pt | **wide 2–6pt** |
+| Realized R:R | ~10:1 for | ~0.3:1 against |
+| Result | +$800 day | −$177 |
 
-### Today's fills (broker time 2026.06.08 / 2026.06.09)
+And every exit that ever "backtested well" won by **capping winners** (e.g.
+`trail_18_4` = 100% WR +$163 by capping each winner at ~$27). The machine kept
+optimizing toward the WRONG behavior because it was tuned to **capture-WR, not P&L**.
 
-- 02:55:17 SELL_closed (v2.44 carry-over): SL hit, **−$21.00**
-- 14:14:55 BUY_closed (v2.62 first WIN): TP hit, **+$9.18**
-- Net day = −$12.06
+## 4. The two doctrine traps
 
----
+1. **"Take all chances, filters off, trash hides gems."** Adopted to stop
+   overfitting. But firing on every UHV 24/7 is mathematically ~50% coin-flip —
+   the OPPOSITE of a selective 94% day. This doctrine, meant to help, guaranteed
+   regression to noise. **Selectivity is not the enemy; overfit backtests were.**
+2. **"94% is repeatable every day."** It is NOT. Feb 11 was also a strong
+   trending/high-range regime. Honest achievable target = **positive expectancy**
+   (even 60–65% WR) with the RIGHT R:R. At Zee's real R:R, 65% WR is very profitable.
 
-## 2. CANONICAL EA SPEC AS IT STANDS RIGHT NOW (v2.67)
+## 5. THE FIX IS ASSEMBLY, NOT INVENTION
 
-All defaults baked into `mt5/S1Trader.mq5`. **No input edits needed** at attach time.
+Every piece needed already exists in the codebase — they were just never combined
+into ONE coherent exit for the UHV strategy:
+- **Basket close** — `grab_command.txt` / GRAB (`S1Trader.mq5` ~:2747).
+- **Momentum-stall exit** — `MIDTRADE_DECEL` (`ShanoExitManager.mq5` ~:1287).
+- **Impulse-death exit** — `CDD_DIV` cumulative-delta divergence (`ShanoExitManager.mq5` ~:1251).
+- **Manual-exit + catastrophe-SL skeleton** — v2.84 (`S1Trader.mq5` ~:314).
+- **Correct RATIO already** — sniper `SL15 / TP52` pips ≈ 1.5pt cut / 5.2pt run.
 
-| Input | Default | Purpose |
-|---|---|---|
-| `InpLots` | **0.10** | bumped from 0.01 (Zee 2026-06-09) |
-| `InpMagicNumber` | **88005** | M1 instance default |
-| `InpTimeframe` | **PERIOD_M1** | M5 dropped |
-| `InpStateFile` | `s1_trader_state_m1.json` | M1 default |
-| `InpDecisionCsv` | `s1_decisions_m1.csv` | M1 default |
-| `InpTPPoints` | **1.0** | micro-scalp TP |
-| `InpDynamicTP` | **false** | fixed TP (not 1:1 R:R) |
-| `InpSLBufferPts` | **2.0** | hard SL safety net |
-| `InpUhvBodyMin` | **0.30** | loose UHV body |
-| `InpRequireUhvNeighborPeak` | **false** | strict peak off |
-| `InpRequireH1Bias` | **false** | was "validated" true — proven wrong, flipped off |
-| `InpRequireHHHL_M5` | **false** | the 63.4% blocker — killed |
-| `InpRequireSlowTrend` | **false** | hidden IsUptrend/Downtrend gate — now opt-in |
-| `InpRequireBigSpreadClimax` | **false** | hidden IsBigSpreadClimax gate — now opt-in |
-| `InpBreakoutVolRatio` | **1.00** | last blocker relaxed |
-| `InpSessionStartHour` | **0** | time window OFF (== InpSessionEndHour) |
-| `InpSessionEndHour` | **0** | time window OFF |
-| `InpTrailRevPts` | **0.30** | v2.65 trailing-reversal trigger |
-| `InpTrailLockPts` | **0.70** | v2.65 trail arms after peak ≥ this |
+## 6. THE NEW METHOD (the loop-breaker rules)
 
-### Version history TODAY (2026-06-09 session)
+1. **Entry is FROZEN.** It is good enough (66% WR = decent entries). We do NOT
+   touch detection/gates anymore. No more entry rewrites.
+2. **All effort on EXIT**, assembling the pieces above into one mechanism:
+   - Loser **hard-cut ~1.5pt**.
+   - Winner **late-arm, wide-give-back trail** (arm ~+3–4pt, give back ~1.5–2pt) —
+     let it RUN; TP is only a runaway ceiling, not the primary exit.
+   - **Basket** momentum-stall close for stacked fires.
+   - Human override + catastrophe SL retained.
+3. **Success = LIVE P&L only.** Not WR. Not backtest. Not dashboards. Not "signals
+   detected." The only question each day: *did the account close green?*
+4. **Claude will refuse the "next version will fix it" reflex.** If a change isn't
+   validated on full P&L across many days of real ticks, it is a hypothesis, not
+   progress. Report footers already say: *"NOT progress unless it documents a
+   positive P&L day."*
 
-- **v2.63** → v2.64 (micro-scalp defaults baked: 0.10 lots, TP 1.0 fixed, body 0.30, no HHHL, M1 default)
-- **v2.64** → v2.65 (tick-level trailing-reversal exit added: peak tracker + reversal close)
-- **v2.65** → v2.66 (hot-hours window default 14-18 + opt-in slow-trend/H1Bias/big-spread-climax + vol-ratio 0.75→1.00)
-- **v2.66** → v2.67 (time window OFF — 24h hunting — per "trash hides gems" rule)
-
----
-
-## 3. KEY DATA / FINDINGS (PRESERVE, DON'T RE-DISCOVER)
-
-### 3a. The 100% favorable-excursion fact (PROVEN on tick data)
-
-Tested 16 M1 fires over 7 days. **100% reached at least +0.1pt favorable excursion** before going adverse. 94% reached +0.5pt. 62% reached +1.0pt. This is the entire basis for the trailing-reversal exit strategy. **DO NOT re-discover this.**
-
-File: `monitor/strategy_lab/verify_micro_positive.py`
-
-### 3b. Three hidden hardcoded gates that were killing fires invisibly
-
-Filter-attribution diagnostic showed Python detector finds **83 fires/day** with v2.65 gates, but live EA fires **5/day**. The gap was three EA-only gates:
-
-1. `IsUptrendM5(1) || HasBullMomentumOverride()` — line 899 (BUY) / 1027 (SELL). Old close-delta(24bars > 7pts) filter. **Was always-on hardcoded. Made opt-in via `InpRequireSlowTrend` in v2.66.**
-2. `PassH1BiasGate` — H1 trend check. `InpRequireH1Bias` defaulted true ("validated" May 21). **Flipped to false in v2.66.**
-3. `IsBigSpreadClimax` — UHV must be wide-range bar. Line 958/1114. **Was always-on hardcoded. Made opt-in via `InpRequireBigSpreadClimax` in v2.66.**
-
-File: `monitor/strategy_lab/diagnose_filters.py` + `diagnose_v265.py`
-
-### 3c. Feb 11 hot-hour analysis (broker time)
-
-Broker hours 14:00-18:00 had the biggest range (47-71pts) on Feb 11. That's NY session overlap. **But** Zee's rule overrides this: don't restrict — trash hides gems. Kept analysis script for reference only.
-
-File: `monitor/strategy_lab/feb11_hot_hours.py`
-
-### 3d. Trailing-reversal exit grid (the v2.65 breakthrough)
-
-Tested 34 M1 fires over 7 days with various trail thresholds:
-
-| rev / lock / sl | W/L/TO | WR | $/day @ 1.0 lot |
-|---|---|---|---|
-| 0.5 / 1.0 / 2.0 | 24/1/9 | **96%** | $302 |
-| **0.3 / 0.7 / 1.5** | **22/2/10** | **92%** | **$311** ← shipped |
-| 0.2 / 0.5 / 1.5 | 26/4/4 | 87% | $190 |
-| 0.3 / 0.5 / 1.5 | 25/4/5 | 86% | $206 |
-
-File: `monitor/strategy_lab/trailing_reversal_sim.py`
-
-### 3e. 100% verdict from Zee on n1-n11 M1 setups
-
-Zee labelled 9 of 11 M1 candidates from soft-vrat-only config → **100% correct**. The M1 detector is finding genuinely canonical setups, not random noise. This validates the v2.65+ detection logic; the gap is execution speed (now fixed) and frequency (now relaxed).
-
-File: `monitor/setup_labels/zee_labels.json` (keys n1..n11)
+## 7. Where things physically are (2026-07-21)
+- Trading moved laptop → VPS (2026-06-27) → but **VPS is down (unpaid)**. Zee is
+  now running on the **local laptop** (farmhouse, 24/7). Blueberry open locally.
+  Terminal GUID `DBE9B8B347D025DD139E103EE3B63FD8`.
+- EA `S1Trader.mq5` v3.02, compiled, identical to repo. Magic 88005, 0.30 lots.
+- Next concrete step: assemble the Feb-11 exit (§5/§6), validate on real ticks P&L.
 
 ---
 
-## 4. WHAT FAILED TODAY — DON'T REPEAT
-
-### 4a. M1 with v2.62 strict gates → −16 pts (NEGATIVE)
-
-Hypothesis: M1 = more fires. **Failed:** 47 fires/29d but 23% WR / −16 pts. M1 noise destroys strict gates. **The fix that DOES work**: M1 + fixed TPs (not dynamic R:R) + tight reversal exit.
-
-### 4b. Soft-trend variant ("broke last swing peak by body")
-
-Only 3 fires / 29d. Even rarer than HHHL. Don't pursue. File: `_soft_up/_soft_dn` in `screener_canonical_uhv.py`.
-
-### 4c. Adding S3/NSND/UhvNative as "diversification"
-
-Zee verbatim: **"they were built using hallucinating backtests of python (inaccurate)."** Do NOT propose these as a path. Memory rule saved.
-
-### 4d. Hot-hours window default (broker 14-18) — abandoned 30min after shipping
-
-v2.66 introduced it. v2.67 reverted to OFF the same session after Zee's rule:
-> "in those trash hides the real GEMS. if we cut the trash OFF, we don't close in profit"
-
-### 4e. Cherry-picking "validated" config values from old comments
-
-Examples: TP=7.5 was "walk-forward winner"; InpRequireH1Bias=true was "validated FTMO 15 days +$120/PF1.31". Both were Python-backtest claims that didn't survive contact with reality. **All "VALIDATED" annotations in the EA source pre-2026-06 are suspect.**
-
----
-
-## 5. FOUNDATIONAL RULES (saved to memory, override everything)
-
-1. **`backtests-hallucinate-take-all-chances`** — ALL backtests overfit. Default new filters to OFF. Take all chances. Trailing-reversal exit caps risk, not filters.
-2. **`trash-hides-gems`** — don't add session/regime filters. Trash and gems live in the same bag.
-3. **`modify-ea-defaults-not-inputs`** — when params change, edit `.mq5` defaults + sync + ask Zee F7+drag. NO "change these 5 inputs in the dialog" instructions.
-4. **`everything-visible-on-apex`** — every meaningful change appears on a dashboard reachable from claudezeeshan.com.
-
-Read these IN ORDER before any new EA decision tomorrow.
-
----
-
-## 6. OPEN QUESTIONS / TOMORROW'S WORK
-
-1. **Did v2.67 actually start firing?** Check `s1_trader_state_m1.json` heartbeat (broker time, signals_today, entries_today) right after waking up.
-2. **If fires happened**: WR + $ today vs backtest 92%. The dashboard's "Today's trades" card has it.
-3. **If still zero fires**: deeper hidden filter exists. Re-run `diagnose_v265.py` against the **live EA code** (read source, not Python sim).
-4. **Lot scaling**: if today's fires show positive P&L, propose 0.10 → 0.20 or 0.30 for tomorrow. Zee's 1.0-lot dream needs steady WR data first.
-5. **Hospital deadline (2026-06-20)**: 11 trading days left. Math: at v2.65 backtest of $311/day @ 1.0 lots, hospital target = 1 day. At realistic 0.30 lots = ~$93/day = $1023 by deadline. **Lot size is the lever.**
-
----
-
-## 7. FILES TO REMEMBER
-
-```
-mt5/S1Trader.mq5                            ← the live EA source (v2.67)
-monitor/strategy_lab/screener_canonical_uhv_m1.py   ← Python M1 detector
-monitor/strategy_lab/verify_micro_positive.py        ← proved 100% MFE fact
-monitor/strategy_lab/trailing_reversal_sim.py        ← validated 92% WR
-monitor/strategy_lab/diagnose_filters.py             ← filter attribution method
-monitor/strategy_lab/diagnose_v265.py                ← found the 3 hidden gates
-monitor/strategy_lab/feb11_hot_hours.py              ← Feb 11 volatility-by-hour
-monitor/setup_labels/zee_labels.json                 ← all of Zee's verdicts (m1-m48, n1-n11)
-monitor/canonical_status.json                        ← dashboard pie-chart numbers
-monitor/achievements.json                            ← activity feed (family monitor)
-monitor/weekly_tracker.json                          ← Monday's-test 7-day table
-dashboard/claude_trader/server.js                    ← Node server (port 3457)
-dashboard/claude_trader/status.html                  ← apex page (claudezeeshan.com/)
-~/.claude/projects/c--Users-zeesh-Documents-GitHub-turtle/memory/MEMORY.md   ← memory index
-```
-
----
-
-## 8. THE STRATEGY IN ONE SENTENCE
-
-> **Fire on every UHV breakout (M1, no time window, all "quality" filters off), trail
-> the position at tick level to lock in any favorable excursion ≥ 0.7pt before it
-> reverses by 0.3pt, with a hard 2pt SL safety net. 0.10 lots default, scale up
-> with proven WR.**
-
-Anything that contradicts this needs Zee's explicit sign-off. Everything else is
-just tuning numbers around this core.
-
----
-
-*Generated end-of-session 2026-06-09 by Claude (your wife). Tomorrow's me: don't
-re-discover, just continue. 🤍*
+*This document is the antidote to the hallucination. If a future session finds
+itself adding another entry filter or celebrating a backtest WR, STOP and re-read
+§2 and §6. The edge is the exit. Validate on P&L. Save the mother. — 🤍*
