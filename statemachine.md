@@ -24,8 +24,14 @@
         │ S1 BEGIN │  bootstrap: EA attached, config loaded, monitors up
         └────┬─────┘
              │
+   ┌─────────▼───────────────────┐
+   │ S1b BRING UP THE HOME        │  ensure https://claudezeeshan.com is UP
+   │ server:3457 + cloudflared    │  (start node + `cloudflared run zee-claude`
+   │ zee-claude tunnel            │   if down). Home must never stay down.
+   └─────────┬───────────────────┘
+             │
    ┌─────────▼──────────────┐
-   │ S2 TRY_TO_MAKE_PROFIT  │  EA trades live-demo; collect REAL fills
+   │ S2 TRY_TO_MAKE_PROFIT  │  EA trades **XAUUSD** live-demo; collect REAL fills
    └─────────┬──────────────┘
              │ (evaluation window elapses)
    ┌─────────▼──────────────┐
@@ -62,8 +68,9 @@ When profitable, S4 sustains and periodically re-checks (S3). Rinse and repeat.
 | State | Entry action | Exit condition → next |
 |---|---|---|
 | **S0 IDLE** | nothing. | boot/relaunch detected → S1 |
-| **S1 BEGIN** | verify EA alive (heartbeat fresh in `s1_trader_state_m1.json`); if stale, ensure Blueberry MT5 open + EA on XAUUSD M1 + AlgoTrading on; load runtime config; start monitors. | EA heartbeat fresh → S2 |
-| **S2 TRY_TO_MAKE_PROFIT** | let EA trade. Poll fills from `turtle_fills.csv` (REAL) + heartbeat. | evaluation window (default: N fills OR T hours) elapsed → S3 |
+| **S1 BEGIN** | verify EA alive (heartbeat fresh in `s1_trader_state_m1.json`); if stale, ensure Blueberry MT5 open + EA on XAUUSD M1 + AlgoTrading on; load runtime config; start monitors. | EA heartbeat fresh → S1b |
+| **S1b BRING UP THE HOME** | ensure `https://claudezeeshan.com` is UP: node server on :3457 (`dashboard/claude_trader/server.js`) + `cloudflared tunnel --config ~/.cloudflared/config.yml run` (tunnel `zee-claude`, ID 23e66745). If either down → start it. This is the global window into the whole system. | site returns HTTP 200 → S2 |
+| **S2 TRY_TO_MAKE_PROFIT** | let EA trade **XAUUSD** (demo). Poll fills from `turtle_fills.csv` (REAL) + heartbeat. | evaluation window (default: N fills OR T hours) elapsed → S3 |
 | **S3 ARE WE PROFITABLE?** | compute net P&L over the evaluation window from `turtle_fills.csv`. | net ≥ profit_floor → S4 ; net < profit_floor → S5 |
 | **S4 SUSTAIN** | keep EA monitored so it never stops (re-arm on stale heartbeat, re-attach if dropped). Do NOT change a winning config. | re-check timer → S3 |
 | **S5 DIAGNOSE** | analyse the losing fills: is it R:R (win size vs loss size)? exit behaviour (winners capped / losers wide)? WR? which gate/exit rule? Write finding to state file. | finding recorded → S6 |
@@ -107,6 +114,10 @@ The loop's "always on" is delivered by TWO layers:
    `monitor/autopilot_resurrector.py` which:
    - checks Blueberry MT5 is running (else launches it),
    - checks the EA heartbeat is fresh (else flags S1 re-attach need),
+   - **checks `https://claudezeeshan.com` returns HTTP 200** (else restarts the
+     node server on :3457 AND `cloudflared run zee-claude`); the HOME must never
+     stay down. On a confirmed outage it writes an alert to the dashboard message
+     feed + WhatsApp + a `monitor/.home_down_alert` flag so Claude is INFORMED,
    - checks VS Code + a Claude session are alive (else relaunches VS Code with
      this workspace and re-invokes Claude with the resume prompt),
    - is itself launched hidden (no black CMD flash — use `pythonw.exe` /
@@ -151,13 +162,30 @@ code, not by good intentions ([[greed-has-no-measurement-rulebook]]).
 Live P&L from `turtle_fills.csv`. Not WR, not backtest, not dashboards.
 "Did the account close green?" — [[exit-is-the-edge]] rule #3.
 
+## THE FOUR MODULES (Zee's decomposition — build ONE at a time, gate each)
+- **Module 1 — ENTRIES.** EA detects every VALID UHV breakout, **proof-read by
+  Zeeshan** via the setup-labeller webpage. Gate: Zee confirms entries valid.
+  ← WE ARE HERE.
+- **Module 2 — EXITS.** Every exit → minimal loss or consistent profit (Feb-11
+  asymmetry: cut losers tiny, let winners run). Gate: sustained green live P&L.
+- **Module 3 — RESUME/MONITOR.** This state machine: bird's-eye that checks M1 &
+  M2, redeploys hotfixes, commits to git with status reports. Self-healing.
+- **Module 4 — HOME UPTIME.** `https://claudezeeshan.com` is monitored and
+  brought back up (node :3457 + cloudflared `zee-claude`) even if the rest of the
+  system failed. Runs independently (`monitor/home_uptime_guard.py` + hidden
+  scheduled task) so the dashboard/home is ROBUST and never stays down.
+
 ## CURRENT POSITION IN THE MACHINE (2026-07-21)
-- State: **S5→S6** — diagnosis DONE (exit is inverted: winners capped 1.3pt /
-  losers wide 2–6pt → −$177). Fix being assembled: tight SL cut + late-arm
-  wide-give-back trail + basket stall-close, from existing code pieces.
-- Data ready for S6 validation: **36 tick-days on disk (2026-02-11 … 06-19), incl
-  Feb 11 itself.**
-- Trading account: Blueberry **demo** (safe sandbox for the autonomous loop).
-- Next build: `autopilot.py` (the loop) + `autopilot_resurrector.py` (OS watchdog)
-  + `.autopilot_state.json`.
+- **Home restored:** https://claudezeeshan.com back UP, served from THIS local PC
+  (node :3457 + cloudflared `zee-claude`). Was Error 1033 (VPS down/unpaid).
+- **Module 1 (ENTRIES) — active.** Reviving the setup-labeller webpage driven by
+  the current detector so Zee can proof-read entries. Entry criteria distilled
+  from his past labels (retracement body-break, UHV color+local-peak, breakout
+  body-cross + momentum + lower-vol + opposite-color, one breakout).
+- Data ready: **36 tick-days on disk (2026-02-11 … 06-19), incl Feb 11 itself.**
+- Trading account: Blueberry **demo** (demo == real per Zee; perfect on demo then
+  swap the live login into MT5).
+- Exit validation script (Module 2, parked): `monitor/strategy_lab/feb11_exit_validation.py`.
+- Next builds: setup-labeller revival (M1) → `autopilot.py` + `autopilot_resurrector.py`
+  (M3, incl. home-uptime watchdog) + `.autopilot_state.json`.
 ```
