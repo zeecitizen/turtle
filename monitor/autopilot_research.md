@@ -1,0 +1,224 @@
+# Autopilot research log (self-paced, while Zee away)
+
+Deep analysis, minimal tokens. One focused finding per cycle. Zee reads on return.
+
+---
+
+## Cycle 1 — 2026-07-22 — Module 1 detector self-audit vs Zee's 9 rules
+
+Compared `screener_canonical_uhv_m1.detect()` (the entry logic the EA mirrors)
+against Zee's proof-read rules. Likely detector bugs — to confirm against his
+fresh labels on the 31 rendered entries:
+
+1. **UHV selection is OVER-STRICT (the crux).** `find_uhv_buy` line ~133 requires
+   the chosen red UHV to be ≥ the highest-volume bar of ANY colour in the
+   retracement window (global-max). Zee's rule is a LOCAL peak: strictly higher
+   than its immediate neighbours only. In a trend the with-trend (green) impulse
+   usually carries peak volume, so the global-max test **rejects or mis-picks** the
+   counter-trend red UHV → "wrong UHV" (his #1/#5/#10 complaints) AND misses valid
+   setups. FIX: UHV = local peak among colour-matched candidates; DROP global-max.
+
+2. **Volume source may be wrong at the root (deepest risk).** Detector volume =
+   tick-count/minute (`build_m1`). Zee #9: the true volume is OANDA's TradingView
+   volume; MT5 tick-count need not match OANDA's magnitude/colour → the "largest
+   volume" bar the detector picks can differ from what Zee sees. If the volume
+   series is wrong, EVERY UHV pick is suspect. Needs volume-source verification
+   (memory: volume-source-mismatch-hypothesis; teacher recommended AXI volume).
+
+3. **Trend test is crude.** `trend_uptrend` = 2nd-half-vs-1st-half highs/lows over
+   30 bars — can pass in a ranging market (his #12: "trend doesn't look up, more
+   like ranging"). FIX: proper HH+HL swing-structure test.
+
+4. **Retracement origin too loose.** `find_retracement_origin_buy` accepts ANY
+   green in the last 15 bars whose low is body-broken, not necessarily the
+   immediately-preceding green → can anchor the wrong origin.
+
+**Priority:** #1 (UHV local-peak) and #2 (volume source) are the heart of "wrong
+UHV," which is Zee's single most common rejection reason. Fix #1 first (pure code,
+low risk); investigate #2 (data) in parallel.
+
+Next cycle: objective check — run detector on Feb 11 and compare its entries to
+Zee's 69 REAL Feb-11 trades (do the EA's entries land where he actually entered?).
+
+---
+
+## Cycle 2 — 2026-07-22 — OBJECTIVE Feb-11 test (DAMNING)
+
+Ran the current detector on Feb 11 (Zee's real 94% day) and compared to his 24
+unique real signal-moments (from the broker history):
+
+- Detector found **only 8 entries** on Feb 11 (Zee took ~24 signal-moments / 69 lots).
+- **Recall 0/24, Precision 0/8** — ZERO overlap within ±4 min same side.
+- Worse: detector fired **5 SELLs / 3 BUYs**, but Zee's day was overwhelmingly
+  **BUYs** (buying uptrend retracements). The detector is trading the WRONG SIDE.
+
+**Verdict:** Module 1 is broken at the root. The detector does NOT reproduce Zee's
+entries even on his own gold-standard day — not the timing, not even the side.
+This OBJECTIVELY confirms Zee: we cannot skip to exits; entries are wrong. The
+earlier "66% WR = decent entries" was the detector's OWN (wrong) entries in some
+regime, NOT Zee's method.
+
+**Likely roots (tie to Cycle 1):** (a) volume source (tick-count ≠ OANDA volume)
+→ wrong UHV; (b) crude trend test → wrong SIDE (sells in an uptrend); (c) over-
+strict global-max → misses most. The wrong-SIDE symptom points hardest at the
+TREND/retracement-colour logic AND the volume series.
+
+Next cycle: diagnose the side inversion — on Feb 11, does `trend_uptrend` ever
+fire during Zee's buy clusters (16:49–17:49)? If the detector sees "downtrend"
+where Zee sees "uptrend + buy retracement," the trend/structure logic is the
+first fix. Keep cheap.
+
+---
+
+## Cycle 3 — 2026-07-22 — WRONG-SIDE root isolated
+
+Instrumented the detector over Zee's biggest BUY window (16:45–17:55, price rose
+5048.65 → 5062.21 — clearly UP, his +$54 buys):
+- `trend_uptrend` fired **19/70** bars; `trend_downtrend` fired **40/70**.
+  → The detector labels a RISING window as a DOWNTREND most of the time. **This is
+    the wrong-side root** — on Zee's uptrend it hunts SELLs.
+- `find_uhv_buy` returned a valid UHV in only **1/70** bars; breakout fired **0**.
+  → Even when uptrend fired (19) and origin found (19), the over-strict UHV logic
+    (global-max + colour + body + neighbour) killed all of Zee's buys.
+
+**Two confirmed, compounding bugs:**
+1. **Trend test broken** (`trend_uptrend`/`trend_downtrend`, 2nd-half-vs-1st-half
+   of 30 bars requiring BOTH higher highs AND higher lows) — misclassifies a
+   choppy-but-rising window as downtrend → SIDE INVERSION. **Fix first.**
+2. **UHV over-strict** (global-max-any-colour) — misses valid UHVs → no entries.
+
+Fix order: (1) robust trend/side detection, then (2) UHV local-peak. Both are
+objectively testable via Feb-11 recall (target: detector's buys land in Zee's
+16:49–17:49 cluster).
+
+Next cycle: prototype a robust trend test (EMA-slope or real swing HH/HL) as a
+DROP-IN, re-run Feb-11, and report if BUY-side recall rises above 0/24. Keep cheap.
+
+---
+
+## Cycle 4 — 2026-07-22 — trend fix + UHV-local-peak BOTH insufficient
+
+Prototyped (monkey-patch, no live edit) and re-measured Feb-11 recall vs Zee's 24:
+- EMA(10)>EMA(30) trend swap: entries 7, **recall 0/24** (no change).
+- EMA-trend + UHV=local-peak (drop global-max): entries 8, **recall 0/24** (no change).
+- In both, the detector's few BUYs land at 13:07/13:37/19:54/20:46 — NEVER in Zee's
+  16:49–17:49 buy cluster.
+
+**Interpretation:** neither the trend test NOR the UHV over-strictness is the
+primary blocker. The detector fundamentally does not identify the SAME setups Zee
+takes — even on his own day, with correct side and relaxed UHV, 0/24. The blocker
+is DEEPER, most likely:
+  (a) **Volume source** — tick-count/min ≠ OANDA volume Zee reads; if the UHV bars
+      differ, the whole UHV-anchored pipeline is anchored to the wrong bars. Now
+      the LEADING suspect (memory: volume-source-mismatch-hypothesis, AXI volume).
+  (b) **Breakout-confirmation gates on M1** (momentum≥0.65, penetration≥0.30pt,
+      vol<0.85×UHV, mandatory sweep) may be too strict / mis-defined vs Zee's eye.
+
+Next cycle: GATE ABLATION at Zee's KNOWN entry bars (e.g. 17:02 buy). Walk the
+pipeline at those exact minutes and print which stage fails (origin? uhv? sweep?
+breakout gate?). This localises whether it's UHV-IDENTIFICATION or
+BREAKOUT-CONFIRMATION. Keep cheap. Do NOT touch the live detector yet.
+
+Growing conviction: Module 1 needs a rethink of the volume series + a re-derivation
+of "breakout" from Zee's actual Feb-11 entries, not incremental gate tweaks. When
+Zee returns, his fresh proof-read labels + this objective 0/24 are the two anchors.
+
+---
+
+## Cycle 5 — 2026-07-22 — GATE ABLATION: the candles themselves don't match
+
+Walked the BUY pipeline at Zee's exact real entry minutes (Feb 11):
+- **16:49**: detector bar is BEAR (O5049.99>C5047.86); trend_uptrend=False; retrace
+  origin 16:46 found; **UHV local-peak: NONE**. Zee bought a GREEN breakout here.
+- **17:02**: detector bar is BEAR (O5059.68>C5057.92); trend=False; origin 17:00;
+  **UHV local-peak: NONE**. Zee's biggest +$54 GREEN-breakout buy — invisible.
+- **17:49**: UHV found (17:48 vol866); sweep OK; but the 17:49 bar is BEAR body0.17,
+  close 8.06 BELOW the UHV high → breakout gate correctly rejects. Zee still bought.
+
+**Prices ALIGN** at these minutes (~5055–5060 on both sides) so it is NOT a gross
+timezone offset. But **the CANDLE COLOURS/STRUCTURE do not match**: where Zee acted
+on GREEN breakout candles, the detector's tick-built mid-price M1 bars are BEARISH,
+and it finds no valid UHV.
+
+**ROOT (new, highest-confidence):** the detector's *bar construction itself* —
+mid-of-(bid,ask) OHLC per minute + tick-count volume — produces a DIFFERENT candle
+& volume picture than Zee's OANDA/TradingView chart on which his UHV/breakout are
+defined. No amount of gate tuning (trend, UHV-strictness, breakout thresholds) will
+align entries while the underlying candles+volume differ. This subsumes Cycles 1–4.
+
+**This needs Zee (can't fully resolve autonomously):**
+- his OANDA/TradingView Feb-11 candles+volume to compare against the detector's bars,
+- confirm the volume-colour source (memory: volume-source-mismatch, AXI volume),
+- his fresh proof-read labels on the 31 rendered entries.
+
+Next cycle: if labels present, mine them. Else, try the TradingView MCP to pull
+OANDA XAUUSD Feb-11 M1 candles+volume at 16:49/17:02/17:49 and compare colour+volume
+to the detector's bars — an autonomous test of the candle/volume-source mismatch.
+Keep cheap. Do NOT edit the live detector.
+
+---
+
+## Cycle 6 — 2026-07-22 — TIMEFRAME MISMATCH (likely THE root)
+
+Two tests:
+1. Candle colour at Zee's entries under mid/bid/ask/prev-close construction — ALL
+   RED. So the M1 red is real in this feed, not a construction artifact.
+2. **Rebuilt as M5** — at Zee's buy windows the M5 candles are GREEN:
+   - M5 16:45 GREEN, 16:50 GREEN, **17:00 GREEN (O5058.29→C5064.63)** ← his 17:02 buy,
+     17:50 GREEN. (17:45 red = the pullback before.)
+
+**ROOT (clearest yet):** the detector runs on **M1**, but Zee's method — and his
+actual Feb-11 entries — are on **M5** (his canonical-rules memory literally says
+"M5 chart"). On M1 the same moments are red intra-minute noise; on M5 they are the
+clean GREEN breakout candles he bought. Running canonical UHV detection on M1
+misreads the candles → wrong colour, wrong UHV, wrong side. This likely explains
+the 0/24 recall far more than any single gate.
+
+Zee once said "it also works on 1-minute… a trade every 5 min," but his real
+Feb-11 fills align with M5 candles, not M1. M1 was an over-aggressive extrapolation.
+
+**Actionable, objectively testable:** run the M5 canonical detector
+(`monitor/strategy_lab/screener_canonical_uhv.py`, the original) on Feb 11 and
+measure recall vs Zee's 24 real signal-moments. If M5 recall >> 0/24, the fix for
+Module 1 is: detect on M5 (the correct timeframe), not M1.
+
+Next cycle: run the M5 detector recall test on Feb 11. If it improves, that is the
+Module-1 direction to propose to Zee (with his proof-read labels as the final gate).
+Home up. Loop still productive — this is a strong lead, not yet the limit.
+
+---
+
+## Cycle 7 — 2026-07-22 — DECISIVE: the coded rule is not Zee's rule
+
+- M5 canonical (strict): **0 entries** on Feb 11.
+- M5 canonical FULLY RELAXED (all quality gates off, UHV=local-peak): **2 entries,
+  both SELL, 0/24 recall, 0 buys** in Zee's cluster.
+
+**Conclusion:** the canonical detection SKELETON itself (trend → red-UHV retracement
+→ green breakout above UHV high) does NOT fire at Zee's real entries on M1 OR M5,
+strict OR fully relaxed. The problem is not a parameter — **our coded definition of
+the setup is not the rule Zee actually trades.** Six months of gate-tuning were
+tuning the wrong rule.
+
+### 🚨 FOR ZEE — bottom line (read on return)
+Objective, reproducible facts from Feb 11 (your real 94% day, your own fills):
+1. The current detector catches **0 of your 24 entries** — every variant tried
+   (M1/M5, strict/relaxed, EMA-trend, local-peak UHV). It even trades the wrong side.
+2. Root is NOT one gate. The coded rule ("retracement → red UHV → green breakout
+   above its high", + our trend test + tick-count volume + M1 bars) does not
+   reproduce what you did. Contributing issues found: trend test misreads rising
+   as falling; UHV over-strict; M1 vs your M5; tick-count vs OANDA volume; candles
+   differ from your chart.
+3. **This needs YOU — it cannot be solved in the dark.** Two ways, pick one:
+   (a) Proof-read the 31 rendered entries at setups.claudezeeshan.com/entries.html
+       (say what's wrong per your eye) — I turn that into the corrected rule; OR
+   (b) Reverse-engineer: for ~3 of your Feb-11 entries (e.g. 17:02 buy), tell me on
+       YOUR chart (timeframe + volume source) exactly what the UHV was, the
+       retracement, and the breakout — I rebuild the detector FROM your entries
+       instead of guessing.
+
+Loop now enters low-token maintenance: watch for your labels + keep home up.
+Active detector work resumes the moment you leave labels or a reverse-engineer note.
+- 12:21Z maintenance: no labels yet, home HTTP 200
+- 13:12Z maintenance: no labels yet, home HTTP 200
+- 14:04Z maintenance: no labels yet, home HTTP 200
