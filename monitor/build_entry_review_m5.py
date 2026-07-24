@@ -139,12 +139,9 @@ def render(s, bars, png):
                       index=pd.DatetimeIndex([b.t for b in seg], name="Datetime"))
     rng = max(df["High"].max() - df["Low"].min(), 1e-6)
     side = s["side"]
-    aps = [mpf.make_addplot([s["entry"]] * len(df), color="#2563eb", width=1.0),
-           mpf.make_addplot([s["sl"]] * len(df), color="#dc2626", linestyle=":", width=1.0)]
-    title = f"{side} M5 | entry {s['entry']} SL {s['sl']} | UHVvol {s['uhv_vol']} Bvol {s['b_vol']} | {s['open_t'].strftime('%Y-%m-%d %H:%M')}"
     try:
-        fig, axes = mpf.plot(df, type="candle", style="charles", volume=True, addplot=aps,
-                             returnfig=True, figsize=(13, 7), title=title, warn_too_much_data=100000, tight_layout=True)
+        fig, axes = mpf.plot(df, type="candle", style="charles", volume=True,
+                             returnfig=True, figsize=(13, 7), warn_too_much_data=100000, tight_layout=True)
         ax = axes[0]
         def lab(idx, txt, above, color):
             b = bars[idx]; x = idx - lo
