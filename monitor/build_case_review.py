@@ -20,6 +20,27 @@ sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / "strategy_lab"))
 from build_entry_review_m5 import build_m5, detect_full, render
 from case_engine import build_cases, extract_features, knn_verdict, describe
+from feb11_exit_validation import load_ticks_by_date, find_idx, simulate_exit
+
+EXIT = {"tp": 8.0, "sl": 1.5, "arm": 3.0, "give": 1.5}  # Feb-11-style: cut small, let winners run
+LOT = 0.10
+
+
+def trade_outcome(s, ticks_by_date):
+    """Simulate this setup as a real trade -> plain-language $ outcome at 0.10 lots."""
+    et = s["open_t"] + timedelta(minutes=5)   # entry ~ breakout-bar close
+    tk = ticks_by_date.get(et.strftime("%Y-%m-%d"))
+    if not tk:
+        return None
+    idx = find_idx(tk, et)
+    if idx is None:
+        return None
+    reason, pnl_pts = simulate_exit(tk, idx, s["side"], s["entry"], EXIT, abs(s["entry"] - s["sl"]))
+    usd = pnl_pts * LOT * 100.0
+    word = "profit" if usd >= 0 else "loss"
+    how = {"sl": "hit stop", "tp": "hit target", "trail": "trailed out on reversal",
+           "window": "closed at time-out", "eod": "closed at day end"}.get(reason, reason)
+    return f"This {s['side']} at {LOT:.2f} lots → ${abs(usd):.1f} {word} ({how})"
 import screener_canonical_uhv_m1 as S
 
 OUT = Path(__file__).parent / "setup_labels"
@@ -67,6 +88,7 @@ def main():
     setups = detect_full(bars)
     print(f"candidate setups: {len(setups)}")
     setups = setups[:args.max]
+    ticks_by_date = load_ticks_by_date()
 
     for old in OUT.glob("case_*.png"):
         try: old.unlink()
@@ -86,7 +108,7 @@ def main():
         png = OUT / f"case_{k:03d}.png"
         s_render = dict(s); s_render["entry"] = s["entry"]  # render expects entry/sl/o/u/i/side
         if render(s_render, bars, png):
-            caption = f"{s['side']} M5 · entry {s['entry']} · SL {s['sl']} · {s['open_t'].strftime('%Y-%m-%d %H:%M')}"
+            caption = trade_outcome(s, ticks_by_date) or f"{s['side']} M5 · {s['open_t'].strftime('%Y-%m-%d %H:%M')}"
             meta.append({"id": f"case_{k:03d}", "png": f"case_{k:03d}.png?v={BUST}", "side": s["side"],
                          "title": f"#{k} {title}", "caption": caption, "notes": notes,
                          "guess": "valid" if valid else "invalid", "near_desc": near_desc,
