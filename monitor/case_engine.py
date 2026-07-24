@@ -60,7 +60,12 @@ def _stats(cases):
 def _dist(fa, fb, mu, sd):
     return math.sqrt(sum(((fa[f] - fb[f]) / sd[f]) ** 2 for f in FEATS))
 
-def knn_verdict(feat, cases, k=3):
+def knn_verdict(feat, cases, k=3, side=None):
+    # side-aware: a BUY candidate is only matched against BUY cases (and SELL vs SELL),
+    # because the pattern reasons are side-specific. Fall back to all if too few.
+    if side is not None:
+        same = [c for c in cases if c.get("side") == side]
+        if len(same) >= k: cases = same
     mu, sd = _stats(cases)
     ranked = sorted(cases, key=lambda c: _dist(feat, c["features"], mu, sd))
     top = ranked[:k]
@@ -108,7 +113,7 @@ def main():
     ok = 0
     for idx, c in enumerate(cases):
         rest = cases[:idx] + cases[idx+1:]
-        valid, nid, conf = knn_verdict(c["features"], rest, k=3)
+        valid, nid, conf = knn_verdict(c["features"], rest, k=3, side=c["side"])
         truth = c["verdict"] == "valid"
         ok += (valid == truth)
     print(f"Leave-one-out case-match accuracy: {ok}/{len(cases)} ({100*ok/len(cases):.0f}%)")
