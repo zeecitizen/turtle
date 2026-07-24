@@ -46,7 +46,7 @@ input.why{flex:1;min-width:120px;background:#0b0f14;color:#e6edf3;border:1px sol
 const S=__J__;let L={};
 async function ld(){try{L=await(await fetch('/api/labels')).json()}catch(e){}rn()}
 async function sv(id,val){let lab=val;if(val==='wrong'){const w=(document.getElementById('w_'+id).value||'').trim();lab='wrong'+(w?': '+w:'');}await fetch('/api/labels',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idx:id,who:'zee',label:lab})});document.getElementById('d_'+id).textContent=val==='correct'?'✓ saved':'✗ saved';}
-function rn(){const a=document.getElementById('app');a.innerHTML='';S.forEach(s=>{const prev=(L[s.id]&&L[s.id].zee)||'';const g=s.guess==='valid'?`<span class="v">VALID</span>`:`<span class="x">INVALID</span>`;const d=document.createElement('div');d.className='card';d.innerHTML=`<img src="${s.png}" loading="lazy"><div class="title">🧩 ${s.title}</div><div class="notes">${(s.notes||[]).map(n=>'• '+n).join('<br>')}</div><div class="guess">🤖 Claude verdict: ${g} &nbsp;—&nbsp; like ${s.near} (${s.reason}) · conf ${s.conf}</div><div class="row"><button class="ok" onclick="sv('${s.id}','correct')">✓ Correct</button><button class="no" onclick="sv('${s.id}','wrong')">✗ Wrong</button><input class="why" id="w_${s.id}" placeholder="Why wrong? (kya ghalat hai)" value="${(prev&&prev.indexOf('wrong:')===0)?prev.slice(6).trim().replace(/"/g,'&quot;'):''}"><span class="done" id="d_${s.id}">${prev?(prev==='correct'?'✓ saved':'✗ saved'):''}</span></div>`;a.appendChild(d)})}
+function rn(){const a=document.getElementById('app');a.innerHTML='';S.forEach(s=>{const prev=(L[s.id]&&L[s.id].zee)||'';const g=s.guess==='valid'?`<span class="v">VALID</span>`:`<span class="x">INVALID</span>`;const d=document.createElement('div');d.className='card';d.innerHTML=`<img src="${s.png}" loading="lazy"><div class="title">🧩 ${s.title}</div><div class="notes">${(s.notes||[]).map(n=>'• '+n).join('<br>')}</div><div class="guess">🤖 Claude verdict: ${g} &nbsp;—&nbsp; similar to: ${s.near_desc} · conf ${s.conf}</div><div class="row"><button class="ok" onclick="sv('${s.id}','correct')">✓ Correct</button><button class="no" onclick="sv('${s.id}','wrong')">✗ Wrong</button><input class="why" id="w_${s.id}" placeholder="Why wrong? (kya ghalat hai)" value="${(prev&&prev.indexOf('wrong:')===0)?prev.slice(6).trim().replace(/"/g,'&quot;'):''}"><span class="done" id="d_${s.id}">${prev?(prev==='correct'?'✓ saved':'✗ saved'):''}</span></div>`;a.appendChild(d)})}
 ld();</script></body></html>"""
 
 
@@ -76,15 +76,19 @@ def main():
         f = extract_features(bars, s["o"], s["u"], s["i"], s["side"])
         valid, near, conf = knn_verdict(f, cases, k=3, side=s["side"])
         near_case = next((c for c in cases if c["id"] == near), None)
-        reason = near_case["reason"] if near_case else ""
+        if near_case:
+            nt, _ = describe(near_case["features"], near_case.get("side", s["side"]))
+            near_desc = near_case.get("reason") or nt
+        else:
+            near_desc = "no similar case yet"
         title, notes = describe(f, s["side"])
         png = OUT / f"case_{k:03d}.png"
         s_render = dict(s); s_render["entry"] = s["entry"]  # render expects entry/sl/o/u/i/side
         if render(s_render, bars, png):
             meta.append({"id": f"case_{k:03d}", "png": f"case_{k:03d}.png?v={BUST}", "side": s["side"],
                          "title": f"#{k} {title}", "notes": notes,
-                         "guess": "valid" if valid else "invalid", "near": near,
-                         "reason": reason, "conf": f"{conf:.0%}"})
+                         "guess": "valid" if valid else "invalid", "near_desc": near_desc,
+                         "conf": f"{conf:.0%}"})
     (OUT / "entries.html").write_text(HTML.replace("__J__", json.dumps(meta)), encoding="utf-8")
     print(f"rendered {len(meta)} candidates -> entries.html (Correct/Wrong page)")
     print("Zee: setups.claudezeeshan.com/entries.html")

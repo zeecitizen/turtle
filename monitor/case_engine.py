@@ -51,25 +51,32 @@ def extract_features(bars, o, u, i, side):
 
 
 def describe(f, side):
-    """Human-readable TITLE + per-feature observations, so Zee can verify Claude
-    is noticing the right things and reference setups by name."""
+    """Human-readable TITLE + plain-language observations (no codes / raw numbers),
+    so Zee can verify Claude is noticing the right things and reference by name."""
+    updn = "up" if side == "BUY" else "down"
     dirw = "uptrend" if side == "BUY" else "downtrend"
     leg, dom, opp = f["side_leg"], f["dominance"], f["opp_leg"]
-    if opp >= 4 and dom < 1.6:      trend_t, trend_w = "ranging/choppy", "Ranging"
-    elif leg >= 6 and dom >= 2:     trend_t, trend_w = f"strong {dirw}", f"Strong {dirw}"
-    elif leg >= 4:                  trend_t, trend_w = f"mild {dirw}", dirw.capitalize()
-    else:                           trend_t, trend_w = "weak/unclear trend", "Weak-trend"
-    bb, bw, bv = f["brk_body"], f["brk_wick"], f["brk_vol_ratio"]
-    if bb >= 0.55 and bw < 0.35:    brk_t, brk_w = "momentum breakout", "momentum-breakout"
-    elif bw >= 0.4:                 brk_t, brk_w = "wick/indecision breakout", "wick-breakout"
-    else:                           brk_t, brk_w = "weak-bodied breakout", "weak-breakout"
+    if opp >= 4 and dom < 1.6:
+        trend_t, trend_w = "ranging / choppy — no clear direction", "Ranging"
+    elif leg >= 6 and dom >= 2:
+        trend_t, trend_w = f"strong {dirw} — clearly stepping {updn}, much bigger than the pullback", f"Strong {dirw}"
+    elif leg >= 4:
+        trend_t, trend_w = f"mild {dirw} — going {updn} but not strongly", dirw.capitalize()
+    else:
+        trend_t, trend_w = "weak / unclear trend", "Weak-trend"
+    origin_t = ("valid — the candle's body broke past the previous candle (retracement started)"
+                if f["origin_margin"] > 0 else "NOT valid — the body didn't break past the previous candle")
     uv = f["uhv_vol_ratio"]
-    notes = [
-        f"trend: {trend_t} (leg {leg:.1f}pt, {dom:.1f}x opp)",
-        f"origin: {'valid body-break' if f['origin_margin'] > 0 else 'NO body-break'} ({f['origin_margin']:.1f}pt)",
-        f"UHV: {'dominant' if uv >= 1.2 else 'marginal'} ({uv:.2f}x next-vol), {'local-peak' if f['uhv_is_peak'] else 'NOT peak'}",
-        f"breakout: {brk_t} (body {bb:.2f}, wick {bw:.2f}, vol {bv:.2f}x UHV{' HIGH!' if bv >= 1 else ''})",
-    ]
+    uhv_t = ("clearly the highest-volume candle in the pullback" if uv >= 1.3
+             else "barely the highest-volume candle — marginal")
+    if not f["uhv_is_peak"]: uhv_t += ", and NOT a clean volume peak"
+    bb, bw, bv = f["brk_body"], f["brk_wick"], f["brk_vol_ratio"]
+    if bb >= 0.55 and bw < 0.35:   brk_t, brk_w = "strong momentum candle, small wick", "momentum-breakout"
+    elif bw >= 0.4:                brk_t, brk_w = "mostly a wick — indecision, not a clean break", "wick-breakout"
+    else:                          brk_t, brk_w = "weak body — not a strong break", "weak-breakout"
+    brk_t += " — but volume HIGHER than UHV (bad)" if bv >= 1 else " — and volume lower than UHV (good)"
+    notes = [f"trend: {trend_t}", f"retracement start: {origin_t}",
+             f"UHV candle: {uhv_t}", f"breakout: {brk_t}"]
     title = f"{trend_w} · {brk_w}"
     return title, notes
 
