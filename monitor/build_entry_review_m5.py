@@ -152,9 +152,9 @@ def render(s, bars, png):
             ax.annotate(txt, (x, y), ha="center", va="bottom" if above else "top",
                         fontsize=9, fontweight="bold", color=color,
                         bbox=dict(boxstyle="round,pad=0.25", fc="white", ec=color, alpha=0.9))
-        lab(oi, "RET.STRTS", False, "#9333ea")   # retracement starts (origin)
+        lab(oi, "RET", False, "#9333ea")          # retracement starts (origin)
         lab(ui, "UHV", True, "#b8860b")           # ultra-high-volume candle
-        lab(bi, "BRKOUT", side == "BUY", "#16a34a" if side == "BUY" else "#dc2626")  # breakout
+        lab(bi, "BRKT", side == "BUY", "#16a34a" if side == "BUY" else "#dc2626")  # breakout
         fig.savefig(png, dpi=72, bbox_inches="tight"); plt.close(fig); return True
     except Exception as e:
         print("render err", e); plt.close("all"); return False
