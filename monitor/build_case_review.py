@@ -11,8 +11,10 @@ Zee's click saves {idx, label:"correct"/"wrong"} -> apply_case_labels.py folds
 the confirmed verdicts back into cases.json.
 """
 from __future__ import annotations
-import argparse, json, sys
+import argparse, json, sys, time
 from datetime import timedelta
+
+BUST = int(time.time())  # cache-buster so browsers reload freshly-rendered charts
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / "strategy_lab"))
@@ -79,7 +81,7 @@ def main():
         png = OUT / f"case_{k:03d}.png"
         s_render = dict(s); s_render["entry"] = s["entry"]  # render expects entry/sl/o/u/i/side
         if render(s_render, bars, png):
-            meta.append({"id": f"case_{k:03d}", "png": f"case_{k:03d}.png", "side": s["side"],
+            meta.append({"id": f"case_{k:03d}", "png": f"case_{k:03d}.png?v={BUST}", "side": s["side"],
                          "title": f"#{k} {title}", "notes": notes,
                          "guess": "valid" if valid else "invalid", "near": near,
                          "reason": reason, "conf": f"{conf:.0%}"})
