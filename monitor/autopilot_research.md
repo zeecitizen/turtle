@@ -222,3 +222,105 @@ Active detector work resumes the moment you leave labels or a reverse-engineer n
 - 12:21Z maintenance: no labels yet, home HTTP 200
 - 13:12Z maintenance: no labels yet, home HTTP 200
 - 14:04Z maintenance: no labels yet, home HTTP 200
+- 14:56Z maintenance: no labels yet, home HTTP 200
+- 15:58Z maintenance: no labels yet, home HTTP 502
+- 15:59Z SELF-HEAL: cloudflared dropped (public 502) → guard restarted it (new PID) → site back 200. Module 4 verified working.
+- 18:56Z maintenance: no labels yet, home HTTP 200
+- 19:57Z maintenance: no labels yet, home HTTP 200
+- 20:58Z maintenance: no labels yet, home HTTP 200
+- 21:59Z maintenance: no labels yet, home HTTP 200
+- 23:00Z maintenance: no labels yet, home HTTP 200
+- 00:01Z maintenance: no labels yet, home HTTP 200
+
+---
+
+## Cycle 8 — 2026-07-24 — ZEE'S LABELS ARRIVED (the unblock) — corrected spec
+
+Zee proof-read all 31 rendered entries. ~15 VALID (detector isn't hopeless on
+June data). The INVALIDs cluster into 4 concrete detector bugs:
+
+### BUG 1 — TREND / RANGING (most cited: e005,012,018,022,027,028,029,031)
+- Must be a CONFIRMED trend. BUY only in uptrend (higher highs AND higher lows);
+  SELL only in downtrend (lower highs AND lower lows). Side MUST match trend.
+  e018 "lower high → downtrend → cannot buy"; e027 "higher highs → uptrend →
+  cannot sell". (This is the Feb-11 wrong-side bug too.)
+- NEVER trade a RANGING/choppy market. e012/022/028/029/031 — "formula doesn't
+  work in ranging." Need a ranging-rejection filter.
+
+### BUG 2 — RETRACEMENT ORIGIN must actually start a valid retracement
+(e011,014,019,025,026)
+- Origin = the counter-trend candle whose BODY breaks the prior same-direction
+  candle's extreme. BUY: a RED candle body-closes BELOW the previous GREEN's low.
+  SELL: a GREEN candle body-closes ABOVE the previous RED's high.
+- e014 "last green's low wasn't broken → no retracement started"; e019 "origin
+  doesn't break prev high/low"; e025 the UHV must be INSIDE a valid retracement,
+  not just any higher-volume candle outside it.
+
+### BUG 3 — BREAKOUT = the FIRST candle that crosses the UHV extreme
+(e003,015)
+- e003 "green arrow one candle late — its previous candle already crossed the UHV
+  high"; e015 "origin's high broken by the very next candle — that's the breakout."
+  Fix: breakout = first body-cross of UHV extreme, not a later one.
+
+### BUG 4 — UHV = highest-vol counter-trend candle WITHIN the retracement (e023,025)
+- e023 "among the 3 green candles in the retracement, 15:40 has the highest green
+  volume" — pick highest-vol same-colour candle inside the valid retracement.
+- Soft flag (e020): breakout with a big rejection wick against the move = weak.
+
+**Priority to implement + validate (one at a time):** BUG 1 (trend+ranging) first
+— it's the most-cited AND explains the Feb-11 wrong-side. Then BUG 2 (origin),
+BUG 3 (first-breakout), BUG 4 (UHV-in-retracement). Validate each against BOTH
+Zee's 31 labels (invalids removed, valids kept) AND Feb-11 recall.
+
+---
+
+## Cycle 9 — 2026-07-24 — DATA-SOURCE CORRECTION (Zee) + rules confirmed
+
+Zee confirmed the full rule set AND corrected the data source:
+- Trend = ONE camel-hump BEFORE the retracement (not at entry). Ranging = up-leg
+  AND down-leg both present (no dominant direction). Confirmed on Feb-11: up-legs
+  8–22pt at his 16:49/17:02/17:49 buys.
+- Timeframe = **M5** (not M1). Feed = **OANDA**. Volume = **OANDA/TradingView
+  volume bars** — MT5 volume is a different colour scheme; the method runs on
+  TradingView volume, NOT MT5 tick-count.
+
+**Implication:** ALL prior detector work used the WRONG data (Blueberry shano_ticks,
+M1, tick-count volume). detect_v2 (coherent rebuild from confirmed rules) improved
+side balance (11 BUY/6 SELL on Feb-11 buy-day, was mostly SELL) but Feb-11 recall
+still 1/24 — because it's on the wrong feed/timeframe/volume.
+
+**Blocker (needs correct data):** need OANDA:XAUUSD **M5** candles WITH OANDA
+volume for Feb-11. TradingView MCP currently NOT connected. Options: Zee opens TV
+desktop (MCP reconnects → pull data) OR sends an OANDA M5 screenshot at 17:02.
+
+**Architectural issue surfaced:** the method needs OANDA/TradingView volume, but the
+live EA runs on Blueberry MT5 (different volume). Solving how the EA obtains the
+correct volume (teacher: AXI) is a real downstream problem. First understand the
+structure on OANDA M5, then solve the volume-source-for-EA.
+
+---
+
+## Cycle 10 — 2026-07-24 — RULEBOOK ENGINE (Zee's stencil idea) + M5
+
+Zee's idea: a rule-based / pattern-matching engine — atomic rules he curates, his
+labelled setups as the case library, engine matches candidates against the stencil.
+
+Built:
+- `monitor/rulebook.json` — 9 atomic rules in Zee's words (trend-hump, not-ranging,
+  valid-origin, uhv-in-retracement, first-breakout, colour, vol<uhv, momentum, wick),
+  each with params + enabled/required toggles.
+- `monitor/rulebook_engine.py` — extracts features from a setup (bars+origin/uhv/
+  breakout indices), a setup is VALID iff every enabled+required rule passes.
+  Validation mode scores the rulebook against Zee's labelled cases.
+- `monitor/build_entry_review_m5.py` — renders the CONFIRMED-rule detector's M5
+  entries for proof-read (22 entries, live at setups.claudezeeshan.com/entries.html).
+
+Validation vs Zee's 31 M1 labels: 48% → **65%** by toggling ONE rule off
+(`not_ranging` — my mechanical def counted the pullback as a leg; needs rework).
+Also detect_v2 on M5 = ~4.4 entries/day, balanced sides (rules work on M5).
+
+**The framework works and is curable** (change a rule → measurable effect; engine
+names the misfiring rule). Next: (A) Zee proof-reads the 22 M5 entries → build the
+M5 case library → tune the rulebook against M5 cases; then (B) port the rulebook
+engine into the EA for MT5 Strategy Tester. Volume = MT5 tick-count magnitude +
+candle colour (Zee: MT5 volume colour scheme differs from TV, but the number is fine).

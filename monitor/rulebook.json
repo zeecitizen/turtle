@@ -1,0 +1,102 @@
+{
+  "_doc": "The UHV-breakout rulebook — the stencil Zee curates. Each rule is atomic, named, in the master's words, with mechanical params. The engine (rulebook_engine.py) extracts features from a candidate setup (bars + origin/uhv/breakout indices) and a setup is VALID only if every ENABLED + REQUIRED rule passes. SOFT rules are quality flags (don't reject). Zee edits this file (toggle enabled, tune params, add rules).",
+  "version": 1,
+  "updated": "2026-07-24",
+  "timeframe": "M5",
+  "rules": [
+    {
+      "id": "trend_hump",
+      "cat": "trend",
+      "words": "Uptrend = camel humps = HH+HL. I look at ONE hump right before the retracement begins. 1 hump is enough usually.",
+      "check": "hump_before_origin",
+      "params": {
+        "min_hump_pts": 4.0,
+        "dominance": 1.6,
+        "lookback_bars": 45
+      },
+      "enabled": true,
+      "required": true
+    },
+    {
+      "id": "not_ranging",
+      "cat": "trend",
+      "words": "Our formula doesn't work in a ranging/choppy market. Ranging = an up-leg AND a down-leg both present, no dominant direction.",
+      "check": "not_both_legs",
+      "params": {
+        "min_hump_pts": 4.0,
+        "dominance": 1.6
+      },
+      "enabled": false,
+      "required": true
+    },
+    {
+      "id": "valid_origin",
+      "cat": "retracement",
+      "words": "A valid retracement starts when a counter-trend candle's BODY breaks the previous same-direction candle's extreme (BUY: red closes below prev green's low; SELL: green closes above prev red's high).",
+      "check": "origin_body_breaks_prior",
+      "params": {},
+      "enabled": true,
+      "required": true
+    },
+    {
+      "id": "uhv_in_retracement",
+      "cat": "uhv",
+      "words": "UHV = the highest-volume counter-trend candle WITHIN the valid retracement, and it must be a local volume peak (bigger than its neighbours). Right colour: red for BUY, green for SELL.",
+      "check": "uhv_local_peak_in_retrace",
+      "params": {},
+      "enabled": true,
+      "required": true
+    },
+    {
+      "id": "first_breakout",
+      "cat": "breakout",
+      "words": "We mark only ONE breakout — the FIRST candle whose body crosses the UHV's extreme. Not a later candle.",
+      "check": "breakout_is_first_cross",
+      "params": {},
+      "enabled": true,
+      "required": true
+    },
+    {
+      "id": "breakout_colour",
+      "cat": "breakout",
+      "words": "Breakout candle must be the opposite colour of the UHV — green for a buy, red for a sell.",
+      "check": "breakout_correct_colour",
+      "params": {},
+      "enabled": true,
+      "required": true
+    },
+    {
+      "id": "breakout_vol_lower",
+      "cat": "breakout",
+      "words": "The breakout candle's volume must be LOWER than the UHV's volume.",
+      "check": "breakout_vol_lt_uhv",
+      "params": {
+        "ratio": 1.0
+      },
+      "enabled": true,
+      "required": true
+    },
+    {
+      "id": "breakout_momentum",
+      "cat": "breakout",
+      "words": "The breakout should be a momentum candle (strong body).",
+      "check": "breakout_body_ratio",
+      "params": {
+        "min_body_ratio": 0.5
+      },
+      "enabled": true,
+      "required": false
+    },
+    {
+      "id": "no_rejection_wick",
+      "cat": "breakout",
+      "words": "Weak if there's a big rejection wick against the breakout direction.",
+      "check": "breakout_wick_ok",
+      "params": {
+        "max_wick_ratio": 0.45
+      },
+      "enabled": true,
+      "required": false
+    }
+  ]
+}
