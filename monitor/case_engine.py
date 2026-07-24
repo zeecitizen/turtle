@@ -50,6 +50,30 @@ def extract_features(bars, o, u, i, side):
             "brk_vol_ratio": brk_vol_ratio, "brk_wick": brk_wick, "retr_len": float(i - o)}
 
 
+def describe(f, side):
+    """Human-readable TITLE + per-feature observations, so Zee can verify Claude
+    is noticing the right things and reference setups by name."""
+    dirw = "uptrend" if side == "BUY" else "downtrend"
+    leg, dom, opp = f["side_leg"], f["dominance"], f["opp_leg"]
+    if opp >= 4 and dom < 1.6:      trend_t, trend_w = "ranging/choppy", "Ranging"
+    elif leg >= 6 and dom >= 2:     trend_t, trend_w = f"strong {dirw}", f"Strong {dirw}"
+    elif leg >= 4:                  trend_t, trend_w = f"mild {dirw}", dirw.capitalize()
+    else:                           trend_t, trend_w = "weak/unclear trend", "Weak-trend"
+    bb, bw, bv = f["brk_body"], f["brk_wick"], f["brk_vol_ratio"]
+    if bb >= 0.55 and bw < 0.35:    brk_t, brk_w = "momentum breakout", "momentum-breakout"
+    elif bw >= 0.4:                 brk_t, brk_w = "wick/indecision breakout", "wick-breakout"
+    else:                           brk_t, brk_w = "weak-bodied breakout", "weak-breakout"
+    uv = f["uhv_vol_ratio"]
+    notes = [
+        f"trend: {trend_t} (leg {leg:.1f}pt, {dom:.1f}x opp)",
+        f"origin: {'valid body-break' if f['origin_margin'] > 0 else 'NO body-break'} ({f['origin_margin']:.1f}pt)",
+        f"UHV: {'dominant' if uv >= 1.2 else 'marginal'} ({uv:.2f}x next-vol), {'local-peak' if f['uhv_is_peak'] else 'NOT peak'}",
+        f"breakout: {brk_t} (body {bb:.2f}, wick {bw:.2f}, vol {bv:.2f}x UHV{' HIGH!' if bv >= 1 else ''})",
+    ]
+    title = f"{trend_w} · {brk_w}"
+    return title, notes
+
+
 def _stats(cases):
     mu = {}; sd = {}
     for f in FEATS:
