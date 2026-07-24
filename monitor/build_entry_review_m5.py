@@ -139,18 +139,22 @@ def render(s, bars, png):
                       index=pd.DatetimeIndex([b.t for b in seg], name="Datetime"))
     rng = max(df["High"].max() - df["Low"].min(), 1e-6)
     side = s["side"]
-    def mk(idx, fn): return [fn(bars[k]) if k == idx else float("nan") for k in range(lo, hi)]
     aps = [mpf.make_addplot([s["entry"]] * len(df), color="#2563eb", width=1.0),
-           mpf.make_addplot([s["sl"]] * len(df), color="#dc2626", linestyle=":", width=1.0),
-           mpf.make_addplot(mk(oi, lambda b: b.l - rng * 0.06), type="scatter", marker="o", color="#9333ea", markersize=90),
-           mpf.make_addplot(mk(ui, lambda b: b.h + rng * 0.06), type="scatter", marker="v", color="goldenrod", markersize=190),
-           mpf.make_addplot(mk(bi, lambda b: (b.l - rng * 0.10) if side == "BUY" else (b.h + rng * 0.10)),
-                            type="scatter", marker="^" if side == "BUY" else "v",
-                            color="#16a34a" if side == "BUY" else "#dc2626", markersize=220)]
+           mpf.make_addplot([s["sl"]] * len(df), color="#dc2626", linestyle=":", width=1.0)]
     title = f"{side} M5 | entry {s['entry']} SL {s['sl']} | UHVvol {s['uhv_vol']} Bvol {s['b_vol']} | {s['open_t'].strftime('%Y-%m-%d %H:%M')}"
     try:
-        fig, _ = mpf.plot(df, type="candle", style="charles", volume=True, addplot=aps,
-                          returnfig=True, figsize=(13, 7), title=title, warn_too_much_data=100000, tight_layout=True)
+        fig, axes = mpf.plot(df, type="candle", style="charles", volume=True, addplot=aps,
+                             returnfig=True, figsize=(13, 7), title=title, warn_too_much_data=100000, tight_layout=True)
+        ax = axes[0]
+        def lab(idx, txt, above, color):
+            b = bars[idx]; x = idx - lo
+            y = b.h + rng * 0.09 if above else b.l - rng * 0.09
+            ax.annotate(txt, (x, y), ha="center", va="bottom" if above else "top",
+                        fontsize=9, fontweight="bold", color=color,
+                        bbox=dict(boxstyle="round,pad=0.25", fc="white", ec=color, alpha=0.9))
+        lab(oi, "RET.STRTS", False, "#9333ea")   # retracement starts (origin)
+        lab(ui, "UHV", True, "#b8860b")           # ultra-high-volume candle
+        lab(bi, "BRKOUT", side == "BUY", "#16a34a" if side == "BUY" else "#dc2626")  # breakout
         fig.savefig(png, dpi=72, bbox_inches="tight"); plt.close(fig); return True
     except Exception as e:
         print("render err", e); plt.close("all"); return False

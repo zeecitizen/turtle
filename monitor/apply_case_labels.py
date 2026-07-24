@@ -31,15 +31,18 @@ def main():
     db = list(seed)
     for k, s in enumerate(setups, 1):
         lid = f"case_{k:03d}"
-        v = (labels.get(lid) or {}).get("zee")
-        if v not in ("correct", "wrong"): continue
+        v = (labels.get(lid) or {}).get("zee") or ""
+        if not (v == "correct" or v.startswith("wrong")): continue
+        is_correct = (v == "correct")
+        why = v[6:].strip() if v.startswith("wrong:") else ""
         f = extract_features(bars, s["o"], s["u"], s["i"], s["side"])
         guess, near, conf = knn_verdict(f, seed, k=3, side=s["side"])
-        final = ("valid" if guess else "invalid") if v == "correct" else ("invalid" if guess else "valid")
-        agree += (v == "correct")
+        final = ("valid" if guess else "invalid") if is_correct else ("invalid" if guess else "valid")
+        agree += is_correct
+        reason = (f"zee confirmed (claude guessed {'valid' if guess else 'invalid'})" if is_correct
+                  else (why or f"zee: wrong (claude guessed {'valid' if guess else 'invalid'})"))
         db.append({"id": f"Z{k:03d}", "side": s["side"], "verdict": final,
-                   "reason": f"zee {v} (claude guessed {'valid' if guess else 'invalid'})",
-                   "source": "zee_confirmed", "features": f})
+                   "reason": reason, "source": "zee_confirmed", "features": f})
         added += 1
 
     CASES_FILE.write_text(json.dumps({"version": 2, "cases": db}, indent=2), encoding="utf-8")

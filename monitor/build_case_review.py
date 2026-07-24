@@ -36,14 +36,15 @@ h1{font-size:18px;margin:0}.sub{color:#9aa7b4;font-size:13px;margin-top:4px}
 .v{color:#16a34a;font-weight:600}.x{color:#dc2626;font-weight:600}
 .row{display:flex;gap:10px;padding:10px 14px}
 button{border:0;border-radius:8px;padding:11px 22px;font-size:15px;cursor:pointer;color:#fff}
-.ok{background:#16a34a}.no{background:#dc2626}.done{color:#9aa7b4;font-size:14px;margin-left:8px;align-self:center}
+.ok{background:#16a34a}.no{background:#dc2626}.done{color:#9aa7b4;font-size:14px;margin-left:6px;align-self:center}
+input.why{flex:1;min-width:120px;background:#0b0f14;color:#e6edf3;border:1px solid #334;border-radius:8px;padding:9px 10px;font-size:14px}
 </style></head><body><header><h1>🧩 Case Review — Claude guesses, you confirm</h1>
 <div class="sub">Har setup pe Claude ka andaaza dikhta hai. Sahi ho to ✓ Correct, warna ✗ Wrong. Bas.</div></header>
 <div id="app"></div><script>
 const S=__J__;let L={};
 async function ld(){try{L=await(await fetch('/api/labels')).json()}catch(e){}rn()}
-async function sv(id,val){await fetch('/api/labels',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idx:id,who:'zee',label:val})});document.getElementById('d_'+id).textContent=val==='correct'?'✓ saved':'✗ saved';}
-function rn(){const a=document.getElementById('app');a.innerHTML='';S.forEach(s=>{const prev=(L[s.id]&&L[s.id].zee)||'';const g=s.guess==='valid'?`<span class="v">VALID</span>`:`<span class="x">INVALID</span>`;const d=document.createElement('div');d.className='card';d.innerHTML=`<img src="${s.png}" loading="lazy"><div class="title">🧩 ${s.title}</div><div class="notes">${(s.notes||[]).map(n=>'• '+n).join('<br>')}</div><div class="guess">🤖 Claude verdict: ${g} &nbsp;—&nbsp; like ${s.near} (${s.reason}) · conf ${s.conf}</div><div class="row"><button class="ok" onclick="sv('${s.id}','correct')">✓ Correct</button><button class="no" onclick="sv('${s.id}','wrong')">✗ Wrong</button><span class="done" id="d_${s.id}">${prev?(prev==='correct'?'✓ saved':'✗ saved'):''}</span></div>`;a.appendChild(d)})}
+async function sv(id,val){let lab=val;if(val==='wrong'){const w=(document.getElementById('w_'+id).value||'').trim();lab='wrong'+(w?': '+w:'');}await fetch('/api/labels',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idx:id,who:'zee',label:lab})});document.getElementById('d_'+id).textContent=val==='correct'?'✓ saved':'✗ saved';}
+function rn(){const a=document.getElementById('app');a.innerHTML='';S.forEach(s=>{const prev=(L[s.id]&&L[s.id].zee)||'';const g=s.guess==='valid'?`<span class="v">VALID</span>`:`<span class="x">INVALID</span>`;const d=document.createElement('div');d.className='card';d.innerHTML=`<img src="${s.png}" loading="lazy"><div class="title">🧩 ${s.title}</div><div class="notes">${(s.notes||[]).map(n=>'• '+n).join('<br>')}</div><div class="guess">🤖 Claude verdict: ${g} &nbsp;—&nbsp; like ${s.near} (${s.reason}) · conf ${s.conf}</div><div class="row"><button class="ok" onclick="sv('${s.id}','correct')">✓ Correct</button><button class="no" onclick="sv('${s.id}','wrong')">✗ Wrong</button><input class="why" id="w_${s.id}" placeholder="Why wrong? (kya ghalat hai)" value="${(prev&&prev.indexOf('wrong:')===0)?prev.slice(6).trim().replace(/"/g,'&quot;'):''}"><span class="done" id="d_${s.id}">${prev?(prev==='correct'?'✓ saved':'✗ saved'):''}</span></div>`;a.appendChild(d)})}
 ld();</script></body></html>"""
 
 
