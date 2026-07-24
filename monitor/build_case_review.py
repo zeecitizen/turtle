@@ -32,7 +32,8 @@ header{position:sticky;top:0;background:#111826;padding:14px 18px;border-bottom:
 h1{font-size:18px;margin:0}.sub{color:#9aa7b4;font-size:13px;margin-top:4px}
 .card{margin:18px;background:#111826;border:1px solid #223;border-radius:10px;overflow:hidden}
 .card img{width:100%;display:block;background:#fff}
-.title{padding:10px 14px 2px;font-size:16px;font-weight:600;border-top:1px solid #223;color:#e6edf3}
+.title{padding:12px 14px 2px;font-size:16px;font-weight:600;color:#e6edf3}
+.caption{padding:0 14px 10px;color:#9aa7b4;font-size:13px}
 .notes{padding:2px 14px 6px;color:#9aa7b4;font-size:13px;line-height:1.6}
 .guess{padding:6px 14px 10px;font-size:15px}
 .v{color:#16a34a;font-weight:600}.x{color:#dc2626;font-weight:600}
@@ -46,7 +47,7 @@ input.why{flex:1;min-width:120px;background:#0b0f14;color:#e6edf3;border:1px sol
 const S=__J__;let L={};
 async function ld(){try{L=await(await fetch('/api/labels')).json()}catch(e){}rn()}
 async function sv(id,val){let lab=val;if(val==='wrong'){const w=(document.getElementById('w_'+id).value||'').trim();lab='wrong'+(w?': '+w:'');}await fetch('/api/labels',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idx:id,who:'zee',label:lab})});document.getElementById('d_'+id).textContent=val==='correct'?'✓ saved':'✗ saved';}
-function rn(){const a=document.getElementById('app');a.innerHTML='';S.forEach(s=>{const prev=(L[s.id]&&L[s.id].zee)||'';const g=s.guess==='valid'?`<span class="v">VALID</span>`:`<span class="x">INVALID</span>`;const d=document.createElement('div');d.className='card';d.innerHTML=`<img src="${s.png}" loading="lazy"><div class="title">🧩 ${s.title}</div><div class="notes">${(s.notes||[]).map(n=>'• '+n).join('<br>')}</div><div class="guess">🤖 Claude verdict: ${g} &nbsp;—&nbsp; similar to: ${s.near_desc} · conf ${s.conf}</div><div class="row"><button class="ok" onclick="sv('${s.id}','correct')">✓ Correct</button><button class="no" onclick="sv('${s.id}','wrong')">✗ Wrong</button><input class="why" id="w_${s.id}" placeholder="Why wrong? (kya ghalat hai)" value="${(prev&&prev.indexOf('wrong:')===0)?prev.slice(6).trim().replace(/"/g,'&quot;'):''}"><span class="done" id="d_${s.id}">${prev?(prev==='correct'?'✓ saved':'✗ saved'):''}</span></div>`;a.appendChild(d)})}
+function rn(){const a=document.getElementById('app');a.innerHTML='';S.forEach(s=>{const prev=(L[s.id]&&L[s.id].zee)||'';const g=s.guess==='valid'?`<span class="v">VALID</span>`:`<span class="x">INVALID</span>`;const d=document.createElement('div');d.className='card';d.innerHTML=`<div class="title">🧩 ${s.title}</div><div class="caption">${s.caption}</div><img src="${s.png}" loading="lazy"><div class="notes">${(s.notes||[]).map(n=>'• '+n).join('<br>')}</div><div class="guess">🤖 Claude verdict: ${g} &nbsp;—&nbsp; similar to: ${s.near_desc} · conf ${s.conf}</div><div class="row"><button class="ok" onclick="sv('${s.id}','correct')">✓ Correct</button><button class="no" onclick="sv('${s.id}','wrong')">✗ Wrong</button><input class="why" id="w_${s.id}" placeholder="Why wrong? (kya ghalat hai)" value="${(prev&&prev.indexOf('wrong:')===0)?prev.slice(6).trim().replace(/"/g,'&quot;'):''}"><span class="done" id="d_${s.id}">${prev?(prev==='correct'?'✓ saved':'✗ saved'):''}</span></div>`;a.appendChild(d)})}
 ld();</script></body></html>"""
 
 
@@ -85,8 +86,9 @@ def main():
         png = OUT / f"case_{k:03d}.png"
         s_render = dict(s); s_render["entry"] = s["entry"]  # render expects entry/sl/o/u/i/side
         if render(s_render, bars, png):
+            caption = f"{s['side']} M5 · entry {s['entry']} · SL {s['sl']} · {s['open_t'].strftime('%Y-%m-%d %H:%M')}"
             meta.append({"id": f"case_{k:03d}", "png": f"case_{k:03d}.png?v={BUST}", "side": s["side"],
-                         "title": f"#{k} {title}", "notes": notes,
+                         "title": f"#{k} {title}", "caption": caption, "notes": notes,
                          "guess": "valid" if valid else "invalid", "near_desc": near_desc,
                          "conf": f"{conf:.0%}"})
     (OUT / "entries.html").write_text(HTML.replace("__J__", json.dumps(meta)), encoding="utf-8")
