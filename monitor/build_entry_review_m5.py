@@ -82,6 +82,16 @@ def trend_ok(bars, o, side, minh=4.0, R=1.6):
     return (up >= minh and up >= dn * R) if side == "BUY" else (dn >= minh and dn >= up * R)
 
 
+def retr_zone_start(bars, o, side, back=12):
+    """The retracement ZONE begins at the swing extreme the pullback comes from —
+    the UHV (highest-vol counter-trend candle) can lie here, BEFORE the body-break
+    origin (Zee, 2026-07-25). Return the index of that swing high (BUY) / low (SELL)."""
+    look = max(0, o - back)
+    if side == "BUY":
+        return max(range(look, o + 1), key=lambda k: bars[k].h)
+    return min(range(look, o + 1), key=lambda k: bars[k].l)
+
+
 def detect_full(bars):
     out = []; n = len(bars)
     for i in range(3, n):
@@ -93,8 +103,9 @@ def detect_full(bars):
             for j in range(i - 1, max(i - LB, 0), -1):
                 if is_origin(bars, j, side): o = j; break
             if o is None or not trend_ok(bars, o, side): continue
+            rs = retr_zone_start(bars, o, side)   # UHV can be BEFORE the origin (Zee 2026-07-25)
             best = None
-            for k in range(o, i):
+            for k in range(rs, i):
                 c = bars[k]; col = c.is_bear if side == "BUY" else c.is_bull
                 if not col: continue
                 if k - 1 >= 0 and bars[k - 1].v >= c.v: continue

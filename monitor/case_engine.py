@@ -16,7 +16,7 @@ import json, sys, math
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / "strategy_lab"))
-from build_entry_review_m5 import build_m5, detect_full
+from build_entry_review_m5 import build_m5, detect_full, retr_zone_start
 from rulebook_engine import humps_before, prior_opp_extreme
 import screener_canonical_uhv_m1 as S
 
@@ -32,7 +32,8 @@ def extract_features(bars, o, u, i, side):
     origin_margin = abs(bars[o].c - ext) if ext is not None else 0.0
     U = bars[u]
     # uhv vol vs 2nd-highest counter-trend candle in retracement
-    others = [bars[k].v for k in range(o, i)
+    rs = retr_zone_start(bars, o, side)
+    others = [bars[k].v for k in range(rs, i)
               if (bars[k].is_bear if side == "BUY" else bars[k].is_bull) and k != u]
     second = max(others) if others else 1
     uhv_vol_ratio = U.v / max(second, 1)
