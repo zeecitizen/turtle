@@ -113,28 +113,30 @@ def evaluate(bars, o, u, i, side, rulebook):
     return (len(failed) == 0), failed, soft
 
 
-# ── validation against Zee's labelled cases ──────────────────────────────
+# ── validation against Zee's labelled M5 cases (the real target) ─────────
+sys.path.insert(0, str(Path(__file__).parent))
+from build_entry_review_m5 import build_m5, detect_full
+
+# Zee's M5 verdicts (from zee_labels.json m5_* proof-reads, 2026-07-24)
+ZEE_M5_VALID = {5, 6, 7, 8, 11, 15, 19, 20, 21}
+ZEE_M5_SKIP = {14}  # render bug: "no setup marked on photo" — not a rule verdict
+
 def main():
     rb = json.loads(RB.read_text(encoding="utf-8"))
-    # reconstruct the 31 M1 setups Zee proof-read (build_entry_review used --days 12)
-    bars = S.build_m1(sorted(S.TICK_DIR.glob("shano_ticks_2026-*.csv"))[-12:])
-    bidx = {b.t: k for k, b in enumerate(bars)}
-    fires = S.detect(bars)
-    ZEE_VALID = {1,2,4,6,7,8,9,10,13,16,17,20,21,24,30,31}
-    print(f"Rulebook v{rb['version']} — {sum(r.get('enabled') for r in rb['rules'])} rules enabled\n")
+    bars = build_m5(sorted(S.TICK_DIR.glob("shano_ticks_2026-*.csv"))[-8:])
+    setups = detect_full(bars)
+    print(f"Rulebook v{rb['version']} — {sum(r.get('enabled') for r in rb['rules'])} rules enabled")
+    print(f"M5 case library: {len(setups)} setups\n")
     correct = 0; total = 0
-    for k, f in enumerate(fires, 1):
-        o = bidx.get(datetime.strptime(f.origin_t, "%Y-%m-%d %H:%M"))
-        u = bidx.get(datetime.strptime(f.uhv_t, "%Y-%m-%d %H:%M"))
-        i = bidx.get(datetime.strptime(f.open_t, "%Y-%m-%d %H:%M"))
-        if None in (o, u, i): continue
-        valid, failed, soft = evaluate(bars, o, u, i, f.side, rb)
-        zee = k in ZEE_VALID
+    for k, s in enumerate(setups, 1):
+        if k in ZEE_M5_SKIP: continue
+        valid, failed, soft = evaluate(bars, s["o"], s["u"], s["i"], s["side"], rb)
+        zee = k in ZEE_M5_VALID
         match = (valid == zee); correct += match; total += 1
         tag = "OK " if match else "XX "
-        print(f"{tag}e{k:03d} {f.side}: engine={'VALID' if valid else 'INVALID'} zee={'valid' if zee else 'invalid'}"
+        print(f"{tag}m5_{k:03d} {s['side']}: engine={'VALID' if valid else 'INVALID'} zee={'valid' if zee else 'invalid'}"
               + ("" if valid else f"  fails={failed}"))
-    print(f"\nRulebook reproduces Zee: {correct}/{total} ({100*correct/max(total,1):.0f}%)")
+    print(f"\nRulebook reproduces Zee (M5): {correct}/{total} ({100*correct/max(total,1):.0f}%)")
 
 
 if __name__ == "__main__":

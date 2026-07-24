@@ -1,6 +1,6 @@
 {
   "_doc": "The UHV-breakout rulebook — the stencil Zee curates. Each rule is atomic, named, in the master's words, with mechanical params. The engine (rulebook_engine.py) extracts features from a candidate setup (bars + origin/uhv/breakout indices) and a setup is VALID only if every ENABLED + REQUIRED rule passes. SOFT rules are quality flags (don't reject). Zee edits this file (toggle enabled, tune params, add rules).",
-  "version": 1,
+  "version": 3,
   "updated": "2026-07-24",
   "timeframe": "M5",
   "rules": [
@@ -26,7 +26,7 @@
         "min_hump_pts": 4.0,
         "dominance": 1.6
       },
-      "enabled": false,
+      "enabled": true,
       "required": true
     },
     {
@@ -82,10 +82,10 @@
       "words": "The breakout should be a momentum candle (strong body).",
       "check": "breakout_body_ratio",
       "params": {
-        "min_body_ratio": 0.5
+        "min_body_ratio": 0.4
       },
       "enabled": true,
-      "required": false
+      "required": true
     },
     {
       "id": "no_rejection_wick",
@@ -98,5 +98,6 @@
       "enabled": true,
       "required": false
     }
-  ]
+  ],
+  "accuracy_on_m5_cases": "12/21 (57%)"
 }
