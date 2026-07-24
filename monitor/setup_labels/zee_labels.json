@@ -292,5 +292,206 @@
   },
   "n1": {
     "zee": "{\"verdict\":\"correct\",\"reason\":\"\"}"
+  },
+  "e001": {
+    "zee": "valid"
+  },
+  "e002": {
+    "zee": "valid"
+  },
+  "e003": {
+    "zee": "the green arrow upward  is marked one candle late, as its previous candle was the one that crossed the high of the UHV"
+  },
+  "e004": {
+    "zee": "valid"
+  },
+  "e005": {
+    "zee": "are we in a confirmed uptrend to be buying? we must check thoroughly"
+  },
+  "e006": {
+    "zee": "yes.. valid"
+  },
+  "e007": {
+    "zee": "valid.."
+  },
+  "e008": {
+    "zee": "valid hai"
+  },
+  "e009": {
+    "zee": "valid"
+  },
+  "e010": {
+    "zee": "valid"
+  },
+  "e011": {
+    "zee": "the origin doesnot start a valid retracement.. green doesnot break above the red's high"
+  },
+  "e012": {
+    "zee": "invalid setup. the trend is shifting.. i wouldnt trade. our setup only works if the market is not in a ranging condition."
+  },
+  "e013": {
+    "zee": "valid"
+  },
+  "e014": {
+    "zee": "origin is wrong.. its not a valid retracement as the last green's low wasn't broken by the origin, so no retracement started"
+  },
+  "e015": {
+    "zee": "invalid setup.. because origin's high was broken by the very next candle.. we didnt mark the correct breakout candle (the candle next one after origin)"
+  },
+  "e016": {
+    "zee": "valid.. "
+  },
+  "e017": {
+    "zee": "valid"
+  },
+  "e018": {
+    "zee": "invalid. price was making lower high.. so we were in downtrend.. therefore we cannot buy in a downtrend. "
+  },
+  "e019": {
+    "zee": "invalid origin. origin doesnot break prev high/low to be considered a retracement start\n"
+  },
+  "e020": {
+    "zee": "correct buy setup but weak setup due to wick (rejection) in the direction of breakout"
+  },
+  "e021": {
+    "zee": "valid"
+  },
+  "e022": {
+    "zee": "invalid setup, ranging market"
+  },
+  "e023": {
+    "zee": "among the 3 green candles in the retracement, the one at 15:40 is the one with highest green volume"
+  },
+  "e024": {
+    "zee": "valid"
+  },
+  "e025": {
+    "zee": "the origin candle was a valid retracement itself as it broke the low of previous green .. we marked another candle as UHV (the one marked as UHV has higher volume but is not a valid retracement (doesnot break below the previous green "
+  },
+  "e026": {
+    "zee": "invalid origin, we've marked a candle as origin which is not starting a valid retracement.. "
+  },
+  "e027": {
+    "zee": "price was making higher highs when we marked origin, means we were in an uptrend, as we know we cannot sell in an uptrend, we only buy in an uptrend"
+  },
+  "e028": {
+    "zee": "our formula doesnot work in  a ranging market. so i wouldnt take this trade. "
+  },
+  "e029": {
+    "zee": "price ranging, avoiding taking setups in the ranging zone"
+  },
+  "e030": {
+    "zee": "valid"
+  },
+  "e031": {
+    "zee": "valid setup, could be avoided as risky due to ranging / choppy market"
+  },
+  "m5_001": {
+    "zee": "wicks on the breakout candle suggest indecision. we always need a momentum breakout candle with lower volume than the UHV candle."
+  },
+  "m5_002": {
+    "zee": "ranging market.. not clear trend. i wont take"
+  },
+  "m5_003": {
+    "zee": "breakout should be with body close to be confirmed, not with wick"
+  },
+  "m5_004": {
+    "zee": "breakout should be with body close to be confirmed, not with wick"
+  },
+  "m5_005": {
+    "zee": "correct.. as strong bodied breakout candle.."
+  },
+  "m5_006": {
+    "zee": "valid because strong bodied breakout"
+  },
+  "m5_007": {
+    "zee": "valid"
+  },
+  "m5_008": {
+    "zee": "valid (had to think a bit on this)"
+  },
+  "m5_009": {
+    "zee": "breakout candle is not momentum candle.."
+  },
+  "m5_010": {
+    "zee": "umm. .selling in an uptrend? not valid"
+  },
+  "m5_011": {
+    "zee": "valid"
+  },
+  "m5_012": {
+    "zee": "can't breakout with wick only.. need a strong momentum candle to break through. although with trend even weaker setups work"
+  },
+  "m5_013": {
+    "zee": "not a valid retracment since the red at 6:25 doesnot break with its own body, below the last green candle "
+  },
+  "m5_014": {
+    "zee": "no setup marked on photo"
+  },
+  "m5_015": {
+    "zee": "valid"
+  },
+  "m5_016": {
+    "zee": "not proper downtrend, can't sell"
+  },
+  "m5_017": {
+    "zee": "not proper downtrend, cant sell"
+  },
+  "m5_018": {
+    "zee": "market is choppy / wicky / no clear downtrend to ensure a sell trade .. "
+  },
+  "m5_019": {
+    "zee": "valid setup but weak bodied breakout candle.. so could be risky"
+  },
+  "m5_020": {
+    "zee": "valid"
+  },
+  "m5_021": {
+    "zee": "valid"
+  },
+  "m5_022": {
+    "zee": "not a strong downtrend, can't sell unless downtrend proven "
+  },
+  "case_001": {
+    "zee": "correct"
+  },
+  "case_002": {
+    "zee": "correct"
+  },
+  "case_003": {
+    "zee": "correct"
+  },
+  "case_004": {
+    "zee": "correct"
+  },
+  "case_005": {
+    "zee": "wrong"
+  },
+  "case_006": {
+    "zee": "correct"
+  },
+  "case_007": {
+    "zee": "correct"
+  },
+  "case_008": {
+    "zee": "correct"
+  },
+  "case_009": {
+    "zee": "correct"
+  },
+  "case_010": {
+    "zee": "correct"
+  },
+  "case_011": {
+    "zee": "wrong"
+  },
+  "case_012": {
+    "zee": "correct"
+  },
+  "case_013": {
+    "zee": "correct"
+  },
+  "case_014": {
+    "zee": "correct"
   }
 }

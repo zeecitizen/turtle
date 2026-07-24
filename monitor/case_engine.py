@@ -66,7 +66,11 @@ def knn_verdict(feat, cases, k=3):
     top = ranked[:k]
     votes = sum(1 for c in top if c["verdict"] == "valid")
     valid = votes > k / 2
-    return valid, ranked[0]["id"], votes / k
+    verdict = "valid" if valid else "invalid"
+    # nearest case that AGREES with the majority verdict (so display never contradicts)
+    near = next((c["id"] for c in ranked if c["verdict"] == verdict), ranked[0]["id"])
+    agree = votes if valid else (k - votes)
+    return valid, near, agree / k
 
 
 # ── seed DB from Zee's M5 proof-reads ────────────────────────────────────
