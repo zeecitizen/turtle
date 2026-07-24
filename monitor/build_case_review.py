@@ -33,8 +33,8 @@ h1{font-size:18px;margin:0}.sub{color:#9aa7b4;font-size:13px;margin-top:4px}
 .card{margin:18px;background:#111826;border:1px solid #223;border-radius:10px;overflow:hidden}
 .card img{width:100%;display:block;background:#fff}
 .title{padding:12px 14px 2px;font-size:16px;font-weight:600;color:#e6edf3}
-.caption{padding:0 14px 10px;color:#9aa7b4;font-size:13px}
-.notes{padding:2px 14px 6px;color:#9aa7b4;font-size:13px;line-height:1.6}
+.caption{padding:0 14px 10px;color:#b8c4d0;font-size:14px}
+.notes{padding:2px 14px 8px;color:#e6edf3;font-size:15px;line-height:1.75}
 .guess{padding:6px 14px 10px;font-size:15px}
 .v{color:#16a34a;font-weight:600}.x{color:#dc2626;font-weight:600}
 .row{display:flex;gap:10px;padding:10px 14px}
