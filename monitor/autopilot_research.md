@@ -324,3 +324,25 @@ names the misfiring rule). Next: (A) Zee proof-reads the 22 M5 entries → build
 M5 case library → tune the rulebook against M5 cases; then (B) port the rulebook
 engine into the EA for MT5 Strategy Tester. Volume = MT5 tick-count magnitude +
 candle colour (Zee: MT5 volume colour scheme differs from TV, but the number is fine).
+
+---
+
+## Cycle 11 — 2026-07-24 — CASE-BASED REASONING DB (Zee's vision) beats rules
+
+P&L test of rulebook-valid entries + Feb-11-style exits on recent M5: ALL policies
+negative (speed_micro 79% WR but +0.25/-1.65 = -$66; feb11_A -$334). Recent data was
+choppy/ranging and the 57% rulebook let ranging losers through → entries not good enough.
+
+Zee's pivot: build a CASE DATABASE. Each validated setup = a case with a feature
+signature; classify a new setup by matching nearest cases (kNN). Zee only clicks
+Correct/Wrong on Claude-proposed labels.
+
+Built: case_engine.py (feature extractor + kNN + seed from 21 M5 cases),
+build_case_review.py (Claude pre-labels 40 new candidates → Correct/Wrong page),
+apply_case_labels.py (folds clicks back into cases.json + reports accuracy).
+
+Result: **kNN case-matching = 76% leave-one-out** vs fixed-rulebook's 57%. Cases
+capture the nuance rules can't. Accuracy grows as the DB grows.
+
+Loop: Claude pre-labels candidates → Zee clicks Correct/Wrong → DB grows → matching
+accuracy rises → then real-time: new candle → match nearest case → "Case 17, valid → entry".
