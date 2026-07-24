@@ -34,7 +34,7 @@ def main():
         v = (labels.get(lid) or {}).get("zee")
         if v not in ("correct", "wrong"): continue
         f = extract_features(bars, s["o"], s["u"], s["i"], s["side"])
-        guess, near, conf = knn_verdict(f, seed, k=3)
+        guess, near, conf = knn_verdict(f, seed, k=3, side=s["side"])
         final = ("valid" if guess else "invalid") if v == "correct" else ("invalid" if guess else "valid")
         agree += (v == "correct")
         db.append({"id": f"Z{k:03d}", "side": s["side"], "verdict": final,

@@ -69,7 +69,7 @@ def main():
     meta = []
     for k, s in enumerate(setups, 1):
         f = extract_features(bars, s["o"], s["u"], s["i"], s["side"])
-        valid, near, conf = knn_verdict(f, cases, k=3)
+        valid, near, conf = knn_verdict(f, cases, k=3, side=s["side"])
         near_case = next((c for c in cases if c["id"] == near), None)
         reason = near_case["reason"] if near_case else ""
         png = OUT / f"case_{k:03d}.png"
