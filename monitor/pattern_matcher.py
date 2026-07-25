@@ -29,7 +29,19 @@ STENCIL = json.loads((HERE / "rules_stencil.json").read_text(encoding="utf-8"))
 TAKE = [r for r in STENCIL["rules"] if r["action"] == "TAKE"]
 SKIP = [r for r in STENCIL["rules"] if r["action"] == "SKIP"]
 SIGNALS = HERE / "case_signals.jsonl"
+COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
+EA_SIGNAL = COMMON / "case_signal.json"   # CaseSignalExecutor EA reads this
 UHV_DOMINANT_MIN = 1.2
+
+
+def write_ea_signal(sig, seq, lots=0.10):
+    """Write the latest TAKE signal for the MT5 executor EA (MQL5 ExtractDouble-safe)."""
+    try:
+        body = ('{"id":%d,"side":"%s","entry":%.2f,"sl":%.2f,"lots":%.2f,"time":"%s"}'
+                % (seq, sig["side"], sig["entry"], sig["sl"], lots, sig["time"]))
+        EA_SIGNAL.write_text(body, encoding="ascii")
+    except Exception as e:
+        print("[matcher] EA signal write failed:", e)
 
 
 def _ok(val, cond):
@@ -86,7 +98,7 @@ def scan(bars):
 def live(poll_sec=20):
     """Poll the newest M5 tick CSV; emit a signal when a NEW setup completes on the
     last CLOSED bar. Emits to case_signals.jsonl (an executor EA acts on TAKE)."""
-    seen = set()
+    seen = set(); seq = 0
     print("[matcher] live loop — watching newest tick CSV for completed setups")
     while True:
         csvs = sorted(S.TICK_DIR.glob("shano_ticks_2026-*.csv"))
@@ -103,6 +115,9 @@ def live(poll_sec=20):
                     s["emitted_utc"] = datetime.utcnow().isoformat(timespec="seconds")
                     with SIGNALS.open("a", encoding="utf-8") as fh:
                         fh.write(json.dumps(s) + "\n")
+                    if s["action"] == "TAKE":
+                        seq += 1
+                        write_ea_signal(s, seq)
                     print(f"[matcher] {s['action']} {s['side']} {s['time']} — {s['rule']} {s['rule_name']}")
         time.sleep(poll_sec)
 
