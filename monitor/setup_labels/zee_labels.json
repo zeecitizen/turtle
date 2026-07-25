@@ -394,5 +394,35 @@
   },
   "case_031": {
     "zee": "wrong"
+  },
+  "Rule 1": {
+    "zee": "correct"
+  },
+  "Rule 2": {
+    "zee": "correct"
+  },
+  "Rule 3": {
+    "zee": "correct"
+  },
+  "Rule 4": {
+    "zee": "correct"
+  },
+  "Rule 5": {
+    "zee": "correct"
+  },
+  "Rule 6": {
+    "zee": "correct"
+  },
+  "loser_001": {
+    "zee": "retracment not strong enough.."
+  },
+  "loser_002": {
+    "zee": "price actually did fell down after this sell was taken. so this should be a profitable trade."
+  },
+  "loser_003": {
+    "zee": "ranging market.no clear trend."
+  },
+  "loser_004": {
+    "zee": "uhv itself should have been a strong bodied candle.. (test this hypothesis)"
   }
 }
