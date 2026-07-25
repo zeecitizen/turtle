@@ -18,7 +18,7 @@
 
 input double InpDefaultLots = 0.10;   // fallback lots if signal omits it
 input int    InpMagic       = 88020;  // CaseSignalExecutor magic
-input double InpHardSLPts   = 10.0;   // wide structural stop — hold through the dip (WR 73%, best net)
+input double InpCatastPts   = 20.0;   // catastrophe backup stop (the real SL is the signal's UHV-low)
 input double InpArmPts      = 8.0;    // trail arms LATE (+8pt) so winners RUN and capture the ~+24pt MFE
 input double InpGivePts     = 4.0;    // give back this from the peak before exiting
 input double InpTpCapPts    = 30.0;   // runaway take-profit ceiling (pts)
@@ -73,12 +73,15 @@ void OnTimer() {
    double lots = JNum(txt, "lots"); if (lots <= 0) lots = InpDefaultLots;
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   // broker-side parachute at the 4pt hard stop (grid sweet spot), NOT the wide UHV SL
-   double sl = (side == "BUY") ? (ask - InpHardSLPts) : (bid + InpHardSLPts);
+   // the SL is the signal's structural UHV-low (Zee's canonical, WR 73-77%);
+   // if missing/invalid, fall back to a wide catastrophe parachute.
+   double sl = JNum(txt, "sl");
+   if (sl <= 0 || sl == EMPTY_VALUE)
+      sl = (side == "BUY") ? (ask - InpCatastPts) : (bid + InpCatastPts);
    g_peak_pts = 0.0;
    if (side == "BUY")       trade.Buy(lots, _Symbol, 0, sl, 0, "case");
    else if (side == "SELL") trade.Sell(lots, _Symbol, 0, sl, 0, "case");
-   PrintFormat("[CaseExec] signal #%d %s lots=%.2f sl@%.1fpt=%.2f", id, side, lots, InpHardSLPts, sl);
+   PrintFormat("[CaseExec] signal #%d %s lots=%.2f sl(UHV)=%.2f", id, side, lots, sl);
 }
 
 // Manage the Feb-11 exit on every tick.
@@ -94,8 +97,8 @@ void OnTick() {
       double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
       double prof = isbuy ? (bid - entry) : (entry - ask);   // favourable move, price pts
       if (prof > g_peak_pts) g_peak_pts = prof;
-      // hard stop (backup to the broker SL parachute) — grid sweet spot 4pt
-      if (prof <= -InpHardSLPts) { trade.PositionClose(t); g_peak_pts = 0; continue; }
+      // catastrophe backup (broker SL from the signal's UHV-low is the primary stop)
+      if (prof <= -InpCatastPts) { trade.PositionClose(t); g_peak_pts = 0; continue; }
       // runaway take-profit ceiling
       if (prof >= InpTpCapPts) { trade.PositionClose(t); g_peak_pts = 0; continue; }
       // trailing-reversal: let it run, exit on give-back after arming
