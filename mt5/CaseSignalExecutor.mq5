@@ -18,10 +18,10 @@
 
 input double InpDefaultLots = 0.10;   // fallback lots if signal omits it
 input int    InpMagic       = 88020;  // CaseSignalExecutor magic
-input double InpHardSLPts   = 4.0;    // hard stop (grid sweet spot: WR 69% / best net)
-input double InpArmPts      = 4.0;    // trail arms after +4.0 pts favourable
-input double InpGivePts     = 2.0;    // exit if price gives back this from the peak
-input double InpTpCapPts    = 10.0;   // runaway take-profit ceiling (pts)
+input double InpHardSLPts   = 10.0;   // wide structural stop — hold through the dip (WR 73%, best net)
+input double InpArmPts      = 8.0;    // trail arms LATE (+8pt) so winners RUN and capture the ~+24pt MFE
+input double InpGivePts     = 4.0;    // give back this from the peak before exiting
+input double InpTpCapPts    = 30.0;   // runaway take-profit ceiling (pts)
 input string InpSignalFile  = "case_signal.json";
 
 CTrade  trade;
