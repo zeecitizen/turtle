@@ -410,3 +410,27 @@ truly-wrong trades early (Feb-11 "scratch on first reversal") before they blow o
 Missing mechanical piece: a wide stop for high WR + a smart EARLY-CUT for
 clearly-failing trades. Grid-searching stop/trail sweet spot next. Also fixed the
 chart headroom so UHV/BRKT labels never clip (setup #2 breakout was invisible).
+
+---
+
+## Cycle 15 — 2026-07-26 — THE 92% SECRET decoded (MFE trace)
+
+Zee: some losing setups are actually winners (buy goes up / sell goes down but we
+call it loss). Traced MFE (max favourable) vs MAE (max adverse) per TAKE signal.
+NOT a sign bug — P&L is correct. The "losses" split in two:
+
+TYPE A (entry RIGHT, tight stop killed it): price dipped 6-13pt first (hit the 4pt
+stop) THEN went favourable. e.g. 2026-05-28 BUY MFE +47.0 (MAE -6.6) stopped at
+-$41.5; 05-12 SELL MFE +10.2 (MAE -12.9). Direction was correct — Zee HOLDS through
+the dip (structural stop at UHV low) and catches the move = his 92%. Our tight 4pt
+mechanical stop is the WR killer.
+
+TYPE B (genuinely wrong): MFE < 3, price just ran against. e.g. 05-29 BUY MFE +0.6
+(MAE -32.8); 05-27 BUY MFE +0.8 (MAE -18.0). Real losses. Zee SKIPS these (weak
+breakout / wick — cf loser_007).
+
+=> Zee's 92% = (1) structural/wide stop that holds through normal dips (the UHV-low
+stop gave 77% WR) + (2) skipping the genuinely-weak setups (Type B). Our system uses
+a tight 4pt stop (kills Type A) and doesn't filter Type B. Fix: wider structural stop
++ an entry filter that rejects Type-B setups (low expected MFE). Next: analyse Type-B
+features (breakout wick/momentum/uhv-dominance) to build that filter.
