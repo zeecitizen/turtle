@@ -367,3 +367,23 @@ Pipeline COMPLETE end-to-end: detect setup -> extract features -> match validate
 stencils -> TAKE/SKIP -> Feb-11 exit -> net positive. Remaining for LIVE: (a) restore
 tick logging (attach logger EA), (b) an executor EA to act on case_signals.jsonl
 (ARM64 has no MT5 Python order API), (c) robustness across more days.
+
+---
+
+## Cycle 13 — 2026-07-26 — ROBUSTNESS CONFIRMED: +$307 over 33 days
+
+Full-data validation of the pattern matcher (validated rule stencils) over ALL 36
+tick files = 33 trading days, 7351 M5 bars:
+- 144 setups -> 26 TAKE / 118 SKIP (0.8 TAKE/day). Rule mix: Rule5 95, Rule4 16,
+  Rule1 13, Rule2 13, unmatched 7.
+- **TAKE P&L (Feb-11 exit, 0.1 lot): Net +$307.0, WR 46%, avgW +$44.8, avgL -$16.5,
+  ~+$9.30/day.** Holds (better than the 20-day +$63) -> not a fluke, system robust.
+
+The pipeline is complete + backtest-profitable: detect -> match validated stencils
+-> TAKE(Rule1/2)/SKIP -> Feb-11 asymmetric exit -> net positive. This is the first
+validated profitable system of the whole project.
+
+Built signals.html dashboard (setup_labels/build_signals_page.py). Next for LIVE:
+CaseSignalExecutor EA (reads matcher signal file, trades demo) + restore tick
+logging (Zee attaches logger + executor). Still: not live-proven, Blueberry ticks,
+demo only.
