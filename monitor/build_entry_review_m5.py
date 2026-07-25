@@ -143,6 +143,7 @@ def render(s, bars, png):
         fig, axes = mpf.plot(df, type="candle", style="charles", volume=True,
                              returnfig=True, figsize=(13, 7), warn_too_much_data=100000, tight_layout=True)
         ax = axes[0]
+        ax.set_ylim(df["Low"].min() - rng * 0.14, df["High"].max() + rng * 0.20)  # headroom for UHV/BRKT labels
         def lab(idx, txt, above, color):
             b = bars[idx]; x = idx - lo
             y = b.h + rng * 0.09 if above else b.l - rng * 0.09
