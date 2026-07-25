@@ -387,3 +387,26 @@ Built signals.html dashboard (setup_labels/build_signals_page.py). Next for LIVE
 CaseSignalExecutor EA (reads matcher signal file, trades demo) + restore tick
 logging (Zee attaches logger + executor). Still: not live-proven, Blueberry ticks,
 demo only.
+
+---
+
+## Cycle 14 — 2026-07-26 — LOSERS diagnosis: the 46% WR was a TIGHT-STOP bug
+
+Zee reviewed the losing TAKE setups (losers.html). Key: ALL 14 losers "hit stop" —
+they never went favourable, i.e. the fixed 1.5pt SL cut them on noise. Zee on
+loser_001: "this didn't lose — price later climbed to 5061, a buy should've
+profited." The ENTRIES are good; the tight stop was the problem.
+
+SL comparison (all data, 26 TAKE trades, arm3/give1.5/tp8):
+- fixed 1.5pt SL : WR 46%  Net +$307  avgL -$16.5
+- UHV-based SL   : WR 77%  Net +$49   avgL -$117  <- Zee's canonical stop (SL below UHV)
+- 2.5pt SL       : WR 46%  Net +$167  avgL -$26.5
+
+Zee was right: the wider UHV-based stop lifts WR 46% -> 77% (near his 92%) — the
+entries breathe instead of getting noise-stopped. BUT the few real losers become
+big (-$117), so net drops to +$49. His 92% = wide stop + he manually SCRATCHES the
+truly-wrong trades early (Feb-11 "scratch on first reversal") before they blow out.
+
+Missing mechanical piece: a wide stop for high WR + a smart EARLY-CUT for
+clearly-failing trades. Grid-searching stop/trail sweet spot next. Also fixed the
+chart headroom so UHV/BRKT labels never clip (setup #2 breakout was invisible).
