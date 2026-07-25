@@ -18,9 +18,10 @@
 
 input double InpDefaultLots = 0.10;   // fallback lots if signal omits it
 input int    InpMagic       = 88020;  // CaseSignalExecutor magic
-input double InpArmPts      = 3.0;    // trail arms after +3.0 pts favourable
-input double InpGivePts     = 1.5;    // exit if price gives back this from the peak
-input double InpTpCapPts    = 8.0;    // runaway take-profit ceiling (pts)
+input double InpHardSLPts   = 4.0;    // hard stop (grid sweet spot: WR 69% / best net)
+input double InpArmPts      = 4.0;    // trail arms after +4.0 pts favourable
+input double InpGivePts     = 2.0;    // exit if price gives back this from the peak
+input double InpTpCapPts    = 10.0;   // runaway take-profit ceiling (pts)
 input string InpSignalFile  = "case_signal.json";
 
 CTrade  trade;
@@ -69,12 +70,15 @@ void OnTimer() {
    if (HasOurPos()) return;          // one position at a time
 
    string side = JStr(txt, "side");
-   double sl   = JNum(txt, "sl");
    double lots = JNum(txt, "lots"); if (lots <= 0) lots = InpDefaultLots;
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   // broker-side parachute at the 4pt hard stop (grid sweet spot), NOT the wide UHV SL
+   double sl = (side == "BUY") ? (ask - InpHardSLPts) : (bid + InpHardSLPts);
    g_peak_pts = 0.0;
    if (side == "BUY")       trade.Buy(lots, _Symbol, 0, sl, 0, "case");
    else if (side == "SELL") trade.Sell(lots, _Symbol, 0, sl, 0, "case");
-   PrintFormat("[CaseExec] signal #%d %s lots=%.2f sl=%.2f", id, side, lots, sl);
+   PrintFormat("[CaseExec] signal #%d %s lots=%.2f sl@%.1fpt=%.2f", id, side, lots, InpHardSLPts, sl);
 }
 
 // Manage the Feb-11 exit on every tick.
@@ -90,13 +94,14 @@ void OnTick() {
       double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
       double prof = isbuy ? (bid - entry) : (entry - ask);   // favourable move, price pts
       if (prof > g_peak_pts) g_peak_pts = prof;
+      // hard stop (backup to the broker SL parachute) — grid sweet spot 4pt
+      if (prof <= -InpHardSLPts) { trade.PositionClose(t); g_peak_pts = 0; continue; }
       // runaway take-profit ceiling
       if (prof >= InpTpCapPts) { trade.PositionClose(t); g_peak_pts = 0; continue; }
       // trailing-reversal: let it run, exit on give-back after arming
       if (g_peak_pts >= InpArmPts && (g_peak_pts - prof) >= InpGivePts) {
          trade.PositionClose(t); g_peak_pts = 0; continue;
       }
-      // (broker SL from the signal handles the small-loss cut)
    }
 }
 //+------------------------------------------------------------------+
