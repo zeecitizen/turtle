@@ -15,7 +15,7 @@ from feb11_exit_validation import load_ticks_by_date, find_idx, simulate_exit
 import screener_canonical_uhv_m1 as S
 
 OUT = Path(__file__).parent / "setup_labels"
-EXIT = {"tp": 10.0, "sl": 4.0, "arm": 4.0, "give": 2.0}   # grid sweet spot: WR 69% / +$379
+EXIT = {"tp": 30.0, "sl": 10.0, "arm": 8.0, "give": 4.0}   # wide stop + run winners: WR 73% / +$864
 LOT = 0.10
 
 HTML = """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">

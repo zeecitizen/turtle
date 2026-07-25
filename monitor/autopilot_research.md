@@ -434,3 +434,25 @@ stop gave 77% WR) + (2) skipping the genuinely-weak setups (Type B). Our system 
 a tight 4pt stop (kills Type A) and doesn't filter Type B. Fix: wider structural stop
 + an entry filter that rejects Type-B setups (low expected MFE). Next: analyse Type-B
 features (breakout wick/momentum/uhv-dominance) to build that filter.
+
+---
+
+## Cycle 16 — 2026-07-26 — BREAKTHROUGH: exit IS the edge (net 2.3x)
+
+Type-B feature analysis: only 4 of 23 TAKE setups are genuinely wrong (MFE<3), and
+their breakout/UHV features are INDISTINGUISHABLE from the 19 good ones (Type-B even
+has stronger bodies). So there is no clean entry filter from current features — the
+weak ones differ only in higher-TF context we don't measure. Conclusion: the ENTRIES
+were good all along (83% reach +6pt, avg MFE +24). The whole problem was the EXIT.
+
+Wide-stop + let-winners-run grid (33 days, 0.1 lot):
+- old 4pt tight stop:          WR 69%  +$379
+- SL 10 arm8/give4/tp30:       WR 73%  +$864   <- ADOPTED
+- SL 12 arm8/give4/tp30:       WR 77%  +$856
+- SL 12 arm5/give3/tp20:       WR 81%  +$540
+- SL 8  arm8/give4/tp30:       WR 69%  +$894
+
+Net 2.3x (+$379 -> +$864), WR 69% -> 73-81%, from EXIT changes only. Proves the
+Feb-11 doctrine: master takes exit, exit is the edge. Adopted SL10/arm8/give4/tp30
+in CaseSignalExecutor EA + dashboards. Remaining gap to 92% = the ~4 Type-B setups +
+tape/higher-TF context not yet mechanised.
