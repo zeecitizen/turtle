@@ -456,3 +456,24 @@ Net 2.3x (+$379 -> +$864), WR 69% -> 73-81%, from EXIT changes only. Proves the
 Feb-11 doctrine: master takes exit, exit is the edge. Adopted SL10/arm8/give4/tp30
 in CaseSignalExecutor EA + dashboards. Remaining gap to 92% = the ~4 Type-B setups +
 tape/higher-TF context not yet mechanised.
+
+---
+
+## Cycle 17 — 2026-07-26 — Zee's loser comments -> 3 entry-filter rules + UHV SL adopted
+
+Adopted UHV-low structural SL (Zee's canonical) + arm8/give4/tp30 (WR 73-77%, net
+~+$816). Executor uses the signal's UHV sl; InpCatastPts=20 backup.
+
+Zee's loser diagnosis gives 3 concrete entry-rule tightenings (to kill the Type-B losers):
+1. MIN RETRACEMENT DEPTH (loser_004,005: "weak retracement, body close below last
+   green too less") — origin body must break the prior extreme by a MEANINGFUL amount,
+   not barely. Add origin_margin >= threshold.
+2. RANGING FILTER (loser_003,006: "choppy market") — reject choppy/range markets the
+   hump-dominance test currently passes as a trend.
+3. INDEPENDENT-BAR ORIGIN (loser_007: "retracement begins when last INDEPENDENT bar's
+   low/high is broken by BODY not wick") — the origin must break the last INDEPENDENT
+   bar's extreme (not just any adjacent candle), with the body.
+(loser_001,008 = Type-A entry-right-stopped-early; the wider UHV SL now holds them.)
+
+Next: implement #1 (min-depth, clearest) + test it removes loser_004/005; then #2 ranging
++ #3 independent-bar. Target: push WR 73% -> Zee's 92% by rejecting the weak/choppy setups.
