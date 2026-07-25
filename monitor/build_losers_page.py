@@ -18,7 +18,7 @@ from feb11_exit_validation import load_ticks_by_date, find_idx, simulate_exit
 import screener_canonical_uhv_m1 as S
 
 OUT = Path(__file__).parent / "setup_labels"
-EXIT = {"tp": 8.0, "sl": 1.5, "arm": 3.0, "give": 1.5}
+EXIT = {"tp": 10.0, "sl": 4.0, "arm": 4.0, "give": 2.0}   # grid sweet spot: WR 69% / +$379
 LOT = 0.10
 BUST = int(time.time())
 
