@@ -60,11 +60,16 @@ def prior_opp(bars, o, side):
         if side == "SELL" and bars[k].is_bear: return bars[k].h
     return None
 
+MIN_ORIGIN_BREAK = 0.5   # origin body must break the prior extreme by >= this many pts
+                          # (Zee: "body close below last green too less" — loser_004/005).
+                          # Grid best: 0.5 -> 21 trades, WR 81%, net +$912 (vs 73%/+$816 at 0).
+
 def is_origin(bars, o, side):
     if side == "BUY" and not bars[o].is_bear: return False
     if side == "SELL" and not bars[o].is_bull: return False
     e = prior_opp(bars, o, side)
-    return e is not None and (bars[o].c < e if side == "BUY" else bars[o].c > e)
+    if e is None: return False
+    return (e - bars[o].c) >= MIN_ORIGIN_BREAK if side == "BUY" else (bars[o].c - e) >= MIN_ORIGIN_BREAK
 
 def humps(bars, at):
     day = bars[at].t.date(); lo = at
@@ -80,6 +85,18 @@ def humps(bars, at):
 def trend_ok(bars, o, side, minh=4.0, R=1.6):
     up, dn = humps(bars, o)
     return (up >= minh and up >= dn * R) if side == "BUY" else (dn >= minh and dn >= up * R)
+
+
+ER_MIN = 0.0    # Kaufman efficiency-ratio ranging filter — OFF: the grid showed it cuts
+                 # good trades and lowers net. min-retracement-depth alone is the winner.
+
+def efficiency_ratio(bars, at, look=20):
+    lo = max(1, at - look)
+    seg = bars[lo:at]
+    if len(seg) < 5: return 1.0
+    net = abs(seg[-1].c - seg[0].c)
+    total = sum(abs(seg[k].c - seg[k - 1].c) for k in range(1, len(seg)))
+    return net / max(total, 1e-6)
 
 
 def retr_zone_start(bars, o, side, back=12):
@@ -103,6 +120,7 @@ def detect_full(bars):
             for j in range(i - 1, max(i - LB, 0), -1):
                 if is_origin(bars, j, side): o = j; break
             if o is None or not trend_ok(bars, o, side): continue
+            if efficiency_ratio(bars, o) < ER_MIN: continue   # skip choppy/ranging (Zee loser_003/006)
             rs = retr_zone_start(bars, o, side)   # UHV can be BEFORE the origin (Zee 2026-07-25)
             best = None
             for k in range(rs, i):
