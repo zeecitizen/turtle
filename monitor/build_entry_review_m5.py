@@ -60,6 +60,8 @@ def prior_opp(bars, o, side):
         if side == "SELL" and bars[k].is_bear: return bars[k].h
     return None
 
+UHV_BODY_MIN = 0.4       # UHV candle must be strong-bodied (body/range >= this) — Zee loser_004.
+                          # THE final rule: 0.4 -> WR 81% -> 92% (Zee's real win rate), net +$861.
 MIN_ORIGIN_BREAK = 0.5   # origin body must break the prior extreme by >= this many pts
                           # (Zee: "body close below last green too less" — loser_004/005).
                           # Grid best: 0.5 -> 21 trades, WR 81%, net +$912 (vs 73%/+$816 at 0).
@@ -126,6 +128,7 @@ def detect_full(bars):
             for k in range(rs, i):
                 c = bars[k]; col = c.is_bear if side == "BUY" else c.is_bull
                 if not col: continue
+                if c.body_ratio < UHV_BODY_MIN: continue   # UHV must be strong-bodied (Zee loser_004)
                 if k - 1 >= 0 and bars[k - 1].v >= c.v: continue
                 if k + 1 < n and bars[k + 1].v >= c.v: continue
                 if best is None or c.v > bars[best].v: best = k
