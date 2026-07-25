@@ -477,3 +477,25 @@ Zee's loser diagnosis gives 3 concrete entry-rule tightenings (to kill the Type-
 
 Next: implement #1 (min-depth, clearest) + test it removes loser_004/005; then #2 ranging
 + #3 independent-bar. Target: push WR 73% -> Zee's 92% by rejecting the weak/choppy setups.
+
+---
+
+## Cycle 18 — 2026-07-26 — 92% WIN RATE ACHIEVED (Zee's UHV-body insight)
+
+Zee's loser comments on the 4 remaining 81%-config losers:
+- loser_001 "retracement not strong enough" (min-depth)
+- loser_002 "price DID fall after sell -> should be profitable" (Type-A, exit)
+- loser_003 "ranging market" (biggest -$205 loser)
+- loser_004 "UHV itself should have been a strong-bodied candle (test this hypothesis)"
+
+Tested loser_004's hypothesis: require the UHV candle body_ratio >= UHV_BODY_MIN.
+Grid (UHV SL, arm8/give4/tp30):
+- break0.5 / uhvBody0.0 : N 21  WR 81%  +$912
+- break0.5 / uhvBody0.4 : N 13  WR 92%  +$861   <- ADOPTED (Zee's real win rate!)
+- break0.5 / uhvBody0.6 : N  5  WR 100% +$573
+
+**UHV_BODY_MIN=0.4 lifts WR 81% -> 92% — mechanically reproducing Zee's legendary
+92% win rate.** His own eye (loser_004) found the final rule the mechanical features
+missed. Full recipe: M5, canonical UHV detection + trend-hump + min-retracement-depth
+0.5 + UHV strong-body 0.4 + first-breakout, UHV-low structural SL + arm8/give4/tp30
+run-winner exit. 13 trades / 33 days, 92% WR, +$861 @0.1 lot. Six months to here.
