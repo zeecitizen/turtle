@@ -346,3 +346,24 @@ capture the nuance rules can't. Accuracy grows as the DB grows.
 
 Loop: Claude pre-labels candidates → Zee clicks Correct/Wrong → DB grows → matching
 accuracy rises → then real-time: new candle → match nearest case → "Case 17, valid → entry".
+
+---
+
+## Cycle 12 — 2026-07-26 — RULE STENCILS validated + pattern matcher = FIRST PROFIT
+
+Zee simplified the setups into 6 named RULE STENCILS (diagrams, rules_stencil.json),
+validated ALL 6 as Correct on rules.html. Built pattern_matcher.py: classifies each
+setup vs the stencils (TAKE Rule1/2 momentum-breakouts; SKIP Rule3 ranging / Rule4
+wick / Rule5 marginal-UHV / Rule6 no-retracement).
+
+Scan over 20 days: 71 setups -> 12 TAKE / 59 SKIP (Rule5=48, Rule4=10, Rule2=8, Rule1=4).
+
+**P&L of the 12 TAKE signals (Feb-11 exit, 0.1 lot): NET +$63.4** — 33% WR, avgWin
++$48.9, avgLoss -$16.5. FIRST net-positive result of the whole project. Confirms:
+rule-matching + asymmetric exit turns a low-WR selective entry into profit. (Small
+sample, Blueberry ticks, not live-proven — but the first green.)
+
+Pipeline COMPLETE end-to-end: detect setup -> extract features -> match validated
+stencils -> TAKE/SKIP -> Feb-11 exit -> net positive. Remaining for LIVE: (a) restore
+tick logging (attach logger EA), (b) an executor EA to act on case_signals.jsonl
+(ARM64 has no MT5 Python order API), (c) robustness across more days.
