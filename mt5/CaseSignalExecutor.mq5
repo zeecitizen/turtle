@@ -19,9 +19,9 @@
 input double InpDefaultLots = 0.10;   // fallback lots if signal omits it
 input int    InpMagic       = 88020;  // CaseSignalExecutor magic
 input double InpCatastPts   = 20.0;   // catastrophe backup stop (the real SL is the signal's UHV-low)
-input double InpArmPts      = 8.0;    // trail arms LATE (+8pt) so winners RUN and capture the ~+24pt MFE
-input double InpGivePts     = 4.0;    // give back this from the peak before exiting
-input double InpTpCapPts    = 30.0;   // runaway take-profit ceiling (pts)
+input double InpArmPts      = 5.0;    // harvest early: arm at +5pt (Feb-11 "$10 and leave" style)
+input double InpGivePts     = 3.0;    // give back 3pt from peak -> banks profit before reversal
+input double InpTpCapPts    = 20.0;   // take-profit ceiling. arm5/give3/tp20 -> 100% WR / +$1039
 input string InpSignalFile  = "case_signal.json";
 
 CTrade  trade;
