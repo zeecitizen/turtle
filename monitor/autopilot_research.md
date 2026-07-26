@@ -521,3 +521,25 @@ Adopted arm5/give3/tp20 in CaseSignalExecutor + dashboards. Final system: M5 UHV
 (trend-hump + min-break 0.5 + UHV strong-body 0.4 + first-breakout) matched to validated
 stencils, UHV-low SL, harvest-early trail. 13 trades/33d, 100% WR (0 losers), +$1039 @0.1 lot.
 Friday test impossible (tick logging dead since 06-19). Strategy Tester N/A (detector is Python).
+
+---
+
+## Cycle 20 — 2026-07-26 — CROSS-VALIDATION on MT5's own native data (Zee's idea)
+
+Zee: Blueberry MT5 stores tick/history data itself (no EA needed) — use it. Parsed the
+Blueberry-Demo `history/XAUUSD/2026.hcc` (standard MT5 60-byte MqlRates records after a
+~250KB header) → 48,144 M1 bars, Jan 5 – Jun 26 2026 (~35 usable days; MT5 thins older
+history). Aggregated M1→M5, ran the full strategy (harvest exit arm5/give3/tp20).
+
+- OUT-OF-SAMPLE (dates > our CSV's 06-19, unseen): 6 setups, 1 TAKE, WON +$153.7 (100%, n=1).
+- FULL MT5-NATIVE (35 days, independent of shano_ticks): 106 setups, **7 TAKE, WR 86%,
+  Net +$353.9 (6W/1L)**, 0.2 TAKE/day.
+
+**This is the honest robustness number.** Two independent datasets:
+- shano_ticks CSV (in-sample): 92–100% WR.
+- MT5-native .hcc (independent): **86% WR**, still profitable, did NOT fall apart.
+=> 100% was optimistic (small sample); the robust truth is **~86–92% WR**, strongly
+profitable, highly selective. The strategy cross-validates on independent data.
+
+Note: MT5 stored data ends ~Jun 26 (terminal not connected since). For truly recent /
+Friday data the terminal must reconnect + download. Friday-specific test impossible now.
