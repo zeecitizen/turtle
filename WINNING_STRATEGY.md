@@ -43,7 +43,7 @@ to turn his observations into mechanical rules and validate them on real tick da
 | Component | Value | Derived from |
 |-----------|-------|--------------|
 | **Stop loss** | **UHV-low structural SL** (below the UHV candle's low for BUY / above for SELL). WIDE — holds through the initial dip. | Zee canonical "SL below the UHV low"; proven by MFE trace (entries dip then run) |
-| **Let winners RUN** | trailing-reversal: arm at **+8pt**, exit on **4pt** give-back from peak; runaway TP cap **30pt**. | wide-stop + run-winner grid: captured the avg **+24pt MFE** the tight stop was throwing away |
+| **Trail (harvest-early)** | trailing-reversal: arm at **+5pt**, exit on **3pt** give-back from peak; TP cap **20pt**. | exit grid: this banks profit before the reversal → **100% WR, 0 losers, +$1039**. (arm8/give4/tp30 lets winners run more → 92%/+$1367 max-net, but 1 loser.) Zee's Feb-11 "$10 and leave" harvest style. |
 | Catastrophe backup | 20pt (broker parachute) | safety |
 
 **Why the exit matters more than the entry:** the MFE trace proved **83% of entries reach
@@ -90,8 +90,13 @@ This is the RELIABLE loop that finally worked, after 6 months of guessing:
 | UHV-low structural SL | UHV SL / arm8 give4 tp30 | 73–77% | +$816 |
 | + min retracement depth | `MIN_ORIGIN_BREAK 0.5` | 81% | +$912 |
 | + **UHV strong body** ⭐ | `UHV_BODY_MIN 0.4` | **92%** | **+$861** |
+| + **harvest-early trail** | `arm5/give3/tp20` | **100%** (0 losers) | **+$1039** |
 
 M1 (same rules): 25% WR, −$159 → rejected. Efficiency-ratio ranging filter: hurt net → off.
+Exit trail is the final lever: arm5/give3/tp20 = 100% WR / +$1039 (harvest early);
+arm8/give4/tp30 = 92% WR / +$1367 (max net, let winners run). Stop mode (touch vs close)
+& distance barely matter — trades exit on the trail before the stop is hit.
+**Caveat:** 13 trades / 33 days is a small sample; treat 100% as optimistic, ~92% as robust.
 
 ---
 
