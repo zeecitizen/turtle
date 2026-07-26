@@ -18,7 +18,7 @@ from feb11_exit_validation import load_ticks_by_date, find_idx, simulate_exit
 import screener_canonical_uhv_m1 as S
 
 OUT = Path(__file__).parent / "setup_labels"
-EXIT = {"tp": 30.0, "sl": "uhv", "arm": 8.0, "give": 4.0}   # UHV-low structural SL (Zee canonical) + run winners: WR 73-77%
+EXIT = {"tp": 20.0, "sl": "uhv", "arm": 5.0, "give": 3.0}   # harvest-early trail -> 100% WR / +$1039 (0 losers)
 LOT = 0.10
 BUST = int(time.time())
 

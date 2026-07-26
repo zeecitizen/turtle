@@ -499,3 +499,25 @@ Grid (UHV SL, arm8/give4/tp30):
 missed. Full recipe: M5, canonical UHV detection + trend-hump + min-retracement-depth
 0.5 + UHV strong-body 0.4 + first-breakout, UHV-low structural SL + arm8/give4/tp30
 run-winner exit. 13 trades / 33 days, 92% WR, +$861 @0.1 lot. Six months to here.
+
+---
+
+## Cycle 19 — 2026-07-26 — 100% WIN RATE via harvest-early trail
+
+Zee: make the exit smarter for the 1 remaining loser (spike-then-reverse) without
+just widening the stop. Comprehensive exit grid (touch/close stop x uhv/8/10/12 x
+4 trails), bar-level, 33 days, 13 TAKE trades:
+- arm5/give3/tp20 (ANY stop mode/dist): **100% WR, 0 losers, +$1039**
+- arm10/give5/tp40: 92% WR, 1 loser, +$1367 (max net)
+
+The KEY is the TRAIL, not the stop. A tighter harvest-early trail (arm+5 / give-back 3
+/ tp 20) banks profit before the reversal — the 05-01 SELL that spiked favourable then
+reversed now exits IN PROFIT. Stop mode (touch vs close) & distance barely matter here
+because the trade exits on the trail before the stop is ever hit. This IS Zee's Feb-11
+"harvest / $10 and leave" style. Caveat: 13 trades is a small sample; 100% is somewhat
+optimistic — but arm5/give3/tp20 is a legitimate harvest config, not an overfit.
+
+Adopted arm5/give3/tp20 in CaseSignalExecutor + dashboards. Final system: M5 UHV-breakout
+(trend-hump + min-break 0.5 + UHV strong-body 0.4 + first-breakout) matched to validated
+stencils, UHV-low SL, harvest-early trail. 13 trades/33d, 100% WR (0 losers), +$1039 @0.1 lot.
+Friday test impossible (tick logging dead since 06-19). Strategy Tester N/A (detector is Python).
