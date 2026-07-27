@@ -30,7 +30,8 @@ ALERT_FILE = REPO / "monitor" / ".home_down_alert"
 LOG_FILE = REPO / "monitor" / ".home_uptime_guard.log"
 
 CHECK_EVERY_SEC = 30
-PUBLIC_CHECK_EVERY = 6           # check public URL every 6th cycle (~3 min)
+PUBLIC_CHECK_EVERY = 2           # check public URL every 2nd cycle (~60s) — catches
+                                  # stale-tunnel 1033 (process alive but edge-connection dead)
 CREATE_NO_WINDOW = 0x08000000
 DETACHED_PROCESS = 0x00000008
 FLAGS = CREATE_NO_WINDOW | DETACHED_PROCESS
