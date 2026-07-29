@@ -1859,4 +1859,25 @@ document.getElementById('ea-settings-apply').addEventListener('click', async () 
   }
 });
 </script>
+<script>
+// Override "Today's Live Profit" with the ACTUAL fast-scalp EA fills (caseexec_fills.csv);
+// turtle_fills/S1Trader doesn't log the probe EA. Runs faster than the base loop so it wins.
+async function probeToday() {
+  try {
+    const d = await (await fetch('/api/probe-today', { cache: 'no-store' })).json();
+    if (!d || !d.ok) return;
+    const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    set('hero-net-big', (d.pnl >= 0 ? '+' : '') + '$' + Number(d.pnl).toFixed(2));
+    set('hero-sub', d.n ? (d.n + ' probe trades · last ' + d.last) : 'awaiting first close…');
+    set('hero-wins', d.wins);
+    set('hero-losses', d.losses);
+    set('hero-wr-small', (d.wins + d.losses) ? Math.round(d.wr) + '%' : '—');
+    set('hero-foot-txt', 'Fast-scalp probe EA · caseexec_fills.csv (real MT5) · live');
+    const hero = document.getElementById('hero-card');
+    if (hero) hero.style.display = '';
+  } catch (_) {}
+}
+probeToday();
+setInterval(probeToday, 800);
+</script>
 </body></html>
