@@ -21,6 +21,24 @@ from setup_strength import strength, lot_for
 OUT = Path(__file__).parent / "setup_labels"
 DASH_JSON = Path(__file__).parent.parent / "dashboard" / "claude_trader" / "live_sequence.json"
 CF = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_m1.csv")
+FILLS = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/caseexec_fills.csv")
+
+
+def real_fill(side, entry):
+    """The EA logs REAL fills to caseexec_fills.csv: time,side,entry,exit,lots,pts,usd,reason.
+    Return (usd, reason, lots) for the closest matching entry, else None."""
+    if not FILLS.exists(): return None
+    best = None
+    try:
+        for r in csv.reader(FILLS.open(encoding="utf-8", errors="ignore")):
+            if len(r) < 8 or r[1] != side: continue
+            try: e = float(r[2]); usd = float(r[6]); lots = float(r[4])
+            except Exception: continue
+            if abs(e - entry) <= 2.0:
+                best = (usd, r[7], lots)   # last match wins (most recent)
+    except Exception:
+        return None
+    return best
 TZ = 2   # Munich display
 CFG = dict(UHV_BODY_MIN=0.0, MIN_ORIGIN_BREAK=0.0, ER_MIN=0.0, TREND_MIN_HUMP=0.5, TREND_DOM=0.0)
 EXIT = dict(arm=0.3, give=0.2, tp=3.0, cap=3.0)
@@ -92,11 +110,17 @@ def main():
                 st = strength(f); lots, tier = lot_for(st)
                 bi = tmap.get(s["open_t"]); usd, how = outcome(bars, bi, s["side"], s["entry"]) if bi is not None else (None, "forming")
                 sidecls = "buy" if s["side"] == "BUY" else "sell"
-                if usd is None:
+                rf = real_fill(s["side"], s["entry"])
+                if rf is not None:
+                    r_usd, r_reason, r_lots = rf
+                    ocls_pos = "pos" if r_usd >= 0 else "neg"
+                    outc = f'<span class="{ocls_pos}">${r_usd:+.1f} REAL ({r_reason}, {r_lots} lot)</span>'; onum = "✓"; ocls = "done"
+                    usd = r_usd / max(lots, 0.01) / 100   # for state json consistency
+                elif usd is None:
                     outc = f'<span class="pend">⏳ {how}…</span>'; onum = "6"; ocls = "now"
                 else:
                     ocls_pos = "pos" if usd >= 0 else "neg"
-                    outc = f'<span class="{ocls_pos}">${usd * lots * 100:+.1f} ({how}, {lots} lot)</span>'; onum = "✓"; ocls = "done"
+                    outc = f'<span class="{ocls_pos}">${usd * lots * 100:+.1f} <span style="color:#8b97a3">~ theoretical (sim, no spread)</span> ({how})</span>'; onum = "✓"; ocls = "done"
                 png = OUT / "sequence.png"
                 render_ok = B.render(dict(s), bars, png)
                 up, dn = B.local_hump(bars, s["o"], s["side"])
