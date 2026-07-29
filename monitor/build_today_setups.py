@@ -95,6 +95,7 @@ def main():
             done = [r for r in resolved if r is not None]
             wins = sum(1 for r in done if r > 0); net = sum(done)
             wr = 100 * wins / max(len(done), 1)
+            nums = {s2["open_t"]: k for k, s2 in enumerate(todays, 1)}   # Setup 1 = first today
             meta = []
             for s in reversed(todays):   # newest first
                 disp = (s["open_t"].hour + TZ_OFFSET) % 24
@@ -109,7 +110,8 @@ def main():
                     cls = "pos" if usd >= 0 else "neg"
                     cap = f"{s['side']} @ {disp:02d}:{s['open_t'].minute:02d} — ${usd:+.1f} ({how})"
                 title, notes = describe(extract_features(bars, s["o"], s["u"], s["i"], s["side"]), s["side"])
-                meta.append({"id": sid, "png": f"{sid}.png", "title": title, "cap": cap, "cls": cls, "notes": notes})
+                meta.append({"id": sid, "png": f"{sid}.png", "title": f"Setup {nums[s['open_t']]} · {title}",
+                             "cap": cap, "cls": cls, "notes": notes})
             proj = rate * 24
             rateline = (f"<b>{len(todays)}</b> setups so far today ({hrs:.1f}h) &nbsp;·&nbsp; "
                         f"<b>{rate:.1f}/hour</b> &nbsp;·&nbsp; projected <b>~{proj:.0f}/day</b><br>"
