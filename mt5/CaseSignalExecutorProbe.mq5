@@ -19,6 +19,9 @@
 #include <Trade/Trade.mqh>
 
 input int    InpMagic      = 88021;   // probe-variant magic (distinct from 88020)
+input double InpProbeDelaySec = 2.0;  // wait this long after the signal before probing —
+                                       // the breakout pauses 1-2s then continues (Zee); entering
+                                       // instantly catches the pullback and cuts the probe.
 input double InpProbeLots  = 0.01;    // initial probe size
 input double InpArmPts     = 0.3;     // harvest arms at +0.3pt
 input double InpGivePts    = 0.2;     // exit on 0.2pt give-back from peak
@@ -38,6 +41,10 @@ bool    g_isbuy  = false;
 double  g_entry  = 0.0;   // probe entry (reference for prof/peak)
 double  g_peak   = 0.0;   // peak favourable pts
 int     g_tier   = 0;     // 0 = probe only, 1/2/3 = scaled
+// delayed-entry state: a signal arrived but we wait InpProbeDelaySec before probing
+bool    g_pending      = false;
+uint    g_pending_ms   = 0;
+string  g_pending_side = "";
 
 int OnInit() { trade.SetExpertMagicNumber(InpMagic); EventSetTimer(1); return INIT_SUCCEEDED; }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -101,9 +108,30 @@ void ScaleTo(double targetLot) {
    else         trade.Sell(add, _Symbol, 0, 0, 0, "probe-scale");
 }
 
-// Open the probe on a NEW signal id.
+// On a NEW signal, start a delay timer; fire the probe only after InpProbeDelaySec —
+// the breakout pauses 1-2s then continues (Zee), so we skip the immediate pullback.
 void OnTimer() {
    if (g_active) return;                       // one probe-trade at a time
+
+   // (A) a signal is waiting — fire the probe once the delay has elapsed
+   if (g_pending) {
+      if (GetTickCount() - g_pending_ms < (uint)(InpProbeDelaySec * 1000.0)) return;
+      double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      g_isbuy = (g_pending_side == "BUY");
+      double sl = g_isbuy ? (ask - InpCapPts) : (bid + InpCapPts);   // 3pt parachute
+      bool ok = g_isbuy ? trade.Buy(InpProbeLots, _Symbol, 0, sl, 0, "probe")
+                        : trade.Sell(InpProbeLots, _Symbol, 0, sl, 0, "probe");
+      g_pending = false;
+      if (!ok) return;
+      g_entry = g_isbuy ? ask : bid;
+      g_peak = 0; g_tier = 0; g_active = true;
+      PrintFormat("[Probe] %s probe %.2f @ %.2f (fired %.1fs after signal)",
+                  g_pending_side, InpProbeLots, g_entry, InpProbeDelaySec);
+      return;
+   }
+
+   // (B) read the signal file; on a NEW id, arm the delay timer
    if (!FileIsExist(InpSignalFile, FILE_COMMON)) return;
    int h = FileOpen(InpSignalFile, FILE_READ | FILE_TXT | FILE_COMMON | FILE_ANSI);
    if (h == INVALID_HANDLE) return;
@@ -113,18 +141,10 @@ void OnTimer() {
    long id = (long)JNum(txt, "id");
    if (id <= g_last_id) return;
    g_last_id = id;
-
-   string side = JStr(txt, "side");
-   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   g_isbuy = (side == "BUY");
-   double sl = g_isbuy ? (ask - InpCapPts) : (bid + InpCapPts);   // 3pt parachute
-   bool ok = g_isbuy ? trade.Buy(InpProbeLots, _Symbol, 0, sl, 0, "probe")
-                     : trade.Sell(InpProbeLots, _Symbol, 0, sl, 0, "probe");
-   if (!ok) return;
-   g_entry = g_isbuy ? ask : bid;
-   g_peak = 0; g_tier = 0; g_active = true;
-   PrintFormat("[Probe] #%d %s probe %.2f @ %.2f", id, side, InpProbeLots, g_entry);
+   g_pending_side = JStr(txt, "side");
+   g_pending_ms   = GetTickCount();
+   g_pending      = true;
+   PrintFormat("[Probe] signal #%d %s — waiting %.1fs before probe", id, g_pending_side, InpProbeDelaySec);
 }
 
 // Manage the probe: scale on acceleration, cut on failure, harvest the winners.

@@ -124,18 +124,30 @@ def main():
                 png = OUT / "sequence.png"
                 render_ok = B.render(dict(s), bars, png)
                 up, dn = B.local_hump(bars, s["o"], s["side"])
+                # trade phase: resolved (real fill) vs still live (probe running)
+                resolved = rf is not None
+                if resolved:
+                    r_lots = rf[2]
+                    probe_desc = (f"0.01 probe → scaled to {r_lots} lot ({rf[1]})" if r_lots > 0.011
+                                  else f"0.01 probe — {rf[1]} (didn't scale)")
+                    probe_cls, out_cls = "done", "done"
+                else:
+                    probe_desc = "0.01 probe fired — watching for acceleration to scale (0.1→0.4→0.8) or cut"
+                    probe_cls, out_cls = "now", "pending"
+                NOW = ' <span style="color:#38bdf8;font-weight:700;">● LIVE — you are here</span>'
                 steps = [
-                    ("1", "done", "Trend", f"{'Uptrend' if s['side']=='BUY' else 'Downtrend'} — hump {max(up,dn):.1f}pt"),
-                    ("2", "done", "Retracement started (RET)", f"{hm(bars[s['o']].t)} — counter-trend origin"),
-                    ("3", "done", f"UHV found — vol {bars[s['u']].v}", f"{hm(bars[s['u']].t)} — highest-volume candle"),
-                    ("4", "done", "Breakout (BRKT)", f"{hm(bars[s['i']].t)} — {'green' if s['side']=='BUY' else 'red'} body crosses UHV"),
-                    ("5", "done", f"Signal — {s['side']} @ {s['entry']:.2f}", f"💪 {tier} · {lots} lot · strength {st:.2f}"),
-                    (onum, ocls, "Outcome", ""),
+                    ("1", "done", "Trend", f"{'Uptrend' if s['side']=='BUY' else 'Downtrend'} — hump {max(up,dn):.1f}pt", ""),
+                    ("2", "done", "Retracement started (RET)", f"{hm(bars[s['o']].t)} — counter-trend origin", ""),
+                    ("3", "done", f"UHV found — vol {bars[s['u']].v}", f"{hm(bars[s['u']].t)} — highest-volume candle", ""),
+                    ("4", "done", "Breakout (BRKT)", f"{hm(bars[s['i']].t)} — {'green' if s['side']=='BUY' else 'red'} body crosses UHV", ""),
+                    ("5", "done", f"Signal — {s['side']} @ {s['entry']:.2f}", f"💪 {tier} · strength {st:.2f}", ""),
+                    ("6", probe_cls, "Probe → scale-in", probe_desc, "" if resolved else NOW),
+                    (("✓" if resolved else "7"), out_cls, "Outcome", outc, NOW if resolved else ""),
                 ]
                 li = "".join(
                     f'<li class="step"><div class="num {c}">{n}</div>'
-                    f'<div class="body"><div class="t">{t}</div><div class="d">{d if k!=5 else outc}</div></div></li>'
-                    for k, (n, c, t, d) in enumerate(steps))
+                    f'<div class="body"><div class="t">{t}{marker}</div><div class="d">{d}</div></div></li>'
+                    for (n, c, t, d, marker) in steps)
                 hd = (f'<div class="hd"><div class="big"><span class="{sidecls}">{s["side"]}</span> '
                       f'@ {s["entry"]:.2f} &nbsp;·&nbsp; {tier} ({lots} lot)</div>'
                       f'<div class="sub">setup @ {hm(s["open_t"])} Munich · strength {st:.2f} · {outc}</div></div>')
