@@ -18,11 +18,11 @@
 
 input double InpDefaultLots = 0.10;   // fallback lots if signal omits it
 input int    InpMagic       = 88020;  // CaseSignalExecutor magic
-input double InpCatastPts   = 20.0;   // catastrophe backup stop (the real SL is the signal's UHV-low)
-input double InpArmPts      = 5.0;    // harvest early: arm at +5pt (Feb-11 "$10 and leave" style)
-input double InpGivePts     = 3.0;    // give back 3pt from peak -> banks profit before reversal
-input double InpTpCapPts    = 20.0;   // take-profit ceiling. arm5/give3/tp20 -> 100% WR / +$1039
-input string InpSignalFile  = "case_signal.json";
+input double InpHardSLPts    = 3.0;    // FAST-SCALP hard stop-cap: cut losers at 3pt (Zee Feb-11 losers were tiny)
+input double InpArmPts       = 0.3;    // arm at +0.3pt -> catch the guaranteed initial pop
+input double InpGivePts      = 0.2;    // exit on 0.2pt reversal from peak (seconds-scalp)
+input double InpTpCapPts     = 3.0;    // take-profit ceiling 3pt. dom=0 fast-scalp: ~115/day, ~79% WR
+input string InpSignalFile   = "case_signal.json";
 
 CTrade  trade;
 long    g_last_id = -1;
@@ -73,11 +73,8 @@ void OnTimer() {
    double lots = JNum(txt, "lots"); if (lots <= 0) lots = InpDefaultLots;
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   // the SL is the signal's structural UHV-low (Zee's canonical, WR 73-77%);
-   // if missing/invalid, fall back to a wide catastrophe parachute.
-   double sl = JNum(txt, "sl");
-   if (sl <= 0 || sl == EMPTY_VALUE)
-      sl = (side == "BUY") ? (ask - InpCatastPts) : (bid + InpCatastPts);
+   // FAST-SCALP: broker SL at the 3pt hard stop-cap (NOT the wide UHV SL) — cut losers small.
+   double sl = (side == "BUY") ? (ask - InpHardSLPts) : (bid + InpHardSLPts);
    g_peak_pts = 0.0;
    if (side == "BUY")       trade.Buy(lots, _Symbol, 0, sl, 0, "case");
    else if (side == "SELL") trade.Sell(lots, _Symbol, 0, sl, 0, "case");
@@ -97,8 +94,8 @@ void OnTick() {
       double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
       double prof = isbuy ? (bid - entry) : (entry - ask);   // favourable move, price pts
       if (prof > g_peak_pts) g_peak_pts = prof;
-      // catastrophe backup (broker SL from the signal's UHV-low is the primary stop)
-      if (prof <= -InpCatastPts) { trade.PositionClose(t); g_peak_pts = 0; continue; }
+      // fast-scalp hard stop-cap (backup to the broker SL) — cut losers at 3pt
+      if (prof <= -InpHardSLPts) { trade.PositionClose(t); g_peak_pts = 0; continue; }
       // runaway take-profit ceiling
       if (prof >= InpTpCapPts) { trade.PositionClose(t); g_peak_pts = 0; continue; }
       // trailing-reversal: let it run, exit on give-back after arming
