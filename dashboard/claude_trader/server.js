@@ -1929,6 +1929,35 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   }
 
   // ── Today's trades (broker fills today + currently-open positions) ──
+  // Probe/CaseExec today P&L from caseexec_fills.csv (the ACTUAL fast-scalp EA fills,
+  // magic 88020/88021) — turtle_fills.csv doesn't log them.
+  if (url === '/api/probe-today') {
+    try {
+      const COMMON = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
+      const today = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+      let pnl = 0, wins = 0, losses = 0, n = 0, last = '—';
+      try {
+        const raw = fs.readFileSync(COMMON + 'caseexec_fills.csv', 'utf8');
+        for (const ln of raw.split(/\r?\n/)) {
+          if (!ln || !ln.startsWith(today)) continue;
+          const c = ln.split(',');
+          const usd = parseFloat(c[6]);
+          if (!isFinite(usd)) continue;
+          n++; pnl += usd;
+          if (usd > 0) wins++; else if (usd < 0) losses++;
+          last = c[0].slice(11);
+        }
+      } catch (_) {}
+      const wr = (wins + losses) ? (100 * wins / (wins + losses)) : 0;
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({ ok: true, pnl, wins, losses, n, wr, last }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ ok: false, error: String(e) }));
+    }
+    return;
+  }
+
   if (url === '/api/today-trades') {
     try {
       const COMMON = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
