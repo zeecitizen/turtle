@@ -982,11 +982,9 @@
   </div>
 
   <!-- ── Achievements / activity feed (family-monitor surface) ── -->
-  <div class="ach-card" id="ach-card">
-    <h3>🏆 What Claude shipped — activity feed</h3>
-    <div id="ach-list">
-      <div style="color:#888; font-size:12px;">loading…</div>
-    </div>
+  <div class="ach-card" id="ach-card" style="padding:10px 14px;">
+    <span style="font-weight:600;color:#f0b429;">🏆 Latest ship:</span>
+    <span id="ach-list" style="color:#c9d4df;font-size:14px;">loading…</span>
   </div>
 
   <button class="ask-btn" onclick="window.location.href='https://chat.claudezeeshan.com/chat-app'">
@@ -996,11 +994,6 @@
   <h2>Today (broker truth)</h2>
   <div class="ea-card" id="ea-card">loading…</div>
 
-  <h2>Open tasks</h2>
-  <div id="open-tasks">loading…</div>
-
-  <h2 style="margin-top:24px;">Closed tasks</h2>
-  <div id="closed-tasks">(none)</div>
 
   <!-- ── Send Claude a message — at BOTTOM per Zee's ask ── -->
   <div class="msg-card" style="margin-top:24px;">
@@ -1074,12 +1067,10 @@ async function load() {
       el.addEventListener('click', () => el.classList.toggle('expanded'));
       container.appendChild(el);
     }
-    const oc = document.getElementById('open-tasks'); oc.innerHTML = '';
-    if (openTasks.length === 0) oc.innerHTML = '<div style="color:#888;">(no open tasks)</div>';
-    else openTasks.forEach(t => renderTask(t, oc));
-    const cc = document.getElementById('closed-tasks'); cc.innerHTML = '';
-    if (closedTasks.length === 0) cc.innerHTML = '<div style="color:#888;">(none)</div>';
-    else closedTasks.forEach(t => renderTask(t, cc));
+    const oc = document.getElementById('open-tasks');
+    if (oc) { oc.innerHTML = openTasks.length === 0 ? '<div style="color:#888;">(no open tasks)</div>' : ''; if (openTasks.length) openTasks.forEach(t => renderTask(t, oc)); }
+    const cc = document.getElementById('closed-tasks');
+    if (cc) { cc.innerHTML = closedTasks.length === 0 ? '<div style="color:#888;">(none)</div>' : ''; if (closedTasks.length) closedTasks.forEach(t => renderTask(t, cc)); }
   } catch (e) {
     document.getElementById('ea-card').textContent = 'unreachable: ' + e.message;
   }
@@ -1291,20 +1282,12 @@ async function loadAchievements() {
       list.innerHTML = '<div style="color:#888; font-size:12px;">(nothing logged yet)</div>';
       return;
     }
-    list.innerHTML = items.slice(0, 15).map(it => {
-      const icon = KIND_ICON[it.kind] || '•';
-      const title = it.link
-        ? `<a href="${it.link}" target="_blank" rel="noopener">${it.title}</a>`
-        : it.title;
-      return `<div class="ach-item">
-        <div class="ach-kind">${icon}</div>
-        <div class="ach-body">
-          <div class="ach-title">${title}</div>
-          ${it.detail ? `<div class="ach-detail">${it.detail}</div>` : ''}
-          <div class="ach-time">${fmtTimeAgo(it.ts)} · ${new Date(it.ts).toLocaleString()}</div>
-        </div>
-      </div>`;
-    }).join('');
+    const it = items[0];
+    const icon = KIND_ICON[it.kind] || '•';
+    const title = it.link
+      ? `<a href="${it.link}" target="_blank" rel="noopener">${it.title}</a>`
+      : it.title;
+    list.innerHTML = `${icon} ${title} <span style="color:#8b97a3;">· ${fmtTimeAgo(it.ts)}</span>`;
   } catch (e) {
     document.getElementById('ach-list').innerHTML =
       `<div style="color:#888; font-size:12px;">unreachable: ${e.message}</div>`;
