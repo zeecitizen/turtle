@@ -53,6 +53,12 @@ def main():
             bars = load_bars()
             if len(bars) > 30:
                 last_closed = bars[-2].t     # -1 may still be forming
+                # WALL-CLOCK freshness guard: if the data edge is stale (internet/feed
+                # outage), do NOT fire — else we'd trade a hours-old setup at live price.
+                stale_min = (datetime.utcnow() - bars[-1].t).total_seconds() / 60
+                if stale_min > 3:
+                    print(f"[oanda_matcher] data stale ({stale_min:.0f} min behind) — holding, no fire")
+                    time.sleep(20); continue
                 for s in B.detect_full(bars):
                     key = f"{s['open_t']}_{s['side']}"
                     # only fire setups whose breakout is on the last few CLOSED bars (fresh)
