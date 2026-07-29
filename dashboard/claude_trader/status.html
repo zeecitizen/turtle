@@ -687,6 +687,12 @@
     <div class="sub" id="now">loading…</div>
   </header>
 
+  <!-- ── World session clocks (live-ticking) — moved to top ── -->
+  <div class="clocks-wrap" style="margin-top:6px;">
+    <div class="clocks-title">⏰ Global market sessions</div>
+    <div class="clocks" id="clocks"></div>
+  </div>
+
   <!-- ── LIVE trade sequence (setup steps: RET → UHV → BRKT → signal → outcome) ── -->
   <div style="background:#111826;border:1px solid #2a3a4d;border-radius:12px;overflow:hidden;margin:12px 0;">
     <div style="padding:10px 14px;font:600 15px system-ui,Segoe UI,Arial;color:#e6edf3;border-bottom:1px solid #223;">
@@ -964,40 +970,7 @@
     <div class="ss-meta-line" id="ss-asof">last update —</div>
   </div>
 
-  <!-- ── World session clocks (live-ticking) ── -->
-  <div class="clocks-wrap">
-    <div class="clocks-title">⏰ Global market sessions</div>
-    <div class="clocks" id="clocks"></div>
-  </div>
 
-  <!-- ── Monday's test: 7-day expected vs real ── -->
-  <div class="week-card" id="week-card">
-    <div class="week-hdr">
-      <h3 id="week-title">🎯 Monday's test — 7-day expected vs real</h3>
-      <span class="week-sub" id="week-sub">loading…</span>
-    </div>
-    <table class="week-tbl">
-      <thead>
-        <tr>
-          <th>Day</th><th>Date</th>
-          <th style="text-align:right">Expected (USD)</th>
-          <th style="text-align:right">Real (USD)</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="week-tbody">
-        <tr><td colspan="5" style="color:#888;">loading…</td></tr>
-      </tbody>
-    </table>
-    <div class="week-summary" id="week-summary">
-      <span class="big" id="week-tally">– / – profitable days</span>
-      <span id="week-tally-sub" style="color:#888; margin-left:10px;">— pending —</span>
-    </div>
-    <div class="week-actions">
-      Tip: click any "Real" cell to type your end-of-day P&amp;L (USD) — saves automatically.
-      <button id="week-roll">Roll to next week</button>
-    </div>
-  </div>
 
   <!-- ── Today's trades ── -->
   <div class="trades-card" id="trades-card">
