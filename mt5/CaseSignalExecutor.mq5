@@ -45,6 +45,19 @@ string JStr(string s, string key) {
    return StringSubstr(s, p, e - p);
 }
 
+// Log the REAL fill (entry, exit, actual points P&L) so the dashboard shows the true
+// result, not a bar-level simulation.
+void LogFill(bool isbuy, double entry, double exitpx, double lots, double prof_pts, string reason) {
+   int h = FileOpen("caseexec_fills.csv", FILE_READ | FILE_WRITE | FILE_CSV | FILE_COMMON | FILE_ANSI, ',');
+   if (h == INVALID_HANDLE) return;
+   FileSeek(h, 0, SEEK_END);
+   double usd = prof_pts * lots * 100.0;
+   FileWrite(h, TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS), (isbuy ? "BUY" : "SELL"),
+             DoubleToString(entry, 2), DoubleToString(exitpx, 2), DoubleToString(lots, 2),
+             DoubleToString(prof_pts, 2), DoubleToString(usd, 2), reason);
+   FileClose(h);
+}
+
 bool HasOurPos() {
    for (int i = PositionsTotal() - 1; i >= 0; i--) {
       ulong t = PositionGetTicket(i);
@@ -94,13 +107,15 @@ void OnTick() {
       double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
       double prof = isbuy ? (bid - entry) : (entry - ask);   // favourable move, price pts
       if (prof > g_peak_pts) g_peak_pts = prof;
+      double lots = PositionGetDouble(POSITION_VOLUME);
+      double expx = isbuy ? bid : ask;
       // fast-scalp hard stop-cap (backup to the broker SL) — cut losers at 3pt
-      if (prof <= -InpHardSLPts) { trade.PositionClose(t); g_peak_pts = 0; continue; }
+      if (prof <= -InpHardSLPts) { LogFill(isbuy, entry, expx, lots, prof, "stop"); trade.PositionClose(t); g_peak_pts = 0; continue; }
       // runaway take-profit ceiling
-      if (prof >= InpTpCapPts) { trade.PositionClose(t); g_peak_pts = 0; continue; }
+      if (prof >= InpTpCapPts) { LogFill(isbuy, entry, expx, lots, prof, "tp"); trade.PositionClose(t); g_peak_pts = 0; continue; }
       // trailing-reversal: let it run, exit on give-back after arming
       if (g_peak_pts >= InpArmPts && (g_peak_pts - prof) >= InpGivePts) {
-         trade.PositionClose(t); g_peak_pts = 0; continue;
+         LogFill(isbuy, entry, expx, lots, prof, "harvest"); trade.PositionClose(t); g_peak_pts = 0; continue;
       }
    }
 }
