@@ -86,9 +86,10 @@ void LogClose(double usd, double lots, double prof_pts, string reason) {
    FileClose(h);
 }
 
+string g_close_reason = "";   // OnTradeTransaction logs the REALIZED P&L per closed deal
+
 void CloseAll(string reason, double prof_pts) {
-   double usd, lots; OurBook(usd, lots);
-   LogClose(usd, lots, prof_pts, reason);
+   g_close_reason = reason;
    for (int i = PositionsTotal() - 1; i >= 0; i--) {
       ulong t = PositionGetTicket(i);
       if (PositionSelectByTicket(t)
@@ -97,6 +98,27 @@ void CloseAll(string reason, double prof_pts) {
          trade.PositionClose(t);
    }
    g_active = false; g_tier = 0; g_peak = 0;
+}
+
+// Log MT5's REALIZED profit for every closing deal — the true broker P&L, not a
+// floating self-estimate. caseexec_fills.csv now matches the account exactly.
+void OnTradeTransaction(const MqlTradeTransaction &trans, const MqlTradeRequest &req, const MqlTradeResult &res) {
+   if (trans.type != TRADE_TRANSACTION_DEAL_ADD) return;
+   if (!HistoryDealSelect(trans.deal)) return;
+   if (HistoryDealGetInteger(trans.deal, DEAL_MAGIC) != InpMagic) return;
+   if (HistoryDealGetInteger(trans.deal, DEAL_ENTRY) != DEAL_ENTRY_OUT) return;   // closes only
+   double usd = HistoryDealGetDouble(trans.deal, DEAL_PROFIT)
+              + HistoryDealGetDouble(trans.deal, DEAL_SWAP)
+              + HistoryDealGetDouble(trans.deal, DEAL_COMMISSION);
+   double vol = HistoryDealGetDouble(trans.deal, DEAL_VOLUME);
+   double exitpx = HistoryDealGetDouble(trans.deal, DEAL_PRICE);
+   int h = FileOpen("caseexec_fills.csv", FILE_READ | FILE_WRITE | FILE_CSV | FILE_COMMON | FILE_ANSI, ',');
+   if (h == INVALID_HANDLE) return;
+   FileSeek(h, 0, SEEK_END);
+   FileWrite(h, TimeToString(TimeCurrent(), TIME_DATE | TIME_SECONDS), (g_isbuy ? "BUY" : "SELL"),
+             DoubleToString(g_entry, 2), DoubleToString(exitpx, 2), DoubleToString(vol, 2),
+             "0", DoubleToString(usd, 2), (g_close_reason == "" ? "close" : g_close_reason));
+   FileClose(h);
 }
 
 // grow the TOTAL position to targetLot by adding the delta at market
