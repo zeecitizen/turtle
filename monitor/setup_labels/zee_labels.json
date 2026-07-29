@@ -414,15 +414,27 @@
     "zee": "correct"
   },
   "loser_001": {
-    "zee": "price does go down after this setup. so if we sold we'd be in profit. as after breakout candle .. the price fell till 4615 from 4620 at time of breakout"
+    "zee": "i think UHV should also be a strong candle, so that when we mitigate it we are mitigating strong sellers (winning the war with a lowvolume breakout) \n"
   },
   "loser_002": {
-    "zee": "price actually did fell down after this sell was taken. so this should be a profitable trade."
+    "zee": "choppy market. sideways ranging.. "
   },
   "loser_003": {
-    "zee": "ranging market.no clear trend."
+    "zee": "choppy market, sideways ranging\n"
   },
   "loser_004": {
-    "zee": "uhv itself should have been a strong bodied candle.. (test this hypothesis)"
+    "zee": "uhv is not larger than the ones before, as said in ur text: • UHV candle: barely the highest-volume candle — marginal\n"
+  },
+  "loser_005": {
+    "zee": "i think UHV should also be a strong candle, so that when we mitigate it we are mitigating strong sellers (winning the war with a lowvolume breakout) \n"
+  },
+  "loser_006": {
+    "zee": "weak breakout candle, its not a strong momentum candle, it has a small candle body "
+  },
+  "loser_007": {
+    "zee": "the candle marked uhv red, formed a new low, breaking previous low, which means this is not a strong uptrend, rather it is a downtrend."
+  },
+  "loser_008": {
+    "zee": "choppy market not a sure trend."
   }
 }

@@ -179,3 +179,45 @@ detection is in Python and execution is an MQL5 EA (no PineConnector — too slo
 
 *Six months, nine versions, $0 — and then, in one session of the loser-comment loop,
 Zeeshan's own 92% win rate, mechanically reproduced.*
+
+---
+
+## 8. THE FAST-SCALP BREAKTHROUGH — OANDA volume (2026-07-29)
+
+**Result: 30 trades/day at 93% WR, +$781 over 3 days (91 setups) on OANDA:XAUUSD M1.**
+Maximises frequency subject to WR ≥ 92% (Zee's constraint). Config: `monitor/fastscalp_config.json`.
+
+### The 6-month blocker, finally found: VOLUME SOURCE
+Zee's UHV method runs on **OANDA/TradingView volume**; Blueberry MT5's **tick-count** volume
+is a different metric. The SAME candle (01:30 UTC, Zee's "3:30") had **MT5 vol 451 vs OANDA
+vol 2132** — so an MT5-fed detector literally never saw Zee's UHVs. Proven by comparing the
+running terminal's data to the TradingView chart Zee trades from.
+
+### The bridge (`monitor/oanda_bridge.py`)
+Pulls OANDA:XAUUSD M1 OHLC **+ real volume** straight from the live TradingView chart via
+Chrome DevTools Protocol (port 9222). Reverse-engineered path:
+`window._exposed_chartWidgetCollection.activeChartWidget.value().model().mainSeries().data().m_bars._items`
+→ each item `.value = [unix_time, o, h, l, c, volume]`. Times are UNIX UTC. Run `--loop 300`
+to keep `Common/Files/oanda_m1.csv` fresh (also accumulates history over days).
+**Timezone:** MT5 server = UTC+3, TradingView chart = UTC+2; OANDA unix times are absolute UTC.
+
+### Why the fast-scalp works on OANDA (but not MT5)
+- **OANDA volume** → the real UHVs are visible → detector matches Zee's eye.
+- **Loose entry** (weak-trend OK, no strict stencil) → ~30/day. On OANDA these stay profitable;
+  the identical looseness on MT5 volume was net-NEGATIVE.
+- **Fast harvest + tight stop-cap** → 93% WR: arm +0.3pt (catch the guaranteed initial pop),
+  give-back 0.2pt (exit on tiny reversal), stop-cap 3pt (cut wrong ones small — Zee's Feb-11
+  losers were −$1-2). The stop-cap (not the wide UHV SL) lifts WR **71% → 93%**.
+
+### The frequency/WR frontier (OANDA, 3 days)
+| Entry | Exit | Trades/day | WR | Net |
+|-------|------|-----------|----|----|
+| strict + stencil | fast harvest | 1 | 100% | +$40 |
+| loose, no stencil | wide UHV SL | 30 | 71% | +$314 |
+| loose, no stencil | **fast harvest + cap 3** | **30** | **93%** | **+$781** |
+
+Trend tweak: `local_hump` measures the ONE hump immediately before the retracement (Zee's rule),
+not a wide 45-bar window that catches a prior opposite move (that mis-flagged uptrends as down).
+
+**Caveat:** 3 days / 91 setups. `oanda_bridge --loop` is accumulating OANDA history to confirm.
+The last ~2% to Zee's manual 94-95% is his discretion/timing — not fully mechanised.

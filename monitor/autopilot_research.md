@@ -543,3 +543,23 @@ profitable, highly selective. The strategy cross-validates on independent data.
 
 Note: MT5 stored data ends ~Jun 26 (terminal not connected since). For truly recent /
 Friday data the terminal must reconnect + download. Friday-specific test impossible now.
+
+---
+
+## Cycle 21 — 2026-07-29 — FAST-SCALP on OANDA volume: 30/day @ 93% WR
+
+Zee: the setups are correct — run them on OANDA + backtest. Then: maximise N with WR ≥ 92%.
+Root cause of 6 months of trouble finally isolated: MT5 tick-count volume != OANDA volume
+(same 01:30 UTC candle: MT5 451 vs OANDA 2132). Built oanda_bridge.py (CDP → OANDA M1
+OHLC+volume). local_hump trend fix (immediate hump, not wide window).
+
+OANDA backtest + optimisation (3 days, 91 setups):
+- strict+stencil: 1/day, 100% WR
+- loose+wide-UHV-SL: 30/day, 71% WR, +$314
+- loose + FAST harvest + stop-cap 3pt: **30/day, 93% WR, +$781**  <- ADOPTED (fastscalp_config.json)
+
+Answer to "max N at WR≥92%": 30/day at 93%. The exit (arm0.3/give0.2/tp3/cap3) is Zee's
+Feb-11 speed-scalp — catch the pop, exit fast, cut losers small. On OANDA volume the loose
+entries are profitable; on MT5 the same was negative. Bridge --loop accumulating data to confirm.
+Also: post-restart brought home/setups/cloudflared/guard back up; TV CDP must be relaunched
+for the bridge.
