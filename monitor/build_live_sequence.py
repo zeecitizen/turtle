@@ -26,19 +26,19 @@ FILLS = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/c
 
 def real_fill(side, entry):
     """The EA logs REAL fills to caseexec_fills.csv: time,side,entry,exit,lots,pts,usd,reason.
-    Return (usd, reason, lots) for the closest matching entry, else None."""
+    OANDA (detector) and MT5 (broker) prices differ, so exact entry-matching is unreliable;
+    we show the MOST RECENT real EA trade of the SAME SIDE as the live outcome."""
     if not FILLS.exists(): return None
-    best = None
+    last = None
     try:
         for r in csv.reader(FILLS.open(encoding="utf-8", errors="ignore")):
             if len(r) < 8 or r[1] != side: continue
-            try: e = float(r[2]); usd = float(r[6]); lots = float(r[4])
+            try: usd = float(r[6]); lots = float(r[4])
             except Exception: continue
-            if abs(e - entry) <= 2.0:
-                best = (usd, r[7], lots)   # last match wins (most recent)
+            last = (usd, r[7], lots)   # most recent same-side fill
     except Exception:
         return None
-    return best
+    return last
 TZ = 2   # Munich display
 CFG = dict(UHV_BODY_MIN=0.0, MIN_ORIGIN_BREAK=0.0, ER_MIN=0.0, TREND_MIN_HUMP=0.5, TREND_DOM=0.0)
 EXIT = dict(arm=0.3, give=0.2, tp=3.0, cap=3.0)
