@@ -84,8 +84,36 @@ def humps(bars, at):
     for b in seg: mx = max(mx, b.h); dn = max(dn, mx - b.l)
     return up, dn
 
-def trend_ok(bars, o, side, minh=4.0, R=1.6):
-    up, dn = humps(bars, o)
+TREND_MIN_HUMP = 4.0   # min trend-hump size before the retracement (STRICT trend = higher)
+TREND_DOM = 1.6        # trend leg must dominate the opposite leg by this (STRICT = higher)
+
+def local_hump(bars, o, side, back=18):
+    """Zee's rule: measure the ONE hump immediately BEFORE the retracement — the up-leg
+    (BUY) leading into the pullback peak — NOT a wide 45-bar window that catches a prior
+    opposite move. Up-leg = pullback-peak.high - swing-low before it; opp = biggest
+    counter-move inside that same leg."""
+    rs = retr_zone_start(bars, o, side)          # swing high (BUY) / low (SELL) pullback comes from
+    look = max(0, rs - back)
+    seg = bars[look:rs + 1]
+    if len(seg) < 3:
+        return humps(bars, o)                    # fallback
+    if side == "BUY":
+        mn = min(b.l for b in seg)
+        up = bars[rs].h - mn
+        mx, dn = seg[0].h, 0.0
+        for b in seg: mx = max(mx, b.h); dn = max(dn, mx - b.l)
+        return up, dn
+    mx = max(b.h for b in seg)
+    dn = mx - bars[rs].l
+    mn, up = seg[0].l, 0.0
+    for b in seg: mn = min(mn, b.l); up = max(up, b.h - mn)
+    return up, dn
+
+
+def trend_ok(bars, o, side, minh=None, R=None):
+    minh = TREND_MIN_HUMP if minh is None else minh
+    R = TREND_DOM if R is None else R
+    up, dn = local_hump(bars, o, side)
     return (up >= minh and up >= dn * R) if side == "BUY" else (dn >= minh and dn >= up * R)
 
 
