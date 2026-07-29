@@ -14,6 +14,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / "strategy_lab"))
 import build_entry_review_m5 as B
+from case_engine import extract_features
+from setup_strength import strength, lot_for
 
 CF = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_m1.csv")
 SIGNAL = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/case_signal.json")
@@ -33,13 +35,14 @@ def load_bars():
     return bars
 
 
-def write_signal(seq, s):
+def write_signal(seq, s, lots, tier, st):
     # EA sets its own 3pt SL (InpHardSLPts); we still send sl for reference.
     body = ('{"id":%d,"side":"%s","entry":%.2f,"sl":%.2f,"lots":%.2f,"time":"%s"}'
-            % (seq, s["side"], s["entry"], s["sl"], LOT, s["open_t"].strftime("%Y-%m-%d %H:%M")))
+            % (seq, s["side"], s["entry"], s["sl"], lots, s["open_t"].strftime("%Y-%m-%d %H:%M")))
     SIGNAL.write_text(body, encoding="ascii")
     with LOG.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps({"seq": seq, "side": s["side"], "entry": s["entry"],
+        fh.write(json.dumps({"seq": seq, "side": s["side"], "entry": s["entry"], "lots": lots,
+                             "tier": tier, "strength": round(st, 2),
                              "time": s["open_t"].strftime("%Y-%m-%d %H:%M"),
                              "emitted_utc": datetime.utcnow().isoformat(timespec="seconds")}) + "\n")
 
@@ -66,8 +69,10 @@ def main():
                         continue
                     seen.add(key)
                     seq += 1
-                    write_signal(seq, s)
-                    print(f"[oanda_matcher] SIGNAL #{seq} {s['side']} @{s['entry']} ({s['open_t'].strftime('%H:%M')}UTC)")
+                    f = extract_features(bars, s["o"], s["u"], s["i"], s["side"])
+                    st = strength(f); lots, tier = lot_for(st)
+                    write_signal(seq, s, lots, tier, st)
+                    print(f"[oanda_matcher] SIGNAL #{seq} {s['side']} @{s['entry']} lots={lots} ({tier}) ({s['open_t'].strftime('%H:%M')}UTC)")
         except Exception as e:
             print("[oanda_matcher] err:", e, file=sys.stderr)
         time.sleep(20)

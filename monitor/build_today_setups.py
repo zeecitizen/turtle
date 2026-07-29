@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent / "strategy_lab"))
 import build_entry_review_m5 as B
 from build_entry_review_m5 import render
 from case_engine import extract_features, describe
+from setup_strength import strength, lot_for
 
 OUT = Path(__file__).parent / "setup_labels"
 CF = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_m1.csv")
@@ -109,7 +110,10 @@ def main():
                 else:
                     cls = "pos" if usd >= 0 else "neg"
                     cap = f"{s['side']} @ {disp:02d}:{s['open_t'].minute:02d} — ${usd:+.1f} ({how})"
-                title, notes = describe(extract_features(bars, s["o"], s["u"], s["i"], s["side"]), s["side"])
+                fea = extract_features(bars, s["o"], s["u"], s["i"], s["side"])
+                title, notes = describe(fea, s["side"])
+                st = strength(fea); lots, tier = lot_for(st)
+                cap = f"{cap} · 💪 {tier} ({lots} lot, str {st:.2f})"
                 meta.append({"id": sid, "png": f"{sid}.png", "title": f"Setup {nums[s['open_t']]} · {title}",
                              "cap": cap, "cls": cls, "notes": notes})
             proj = rate * 24
