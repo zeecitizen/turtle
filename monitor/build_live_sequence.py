@@ -124,25 +124,17 @@ def main():
                 png = OUT / "sequence.png"
                 render_ok = B.render(dict(s), bars, png)
                 up, dn = B.local_hump(bars, s["o"], s["side"])
-                # trade phase: resolved (real fill) vs still live (probe running)
+                # trade phase: resolved (real fill exists) vs still live
                 resolved = rf is not None
-                if resolved:
-                    r_lots = rf[2]
-                    probe_desc = (f"0.01 probe → scaled to {r_lots} lot ({rf[1]})" if r_lots > 0.011
-                                  else f"0.01 probe — {rf[1]} (didn't scale)")
-                    probe_cls, out_cls = "done", "done"
-                else:
-                    probe_desc = "0.01 probe fired — watching for acceleration to scale (0.1→0.4→0.8) or cut"
-                    probe_cls, out_cls = "now", "pending"
+                out_cls = "done" if resolved else "now"
                 NOW = ' <span style="color:#38bdf8;font-weight:700;">● LIVE — you are here</span>'
                 steps = [
                     ("1", "done", "Trend", f"{'Uptrend' if s['side']=='BUY' else 'Downtrend'} — hump {max(up,dn):.1f}pt", ""),
                     ("2", "done", "Retracement started (RET)", f"{hm(bars[s['o']].t)} — counter-trend origin", ""),
                     ("3", "done", f"UHV found — vol {bars[s['u']].v}", f"{hm(bars[s['u']].t)} — highest-volume candle", ""),
                     ("4", "done", "Breakout (BRKT)", f"{hm(bars[s['i']].t)} — {'green' if s['side']=='BUY' else 'red'} body crosses UHV", ""),
-                    ("5", "done", f"Signal — {s['side']} @ {s['entry']:.2f}", f"💪 {tier} · strength {st:.2f}", ""),
-                    ("6", probe_cls, "Probe → scale-in", probe_desc, "" if resolved else NOW),
-                    (("✓" if resolved else "7"), out_cls, "Outcome", outc, NOW if resolved else ""),
+                    ("5", "done", f"Signal — {s['side']} @ {s['entry']:.2f}", f"💪 {tier} · {lots} lot · strength {st:.2f}", ""),
+                    (("✓" if resolved else "6"), out_cls, "Outcome", outc, NOW),
                 ]
                 li = "".join(
                     f'<li class="step"><div class="num {c}">{n}</div>'
