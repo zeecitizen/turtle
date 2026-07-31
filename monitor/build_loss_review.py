@@ -105,17 +105,20 @@ def render(bars, i, tr, png):
     ax.annotate(f'{tr["side"]} {tr["lots"]}', (ex, tr["entry"]), xytext=(ex + 0.6, tr["entry"]),
                 fontsize=10, fontweight="bold", color=BLUE,
                 bbox=dict(boxstyle="round,pad=0.25", fc="white", ec=BLUE, alpha=0.95))
-    # what the detector saw near this trade
+    # what the detector saw — ONLY the single setup closest to this trade (Zee: 2 UHVs /
+    # 2 RETs on one chart made it unreadable)
     labels = []
-    for s in B.detect_full(bars):
-        if lo <= s["i"] <= hi and abs(s["i"] - i) <= 4:
-            for idx, txt, col2 in ((s["o"], "RET", PUR), (s["u"], "UHV", GOLD), (s["i"], "BRKT", G if s["side"] == "BUY" else R)):
-                if lo <= idx < hi:
-                    b = bars[idx]
-                    ax.annotate(txt, (idx - lo, b.h + (b.h - b.l) * 0.4), ha="center", fontsize=9,
-                                fontweight="bold", color=col2,
-                                bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=col2, alpha=0.95))
-            labels.append(s)
+    near = [s for s in B.detect_full(bars) if lo <= s["i"] < hi and abs(s["i"] - i) <= 4]
+    if near:
+        s = min(near, key=lambda x: abs(x["i"] - i))
+        for idx, txt, col2 in ((s["o"], "RET", PUR), (s["u"], "UHV", GOLD),
+                               (s["i"], "BRKT", G if s["side"] == "BUY" else R)):
+            if lo <= idx < hi:
+                b = bars[idx]
+                ax.annotate(txt, (idx - lo, b.h + (b.h - b.l) * 0.4), ha="center", fontsize=9,
+                            fontweight="bold", color=col2,
+                            bbox=dict(boxstyle="round,pad=0.2", fc="white", ec=col2, alpha=0.95))
+        labels.append(s)
     ticks = list(range(0, len(seg), 8))
     ax.set_xticks([]); av.set_xticks(ticks)
     av.set_xticklabels([f"{(seg[t].t.hour + MT5_UTC_OFFSET) % 24:02d}:{seg[t].t.minute:02d}" for t in ticks], fontsize=8)
