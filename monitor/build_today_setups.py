@@ -23,7 +23,7 @@ OUT = Path(__file__).parent / "setup_labels"
 CF = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_m1.csv")
 LOT = 0.10
 TZ_OFFSET = 2   # OANDA/Zee chart display = UTC+2 (Munich)
-CFG = dict(UHV_BODY_MIN=0.0, MIN_ORIGIN_BREAK=0.0, ER_MIN=0.0, TREND_MIN_HUMP=0.5, TREND_DOM=0.0)
+CFG = dict(UHV_BODY_MIN=0.0, MIN_ORIGIN_BREAK=0.0, ER_MIN=0.0, TREND_MIN_HUMP=0.5, TREND_DOM=1.2)  # TREND FILTER ON (Zee: "selling in an uptrend" caused all 3 big losses)
 EXIT = dict(arm=0.3, give=0.2, tp=3.0, cap=3.0)
 
 HTML = """<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
