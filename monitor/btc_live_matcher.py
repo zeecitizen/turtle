@@ -55,7 +55,7 @@ def tier_for(st):
 
 def write_signal(seq, s, mult, tier, st):
     body = ('{"id":%d,"side":"%s","entry":%.2f,"mult":%.2f,"ts":%d,"time":"%s"}'
-            % (seq, s["side"], s["entry"], mult, int(datetime.utcnow().timestamp()),
+            % (seq, s["side"], s["entry"], mult, int(time.time()),
                s["open_t"].strftime("%Y-%m-%d %H:%M")))
     SIGNAL.write_text(body, encoding="ascii")
     with LOG.open("a", encoding="utf-8") as fh:
