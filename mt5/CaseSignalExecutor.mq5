@@ -22,6 +22,7 @@ input double InpHardSLPts    = 3.0;    // FAST-SCALP hard stop-cap: cut losers a
 input double InpArmPts       = 0.3;    // arm at +0.3pt -> catch the guaranteed initial pop
 input double InpGivePts      = 0.2;    // exit on 0.2pt reversal from peak (seconds-scalp)
 input double InpTpCapPts     = 3.0;    // take-profit ceiling 3pt. dom=0 fast-scalp: ~115/day, ~79% WR
+input int    InpMaxSignalAgeSec = 180;  // ignore signals older than this (stale-signal guard)
 input string InpSignalFile   = "case_signal.json";
 
 CTrade  trade;
@@ -80,6 +81,12 @@ void OnTimer() {
    long id = (long)JNum(txt, "id");
    if (id <= g_last_id) return;      // already processed
    g_last_id = id;
+   // STALENESS GUARD: don't fire an old signal (matcher stopped / EA re-attached).
+   long ts = (long)JNum(txt, "ts");
+   if (ts > 0) {
+      long age = (long)TimeGMT() - ts;
+      if (age > InpMaxSignalAgeSec) { PrintFormat("[CaseExec] IGNORING stale signal #%d (%d s old)", id, age); return; }
+   }
    if (HasOurPos()) return;          // one position at a time
 
    string side = JStr(txt, "side");
