@@ -39,8 +39,9 @@ def load_bars():
 
 def write_signal(seq, s, lots, tier, st):
     # EA sets its own 3pt SL (InpHardSLPts); we still send sl for reference.
-    body = ('{"id":%d,"side":"%s","entry":%.2f,"sl":%.2f,"lots":%.2f,"time":"%s"}'
-            % (seq, s["side"], s["entry"], s["sl"], lots, s["open_t"].strftime("%Y-%m-%d %H:%M")))
+    body = ('{"id":%d,"side":"%s","entry":%.2f,"sl":%.2f,"lots":%.2f,"ts":%d,"time":"%s"}'
+            % (seq, s["side"], s["entry"], s["sl"], lots, int(datetime.utcnow().timestamp()),
+               s["open_t"].strftime("%Y-%m-%d %H:%M")))
     SIGNAL.write_text(body, encoding="ascii")
     with LOG.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps({"seq": seq, "side": s["side"], "entry": s["entry"], "lots": lots,

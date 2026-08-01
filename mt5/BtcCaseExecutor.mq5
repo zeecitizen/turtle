@@ -30,6 +30,7 @@ input double InpStopPts   = 14.0;    // BTC-scaled hard stop (gold 3 x 4.5)
 input double InpArmPts    = 1.4;     // trail arms here (gold 0.3 x 4.5)
 input double InpGivePts   = 0.9;     // give-back from peak to exit (gold 0.2 x 4.5)
 input double InpTpCapPts  = 14.0;    // take-profit ceiling
+input int    InpMaxSignalAgeSec = 180;  // ignore signals older than this (stale-signal guard)
 input string InpSignalFile = "btc_signal.json";
 
 CTrade  trade;
@@ -116,6 +117,16 @@ void OnTimer() {
    long id = (long)JNum(txt, "id");
    if (id <= g_last_id) return;
    g_last_id = id;
+   // STALENESS GUARD: never act on an old signal (e.g. matcher stopped, EA re-attached).
+   // Firing a 3-hour-old setup at the current price is how you lose money for nothing.
+   long ts = (long)JNum(txt, "ts");
+   if (ts > 0) {
+      long age = (long)TimeGMT() - ts;
+      if (age > InpMaxSignalAgeSec) {
+         PrintFormat("[BtcExec] IGNORING stale signal #%d (%d s old)", id, age);
+         return;
+      }
+   }
    if (HasOurPos()) return;
 
    string side = JStr(txt, "side");
