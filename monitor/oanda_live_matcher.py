@@ -22,6 +22,8 @@ SIGNAL = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/
 LOG = Path(__file__).parent / "oanda_signals.jsonl"
 LOT = 0.10
 CFG = dict(UHV_BODY_MIN=0.0, MIN_ORIGIN_BREAK=0.0, ER_MIN=0.0, TREND_MIN_HUMP=0.5, TREND_DOM=1.2)  # TREND FILTER ON (Zee: "selling in an uptrend" caused all 3 big losses)
+BRK_BODY_MIN = 0.5   # breakout must be a MOMENTUM candle (Zee on loss #2: "brkt candle
+                      # not momentum candle"). body/range >= this.
 
 
 def load_bars():
@@ -67,9 +69,13 @@ def main():
                     # only fire setups whose breakout is on the last few CLOSED bars (fresh)
                     if key in seen or s["open_t"] < last_closed - timedelta(minutes=3):
                         continue
+                    f = extract_features(bars, s["o"], s["u"], s["i"], s["side"])
+                    if f["brk_body"] < BRK_BODY_MIN:      # Zee: breakout must be momentum
+                        seen.add(key)
+                        print(f"[oanda_matcher] SKIP {s['side']} {s['open_t'].strftime('%H:%M')} — weak breakout body {f['brk_body']:.2f}")
+                        continue
                     seen.add(key)
                     seq += 1
-                    f = extract_features(bars, s["o"], s["u"], s["i"], s["side"])
                     st = strength(f); lots, tier = lot_for(st)
                     write_signal(seq, s, lots, tier, st)
                     print(f"[oanda_matcher] SIGNAL #{seq} {s['side']} @{s['entry']} lots={lots} ({tier}) ({s['open_t'].strftime('%H:%M')}UTC)")
