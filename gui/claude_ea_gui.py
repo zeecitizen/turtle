@@ -90,7 +90,7 @@ class App(tk.Tk):
 
         bar = tk.Frame(self, bg=BG, padx=12, pady=8); bar.pack(fill="x")
         self._btn(bar, "▶  START EVERYTHING", self.start_all, GREEN, 19)
-        self._btn(bar, "🧠  LAUNCH CLAUDE SESSION", self.launch_claude, BLUE, 23)
+        self._btn(bar, "🧠  BEGIN AI EA TRADING", self.launch_claude, BLUE, 22)
         self._btn(bar, "📸  Snap", self.snap_now, "#334155", 8)
         self._btn(bar, "⏹  Stop", self.stop_all, "#7f1d1d", 8)
 
@@ -117,6 +117,24 @@ class App(tk.Tk):
         self.chart_img.pack(fill="both", pady=(4, 0))
         self._imgref = None
 
+        # what Claude SEES in that picture, and Zee's answer to it
+        self.vision = tk.Label(cf, text="", bg=PANEL, fg=MUTED, font=("Segoe UI", 9),
+                               justify="left", anchor="w", wraplength=880)
+        self.vision.pack(fill="x", pady=(6, 0))
+        self.vrow = tk.Frame(cf, bg=PANEL)
+        self.vrow.pack(fill="x", pady=(6, 2))
+        tk.Button(self.vrow, text="\u2713  Correct \u2014 take it",
+                  command=lambda: self.vision_say("correct"), bg=GREEN, fg="#0b0f14",
+                  relief="flat", font=("Segoe UI", 9, "bold"), padx=16, pady=6,
+                  cursor="hand2").pack(side="left", padx=2)
+        tk.Button(self.vrow, text="\u2717  Ummm.. not sure this works",
+                  command=lambda: self.vision_say("unsure"), bg=AMBER, fg="#0b0f14",
+                  relief="flat", font=("Segoe UI", 9, "bold"), padx=16, pady=6,
+                  cursor="hand2").pack(side="left", padx=6)
+        self.vmsg = tk.Label(self.vrow, text="", bg=PANEL, fg=MUTED, font=("Segoe UI", 9))
+        self.vmsg.pack(side="left", padx=10)
+        self.vrow.pack_forget()          # only shown when a fresh reading exists
+
         self.status = self._card(left, "SYSTEM STATUS", 7)
         self.armed = self._card(left, "ARMED — setup forming", 5)
         self.journal = self._card(right, "CLAUDE'S RECENT VERDICTS", 7, width=44)
@@ -134,8 +152,9 @@ class App(tk.Tk):
         # ---- TODAY'S TRADES (double-click a row for the full story) ----
         tf = tk.Frame(left, bg=PANEL, padx=10, pady=8); tf.pack(fill="both", expand=True, pady=4)
         hdr = tk.Frame(tf, bg=PANEL); hdr.pack(fill="x")
-        tk.Label(hdr, text="TODAY'S TRADES   (double-click a row for details)", bg=PANEL,
-                 fg=MUTED, font=("Segoe UI", 9, "bold")).pack(side="left")
+        self.thdr = tk.Label(hdr, text="TRADES   (double-click a row for details)",
+                             bg=PANEL, fg=MUTED, font=("Segoe UI", 9, "bold"))
+        self.thdr.pack(side="left")
         tk.Button(hdr, text="PDF: failed setups", command=self.make_pdf, bg="#7f1d1d", fg="#fff",
                   relief="flat", font=("Segoe UI", 8, "bold"), cursor="hand2",
                   padx=8).pack(side="right")
@@ -361,6 +380,23 @@ class App(tk.Tk):
                        creationflags=NO_WIN)
 
     # ── refresh ───────────────────────────────────────────────────────────
+    def vision_say(self, verdict):
+        """Zee answering Claude's visual reading. This is the training signal."""
+        try:
+            sys.path.insert(0, str(MON))
+            import vision_mark as VM
+            VM.feedback(verdict)
+            sc = VM.score()
+            self.vmsg.configure(
+                text=("noted \u2014 taking it" if verdict == "correct"
+                      else "noted \u2014 Claude will not act on this reading")
+                     + (f"   ({sc['agreed']}/{sc['total']} agreed)" if sc else ""),
+                fg=GREEN if verdict == "correct" else AMBER)
+            if verdict == "correct" and (COMMON / "pending_setup.json").exists():
+                self.manual("TAKE", 1.0)
+        except Exception as e:
+            self.vmsg.configure(text=str(e)[:70], fg=RED)
+
     def _manual_buttons(self):
         """Spell the sizes out. "1x" and "2x" told the user nothing about what would
         actually be sent to the broker."""
@@ -458,13 +494,17 @@ class App(tk.Tk):
             self.livesub.configure(
                 text=sub,
                 fg=GREEN if any(q["profit"] > 0 for q in pos) else (RED if pos else MUTED))
-        rows = TB.book(mk)
+        day, caption = TB.day_caption(mk)
+        rows = TB.book(mk, day)
         s = TB.summary(rows)
-        txt = "judged {} \u00b7 taken {} \u00b7 skipped {} \u00b7 net ${:+.2f}".format(
-            s["judged"], s["taken"], s["skipped"], s["net"])
+        txt = "[{}]  judged {} \u00b7 taken {} \u00b7 skipped {} \u00b7 net ${:+.2f}".format(
+            caption, s["judged"], s["taken"], s["skipped"], s["net"])
         if s["wr"] is not None:
             txt += " \u00b7 WR {:.0f}%".format(s["wr"])
         self.tsum.configure(text=txt)
+        self.thdr.configure(text=("TODAY'S TRADES" if caption in ("today",)
+                                  else "TRADES \u2014 " + caption.upper())
+                                 + "   (double-click a row for details)")
         self.tree.delete(*self.tree.get_children())
         self._rows = {}
         for r in rows:
@@ -487,7 +527,8 @@ class App(tk.Tk):
     def make_pdf(self):
         import trade_book as TB
         try:
-            out = TB.failed_pdf(self.market.get())
+            day, _ = TB.day_caption(self.market.get())
+            out = TB.failed_pdf(self.market.get(), day)
             messagebox.showinfo("Turtle Desktop", "Report written:\n" + str(out))
             subprocess.Popen(["cmd", "/c", "start", "", str(out)], creationflags=NO_WIN)
         except Exception as e:
@@ -518,6 +559,41 @@ class App(tk.Tk):
             use = live_png
             age = int(time.time() - live_png.stat().st_mtime)
             title = f"LIVE CHART   ({age}s ago)"
+
+        # Claude's own reading of the picture outranks both: it is what actually beat the
+        # rule engine, and Zee needs to see the marks she is arguing from.
+        try:
+            sys.path.insert(0, str(MON))
+            import vision_mark as VM
+            rd = VM.latest()
+            if rd and rd.get("age_sec", 9999) < 900 and Path(rd.get("png", "")).exists():
+                use = Path(rd["png"])
+                bits = [f"trend {rd.get('trend', '?').upper()}"]
+                if rd.get("side"):
+                    bits.append(f"wants {rd['side']}")
+                for k in ("ret", "uhv", "brkt"):
+                    if rd.get(k):
+                        bits.append(f"{k.upper()} {rd[k]}")
+                if rd.get("confidence"):
+                    bits.append(rd["confidence"] + " confidence")
+                txt = "CLAUDE'S EYES:  " + "   \u00b7   ".join(bits)
+                if rd.get("note"):
+                    txt += "\n" + rd["note"]
+                sc = VM.score()
+                if sc:
+                    txt += (f"\nyou have agreed with {sc['agreed']} of {sc['total']} "
+                            f"readings ({sc['pct']:.0f}%)")
+                self.vision.configure(text=txt, fg=FG)
+                self.vrow.pack(fill="x", pady=(6, 2))
+                title = f"LIVE CHART \u2014 CLAUDE'S VISION   ({rd['age_sec']}s ago)"
+            else:
+                self.vision.configure(
+                    text="no fresh visual reading \u2014 ask the Claude session to look "
+                         "at the chart and mark it", fg=MUTED)
+                self.vrow.pack_forget()
+        except Exception:
+            pass
+
         if not use:
             return
         try:
@@ -594,18 +670,28 @@ class App(tk.Tk):
 
         jf = MON / "claude_judgments.jsonl"
         if jf.exists():
-            rows = jf.read_text(encoding="utf-8").strip().splitlines()[-200:]
+            import trade_book as TB
+            day, caption = TB.day_caption(mk)
+            rows = jf.read_text(encoding="utf-8").strip().splitlines()[-400:]
             out = []
             for r in rows:
                 try:
                     d = json.loads(r)
                     if d.get("market") and d.get("market") != mk:
                         continue          # a gold panel must not show BTC verdicts
+                    if not str(d.get("judged_utc", "")).startswith(day):
+                        continue
                     out.append(f"{d.get('judged_utc','')[11:16]}  {d.get('verdict',''):7} "
-                               f"{d.get('side',''):4} @{d.get('entry','')}  {str(d.get('reason',''))[:60]}")
+                               f"{d.get('side',''):4} @{d.get('entry','')}  "
+                               f"{str(d.get('reason',''))[:60]}")
                 except Exception:
                     pass
-            self._set(self.journal, "\n".join(reversed(out[-9:])) or f"no {mk} verdicts yet")
+            body = "\n".join(reversed(out[-9:]))
+            if not body:
+                body = ("waiting for the first verdict of the session"
+                        if TB.market_open() else
+                        f"nothing judged yet \u2014 {mk} market is closed")
+            self._set(self.journal, f"[{caption}]\n" + body)
         else:
             self._set(self.journal, "no verdicts yet")
 
