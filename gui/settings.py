@@ -341,6 +341,14 @@ class SettingsDialog(tk.Toplevel):
                                  justify="left", anchor="w", wraplength=640)
         self.terminfo.pack(fill="x", padx=6, pady=(2, 4))
         self.common = self._path_row(m5, "Common\\Files", self.cfg["common_dir"], folder=True)
+        ra = tk.Frame(m5, bg=PANEL); ra.pack(fill="x", pady=(8, 2))
+        tk.Button(ra, text="📌  Drag-Attach EA to Chart",
+                  command=self.open_attach, bg=AMBER, fg="#0b0f14", relief="flat",
+                  font=("Segoe UI", 9, "bold"), padx=16, pady=6,
+                  cursor="hand2").pack(side="left", padx=6)
+        self.atres = tk.Label(ra, text="", bg=PANEL, fg=MUTED, font=("Segoe UI", 9),
+                              wraplength=430, justify="left")
+        self.atres.pack(side="left", padx=8)
         tk.Label(m5, text="      Common\\Files is shared by every terminal - it is where the EA "
                           "reads signals and writes fills.", bg=PANEL, fg=MUTED,
                  font=("Segoe UI", 9), anchor="w").pack(fill="x")
@@ -462,6 +470,19 @@ class SettingsDialog(tk.Toplevel):
         tk.Button(r, text="…", command=browse, bg="#334155", fg="#fff", relief="flat",
                   width=3, cursor="hand2").pack(side="left", padx=4)
         return e
+
+    def open_attach(self):
+        """Which EA, onto which chart - and whether it is actually running."""
+        try:
+            import attach_ea as AE
+            AttachWindow(self, self.market.get())
+            r = AE.check(self.market.get())
+            self.atres.configure(
+                text=("everything checks out" if r.get("ready") else
+                      "something needs doing - see the window"),
+                fg=GREEN if r.get("ready") else AMBER)
+        except Exception as e:
+            self.atres.configure(text=str(e)[:70], fg=RED)
 
     def copy_to_usb(self):
         """Put the installer somewhere a friend can run it from."""

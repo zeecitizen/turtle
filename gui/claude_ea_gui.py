@@ -195,7 +195,7 @@ class App(tk.Tk):
         self.learn_lbl.pack(side="left", padx=6)
         self.tsum = tk.Label(hdr, text="", bg=PANEL, fg=MUTED, font=("Consolas", 9))
         self.tsum.pack(side="right", padx=10)
-        cols = ("time", "side", "verdict", "lots", "entry", "exit", "pnl", "status")
+        cols = ("id", "time", "side", "verdict", "lots", "entry", "exit", "pnl", "status")
         st = ttk.Style()
         try:
             st.theme_use("clam")
@@ -206,7 +206,7 @@ class App(tk.Tk):
         except Exception:
             pass
         self.tree = ttk.Treeview(tf, columns=cols, show="headings", height=9, style="T.Treeview")
-        for c, w in zip(cols, (66, 46, 60, 46, 74, 74, 70, 96)):
+        for c, w in zip(cols, (44, 62, 44, 58, 44, 70, 70, 66, 92)):
             self.tree.heading(c, text=c.upper()); self.tree.column(c, width=w, anchor="w")
         self.tree.tag_configure("win", foreground=GREEN)
         self.tree.tag_configure("loss", foreground=RED)
@@ -581,6 +581,7 @@ class App(tk.Tk):
             u = r["usd"] or 0
             tag = "win" if u > 0 else "loss" if u < 0 else "skip"
             iid = self.tree.insert("", "end", values=(
+                ("#" + str(r["id"])) if r.get("id") else "-",
                 r["time"][-5:], r["side"], r["verdict"], r["lots"], r["entry"], r["exit"],
                 ("${:+.2f}".format(r["usd"]) if r["usd"] is not None else "--"),
                 r["status"]), tags=(tag,))
@@ -1104,7 +1105,8 @@ class TradeDetail(tk.Toplevel):
     def __init__(self, parent, row, market):
         super().__init__(parent)
         self.row, self.market = row, market
-        self.title("{} {}  ({})".format(row["side"], row["time"], row["status"]))
+        self.title("Trade #{}  ·  {} {}  ({})".format(
+            row.get("id", "?"), row["side"], row["time"], row["status"]))
         self.geometry("980x760")
         self.configure(bg=BG)
 
@@ -1112,6 +1114,8 @@ class TradeDetail(tk.Toplevel):
         pnl = "${:+.2f}".format(row["usd"]) if row["usd"] is not None else "not filled"
         u = row["usd"] or 0
         col = GREEN if u > 0 else RED if u < 0 else MUTED
+        tk.Label(head, text="#{}".format(row.get("id", "?")), bg=PANEL, fg=BLUE,
+                 font=("Segoe UI", 15, "bold")).pack(side="left", padx=(0, 10))
         tk.Label(head, text="{}  {} lot  @ {}".format(row["side"], row["lots"], row["entry"]),
                  bg=PANEL, fg=FG, font=("Segoe UI", 15, "bold")).pack(side="left")
         tk.Label(head, text="   " + pnl, bg=PANEL, fg=col,
