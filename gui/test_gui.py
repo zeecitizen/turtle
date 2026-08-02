@@ -17,6 +17,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 RESULTS = []
 
 
+def _windows_honest(WN):
+    d = WN.analyse("BTC")
+    solid = [r for r in d["money"] if r.get("solid")]
+    if not solid:
+        joined = " ".join(d["findings"]).lower()
+        assert ("noise" in joined or "no completed trades" in joined), d["findings"]
+    return True
+
+
 def _thin_is_honest(RS):
     """With no fills there is nothing to conclude, and it must say so."""
     rep = RS.analyse("BTC")
@@ -220,6 +229,26 @@ def main():
     check("research: text render works", lambda: len(RS.to_text(RS.analyse("BTC"))) > 100)
     check("research: PDF render works", lambda: Path(RS.to_pdf(RS.analyse("BTC"))).exists())
 
+    import funnel as FN, windows as WN
+    check("funnel: diagnose() returns the whole funnel",
+          lambda: set(FN.diagnose("BTC")) >= {"steps", "findings", "strict", "loose"})
+    check("funnel: every stage is counted",
+          lambda: len(FN.diagnose("BTC")["steps"]) == len(FN.STAGES))
+    check("funnel: the biggest drop is identified",
+          lambda: FN.diagnose("BTC")["worst"] is not None)
+    check("funnel: opening the gates is compared honestly",
+          lambda: FN.diagnose("BTC")["loose"]["setups"] >= FN.diagnose("BTC")["strict"]["setups"])
+    check("funnel: text render works", lambda: "THE FUNNEL" in FN.to_text(FN.diagnose("BTC")))
+
+    check("windows: movement is measured per hour",
+          lambda: all("body_share" in r for r in WN.movement("BTC")))
+    check("windows: hours are mapped to sessions",
+          lambda: all(r["sessions"] for r in WN.movement("BTC")))
+    check("windows: thin money samples are flagged, not ranked",
+          lambda: _windows_honest(WN))
+    check("windows: text render works",
+          lambda: "MOVEMENT BY HOUR" in WN.to_text(WN.analyse("BTC")))
+
     import lessons as LS
     check("lessons: rulebook is found", lambda: LS.rulebook_path().exists())
     check("lessons: an empty comment is refused",
@@ -299,6 +328,8 @@ def main():
         except Exception:
             pass
 
+    check("report window opens and renders",
+          lambda: (G.ReportWindow(app, "test", lambda: "hello", "..."), app.update()))
     check("research window opens and renders",
           lambda: (G.ResearchWindow(app, "BTC"), app.update()))
 
