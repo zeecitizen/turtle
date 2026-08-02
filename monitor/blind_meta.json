@@ -1,0 +1,42 @@
+[
+ {
+  "id": "blind_01",
+  "side": "BUY",
+  "time": "22:43"
+ },
+ {
+  "id": "blind_02",
+  "side": "SELL",
+  "time": "21:03"
+ },
+ {
+  "id": "blind_03",
+  "side": "SELL",
+  "time": "19:39"
+ },
+ {
+  "id": "blind_04",
+  "side": "BUY",
+  "time": "20:01"
+ },
+ {
+  "id": "blind_05",
+  "side": "SELL",
+  "time": "22:11"
+ },
+ {
+  "id": "blind_06",
+  "side": "BUY",
+  "time": "20:48"
+ },
+ {
+  "id": "blind_07",
+  "side": "SELL",
+  "time": "19:15"
+ },
+ {
+  "id": "blind_08",
+  "side": "BUY",
+  "time": "19:31"
+ }
+]
