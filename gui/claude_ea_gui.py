@@ -33,6 +33,7 @@ PYW = PY.replace("python.exe", "pythonw.exe")
 NO_WIN = 0x08000000
 
 BG, PANEL, FG, MUTED = "#0b0f14", "#111826", "#e6edf3", "#8b97a3"
+MAX_CHART_H = 300        # a chart must never crowd out the controls
 GREEN, RED, BLUE, AMBER = "#4ade80", "#f87171", "#7dd3fc", "#fbbf24"
 
 
@@ -110,7 +111,27 @@ class App(tk.Tk):
         self.banner.pack_forget()
         self._blink = 0
 
-        body = tk.Frame(self, bg=BG); body.pack(fill="both", expand=True, padx=12, pady=(6, 10))
+        # Everything below the buttons scrolls. Zee: a tall chart used to push the controls
+        # off the bottom of the window with no way to reach them.
+        outer = tk.Frame(self, bg=BG); outer.pack(fill="both", expand=True)
+        self._canvas = tk.Canvas(outer, bg=BG, highlightthickness=0)
+        vsb = ttk.Scrollbar(outer, orient="vertical", command=self._canvas.yview)
+        hsb = ttk.Scrollbar(self, orient="horizontal", command=self._canvas.xview)
+        self._canvas.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
+        vsb.pack(side="right", fill="y")
+        self._canvas.pack(side="left", fill="both", expand=True)
+        hsb.pack(fill="x", side="bottom")
+
+        body = tk.Frame(self._canvas, bg=BG)
+        self._body_id = self._canvas.create_window((0, 0), window=body, anchor="nw")
+        body.bind("<Configure>",
+                  lambda e: self._canvas.configure(scrollregion=self._canvas.bbox("all")))
+        self._canvas.bind("<Configure>",
+                          lambda e: self._canvas.itemconfigure(self._body_id,
+                                                               width=max(e.width, 900)))
+        self._canvas.bind_all("<MouseWheel>", self._wheel)
+
+        body.configure(padx=12, pady=6)
         left = tk.Frame(body, bg=BG); left.pack(side="left", fill="both", expand=True)
         right = tk.Frame(body, bg=BG, width=380); right.pack(side="right", fill="y")
 
@@ -517,6 +538,16 @@ class App(tk.Tk):
         except Exception:
             pass
 
+    def _wheel(self, e):
+        try:
+            w = self.winfo_containing(e.x_root, e.y_root)
+            top = w.winfo_toplevel() if w else None
+            if top is not None and top is not self:
+                return                      # a dialog is under the pointer; leave it alone
+            self._canvas.yview_scroll(int(-e.delta / 120), "units")
+        except Exception:
+            pass
+
     def _refresh_conn(self):
         try:
             import settings as S
@@ -745,9 +776,15 @@ class App(tk.Tk):
                 self.chart_title.configure(text=title); return
             self._imgsig = sig
             img = tk.PhotoImage(file=str(use))
-            # Tk has no resize; subsample by an integer factor to fit the panel
-            target = max(self.chart_img.winfo_width(), 700)
-            factor = max(1, round(img.width() / target))
+            # Tk cannot resize, only subsample by an integer factor - so the factor has to
+            # satisfy BOTH dimensions. Width alone was not enough: a CDP screenshot is ~3400px
+            # wide and a few hundred tall, so a width-only fit left an image taller than the
+            # window and pushed every control off-screen.
+            avail_w = max(self.chart_img.winfo_width(), 640)
+            avail_h = MAX_CHART_H
+            factor = max(1,
+                         -(-img.width() // avail_w),      # ceil division
+                         -(-img.height() // avail_h))
             if factor > 1:
                 img = img.subsample(factor, factor)
             self._imgref = img                      # keep a reference or Tk drops it
@@ -1135,7 +1172,7 @@ class TradeDetail(tk.Toplevel):
         if png.exists():
             try:
                 im = tk.PhotoImage(file=str(png))
-                f = max(1, round(im.width() / 900))
+                f = max(1, -(-im.width() // 900), -(-im.height() // 340))
                 if f > 1:
                     im = im.subsample(f, f)
                 self._img = im
