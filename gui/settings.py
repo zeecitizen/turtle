@@ -418,6 +418,10 @@ class SettingsDialog(tk.Toplevel):
         # ── share ──
         sh = self._box("GIVE IT TO SOMEONE")
         rs = tk.Frame(sh, bg=PANEL); rs.pack(fill="x", pady=4)
+        tk.Button(rs, text="🐛  REPORT A BUG", command=self.report_bug,
+                  bg="#f87171", fg="#0b0f14", relief="flat",
+                  font=("Segoe UI", 9, "bold"), padx=16, pady=7,
+                  cursor="hand2").pack(side="right", padx=6)
         tk.Button(rs, text="💾  COPY SETUP TO USB TO GIVE TO FRIEND",
                   command=self.copy_to_usb, bg=GREEN, fg="#0b0f14", relief="flat",
                   font=("Segoe UI", 9, "bold"), padx=16, pady=7,
@@ -483,6 +487,9 @@ class SettingsDialog(tk.Toplevel):
                 fg=GREEN if r.get("ready") else AMBER)
         except Exception as e:
             self.atres.configure(text=str(e)[:70], fg=RED)
+
+    def report_bug(self):
+        BugWindow(self, self.market.get())
 
     def copy_to_usb(self):
         """Put the installer somewhere a friend can run it from."""
@@ -657,3 +664,97 @@ def status_line():
                 "connected" if cli_available() else "CLI not installed — open Settings")
     return ("Anthropic API key", GREEN if has_key() else RED,
             "key saved" if has_key() else "no key — open Settings")
+
+
+class BugWindow(tk.Toplevel):
+    """A bug report Zee can act on: what happened, what was expected, and the diagnostics
+    that answer the first questions anyone would ask."""
+
+    def __init__(self, parent, market="XAU"):
+        super().__init__(parent)
+        self.market = market
+        self.title("Turtle Desktop - Report a bug")
+        self.geometry("820x680")
+        self.configure(bg=BG)
+        import bugreport as BR
+        self.BR = BR
+
+        head = tk.Frame(self, bg=PANEL, padx=14, pady=10); head.pack(fill="x")
+        tk.Label(head, text="🐛  Report a bug", bg=PANEL, fg=FG,
+                 font=("Segoe UI", 14, "bold")).pack(side="left")
+        tk.Label(head, text="   goes to " + BR.TO, bg=PANEL, fg=MUTED,
+                 font=("Consolas", 9)).pack(side="left", padx=10)
+
+        for title, attr, hint in (
+                ("What happened?", "what",
+                 "What you did, and what the software did. Exact wording of any message helps."),
+                ("What did you expect instead?", "expected",
+                 "One line is enough - it is often the most useful line in the report.")):
+            tk.Label(self, text=title, bg=BG, fg=AMBER, font=("Segoe UI", 10, "bold"),
+                     anchor="w").pack(fill="x", padx=16, pady=(12, 0))
+            tk.Label(self, text=hint, bg=BG, fg=MUTED, font=("Segoe UI", 9),
+                     anchor="w").pack(fill="x", padx=16)
+            box = tk.Text(self, height=6 if attr == "what" else 3, bg=PANEL, fg=FG,
+                          insertbackground=FG, relief="flat", font=("Consolas", 10),
+                          wrap="word")
+            box.pack(fill="x", padx=16, pady=4)
+            setattr(self, attr, box)
+
+        self.diag = tk.IntVar(value=1)
+        tk.Checkbutton(self, text="include diagnostics (build, EA heartbeat, data freshness, "
+                                  "last scan) - strongly recommended",
+                       variable=self.diag, bg=BG, fg=MUTED, selectcolor=BG,
+                       activebackground=BG, font=("Segoe UI", 9)).pack(anchor="w", padx=14)
+
+        b = tk.Frame(self, bg=BG, padx=16, pady=12); b.pack(fill="x")
+        tk.Button(b, text="Send", command=self.send, bg=GREEN, fg="#0b0f14", relief="flat",
+                  font=("Segoe UI", 10, "bold"), padx=22, pady=7,
+                  cursor="hand2").pack(side="left")
+        tk.Button(b, text="Preview", command=self.preview, bg="#334155", fg="#fff",
+                  relief="flat", font=("Segoe UI", 10, "bold"), padx=16, pady=7,
+                  cursor="hand2").pack(side="left", padx=8)
+        tk.Button(b, text="Copy to clipboard", command=self.copy, bg="#334155", fg="#fff",
+                  relief="flat", font=("Segoe UI", 10, "bold"), padx=16, pady=7,
+                  cursor="hand2").pack(side="left")
+        self.msg = tk.Label(self, text="", bg=BG, fg=GREEN, font=("Segoe UI", 9),
+                            wraplength=760, justify="left")
+        self.msg.pack(fill="x", padx=16)
+
+    def _fields(self):
+        return (self.what.get("1.0", "end").strip(),
+                self.expected.get("1.0", "end").strip())
+
+    def send(self):
+        w, e = self._fields()
+        if len(w) < 5:
+            self.msg.configure(text="Describe what happened first - even one sentence.",
+                               fg=AMBER)
+            self.what.focus_set()
+            return
+        self.msg.configure(text="gathering diagnostics...", fg=MUTED); self.update()
+        path, opened, _ = self.BR.send(w, e, self.market, bool(self.diag.get()))
+        note = ("Your mail app should be open with the report ready to send."
+                if opened else
+                "No mail app opened. The report is saved - attach it to an email yourself.")
+        self.msg.configure(text=note + "\nSaved a copy at: " + str(path),
+                           fg=GREEN if opened else AMBER)
+
+    def preview(self):
+        w, e = self._fields()
+        body = self.BR.compose(w, e, self.market, bool(self.diag.get()))
+        top = tk.Toplevel(self); top.title("Preview"); top.geometry("860x640")
+        top.configure(bg=BG)
+        tx = tk.Text(top, bg="#0b0f14", fg=FG, relief="flat", font=("Consolas", 9),
+                     wrap="word", padx=12, pady=10)
+        tx.pack(fill="both", expand=True)
+        tx.insert("1.0", body); tx.configure(state="disabled")
+
+    def copy(self):
+        w, e = self._fields()
+        try:
+            self.clipboard_clear()
+            self.clipboard_append(self.BR.compose(w, e, self.market, bool(self.diag.get())))
+            self.msg.configure(text="copied - paste it into an email to " + self.BR.TO,
+                               fg=GREEN)
+        except Exception as ex:
+            self.msg.configure(text=str(ex)[:90], fg=RED)
