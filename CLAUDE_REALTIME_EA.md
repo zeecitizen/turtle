@@ -26,6 +26,11 @@ the ground truth.**
 If you are resuming cold: read §1 (why), §2 (the rules you judge by), then run §6
 (startup check), then loop §5. Everything else is reference.
 
+**There is now a desktop app.** `Turtle Desktop` (Start menu) is the front door: it starts
+the services, shows the live chart with Claude's own vision marks, lists every trade, and
+launches this session with **BEGIN AI EA TRADING**. Everything below still works from a
+terminal, and the app is a shell around it — neither replaces the other.
+
 **The commands you actually need:**
 ```bash
 PY="C:/Users/zeesh/AppData/Local/Programs/Python/Python313-arm64/python.exe"
@@ -338,6 +343,37 @@ the downtrend was a single swing old.
 
 ---
 
+## 5b. THE EXIT — and what Claude may order
+
+The EA owns the exit and should keep it. Its trail arms at a small favourable move and
+leaves on a small give-back, in **milliseconds**. No judgement call — human or model — beats
+that on a 0.2 pt give-back, and pretending otherwise costs money.
+
+What Claude *can* do is order an exit when the **picture changes**:
+
+```bash
+$PY monitor/claude_judge.py close XAU "the trend just broke against us"
+```
+
+This writes `xau_close.json` / `btc_close.json`; the EA closes every position it holds on
+that magic, and ignores the command if it is older than `InpMaxSignalAgeSec`. Use it for
+judgement, never for micro-managing a scalp.
+
+**Current exit settings**
+
+| | XAUUSD | BTC |
+|---|---|---|
+| hard stop | 3.0 pt | 14 pt |
+| trail arms at | +0.3 pt | +1.4 pt |
+| give-back that exits | 0.2 pt | 0.9 pt |
+| take-profit ceiling | 3.0 pt | 14 pt |
+
+⚠️ Both EAs now widen the stop to the broker's own minimum via `SafeStopPts()`. Before that
+fix every BTC order came back **`[invalid stops]`** and an entire session traded nothing
+while looking healthy. If fills stop appearing, read the MT5 log before assuming anything.
+
+---
+
 ## 6. STARTUP AND RECOVERY RUNBOOK
 
 Run this whenever a session begins, or after a crash, restart, or outage.
@@ -411,6 +447,10 @@ Get-CimInstance Win32_Process -Filter "Name='python.exe'" |
 | `.hcc` history file unreadable | MT5 locks it while the terminal runs | use `ExportRecentBars` EA, or the bridge |
 | Review chart shows **two** UHV/RET pairs | all nearby setups were annotated | annotate only the setup nearest the trade |
 | TradingView returns only ~300 M1 bars | that is the loaded window, especially for a closed market | for deep history use the `ExportRecentBars` EA (MT5 prices) |
+| Every order rejected, `[invalid stops]`, no fills all session | our scalp stop sits inside the broker's minimum stop distance | `SafeStopPts()` widens the SL to the broker's own minimum and logs when it does |
+| "The EA never ran" — but it did | MT5 logs are UTF-16; a naive grep finds nothing | strip nulls, or read the file as UTF-16 before concluding anything |
+| Claude judged a setup she never looked at | a concurrent scan overwrote `pending_setup.json` between LOOK and APPROVE | `scan()` never replaces an un-judged pending setup |
+| The same setup re-judged every minute | the 3-minute freshness window kept re-parking it | judged setups are remembered in `.judged_setups.json` |
 | `caseexec_fills.csv` empty although trades happened | the attached `.ex5` predates the fill-logging code | ask Zee to **F7 recompile** and re-attach |
 | Signals emitted but zero fills, no `BtcExec` lines in the MT5 log | the EA is not actually attached / Algo Trading off | check the Experts tab and the log first — do not guess |
 
@@ -454,6 +494,38 @@ a failed delivery.
 
 ---
 
+## 9b. TURTLE DESKTOP — the app
+
+`gui/claude_ea_gui.py`, installed by `gui/Output/TurtleDesktop-Setup.exe` (built from
+`gui/installer.iss` with Inno Setup). Start-menu entry, desktop icon, optional auto-start,
+proper uninstall. **Tests: `python gui/test_gui.py` — every button is invoked, not just
+inspected.**
+
+| Piece | What it is |
+|---|---|
+| **START EVERYTHING** | TradingView + CDP, the bridge, the dashboards |
+| **BEGIN AI EA TRADING** | opens this session, pre-prompted with the rulebook and the lesson count |
+| **⚡ POWER OUTAGE / 🌐 INTERNET-PC RESTART** | full or partial recovery, and clears any stale setup so nothing old is traded |
+| **LIVE CHART** | prefers Claude's own vision marks over the detector's geometry |
+| **✓ Correct / ✗ Not sure** | Zee answering that visual reading; scored over time |
+| **Banner** | "EXPERIENCING BREAKOUT TURBULENCE — HANG ON, HARVESTING PROFITS" while a position runs |
+| **TRADES table** | every judged setup joined to its real fill; falls back to the last session rather than showing nothing |
+| **Trade detail** | chart, Claude's reasoning, Zee's comment box, 10/10 - 0/10, **Derive Learnings**, **View Trade Lifecycle** |
+| **🔬 ANALYZE & RESEARCH** | ratio not win-rate, what the skips were worth, which numbers predicted anything, every loss |
+| **❓ WHY ARE WE MISSING SETUPS?** | the funnel, gate by gate, plus measured gains from relaxing each rule |
+| **🕐 FIND BEST TIME WINDOW** | movement by hour mapped to sessions; money only where an hour has 5+ trades |
+| **🧠 WHAT HAVE I LEARNED?** | the continuous learner's rule lifecycle |
+| **🔗 VIEW TRADE LIFECYCLE** | grade each step — trend, RET, UHV, breakout, sizing, entry, exit — to find which link breaks |
+| **Settings** | Claude connection (subscription **or** API key, both tested), the EA rulebook, which MT5 terminal, the TradingView bridge, lot caps, **Explore Labelled Setups**, **Philosophy**, **COPY SETUP TO USB** |
+
+### What Turtle Desktop knows that the terminal does not
+The EAs publish a heartbeat (`xau_live.json` / `btc_live.json`) with the broker's own bid,
+ask, spread, equity and any running position with live P&L — because Python cannot query
+MT5 on this ARM64 machine. They also export the terminal's own closed-trade history
+(`xau_history.csv`), which is the only place the 2026-07-31 gold trades ever existed.
+
+---
+
 ## 10. SELF-IMPROVEMENT LOOP
 
 1. Every verdict lands in `monitor/claude_judgments.jsonl` **with its reasoning**.
@@ -467,6 +539,34 @@ a failed delivery.
 5. **One change at a time**, then live evidence. Nine EA versions died of stacked "fixes".
 6. Keep a written note of what you changed and why — future sessions inherit only what is
    written down.
+
+### The machinery that now does this
+
+**Lessons (`gui/lessons.py`).** After a loss, Zee writes what went wrong and presses
+**Derive Learnings**. His sentence becomes an imperative rule and is appended to *this
+document* under `## LESSONS FROM REAL LOSSES`, which Claude reads before judging. His exact
+words are always kept beneath the rule — the paraphrase is never the authority. Append-only:
+a rule that cost money is never quietly deleted.
+
+**Continuous learning (`gui/autolearn.py`).** Every two minutes it reduces each closed trade
+to a *signature* (side, whether it agreed with the trend, strength and body buckets, session)
+and scores signatures against real fills. Lifecycle: `watching → proposed → active → retired`.
+A signature must lose **three or more times while winning rarely** before it is proposed, and
+once more before it activates. Active rules are written into their own machine-derived block,
+explicitly ranked **below** Zee's lessons, and are retired automatically when they stop
+earning their place.
+
+> **The limit, stated because it matters more than the feature:** twenty fills cannot teach
+> statistics. This engine deliberately learns only what a small sample can honestly show —
+> *a mistake already made, made again*. It will not invent a pattern to look busy. Anything
+> beyond that still comes from Zee's eye.
+
+**Per-step grading (`gui/lifecycle.py`).** Grading a whole trade says it lost; grading each
+step says **where**. Trend → RET → UHV → breakout → sizing → entry → exit, each marked
+*Correct* or *Needs improvement*, aggregated into "which link breaks most often".
+
+**Diagnostics that refuse to overclaim.** `research.py`, `funnel.py` and `windows.py` each
+attach a sample size to every finding and label anything thin as a hint rather than a rule.
 
 ---
 
@@ -490,16 +590,26 @@ a failed delivery.
 
 ## 12. CURRENT STATE (update this section as it changes)
 
-- **Account:** 12654170, BlueberryMarkets-Demo, ≈ **$309** (was $1,000 before 2026-07-31).
-- **Live judge:** `claude_judge.py`, trend gate disabled (`TREND_DOM = 0`) — **Claude decides**.
-- **Auto-matchers:** stopped, by design.
-- **Weekend:** BTC via `COINBASE:BTCUSD`, EA `BtcCaseExecutor` (88022), risk $3 per 1×.
+- **Account:** 12654170, BlueberryMarkets-Demo, ≈ **$309**. Six MT5 terminals exist on this
+  PC (Blueberry ×2, Exness ×2, Atmos, FTMO); Settings names them and flags the one holding
+  our EA.
+- **Gold lots are capped at 0.10** — 0.40 was rejected as `[not enough money]`.
+- **Live judge:** `claude_judge.py`, trend gate disabled (`TREND_DOM = 0`) — Claude decides.
+  Judged setups are remembered; a pending setup is never swapped mid-verdict.
+- **Auto-matchers stay stopped.** Claude's verdict replaces them.
 - **Weekday:** XAUUSD via `OANDA:XAUUSD`, EA `CaseSignalExecutor` (88020).
-  ⚠️ **Its lots must be reduced before the next gold session** — 0.40 lots cannot open on a
-  $309 account (`[not enough money]`). Use 0.05–0.10.
-- **Snapshot branch:** `final_profitable` — the last known-good code before the vision era.
+  **Weekend:** BTC via `COINBASE:BTCUSD`, EA `BtcCaseExecutor` (88022).
+- ⚠️ **Both EAs need an F7 recompile** to pick up: `SafeStopPts()`, the heartbeat, the
+  history export, and the close command. Until then Turtle Desktop's LIVE panel stays empty
+  and no real trade history can be shown.
+- **Snapshot branch:** `final_profitable`.
 
----
+### The 2026-08-02 BTC session, in full
+Twenty setups judged, four taken, sixteen skipped — and **zero fills**, because every order
+was rejected with `[invalid stops]`. The judging itself held up: the largest skip was a
+287-point rally where the engine wanted to SELL, which is precisely the mistake that cost
+$374 on 31 July. The session's real lesson was infrastructural, not strategic: *a system
+that looks healthy and trades nothing is worse than one that fails loudly.*
 
 ## 13. THE FIRST LIVE VISION TRADE (for the record)
 
@@ -545,7 +655,16 @@ picture was still up.
   pakadti trend?"* The game is played: **50/50**. On real fills Claude's eyes beat the rule
   engine by **+$132.20**. The trend gate is handed to vision, and this document is written.
 
-*Written the day the machine stopped guessing at "trend" and started looking at the chart.*
+- **2026-08-02/03** — the system becomes a product and starts correcting itself: Turtle
+  Desktop with a real installer, Claude's vision marks on the live chart with Zee grading
+  them, per-step lifecycle grading, three diagnostic engines that refuse to overclaim, the
+  Derive-Learnings loop writing rules into this document, and a continuous learner that
+  proposes and retires its own rules. The funnel answers the six-month-old question of why
+  the EA takes one or two setups where Zee counts a hundred: **90% die at the
+  first-body-cross rule, not at the filters.**
+
+*Written the day the machine stopped guessing at "trend" and started looking at the chart —
+and updated the day it started grading itself, step by step.*
 
 ---
 
