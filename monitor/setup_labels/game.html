@@ -1,0 +1,35 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trend Game — grade Claude</title><style>
+body{font-family:system-ui,Segoe UI,Arial;margin:0;background:#0b0f14;color:#e6edf3}
+header{position:sticky;top:0;background:#111826;padding:14px 18px;border-bottom:1px solid #223;z-index:5}
+h1{font-size:18px;margin:0}.sub{color:#b8c4d0;font-size:14px;margin-top:5px;line-height:1.6}
+.card{margin:18px;background:#111826;border:1px solid #223;border-radius:10px;overflow:hidden}
+.card img{width:100%;display:block;background:#fff}
+.title{padding:12px 14px 4px;font-size:16px;font-weight:700}
+.call{margin:0 14px 10px;padding:10px 12px;background:#0d1622;border:1px solid #24405e;border-radius:8px;font-size:15px;line-height:1.6}
+.call b{color:#7dd3fc}
+.row{display:flex;gap:8px;padding:8px 14px 14px;flex-wrap:wrap}
+button{border:0;border-radius:8px;padding:10px 18px;font-size:15px;cursor:pointer;color:#fff}
+.ok{background:#16a34a}.no{background:#dc2626}
+input.why{flex:1;min-width:160px;background:#0b0f14;color:#e6edf3;border:1px solid #334;border-radius:8px;padding:9px;font-size:14px}
+.done{color:#b8c4d0;font-size:14px;align-self:center}
+</style></head><body><header><h1>🎮 Trend Game — Claude ka call, tumhare marks</h1>
+<div class="sub">Claude ne chart DEKH kar call kiya (koi hardcoded rule nahi). Tum sirf marks do: ✅ 10/10 agar sahi pehchana, ❌ 0/10 agar ghalat — aur likho kya miss kiya. Jab Claude ki aankh tumse milne lage, tab AI judgment live jayega.</div></header>
+<div id="app"></div><script>
+const S=[{"id": "game_02", "png": "game_02.png?v=1785684290", "title": "Setup 2 \u00b7 engine wants BUY \u00b7 20:01", "call": "<b>SKIP</b> \u2014 trend: <b>shifting/ranging</b>. 19:34 pe 4050 ka top bana, phir tez gira 4042 tak \u2014 uptrend toot gaya. Bounce sirf ~4045 tak aaya = <b>LOWER HIGH</b>. Ab 4043-4045 me chop hai. Confirmed uptrend nahi, to BUY nahi.", "side": "BUY", "time": "20:01"}, {"id": "game_03", "png": "game_03.png?v=1785684290", "title": "Setup 3 \u00b7 engine wants SELL \u00b7 20:34", "call": "<b>SKIP</b> \u2014 trend: <b>strong UPTREND</b>. 20:13 se price 4042 \u2192 4053 gaya, saaf higher highs + higher lows. Yeh red candle sirf uptrend ka pullback hai. <b>Uptrend me sell nahi karte.</b>", "side": "SELL", "time": "20:34"}, {"id": "game_04", "png": "game_04.png?v=1785684290", "title": "Setup 4 \u00b7 engine wants SELL \u00b7 21:03", "call": "<b>SKIP</b> \u2014 trend: <b>UPTREND</b> (4046 \u2192 4054, HH+HL). Top pe thoda sideways hua phir pehla drop \u2014 par abhi tak koi lower-low/lower-high nahi bana. Yeh pullback hai, downtrend nahi. Sell = trend ke khilaf.", "side": "SELL", "time": "21:03"}, {"id": "game_05", "png": "game_05.png?v=1785684290", "title": "Setup 5 \u00b7 engine wants SELL \u00b7 22:01", "call": "<b>SKIP</b> \u2014 trend: <b>RANGING</b>. Price baar baar 4048 \u2194 4052 ke beech bounce kar raha (3 baar), koi structure nahi. <b>Choppy market me trade nahi.</b>", "side": "SELL", "time": "22:01"}, {"id": "game_06", "png": "game_06.png?v=1785684290", "title": "Setup 6 \u00b7 engine wants BUY \u00b7 22:43", "call": "<b>TAKE \u2705</b> \u2014 trend: <b>UPTREND</b>. 22:12 pe 4047.5 ka base bana, phir saaf higher lows (4049.4 \u2192 4050) aur higher highs (4050 \u2192 4051.5 \u2192 4055). Retracement ke baad UHV, aur breakout ek <b>strong green momentum candle</b> hai. Trend ke saath buy \u2014 yeh sahi setup hai.", "side": "BUY", "time": "22:43"}];let L={};
+async function ld(){try{L=await(await fetch('/api/labels')).json()}catch(e){}rn()}
+async function sv(id,mark){const w=(document.getElementById('w_'+id).value||'').trim();
+ const lab=mark+(w?': '+w:'');
+ await fetch('/api/labels',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idx:id,who:'zee',label:lab})});
+ document.getElementById('d_'+id).textContent=mark==='10/10'?'✅ 10/10':'❌ 0/10';}
+function rn(){const a=document.getElementById('app');a.innerHTML='';S.forEach(s=>{const p=(L[s.id]&&L[s.id].zee)||'';
+ const d=document.createElement('div');d.className='card';
+ d.innerHTML=`<div class="title">${s.title}</div>
+ <div class="call">🤖 <b>Claude:</b> ${s.call}</div>
+ <img src="${s.png}" loading="lazy">
+ <div class="row"><button class="ok" onclick="sv('${s.id}','10/10')">✅ 10/10 sahi</button>
+ <button class="no" onclick="sv('${s.id}','0/10')">❌ 0/10 ghalat</button>
+ <input class="why" id="w_${s.id}" placeholder="kya miss kiya?" value="${p.includes(':')?p.split(':').slice(1).join(':').trim().replace(/"/g,'&quot;'):''}">
+ <span class="done" id="d_${s.id}">${p?p.split(':')[0]:''}</span></div>`;
+ a.appendChild(d)})}
+ld();</script></body></html>
