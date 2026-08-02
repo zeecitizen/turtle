@@ -63,15 +63,44 @@ def snap():
     return OUT
 
 
+def render_own(market="BTC", bars_back=45):
+    """Render OUR OWN chart from the bridge data — always correctly framed.
+
+    The TradingView screenshot is whatever the user last scrolled/zoomed to; it can put the
+    candles in a corner and leave half the frame blank, which is unreadable. This one is
+    deterministic: the last N bars, price pane + volume pane, every time. This is the
+    picture Claude should judge from; the TV screenshot is a cross-check.
+    """
+    sys.path.insert(0, str(Path(__file__).parent))
+    import claude_judge as J
+    import build_entry_review_m5 as B
+    import build_trend_game as G
+    m = J.MARKETS[market]
+    bars = J.load_bars(m["data"])
+    if len(bars) < 20:
+        raise RuntimeError(f"only {len(bars)} bars")
+    i = len(bars) - 1
+    # frame it like a setup chart even when no setup exists, so the view never changes shape
+    s = {"i": i, "o": max(0, i - 6), "u": max(0, i - 3), "side": "BUY"}
+    out = Path(__file__).parent / "setup_labels" / "own.png"
+    G.draw(bars, s, out, m["tz"])
+    return out
+
+
 if __name__ == "__main__":
     market = (sys.argv[1] if len(sys.argv) > 1 else "BTC").upper()
     bare = len(sys.argv) > 2 and sys.argv[2] == "bare"
+    # our OWN render first — it is the reliable, always-framed picture Claude judges from
+    try:
+        o = render_own(market)
+        print(f"[chart] {o}  <- READ THIS (own render, always framed)")
+    except Exception as e:
+        print(f"[chart] own render failed: {e}")
     try:
         p = snap()
-        print(f"[snap] {p}  ({p.stat().st_size // 1024} KB)  -> Read this path")
+        print(f"[snap]  {p}  ({p.stat().st_size // 1024} KB)  (TradingView view, cross-check)")
     except Exception as e:
-        print(f"[snap] FAILED: {e}")
-        sys.exit(1)
+        print(f"[snap]  TV capture failed: {e}")
     if bare:
         sys.exit(0)
     # market state in the same call, so one command tells the whole story

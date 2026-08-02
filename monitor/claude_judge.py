@@ -34,13 +34,31 @@ COMMON = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files"
 PENDING = COMMON / "pending_setup.json"
 PENDING_PNG = Path(__file__).parent / "setup_labels" / "pending_setup.png"
 JOURNAL = Path(__file__).parent / "claude_judgments.jsonl"
+JUDGED  = Path(__file__).parent / ".judged_setups.json"   # keys already ruled on
 
 MARKETS = {
     "BTC": dict(data=COMMON / "btc_m1.csv", mark=COMMON / "btc_m1.symbol",
-                signal=COMMON / "btc_signal.json", tz=2, must="BTC", k=4.5),
+                signal=COMMON / "btc_signal.json", tz=2, must="BTC", k=4.5, max_lots=0.30),
     "XAU": dict(data=COMMON / "oanda_m1.csv", mark=COMMON / "oanda_m1.symbol",
-                signal=COMMON / "case_signal.json", tz=2, must="XAU", k=1.0),
+                signal=COMMON / "case_signal.json", tz=2, must="XAU", k=1.0, max_lots=0.10),
 }
+
+
+def _judged():
+    """Setups already ruled on. Without this the 3-minute freshness window re-parks the
+    same setup every scan and Claude re-judges it over and over."""
+    try:
+        return set(json.loads(JUDGED.read_text(encoding="ascii")))
+    except Exception:
+        return set()
+
+
+def _mark_judged(key):
+    s = _judged(); s.add(key)
+    try:
+        JUDGED.write_text(json.dumps(sorted(s)[-200:]), encoding="ascii")
+    except Exception:
+        pass
 
 
 def load_bars(path):
@@ -67,11 +85,24 @@ def scan(market="BTC", max_age_min=3):
     stale = (datetime.now(timezone.utc).replace(tzinfo=None) - bars[-1].t).total_seconds() / 60
     if stale > max_age_min:
         return {"error": f"data {stale:.0f} min stale"}
+    # A setup already parked and still inside its judging window is returned UNCHANGED.
+    # Replacing it would let a concurrent scan swap the chart out from under a verdict.
+    if PENDING.exists():
+        try:
+            cur = json.loads(PENDING.read_text(encoding="ascii"))
+            if int(time.time()) - cur.get("created", 0) <= 180:
+                return cur
+            PENDING.unlink(missing_ok=True)          # expired -> make room for a new one
+        except Exception:
+            PENDING.unlink(missing_ok=True)
     k = m["k"]
     B.UHV_BODY_MIN = 0.0; B.MIN_ORIGIN_BREAK = 0.0; B.ER_MIN = 0.0
     B.TREND_MIN_HUMP = 0.5 * k; B.TREND_DOM = 0.0      # NO trend rule — Claude judges that
     last_closed = bars[-2].t
-    fresh = [s for s in B.detect_full(bars) if s["open_t"] >= last_closed - timedelta(minutes=max_age_min)]
+    done = _judged()
+    fresh = [s for s in B.detect_full(bars)
+             if s["open_t"] >= last_closed - timedelta(minutes=max_age_min)
+             and f'{s["open_t"]}_{s["side"]}' not in done]
     if not fresh:
         return None
     s = fresh[-1]
@@ -141,13 +172,16 @@ def approve(verdict, mult=1.0, reason="", max_age_sec=180):
         rec = {**p, "verdict": "EXPIRED", "age_sec": age, "reason": "judged too late"}
     elif verdict.upper() == "TAKE":
         m = MARKETS[p["market"]]
+        lots = min(round(0.10 * mult, 2), m.get("max_lots", 0.10))
         body = ('{"id":%d,"side":"%s","entry":%.2f,"mult":%.2f,"lots":%.2f,"ts":%d,"time":"%s"}'
                 % (int(time.time()) % 100000, p["side"], p["entry"], mult,
-                   round(0.10 * mult, 2), int(time.time()), p["time"]))
+                   lots, int(time.time()), p["time"]))
         m["signal"].write_text(body, encoding="ascii")
-        rec = {**p, "verdict": "TAKE", "mult": mult, "reason": reason, "age_sec": age}
+        rec = {**p, "verdict": "TAKE", "mult": mult, "lots": lots, "reason": reason, "age_sec": age}
     else:
         rec = {**p, "verdict": "SKIP", "reason": reason, "age_sec": age}
+    _mark_judged(f'{p["time"]}:00_{p["side"]}')
+    _mark_judged(f'{p["time"]}_{p["side"]}')
     rec["judged_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with JOURNAL.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(rec) + "\n")

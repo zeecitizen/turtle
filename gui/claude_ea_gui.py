@@ -82,19 +82,38 @@ class App(tk.Tk):
         tk.Label(head, text="Market ", bg=PANEL, fg=MUTED).pack(side="right")
 
         bar = tk.Frame(self, bg=BG, padx=12, pady=8); bar.pack(fill="x")
-        self._btn(bar, "▶  START EVERYTHING", self.start_all, GREEN, 20)
-        self._btn(bar, "🧠  LAUNCH CLAUDE SESSION", self.launch_claude, BLUE, 24)
-        self._btn(bar, "📸  Snap now", self.snap_now, "#334155", 12)
-        self._btn(bar, "⏹  Stop services", self.stop_all, "#7f1d1d", 14)
+        self._btn(bar, "▶  START EVERYTHING", self.start_all, GREEN, 19)
+        self._btn(bar, "🧠  LAUNCH CLAUDE SESSION", self.launch_claude, BLUE, 23)
+        self._btn(bar, "📸  Snap", self.snap_now, "#334155", 8)
+        self._btn(bar, "⏹  Stop", self.stop_all, "#7f1d1d", 8)
 
-        body = tk.Frame(self, bg=BG); body.pack(fill="both", expand=True, padx=12, pady=(0, 10))
+        # ── recovery row (Zee: resume from exactly where it broke) ──
+        rec = tk.Frame(self, bg=BG, padx=12, pady=0); rec.pack(fill="x")
+        tk.Label(rec, text="RECOVER:", bg=BG, fg=MUTED,
+                 font=("Segoe UI", 9, "bold")).pack(side="left", padx=(2, 6))
+        self._btn(rec, "⚡  POWER OUTAGE", self.recover_power, AMBER, 17)
+        self._btn(rec, "🌐  INTERNET / PC RESTART", self.recover_net, "#a78bfa", 24)
+        self.recmsg = tk.Label(rec, text="", bg=BG, fg=MUTED, font=("Consolas", 9))
+        self.recmsg.pack(side="left", padx=8)
+
+        body = tk.Frame(self, bg=BG); body.pack(fill="both", expand=True, padx=12, pady=(6, 10))
         left = tk.Frame(body, bg=BG); left.pack(side="left", fill="both", expand=True)
         right = tk.Frame(body, bg=BG, width=380); right.pack(side="right", fill="y")
 
+        # ── the chart Claude is looking at ──
+        cf = tk.Frame(left, bg=PANEL, padx=8, pady=6); cf.pack(fill="x", pady=4)
+        self.chart_title = tk.Label(cf, text="LIVE CHART", bg=PANEL, fg=MUTED,
+                                    font=("Segoe UI", 9, "bold"))
+        self.chart_title.pack(anchor="w")
+        self.chart_img = tk.Label(cf, bg="#0b0f14", text="(no chart yet — press Snap)",
+                                  fg=MUTED, font=("Segoe UI", 9))
+        self.chart_img.pack(fill="both", pady=(4, 0))
+        self._imgref = None
+
         self.status = self._card(left, "SYSTEM STATUS", 7)
-        self.armed = self._card(left, "ARMED — setup forming", 6)
-        self.journal = self._card(left, "CLAUDE'S RECENT VERDICTS", 8)
-        self.fills = self._card(right, "REAL BROKER FILLS", 12, width=44)
+        self.armed = self._card(left, "ARMED — setup forming", 5)
+        self.journal = self._card(right, "CLAUDE'S RECENT VERDICTS", 9, width=44)
+        self.fills = self._card(right, "REAL BROKER FILLS", 10, width=44)
 
         act = tk.Frame(right, bg=PANEL, padx=10, pady=10); act.pack(fill="x", pady=(8, 0))
         tk.Label(act, text="MANUAL OVERRIDE (no Claude session)", bg=PANEL, fg=MUTED,
@@ -161,6 +180,79 @@ class App(tk.Tk):
         messagebox.showerror("Claude EA",
                              "Could not launch. Install the Claude Code CLI ('claude') or VS Code ('code').")
 
+    # ── recovery: resume from exactly where it broke ──────────────────────
+    def _rec(self, msg):
+        self.recmsg.configure(text=msg)
+
+    def recover_power(self):
+        """Power outage: everything died. Cold-start the whole stack in order."""
+        if not messagebox.askyesno("Power outage recovery",
+                                   "Full cold start:\n\n"
+                                   "1. kill any stale TradingView (no debug port)\n"
+                                   "2. relaunch TradingView with CDP :9222\n"
+                                   "3. restart the data bridge\n"
+                                   "4. restart dashboards + tunnel guard\n"
+                                   "5. clear any stale pending setup\n\nProceed?"):
+            return
+        threading.Thread(target=self._recover, args=(True,), daemon=True).start()
+
+    def recover_net(self):
+        """Internet or PC restart: re-establish only what the network broke."""
+        threading.Thread(target=self._recover, args=(False,), daemon=True).start()
+
+    def _recover(self, cold):
+        mk = self.market.get()
+        data = COMMON / ("btc_m1.csv" if mk == "BTC" else "oanda_m1.csv")
+        steps = []
+        # 1. a stale signal must never be traded after downtime
+        pend = COMMON / "pending_setup.json"
+        if pend.exists():
+            try: pend.unlink(); steps.append("cleared stale pending setup")
+            except Exception: pass
+        # 2. TradingView + CDP
+        if cold or not http_ok("http://localhost:9222/json/version"):
+            self._rec("restarting TradingView…")
+            if cold:
+                subprocess.run(["powershell", "-NoProfile", "-Command",
+                                "Get-Process -Name 'TradingView*' -ErrorAction SilentlyContinue | Stop-Process -Force"],
+                               creationflags=NO_WIN)
+                time.sleep(3)
+            ps1 = REPO / "bootstrap" / "launch_tv.ps1"
+            if ps1.exists():
+                run_bg(["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(ps1)])
+            for _ in range(24):                       # wait up to ~2 min for CDP
+                time.sleep(5)
+                if http_ok("http://localhost:9222/json/version"): break
+            steps.append("CDP " + ("up" if http_ok("http://localhost:9222/json/version") else "STILL DOWN"))
+        else:
+            steps.append("CDP already up")
+        # 3. cloudflared — the tunnel goes stale on any network change (error 1033)
+        self._rec("restarting tunnel…")
+        subprocess.run(["taskkill", "/f", "/im", "cloudflared.exe"],
+                       capture_output=True, creationflags=NO_WIN)
+        time.sleep(2)
+        cf = r"C:/Program Files (x86)/cloudflared/cloudflared"
+        run_bg([cf, "tunnel", "--config", r"C:/Users/zeesh/.cloudflared/config.yml", "run"])
+        steps.append("cloudflared restarted")
+        # 4. bridge + dashboards
+        self._rec("restarting services…")
+        if not proc_running("oanda_bridge.py"):
+            run_bg([PY, str(MON / "oanda_bridge.py"), "--out", str(data), "--loop", "20"])
+            steps.append("bridge restarted")
+        if not proc_running("home_uptime_guard.py"):
+            run_bg([PYW, str(MON / "home_uptime_guard.py")]); steps.append("guard restarted")
+        if not proc_running("serve_setup_labels.py"):
+            run_bg([PYW, str(MON / "serve_setup_labels.py")]); steps.append("setups site restarted")
+        time.sleep(12)
+        fresh = data.exists() and (time.time() - data.stat().st_mtime) < 120
+        steps.append("data " + ("FRESH again" if fresh else "still stale — check the TV chart symbol"))
+        self._rec("recovery done")
+        messagebox.showinfo("Recovery complete", "\n".join("• " + s for s in steps) +
+                            "\n\nStill YOUR job:\n"
+                            f"• TradingView chart on {'COINBASE:BTCUSD' if mk=='BTC' else 'OANDA:XAUUSD'}\n"
+                            "• MT5 open, EA attached, Algo Trading ON (demo)\n"
+                            "• press LAUNCH CLAUDE SESSION to resume judging")
+
     def snap_now(self):
         threading.Thread(target=lambda: subprocess.run(
             [PY, str(MON / "snap.py"), self.market.get()], cwd=str(REPO),
@@ -187,7 +279,48 @@ class App(tk.Tk):
     # ── refresh ───────────────────────────────────────────────────────────
     def refresh_loop(self):
         threading.Thread(target=self._collect, daemon=True).start()
+        self._show_chart()
+        # keep live.png fresh on its own cadence so the picture is never far behind
+        if time.time() - getattr(self, "_last_snap", 0) > 45:
+            self._last_snap = time.time(); self.snap_now()
         self.after(5000, self.refresh_loop)
+
+    def _show_chart(self):
+        """Show the setup Claude is judging (pending_setup.png) or the live chart."""
+        pend_png = MON / "setup_labels" / "pending_setup.png"
+        live_png = MON / "setup_labels" / "live.png"
+        pend_json = COMMON / "pending_setup.json"
+        use, title = None, "LIVE CHART"
+        if pend_json.exists() and pend_png.exists():
+            use = pend_png
+            try:
+                p = json.loads(pend_json.read_text(encoding="ascii"))
+                title = f"⚠  SETUP AWAITING VERDICT — {p['side']} @ {p['entry']}"
+            except Exception:
+                title = "⚠  SETUP AWAITING VERDICT"
+        elif live_png.exists():
+            use = live_png
+            age = int(time.time() - live_png.stat().st_mtime)
+            title = f"LIVE CHART   ({age}s ago)"
+        if not use:
+            return
+        try:
+            sig = (use, use.stat().st_mtime)
+            if sig == getattr(self, "_imgsig", None):
+                self.chart_title.configure(text=title); return
+            self._imgsig = sig
+            img = tk.PhotoImage(file=str(use))
+            # Tk has no resize; subsample by an integer factor to fit the panel
+            target = max(self.chart_img.winfo_width(), 700)
+            factor = max(1, round(img.width() / target))
+            if factor > 1:
+                img = img.subsample(factor, factor)
+            self._imgref = img                      # keep a reference or Tk drops it
+            self.chart_img.configure(image=img, text="")
+            self.chart_title.configure(
+                text=title, fg=AMBER if "AWAITING" in title else MUTED)
+        except Exception as e:
+            self.chart_img.configure(image="", text=f"(chart unavailable: {e})")
 
     def _collect(self):
         mk = self.market.get()
