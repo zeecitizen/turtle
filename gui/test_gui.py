@@ -17,6 +17,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 RESULTS = []
 
 
+def _refuses(LS):
+    try:
+        LS.add({"side": "SELL"}, "   ")
+    except ValueError:
+        return True
+    raise AssertionError("an empty comment should be refused")
+
+
 def check(name, fn):
     try:
         fn()
@@ -162,6 +170,21 @@ def main():
     check("philosophy: core quotes present", lambda: len(PH.CORE) >= 12)
     check("philosophy: realign() re-derives from the sources",
           lambda: len(PH.realign()[0]) >= len(PH.CORE))
+
+    import lessons as LS
+    check("lessons: rulebook is found", lambda: LS.rulebook_path().exists())
+    check("lessons: an empty comment is refused",
+          lambda: (LS.add({"side": "SELL"}, "   "), False)[1] if False else
+                  _refuses(LS))
+    check("lessons: count() reads the store", lambda: isinstance(LS.count(), int))
+    check("lessons: prompt block lists the rules",
+          lambda: (LS.as_prompt_block() == "") or ("binding" in LS.as_prompt_block()))
+    check("lessons: every stored lesson has a rule and Zee's words",
+          lambda: all(e.get("rule") and e.get("zee_comment") for e in LS.load()))
+    check("lessons: the rulebook carries the section",
+          lambda: (LS.count() == 0) or
+                  (LS.SECTION in LS.rulebook_path().read_text(encoding="utf-8",
+                                                              errors="replace")))
 
     dlg = {}
 

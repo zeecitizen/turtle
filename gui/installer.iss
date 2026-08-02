@@ -1,4 +1,4 @@
-; TurtleDesktop-Setup.exe - a real Windows installer you can hand to someone.
+﻿; TurtleDesktop-Setup.exe - a real Windows installer you can hand to someone.
 ;
 ; PyInstaller has no ARM64 wheel, so rather than freezing an .exe this ships the actual
 ; application (a small Python program plus the engine it drives) and wires it into Windows
@@ -41,6 +41,7 @@ Name: "autostart";  Description: "Start {#AppName} automatically when I log in";
 Source: "claude_ea_gui.py";   DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "trade_book.py";      DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "settings.py";        DestDir: "{app}\gui"; Flags: ignoreversion
+Source: "lessons.py";      DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "philosophy.py";     DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "labels_explorer.py";DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "install.ps1";        DestDir: "{app}\gui"; Flags: ignoreversion
@@ -66,3 +67,4 @@ Name: "{userstartup}\{#AppName}";     Filename: "{app}\{#AppExeName}"; WorkingDi
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent shellexec
+

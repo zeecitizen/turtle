@@ -546,3 +546,20 @@ picture was still up.
   engine by **+$132.20**. The trend gate is handed to vision, and this document is written.
 
 *Written the day the machine stopped guessing at "trend" and started looking at the chart.*
+
+---
+
+## LESSONS FROM REAL LOSSES
+
+Written by Zee after a real losing trade, appended automatically by Turtle Desktop. These
+are binding: read them before judging, and let them override anything above that disagrees.
+Append-only — a rule that cost money is never quietly deleted.
+
+### L20260802200812  ·  2026-07-31 19:16  ·  SELL 0.4 @ 4043.43  →  $-120.40
+
+**RULE — On a SELL that lost $120.40: Price ne 19:08 pe HIGHER LOW banaya tha, matlab trend up shift ho raha tha.**
+
+*Zee:* "Price ne 19:08 pe HIGHER LOW banaya tha, matlab trend up shift ho raha tha. Uptrend me sell nahi karni chahiye thi."
+
+*What Claude thought at the time:* engine said downtrend
+
