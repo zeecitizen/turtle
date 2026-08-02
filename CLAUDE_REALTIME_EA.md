@@ -349,11 +349,36 @@ the downtrend was a single swing old.
 
 ## 5b. THE EXIT — and what Claude may order
 
-The EA owns the exit and should keep it. Its trail arms at a small favourable move and
-leaves on a small give-back, in **milliseconds**. No judgement call — human or model — beats
-that on a 0.2 pt give-back, and pretending otherwise costs money.
+**Corrected 2026-08-03.** I first wrote that the EA's trail could not be improved on because
+it acts in milliseconds while Claude takes seconds. Zee pushed back, and he was right — for
+two reasons, both measurable.
 
-What Claude *can* do is order an exit when the **picture changes**:
+*Speed.* A verdict today took between **9 and 91 seconds** (measured, not estimated), and our
+trades last **2–5 minutes**. A position therefore gets looked at many times before it closes.
+Managing an exit needs a decision every few seconds, not every millisecond.
+
+*And the more important one:* the trail is not fast, it is **blind**. On 2026-07-31 it
+captured only **32%** of what the winners offered — $145.61 of $460.89 available. Trade #14
+reached **+$63.80** and was closed for **+$12.00**. A fixed 0.2 pt give-back cannot say *"this
+one is still running, hold"*. Eyes can.
+
+So the exit is now shared:
+
+| | who decides | why |
+|---|---|---|
+| **the hard stop** | the EA, always | insurance, never an opinion — it must not depend on anything being awake |
+| **when to take profit** | **Claude's eyes** | the give-back rule is what caps winners at a third of their range |
+| **"the picture changed, get out"** | Claude's eyes | judgement, which is what Zee always said belongs to the master |
+
+Watch an open position:
+
+```bash
+$PY monitor/claude_judge.py watch XAU     # renders position.png with entry, run and P&L
+# LOOK at monitor/setup_labels/position.png, then either hold, or:
+$PY monitor/claude_judge.py close XAU "it stalled at the prior high and is rolling over"
+```
+
+Order an exit when the picture changes:
 
 ```bash
 $PY monitor/claude_judge.py close XAU "the trend just broke against us"
