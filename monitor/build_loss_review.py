@@ -23,7 +23,7 @@ from case_engine import extract_features
 from setup_strength import strength, lot_for
 
 OUT = Path(__file__).parent / "setup_labels"
-CF = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_m1.csv")
+CF = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_xauusd_m1_backup.csv")
 MT5_UTC_OFFSET = 3          # Blueberry server = UTC+3
 BUST = int(time.time())
 G, R, GOLD, PUR, BLUE = "#16a34a", "#dc2626", "#b8860b", "#9333ea", "#2563eb"
@@ -33,6 +33,7 @@ TRADES = [
     dict(n=3,  t="18:49:44", side="SELL", lots=0.4,  entry=4040.19, exit=4043.34, usd=-126.00, skull=True),
     dict(n=6,  t="19:16:25", side="SELL", lots=0.4,  entry=4043.43, exit=4046.44, usd=-120.40, skull=True),
     dict(n=18, t="22:39:57", side="SELL", lots=0.4,  entry=4049.93, exit=4053.13, usd=-128.00, skull=True),
+    dict(n=0,  t="18:26:23", side="BUY",  lots=0.1,  entry=4043.77, exit=4040.62, usd=-31.50,  skull=False),
     dict(n=10, t="20:02:07", side="BUY",  lots=0.1,  entry=4045.61, exit=4042.67, usd=-29.40,  skull=False),
     dict(n=2,  t="18:40:44", side="BUY",  lots=0.01, entry=4043.37, exit=4040.48, usd=-2.89,   skull=False),
 ]
@@ -144,7 +145,15 @@ def main():
             continue
         png = OUT / f"loss_{tr['n']:02d}.png"
         labels = render(bars, i, tr, png)
-        notes = [f"Entry {tr['entry']:.2f} → exit {tr['exit']:.2f} = {abs(tr['exit']-tr['entry']):.2f}pt against us (3pt stop hit)",
+        seg = bars[i:min(i + 40, len(bars))]
+        if tr["side"] == "SELL":
+            mfe = tr["entry"] - min(b.l for b in seg)
+        else:
+            mfe = max(b.h for b in seg) - tr["entry"]
+        mfe_usd = mfe * tr["lots"] * 100
+        notes = [(f"PEHLE +${mfe_usd:.2f} PROFIT me tha, phir loss" if mfe_usd > 0.5
+                  else "kabhi profit me aaya hi nahi — shuru se khilaf"),
+                 f"Entry {tr['entry']:.2f} → exit {tr['exit']:.2f} = {abs(tr['exit']-tr['entry']):.2f}pt against us (3pt stop hit)",
                  f"Lot {tr['lots']} → ${tr['usd']:+.2f}. Ek aisa loss ~{int(abs(tr['usd'])/11)} choti jeet kha jaata hai."]
         if labels:
             s = labels[0]
