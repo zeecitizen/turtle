@@ -1109,6 +1109,24 @@ function fmtDur(min) {
   const h = Math.floor(min / 60), m = min % 60;
   return (h ? h + 'h ' : '') + m + 'm';
 }
+// FX / metals trade WEEK: opens Sun 21:00 UTC, closes Fri 21:00 UTC. Session hours alone
+// wrongly showed "OPEN" on weekends while MT5 rejected orders with "Market closed".
+function fxWeekOpen(now) {
+  const d = now.getUTCDay();                       // 0=Sun … 6=Sat
+  const m = now.getUTCHours() * 60 + now.getUTCMinutes();
+  if (d === 6) return false;                       // Saturday — shut
+  if (d === 0) return m >= 21 * 60;                // Sunday — opens 21:00 UTC
+  if (d === 5) return m < 21 * 60;                 // Friday — closes 21:00 UTC
+  return true;                                     // Mon–Thu
+}
+function fxOpensInMin(now) {                       // minutes until Sunday 21:00 UTC
+  const d = now.getUTCDay();
+  const m = now.getUTCHours() * 60 + now.getUTCMinutes();
+  const daysToSun = (7 - d) % 7;
+  let mins = daysToSun * 1440 + 21 * 60 - m;
+  if (mins <= 0) mins += 7 * 1440;
+  return mins;
+}
 function hand(len, deg) {
   const r = (deg - 90) * Math.PI / 180;
   return [50 + len * Math.cos(r), 50 + len * Math.sin(r)];
@@ -1125,10 +1143,14 @@ function renderClocks() {
     const [mx, my] = hand(32, lm * 6 + ls * 0.1);
     const [sx, sy] = hand(36, ls * 6);
     const oMin = s.o * 60, cMin = s.c * 60;
-    const open = oMin < cMin ? (uMin >= oMin && uMin < cMin) : (uMin >= oMin || uMin < cMin);
-    const sess = open
-      ? `<div class="sess on">● OPEN · ${fmtDur((cMin - uMin + 1440) % 1440)} left</div>`
-      : `<div class="sess off">opens in ${fmtDur((oMin - uMin + 1440) % 1440)}</div>`;
+    const inHours = oMin < cMin ? (uMin >= oMin && uMin < cMin) : (uMin >= oMin || uMin < cMin);
+    const weekOpen = fxWeekOpen(now);
+    const open = inHours && weekOpen;             // session hours AND the FX week
+    const sess = !weekOpen
+      ? `<div class="sess off">WEEKEND · opens in ${fmtDur(fxOpensInMin(now))}</div>`
+      : open
+        ? `<div class="sess on">● OPEN · ${fmtDur((cMin - uMin + 1440) % 1440)} left</div>`
+        : `<div class="sess off">opens in ${fmtDur((oMin - uMin + 1440) % 1440)}</div>`;
     const ampm = lh >= 12 ? 'PM' : 'AM', h12 = ((lh + 11) % 12) + 1;
     return `<div class="clock ${open ? 'open' : ''}"><svg viewBox="0 0 100 100">
       <circle class="face" cx="50" cy="50" r="46"/>
