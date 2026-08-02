@@ -119,8 +119,7 @@ def scan(market="XAU", max_age_min=3):
                    "judged_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
             try:
                 with JOURNAL.open("a", encoding="utf-8") as fh:
-                    fh.write(json.dumps(rec) + "
-")
+                    fh.write(json.dumps(rec) + "\n")
             except Exception:
                 pass
             PENDING.unlink(missing_ok=True)          # expired -> make room for a new one
