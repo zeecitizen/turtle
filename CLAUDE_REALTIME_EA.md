@@ -26,6 +26,10 @@ the ground truth.**
 If you are resuming cold: read §1 (why), §2 (the rules you judge by), then run §6
 (startup check), then loop §5. Everything else is reference.
 
+**The backlog lives in [VISION_OF_CLAUDE_EA.md](VISION_OF_CLAUDE_EA.md)** — everything Zee
+has asked for, in his own words, with what exists and what is still owed. On a quiet cycle
+(market closed, nothing forming), open it and build the top unbuilt item.
+
 **There is now a desktop app.** `Turtle Desktop` (Start menu) is the front door: it starts
 the services, shows the live chart with Claude's own vision marks, lists every trade, and
 launches this session with **BEGIN AI EA TRADING**. Everything below still works from a
