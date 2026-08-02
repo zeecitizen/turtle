@@ -18,7 +18,7 @@ FIRST START
   Set the TradingView chart to OANDA:XAUUSD (or COINBASE:BTCUSD at the weekend).
   In MT5, attach the EA from the mt5\ folder to that chart, press F7 to compile,
   and switch Algo Trading ON.  Keep it on a DEMO account.
-  Press  LAUNCH CLAUDE SESSION  - opens Claude Code on this folder, pre-prompted to read
+  Press  BEGIN AI EA TRADING  - opens Claude Code on this folder, pre-prompted to read
                                   CLAUDE_REALTIME_EA.md and resume live judging.
 
 WHAT THE PANEL SHOWS

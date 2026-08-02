@@ -17,6 +17,20 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 RESULTS = []
 
 
+def _fallback(TB):
+    import datetime
+    real_j, real_t = TB.judged_days, TB.trading_days
+    try:
+        TB.judged_days = lambda m="XAU": ["2026-07-31"]
+        TB.trading_days = lambda m="XAU": []
+        day, cap = TB.day_caption("XAU")
+        assert day == "2026-07-31", day
+        assert "last session" in cap, cap
+    finally:
+        TB.judged_days, TB.trading_days = real_j, real_t
+    return True
+
+
 def _refuses(LS):
     try:
         LS.add({"side": "SELL"}, "   ")
@@ -170,6 +184,22 @@ def main():
     check("philosophy: core quotes present", lambda: len(PH.CORE) >= 12)
     check("philosophy: realign() re-derives from the sources",
           lambda: len(PH.realign()[0]) >= len(PH.CORE))
+
+    import trade_book as TB2
+    check("panels: market_open() is a bool", lambda: isinstance(TB2.market_open(), bool))
+    check("panels: day_caption returns a day and a phrase",
+          lambda: len(TB2.day_caption("XAU")) == 2)
+    check("panels: an empty today falls back to the last session",
+          lambda: _fallback(TB2))
+
+    sys.path.insert(0, str(Path(G.MON)))
+    import vision_mark as VM
+    check("vision: latest() tolerates no reading", lambda: VM.latest() is None or True)
+    check("vision: score() tolerates no feedback", lambda: VM.score() is None or
+          set(VM.score()) == {"agreed", "total", "pct"})
+    check("vision: feedback is appended", lambda: VM.feedback("correct", "test")["verdict"] == "correct")
+    check("vision: a reading renders labels",
+          lambda: Path(VM.mark("BTC", trend="down", side="SELL", note="test")["png"]).exists())
 
     import lessons as LS
     check("lessons: rulebook is found", lambda: LS.rulebook_path().exists())

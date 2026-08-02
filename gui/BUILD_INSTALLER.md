@@ -13,7 +13,7 @@ answer is no, and this makes recovery a two-minute job on a new machine.
 | Button / panel | What it does |
 |---|---|
 | **▶ START EVERYTHING** | launches TradingView+CDP, the data bridge, the dashboards |
-| **🧠 LAUNCH CLAUDE SESSION** | opens a Claude Code session on this repo, pre-prompted to read `CLAUDE_REALTIME_EA.md` and resume live judging — **this is the piece that makes the GUI complete: it does not replace Claude, it starts her** |
+| **🧠 BEGIN AI EA TRADING** | opens a Claude Code session on this repo, pre-prompted to read `CLAUDE_REALTIME_EA.md` and resume live judging — **this is the piece that makes the GUI complete: it does not replace Claude, it starts her** |
 | **📸 Snap now** | captures the live chart to `monitor/setup_labels/live.png` |
 | **SYSTEM STATUS** | CDP, data symbol + freshness, bridge, both dashboards, pending setup |
 | **ARMED** | a retracement+UHV exists, breakout not fired yet, distance to the level |
@@ -56,7 +56,7 @@ entry and a desktop shortcut.
    `mt5\` (F7 to compile), Algo Trading ON.
 4. Install **TradingView Desktop**, log in, chart on `COINBASE:BTCUSD` or `OANDA:XAUUSD`.
 5. Run `ClaudeEA-Setup.exe` (or `pythonw gui\claude_ea_gui.py`).
-6. Press **START EVERYTHING**, then **LAUNCH CLAUDE SESSION**.
+6. Press **START EVERYTHING**, then **BEGIN AI EA TRADING**.
 7. Claude reads `CLAUDE_REALTIME_EA.md` and resumes exactly where things left off.
 
 **What is NOT in the repo and must be restored by hand** (keep these in a password manager):

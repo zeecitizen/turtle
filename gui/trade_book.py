@@ -132,6 +132,58 @@ def history(market="XAU"):
     return out
 
 
+def market_open():
+    """FX/metals week: Sun 21:00 UTC -> Fri 21:00 UTC."""
+    n = datetime.now(timezone.utc)
+    d = (n.weekday() + 1) % 7
+    m = n.hour * 60 + n.minute
+    if d == 6:
+        return False
+    if d == 0:
+        return m >= 21 * 60
+    if d == 5:
+        return m < 21 * 60
+    return True
+
+
+def judged_days(market="XAU"):
+    """Days Claude actually judged something, newest first."""
+    days = []
+    for j in _judgments():
+        if j.get("market") != market:
+            continue
+        d = str(j.get("judged_utc", ""))[:10]
+        if d and d not in days:
+            days.append(d)
+    return sorted(days, reverse=True)
+
+
+def last_session(market="XAU"):
+    """The day the panels should show: today if it has anything, else the most recent day
+    that does. Zee: an empty panel should say 'Friday's verdicts', not 'nothing yet'."""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    have = set(judged_days(market)) | set(trading_days(market))
+    if today in have:
+        return today, "today", False
+    prev = sorted(have, reverse=True)
+    if prev:
+        d = prev[0]
+        try:
+            name = datetime.strptime(d, "%Y-%m-%d").strftime("%a %d %b")
+        except Exception:
+            name = d
+        return d, name, True
+    return today, "today", False
+
+
+def day_caption(market="XAU"):
+    """One phrase for a panel header."""
+    day, name, is_old = last_session(market)
+    if not is_old:
+        return day, ("waiting for the first verdict" if market_open() else "today")
+    return day, f"last session \u2014 {name}"
+
+
 def trading_days(market="XAU"):
     """Days that actually have trades, newest first — so the panel can default to the last
     session rather than an empty 'today' over a weekend."""
