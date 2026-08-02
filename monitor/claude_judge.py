@@ -87,6 +87,22 @@ def scan(market="XAU", max_age_min=3):
     stale = (datetime.now(timezone.utc).replace(tzinfo=None) - bars[-1].t).total_seconds() / 60
     if stale > max_age_min:
         return {"error": f"data {stale:.0f} min stale"}
+    # A weekend or holiday leaves a hole in the data: the last Friday bars sit directly
+    # beside the first Sunday bar, tens of points away. The detector reads that gap as a
+    # breakout off a "UHV" that is really just Friday's closing candle. Refuse to judge
+    # until enough genuinely new bars exist to form a shape.
+    gap = None
+    for i in range(len(bars) - 1, max(len(bars) - 60, 0), -1):
+        if (bars[i].t - bars[i - 1].t).total_seconds() > 30 * 60:
+            gap = i
+            break
+    if gap is not None:
+        fresh_bars = len(bars) - gap
+        if fresh_bars < 30:
+            return {"error": f"only {fresh_bars} bars since the session gap "
+                             f"({bars[gap - 1].t:%a %H:%M} -> {bars[gap].t:%a %H:%M} UTC) "
+                             f"- need 30 before any setup here is real"}
+
     # A setup already parked and still inside its judging window is returned UNCHANGED.
     # Replacing it would let a concurrent scan swap the chart out from under a verdict.
     if PENDING.exists():
