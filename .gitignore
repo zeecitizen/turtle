@@ -115,3 +115,10 @@ dashboard/claude_trader/package-lock.json
 monitor/.profit_pulse_state.json
 monitor/profit_pulse_hawk.log
 monitor/.tasks_state.json
+
+# Turtle Desktop build artefacts (rebuild with gui/installer.iss)
+gui/Output/
+gui/dist/
+gui/build/
+gui/*.spec
+gui/settings.json

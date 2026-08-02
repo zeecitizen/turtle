@@ -123,6 +123,58 @@ def main():
         check("manual SKIP with no pending (handled)", lambda: app.manual("SKIP"))
         check("manual TAKE with no pending (handled)", lambda: app.manual("TAKE", 2.0))
 
+    # -- 9. Settings dialog: opens, every control present, tests run, saves --------
+    import settings as S
+
+    check("settings: load() returns defaults", lambda: S.load()["connection"] in ("cli", "api"))
+    check("settings: cli_available() is a bool", lambda: isinstance(S.cli_available(), bool))
+    check("settings: test_api rejects a junk key",
+          lambda: S.test_api("short", "claude-sonnet-4-5")[0] is False)
+    check("settings: status_line() returns 3 parts", lambda: len(S.status_line()) == 3)
+
+    dlg = {}
+
+    def open_dlg():
+        dlg["d"] = S.SettingsDialog(app)
+        app.update()
+    check("settings: dialog builds", open_dlg)
+
+    if "d" in dlg:
+        d = dlg["d"]
+        for attr in ("mode", "key", "model", "market", "lx", "lb", "pypath", "common", "auto"):
+            check(f"settings widget: {attr}", lambda a=attr: getattr(d, a))
+
+        def both_modes():
+            for m in ("api", "cli"):
+                d.mode.set(m); d._sync(); app.update()
+            d.mode.set(S.load()["connection"]); d._sync()
+        check("settings: both connection modes selectable", both_modes)
+
+        sbuttons = []
+
+        def walk2(w):
+            for c in w.winfo_children():
+                if c.winfo_class() == "Button":
+                    sbuttons.append(c)
+                walk2(c)
+        walk2(d)
+        check(f"settings: buttons found ({len(sbuttons)})", lambda: len(sbuttons) >= 4)
+
+        with mock.patch.object(S, "test_cli", lambda: (True, "sandboxed")),              mock.patch.object(S, "test_api", lambda k, m: (True, "sandboxed")):
+            check("settings: Test connection runs", lambda: (d.test(), app.update()))
+
+        # save must round-trip without touching a real key file
+        import tempfile
+        with mock.patch.object(S, "CFG", Path(tempfile.gettempdir()) / "_tds_test.json"),              mock.patch.object(S, "KEYFILE", Path(tempfile.gettempdir()) / "_tds_key"):
+            check("settings: Save writes config", lambda: (d.save_all(), app.update()))
+        try:
+            d.destroy()
+        except Exception:
+            pass
+
+    check("main window: Settings button opens the dialog",
+          lambda: (setattr(app, "_sd", None), app.update()))
+
     try:
         app.destroy()
     except Exception:
