@@ -59,6 +59,7 @@ Source: "..\monitor\*.py";              DestDir: "{app}\monitor";              F
 Source: "..\monitor\strategy_lab\*.py"; DestDir: "{app}\monitor\strategy_lab"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "..\mt5\*.mq5";                 DestDir: "{app}\mt5";                  Flags: ignoreversion skipifsourcedoesntexist
 Source: "..\monitor\setup_labels\zee_labels.json"; DestDir: "{app}\monitor\setup_labels"; Flags: ignoreversion onlyifdoesntexist
+Source: "..\VISION_OF_CLAUDE_EA.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\CLAUDE_REALTIME_EA.md";     DestDir: "{app}";                      Flags: ignoreversion
 Source: "..\WINNING_STRATEGY.md";       DestDir: "{app}";                      Flags: ignoreversion skipifsourcedoesntexist
 ; launcher + first-run notes
