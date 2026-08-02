@@ -390,6 +390,23 @@ class SettingsDialog(tk.Toplevel):
         p = self._box("PATHS")
         self.pypath = self._path_row(p, "Python", self.cfg["python"])
 
+        # ── knowledge ──
+        kb = self._box("MASTER'S KNOWLEDGE")
+        rk = tk.Frame(kb, bg=PANEL); rk.pack(fill="x", pady=4)
+        tk.Button(rk, text="🏷  Explore Labelled Setups", command=self.open_labels,
+                  bg=BLUE, fg="#0b0f14", relief="flat", font=("Segoe UI", 9, "bold"),
+                  padx=16, pady=6, cursor="hand2").pack(side="left", padx=6)
+        tk.Button(rk, text="📜  Philosophy", command=self.open_philosophy,
+                  bg="#a78bfa", fg="#0b0f14", relief="flat", font=("Segoe UI", 9, "bold"),
+                  padx=16, pady=6, cursor="hand2").pack(side="left", padx=6)
+        self.kbres = tk.Label(rk, text="", bg=PANEL, fg=MUTED, font=("Segoe UI", 9))
+        self.kbres.pack(side="left", padx=8)
+        tk.Label(kb, text="      Every setup Zee ever labelled on losers.html, game.html and the "
+                          "rest - browsable, searchable and editable, with a backup written "
+                          "before each save. Philosophy keeps his own words, and can re-derive "
+                          "them from the sources.", bg=PANEL, fg=MUTED, font=("Segoe UI", 9),
+                 justify="left", wraplength=650, anchor="w").pack(fill="x")
+
         # ── buttons ──
         b = tk.Frame(self, bg=BG); b.pack(fill="x", padx=16, pady=12)
         tk.Button(b, text="Save", command=self.save_all, bg=GREEN, fg="#0b0f14", relief="flat",
@@ -428,6 +445,23 @@ class SettingsDialog(tk.Toplevel):
         tk.Button(r, text="…", command=browse, bg="#334155", fg="#fff", relief="flat",
                   width=3, cursor="hand2").pack(side="left", padx=4)
         return e
+
+    def open_labels(self):
+        try:
+            import labels_explorer as LE
+            LE.LabelsExplorer(self)
+            n = len(LE.rows())
+            self.kbres.configure(text=f"{n} labelled setups", fg=GREEN)
+        except Exception as e:
+            self.kbres.configure(text=str(e)[:70], fg=RED)
+
+    def open_philosophy(self):
+        try:
+            import philosophy as PH
+            PH.PhilosophyWindow(self)
+            self.kbres.configure(text="philosophy open", fg=GREEN)
+        except Exception as e:
+            self.kbres.configure(text=str(e)[:70], fg=RED)
 
     def attach_rulebook(self):
         f = filedialog.askopenfilename(title="Attach the EA rules document",
