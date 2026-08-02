@@ -131,6 +131,15 @@ def main():
     check("settings: test_api rejects a junk key",
           lambda: S.test_api("short", "claude-sonnet-4-5")[0] is False)
     check("settings: status_line() returns 3 parts", lambda: len(S.status_line()) == 3)
+    check("settings: find_terminals() finds this PC's MT5 installs",
+          lambda: len(S.find_terminals()) > 0 or (_ for _ in ()).throw(AssertionError("none")))
+    check("settings: each terminal reports its broker(s)",
+          lambda: all(x["brokers"] for x in S.find_terminals()))
+    check("settings: the terminal holding our EA is listed first",
+          lambda: (not any(x["has_ea"] for x in S.find_terminals()))
+                  or S.find_terminals()[0]["has_ea"])
+    check("settings: test_tradingview handles a dead port",
+          lambda: S.test_tradingview(1)[0] is False)
 
     dlg = {}
 
@@ -141,7 +150,8 @@ def main():
 
     if "d" in dlg:
         d = dlg["d"]
-        for attr in ("mode", "key", "model", "market", "lx", "lb", "pypath", "common", "auto"):
+        for attr in ("mode", "key", "model", "market", "lx", "lb", "pypath", "common", "auto",
+                     "term", "terminfo", "tvport", "tvpoll", "tvx", "tvb", "tvres"):
             check(f"settings widget: {attr}", lambda a=attr: getattr(d, a))
 
         def both_modes():
@@ -162,6 +172,10 @@ def main():
 
         with mock.patch.object(S, "test_cli", lambda: (True, "sandboxed")),              mock.patch.object(S, "test_api", lambda k, m: (True, "sandboxed")):
             check("settings: Test connection runs", lambda: (d.test(), app.update()))
+        with mock.patch.object(S, "test_tradingview", lambda p: (True, "sandboxed")):
+            check("settings: Test bridge runs", lambda: (d.test_tv(), app.update()))
+        check("settings: terminal picker updates its info line",
+              lambda: (d._term_changed(), app.update()))
 
         # save must round-trip without touching a real key file
         import tempfile

@@ -526,16 +526,18 @@ class App(tk.Tk):
 
         jf = MON / "claude_judgments.jsonl"
         if jf.exists():
-            rows = jf.read_text(encoding="utf-8").strip().splitlines()[-8:]
+            rows = jf.read_text(encoding="utf-8").strip().splitlines()[-200:]
             out = []
             for r in rows:
                 try:
                     d = json.loads(r)
+                    if d.get("market") and d.get("market") != mk:
+                        continue          # a gold panel must not show BTC verdicts
                     out.append(f"{d.get('judged_utc','')[11:16]}  {d.get('verdict',''):7} "
                                f"{d.get('side',''):4} @{d.get('entry','')}  {str(d.get('reason',''))[:60]}")
                 except Exception:
                     pass
-            self._set(self.journal, "\n".join(reversed(out)) or "no verdicts yet")
+            self._set(self.journal, "\n".join(reversed(out[-9:])) or f"no {mk} verdicts yet")
         else:
             self._set(self.journal, "no verdicts yet")
 
