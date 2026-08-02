@@ -26,6 +26,40 @@ input int    InpMaxSignalAgeSec = 180;  // ignore signals older than this (stale
 input string InpSignalFile   = "case_signal.json";
 input string InpHeartbeatFile = "xau_live.json";   // live price/position feed for Turtle Desktop
 input string InpHistoryFile   = "xau_history.csv";   // MT5 closed-trade history for Turtle Desktop
+input string InpCloseFile     = "xau_close.json";   // Claude can order an exit here
+
+//--- Claude can order an exit. The trail already handles the fast, mechanical part far
+//--- better than any human or model could (0.2pt give-back in milliseconds). This is for the
+//--- judgement part: "this is turning against us, get out now" - which is the piece Zee has
+//--- always said belongs to the master, not the machine.
+void CheckCloseCommand()
+{
+   if (!FileIsExist(InpCloseFile, FILE_COMMON)) return;
+   int h = FileOpen(InpCloseFile, FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON);
+   if (h == INVALID_HANDLE) return;
+   string txt = "";
+   while (!FileIsEnding(h)) txt += FileReadString(h);
+   FileClose(h);
+   FileDelete(InpCloseFile, FILE_COMMON);          // one command, once
+   if (StringLen(txt) < 2) return;
+
+   long ts = (long)JNum(txt, "ts");
+   if (ts > 0 && (long)TimeGMT() - ts > InpMaxSignalAgeSec)
+   {
+      PrintFormat("[close] IGNORING stale close command (%d s old)", (int)(TimeGMT() - ts));
+      return;
+   }
+
+   int closed = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagic) continue;
+      if (trade.PositionClose(tk)) closed++;
+   }
+   PrintFormat("[close] Claude ordered an exit -> %d position(s) closed", closed);
+}
 
 //--- Export the terminal's OWN closed-trade history for this symbol. The 2026-07-31 gold
 //--- trades lived only in the History tab: no CSV had them, so Turtle Desktop could not
@@ -183,6 +217,8 @@ bool HasOurPos() {
 
 // Poll the signal file; open a trade on a NEW signal id.
 void OnTimer() {
+   CheckCloseCommand();
+
    WriteHeartbeat();
 
    if (!FileIsExist(InpSignalFile, FILE_COMMON)) return;
