@@ -37,6 +37,7 @@ FEEDBACK = HERE / "vision_feedback.jsonl"
 
 G, R, GOLD, PUR, BLUE, GREY = "#16a34a", "#dc2626", "#b8860b", "#9333ea", "#2563eb", "#64748b"
 TREND_COLOUR = {"up": G, "down": R, "ranging": GREY, "shifting": "#f59e0b"}
+TREND_NAME = {'up': 'UP TREND', 'down': 'DOWN TREND', 'ranging': 'RANGING', 'shifting': 'TREND SHIFTING'}
 
 
 def _bars(market):
@@ -94,7 +95,8 @@ def draw(market, reading, back=45):
                               alpha=0.97), zorder=5)
 
     tcol = TREND_COLOUR.get(reading.get("trend", "ranging"), GREY)
-    ax.set_title(f"CLAUDE'S EYES  —  {reading.get('trend', '?').upper()}"
+    tname = TREND_NAME.get(reading.get("trend", ""), str(reading.get("trend", "?")).upper())
+    ax.set_title(f"CLAUDE'S EYES  —  {tname}"
                  + (f"   ·   {reading['side']} MAKES SENSE" if reading.get("side")
                     and reading["side"] != "NONE" else
                     ("   ·   NO SIDE MAKES SENSE" if reading.get("side") == "NONE" else ""))
