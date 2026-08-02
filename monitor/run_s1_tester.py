@@ -12,7 +12,10 @@ from __future__ import annotations
 import argparse, os, re, subprocess, sys, time, shutil
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 TERMINAL_EXE = r"C:\Program Files\FTMO Global Markets MT5 Terminal\terminal64.exe"
 TERMINAL_DIR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/81A933A9AFC5DE3C23B15CAB19C63850")

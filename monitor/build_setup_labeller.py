@@ -17,7 +17,10 @@ import csv, json, os, re, sys
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 import pandas as pd
 import mplfinance as mpf

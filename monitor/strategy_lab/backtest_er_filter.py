@@ -14,7 +14,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 COMMON  = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
 M1_CSV  = COMMON / "export_m1_recent.csv"

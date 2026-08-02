@@ -15,7 +15,10 @@ import sys, os, time, subprocess, json, re, argparse
 from pathlib import Path
 from datetime import datetime, timezone
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 MT5_EXE = r"C:\Program Files\Blueberry Markets MetaTrader 5\terminal64.exe"
 TERMINAL_DIR = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\DBE9B8B347D025DD139E103EE3B63FD8")

@@ -3,7 +3,10 @@ configure Expert/Symbol/Date/Modelling/Visual, then click Start.
 """
 from __future__ import annotations
 import sys, time
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 from pywinauto import Application, Desktop, mouse
 from pywinauto.keyboard import send_keys

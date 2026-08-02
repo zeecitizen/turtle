@@ -12,7 +12,10 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import mplfinance as mpf
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 REPO = Path(r"C:/Users/zeesh/Documents/GitHub/turtle")
 TICK_DIR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files")

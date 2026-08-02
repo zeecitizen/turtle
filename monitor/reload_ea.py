@@ -10,7 +10,10 @@ Usage:
 from __future__ import annotations
 import argparse, sys, time
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 from pywinauto import Application, Desktop
 from pywinauto.keyboard import send_keys

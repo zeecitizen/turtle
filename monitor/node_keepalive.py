@@ -13,7 +13,10 @@ from pathlib import Path
 from urllib import request as urlreq
 from datetime import datetime, timezone
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 SERVER_PORT = 3457
 SERVER_URL  = f"http://localhost:{SERVER_PORT}/api/status"   # cheap, fast endpoint

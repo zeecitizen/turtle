@@ -5,7 +5,10 @@ from pathlib import Path
 from collections import defaultdict
 from datetime import datetime
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 CSV = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/shano_ticks_2026-02-11.csv")
 

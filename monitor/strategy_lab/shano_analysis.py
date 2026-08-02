@@ -4,7 +4,10 @@ with the proposed $5 SL / $10 TP discipline using REAL Blueberry XAUUSD ticks.
 import sys, bisect
 from datetime import datetime, timedelta
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 TICKS = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files\shano_ticks_2026-05-29.csv")
 

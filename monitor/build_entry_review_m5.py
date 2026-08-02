@@ -20,7 +20,10 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "strategy_lab"))
 from screener_canonical_uhv_m1 import Bar, TICK_DIR
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 import pandas as pd
 import mplfinance as mpf
 import matplotlib

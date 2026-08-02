@@ -21,7 +21,10 @@ Usage:
 """
 import csv
 import sys
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 from datetime import datetime, timedelta
 from pathlib import Path
 

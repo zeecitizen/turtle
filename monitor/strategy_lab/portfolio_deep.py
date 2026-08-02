@@ -10,7 +10,10 @@ Builds each EA's daily P&L series (12d, current deployed configs), then:
 import sys, glob, math
 from collections import defaultdict
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 sys.path.insert(0, str(Path(__file__).parent))
 from backtest_v349_multiday import load_m1_merged, load_ticks, COMMON
 from backtest_s3_teacher_spec import aggregate_to_tf, group_bars_by_day, find_h1_fvgs

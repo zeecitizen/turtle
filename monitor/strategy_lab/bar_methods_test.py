@@ -16,7 +16,10 @@ Data: 27thmayexport.csv (100k M1 bars). $ = price points at 0.01 lot (PPP=1).
 import csv, sys
 from datetime import datetime
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 from backtest_s1_uhv_breakout import COMMON
 PPP=1.0
 

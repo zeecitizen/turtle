@@ -2,7 +2,10 @@
 from pathlib import Path
 import re, sys
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 TERMINAL = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/DBE9B8B347D025DD139E103EE3B63FD8")
 logs = sorted((TERMINAL / "MQL5/Logs").glob("20260619*.log"), key=lambda p: p.stat().st_mtime, reverse=True)
 with open(logs[0], "rb") as f:

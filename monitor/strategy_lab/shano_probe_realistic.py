@@ -13,7 +13,10 @@ less reward / more SL room, exactly as in live trading.
 """
 import sys, glob
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 sys.path.insert(0, str(Path(__file__).parent))
 from backtest_s3_teacher_spec import stats
 from shano_probe_overlay import build_cache, gen_sigs

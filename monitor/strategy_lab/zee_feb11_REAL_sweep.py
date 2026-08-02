@@ -4,7 +4,10 @@ Goal: find config that produces +$300-$800 NET (dollars at 0.10 lots) on full da
 import sys, bisect
 from datetime import datetime
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
 TICKS = COMMON / "shano_ticks_2026-02-11.csv"

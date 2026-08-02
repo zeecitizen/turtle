@@ -12,7 +12,10 @@ import sys, time, json, csv, urllib.request, base64
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 UTC = timezone.utc
 PKT = timezone(timedelta(hours=5))
 

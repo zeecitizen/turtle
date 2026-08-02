@@ -13,7 +13,10 @@ import json, sys, os
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 ROOT = Path(r"c:/Users/zeesh/Documents/GitHub/turtle/monitor/setup_labels")
 LABELS_FILE = ROOT / "zee_labels.json"

@@ -7,7 +7,10 @@ import sys, csv, glob
 from datetime import datetime, timedelta
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
 BARS_CSV = COMMON / "ticks_for_testing.csv"

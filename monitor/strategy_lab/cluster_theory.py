@@ -15,7 +15,10 @@ $ = price points @0.01 lot.
 import csv, sys, glob
 from datetime import datetime, timedelta
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 sys.path.insert(0, str(Path(__file__).parent))
 from backtest_s1_uhv_breakout import load_ticks, COMMON
 import bisect

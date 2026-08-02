@@ -13,7 +13,10 @@ from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import numpy as np
 import pandas as pd
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 PARQ = Path(r"C:\Users\zeesh\Documents\GitHub\turtle\monitor\strategy_lab\_xauusd_ticks.parquet")
 

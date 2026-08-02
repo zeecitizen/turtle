@@ -20,7 +20,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from dataclasses import dataclass
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 TICK_CSV = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/shano_ticks_2026-06-03.csv")
 

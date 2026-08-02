@@ -12,7 +12,10 @@ Run:  py be_netsim.py
 import sys, glob
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 from winrate_improvement import (load_m1, build_m5, load_ticks, detect_s1, detect_s3,
                                  CONTRACT, LOTS, COMMON)
 

@@ -6,7 +6,10 @@ runs. Everything before that is automated.
 """
 from __future__ import annotations
 import sys, time
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 from pywinauto import Desktop, Application
 from pywinauto.keyboard import send_keys

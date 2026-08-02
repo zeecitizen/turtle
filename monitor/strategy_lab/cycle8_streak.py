@@ -4,7 +4,10 @@ Re-sweep loss-streak params now that M5_LB=20 (was 30) and cd=45 (was 60).
 import sys, glob, bisect
 from datetime import datetime
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
 COST = 0.20

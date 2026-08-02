@@ -14,7 +14,10 @@ import argparse, json, sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 REPO = Path(r"C:/Users/zeesh/Documents/GitHub/turtle")
 CANON_RESULTS = REPO / "monitor" / "strategy_lab" / "_canonical" / "results_fvg-none_10d.json"
