@@ -1,0 +1,34 @@
+{
+ "blind_01": {
+  "verdict": "TAKE",
+  "reason": "Uptrend — 4047.5 base ke baad saaf HH+HL (4049.4 -> 4050 higher lows) up to 4055. Retracement + strong green momentum breakout. Trend ke saath buy."
+ },
+ "blind_02": {
+  "verdict": "SKIP",
+  "reason": "Uptrend (4046 -> 4054, HH+HL). Top pe sideways phir pehla drop — koi lower-low/lower-high nahi bana. Yeh pullback hai, downtrend nahi. Sell = trend ke khilaf."
+ },
+ "blind_03": {
+  "verdict": "SKIP",
+  "reason": "Pehle saaf uptrend tha (4042.5 -> 4050, HH+HL). Yeh top se PEHLA tez drop hai — abhi tak confirmed downtrend (LH+LL) nahi bana. Top call karna hai, trend follow nahi."
+ },
+ "blind_04": {
+  "verdict": "SKIP",
+  "reason": "4050 se tez gira, bounce sirf ~4045 tak = LOWER HIGH. Uptrend toot chuka, ab 4043-4045 me chop. Confirmed uptrend nahi to BUY nahi."
+ },
+ "blind_05": {
+  "verdict": "SKIP",
+  "reason": "RANGING — 45 min se price 4047-4053 band me baar baar ghoom raha. 4053 ka spike higher high tha, ab gir raha, par koi saaf LH+LL nahi. Chop me trade nahi."
+ },
+ "blind_06": {
+  "verdict": "TAKE",
+  "reason": "Strong uptrend — 4042 base se 4053 tak lagatar HH+HL. Retracement (4053->4048) ke baad wapas upar. Trend ke saath buy — yehi setup chahiye."
+ },
+ "blind_07": {
+  "verdict": "SKIP",
+  "reason": "4041.3 ke baad price ne HIGHER LOWS banaye (4042.07, 4043.18) aur 4047 tak rally ki = trend UP shift ho chuka. Ismein sell = trend ke khilaf."
+ },
+ "blind_08": {
+  "verdict": "TAKE",
+  "reason": "Confirmed uptrend — 4041.3 base, phir higher lows (4044 -> 4045.2 -> 4046) aur higher highs (4046.5 -> 4049). Retracement + UHV + green momentum breakout. Buy with trend."
+ }
+}

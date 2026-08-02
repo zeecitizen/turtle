@@ -1,0 +1,50 @@
+{
+ "blind_01": {
+  "side": "BUY",
+  "pts": 1.5,
+  "win": true,
+  "time": "22:43"
+ },
+ "blind_02": {
+  "side": "SELL",
+  "pts": 1.35,
+  "win": true,
+  "time": "21:03"
+ },
+ "blind_03": {
+  "side": "SELL",
+  "pts": 0.69,
+  "win": true,
+  "time": "19:39"
+ },
+ "blind_04": {
+  "side": "BUY",
+  "pts": 0.48,
+  "win": true,
+  "time": "20:01"
+ },
+ "blind_05": {
+  "side": "SELL",
+  "pts": 0.23,
+  "win": true,
+  "time": "22:11"
+ },
+ "blind_06": {
+  "side": "BUY",
+  "pts": 1.01,
+  "win": true,
+  "time": "20:48"
+ },
+ "blind_07": {
+  "side": "SELL",
+  "pts": 0.65,
+  "win": true,
+  "time": "19:15"
+ },
+ "blind_08": {
+  "side": "BUY",
+  "pts": 0.48,
+  "win": true,
+  "time": "19:31"
+ }
+}
