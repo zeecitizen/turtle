@@ -52,6 +52,36 @@ def proc_running(needle):
         return False
 
 
+def open_file(path):
+    """Open a file in whatever the user has set as its default application.
+
+    `cmd /c start` was silently failing behind the CREATE_NO_WINDOW flag, and the modal
+    message box ran BEFORE it, so the PDF never appeared and the path could not even be
+    copied out of the dialog."""
+    try:
+        os.startfile(str(path))
+        return True
+    except Exception:
+        try:
+            subprocess.Popen(["explorer", "/select,", str(path)])
+            return True
+        except Exception:
+            return False
+
+
+def open_folder(path):
+    """Reveal the file in File Explorer with it already selected."""
+    try:
+        subprocess.Popen(["explorer", "/select,", str(Path(path))])
+        return True
+    except Exception:
+        try:
+            os.startfile(str(Path(path).parent))
+            return True
+        except Exception:
+            return False
+
+
 def http_ok(url, timeout=3):
     import urllib.request
     try:
@@ -103,6 +133,13 @@ class App(tk.Tk):
         self._btn(rec, "🌐  INTERNET / PC RESTART", self.recover_net, "#a78bfa", 24)
         self.recmsg = tk.Label(rec, text="", bg=BG, fg=MUTED, font=("Consolas", 9))
         self.recmsg.pack(side="left", padx=8)
+
+        # When each market is actually awake. Zee: show the session times the easy way.
+        sf = tk.Frame(self, bg=PANEL, padx=12, pady=6); sf.pack(fill="x", padx=12, pady=(8, 0))
+        self.clocks = tk.Frame(sf, bg=PANEL); self.clocks.pack(fill="x")
+        self.goldnote = tk.Label(sf, text="", bg=PANEL, fg=MUTED, font=("Segoe UI", 9))
+        self.goldnote.pack(anchor="w", pady=(4, 0))
+        self._clock_cells = {}
 
         # The loud one. Zee wanted no ambiguity about the moment the breakout is live.
         self.banner = tk.Label(self, text="", bg=BG, fg=BG, font=("Segoe UI", 15, "bold"),
@@ -538,6 +575,41 @@ class App(tk.Tk):
         except Exception:
             pass
 
+    def _refresh_clocks(self):
+        """Local time and what happens next, per session."""
+        try:
+            import sessions as SS
+            rows = SS.status()
+            if not self._clock_cells:
+                for r in rows:
+                    c = tk.Frame(self.clocks, bg=PANEL, padx=10)
+                    c.pack(side="left", fill="x", expand=True)
+                    name = tk.Label(c, text=r["city"], bg=PANEL, fg=FG,
+                                    font=("Segoe UI", 10, "bold"))
+                    name.pack(anchor="w")
+                    loc = tk.Label(c, text="", bg=PANEL, fg=MUTED, font=("Consolas", 11))
+                    loc.pack(anchor="w")
+                    st = tk.Label(c, text="", bg=PANEL, font=("Segoe UI", 9, "bold"))
+                    st.pack(anchor="w")
+                    self._clock_cells[r["city"]] = (name, loc, st)
+            for r in rows:
+                name, loc, st = self._clock_cells[r["city"]]
+                loc.configure(text=r["local_12"])
+                st.configure(
+                    text=("● OPEN · " + r["in"] + " left") if r["open"]
+                         else (r["note"] + " " + r["in"]),
+                    fg=GREEN if r["open"] else MUTED)
+                name.configure(fg=GREEN if r["open"] else FG)
+            note = SS.gold_note()
+            self.goldnote.configure(
+                text=note,
+                fg=GREEN if "trading" in note else (AMBER if "quiet" in note else MUTED))
+        except Exception as e:
+            try:
+                self.goldnote.configure(text="clocks unavailable: " + str(e)[:60], fg=RED)
+            except Exception:
+                pass
+
     def _wheel(self, e):
         try:
             w = self.winfo_containing(e.x_root, e.y_root)
@@ -703,6 +775,7 @@ class App(tk.Tk):
             messagebox.showerror("Turtle Desktop", "PDF failed: " + str(e))
 
     def refresh_loop(self):
+        self._refresh_clocks()
         threading.Thread(target=self._collect, daemon=True).start()
         self._show_chart()
         if time.time() - getattr(self, "_last_learn", 0) > 120:
@@ -1124,8 +1197,16 @@ class ResearchWindow(tk.Toplevel):
         import research as RS
         try:
             out = RS.to_pdf(self.rep or RS.analyse(self.market))
-            self.msg.configure(text="written: " + str(out), fg=GREEN)
-            subprocess.Popen(["cmd", "/c", "start", "", str(out)], creationflags=NO_WIN)
+            opened = open_file(out)
+            self.msg.configure(
+                text=("opened " if opened else "saved (could not open) ") + str(out),
+                fg=GREEN if opened else AMBER)
+            for txt, fn in (("Show in folder", lambda: open_folder(out)),
+                            ("Copy path", lambda: (self.clipboard_clear(),
+                                                   self.clipboard_append(str(out))))):
+                tk.Button(self.msg.master, text=txt, command=fn, bg="#334155", fg="#fff",
+                          relief="flat", font=("Segoe UI", 8, "bold"), padx=10,
+                          cursor="hand2").pack(side="left", padx=4)
         except Exception as e:
             self.msg.configure(text=str(e)[:90], fg=RED)
 
