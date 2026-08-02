@@ -42,6 +42,7 @@ Source: "claude_ea_gui.py";   DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "trade_book.py";      DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "settings.py";        DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "lessons.py";      DestDir: "{app}\gui"; Flags: ignoreversion
+Source: "research.py";      DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "philosophy.py";     DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "labels_explorer.py";DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "install.ps1";        DestDir: "{app}\gui"; Flags: ignoreversion
@@ -67,4 +68,5 @@ Name: "{userstartup}\{#AppName}";     Filename: "{app}\{#AppExeName}"; WorkingDi
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "Launch {#AppName}"; Flags: nowait postinstall skipifsilent shellexec
+
 

@@ -103,6 +103,13 @@ class App(tk.Tk):
         self.recmsg = tk.Label(rec, text="", bg=BG, fg=MUTED, font=("Consolas", 9))
         self.recmsg.pack(side="left", padx=8)
 
+        # The loud one. Zee wanted no ambiguity about the moment the breakout is live.
+        self.banner = tk.Label(self, text="", bg=BG, fg=BG, font=("Segoe UI", 15, "bold"),
+                               pady=10, wraplength=1050, justify="center")
+        self.banner.pack(fill="x", padx=12, pady=(8, 0))
+        self.banner.pack_forget()
+        self._blink = 0
+
         body = tk.Frame(self, bg=BG); body.pack(fill="both", expand=True, padx=12, pady=(6, 10))
         left = tk.Frame(body, bg=BG); left.pack(side="left", fill="both", expand=True)
         right = tk.Frame(body, bg=BG, width=380); right.pack(side="right", fill="y")
@@ -158,6 +165,10 @@ class App(tk.Tk):
         tk.Button(hdr, text="PDF: failed setups", command=self.make_pdf, bg="#7f1d1d", fg="#fff",
                   relief="flat", font=("Segoe UI", 8, "bold"), cursor="hand2",
                   padx=8).pack(side="right")
+        tk.Button(hdr, text="\U0001F52C  ANALYZE & RESEARCH TODAY'S TRADES",
+                  command=self.open_research, bg="#7dd3fc", fg="#0b0f14", relief="flat",
+                  font=("Segoe UI", 8, "bold"), cursor="hand2",
+                  padx=10).pack(side="right", padx=6)
         self.tsum = tk.Label(hdr, text="", bg=PANEL, fg=MUTED, font=("Consolas", 9))
         self.tsum.pack(side="right", padx=10)
         cols = ("time", "side", "verdict", "lots", "entry", "exit", "pnl", "status")
@@ -380,6 +391,33 @@ class App(tk.Tk):
                        creationflags=NO_WIN)
 
     # ── refresh ───────────────────────────────────────────────────────────
+    def _banner_update(self, pend, positions):
+        """Three states worth shouting about, and silence otherwise."""
+        if positions:
+            pnl = sum(q["profit"] for q in positions)
+            side = positions[0]["side"]
+            if pnl >= 0:
+                text = ("\u26a1  EXPERIENCING BREAKOUT TURBULENCE  \u2014  HANG ON, "
+                        f"HARVESTING PROFITS   ({side}  ${pnl:+.2f})")
+                bg, fg = "#14532d", "#4ade80"
+            else:
+                text = ("\u26a1  IN THE TRADE  \u2014  RIDING IT OUT   "
+                        f"({side}  ${pnl:+.2f})")
+                bg, fg = "#7c2d12", "#fbbf24"
+        elif pend:
+            text = ("\u26a1  BREAKOUT DETECTED  \u2014  "
+                    f"{pend.get('side', '')} @ {pend.get('entry', '')}   "
+                    "AWAITING CLAUDE'S VERDICT")
+            bg, fg = "#78350f", "#fbbf24"
+        else:
+            self.banner.pack_forget()
+            return
+        self._blink = (self._blink + 1) % 2
+        self.banner.configure(text=text, bg=bg,
+                              fg=fg if self._blink else "#f8fafc")
+        if not self.banner.winfo_ismapped():
+            self.banner.pack(fill="x", padx=12, pady=(8, 0))
+
     def vision_say(self, verdict):
         """Zee answering Claude's visual reading. This is the training signal."""
         try:
@@ -494,6 +532,14 @@ class App(tk.Tk):
             self.livesub.configure(
                 text=sub,
                 fg=GREEN if any(q["profit"] > 0 for q in pos) else (RED if pos else MUTED))
+        try:
+            pend = None
+            pf = COMMON / "pending_setup.json"
+            if pf.exists():
+                pend = json.loads(pf.read_text(encoding="ascii"))
+            self._banner_update(pend, (lv.get("positions") or []) if not lv.get("error") else [])
+        except Exception:
+            pass
         day, caption = TB.day_caption(mk)
         rows = TB.book(mk, day)
         s = TB.summary(rows)
@@ -523,6 +569,13 @@ class App(tk.Tk):
         r = self._rows.get(sel[0])
         if r:
             TradeDetail(self, r, self.market.get())
+
+    def open_research(self):
+        """Study the session and say what to do differently."""
+        try:
+            ResearchWindow(self, self.market.get())
+        except Exception as e:
+            messagebox.showerror("Turtle Desktop", "Research failed: " + str(e))
 
     def make_pdf(self):
         import trade_book as TB
@@ -700,6 +753,96 @@ class App(tk.Tk):
 
         self.foot.configure(text=f"  {datetime.now(timezone.utc).strftime('%H:%M:%S')} UTC   ·   "
                                  f"repo {REPO}   ·   playbook: CLAUDE_REALTIME_EA.md")
+
+
+class ResearchWindow(tk.Toplevel):
+    """Every finding carries its sample size, and thin samples are labelled as such rather
+    than promoted into rules. Confident conclusions from small samples are what cost this
+    system six months."""
+
+    def __init__(self, parent, market):
+        super().__init__(parent)
+        self.market = market
+        self.title("Turtle Desktop - Research")
+        self.geometry("1040x820")
+        self.configure(bg=BG)
+
+        head = tk.Frame(self, bg=PANEL, padx=14, pady=10); head.pack(fill="x")
+        tk.Label(head, text="\U0001F52C  Research", bg=PANEL, fg=FG,
+                 font=("Segoe UI", 15, "bold")).pack(side="left")
+        self.sub = tk.Label(head, text="studying the session...", bg=PANEL, fg=MUTED,
+                            font=("Segoe UI", 9))
+        self.sub.pack(side="left", padx=12)
+        tk.Button(head, text="Save as PDF", command=self.pdf, bg="#334155", fg="#fff",
+                  relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=4,
+                  cursor="hand2").pack(side="right", padx=4)
+        tk.Button(head, text="Re-run", command=self.run, bg=BLUE, fg="#0b0f14",
+                  relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=4,
+                  cursor="hand2").pack(side="right", padx=4)
+
+        self.txt = tk.Text(self, bg="#0b0f14", fg=FG, relief="flat", wrap="word",
+                           font=("Consolas", 10), padx=14, pady=10)
+        self.txt.pack(fill="both", expand=True, padx=12, pady=8)
+        self.txt.tag_configure("h", foreground="#7dd3fc",
+                               font=("Segoe UI", 12, "bold"), spacing1=10, spacing3=4)
+        self.txt.tag_configure("thin", foreground=AMBER, font=("Segoe UI", 9, "italic"))
+        self.txt.tag_configure("do", foreground=AMBER, font=("Segoe UI", 11, "bold"),
+                               spacing1=12)
+        self.txt.tag_configure("head", foreground=FG, font=("Segoe UI", 12, "bold"))
+
+        b = tk.Frame(self, bg=BG, padx=12, pady=8); b.pack(fill="x")
+        tk.Button(b, text="Open the losses to comment on", command=self.goto_losses,
+                  bg="#7f1d1d", fg="#fff", relief="flat", font=("Segoe UI", 9, "bold"),
+                  padx=14, pady=6, cursor="hand2").pack(side="left")
+        self.msg = tk.Label(b, text="", bg=BG, fg=MUTED, font=("Segoe UI", 9))
+        self.msg.pack(side="left", padx=10)
+        self.rep = None
+        self.after(100, self.run)
+
+    def run(self):
+        import research as RS
+        self.txt.configure(state="normal"); self.txt.delete("1.0", "end")
+        self.txt.insert("end", "studying...\n")
+        self.update()
+        try:
+            self.rep = RS.analyse(self.market)
+        except Exception as e:
+            self.txt.delete("1.0", "end")
+            self.txt.insert("end", "Could not analyse: " + str(e))
+            self.txt.configure(state="disabled")
+            return
+        r = self.rep
+        c = r["counts"]
+        self.sub.configure(text=f"{r['market']}  ·  {r['day']}")
+        self.txt.delete("1.0", "end")
+        self.txt.insert("end", r["headline"] + "\n", "head")
+        self.txt.insert("end", f"judged {c['judged']}    taken {c['taken']}    "
+                               f"skipped {c['skipped']}    filled {c['filled']}    "
+                               f"wins {c['wins']}    losses {c['losses']}\n")
+        for s in r["sections"]:
+            self.txt.insert("end", "\n" + s["title"] + "\n", "h")
+            if not s.get("solid"):
+                self.txt.insert("end", f"thin sample (n={s['n']}) — a hint, not a rule\n",
+                                "thin")
+            self.txt.insert("end", s["body"] + "\n")
+        self.txt.insert("end", "\nWHAT TO DO DIFFERENTLY\n", "do")
+        for i, s in enumerate(r["suggested"], 1):
+            self.txt.insert("end", f"{i}. {s}\n\n")
+        self.txt.configure(state="disabled")
+
+    def pdf(self):
+        import research as RS
+        try:
+            out = RS.to_pdf(self.rep or RS.analyse(self.market))
+            self.msg.configure(text="written: " + str(out), fg=GREEN)
+            subprocess.Popen(["cmd", "/c", "start", "", str(out)], creationflags=NO_WIN)
+        except Exception as e:
+            self.msg.configure(text=str(e)[:90], fg=RED)
+
+    def goto_losses(self):
+        self.msg.configure(
+            text="close this window, then double-click a red row and press Derive Learnings",
+            fg=AMBER)
 
 
 class TradeDetail(tk.Toplevel):
