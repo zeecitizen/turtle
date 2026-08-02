@@ -150,6 +150,19 @@ def main():
           lambda: S.inspect_rulebook("no_such_file.md")[0] is False)
     check("settings: rulebook_path() resolves", lambda: S.rulebook_path() is not None)
 
+    import labels_explorer as LE, philosophy as PH
+    check("labels: rows() reads every label",
+          lambda: len(LE.rows()) > 100 or (_ for _ in ()).throw(AssertionError(len(LE.rows()))))
+    check("labels: each row knows its source page",
+          lambda: all(r["page"] for r in LE.rows()))
+    check("labels: grades are parsed", lambda: LE.grade_of("10/10: good")[0] == "10/10")
+    check("labels: charts are located for most rows",
+          lambda: sum(1 for r in LE.rows() if r["chart"]) > 20)
+    check("labels: backup() writes a copy", lambda: LE.backup().exists())
+    check("philosophy: core quotes present", lambda: len(PH.CORE) >= 12)
+    check("philosophy: realign() re-derives from the sources",
+          lambda: len(PH.realign()[0]) >= len(PH.CORE))
+
     dlg = {}
 
     def open_dlg():
@@ -192,6 +205,9 @@ def main():
                   lambda: (d.attach_rulebook(), app.update()))
         check("settings: attach reported success",
               lambda: "does not look like" not in d.rbres.cget("text"))
+        check("settings: Explore Labelled Setups opens",
+              lambda: (d.open_labels(), app.update()))
+        check("settings: Philosophy opens", lambda: (d.open_philosophy(), app.update()))
 
         # save must round-trip without touching a real key file
         import tempfile

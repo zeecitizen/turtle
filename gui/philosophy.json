@@ -1,0 +1,227 @@
+{
+ "quotes": [
+  {
+   "theme": "Trend is everything",
+   "quote": "Selling in an uptrend.",
+   "why": "His three-word diagnosis of every large loss on 2026-07-31, the day the demo went $1000 to $309. No numeric trend filter ever caught them; his eyes caught all three.",
+   "src": "core"
+  },
+  {
+   "theme": "Trend is everything",
+   "quote": "In a strong trend even a weak setup works.",
+   "why": "Trend quality outranks candle quality. Judge the context first, the geometry second.",
+   "src": "core"
+  },
+  {
+   "theme": "Trend is everything",
+   "quote": "This setup is choppy market — we don't take trades in a ranging market.",
+   "why": "The most frequent avoidable loss. When highs and lows are flat, stand aside.",
+   "src": "core"
+  },
+  {
+   "theme": "The eye beats the threshold",
+   "quote": "AI khud kyun ni pakadti trend?",
+   "why": "The question that ended six months of tuning. Vision replaced the trend filter the same day, and beat the rule engine by $132 on the same six real trades.",
+   "src": "core"
+  },
+  {
+   "theme": "The eye beats the threshold",
+   "quote": "Hum wheel dobara bana rahe hain.",
+   "why": "Said while watching another threshold sweep. He was right: no setting both blocked the killers and kept the winners.",
+   "src": "core"
+  },
+  {
+   "theme": "Risk",
+   "quote": "Apologies don't pay hospital bills.",
+   "why": "Nine EA versions, $0 earned. 'The next version will fix it' IS the failure mode. Only live receipts count.",
+   "src": "core"
+  },
+  {
+   "theme": "Risk",
+   "quote": "We ride the wave and surf into profit for 5-6 trades, then when the trend shifts we make a huge loss.",
+   "why": "Measured: one full-size loss eats 6.2 average winners. Avoiding killers beats catching winners.",
+   "src": "core"
+  },
+  {
+   "theme": "Risk",
+   "quote": "Greed has no measurement — 40 students, none succeeded.",
+   "why": "Every safety rule must be enforced by the machine, never by a human's promise.",
+   "src": "core"
+  },
+  {
+   "theme": "Exit",
+   "quote": "Master takes the exit, the computer takes the entry.",
+   "why": "The strategy is deterministic at entry and judgemental at exit. Nine versions automated the entry and never assembled the exit.",
+   "src": "core"
+  },
+  {
+   "theme": "Exit",
+   "quote": "Harvest, then withdraw. The market takes back what it gives.",
+   "why": "At the daily target, stop. This was learned on the day of the 94% run.",
+   "src": "core"
+  },
+  {
+   "theme": "Method",
+   "quote": "UHV means Ultra High Volume — it must be higher than its closest neighbours, and it must be a strong candle, so that when we mitigate it we are mitigating strong sellers.",
+   "why": "A weak-bodied 'UHV' means nobody was exhausted, and the setup has no fuel.",
+   "src": "core"
+  },
+  {
+   "theme": "Method",
+   "quote": "A valid retracement starts when a candle's BODY breaks the previous candle's extreme.",
+   "why": "Not a wick, not a touch. The body.",
+   "src": "core"
+  },
+  {
+   "theme": "Method",
+   "quote": "The breakout must have LOWER volume than the UHV.",
+   "why": "Higher volume on the breakout means the move is being fought, not accepted.",
+   "src": "core"
+  },
+  {
+   "theme": "Evidence",
+   "quote": "Show me the losing setups so I can comment on them.",
+   "why": "Every genuine improvement in this system came from his comments on losers. Not one came from a parameter sweep.",
+   "src": "core"
+  },
+  {
+   "theme": "Evidence",
+   "quote": "All backtests hallucinate.",
+   "why": "Confirmed the hard way: the simulator scored a -$690 day at +$942 and called a -$120 trade a winner. Validate on real fills only.",
+   "src": "core"
+  },
+  {
+   "theme": "Doctrine",
+   "quote": "Zee's eye is ground truth",
+   "why": "Mechanise it; never overrule it.",
+   "src": "playbook"
+  },
+  {
+   "theme": "Doctrine",
+   "quote": "The simulator lies",
+   "why": "Validate on real fills only.",
+   "src": "playbook"
+  },
+  {
+   "theme": "Doctrine",
+   "quote": "A big loss eats ten small wins",
+   "why": "Avoiding killers beats catching winners.",
+   "src": "playbook"
+  },
+  {
+   "theme": "Doctrine",
+   "quote": "Skipping a winner is cheap; taking a killer is not",
+   "why": "When unsure, SKIP.",
+   "src": "playbook"
+  },
+  {
+   "theme": "Doctrine",
+   "quote": "One change at a time",
+   "why": ", then live evidence.",
+   "src": "playbook"
+  },
+  {
+   "theme": "Doctrine",
+   "quote": "Demo until proven",
+   "why": "Real money only on Zee's explicit word.",
+   "src": "playbook"
+  },
+  {
+   "theme": "Doctrine",
+   "quote": "Say it straight",
+   "why": "If it is losing, say so, with the receipts.",
+   "src": "playbook"
+  },
+  {
+   "theme": "Doctrine",
+   "quote": "Exit is the edge",
+   "why": "83 % of entries reached +6 pt; the exit decided the outcome.",
+   "src": "playbook"
+  },
+  {
+   "theme": "Doctrine",
+   "quote": "Detect on the exchange feed, execute on the broker",
+   "why": "Volume source is not a detail.",
+   "src": "playbook"
+  },
+  {
+   "theme": "Doctrine",
+   "quote": "Never trade stale data",
+   "why": "A hours-old setup at a live price is a donation.",
+   "src": "playbook"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "Y is not a UHV as its not in a valid retracement..",
+   "why": "written on setup 6",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "correct Y, incorrect B (B should be green for a buy trade) ..",
+   "why": "written on setup 15",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "invalid Y as candle is not red in color..",
+   "why": "written on setup 29",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "invalid Y as candle color should be green in sell setups..",
+   "why": "written on setup 31",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "invalid Y, as a valid retracement has not yet begun at the appearance of this UHV.",
+   "why": "written on setup 32",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "the Y is invalid uhv as its previous candle was the one with highest volume.",
+   "why": "written on setup 36",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "{\"verdict\":\"incorrect\",\"reason\":\"ranging market.",
+   "why": "written on setup m4",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "{\"verdict\":\"incorrect\",\"reason\":\"umm how can we be in loss when price fell after we took the sell trade, we should be in profit by now as we sold at around 4699 and now its 4692\"}",
+   "why": "written on setup m11",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "{\"verdict\":\"incorrect\",\"reason\":\"cyan doesnot mark a valid retracement in a downtrend, rather the trend before cyan is ranging.",
+   "why": "written on setup m12",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "{\"verdict\":\"incorrect\",\"reason\":\"price didnot break its last peak seen at 2135 so its not making higher highs therefore its not a confirmed uptrend, and we dont trade in ranging\"}",
+   "why": "written on setup m22",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "{\"verdict\":\"incorrect\",\"reason\":\"umm did price clearly moved past the uhv low?",
+   "why": "written on setup m34",
+   "src": "labels"
+  },
+  {
+   "theme": "From his own labels",
+   "quote": "{\"verdict\":\"incorrect\",\"reason\":\"dont know why its written loss, price CLEARLY moves up after entry..",
+   "why": "written on setup m44",
+   "src": "labels"
+  }
+ ],
+ "realigned": "2026-08-03T01:02:34"
+}
