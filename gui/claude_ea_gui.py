@@ -68,6 +68,7 @@ class App(tk.Tk):
         self.geometry("1120x760")
         self.configure(bg=BG)
         self.market = tk.StringVar(value="XAU")     # Zee trades gold — open on XAUUSD
+        self.market.trace_add("write", lambda *a: self._on_market_change())
         self._build()
         self.after(500, self.refresh_loop)
 
@@ -161,12 +162,14 @@ class App(tk.Tk):
         self._rows = {}
 
         act = tk.Frame(right, bg=PANEL, padx=10, pady=10); act.pack(fill="x", pady=(8, 0))
-        tk.Label(act, text="MANUAL OVERRIDE (no Claude session)", bg=PANEL, fg=MUTED,
+        tk.Label(act, text="DECIDE THIS SETUP YOURSELF", bg=PANEL, fg=MUTED,
                  font=("Segoe UI", 9, "bold")).pack(anchor="w")
-        row = tk.Frame(act, bg=PANEL); row.pack(fill="x", pady=6)
-        self._btn(row, "TAKE 1x", lambda: self.manual("TAKE", 1.0), GREEN, 9)
-        self._btn(row, "TAKE 2x", lambda: self.manual("TAKE", 2.0), "#16a34a", 9)
-        self._btn(row, "SKIP", lambda: self.manual("SKIP"), RED, 9)
+        tk.Label(act, text="Use these only when no Claude session is judging. They act on the "
+                           "setup currently waiting for a verdict.",
+                 bg=PANEL, fg="#5b6673", font=("Segoe UI", 8), wraplength=350,
+                 justify="left", anchor="w").pack(fill="x", pady=(1, 6))
+        self.mbtns = tk.Frame(act, bg=PANEL); self.mbtns.pack(fill="x")
+        self._manual_buttons()
 
         self.foot = tk.Label(self, text="", bg=BG, fg=MUTED, font=("Consolas", 9), anchor="w")
         self.foot.pack(fill="x", padx=14, pady=(0, 8))
@@ -239,8 +242,17 @@ class App(tk.Tk):
             rbname = rb.name if rb and rb.exists() else "CLAUDE_REALTIME_EA.md"
         except Exception:
             rbname = "CLAUDE_REALTIME_EA.md"
-        prompt = ("Read " + rbname + " and resume the live judging loop for "
-                  + self.market.get() + ".")
+        lessons = ""
+        try:
+            import lessons as L
+            n = L.count()
+            if n:
+                lessons = (" There are " + str(n) + " LESSONS FROM REAL LOSSES at the end of "
+                           "it - read those first and treat them as binding.")
+        except Exception:
+            pass
+        prompt = ("Read " + rbname + " before doing anything." + lessons
+                  + " Then resume the live judging loop for " + self.market.get() + ".")
         for attempt in (
             ["cmd", "/c", "start", "", "cmd", "/k", f'cd /d "{REPO}" && claude "{prompt}"'],
             ["cmd", "/c", "start", "", "code", str(REPO)],
@@ -349,7 +361,45 @@ class App(tk.Tk):
                        creationflags=NO_WIN)
 
     # ── refresh ───────────────────────────────────────────────────────────
+    def _manual_buttons(self):
+        """Spell the sizes out. "1x" and "2x" told the user nothing about what would
+        actually be sent to the broker."""
+        for w in self.mbtns.winfo_children():
+            w.destroy()
+        try:
+            import settings as S
+            cfg = S.load()
+            cap = cfg.get("max_lots_xau" if self.market.get() == "XAU" else "max_lots_btc", 0.10)
+        except Exception:
+            cap = 0.10
+        one = min(0.10, cap)
+        two = min(0.20, cap)
+        rows = [("BUY / SELL it  —  normal size", f"{one:.2f} lot", GREEN, 1.0),
+                ("BUY / SELL it  —  high conviction", f"{two:.2f} lot", "#16a34a", 2.0),
+                ("Do NOT trade this setup", "no order is sent", RED, None)]
+        for title, sub, colour, mult in rows:
+            f = tk.Frame(self.mbtns, bg=PANEL); f.pack(fill="x", pady=2)
+            cmd = ((lambda m=mult: self.manual("TAKE", m)) if mult
+                   else (lambda: self.manual("SKIP")))
+            tk.Button(f, text=title, command=cmd, bg=colour, fg="#0b0f14", relief="flat",
+                      font=("Segoe UI", 9, "bold"), anchor="w", padx=10, pady=6,
+                      cursor="hand2").pack(side="left", fill="x", expand=True)
+            tk.Label(f, text=sub, bg=PANEL, fg=MUTED,
+                     font=("Consolas", 8)).pack(side="left", padx=6)
+        if two <= one:
+            tk.Label(self.mbtns,
+                     text=f"both sizes are capped at {cap:.2f} lot for this account "
+                          f"(Settings → Trading)",
+                     bg=PANEL, fg=AMBER, font=("Segoe UI", 8), wraplength=350,
+                     justify="left", anchor="w").pack(fill="x", pady=(4, 0))
+
     # -- settings ---------------------------------------------------------
+    def _on_market_change(self):
+        try:
+            self._manual_buttons()
+        except Exception:
+            pass
+
     def open_settings(self):
         """Connect to Claude (subscription or API key), and set markets, lots and paths."""
         try:
@@ -364,12 +414,24 @@ class App(tk.Tk):
         except Exception:
             pass
         self._refresh_conn()
+        try:
+            self._manual_buttons()
+        except Exception:
+            pass
 
     def _refresh_conn(self):
         try:
             import settings as S
             name, colour, state = S.status_line()
-            self.conn.configure(text=name + "  \u00b7  " + state, fg=colour)
+            extra = ""
+            try:
+                import lessons as L
+                n = L.count()
+                if n:
+                    extra = "  \u00b7  " + str(n) + " lesson" + ("s" if n != 1 else "")
+            except Exception:
+                pass
+            self.conn.configure(text=name + "  \u00b7  " + state + extra, fg=colour)
         except Exception:
             pass
 
@@ -621,8 +683,42 @@ class TradeDetail(tk.Toplevel):
         tk.Button(br, text="Save comment", command=lambda: self.grade(None), bg="#334155",
                   fg="#fff", relief="flat", font=("Segoe UI", 9, "bold"), padx=14, pady=6,
                   cursor="hand2").pack(side="left", padx=12)
+        lost = (row["usd"] or 0) < 0
+        tk.Button(br, text=("\U0001F393  Derive Learnings" if lost else "Derive Learnings"),
+                  command=self.derive, bg=(AMBER if lost else "#334155"),
+                  fg=("#0b0f14" if lost else "#fff"), relief="flat",
+                  font=("Segoe UI", 9, "bold"), padx=16, pady=6,
+                  cursor="hand2").pack(side="left", padx=4)
         self.saved = tk.Label(br, text="", bg=BG, fg=GREEN, font=("Segoe UI", 9, "bold"))
         self.saved.pack(side="left", padx=8)
+        self.learnt = tk.Label(self, text="", bg=BG, fg=GREEN,
+                               font=("Segoe UI", 11, "bold"), pady=6)
+        self.learnt.pack(fill="x")
+
+    def derive(self):
+        """Zee's comment becomes a binding rule in the playbook Claude reads before judging."""
+        note = self.note.get("1.0", "end").strip()
+        note = __import__("re").sub(r"^(10/10|0/10)\s*:?\s*", "", note)
+        if len(note) < 10:
+            self.learnt.configure(
+                text="Write what went wrong first \u2014 the lesson comes from your words.",
+                fg=AMBER)
+            self.note.focus_set()
+            return
+        self.learnt.configure(text="deriving\u2026", fg=MUTED)
+        self.update()
+        try:
+            import lessons as L
+            tr = dict(self.row); tr["market"] = self.market
+            e = L.add(tr, note)
+            self.grade(None)
+            self.learnt.configure(
+                text="\u2713  Claude has learnt the lesson  \u2014  \u201c" + e["rule"]
+                     + "\u201d   (written into " + L.rulebook_path().name
+                     + ", now " + str(L.count()) + " lessons)",
+                fg=GREEN, wraplength=940, justify="left")
+        except Exception as ex:
+            self.learnt.configure(text="Could not save the lesson: " + str(ex), fg=RED)
 
     def grade(self, mark):
         import trade_book as TB

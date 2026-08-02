@@ -1,0 +1,20 @@
+[
+ {
+  "id": "L20260802200812",
+  "when": "2026-08-02T20:08:12+00:00",
+  "market": "XAU",
+  "trade": {
+   "time": "2026-07-31 19:16",
+   "side": "SELL",
+   "lots": "0.4",
+   "entry": 4043.43,
+   "exit": 4046.44,
+   "usd": -120.4,
+   "verdict": "TAKE"
+  },
+  "claude_reason": "engine said downtrend",
+  "zee_comment": "Price ne 19:08 pe HIGHER LOW banaya tha, matlab trend up shift ho raha tha. Uptrend me sell nahi karni chahiye thi.",
+  "rule": "On a SELL that lost $120.40: Price ne 19:08 pe HIGHER LOW banaya tha, matlab trend up shift ho raha tha.",
+  "derived_by": "verbatim"
+ }
+]
