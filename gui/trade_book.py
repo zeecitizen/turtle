@@ -46,6 +46,48 @@ def live(market="XAU"):
 
 
 # ── the book -------------------------------------------------------------------------
+TRADE_IDS = MON / "trade_ids.json"
+
+
+def _ids():
+    """A permanent, human-sayable number for every trade.
+
+    Zee: *"har trade ka ek unique ID trade number hona chahiye, takay kahin bhi kabhi bhi hum
+    kisi comment mein trade # mention kar ke uss trade ko discuss kar sakein."* Numbers are
+    assigned once, in the order trades are first seen, and never reused - so "trade #14"
+    means the same trade tomorrow, next month, and in any comment written about it."""
+    try:
+        return json.loads(TRADE_IDS.read_text(encoding="utf-8"))
+    except Exception:
+        return {"next": 1, "map": {}}
+
+
+def trade_id(market, key):
+    """Return (and mint, if new) the number for this trade."""
+    if not key:
+        return None
+    store = _ids()
+    full = f"{market}:{key}"
+    n = store["map"].get(full)
+    if n is None:
+        n = store["next"]
+        store["map"][full] = n
+        store["next"] = n + 1
+        TRADE_IDS.parent.mkdir(parents=True, exist_ok=True)
+        TRADE_IDS.write_text(json.dumps(store, indent=1), encoding="utf-8")
+    return n
+
+
+def find_by_id(n):
+    """The reverse lookup, so a comment saying "trade #14" can be resolved."""
+    store = _ids()
+    for full, num in store["map"].items():
+        if num == int(n):
+            mkt, _, key = full.partition(":")
+            return {"market": mkt, "key": key}
+    return None
+
+
 def _labels():
     try:
         return json.loads(LABELS.read_text(encoding="utf-8"))
@@ -260,6 +302,8 @@ def book(market="XAU", day=None):
             "strength": "", "brk_body": "", "uhv_vol": "",
             "judged_utc": h["close_time"].replace(".", "-").replace(" ", "T"),
         })
+    for r in rows:
+        r["id"] = trade_id(market, r.get("key"))
     rows.sort(key=lambda r: r["judged_utc"], reverse=True)
     return rows
 
