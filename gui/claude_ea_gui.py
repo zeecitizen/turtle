@@ -169,6 +169,15 @@ class App(tk.Tk):
                   command=self.open_research, bg="#7dd3fc", fg="#0b0f14", relief="flat",
                   font=("Segoe UI", 8, "bold"), cursor="hand2",
                   padx=10).pack(side="right", padx=6)
+        drow = tk.Frame(tf, bg=PANEL); drow.pack(fill="x", pady=(4, 0))
+        tk.Button(drow, text="\u2753  WHY ARE WE MISSING SETUPS?",
+                  command=self.open_funnel, bg="#a78bfa", fg="#0b0f14", relief="flat",
+                  font=("Segoe UI", 8, "bold"), cursor="hand2",
+                  padx=10, pady=4).pack(side="left", padx=(0, 6))
+        tk.Button(drow, text="\U0001F551  FIND BEST TIME WINDOW",
+                  command=self.open_windows, bg="#fbbf24", fg="#0b0f14", relief="flat",
+                  font=("Segoe UI", 8, "bold"), cursor="hand2",
+                  padx=10, pady=4).pack(side="left", padx=6)
         self.tsum = tk.Label(hdr, text="", bg=PANEL, fg=MUTED, font=("Consolas", 9))
         self.tsum.pack(side="right", padx=10)
         cols = ("time", "side", "verdict", "lots", "entry", "exit", "pnl", "status")
@@ -577,6 +586,21 @@ class App(tk.Tk):
         except Exception as e:
             messagebox.showerror("Turtle Desktop", "Research failed: " + str(e))
 
+    def open_funnel(self):
+        """Why 1-2 setups a day when Zee counts ~100 by eye: count the drop-off at each gate."""
+        def build():
+            import funnel as F
+            return F.to_text(F.diagnose(self.market.get()))
+        ReportWindow(self, "Why are we missing setups?", build,
+                     "counting how many candidates die at each gate...")
+
+    def open_windows(self):
+        def build():
+            import windows as W
+            return W.to_text(W.analyse(self.market.get()))
+        ReportWindow(self, "Best time window", build,
+                     "measuring movement and money by hour...")
+
     def make_pdf(self):
         import trade_book as TB
         try:
@@ -753,6 +777,58 @@ class App(tk.Tk):
 
         self.foot.configure(text=f"  {datetime.now(timezone.utc).strftime('%H:%M:%S')} UTC   ·   "
                                  f"repo {REPO}   ·   playbook: CLAUDE_REALTIME_EA.md")
+
+
+class ReportWindow(tk.Toplevel):
+    """A plain reader for the diagnostic engines. Monospaced on purpose: these are tables of
+    counts, and the numbers should line up."""
+
+    def __init__(self, parent, title, build, busy="working..."):
+        super().__init__(parent)
+        self.build = build
+        self.title("Turtle Desktop - " + title)
+        self.geometry("1080x820")
+        self.configure(bg=BG)
+
+        head = tk.Frame(self, bg=PANEL, padx=14, pady=10); head.pack(fill="x")
+        tk.Label(head, text=title, bg=PANEL, fg=FG,
+                 font=("Segoe UI", 14, "bold")).pack(side="left")
+        self.sub = tk.Label(head, text=busy, bg=PANEL, fg=MUTED, font=("Segoe UI", 9))
+        self.sub.pack(side="left", padx=12)
+        tk.Button(head, text="Re-run", command=self.run, bg=BLUE, fg="#0b0f14",
+                  relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=4,
+                  cursor="hand2").pack(side="right", padx=4)
+        tk.Button(head, text="Copy", command=self.copy, bg="#334155", fg="#fff",
+                  relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=4,
+                  cursor="hand2").pack(side="right", padx=4)
+
+        self.txt = tk.Text(self, bg="#0b0f14", fg=FG, relief="flat", wrap="none",
+                           font=("Consolas", 10), padx=14, pady=10)
+        sb = ttk.Scrollbar(self, orient="vertical", command=self.txt.yview)
+        self.txt.configure(yscrollcommand=sb.set)
+        sb.pack(side="right", fill="y")
+        self.txt.pack(fill="both", expand=True, padx=(12, 0), pady=8)
+        self.after(80, self.run)
+
+    def run(self):
+        self.txt.configure(state="normal"); self.txt.delete("1.0", "end")
+        self.txt.insert("end", "working...\n"); self.update()
+        try:
+            body = self.build()
+        except Exception as e:
+            body = "Could not run this: " + str(e)
+        self.txt.delete("1.0", "end")
+        self.txt.insert("end", body)
+        self.txt.configure(state="disabled")
+        self.sub.configure(text="")
+
+    def copy(self):
+        try:
+            self.clipboard_clear()
+            self.clipboard_append(self.txt.get("1.0", "end"))
+            self.sub.configure(text="copied", fg=GREEN)
+        except Exception:
+            pass
 
 
 class ResearchWindow(tk.Toplevel):
