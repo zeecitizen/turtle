@@ -407,6 +407,23 @@ class SettingsDialog(tk.Toplevel):
                           "them from the sources.", bg=PANEL, fg=MUTED, font=("Segoe UI", 9),
                  justify="left", wraplength=650, anchor="w").pack(fill="x")
 
+        # ── share ──
+        sh = self._box("GIVE IT TO SOMEONE")
+        rs = tk.Frame(sh, bg=PANEL); rs.pack(fill="x", pady=4)
+        tk.Button(rs, text="💾  COPY SETUP TO USB TO GIVE TO FRIEND",
+                  command=self.copy_to_usb, bg=GREEN, fg="#0b0f14", relief="flat",
+                  font=("Segoe UI", 9, "bold"), padx=16, pady=7,
+                  cursor="hand2").pack(side="left", padx=6)
+        self.shres = tk.Label(rs, text="", bg=PANEL, fg=MUTED, font=("Segoe UI", 9),
+                              wraplength=440, justify="left")
+        self.shres.pack(side="left", padx=8)
+        tk.Label(sh, text="      Copies TurtleDesktop-Setup.exe and a short read-me onto a "
+                          "drive you pick. Your friend runs the setup, then needs Python, "
+                          "MetaTrader 5 and TradingView on their own PC - and their own "
+                          "Claude subscription or API key.", bg=PANEL, fg=MUTED,
+                 font=("Segoe UI", 9), justify="left", wraplength=650,
+                 anchor="w").pack(fill="x")
+
         # ── buttons ──
         b = tk.Frame(self, bg=BG); b.pack(fill="x", padx=16, pady=12)
         tk.Button(b, text="Save", command=self.save_all, bg=GREEN, fg="#0b0f14", relief="flat",
@@ -445,6 +462,52 @@ class SettingsDialog(tk.Toplevel):
         tk.Button(r, text="…", command=browse, bg="#334155", fg="#fff", relief="flat",
                   width=3, cursor="hand2").pack(side="left", padx=4)
         return e
+
+    def copy_to_usb(self):
+        """Put the installer somewhere a friend can run it from."""
+        import shutil
+        exe = REPO / "gui" / "Output" / "TurtleDesktop-Setup.exe"
+        if not exe.exists():
+            self.shres.configure(
+                text=("TurtleDesktop-Setup.exe has not been built yet.\n"
+                      "Build it by compiling gui/installer.iss in Inno Setup."), fg=RED)
+            return
+        dest = filedialog.askdirectory(title="Choose the USB drive (or any folder)")
+        if not dest:
+            return
+        try:
+            out = Path(dest) / "TurtleDesktop"
+            out.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(exe, out / exe.name)
+            readme = REPO / "gui" / "FIRST_RUN.txt"
+            if readme.exists():
+                shutil.copy2(readme, out / "READ ME FIRST.txt")
+            howto = [
+                "TURTLE DESKTOP",
+                "==============",
+                "",
+                "1. Double-click TurtleDesktop-Setup.exe and follow the wizard.",
+                "2. Open \"Turtle Desktop\" from the Start menu.",
+                "3. Read READ ME FIRST.txt - it lists what else this PC needs:",
+                "     Python 3.12+",
+                "     MetaTrader 5, logged into a DEMO account",
+                "     TradingView Desktop",
+                "     a Claude subscription, or an Anthropic API key",
+                "",
+                "This trades a real market. Keep it on a demo account until it has",
+                "proven itself to you. It is not a promise of profit.",
+            ]
+            (out / "HOW TO INSTALL.txt").write_text("\n".join(howto), encoding="utf-8")
+            mb = exe.stat().st_size / 1048576
+            self.shres.configure(
+                text=(f"Copied to {out}\n{exe.name} ({mb:.1f} MB) plus the read-me. "
+                      "Hand over the whole TurtleDesktop folder."), fg=GREEN)
+            try:
+                subprocess.Popen(["explorer", str(out)])
+            except Exception:
+                pass
+        except Exception as e:
+            self.shres.configure(text=f"Copy failed: {e}", fg=RED)
 
     def open_labels(self):
         try:

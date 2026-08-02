@@ -17,6 +17,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 RESULTS = []
 
 
+def _thin_is_honest(RS):
+    """With no fills there is nothing to conclude, and it must say so."""
+    rep = RS.analyse("BTC")
+    if rep["counts"]["filled"] == 0:
+        assert "validated" in rep["headline"] or "none" in rep["headline"].lower(), rep["headline"]
+        assert any("not a failure" in s or "small" in s for s in rep["suggested"]), rep["suggested"]
+    return True
+
+
 def _fallback(TB):
     import datetime
     real_j, real_t = TB.judged_days, TB.trading_days
@@ -201,6 +210,16 @@ def main():
     check("vision: a reading renders labels",
           lambda: Path(VM.mark("BTC", trend="down", side="SELL", note="test")["png"]).exists())
 
+    import research as RS
+    check("research: analyse() returns a report",
+          lambda: set(RS.analyse("BTC")) >= {"headline", "sections", "suggested", "counts"})
+    check("research: every section reports its sample size",
+          lambda: all("n" in s and "solid" in s for s in RS.analyse("BTC")["sections"]))
+    check("research: a thin sample is never promoted to a rule",
+          lambda: _thin_is_honest(RS))
+    check("research: text render works", lambda: len(RS.to_text(RS.analyse("BTC"))) > 100)
+    check("research: PDF render works", lambda: Path(RS.to_pdf(RS.analyse("BTC"))).exists())
+
     import lessons as LS
     check("lessons: rulebook is found", lambda: LS.rulebook_path().exists())
     check("lessons: an empty comment is refused",
@@ -227,7 +246,7 @@ def main():
         d = dlg["d"]
         for attr in ("mode", "key", "model", "market", "lx", "lb", "pypath", "common", "auto",
                      "term", "terminfo", "tvport", "tvpoll", "tvx", "tvb", "tvres",
-                     "rulebook", "rbres"):
+                     "rulebook", "rbres", "shres"):
             check(f"settings widget: {attr}", lambda a=attr: getattr(d, a))
 
         def both_modes():
@@ -261,6 +280,15 @@ def main():
         check("settings: Explore Labelled Setups opens",
               lambda: (d.open_labels(), app.update()))
         check("settings: Philosophy opens", lambda: (d.open_philosophy(), app.update()))
+        import tempfile
+        with mock.patch.object(S.filedialog, "askdirectory", lambda **k: ""):
+            check("settings: USB copy handles a cancelled picker",
+                  lambda: (d.copy_to_usb(), app.update()))
+        with mock.patch.object(S.filedialog, "askdirectory",
+                               lambda **k: tempfile.gettempdir()),              mock.patch.object(S.subprocess, "Popen", lambda *a, **k: None):
+            check("settings: USB copy runs", lambda: (d.copy_to_usb(), app.update()))
+        check("settings: USB copy reported a result",
+              lambda: len(d.shres.cget("text")) > 0)
 
         # save must round-trip without touching a real key file
         import tempfile
@@ -270,6 +298,21 @@ def main():
             d.destroy()
         except Exception:
             pass
+
+    check("research window opens and renders",
+          lambda: (G.ResearchWindow(app, "BTC"), app.update()))
+
+    check("banner: hidden when nothing is happening",
+          lambda: (app._banner_update(None, []), app.update()))
+    check("banner: shouts on a pending breakout",
+          lambda: (app._banner_update({"side": "BUY", "entry": 4050.0}, []), app.update(),
+                   "BREAKOUT DETECTED" in app.banner.cget("text"))[2])
+    check("banner: harvesting text when a position is in profit",
+          lambda: (app._banner_update(None, [{"side": "BUY", "profit": 4.2}]), app.update(),
+                   "HARVESTING PROFITS" in app.banner.cget("text"))[2])
+    check("banner: different text when the position is losing",
+          lambda: (app._banner_update(None, [{"side": "SELL", "profit": -2.0}]), app.update(),
+                   "RIDING IT OUT" in app.banner.cget("text"))[2])
 
     check("main window: Settings button opens the dialog",
           lambda: (setattr(app, "_sd", None), app.update()))
