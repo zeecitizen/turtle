@@ -12,13 +12,13 @@
 param([switch]$Uninstall, [switch]$NoAutoStart)
 
 $ErrorActionPreference = "Stop"
-$AppName   = "Claude EA"
+$AppName   = "Turtle Desktop"
 $Repo      = Split-Path -Parent $PSScriptRoot
 $Gui       = Join-Path $PSScriptRoot "claude_ea_gui.py"
-$Icon      = Join-Path $PSScriptRoot "claude_ea.ico"
+$Icon      = Join-Path $PSScriptRoot "turtle.ico"
 $StartDir  = Join-Path ([Environment]::GetFolderPath('Programs')) $AppName
 $Desktop   = [Environment]::GetFolderPath('Desktop')
-$TaskName  = "ClaudeEA_AutoStart"
+$TaskName  = "TurtleDesktop_AutoStart"
 
 function Find-Pythonw {
     $c = @(
@@ -79,9 +79,9 @@ if ($missing.Count -gt 0) {
 
 # --------------------------- shortcuts ---------------------------
 New-Item -ItemType Directory -Force -Path $StartDir | Out-Null
-New-Shortcut (Join-Path $StartDir "$AppName.lnk") $Pythonw "`"$Gui`"" $Repo "Claude EA - vision-driven trading"
-New-Shortcut (Join-Path $StartDir "Claude EA Playbook.lnk") (Join-Path $Repo "CLAUDE_REALTIME_EA.md") "" $Repo "The playbook Claude reads to resume trading"
-New-Shortcut (Join-Path $Desktop "$AppName.lnk") $Pythonw "`"$Gui`"" $Repo "Claude EA - vision-driven trading"
+New-Shortcut (Join-Path $StartDir "$AppName.lnk") $Pythonw "`"$Gui`"" $Repo "Turtle Desktop - vision-driven trading"
+New-Shortcut (Join-Path $StartDir "Turtle Desktop Playbook.lnk") (Join-Path $Repo "CLAUDE_REALTIME_EA.md") "" $Repo "The playbook Claude reads to resume trading"
+New-Shortcut (Join-Path $Desktop "$AppName.lnk") $Pythonw "`"$Gui`"" $Repo "Turtle Desktop - vision-driven trading"
 Write-Host "  [ok] Start menu entry : $StartDir"
 Write-Host "  [ok] Desktop shortcut"
 
@@ -90,7 +90,7 @@ if (-not $NoAutoStart) {
     # Scheduled Tasks need elevation; the per-user Startup folder does not. Same effect:
     # the panel comes back by itself after a power cut, a restart, or a re-login.
     $StartupDir = [Environment]::GetFolderPath('Startup')
-    New-Shortcut (Join-Path $StartupDir "$AppName.lnk") $Pythonw "`"$Gui`"" $Repo "Claude EA (auto-start)"
+    New-Shortcut (Join-Path $StartupDir "$AppName.lnk") $Pythonw "`"$Gui`"" $Repo "Turtle Desktop (auto-start)"
     Write-Host "  [ok] auto-start registered (Startup folder, no admin needed)"
     Write-Host "       -> after a power cut or restart the panel comes back by itself"
 } else {
