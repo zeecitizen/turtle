@@ -33,6 +33,11 @@ DEFAULTS = {
     "python": sys.executable,
     "common_dir": r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files",
     "auto_judge": False,              # API mode only: judge without a human in the loop
+    "mt5_terminal": "",               # which installed terminal we are wired to
+    "tv_port": 9222,                  # TradingView remote-debug port the bridge attaches to
+    "tv_symbol_xau": "OANDA:XAUUSD",
+    "tv_symbol_btc": "COINBASE:BTCUSD",
+    "tv_poll_sec": 20,
 }
 
 BG, PANEL, FG, MUTED = "#0b0f14", "#111826", "#e6edf3", "#8b97a3"
@@ -101,6 +106,62 @@ def test_api(key, model):
         if "authentication" in s.lower() or "401" in s:
             return False, "The key was rejected (authentication error). Check you pasted it whole."
         return False, f"Could not reach the API:\n{s[:300]}"
+
+
+# ── MT5 discovery ────────────────────────────────────────────────────────────────────
+def find_terminals():
+    """Every MetaTrader 5 data folder on this PC, with the broker(s) it is logged into.
+
+    Zee: *"pata ni konsa konsa MT5 hota hai system mein installed"* - Exness, Blueberry and
+    the rest each get their own hashed folder under %APPDATA%\\MetaQuotes\\Terminal, and the
+    server names appear as sub-folders of bases\\. That is how we name them."""
+    import os
+    root = Path(os.environ.get("APPDATA", "")) / "MetaQuotes" / "Terminal"
+    out = []
+    if not root.exists():
+        return out
+    for d in sorted(root.iterdir()):
+        if not d.is_dir() or d.name.lower() in ("common",) or len(d.name) < 16:
+            continue
+        brokers = []
+        bases = d / "bases"
+        if bases.exists():
+            for b in bases.iterdir():
+                if b.is_dir() and b.name not in ("Custom", "Default", "Embedded"):
+                    brokers.append(b.name)
+        install = ""
+        try:
+            install = (d / "origin.txt").read_text(encoding="utf-16", errors="ignore").strip()
+        except Exception:
+            try:
+                install = (d / "origin.txt").read_text(encoding="utf-8", errors="ignore").strip()
+            except Exception:
+                pass
+        has_ea = (d / "MQL5" / "Experts" / "CaseSignalExecutor.mq5").exists()
+        out.append({"id": d.name, "path": str(d),
+                    "brokers": brokers or ["(not logged in)"],
+                    "install": install, "has_ea": has_ea,
+                    "label": (", ".join(brokers) if brokers else "(no account)")
+                             + "   [" + d.name[:8] + "]" + ("   * our EA" if has_ea else "")})
+    # the one carrying our EA first
+    out.sort(key=lambda x: (not x["has_ea"], x["label"]))
+    return out
+
+
+def test_tradingview(port):
+    """Is TradingView reachable on its debug port, and what is on the chart?"""
+    import json as _j, urllib.request
+    try:
+        pages = _j.load(urllib.request.urlopen(f"http://localhost:{port}/json", timeout=5))
+    except Exception as e:
+        return False, (f"Nothing answering on port {port}.\n\n"
+                       f"Start TradingView through START EVERYTHING (it needs "
+                       f"--remote-debugging-port={port}); if it is already open without the "
+                       f"port, close it completely first.\n\n{e}")
+    tv = [p for p in pages if "tradingview" in (p.get("url", "") + p.get("title", "")).lower()]
+    if not tv:
+        return False, f"Port {port} answers, but no TradingView page is open there."
+    return True, f"TradingView connected on {port}.\n{tv[0].get('title', '')[:90]}"
 
 
 # ── dialog ───────────────────────────────────────────────────────────────────────────
@@ -195,10 +256,72 @@ class SettingsDialog(tk.Toplevel):
                          "has no margin for.", bg=PANEL, fg=MUTED, font=("Segoe UI", 9),
                  anchor="w").pack(fill="x")
 
+        # ── MT5 ──
+        m5 = self._box("METATRADER 5")
+        self.terms = find_terminals()
+        r0 = tk.Frame(m5, bg=PANEL); r0.pack(fill="x", pady=4)
+        tk.Label(r0, text="Terminal", bg=PANEL, fg=MUTED, width=16, anchor="w",
+                 font=("Segoe UI", 9, "bold")).pack(side="left", padx=(6, 4))
+        self.term = ttk.Combobox(r0, values=[x["label"] for x in self.terms] or ["(none found)"],
+                                 state="readonly", width=52)
+        cur = self.cfg.get("mt5_terminal", "")
+        idx = next((i for i, x in enumerate(self.terms) if x["id"] == cur), 0)
+        if self.terms:
+            self.term.current(idx)
+        self.term.pack(side="left")
+        self.term.bind("<<ComboboxSelected>>", lambda e: self._term_changed())
+        self.terminfo = tk.Label(m5, text="", bg=PANEL, fg=MUTED, font=("Consolas", 9),
+                                 justify="left", anchor="w", wraplength=640)
+        self.terminfo.pack(fill="x", padx=6, pady=(2, 4))
+        self.common = self._path_row(m5, "Common\\Files", self.cfg["common_dir"], folder=True)
+        tk.Label(m5, text="      Common\\Files is shared by every terminal - it is where the EA "
+                          "reads signals and writes fills.", bg=PANEL, fg=MUTED,
+                 font=("Segoe UI", 9), anchor="w").pack(fill="x")
+
+        # ── TradingView bridge ──
+        tv = self._box("TRADINGVIEW BRIDGE  (price and volume come from here, not MT5)")
+        r1 = tk.Frame(tv, bg=PANEL); r1.pack(fill="x", pady=4)
+        tk.Label(r1, text="Debug port", bg=PANEL, fg=MUTED, width=16, anchor="w",
+                 font=("Segoe UI", 9, "bold")).pack(side="left", padx=(6, 4))
+        self.tvport = tk.Entry(r1, width=8, bg="#0b0f14", fg=FG, relief="flat",
+                               insertbackground=FG, font=("Consolas", 10))
+        self.tvport.insert(0, str(self.cfg.get("tv_port", 9222)))
+        self.tvport.pack(side="left", ipady=3)
+        tk.Label(r1, text="   Poll every", bg=PANEL, fg=MUTED,
+                 font=("Segoe UI", 9, "bold")).pack(side="left", padx=(14, 4))
+        self.tvpoll = tk.Entry(r1, width=6, bg="#0b0f14", fg=FG, relief="flat",
+                               insertbackground=FG, font=("Consolas", 10))
+        self.tvpoll.insert(0, str(self.cfg.get("tv_poll_sec", 20)))
+        self.tvpoll.pack(side="left", ipady=3)
+        tk.Label(r1, text="sec", bg=PANEL, fg=MUTED).pack(side="left", padx=3)
+        tk.Button(r1, text="Test bridge", command=self.test_tv, bg=BLUE, fg="#0b0f14",
+                  relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=4,
+                  cursor="hand2").pack(side="left", padx=14)
+        r2 = tk.Frame(tv, bg=PANEL); r2.pack(fill="x", pady=4)
+        tk.Label(r2, text="Chart symbols", bg=PANEL, fg=MUTED, width=16, anchor="w",
+                 font=("Segoe UI", 9, "bold")).pack(side="left", padx=(6, 4))
+        tk.Label(r2, text="XAU", bg=PANEL, fg=MUTED).pack(side="left")
+        self.tvx = tk.Entry(r2, width=20, bg="#0b0f14", fg=FG, relief="flat",
+                            insertbackground=FG, font=("Consolas", 9))
+        self.tvx.insert(0, self.cfg.get("tv_symbol_xau", "OANDA:XAUUSD"))
+        self.tvx.pack(side="left", ipady=3, padx=6)
+        tk.Label(r2, text="BTC", bg=PANEL, fg=MUTED).pack(side="left")
+        self.tvb = tk.Entry(r2, width=22, bg="#0b0f14", fg=FG, relief="flat",
+                            insertbackground=FG, font=("Consolas", 9))
+        self.tvb.insert(0, self.cfg.get("tv_symbol_btc", "COINBASE:BTCUSD"))
+        self.tvb.pack(side="left", ipady=3, padx=6)
+        self.tvres = tk.Label(tv, text="", bg=PANEL, fg=MUTED, font=("Segoe UI", 9),
+                              wraplength=640, justify="left", anchor="w")
+        self.tvres.pack(fill="x", padx=6, pady=(4, 0))
+        tk.Label(tv, text="      MT5 tick volume is not the volume the strategy needs; the "
+                          "exchange feed is. Gold: OANDA. Bitcoin: Coinbase (OANDA's BTC "
+                          "volume has no usable spikes).", bg=PANEL, fg=MUTED,
+                 font=("Segoe UI", 9), justify="left", wraplength=650,
+                 anchor="w").pack(fill="x")
+
         # ── paths ──
         p = self._box("PATHS")
         self.pypath = self._path_row(p, "Python", self.cfg["python"])
-        self.common = self._path_row(p, "MT5 Common\\Files", self.cfg["common_dir"], folder=True)
 
         # ── buttons ──
         b = tk.Frame(self, bg=BG); b.pack(fill="x", padx=16, pady=12)
@@ -210,6 +333,7 @@ class SettingsDialog(tk.Toplevel):
         self.msg = tk.Label(b, text="", bg=BG, fg=GREEN, font=("Segoe UI", 9, "bold"))
         self.msg.pack(side="left", padx=10)
         self._sync()
+        self._term_changed()
 
     # helpers
     def _box(self, title):
@@ -235,6 +359,28 @@ class SettingsDialog(tk.Toplevel):
         tk.Button(r, text="…", command=browse, bg="#334155", fg="#fff", relief="flat",
                   width=3, cursor="hand2").pack(side="left", padx=4)
         return e
+
+    def _term_changed(self):
+        i = self.term.current()
+        if not (0 <= i < len(self.terms)):
+            return
+        x = self.terms[i]
+        self.terminfo.configure(
+            text="broker(s): " + ", ".join(x["brokers"]) + "\n" + x["path"]
+                 + ("\nour EA is installed here" if x["has_ea"]
+                    else "\nCaseSignalExecutor.mq5 is NOT in this terminal - copy it from mt5\\ "
+                         "and press F7"),
+            fg=GREEN if x["has_ea"] else AMBER)
+
+    def test_tv(self):
+        self.tvres.configure(text="testing...", fg=MUTED)
+        self.update()
+        try:
+            port = int(self.tvport.get())
+        except Exception:
+            self.tvres.configure(text="Port must be a number.", fg=RED); return
+        ok, msg = test_tradingview(port)
+        self.tvres.configure(text=msg, fg=GREEN if ok else RED)
 
     def _sync(self):
         api = self.mode.get() == "api"
@@ -262,7 +408,17 @@ class SettingsDialog(tk.Toplevel):
             "python": self.pypath.get().strip(),
             "common_dir": self.common.get().strip(),
             "auto_judge": bool(self.auto.get()),
+            "tv_symbol_xau": self.tvx.get().strip() or "OANDA:XAUUSD",
+            "tv_symbol_btc": self.tvb.get().strip() or "COINBASE:BTCUSD",
         })
+        i = self.term.current()
+        if 0 <= i < len(self.terms):
+            cfg["mt5_terminal"] = self.terms[i]["id"]
+        for k, ent, d in (("tv_port", self.tvport, 9222), ("tv_poll_sec", self.tvpoll, 20)):
+            try:
+                cfg[k] = int(ent.get())
+            except Exception:
+                cfg[k] = d
         for k, ent, d in (("max_lots_xau", self.lx, 0.10), ("max_lots_btc", self.lb, 0.30)):
             try:
                 cfg[k] = max(0.01, float(ent.get()))

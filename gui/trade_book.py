@@ -23,8 +23,10 @@ LABELS = MON / "setup_labels" / "zee_labels.json"
 JOURNAL = MON / "claude_judgments.jsonl"
 COMMON = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files")
 
-MKT = {"XAU": dict(fills="caseexec_fills.csv", live="xau_live.json", label="XAUUSD"),
-       "BTC": dict(fills="btc_fills.csv",      live="btc_live.json", label="BTCUSD")}
+MKT = {"XAU": dict(fills="caseexec_fills.csv", live="xau_live.json",
+                   hist="xau_history.csv", label="XAUUSD"),
+       "BTC": dict(fills="btc_fills.csv", live="btc_live.json",
+                   hist="btc_history.csv", label="BTCUSD")}
 
 
 # ── live -----------------------------------------------------------------------------
@@ -107,8 +109,45 @@ def _num(x, d=0.0):
         return d
 
 
+def history(market="XAU"):
+    """MT5's OWN closed trades, exported by the EA. This is where the real 2026-07-31 gold
+    trades live -- no CSV in the repo ever had them, only the terminal's History tab."""
+    f = COMMON / MKT[market]["hist"]
+    if not f.exists():
+        return []
+    out = []
+    try:
+        for r in csv.DictReader(f.open(encoding="utf-8", errors="replace")):
+            if not r.get("close_time"):
+                continue
+            out.append({"close_time": r["close_time"].strip(),
+                        "side": (r.get("side") or "").strip().upper(),
+                        "lots": r.get("lots", ""), "entry": r.get("entry", ""),
+                        "exit": r.get("exit", ""), "pts": r.get("pts", ""),
+                        "usd": _num(r.get("usd")), "magic": r.get("magic", ""),
+                        "comment": (r.get("comment") or "").strip()})
+    except Exception:
+        return []
+    out.sort(key=lambda x: x["close_time"], reverse=True)
+    return out
+
+
+def trading_days(market="XAU"):
+    """Days that actually have trades, newest first — so the panel can default to the last
+    session rather than an empty 'today' over a weekend."""
+    days = []
+    for h in history(market):
+        d = h["close_time"][:10].replace(".", "-")
+        if d not in days:
+            days.append(d)
+    return days
+
+
 def book(market="XAU", day=None):
-    """One row per judged setup, joined to its broker fill and Zee's comment."""
+    """One row per judged setup, joined to its broker fill and Zee's comment.
+
+    Rows also include REAL MT5 trades that Claude never judged (anything traded before this
+    system existed, e.g. 2026-07-31), so the panel shows the account's actual history."""
     day = day or datetime.now(timezone.utc).strftime("%Y-%m-%d")
     labels = _labels()
     fills = _fills(market)
@@ -145,6 +184,29 @@ def book(market="XAU", day=None):
             "brk_body": j.get("brk_body", ""),
             "uhv_vol": j.get("uhv_vol", ""),
             "judged_utc": j.get("judged_utc", ""),
+        })
+    # real MT5 trades for that day that have no Claude judgment behind them
+    seen = {(r["side"], round(_num(r["entry"]), 2)) for r in rows}
+    for h in history(market):
+        d = h["close_time"][:10].replace(".", "-")
+        if d != day:
+            continue
+        if (h["side"], round(_num(h["entry"]), 2)) in seen:
+            continue
+        key = f"{h['close_time']}_{h['side']}"
+        lab = labels.get(f"trade_{key}", {})
+        rows.append({
+            "key": key, "time": h["close_time"][-8:-3] or h["close_time"],
+            "side": h["side"], "verdict": "(pre-Claude)", "mult": "",
+            "lots": h["lots"], "entry": h["entry"], "exit": h["exit"],
+            "usd": h["usd"],
+            "status": "WIN" if h["usd"] > 0 else "LOSS" if h["usd"] < 0 else "flat",
+            "claude_reason": f"Traded by the EA before Claude judged setups"
+                             f"{' (magic ' + h['magic'] + ')' if h['magic'] else ''}."
+                             f"{' ' + h['comment'] if h['comment'] else ''}",
+            "zee_comment": (lab.get("zee") or ""),
+            "strength": "", "brk_body": "", "uhv_vol": "",
+            "judged_utc": h["close_time"].replace(".", "-").replace(" ", "T"),
         })
     rows.sort(key=lambda r: r["judged_utc"], reverse=True)
     return rows

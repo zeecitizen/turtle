@@ -25,6 +25,61 @@ input double InpTpCapPts     = 3.0;    // take-profit ceiling 3pt. dom=0 fast-sc
 input int    InpMaxSignalAgeSec = 180;  // ignore signals older than this (stale-signal guard)
 input string InpSignalFile   = "case_signal.json";
 input string InpHeartbeatFile = "xau_live.json";   // live price/position feed for Turtle Desktop
+input string InpHistoryFile   = "xau_history.csv";   // MT5 closed-trade history for Turtle Desktop
+
+//--- Export the terminal's OWN closed-trade history for this symbol. The 2026-07-31 gold
+//--- trades lived only in the History tab: no CSV had them, so Turtle Desktop could not
+//--- show a single real trade. Written once at init and after every close.
+void ExportHistory(int days = 30)
+{
+   datetime from = TimeCurrent() - (datetime)days * 86400;
+   if (!HistorySelect(from, TimeCurrent())) return;
+
+   int h = FileOpen(InpHistoryFile, FILE_WRITE | FILE_CSV | FILE_ANSI | FILE_COMMON, ',');
+   if (h == INVALID_HANDLE) return;
+   FileWrite(h, "close_time", "symbol", "side", "lots", "entry", "exit", "pts", "usd",
+             "magic", "comment", "ticket");
+
+   int total = HistoryDealsTotal();
+   for (int i = 0; i < total; i++)
+   {
+      ulong d = HistoryDealGetTicket(i);
+      if (d == 0) continue;
+      if (HistoryDealGetInteger(d, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;   // closes only
+      string sym = HistoryDealGetString(d, DEAL_SYMBOL);
+      if (StringFind(sym, _Symbol) < 0) continue;
+
+      double vol   = HistoryDealGetDouble(d, DEAL_VOLUME);
+      double price = HistoryDealGetDouble(d, DEAL_PRICE);
+      double usd   = HistoryDealGetDouble(d, DEAL_PROFIT)
+                   + HistoryDealGetDouble(d, DEAL_SWAP)
+                   + HistoryDealGetDouble(d, DEAL_COMMISSION);
+      long   type  = HistoryDealGetInteger(d, DEAL_TYPE);
+      // a closing SELL deal closes a BUY position, and vice versa
+      string side  = (type == DEAL_TYPE_SELL) ? "BUY" : "SELL";
+      long   pid   = HistoryDealGetInteger(d, DEAL_POSITION_ID);
+
+      double entry = 0.0;                      // find this position's opening deal
+      for (int k = 0; k < total; k++)
+      {
+         ulong o = HistoryDealGetTicket(k);
+         if (o == 0) continue;
+         if (HistoryDealGetInteger(o, DEAL_POSITION_ID) != pid) continue;
+         if (HistoryDealGetInteger(o, DEAL_ENTRY) != DEAL_ENTRY_IN) continue;
+         entry = HistoryDealGetDouble(o, DEAL_PRICE); break;
+      }
+      double pts = (entry > 0) ? ((side == "BUY") ? price - entry : entry - price) : 0.0;
+
+      FileWrite(h,
+                TimeToString((datetime)HistoryDealGetInteger(d, DEAL_TIME), TIME_DATE | TIME_SECONDS),
+                sym, side, DoubleToString(vol, 2), DoubleToString(entry, 2),
+                DoubleToString(price, 2), DoubleToString(pts, 2), DoubleToString(usd, 2),
+                (string)HistoryDealGetInteger(d, DEAL_MAGIC),
+                HistoryDealGetString(d, DEAL_COMMENT), (string)d);
+   }
+   FileClose(h);
+   PrintFormat("[history] exported %s history -> %s", _Symbol, InpHistoryFile);
+}
 
 //--- Live heartbeat: Turtle Desktop needs the BROKER's own truth (price, spread, and any
 //--- running position with its live P&L). Python cannot query MT5 on this ARM64 machine,
