@@ -191,6 +191,68 @@ def approve(verdict, mult=1.0, reason="", max_age_sec=180):
     return rec
 
 
+def watch(market="XAU"):
+    """Render the OPEN position so Claude can manage the exit with her eyes.
+
+    Zee, correcting me: *"tum candle form hote har second dekh sakti ho... tumhari speed
+    ENOUGH hai trade ko open/close karne ke liye. Masla ye hai tum EA pe depend karti ho
+    jabke tumhare paas EYES hain."* He is right, and the measurements agree with him: a
+    verdict today took 9-91 seconds while our trades last 2-5 minutes, so a position gets
+    looked at many times before it closes.
+
+    The evidence is stronger than the speed argument, though. The EA's fixed 0.2pt give-back
+    captured only 32% of what the winners offered ($145.61 of $460.89 on 2026-07-31). That
+    trail is not fast — it is BLIND. It cannot say "this one is still running, hold".
+
+    The hard stop stays where it is. It is insurance, not an opinion."""
+    m = MARKETS[market]
+    hb = COMMON / ("xau_live.json" if market == "XAU" else "btc_live.json")
+    if not hb.exists():
+        return {"error": "no EA heartbeat — nothing to watch"}
+    try:
+        d = json.loads(hb.read_text(encoding="ascii", errors="replace"))
+    except Exception as e:
+        return {"error": f"heartbeat unreadable: {e}"}
+    pos = d.get("positions") or []
+    if not pos:
+        return {"open": 0, "price": d.get("bid"), "note": "no open position"}
+
+    bars = load_bars(m["data"])
+    import build_trend_game as G
+    out = Path(__file__).parent / "setup_labels" / "position.png"
+    i = len(bars) - 1
+    s = {"i": i, "o": max(0, i - 6), "u": max(0, i - 3), "side": pos[0]["side"]}
+    G.draw(bars, s, out, m["tz"])
+
+    # annotate the entry, the current price and how far it has run
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        import matplotlib.image as mpimg
+        fig = plt.figure(figsize=(12, 6.6))
+        ax = fig.add_axes([0, 0.08, 1, 0.92]); ax.axis("off")
+        ax.imshow(mpimg.imread(str(out)))
+        p0 = pos[0]
+        run = (p0["price"] - p0["entry"]) if p0["side"] == "BUY" else (p0["entry"] - p0["price"])
+        fig.text(0.02, 0.03,
+                 f"OPEN {p0['side']} {p0['lots']} @ {p0['entry']:.2f}   "
+                 f"now {p0['price']:.2f}   ({run:+.2f} pt)   "
+                 f"P&L ${p0['profit']:+.2f}   SL {p0['sl']:.2f}",
+                 fontsize=13, fontweight="bold",
+                 color=("#16a34a" if p0["profit"] >= 0 else "#dc2626"))
+        fig.savefig(out, dpi=85, bbox_inches="tight")
+        plt.close(fig)
+    except Exception:
+        pass
+
+    for q in pos:
+        q["run_pts"] = round((q["price"] - q["entry"]) if q["side"] == "BUY"
+                             else (q["entry"] - q["price"]), 2)
+    return {"open": len(pos), "positions": pos, "price": d.get("bid"),
+            "png": str(out), "heartbeat_age": d.get("age_sec")}
+
+
 def close(market="XAU", reason=""):
     """Order the EA to exit everything it holds on this market.
 
@@ -210,7 +272,10 @@ def close(market="XAU", reason=""):
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "scan"
-    if cmd == "close":
+    if cmd == "watch":
+        print(json.dumps(watch(sys.argv[2].upper() if len(sys.argv) > 2 else "XAU"),
+                         indent=1, default=str))
+    elif cmd == "close":
         mk = sys.argv[2].upper() if len(sys.argv) > 2 else "XAU"
         why = sys.argv[3] if len(sys.argv) > 3 else ""
         print(json.dumps(close(mk, why), indent=1))
