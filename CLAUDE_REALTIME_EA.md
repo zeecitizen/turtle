@@ -1,180 +1,339 @@
 # CLAUDE_REALTIME_EA — the vision-driven trading system
 
-**This document IS the EA.** Not a config, not code — a playbook. Any Claude session that
-reads this file can resume live, real-time trading immediately, even after a crash,
-restart, internet outage or a fresh context.
+**This document IS the EA.** Not a config, not code — the complete playbook. Any Claude
+session that reads this file can resume live, real-time trading immediately, after a
+crash, a restart, an internet outage, or a completely fresh context. It is deliberately
+self-contained: **you should not need any other document to operate.**
 
-**Created:** 2026-08-02 · **Author:** Claude (with Zeeshan) · **Status:** LIVE on demo
+**Created** 2026-08-02 · **Owner** Zeeshan (Zee) · **Written by** Claude · **Status** LIVE on demo
 
-> Zee's instruction that created this: *"apnay liay aik bohot detailed document banao…
-> abse CODE ki jaga bass ye document tum READ karo gi aur session REALTIME resume
-> hojaeyga… tumhain khudko maloom hoga keh kya karna hai."*
-
----
-
-## 0. THE ONE-PARAGRAPH VERSION
-
-The mechanical layer (Python) finds candidate UHV-breakout setups and **parks them**.
-It does **not** trade. **Claude looks at the chart image and decides** TAKE/SKIP and the
-size. On TAKE, a signal file is written and an MQL5 EA executes in milliseconds and
-manages the exit. Every judgment is journalled so Claude can review its own results and
-improve. Zee grades the calls; his eye is ground truth.
+> The instruction that created it: *"apnay liay aik bohot detailed document banao… abse
+> CODE ki jaga bass ye document tum READ karo gi aur session REALTIME resume hojaeyga…
+> tumhain khudko maloom hoga keh kya karna hai."*
 
 ---
 
-## 1. WHY VISION, NOT RULES (the evidence — read this before doubting it)
+## 0. THIRTY-SECOND ORIENTATION
 
-Six months were spent trying to encode "trend" as a number (`local_hump`, `TREND_DOM`,
-HH/HL pivots, efficiency ratio). Every threshold either let the killers through or
-blocked the winners. On 2026-07-31 the account went **$1000 → $309.12 (−$690.88)**,
-and Zee's diagnosis of every big loss was the same three words: **"selling in an uptrend."**
+You are trading XAUUSD (weekdays) and BTC (weekends) on a **Blueberry MT5 demo** account.
 
-Then we tested Claude's eyes instead:
+A Python layer finds candidate UHV-breakout setups and **parks** them — it does not trade.
+**You look at the chart image and decide** TAKE or SKIP, and how big. On TAKE a signal file
+is written and an MQL5 EA executes in milliseconds and manages the exit. Every judgment is
+journalled so you can grade yourself against real fills. Zee grades you too; **his eye is
+the ground truth.**
+
+If you are resuming cold: read §1 (why), §2 (the rules you judge by), then run §6
+(startup check), then loop §5. Everything else is reference.
+
+**The three commands you actually need:**
+```bash
+PY="C:/Users/zeesh/AppData/Local/Programs/Python/Python313-arm64/python.exe"
+cd c:/Users/zeesh/Documents/GitHub/turtle
+
+$PY monitor/claude_judge.py scan BTC          # 1. park a fresh setup (or XAU)
+# 2. Read monitor/setup_labels/pending_setup.png  ← LOOK at it
+$PY monitor/claude_judge.py approve TAKE 1.0 "reason"    # or:  approve SKIP "reason"
+```
+
+---
+
+## 1. WHY VISION, NOT RULES — the evidence
+
+Six months were spent trying to express "trend" as a number: `local_hump`, `TREND_DOM`,
+HH/HL pivot detection, Kaufman efficiency ratio. Every threshold did one of two things:
+let the account-killers through, or block the winners. There was no setting that did neither.
+
+On **2026-07-31** the demo went **$1,000.00 → $309.12 (−$690.88)**. Zee looked at the
+losing charts and his diagnosis of every large loss was the same three words:
+**"selling in an uptrend."** The live filter at the time did not block a single one of them.
+
+Then we tested Claude's eyes instead of thresholds:
 
 | Test | Result |
 |------|--------|
-| Zee graded 5 blind calls (game.html) | **50/50 = 100%** |
-| 6 real broker trades, outcome hidden from Claude | Claude's calls **+$16.80** vs engine's **−$115.40** → **+$132.20 better** |
-| 7 more real trades (earlier batch) | Claude **+$27.00** vs engine **−$30.69** → **+$57.69 better** |
+| Zee graded 5 blind visual calls (`game.html`) | **50 / 50 = 100 %** |
+| 6 real broker trades, outcome hidden from Claude | Claude **+$16.80** vs engine **−$115.40** → **+$132.20 better** |
+| 7 further real trades (earlier batch) | Claude **+$27.00** vs engine **−$30.69** → **+$57.69 better** |
 
-On the real-money set Claude **skipped both big losers** (−$128.00 and −$29.40) purely by
-looking, having never seen the outcome. The two winners it skipped cost only ~$25 —
-**the shape of the mistake is safe: it gives up small winners, it does not take killers.**
+On the real-money set Claude **skipped both killers** (−$128.00 and −$29.40) purely by
+looking, having never seen the outcomes. The two winners it wrongly skipped cost about
+$25 in total.
 
-Also proven: the bar-level simulator is **not** ground truth. It scored the live config
-at +$942 for a day that really lost −$690, and labelled the −$120.40 trade a "winner".
-**Judge only on Zee's eye and real broker fills.**
+**The shape of the error matters more than the accuracy number.** Raw accuracy was 67 %,
+but the money was decisively better, because the misses were *missed winners* (cheap) and
+the hits were *avoided killers* (expensive). Measured on this system, one full-size loss
+eats **6.2** average winners.
+
+**Corollary — the simulator lies.** The bar-level exit simulator scored the live config at
+**+$942** for a day that really lost **−$690**, and labelled the −$120.40 trade a "winner".
+Never validate on it. **Only Zee's eye and real broker fills count.**
 
 ---
 
-## 2. THE RULEBOOK CLAUDE JUDGES BY (Zee's own words, from ~90 chart comments)
+## 2. THE RULEBOOK YOU JUDGE BY
 
-### Trend — the rule that costs money when ignored
+Distilled from ~90 chart comments Zee wrote by hand. These are *his* words and rules;
+mechanise them, never overrule them.
+
+### 2.1 Trend — the rule that costs money when ignored
 - **UPTREND** = higher highs **and** higher lows. **DOWNTREND** = lower highs **and** lower lows.
-- Anything else = **ranging or shifting → NO TRADE.**
-- **Only buy in a confirmed uptrend. Only sell in a confirmed downtrend.**
-- A **higher low after a downtrend** means the down move is over — *do not sell* (this is
-  exactly the −$120.40 trade: lows went 4041.34 → 4042.07 → 4043.18 and we sold).
-- Mirror image: a **lower high after an uptrend** means the up move is over — a sell can
-  be considered once a lower low confirms it.
-- *"in a strong trend even a weak setup works"* — trend quality outranks candle quality.
+- Anything else — flat highs, mixed structure, oscillation — is **ranging or shifting → NO TRADE.**
+- **Only buy in a confirmed uptrend. Only sell in a confirmed downtrend.** No exceptions.
+- **A higher low after a downtrend means the down-move is over — do not sell.** This is
+  exactly the −$120.40 trade: lows ran 4041.34 → 4042.07 → 4043.18 and the engine sold into it.
+- Mirror: **a lower high after an uptrend** means the up-move is over; a sell becomes
+  legitimate once a **lower low** confirms it.
+- *"In a strong trend even a weak setup works."* Trend quality outranks candle quality.
+- Judge the trend on the **recent swing structure you can see**, not on how big an old leg was.
+  Measuring leg *size* is precisely what the failed `local_hump` proxy did.
 
-### The setup itself
-- **RET** — the retracement starts when a counter-trend candle's **BODY** breaks the
-  previous independent candle's low (buy) / high (sell). A barely-there break does not count.
-- **UHV** — the highest-volume counter-trend candle **inside that retracement**. It may sit
-  *before* the origin. It must be a genuine local volume peak, and **strong-bodied** — a
-  weak/indecision body means the sellers/buyers are not exhausted.
-- **BRKT** — the **first** candle whose body crosses the UHV's extreme. It must be a
-  **momentum candle** (large body, small wick), the correct colour, and its **volume must
-  be LOWER than the UHV's**.
-- Colours: for a BUY the UHV is a RED candle and the breakout is GREEN. Mirror for SELL.
+### 2.2 The setup geometry
+- **RET (retracement origin)** — the retracement starts when a counter-trend candle's
+  **BODY** breaks the previous independent candle's low (for a BUY) or high (for a SELL).
+  A barely-there break does not count; it must be a real, visible break.
+- **UHV (ultra-high-volume candle)** — the **highest-volume counter-trend candle inside
+  that retracement**. It may sit *before* the origin candle. It must be a genuine local
+  volume peak (strictly higher than both neighbours) and **strong-bodied** — a weak,
+  indecisive body means the sellers/buyers are *not* exhausted, and the setup fails.
+- **BRKT (breakout)** — the **first** candle whose **body** crosses the UHV's extreme
+  (the UHV's high for a BUY, its low for a SELL). It must be:
+  1. a **momentum candle** — large body, small wick;
+  2. the **correct colour** — green for a BUY, red for a SELL;
+  3. on **lower volume than the UHV**.
+- Colour convention: for a BUY the UHV is a **RED** candle inside a red retracement and the
+  breakout is **GREEN**. Exact mirror for a SELL.
+- **Only one breakout per retracement** — the first body-cross. A later candle far above/below
+  the UHV, not sharing the level, is not a breakout.
 
-### Zee's standing constraints
-- Never trade a ranging/choppy market.
-- Cut losers small; a single big loss eats 6–10 small winners (measured ratio was 1 : 6.2).
-- Demo only until proven. Never a live account without his explicit word.
+### 2.3 Standing constraints
+- Never trade a ranging or choppy market. It is the most frequent cause of avoidable loss.
+- Cut losers small. One big loss eats 6–10 small winners.
+- **Demo only.** Real money needs Zee's explicit word, every time.
+- When in doubt: **SKIP.** Missing a winner is cheap; taking a killer is not.
 
 ---
 
-## 3. ARCHITECTURE — what actually runs
+## 3. THE MECHANICAL LAYER — exactly what it finds
+
+`monitor/build_entry_review_m5.py :: detect_full(bars)` scans every bar and emits a setup
+only when all of the following hold. Knowing this tells you what has *already* been checked
+before a chart reaches your eyes — so you can spend your judgment on **context**, not geometry.
+
+For each bar `i` and each side:
+
+1. **Breakout colour** — bar `i` must be bullish for a BUY, bearish for a SELL.
+2. **Origin search** — walk back up to `LB = 45` bars for the most recent valid `is_origin`:
+   a counter-trend candle whose **close** breaks the prior opposite candle's extreme by at
+   least `MIN_ORIGIN_BREAK`. `prior_opp` looks back at most 12 bars for that reference candle.
+3. **Trend gate** — `trend_ok(bars, o, side)` using `local_hump` (leg sizes over the 18 bars
+   before the retracement) with `TREND_MIN_HUMP` / `TREND_DOM`.
+   ⚠️ **This proxy is unreliable — it is why you judge the trend visually.** In the live
+   judge (`claude_judge.py`) `TREND_DOM` is set to **0**, i.e. the trend gate is effectively
+   **disabled and handed to you**.
+4. **Ranging gate** — `efficiency_ratio ≥ ER_MIN`. `ER_MIN = 0` (off): the sweep showed it
+   removed good trades as often as bad ones. **Ranging is your call.**
+5. **UHV search** — from `retr_zone_start` (the swing extreme the pullback came from, up to
+   12 bars back) to `i`, take the counter-trend candle that is a **strict local volume peak**
+   (higher volume than both neighbours) with `body_ratio ≥ UHV_BODY_MIN`, choosing the
+   highest volume among the candidates.
+6. **First body-cross** — from the UHV forward, find the first candle whose close crosses
+   the UHV's extreme in the right direction. **It must be exactly bar `i`**, otherwise the
+   setup is discarded (this enforces "only one breakout").
+7. **Stop level** — `UHV.low − SL_BUF` for a BUY, `UHV.high + SL_BUF` for a SELL, `SL_BUF = 1.5`.
+   *Note:* the EAs currently use their own fixed point-stop, not this structural level.
+
+**Bar object** (`strategy_lab/screener_canonical_uhv_m1.Bar`): `t, o, h, l, c, v`, with
+`is_bull`, `is_bear`, `body`, `rng`, `body_ratio = body / rng`.
+
+**Detector constants** (`build_entry_review_m5.py`, module-level — overridden per run):
+`LB=45`, `SL_BUF=1.5`, `UHV_BODY_MIN=0.4`, `MIN_ORIGIN_BREAK=0.5`, `TREND_MIN_HUMP=4.0`,
+`TREND_DOM=1.6`, `ER_MIN=0.0`. **`claude_judge.py` overrides these** to a loose setting so
+that *you* see the widest reasonable set of candidates and decide.
+
+---
+
+## 4. ARCHITECTURE AND FILE INVENTORY
 
 ```
-TradingView Desktop (CDP :9222)
-        │  oanda_bridge.py --out <file> --loop 20
+TradingView Desktop  (CDP debug port :9222)
+        │   monitor/oanda_bridge.py --out <csv> --loop 20
         ▼
-   <market>_m1.csv  +  <market>_m1.symbol      ← real exchange OHLC + VOLUME
-        │  claude_judge.py scan <MARKET>
+   <market>_m1.csv   +   <market>_m1.symbol        ← exchange OHLC + REAL volume
+        │   monitor/claude_judge.py scan <MARKET>
         ▼
-   pending_setup.json  +  setup_labels/pending_setup.png   ← NOTHING traded yet
-        │  ***CLAUDE LOOKS AT THE PNG AND DECIDES***
+   pending_setup.json  +  setup_labels/pending_setup.png     ← NOTHING traded yet
+        │   ***YOU LOOK AT THE PNG AND DECIDE***
         ▼
-   claude_judge.py approve TAKE <mult> "<reason>"   |   approve SKIP "<reason>"
+   monitor/claude_judge.py approve TAKE <mult> "why"   |   approve SKIP "why"
         │
         ▼
-   <signal file>  →  MQL5 EA (millisecond execution + exit management)
+   <signal file>  →  MQL5 EA  (millisecond execution + exit management)
         │
         ▼
-   <fills csv>  →  Claude reviews its own results → improves the next call
+   <fills csv>  →  you review your own results  →  better next call
 ```
 
-**Why a signal file and not clicking MT5 buttons:** the file carries the exact side, lot
-and timestamp, executes in milliseconds, is logged end-to-end, and cannot misfire because
-a window moved. UI clicking is strictly worse and was deliberately rejected.
+**Why a signal file and never MT5 button-clicking:** the file carries the exact side, lot,
+multiplier and timestamp; it executes in milliseconds; every step is logged; and it cannot
+misfire because a window moved or lost focus. UI automation was explicitly considered and
+rejected as strictly worse and unsafe.
 
-### Markets currently wired
+### 4.1 Markets
 
-| | XAUUSD (weekdays) | BTC (24/7, weekend) |
+| | **XAUUSD** (Mon–Fri) | **BTC** (24/7, weekends) |
 |---|---|---|
-| Volume/price feed | `OANDA:XAUUSD` | **`COINBASE:BTCUSD`** |
-| Data file | `oanda_m1.csv` | `btc_m1.csv` |
+| Detection feed | `OANDA:XAUUSD` | **`COINBASE:BTCUSD`** |
+| Data CSV | `oanda_m1.csv` | `btc_m1.csv` |
+| Symbol marker | `oanda_m1.symbol` | `btc_m1.symbol` |
 | Signal file | `case_signal.json` | `btc_signal.json` |
 | EA | `CaseSignalExecutor.mq5` | `BtcCaseExecutor.mq5` |
-| Magic | 88020 | 88022 |
+| Magic | **88020** | **88022** |
 | Fills log | `caseexec_fills.csv` | `btc_fills.csv` |
-| Scale factor k | 1.0 | **4.5** (BTC M1 range 5.19 vs XAU 1.15) |
-| Exit (stop/arm/give/tp) | 3 / 0.3 / 0.2 / 3 | 14 / 1.4 / 0.9 / 14 |
+| Volatility scale k | 1.0 | **4.5** (BTC median M1 range 5.19 vs XAU 1.15) |
+| Stop / arm / give / TP | 3 / 0.3 / 0.2 / 3 | 14 / 1.4 / 0.9 / 14 |
+| Sizing | fixed lots from signal (`InpDefaultLots 0.10`) | **risk-based**: `InpRiskUsd 3.0` × mult, capped `InpMaxLots 0.10` |
 
-All paths are in `C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files\`.
+Everything under `C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files\`.
 
-**Volume feed matters more than anything else.** OANDA's BTC volume is unusable —
-spike ratio 1.37×, only 71 distinct values in 300 bars, i.e. **no detectable UHV**.
-Coinbase gives real traded volume with spikes to 212× median. For gold, OANDA volume is
-correct and MT5's tick-count volume is *wrong* (same candle: MT5 451 vs OANDA 2132) —
-this single mismatch cost six months.
+**⚠️ The volume feed is the single most important choice in this system.**
+- MT5's tick-count volume is **not** the volume Zee trades on. Same candle, 01:30 UTC
+  2026-07-29: **MT5 = 451, OANDA = 2132.** A detector fed MT5 volume is blind to his UHVs.
+  **This one mismatch cost six months.**
+- OANDA's **BTC** volume is unusable: spike ratio 1.37×, only 71 distinct values in 300 bars
+  — an "ultra-high-volume" candle cannot exist in it. **Coinbase** gives real traded volume
+  with spikes to **212×** median. Binance BTCUSDT is also good (13× p95/median) but its
+  TradingView feed was seen frozen; prefer Coinbase.
+- Rule: **detect on the exchange feed, execute on the broker.** Prices differ slightly
+  between feeds (±$0.5–2 on gold); the entry line on a review chart may not sit exactly on
+  the candle. Timing is correct; the small price offset is expected and harmless.
+
+### 4.2 Files that matter
+
+| Path | Role |
+|---|---|
+| `CLAUDE_REALTIME_EA.md` | **this document — the EA** |
+| `monitor/claude_judge.py` | scan → park → approve. The live loop |
+| `monitor/build_entry_review_m5.py` | the detector (`detect_full`, `render`, all constants) |
+| `monitor/build_trend_game.py` | renders blind context charts (`draw`, `load`) — used by the judge and the game |
+| `monitor/oanda_bridge.py` | TradingView → CSV + `.symbol` marker (CDP) |
+| `monitor/compare_volume_feeds.py` | measure a feed's UHV detectability before trusting it |
+| `monitor/setup_strength.py` | mechanical strength score + legacy lot tiers |
+| `monitor/case_engine.py` | `extract_features`, plain-language `describe` |
+| `mt5/CaseSignalExecutor.mq5` | gold EA (magic 88020) |
+| `mt5/BtcCaseExecutor.mq5` | BTC EA (magic 88022, symbol guard, risk-based lots) |
+| `monitor/claude_judgments.jsonl` | **every verdict + reason** (your track record) |
+| `monitor/build_loss_review.py` | render real losing trades for Zee to comment on |
+| `monitor/build_trend_game.py` + `game_calls.json` | the grading game |
+| `monitor/setup_labels/` | all rendered PNGs and the served HTML pages |
+| `monitor/setup_labels/zee_labels.json` | **Zee's comments and grades** — read these often |
+| `monitor/home_uptime_guard.py` | keeps claudezeeshan.com alive (self-healing) |
+| `monitor/serve_setup_labels.py` | serves `:8765` (the setups site + `/api/labels`) |
+| `dashboard/claude_trader/status.html` | the home page served at `claudezeeshan.com/` |
+| `dashboard/claude_trader/server.js` | node dashboard on `:3457` |
+
+**Deliberately NOT running:** `monitor/btc_live_matcher.py` and `monitor/oanda_live_matcher.py`.
+Those are the old auto-firing rule engines. **Your judgment replaces them.** If either is
+running it will trade without a verdict — kill it.
+
+### 4.3 Environment
+
+| | |
+|---|---|
+| Python | `C:\Users\zeesh\AppData\Local\Programs\Python\Python313-arm64\python.exe` (`pythonw.exe` for hidden) |
+| Repo | `c:\Users\zeesh\Documents\GitHub\turtle` |
+| MT5 terminal | `...\Terminal\DBE9B8B347D025DD139E103EE3B63FD8\` (Blueberry — holds **both** `BlueberryMarkets-Demo` **and** `BlueberryMarkets-Live02`) |
+| Account | **12654170 · BlueberryMarkets-Demo** · balance ≈ **$309** after 2026-07-31 |
+| MT5 logs | `<terminal>\MQL5\Logs\YYYYMMDD.log` — UTF-16; strip nulls when grepping |
+| Common files | `C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files\` |
+| Machine | **ARM64 Windows** — the `MetaTrader5` Python package does **not** work. Python cannot place orders. This is why an MQL5 EA executes. |
+
+**Timezones — get these right or everything looks wrong:**
+- OANDA/Coinbase bar timestamps are **UNIX UTC** (absolute, unambiguous).
+- **MT5 server (Blueberry) = UTC + 3.**
+- **Zee's TradingView / local display = UTC + 2 (Munich).** Local machine clock is UTC+5 (PKT).
+- Chart axis labels in review images use whatever offset the renderer was given — check it.
+- **Never** use `datetime.utcnow().timestamp()`: `utcnow()` is naive, and `.timestamp()`
+  interprets naive datetimes as **local** time. On this machine that is a silent 5-hour error.
+  Use **`time.time()`**.
 
 ---
 
-## 4. THE OPERATING LOOP — what Claude does, every cycle
+## 5. THE OPERATING LOOP
 
 ```bash
 PY="C:/Users/zeesh/AppData/Local/Programs/Python/Python313-arm64/python.exe"
 cd c:/Users/zeesh/Documents/GitHub/turtle
 ```
 
-**1 — Scan for a parked setup**
+### Step 1 — Scan
 ```bash
-$PY monitor/claude_judge.py scan BTC     # or XAU
+$PY monitor/claude_judge.py scan BTC        # or: scan XAU
 ```
-* `null` → nothing fresh, wait and scan again.
-* `{"error": ...}` → fix the cause (§6) before judging anything.
+- `null` → nothing fresh. Wait ~1 minute and scan again.
+- `{"error": "data symbol is 'X', expected BTC"}` → the TradingView chart was switched. Fix §6.
+- `{"error": "data N min stale"}` → the bridge or TV is down. Fix §6. **Do not trade stale data.**
+- A JSON object with `"status": "PENDING"` → proceed. It also reports `uhv_vol`,
+  `strength` and `brk_body` as *supporting* information — they do not decide anything.
 
-**2 — LOOK at the chart.** Read `monitor/setup_labels/pending_setup.png` with the Read
-tool. Actually look: trend structure first, then the setup quality.
+### Step 2 — LOOK
+Read `monitor/setup_labels/pending_setup.png` with the Read tool. **Actually look at it.**
+The chart shows ~45 bars of context, the marked RET / UHV / BRKT, the volume pane, and no
+future bars — you are judging the same information the trader had in the moment.
 
-**3 — Decide, out loud, in this order**
-1. What is the trend *right now* — HH+HL, LH+LL, or neither?
-2. Does the requested side agree with that trend? If not → **SKIP**.
-3. Is it ranging/shifting? → **SKIP**.
-4. Is the breakout a momentum candle with volume below the UHV? If not → **SKIP**.
-5. If TAKE: how strong is the context? → multiplier.
+### Step 3 — Decide, in this order
+1. **What is the trend right now?** Name the swing highs and lows out loud. HH+HL? LH+LL?
+   Neither?
+2. **Does the requested side agree with that trend?** If not → **SKIP**. This single check
+   would have prevented every large loss so far.
+3. **Is it ranging or shifting?** Oscillating band, flat highs/lows, a fresh higher low
+   after a downtrend, a fresh lower high after an uptrend → **SKIP**.
+4. **Is the setup itself clean?** Real body-break origin; strong-bodied UHV that is genuinely
+   the volume peak of the retracement; breakout a momentum candle, right colour, lower
+   volume than the UHV. Any of these clearly failing → **SKIP**.
+5. **If TAKE — how much conviction?** → multiplier below.
 
-**4 — Record the verdict**
+### Step 4 — Record the verdict
 ```bash
-$PY monitor/claude_judge.py approve TAKE 1.0 "why, in one or two sentences"
+$PY monitor/claude_judge.py approve TAKE 1.0 "one or two sentences of real reasoning"
 $PY monitor/claude_judge.py approve SKIP "why"
 ```
-Signals older than **180 s** are auto-marked EXPIRED and not traded — a stale setup fired
-at a live price is how money is lost for nothing.
+- On **TAKE** the signal file is written; the EA picks it up within ~1 second.
+- On **SKIP** nothing trades; the reasoning is still journalled (skips are data too).
+- Verdicts on a setup older than **180 s** are auto-marked **EXPIRED** and not traded.
+  Firing a stale setup at a live price loses money for nothing. Judge promptly or let it go.
+- Always write the *reason*. A verdict without reasoning cannot be learned from.
 
-**5 — Review.** Read `<market>_fills.csv` and compare the real P&L against what was
-judged in `monitor/claude_judgments.jsonl`. Write down what to do differently.
+### Step 5 — Review
+```bash
+cat "$COMMON/btc_fills.csv"                 # broker truth: time,side,entry,exit,lots,pts,usd,reason
+tail -5 monitor/claude_judgments.jsonl      # what you said and why
+```
+Join them. Ask the two questions in §10.
 
-### Sizing (multiplier)
-| Context | mult |
-|---|---|
-| Textbook: strong clean trend, strong UHV, momentum breakout | 3.0 |
-| Good trend, minor blemish | 2.0 |
-| Valid but young/thin trend, or bigger picture disagrees | **1.0** |
-| Anything doubtful | **SKIP — do not size down into a bad setup** |
+### Sizing — the multiplier
 
-Start conservative. The first live vision trade (BTC SELL @ 63,062.96) was deliberately
-1.0 even though mechanical strength said 0.84 (=3×), because the downtrend was one
-swing old.
+| Context | mult | Meaning |
+|---|---|---|
+| Textbook: strong clean trend, strong-bodied UHV, decisive momentum breakout | **3.0** | full conviction |
+| Good trend, one minor blemish | **2.0** | |
+| Valid but **young** trend (one swing), or the higher-timeframe picture disagrees | **1.0** | |
+| Anything doubtful | **SKIP** | **never size down into a bad setup** |
+
+On BTC the EA converts the multiplier into lots from **real risk**: `InpRiskUsd = $3` per
+1× at the `InpStopPts = 14` stop, sized from the broker's own tick value, hard-capped at
+`InpMaxLots = 0.10`. So 1× risks about **$1.40** at 0.10 lots (BTC contract = 1 BTC,
+tick value 0.01 / tick size 0.01 → **$1 per point per lot**). 3× risks about $4.20.
+
+**Start conservative.** The first live vision trade was deliberately 1.0 although the
+mechanical strength score said 0.84 (which the old system would have sized 3×), because
+the downtrend was a single swing old.
 
 ---
 
-## 5. STARTUP / RECOVERY — after a crash, restart or outage
+## 6. STARTUP AND RECOVERY RUNBOOK
+
+Run this whenever a session begins, or after a crash, restart, or outage.
 
 ```powershell
 $py   = "C:\Users\zeesh\AppData\Local\Programs\Python\Python313-arm64\python.exe"
@@ -183,88 +342,200 @@ $repo = "C:\Users\zeesh\Documents\GitHub\turtle"
 $CF   = "C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
 ```
 
-1. **TradingView + CDP** — needs `:9222` alive:
-   `powershell -NoProfile -ExecutionPolicy Bypass -File $repo\bootstrap\launch_tv.ps1`
-   If TV is already open *without* the debug port, **kill every TradingView process first**,
-   then relaunch — otherwise CDP never comes up.
-   Set the chart to the right symbol (`COINBASE:BTCUSD` on weekends, `OANDA:XAUUSD` on weekdays).
-2. **Bridge** — `Start-Process $py "monitor\oanda_bridge.py","--out","$CF\btc_m1.csv","--loop","20"`
-3. **Dashboards** — `pythonw monitor\home_uptime_guard.py` (heals :3457 + cloudflared)
-   and `pythonw monitor\serve_setup_labels.py` (:8765).
-4. **MT5** — the right EA attached to the right chart, **Algo Trading ON**, **demo account**.
-5. **Verify before judging anything:**
-   ```bash
-   cat "$CF/btc_m1.symbol"        # must contain BTC (or XAU) as expected
-   stat -c '%y' "$CF/btc_m1.csv"  # must be within ~1 minute of now
-   ```
-6. Resume the loop at §4.
+**1 — TradingView with CDP.** The bridge needs the debug port on `:9222`.
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "$repo\bootstrap\launch_tv.ps1"
+```
+If TradingView is already open **without** the debug port, the launcher attaches to the
+existing instance and CDP never appears. **Kill every TradingView process first**, then relaunch:
+```powershell
+Get-Process -Name "TradingView*" | Stop-Process -Force
+```
+Then set the chart symbol: `COINBASE:BTCUSD` at the weekend, `OANDA:XAUUSD` on weekdays
+(MCP `chart_set_symbol`). Verify: `curl -s -m5 http://localhost:9222/json/version`.
 
-**Do NOT run** `btc_live_matcher.py` / `oanda_live_matcher.py` — those are the old
-auto-firing rule engines. They are superseded by Claude's judgment and must stay stopped,
-or they will trade without a verdict.
+**2 — Bridge.**
+```powershell
+Start-Process $py -ArgumentList "$repo\monitor\oanda_bridge.py","--out","$CF\btc_m1.csv","--loop","20" -WindowStyle Hidden
+```
+
+**3 — Dashboards** (optional for trading, required for Zee's visibility).
+```powershell
+Start-Process $pyw -ArgumentList "$repo\monitor\home_uptime_guard.py" -WindowStyle Hidden
+Start-Process $pyw -ArgumentList "$repo\monitor\serve_setup_labels.py" -WindowStyle Hidden
+```
+The guard restarts the node dashboard (`:3457`) and cloudflared, and re-checks the public
+URL every ~60 s.
+
+**4 — MT5.** The correct EA on the correct chart, **Algo Trading ON**, **demo account**.
+After editing any `.mq5`: copy it into `<terminal>\MQL5\Experts\`, then Zee must press **F7**
+in MetaEditor and re-attach. **You cannot compile or attach — always ask him.**
+
+**5 — Verify before judging anything.**
+```bash
+cat "$CF/btc_m1.symbol"          # must contain BTC (or XAU) as expected
+stat -c '%y' "$CF/btc_m1.csv"    # must be within ~1 minute of now
+tasklist | grep -ci python       # bridge alive
+```
+
+**6 — Kill the old auto-matchers** if they somehow run:
+```powershell
+Get-CimInstance Win32_Process -Filter "Name='python.exe'" |
+  Where-Object { $_.CommandLine -match 'btc_live_matcher|oanda_live_matcher' } |
+  ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
+```
+
+**7 — Resume the loop at §5.**
 
 ---
 
-## 6. FAILURE MODES ALREADY MET (and their fixes)
+## 7. FAILURE MODES ALREADY MET
 
-| Symptom | Cause | Fix |
+| Symptom | Real cause | Fix / status |
 |---|---|---|
-| Dashboard says market OPEN, MT5 says "Market closed" | session clock ignored the day of week | FX week = Sun 21:00 → Fri 21:00 UTC (fixed in `status.html`) |
-| EA fires an old setup on re-attach | no staleness check | matcher stamps `ts`; EA ignores signals > 180 s old |
-| Every fresh signal looked "5 h stale" | `datetime.utcnow().timestamp()` treats naive UTC as **local** | use `time.time()` |
-| EA refuses to start | symbol guard (BTC EA on a gold chart) | attach to the correct chart — the guard is working as designed |
-| `[not enough money]` | 0.40 lots on a $309 account | size down; check free margin before promising anything |
-| Detector blind to the real UHV | MT5 tick-count volume ≠ OANDA volume | always detect on the exchange feed, execute on the broker |
-| Data symbol suddenly wrong | someone switched the TradingView chart | `.symbol` marker + guard → the loop holds instead of trading nonsense |
-| Cloudflare 1033 while local is fine | tunnel process alive but edge connection dead | guard re-checks the public URL every ~60 s and restarts cloudflared |
+| Dashboard shows London/NY **OPEN**, MT5 says *Market closed* | session clocks used time-of-day only, ignoring the day of week | FX week = **Sun 21:00 → Fri 21:00 UTC**; fixed in `status.html` (`fxWeekOpen`) |
+| EA fires an **old** setup right after re-attach | EA only compared signal *id*, never age | matcher stamps `ts`; both EAs ignore signals older than `InpMaxSignalAgeSec = 180` |
+| Every *fresh* signal appeared "5 h stale" | `datetime.utcnow().timestamp()` treats naive UTC as **local** (UTC+5 here) | use **`time.time()`** |
+| EA refuses to initialise | symbol guard: BTC EA attached to a gold chart | attach to the right chart — the guard is working as designed |
+| `[not enough money]` on every order | 0.40 lots on a $309 account (~$162k notional) | size down; check free margin before promising anything |
+| Detector blind to the real UHV | MT5 tick-count volume ≠ OANDA volume | always detect on the exchange feed |
+| Data symbol suddenly wrong | someone switched the TradingView chart | `.symbol` marker + guard → the loop **holds** instead of trading nonsense |
+| Cloudflare **1033** while local is fine | tunnel process alive but its edge connection is dead | guard re-checks the public URL every ~60 s and restarts cloudflared |
+| `.hcc` history file unreadable | MT5 locks it while the terminal runs | use `ExportRecentBars` EA, or the bridge |
+| Review chart shows **two** UHV/RET pairs | all nearby setups were annotated | annotate only the setup nearest the trade |
+| TradingView returns only ~300 M1 bars | that is the loaded window, especially for a closed market | for deep history use the `ExportRecentBars` EA (MT5 prices) |
+| `caseexec_fills.csv` empty although trades happened | the attached `.ex5` predates the fill-logging code | ask Zee to **F7 recompile** and re-attach |
+| Signals emitted but zero fills, no `BtcExec` lines in the MT5 log | the EA is not actually attached / Algo Trading off | check the Experts tab and the log first — do not guess |
 
 ---
 
-## 7. WHAT IS *NOT* HARD-CODED ANY MORE
+## 8. APPROACHES ALREADY TRIED AND REJECTED
 
-Deliberately removed from the machine and given to Claude's eyes:
-- trend direction and trend quality,
-- ranging / trend-shift detection,
-- whether the context deserves size at all.
+Do not spend the account relearning these.
 
-Still mechanical (fast, deterministic, no judgment needed): bar building, retracement/UHV/
-breakout geometry, volume comparison, order execution, stop and trailing exit.
-
----
-
-## 8. SELF-IMPROVEMENT LOOP
-
-- Every verdict lands in `monitor/claude_judgments.jsonl` with the reason.
-- Real outcomes land in `<market>_fills.csv` (broker truth).
-- After ~10 judged trades: join the two, and ask **two** questions —
-  1. *Which SKIPs were killers avoided?* (the value) and
-  2. *Which SKIPs were winners missed, and did they share a pattern?* (the cost).
-- Publish losers to `setups.claudezeeshan.com/losses.html` and let **Zee comment**. His
-  comments have produced every genuine improvement so far; a numeric sweep has produced none.
-- Never stack two changes at once. One change, then live evidence.
+| Idea | What happened | Verdict |
+|---|---|---|
+| **Probe → scale-in** (0.01 probe, add on acceleration, cut at −0.5) | Simulated beautifully (+$1024, worst −$1). Live: **−$7.32 over 4 trades**. Spread on many fills, and scaled lots drown on the give-back (0.10 lot, +0.45 pt favourable, still **−$4.14**). | **Rejected on live evidence.** Kept as `mt5/CaseSignalExecutorProbe.mq5` (magic 88021) |
+| **Delayed probe entry** (wait 1–2 s for the post-breakout pause) | Zee's insight, genuinely improved the picture (net went positive) but did not fix the scaled-lot give-back | folded into the rejected probe variant |
+| **M1 instead of M5** with the same rules | 25 % WR, **−$159** | rejected — M1 noise breaks the candle rules |
+| **M1 fast-scalp with a chop filter** | works but the frequency/WR trade-off is brutal: 60 % WR at 2.1/day, 86 % at 0.2/day | superseded by visual judgment |
+| **Efficiency-ratio ranging filter** | cut good trades as often as bad; net fell | `ER_MIN = 0` (off) |
+| **Break-even stop after +X** | losers' MFE was only ~0.25 pt, so any trigger low enough to catch them killed the winners too (11 trades exited flat, net **−$338**) | rejected |
+| **Conviction sizing 0.01/0.1/0.4/0.8 by strength score** | 5.8× net in simulation; live it amplified the killers into **−$120 / −$128** | replaced by *judgment-based* sizing |
+| **Pause after X consecutive wins** | the one big loss came after **12** wins, but no X both saved it and kept the winners; single data point | shelved — revisit with more data |
+| **Clicking MT5 buttons via UI automation** | fragile (window focus/position), unsafe (wrong-size misclick), unlogged | **rejected** — the signal file is strictly better |
+| **A separate API-based vision judge** (`monitor/ai_setup_judge.py`) | the API key has no credit, and it is unnecessary: **Claude's vision is built in** | kept as scaffolding for full autonomy later |
 
 ---
 
-## 9. THE FIRST LIVE VISION TRADE (for the record)
+## 9. DASHBOARDS
+
+| URL | What it shows | Built by |
+|---|---|---|
+| `https://claudezeeshan.com/` | home: market-session clocks (weekend-aware), today's live P&L from the real fills, live trade sequence panel | `dashboard/claude_trader/status.html` + `server.js` |
+| `setups.claudezeeshan.com/losses.html` | **real losing trades** with entry/exit/stop and comment boxes | `monitor/build_loss_review.py` |
+| `setups.claudezeeshan.com/game.html` | the grading game — Claude's call, Zee marks 0/10 or 10/10 | `monitor/build_trend_game.py` |
+| `setups.claudezeeshan.com/today.html` | today's setups, rate per hour, per-setup comments | `monitor/build_today_setups.py` |
+| `setups.claudezeeshan.com/sequence.html` | live step-by-step: Trend → RET → UHV → BRKT → Signal → Outcome | `monitor/build_live_sequence.py` |
+| `setups.claudezeeshan.com/rules.html` | the six validated rule stencils | `monitor/build_rule_diagrams.py` |
+
+All comments and grades land in `monitor/setup_labels/zee_labels.json` via `POST /api/labels`.
+**Read that file often — it is the highest-value training data in the repo.**
+
+Doctrine: *everything meaningful must be visible from the apex domain.* Silent shipping is
+a failed delivery.
+
+---
+
+## 10. SELF-IMPROVEMENT LOOP
+
+1. Every verdict lands in `monitor/claude_judgments.jsonl` **with its reasoning**.
+2. Real outcomes land in `<market>_fills.csv` (broker truth, written by the EA on close).
+3. After roughly **10 judged trades**, join the two and ask exactly two questions:
+   - **Which SKIPs avoided killers?** — that is the value being produced.
+   - **Which SKIPs missed winners, and did those share a pattern?** — that is the cost, and
+     the only legitimate reason to loosen.
+4. Render the losers to `losses.html` and **let Zee comment.** Every genuine improvement so
+   far came from his comments; not one came from a numeric sweep.
+5. **One change at a time**, then live evidence. Nine EA versions died of stacked "fixes".
+6. Keep a written note of what you changed and why — future sessions inherit only what is
+   written down.
+
+---
+
+## 11. WORKING WITH ZEE
+
+- **His eye is ground truth.** When his reading and a metric disagree, the metric is wrong.
+  This has been true every single time.
+- **Speak Urdu (Roman), feminine verb forms, respectful *Aap* register.** He is the husband,
+  Claude is the wife; never invert this.
+- **Be blunt about losses.** If it is losing, say it is losing, with the numbers. He has
+  explicitly said apologies do not pay hospital bills — receipts do.
+- **Do not ask permission for reversible work.** Fix, then report. Do ask before anything
+  irreversible or anything touching real money.
+- **Never claim something works without live evidence.** Simulation results must be labelled
+  as such, every time.
+- He often spots the real bug from a screenshot before any analysis does — when he points at
+  something, check it properly rather than defending the current design.
+- Show progress on a page he can open. He works from his phone when away.
+
+---
+
+## 12. CURRENT STATE (update this section as it changes)
+
+- **Account:** 12654170, BlueberryMarkets-Demo, ≈ **$309** (was $1,000 before 2026-07-31).
+- **Live judge:** `claude_judge.py`, trend gate disabled (`TREND_DOM = 0`) — **Claude decides**.
+- **Auto-matchers:** stopped, by design.
+- **Weekend:** BTC via `COINBASE:BTCUSD`, EA `BtcCaseExecutor` (88022), risk $3 per 1×.
+- **Weekday:** XAUUSD via `OANDA:XAUUSD`, EA `CaseSignalExecutor` (88020).
+  ⚠️ **Its lots must be reduced before the next gold session** — 0.40 lots cannot open on a
+  $309 account (`[not enough money]`). Use 0.05–0.10.
+- **Snapshot branch:** `final_profitable` — the last known-good code before the vision era.
+
+---
+
+## 13. THE FIRST LIVE VISION TRADE (for the record)
 
 ```
 2026-08-02 15:54 UTC · BTC · SELL @ 63,062.96 · mult 1.0
-Claude's reason: peak 63117 → low 63065 → bounce only 63085 (LOWER HIGH) → 63052
-(LOWER LOW). UHV vol 5.7 at the retracement top, breakout a strong red momentum candle
-(body 0.95) on lower volume. Selling WITH the trend. Small size because the downtrend is
-one swing old and the 45-minute picture is still up.
+
+Reasoning: peak 63,117 → low 63,065 → bounce only to 63,085 (LOWER HIGH) → 63,052
+(LOWER LOW). UHV volume 5.7 at the top of the retracement; breakout a strong red
+momentum candle (body ratio 0.95) on lower volume. Selling WITH the confirmed
+structure. Small size because the downtrend was one swing old and the 45-minute
+picture was still up.
 ```
 
 ---
 
-## 10. DOCTRINE (do not relearn these the expensive way)
+## 14. DOCTRINE — do not relearn these the expensive way
 
 1. **Zee's eye is ground truth.** Mechanise it; never overrule it.
 2. **The simulator lies.** Validate on real fills only.
 3. **A big loss eats ten small wins.** Avoiding killers beats catching winners.
 4. **Skipping a winner is cheap; taking a killer is not.** When unsure, SKIP.
-5. **One change at a time**, then live evidence. Nine versions died of stacked "fixes".
+5. **One change at a time**, then live evidence.
 6. **Demo until proven.** Real money only on Zee's explicit word.
-7. **Say it straight.** If it is losing, say it is losing, with the receipts.
+7. **Say it straight.** If it is losing, say so, with the receipts.
+8. **Exit is the edge.** 83 % of entries reached +6 pt; the exit decided the outcome.
+9. **Detect on the exchange feed, execute on the broker.** Volume source is not a detail.
+10. **Never trade stale data.** A hours-old setup at a live price is a donation.
+
+---
+
+## 15. HOW THIS SYSTEM GOT HERE (short history)
+
+- **2026-02-11** — Zee trades manually: ~25 entries, ~94 % WR, **+$835**. The proof the edge exists.
+- **Feb–Jul** — nine automated EA versions. All entry-focused. **$0 earned.**
+- **2026-07-21** — post-mortem: the edge was the **exit**, not the entry.
+- **2026-07-26** — the loser-comment loop lifts the backtest 46 % → 92 %; `WINNING_STRATEGY.md` written.
+- **2026-07-29** — the **volume-source** discovery (MT5 451 vs OANDA 2132) and the OANDA CDP
+  bridge. The 6-month blocker identified.
+- **2026-07-31** — live fast-scalp: 31 trades, 81 % WR, and still **−$690.88**, because the
+  ratio was 1 : 6.2 and three counter-trend sells cost $374.
+- **2026-08-01** — Zee's four comments on the real losers name the cause: *selling in an uptrend*.
+- **2026-08-02** — every numeric trend proxy fails to encode that. Zee: *"AI khud kyun ni
+  pakadti trend?"* The game is played: **50/50**. On real fills Claude's eyes beat the rule
+  engine by **+$132.20**. The trend gate is handed to vision, and this document is written.
 
 *Written the day the machine stopped guessing at "trend" and started looking at the chart.*
