@@ -570,7 +570,8 @@ class App(tk.Tk):
                 use = Path(rd["png"])
                 bits = [f"trend {rd.get('trend', '?').upper()}"]
                 if rd.get("side"):
-                    bits.append(f"wants {rd['side']}")
+                    bits.append("no side makes sense" if rd["side"] == "NONE"
+                                else f"{rd['side']} makes sense")
                 for k in ("ret", "uhv", "brkt"):
                     if rd.get(k):
                         bits.append(f"{k.upper()} {rd[k]}")

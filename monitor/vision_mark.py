@@ -95,7 +95,9 @@ def draw(market, reading, back=45):
 
     tcol = TREND_COLOUR.get(reading.get("trend", "ranging"), GREY)
     ax.set_title(f"CLAUDE'S EYES  —  {reading.get('trend', '?').upper()}"
-                 + (f"   ·   wants {reading['side']}" if reading.get("side") else "")
+                 + (f"   ·   {reading['side']} MAKES SENSE" if reading.get("side")
+                    and reading["side"] != "NONE" else
+                    ("   ·   NO SIDE MAKES SENSE" if reading.get("side") == "NONE" else ""))
                  + (f"   ·   {reading['confidence']}" if reading.get("confidence") else ""),
                  fontsize=12, fontweight="bold", loc="left", color=tcol)
     if reading.get("note"):
