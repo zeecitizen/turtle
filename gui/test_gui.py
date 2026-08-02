@@ -113,6 +113,36 @@ def _refuses(LS):
     raise AssertionError("an empty comment should be refused")
 
 
+def _chart_fits(app, G):
+    """The bug Zee hit: a 3400px-wide CDP screenshot filled the window and pushed every
+    control off-screen. The scale factor must satisfy height as well as width."""
+    import tkinter as tk
+    from pathlib import Path as P
+    png = P(G.MON) / "setup_labels" / "live.png"
+    if not png.exists():
+        return True
+    im = tk.PhotoImage(file=str(png))
+    f = max(1, -(-im.width() // 640), -(-im.height() // G.MAX_CHART_H))
+    shown = im.subsample(f, f) if f > 1 else im
+    assert shown.height() <= G.MAX_CHART_H + 2, (shown.width(), shown.height())
+    return True
+
+
+def _mark_roundtrip(LC):
+    import tempfile
+    from unittest import mock
+    from pathlib import Path as P
+    tmp = P(tempfile.gettempdir()) / "_lc_test.json"
+    tmp.unlink(missing_ok=True)
+    with mock.patch.object(LC, "MARKS", tmp):
+        LC.save_mark("T:1", "uhv", "needs_improvement", "volume was tiny")
+        d = LC.load_marks()
+        assert d["T:1"]["uhv"]["verdict"] == "needs_improvement", d
+        assert any(r["step"] == "uhv" and r["bad"] == 1 for r in LC.weakest_link())
+    tmp.unlink(missing_ok=True)
+    return True
+
+
 def check(name, fn):
     try:
         fn()
@@ -208,6 +238,13 @@ def main():
     # ── 7. live data paths ─────────────────────────────────────────────────
     check("status panel collects without error", lambda: (app._collect(), app.update()))
     check("chart panel renders without error", lambda: (app._show_chart(), app.update()))
+    check("window scrolls (canvas + scrollbars exist)",
+          lambda: app._canvas.winfo_exists())
+    check("a chart never grows taller than the cap",
+          lambda: _chart_fits(app, G))
+    check("mouse wheel handler is safe with no widget under the pointer",
+          lambda: (app._wheel(type("E", (), {"x_root": -1, "y_root": -1, "delta": 120})()),
+                   True)[1])
     check("trade book loads without error", lambda: (app._refresh_book(), app.update()))
     check("refresh cycle runs", lambda: (app.refresh_loop(), app.update()))
 
