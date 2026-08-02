@@ -122,3 +122,5 @@ gui/dist/
 gui/build/
 gui/*.spec
 gui/settings.json
+
+bug_reports/

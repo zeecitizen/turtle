@@ -48,6 +48,7 @@ Source: "windows.py";        DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "lifecycle.py"; DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "autolearn.py"; DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "attach_ea.py";   DestDir: "{app}\gui"; Flags: ignoreversion
+Source: "bugreport.py";   DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "philosophy.py";     DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "labels_explorer.py";DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "install.ps1";        DestDir: "{app}\gui"; Flags: ignoreversion
