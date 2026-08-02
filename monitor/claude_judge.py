@@ -38,9 +38,11 @@ JUDGED  = Path(__file__).parent / ".judged_setups.json"   # keys already ruled o
 
 MARKETS = {
     "BTC": dict(data=COMMON / "btc_m1.csv", mark=COMMON / "btc_m1.symbol",
-                signal=COMMON / "btc_signal.json", tz=2, must="BTC", k=4.5, max_lots=0.30),
+                signal=COMMON / "btc_signal.json", close=COMMON / "btc_close.json",
+                tz=2, must="BTC", k=4.5, max_lots=0.30),
     "XAU": dict(data=COMMON / "oanda_m1.csv", mark=COMMON / "oanda_m1.symbol",
-                signal=COMMON / "case_signal.json", tz=2, must="XAU", k=1.0, max_lots=0.10),
+                signal=COMMON / "case_signal.json", close=COMMON / "xau_close.json",
+                tz=2, must="XAU", k=1.0, max_lots=0.10),
 }
 
 
@@ -189,9 +191,30 @@ def approve(verdict, mult=1.0, reason="", max_age_sec=180):
     return rec
 
 
+def close(market="XAU", reason=""):
+    """Order the EA to exit everything it holds on this market.
+
+    The EA's trail is faster than any judgement call on the mechanical give-back, so this is
+    NOT for micro-managing a scalp. It is for the moment the picture changes and the trade no
+    longer makes sense - the part Zee has always said belongs to the master."""
+    m = MARKETS[market]
+    body = ('{"cmd":"close","market":"%s","ts":%d,"reason":"%s"}'
+            % (market, int(time.time()), (reason or "").replace('"', "'")[:200]))
+    m["close"].write_text(body, encoding="ascii")
+    rec = {"market": market, "verdict": "CLOSE", "reason": reason,
+           "judged_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    with JOURNAL.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(rec) + "\n")
+    return rec
+
+
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "scan"
-    if cmd == "scan":
+    if cmd == "close":
+        mk = sys.argv[2].upper() if len(sys.argv) > 2 else "XAU"
+        why = sys.argv[3] if len(sys.argv) > 3 else ""
+        print(json.dumps(close(mk, why), indent=1))
+    elif cmd == "scan":
         print(json.dumps(scan(sys.argv[2] if len(sys.argv) > 2 else "XAU"), indent=1))
     elif cmd == "near":
         print(json.dumps(near(sys.argv[2] if len(sys.argv) > 2 else "XAU"), indent=1))

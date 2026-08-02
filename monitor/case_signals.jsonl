@@ -1,0 +1,2 @@
+{"time": "2026-07-28 22:00", "side": "SELL", "entry": 4022.75, "sl": 4157.32, "rule": "Rule 4", "rule_name": "Wick Breakout \u2014 SKIP", "action": "SKIP", "pattern": "Strong downtrend \u00b7 wick-breakout", "emitted_utc": "2026-07-28T19:02:18"}
+{"time": "2026-07-28 22:10", "side": "SELL", "entry": 4024.6, "sl": 4157.32, "rule": "Rule 4", "rule_name": "Wick Breakout \u2014 SKIP", "action": "SKIP", "pattern": "Strong downtrend \u00b7 wick-breakout", "emitted_utc": "2026-07-28T19:10:41"}

@@ -1,7 +1,7 @@
 {
-  "checked_utc": "2026-07-24T20:45:49+00:00",
+  "checked_utc": "2026-08-02T17:35:52+00:00",
   "local_3457": true,
   "cloudflared": true,
-  "public_site": null,
-  "recovered_this_cycle": false
+  "public_site": false,
+  "recovered_this_cycle": true
 }

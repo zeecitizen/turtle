@@ -178,6 +178,17 @@ class App(tk.Tk):
                   command=self.open_windows, bg="#fbbf24", fg="#0b0f14", relief="flat",
                   font=("Segoe UI", 8, "bold"), cursor="hand2",
                   padx=10, pady=4).pack(side="left", padx=6)
+        tk.Button(drow, text="\U0001F9E0  WHAT HAVE I LEARNED?",
+                  command=self.open_learning, bg="#4ade80", fg="#0b0f14", relief="flat",
+                  font=("Segoe UI", 8, "bold"), cursor="hand2",
+                  padx=10, pady=4).pack(side="left", padx=6)
+        self.learn_on = tk.IntVar(value=1)
+        tk.Checkbutton(drow, text="keep learning while it runs", variable=self.learn_on,
+                       bg=PANEL, fg=MUTED, selectcolor=PANEL, activebackground=PANEL,
+                       font=("Segoe UI", 8)).pack(side="left", padx=10)
+        self.learn_lbl = tk.Label(drow, text="", bg=PANEL, fg=GREEN,
+                                  font=("Consolas", 8))
+        self.learn_lbl.pack(side="left", padx=6)
         self.tsum = tk.Label(hdr, text="", bg=PANEL, fg=MUTED, font=("Consolas", 9))
         self.tsum.pack(side="right", padx=10)
         cols = ("time", "side", "verdict", "lots", "entry", "exit", "pnl", "status")
@@ -601,6 +612,38 @@ class App(tk.Tk):
         ReportWindow(self, "Best time window", build,
                      "measuring movement and money by hour...")
 
+    def open_learning(self):
+        def build():
+            import autolearn as AL
+            AL.run_cycle(self.market.get())
+            return AL.to_text(self.market.get())
+        ReportWindow(self, "What have I learned?", build,
+                     "scoring every signature against real fills...")
+
+    def _learn_tick(self):
+        """The loop Zee asked for: it keeps correcting itself while the app is open.
+
+        Cheap and quiet - it only speaks when something actually changed, because a learning
+        system that announces non-events is just noise."""
+        try:
+            if not self.learn_on.get():
+                self.learn_lbl.configure(text="learning paused", fg=MUTED)
+                return
+            import autolearn as AL
+            ch = AL.run_cycle(self.market.get())
+            st = AL.status()
+            bits = []
+            if ch["promoted"]:
+                bits.append(f"{len(ch['promoted'])} new rule(s)")
+            if ch["retired"]:
+                bits.append(f"{len(ch['retired'])} retired")
+            self.learn_lbl.configure(
+                text=(("learned: " + ", ".join(bits)) if bits else
+                      f"learning · {st['active']} active · {ch['fills']} fills seen"),
+                fg=GREEN if bits else MUTED)
+        except Exception as e:
+            self.learn_lbl.configure(text=str(e)[:40], fg=RED)
+
     def make_pdf(self):
         import trade_book as TB
         try:
@@ -614,6 +657,9 @@ class App(tk.Tk):
     def refresh_loop(self):
         threading.Thread(target=self._collect, daemon=True).start()
         self._show_chart()
+        if time.time() - getattr(self, "_last_learn", 0) > 120:
+            self._last_learn = time.time()
+            threading.Thread(target=self._learn_tick, daemon=True).start()
         # keep live.png fresh on its own cadence so the picture is never far behind
         if time.time() - getattr(self, "_last_snap", 0) > 45:
             self._last_snap = time.time(); self.snap_now()

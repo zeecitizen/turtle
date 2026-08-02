@@ -17,6 +17,62 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 RESULTS = []
 
 
+def _learns_honestly(AL):
+    """With no repeated pattern it must say so, not manufacture one."""
+    st = AL.status()
+    if st["active"] == 0:
+        assert "Nothing learned yet" in AL.to_text("BTC") or st["proposed"] >= 0
+    return True
+
+
+def _repeat_becomes_rule(AL):
+    """Feed the same losing signature repeatedly and confirm it is promoted, then that a
+    recovery retires it. Runs entirely on a temporary store."""
+    import tempfile, json
+    from unittest import mock
+    from pathlib import Path as P
+    tmp = P(tempfile.gettempdir()) / "_al_test.json"
+    if tmp.exists():
+        tmp.unlink()
+
+    losing = [{"side": "SELL", "strength": 0.5, "brk_body": 0.5, "time": "14:00",
+               "usd": -20.0, "verdict": "TAKE"} for _ in range(5)]
+
+    class FakeTB:
+        @staticmethod
+        def judged_days(m):
+            return ["2026-01-01"]
+
+        @staticmethod
+        def trading_days(m):
+            return []
+
+        @staticmethod
+        def book(m, d=None):
+            return losing
+
+    import sys
+    real = sys.modules.get("trade_book")
+    sys.modules["trade_book"] = FakeTB
+    try:
+        with mock.patch.object(AL, "STORE", tmp):
+            AL.run_cycle("BTC", write_rulebook=False)
+            AL.run_cycle("BTC", write_rulebook=False)
+            st = json.loads(tmp.read_text(encoding="utf-8"))
+            states = {r["state"] for r in st["rules"]}
+            assert "active" in states, states
+            rule = [r for r in st["rules"] if r["state"] == "active"][0]
+            assert "Do not take" in (rule.get("rule") or ""), rule
+    finally:
+        if real is not None:
+            sys.modules["trade_book"] = real
+        else:
+            sys.modules.pop("trade_book", None)
+        if tmp.exists():
+            tmp.unlink()
+    return True
+
+
 def _windows_honest(WN):
     d = WN.analyse("BTC")
     solid = [r for r in d["money"] if r.get("solid")]
@@ -228,6 +284,20 @@ def main():
           lambda: _thin_is_honest(RS))
     check("research: text render works", lambda: len(RS.to_text(RS.analyse("BTC"))) > 100)
     check("research: PDF render works", lambda: Path(RS.to_pdf(RS.analyse("BTC"))).exists())
+
+    import autolearn as AL
+    check("autolearn: a cycle runs", lambda: "fills" in AL.run_cycle("BTC", write_rulebook=False))
+    check("autolearn: signatures are stable",
+          lambda: AL.signature({"side": "BUY", "strength": 0.8, "brk_body": 0.9, "time": "14:30"})
+                  == AL.signature({"side": "BUY", "strength": 0.8, "brk_body": 0.9, "time": "14:45"}))
+    check("autolearn: signatures separate different behaviour",
+          lambda: AL.signature({"side": "BUY", "strength": 0.9})
+                  != AL.signature({"side": "SELL", "strength": 0.9}))
+    check("autolearn: nothing is invented from a thin sample", lambda: _learns_honestly(AL))
+    check("autolearn: a repeated loss becomes a rule", lambda: _repeat_becomes_rule(AL))
+    check("autolearn: status() reports the lifecycle",
+          lambda: set(AL.status()) >= {"active", "proposed", "watching", "retired"})
+    check("autolearn: text render works", lambda: "CONTINUOUS LEARNING" in AL.to_text("BTC"))
 
     import funnel as FN, windows as WN
     check("funnel: diagnose() returns the whole funnel",

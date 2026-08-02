@@ -1,0 +1,282 @@
+{"seq": 1, "side": "SELL", "entry": 4039.03, "time": "2026-07-29 08:23", "emitted_utc": "2026-07-29T08:24:01"}
+{"seq": 2, "side": "SELL", "entry": 4036.34, "time": "2026-07-29 08:33", "emitted_utc": "2026-07-29T08:34:42"}
+{"seq": 3, "side": "BUY", "entry": 4039.72, "time": "2026-07-29 08:46", "emitted_utc": "2026-07-29T08:47:04"}
+{"seq": 4, "side": "SELL", "entry": 4038.01, "time": "2026-07-29 08:48", "emitted_utc": "2026-07-29T08:49:04"}
+{"seq": 5, "side": "SELL", "entry": 4036.64, "time": "2026-07-29 09:00", "emitted_utc": "2026-07-29T09:00:45"}
+{"seq": 6, "side": "BUY", "entry": 4036.66, "time": "2026-07-29 09:09", "emitted_utc": "2026-07-29T09:09:27"}
+{"seq": 7, "side": "SELL", "entry": 4036.22, "time": "2026-07-29 09:12", "emitted_utc": "2026-07-29T09:13:07"}
+{"seq": 8, "side": "SELL", "entry": 4035.47, "time": "2026-07-29 09:21", "emitted_utc": "2026-07-29T09:22:09"}
+{"seq": 9, "side": "SELL", "entry": 4035.47, "time": "2026-07-29 09:22", "emitted_utc": "2026-07-29T09:23:09"}
+{"seq": 10, "side": "SELL", "entry": 4033.95, "time": "2026-07-29 09:26", "emitted_utc": "2026-07-29T09:27:49"}
+{"seq": 11, "side": "BUY", "entry": 4034.61, "time": "2026-07-29 09:33", "emitted_utc": "2026-07-29T09:33:50"}
+{"seq": 12, "side": "BUY", "entry": 4035.64, "time": "2026-07-29 09:46", "emitted_utc": "2026-07-29T09:46:52"}
+{"seq": 13, "side": "SELL", "entry": 4033.82, "time": "2026-07-29 09:55", "emitted_utc": "2026-07-29T09:56:14"}
+{"seq": 14, "side": "SELL", "entry": 4026.57, "time": "2026-07-29 10:51", "emitted_utc": "2026-07-29T10:52:02"}
+{"seq": 1, "side": "SELL", "entry": 4026.58, "time": "2026-07-29 10:51", "emitted_utc": "2026-07-29T10:55:45"}
+{"seq": 2, "side": "BUY", "entry": 4028.77, "time": "2026-07-29 11:01", "emitted_utc": "2026-07-29T11:01:26"}
+{"seq": 3, "side": "SELL", "entry": 4026.49, "time": "2026-07-29 11:06", "emitted_utc": "2026-07-29T11:06:27"}
+{"seq": 4, "side": "BUY", "entry": 4027.07, "time": "2026-07-29 11:10", "emitted_utc": "2026-07-29T11:11:47"}
+{"seq": 5, "side": "BUY", "entry": 4033.15, "time": "2026-07-29 11:28", "emitted_utc": "2026-07-29T11:29:10"}
+{"seq": 6, "side": "BUY", "entry": 4033.16, "time": "2026-07-29 11:47", "emitted_utc": "2026-07-29T11:47:52"}
+{"seq": 7, "side": "SELL", "entry": 4032.27, "time": "2026-07-29 11:54", "emitted_utc": "2026-07-29T11:55:13"}
+{"seq": 8, "side": "BUY", "entry": 4032.74, "time": "2026-07-29 11:56", "emitted_utc": "2026-07-29T11:56:54"}
+{"seq": 9, "side": "SELL", "entry": 4030.62, "time": "2026-07-29 12:02", "emitted_utc": "2026-07-29T12:02:54"}
+{"seq": 10, "side": "SELL", "entry": 4024.84, "time": "2026-07-29 12:16", "emitted_utc": "2026-07-29T12:16:35"}
+{"seq": 11, "side": "BUY", "entry": 4023.13, "time": "2026-07-29 12:18", "emitted_utc": "2026-07-29T12:19:15"}
+{"seq": 12, "side": "BUY", "entry": 4021.42, "time": "2026-07-29 12:46", "emitted_utc": "2026-07-29T12:46:36"}
+{"seq": 13, "side": "BUY", "entry": 4021.38, "time": "2026-07-29 12:52", "emitted_utc": "2026-07-29T12:52:57"}
+{"seq": 14, "side": "SELL", "entry": 4020.93, "time": "2026-07-29 13:03", "emitted_utc": "2026-07-29T13:03:17"}
+{"seq": 15, "side": "SELL", "entry": 4014.37, "time": "2026-07-29 13:15", "emitted_utc": "2026-07-29T13:15:38"}
+{"seq": 1, "side": "BUY", "entry": 4019.55, "lots": 0.1, "tier": "1x normal", "strength": 0.57, "time": "2026-07-29 13:21", "emitted_utc": "2026-07-29T13:21:49"}
+{"seq": 2, "side": "SELL", "entry": 4017.56, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.69, "time": "2026-07-29 13:28", "emitted_utc": "2026-07-29T13:28:49"}
+{"seq": 3, "side": "BUY", "entry": 4017.26, "lots": 0.1, "tier": "1x normal", "strength": 0.53, "time": "2026-07-29 13:34", "emitted_utc": "2026-07-29T13:35:09"}
+{"seq": 4, "side": "SELL", "entry": 4010.22, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-29 13:51", "emitted_utc": "2026-07-29T13:51:30"}
+{"seq": 5, "side": "SELL", "entry": 4003.22, "lots": 0.4, "tier": "2x strong", "strength": 0.58, "time": "2026-07-29 13:58", "emitted_utc": "2026-07-29T13:58:30"}
+{"seq": 6, "side": "SELL", "entry": 4000.96, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.81, "time": "2026-07-29 14:07", "emitted_utc": "2026-07-29T14:08:31"}
+{"seq": 7, "side": "BUY", "entry": 4008.91, "lots": 0.01, "tier": "weak", "strength": 0.48, "time": "2026-07-29 14:19", "emitted_utc": "2026-07-29T14:19:51"}
+{"seq": 8, "side": "BUY", "entry": 4009.55, "lots": 0.4, "tier": "2x strong", "strength": 0.59, "time": "2026-07-29 14:23", "emitted_utc": "2026-07-29T14:23:11"}
+{"seq": 9, "side": "BUY", "entry": 4009.37, "lots": 0.01, "tier": "weak", "strength": 0.46, "time": "2026-07-29 14:24", "emitted_utc": "2026-07-29T14:24:52"}
+{"seq": 10, "side": "SELL", "entry": 4003.41, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.88, "time": "2026-07-29 14:42", "emitted_utc": "2026-07-29T14:43:32"}
+{"seq": 11, "side": "BUY", "entry": 4002.43, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-29 14:47", "emitted_utc": "2026-07-29T14:47:53"}
+{"seq": 12, "side": "SELL", "entry": 4003.82, "lots": 0.1, "tier": "1x normal", "strength": 0.54, "time": "2026-07-29 15:00", "emitted_utc": "2026-07-29T15:01:33"}
+{"seq": 13, "side": "BUY", "entry": 4009.76, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-29 15:09", "emitted_utc": "2026-07-29T15:10:14"}
+{"seq": 14, "side": "BUY", "entry": 4005.89, "lots": 0.01, "tier": "weak", "strength": 0.43, "time": "2026-07-29 15:22", "emitted_utc": "2026-07-29T15:22:14"}
+{"seq": 15, "side": "BUY", "entry": 4010.09, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-29 15:27", "emitted_utc": "2026-07-29T15:27:34"}
+{"seq": 16, "side": "BUY", "entry": 4010.09, "lots": 0.1, "tier": "1x normal", "strength": 0.54, "time": "2026-07-29 15:28", "emitted_utc": "2026-07-29T15:28:35"}
+{"seq": 17, "side": "SELL", "entry": 4010.47, "lots": 0.1, "tier": "1x normal", "strength": 0.52, "time": "2026-07-29 15:34", "emitted_utc": "2026-07-29T15:35:15"}
+{"seq": 18, "side": "SELL", "entry": 4007.37, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.82, "time": "2026-07-29 15:43", "emitted_utc": "2026-07-29T15:43:36"}
+{"seq": 19, "side": "BUY", "entry": 4011.86, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-29 15:46", "emitted_utc": "2026-07-29T15:46:56"}
+{"seq": 20, "side": "BUY", "entry": 4011.46, "lots": 0.1, "tier": "1x normal", "strength": 0.52, "time": "2026-07-29 15:49", "emitted_utc": "2026-07-29T15:49:36"}
+{"seq": 21, "side": "SELL", "entry": 4009.89, "lots": 0.1, "tier": "1x normal", "strength": 0.54, "time": "2026-07-29 15:56", "emitted_utc": "2026-07-29T15:56:37"}
+{"seq": 22, "side": "SELL", "entry": 4009.56, "lots": 0.1, "tier": "1x normal", "strength": 0.53, "time": "2026-07-29 15:57", "emitted_utc": "2026-07-29T15:57:37"}
+{"seq": 23, "side": "SELL", "entry": 4007.93, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-29 16:03", "emitted_utc": "2026-07-29T16:04:18"}
+{"seq": 24, "side": "BUY", "entry": 4011.96, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.67, "time": "2026-07-29 16:07", "emitted_utc": "2026-07-29T16:08:19"}
+{"seq": 25, "side": "SELL", "entry": 4011.47, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-29 16:11", "emitted_utc": "2026-07-29T16:12:19"}
+{"seq": 26, "side": "BUY", "entry": 4016.7, "lots": 0.1, "tier": "1x normal", "strength": 0.57, "time": "2026-07-29 16:23", "emitted_utc": "2026-07-29T16:23:20"}
+{"seq": 27, "side": "BUY", "entry": 4015.79, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.7, "time": "2026-07-29 16:25", "emitted_utc": "2026-07-29T16:26:01"}
+{"seq": 28, "side": "BUY", "entry": 4017.2, "lots": 0.1, "tier": "1x normal", "strength": 0.56, "time": "2026-07-29 16:49", "emitted_utc": "2026-07-29T16:49:44"}
+{"seq": 29, "side": "BUY", "entry": 4048.49, "lots": 0.1, "tier": "1x normal", "strength": 0.56, "time": "2026-07-29 17:22", "emitted_utc": "2026-07-29T17:22:27"}
+{"seq": 30, "side": "SELL", "entry": 4036.89, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-29 17:35", "emitted_utc": "2026-07-29T17:36:08"}
+{"seq": 31, "side": "BUY", "entry": 4046.86, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.66, "time": "2026-07-29 17:53", "emitted_utc": "2026-07-29T17:53:30"}
+{"seq": 32, "side": "SELL", "entry": 4044.97, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.67, "time": "2026-07-29 17:54", "emitted_utc": "2026-07-29T17:54:50"}
+{"seq": 33, "side": "BUY", "entry": 4053.61, "lots": 0.1, "tier": "1x normal", "strength": 0.56, "time": "2026-07-29 18:00", "emitted_utc": "2026-07-29T18:00:10"}
+{"seq": 34, "side": "SELL", "entry": 4068.57, "lots": 0.1, "tier": "1x normal", "strength": 0.56, "time": "2026-07-29 18:03", "emitted_utc": "2026-07-29T18:03:51"}
+{"seq": 35, "side": "BUY", "entry": 4071.36, "lots": 0.1, "tier": "1x normal", "strength": 0.5, "time": "2026-07-29 18:05", "emitted_utc": "2026-07-29T18:05:31"}
+{"seq": 36, "side": "BUY", "entry": 4084.45, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-29 18:12", "emitted_utc": "2026-07-29T18:12:32"}
+{"seq": 37, "side": "SELL", "entry": 4065.59, "lots": 0.1, "tier": "1x normal", "strength": 0.54, "time": "2026-07-29 18:25", "emitted_utc": "2026-07-29T18:25:53"}
+{"seq": 38, "side": "SELL", "entry": 4065.92, "lots": 0.01, "tier": "weak", "strength": 0.48, "time": "2026-07-29 18:26", "emitted_utc": "2026-07-29T18:26:53"}
+{"seq": 39, "side": "SELL", "entry": 4061.24, "lots": 0.4, "tier": "2x strong", "strength": 0.62, "time": "2026-07-29 18:31", "emitted_utc": "2026-07-29T18:31:53"}
+{"seq": 40, "side": "BUY", "entry": 4073.99, "lots": 0.1, "tier": "1x normal", "strength": 0.57, "time": "2026-07-29 18:40", "emitted_utc": "2026-07-29T18:40:54"}
+{"seq": 41, "side": "BUY", "entry": 4077.19, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-29 18:41", "emitted_utc": "2026-07-29T18:41:14"}
+{"seq": 42, "side": "SELL", "entry": 4095.01, "lots": 0.1, "tier": "1x normal", "strength": 0.57, "time": "2026-07-29 19:08", "emitted_utc": "2026-07-29T19:08:57"}
+{"seq": 43, "side": "BUY", "entry": 4103.99, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.67, "time": "2026-07-29 19:15", "emitted_utc": "2026-07-29T19:15:58"}
+{"seq": 44, "side": "SELL", "entry": 4095.68, "lots": 0.4, "tier": "2x strong", "strength": 0.62, "time": "2026-07-29 19:20", "emitted_utc": "2026-07-29T19:20:38"}
+{"seq": 45, "side": "SELL", "entry": 4084.68, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-29 19:25", "emitted_utc": "2026-07-29T19:25:59"}
+{"seq": 46, "side": "SELL", "entry": 4066.03, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.67, "time": "2026-07-29 19:40", "emitted_utc": "2026-07-29T19:40:20"}
+{"seq": 47, "side": "SELL", "entry": 4068.47, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-29 19:50", "emitted_utc": "2026-07-29T19:50:21"}
+{"seq": 48, "side": "SELL", "entry": 4045.89, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.7, "time": "2026-07-29 20:03", "emitted_utc": "2026-07-29T20:03:43"}
+{"seq": 49, "side": "BUY", "entry": 4054.02, "lots": 0.01, "tier": "weak", "strength": 0.39, "time": "2026-07-29 20:12", "emitted_utc": "2026-07-29T20:13:04"}
+{"seq": 50, "side": "SELL", "entry": 4045.66, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.73, "time": "2026-07-29 20:20", "emitted_utc": "2026-07-29T20:21:05"}
+{"seq": 51, "side": "BUY", "entry": 4057.18, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-29 20:29", "emitted_utc": "2026-07-29T20:29:46"}
+{"seq": 52, "side": "BUY", "entry": 4056.65, "lots": 0.4, "tier": "2x strong", "strength": 0.58, "time": "2026-07-29 20:32", "emitted_utc": "2026-07-29T20:33:26"}
+{"seq": 53, "side": "SELL", "entry": 4063.72, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-29 20:50", "emitted_utc": "2026-07-29T20:50:48"}
+{"seq": 54, "side": "SELL", "entry": 4065.16, "lots": 0.01, "tier": "weak", "strength": 0.39, "time": "2026-07-29 20:52", "emitted_utc": "2026-07-29T20:53:09"}
+{"seq": 55, "side": "BUY", "entry": 4072.63, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-29 22:06", "emitted_utc": "2026-07-29T22:06:13"}
+{"seq": 56, "side": "SELL", "entry": 4065.61, "lots": 0.01, "tier": "weak", "strength": 0.47, "time": "2026-07-29 22:07", "emitted_utc": "2026-07-29T22:07:53"}
+{"seq": 57, "side": "BUY", "entry": 4073.36, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.78, "time": "2026-07-29 22:11", "emitted_utc": "2026-07-29T22:11:34"}
+{"seq": 58, "side": "BUY", "entry": 4075.68, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.85, "time": "2026-07-29 22:34", "emitted_utc": "2026-07-29T22:35:17"}
+{"seq": 59, "side": "BUY", "entry": 4085.93, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-29 22:55", "emitted_utc": "2026-07-29T22:55:39"}
+{"seq": 60, "side": "BUY", "entry": 4090.82, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.72, "time": "2026-07-29 23:00", "emitted_utc": "2026-07-29T23:01:00"}
+{"seq": 61, "side": "SELL", "entry": 4094.29, "lots": 0.4, "tier": "2x strong", "strength": 0.58, "time": "2026-07-29 23:10", "emitted_utc": "2026-07-29T23:11:01"}
+{"seq": 62, "side": "BUY", "entry": 4094.56, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.72, "time": "2026-07-29 23:12", "emitted_utc": "2026-07-29T23:12:41"}
+{"seq": 63, "side": "SELL", "entry": 4092.14, "lots": 0.4, "tier": "2x strong", "strength": 0.62, "time": "2026-07-29 23:24", "emitted_utc": "2026-07-29T23:25:23"}
+{"seq": 64, "side": "BUY", "entry": 4094.06, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-29 23:26", "emitted_utc": "2026-07-29T23:27:03"}
+{"seq": 65, "side": "SELL", "entry": 4092.43, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-29 23:39", "emitted_utc": "2026-07-29T23:39:25"}
+{"seq": 66, "side": "BUY", "entry": 4091.76, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.79, "time": "2026-07-29 23:46", "emitted_utc": "2026-07-29T23:47:06"}
+{"seq": 67, "side": "SELL", "entry": 4089.44, "lots": 0.1, "tier": "1x normal", "strength": 0.56, "time": "2026-07-29 23:52", "emitted_utc": "2026-07-29T23:52:46"}
+{"seq": 68, "side": "SELL", "entry": 4080.01, "lots": 0.4, "tier": "2x strong", "strength": 0.62, "time": "2026-07-30 00:10", "emitted_utc": "2026-07-30T00:10:49"}
+{"seq": 69, "side": "BUY", "entry": 4082.95, "lots": 0.01, "tier": "weak", "strength": 0.47, "time": "2026-07-30 00:15", "emitted_utc": "2026-07-30T00:16:09"}
+{"seq": 70, "side": "BUY", "entry": 4083.21, "lots": 0.01, "tier": "weak", "strength": 0.42, "time": "2026-07-30 00:16", "emitted_utc": "2026-07-30T00:16:49"}
+{"seq": 71, "side": "SELL", "entry": 4080.51, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.7, "time": "2026-07-30 00:17", "emitted_utc": "2026-07-30T00:18:10"}
+{"seq": 72, "side": "SELL", "entry": 4068.45, "lots": 0.4, "tier": "2x strong", "strength": 0.62, "time": "2026-07-30 00:42", "emitted_utc": "2026-07-30T00:42:33"}
+{"seq": 73, "side": "SELL", "entry": 4066.23, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.68, "time": "2026-07-30 00:50", "emitted_utc": "2026-07-30T00:50:34"}
+{"seq": 74, "side": "SELL", "entry": 4065.89, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.69, "time": "2026-07-30 00:53", "emitted_utc": "2026-07-30T00:53:34"}
+{"seq": 75, "side": "BUY", "entry": 4068.18, "lots": 0.01, "tier": "weak", "strength": 0.48, "time": "2026-07-30 00:55", "emitted_utc": "2026-07-30T00:55:54"}
+{"seq": 76, "side": "BUY", "entry": 4068.43, "lots": 0.01, "tier": "weak", "strength": 0.46, "time": "2026-07-30 00:56", "emitted_utc": "2026-07-30T00:56:14"}
+{"seq": 77, "side": "BUY", "entry": 4082.91, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.77, "time": "2026-07-30 01:31", "emitted_utc": "2026-07-30T01:31:18"}
+{"seq": 78, "side": "SELL", "entry": 4084.09, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-30 01:48", "emitted_utc": "2026-07-30T01:48:39"}
+{"seq": 79, "side": "SELL", "entry": 4087.73, "lots": 0.4, "tier": "2x strong", "strength": 0.59, "time": "2026-07-30 01:56", "emitted_utc": "2026-07-30T01:57:00"}
+{"seq": 80, "side": "BUY", "entry": 4088.32, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.76, "time": "2026-07-30 02:00", "emitted_utc": "2026-07-30T02:00:40"}
+{"seq": 81, "side": "SELL", "entry": 4084.36, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-30 02:12", "emitted_utc": "2026-07-30T02:13:02"}
+{"seq": 82, "side": "BUY", "entry": 4083.48, "lots": 0.4, "tier": "2x strong", "strength": 0.58, "time": "2026-07-30 02:20", "emitted_utc": "2026-07-30T02:20:42"}
+{"seq": 83, "side": "BUY", "entry": 4082.94, "lots": 0.01, "tier": "weak", "strength": 0.46, "time": "2026-07-30 02:24", "emitted_utc": "2026-07-30T02:25:03"}
+{"seq": 84, "side": "SELL", "entry": 4078.37, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.71, "time": "2026-07-30 02:31", "emitted_utc": "2026-07-30T02:32:24"}
+{"seq": 85, "side": "SELL", "entry": 4075.06, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.89, "time": "2026-07-30 02:38", "emitted_utc": "2026-07-30T02:38:24"}
+{"seq": 86, "side": "BUY", "entry": 4078.78, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-30 02:40", "emitted_utc": "2026-07-30T02:41:05"}
+{"seq": 87, "side": "BUY", "entry": 4077.14, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-30 02:44", "emitted_utc": "2026-07-30T02:44:45"}
+{"seq": 88, "side": "SELL", "entry": 4073.88, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.69, "time": "2026-07-30 02:49", "emitted_utc": "2026-07-30T02:50:05"}
+{"seq": 89, "side": "SELL", "entry": 4061.78, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.75, "time": "2026-07-30 03:12", "emitted_utc": "2026-07-30T03:12:28"}
+{"seq": 90, "side": "BUY", "entry": 4054.82, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-30 03:35", "emitted_utc": "2026-07-30T03:35:30"}
+{"seq": 91, "side": "BUY", "entry": 4058.41, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-30 03:59", "emitted_utc": "2026-07-30T03:59:33"}
+{"seq": 92, "side": "BUY", "entry": 4060.28, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.86, "time": "2026-07-30 04:02", "emitted_utc": "2026-07-30T04:02:54"}
+{"seq": 93, "side": "SELL", "entry": 4053.89, "lots": 0.01, "tier": "weak", "strength": 0.5, "time": "2026-07-30 04:11", "emitted_utc": "2026-07-30T04:11:34"}
+{"seq": 94, "side": "BUY", "entry": 4053.34, "lots": 0.4, "tier": "2x strong", "strength": 0.62, "time": "2026-07-30 04:26", "emitted_utc": "2026-07-30T04:26:36"}
+{"seq": 95, "side": "SELL", "entry": 4050.12, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-30 04:38", "emitted_utc": "2026-07-30T04:38:38"}
+{"seq": 96, "side": "SELL", "entry": 4049.51, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.76, "time": "2026-07-30 04:47", "emitted_utc": "2026-07-30T04:48:19"}
+{"seq": 97, "side": "BUY", "entry": 4047.87, "lots": 0.1, "tier": "1x normal", "strength": 0.56, "time": "2026-07-30 04:51", "emitted_utc": "2026-07-30T04:51:39"}
+{"seq": 98, "side": "SELL", "entry": 4044.74, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.72, "time": "2026-07-30 04:58", "emitted_utc": "2026-07-30T04:58:40"}
+{"seq": 99, "side": "SELL", "entry": 4043.76, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.72, "time": "2026-07-30 05:00", "emitted_utc": "2026-07-30T05:01:00"}
+{"seq": 100, "side": "SELL", "entry": 4043.34, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-30 05:01", "emitted_utc": "2026-07-30T05:02:00"}
+{"seq": 101, "side": "BUY", "entry": 4044.79, "lots": 0.01, "tier": "weak", "strength": 0.42, "time": "2026-07-30 05:09", "emitted_utc": "2026-07-30T05:09:21"}
+{"seq": 102, "side": "BUY", "entry": 4043.68, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-30 05:20", "emitted_utc": "2026-07-30T05:20:42"}
+{"seq": 103, "side": "SELL", "entry": 4044.97, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-30 05:35", "emitted_utc": "2026-07-30T05:35:44"}
+{"seq": 104, "side": "SELL", "entry": 4032.34, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-30 05:48", "emitted_utc": "2026-07-30T05:49:25"}
+{"seq": 105, "side": "BUY", "entry": 4033.73, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-30 05:56", "emitted_utc": "2026-07-30T05:56:26"}
+{"seq": 106, "side": "SELL", "entry": 4033.54, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.71, "time": "2026-07-30 06:12", "emitted_utc": "2026-07-30T06:12:28"}
+{"seq": 107, "side": "SELL", "entry": 4032.64, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.77, "time": "2026-07-30 06:13", "emitted_utc": "2026-07-30T06:13:28"}
+{"seq": 108, "side": "BUY", "entry": 4036.7, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-30 06:21", "emitted_utc": "2026-07-30T06:21:48"}
+{"seq": 109, "side": "BUY", "entry": 4038.4, "lots": 0.1, "tier": "1x normal", "strength": 0.54, "time": "2026-07-30 06:22", "emitted_utc": "2026-07-30T06:22:29"}
+{"seq": 110, "side": "SELL", "entry": 4035.41, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-30 06:25", "emitted_utc": "2026-07-30T06:26:09"}
+{"seq": 111, "side": "BUY", "entry": 4033.58, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.67, "time": "2026-07-30 06:29", "emitted_utc": "2026-07-30T06:29:49"}
+{"seq": 112, "side": "SELL", "entry": 4034.35, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-30 06:40", "emitted_utc": "2026-07-30T06:41:10"}
+{"seq": 113, "side": "BUY", "entry": 4037.06, "lots": 0.1, "tier": "1x normal", "strength": 0.57, "time": "2026-07-30 06:46", "emitted_utc": "2026-07-30T06:46:51"}
+{"seq": 114, "side": "SELL", "entry": 4034.95, "lots": 0.1, "tier": "1x normal", "strength": 0.52, "time": "2026-07-30 06:48", "emitted_utc": "2026-07-30T06:48:51"}
+{"seq": 115, "side": "SELL", "entry": 4034.39, "lots": 0.4, "tier": "2x strong", "strength": 0.59, "time": "2026-07-30 06:49", "emitted_utc": "2026-07-30T06:49:31"}
+{"seq": 116, "side": "BUY", "entry": 4036.42, "lots": 0.1, "tier": "1x normal", "strength": 0.52, "time": "2026-07-30 06:49", "emitted_utc": "2026-07-30T06:50:31"}
+{"seq": 117, "side": "SELL", "entry": 4037.68, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-30 06:56", "emitted_utc": "2026-07-30T06:56:32"}
+{"seq": 118, "side": "BUY", "entry": 4036.61, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-30 06:59", "emitted_utc": "2026-07-30T06:59:52"}
+{"seq": 119, "side": "BUY", "entry": 4045.88, "lots": 0.1, "tier": "1x normal", "strength": 0.53, "time": "2026-07-30 07:10", "emitted_utc": "2026-07-30T07:10:53"}
+{"seq": 120, "side": "BUY", "entry": 4046.47, "lots": 0.4, "tier": "2x strong", "strength": 0.58, "time": "2026-07-30 07:11", "emitted_utc": "2026-07-30T07:12:14"}
+{"seq": 121, "side": "BUY", "entry": 4046.21, "lots": 0.01, "tier": "weak", "strength": 0.47, "time": "2026-07-30 07:12", "emitted_utc": "2026-07-30T07:12:54"}
+{"seq": 122, "side": "SELL", "entry": 4043.88, "lots": 0.1, "tier": "1x normal", "strength": 0.5, "time": "2026-07-30 07:28", "emitted_utc": "2026-07-30T07:28:55"}
+{"seq": 123, "side": "BUY", "entry": 4046.34, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-30 07:29", "emitted_utc": "2026-07-30T07:29:35"}
+{"seq": 124, "side": "SELL", "entry": 4043.36, "lots": 0.4, "tier": "2x strong", "strength": 0.62, "time": "2026-07-30 07:30", "emitted_utc": "2026-07-30T07:30:55"}
+{"seq": 125, "side": "SELL", "entry": 4043.61, "lots": 0.1, "tier": "1x normal", "strength": 0.52, "time": "2026-07-30 07:31", "emitted_utc": "2026-07-30T07:31:16"}
+{"seq": 126, "side": "BUY", "entry": 4040.43, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-30 07:39", "emitted_utc": "2026-07-30T07:40:16"}
+{"seq": 127, "side": "SELL", "entry": 4041.84, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-30 07:47", "emitted_utc": "2026-07-30T07:48:17"}
+{"seq": 128, "side": "BUY", "entry": 4043.86, "lots": 0.1, "tier": "1x normal", "strength": 0.56, "time": "2026-07-30 07:51", "emitted_utc": "2026-07-30T07:52:18"}
+{"seq": 129, "side": "SELL", "entry": 4042.43, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-30 07:54", "emitted_utc": "2026-07-30T07:54:38"}
+{"seq": 130, "side": "BUY", "entry": 4041.41, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-30 08:03", "emitted_utc": "2026-07-30T08:03:59"}
+{"seq": 131, "side": "BUY", "entry": 4052.09, "lots": 0.1, "tier": "1x normal", "strength": 0.52, "time": "2026-07-30 08:10", "emitted_utc": "2026-07-30T08:11:00"}
+{"seq": 132, "side": "BUY", "entry": 4062.69, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-30 08:23", "emitted_utc": "2026-07-30T08:24:01"}
+{"seq": 133, "side": "SELL", "entry": 4064.18, "lots": 0.4, "tier": "2x strong", "strength": 0.62, "time": "2026-07-30 08:29", "emitted_utc": "2026-07-30T08:29:42"}
+{"seq": 134, "side": "SELL", "entry": 4069.05, "lots": 0.01, "tier": "weak", "strength": 0.37, "time": "2026-07-30 08:33", "emitted_utc": "2026-07-30T08:34:43"}
+{"seq": 135, "side": "BUY", "entry": 4070.04, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-30 08:36", "emitted_utc": "2026-07-30T08:36:43"}
+{"seq": 136, "side": "SELL", "entry": 4066.75, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-30 08:38", "emitted_utc": "2026-07-30T08:38:23"}
+{"seq": 137, "side": "SELL", "entry": 4078.93, "lots": 0.1, "tier": "1x normal", "strength": 0.52, "time": "2026-07-30 10:51", "emitted_utc": "2026-07-30T10:52:12"}
+{"seq": 138, "side": "BUY", "entry": 4080.01, "lots": 0.1, "tier": "1x normal", "strength": 0.53, "time": "2026-07-30 11:03", "emitted_utc": "2026-07-30T11:03:53"}
+{"seq": 139, "side": "BUY", "entry": 4080.13, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.7, "time": "2026-07-30 11:05", "emitted_utc": "2026-07-30T11:05:33"}
+{"seq": 140, "side": "SELL", "entry": 4080.82, "lots": 0.01, "tier": "weak", "strength": 0.36, "time": "2026-07-30 11:08", "emitted_utc": "2026-07-30T11:09:13"}
+{"seq": 141, "side": "SELL", "entry": 4079.8, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-30 11:13", "emitted_utc": "2026-07-30T11:13:34"}
+{"seq": 142, "side": "SELL", "entry": 4078.91, "lots": 0.01, "tier": "weak", "strength": 0.5, "time": "2026-07-30 11:19", "emitted_utc": "2026-07-30T11:19:54"}
+{"seq": 143, "side": "BUY", "entry": 4081.09, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-30 11:24", "emitted_utc": "2026-07-30T11:24:55"}
+{"seq": 144, "side": "BUY", "entry": 4077.84, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-30 11:33", "emitted_utc": "2026-07-30T11:33:56"}
+{"seq": 145, "side": "BUY", "entry": 4078.05, "lots": 0.1, "tier": "1x normal", "strength": 0.54, "time": "2026-07-30 11:36", "emitted_utc": "2026-07-30T11:36:56"}
+{"seq": 146, "side": "SELL", "entry": 4077.91, "lots": 0.01, "tier": "weak", "strength": 0.42, "time": "2026-07-30 11:42", "emitted_utc": "2026-07-30T11:42:37"}
+{"seq": 147, "side": "SELL", "entry": 4077.62, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-30 11:44", "emitted_utc": "2026-07-30T11:44:57"}
+{"seq": 148, "side": "BUY", "entry": 4079.27, "lots": 0.01, "tier": "weak", "strength": 0.48, "time": "2026-07-30 11:54", "emitted_utc": "2026-07-30T11:54:38"}
+{"seq": 149, "side": "SELL", "entry": 4077.82, "lots": 0.1, "tier": "1x normal", "strength": 0.53, "time": "2026-07-30 11:57", "emitted_utc": "2026-07-30T11:58:18"}
+{"seq": 150, "side": "BUY", "entry": 4077.05, "lots": 0.1, "tier": "1x normal", "strength": 0.55, "time": "2026-07-30 12:03", "emitted_utc": "2026-07-30T12:04:19"}
+{"seq": 151, "side": "SELL", "entry": 4076.09, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-30 12:11", "emitted_utc": "2026-07-30T12:12:19"}
+{"seq": 152, "side": "SELL", "entry": 4076.23, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-30 12:15", "emitted_utc": "2026-07-30T12:16:00"}
+{"seq": 153, "side": "SELL", "entry": 4073.58, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.78, "time": "2026-07-30 12:20", "emitted_utc": "2026-07-30T12:20:40"}
+{"seq": 154, "side": "BUY", "entry": 4075.8, "lots": 0.1, "tier": "1x normal", "strength": 0.55, "time": "2026-07-30 12:24", "emitted_utc": "2026-07-30T12:24:41"}
+{"seq": 155, "side": "BUY", "entry": 4084.45, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.7, "time": "2026-07-30 12:30", "emitted_utc": "2026-07-30T12:30:21"}
+{"seq": 156, "side": "SELL", "entry": 4075.96, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-30 12:31", "emitted_utc": "2026-07-30T12:31:41"}
+{"seq": 157, "side": "SELL", "entry": 4076.62, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.73, "time": "2026-07-31 07:16", "emitted_utc": "2026-07-31T07:17:08"}
+{"seq": 158, "side": "BUY", "entry": 4078.57, "lots": 0.4, "tier": "2x strong", "strength": 0.59, "time": "2026-07-31 07:19", "emitted_utc": "2026-07-31T07:19:48"}
+{"seq": 159, "side": "BUY", "entry": 4074.18, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.87, "time": "2026-07-31 07:49", "emitted_utc": "2026-07-31T07:49:29"}
+{"seq": 160, "side": "SELL", "entry": 4062.91, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.71, "time": "2026-07-31 08:11", "emitted_utc": "2026-07-31T08:12:10"}
+{"seq": 161, "side": "SELL", "entry": 4062.86, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.66, "time": "2026-07-31 08:12", "emitted_utc": "2026-07-31T08:12:50"}
+{"seq": 162, "side": "BUY", "entry": 4067.18, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-31 08:20", "emitted_utc": "2026-07-31T08:20:30"}
+{"seq": 163, "side": "SELL", "entry": 4062.67, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.69, "time": "2026-07-31 08:22", "emitted_utc": "2026-07-31T08:22:50"}
+{"seq": 164, "side": "SELL", "entry": 4061.97, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.69, "time": "2026-07-31 08:23", "emitted_utc": "2026-07-31T08:24:10"}
+{"seq": 165, "side": "BUY", "entry": 4060.28, "lots": 0.1, "tier": "1x normal", "strength": 0.56, "time": "2026-07-31 08:37", "emitted_utc": "2026-07-31T08:38:11"}
+{"seq": 166, "side": "SELL", "entry": 4060.24, "lots": 0.01, "tier": "weak", "strength": 0.4, "time": "2026-07-31 09:05", "emitted_utc": "2026-07-31T09:08:14"}
+{"seq": 167, "side": "BUY", "entry": 4061.53, "lots": 0.1, "tier": "1x normal", "strength": 0.5, "time": "2026-07-31 09:06", "emitted_utc": "2026-07-31T09:08:14"}
+{"seq": 168, "side": "SELL", "entry": 4054.8, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.72, "time": "2026-07-31 09:22", "emitted_utc": "2026-07-31T09:22:54"}
+{"seq": 169, "side": "BUY", "entry": 4053.2, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-31 09:27", "emitted_utc": "2026-07-31T09:27:34"}
+{"seq": 170, "side": "SELL", "entry": 4051.36, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.69, "time": "2026-07-31 09:34", "emitted_utc": "2026-07-31T09:35:55"}
+{"seq": 171, "side": "BUY", "entry": 4055.55, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-31 09:47", "emitted_utc": "2026-07-31T09:47:55"}
+{"seq": 172, "side": "BUY", "entry": 4054.74, "lots": 0.4, "tier": "2x strong", "strength": 0.59, "time": "2026-07-31 09:59", "emitted_utc": "2026-07-31T09:59:35"}
+{"seq": 173, "side": "SELL", "entry": 4052.49, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-31 10:24", "emitted_utc": "2026-07-31T10:24:56"}
+{"seq": 174, "side": "BUY", "entry": 4054.96, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-31 10:30", "emitted_utc": "2026-07-31T10:30:56"}
+{"seq": 175, "side": "SELL", "entry": 4055.01, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-31 10:37", "emitted_utc": "2026-07-31T10:37:56"}
+{"seq": 176, "side": "BUY", "entry": 4054.93, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-31 10:44", "emitted_utc": "2026-07-31T10:44:36"}
+{"seq": 177, "side": "SELL", "entry": 4054.49, "lots": 0.1, "tier": "1x normal", "strength": 0.56, "time": "2026-07-31 10:55", "emitted_utc": "2026-07-31T10:56:17"}
+{"seq": 178, "side": "SELL", "entry": 4053.74, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.67, "time": "2026-07-31 10:59", "emitted_utc": "2026-07-31T10:59:57"}
+{"seq": 179, "side": "BUY", "entry": 4055.6, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.67, "time": "2026-07-31 11:04", "emitted_utc": "2026-07-31T11:05:17"}
+{"seq": 180, "side": "BUY", "entry": 4056.84, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.72, "time": "2026-07-31 11:17", "emitted_utc": "2026-07-31T11:18:17"}
+{"seq": 181, "side": "SELL", "entry": 4058.82, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-31 11:28", "emitted_utc": "2026-07-31T11:29:18"}
+{"seq": 182, "side": "SELL", "entry": 4053.32, "lots": 0.1, "tier": "1x normal", "strength": 0.55, "time": "2026-07-31 11:38", "emitted_utc": "2026-07-31T11:39:18"}
+{"seq": 183, "side": "BUY", "entry": 4052.45, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-31 11:44", "emitted_utc": "2026-07-31T11:44:38"}
+{"seq": 184, "side": "BUY", "entry": 4054.78, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.67, "time": "2026-07-31 12:02", "emitted_utc": "2026-07-31T12:02:35"}
+{"seq": 185, "side": "BUY", "entry": 4058.89, "lots": 0.4, "tier": "2x strong", "strength": 0.59, "time": "2026-07-31 12:06", "emitted_utc": "2026-07-31T12:07:15"}
+{"seq": 186, "side": "BUY", "entry": 4058.28, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-31 12:13", "emitted_utc": "2026-07-31T12:13:16"}
+{"seq": 187, "side": "SELL", "entry": 4050.14, "lots": 0.1, "tier": "1x normal", "strength": 0.5, "time": "2026-07-31 12:28", "emitted_utc": "2026-07-31T12:28:36"}
+{"seq": 188, "side": "SELL", "entry": 4049.94, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.68, "time": "2026-07-31 12:29", "emitted_utc": "2026-07-31T12:29:56"}
+{"seq": 189, "side": "SELL", "entry": 4044.54, "lots": 0.1, "tier": "1x normal", "strength": 0.57, "time": "2026-07-31 12:39", "emitted_utc": "2026-07-31T12:39:56"}
+{"seq": 190, "side": "SELL", "entry": 4043.61, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-31 12:48", "emitted_utc": "2026-07-31T12:48:37"}
+{"seq": 191, "side": "BUY", "entry": 4046.3, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-31 12:53", "emitted_utc": "2026-07-31T12:54:17"}
+{"seq": 192, "side": "BUY", "entry": 4041.82, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.7, "time": "2026-07-31 13:02", "emitted_utc": "2026-07-31T13:02:37"}
+{"seq": 193, "side": "SELL", "entry": 4035.27, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-31 13:11", "emitted_utc": "2026-07-31T13:11:57"}
+{"seq": 194, "side": "SELL", "entry": 4036.0, "lots": 0.01, "tier": "weak", "strength": 0.36, "time": "2026-07-31 13:12", "emitted_utc": "2026-07-31T13:12:17"}
+{"seq": 195, "side": "SELL", "entry": 4035.83, "lots": 0.1, "tier": "1x normal", "strength": 0.52, "time": "2026-07-31 13:14", "emitted_utc": "2026-07-31T13:14:18"}
+{"seq": 196, "side": "BUY", "entry": 4045.75, "lots": 0.1, "tier": "1x normal", "strength": 0.55, "time": "2026-07-31 13:22", "emitted_utc": "2026-07-31T13:22:58"}
+{"seq": 197, "side": "SELL", "entry": 4037.36, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-31 13:31", "emitted_utc": "2026-07-31T13:31:38"}
+{"seq": 198, "side": "SELL", "entry": 4031.3, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-31 13:38", "emitted_utc": "2026-07-31T13:38:58"}
+{"seq": 199, "side": "SELL", "entry": 4031.63, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-31 13:39", "emitted_utc": "2026-07-31T13:39:18"}
+{"seq": 200, "side": "SELL", "entry": 4025.51, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.67, "time": "2026-07-31 13:59", "emitted_utc": "2026-07-31T14:00:39"}
+{"seq": 201, "side": "SELL", "entry": 4023.79, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.74, "time": "2026-07-31 14:07", "emitted_utc": "2026-07-31T14:08:19"}
+{"seq": 202, "side": "BUY", "entry": 4026.01, "lots": 0.4, "tier": "2x strong", "strength": 0.59, "time": "2026-07-31 14:09", "emitted_utc": "2026-07-31T14:09:39"}
+{"seq": 203, "side": "BUY", "entry": 4030.51, "lots": 0.1, "tier": "1x normal", "strength": 0.54, "time": "2026-07-31 14:12", "emitted_utc": "2026-07-31T14:12:39"}
+{"seq": 204, "side": "BUY", "entry": 4030.16, "lots": 0.01, "tier": "weak", "strength": 0.38, "time": "2026-07-31 14:13", "emitted_utc": "2026-07-31T14:13:19"}
+{"seq": 205, "side": "BUY", "entry": 4037.29, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-31 14:25", "emitted_utc": "2026-07-31T14:26:00"}
+{"seq": 206, "side": "BUY", "entry": 4040.22, "lots": 0.4, "tier": "2x strong", "strength": 0.58, "time": "2026-07-31 14:34", "emitted_utc": "2026-07-31T14:34:40"}
+{"seq": 207, "side": "BUY", "entry": 4042.12, "lots": 0.4, "tier": "2x strong", "strength": 0.59, "time": "2026-07-31 14:45", "emitted_utc": "2026-07-31T14:46:00"}
+{"seq": 208, "side": "BUY", "entry": 4042.54, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-31 14:46", "emitted_utc": "2026-07-31T14:46:20"}
+{"seq": 209, "side": "BUY", "entry": 4042.91, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-31 14:47", "emitted_utc": "2026-07-31T14:47:40"}
+{"seq": 210, "side": "BUY", "entry": 4042.11, "lots": 0.01, "tier": "weak", "strength": 0.47, "time": "2026-07-31 14:48", "emitted_utc": "2026-07-31T14:48:40"}
+{"seq": 211, "side": "SELL", "entry": 4045.89, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.69, "time": "2026-07-31 15:09", "emitted_utc": "2026-07-31T15:10:21"}
+{"seq": 212, "side": "BUY", "entry": 4046.68, "lots": 0.4, "tier": "2x strong", "strength": 0.63, "time": "2026-07-31 15:14", "emitted_utc": "2026-07-31T15:14:21"}
+{"seq": 213, "side": "SELL", "entry": 4044.91, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.69, "time": "2026-07-31 15:17", "emitted_utc": "2026-07-31T15:17:42"}
+{"seq": 214, "side": "BUY", "entry": 4044.14, "lots": 0.1, "tier": "1x normal", "strength": 0.56, "time": "2026-07-31 15:25", "emitted_utc": "2026-07-31T15:26:22"}
+{"seq": 215, "side": "BUY", "entry": 4042.66, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-31 15:38", "emitted_utc": "2026-07-31T15:39:03"}
+{"seq": 216, "side": "BUY", "entry": 4043.03, "lots": 0.1, "tier": "1x normal", "strength": 0.57, "time": "2026-07-31 15:39", "emitted_utc": "2026-07-31T15:39:43"}
+{"seq": 217, "side": "BUY", "entry": 4042.91, "lots": 0.01, "tier": "weak", "strength": 0.42, "time": "2026-07-31 15:40", "emitted_utc": "2026-07-31T15:40:43"}
+{"seq": 218, "side": "SELL", "entry": 4040.38, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-31 15:49", "emitted_utc": "2026-07-31T15:49:44"}
+{"seq": 219, "side": "BUY", "entry": 4044.97, "lots": 0.1, "tier": "1x normal", "strength": 0.55, "time": "2026-07-31 15:51", "emitted_utc": "2026-07-31T15:52:04"}
+{"seq": 220, "side": "BUY", "entry": 4046.34, "lots": 0.4, "tier": "2x strong", "strength": 0.62, "time": "2026-07-31 16:11", "emitted_utc": "2026-07-31T16:12:24"}
+{"seq": 221, "side": "SELL", "entry": 4044.03, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-31 16:15", "emitted_utc": "2026-07-31T16:16:24"}
+{"seq": 222, "side": "BUY", "entry": 4047.55, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.72, "time": "2026-07-31 16:24", "emitted_utc": "2026-07-31T16:24:45"}
+{"seq": 223, "side": "BUY", "entry": 4048.81, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-31 16:31", "emitted_utc": "2026-07-31T16:32:25"}
+{"seq": 224, "side": "SELL", "entry": 4048.11, "lots": 0.01, "tier": "weak", "strength": 0.35, "time": "2026-07-31 16:39", "emitted_utc": "2026-07-31T16:39:45"}
+{"seq": 225, "side": "BUY", "entry": 4044.01, "lots": 0.4, "tier": "2x strong", "strength": 0.61, "time": "2026-07-31 17:00", "emitted_utc": "2026-07-31T17:00:26"}
+{"seq": 226, "side": "BUY", "entry": 4044.78, "lots": 0.1, "tier": "1x normal", "strength": 0.54, "time": "2026-07-31 17:01", "emitted_utc": "2026-07-31T17:02:06"}
+{"seq": 227, "side": "SELL", "entry": 4042.95, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.67, "time": "2026-07-31 17:04", "emitted_utc": "2026-07-31T17:04:46"}
+{"seq": 228, "side": "BUY", "entry": 4044.51, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.68, "time": "2026-07-31 17:05", "emitted_utc": "2026-07-31T17:06:06"}
+{"seq": 229, "side": "BUY", "entry": 4045.64, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.69, "time": "2026-07-31 17:14", "emitted_utc": "2026-07-31T17:14:27"}
+{"seq": 230, "side": "BUY", "entry": 4048.35, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-31 17:24", "emitted_utc": "2026-07-31T17:25:07"}
+{"seq": 231, "side": "SELL", "entry": 4048.09, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.72, "time": "2026-07-31 17:34", "emitted_utc": "2026-07-31T17:35:27"}
+{"seq": 232, "side": "BUY", "entry": 4051.27, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.69, "time": "2026-07-31 17:43", "emitted_utc": "2026-07-31T17:43:48"}
+{"seq": 233, "side": "BUY", "entry": 4053.76, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.76, "time": "2026-07-31 17:46", "emitted_utc": "2026-07-31T17:47:08"}
+{"seq": 234, "side": "BUY", "entry": 4053.74, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.71, "time": "2026-07-31 17:47", "emitted_utc": "2026-07-31T17:47:28"}
+{"seq": 235, "side": "BUY", "entry": 4053.76, "lots": 0.1, "tier": "1x normal", "strength": 0.58, "time": "2026-07-31 17:48", "emitted_utc": "2026-07-31T17:49:08"}
+{"seq": 236, "side": "BUY", "entry": 4054.26, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.7, "time": "2026-07-31 17:56", "emitted_utc": "2026-07-31T17:56:48"}
+{"seq": 237, "side": "SELL", "entry": 4053.11, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.68, "time": "2026-07-31 18:02", "emitted_utc": "2026-07-31T18:02:48"}
+{"seq": 238, "side": "SELL", "entry": 4053.64, "lots": 0.1, "tier": "1x normal", "strength": 0.57, "time": "2026-07-31 18:03", "emitted_utc": "2026-07-31T18:03:48"}
+{"seq": 239, "side": "SELL", "entry": 4050.07, "lots": 0.4, "tier": "2x strong", "strength": 0.66, "time": "2026-07-31 18:31", "emitted_utc": "2026-07-31T18:31:31"}
+{"seq": 240, "side": "SELL", "entry": 4050.08, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-31 18:32", "emitted_utc": "2026-07-31T18:32:31"}
+{"seq": 241, "side": "SELL", "entry": 4049.55, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.7, "time": "2026-07-31 18:44", "emitted_utc": "2026-07-31T18:45:12"}
+{"seq": 242, "side": "BUY", "entry": 4049.82, "lots": 0.4, "tier": "2x strong", "strength": 0.64, "time": "2026-07-31 18:48", "emitted_utc": "2026-07-31T18:49:12"}
+{"seq": 243, "side": "SELL", "entry": 4050.69, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.68, "time": "2026-07-31 19:01", "emitted_utc": "2026-07-31T19:01:53"}
+{"seq": 244, "side": "SELL", "entry": 4048.24, "lots": 0.4, "tier": "2x strong", "strength": 0.65, "time": "2026-07-31 19:11", "emitted_utc": "2026-07-31T19:11:34"}
+{"seq": 245, "side": "BUY", "entry": 4048.99, "lots": 0.4, "tier": "2x strong", "strength": 0.62, "time": "2026-07-31 19:19", "emitted_utc": "2026-07-31T19:20:15"}
+{"seq": 246, "side": "BUY", "entry": 4051.45, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.8, "time": "2026-07-31 19:34", "emitted_utc": "2026-07-31T19:34:36"}
+{"seq": 247, "side": "BUY", "entry": 4051.26, "lots": 0.8, "tier": "3x STRONGEST", "strength": 0.78, "time": "2026-07-31 19:35", "emitted_utc": "2026-07-31T19:36:16"}
+{"seq": 248, "side": "SELL", "entry": 4049.77, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-31 19:39", "emitted_utc": "2026-07-31T19:39:57"}
+{"seq": 249, "side": "BUY", "entry": 4051.68, "lots": 0.4, "tier": "2x strong", "strength": 0.59, "time": "2026-07-31 19:43", "emitted_utc": "2026-07-31T19:43:37"}
+{"seq": 250, "side": "SELL", "entry": 4053.78, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-31 19:47", "emitted_utc": "2026-07-31T19:47:37"}
+{"seq": 251, "side": "BUY", "entry": 4048.28, "lots": 0.4, "tier": "2x strong", "strength": 0.58, "time": "2026-07-31 20:18", "emitted_utc": "2026-07-31T20:19:00"}
+{"seq": 1, "side": "BUY", "entry": 4049.07, "lots": 0.1, "tier": "1x normal", "strength": 0.53, "time": "2026-07-31 20:30", "emitted_utc": "2026-07-31T20:31:09"}
+{"seq": 2, "side": "BUY", "entry": 4049.48, "lots": 0.4, "tier": "2x strong", "strength": 0.6, "time": "2026-07-31 20:31", "emitted_utc": "2026-07-31T20:31:29"}
