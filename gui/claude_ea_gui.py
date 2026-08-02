@@ -233,7 +233,13 @@ class App(tk.Tk):
                 return
         except Exception:
             pass
-        prompt = ("Read CLAUDE_REALTIME_EA.md and resume the live judging loop for "
+        try:
+            import settings as S
+            rb = S.rulebook_path()
+            rbname = rb.name if rb and rb.exists() else "CLAUDE_REALTIME_EA.md"
+        except Exception:
+            rbname = "CLAUDE_REALTIME_EA.md"
+        prompt = ("Read " + rbname + " and resume the live judging loop for "
                   + self.market.get() + ".")
         for attempt in (
             ["cmd", "/c", "start", "", "cmd", "/k", f'cd /d "{REPO}" && claude "{prompt}"'],

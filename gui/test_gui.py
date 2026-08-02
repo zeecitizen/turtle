@@ -140,6 +140,15 @@ def main():
                   or S.find_terminals()[0]["has_ea"])
     check("settings: test_tradingview handles a dead port",
           lambda: S.test_tradingview(1)[0] is False)
+    check("settings: the EA playbook is found automatically",
+          lambda: Path(S.default_rulebook()).exists())
+    check("settings: the playbook validates",
+          lambda: S.inspect_rulebook(S.default_rulebook())[0] is True)
+    check("settings: a look-alike document is rejected",
+          lambda: S.inspect_rulebook(Path(S.REPO) / "README.md")[0] is False)
+    check("settings: a missing rulebook is rejected",
+          lambda: S.inspect_rulebook("no_such_file.md")[0] is False)
+    check("settings: rulebook_path() resolves", lambda: S.rulebook_path() is not None)
 
     dlg = {}
 
@@ -151,7 +160,8 @@ def main():
     if "d" in dlg:
         d = dlg["d"]
         for attr in ("mode", "key", "model", "market", "lx", "lb", "pypath", "common", "auto",
-                     "term", "terminfo", "tvport", "tvpoll", "tvx", "tvb", "tvres"):
+                     "term", "terminfo", "tvport", "tvpoll", "tvx", "tvb", "tvres",
+                     "rulebook", "rbres"):
             check(f"settings widget: {attr}", lambda a=attr: getattr(d, a))
 
         def both_modes():
@@ -176,6 +186,12 @@ def main():
             check("settings: Test bridge runs", lambda: (d.test_tv(), app.update()))
         check("settings: terminal picker updates its info line",
               lambda: (d._term_changed(), app.update()))
+        with mock.patch.object(S.filedialog, "askopenfilename",
+                               lambda **k: S.default_rulebook()):
+            check("settings: Attach EA MD Rules File runs",
+                  lambda: (d.attach_rulebook(), app.update()))
+        check("settings: attach reported success",
+              lambda: "does not look like" not in d.rbres.cget("text"))
 
         # save must round-trip without touching a real key file
         import tempfile
