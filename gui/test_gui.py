@@ -66,11 +66,12 @@ def main():
         assert combos, "no combobox found"
         c = combos[0]
         vals = list(c["values"])
-        assert vals == ["BTC", "XAU"], f"unexpected values {vals}"
+        assert set(vals) == {"XAU", "BTC"}, f"unexpected values {vals}"
+        assert vals[0] == "XAU", f"gold must be the default/first entry, got {vals}"
         for v in vals:                      # select each option like a user would
             app.market.set(v); app.update()
             assert app.market.get() == v
-        app.market.set("BTC")
+        app.market.set("XAU")
     check("dropdown: both markets selectable", dropdown)
 
     # ── 5. every button is wired to a callable ─────────────────────────────
