@@ -471,6 +471,8 @@ Get-CimInstance Win32_Process -Filter "Name='python.exe'" |
 | EA refuses to initialise | symbol guard: BTC EA attached to a gold chart | attach to the right chart — the guard is working as designed |
 | `[not enough money]` on every order | 0.40 lots on a $309 account (~$162k notional) | size down; check free margin before promising anything |
 | Detector blind to the real UHV | MT5 tick-count volume ≠ OANDA volume | always detect on the exchange feed |
+| Market is live on the broker but the feed is frozen at Friday's close | TradingView's websocket dropped over the weekend and the page served cached bars; a symbol switch does NOT fix it | hard-reload the page with cache ignored (`Page.reload` with `ignoreCache`) — the feed reconnects within a minute |
+| A "breakout" appears in the first minutes of a new session | the weekend gap sits between Friday's last bar and Sunday's first, so the detector reads Friday's closing candle as a UHV and the gap as a breakout | `scan()` refuses to judge until 30 bars exist after any gap over 30 minutes |
 | Data symbol suddenly wrong | someone switched the TradingView chart | `.symbol` marker + guard → the loop **holds** instead of trading nonsense |
 | Cloudflare **1033** while local is fine | tunnel process alive but its edge connection is dead | guard re-checks the public URL every ~60 s and restarts cloudflared |
 | `.hcc` history file unreadable | MT5 locks it while the terminal runs | use `ExportRecentBars` EA, or the bridge |
