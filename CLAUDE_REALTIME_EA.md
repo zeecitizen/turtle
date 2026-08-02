@@ -26,15 +26,22 @@ the ground truth.**
 If you are resuming cold: read §1 (why), §2 (the rules you judge by), then run §6
 (startup check), then loop §5. Everything else is reference.
 
-**The three commands you actually need:**
+**The commands you actually need:**
 ```bash
 PY="C:/Users/zeesh/AppData/Local/Programs/Python/Python313-arm64/python.exe"
 cd c:/Users/zeesh/Documents/GitHub/turtle
 
-$PY monitor/claude_judge.py scan BTC          # 1. park a fresh setup (or XAU)
-# 2. Read monitor/setup_labels/pending_setup.png  ← LOOK at it
+$PY monitor/snap.py BTC        # ★ live screenshot + scan + armed state, in ONE call (~9 s)
+# then:  Read  monitor/setup_labels/live.png       ← always this path, no filename to hunt
+#        Read  monitor/setup_labels/pending_setup.png   ← if scan says PENDING
+
 $PY monitor/claude_judge.py approve TAKE 1.0 "reason"    # or:  approve SKIP "reason"
 ```
+
+`snap.py` replaces the old two-step MCP capture (which cost ~1 minute per look because the
+filename changed every time). It pulls the frame straight off the CDP socket, crops to the
+chart canvas, always writes **`monitor/setup_labels/live.png`**, and prints the scan +
+armed state in the same output. Use `snap.py BTC bare` for the picture only.
 
 ---
 
