@@ -568,7 +568,9 @@ class App(tk.Tk):
             rd = VM.latest()
             if rd and rd.get("age_sec", 9999) < 900 and Path(rd.get("png", "")).exists():
                 use = Path(rd["png"])
-                bits = [f"trend {rd.get('trend', '?').upper()}"]
+                import vision_mark as _VM
+                bits = [_VM.TREND_NAME.get(rd.get("trend", ""),
+                                           str(rd.get("trend", "?")).upper())]
                 if rd.get("side"):
                     bits.append("no side makes sense" if rd["side"] == "NONE"
                                 else f"{rd['side']} makes sense")
