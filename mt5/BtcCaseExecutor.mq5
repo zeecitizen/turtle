@@ -33,6 +33,28 @@ input double InpTpCapPts  = 14.0;    // take-profit ceiling
 input int    InpMaxSignalAgeSec = 180;  // ignore signals older than this (stale-signal guard)
 input string InpSignalFile = "btc_signal.json";
 
+//--- Brokers enforce a minimum distance between price and the stop (SYMBOL_TRADE_STOPS_LEVEL,
+//--- plus the spread for a market order). Our scalp stops are deliberately tight, so on
+//--- 2026-08-02 EVERY BTC order came back [invalid stops] and nothing traded all session.
+//--- Widen the stop to the broker's own minimum whenever ours is tighter.
+double SafeStopPts(double wanted)
+{
+   long   lvl    = (long)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
+   long   frz    = (long)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL);
+   double point  = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+   double spread = SymbolInfoInteger(_Symbol, SYMBOL_SPREAD) * point;
+   double minpts = (double)MathMax(lvl, frz) * point + spread;
+   if (minpts <= 0) minpts = spread * 2.0;             // some brokers report 0
+   double need = minpts * 1.15 + point;                // small buffer over the wire
+   if (wanted < need)
+   {
+      PrintFormat("[stops] SL widened %.2f -> %.2f (broker min %.2f incl spread %.2f)",
+                  wanted, need, minpts, spread);
+      return need;
+   }
+   return wanted;
+}
+
 CTrade  trade;
 long    g_last_id = -1;
 double  g_peak_pts = 0.0;
@@ -136,7 +158,7 @@ void OnTimer() {
    double lots = LotsForRisk(InpRiskUsd * mult);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   double sl  = (side == "BUY") ? (ask - InpStopPts) : (bid + InpStopPts);
+   double sl  = (side == "BUY") ? (ask - SafeStopPts(InpStopPts)) : (bid + SafeStopPts(InpStopPts));
    g_peak_pts = 0.0;
    bool ok = (side == "BUY") ? trade.Buy(lots, _Symbol, 0, sl, 0, "btc")
                              : trade.Sell(lots, _Symbol, 0, sl, 0, "btc");
