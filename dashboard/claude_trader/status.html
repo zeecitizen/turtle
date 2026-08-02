@@ -1099,12 +1099,29 @@ setInterval(loadSystemStatus, 60000);
 
 // ── World session clocks ───────────────────────────────────────────────
 // Session UTC windows (May 2026: AU off DST → UTC+10; London BST; New York EDT)
+// Sessions are LOCAL business hours in each city's real timezone, so daylight saving is
+// handled by the browser instead of by hand-written offsets that silently rot twice a year.
+// (Checked against ForexFactory 2026-08-03: Tokyo, London and New York agree exactly.
+// Sydney differs by an hour because ForexFactory pins it to New York time and so never
+// shifts it for Australian DST; ours follows Sydney's actual clock. The two will agree
+// again when Australia returns to AEDT in October.)
 const SESSIONS = [
-  { city: 'Sydney',   off: 10, o: 22, c: 7  },
-  { city: 'Tokyo',    off: 9,  o: 0,  c: 9  },
-  { city: 'London',   off: 1,  o: 7,  c: 16 },
-  { city: 'New York', off: -4, o: 12, c: 21 },
+  { city: 'Sydney',   tz: 'Australia/Sydney', oh: 8, ch: 17 },
+  { city: 'Tokyo',    tz: 'Asia/Tokyo',       oh: 9, ch: 18 },
+  { city: 'London',   tz: 'Europe/London',    oh: 8, ch: 17 },
+  { city: 'New York', tz: 'America/New_York', oh: 8, ch: 17 },
 ];
+
+// How many hours that timezone is ahead of UTC right now (DST included).
+function tzOffset(tz, now) {
+  const s = new Intl.DateTimeFormat('en-US', {
+    timeZone: tz, hour12: false, year: 'numeric', month: '2-digit',
+    day: '2-digit', hour: '2-digit', minute: '2-digit'
+  }).formatToParts(now).reduce((a, p) => (a[p.type] = p.value, a), {});
+  const asUTC = Date.UTC(+s.year, +s.month - 1, +s.day,
+                         +s.hour % 24, +s.minute);
+  return Math.round((asUTC - now.getTime()) / 60000) / 60;
+}
 function fmtDur(min) {
   const h = Math.floor(min / 60), m = min % 60;
   return (h ? h + 'h ' : '') + m + 'm';
@@ -1136,8 +1153,12 @@ function renderClocks() {
   if (!el) return;
   const now = new Date();
   const uMin = now.getUTCHours() * 60 + now.getUTCMinutes();
-  el.innerHTML = SESSIONS.map(s => {
-    const lh = (now.getUTCHours() + s.off + 24) % 24;
+  el.innerHTML = SESSIONS.map(s0 => {
+    const off = tzOffset(s0.tz, now);
+    const s = { ...s0, off,
+                o: ((s0.oh - off) % 24 + 24) % 24,      // local open  -> UTC hour
+                c: ((s0.ch - off) % 24 + 24) % 24 };    // local close -> UTC hour
+    const lh = (now.getUTCHours() + Math.floor(off) + 24) % 24;
     const lm = now.getUTCMinutes(), ls = now.getUTCSeconds();
     const [hx, hy] = hand(22, (lh % 12) * 30 + lm * 0.5);
     const [mx, my] = hand(32, lm * 6 + ls * 0.1);
