@@ -54,8 +54,8 @@ def main():
         return report()
 
     # ── 3. every widget that exists ────────────────────────────────────────
-    for attr in ("status", "armed", "journal", "fills", "chart_img", "chart_title",
-                 "recmsg", "foot", "market"):
+    for attr in ("status", "armed", "journal", "chart_img", "chart_title",
+                 "recmsg", "foot", "market", "tree", "livebig", "livesub", "tsum"):
         check(f"widget present: {attr}", lambda a=attr: getattr(app, a))
 
     # ── 4. the market dropdown ─────────────────────────────────────────────
@@ -112,6 +112,7 @@ def main():
     # ── 7. live data paths ─────────────────────────────────────────────────
     check("status panel collects without error", lambda: (app._collect(), app.update()))
     check("chart panel renders without error", lambda: (app._show_chart(), app.update()))
+    check("trade book loads without error", lambda: (app._refresh_book(), app.update()))
     check("refresh cycle runs", lambda: (app.refresh_loop(), app.update()))
 
     # ── 8. manual verdict with NO pending setup must warn, not crash ───────
