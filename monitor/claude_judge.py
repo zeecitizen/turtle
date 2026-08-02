@@ -108,8 +108,21 @@ def scan(market="XAU", max_age_min=3):
     if PENDING.exists():
         try:
             cur = json.loads(PENDING.read_text(encoding="ascii"))
-            if int(time.time()) - cur.get("created", 0) <= 180:
+            age = int(time.time()) - cur.get("created", 0)
+            if age <= 180:
                 return cur
+            # An expired pending means a setup went UNJUDGED. Record it, loudly - a silent
+            # miss is the same failure class as the [invalid stops] session that traded
+            # nothing while every light was green.
+            rec = {**cur, "verdict": "MISSED", "age_sec": age,
+                   "reason": "expired before a verdict was recorded",
+                   "judged_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+            try:
+                with JOURNAL.open("a", encoding="utf-8") as fh:
+                    fh.write(json.dumps(rec) + "
+")
+            except Exception:
+                pass
             PENDING.unlink(missing_ok=True)          # expired -> make room for a new one
         except Exception:
             PENDING.unlink(missing_ok=True)
