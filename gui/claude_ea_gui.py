@@ -178,6 +178,10 @@ class App(tk.Tk):
                   command=self.open_windows, bg="#fbbf24", fg="#0b0f14", relief="flat",
                   font=("Segoe UI", 8, "bold"), cursor="hand2",
                   padx=10, pady=4).pack(side="left", padx=6)
+        tk.Button(drow, text="\U0001F517  VIEW TRADE LIFECYCLE",
+                  command=self.open_lifecycle, bg="#60a5fa", fg="#0b0f14", relief="flat",
+                  font=("Segoe UI", 8, "bold"), cursor="hand2",
+                  padx=10, pady=4).pack(side="left", padx=6)
         tk.Button(drow, text="\U0001F9E0  WHAT HAVE I LEARNED?",
                   command=self.open_learning, bg="#4ade80", fg="#0b0f14", relief="flat",
                   font=("Segoe UI", 8, "bold"), cursor="hand2",
@@ -612,6 +616,18 @@ class App(tk.Tk):
         ReportWindow(self, "Best time window", build,
                      "measuring movement and money by hour...")
 
+    def open_lifecycle(self):
+        """Grade the selected trade step by step; falls back to the most recent one."""
+        sel = self.tree.selection()
+        row = self._rows.get(sel[0]) if sel else None
+        if row is None and self._rows:
+            row = list(self._rows.values())[0]
+        if row is None:
+            messagebox.showinfo("Turtle Desktop",
+                                "No trade to walk through yet. Pick a row once there is one.")
+            return
+        LifecycleWindow(self, row, self.market.get())
+
     def open_learning(self):
         def build():
             import autolearn as AL
@@ -823,6 +839,120 @@ class App(tk.Tk):
 
         self.foot.configure(text=f"  {datetime.now(timezone.utc).strftime('%H:%M:%S')} UTC   ·   "
                                  f"repo {REPO}   ·   playbook: CLAUDE_REALTIME_EA.md")
+
+
+class LifecycleWindow(tk.Toplevel):
+    """The trade as a chain, one row per step, each gradeable on its own.
+
+    Grading a whole trade only says it lost. Grading each step says WHERE it lost, and that
+    is the only version of the feedback that can be acted on."""
+
+    def __init__(self, parent, row, market):
+        super().__init__(parent)
+        self.row, self.market = row, market
+        self.title("Turtle Desktop - Trade lifecycle")
+        self.geometry("1000x860")
+        self.configure(bg=BG)
+
+        import lifecycle as LC
+        self.LC = LC
+        try:
+            sys.path.insert(0, str(MON))
+            import vision_mark as VM
+            vision = VM.latest() or {}
+        except Exception:
+            vision = {}
+        desc = LC.describe(row, vision)
+        marks = LC.load_marks().get(self._key(), {})
+
+        head = tk.Frame(self, bg=PANEL, padx=14, pady=10); head.pack(fill="x")
+        pnl = f"${row['usd']:+.2f}" if row.get("usd") is not None else "no fill"
+        u = row.get("usd") or 0
+        tk.Label(head, text=f"{row.get('side','')}  {row.get('lots','')} lot @ "
+                            f"{row.get('entry','')}", bg=PANEL, fg=FG,
+                 font=("Segoe UI", 14, "bold")).pack(side="left")
+        tk.Label(head, text="   " + pnl, bg=PANEL,
+                 fg=GREEN if u > 0 else RED if u < 0 else MUTED,
+                 font=("Segoe UI", 14, "bold")).pack(side="left")
+        tk.Label(head, text=row.get("time", ""), bg=PANEL, fg=MUTED,
+                 font=("Consolas", 9)).pack(side="right")
+
+        tk.Label(self, text="Mark each step on its own. The point is to find WHICH link "
+                            "breaks, not whether the trade lost.",
+                 bg=BG, fg=MUTED, font=("Segoe UI", 9)).pack(anchor="w", padx=14, pady=(8, 2))
+
+        wrap = tk.Frame(self, bg=BG); wrap.pack(fill="both", expand=True, padx=12, pady=4)
+        canvas = tk.Canvas(wrap, bg=BG, highlightthickness=0)
+        sb = ttk.Scrollbar(wrap, orient="vertical", command=canvas.yview)
+        inner = tk.Frame(canvas, bg=BG)
+        inner.bind("<Configure>",
+                   lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=inner, anchor="nw", width=940)
+        canvas.configure(yscrollcommand=sb.set)
+        canvas.pack(side="left", fill="both", expand=True); sb.pack(side="right", fill="y")
+        canvas.bind_all("<MouseWheel>",
+                        lambda e: canvas.yview_scroll(int(-e.delta / 120), "units"))
+
+        self.notes, self.state = {}, {}
+        for key, title, question in LC.STEPS:
+            card = tk.Frame(inner, bg=PANEL, padx=12, pady=9)
+            card.pack(fill="x", pady=4)
+            top = tk.Frame(card, bg=PANEL); top.pack(fill="x")
+            tk.Label(top, text=title, bg=PANEL, fg=BLUE,
+                     font=("Segoe UI", 10, "bold")).pack(side="left")
+            lbl = tk.Label(top, text="", bg=PANEL, font=("Segoe UI", 9, "bold"))
+            lbl.pack(side="right")
+            self.state[key] = lbl
+            tk.Label(card, text=question, bg=PANEL, fg=MUTED,
+                     font=("Segoe UI", 9, "italic"), anchor="w").pack(fill="x")
+            tk.Label(card, text=desc.get(key, ""), bg=PANEL, fg=FG, font=("Consolas", 9),
+                     wraplength=880, justify="left", anchor="w").pack(fill="x", pady=(4, 6))
+            row2 = tk.Frame(card, bg=PANEL); row2.pack(fill="x")
+            tk.Button(row2, text="\u2713 Correct", command=lambda k=key: self.mark(k, "correct"),
+                      bg=GREEN, fg="#0b0f14", relief="flat", font=("Segoe UI", 9, "bold"),
+                      padx=12, pady=4, cursor="hand2").pack(side="left")
+            tk.Button(row2, text="\u26a0 Needs improvement",
+                      command=lambda k=key: self.mark(k, "needs_improvement"),
+                      bg=AMBER, fg="#0b0f14", relief="flat", font=("Segoe UI", 9, "bold"),
+                      padx=12, pady=4, cursor="hand2").pack(side="left", padx=6)
+            e = tk.Entry(row2, bg="#0b0f14", fg=FG, insertbackground=FG, relief="flat",
+                         font=("Consolas", 9))
+            e.pack(side="left", fill="x", expand=True, ipady=4, padx=8)
+            self.notes[key] = e
+            m = marks.get(key)
+            if m:
+                e.insert(0, m.get("note", ""))
+                self._show(key, m.get("verdict"))
+
+        bot = tk.Frame(self, bg=BG, padx=12, pady=10); bot.pack(fill="x")
+        tk.Button(bot, text="Which step breaks most often?", command=self.summary,
+                  bg=BLUE, fg="#0b0f14", relief="flat", font=("Segoe UI", 9, "bold"),
+                  padx=14, pady=6, cursor="hand2").pack(side="left")
+        self.msg = tk.Label(bot, text="", bg=BG, fg=GREEN, font=("Segoe UI", 9, "bold"))
+        self.msg.pack(side="left", padx=12)
+
+    def _key(self):
+        return f"{self.market}:{self.row.get('key') or self.row.get('time')}"
+
+    def _show(self, key, verdict):
+        lbl = self.state.get(key)
+        if not lbl:
+            return
+        if verdict == "correct":
+            lbl.configure(text="\u2713 correct", fg=GREEN)
+        elif verdict == "needs_improvement":
+            lbl.configure(text="\u26a0 needs improvement", fg=AMBER)
+        else:
+            lbl.configure(text="")
+
+    def mark(self, key, verdict):
+        self.LC.save_mark(self._key(), key, verdict, self.notes[key].get())
+        self._show(key, verdict)
+        self.msg.configure(text="saved")
+
+    def summary(self):
+        ReportWindow(self, "Which step breaks most often?",
+                     lambda: self.LC.summary_text(), "tallying every graded step...")
 
 
 class ReportWindow(tk.Toplevel):
@@ -1037,6 +1167,10 @@ class TradeDetail(tk.Toplevel):
         tk.Button(br, text="Save comment", command=lambda: self.grade(None), bg="#334155",
                   fg="#fff", relief="flat", font=("Segoe UI", 9, "bold"), padx=14, pady=6,
                   cursor="hand2").pack(side="left", padx=12)
+        tk.Button(br, text="\U0001F517  View Trade Lifecycle",
+                  command=lambda: LifecycleWindow(self, row, market), bg=BLUE, fg="#0b0f14",
+                  relief="flat", font=("Segoe UI", 9, "bold"), padx=16, pady=6,
+                  cursor="hand2").pack(side="left", padx=4)
         lost = (row["usd"] or 0) < 0
         tk.Button(br, text=("\U0001F393  Derive Learnings" if lost else "Derive Learnings"),
                   command=self.derive, bg=(AMBER if lost else "#334155"),

@@ -30,3 +30,6 @@
 {"utc": "2026-08-02T20:38:13+00:00", "verdict": "correct", "note": "", "reading": {"market": "BTC", "trend": "down", "side": "SELL", "ret": null, "uhv": null, "brkt": null, "note": "test", "utc": "2026-08-02T20:36:24+00:00"}}
 {"utc": "2026-08-02T20:38:13+00:00", "verdict": "unsure", "note": "", "reading": {"market": "BTC", "trend": "down", "side": "SELL", "ret": null, "uhv": null, "brkt": null, "note": "test", "utc": "2026-08-02T20:36:24+00:00"}}
 {"utc": "2026-08-02T20:38:26+00:00", "verdict": "correct", "note": "test", "reading": {"market": "BTC", "trend": "down", "side": "SELL", "ret": null, "uhv": null, "brkt": null, "note": "test", "utc": "2026-08-02T20:36:24+00:00"}}
+{"utc": "2026-08-02T20:42:33+00:00", "verdict": "correct", "note": "", "reading": {"market": "BTC", "trend": "down", "side": "SELL", "ret": null, "uhv": null, "brkt": null, "note": "test", "utc": "2026-08-02T20:38:26+00:00"}}
+{"utc": "2026-08-02T20:42:33+00:00", "verdict": "unsure", "note": "", "reading": {"market": "BTC", "trend": "down", "side": "SELL", "ret": null, "uhv": null, "brkt": null, "note": "test", "utc": "2026-08-02T20:38:26+00:00"}}
+{"utc": "2026-08-02T20:42:46+00:00", "verdict": "correct", "note": "test", "reading": {"market": "BTC", "trend": "down", "side": "SELL", "ret": null, "uhv": null, "brkt": null, "note": "test", "utc": "2026-08-02T20:38:26+00:00"}}
