@@ -86,6 +86,51 @@ def scan(market="BTC", max_age_min=3):
     return pend
 
 
+def near(market="BTC", back=14):
+    """ARMED state: a valid retracement with a UHV exists but the breakout has NOT
+    happened yet. Zee: "agar setup k hum qareeb hain to Claude EA die out na ho" — the
+    loop must stay awake and study the picture instead of sleeping through the entry.
+    Returns dict with armed=True/False (+ the level the breakout must cross)."""
+    m = MARKETS[market]
+    sym = m["mark"].read_text(encoding="ascii").strip() if m["mark"].exists() else ""
+    if m["must"] not in sym.upper():
+        return {"error": f"data symbol is '{sym}', expected {m['must']}"}
+    bars = load_bars(m["data"])
+    if len(bars) < 40:
+        return {"error": f"only {len(bars)} bars"}
+    stale = (datetime.now(timezone.utc).replace(tzinfo=None) - bars[-1].t).total_seconds() / 60
+    k = m["k"]
+    B.UHV_BODY_MIN = 0.0; B.MIN_ORIGIN_BREAK = 0.0; B.ER_MIN = 0.0
+    B.TREND_MIN_HUMP = 0.5 * k; B.TREND_DOM = 0.0
+    n = len(bars); px = bars[-1].c
+    out = []
+    for side in ("BUY", "SELL"):
+        # most recent valid retracement origin
+        o = next((j for j in range(n - 1, max(n - 1 - B.LB, 0), -1) if B.is_origin(bars, j, side)), None)
+        if o is None: continue
+        rs = B.retr_zone_start(bars, o, side)
+        best = None
+        for kk in range(rs, n):
+            c = bars[kk]
+            if not (c.is_bear if side == "BUY" else c.is_bull): continue
+            if kk - 1 >= 0 and bars[kk - 1].v >= c.v: continue
+            if kk + 1 < n and bars[kk + 1].v >= c.v: continue
+            if best is None or c.v > bars[best].v: best = kk
+        if best is None or best < n - 1 - back: continue
+        U = bars[best]
+        lvl = U.h if side == "BUY" else U.l
+        crossed = any((bars[z].is_bull and bars[z].c > lvl) if side == "BUY"
+                      else (bars[z].is_bear and bars[z].c < lvl) for z in range(best + 1, n))
+        if crossed: continue                       # already broken out — not "armed"
+        out.append({"side": side, "uhv_time": U.t.strftime("%H:%M") + "Z",
+                    "uhv_vol": round(U.v, 2), "uhv_body_ratio": round(U.body_ratio, 2),
+                    "breakout_level": round(lvl, 2), "price_now": round(px, 2),
+                    "distance": round(abs(px - lvl), 2),
+                    "bars_since_uhv": n - 1 - best})
+    return {"market": market, "armed": bool(out), "stale_min": round(stale, 1),
+            "price": round(px, 2), "candidates": out}
+
+
 def approve(verdict, mult=1.0, reason="", max_age_sec=180):
     """Claude's verdict. TAKE -> write the signal the EA executes. SKIP -> log only."""
     if not PENDING.exists():
@@ -114,6 +159,8 @@ if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "scan"
     if cmd == "scan":
         print(json.dumps(scan(sys.argv[2] if len(sys.argv) > 2 else "BTC"), indent=1))
+    elif cmd == "near":
+        print(json.dumps(near(sys.argv[2] if len(sys.argv) > 2 else "BTC"), indent=1))
     else:   # approve TAKE 2.0 "reason"  |  approve SKIP "reason"
         v = sys.argv[2]
         mult = float(sys.argv[3]) if v.upper() == "TAKE" and len(sys.argv) > 3 else 1.0
