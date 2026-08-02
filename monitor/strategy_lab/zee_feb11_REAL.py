@@ -7,7 +7,10 @@ import csv, sys, bisect
 from datetime import datetime, timedelta
 from pathlib import Path
 from collections import Counter, defaultdict
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
 TICKS = COMMON / "shano_ticks_2026-02-11.csv"

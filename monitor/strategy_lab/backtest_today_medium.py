@@ -28,7 +28,10 @@ import sys, csv, bisect
 from datetime import datetime, timezone
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 UTC = timezone.utc
 
 COMMON   = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")

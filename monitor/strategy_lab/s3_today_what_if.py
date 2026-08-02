@@ -8,7 +8,10 @@ signal, marking which ones would have been blocked by the hour filter.
 import sys, csv
 from pathlib import Path
 from datetime import datetime, date
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 sys.path.insert(0, str(Path(__file__).parent))
 from backtest_s3_teacher_spec import aggregate_to_tf, find_h1_fvgs
 from ea_mirror_validate import s3_ea_mirror

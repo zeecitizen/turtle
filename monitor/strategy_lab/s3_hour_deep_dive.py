@@ -8,7 +8,10 @@ Investigates:
   5. Hourly heatmap: hour × day-of-week → P&L
 """
 import csv, sys, glob
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 from datetime import datetime, timedelta
 from collections import defaultdict
 from pathlib import Path

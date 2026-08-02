@@ -9,7 +9,10 @@ NSND: swap its FVG TF + re-test 1-Day trend on top.
 import csv, sys, glob
 from datetime import datetime, timedelta
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 sys.path.insert(0, str(Path(__file__).parent))
 from backtest_v349_multiday import load_m1_merged, load_ticks, COMMON
 from backtest_s3_teacher_spec import aggregate_to_tf, group_bars_by_day, stats

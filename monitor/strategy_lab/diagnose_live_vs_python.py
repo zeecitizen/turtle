@@ -13,7 +13,10 @@ import sys, csv, glob, bisect
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 UTC = timezone.utc
 PKT = timezone(timedelta(hours=5))
 

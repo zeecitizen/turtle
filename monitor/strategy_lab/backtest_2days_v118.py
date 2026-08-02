@@ -8,7 +8,10 @@ v1.18 config = MEDIUM variant, GMT+0 sessions (UTC 01:30-02:30 + 16:45-19:45).
 import sys, csv
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Import everything from the today-only script

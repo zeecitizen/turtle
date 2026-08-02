@@ -1,6 +1,9 @@
 """Quick daemon health check — counts python procs by script name."""
 import psutil, os, sys
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 NEEDED = [
     "memory_hawk.py", "claude_brain.py", "brain_lock.py",

@@ -14,7 +14,10 @@ import sys, csv, glob
 from pathlib import Path
 from datetime import datetime
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Reuse exact v1.18 simulation from backtest_today_medium.py

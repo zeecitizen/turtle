@@ -3,7 +3,10 @@ mechanizes Zee's day. M1-bar level, bar-conservative SL-before-TP."""
 import csv, sys
 from datetime import datetime
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
 M1 = COMMON / "rev_eng_m1.csv"

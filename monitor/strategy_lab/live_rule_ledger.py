@@ -16,7 +16,10 @@ import csv, sys, json, glob
 from datetime import datetime, timedelta
 from collections import defaultdict
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 COMMON = Path("C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files")
 OUT = Path(__file__).parent / "live_rule_ledger.json"

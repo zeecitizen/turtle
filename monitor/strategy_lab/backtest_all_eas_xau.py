@@ -8,7 +8,10 @@ Run: python backtest_all_eas_xau.py
 import sys, csv
 from datetime import datetime, timedelta
 from collections import defaultdict
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 CSV = r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files\export_m1_recent.csv"
 

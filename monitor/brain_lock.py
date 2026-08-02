@@ -29,7 +29,10 @@ import sys, os, tarfile, subprocess, time, argparse, json, getpass
 from datetime import datetime, timezone
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 UTC = timezone.utc
 
 ROOT     = Path(r"C:\Users\zeesh\Documents\GitHub\turtle")

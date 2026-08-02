@@ -11,7 +11,10 @@ import argparse, os, re, sys
 from collections import defaultdict
 from datetime import datetime
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 DEFAULT_LOG = r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\81A933A9AFC5DE3C23B15CAB19C63850\Tester\logs"
 

@@ -8,7 +8,10 @@ SELL-only vs BOTH. Honest: multi-day, WR, total, drawdown, train/test split.
 import csv, sys, glob
 from datetime import datetime, timedelta
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 sys.path.insert(0, str(Path(__file__).parent))
 from backtest_v349_multiday import load_ticks, COMMON
 import s3_full_m1 as S3

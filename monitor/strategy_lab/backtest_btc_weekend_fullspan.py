@@ -10,7 +10,10 @@ import sys, csv
 from datetime import datetime, timedelta
 from pathlib import Path
 from collections import defaultdict
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 CSV = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files\btc_m1_recent.csv")
 

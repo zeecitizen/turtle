@@ -6,7 +6,10 @@ Adopt only what BEATS baseline net-of-cost AND holds OOS (don't just cap winners
 import csv, sys, glob
 from datetime import datetime, timedelta
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 sys.path.insert(0, str(Path(__file__).parent))
 from backtest_s3_teacher_spec import aggregate_to_tf, group_bars_by_day, stats
 from backtest_s1_uhv_breakout import s1_mirror, find_h1_fvgs, load_ticks, COMMON

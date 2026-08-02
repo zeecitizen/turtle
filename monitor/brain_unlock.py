@@ -19,7 +19,10 @@ follow when arriving for the first time.
 import sys, os, tarfile, subprocess, argparse
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 ROOT     = Path(__file__).resolve().parent.parent
 VAULT    = ROOT / "brain_vault"

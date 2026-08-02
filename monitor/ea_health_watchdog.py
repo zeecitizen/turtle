@@ -17,7 +17,10 @@ from pathlib import Path
 from datetime import datetime, timezone, timedelta
 from urllib import request as urlreq
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 # ── Paths ──
 COMMON_FILES = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files")

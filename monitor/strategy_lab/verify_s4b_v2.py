@@ -5,7 +5,10 @@ Run: python verify_s4b_v2.py
 import sys, glob
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 from backtest_v349_multiday import load_m1_merged, load_ticks, COMMON
 from backtest_s3_teacher_spec import group_bars_by_day
 

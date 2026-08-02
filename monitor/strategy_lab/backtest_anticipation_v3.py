@@ -25,7 +25,10 @@ from pathlib import Path
 
 UTC = timezone.utc
 sys.path.insert(0, str(Path(__file__).parent))
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 from build_feb11_lab import load_feb11_bars, ZEE_TRADES
 

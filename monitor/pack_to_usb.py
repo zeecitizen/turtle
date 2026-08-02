@@ -18,7 +18,10 @@ import sys, os, shutil, argparse, time, json
 from pathlib import Path
 from datetime import datetime, timezone
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 UTC = timezone.utc
 
 ROOT = Path(__file__).resolve().parent.parent

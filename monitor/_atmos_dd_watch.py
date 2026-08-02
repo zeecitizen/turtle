@@ -51,5 +51,8 @@ def main():
         sys.stdout.flush()
 
 if __name__ == "__main__":
-    sys.stdout.reconfigure(encoding="utf-8")
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
     main()

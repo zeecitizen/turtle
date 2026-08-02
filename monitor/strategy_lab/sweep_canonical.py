@@ -3,7 +3,10 @@ from __future__ import annotations
 import subprocess, json, sys
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 PY = r"C:/Users/zeesh/AppData/Local/Programs/Python/Python313-arm64/python.exe"
 SCRIPT = r"C:/Users/zeesh/Documents/GitHub/turtle/monitor/strategy_lab/screener_canonical_uhv.py"

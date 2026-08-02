@@ -6,7 +6,10 @@ Cross-reference vs win/loss outcome to see if the filters help on losers.
 import csv, sys
 from datetime import datetime, timedelta, date
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 sys.path.insert(0, str(Path(__file__).parent))
 from backtest_s3_teacher_spec import aggregate_to_tf, find_h1_fvgs, fvg_tapped_at
 

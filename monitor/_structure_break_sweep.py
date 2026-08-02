@@ -6,7 +6,10 @@ sys.path.insert(0, r"C:/Users/zeesh/Documents/GitHub/turtle/monitor")
 import find_optimal_ea as foe
 from datetime import datetime, timezone
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 entries = foe.parse_entries()
 all_ticks = []

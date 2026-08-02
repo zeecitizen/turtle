@@ -2,7 +2,10 @@
 import json, sys
 from pathlib import Path
 
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 p = Path(r"C:/Users/zeesh/Documents/GitHub/turtle/monitor/setup_labels/zee_labels.json")
 data = json.loads(p.read_text(encoding="utf-8"))

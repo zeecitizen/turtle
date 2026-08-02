@@ -6,7 +6,10 @@ Wider cooldown = fewer fills (better selectivity).
 import sys, glob, bisect
 from datetime import datetime
 from pathlib import Path
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
 COST = 0.20

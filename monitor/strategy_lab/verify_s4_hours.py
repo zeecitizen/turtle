@@ -7,7 +7,10 @@ only on the lucky single split? (Hour buckets are ~5-7 trades — overfit-prone.
 import sys, glob
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")   # no console under pythonw -> stdout is None
+except Exception:
+    pass
 from winrate_improvement import (load_m1, build_m5, load_ticks, detect_s4,
                                  replay_enhanced, LOTS, COMMON)
 
