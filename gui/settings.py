@@ -38,6 +38,7 @@ DEFAULTS = {
     "tv_symbol_xau": "OANDA:XAUUSD",
     "tv_symbol_btc": "COINBASE:BTCUSD",
     "tv_poll_sec": 20,
+    "rulebook": "",                   # the .md Claude reads before judging
 }
 
 BG, PANEL, FG, MUTED = "#0b0f14", "#111826", "#e6edf3", "#8b97a3"
@@ -164,6 +165,49 @@ def test_tradingview(port):
     return True, f"TradingView connected on {port}.\n{tv[0].get('title', '')[:90]}"
 
 
+def default_rulebook():
+    for c in (REPO / "CLAUDE_REALTIME_EA.md", Path(__file__).resolve().parent.parent / "CLAUDE_REALTIME_EA.md"):
+        if c.exists():
+            return str(c)
+    return ""
+
+
+def rulebook_path():
+    p = (load().get("rulebook") or "").strip() or default_rulebook()
+    return Path(p) if p else None
+
+
+def inspect_rulebook(path):
+    """Confirm the attached file really is the playbook, and summarise it."""
+    p = Path(path or "")
+    if not p.exists():
+        return False, "No file at that path."
+    try:
+        txt = p.read_text(encoding="utf-8", errors="replace")
+    except Exception as e:
+        return False, f"Could not read it: {e}"
+    heads = [l.strip("# ").strip() for l in txt.splitlines() if l.startswith("## ")]
+    kb = p.stat().st_size / 1024.0
+    if len(txt) < 400:
+        return False, f"{p.name} is only {kb:.1f} KB - that does not look like the playbook."
+    # Generic words like "trend" appear in any trading README. The playbook is the document
+    # that actually drives the loop, so require the things only it contains.
+    low = txt.lower()
+    need = {"the judging commands": "claude_judge.py",
+            "the TAKE verdict": "take",
+            "the SKIP verdict": "skip",
+            "the UHV rule": "uhv",
+            "a recovery section": "recover"}
+    missing = [name for name, token in need.items() if token not in low]
+    if missing:
+        return False, (f"{p.name} does not look like the EA playbook - it is missing "
+                       f"{', '.join(missing)}. Attach CLAUDE_REALTIME_EA.md (or your own "
+                       f"copy of it).")
+    return True, (f"{p.name}  ({kb:.0f} KB, {len(txt.splitlines())} lines, "
+                  f"{len(heads)} sections)\n"
+                  + " | ".join(h[:26] for h in heads[:6]) + (" ..." if len(heads) > 6 else ""))
+
+
 # ── dialog ───────────────────────────────────────────────────────────────────────────
 class SettingsDialog(tk.Toplevel):
     def __init__(self, parent, on_save=None):
@@ -256,6 +300,29 @@ class SettingsDialog(tk.Toplevel):
                          "has no margin for.", bg=PANEL, fg=MUTED, font=("Segoe UI", 9),
                  anchor="w").pack(fill="x")
 
+        # ── rulebook ──
+        rb = self._box("EA RULEBOOK  (the document that IS the EA)")
+        r9 = tk.Frame(rb, bg=PANEL); r9.pack(fill="x", pady=4)
+        tk.Label(r9, text="Rules file", bg=PANEL, fg=MUTED, width=16, anchor="w",
+                 font=("Segoe UI", 9, "bold")).pack(side="left", padx=(6, 4))
+        self.rulebook = tk.Entry(r9, bg="#0b0f14", fg=FG, relief="flat", insertbackground=FG,
+                                 font=("Consolas", 9))
+        self.rulebook.insert(0, self.cfg.get("rulebook") or default_rulebook())
+        self.rulebook.pack(side="left", fill="x", expand=True, ipady=4)
+        tk.Button(r9, text="Open", command=self.open_rulebook, bg="#334155", fg="#fff",
+                  relief="flat", cursor="hand2", padx=8).pack(side="left", padx=4)
+        r10 = tk.Frame(rb, bg=PANEL); r10.pack(fill="x", pady=(6, 2))
+        tk.Button(r10, text="\U0001F4D6  Attach EA MD Rules File", command=self.attach_rulebook,
+                  bg=AMBER, fg="#0b0f14", relief="flat", font=("Segoe UI", 9, "bold"),
+                  padx=16, pady=6, cursor="hand2").pack(side="left", padx=6)
+        self.rbres = tk.Label(r10, text="", bg=PANEL, fg=MUTED, font=("Segoe UI", 9),
+                              wraplength=470, justify="left")
+        self.rbres.pack(side="left", padx=8)
+        tk.Label(rb, text="      Claude reads this before judging anything: the trend rules, the "
+                          "setup geometry, the sizing, and the recovery steps. Attach your own "
+                          "copy if you keep it elsewhere.", bg=PANEL, fg=MUTED,
+                 font=("Segoe UI", 9), justify="left", wraplength=650, anchor="w").pack(fill="x")
+
         # ── MT5 ──
         m5 = self._box("METATRADER 5")
         self.terms = find_terminals()
@@ -334,6 +401,8 @@ class SettingsDialog(tk.Toplevel):
         self.msg.pack(side="left", padx=10)
         self._sync()
         self._term_changed()
+        ok, msg = inspect_rulebook(self.rulebook.get().strip())
+        self.rbres.configure(text=msg, fg=GREEN if ok else AMBER)
 
     # helpers
     def _box(self, title):
@@ -359,6 +428,24 @@ class SettingsDialog(tk.Toplevel):
         tk.Button(r, text="…", command=browse, bg="#334155", fg="#fff", relief="flat",
                   width=3, cursor="hand2").pack(side="left", padx=4)
         return e
+
+    def attach_rulebook(self):
+        f = filedialog.askopenfilename(title="Attach the EA rules document",
+                                       initialdir=str(REPO),
+                                       filetypes=[("Markdown", "*.md"), ("All files", "*.*")])
+        if f:
+            self.rulebook.delete(0, "end"); self.rulebook.insert(0, f)
+        ok, msg = inspect_rulebook(self.rulebook.get().strip())
+        self.rbres.configure(text=msg, fg=GREEN if ok else RED)
+
+    def open_rulebook(self):
+        p = Path(self.rulebook.get().strip())
+        if not p.exists():
+            self.rbres.configure(text="No file at that path.", fg=RED); return
+        try:
+            os.startfile(str(p))
+        except Exception as e:
+            self.rbres.configure(text=str(e), fg=RED)
 
     def _term_changed(self):
         i = self.term.current()
@@ -410,6 +497,7 @@ class SettingsDialog(tk.Toplevel):
             "auto_judge": bool(self.auto.get()),
             "tv_symbol_xau": self.tvx.get().strip() or "OANDA:XAUUSD",
             "tv_symbol_btc": self.tvb.get().strip() or "COINBASE:BTCUSD",
+            "rulebook": self.rulebook.get().strip(),
         })
         i = self.term.current()
         if 0 <= i < len(self.terms):
