@@ -23,6 +23,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 REPO = Path(__file__).resolve().parent.parent
 MON = REPO / "monitor"
 COMMON = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files")
@@ -112,8 +113,47 @@ class App(tk.Tk):
 
         self.status = self._card(left, "SYSTEM STATUS", 7)
         self.armed = self._card(left, "ARMED — setup forming", 5)
-        self.journal = self._card(right, "CLAUDE'S RECENT VERDICTS", 9, width=44)
-        self.fills = self._card(right, "REAL BROKER FILLS", 10, width=44)
+        self.journal = self._card(right, "CLAUDE'S RECENT VERDICTS", 7, width=44)
+
+        # ---- LIVE from the broker (EA heartbeat) ----
+        lf = tk.Frame(right, bg=PANEL, padx=10, pady=8); lf.pack(fill="x", pady=4)
+        tk.Label(lf, text="LIVE (from MT5)", bg=PANEL, fg=MUTED,
+                 font=("Segoe UI", 9, "bold")).pack(anchor="w")
+        self.livebig = tk.Label(lf, text="--", bg=PANEL, fg=FG, font=("Consolas", 20, "bold"))
+        self.livebig.pack(anchor="w")
+        self.livesub = tk.Label(lf, text="", bg=PANEL, fg=MUTED, font=("Consolas", 9),
+                                justify="left", anchor="w")
+        self.livesub.pack(fill="x")
+
+        # ---- TODAY'S TRADES (double-click a row for the full story) ----
+        tf = tk.Frame(left, bg=PANEL, padx=10, pady=8); tf.pack(fill="both", expand=True, pady=4)
+        hdr = tk.Frame(tf, bg=PANEL); hdr.pack(fill="x")
+        tk.Label(hdr, text="TODAY'S TRADES   (double-click a row for details)", bg=PANEL,
+                 fg=MUTED, font=("Segoe UI", 9, "bold")).pack(side="left")
+        tk.Button(hdr, text="PDF: failed setups", command=self.make_pdf, bg="#7f1d1d", fg="#fff",
+                  relief="flat", font=("Segoe UI", 8, "bold"), cursor="hand2",
+                  padx=8).pack(side="right")
+        self.tsum = tk.Label(hdr, text="", bg=PANEL, fg=MUTED, font=("Consolas", 9))
+        self.tsum.pack(side="right", padx=10)
+        cols = ("time", "side", "verdict", "lots", "entry", "exit", "pnl", "status")
+        st = ttk.Style()
+        try:
+            st.theme_use("clam")
+            st.configure("T.Treeview", background="#0b0f14", foreground=FG,
+                         fieldbackground="#0b0f14", rowheight=22, font=("Consolas", 9))
+            st.configure("T.Treeview.Heading", background=PANEL, foreground=MUTED,
+                         font=("Segoe UI", 8, "bold"))
+        except Exception:
+            pass
+        self.tree = ttk.Treeview(tf, columns=cols, show="headings", height=9, style="T.Treeview")
+        for c, w in zip(cols, (66, 46, 60, 46, 74, 74, 70, 96)):
+            self.tree.heading(c, text=c.upper()); self.tree.column(c, width=w, anchor="w")
+        self.tree.tag_configure("win", foreground=GREEN)
+        self.tree.tag_configure("loss", foreground=RED)
+        self.tree.tag_configure("skip", foreground=MUTED)
+        self.tree.pack(fill="both", expand=True, pady=(4, 0))
+        self.tree.bind("<Double-1>", self.open_detail)
+        self._rows = {}
 
         act = tk.Frame(right, bg=PANEL, padx=10, pady=10); act.pack(fill="x", pady=(8, 0))
         tk.Label(act, text="MANUAL OVERRIDE (no Claude session)", bg=PANEL, fg=MUTED,
@@ -277,6 +317,64 @@ class App(tk.Tk):
                        creationflags=NO_WIN)
 
     # ── refresh ───────────────────────────────────────────────────────────
+    # -- trade book -------------------------------------------------------
+    def _refresh_book(self):
+        import trade_book as TB
+        mk = self.market.get()
+        lv = TB.live(mk)
+        if lv.get("error"):
+            self.livebig.configure(text="--", fg=MUTED)
+            self.livesub.configure(text=lv["error"], fg=MUTED)
+        else:
+            self.livebig.configure(text=format(lv.get("bid", 0), ",.2f"),
+                                   fg=AMBER if lv.get("stale") else FG)
+            pos = lv.get("positions") or []
+            sub = ("bid {:,.2f}  ask {:,.2f}  spread {:.2f}\n"
+                   "balance ${:,.2f}   equity ${:,.2f}\n{}").format(
+                lv.get("bid", 0), lv.get("ask", 0), lv.get("spread", 0),
+                lv.get("balance", 0), lv.get("equity", 0),
+                ("stale " + str(lv.get("age_sec")) + "s") if lv.get("stale") else "live")
+            for q in pos:
+                sub += "\nOPEN {} {} @ {:.2f}  now {:.2f}  P&L ${:+.2f}".format(
+                    q["side"], q["lots"], q["entry"], q["price"], q["profit"])
+            self.livesub.configure(
+                text=sub,
+                fg=GREEN if any(q["profit"] > 0 for q in pos) else (RED if pos else MUTED))
+        rows = TB.book(mk)
+        s = TB.summary(rows)
+        txt = "judged {} \u00b7 taken {} \u00b7 skipped {} \u00b7 net ${:+.2f}".format(
+            s["judged"], s["taken"], s["skipped"], s["net"])
+        if s["wr"] is not None:
+            txt += " \u00b7 WR {:.0f}%".format(s["wr"])
+        self.tsum.configure(text=txt)
+        self.tree.delete(*self.tree.get_children())
+        self._rows = {}
+        for r in rows:
+            u = r["usd"] or 0
+            tag = "win" if u > 0 else "loss" if u < 0 else "skip"
+            iid = self.tree.insert("", "end", values=(
+                r["time"][-5:], r["side"], r["verdict"], r["lots"], r["entry"], r["exit"],
+                ("${:+.2f}".format(r["usd"]) if r["usd"] is not None else "--"),
+                r["status"]), tags=(tag,))
+            self._rows[iid] = r
+
+    def open_detail(self, _evt=None):
+        sel = self.tree.selection()
+        if not sel:
+            return
+        r = self._rows.get(sel[0])
+        if r:
+            TradeDetail(self, r, self.market.get())
+
+    def make_pdf(self):
+        import trade_book as TB
+        try:
+            out = TB.failed_pdf(self.market.get())
+            messagebox.showinfo("Turtle Desktop", "Report written:\n" + str(out))
+            subprocess.Popen(["cmd", "/c", "start", "", str(out)], creationflags=NO_WIN)
+        except Exception as e:
+            messagebox.showerror("Turtle Desktop", "PDF failed: " + str(e))
+
     def refresh_loop(self):
         threading.Thread(target=self._collect, daemon=True).start()
         self._show_chart()
@@ -323,10 +421,16 @@ class App(tk.Tk):
             self.chart_img.configure(image="", text=f"(chart unavailable: {e})")
 
     def _collect(self):
+        try:
+            self._refresh_book()
+        except Exception as e:
+            try:
+                self.tsum.configure(text="book error: " + str(e))
+            except Exception:
+                pass
         mk = self.market.get()
         data = COMMON / ("btc_m1.csv" if mk == "BTC" else "oanda_m1.csv")
         mark = COMMON / ("btc_m1.symbol" if mk == "BTC" else "oanda_m1.symbol")
-        fills = COMMON / ("btc_fills.csv" if mk == "BTC" else "caseexec_fills.csv")
         L = []
         cdp = http_ok("http://localhost:9222/json/version")
         L.append(f"{'OK ' if cdp else 'DOWN'}  TradingView CDP :9222")
@@ -381,20 +485,96 @@ class App(tk.Tk):
         else:
             self._set(self.journal, "no verdicts yet")
 
-        if fills.exists():
-            rows = fills.read_text(encoding="utf-8", errors="ignore").strip().splitlines()[-12:]
-            tot = 0.0
-            for r in rows:
-                c = r.split(",")
-                if len(c) >= 7:
-                    try: tot += float(c[6])
-                    except Exception: pass
-            self._set(self.fills, "\n".join(reversed(rows)) + f"\n\nlast {len(rows)} net: ${tot:+.2f}")
-        else:
-            self._set(self.fills, "no fills yet")
-
         self.foot.configure(text=f"  {datetime.now(timezone.utc).strftime('%H:%M:%S')} UTC   ·   "
                                  f"repo {REPO}   ·   playbook: CLAUDE_REALTIME_EA.md")
+
+
+class TradeDetail(tk.Toplevel):
+    """Everything about one trade: the chart, Claude's reasoning, Zee's comment, and the two
+    grading buttons - so the game is played right where the trade is reviewed."""
+
+    def __init__(self, parent, row, market):
+        super().__init__(parent)
+        self.row, self.market = row, market
+        self.title("{} {}  ({})".format(row["side"], row["time"], row["status"]))
+        self.geometry("980x760")
+        self.configure(bg=BG)
+
+        head = tk.Frame(self, bg=PANEL, padx=14, pady=10); head.pack(fill="x")
+        pnl = "${:+.2f}".format(row["usd"]) if row["usd"] is not None else "not filled"
+        u = row["usd"] or 0
+        col = GREEN if u > 0 else RED if u < 0 else MUTED
+        tk.Label(head, text="{}  {} lot  @ {}".format(row["side"], row["lots"], row["entry"]),
+                 bg=PANEL, fg=FG, font=("Segoe UI", 15, "bold")).pack(side="left")
+        tk.Label(head, text="   " + pnl, bg=PANEL, fg=col,
+                 font=("Segoe UI", 15, "bold")).pack(side="left")
+        tk.Label(head, text="{}  |  verdict {}  |  mult {}  |  exit {}  |  strength {}  |  "
+                            "brk_body {}  |  UHV vol {}".format(
+                     row["time"], row["verdict"], row["mult"], row["exit"],
+                     row["strength"], row["brk_body"], row["uhv_vol"]),
+                 bg=PANEL, fg=MUTED, font=("Consolas", 9)).pack(side="right")
+
+        png = MON / "setup_labels" / ("trade_" + row["key"].replace(":", "") + ".png")
+        if not png.exists():
+            png = MON / "setup_labels" / "pending_setup.png"
+        imgf = tk.Frame(self, bg=PANEL, padx=8, pady=6); imgf.pack(fill="x", padx=12, pady=8)
+        lbl = tk.Label(imgf, bg="#0b0f14", fg=MUTED, text="(no chart saved for this trade)")
+        lbl.pack()
+        if png.exists():
+            try:
+                im = tk.PhotoImage(file=str(png))
+                f = max(1, round(im.width() / 900))
+                if f > 1:
+                    im = im.subsample(f, f)
+                self._img = im
+                lbl.configure(image=im, text="")
+            except Exception:
+                pass
+
+        f2 = tk.Frame(self, bg=PANEL, padx=10, pady=8); f2.pack(fill="x", padx=12, pady=4)
+        tk.Label(f2, text="WHY CLAUDE TOOK / SKIPPED IT", bg=PANEL, fg="#7dd3fc",
+                 font=("Segoe UI", 9, "bold")).pack(anchor="w")
+        tx = tk.Text(f2, height=4, bg="#0b0f14", fg=FG, relief="flat",
+                     font=("Consolas", 9), wrap="word")
+        tx.insert("1.0", row["claude_reason"] or "(none)")
+        tx.configure(state="disabled")
+        tx.pack(fill="x", pady=(4, 0))
+
+        zf = tk.Frame(self, bg=PANEL, padx=10, pady=8)
+        zf.pack(fill="both", expand=True, padx=12, pady=4)
+        tk.Label(zf, text="ZEE - kya ghalat tha? (yahan likho, save ho jayega)", bg=PANEL,
+                 fg=AMBER, font=("Segoe UI", 9, "bold")).pack(anchor="w")
+        self.note = tk.Text(zf, height=5, bg="#0b0f14", fg=FG, insertbackground=FG,
+                            relief="flat", font=("Consolas", 10), wrap="word")
+        self.note.insert("1.0", row["zee_comment"] or "")
+        self.note.pack(fill="both", expand=True, pady=(4, 0))
+
+        br = tk.Frame(self, bg=BG, padx=12, pady=10); br.pack(fill="x")
+        tk.Label(br, text="Claude ka call sahi tha?", bg=BG, fg=MUTED,
+                 font=("Segoe UI", 9, "bold")).pack(side="left", padx=(2, 8))
+        for txt, mark, colour in (("10/10 sahi", "10/10", GREEN), ("0/10 ghalat", "0/10", RED)):
+            tk.Button(br, text=txt, command=lambda m=mark: self.grade(m), bg=colour,
+                      fg="#0b0f14", relief="flat", font=("Segoe UI", 9, "bold"),
+                      padx=14, pady=6, cursor="hand2").pack(side="left", padx=4)
+        tk.Button(br, text="Save comment", command=lambda: self.grade(None), bg="#334155",
+                  fg="#fff", relief="flat", font=("Segoe UI", 9, "bold"), padx=14, pady=6,
+                  cursor="hand2").pack(side="left", padx=12)
+        self.saved = tk.Label(br, text="", bg=BG, fg=GREEN, font=("Segoe UI", 9, "bold"))
+        self.saved.pack(side="left", padx=8)
+
+    def grade(self, mark):
+        import trade_book as TB
+        note = self.note.get("1.0", "end").strip()
+        label = (mark + ": " + note) if mark else note
+        try:
+            d = json.loads(TB.LABELS.read_text(encoding="utf-8")) if TB.LABELS.exists() else {}
+        except Exception:
+            d = {}
+        d.setdefault("trade_" + self.row["key"], {})["zee"] = label
+        TB.LABELS.parent.mkdir(parents=True, exist_ok=True)
+        TB.LABELS.write_text(json.dumps(d, indent=1, ensure_ascii=False), encoding="utf-8")
+        self.row["zee_comment"] = label
+        self.saved.configure(text="saved" + ("  " + mark if mark else ""))
 
 
 if __name__ == "__main__":

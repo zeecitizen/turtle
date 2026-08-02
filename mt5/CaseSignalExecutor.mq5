@@ -24,6 +24,41 @@ input double InpGivePts      = 0.2;    // exit on 0.2pt reversal from peak (seco
 input double InpTpCapPts     = 3.0;    // take-profit ceiling 3pt. dom=0 fast-scalp: ~115/day, ~79% WR
 input int    InpMaxSignalAgeSec = 180;  // ignore signals older than this (stale-signal guard)
 input string InpSignalFile   = "case_signal.json";
+input string InpHeartbeatFile = "xau_live.json";   // live price/position feed for Turtle Desktop
+
+//--- Live heartbeat: Turtle Desktop needs the BROKER's own truth (price, spread, and any
+//--- running position with its live P&L). Python cannot query MT5 on this ARM64 machine,
+//--- so the EA publishes it to a small JSON every timer tick.
+void WriteHeartbeat()
+{
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   string pos = "";
+   int    n   = 0;
+   double eq  = AccountInfoDouble(ACCOUNT_EQUITY);
+   double bal = AccountInfoDouble(ACCOUNT_BALANCE);
+   for (int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagic) continue;
+      if (n > 0) pos += ",";
+      pos += StringFormat("{\"ticket\":%I64u,\"side\":\"%s\",\"lots\":%.2f,\"entry\":%.2f,"
+                          "\"sl\":%.2f,\"price\":%.2f,\"profit\":%.2f,\"opened\":%I64d}",
+             tk,
+             (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY ? "BUY" : "SELL"),
+             PositionGetDouble(POSITION_VOLUME), PositionGetDouble(POSITION_PRICE_OPEN),
+             PositionGetDouble(POSITION_SL),     PositionGetDouble(POSITION_PRICE_CURRENT),
+             PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP),
+             (long)PositionGetInteger(POSITION_TIME));
+      n++;
+   }
+   string js = StringFormat("{\"symbol\":\"%s\",\"bid\":%.2f,\"ask\":%.2f,\"spread\":%.2f,"
+                            "\"balance\":%.2f,\"equity\":%.2f,\"ts\":%I64d,\"positions\":[%s]}",
+                            _Symbol, bid, ask, ask - bid, bal, eq, (long)TimeGMT(), pos);
+   int h = FileOpen(InpHeartbeatFile, FILE_WRITE | FILE_TXT | FILE_ANSI | FILE_COMMON);
+   if (h != INVALID_HANDLE) { FileWriteString(h, js); FileClose(h); }
+}
 
 //--- Brokers enforce a minimum distance between price and the stop (SYMBOL_TRADE_STOPS_LEVEL,
 //--- plus the spread for a market order). Our scalp stops are deliberately tight, so on
@@ -93,6 +128,8 @@ bool HasOurPos() {
 
 // Poll the signal file; open a trade on a NEW signal id.
 void OnTimer() {
+   WriteHeartbeat();
+
    if (!FileIsExist(InpSignalFile, FILE_COMMON)) return;
    int h = FileOpen(InpSignalFile, FILE_READ | FILE_TXT | FILE_COMMON | FILE_ANSI);
    if (h == INVALID_HANDLE) return;
