@@ -40,6 +40,7 @@ Name: "autostart";  Description: "Start {#AppName} automatically when I log in";
 ; the application
 Source: "claude_ea_gui.py";   DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "trade_book.py";      DestDir: "{app}\gui"; Flags: ignoreversion
+Source: "settings.py";        DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "install.ps1";        DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "test_gui.py";        DestDir: "{app}\gui"; Flags: ignoreversion
 Source: "BUILD_INSTALLER.md"; DestDir: "{app}\gui"; Flags: ignoreversion

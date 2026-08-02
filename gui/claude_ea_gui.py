@@ -78,9 +78,14 @@ class App(tk.Tk):
                  font=("Segoe UI", 16, "bold")).pack(side="left")
         tk.Label(head, text="  Claude's eyes decide · the MQL5 EA executes",
                  bg=PANEL, fg=MUTED, font=("Segoe UI", 10)).pack(side="left")
+        tk.Button(head, text="\u2699  Settings", command=self.open_settings, bg="#334155",
+                  fg="#fff", relief="flat", font=("Segoe UI", 9, "bold"), padx=12, pady=4,
+                  cursor="hand2").pack(side="right", padx=(10, 0))
         ttk.Combobox(head, textvariable=self.market, values=["XAU", "BTC"],
                      width=6, state="readonly").pack(side="right")
         tk.Label(head, text="Market ", bg=PANEL, fg=MUTED).pack(side="right")
+        self.conn = tk.Label(head, text="", bg=PANEL, fg=MUTED, font=("Segoe UI", 9))
+        self.conn.pack(side="right", padx=14)
 
         bar = tk.Frame(self, bg=BG, padx=12, pady=8); bar.pack(fill="x")
         self._btn(bar, "▶  START EVERYTHING", self.start_all, GREEN, 19)
@@ -206,7 +211,28 @@ class App(tk.Tk):
                             + " and attach the matching EA in MT5 (Algo Trading ON, demo).")
 
     def launch_claude(self):
-        """Zee's idea: the GUI does not replace Claude — it LAUNCHES her."""
+        """Zee's idea: the GUI does not replace Claude - it LAUNCHES her.
+
+        In API mode there is no session to open, so point the user at Settings instead of
+        failing silently."""
+        try:
+            import settings as S
+            if S.load().get("connection") == "api":
+                messagebox.showinfo(
+                    "Turtle Desktop",
+                    "This app is set to API-key mode, so there is no session to launch.\n\n"
+                    "The judge runs headless against your key. Switch to 'Claude Code "
+                    "subscription' in Settings if you want an interactive session.")
+                return
+            if not S.cli_available():
+                messagebox.showwarning(
+                    "Turtle Desktop",
+                    "Claude Code CLI is not installed.\n\n"
+                    "Install it:\n    npm install -g @anthropic-ai/claude-code\n\n"
+                    "Or open Settings and switch to API-key mode.")
+                return
+        except Exception:
+            pass
         prompt = ("Read CLAUDE_REALTIME_EA.md and resume the live judging loop for "
                   + self.market.get() + ".")
         for attempt in (
@@ -317,6 +343,30 @@ class App(tk.Tk):
                        creationflags=NO_WIN)
 
     # ── refresh ───────────────────────────────────────────────────────────
+    # -- settings ---------------------------------------------------------
+    def open_settings(self):
+        """Connect to Claude (subscription or API key), and set markets, lots and paths."""
+        try:
+            import settings as S
+            S.SettingsDialog(self, on_save=self._applied_settings)
+        except Exception as e:
+            messagebox.showerror("Turtle Desktop", "Settings unavailable: " + str(e))
+
+    def _applied_settings(self, cfg):
+        try:
+            self.market.set(cfg.get("market", "XAU"))
+        except Exception:
+            pass
+        self._refresh_conn()
+
+    def _refresh_conn(self):
+        try:
+            import settings as S
+            name, colour, state = S.status_line()
+            self.conn.configure(text=name + "  \u00b7  " + state, fg=colour)
+        except Exception:
+            pass
+
     # -- trade book -------------------------------------------------------
     def _refresh_book(self):
         import trade_book as TB
@@ -421,6 +471,10 @@ class App(tk.Tk):
             self.chart_img.configure(image="", text=f"(chart unavailable: {e})")
 
     def _collect(self):
+        try:
+            self._refresh_conn()
+        except Exception:
+            pass
         try:
             self._refresh_book()
         except Exception as e:
