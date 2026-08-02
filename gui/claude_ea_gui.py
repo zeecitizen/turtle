@@ -1,4 +1,4 @@
-"""claude_ea_gui.py — the Claude EA control panel (Windows desktop GUI).
+"""claude_ea_gui.py — Turtle Desktop, the control panel (Windows desktop GUI).
 
 Zee 2026-08-02: *"aik windows style setup.exe ho jo ye software windows pe install karay…
 waha GUI pe tum loop mein setups ka wait kar rahi ho… what if ye laptop koi chura kr le
@@ -63,21 +63,21 @@ def http_ok(url, timeout=3):
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("Claude EA — vision-driven trading")
+        self.title("Turtle Desktop — vision-driven trading")
         self.geometry("1120x760")
         self.configure(bg=BG)
-        self.market = tk.StringVar(value="BTC")
+        self.market = tk.StringVar(value="XAU")     # Zee trades gold — open on XAUUSD
         self._build()
         self.after(500, self.refresh_loop)
 
     # ── layout ────────────────────────────────────────────────────────────
     def _build(self):
         head = tk.Frame(self, bg=PANEL, padx=14, pady=10); head.pack(fill="x")
-        tk.Label(head, text="🤖  CLAUDE EA", bg=PANEL, fg=FG,
+        tk.Label(head, text="🐢  TURTLE DESKTOP", bg=PANEL, fg=FG,
                  font=("Segoe UI", 16, "bold")).pack(side="left")
         tk.Label(head, text="  Claude's eyes decide · the MQL5 EA executes",
                  bg=PANEL, fg=MUTED, font=("Segoe UI", 10)).pack(side="left")
-        ttk.Combobox(head, textvariable=self.market, values=["BTC", "XAU"],
+        ttk.Combobox(head, textvariable=self.market, values=["XAU", "BTC"],
                      width=6, state="readonly").pack(side="right")
         tk.Label(head, text="Market ", bg=PANEL, fg=MUTED).pack(side="right")
 
@@ -161,7 +161,7 @@ class App(tk.Tk):
             run_bg([PYW, str(MON / "home_uptime_guard.py")])
         if not proc_running("serve_setup_labels.py"):
             run_bg([PYW, str(MON / "serve_setup_labels.py")])
-        messagebox.showinfo("Claude EA", "Services starting.\n\nSet the TradingView chart to "
+        messagebox.showinfo("Turtle Desktop", "Services starting.\n\nSet the TradingView chart to "
                             + ("COINBASE:BTCUSD" if mk == "BTC" else "OANDA:XAUUSD")
                             + " and attach the matching EA in MT5 (Algo Trading ON, demo).")
 
@@ -177,7 +177,7 @@ class App(tk.Tk):
                 subprocess.Popen(attempt, cwd=str(REPO)); return
             except Exception:
                 continue
-        messagebox.showerror("Claude EA",
+        messagebox.showerror("Turtle Desktop",
                              "Could not launch. Install the Claude Code CLI ('claude') or VS Code ('code').")
 
     # ── recovery: resume from exactly where it broke ──────────────────────
@@ -260,16 +260,16 @@ class App(tk.Tk):
 
     def manual(self, verdict, mult=1.0):
         if not (COMMON / "pending_setup.json").exists():
-            messagebox.showwarning("Claude EA", "No pending setup to judge."); return
+            messagebox.showwarning("Turtle Desktop", "No pending setup to judge."); return
         args = [PY, str(MON / "claude_judge.py"), "approve", verdict]
         if verdict == "TAKE": args += [str(mult)]
         args += [f"manual from GUI ({verdict} {mult}x)"]
         out = subprocess.run(args, cwd=str(REPO), capture_output=True, text=True,
                              creationflags=NO_WIN)
-        messagebox.showinfo("Claude EA", (out.stdout or out.stderr)[-500:])
+        messagebox.showinfo("Turtle Desktop", (out.stdout or out.stderr)[-500:])
 
     def stop_all(self):
-        if not messagebox.askyesno("Claude EA", "Stop bridge and dashboards?"): return
+        if not messagebox.askyesno("Turtle Desktop", "Stop bridge and dashboards?"): return
         subprocess.run(["powershell", "-NoProfile", "-Command",
                         "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | "
                         "Where-Object { $_.CommandLine -match 'oanda_bridge|serve_setup_labels|home_uptime_guard' } | "

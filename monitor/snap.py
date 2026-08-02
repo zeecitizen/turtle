@@ -63,7 +63,7 @@ def snap():
     return OUT
 
 
-def render_own(market="BTC", bars_back=45):
+def render_own(market="XAU", bars_back=45):
     """Render OUR OWN chart from the bridge data — always correctly framed.
 
     The TradingView screenshot is whatever the user last scrolled/zoomed to; it can put the
@@ -88,7 +88,7 @@ def render_own(market="BTC", bars_back=45):
 
 
 if __name__ == "__main__":
-    market = (sys.argv[1] if len(sys.argv) > 1 else "BTC").upper()
+    market = (sys.argv[1] if len(sys.argv) > 1 else "XAU").upper()
     bare = len(sys.argv) > 2 and sys.argv[2] == "bare"
     # our OWN render first — it is the reliable, always-framed picture Claude judges from
     try:

@@ -72,7 +72,7 @@ def load_bars(path):
     return bars
 
 
-def scan(market="BTC", max_age_min=3):
+def scan(market="XAU", max_age_min=3):
     """Find a FRESH mechanical setup and park it as PENDING (nothing is traded).
     Returns the pending dict, or None."""
     m = MARKETS[market]
@@ -117,7 +117,7 @@ def scan(market="BTC", max_age_min=3):
     return pend
 
 
-def near(market="BTC", back=14):
+def near(market="XAU", back=14):
     """ARMED state: a valid retracement with a UHV exists but the breakout has NOT
     happened yet. Zee: "agar setup k hum qareeb hain to Claude EA die out na ho" — the
     loop must stay awake and study the picture instead of sleeping through the entry.
@@ -192,9 +192,9 @@ def approve(verdict, mult=1.0, reason="", max_age_sec=180):
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "scan"
     if cmd == "scan":
-        print(json.dumps(scan(sys.argv[2] if len(sys.argv) > 2 else "BTC"), indent=1))
+        print(json.dumps(scan(sys.argv[2] if len(sys.argv) > 2 else "XAU"), indent=1))
     elif cmd == "near":
-        print(json.dumps(near(sys.argv[2] if len(sys.argv) > 2 else "BTC"), indent=1))
+        print(json.dumps(near(sys.argv[2] if len(sys.argv) > 2 else "XAU"), indent=1))
     else:   # approve TAKE 2.0 "reason"  |  approve SKIP "reason"
         v = sys.argv[2]
         mult = float(sys.argv[3]) if v.upper() == "TAKE" and len(sys.argv) > 3 else 1.0
