@@ -21,7 +21,7 @@ Files (Common\\Files):
 """
 from __future__ import annotations
 import csv, json, sys, time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / "strategy_lab"))
@@ -47,7 +47,7 @@ def load_bars(path):
     bars = []
     with open(path, encoding="utf-8") as f:
         for r in csv.DictReader(f):
-            bars.append(B.Bar(datetime.utcfromtimestamp(int(r["time_unix"])),
+            bars.append(B.Bar(datetime.fromtimestamp(int(r["time_unix"]), tz=timezone.utc).replace(tzinfo=None),
                               float(r["open"]), float(r["high"]), float(r["low"]),
                               float(r["close"]), float(r["volume"])))
     bars.sort(key=lambda b: b.t)
@@ -64,7 +64,7 @@ def scan(market="BTC", max_age_min=3):
     bars = load_bars(m["data"])
     if len(bars) < 40:
         return {"error": f"only {len(bars)} bars"}
-    stale = (datetime.utcnow() - bars[-1].t).total_seconds() / 60
+    stale = (datetime.now(timezone.utc).replace(tzinfo=None) - bars[-1].t).total_seconds() / 60
     if stale > max_age_min:
         return {"error": f"data {stale:.0f} min stale"}
     k = m["k"]
@@ -103,7 +103,7 @@ def approve(verdict, mult=1.0, reason="", max_age_sec=180):
         rec = {**p, "verdict": "TAKE", "mult": mult, "reason": reason, "age_sec": age}
     else:
         rec = {**p, "verdict": "SKIP", "reason": reason, "age_sec": age}
-    rec["judged_utc"] = datetime.utcnow().isoformat(timespec="seconds")
+    rec["judged_utc"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
     with JOURNAL.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(rec) + "\n")
     PENDING.unlink(missing_ok=True)
