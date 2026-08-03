@@ -127,7 +127,12 @@ def scan(market="XAU", max_age_min=3):
             PENDING.unlink(missing_ok=True)
     k = m["k"]
     B.UHV_BODY_MIN = 0.0; B.MIN_ORIGIN_BREAK = 0.0; B.ER_MIN = 0.0
-    B.TREND_MIN_HUMP = 0.5 * k; B.TREND_DOM = 0.0      # NO trend rule — Claude judges that
+    # The trend rule is mechanical, not a judgement call. It used to be left entirely to me
+    # ("Claude judges that"), and the result was a SELL offered in a plainly rising market.
+    # Zee 2026-08-03: "humara setup sirf ya to SELL ki indication deta hai agar trend down
+    # ho, ya BUY ki agar uptrend strong ho." DOM = 1.0 means the move in the trade's own
+    # direction must be at least as large as the move against it.
+    B.TREND_MIN_HUMP = 0.5 * k; B.TREND_DOM = 1.0
     last_closed = bars[-2].t
     done = _judged()
     fresh = [s for s in B.detect_full(bars)
