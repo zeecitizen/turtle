@@ -784,8 +784,10 @@ class App(tk.Tk):
         if time.time() - getattr(self, "_last_learn", 0) > 120:
             self._last_learn = time.time()
             threading.Thread(target=self._learn_tick, daemon=True).start()
-        # keep live.png fresh on its own cadence so the picture is never far behind
-        if time.time() - getattr(self, "_last_snap", 0) > 45:
+        # keep live.png fresh on its own cadence so the picture is never far behind.
+        # 12s, not 45s: a bar is 60s, so 45s meant the chart could be three quarters of a
+        # candle stale while Zee was reading it as "live".
+        if time.time() - getattr(self, "_last_snap", 0) > 12:
             self._last_snap = time.time(); self.snap_now()
         self.after(5000, self.refresh_loop)
 
@@ -814,7 +816,13 @@ class App(tk.Tk):
             import vision_mark as VM
             rd = VM.latest()
             if rd and rd.get("age_sec", 9999) < 900 and Path(rd.get("png", "")).exists():
-                use = Path(rd["png"])
+                vis = Path(rd["png"])
+                # Show whichever picture is actually newer. The reading's words stay on
+                # screen either way - it is the IMAGE that must not be stale.
+                live_age = (time.time() - live_png.stat().st_mtime
+                            if live_png.exists() else 9e9)
+                if rd.get("age_sec", 9999) <= live_age + 15:
+                    use = vis
                 import vision_mark as _VM
                 bits = [_VM.TREND_NAME.get(rd.get("trend", ""),
                                            str(rd.get("trend", "?")).upper())]

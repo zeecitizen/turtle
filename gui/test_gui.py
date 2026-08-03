@@ -73,6 +73,17 @@ def _repeat_becomes_rule(AL):
     return True
 
 
+def _snap_within_a_candle():
+    """A bar is 60s. If the auto-snap is slower than that, the panel labelled LIVE can be
+    showing a picture from the previous candle."""
+    import re
+    src = (P(__file__).parent / "claude_ea_gui.py").read_text(encoding="utf-8")
+    m = re.search(r'_last_snap", 0\) > (\d+)', src)
+    assert m, "auto-snap cadence not found"
+    assert int(m.group(1)) < 60, f"snap every {m.group(1)}s is slower than a candle"
+    return True
+
+
 def _fill_columns_sane(TB):
     """The EA writes time,side,entry,exit,lots,points,usd. Reading lots out of the entry
     column made every price land one field to the left."""
@@ -317,6 +328,8 @@ def main():
 
     import trade_book as TB2
     check("panels: market_open() is a bool", lambda: isinstance(TB2.market_open(), bool))
+    check("live chart snaps at least once per candle",
+          lambda: _snap_within_a_candle())
     check("fills columns are read in the EA's order (entry,exit,lots)",
           lambda: _fill_columns_sane(TB2))
     check("a SKIP never owns a fill",
