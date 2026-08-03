@@ -317,6 +317,21 @@ def main():
 
     import trade_book as TB2
     check("panels: market_open() is a bool", lambda: isinstance(TB2.market_open(), bool))
+    check("fills columns are read in the EA's order (entry,exit,lots)",
+          lambda: _fill_columns_sane(TB2))
+    check("a SKIP never owns a fill",
+          lambda: all(r["usd"] is None for r in TB2.book("XAU")
+                      if r["verdict"] == "SKIP"))
+    check("one broker fill is never shown under two rows",
+          lambda: _no_duplicate_fills(TB2))
+    check("trade IDs: a number is minted once and never changes",
+          lambda: TB2.trade_id("XAU", "k1") == TB2.trade_id("XAU", "k1"))
+    check("trade IDs: different trades get different numbers",
+          lambda: TB2.trade_id("XAU", "k1") != TB2.trade_id("XAU", "k2"))
+    check("trade IDs: a number resolves back to its trade",
+          lambda: TB2.find_by_id(TB2.trade_id("XAU", "k1"))["key"] == "k1")
+    check("trade IDs: every row carries one",
+          lambda: all("id" in r for r in TB2.book("XAU")))
     check("panels: day_caption returns a day and a phrase",
           lambda: len(TB2.day_caption("XAU")) == 2)
     check("panels: an empty today falls back to the last session",
