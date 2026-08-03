@@ -169,6 +169,12 @@ def near(market="XAU", back=14):
         # most recent valid retracement origin
         o = next((j for j in range(n - 1, max(n - 1 - B.LB, 0), -1) if B.is_origin(bars, j, side)), None)
         if o is None: continue
+        # The trend decides the side. Without this the same picture armed BUY *and* SELL,
+        # which the setup never does: a SELL needs a downtrend, a BUY needs an uptrend.
+        # R=1.0 means the move in the trade's own direction must be at least as large as
+        # the move against it.
+        if not B.trend_ok(bars, o, side, R=1.0):
+            continue
         rs = B.retr_zone_start(bars, o, side)
         best = None
         for kk in range(rs, n):
