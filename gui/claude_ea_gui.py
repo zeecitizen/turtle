@@ -270,6 +270,8 @@ class App(tk.Tk):
         self.tree.tag_configure("loss", foreground=RED)
         self.tree.tag_configure("skip", foreground=MUTED)
         self.tree.pack(fill="both", expand=True, pady=(4, 0))
+        # TRADES sits directly under the clocks - it is what Zee reads first.
+        tf.pack_configure(before=self.status._card_frame)
         self.tree.bind("<Double-1>", self.open_detail)
         self._rows = {}
 
@@ -301,6 +303,7 @@ class App(tk.Tk):
                     **({"width": width} if width else {}))
         t.pack(fill="both", expand=True, pady=(4, 0))
         t.configure(state="disabled")
+        t._card_frame = f          # so the caller can reorder the panels
         return t
 
     def _set(self, widget, text):
