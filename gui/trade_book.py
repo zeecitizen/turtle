@@ -136,9 +136,10 @@ def _fills(market):
             return c[idx] if idx is not None and idx < len(c) else ""
         rows.append({"time": g("time", "close_time", idx=0),
                      "side": g("side", "type", idx=1).upper(),
-                     "lots": g("lots", "volume", idx=2),
-                     "entry": g("entry", "open_price", idx=3),
-                     "exit": g("exit", "close_price", idx=4),
+                     # column order written by the EA: time,side,entry,exit,lots,points,usd
+                     "entry": g("entry", "open_price", idx=2),
+                     "exit": g("exit", "close_price", idx=3),
+                     "lots": g("lots", "volume", idx=4),
                      "usd": g("usd", "profit", "pnl", idx=6),
                      "reason": g("reason", "comment", idx=7)})
     return rows
@@ -246,18 +247,26 @@ def book(market="XAU", day=None):
     labels = _labels()
     fills = _fills(market)
     rows = []
+    claimed = set()
     for j in _judgments(day):
         if j.get("market") != market:
             continue
         key = f"{j.get('time', '')}_{j.get('side', '')}"
-        # match a fill by side + closest entry price
+        # Only a TAKE can own a fill, and a fill belongs to exactly one judgment. Without
+        # both rules a skipped setup borrowed a nearby trade's P&L and the same broker
+        # trade appeared under many rows - the panel then showed far more trades than the
+        # account actually had.
         fill, best = None, 9e9
-        for f in fills:
-            if f["side"] != j.get("side"):
-                continue
-            d = abs(_num(f["entry"]) - _num(j.get("entry")))
-            if d < best and d < 5:
-                fill, best = f, d
+        if j.get("verdict") == "TAKE":
+            for i, f in enumerate(fills):
+                if i in claimed or f["side"] != j.get("side"):
+                    continue
+                d = abs(_num(f["entry"]) - _num(j.get("entry")))
+                if d < best and d < 1.5:
+                    fill, best = f, d
+                    fill_idx = i
+            if fill is not None:
+                claimed.add(fill_idx)
         lab = labels.get(f"trade_{key}", {})
         usd = _num(fill["usd"]) if fill else None
         rows.append({

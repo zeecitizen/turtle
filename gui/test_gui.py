@@ -73,6 +73,25 @@ def _repeat_becomes_rule(AL):
     return True
 
 
+def _fill_columns_sane(TB):
+    """The EA writes time,side,entry,exit,lots,points,usd. Reading lots out of the entry
+    column made every price land one field to the left."""
+    for f in TB._fills("XAU")[:5]:
+        lots = float(f["lots"] or 0)
+        entry = float(f["entry"] or 0)
+        assert 0 < lots < 100, f          # lots, not a gold price
+        assert entry > 100, f             # a price, not a lot size
+    return True
+
+
+def _no_duplicate_fills(TB):
+    """Each judged row that carries P&L must correspond to a distinct broker fill."""
+    rows = [r for r in TB.book("XAU") if r["usd"] is not None and r["verdict"] == "TAKE"]
+    keys = [(r["entry"], r["exit"], r["usd"]) for r in rows]
+    assert len(keys) == len(set(keys)), keys
+    return True
+
+
 def _windows_honest(WN):
     d = WN.analyse("BTC")
     solid = [r for r in d["money"] if r.get("solid")]
