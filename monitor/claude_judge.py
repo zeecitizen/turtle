@@ -230,6 +230,35 @@ def approve(verdict, mult=1.0, reason="", max_age_sec=180):
     return rec
 
 
+def fire(market="XAU", side="SELL", mult=1.0, reason=""):
+    """Open a trade with no pending signal behind it.
+
+    Zee, watching a breakout the engine would not re-signal: "is time breakout ho raha hai,
+    apne SELL nahi kholna?" The detector allows one UHV per retracement, so once a weak
+    candle has already crossed the level it will not fire again even if a proper momentum
+    candle closes beyond a minute later. That rule is right for the machine and wrong for
+    the moment — this is the door for when the human is looking straight at it.
+
+    Every firing is journalled as manual with the reason, so these never get quietly mixed
+    into the engine's own record."""
+    m = MARKETS[market]
+    bars = load_bars(m["data"])
+    px = bars[-1].c
+    lots = min(round(0.10 * mult, 2), m.get("max_lots", 0.10))
+    body = ('{"id":%d,"side":"%s","entry":%.2f,"mult":%.2f,"lots":%.2f,"ts":%d,"time":"%s"}'
+            % (int(time.time()) % 100000, side.upper(), px, mult, lots, int(time.time()),
+               bars[-1].t.strftime("%Y-%m-%d %H:%M")))
+    m["signal"].write_text(body, encoding="ascii")
+    rec = {"market": market, "side": side.upper(), "entry": round(px, 2), "mult": mult,
+           "lots": lots, "verdict": "TAKE", "source": "manual",
+           "reason": reason or "fired by hand",
+           "time": bars[-1].t.strftime("%Y-%m-%d %H:%M"),
+           "judged_utc": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    with JOURNAL.open("a", encoding="utf-8") as fh:
+        fh.write(json.dumps(rec) + chr(10))
+    return rec
+
+
 def watch(market="XAU"):
     """Render the OPEN position so Claude can manage the exit with her eyes.
 
@@ -311,6 +340,12 @@ def close(market="XAU", reason=""):
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "scan"
+    if cmd == "fire":
+        mk = sys.argv[2] if len(sys.argv) > 2 else "XAU"
+        sd = sys.argv[3] if len(sys.argv) > 3 else "SELL"
+        ml = float(sys.argv[4]) if len(sys.argv) > 4 else 1.0
+        rs = sys.argv[5] if len(sys.argv) > 5 else ""
+        print(json.dumps(fire(mk, sd, ml, rs), indent=1)); raise SystemExit
     if cmd == "watch":
         print(json.dumps(watch(sys.argv[2].upper() if len(sys.argv) > 2 else "XAU"),
                          indent=1, default=str))
