@@ -58,6 +58,12 @@ def update_gate(bars):
 def zee_allows(side):
     return side in ALLOW
 LOT = 0.10
+# RISK CAP (2026-08-05, after the -$259 night): bursts 0.30/0.60 turned ordinary
+# -1pt entry losses into -$30/-$37 while wins stayed small — six big-lot losses ate
+# the day. Diamonds/raids stay (they are counted and displayed), but ALL lots cap at
+# 0.10 until the new entry stack (door+laws+guards) is validated on recorded data.
+# Lift this cap only after a walk-forward test, never on feel.
+RISK_CAP = 0.10
 CFG = dict(UHV_BODY_MIN=0.0, MIN_ORIGIN_BREAK=0.0, ER_MIN=0.0, TREND_MIN_HUMP=0.5, TREND_DOM=0.0)
 
 
@@ -335,6 +341,7 @@ def write_armed(bars):
     if diamonds >= 3:                              # third diamond: one more burst tier
         a["lots"] = 0.60 if a["lots"] >= 0.30 else 0.30
     a["diamonds"] = diamonds
+    a["lots"] = min(a["lots"], RISK_CAP)
     aid = ARMED_IDS.setdefault(a["key"], int(time.time()))
     if len(ARMED_IDS) > 400:                       # keep the id map from growing forever
         for k in list(ARMED_IDS)[:200]: ARMED_IDS.pop(k)
@@ -385,7 +392,7 @@ def main():
                               f"breakout not a momentum candle (body {bb.body_ratio:.2f})")
                         continue
                     seq += 1
-                    lots = feb11_lots(bars, s)
+                    lots = min(feb11_lots(bars, s), RISK_CAP)
                     write_signal(seq, s, lots)
                     print(f"[oanda_matcher] SIGNAL #{seq} {s['side']} @{s['entry']} "
                           f"lots={lots:.2f} ({s['open_t'].strftime('%H:%M')}UTC)")
