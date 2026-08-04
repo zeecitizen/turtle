@@ -71,9 +71,19 @@ class Cockpit:
         self.status.pack(pady=(2, 10))
 
         self.tick()
+        self._busy = False
+        self.auto_loop()
+
+    def auto_loop(self):
+        """Zee 2026-08-05: the humps must redraw THEMSELVES — he caught the cockpit
+        only refreshing on the button. Auto-regen every 60s, button still works."""
         self.regen()
+        self.root.after(60000, self.auto_loop)
 
     def regen(self):
+        if self._busy:
+            return
+        self._busy = True
         self.machine.config(text="machine: redrawing…")
         def work():
             try:
@@ -89,6 +99,7 @@ class Cockpit:
         threading.Thread(target=work, daemon=True).start()
 
     def show(self, machine_txt):
+        self._busy = False
         self.machine.config(text=machine_txt)
         try:
             from PIL import Image, ImageTk
