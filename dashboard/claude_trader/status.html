@@ -679,6 +679,33 @@
     50% { box-shadow: 0 0 0 6px rgba(48,209,88,0); }
   }
 </style>
+
+<style>
+/* ── APPLE-STYLE LIGHT THEME (Zee 2026-08-04): black on white, clean, minimal ── */
+.container { max-width: min(1800px, 96vw) !important; }
+:root {
+  --bg:#ffffff; --bg2:#fbfbfd; --panel:#f5f5f7; --panel2:#ffffff;
+  --text:#1d1d1f; --muted:#6e6e73; --faint:#86868b;
+}
+html, body { background:#ffffff !important; color:#1d1d1f !important;
+  font-family:-apple-system,"SF Pro Text","SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif !important;
+  -webkit-font-smoothing:antialiased; }
+h1,h2,h3,h4 { color:#1d1d1f !important; letter-spacing:-0.01em; }
+a { color:#0066cc !important; }
+.hero-card,.trades-card,.clocks-wrap,.msg-card,.ea-card,.week-card,.ach-card,
+.claude-reply,.ea-settings-card {
+  background:#f5f5f7 !important; border:1px solid #e5e5e7 !important;
+  box-shadow:0 2px 16px rgba(0,0,0,0.05) !important; border-radius:18px !important;
+  color:#1d1d1f !important; }
+.hero-card * , .trades-card *, .clocks-wrap * { text-shadow:none !important; }
+button, .ask-btn { background:#0071e3 !important; color:#ffffff !important;
+  border:none !important; border-radius:980px !important; }
+textarea, input { background:#ffffff !important; color:#1d1d1f !important;
+  border:1px solid #d2d2d7 !important; border-radius:12px !important; }
+header .sub, .hero-wr .sub, .l { color:#6e6e73 !important; }
+th, td { border-color:#e5e5e7 !important; }
+.pos { color:#008a00 !important; } .neg { color:#ff3b30 !important; }
+</style>
 </head>
 <body>
 <div class="container">
@@ -811,7 +838,7 @@
   </div>
 
   <!-- ── Watchdog Status (hourly health check for Mehboob bhai) ── -->
-  <div id="watchdog-card" style="
+  <div id="watchdog-card" style="display:none; 
     background: linear-gradient(160deg, var(--panel2), var(--panel));
     border: 1px solid var(--line);
     border-radius: 22px;
@@ -839,7 +866,7 @@
   </div>
 
   <!-- ── EA Settings (hot-reload, no reattach needed) ── -->
-  <div class="ea-settings-card">
+  <div class="ea-settings-card" style="display:none">
     <div class="ea-settings-hdr">
       <h3>⚙️ EA Settings (hot-reload)</h3>
       <button class="toggle-btn" id="ea-settings-toggle">Show</button>
@@ -915,6 +942,21 @@
   </div>
 
   <!-- ── HERO: today's NET P&L (the number that matters) ── -->
+  <!-- ── The Ghost — live hunt ── -->
+  <div class="trades-card" id="ghost-card">
+    <h3>👻 The Ghost — live hunt (camel humps · UHV box · sweep)</h3>
+    <div id="ghost-state" style="font-size:13px;color:#6e6e73;margin:6px 0 10px;line-height:1.6;">loading…</div>
+    <img id="camel-img" src="/api/camel.png" alt="camel humps — live trend chart"
+         style="width:100%;border-radius:12px;background:#fff;border:1px solid #e5e5e7;"/>
+    <div id="cockpit-row" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
+      <button onclick="camelRegen()" style="background:#1d1d1f !important;">🔄 Regenerate humps</button>
+      <button onclick="sendCall('UPTREND')" style="background:#2f9e44 !important;">📈 UPTREND — buy lamps</button>
+      <button onclick="sendCall('DOWNTREND')" style="background:#e03131 !important;">📉 DOWNTREND — sell lamps</button>
+      <button onclick="sendCall('RANGE')" style="background:#f08c00 !important;">📦 RANGE — ghost waits</button>
+    </div>
+    <div id="call-status" style="font-size:13px;font-weight:600;margin-top:8px;color:#6e6e73;">…</div>
+  </div>
+
   <div class="hero-card" id="hero-card">
     <div class="hero-label"><span style="display:inline-block;margin-right:4px;"><span class="live" style="display:inline-block;width:7px;height:7px;background:#30d158;border-radius:50%;vertical-align:middle;margin-right:5px;"></span></span>TODAY'S LIVE PROFIT</div>
     <div class="hero-wr">
@@ -927,12 +969,12 @@
       <div class="hero-stat"><div class="v" id="hero-wr-small">—</div><div class="l">win rate</div></div>
     </div>
     <div class="hero-foot">
-      <span class="live"></span><span id="hero-foot-txt">S1Trader LIVE · M1 · 0.10 lots · auto-refreshes every 15s</span>
+      <span class="live"></span><span id="hero-foot-txt">👻 Ghost EA v1.40 (CaseSignalExecutor) LIVE · XAUUSD M1 · OANDA volume · bursts 0.10–0.60 · auto-refreshes every 15s</span>
     </div>
   </div>
 
   <!-- ── Investor system status (auto-updated each backtest cycle) ── -->
-  <div class="ss-card" id="ss-card">
+  <div class="ss-card" id="ss-card" style="display:none">
     <div class="ss-title"><span class="ss-pulse"></span><span>Live System Status</span></div>
 
     <div class="ss-row">
@@ -961,7 +1003,7 @@
   </div>
 
   <!-- ── Monday's test: 7-day expected vs real ── -->
-  <div class="week-card" id="week-card">
+  <div class="week-card" id="week-card" style="display:none">
     <div class="week-hdr">
       <h3 id="week-title">🎯 Monday's test — 7-day expected vs real</h3>
       <span class="week-sub" id="week-sub">loading…</span>
@@ -999,28 +1041,26 @@
   </div>
 
   <!-- ── Achievements / activity feed (family-monitor surface) ── -->
-  <div class="ach-card" id="ach-card">
+  <div class="ach-card" id="ach-card" style="display:none">
     <h3>🏆 What Claude shipped — activity feed</h3>
     <div id="ach-list">
       <div style="color:#888; font-size:12px;">loading…</div>
     </div>
   </div>
 
-  <button class="ask-btn" onclick="window.location.href='https://chat.claudezeeshan.com/chat-app'">
-    🤖  Ask Claude for status
-  </button>
+  <!-- ask-btn retired 2026-08-04 -->
 
+  <div style="display:none"><!-- retired 2026-08-04: stale June-era status/tasks -->
   <h2>Today (broker truth)</h2>
   <div class="ea-card" id="ea-card">loading…</div>
-
   <h2>Open tasks</h2>
   <div id="open-tasks">loading…</div>
-
   <h2 style="margin-top:24px;">Closed tasks</h2>
   <div id="closed-tasks">(none)</div>
+  </div>
 
   <!-- ── Send Claude a message — at BOTTOM per Zee's ask ── -->
-  <div class="msg-card" style="margin-top:24px;">
+  <div class="msg-card" style="display:none; margin-top:24px;">
     <div class="msg-label">Send Claude a message</div>
     <div class="msg-row">
       <textarea id="msg-text" placeholder="Type a message…" autocomplete="off" autocapitalize="sentences"></textarea>
@@ -1511,6 +1551,70 @@ async function loadTrades() {
 }
 loadTrades();
 setInterval(loadTrades, 15000);
+
+// ── The Ghost panel: camel humps image + gate/box/armed state ────────────────
+async function loadGhost() {
+  try {
+    const g = await fetch('/api/ghost-state', { cache: 'no-store' }).then(x => x.json());
+    const parts = [];
+    const fresh = g.call && (Date.now() / 1000 - (g.call.ts || 0)) < 1800;
+    if (fresh && g.call.trend && g.call.trend !== 'AUTO')
+      parts.push('🎛️ Zee’s call: <b>' + g.call.trend + '</b>');
+    else
+      parts.push('🤖 gate: AUTO — the humps decide');
+    if (g.watch)
+      parts.push('📦 UHV box: ' + g.watch.side + ' lamp @' + g.watch.level +
+                 ' · sweep line @' + g.watch.sweep +
+                 (g.watch.swept ? ' — <b>Law of Conviction ✅</b>' : ' — Law of Conviction pending') +
+                 (g.watch.law2 ? ' · <b>2nd Law NS/ND ✅</b>' : '') +
+                 (g.watch.law3 ? ' · <b>3rd Law EMA5 ✅</b>' : '') +
+                 (g.watch.law4 ? ' · <b>4th Law RSI divergence ✅</b>' : '') +
+                 (g.watch.law5 ? ' · <b>5th Law wick/volume ✅</b>' : ''));
+    else
+      parts.push('no UHV boxed right now — hunting');
+    parts.push(g.armed ? '🚪 ghost AT THE DOOR (fires on tick-cross)' : '👻 ghost watching');
+    document.getElementById('ghost-state').innerHTML = parts.join(' &nbsp;·&nbsp; ');
+    document.getElementById('camel-img').src = '/api/camel.png?t=' + Date.now();
+  } catch (_) {}
+}
+loadGhost();
+setInterval(loadGhost, 60000);
+// cockpit-on-web: Zee-only buttons (PIN once, cached); friends can look, not touch
+let CALL_TS = 0, CALL_NAME = 'AUTO';
+function pin() {
+  let v = localStorage.getItem('cockpit_pin');
+  if (!v) { v = prompt('Cockpit PIN (Zee only):') || ''; if (v) localStorage.setItem('cockpit_pin', v); }
+  return v;
+}
+async function sendCall(name) {
+  const r = await fetch('/api/trend-call', { method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ trend: name, pin: pin() }) });
+  if (r.status === 403) { localStorage.removeItem('cockpit_pin'); alert('wrong PIN'); return; }
+  loadGhost();
+}
+function camelRegen() {
+  fetch('/api/camel.png?force=1&t=' + Date.now()).then(() =>
+    setTimeout(() => { document.getElementById('camel-img').src = '/api/camel.png?t=' + Date.now(); }, 4000));
+}
+function tickCall() {
+  const el = document.getElementById('call-status'); if (!el) return;
+  const left = Math.max(0, 600 - (Date.now() / 1000 - CALL_TS));
+  if (CALL_NAME !== 'AUTO' && left > 0)
+    el.textContent = 'YOUR CALL: ' + CALL_NAME + ' — expires in ' +
+      Math.floor(left / 60) + 'm ' + String(Math.floor(left % 60)).padStart(2, '0') + 's, then humps decide';
+  else el.textContent = 'CALL: AUTO — the humps decide the direction';
+}
+setInterval(tickCall, 1000);
+const _origLoadGhost = loadGhost;
+loadGhost = async function () {
+  await _origLoadGhost();
+  try {
+    const g = await fetch('/api/ghost-state', { cache: 'no-store' }).then(x => x.json());
+    CALL_TS = (g.call && g.call.ts) || 0;
+    CALL_NAME = (g.call && g.call.trend) || 'AUTO';
+  } catch (_) {}
+};
 // Delegate expand/collapse clicks on the trades list
 document.getElementById('trades-list').addEventListener('click', e => {
   const t = e.target.closest('[data-detail]');

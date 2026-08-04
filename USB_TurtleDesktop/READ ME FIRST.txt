@@ -1,0 +1,40 @@
+TURTLE DESKTOP - first run
+==========================
+
+Turtle Desktop is the control panel for a vision-driven trading system: a mechanical
+layer finds candidate setups, Claude LOOKS at the chart and decides take or skip, and an
+MQL5 Expert Advisor executes and manages the exit.
+
+WHAT YOU NEED ON THIS PC
+  1. Python 3.12 or newer          https://www.python.org/downloads/
+     (tick "Add Python to PATH" during setup)
+  2. MetaTrader 5, logged into a DEMO account
+  3. TradingView Desktop, logged in
+
+FIRST START
+  Open "Turtle Desktop" from the Start menu.
+  Press  START EVERYTHING       - launches TradingView with its debug port, the data
+                                  bridge and the dashboards.
+  Set the TradingView chart to OANDA:XAUUSD (or COINBASE:BTCUSD at the weekend).
+  In MT5, attach the EA from the mt5\ folder to that chart, press F7 to compile,
+  and switch Algo Trading ON.  Keep it on a DEMO account.
+  Press  BEGIN AI EA TRADING  - opens Claude Code on this folder, pre-prompted to read
+                                  CLAUDE_REALTIME_EA.md and resume live judging.
+
+WHAT THE PANEL SHOWS
+  LIVE (from MT5)   real bid/ask, spread, balance, equity and any running position P&L
+  ARMED             a retracement and its UHV exist; the breakout has not fired yet
+  TODAY'S TRADES    every judged setup - double-click a row for the full story:
+                    the chart, why Claude took or skipped it, your own comment box,
+                    and the two grading buttons (10/10 or 0/10)
+  PDF               "PDF: failed setups" writes one page per losing trade for study
+
+IF THE POWER GOES OUT
+  Press POWER OUTAGE. It restarts TradingView with its debug port, the tunnel, the data
+  bridge and the dashboards, and clears any stale setup so nothing old is ever traded.
+
+THE PLAYBOOK
+  CLAUDE_REALTIME_EA.md is the whole system in writing - rules, architecture, recovery
+  steps and the mistakes already paid for. Read it before changing anything.
+
+DEMO ONLY until it has proven itself on your own account.

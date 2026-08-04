@@ -1,0 +1,13 @@
+TURTLE DESKTOP
+==============
+
+1. Double-click TurtleDesktop-Setup.exe and follow the wizard.
+2. Open "Turtle Desktop" from the Start menu.
+3. Read "READ ME FIRST.txt" - it lists what else this PC needs:
+     Python 3.12+
+     MetaTrader 5, logged into a DEMO account
+     TradingView Desktop
+     a Claude subscription, or an Anthropic API key
+
+This trades a real market. Keep it on a demo account until it has
+proven itself to you. It is not a promise of profit.

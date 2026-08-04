@@ -734,7 +734,7 @@ const server = http.createServer(async (req, res) => {
 
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
-    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && apexUrl !== '/docs' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && apexUrl !== '/docs' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
       res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
       res.end();
       return;
@@ -1929,6 +1929,59 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   }
 
   // ── Today's trades (broker fills today + currently-open positions) ──
+  // ── The Ghost panel (status.html): live camel-humps chart + hunt state ──────
+  if (url === '/api/camel.png') {
+    const png = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\setup_labels\\camel_humps.png';
+    try {
+      // Regenerate at most once a minute so friends always see a fresh hunt.
+      // (?force=1 — the cockpit's Regenerate button — bypasses the throttle.)
+      const age = fs.existsSync(png) ? Date.now() - fs.statSync(png).mtimeMs : Infinity;
+      const force = query.get('force') === '1';
+      if ((age > 60000 || force) && !global._camelBusy) {
+        global._camelBusy = true;
+        require('child_process').execFile(
+          'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python313-arm64\\python.exe',
+          ['C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\trend_eyes.py', '--draw', '120'],
+          { timeout: 45000 }, () => { global._camelBusy = false; });
+      }
+      res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
+      res.end(fs.readFileSync(png));
+    } catch (e) { res.writeHead(404); res.end('camel not drawn yet'); }
+    return;
+  }
+  // Cockpit-on-web (Zee only): press a trend button -> gate the ghost. PIN-guarded
+  // with the same .dashboard_password that gates /me — friends can look, not touch.
+  if (url === '/api/trend-call' && req.method === 'POST') {
+    let body = '';
+    req.on('data', c => body += c);
+    req.on('end', () => {
+      try {
+        const d = JSON.parse(body || '{}');
+        const want = fs.readFileSync(
+          'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.dashboard_password', 'utf8').trim();
+        if (!d.pin || d.pin.trim() !== want) { res.writeHead(403); res.end('nope'); return; }
+        const ALLOW = { UPTREND: ['BUY'], DOWNTREND: ['SELL'], RANGE: [], AUTO: ['BUY', 'SELL'] };
+        if (!(d.trend in ALLOW)) { res.writeHead(400); res.end('bad trend'); return; }
+        fs.writeFileSync(
+          'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\trend_call.json',
+          JSON.stringify({ trend: d.trend, allow: ALLOW[d.trend],
+                           ts: Math.floor(Date.now() / 1000), by: 'zee-web' }));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end('{"ok":true}');
+      } catch (e) { res.writeHead(500); res.end(String(e)); }
+    });
+    return;
+  }
+
+  if (url === '/api/ghost-state') {
+    const CMN = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
+    const rd = f => { try { return JSON.parse(fs.readFileSync(CMN + f, 'utf8')); } catch (_) { return null; } };
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+    res.end(JSON.stringify({ call: rd('trend_call.json'), watch: rd('case_watch.json'),
+                             armed: rd('case_armed.json'), ts: Date.now() }));
+    return;
+  }
+
   if (url === '/api/today-trades') {
     try {
       const COMMON = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
@@ -1960,6 +2013,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
             '88003': 'S3', '88004': 'S1_M5', '88005': 'S1_M1', '88006': 'NSND',
             '88007': 'S4', '88009': 'Feb11_AGG', '88010': 'BTC_S4b',
             '88011': 'Feb11_MED', '88012': 'Feb11_LIVE', '0': 'Human',
+            '88020': '👻 Ghost',   // CaseSignalExecutor v1.40 — the fast-scalp ghost
           };
           if (rec.magic && MAGIC_EA_MAP[rec.magic]) rec.ea = MAGIC_EA_MAP[rec.magic];
           closed.push(rec);
