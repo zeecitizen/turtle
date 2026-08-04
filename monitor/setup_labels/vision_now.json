@@ -1,0 +1,11 @@
+{
+ "market": "XAU",
+ "n": 3,
+ "name": "in a valid retracement",
+ "side": "BUY",
+ "trend": "up",
+ "seeing": "Clean uptrend on the picture: 4050.4 up to 4057.9 with two real thrusts, the second one on 320 volume. Since 20:38 price has drifted back to 4056.9 - about 1.0 pt off the high - and every candle in that drift is small, 60 to 200 volume against the 320 that made the high. Weak selling into a strong move.",
+ "waiting_for": "a heavier red candle to serve as the UHV so the level has meaning, or a green push back through 4057.9 with volume behind it.",
+ "when": "2026-08-03T20:52:23+00:00",
+ "source": "claude-eyes"
+}
