@@ -331,6 +331,12 @@ def draw(bars, back=120, out=None):
         n_laws = (int(bool(wd.get("swept"))) + int(bool(wd.get("law2")))
                   + int(bool(wd.get("law3"))) + int(bool(wd.get("law4")))
                   + int(bool(wd.get("law5"))))
+        # ❤ PROBATION MARK (Zee): laws still earning their diamond (Law 6 Selling
+        # Climax) draw a red heart beside the diamonds — "this setup has a chance
+        # greater than others" — but grant no money until promoted.
+        if wd.get("law6"):
+            heart_xy = (len(df) - 3 - n_laws * 2,
+                        max(wd["level"], wd["sweep"]) + 0.6)
         if n_laws:
             _dpos = [len(df) - 3 - d * 2 for d in range(n_laws)]
             _dpos = [p for p in _dpos if 0 <= p < len(df)]
@@ -346,8 +352,12 @@ def draw(bars, back=120, out=None):
                                                  edgecolors="#8a6d00")
     except Exception:
         pass
+    heart_xy = locals().get("heart_xy")
     kw["returnfig"] = True
     fig, _axes = mpf.plot(df, **kw)
+    if heart_xy:
+        _axes[0].text(heart_xy[0], heart_xy[1], "♥", fontsize=26,
+                      color="#e03131", ha="center", va="center")
     if diamonds_png:
         from matplotlib.offsetbox import OffsetImage, AnnotationBbox
         import matplotlib.image as mimg
