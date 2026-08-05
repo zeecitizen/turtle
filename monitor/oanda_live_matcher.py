@@ -66,7 +66,13 @@ LOT = 0.10
 # v1.64 send-cooldown, slope guard, ratchet trail); the demo now runs the diamond
 # experiment at full tiers 0.10/0.30/0.60. Evaluation: per-tier expectancy from
 # turtle_fills (lots self-identify the tier).
-RISK_CAP = 0.60
+# 2026-08-06 THE DIAMOND EXPERIMENT'S VERDICT (n=14): big lots 36% WR, -$219.90;
+# 0.10 flat 71% WR, +$76.60 — conviction sizing as currently timed multiplies
+# losses (diamonds align late, when trends are old). Cap returns to 0.10.
+# Diamonds/hearts REMAIN as labels + raid allowance: at equal size the fills now
+# measure pure selection quality — if diamond-labeled trades out-WIN plain ones
+# over the coming days, sizing can be re-earned with better timing.
+RISK_CAP = 0.10
 CFG = dict(UHV_BODY_MIN=0.0, MIN_ORIGIN_BREAK=0.0, ER_MIN=0.0, TREND_MIN_HUMP=0.5, TREND_DOM=0.0)
 
 
