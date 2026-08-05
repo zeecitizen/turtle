@@ -155,8 +155,7 @@ def find_armed(bars):
             c = bars[k]
             if not (c.is_bear if side == "BUY" else c.is_bull): continue
             if c.body_ratio < B.UHV_BODY_MIN: continue
-            if k - 1 >= 0 and bars[k - 1].v >= c.v: continue
-            if k + 1 < n and bars[k + 1].v >= c.v: continue
+            # COLOUR-AWARE UHV (Zee 2026-08-05, Option B) — see build_entry_review_m5
             if best is None or c.v > bars[best].v: best = k
         if best is None: continue
         # STRONG-NEIGHBOUR OVERRIDE (Zee 2026-08-04): "the detected UHV has 2 candles
