@@ -12,7 +12,12 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.63"
+#property version   "1.64"
+// v1.64 SEND-COOLDOWN (2026-08-05): the door path and the signal path were double-
+// firing the same setup within 1 second — each checked "do we hold a position?"
+// while the other's order was still IN FLIGHT at the broker (fill latency makes it
+// invisible for ~hundreds of ms). One timestamp bridges the blindness: after any
+// order is sent, no new entry for InpSendCooldownS seconds.
 // v1.63 RATCHET TRAIL (2026-08-05): gold moved 109 points; the flat 0.2 give-back
 // harvested $13.70 gross all morning (avg win $3.42 vs avg loss $11.76 = 77% WR
 // needed to break even). Give now grows with the peak — max(InpGivePts,
@@ -88,6 +93,7 @@ input string InpArmedFile    = "case_armed.json";   // pre-breakout lamp level (
 input double InpMaxChasePts  = 1.0;    // fallback chase past the lamp (armed file may allow 3)
 input double InpMaxStackLots = 1.20;   // hard ceiling on total stacked lots (code-enforced)
 input int    InpMaxRaids     = 6;      // apparitions per convicted lamp (Zee's 5-6 burst)
+input int    InpSendCooldownS = 4;     // seconds after any order send before another entry
 
 // Ghost cut, lot-scaled so the exit money stays roughly constant per burst.
 double GhostCap(double lots) {
@@ -101,6 +107,7 @@ long    g_last_id = -1;
 long    g_armed_id = -1, g_last_lamp = -1, g_armed_ts = 0;
 int     g_raids = 0, g_armed_raids = 1;   // per-lamp allowance from the matcher (diamonds)
 bool    g_lamp_ready = true;               // harvest-and-return: reset by a lamp re-touch
+long    g_last_send = 0;                   // send-cooldown anchor (epoch, TimeGMT)
 double  g_armed_sl = 0;                    // structural SL from the matcher (0 = none)
 
 // Broker stop: prefer the structural level; clamp to [0.4pt .. InpHardSLPts] distance.
@@ -163,7 +170,7 @@ void ReadArmed() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    EventSetTimer(1);
-   Print("[CaseExec] v1.63 loaded — ratchet trail (give grows with the peak)");
+   Print("[CaseExec] v1.64 loaded — send-cooldown kills the double-fire");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -215,6 +222,8 @@ void OnTimer() {
    string side = JStr(txt, "side");
    double lots = JNum(txt, "lots"); if (lots <= 0) lots = InpDefaultLots;
    if (!StackAllowed(side, lots)) return;   // join a verified burst, or wait
+   if ((long)TimeGMT() - g_last_send < InpSendCooldownS) return;   // in-flight guard
+   g_last_send = (long)TimeGMT();
 
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
@@ -250,7 +259,8 @@ void OnTick() {
             cross = (aask > g_armed_level && aask <= g_armed_level + g_armed_chase);
          else if (g_lamp_ready && g_armed_side == "SELL")
             cross = (abid < g_armed_level && abid >= g_armed_level - g_armed_chase);
-         if (cross) {
+         if (cross && (long)TimeGMT() - g_last_send >= InpSendCooldownS) {
+            g_last_send = (long)TimeGMT();
             g_raids++;
             g_lamp_ready = false;
             double asl = BrokerSL(g_armed_side == "BUY",
