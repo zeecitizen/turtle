@@ -157,8 +157,11 @@ def detect_full(bars):
                 c = bars[k]; col = c.is_bear if side == "BUY" else c.is_bull
                 if not col: continue
                 if c.body_ratio < UHV_BODY_MIN: continue   # UHV must be strong-bodied (Zee loser_004)
-                if k - 1 >= 0 and bars[k - 1].v >= c.v: continue
-                if k + 1 < n and bars[k + 1].v >= c.v: continue
+                # COLOUR-AWARE UHV (Zee 2026-08-05, Option B): the UHV must be the
+                # highest volume among SAME-COLOUR (counter-trend) candles in the
+                # zone — comparing a supply candle against a trend-side demand
+                # candle's volume is apples to oranges (the 16:29 858-vs-910 miss).
+                # Supersedes the strict both-neighbours local-max rule of June.
                 if best is None or c.v > bars[best].v: best = k
             if best is None: continue
             U = bars[best]
