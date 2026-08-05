@@ -271,3 +271,31 @@ NEW SPECIES ⚠ = unexplained — Claude investigates before anything else is bu
 - night window (22:00-01:00 broker): chop + 2-6x slippage era — hour study says the edge lives elsewhere
 - burst-sized BEFORE the risk cap (pre 00:05 broker 08-05) — cured by RISK_CAP 0.10
 - slope +0.09 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 01:11:34 (broker) — BUY 0.30 · **-29.10** (-0.97pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1785967815 BUY raid 1/6 lamp 4248.19 lots=0.30 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-0.97pt vs 1.0 cap) — bounded toll
+- night window (22:00-01:00 broker): chop + 2-6x slippage era — hour study says the edge lives elsewhere
+- burst-sized BEFORE the risk cap (pre 00:05 broker 08-05) — cured by RISK_CAP 0.10
+- slope +0.07 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 01:30:05 (broker) — BUY 0.30 · **-12.90** (-0.43pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1785968830 BUY raid 1/6 lamp 4248.44 lots=0.30 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-0.43pt vs 1.0 cap) — bounded toll
+- night window (22:00-01:00 broker): chop + 2-6x slippage era — hour study says the edge lives elsewhere
+- burst-sized BEFORE the risk cap (pre 00:05 broker 08-05) — cured by RISK_CAP 0.10
+- slope +0.03 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 02:39:58 (broker) — BUY 0.10 · **-13.60** (-1.36pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] signal #1785972904 BUY lots=0.10 ghost=1.00pt stackable parachute=4262.65`
+- ghost exit with 0.36pt SLIPPAGE beyond design (fast tape/thin book)
+- slope +0.71 aligned; AUTO said UPTREND — entry direction was legitimate

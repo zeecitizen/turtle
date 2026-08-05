@@ -12,7 +12,13 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.64"
+#property version   "1.65"
+// v1.65 CLICK-BURST (Zee 2026-08-06, his true Feb-11 mechanic): "buy buy buy
+// multiple times 0.1 lots.. many ghosts into the room.. the multiplier should work
+// not with larger lot size but with more trades of 0.1 each." A convicted lamp
+// fires N separate 0.10 clicks a few seconds apart (armed file "clicks"); each
+// click trails its OWN peak and dies its own cheap death. Burst siblings bypass
+// the all-armed stacking rule (they ARE the burst); 1.20-lot ceiling still holds.
 // v1.64 SEND-COOLDOWN (2026-08-05): the door path and the signal path were double-
 // firing the same setup within 1 second — each checked "do we hold a position?"
 // while the other's order was still IN FLIGHT at the broker (fill latency makes it
@@ -94,6 +100,7 @@ input double InpMaxChasePts  = 1.0;    // fallback chase past the lamp (armed fi
 input double InpMaxStackLots = 1.20;   // hard ceiling on total stacked lots (code-enforced)
 input int    InpMaxRaids     = 6;      // apparitions per convicted lamp (Zee's 5-6 burst)
 input int    InpSendCooldownS = 4;     // seconds after any order send before another entry
+input int    InpClickSpaceS   = 2;     // spacing between burst sibling clicks
 
 // Ghost cut, lot-scaled so the exit money stays roughly constant per burst.
 double GhostCap(double lots) {
@@ -109,6 +116,8 @@ int     g_raids = 0, g_armed_raids = 1;   // per-lamp allowance from the matcher
 bool    g_lamp_ready = true;               // harvest-and-return: reset by a lamp re-touch
 long    g_last_send = 0;                   // send-cooldown anchor (epoch, TimeGMT)
 double  g_armed_sl = 0;                    // structural SL from the matcher (0 = none)
+int     g_armed_clicks = 1;                // burst size (matcher "clicks", 0.10 each)
+int     g_burst_left = 0;                  // siblings still to fire for this burst
 
 // Broker stop: prefer the structural level; clamp to [0.4pt .. InpHardSLPts] distance.
 double BrokerSL(bool isbuy, double px, double structural) {
@@ -128,6 +137,18 @@ void   SetPeakOf(ulong t, double v) {
    for (int i = 0; i < 24; i++) if (g_tk[i] == 0) { g_tk[i] = t; g_pk[i] = v; return; }
 }
 void   DropPeakOf(ulong t)        { for (int i = 0; i < 24; i++) if (g_tk[i] == t) { g_tk[i] = 0; g_pk[i] = 0; return; } }
+
+double OurLots() {
+   double tot = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong t = PositionGetTicket(i);
+      if (!PositionSelectByTicket(t)) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagic
+          || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      tot += PositionGetDouble(POSITION_VOLUME);
+   }
+   return tot;
+}
 
 // Zee: stack onto a VERIFIED burst only — same direction, every open click already
 // armed (pop proven), total lots under the code-enforced ceiling. Never averaging
@@ -165,12 +186,14 @@ void ReadArmed() {
    g_armed_raids = (r == EMPTY_VALUE || r < 1) ? 1 : (int)r;
    double s = JNum(txt, "sl");
    g_armed_sl = (s == EMPTY_VALUE) ? 0 : s;
+   double ck = JNum(txt, "clicks");
+   g_armed_clicks = (ck == EMPTY_VALUE || ck < 1) ? 1 : (int)ck;
 }
 
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    EventSetTimer(1);
-   Print("[CaseExec] v1.64 loaded — send-cooldown kills the double-fire");
+   Print("[CaseExec] v1.65 loaded — click-burst: many small ghosts, one room");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -238,6 +261,30 @@ void OnTimer() {
 
 // Manage the Feb-11 exit on every tick — and grab armed lamps at tick speed.
 void OnTick() {
+   // BURST SIBLINGS (v1.65): after the lead click, fire the remaining 0.10 clicks
+   // a few seconds apart while price is still in the lamp's zone. Siblings bypass
+   // the all-armed stack rule; the 1.20-lot ceiling and direction rule still hold.
+   if (g_burst_left > 0 && g_armed_id == g_last_lamp
+       && (long)TimeGMT() - g_last_send >= InpClickSpaceS
+       && (long)TimeGMT() - g_armed_ts <= InpMaxAgeSec) {
+      double sb = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      double sa = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      bool inzone = (g_armed_side == "BUY")
+                    ? (sa > g_armed_level - 0.3 && sa <= g_armed_level + g_armed_chase)
+                    : (sb < g_armed_level + 0.3 && sb >= g_armed_level - g_armed_chase);
+      if (inzone && OurLots() + g_armed_lots <= InpMaxStackLots + 1e-9) {
+         g_last_send = (long)TimeGMT();
+         g_burst_left--;
+         double bsl = BrokerSL(g_armed_side == "BUY",
+                               (g_armed_side == "BUY") ? sa : sb, g_armed_sl);
+         if (g_armed_side == "BUY")  trade.Buy(g_armed_lots, _Symbol, 0, bsl, 0, "ghost");
+         else                        trade.Sell(g_armed_lots, _Symbol, 0, bsl, 0, "ghost");
+         PrintFormat("[CaseExec] BURST sibling %d remaining, lamp %.2f", g_burst_left, g_armed_level);
+      } else if (!inzone) {
+         g_burst_left = 0;            // zone left the station — no chasing siblings
+      }
+   }
+
    // GHOST AT THE DOOR: fire the instant live price crosses the armed level.
    // REPEAT APPARITIONS: while the convicted lamp stays armed, harvest-and-return —
    // up to InpMaxRaids entries per lamp (Zee's 5-6 burst on a Law-of-Conviction
@@ -263,6 +310,7 @@ void OnTick() {
             g_last_send = (long)TimeGMT();
             g_raids++;
             g_lamp_ready = false;
+            g_burst_left = g_armed_clicks - 1;   // siblings follow (Zee's buy-buy-buy)
             double asl = BrokerSL(g_armed_side == "BUY",
                                   (g_armed_side == "BUY") ? aask : abid, g_armed_sl);
             if (g_armed_side == "BUY")  trade.Buy(g_armed_lots, _Symbol, 0, asl, 0, "ghost");
