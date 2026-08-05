@@ -176,20 +176,27 @@ def auto_call(bars, upto=None):
     # we say the trend has shifted from BUYS now." Mirror with highs for SELLs.
     recent_low = min(bars[k][2] for k in range(max(0, n - 2), n))
     recent_high = max(bars[k][1] for k in range(max(0, n - 2), n))
+    # EARLY-TREND ON GUARD BREAK (Zee 2026-08-05): "the last higher high was broken,
+    # with a new high — that's a sign of uptrend." A broken guard doesn't mean
+    # no-man's-land; it means the trend has SHIFTED. The confirmed-peak slant lags a
+    # fresh V-turn by design (peaks need 3 closed bars); the guard break is the
+    # earliest honest signal of the flip, so it takes command until the peaks catch up.
     if sl > SLANT_EPS:
         lows = [s for s in find_swings(bars, upto) if s.kind == "L"][-2:]
         guard = min(s.price for s in lows) if lows else None
         if guard is not None and recent_low < guard:
-            return dict(trend="RANGE", allow=[], slant=sl,
-                        why=f"guard low {guard:.2f} BROKEN — trend shifted from BUYS")
+            return dict(trend="DOWNTREND", allow=["SELL"], slant=sl,
+                        why=f"EARLY SHIFT: guard low {guard:.2f} broken by a new low "
+                            f"— trend shifted from BUYS")
         return dict(trend="UPTREND", allow=["BUY"], slant=sl,
                     why=f"peak-line slants up {sl:+.3f} pts/bar"
                         + (f", guard low {guard:.2f} safe" if guard else ""))
     if sl < -SLANT_EPS:
         guard = max(s.price for s in hs[-2:]) if len(hs) >= 2 else None
         if guard is not None and recent_high > guard:
-            return dict(trend="RANGE", allow=[], slant=sl,
-                        why=f"guard high {guard:.2f} BROKEN — trend shifted from SELLS")
+            return dict(trend="UPTREND", allow=["BUY"], slant=sl,
+                        why=f"EARLY SHIFT: guard high {guard:.2f} broken by a new high "
+                            f"— trend shifted from SELLS")
         return dict(trend="DOWNTREND", allow=["SELL"], slant=sl,
                     why=f"peak-line slants down {sl:+.3f} pts/bar"
                         + (f", guard high {guard:.2f} safe" if guard else ""))
