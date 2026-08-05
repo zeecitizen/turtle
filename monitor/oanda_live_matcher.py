@@ -134,6 +134,25 @@ def stretch_of(bars, lvl, side):
     return (highs[-1].price - lvl) if highs else 0.0
 
 
+EXHAUST_SLOPE = 0.60   # LAW OF EXHAUSTION (Zee 2026-08-05): trends die of old age.
+EXHAUST_HUMPS = 4      # Today's census: avg life 2.1 humps; P(next) 70%->29% after
+                       # hump 2; avg |slope| at DYING humps 0.87 vs 0.35-0.42 alive —
+                       # steepness is the blow-off, not strength. The 19:57 -$30.90
+                       # fired at slope +0.791 (death zone). Humility, not a gate.
+
+
+def exhausted(bars, side):
+    if abs(TE.slope_of(_te_bars(bars))) > EXHAUST_SLOPE:
+        return True
+    sw = TE.find_swings(_te_bars(bars))
+    seq = [s for s in sw if s.kind == ("H" if side == "BUY" else "L")]
+    streak = 0
+    for s in reversed(seq):
+        if s.label == ("HH" if side == "BUY" else "LL"): streak += 1
+        else: break
+    return streak >= EXHAUST_HUMPS
+
+
 ARMED_IDS: dict = {}     # armed-setup key -> the id first assigned (stable across polls)
 
 
@@ -268,7 +287,7 @@ def find_armed(bars):
         # candle) — in case the ghost is stuck." Mirror above the last high for SELL.
         sl_px = (min(b.l for b in closed[-3:]) - 0.5) if side == "BUY" \
             else (max(b.h for b in closed[-3:]) + 0.5)
-        humble = int(stretch_of(bars, lvl, side) > STRETCH_PT)
+        humble = int(stretch_of(bars, lvl, side) > STRETCH_PT or exhausted(bars, side))
         if humble:
             lots = 0.10                            # stretched top/bottom: humble size
         found.append(dict(side=side, level=round(lvl, 2), lots=lots, chase=chase,
@@ -415,8 +434,8 @@ def main():
                         continue
                     seq += 1
                     lots = min(feb11_lots(bars, s), RISK_CAP)
-                    if stretch_of(bars, s["entry"], s["side"]) > STRETCH_PT:
-                        lots = 0.10                # stretch humility (see STRETCH_PT)
+                    if stretch_of(bars, s["entry"], s["side"]) > STRETCH_PT                             or exhausted(bars, s["side"]):
+                        lots = 0.10                # stretch/exhaustion humility
                     write_signal(seq, s, lots)
                     print(f"[oanda_matcher] SIGNAL #{seq} {s['side']} @{s['entry']} "
                           f"lots={lots:.2f} ({s['open_t'].strftime('%H:%M')}UTC)")
