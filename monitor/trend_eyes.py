@@ -30,8 +30,12 @@ CF = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oand
 # ── the knobs to perfect ──────────────────────────────────────────────────────
 METHOD    = "fractal"  # "fractal" (K bars each side) or "zigzag" (reversal threshold —
                        # from the Shreyas trendlines article; confirms faster in fast runs)
-PIVOT_K   = 3     # fractal: a swing high = the highest high of K bars on EACH side.
+PIVOT_K   = 2     # fractal: a swing high = the highest high of K bars on EACH side.
                   # Smaller = more, faster swings; larger = only the big landmarks.
+                  # 3 -> 2 (Zee 2026-08-05): "it missed the smaller middle peak" — a
+                  # minor peak inside a taller neighbour's 3-bar shadow was erased,
+                  # bending the slant. K=2 lets minor peaks exist; EPS_PT still
+                  # smooths dime-noise out of the labels.
 ZZ_TH_PT  = 2.0   # zigzag: a swing is confirmed once price reverses this many points
                   # from the running extreme (their 2% stock threshold, in gold points).
 EPS_PT    = 0.30  # two swings closer than this are "equal", not higher/lower —
