@@ -178,8 +178,14 @@ def auto_call(bars, upto=None):
     # can keep buying.. if there were two previous lows in a row, the deepest point,
     # the lowest low is considered.. we stop buying if the last low is broken —
     # we say the trend has shifted from BUYS now." Mirror with highs for SELLs.
-    recent_low = min(bars[k][2] for k in range(max(0, n - 2), n))
-    recent_high = max(bars[k][1] for k in range(max(0, n - 2), n))
+    # WICK IS A SWEEP, CLOSE IS A BREAK (Zee's VSA canon, applied 2026-08-05 after
+    # the 18:50 spring: the guard was swept by a wick and the compass wrongly shifted
+    # DOWN during the launch, blocking the 18:52 breakout). Guards now break only on
+    # a CLOSED candle's close beyond them — and a reclaiming close cancels the shift
+    # automatically on the next reading.
+    last_closed = bars[n - 2] if n >= 2 else bars[-1]
+    recent_low = last_closed[3]     # close, not wick
+    recent_high = last_closed[3]
     # EARLY-TREND ON GUARD BREAK (Zee 2026-08-05): "the last higher high was broken,
     # with a new high — that's a sign of uptrend." A broken guard doesn't mean
     # no-man's-land; it means the trend has SHIFTED. The confirmed-peak slant lags a
@@ -293,7 +299,14 @@ def draw(bars, back=120, out=None):
               title=f"camel humps [{METHOD}] — structure: {r['trend']}  |  "
                     f"AUTO: {a['trend']} ({a['why']})")
     if lines:
-        kw["alines"] = dict(alines=lines, colors=colors, linewidths=widths, alpha=0.9)
+        # EARLY SHIFT paint (Zee 2026-08-05): when a broken guard has overruled the
+        # slant, the slant line goes DASHED — geometry stale, verdict shifted.
+        early = "EARLY SHIFT" in a.get("why", "")
+        styles = ["-"] * len(lines)
+        if early and len(lines) >= 2:
+            styles[-1] = "--"
+        kw["alines"] = dict(alines=lines, colors=colors, linewidths=widths,
+                            linestyle=styles, alpha=0.9)
     # THE UHV BOX (Zee): the moment a UHV forms in a retracement, two black lines
     # frame it — top = the lamp, bottom = the sweep line. DASHED while the sweep is
     # pending, SOLID once the apparition is concrete.
