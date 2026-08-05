@@ -118,6 +118,22 @@ def write_signal(seq, s, lots):
                              "emitted_utc": datetime.utcnow().isoformat(timespec="seconds")}) + "\n")
 
 
+STRETCH_PT = 6.0   # STRETCH HUMILITY (2026-08-05, 3rd receipt: the 19:57 -$30.90
+                    # diamond at the tip of a 14pt/40min climb): when the lamp sits
+                    # more than this many points beyond the last confirmed swing
+                    # (low for BUY, high for SELL), conviction CANNOT be "sure" —
+                    # entry stays (trash hides gems) but lots humble to 0.10.
+
+
+def stretch_of(bars, lvl, side):
+    sw = TE.find_swings(_te_bars(bars))
+    if side == "BUY":
+        lows = [s for s in sw if s.kind == "L"]
+        return (lvl - lows[-1].price) if lows else 0.0
+    highs = [s for s in sw if s.kind == "H"]
+    return (highs[-1].price - lvl) if highs else 0.0
+
+
 ARMED_IDS: dict = {}     # armed-setup key -> the id first assigned (stable across polls)
 
 
@@ -252,7 +268,11 @@ def find_armed(bars):
         # candle) — in case the ghost is stuck." Mirror above the last high for SELL.
         sl_px = (min(b.l for b in closed[-3:]) - 0.5) if side == "BUY" \
             else (max(b.h for b in closed[-3:]) + 0.5)
+        humble = int(stretch_of(bars, lvl, side) > STRETCH_PT)
+        if humble:
+            lots = 0.10                            # stretched top/bottom: humble size
         found.append(dict(side=side, level=round(lvl, 2), lots=lots, chase=chase,
+                          humble=humble,
                           sweep=round(sweep_line, 2), swept=int(sw), law2=law2,
                           law3=law3, law4=law4, law5=law5, sl=round(sl_px, 2),
                           key=f"{side}_{U.t}_{round(lvl, 2)}",
@@ -340,8 +360,8 @@ def write_armed(bars):
     diamonds = (int(a["swept"]) + int(a.get("law2", 0)) + int(a.get("law3", 0))
                 + int(a.get("law4", 0)) + int(a.get("law5", 0)))
     a["raids"] = {0: 1, 1: 3}.get(diamonds, 6)     # 2+ diamonds -> the full 6-raid burst
-    if diamonds >= 3:                              # third diamond: one more burst tier
-        a["lots"] = 0.60 if a["lots"] >= 0.30 else 0.30
+    if diamonds >= 3 and not a.get("humble"):      # third diamond: one more burst tier
+        a["lots"] = 0.60 if a["lots"] >= 0.30 else 0.30   # (never re-inflate a humbled lamp)
     a["diamonds"] = diamonds
     a["lots"] = min(a["lots"], RISK_CAP)
     aid = ARMED_IDS.setdefault(a["key"], int(time.time()))
@@ -395,6 +415,8 @@ def main():
                         continue
                     seq += 1
                     lots = min(feb11_lots(bars, s), RISK_CAP)
+                    if stretch_of(bars, s["entry"], s["side"]) > STRETCH_PT:
+                        lots = 0.10                # stretch humility (see STRETCH_PT)
                     write_signal(seq, s, lots)
                     print(f"[oanda_matcher] SIGNAL #{seq} {s['side']} @{s['entry']} "
                           f"lots={lots:.2f} ({s['open_t'].strftime('%H:%M')}UTC)")
