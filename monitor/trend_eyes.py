@@ -243,7 +243,10 @@ def draw(bars, back=120, out=None):
     out = out or (Path(__file__).parent / "setup_labels" / "camel_humps.png")
     n = len(bars); lo = max(0, n - back)
     seg = bars[lo:]
-    idx = pd.DatetimeIndex([b[0] for b in seg])
+    # Chart axis in KARACHI time (Zee 2026-08-05: TV + computer + cockpit must agree).
+    # Internal bar times stay UTC everywhere else — only the DISPLAY shifts.
+    from datetime import timedelta as _td
+    idx = pd.DatetimeIndex([b[0] + _td(hours=5) for b in seg])
     df = pd.DataFrame({"Open": [b[3] for b in seg], "High": [b[1] for b in seg],
                        "Low": [b[2] for b in seg], "Close": [b[3] for b in seg],
                        "Volume": [b[4] if len(b) > 4 else 0 for b in seg]}, index=idx)
@@ -251,7 +254,7 @@ def draw(bars, back=120, out=None):
     df["Open"] = df["Close"].shift(1).fillna(df["Close"])
     swings = [s for s in find_swings(bars) if s.i >= lo + 1]
     swings.sort(key=lambda s: s.i)
-    humps = [(bars[s.i][0], s.price) for s in swings]
+    humps = [(bars[s.i][0] + _td(hours=5), s.price) for s in swings]
     r = read_trend(bars)
     a = auto_call(bars)
     # THE SLANT LINE (Zee): fitted through the last 3 peaks, extended to the current
@@ -267,7 +270,8 @@ def draw(bars, back=120, out=None):
         m = sum((x - xb) * (y - yb) for x, y in zip(xs, ys)) / den
         c = yb - m * xb
         x0, x1 = hs[0].i, n - 1
-        lines.append([(bars[x0][0], m * x0 + c), (bars[x1][0], m * x1 + c)])
+        lines.append([(bars[x0][0] + _td(hours=5), m * x0 + c),
+                      (bars[x1][0] + _td(hours=5), m * x1 + c)])
         # Line colour = the SLOPE's geometry (Zee: blue is ONLY for near-horizontal).
         # The verdict (which may be RANGE because a guard broke) lives in the title.
         colors.append("#2f9e44" if a["slant"] > SLANT_EPS else

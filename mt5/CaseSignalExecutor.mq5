@@ -12,7 +12,11 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.62"
+#property version   "1.63"
+// v1.63 RATCHET TRAIL (2026-08-05): gold moved 109 points; the flat 0.2 give-back
+// harvested $13.70 gross all morning (avg win $3.42 vs avg loss $11.76 = 77% WR
+// needed to break even). Give now grows with the peak — max(InpGivePts,
+// InpGiveFrac*peak) — so scalps harvest fast AND runners ride trends.
 // v1.62 A LOSING RAID RETIRES THE LAMP (2026-08-05): the 23:13 -$32.40 was raid 2
 // entering BIGGER after raid 1 lost. Feb-11 Zee added clicks to WINNING setups only.
 // Now any ghost/backstop (losing) exit closes the lamp for good — next lamp, fresh start.
@@ -75,7 +79,8 @@ input int    InpMagic       = 88020;  // CaseSignalExecutor magic
 input double InpHardSLPts    = 3.0;    // PARACHUTE broker stop (terminal-death insurance only)
 input double InpGhostPts     = 1.0;    // ghost exit: un-armed trade this far against us -> evaporate
 input double InpArmPts       = 0.3;    // arm at +0.3pt -> the pop Zee harvests per click
-input double InpGivePts      = 0.2;    // after arming: exit on 0.2pt give-back from peak
+input double InpGivePts      = 0.2;    // minimum give-back from peak (small rides)
+input double InpGiveFrac     = 0.30;   // ratchet: give = max(GivePts, Frac*peak) — runners ride
 input double InpTpCapPts     = 999.0;  // no ceiling — the trail is the exit
 input int    InpMaxAgeSec    = 180;    // ignore signals older than this (re-attach refire guard)
 input string InpSignalFile   = "case_signal.json";
@@ -158,7 +163,7 @@ void ReadArmed() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    EventSetTimer(1);
-   Print("[CaseExec] v1.62 loaded — harvest-and-return + losing-raid-retires-lamp");
+   Print("[CaseExec] v1.63 loaded — ratchet trail (give grows with the peak)");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -295,7 +300,8 @@ void OnTick() {
       // runaway take-profit ceiling
       if (prof >= InpTpCapPts) { trade.PositionClose(t); DropPeakOf(t); continue; }
       // trailing-reversal: let it run, exit on give-back after arming
-      if (pk >= InpArmPts && (pk - prof) >= InpGivePts) {
+      double give = MathMax(InpGivePts, InpGiveFrac * pk);   // ratchet trail
+      if (pk >= InpArmPts && (pk - prof) >= give) {
          trade.PositionClose(t); DropPeakOf(t); continue;
       }
    }
