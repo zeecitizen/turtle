@@ -58,12 +58,15 @@ def update_gate(bars):
 def zee_allows(side):
     return side in ALLOW
 LOT = 0.10
-# RISK CAP (2026-08-05, after the -$259 night): bursts 0.30/0.60 turned ordinary
-# -1pt entry losses into -$30/-$37 while wins stayed small — six big-lot losses ate
-# the day. Diamonds/raids stay (they are counted and displayed), but ALL lots cap at
-# 0.10 until the new entry stack (door+laws+guards) is validated on recorded data.
-# Lift this cap only after a walk-forward test, never on feel.
-RISK_CAP = 0.10
+# RISK CAP history: set to 0.10 after the -$259 night (bursts amplified entry
+# losses). LIFTED 2026-08-05 by Zee's explicit instruction: "let the diamonds
+# multiply the trades.. this is exactly what we want to test on this demo account —
+# whether the diamonds giving conviction result in multiplied profit." The burst-
+# night species are all cured since (v1.61 harvest-return, v1.62 lamp-retirement,
+# v1.64 send-cooldown, slope guard, ratchet trail); the demo now runs the diamond
+# experiment at full tiers 0.10/0.30/0.60. Evaluation: per-tier expectancy from
+# turtle_fills (lots self-identify the tier).
+RISK_CAP = 0.60
 CFG = dict(UHV_BODY_MIN=0.0, MIN_ORIGIN_BREAK=0.0, ER_MIN=0.0, TREND_MIN_HUMP=0.5, TREND_DOM=0.0)
 
 
