@@ -434,8 +434,13 @@ def write_armed(bars):
     diamonds = (int(a["swept"]) + int(a.get("law2", 0)) + int(a.get("law3", 0))
                 + int(a.get("law4", 0)) + int(a.get("law5", 0)))
     a["raids"] = {0: 1, 1: 3}.get(diamonds, 6)     # 2+ diamonds -> the full 6-raid burst
-    if diamonds >= 3 and not a.get("humble"):      # third diamond: one more burst tier
-        a["lots"] = 0.60 if a["lots"] >= 0.30 else 0.30   # (never re-inflate a humbled lamp)
+    # THE CLICK-BURST MULTIPLIER (Zee 2026-08-06, his real Feb-11 mechanic): "buy buy
+    # buy multiple times 0.1 lots.. spread many ghosts into the room.. that's how the
+    # multiplier should work — not with larger lot size but with more trades of 0.1
+    # each." Conviction sets the CLICK COUNT; every click stays 0.10 and exits on its
+    # own trail/ghost. (Big-lot tiers are dead: n=14, 36% WR, -$219.90.)
+    a["clicks"] = 1 if a.get("humble") else {0: 1, 1: 2, 2: 3}.get(diamonds, 6)
+    a["lots"] = 0.10
 
     a["diamonds"] = diamonds
     a["lots"] = min(a["lots"], RISK_CAP)
@@ -443,9 +448,9 @@ def write_armed(bars):
     if len(ARMED_IDS) > 400:                       # keep the id map from growing forever
         for k in list(ARMED_IDS)[:200]: ARMED_IDS.pop(k)
     ARMED.write_text('{"id":%d,"side":"%s","level":%.2f,"lots":%.2f,"chase":%.2f,'
-                     '"sweep":%.2f,"raids":%d,"sl":%.2f,"ts":%d}'
+                     '"sweep":%.2f,"raids":%d,"clicks":%d,"sl":%.2f,"ts":%d}'
                      % (aid, a["side"], a["level"], a["lots"], a["chase"], a["sweep"],
-                        a["raids"], a["sl"], int(time.time())), encoding="ascii")
+                        a["raids"], a["clicks"], a["sl"], int(time.time())), encoding="ascii")
     return a
 
 
@@ -510,7 +515,7 @@ def main():
                     hearts = " ❤(L6 probation)" if a.get("law6") else ""
                     print(f"[oanda_matcher] {'💎' * d or 'no diamonds'}{hearts} — "
                           f"{a['side']} lamp @{a['level']} sweep line @{a['sweep']} "
-                          f"lots={a['lots']:.2f} raids allowed={a.get('raids', 1)}")
+                          f"clicks={a.get('clicks', 1)}x0.10 raids={a.get('raids', 1)}")
                 last_armed_key = a["key"] if a else None
         except Exception as e:
             print("[oanda_matcher] err:", e, file=sys.stderr)
