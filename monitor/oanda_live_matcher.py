@@ -134,6 +134,23 @@ def stretch_of(bars, lvl, side):
     return (highs[-1].price - lvl) if highs else 0.0
 
 
+def law6_probation(bars, u, side):
+    """LAW 6 IN PROBATION (Zee 2026-08-05): Selling-Climax UHV — heavy counter-trend
+    VOLUMES before the UHV (2+ bars >= avg20) + big-spread UHV (>=1.5x avg range).
+    Day-1 exam PASSED (+0.54 vs +0.30 avg/trade); needs 3 passing days to become a
+    diamond. Until then it grants NO lots/raids — only a heart on the chart:
+    'this setup has a chance greater than others.'"""
+    look = bars[max(0, u - 20):u]
+    if not look: return 0
+    avg_v = sum(b.v for b in look) / len(look)
+    avg_r = sum(b.h - b.l for b in look) / len(look)
+    prev = bars[max(0, u - 4):u]
+    col = (lambda b: b.is_bear) if side == "BUY" else (lambda b: b.is_bull)
+    heavy = sum(1 for b in prev if col(b) and b.v >= avg_v)
+    U = bars[u]
+    return int(heavy >= 2 and (U.h - U.l) >= 1.5 * avg_r)
+
+
 DEAD_TAPE_FRAC = 0.50  # DEAD-TAPE SELECTIVITY (Zee 2026-08-05, shipped on his word):
                         # when the last 10 bars' average volume falls below half the
                         # session's average, only diamond-bearing setups may enter —
@@ -306,7 +323,7 @@ def find_armed(bars):
         if humble:
             lots = 0.10                            # stretched top/bottom: humble size
         found.append(dict(side=side, level=round(lvl, 2), lots=lots, chase=chase,
-                          humble=humble,
+                          humble=humble, law6=law6_probation(bars, best, side),
                           sweep=round(sweep_line, 2), swept=int(sw), law2=law2,
                           law3=law3, law4=law4, law5=law5, sl=round(sl_px, 2),
                           key=f"{side}_{U.t}_{round(lvl, 2)}",
@@ -372,7 +389,7 @@ def write_armed(bars):
     # the cockpit chart while the sweep is pending, solid once concrete.
     if w is not None:
         WATCH.write_text(json.dumps({k: w[k] for k in
-                                     ("side", "level", "sweep", "swept", "law2", "law3", "law4", "law5")}
+                                     ("side", "level", "sweep", "swept", "law2", "law3", "law4", "law5", "law6")}
                                     | {"ts": int(time.time())}),
                          encoding="ascii")
     # ARM the nearest hunting-side setup — the Laws do NOT gate the apparition
@@ -465,7 +482,8 @@ def main():
                 if a and a["key"] != last_armed_key:
                     d = (int(a["swept"]) + int(a.get("law2", 0)) + int(a.get("law3", 0))
                          + int(a.get("law4", 0)) + int(a.get("law5", 0)))
-                    print(f"[oanda_matcher] {'💎' * d or 'no diamonds'} — "
+                    hearts = " ❤(L6 probation)" if a.get("law6") else ""
+                    print(f"[oanda_matcher] {'💎' * d or 'no diamonds'}{hearts} — "
                           f"{a['side']} lamp @{a['level']} sweep line @{a['sweep']} "
                           f"lots={a['lots']:.2f} raids allowed={a.get('raids', 1)}")
                 last_armed_key = a["key"] if a else None
