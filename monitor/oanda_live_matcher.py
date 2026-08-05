@@ -134,6 +134,21 @@ def stretch_of(bars, lvl, side):
     return (highs[-1].price - lvl) if highs else 0.0
 
 
+DEAD_TAPE_FRAC = 0.50  # DEAD-TAPE SELECTIVITY (Zee 2026-08-05, shipped on his word):
+                        # when the last 10 bars' average volume falls below half the
+                        # session's average, only diamond-bearing setups may enter —
+                        # zero-diamond entries wait for the market to breathe.
+                        # "Conviction may hunt in the dark; boredom may not."
+                        # (The 20:49 -$15.80 and 20:57 -$11.70 post-peak drift fades.)
+
+
+def dead_tape(bars):
+    if len(bars) < 40: return False
+    recent = sum(b.v for b in bars[-10:]) / 10
+    session = sum(b.v for b in bars) / len(bars)
+    return recent < DEAD_TAPE_FRAC * session
+
+
 EXHAUST_SLOPE = 0.60   # LAW OF EXHAUSTION (Zee 2026-08-05): trends die of old age.
 EXHAUST_HUMPS = 4      # Today's census: avg life 2.1 humps; P(next) 70%->29% after
                        # hump 2; avg |slope| at DYING humps 0.87 vs 0.35-0.42 alive —
@@ -369,7 +384,10 @@ def write_armed(bars):
     # -30.00) were BUYs fired while the 30-bar slope was falling hard — the 3-peak
     # slant lags a fresh turn. Never fire against a strongly opposed slope.
     slope = TE.slope_of(_te_bars(bars))
+    dt = dead_tape(bars)
     ready = [c for c in cands if c["dist"] <= 2.0 and zee_allows(c["side"])
+             and not (dt and (int(c["swept"]) + int(c.get("law2", 0)) + int(c.get("law3", 0))
+                              + int(c.get("law4", 0)) + int(c.get("law5", 0))) == 0)
              and not (c["side"] == "BUY" and slope < -0.10)
              and not (c["side"] == "SELL" and slope > 0.10)]
     if not ready:
@@ -426,6 +444,10 @@ def main():
                     if (s["side"] == "BUY" and _sl < -0.10) or                        (s["side"] == "SELL" and _sl > 0.10):
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"slope {_sl:+.2f} strongly opposed")
+                        continue
+                    if dead_tape(bars) and not swept(bars, s["u"], s["i"], s["side"]):
+                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                              f"dead tape and no conviction (boredom may not hunt)")
                         continue
                     bb = bars[s["i"]]
                     if bb.body_ratio < 0.5:
