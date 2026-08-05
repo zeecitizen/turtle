@@ -151,6 +151,17 @@ def law6_probation(bars, u, side):
     return int(heavy >= 2 and (U.h - U.l) >= 1.5 * avg_r)
 
 
+def night_window():
+    """NIGHT HUMILITY (2026-08-06, third night of receipts: -$130, -$43, -$69.30):
+    21:30-01:00 broker (18:30-22:00 UTC) — chop + 2-6x slippage breaks even honest
+    conviction. Entries continue (trash hides gems; dead-tape filters boredom) but
+    ALL lots cap at 0.10. Size sleeps at night; the ghost may still walk."""
+    from datetime import datetime, timezone
+    t = datetime.now(timezone.utc)
+    mins = t.hour * 60 + t.minute
+    return 18 * 60 + 30 <= mins < 22 * 60
+
+
 DEAD_TAPE_FRAC = 0.50  # DEAD-TAPE SELECTIVITY (Zee 2026-08-05, shipped on his word):
                         # when the last 10 bars' average volume falls below half the
                         # session's average, only diamond-bearing setups may enter —
@@ -416,6 +427,9 @@ def write_armed(bars):
     a["raids"] = {0: 1, 1: 3}.get(diamonds, 6)     # 2+ diamonds -> the full 6-raid burst
     if diamonds >= 3 and not a.get("humble"):      # third diamond: one more burst tier
         a["lots"] = 0.60 if a["lots"] >= 0.30 else 0.30   # (never re-inflate a humbled lamp)
+    if night_window():
+        a["lots"] = min(a["lots"], 0.10)           # night humility: size sleeps
+
     a["diamonds"] = diamonds
     a["lots"] = min(a["lots"], RISK_CAP)
     aid = ARMED_IDS.setdefault(a["key"], int(time.time()))
@@ -473,8 +487,8 @@ def main():
                         continue
                     seq += 1
                     lots = min(feb11_lots(bars, s), RISK_CAP)
-                    if stretch_of(bars, s["entry"], s["side"]) > STRETCH_PT                             or exhausted(bars, s["side"]):
-                        lots = 0.10                # stretch/exhaustion humility
+                    if stretch_of(bars, s["entry"], s["side"]) > STRETCH_PT                             or exhausted(bars, s["side"]) or night_window():
+                        lots = 0.10                # stretch/exhaustion/night humility
                     write_signal(seq, s, lots)
                     print(f"[oanda_matcher] SIGNAL #{seq} {s['side']} @{s['entry']} "
                           f"lots={lots:.2f} ({s['open_t'].strftime('%H:%M')}UTC)")
