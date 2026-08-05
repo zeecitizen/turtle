@@ -97,7 +97,48 @@ Diamonds drawn with Zee's own `setup_labels/diamond.png` above the box.
 - Branch-EA heartbeat/fills differ per era — TurtleTradeLogger is the receipts truth.
 - NY session (18:00–01:00 PKT) bannered on the chart — the ideal window.
 
-## 8. Open questions for future sessions
+## 8. Day-two evolution (2026-08-05 — the first GREEN day)
+
+**EA v1.63 RATCHET TRAIL**: give-back = max(0.2, 30% of peak) — scalps harvest fast,
+runners ride (first mechanical wins >$15: +17.30, +15.40, +17.20, +13.20).
+**EA v1.64 SEND-COOLDOWN**: door+signal paths were double-firing inside the broker's
+in-flight blindness (1-second twin entries); 4s cooldown after any send.
+
+**Matcher laws added (all humility-style — laws never gate):**
+- **COLOUR-AWARE UHV** (supersedes June local-max): UHV = highest volume among
+  SAME-COLOUR counter-trend candles in the zone; supply is never compared against
+  trend-side demand volume (the 16:29 858-vs-910 miss, replay-proven fixed).
+- **STRETCH HUMILITY**: lamp >6pt beyond the last confirmed swing → lots 0.10
+  (the 19:57 −$30.90 diamond at a parabola tip).
+- **LAW OF EXHAUSTION**: trends die of old age — M1 census: runs live ~2.1 humps,
+  P(next) 70%→29% after hump 2; dying humps carry |slope| 0.87 vs 0.35–0.42 alive.
+  |slope|>0.60 or hump-streak ≥4 → lots 0.10. The market died at 4259 minutes after
+  the law shipped.
+- Humbled lamps are immune to the 3-diamond re-inflation.
+
+**Compass upgrades (all from Zee's live eye-audits):**
+- PIVOT_K 3→2 (a smaller middle peak was erased by a taller neighbour's shadow)
+- EARLY SHIFT: a broken guard flips the verdict to the breakout side immediately
+- WICK IS A SWEEP, CLOSE IS A BREAK: guards fall only to a closed candle's close
+  (the 18:50 spring swept the guard by wick and wrongly blocked the 18:52 breakout)
+- Early-shift paint: slant line dashed when a guard-break overrules its geometry
+- Chart axis in Karachi time; NY-session banner beneath the chart
+
+**THE DIAMOND EXPERIMENT** (Zee lifted the risk cap: "this is exactly what we want
+to test on this demo"): tiers 0.10/0.30/0.60 by diamonds. First reading —
+0.10 plain clicks: −$0.27/trade avg · 0.30 diamond bursts: 3W/0L, +$9.80/trade.
+Conviction outperformed no-conviction ~36× per trade (n=3, keep collecting).
+
+**LOSS LEDGER** (LOSS_LEDGER.md + monitor/loss_ledger.py daemon): every losing fill
+auto-autopsied — species vs every shipped fix, NEW-SPECIES ⚠ = mandatory first job.
+
+**The receipts trajectory:** night one −$259.84 → day two −$45 morning, then
+post-ratchet green — day closed with 66 trades, 68% WR, **+$30.30**, last 10 trades
+8W/2L +$45.90 (losses −$0.40 and $0.00 — ghost + breakeven + humility as the floor).
+Milestone: the machine harvested BOTH the parabola's death (SELL run 18:43-18:59)
+and the next trend's birth (BUY run 19:35-19:53, +$15.40 ratchet rider).
+
+## 9. Open questions for future sessions
 
 - Slope-opposition threshold (±0.10) and NS/ND nearness (0.8pt) chosen on few
   receipts — tune with data, walk-forward, never on one day.
