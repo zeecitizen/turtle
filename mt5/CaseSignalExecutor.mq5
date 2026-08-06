@@ -12,7 +12,13 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.69"
+#property version   "1.70"
+// v1.70 GREEN SWEEP — the true "Close All Profitable" semantics (Zee's example:
+// +1 -5 +3 +4 -9 +8 -> sweep banks the greens (+16), reds -9 -5 stay and fight;
+// later +1 -3 -> the green's own trail handles it; reds exit via ghost/BE).
+// Trigger: 2+ PROFITABLE clicks whose combined profit >= InpGreenSumPts -> close
+// ALL profitable positions same-second; reds untouched. A single green is never
+// swept (that's the ratchet rider's seat — Feb-11's 37%-of-the-day money).
 // v1.69: basket trigger becomes an OR (Zee's screenshots: +$15.70 and +$10.30
 // baskets sat unharvested because avg/click was under $3). Now fires on EITHER
 // avg >= InpBasketAvgPts ("$3 each") OR total >= InpBasketTotPts ($10 on the table).
@@ -122,9 +128,8 @@ input int    InpMaxRaids     = 6;      // apparitions per convicted lamp (Zee's 
 input int    InpSendCooldownS = 4;     // seconds after any order send before another entry
 input int    InpClickSpaceS   = 2;     // spacing between burst sibling clicks
 input int    InpSibHoldS      = 65;    // sibling hold seconds (Feb-11 median; time study)
-input double InpBasketAvgPts  = 0.3;   // avg pts/click that fires Close-All-Profitable
-input int    InpBasketMin     = 2;     // basket harvest needs at least this many clicks
-input double InpBasketTotPts  = 1.0;   // OR: total floating pts across clicks (1.0 = ~$10)
+input int    InpGreenMin      = 2;     // sweep needs at least this many GREEN clicks
+input double InpGreenSumPts   = 0.6;   // ...whose combined profit reaches this (0.6 = ~$6)
 
 // Ghost cut, lot-scaled so the exit money stays roughly constant per burst.
 double GhostCap(double lots) {
@@ -217,7 +222,7 @@ void ReadArmed() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    EventSetTimer(1);
-   Print("[CaseExec] v1.69 loaded — basket fires on avg OR total");
+   Print("[CaseExec] v1.70 loaded — GREEN SWEEP (close all profitable, reds fight on)");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -346,10 +351,11 @@ void OnTick() {
          }
       }
    }
-   // BASKET HARVEST (v1.68, Zee's Feb-11 exit): 2+ clicks averaging +BasketAvgPts
-   // -> Close All PROFITABLE at once. Reds stay under ghost/BE management.
+   // GREEN SWEEP (v1.70, Zee's true Close-All-Profitable): count the GREENS only;
+   // 2+ greens totalling +InpGreenSumPts -> bank every green same-second. Reds stay
+   // and fight under ghost/BE; a lone green rides its ratchet (the Feb-11 riders).
    {
-      int bn = 0; double bsum = 0;
+      int gn = 0; double gsum = 0;
       double bbid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
       double bask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
       for (int bi = PositionsTotal() - 1; bi >= 0; bi--) {
@@ -359,11 +365,12 @@ void OnTick() {
              || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
          bool bb = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
          double be = PositionGetDouble(POSITION_PRICE_OPEN);
-         bn++; bsum += bb ? (bbid - be) : (be - bask);
+         double pp = bb ? (bbid - be) : (be - bask);
+         if (pp > 0) { gn++; gsum += pp; }
       }
-      if (bn >= InpBasketMin && (bsum / bn >= InpBasketAvgPts || bsum >= InpBasketTotPts)) {
-         PrintFormat("[CaseExec] BASKET HARVEST: %d clicks avg %+.2fpt -> Close All Profitable",
-                     bn, bsum / bn);
+      if (gn >= InpGreenMin && gsum >= InpGreenSumPts) {
+         PrintFormat("[CaseExec] CLOSE ALL PROFITABLE: %d greens %+.2fpt banked (reds fight on)",
+                     gn, gsum);
          for (int bi = PositionsTotal() - 1; bi >= 0; bi--) {
             ulong bt = PositionGetTicket(bi);
             if (!PositionSelectByTicket(bt)) continue;
@@ -371,8 +378,8 @@ void OnTick() {
                 || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
             bool bb = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
             double be = PositionGetDouble(POSITION_PRICE_OPEN);
-            double pprof = bb ? (bbid - be) : (be - bask);
-            if (pprof > 0) { trade.PositionClose(bt); DropPeakOf(bt); }
+            double pp = bb ? (bbid - be) : (be - bask);
+            if (pp > 0) { trade.PositionClose(bt); DropPeakOf(bt); }
          }
       }
    }
