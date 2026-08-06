@@ -177,9 +177,13 @@ DEAD_TAPE_FRAC = 0.50  # DEAD-TAPE SELECTIVITY (Zee 2026-08-05, shipped on his w
 
 
 def dead_tape(bars):
-    if len(bars) < 40: return False
-    recent = sum(b.v for b in bars[-10:]) / 10
-    session = sum(b.v for b in bars) / len(bars)
+    # (audit fix B, 2026-08-06): closed candles only — the forming bar's partial
+    # volume made this gate flicker with the wall clock (false dead-tape at :05
+    # of every minute).
+    closed = bars[:-1]
+    if len(closed) < 40: return False
+    recent = sum(b.v for b in closed[-10:]) / 10
+    session = sum(b.v for b in closed) / len(closed)
     return recent < DEAD_TAPE_FRAC * session
 
 
@@ -284,7 +288,9 @@ def find_armed(bars):
         # within 0.8pt of either black line. ND for SELL: the green mirror. The crowd
         # has nothing left to throw at the level; conviction doubles the burst.
         law2 = 0
-        for k in range(max(best + 1, 2), min(i + 1, len(bars))):
+        # (audit fix A, 2026-08-06): closed candles only — the forming bar's
+        # half-born volume always looks 'dead' and minted false NS/ND diamonds.
+        for k in range(max(best + 1, 2), i):
             c = bars[k]
             if not (c.is_bear if side == "BUY" else c.is_bull): continue
             if c.v >= 0.75 * bars[k - 1].v or c.v >= 0.75 * bars[k - 2].v: continue
