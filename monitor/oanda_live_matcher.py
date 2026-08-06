@@ -440,6 +440,11 @@ def write_armed(bars):
     # each." Conviction sets the CLICK COUNT; every click stays 0.10 and exits on its
     # own trail/ghost. (Big-lot tiers are dead: n=14, 36% WR, -$219.90.)
     a["clicks"] = 1 if a.get("humble") else {0: 1, 1: 2, 2: 3}.get(diamonds, 6)
+    # ASIA DISCIPLINE (2026-08-06, the overnight -$110.80): chop hours 01:00-07:00
+    # broker (22:00-04:00 UTC) get single clicks only — bursts need drift to harvest.
+    from datetime import datetime as _dt, timezone as _tz
+    if _dt.now(_tz.utc).hour >= 22 or _dt.now(_tz.utc).hour < 4:
+        a["clicks"] = 1
     a["lots"] = 0.10
 
     a["diamonds"] = diamonds
