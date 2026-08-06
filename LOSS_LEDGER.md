@@ -872,3 +872,12 @@ NEW SPECIES ⚠ = unexplained — Claude investigates before anything else is bu
 - EA fire: `[CaseExec] signal #1786030408 SELL lots=0.10 ghost=1.00pt stackable parachute=4256.31`
 - ghost exit at design distance (-0.14pt vs 1.0 cap) — bounded toll
 - slope -0.65 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 19:02:08 (broker) — SELL 0.10 · **-14.40** (-1.44pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1785945592 SELL raid 1/3 lamp 4233.27 lots=0.10 chase=3.0 ghost=1.00pt`
+- ghost exit with 0.44pt SLIPPAGE beyond design (fast tape/thin book)
+- dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
+- slope -0.72 aligned; AUTO said DOWNTREND — entry direction was legitimate

@@ -335,7 +335,8 @@ def draw(bars, back=120, out=None):
             "") + (
             "  +  3rd Law (EMA5)" if wd.get("law3") else "") + (
             "  +  4th Law (RSI div)" if wd.get("law4") else "") + (
-            "  +  5th Law (wick/vol)" if wd.get("law5") else "")
+            "  +  5th Law (wick/vol)" if wd.get("law5") else "") + (
+            "  +  ❤ SCENARIO 3 (climactic bar, probation)" if wd.get("s3") else "")
         # 💎 DIAMONDS OF CONVICTION (Zee): one diamond above the box per satisfied
         # Law. "two diamonds means two convictions.. the more conviction we have the
         # more diamonds we add." Rendered with Zee's own diamond.png (2026-08-05,
@@ -345,7 +346,7 @@ def draw(bars, back=120, out=None):
         # ❤ PROBATION MARK (Zee): laws still earning their diamond (Law 6 Selling
         # Climax) draw a red heart beside the diamonds — "this setup has a chance
         # greater than others" — but grant no money until promoted.
-        if wd.get("law6"):
+        if wd.get("law6") or wd.get("s3"):
             heart_xy = (len(df) - 3 - n_laws * 2,
                         max(wd["level"], wd["sweep"]) + 0.6)
         if n_laws:
