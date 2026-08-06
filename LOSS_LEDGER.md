@@ -299,3 +299,46 @@ NEW SPECIES ⚠ = unexplained — Claude investigates before anything else is bu
 - EA fire: `[CaseExec] signal #1785972904 BUY lots=0.10 ghost=1.00pt stackable parachute=4262.65`
 - ghost exit with 0.36pt SLIPPAGE beyond design (fast tape/thin book)
 - slope +0.71 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 02:40:55 (broker) — BUY 0.10 · **-2.50** (-0.25pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1785973145 BUY raid 1/1 lamp 4279.94 lots=0.10 chase=3.0 ghost=1.00pt`
+- ghost exit at design distance (-0.25pt vs 1.0 cap) — bounded toll
+- dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
+- slope +0.75 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 02:41:14 (broker) — BUY 0.10 · **-20.20** (-2.02pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1785973229 BUY raid 2/3 lamp 4279.94 lots=0.10 chase=3.0 ghost=1.00pt`
+- ghost exit with 1.02pt SLIPPAGE beyond design (fast tape/thin book)
+- repeat raid — must have followed a WINNING raid (v1.62) and a lamp re-touch (v1.61); if raid 1 lost, this is a NEW BUG
+- dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
+- slope +0.77 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 02:44:14 (broker) — BUY 0.10 · **-10.70** (-1.07pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1785973385 BUY lots=0.10 ghost=1.00pt stackable parachute=4278.58`
+- ghost exit at design distance (-1.07pt vs 1.0 cap) — bounded toll
+- slope +0.88 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 02:49:50 (broker) — BUY 0.10 · **-9.30** (-0.93pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1785973385 BUY lots=0.10 ghost=1.00pt stackable parachute=4278.58`
+- ghost exit at design distance (-0.93pt vs 1.0 cap) — bounded toll
+- slope +0.79 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 02:52:25 (broker) — BUY 0.10 · **-0.40** (-0.04pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1785973937 BUY lots=0.10 ghost=1.00pt stackable parachute=4273.40`
+- ghost exit at design distance (-0.04pt vs 1.0 cap) — bounded toll
+- slope +0.67 aligned; AUTO said UPTREND — entry direction was legitimate

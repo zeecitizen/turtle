@@ -12,7 +12,13 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.65"
+#property version   "1.66"
+// v1.66 SPEED-HARVEST SIBLINGS (Zee 2026-08-06, tick-validated: 70% favorable-first
+// at ±0.5pt within seconds of the breakout, EV +0.134pt/click at Raw costs):
+// burst SIBLINGS exit on a software micro-bracket ±InpSibBracket — quick lamps in
+// the breakout's living seconds. The LEAD click keeps ghost+ratchet (the riders).
+// Max loss per sibling: $5.70 — tighter than the 1pt ghost. Edge requires
+// Raw-account costs; on Standard spreads it computes ~breakeven.
 // v1.65 CLICK-BURST (Zee 2026-08-06, his true Feb-11 mechanic): "buy buy buy
 // multiple times 0.1 lots.. many ghosts into the room.. the multiplier should work
 // not with larger lot size but with more trades of 0.1 each." A convicted lamp
@@ -101,6 +107,7 @@ input double InpMaxStackLots = 1.20;   // hard ceiling on total stacked lots (co
 input int    InpMaxRaids     = 6;      // apparitions per convicted lamp (Zee's 5-6 burst)
 input int    InpSendCooldownS = 4;     // seconds after any order send before another entry
 input int    InpClickSpaceS   = 2;     // spacing between burst sibling clicks
+input double InpSibBracket    = 0.5;   // sibling micro-bracket: exit at +/- this (pts)
 
 // Ghost cut, lot-scaled so the exit money stays roughly constant per burst.
 double GhostCap(double lots) {
@@ -193,7 +200,7 @@ void ReadArmed() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    EventSetTimer(1);
-   Print("[CaseExec] v1.65 loaded — click-burst: many small ghosts, one room");
+   Print("[CaseExec] v1.66 loaded — speed-harvest siblings (bracket 0.5) + ratchet lead");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -277,9 +284,10 @@ void OnTick() {
          g_burst_left--;
          double bsl = BrokerSL(g_armed_side == "BUY",
                                (g_armed_side == "BUY") ? sa : sb, g_armed_sl);
-         if (g_armed_side == "BUY")  trade.Buy(g_armed_lots, _Symbol, 0, bsl, 0, "ghost");
-         else                        trade.Sell(g_armed_lots, _Symbol, 0, bsl, 0, "ghost");
-         PrintFormat("[CaseExec] BURST sibling %d remaining, lamp %.2f", g_burst_left, g_armed_level);
+         if (g_armed_side == "BUY")  trade.Buy(g_armed_lots, _Symbol, 0, bsl, 0, "ghost-s");
+         else                        trade.Sell(g_armed_lots, _Symbol, 0, bsl, 0, "ghost-s");
+         PrintFormat("[CaseExec] BURST sibling %d remaining (bracket %.1f), lamp %.2f",
+                     g_burst_left, InpSibBracket, g_armed_level);
       } else if (!inzone) {
          g_burst_left = 0;            // zone left the station — no chasing siblings
       }
@@ -331,6 +339,13 @@ void OnTick() {
       double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
       double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
       double prof = isbuy ? (bid - entry) : (entry - ask);   // favourable move, price pts
+      // SPEED-HARVEST SIBLING (v1.66): micro-bracket exit, no trail, no 1pt ghost.
+      if (StringFind(PositionGetString(POSITION_COMMENT), "ghost-s") >= 0) {
+         if (prof >= InpSibBracket || prof <= -InpSibBracket) {
+            trade.PositionClose(t); DropPeakOf(t);
+         }
+         continue;
+      }
       double pk = PeakOf(t);
       if (prof > pk) { pk = prof; SetPeakOf(t, pk); }
       // BREAKEVEN AT 1:1 (Zee): profit reached one R -> stop to entry. Not losing.
