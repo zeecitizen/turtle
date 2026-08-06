@@ -157,7 +157,10 @@ def trend_allows(bars, side, upto=None):
     return side in read_trend(bars, upto)["allow"]
 
 
-SLANT_EPS = 0.03   # pts/bar — flatter than this, the peak-line is "flat" -> RANGE
+SLANT_EPS = 0.10   # pts/bar — flatter than this, the peak-line is "flat" -> RANGE.
+                    # 0.03 -> 0.10 (2026-08-06): a +0.053 "UPTREND" fired a BUY into
+                    # Zee's visually-obvious downtrend while the gate flickered
+                    # RANGE/DOWN for an hour. Near-zero slants are noise in costume.
 
 
 def auto_call(bars, upto=None):
@@ -191,6 +194,15 @@ def auto_call(bars, upto=None):
     # no-man's-land; it means the trend has SHIFTED. The confirmed-peak slant lags a
     # fresh V-turn by design (peaks need 3 closed bars); the guard break is the
     # earliest honest signal of the flip, so it takes command until the peaks catch up.
+    # COHERENCE (2026-08-06): the slant verdict must not be contradicted by the
+    # 30-bar slope — a "rising peak-line" over falling closes is a wobble artifact.
+    slope30 = slope_of(bars, upto)
+    if sl > SLANT_EPS and slope30 < -0.05:
+        return dict(trend="RANGE", allow=[], slant=sl,
+                    why=f"slant up {sl:+.2f} but slope down {slope30:+.2f} — incoherent, wait")
+    if sl < -SLANT_EPS and slope30 > 0.05:
+        return dict(trend="RANGE", allow=[], slant=sl,
+                    why=f"slant down {sl:+.2f} but slope up {slope30:+.2f} — incoherent, wait")
     if sl > SLANT_EPS:
         lows = [s for s in find_swings(bars, upto) if s.kind == "L"][-2:]
         guard = min(s.price for s in lows) if lows else None
