@@ -168,6 +168,53 @@ def night_window():
     return 18 * 60 + 30 <= mins < 22 * 60
 
 
+def no_supply_bar(bars, k, side):
+    """NO SUPPLY / NO DEMAND candle — CALIBRATED to Zee's three labelled examples
+    (2026-08-06, 5:18 / 6:16 / 6:53 PM PKT; all three detected by this rule):
+    counter-trend colour · spread < 0.8x avg20 range · volume below the IMMEDIATELY
+    PRECEDING candle (the supply bar) and below the 20-bar average. (v1 demanded
+    'below both previous' and missed his 1:51 PM textbook case by ONE unit of
+    volume; his spoken 'less than half' is the feel — his eye picks 0.65-0.9x with
+    a notably small spread right after a heavy bar. All FOUR labelled examples —
+    1:51 / 5:18 / 6:16 / 6:53 PM PKT — are detected by this rule.)"""
+    if k < 22 or k >= len(bars): return False
+    NS = bars[k]
+    if (NS.is_bear if side == "BUY" else NS.is_bull) is False: return False
+    look = bars[k - 20:k]
+    avg_v = sum(b.v for b in look) / len(look)
+    avg_r = sum(b.h - b.l for b in look) / len(look)
+    return ((NS.h - NS.l) < 0.8 * avg_r and NS.v < bars[k - 1].v and NS.v < avg_v)
+
+
+def scenario3(bars, u, i, side):
+    """CLIMACTIC ACTION BAR — SCENARIO 3 (Zee's 11-step spec, 2026-08-06).
+    Climactic UHV -> no-supply candle near the trigger lines -> its low swept ->
+    a momentum candle of the trade's colour breaks its high on HIGHER volume.
+    TRIAL (27h, n=9): 56% WR / +0.297pt per trade vs baseline 49% / +0.110pt —
+    promising but small; rides as a PROBATION HEART (no lots, no raids) until it
+    passes 3 separate days. Zee's own exits (SL/structural target) scored 14% at
+    M1 scale — the pattern travels, that target does not."""
+    if u is None: return 0
+    look = bars[max(0, u - 20):u]
+    if not look: return 0
+    if bars[u].v < 1.5 * (sum(b.v for b in look) / len(look)): return 0
+    for k in range(u + 1, min(u + 10, i)):
+        if not no_supply_bar(bars, k, side): continue
+        NS = bars[k]
+        for j in range(k + 1, min(k + 5, i + 1)):
+            BO = bars[j]
+            swept = (BO.l < NS.l) if side == "BUY" else (BO.h > NS.h)
+            if not swept: continue
+            for m in range(j, min(j + 4, i + 1)):
+                BK = bars[m]
+                broke = (BK.c > NS.h) if side == "BUY" else (BK.c < NS.l)
+                rc = BK.is_bull if side == "BUY" else BK.is_bear
+                if broke and rc and BK.body_ratio >= 0.5 and BK.v > NS.v:
+                    return 1
+            break
+    return 0
+
+
 def no_demand(bars, side):
     """THE NO-DEMAND VETO (2026-08-06, Law 2 reborn with correct polarity — trial:
     NS/ND-as-confirmation scored 44%/+0.126 vs 50%/+0.193 without; but as Zee's
@@ -395,6 +442,7 @@ def find_armed(bars):
                           humble=humble, law6=law6_probation(bars, best, side),
                           sweep=round(sweep_line, 2), swept=int(sw), law2=law2,
                           law3=law3, law4=law4, law5=law5, sl=round(sl_px, 2),
+                          s3=scenario3(bars, best, i, side),
                           key=f"{side}_{U.t}_{round(lvl, 2)}",
                           dist=abs(lvl - bars[-1].c)))
     return sorted(found, key=lambda a: a["dist"])
@@ -458,7 +506,7 @@ def write_armed(bars):
     # the cockpit chart while the sweep is pending, solid once concrete.
     if w is not None:
         WATCH.write_text(json.dumps({k: w[k] for k in
-                                     ("side", "level", "sweep", "swept", "law2", "law3", "law4", "law5", "law6")}
+                                     ("side", "level", "sweep", "swept", "law2", "law3", "law4", "law5", "law6", "s3")}
                                     | {"ts": int(time.time())}),
                          encoding="ascii")
     # ARM the nearest hunting-side setup — the Laws do NOT gate the apparition
@@ -608,7 +656,7 @@ def main():
                 if a and a["key"] != last_armed_key:
                     d = (int(a["swept"]) + int(a.get("law3", 0))
                          + int(a.get("law4", 0)) + int(a.get("law5", 0)))
-                    hearts = " ❤(L6 probation)" if a.get("law6") else ""
+                    hearts = (" ❤(L6)" if a.get("law6") else "") + (" ❤(SC3)" if a.get("s3") else "")
                     print(f"[oanda_matcher] {'💎' * d or 'no diamonds'}{hearts} — "
                           f"{a['side']} lamp @{a['level']} sweep line @{a['sweep']} "
                           f"clicks={a.get('clicks', 1)}x0.10 raids={a.get('raids', 1)}")

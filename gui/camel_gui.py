@@ -49,9 +49,12 @@ class Cockpit:
         self.root.configure(bg=BG)
         self.photo = None
 
+        self.stage = tk.Label(self.root, text="", font=("Segoe UI", 26, "bold"),
+                              bg=BG, fg=DIM)
+        self.stage.pack(pady=(10, 0))
         self.regime = tk.Label(self.root, text="", font=("Segoe UI", 20, "bold"),
                                bg=BG, fg="#e03131")
-        self.regime.pack(pady=(10, 0))
+        self.regime.pack(pady=(2, 0))
         self.machine = tk.Label(self.root, text="machine: …", font=("Segoe UI", 13, "bold"),
                                 bg=BG, fg=DIM)
         self.machine.pack(pady=(4, 2))
@@ -81,6 +84,7 @@ class Cockpit:
         self.status.pack(pady=(2, 10))
 
         self.tick()
+        self.tick_stage()
         self._busy = False
         self.auto_loop()
 
@@ -143,6 +147,77 @@ class Cockpit:
         ph = ImageTk.PhotoImage(im)
         lbl = tk.Label(top, image=ph, bg=BG); lbl.image = ph
         lbl.pack(padx=8, pady=8)
+
+    # ── THE STAGE BANNER (Zee 2026-08-06): where the ghost is, in large type ──
+    STAGES = {
+        "JUMPING":  ("🏃 JUMPING OUT OF TRADE", "#f08c00"),
+        "TRADE":    ("🔥 TRADE ON", "#2f9e44"),
+        "TAKING":   ("🚪 TAKING SETUP", "#1c7ed6"),
+        "APPROACH": ("👀 APPROACHING SETUP", "#7048e8"),
+        "HUNT":     ("👻 hunting — no setup yet", DIM),
+    }
+    EALOG = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/DBE9B8B347D025DD139E103EE3B63FD8/MQL5/Logs")
+    ARMED_F = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/case_armed.json")
+    WATCH_F = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/case_watch.json")
+    FILLS_F = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/turtle_fills.csv")
+
+    def _ea_tail(self):
+        import glob, os
+        try:
+            f = sorted(glob.glob(str(self.EALOG / "*.log")), key=os.path.getmtime)[-1]
+            try:
+                txt = Path(f).read_text(encoding="utf-16", errors="ignore")
+            except Exception:
+                txt = Path(f).read_text(errors="ignore")
+            return [l for l in txt.splitlines()[-400:] if "CaseExec" in l]
+        except Exception:
+            return []
+
+    def stage_now(self):
+        import re, os
+        from datetime import datetime, timedelta
+        lines = self._ea_tail()
+        now = datetime.now()
+
+        def line_dt(l):
+            m = re.search(r"(\d\d:\d\d:\d\d)", l)
+            if not m: return None
+            t = datetime.strptime(m.group(1), "%H:%M:%S")
+            return now.replace(hour=t.hour, minute=t.minute, second=t.second, microsecond=0)
+
+        last_fire = last_exit = None
+        for l in lines:
+            d = line_dt(l)
+            if d is None or d > now + timedelta(minutes=1): continue
+            if "GHOST-DOOR" in l or "signal #" in l or "BURST sibling" in l:
+                last_fire = d
+            if "BASKET FLOOR" in l or "CLOSE ALL PROFITABLE" in l:
+                last_exit = d
+        # freshest exit in the last 25s -> jumping out
+        if last_exit and (now - last_exit).total_seconds() <= 25:
+            return "JUMPING"
+        # a fire more recent than the last recorded close -> position open
+        try:
+            rows = [r for r in self.FILLS_F.read_text(errors="ignore").splitlines() if r.strip()]
+            last_close = datetime.strptime(rows[-1].split(",")[0], "%Y.%m.%d %H:%M:%S") + timedelta(hours=2)
+        except Exception:
+            last_close = None
+        if last_fire and (last_close is None or last_fire > last_close)                 and (now - last_fire).total_seconds() < 1800:
+            return "TRADE"
+        import time as _t
+        if self.ARMED_F.exists() and _t.time() - os.path.getmtime(self.ARMED_F) < 120:
+            return "TAKING"
+        if self.WATCH_F.exists() and _t.time() - os.path.getmtime(self.WATCH_F) < 120:
+            return "APPROACH"
+        return "HUNT"
+
+    def tick_stage(self):
+        try:
+            txt, col = self.STAGES[self.stage_now()]
+        except Exception:
+            txt, col = "", DIM
+        self.stage.config(text=txt, fg=col)
+        self.root.after(3000, self.tick_stage)
 
     def force_regime(self):
         ROVR.write_text(json.dumps({"until": int(time.time()) + 1800, "by": "zee"}),
