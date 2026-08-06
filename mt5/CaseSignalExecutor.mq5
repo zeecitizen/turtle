@@ -12,7 +12,9 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.66"
+#property version   "1.67"
+// v1.67: sibling bracket 0.5 -> 1.0 — TWO independent days converge there: Aug-5
+// tick curve rising through 1.0-1.2, and Feb-11's own median win = +1.01pt (94%%).
 // v1.66 SPEED-HARVEST SIBLINGS (Zee 2026-08-06, tick-validated: 70% favorable-first
 // at ±0.5pt within seconds of the breakout, EV +0.134pt/click at Raw costs):
 // burst SIBLINGS exit on a software micro-bracket ±InpSibBracket — quick lamps in
@@ -107,7 +109,7 @@ input double InpMaxStackLots = 1.20;   // hard ceiling on total stacked lots (co
 input int    InpMaxRaids     = 6;      // apparitions per convicted lamp (Zee's 5-6 burst)
 input int    InpSendCooldownS = 4;     // seconds after any order send before another entry
 input int    InpClickSpaceS   = 2;     // spacing between burst sibling clicks
-input double InpSibBracket    = 0.5;   // sibling micro-bracket: exit at +/- this (pts)
+input double InpSibBracket    = 1.0;   // sibling bracket (Feb-11 median win = 1.01pt)
 
 // Ghost cut, lot-scaled so the exit money stays roughly constant per burst.
 double GhostCap(double lots) {
@@ -200,7 +202,7 @@ void ReadArmed() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    EventSetTimer(1);
-   Print("[CaseExec] v1.66 loaded — speed-harvest siblings (bracket 0.5) + ratchet lead");
+   Print("[CaseExec] v1.67 loaded — sibling bracket 1.0 (the Feb-11 median)");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
