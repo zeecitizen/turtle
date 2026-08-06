@@ -168,6 +168,23 @@ def night_window():
     return 18 * 60 + 30 <= mins < 22 * 60
 
 
+CHOP_ER = 0.25   # CHOP SELECTIVITY (Zee-approved 2026-08-06): Kaufman efficiency
+                  # ratio of the last 20 CLOSED bars. The 21:07 BUY fired at ER 0.04
+                  # (9.2pt of wandering, zero net) — the canonical chop-meter had sat
+                  # DISABLED (ER_MIN=0) since the pure-config day. Below CHOP_ER only
+                  # diamond-bearing setups may enter. Conviction may hunt in the
+                  # washing machine; boredom may not.
+
+
+def choppy(bars):
+    closed = bars[:-1]
+    if len(closed) < 22: return False
+    seg = [b.c for b in closed[-21:]]
+    net = abs(seg[-1] - seg[0])
+    tot = sum(abs(seg[i] - seg[i - 1]) for i in range(1, len(seg)))
+    return (net / max(tot, 1e-9)) < CHOP_ER
+
+
 DEAD_TAPE_FRAC = 0.50  # DEAD-TAPE SELECTIVITY (Zee 2026-08-05, shipped on his word):
                         # when the last 10 bars' average volume falls below half the
                         # session's average, only diamond-bearing setups may enter —
@@ -424,7 +441,7 @@ def write_armed(bars):
     # -30.00) were BUYs fired while the 30-bar slope was falling hard — the 3-peak
     # slant lags a fresh turn. Never fire against a strongly opposed slope.
     slope = TE.slope_of(_te_bars(bars))
-    dt = dead_tape(bars)
+    dt = dead_tape(bars) or choppy(bars)   # dead OR directionless: same law
     if night_window():
         ARMED.unlink(missing_ok=True)              # night gate: the ghost rests
         return w
@@ -504,9 +521,9 @@ def main():
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"slope {_sl:+.2f} strongly opposed")
                         continue
-                    if dead_tape(bars) and not swept(bars, s["u"], s["i"], s["side"]):
+                    if (dead_tape(bars) or choppy(bars)) and not swept(bars, s["u"], s["i"], s["side"]):
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
-                              f"dead tape and no conviction (boredom may not hunt)")
+                              f"dead/choppy tape and no conviction (boredom may not hunt)")
                         continue
                     bb = bars[s["i"]]
                     if bb.body_ratio < 0.5:
