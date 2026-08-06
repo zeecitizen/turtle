@@ -816,3 +816,19 @@ NEW SPECIES ⚠ = unexplained — Claude investigates before anything else is bu
 - EA fire: `[CaseExec] signal #1785934383 SELL lots=0.10 ghost=1.00pt stackable parachute=4192.53`
 - ghost exit at design distance (-1.11pt vs 1.0 cap) — bounded toll
 - slope -0.82 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 17:08:01 (broker) — BUY 0.10 · **-9.50** (-0.95pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1786023641 BUY lots=0.10 ghost=1.00pt stackable parachute=4261.93`
+- ghost exit at design distance (-0.95pt vs 1.0 cap) — bounded toll
+- slope +0.07 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 17:11:47 (broker) — BUY 0.10 · **-10.60** (-1.06pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1786025498 BUY lots=0.10 ghost=1.00pt stackable parachute=4271.98`
+- ghost exit at design distance (-1.06pt vs 1.0 cap) — bounded toll
+- slope +0.01 aligned; AUTO said UPTREND — entry direction was legitimate

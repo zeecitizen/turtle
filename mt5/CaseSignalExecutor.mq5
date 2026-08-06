@@ -12,7 +12,20 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.72"
+#property version   "1.73"
+// v1.73 THE BASKET GAME (Zee 2026-08-06, his lifecycle verbatim): "multiple
+// entries -> all in red -> IMP: wait until they turn blue -> some turn blue ->
+// close all profitable (repeat) -> close the final lossy ones in loss -> done."
+//  * NO per-click ghost — squad members tolerate individual red (Feb-11 receipts:
+//    his real per-click losses were -0.09..-0.19pt, never 1pt stops).
+//  * BASKET FLOOR: total adverse <= -(sum of per-click G) -> evaporate ALL.
+//    G = max(1.0, 35% of avg last-5-candle range, cap 2.5) — volatility-aware,
+//    so a 7pt-candle storm cannot rob the squad (the 16:05 SELL, -$11.10, then
+//    a 16-point fall without us).
+//  * GREEN SWEEP unchanged — the harvest loop, repeating.
+//  * CAMPAIGN END: compass flips against the squad OR a click older than
+//    InpCampaignMaxMin (25 = Feb-11 max patience) -> close remainder. Done.
+//  * REMOVED: the 65s sibling time-exit (contradicted "wait until blue").
 // v1.72 AUDIT FIXES (Zee: "find and fix any other bugs, wisdomfully"):
 //  BUG1 RELOAD AMNESIA (receipts: the 08-04 #...032 double-fire, the 08-06 11:36
 //    twins): every reattach wiped g_last_id/g_last_lamp/g_raids -> fresh (<180s)
@@ -142,7 +155,7 @@ input int    InpMaxRaids     = 6;      // apparitions per convicted lamp (Zee's 
 input int    InpSendCooldownS = 4;     // seconds after any order send before another entry
 input int    InpClickSpaceS   = 2;     // spacing between burst sibling clicks
 input int    InpCrossHoldS    = 3;     // door fires only after the cross holds this long
-input int    InpSibHoldS      = 65;    // sibling hold seconds (Feb-11 median; time study)
+input int    InpCampaignMaxMin = 25;   // max patience per click (Feb-11 maximum), minutes
 input int    InpGreenMin      = 2;     // sweep needs at least this many GREEN clicks
 input double InpGreenSumPts   = 0.6;   // ...whose combined profit reaches this (0.6 = ~$6)
 
@@ -176,12 +189,26 @@ double  g_armed_level = 0, g_armed_lots = 0, g_armed_chase = 1.0;
 // Per-position peaks: with stacking, every click trails its OWN best point.
 ulong  g_tk[24];
 double g_pk[24];
+double g_gv[24];                          // per-click volatility ghost G (basket floor)
 double PeakOf(ulong t)            { for (int i = 0; i < 24; i++) if (g_tk[i] == t) return g_pk[i]; return 0.0; }
 void   SetPeakOf(ulong t, double v) {
    for (int i = 0; i < 24; i++) if (g_tk[i] == t) { g_pk[i] = v; return; }
    for (int i = 0; i < 24; i++) if (g_tk[i] == 0) { g_tk[i] = t; g_pk[i] = v; return; }
 }
-void   DropPeakOf(ulong t)        { for (int i = 0; i < 24; i++) if (g_tk[i] == t) { g_tk[i] = 0; g_pk[i] = 0; return; } }
+void   DropPeakOf(ulong t)        { for (int i = 0; i < 24; i++) if (g_tk[i] == t) { g_tk[i] = 0; g_pk[i] = 0; g_gv[i] = 0; return; } }
+double GOf(ulong t)               { for (int i = 0; i < 24; i++) if (g_tk[i] == t) return g_gv[i]; return 0.0; }
+void   SetGOf(ulong t, double v)  { for (int i = 0; i < 24; i++) if (g_tk[i] == t) { g_gv[i] = v; return; } }
+bool   HasSlot(ulong t)           { for (int i = 0; i < 24; i++) if (g_tk[i] == t) return true; return false; }
+// volatility-aware per-click ghost: 35% of the recent candle weather, 1.0..2.5
+double CalcG() {
+   double s = 0; int n = 0;
+   for (int k = 1; k <= 5; k++) {
+      double hh = iHigh(_Symbol, PERIOD_M1, k), ll = iLow(_Symbol, PERIOD_M1, k);
+      if (hh > 0 && ll > 0) { s += hh - ll; n++; }
+   }
+   double avg = (n > 0) ? s / n : 1.0;
+   return MathMin(2.5, MathMax(1.0, 0.35 * avg));
+}
 
 double OurLots() {
    double tot = 0;
@@ -242,7 +269,7 @@ int OnInit() {
    if (GlobalVariableCheck("CaseExec_last_id"))   g_last_id   = (long)GlobalVariableGet("CaseExec_last_id");
    if (GlobalVariableCheck("CaseExec_last_lamp")) g_last_lamp = (long)GlobalVariableGet("CaseExec_last_lamp");
    if (GlobalVariableCheck("CaseExec_raids"))     g_raids     = (int)GlobalVariableGet("CaseExec_raids");
-   Print("[CaseExec] v1.72 loaded — persistent memory (no reload amnesia) + per-raid cross proof");
+   Print("[CaseExec] v1.73 loaded — THE BASKET GAME (squad floor, no per-click ghost)");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -329,8 +356,8 @@ void OnTick() {
                                (g_armed_side == "BUY") ? sa : sb, g_armed_sl);
          if (g_armed_side == "BUY")  trade.Buy(g_armed_lots, _Symbol, 0, bsl, 0, "ghost-s");
          else                        trade.Sell(g_armed_lots, _Symbol, 0, bsl, 0, "ghost-s");
-         PrintFormat("[CaseExec] BURST sibling %d remaining (hold %ds), lamp %.2f",
-                     g_burst_left, InpSibHoldS, g_armed_level);
+         PrintFormat("[CaseExec] BURST sibling %d remaining (basket game), lamp %.2f",
+                     g_burst_left, g_armed_level);
       } else if (!inzone) {
          g_burst_left = 0;            // zone left the station — no chasing siblings
       }
@@ -384,6 +411,39 @@ void OnTick() {
          }
       }
    }
+   // THE BASKET GAME (v1.73): register every click with its weather-ghost G, and
+   // enforce the SQUAD FLOOR — total adverse beyond -(sum G) means the burst was
+   // simply wrong: evaporate ALL, campaign over, lamp retired.
+   {
+      int cn = 0; double csum = 0, gsum2 = 0;
+      double cbid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      double cask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      for (int ci = PositionsTotal() - 1; ci >= 0; ci--) {
+         ulong ct = PositionGetTicket(ci);
+         if (!PositionSelectByTicket(ct)) continue;
+         if (PositionGetInteger(POSITION_MAGIC) != InpMagic
+             || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+         bool cb = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+         double ce = PositionGetDouble(POSITION_PRICE_OPEN);
+         double cp = cb ? (cbid - ce) : (ce - cask);
+         if (!HasSlot(ct)) { SetPeakOf(ct, 0.0); SetGOf(ct, CalcG()); }
+         cn++; csum += cp; gsum2 += GOf(ct);
+      }
+      if (cn > 0 && csum <= -gsum2) {
+         PrintFormat("[CaseExec] BASKET FLOOR: %d clicks %+.2fpt breached -%.2f -> evaporate ALL",
+                     cn, csum, gsum2);
+         for (int ci = PositionsTotal() - 1; ci >= 0; ci--) {
+            ulong ct = PositionGetTicket(ci);
+            if (!PositionSelectByTicket(ct)) continue;
+            if (PositionGetInteger(POSITION_MAGIC) != InpMagic
+                || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+            trade.PositionClose(ct); DropPeakOf(ct);
+         }
+         g_raids = InpMaxRaids;
+         GlobalVariableSet("CaseExec_raids", g_raids);
+      }
+   }
+
    // GREEN SWEEP (v1.70, Zee's true Close-All-Profitable): count the GREENS only;
    // 2+ greens totalling +InpGreenSumPts -> bank every green same-second. Reds stay
    // and fight under ghost/BE; a lone green rides its ratchet (the Feb-11 riders).
@@ -426,12 +486,13 @@ void OnTick() {
       double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
       double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
       double prof = isbuy ? (bid - entry) : (entry - ask);   // favourable move, price pts
-      // TIME-HARVEST SIBLING (v1.68): hold the drift window, ghost bail at -1.0.
-      if (StringFind(PositionGetString(POSITION_COMMENT), "ghost-s") >= 0) {
-         long age = (long)TimeCurrent() - (long)PositionGetInteger(POSITION_TIME);
-         if (prof <= -1.0 || age >= InpSibHoldS) {
-            trade.PositionClose(t); DropPeakOf(t);
-         }
+      // CAMPAIGN END (v1.73): the compass flipped against the squad, or this
+      // click has outlived the Feb-11 maximum patience -> close it, done.
+      long cage = (long)TimeCurrent() - (long)PositionGetInteger(POSITION_TIME);
+      bool flipped = (g_armed_id > 0 && (long)TimeGMT() - g_armed_ts <= InpMaxAgeSec
+                      && g_armed_side != "" && ((g_armed_side == "BUY") != isbuy));
+      if (flipped || cage >= (long)InpCampaignMaxMin * 60) {
+         trade.PositionClose(t); DropPeakOf(t);
          continue;
       }
       double pk = PeakOf(t);
@@ -444,14 +505,8 @@ void OnTick() {
          if (!at_be) trade.PositionModify(t, isbuy ? entry + 0.05 : entry - 0.05,
                                           PositionGetDouble(POSITION_TP));
       }
-      // GHOST EXIT: this click never got going and is moving against us -> evaporate.
-      // Only for un-armed clicks; once armed, the give-back trail owns the exit.
-      double ghost = GhostCap(PositionGetDouble(POSITION_VOLUME));
-      if (pk < InpArmPts && prof <= -ghost) {
-         trade.PositionClose(t); DropPeakOf(t);
-         g_raids = InpMaxRaids;              // losing raid -> lamp retired
-         continue;
-      }
+      // (v1.73: the per-click ghost is GONE — squad members tolerate individual
+      // red; the BASKET FLOOR above judges danger collectively, as Zee's hands did.)
       // absolute software backstop at the parachute distance (belt and braces)
       if (prof <= -InpHardSLPts) {
          trade.PositionClose(t); DropPeakOf(t);
@@ -466,6 +521,6 @@ void OnTick() {
          trade.PositionClose(t); DropPeakOf(t); continue;
       }
    }
-   if (!HasOurPos()) for (int i = 0; i < 24; i++) { g_tk[i] = 0; g_pk[i] = 0; }   // flat -> clean slate
+   if (!HasOurPos()) for (int i = 0; i < 24; i++) { g_tk[i] = 0; g_pk[i] = 0; g_gv[i] = 0; }   // flat -> clean slate
 }
 //+------------------------------------------------------------------+
