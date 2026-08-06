@@ -64,6 +64,9 @@ class Cockpit:
                   command=self.regen).pack(side="left", padx=6)
         # No AUTO button (Zee): AUTO is the resting state — every manual call fades
         # back to it after 10 minutes on its own.
+        tk.Button(row, text="📊 Versions", font=("Segoe UI", 12, "bold"),
+                  bg="#1c7ed6", fg="white", padx=12, pady=8, relief="flat",
+                  command=self.show_versions).pack(side="left", padx=6)
         tk.Button(row, text="⚡ START REGIME (30 min)", font=("Segoe UI", 12, "bold"),
                   bg="#7048e8", fg="white", padx=12, pady=8, relief="flat",
                   command=self.force_regime).pack(side="left", padx=6)
@@ -118,6 +121,28 @@ class Cockpit:
         except Exception:
             self.photo = tk.PhotoImage(file=str(PNG))
         self.img.config(image=self.photo)
+
+    def show_versions(self):
+        """Zee: the version-vs-winrate graph — after which version did WR drop/climb."""
+        def work():
+            import subprocess
+            subprocess.run([r"C:/Users/zeesh/AppData/Local/Programs/Python/Python313-arm64/python.exe",
+                            str(Path(TE.__file__).parent / "version_winrate.py")],
+                           capture_output=True, timeout=60)
+            self.root.after(0, self._show_versions_win)
+        threading.Thread(target=work, daemon=True).start()
+
+    def _show_versions_win(self):
+        png = Path(TE.__file__).parent / "setup_labels" / "version_winrate.png"
+        if not png.exists(): return
+        top = tk.Toplevel(self.root)
+        top.title("📊 version vs winrate")
+        top.configure(bg=BG)
+        from PIL import Image, ImageTk
+        im = Image.open(png); im.thumbnail((1250, 640))
+        ph = ImageTk.PhotoImage(im)
+        lbl = tk.Label(top, image=ph, bg=BG); lbl.image = ph
+        lbl.pack(padx=8, pady=8)
 
     def force_regime(self):
         ROVR.write_text(json.dumps({"until": int(time.time()) + 1800, "by": "zee"}),
