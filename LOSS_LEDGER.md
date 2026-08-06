@@ -864,3 +864,11 @@ NEW SPECIES ⚠ = unexplained — Claude investigates before anything else is bu
 - EA fire: `[CaseExec] GHOST-DOOR #-1624780216 BUY raid 1/3 lamp 4274.74 lots=0.10 chase=1.0 ghost=1.00pt`
 - ghost exit with 0.16pt SLIPPAGE beyond design (fast tape/thin book)
 - slope +0.38 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 18:33:37 (broker) — SELL 0.10 · **-1.40** (-0.14pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1786030408 SELL lots=0.10 ghost=1.00pt stackable parachute=4256.31`
+- ghost exit at design distance (-0.14pt vs 1.0 cap) — bounded toll
+- slope -0.65 aligned; AUTO said DOWNTREND — entry direction was legitimate
