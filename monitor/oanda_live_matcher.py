@@ -479,7 +479,13 @@ def write_armed(bars):
     # multiplier should work — not with larger lot size but with more trades of 0.1
     # each." Conviction sets the CLICK COUNT; every click stays 0.10 and exits on its
     # own trail/ghost. (Big-lot tiers are dead: n=14, 36% WR, -$219.90.)
-    a["clicks"] = 1 if a.get("humble") else {0: 1, 1: 2, 2: 3}.get(diamonds, 6)
+    # 2026-08-06 THE SIBLING RECKONING: era table on real fills — yesterday's
+    # single-click machine +$35.70 (avg win $16.80) vs bracket siblings -$116.30
+    # (avg win $6) vs 65s siblings -$206.10 (avg win $3). Multiplying tickets
+    # multiplied the machine's timing errors and booked scraps by design.
+    # CLICKS = 1, ALWAYS, until entry timing earns crowds back. Diamonds remain
+    # as labels + raid allowance (sequential harvest-and-return, the proven kind).
+    a["clicks"] = 1
     # ASIA DISCIPLINE (2026-08-06, the overnight -$110.80): chop hours 01:00-07:00
     # broker (22:00-04:00 UTC) get single clicks only — bursts need drift to harvest.
     from datetime import datetime as _dt, timezone as _tz
