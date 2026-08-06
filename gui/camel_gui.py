@@ -55,6 +55,8 @@ class Cockpit:
         self.regime = tk.Label(self.root, text="", font=("Segoe UI", 20, "bold"),
                                bg=BG, fg="#e03131")
         self.regime.pack(pady=(2, 0))
+        self.clocks = tk.Label(self.root, text="", font=("Segoe UI", 12), bg=BG, fg=DIM)
+        self.clocks.pack(pady=(0, 2))
         self.machine = tk.Label(self.root, text="machine: …", font=("Segoe UI", 13, "bold"),
                                 bg=BG, fg=DIM)
         self.machine.pack(pady=(4, 2))
@@ -211,7 +213,35 @@ class Cockpit:
             return "APPROACH"
         return "HUNT"
 
+    def clock_line(self):
+        """Zee 2026-08-06: show the MT5-vs-Karachi offset, measured live from the
+        broker's own fill timestamps against this machine's clock (never hardcoded,
+        so a broker DST change can't quietly lie to us)."""
+        import os
+        from datetime import datetime
+        off = None
+        try:
+            rows = [r for r in self.FILLS_F.read_text(errors="ignore").splitlines() if r.strip()]
+            bt = datetime.strptime(rows[-1].split(",")[0], "%Y.%m.%d %H:%M:%S")
+            lt = datetime.fromtimestamp(os.path.getmtime(self.FILLS_F))
+            off = round((lt - bt).total_seconds() / 3600)
+        except Exception:
+            pass
+        now = datetime.now()
+        if off is None:
+            return f"local (Karachi) {now:%H:%M:%S}  ·  MT5 offset unknown"
+        mt5 = now.replace() if off == 0 else None
+        from datetime import timedelta
+        mt5t = now - timedelta(hours=off)
+        word = "behind" if off > 0 else ("ahead of" if off < 0 else "same as")
+        return (f"MT5 (broker) {mt5t:%H:%M:%S}  is  {abs(off)}h {word}  local Karachi "
+                f"{now:%H:%M:%S}   ·   chart times = Karachi")
+
     def tick_stage(self):
+        try:
+            self.clocks.config(text=self.clock_line())
+        except Exception:
+            pass
         try:
             txt, col = self.STAGES[self.stage_now()]
         except Exception:
