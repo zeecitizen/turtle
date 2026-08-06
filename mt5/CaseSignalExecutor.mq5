@@ -12,7 +12,16 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.67"
+#property version   "1.68"
+// v1.68 THE FEB-11 EXIT TRINITY (Zee 2026-08-06):
+//  1. BASKET HARVEST — his real exit: "wait for red then blue, then Close All
+//     Profitable." 2+ clicks open averaging +InpBasketAvgPts each -> every
+//     PROFITABLE position closes at once (23/24 Feb-11 bursts exited same-second).
+//  2. TIME-HARVEST SIBLINGS — the overnight -$110.80 killed the distance bracket
+//     in Asia chop; the time study (106 setups): edge develops over 45-65s
+//     (65s = Feb-11 median hold, 95% on tape). Siblings hold InpSibHoldS seconds
+//     (ghost bail -1.0), then close at market.
+//  3. (matcher) Asia discipline: no click-bursts 01:00-07:00 broker.
 // v1.67: sibling bracket 0.5 -> 1.0 — TWO independent days converge there: Aug-5
 // tick curve rising through 1.0-1.2, and Feb-11's own median win = +1.01pt (94%%).
 // v1.66 SPEED-HARVEST SIBLINGS (Zee 2026-08-06, tick-validated: 70% favorable-first
@@ -109,7 +118,9 @@ input double InpMaxStackLots = 1.20;   // hard ceiling on total stacked lots (co
 input int    InpMaxRaids     = 6;      // apparitions per convicted lamp (Zee's 5-6 burst)
 input int    InpSendCooldownS = 4;     // seconds after any order send before another entry
 input int    InpClickSpaceS   = 2;     // spacing between burst sibling clicks
-input double InpSibBracket    = 1.0;   // sibling bracket (Feb-11 median win = 1.01pt)
+input int    InpSibHoldS      = 65;    // sibling hold seconds (Feb-11 median; time study)
+input double InpBasketAvgPts  = 0.3;   // avg pts/click that fires Close-All-Profitable
+input int    InpBasketMin     = 2;     // basket harvest needs at least this many clicks
 
 // Ghost cut, lot-scaled so the exit money stays roughly constant per burst.
 double GhostCap(double lots) {
@@ -202,7 +213,7 @@ void ReadArmed() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    EventSetTimer(1);
-   Print("[CaseExec] v1.67 loaded — sibling bracket 1.0 (the Feb-11 median)");
+   Print("[CaseExec] v1.68 loaded — basket harvest + 65s time-siblings");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -288,8 +299,8 @@ void OnTick() {
                                (g_armed_side == "BUY") ? sa : sb, g_armed_sl);
          if (g_armed_side == "BUY")  trade.Buy(g_armed_lots, _Symbol, 0, bsl, 0, "ghost-s");
          else                        trade.Sell(g_armed_lots, _Symbol, 0, bsl, 0, "ghost-s");
-         PrintFormat("[CaseExec] BURST sibling %d remaining (bracket %.1f), lamp %.2f",
-                     g_burst_left, InpSibBracket, g_armed_level);
+         PrintFormat("[CaseExec] BURST sibling %d remaining (hold %ds), lamp %.2f",
+                     g_burst_left, InpSibHoldS, g_armed_level);
       } else if (!inzone) {
          g_burst_left = 0;            // zone left the station — no chasing siblings
       }
@@ -331,6 +342,36 @@ void OnTick() {
          }
       }
    }
+   // BASKET HARVEST (v1.68, Zee's Feb-11 exit): 2+ clicks averaging +BasketAvgPts
+   // -> Close All PROFITABLE at once. Reds stay under ghost/BE management.
+   {
+      int bn = 0; double bsum = 0;
+      double bbid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+      double bask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      for (int bi = PositionsTotal() - 1; bi >= 0; bi--) {
+         ulong bt = PositionGetTicket(bi);
+         if (!PositionSelectByTicket(bt)) continue;
+         if (PositionGetInteger(POSITION_MAGIC) != InpMagic
+             || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+         bool bb = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+         double be = PositionGetDouble(POSITION_PRICE_OPEN);
+         bn++; bsum += bb ? (bbid - be) : (be - bask);
+      }
+      if (bn >= InpBasketMin && bsum / bn >= InpBasketAvgPts) {
+         PrintFormat("[CaseExec] BASKET HARVEST: %d clicks avg %+.2fpt -> Close All Profitable",
+                     bn, bsum / bn);
+         for (int bi = PositionsTotal() - 1; bi >= 0; bi--) {
+            ulong bt = PositionGetTicket(bi);
+            if (!PositionSelectByTicket(bt)) continue;
+            if (PositionGetInteger(POSITION_MAGIC) != InpMagic
+                || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+            bool bb = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+            double be = PositionGetDouble(POSITION_PRICE_OPEN);
+            double pprof = bb ? (bbid - be) : (be - bask);
+            if (pprof > 0) { trade.PositionClose(bt); DropPeakOf(bt); }
+         }
+      }
+   }
    for (int i = PositionsTotal() - 1; i >= 0; i--) {
       ulong t = PositionGetTicket(i);
       if (!PositionSelectByTicket(t)) continue;
@@ -341,9 +382,10 @@ void OnTick() {
       double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
       double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
       double prof = isbuy ? (bid - entry) : (entry - ask);   // favourable move, price pts
-      // SPEED-HARVEST SIBLING (v1.66): micro-bracket exit, no trail, no 1pt ghost.
+      // TIME-HARVEST SIBLING (v1.68): hold the drift window, ghost bail at -1.0.
       if (StringFind(PositionGetString(POSITION_COMMENT), "ghost-s") >= 0) {
-         if (prof >= InpSibBracket || prof <= -InpSibBracket) {
+         long age = (long)TimeCurrent() - (long)PositionGetInteger(POSITION_TIME);
+         if (prof <= -1.0 || age >= InpSibHoldS) {
             trade.PositionClose(t); DropPeakOf(t);
          }
          continue;
