@@ -168,6 +168,23 @@ def night_window():
     return 18 * 60 + 30 <= mins < 22 * 60
 
 
+def no_demand(bars, side):
+    """THE NO-DEMAND VETO (2026-08-06, Law 2 reborn with correct polarity — trial:
+    NS/ND-as-confirmation scored 44%/+0.126 vs 50%/+0.193 without; but as Zee's
+    original VSA warning it kills the 17:19 species): a BUY is refused when the
+    approach is a falling-volume same-colour drift (greens shrinking after heavy
+    reds = a rally nobody funds). Mirror for SELL."""
+    closed = bars[:-1]
+    if len(closed) < 8: return False
+    a, b2 = closed[-2], closed[-1]
+    col = (lambda c: c.is_bull) if side == "BUY" else (lambda c: c.is_bear)
+    if not (col(a) and col(b2)): return False
+    if not (b2.v < a.v): return False
+    prior = closed[-7:-2]
+    opp = [c.v for c in prior if (c.is_bear if side == "BUY" else c.is_bull)]
+    return bool(opp) and b2.v < sum(opp) / len(opp)
+
+
 CHOP_ER = 0.25   # CHOP SELECTIVITY (Zee-approved 2026-08-06): Kaufman efficiency
                   # ratio of the last 20 CLOSED bars. The 21:07 BUY fired at ER 0.04
                   # (9.2pt of wandering, zero net) — the canonical chop-meter had sat
@@ -314,8 +331,7 @@ def find_armed(bars):
             if min(abs(c.c - lvl), abs(c.c - sweep_line)) <= 0.8:
                 law2 = 1
                 break
-        if law2:
-            lots = 0.60 if lots >= 0.30 else 0.30
+        # (law2 demoted 2026-08-06: no burst effects — see no_demand veto)
         # THIRD LAW OF CONVICTION (Zee, sharpened 2026-08-05): the momentum candle is
         # "a strong big candle without a wick on top and closing CLEARLY above EMA 5"
         # (BUY; mirror below for SELL). EMA = exponential smoothing, never SMA.
@@ -446,6 +462,7 @@ def write_armed(bars):
         ARMED.unlink(missing_ok=True)              # night gate: the ghost rests
         return w
     ready = [c for c in cands if c["dist"] <= 2.0 and zee_allows(c["side"])
+             and not no_demand(bars, c["side"])
              and not (dt and (int(c["swept"]) + int(c.get("law2", 0)) + int(c.get("law3", 0))
                               + int(c.get("law4", 0)) + int(c.get("law5", 0))) == 0)
              and not (c["side"] == "BUY" and slope < -0.10)
@@ -454,7 +471,7 @@ def write_armed(bars):
         ARMED.unlink(missing_ok=True)              # nothing in striking distance
         return w
     a = ready[0]
-    diamonds = (int(a["swept"]) + int(a.get("law2", 0)) + int(a.get("law3", 0))
+    diamonds = (int(a["swept"]) + int(a.get("law3", 0))
                 + int(a.get("law4", 0)) + int(a.get("law5", 0)))
     a["raids"] = {0: 1, 1: 3}.get(diamonds, 6)     # 2+ diamonds -> the full 6-raid burst
     # THE CLICK-BURST MULTIPLIER (Zee 2026-08-06, his real Feb-11 mechanic): "buy buy
@@ -521,6 +538,10 @@ def main():
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"slope {_sl:+.2f} strongly opposed")
                         continue
+                    if no_demand(bars, s["side"]):
+                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                              f"no-demand rally / no-supply dip (a move nobody funds)")
+                        continue
                     if (dead_tape(bars) or choppy(bars)) and not swept(bars, s["u"], s["i"], s["side"]):
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"dead/choppy tape and no conviction (boredom may not hunt)")
@@ -543,7 +564,7 @@ def main():
                           f"lots={lots:.2f} ({s['open_t'].strftime('%H:%M')}UTC)")
                 a = write_armed(bars)
                 if a and a["key"] != last_armed_key:
-                    d = (int(a["swept"]) + int(a.get("law2", 0)) + int(a.get("law3", 0))
+                    d = (int(a["swept"]) + int(a.get("law3", 0))
                          + int(a.get("law4", 0)) + int(a.get("law5", 0)))
                     hearts = " ❤(L6 probation)" if a.get("law6") else ""
                     print(f"[oanda_matcher] {'💎' * d or 'no diamonds'}{hearts} — "
