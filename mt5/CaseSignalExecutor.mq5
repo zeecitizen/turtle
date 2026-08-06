@@ -12,7 +12,19 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.73"
+#property version   "1.74"
+// v1.74 PATIENCE + COLOUR-ABORT (Zee 2026-08-07, both trial-proven on 187 setups):
+//  * GRACE PERIOD — "a VSA breakout takes several candles to actually go." The tape
+//    agreed: median 15 bars to best price, only 21% peak within 3, and 57% of the
+//    setups that eventually reached +2pt dipped -1pt FIRST (the floor was killing
+//    more than half our winners). Suspending the basket floor for the first
+//    InpGraceBars minutes: WR 50% -> 80%, net +$213 -> +$868, max DD -$72.
+//    The 3pt parachute stays armed throughout, so the grace is bounded.
+//  * COLOUR-ABORT — Zee's 19:02 catch: the door fired a SELL intrabar and that
+//    candle CLOSED GREEN (+$-14.40). Across the tape, door fires whose candle
+//    closed the WRONG colour ran 12% WR / -$153; right-colour ones 60% / +$1074.
+//    So: when the ENTRY candle closes the wrong colour and we are not yet in
+//    profit, the ghost leaves at once instead of grinding to the floor.
 // v1.73 THE BASKET GAME (Zee 2026-08-06, his lifecycle verbatim): "multiple
 // entries -> all in red -> IMP: wait until they turn blue -> some turn blue ->
 // close all profitable (repeat) -> close the final lossy ones in loss -> done."
@@ -155,6 +167,8 @@ input int    InpMaxRaids     = 6;      // apparitions per convicted lamp (Zee's 
 input int    InpSendCooldownS = 4;     // seconds after any order send before another entry
 input int    InpClickSpaceS   = 2;     // spacing between burst sibling clicks
 input int    InpCrossHoldS    = 3;     // door fires only after the cross holds this long
+input int    InpGraceBars     = 2;     // minutes of patience before the basket floor arms
+input bool   InpColourAbort  = true;  // leave if the ENTRY candle closes the wrong colour
 input int    InpCampaignMaxMin = 25;   // max patience per click (Feb-11 maximum), minutes
 input int    InpGreenMin      = 2;     // sweep needs at least this many GREEN clicks
 input double InpGreenSumPts   = 0.6;   // ...whose combined profit reaches this (0.6 = ~$6)
@@ -173,6 +187,7 @@ int     g_raids = 0, g_armed_raids = 1;   // per-lamp allowance from the matcher
 bool    g_lamp_ready = true;               // harvest-and-return: reset by a lamp re-touch
 long    g_last_send = 0;                   // send-cooldown anchor (epoch, TimeGMT)
 long    g_cross_t0 = 0;                    // sustained-cross: when the cross was first seen
+datetime g_last_bar = 0;                   // colour-abort: last M1 bar we examined
 double  g_armed_sl = 0;                    // structural SL from the matcher (0 = none)
 int     g_armed_clicks = 1;                // burst size (matcher "clicks", 0.10 each)
 int     g_burst_left = 0;                  // siblings still to fire for this burst
@@ -269,7 +284,7 @@ int OnInit() {
    if (GlobalVariableCheck("CaseExec_last_id"))   g_last_id   = (long)GlobalVariableGet("CaseExec_last_id");
    if (GlobalVariableCheck("CaseExec_last_lamp")) g_last_lamp = (long)GlobalVariableGet("CaseExec_last_lamp");
    if (GlobalVariableCheck("CaseExec_raids"))     g_raids     = (int)GlobalVariableGet("CaseExec_raids");
-   Print("[CaseExec] v1.73 loaded — THE BASKET GAME (squad floor, no per-click ghost)");
+   Print("[CaseExec] v1.74 loaded — grace period + colour-abort");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -411,6 +426,40 @@ void OnTick() {
          }
       }
    }
+   // COLOUR-ABORT (v1.74): when a new M1 bar forms, look at the candle that just
+   // closed; any position opened INSIDE it that finished the wrong colour and is
+   // not in profit leaves immediately (Zee's 19:02 green-candle SELL).
+   if (InpColourAbort) {
+      datetime bt0 = iTime(_Symbol, PERIOD_M1, 0);
+      if (bt0 != g_last_bar) {
+         if (g_last_bar != 0) {
+            datetime bt1 = iTime(_Symbol, PERIOD_M1, 1);
+            double o1 = iOpen(_Symbol, PERIOD_M1, 1), c1 = iClose(_Symbol, PERIOD_M1, 1);
+            bool bar_green = (c1 > o1), bar_red = (c1 < o1);
+            double abid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+            double aask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+            for (int ai = PositionsTotal() - 1; ai >= 0; ai--) {
+               ulong at = PositionGetTicket(ai);
+               if (!PositionSelectByTicket(at)) continue;
+               if (PositionGetInteger(POSITION_MAGIC) != InpMagic
+                   || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+               datetime pt = (datetime)PositionGetInteger(POSITION_TIME);
+               if (pt < bt1 || pt >= bt0) continue;          // not the entry candle
+               bool isbuy2 = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+               double e2 = PositionGetDouble(POSITION_PRICE_OPEN);
+               double pf = isbuy2 ? (abid - e2) : (e2 - aask);
+               bool wrong = (isbuy2 && bar_red) || (!isbuy2 && bar_green);
+               if (wrong && pf <= 0) {
+                  PrintFormat("[CaseExec] COLOUR-ABORT: entry candle closed %s on a %s — leaving (%.2fpt)",
+                              bar_green ? "GREEN" : "RED", isbuy2 ? "BUY" : "SELL", pf);
+                  trade.PositionClose(at); DropPeakOf(at);
+               }
+            }
+         }
+         g_last_bar = bt0;
+      }
+   }
+
    // THE BASKET GAME (v1.73): register every click with its weather-ghost G, and
    // enforce the SQUAD FLOOR — total adverse beyond -(sum G) means the burst was
    // simply wrong: evaporate ALL, campaign over, lamp retired.
@@ -429,7 +478,19 @@ void OnTick() {
          if (!HasSlot(ct)) { SetPeakOf(ct, 0.0); SetGOf(ct, CalcG()); }
          cn++; csum += cp; gsum2 += GOf(ct);
       }
-      if (cn > 0 && csum <= -gsum2) {
+      // GRACE PERIOD (v1.74): the floor stays disarmed while the campaign is young —
+      // breakouts need several candles to go. The 3pt parachute still guards below.
+      long youngest = 0;
+      for (int ci = PositionsTotal() - 1; ci >= 0; ci--) {
+         ulong ct = PositionGetTicket(ci);
+         if (!PositionSelectByTicket(ct)) continue;
+         if (PositionGetInteger(POSITION_MAGIC) != InpMagic
+             || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+         long agec = (long)TimeCurrent() - (long)PositionGetInteger(POSITION_TIME);
+         if (youngest == 0 || agec < youngest) youngest = agec;
+      }
+      bool in_grace = (youngest > 0 && youngest < (long)InpGraceBars * 60);
+      if (cn > 0 && csum <= -gsum2 && !in_grace) {
          PrintFormat("[CaseExec] BASKET FLOOR: %d clicks %+.2fpt breached -%.2f -> evaporate ALL",
                      cn, csum, gsum2);
          for (int ci = PositionsTotal() - 1; ci >= 0; ci--) {
