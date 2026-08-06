@@ -12,7 +12,10 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.68"
+#property version   "1.69"
+// v1.69: basket trigger becomes an OR (Zee's screenshots: +$15.70 and +$10.30
+// baskets sat unharvested because avg/click was under $3). Now fires on EITHER
+// avg >= InpBasketAvgPts ("$3 each") OR total >= InpBasketTotPts ($10 on the table).
 // v1.68 THE FEB-11 EXIT TRINITY (Zee 2026-08-06):
 //  1. BASKET HARVEST — his real exit: "wait for red then blue, then Close All
 //     Profitable." 2+ clicks open averaging +InpBasketAvgPts each -> every
@@ -121,6 +124,7 @@ input int    InpClickSpaceS   = 2;     // spacing between burst sibling clicks
 input int    InpSibHoldS      = 65;    // sibling hold seconds (Feb-11 median; time study)
 input double InpBasketAvgPts  = 0.3;   // avg pts/click that fires Close-All-Profitable
 input int    InpBasketMin     = 2;     // basket harvest needs at least this many clicks
+input double InpBasketTotPts  = 1.0;   // OR: total floating pts across clicks (1.0 = ~$10)
 
 // Ghost cut, lot-scaled so the exit money stays roughly constant per burst.
 double GhostCap(double lots) {
@@ -213,7 +217,7 @@ void ReadArmed() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    EventSetTimer(1);
-   Print("[CaseExec] v1.68 loaded — basket harvest + 65s time-siblings");
+   Print("[CaseExec] v1.69 loaded — basket fires on avg OR total");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -357,7 +361,7 @@ void OnTick() {
          double be = PositionGetDouble(POSITION_PRICE_OPEN);
          bn++; bsum += bb ? (bbid - be) : (be - bask);
       }
-      if (bn >= InpBasketMin && bsum / bn >= InpBasketAvgPts) {
+      if (bn >= InpBasketMin && (bsum / bn >= InpBasketAvgPts || bsum >= InpBasketTotPts)) {
          PrintFormat("[CaseExec] BASKET HARVEST: %d clicks avg %+.2fpt -> Close All Profitable",
                      bn, bsum / bn);
          for (int bi = PositionsTotal() - 1; bi >= 0; bi--) {
