@@ -881,3 +881,30 @@ NEW SPECIES ⚠ = unexplained — Claude investigates before anything else is bu
 - ghost exit with 0.44pt SLIPPAGE beyond design (fast tape/thin book)
 - dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
 - slope -0.72 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 19:28:24 (broker) — SELL 0.10 · **-13.80** (-1.38pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #-1231700199 SELL raid 2/3 lamp 4225.69 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit with 0.38pt SLIPPAGE beyond design (fast tape/thin book)
+- repeat raid — must have followed a WINNING raid (v1.62) and a lamp re-touch (v1.61); if raid 1 lost, this is a NEW BUG
+- slope -0.53 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 20:07:01 (broker) — BUY 0.10 · **-10.70** (-1.07pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #517657779 BUY raid 1/3 lamp 4242.59 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.07pt vs 1.0 cap) — bounded toll
+- slope +0.36 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 21:07:03 (broker) — BUY 0.10 · **-12.30** (-1.23pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1785953060 BUY raid 2/6 lamp 4253.22 lots=0.10 chase=3.0 ghost=1.00pt`
+- ghost exit with 0.23pt SLIPPAGE beyond design (fast tape/thin book)
+- repeat raid — must have followed a WINNING raid (v1.62) and a lamp re-touch (v1.61); if raid 1 lost, this is a NEW BUG
+- dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
+- slope +0.20 aligned; AUTO said UPTREND — entry direction was legitimate
