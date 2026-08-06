@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "monitor"))
 import trend_eyes as TE                                     # noqa: E402
 
 CALL = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/trend_call.json")
+ROVR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/regime_override.json")
 PNG = Path(TE.__file__).parent / "setup_labels" / "camel_humps.png"
 TTL = 600     # a manual call fades after 10 minutes, then AUTO (Zee 2026-08-04)
 BACK = 120
@@ -48,9 +49,12 @@ class Cockpit:
         self.root.configure(bg=BG)
         self.photo = None
 
+        self.regime = tk.Label(self.root, text="", font=("Segoe UI", 20, "bold"),
+                               bg=BG, fg="#e03131")
+        self.regime.pack(pady=(10, 0))
         self.machine = tk.Label(self.root, text="machine: …", font=("Segoe UI", 13, "bold"),
                                 bg=BG, fg=DIM)
-        self.machine.pack(pady=(10, 2))
+        self.machine.pack(pady=(4, 2))
         self.img = tk.Label(self.root, bg=BG)
         self.img.pack(padx=10, pady=4)
 
@@ -60,6 +64,9 @@ class Cockpit:
                   command=self.regen).pack(side="left", padx=6)
         # No AUTO button (Zee): AUTO is the resting state — every manual call fades
         # back to it after 10 minutes on its own.
+        tk.Button(row, text="⚡ START REGIME (30 min)", font=("Segoe UI", 12, "bold"),
+                  bg="#7048e8", fg="white", padx=12, pady=8, relief="flat",
+                  command=self.force_regime).pack(side="left", padx=6)
         for name, label in [("UPTREND", "📈 UPTREND — buy lamps"),
                             ("DOWNTREND", "📉 DOWNTREND — sell lamps"),
                             ("RANGE", "📦 RANGE — ghost waits")]:
@@ -93,6 +100,8 @@ class Cockpit:
                 a = TE.auto_call(bars)
                 txt = (f"structure: {r['trend']} ({r['why']})    "
                        f"AUTO/peak-slant: {a['trend']} ({a['why']})")
+                rtxt, rcol = self._regime_text(bars)
+                self.root.after(0, lambda: self.regime.config(text=rtxt, fg=rcol))
             except Exception as e:
                 txt = f"machine error: {e}"
             self.root.after(0, lambda: self.show(txt))
@@ -109,6 +118,30 @@ class Cockpit:
         except Exception:
             self.photo = tk.PhotoImage(file=str(PNG))
         self.img.config(image=self.photo)
+
+    def force_regime(self):
+        ROVR.write_text(json.dumps({"until": int(time.time()) + 1800, "by": "zee"}),
+                        encoding="ascii")
+
+    def _regime_text(self, bars):
+        closed = bars[:-1]
+        if len(closed) < 22:
+            return "", ""
+        seg = [b[3] for b in closed[-21:]]
+        net = abs(seg[-1] - seg[0])
+        tot = sum(abs(seg[i] - seg[i - 1]) for i in range(1, len(seg)))
+        er = net / max(tot, 1e-9)
+        forced_left = 0
+        try:
+            forced_left = max(0, int(json.loads(ROVR.read_text()).get("until", 0)) - int(time.time()))
+        except Exception:
+            pass
+        if forced_left > 0:
+            return (f"⚡ REGIME FORCED — trading through chop, {forced_left//60}m {forced_left%60:02d}s left "
+                    f"(ER {er:.2f})", "#7048e8")
+        if er < 0.25:
+            return (f"⛔ REGIME HALT — tape not trending (ER {er:.2f} < 0.25) — ghost rests", "#e03131")
+        return (f"✅ regime OK — tape trending (ER {er:.2f})", "#2f9e44")
 
     def set_call(self, name):
         CALL.write_text(json.dumps({"trend": name,

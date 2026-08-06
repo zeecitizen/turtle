@@ -193,6 +193,19 @@ CHOP_ER = 0.25   # CHOP SELECTIVITY (Zee-approved 2026-08-06): Kaufman efficienc
                   # washing machine; boredom may not.
 
 
+REGIME_OVR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/regime_override.json")
+
+
+def regime_forced():
+    """Zee's START REGIME button (cockpit): force trading through chop for 30 min
+    so he can test in non-regime times. File written by gui/camel_gui.py."""
+    try:
+        import json as _j
+        return time.time() < _j.loads(REGIME_OVR.read_text()).get("until", 0)
+    except Exception:
+        return False
+
+
 def choppy(bars):
     closed = bars[:-1]
     if len(closed) < 22: return False
@@ -461,7 +474,7 @@ def write_armed(bars):
     # today -306.90 -> -95.60, yesterday's slice -11.20 -> +32.20 at 72% WR):
     # ER < 0.25 = the tape is not trending -> NO entries for ANYONE, diamonds
     # included. The machine trades only when the tape moves like February moved.
-    if choppy(bars):
+    if choppy(bars) and not regime_forced():
         ARMED.unlink(missing_ok=True)
         return w
     dt = dead_tape(bars)
@@ -567,7 +580,7 @@ def main():
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"no-demand rally / no-supply dip (a move nobody funds)")
                         continue
-                    if choppy(bars):
+                    if choppy(bars) and not regime_forced():
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"REGIME SWITCH: tape not trending (ER < 0.25)")
                         continue
