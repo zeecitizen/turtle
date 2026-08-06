@@ -121,9 +121,13 @@ def classify(loss, fire, ctx):
     elif slip > 0.15:
         findings.append(f"ghost exit with {slip:.2f}pt SLIPPAGE beyond design (fast tape/thin book)")
         status = "KNOWN SPECIES"
-    if 22 <= hour or hour <= 1:
-        findings.append("night window (22:00-01:00 broker): chop + 2-6x slippage era — "
-                        "hour study says the edge lives elsewhere")
+    mins = hour * 60 + int(loss["ts"][14:16])
+    if (mins >= 21 * 60 + 30 or hour < 1) and loss["ts"] >= "2026.08.06 02:00":
+        findings.append("inside the NIGHT GATE window (21:30-01:00 broker) AFTER the "
+                        "gate shipped — an entry here should be impossible: GATE FAILED")
+        status = "NEW SPECIES ⚠"
+    elif 22 <= hour or hour <= 1:
+        findings.append("night window loss from the pre-gate era (gate shipped 08-06)")
         status = "KNOWN SPECIES"
     if fire:
         if "raid 2" in fire or "raid 3" in fire or "raid 4" in fire:
@@ -134,9 +138,11 @@ def classify(loss, fire, ctx):
                             "not yet shipped; candidate fix on 2+ receipts)")
             status = "KNOWN SPECIES"
         if "lots=0.30" in fire or "lots=0.60" in fire:
-            findings.append("burst-sized BEFORE the risk cap (pre 00:05 broker 08-05) — "
-                            "cured by RISK_CAP 0.10")
+            findings.append("big-lot era trade (pre risk-cap / pre click-burst; "
+                            "multiplier is CLICKS now, lots always 0.10)")
             status = "KNOWN SPECIES"
+        if "BURST sibling" in fire:
+            findings.append("burst sibling — time-harvest exit (65s hold, ghost bail)")
     if ctx:
         opposed = (loss["side"] == "BUY" and ctx["slope"] < -0.10) or \
                   (loss["side"] == "SELL" and ctx["slope"] > 0.10)
