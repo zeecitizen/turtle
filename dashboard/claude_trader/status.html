@@ -1456,7 +1456,7 @@ async function loadTrades() {
       const entryDisp = c.entry ? Number(c.entry).toFixed(2) : '—';
       const closeDisp = Number(c.close_price || 0).toFixed(2);
       const a = c.analysis || null;
-      let detailHtml = '<em style="color:#888;">No analysis available (older trade, pre-v2.73).</em>';
+      let detailHtml = '<em style="color:#888;">No analysis available for this trade.</em>';
       if (a) {
         const dur = a.duration_sec
           ? (a.duration_sec < 60 ? a.duration_sec + 's' : Math.floor(a.duration_sec/60) + 'm ' + (a.duration_sec%60) + 's')

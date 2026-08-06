@@ -2078,7 +2078,21 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
           }
         } catch (_) {}
         t.analysis = {
-          method: 'S1Trader v2.73 — canonical UHV breakout (M1 scalp, 0.80 lots)',
+          // Method is derived from the trade's OWN magic number (2026-08-07, Zee
+          // spotted the stale hardcode): a label can never again outlive its EA.
+          method: ({
+            '88020': '👻 Ghost EA — CaseSignalExecutor (climactic-UHV lamp raid, M1, 0.10 lots)',
+            '88005': 'S1Trader (canonical UHV breakout, M1 scalp)',
+            '88004': 'S1Trader M5', '88003': 'S3Trader', '88006': 'NSND',
+            '88009': 'Feb11 TickTrader (aggressive)', '88011': 'Feb11 Medium',
+            '88012': 'Feb11 LIVE', '0': 'Manual (human)',
+          })[String(t.magic)] ||
+            // turtle_fills.csv carries no magic column, so fall back to the era:
+            // CaseSignalExecutor (magic 88020) is the only EA trading since the
+            // Ghost era opened on 2026-08-04 20:00 broker.
+            (t.broker_time >= '2026.08.04 20:00'
+              ? '👻 Ghost EA — CaseSignalExecutor (climactic-UHV lamp raid, M1, 0.10 lots)'
+              : (t.ea ? `${t.ea} (magic ${t.magic})` : 'legacy EA (pre-Ghost era)')),
           side, isWin, exitKind,
           entry, close: close_price,
           intended_sl: d?.sl ?? null,
