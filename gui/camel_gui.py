@@ -269,6 +269,15 @@ class Cockpit:
         if forced_left > 0:
             return (f"⚡ REGIME FORCED — trading through chop, {forced_left//60}m {forced_left%60:02d}s left "
                     f"(ER {er:.2f})", "#7048e8")
+        try:
+            import re as _re
+            src = Path(TE.__file__).parent.joinpath("oanda_live_matcher.py").read_text(encoding="utf-8")
+            lifted = bool(_re.search(r"^GATES_LIFTED = True", src, _re.M))
+        except Exception:
+            lifted = False
+        if lifted:
+            tag = "chop" if er < 0.25 else "trending"
+            return (f"⚖️ GATES LIFTED (trial) — trading 24/7 · tape {tag} (ER {er:.2f})", "#f08c00")
         if er < 0.25:
             return (f"⛔ REGIME HALT — tape not trending (ER {er:.2f} < 0.25) — ghost rests", "#e03131")
         return (f"✅ regime OK — tape trending (ER {er:.2f})", "#2f9e44")

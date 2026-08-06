@@ -162,6 +162,8 @@ def night_window():
     Zee's revocation of the trash-hides-gems doctrine the same day ("its not holding
     true"). 21:30-01:00 broker (18:30-22:00 UTC): NO new entries at all — chop +
     2-6x slippage made the window negative in every configuration tried."""
+    if GATES_LIFTED:
+        return False                       # hanging free — trial 2026-08-07
     from datetime import datetime, timezone
     t = datetime.now(timezone.utc)
     mins = t.hour * 60 + t.minute
@@ -241,6 +243,15 @@ CHOP_ER = 0.25   # CHOP SELECTIVITY (Zee-approved 2026-08-06): Kaufman efficienc
 
 
 REGIME_OVR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/regime_override.json")
+
+
+# ── THE GATES-LIFTED TRIAL (Zee 2026-08-07: "lift them, let them hang free") ──
+# The night gate and the regime/chop switch were bought with receipts from the
+# IMPATIENT machine (1pt floor). Under the v1.74 grace period the same buckets
+# now simulate profitable: night 82% WR/+$117, chop 75%/+$333, asia 72%/+$181,
+# with trending tape still 3.3x better per trade. So both blocks hang free for a
+# full 24h cycle; the live receipts are the judge. Flip back to False to restore.
+GATES_LIFTED = True
 
 
 def regime_forced():
@@ -522,7 +533,7 @@ def write_armed(bars):
     # today -306.90 -> -95.60, yesterday's slice -11.20 -> +32.20 at 72% WR):
     # ER < 0.25 = the tape is not trending -> NO entries for ANYONE, diamonds
     # included. The machine trades only when the tape moves like February moved.
-    if choppy(bars) and not regime_forced():
+    if choppy(bars) and not regime_forced() and not GATES_LIFTED:
         ARMED.unlink(missing_ok=True)
         return w
     dt = dead_tape(bars)
@@ -628,7 +639,7 @@ def main():
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"no-demand rally / no-supply dip (a move nobody funds)")
                         continue
-                    if choppy(bars) and not regime_forced():
+                    if choppy(bars) and not regime_forced() and not GATES_LIFTED:
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"REGIME SWITCH: tape not trending (ER < 0.25)")
                         continue
