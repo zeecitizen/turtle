@@ -449,7 +449,12 @@ def write_armed(bars):
 
     a["diamonds"] = diamonds
     a["lots"] = min(a["lots"], RISK_CAP)
-    aid = ARMED_IDS.setdefault(a["key"], int(time.time()))
+    # BUG3 fix (2026-08-06 audit): ids were minted from the clock at first sight,
+    # so every MATCHER restart gave the same lamp a NEW id -> the EA saw a "new
+    # lamp" and reset its raid counter. Deterministic id from the key: same lamp,
+    # same id, across any number of restarts.
+    import zlib
+    aid = ARMED_IDS.setdefault(a["key"], int(zlib.crc32(a["key"].encode())) or 1)
     if len(ARMED_IDS) > 400:                       # keep the id map from growing forever
         for k in list(ARMED_IDS)[:200]: ARMED_IDS.pop(k)
     ARMED.write_text('{"id":%d,"side":"%s","level":%.2f,"lots":%.2f,"chase":%.2f,'

@@ -50,7 +50,7 @@ def deploy(name: str) -> bool:
     errs, warns = int(m.group(1)), int(m.group(2))
     ok = errs == 0
     print(f"  {name}: {'OK' if ok else 'FAILED'} — {errs} errors, {warns} warnings"
-          + ("  (attached chart hot-reloads this build automatically)" if ok else ""))
+          + ("  (hot-reload NOT guaranteed — reattach and verify the load fingerprint)" if ok else ""))
     if not ok:
         for line in text.splitlines():
             if ": error" in line:

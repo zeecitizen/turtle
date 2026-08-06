@@ -12,7 +12,15 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.71"
+#property version   "1.72"
+// v1.72 AUDIT FIXES (Zee: "find and fix any other bugs, wisdomfully"):
+//  BUG1 RELOAD AMNESIA (receipts: the 08-04 #...032 double-fire, the 08-06 11:36
+//    twins): every reattach wiped g_last_id/g_last_lamp/g_raids -> fresh (<180s)
+//    signals refired and raid counters reset. Now persisted in terminal
+//    GlobalVariables — they survive reattach, recompile, and terminal restart.
+//  BUG2 STALE CROSS-PROOF: g_cross_t0 was not reset after firing, so a
+//    harvest-and-return re-raid could fire instantly on proof accumulated BEFORE
+//    the harvest. Reset on every fire; each raid earns its own 3 seconds.
 // v1.71 SUSTAINED CROSS (the 15:10 doji wick-poke, -$10.80): a doji's wick kissed
 // the lamp for ONE second, the door fired, price rejected instantly. Real breakouts
 // HOLD beyond the lamp; pokes die in under a second. The door now requires the
@@ -230,7 +238,11 @@ void ReadArmed() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    EventSetTimer(1);
-   Print("[CaseExec] v1.71 loaded — sustained-cross door (3s proof)");
+   // BUG1 fix: restore persistent counters (survive reattach/recompile)
+   if (GlobalVariableCheck("CaseExec_last_id"))   g_last_id   = (long)GlobalVariableGet("CaseExec_last_id");
+   if (GlobalVariableCheck("CaseExec_last_lamp")) g_last_lamp = (long)GlobalVariableGet("CaseExec_last_lamp");
+   if (GlobalVariableCheck("CaseExec_raids"))     g_raids     = (int)GlobalVariableGet("CaseExec_raids");
+   Print("[CaseExec] v1.72 loaded — persistent memory (no reload amnesia) + per-raid cross proof");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -272,6 +284,7 @@ void OnTimer() {
    long id = (long)JNum(txt, "id");
    if (id <= g_last_id) return;      // already processed
    g_last_id = id;
+   GlobalVariableSet("CaseExec_last_id", (double)g_last_id);
    // STALENESS GUARD: reattach resets g_last_id and re-reads the file — never
    // execute an old signal at today's price (bitten twice on 2026-08-04).
    long ts = (long)JNum(txt, "ts");
@@ -328,7 +341,11 @@ void OnTick() {
    // up to InpMaxRaids entries per lamp (Zee's 5-6 burst on a Law-of-Conviction
    // setup). Chase allowance comes per-lamp; stacking allowed onto a verified burst.
    if (g_armed_id > 0 && (long)TimeGMT() - g_armed_ts <= InpMaxAgeSec) {
-      if (g_armed_id != g_last_lamp) { g_last_lamp = g_armed_id; g_raids = 0; g_lamp_ready = true; g_cross_t0 = 0; }
+      if (g_armed_id != g_last_lamp) {
+         g_last_lamp = g_armed_id; g_raids = 0; g_lamp_ready = true; g_cross_t0 = 0;
+         GlobalVariableSet("CaseExec_last_lamp", (double)g_last_lamp);
+         GlobalVariableSet("CaseExec_raids", 0);
+      }
       int raid_cap = (int)MathMin(InpMaxRaids, g_armed_raids);   // diamonds decide
       if (g_raids < raid_cap && StackAllowed(g_armed_side, g_armed_lots)) {
          double abid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
@@ -354,6 +371,8 @@ void OnTick() {
             g_last_send = (long)TimeGMT();
             g_raids++;
             g_lamp_ready = false;
+            g_cross_t0 = 0;                                   // BUG2: fresh proof per raid
+            GlobalVariableSet("CaseExec_raids", g_raids);     // BUG1: survive reloads
             g_burst_left = g_armed_clicks - 1;   // siblings follow (Zee's buy-buy-buy)
             double asl = BrokerSL(g_armed_side == "BUY",
                                   (g_armed_side == "BUY") ? aask : abid, g_armed_sl);

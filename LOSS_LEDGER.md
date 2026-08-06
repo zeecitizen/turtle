@@ -554,3 +554,257 @@ NEW SPECIES ⚠ = unexplained — Claude investigates before anything else is bu
 - EA fire: `[CaseExec] GHOST-DOOR #1785997272 SELL raid 1/6 lamp 4254.74 lots=0.10 chase=1.0 ghost=1.00pt`
 - ghost exit at design distance (-1.02pt vs 1.0 cap) — bounded toll
 - slope -0.40 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 10:20:10 (broker) — BUY 0.10 · **-11.30** (-1.13pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786000781 BUY raid 1/6 lamp 4263.31 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.13pt vs 1.0 cap) — bounded toll
+- slope +0.44 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 10:20:29 (broker) — BUY 0.10 · **-10.80** (-1.08pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786000781 BUY raid 1/6 lamp 4263.31 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.08pt vs 1.0 cap) — bounded toll
+- slope +0.42 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 10:20:30 (broker) — BUY 0.10 · **-11.20** (-1.12pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786000781 BUY raid 1/6 lamp 4263.31 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.12pt vs 1.0 cap) — bounded toll
+- slope +0.42 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 10:51:32 (broker) — SELL 0.10 · **-10.40** (-1.04pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1786002662 SELL lots=0.10 ghost=1.00pt stackable parachute=4257.82`
+- ghost exit at design distance (-1.04pt vs 1.0 cap) — bounded toll
+- slope -0.29 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 10:52:55 (broker) — SELL 0.10 · **-10.30** (-1.03pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786002742 SELL raid 1/1 lamp 4254.43 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.03pt vs 1.0 cap) — bounded toll
+- slope -0.31 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 11:19:31 (broker) — BUY 0.10 · **-0.30** (-0.03pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786004285 BUY raid 1/3 lamp 4270.07 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-0.03pt vs 1.0 cap) — bounded toll
+- slope +0.49 aligned; AUTO said RANGE — entry direction was legitimate
+
+---
+
+## 2026.08.06 11:20:14 (broker) — BUY 0.10 · **-17.20** (-1.72pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] signal #1786004380 BUY lots=0.10 ghost=1.00pt stackable parachute=4266.61`
+- ghost exit with 0.72pt SLIPPAGE beyond design (fast tape/thin book)
+- slope +0.47 aligned; AUTO said RANGE — entry direction was legitimate
+
+---
+
+## 2026.08.06 11:25:13 (broker) — BUY 0.10 · **-10.40** (-1.04pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1786004696 BUY lots=0.10 ghost=1.00pt stackable parachute=4263.25`
+- ghost exit at design distance (-1.04pt vs 1.0 cap) — bounded toll
+- slope +0.29 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 11:33:45 (broker) — BUY 0.10 · **-10.50** (-1.05pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786005202 BUY raid 1/3 lamp 4273.82 lots=0.10 chase=3.0 ghost=1.00pt`
+- ghost exit at design distance (-1.05pt vs 1.0 cap) — bounded toll
+- dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
+- slope +0.23 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 11:36:27 (broker) — BUY 0.10 · **-10.50** (-1.05pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1786005322 BUY lots=0.10 ghost=1.00pt stackable parachute=4271.61`
+- ghost exit at design distance (-1.05pt vs 1.0 cap) — bounded toll
+- slope +0.25 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 11:40:50 (broker) — BUY 0.10 · **-12.00** (-1.20pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] signal #1786005322 BUY lots=0.10 ghost=1.00pt stackable parachute=4271.61`
+- ghost exit with 0.20pt SLIPPAGE beyond design (fast tape/thin book)
+- slope +0.21 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 11:50:42 (broker) — BUY 0.10 · **-8.50** (-0.85pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786006139 BUY raid 1/6 lamp 4274.79 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-0.85pt vs 1.0 cap) — bounded toll
+- slope +0.28 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 11:50:50 (broker) — BUY 0.10 · **-10.50** (-1.05pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786006139 BUY raid 1/6 lamp 4274.79 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.05pt vs 1.0 cap) — bounded toll
+- slope +0.28 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 11:50:58 (broker) — BUY 0.10 · **-10.90** (-1.09pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786006139 BUY raid 1/6 lamp 4274.79 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.09pt vs 1.0 cap) — bounded toll
+- slope +0.28 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 12:55:11 (broker) — SELL 0.10 · **-8.50** (-0.85pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1786009271 SELL lots=0.10 ghost=1.00pt stackable parachute=4278.58`
+- ghost exit at design distance (-0.85pt vs 1.0 cap) — bounded toll
+- slope -0.33 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 12:55:18 (broker) — SELL 0.10 · **-10.00** (-1.00pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786009948 SELL raid 1/6 lamp 4271.96 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.00pt vs 1.0 cap) — bounded toll
+- slope -0.33 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 12:55:25 (broker) — SELL 0.10 · **-9.60** (-0.96pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786009948 SELL raid 1/6 lamp 4271.96 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-0.96pt vs 1.0 cap) — bounded toll
+- slope -0.33 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 12:55:26 (broker) — SELL 0.10 · **-10.30** (-1.03pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786009948 SELL raid 1/6 lamp 4271.96 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.03pt vs 1.0 cap) — bounded toll
+- slope -0.33 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 12:55:26 (broker) — SELL 0.10 · **-10.20** (-1.02pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786009948 SELL raid 1/6 lamp 4271.96 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.02pt vs 1.0 cap) — bounded toll
+- slope -0.33 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 12:55:27 (broker) — SELL 0.10 · **-10.40** (-1.04pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786009948 SELL raid 1/6 lamp 4271.96 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.04pt vs 1.0 cap) — bounded toll
+- slope -0.33 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 13:01:37 (broker) — SELL 0.10 · **-9.50** (-0.95pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1786010479 SELL lots=0.10 ghost=1.00pt stackable parachute=4273.80`
+- ghost exit at design distance (-0.95pt vs 1.0 cap) — bounded toll
+- slope -0.24 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 13:04:30 (broker) — SELL 0.10 · **-9.70** (-0.97pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786010624 SELL raid 2/6 lamp 4271.58 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-0.97pt vs 1.0 cap) — bounded toll
+- repeat raid — must have followed a WINNING raid (v1.62) and a lamp re-touch (v1.61); if raid 1 lost, this is a NEW BUG
+- slope -0.20 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 13:12:34 (broker) — SELL 0.10 · **-12.50** (-1.25pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786011127 SELL raid 1/1 lamp 4268.90 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit with 0.25pt SLIPPAGE beyond design (fast tape/thin book)
+- slope -0.18 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 13:21:49 (broker) — SELL 0.10 · **-7.80** (-0.78pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786011685 SELL raid 1/1 lamp 4268.16 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-0.78pt vs 1.0 cap) — bounded toll
+- slope -0.18 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 13:23:47 (broker) — SELL 0.10 · **-9.50** (-0.95pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] signal #1786011805 SELL lots=0.10 ghost=1.00pt stackable parachute=4271.06`
+- ghost exit at design distance (-0.95pt vs 1.0 cap) — bounded toll
+- slope -0.16 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 13:58:45 (broker) — BUY 0.10 · **-9.90** (-0.99pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786013859 BUY raid 1/3 lamp 4271.17 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-0.99pt vs 1.0 cap) — bounded toll
+- slope +0.07 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 14:03:26 (broker) — BUY 0.10 · **-10.40** (-1.04pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786014140 BUY raid 1/1 lamp 4273.12 lots=0.10 chase=3.0 ghost=1.00pt`
+- ghost exit at design distance (-1.04pt vs 1.0 cap) — bounded toll
+- dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
+- slope +0.17 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 14:18:56 (broker) — SELL 0.10 · **-0.10** (-0.01pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786014743 SELL raid 1/6 lamp 4266.68 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-0.01pt vs 1.0 cap) — bounded toll
+- slope -0.09 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 14:41:26 (broker) — SELL 0.10 · **-0.70** (-0.07pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786015513 SELL raid 1/6 lamp 4260.35 lots=0.10 chase=3.0 ghost=1.00pt`
+- ghost exit at design distance (-0.07pt vs 1.0 cap) — bounded toll
+- dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
+- slope -0.21 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 14:44:05 (broker) — SELL 0.10 · **-10.10** (-1.01pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786015513 SELL raid 2/6 lamp 4260.35 lots=0.10 chase=3.0 ghost=1.00pt`
+- ghost exit at design distance (-1.01pt vs 1.0 cap) — bounded toll
+- repeat raid — must have followed a WINNING raid (v1.62) and a lamp re-touch (v1.61); if raid 1 lost, this is a NEW BUG
+- dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
+- slope -0.21 aligned; AUTO said DOWNTREND — entry direction was legitimate
+
+---
+
+## 2026.08.06 15:10:25 (broker) — BUY 0.10 · **-10.80** (-1.08pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1786018214 BUY raid 1/1 lamp 4259.51 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.08pt vs 1.0 cap) — bounded toll
+- slope +0.11 aligned; AUTO said UPTREND — entry direction was legitimate
