@@ -457,7 +457,14 @@ def write_armed(bars):
     # -30.00) were BUYs fired while the 30-bar slope was falling hard — the 3-peak
     # slant lags a fresh turn. Never fire against a strongly opposed slope.
     slope = TE.slope_of(_te_bars(bars))
-    dt = dead_tape(bars) or choppy(bars)   # dead OR directionless: same law
+    # THE REGIME SWITCH (Zee-approved 2026-08-06, receipts-backtested on both days:
+    # today -306.90 -> -95.60, yesterday's slice -11.20 -> +32.20 at 72% WR):
+    # ER < 0.25 = the tape is not trending -> NO entries for ANYONE, diamonds
+    # included. The machine trades only when the tape moves like February moved.
+    if choppy(bars):
+        ARMED.unlink(missing_ok=True)
+        return w
+    dt = dead_tape(bars)
     if night_window():
         ARMED.unlink(missing_ok=True)              # night gate: the ghost rests
         return w
@@ -512,7 +519,15 @@ def write_armed(bars):
 
 def main():
     for k, v in CFG.items(): setattr(B, k, v)
-    seen = set(); seq = 0
+    # RESTART-REFIRE FIX (2026-08-06, the 18:33 late SELL): the dedup set lived in
+    # memory, so every matcher restart re-emitted any setup still inside the 3-min
+    # freshness window — and this matcher was restarted ~15 times today. The dedup
+    # now persists to disk across restarts.
+    _SEEN_F = Path(__file__).parent / ".emitted_setups.json"
+    try:
+        seen = set(tuple(x) for x in json.loads(_SEEN_F.read_text()))
+    except Exception:
+        seen = set(); seq = 0
     last_armed_key = None
     print("[oanda_matcher] live fast-scalp — watching oanda_m1.csv (ghost-door armed mode)")
     while True:
@@ -533,6 +548,10 @@ def main():
                     if key in seen or s["open_t"] < last_closed - timedelta(minutes=3):
                         continue
                     seen.add(key)
+                    try:
+                        _SEEN_F.write_text(json.dumps([list(k) for k in list(seen)[-200:]], default=str))
+                    except Exception:
+                        pass
                     if not zee_allows(s["side"]):
                         print(f"[oanda_matcher] cockpit gate: {s['side']} blocked by Zee's call")
                         continue
@@ -548,9 +567,13 @@ def main():
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"no-demand rally / no-supply dip (a move nobody funds)")
                         continue
-                    if (dead_tape(bars) or choppy(bars)) and not swept(bars, s["u"], s["i"], s["side"]):
+                    if choppy(bars):
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
-                              f"dead/choppy tape and no conviction (boredom may not hunt)")
+                              f"REGIME SWITCH: tape not trending (ER < 0.25)")
+                        continue
+                    if dead_tape(bars) and not swept(bars, s["u"], s["i"], s["side"]):
+                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                              f"dead tape and no conviction (boredom may not hunt)")
                         continue
                     bb = bars[s["i"]]
                     if bb.body_ratio < 0.5:
