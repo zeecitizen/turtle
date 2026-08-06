@@ -332,7 +332,7 @@ def draw(bars, back=120, out=None):
         kw["title"] = kw["title"] + (
             "  |  Law of Conviction: SATISFIED" if wd.get("swept")
             else "  |  Law of Conviction: pending") + (
-            "  +  2nd Law (NS/ND)" if wd.get("law2") else "") + (
+            "") + (
             "  +  3rd Law (EMA5)" if wd.get("law3") else "") + (
             "  +  4th Law (RSI div)" if wd.get("law4") else "") + (
             "  +  5th Law (wick/vol)" if wd.get("law5") else "")
@@ -340,9 +340,8 @@ def draw(bars, back=120, out=None):
         # Law. "two diamonds means two convictions.. the more conviction we have the
         # more diamonds we add." Rendered with Zee's own diamond.png (2026-08-05,
         # "so our diamonds look coolest"); gold scatter only as fallback.
-        n_laws = (int(bool(wd.get("swept"))) + int(bool(wd.get("law2")))
-                  + int(bool(wd.get("law3"))) + int(bool(wd.get("law4")))
-                  + int(bool(wd.get("law5"))))
+        n_laws = (int(bool(wd.get("swept"))) + int(bool(wd.get("law3")))
+                  + int(bool(wd.get("law4"))) + int(bool(wd.get("law5"))))
         # ❤ PROBATION MARK (Zee): laws still earning their diamond (Law 6 Selling
         # Climax) draw a red heart beside the diamonds — "this setup has a chance
         # greater than others" — but grant no money until promoted.
