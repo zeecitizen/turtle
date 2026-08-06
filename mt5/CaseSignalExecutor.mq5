@@ -12,7 +12,13 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.70"
+#property version   "1.71"
+// v1.71 SUSTAINED CROSS (the 15:10 doji wick-poke, -$10.80): a doji's wick kissed
+// the lamp for ONE second, the door fired, price rejected instantly. Real breakouts
+// HOLD beyond the lamp; pokes die in under a second. The door now requires the
+// cross to persist InpCrossHoldS seconds before firing. (The momentum-body law
+// only exists on the closed-candle path — the door cannot judge an unfinished
+// candle, but it CAN demand the cross prove itself for three seconds.)
 // v1.70 GREEN SWEEP — the true "Close All Profitable" semantics (Zee's example:
 // +1 -5 +3 +4 -9 +8 -> sweep banks the greens (+16), reds -9 -5 stay and fight;
 // later +1 -3 -> the green's own trail handles it; reds exit via ghost/BE).
@@ -127,6 +133,7 @@ input double InpMaxStackLots = 1.20;   // hard ceiling on total stacked lots (co
 input int    InpMaxRaids     = 6;      // apparitions per convicted lamp (Zee's 5-6 burst)
 input int    InpSendCooldownS = 4;     // seconds after any order send before another entry
 input int    InpClickSpaceS   = 2;     // spacing between burst sibling clicks
+input int    InpCrossHoldS    = 3;     // door fires only after the cross holds this long
 input int    InpSibHoldS      = 65;    // sibling hold seconds (Feb-11 median; time study)
 input int    InpGreenMin      = 2;     // sweep needs at least this many GREEN clicks
 input double InpGreenSumPts   = 0.6;   // ...whose combined profit reaches this (0.6 = ~$6)
@@ -144,6 +151,7 @@ long    g_armed_id = -1, g_last_lamp = -1, g_armed_ts = 0;
 int     g_raids = 0, g_armed_raids = 1;   // per-lamp allowance from the matcher (diamonds)
 bool    g_lamp_ready = true;               // harvest-and-return: reset by a lamp re-touch
 long    g_last_send = 0;                   // send-cooldown anchor (epoch, TimeGMT)
+long    g_cross_t0 = 0;                    // sustained-cross: when the cross was first seen
 double  g_armed_sl = 0;                    // structural SL from the matcher (0 = none)
 int     g_armed_clicks = 1;                // burst size (matcher "clicks", 0.10 each)
 int     g_burst_left = 0;                  // siblings still to fire for this burst
@@ -222,7 +230,7 @@ void ReadArmed() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    EventSetTimer(1);
-   Print("[CaseExec] v1.70 loaded — GREEN SWEEP (close all profitable, reds fight on)");
+   Print("[CaseExec] v1.71 loaded — sustained-cross door (3s proof)");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -320,7 +328,7 @@ void OnTick() {
    // up to InpMaxRaids entries per lamp (Zee's 5-6 burst on a Law-of-Conviction
    // setup). Chase allowance comes per-lamp; stacking allowed onto a verified burst.
    if (g_armed_id > 0 && (long)TimeGMT() - g_armed_ts <= InpMaxAgeSec) {
-      if (g_armed_id != g_last_lamp) { g_last_lamp = g_armed_id; g_raids = 0; g_lamp_ready = true; }
+      if (g_armed_id != g_last_lamp) { g_last_lamp = g_armed_id; g_raids = 0; g_lamp_ready = true; g_cross_t0 = 0; }
       int raid_cap = (int)MathMin(InpMaxRaids, g_armed_raids);   // diamonds decide
       if (g_raids < raid_cap && StackAllowed(g_armed_side, g_armed_lots)) {
          double abid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
@@ -336,7 +344,13 @@ void OnTick() {
             cross = (aask > g_armed_level && aask <= g_armed_level + g_armed_chase);
          else if (g_lamp_ready && g_armed_side == "SELL")
             cross = (abid < g_armed_level && abid >= g_armed_level - g_armed_chase);
-         if (cross && (long)TimeGMT() - g_last_send >= InpSendCooldownS) {
+         // SUSTAINED CROSS (v1.71): the cross must prove itself for InpCrossHoldS
+         // seconds — wick-pokes reject in under one and never earn the fire.
+         if (cross && g_cross_t0 == 0) g_cross_t0 = (long)TimeGMT();
+         if (!cross) g_cross_t0 = 0;
+         bool proven = cross && g_cross_t0 > 0
+                       && (long)TimeGMT() - g_cross_t0 >= InpCrossHoldS;
+         if (proven && (long)TimeGMT() - g_last_send >= InpSendCooldownS) {
             g_last_send = (long)TimeGMT();
             g_raids++;
             g_lamp_ready = false;
