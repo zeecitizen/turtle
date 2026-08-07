@@ -69,6 +69,9 @@ class Cockpit:
                   command=self.regen).pack(side="left", padx=6)
         # No AUTO button (Zee): AUTO is the resting state — every manual call fades
         # back to it after 10 minutes on its own.
+        tk.Button(row, text="📜 Trades", font=("Segoe UI", 12, "bold"),
+                  bg="#0b7285", fg="white", padx=12, pady=8, relief="flat",
+                  command=self.show_trades).pack(side="left", padx=6)
         tk.Button(row, text="📊 Versions", font=("Segoe UI", 12, "bold"),
                   bg="#1c7ed6", fg="white", padx=12, pady=8, relief="flat",
                   command=self.show_versions).pack(side="left", padx=6)
@@ -128,6 +131,82 @@ class Cockpit:
         except Exception:
             self.photo = tk.PhotoImage(file=str(PNG))
         self.img.config(image=self.photo)
+
+    # ── THE TRADE LIST with a forensic button per trade (Zee 2026-08-07) ──
+    def show_trades(self):
+        import csv as _csv
+        top = tk.Toplevel(self.root); top.title("📜 Trades — click 🔍 to inspect the setup")
+        top.configure(bg=BG)
+        head = tk.Label(top, text="today's fills — 🔍 draws the UHV, trigger lines, BO candle",
+                        font=("Segoe UI", 13, "bold"), bg=BG, fg=FG)
+        head.pack(pady=(10, 6))
+        canvas = tk.Canvas(top, bg=BG, highlightthickness=0,
+                           width=760, height=min(700, int(self.root.winfo_screenheight() * 0.6)))
+        sb = tk.Scrollbar(top, orient="vertical", command=canvas.yview)
+        frame = tk.Frame(canvas, bg=BG)
+        frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=frame, anchor="nw")
+        canvas.configure(yscrollcommand=sb.set)
+        canvas.pack(side="left", fill="both", expand=True, padx=(10, 0), pady=(0, 10))
+        sb.pack(side="right", fill="y", pady=(0, 10))
+
+        rows = []
+        try:
+            for r in self.FILLS_F.read_text(errors="ignore").splitlines():
+                c = r.split(",")
+                if len(c) < 8 or not c[0].startswith("2026."): continue
+                try: lots, pnl = float(c[5]), float(c[7])
+                except ValueError: continue
+                if lots not in (0.10, 0.20, 0.30, 0.60): continue
+                rows.append((c[0], c[4].replace("_closed", ""), lots, float(c[6]), pnl))
+        except Exception:
+            pass
+        for ts, side, lots, closepx, pnl in reversed(rows[-40:]):
+            r = tk.Frame(frame, bg=BG); r.pack(fill="x", pady=1)
+            col = "#2f9e44" if pnl > 0 else "#e03131"
+            tk.Label(r, text=f"{ts[5:]}", font=("Consolas", 11), bg=BG, fg=DIM,
+                     width=17, anchor="w").pack(side="left")
+            tk.Label(r, text=side, font=("Consolas", 11, "bold"), bg=BG,
+                     fg="#4dabf7" if side == "BUY" else "#f08c00", width=5).pack(side="left")
+            tk.Label(r, text=f"{lots:.2f}", font=("Consolas", 11), bg=BG, fg=DIM,
+                     width=6).pack(side="left")
+            tk.Label(r, text=f"{pnl:+8.2f}", font=("Consolas", 12, "bold"), bg=BG,
+                     fg=col, width=10).pack(side="left")
+            tk.Button(r, text="🔍 forensic", font=("Segoe UI", 10, "bold"),
+                      bg="#343a40", fg=FG, relief="flat", padx=8,
+                      command=lambda t=ts, s2=side, x=closepx: self.forensic(t, s2, x)
+                      ).pack(side="left", padx=8)
+
+    def forensic(self, ts, side, exit_px):
+        """Draw and show one trade's UHV / trigger lines / BO candle."""
+        win = tk.Toplevel(self.root); win.title(f"🔍 {ts} {side}")
+        win.configure(bg=BG)
+        lbl = tk.Label(win, text="drawing…", font=("Segoe UI", 14), bg=BG, fg=DIM)
+        lbl.pack(padx=20, pady=20)
+
+        def work():
+            try:
+                sys.path.insert(0, str(Path(TE.__file__).parent))
+                import forensic_chart as FC
+                import importlib; importlib.reload(FC)
+                p = FC.draw_trade(ts, side, exit_px)
+            except Exception as ex:
+                p = None
+                self.root.after(0, lambda: lbl.config(text=f"could not draw: {ex}"))
+            if p:
+                self.root.after(0, lambda: self._show_png(win, lbl, p))
+            else:
+                self.root.after(0, lambda: lbl.config(
+                    text="no EA fire line found for this trade (pre-Ghost era, or logs rotated)"))
+        threading.Thread(target=work, daemon=True).start()
+
+    def _show_png(self, win, lbl, path):
+        from PIL import Image, ImageTk
+        im = Image.open(path)
+        im.thumbnail((int(self.root.winfo_screenwidth() * 0.8),
+                      int(self.root.winfo_screenheight() * 0.72)))
+        ph = ImageTk.PhotoImage(im)
+        lbl.config(image=ph, text=""); lbl.image = ph
 
     def show_versions(self):
         """Zee: the version-vs-winrate graph — after which version did WR drop/climb."""
