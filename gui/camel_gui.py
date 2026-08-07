@@ -49,25 +49,45 @@ class Cockpit:
         self.root.configure(bg=BG)
         self.photo = None
 
-        self.stage = tk.Label(self.root, text="", font=("Segoe UI", 26, "bold"),
+        # SCROLLABLE BODY (Zee 2026-08-07: "I can't see the bottom buttons"): every
+        # widget below lives inside this canvas, so a tall chart can never push the
+        # controls off-screen. Mouse wheel scrolls; the window opens at 92% height.
+        sw0, sh0 = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        self.root.geometry(f"{int(sw0 * 0.92)}x{int(sh0 * 0.92)}+20+10")
+        _outer = tk.Frame(self.body, bg=BG); _outer.pack(fill="both", expand=True)
+        self._canvas = tk.Canvas(_outer, bg=BG, highlightthickness=0)
+        _vsb = tk.Scrollbar(_outer, orient="vertical", command=self._canvas.yview)
+        self.body = tk.Frame(self._canvas, bg=BG)
+        self.body.bind("<Configure>",
+                       lambda e: self._canvas.configure(scrollregion=self._canvas.bbox("all")))
+        self._win_id = self._canvas.create_window((0, 0), window=self.body, anchor="n")
+        self._canvas.bind("<Configure>",
+                          lambda e: self._canvas.coords(self._win_id, e.width / 2, 0))
+        self._canvas.configure(yscrollcommand=_vsb.set)
+        self._canvas.pack(side="left", fill="both", expand=True)
+        _vsb.pack(side="right", fill="y")
+        self.root.bind_all("<MouseWheel>",
+                           lambda e: self._canvas.yview_scroll(int(-e.delta / 120), "units"))
+
+        self.stage = tk.Label(self.body, text="", font=("Segoe UI", 26, "bold"),
                               bg=BG, fg=DIM)
         self.stage.pack(pady=(8, 0))
-        srow = tk.Frame(self.root, bg=BG); srow.pack(pady=(2, 0))
+        srow = tk.Frame(self.body, bg=BG); srow.pack(pady=(2, 0))
         tk.Button(srow, text="👀 draw the setup forming now", font=("Segoe UI", 11, "bold"),
                   bg="#7048e8", fg="white", padx=12, pady=5, relief="flat",
                   command=self.show_forming).pack()
-        self.regime = tk.Label(self.root, text="", font=("Segoe UI", 20, "bold"),
+        self.regime = tk.Label(self.body, text="", font=("Segoe UI", 20, "bold"),
                                bg=BG, fg="#e03131")
         self.regime.pack(pady=(2, 0))
-        self.clocks = tk.Label(self.root, text="", font=("Segoe UI", 12), bg=BG, fg=DIM)
+        self.clocks = tk.Label(self.body, text="", font=("Segoe UI", 12), bg=BG, fg=DIM)
         self.clocks.pack(pady=(0, 2))
-        self.machine = tk.Label(self.root, text="machine: …", font=("Segoe UI", 13, "bold"),
+        self.machine = tk.Label(self.body, text="machine: …", font=("Segoe UI", 13, "bold"),
                                 bg=BG, fg=DIM)
         self.machine.pack(pady=(4, 2))
-        self.img = tk.Label(self.root, bg=BG)
+        self.img = tk.Label(self.body, bg=BG)
         self.img.pack(padx=10, pady=4)
 
-        row = tk.Frame(self.root, bg=BG); row.pack(pady=6)
+        row = tk.Frame(self.body, bg=BG); row.pack(pady=6)
         tk.Button(row, text="🔄  Regenerate humps", font=("Segoe UI", 13, "bold"),
                   bg="#343a40", fg=FG, padx=16, pady=8, relief="flat",
                   command=self.regen).pack(side="left", padx=6)
@@ -92,7 +112,7 @@ class Cockpit:
                       bg=COLORS[name], fg="white", padx=12, pady=8, relief="flat",
                       command=lambda n=name: self.set_call(n)).pack(side="left", padx=6)
 
-        self.status = tk.Label(self.root, text="", font=("Segoe UI", 12), bg=BG, fg=FG)
+        self.status = tk.Label(self.body, text="", font=("Segoe UI", 12), bg=BG, fg=FG)
         self.status.pack(pady=(2, 10))
 
         self.tick()
