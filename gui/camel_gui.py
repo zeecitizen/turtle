@@ -228,10 +228,11 @@ class Cockpit:
                 import forensic_chart as FC
                 import importlib; importlib.reload(FC)
                 p, msg = FC.draw_forming()
+                ctx = FC.draw_context_now() if p else None
             except Exception as ex:
-                p, msg = None, f"error: {ex}"
+                p, msg, ctx = None, f"error: {ex}", None
             if p:
-                self.root.after(0, lambda: (self._show_png(win, lbl, p),
+                self.root.after(0, lambda: (self._show_pngs(win, lbl, p, ctx),
                                             win.title(f"👀 forming — {msg}")))
             else:
                 self.root.after(0, lambda: lbl.config(text=msg))
@@ -283,8 +284,12 @@ class Cockpit:
         canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-e.delta/120), "units"))
         win._imgs = []
         maxw = int(sw * 0.80)
-        for pth, cap in ((path, "🔍 THE SETUP — UHV, trigger lines, breakout candle"),
-                         (ctx, "🌄 THE CIRCUMSTANCES — trend, slope and volume around this trade")):
+        forming = "forming_now" in str(path)
+        cap1 = ("👀 THE SETUP FORMING — UHV and its trigger lines, breakout still to come"
+                if forming else "🔍 THE SETUP — UHV, trigger lines, breakout candle")
+        cap2 = ("🌄 THE CIRCUMSTANCES NOW — trend, slope and volume right now" if forming
+                else "🌄 THE CIRCUMSTANCES — trend, slope and volume around this trade")
+        for pth, cap in ((path, cap1), (ctx, cap2)):
             if not pth:
                 continue
             tk.Label(frame, text=cap, font=("Segoe UI", 13, "bold"),
