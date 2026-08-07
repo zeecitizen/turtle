@@ -140,7 +140,10 @@ def resolve_trade(broker_ts, side):
             if not m:
                 continue
             lt = datetime.combine(day, datetime.strptime(m.group(1), "%H:%M:%S").time())
-            if timedelta(0) <= (close_local - lt) <= timedelta(minutes=45):
+            # 45min -> 3h (2026-08-07): trades held through the grace period and the
+            # 25-minute campaign window closed well after their fire, so the old
+            # window said "no EA fire line found" on perfectly good trades.
+            if timedelta(0) <= (close_local - lt) <= timedelta(hours=3):
                 if best is None or lt > best[0]:
                     best = (lt, l)
     if best is None:
@@ -149,6 +152,30 @@ def resolve_trade(broker_ts, side):
     lm = re.search(r"lamp (\d+\.\d+)", best[1])
     if lm:
         lamp = float(lm.group(1))
+    else:
+        # the chosen line is a signal-path fire (no lamp printed). If a DOOR fire for
+        # the same setup sits within 2 minutes, borrow its lamp — that is the same
+        # setup seen by the other path. (2026-08-07: this was the real reason two
+        # trades reported "no EA fire line found".)
+        for lf in sorted(glob.glob(MT5D + "/MQL5/Logs/*.log"), key=os.path.getmtime)[-4:]:
+            stem = os.path.basename(lf)[:8]
+            if not stem.isdigit():
+                continue
+            day2 = datetime.strptime(stem, "%Y%m%d").date()
+            for l in _read_log(lf):
+                if "GHOST-DOOR" not in l or side not in l:
+                    continue
+                m2 = re.search(r"(\d\d:\d\d:\d\d)", l)
+                lm2 = re.search(r"lamp (\d+\.\d+)", l)
+                if not m2 or not lm2:
+                    continue
+                lt2 = datetime.combine(day2, datetime.strptime(m2.group(1), "%H:%M:%S").time())
+                if abs((lt2 - best[0]).total_seconds()) <= 120:
+                    lamp = float(lm2.group(1))
+                    best = (lt2, l)
+                    break
+            if lamp is not None:
+                break
     entry_utc = best[0] - timedelta(hours=5)          # local (Karachi) -> UTC
     rows = load()
     # the UHV: the most recent candle before entry whose low (SELL) / high (BUY)
@@ -161,6 +188,17 @@ def resolve_trade(broker_ts, side):
             if abs(edge - lamp) < 0.06:
                 uhv_utc = r[0]
                 break
+    if lamp is None:
+        # a pure signal-path fire: its printed parachute sits InpHardSLPts (3.0) beyond
+        # the entry, so the entry candle's close is recoverable from the bars instead.
+        pm = re.search(r"parachute=(\d+\.\d+)", best[1])
+        if pm:
+            para = float(pm.group(1))
+            for x in load():
+                if abs((x[0] - entry_utc).total_seconds()) <= 90:
+                    if abs(abs(x[4] - para) - 3.0) < 0.35:
+                        lamp = x[4]
+                        break
     if uhv_utc is None:
         # signal-path fire (no lamp in the line): ask the detector which UHV that
         # breakout candle belonged to.
@@ -170,7 +208,8 @@ def resolve_trade(broker_ts, side):
             import oanda_live_matcher as _M, build_entry_review_m5 as _B
             for k2, v2 in _M.CFG.items():
                 setattr(_B, k2, v2)
-            bb = _M.load_bars()
+            # the ARCHIVE, not the rolling live window — older trades live there
+            bb = [_B.Bar(x[0], x[1], x[2], x[3], x[4], int(x[5])) for x in load()]
             for st in _B.detect_full(bb):
                 if st["side"] == side and abs((st["open_t"] - entry_utc).total_seconds()) <= 120:
                     uhv_utc = st["uhv_t"]
