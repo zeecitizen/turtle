@@ -671,10 +671,15 @@ def main():
     # freshness window — and this matcher was restarted ~15 times today. The dedup
     # now persists to disk across restarts.
     _SEEN_F = Path(__file__).parent / ".emitted_setups.json"
+    seq = 0                     # BUGFIX 2026-08-07: seq was ONLY initialised in the
+                                # except branch, so whenever the dedup file loaded
+                                # successfully every signal emission died with
+                                # "cannot access local variable seq" — the machine
+                                # could not fire at all once the door was retired.
     try:
         seen = set(tuple(x) for x in json.loads(_SEEN_F.read_text()))
     except Exception:
-        seen = set(); seq = 0
+        seen = set()
     last_armed_key = None
     print("[oanda_matcher] live fast-scalp — watching oanda_m1.csv (ghost-door armed mode)")
     while True:
