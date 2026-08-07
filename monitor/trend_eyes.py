@@ -290,7 +290,29 @@ def draw(bars, back=120, out=None):
     # bar, coloured by its own verdict — green up, red down, blue near-horizontal.
     lines, colors, widths = [], [], []
     if len(humps) >= 2:
-        lines.append(humps); colors.append("#868e96"); widths.append(2.0)
+        # THE CAMEL HUMPS, CURVED (Zee 2026-08-07): "the humps should be curvy, right
+        # now we draw lines with triangular edges." A Catmull-Rom spline through the
+        # swing points (no scipy on this machine), thick, and coloured by the trend —
+        # green for an uptrend, red for a downtrend.
+        _pts = [(bars[sw.i][0] + _td(hours=5), float(sw.price)) for sw in swings]
+        _xs = [q[0] for q in _pts]; _ys = [q[1] for q in _pts]
+        _curve = []
+        _ext = [_ys[0]] + _ys + [_ys[-1]]                 # duplicate the endpoints
+        for i in range(len(_ys) - 1):
+            p0, p1, p2, p3 = _ext[i], _ext[i + 1], _ext[i + 2], _ext[i + 3]
+            t0, t1 = _xs[i], _xs[i + 1]
+            span = (t1 - t0).total_seconds()
+            steps = 14
+            for k in range(steps):
+                t = k / steps
+                y = 0.5 * ((2 * p1) + (-p0 + p2) * t
+                           + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t
+                           + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t)
+                _curve.append((t0 + _td(seconds=span * t), y))
+        _curve.append(_pts[-1])
+        _hcol = {"UPTREND": "#2f9e44", "DOWNTREND": "#e03131"}.get(
+            auto_call(bars)["trend"], "#868e96")
+        lines.append(_curve); colors.append(_hcol); widths.append(4.5)
     hs = [s for s in swings if s.kind == "H"][-3:]
     if len(hs) >= 2:
         xs = [s.i for s in hs]; ys = [s.price for s in hs]
