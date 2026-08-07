@@ -417,8 +417,9 @@ def find_armed(bars):
             c = bars[k]
             if not (c.is_bear if side == "BUY" else c.is_bull): continue
             if c.body_ratio < B.UHV_BODY_MIN: continue
-            _lk = bars[max(0, k - 20):k]                   # THE ULTRA-VOLUME LAW (Zee)
-            if _lk and c.v < B.UHV_VOL_MIN * (sum(x.v for x in _lk) / len(_lk)): continue
+            if B.UHV_VOL_MIN > 0:                          # optional absolute floor
+                _lk = bars[max(0, k - 20):k]
+                if _lk and c.v < B.UHV_VOL_MIN * (sum(x.v for x in _lk) / len(_lk)): continue
             # COLOUR-AWARE UHV (Zee 2026-08-05, Option B) — see build_entry_review_m5
             if best is None or c.v > bars[best].v: best = k
         if best is None: continue
