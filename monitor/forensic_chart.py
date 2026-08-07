@@ -122,7 +122,15 @@ def resolve_trade(broker_ts, side):
     """Return dict(entry_utc, lamp, uhv_utc, entry_px, exit_px) for one fill."""
     close_local = datetime.strptime(broker_ts, "%Y.%m.%d %H:%M:%S") + timedelta(hours=BROKER_TO_LOCAL_H)
     best = None
-    for lf in sorted(glob.glob(MT5D + "/MQL5/Logs/*.log"), key=os.path.getmtime)[-3:]:
+    for lf in sorted(glob.glob(MT5D + "/MQL5/Logs/*.log"), key=os.path.getmtime)[-4:]:
+        # BUGFIX 2026-08-07 (Zee spotted a chart with no UHV): the log line's date
+        # must come from the LOG FILENAME (20260807.log), not from the fill's date —
+        # otherwise a fire from a previous day matched by time-of-day alone and
+        # handed back a lamp 150 points away from the market.
+        stem = os.path.basename(lf)[:8]
+        if not stem.isdigit():
+            continue
+        day = datetime.strptime(stem, "%Y%m%d").date()
         for l in _read_log(lf):
             if "CaseExec" not in l or side not in l:
                 continue
@@ -131,8 +139,7 @@ def resolve_trade(broker_ts, side):
             m = re.search(r"(\d\d:\d\d:\d\d)", l)
             if not m:
                 continue
-            lt = datetime.combine(close_local.date(),
-                                  datetime.strptime(m.group(1), "%H:%M:%S").time())
+            lt = datetime.combine(day, datetime.strptime(m.group(1), "%H:%M:%S").time())
             if timedelta(0) <= (close_local - lt) <= timedelta(minutes=45):
                 if best is None or lt > best[0]:
                     best = (lt, l)
@@ -154,6 +161,24 @@ def resolve_trade(broker_ts, side):
             if abs(edge - lamp) < 0.06:
                 uhv_utc = r[0]
                 break
+    if uhv_utc is None:
+        # signal-path fire (no lamp in the line): ask the detector which UHV that
+        # breakout candle belonged to.
+        try:
+            sys.path.insert(0, str(Path(__file__).parent))
+            sys.path.insert(0, str(Path(__file__).parent / "strategy_lab"))
+            import oanda_live_matcher as _M, build_entry_review_m5 as _B
+            for k2, v2 in _M.CFG.items():
+                setattr(_B, k2, v2)
+            bb = _M.load_bars()
+            for st in _B.detect_full(bb):
+                if st["side"] == side and abs((st["open_t"] - entry_utc).total_seconds()) <= 120:
+                    uhv_utc = st["uhv_t"]
+                    if lamp is None:
+                        lamp = (bb[st["u"]].h if side == "BUY" else bb[st["u"]].l)
+                    break
+        except Exception:
+            pass
     return dict(entry_utc=entry_utc, lamp=lamp, uhv_utc=uhv_utc, fire=best[1].strip())
 
 
