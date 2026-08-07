@@ -122,7 +122,8 @@ class Cockpit:
         try:
             from PIL import Image, ImageTk
             im = Image.open(PNG)
-            im.thumbnail((1250, 620))
+            sw = self.root.winfo_screenwidth(); sh = self.root.winfo_screenheight()
+            im.thumbnail((int(sw * 0.86), int(sh * 0.66)))   # fill the real screen
             self.photo = ImageTk.PhotoImage(im)
         except Exception:
             self.photo = tk.PhotoImage(file=str(PNG))
@@ -145,7 +146,9 @@ class Cockpit:
         top.title("📊 version vs winrate")
         top.configure(bg=BG)
         from PIL import Image, ImageTk
-        im = Image.open(png); im.thumbnail((1250, 640))
+        im = Image.open(png)
+        im.thumbnail((int(self.root.winfo_screenwidth() * 0.8),
+                      int(self.root.winfo_screenheight() * 0.7)))
         ph = ImageTk.PhotoImage(im)
         lbl = tk.Label(top, image=ph, bg=BG); lbl.image = ph
         lbl.pack(padx=8, pady=8)

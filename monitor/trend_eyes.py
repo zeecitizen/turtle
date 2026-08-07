@@ -307,7 +307,7 @@ def draw(bars, back=120, out=None):
                       "#e03131" if a["slant"] < -SLANT_EPS else "#4dabf7")
         widths.append(4.0)
     style = mpf.make_mpf_style(base_mpf_style="yahoo", gridstyle=":")
-    kw = dict(type="candle", style=style, figsize=(16, 9), volume=True,
+    kw = dict(type="candle", style=style, figsize=(19, 10.5), volume=True,
               title=f"camel humps [{METHOD}] — structure: {r['trend']}  |  "
                     f"AUTO: {a['trend']} ({a['why']})")
     if lines:
@@ -382,7 +382,7 @@ def draw(bars, back=120, out=None):
     # session banner beneath the chart (Zee: mark the NY window as the ideal time)
     stext, scol = session_label()
     fig.text(0.5, 0.005, stext, ha="center", fontsize=13, fontweight="bold", color=scol)
-    fig.savefig(str(out), dpi=110, bbox_inches="tight")
+    fig.savefig(str(out), dpi=155, bbox_inches="tight")   # big screens: ~2900px wide
     import matplotlib.pyplot as plt
     plt.close(fig)
     print(f"  camel humps drawn -> {out}   structure: {r['trend']}   slant: {a['trend']}")

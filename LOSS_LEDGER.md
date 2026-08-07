@@ -908,3 +908,28 @@ NEW SPECIES ⚠ = unexplained — Claude investigates before anything else is bu
 - repeat raid — must have followed a WINNING raid (v1.62) and a lamp re-touch (v1.61); if raid 1 lost, this is a NEW BUG
 - dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
 - slope +0.20 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.07 02:04:30 (broker) — BUY 0.10 · **-24.70** (-2.47pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #934371323 BUY raid 1/6 lamp 4242.89 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit with 1.47pt SLIPPAGE beyond design (fast tape/thin book)
+- slope +0.05 aligned; AUTO said RANGE — entry direction was legitimate
+
+---
+
+## 2026.08.07 03:00:00 (broker) — BUY 0.10 · **-10.40** (-1.04pt) — **DESIGN TOLL**
+
+- EA fire: `[CaseExec] GHOST-DOOR #1577450586 BUY raid 1/3 lamp 4252.31 lots=0.10 chase=1.0 ghost=1.00pt`
+- ghost exit at design distance (-1.04pt vs 1.0 cap) — bounded toll
+- slope +0.23 aligned; AUTO said UPTREND — entry direction was legitimate
+
+---
+
+## 2026.08.07 03:59:58 (broker) — SELL 0.10 · **-30.50** (-3.05pt) — **KNOWN SPECIES**
+
+- EA fire: `[CaseExec] GHOST-DOOR #-2061275521 SELL raid 1/6 lamp 4230.40 lots=0.10 chase=3.0 ghost=1.00pt`
+- ghost exit with 2.05pt SLIPPAGE beyond design (fast tape/thin book)
+- dying-lamp chase entry — stretched-run risk (stretch-guard not yet shipped; candidate fix on 2+ receipts)
+- slope -0.36 aligned; AUTO said DOWNTREND — entry direction was legitimate
