@@ -224,8 +224,30 @@ def resolve_trade(broker_ts, side):
 def draw_trade(broker_ts, side, exit_px, out=None):
     """Render the forensic chart for one fill; returns the PNG path (or None)."""
     r = resolve_trade(broker_ts, side)
-    if not r or r["lamp"] is None:
-        return None
+    if not r:
+        # no fire line at all: still draw the price window around the close so the
+        # trade can be inspected (Zee 2026-08-07 — a dead end is worse than a chart)
+        rows0 = load()
+        ct = datetime.strptime(broker_ts, "%Y.%m.%d %H:%M:%S") - timedelta(hours=3)
+        win0 = [x for x in rows0 if abs((x[0] - ct).total_seconds()) <= 1500]
+        if len(win0) < 8:
+            return None
+        idx0 = pd.DatetimeIndex([x[0] + timedelta(hours=5) for x in win0])
+        df0 = pd.DataFrame({"Open": [x[1] for x in win0], "High": [x[2] for x in win0],
+                            "Low": [x[3] for x in win0], "Close": [x[4] for x in win0],
+                            "Volume": [x[5] for x in win0]}, index=idx0)
+        st0 = mpf.make_mpf_style(base_mpf_style="yahoo", gridstyle=":")
+        fig0, ax0 = mpf.plot(df0, type="candle", style=st0, volume=True, figsize=(16, 9),
+                             returnfig=True,
+                             title=f"{side} closed {broker_ts[11:]} broker — no EA fire "
+                                   f"line in the logs, so no UHV/trigger lines to draw")
+        if exit_px:
+            ax0[0].axhline(exit_px, color="#f08c00", lw=1.6)
+        out2 = Path(__file__).parent / "setup_labels" / f"forensic_{broker_ts[11:].replace(':','')}.png"
+        fig0.savefig(str(out2), dpi=100, bbox_inches="tight"); plt.close(fig0)
+        return out2
+    if r["lamp"] is None:
+        r["lamp"] = exit_px          # last resort: anchor the chart on the exit
     rows = load()
     e_utc = r["entry_utc"]
     u_utc = r["uhv_utc"] or (e_utc - timedelta(minutes=10))

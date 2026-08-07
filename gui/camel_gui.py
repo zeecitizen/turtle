@@ -245,19 +245,24 @@ class Cockpit:
         lbl.pack(padx=20, pady=20)
 
         def work():
+            # 2026-08-07: the old version set an error message and then ALWAYS
+            # overwrote it with "no EA fire line found" — every real exception was
+            # hidden behind a wrong explanation. Now the truth reaches the window.
+            import traceback
             try:
                 sys.path.insert(0, str(Path(TE.__file__).parent))
                 import forensic_chart as FC
                 import importlib; importlib.reload(FC)
                 p = FC.draw_trade(ts, side, exit_px)
-            except Exception as ex:
-                p = None
-                self.root.after(0, lambda: lbl.config(text=f"could not draw: {ex}"))
+            except Exception:
+                err = traceback.format_exc().strip().splitlines()[-1]
+                self.root.after(0, lambda: lbl.config(text="could not draw: " + err))
+                return
             if p:
                 self.root.after(0, lambda: self._show_png(win, lbl, p))
             else:
                 self.root.after(0, lambda: lbl.config(
-                    text="no EA fire line found for this trade (pre-Ghost era, or logs rotated)"))
+                    text="this trade has no matching EA fire line in the logs"))
         threading.Thread(target=work, daemon=True).start()
 
     def _show_png(self, win, lbl, path):

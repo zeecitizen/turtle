@@ -109,14 +109,72 @@ def load_bars():
     return bars
 
 
+def selling_climax_tip(bars, s):
+    """THE REAL-PERSON TIP, PROMOTED TO A DIAMOND (Zee 2026-08-07): a no-supply /
+    no-demand candle in the retracement WITH a heavy counter-trend (selling)
+    background before the UHV. Two independent trials on separate tape lengths:
+    83% WR / +$31.33 and 75% WR / +$21.76 per trade, against a control of the same
+    pattern WITHOUT the background at 43% and 53% (i.e. nothing). The background is
+    the entire signal; the bare no-supply candle is worthless. This diamond also
+    unlocks the STRUCTURAL TARGET — the one subset whose targets actually get hit."""
+    u, i, side = s["u"], s["i"], s["side"]
+    if not any(no_supply_bar(bars, k, side) for k in range(u + 1, i)):
+        return 0
+    look = bars[max(0, u - 20):u]
+    if not look:
+        return 0
+    avgv = sum(b.v for b in look) / len(look)
+    prev = bars[max(0, u - 4):u]
+    heavy = sum(1 for b in prev
+                if (b.is_bear if side == "BUY" else b.is_bull) and b.v >= avgv)
+    return int(heavy >= 2)
+
+
+def structural_target(bars, i, side, entry):
+    """First target = the last CONFIRMED structural swing beyond entry (Zee step 11)."""
+    sw = TE.find_swings(_te_bars(bars), upto=i)
+    if side == "BUY":
+        hs = [x.price for x in sw if x.kind == "H" and x.price > entry + 0.3]
+        return round(hs[-1], 2) if hs else 0.0
+    ls = [x.price for x in sw if x.kind == "L" and x.price < entry - 0.3]
+    return round(ls[-1], 2) if ls else 0.0
+
+
+def diamonds_for(bars, s):
+    """The laws of conviction, counted on a LAWFUL completed setup (2026-08-07,
+    Zee: 'reconnect the multiplier to the lawful path'). Diamonds never gate — they
+    buy CLICKS: 0-1 diamond -> 1 click, 2 -> 2 clicks, 3+ -> 3 clicks, 0.10 each."""
+    u, i = s["u"], s["i"]
+    side = s["side"]
+    d = 0
+    d += int(swept(bars, u, i, side))                      # Law 1 — the sweep
+    closed = bars[:i]
+    if len(closed) >= 6:
+        e5 = _ema5([b.c for b in closed[-40:]])
+        lc = closed[-1]
+        d += int((lc.is_bull and lc.c > e5 + 0.10) if side == "BUY"
+                 else (lc.is_bear and lc.c < e5 - 0.10))   # Law 3 — EMA-5 close
+    bk = bars[i]
+    rng = max(bk.h - bk.l, 1e-9)
+    wick = (bk.h - max(bk.o, bk.c)) / rng if side == "BUY" else (min(bk.o, bk.c) - bk.l) / rng
+    d += int(wick <= 0.25 and s["b_vol"] < s["uhv_vol"])   # Law 5 — wick & volume
+    d += selling_climax_tip(bars, s)                       # THE TIP — promoted 08-07
+    return d
+
+
+def clicks_for(d):
+    return 1 if d <= 1 else (2 if d == 2 else 3)
+
+
 def write_signal(seq, s, lots):
     # id = epoch seconds: MONOTONIC across restarts. A plain counter reset to 1 on
     # every restart while the EA's g_last_id stayed high -> signals silently dropped
     # (and the reverse re-fired old ones). ts feeds the EA's 180s staleness guard.
     now = int(time.time())
-    body = ('{"id":%d,"side":"%s","entry":%.2f,"sl":%.2f,"lots":%.2f,"ts":%d,"time":"%s"}'
-            % (now, s["side"], s["entry"], s["sl"], lots, now,
-               s["open_t"].strftime("%Y-%m-%d %H:%M")))
+    body = ('{"id":%d,"side":"%s","entry":%.2f,"sl":%.2f,"lots":%.2f,"clicks":%d,'
+            '"target":%.2f,"ts":%d,"time":"%s"}'
+            % (now, s["side"], s["entry"], s["sl"], lots, s.get("clicks", 1),
+               s.get("target", 0.0), now, s["open_t"].strftime("%Y-%m-%d %H:%M")))
     SIGNAL.write_text(body, encoding="ascii")
     with LOG.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps({"seq": seq, "id": now, "side": s["side"], "entry": s["entry"],
@@ -675,12 +733,22 @@ def main():
                         continue
                     seq += 1
                     lots = min(feb11_lots(bars, s), RISK_CAP)
+                    _d = diamonds_for(bars, s)
+                    s["clicks"] = clicks_for(_d)
+                    _tip = selling_climax_tip(bars, s)
+                    if _tip:
+                        s["clicks"] = 3                    # full conviction
+                        s["target"] = structural_target(bars, s["i"], s["side"], s["entry"])
                     if night_window():
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"night gate (21:30-01:00 broker rests)")
                         continue
                     if stretch_of(bars, s["entry"], s["side"]) > STRETCH_PT                             or exhausted(bars, s["side"]):
                         lots = 0.10                # stretch/exhaustion humility
+                    print(f"[oanda_matcher] {'*' * _d or 'no'} diamond(s)"
+                          f"{' [TIP: selling-climax]' if _tip else ''} -> "
+                          f"{s['clicks']} click(s) of {lots:.2f}"
+                          f"{f' target {s.get(chr(34)+chr(34)) or s.get(_x)}' if False else ''}")
                     write_signal(seq, s, lots)
                     print(f"[oanda_matcher] SIGNAL #{seq} {s['side']} @{s['entry']} "
                           f"lots={lots:.2f} ({s['open_t'].strftime('%H:%M')}UTC)")

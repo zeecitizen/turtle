@@ -12,7 +12,22 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.74"
+#property version   "1.76"
+// v1.76 THE TIP TRADES TO ITS TARGET (Zee 2026-08-07, "ok promote it"): the
+// selling-climax pattern (no-supply candle WITH a heavy selling background) tested
+// 83% then 75% WR at +$31.33 / +$21.76 per trade across two tape lengths, against a
+// control of the SAME pattern without the background at 43% / 53%. It is now a full
+// diamond: 3 conviction clicks, and uniquely it AIMS at the last structural swing
+// instead of trailing. Those positions carry the comment "ghost-t" — the ratchet
+// never clips them; they run to the broker TP, or die by the basket floor /
+// campaign end / parachute like everyone else.
+// v1.75 CONVICTION RECONNECTED (Zee 2026-08-07): with the door retired, the diamond
+// multiplier had quietly gone inert — clicks forced to 1, raids lived in the door,
+// lots capped: a 4-diamond lamp and a 0-diamond lamp got the identical trade.
+// The matcher now counts the laws on the LAWFUL closed-candle setup and sends
+// "clicks" in case_signal.json (0-1 diamond -> 1, 2 -> 2, 3+ -> 3). The EA fires
+// the extra clicks InpClickSpaceS seconds apart, each one 0.10, each managed by the
+// same basket floor and green sweep. Conviction pays again, with the law intact.
 // v1.74 PATIENCE + COLOUR-ABORT (Zee 2026-08-07, both trial-proven on 187 setups):
 //  * GRACE PERIOD — "a VSA breakout takes several candles to actually go." The tape
 //    agreed: median 15 bars to best price, only 21% peak within 3, and 57% of the
@@ -191,6 +206,11 @@ datetime g_last_bar = 0;                   // colour-abort: last M1 bar we exami
 double  g_armed_sl = 0;                    // structural SL from the matcher (0 = none)
 int     g_armed_clicks = 1;                // burst size (matcher "clicks", 0.10 each)
 int     g_burst_left = 0;                  // siblings still to fire for this burst
+int     g_sig_left = 0;                    // conviction clicks still to fire (signal path)
+string  g_sig_side = "";
+double  g_sig_lots = 0, g_sig_px = 0, g_sig_sl = 0;
+long    g_sig_t0 = 0;
+double  g_sig_tgt = 0;                     // structural target for tip trades
 
 // Broker stop: prefer the structural level; clamp to [0.4pt .. InpHardSLPts] distance.
 double BrokerSL(bool isbuy, double px, double structural) {
@@ -273,6 +293,8 @@ void ReadArmed() {
    g_armed_raids = (r == EMPTY_VALUE || r < 1) ? 1 : (int)r;
    double s = JNum(txt, "sl");
    g_armed_sl = (s == EMPTY_VALUE) ? 0 : s;
+   double tgt = JNum(txt, "target");
+   if (tgt == EMPTY_VALUE) tgt = 0;
    double ck = JNum(txt, "clicks");
    g_armed_clicks = (ck == EMPTY_VALUE || ck < 1) ? 1 : (int)ck;
 }
@@ -284,7 +306,7 @@ int OnInit() {
    if (GlobalVariableCheck("CaseExec_last_id"))   g_last_id   = (long)GlobalVariableGet("CaseExec_last_id");
    if (GlobalVariableCheck("CaseExec_last_lamp")) g_last_lamp = (long)GlobalVariableGet("CaseExec_last_lamp");
    if (GlobalVariableCheck("CaseExec_raids"))     g_raids     = (int)GlobalVariableGet("CaseExec_raids");
-   Print("[CaseExec] v1.74 loaded — grace period + colour-abort");
+   Print("[CaseExec] v1.76 loaded — the tip aims at its structural target");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -345,8 +367,18 @@ void OnTimer() {
    // Broker SL: structural level from the signal if sane, else the 3pt parachute.
    double ssl = JNum(txt, "sl"); if (ssl == EMPTY_VALUE) ssl = 0;
    double sl = BrokerSL(side == "BUY", (side == "BUY") ? ask : bid, ssl);
-   if (side == "BUY")       trade.Buy(lots, _Symbol, 0, sl, 0, "case");
-   else if (side == "SELL") trade.Sell(lots, _Symbol, 0, sl, 0, "case");
+   double tgt = JNum(txt, "target");
+   if (tgt == EMPTY_VALUE) tgt = 0;
+   double ck = JNum(txt, "clicks");
+   int nclicks = (ck == EMPTY_VALUE || ck < 1) ? 1 : (int)ck;
+   g_sig_left = nclicks - 1;                       // the extra conviction clicks
+   g_sig_side = side; g_sig_lots = lots; g_sig_sl = ssl; g_sig_tgt = tgt;
+   g_sig_px = (side == "BUY") ? ask : bid;
+   g_sig_t0 = (long)TimeGMT();
+   string tag = (tgt > 0) ? "ghost-t" : "case";
+   double tp0 = (tgt > 0) ? tgt : 0;
+   if (side == "BUY")       trade.Buy(lots, _Symbol, 0, sl, tp0, tag);
+   else if (side == "SELL") trade.Sell(lots, _Symbol, 0, sl, tp0, tag);
    PrintFormat("[CaseExec] signal #%d %s lots=%.2f ghost=%.2fpt stackable parachute=%.2f",
                id, side, lots, GhostCap(lots), sl);
 }
@@ -426,6 +458,34 @@ void OnTick() {
          }
       }
    }
+   // CONVICTION CLICKS (v1.75): the diamonds bought extra 0.10 entries on this
+   // lawful setup — fire them a few seconds apart while price is still near the
+   // signal price, under the same stack ceiling and send-cooldown.
+   if (g_sig_left > 0 && g_sig_side != "") {
+      long age = (long)TimeGMT() - g_sig_t0;
+      if (age > 90) { g_sig_left = 0; }            // the moment has passed
+      else if (age >= InpClickSpaceS
+               && (long)TimeGMT() - g_last_send >= InpSendCooldownS) {
+         double cbid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+         double cask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+         double now_px = (g_sig_side == "BUY") ? cask : cbid;
+         bool near = MathAbs(now_px - g_sig_px) <= 0.60;      // not chasing
+         if (near && OurLots() + g_sig_lots <= InpMaxStackLots + 1e-9) {
+            g_last_send = (long)TimeGMT();
+            g_sig_left--;
+            double bsl = BrokerSL(g_sig_side == "BUY", now_px, g_sig_sl);
+            string ctag = (g_sig_tgt > 0) ? "ghost-t" : "ghost-c";
+            double ctp = (g_sig_tgt > 0) ? g_sig_tgt : 0;
+            if (g_sig_side == "BUY")  trade.Buy(g_sig_lots, _Symbol, 0, bsl, ctp, ctag);
+            else                      trade.Sell(g_sig_lots, _Symbol, 0, bsl, ctp, ctag);
+            PrintFormat("[CaseExec] CONVICTION CLICK (%d left) %s %.2f lots @ %.2f",
+                        g_sig_left, g_sig_side, g_sig_lots, now_px);
+         } else if (!near) {
+            g_sig_left = 0;                        // price left the setup - stand down
+         }
+      }
+   }
+
    // COLOUR-ABORT (v1.74): when a new M1 bar forms, look at the candle that just
    // closed; any position opened INSIDE it that finished the wrong colour and is
    // not in profit leaves immediately (Zee's 19:02 green-candle SELL).
@@ -577,6 +637,10 @@ void OnTick() {
       // runaway take-profit ceiling
       if (prof >= InpTpCapPts) { trade.PositionClose(t); DropPeakOf(t); continue; }
       // trailing-reversal: let it run, exit on give-back after arming
+      // TARGET TRADES (v1.76): the tip aims at its structural swing — the ratchet
+      // does not clip it; it exits on the broker TP, the floor, the campaign end
+      // or the parachute.
+      if (StringFind(PositionGetString(POSITION_COMMENT), "ghost-t") >= 0) continue;
       double give = MathMax(InpGivePts, InpGiveFrac * pk);   // ratchet trail
       if (pk >= InpArmPts && (pk - prof) >= give) {
          trade.PositionClose(t); DropPeakOf(t); continue;
