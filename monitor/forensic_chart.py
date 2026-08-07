@@ -267,11 +267,22 @@ def draw_trade(broker_ts, side, exit_px, out=None):
     bi = next((i for i, x in enumerate(win)
                if x[0] <= e_utc < x[0] + timedelta(minutes=1)), None)
     uhv = win[ui] if ui is not None else None
+    if uhv is None:
+        # The UHV bar may be missing from the drawn window (a bridge gap, or a tape
+        # that had not caught up when the GUI drew it). Zee 2026-08-07: "it doesn't
+        # mark the UHV / trigger lines — maybe it drew off screen?" Find the bar
+        # anywhere in the tape and STILL draw its two trigger lines, so a chart is
+        # never silently missing the thing it exists to show.
+        uhv = next((x for x in rows if x[0] == u_utc), None)
+        if uhv is None:
+            near = sorted(rows, key=lambda x: abs((x[0] - u_utc).total_seconds()))
+            uhv = near[0] if near and abs((near[0][0] - u_utc).total_seconds()) <= 300 else None
     style = mpf.make_mpf_style(base_mpf_style="yahoo", gridstyle=":")
     hl = dict(hlines=[uhv[2], uhv[3]] if uhv else [r["lamp"]],
               colors=["k"] * (2 if uhv else 1), linestyle="--", linewidths=[2.0, 2.0])
+    off = " (UHV outside the drawn window - lines shown)" if (ui is None and uhv) else ""
     ttl = (f"FORENSIC — {side} entered "
-           f"{(e_utc + timedelta(hours=5)):%H:%M} PKT · closed {broker_ts[11:]} broker")
+           f"{(e_utc + timedelta(hours=5)):%H:%M} PKT · closed {broker_ts[11:]} broker{off}")
     fig, axes = mpf.plot(df, type="candle", style=style, volume=True, figsize=(16, 9),
                          hlines=hl, returnfig=True, title=ttl)
     ax = axes[0]
