@@ -49,18 +49,9 @@ class Cockpit:
         self.root.configure(bg=BG)
         self.photo = None
 
-        # ── REFRESH (Zee 2026-08-07): pull in the newest code without waiting for me ──
-        toprow = tk.Frame(self.root, bg=BG); toprow.pack(pady=(8, 0))
-        tk.Button(toprow, text="🔄 REFRESH — load the latest build",
-                  font=("Segoe UI", 13, "bold"), bg="#e8590c", fg="white",
-                  padx=18, pady=7, relief="flat",
-                  command=self.refresh_app).pack(side="left", padx=6)
-        self.refresh_note = tk.Label(toprow, text="", font=("Segoe UI", 11), bg=BG, fg=DIM)
-        self.refresh_note.pack(side="left", padx=8)
-
         self.stage = tk.Label(self.root, text="", font=("Segoe UI", 26, "bold"),
                               bg=BG, fg=DIM)
-        self.stage.pack(pady=(6, 0))
+        self.stage.pack(pady=(8, 0))
         srow = tk.Frame(self.root, bg=BG); srow.pack(pady=(2, 0))
         tk.Button(srow, text="👀 draw the setup forming now", font=("Segoe UI", 11, "bold"),
                   bg="#7048e8", fg="white", padx=12, pady=5, relief="flat",
@@ -82,6 +73,9 @@ class Cockpit:
                   command=self.regen).pack(side="left", padx=6)
         # No AUTO button (Zee): AUTO is the resting state — every manual call fades
         # back to it after 10 minutes on its own.
+        tk.Button(row, text="🔄 refresh build", font=("Segoe UI", 11, "bold"),
+                  bg="#e8590c", fg="white", padx=10, pady=8, relief="flat",
+                  command=self.refresh_app).pack(side="left", padx=6)
         tk.Button(row, text="📜 Trades", font=("Segoe UI", 12, "bold"),
                   bg="#0b7285", fg="white", padx=12, pady=8, relief="flat",
                   command=self.show_trades).pack(side="left", padx=6)
@@ -195,7 +189,7 @@ class Cockpit:
         laws are live) and this cockpit itself (so the newest UI is live). Zee should
         never have to wait for Claude to relaunch anything."""
         import subprocess, os
-        self.refresh_note.config(text="restarting the stack…", fg="#e8590c")
+        self.status.config(text="🔄 restarting the stack on the latest build…", fg="#e8590c")
         self.root.update_idletasks()
         py = sys.executable
         root = Path(__file__).resolve().parent.parent
@@ -217,7 +211,7 @@ class Cockpit:
             subprocess.Popen([py, str(Path(__file__).resolve())], cwd=str(root),
                              creationflags=DETACHED)
         except Exception as ex:
-            self.refresh_note.config(text=f"could not restart: {ex}", fg="#e03131")
+            self.status.config(text=f"could not restart: {ex}", fg="#e03131")
             return
         self.root.after(900, self.root.destroy)
 
