@@ -63,7 +63,16 @@ def prior_opp(bars, o, side):
         if side == "SELL" and bars[k].is_bear: return bars[k].h
     return None
 
-UHV_VOL_MIN = 1.2        # THE FUNDAMENTAL LAW OF THE UHV (Zee 2026-08-07): "uhv should
+UHV_VOL_MIN = 0.0        # SUPERSEDED 2026-08-07 (same day): Zee refined the law —
+                          # "the UHV candle's volume should be larger than the same
+                          # coloured candles' volumes WITHIN the same retracement".
+                          # The absolute 20-bar floor was contaminated by monster bars
+                          # OUTSIDE the pullback (after the 5:30 PM 4.84x candle it
+                          # rejected every ordinary retracement bar for 20 minutes).
+                          # The climax is now judged against its OWN retracement, and
+                          # the chosen UHV must be STRICTLY the loudest of its colour
+                          # in that zone — enforced below. Set >0 to re-arm the floor.
+UHV_VOL_MIN_OLD = 1.2    # kept for reference / re-testing
                           # have ULTRA HIGH VOLUME". Until today any local same-colour
                           # maximum qualified, however quiet — the 15:17 PKT 'UHV' that
                           # cost -$21.00 carried 0.74x the neighbourhood average and was
@@ -168,8 +177,9 @@ def detect_full(bars):
                 c = bars[k]; col = c.is_bear if side == "BUY" else c.is_bull
                 if not col: continue
                 if c.body_ratio < UHV_BODY_MIN: continue   # UHV must be strong-bodied (Zee loser_004)
-                _lk = bars[max(0, k - 20):k]                # THE ULTRA-VOLUME LAW (Zee)
-                if _lk and c.v < UHV_VOL_MIN * (sum(x.v for x in _lk) / len(_lk)): continue
+                if UHV_VOL_MIN > 0:                         # optional absolute floor
+                    _lk = bars[max(0, k - 20):k]
+                    if _lk and c.v < UHV_VOL_MIN * (sum(x.v for x in _lk) / len(_lk)): continue
                 # COLOUR-AWARE UHV (Zee 2026-08-05, Option B): the UHV must be the
                 # highest volume among SAME-COLOUR (counter-trend) candles in the
                 # zone — comparing a supply candle against a trend-side demand
@@ -177,6 +187,12 @@ def detect_full(bars):
                 # Supersedes the strict both-neighbours local-max rule of June.
                 if best is None or c.v > bars[best].v: best = k
             if best is None: continue
+            # THE UHV LAW (Zee 2026-08-07): strictly the loudest candle of its own
+            # colour inside this retracement — a climax must dominate its own zone.
+            _same = [bars[k].v for k in range(rs, i)
+                     if (bars[k].is_bear if side == "BUY" else bars[k].is_bull)
+                     and k != best]
+            if _same and bars[best].v <= max(_same): continue
             U = bars[best]
             lvl = U.h if side == "BUY" else U.l
             first = None
