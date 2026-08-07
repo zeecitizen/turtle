@@ -60,6 +60,14 @@ def prior_opp(bars, o, side):
         if side == "SELL" and bars[k].is_bear: return bars[k].h
     return None
 
+UHV_VOL_MIN = 1.2        # THE FUNDAMENTAL LAW OF THE UHV (Zee 2026-08-07): "uhv should
+                          # have ULTRA HIGH VOLUME". Until today any local same-colour
+                          # maximum qualified, however quiet — the 15:17 PKT 'UHV' that
+                          # cost -$21.00 carried 0.74x the neighbourhood average and was
+                          # smaller than 17 of its 20 neighbours. A UHV must now beat this
+                          # multiple of the 20-bar average volume, or it is not a climax
+                          # at all. (Live-exit sim on 266 setups: 1.0x -> 78% WR/+$4.83 per
+                          # trade; 1.2x -> 78%/+$4.09; both beat the unfiltered 75%/+$3.76.)
 UHV_BODY_MIN = 0.4       # UHV candle must be strong-bodied (body/range >= this) — Zee loser_004.
                           # THE final rule: 0.4 -> WR 81% -> 92% (Zee's real win rate), net +$861.
 MIN_ORIGIN_BREAK = 0.5   # origin body must break the prior extreme by >= this many pts
@@ -157,6 +165,8 @@ def detect_full(bars):
                 c = bars[k]; col = c.is_bear if side == "BUY" else c.is_bull
                 if not col: continue
                 if c.body_ratio < UHV_BODY_MIN: continue   # UHV must be strong-bodied (Zee loser_004)
+                _lk = bars[max(0, k - 20):k]                # THE ULTRA-VOLUME LAW (Zee)
+                if _lk and c.v < UHV_VOL_MIN * (sum(x.v for x in _lk) / len(_lk)): continue
                 # COLOUR-AWARE UHV (Zee 2026-08-05, Option B): the UHV must be the
                 # highest volume among SAME-COLOUR (counter-trend) candles in the
                 # zone — comparing a supply candle against a trend-side demand
