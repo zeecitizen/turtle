@@ -310,6 +310,17 @@ def draw(bars, back=120, out=None):
                            + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t)
                 _curve.append((t0 + _td(seconds=span * t), y))
         _curve.append(_pts[-1])
+        # SMOOTHER (Zee 2026-08-07: "the curves are a bit jittery"): a centred moving
+        # average over the spline points irons out the staircase left by closely
+        # spaced pivots, without moving the humps themselves off the swings.
+        if len(_curve) > 9:
+            _w = 9
+            _ys2 = [q[1] for q in _curve]
+            _sm = []
+            for _i in range(len(_ys2)):
+                a0 = max(0, _i - _w // 2); b0 = min(len(_ys2), _i + _w // 2 + 1)
+                _sm.append(sum(_ys2[a0:b0]) / (b0 - a0))
+            _curve = [(_curve[_i][0], _sm[_i]) for _i in range(len(_curve))]
         _hcol = {"UPTREND": "#2f9e44", "DOWNTREND": "#e03131"}.get(
             auto_call(bars)["trend"], "#868e96")
         lines.append(_curve); colors.append(_hcol); widths.append(4.5)

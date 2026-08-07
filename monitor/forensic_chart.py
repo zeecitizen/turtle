@@ -202,6 +202,41 @@ def resolve_trade(broker_ts, side):
                     if abs(abs(x[4] - para) - 3.0) < 0.35:
                         lamp = x[4]
                         break
+    # GROUND TRUTH FIRST (2026-08-07, Zee: "UHV and BO are both green, impossible"):
+    # a signal-path fire prints its id, and the matcher logged exactly what it emitted
+    # (side, entry price, setup time) in monitor/oanda_signals.jsonl. Identify the
+    # breakout candle by that ENTRY PRICE — timestamps can disagree between the live
+    # feed and the archive, prices cannot.
+    sig_id = re.search(r"signal #(\d+)", best[1])
+    if sig_id:
+        try:
+            import json as _j
+            led = Path(__file__).parent / "oanda_signals.jsonl"
+            rec = None
+            for ln in led.read_text(encoding="utf-8").splitlines():
+                d = _j.loads(ln)
+                if str(d.get("id")) == sig_id.group(1):
+                    rec = d
+            if rec:
+                want = float(rec["entry"])
+                # the live feed revises a closed bar by a few cents, so match on the
+                # NEAREST close rather than an exact one (0.50 sanity cap)
+                cands = [x for x in load()
+                         if abs((x[0] - entry_utc).total_seconds()) <= 420]
+                bo = min(cands, key=lambda x: abs(x[4] - want)) if cands else None
+                if bo is not None and abs(bo[4] - want) <= 0.50:
+                    entry_utc = bo[0]
+                    import oanda_live_matcher as _M2, build_entry_review_m5 as _B2
+                    for k3, v3 in _M2.CFG.items():
+                        setattr(_B2, k3, v3)
+                    bb2 = [_B2.Bar(x[0], x[1], x[2], x[3], x[4], int(x[5])) for x in load()]
+                    for st2 in _B2.detect_full(bb2):
+                        if st2["side"] == side and st2["open_t"] == bo[0]:
+                            uhv_utc = st2["uhv_t"]
+                            lamp = (bb2[st2["u"]].h if side == "BUY" else bb2[st2["u"]].l)
+                            break
+        except Exception:
+            pass
     if uhv_utc is None:
         # signal-path fire (no lamp in the line): ask the detector which UHV that
         # breakout candle belonged to.
