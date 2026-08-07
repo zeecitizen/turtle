@@ -49,9 +49,18 @@ class Cockpit:
         self.root.configure(bg=BG)
         self.photo = None
 
+        # ── REFRESH (Zee 2026-08-07): pull in the newest code without waiting for me ──
+        toprow = tk.Frame(self.root, bg=BG); toprow.pack(pady=(8, 0))
+        tk.Button(toprow, text="🔄 REFRESH — load the latest build",
+                  font=("Segoe UI", 13, "bold"), bg="#e8590c", fg="white",
+                  padx=18, pady=7, relief="flat",
+                  command=self.refresh_app).pack(side="left", padx=6)
+        self.refresh_note = tk.Label(toprow, text="", font=("Segoe UI", 11), bg=BG, fg=DIM)
+        self.refresh_note.pack(side="left", padx=8)
+
         self.stage = tk.Label(self.root, text="", font=("Segoe UI", 26, "bold"),
                               bg=BG, fg=DIM)
-        self.stage.pack(pady=(10, 0))
+        self.stage.pack(pady=(6, 0))
         srow = tk.Frame(self.root, bg=BG); srow.pack(pady=(2, 0))
         tk.Button(srow, text="👀 draw the setup forming now", font=("Segoe UI", 11, "bold"),
                   bg="#7048e8", fg="white", padx=12, pady=5, relief="flat",
@@ -180,6 +189,37 @@ class Cockpit:
                       bg="#343a40", fg=FG, relief="flat", padx=8,
                       command=lambda t=ts, s2=side, x=closepx: self.forensic(t, s2, x)
                       ).pack(side="left", padx=8)
+
+    def refresh_app(self):
+        """Restart the whole stack on the CURRENT code: the matcher (so the newest
+        laws are live) and this cockpit itself (so the newest UI is live). Zee should
+        never have to wait for Claude to relaunch anything."""
+        import subprocess, os
+        self.refresh_note.config(text="restarting the stack…", fg="#e8590c")
+        self.root.update_idletasks()
+        py = sys.executable
+        root = Path(__file__).resolve().parent.parent
+        DETACHED = 0x00000008 | 0x00000200          # DETACHED_PROCESS | NEW_PROCESS_GROUP
+        # 1) matcher: kill any running one, start a fresh one on the current code
+        try:
+            subprocess.run(["powershell", "-NoProfile", "-Command",
+                            "Get-CimInstance Win32_Process -Filter \"Name like 'python%'\" | "
+                            "Where-Object { $_.CommandLine -match 'oanda_live_matcher' } | "
+                            "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -Confirm:$false }"],
+                           capture_output=True, timeout=25)
+            subprocess.Popen([py, "-u", str(root / "monitor" / "oanda_live_matcher.py")],
+                             cwd=str(root), creationflags=DETACHED,
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+        # 2) this cockpit: launch a fresh copy, then close this one
+        try:
+            subprocess.Popen([py, str(Path(__file__).resolve())], cwd=str(root),
+                             creationflags=DETACHED)
+        except Exception as ex:
+            self.refresh_note.config(text=f"could not restart: {ex}", fg="#e03131")
+            return
+        self.root.after(900, self.root.destroy)
 
     def show_forming(self):
         """Zee 2026-08-07: draw the INCOMPLETE setup — which UHV is being considered
