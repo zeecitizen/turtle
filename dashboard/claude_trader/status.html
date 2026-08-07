@@ -1610,37 +1610,37 @@ async function sendCall(name) {
   if (r.status === 403) { localStorage.removeItem('cockpit_pin'); alert('wrong PIN'); return; }
   loadGhost();
 }
+function openViewer(title, note, cap2, src1, src2) {
+  document.getElementById('viewer').style.display = 'block';
+  document.getElementById('viewer-title').textContent = title;
+  document.getElementById('viewer-note').textContent = note;
+  document.getElementById('viewer-cap2').textContent = cap2 || '';
+  document.getElementById('viewer-img1').src = src1;
+  const i2 = document.getElementById('viewer-img2');
+  if (src2) { i2.style.display = 'block'; i2.src = src2; } else { i2.style.display = 'none'; }
+  document.getElementById('viewer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function showForming() {
+  const t = Date.now();
+  openViewer('👀 The setup forming now',
+             'the UHV under consideration and its trigger lines — the breakout is still to come',
+             '🌄 THE CIRCUMSTANCES NOW — trend, slope and volume right now',
+             '/api/forming.png?t=' + t, '/api/context-now.png?t=' + t);
+}
+function showVersions() {
+  openViewer('📊 Version vs winrate',
+             'winrate line and net P&L bars for every EA version — live fills only',
+             '', '/api/versions.png?t=' + Date.now(), '');
+}
+function showForensic(ts, side, px) {
+  const q = 'ts=' + encodeURIComponent(ts) + '&side=' + side + '&px=' + px + '&t=' + Date.now();
+  openViewer('🔍 ' + ts + '  ' + side,
+             'the UHV, its trigger lines and the breakout candle that triggered this trade',
+             '🌄 THE CIRCUMSTANCES — trend, slope and volume around this trade',
+             '/api/forensic.png?' + q + '&panel=setup',
+             '/api/forensic.png?' + q + '&panel=context');
+}
 function camelRegen() {
-  function openViewer(title, note, cap2, src1, src2) {
-    document.getElementById('viewer').style.display = 'block';
-    document.getElementById('viewer-title').textContent = title;
-    document.getElementById('viewer-note').textContent = note;
-    document.getElementById('viewer-cap2').textContent = cap2 || '';
-    document.getElementById('viewer-img1').src = src1;
-    const i2 = document.getElementById('viewer-img2');
-    if (src2) { i2.style.display = 'block'; i2.src = src2; } else { i2.style.display = 'none'; }
-    document.getElementById('viewer').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-  function showForming() {
-    const t = Date.now();
-    openViewer('👀 The setup forming now',
-               'the UHV under consideration and its trigger lines — the breakout is still to come',
-               '🌄 THE CIRCUMSTANCES NOW — trend, slope and volume right now',
-               '/api/forming.png?t=' + t, '/api/context-now.png?t=' + t);
-  }
-  function showVersions() {
-    openViewer('📊 Version vs winrate',
-               'winrate line and net P&L bars for every EA version — live fills only',
-               '', '/api/versions.png?t=' + Date.now(), '');
-  }
-  function showForensic(ts, side, px) {
-    const q = 'ts=' + encodeURIComponent(ts) + '&side=' + side + '&px=' + px + '&t=' + Date.now();
-    openViewer('🔍 ' + ts + '  ' + side,
-               'the UHV, its trigger lines and the breakout candle that triggered this trade',
-               '🌄 THE CIRCUMSTANCES — trend, slope and volume around this trade',
-               '/api/forensic.png?' + q + '&panel=setup',
-               '/api/forensic.png?' + q + '&panel=context');
-  }
   fetch('/api/camel.png?force=1&t=' + Date.now()).then(() =>
     setTimeout(() => { document.getElementById('camel-img').src = '/api/camel.png?t=' + Date.now(); }, 4000));
 }
