@@ -253,6 +253,17 @@ REGIME_OVR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Fi
 # full 24h cycle; the live receipts are the judge. Flip back to False to restore.
 GATES_LIFTED = True
 
+# ── THE FUNDAMENTAL LAW OF THE BREAKOUT (Zee 2026-08-07, verbatim) ──
+# "a breakout candle must CLOSE above the high of the UHV (for buy) and should be
+#  a MOMENTUM candle with LOWER VOLUME than the UHV."
+# This cannot be satisfied by an intrabar tick-cross — a candle can cross the level
+# and still close a doji on the wrong side (the 12:37 PKT SELL: 2%-body green doji,
+# 0.83x volume). So the tick-DOOR is retired: entries now come only from a CLOSED
+# candle that satisfies all three clauses. Cost: we lose the ms-speed entry (it
+# tested +$921 vs +$213 on wick-crosses in the old exit model). Zee's law outranks
+# that trial — it is a stated rule, not a tuning knob. DOOR_ENABLED flips it back.
+DOOR_ENABLED = False
+
 
 def regime_forced():
     """Zee's START REGIME button (cockpit): force trading through chop for 30 min
@@ -497,6 +508,9 @@ def _swing_idx(seg, kind, k=3):
 
 
 def write_armed(bars):
+    if not DOOR_ENABLED:                      # the fundamental law: closed candles only
+        ARMED.unlink(missing_ok=True)
+        # the WATCH box still updates below so the cockpit keeps showing the setup
     cands = find_armed(bars)
     if not cands:
         ARMED.unlink(missing_ok=True)
@@ -651,6 +665,11 @@ def main():
                     if bb.body_ratio < 0.5:
                         print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
                               f"breakout not a momentum candle (body {bb.body_ratio:.2f})")
+                        continue
+                    if s["b_vol"] >= s["uhv_vol"]:
+                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                              f"breakout volume {s['b_vol']} >= UHV {s['uhv_vol']} "
+                              f"(the fundamental law needs LOWER)")
                         continue
                     seq += 1
                     lots = min(feb11_lots(bars, s), RISK_CAP)
