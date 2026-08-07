@@ -207,6 +207,31 @@ class Cockpit:
                       int(self.root.winfo_screenheight() * 0.72)))
         ph = ImageTk.PhotoImage(im)
         lbl.config(image=ph, text=""); lbl.image = ph
+        # Zee 2026-08-07: clicking the anatomy copies the IMAGE to the clipboard
+        # (paste straight into chat); the button copies the filename as a fallback.
+        note = tk.Label(win, text=f"🖱️ click the chart to COPY THE IMAGE   ·   {Path(path).name}",
+                        font=("Segoe UI", 12), bg=BG, fg=DIM)
+        note.pack(pady=(0, 4))
+        def copy_image(_evt=None):
+            import subprocess
+            ps = ("Add-Type -AssemblyName System.Windows.Forms,System.Drawing; "
+                  f"$i=[System.Drawing.Image]::FromFile('{path}'); "
+                  "[System.Windows.Forms.Clipboard]::SetImage($i); $i.Dispose()")
+            try:
+                subprocess.run(["powershell", "-NoProfile", "-STA", "-Command", ps],
+                               capture_output=True, timeout=25, check=True)
+                note.config(text=f"✅ image copied — paste it in chat   ·   {Path(path).name}",
+                            fg="#2f9e44")
+            except Exception as ex:
+                note.config(text=f"could not copy image ({ex}) — filename: {Path(path).name}",
+                            fg="#e03131")
+        lbl.bind("<Button-1>", copy_image)
+        def copy_name():
+            self.root.clipboard_clear(); self.root.clipboard_append(str(path))
+            note.config(text=f"📋 path copied as text   ·   {Path(path).name}", fg="#1c7ed6")
+        tk.Button(win, text="📋 copy filename instead", font=("Segoe UI", 11, "bold"),
+                  bg="#343a40", fg=FG, relief="flat", padx=10, pady=6,
+                  command=copy_name).pack(pady=(0, 10))
 
     def show_versions(self):
         """Zee: the version-vs-winrate graph — after which version did WR drop/climb."""
