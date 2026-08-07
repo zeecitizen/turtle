@@ -734,7 +734,7 @@ const server = http.createServer(async (req, res) => {
 
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
-    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && apexUrl !== '/docs' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/forming.png' && apexUrl !== '/api/context-now.png' && apexUrl !== '/api/versions.png' && apexUrl !== '/api/forensic.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && apexUrl !== '/docs' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
       res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
       res.end();
       return;
@@ -1930,6 +1930,53 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
 
   // ── Today's trades (broker fills today + currently-open positions) ──
   // ── The Ghost panel (status.html): live camel-humps chart + hunt state ──────
+  // ── COCKPIT PARITY ON THE WEB (Zee 2026-08-07): the same buttons and pictures
+  // the desktop cockpit has — the forming setup, any trade's anatomy + the
+  // circumstances around it, and the version-vs-winrate graph.
+  const PYEXE = 'C:/Users/zeesh/AppData/Local/Programs/Python/Python313-arm64/python.exe';
+  const WEBCH = 'C:/Users/zeesh/Documents/GitHub/turtle/monitor/web_charts.py';
+  const LABELS = 'C:/Users/zeesh/Documents/GitHub/turtle/monitor/setup_labels/';
+  const drawThen = (args, key, cb) => {
+    if (global['_busy_' + key]) return cb();
+    global['_busy_' + key] = true;
+    require('child_process').execFile(PYEXE, [WEBCH].concat(args), { timeout: 90000 },
+      () => { global['_busy_' + key] = false; cb(); });
+  };
+  const sendPng = (file) => {
+    try {
+      res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
+      res.end(fs.readFileSync(file));
+    } catch (e) { res.writeHead(404); res.end('not drawn'); }
+  };
+
+  if (url === '/api/forming.png' || url === '/api/context-now.png') {
+    const file = LABELS + (url === '/api/forming.png' ? 'forming_now.png' : 'context_now.png');
+    const age = fs.existsSync(file) ? Date.now() - fs.statSync(file).mtimeMs : Infinity;
+    if (age > 45000) drawThen(['forming'], 'forming', () => sendPng(file));
+    else sendPng(file);
+    return;
+  }
+  if (url === '/api/versions.png') {
+    const file = LABELS + 'version_winrate.png';
+    const age = fs.existsSync(file) ? Date.now() - fs.statSync(file).mtimeMs : Infinity;
+    if (age > 300000) drawThen(['versions'], 'versions', () => sendPng(file));
+    else sendPng(file);
+    return;
+  }
+  // /api/forensic.png?ts=2026.08.07 19:03:34&side=SELL&px=4339.44&panel=setup|context
+  if (url === '/api/forensic.png') {
+    const ts = query.get('ts') || '', side = query.get('side') || '', px = query.get('px') || '0';
+    const panel = query.get('panel') === 'context' ? 'context' : 'setup';
+    if (!/^\d{4}\.\d{2}\.\d{2} \d{2}:\d{2}:\d{2}$/.test(ts) || !/^(BUY|SELL)$/.test(side)) {
+      res.writeHead(400); res.end('bad args'); return;
+    }
+    const stamp = ts.slice(11).replace(/:/g, '');
+    const file = LABELS + (panel === 'context' ? 'context_' : 'forensic_') + stamp + '.png';
+    const age = fs.existsSync(file) ? Date.now() - fs.statSync(file).mtimeMs : Infinity;
+    if (age > 600000) drawThen(['trade', ts, side, px], 'tr' + stamp, () => sendPng(file));
+    else sendPng(file);
+    return;
+  }
   if (url === '/api/camel.png') {
     const png = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\setup_labels\\camel_humps.png';
     try {

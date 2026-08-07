@@ -950,11 +950,28 @@ th, td { border-color:#e5e5e7 !important; }
          style="width:100%;border-radius:12px;background:#fff;border:1px solid #e5e5e7;"/>
     <div id="cockpit-row" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
       <button onclick="camelRegen()" style="background:#1d1d1f !important;">🔄 Regenerate humps</button>
+      <button onclick="showForming()" style="background:#7048e8 !important;">👀 Setup forming now</button>
+      <button onclick="showVersions()" style="background:#1c7ed6 !important;">📊 Versions</button>
       <button onclick="sendCall('UPTREND')" style="background:#2f9e44 !important;">📈 UPTREND — buy lamps</button>
       <button onclick="sendCall('DOWNTREND')" style="background:#e03131 !important;">📉 DOWNTREND — sell lamps</button>
       <button onclick="sendCall('RANGE')" style="background:#f08c00 !important;">📦 RANGE — ghost waits</button>
     </div>
     <div id="call-status" style="font-size:13px;font-weight:600;margin-top:8px;color:#6e6e73;">…</div>
+    <!-- COCKPIT PARITY (Zee 2026-08-07): the same pictures the desktop cockpit shows —
+         the setup forming, any trade's anatomy, and the circumstances around it. -->
+    <div id="viewer" style="display:none;margin-top:16px;border-top:1px solid #e5e5e7;padding-top:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div id="viewer-title" style="font-size:15px;font-weight:700;"></div>
+        <button onclick="document.getElementById('viewer').style.display='none'"
+                style="background:#6e6e73 !important;">✕ close</button>
+      </div>
+      <div id="viewer-note" style="font-size:13px;color:#6e6e73;margin:6px 0;">…</div>
+      <img id="viewer-img1" style="width:100%;border-radius:12px;background:#fff;
+           border:1px solid #e5e5e7;margin-top:8px;"/>
+      <div id="viewer-cap2" style="font-size:14px;font-weight:600;margin-top:14px;"></div>
+      <img id="viewer-img2" style="width:100%;border-radius:12px;background:#fff;
+           border:1px solid #e5e5e7;margin-top:6px;"/>
+    </div>
   </div>
 
   <div class="hero-card" id="hero-card">
@@ -1487,7 +1504,7 @@ async function loadTrades() {
         <div class="t-time">${ts}</div>
         <div class="t-side ${side.toLowerCase()}">${side}</div>
         <div class="t-info">${c.symbol} ${c.volume} @ <b>$${entryDisp}</b> → <b>$${closeDisp}</b><br/><small>${ea} · ${c.comment || 'trail exit'}</small></div>
-        <div class="t-pnl ${pnl >= 0 ? 'win' : 'loss'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}<br/><span class="explore-btn" data-detail="${detailId}">Explore →</span></div>
+        <div class="t-pnl ${pnl >= 0 ? 'win' : 'loss'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}<br/><span class="explore-btn" data-detail="${detailId}">Explore →</span><br/><span class="explore-btn" style="color:#7048e8;" onclick="event.stopPropagation();showForensic('${c.broker_time}','${side}',${closeDisp})">🔍 forensic</span></div>
       </div>
       <div class="trade-detail" id="${detailId}">${detailHtml}</div>`);
     }
@@ -1594,6 +1611,36 @@ async function sendCall(name) {
   loadGhost();
 }
 function camelRegen() {
+  function openViewer(title, note, cap2, src1, src2) {
+    document.getElementById('viewer').style.display = 'block';
+    document.getElementById('viewer-title').textContent = title;
+    document.getElementById('viewer-note').textContent = note;
+    document.getElementById('viewer-cap2').textContent = cap2 || '';
+    document.getElementById('viewer-img1').src = src1;
+    const i2 = document.getElementById('viewer-img2');
+    if (src2) { i2.style.display = 'block'; i2.src = src2; } else { i2.style.display = 'none'; }
+    document.getElementById('viewer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function showForming() {
+    const t = Date.now();
+    openViewer('👀 The setup forming now',
+               'the UHV under consideration and its trigger lines — the breakout is still to come',
+               '🌄 THE CIRCUMSTANCES NOW — trend, slope and volume right now',
+               '/api/forming.png?t=' + t, '/api/context-now.png?t=' + t);
+  }
+  function showVersions() {
+    openViewer('📊 Version vs winrate',
+               'winrate line and net P&L bars for every EA version — live fills only',
+               '', '/api/versions.png?t=' + Date.now(), '');
+  }
+  function showForensic(ts, side, px) {
+    const q = 'ts=' + encodeURIComponent(ts) + '&side=' + side + '&px=' + px + '&t=' + Date.now();
+    openViewer('🔍 ' + ts + '  ' + side,
+               'the UHV, its trigger lines and the breakout candle that triggered this trade',
+               '🌄 THE CIRCUMSTANCES — trend, slope and volume around this trade',
+               '/api/forensic.png?' + q + '&panel=setup',
+               '/api/forensic.png?' + q + '&panel=context');
+  }
   fetch('/api/camel.png?force=1&t=' + Date.now()).then(() =>
     setTimeout(() => { document.getElementById('camel-img').src = '/api/camel.png?t=' + Date.now(); }, 4000));
 }
