@@ -323,6 +323,7 @@ def draw(bars, back=120, out=None):
     # frame it — top = the lamp, bottom = the sweep line. DASHED while the sweep is
     # pending, SOLID once the apparition is concrete.
     diamonds_png = None
+    heart_why = ""
     try:
         import json as _json
         wd = _json.loads((CF.parent / "case_watch.json").read_text(encoding="ascii"))
@@ -341,12 +342,20 @@ def draw(bars, back=120, out=None):
         # Law. "two diamonds means two convictions.. the more conviction we have the
         # more diamonds we add." Rendered with Zee's own diamond.png (2026-08-05,
         # "so our diamonds look coolest"); gold scatter only as fallback.
-        n_laws = (int(bool(wd.get("swept"))) + int(bool(wd.get("law3")))
-                  + int(bool(wd.get("law4"))) + int(bool(wd.get("law5"))))
+        # Zee 2026-08-07: each diamond says WHY it is there, in one short line.
+        _reasons = [(wd.get("swept"), "sweep taken"),
+                    (wd.get("law3"),  "closed past EMA-5"),
+                    (wd.get("law4"),  "RSI divergence"),
+                    (wd.get("law5"),  "clean wick, low volume"),
+                    (wd.get("tip"),   "no-supply + selling background")]
+        dia_labels = [t for ok, t in _reasons if ok]
+        n_laws = len(dia_labels)
         # ❤ PROBATION MARK (Zee): laws still earning their diamond (Law 6 Selling
         # Climax) draw a red heart beside the diamonds — "this setup has a chance
         # greater than others" — but grant no money until promoted.
         if wd.get("law6") or wd.get("s3"):
+            heart_why = ("selling climax (on probation)" if wd.get("law6")
+                         else "Scenario 3 (on probation)")
             heart_xy = (len(df) - 3 - n_laws * 2,
                         max(wd["level"], wd["sweep"]) + 0.6)
         if n_laws:
@@ -355,7 +364,7 @@ def draw(bars, back=120, out=None):
             _dtop = max(wd["level"], wd["sweep"]) + 0.6
             dpng = Path(__file__).parent / "setup_labels" / "diamond.png"
             if dpng.exists():
-                diamonds_png = (str(dpng), _dpos, _dtop)
+                diamonds_png = (str(dpng), _dpos, _dtop, dia_labels)
             else:
                 ys = [float("nan")] * len(df)
                 for p in _dpos: ys[p] = _dtop
@@ -378,15 +387,29 @@ def draw(bars, back=120, out=None):
     if heart_xy:
         _axes[0].text(heart_xy[0], heart_xy[1], "♥", fontsize=26,
                       color="#e03131", ha="center", va="center")
+        _axes[0].annotate(heart_why, xy=(heart_xy[0], heart_xy[1]),
+                          textcoords="offset points", xytext=(0, 22), ha="center",
+                          fontsize=11, fontweight="bold", color="#e03131",
+                          annotation_clip=False, zorder=7,
+                          bbox=dict(boxstyle="round,pad=0.28", fc="white",
+                                    ec="#e03131", lw=1.1, alpha=0.95))
     if diamonds_png:
         from matplotlib.offsetbox import OffsetImage, AnnotationBbox
         import matplotlib.image as mimg
         gem = mimg.imread(diamonds_png[0])
         zoom = 34.0 / max(gem.shape[0], gem.shape[1])   # ~34px tall on the figure
         ax = _axes[0]
-        for p in diamonds_png[1]:
+        labels = diamonds_png[3] if len(diamonds_png) > 3 else []
+        for i, p in enumerate(diamonds_png[1]):
             ax.add_artist(AnnotationBbox(OffsetImage(gem, zoom=zoom),
                                          (p, diamonds_png[2]), frameon=False))
+            if i < len(labels):
+                ax.annotate(labels[i], xy=(p, diamonds_png[2]),
+                            textcoords="offset points", xytext=(0, 26 + (i % 2) * 18),
+                            ha="center", fontsize=11, fontweight="bold", color="#7048e8",
+                            annotation_clip=False, zorder=7,
+                            bbox=dict(boxstyle="round,pad=0.28", fc="white",
+                                      ec="#7048e8", lw=1.1, alpha=0.95))
     # session banner beneath the chart (Zee: mark the NY window as the ideal time)
     stext, scol = session_label()
     fig.text(0.5, 0.005, stext, ha="center", fontsize=13, fontweight="bold", color=scol)

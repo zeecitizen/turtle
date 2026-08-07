@@ -524,7 +524,7 @@ def find_armed(bars):
         found.append(dict(side=side, level=round(lvl, 2), lots=lots, chase=chase,
                           humble=humble, law6=law6_probation(bars, best, side),
                           sweep=round(sweep_line, 2), swept=int(sw), law2=law2,
-                          law3=law3, law4=law4, law5=law5, sl=round(sl_px, 2),
+                          law3=law3, law4=law4, law5=law5, sl=round(sl_px, 2), tip=0,
                           s3=scenario3(bars, best, i, side),
                           key=f"{side}_{U.t}_{round(lvl, 2)}",
                           dist=abs(lvl - bars[-1].c)))
@@ -589,7 +589,7 @@ def write_armed(bars):
     # the cockpit chart while the sweep is pending, solid once concrete.
     if w is not None:
         WATCH.write_text(json.dumps({k: w[k] for k in
-                                     ("side", "level", "sweep", "swept", "law2", "law3", "law4", "law5", "law6", "s3")}
+                                     ("side", "level", "sweep", "swept", "law2", "law3", "law4", "law5", "law6", "s3", "tip")}
                                     | {"ts": int(time.time())}),
                          encoding="ascii")
     # ARM the nearest hunting-side setup — the Laws do NOT gate the apparition
