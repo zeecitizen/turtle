@@ -510,9 +510,6 @@ def _swing_idx(seg, kind, k=3):
 
 
 def write_armed(bars):
-    if not DOOR_ENABLED:                      # the fundamental law: closed candles only
-        ARMED.unlink(missing_ok=True)
-        # the WATCH box still updates below so the cockpit keeps showing the setup
     cands = find_armed(bars)
     if not cands:
         ARMED.unlink(missing_ok=True)
@@ -556,6 +553,9 @@ def write_armed(bars):
     if night_window():
         ARMED.unlink(missing_ok=True)              # night gate: the ghost rests
         return w
+    if not DOOR_ENABLED:
+        ARMED.unlink(missing_ok=True)   # THE DOOR IS RETIRED — never arm, ever.
+        return w                        # (the WATCH box above still feeds the cockpit)
     ready = [c for c in cands if c["dist"] <= 2.0 and zee_allows(c["side"])
              and not no_demand(bars, c["side"])
              and not (dt and (int(c["swept"]) + int(c.get("law2", 0)) + int(c.get("law3", 0))
