@@ -60,14 +60,19 @@ class Cockpit:
         self.body = tk.Frame(self._canvas, bg=BG)
         self.body.bind("<Configure>",
                        lambda e: self._canvas.configure(scrollregion=self._canvas.bbox("all")))
-        self._win_id = self._canvas.create_window((0, 0), window=self.body, anchor="n")
-        self._canvas.bind("<Configure>",
-                          lambda e: self._canvas.coords(self._win_id, e.width / 2, 0))
-        self._canvas.configure(yscrollcommand=_vsb.set)
-        self._canvas.pack(side="left", fill="both", expand=True)
-        _vsb.pack(side="right", fill="y")
+        self._win_id = self._canvas.create_window((0, 0), window=self.body, anchor="nw")
+        _hsb = tk.Scrollbar(_outer, orient="horizontal", command=self._canvas.xview)
+        self._canvas.configure(yscrollcommand=_vsb.set, xscrollcommand=_hsb.set)
+        # grid so both bars sit correctly around the canvas (pack cannot do this cleanly)
+        self._canvas.grid(row=0, column=0, sticky="nsew")
+        _vsb.grid(row=0, column=1, sticky="ns")
+        _hsb.grid(row=1, column=0, sticky="ew")
+        _outer.rowconfigure(0, weight=1); _outer.columnconfigure(0, weight=1)
         self.root.bind_all("<MouseWheel>",
                            lambda e: self._canvas.yview_scroll(int(-e.delta / 120), "units"))
+        # shift+wheel scrolls sideways, the usual convention
+        self.root.bind_all("<Shift-MouseWheel>",
+                           lambda e: self._canvas.xview_scroll(int(-e.delta / 120), "units"))
 
         self.stage = tk.Label(self.body, text="", font=("Segoe UI", 26, "bold"),
                               bg=BG, fg=DIM)
