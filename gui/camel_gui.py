@@ -245,25 +245,77 @@ class Cockpit:
         lbl.pack(padx=20, pady=20)
 
         def work():
-            # 2026-08-07: the old version set an error message and then ALWAYS
-            # overwrote it with "no EA fire line found" — every real exception was
-            # hidden behind a wrong explanation. Now the truth reaches the window.
+            # the real exception must reach the window (2026-08-07) — the old version
+            # overwrote every error with "no EA fire line found".
             import traceback
             try:
                 sys.path.insert(0, str(Path(TE.__file__).parent))
                 import forensic_chart as FC
                 import importlib; importlib.reload(FC)
                 p = FC.draw_trade(ts, side, exit_px)
+                ctx = FC.draw_context(ts, side)        # the circumstances, zoomed out
             except Exception:
                 err = traceback.format_exc().strip().splitlines()[-1]
                 self.root.after(0, lambda: lbl.config(text="could not draw: " + err))
                 return
             if p:
-                self.root.after(0, lambda: self._show_png(win, lbl, p))
+                self.root.after(0, lambda: self._show_pngs(win, lbl, p, ctx))
             else:
                 self.root.after(0, lambda: lbl.config(
                     text="this trade has no matching EA fire line in the logs"))
         threading.Thread(target=work, daemon=True).start()
+
+    def _show_pngs(self, win, lbl, path, ctx=None):
+        """Zee 2026-08-07: the anatomy on top, THE CIRCUMSTANCES (zoomed-out trend +
+        volume) underneath, the whole thing scrollable."""
+        from PIL import Image, ImageTk
+        lbl.destroy()
+        sw = self.root.winfo_screenwidth(); sh = self.root.winfo_screenheight()
+        win.geometry(f"{int(sw*0.86)}x{int(sh*0.86)}")
+        canvas = tk.Canvas(win, bg=BG, highlightthickness=0)
+        vsb = tk.Scrollbar(win, orient="vertical", command=canvas.yview)
+        frame = tk.Frame(canvas, bg=BG)
+        frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.create_window((0, 0), window=frame, anchor="nw")
+        canvas.configure(yscrollcommand=vsb.set)
+        canvas.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
+        canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-e.delta/120), "units"))
+        win._imgs = []
+        maxw = int(sw * 0.80)
+        for pth, cap in ((path, "🔍 THE SETUP — UHV, trigger lines, breakout candle"),
+                         (ctx, "🌄 THE CIRCUMSTANCES — trend, slope and volume around this trade")):
+            if not pth:
+                continue
+            tk.Label(frame, text=cap, font=("Segoe UI", 13, "bold"),
+                     bg=BG, fg=FG).pack(pady=(12, 4))
+            im = Image.open(pth); im.thumbnail((maxw, int(sh * 0.75)))
+            ph = ImageTk.PhotoImage(im); win._imgs.append(ph)
+            l2 = tk.Label(frame, image=ph, bg=BG); l2.image = ph
+            l2.pack(padx=8)
+            l2.bind("<Button-1>", lambda e, q=pth: self._copy_image(note, q))
+        note = tk.Label(frame, text=f"🖱️ click either chart to COPY IT   ·   {Path(path).name}",
+                        font=("Segoe UI", 12), bg=BG, fg=DIM)
+        note.pack(pady=(8, 4))
+        tk.Button(frame, text="📋 copy filename instead", font=("Segoe UI", 11, "bold"),
+                  bg="#343a40", fg=FG, relief="flat", padx=10, pady=6,
+                  command=lambda: (self.root.clipboard_clear(),
+                                   self.root.clipboard_append(str(path)),
+                                   note.config(text=f"📋 path copied · {Path(path).name}",
+                                               fg="#1c7ed6"))).pack(pady=(0, 14))
+
+    def _copy_image(self, note, path):
+        import subprocess
+        ps = ("Add-Type -AssemblyName System.Windows.Forms,System.Drawing; "
+              f"$i=[System.Drawing.Image]::FromFile('{path}'); "
+              "[System.Windows.Forms.Clipboard]::SetImage($i); $i.Dispose()")
+        try:
+            subprocess.run(["powershell", "-NoProfile", "-STA", "-Command", ps],
+                           capture_output=True, timeout=25, check=True)
+            note.config(text=f"✅ image copied — paste it in chat · {Path(path).name}",
+                        fg="#2f9e44")
+        except Exception as ex:
+            note.config(text=f"could not copy ({ex}) · {Path(path).name}", fg="#e03131")
 
     def _show_png(self, win, lbl, path):
         from PIL import Image, ImageTk

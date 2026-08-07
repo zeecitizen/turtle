@@ -389,5 +389,67 @@ def draw_forming(out=None):
     return out, f"{side} · trigger {lamp:.2f} · {swept_txt} · {laws} diamond(s)"
 
 
+def draw_context(broker_ts, side, bars_back=180, out=None):
+    """THE CIRCUMSTANCES (Zee 2026-08-07): a zoomed-out view under the close-up —
+    candles + volume over a wide window, the trade's entry marked, and the compass
+    line drawn through the swing peaks, so it is obvious at a glance what the trend
+    and slope looked like when this trade was taken."""
+    import trend_eyes as _TE
+    r = resolve_trade(broker_ts, side)
+    rows = load()
+    if not rows:
+        return None
+    e_utc = r["entry_utc"] if r else (datetime.strptime(broker_ts, "%Y.%m.%d %H:%M:%S")
+                                      - timedelta(hours=3))
+    ei = next((i for i, x in enumerate(rows)
+               if x[0] <= e_utc < x[0] + timedelta(minutes=1)), None)
+    if ei is None:
+        near = sorted(range(len(rows)), key=lambda i: abs((rows[i][0] - e_utc).total_seconds()))
+        ei = near[0] if near else None
+    if ei is None:
+        return None
+    lo = max(0, ei - bars_back)
+    hi = min(len(rows), ei + 40)
+    win = rows[lo:hi]
+    if len(win) < 20:
+        return None
+    idx = pd.DatetimeIndex([x[0] + timedelta(hours=5) for x in win])
+    df = pd.DataFrame({"Open": [x[1] for x in win], "High": [x[2] for x in win],
+                       "Low": [x[3] for x in win], "Close": [x[4] for x in win],
+                       "Volume": [x[5] for x in win]}, index=idx)
+    tb = [(x[0], x[2], x[3], x[4], x[5]) for x in rows]
+    a = _TE.auto_call(tb, upto=ei + 1)
+    slope = _TE.slope_of(tb, upto=ei + 1)
+    style = mpf.make_mpf_style(base_mpf_style="yahoo", gridstyle=":")
+    ttl = (f"THE CIRCUMSTANCES — compass said {a['trend']} · 30-bar slope "
+           f"{slope:+.3f} pts/bar   ({a['why'][:60]})")
+    fig, axes = mpf.plot(df, type="candle", style=style, volume=True, figsize=(19, 7),
+                         returnfig=True, title=ttl)
+    ax = axes[0]
+    epos = ei - lo
+    ax.axvline(epos, color="#1c7ed6", lw=2.2, ls="-", alpha=0.9, zorder=5)
+    ax.annotate("this trade", xy=(epos, win[epos][2]), textcoords="offset points",
+                xytext=(0, 22), fontsize=13, fontweight="bold", color="white",
+                ha="center", annotation_clip=False, zorder=6,
+                bbox=dict(boxstyle="round,pad=0.35", fc="#1c7ed6", ec="none"),
+                arrowprops=dict(arrowstyle="->", lw=2.2, color="#1c7ed6"))
+    # the compass line through the swing peaks
+    sw = _TE.find_swings(tb, upto=ei + 1)
+    pk = [x for x in sw if x.kind == ("H" if a["trend"] != "DOWNTREND" else "H")][-3:]
+    pts = [(x.i - lo, x.price) for x in pk if lo <= x.i < hi]
+    if len(pts) >= 2:
+        col = {"UPTREND": "#2f9e44", "DOWNTREND": "#e03131"}.get(a["trend"], "#1c7ed6")
+        ax.plot([q[0] for q in pts], [q[1] for q in pts], "-o", color=col, lw=2.4,
+                markersize=7, alpha=0.95, zorder=4)
+    lo_p = min(x[3] for x in win); hi_p = max(x[2] for x in win)
+    pad = max((hi_p - lo_p) * 0.10, 0.3)
+    ax.set_ylim(lo_p - pad, hi_p + pad)
+    out = out or (Path(__file__).parent / "setup_labels" /
+                  f"context_{broker_ts[11:].replace(':', '')}.png")
+    fig.savefig(str(out), dpi=95, bbox_inches="tight")
+    plt.close(fig)
+    return out
+
+
 if __name__ == "__main__":
     main()
