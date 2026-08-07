@@ -248,5 +248,71 @@ def draw_trade(broker_ts, side, exit_px, out=None):
     return out
 
 
+WATCH_F = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/case_watch.json")
+
+
+def draw_forming(out=None):
+    """THE SETUP ON THE WAY (Zee 2026-08-07): draw the UHV currently under
+    consideration and its trigger lines BEFORE any breakout — so the forming setup
+    can be inspected while it is still forming. Source: case_watch.json, which the
+    matcher keeps current every cycle."""
+    import json as _json
+    try:
+        w = _json.loads(WATCH_F.read_text(encoding="ascii"))
+    except Exception:
+        return None, "no setup is forming right now (no UHV boxed)"
+    side = w["side"]; lamp = float(w["level"]); sweep = float(w["sweep"])
+    hi_line, lo_line = (max(lamp, sweep), min(lamp, sweep))
+    rows = load()
+    if not rows:
+        return None, "no bars"
+    # the UHV is the candle whose HIGH and LOW are the two trigger lines
+    ui_t = None
+    for x in reversed(rows[-180:]):
+        if abs(x[2] - hi_line) < 0.06 and abs(x[3] - lo_line) < 0.06:
+            ui_t = x[0]; break
+    win = [x for x in rows if (ui_t is None or x[0] >= ui_t - timedelta(minutes=10))][-70:]
+    if len(win) < 8:
+        return None, "not enough bars"
+    idx = pd.DatetimeIndex([x[0] + timedelta(hours=5) for x in win])
+    df = pd.DataFrame({"Open": [x[1] for x in win], "High": [x[2] for x in win],
+                       "Low": [x[3] for x in win], "Close": [x[4] for x in win],
+                       "Volume": [x[5] for x in win]}, index=idx)
+    ui = next((i for i, x in enumerate(win) if x[0] == ui_t), None)
+    laws = sum(int(bool(w.get(k))) for k in ("swept", "law3", "law4", "law5"))
+    hearts = ("  +L6" if w.get("law6") else "") + ("  +SC3" if w.get("s3") else "")
+    need = "CLOSE above" if side == "BUY" else "CLOSE below"
+    ttl = (f"FORMING - {side} setup on the way   |   diamonds: {laws}{hearts}"
+           f"   ·   waiting for a {need} {lamp:.2f} (momentum body, volume < UHV)")
+    style = mpf.make_mpf_style(base_mpf_style="yahoo", gridstyle=":")
+    hl = dict(hlines=[hi_line, lo_line], colors=["k", "k"], linestyle="--", linewidths=[2.0, 2.0])
+    fig, axes = mpf.plot(df, type="candle", style=style, volume=True, figsize=(16, 9),
+                         hlines=hl, returnfig=True, title=ttl)
+    ax = axes[0]
+    if ui is not None:
+        ax.axvspan(ui - 0.5, ui + 0.5, color="#7048e8", alpha=0.30, zorder=0)
+        ax.axvline(ui, color="#7048e8", lw=1.6, ls="--", alpha=0.9, zorder=1)
+        ax.annotate("UHV", xy=(ui, win[ui][3]), textcoords="offset points", xytext=(0, -26),
+                    fontsize=14, fontweight="bold", color="white", ha="center",
+                    annotation_clip=False, zorder=6,
+                    bbox=dict(boxstyle="round,pad=0.35", fc="#7048e8", ec="none"),
+                    arrowprops=dict(arrowstyle="->", lw=2.4, color="#7048e8"))
+    ax.axhline(lamp, color="#1c7ed6", lw=1.8)
+    ax.text(len(win) - 1, lamp, f"  trigger {lamp:.2f}", color="#1c7ed6",
+            fontsize=12, fontweight="bold", va="center")
+    px = win[-1][4]
+    ax.axhline(px, color="#f08c00", lw=1.2, ls=":")
+    ax.text(len(win) - 1, px, f"  now {px:.2f}", color="#f08c00",
+            fontsize=11, fontweight="bold", va="center")
+    lo = min(x[3] for x in win); hi = max(x[2] for x in win)
+    pad = max((hi - lo) * 0.14, 0.35)
+    ax.set_ylim(min(lo, lamp) - pad, max(hi, lamp) + pad)
+    out = out or (Path(__file__).parent / "setup_labels" / "forming_now.png")
+    fig.savefig(str(out), dpi=100, bbox_inches="tight")
+    plt.close(fig)
+    swept_txt = "sweep DONE ✓" if w.get("swept") else "sweep pending"
+    return out, f"{side} · trigger {lamp:.2f} · {swept_txt} · {laws} diamond(s)"
+
+
 if __name__ == "__main__":
     main()

@@ -52,6 +52,10 @@ class Cockpit:
         self.stage = tk.Label(self.root, text="", font=("Segoe UI", 26, "bold"),
                               bg=BG, fg=DIM)
         self.stage.pack(pady=(10, 0))
+        srow = tk.Frame(self.root, bg=BG); srow.pack(pady=(2, 0))
+        tk.Button(srow, text="👀 draw the setup forming now", font=("Segoe UI", 11, "bold"),
+                  bg="#7048e8", fg="white", padx=12, pady=5, relief="flat",
+                  command=self.show_forming).pack()
         self.regime = tk.Label(self.root, text="", font=("Segoe UI", 20, "bold"),
                                bg=BG, fg="#e03131")
         self.regime.pack(pady=(2, 0))
@@ -176,6 +180,28 @@ class Cockpit:
                       bg="#343a40", fg=FG, relief="flat", padx=8,
                       command=lambda t=ts, s2=side, x=closepx: self.forensic(t, s2, x)
                       ).pack(side="left", padx=8)
+
+    def show_forming(self):
+        """Zee 2026-08-07: draw the INCOMPLETE setup — which UHV is being considered
+        right now and its trigger lines, before any breakout happens."""
+        win = tk.Toplevel(self.root); win.title("👀 the setup forming now")
+        win.configure(bg=BG)
+        lbl = tk.Label(win, text="drawing…", font=("Segoe UI", 14), bg=BG, fg=DIM)
+        lbl.pack(padx=20, pady=20)
+        def work():
+            try:
+                sys.path.insert(0, str(Path(TE.__file__).parent))
+                import forensic_chart as FC
+                import importlib; importlib.reload(FC)
+                p, msg = FC.draw_forming()
+            except Exception as ex:
+                p, msg = None, f"error: {ex}"
+            if p:
+                self.root.after(0, lambda: (self._show_png(win, lbl, p),
+                                            win.title(f"👀 forming — {msg}")))
+            else:
+                self.root.after(0, lambda: lbl.config(text=msg))
+        threading.Thread(target=work, daemon=True).start()
 
     def forensic(self, ts, side, exit_px):
         """Draw and show one trade's UHV / trigger lines / BO candle."""
