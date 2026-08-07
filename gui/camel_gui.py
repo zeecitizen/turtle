@@ -92,7 +92,10 @@ class Cockpit:
         self.img = tk.Label(self.body, bg=BG)
         self.img.pack(padx=10, pady=4)
 
-        row = tk.Frame(self.body, bg=BG); row.pack(pady=6)
+        # TWO ROWS (Zee 2026-08-07): tools on top, the trend calls beneath — one long
+        # line forced horizontal scrolling every time.
+        row = tk.Frame(self.body, bg=BG); row.pack(pady=(6, 2))
+        row2 = tk.Frame(self.body, bg=BG); row2.pack(pady=(0, 6))
         tk.Button(row, text="🔄  Regenerate humps", font=("Segoe UI", 13, "bold"),
                   bg="#343a40", fg=FG, padx=16, pady=8, relief="flat",
                   command=self.regen).pack(side="left", padx=6)
@@ -107,13 +110,13 @@ class Cockpit:
         tk.Button(row, text="📊 Versions", font=("Segoe UI", 12, "bold"),
                   bg="#1c7ed6", fg="white", padx=12, pady=8, relief="flat",
                   command=self.show_versions).pack(side="left", padx=6)
-        tk.Button(row, text="⚡ START REGIME (30 min)", font=("Segoe UI", 12, "bold"),
+        tk.Button(row2, text="⚡ START REGIME (30 min)", font=("Segoe UI", 12, "bold"),
                   bg="#7048e8", fg="white", padx=12, pady=8, relief="flat",
                   command=self.force_regime).pack(side="left", padx=6)
         for name, label in [("UPTREND", "📈 UPTREND — buy lamps"),
                             ("DOWNTREND", "📉 DOWNTREND — sell lamps"),
                             ("RANGE", "📦 RANGE — ghost waits")]:
-            tk.Button(row, text=label, font=("Segoe UI", 12, "bold"),
+            tk.Button(row2, text=label, font=("Segoe UI", 12, "bold"),
                       bg=COLORS[name], fg="white", padx=12, pady=8, relief="flat",
                       command=lambda n=name: self.set_call(n)).pack(side="left", padx=6)
 
