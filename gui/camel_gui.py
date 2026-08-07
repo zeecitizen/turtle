@@ -54,7 +54,7 @@ class Cockpit:
         # controls off-screen. Mouse wheel scrolls; the window opens at 92% height.
         sw0, sh0 = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
         self.root.geometry(f"{int(sw0 * 0.92)}x{int(sh0 * 0.92)}+20+10")
-        _outer = tk.Frame(self.body, bg=BG); _outer.pack(fill="both", expand=True)
+        _outer = tk.Frame(self.root, bg=BG); _outer.pack(fill="both", expand=True)
         self._canvas = tk.Canvas(_outer, bg=BG, highlightthickness=0)
         _vsb = tk.Scrollbar(_outer, orient="vertical", command=self._canvas.yview)
         self.body = tk.Frame(self._canvas, bg=BG)
