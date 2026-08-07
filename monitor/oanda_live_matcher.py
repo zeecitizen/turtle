@@ -696,9 +696,21 @@ def main():
                 update_gate(bars)
                 for s in B.detect_full(bars):
                     key = f"{s['open_t']}_{s['side']}"
-                    # only fire setups whose breakout is on the last few CLOSED bars (fresh)
+                    # THE ROOT BUG OF 2026-08-07 (Zee: "why did these 3 trades lose after
+                    # all the measures?"): this only rejected setups that were too OLD.
+                    # Nothing stopped a setup whose breakout candle was the LAST, STILL
+                    # FORMING bar — so the machine judged an unfinished candle as if it
+                    # had closed. Receipt: 18:59:23 it saw a red momentum breakout at
+                    # 4333.70 and sold; by 19:00:00 that same candle had closed GREEN at
+                    # 4335.69, two points higher. Three clicks, -$70.40. It also explains
+                    # every "impossible" forensic Zee found today — green breakouts on
+                    # sells, closes on the wrong side of the lamp, doji "momentum"
+                    # candles: all of them were candles still being drawn.
+                    # THE BREAKOUT CANDLE MUST BE CLOSED.
                     if key in seen or s["open_t"] < last_closed - timedelta(minutes=3):
                         continue
+                    if s["open_t"] > last_closed:
+                        continue          # still forming — no law can be verified yet
                     seen.add(key)
                     try:
                         _SEEN_F.write_text(json.dumps([list(k) for k in list(seen)[-200:]], default=str))

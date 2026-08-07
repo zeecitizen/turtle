@@ -230,11 +230,31 @@ def resolve_trade(broker_ts, side):
                     for k3, v3 in _M2.CFG.items():
                         setattr(_B2, k3, v3)
                     bb2 = [_B2.Bar(x[0], x[1], x[2], x[3], x[4], int(x[5])) for x in load()]
+                    best2 = None
                     for st2 in _B2.detect_full(bb2):
-                        if st2["side"] == side and st2["open_t"] == bo[0]:
-                            uhv_utc = st2["uhv_t"]
-                            lamp = (bb2[st2["u"]].h if side == "BUY" else bb2[st2["u"]].l)
-                            break
+                        if st2["side"] != side:
+                            continue
+                        gap = abs((st2["open_t"] - bo[0]).total_seconds())
+                        if gap <= 180 and (best2 is None or gap < best2[0]):
+                            best2 = (gap, st2)
+                    if best2:
+                        st2 = best2[1]
+                        uhv_utc = st2["uhv_t"]
+                        lamp = (bb2[st2["u"]].h if side == "BUY" else bb2[st2["u"]].l)
+                    else:
+                        # LAST RESORT (2026-08-08, Zee: "second time this bug is
+                        # happening"): the archive can differ enough from the live feed
+                        # that the detector will not reproduce the setup. Name the UHV
+                        # the way the detector would: the loudest counter-coloured
+                        # candle in the 15 bars before the breakout.
+                        bi2 = next((k for k, x in enumerate(bb2) if x.t == bo[0]), None)
+                        if bi2 is not None:
+                            zone = [k for k in range(max(0, bi2 - 15), bi2)
+                                    if (bb2[k].is_bear if side == "BUY" else bb2[k].is_bull)]
+                            if zone:
+                                k2 = max(zone, key=lambda k: bb2[k].v)
+                                uhv_utc = bb2[k2].t
+                                lamp = bb2[k2].h if side == "BUY" else bb2[k2].l
         except Exception:
             pass
     if uhv_utc is None:

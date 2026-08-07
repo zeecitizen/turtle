@@ -12,7 +12,18 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.76"
+#property version   "1.77"
+// v1.77 THE COLOUR-ABORT WAS EATING GOOD TRADES (Zee 2026-08-08, three clicks of one
+// setup cut together for -$70.40): the abort was built for the DOOR, where the entry
+// candle IS the breakout candle — an intrabar entry whose candle then closes the
+// wrong way really is a disproven breakout. With the door retired every entry is a
+// CLOSED-CANDLE entry, so the position opens in the candle AFTER the breakout: the
+// abort was demanding that the very NEXT candle also close our way, within seconds
+// of entry, which flatly contradicts the 2-minute grace period shipped in the same
+// version. Receipt: 23:59:24 SELL + 2 conviction clicks -> 00:00:00 all three cut at
+// -2.23/-2.09/-2.10pt because the following candle closed green. The abort now
+// applies ONLY to door entries (comment "ghost"); closed-candle entries have already
+// proven their breakout at emit time and are left to the grace period.
 // v1.76 THE TIP TRADES TO ITS TARGET (Zee 2026-08-07, "ok promote it"): the
 // selling-climax pattern (no-supply candle WITH a heavy selling background) tested
 // 83% then 75% WR at +$31.33 / +$21.76 per trade across two tape lengths, against a
@@ -306,7 +317,7 @@ int OnInit() {
    if (GlobalVariableCheck("CaseExec_last_id"))   g_last_id   = (long)GlobalVariableGet("CaseExec_last_id");
    if (GlobalVariableCheck("CaseExec_last_lamp")) g_last_lamp = (long)GlobalVariableGet("CaseExec_last_lamp");
    if (GlobalVariableCheck("CaseExec_raids"))     g_raids     = (int)GlobalVariableGet("CaseExec_raids");
-   Print("[CaseExec] v1.76 loaded — the tip aims at its structural target");
+   Print("[CaseExec] v1.77 loaded — colour-abort limited to door entries");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -505,6 +516,10 @@ void OnTick() {
                    || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
                datetime pt = (datetime)PositionGetInteger(POSITION_TIME);
                if (pt < bt1 || pt >= bt0) continue;          // not the entry candle
+               // v1.77: only DOOR entries ("ghost") can be disproven by their own
+               // candle. A closed-candle entry proved its breakout before it was
+               // emitted — judging the NEXT candle would just be impatience.
+               if (PositionGetString(POSITION_COMMENT) != "ghost") continue;
                bool isbuy2 = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
                double e2 = PositionGetDouble(POSITION_PRICE_OPEN);
                double pf = isbuy2 ? (abid - e2) : (e2 - aask);
