@@ -367,6 +367,14 @@ def draw(bars, back=120, out=None):
     heart_xy = locals().get("heart_xy")
     kw["returnfig"] = True
     fig, _axes = mpf.plot(df, **kw)
+    # TIGHT Y-RANGE (Zee 2026-08-07): keep the candles filling the pane — box lines,
+    # diamonds and hearts must never stretch the scale and squash the price action.
+    try:
+        _lo = float(df["Low"].min()); _hi = float(df["High"].max())
+        _pad = max((_hi - _lo) * 0.08, 0.3)
+        _axes[0].set_ylim(_lo - _pad, _hi + _pad)
+    except Exception:
+        pass
     if heart_xy:
         _axes[0].text(heart_xy[0], heart_xy[1], "♥", fontsize=26,
                       color="#e03131", ha="center", va="center")

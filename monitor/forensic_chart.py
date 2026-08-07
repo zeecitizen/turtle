@@ -187,22 +187,35 @@ def draw_trade(broker_ts, side, exit_px, out=None):
                          hlines=hl, returnfig=True, title=ttl)
     ax = axes[0]
     if ui is not None:
-        ax.axvspan(ui - 0.45, ui + 0.45, color="#7048e8", alpha=0.16)
-        ax.annotate("UHV / trigger lines", xy=(ui, uhv[2]),
-                    xytext=(max(ui - 5, 1), uhv[2] + (win[-1][2] - win[-1][3]) * 2.5),
-                    fontsize=12, fontweight="bold", color="#7048e8", ha="center",
-                    arrowprops=dict(arrowstyle="->", lw=2.2, color="#7048e8"))
+        # Zee 2026-08-07: the UHV band was too faint and its label clipped off the
+        # top — now a solid band + full-height dashed line + an always-drawn label.
+        ax.axvspan(ui - 0.5, ui + 0.5, color="#7048e8", alpha=0.30, zorder=0)
+        ax.axvline(ui, color="#7048e8", lw=1.6, ls="--", alpha=0.9, zorder=1)
+        # offset-POINT labels never stretch the y-axis (Zee 2026-08-07: the candles
+        # were squeezed into a corner because data-coordinate text expanded the scale)
+        ax.annotate("UHV", xy=(ui, uhv[3]), textcoords="offset points", xytext=(0, -26),
+                    fontsize=14, fontweight="bold", color="white", ha="center",
+                    annotation_clip=False, zorder=6,
+                    bbox=dict(boxstyle="round,pad=0.35", fc="#7048e8", ec="none"),
+                    arrowprops=dict(arrowstyle="->", lw=2.4, color="#7048e8"))
     if bi is not None:
-        ax.axvspan(bi - 0.45, bi + 0.45, color="#e03131", alpha=0.16)
-        ax.annotate("BO candle - fired here", xy=(bi, win[bi][3]),
-                    xytext=(bi, win[bi][3] - (win[-1][2] - win[-1][3]) * 3),
-                    fontsize=12, fontweight="bold", color="#e03131", ha="center",
-                    arrowprops=dict(arrowstyle="->", lw=2.2, color="#e03131"))
+        ax.axvspan(bi - 0.5, bi + 0.5, color="#e03131", alpha=0.30, zorder=0)
+        ax.axvline(bi, color="#e03131", lw=1.6, ls="--", alpha=0.9, zorder=1)
+        ax.annotate("BO", xy=(bi, win[bi][2]), textcoords="offset points", xytext=(0, 26),
+                    fontsize=14, fontweight="bold", color="white", ha="center",
+                    annotation_clip=False, zorder=6,
+                    bbox=dict(boxstyle="round,pad=0.35", fc="#e03131", ec="none"),
+                    arrowprops=dict(arrowstyle="->", lw=2.4, color="#e03131"))
     if exit_px:
         ax.axhline(exit_px, color="#f08c00", lw=1.6)
         ax.text(len(win) - 1, exit_px, f"  exit {exit_px:.2f}", color="#f08c00",
                 fontsize=11, fontweight="bold", va="center")
     ax.axhline(r["lamp"], color="#1c7ed6", lw=1.2, ls=":")
+    # TIGHT Y-RANGE: candles fill the pane instead of clumping (Zee's catch)
+    lo = min(x[3] for x in win); hi = max(x[2] for x in win)
+    if exit_px: lo, hi = min(lo, exit_px), max(hi, exit_px)
+    pad = max((hi - lo) * 0.16, 0.35)   # room for the UHV/BO labels
+    ax.set_ylim(lo - pad, hi + pad)
     out = out or (Path(__file__).parent / "setup_labels" /
                   f"forensic_{broker_ts[11:].replace(':', '')}.png")
     fig.savefig(str(out), dpi=100, bbox_inches="tight")
