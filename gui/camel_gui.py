@@ -68,11 +68,22 @@ class Cockpit:
         _vsb.grid(row=0, column=1, sticky="ns")
         _hsb.grid(row=1, column=0, sticky="ew")
         _outer.rowconfigure(0, weight=1); _outer.columnconfigure(0, weight=1)
-        self.root.bind_all("<MouseWheel>",
-                           lambda e: self._canvas.yview_scroll(int(-e.delta / 120), "units"))
-        # shift+wheel scrolls sideways, the usual convention
-        self.root.bind_all("<Shift-MouseWheel>",
-                           lambda e: self._canvas.xview_scroll(int(-e.delta / 120), "units"))
+        self._wheel_target = self._canvas
+        # GUARDED WHEEL (Zee 2026-08-07 — the console filled with TclError "invalid
+        # command name .!toplevel.!canvas"): bind_all is global, so a child window's
+        # binding outlived the window and kept scrolling a destroyed canvas. Every
+        # wheel event now checks the target still exists, and closing a child window
+        # hands the wheel back to the cockpit.
+        def _wheel(e, axis="y"):
+            t = getattr(self, "_wheel_target", None)
+            try:
+                if t is not None and t.winfo_exists():
+                    (t.yview_scroll if axis == "y" else t.xview_scroll)(
+                        int(-e.delta / 120), "units")
+            except Exception:
+                pass
+        self.root.bind_all("<MouseWheel>", _wheel)
+        self.root.bind_all("<Shift-MouseWheel>", lambda e: _wheel(e, "x"))
 
         self.stage = tk.Label(self.body, text="", font=("Segoe UI", 26, "bold"),
                               bg=BG, fg=DIM)
@@ -184,6 +195,9 @@ class Cockpit:
         canvas.configure(yscrollcommand=sb.set)
         canvas.pack(side="left", fill="both", expand=True, padx=(10, 0), pady=(0, 10))
         sb.pack(side="right", fill="y", pady=(0, 10))
+        self._wheel_target = canvas
+        top.bind("<Destroy>", lambda e, t=top: (
+            setattr(self, "_wheel_target", self._canvas) if e.widget is t else None))
 
         rows = []
         try:
@@ -309,7 +323,9 @@ class Cockpit:
         canvas.configure(yscrollcommand=vsb.set)
         canvas.pack(side="left", fill="both", expand=True)
         vsb.pack(side="right", fill="y")
-        canvas.bind_all("<MouseWheel>", lambda e: canvas.yview_scroll(int(-e.delta/120), "units"))
+        self._wheel_target = canvas                      # the wheel follows the window
+        win.bind("<Destroy>", lambda e, c=canvas: (
+            setattr(self, "_wheel_target", self._canvas) if e.widget is win else None))
         win._imgs = []
         maxw = int(sw * 0.80)
         forming = "forming_now" in str(path)
