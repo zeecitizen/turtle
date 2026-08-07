@@ -9,7 +9,10 @@ All times UTC (the chart axis is drawn in Karachi = UTC+5, matching Zee's TV).
 """
 from __future__ import annotations
 import argparse, csv, sys
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:  # detached GUI process: sys.stdout is None
+    pass
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import matplotlib

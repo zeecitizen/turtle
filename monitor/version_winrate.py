@@ -7,7 +7,10 @@ fill against the version active at its moment, and renders a dual-axis chart:
 winrate line + net-P&L bars per version. -> monitor/setup_labels/version_winrate.png
 """
 import sys, os, glob, re
-sys.stdout.reconfigure(encoding="utf-8")
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:  # detached GUI process: sys.stdout is None
+    pass
 from pathlib import Path
 from datetime import datetime, timedelta
 from collections import OrderedDict
