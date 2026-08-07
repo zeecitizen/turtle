@@ -12,7 +12,19 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.77"
+#property version   "1.78"
+// v1.78 ZEE'S OWN EXIT (2026-08-08). His Feb-11 broker report beside our ledger:
+//   ZEE    69 trades  94% WR  avg win +$12.93  avg LOSS  -$1.32  worst  -$1.60
+//   GHOST 287 trades  57% WR  avg win  +$5.43  avg LOSS -$12.73  worst -$39.00
+// In 69 trades he NEVER took a $10 loss; his four losses that day totalled -$5.30.
+// His losing buys at 18:41:50 were HELD 25 MINUTES and closed at -$1.43 — he is
+// never stopped out, he waits for the trade to come back and steps off flat.
+// Every stop I built manufactures the loss he never takes. So under InpZeeExit:
+//   * a RED click is never cut by the ghost or the basket floor
+//   * it is held until it returns to within InpFlatPts of breakeven, then closed
+//   * winners keep the ratchet; the green sweep still banks the blue ones
+//   * only the wide catastrophe parachute remains as a bound
+// InpZeeExit=false restores the previous machine in one input.
 // v1.77 THE COLOUR-ABORT WAS EATING GOOD TRADES (Zee 2026-08-08, three clicks of one
 // setup cut together for -$70.40): the abort was built for the DOOR, where the entry
 // candle IS the breakout candle — an intrabar entry whose candle then closes the
@@ -178,7 +190,9 @@
 // v1.10: TP cap lifted (winners run on the trail), staleness guard (no refires).
 input double InpDefaultLots = 0.10;   // fallback lots if signal omits it
 input int    InpMagic       = 88020;  // CaseSignalExecutor magic
-input double InpHardSLPts    = 3.0;    // PARACHUTE broker stop (terminal-death insurance only)
+input bool   InpZeeExit      = true;   // hold red clicks to flat instead of stopping out
+input double InpFlatPts      = 0.05;   // "came back": within this of breakeven -> step off
+input double InpHardSLPts    = 6.0;    // PARACHUTE broker stop (terminal-death insurance only)
 input double InpGhostPts     = 1.0;    // ghost exit: un-armed trade this far against us -> evaporate
 input double InpArmPts       = 0.3;    // arm at +0.3pt -> the pop Zee harvests per click
 input double InpGivePts      = 0.2;    // minimum give-back from peak (small rides)
@@ -317,7 +331,7 @@ int OnInit() {
    if (GlobalVariableCheck("CaseExec_last_id"))   g_last_id   = (long)GlobalVariableGet("CaseExec_last_id");
    if (GlobalVariableCheck("CaseExec_last_lamp")) g_last_lamp = (long)GlobalVariableGet("CaseExec_last_lamp");
    if (GlobalVariableCheck("CaseExec_raids"))     g_raids     = (int)GlobalVariableGet("CaseExec_raids");
-   Print("[CaseExec] v1.77 loaded — colour-abort limited to door entries");
+   Print("[CaseExec] v1.78 loaded — ZEE EXIT: hold to flat, never stop out small");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -565,6 +579,7 @@ void OnTick() {
          if (youngest == 0 || agec < youngest) youngest = agec;
       }
       bool in_grace = (youngest > 0 && youngest < (long)InpGraceBars * 60);
+      if (InpZeeExit) cn = 0;            // ZEE EXIT: no collective stop-out either
       if (cn > 0 && csum <= -gsum2 && !in_grace) {
          PrintFormat("[CaseExec] BASKET FLOOR: %d clicks %+.2fpt breached -%.2f -> evaporate ALL",
                      cn, csum, gsum2);
@@ -643,6 +658,18 @@ void OnTick() {
       }
       // (v1.73: the per-click ghost is GONE — squad members tolerate individual
       // red; the BASKET FLOOR above judges danger collectively, as Zee's hands did.)
+      // ── ZEE EXIT (v1.78): a red click is never stopped out. Hold it until it
+      // comes back to flat, then step off — that is how his losses stay pennies.
+      if (InpZeeExit && prof < 0 && pk < InpArmPts) {
+         if (prof >= -InpFlatPts) {
+            PrintFormat("[CaseExec] ZEE EXIT: came back to flat (%.2fpt) — stepping off", prof);
+            trade.PositionClose(t); DropPeakOf(t);
+         } else if (prof <= -InpHardSLPts) {
+            PrintFormat("[CaseExec] catastrophe parachute at %.2fpt", prof);
+            trade.PositionClose(t); DropPeakOf(t);
+         }
+         continue;                       // no ghost, no floor, no give-back on reds
+      }
       // absolute software backstop at the parachute distance (belt and braces)
       if (prof <= -InpHardSLPts) {
          trade.PositionClose(t); DropPeakOf(t);
