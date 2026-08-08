@@ -12,18 +12,18 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.78b"
+#property version   "1.78c"
 // BTCCaseExecutor — the XAUUSD ghost cloned for Bitcoin (Zee 2026-08-08: trade the
 // weekend while gold sleeps). Identical laws, identical exits. Only three things
 // differ, and all three had to:
 //   * its own files (btc_signal.json / btc_armed.json) so the two ghosts never read
 //     each other's orders
 //   * magic 88021, so fills, ledgers and the loss autopsy stay separable
-//   * every DISTANCE input at the MEASURED scale 3.7 — Binance's live 24/7
-//     tape, ACTIVE-bar median $7.26 vs gold $1.95. (OANDA's BTCUSD is a CFD
-//     that closes with forex on Friday; the weekend feed is Binance's public
-//     API, no browser involved.) Half of BTC's minutes are dead — the
-//     dead-tape gate matters more here than it ever did on gold., because the whole rulebook
+//   * every DISTANCE input at the MEASURED scale 13.7 — PEPPERSTONE:BTCUSD
+//     (Zee's choice), median M1 range $26.69 vs gold $1.95, ZERO dead bars.
+//     OANDA's BTCUSD is a CFD that freezes at the Friday FX close; Binance's
+//     own feed showed half its minutes dead. Pepperstone trades 24/7 and moves.
+, because the whole rulebook
 //     was written in GOLD points and a Bitcoin minute is far larger. The scale is
 //     MEASURED from the tape (BTCUSD/measure_scale.py) and set in these defaults,
 //     so every number stays visible and adjustable in the inputs dialog.
@@ -206,17 +206,17 @@
 input double InpDefaultLots = 0.20;   // fallback lots if signal omits it
 input int    InpMagic       = 88021;  // CaseSignalExecutor magic
 input bool   InpZeeExit      = true;   // hold red clicks to flat instead of stopping out
-input double InpFlatPts      = 0.2;   // "came back": within this of breakeven -> step off
-input double InpHardSLPts    = 22.2;    // PARACHUTE broker stop (terminal-death insurance only)
-input double InpGhostPts     = 3.7;    // ghost exit: un-armed trade this far against us -> evaporate
-input double InpArmPts       = 1.1;    // arm at +0.3pt -> the pop Zee harvests per click
-input double InpGivePts      = 0.75;    // minimum give-back from peak (small rides)
+input double InpFlatPts      = 0.7;   // "came back": within this of breakeven -> step off
+input double InpHardSLPts    = 82.0;    // PARACHUTE broker stop (terminal-death insurance only)
+input double InpGhostPts     = 13.7;    // ghost exit: un-armed trade this far against us -> evaporate
+input double InpArmPts       = 4.1;    // arm at +0.3pt -> the pop Zee harvests per click
+input double InpGivePts      = 2.7;    // minimum give-back from peak (small rides)
 input double InpGiveFrac     = 0.30;   // ratchet: give = max(GivePts, Frac*peak) — runners ride
 input double InpTpCapPts     = 999.0;  // no ceiling — the trail is the exit
 input int    InpMaxAgeSec    = 180;    // ignore signals older than this (re-attach refire guard)
 input string InpSignalFile   = "btc_signal.json";
 input string InpArmedFile    = "btc_armed.json";   // pre-breakout lamp level (tick-fire)
-input double InpMaxChasePts  = 3.7;    // fallback chase past the lamp (armed file may allow 3)
+input double InpMaxChasePts  = 13.7;    // fallback chase past the lamp (armed file may allow 3)
 input double InpMaxStackLots = 0.60;   // hard ceiling on total stacked lots (code-enforced)
 input int    InpMaxRaids     = 6;      // apparitions per convicted lamp (Zee's 5-6 burst)
 input int    InpSendCooldownS = 4;     // seconds after any order send before another entry
@@ -226,7 +226,7 @@ input int    InpGraceBars     = 2;     // minutes of patience before the basket 
 input bool   InpColourAbort  = true;  // leave if the ENTRY candle closes the wrong colour
 input int    InpCampaignMaxMin = 25;   // max patience per click (Feb-11 maximum), minutes
 input int    InpGreenMin      = 2;     // sweep needs at least this many GREEN clicks
-input double InpGreenSumPts   = 2.2;   // ...whose combined profit reaches this (0.6 = ~$6)
+input double InpGreenSumPts   = 8.2;   // ...whose combined profit reaches this (0.6 = ~$6)
 
 // Ghost cut, lot-scaled so the exit money stays roughly constant per burst.
 double GhostCap(double lots) {
@@ -346,7 +346,7 @@ int OnInit() {
    if (GlobalVariableCheck("CaseExec_last_id"))   g_last_id   = (long)GlobalVariableGet("CaseExec_last_id");
    if (GlobalVariableCheck("CaseExec_last_lamp")) g_last_lamp = (long)GlobalVariableGet("CaseExec_last_lamp");
    if (GlobalVariableCheck("CaseExec_raids"))     g_raids     = (int)GlobalVariableGet("CaseExec_raids");
-   Print("[BTCCase] v1.78b loaded — BTC ghost, ZEE EXIT: hold to flat");
+   Print("[BTCCase] v1.78c loaded — BTC ghost, ZEE EXIT: hold to flat");
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }

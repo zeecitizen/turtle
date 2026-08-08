@@ -20,6 +20,7 @@ from pathlib import Path
 import websockets
 
 CDP_HTTP = "http://localhost:9222/json"
+VMUL = 1
 OUT = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/btc_m1.csv")
 EXTRACT_JS = (
     "(function(){try{"
@@ -82,6 +83,14 @@ async def _pull():
 def pull_and_write():
     bars = asyncio.run(_pull())
     bars = [b for b in bars if b and len(b) >= 6 and b[1]]   # valid rows
+    # VOLUME UNITS (2026-08-08): a broker feed (Pepperstone/OANDA) gives whole tick
+    # counts; an exchange feed (Binance) gives fractional BTC, where int() would
+    # truncate almost every bar to ZERO and destroy the UHV signal outright. Detect
+    # which we are looking at and scale only when we must — every rule is relative,
+    # so the unit never matters, but the precision does.
+    vmax = max((float(b[5]) for b in bars), default=0)
+    global VMUL
+    VMUL = 1000 if vmax < 100 else 1
     tmp = OUT.with_suffix(".tmp")
     with tmp.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
@@ -92,7 +101,7 @@ def pull_and_write():
             # volume is fractional BTC (0.22, 15.3). int() would truncate most bars to
             # ZERO and destroy the whole UHV signal. Store volume x1000 as an integer;
             # every rule in the strategy is RELATIVE, so the unit does not matter.
-            w.writerow([int(t), o, h, l, c, int(round(float(vol) * 1000))])
+            w.writerow([int(t), o, h, l, c, int(round(float(vol) * VMUL))])
     tmp.replace(OUT)
     return len(bars), (int(bars[0][0]) if bars else 0), (int(bars[-1][0]) if bars else 0)
 
