@@ -15,13 +15,13 @@ sys.path.insert(0, str(Path(__file__).parent))
 sys.path.insert(0, str(Path(__file__).parent / "strategy_lab"))
 import build_entry_review_m5 as B
 
-CF = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_m1.csv")
-SIGNAL = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/case_signal.json")
-ARMED = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/case_armed.json")
-WATCH = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/case_watch.json")
-CALL = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/trend_call.json")
+CF = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/btc_m1.csv")
+SIGNAL = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/btc_signal.json")
+ARMED = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/btc_armed.json")
+WATCH = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/btc_watch.json")
+CALL = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/btc_trend_call.json")
 CALL_TTL = 600    # Zee 2026-08-04: a manual call fades after 10 minutes, then AUTO
-LOG = Path(__file__).parent / "oanda_signals.jsonl"
+LOG = Path(__file__).parent / "btc_signals.jsonl"
 
 
 import trend_eyes as TE
@@ -29,6 +29,19 @@ import trend_eyes as TE
 def _te_bars(bars):
     """trend_eyes speaks (t, high, low, close, volume) tuples; we speak Bar objects."""
     return [(b.t, b.h, b.l, b.c, b.v) for b in bars]
+
+
+# ── THE BITCOIN SCALE (2026-08-08) ─────────────────────────────────────────────
+# Every distance in this strategy was written in GOLD points. Bitcoin's minute bars
+# are far bigger, so the same numbers would be nonsense here. SCALE converts them.
+# It is measured from the tape by BTCUSD/measure_scale.py (median M1 range BTC /
+# median M1 range XAU) and written into btc_scale.txt — never guessed.
+def _load_scale():
+    try:
+        return float((Path(__file__).parent / "btc_scale.txt").read_text().strip())
+    except Exception:
+        return 40.0          # provisional until the first measurement
+SCALE = _load_scale()
 
 ALLOW = ["BUY", "SELL"]        # refreshed every cycle by update_gate()
 _gate_src = ""
@@ -51,13 +64,13 @@ def update_gate(bars):
         a = TE.auto_call(_te_bars(bars))
         ALLOW, src = a["allow"], f"AUTO:{a['trend']} ({a['why']})"
     if src != _gate_src:
-        print(f"[oanda_matcher] gate -> {src}  allow={ALLOW or 'NONE - ghost waits'}")
+        print(f"[btc_matcher] gate -> {src}  allow={ALLOW or 'NONE - ghost waits'}")
         _gate_src = src
 
 
 def zee_allows(side):
     return side in ALLOW
-LOT = 0.10
+LOT = 0.02
 # RISK CAP history: set to 0.10 after the -$259 night (bursts amplified entry
 # losses). LIFTED 2026-08-05 by Zee's explicit instruction: "let the diamonds
 # multiply the trades.. this is exactly what we want to test on this demo account —
@@ -72,7 +85,7 @@ LOT = 0.10
 # Diamonds/hearts REMAIN as labels + raid allowance: at equal size the fills now
 # measure pure selection quality — if diamond-labeled trades out-WIN plain ones
 # over the coming days, sizing can be re-earned with better timing.
-RISK_CAP = 0.10
+RISK_CAP = 0.02      # BTC: far larger $/point — smaller size
 CFG = dict(UHV_BODY_MIN=0.0, MIN_ORIGIN_BREAK=0.0, ER_MIN=0.0, TREND_MIN_HUMP=0.5, TREND_DOM=0.0)
 
 
@@ -152,8 +165,8 @@ def diamonds_for(bars, s):
     if len(closed) >= 6:
         e5 = _ema5([b.c for b in closed[-40:]])
         lc = closed[-1]
-        d += int((lc.is_bull and lc.c > e5 + 0.10) if side == "BUY"
-                 else (lc.is_bear and lc.c < e5 - 0.10))   # Law 3 — EMA-5 close
+        d += int((lc.is_bull and lc.c > e5 + 0.10 * SCALE) if side == "BUY"
+                 else (lc.is_bear and lc.c < e5 - 0.10 * SCALE))   # Law 3 — EMA-5 close
     bk = bars[i]
     rng = max(bk.h - bk.l, 1e-9)
     wick = (bk.h - max(bk.o, bk.c)) / rng if side == "BUY" else (min(bk.o, bk.c) - bk.l) / rng
@@ -182,7 +195,7 @@ def write_signal(seq, s, lots):
                              "emitted_utc": datetime.utcnow().isoformat(timespec="seconds")}) + "\n")
 
 
-STRETCH_PT = 6.0   # STRETCH HUMILITY (2026-08-05, 3rd receipt: the 19:57 -$30.90
+STRETCH_PT = 6.0 * SCALE   # STRETCH HUMILITY (2026-08-05, 3rd receipt: the 19:57 -$30.90
                     # diamond at the tip of a 14pt/40min climb): when the lamp sits
                     # more than this many points beyond the last confirmed swing
                     # (low for BUY, high for SELL), conviction CANNOT be "sure" —
@@ -300,7 +313,7 @@ CHOP_ER = 0.25   # CHOP SELECTIVITY (Zee-approved 2026-08-06): Kaufman efficienc
                   # washing machine; boredom may not.
 
 
-REGIME_OVR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/regime_override.json")
+REGIME_OVR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/btc_regime_override.json")
 
 
 # ── THE GATES-LIFTED TRIAL (Zee 2026-08-07: "lift them, let them hang free") ──
@@ -471,7 +484,7 @@ def find_armed(bars):
             c = bars[k]
             if not (c.is_bear if side == "BUY" else c.is_bull): continue
             if c.v >= 0.75 * bars[k - 1].v or c.v >= 0.75 * bars[k - 2].v: continue
-            if min(abs(c.c - lvl), abs(c.c - sweep_line)) <= 0.8:
+            if min(abs(c.c - lvl), abs(c.c - sweep_line)) <= 0.8 * SCALE:
                 law2 = 1
                 break
         # (law2 demoted 2026-08-06: no burst effects — see no_demand veto)
@@ -484,10 +497,10 @@ def find_armed(bars):
         rng = max(lc.h - lc.l, 1e-9)
         if side == "BUY":
             law3 = int(lc.is_bull and lc.body_ratio >= 0.5
-                       and lc.c > e5 + 0.10)                        # clearly above EMA5
+                       and lc.c > e5 + 0.10 * SCALE)                        # clearly above EMA5
         else:
             law3 = int(lc.is_bear and lc.body_ratio >= 0.5
-                       and lc.c < e5 - 0.10)                        # clearly below EMA5
+                       and lc.c < e5 - 0.10 * SCALE)                        # clearly below EMA5
         # FOURTH LAW OF CONVICTION (Zee 2026-08-05): RSI-14 regular divergence at the
         # extremes, "we need two swings". Oversold BUY: price makes a LOWER low across
         # the last two swing lows while RSI makes a HIGHER low, with RSI in/near the
@@ -615,7 +628,7 @@ def write_armed(bars):
     if not DOOR_ENABLED:
         ARMED.unlink(missing_ok=True)   # THE DOOR IS RETIRED — never arm, ever.
         return w                        # (the WATCH box above still feeds the cockpit)
-    ready = [c for c in cands if c["dist"] <= 2.0 and zee_allows(c["side"])
+    ready = [c for c in cands if c["dist"] <= 2.0 * SCALE and zee_allows(c["side"])
              and not no_demand(bars, c["side"])
              and not (dt and (int(c["swept"]) + int(c.get("law2", 0)) + int(c.get("law3", 0))
                               + int(c.get("law4", 0)) + int(c.get("law5", 0))) == 0)
@@ -670,7 +683,7 @@ def main():
     # memory, so every matcher restart re-emitted any setup still inside the 3-min
     # freshness window — and this matcher was restarted ~15 times today. The dedup
     # now persists to disk across restarts.
-    _SEEN_F = Path(__file__).parent / ".emitted_setups.json"
+    _SEEN_F = Path(__file__).parent / ".btc_emitted.json"
     seq = 0                     # BUGFIX 2026-08-07: seq was ONLY initialised in the
                                 # except branch, so whenever the dedup file loaded
                                 # successfully every signal emission died with
@@ -681,7 +694,7 @@ def main():
     except Exception:
         seen = set()
     last_armed_key = None
-    print("[oanda_matcher] live fast-scalp — watching oanda_m1.csv (ghost-door armed mode)")
+    print("[btc_matcher] live fast-scalp — watching oanda_m1.csv (ghost-door armed mode)")
     while True:
         try:
             bars = load_bars()
@@ -691,12 +704,12 @@ def main():
                 # outage), do NOT fire — else we'd trade a hours-old setup at live price.
                 # PRICE SANITY (2026-08-08): a feed that is not this instrument
                 # must never reach the executor, whatever the file name says.
-                if not (500 <= bars[-1].c <= 20000):
-                    print(f"[oanda_matcher] FEED IS NOT XAUUSD (price {bars[-1].c:.2f}) — refusing to trade")
+                if not (10000 <= bars[-1].c <= 500000):
+                    print(f"[btc_matcher] FEED IS NOT BTCUSD (price {bars[-1].c:.2f}) — refusing to trade")
                     time.sleep(20); continue
                 stale_min = (datetime.utcnow() - bars[-1].t).total_seconds() / 60
                 if stale_min > 3:
-                    print(f"[oanda_matcher] data stale ({stale_min:.0f} min behind) — holding, no fire")
+                    print(f"[btc_matcher] data stale ({stale_min:.0f} min behind) — holding, no fire")
                     time.sleep(20); continue
                 update_gate(bars)
                 for s in B.detect_full(bars):
@@ -722,35 +735,35 @@ def main():
                     except Exception:
                         pass
                     if not zee_allows(s["side"]):
-                        print(f"[oanda_matcher] cockpit gate: {s['side']} blocked by Zee's call")
+                        print(f"[btc_matcher] cockpit gate: {s['side']} blocked by Zee's call")
                         continue
                     # THE BREAKOUT CANDLE'S CONDITIONS (Zee 2026-08-04):
                     #   1. momentum candle (strong body)
                     #   2. LOW volume — lower than the UHV's volume
                     _sl = TE.slope_of(_te_bars(bars))
                     if (s["side"] == "BUY" and _sl < -0.10) or                        (s["side"] == "SELL" and _sl > 0.10):
-                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                        print(f"[btc_matcher] {s['side']} @{s['entry']} skipped — "
                               f"slope {_sl:+.2f} strongly opposed")
                         continue
                     if no_demand(bars, s["side"]):
-                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                        print(f"[btc_matcher] {s['side']} @{s['entry']} skipped — "
                               f"no-demand rally / no-supply dip (a move nobody funds)")
                         continue
                     if choppy(bars) and not regime_forced() and not GATES_LIFTED:
-                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                        print(f"[btc_matcher] {s['side']} @{s['entry']} skipped — "
                               f"REGIME SWITCH: tape not trending (ER < 0.25)")
                         continue
                     if dead_tape(bars) and not swept(bars, s["u"], s["i"], s["side"]):
-                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                        print(f"[btc_matcher] {s['side']} @{s['entry']} skipped — "
                               f"dead tape and no conviction (boredom may not hunt)")
                         continue
                     bb = bars[s["i"]]
                     if bb.body_ratio < 0.5:
-                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                        print(f"[btc_matcher] {s['side']} @{s['entry']} skipped — "
                               f"breakout not a momentum candle (body {bb.body_ratio:.2f})")
                         continue
                     if s["b_vol"] >= s["uhv_vol"]:
-                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                        print(f"[btc_matcher] {s['side']} @{s['entry']} skipped — "
                               f"breakout volume {s['b_vol']} >= UHV {s['uhv_vol']} "
                               f"(the fundamental law needs LOWER)")
                         continue
@@ -763,29 +776,29 @@ def main():
                         s["clicks"] = 3                    # full conviction
                         s["target"] = structural_target(bars, s["i"], s["side"], s["entry"])
                     if night_window():
-                        print(f"[oanda_matcher] {s['side']} @{s['entry']} skipped — "
+                        print(f"[btc_matcher] {s['side']} @{s['entry']} skipped — "
                               f"night gate (21:30-01:00 broker rests)")
                         continue
                     if stretch_of(bars, s["entry"], s["side"]) > STRETCH_PT                             or exhausted(bars, s["side"]):
                         lots = 0.10                # stretch/exhaustion humility
-                    print(f"[oanda_matcher] {'*' * _d or 'no'} diamond(s)"
+                    print(f"[btc_matcher] {'*' * _d or 'no'} diamond(s)"
                           f"{' [TIP: selling-climax]' if _tip else ''} -> "
                           f"{s['clicks']} click(s) of {lots:.2f}"
                           f"{f' target {s.get(chr(34)+chr(34)) or s.get(_x)}' if False else ''}")
                     write_signal(seq, s, lots)
-                    print(f"[oanda_matcher] SIGNAL #{seq} {s['side']} @{s['entry']} "
+                    print(f"[btc_matcher] SIGNAL #{seq} {s['side']} @{s['entry']} "
                           f"lots={lots:.2f} ({s['open_t'].strftime('%H:%M')}UTC)")
                 a = write_armed(bars)
                 if a and a["key"] != last_armed_key:
                     d = (int(a["swept"]) + int(a.get("law3", 0))
                          + int(a.get("law4", 0)) + int(a.get("law5", 0)))
                     hearts = (" ❤(L6)" if a.get("law6") else "") + (" ❤(SC3)" if a.get("s3") else "")
-                    print(f"[oanda_matcher] {'💎' * d or 'no diamonds'}{hearts} — "
+                    print(f"[btc_matcher] {'💎' * d or 'no diamonds'}{hearts} — "
                           f"{a['side']} lamp @{a['level']} sweep line @{a['sweep']} "
                           f"clicks={a.get('clicks', 1)}x0.10 raids={a.get('raids', 1)}")
                 last_armed_key = a["key"] if a else None
         except Exception as e:
-            print("[oanda_matcher] err:", e, file=sys.stderr)
+            print("[btc_matcher] err:", e, file=sys.stderr)
         time.sleep(5)   # local csv poll is free; the bridge refreshes it every 20s
 
 

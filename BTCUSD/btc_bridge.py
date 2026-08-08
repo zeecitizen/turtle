@@ -2,7 +2,7 @@
 
 Zee's UHV method runs on OANDA/TradingView volume. Blueberry MT5's tick-count volume
 is a DIFFERENT metric (same candle, e.g. 01:30 UTC: MT5 vol 451 vs OANDA vol 2132), so
-the MT5-fed detector never saw Zee's UHVs. This bridge pulls OANDA:XAUUSD M1 bars
+the MT5-fed detector never saw Zee's UHVs. This bridge pulls OANDA:BTCUSD M1 bars
 (OHLC + the real volume) straight from the live TradingView chart via Chrome DevTools
 Protocol (port 9222) and writes them to a CSV the detector reads.
 
@@ -12,7 +12,7 @@ TradingView internal path (reverse-engineered via CDP):
 
 Times are UNIX UTC (no timezone ambiguity). Run once (--once) or loop (--loop N).
 Requires TradingView Desktop launched with --remote-debugging-port=9222 and the chart
-on OANDA:XAUUSD, M1, with the Volume study (tradingview_launcher.bat).
+on OANDA:BTCUSD, M1, with the Volume study (tradingview_launcher.bat).
 """
 from __future__ import annotations
 import argparse, asyncio, csv, json, sys, time, urllib.request
@@ -20,7 +20,7 @@ from pathlib import Path
 import websockets
 
 CDP_HTTP = "http://localhost:9222/json"
-OUT = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_m1.csv")
+OUT = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/btc_m1.csv")
 EXTRACT_JS = (
     "(function(){try{"
     "var b=window._exposed_chartWidgetCollection.activeChartWidget.value()"
@@ -37,6 +37,7 @@ SYMBOL_JS = (
 
 
 async def _page_symbol(url):
+    """Ask a CDP page which symbol its active chart shows."""
     try:
         async with websockets.connect(url, max_size=None) as ws:
             await ws.send(json.dumps({"id": 9, "method": "Runtime.evaluate",
@@ -51,17 +52,17 @@ async def _page_symbol(url):
 
 
 async def _ws_url_async():
-    """SYMBOL-AWARE (2026-08-08): this bridge used to grab whatever the 'Forex' tab
-    was showing. The moment Zee switched that chart to Bitcoin to set up the BTC
-    machine, GOLD's own feed filled with BTC prices (64941 where 4340 belongs) — the
-    gold ghost was one candle away from trading Bitcoin data on a gold chart. Now the
-    bridge asks each page what it is showing and accepts only XAU."""
+    """BTC machine (2026-08-08): pick the TradingView tab whose ACTIVE CHART is
+    Bitcoin — title matching is unreliable with two charts open, so we ask each page
+    what it is showing. Async because it runs inside the pull's own event loop."""
     d = json.load(urllib.request.urlopen(CDP_HTTP, timeout=5))
     pages = [p for p in d if p.get("type") == "page" and p.get("webSocketDebuggerUrl")]
     for p in pages:
-        if "XAU" in (await _page_symbol(p["webSocketDebuggerUrl"])).upper():
+        sym = (await _page_symbol(p["webSocketDebuggerUrl"])).upper()
+        if "BTC" in sym:
             return p["webSocketDebuggerUrl"]
-    raise RuntimeError("no TradingView tab is showing an XAUUSD chart on CDP :9222")
+    raise RuntimeError("no TradingView tab is showing a BTC chart on CDP :9222 — "
+                       "open BTCUSD (OANDA feed), M1, with the Volume study")
 
 
 async def _pull():
@@ -86,7 +87,12 @@ def pull_and_write():
         w = csv.writer(f)
         w.writerow(["time_unix", "open", "high", "low", "close", "volume"])
         for t, o, h, l, c, vol in bars:
-            w.writerow([int(t), o, h, l, c, int(vol)])
+            # VOLUME PRECISION (2026-08-08): OANDA's BTCUSD is a CFD that closes with
+            # forex on Friday, so the weekend feed comes from BINANCE:BTCUSDT — whose
+            # volume is fractional BTC (0.22, 15.3). int() would truncate most bars to
+            # ZERO and destroy the whole UHV signal. Store volume x1000 as an integer;
+            # every rule in the strategy is RELATIVE, so the unit does not matter.
+            w.writerow([int(t), o, h, l, c, int(round(float(vol) * 1000))])
     tmp.replace(OUT)
     return len(bars), (int(bars[0][0]) if bars else 0), (int(bars[-1][0]) if bars else 0)
 
@@ -101,9 +107,9 @@ def main():
             from datetime import datetime, timezone
             f = datetime.fromtimestamp(t0, tz=timezone.utc).strftime("%m-%d %H:%M")
             l = datetime.fromtimestamp(t1, tz=timezone.utc).strftime("%m-%d %H:%M")
-            print(f"[oanda_bridge] wrote {n} OANDA M1 bars ({f} .. {l} UTC) -> {OUT.name}")
+            print(f"[btc_bridge] wrote {n} OANDA M1 bars ({f} .. {l} UTC) -> {OUT.name}")
         except Exception as e:
-            print(f"[oanda_bridge] ERROR: {e}", file=sys.stderr)
+            print(f"[btc_bridge] ERROR: {e}", file=sys.stderr)
         if args.loop <= 0:
             break
         time.sleep(args.loop)
