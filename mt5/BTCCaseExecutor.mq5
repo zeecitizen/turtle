@@ -353,7 +353,7 @@ int OnInit() {
    if (GlobalVariableCheck("CaseExec_last_id"))   g_last_id   = (long)GlobalVariableGet("CaseExec_last_id");
    if (GlobalVariableCheck("CaseExec_last_lamp")) g_last_lamp = (long)GlobalVariableGet("CaseExec_last_lamp");
    if (GlobalVariableCheck("CaseExec_raids"))     g_raids     = (int)GlobalVariableGet("CaseExec_raids");
-   Print("[BTCCase] v1.78c loaded — BTC ghost, ZEE EXIT: hold to flat");
+   PrintFormat("[BTCCase] v1.79c loaded — breakeven lock at +%.2f, ZEE EXIT", InpBEArmPts);
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
