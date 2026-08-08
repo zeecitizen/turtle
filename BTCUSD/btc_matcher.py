@@ -70,7 +70,7 @@ def update_gate(bars):
 
 def zee_allows(side):
     return side in ALLOW
-LOT = 0.02
+LOT = 0.20      # BTC: matches the EA default; $1 of price = $1 per lot
 # RISK CAP history: set to 0.10 after the -$259 night (bursts amplified entry
 # losses). LIFTED 2026-08-05 by Zee's explicit instruction: "let the diamonds
 # multiply the trades.. this is exactly what we want to test on this demo account —
@@ -85,7 +85,7 @@ LOT = 0.02
 # Diamonds/hearts REMAIN as labels + raid allowance: at equal size the fills now
 # measure pure selection quality — if diamond-labeled trades out-WIN plain ones
 # over the coming days, sizing can be re-earned with better timing.
-RISK_CAP = 0.02      # BTC: far larger $/point — smaller size
+RISK_CAP = 0.20      # BTC: at scale 3.7 a catastrophe stop costs ~$4.44 here
 CFG = dict(UHV_BODY_MIN=0.0, MIN_ORIGIN_BREAK=0.0, ER_MIN=0.0, TREND_MIN_HUMP=0.5, TREND_DOM=0.0)
 
 
