@@ -1,6 +1,17 @@
 //+------------------------------------------------------------------+
 //| S1TraderBTC.mq5 — S1Trader with BITCOIN-SCALE defaults            |
 //|                                                                  |
+//| 2026-08-09 RESULT OF THE FIRST TWO HONEST BACKTESTS (21 days,     |
+//| real volume, real spread, real slippage):                        |
+//|   proportional target (TP = stop distance) : 53% WR, +$9.59  WON |
+//|   fixed $200 target                        : 19% WR, -$15.86     |
+//|   our live give-back ratchet               : 57% WR, -$657       |
+//| The market decides the size of each trade's opportunity, not us:  |
+//| a UHV with a wide stop earns a wide target, a tight one a tight   |
+//| target. Both failures came from imposing a number the setup never |
+//| agreed to. So InpDynamicTP is now TRUE by default.                |
+
+//|                                                                  |
 //| 2026-08-09: the same engine, but every price-unit input rescaled  |
 //| for a $65,000 instrument whose minute moves ~$17 instead of gold's|
 //| $1.95 (SCALE 10). Created as a SEPARATE EA on purpose: MT5 keeps  |
@@ -694,7 +705,7 @@ input int    InpH1FvgLookback     = 50;   // H1 bars searched for unfilled FVG (
 input bool   InpRequireBigSpread  = false; // 2026-05-27: DISABLED. Was blocking 100% of live trades (0 entries in 5 days). The WF validation was on a model that didn't include this filter. Re-enable only after live calibration.
 input double InpBigSpreadMult     = 1.3;  // UHV bar range must be >= this x avg range of prior 10 M5 bars
 input int    InpSpreadAvgBars     = 10;   // bars used for the avg-range baseline
-input double InpSLBufferPts       = 20.0; // 2026-05-19: walk-forward winner. Was 0.10, but tighter SL configs all BROKE OOS (curve-fit). Wider SL absorbs noise.
+input double InpSLBufferPts       = 10.0; // 2026-05-19: walk-forward winner. Was 0.10, but tighter SL configs all BROKE OOS (curve-fit). Wider SL absorbs noise.
 input double InpMaxInitialSLPoints = 0.0;  // 2026-06-16 v2.76: REVERTED to 0 (no cap). Live data showed 2.0pt cap was converting pullback-survivor wins into capped losses (WR 38%→30%). Catastrophe protection now comes from smaller lot size + daily-loss-halt instead. Canonical SL respected again.
 
 input group "── v2.52 Structural Gates (teacher-faithful, all OFF by default) ──"
@@ -750,7 +761,7 @@ input bool   InpRequireBigSpreadClimax = false; // 2026-06-09 v2.66: previously 
 
 input group "── Exit ──"
 input double InpTPPoints          = 200.0;  // 2026-06-22 v2.98: 5.0→1.3 — with rejection-wick filter producing 87.5% WR at TP=1.3pt, return to "catch the fish" tight TP. Master prefers high WR over high $.
-input bool   InpDynamicTP         = false; // 2026-06-16 v2.78: BACK to FALSE per master verbatim "we're looking for something like 1:0.001 R:R" — we don't chase big TPs, we catch the +0.1pt micro-positive via tight trail and lock it. Fixed 1pt TP as safety ceiling for the rare runs that don't reverse.
+input bool   InpDynamicTP         = true; // 2026-06-16 v2.78: BACK to FALSE per master verbatim "we're looking for something like 1:0.001 R:R" — we don't chase big TPs, we catch the +0.1pt micro-positive via tight trail and lock it. Fixed 1pt TP as safety ceiling for the rare runs that don't reverse.
 
 input group "── Logging ──"
 input bool   InpVerbose       = true;
