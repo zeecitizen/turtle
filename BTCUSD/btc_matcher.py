@@ -43,6 +43,34 @@ def _load_scale():
         return 40.0          # provisional until the first measurement
 SCALE = _load_scale()
 
+
+# ── SINGLETON GUARD (2026-08-08) ───────────────────────────────────────────────
+# Two matchers running at once both write the same signal file, and the EA cannot
+# tell them apart — that is a double-fired trade waiting to happen. It has already
+# happened twice today (13:01 + 13:54, then again after a restart). A matcher now
+# refuses to start if another one is already alive.
+def _singleton_or_die():
+    import subprocess, os
+    try:
+        out = subprocess.run(
+            ["powershell", "-NoProfile", "-Command",
+             "Get-CimInstance Win32_Process -Filter \"Name like 'python%'\" | "
+             "Where-Object { $_.CommandLine -match 'btc_matcher' } | "
+             "Select-Object -ExpandProperty ProcessId"],
+            capture_output=True, text=True, timeout=25).stdout.split()
+        pids = [int(x) for x in out if x.isdigit() and int(x) != os.getpid()]
+        if pids:
+            print(f"[btc_matcher] ANOTHER MATCHER IS ALREADY RUNNING (pid {pids[0]}) — "
+                  f"refusing to start a second one")
+            raise SystemExit(1)
+    except SystemExit:
+        raise
+    except Exception:
+        pass          # if the check itself fails, do not block the machine
+
+
+_singleton_or_die()
+
 ALLOW = ["BUY", "SELL"]        # refreshed every cycle by update_gate()
 _gate_src = ""
 
