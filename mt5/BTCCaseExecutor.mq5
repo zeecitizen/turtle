@@ -23,10 +23,9 @@
 //     (Zee's choice), median M1 range $26.69 vs gold $1.95, ZERO dead bars.
 //     OANDA's BTCUSD is a CFD that freezes at the Friday FX close; Binance's
 //     own feed showed half its minutes dead. Pepperstone trades 24/7 and moves.
-, because the whole rulebook
-//     was written in GOLD points and a Bitcoin minute is far larger. The scale is
-//     MEASURED from the tape (BTCUSD/measure_scale.py) and set in these defaults,
-//     so every number stays visible and adjustable in the inputs dialog.
+//     The whole rulebook was written in GOLD points and a Bitcoin minute is far
+//     larger, so the scale is MEASURED from the tape (BTCUSD/measure_scale.py) and
+//     baked into these defaults — every number stays visible in the inputs dialog.
 // Attach to a BTCUSD M1 chart.
 // v1.78 ZEE'S OWN EXIT (2026-08-08). His Feb-11 broker report beside our ledger:
 //   ZEE    69 trades  94% WR  avg win +$12.93  avg LOSS  -$1.32  worst  -$1.60
