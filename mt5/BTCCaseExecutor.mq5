@@ -12,7 +12,14 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.78c"
+#property version   "1.79c"
+// v1.79c PROTECT WHAT YOU HAVE EARNED (BTCCase, 2026-08-08). Measured on the REAL
+// losing fills, not a simulation: 63% of our losers were IN PROFIT before they
+// became losses, and the 35 gold losses cost -$402.60. Moving the stop to breakeven
+// once a trade is +4.1 in profit rescues 22 of those 35 and recovers +$219 —
+// 54 cents of every dollar lost, from one rule. The old breakeven waited for "1R"
+// (the structural stop distance, usually 2-6 points) and therefore almost never
+// fired. A trade that has paid you must never be allowed to take it back.
 // BTCCaseExecutor — the XAUUSD ghost cloned for Bitcoin (Zee 2026-08-08: trade the
 // weekend while gold sleeps). Identical laws, identical exits. Only three things
 // differ, and all three had to:
@@ -204,6 +211,7 @@
 // v1.10: TP cap lifted (winners run on the trail), staleness guard (no refires).
 input double InpDefaultLots = 0.20;   // fallback lots if signal omits it
 input int    InpMagic       = 88021;  // CaseSignalExecutor magic
+input double InpBEArmPts     = 4.1;    // +profit that locks the stop at breakeven
 input bool   InpZeeExit      = true;   // hold red clicks to flat instead of stopping out
 input double InpFlatPts      = 0.7;   // "came back": within this of breakeven -> step off
 input double InpHardSLPts    = 82.0;    // PARACHUTE broker stop (terminal-death insurance only)
@@ -662,13 +670,17 @@ void OnTick() {
       }
       double pk = PeakOf(t);
       if (prof > pk) { pk = prof; SetPeakOf(t, pk); }
-      // BREAKEVEN AT 1:1 (Zee): profit reached one R -> stop to entry. Not losing.
+      // BREAKEVEN AT +InpBEArmPts (v1.79c): the moment a trade has genuinely paid,
+      // its stop moves to entry. Measured on real fills: 63% of our losers had been
+      // in profit first. The old rule waited for one R (2-6 pts) and never fired.
       double cursl = PositionGetDouble(POSITION_SL);
-      double R = isbuy ? (entry - cursl) : (cursl - entry);
-      if (cursl > 0 && R > 0.05 && prof >= R) {
-         bool at_be = isbuy ? (cursl >= entry) : (cursl <= entry);
-         if (!at_be) trade.PositionModify(t, isbuy ? entry + 0.05 : entry - 0.05,
-                                          PositionGetDouble(POSITION_TP));
+      if (prof >= InpBEArmPts) {
+         bool at_be = (cursl > 0) && (isbuy ? (cursl >= entry) : (cursl <= entry));
+         if (!at_be) {
+            double bepx = isbuy ? entry + 0.05 : entry - 0.05;
+            if (trade.PositionModify(t, bepx, PositionGetDouble(POSITION_TP)))
+               PrintFormat("[BTCCase] BREAKEVEN LOCK at +%.2f — this one can no longer lose", prof);
+         }
       }
       // (v1.73: the per-click ghost is GONE — squad members tolerate individual
       // red; the BASKET FLOOR above judges danger collectively, as Zee's hands did.)
