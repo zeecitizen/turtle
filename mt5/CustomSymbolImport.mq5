@@ -25,6 +25,7 @@ input string InpNewSymbol  = "BTCUSD_REAL";         // custom symbol to create
 input string InpCopyFrom   = "BTCUSD";              // broker symbol to copy specs from
 input double InpPriceMin   = 0;                       // ignore rows below this price (0 = off)
 input double InpPriceMax   = 0;                       // ignore rows above this price (0 = off)
+input bool   InpMakeTicks  = true;                    // also synthesise ticks (lets "Every tick" models run)
 
 //+------------------------------------------------------------------+
 int ReadBars(MqlRates &out[]) {
@@ -104,6 +105,42 @@ void OnStart() {
 
    int put = CustomRatesReplace(InpNewSymbol, 0, D'2100.01.01', rates);
    if (put < 0) { PrintFormat("[import] CustomRatesReplace failed: %d", GetLastError()); return; }
+
+   // SYNTHETIC TICKS (2026-08-08): a custom symbol holding only BARS makes the
+   // Strategy Tester answer "no history data, stop testing" for every tick-based
+   // model. Four ticks per minute — open, then the extreme that came first, then the
+   // other, then close — give the tester something to walk. It is not real tick
+   // data, but it is honest about what we know: the OHLC of each minute.
+   if (InpMakeTicks) {
+      MqlTick ticks[];
+      ArrayResize(ticks, n * 4);
+      double sp = SymbolInfoDouble(InpCopyFrom, SYMBOL_POINT) * 20;   // nominal spread
+      if (sp <= 0) sp = rates[0].close * 0.00002;
+      int m = 0;
+      for (int i = 0; i < n; i++) {
+         bool up = (rates[i].close >= rates[i].open);   // green: low first, then high
+         double seq[4];
+         seq[0] = rates[i].open;
+         seq[1] = up ? rates[i].low  : rates[i].high;
+         seq[2] = up ? rates[i].high : rates[i].low;
+         seq[3] = rates[i].close;
+         for (int k = 0; k < 4; k++) {
+            ticks[m].time      = rates[i].time + (k * 15);
+            ticks[m].time_msc  = (long)ticks[m].time * 1000;
+            ticks[m].bid       = seq[k];
+            ticks[m].ask       = seq[k] + sp;
+            ticks[m].last      = seq[k];
+            ticks[m].volume    = (k == 3) ? (long)rates[i].tick_volume : 0;
+            ticks[m].flags     = TICK_FLAG_BID | TICK_FLAG_ASK;
+            m++;
+         }
+      }
+      ArrayResize(ticks, m);
+      int tput = CustomTicksReplace(InpNewSymbol, ticks[0].time_msc,
+                                    ticks[m-1].time_msc, ticks);
+      PrintFormat("[import] %d synthetic ticks written (%s)", tput,
+                  tput > 0 ? "tick models now runnable" : "tick write FAILED, use '1 minute OHLC'");
+   }
    SymbolSelect(InpNewSymbol, true);
    PrintFormat("[import] %s: %d M1 bars loaded (%s .. %s) — open the Strategy Tester "
                "and choose this symbol, period M1, 'Every tick based on real ticks' is "
