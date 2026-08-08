@@ -24,6 +24,7 @@ import trend_eyes as TE                                     # noqa: E402
 CALL = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/btc_trend_call.json")
 ROVR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/btc_regime_override.json")
 PNG = Path(TE.__file__).parent / "setup_labels" / "camel_humps.png"
+BTC_ERA_START = "2026.08.08 12:00"   # the Bitcoin ghost was born here
 TTL = 600     # a manual call fades after 10 minutes, then AUTO (Zee 2026-08-04)
 BACK = 120
 
@@ -208,6 +209,10 @@ class Cockpit:
                 except ValueError: continue
                 if lots not in (0.02, 0.05, 0.10, 0.20, 0.30, 0.60): continue
                 if "BTC" not in c[3].upper(): continue      # this cockpit is Bitcoin only
+                # ERA CUTOFF (Zee 2026-08-08, laughing at 69-day-old fossils): the
+                # ledger still holds Bitcoin fills from the old S3-M30 experiment in
+                # April and May. This cockpit shows only THIS ghost's work.
+                if c[0] < BTC_ERA_START: continue
                 rows.append((c[0], c[4].replace("_closed", ""), lots, float(c[6]), pnl))
         except Exception:
             pass
