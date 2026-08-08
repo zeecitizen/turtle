@@ -689,6 +689,11 @@ def main():
                 last_closed = bars[-2].t     # -1 may still be forming
                 # WALL-CLOCK freshness guard: if the data edge is stale (internet/feed
                 # outage), do NOT fire — else we'd trade a hours-old setup at live price.
+                # PRICE SANITY (2026-08-08): a feed that is not this instrument
+                # must never reach the executor, whatever the file name says.
+                if not (500 <= bars[-1].c <= 20000):
+                    print(f"[oanda_matcher] FEED IS NOT XAUUSD (price {bars[-1].c:.2f}) — refusing to trade")
+                    time.sleep(20); continue
                 stale_min = (datetime.utcnow() - bars[-1].t).total_seconds() / 60
                 if stale_min > 3:
                     print(f"[oanda_matcher] data stale ({stale_min:.0f} min behind) — holding, no fire")

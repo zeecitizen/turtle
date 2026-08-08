@@ -30,16 +30,42 @@ EXTRACT_JS = (
 )
 
 
-def _ws_url():
+SYMBOL_JS = (
+    "(function(){try{return window._exposed_chartWidgetCollection.activeChartWidget"
+    ".value().model().mainSeries().symbolInfo().name;}catch(e){return '';}})()"
+)
+
+
+async def _page_symbol(url):
+    try:
+        async with websockets.connect(url, max_size=None) as ws:
+            await ws.send(json.dumps({"id": 9, "method": "Runtime.evaluate",
+                                      "params": {"expression": SYMBOL_JS,
+                                                 "returnByValue": True, "timeout": 6000}}))
+            while True:
+                m = json.loads(await ws.recv())
+                if m.get("id") == 9:
+                    return str(m.get("result", {}).get("result", {}).get("value") or "")
+    except Exception:
+        return ""
+
+
+async def _ws_url_async():
+    """SYMBOL-AWARE (2026-08-08): this bridge used to grab whatever the 'Forex' tab
+    was showing. The moment Zee switched that chart to Bitcoin to set up the BTC
+    machine, GOLD's own feed filled with BTC prices (64941 where 4340 belongs) — the
+    gold ghost was one candle away from trading Bitcoin data on a gold chart. Now the
+    bridge asks each page what it is showing and accepts only XAU."""
     d = json.load(urllib.request.urlopen(CDP_HTTP, timeout=5))
-    for p in d:
-        if p.get("type") == "page" and "Forex" in p.get("title", ""):
+    pages = [p for p in d if p.get("type") == "page" and p.get("webSocketDebuggerUrl")]
+    for p in pages:
+        if "XAU" in (await _page_symbol(p["webSocketDebuggerUrl"])).upper():
             return p["webSocketDebuggerUrl"]
-    raise RuntimeError("TradingView chart page not found on CDP :9222")
+    raise RuntimeError("no TradingView tab is showing an XAUUSD chart on CDP :9222")
 
 
 async def _pull():
-    url = _ws_url()
+    url = await _ws_url_async()
     async with websockets.connect(url, max_size=None) as ws:
         await ws.send(json.dumps({"id": 1, "method": "Runtime.evaluate",
                                   "params": {"expression": EXTRACT_JS, "returnByValue": True, "timeout": 12000}}))
