@@ -661,113 +661,113 @@
 
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
-input double InpLots          = 0.01;     // 2026-06-16 v2.76: REVERTED 0.80→0.30 after live receipt showed 0.80 + tight SL cap = -$1668 across 99 trades. At 0.30 lots: worst-case 6pt UHV blow-up = ~$144 (survivable). Wide SL lets winners ride to TP. Slower but real.
-input int    InpMagicNumber   = 88099;    // 2026-06-09 v2.64: defaults to M1 scalp instance (was 88004 = M5). M5 instance running v2.63 stays untouched.
-input double InpDailyLossHalt = 0.0;  // 2026-06-16 v2.76: scaled to 0.30 lot size (500 × 0.30/0.80 ≈ 188 → round to 200). One uncapped 6pt stop ≈ $144; halt at $200 = 1.4 such killers max. ~10% of demo acct. 0=off.
-input double InpDailyProfitTarget = 0.0;    // 2026-06-18 v2.84: DISABLED. Master decides when to stop trading for the day. EA doesn't impose a profit-cap. 0=off.
-input bool   InpAutoCloseOnTarget = false;  // 2026-06-18 v2.84: DISABLED. No auto-close on profit. Master closes manually.
+input double InpLots          = 0.01; // InpLots — 2026-06-16 v2.76: REVERTED 0.80→0.30 after live receipt showed 0.80 + 
+input int    InpMagicNumber   = 88099; // InpMagicNumber — 2026-06-09 v2.64: defaults to M1 scalp instance (was 88004 = M5). M5 i
+input double InpDailyLossHalt = 0.0; // InpDailyLossHalt — 2026-06-16 v2.76: scaled to 0.30 lot size (500 × 0.30/0.80 ≈ 188 → rou
+input double InpDailyProfitTarget = 0.0; // InpDailyProfitTarget — 2026-06-18 v2.84: DISABLED. Master decides when to stop trading for th
+input bool   InpAutoCloseOnTarget = false; // InpAutoCloseOnTarget — 2026-06-18 v2.84: DISABLED. No auto-close on profit. Master closes man
 
 input group "── Profit protection: 2R Free Roll (backtest 2026-05-22) ──"
-input bool   InpEnableBreakeven = false; // OFF — backtest showed INERT on S1 (SL at UHV-red low is usually wider than the $7.5 TP, so +1R can't arm before TP; identical to baseline +$431.8). Enable only if you widen TP / tighten SL.
-input double InpBreakevenR      = 1.0;   // R-multiple that arms breakeven. R = entry − ORIGINAL SL.
-input double InpBEArmUsd        = 0.0;   // Breakeven: lock SL at entry once trade is +$this profit. SUPERSEDED by the trailing lock below (0=off). Set >0 only to use fixed BE instead of the trail.
-input double InpTrailActUsd     = 0.0;   // 2026-05-29 REVERTED to OFF — May-27 trail "validation" was on misaligned data; on the aligned oracle trail HURTS S3/S4 (scratches winners). Disabled.
-input double InpTrailGiveUsd    = 0.0;   // Trailing lock: bank & exit if profit falls $this back from its peak ($0.3 keeps it outside gold spread so noise can't shake you out).
-input string InpPeakLogFile     = "trade_peaks_S1.csv";  // closed-trade peak (MFE) log in Common\Files — feeds the live "% of trades reached here" slider markers.
-input bool   InpMaxOneSameDir   = false; // 2026-06-09 v2.68: FLIPPED to FALSE. Vestigial from multi-EA era (S1/S3/NSND). We're M1-only now. Was blocking BUY signals during clear uptrends with the "cluster_guard" reason. Per "take all chances" rule.
-input bool   InpSkipOvernight   = false; // 2026-06-09 v2.68: FLIPPED to FALSE. Vestigial — "overnight thin hours" assumption contradicts Zee's "trash hides gems" + "asian session has some good trades" rule. Was blocking entries during broker 00-06.
-input int    InpOvernightStart  = 0;     // broker hour: block new entries from here ...
-input int    InpOvernightEnd    = 6;     // ... until here (exclusive).
-input string InpDecisionCsv     = "s1_decisions_m1.csv";  // 2026-06-09 v2.64: defaults to M1 instance file (was s1_decisions.csv for M5).
-input bool   InpEnablePartial   = false; // OFF — inert on S1 for the same geometry reason.
-input double InpPartialR        = 1.5;
-input double InpPartialFrac     = 0.5;
-input double InpBEBufferPts     = 3.0;  // SL set this far beyond entry (price units) to cover spread/swap.
+input bool   InpEnableBreakeven = false; // InpEnableBreakeven — OFF — backtest showed INERT on S1 (SL at UHV-red low is usually wider 
+input double InpBreakevenR      = 1.0; // InpBreakevenR — R-multiple that arms breakeven. R = entry − ORIGINAL SL.
+input double InpBEArmUsd        = 0.0; // InpBEArmUsd — Breakeven: lock SL at entry once trade is +$this profit. SUPERSEDED by
+input double InpTrailActUsd     = 0.0; // InpTrailActUsd — 2026-05-29 REVERTED to OFF — May-27 trail "validation" was on misalign
+input double InpTrailGiveUsd    = 0.0; // InpTrailGiveUsd — Trailing lock: bank & exit if profit falls $this back from its peak ($
+input string InpPeakLogFile     = "trade_peaks_S1.csv"; // InpPeakLogFile — closed-trade peak (MFE) log in Common\Files — feeds the live "% of tra
+input bool   InpMaxOneSameDir   = false; // InpMaxOneSameDir — 2026-06-09 v2.68: FLIPPED to FALSE. Vestigial from multi-EA era (S1/S3
+input bool   InpSkipOvernight   = false; // InpSkipOvernight — 2026-06-09 v2.68: FLIPPED to FALSE. Vestigial — "overnight thin hours"
+input int    InpOvernightStart  = 0; // InpOvernightStart — broker hour: block new entries from here ...
+input int    InpOvernightEnd    = 6; // InpOvernightEnd — ... until here (exclusive).
+input string InpDecisionCsv     = "s1_decisions_m1.csv"; // InpDecisionCsv — 2026-06-09 v2.64: defaults to M1 instance file (was s1_decisions.csv f
+input bool   InpEnablePartial   = false; // InpEnablePartial — OFF — inert on S1 for the same geometry reason.
+input double InpPartialR        = 1.5; // InpPartialR
+input double InpPartialFrac     = 0.5; // InpPartialFrac
+input double InpBEBufferPts     = 3.0; // InpBEBufferPts — SL set this far beyond entry (price units) to cover spread/swap.
 
 input group "── Human profit-pulse + one-tap GRAB ──"
-input bool   InpEnableGrab = true;       // honor a GRAB command (close ALL this EA's positions at market) from WhatsApp/dashboard one tap.
-input double InpAvgWinUsd  = 40.0;       // reference avg winning trade ($) for the heartbeat 'bigness' read (S1 ~$44 avg win @0.06).
-input string InpGrabFile   = "grab_command.txt"; // shared command file (epoch id). EA grabs on a NEWER id than last seen.
+input bool   InpEnableGrab = true; // InpEnableGrab — honor a GRAB command (close ALL this EA's positions at market) from Wh
+input double InpAvgWinUsd  = 40.0; // InpAvgWinUsd — reference avg winning trade ($) for the heartbeat 'bigness' read (S1 ~
+input string InpGrabFile   = "grab_command.txt"; // InpGrabFile — shared command file (epoch id). EA grabs on a NEWER id than last seen.
 
 input group "── Sides ──"
-input bool   InpDoBuys        = true;     // BUY side enabled (UHV red + bullish FVG)
-input bool   InpDoSells       = true;     // 2026-05-19: SELL side enabled — adds +$243/12d in walk-forward train (+/-$0 OOS net)
+input bool   InpDoBuys        = true; // InpDoBuys — BUY side enabled (UHV red + bullish FVG)
+input bool   InpDoSells       = true; // InpDoSells — 2026-05-19: SELL side enabled — adds +$243/12d in walk-forward train (
 
 input group "── Detection ──"
-input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M1;  // 2026-06-09 v2.64: defaults to M1 (scalp instance). The M5 instance v2.63 already attached on M5 chart keeps trading on M5 — this default only affects FRESH v2.64 attaches.
-input int    InpTrendLookback     = 24;   // bars (M1 default: ~24min; M5: ~2h)
-input double InpTrendThreshold    = 7.0;  // 2026-05-29 REVERTED to M5 validated value (verify_thorough.py: 7/7 splits, +$629->+$745, WR 69->76%).
-input double InpERMin             = 0.0;  // 2026-05-29 NEW: Kaufman Efficiency Ratio chop filter (same math as S4). 0=OFF. Threshold to be validated on aligned oracle before enabling.
-input int    InpERLookback        = 30;   // bars over InpTimeframe for the ER calc.
-input int    InpRetraceLookback   = 15;   // M5 bars searched for UHV red/green
-input bool   InpRequireH1Fvg      = false; // 2026-06-16 v2.78: BACK to FALSE per master verbatim 06-09 ("kill the filter that blocks us the most ... let the strategy bloom freely"). v2.77 mis-restored this; Strategy B (catch-the-100%) needs blooming, not gating.
-input int    InpH1FvgLookback     = 50;   // H1 bars searched for unfilled FVG (only used if InpRequireH1Fvg)
-input bool   InpRequireBigSpread  = false; // 2026-05-27: DISABLED. Was blocking 100% of live trades (0 entries in 5 days). The WF validation was on a model that didn't include this filter. Re-enable only after live calibration.
-input double InpBigSpreadMult     = 1.3;  // UHV bar range must be >= this x avg range of prior 10 M5 bars
-input int    InpSpreadAvgBars     = 10;   // bars used for the avg-range baseline
-input double InpSLBufferPts       = 10.0; // 2026-05-19: walk-forward winner. Was 0.10, but tighter SL configs all BROKE OOS (curve-fit). Wider SL absorbs noise.
-input double InpMaxInitialSLPoints = 0.0;  // 2026-06-16 v2.76: REVERTED to 0 (no cap). Live data showed 2.0pt cap was converting pullback-survivor wins into capped losses (WR 38%→30%). Catastrophe protection now comes from smaller lot size + daily-loss-halt instead. Canonical SL respected again.
+input ENUM_TIMEFRAMES InpTimeframe = PERIOD_M1; // InpTimeframe — 2026-06-09 v2.64: defaults to M1 (scalp instance). The M5 instance v2.
+input int    InpTrendLookback     = 24; // InpTrendLookback — bars (M1 default: ~24min; M5: ~2h)
+input double InpTrendThreshold    = 7.0; // InpTrendThreshold — 2026-05-29 REVERTED to M5 validated value (verify_thorough.py: 7/7 spl
+input double InpERMin             = 0.0; // InpERMin — 2026-05-29 NEW: Kaufman Efficiency Ratio chop filter (same math as S4)
+input int    InpERLookback        = 30; // InpERLookback — bars over InpTimeframe for the ER calc.
+input int    InpRetraceLookback   = 15; // InpRetraceLookback — M5 bars searched for UHV red/green
+input bool   InpRequireH1Fvg      = false; // InpRequireH1Fvg — 2026-06-16 v2.78: BACK to FALSE per master verbatim 06-09 ("kill the f
+input int    InpH1FvgLookback     = 50; // InpH1FvgLookback — H1 bars searched for unfilled FVG (only used if InpRequireH1Fvg)
+input bool   InpRequireBigSpread  = false; // InpRequireBigSpread — 2026-05-27: DISABLED. Was blocking 100% of live trades (0 entries in 5
+input double InpBigSpreadMult     = 1.3; // InpBigSpreadMult — UHV bar range must be >= this x avg range of prior 10 M5 bars
+input int    InpSpreadAvgBars     = 10; // InpSpreadAvgBars — bars used for the avg-range baseline
+input double InpSLBufferPts       = 10.0; // InpSLBufferPts — 2026-05-19: walk-forward winner. Was 0.10, but tighter SL configs all 
+input double InpMaxInitialSLPoints = 0.0; // InpMaxInitialSLPoints — 2026-06-16 v2.76: REVERTED to 0 (no cap). Live data showed 2.0pt cap w
 
 input group "── v2.52 Structural Gates (teacher-faithful, all OFF by default) ──"
-input bool   InpRequireHHHL_M5 = false; // 2026-06-16 v2.78: BACK to FALSE per master verbatim — bloom mandate. v2.77 mis-restored; master said "kill the filter that blocks us the most." HHHL was the 63% blocker; killing it was correct.
-input bool   InpRequireHHHL_H1 = false; // 2026-06-04 v2.52: same HH+HL check on H1 (multi-TF confirmation per lesson02 "confirm trend on 1H AND 5min")
-input int    InpHHHL_PivotBars = 3;     // number of bars on each side a candle must be the local high/low to count as a pivot. 3 = pivot if higher (lower) than the 3 bars before AND 3 bars after.
-input int    InpHHHL_LookbackM5 = 24;   // 2026-06-08 v2.63: shortened 60→24 (2h) per Python sweep — gets 67% more fires (10 vs 6 over 29d) while keeping the structural HH+HL discipline. Still needs ≥2 highs + ≥2 lows in this window. If pivots get too sparse, bump back to 30-40.
-input int    InpHHHL_LookbackH1 = 24;   // H1 bars to scan for swing structure (~24h).
-input bool   InpRequireH1Bias  = false; // 2026-06-09 v2.66: FLIPPED to FALSE — filter-attribution showed this was killing fires (live: 5/day vs Python sim: 83/day). The May-21 backtest "validation" predated Zee's actual frequency target.
-input int    InpH1BiasBars     = 6;     // how many H1 bars back to compare for the bias check. 6 = compare against 6 hours ago.
+input bool   InpRequireHHHL_M5 = false; // InpRequireHHHL_M5 — 2026-06-16 v2.78: BACK to FALSE per master verbatim — bloom mandate. v
+input bool   InpRequireHHHL_H1 = false; // InpRequireHHHL_H1 — 2026-06-04 v2.52: same HH+HL check on H1 (multi-TF confirmation per le
+input int    InpHHHL_PivotBars = 3; // InpHHHL_PivotBars — number of bars on each side a candle must be the local high/low to cou
+input int    InpHHHL_LookbackM5 = 24; // InpHHHL_LookbackM5 — 2026-06-08 v2.63: shortened 60→24 (2h) per Python sweep — gets 67% mor
+input int    InpHHHL_LookbackH1 = 24; // InpHHHL_LookbackH1 — H1 bars to scan for swing structure (~24h).
+input bool   InpRequireH1Bias  = false; // InpRequireH1Bias — 2026-06-09 v2.66: FLIPPED to FALSE — filter-attribution showed this wa
+input int    InpH1BiasBars     = 6; // InpH1BiasBars — how many H1 bars back to compare for the bias check. 6 = compare again
 
 input group "── v2.59 Momentum Override (bypass slow trend filter on big single-bar moves) ──"
-input bool   InpMomentumOverrideEnabled = true;  // 2026-06-05 v2.59: when slow trend filter says NO but recent 30-min close-delta is > InpMomentumOverridePts in trade direction, allow entry. Catches fast moves the 2h close-delta misses.
-input double InpMomentumOverridePts     = 5.0;   // 30-min (6 M5 bars) close-delta needed to bypass IsDowntrendM5/IsUptrendM5. Default 5pts.
+input bool   InpMomentumOverrideEnabled = true; // InpMomentumOverrideEnabled — 2026-06-05 v2.59: when slow trend filter says NO but recent 30-min clo
+input double InpMomentumOverridePts     = 5.0; // InpMomentumOverridePts — 30-min (6 M5 bars) close-delta needed to bypass IsDowntrendM5/IsUptren
 
 input group "── v2.60 Breakout Candle Quality (lesson02: 'momentum body + low vol') ──"
-input bool   InpRequireBreakoutMomentum = false; // 2026-06-05 v2.60: require the FORMING breakout bar to already show momentum body in trade direction. Default OFF — backtest before flipping. Per lesson02: breakout candle must be 'big body, tiny wicks above and below'.
-input double InpBreakoutMinBodyPts      = 15.0;   // minimum body size (in price units) of the forming bar at trigger time. For SELL: open-close >= this. For BUY: close-open >= this.
-input bool   InpRequireBreakoutLowVol   = false; // 2026-06-05 v2.60: require forming-bar tick-volume to be BELOW the UHV's volume. Default OFF.
+input bool   InpRequireBreakoutMomentum = false; // InpRequireBreakoutMomentum — 2026-06-05 v2.60: require the FORMING breakout bar to already show mom
+input double InpBreakoutMinBodyPts      = 15.0; // InpBreakoutMinBodyPts — minimum body size (in price units) of the forming bar at trigger time.
+input bool   InpRequireBreakoutLowVol   = false; // InpRequireBreakoutLowVol — 2026-06-05 v2.60: require forming-bar tick-volume to be BELOW the UHV'
 
 input group "── v2.61 Canonical UHV (lesson02 + Zee's labelling pass 2026-06-05/08) ──"
-input bool   InpRequireCanonicalOrigin = true;  // 2026-06-08 v2.61: retracement origin = FIRST bear (BUY) / bull (SELL) whose IMMEDIATE prior bar is opposite-colour AND body-closes through its extreme. The "cyan ■" gate.
-input double InpUhvBodyMin             = 0.30;  // 2026-06-21 v2.94: 0.60→0.30. Backtest showed 0.60 killed too many good entries. The body-close gate already enforces strong-bodied breakout candle; UHV body-min is now just a doji-rejection.
-input bool   InpRequireUhvNeighborPeak = false; // 2026-06-21 v2.94: true→FALSE. Master's intuition correct but strict ">" Python check too literal. Backtest: this gate alone removed 8 of 14 winning trades.
-input int    InpMaxBarsSinceUhv        = 0;     // 2026-06-21 v2.95: 8→0 (off). Time-window filter dominates; max-bars adds no further benefit.
-input bool   InpRequireBreakoutBodyClose = false; // 2026-06-21 v2.95: true→FALSE. Body-close cut sample size; time-window filter alone produces 67%+ WR.
-input string InpAllowedHoursUtc        = "5,12,15,19"; // 2026-06-21 v2.95: comma-separated UTC hours where fires are allowed. Empty="all hours". Default = the 4 hours that produced WR>=62% in 5-day backtest. Broker time = UTC+2 (Blueberry server).
-input double InpMinSweepDepthPts       = 3.0; // 2026-06-22 v2.97: minimum depth (pts) the sweep must reach past UHV extreme. Master: "sweep must be real, not a tiny tap." 0=off.
-input double InpMaxBreakoutWickPct     = 0.35;  // 2026-06-22 v2.97: max against-direction wick on breakout candle (as fraction of range). Master: "weak candle = long wick against direction." 0=off. Recommended 0.35 once enabled.
-input bool   InpRequireH1AgreesV2      = false; // 2026-06-22 v2.97: H1 candle direction must match setup direction (close>open for BUY, close<open for SELL). Master: "H1 trend disagreeing = skip."
-input double InpMaxRetracementWickPct  = 0.45; // 2026-06-22 v2.98 NEW: max rejection-wick on retracement candles (UHV + 2 prior). Master labels #4, m39: "strong bottom wicks on retracement greens shows rejection." 0=off. Empirical: 0.45 lifts WR to 87.5%.
-input bool   InpRequireBreakoutColor   = true; // 2026-06-22 v2.99 ★: breakout candle (shift=1) must match side color. BUY=green (close>open), SELL=red (close<open). Master labels #15, #24. THE final piece — combined with wick filter pushes WR to 92.3%.
-input bool   InpUhvGlobalMax           = true; // 2026-06-22 v3.00 NEW: chosen UHV must have STRICTLY GREATER volume than ANY bar (any color) in same scope. If a green bar (BUY setup) has higher vol than the chosen red UHV, setup is invalid (opposite side won the ultra-vol moment).
-input double InpBreakoutVolRatio       = 0.75;  // 2026-06-16 v2.79: RESTORED 1.00→0.75. This is the value verify_micro_positive.py used when it proved Zee's "100% goes positive" claim. Breakout must have lower volume than UHV (canonical structure: vol-decline after peak = continuation, vol-rise = exhaustion).
-input double InpBreakoutBodyRatio      = 0.65;  // 2026-06-08 v2.61: forming breakout bar body/range must be >= this (canonical momentum body).
-input double InpMinBreakoutPenetration = 3.0;  // 2026-06-08 v2.62: minimum price-units the forming bar's body must close BEYOND the UHV extreme. Blocks "micro-poke" breakouts (Zee m34/m35). For BUY: ask must >= uhv_h + this. For SELL: bid must <= uhv_l - this.
+input bool   InpRequireCanonicalOrigin = true; // InpRequireCanonicalOrigin — 2026-06-08 v2.61: retracement origin = FIRST bear (BUY) / bull (SELL) 
+input double InpUhvBodyMin             = 0.30; // InpUhvBodyMin — 2026-06-21 v2.94: 0.60→0.30. Backtest showed 0.60 killed too many good
+input bool   InpRequireUhvNeighborPeak = false; // InpRequireUhvNeighborPeak — 2026-06-21 v2.94: true→FALSE. Master's intuition correct but strict ">
+input int    InpMaxBarsSinceUhv        = 0; // InpMaxBarsSinceUhv — 2026-06-21 v2.95: 8→0 (off). Time-window filter dominates; max-bars ad
+input bool   InpRequireBreakoutBodyClose = false; // InpRequireBreakoutBodyClose — 2026-06-21 v2.95: true→FALSE. Body-close cut sample size; time-window 
+input string InpAllowedHoursUtc        = "5,12,15,19"; // InpAllowedHoursUtc — 2026-06-21 v2.95: comma-separated UTC hours where fires are allowed. E
+input double InpMinSweepDepthPts       = 3.0; // InpMinSweepDepthPts — 2026-06-22 v2.97: minimum depth (pts) the sweep must reach past UHV ex
+input double InpMaxBreakoutWickPct     = 0.35; // InpMaxBreakoutWickPct — 2026-06-22 v2.97: max against-direction wick on breakout candle (as fr
+input bool   InpRequireH1AgreesV2      = false; // InpRequireH1AgreesV2 — 2026-06-22 v2.97: H1 candle direction must match setup direction (clos
+input double InpMaxRetracementWickPct  = 0.45; // InpMaxRetracementWickPct — 2026-06-22 v2.98 NEW: max rejection-wick on retracement candles (UHV +
+input bool   InpRequireBreakoutColor   = true; // InpRequireBreakoutColor — 2026-06-22 v2.99 ★: breakout candle (shift=1) must match side color. B
+input bool   InpUhvGlobalMax           = true; // InpUhvGlobalMax — 2026-06-22 v3.00 NEW: chosen UHV must have STRICTLY GREATER volume tha
+input double InpBreakoutVolRatio       = 0.75; // InpBreakoutVolRatio — 2026-06-16 v2.79: RESTORED 1.00→0.75. This is the value verify_micro_p
+input double InpBreakoutBodyRatio      = 0.65; // InpBreakoutBodyRatio — 2026-06-08 v2.61: forming breakout bar body/range must be >= this (can
+input double InpMinBreakoutPenetration = 3.0; // InpMinBreakoutPenetration — 2026-06-08 v2.62: minimum price-units the forming bar's body must clos
 
 input group "── v2.65 Tick-level Trailing Reversal (Zee's catch-the-100% mandate) ──"
-input bool   InpInstantLockOnFirstPositive = false; // 2026-06-18 v2.81: DISABLED. v2.80's instant-lock at +0.01-0.14pt locked too tiny (spread eats the win). MFE analysis shows trades naturally peak at +3.83pt mean — let the trail catch real moves instead.
-input double InpTrailRevPts  = 0.0;   // 2026-06-18 v2.84: DISABLED. Master takes manual exit. 0=off.
-input double InpTrailLockPts = 0.0;   // 2026-06-18 v2.84: DISABLED. No auto trail. Manual close only.
+input bool   InpInstantLockOnFirstPositive = false; // InpInstantLockOnFirstPositive — 2026-06-18 v2.81: DISABLED. v2.80's instant-lock at +0.01-0.14pt locke
+input double InpTrailRevPts  = 0.0; // InpTrailRevPts — 2026-06-18 v2.84: DISABLED. Master takes manual exit. 0=off.
+input double InpTrailLockPts = 0.0; // InpTrailLockPts — 2026-06-18 v2.84: DISABLED. No auto trail. Manual close only.
 
 input group "── v2.70 INSTANT-BE (Zee's zero-loss-today mandate) ──"
-input bool   InpInstantBE          = false; // 2026-06-18 v2.84: DISABLED per master's deterministic-strategy mandate. Hard SL only (canonical UHV-extreme − 2pt). Master closes manually. No auto SL-tightening that could trip on noise.
-input int    InpAutoCloseAfterMs   = 0;     // 2026-06-22 v3.01: DEFAULT 0 (off) per master-takes-exit doctrine. Was 500ms in v2.88 but live evidence shows runtime config hot-reload sometimes doesn't apply on attach. Hardcoding 0 as default ensures auto-close stays off even if runtime fails.
-input double InpInstantBE_BufferPts = 0.40;  // 2026-06-09 v2.70: how far BELOW entry (for BUY) / ABOVE entry (for SELL) to place the instant-BE SL. Must cover broker spread + 1-tick slippage. XAUUSD typical = 0.30-0.40pt. Don't go below 0.30 unless spread is verified tight.
+input bool   InpInstantBE          = false; // InpInstantBE — 2026-06-18 v2.84: DISABLED per master's deterministic-strategy mandate
+input int    InpAutoCloseAfterMs   = 0; // InpAutoCloseAfterMs — 2026-06-22 v3.01: DEFAULT 0 (off) per master-takes-exit doctrine. Was 
+input double InpInstantBE_BufferPts = 0.40; // InpInstantBE_BufferPts — 2026-06-09 v2.70: how far BELOW entry (for BUY) / ABOVE entry (for SEL
 
 input group "── v2.66 Hot-hours window + bloom flags (Zee's session-specific insight) ──"
-input int    InpSessionStartHour = 0;     // 2026-06-09 v2.67: DISABLED (start==end means 24h). Was 14 in v2.66 but Zee wants to see fires NOW after wasted Monday. Re-enable when WR data justifies.
-input int    InpSessionEndHour   = 0;     // 2026-06-09 v2.67: DISABLED.
-input bool   InpRequireSlowTrend = false; // 2026-06-09 v2.66: previously HARDCODED on as IsUptrendM5/IsDowntrendM5 (close-delta 24bars > 7pts). Now opt-in. Default OFF for max bloom.
-input bool   InpRequireBigSpreadClimax = false; // 2026-06-09 v2.66: previously HARDCODED on as IsBigSpreadClimax (UHV must be wide-range bar). Now opt-in. Default OFF for max bloom.
+input int    InpSessionStartHour = 0; // InpSessionStartHour — 2026-06-09 v2.67: DISABLED (start==end means 24h). Was 14 in v2.66 but
+input int    InpSessionEndHour   = 0; // InpSessionEndHour — 2026-06-09 v2.67: DISABLED.
+input bool   InpRequireSlowTrend = false; // InpRequireSlowTrend — 2026-06-09 v2.66: previously HARDCODED on as IsUptrendM5/IsDowntrendM5
+input bool   InpRequireBigSpreadClimax = false; // InpRequireBigSpreadClimax — 2026-06-09 v2.66: previously HARDCODED on as IsBigSpreadClimax (UHV mu
 
 input group "── Exit ──"
-input double InpTPPoints          = 200.0;  // 2026-06-22 v2.98: 5.0→1.3 — with rejection-wick filter producing 87.5% WR at TP=1.3pt, return to "catch the fish" tight TP. Master prefers high WR over high $.
-input bool   InpDynamicTP         = true; // 2026-06-16 v2.78: BACK to FALSE per master verbatim "we're looking for something like 1:0.001 R:R" — we don't chase big TPs, we catch the +0.1pt micro-positive via tight trail and lock it. Fixed 1pt TP as safety ceiling for the rare runs that don't reverse.
+input double InpTPPoints          = 200.0; // InpTPPoints — 2026-06-22 v2.98: 5.0→1.3 — with rejection-wick filter producing 87.5%
+input bool   InpDynamicTP         = true; // InpDynamicTP — 2026-06-16 v2.78: BACK to FALSE per master verbatim "we're looking for
 
 input group "── Logging ──"
-input bool   InpVerbose       = true;
-input string InpLogPrefix     = "S1";
-input string InpStateFile     = "s1_trader_state_m1.json";  // 2026-06-09 v2.64: defaults to M1 instance file.
-input int    InpHeartbeatSec  = 5;
+input bool   InpVerbose       = true; // InpVerbose
+input string InpLogPrefix     = "S1"; // InpLogPrefix
+input string InpStateFile     = "s1_trader_state_m1.json"; // InpStateFile — 2026-06-09 v2.64: defaults to M1 instance file.
+input int    InpHeartbeatSec  = 5; // InpHeartbeatSec
 
 //── State ───────────────────────────────────────────────────────────
 CTrade   g_trade;
@@ -2807,4 +2807,3 @@ void OnTick() {
    CheckGrabCommand();      // one-tap GRAB (close all) from WhatsApp/dashboard
    WriteHeartbeat();
 }
-
