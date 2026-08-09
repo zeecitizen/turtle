@@ -673,7 +673,7 @@ input double InpBreakevenR      = 1.0; // InpBreakevenR — R-multiple that arms
 input double InpBEArmUsd        = 0.0; // InpBEArmUsd — Breakeven: lock SL at entry once trade is +$this profit. SUPERSEDED by
 input double InpTrailActUsd     = 0.0; // InpTrailActUsd — 2026-05-29 REVERTED to OFF — May-27 trail "validation" was on misalign
 input double InpTrailGiveUsd    = 0.0; // InpTrailGiveUsd — Trailing lock: bank & exit if profit falls $this back from its peak ($
-input string InpPeakLogFile     = "trade_peaks_S1.csv"; // InpPeakLogFile — closed-trade peak (MFE) log in Common\Files — feeds the live "% of tra
+input string InpPeakLogFile     = ""; // InpPeakLogFile — closed-trade peak (MFE) log in Common\Files — feeds the live "% of tra
 input bool   InpMaxOneSameDir   = false; // InpMaxOneSameDir — 2026-06-09 v2.68: FLIPPED to FALSE. Vestigial from multi-EA era (S1/S3
 input bool   InpSkipOvernight   = false; // InpSkipOvernight — 2026-06-09 v2.68: FLIPPED to FALSE. Vestigial — "overnight thin hours"
 input int    InpOvernightStart  = 0; // InpOvernightStart — broker hour: block new entries from here ...
@@ -764,10 +764,10 @@ input double InpTPPoints          = 200.0; // InpTPPoints — 2026-06-22 v2.98: 
 input bool   InpDynamicTP         = true; // InpDynamicTP — 2026-06-16 v2.78: BACK to FALSE per master verbatim "we're looking for
 
 input group "── Logging ──"
-input bool   InpVerbose       = true; // InpVerbose
+input bool   InpVerbose       = false; // InpVerbose
 input string InpLogPrefix     = "S1"; // InpLogPrefix
 input string InpStateFile     = "s1_trader_state_m1.json"; // InpStateFile — 2026-06-09 v2.64: defaults to M1 instance file.
-input int    InpHeartbeatSec  = 5; // InpHeartbeatSec
+input int    InpHeartbeatSec  = 0; // InpHeartbeatSec
 
 //── State ───────────────────────────────────────────────────────────
 CTrade   g_trade;
