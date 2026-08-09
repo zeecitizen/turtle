@@ -109,5 +109,25 @@ def main():
         time.sleep(args.loop)
 
 
+_STALL = {"last": None, "n": 0}
+
+
+def _selfheal(edge):
+    """A feed that dies quietly is worse than one that crashes: every health check
+    still says ALIVE. Tonight gold sat 4 hours stale straight through the Sunday
+    reopen. Six dead polls in a row now ends the process so the supervisor (or the
+    next startup.bat) restarts it clean, instead of pretending to work."""
+    import os, sys as _s
+    if edge and edge == _STALL["last"]:
+        _STALL["n"] += 1
+        if _STALL["n"] >= 6:
+            print("[oanda_bridge] FATAL: newest bar has not advanced in 6 polls — "
+                  "exiting so a fresh process can take over", flush=True)
+            os._exit(3)
+    else:
+        _STALL["n"] = 0
+    _STALL["last"] = edge
+
+
 if __name__ == "__main__":
     main()
