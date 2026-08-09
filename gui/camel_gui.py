@@ -183,7 +183,7 @@ class Cockpit:
         import csv as _csv
         top = tk.Toplevel(self.root); top.title("📜 Trades — click 🔍 to inspect the setup")
         top.configure(bg=BG)
-        head = tk.Label(top, text="today's fills — 🔍 draws the UHV, trigger lines, BO candle",
+        head = tk.Label(top, text="XAUUSD fills — 🔍 draws the UHV, trigger lines, BO candle",
                         font=("Segoe UI", 13, "bold"), bg=BG, fg=FG)
         head.pack(pady=(10, 6))
         canvas = tk.Canvas(top, bg=BG, highlightthickness=0,
@@ -207,6 +207,11 @@ class Cockpit:
                 try: lots, pnl = float(c[5]), float(c[7])
                 except ValueError: continue
                 if lots not in (0.10, 0.20, 0.30, 0.60): continue
+                # SYMBOL FILTER (Zee 2026-08-10: "are these XAUUSD?" — they were not.
+                # turtle_fills.csv carries every instrument the terminal trades, so the
+                # gold cockpit was listing Bitcoin fills as if they were ours. A cockpit
+                # that shows another instrument's P&L is worse than one showing nothing.
+                if "XAU" not in c[3].upper(): continue
                 rows.append((c[0], c[4].replace("_closed", ""), lots, float(c[6]), pnl))
         except Exception:
             pass
