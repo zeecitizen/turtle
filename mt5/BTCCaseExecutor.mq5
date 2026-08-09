@@ -12,7 +12,7 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.79c"
+#property version   "1.80c"
 // v1.79c PROTECT WHAT YOU HAVE EARNED (BTCCase, 2026-08-08). Measured on the REAL
 // losing fills, not a simulation: 63% of our losers were IN PROFIT before they
 // became losses, and the 35 gold losses cost -$402.60. Moving the stop to breakeven
@@ -211,6 +211,8 @@
 // v1.10: TP cap lifted (winners run on the trail), staleness guard (no refires).
 input double InpDefaultLots = 0.20;   // fallback lots if signal omits it
 input int    InpMagic       = 88021;  // CaseSignalExecutor magic
+input bool   InpSynthesis    = true;   // v1.80: BE lock protects + target captures
+input double InpTgtRR        = 1.0;    // fallback target: this x the stop distance
 input double InpBEArmPts     = 4.1;    // +profit that locks the stop at breakeven
 input bool   InpZeeExit      = true;   // hold red clicks to flat instead of stopping out
 input double InpFlatPts      = 0.7;   // "came back": within this of breakeven -> step off

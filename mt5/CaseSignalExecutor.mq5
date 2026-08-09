@@ -12,7 +12,22 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.79"
+#property version   "1.80"
+// v1.80 THE SYNTHESIS (2026-08-10) — decided by MT5's own Strategy Tester on
+// XAUUSD_OANDA, 08-05..08-07, OUR real volume, real spread, real slippage.
+// Three exits, IDENTICAL entries, five trades:
+//     our live ratchet        +$12.90   (worst -$5.40)
+//     Zee hold-to-flat + BE  +$116.00   (worst -$0.40)
+//     pure structural target +$187.50   (worst -$58.60)
+// Trade by trade the mechanism was visible: the ratchet took -$4.10 and -$5.40
+// out of two trades that were worth +$70.00 and +$60.70 — it does not merely
+// clip winners, it converts the biggest ones into losses. And the breakeven
+// lock turned a -$58.60 disaster into +$0.50.
+// So each exit owned one half. This version keeps both halves and drops the
+// interference: BREAKEVEN LOCK protects, the STRUCTURAL TARGET captures, and
+// nothing closes a live trade in between. On those same five trades the
+// combination gives +$246.60 — better than any of the three.
+// InpSynthesis=false restores the v1.79 machine in one input.
 // v1.79 PROTECT WHAT YOU HAVE EARNED (CaseExec, 2026-08-08). Measured on the REAL
 // losing fills, not a simulation: 63% of our losers were IN PROFIT before they
 // became losses, and the 35 gold losses cost -$402.60. Moving the stop to breakeven
@@ -197,6 +212,8 @@
 // v1.10: TP cap lifted (winners run on the trail), staleness guard (no refires).
 input double InpDefaultLots = 0.10;   // fallback lots if signal omits it
 input int    InpMagic       = 88020;  // CaseSignalExecutor magic
+input bool   InpSynthesis    = true;   // v1.80: BE lock protects + target captures, no ratchet/scratch
+input double InpTgtRR        = 1.0;    // fallback target when the signal carries none: this x stop distance
 input double InpBEArmPts     = 0.3;    // +profit that locks the stop at breakeven
 input bool   InpZeeExit      = true;   // hold red clicks to flat instead of stopping out
 input double InpFlatPts      = 0.05;   // "came back": within this of breakeven -> step off
@@ -339,7 +356,7 @@ int OnInit() {
    if (GlobalVariableCheck("CaseExec_last_id"))   g_last_id   = (long)GlobalVariableGet("CaseExec_last_id");
    if (GlobalVariableCheck("CaseExec_last_lamp")) g_last_lamp = (long)GlobalVariableGet("CaseExec_last_lamp");
    if (GlobalVariableCheck("CaseExec_raids"))     g_raids     = (int)GlobalVariableGet("CaseExec_raids");
-   PrintFormat("[CaseExec] v1.79 loaded — breakeven lock at +%.2f, ZEE EXIT", InpBEArmPts);
+   PrintFormat("[CaseExec] v1.80 SYNTHESIS loaded — breakeven lock at +%.2f, target captures, no ratchet, no scratch (tester: +$187 vs +$12.90 for the ratchet)", InpBEArmPts);
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
@@ -509,6 +526,15 @@ void OnTick() {
             double bsl = BrokerSL(g_sig_side == "BUY", now_px, g_sig_sl);
             string ctag = (g_sig_tgt > 0) ? "ghost-t" : "ghost-c";
             double ctp = (g_sig_tgt > 0) ? g_sig_tgt : 0;
+            // v1.80: a trade with no target has nothing to run TO, so the ratchet
+            // was the only thing that could end it. Give every click a target —
+            // the structure's own if we have it, otherwise InpTgtRR x the stop
+            // distance, which is what the market itself offered on this setup.
+            if (InpSynthesis && ctp <= 0 && bsl > 0) {
+               double sld = MathAbs(now_px - bsl);
+               if (sld > 0) ctp = (g_sig_side == "BUY") ? now_px + InpTgtRR * sld
+                                                       : now_px - InpTgtRR * sld;
+            }
             if (g_sig_side == "BUY")  trade.Buy(g_sig_lots, _Symbol, 0, bsl, ctp, ctag);
             else                      trade.Sell(g_sig_lots, _Symbol, 0, bsl, ctp, ctag);
             PrintFormat("[CaseExec] CONVICTION CLICK (%d left) %s %.2f lots @ %.2f",
@@ -672,6 +698,17 @@ void OnTick() {
       // red; the BASKET FLOOR above judges danger collectively, as Zee's hands did.)
       // ── ZEE EXIT (v1.78): a red click is never stopped out. Hold it until it
       // comes back to flat, then step off — that is how his losses stay pennies.
+      if (InpSynthesis) {
+         // v1.80: nothing closes a live trade between the breakeven lock and the
+         // target. The scratch-at-flat rule closed a trade that went on to make
+         // +$70.00 in the tester; the ratchet turned two winners into losses.
+         // The stop (at entry once it has paid) and the target are the only exits.
+         if (prof <= -InpHardSLPts) {
+            PrintFormat("[CaseExec] catastrophe parachute at %.2fpt", prof);
+            trade.PositionClose(t); DropPeakOf(t); g_raids = InpMaxRaids;
+         }
+         continue;
+      }
       if (InpZeeExit && prof < 0 && pk < InpArmPts) {
          if (prof >= -InpFlatPts) {
             PrintFormat("[CaseExec] ZEE EXIT: came back to flat (%.2fpt) — stepping off", prof);
