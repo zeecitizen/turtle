@@ -12,7 +12,19 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.81"
+#property version   "1.82"
+// v1.82 (2026-08-10) — THE TIGHT BOUND RESTORED, from Zee's own Feb-11 receipts
+// replayed through MT5 on his real tick data. Same day, same tape:
+//        avg WIN    avg LOSS   worst loss
+//   ZEE  1.29 pt    0.13 pt    0.16 pt     69 trades, 94%, +EUR835
+//   EA  10.20 pt    9.82 pt   21.93 pt      8 trades, 37%, -$213
+// Our stop was 76x wider than his. He was not running a structural stop at all —
+// he stepped off in a tenth of a point, 69 times in a day. That reflex IS the edge:
+// at 10:1 win/loss you can be wrong half the time; at 1:1 you cannot.
+// Tonight's five-trade test said "remove all interference"; his 69 REAL trades say
+// the interference was the whole method. Five simulated trades do not outrank 69
+// real ones, so the bound comes back: InpMaxRiskPts caps what any click may cost.
+// The target still captures — only the downside is bounded.
 // v1.81 (2026-08-10) — THE BREAKEVEN LOCK COMES OUT TOO. Zee swept its arming
 // distance on the same 08-06 gold tape, five identical entries:
 //     no lock at all   +$187.50      <-- best
@@ -229,6 +241,7 @@
 input double InpDefaultLots = 0.10;   // fallback lots if signal omits it
 input int    InpMagic       = 88020;  // CaseSignalExecutor magic
 input bool   InpSynthesis    = true;   // v1.80: BE lock protects + target captures, no ratchet/scratch
+input double InpMaxRiskPts   = 1.0;    // v1.82: a click may never cost more than this (Zee's Feb-11 reflex)
 input double InpTgtRR        = 1.0;    // fallback target when the signal carries none: this x stop distance
 input double InpBEArmPts     = 0.0;    // +profit that locks the stop at breakeven
 input bool   InpZeeExit      = true;   // hold red clicks to flat instead of stopping out
@@ -715,6 +728,15 @@ void OnTick() {
       // ── ZEE EXIT (v1.78): a red click is never stopped out. Hold it until it
       // comes back to flat, then step off — that is how his losses stay pennies.
       if (InpSynthesis) {
+         // v1.82 THE BOUND: no click may cost more than InpMaxRiskPts. This is not
+         // a structural stop — the structure on gold sits 5-20 points away, and Zee
+         // never once let a trade travel that far. It is his step-off reflex, made
+         // mechanical, because a human cannot be trusted to do it 69 times a day.
+         if (InpMaxRiskPts > 0 && prof <= -InpMaxRiskPts) {
+            PrintFormat("[CaseExec] BOUND: %.2fpt against — stepping off (Zee's reflex)", prof);
+            trade.PositionClose(t); DropPeakOf(t);
+            continue;
+         }
          // v1.80: nothing closes a live trade between the breakeven lock and the
          // target. The scratch-at-flat rule closed a trade that went on to make
          // +$70.00 in the tester; the ratchet turned two winners into losses.

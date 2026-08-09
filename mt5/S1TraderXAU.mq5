@@ -705,7 +705,8 @@ input int    InpH1FvgLookback     = 50; // InpH1FvgLookback — H1 bars searched
 input bool   InpRequireBigSpread  = false; // InpRequireBigSpread — 2026-05-27: DISABLED. Was blocking 100% of live trades (0 entries in 5
 input double InpBigSpreadMult     = 1.3; // InpBigSpreadMult — UHV bar range must be >= this x avg range of prior 10 M5 bars
 input int    InpSpreadAvgBars     = 10; // InpSpreadAvgBars — bars used for the avg-range baseline
-input int    InpExitStyle    = 0;  // InpExitStyle — 0 = pure target · 1 = LIVE RATCHET · 2 = ZEE hold-to-flat+BE · 3 = THE SYNTHESIS (v1.80: BE lock + target, no interference)
+input int    InpExitStyle    = 0;  // InpExitStyle — 0 = pure target · 1 = LIVE RATCHET · 2 = ZEE hold-to-flat+BE · 3 = synthesis · 4 = v1.82 TARGET + BOUNDED RISK
+input double InpMaxRiskPts   = 1.0; // InpMaxRiskPts — style 4: max a click may cost (Zee Feb-11: 0.13pt)
 input double InpZeeBEPts     = 0.3; // InpZeeBEPts — style 2: lock breakeven once this far in profit (gold pts; x10 on BTC)
 input double InpZeeFlatPts   = 0.05;// InpZeeFlatPts — style 2: a red trade that returns within this of entry steps off
 input double InpRatchetArm   = 0.3; // InpRatchetArm — style 1: arm the ratchet at this profit
@@ -2540,6 +2541,13 @@ bool RunExitStyle() {
          if (g_xpeak[k] >= InpRatchetArm) {
             double give = MathMax(InpRatchetGive, InpRatchetFrac * g_xpeak[k]);
             if (g_xpeak[k] - prof >= give) { g_trade.PositionClose(t); XDrop(t); }
+         }
+      } else if (InpExitStyle == 4) {
+         // STYLE 4 = v1.82: the target still captures, but no click may cost more
+         // than InpMaxRiskPts. Zee's Feb-11 average loss was 0.13pt; this EA's was
+         // 9.82pt on the same tape. The bound is his step-off reflex made mechanical.
+         if (InpMaxRiskPts > 0 && prof <= -InpMaxRiskPts) {
+            g_trade.PositionClose(t); XDrop(t);
          }
       } else if (InpExitStyle == 3) {
          // STYLE 3 = THE SYNTHESIS shipped as CaseSignalExecutor v1.80.
