@@ -20,8 +20,8 @@
 #property script_show_inputs
 #property version   "1.00"
 
-input string InpCsv        = "tester_xau_feb11.csv"; // source bars (Common\Files)
-input string InpNewSymbol  = "XAUUSD_FEB11";        // custom symbol to create
+input string InpCsv        = "tester_xau_feb11_warm.csv"; // source bars (Common\Files)
+input string InpNewSymbol  = "XAUUSD_F11";          // custom symbol to create
 input string InpCopyFrom   = "XAUUSD";              // broker symbol to copy specs from
 input double InpPriceMin   = 0;                       // ignore rows below this price (0 = off)
 input double InpPriceMax   = 0;                       // ignore rows above this price (0 = off)
