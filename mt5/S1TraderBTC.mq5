@@ -705,6 +705,12 @@ input int    InpH1FvgLookback     = 50; // InpH1FvgLookback — H1 bars searched
 input bool   InpRequireBigSpread  = false; // InpRequireBigSpread — 2026-05-27: DISABLED. Was blocking 100% of live trades (0 entries in 5
 input double InpBigSpreadMult     = 1.3; // InpBigSpreadMult — UHV bar range must be >= this x avg range of prior 10 M5 bars
 input int    InpSpreadAvgBars     = 10; // InpSpreadAvgBars — bars used for the avg-range baseline
+input int    InpExitStyle    = 0;  // InpExitStyle — 0 = proportional target (TP = stop distance) · 1 = LIVE RATCHET (give back 30% of peak) · 2 = ZEE hold-to-flat + breakeven
+input double InpZeeBEPts     = 3.0; // InpZeeBEPts — style 2: lock breakeven once this far in profit (gold pts; x10 on BTC)
+input double InpZeeFlatPts   = 0.5;// InpZeeFlatPts — style 2: a red trade that returns within this of entry steps off
+input double InpRatchetArm   = 3.0; // InpRatchetArm — style 1: arm the ratchet at this profit
+input double InpRatchetGive  = 2.0; // InpRatchetGive — style 1: minimum give-back from peak
+input double InpRatchetFrac  = 0.30;// InpRatchetFrac — style 1: give back this fraction of the peak
 input double InpSLBufferPts       = 10.0; // InpSLBufferPts — 2026-05-19: walk-forward winner. Was 0.10, but tighter SL configs all 
 input double InpMaxInitialSLPoints = 0.0; // InpMaxInitialSLPoints — 2026-06-16 v2.76: REVERTED to 0 (no cap). Live data showed 2.0pt cap w
 
@@ -2500,7 +2506,59 @@ int MngIndex(ulong ticket) {
 //   Walk this EA's open positions (BUY or SELL) each tick. At +BreakevenR move SL
 //   to breakeven. Optional partial at +PartialR. Static TP untouched. (Default OFF
 //   on S1 — see header note; inert because 1R is usually wider than the $7.5 TP.)
+// ── THE EXIT LABORATORY (Zee 2026-08-09: "test the actual EA, not the old method")
+// Identical entries, identical data, identical costs — only the exit changes. This
+// is the controlled experiment that says where the -$657 went.
+double g_xpeak[512];
+ulong  g_xtick[512];
+
+int XIdx(ulong t) {
+   for (int i = 0; i < 512; i++) if (g_xtick[i] == t) return i;
+   for (int i = 0; i < 512; i++) if (g_xtick[i] == 0) { g_xtick[i] = t; g_xpeak[i] = 0; return i; }
+   return 0;
+}
+
+void XDrop(ulong t) { for (int i = 0; i < 512; i++) if (g_xtick[i] == t) { g_xtick[i] = 0; g_xpeak[i] = 0; } }
+
+bool RunExitStyle() {
+   if (InpExitStyle == 0) return false;             // style 0: broker TP/SL only
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong t = PositionGetTicket(i);
+      if (t == 0 || !PositionSelectByTicket(t)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      bool isbuy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+      double e = PositionGetDouble(POSITION_PRICE_OPEN);
+      double prof = isbuy ? (bid - e) : (e - ask);
+      int k = XIdx(t);
+      if (prof > g_xpeak[k]) g_xpeak[k] = prof;
+
+      if (InpExitStyle == 1) {
+         // OUR LIVE RATCHET — arm, then give back a fraction of the peak.
+         if (g_xpeak[k] >= InpRatchetArm) {
+            double give = MathMax(InpRatchetGive, InpRatchetFrac * g_xpeak[k]);
+            if (g_xpeak[k] - prof >= give) { g_trade.PositionClose(t); XDrop(t); }
+         }
+      } else if (InpExitStyle == 2) {
+         // ZEE'S EXIT — never stopped out small; held until it comes back to flat,
+         // and once it has genuinely paid, its stop moves to breakeven.
+         if (prof >= InpZeeBEPts) {
+            double sl = PositionGetDouble(POSITION_SL);
+            bool at_be = (sl > 0) && (isbuy ? (sl >= e) : (sl <= e));
+            if (!at_be) g_trade.PositionModify(t, isbuy ? e + 0.05 : e - 0.05,
+                                               PositionGetDouble(POSITION_TP));
+         } else if (prof < 0 && prof >= -InpZeeFlatPts) {
+            g_trade.PositionClose(t); XDrop(t);      // came back to flat, step off
+         }
+      }
+   }
+   return true;
+}
+
 void ManageOpenPositions() {
+   if (RunExitStyle() && InpExitStyle != 0) return;   // the laboratory owns the exit
    if (!InpEnableBreakeven && !InpEnablePartial && InpBEArmUsd <= 0 && InpTrailActUsd <= 0 && InpTrailRevPts <= 0 && !InpInstantBE && g_auto_close_ms <= 0) return;
    double bid  = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double ask  = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
