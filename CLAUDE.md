@@ -1,3 +1,26 @@
+# ⛔ PYTHON BACKTESTS DO NOT REFLECT REALITY — USE MT5's STRATEGY TESTER
+
+**This is the first thing to know before proposing any strategy change.**
+
+Proven on 2026-08-08 in a single afternoon:
+- a Python replay of **163 real entries** predicted **+$876**; those same trades really made **−$657**
+- a Python simulation of the tick-door promised **89% WR**; live fills gave **57%**
+
+Python lies no matter how carefully it is written, because it fills at the price it
+wants, has no spread, slippage, requotes or latency, and asks "did the low reach my
+stop?" using the very candle it is trading inside — the answer is baked into the
+question. Our archives also silently mix instruments and revise closed bars.
+
+**THE RULE: Python may GENERATE a hypothesis. Only MT5's Strategy Tester — or live
+fills — may PROMOTE one.** Never quote a Python P&L to Zee as evidence. Say
+"hypothesis", then go and test it properly.
+
+**How to test properly:** `mt5/CustomSymbolImport.mq5` loads OUR real volume into an
+MT5 custom symbol, so the Strategy Tester replays our own data with real spread and
+real execution. Full instructions in `BTCUSD/README.md`.
+
+---
+
 # Claude Go Hawking
 
 When Zeeshan says **"Claude go hawking"**, run the full startup sequence below. No questions, no confirmations. Just do it.

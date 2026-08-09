@@ -1,4 +1,31 @@
 @echo off
+REM ##########################################################################
+REM ##                                                                      ##
+REM ##   *** PYTHON BACKTESTS DO NOT REFLECT REALITY. ***                   ##
+REM ##   *** USE MT5's STRATEGY TESTER. ***                                 ##
+REM ##                                                                      ##
+REM ##   Proven on 2026-08-08, in one afternoon:                            ##
+REM ##     the Python replay of 163 REAL entries predicted  +$876           ##
+REM ##     the same trades in real life delivered           -$657           ##
+REM ##     a Python sim of the door promised   89% WR; live gave 57%        ##
+REM ##                                                                      ##
+REM ##   WHY it lies, every time, no matter how carefully it is written:    ##
+REM ##     - it fills at the price it wants; the broker does not            ##
+REM ##     - no spread, no slippage, no requotes, no latency                ##
+REM ##     - it checks "did the low reach my stop" using the SAME candle    ##
+REM ##       it is trading inside — the answer is baked into the question   ##
+REM ##     - our own archives silently mix instruments and revise closes    ##
+REM ##                                                                      ##
+REM ##   THE RULE:                                                          ##
+REM ##     Python may GENERATE a hypothesis. Only MT5's Strategy Tester     ##
+REM ##     (or live fills) may PROMOTE one. Never quote a Python P&L to     ##
+REM ##     Zee as evidence — say "hypothesis" and go test it properly.      ##
+REM ##                                                                      ##
+REM ##   HOW to test properly:  mt5\CustomSymbolImport.mq5 loads OUR real   ##
+REM ##     volume into an MT5 custom symbol, so the tester replays our      ##
+REM ##     own data with real spread and execution. See BTCUSD\README.md.   ##
+REM ##                                                                      ##
+REM ##########################################################################
 REM ═════════════════════════════════════════════════════════════════════════
 REM  UHV SWEEP TRADER — STARTUP & ORIENTATION    (rewritten 2026-05-12)
 REM ═════════════════════════════════════════════════════════════════════════
