@@ -12,7 +12,23 @@
 //|                                                                   |
 //| Attach to XAUUSD, enable Algo Trading. DEMO only until proven.     |
 //+------------------------------------------------------------------+
-#property version   "1.80"
+#property version   "1.81"
+// v1.81 (2026-08-10) — THE BREAKEVEN LOCK COMES OUT TOO. Zee swept its arming
+// distance on the same 08-06 gold tape, five identical entries:
+//     no lock at all   +$187.50      <-- best
+//     lock at 4.0 pt   +$127.30
+//     lock at 0.3 pt   +$116.90
+//     lock at 1.0 pt   +$116.90
+//     lock at 2.0 pt    +$57.80
+// NO arming distance beat having no lock. My "synthesis" was wrong: the lock is
+// the ratchet wearing a gentler name. At 2.0 it scratched at +$0.50 a trade that
+// went on to make +$70.00; at 4.0 it did not arm in time to save the -$58.60 it
+// exists for. It charges a premium every trade and pays out rarely.
+// So v1.81 keeps ONLY what the market itself defines: the structural stop, the
+// structural target, and the catastrophe parachute. The price of this is honest
+// and must be said out loud — a full stop now costs what the structure says it
+// costs (-$58.60 on that day at 0.10 lots) instead of being cut short.
+// InpBEArmPts=0 turns the lock off; set it >0 to bring it back.
 // v1.80 THE SYNTHESIS (2026-08-10) — decided by MT5's own Strategy Tester on
 // XAUUSD_OANDA, 08-05..08-07, OUR real volume, real spread, real slippage.
 // Three exits, IDENTICAL entries, five trades:
@@ -214,7 +230,7 @@ input double InpDefaultLots = 0.10;   // fallback lots if signal omits it
 input int    InpMagic       = 88020;  // CaseSignalExecutor magic
 input bool   InpSynthesis    = true;   // v1.80: BE lock protects + target captures, no ratchet/scratch
 input double InpTgtRR        = 1.0;    // fallback target when the signal carries none: this x stop distance
-input double InpBEArmPts     = 0.3;    // +profit that locks the stop at breakeven
+input double InpBEArmPts     = 0.0;    // +profit that locks the stop at breakeven
 input bool   InpZeeExit      = true;   // hold red clicks to flat instead of stopping out
 input double InpFlatPts      = 0.05;   // "came back": within this of breakeven -> step off
 input double InpHardSLPts    = 6.0;    // PARACHUTE broker stop (terminal-death insurance only)
@@ -356,7 +372,7 @@ int OnInit() {
    if (GlobalVariableCheck("CaseExec_last_id"))   g_last_id   = (long)GlobalVariableGet("CaseExec_last_id");
    if (GlobalVariableCheck("CaseExec_last_lamp")) g_last_lamp = (long)GlobalVariableGet("CaseExec_last_lamp");
    if (GlobalVariableCheck("CaseExec_raids"))     g_raids     = (int)GlobalVariableGet("CaseExec_raids");
-   PrintFormat("[CaseExec] v1.80 SYNTHESIS loaded — breakeven lock at +%.2f, target captures, no ratchet, no scratch (tester: +$187 vs +$12.90 for the ratchet)", InpBEArmPts);
+   PrintFormat("[CaseExec] v1.81 loaded — structural stop + structural target only, breakeven lock at +%.2f (0=off) — breakeven lock at +%.2f, target captures, no ratchet, no scratch (tester: +$187 vs +$12.90 for the ratchet)", InpBEArmPts);
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { EventKillTimer(); }
