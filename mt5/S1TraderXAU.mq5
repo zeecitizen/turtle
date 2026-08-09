@@ -705,7 +705,7 @@ input int    InpH1FvgLookback     = 50; // InpH1FvgLookback — H1 bars searched
 input bool   InpRequireBigSpread  = false; // InpRequireBigSpread — 2026-05-27: DISABLED. Was blocking 100% of live trades (0 entries in 5
 input double InpBigSpreadMult     = 1.3; // InpBigSpreadMult — UHV bar range must be >= this x avg range of prior 10 M5 bars
 input int    InpSpreadAvgBars     = 10; // InpSpreadAvgBars — bars used for the avg-range baseline
-input int    InpExitStyle    = 0;  // InpExitStyle — 0 = proportional target (TP = stop distance) · 1 = LIVE RATCHET (give back 30% of peak) · 2 = ZEE hold-to-flat + breakeven
+input int    InpExitStyle    = 0;  // InpExitStyle — 0 = pure target · 1 = LIVE RATCHET · 2 = ZEE hold-to-flat+BE · 3 = THE SYNTHESIS (v1.80: BE lock + target, no interference)
 input double InpZeeBEPts     = 0.3; // InpZeeBEPts — style 2: lock breakeven once this far in profit (gold pts; x10 on BTC)
 input double InpZeeFlatPts   = 0.05;// InpZeeFlatPts — style 2: a red trade that returns within this of entry steps off
 input double InpRatchetArm   = 0.3; // InpRatchetArm — style 1: arm the ratchet at this profit
@@ -2540,6 +2540,18 @@ bool RunExitStyle() {
          if (g_xpeak[k] >= InpRatchetArm) {
             double give = MathMax(InpRatchetGive, InpRatchetFrac * g_xpeak[k]);
             if (g_xpeak[k] - prof >= give) { g_trade.PositionClose(t); XDrop(t); }
+         }
+      } else if (InpExitStyle == 3) {
+         // STYLE 3 = THE SYNTHESIS shipped as CaseSignalExecutor v1.80.
+         // Breakeven lock protects; the structural target captures; NOTHING
+         // closes a live trade in between. This is style 0 plus the one rule
+         // from Zee's exit that demonstrably saved money (-$58.60 -> +$0.50),
+         // without the scratch-at-flat that closed a +$70 winner.
+         if (prof >= InpZeeBEPts) {
+            double sl3 = PositionGetDouble(POSITION_SL);
+            bool be3 = (sl3 > 0) && (isbuy ? (sl3 >= e) : (sl3 <= e));
+            if (!be3) g_trade.PositionModify(t, isbuy ? e + 0.05 : e - 0.05,
+                                             PositionGetDouble(POSITION_TP));
          }
       } else if (InpExitStyle == 2) {
          // ZEE'S EXIT — never stopped out small; held until it comes back to flat,
