@@ -80,6 +80,18 @@ async def _pull():
                 return json.loads(v)
 
 
+_last_edge = [0]
+
+
+def _watchdog(edge):
+    """Shout if the tape stops advancing — a stalled bridge used to look alive."""
+    import time as _t
+    if edge == _last_edge[0]:
+        print(f"[btc_bridge] WARNING: newest bar has not advanced ({edge}) — "
+              f"the chart may be asleep or the page changed", flush=True)
+    _last_edge[0] = edge
+
+
 def pull_and_write():
     bars = asyncio.run(_pull())
     bars = [b for b in bars if b and len(b) >= 6 and b[1]]   # valid rows
@@ -103,6 +115,7 @@ def pull_and_write():
             # every rule in the strategy is RELATIVE, so the unit does not matter.
             w.writerow([int(t), o, h, l, c, int(round(float(vol) * VMUL))])
     tmp.replace(OUT)
+    _watchdog(int(bars[-1][0]) if bars else 0)
     return len(bars), (int(bars[0][0]) if bars else 0), (int(bars[-1][0]) if bars else 0)
 
 
