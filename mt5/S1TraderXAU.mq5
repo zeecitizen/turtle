@@ -1985,15 +1985,20 @@ bool TryS1BuySignalLive(double ask, double bid) {
       if (ask <= uhv_h) return false;
    }
    // 6a. v2.62 — require minimum penetration past UHV high (block micro-pokes)
-   if (InpMinBreakoutPenetration > 0 && (ask - uhv_h) < InpMinBreakoutPenetration) return false;
+   if (InpMinBreakoutPenetration > 0 && (ask - uhv_h) < InpMinBreakoutPenetration)
+      { if (InpVerbose) Print("[S1] [BLOCK] penetration"); return false; }
 
    // 6b. v2.61 CANONICAL — forming bar body/range and vol must satisfy spec
-   if (InpBreakoutBodyRatio > 0 && !BreakoutBodyOk(+1, InpBreakoutBodyRatio, ask, bid)) return false;
-   if (InpBreakoutVolRatio  > 0 && !BreakoutVolOk(uhv_vol, InpBreakoutVolRatio)) return false;
+   if (InpBreakoutBodyRatio > 0 && !BreakoutBodyOk(+1, InpBreakoutBodyRatio, ask, bid))
+      { if (InpVerbose) Print("[S1] [BLOCK] body-ratio"); return false; }
+   if (InpBreakoutVolRatio  > 0 && !BreakoutVolOk(uhv_vol, InpBreakoutVolRatio))
+      { if (InpVerbose) Print("[S1] [BLOCK] breakout-volume"); return false; }
 
    // v2.60 — lesson02 breakout-candle quality gates
-   if (!HasBuyBreakoutMomentum()) return false;
-   if (!HasBreakoutLowVolume(uhv_vol)) return false;
+   if (!HasBuyBreakoutMomentum())
+      { if (InpVerbose) Print("[S1] [BLOCK] momentum"); return false; }
+   if (!HasBreakoutLowVolume(uhv_vol))
+      { if (InpVerbose) Print("[S1] [BLOCK] low-volume"); return false; }
 
    // 7. SL/TP — v2.51: dynamic 1:1 R:R when InpDynamicTP=true (TP = entry + sl_dist)
    double sl = uhv_l - InpSLBufferPts;
@@ -2152,15 +2157,20 @@ bool TryS1SellSignalLive(double bid, double ask) {
       if (bid >= uhv_l) return false;
    }
    // 4a. v2.62 — require minimum penetration below UHV low (block micro-pokes)
-   if (InpMinBreakoutPenetration > 0 && (uhv_l - bid) < InpMinBreakoutPenetration) return false;
+   if (InpMinBreakoutPenetration > 0 && (uhv_l - bid) < InpMinBreakoutPenetration)
+      { if (InpVerbose) Print("[S1] [BLOCK] penetration"); return false; }
 
    // 4b. v2.61 CANONICAL — forming bar body/range and vol must satisfy spec
-   if (InpBreakoutBodyRatio > 0 && !BreakoutBodyOk(-1, InpBreakoutBodyRatio, ask, bid)) return false;
-   if (InpBreakoutVolRatio  > 0 && !BreakoutVolOk(uhv_vol, InpBreakoutVolRatio)) return false;
+   if (InpBreakoutBodyRatio > 0 && !BreakoutBodyOk(-1, InpBreakoutBodyRatio, ask, bid))
+      { if (InpVerbose) Print("[S1] [BLOCK] body-ratio"); return false; }
+   if (InpBreakoutVolRatio  > 0 && !BreakoutVolOk(uhv_vol, InpBreakoutVolRatio))
+      { if (InpVerbose) Print("[S1] [BLOCK] breakout-volume"); return false; }
 
    // v2.60 — lesson02 breakout-candle quality gates
-   if (!HasSellBreakoutMomentum()) return false;
-   if (!HasBreakoutLowVolume(uhv_vol)) return false;
+   if (!HasSellBreakoutMomentum())
+      { if (InpVerbose) Print("[S1] [BLOCK] momentum"); return false; }
+   if (!HasBreakoutLowVolume(uhv_vol))
+      { if (InpVerbose) Print("[S1] [BLOCK] low-volume"); return false; }
 
    // 5. SL/TP — v2.51: dynamic 1:1 R:R when InpDynamicTP=true (TP = entry - sl_dist)
    double sl = uhv_h + InpSLBufferPts;
