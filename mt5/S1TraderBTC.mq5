@@ -2804,6 +2804,15 @@ void OnTick() {
    g_last_m5_time = cur_m5;
 
    ManageOpenPositions();   // 2R Free Roll (default off on S1 — see header)
-   CheckGrabCommand();      // one-tap GRAB (close all) from WhatsApp/dashboard
-   WriteHeartbeat();
+   // TESTER SPEED (2026-08-09): CheckGrabCommand reads a file and WriteHeartbeat
+   // writes one — on EVERY tick. Live that is the point: it is how Zee's one-tap
+   // GRAB reaches the EA in 50ms. In the Strategy Tester it is 115,200 disk
+   // round-trips per pass, and with 8 agents contending on the same Common\Files
+   // every core sat at 1.9% CPU waiting on the disk (60 passes estimated at 20
+   // HOURS). Neither function means anything in a backtest — there is no one to
+   // press GRAB and no dashboard to feed.
+   if (!MQLInfoInteger(MQL_TESTER)) {
+      CheckGrabCommand();   // one-tap GRAB (close all) from WhatsApp/dashboard
+      WriteHeartbeat();
+   }
 }
