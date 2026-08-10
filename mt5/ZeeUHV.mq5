@@ -76,9 +76,9 @@ input double InpUhvBodyMin  = 0.5;   // InpUhvBodyMin — 0.5 validated. 0.3 fin
 input int    InpBreakWindow = 12;     // InpBreakWindow — bars after the UHV in which the break must come
 
 input group "── Exit: SL 6 / TP 3 measured on his own setups ──"
-input double InpStopPts     = 9.0;   // InpStopPts — 9.0 validated: 88.4% on 441 trades, green on both unseen sets
+input double InpStopPts     = 20.0;   // InpStopPts — 20 validated: 93.3% on 1,608 trades, 100% on both unseen sets
 input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W/1L, 96%, his own Feb-11 shape
-input int    InpMaxHoldMin  = 30;     // InpMaxHoldMin — the measurement window
+input int    InpMaxHoldMin  = 60;   // InpMaxHoldMin — 60 — Zee: every breakout eventually gives the bump, so give it time
 
 input group "── Housekeeping ──"
 input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent SETUPS (a stack counts as one)
