@@ -231,6 +231,61 @@ class Cockpit:
                       command=lambda t=ts, s2=side, x=closepx: self.forensic(t, s2, x)
                       ).pack(side="left", padx=8)
 
+            # ── TEACH THE MACHINE (Zee 2026-08-10) ──────────────────────────────
+            # "you can add a comment field under each trade we take wherein i can
+            #  save my responses for you to read on the trades taken."
+            # His 146 labels on setup_labeller are the most valuable training data
+            # this project owns — they are the only place the UHV rule is stated in
+            # his own words. This puts the same channel on REAL fills, where the
+            # money actually was, so the lesson arrives attached to a receipt.
+            note = self.notes.get(ts, "")
+            e = tk.Entry(r, font=("Segoe UI", 10), bg="#0f1216",
+                         fg="#e6edf3", insertbackground="#e6edf3",
+                         relief="flat", width=52)
+            e.insert(0, note)
+            e.pack(side="left", padx=(4, 6), ipady=3)
+            mark = tk.Label(r, text="✓" if note else "", font=("Segoe UI", 11, "bold"),
+                            bg=BG, fg="#2f9e44", width=2)
+            mark.pack(side="left")
+            e.bind("<Return>", lambda ev, t=ts, w=e, m=mark: self.save_note(t, w, m))
+            e.bind("<FocusOut>", lambda ev, t=ts, w=e, m=mark: self.save_note(t, w, m))
+
+    # ── the note store ─────────────────────────────────────────────────────────
+    NOTES_F = Path(__file__).resolve().parent.parent / "monitor" / "zee_trade_notes.json"
+
+    @property
+    def notes(self):
+        """Load lazily and keep it on disk, never only in memory: the whole point is
+        that Claude reads these later, possibly in another session."""
+        if getattr(self, "_notes", None) is None:
+            try:
+                self._notes = json.loads(self.NOTES_F.read_text(encoding="utf-8"))
+            except Exception:
+                self._notes = {}
+        return self._notes
+
+    def save_note(self, ts, widget, mark=None):
+        txt = widget.get().strip()
+        cur = self.notes.get(ts, "")
+        if txt == cur:
+            return
+        if txt:
+            self.notes[ts] = txt
+        else:
+            self.notes.pop(ts, None)
+        try:
+            self.NOTES_F.parent.mkdir(parents=True, exist_ok=True)
+            self.NOTES_F.write_text(json.dumps(self.notes, indent=1, ensure_ascii=False),
+                                    encoding="utf-8")
+            if mark:
+                mark.config(text="✓" if txt else "", fg="#2f9e44")
+            self.status.config(text=f"📝 saved your note on {ts[5:]} — Claude will read it",
+                               fg="#2f9e44")
+        except Exception as ex:
+            if mark:
+                mark.config(text="✗", fg="#e03131")
+            self.status.config(text=f"could not save note: {ex}", fg="#e03131")
+
     def refresh_app(self):
         """Restart the whole stack on the CURRENT code: the matcher (so the newest
         laws are live) and this cockpit itself (so the newest UI is live). Zee should

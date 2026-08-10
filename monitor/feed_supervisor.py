@@ -37,6 +37,12 @@ FEEDS = [
     # name,      output file,      script,                       stale after (s)
     ("gold", COMMON / "oanda_m1.csv", ROOT / "monitor/oanda_bridge.py", 600),
     ("btc",  COMMON / "btc_m1.csv",   ROOT / "BTCUSD/binance_bridge.py", 600),
+    # 2026-08-10: the BRAIN can hang too, and did — oanda_live_matcher sat alive but
+    # silent for 2.6 days while gold traded. Every health check said ALIVE because the
+    # process existed. It writes a heartbeat now, and this watches the heartbeat rather
+    # than the process. A daemon is only alive if it is producing something.
+    ("brain", COMMON / "matcher_heartbeat.txt",
+     ROOT / "monitor/oanda_live_matcher.py", 900),
 ]
 
 
