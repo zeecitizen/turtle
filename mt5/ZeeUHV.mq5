@@ -25,7 +25,20 @@
 //| opposite of the ghost at 1.0, the ratchet at 0.3, the breakeven   |
 //| lock at 0.3 and my own bound at 1.0.                              |
 //|                                                                  |
-//| ZEE'S CALL on the target (2026-08-10): "if 96% reach +$1, then let |
+//| ZEE'S CALL, twice (2026-08-10): "if 96% reach +$1, then let each   |
+//| trade bring in the $1" and then, when I argued for a bigger        |
+//| target, "nah i want a highest winrate even if we're earning        |
+//| pennis". That is his decision and it stands.                       |
+//|                                                                    |
+//| What I could do FOR that decision rather than against it: the      |
+//| break-even threshold is set by the STOP, not the target.           |
+//|     SL 6 / TP 1 -> needs 86%, MT5 measured 83%  -> lost -$26.60    |
+//|     SL 4 / TP 1 -> needs 80%, measured 88%      -> +8 of margin    |
+//| So the $1 target stays and the stop comes in. Same high win rate,  |
+//| a loss that costs $40 instead of $60, and eight points of room to  |
+//| be wrong about the win rate — which matters, because 12 trades     |
+//| cannot tell 83% from 96% and that gap is the whole result.         |
+//|                                                                    |
 //| each trade bring in the $1." Measured, and he is right — it is the |
 //| safest cell on the board:                                          |
 //|     SL 6 / TP 1 -> 96% (25W/1L)  +0.73 pt/trade                     |
@@ -62,7 +75,7 @@ input double InpUhvBodyMin  = 0.30;   // InpUhvBodyMin — "UHV should also be a
 input int    InpBreakWindow = 12;     // InpBreakWindow — bars after the UHV in which the break must come
 
 input group "── Exit: SL 6 / TP 3 measured on his own setups ──"
-input double InpStopPts     = 6.0;    // InpStopPts — 6.0 measured best; below 3.0 the edge dies entirely
+input double InpStopPts     = 4.0;    // InpStopPts — 4.0: keeps ~88% wins but only NEEDS 80%, so it has margin
 input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W/1L, 96%, his own Feb-11 shape
 input int    InpMaxHoldMin  = 30;     // InpMaxHoldMin — the measurement window
 
