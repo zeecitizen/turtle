@@ -43,6 +43,82 @@ sample. That is worth remembering, because I offered the plateau as reassurance.
 
 
 
+
+## 💎 DIAMONDS AT FIXED 0.10 — 6x the profit, win rate unchanged, green on ALL THREE
+
+Zee, 2026-08-10: *"keep the lotsize fixed at 0.1 for all diamonds etc.. and then check
+for me if we can make profit?"*
+
+**Yes.** Diamonds buy MORE TICKETS, never bigger ones — every ticket stays 0.10.
+
+```
+                     103 days              Aug 5-10 (UNSEEN)     Feb 11 (UNSEEN)
+no diamonds     441 tr  88.44%  +$139       8 tr  87.5%  +$51     7 tr 100%  +$70
+diamonds @0.10 1628 tr  88.64%  +$821      30 tr  86.7% +$184    26 tr 100% +$260
+```
+
+**Six times the profit. The win rate does not move (88.44% -> 88.64%). Profitable on
+every dataset including both the optimiser never saw.**
+
+### And it is NOT just leverage — the conviction laws genuinely pick better trades
+
+```
+flat 0.30 lots   +$416   drawdown 40%
+diamonds @0.10   +$821   drawdown 45%
+```
+
+Nearly double the money for barely more risk. If diamonds were only size, those two
+lines would match. They do not, so Law 1 (the sweep), Law 3 (the EMA-5 close) and Law 5
+(wick and volume) are selecting, not merely amplifying.
+
+**The open problem: 45% drawdown over 103 days is not survivable on a $500 account.**
+`InpMaxRisk` caps total lots per setup and the right cap is not yet measured.
+
+### Lot size is a pure multiplier — it cannot manufacture an edge
+
+Zee asked whether a bigger lot magnifies the small $1 win against the high win rate.
+Arithmetically yes, and the win rate is unchanged by size — but the losses scale in
+exactly the same step:
+
+```
+  lots     trades   win%      profit     max drawdown
+  0.10      441    88.44%    +$138.60    15% of account
+  0.20      441    88.44%    +$277.20    28%
+  0.30      441    88.44%    +$415.80    40%
+  0.50      441    88.44%    +$693.00    60%
+```
+
+**The strategy is not the limit. The account size is.** At $500 the safe size is about
+0.01-0.02 lots. Surviving a 15% dip at 0.10 lots needs roughly $4,400.
+
+---
+
+## 🔍 WHY WE TAKE 26 TRADES ON FEB 11 AND HE TOOK 69
+
+Measured on Feb 11 itself. **The position limits are NOT the constraint** — removing all
+of them changes nothing at all:
+
+```
+as validated (MaxOpen 1, cooldown 3)   26 trades · 100.00% · +$260
+MaxOpen 4, cooldown 1                  26 trades · 100.00% · +$260
+MaxOpen 10, no cooldown                26 trades · 100.00% · +$260
++ hold 10 minutes instead of 30        26 trades · 100.00% · +$260
++ body rule 0.5 -> 0.3                 41 trades ·  90.24% ·  +$10   <- profit collapses
+```
+
+**26 is simply how many lawful UHV setups exist on that day.** Loosening the body rule
+finds 41, and the extra 15 destroy the profit — $260 down to $10.
+
+**So his other 43 trades were not this pattern.** They were the other strategies the
+June taxonomy identified in that day — sweep, NS/ND, momentum, and un-mechanizable tape
+reading. See [[project_feb11_strategy_taxonomy]]. Chasing 69 with THIS engine means
+taking rubbish; the way to 69 is more ENGINES, not looser rules.
+
+**And 26 trades at 100% with +$260 on his own day is the best single-day result this
+project has ever produced.**
+
+---
+
 ## ✅ THE CONFIRMED RESULT — 88.4%, and it survives unseen tape
 
 Found the honest way round: **searched on 103 days (3,600 configs, 440+ trades per
