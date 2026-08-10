@@ -659,6 +659,36 @@
 
 #include <Trade/Trade.mqh>
 
+//+------------------------------------------------------------------+
+//| BarVolume — the one call every volume rule must use.              |
+//|                                                                  |
+//| 2026-08-10, measured with TapeProbe on XAUUSD_REAL2:              |
+//|     iVolume     : 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4                   |
+//|     iRealVolume : 572 454 270 174 312 305 366 672 331 438 ...     |
+//|                                                                  |
+//| The Strategy Tester OVERWRITES tick_volume with the number of     |
+//| ticks it synthesised (4 per bar in 'OHLC M1' mode) but preserves  |
+//| real_volume. Every rule we own asked iVolume(), so every rule was |
+//| comparing 4 against 4 and no candle was ever louder than another. |
+//| That is why NsndF11 reported signals=0, why S1Trader took 8       |
+//| trades where the tape offers 263 UHV candidates, and why          |
+//| DohaLevel placed nothing at all. They were not failing to find    |
+//| setups. They were blind.                                          |
+//|                                                                  |
+//| real_volume first, tick_volume as the fallback: our custom        |
+//| symbols carry the truth in real_volume, while a live broker feed  |
+//| often reports real_volume 0 and keeps its count in tick_volume.   |
+//| This one call is correct on both.                                 |
+//+------------------------------------------------------------------+
+long BarVolume(ENUM_TIMEFRAMES tf, int shift) {
+   long rv = iRealVolume(_Symbol, tf, shift);
+   if (rv > 0) return rv;
+   return iVolume(_Symbol, tf, shift);
+}
+
+long BarVolume(int shift) { return BarVolume((ENUM_TIMEFRAMES)PERIOD_CURRENT, shift); }
+
+
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
 input double InpLots          = 0.10; // InpLots — 2026-06-16 v2.76: REVERTED 0.80→0.30 after live receipt showed 0.80 + 
@@ -969,7 +999,7 @@ void DrawVolumeLabels(int n_bars = 200) {
    for (int i = 0; i < n_bars; i++) {
       datetime t = iTime(_Symbol, InpTimeframe, i);
       if (t == 0) break;
-      long vol = iVolume(_Symbol, InpTimeframe, i);
+      long vol = BarVolume(InpTimeframe, i);
       double bar_high = iHigh(_Symbol, InpTimeframe, i);
       double bar_low  = iLow (_Symbol, InpTimeframe, i);
       double bar_h    = bar_high - bar_low;
@@ -1422,7 +1452,7 @@ bool HasBuyBreakoutMomentum() {
 //   Breakout's tick volume so far must be below the UHV's volume.
 bool HasBreakoutLowVolume(long uhv_vol) {
    if (!g_require_breakout_lowvol) return true;
-   long cur_vol = iVolume(_Symbol, InpTimeframe, 0);
+   long cur_vol = BarVolume(InpTimeframe, 0);
    return cur_vol < uhv_vol;
 }
 
@@ -1550,9 +1580,9 @@ void DetectMissedBreakouts() {
          if (c > o && gc < 15) greens[gc++] = j;
       }
       if (gc > 0) {
-         int uhv_shift = greens[0]; long uhv_vol = iVolume(_Symbol, InpTimeframe, uhv_shift);
+         int uhv_shift = greens[0]; long uhv_vol = BarVolume(InpTimeframe, uhv_shift);
          for (int r = 1; r < gc; r++) {
-            long v = iVolume(_Symbol, InpTimeframe, greens[r]);
+            long v = BarVolume(InpTimeframe, greens[r]);
             if (v > uhv_vol) { uhv_vol = v; uhv_shift = greens[r]; }
          }
          double uhv_h = iHigh(_Symbol, InpTimeframe, uhv_shift);
@@ -1582,9 +1612,9 @@ void DetectMissedBreakouts() {
          if (c < o && rc < 15) reds[rc++] = j;
       }
       if (rc > 0) {
-         int uhv_shift = reds[0]; long uhv_vol = iVolume(_Symbol, InpTimeframe, uhv_shift);
+         int uhv_shift = reds[0]; long uhv_vol = BarVolume(InpTimeframe, uhv_shift);
          for (int r = 1; r < rc; r++) {
-            long v = iVolume(_Symbol, InpTimeframe, reds[r]);
+            long v = BarVolume(InpTimeframe, reds[r]);
             if (v > uhv_vol) { uhv_vol = v; uhv_shift = reds[r]; }
          }
          double uhv_h = iHigh(_Symbol, InpTimeframe, uhv_shift);
@@ -1711,11 +1741,11 @@ bool UhvBodyOk(int shift, double min_ratio) {
 // neighbour exists only if shift >= 2 (otherwise still-forming bar 0
 // could become higher; we skip the check rather than approve weakly).
 bool UhvNeighborPeakOk(int shift) {
-   long uhv_v = iVolume(_Symbol, InpTimeframe, shift);
-   long older_v = iVolume(_Symbol, InpTimeframe, shift + 1);
+   long uhv_v = BarVolume(InpTimeframe, shift);
+   long older_v = BarVolume(InpTimeframe, shift + 1);
    if (older_v >= uhv_v) return false;
    if (shift >= 2) {
-      long newer_v = iVolume(_Symbol, InpTimeframe, shift - 1);
+      long newer_v = BarVolume(InpTimeframe, shift - 1);
       if (newer_v >= uhv_v) return false;
    }
    return true;
@@ -1739,7 +1769,7 @@ bool BreakoutBodyOk(int side, double min_ratio, double ask, double bid) {
 
 // Forming-bar tick-volume must be <= ratio × UHV vol.
 bool BreakoutVolOk(long uhv_vol, double ratio) {
-   long cur_v = iVolume(_Symbol, InpTimeframe, 0);
+   long cur_v = BarVolume(InpTimeframe, 0);
    double cap = (double)uhv_vol * ratio;
    return (double)cur_v <= cap;
 }
@@ -1847,7 +1877,7 @@ bool UhvIsGlobalMax(int uhv_shift, long uhv_vol, int scope_back) {
    if (!g_uhv_global_max) return true;
    for (int j = 1; j <= scope_back; j++) {
       if (j == uhv_shift) continue;
-      long v = iVolume(_Symbol, InpTimeframe, j);
+      long v = BarVolume(InpTimeframe, j);
       if (v > uhv_vol) return false;     // some other bar has higher vol → invalid
    }
    return true;
@@ -1915,9 +1945,9 @@ bool TryS1BuySignalLive(double ask, double bid) {
 
    // 2. UHV red = highest-volume red in the retracement
    int uhv_shift = reds[0];
-   long uhv_vol = iVolume(_Symbol, InpTimeframe, uhv_shift);
+   long uhv_vol = BarVolume(InpTimeframe, uhv_shift);
    for (int r = 1; r < reds_count; r++) {
-      long v = iVolume(_Symbol, InpTimeframe, reds[r]);
+      long v = BarVolume(InpTimeframe, reds[r]);
       if (v > uhv_vol) {
          uhv_vol = v;
          uhv_shift = reds[r];
@@ -2093,9 +2123,9 @@ bool TryS1SellSignalLive(double bid, double ask) {
 
    // 2. UHV green = highest-volume green in the retracement
    int uhv_shift = greens[0];
-   long uhv_vol = iVolume(_Symbol, InpTimeframe, uhv_shift);
+   long uhv_vol = BarVolume(InpTimeframe, uhv_shift);
    for (int r = 1; r < greens_count; r++) {
-      long v = iVolume(_Symbol, InpTimeframe, greens[r]);
+      long v = BarVolume(InpTimeframe, greens[r]);
       if (v > uhv_vol) {
          uhv_vol = v;
          uhv_shift = greens[r];
@@ -2225,7 +2255,7 @@ string BuildWatchJson() {
       double o = iOpen(_Symbol, InpTimeframe, j), c = iClose(_Symbol, InpTimeframe, j);
       bool match = (dir == 1) ? (c < o) : (c > o);     // red for buy, green for sell
       if (!match) continue;
-      long v = iVolume(_Symbol, InpTimeframe, j);
+      long v = BarVolume(InpTimeframe, j);
       if (v > uhv_vol) { uhv_vol = v; uhv_shift = j; }
    }
    if (uhv_shift < 0) return "null";

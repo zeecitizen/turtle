@@ -40,6 +40,36 @@
 #property strict
 
 #include <Trade/Trade.mqh>
+
+//+------------------------------------------------------------------+
+//| BarVolume — the one call every volume rule must use.              |
+//|                                                                  |
+//| 2026-08-10, measured with TapeProbe on XAUUSD_REAL2:              |
+//|     iVolume     : 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4                   |
+//|     iRealVolume : 572 454 270 174 312 305 366 672 331 438 ...     |
+//|                                                                  |
+//| The Strategy Tester OVERWRITES tick_volume with the number of     |
+//| ticks it synthesised (4 per bar in 'OHLC M1' mode) but preserves  |
+//| real_volume. Every rule we own asked iVolume(), so every rule was |
+//| comparing 4 against 4 and no candle was ever louder than another. |
+//| That is why NsndF11 reported signals=0, why S1Trader took 8       |
+//| trades where the tape offers 263 UHV candidates, and why          |
+//| DohaLevel placed nothing at all. They were not failing to find    |
+//| setups. They were blind.                                          |
+//|                                                                  |
+//| real_volume first, tick_volume as the fallback: our custom        |
+//| symbols carry the truth in real_volume, while a live broker feed  |
+//| often reports real_volume 0 and keeps its count in tick_volume.   |
+//| This one call is correct on both.                                 |
+//+------------------------------------------------------------------+
+long BarVolume(ENUM_TIMEFRAMES tf, int shift) {
+   long rv = iRealVolume(_Symbol, tf, shift);
+   if (rv > 0) return rv;
+   return iVolume(_Symbol, tf, shift);
+}
+
+long BarVolume(int shift) { return BarVolume((ENUM_TIMEFRAMES)PERIOD_CURRENT, shift); }
+
 CTrade trade;
 
 input double InpLots         = 0.10;  // InpLots — lot size
@@ -126,9 +156,9 @@ double FadeAmount(int dir) {
 
 //+------------------------------------------------------------------+
 bool QuietBar() {
-   long v = iVolume(_Symbol, PERIOD_CURRENT, 1);
+   long v = BarVolume(1);
    double sum = 0;
-   for (int k = 2; k <= 21; k++) sum += (double)iVolume(_Symbol, PERIOD_CURRENT, k);
+   for (int k = 2; k <= 21; k++) sum += (double)BarVolume(k);
    double avg = sum / 20.0;
    return (avg > 0 && (double)v < InpDeadVolRatio * avg);
 }

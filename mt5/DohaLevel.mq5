@@ -40,6 +40,36 @@
 #property strict
 
 #include <Trade/Trade.mqh>
+
+//+------------------------------------------------------------------+
+//| BarVolume — the one call every volume rule must use.              |
+//|                                                                  |
+//| 2026-08-10, measured with TapeProbe on XAUUSD_REAL2:              |
+//|     iVolume     : 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4                   |
+//|     iRealVolume : 572 454 270 174 312 305 366 672 331 438 ...     |
+//|                                                                  |
+//| The Strategy Tester OVERWRITES tick_volume with the number of     |
+//| ticks it synthesised (4 per bar in 'OHLC M1' mode) but preserves  |
+//| real_volume. Every rule we own asked iVolume(), so every rule was |
+//| comparing 4 against 4 and no candle was ever louder than another. |
+//| That is why NsndF11 reported signals=0, why S1Trader took 8       |
+//| trades where the tape offers 263 UHV candidates, and why          |
+//| DohaLevel placed nothing at all. They were not failing to find    |
+//| setups. They were blind.                                          |
+//|                                                                  |
+//| real_volume first, tick_volume as the fallback: our custom        |
+//| symbols carry the truth in real_volume, while a live broker feed  |
+//| often reports real_volume 0 and keeps its count in tick_volume.   |
+//| This one call is correct on both.                                 |
+//+------------------------------------------------------------------+
+long BarVolume(ENUM_TIMEFRAMES tf, int shift) {
+   long rv = iRealVolume(_Symbol, tf, shift);
+   if (rv > 0) return rv;
+   return iVolume(_Symbol, tf, shift);
+}
+
+long BarVolume(int shift) { return BarVolume((ENUM_TIMEFRAMES)PERIOD_CURRENT, shift); }
+
 CTrade trade;
 
 input double InpLots        = 0.10;   // InpLots — lot size
@@ -91,7 +121,7 @@ void DumpVolumes() {
    g_dumped = true;
    string s = "";
    for (int k = 1; k <= 12; k++)
-      s += StringFormat("%d ", (int)iVolume(_Symbol, PERIOD_CURRENT, k));
+      s += StringFormat("%d ", (int)BarVolume(k));
    PrintFormat("[LEVEL] VOLUME CHECK — last 12 bars as the EA sees them: %s", s);
    PrintFormat("[LEVEL] VOLUME CHECK — if these are all identical (e.g. all 4), the "
                "tester is reporting GENERATED ticks, not our imported volume, and every "
@@ -145,14 +175,14 @@ int FindUhv() {
    if (Bars(_Symbol, PERIOD_CURRENT) < n + 4) return -1;
    int j = -1; long bestv = -1; double sum = 0;
    for (int k = 1; k <= n; k++) {
-      long v = iVolume(_Symbol, PERIOD_CURRENT, k);
+      long v = BarVolume(k);
       sum += (double)v;
       if (v > bestv) { bestv = v; j = k; }
    }
    if (j < 1 || j >= n) return -1;
    if (InpNeedPeak) {
-      if (!(bestv > iVolume(_Symbol, PERIOD_CURRENT, j - 1) &&
-            bestv > iVolume(_Symbol, PERIOD_CURRENT, j + 1))) return -1;
+      if (!(bestv > BarVolume(j - 1) &&
+            bestv > BarVolume(j + 1))) return -1;
    }
    double avg = sum / n;
    if (avg <= 0 || (double)bestv < InpUhvMult * avg) return -1;
@@ -211,7 +241,7 @@ void TryPlace() {
       g_placed  = TimeCurrent();
       PrintFormat("[LEVEL] %s LIMIT resting at %.2f (UHV bar %d, vol %d)  SL %.2f  TP %.2f",
                   dir > 0 ? "BUY " : "SELL", lvl, j,
-                  (int)iVolume(_Symbol, PERIOD_CURRENT, j), sl, tp);
+                  (int)BarVolume(j), sl, tp);
    }
 }
 

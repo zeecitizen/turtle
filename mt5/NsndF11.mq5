@@ -71,6 +71,36 @@
 
 #include <Trade/Trade.mqh>
 
+//+------------------------------------------------------------------+
+//| BarVolume — the one call every volume rule must use.              |
+//|                                                                  |
+//| 2026-08-10, measured with TapeProbe on XAUUSD_REAL2:              |
+//|     iVolume     : 4 4 4 4 4 4 4 4 4 4 4 4 4 4 4                   |
+//|     iRealVolume : 572 454 270 174 312 305 366 672 331 438 ...     |
+//|                                                                  |
+//| The Strategy Tester OVERWRITES tick_volume with the number of     |
+//| ticks it synthesised (4 per bar in 'OHLC M1' mode) but preserves  |
+//| real_volume. Every rule we own asked iVolume(), so every rule was |
+//| comparing 4 against 4 and no candle was ever louder than another. |
+//| That is why NsndF11 reported signals=0, why S1Trader took 8       |
+//| trades where the tape offers 263 UHV candidates, and why          |
+//| DohaLevel placed nothing at all. They were not failing to find    |
+//| setups. They were blind.                                          |
+//|                                                                  |
+//| real_volume first, tick_volume as the fallback: our custom        |
+//| symbols carry the truth in real_volume, while a live broker feed  |
+//| often reports real_volume 0 and keeps its count in tick_volume.   |
+//| This one call is correct on both.                                 |
+//+------------------------------------------------------------------+
+long BarVolume(ENUM_TIMEFRAMES tf, int shift) {
+   long rv = iRealVolume(_Symbol, tf, shift);
+   if (rv > 0) return rv;
+   return iVolume(_Symbol, tf, shift);
+}
+
+long BarVolume(int shift) { return BarVolume((ENUM_TIMEFRAMES)PERIOD_CURRENT, shift); }
+
+
 //── Inputs ──────────────────────────────────────────────────────────
 input group "── Sizing ──"
 input double InpLots          = 0.10;  // 2026-05-27: Shano Exness $126 account ONLY. Was 0.03 (FTMO 3x) = ~$36 risk/trade = account-ending. 0.01.
@@ -219,13 +249,13 @@ bool IsNsCandidate(int k, bool buy_setup) {
    double c = iClose(_Symbol, PERIOD_M1, k);
    double h = iHigh (_Symbol, PERIOD_M1, k);
    double l = iLow  (_Symbol, PERIOD_M1, k);
-   long   v = iVolume(_Symbol, PERIOD_M1, k);
+   long   v = BarVolume(PERIOD_M1, k);
    if (buy_setup) { if (c >= o) return false; }    // NS = red
    else           { if (c <= o) return false; }    // ND = green
    // Volume: lower than at least vol_compare_min of prev vol_compare_n
    int lower_count = 0;
    for (int j = k + 1; j <= k + InpVolCompareN; j++) {
-      long jv = iVolume(_Symbol, PERIOD_M1, j);
+      long jv = BarVolume(PERIOD_M1, j);
       if (jv > v) lower_count++;
    }
    if (lower_count < InpVolCompareMin) return false;
@@ -247,7 +277,7 @@ bool HasPriorUhv(int ns_k, bool buy_setup, double avg20_vol) {
    for (int j = ns_k + 1; j <= ns_k + InpUhvLookback; j++) {
       double o = iOpen (_Symbol, PERIOD_M1, j);
       double c = iClose(_Symbol, PERIOD_M1, j);
-      long   v = iVolume(_Symbol, PERIOD_M1, j);
+      long   v = BarVolume(PERIOD_M1, j);
       if (buy_setup)  { if (c >= o) continue; }  // need red (supply)
       else            { if (c <= o) continue; }  // need green (demand)
       if (v >= InpUhvVolMult * avg20_vol) return true;
@@ -259,7 +289,7 @@ double AvgVol20() {
    // BUGFIX 2026-05-17: Python backtest uses 20 bars BEFORE bo (excludes bo itself).
    // Was: shifts 1..20 (included bo at shift 1). Now: shifts 2..21 (excludes bo).
    double sum = 0;
-   for (int j = 2; j <= 21; j++) sum += iVolume(_Symbol, PERIOD_M1, j);
+   for (int j = 2; j <= 21; j++) sum += BarVolume(PERIOD_M1, j);
    return sum / 20.0;
 }
 
@@ -434,8 +464,8 @@ bool TryNsndSignal() {
                        ticket, actual_fill, entry, actual_fill - entry));
       // Log decision for reconciler
       datetime ns_t = iTime(_Symbol, PERIOD_M1, k);
-      long ns_vol_log = iVolume(_Symbol, PERIOD_M1, k);
-      LogDecisionCsv(bo_t, bo_high, bo_low, iVolume(_Symbol, PERIOD_M1, 1),
+      long ns_vol_log = BarVolume(PERIOD_M1, k);
+      LogDecisionCsv(bo_t, bo_high, bo_low, BarVolume(PERIOD_M1, 1),
                      ns_t, ns_low, ns_high, ns_vol_log,
                      buy_setup, entry, sl, tp, actual_fill, ticket);
       return true;
