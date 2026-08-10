@@ -151,6 +151,21 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // The UHV drawing review. Zee 2026-08-10: "get the visual software to draw what
+  // you'd draw, and only then mechanise it." A page nobody can reach is a page that
+  // does not exist, and his standing rule is that every meaningful change shows up
+  // somewhere reachable from the apex.
+  if (url === '/uhv' || url === '/uhv_review.html') {
+    try {
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(fs.readFileSync(path.join(__dirname, 'uhv_review.html'), 'utf8'));
+    } catch (e) {
+      res.writeHead(404);
+      res.end('Run: py monitor/uhv_review.py  (' + e.message + ')');
+    }
+    return;
+  }
+
   if (url === '/' || url === '/index.html') {
     try {
       res.writeHead(200, { 'Content-Type': 'text/html' });
