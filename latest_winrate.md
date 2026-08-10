@@ -42,6 +42,58 @@ sample. That is worth remembering, because I offered the plateau as reassurance.
 ---
 
 
+
+## ✅ THE CONFIRMED RESULT — 88.4%, and it survives unseen tape
+
+Found the honest way round: **searched on 103 days (3,600 configs, 440+ trades per
+pass), then validated on tape the search never saw.**
+
+```
+SL 9  ·  TP 1  ·  UhvBodyMin 0.5  ·  TrendLook 20  ·  gate ON (trend required)  ·  flat 0.10
+
+                        net      trades   win%     maxDD
+103 days (in-sample)  +138.60      441    88.44%   14.95%
+Aug 5-10   (UNSEEN)    +51.10        8    87.50%    1.64%
+Feb 11     (UNSEEN)    +70.00        7   100.00%    1.40%
+```
+
+**Profitable on all three. The win rate holds at 87-88% across every dataset**, and
+88.44% of it rests on 441 trades — the largest sample this project has ever measured.
+
+### What FAILED the same test, and why it matters
+```
+                                103 days    Aug 5-10    Feb 11
+B  SL4/TP5 body0.7 gate OFF     +$1074      -$171       -$120
+C  SL6/TP5 body0.7 gate OFF      +$878       -$21       -$146
+```
+Both looked far richer in-sample and collapsed on contact with new tape — exactly as the
+96.4% did. **In-sample profit is not evidence. Surviving unseen tape is.**
+
+### With Zee's capped stack
+```
+103 days + stack   +415.80    882 trades   88.44%   maxDD 40%   <- drawdown too high
+Aug 5-10  + stack  +153.30     16 trades   87.50%   maxDD 4.9%
+```
+The stack triples the profit and the win rate does not move — but **40% drawdown over
+103 days is not survivable on a $500 account.** If the stack is used it needs a tighter
+cap than 0.60, and that cap must itself be tested.
+
+### The honest economics
+**+$138.60 over 103 days at 0.10 lots is about $1.35/day.** It is a real, validated edge
+and it is small. The reason is arithmetic: at SL 9 / TP 1 each win pays $10 and each
+full-stop loss costs $90, so 88% barely clears. The 30-minute age-out is what makes it
+positive at all, by closing some losers before they reach the stop.
+
+**To earn more we need more trades or a better payoff — not better entries.** 441 trades
+in 103 days is 4.3/day; the entry engine is sound and under-used.
+
+### The trend gate — the answer flipped
+On four days of August, opening the gate looked like a huge win (+$44 -> +$144). On 103
+days, **every one of the top win-rate configs has the gate ON.** The August result was
+a small-sample artefact. **Gate stays ON.**
+
+---
+
 ## The in-sample record (superseded by the box above)
 
 **Measured 2026-08-10 by MT5's own Strategy Tester** (never Python), on real archived

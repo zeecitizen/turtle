@@ -48,8 +48,13 @@ def load(path):
             d["Profit"] = float(d["Profit"])
             d["Trades"] = int(d["Trades"])
             for k in hdr:
-                if k.startswith("Inp"):
-                    d[k] = float(d[k])
+                if not k.startswith("Inp"):
+                    continue
+                # a swept BOOL input arrives as "true"/"false" and float() throws,
+                # which silently discarded every row of a 3,600-pass sweep until it was
+                # noticed. Keep bools as 0/1 so they can still be grouped and printed.
+                v = str(d[k]).strip().lower()
+                d[k] = 1.0 if v == "true" else (0.0 if v == "false" else float(d[k]))
         except Exception:
             continue
         out.append(d)
