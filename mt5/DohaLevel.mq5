@@ -259,8 +259,12 @@ void AgeOut() {
       if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
       datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
       if (TimeCurrent() - opened >= InpMaxHoldMin * 60) {
-         trade.PositionClose(t);
-         if (InpVerbose) PrintFormat("[LEVEL] aged out after %dm", InpMaxHoldMin);
+         // Only announce it when the close actually succeeds. Previously this retried
+         // and logged on every tick while the broker said "market closed", turning
+         // ~50 trades into 150 age-out lines and burying the real events.
+         if (trade.PositionClose(t)) {
+            if (InpVerbose) PrintFormat("[LEVEL] aged out after %dm", InpMaxHoldMin);
+         }
       }
    }
 }

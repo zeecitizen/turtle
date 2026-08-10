@@ -21,7 +21,7 @@
 #property version   "1.00"
 
 input string InpCsv        = "tester_xau_real.csv";  // source bars (Common\Files)
-input string InpNewSymbol  = "XAUUSD_REAL2";        // custom symbol to create
+input string InpNewSymbol  = "XAUUSD_R3";           // custom symbol to create
 input string InpCopyFrom   = "XAUUSD";              // broker symbol to copy specs from
 input double InpPriceMin   = 0;                       // ignore rows below this price (0 = off)
 input double InpPriceMax   = 0;                       // ignore rows above this price (0 = off)
@@ -102,6 +102,17 @@ void OnStart() {
                          SymbolInfoDouble(InpCopyFrom, SYMBOL_VOLUME_MIN));
    CustomSymbolSetDouble(InpNewSymbol, SYMBOL_VOLUME_STEP,
                          SymbolInfoDouble(InpCopyFrom, SYMBOL_VOLUME_STEP));
+
+   // SESSIONS (2026-08-10): the copied symbol inherits XAUUSD's trading hours, so
+   // the tester rejected 188 orders with "[Market closed]" on bars that exist in our
+   // own data — a backtest quietly missing a fifth of its trades. Our archive is
+   // continuous, so the symbol is told it is open whenever we have a bar.
+   for (int d = 0; d < 7; d++) {
+      CustomSymbolSetSessionQuote(InpNewSymbol, (ENUM_DAY_OF_WEEK)d, 0, 0, 86400);
+      CustomSymbolSetSessionTrade(InpNewSymbol, (ENUM_DAY_OF_WEEK)d, 0, 0, 86400);
+   }
+   PrintFormat("[import] %s: sessions opened 24/7 so the tester cannot drop trades "
+               "on bars we actually have", InpNewSymbol);
 
    int put = CustomRatesReplace(InpNewSymbol, 0, D'2100.01.01', rates);
    if (put < 0) { PrintFormat("[import] CustomRatesReplace failed: %d", GetLastError()); return; }
