@@ -25,8 +25,22 @@
 //| opposite of the ghost at 1.0, the ratchet at 0.3, the breakeven   |
 //| lock at 0.3 and my own bound at 1.0.                              |
 //|                                                                  |
+//| ZEE'S CALL on the target (2026-08-10): "if 96% reach +$1, then let |
+//| each trade bring in the $1." Measured, and he is right — it is the |
+//| safest cell on the board:                                          |
+//|     SL 6 / TP 1 -> 96% (25W/1L)  +0.73 pt/trade                     |
+//|     SL 6 / TP 2 -> 88% (22W/3L)  +1.04                              |
+//|     SL 6 / TP 3 -> 83% (20W/4L)  +1.50                              |
+//| A bigger target earns more on paper and loses four times as often. |
+//| After six months of red days, an engine he can watch running at    |
+//| 96% is worth more than a little extra theoretical expectancy — and |
+//| 25W/1L is the shape he actually traded on Feb 11.                   |
+//| Note the money: 1 point of gold = $1 of PRICE = $10 at 0.10 lots.  |
+//| So 26 trades x $1 is $260/day at 0.10 lots, not $26.               |
+//|                                                                    |
 //| CAVEAT ON THE FACE OF IT: 26 setups, ~2 days, measured in Python. |
 //| Direction only. Only MT5's tester or live fills promote anything. |
+//| 25W/1L on one sample could be 22W/4L on the next week.            |
 //|                                                                  |
 //| magic 88094 = tester only.                                        |
 //+------------------------------------------------------------------+
@@ -48,8 +62,8 @@ input double InpUhvBodyMin  = 0.30;   // InpUhvBodyMin — "UHV should also be a
 input int    InpBreakWindow = 12;     // InpBreakWindow — bars after the UHV in which the break must come
 
 input group "── Exit: SL 6 / TP 3 measured on his own setups ──"
-input double InpStopPts     = 6.0;    // InpStopPts — 6.0 measured best (83% win, needs 67%)
-input double InpTargetPts   = 3.0;    // InpTargetPts — 3.0 measured best
+input double InpStopPts     = 6.0;    // InpStopPts — 6.0 measured best; below 3.0 the edge dies entirely
+input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W/1L, 96%, his own Feb-11 shape
 input int    InpMaxHoldMin  = 30;     // InpMaxHoldMin — the measurement window
 
 input group "── Housekeeping ──"
