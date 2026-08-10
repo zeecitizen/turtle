@@ -1,5 +1,45 @@
 # LATEST WIN RATE
 
+## 📌 TODAY'S ANSWER IN ONE BOX (2026-08-10)
+
+```
+WIN RATE       88.4% - 88.6%
+              measured on 441 trades over 103 days, and it held on two datasets
+              the optimiser had never seen:
+                 103 days (in-sample)   88.44%   +$139   (441 trades)
+                 Aug 5-10   (UNSEEN)    87.50%    +$51   (8 trades)
+                 Feb 11     (UNSEEN)   100.00%    +$70   (7 trades)
+
+WITH DIAMONDS AT FIXED 0.10 PER TICKET — 6x the money, same win rate:
+                 103 days              88.64%   +$821   (1628 trades)
+                 Aug 5-10   (UNSEEN)   86.67%   +$184   (30 trades)
+                 Feb 11     (UNSEEN)  100.00%   +$260   (26 trades)
+```
+
+**THE EA'S DEFAULTS NOW MATCH THIS EXACTLY** (checked 2026-08-10; five were stale
+because every test ran from `Profiles/Tester/ZeeUHV.set` and the `.mq5` defaults were
+never updated — they would have been wrong the moment it was dragged onto a chart):
+
+```
+InpLots 0.10 · InpStopPts 9 · InpTargetPts 1 · InpUhvBodyMin 0.5 · InpTrendLook 20
+InpRetraceBack 20 · InpRequireTrend true · InpUseDiamonds true · InpStackLots true
+InpStackStep 0.0 · InpMaxRisk 0 · InpMaxOpen 1 · InpCooldownBar 3 · InpMaxHoldMin 30
+```
+
+**Use base 0.02 on the $500 real account** (~11% drawdown). 0.10 is for the demo.
+
+### What to expect per day, honestly
+```
+103 days -> +$821 at base 0.10  =  about $8/day
+              +$164 at base 0.02  =  about $1.60/day
+```
+**Roughly 16 trades a day, about 14 of them winners.** Some days are green, some are
+flat, and roughly one day in eight ends red. This is not a daily wage yet — it is a
+proven edge at a size the account can survive.
+
+---
+
+
 ## ⚠️ READ THIS FIRST — the 96.4% did NOT survive out-of-sample (2026-08-10)
 
 The 96.4% below was found by optimising on four days and validating on nothing. Run on
