@@ -65,6 +65,7 @@ input group "── Housekeeping ──"
 input int    InpCooldownBars = 3;     // InpCooldownBars — minimum bars between entries
 input int    InpMaxOpen      = 1;     // InpMaxOpen — concurrent positions
 input bool   InpVerbose      = true;  // InpVerbose — log every decision and every refusal
+input int    InpMaxGapSec    = 300;   // InpMaxGapSec — refuse if the lookback contains a hole bigger than this (0=off)
 
 datetime g_last_bar  = 0;
 datetime g_last_fire = 0;
@@ -146,8 +147,35 @@ bool SweptExtreme(int dir, double hi, double lo) {
 }
 
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| Is the window we are about to reason over CONTINUOUS?             |
+//|                                                                  |
+//| 2026-08-10: the first real-data run scored +$67.20 and the number |
+//| was worthless. Our archive has holes — a weekend, a 15h outage —  |
+//| and the EA read straight across them: price jumped 4245 -> 4338   |
+//| over the weekend and it logged "faded 96.73pt", then held a trade |
+//| 15 hours waiting for a gap to close. A backtest that reasons over |
+//| a hole is measuring the hole, not the strategy.                   |
+//+------------------------------------------------------------------+
+bool WindowContinuous(int bars) {
+   if (InpMaxGapSec <= 0) return true;
+   int step = PeriodSeconds();
+   for (int k = 1; k < bars; k++) {
+      datetime a = iTime(_Symbol, PERIOD_CURRENT, k);
+      datetime b = iTime(_Symbol, PERIOD_CURRENT, k + 1);
+      if (a <= 0 || b <= 0) return false;
+      if ((int)(a - b) > step + InpMaxGapSec) return false;
+   }
+   return true;
+}
+
+//+------------------------------------------------------------------+
 void TryFire() {
    if (OpenCount() >= InpMaxOpen) return;
+   if (!WindowContinuous(InpRangeBars + 2)) {
+      if (InpVerbose) Print("[FADE] [SKIP] gap in lookback — refusing to reason across a hole");
+      return;
+   }
    if (g_last_fire > 0 &&
        (TimeCurrent() - g_last_fire) < InpCooldownBars * PeriodSeconds()) return;
 
