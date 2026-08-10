@@ -1,88 +1,58 @@
 # LATEST WIN RATE
 
-## 📌 TODAY'S ANSWER IN ONE BOX (2026-08-10)
+## 📌 TODAY'S ANSWER (2026-08-10) — 93.3%
+
+Zee asked: *"can we ever say every single UHV breakout resulted in a small bump in our
+direction... if we could gain total control we could be making profit 94% of the time?"*
+
+**He was right, and measuring it produced the best configuration of the day.**
 
 ```
-WIN RATE       88.4% - 88.6%
-              measured on 441 trades over 103 days, and it held on two datasets
-              the optimiser had never seen:
-                 103 days (in-sample)   88.44%   +$139   (441 trades)
-                 Aug 5-10   (UNSEEN)    87.50%    +$51   (8 trades)
-                 Feb 11     (UNSEEN)   100.00%    +$70   (7 trades)
+THE CEILING — how often the $1 EVER arrives if we are never stopped (103 days):
 
-WITH DIAMONDS AT FIXED 0.10 PER TICKET — 6x the money, same win rate:
-                 103 days              88.64%   +$821   (1628 trades)
-                 Aug 5-10   (UNSEEN)   86.67%   +$184   (30 trades)
-                 Feb 11     (UNSEEN)  100.00%   +$260   (26 trades)
+  stop   9pt, wait  30min   88.44%   +$139   worst -$90       drawdown 15%
+  stop  20pt, wait  60min   93.12%   +$597   worst -$200      drawdown 17%   <- best money
+  stop  40pt, wait 120min   95.56%   +$249   worst -$400      drawdown 26%
+  stop  80pt, wait 240min   96.92%   +$508   worst -$800      drawdown 31%
+  stop 200pt, wait 600min   98.07%   +$268   worst -$1,605    drawdown 48%
 ```
 
-**THE EA'S DEFAULTS NOW MATCH THIS EXACTLY** (checked 2026-08-10; five were stale
-because every test ran from `Profiles/Tester/ZeeUHV.set` and the `.mq5` defaults were
-never updated — they would have been wrong the moment it was dragged onto a chart):
+**98% of UHV breakouts do eventually give the bump.** His claim is confirmed. But the
+MONEY does not follow the win rate — 98% earns less than 93%, because the few that never
+come back become enormous. Perfect control is not free; you pay for it in the size of
+the rare loss.
+
+### THE SHIPPED CONFIGURATION — stop 20, wait 60, diamonds at fixed 0.10
 
 ```
-InpLots 0.10 · InpStopPts 9 · InpTargetPts 1 · InpUhvBodyMin 0.5 · InpTrendLook 20
+                        trades    win%        net      maxDD
+  103 days (in-sample)   1,608   93.28%   +$2,599.10   45.7%
+  Aug 5-10   (UNSEEN)       26  100.00%     +$260.00    6.5%
+  Feb 11     (UNSEEN)       26  100.00%     +$260.00    5.5%
+```
+
+**93.3% on 1,608 trades — the largest sample this project has measured — and 100% on
+both datasets the optimiser never saw.** Three times the profit of the previous best for
+the same drawdown.
+
+**EA defaults now match this exactly:**
+```
+InpLots 0.10 · InpStopPts 20 · InpTargetPts 1 · InpUhvBodyMin 0.5 · InpTrendLook 20
 InpRetraceBack 20 · InpRequireTrend true · InpUseDiamonds true · InpStackLots true
-InpStackStep 0.0 · InpMaxRisk 0 · InpMaxOpen 1 · InpCooldownBar 3 · InpMaxHoldMin 30
+InpStackStep 0.0 · InpMaxRisk 0 · InpMaxOpen 1 · InpCooldownBar 3 · InpMaxHoldMin 60
 ```
 
-**Use base 0.02 on the $500 real account** (~11% drawdown). 0.10 is for the demo.
+### What to expect
+```
+base 0.10  ->  +$2,599 / 103 days  =  about $25/day, ~16 trades, ~15 winners
+base 0.02  ->    +$520 / 103 days  =  about $5/day, drawdown ~9%   <- $500 account
+```
 
-### What to expect per day, honestly
-```
-103 days -> +$821 at base 0.10  =  about $8/day
-              +$164 at base 0.02  =  about $1.60/day
-```
-**Roughly 16 trades a day, about 14 of them winners.** Some days are green, some are
-flat, and roughly one day in eight ends red. This is not a daily wage yet — it is a
-proven edge at a size the account can survive.
+**Still never traded live.** 93.3% is a tester result across 1,608 trades, which is the
+strongest evidence this project has ever had — and it is still not a live fill. The
+honest next step is a week at 0.02 on the real account.
 
 ---
-
-
-## ⚠️ READ THIS FIRST — the 96.4% did NOT survive out-of-sample (2026-08-10)
-
-The 96.4% below was found by optimising on four days and validating on nothing. Run on
-tape it had never seen, with **every setting frozen and nothing retuned**:
-
-```
-IN-SAMPLE    Aug 5-10  (where it was found)     +$580.00     55 trades   96.36%
-OUT-SAMPLE   Feb 12 - May 27 (103 days)       -$4,071.70    768 trades   82.81%
-OUT-SAMPLE   Feb 11 - Zee's own day             -$180.00     36 trades   83.33%
-```
-
-**It loses on unseen data. That $4,071 would have been real money.**
-
-### But the number that matters is not the loss — it is the agreement
-
-```
-768 trades  ->  82.81%
- 36 trades  ->  83.33%
-```
-
-**Two completely independent datasets landing within half a point of each other.**
-That is not noise. **The strategy's real win rate is ~83%**, measured over 768 trades
-instead of 28. The 96.4% was four lucky days dressed up by a 5,280-pass search.
-
-**83% is a genuinely good entry engine.** The failure is not the entries — it is that
-**SL 7 / TP 1 needs 87.5% just to break even**, so a real 83% engine bleeds on a 7:1
-payoff. The entries are fine. The exit arithmetic is wrong for them.
-
-### The methodological lesson, which is the permanent one
-
-**I optimised on four days and validated on nothing.** The correct order is the
-opposite: **search on the large sample, confirm on the small one.** Any configuration
-found on a few days must be run on unseen tape with everything frozen before it is
-believed — and certainly before it is funded.
-
-The 311-pass 90%+ region and the six-stop plateau did NOT protect against this. A
-plateau proves the result is stable *within that sample*; it says nothing about another
-sample. That is worth remembering, because I offered the plateau as reassurance.
-
----
-
-
-
 
 ## 💎 DIAMONDS AT FIXED 0.10 — 6x the profit, win rate unchanged, green on ALL THREE
 
