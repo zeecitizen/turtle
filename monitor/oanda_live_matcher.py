@@ -693,6 +693,37 @@ def write_armed(bars):
 
 
 
+
+def _only_one_of_me():
+    """Refuse to start if another matcher is already alive.
+
+    2026-08-10: after a few restarts there were THREE matchers running at once. Each
+    one is a brain that can fire a click, so three of them is three times the money at
+    risk on the same setup — the kind of fault that is invisible until the fills arrive.
+    A lock file holding the PID is cheap; duplicate live trades are not.
+    """
+    import os, sys as _s
+    from pathlib import Path as _P
+    lock = _P(__file__).with_name(".matcher.lock")
+    try:
+        if lock.exists():
+            old = int(lock.read_text().strip() or 0)
+            if old and old != os.getpid():
+                import subprocess as _sp
+                r = _sp.run(["powershell", "-NoProfile", "-Command",
+                             f"(Get-Process -Id {old} -ErrorAction SilentlyContinue).Id"],
+                            capture_output=True, text=True, timeout=20)
+                if r.stdout.strip():
+                    print(f"[oanda_matcher] another matcher is already running (PID {old}) "
+                          f"— exiting so we do not double-fire", flush=True)
+                    _s.exit(0)
+        lock.write_text(str(os.getpid()), encoding="utf-8")
+    except SystemExit:
+        raise
+    except Exception:
+        pass
+
+
 def _heartbeat():
     """Prove we are still thinking, not merely still running.
 
@@ -727,8 +758,14 @@ def main():
     except Exception:
         seen = set()
     last_armed_key = None
+    _only_one_of_me()
     print("[oanda_matcher] live fast-scalp — watching oanda_m1.csv (ghost-door armed mode)")
     while True:
+        # FIRST thing every cycle, before any condition can skip it: prove we are still
+        # thinking. This sat two conditionals deep and therefore never ran, which is why
+        # the file did not exist and feed_supervisor could not tell a hung brain from a
+        # healthy one — the exact failure it was written to catch.
+        _heartbeat()
         try:
             bars = load_bars()
             if len(bars) > 30:
@@ -739,7 +776,6 @@ def main():
                 # must never reach the executor, whatever the file name says.
                 if not (500 <= bars[-1].c <= 20000):
                     print(f"[oanda_matcher] FEED IS NOT XAUUSD (price {bars[-1].c:.2f}) — refusing to trade")
-                    _heartbeat()
                     time.sleep(20); continue
                 stale_min = (datetime.utcnow() - bars[-1].t).total_seconds() / 60
                 if stale_min > 3:
