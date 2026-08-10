@@ -692,6 +692,24 @@ def write_armed(bars):
     return a
 
 
+
+def _heartbeat():
+    """Prove we are still thinking, not merely still running.
+
+    2026-08-10: this process sat alive and silent for 2.6 days across a trading
+    weekend. Nothing noticed, because 'is the process there' was the only question
+    anyone asked. Touching a file every cycle turns that into 'is it still working',
+    which is the question that matters and the one feed_supervisor now polls.
+    """
+    try:
+        from pathlib import Path as _P
+        import time as _t
+        _P(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files"
+           r"/matcher_heartbeat.txt").write_text(str(int(_t.time())), encoding="utf-8")
+    except Exception:
+        pass
+
+
 def main():
     for k, v in CFG.items(): setattr(B, k, v)
     # RESTART-REFIRE FIX (2026-08-06, the 18:33 late SELL): the dedup set lived in
@@ -721,6 +739,7 @@ def main():
                 # must never reach the executor, whatever the file name says.
                 if not (500 <= bars[-1].c <= 20000):
                     print(f"[oanda_matcher] FEED IS NOT XAUUSD (price {bars[-1].c:.2f}) — refusing to trade")
+                    _heartbeat()
                     time.sleep(20); continue
                 stale_min = (datetime.utcnow() - bars[-1].t).total_seconds() / 60
                 if stale_min > 3:
