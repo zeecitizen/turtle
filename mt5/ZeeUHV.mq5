@@ -84,7 +84,11 @@ input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent positions
 input int    InpCooldownBar = 3;      // InpCooldownBar — bars between entries
 input int    InpMaxGapSec   = 300;    // InpMaxGapSec — never reason across a hole in the data
 input bool   InpVerbose     = false;  // InpVerbose — OFF for optimisation (a sweep with logging is 100x slower)
-input int    InpMinTrades   = 15;     // InpMinTrades — a pass with fewer closed trades scores ZERO
+input int    InpMinTrades   = 15;
+
+input group "── Diamonds: conviction buys SIZE (Zee 2026-08-10) ──"
+input bool   InpUseDiamonds = true;   // InpUseDiamonds — size by conviction instead of a flat lot
+input double InpMaxRisk     = 0.0;    // InpMaxRisk — 0 = off. Cap total lots if you want one.     // InpMinTrades — a pass with fewer closed trades scores ZERO
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
@@ -251,6 +255,51 @@ int OpenCount() {
 }
 
 //+------------------------------------------------------------------+
+//| THE LAWS OF CONVICTION — diamonds buy CLICKS, they never gate.     |
+//|                                                                    |
+//| Zee 2026-08-10: "have you tested with diamonds? because multiple    |
+//| trades can bring us multiple profits aggregating to nice profits."  |
+//| He is right that it was never tested: every ZeeUHV run so far fired |
+//| a flat 0.10 regardless of how good the setup was, which throws away |
+//| the whole point of the conviction system — that the BEST setups     |
+//| should carry the MOST size.                                        |
+//|                                                                    |
+//| Mirrors diamonds_for() in monitor/oanda_live_matcher.py, which is   |
+//| what the live machine already uses:                                 |
+//|   Law 1  the sweep — price took liquidity before the setup          |
+//|   Law 3  the EMA-5 close — the breakout closed decisively past it   |
+//|   Law 5  the wick and the volume — clean body, quieter than the UHV |
+//| and clicks_for(): 0-1 diamond -> 1 click, 2 -> 2, 3+ -> 3.          |
+//+------------------------------------------------------------------+
+double Ema5(int shift) {
+   double k = 2.0 / 6.0, e = bClose(shift + 30);
+   for (int i = shift + 29; i >= shift; i--) e = bClose(i) * k + e * (1.0 - k);
+   return e;
+}
+
+int DiamondsFor(int origin, int uhv, int side) {
+   int d = 0;
+   // Law 1 — the sweep: did price poke beyond the prior extreme on the way in?
+   double hi = bHigh(uhv), lo = bLow(uhv);
+   for (int k = uhv + 1; k <= uhv + 20; k++) {
+      if (side > 0 && bLow(k) < lo) { d++; break; }
+      if (side < 0 && bHigh(k) > hi) { d++; break; }
+   }
+   // Law 3 — the EMA-5 close: the breakout candle closed decisively past the mean
+   double e5 = Ema5(1);
+   if (side > 0 && IsGreen(1) && bClose(1) > e5 + 0.10) d++;
+   if (side < 0 && IsRed(1)   && bClose(1) < e5 - 0.10) d++;
+   // Law 5 — the wick and the volume
+   double rng = MathMax(bHigh(1) - bLow(1), 1e-9);
+   double wick = (side > 0) ? (bHigh(1) - MathMax(bOpen(1), bClose(1))) / rng
+                            : (MathMin(bOpen(1), bClose(1)) - bLow(1)) / rng;
+   if (wick <= 0.25 && BarVolume(1) < BarVolume(uhv)) d++;
+   return d;
+}
+
+int ClicksFor(int d) { return (d <= 1) ? 1 : ((d == 2) ? 2 : 3); }
+
+//+------------------------------------------------------------------+
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
@@ -283,13 +332,20 @@ void TryFire() {
    double sl = (t > 0) ? px - InpStopPts   : px + InpStopPts;
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
 
-   bool ok = (t > 0) ? trade.Buy (InpLots, _Symbol, 0, sl, tp, "zee_buy")
-                     : trade.Sell(InpLots, _Symbol, 0, sl, tp, "zee_sell");
+   int dia = InpUseDiamonds ? DiamondsFor(origin, uhv, t) : 0;
+   int clicks = InpUseDiamonds ? ClicksFor(dia) : 1;
+   double lots = NormalizeDouble(InpLots * clicks, 2);
+   if (InpMaxRisk > 0) lots = MathMin(lots, InpMaxRisk);
+
+   bool ok = (t > 0) ? trade.Buy (lots, _Symbol, 0, sl, tp, "zee_buy")
+                     : trade.Sell(lots, _Symbol, 0, sl, tp, "zee_sell");
    if (ok) {
       g_last_fire = TimeCurrent();
-      PrintFormat("[ZEE] %s @%.2f — trend %s · origin %d · UHV %d (vol %d) · break vol %d",
-                  t > 0 ? "BUY " : "SELL", px, t > 0 ? "UP" : "DOWN",
-                  origin, uhv, (int)BarVolume(uhv), (int)BarVolume(1));
+      PrintFormat("[ZEE] %s @%.2f %s x%d = %.2f lots — trend %s · UHV %d (vol %d) · brk vol %d",
+                  t > 0 ? "BUY " : "SELL", px,
+                  dia >= 3 ? "3 diamonds" : (dia == 2 ? "2 diamonds" : (dia == 1 ? "1 diamond " : "no diamond")),
+                  clicks, lots, t > 0 ? "UP" : "DOWN",
+                  uhv, (int)BarVolume(uhv), (int)BarVolume(1));
    }
 }
 
