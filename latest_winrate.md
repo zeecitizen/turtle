@@ -119,6 +119,40 @@ project has ever produced.**
 
 ---
 
+
+## 🎚️ THE RISK ANSWER — do not cap the conviction, shrink the base lot
+
+Capping the stack was the obvious idea and it is the wrong one. Measured on 103 days:
+
+```
+   cap    trades   win%      net     maxDD   $ earned per 1% of drawdown
+  0.10      441   88.4%   +$139     14.9%          9.3
+  0.20      882   88.4%   +$277     28.2%          9.8
+  none     1628   88.6%   +$821     45.2%         18.1   <- TWICE as efficient
+```
+
+**The uncapped version earns twice as much per unit of risk.** The 3rd and 4th tickets —
+the ones only the highest-conviction setups earn — are the best trades in the system.
+Capping throws away precisely the part worth having.
+
+**So scale the BASE LOT instead. The structure stays; only the size moves:**
+
+```
+   base       net      maxDD    what a $500 account would feel
+   0.10    +820.50     45.2%    ~$226 down at its worst
+   0.05    +410.25     25.9%    ~$130 down
+   0.02    +164.10     11.4%    ~$57 down     <- for a $500 real account
+   0.01     +82.05      5.9%    ~$29 down
+```
+
+**RECOMMENDED SIZES**
+- **$500 real account -> base 0.02.** ~11% drawdown, +$164 per 103 days (~$1.60/day).
+- **$4,123 demo -> base 0.10.** 45% drawdown is aggressive but survivable while testing.
+
+Both keep `InpMaxRisk = 0` (no cap), because the cap destroys the edge's efficiency.
+
+---
+
 ## ✅ THE CONFIRMED RESULT — 88.4%, and it survives unseen tape
 
 Found the honest way round: **searched on 103 days (3,600 configs, 440+ trades per
