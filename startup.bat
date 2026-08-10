@@ -600,5 +600,11 @@ REM The bridge dying is not the problem; nothing listening for it is. This check
 REM output file's age and restarts the bridge when the market is open and it stops
 REM moving. Also the tape archive, which keeps every real bar so the tester's ground
 REM grows daily instead of rolling over a 300-bar window.
-start "feed_supervisor" /min "%PY%" -u "%~dp0monitoreed_supervisor.py" --loop 120
-start "tape_archive"    /min "%PY%" -u "%~dp0monitor	ape_archive.py" --loop 60
+eed_supervisor.py" --loop 120
+
+REM -- feed supervisor (2026-08-10): three stalls in three days, each one silent.
+REM The bridge dying is not the problem; nothing listening for it is. This checks
+REM the output file age and restarts the bridge when the market is open and it
+REM stops moving. tape_archive keeps every real bar so the tester ground grows.
+start "feed_supervisor" /min "%PY%" -u "%~dp0monitor/feed_supervisor.py" --loop 120
+start "tape_archive"    /min "%PY%" -u "%~dp0monitor/tape_archive.py" --loop 60
