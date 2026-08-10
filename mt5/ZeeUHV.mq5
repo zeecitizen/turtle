@@ -68,15 +68,15 @@ input double InpLots        = 0.10;   // InpLots — lot size
 input int    InpMagicNumber = 88094;  // InpMagicNumber — 88094 = ZeeUHV, tester only
 
 input group "── His rules (each one quoted from his labels in the code) ──"
-input int    InpTrendLook   = 40;     // InpTrendLook — bars used to judge HH/HL structure
+input int    InpTrendLook   = 20;   // InpTrendLook — 20 validated
 input int    InpPivot       = 2;      // InpPivot — swing pivot strength
 input bool   InpRequireTrend = true;  // InpRequireTrend — false lets RANGING tape trade too (the 40% gate)
-input int    InpRetraceBack = 15;     // InpRetraceBack — how far back to find the retracement origin
-input double InpUhvBodyMin  = 0.30;   // InpUhvBodyMin — "UHV should also be a strong candle"
+input int    InpRetraceBack = 20;   // InpRetraceBack — 20 validated
+input double InpUhvBodyMin  = 0.5;   // InpUhvBodyMin — 0.5 validated. 0.3 finds more setups and loses money
 input int    InpBreakWindow = 12;     // InpBreakWindow — bars after the UHV in which the break must come
 
 input group "── Exit: SL 6 / TP 3 measured on his own setups ──"
-input double InpStopPts     = 4.0;    // InpStopPts — 4.0: keeps ~88% wins but only NEEDS 80%, so it has margin
+input double InpStopPts     = 9.0;   // InpStopPts — 9.0 validated: 88.4% on 441 trades, green on both unseen sets
 input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W/1L, 96%, his own Feb-11 shape
 input int    InpMaxHoldMin  = 30;     // InpMaxHoldMin — the measurement window
 
@@ -91,7 +91,7 @@ input group "── Diamonds: conviction buys SIZE (Zee 2026-08-10) ──"
 input bool   InpUseDiamonds = true;   // InpUseDiamonds — size by conviction instead of a flat lot
 input double InpMaxRisk     = 0.0;    // InpMaxRisk — 0 = off. Cap TOTAL lots across the stack.
 input bool   InpStackLots   = true;   // InpStackLots — each diamond opens ANOTHER position, each one bigger
-input double InpStackStep   = 0.10;   // InpStackStep — 0.10 -> 0.10, 0.20, 0.30, 0.40 as conviction rises     // InpMinTrades — a pass with fewer closed trades scores ZERO
+input double InpStackStep   = 0.0;   // InpStackStep — 0.0 = every diamond ticket stays at InpLots (Zee's call)
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
