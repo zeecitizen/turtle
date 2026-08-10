@@ -73,14 +73,14 @@ long BarVolume(int k) {
    return iVolume(_Symbol, PERIOD_CURRENT, k);
 }
 
-double O(int k) { return iOpen (_Symbol, PERIOD_CURRENT, k); }
-double H(int k) { return iHigh (_Symbol, PERIOD_CURRENT, k); }
-double L(int k) { return iLow  (_Symbol, PERIOD_CURRENT, k); }
-double C(int k) { return iClose(_Symbol, PERIOD_CURRENT, k); }
-bool Green(int k) { return C(k) > O(k); }
-bool Red  (int k) { return C(k) < O(k); }
-double BodyHi(int k) { return MathMax(O(k), C(k)); }
-double BodyLo(int k) { return MathMin(O(k), C(k)); }
+double bOpen(int k) { return iOpen (_Symbol, PERIOD_CURRENT, k); }
+double bHigh(int k) { return iHigh (_Symbol, PERIOD_CURRENT, k); }
+double bLow(int k) { return iLow  (_Symbol, PERIOD_CURRENT, k); }
+double bClose(int k) { return iClose(_Symbol, PERIOD_CURRENT, k); }
+bool IsGreen(int k) { return bClose(k) > bOpen(k); }
+bool IsRed(int k) { return bClose(k) < bOpen(k); }
+double BodyHi(int k) { return MathMax(bOpen(k), bClose(k)); }
+double BodyLo(int k) { return MathMin(bOpen(k), bClose(k)); }
 
 //+------------------------------------------------------------------+
 //| 0. REGIME                                                         |
@@ -97,11 +97,11 @@ int TrendNow() {
    for (int k = InpTrendLook; k >= InpPivot + 1; k--) {
       bool ph = true, pl = true;
       for (int d = 1; d <= InpPivot; d++) {
-         if (H(k) < H(k - d) || H(k) < H(k + d)) ph = false;
-         if (L(k) > L(k - d) || L(k) > L(k + d)) pl = false;
+         if (bHigh(k) < bHigh(k - d) || bHigh(k) < bHigh(k + d)) ph = false;
+         if (bLow(k) > bLow(k - d) || bLow(k) > bLow(k + d)) pl = false;
       }
-      if (ph) { int n = ArraySize(highs); ArrayResize(highs, n + 1); highs[n] = H(k); }
-      if (pl) { int n = ArraySize(lows);  ArrayResize(lows,  n + 1); lows[n]  = L(k); }
+      if (ph) { int n = ArraySize(highs); ArrayResize(highs, n + 1); highs[n] = bHigh(k); }
+      if (pl) { int n = ArraySize(lows);  ArrayResize(lows,  n + 1); lows[n]  = bLow(k); }
    }
    int nh = ArraySize(highs), nl = ArraySize(lows);
    if (nh < 2 || nl < 2) return 0;
@@ -126,15 +126,15 @@ int TrendNow() {
 int RetracementOrigin(int side) {
    bool wantRed = (side > 0);
    for (int k = 1; k <= InpRetraceBack; k++) {
-      if (wantRed  && !Red(k))   continue;
-      if (!wantRed && !Green(k)) continue;
+      if (wantRed  && !IsRed(k))   continue;
+      if (!wantRed && !IsGreen(k)) continue;
       int prev = -1;
       for (int j = k + 1; j <= k + 8; j++) {
-         if (wantRed ? Green(j) : Red(j)) { prev = j; break; }
+         if (wantRed ? IsGreen(j) : IsRed(j)) { prev = j; break; }
       }
       if (prev < 0) continue;
-      if (wantRed) { if (BodyLo(k) < L(prev)) return k; }
-      else         { if (BodyHi(k) > H(prev)) return k; }
+      if (wantRed) { if (BodyLo(k) < bLow(prev)) return k; }
+      else         { if (BodyHi(k) > bHigh(prev)) return k; }
    }
    return -1;
 }
@@ -158,14 +158,14 @@ int FindUhv(int origin, int side) {
    bool wantRed = (side > 0);
    int best = -1; long bestv = -1;
    for (int k = origin; k >= 1; k--) {
-      if (wantRed  && !Red(k))   continue;
-      if (!wantRed && !Green(k)) continue;
+      if (wantRed  && !IsRed(k))   continue;
+      if (!wantRed && !IsGreen(k)) continue;
       long v = BarVolume(k);
       if (v > bestv) { bestv = v; best = k; }
    }
    if (best < 1) return -1;
-   double rng = H(best) - L(best);
-   if (rng <= 0 || MathAbs(C(best) - O(best)) / rng < InpUhvBodyMin) return -1;
+   double rng = bHigh(best) - bLow(best);
+   if (rng <= 0 || MathAbs(bClose(best) - bOpen(best)) / rng < InpUhvBodyMin) return -1;
    if (BarVolume(best + 1) > bestv) return -1;      // louder than its neighbours
    if (best > 1 && BarVolume(best - 1) > bestv) return -1;
    return best;
@@ -189,9 +189,9 @@ bool BreakoutIsBar1(int uhv, int side) {
    // the FIRST true crossing must be bar 1 — if an earlier bar already crossed,
    // this one is late and he would not mark it
    for (int k = uhv - 1; k >= 1; k--) {
-      if (wantGreen  && !Green(k)) continue;
-      if (!wantGreen && !Red(k))   continue;
-      bool crossed = wantGreen ? (BodyHi(k) > H(uhv)) : (BodyLo(k) < L(uhv));
+      if (wantGreen  && !IsGreen(k)) continue;
+      if (!wantGreen && !IsRed(k))   continue;
+      bool crossed = wantGreen ? (BodyHi(k) > bHigh(uhv)) : (BodyLo(k) < bLow(uhv));
       if (!crossed) continue;
       if (BarVolume(k) >= BarVolume(uhv)) return false;   // must be quieter
       return (k == 1);
