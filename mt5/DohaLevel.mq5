@@ -71,6 +71,34 @@ ulong    g_pending  = 0;
 datetime g_placed   = 0;
 
 //+------------------------------------------------------------------+
+bool g_dumped = false;
+
+//+------------------------------------------------------------------+
+//| One-shot: print the volumes the EA ACTUALLY SEES.                 |
+//|                                                                  |
+//| DohaLevel placed ZERO orders on data where its own logic, replayed|
+//| in Python against the same file, would have placed 917. When the  |
+//| code is right and the answer is wrong, the input is wrong — so    |
+//| before touching another rule, look at what iVolume() returns.     |
+//| MT5 synthesises ticks for custom symbols in 'OHLC M1' mode, and   |
+//| if the bar volume it reports is the count of GENERATED ticks      |
+//| rather than our imported volume, then every volume rule we own —  |
+//| UHV, no-supply, breakout-volume — has been reading a constant.    |
+//+------------------------------------------------------------------+
+void DumpVolumes() {
+   if (g_dumped) return;
+   if (Bars(_Symbol, PERIOD_CURRENT) < 30) return;
+   g_dumped = true;
+   string s = "";
+   for (int k = 1; k <= 12; k++)
+      s += StringFormat("%d ", (int)iVolume(_Symbol, PERIOD_CURRENT, k));
+   PrintFormat("[LEVEL] VOLUME CHECK — last 12 bars as the EA sees them: %s", s);
+   PrintFormat("[LEVEL] VOLUME CHECK — if these are all identical (e.g. all 4), the "
+               "tester is reporting GENERATED ticks, not our imported volume, and every "
+               "volume rule in every EA has been reading a constant.");
+}
+
+//+------------------------------------------------------------------+
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
@@ -209,6 +237,7 @@ void AgeOut() {
 
 //+------------------------------------------------------------------+
 void OnTick() {
+   DumpVolumes();
    AgeOut();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;
