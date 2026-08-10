@@ -149,7 +149,7 @@ def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
               Model=2,                       # 1 minute OHLC
               FromDate=frm, ToDate=to,
               Deposit=4123, Currency="USD", Leverage="1:500",
-              Optimization=(2 if optimize else 0),   # 2 = slow complete algorithm
+              Optimization=(1 if optimize else 0),   # 1 = SLOW COMPLETE (2 is genetic and stops early)
               OptimizationCriterion=6,               # 6 = our OnTester value
               Report=name, ReplaceReport=1,
               ShutdownTerminal=1, Visual=0)
