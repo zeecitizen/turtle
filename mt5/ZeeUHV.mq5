@@ -70,6 +70,7 @@ input int    InpMagicNumber = 88094;  // InpMagicNumber — 88094 = ZeeUHV, test
 input group "── His rules (each one quoted from his labels in the code) ──"
 input int    InpTrendLook   = 40;     // InpTrendLook — bars used to judge HH/HL structure
 input int    InpPivot       = 2;      // InpPivot — swing pivot strength
+input bool   InpRequireTrend = true;  // InpRequireTrend — false lets RANGING tape trade too (the 40% gate)
 input int    InpRetraceBack = 15;     // InpRetraceBack — how far back to find the retracement origin
 input double InpUhvBodyMin  = 0.30;   // InpUhvBodyMin — "UHV should also be a strong candle"
 input int    InpBreakWindow = 12;     // InpBreakWindow — bars after the UHV in which the break must come
@@ -80,7 +81,7 @@ input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W
 input int    InpMaxHoldMin  = 30;     // InpMaxHoldMin — the measurement window
 
 input group "── Housekeeping ──"
-input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent positions
+input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent SETUPS (a stack counts as one)
 input int    InpCooldownBar = 3;      // InpCooldownBar — bars between entries
 input int    InpMaxGapSec   = 300;    // InpMaxGapSec — never reason across a hole in the data
 input bool   InpVerbose     = false;  // InpVerbose — OFF for optimisation (a sweep with logging is 100x slower)
@@ -88,7 +89,9 @@ input int    InpMinTrades   = 15;
 
 input group "── Diamonds: conviction buys SIZE (Zee 2026-08-10) ──"
 input bool   InpUseDiamonds = true;   // InpUseDiamonds — size by conviction instead of a flat lot
-input double InpMaxRisk     = 0.0;    // InpMaxRisk — 0 = off. Cap total lots if you want one.     // InpMinTrades — a pass with fewer closed trades scores ZERO
+input double InpMaxRisk     = 0.0;    // InpMaxRisk — 0 = off. Cap TOTAL lots across the stack.
+input bool   InpStackLots   = true;   // InpStackLots — each diamond opens ANOTHER position, each one bigger
+input double InpStackStep   = 0.10;   // InpStackStep — 0.10 -> 0.10, 0.20, 0.30, 0.40 as conviction rises     // InpMinTrades — a pass with fewer closed trades scores ZERO
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
@@ -244,6 +247,9 @@ bool WindowContinuous(int bars) {
 }
 
 int OpenCount() {
+   // counts TICKETS. The stack is built in one pass inside TryFire, so InpMaxOpen only
+   // gates NEW setups afterwards — which is what we want: one setup at a time, however
+   // many tickets that setup happens to be worth.
    int n = 0;
    for (int i = PositionsTotal() - 1; i >= 0; i--) {
       ulong t = PositionGetTicket(i);
@@ -318,13 +324,34 @@ void TryFire() {
       if (InpVerbose) Print("[ZEE] [SKIP] gap in lookback");
       return;
    }
+//  THE 40% GATE, under test (Zee 2026-08-10: "can u check what's stopping us from
+//  taking every single opportunity we get?"). Measured on real gold, the structural
+//  trend reads FLAT 40.3% of the time, and update_gate()'s "flat -> the ghost waits"
+//  forbids BOTH sides for those four hours in ten — before any setup rule is even
+//  consulted. It is the single largest brake on trade count, and it was assumed, never
+//  tested. With InpRequireTrend=false a ranging tape may still trade: we simply try
+//  both sides and take whichever completes a lawful setup.
    int t = TrendNow();
-   if (t == 0) { if (InpVerbose) Print("[ZEE] [SKIP] ranging — his setup needs a trend"); return; }
-   int origin = RetracementOrigin(t);
-   if (origin < 0) { if (InpVerbose) Print("[ZEE] [SKIP] no valid retracement origin"); return; }
-   int uhv = FindUhv(origin, t);
-   if (uhv < 0) { if (InpVerbose) Print("[ZEE] [SKIP] no valid UHV in the retracement"); return; }
-   if (!BreakoutIsBar1(uhv, t)) return;              // silent: the common case
+   int sides[2]; int nsides = 0;
+   if (t != 0) { sides[0] = t; nsides = 1; }
+   else if (!InpRequireTrend) { sides[0] = +1; sides[1] = -1; nsides = 2; }
+   else { if (InpVerbose) Print("[ZEE] [SKIP] ranging — his setup needs a trend"); return; }
+
+   int origin = -1, uhv = -1, side = 0;
+   for (int si = 0; si < nsides; si++) {
+      int try_side = sides[si];
+      int o = RetracementOrigin(try_side);
+      if (o < 0) continue;
+      int u = FindUhv(o, try_side);
+      if (u < 0) continue;
+      if (!BreakoutIsBar1(u, try_side)) continue;
+      origin = o; uhv = u; side = try_side; break;
+   }
+   if (side == 0) {
+      if (InpVerbose && t != 0) Print("[ZEE] [SKIP] no lawful setup on the allowed side");
+      return;
+   }
+   t = side;
 
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
@@ -333,18 +360,37 @@ void TryFire() {
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
 
    int dia = InpUseDiamonds ? DiamondsFor(origin, uhv, t) : 0;
-   int clicks = InpUseDiamonds ? ClicksFor(dia) : 1;
-   double lots = NormalizeDouble(InpLots * clicks, 2);
-   if (InpMaxRisk > 0) lots = MathMin(lots, InpMaxRisk);
 
-   bool ok = (t > 0) ? trade.Buy (lots, _Symbol, 0, sl, tp, "zee_buy")
-                     : trade.Sell(lots, _Symbol, 0, sl, tp, "zee_sell");
-   if (ok) {
+   // THE STACK — Zee 2026-08-10: "the diamonds should each not only add 1 trade, but
+   // add the trade in twice the lots that we already have... 0.1, then 0.2, then 0.3,
+   // then 0.4 — it stacks while increasing the lot size as our conviction increases."
+   //
+   // So a diamond is not a multiplier on one ticket; it is ANOTHER ticket, larger than
+   // the one before it. A setup with no diamonds is a single 0.10. A three-diamond
+   // setup opens 0.10 + 0.20 + 0.30 + 0.40 = 1.00 across four positions, all sharing
+   // the same stop and target.
+   //
+   // Note what this does to risk: at SL 7 a full four-deep stack risks 7 x 100 x 1.00
+   // = $700 on ONE setup. The live receipts from 2026-08-06 already warn about
+   // conviction sizing multiplying losses, so InpMaxRisk exists to cap the total and
+   // this must be proven in the tester before it goes anywhere near live.
+   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, 3))) : 1;
+   double placed = 0, total = 0;
+   for (int q = 0; q < tickets; q++) {
+      double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
+      if (!InpStackLots) lots = NormalizeDouble(InpLots * (InpUseDiamonds ? ClicksFor(dia) : 1), 2);
+      if (InpMaxRisk > 0 && total + lots > InpMaxRisk) break;
+      bool ok = (t > 0) ? trade.Buy (lots, _Symbol, 0, sl, tp, "zee_buy")
+                        : trade.Sell(lots, _Symbol, 0, sl, tp, "zee_sell");
+      if (!ok) break;
+      total += lots; placed += 1;
+      if (!InpStackLots) break;
+   }
+   if (placed > 0) {
       g_last_fire = TimeCurrent();
-      PrintFormat("[ZEE] %s @%.2f %s x%d = %.2f lots — trend %s · UHV %d (vol %d) · brk vol %d",
-                  t > 0 ? "BUY " : "SELL", px,
-                  dia >= 3 ? "3 diamonds" : (dia == 2 ? "2 diamonds" : (dia == 1 ? "1 diamond " : "no diamond")),
-                  clicks, lots, t > 0 ? "UP" : "DOWN",
+      PrintFormat("[ZEE] %s @%.2f — %d diamond(s) -> %d ticket(s), %.2f lots total · "
+                  "UHV %d (vol %d) · brk vol %d",
+                  t > 0 ? "BUY " : "SELL", px, dia, (int)placed, total,
                   uhv, (int)BarVolume(uhv), (int)BarVolume(1));
    }
 }

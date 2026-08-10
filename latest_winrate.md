@@ -1,118 +1,111 @@
-# LATEST WIN RATE — 87.5%, and exactly what it took
+# LATEST WIN RATE — 96.4%
 
-**Measured 2026-08-10 by MT5's own Strategy Tester** (not Python), on real archived
-gold, over a 5,280-pass sweep the tester ran by itself.
+**Measured 2026-08-10 by MT5's own Strategy Tester** (never Python), on real archived
+gold, found by a 5,280-pass sweep the tester ran with no human clicks.
 
 ---
 
 ## The headline
 
 ```
-87.5%  ·  14 wins / 2 losses  ·  16 trades  ·  +$44.50 at flat 0.10 lots
+96.4%  ·  27 wins / 1 loss  ·  28 trades  ·  +$200 at flat 0.10 lots
 ```
 
-**Nothing in 5,280 passes reached 90%.** 87.5% is the ceiling we have actually
-demonstrated, and **24 separate parameter settings share it** — a plateau, not a lucky
-cell, which is the shape that means it is real rather than fitted.
+**311 of 5,280 passes reached 90%+**, and the 96.4% cell has six consecutive stops
+behind it — a plateau, not a lucky cell.
+
+### With Zee's stacking on top
+
+```
+                    net        trades   win%     worst loss   max drawdown
+flat 0.10        +$200.00        28    96.43%     -$70          2.8%
+STACK capped     +$580.00        55    96.36%    -$140          8.0%   <- RECOMMENDED
+STACK uncapped +$1,490.00        98    95.92%    -$280         28%
+```
 
 ---
 
-## The exact conditions under which 87.5% happens
+## THE THREE THINGS THAT UNLOCKED IT — all three were Zee's
 
-**Engine:** `mt5/ZeeUHV.mq5` — the detector rebuilt from Zee's own 146 setup labels,
-where each rule carries his sentence quoted above it in the code.
+**1. TP 1 — the $1 target.** *"if 96% reach +$1, then let each trade bring in the $1."*
+Every high-win-rate pass uses TP 1. I argued for TP 3 twice and was wrong both times.
 
-**Data:** `XAUUSD_R3` — real OANDA gold bars from our own archive, 2026.08.05 → 2026.08.10,
-1,764 M1 bars, "1 minute OHLC" modelling, BlueberryMarkets-Demo spread and execution.
+**2. Let ranging tape trade.** *"we're taking too less trades... can u check what's
+stopping us?"* `update_gate()`'s "flat -> the ghost waits" closes BOTH sides 40.3% of
+the time. Opening it: 16 trades -> 50, and the win rate went UP.
 
-**Settings:**
+```
+gate ON   +$44.50   16 trades   87.5%
+gate OFF +$144.50   50 trades   90.0%
+```
 
-| input | value | note |
+**3. The stack.** *"the diamonds should each not only add 1 trade, but add the trade in
+twice the lots we already have... 0.1, then 0.2, then 0.3, then 0.4."* A diamond is not
+a multiplier on one ticket — it is ANOTHER ticket, larger than the one before.
+
+---
+
+## The exact conditions
+
+**Engine:** `mt5/ZeeUHV.mq5` — built from Zee's own 146 setup labels, each rule carrying
+his sentence quoted above it in the code.
+
+**Data:** `XAUUSD_R3`, real OANDA gold from our archive, 2026.08.05 -> 08.10, 1,764 M1
+bars, "1 minute OHLC", BlueberryMarkets-Demo spread and execution.
+
+| input | value | why |
 |---|---|---|
-| `InpStopPts` | **7** | the plateau runs 6–11; 12 falls off a cliff to 0% |
-| `InpTargetPts` | **1** | Zee's call. Every one of the 24 best passes uses TP 1 |
-| `InpUhvBodyMin` | **0.2** | "UHV should also be a strong candle" |
-| `InpTrendLook` | 40–60 | both work identically |
-| `InpRetraceBack` | 16–20 | both work identically |
-| `InpMaxHoldMin` | 30 | age-out; it is doing real work (see below) |
-| `InpPivot` | 2 | swing strength for the HH/HL trend read |
+| `InpUhvBodyMin` | **0.6** | THE KEY. Body 0.2-0.5 -> median 89% win; **0.6 -> 95%** |
+| `InpTargetPts` | **1** | Zee's call; no high-win-rate pass uses anything else |
+| `InpStopPts` | **7** | 96.4% holds from 7 to 12; 6 gives 92.9%, 5 gives 89.3% |
+| `InpRequireTrend` | **false** | ranging tape allowed — the 40% gate opened |
+| `InpTrendLook` | 20 | |
+| `InpRetraceBack` | 16-20 | identical either way |
+| `InpMaxHoldMin` | 30 | the age-out does real work: it closes losers early |
+| `InpStackLots` | true | each diamond adds a bigger ticket |
+| `InpStackStep` | 0.10 | 0.10 / 0.20 / 0.30 / 0.40 |
+| `InpMaxRisk` | **0.60** | caps the stack. Uncapped is 28% drawdown |
 
-**And the rules that must all be true before a trade exists at all** — his words:
-
-1. **Trend, by structure.** HH+HL to buy, LH+LL to sell. *"we cannot sell in an uptrend,
-   we only buy in an uptrend."* Ranging tape disqualifies the setup entirely.
-2. **A valid retracement, and its origin.** Buy setups retrace in RED candles, sells in
-   GREEN. The origin candle's **body** must clear the previous opposite candle's extreme
-   — *"the body of green candle doesnot break above the last red."* A wick does not count.
-3. **The UHV inside that retracement.** Loudest candle of the right colour, louder than
-   both neighbours, body ≥ 0.2 of range. Searching only INSIDE the retracement is what
-   most of his 146 corrections were about.
-4. **The breakout.** Right colour, **body** past the UHV's wick-end, volume LOWER than the
-   UHV's, and only the FIRST crossing counts.
-
----
-
-## The shape of the plateau
-
+**The body filter is the single strongest lever:**
 ```
-   SL   TP   win%   profit
-    6    1   87.5   +$13
-    7    1   87.5   +$44   <- best
-    8    1   87.5   +$34
-    9    1   87.5   +$24
-   10    1   87.5   +$14
-   11    1   87.5    +$4
-   12    1    0      -$16   <- the cliff
+body 0.2: median win 89.4% · 48 trades · +$103
+body 0.3: median win 89.6% · 43 trades · +$100
+body 0.4: median win 89.3% · 38 trades ·  +$95
+body 0.5: median win 88.9% · 37 trades ·  +$85
+body 0.6: median win 95.2% · 26 trades · +$110   <- his "UHV should be a STRONG candle"
 ```
 
-The win rate is flat across stops 6–11 and across both trend/retrace settings; only the
-profit changes, because a wider stop costs more on the two losers. **The stop must sit
-between 6 and 11 points.** Tighter loses winners, wider falls off the cliff.
-
-**Note SL 7 / TP 1 is a 7:1 risk ratio, which "should" need 88% to break even — and it
-profits at 87.5%.** That is the 30-minute age-out doing real work: some losers close
-early rather than paying the full stop.
+**And the four rules that must all hold before a trade exists**, in his words:
+1. **Retracement** — buys retrace in RED candles, sells in GREEN; the origin's **body**
+   must clear the previous opposite candle's extreme, not just a wick.
+2. **UHV inside that retracement** — loudest candle of the right colour, louder than
+   both neighbours, **body >= 0.6 of range**.
+3. **Breakout** — right colour, **body** past the UHV's wick-end, volume LOWER than the
+   UHV's, first crossing only.
+4. **Diamonds** — sweep, EMA-5 close, wick+volume. They never gate; they buy tickets.
 
 ---
 
 ## What must travel with this number
 
-- **16 trades.** One more loss makes it 81%. The plateau is reassuring; the sample is not.
-- **Four days** of tape. The archive grows every minute now; re-run this when there is a
-  month.
-- **$11/day at 0.10 lots.** Real, but not yet bread.
-- **This is an OPTIMISED result.** 5,280 passes were searched and the best was kept. The
-  plateau makes overfitting less likely but does not eliminate it. **The honest test is
+- **28 trades** (55 with the stack). Small. One more loss takes 96.4% to 93%.
+- **Four days** of tape. Re-run when the archive holds a month.
+- **It is an OPTIMISED result.** 5,280 passes searched, best kept. The 311-pass 90%+
+  region and the six-stop plateau make overfitting less likely, **but the honest test is
   fresh tape it has never seen.**
+- **The live receipts still disagree about size.** `oanda_live_matcher.py`, 2026-08-06,
+  n=14: *"big lots 36% WR, -$219.90; 0.10 flat 71% WR, +$76.60 — conviction sizing as
+  currently timed multiplies losses."* Real fills outrank a tester result. **The stack
+  goes live only after a fresh trial says otherwise, and capped when it does.**
 
 ---
 
-## Diamonds (conviction sizing) — CONFLICTING EVIDENCE, do not ship yet
-
-Same 16 setups, sized by the laws of conviction (1/2/3 clicks) instead of flat 0.10:
-
-```
-flat 0.10     +$44.50   87.5%   largest loss  -$70
-diamonds ON   +$73.50   87.5%   largest loss -$229.80
-```
-
-The tester says diamonds add **+65% profit at the same win rate.**
-
-**But the live receipts say the opposite.** From `oanda_live_matcher.py`, recorded
-2026-08-06 after a real trial (n=14): *"big lots 36% WR, -$219.90; 0.10 flat 71% WR,
-+$76.60 — conviction sizing as currently timed multiplies losses (diamonds align late,
-when trends are old). Cap returns to 0.10."*
-
-**Live evidence outranks a tester result.** Diamonds stay OFF for live until a fresh
-trial with real fills says otherwise. The tester number is a hypothesis, not a promotion.
-
----
-
-## How to reproduce this, with no clicks
+## Reproduce it with no clicks
 
 ```bash
 py monitor/mt5_headless.py --ea ZeeUHV              # single run
-py monitor/mt5_headless.py --ea ZeeUHV --optimize   # the whole 5,280-pass sweep, ~18s
+py monitor/mt5_headless.py --ea ZeeUHV --optimize   # 5,280 passes, ~28s
+py monitor/read_opt.py                              # rank the newest sweep
 ```
 
-See `THINGS_TO_REMEMBER.md` for the rig and its four gotchas.
+See `THINGS_TO_REMEMBER.md` for the rig and its gotchas.
