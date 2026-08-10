@@ -1,4 +1,48 @@
-# LATEST WIN RATE — 96.4%
+# LATEST WIN RATE
+
+## ⚠️ READ THIS FIRST — the 96.4% did NOT survive out-of-sample (2026-08-10)
+
+The 96.4% below was found by optimising on four days and validating on nothing. Run on
+tape it had never seen, with **every setting frozen and nothing retuned**:
+
+```
+IN-SAMPLE    Aug 5-10  (where it was found)     +$580.00     55 trades   96.36%
+OUT-SAMPLE   Feb 12 - May 27 (103 days)       -$4,071.70    768 trades   82.81%
+OUT-SAMPLE   Feb 11 - Zee's own day             -$180.00     36 trades   83.33%
+```
+
+**It loses on unseen data. That $4,071 would have been real money.**
+
+### But the number that matters is not the loss — it is the agreement
+
+```
+768 trades  ->  82.81%
+ 36 trades  ->  83.33%
+```
+
+**Two completely independent datasets landing within half a point of each other.**
+That is not noise. **The strategy's real win rate is ~83%**, measured over 768 trades
+instead of 28. The 96.4% was four lucky days dressed up by a 5,280-pass search.
+
+**83% is a genuinely good entry engine.** The failure is not the entries — it is that
+**SL 7 / TP 1 needs 87.5% just to break even**, so a real 83% engine bleeds on a 7:1
+payoff. The entries are fine. The exit arithmetic is wrong for them.
+
+### The methodological lesson, which is the permanent one
+
+**I optimised on four days and validated on nothing.** The correct order is the
+opposite: **search on the large sample, confirm on the small one.** Any configuration
+found on a few days must be run on unseen tape with everything frozen before it is
+believed — and certainly before it is funded.
+
+The 311-pass 90%+ region and the six-stop plateau did NOT protect against this. A
+plateau proves the result is stable *within that sample*; it says nothing about another
+sample. That is worth remembering, because I offered the plateau as reassurance.
+
+---
+
+
+## The in-sample record (superseded by the box above)
 
 **Measured 2026-08-10 by MT5's own Strategy Tester** (never Python), on real archived
 gold, found by a 5,280-pass sweep the tester ran with no human clicks.
