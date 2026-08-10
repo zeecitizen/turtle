@@ -44,19 +44,22 @@ except Exception:
 ROOT = Path(__file__).parent.parent
 TERMINALS = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal")
 LIVE_PREFIX = "DBE9B8B347D0"                      # Blueberry — hands off
-TEST_EXE = Path(r"C:/Program Files/MetaTrader 5/terminal64.exe")
-TEST_PREFIX = "D0E8209F77C8"
+TEST_EXE = Path(r"C:/mt5_rig/terminal64.exe")   # portable clone, /portable
+TEST_PREFIX = "81A933A9AFC5"   # unused in portable mode
 COMMON = TERMINALS / "Common" / "Files"
 REPORTS = ROOT / "mt5" / "_tester_runs" / "headless"
 
 
+RIG = Path(r"C:/mt5_rig")
+
+
 def test_data_dir():
-    d = next((p for p in TERMINALS.iterdir() if p.name.startswith(TEST_PREFIX)), None)
-    if d is None:
-        raise SystemExit("test terminal data folder not found — run the terminal once by hand")
-    if d.name.startswith(LIVE_PREFIX):
-        raise SystemExit("REFUSING: that is the LIVE terminal")
-    return d
+    """In portable mode the data folder sits beside the exe, so the rig is fully
+    self-contained: its own config, its own symbols, its own logs. Nothing it does can
+    reach the live terminal's folder, which is the entire point."""
+    if not (RIG / "terminal64.exe").exists():
+        raise SystemExit("portable rig missing — rebuild C:/mt5_rig")
+    return RIG
 
 
 def live_is_safe():
@@ -99,7 +102,7 @@ def run(ini, timeout=1800, label=""):
     t0 = time.time()
     print(f"[headless] {label} starting…", flush=True)
     try:
-        subprocess.run([str(TEST_EXE), f"/config:{ini}"], timeout=timeout,
+        subprocess.run([str(TEST_EXE), "/portable", f"/config:{ini}"], timeout=timeout,
                        capture_output=True)
     except subprocess.TimeoutExpired:
         print(f"[headless] {label} exceeded {timeout}s — killing")
@@ -135,7 +138,11 @@ def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
     sync_experts()
     REPORTS.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now().strftime("%H%M%S")
-    rpt = REPORTS / f"{ea}_{stamp}"
+    # MT5 writes the report RELATIVE TO ITS OWN FOLDER when given a bare name, and
+    # silently writes nothing at all when given an absolute path it dislikes. A bare
+    # name always works; we fetch the file afterwards.
+    name = f"{ea}_{stamp}"
+    rpt = RIG / name
     ini = ROOT / "mt5" / "_headless_run.ini"
     write_ini(ini, "Tester",
               Expert=ea, Symbol=symbol, Period=period,
@@ -144,14 +151,18 @@ def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
               Deposit=4123, Currency="USD", Leverage="1:500",
               Optimization=(2 if optimize else 0),   # 2 = slow complete algorithm
               OptimizationCriterion=6,               # 6 = our OnTester value
-              Report=str(rpt), ReplaceReport=1,
+              Report=name, ReplaceReport=1,
               ShutdownTerminal=1, Visual=0)
     run(ini, timeout=5400 if optimize else 600,
         label=f"{ea} {'OPTIMISATION' if optimize else 'backtest'}")
     for ext in (".htm", ".html", ".xml"):
-        if (rpt.with_suffix(ext)).exists():
-            print(f"[headless] report -> {rpt.with_suffix(ext)}")
-            return rpt.with_suffix(ext)
+        src = RIG / (name + ext)
+        if src.exists():
+            REPORTS.mkdir(parents=True, exist_ok=True)
+            out = REPORTS / (name + ext)
+            shutil.copy(src, out)
+            print(f"[headless] report -> {out}")
+            return out
     print("[headless] no report written — check the test terminal's logs")
     return None
 
