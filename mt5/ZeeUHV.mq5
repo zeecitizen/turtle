@@ -83,7 +83,8 @@ input group "── Housekeeping ──"
 input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent positions
 input int    InpCooldownBar = 3;      // InpCooldownBar — bars between entries
 input int    InpMaxGapSec   = 300;    // InpMaxGapSec — never reason across a hole in the data
-input bool   InpVerbose     = true;   // InpVerbose — log every decision
+input bool   InpVerbose     = false;  // InpVerbose — OFF for optimisation (a sweep with logging is 100x slower)
+input int    InpMinTrades   = 15;     // InpMinTrades — a pass with fewer closed trades scores ZERO
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
@@ -306,6 +307,34 @@ void AgeOut() {
    }
 }
 
+//+------------------------------------------------------------------+
+//| OnTester — let MT5 rank the passes by WIN RATE, in MT5's own       |
+//| numbers.                                                           |
+//|                                                                    |
+//| Zee, 2026-08-10: "i want you to find something that has a 90%+     |
+//| winrate on MT5 tester not Python. Find it using your tests."        |
+//|                                                                    |
+//| So the search moves inside the tester. The optimiser maximises     |
+//| whatever this returns, and this returns the win rate measured by   |
+//| MT5 with real spread and real execution — no Python anywhere in    |
+//| the loop.                                                           |
+//|                                                                    |
+//| TWO GUARDS, because an unguarded win rate is trivially gamed:      |
+//|   * fewer than InpMinTrades closed trades scores ZERO. Otherwise   |
+//|     one lucky trade returns 100% and wins the whole optimisation.  |
+//|   * a pass that LOST money scores zero however pretty its win      |
+//|     rate. A 95% win rate that nets negative is the SL-30 trap he   |
+//|     found this afternoon, where one loss wipes thirty wins.        |
+//+------------------------------------------------------------------+
+double OnTester() {
+   double trades = TesterStatistics(STAT_TRADES);
+   if (trades < InpMinTrades) return 0.0;
+   if (TesterStatistics(STAT_PROFIT) <= 0) return 0.0;
+   double wins = TesterStatistics(STAT_PROFIT_TRADES);
+   return (wins / trades) * 100.0;
+}
+
+//+------------------------------------------------------------------+
 void OnTick() {
    AgeOut();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
