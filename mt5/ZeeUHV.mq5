@@ -1,0 +1,289 @@
+//+------------------------------------------------------------------+
+//| ZeeUHV.mq5 — HIS rules, not mine. Rebuilt from his own 146 labels. |
+//|                                                                  |
+//| Zee, 2026-08-10: "i labelled more than a 100 setups for you to    |
+//| see which one is UHV which one is not."                          |
+//|                                                                  |
+//| He had, and I had forgotten. monitor/setup_labels/zee_labels.json |
+//| holds 146 setups annotated in his own words, and only 27 of them  |
+//| say the machine's drawing was right — about 18%. Every detector   |
+//| we ever shipped encoded MY reading of "ultra high volume". This   |
+//| one encodes his, rule by rule, with his sentence quoted above     |
+//| each check so anyone reading the code can see whose authority it  |
+//| carries.                                                          |
+//|                                                                  |
+//| On 3,159 bars of real archived gold his rules find 26 setups      |
+//| where my detector found 193 — far stricter, and better:           |
+//|     96% reach +$1.00 · 85% reach +$2.00 · 50% reach +$5.00        |
+//| Walked forward bar by bar asking WHICH CAME FIRST (the mistake    |
+//| that cost the DohaLevel call this morning):                       |
+//|     SL 6 / TP 3 -> 83% (20W/4L), needs 67%, +1.50 pts per trade   |
+//|     SL 6 / TP 2 -> 88% (22W/3L), needs 75%, +1.04                 |
+//|     SL 4 / TP 3 -> 68% (17W/8L), needs 57%, +0.76                 |
+//| The whole neighbourhood is positive, not one lucky cell — and it  |
+//| says what he has been saying: WIDE STOP, MODEST TARGET. The       |
+//| opposite of the ghost at 1.0, the ratchet at 0.3, the breakeven   |
+//| lock at 0.3 and my own bound at 1.0.                              |
+//|                                                                  |
+//| CAVEAT ON THE FACE OF IT: 26 setups, ~2 days, measured in Python. |
+//| Direction only. Only MT5's tester or live fills promote anything. |
+//|                                                                  |
+//| magic 88094 = tester only.                                        |
+//+------------------------------------------------------------------+
+#property copyright "Zee & his ghost"
+#property version   "1.00"
+#property strict
+
+#include <Trade/Trade.mqh>
+CTrade trade;
+
+input double InpLots        = 0.10;   // InpLots — lot size
+input int    InpMagicNumber = 88094;  // InpMagicNumber — 88094 = ZeeUHV, tester only
+
+input group "── His rules (each one quoted from his labels in the code) ──"
+input int    InpTrendLook   = 40;     // InpTrendLook — bars used to judge HH/HL structure
+input int    InpPivot       = 2;      // InpPivot — swing pivot strength
+input int    InpRetraceBack = 15;     // InpRetraceBack — how far back to find the retracement origin
+input double InpUhvBodyMin  = 0.30;   // InpUhvBodyMin — "UHV should also be a strong candle"
+input int    InpBreakWindow = 12;     // InpBreakWindow — bars after the UHV in which the break must come
+
+input group "── Exit: SL 6 / TP 3 measured on his own setups ──"
+input double InpStopPts     = 6.0;    // InpStopPts — 6.0 measured best (83% win, needs 67%)
+input double InpTargetPts   = 3.0;    // InpTargetPts — 3.0 measured best
+input int    InpMaxHoldMin  = 30;     // InpMaxHoldMin — the measurement window
+
+input group "── Housekeeping ──"
+input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent positions
+input int    InpCooldownBar = 3;      // InpCooldownBar — bars between entries
+input int    InpMaxGapSec   = 300;    // InpMaxGapSec — never reason across a hole in the data
+input bool   InpVerbose     = true;   // InpVerbose — log every decision
+
+datetime g_last_bar = 0;
+datetime g_last_fire = 0;
+
+//+------------------------------------------------------------------+
+//| The tester overwrites tick_volume with its synthesised tick count |
+//| (4/bar) and preserves real_volume. Measured 2026-08-10 with       |
+//| TapeProbe: iVolume returned 4 4 4 4 4 while iRealVolume returned  |
+//| 572 454 270 174. Every volume rule we owned had been blind.       |
+//+------------------------------------------------------------------+
+long BarVolume(int k) {
+   long rv = iRealVolume(_Symbol, PERIOD_CURRENT, k);
+   if (rv > 0) return rv;
+   return iVolume(_Symbol, PERIOD_CURRENT, k);
+}
+
+double O(int k) { return iOpen (_Symbol, PERIOD_CURRENT, k); }
+double H(int k) { return iHigh (_Symbol, PERIOD_CURRENT, k); }
+double L(int k) { return iLow  (_Symbol, PERIOD_CURRENT, k); }
+double C(int k) { return iClose(_Symbol, PERIOD_CURRENT, k); }
+bool Green(int k) { return C(k) > O(k); }
+bool Red  (int k) { return C(k) < O(k); }
+double BodyHi(int k) { return MathMax(O(k), C(k)); }
+double BodyLo(int k) { return MathMin(O(k), C(k)); }
+
+//+------------------------------------------------------------------+
+//| 0. REGIME                                                         |
+//|   "we cannot sell in an uptrend, we only buy in an uptrend" (e027)|
+//|   "our setup only works if the market is not in a ranging         |
+//|    condition" (e012)                                              |
+//|   He judges trend by STRUCTURE — every complaint is phrased as    |
+//|   'price made a lower low' or 'formed HH' — so this reads swing   |
+//|   pivots, and returns 0 when they disagree.                       |
+//+------------------------------------------------------------------+
+int TrendNow() {
+   double highs[]; double lows[];
+   ArrayResize(highs, 0); ArrayResize(lows, 0);
+   for (int k = InpTrendLook; k >= InpPivot + 1; k--) {
+      bool ph = true, pl = true;
+      for (int d = 1; d <= InpPivot; d++) {
+         if (H(k) < H(k - d) || H(k) < H(k + d)) ph = false;
+         if (L(k) > L(k - d) || L(k) > L(k + d)) pl = false;
+      }
+      if (ph) { int n = ArraySize(highs); ArrayResize(highs, n + 1); highs[n] = H(k); }
+      if (pl) { int n = ArraySize(lows);  ArrayResize(lows,  n + 1); lows[n]  = L(k); }
+   }
+   int nh = ArraySize(highs), nl = ArraySize(lows);
+   if (nh < 2 || nl < 2) return 0;
+   if (highs[nh-1] > highs[nh-2] && lows[nl-1] > lows[nl-2]) return +1;
+   if (highs[nh-1] < highs[nh-2] && lows[nl-1] < lows[nl-2]) return -1;
+   return 0;
+}
+
+//+------------------------------------------------------------------+
+//| 1. THE RETRACEMENT AND WHERE IT STARTS                            |
+//|   "In uptrend we take a buy -> in uptrend we find a retracement   |
+//|    OF RED COLORED CANDLES" (#8)                                   |
+//|   "the origin candle was a valid retracement itself as it broke   |
+//|    the low of previous green" (#e025)                             |
+//|   "its not a valid retracement as the last green's low wasn't     |
+//|    broken by the origin, so no retracement started" (#e014)       |
+//|   "the body of green candle doesnot break above the last red"(#c4)|
+//|                                                                  |
+//|   The BODY requirement is what every earlier detector missed: he  |
+//|   rejects a retracement that only pokes past with a wick.         |
+//+------------------------------------------------------------------+
+int RetracementOrigin(int side) {
+   bool wantRed = (side > 0);
+   for (int k = 1; k <= InpRetraceBack; k++) {
+      if (wantRed  && !Red(k))   continue;
+      if (!wantRed && !Green(k)) continue;
+      int prev = -1;
+      for (int j = k + 1; j <= k + 8; j++) {
+         if (wantRed ? Green(j) : Red(j)) { prev = j; break; }
+      }
+      if (prev < 0) continue;
+      if (wantRed) { if (BodyLo(k) < L(prev)) return k; }
+      else         { if (BodyHi(k) > H(prev)) return k; }
+   }
+   return -1;
+}
+
+//+------------------------------------------------------------------+
+//| 2. THE UHV                                                        |
+//|   "a correct UHV should have been the largest volume at 5:30" (#1)|
+//|   "Y has the lowest volume among its neighbors, its not a valid   |
+//|    uhv because its not having highest volume" (#5)                |
+//|   "for a buy setup the uhv should be a red candle" (#11)          |
+//|   "uhv candle for sell case must be a green" (#24)                |
+//|   "Y is not a UHV as its not in a valid retracement" (#6)         |
+//|   "UHV should also be a strong candle, so that when we mitigate   |
+//|    it we are mitigating strong sellers" (#loser_001)              |
+//|                                                                  |
+//|   Scope is his, not ours: the search runs INSIDE the retracement  |
+//|   only, so a louder candle outside it can never be chosen. That   |
+//|   single constraint answers most of his complaints.               |
+//+------------------------------------------------------------------+
+int FindUhv(int origin, int side) {
+   bool wantRed = (side > 0);
+   int best = -1; long bestv = -1;
+   for (int k = origin; k >= 1; k--) {
+      if (wantRed  && !Red(k))   continue;
+      if (!wantRed && !Green(k)) continue;
+      long v = BarVolume(k);
+      if (v > bestv) { bestv = v; best = k; }
+   }
+   if (best < 1) return -1;
+   double rng = H(best) - L(best);
+   if (rng <= 0 || MathAbs(C(best) - O(best)) / rng < InpUhvBodyMin) return -1;
+   if (BarVolume(best + 1) > bestv) return -1;      // louder than its neighbours
+   if (best > 1 && BarVolume(best - 1) > bestv) return -1;
+   return best;
+}
+
+//+------------------------------------------------------------------+
+//| 3. THE BREAKOUT                                                   |
+//|   "for a buy setup the breakout should be with a green colored    |
+//|    candle" (#8) · "breakout candle in sell case must be red"(#24) |
+//|   "the R cannot be considered as breakout candle since its body   |
+//|    doesnot break/cross below the Y's lowest point (wick's end)"   |
+//|                                                              (#33)|
+//|   "14:50 would be a valid breakout candle if its volume were      |
+//|    lower than the Y which it is not" (#15)                        |
+//|   "we mark only 1 Breakout" (#13) · "B cannot be same candle as   |
+//|    Y" (#17)                                                       |
+//+------------------------------------------------------------------+
+bool BreakoutIsBar1(int uhv, int side) {
+   if (uhv <= 1) return false;                       // B cannot be Y
+   bool wantGreen = (side > 0);
+   // the FIRST true crossing must be bar 1 — if an earlier bar already crossed,
+   // this one is late and he would not mark it
+   for (int k = uhv - 1; k >= 1; k--) {
+      if (wantGreen  && !Green(k)) continue;
+      if (!wantGreen && !Red(k))   continue;
+      bool crossed = wantGreen ? (BodyHi(k) > H(uhv)) : (BodyLo(k) < L(uhv));
+      if (!crossed) continue;
+      if (BarVolume(k) >= BarVolume(uhv)) return false;   // must be quieter
+      return (k == 1);
+   }
+   return false;
+}
+
+bool WindowContinuous(int bars) {
+   if (InpMaxGapSec <= 0) return true;
+   int step = PeriodSeconds();
+   for (int k = 1; k < bars; k++) {
+      datetime a = iTime(_Symbol, PERIOD_CURRENT, k);
+      datetime b = iTime(_Symbol, PERIOD_CURRENT, k + 1);
+      if (a <= 0 || b <= 0) return false;
+      if ((int)(a - b) > step + InpMaxGapSec) return false;
+   }
+   return true;
+}
+
+int OpenCount() {
+   int n = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong t = PositionGetTicket(i);
+      if (t == 0 || !PositionSelectByTicket(t)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) == InpMagicNumber) n++;
+   }
+   return n;
+}
+
+//+------------------------------------------------------------------+
+int OnInit() {
+   trade.SetExpertMagicNumber(InpMagicNumber);
+   trade.SetTypeFillingBySymbol(_Symbol);
+   PrintFormat("[ZEE] ZeeUHV v1.00 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d",
+               InpStopPts, InpTargetPts, InpMagicNumber);
+   return INIT_SUCCEEDED;
+}
+void OnDeinit(const int r) { PrintFormat("[ZEE] deinit reason=%d", r); }
+
+//+------------------------------------------------------------------+
+void TryFire() {
+   if (OpenCount() >= InpMaxOpen) return;
+   if (g_last_fire > 0 &&
+       (TimeCurrent() - g_last_fire) < InpCooldownBar * PeriodSeconds()) return;
+   if (!WindowContinuous(InpTrendLook + 5)) {
+      if (InpVerbose) Print("[ZEE] [SKIP] gap in lookback");
+      return;
+   }
+   int t = TrendNow();
+   if (t == 0) { if (InpVerbose) Print("[ZEE] [SKIP] ranging — his setup needs a trend"); return; }
+   int origin = RetracementOrigin(t);
+   if (origin < 0) { if (InpVerbose) Print("[ZEE] [SKIP] no valid retracement origin"); return; }
+   int uhv = FindUhv(origin, t);
+   if (uhv < 0) { if (InpVerbose) Print("[ZEE] [SKIP] no valid UHV in the retracement"); return; }
+   if (!BreakoutIsBar1(uhv, t)) return;              // silent: the common case
+
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double px = (t > 0) ? ask : bid;
+   double sl = (t > 0) ? px - InpStopPts   : px + InpStopPts;
+   double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
+
+   bool ok = (t > 0) ? trade.Buy (InpLots, _Symbol, 0, sl, tp, "zee_buy")
+                     : trade.Sell(InpLots, _Symbol, 0, sl, tp, "zee_sell");
+   if (ok) {
+      g_last_fire = TimeCurrent();
+      PrintFormat("[ZEE] %s @%.2f — trend %s · origin %d · UHV %d (vol %d) · break vol %d",
+                  t > 0 ? "BUY " : "SELL", px, t > 0 ? "UP" : "DOWN",
+                  origin, uhv, (int)BarVolume(uhv), (int)BarVolume(1));
+   }
+}
+
+void AgeOut() {
+   if (InpMaxHoldMin <= 0) return;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong t = PositionGetTicket(i);
+      if (t == 0 || !PositionSelectByTicket(t)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
+      if (TimeCurrent() - opened >= InpMaxHoldMin * 60)
+         if (trade.PositionClose(t) && InpVerbose)
+            PrintFormat("[ZEE] aged out after %dm", InpMaxHoldMin);
+   }
+}
+
+void OnTick() {
+   AgeOut();
+   datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
+   if (bt == g_last_bar) return;
+   g_last_bar = bt;
+   TryFire();
+}
+//+------------------------------------------------------------------+
