@@ -379,7 +379,10 @@ void TryFire() {
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
       if (!InpStackLots) lots = NormalizeDouble(InpLots * (InpUseDiamonds ? ClicksFor(dia) : 1), 2);
-      if (InpMaxRisk > 0 && total + lots > InpMaxRisk) break;
+      // 1e-9 slack: 0.20 + 0.10 evaluates to 0.30000000000000004 in doubles, so a cap
+      // of 0.30 silently behaved like 0.20 and the sweep returned identical numbers for
+      // both. Floating point must never quietly move a risk limit.
+      if (InpMaxRisk > 0 && total + lots > InpMaxRisk + 1e-9) break;
       bool ok = (t > 0) ? trade.Buy (lots, _Symbol, 0, sl, tp, "zee_buy")
                         : trade.Sell(lots, _Symbol, 0, sl, tp, "zee_sell");
       if (!ok) break;
