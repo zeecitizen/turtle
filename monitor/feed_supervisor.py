@@ -46,6 +46,39 @@ FEEDS = [
 ]
 
 
+def web_alive():
+    """claudezeeshan.com is served by dashboard/claude_trader/server.js on port 3457.
+
+    2026-08-11: it was dead for a day and the site answered 502, because I killed every
+    node process matching "server.js" to restart the dashboard — and there are TWO of
+    them. dashboard/server.js (port 3456) came back; claude_trader/server.js (3457),
+    which is the one the Cloudflare tunnel actually points at, did not.
+
+    Zee's standing rule is that every meaningful change must be visible on
+    claudezeeshan.com, so a dead 3457 makes all of it invisible. This restarts it.
+    """
+    import urllib.request
+    try:
+        urllib.request.urlopen("http://localhost:3457/", timeout=8)
+        return True
+    except Exception:
+        pass
+    print("[super] web: port 3457 DOWN (claudezeeshan.com would 502) — restarting", flush=True)
+    subprocess.run(["powershell", "-NoProfile", "-Command",
+                    "Start-Process -WindowStyle Hidden -FilePath 'node' "
+                    "-ArgumentList 'server.js' -WorkingDirectory "
+                    f"'{ROOT / 'dashboard' / 'claude_trader'}'"],
+                   capture_output=True, timeout=30)
+    time.sleep(8)
+    try:
+        urllib.request.urlopen("http://localhost:3457/", timeout=8)
+        print("[super] web: back up", flush=True)
+        return True
+    except Exception:
+        print("[super] web: STILL DOWN — needs a look", flush=True)
+        return False
+
+
 def gold_market_open(now=None):
     """Gold sleeps from Friday 21:00 UTC to Sunday 21:00 UTC.
 
@@ -89,6 +122,7 @@ def restart(script):
 
 
 def check():
+    web_alive()
     for name, out, script, limit in FEEDS:
         if name == "gold" and not gold_market_open():
             print(f"[super] {name}: market closed — not watching")
