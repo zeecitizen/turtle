@@ -36,6 +36,22 @@ except Exception:
 FILLS = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/turtle_fills.csv")
 TESTED_WR = 93.28
 
+# ── THE THING THIS SCOREBOARD IS NOW REALLY WATCHING (2026-08-12) ──────────────
+# The 93.28% was measured on XAUUSD_R3, which carries OANDA's REAL TRADED VOLUME.
+# The live EA is attached to a Blueberry XAUUSD chart, so it reads the BROKER's bars,
+# where volume is a TICK COUNT. Run on that feed over the identical 103 days:
+#
+#     XAUUSD_R3 (OANDA volume)    1,608 trades   93.3%   +$2,599
+#     XAUUSD    (broker ticks)      896 trades   64.4%   -$4,030   drawdown 97.8%
+#
+# Same EA, same settings, opposite outcome. Zee chose to keep it running — it is a
+# demo account, and if the live fills hold above 90% then the broker-data backtest is
+# missing something we need to understand. That makes the live sample the experiment,
+# so this scoreboard's job changed: it is no longer confirming 93%, it is watching for
+# the moment reality picks a side.
+BROKER_FEED_WARNING = True
+BROKER_WR = 64.40          # what the tester says this feed really gives
+
 # The moment ZeeUHV was first attached, read from its own init line in the terminal log.
 # WITHOUT THIS the "[tp" fingerprint sweeps up every take-profit fill in the entire
 # history — on 2026-08-11 that produced "108 fills, +$5,010, 100%", which I very nearly
@@ -104,12 +120,25 @@ def report():
     if len(f) < 20:
         verdict = "far too few to mean anything — keep going"
     elif wr >= 90:
-        verdict = "holding up against the tester"
-    elif wr >= 85:
-        verdict = "slightly under the tester, within reach of noise"
+        verdict = "holding above 90% — the OANDA-feed result, NOT the broker-feed one"
+    elif wr >= 80:
+        verdict = "slipping — between the two backtests, watch closely"
+    elif wr >= 70:
+        verdict = "heading toward the broker-feed number (64%)"
     else:
-        verdict = "BELOW the tester — if this holds past 50 fills, the tester was flattering us"
+        verdict = "AT OR BELOW the broker-feed backtest. The feed difference is real."
     print(f"   verdict: {verdict}")
+    if BROKER_FEED_WARNING:
+        print("")
+        print("   what the two backtests predict for THIS feed:")
+        print(f"      OANDA volume (what we validated) : {TESTED_WR:.1f}%")
+        print(f"      broker ticks (what it is reading): {BROKER_WR:.1f}%  <- live is on this one")
+        if l:
+            worst = min(x["pnl"] for x in f)
+            print(f"      broker-feed backtest says avg loss -$30.68; worst so far ${worst:+.2f}")
+        else:
+            print(f"      NO LOSS YET after {len(f)} fills. The broker-feed backtest says")
+            print(f"      about a third of setups lose, averaging -$30.68. Expect one.")
     print(f"\n   last {min(10, len(f))} fills:")
     for x in f[-10:]:
         print(f"      {x['t'][11:]}  {x['side']:4s} {x['lots']:.2f} @ {x['px']:9.2f}  ${x['pnl']:+7.2f}")

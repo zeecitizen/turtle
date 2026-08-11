@@ -572,17 +572,38 @@ class Cockpit:
         lines = self._ea_tail()
         now = datetime.now()
 
-        def line_dt(l):
+        def line_dt(l, logday=None):
+            """Zee, 2026-08-12: "isnt it saying Trade ON when no trade is ON inside
+            Blueberry?" It was. This took HH:MM:SS and stamped TODAY on it, so a line
+            written at 00:25 in YESTERDAY's log file read as 21 minutes old instead of
+            six hours. Past midnight the whole banner became fiction. The date now
+            comes from the log FILE's name (MT5 names them yyyymmdd)."""
             m = re.search(r"(\d\d:\d\d:\d\d)", l)
             if not m: return None
             t = datetime.strptime(m.group(1), "%H:%M:%S")
-            return now.replace(hour=t.hour, minute=t.minute, second=t.second, microsecond=0)
+            base = logday or now
+            return base.replace(hour=t.hour, minute=t.minute, second=t.second, microsecond=0)
+
+        # which DAY does this log belong to? MT5 names them yyyymmdd.
+        logday = now
+        try:
+            import glob as _g
+            _f = sorted(_g.glob(str(self.EALOG / "*.log")), key=os.path.getmtime)[-1]
+            _st = Path(_f).stem
+            if len(_st) == 8 and _st.isdigit():
+                logday = datetime.strptime(_st, "%Y%m%d")
+        except Exception:
+            pass
 
         last_fire = last_exit = None
         for l in lines:
-            d = line_dt(l)
+            d = line_dt(l, logday)
             if d is None or d > now + timedelta(minutes=1): continue
-            if "GHOST-DOOR" in l or "signal #" in l or "BURST sibling" in l:
+            # ZeeUHV is the engine on the chart now and writes [ZEE] lines. The
+            # banner was only watching the ghost's markers, so it could not see the
+            # EA that is actually trading — and reported on one that had stopped.
+            if ("GHOST-DOOR" in l or "signal #" in l or "BURST sibling" in l
+                    or ("[ZEE]" in l and ("BUY" in l or "SELL" in l))):
                 last_fire = d
             if "BASKET FLOOR" in l or "CLOSE ALL PROFITABLE" in l:
                 last_exit = d
