@@ -60,6 +60,7 @@ def web_alive():
     import urllib.request
     try:
         urllib.request.urlopen("http://localhost:3457/", timeout=8)
+        print("[super] web  : claudezeeshan.com origin (3457) ok")
         return True
     except Exception:
         pass
