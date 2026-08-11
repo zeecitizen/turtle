@@ -9,6 +9,34 @@ Anything on this page is **already working**. Do not rebuild it. Use it.
 
 ---
 
+## 0. 💎 `goal_achieved` IS SEALED — never commit to it
+
+Zee, 2026-08-11: *"make it the master, stop it from further modification so its
+preserving what we have right now as it is. no changes on it in future... its a rare
+diamond."*
+
+That branch holds the exact machine that produced **93.3% on 1,608 MT5 trades** and the
+first 15 live fills. **Its entire value is that it cannot have drifted.** A commit on it
+— even a good one — destroys the only thing it is for.
+
+```
+goal_achieved   SEALED. read it, check it out, learn from it. never commit.
+development     where all work happens now. branched from goal_achieved.
+main            LEFT ALONE — it has 61 commits of its own that goal_achieved
+                does not, from a split on 2026-07-29. It was NOT overwritten,
+                because that would have thrown that work away.
+```
+
+Three git hooks enforce it: `pre-commit`, `pre-rebase` and `pre-push` all refuse when
+HEAD is `goal_achieved`. They live in `.git/hooks/` and are therefore LOCAL — a fresh
+clone does not have them. **Reinstall them after cloning**, and note that
+`git commit --no-verify` still overrides, deliberately: the seal is a wall, not a prison.
+
+**Server-side protection needs one action from Zee that no script here can do:**
+GitHub → repo → Settings → Branches → Add rule for `goal_achieved` → tick *Lock branch*.
+Until that is done, the branch is protected on this machine only.
+
+
 ## 1. ⚡ MT5's Strategy Tester runs WITHOUT any human clicks
 
 **It is built, it is verified, and it needs nobody.**
