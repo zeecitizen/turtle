@@ -42,6 +42,57 @@ def current_call():
         return "AUTO", 0
 
 
+
+# ── Karachi time in the Trades window ─────────────────────────────────────────────
+# Zee, 2026-08-11: "can it show time in timezone of Karachi so its easier to compare
+# when the last trade happened."
+#
+# turtle_fills.csv stores BROKER time. Measured against his own clock on 2026-08-11:
+# a fill stamped 13:10:22 broker was written to disk at 15:10:22 local, and he confirmed
+# Karachi was 16:11 while the machine read 16:10 — so this machine runs on Karachi time
+# and the broker is two hours behind it (broker UTC+3, Karachi UTC+5).
+#
+# The offset is DETECTED rather than hardcoded, because MT5 brokers commonly move between
+# UTC+2 and UTC+3 with European DST while Karachi never changes. Detection compares the
+# newest fill's broker stamp against the file's own mtime — the file is written the
+# instant the deal closes, so the gap between the two IS the offset. Falls back to +2.
+_KARACHI_SHIFT_H = None
+
+
+def _karachi_shift(fills_path):
+    global _KARACHI_SHIFT_H
+    if _KARACHI_SHIFT_H is not None:
+        return _KARACHI_SHIFT_H
+    _KARACHI_SHIFT_H = 2
+    try:
+        import os
+        from datetime import datetime
+        last = None
+        for line in fills_path.read_text(errors="ignore").splitlines():
+            if line[:5].isdigit() or line[:4].isdigit():
+                last = line
+        if last:
+            bt = datetime.strptime(last.split(",")[0], "%Y.%m.%d %H:%M:%S")
+            mt = datetime.fromtimestamp(os.path.getmtime(fills_path))
+            h = round((mt - bt).total_seconds() / 3600)
+            if -12 <= h <= 12:
+                _KARACHI_SHIFT_H = h
+    except Exception:
+        pass
+    return _KARACHI_SHIFT_H
+
+
+def _to_karachi(ts, shift_h):
+    """'2026.08.11 13:10:22' broker -> '08.11 15:10:22' Karachi."""
+    from datetime import datetime, timedelta
+    try:
+        d = datetime.strptime(ts, "%Y.%m.%d %H:%M:%S") + timedelta(hours=shift_h)
+        return d.strftime("%m.%d %H:%M:%S")
+    except Exception:
+        return ts[5:]
+
+
+
 class Cockpit:
     def __init__(self):
         self.root = tk.Tk()
@@ -183,7 +234,7 @@ class Cockpit:
         import csv as _csv
         top = tk.Toplevel(self.root); top.title("📜 Trades — click 🔍 to inspect the setup")
         top.configure(bg=BG)
-        head = tk.Label(top, text="XAUUSD fills — 🔍 draws the UHV, trigger lines, BO candle",
+        head = tk.Label(top, text="XAUUSD fills (Karachi time) — 🔍 draws the UHV, trigger lines, BO candle",
                         font=("Segoe UI", 13, "bold"), bg=BG, fg=FG)
         head.pack(pady=(10, 6))
         canvas = tk.Canvas(top, bg=BG, highlightthickness=0,
@@ -218,7 +269,7 @@ class Cockpit:
         for ts, side, lots, closepx, pnl in reversed(rows[-40:]):
             r = tk.Frame(frame, bg=BG); r.pack(fill="x", pady=1)
             col = "#2f9e44" if pnl > 0 else "#e03131"
-            tk.Label(r, text=f"{ts[5:]}", font=("Consolas", 11), bg=BG, fg=DIM,
+            tk.Label(r, text=_to_karachi(ts, _karachi_shift(self.FILLS_F)), font=("Consolas", 11), bg=BG, fg=DIM,
                      width=17, anchor="w").pack(side="left")
             tk.Label(r, text=side, font=("Consolas", 11, "bold"), bg=BG,
                      fg="#4dabf7" if side == "BUY" else "#f08c00", width=5).pack(side="left")
