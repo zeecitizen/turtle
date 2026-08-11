@@ -220,6 +220,8 @@ def build(out_dir: Path, with_extras: bool = True):
     print(f"   wheels                 {len(got):6,d} files  {wb/1e6:8,.1f} MB"
           f"{'' if r.returncode == 0 else '  (some failed — see pip output)'}")
 
+    shutil.copy2(ROOT / "localize.py", payload / "turtle" / "localize.py")
+    print("   localize.py             bundled (rewrites paths on the new machine)")
     write_installer(stage)
     print(f"\n   TOTAL {total/1e6:,.0f} MB in {time.time()-t0:.0f}s")
     print(f"\n   Copy this folder to a USB stick:\n      {stage}")
@@ -236,6 +238,13 @@ echo.
 echo   ===========================================================
 echo      TURTLE TRADER  -  setup
 echo   ===========================================================
+echo.
+echo   PREREQUISITES: none for the software itself.
+echo     Python and Node are INCLUDED in this bundle - do not install them.
+echo     Windows 10 or 11, about 400 MB of disk, and no admin rights needed.
+echo.
+echo   ONE THING YOU MUST SUPPLY: MetaTrader 5 from your broker, logged in.
+echo     It is licensed to them and tied to your account, so it cannot ship here.
 echo.
 echo   This installs everything into ONE folder.
 echo   Nothing is written to the registry and nothing is added to PATH.
@@ -260,6 +269,13 @@ set "PY=%TARGET%\python\python.exe"
 "%PY%" -m pip install --no-index --find-links "%~dp0payload\wheels" ^
     requests websockets psutil numpy pandas pillow >nul 2>&1
 echo     [4/5] python packages (offline)
+
+REM ---- THE STEP WITHOUT WHICH NOTHING RUNS.
+REM      119 files carry an absolute path into the machine this was built on. On any
+REM      other account those folders do not exist, so the install would finish, report
+REM      success, and then quietly do nothing.
+"%PY%" "%TARGET%	urtle\localize.py" --root "%TARGET%"
+echo     [4b ] paths localised to this computer
 
 REM ---- MetaTrader 5 has to come from the broker; we can only check and tell the truth
 set "MT5=%ProgramFiles%\Blueberry Markets MetaTrader 5\terminal64.exe"
