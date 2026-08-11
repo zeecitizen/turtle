@@ -1,0 +1,53 @@
+{
+  "_doc": "The RULE STENCILS — canonical UHV-breakout archetypes simplified into named rules Zee validates. Each rule has a plain description, an ACTION (TAKE/SKIP), and a feature SIGNATURE (the stencil ranges the pattern-matcher checks against live/forming candles). Diagrams rendered by build_rule_diagrams.py. Matched live by pattern_matcher.py.",
+  "version": 1,
+  "updated": "2026-07-25",
+  "timeframe": "M5",
+  "features_doc": {
+    "side_leg": "size (pts) of the trend hump BEFORE the retracement, in the trade direction",
+    "dominance": "trend leg vs opposite leg (>1.6 = one-sided trend, ~1 = ranging)",
+    "origin_valid": "did a counter-trend candle body-break the prior candle's extreme (retracement started)",
+    "uhv_dominant": "is the UHV clearly the highest-volume counter-trend candle in the pullback",
+    "uhv_is_peak": "is the UHV a local volume peak",
+    "brk_body": "breakout candle body/range (>=0.55 = momentum, <0.4 = mostly wick)",
+    "brk_wick": "rejection wick of breakout against the move (<0.35 good, >=0.4 indecision)",
+    "brk_vol_ratio": "breakout volume / UHV volume (<1 good, >=1 bad)",
+    "brk_first": "is this the FIRST candle to body-cross the UHV extreme"
+  },
+  "rules": [
+    {
+      "id": "Rule 1", "name": "Uptrend Momentum Breakout", "action": "TAKE", "side": "BUY",
+      "plain": "Price is in a clear uptrend (a strong hump up before the pullback). It pulls back in red candles; the biggest-volume red candle is the UHV. The FIRST green candle then closes with a strong body above the UHV's high, on lower volume than the UHV. Buy the breakout.",
+      "signature": {"trend": "up", "side_leg": ">=6", "dominance": ">=1.6", "origin_valid": true,
+                    "uhv_dominant": true, "uhv_is_peak": true, "brk_body": ">=0.55",
+                    "brk_wick": "<0.35", "brk_vol_ratio": "<1.0", "brk_first": true}
+    },
+    {
+      "id": "Rule 2", "name": "Downtrend Momentum Breakout", "action": "TAKE", "side": "SELL",
+      "plain": "Mirror of Rule 1. Clear downtrend (strong hump down before the pullback). Green-candle pullback; biggest-volume green candle is the UHV. The FIRST red candle closes with a strong body below the UHV's low, on lower volume. Sell the breakout.",
+      "signature": {"trend": "down", "side_leg": ">=6", "dominance": ">=1.6", "origin_valid": true,
+                    "uhv_dominant": true, "uhv_is_peak": true, "brk_body": ">=0.55",
+                    "brk_wick": "<0.35", "brk_vol_ratio": "<1.0", "brk_first": true}
+    },
+    {
+      "id": "Rule 3", "name": "Ranging / Choppy — SKIP", "action": "SKIP", "side": "any",
+      "plain": "No clear direction — an up-leg AND a down-leg of similar size (dominance near 1). The formula does not work here. Do not trade.",
+      "signature": {"trend": "range", "dominance": "<1.6"}
+    },
+    {
+      "id": "Rule 4", "name": "Wick Breakout — SKIP", "action": "SKIP", "side": "any",
+      "plain": "Trend and UHV may be fine, but the breakout candle is mostly a WICK (indecision), not a strong body close through the UHV. Not a clean break. Skip.",
+      "signature": {"origin_valid": true, "brk_wick": ">=0.4"}
+    },
+    {
+      "id": "Rule 5", "name": "Marginal UHV — SKIP/RISKY", "action": "SKIP", "side": "any",
+      "plain": "The 'UHV' is barely the highest-volume candle (not clearly dominant) or not a clean local volume peak. Weak signal. Skip or treat as risky.",
+      "signature": {"uhv_dominant": false}
+    },
+    {
+      "id": "Rule 6", "name": "Wrong-Side / No Retracement — SKIP", "action": "SKIP", "side": "any",
+      "plain": "Trading against the trend (buying in a downtrend / selling in an uptrend), OR the origin candle never body-broke the previous candle so no valid retracement started. Skip.",
+      "signature": {"origin_valid": false}
+    }
+  ]
+}

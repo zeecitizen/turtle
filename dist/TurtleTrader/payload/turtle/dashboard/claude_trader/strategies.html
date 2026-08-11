@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Strategy Playbook — Shano Trading</title>
+<style>
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",system-ui,sans-serif;
+         background:radial-gradient(1200px 600px at 50% -100px,#16203a 0%,#0a0e17 60%); color:#e6ebf5;
+         -webkit-font-smoothing:antialiased; min-height:100vh; }
+  .wrap { max-width:760px; margin:0 auto; padding:24px 16px 80px; }
+  .top { text-align:center; margin-bottom:8px; }
+  .top .logo { font-size:40px; }
+  h1 { font-size:24px; font-weight:800; margin:4px 0 2px; letter-spacing:-0.5px; }
+  .sub { color:#8a96ad; font-size:13px; margin:0 0 6px; }
+  .back { display:inline-block; margin:8px 0 18px; color:#4d9fff; text-decoration:none; font-size:14px; }
+  .ea { background:linear-gradient(160deg,#1a2336,#141b2b); border:1px solid rgba(255,255,255,0.07);
+        border-radius:18px; padding:20px 20px 10px; margin-bottom:18px; box-shadow:0 10px 30px rgba(0,0,0,0.3); }
+  .ea h2 { font-size:20px; margin:0 0 2px; letter-spacing:-0.3px; }
+  .ea .tag { font-size:11.5px; color:#8a96ad; font-family:ui-monospace,Menlo,monospace; margin-bottom:4px; }
+  .ea .what { font-size:14px; color:#c2cad9; margin:8px 0 14px; line-height:1.5; }
+  b { color:#e6ebf5; }
+  ol { margin:0; padding-left:22px; }
+  ol li { font-size:14.5px; line-height:1.65; margin-bottom:7px; color:#c2cad9; }
+  ol li b { color:#2bd576; }
+  .exit { display:flex; gap:10px; margin:14px 0 6px; flex-wrap:wrap; }
+  .chip { background:#1a2336; border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:7px 12px;
+          font-size:13px; font-family:ui-monospace,Menlo,monospace; }
+  .chip.sl { background:rgba(255,90,106,0.12); color:#ff5a6a; }
+  .chip.tp { background:rgba(43,213,118,0.12); color:#2bd576; }
+  .chip.lot{ background:rgba(77,159,255,0.12); color:#4d9fff; }
+  .mirror { font-size:13px; color:#8a96ad; font-style:italic; margin:10px 0 4px; line-height:1.5; }
+  .note { background:rgba(255,179,62,0.08); border:1px solid rgba(255,179,62,0.25); border-radius:14px;
+          padding:14px 16px; font-size:13.5px; line-height:1.6; color:#ffc77a; margin-top:10px; }
+  .s1 h2 { color:#4d9fff; } .s3 h2 { color:#ffb33e; } .ns h2 { color:#b07cff; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="logo">📖</div>
+    <h1>Strategy Playbook</h1>
+    <p class="sub">The exact steps each EA follows — straight from the teacher's VSA videos</p>
+  </div>
+  <a class="back" href="/">← back to dashboard</a>
+
+  <!-- ============ S1 ============ -->
+  <div class="ea s1">
+    <h2>S1 — UHV Breakout (Climactic Action Bar)</h2>
+    <div class="tag">Trader EA ID: 88004 · 0.02 lots · M5 · Teacher Lesson 2 / VSA Scenario 3 · BUY+SELL</div>
+    <div class="what">Catch the reversal when a climax of selling exhausts, gets stop-hunted, then breaks back up. "Smart money shakes out weak hands, then runs."</div>
+    <b>BUY steps:</b>
+    <ol>
+      <li><b>Uptrend</b> on M5 (price now is &gt; price 2 hours / 24 bars ago, by &gt; $2).</li>
+      <li>Mark the <b>retracement</b> — the red candles in the last ~15 M5 bars.</li>
+      <li>Find the <b>Climactic Action Bar</b> = the <b>highest-volume RED</b> candle in that retracement.</li>
+      <li><b>Big-spread filter:</b> that climax bar must be a <b>large candle</b> — its range ≥ 1.3× the average of the prior 10 bars. (Not just high volume — must be big.)</li>
+      <li><b>Liquidity sweep:</b> price must dip <b>below the climax bar's low</b> (the stop-hunt). This is Scenario 3.</li>
+      <li><b>Breakout:</b> a green candle <b>closes above the climax bar's high</b> (opened at/below it = a fresh break of the "upper trigger line").</li>
+      <li><b>H1 FVG:</b> an unfilled bullish H1 Fair Value Gap was tapped during the retracement.</li>
+    </ol>
+    <div class="exit">
+      <span class="chip lot">Entry: market BUY at breakout close</span>
+      <span class="chip sl">SL: climax bar low − $2.00</span>
+      <span class="chip tp">TP: +$7.50</span>
+    </div>
+    <div class="mirror">SELL = the mirror: downtrend, highest-volume GREEN climax, big spread, sweep ABOVE its high, red candle breaks back below its low, bearish H1 FVG tapped.</div>
+  </div>
+
+  <!-- ============ S3 ============ -->
+  <div class="ea s3">
+    <h2>S3 — Liquidity-Sweep Reversal</h2>
+    <div class="tag">Trader EA ID: 88003 · 0.03 lots · M5 · Teacher Lesson 10 · BUY only (gold is bullish)</div>
+    <div class="what">The cleanest reversal entry: a green candle stabs below a recent low to grab liquidity, then snaps back inside on heavier volume = buyers absorbed the supply.</div>
+    <b>BUY steps:</b>
+    <ol>
+      <li><b>Uptrend</b> on M5 (price now &gt; price 24 bars ago, by &gt; $1).</li>
+      <li>Find a green candle whose low later got <b>broken by red candles</b> → those reds are the retracement.</li>
+      <li>The signal is a <b>green "wicking" candle</b> that:
+        <br>&nbsp;&nbsp;a. <b>wicks below</b> one of those reds' lows (sweeps liquidity),
+        <br>&nbsp;&nbsp;b. <b>closes back inside</b> that red's range,
+        <br>&nbsp;&nbsp;c. has <b>higher volume</b> than that red.</li>
+      <li><b>No-rejection filter:</b> the green's <b>upper wick ≤ 35%</b> of its range (a big upper wick = rejection = skip).</li>
+      <li><b>M5 FVG:</b> an unfilled bullish M5 Fair Value Gap was tapped during the retracement.</li>
+    </ol>
+    <div class="exit">
+      <span class="chip lot">Entry: market BUY at the wicking green's close</span>
+      <span class="chip sl">SL: wicking green low − $2.00</span>
+      <span class="chip tp">TP: peak of last 10 M5 bars</span>
+    </div>
+  </div>
+
+  <!-- ============ NSND ============ -->
+  <div class="ea ns">
+    <h2>NSND — No Supply / No Demand break</h2>
+    <div class="tag">Trader EA ID: 88006 · 0.01 lots · M1 · Teacher Lessons 6-7 · BUY+SELL</div>
+    <div class="what">When volume dries up at a level, the pros aren't selling/buying there. The first break of that dead-volume candle shows their hand.</div>
+    <b>No-Supply (BUY) steps:</b>
+    <ol>
+      <li><b>Uptrend</b> on M1 (price now &gt; price 60 bars ago, by &gt; $2).</li>
+      <li><b>Prior climax:</b> a big-volume sell candle came just before (institutions absorbing).</li>
+      <li><b>No-Supply candle:</b> a small-spread RED candle with <b>dead volume</b> — smaller than the previous bars (ideally &lt; half).</li>
+      <li><b>M15 FVG:</b> an unfilled bullish M15 Fair Value Gap overlaps that candle's zone.</li>
+      <li><b>Sweep + break:</b> price <b>sweeps the candle's low</b> (with a wick), then <b>breaks its high</b> (with a body) → trigger.</li>
+    </ol>
+    <div class="exit">
+      <span class="chip lot">Entry: market BUY at the break of the high</span>
+      <span class="chip sl">SL: just below the candle (tiny)</span>
+      <span class="chip tp">TP: +$12</span>
+    </div>
+    <div class="mirror">No-Demand = the mirror in a downtrend: small-spread GREEN dead-volume candle, prior big buy climax, bearish M15 FVG, sweep its HIGH then break its LOW → SELL.</div>
+  </div>
+
+  <div class="note">
+    <b>The golden rule across all three:</b> each setup waits for a <b>trend → retracement → volume signal → break</b>. If the market is flat or choppy (e.g. the dead Asian hours), nothing fires — that's by design, not a bug. And each setup's Fair Value Gap comes from <b>its own structure timeframe</b>: S3→M5, NSND→M15, S1→H1. We never force trades; standing aside in chop is how the account survives.
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "open": false,
+  "direction": "buy",
+  "symbol": "XAUUSD",
+  "lots": "0.40",
+  "entryTime": "2026-04-24T19:48:05Z",
+  "uhvLevel": 4718.06,
+  "slPips": 15,
+  "tpPips": 52,
+  "beTriggerPips": 8,
+  "comment": "Claude_Trader_v1",
+  "firedBy": "claude_sniper_daemon",
+  "livePnl": -27.6,
+  "livePeak": -27.6,
+  "closedBy": "claude_hawk_ai",
+  "pnl": -47.6,
+  "peak": -26.4,
+  "claudeReason": "Price dropped sharply from peak $-26.40 to $-47.60 in the last tick (4717.690), representing a clear 3+ tick reversal against our BUY with accelerating downward momentum, now at 59% of the emergency ceiling with no recovery sign in 8 seconds."
+}

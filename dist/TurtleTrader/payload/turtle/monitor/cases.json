@@ -1,0 +1,425 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "C001",
+      "side": "BUY",
+      "verdict": "invalid",
+      "reason": "wick breakout, indecision",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 53.27000000000044,
+        "opp_leg": 22.640000000001237,
+        "dominance": 2.3529151943461803,
+        "origin_margin": 0.15999999999985448,
+        "uhv_vol_ratio": 910.0,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.599999999999899,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.9263736263736264,
+        "brk_wick": 0.2402777777779455,
+        "retr_len": 1.0
+      }
+    },
+    {
+      "id": "C002",
+      "side": "BUY",
+      "verdict": "invalid",
+      "reason": "ranging, no clear trend",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 37.55999999999949,
+        "opp_leg": 15.734999999999673,
+        "dominance": 2.3870352716873384,
+        "origin_margin": 0.2899999999999636,
+        "uhv_vol_ratio": 1.1994715984147952,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.5630252100837202,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.9889867841409692,
+        "brk_wick": 0.0605042016807627,
+        "retr_len": 5.0
+      }
+    },
+    {
+      "id": "C003",
+      "side": "BUY",
+      "verdict": "invalid",
+      "reason": "wick not body close",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 44.74000000000069,
+        "opp_leg": 22.87500000000091,
+        "dominance": 1.9558469945354715,
+        "origin_margin": 4.3149999999996,
+        "uhv_vol_ratio": 1.0063604240282686,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.5936507936509449,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.9157303370786517,
+        "brk_wick": 0.18412698412692913,
+        "retr_len": 5.0
+      }
+    },
+    {
+      "id": "C004",
+      "side": "SELL",
+      "verdict": "invalid",
+      "reason": "wick not body close",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 45.475000000000364,
+        "opp_leg": 11.075000000000728,
+        "dominance": 4.106094808126174,
+        "origin_margin": 2.5150000000003274,
+        "uhv_vol_ratio": 1.0118483412322274,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.707900207900419,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.9882903981264637,
+        "brk_wick": 0.07796257796258622,
+        "retr_len": 8.0
+      }
+    },
+    {
+      "id": "C005",
+      "side": "SELL",
+      "verdict": "valid",
+      "reason": "strong bodied breakout",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 42.60500000000047,
+        "opp_leg": 11.06500000000051,
+        "dominance": 3.8504292815181667,
+        "origin_margin": 0.6700000000000728,
+        "uhv_vol_ratio": 837.0,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.659966499162131,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.8279569892473119,
+        "brk_wick": 0.18927973199343354,
+        "retr_len": 2.0
+      }
+    },
+    {
+      "id": "C006",
+      "side": "SELL",
+      "verdict": "valid",
+      "reason": "strong bodied breakout",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 42.60500000000047,
+        "opp_leg": 11.06500000000051,
+        "dominance": 3.8504292815181667,
+        "origin_margin": 0.6700000000000728,
+        "uhv_vol_ratio": 1.1851851851851851,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.5345345345341966,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.9637096774193549,
+        "brk_wick": 0.4324324324325948,
+        "retr_len": 4.0
+      }
+    },
+    {
+      "id": "C007",
+      "side": "SELL",
+      "verdict": "valid",
+      "reason": "valid",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 36.11999999999898,
+        "opp_leg": 9.850000000000364,
+        "dominance": 3.6670050761418933,
+        "origin_margin": 0.9949999999998909,
+        "uhv_vol_ratio": 1230.0,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.8804347826087843,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.3967479674796748,
+        "brk_wick": 0.06521739130429947,
+        "retr_len": 3.0
+      }
+    },
+    {
+      "id": "C008",
+      "side": "BUY",
+      "verdict": "valid",
+      "reason": "valid",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 34.22999999999956,
+        "opp_leg": 9.859999999999673,
+        "dominance": 3.47160243407715,
+        "origin_margin": 0.3250000000007276,
+        "uhv_vol_ratio": 765.0,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.9949999999998909,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.7620915032679738,
+        "brk_wick": 0.005000000000109139,
+        "retr_len": 1.0
+      }
+    },
+    {
+      "id": "C009",
+      "side": "BUY",
+      "verdict": "invalid",
+      "reason": "breakout not momentum",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 21.040000000000873,
+        "opp_leg": 11.710000000000946,
+        "dominance": 1.796754910332978,
+        "origin_margin": 1.4749999999994543,
+        "uhv_vol_ratio": 998.0,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.31088082901568564,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 1.0270541082164328,
+        "brk_wick": 0.6891191709843143,
+        "retr_len": 2.0
+      }
+    },
+    {
+      "id": "C010",
+      "side": "SELL",
+      "verdict": "invalid",
+      "reason": "selling in uptrend",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 26.82499999999891,
+        "opp_leg": 15.454999999999927,
+        "dominance": 1.7356842445809793,
+        "origin_margin": 1.7049999999999272,
+        "uhv_vol_ratio": 1083.0,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.5887772194305155,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 1.0073868882733148,
+        "brk_wick": 0.34254606365158885,
+        "retr_len": 2.0
+      }
+    },
+    {
+      "id": "C011",
+      "side": "BUY",
+      "verdict": "valid",
+      "reason": "valid",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 44.17000000000007,
+        "opp_leg": 21.13000000000102,
+        "dominance": 2.090392806436249,
+        "origin_margin": 1.5,
+        "uhv_vol_ratio": 1.1294736842105264,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.8313539192396939,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.7488350419384903,
+        "brk_wick": 0.08551068883623587,
+        "retr_len": 7.0
+      }
+    },
+    {
+      "id": "C012",
+      "side": "BUY",
+      "verdict": "invalid",
+      "reason": "wick breakout, weak",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 73.97499999999945,
+        "opp_leg": 21.100000000000364,
+        "dominance": 3.5059241706160273,
+        "origin_margin": 3.125,
+        "uhv_vol_ratio": 1.036112934996717,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.3363957597171668,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.8681875792141952,
+        "brk_wick": 0.36537102473507843,
+        "retr_len": 5.0
+      }
+    },
+    {
+      "id": "C013",
+      "side": "BUY",
+      "verdict": "invalid",
+      "reason": "invalid origin (no body break)",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 61.845000000000255,
+        "opp_leg": 21.100000000000364,
+        "dominance": 2.9310426540283974,
+        "origin_margin": 0.0999999999994543,
+        "uhv_vol_ratio": 1.195945945945946,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.7155297532656105,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.9387947269303202,
+        "brk_wick": 0.15239477503630364,
+        "retr_len": 4.0
+      }
+    },
+    {
+      "id": "C015",
+      "side": "SELL",
+      "verdict": "valid",
+      "reason": "valid",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 28.36999999999989,
+        "opp_leg": 14.8100000000004,
+        "dominance": 1.915597569209934,
+        "origin_margin": 2.944999999999709,
+        "uhv_vol_ratio": 1.032874617737003,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.4528508771931447,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.7757216876387861,
+        "brk_wick": 0.21710526315787113,
+        "retr_len": 18.0
+      }
+    },
+    {
+      "id": "C016",
+      "side": "SELL",
+      "verdict": "invalid",
+      "reason": "not proper downtrend",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 49.780000000000655,
+        "opp_leg": 13.550000000000182,
+        "dominance": 3.673800738007379,
+        "origin_margin": 2.0650000000005093,
+        "uhv_vol_ratio": 1045.0,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.04555314533623672,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 1.185645933014354,
+        "brk_wick": 0.6182212581344158,
+        "retr_len": 2.0
+      }
+    },
+    {
+      "id": "C017",
+      "side": "SELL",
+      "verdict": "invalid",
+      "reason": "not proper downtrend",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 48.13000000000011,
+        "opp_leg": 20.405000000000655,
+        "dominance": 2.3587356040185528,
+        "origin_margin": 20.284999999999854,
+        "uhv_vol_ratio": 1745.0,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.6985815602836891,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.8842406876790831,
+        "brk_wick": 0.10195035460990735,
+        "retr_len": 1.0
+      }
+    },
+    {
+      "id": "C018",
+      "side": "SELL",
+      "verdict": "invalid",
+      "reason": "choppy, no clear downtrend",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 29.109999999998763,
+        "opp_leg": 11.140000000000327,
+        "dominance": 2.6131059245958626,
+        "origin_margin": 1.3299999999999272,
+        "uhv_vol_ratio": 0.8322399250234301,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.8933764135705694,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 1.2567567567567568,
+        "brk_wick": 0.07269789983828817,
+        "retr_len": 7.0
+      }
+    },
+    {
+      "id": "C019",
+      "side": "SELL",
+      "verdict": "valid",
+      "reason": "valid but weak-bodied breakout",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 29.789999999999054,
+        "opp_leg": 11.140000000000327,
+        "dominance": 2.674147217235025,
+        "origin_margin": 2.4299999999993815,
+        "uhv_vol_ratio": 1.007882882882883,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.19075568598693973,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 1.3553072625698324,
+        "brk_wick": 0.7116654438736745,
+        "retr_len": 8.0
+      }
+    },
+    {
+      "id": "C020",
+      "side": "SELL",
+      "verdict": "valid",
+      "reason": "valid",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 29.789999999999054,
+        "opp_leg": 11.140000000000327,
+        "dominance": 2.674147217235025,
+        "origin_margin": 2.4299999999993815,
+        "uhv_vol_ratio": 1.1203407880724174,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.8449809402795081,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.9334600760456274,
+        "brk_wick": 0.03303684879291256,
+        "retr_len": 19.0
+      }
+    },
+    {
+      "id": "C021",
+      "side": "SELL",
+      "verdict": "valid",
+      "reason": "valid",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 29.789999999999054,
+        "opp_leg": 11.140000000000327,
+        "dominance": 2.674147217235025,
+        "origin_margin": 2.4299999999993815,
+        "uhv_vol_ratio": 1.1359315589353611,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.4419934640524979,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 1.0602510460251047,
+        "brk_wick": 0.49183006535944607,
+        "retr_len": 25.0
+      }
+    },
+    {
+      "id": "C022",
+      "side": "SELL",
+      "verdict": "invalid",
+      "reason": "not a strong downtrend",
+      "source": "zee_m5",
+      "features": {
+        "side_leg": 40.289999999999964,
+        "opp_leg": 18.284999999999854,
+        "dominance": 2.2034454470877924,
+        "origin_margin": 10.715000000000146,
+        "uhv_vol_ratio": 512.0,
+        "uhv_is_peak": 1.0,
+        "brk_body": 0.8341013824886125,
+        "brk_first": 1.0,
+        "brk_vol_ratio": 0.98828125,
+        "brk_wick": 0.02611367127483584,
+        "retr_len": 1.0
+      }
+    }
+  ]
+}

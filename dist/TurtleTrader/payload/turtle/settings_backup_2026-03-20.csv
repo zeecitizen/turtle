@@ -1,0 +1,88 @@
+Name,Value
+"__indicatorName","Turtle Trader Desk"
+"My Starting Capital ($)",869
+"Contract size ($/point/lot)",100
+"Position Size Multiplier + / - to scale all lot sizes (1.0 = normal, 2.0 = double lots/profit, 0.5 = half size, etc.)",1
+"Spread ($) — enter live broker spread to simulate real conditions (e.g. 0.28 for gold). Widens SL minimum so backtests reflect spread cost.",0.06
+"Account Leverage (e.g. 2000 for 2000:1)",2000
+"🔄 Reset Stats",false
+"Require POI zone to exist before retracement starts",false
+"Require POI Touch Before Signal",false
+"Higher Time Frame Fair Value Gap (imbalance zone)",false
+"Previous Higher Low (above the deeper low)",false
+"Broken High / Low (now flipped to S or R)",false
+"POI Lookback (bars)",50
+"Use this strategy?",false
+"Must any candle wick through or break the UHV low before the entry candle breaks its high?",false
+"Must the breakout candle have lower volume than the UHV candle?",true
+"──── UHV Detection: Require candle to rank in top percentile vs last N bars? (OFF = pick highest volume candle from this retracement only)",false
+"──────── Min volume percentile threshold",95
+"──────── Lookback bars for percentile calculation",20
+"How many bars must pass after the UHV candle before entry?",0
+"──── Pre-breakout offset ($): fire signal this many $ BEFORE the breakout level (0 = at breakout, 0.05 = 5 cents early = better fill)",4
+"──── Post-breakout offset ($): wait for price to move this many $ PAST the breakout level before entering (0 = off, 0.5 = wait for 50¢ confirmation — combines with pre-offset)",2
+"──── Also allow signal at actual breakout level: when pre-offset is set and price breaks out without reaching the offset level, fire at the actual breakout price instead of missing the trade",true
+"──── Risk: Dollar risk per trade? ($)",0
+"──── Risk: % of capital per trade (when $Risk = 0) — sizes lots so each trade risks this % of your starting capital",7
+"──── Risk: Fixed lot size? (when $Risk = 0 and % = 0)",0.011
+"──── Take Profit: R:R Ratio (R:R method only)",0.2
+"──── Take Profit: Fixed $ target (Dollar method only)",28
+"──── Stop Loss: Offset from SL level (+ = below the level for tighter protection, − = above the level for a tighter stop inside the candle) [UHV=relative to UHV candle low | Breakout Wick=relative to entry candle wick | SwingLow=relative to swing | Retracement's Min/Max=relative to lowest/highest retracement point | Prev Candle=relative to previous candle low/high | not used for ATR or Dollar]",4
+"──── Stop Loss: Closest it can ever be to entry? ($)",0.2
+"──── Stop Loss: Volatility width? (ATR method only)",4
+"──── Stop Loss: Fixed $ distance from entry? (Dollar method only)",2
+"──── Stop Loss: How many bars back to find the swing? (SwingLow method only)",11
+"──── Stop Loss: Override with fixed pips (0 = off, uses SL method above)",0
+"──── Take Profit: Override with fixed pips (0 = off, uses TP method above)",5
+"──── Cancel this strategy on early bounce-back (price returns to IB level before touching POI)?",false
+"──── Momentum Candle: Require min body size (strong body)?",false
+"──────── Min body size as % of candle range (60 = body must be =60% of high-low range)",60
+"──── Momentum Candle: Require max wick size (small wicks)?",false
+"──────── Max wick size as % of candle range — applies to both upper and lower wick (15 = each wick ≤15% of range)",35
+"──── Require volume drop vs UHV candle?",false
+"──────── Volume drop % — breakout candle must have at least this much less volume than UHV candle",40
+"──── Require body breakout: only enter if the candle body crosses the breakout level (close must be above/below the trigger — wick-only crossings are ignored) [IOE mode only — bar-close already uses close]",true
+"──── Cooldown: Bars after a signal before another can fire?",22
+"──── Alert Gate ($): min gap from current price to TP before alert fires (−1 = always fire, 0 = block only if price already past TP, >0 = require X$ gap — protects against fast-candle fills past TP)",-0.05
+"──── IOE TP Guard: spread multiplier (0 = off, 1 = guard triggers when TP within 1× spread of close, 2 = stricter — within 2× spread)",1
+"Show signals on the chart?",false
+"Must the sweep candle have higher volume than the candle it sweeps?",false
+"──── Minimum volume excess (%): sweep candle must have at least this much MORE volume than the red candle being swept (0 = any higher is enough; 20 = must be 20% higher)",0
+"If sweep candle has rejection wick, wait for next candle to confirm?",false
+"──── Stop Loss: Distance $ below SL level? [UHV=below UHV candle low | Breakout Wick=below entry candle wick | SwingLow=below swing | not used for ATR or Dollar]",16.27
+"──── Must the sweep candle immediately follow the high-volume candle (consecutive bars only)?",false
+"──── Min close level within swept candle (%): 0 = anywhere inside, 50 = must close above midpoint, 100 = must reach red candle high",0
+"──── Max bars since the high-vol candle (0 = off, 1 = consecutive, 3 = within 3 bars)",0
+"──── Min wick penetration below swept candle low ($): sweep candle wick must extend at least this far below the swept candle low",0
+"──── Min sweep candle volume percentile (0 = off, 50 = above average, 80 = top 20%)",0
+"Min Trend Strength at Signal",20
+"Trend Persistence Lookback (bars)",8
+"Only trade London + NY sessions? (8–12 GMT and 13–17 GMT)",false
+"Cut Low Probability Trades — suppress directions with ≥10 trades and negative all-time P&L",false
+"Avoid trading when trend is shifting?",false
+"──── Apply to UHV Breakout?",false
+"──── Apply to Effort vs Result?",false
+"──── Shift Threshold (strength drop to trigger)",53
+"Require Full Trend Confirmation at Entry?",false
+"Show Trend MA Line on Chart",true
+"Require structural trend — buy only when HH+HL confirmed, sell only when LH+LL confirmed (prevents taking buys in a downtrend or sells in an uptrend)",false
+"Avoid signals during ranging market (ADX-based — suppresses entries when trend strength is too weak for a breakout to follow through)",false
+"──── Ranging threshold: ADX below this = ranging (14 = very strict, 18 = balanced, 25 = aggressive)",14
+"Bypass retracement rules — retracement starts whenever a red candle closes below the prior green candle's low (removes trend/IB phase requirements)",true
+"Use Higher Time Frame FVG for Signals",false
+"FVG Width Filter (ATR multiple)",0.3
+"──── UHV Breakout: FVG Width Filter (ATR multiple)",0.3
+"──── Effort vs Result: FVG Width Filter (ATR multiple)",0.3
+"Show Historical FVGs",true
+"Show Signal Labels",true
+"Show Debug Labels",false
+"Show Stats Panel",true
+"Highlight signal candles (outline which candles were studied)",true
+"Send signals to PineConnector (MT5)?",true
+"PineConnector License ID",87782869895251
+"MT5 Symbol Name","XAUUSD"
+"Minimum lot size allowed by your broker",0.01
+"MT5 pip size for this symbol (XAUUSD=0.01, ETHUSD=0.1, BTCUSD=1.0)",0.01
+"Signal→MT5 latency ms (comma-sep, copy from PineConnector Bridge logs)","151,135,155,142,144"
+"Maximize Trades — remove all cooldowns and optional filters to fire on every valid setup (uses trade history analysis to unlock blocked signals)",false
+"──── Developer mode: show decoded condition bits + full alert string on each signal label",true

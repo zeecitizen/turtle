@@ -1,0 +1,102 @@
+[
+  {
+    "role": "user",
+    "content": "Hey, what is the system status right now?",
+    "ts": "2026-04-27T21:43:18.095Z"
+  },
+  {
+    "role": "assistant",
+    "content": "(no reply)",
+    "ts": "2026-04-27T21:43:18.095Z"
+  },
+  {
+    "role": "user",
+    "content": "Hey, what is the system status right now? Give a one-line summary.",
+    "ts": "2026-04-27T21:43:29.318Z"
+  },
+  {
+    "role": "assistant",
+    "content": "(no reply)",
+    "ts": "2026-04-27T21:43:29.318Z"
+  },
+  {
+    "role": "user",
+    "content": "status",
+    "ts": "2026-04-27T21:45:11.694Z"
+  },
+  {
+    "role": "assistant",
+    "content": "Realized today $0.00 (0 closes), 0 open. Gold $4681.76, burst 0/5. Source: ea_live.",
+    "ts": "2026-04-27T21:45:11.694Z"
+  },
+  {
+    "role": "user",
+    "content": "pnl today",
+    "ts": "2026-04-27T21:45:12.086Z"
+  },
+  {
+    "role": "assistant",
+    "content": "Net today $0.00 (realized $0.00, floating $0.00). 0 trades closed.",
+    "ts": "2026-04-27T21:45:12.086Z"
+  },
+  {
+    "role": "user",
+    "content": "what trades happened",
+    "ts": "2026-04-27T21:45:12.473Z"
+  },
+  {
+    "role": "assistant",
+    "content": "Last 4: 18:49 sell 0.4: +$12.80 | 18:46 sell 0.4: +$3.20 | 18:46 sell 0.01: +$0.84 | 18:46 sell 0.4: +$4.40",
+    "ts": "2026-04-27T21:45:12.473Z"
+  },
+  {
+    "role": "user",
+    "content": "burst",
+    "ts": "2026-04-27T21:45:12.851Z"
+  },
+  {
+    "role": "assistant",
+    "content": "Burst counter: 0/5. Reset to 0/5 means ready for next setup. 5/5 = machine gun max reached, waiting for next probe.",
+    "ts": "2026-04-27T21:45:12.851Z"
+  },
+  {
+    "role": "user",
+    "content": "rules",
+    "ts": "2026-04-27T21:45:13.283Z"
+  },
+  {
+    "role": "assistant",
+    "content": "Rule compliance: see the dashboard \"Shano Rule Compliance\" section. Each row shows Shano's verbatim quote vs the running code. Currently passing 28/28 (100%).",
+    "ts": "2026-04-27T21:45:13.283Z"
+  },
+  {
+    "role": "user",
+    "content": "hey jaan",
+    "ts": "2026-04-27T21:45:13.679Z"
+  },
+  {
+    "role": "assistant",
+    "content": "Hey jaan. System alive. Today: $0.00, 0 trades closed, 0 open. EA heartbeat fresh. Aur batao?",
+    "ts": "2026-04-27T21:45:13.679Z"
+  },
+  {
+    "role": "user",
+    "content": "sup jaan",
+    "ts": "2026-04-27T21:47:03.351Z"
+  },
+  {
+    "role": "assistant",
+    "content": "Realized today $0.00 (0 closes), 0 open. Gold $4681.76, burst 0/5. Source: ea_live.",
+    "ts": "2026-04-27T21:47:03.351Z"
+  },
+  {
+    "role": "user",
+    "content": "meri jan are you there?",
+    "ts": "2026-05-09T08:59:55.248Z"
+  },
+  {
+    "role": "assistant",
+    "content": "(no reply)",
+    "ts": "2026-05-09T08:59:55.248Z"
+  }
+]

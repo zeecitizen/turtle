@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Turtle Trading Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg:       #0a0e1a;
+    --card:     #111827;
+    --border:   #1f2a3d;
+    --text:     #e2e8f0;
+    --muted:    #64748b;
+    --green:    #22c55e;
+    --red:      #ef4444;
+    --amber:    #f59e0b;
+    --blue:     #3b82f6;
+    --purple:   #a855f7;
+    --cyan:     #06b6d4;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { font-size: 16px; font-weight: 700; letter-spacing: 0.5px; }
+  .logo span { color: var(--amber); }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green); display: inline-block;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .ts { color: var(--muted); font-size: 11px; }
+  .btn {
+    background: var(--blue); border: none; color: #fff;
+    padding: 6px 14px; border-radius: 6px; cursor: pointer;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.3px;
+    transition: opacity .15s;
+  }
+  .btn:hover { opacity: .8; }
+  .btn.auto-on { background: var(--green); }
+  .btn.auto-off { background: var(--muted); }
+
+  /* ── LAYOUT ── */
+  .main { padding: 16px 20px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* ── STAT CARDS ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .stat-label { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .stat-value { font-size: 24px; font-weight: 700; line-height: 1; }
+  .stat-sub   { color: var(--muted); font-size: 11px; margin-top: 4px; }
+  .positive { color: var(--green); }
+  .negative { color: var(--red); }
+  .neutral  { color: var(--amber); }
+  .info     { color: var(--blue); }
+  .purple   { color: var(--purple); }
+
+  /* ── CHARTS ROW ── */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 800px) { .charts-row { grid-template-columns: 1fr; } }
+  .chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .chart-title {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--muted); margin-bottom: 12px;
+  }
+  .chart-wrap { position: relative; }
+
+  /* ── BOTTOM ROW ── */
+  .bottom-row {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 900px) { .bottom-row { grid-template-columns: 1fr; } }
+
+  /* ── TRADES TABLE ── */
+  .table-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .table-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--muted);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left; padding: 8px 10px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px;
+    color: var(--muted); border-bottom: 1px solid var(--border);
+    font-weight: 600;
+  }
+  td { padding: 7px 10px; border-bottom: 1px solid rgba(31,42,61,.5); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  .tag-tp { color: var(--green); font-weight: 600; font-size: 11px; }
+  .tag-sl { color: var(--red);   font-weight: 600; font-size: 11px; }
+  .tag-be { color: var(--amber); font-weight: 600; font-size: 11px; }
+  .profit-bar-wrap {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .profit-bar {
+    height: 6px; border-radius: 3px; min-width: 2px; max-width: 60px;
+    flex-shrink: 0;
+  }
+  .dir-buy  { color: var(--green); font-size: 10px; font-weight: 700; }
+  .dir-sell { color: var(--red);   font-size: 10px; font-weight: 700; }
+
+  /* ── NEWSFEED ── */
+  .feed-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .feed-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--muted);
+    flex-shrink: 0;
+  }
+  .feed-list {
+    overflow-y: auto;
+    max-height: 420px;
+    flex: 1;
+  }
+  .feed-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(31,42,61,.5);
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .feed-item:last-child { border-bottom: none; }
+  .feed-item:hover { background: rgba(255,255,255,.02); }
+  .feed-cron {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 10px; color: var(--muted);
+  }
+  .feed-badge {
+    display: inline-block; padding: 1px 6px; border-radius: 4px;
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+  }
+  .badge-success { background: rgba(34,197,94,.15);  color: var(--green); }
+  .badge-partial { background: rgba(245,158,11,.15); color: var(--amber); }
+  .badge-error   { background: rgba(239,68,68,.15);  color: var(--red); }
+  .feed-summary  { font-size: 12px; color: var(--text); line-height: 1.4; }
+  .feed-flags    { display: flex; gap: 4px; flex-wrap: wrap; }
+  .feed-flag {
+    background: rgba(168,85,247,.15); color: var(--purple);
+    font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px;
+  }
+  .feed-time { color: var(--muted); font-size: 10px; }
+
+  /* ── LOADING ── */
+  .loading { text-align: center; padding: 40px; color: var(--muted); }
+
+  /* ── HEALTH SMILEY ── */
+  .health-smiley {
+    font-size: 22px; line-height: 1;
+    cursor: default;
+    transition: transform .2s;
+  }
+  .health-smiley:hover { transform: scale(1.2); }
+  .health-label { font-size: 10px; color: var(--muted); text-align: center; margin-top: 1px; }
+
+  /* ── LAST HOUR SECTION ── */
+  .last-hour-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .last-hour-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--muted); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .last-hour-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  .lh-stat { display: flex; flex-direction: column; gap: 4px; }
+  .lh-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
+  .lh-value { font-size: 20px; font-weight: 700; }
+  .lh-sub   { font-size: 11px; color: var(--muted); }
+
+  /* ── STREAK ── */
+  .streak-bar { display: flex; gap: 4px; margin-top: 4px; }
+  .streak-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border);
+  }
+  .streak-dot.filled { background: var(--green); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">TURTLE <span>TRADER</span> DESK</div>
+  <div class="header-right">
+    <!-- 2026-08-10: the UHV drawing review. Zee's rule is that every meaningful
+         change has to be reachable from the apex, and this is the page that decides
+         whether the machine's drawing matches his eye. -->
+    <a href="/uhv" title="Every UHV the machine drew — confirm the circle"
+       style="color:#f0a020;text-decoration:none;font-size:13px;font-weight:600;
+              border:1px solid #f0a020;border-radius:6px;padding:4px 10px">🔍 UHV drawings</a>
+    <div style="display:flex;flex-direction:column;align-items:center">
+      <div class="health-smiley" id="healthSmiley" title="System health — last hour WR">😐</div>
+      <div class="health-label" id="healthLabel">no data</div>
+    </div>
+    <span class="status-dot" id="dot"></span>
+    <span class="ts" id="lastUpdated">—</span>
+    <button class="btn auto-on" id="autoBtn" onclick="toggleAuto()">Auto 30s</button>
+    <button class="btn" onclick="fetchData()">Refresh</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- STAT CARDS -->
+  <div class="stat-row" id="statRow">
+    <div class="stat-card"><div class="stat-label">Today P&amp;L</div><div class="stat-value neutral" id="sPL">—</div><div class="stat-sub" id="sTrades">—</div></div>
+    <div class="stat-card"><div class="stat-label">Win Rate</div><div class="stat-value info" id="sWR">—</div><div class="stat-sub" id="sWL">—</div></div>
+    <div class="stat-card"><div class="stat-label">Avg Win</div><div class="stat-value positive" id="sAW">—</div><div class="stat-sub" id="sAL" style="color:var(--red)">—</div></div>
+    <div class="stat-card"><div class="stat-label">Win Streak</div><div class="stat-value purple" id="sStreak">—</div><div class="streak-bar" id="streakBar"></div></div>
+    <div class="stat-card"><div class="stat-label">Breakeven</div><div class="stat-value neutral" id="sBE">—</div><div class="stat-sub">kill-timer exits</div></div>
+  </div>
+
+  <!-- CHARTS -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <div class="chart-title">Equity Curve — Today</div>
+      <div class="chart-wrap"><canvas id="equityChart" height="160"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Win / Loss / BE</div>
+      <div class="chart-wrap"><canvas id="donutChart" height="160"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TRADES + FEED -->
+  <div class="bottom-row">
+
+    <!-- Last 20 trades -->
+    <div class="table-card">
+      <div class="table-header">Last 20 Trades</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Dir</th>
+            <th>Profit</th>
+            <th>Bar</th>
+            <th>Tag</th>
+          </tr>
+        </thead>
+        <tbody id="tradesBody">
+          <tr><td colspan="5" class="loading">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cron messages -->
+    <div class="feed-card">
+      <div class="feed-header">Cron Messages</div>
+      <div class="feed-list" id="feedList">
+        <div class="loading">Loading…</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LAST HOUR PERFORMANCE -->
+  <div class="last-hour-card">
+    <div class="last-hour-title">
+      Last Hour Performance
+      <span id="lhHealthBadge" style="margin-left:auto;font-size:20px;cursor:default" title="WR ≥ 80% = happy">😐</span>
+    </div>
+    <div class="last-hour-grid">
+      <div class="lh-stat">
+        <div class="lh-label">P&amp;L (1h)</div>
+        <div class="lh-value" id="lhPL">—</div>
+        <div class="lh-sub" id="lhTrades">— trades</div>
+      </div>
+      <div class="lh-stat">
+        <div class="lh-label">Win Rate (1h)</div>
+        <div class="lh-value" id="lhWR">—</div>
+        <div class="lh-sub" id="lhWL">— W / — L</div>
+      </div>
+      <div class="lh-stat">
+        <div class="lh-label">Wins (1h)</div>
+        <div class="lh-value positive" id="lhWins">—</div>
+        <div class="lh-sub" id="lhBE">— breakeven</div>
+      </div>
+      <div class="lh-stat">
+        <div class="lh-label">Losses (1h)</div>
+        <div class="lh-value negative" id="lhLosses">—</div>
+        <div class="lh-sub">happy when &lt;20%</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+let autoRefresh = true;
+let autoTimer   = null;
+let equityChart = null;
+let donutChart  = null;
+const STREAK_TARGET = 5;
+
+function toggleAuto() {
+  autoRefresh = !autoRefresh;
+  const btn = document.getElementById('autoBtn');
+  btn.textContent = autoRefresh ? 'Auto 30s' : 'Auto OFF';
+  btn.className   = autoRefresh ? 'btn auto-on' : 'btn auto-off';
+  scheduleAuto();
+}
+
+function scheduleAuto() {
+  clearTimeout(autoTimer);
+  if (autoRefresh) autoTimer = setTimeout(() => { fetchData(); }, 30000);
+}
+
+// ── Fetch ──────────────────────────────────────────────────────────────────────
+async function fetchData() {
+  const dot = document.getElementById('dot');
+  dot.style.background = 'var(--amber)';
+  try {
+    const r    = await fetch('/api/data?t=' + Date.now());
+    const data = await r.json();
+    render(data);
+    dot.style.background = 'var(--green)';
+  } catch(e) {
+    dot.style.background = 'var(--red)';
+    console.error('Fetch failed:', e);
+  }
+  document.getElementById('lastUpdated').textContent =
+    'Updated ' + new Date().toLocaleTimeString();
+  scheduleAuto();
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function render(data) {
+  if (data.fills && data.fills.ok) renderStats(data.fills);
+  if (data.fills && data.fills.equity) renderEquity(data.fills.equity);
+  if (data.fills && data.fills.today) renderDonut(data.fills.today);
+  if (data.fills && data.fills.last20) renderTrades(data.fills.last20);
+  if (data.fills && data.fills.lastHour) renderLastHour(data.fills.lastHour);
+  if (data.newsfeed) renderFeed(data.newsfeed);
+}
+
+function renderLastHour(lh) {
+  // smiley logic: null wr = no trades, wr >= 80 = happy, else sad
+  const wr    = lh.wr !== null ? parseFloat(lh.wr) : null;
+  const emoji = wr === null ? '😐' : wr >= 80 ? '😄' : '😢';
+  const label = wr === null ? 'no trades' : wr >= 80 ? 'happy!' : 'struggling';
+
+  // update header smiley
+  document.getElementById('healthSmiley').textContent = emoji;
+  document.getElementById('healthLabel').textContent  = label;
+  // update section badge
+  document.getElementById('lhHealthBadge').textContent = emoji;
+
+  const plEl = document.getElementById('lhPL');
+  plEl.textContent = lh.trades === 0 ? '—' : fmt(lh.pl);
+  plEl.className   = 'lh-value ' + (lh.pl >= 0 ? 'positive' : 'negative');
+
+  document.getElementById('lhTrades').textContent = lh.trades === 0
+    ? 'no trades this hour' : `${lh.trades} trade${lh.trades !== 1 ? 's' : ''}`;
+
+  const wrEl = document.getElementById('lhWR');
+  wrEl.textContent = wr === null ? '—' : wr.toFixed(1) + '%';
+  wrEl.className   = 'lh-value ' + (wr === null ? '' : wr >= 80 ? 'positive' : 'negative');
+
+  document.getElementById('lhWL').textContent      = `${lh.wins}W / ${lh.losses}L`;
+  document.getElementById('lhWins').textContent    = lh.wins;
+  document.getElementById('lhBE').textContent      = `${lh.be} breakeven`;
+  document.getElementById('lhLosses').textContent  = lh.losses;
+}
+
+function fmt(n) {
+  const sign = n >= 0 ? '+' : '';
+  return sign + n.toFixed(2);
+}
+
+function renderStats(fills) {
+  const t = fills.today;
+  const pl = document.getElementById('sPL');
+  pl.textContent  = fmt(t.pl);
+  pl.className    = 'stat-value ' + (t.pl >= 0 ? 'positive' : 'negative');
+
+  document.getElementById('sTrades').textContent = `${t.trades} trades today`;
+  document.getElementById('sWR').textContent     = t.winRate + '%';
+  document.getElementById('sWL').textContent     = `${t.wins}W / ${t.losses}L`;
+  document.getElementById('sAW').textContent     = fmt(t.avgWin);
+  document.getElementById('sAL').textContent     = 'Avg loss: ' + fmt(t.avgLoss);
+  document.getElementById('sStreak').textContent = t.streak + '/5';
+  document.getElementById('sBE').textContent     = t.be;
+
+  // Streak dots
+  const bar = document.getElementById('streakBar');
+  bar.innerHTML = '';
+  for (let i = 0; i < STREAK_TARGET; i++) {
+    const d = document.createElement('div');
+    d.className = 'streak-dot' + (i < t.streak ? ' filled' : '');
+    bar.appendChild(d);
+  }
+}
+
+function renderEquity(equity) {
+  const labels = equity.map(e => e.t);
+  const values = equity.map(e => e.v);
+
+  const color = (values[values.length - 1] || 0) >= 0
+    ? 'rgba(34,197,94,0.9)'
+    : 'rgba(239,68,68,0.9)';
+  const fill  = (values[values.length - 1] || 0) >= 0
+    ? 'rgba(34,197,94,0.08)'
+    : 'rgba(239,68,68,0.08)';
+
+  if (equityChart) {
+    equityChart.data.labels = labels;
+    equityChart.data.datasets[0].data = values;
+    equityChart.data.datasets[0].borderColor = color;
+    equityChart.data.datasets[0].backgroundColor = fill;
+    equityChart.update('none');
+    return;
+  }
+
+  equityChart = new Chart(document.getElementById('equityChart'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        borderColor: color,
+        backgroundColor: fill,
+        borderWidth: 2,
+        pointRadius: equity.length > 50 ? 0 : 2,
+        pointHoverRadius: 4,
+        fill: true,
+        tension: 0.3,
+      }],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => ' $' + ctx.raw.toFixed(2),
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: '#64748b', font: { size: 10 }, maxTicksLimit: 10 },
+          grid: { color: 'rgba(31,42,61,.8)' },
+        },
+        y: {
+          ticks: {
+            color: '#64748b', font: { size: 10 },
+            callback: v => '$' + v.toFixed(0),
+          },
+          grid: { color: 'rgba(31,42,61,.8)' },
+        },
+      },
+    },
+  });
+}
+
+function renderDonut(t) {
+  const vals = [t.wins, t.losses, t.be];
+  if (donutChart) {
+    donutChart.data.datasets[0].data = vals;
+    donutChart.update('none');
+    return;
+  }
+  donutChart = new Chart(document.getElementById('donutChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Wins', 'Losses', 'Breakeven'],
+      datasets: [{
+        data: vals,
+        backgroundColor: ['rgba(34,197,94,.8)', 'rgba(239,68,68,.8)', 'rgba(245,158,11,.8)'],
+        borderColor: ['#22c55e', '#ef4444', '#f59e0b'],
+        borderWidth: 1,
+      }],
+    },
+    options: {
+      responsive: true,
+      cutout: '65%',
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: '#94a3b8', font: { size: 11 }, padding: 12, boxWidth: 12 },
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.label}: ${ctx.raw} (${t.trades ? (ctx.raw/t.trades*100).toFixed(1) : 0}%)`,
+          },
+        },
+      },
+    },
+  });
+}
+
+function tagClass(tag) {
+  if (tag.startsWith('[tp')) return 'tag-tp';
+  if (tag.startsWith('[sl') || tag.startsWith('[be')) return 'tag-sl';
+  return 'tag-be';
+}
+function tagLabel(tag) {
+  if (tag.startsWith('[tp')) return 'TP';
+  if (tag.startsWith('[sl')) return 'SL';
+  return 'BE';
+}
+
+function renderTrades(trades) {
+  const tbody = document.getElementById('tradesBody');
+  if (!trades.length) { tbody.innerHTML = '<tr><td colspan="5" class="loading">No trades</td></tr>'; return; }
+
+  const maxAbs = Math.max(...trades.map(t => Math.abs(t.profit)), 1);
+
+  tbody.innerHTML = trades.map(t => {
+    const dir    = t.type.startsWith('BUY') ? 'BUY' : 'SELL';
+    const dirCls = dir === 'BUY' ? 'dir-buy' : 'dir-sell';
+    const pCls   = t.profit > 0 ? 'positive' : t.profit < 0 ? 'negative' : 'neutral';
+    const barW   = Math.round((Math.abs(t.profit) / maxAbs) * 60);
+    const barCol = t.profit > 0 ? 'var(--green)' : t.profit < 0 ? 'var(--red)' : 'var(--amber)';
+    const time   = t.datetime.substring(11, 16); // HH:MM
+    const tgCls  = tagClass(t.tag);
+    const tgLbl  = tagLabel(t.tag);
+    return `<tr>
+      <td style="color:var(--muted)">${time}</td>
+      <td class="${dirCls}">${dir}</td>
+      <td>
+        <div class="profit-bar-wrap">
+          <div class="profit-bar" style="width:${barW}px;background:${barCol}"></div>
+          <span class="${pCls}">${fmt(t.profit)}</span>
+        </div>
+      </td>
+      <td style="color:var(--muted);font-size:11px">${t.lots}</td>
+      <td class="${tgCls}">${tgLbl}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderFeed(feed) {
+  const list = document.getElementById('feedList');
+  if (!feed.length) { list.innerHTML = '<div class="loading">No messages</div>'; return; }
+
+  list.innerHTML = feed.map(e => {
+    const badgeCls = e.status === 'success' ? 'badge-success'
+                   : e.status === 'partial' ? 'badge-partial' : 'badge-error';
+    const time = e.finished_at
+      ? new Date(e.finished_at).toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' })
+      : '';
+    const flags = (e.flags || []).map(f =>
+      `<span class="feed-flag">${f}</span>`).join('');
+    const cronLabel = e.cronId
+      .replace(/_/g,' ')
+      .replace(/\b\w/g, c => c.toUpperCase());
+
+    return `<div class="feed-item">
+      <div class="feed-cron">
+        <span class="feed-badge ${badgeCls}">${e.status}</span>
+        <span>${cronLabel}</span>
+        <span style="margin-left:auto" class="feed-time">${time}</span>
+      </div>
+      <div class="feed-summary">${e.summary}</div>
+      ${flags ? `<div class="feed-flags">${flags}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────────
+fetchData();
+</script>
+</body>
+</html>
