@@ -83,11 +83,18 @@ def _karachi_shift(fills_path):
 
 
 def _to_karachi(ts, shift_h):
-    """'2026.08.11 13:10:22' broker -> '08.11 15:10:22' Karachi."""
+    """'2026.08.11 13:10:22' broker -> '08.11  3:10:22 pm' Karachi.
+
+    Zee, 2026-08-11: "can u make it show times in 12 hour time format, not 24 hour
+    time format.. so its easier to read." The hour is space-padded rather than
+    zero-padded so the colons still line up down the column — a list of trades is
+    scanned vertically, and ragged columns are what make it hard to read.
+    """
     from datetime import datetime, timedelta
     try:
         d = datetime.strptime(ts, "%Y.%m.%d %H:%M:%S") + timedelta(hours=shift_h)
-        return d.strftime("%m.%d %H:%M:%S")
+        h12 = d.hour % 12 or 12
+        return f"{d:%m.%d} {h12:2d}:{d:%M:%S} {'am' if d.hour < 12 else 'pm'}"
     except Exception:
         return ts[5:]
 
@@ -270,7 +277,7 @@ class Cockpit:
             r = tk.Frame(frame, bg=BG); r.pack(fill="x", pady=1)
             col = "#2f9e44" if pnl > 0 else "#e03131"
             tk.Label(r, text=_to_karachi(ts, _karachi_shift(self.FILLS_F)), font=("Consolas", 11), bg=BG, fg=DIM,
-                     width=17, anchor="w").pack(side="left")
+                     width=20, anchor="w").pack(side="left")
             tk.Label(r, text=side, font=("Consolas", 11, "bold"), bg=BG,
                      fg="#4dabf7" if side == "BUY" else "#f08c00", width=5).pack(side="left")
             tk.Label(r, text=f"{lots:.2f}", font=("Consolas", 11), bg=BG, fg=DIM,
