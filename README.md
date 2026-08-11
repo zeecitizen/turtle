@@ -41,6 +41,104 @@ frozen first, then run, and nothing was retuned afterwards.
 
 ---
 
+# HOW WE GOT HERE — the exact changes, newest last
+
+Every change below is a real commit on this branch. The hash lets you read the diff, so
+nothing here has to be taken on trust.
+
+## The three changes that BUILT the engine
+
+### `6064e28` — the detector was rebuilt from Zee's 146 labels
+Before this, every detector encoded *my* reading of "ultra high volume". This one encodes
+his. 67 rule-statements were mined from `monitor/setup_labels/zee_labels.json`, and each
+check in the source carries his own sentence quoted above it.
+
+**What actually changed in the code:** the UHV search became **scoped inside the
+retracement** — a louder candle outside it can never be chosen — and every level test
+became a **BODY test** instead of a wick test. Those two things are exactly what he had
+been correcting in his labels all along.
+
+### `d63876f` — every EA was reading a constant, and stopped
+`iVolume()` returns **4 for every bar** inside MT5's tester, because MT5 overwrites
+tick_volume with its own synthesised tick count. `iRealVolume()` carries the truth. A
+`BarVolume()` helper replaced 43 call sites.
+
+**Nothing measured before this commit is valid.** It is why `NsndF11` reported
+`signals=0` on a day full of setups — it was not failing to find them, it was blind.
+
+### `9087870` — searched on 103 days, validated on unseen tape
+The *method* changed here, not the code. 3,600 configurations swept on the large sample,
+then the winner **frozen** and run on two datasets the search had never seen. This
+replaced the previous approach — optimise on four days, validate on nothing — which had
+produced a 96.4% that lost **−$4,071** the moment it met new data (`272770a`).
+
+## The last three changes to the EA — these ARE the shipped configuration
+
+### 1. `536297d` — do NOT cap the conviction; shrink the base lot instead
+Capping the diamond stack was the obvious risk control, and it is wrong:
+```
+cap 0.10   +$139   14.9% drawdown    $9.30 earned per 1% of drawdown
+cap 0.20   +$277   28.2% drawdown    $9.80
+no cap     +$821   45.2% drawdown   $18.10   <- twice as efficient
+```
+The 3rd and 4th tickets — the ones only the highest-conviction setups earn — are the
+**best trades in the system**. Capping throws away the part worth having. So `InpMaxRisk`
+stays 0, and risk is controlled by `InpLots`: 0.10 on demo, **0.02 on a $500 account**
+(~11% drawdown).
+
+*Also fixed here: a float-precision bug in the cap itself. `0.20 + 0.10` evaluates to
+`0.30000000000000004`, so a cap of 0.30 silently behaved like 0.20 and the sweep returned
+identical numbers for both.*
+
+### 2. `b8d628d` — the EA's own defaults were STALE and would have traded wrong
+Every test had run from `MQL5/Profiles/Tester/ZeeUHV.set`, which MT5 reads **instead of**
+the `.mq5` defaults. The winning configuration therefore existed only inside the tester,
+while five settings in the EA itself were still on old values:
+```
+InpStopPts      4.0  -> 9.0        InpStackStep    0.10 -> 0.0
+InpUhvBodyMin   0.30 -> 0.5        InpRetraceBack  15   -> 20
+InpTrendLook    40   -> 20
+```
+**The moment the EA was dragged onto a chart it would have traded the wrong rules.** Zee
+caught it by asking whether the EA was actually up to date. After changing a default,
+read the source back and verify — that is now a step in `THINGS_TO_REMEMBER.md`.
+
+### 3. `6e2a82d` — stop 20, hold 60. The final configuration.
+This came from Zee's question: *"can we ever say every single UHV breakout resulted in a
+small bump in our direction... if we could gain total control?"*
+
+Measuring that ceiling gave both the answer and the setting:
+```
+  stop   9pt, wait  30min   88.44%   +$139   worst -$90       drawdown 15%
+  stop  20pt, wait  60min   93.12%   +$597   worst -$200      drawdown 17%  <- SHIPPED
+  stop  40pt, wait 120min   95.56%   +$249   worst -$400      drawdown 26%
+  stop 200pt, wait 600min   98.07%   +$268   worst -$1,605    drawdown 48%
+```
+**98% of breakouts DO eventually give the bump — his claim is confirmed.** But the money
+peaks at 93%, not 98%, because the few that never come back grow enormous. Stop 20 /
+hold 60 is the top of the money curve, and it is what the EA ships with.
+
+### And one change built, measured, and switched OFF: `040706e`
+The Watcher — a tick-by-tick exit that closes the instant price falls back through the
+level it broke. Zee's own Feb-11 losses averaged **−0.16 points** because he left when he
+could see it was not working, and he was right that an EA can watch every tick.
+
+It works exactly as intended — **the average loss fell from $114 to $19** — but the win
+rate collapsed from **93% to 64%** and the net from **+$2,599 to −$872**. Price dips back
+through the level constantly and then goes anyway. **The EA can watch; it cannot yet
+judge.** Defaults are `false`. The code stays, because the mechanism is real and it is
+the *trigger* that needs fixing.
+
+## The last three commits on the repo — these preserve, they do not change
+
+| commit | what it is |
+|---|---|
+| `5afca1b` | `monitor/zeeuhv_live.py`, the live scoreboard. Prints the tested 93.28% beside the live number every time and refuses to conclude anything under 20 fills. Anchored to the attach timestamp — without that anchor its `[tp` fingerprint swept up every take-profit in the entire history and reported a fake *"108 fills, +$5,010, 100%"* |
+| `39df494` | `preserved/` — datasets, tester `.set` files and live evidence copied INTO the repo, because they lived in MetaQuotes' folders where a clone would never find them. Includes Zee's own Feb-11 broker statement |
+| `b67e799` | the final seal — runtime state at the moment the branch was cut, with ZeeUHV at 15 live fills and no loss |
+
+---
+
 # WHERE WE STARTED
 
 **48 hours before this, the machine had never made money.** The state on 2026-08-09:
