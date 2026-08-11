@@ -115,3 +115,7 @@ dashboard/claude_trader/package-lock.json
 monitor/.profit_pulse_state.json
 monitor/profit_pulse_hawk.log
 monitor/.tasks_state.json
+
+# Build output of make_installer.py. Regenerable in seconds, 167 MB and 4,198 files,
+# and committing it once already added 3,706 files to history for no benefit.
+dist/
