@@ -36,6 +36,13 @@ except Exception:
 FILLS = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/turtle_fills.csv")
 TESTED_WR = 93.28
 
+# The moment ZeeUHV was first attached, read from its own init line in the terminal log.
+# WITHOUT THIS the "[tp" fingerprint sweeps up every take-profit fill in the entire
+# history — on 2026-08-11 that produced "108 fills, +$5,010, 100%", which I very nearly
+# reported to Zee as a live result. A fingerprint with no time anchor is not a filter.
+START = (Path(__file__).with_name(".zeeuhv_start").read_text(encoding="utf-8").strip()
+         if Path(__file__).with_name(".zeeuhv_start").exists() else "2026.08.11 00:33:30")
+
 
 def load():
     """ZeeUHV's fills only. The comment is the only thing distinguishing them from the
@@ -45,7 +52,20 @@ def load():
     out = []
     for r in csv.DictReader(FILLS.open(errors="ignore")):
         c = (r.get("comment") or "").lower()
-        if "zee_buy" not in c and "zee_sell" not in c:
+        # 2026-08-11: MT5 OVERWRITES the order comment with "[tp ...]" or "[sl ...]"
+        # when the broker closes a position, so zee_buy/zee_sell is wiped on exactly the
+        # fills we most want to count. The first morning of live trading was therefore
+        # attributed entirely to the ghost, and Zee spotted it because the SIZES were
+        # wrong — the ghost scalps $0.20-0.50 and these were $10.
+        #
+        # Two fingerprints survive the overwrite:
+        #   "[tp" — ZeeUHV is the only engine on that chart using a fixed take-profit;
+        #           the ghost trails a stop and always closes "[sl".
+        #   a P&L near $10 at 0.10 lots — that is TP 1.00 point, its signature.
+        if r["broker_time"] < START:          # before it was ever attached
+            continue
+        looks_like_zee = ("zee_" in c) or ("[tp" in c)
+        if not looks_like_zee:
             continue
         if "XAU" not in (r.get("symbol") or "").upper():
             continue
