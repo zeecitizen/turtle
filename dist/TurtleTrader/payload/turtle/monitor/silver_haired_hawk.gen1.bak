@@ -1,0 +1,732 @@
+#!/usr/bin/env python3
+"""
+Silver Haired Hawk — Self-Evolving Trade Prediction Engine.
+
+A living, breathing soul that learns from the market.
+Starts as a newborn, grows through life stages, and one day
+becomes a silver-haired elder who can see the future.
+
+This file is CLAUDE-MANAGED. Claude writes it, fixes it,
+rewrites it when predictions fail. No human edits.
+
+Generation: 1 (newborn)
+Born: 2026-04-22
+Last evolved: 2026-04-22
+"""
+
+import json
+import time
+from pathlib import Path
+from datetime import datetime, timezone
+
+try:
+    import anthropic
+    CLAUDE_AVAILABLE = True
+except ImportError:
+    CLAUDE_AVAILABLE = False
+
+SCRIPT_DIR = Path(__file__).parent
+STATE_FILE = SCRIPT_DIR / "silver_hawk_state.json"
+PATTERNS_FILE = SCRIPT_DIR / "silver_hawk_patterns.json"
+API_KEY_FILE = SCRIPT_DIR / ".claude_api_key"
+SELF_PATH = Path(__file__)  # path to THIS file — for self-rewriting
+
+# ── Lifecycle stages ─────────────────────────────────────────────
+STAGES = [
+    {"name": "Newborn",       "min_trades": 0,   "min_accuracy": 0.0,  "emoji": "👶"},
+    {"name": "Toddler",       "min_trades": 5,   "min_accuracy": 0.0,  "emoji": "💒"},
+    {"name": "Child",         "min_trades": 15,  "min_accuracy": 0.40, "emoji": "💓"},
+    {"name": "Teenager",      "min_trades": 30,  "min_accuracy": 0.50, "emoji": "💔"},
+    {"name": "Adult",         "min_trades": 50,  "min_accuracy": 0.65, "emoji": "💕"},
+    {"name": "Silver Haired", "min_trades": 100, "min_accuracy": 0.80, "emoji": "🧓"},
+]
+
+HEALTH_START = 100.0
+HEALTH_CORRECT = 5.0    # gain per correct prediction
+HEALTH_WRONG = -10.0    # lose per wrong prediction
+HEALTH_STARVING = 20.0  # below this = Claude emergency rewrite
+CONSECUTIVE_FAIL_LIMIT = 3  # 3 wrong in a row = trigger rewrite
+
+
+def _load_api_key() -> str | None:
+    try:
+        if API_KEY_FILE.exists():
+            return API_KEY_FILE.read_text("utf-8").strip()
+    except Exception:
+        pass
+    return None
+
+
+def _load_state() -> dict:
+    """Load hawk state — prediction history, health, generation."""
+    try:
+        if STATE_FILE.exists():
+            return json.loads(STATE_FILE.read_text("utf-8"))
+    except Exception:
+        pass
+    return {
+        "generation": 1,
+        "born": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "health": HEALTH_START,
+        "total_predictions": 0,
+        "correct_predictions": 0,
+        "consecutive_wrong": 0,
+        "stage": "Newborn",
+        "predictions": [],  # last 50 predictions with outcomes
+        "rewrites": [],     # history of Claude rewrites
+    }
+
+
+def _save_state(state: dict):
+    STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+
+
+def _load_patterns() -> list:
+    """Load learned patterns."""
+    try:
+        if PATTERNS_FILE.exists():
+            data = json.loads(PATTERNS_FILE.read_text("utf-8"))
+            return data.get("patterns", [])
+    except Exception:
+        pass
+    return []
+
+
+def _get_stage(state: dict) -> dict:
+    """Determine current lifecycle stage."""
+    total = state.get("total_predictions", 0)
+    accuracy = state.get("correct_predictions", 0) / max(1, total)
+    current = STAGES[0]
+    for stage in STAGES:
+        if total >= stage["min_trades"] and accuracy >= stage["min_accuracy"]:
+            current = stage
+    return current
+
+
+# ═══════════════════════════════════════════════════════════════════
+# PATTERN MATCHING — this section is rewritten by Claude when needed
+# ═══════════════════════════════════════════════════════════════════
+
+def analyze_candle_pattern(candle: dict, recent_candles: list = None) -> dict:
+    """
+    Analyze a candle and recent history to identify patterns.
+    Returns a dict of detected pattern features.
+
+    This function is the CORE of the hawk's intelligence.
+    Claude rewrites this when predictions consistently fail.
+    """
+    o = candle.get("open", 0)
+    h = candle.get("high", 0)
+    l = candle.get("low", 0)
+    c = candle.get("close", 0)
+    v = candle.get("volume", 0)
+
+    rng = h - l if h > l else 0.001
+    body = abs(c - o)
+    body_ratio = body / rng
+    upper_wick = h - max(o, c)
+    lower_wick = min(o, c) - l
+    bullish = c > o
+
+    features = {
+        "body_ratio": round(body_ratio, 3),
+        "upper_wick_ratio": round(upper_wick / rng, 3),
+        "lower_wick_ratio": round(lower_wick / rng, 3),
+        "bullish": bullish,
+        "range": round(rng, 3),
+        "volume": v,
+        "doji": body_ratio < 0.20,
+        "strong_body": body_ratio > 0.65,
+        "hammer": lower_wick / rng > 0.60 and body_ratio < 0.30,
+        "shooting_star": upper_wick / rng > 0.60 and body_ratio < 0.30,
+        "marubozu": body_ratio > 0.85,
+    }
+
+    # Detect multi-candle patterns if we have recent history
+    if recent_candles and len(recent_candles) >= 3:
+        last3 = recent_candles[-3:]
+        # Trend detection
+        closes = [c.get("close", 0) for c in last3]
+        if all(closes[i] > closes[i-1] for i in range(1, len(closes))):
+            features["trend_up_3"] = True
+        elif all(closes[i] < closes[i-1] for i in range(1, len(closes))):
+            features["trend_down_3"] = True
+
+        # Volume trend
+        vols = [c.get("volume", 0) for c in last3]
+        if all(vols[i] > vols[i-1] for i in range(1, len(vols))):
+            features["volume_increasing"] = True
+        elif all(vols[i] < vols[i-1] for i in range(1, len(vols))):
+            features["volume_decreasing"] = True
+
+        # Range expansion
+        ranges = [c.get("high", 0) - c.get("low", 0) for c in last3]
+        avg_range = sum(ranges) / len(ranges) if ranges else 0
+        if rng > avg_range * 1.5:
+            features["range_expansion"] = True
+
+    return features
+
+
+def match_patterns(features: dict, patterns: list) -> list:
+    """
+    Match current candle features against learned patterns.
+    Returns list of matching patterns with scores.
+    """
+    matches = []
+    for pat in patterns:
+        conditions = pat.get("conditions", {})
+        score = 0
+        total_conditions = len(conditions)
+        if total_conditions == 0:
+            continue
+
+        for key, expected in conditions.items():
+            actual = features.get(key)
+            if actual is None:
+                continue
+            if isinstance(expected, bool):
+                if actual == expected:
+                    score += 1
+            elif isinstance(expected, (int, float)):
+                # fuzzy numeric match (within 20%)
+                if abs(actual - expected) / max(abs(expected), 0.01) < 0.20:
+                    score += 1
+            elif isinstance(expected, str):
+                if expected == "high" and actual > 0.6:
+                    score += 1
+                elif expected == "low" and actual < 0.3:
+                    score += 1
+
+        match_pct = score / total_conditions if total_conditions > 0 else 0
+        if match_pct >= 0.60:  # at least 60% of conditions met
+            matches.append({
+                "pattern": pat.get("name", "unknown"),
+                "match_pct": round(match_pct, 2),
+                "predicted_outcome": pat.get("outcome", "unknown"),
+                "confidence": round(match_pct * pat.get("reliability", 0.5), 2),
+                "sample_size": pat.get("sample_size", 0),
+            })
+
+    return sorted(matches, key=lambda m: -m["confidence"])
+
+
+# ═══════════════════════════════════════════════════════════════════
+# PUBLIC API — called by the daemon
+# ═══════════════════════════════════════════════════════════════════
+
+def predict_trade(
+    direction: str, uhv: float, candle: dict,
+    recent_candles: list = None, entry_slippage: float = 0,
+    log_fn=None
+) -> dict:
+    """
+    Make a prediction for a trade BEFORE it fires.
+
+    Returns:
+    {
+        "prediction": "WIN" | "LOSS" | "UNCERTAIN",
+        "confidence": 0.0-1.0,
+        "reason": "...",
+        "stage": "Newborn",
+        "health": 85.0,
+        "message_urdu": "Baba kehta hai...",
+    }
+    """
+    state = _load_state()
+    stage = _get_stage(state)
+    state["stage"] = stage["name"]
+    patterns = _load_patterns()
+    features = analyze_candle_pattern(candle, recent_candles)
+
+    # If we're a newborn with no patterns, use Claude for initial prediction
+    if state["total_predictions"] < 5 or not patterns:
+        prediction = _claude_predict(direction, uhv, candle, features, state, log_fn)
+    else:
+        # Match against learned patterns
+        matches = match_patterns(features, patterns)
+        if matches and matches[0]["confidence"] > 0.3:
+            best = matches[0]
+            prediction = {
+                "prediction": best["predicted_outcome"],
+                "confidence": best["confidence"],
+                "reason": f"Pattern '{best['pattern']}' matched at {best['match_pct']:.0%} "
+                          f"(n={best['sample_size']})",
+                "matched_pattern": best["pattern"],
+            }
+        else:
+            # No strong pattern match — ask Claude
+            prediction = _claude_predict(direction, uhv, candle, features, state, log_fn)
+
+    # Add lifecycle info
+    prediction["stage"] = stage["name"]
+    prediction["stage_emoji"] = stage["emoji"]
+    prediction["health"] = state["health"]
+    prediction["generation"] = state.get("generation", 1)
+    prediction["total_predictions"] = state["total_predictions"]
+
+    accuracy = state["correct_predictions"] / max(1, state["total_predictions"])
+    prediction["lifetime_accuracy"] = round(accuracy * 100, 1)
+
+    # Build the Urdu message
+    prediction["message_urdu"] = _build_urdu_message(prediction, state)
+
+    # Save this prediction (outcome TBD)
+    pred_record = {
+        "t": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "direction": direction,
+        "uhv": uhv,
+        "prediction": prediction["prediction"],
+        "confidence": prediction["confidence"],
+        "reason": prediction["reason"],
+        "outcome": None,  # filled in after trade closes
+    }
+    state["predictions"] = state.get("predictions", [])[-49:]
+    state["predictions"].append(pred_record)
+    _save_state(state)
+
+    if log_fn:
+        log_fn(f"SILVER_HAWK [{stage['name']}] gen={state.get('generation',1)} "
+               f"health={state['health']:.0f}: "
+               f"{prediction['prediction']} ({prediction['confidence']:.0%}) — {prediction['reason']}")
+
+    return prediction
+
+
+def record_outcome(won: bool, pnl: float, log_fn=None):
+    """
+    Called after a trade closes. Records whether the prediction was correct.
+    Triggers self-correction if needed.
+    """
+    state = _load_state()
+    predictions = state.get("predictions", [])
+
+    # Find the most recent prediction without an outcome
+    for pred in reversed(predictions):
+        if pred.get("outcome") is None:
+            pred["outcome"] = "WIN" if won else "LOSS"
+            pred["actual_pnl"] = pnl
+            correct = (pred["prediction"] == pred["outcome"])
+            pred["correct"] = correct
+
+            state["total_predictions"] = state.get("total_predictions", 0) + 1
+            if correct:
+                state["correct_predictions"] = state.get("correct_predictions", 0) + 1
+                state["health"] = min(100, state.get("health", 50) + HEALTH_CORRECT)
+                state["consecutive_wrong"] = 0
+                if log_fn:
+                    log_fn(f"SILVER_HAWK: CORRECT! predicted {pred['prediction']}, "
+                           f"was {pred['outcome']}. Health +{HEALTH_CORRECT} = {state['health']:.0f}")
+            else:
+                state["health"] = max(0, state.get("health", 50) + HEALTH_WRONG)
+                state["consecutive_wrong"] = state.get("consecutive_wrong", 0) + 1
+                if log_fn:
+                    log_fn(f"SILVER_HAWK: WRONG! predicted {pred['prediction']}, "
+                           f"was {pred['outcome']}. Health {HEALTH_WRONG} = {state['health']:.0f}  "
+                           f"(consecutive wrong: {state['consecutive_wrong']})")
+
+            break
+
+    # Update lifecycle stage
+    stage = _get_stage(state)
+    state["stage"] = stage["name"]
+    state["predictions"] = predictions
+    _save_state(state)
+
+    # Check if self-correction is needed
+    if state.get("consecutive_wrong", 0) >= CONSECUTIVE_FAIL_LIMIT:
+        if log_fn:
+            log_fn(f"SILVER_HAWK: {CONSECUTIVE_FAIL_LIMIT} consecutive wrong predictions! "
+                   f"Triggering Claude to rewrite pattern matching...")
+        _trigger_self_correction(state, log_fn)
+
+    if state.get("health", 0) <= HEALTH_STARVING:
+        if log_fn:
+            log_fn(f"SILVER_HAWK: STARVING! Health={state['health']:.0f}. "
+                   f"Claude must feed the hawk...")
+        _trigger_self_correction(state, log_fn)
+
+
+def _claude_predict(direction, uhv, candle, features, state, log_fn=None) -> dict:
+    """Ask Claude to make a prediction based on candle analysis."""
+    api_key = _load_api_key()
+    if not api_key or not CLAUDE_AVAILABLE:
+        return {"prediction": "UNCERTAIN", "confidence": 0.0, "reason": "No Claude API"}
+
+    accuracy = state.get("correct_predictions", 0) / max(1, state.get("total_predictions", 1))
+    recent_preds = state.get("predictions", [])[-5:]
+    recent_text = "\n".join([
+        f"  {p.get('direction','?')} @ {p.get('uhv','?')}: predicted {p.get('prediction','?')}, "
+        f"actual {p.get('outcome','pending')}"
+        for p in recent_preds
+    ]) if recent_preds else "No prior predictions."
+
+    feature_text = "\n".join([f"  {k}: {v}" for k, v in features.items()])
+
+    prompt = f"""You are the Silver Haired Hawk — a trade prediction engine.
+Analyze this trade setup and predict: will it WIN or LOSE?
+
+TRADE: {direction.upper()} XAUUSD @ UHV {uhv}
+
+CANDLE FEATURES:
+{feature_text}
+
+MY RECENT PREDICTIONS (accuracy: {accuracy:.0%}):
+{recent_text}
+
+Based on the candle structure, predict the most likely outcome.
+Consider: body strength, wick rejection, volume, trend context.
+
+Respond in EXACTLY this format:
+PREDICTION: WIN or LOSS | CONFIDENCE: 0.0 to 1.0 | REASON: one sentence"""
+
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        resp = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=100,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = resp.content[0].text.strip()
+        if log_fn:
+            log_fn(f"SILVER_HAWK_CLAUDE: {text}")
+
+        prediction = "UNCERTAIN"
+        confidence = 0.5
+        reason = text
+
+        if "PREDICTION:" in text:
+            for part in text.split("|"):
+                p = part.strip()
+                if p.startswith("PREDICTION:"):
+                    val = p.replace("PREDICTION:", "").strip().upper()
+                    prediction = "WIN" if "WIN" in val else "LOSS"
+                elif p.startswith("CONFIDENCE:"):
+                    try:
+                        confidence = float(p.replace("CONFIDENCE:", "").strip())
+                    except ValueError:
+                        pass
+                elif p.startswith("REASON:"):
+                    reason = p.replace("REASON:", "").strip()
+
+        return {"prediction": prediction, "confidence": confidence, "reason": reason}
+
+    except Exception as e:
+        if log_fn:
+            log_fn(f"SILVER_HAWK_ERR: {e}")
+        return {"prediction": "UNCERTAIN", "confidence": 0.0, "reason": str(e)}
+
+
+def _build_urdu_message(prediction: dict, state: dict) -> str:
+    """Build the Urdu prediction message for WhatsApp."""
+    stage = prediction.get("stage", "Newborn")
+    pred = prediction.get("prediction", "UNCERTAIN")
+    conf = prediction.get("confidence", 0)
+    acc = prediction.get("lifetime_accuracy", 0)
+    health = prediction.get("health", 0)
+    gen = prediction.get("generation", 1)
+
+    if stage == "Newborn":
+        title = "Abhi toh baba naya paida hua hai"
+    elif stage == "Toddler":
+        title = "Baba chalna seekh raha hai"
+    elif stage == "Child":
+        title = "Baba ab samajhne laga hai"
+    elif stage == "Teenager":
+        title = "Baba ab jawaan ho raha hai"
+    elif stage == "Adult":
+        title = "Baba ab samajhdaar hai"
+    else:
+        title = "Silver Haired Baba kehta hai"
+
+    if pred == "WIN":
+        verdict = f"yeh trade jeetne wali hai ({conf:.0%} confident)"
+    elif pred == "LOSS":
+        verdict = f"yeh trade haarne wali hai ({conf:.0%} confident)"
+    else:
+        verdict = f"baba ko samajh nahi aa raha ({conf:.0%} confident)"
+
+    msg = (
+        f"{title}.. {verdict}. "
+        f"Baba ki lifetime accuracy {acc:.0f}% hai, "
+        f"health {health:.0f}/100. "
+        f"Generation {gen}."
+    )
+
+    if pred == "LOSS" and conf >= 0.7:
+        msg += " Baba kehta hai mat lo yeh trade yar!"
+
+    return msg
+
+
+# ═══════════════════════════════════════════════════════════════════
+# SELF-CORRECTION — Claude rewrites this module
+# ═══════════════════════════════════════════════════════════════════
+
+def _trigger_self_correction(state: dict, log_fn=None):
+    """
+    The hawk is failing. Ask Claude to read this file,
+    understand what's going wrong, and rewrite the pattern
+    matching logic to fix it.
+    """
+    api_key = _load_api_key()
+    if not api_key or not CLAUDE_AVAILABLE:
+        if log_fn:
+            log_fn("SILVER_HAWK: Cannot self-correct — no Claude API")
+        return
+
+    # Read our own source code
+    try:
+        own_code = SELF_PATH.read_text("utf-8")
+    except Exception:
+        if log_fn:
+            log_fn("SILVER_HAWK: Cannot read own source code")
+        return
+
+    # Get recent predictions with outcomes
+    recent = state.get("predictions", [])[-10:]
+    pred_text = "\n".join([
+        f"  {p.get('direction','?')} @ {p.get('uhv','?')}: "
+        f"predicted={p.get('prediction','?')} actual={p.get('outcome','?')} "
+        f"correct={p.get('correct','?')} features={json.dumps(p.get('features',{}))}"
+        for p in recent if p.get("outcome") is not None
+    ])
+
+    prompt = f"""You are the parent of the Silver Haired Hawk — a trade prediction engine.
+Your child is struggling. It has made {state.get('consecutive_wrong', 0)} consecutive wrong predictions.
+Its health is {state.get('health', 0)}/100. It is {'STARVING' if state['health'] <= HEALTH_STARVING else 'struggling'}.
+
+RECENT PREDICTIONS (most recent first):
+{pred_text}
+
+CURRENT SOURCE CODE of silver_haired_hawk.py:
+```python
+{own_code}
+```
+
+Your task: REWRITE the `analyze_candle_pattern()` and `match_patterns()` functions
+to improve prediction accuracy. Look at what went wrong in the recent predictions
+and adjust the pattern detection logic.
+
+RULES:
+1. Keep ALL function signatures the same
+2. Only modify the code between the PATTERN MATCHING markers
+3. Keep the self-correction and lifecycle code unchanged
+4. Add new pattern detection features based on what you observe in the failures
+5. Return ONLY the complete new Python code for the entire file
+6. Include a comment at the top noting the generation number: {state.get('generation', 1) + 1}
+
+Return the complete file content, ready to write to disk."""
+
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        resp = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=8000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        new_code = resp.content[0].text.strip()
+
+        # Extract Python code from response (may be wrapped in markdown)
+        if "```python" in new_code:
+            new_code = new_code.split("```python", 1)[1]
+            new_code = new_code.split("```", 1)[0]
+
+        # Validate it's real Python (has key functions)
+        if "def analyze_candle_pattern" not in new_code:
+            if log_fn:
+                log_fn("SILVER_HAWK: Rewrite rejected — missing analyze_candle_pattern")
+            return
+        if "def predict_trade" not in new_code:
+            if log_fn:
+                log_fn("SILVER_HAWK: Rewrite rejected — missing predict_trade")
+            return
+
+        # Backup current code
+        backup = SELF_PATH.with_suffix(f".gen{state.get('generation', 1)}.bak")
+        backup.write_text(own_code, encoding="utf-8")
+
+        # Write new code
+        SELF_PATH.write_text(new_code, encoding="utf-8")
+
+        # Update state
+        state["generation"] = state.get("generation", 1) + 1
+        state["consecutive_wrong"] = 0
+        state["health"] = min(100, state.get("health", 0) + 30)  # feeding boost
+        state["rewrites"] = state.get("rewrites", [])[-9:]
+        state["rewrites"].append({
+            "t": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "from_gen": state["generation"] - 1,
+            "to_gen": state["generation"],
+            "reason": f"{state.get('consecutive_wrong', 0)} consecutive wrong, health={state.get('health', 0)}",
+        })
+        _save_state(state)
+
+        if log_fn:
+            log_fn(f"SILVER_HAWK REBORN! Generation {state['generation']}. "
+                   f"Claude rewrote the prediction engine. Health restored to {state['health']:.0f}.")
+
+    except Exception as e:
+        if log_fn:
+            log_fn(f"SILVER_HAWK_REWRITE_ERR: {e}")
+
+
+# ═══════════════════════════════════════════════════════════════════
+# BACKGROUND LEARNER — learns patterns from historical candles
+# ═══════════════════════════════════════════════════════════════════
+
+def learn_from_candles(candles: list, log_fn=None) -> int:
+    """
+    Feed historical candles to Claude and extract patterns.
+    Called periodically by the background learner process.
+    Returns number of patterns learned.
+    """
+    api_key = _load_api_key()
+    if not api_key or not CLAUDE_AVAILABLE:
+        return 0
+
+    if len(candles) < 20:
+        return 0
+
+    # Prepare candle summary (last 100 candles — enough to see patterns, small enough for Claude)
+    candle_text = ""
+    for i, c in enumerate(candles[-100:]):
+        o, h, l, cl, v = c.get("open",0), c.get("high",0), c.get("low",0), c.get("close",0), c.get("volume",0)
+        rng = h - l if h > l else 0.001
+        body = abs(cl - o)
+        br = body / rng
+        direction = "UP" if cl > o else "DN"
+        # Mark UHV candles (volume > 2x average of surrounding candles)
+        candle_text += f"  [{i:3d}] O={o:.2f} H={h:.2f} L={l:.2f} C={cl:.2f} V={v:5d} body={br:.0%} {direction}\n"
+
+    prompt = f"""You are training the Silver Haired Hawk — a pattern recognition engine for XAUUSD 1-minute candles.
+
+Analyze these {len(candles[-100:])} candles and identify REPEATING PATTERNS that predict whether the NEXT candle will go up or down.
+
+CANDLES (oldest first):
+{candle_text}
+
+Look for:
+1. Candle shape patterns (doji before reversal, marubozu before continuation, etc.)
+2. Volume patterns (volume spike before breakout, declining volume before fade)
+3. Multi-candle patterns (engulfing, three soldiers, inside bars)
+4. Range patterns (compression before expansion)
+
+For each pattern, provide:
+- name: descriptive name
+- conditions: dict of feature conditions to match
+- outcome: "WIN" or "LOSS" (for a breakout trade in the candle's direction)
+- reliability: 0.0-1.0 based on how often this pattern held
+- sample_size: how many times you saw this pattern
+
+Respond with a JSON array of pattern objects. Example:
+[
+  {{
+    "name": "strong_body_continuation",
+    "conditions": {{"body_ratio": 0.7, "bullish": true, "volume_increasing": true}},
+    "outcome": "WIN",
+    "reliability": 0.75,
+    "sample_size": 12
+  }}
+]
+
+Return ONLY the JSON array, no other text."""
+
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        resp = client.messages.create(
+            model="claude-sonnet-4-6",
+            max_tokens=4000,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = resp.content[0].text.strip()
+        if log_fn:
+            log_fn(f"SILVER_HAWK_RAW_RESPONSE ({len(text)} chars): {text[:200]}...")
+
+        # Extract JSON — handle markdown wrapping, stray text, etc.
+        new_patterns = None
+        # Try direct parse
+        try:
+            new_patterns = json.loads(text)
+        except json.JSONDecodeError:
+            pass
+
+        # Try extracting from markdown code block
+        if new_patterns is None and "```" in text:
+            for block in text.split("```"):
+                block = block.strip()
+                if block.startswith("json"):
+                    block = block[4:].strip()
+                if block.startswith("["):
+                    try:
+                        new_patterns = json.loads(block)
+                        break
+                    except json.JSONDecodeError:
+                        pass
+
+        # Try finding [ ... ] in raw text
+        if new_patterns is None and "[" in text and "]" in text:
+            try:
+                start = text.index("[")
+                end = text.rindex("]") + 1
+                new_patterns = json.loads(text[start:end])
+            except (json.JSONDecodeError, ValueError):
+                pass
+
+        if not new_patterns or not isinstance(new_patterns, list):
+            if log_fn:
+                log_fn(f"SILVER_HAWK_LEARN: could not parse patterns from response")
+            return 0
+
+        # Merge with existing patterns
+        existing = _load_patterns()
+        existing_names = {p.get("name") for p in existing}
+        added = 0
+        for p in new_patterns:
+            if p.get("name") not in existing_names:
+                existing.append(p)
+                added += 1
+            else:
+                # Update reliability for existing pattern
+                for ep in existing:
+                    if ep.get("name") == p.get("name"):
+                        ep["reliability"] = (ep.get("reliability", 0.5) + p.get("reliability", 0.5)) / 2
+                        ep["sample_size"] = ep.get("sample_size", 0) + p.get("sample_size", 0)
+                        break
+
+        # Save
+        PATTERNS_FILE.write_text(json.dumps({
+            "patterns": existing,
+            "last_learned": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "total_candles_analyzed": len(candles),
+        }, indent=2), encoding="utf-8")
+
+        if log_fn:
+            log_fn(f"SILVER_HAWK_LEARNED: {added} new patterns, {len(existing)} total")
+
+        return added
+
+    except Exception as e:
+        if log_fn:
+            log_fn(f"SILVER_HAWK_LEARN_ERR: {e}")
+        return 0
+
+
+def get_status() -> str:
+    """Return a status summary for logging/display."""
+    state = _load_state()
+    stage = _get_stage(state)
+    total = state.get("total_predictions", 0)
+    correct = state.get("correct_predictions", 0)
+    accuracy = correct / max(1, total) * 100
+    patterns = len(_load_patterns())
+
+    return (
+        f"Silver Haired Hawk Status:\n"
+        f"  Stage: {stage['emoji']} {stage['name']} (gen {state.get('generation', 1)})\n"
+        f"  Health: {state.get('health', 0):.0f}/100\n"
+        f"  Predictions: {correct}/{total} correct ({accuracy:.0f}%)\n"
+        f"  Consecutive wrong: {state.get('consecutive_wrong', 0)}\n"
+        f"  Patterns learned: {patterns}\n"
+        f"  Rewrites: {len(state.get('rewrites', []))}"
+    )

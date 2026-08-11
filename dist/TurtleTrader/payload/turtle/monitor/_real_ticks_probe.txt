@@ -1,0 +1,17 @@
+Terminal: Blueberry Markets Pty Ltd / build 5834
+Account:  12640543 (Blueberry Markets Pty Ltd, BlueberryMarkets-Demo)
+Path:     C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\DBE9B8B347D025DD139E103EE3B63FD8
+
+Symbol info — XAUUSD:
+  digits=2, point=0.01, spread=18
+  trade_tick_value=1.0, trade_contract_size=100.0
+
+Probing real-tick history for XAUUSD (now=2026-05-07 18:43 UTC):
+
+  T-  1d (2026-05-06 -> 2026-05-07): 0 ticks
+  T-  3d (2026-05-04 18:43):   291403 ticks | first 18:43:17 bid=4535.75 ask=4535.89 sprd=14pts
+  T-  7d (2026-04-30 18:43):   287494 ticks | first 18:43:17 bid=4614.97 ask=4615.2 sprd=23pts
+  T- 14d (2026-04-23 18:43):   373267 ticks | first 18:43:17 bid=4733.28 ask=4733.43 sprd=15pts
+  T- 30d (2026-04-07 18:43):   391403 ticks | first 18:43:17 bid=4646.12 ask=4646.26 sprd=14pts
+  T- 60d (2026-03-08 18:43):   591904 ticks | first 01:00:37 bid=5192.34 ask=5192.88 sprd=54pts
+  T- 90d (2026-02-06 -> 2026-02-07): 0 ticks

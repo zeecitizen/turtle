@@ -1,0 +1,132 @@
+{
+  "date": "2026-05-20",
+  "config": "MQL5-mirror v1.18 (one-position, broker SL=$25.0/TP=$50.0)",
+  "lots": 0.05,
+  "n_trades": 12,
+  "wins": 6,
+  "losses": 6,
+  "wr_pct": 50.0,
+  "total_usd": 84.8,
+  "trades": [
+    {
+      "entry_ts": 1779243300,
+      "exit_ts": 1779245701,
+      "side": "buy",
+      "entry_px": 4486.55,
+      "pnl_price": 4.4,
+      "pnl_usd": 21.8,
+      "reason": "EOH",
+      "hold_s": 2401
+    },
+    {
+      "entry_ts": 1779295800,
+      "exit_ts": 1779296911,
+      "side": "sell",
+      "entry_px": 4486.92,
+      "pnl_price": 10.0,
+      "pnl_usd": 49.8,
+      "reason": "BROKER_TP",
+      "hold_s": 1110
+    },
+    {
+      "entry_ts": 1779296913,
+      "exit_ts": 1779297335,
+      "side": "sell",
+      "entry_px": 4476.97,
+      "pnl_price": -5.0,
+      "pnl_usd": -25.2,
+      "reason": "BROKER_SL",
+      "hold_s": 422
+    },
+    {
+      "entry_ts": 1779297635,
+      "exit_ts": 1779297695,
+      "side": "sell",
+      "entry_px": 4501.97,
+      "pnl_price": -5.0,
+      "pnl_usd": -25.2,
+      "reason": "BROKER_SL",
+      "hold_s": 59
+    },
+    {
+      "entry_ts": 1779299400,
+      "exit_ts": 1779299714,
+      "side": "buy",
+      "entry_px": 4521.98,
+      "pnl_price": 10.0,
+      "pnl_usd": 49.8,
+      "reason": "BROKER_TP",
+      "hold_s": 313
+    },
+    {
+      "entry_ts": 1779299715,
+      "exit_ts": 1779300445,
+      "side": "buy",
+      "entry_px": 4532.33,
+      "pnl_price": -5.0,
+      "pnl_usd": -25.2,
+      "reason": "BROKER_SL",
+      "hold_s": 730
+    },
+    {
+      "entry_ts": 1779300746,
+      "exit_ts": 1779300933,
+      "side": "buy",
+      "entry_px": 4524.04,
+      "pnl_price": 10.0,
+      "pnl_usd": 49.8,
+      "reason": "BROKER_TP",
+      "hold_s": 187
+    },
+    {
+      "entry_ts": 1779300934,
+      "exit_ts": 1779300946,
+      "side": "buy",
+      "entry_px": 4534.42,
+      "pnl_price": 10.0,
+      "pnl_usd": 49.8,
+      "reason": "BROKER_TP",
+      "hold_s": 11
+    },
+    {
+      "entry_ts": 1779300965,
+      "exit_ts": 1779301068,
+      "side": "buy",
+      "entry_px": 4549.43,
+      "pnl_price": -5.0,
+      "pnl_usd": -25.2,
+      "reason": "BROKER_SL",
+      "hold_s": 102
+    },
+    {
+      "entry_ts": 1779301368,
+      "exit_ts": 1779301471,
+      "side": "buy",
+      "entry_px": 4541.35,
+      "pnl_price": -5.0,
+      "pnl_usd": -25.2,
+      "reason": "BROKER_SL",
+      "hold_s": 102
+    },
+    {
+      "entry_ts": 1779301772,
+      "exit_ts": 1779304172,
+      "side": "buy",
+      "entry_px": 4530.42,
+      "pnl_price": 3.04,
+      "pnl_usd": 15.0,
+      "reason": "EOH",
+      "hold_s": 2400
+    },
+    {
+      "entry_ts": 1779305400,
+      "exit_ts": 1779306139,
+      "side": "sell",
+      "entry_px": 4526.29,
+      "pnl_price": -5.0,
+      "pnl_usd": -25.2,
+      "reason": "BROKER_SL",
+      "hold_s": 738
+    }
+  ]
+}
