@@ -440,7 +440,13 @@ void TryFire() {
    // = $700 on ONE setup. The live receipts from 2026-08-06 already warn about
    // conviction sizing multiplying losses, so InpMaxRisk exists to cap the total and
    // this must be proven in the tester before it goes anywhere near live.
-   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, 3))) : 1;
+   // The cap must follow the number of ACTIVE laws, not a hardcoded 3. With Law 2
+   // enabled there are four diamonds available, and a fixed cap of 3 silently threw the
+   // fourth away — the Law 2 test returned results identical TO THE CENT because the
+   // rule could not affect the outcome at all. A limit that quietly deletes a feature
+   // is the same class of bug as a fallback that never announces itself.
+   int maxdia = InpUseLaw2 ? 4 : 3;
+   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, maxdia))) : 1;
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
