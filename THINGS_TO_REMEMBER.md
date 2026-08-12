@@ -1,5 +1,11 @@
 # THINGS TO REMEMBER
 
+> **Before running ANY test, read [`testing/test_tips.md`](testing/test_tips.md).**
+> It holds every testing rule, formula and gotcha we have paid for — the real-tick
+> requirement, the null-hypothesis control, the five silent failures, the MT5 traps, and
+> the checklist. This page covers the rig; that one covers how not to fool yourself.
+
+
 Zee, 2026-08-10: *"paste there that you already have a self executing (without human
 intervention) strategy tester setup on MT5.. i think we forget afterwards"*
 

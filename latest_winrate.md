@@ -1,3 +1,7 @@
+> **⚠️ Every number in this file before 2026-08-13 was measured at 4 ticks per bar.**
+> Only real-tick runs (`--model 4`) can test a 1-point target. See
+> [`testing/test_tips.md`](testing/test_tips.md) before quoting anything here.
+
 
 
 ## 📏 FIVE SEARCHES, ONE CONFIG — and the one thing still unexplained (2026-08-12)
