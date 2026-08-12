@@ -57,6 +57,12 @@
 //|                                                                  |
 //| magic 88094 = tester only.                                        |
 //+------------------------------------------------------------------+
+//| WATCHER REMOVED 2026-08-12. It defaulted to false and its guard returned
+//| immediately, yet its mere presence changed the tester result: 1,608 trades at
+//| 93.28% and +$2,599.10 became 1,665 at 69.43% and -$779.90 on identical data,
+//| identical inputs and 97,564 identical bars. Removing it restores the number to
+//| the cent. The mechanism is not yet understood, which is exactly why it is out:
+//| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
 #property version   "1.00"
 #property strict
@@ -78,13 +84,6 @@ input int    InpBreakWindow = 12;     // InpBreakWindow — bars after the UHV i
 input group "── Exit: SL 6 / TP 3 measured on his own setups ──"
 input double InpStopPts     = 20.0;   // InpStopPts — 20 validated: 93.3% on 1,608 trades, 100% on both unseen sets
 input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W/1L, 96%, his own Feb-11 shape
-input group "── THE WATCHER: leave the moment the breakout fails (Zee 2026-08-10) ──"
-input bool   InpFailExit    = false;  // InpFailExit — MEASURED WORSE: 93.28%->64.08%, +$2,599->-$872. A single dip back through the level kicks out winners too. OFF.
-input double InpFailOffset  = 0.10;   // InpFailOffset — how far back through the level counts as failure
-input bool   InpStaleExit   = false;  // InpStaleExit — untestable while InpFailExit fires first; OFF until the invalidation trigger is fixed
-input int    InpStaleMin    = 12;     // InpStaleMin — minutes of nothing before we call it fate
-input double InpStaleBand   = 0.40;   // InpStaleBand — 'flat' means within this many points of entry
-
 input int    InpMaxHoldMin  = 60;   // InpMaxHoldMin — 60 — Zee: every breakout eventually gives the bump, so give it time
 
 input group "── Housekeeping ──"
@@ -102,9 +101,6 @@ input double InpStackStep   = 0.0;   // InpStackStep — 0.0 = every diamond tic
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
-// the level the breakout had to hold, remembered so the watcher can judge it tick by tick
-double   g_uhv_level = 0;
-int      g_uhv_side  = 0;
 
 //+------------------------------------------------------------------+
 //| The tester overwrites tick_volume with its synthesised tick count |
@@ -393,16 +389,18 @@ void TryFire() {
       // of 0.30 silently behaved like 0.20 and the sweep returned identical numbers for
       // both. Floating point must never quietly move a risk limit.
       if (InpMaxRisk > 0 && total + lots > InpMaxRisk + 1e-9) break;
-      bool ok = (t > 0) ? trade.Buy (lots, _Symbol, 0, sl, tp, "zee_buy")
-                        : trade.Sell(lots, _Symbol, 0, sl, tp, "zee_sell");
+      // Zee, 2026-08-12: "measure the diamond's earnings and decide which diamond is
+      // the most earner". The count must survive into the deal record to be grouped
+      // later, and the comment is the only field that travels with it.
+      string tag = StringFormat("zee_%s_D%d", (t > 0 ? "buy" : "sell"), dia);
+      bool ok = (t > 0) ? trade.Buy (lots, _Symbol, 0, sl, tp, tag)
+                        : trade.Sell(lots, _Symbol, 0, sl, tp, tag);
       if (!ok) break;
       total += lots; placed += 1;
       if (!InpStackLots) break;
    }
    if (placed > 0) {
       g_last_fire = TimeCurrent();
-      g_uhv_level = (t > 0) ? bHigh(uhv) : bLow(uhv);   // the level that must hold
-      g_uhv_side  = t;
       PrintFormat("[ZEE] %s @%.2f — %d diamond(s) -> %d ticket(s), %.2f lots total · "
                   "UHV %d (vol %d) · brk vol %d",
                   t > 0 ? "BUY " : "SELL", px, dia, (int)placed, total,
@@ -410,74 +408,6 @@ void TryFire() {
    }
 }
 
-//+------------------------------------------------------------------+
-//| THE WATCHER — the EA sits with the trade instead of setting a     |
-//| stop and walking away.                                            |
-//|                                                                   |
-//| Zee, 2026-08-10, from his own Feb-11 broker statement:            |
-//|     avg WIN   +1.54 pt, held  1.0 min                             |
-//|     avg LOSS  -0.16 pt, held 24.9 min                             |
-//|     worst trade of the entire day: -1.60 EUR                      |
-//| He never took a real loss. All four losers were the same setup at |
-//| 18:41:50, held 25 minutes and exited FLAT because he could see the|
-//| bump was not coming.                                              |
-//|                                                                   |
-//| He put it as two states: "bump is there -> take it and leave. bump|
-//| is not there -> take the loss and leave before it turns against    |
-//| us." And when I said a clock cannot know which state it is in, he  |
-//| answered: "our EA can read the tape. an EA can be watching."       |
-//| He is right. OnTick fires on every price update, so the EA can     |
-//| judge the breakout continuously instead of once a candle.         |
-//|                                                                   |
-//| TWO WAYS A BREAKOUT ANNOUNCES ITS OWN FAILURE:                     |
-//|   1. INVALIDATION — price falls back through the very level it     |
-//|      broke. The reason for the trade has gone, so the trade goes   |
-//|      too, at market, immediately. This is what turns a -27pt stop  |
-//|      into his -0.16pt exit: we leave AT the level, not 20 points   |
-//|      below it.                                                     |
-//|   2. STALENESS — price neither breaks out nor fails; it just sits. |
-//|      That is exactly what his four losers did. After InpStaleMin   |
-//|      minutes still inside InpStaleBand of entry, call it fate.     |
-//+------------------------------------------------------------------+
-void Watch() {
-   if (!InpFailExit && !InpStaleExit) return;
-   if (g_uhv_level <= 0) return;
-   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   for (int i = PositionsTotal() - 1; i >= 0; i--) {
-      ulong t = PositionGetTicket(i);
-      if (t == 0 || !PositionSelectByTicket(t)) continue;
-      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
-      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
-      bool isbuy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
-      double entry = PositionGetDouble(POSITION_PRICE_OPEN);
-      double now   = isbuy ? bid : ask;
-      double prof  = isbuy ? (bid - entry) : (entry - ask);
-
-      // 1. the breakout gave the level back — the reason for the trade is gone
-      if (InpFailExit) {
-         bool failed = isbuy ? (bid < g_uhv_level - InpFailOffset)
-                             : (ask > g_uhv_level + InpFailOffset);
-         if (failed) {
-            if (trade.PositionClose(t) && InpVerbose)
-               PrintFormat("[ZEE] FAILED — price back through %.2f, out at %.2fpt",
-                           g_uhv_level, prof);
-            continue;
-         }
-      }
-      // 2. it is going nowhere at all — his four losers, exactly
-      if (InpStaleExit) {
-         datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
-         if (TimeCurrent() - opened >= InpStaleMin * 60 && MathAbs(prof) <= InpStaleBand) {
-            if (trade.PositionClose(t) && InpVerbose)
-               PrintFormat("[ZEE] STALE — %d min and still flat (%.2fpt), calling it fate",
-                           InpStaleMin, prof);
-         }
-      }
-   }
-}
-
-//+------------------------------------------------------------------+
 void AgeOut() {
    if (InpMaxHoldMin <= 0) return;
    for (int i = PositionsTotal() - 1; i >= 0; i--) {
@@ -521,7 +451,6 @@ double OnTester() {
 
 //+------------------------------------------------------------------+
 void OnTick() {
-   Watch();          // every tick, not once a candle
    AgeOut();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;
