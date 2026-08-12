@@ -10,11 +10,11 @@ backtested and never traded. But the idea behind it is sound and buildable:
     DECIDE on OANDA data. EXECUTE at the broker.
 
 That is what this is. The same four laws that live in mt5/ZeeUHV.mq5, run against
-Common/Files/oanda_m1.csv — real OANDA prices AND real OANDA traded volume — with the
+Common/Files/oanda_m1.csv — OANDA prices AND OANDA tick volume — with the
 resulting setup handed to the broker for filling.
 
 WHY IT MIGHT BEAT THE CHART EA
-    XAUUSD_R3  OANDA prices + OANDA volume    93.28%   +$2,599
+    XAUUSD_R3  OANDA prices + OANDA tick volume    93.28%   +$2,599
     XAUUSD     broker prices + broker volume  80-89%   -$3,956
     v2         broker prices + OANDA volume   80.00%   -$2,866   <- volume alone did nothing
 

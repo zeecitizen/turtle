@@ -2,9 +2,25 @@
 
 Zee's UHV method runs on OANDA/TradingView volume. Blueberry MT5's tick-count volume
 is a DIFFERENT metric (same candle, e.g. 01:30 UTC: MT5 vol 451 vs OANDA vol 2132), so
-the MT5-fed detector never saw Zee's UHVs. This bridge pulls OANDA:XAUUSD M1 bars
-(OHLC + the real volume) straight from the live TradingView chart via Chrome DevTools
-Protocol (port 9222) and writes them to a CSV the detector reads.
+the MT5-fed detector never saw Zee's UHVs. This bridge pulls OANDA:XAUUSD M1 bars (OHLC + volume) straight from the live
+TradingView chart via Chrome DevTools Protocol (port 9222) and writes them to a CSV the
+detector reads.
+
+CORRECTION, 2026-08-13. This was described for months as "the real volume". IT IS NOT.
+XAUUSD is OTC with no central exchange, so NO retail broker publishes traded volume —
+both feeds report a TICK COUNT, meaning how many price updates arrived. OANDA's is denser
+(median ~500 against Blueberry's ~200) because OANDA aggregates 20+ interbank feeds, not
+because it measures something different in kind.
+
+Why the denser feed is still the right one for this method: the rules are RELATIVE — the
+loudest bar in the retracement, and a breakout quieter than it. A denser feed resolves
+those comparisons more finely, so the bar it calls "loudest" is a better estimate of where
+activity actually concentrated. Zee's teacher specified OANDA volume and that stands.
+
+The real hazard is NOT a threshold mismatch — we use no absolute volume threshold
+anywhere. It is that two feeds can disagree about WHICH bar was loudest. Measured: of 10
+live entries the EA made on Blueberry bars, our OANDA archive agrees with only ONE. Same
+minute, different answer about where the UHV sat.
 
 TradingView internal path (reverse-engineered via CDP):
   window._exposed_chartWidgetCollection.activeChartWidget.value()

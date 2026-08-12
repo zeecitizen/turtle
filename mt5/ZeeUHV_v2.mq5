@@ -7,12 +7,12 @@
 //| OANDA volume too (currently broker volume)."                     |
 //|                                                                  |
 //| WHY THIS EXISTS. Everything we validated was measured on          |
-//| XAUUSD_R3, a custom symbol carrying OANDA's REAL TRADED VOLUME    |
+//| XAUUSD_R3, a custom symbol carrying OANDA's tick volume    |
 //| (median 458-586). The EA then went live on a broker chart, where  |
 //| iRealVolume is 0 for gold and iVolume is a TICK COUNT (median     |
 //| 150-200). Measured on the clean build over the same 103 days:     |
 //|                                                                  |
-//|     OANDA traded volume   93.28%   +$2,599                       |
+//|     OANDA tick volume   93.28%   +$2,599                       |
 //|     broker tick counts    89.13%   -$3,947                       |
 //|                                                                  |
 //| Four points of win rate, and a $6,500 swing, because at SL 20 /   |
