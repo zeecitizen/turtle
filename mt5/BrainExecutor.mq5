@@ -133,12 +133,31 @@ void CheckSignal() {
    double tp = StringToDouble(Grab(body, "tp"));
    if (side != "buy" && side != "sell") return;
 
+   // THE DIAMOND STACK. Zee, 2026-08-12: "does the brain has the diamond multiplier?"
+   // It did not, and that is worth six times the profit — the brain had been trading
+   // the weakest version of his own strategy. The brain now sends a ticket count and
+   // this opens that many, each the same size, exactly as ZeeUHV.mq5 does.
+   int tickets = (int)StringToInteger(Grab(body, "tickets"));
+   if (tickets < 1) tickets = 1;
+   int room = InpMaxOpen - CountMine();
+   if (tickets > room) tickets = room;
+
    g_last_id = id; SaveLast(id);             // BEFORE trading: a failed order must not retry forever
-   bool ok = (side == "buy")
-             ? trade.Buy (InpLots, _Symbol, 0, sl, tp, "brain_buy")
-             : trade.Sell(InpLots, _Symbol, 0, sl, tp, "brain_sell");
-   PrintFormat("[BRAIN] %s %.2f lots  SL %.2f  TP %.2f  -> %s (%d)",
-               side, InpLots, sl, tp, ok ? "FILLED" : "REJECTED", trade.ResultRetcode());
+   int filled = 0;
+   for (int k = 0; k < tickets; k++) {
+      bool ok = (side == "buy")
+                ? trade.Buy (InpLots, _Symbol, 0, sl, tp, "brain_buy")
+                : trade.Sell(InpLots, _Symbol, 0, sl, tp, "brain_sell");
+      if (!ok) {
+         PrintFormat("[BRAIN] ticket %d of %d REJECTED (%d) — stopping this stack",
+                     k + 1, tickets, trade.ResultRetcode());
+         break;
+      }
+      filled++;
+   }
+   PrintFormat("[BRAIN] %s %d💎 -> %d ticket(s), %d filled, %.2f lots each  SL %.2f  TP %.2f",
+               side, (int)StringToInteger(Grab(body, "diamonds")), tickets, filled,
+               InpLots, sl, tp);
 }
 
 int OnInit() {
