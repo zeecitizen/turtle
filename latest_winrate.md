@@ -43,6 +43,47 @@ claims, and only live losses — when they come — will separate them.
 
 ---
 
+
+# ✅ THE BACKTEST-VS-LIVE CONTRADICTION WAS MY SAMPLING ERROR (2026-08-12)
+
+For two days I could not reconcile "every broker backtest loses" with "the live account
+wins every setup", and offered four wrong explanations: the volume source, the tick model,
+contaminated code, and the price feed.
+
+**There was never a contradiction. I was comparing a 103-day backtest against two days of
+live trading.**
+
+Replaying the EXACT days the live EA traded, on REAL broker ticks (598,796 ticks over
+2,758 bars, 217 per bar, quality 100%):
+
+```
+                              trades   win%        net
+real ticks, Aug 10-13             38  100.00%   +$430.00
+THE LIVE ACCOUNT, same days       12  100.00%   +$570.40
+real ticks, Mar 2-16             224   85.27%  -$2,618.30
+```
+
+**The tester agrees with live when pointed at the same days.** It also handles a 1-point
+target correctly once given real ticks — avg win $11.32 against a $10 target, so fills
+land slightly PAST the target rather than being penalised.
+
+## What this actually means
+
+- **The tester is not broken**, and MT5 can test a 1-point scalper — but only on REAL
+  TICKS. Every custom-symbol result in this file was measured at 4 ticks per bar and
+  remains suspect.
+- **The live results are real.** So are the March losses.
+- **The strategy has good periods and bad ones, and August is a good one.** Twelve
+  consecutive wins is not evidence of an edge; it is evidence of a favourable fortnight.
+
+## The methodological lesson, which is mine
+
+Comparing a long backtest to a short live sample and calling the difference a mystery is
+a sampling error, not a finding. **Match the period before comparing the numbers.** Four
+elaborate explanations were built on top of that mistake before anyone checked it.
+
+---
+
 # 🚨 THE WIN RATE WAS NEVER THE EDGE (2026-08-12)
 
 Zee: *"but isnt it the fact: that your tests don't even apply to our trades, that you're
