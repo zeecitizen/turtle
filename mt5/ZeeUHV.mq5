@@ -493,37 +493,69 @@ void AgeOut() {
 //|     rate. A 95% win rate that nets negative is the SL-30 trap he   |
 //|     found this afternoon, where one loss wipes thirty wins.        |
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| CVaR95 — the mean of the WORST 5% of losing trades.              |
+//|                                                                  |
+//| The first TCER used STAT_MAX_LOSSTRADE, the single worst trade,   |
+//| which lets one news spike decide a 585-config sweep. MT5 has no   |
+//| CVaR statistic, but OnTester runs after the test finishes, so the |
+//| whole deal history is there to be read.                           |
+//|                                                                  |
+//| Why this is the better tail measure: CVaR95 is always >= the      |
+//| average loss, so avgLoss/CVaR95 lands in (0,1] and reaches 1 only |
+//| when EVERY loss is the same size. That is exactly the property we |
+//| want to reward — losses that are uniform rather than occasionally |
+//| catastrophic.                                                     |
+//+------------------------------------------------------------------+
+double GetCVaR95() {
+   if (!HistorySelect(0, TimeCurrent())) return 0.0;
+   double losses[];
+   int n = 0, total = HistoryDealsTotal();
+   for (int i = 0; i < total; i++) {
+      ulong t = HistoryDealGetTicket(i);
+      if (t <= 0) continue;
+      long entry = HistoryDealGetInteger(t, DEAL_ENTRY);
+      if (entry != DEAL_ENTRY_OUT && entry != DEAL_ENTRY_INOUT) continue;
+      double pnl = HistoryDealGetDouble(t, DEAL_PROFIT)
+                 + HistoryDealGetDouble(t, DEAL_SWAP)
+                 + HistoryDealGetDouble(t, DEAL_COMMISSION);
+      if (pnl < 0) { n++; ArrayResize(losses, n); losses[n-1] = MathAbs(pnl); }
+   }
+   if (n == 0) return 0.0;
+   ArraySort(losses);                                  // ascending
+   int k = (int)MathMax(1, MathCeil(n * 0.05));        // the worst 5%, at least one
+   double sum = 0.0;
+   for (int i = n - k; i < n; i++) sum += losses[i];
+   return sum / k;
+}
+
 double OnTester() {
-   // ── TCER: Tail-Compressed Expectancy Ratio (2026-08-12) ─────────────────────
-   //     TCER = E x (avgLoss / tailLoss) x sqrt(N)
+   // ── TCER with TRUE CVaR95 ───────────────────────────────────────────────────
+   //     TCER = E x (avgLoss / CVaR95) x sqrt(N)
    //
-   // Replaces win rate, which the NullEntry control proved is noise: no rules at all
-   // scored 92.42% against ZeeUHV's 93.28%, because a 1-point target against a 20-point
-   // stop over 60 minutes wins ~92% from ANY entry. The edge is not picking winners, it
-   // is picking trades that are CHEAP TO BE WRONG ABOUT — avg loss $114.58 vs $154.80,
-   // worst $200 vs $723.
+   // Win rate is not used and never will be again. NullEntry — no rules at all —
+   // scored 92.42% against ZeeUHV's 93.28%, because a 1-point target against a
+   // 20-point stop over 60 minutes wins ~92% from ANY entry. The edge is not picking
+   // winners; it is picking trades that are CHEAP TO BE WRONG ABOUT.
    //
-   //   E              expectancy per trade; also rejects any net-negative pass
-   //   avgLoss/tail   how closely the worst losses resemble the average one. High means
-   //                  the setup creates structural friction when it fails — price chops
-   //                  in the absorption zone instead of free-falling.
-   //   sqrt(N)        sample weight, so a lucky 40-trade run cannot outrank 1,600.
+   //   E                 expectancy per trade, and rejects any net-negative pass
+   //   avgLoss/CVaR95    in (0,1]; reaches 1 only when every loss is the same size
+   //   sqrt(N)           sample weight, so a lucky short run cannot outrank 1,600 trades
    //
-   // HONEST NOTE ON THE TAIL TERM. The metric as designed wants CVaR95 — the mean of
-   // the worst 5% of losses. MT5's OnTester exposes no loss distribution, only
-   // STAT_MAX_LOSSTRADE, so the single worst trade stands in for it. That is exactly
-   // the single-candle bias the design warned about: one news spike can decide the
-   // score. Every TCER winner must therefore be validated out-of-sample before it is
-   // believed — which is how the TP-3 "winner" was caught losing on both unseen sets.
+   // STILL NOT A PROOF. The ratio can rise by shrinking the tail (wanted) or by
+   // inflating the average loss (not wanted), and E only partly cancels that. Every
+   // winner is frozen and run on unseen data before it is believed — the discipline
+   // that caught a TP-3 config worth $4,152 in-sample and -$491 on Feb 11.
    double trades = TesterStatistics(STAT_TRADES);
    double net    = TesterStatistics(STAT_PROFIT);
    double losses = TesterStatistics(STAT_LOSS_TRADES);
    double avgLoss = MathAbs(TesterStatistics(STAT_GROSS_LOSS) / MathMax(1.0, losses));
-   double tail    = MathAbs(TesterStatistics(STAT_MAX_LOSSTRADE));
-   if (trades < InpMinTrades || net <= 0 || avgLoss <= 0 || tail <= 0) return 0.0;
-   double E = net / trades;
-   return E * (avgLoss / tail) * MathSqrt(trades);
+   if (trades < InpMinTrades || net <= 0 || avgLoss <= 0) return 0.0;
+   double cvar = GetCVaR95();
+   if (cvar <= 0) return 0.0;
+   return (net / trades) * (avgLoss / cvar) * MathSqrt(trades);
 }
+
 
 
 
