@@ -146,7 +146,17 @@ def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
     ini = ROOT / "mt5" / "_headless_run.ini"
     write_ini(ini, "Tester",
               Expert=ea, Symbol=symbol, Period=period,
-              # 0 = EVERY TICK (real broker tick history), 2 = 1 minute OHLC.
+              # MT5 modelling modes, and the distinction that matters for a 1-point target:
+              #   0 = "Every tick"          — ticks INTERPOLATED from M1 bars (a guess)
+              #   1 = "1 minute OHLC"       — four ticks per bar
+              #   2 = "Open prices only"    — one tick per bar
+              #   4 = "Every tick based on REAL TICKS" — the broker's stored .tkc history
+              #
+              # Every backtest before 2026-08-12 used an interpolated mode. For a target
+              # of ONE POINT that is close to meaningless: MT5 deletes the intrabar path
+              # and guesses it back, so a spike that really did touch +1 before falling
+              # simply does not exist in the simulation. Blueberry stores 500 MB of real
+              # ticks for XAUUSD, so mode 4 costs nothing to use.
               # With TP 1 and SL 20 the ORDER of touches inside a bar decides the
               # trade, and OHLC modelling invents only four ticks per bar — it cannot
               # know which came first. Real ticks can.
@@ -179,7 +189,8 @@ if __name__ == "__main__":
     ap.add_argument("--from", dest="frm", default="2026.08.05")
     ap.add_argument("--to", default="2026.08.10")
     ap.add_argument("--optimize", action="store_true")
-    ap.add_argument("--model", type=int, default=2, help="0=every tick, 2=1min OHLC")
+    ap.add_argument("--model", type=int, default=2,
+                    help="0=interpolated ticks, 1=OHLC, 2=open only, 4=REAL ticks")
     a = ap.parse_args()
     if a.setup:
         setup(symbol=a.symbol)
