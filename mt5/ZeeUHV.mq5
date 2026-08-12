@@ -494,39 +494,37 @@ void AgeOut() {
 //|     found this afternoon, where one loss wipes thirty wins.        |
 //+------------------------------------------------------------------+
 double OnTester() {
-   // ── WHAT WE OPTIMISE FOR, CHANGED 2026-08-12 ────────────────────────────────
-   // Zee: "isnt it the fact that your tests don't even apply to our trades, that
-   // you're unaware on why the trades win in the first place?" He was right, and the
-   // control experiment proved it. NullEntry — no rules at all, firing every 30
-   // minutes with the SAME stop, target and hold — scored 92.42%. ZeeUHV scores
-   // 93.28%. The entire win rate comes from the GEOMETRY: a 1-point target against a
-   // 20-point stop over 60 minutes wins ~92% from any entry, because gold touches a
-   // dollar constantly.
+   // ── TCER: Tail-Compressed Expectancy Ratio (2026-08-12) ─────────────────────
+   //     TCER = E x (avgLoss / tailLoss) x sqrt(N)
    //
-   // The rules add 0.86 points of win rate and $6,876 of profit. That money is not in
-   // the wins — both engines average $9.98 a win. It is in the LOSSES:
+   // Replaces win rate, which the NullEntry control proved is noise: no rules at all
+   // scored 92.42% against ZeeUHV's 93.28%, because a 1-point target against a 20-point
+   // stop over 60 minutes wins ~92% from ANY entry. The edge is not picking winners, it
+   // is picking trades that are CHEAP TO BE WRONG ABOUT — avg loss $114.58 vs $154.80,
+   // worst $200 vs $723.
    //
-   //     average loss   null -$154.80   ZeeUHV -$114.58
-   //     worst trade    null -$723.10   ZeeUHV -$200.00
+   //   E              expectancy per trade; also rejects any net-negative pass
+   //   avgLoss/tail   how closely the worst losses resemble the average one. High means
+   //                  the setup creates structural friction when it fails — price chops
+   //                  in the absorption zone instead of free-falling.
+   //   sqrt(N)        sample weight, so a lucky 40-trade run cannot outrank 1,600.
    //
-   // A real UHV sits at a level price respects, so when the trade fails price chops
-   // in the absorption zone instead of free-falling. The edge is not picking winners;
-   // it is picking trades that are CHEAP TO BE WRONG ABOUT.
-   //
-   // Every sweep before today ranked by WIN RATE — which we now know is noise the
-   // geometry produces whatever the rules say. This ranks by EXPECTANCY per trade,
-   // which is the thing that actually separated +$2,599 from -$4,277.
+   // HONEST NOTE ON THE TAIL TERM. The metric as designed wants CVaR95 — the mean of
+   // the worst 5% of losses. MT5's OnTester exposes no loss distribution, only
+   // STAT_MAX_LOSSTRADE, so the single worst trade stands in for it. That is exactly
+   // the single-candle bias the design warned about: one news spike can decide the
+   // score. Every TCER winner must therefore be validated out-of-sample before it is
+   // believed — which is how the TP-3 "winner" was caught losing on both unseen sets.
    double trades = TesterStatistics(STAT_TRADES);
-   if (trades < InpMinTrades) return 0.0;
-   double net = TesterStatistics(STAT_PROFIT);
-   if (net <= 0) return 0.0;                     // a losing pass scores nothing
-   double expectancy = net / trades;             // dollars per trade
-   // Penalise a fat tail: a config that earns by risking one catastrophic loss is not
-   // the same as one that never has a big loser, even at identical expectancy.
-   double worst = MathAbs(TesterStatistics(STAT_MAX_LOSSTRADE));
-   double tail  = (worst > 0 ? MathMin(1.0, 200.0 / worst) : 1.0);
-   return expectancy * tail * 100.0;
+   double net    = TesterStatistics(STAT_PROFIT);
+   double losses = TesterStatistics(STAT_LOSS_TRADES);
+   double avgLoss = MathAbs(TesterStatistics(STAT_GROSS_LOSS) / MathMax(1.0, losses));
+   double tail    = MathAbs(TesterStatistics(STAT_MAX_LOSSTRADE));
+   if (trades < InpMinTrades || net <= 0 || avgLoss <= 0 || tail <= 0) return 0.0;
+   double E = net / trades;
+   return E * (avgLoss / tail) * MathSqrt(trades);
 }
+
 
 
 //+------------------------------------------------------------------+
