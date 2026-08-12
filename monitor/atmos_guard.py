@@ -41,7 +41,11 @@ ACCOUNT = 10000.0
 DAILY_LOSS_PCT = 4.0
 MAX_LOSS_PCT = 8.0
 TARGET_PCT = 5.0
-MAGIC = 88094                      # ZeeUHV v1
+# Two engines now share this account, and they carry very different risk.
+ENGINES = {88094: "ZeeUHV     (0.10 lots)",
+           88095: "ZeeUHV v2  (OANDA volume)",
+           88096: "BrainExec  (0.01 lots)"}
+MAGIC = 88094
 
 
 def atmos_fills():
@@ -110,6 +114,15 @@ def report():
     print()
     if not rows:
         print("   no Atmos fills yet — nothing to measure.")
+        print()
+        print("   WHAT EACH ENGINE CAN COST ON ONE LOSING STACK:")
+        for mg, name in ENGINES.items():
+            lots = 0.01 if mg == 88096 else 0.10
+            n = 4 if mg == 96 else (5 if mg == 88094 else 4)
+            worst = n * 20 * (lots / 0.10) * 10
+            print(f"      {name:26s} {n} tickets -> ${worst:,.0f}  "
+                  f"({worst/ACCOUNT*100:.1f}% of the account)"
+                  + ("   <-- alone exceeds the 8% cap" if worst > ACCOUNT*MAX_LOSS_PCT/100 else ""))
     else:
         today = datetime.now().strftime("%Y.%m.%d")
         day = [float(r["net_pnl"]) for r in rows if r["broker_time"].startswith(today)]
@@ -122,6 +135,16 @@ def report():
               f"({abs(min(tpl,0))/mlim*100:5.1f}% used)")
         print(f"   target    ${ACCOUNT*TARGET_PCT/100:,.0f}  "
               f"({tpl/(ACCOUNT*TARGET_PCT/100)*100:5.1f}% of the way)")
+        print()
+        print("   BY ENGINE:")
+        import collections as _c
+        by = _c.defaultdict(list)
+        for r in rows:
+            by[(r.get("magic") or "?").strip()].append(float(r["net_pnl"]))
+        for mg, v in sorted(by.items()):
+            name = ENGINES.get(int(mg) if mg.isdigit() else 0, f"magic {mg}")
+            w = sum(1 for x in v if x > 0)
+            print(f"      {name:26s} {len(v):3d} fills · {w}W/{len(v)-w}L · ${sum(v):+9,.2f}")
         print()
         for label, val, lim in (("TODAY", dpl, dlim), ("OVERALL", tpl, mlim)):
             used = abs(min(val, 0)) / lim
