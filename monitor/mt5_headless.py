@@ -167,7 +167,10 @@ def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
               OptimizationCriterion=6,               # 6 = our OnTester value
               Report=name, ReplaceReport=1,
               ShutdownTerminal=1, Visual=0)
-    run(ini, timeout=5400 if optimize else 600,
+    # Real-tick modelling (mode 4) reads millions of stored ticks and is far slower
+    # than the 4-per-bar modes — a 45-day run blew the 600s budget and wrote NO report,
+    # which looks identical to a failed test. Give it the optimisation budget.
+    run(ini, timeout=5400 if (optimize or model == 4) else 600,
         label=f"{ea} {'OPTIMISATION' if optimize else 'backtest'}")
     for ext in (".htm", ".html", ".xml"):
         src = RIG / (name + ext)
