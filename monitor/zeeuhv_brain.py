@@ -112,9 +112,24 @@ def load_bars(limit=4000):
     return out[-limit:]
 
 
-def find_setup(bars):
-    """Exactly the EA's sequence: trend, retracement, UHV, breakout on THIS bar."""
-    i = len(bars) - 1                                  # the last CLOSED bar
+def find_setup(bars, now=None):
+    """Exactly the EA's sequence: trend, retracement, UHV, breakout on THIS bar.
+
+    2026-08-12: this said "the last CLOSED bar" and took bars[-1], which is the bar
+    STILL FORMING. The brain therefore judged a half-built candle on every scan and
+    recorded ZERO setups in nine hours, while a replay of the same tape found three
+    (13:21, 14:24, 15:33 UTC). The logic was never wrong; it was being fed an
+    incomplete bar.
+
+    A bar is complete only once the NEXT minute has begun. Anything else is a
+    candle whose high, low and close have not happened yet — and every rule here
+    depends on all three.
+    """
+    import time as _t
+    i = len(bars) - 1
+    cutoff = (now if now is not None else _t.time()) - 60
+    while i > 0 and bars[i]["t"] > cutoff:
+        i -= 1                                         # step back to a CLOSED bar
     t = Z.trend_at(bars, i, look=TREND_LOOK)
     if t == 0:
         return None, "ranging — his setup needs a trend"
