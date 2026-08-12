@@ -233,6 +233,36 @@ bool BreakoutIsBar1(int uhv, int side) {
    return false;
 }
 
+//| RESUMING AFTER A DROPOUT — Zee, 2026-08-13: "our EA should resume as
+//| soon as it can.. 25 mins is too much".
+//|
+//| The old guard rejected the whole 25-bar window if ANY hole sat inside it,
+//| so one outage cost 25 clean minutes afterwards. On a flaky connection that
+//| is expensive, and it is stricter than the logic needs: the rules only ever
+//| read from the retracement origin forward, which is usually far shorter.
+//|
+//| WHAT DID NOT CHANGE: a hole is still never reasoned across. Bars either
+//| side of an outage are not comparable and a "UHV" measured over one is an
+//| artefact of the router, not the market. This narrows WHERE we look for a
+//| hole; it does not tolerate one.
+//|
+//| Worth knowing (measured 2026-08-13): during three dropouts of 33, 25 and
+//| 32 minutes, OANDA recorded EVERY bar — the market was trading and only our
+//| connection was down. MT5 backfills M1 history on reconnect, so in that
+//| common case there is no hole to find and neither guard blanks anything.
+//| This matters only for a genuine hole, e.g. broker-side.
+bool WindowUsable(int from_bar) {
+   if (InpMaxGapSec <= 0) return true;
+   int step = PeriodSeconds();
+   for (int k = 1; k < from_bar; k++) {
+      datetime a = iTime(_Symbol, PERIOD_CURRENT, k);
+      datetime b = iTime(_Symbol, PERIOD_CURRENT, k + 1);
+      if (a <= 0 || b <= 0) return false;
+      if ((int)(a - b) > step + InpMaxGapSec) return false;
+   }
+   return true;
+}
+
 bool WindowContinuous(int bars) {
    if (InpMaxGapSec <= 0) return true;
    int step = PeriodSeconds();
