@@ -1,4 +1,48 @@
 
+
+## 📏 FIVE SEARCHES, ONE CONFIG — and the one thing still unexplained (2026-08-12)
+
+After the NullEntry control proved the win rate is geometry rather than edge, three
+further metrics were tried. All of them found the same over-fitted family, and all of it
+died out of sample.
+
+```
+ranked by                 in-sample winner        out-of-sample
+win rate                  body 0.5 / TP 1         survives: 100% on both unseen sets
+expectancy per trade      body 0.6 / TP 3         78.95% / -$96  and  57.14% / -$491
+TCER (worst-loss proxy)   body 0.6 / TP 3         same config, same failure
+TCER (true CVaR95)        body 0.6 / TP 3         same config, same failure
+body-filter isolation     body 0.5 beats 0.6      $1.62 vs $1.38 per trade
+```
+
+**Why TCER failed the same way:** a $3 target inflates E so heavily that the CVaR95
+penalty cannot overcome it. A better tail statistic did not stop the metric finding a new
+route to the same noise.
+
+**The body-filter result is the honest capstone.** The hypothesis was structurally right —
+body 0.6 DOES make losses cheaper (-$110.74 against -$114.58) — but it starves the engine
+of setups, and the opportunity cost outweighs the saving. 1,054 trades at $1.38 loses to
+1,608 at $1.62. **0.5 is the equilibrium, and it was already shipped.**
+
+### WHAT THIS IS NOT
+
+It is not proof the configuration is optimal. Five searches agreeing means the SPACE WE
+SEARCHED has one peak, not that no better system exists. And two things remain open:
+
+**1. On broker data, nothing works.** 3,600 configurations swept on XAUUSD — the feed both
+live accounts actually trade — and ZERO were profitable. The +$2,599 lives on XAUUSD_BIG,
+a symbol built from our own OANDA archive. That gap has never been closed.
+
+**2. The live streak explains nothing.** 11 setups, 11 wins. NullEntry says ~92% of that
+is the geometry, so a random engine would have produced much the same. It is not
+confirmation, and treating it as such is precisely the error this whole thread was about.
+
+**The disciplined position: the configuration has earned its place because nothing beat it,
+not because it has been proven to work on the feed it trades.** Those are different
+claims, and only live losses — when they come — will separate them.
+
+---
+
 # 🚨 THE WIN RATE WAS NEVER THE EDGE (2026-08-12)
 
 Zee: *"but isnt it the fact: that your tests don't even apply to our trades, that you're
