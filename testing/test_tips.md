@@ -326,3 +326,54 @@ Recorded so nobody mistakes an open question for a settled one.
   $114.58 on average against NullEntry's $154.80. Under real ticks ZeeUHV's average loss
   was $148.81 — close to random. **Today's central finding may itself be an artefact of
   OHLC modelling and needs re-measuring with a real-tick NullEntry run.**
+
+
+---
+
+# PART 9 — VOLUME: WHAT IT ACTUALLY IS (corrected 2026-08-13)
+
+**XAUUSD is OTC. There is no central exchange, so NO retail broker publishes traded
+volume.** Every "volume" number in this project — OANDA's and Blueberry's alike — is a
+**TICK COUNT**: how many price updates arrived in that minute.
+
+```
+OANDA     median ~500   aggregates 20+ interbank feeds, so ticks arrive densely
+Blueberry median ~200   only the updates crossing their own servers
+```
+
+**They are the same KIND of measurement at different densities.** For months this project
+described OANDA's as "the real volume" — in the bridge docstring, in code comments, in
+commit messages and in this file. That was wrong and is now corrected.
+
+### Which to use, and why it is not a threshold problem
+
+The usual warning is that a bot calibrated on one feed's thresholds will misfire on
+another. **That does not apply here: this strategy uses no absolute volume threshold
+anywhere.** Every rule is relative —
+```
+the UHV = the loudest bar in the retracement
+the breakout must be QUIETER than the UHV
+```
+Ratios survive a change of scale. A denser feed simply resolves those comparisons more
+finely.
+
+### The real hazard, measured
+
+Two feeds can disagree about **WHICH bar was loudest**.
+
+```
+of 10 live entries the EA made from Blueberry bars,
+our OANDA archive agrees with exactly ONE.
+```
+
+Same minute, same rules, different answer about where the UHV sat. **That is the live
+consequence of the feed difference, and it is not fixable by rescaling anything.**
+
+### The decision on record
+**Zee, 2026-08-13: use OANDA volume — his teacher specified it.** The denser feed is the
+better estimate of where activity concentrated, which is what a UHV is meant to identify.
+`zeeuhv_brain.py` (v3) reads OANDA and is the engine that honours this. `ZeeUHV.mq5` on a
+broker chart reads that broker's ticks and does not.
+
+*(For genuinely traded volume, VSA traders use COMEX Gold futures (GC), which is
+exchange-traded and publishes real contract volume. We do not have that feed.)*
