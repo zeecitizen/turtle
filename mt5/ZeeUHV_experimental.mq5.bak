@@ -87,6 +87,11 @@ input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W
 input int    InpMaxHoldMin  = 60;   // InpMaxHoldMin — 60 — Zee: every breakout eventually gives the bump, so give it time
 
 input group "── Housekeeping ──"
+input group "── VSA volume-fade exit (test, 2026-08-12) ──"
+input bool   InpFadeExit    = false;  // InpFadeExit — close when institutional effort dies
+input double InpFadeFrac    = 0.35;   // InpFadeFrac — a bar is 'dead' below this fraction of the UHV's volume
+input int    InpFadeBars    = 3;      // InpFadeBars — this many CONSECUTIVE dead bars before closing
+
 input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent SETUPS (a stack counts as one)
 input int    InpCooldownBar = 3;      // InpCooldownBar — bars between entries
 input int    InpMaxGapSec   = 300;    // InpMaxGapSec — never reason across a hole in the data
@@ -94,6 +99,10 @@ input bool   InpVerbose     = false;  // InpVerbose — OFF for optimisation (a 
 input int    InpMinTrades   = 15;
 
 input group "── Diamonds: conviction buys SIZE (Zee 2026-08-10) ──"
+input bool   InpUseLaw2     = false;  // InpUseLaw2 — Law 2 (No Supply / No Demand) as a 4th diamond. OFF until measured.
+input double InpNsdSpread   = 0.70;   // InpNsdSpread — the test bar's range must be under this fraction of the recent average
+input double InpNsdVolFrac  = 0.80;   // InpNsdVolFrac — and its volume under this fraction of the prior bars
+
 input bool   InpUseDiamonds = true;   // InpUseDiamonds — size by conviction instead of a flat lot
 input double InpMaxRisk     = 0.0;    // InpMaxRisk — 0 = off. Cap TOTAL lots across the stack.
 input bool   InpStackLots   = true;   // InpStackLots — each diamond opens ANOTHER position, each one bigger
@@ -101,6 +110,8 @@ input double InpStackStep   = 0.0;   // InpStackStep — 0.0 = every diamond tic
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
+long     g_uhv_vol   = 0;      // the effort that justified the trade
+datetime g_fade_bar  = 0;      // so the fade is judged once per bar, not per tick
 
 //+------------------------------------------------------------------+
 //| The tester overwrites tick_volume with its synthesised tick count |
@@ -289,6 +300,53 @@ double Ema5(int shift) {
    return e;
 }
 
+
+//+------------------------------------------------------------------+
+//| LAW 2 — No Supply / No Demand. The VACUUM after the footprint.   |
+//|                                                                  |
+//| The last piece of Zee's doctrine the EA never used. It lives in   |
+//| oanda_live_matcher.py as a VETO; here it is a DIAMOND, because a  |
+//| veto starves an engine whose baseline win rate comes from the     |
+//| geometry rather than from selectivity — NullEntry scored 92.42%   |
+//| with no rules at all, so every rule that BLOCKS costs sample and  |
+//| must earn its place, while a rule that SCALES costs nothing.      |
+//|                                                                  |
+//| WHERE IT APPLIES: the bar immediately BEFORE the breakout — the   |
+//| exhaustion point of the retracement — not the UHV candle.         |
+//|   the UHV measures the institutional FOOTPRINT (heavy absorption) |
+//|   No Supply / No Demand measures the VACUUM that follows it       |
+//|                                                                  |
+//| No Supply (buying, so the pullback is red):                       |
+//|   a DOWN bar, narrow range, closing in its upper half, on volume  |
+//|   below the bars before it — the sellers have dried up.           |
+//| No Demand (selling) is the mirror.                                |
+//+------------------------------------------------------------------+
+bool NoSupplyOrDemand(int k, int side) {
+   // narrow spread, measured against the recent average range
+   double avg = 0; int n = 0;
+   for (int j = k + 1; j <= k + 10; j++) { avg += bHigh(j) - bLow(j); n++; }
+   if (n == 0) return false;
+   avg /= n;
+   double rng = bHigh(k) - bLow(k);
+   if (avg <= 0 || rng > avg * InpNsdSpread) return false;
+
+   // the right colour: a DOWN bar when buying (no supply), UP when selling
+   if (side > 0 && !IsRed(k))   return false;
+   if (side < 0 && !IsGreen(k)) return false;
+
+   // closing away from the extreme it was pushed toward
+   double pos = (rng > 0 ? (bClose(k) - bLow(k)) / rng : 0.5);
+   if (side > 0 && pos < 0.5) return false;      // no supply closes in the UPPER half
+   if (side < 0 && pos > 0.5) return false;      // no demand closes in the LOWER half
+
+   // and the volume has dried up against the bars before it
+   long v = BarVolume(k);
+   long prior = 0; int m = 0;
+   for (int j = k + 1; j <= k + 3; j++) { prior += BarVolume(j); m++; }
+   if (m == 0 || prior <= 0) return false;
+   return v < (prior / m) * InpNsdVolFrac;
+}
+
 int DiamondsFor(int origin, int uhv, int side) {
    int d = 0;
    // Law 1 — the sweep: did price poke beyond the prior extreme on the way in?
@@ -306,6 +364,8 @@ int DiamondsFor(int origin, int uhv, int side) {
    double wick = (side > 0) ? (bHigh(1) - MathMax(bOpen(1), bClose(1))) / rng
                             : (MathMin(bOpen(1), bClose(1)) - bLow(1)) / rng;
    if (wick <= 0.25 && BarVolume(1) < BarVolume(uhv)) d++;
+   // Law 2 — the vacuum on the bar just before the breakout
+   if (InpUseLaw2 && NoSupplyOrDemand(2, side)) d++;
    return d;
 }
 
@@ -380,7 +440,13 @@ void TryFire() {
    // = $700 on ONE setup. The live receipts from 2026-08-06 already warn about
    // conviction sizing multiplying losses, so InpMaxRisk exists to cap the total and
    // this must be proven in the tester before it goes anywhere near live.
-   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, 3))) : 1;
+   // The cap must follow the number of ACTIVE laws, not a hardcoded 3. With Law 2
+   // enabled there are four diamonds available, and a fixed cap of 3 silently threw the
+   // fourth away — the Law 2 test returned results identical TO THE CENT because the
+   // rule could not affect the outcome at all. A limit that quietly deletes a feature
+   // is the same class of bug as a fallback that never announces itself.
+   int maxdia = InpUseLaw2 ? 4 : 3;
+   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, maxdia))) : 1;
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
@@ -401,11 +467,56 @@ void TryFire() {
    }
    if (placed > 0) {
       g_last_fire = TimeCurrent();
+      g_uhv_vol   = BarVolume(uhv);   // the effort this trade rests on
       PrintFormat("[ZEE] %s @%.2f — %d diamond(s) -> %d ticket(s), %.2f lots total · "
                   "UHV %d (vol %d) · brk vol %d",
                   t > 0 ? "BUY " : "SELL", px, dia, (int)placed, total,
                   uhv, (int)BarVolume(uhv), (int)BarVolume(1));
    }
+}
+
+//+------------------------------------------------------------------+
+//| THE VOLUME-FADE EXIT — exit on INFORMATION, not on a clock.      |
+//|                                                                  |
+//| Two VSA reports proposed cutting the hold from 60 minutes to 8,  |
+//| arguing a stalled breakout is a dead breakout. Swept over 103    |
+//| days that is catastrophic: 60 min gives +$2,599 at 93.28%, and   |
+//| 8 min gives -$918. The fast winners were already banked; a short |
+//| clock cuts the SLOW winners, and in this market most drifting    |
+//| trades still reach the target, only later.                       |
+//|                                                                  |
+//| This is the one proposal that survived that argument, because it |
+//| uses no clock at all. If institutional effort has evaporated the |
+//| reason for the trade is gone, whatever the stopwatch says.       |
+//|                                                                  |
+//| The anchor is the UHV's OWN volume — the effort that justified   |
+//| the entry. A bar is dead below InpFadeFrac of it, and it takes   |
+//| InpFadeBars CONSECUTIVE dead bars to close, so a single quiet    |
+//| minute cannot eject a good trade.                                |
+//|                                                                  |
+//| DEFAULT OFF until measured. The Watcher was off too and still    |
+//| changed the result, so the baseline is RE-VERIFIED after adding  |
+//| this rather than assumed.                                        |
+//+------------------------------------------------------------------+
+void FadeExit() {
+   if (!InpFadeExit || g_uhv_vol <= 0) return;
+   datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
+   if (bt == g_fade_bar) return;                 // judge once per bar, not per tick
+   g_fade_bar = bt;
+   long limit = (long)(g_uhv_vol * InpFadeFrac);
+   for (int k = 1; k <= InpFadeBars; k++)
+      if (BarVolume(k) >= limit) return;         // the effort is still there
+   int closed = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong t = PositionGetTicket(i);
+      if (t == 0 || !PositionSelectByTicket(t)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      if (trade.PositionClose(t)) closed++;
+   }
+   if (closed && InpVerbose)
+      PrintFormat("[ZEE] VOLUME FADE — %d bars under %d (%.0f%% of UHV %d), closed %d",
+                  InpFadeBars, (int)limit, InpFadeFrac * 100, (int)g_uhv_vol, closed);
 }
 
 void AgeOut() {
@@ -441,16 +552,75 @@ void AgeOut() {
 //|     rate. A 95% win rate that nets negative is the SL-30 trap he   |
 //|     found this afternoon, where one loss wipes thirty wins.        |
 //+------------------------------------------------------------------+
-double OnTester() {
-   double trades = TesterStatistics(STAT_TRADES);
-   if (trades < InpMinTrades) return 0.0;
-   if (TesterStatistics(STAT_PROFIT) <= 0) return 0.0;
-   double wins = TesterStatistics(STAT_PROFIT_TRADES);
-   return (wins / trades) * 100.0;
+//+------------------------------------------------------------------+
+//| CVaR95 — the mean of the WORST 5% of losing trades.              |
+//|                                                                  |
+//| The first TCER used STAT_MAX_LOSSTRADE, the single worst trade,   |
+//| which lets one news spike decide a 585-config sweep. MT5 has no   |
+//| CVaR statistic, but OnTester runs after the test finishes, so the |
+//| whole deal history is there to be read.                           |
+//|                                                                  |
+//| Why this is the better tail measure: CVaR95 is always >= the      |
+//| average loss, so avgLoss/CVaR95 lands in (0,1] and reaches 1 only |
+//| when EVERY loss is the same size. That is exactly the property we |
+//| want to reward — losses that are uniform rather than occasionally |
+//| catastrophic.                                                     |
+//+------------------------------------------------------------------+
+double GetCVaR95() {
+   if (!HistorySelect(0, TimeCurrent())) return 0.0;
+   double losses[];
+   int n = 0, total = HistoryDealsTotal();
+   for (int i = 0; i < total; i++) {
+      ulong t = HistoryDealGetTicket(i);
+      if (t <= 0) continue;
+      long entry = HistoryDealGetInteger(t, DEAL_ENTRY);
+      if (entry != DEAL_ENTRY_OUT && entry != DEAL_ENTRY_INOUT) continue;
+      double pnl = HistoryDealGetDouble(t, DEAL_PROFIT)
+                 + HistoryDealGetDouble(t, DEAL_SWAP)
+                 + HistoryDealGetDouble(t, DEAL_COMMISSION);
+      if (pnl < 0) { n++; ArrayResize(losses, n); losses[n-1] = MathAbs(pnl); }
+   }
+   if (n == 0) return 0.0;
+   ArraySort(losses);                                  // ascending
+   int k = (int)MathMax(1, MathCeil(n * 0.05));        // the worst 5%, at least one
+   double sum = 0.0;
+   for (int i = n - k; i < n; i++) sum += losses[i];
+   return sum / k;
 }
+
+double OnTester() {
+   // ── TCER with TRUE CVaR95 ───────────────────────────────────────────────────
+   //     TCER = E x (avgLoss / CVaR95) x sqrt(N)
+   //
+   // Win rate is not used and never will be again. NullEntry — no rules at all —
+   // scored 92.42% against ZeeUHV's 93.28%, because a 1-point target against a
+   // 20-point stop over 60 minutes wins ~92% from ANY entry. The edge is not picking
+   // winners; it is picking trades that are CHEAP TO BE WRONG ABOUT.
+   //
+   //   E                 expectancy per trade, and rejects any net-negative pass
+   //   avgLoss/CVaR95    in (0,1]; reaches 1 only when every loss is the same size
+   //   sqrt(N)           sample weight, so a lucky short run cannot outrank 1,600 trades
+   //
+   // STILL NOT A PROOF. The ratio can rise by shrinking the tail (wanted) or by
+   // inflating the average loss (not wanted), and E only partly cancels that. Every
+   // winner is frozen and run on unseen data before it is believed — the discipline
+   // that caught a TP-3 config worth $4,152 in-sample and -$491 on Feb 11.
+   double trades = TesterStatistics(STAT_TRADES);
+   double net    = TesterStatistics(STAT_PROFIT);
+   double losses = TesterStatistics(STAT_LOSS_TRADES);
+   double avgLoss = MathAbs(TesterStatistics(STAT_GROSS_LOSS) / MathMax(1.0, losses));
+   if (trades < InpMinTrades || net <= 0 || avgLoss <= 0) return 0.0;
+   double cvar = GetCVaR95();
+   if (cvar <= 0) return 0.0;
+   return (net / trades) * (avgLoss / cvar) * MathSqrt(trades);
+}
+
+
+
 
 //+------------------------------------------------------------------+
 void OnTick() {
+   FadeExit();
    AgeOut();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;

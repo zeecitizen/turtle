@@ -377,3 +377,66 @@ broker chart reads that broker's ticks and does not.
 
 *(For genuinely traded volume, VSA traders use COMEX Gold futures (GC), which is
 exchange-traded and publishes real contract volume. We do not have that feed.)*
+
+
+---
+
+# PART 10 — THE BRANCHING DISCIPLINE
+
+Zee, 2026-08-13: *"the diamond branch stays untouched with all rules preserved as is on
+the last 10 trade setups. what we're doing is branching (like searching in a tree a new
+version that is better) and we revert to the diamond's own rules if these don't hold."*
+
+```
+diamond            THE BASELINE. The exact rules behind 12 live setups, 12 wins,
+                   +$570.40. Never edited. Everything reverts here.
+goal_achieved      SEALED — git hooks refuse commits
+feature/*          experiments. They must EARN their way in.
+```
+
+## The rules of the search
+
+1. **Never edit the live EA to run an experiment.** A new rule gets its own file and its
+   own magic number — `ZeeUHV_v12.mq5` is 88098, `ZeeUHV_v2.mq5` is 88095, the baseline is
+   88094. Two EAs must never be able to manage each other's positions.
+
+2. **After ANY edit to the baseline's source, restore it and confirm it is byte-identical
+   to `diamond`.** This is not paranoia. On 2026-08-12 the Watcher was added to
+   `ZeeUHV.mq5`, defaulted to `false`, guarded on its first line — and moved the result
+   from 1,608 trades / 93.28% / +$2,599.10 to 1,665 / 69.43% / -$779.90. Dead code that
+   moves live results is not dead.
+   ```bash
+   git show diamond:mt5/ZeeUHV.mq5 > mt5/ZeeUHV.mq5
+   py monitor/deploy_ea.py ZeeUHV
+   git diff diamond -- mt5/ZeeUHV.mq5     # must print nothing
+   ```
+
+3. **The compiled .ex5 matters as much as the source.** An attached EA keeps running the
+   binary it was loaded with, so recompiling looks harmless — until MT5 restarts and
+   silently picks up the new one. Recompile the BASELINE back into the live terminal after
+   any experiment.
+
+4. **A change is only promoted when it wins in a kind period AND a hostile one, on real
+   ticks.** Two periods, one of each. Improving only in the good one is what a favourable
+   fortnight looks like.
+
+5. **A rule from Zee's own labels is not overridden by a measurement alone.** Doctrine and
+   data disagreeing is HIS call to make, and the disagreement gets recorded either way.
+
+## Worked example — the body filter, 2026-08-13
+
+```
+                    AUGUST (kind)              MARCH (hard)
+peak  body    trades  win%      net      trades  win%       net
+ on   0.5        38  100.00%   +$430      224  85.27%   -$2,618   <- baseline
+ on   0.0       123   97.56% +$1,257      585  91.28%     -$571   <- better in BOTH
+OFF   0.5        90   91.11%    -$63      380  86.58%   -$3,918
+OFF   0.0       207   87.44%   +$199      706  89.94%   -$3,967
+```
+
+Removing the body filter improves the net, the win rate and the average loss, in both a
+kind period and a hostile one. It passes rule 4. **It has still not been promoted**,
+because the body filter is Zee's own rule and rule 5 applies.
+
+Meanwhile the peak rule — which he correctly identified as absent from his labels — turns
+out to be load-bearing: removing it is worse in both periods. **Kept.**
