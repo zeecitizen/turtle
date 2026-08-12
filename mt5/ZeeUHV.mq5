@@ -494,12 +494,40 @@ void AgeOut() {
 //|     found this afternoon, where one loss wipes thirty wins.        |
 //+------------------------------------------------------------------+
 double OnTester() {
+   // ── WHAT WE OPTIMISE FOR, CHANGED 2026-08-12 ────────────────────────────────
+   // Zee: "isnt it the fact that your tests don't even apply to our trades, that
+   // you're unaware on why the trades win in the first place?" He was right, and the
+   // control experiment proved it. NullEntry — no rules at all, firing every 30
+   // minutes with the SAME stop, target and hold — scored 92.42%. ZeeUHV scores
+   // 93.28%. The entire win rate comes from the GEOMETRY: a 1-point target against a
+   // 20-point stop over 60 minutes wins ~92% from any entry, because gold touches a
+   // dollar constantly.
+   //
+   // The rules add 0.86 points of win rate and $6,876 of profit. That money is not in
+   // the wins — both engines average $9.98 a win. It is in the LOSSES:
+   //
+   //     average loss   null -$154.80   ZeeUHV -$114.58
+   //     worst trade    null -$723.10   ZeeUHV -$200.00
+   //
+   // A real UHV sits at a level price respects, so when the trade fails price chops
+   // in the absorption zone instead of free-falling. The edge is not picking winners;
+   // it is picking trades that are CHEAP TO BE WRONG ABOUT.
+   //
+   // Every sweep before today ranked by WIN RATE — which we now know is noise the
+   // geometry produces whatever the rules say. This ranks by EXPECTANCY per trade,
+   // which is the thing that actually separated +$2,599 from -$4,277.
    double trades = TesterStatistics(STAT_TRADES);
    if (trades < InpMinTrades) return 0.0;
-   if (TesterStatistics(STAT_PROFIT) <= 0) return 0.0;
-   double wins = TesterStatistics(STAT_PROFIT_TRADES);
-   return (wins / trades) * 100.0;
+   double net = TesterStatistics(STAT_PROFIT);
+   if (net <= 0) return 0.0;                     // a losing pass scores nothing
+   double expectancy = net / trades;             // dollars per trade
+   // Penalise a fat tail: a config that earns by risking one catastrophic loss is not
+   // the same as one that never has a big loser, even at identical expectancy.
+   double worst = MathAbs(TesterStatistics(STAT_MAX_LOSSTRADE));
+   double tail  = (worst > 0 ? MathMin(1.0, 200.0 / worst) : 1.0);
+   return expectancy * tail * 100.0;
 }
+
 
 //+------------------------------------------------------------------+
 void OnTick() {

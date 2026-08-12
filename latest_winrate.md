@@ -1,3 +1,69 @@
+
+# 🚨 THE WIN RATE WAS NEVER THE EDGE (2026-08-12)
+
+Zee: *"but isnt it the fact: that your tests don't even apply to our trades, that you're
+unaware on why the trades win in the first place?"*
+
+He was right, and the control experiment settles it.
+
+## The control: NullEntry — no strategy at all
+
+`mt5/NullEntry.mq5` has no rules. It opens a position every 30 minutes, alternating
+direction, with the IDENTICAL stop, target and hold as ZeeUHV. Same 103 days:
+
+```
+                     trades    win%    avg WIN   avg LOSS   worst    net
+NullEntry (no rules)  1,716   92.42%    $9.99    -$154.80   -$723   -$4,277
+ZeeUHV (his rules)    1,608   93.28%    $9.98    -$114.58   -$200   +$2,599
+```
+
+**Firing at nothing wins 92.42%.** The entire UHV detection adds **0.86 points** of win
+rate. The 93% is not the strategy — it is the GEOMETRY. A 1-point target against a
+20-point stop over 60 minutes wins ~92% from any entry, because gold touches a dollar
+constantly. (Brownian approximation: 20/(20+1) = 95%.)
+
+**So the 11-setup live streak proves nothing about the strategy. Random entries would
+have produced it too.**
+
+## Where the $6,876 actually is
+
+Both engines average **$9.98 a win**. The difference is entirely in the losses:
+
+```
+average loss   null -$154.80   ZeeUHV -$114.58    ($40 cheaper)
+worst trade    null -$723.10   ZeeUHV -$200.00    (3.6x smaller)
+```
+
+Expectancy per trade:
+```
+null    (0.9242 x 9.99) - (0.0758 x 154.80) = -$2.50
+ZeeUHV  (0.9328 x 9.98) - (0.0672 x 114.58) = +$1.61      x 1,608 trades = +$2,589
+```
+
+**THE EDGE IS NOT PICKING WINNERS. IT IS PICKING TRADES THAT ARE CHEAP TO BE WRONG
+ABOUT.** A genuine UHV sits at a level price respects — heavy institutional volume at
+that price acts as friction — so a failed breakout chops in the absorption zone instead
+of free-falling through empty air.
+
+## What this invalidates
+
+- **Every sweep ranked by win rate was ranking noise.** The geometry produces ~92%
+  whatever the rules say.
+- **"93.3%" was never evidence the strategy works.**
+- **The live streak is not confirmation.** It is what the geometry does.
+- **It also explains the two-day contradiction.** Broker data and OANDA data give
+  similar WIN RATES and opposite MONEY, which is impossible if the win rate were the
+  edge — and obvious once the edge is the loss distribution.
+
+## What replaces it
+
+`OnTester()` now returns **expectancy per trade, penalised by the worst single loss**,
+so a configuration that earns by risking one catastrophic trade cannot outrank one that
+never has a big loser. Win rate is no longer an optimisation target and should never be
+one again.
+
+---
+
 # LATEST WIN RATE — 93.3%, MEASURED BY MT5, NOT PYTHON
 
 **Date:** 2026-08-10 · **Branch:** `profitable_2026_08_10_tested` · **Frozen at commit:** `6e2a82d`
