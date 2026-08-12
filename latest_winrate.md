@@ -241,6 +241,68 @@ monitor/doctrine.py                   stops a Python number being quoted as evid
 monitor/setup_labels/zee_labels.json  his 146 labels — the source of every rule
 THINGS_TO_REMEMBER.md                 the rig, and the things we keep forgetting
 ```
+
+## 🚫 EXIT INTERFERENCE, TESTED A THIRD TIME AND REFUTED AGAIN (2026-08-12)
+
+Zee noticed a live trade that took **56 minutes** to reach its target where the median is
+1.8 minutes, and asked whether that was normal. Two VSA reports then proposed cutting the
+hold time and adding staged exits. Both were tested. Both are wrong for this strategy.
+
+### The hold-time sweep, 2 to 60 minutes, everything else frozen
+```
+   5 min   -$1,742          25 min     +$198
+   8 min     -$918  <- report 1        45 min   +$1,450
+  10 min      -$24  <- report 2        60 min   +$2,599   93.28%   <- shipped
+  15 min     +$935
+```
+**The curve rises almost monotonically with time.** Cutting to 8 minutes turns +$2,599
+into -$918 — a **$3,517 swing** — and the win rate falls from 93.28% to 87% or worse.
+
+**Why the reasoning fails even though the VSA theory is sound:** both reports argued that
+90% of winners arrive within 3.4 minutes, so 8 minutes is generous. True, and it is the
+trap. The fast winners are already banked; a short clock does not touch them. What it
+cuts is the SLOW winners. In this market a drifting trade usually still reaches the
+target — just later.
+
+### The volume-fade exit, the one proposal that deserved a test
+It uses no clock: it closes when institutional effort dies, measured against the UHV's
+own volume. Built as `InpFadeExit`, swept across 45 configurations (threshold 0.20-0.60,
+2-6 consecutive dead bars). Profit relative to the baseline:
+
+```
+   frac \ bars      2      3      4      5      6
+        0.20      -242   -213     +0     +0     +0
+        0.30      -691   -944   -960   -933   -834
+        0.35      -718   -765  -1192   -916   -610     <- the reports' recommended band
+        0.50     -1164   -256   -632   -700   -781
+        0.60     -2235  -1373  -1052   +105   -103
+```
+
+**One cell of 45 beats doing nothing, by $105 — and every neighbour it has is negative**
+(-427, -1052, -103). That is a lone lucky cell, not a plateau, and it is exactly the
+shape of the 96.4% that lost $4,071 out of sample. It also costs 2.7 points of win rate
+(93.28% -> 90.56%) to earn 4% more money.
+
+**5 configurations never fired at all. 39 lost money against doing nothing.**
+
+### THE RULE, now established three independent ways
+```
+the Watcher (tick-by-tick invalidation)   avg loss $114 -> $19, win rate 93% -> 64%
+v1.81 (the breakeven lock)                removed; the sweep said so
+the volume fade (45 configs)              39 lose, 5 inert, 1 lucky cell
+```
+**Anything that closes a trade between the structural stop and the target costs money in
+this strategy.** The 56-minute trade is not a defect to be engineered away — it is the
+strategy working slowly, and it paid $82.90.
+
+`InpFadeExit` stays in the code, default FALSE, with this measurement beside it.
+
+**Method note:** after adding the fade code the baseline was RE-RUN before testing
+anything, and reproduced 1,608 trades / 93.28% / +$2,599.10 exactly. That check exists
+because the Watcher was also default-off and still changed the result.
+
+---
+
 ## 🔴 OPEN CONTRADICTION — live says 100%, the tester says it loses (2026-08-12)
 
 **Live, on the real Blueberry demo account:**

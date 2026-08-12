@@ -87,6 +87,11 @@ input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W
 input int    InpMaxHoldMin  = 60;   // InpMaxHoldMin — 60 — Zee: every breakout eventually gives the bump, so give it time
 
 input group "── Housekeeping ──"
+input group "── VSA volume-fade exit (test, 2026-08-12) ──"
+input bool   InpFadeExit    = false;  // InpFadeExit — close when institutional effort dies
+input double InpFadeFrac    = 0.35;   // InpFadeFrac — a bar is 'dead' below this fraction of the UHV's volume
+input int    InpFadeBars    = 3;      // InpFadeBars — this many CONSECUTIVE dead bars before closing
+
 input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent SETUPS (a stack counts as one)
 input int    InpCooldownBar = 3;      // InpCooldownBar — bars between entries
 input int    InpMaxGapSec   = 300;    // InpMaxGapSec — never reason across a hole in the data
@@ -101,6 +106,8 @@ input double InpStackStep   = 0.0;   // InpStackStep — 0.0 = every diamond tic
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
+long     g_uhv_vol   = 0;      // the effort that justified the trade
+datetime g_fade_bar  = 0;      // so the fade is judged once per bar, not per tick
 
 //+------------------------------------------------------------------+
 //| The tester overwrites tick_volume with its synthesised tick count |
@@ -401,11 +408,56 @@ void TryFire() {
    }
    if (placed > 0) {
       g_last_fire = TimeCurrent();
+      g_uhv_vol   = BarVolume(uhv);   // the effort this trade rests on
       PrintFormat("[ZEE] %s @%.2f — %d diamond(s) -> %d ticket(s), %.2f lots total · "
                   "UHV %d (vol %d) · brk vol %d",
                   t > 0 ? "BUY " : "SELL", px, dia, (int)placed, total,
                   uhv, (int)BarVolume(uhv), (int)BarVolume(1));
    }
+}
+
+//+------------------------------------------------------------------+
+//| THE VOLUME-FADE EXIT — exit on INFORMATION, not on a clock.      |
+//|                                                                  |
+//| Two VSA reports proposed cutting the hold from 60 minutes to 8,  |
+//| arguing a stalled breakout is a dead breakout. Swept over 103    |
+//| days that is catastrophic: 60 min gives +$2,599 at 93.28%, and   |
+//| 8 min gives -$918. The fast winners were already banked; a short |
+//| clock cuts the SLOW winners, and in this market most drifting    |
+//| trades still reach the target, only later.                       |
+//|                                                                  |
+//| This is the one proposal that survived that argument, because it |
+//| uses no clock at all. If institutional effort has evaporated the |
+//| reason for the trade is gone, whatever the stopwatch says.       |
+//|                                                                  |
+//| The anchor is the UHV's OWN volume — the effort that justified   |
+//| the entry. A bar is dead below InpFadeFrac of it, and it takes   |
+//| InpFadeBars CONSECUTIVE dead bars to close, so a single quiet    |
+//| minute cannot eject a good trade.                                |
+//|                                                                  |
+//| DEFAULT OFF until measured. The Watcher was off too and still    |
+//| changed the result, so the baseline is RE-VERIFIED after adding  |
+//| this rather than assumed.                                        |
+//+------------------------------------------------------------------+
+void FadeExit() {
+   if (!InpFadeExit || g_uhv_vol <= 0) return;
+   datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
+   if (bt == g_fade_bar) return;                 // judge once per bar, not per tick
+   g_fade_bar = bt;
+   long limit = (long)(g_uhv_vol * InpFadeFrac);
+   for (int k = 1; k <= InpFadeBars; k++)
+      if (BarVolume(k) >= limit) return;         // the effort is still there
+   int closed = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong t = PositionGetTicket(i);
+      if (t == 0 || !PositionSelectByTicket(t)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      if (trade.PositionClose(t)) closed++;
+   }
+   if (closed && InpVerbose)
+      PrintFormat("[ZEE] VOLUME FADE — %d bars under %d (%.0f%% of UHV %d), closed %d",
+                  InpFadeBars, (int)limit, InpFadeFrac * 100, (int)g_uhv_vol, closed);
 }
 
 void AgeOut() {
@@ -451,6 +503,7 @@ double OnTester() {
 
 //+------------------------------------------------------------------+
 void OnTick() {
+   FadeExit();
    AgeOut();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;
