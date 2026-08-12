@@ -133,7 +133,7 @@ def setup(csv="tester_xau_real.csv", symbol="XAUUSD_R3"):
 
 
 def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
-             optimize=False, period="M1"):
+             optimize=False, period="M1", model=2):
     live_is_safe()
     sync_experts()
     REPORTS.mkdir(parents=True, exist_ok=True)
@@ -146,7 +146,11 @@ def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
     ini = ROOT / "mt5" / "_headless_run.ini"
     write_ini(ini, "Tester",
               Expert=ea, Symbol=symbol, Period=period,
-              Model=2,                       # 1 minute OHLC
+              # 0 = EVERY TICK (real broker tick history), 2 = 1 minute OHLC.
+              # With TP 1 and SL 20 the ORDER of touches inside a bar decides the
+              # trade, and OHLC modelling invents only four ticks per bar — it cannot
+              # know which came first. Real ticks can.
+              Model=model,
               FromDate=frm, ToDate=to,
               Deposit=4123, Currency="USD", Leverage="1:500",
               Optimization=(1 if optimize else 0),   # 1 = SLOW COMPLETE (2 is genetic and stops early)
@@ -175,8 +179,9 @@ if __name__ == "__main__":
     ap.add_argument("--from", dest="frm", default="2026.08.05")
     ap.add_argument("--to", default="2026.08.10")
     ap.add_argument("--optimize", action="store_true")
+    ap.add_argument("--model", type=int, default=2, help="0=every tick, 2=1min OHLC")
     a = ap.parse_args()
     if a.setup:
         setup(symbol=a.symbol)
     if a.ea:
-        backtest(a.ea, a.symbol, a.frm, a.to, a.optimize)
+        backtest(a.ea, a.symbol, a.frm, a.to, a.optimize, model=a.model)
