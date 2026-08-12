@@ -136,7 +136,7 @@ def find_setup(bars):
     tp = entry + TARGET_PTS if side == "buy" else entry - TARGET_PTS
     return dict(t=bar["t"], side=side, entry=entry, sl=sl, tp=tp,
                 uhv_vol=bars[u]["v"], brk_vol=bar["v"],
-                diamonds=Z.diamonds_for(bars, u, i, side) if hasattr(Z, "diamonds_for") else 0), None
+                diamonds=Z.diamonds_for(bars, u, i, side)), None
 
 
 def resolve(bars, sig):
@@ -191,12 +191,18 @@ def scan(fire=False, quiet=False):
         f.write(json.dumps(rec) + "\n")
     print(f"  ★ {newest:%H:%M} UTC  {sig['side'].upper():4s} @ {sig['entry']:.2f}  "
           f"SL {sig['sl']:.2f}  TP {sig['tp']:.2f}  "
-          f"UHV vol {sig['uhv_vol']} vs breakout {sig['brk_vol']}  [{rec['mode']}]")
+          f"{sig['diamonds']}💎  UHV vol {sig['uhv_vol']} vs breakout {sig['brk_vol']}  "
+          f"[{rec['mode']}]")
     if fire:
+        # Diamonds NEVER gate; they MULTIPLY. Each one buys another ticket, exactly as
+        # ZeeUHV.mq5 does — that stack is worth six times the profit of a single ticket,
+        # and the brain had been silently trading without it.
+        tickets = 1 + max(0, min(sig["diamonds"], 3))
         SIGNAL.write_text(json.dumps(dict(
             ts=int(time.time()), symbol="XAUUSD", side=sig["side"], lots=LOTS,
+            tickets=tickets, diamonds=sig["diamonds"],
             sl=round(sig["sl"], 2), tp=round(sig["tp"], 2), source="zeeuhv_brain")))
-        print("     signal written for the executor")
+        print(f"     signal written: {sig['diamonds']} diamond(s) -> {tickets} ticket(s)")
 
 
 def replay():

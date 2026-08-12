@@ -219,3 +219,57 @@ def scan(bars, start=60):
         if s:
             out.append(s)
     return out
+
+
+def ema(bars, i, n=5):
+    """Plain EMA of closes ending at bar i — the EA's Ema5(1)."""
+    k = 2.0 / (n + 1)
+    start = max(0, i - n * 4)
+    e = bars[start]["c"]
+    for j in range(start + 1, i + 1):
+        e = bars[j]["c"] * k + e * (1 - k)
+    return e
+
+
+def diamonds_for(bars, uhv, i, side):
+    """Zee's Laws of Conviction, ported EXACTLY from DiamondsFor() in mt5/ZeeUHV.mq5.
+
+    2026-08-12: Zee asked "does the brain have the diamond multiplier?" It did not —
+    zeeuhv_brain.py called a diamonds_for() that never existed, and a hasattr() guard
+    turned that into a silent 0 on every setup. The stack is worth six times the profit,
+    so the brain had been quietly trading the weakest version of his own strategy.
+
+    Diamonds NEVER gate a trade. They multiply it — each one buys another ticket.
+
+    Note on indexing: the EA counts bars backwards from the current one (1 = the last
+    closed bar, uhv+1 = one bar OLDER than the UHV). Here the list runs forwards, so
+    every direction is mirrored: the EA's uhv+1..uhv+20 becomes uhv-1..uhv-20, and its
+    bar 1 is simply bars[i].
+    """
+    d = 0
+    b = bars[i]                                    # the breakout bar (the EA's bar 1)
+    u = bars[uhv]
+
+    # Law 1 — the sweep: did price poke beyond the UHV's extreme on the way in?
+    for k in range(uhv - 1, max(-1, uhv - 21), -1):
+        if side == "buy" and bars[k]["l"] < u["l"]:
+            d += 1
+            break
+        if side == "sell" and bars[k]["h"] > u["h"]:
+            d += 1
+            break
+
+    # Law 3 — the EMA-5 close: the breakout closed decisively past the mean
+    e5 = ema(bars, i, 5)
+    if side == "buy" and _green(b) and b["c"] > e5 + 0.10:
+        d += 1
+    if side == "sell" and _red(b) and b["c"] < e5 - 0.10:
+        d += 1
+
+    # Law 5 — a clean wick AND a breakout quieter than the UHV
+    rng = max(b["h"] - b["l"], 1e-9)
+    wick = ((b["h"] - max(b["o"], b["c"])) / rng if side == "buy"
+            else (min(b["o"], b["c"]) - b["l"]) / rng)
+    if wick <= 0.25 and b["v"] < u["v"]:
+        d += 1
+    return d
