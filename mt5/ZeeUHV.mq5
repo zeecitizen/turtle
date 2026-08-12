@@ -99,6 +99,10 @@ input bool   InpVerbose     = false;  // InpVerbose — OFF for optimisation (a 
 input int    InpMinTrades   = 15;
 
 input group "── Diamonds: conviction buys SIZE (Zee 2026-08-10) ──"
+input bool   InpUseLaw2     = false;  // InpUseLaw2 — Law 2 (No Supply / No Demand) as a 4th diamond. OFF until measured.
+input double InpNsdSpread   = 0.70;   // InpNsdSpread — the test bar's range must be under this fraction of the recent average
+input double InpNsdVolFrac  = 0.80;   // InpNsdVolFrac — and its volume under this fraction of the prior bars
+
 input bool   InpUseDiamonds = true;   // InpUseDiamonds — size by conviction instead of a flat lot
 input double InpMaxRisk     = 0.0;    // InpMaxRisk — 0 = off. Cap TOTAL lots across the stack.
 input bool   InpStackLots   = true;   // InpStackLots — each diamond opens ANOTHER position, each one bigger
@@ -296,6 +300,53 @@ double Ema5(int shift) {
    return e;
 }
 
+
+//+------------------------------------------------------------------+
+//| LAW 2 — No Supply / No Demand. The VACUUM after the footprint.   |
+//|                                                                  |
+//| The last piece of Zee's doctrine the EA never used. It lives in   |
+//| oanda_live_matcher.py as a VETO; here it is a DIAMOND, because a  |
+//| veto starves an engine whose baseline win rate comes from the     |
+//| geometry rather than from selectivity — NullEntry scored 92.42%   |
+//| with no rules at all, so every rule that BLOCKS costs sample and  |
+//| must earn its place, while a rule that SCALES costs nothing.      |
+//|                                                                  |
+//| WHERE IT APPLIES: the bar immediately BEFORE the breakout — the   |
+//| exhaustion point of the retracement — not the UHV candle.         |
+//|   the UHV measures the institutional FOOTPRINT (heavy absorption) |
+//|   No Supply / No Demand measures the VACUUM that follows it       |
+//|                                                                  |
+//| No Supply (buying, so the pullback is red):                       |
+//|   a DOWN bar, narrow range, closing in its upper half, on volume  |
+//|   below the bars before it — the sellers have dried up.           |
+//| No Demand (selling) is the mirror.                                |
+//+------------------------------------------------------------------+
+bool NoSupplyOrDemand(int k, int side) {
+   // narrow spread, measured against the recent average range
+   double avg = 0; int n = 0;
+   for (int j = k + 1; j <= k + 10; j++) { avg += bHigh(j) - bLow(j); n++; }
+   if (n == 0) return false;
+   avg /= n;
+   double rng = bHigh(k) - bLow(k);
+   if (avg <= 0 || rng > avg * InpNsdSpread) return false;
+
+   // the right colour: a DOWN bar when buying (no supply), UP when selling
+   if (side > 0 && !IsRed(k))   return false;
+   if (side < 0 && !IsGreen(k)) return false;
+
+   // closing away from the extreme it was pushed toward
+   double pos = (rng > 0 ? (bClose(k) - bLow(k)) / rng : 0.5);
+   if (side > 0 && pos < 0.5) return false;      // no supply closes in the UPPER half
+   if (side < 0 && pos > 0.5) return false;      // no demand closes in the LOWER half
+
+   // and the volume has dried up against the bars before it
+   long v = BarVolume(k);
+   long prior = 0; int m = 0;
+   for (int j = k + 1; j <= k + 3; j++) { prior += BarVolume(j); m++; }
+   if (m == 0 || prior <= 0) return false;
+   return v < (prior / m) * InpNsdVolFrac;
+}
+
 int DiamondsFor(int origin, int uhv, int side) {
    int d = 0;
    // Law 1 — the sweep: did price poke beyond the prior extreme on the way in?
@@ -313,6 +364,8 @@ int DiamondsFor(int origin, int uhv, int side) {
    double wick = (side > 0) ? (bHigh(1) - MathMax(bOpen(1), bClose(1))) / rng
                             : (MathMin(bOpen(1), bClose(1)) - bLow(1)) / rng;
    if (wick <= 0.25 && BarVolume(1) < BarVolume(uhv)) d++;
+   // Law 2 — the vacuum on the bar just before the breakout
+   if (InpUseLaw2 && NoSupplyOrDemand(2, side)) d++;
    return d;
 }
 
