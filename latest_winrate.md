@@ -241,3 +241,57 @@ monitor/doctrine.py                   stops a Python number being quoted as evid
 monitor/setup_labels/zee_labels.json  his 146 labels — the source of every rule
 THINGS_TO_REMEMBER.md                 the rig, and the things we keep forgetting
 ```
+## 🔴 OPEN CONTRADICTION — live says 100%, the tester says it loses (2026-08-12)
+
+**Live, on the real Blueberry demo account:**
+```
+9 setups · 40 fills · 9W / 0L · +$437.70   over 24 hours, no loss yet
+```
+
+**The same EA, same symbol, same days, in MT5's Strategy Tester:**
+```
+XAUUSD, 1 minute OHLC   Aug 6-12    49.4%   -$566
+XAUUSD, EVERY REAL TICK Aug 6-12    38.8%   -$356      (1,236,009 ticks, quality 100%)
+XAUUSD, 1 minute OHLC   103 days    64.4%   -$4,030    drawdown 97.8%
+```
+
+**On the identical calendar days the two disagree completely** — the tester records
+losing trades at 07:32 and 13:07 on Aug 11 where the live account took wins.
+
+### What was ruled OUT
+- **Not the volume feed.** TapeProbe on broker XAUUSD: `iVolume` varies (132, 88, 75,
+  135…), `iRealVolume` is 0. The tester was NOT blind, and the live EA reads the same
+  tick counts.
+- **Not tick modelling.** Every-tick with real broker history was WORSE (38.8%), not
+  better, so the four-ticks-per-bar theory is dead.
+- **Not the configuration.** The tester's own order rows show SL 20 below entry and TP 1
+  above — exactly as shipped.
+- **Not a lucky-streak illusion of size.** 40 fills are only 9 setups, because a stack
+  wins or loses together. At the tester's 64% a 9-setup run has a 1.9% chance; at 93%
+  it has 53.6%.
+
+### What is UNRESOLVED
+The prices do not reconcile. The rig, the live fills and our OANDA archive give three
+different levels for what should be the same moment. Either the timezone arithmetic is
+wrong or **the rig's freshly-downloaded XAUUSD history is not the market the live
+account traded** — and that rig produced a 0.247-second "test" and a mis-parsed report
+in the same session, so it is not above suspicion.
+
+### THE DECISION (Zee, 2026-08-12)
+> *"i think the setup we already have, maybe running on diff data etc, but is highly
+> successful at 100% winrate since 24 hours+. Thus we keep this setup as is for now."*
+
+**Left running, unchanged.** It is a demo account, so nothing is at risk, and the live
+sample is the only evidence gathered from reality rather than from a model. The concern
+was raised twice and answered twice; this is his call and it stands.
+
+**What decides it:** the next several setups. Losses arriving at roughly one in three
+would vindicate the tester. Reaching 15+ setups still unbeaten makes 64% very hard to
+believe and means the backtest is measuring the wrong market.
+
+`monitor/zeeuhv_live.py` prints both predictions beside the live number on every run, so
+whichever way it turns, we see it turn.
+
+---
+
+
