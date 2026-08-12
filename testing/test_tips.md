@@ -438,5 +438,22 @@ Removing the body filter improves the net, the win rate and the average loss, in
 kind period and a hostile one. It passes rule 4. **It has still not been promoted**,
 because the body filter is Zee's own rule and rule 5 applies.
 
+The fine sweep shows there is **no compromise value** — the relationship is monotonic in
+both periods, so no setting keeps "strong candle" while capturing the benefit:
+
+```
+body    AUGUST  trades  win%       net       MARCH  trades  win%       net
+0.0             123   97.56%   +$1,257              585   91.28%     -$571
+0.1             119   97.48%   +$1,213              520   90.19%   -$1,432
+0.2             100   97.00%     +$953              454   88.77%   -$2,162
+0.3              77   96.10%     +$690              389   86.89%   -$2,861
+0.4              59   96.61%     +$555              293   85.32%   -$2,820
+0.5              38  100.00%     +$430              224   85.27%   -$2,618   <- shipped
+```
+
+Note the trap in that table: **0.5 has the highest August win rate (100%) and the worst
+August profit.** Ranking by win rate would pick exactly the wrong row — the same lesson
+NullEntry taught, appearing again in live data.
+
 Meanwhile the peak rule — which he correctly identified as absent from his labels — turns
 out to be load-bearing: removing it is worse in both periods. **Kept.**
