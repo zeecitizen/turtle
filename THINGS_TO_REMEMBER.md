@@ -9,6 +9,39 @@ Anything on this page is **already working**. Do not rebuild it. Use it.
 
 ---
 
+
+## 0b. 🎯 ONLY REAL TICKS CAN TEST THIS STRATEGY
+
+**Every backtest before 2026-08-12 used 4 ticks per bar and is suspect.**
+
+```bash
+py monitor/mt5_headless.py --ea ZeeUHV --symbol XAUUSD --from 2026.08.10 --to 2026.08.13 --model 4
+```
+
+`--model 4` is "Every tick based on REAL ticks". Modes 0/1/2 invent the intrabar path from
+OHLC, and with a **1-point target** the invented path IS the trade. Blueberry already
+stores the real ticks (8 .tkc files, ~420 MB) — nothing needs buying.
+
+**PROOF IT MATTERS.** Replaying the exact days the live EA traded:
+```
+real ticks, Aug 10-13   38 trades  100.00%  +$430    (598,796 ticks, 217/bar)
+THE LIVE ACCOUNT        12 setups  100.00%  +$570
+real ticks, Mar 2-16   224 trades   85.27%  -$2,618
+```
+The tester AGREES with live on the same days. There was never a backtest-vs-live
+contradiction — that was a sampling error, comparing 103 days of backtest to 2 days of
+live. **Match the period before comparing numbers.**
+
+**CUSTOM SYMBOLS CANNOT DO THIS.** `XAUUSD_BIG`, `XAUUSD_R3` and `XAUUSD_F11` were built
+from CSV bars, so MT5 logs `OHLC bar states generating. OnTick executed on the bar begin
+only` — the EA sees roughly one price per minute. Every number they produced, including
+the 93.28% and +$2,599, was measured that way.
+
+**BUDGET THE TIME.** Real-tick runs are ~50x slower: two weeks takes ~18 minutes, and a
+full month exceeds the 5,400s limit. Use two-week windows.
+
+---
+
 ## 1. ⚡ MT5's Strategy Tester runs WITHOUT any human clicks
 
 **It is built, it is verified, and it needs nobody.**
