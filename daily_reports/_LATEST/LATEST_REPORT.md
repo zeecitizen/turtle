@@ -209,23 +209,123 @@ win rate. But losses are what destroy the hostile months, so it was tested there
 
 ### All four periods at 0.02 lots — nothing censored, every window complete
 
+Small lots deliberately: at 0.10 the shipped config bankrupts in April and its net is
+censored at the deposit (§0a), which makes every comparison against it meaningless.
+
 ```
-config                   MAR       APR       MAY     3-period    worst eqDD
-CONTROL SL20/TP1/60   -523.66   -896.34   +106.36   -1,313.64      24.9%
-SL20 TRAIL 1.0/0.3    -392.74   -896.00   +130.98   -1,157.76      24.9%
-SL20 TRAIL 1.0/0.5    -397.02   -873.48   +108.42   -1,162.08      24.4%
-SL20 TRAIL 2.0/1.0    -575.76   -873.20    -78.10   -1,527.06      25.1%
-NOSL TRAIL1.0/0.5 h60  -44.76  -1,193.56  +108.42   -1,129.90      32.2%
-NOSL TP1 h25          -276.48   -548.62   -205.50   -1,030.60      17.1%
+exit configuration          AUG       MAR        APR       MAY    4-PERIOD   E/trade
+NOSL TP1 h25              59.98   -276.48    -548.62   -205.50    -970.62    -1.150
+NOSL TRAIL1.0/0.5 h60     72.30    -44.76  -1,193.56   +108.42  -1,057.60    -1.288
+SL20 TRAIL 1.0/0.3        69.66   -392.74    -896.00   +130.98  -1,088.10    -1.302
+SL20 TRAIL 1.0/0.5        72.30   -397.02    -873.48   +108.42  -1,089.78    -1.310
+CONTROL SL20/TP1/60       88.06   -523.66    -896.34   +106.36  -1,225.58    -1.466   <- shipped
+SL20 TRAIL 2.0/1.0      -133.74   -575.76    -873.20    -78.10  -1,660.80    -2.061
 ```
 
-**No exit configuration is profitable across four periods.** The best (`NOSL TP1 h25`,
-−$1,030.60) beats the shipped config by $283 at 0.02 lots — about $1,400 at 0.10 — and it
-does it by having the cheapest losses of anything tested, not by winning more.
+**Every row is negative.** The best (`NOSL TP1 h25`) beats the shipped config by $254.96 at
+0.02 lots — about **+$1,275 at 0.10 over 47 trading days** — and it does it by having the
+cheapest losses of anything tested, not by winning more. It buys March and April protection
+by giving up May.
+
+**The conclusion is uncomfortable and worth stating plainly: the exit is already at its
+maximum. Every one of the eleven alternatives tested today earns less, or earns a little
+more only by trading one period's profit for another's.** The shipped exit loses $1.47 per
+trade; the best alternative loses $1.15. Breaking even needs $1.47 of improvement per
+trade and the entire exit search delivers $0.32. **If more money exists, it is not here.**
 
 **The conclusion is uncomfortable and worth stating plainly: the exit is already at its
 maximum. Every one of the eleven alternatives tested today earns less.** If more money is
 to be found it is not here.
+
+## 1.7 THE LEVERS THAT ARE NOT THE EXIT — frequency works, size does not
+
+Since the exit is maximal, the remaining levers all multiply the *good* setups. All at
+0.02 lots, all four periods, every window complete.
+
+```
+arm                    AUG       MAR        APR       MAY    4-PERIOD
+rank6 + Law2        +128.62   -353.98  -998.48   +204.12   -1,019.72
+rank6               +128.62   -356.74  -1,003.36 +204.12   -1,027.36
+Law2 (5th ticket)    +88.06   -520.90   -894.00  +106.36   -1,220.48
+shipped              +88.06   -523.66   -896.34  +106.36   -1,225.58
+StackStep 0.1       +668.56 -3,795.84 -4,249.28  +572.86   -6,803.70   BLEW UP ×2
+```
+
+**`rank 6` is the one genuine improvement found all day — and it is Zee's own rule.**
+
+```
+             AUG                       MAR                       MAY
+shipped   63 tr 93.65% +88.06     224 tr 85.27% -523.66     250 tr 88.00% +106.36
+rank 6    82 tr 95.12% +128.62    296 tr 88.85% -356.74     357 tr 88.52% +204.12
+                                  drawdown 15.7% -> 12.1%
+```
+
+August: **+46% more money and not one new loss** — four losing tickets in both arms, which
+is why the average loss is identical to the cent. March: better by $167 *at lower
+drawdown*. May: nearly double. April is the only period it costs anything (−$107). It
+satisfies the promotion rule — it wins in a kind period and a hostile one — and it is
+worth about **+$1,000 per 47 trading days at 0.10 lots**.
+
+**`Law 2` is inert**, not broken: it added 1 ticket in 225 in March, exactly what its
+measured 1.1% fire rate predicts. It costs nothing and earns nothing.
+
+**`StackStep` is leverage, not edge, and it is dangerous.** In August it looks like a 7.6×
+profit multiplier — but drawdown scales 7.2× with it, and in March and April it **blew the
+account** (93.0% and 102.9% equity drawdown). Third confirmation that the account, not the
+strategy, is the limit on size.
+
+## 1.8 🚨 THE CONTROL EXPERIMENT — the entry is WORSE THAN RANDOM on real ticks
+
+Open since 2026-08-12, listed in `test_tips.md` Part 8 as "the most valuable outstanding
+measurement", never run. It is now run.
+
+`NullEntry` has **no rules**: it opens every 30 minutes, alternating direction, with the
+identical stop 20 / target 1 / hold 60. Both arms at 0.02 lots, real ticks, every window
+complete, nothing censored.
+
+```
+period       ZeeUHV (his rules)                NullEntry (NO rules)
+             trades   win%      net   E/tr     trades   win%      net   E/tr
+Aug 10-13        63  93.65%   +88.06  +1.40       119  87.39%   -46.28  -0.39
+Mar 02-16       224  85.27%  -523.66  -2.34       424  92.22%  -185.52  -0.44
+Apr 01-15       299  81.61%  -896.34  -3.00       381  90.55%  -257.22  -0.68
+May 01-15       250  88.00%  +106.36  +0.43       405  93.58%  +174.58  +0.43
+──────────────────────────────────────────────────────────────────────────────
+TOTAL           836          -1,225.58 -1.466    1,329          -314.44 -0.237
+```
+
+> **Firing at nothing loses $0.24 a trade. Firing on Zee's UHV rules loses $1.47 a trade.
+> Over 47 trading days the random entry is six times cheaper to be wrong with.**
+
+**The old belief is exactly inverted.** Under OHLC modelling ZeeUHV's average loss was
+$114.58 against NullEntry's $154.80, and that gap was declared the whole edge —
+"the edge is not picking winners, it is picking trades that are cheap to be wrong about."
+
+On real ticks the loss-cheapness half is **still true**: ZeeUHV's average loss is smaller
+in *every* period (−29.76 vs −33.54, −27.33 vs −31.92, −12.80 vs −26.08, −11.66 vs −18.41).
+But it is swamped, because the entry's **win rate is LOWER than random in three of the four
+periods** — 85.27 vs 92.22, 81.61 vs 90.55, 88.00 vs 93.58. Cheaper losses, far more of them.
+
+**A coherent mechanism, offered as a hypothesis rather than a conclusion:** a UHV is by
+definition a moment of unusual volume, therefore unusual volatility. A 20-point stop is hit
+far more often from there than from a random quiet minute, where price simply wanders back
+to +1 within the hour. **We may have spent six months selecting precisely the moments where
+our own exit geometry is most likely to fail.**
+
+### What this does NOT say
+
+- **It does not say August is fake.** August is the one period where the entry clearly beats
+  random — **+$1.40 a trade against −$0.39** — and it is the regime the live account is
+  trading right now, 14 baskets unbeaten. The entry is not worthless; it is
+  **regime-dependent**, and that is now measured rather than assumed.
+- **It does not say NullEntry is a strategy.** It loses money too. Nothing here is a
+  business.
+- **Sample caveat, stated because it cuts against the finding:** ZeeUHV's 836 tickets are
+  only ~220 independent setups (a diamond stack wins or loses together), so its effective
+  sample is ~55 setups per period and noisier than the trade count suggests. NullEntry's
+  1,329 are independent. The direction is consistent across three periods and the totals
+  differ 4×, which is more than noise — but the per-period figures deserve less confidence
+  than they look.
 
 ## 1.4 v1.4 — "every UHV in the retracement" (`InpUhvRank`, `InpMaxOpen=8`)
 
@@ -301,15 +401,21 @@ the mechanical version    average   $0.85 per win
 Same nominal strategy. Two orders of magnitude apart. Every candidate this week has been an
 *exit* variation, and the best of them survives by refusing to lose rather than by winning.
 
-**The unanswered question underneath all of it** ([`test_tips.md`](../../testing/test_tips.md) Part 8):
-under OHLC modelling the strategy's average loss was $114.58 against random's $154.80 — that
-gap *is* the entire claimed edge. Under real ticks the strategy's average loss is $148.81,
-essentially random. **A real-tick `NullEntry` run has never been done.** Until it is, we do
-not know whether the entry contributes anything at all, and every exit we tune is being
-tuned on top of an unmeasured foundation.
+**That question is now answered — see §1.8.** The real-tick `NullEntry` control was run this
+evening. **The entry is worse than random over 47 trading days** (−$1.47 a trade against
+−$0.24), because its win rate is *lower* than random in three of the four periods. It beats
+random only in August — the regime the live account is trading right now.
 
-That is one ~18-minute run per fortnight window. It is the cheapest decisive measurement
-available and it should come before any further exit search.
+So the order of business inverts. There is no point tuning an exit on top of an entry that
+subtracts value in three regimes out of four. The two questions that matter now:
+
+1. **What distinguishes August and May from March and April?** The entry earns in one pair
+   and bleeds in the other. If that is detectable in advance, it is the whole ballgame —
+   sitting out the hostile periods turns −$1,225 into +$194 on this data. If it is not
+   detectable, the strategy is a bet on regime and must be sized as one.
+2. **Does the diamond count carry the signal?** The stack is the one part of the entry never
+   tested against random. If 3-diamond setups beat NullEntry and 0-diamond ones do not, the
+   conviction laws are the edge and the UHV trigger is just their carrier.
 
 ---
 

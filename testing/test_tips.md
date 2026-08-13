@@ -123,6 +123,12 @@ constantly. Brownian approximation: `20 / (20 + 1) = 95%`.
 > **Before believing any win rate, ask what a random entry scores with the same exits.**
 > If they match, the strategy is not doing the work.
 
+> ⚠️ **The +$2,599 column above is 4-ticks-per-bar and is now known to be wrong.** Re-run on
+> REAL TICKS over four fortnights at matched exits, the control **beats** the strategy:
+> NullEntry −$0.237/trade against ZeeUHV −$1.466/trade, with a HIGHER win rate in three of
+> four periods. The rule in the box still stands — it is just that when we finally obeyed
+> it properly, the answer was worse than "they match". See Part 8.
+
 ## 2.3 Out-of-sample or it did not happen
 
 Freeze every parameter, then run on data the search never saw. This has caught four
@@ -337,13 +343,25 @@ Recorded so nobody mistakes an open question for a settled one.
   season.
 - **Why did the Watcher change results while disabled?** Reproducible in both directions,
   mechanism unexplained.
-- **Does the loss-cheapness edge survive real ticks?** Under OHLC modelling ZeeUHV lost
-  $114.58 on average against NullEntry's $154.80. Under real ticks ZeeUHV's average loss
-  was $148.81 — close to random. **Today's central finding may itself be an artefact of
-  OHLC modelling and needs re-measuring with a real-tick NullEntry run.**
-  → **Still not done as of 2026-08-13, and it is now the top of the queue.** Every exit
-  variation tested this week is tuned on top of an entry whose contribution has never been
-  measured against random on real ticks. One ~18-minute run per fortnight window settles it.
+- ~~**Does the loss-cheapness edge survive real ticks?**~~ **ANSWERED 2026-08-13 — and the
+  answer is no.** The real-tick `NullEntry` control was finally run over four fortnights at
+  matched exits and lot size:
+
+  ```
+                          trades    win%        net    E/trade
+  ZeeUHV (his rules)         836              -1,225.58   -1.466
+  NullEntry (NO rules)     1,329                -314.44   -0.237
+  ```
+
+  **The entry is worse than random.** The loss-cheapness half is still true — ZeeUHV's
+  average loss is smaller in every period — but its **win rate is LOWER than random in
+  three of the four** (85.27 vs 92.22, 81.61 vs 90.55, 88.00 vs 93.58). It beats random
+  only in August. Full table and caveats in
+  [`daily_reports/_LATEST/LATEST_REPORT.md`](../daily_reports/_LATEST/LATEST_REPORT.md) §1.8.
+
+  **The lesson for this page:** the 2026-08-12 conclusion "the edge is picking trades that
+  are cheap to be wrong about" was drawn at 4 ticks per bar and did not survive real ticks.
+  A control experiment is only as good as its tick model, exactly like everything else here.
 
 
 ---
