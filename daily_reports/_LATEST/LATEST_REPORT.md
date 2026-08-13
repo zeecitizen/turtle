@@ -402,6 +402,56 @@ stacked tickets, exiting together. **August's 93.65% over 63 tickets is 15 setup
 loser.** Every per-period win rate in this document should be read with the same division:
 the ticket counts are roughly 3.8× the number of independent events.
 
+## 1.10 THE STOP SWEEP — a $500 improvement that must be REJECTED
+
+§1.9 showed the average loss decides everything, so the stop was swept on real ticks across
+all four periods, target and hold unchanged, 0.02 lots. The headline looks like the best
+result of the day:
+
+```
+stop   four-period total    vs shipped
+   3        -724.76          +500.82   <- "best"
+   8        -955.78          +269.80
+   5      -1,040.58          +185.00
+  12      -1,065.90          +159.68
+  20      -1,225.58             ----   <- shipped
+```
+
+**Do not ship it.** Broken out by period, the total is one month wearing a disguise:
+
+```
+stop       AUG        MAR        APR        MAY   |  change vs shipped, per period
+  20     88.06    -523.66    -896.34    +106.36   |    ----      ----      ----      ----
+  12     88.06    -378.08    -634.60    -141.28   |   +0.00   +145.58   +261.74   -247.64
+   8    -62.50    -372.92    -318.12    -202.24   | -150.56   +150.74   +578.22   -308.60
+   5     -9.22    -359.14    -296.54    -375.68   |  -97.28   +164.52   +599.80   -482.04
+   3    +30.46    -400.74     -83.18    -271.30   |  -57.60   +122.92   +813.16   -377.66
+```
+
+- **Only 2 of 4 periods improve at any stop.** It helps March and April, hurts August and May.
+- **April alone contributes +$813 of the +$501.** Remove April and stop 3 is **worse** by $312.
+- **The win rate collapses**: March 85.27% → 55.08%, May 88.00% → 61.51%. That is a
+  different strategy — high-frequency, low-win-rate — not a tuned version of this one.
+- **It is non-monotonic**: in August, stop 8 is worse than both stop 12 and stop 3. No
+  plateau, so no stable optimum. Part 2.3 of `test_tips.md`: *a plateau is not protection* —
+  and here there is not even a plateau.
+
+**It fails the promotion rule outright: a change must win in a kind period AND a hostile
+one. This wins only in the hostile ones.** It is the same shape as the 96.4% configuration
+that lost $4,071 out of sample — a single period carrying a total.
+
+### What it does establish
+
+The direction is consistent and it is the regime story again, from the other side:
+
+> **A tighter stop helps where losses run (March, April) and hurts where noise ejects
+> trades (August, May).** The right stop is not a constant — it is a function of how far
+> price is currently travelling.
+
+A volatility-scaled stop is therefore the natural next experiment. It is also exactly the
+kind of feature that overfits, so it gets built only with its own out-of-sample receipts,
+and not tonight.
+
 ## 1.4 v1.4 — "every UHV in the retracement" (`InpUhvRank`, `InpMaxOpen=8`)
 
 Your rule: fire on every UHV in the retracement, not only the loudest. Mechanically sound
