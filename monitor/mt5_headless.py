@@ -133,7 +133,10 @@ def setup(csv="tester_xau_real.csv", symbol="XAUUSD_R3"):
 
 
 def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
-             optimize=False, period="M1", model=2):
+             optimize=False, period="M1", model=2, deposit=4123):
+    # deposit is an argument because a run that BLOWS THE ACCOUNT stops early and reports a
+    # net censored at the balance — see daily_reports/_LATEST/LATEST_REPORT.md 0a. When the
+    # question is a rate rather than a P&L, fund the test well enough to finish the window.
     live_is_safe()
     sync_experts()
     REPORTS.mkdir(parents=True, exist_ok=True)
@@ -162,7 +165,7 @@ def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
               # know which came first. Real ticks can.
               Model=model,
               FromDate=frm, ToDate=to,
-              Deposit=4123, Currency="USD", Leverage="1:500",
+              Deposit=deposit, Currency="USD", Leverage="1:500",
               Optimization=(1 if optimize else 0),   # 1 = SLOW COMPLETE (2 is genetic and stops early)
               OptimizationCriterion=6,               # 6 = our OnTester value
               Report=name, ReplaceReport=1,
@@ -192,10 +195,12 @@ if __name__ == "__main__":
     ap.add_argument("--from", dest="frm", default="2026.08.05")
     ap.add_argument("--to", default="2026.08.10")
     ap.add_argument("--optimize", action="store_true")
+    ap.add_argument("--deposit", type=int, default=4123)
     ap.add_argument("--model", type=int, default=2,
                     help="0=interpolated ticks, 1=OHLC, 2=open only, 4=REAL ticks")
     a = ap.parse_args()
     if a.setup:
         setup(symbol=a.symbol)
     if a.ea:
-        backtest(a.ea, a.symbol, a.frm, a.to, a.optimize, model=a.model)
+        backtest(a.ea, a.symbol, a.frm, a.to, a.optimize, model=a.model,
+                 deposit=a.deposit)
