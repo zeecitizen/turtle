@@ -304,7 +304,29 @@ Each of these cost at least an hour.
 7. **A swept BOOL arrives as `"true"`/`"false"`** in the optimisation XML and `float()`
    throws — which silently discarded every row of a 3,600-pass sweep.
 
-8. **The tester needs a logged-in trade server**, even for a custom symbol.
+8. **`ExecutionMode` is ABSENT unless you write it, and its default is IDEAL.** Zee,
+   2026-08-13: *"u selected ideal zero latency during testing, while in real, we have a
+   spread / latency etc."* He was right — no ini this project ever wrote contained the key,
+   so every result before that used instant fills.
+   ```
+   ExecutionMode=0     ideal, no delay      <- the silent default
+   ExecutionMode=163   163 ms send-to-fill  <- our measured live median
+   ExecutionMode=-1    random delay
+   ```
+   **Real-tick mode already models SPREAD** (it replays the broker's own recorded bid/ask);
+   it is only the send-to-fill delay that is missing. Use `--delay` in `mt5_headless.py`.
+   Our own `Common/Files/shano_open_log.csv` measures the real number on live fills:
+   **median 162.6 ms, p90 197 ms, p99 566 ms**, so do not invent one.
+
+   **Measured effect, both EAs, Aug and Mar (real ticks, 0.02 lots):** at 0 / 163 / 200 /
+   500 ms, ZeeUHV goes +1.40 → +1.48 per trade in August and −2.34 → −2.50 in March;
+   NullEntry stays flat at −0.39 → −0.41. **The ranking is identical at every delay.**
+   500 ms of gold is roughly 0.02–0.05 points against a 1-point target — noise, not drag.
+
+   **What it still does NOT model:** requotes, rejections and partial fills. Delay only
+   moves the price under your order.
+
+9. **The tester needs a logged-in trade server**, even for a custom symbol.
 
 9. **A custom symbol needs `bases/symbols.custom.dat`**, not just `bases/Custom/history`.
    That 4 KB registry file is the whole difference between working and `symbol not exist`.

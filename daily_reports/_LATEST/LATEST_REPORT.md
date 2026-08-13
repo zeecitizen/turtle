@@ -566,6 +566,58 @@ the take-profit-placed-at-the-entry bug (§1.3) and a harness that scored v14 ar
 leftover v13 reports. **Those older periods have not earned the presumption of correctness**
 and should be re-examined before the March/April result is treated as settled.
 
+## 1.13 EXECUTION LATENCY — a real harness defect, and it changes nothing
+
+Zee, 2026-08-13: *"u selected ideal zero latency during testing, while in real, we have a
+spread / latency etc."*
+
+**He was right about the defect.** `ExecutionMode` was absent from every ini this project
+has ever written, so MT5 used its default of `0` — instant, ideal fills. (Real-tick mode
+*does* model spread; it replays the broker's own recorded bid/ask. Only the send-to-fill
+delay was missing.) Fixed: `mt5_headless.py --delay`.
+
+**The number is measured, not guessed.** `Common/Files/shano_open_log.csv`, 17 real fills:
+**median 162.6 ms, p90 197 ms, p99 566 ms**; slippage median 0.06 pt, p90 0.55 pt.
+
+```
+                    ZeeUHV E/trade        NullEntry E/trade
+delay        AUG        MAR             AUG        MAR          ranking
+    0      +1.40      -2.34           -0.39      -0.44      Aug: Zee · Mar: random
+  163      +1.42      -2.47           -0.41      -0.43      Aug: Zee · Mar: random
+  200      +1.43      -2.49           -0.41      -0.40      Aug: Zee · Mar: random
+  500      +1.48      -2.50           -0.40      -0.41      Aug: Zee · Mar: random
+```
+
+**Latency is real, small, and does not reverse anything.** At 500 ms — three times the live
+median — ZeeUHV actually scores slightly *better* in August (+$93.28 against +$88.06),
+because 500 ms of gold is roughly 0.02–0.05 points against a 1-point target: noise, not a
+systematic drag. The August advantage over random holds at every delay; the March deficit
+holds at every delay.
+
+**What is still not modelled:** requotes, rejections and partial fills. `ExecutionMode`
+only moves the price under an in-flight order. The residual risk is the p90 slippage of
+0.55 pt, which on a 1-point target would matter — but that figure comes from the Shano
+burst era at 0.30 lots in fast tape, a harsher regime than these entries.
+
+**And the live receipts point the other way.** In Zee's own fills the close price
+consistently *overshoots* the take-profit — 4373.36 against a 4373.06 target, 4410.15
+against 4410.71 — and the live average win is **$11.42 against a $10 target**. Exit
+slippage has been in our favour, not against us.
+
+---
+
+### Three real defects were found today, and Zee found two of them
+
+```
+the take-profit placed AT the entry price    every "let it run" test was fake      (§1.3)
+the sweep harness reading v13 reports        four v14 arms scored identically      (§1.7)
+ExecutionMode absent -> ideal fills          every result ever, incl. tonight's    (§1.13)
+```
+
+Two of the three surfaced because he pushed back on a result rather than accepting it. That
+is worth recording as a working method, not just a tally: **the conclusions that survived
+tonight are the ones that survived being disbelieved.**
+
 ## 1.4 v1.4 — "every UHV in the retracement" (`InpUhvRank`, `InpMaxOpen=8`)
 
 Your rule: fire on every UHV in the retracement, not only the loudest. Mechanically sound
