@@ -452,6 +452,63 @@ A volatility-scaled stop is therefore the natural next experiment. It is also ex
 kind of feature that overfits, so it gets built only with its own out-of-sample receipts,
 and not tonight.
 
+## 1.11 THE DIAMOND MULTIPLIER — 4 tickets to 8
+
+Zee, 2026-08-13: *"since our winrate since past two days is 100%, let's increase the
+multiplier of each diamond. so that instead of opening 4 trades, it opens 8 trades."*
+
+That sentence has two readings and they are not the same trade, so both were built
+(`InpDiaMult`, `InpStackMult` in `ZeeUHV_v13`, both defaulting to 1 = shipped behaviour):
+
+```
+InpDiaMult   2   1 + dia*2   = 7 at 3 diamonds   conviction-weighted: a 0-diamond setup still opens 1
+InpStackMult 2   (1 + dia)*2 = 8 at 3 diamonds   doubles everything
+```
+
+Baseline re-ran to the cent after the edit (63 trades / 93.65% / +$88.06), as required.
+
+### At 0.02 lots — uncensored, so expectancy is comparable
+
+```
+              AUG       MAR       APR      MAY    4-period
+baseline 4  +88.06   -523.66   -896.34  +106.36   -1,225.58
+DiaMult2 7 +151.44   -896.90 -1,560.14  +175.22   -2,130.38
+StackMul2 8 +176.12 -1,047.32 -1,792.68 +212.72   -2,451.16
+```
+
+**−2451.16 / −1225.58 = exactly 2.000.** Per-ticket expectancy is unchanged in every arm
+($1.40 / $1.39 / $1.40) and the average loss never moves ($−11.66 in all three August
+arms). **It is a pure multiplier: it does not make the system better, it makes it bigger,
+in both directions.** `StackMult` is arithmetically identical to doubling `InpLots`.
+
+### At 0.10 lots — the size actually traded, and the reason this matters
+
+```
+             MAR                                APR
+baseline 4   -2,618.30   73.5% DD   survived    -4,000.60    97.1%  blew up
+DiaMult2 7   -3,783.80   92.9% DD   BLEW UP     -4,295.40   104.0%  blew up
+StackMul2 8  -3,781.80   93.0% DD   BLEW UP     -3,990.60    97.0%  blew up at 25% of the window
+```
+
+**March is the line.** At 4 tickets the account survives it — badly hurt at 73.5% drawdown,
+but alive. At 7 or 8 it is gone. Doubling converts one bad month into no account. (The
+0.10 four-period totals are omitted deliberately: three of them are censored at the
+deposit and cannot be summed — §0a.)
+
+Risk per failed setup on the $4,123 demo, since all tickets share one stop and die together:
+
+```
+stack        lots/setup   risk if the setup fails   % of account   losing setups to ruin
+4 tickets        0.40              $800                 19.4%              5.2
+7 tickets        0.70            $1,400                 34.0%              2.9
+8 tickets        0.80            $1,600                 38.8%              2.6
+```
+
+**Not promoted. Nothing is live.** Both inputs default to 1. The decision is Zee's, and the
+options put to him were: ship it as asked; double the tickets and halve the lot (identical
+exposure, finer granularity); or ship it paired with a **code-enforced equity halt**, on the
+grounds that a safety rule a human has to remember is not a safety rule.
+
 ## 1.4 v1.4 — "every UHV in the retracement" (`InpUhvRank`, `InpMaxOpen=8`)
 
 Your rule: fire on every UHV in the retracement, not only the loudest. Mechanically sound

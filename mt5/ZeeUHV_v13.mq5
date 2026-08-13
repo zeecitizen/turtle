@@ -83,6 +83,8 @@ input bool   InpUseDiamonds = true;   // InpUseDiamonds — size by conviction i
 input double InpMaxRisk     = 0.0;    // InpMaxRisk — 0 = off. Cap TOTAL lots across the stack.
 input bool   InpStackLots   = true;   // InpStackLots — each diamond opens ANOTHER position, each one bigger
 input double InpStackStep   = 0.0;   // InpStackStep — 0.0 = every diamond ticket stays at InpLots (Zee's call)
+input int    InpDiaMult     = 1;      // InpDiaMult — tickets PER DIAMOND. 2 => 1+dia*2 = 7 at 3 diamonds (conviction-weighted)
+input int    InpStackMult   = 1;      // InpStackMult — multiplies the whole stack. 2 => 8 at 3 diamonds (same as doubling InpLots)
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
@@ -470,8 +472,22 @@ void TryFire() {
    // fourth away — the Law 2 test returned results identical TO THE CENT because the
    // rule could not affect the outcome at all. A limit that quietly deletes a feature
    // is the same class of bug as a fallback that never announces itself.
-   int maxdia = InpUseLaw2 ? 4 : 3;
-   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, maxdia))) : 1;
+   // Zee, 2026-08-13: "since our winrate since past two days is 100%, let's increase the
+   // multiplier of each diamond. so that instead of opening 4 trades, it opens 8 trades".
+   //
+   // That sentence has two readings and they are NOT the same trade, so both are built and
+   // both get measured rather than one being guessed at:
+   //
+   //   InpDiaMult   — each diamond is worth this many tickets.  1 + dia*2  = 7 at 3 diamonds.
+   //                  Concentrates size on CONVICTION: a 0-diamond setup still opens 1.
+   //   InpStackMult — multiplies the finished stack.  (1 + dia)*2 = 8 at 3 diamonds.
+   //                  Doubles EVERYTHING, so it is arithmetically identical to doubling
+   //                  InpLots — profit x2 and drawdown x2, no change in risk-adjusted return.
+   //
+   // Both default to 1, which reproduces the shipped stack exactly.
+   int maxdia  = InpUseLaw2 ? 4 : 3;
+   int capped  = MathMax(0, MathMin(dia, maxdia));
+   int tickets = InpStackLots ? (1 + capped * InpDiaMult) * InpStackMult : 1;
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
