@@ -602,15 +602,19 @@ def draw_possible(bars_back=180, out=None):
     n_uhv = len(considered)
     n_fired = sum(1 for v in considered.values() if v[1])
     pruned = n_uhv - n_fired
-    ttl = (f"EVERY POSSIBLE SETUP - last {len(win)} bars   |   "
-           f"{n_uhv} UHV candidate(s) considered  ->  {n_fired} traded, {pruned} pruned"
-           f"   |   bars: {stage['ranging']} ranging, {stage['no retracement']} no-retracement, "
-           f"{stage['no lawful UHV']} no-UHV, {stage['UHV never broken']} UHV-never-broke"
-           "   |   OANDA feed - the live EA reads Blueberry and can differ")
+    # THE TITLE MUST WRAP. Zee, 2026-08-13: "make text above it multiline that way chart
+    # size grows". With bbox_inches="tight" a single long title stretches the whole image
+    # to fit the text, so once the GUI scales it down to the screen the CHART is what
+    # shrinks. Three short lines keep the figure the width of the plot.
+    ttl = (f"EVERY POSSIBLE SETUP - last {len(win)} bars\n"
+           f"{n_uhv} UHV candidate(s) considered  ->  {n_fired} traded, {pruned} pruned\n"
+           f"bars: {stage['ranging']} ranging · {stage['no retracement']} no-retracement · "
+           f"{stage['no lawful UHV']} no-UHV · {stage['UHV never broken']} UHV-never-broke"
+           "        (OANDA feed - the live EA reads Blueberry and can differ)")
 
     style = mpf.make_mpf_style(base_mpf_style="yahoo", gridstyle=":")
-    fig, axes = mpf.plot(df, type="candle", style=style, volume=True, figsize=(18, 9),
-                         returnfig=True, title=ttl)
+    fig, axes = mpf.plot(df, type="candle", style=style, volume=True, figsize=(19, 11),
+                         returnfig=True, title=ttl, panel_ratios=(4, 1))
     ax = axes[0]
 
     # labels stagger, because candidates cluster and a pile of overlapping badges is
@@ -640,7 +644,7 @@ def draw_possible(bars_back=180, out=None):
     pad = max((hi - lo) * 0.10, 0.30)
     ax.set_ylim(lo - pad, hi + pad)
     out = out or (Path(__file__).parent / "setup_labels" / "possible_setups.png")
-    fig.savefig(str(out), dpi=100, bbox_inches="tight")
+    fig.savefig(str(out), dpi=150, bbox_inches="tight")   # 150 dpi so zooming has pixels
     plt.close(fig)
     kept = f"{100.0 * n_fired / n_uhv:.0f}%" if n_uhv else "n/a"
     return out, (f"{n_uhv} candidates -> {n_fired} traded ({kept} kept), {pruned} pruned "

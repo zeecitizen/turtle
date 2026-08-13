@@ -516,7 +516,7 @@ class Cockpit:
             except Exception:
                 p, msg = None, traceback.format_exc()[-500:]   # the real error, not a guess
             if p:
-                self.root.after(0, lambda: (self._show_png(win, lbl, p),
+                self.root.after(0, lambda: (self._show_png_zoom(win, lbl, p),
                                             win.title(f"🕸 {msg}")))
             else:
                 self.root.after(0, lambda: lbl.config(text=msg, justify="left"))
@@ -648,6 +648,73 @@ class Cockpit:
         tk.Button(win, text="📋 copy filename instead", font=("Segoe UI", 11, "bold"),
                   bg="#343a40", fg=FG, relief="flat", padx=10, pady=6,
                   command=copy_name).pack(pady=(0, 10))
+
+
+    def _show_png_zoom(self, win, lbl, path):
+        """A pannable, zoomable view. Zee 2026-08-13: "its too small to be visible.
+        or give a zoom button on it". The chart is rendered at 150 dpi, so there are
+        real pixels to zoom into rather than an upscaled blur."""
+        from PIL import Image, ImageTk
+        lbl.pack_forget()
+        src = Image.open(path)
+        holder = tk.Frame(win, bg=BG); holder.pack(fill="both", expand=True)
+        cv = tk.Canvas(holder, bg=BG, highlightthickness=0)
+        xs = tk.Scrollbar(holder, orient="horizontal", command=cv.xview)
+        ys = tk.Scrollbar(holder, orient="vertical", command=cv.yview)
+        cv.configure(xscrollcommand=xs.set, yscrollcommand=ys.set)
+        cv.grid(row=0, column=0, sticky="nsew"); ys.grid(row=0, column=1, sticky="ns")
+        xs.grid(row=1, column=0, sticky="ew")
+        holder.rowconfigure(0, weight=1); holder.columnconfigure(0, weight=1)
+
+        sw = int(self.root.winfo_screenwidth() * 0.92)
+        sh = int(self.root.winfo_screenheight() * 0.70)
+        fit = min(sw / src.width, sh / src.height)
+        state = {"z": fit}
+
+        def render():
+            z = state["z"]
+            w, h = max(1, int(src.width * z)), max(1, int(src.height * z))
+            im = src.resize((w, h), Image.LANCZOS)
+            ph = ImageTk.PhotoImage(im)
+            cv.delete("all")
+            cv.create_image(0, 0, anchor="nw", image=ph)
+            cv.image = ph
+            cv.configure(scrollregion=(0, 0, w, h),
+                         width=min(w, sw), height=min(h, sh))
+            pct.config(text=f"{z*100:.0f}%")
+
+        def zoom(mult=None, absolute=None):
+            state["z"] = absolute if absolute else max(0.15, min(4.0, state["z"] * mult))
+            render()
+
+        bar = tk.Frame(win, bg=BG); bar.pack(pady=(4, 6))
+        for txt, cmd in (("🔍−", lambda: zoom(0.8)), ("🔍+", lambda: zoom(1.25)),
+                         ("fit", lambda: zoom(absolute=fit)),
+                         ("100%", lambda: zoom(absolute=1.0))):
+            tk.Button(bar, text=txt, font=("Segoe UI", 11, "bold"), bg="#343a40", fg=FG,
+                      relief="flat", padx=12, pady=4, command=cmd).pack(side="left", padx=3)
+        pct = tk.Label(bar, text="", font=("Segoe UI", 11, "bold"), bg=BG, fg=DIM)
+        pct.pack(side="left", padx=(10, 14))
+        tk.Label(bar, text="drag to pan · ctrl+wheel to zoom · wheel to scroll",
+                 font=("Segoe UI", 10), bg=BG, fg=DIM).pack(side="left")
+
+        cv.bind("<ButtonPress-1>", lambda e: cv.scan_mark(e.x, e.y))
+        cv.bind("<B1-Motion>", lambda e: cv.scan_dragto(e.x, e.y, gain=1))
+        def wheel(e):
+            if e.state & 0x0004:                      # ctrl held -> zoom
+                zoom(1.15 if e.delta > 0 else 0.87)
+            else:
+                cv.yview_scroll(-1 if e.delta > 0 else 1, "units")
+        cv.bind("<MouseWheel>", wheel)
+        cv.bind("<Shift-MouseWheel>",
+                lambda e: cv.xview_scroll(-1 if e.delta > 0 else 1, "units"))
+        render()
+
+        def copy_name():
+            self.root.clipboard_clear(); self.root.clipboard_append(str(path))
+        tk.Button(win, text="📋 copy filename", font=("Segoe UI", 10, "bold"),
+                  bg="#343a40", fg=FG, relief="flat", padx=10,
+                  command=copy_name).pack(pady=(0, 8))
 
     def show_versions(self):
         """Zee: the version-vs-winrate graph — after which version did WR drop/climb."""
