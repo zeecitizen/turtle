@@ -17,6 +17,7 @@ from __future__ import annotations
 import json, sys, threading, time
 from pathlib import Path
 import tkinter as tk
+from datetime import datetime, timedelta
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "monitor"))
 import trend_eyes as TE                                     # noqa: E402
@@ -42,6 +43,76 @@ def current_call():
         return "AUTO", 0
 
 
+
+
+# ── HOW LONG DID THE TRADE LAST? (Zee 2026-08-13) ────────────────────────────────
+# "on this page can you add trade duration? so i know how long the trade lasted in
+#  minutes there"
+#
+# turtle_fills.csv records only the CLOSE — broker_time, price, P&L. The OPEN time
+# lives in the EA's own log, where every fire prints "[ZEE] BUY @price — N diamond(s)".
+# So the duration has to be assembled from two files.
+#
+# THE TIMEZONE TRAP, and it has bitten this project before: MT5 writes its expert log
+# in the machine's LOCAL time (Karachi) while the fills carry BROKER time (UTC+3).
+# Karachi is UTC+5, so a fire logged at 03:51 is a broker-time 01:51 entry. Pairing
+# them without that shift produced hold times of 221 and 1,130 minutes on trades that
+# actually lasted 44 seconds.
+LOG_TO_BROKER_H = 2          # Karachi (UTC+5) -> broker (UTC+3)
+
+def _fire_times(logdir):
+    """Every moment the EA opened a setup, in BROKER time."""
+    import glob, re as _re
+    out = []
+    for f in sorted(glob.glob(str(Path(logdir) / "*.log"))):
+        stem = Path(f).stem
+        if not (len(stem) == 8 and stem.isdigit()):
+            continue
+        day = datetime(int(stem[:4]), int(stem[4:6]), int(stem[6:]))
+        try:
+            txt = Path(f).read_text(encoding="utf-16", errors="ignore")
+        except Exception:
+            try: txt = Path(f).read_text(errors="ignore")
+            except Exception: continue
+        for line in txt.splitlines():
+            if "[ZEE]" not in line: continue
+            if "BUY" not in line and "SELL" not in line: continue
+            m = _re.search(r"(\d\d):(\d\d):(\d\d)", line)
+            if not m: continue
+            local = day.replace(hour=int(m.group(1)), minute=int(m.group(2)),
+                                second=int(m.group(3)))
+            out.append(local - timedelta(hours=LOG_TO_BROKER_H))
+    return sorted(out)
+
+def _durations(fills_file, logdir):
+    """{close_timestamp -> minutes held}. A setup closes all its tickets on the same
+    second, so one duration covers the whole stack. Each fire is used once, matched to
+    the first close that follows it — anything over 4 hours is left blank rather than
+    shown, because a wrong number here is worse than none."""
+    import csv as _c
+    fires = _fire_times(logdir)
+    closes = []
+    try:
+        for r in _c.DictReader(Path(fills_file).open(errors="ignore")):
+            if "XAU" not in (r.get("symbol") or "").upper(): continue
+            closes.append(r["broker_time"])
+    except Exception:
+        return {}
+    seen, out, used = [], {}, set()
+    for ts in closes:
+        if ts in out: continue
+        try: ct = datetime.strptime(ts, "%Y.%m.%d %H:%M:%S")
+        except ValueError: continue
+        best = None
+        for i, ft in enumerate(fires):
+            if i in used or ft > ct: continue
+            if best is None or ft > fires[best]: best = i
+        if best is None: continue
+        mins = (ct - fires[best]).total_seconds() / 60.0
+        if 0 <= mins <= 240:
+            out[ts] = mins
+            used.add(best)
+    return out
 
 # ── Karachi time in the Trades window ─────────────────────────────────────────────
 # Zee, 2026-08-11: "can it show time in timezone of Karachi so its easier to compare
@@ -241,7 +312,7 @@ class Cockpit:
         import csv as _csv
         top = tk.Toplevel(self.root); top.title("📜 Trades — click 🔍 to inspect the setup")
         top.configure(bg=BG)
-        head = tk.Label(top, text="XAUUSD fills (Karachi time) — 🔍 draws the UHV, trigger lines, BO candle",
+        head = tk.Label(top, text="XAUUSD fills (Karachi time) · held · — 🔍 draws the UHV, trigger lines, BO candle",
                         font=("Segoe UI", 13, "bold"), bg=BG, fg=FG)
         head.pack(pady=(10, 6))
         canvas = tk.Canvas(top, bg=BG, highlightthickness=0,
@@ -256,6 +327,14 @@ class Cockpit:
         self._wheel_target = canvas
         top.bind("<Destroy>", lambda e, t=top: (
             setattr(self, "_wheel_target", self._canvas) if e.widget is t else None))
+
+        # how long each setup was held — assembled from the EA's log, see _durations
+        try:
+            durs = _durations(self.FILLS_F,
+                              Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal"
+                                   r"/DBE9B8B347D025DD139E103EE3B63FD8/MQL5/Logs"))
+        except Exception:
+            durs = {}
 
         rows = []
         try:
@@ -284,6 +363,13 @@ class Cockpit:
                      width=6).pack(side="left")
             tk.Label(r, text=f"{pnl:+8.2f}", font=("Consolas", 12, "bold"), bg=BG,
                      fg=col, width=10).pack(side="left")
+            # HELD FOR — blank when the open time cannot be established, never guessed.
+            d = durs.get(ts)
+            held = (f"{d:.0f}m" if d is not None and d >= 1 else
+                    (f"{d*60:.0f}s" if d is not None else "—"))
+            tk.Label(r, text=held, font=("Consolas", 11), bg=BG,
+                     fg="#f59f00" if (d is not None and d > 30) else DIM,
+                     width=7, anchor="e").pack(side="left")
             tk.Button(r, text="🔍 forensic", font=("Segoe UI", 10, "bold"),
                       bg="#343a40", fg=FG, relief="flat", padx=8,
                       command=lambda t=ts, s2=side, x=closepx: self.forensic(t, s2, x)
