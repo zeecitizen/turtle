@@ -344,6 +344,64 @@ our own exit geometry is most likely to fail.**
   differ 4×, which is more than noise — but the per-period figures deserve less confidence
   than they look.
 
+## 1.9 WHERE THE LOSS LIVES — 13 windows, and the quantity that decides everything
+
+If a hostile fortnight is a few bad days, a regime filter has something to bite on. If it
+bleeds throughout, it does not. So the shipped configuration was run over 13 consecutive
+~3-day windows at 0.02 lots.
+
+**Reconciliation check first:** the four March windows sum to **−$523.66**, matching the
+single full-period run to the cent; April's four sum to **−$896.34**, likewise. All 13 sum
+to −$1,226.54 against the four full runs' −$1,225.58. The windowing is sound.
+
+```
+window        win%    avgW     avgL    break-even needed        net
+May 09-13   88.89%    2.24    -0.49         17.9%           +104.48
+Aug 10-13   93.65%    2.28   -11.66         83.6%            +88.06
+Apr 09-13   94.74%    2.28   -16.20         87.7%            +74.30
+May 13-15   85.19%    2.20    -9.85         81.7%            +22.48
+May 06-09   84.31%    2.14   -12.28         85.2%             -6.38
+May 01-06   91.21%    2.29   -25.62         91.8%            -15.18
+Mar 02-05   89.02%    2.64   -30.95         92.1%            -86.20
+Mar 05-10   88.06%    2.40   -30.99         92.8%           -106.50
+Mar 13-16   86.67%    2.15   -40.82         95.0%           -107.46
+Mar 10-13   73.33%    2.09   -24.37         92.1%           -223.50
+Apr 01-06   84.62%    2.20   -40.12         94.8%           -224.26
+Apr 13-15   75.63%    2.81   -18.12         86.6%           -272.92
+Apr 06-09   78.87%    2.40   -40.54         94.4%           -473.46
+```
+
+**4 of 13 windows are profitable, and they are not grouped by month.** April — the worst
+fortnight — contains both a +$74.30 window and the −$473.46 one. March bleeds in all four.
+So the damage is neither uniform nor conveniently concentrated.
+
+### The quantity that decides it
+
+`break-even needed = |avgL| / (avgW + |avgL|)`. Every profitable window clears its own
+threshold and every losing one misses — but that is an **accounting identity, not a
+prediction**, and it should not be dressed up as a discovery. Its value is the
+decomposition:
+
+```
+avgW  spans  2.09 -> 2.81     a factor of 1.3
+avgL  spans -0.49 -> -40.82   a factor of 83
+```
+
+**The average win is pinned by the $1 target and barely moves. The outcome is decided
+almost entirely by the average loss.** At a realistic 88% win rate the system needs
+`|avgL| <= 2.3 × 0.88/0.12 ≈ $17` to survive. It sits between $12 and $41.
+
+That is what §1.10 goes after — and it is also why the 1:20 geometry is a trap: **a
+volatile period raises the win rate you need at the same moment it lowers the win rate you
+get.**
+
+### A caveat this section made visible
+
+All four of August's losing tickets are **−$11.66 exactly** — one losing setup with four
+stacked tickets, exiting together. **August's 93.65% over 63 tickets is 15 setups with one
+loser.** Every per-period win rate in this document should be read with the same division:
+the ticket counts are roughly 3.8× the number of independent events.
+
 ## 1.4 v1.4 — "every UHV in the retracement" (`InpUhvRank`, `InpMaxOpen=8`)
 
 Your rule: fire on every UHV in the retracement, not only the loudest. Mechanically sound
