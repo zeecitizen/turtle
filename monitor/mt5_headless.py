@@ -133,7 +133,7 @@ def setup(csv="tester_xau_real.csv", symbol="XAUUSD_R3"):
 
 
 def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
-             optimize=False, period="M1", model=2, deposit=4123):
+             optimize=False, period="M1", model=2, deposit=4123, delay=0):
     # deposit is an argument because a run that BLOWS THE ACCOUNT stops early and reports a
     # net censored at the balance — see daily_reports/_LATEST/LATEST_REPORT.md 0a. When the
     # question is a rate rather than a P&L, fund the test well enough to finish the window.
@@ -166,6 +166,14 @@ def backtest(ea, symbol="XAUUSD_R3", frm="2026.08.05", to="2026.08.10",
               Model=model,
               FromDate=frm, ToDate=to,
               Deposit=deposit, Currency="USD", Leverage="1:500",
+              # EXECUTION DELAY. Zee, 2026-08-13: "u selected ideal zero latency
+              # during testing, while in real, we have a spread / latency etc."
+              # He was right — this key was ABSENT, so every run before that used
+              # MT5's default of 0 = instant, ideal fills. Real-tick mode does model
+              # the broker's recorded SPREAD, but nothing modelled the delay between
+              # send and fill. Our own shano_open_log.csv measures that on real fills:
+              # median 162.6 ms, p90 197 ms. 0 = ideal, N = N milliseconds, -1 = random.
+              ExecutionMode=delay,
               Optimization=(1 if optimize else 0),   # 1 = SLOW COMPLETE (2 is genetic and stops early)
               OptimizationCriterion=6,               # 6 = our OnTester value
               Report=name, ReplaceReport=1,
@@ -196,6 +204,8 @@ if __name__ == "__main__":
     ap.add_argument("--to", default="2026.08.10")
     ap.add_argument("--optimize", action="store_true")
     ap.add_argument("--deposit", type=int, default=4123)
+    ap.add_argument("--delay", type=int, default=0,
+                    help="execution delay ms (0=ideal, -1=random). Live median is ~163.")
     ap.add_argument("--model", type=int, default=2,
                     help="0=interpolated ticks, 1=OHLC, 2=open only, 4=REAL ticks")
     a = ap.parse_args()
@@ -203,4 +213,4 @@ if __name__ == "__main__":
         setup(symbol=a.symbol)
     if a.ea:
         backtest(a.ea, a.symbol, a.frm, a.to, a.optimize, model=a.model,
-                 deposit=a.deposit)
+                 deposit=a.deposit, delay=a.delay)
