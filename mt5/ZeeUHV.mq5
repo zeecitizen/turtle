@@ -98,6 +98,7 @@ input bool   InpUseDiamonds = true;   // InpUseDiamonds — size by conviction i
 input double InpMaxRisk     = 0.0;    // InpMaxRisk — 0 = off. Cap TOTAL lots across the stack.
 input bool   InpStackLots   = true;   // InpStackLots — each diamond opens ANOTHER position, each one bigger
 input double InpStackStep   = 0.0;   // InpStackStep — 0.0 = every diamond ticket stays at InpLots (Zee's call)
+input int    InpStackMult   = 2;      // InpStackMult — multiplies the whole stack. 2 => 8 tickets at 3 diamonds (Zee 2026-08-13)
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
@@ -315,8 +316,14 @@ int ClicksFor(int d) { return (d <= 1) ? 1 : ((d == 2) ? 2 : 3); }
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
-   PrintFormat("[ZEE] ZeeUHV v1.00 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d",
-               InpStopPts, InpTargetPts, InpMagicNumber);
+   // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
+   // how a deploy is verified — if the Experts tab does not say v1.10 with stack x2, the
+   // chart is still running the old binary and the change did NOT take.
+   PrintFormat("[ZEE] ZeeUHV v1.10 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+               " · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
+               InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
+               4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
+               4 * MathMax(1, InpStackMult) * InpLots * InpStopPts * 100.0);
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { PrintFormat("[ZEE] deinit reason=%d", r); }
@@ -380,7 +387,25 @@ void TryFire() {
    // = $700 on ONE setup. The live receipts from 2026-08-06 already warn about
    // conviction sizing multiplying losses, so InpMaxRisk exists to cap the total and
    // this must be proven in the tester before it goes anywhere near live.
-   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, 3))) : 1;
+   // Zee, 2026-08-13: "since our winrate since past two days is 100%, let's increase the
+   // multiplier of each diamond. so that instead of opening 4 trades, it opens 8 trades."
+   //
+   // HIS CALL, MADE WITH THE NUMBERS IN FRONT OF HIM. Measured on real ticks first, and
+   // recorded here so nobody later mistakes it for an untested change:
+   //
+   //   * It is a PURE MULTIPLIER. Four periods at 0.02 lots gave -2451.16 against the
+   //     4-ticket -1225.58 — exactly 2.000x. Per-ticket expectancy did not move
+   //     ($1.40 -> $1.40) and neither did the average loss. It does not make the system
+   //     better, it makes it bigger, in both directions.
+   //   * AT 0.10 LOTS IT CHANGES WHAT MARCH DOES TO THE ACCOUNT. The 4-ticket stack
+   //     survives March at 73.5% equity drawdown; at 8 tickets it BLEW THE ACCOUNT
+   //     (93.0%). April blew up either way, but faster.
+   //   * All tickets share one stop and fail together, so one lost setup costs
+   //     8 x 0.10 x 20pt x $100 = $1,600, which is 38.8% of the $4,123 demo.
+   //     Roughly 2.6 losing setups in a row would end it.
+   //
+   // The concern was put to him in those terms and he chose to ship it. Demo account.
+   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, 3))) * MathMax(1, InpStackMult) : 1;
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
