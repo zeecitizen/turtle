@@ -1,3 +1,24 @@
+> # ⚠️ READ BEFORE QUOTING ANY NUMBER ON THIS PAGE
+>
+> **This page is a frozen historical record of 2026-08-11. Two of its headline numbers have
+> since been shown to be measurement artefacts. It is preserved unedited — Zee asked for it
+> to be kept "like the book of Moses" — but it is no longer the current state.**
+>
+> 1. **The `93.28% / +$2,599.10 / 1,608 trades` result was measured at 4 ticks per bar** on
+>    `XAUUSD_BIG`, a custom symbol built from CSV *bars*. MT5 logs `OnTick executed on the
+>    bar begin only` for such symbols — the EA saw about one price per minute. **Only real
+>    ticks (`--model 4`) can test a 1-point target.**
+> 2. **A no-rules control EA (`NullEntry`) scores 92.42%** on the same exits. The win rate
+>    is geometry — a 1-point target against a 20-point stop — not edge. Win rate must never
+>    be an optimisation target again.
+> 3. On real ticks across four fortnights this configuration nets **−$5,656 and blows the
+>    account in April**.
+>
+> **Current state:** [`daily_reports/_LATEST/LATEST_REPORT.md`](daily_reports/_LATEST/LATEST_REPORT.md)
+> **How to test without lying to yourself:** [`testing/test_tips.md`](testing/test_tips.md)
+
+---
+
 # GOAL ACHIEVED — 48 hours, 55 commits, and one working machine
 
 **Branch:** `goal_achieved` · **Frozen:** 2026-08-11

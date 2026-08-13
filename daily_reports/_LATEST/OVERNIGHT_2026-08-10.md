@@ -1,3 +1,25 @@
+> # 🛑 THE CENTRAL RECOMMENDATION OF THIS REPORT WAS TESTED AND REFUTED
+>
+> This page argues for **resting a LIMIT at the UHV level instead of chasing the break**,
+> on the strength of a 172-setup tape study. It was built as `DohaLevel.mq5` and run.
+>
+> **It lost $593.10.** A limit only fills on the trades that come BACK to the level, and
+> those are the worse half — **65 of 193 setups never filled at all, and they were
+> disproportionately the good ones.** Classic adverse selection. It is now in the
+> do-not-re-investigate table in [`../../latest_winrate.md`](../../latest_winrate.md).
+>
+> **The tape measurements in section 1 are still sound** — 92% of breakouts do reach +$1,
+> and the CHASE-vs-LEVEL excursion figures are real facts about the tape. The error was
+> inferring that a fillable strategy could harvest them. Read this page for the
+> measurements; do not act on its conclusion.
+>
+> Also superseded: section 6's run instructions use `1 minute OHLC` modelling, which cannot
+> test a 1-point target at all (see [`../../testing/test_tips.md`](../../testing/test_tips.md)).
+>
+> **Current state:** [`LATEST_REPORT.md`](LATEST_REPORT.md)
+
+---
+
 # Overnight, 10 August 2026 — the night we found it
 
 You said: *"build it till completion. don't stop for me. get the visual software to draw

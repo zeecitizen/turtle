@@ -30,13 +30,19 @@ stores the real ticks (8 .tkc files, ~420 MB) — nothing needs buying.
 
 **PROOF IT MATTERS.** Replaying the exact days the live EA traded:
 ```
-real ticks, Aug 10-13   38 trades  100.00%  +$430    (598,796 ticks, 217/bar)
-THE LIVE ACCOUNT        12 setups  100.00%  +$570
+real ticks, Aug 10-13   63 trades   93.65%  +$430.80  (890,868 ticks, 215/bar, 4,137 bars)
+THE LIVE ACCOUNT        14 baskets 100.00%  +$613.80
 real ticks, Mar 2-16   224 trades   85.27%  -$2,618
 ```
 The tester AGREES with live on the same days. There was never a backtest-vs-live
 contradiction — that was a sampling error, comparing 103 days of backtest to 2 days of
 live. **Match the period before comparing numbers.**
+
+> ⚠️ **CORRECTED 2026-08-13.** This block previously read *"38 trades, 100.00%, +$430"*.
+> That run covered **2,758 of 4,137 bars** — two days of a three-day window, because the
+> rig was still downloading tick history. Identical configuration on the full window gives
+> 63 trades at 93.65% with losses averaging $58.30. **`Ticks/Bars` proves tick quality and
+> says NOTHING about coverage — check `Bars` too.** See `testing/test_tips.md` Part 11.
 
 **CUSTOM SYMBOLS CANNOT DO THIS.** `XAUUSD_BIG`, `XAUUSD_R3` and `XAUUSD_F11` were built
 from CSV bars, so MT5 logs `OHLC bar states generating. OnTick executed on the bar begin

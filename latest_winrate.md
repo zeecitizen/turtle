@@ -1,6 +1,14 @@
 > **⚠️ Every number in this file before 2026-08-13 was measured at 4 ticks per bar.**
 > Only real-tick runs (`--model 4`) can test a 1-point target. See
 > [`testing/test_tips.md`](testing/test_tips.md) before quoting anything here.
+>
+> **⚠️ SECOND CORRECTION, 2026-08-13.** The real-tick August row below — *"38 trades,
+> 100.00%, +$430"* — covered **2,758 of 4,137 bars**, two days of a three-day window. The
+> identical configuration on the full window scores **63 trades, 93.65%, +$430.80**, with
+> losses averaging $58.30. August is a good period, not a lossless one. Any figure in this
+> file near **−$4,000** should also be suspected of being a **stop-out on the $4,123
+> deposit** rather than a measurement. See `test_tips.md` **Part 11**, and
+> [`daily_reports/_LATEST/LATEST_REPORT.md`](daily_reports/_LATEST/LATEST_REPORT.md).
 
 
 
@@ -61,10 +69,10 @@ Replaying the EXACT days the live EA traded, on REAL broker ticks (598,796 ticks
 2,758 bars, 217 per bar, quality 100%):
 
 ```
-                              trades   win%        net
-real ticks, Aug 10-13             38  100.00%   +$430.00
+                              trades   win%        net      bars
+real ticks, Aug 10-13             63   93.65%   +$430.80   4,137   <- corrected 08-13
 THE LIVE ACCOUNT, same days       12  100.00%   +$570.40
-real ticks, Mar 2-16             224   85.27%  -$2,618.30
+real ticks, Mar 2-16             224   85.27%  -$2,618.30  13,788
 ```
 
 **The tester agrees with live when pointed at the same days.** It also handles a 1-point

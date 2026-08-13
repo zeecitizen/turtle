@@ -33,12 +33,17 @@ reconstructs it from four numbers.
 **PROOF, and it is unambiguous.** Replaying the exact days the live EA traded:
 
 ```
-real ticks, Aug 10-13    38 trades  100.00%   +$430    (598,796 ticks · 217/bar)
-THE LIVE ACCOUNT         12 setups  100.00%   +$570
+real ticks, Aug 10-13    63 trades   93.65%   +$430.80   (890,868 ticks · 215/bar)
+THE LIVE ACCOUNT         14 baskets 100.00%   +$613.80
 ```
 
 The tester **agrees with live** once it can see the real path. Before this discovery,
 every number this project ever produced was measured at **4 ticks per bar**.
+
+> ⚠️ **CORRECTED 2026-08-13.** This block used to read *"38 trades, 100.00%, +$430"*. That
+> run covered **2,758 bars of a 4,137-bar window** — two days of three. On the full window
+> the same configuration scores 93.65% and takes losses averaging $58.30. August is a good
+> period; it is not a period without losses. See **Part 11**.
 
 ## How to verify a run actually used real ticks
 Never trust the flag — check the report:
@@ -49,6 +54,10 @@ ratio ≈ 4    -> OHLC modelling
 ratio > 50   -> REAL TICKS
 ```
 A run that silently fell back to OHLC looks identical to a good one.
+
+**This ratio proves tick QUALITY and says nothing about COVERAGE.** Both of the August runs
+above score ~216 ticks/bar and one of them is missing a third of the period. Check `Bars`
+too — **Part 11**.
 
 ## Custom symbols CANNOT do this
 `XAUUSD_BIG`, `XAUUSD_R3`, `XAUUSD_F11` were built from CSV **bars**. MT5 logs:
@@ -89,10 +98,12 @@ days* and it agrees with live. A strategy has good periods and bad ones:
 
 ```
 real ticks, Mar 2-16    85.27%   -$2,618
-real ticks, Aug 10-13  100.00%     +$430
+real ticks, Aug 10-13   93.65%     +$431
 ```
 
 > **If a backtest disagrees with live, first check they cover the same dates.**
+> **Then check they cover the same NUMBER OF BARS** — matching `--from/--to` is not the
+> same as matching coverage (Part 11).
 
 ## 2.2 Always run the null hypothesis
 
@@ -278,9 +289,13 @@ Each of these cost at least an hour.
 
 Before believing any test result:
 
+- [ ] **`Bars` ≈ the window's expected bar count?** (~1,380/trading day on M1 gold) — a short
+      run is a clean-looking report about a different experiment (Part 11)
+- [ ] **`Equity Drawdown Relative` < 90%?** Above that the account died, the run stopped
+      early, and the net is CENSORED at the deposit — not a measurement (Part 11)
 - [ ] `Ticks / Bars > 50`? (real ticks, not a guess)
 - [ ] Does the baseline still reproduce to the cent after my code change?
-- [ ] Same date range as whatever I am comparing it to?
+- [ ] Same date range as whatever I am comparing it to — **and the same `Bars`?**
 - [ ] What does `NullEntry` score with the same exits?
 - [ ] Has the winner been frozen and run on data the search never saw?
 - [ ] Am I ranking by expectancy, not win rate?
@@ -326,6 +341,9 @@ Recorded so nobody mistakes an open question for a settled one.
   $114.58 on average against NullEntry's $154.80. Under real ticks ZeeUHV's average loss
   was $148.81 — close to random. **Today's central finding may itself be an artefact of
   OHLC modelling and needs re-measuring with a real-tick NullEntry run.**
+  → **Still not done as of 2026-08-13, and it is now the top of the queue.** Every exit
+  variation tested this week is tuned on top of an entry whose contribution has never been
+  measured against random on real ticks. One ~18-minute run per fortnight window settles it.
 
 
 ---
@@ -434,12 +452,19 @@ OFF   0.5        90   91.11%    -$63      380  86.58%   -$3,918
 OFF   0.0       207   87.44%   +$199      706  89.94%   -$3,967
 ```
 
+> ⚠️ **This table has NOT been re-audited (2026-08-13).** Its August baseline is the
+> 2,758-bar run (Part 11), and its two −$3,9xx March cells are close enough to the $4,123
+> deposit to be suspected stop-outs rather than measurements. The *direction* of the body
+> result has survived three separate framings and is probably right; the **numbers need
+> re-running with `Bars` and `Equity Drawdown Relative` checked** before they are quoted.
+
 Removing the body filter improves the net, the win rate and the average loss, in both a
 kind period and a hostile one. It passes rule 4. **It has still not been promoted**,
 because the body filter is Zee's own rule and rule 5 applies.
 
 The fine sweep shows there is **no compromise value** — the relationship is monotonic in
-both periods, so no setting keeps "strong candle" while capturing the benefit:
+both periods, so no setting keeps "strong candle" while capturing the benefit (same
+re-audit caveat as above applies to these figures):
 
 ```
 body    AUGUST  trades  win%       net       MARCH  trades  win%       net
@@ -457,3 +482,77 @@ NullEntry taught, appearing again in live data.
 
 Meanwhile the peak rule — which he correctly identified as absent from his labels — turns
 out to be load-bearing: removing it is worse in both periods. **Kept.**
+
+
+---
+
+# PART 11 — THE RUN ITSELF CAN BE A LIE (2026-08-13)
+
+Parts 1–10 assume that once a report exists, it describes the experiment you asked for.
+**Twice today it did not.** Both faults produce a clean report, a plausible number, and no
+error anywhere.
+
+## 11.1 A run can cover less of the period than you asked for
+
+Two August runs. Diffed input by input — **the configurations are identical**:
+
+```
+ZeeUHV_v13_004725    2,758 bars   217 tk/bar    38 trades   100.00%   +$430.00
+ZeeUHV_v13_021210    4,137 bars   215 tk/bar    63 trades    93.65%   +$430.80
+```
+
+Same `--from`, same `--to`, same EA, same `.set`. The first ran while the rig was still
+downloading tick history and silently tested **two days of a three-day window**.
+
+Both pass every check in Part 6 as it stood. Both pass `Ticks/Bars > 50`. The nets even
+agree to within a dollar — pure coincidence, and the reason it survived a week of being
+quoted as the project's flagship result.
+
+**The check:** M1 gold produces roughly **1,380 bars per trading day** (23h). Multiply by
+the trading days in the window and compare to `Bars` before reading anything else.
+
+```
+Aug 10-13  ->  3 days  -> ~4,140    (4,137 = complete;  2,758 = two days)
+Mar 2-16   -> 10 days  -> ~13,800   (13,788 = complete)
+Apr 1-15   ->  9 days  -> ~12,420   (Good Friday Apr 3 closed; 12,407 = complete)
+May 1-15   -> 10 days  -> ~13,800   (13,788 = complete)
+```
+
+**A run's bar count also grows as the rig downloads more history, so two runs done hours
+apart are not automatically comparable.** Record `Bars` beside every number.
+
+## 11.2 A run can end because the account died — and the net is then censored
+
+The tester deposit is **$4,123**. A cluster of results landed at −$3,766 … −$4,057, all
+with equity drawdown 92–98% and truncated bar counts:
+
+```
+run                    net        eq DD     bars / expected   what it really is
+v13_021847        -4 000.60      97.13%     11,565 / 12,407   bankrupt, April
+v14_012937        -4 039.60      98.06%      5,308 / 12,407   bankrupt at 43%
+ZeeMulti_015952   -4 001.30      97.21%      4,432 / 13,788   bankrupt at 32%
+v14_012737        -3 766.10      92.05%      1,591 / 13,788   bankrupt at 12%
+```
+
+**−$4,000 is not a loss, it is the floor of the instrument** — the most the account can
+possibly lose. Two configurations that both print "−$4,00x" may be nowhere near equally
+bad, and neither number can be averaged, ranked, or put in a ratio.
+
+**It is systematically biased toward the configurations you are most interested in.** The
+higher the trade frequency, the sooner the account dies, the shorter the run — so every
+"more trades loses money" conclusion drawn from these is confounded. That is precisely the
+family of change worth testing.
+
+**The check:** `Equity Drawdown Relative > 90%` → discard the net, report it as a
+bankruptcy, and if the configuration still deserves a fair trial, re-run it at a lot size
+small enough to survive.
+
+## 11.3 The rule
+
+> **Before reading `Total Net Profit`, read `Bars` and `Equity Drawdown Relative`.**
+> The first tells you whether the experiment happened. The second tells you whether the
+> number means anything. Only then does the strategy result exist.
+
+Both faults belong in Part 4's family — **a confident, clean-looking result produced by
+something that did not do what it was asked.** That remains the dominant failure mode of
+this project, and it is now six for six.
