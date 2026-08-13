@@ -220,7 +220,10 @@ class Cockpit:
         srow = tk.Frame(self.body, bg=BG); srow.pack(pady=(2, 0))
         tk.Button(srow, text="👀 draw the setup forming now", font=("Segoe UI", 11, "bold"),
                   bg="#7048e8", fg="white", padx=12, pady=5, relief="flat",
-                  command=self.show_forming).pack()
+                  command=self.show_forming).pack(side="left", padx=(0, 6))
+        tk.Button(srow, text="🕸 possible setups", font=("Segoe UI", 11, "bold"),
+                  bg="#f08c00", fg="white", padx=12, pady=5, relief="flat",
+                  command=self.show_possible).pack(side="left")
         self.regime = tk.Label(self.body, text="", font=("Segoe UI", 20, "bold"),
                                bg=BG, fg="#e03131")
         self.regime.pack(pady=(2, 0))
@@ -483,6 +486,49 @@ class Cockpit:
             else:
                 self.root.after(0, lambda: lbl.config(text=msg))
         threading.Thread(target=work, daemon=True).start()
+
+
+    def show_possible(self):
+        """Zee 2026-08-13: "i wanna see how many possible setups did we prune through
+        on a chart." The EA only ever reports what it FIRED. This runs the same rules
+        over every bar on screen and marks every UHV candidate it considered — green
+        for the ones that became trades, amber for the ones the rules threw away."""
+        win = tk.Toplevel(self.root); win.title("🕸 every possible setup")
+        win.configure(bg=BG)
+        bar = tk.Frame(win, bg=BG); bar.pack(pady=(10, 0))
+        tk.Label(bar, text="bars to scan:", font=("Segoe UI", 11), bg=BG, fg=DIM
+                 ).pack(side="left", padx=(0, 6))
+        depth = tk.IntVar(value=400)
+        for n in (200, 400, 800, 1500):
+            tk.Radiobutton(bar, text=str(n), variable=depth, value=n, bg=BG, fg=DIM,
+                           selectcolor=BG, font=("Segoe UI", 10, "bold"),
+                           activebackground=BG).pack(side="left")
+        lbl = tk.Label(win, text="drawing…", font=("Segoe UI", 14), bg=BG, fg=DIM)
+        lbl.pack(padx=20, pady=20)
+
+        def work():
+            import traceback
+            try:
+                sys.path.insert(0, str(Path(TE.__file__).parent))
+                import forensic_chart as FC
+                import importlib; importlib.reload(FC)
+                p, msg = FC.draw_possible(bars_back=depth.get())
+            except Exception:
+                p, msg = None, traceback.format_exc()[-500:]   # the real error, not a guess
+            if p:
+                self.root.after(0, lambda: (self._show_png(win, lbl, p),
+                                            win.title(f"🕸 {msg}")))
+            else:
+                self.root.after(0, lambda: lbl.config(text=msg, justify="left"))
+
+        def redraw():
+            lbl.config(text="drawing…")
+            threading.Thread(target=work, daemon=True).start()
+
+        tk.Button(bar, text="↻ redraw", font=("Segoe UI", 10, "bold"), bg="#1c7ed6",
+                  fg="white", padx=10, relief="flat", command=redraw).pack(side="left",
+                                                                          padx=(10, 0))
+        redraw()
 
     def forensic(self, ts, side, exit_px):
         """Draw and show one trade's UHV / trigger lines / BO candle."""
