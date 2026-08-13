@@ -434,8 +434,21 @@ void TryFire() {
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double px = (t > 0) ? ask : bid;
-   double sl = (t > 0) ? px - InpStopPts   : px + InpStopPts;
-   double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
+   // ZERO MEANS "NONE", NOT "AT THE ENTRY PRICE" (fixed 2026-08-13).
+   //
+   // This line used to read `px + InpTargetPts` unconditionally, so InpTargetPts = 0
+   // placed the take-profit ON THE ENTRY PRICE. The trade then closed the moment price
+   // ticked up by one spread. Every "no target, let the winner run" configuration ever
+   // measured was really "open and close at breakeven": across 63 August trades the
+   // LARGEST win was $2.70, against the TP-1 baseline's $15.20, while the tape over
+   // those same entries offered a median +4.62 points. The 25-minute hold never
+   // happened, which is why 15 / 25 / 40 minutes all returned nearly the same number.
+   //
+   // That artefact produced last night's "no stop, flat 25min survives all four
+   // periods, -$1,150" — a machine that barely traded, not one that survived.
+   // MT5 treats 0.0 as "no level", so that is what zero must send.
+   double sl = (InpStopPts   <= 0) ? 0.0 : ((t > 0) ? px - InpStopPts   : px + InpStopPts);
+   double tp = (InpTargetPts <= 0) ? 0.0 : ((t > 0) ? px + InpTargetPts : px - InpTargetPts);
 
    int dia = InpUseDiamonds ? DiamondsFor(origin, uhv, t) : 0;
 
