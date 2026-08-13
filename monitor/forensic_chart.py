@@ -524,5 +524,128 @@ def draw_context(broker_ts, side, bars_back=180, out=None):
     return out
 
 
+# ─────────────────────────────────────────────────────────────────────────────────
+# EVERY POSSIBLE SETUP, AND WHERE EACH ONE DIED
+#
+# Zee, 2026-08-13: "i wanna see how many possible setups did we prune through on a
+# chart."
+#
+# The EA only ever reports what it FIRED. This walks the same rules over every bar
+# on screen and records the stage each candidate reached, so the pruning is visible
+# instead of invisible. The rules are imported from zee_uhv.py — never re-implemented
+# here, because a second copy of the rules would drift from the first.
+# ─────────────────────────────────────────────────────────────────────────────────
+def _probe(Z, bars, i):
+    """Run the pipeline at bar i and report HOW FAR it got, not just pass/fail."""
+    t = Z.trend_at(bars, i)
+    if t == 0:
+        return "ranging", None, None
+    side = "buy" if t > 0 else "sell"
+    origin = Z.retracement_origin(bars, i - 1, side)
+    if origin is None:
+        return "no retracement", side, None
+    uhv = Z.find_uhv(bars, origin, i, side)
+    if uhv is None or uhv == i:
+        return "no lawful UHV", side, None
+    brk = Z.breakout_after(bars, uhv, side)
+    if brk is None:
+        return "UHV never broken", side, uhv
+    if brk != i:
+        return "broke on another bar", side, uhv
+    return "FIRED", side, uhv
+
+
+def draw_possible(bars_back=180, out=None):
+    """Draw every UHV the rules considered on the recent chart, and mark which ones
+    survived to a trade. Returns (png_path, summary_line)."""
+    import importlib, collections
+    sys.path.insert(0, str(Path(__file__).parent))
+    Z = importlib.import_module("zee_uhv")
+
+    # load() reads the rolling live window plus the old history file — together only
+    # a few hundred recent bars. tape_archive_xau.csv is the permanent record (it exists
+    # precisely because the bridge used to keep only 300 bars), so it is merged in here
+    # to give this view real depth. Deduped by timestamp; other forensic functions are
+    # deliberately left on load() alone so this cannot disturb them.
+    rows = {x[0]: x for x in load()}
+    arch = Path(__file__).parent / "tape_archive_xau.csv"
+    if arch.exists():
+        for r in csv.DictReader(open(arch, encoding="utf-8")):
+            t = datetime.fromtimestamp(int(r["time_unix"]), tz=timezone.utc).replace(tzinfo=None)
+            rows.setdefault(t, (t, float(r["open"]), float(r["high"]), float(r["low"]),
+                                float(r["close"]), float(r["volume"])))
+    rows = [rows[k] for k in sorted(rows)]
+    if not rows:
+        return None, "no bars"
+    win = rows[-bars_back:]
+    if len(win) < 80:
+        return None, f"only {len(win)} bars — need at least 80"
+    bars = [{"o": x[1], "h": x[2], "l": x[3], "c": x[4], "v": x[5]} for x in win]
+
+    stage = collections.Counter()
+    considered = {}        # uhv bar index -> [side, fired?]
+    fires = []
+    for i in range(60, len(bars)):
+        st, side, uhv = _probe(Z, bars, i)
+        stage[st] += 1
+        if uhv is not None:
+            rec = considered.setdefault(uhv, [side, False])
+            if st == "FIRED":
+                rec[1] = True
+                fires.append((i, uhv, side))
+
+    idx = pd.DatetimeIndex([x[0] + timedelta(hours=5) for x in win])   # Karachi
+    df = pd.DataFrame({"Open": [x[1] for x in win], "High": [x[2] for x in win],
+                       "Low": [x[3] for x in win], "Close": [x[4] for x in win],
+                       "Volume": [x[5] for x in win]}, index=idx)
+
+    n_uhv = len(considered)
+    n_fired = sum(1 for v in considered.values() if v[1])
+    pruned = n_uhv - n_fired
+    ttl = (f"EVERY POSSIBLE SETUP - last {len(win)} bars   |   "
+           f"{n_uhv} UHV candidate(s) considered  ->  {n_fired} traded, {pruned} pruned"
+           f"   |   bars: {stage['ranging']} ranging, {stage['no retracement']} no-retracement, "
+           f"{stage['no lawful UHV']} no-UHV, {stage['UHV never broken']} UHV-never-broke"
+           "   |   OANDA feed - the live EA reads Blueberry and can differ")
+
+    style = mpf.make_mpf_style(base_mpf_style="yahoo", gridstyle=":")
+    fig, axes = mpf.plot(df, type="candle", style=style, volume=True, figsize=(18, 9),
+                         returnfig=True, title=ttl)
+    ax = axes[0]
+
+    # labels stagger, because candidates cluster and a pile of overlapping badges is
+    # unreadable — which defeats the entire point of this view
+    last_u, tier = -99, 0
+    for u, (side, fired) in sorted(considered.items()):
+        tier = (tier + 1) % 3 if u - last_u < 12 else 0
+        last_u = u
+        col = "#2f9e44" if fired else "#f08c00"          # green traded, amber pruned
+        lvl = bars[u]["h"] if side == "buy" else bars[u]["l"]
+        ax.axvspan(u - 0.5, u + 0.5, color=col, alpha=0.30 if fired else 0.16, zorder=0)
+        ax.plot([u - 0.5, u + 0.5], [lvl, lvl], color=col, lw=2.2 if fired else 1.2,
+                zorder=3)
+        base = -20 if side == "buy" else 14
+        off = base + (-14 * tier if side == "buy" else 14 * tier)
+        ax.annotate(("TRADED" if fired else "pruned") + f" {side}",
+                    xy=(u, bars[u]["l"] if side == "buy" else bars[u]["h"]),
+                    textcoords="offset points", xytext=(0, off),
+                    fontsize=7.5, fontweight="bold", color="white", ha="center",
+                    annotation_clip=False, zorder=6,
+                    bbox=dict(boxstyle="round,pad=0.22", fc=col, ec="none"))
+
+    for i, u, side in fires:
+        ax.axvline(i, color="#1c7ed6", lw=1.4, ls="--", alpha=0.85, zorder=2)
+
+    lo = min(x[3] for x in win); hi = max(x[2] for x in win)
+    pad = max((hi - lo) * 0.10, 0.30)
+    ax.set_ylim(lo - pad, hi + pad)
+    out = out or (Path(__file__).parent / "setup_labels" / "possible_setups.png")
+    fig.savefig(str(out), dpi=100, bbox_inches="tight")
+    plt.close(fig)
+    kept = f"{100.0 * n_fired / n_uhv:.0f}%" if n_uhv else "n/a"
+    return out, (f"{n_uhv} candidates -> {n_fired} traded ({kept} kept), {pruned} pruned "
+                 f"· {stage['ranging']} of {sum(stage.values())} bars were ranging")
+
+
 if __name__ == "__main__":
     main()
