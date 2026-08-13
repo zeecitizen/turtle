@@ -103,7 +103,7 @@ May 1-15    13,788       254  79.13%  -1,027.50     -61.01    34.5%    survived
 
 Keeps real wins ($10.97 average) and survives April, but 83.3% drawdown is a near miss.
 
-## 1.3 No stop, no target, hold 25 — the survivor
+## 1.3 ~~No stop, no target, hold 25 — the survivor~~ **RETRACTED — it was never trading**
 
 ```
 Aug 10-13    4,137        63 100.00%     +32.10       0.00     7.6%    survived
@@ -114,24 +114,118 @@ May 1-15    13,788       272  97.06%    -126.80     -43.90     9.1%    survived
                                        -1,149.70   max equity drawdown 23.0%
 ```
 
-**This is the real result, and the audit strengthens it rather than weakening it.** The
-comparison is not "−$1,150 versus −$5,656". It is:
+> ### 🛑 RETRACTED the same day it was published
+>
+> These runs set `InpTargetPts = 0` to mean "no target". The EA computed
+> `tp = px + InpTargetPts`, which put the take-profit **on the entry price itself**, so
+> every trade closed as soon as price ticked up by one spread. The 25-minute hold never
+> happened. Nothing ran.
+>
+> **The tell was in the report all along:** across 63 August trades the largest single
+> win was **$2.70**, against the TP-1 baseline's $15.20 — while the tape over those same
+> entries offered a median favourable excursion of **+4.62 points**. A configuration that
+> "lets winners run" cannot have a $2.70 best trade. It also explains the 97–100% win
+> rates and the $0.51–$0.88 average wins: that is what closing at breakeven looks like.
+> And it explains why 15, 25 and 40-minute holds all returned nearly the same number —
+> the hold was irrelevant.
+>
+> **So −$1,150 was not a strategy surviving four periods. It was a machine that opened
+> and immediately closed, collecting a spread-sized crumb and occasionally being caught
+> out.** The claim that it "survived where the shipped config went bankrupt" is withdrawn.
+>
+> Fixed in `mt5/ZeeUHV_v13.mq5`: zero now sends `0.0`, which MT5 reads as "no level".
+> Re-measured honestly, **letting winners run is a disaster** — see §1.6.
+>
+> Untouched by this: **`NOSTOP TP1 h25` used a real target (TP 1.0) and remains valid**,
+> as does every row in §1.1 and §1.2. **The live EA is not affected** — it runs
+> `InpTargetPts = 1.0`, so all 14 live baskets are genuine.
+
+**One caveat on §1.1 that still stands:** the April baseline run covered 11,565 bars
+against §1.2's 12,407. The baseline saw *less* of a losing month.
+
+## 1.6 THE EXIT SWEEP — can we make more money per trade? No. (2026-08-13, evening)
+
+Zee: *"given our current trade history since deploying the EA and its first trade on
+11.08 01:51, can you find a way to maximize the profits?"*
+
+The screenshot he sent carries the clue: **every close price overshoots the take-profit**,
+sometimes by 0.30–0.56. Price is moving fast *through* our $1 target, which looks like a
+move we are clipping short. And his own Feb-11 winners ran to ~6 points where ours take 1.
+
+So the target was swept properly, on real ticks, for the first time.
+
+### August (kind period) · 4,137 bars · 216 ticks/bar · 0.10 lots
 
 ```
-                    four-period net    worst drawdown    survived all four?
-shipped                 -$5,656*            97.1%              NO
-no stop, flat 25min     -$1,150             23.0%             YES
+config                trades   win%       net    avgW    maxW     avgL    eqDD
+CONTROL SL20/TP1/60       63  93.65%   +440.30   11.42   15.20   -58.30   13.1%   <- shipped
+TP 2.0                    60  66.67%   -489.60   21.75           -67.98   33.0%
+TP 3.0                    60  66.67%   -106.40   31.33           -67.98   30.0%
+TP 5.0                    60  46.67%  -1510.70   40.85           -82.95   54.6%
+SL20 TRAIL 1.0/0.3        63  88.89%   +348.30   10.45   27.60   -33.87   13.3%
+SL20 TRAIL 1.0/0.5        63  88.89%   +361.50   10.69   27.60   -33.87   13.3%
+SL20 TRAIL 2.0/1.0        60  66.67%   -668.70   17.27   27.60   -67.98   34.5%
+SL20 TRAIL 3.0/1.5        60  66.67%   -235.30   28.11   63.00   -67.98   31.2%
+NOSL NOTP h25             60  11.67%  -2165.60   30.94   50.70   -44.95   58.2%
+NOSL NOTP h60             60  40.00%  -1998.10   65.93  131.50   -99.46   81.2%
+NOSL TP1 h25              63  87.30%   +299.90   11.14   13.50   -39.10    8.0%
 ```
 
-*\*censored; the true figure is worse.*
+**Nothing beats TP 1.** Every larger target loses money, and the win rate collapses with
+it — 93.65% → 66.67% → 46.67%. This is now the fourth independent confirmation of Zee's
+$1 call, and the first on real ticks.
 
-**It still loses money.** Wins average $0.85. A machine that survives is not a machine
-that earns, and −$1,150 over 47 trading days is not a business. But it is the first
-configuration this week that did not put the account on the floor in any period tested.
+### The Feb-11 shape, mechanised — and why six months of it failed
 
-**One caveat, stated because it cuts our way and should not be quietly enjoyed:** the
-April baseline run covered 11,565 bars against the candidates' 12,407. The baseline saw
-*less* of a losing month, so correcting it would widen the gap, not close it.
+`NOSL NOTP h60` is his actual Feb-11 configuration: **no stop, no target, exit on the
+clock.** Run honestly for the first time (§1.3 explains why every previous attempt was
+fake), it reproduces the good half of his day exactly:
+
+```
+                     average WIN    largest WIN
+Zee, 11 Feb 2026        €12.93         €54.93      ≈ 5.5 points
+NOSL NOTP h60            $65.93        $131.50     ≈ 6.6 points at 0.10 lots
+```
+
+**The winners really do run to six points.** The machine found them. What it could not do
+was the other half:
+
+```
+                     win rate    average LOSS    worst
+Zee's hand              94.2%         -€1.32     -€1.60
+the machine             40.0%        -$99.46    -$400+     net -$1,998
+```
+
+> **This is the six-month post-mortem, measured.** His 94% and his €1.32 average loss were
+> one thing, not two: a discretionary cut. Remove the cut and the same entries produce
+> 60% losers at $99 each. **The runs were never the edge. The cut was.** And no clock,
+> stop, trail or volume rule tested so far reproduces it — this is the sixth to fail.
+
+### The one honest improvement, and it is not in August
+
+The trail at 1.0/0.5 cuts the average loss almost in half — **−$58.30 → −$33.87** — while
+capturing bigger winners ($27.60 vs $15.20). It nets less in August because it gives up
+win rate. But losses are what destroy the hostile months, so it was tested there.
+
+### All four periods at 0.02 lots — nothing censored, every window complete
+
+```
+config                   MAR       APR       MAY     3-period    worst eqDD
+CONTROL SL20/TP1/60   -523.66   -896.34   +106.36   -1,313.64      24.9%
+SL20 TRAIL 1.0/0.3    -392.74   -896.00   +130.98   -1,157.76      24.9%
+SL20 TRAIL 1.0/0.5    -397.02   -873.48   +108.42   -1,162.08      24.4%
+SL20 TRAIL 2.0/1.0    -575.76   -873.20    -78.10   -1,527.06      25.1%
+NOSL TRAIL1.0/0.5 h60  -44.76  -1,193.56  +108.42   -1,129.90      32.2%
+NOSL TP1 h25          -276.48   -548.62   -205.50   -1,030.60      17.1%
+```
+
+**No exit configuration is profitable across four periods.** The best (`NOSL TP1 h25`,
+−$1,030.60) beats the shipped config by $283 at 0.02 lots — about $1,400 at 0.10 — and it
+does it by having the cheapest losses of anything tested, not by winning more.
+
+**The conclusion is uncomfortable and worth stating plainly: the exit is already at its
+maximum. Every one of the eleven alternatives tested today earns less.** If more money is
+to be found it is not here.
 
 ## 1.4 v1.4 — "every UHV in the retracement" (`InpUhvRank`, `InpMaxOpen=8`)
 
