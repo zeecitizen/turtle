@@ -129,6 +129,33 @@ constantly. Brownian approximation: `20 / (20 + 1) = 95%`.
 > four periods. The rule in the box still stands — it is just that when we finally obeyed
 > it properly, the answer was worse than "they match". See Part 8.
 
+### ⚠️ How to QUOTE a control result without misleading anyone (Zee, 2026-08-13)
+
+He objected: *"i can't accept the fact that 87% of randomly taken trades go into positive …
+its even hard to get 50% if i click randomly … and by saying this u discard the advantage
+the UHV strategy gives us."* **He was right on both counts.**
+
+"Random entries score 87%" is not a statement about entries. It is a statement about
+**risking 20 points to make 1**. Widen the target and it collapses to the coin flip he
+described — same EA, same random entries, only the target moved:
+
+```
+target      AUG win%    MAR win%    random-walk prediction 20/(20+t)
+  1.0        87.39%      92.22%             95.2%
+  5.0        61.54%      72.93%             80.0%
+ 20.0        54.29%      51.47%             50.0%     <- 272 March trades
+```
+
+**Two rules follow, and they are about honesty rather than method:**
+
+1. **Never quote a control's win rate without its risk/reward.** "NullEntry wins 92%" is
+   meaningless alone; "NullEntry wins 92% risking 20 to make 1, and still loses money"
+   is the finding.
+2. **Lead a control comparison with EXPECTANCY, not win rate.** The win rate is mostly the
+   exit and comparing it invites the reading that the strategy is worse than noise. On the
+   identical August days: random **−$0.39/trade**, his rules **+$1.40/trade**. That gap is
+   the edge, and it was buried under a win-rate table that implied the opposite.
+
 ## 2.3 Out-of-sample or it did not happen
 
 Freeze every parameter, then run on data the search never saw. This has caught four

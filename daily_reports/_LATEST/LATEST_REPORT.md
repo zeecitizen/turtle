@@ -509,6 +509,63 @@ options put to him were: ship it as asked; double the tickets and halve the lot 
 exposure, finer granularity); or ship it paired with a **code-enforced equity halt**, on the
 grounds that a safety rule a human has to remember is not a safety rule.
 
+## 1.12 ZEE WAS RIGHT ABOUT THE 87% — and the way §1.8 was written was misleading
+
+Zee, 2026-08-13: *"as a human i can verify that even 4 consecutive wins are extremely hard
+… i can't accept the fact that 87% of randomly taken trades go into positive. no they
+dont. its even hard to get 50% if i click randomly … and by saying this u discard the
+advantage the UHV strategy gives us."*
+
+**He is right, and the objection is well aimed.** "NullEntry scores 87%" is not the claim
+that random trading wins. It is a claim about **one exit geometry**: risk 20 points to make
+1. Stated without that qualifier it reads as though his year of work counted for nothing.
+
+Tested directly — same EA, same random entry every 30 minutes, same stop, same hold, only
+the target moves. If the win rate is geometry it must collapse toward 50% as the target
+widens to match the stop:
+
+```
+              AUGUST                    MARCH               random-walk
+target    trades   win%           trades   win%            prediction 20/(20+t)
+  1.0        119  87.39%             424  92.22%              95.2%
+  2.0        117  87.18%             409  87.53%              90.9%
+  5.0         91  61.54%             351  72.93%              80.0%
+ 10.0         77  50.65%             300  60.33%              66.7%
+ 20.0         70  54.29%             272  51.47%              50.0%
+ 40.0         70  54.29%             250  48.40%              33.3%   (saturated: the
+                                                                      60-min clock decides)
+```
+
+**At a symmetric target, random entries score 51.47% on 272 March trades against a
+predicted 50.0%.** Exactly the coin flip he described. The 87–92% at TP 1 is produced
+entirely by the 20:1 asymmetry, which is also why NullEntry **still loses money** at that
+win rate: twenty small wins are erased by one loss.
+
+### What this corrects in §1.8
+
+The finding stands — over four fortnights the entry underperforms random on expectancy.
+But §1.8 led with the win-rate comparison, and that was the wrong evidence to lead with,
+for two reasons Zee identified:
+
+1. **Win rate is mostly the exit.** Comparing 85.27% against 92.22% invites the reading
+   that his rules are worse than noise, when both numbers are largely the geometry.
+2. **His edge is in the same data and should have been the headline.** In August, on
+   identical exits and identical days: **random loses $0.39 a trade, his rules make $1.40.**
+   The $1.79 gap is the UHV edge, measured on real ticks — random cannot make money with
+   this geometry and his entry can.
+
+**The streak is still not the proof** — 14 in a row is what 20:1 odds produce regardless of
+entry quality. The expectancy gap is the proof, and it is a better argument for the
+strategy than the win rate ever was.
+
+### What remains open, and why March/April now deserve suspicion
+
+The expectancy gap is positive in August and negative in March and April. Zee offered the
+alternative that *"our testing setup has a flaw"*, and today alone produced two real ones —
+the take-profit-placed-at-the-entry bug (§1.3) and a harness that scored v14 arms against
+leftover v13 reports. **Those older periods have not earned the presumption of correctness**
+and should be re-examined before the March/April result is treated as settled.
+
 ## 1.4 v1.4 — "every UHV in the retracement" (`InpUhvRank`, `InpMaxOpen=8`)
 
 Your rule: fire on every UHV in the retracement, not only the loudest. Mechanically sound
