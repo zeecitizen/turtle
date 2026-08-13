@@ -316,8 +316,25 @@ our own exit geometry is most likely to fail.**
 
 - **It does not say August is fake.** August is the one period where the entry clearly beats
   random — **+$1.40 a trade against −$0.39** — and it is the regime the live account is
-  trading right now, 14 baskets unbeaten. The entry is not worthless; it is
-  **regime-dependent**, and that is now measured rather than assumed.
+  trading right now, 14 baskets unbeaten.
+
+  **But "regime-dependent" is a hypothesis, not a measurement.** The entry beat random in
+  **one fortnight out of four**. May was a dead heat (+$0.43 both). One win in four is not
+  distinguishable from luck at this sample size, and calling it a regime effect is exactly
+  the kind of overclaim this project keeps paying for. What is measured is the *shape*:
+
+  ```
+  period   ZeeUHV avgW    avgL    our win rate vs random
+  Aug            2.28  -11.66            +6.26 pts
+  May            2.23  -12.80            -5.58
+  Mar            2.40  -29.76            -6.95
+  Apr            2.49  -27.33            -8.94
+  ```
+
+  **The average WIN barely moves (2.23–2.49). The average LOSS more than doubles.** The
+  regime variable is how far a failed trade runs against you, not what a winner pays — and
+  our deficit against random widens as losses get more expensive. That is a coherent,
+  testable story. It is not yet evidence.
 - **It does not say NullEntry is a strategy.** It loses money too. Nothing here is a
   business.
 - **Sample caveat, stated because it cuts against the finding:** ZeeUHV's 836 tickets are
