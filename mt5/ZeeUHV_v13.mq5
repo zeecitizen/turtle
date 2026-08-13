@@ -84,9 +84,29 @@ input double InpMaxRisk     = 0.0;    // InpMaxRisk — 0 = off. Cap TOTAL lots 
 input bool   InpStackLots   = true;   // InpStackLots — each diamond opens ANOTHER position, each one bigger
 input double InpStackStep   = 0.0;   // InpStackStep — 0.0 = every diamond ticket stays at InpLots (Zee's call)
 input int    InpDiaMult     = 1;      // InpDiaMult — tickets PER DIAMOND. 2 => 1+dia*2 = 7 at 3 diamonds (conviction-weighted)
-input int    InpStackMult   = 1;      // InpStackMult — multiplies the whole stack. 2 => 8 at 3 diamonds (same as doubling InpLots)
+input int    InpStackMult   = 1;
+input int    InpUhvPick     = 0;
+
+input group "-- Pyramiding INSIDE a live breakout (Zee 2026-08-13) --"
+// Zee: "if we're earning on a breakout.. while the breakout lasts.. we could open more
+// subsequent trades? ... if we opened 4 trades based on some diamonds, can we open 4 more
+// on the next candle, then 4 more, would those also be successful? that way we could
+// create a streak within one breakout"
+//
+// So: after a setup fires, keep re-firing the SAME stack on each of the next N bars for as
+// long as the move is still going our way. Each add is a fresh ticket with its own stop and
+// its own target measured from ITS OWN entry, so a late add is not carrying the first
+// entry's risk. 0 = off, which reproduces the shipped EA exactly.
+input int    InpPyramidBars = 0;      // InpPyramidBars — add on each of the next N bars (0 = off)
+input bool   InpPyramidOnlyUp = true; // InpPyramidOnlyUp — only add while price is BEYOND the first entry in our favour
+      // InpUhvPick — 0 LOUDEST (his rule) · 1 QUIETEST · 2 BIGGEST RANGE · 3 FIRST
+      // InpStackMult — multiplies the whole stack. 2 => 8 at 3 diamonds (same as doubling InpLots)
 
 datetime g_last_bar = 0;
+int      g_pyr_left = 0;      // bars of pyramiding still allowed
+int      g_pyr_side = 0;      // the live breakout's direction
+double   g_pyr_entry = 0;     // the FIRST entry price of this breakout
+int      g_pyr_dia  = 0;      // diamonds the original setup earned
 datetime g_last_fire = 0;
 long     g_uhv_vol   = 0;      // the effort that justified the trade
 datetime g_fade_bar  = 0;      // so the fade is judged once per bar, not per tick
@@ -184,14 +204,35 @@ int RetracementOrigin(int side) {
 //|   only, so a louder candle outside it can never be chosen. That   |
 //|   single constraint answers most of his complaints.               |
 //+------------------------------------------------------------------+
+// InpUhvPick — IS THE VOLUME THE EDGE? (Zee, 2026-08-13: "can u confirm whether the UHV
+// is the thing giving us the edge or not?")
+//
+// Everything else — trend, retracement scope, colour, body, peak, breakout, stop, target,
+// stack — is held identical. ONLY the rule that chooses WHICH candle in the retracement is
+// "the UHV" changes. If volume is carrying the edge, inverting it must hurt.
+//
+//   0  LOUDEST   his rule: the highest-volume candle of the right colour   (shipped)
+//   1  QUIETEST  the exact inverse. The sharpest test there is.
+//   2  BIGGEST   the widest range instead — volatility, not volume
+//   3  FIRST     the oldest eligible candle — pure structure, no selection at all
 int FindUhv(int origin, int side) {
    bool wantRed = (side > 0);
    int best = -1; long bestv = -1;
+   double bestr = -1;
    for (int k = origin; k >= 1; k--) {
       if (wantRed  && !IsRed(k))   continue;
       if (!wantRed && !IsGreen(k)) continue;
       long v = BarVolume(k);
-      if (v > bestv) { bestv = v; best = k; }
+      if (InpUhvPick == 1) {                       // QUIETEST of the right colour
+         if (bestv < 0 || v < bestv) { bestv = v; best = k; }
+      } else if (InpUhvPick == 2) {                // widest RANGE, volume ignored
+         double r = bHigh(k) - bLow(k);
+         if (r > bestr) { bestr = r; bestv = v; best = k; }
+      } else if (InpUhvPick == 3) {                // oldest eligible — no selection
+         if (best < 0) { bestv = v; best = k; }
+      } else {                                     // 0 = LOUDEST, his rule
+         if (v > bestv) { bestv = v; best = k; }
+      }
    }
    if (best < 1) return -1;
    double rng = bHigh(best) - bLow(best);
@@ -509,6 +550,11 @@ void TryFire() {
    if (placed > 0) {
       g_last_fire = TimeCurrent();
       g_uhv_vol   = BarVolume(uhv);   // the effort this trade rests on
+      // arm the pyramid: this breakout may be re-entered on the next N bars
+      g_pyr_left  = InpPyramidBars;
+      g_pyr_side  = t;
+      g_pyr_entry = px;
+      g_pyr_dia   = dia;
       PrintFormat("[ZEE] %s @%.2f — %d diamond(s) -> %d ticket(s), %.2f lots total · "
                   "UHV %d (vol %d) · brk vol %d",
                   t > 0 ? "BUY " : "SELL", px, dia, (int)placed, total,
@@ -696,6 +742,55 @@ void Trail() {
    }
 }
 
+
+//+------------------------------------------------------------------+
+//| PYRAMID — re-enter the SAME breakout while it is still working.   |
+//|                                                                  |
+//| Zee, 2026-08-13: "if we opened 4 trades based on some diamonds,   |
+//| can we open 4 more on the next candle, then 4 more, would those   |
+//| also be successful? that way we could create a streak within one  |
+//| breakout."                                                       |
+//|                                                                  |
+//| Each add is a FRESH ticket with its own stop and its own target   |
+//| measured from its own fill, so a late add never inherits the      |
+//| first entry's risk. The add is skipped unless price is still      |
+//| beyond the ORIGINAL entry in our favour, which is his condition   |
+//| "in case the breakout went positive".                             |
+//+------------------------------------------------------------------+
+void Pyramid() {
+   if (InpPyramidBars <= 0 || g_pyr_left <= 0 || g_pyr_side == 0) return;
+   g_pyr_left--;                                  // one bar of the window consumed
+
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double px  = (g_pyr_side > 0) ? ask : bid;
+
+   // "while the breakout lasts" — only add if the move is still in our favour
+   if (InpPyramidOnlyUp) {
+      double moved = (g_pyr_side > 0) ? (px - g_pyr_entry) : (g_pyr_entry - px);
+      if (moved <= 0) { g_pyr_left = 0; return; }  // it turned: stop adding entirely
+   }
+
+   double sl = (InpStopPts   <= 0) ? 0.0 : ((g_pyr_side > 0) ? px - InpStopPts   : px + InpStopPts);
+   double tp = (InpTargetPts <= 0) ? 0.0 : ((g_pyr_side > 0) ? px + InpTargetPts : px - InpTargetPts);
+
+   int maxdia  = InpUseLaw2 ? 4 : 3;
+   int capped  = MathMax(0, MathMin(g_pyr_dia, maxdia));
+   int tickets = InpStackLots ? (1 + capped * InpDiaMult) * MathMax(1, InpStackMult) : 1;
+
+   int placed = 0;
+   for (int q = 0; q < tickets; q++) {
+      bool ok = (g_pyr_side > 0)
+                  ? trade.Buy (InpLots, _Symbol, 0, sl, tp, "zee_pyr")
+                  : trade.Sell(InpLots, _Symbol, 0, sl, tp, "zee_pyr");
+      if (!ok) break;
+      placed++;
+   }
+   if (placed > 0 && InpVerbose)
+      PrintFormat("[ZEE] PYRAMID %s @%.2f — %d more ticket(s), %d bar(s) left",
+                  g_pyr_side > 0 ? "BUY " : "SELL", px, placed, g_pyr_left);
+}
+
 void OnTick() {
    Trail();
    FadeExit();
@@ -703,6 +798,7 @@ void OnTick() {
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;
    g_last_bar = bt;
+   Pyramid();          // add to a live breakout first — MaxOpen must not block it
    TryFire();
 }
 //+------------------------------------------------------------------+
