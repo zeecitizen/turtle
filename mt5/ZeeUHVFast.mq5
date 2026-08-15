@@ -50,6 +50,18 @@ input group "── Housekeeping ──"
 input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent SETUPS (a stack counts as one)
 input int    InpCooldownBar = 3;      // InpCooldownBar — bars between entries
 input int    InpMaxGapSec   = 300;    // InpMaxGapSec — never reason across a hole in the data
+
+input group "-- Stale-quote guard (Zee found this 2026-08-14) --"
+// The EA fired at 02:15 on 14 Aug using ask 4366.17. Blueberry's own tick history for
+// that half-hour tops out at 4363.25 and the spread never exceeded 0.56 - that price
+// did not exist. It DID exist about six hours earlier, 18:52-20:30 the previous evening.
+// The bars were fresh (it found a real setup with real volumes); only the terminal's
+// cached quote was stale. The server filled correctly at 4360.7, so the stop and target
+// - both computed from 4366.17 - landed 6.4 points away from the trade. -$695.
+//
+// A gap guard already exists for BARS (WindowContinuous). Nothing checked the QUOTE.
+input double InpMaxQuoteDrift = 2.0;   // InpMaxQuoteDrift — skip if the quote disagrees with bar 0 by more than this (0 = off)
+input int    InpMaxQuoteAgeSec = 90;   // InpMaxQuoteAgeSec — skip if the last quote is older than this (0 = off)
 input bool   InpVerbose     = false;  // InpVerbose — OFF for optimisation (a sweep with logging is 100x slower)
 input int    InpMinTrades   = 15;
 
@@ -351,6 +363,31 @@ void TryFire() {
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double px = (t > 0) ? ask : bid;
+
+   // ── THE QUOTE MUST BE FRESH AND IT MUST AGREE WITH THE TAPE ──────────────
+   // Both checks print unconditionally when they fire. A guard that refuses a trade
+   // silently is indistinguishable from a quiet market, and we have already lost a
+   // day to exactly that confusion.
+   if (InpMaxQuoteAgeSec > 0) {
+      datetime qt = (datetime)SymbolInfoInteger(_Symbol, SYMBOL_TIME);
+      long age = (long)(TimeCurrent() - qt);
+      if (qt > 0 && age > InpMaxQuoteAgeSec) {
+         PrintFormat("[FAST] [BLOCKED] quote is %d s old (limit %d) — not trading on it",
+                     (int)age, InpMaxQuoteAgeSec);
+         return;
+      }
+   }
+   if (InpMaxQuoteDrift > 0) {
+      // bar 0's close arrives through the HISTORY path, so it is an independent
+      // witness to the quote cache. When they disagree, one of them is lying.
+      double c0 = iClose(_Symbol, PERIOD_CURRENT, 0);
+      if (c0 > 0 && MathAbs(px - c0) > InpMaxQuoteDrift) {
+         PrintFormat("[FAST] [BLOCKED] quote %.2f disagrees with the tape %.2f by %.2f pts "
+                     "(limit %.2f) — this is the 2026-08-14 fault, refusing the trade",
+                     px, c0, MathAbs(px - c0), InpMaxQuoteDrift);
+         return;
+      }
+   }
    double sl = (t > 0) ? px - InpStopPts   : px + InpStopPts;
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
 
