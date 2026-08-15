@@ -335,13 +335,14 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.20 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.21 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
                4 * MathMax(1, InpStackMult) * InpLots * InpStopPts * 100.0);
-   PrintFormat("[ZEE] QUOTE GUARD %s — refuse if quote drifts >%.2f pts from the tape or is "
-               ">%d s old · levels re-anchored on each fill (the 2026-08-14 -$695 fault)",
+   PrintFormat("[ZEE] PRICE via SymbolInfoTick + tick-history cross-check %s — refuse if "
+               "the two disagree >%.2f pts or the tick is >%d s old · levels re-anchored "
+               "on each fill (the 2026-08-14 -$695 fault)",
                (InpMaxQuoteDrift > 0 || InpMaxQuoteAgeSec > 0) ? "ARMED" : "*** OFF ***",
                InpMaxQuoteDrift, InpMaxQuoteAgeSec);
    return INIT_SUCCEEDED;
@@ -349,6 +350,71 @@ int OnInit() {
 void OnDeinit(const int r) { PrintFormat("[ZEE] deinit reason=%d", r); }
 
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| CurrentTick — the ONLY way this EA is allowed to learn a price.  |
+//|                                                                  |
+//| Zee, 2026-08-15: "can u ensure that we're using a method to pull  |
+//| the latest price only while trading.. so we're using the current  |
+//| price always"                                                     |
+//|                                                                  |
+//| The old code called SymbolInfoDouble(SYMBOL_ASK). That returns a  |
+//| number and NOTHING ELSE — no timestamp, no way to know whether it |
+//| is from this second or from last night. On 2026-08-14 it returned |
+//| a price six hours old, twice, and the stop and target were built  |
+//| on it. -$695 on one trade and a 4.43-point stop on the other.     |
+//|                                                                  |
+//| SymbolInfoTick returns the same price WITH tick.time, so age      |
+//| becomes a fact instead of an assumption. Four checks, and the     |
+//| function refuses rather than guessing:                            |
+//|                                                                  |
+//|   1. the call itself must succeed                                 |
+//|   2. the symbol must be SYNCHRONIZED with the server              |
+//|   3. the tick must be younger than InpMaxQuoteAgeSec              |
+//|   4. the tick DATABASE (a different code path) must agree with it |
+//|                                                                  |
+//| Every refusal prints. A guard that blocks silently is             |
+//| indistinguishable from a quiet market.                            |
+//+------------------------------------------------------------------+
+bool CurrentTick(MqlTick &out) {
+   if (!SymbolInfoTick(_Symbol, out)) {
+      PrintFormat("[ZEE] [BLOCKED] SymbolInfoTick failed (%d) — no price, no trade",
+                  GetLastError());
+      return false;
+   }
+   if (out.ask <= 0 || out.bid <= 0) {
+      PrintFormat("[ZEE] [BLOCKED] nonsense quote bid=%.2f ask=%.2f", out.bid, out.ask);
+      return false;
+   }
+   if (!SymbolIsSynchronized(_Symbol)) {
+      Print("[ZEE] [BLOCKED] symbol is NOT synchronized with the server — refusing to trade");
+      return false;
+   }
+   if (InpMaxQuoteAgeSec > 0) {
+      long age = (long)(TimeCurrent() - out.time);
+      if (age > InpMaxQuoteAgeSec) {
+         PrintFormat("[ZEE] [BLOCKED] the tick is %d s old (limit %d) — this is the "
+                     "2026-08-14 fault", (int)age, InpMaxQuoteAgeSec);
+         return false;
+      }
+   }
+   // The tick DATABASE is filled by a different mechanism than the symbol cache, so it
+   // is an independent witness. If the cache had gone stale on 08-14, this is what would
+   // have disagreed with it.
+   if (InpMaxQuoteDrift > 0) {
+      MqlTick h[];
+      if (CopyTicks(_Symbol, h, COPY_TICKS_INFO, 0, 1) == 1 && h[0].ask > 0) {
+         if (MathAbs(h[0].ask - out.ask) > InpMaxQuoteDrift) {
+            PrintFormat("[ZEE] [BLOCKED] cache says %.2f, tick history says %.2f — %.2f "
+                        "pts apart (limit %.2f). One of them is lying.",
+                        out.ask, h[0].ask, MathAbs(h[0].ask - out.ask), InpMaxQuoteDrift);
+            return false;
+         }
+         if (h[0].time_msc > out.time_msc) out = h[0];   // always prefer the NEWER tick
+      }
+   }
+   return true;
+}
+
 void TryFire() {
    if (OpenCount() >= InpMaxOpen) return;
    if (g_last_fire > 0 &&
@@ -386,8 +452,10 @@ void TryFire() {
    }
    t = side;
 
-   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   MqlTick tk;
+   if (!CurrentTick(tk)) return;          // no trustworthy price -> no trade, ever
+   double ask = tk.ask;
+   double bid = tk.bid;
    double px = (t > 0) ? ask : bid;
 
    // ── THE QUOTE MUST BE FRESH, AND IT MUST AGREE WITH THE TAPE ─────────────

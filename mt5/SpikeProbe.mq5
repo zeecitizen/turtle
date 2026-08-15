@@ -23,6 +23,7 @@
 input string InpFrom     = "2026.08.14 02:00";  // window start (broker time)
 input string InpTo       = "2026.08.14 02:30";  // window end
 input double InpLookFor  = 4366.17;             // the price in question
+input double InpTpBid    = 0.0;                 // if >0, report whether BID ever reached it (a long TP)
 
 datetime g_from, g_to;
 bool     g_done = false;
@@ -84,6 +85,14 @@ void OnTick() {
    PrintFormat("[SPIKE] ===== WIDEST SPREAD: %.2f at %s",
                worst_spread, TimeToString(worst_at, TIME_DATE | TIME_SECONDS));
    PrintFormat("[SPIKE] ===== ticks within 0.50 of %.2f : %d", InpLookFor, near);
+   if (InpTpBid > 0) {
+      double best_bid = 0; datetime bat = 0;
+      for (int i = 0; i < n; i++)
+         if (t[i].bid > best_bid) { best_bid = t[i].bid; bat = t[i].time; }
+      PrintFormat("[SPIKE] ===== HIGHEST BID: %.2f at %s   (a long TP at %.2f would %s)",
+                  best_bid, TimeToString(bat, TIME_DATE | TIME_SECONDS), InpTpBid,
+                  best_bid >= InpTpBid ? "HAVE FILLED" : "NOT have filled");
+   }
    PrintFormat("[SPIKE] ===== VERDICT: %s",
                near > 0 ? "that price DID exist in the broker's own feed"
                         : "that price NEVER appeared — it did not come from the market");
