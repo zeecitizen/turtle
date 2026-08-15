@@ -326,6 +326,28 @@ void TryFire() {
    }
    t = side;
 
+   // ─────────────────────────────────────────────────────────────────────────
+   // THE STOP AND TARGET MUST COME FROM THE FILL, NOT FROM THE QUOTE.
+   //
+   // Zee found this on 2026-08-14 by reading his own MT5 history against my log:
+   //   the EA logged   BUY @4366.17
+   //   it FILLED at    4360.62 - 4360.78          (5.4 points lower)
+   //   S/L was set     4346.17 = 4366.17 - 20
+   //   T/P was set     4367.17 = 4366.17 + 1
+   //
+   // So the $1 target sat 6.4 points above the actual fill instead of 1, and could
+   // not be reached inside the hold. All 8 tickets aged out at -8.7 points: -$695.
+   // That loss was not the market, and it was not the 8-ticket stack. It was a
+   // target measured from a price the trade never traded at.
+   //
+   // A normal fire for contrast (08-11): logged 4372.06, filled 4371.96, TP 4373.06
+   // — 1.1 points above the fill, exactly as designed.
+   //
+   // The quote is still used to place the order, so a position is NEVER naked even
+   // for a millisecond. The levels are then corrected from the real open price of
+   // each ticket, which also means a late ticket in the stack gets its own honest
+   // target rather than inheriting the first one's.
+   // ─────────────────────────────────────────────────────────────────────────
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double px = (t > 0) ? ask : bid;
@@ -382,6 +404,27 @@ void TryFire() {
                         : trade.Sell(lots, _Symbol, 0, sl, tp, tag);
       if (!ok) break;
       total += lots; placed += 1;
+
+      // Re-anchor this ticket's stop and target on the price it ACTUALLY filled at.
+      ulong pt = trade.ResultOrder();
+      if (pt > 0 && PositionSelectByTicket(pt)) {
+         double fill = PositionGetDouble(POSITION_PRICE_OPEN);
+         double slip = (t > 0) ? (px - fill) : (fill - px);   // + = filled better
+         if (MathAbs(fill - px) > _Point) {
+            double nsl = (InpStopPts   <= 0) ? 0.0
+                       : ((t > 0) ? fill - InpStopPts   : fill + InpStopPts);
+            double ntp = (InpTargetPts <= 0) ? 0.0
+                       : ((t > 0) ? fill + InpTargetPts : fill - InpTargetPts);
+            if (!trade.PositionModify(pt, nsl, ntp))
+               PrintFormat("[FAST] !! could not re-anchor #%I64u (%d) — it is still on "
+                           "the QUOTE levels, target %.2f", pt, trade.ResultRetcode(), tp);
+         }
+         // Loud, unconditional, never behind InpVerbose: a fill this far from the quote
+         // is how -$695 happened, and it must be visible in the log the moment it recurs.
+         if (MathAbs(slip) >= 1.0)
+            PrintFormat("[FAST] !! SLIPPAGE %.2f pts — quote %.2f, filled %.2f. Levels "
+                        "re-anchored on the fill.", slip, px, fill);
+      }
       if (!InpStackLots) break;
    }
    if (placed > 0) {
