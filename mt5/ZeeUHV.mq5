@@ -84,7 +84,29 @@ input int    InpBreakWindow = 12;     // InpBreakWindow — bars after the UHV i
 input group "── Exit: SL 6 / TP 3 measured on his own setups ──"
 input double InpStopPts     = 20.0;   // InpStopPts — 20 validated: 93.3% on 1,608 trades, 100% on both unseen sets
 input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W/1L, 96%, his own Feb-11 shape
-input int    InpMaxHoldMin  = 60;   // InpMaxHoldMin — 60 — Zee: every breakout eventually gives the bump, so give it time
+// ZEE'S CALL, 2026-08-15: 5 minutes. He noticed his live trades nearly all finish inside
+// three ("since all trades last nearly under 3 minutes .. would 90%+ trades still go into
+// profit?") and asked for it to be measured on the LIVE window rather than on backtest
+// periods — 11 Aug 01:51 to 14 Aug, the clean 14/14 run, excluding the two stale-quote
+// trades of the 14th.
+//
+// Measured there, real ticks, 163 ms delay:
+//     hold  win%     net    avgL    drawdown
+//        3  68.66%  +67.60  -1.74     0.5%
+//        4  82.09%  +93.44  -1.57     0.5%     best money
+//        5  88.06%  +85.04  -4.86     1.0%     <- SHIPPED: keeps the win rate AND the money
+//       60  89.06%  +29.84 -14.51     3.6%     the old setting
+//
+// Nearly 3x the money at a third of the drawdown, for one point of win rate. The mechanism
+// is the average loss: -1.57 at four minutes against -14.51 at sixty. A short clock stops a
+// failing trade bleeding for another 55 minutes.
+//
+// NOT a free lunch, recorded so it is not forgotten: across THREE periods the 60-minute
+// hold wins overall, because March and May prefer it. What makes 5 more than a 3-day fit is
+// that a SECOND, independent August window (10-13 Aug) also preferred short holds. It is a
+// property of this regime, and this is the regime being traded. If the tape turns into
+// March, revisit this line first.
+input int    InpMaxHoldMin  = 5;    // InpMaxHoldMin — 5, Zee 2026-08-15, fitted to the live window
 
 input group "── Housekeeping ──"
 input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent SETUPS (a stack counts as one)
@@ -335,9 +357,9 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.21 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
-               " · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
-               InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
+   PrintFormat("[ZEE] ZeeUHV v1.22 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+               " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
+               InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
                4 * MathMax(1, InpStackMult) * InpLots * InpStopPts * 100.0);
    PrintFormat("[ZEE] PRICE via SymbolInfoTick + tick-history cross-check %s — refuse if "
