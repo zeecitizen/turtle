@@ -381,8 +381,18 @@ def draw_trade(broker_ts, side, exit_px, out=None):
                        "Low": [x[3] for x in win], "Close": [x[4] for x in win],
                        "Volume": [x[5] for x in win]}, index=idx)
     ui = next((i for i, x in enumerate(win) if x[0] == u_utc), None)
+    # THE BREAKOUT IS BAR 1, NOT BAR 0. Zee, 2026-08-16: "ye dono candles green marked
+    # hain? ... kyunk normally uhv ka color opposite hota hai" — he saw a SELL whose BO
+    # marker sat on a GREEN candle, which his own rule forbids.
+    #
+    # He was right about the picture and the EA was innocent. It judges the just-CLOSED
+    # candle (BreakoutIsBar1) and enters at the OPEN of the next one, so entry_utc belongs
+    # to the FIRE bar and the breakout is the minute before it. Verified against Blueberry's
+    # own bars for that trade: UHV 20:15 GREEN vol 206 and breakout 20:17 RED vol 145,
+    # both matching the EA's log exactly. The chart was marking 20:18 — the green fire bar.
+    bo_utc = e_utc - timedelta(minutes=1)
     bi = next((i for i, x in enumerate(win)
-               if x[0] <= e_utc < x[0] + timedelta(minutes=1)), None)
+               if x[0] <= bo_utc < x[0] + timedelta(minutes=1)), None)
     uhv = win[ui] if ui is not None else None
     if uhv is None:
         # The UHV bar may be missing from the drawn window (a bridge gap, or a tape
