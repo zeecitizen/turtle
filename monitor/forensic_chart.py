@@ -121,9 +121,71 @@ def _read_log(p):
         return Path(p).read_text(errors="ignore").splitlines()
 
 
+def _resolve_zeeuhv(close_local, side):
+    """Resolve a ZeeUHV fire. Returns the same dict shape as resolve_trade, or None."""
+    want = "BUY" if side.upper().startswith("B") else "SELL"
+    best = None
+    # Pick logs by DATE, not by "the four most recent files". The trades window lists
+    # every fill we have, and taking the newest four silently lost anything older than
+    # about three days — which is why 11 Aug still said "no EA fire line" after the
+    # resolver itself was fixed. A fire is on the close's own day or the one before it.
+    want_days = {(close_local - timedelta(days=d)).strftime("%Y%m%d") for d in (0, 1)}
+    for lf in sorted(glob.glob(MT5D + "/MQL5/Logs/*.log")):
+        stem = os.path.basename(lf)[:8]
+        if not stem.isdigit() or stem not in want_days:
+            continue
+        day = datetime.strptime(stem, "%Y%m%d").date()
+        for l in _read_log(lf):
+            if "[ZEE]" not in l or "diamond(s)" not in l:
+                continue
+            m = re.search(r"(\d\d:\d\d:\d\d).*\[ZEE\]\s+(BUY|SELL)\s+@([\d.]+)", l)
+            if not m or m.group(2) != want:
+                continue
+            lt = datetime.combine(day, datetime.strptime(m.group(1), "%H:%M:%S").time())
+            # a fire must precede its close, and the hold is capped at an hour
+            if not (timedelta(0) <= (close_local - lt) <= timedelta(hours=3)):
+                continue
+            if best is None or lt > best[0]:
+                best = (lt, l, float(m.group(3)))
+    if best is None:
+        return None
+
+    entry_utc = best[0] - timedelta(hours=5)               # Karachi log -> UTC
+    uhv_utc, lamp = None, None
+    um = re.search(r"UHV (\d+) \(vol", best[1])
+    if um:
+        # bar k is k minutes before the fire bar
+        uhv_utc = (entry_utc - timedelta(minutes=int(um.group(1)))
+                   ).replace(second=0, microsecond=0)
+        for r in load():                                    # the trigger the break crossed
+            if r[0] == uhv_utc:
+                lamp = r[2] if want == "BUY" else r[3]      # UHV high for a buy, low for a sell
+                break
+    if lamp is None:
+        lamp = best[2]                                      # fall back to the logged entry
+    return dict(entry_utc=entry_utc, lamp=lamp, uhv_utc=uhv_utc, fire=best[1].strip())
+
+
 def resolve_trade(broker_ts, side):
     """Return dict(entry_utc, lamp, uhv_utc, entry_px, exit_px) for one fill."""
     close_local = datetime.strptime(broker_ts, "%Y.%m.%d %H:%M:%S") + timedelta(hours=BROKER_TO_LOCAL_H)
+
+    # ── ZeeUHV FIRST (2026-08-15) ────────────────────────────────────────────────
+    # Zee: "when i click forensic on trades page, it says no EA fire line in the logs".
+    # Everything below this block hunts for CaseExec / GHOST-DOOR / "lamp NNNN.NN" — the
+    # log vocabulary of the OLD ghost EA. ZeeUHV has been the live EA since 11 Aug and
+    # writes nothing of the sort:
+    #     [ZEE] SELL @4367.74 — 3 diamond(s) -> 4 ticket(s), ... · UHV 2 (vol 454) · brk vol 400
+    # so every ZeeUHV trade failed the lookup and reported "no EA fire line". The resolver
+    # was simply never updated when the EA changed.
+    #
+    # There is no "lamp" in that line, but there is the UHV's BAR INDEX, which is better:
+    # bar k is k minutes before the fire, and the trigger is that bar's HIGH for a buy or
+    # its LOW for a sell — exactly what the old lamp meant.
+    zee = _resolve_zeeuhv(close_local, side)
+    if zee:
+        return zee
+
     best = None
     for lf in sorted(glob.glob(MT5D + "/MQL5/Logs/*.log"), key=os.path.getmtime)[-4:]:
         # BUGFIX 2026-08-07 (Zee spotted a chart with no UHV): the log line's date
