@@ -82,7 +82,26 @@ input double InpUhvBodyMin  = 0.5;   // InpUhvBodyMin — 0.5 validated. 0.3 fin
 input int    InpBreakWindow = 12;     // InpBreakWindow — bars after the UHV in which the break must come
 
 input group "── Exit: SL 6 / TP 3 measured on his own setups ──"
-input double InpStopPts     = 20.0;   // InpStopPts — 20 validated: 93.3% on 1,608 trades, 100% on both unseen sets
+// ZEE'S CALL, 2026-08-15. The 20-point stop stopped doing anything the moment the hold
+// came down to 5 minutes — it was an unused parameter carrying the whole tail risk.
+//
+// Measured on the live window (11-13 Aug), real ticks, at hold 5. Stops of 20, 12, 8 and 5
+// are IDENTICAL TO THE CENT — no trade's adverse excursion reached even 5 points inside
+// five minutes, so the stop never fired at any of them:
+//     stop 20 / 12 / 8 / 5   67 trades  88.06%  +85.04     tightening is FREE
+//     stop 3                 67 trades  83.58%  +63.94     starts binding, starts costing
+//     stop 2                 67 trades  77.61%  +53.68
+//
+// And it is not only free here — at hold 5 it is BETTER in the two hostile months:
+//     March   -443.66 -> -375.44        April   -296.24 -> -232.84
+//     May     -154.02 -> -191.86        (the honest cost)
+//
+// What it actually buys is the tail. Eight tickets share one stop, so a failed setup at
+// 0.10 lots costs 8 x 0.10 x stop x 100:
+//     stop 20   $1,600   38.8% of the account    2.6 losing setups to ruin
+//     stop  5     $400    9.7%                  10.3
+// The 14 Aug stale-quote accident took $695 of a possible $1,600. Capped at $400 now.
+input double InpStopPts     = 5.0;    // InpStopPts — 5, Zee 2026-08-15. Free at hold 5, and it caps the tail 4x.
 input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W/1L, 96%, his own Feb-11 shape
 // ZEE'S CALL, 2026-08-15: 5 minutes. He noticed his live trades nearly all finish inside
 // three ("since all trades last nearly under 3 minutes .. would 90%+ trades still go into
@@ -357,7 +376,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.22 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.23 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
