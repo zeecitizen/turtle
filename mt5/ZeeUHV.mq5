@@ -90,6 +90,22 @@ input group "── Housekeeping ──"
 input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent SETUPS (a stack counts as one)
 input int    InpCooldownBar = 3;      // InpCooldownBar — bars between entries
 input int    InpMaxGapSec   = 300;    // InpMaxGapSec — never reason across a hole in the data
+
+input group "── STALE-QUOTE GUARD — the 2026-08-14 fault (v1.20) ──"
+// WHAT HAPPENED, so nobody ever removes these thinking they are paranoia:
+//
+// 02:15 on 14 Aug the EA fired BUY on ask 4366.17 and filled at 4360.7. Blueberry's own
+// stored ticks for that half hour top out at 4363.25, and the widest spread in 4,420 ticks
+// was 0.56 — that price did not exist. It DID exist 18:52-20:30 the PREVIOUS EVENING.
+// SymbolInfoDouble had handed back a quote roughly six hours old.
+//
+// The bars were fresh, so a real setup was found and the server filled correctly. But the
+// stop and target were computed from 4366.17, which put the $1 target 6.4 points above the
+// actual fill — unreachable inside the hold. Eight tickets aged out: -$695.
+//
+// A gap guard for BARS has existed since 08-10. Nothing checked the QUOTE.
+input double InpMaxQuoteDrift  = 2.0;  // InpMaxQuoteDrift — refuse if the quote disagrees with bar 0 by more than this (0 = off). The fault measured 5.4; a normal fire is ~0.1.
+input int    InpMaxQuoteAgeSec = 120;  // InpMaxQuoteAgeSec — refuse if the last quote is older than this (0 = off)
 input bool   InpVerbose     = false;  // InpVerbose — OFF for optimisation (a sweep with logging is 100x slower)
 input int    InpMinTrades   = 15;
 
@@ -317,13 +333,17 @@ int OnInit() {
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
-   // how a deploy is verified — if the Experts tab does not say v1.10 with stack x2, the
-   // chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.10 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
+   // guards, the chart is still running the old binary and the change did NOT take.
+   PrintFormat("[ZEE] ZeeUHV v1.20 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
                4 * MathMax(1, InpStackMult) * InpLots * InpStopPts * 100.0);
+   PrintFormat("[ZEE] QUOTE GUARD %s — refuse if quote drifts >%.2f pts from the tape or is "
+               ">%d s old · levels re-anchored on each fill (the 2026-08-14 -$695 fault)",
+               (InpMaxQuoteDrift > 0 || InpMaxQuoteAgeSec > 0) ? "ARMED" : "*** OFF ***",
+               InpMaxQuoteDrift, InpMaxQuoteAgeSec);
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int r) { PrintFormat("[ZEE] deinit reason=%d", r); }
@@ -369,6 +389,32 @@ void TryFire() {
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double px = (t > 0) ? ask : bid;
+
+   // ── THE QUOTE MUST BE FRESH, AND IT MUST AGREE WITH THE TAPE ─────────────
+   // Both refusals PRINT UNCONDITIONALLY. A guard that blocks silently is
+   // indistinguishable from a quiet market, and that confusion has cost this
+   // project a full day before.
+   if (InpMaxQuoteAgeSec > 0) {
+      datetime qt = (datetime)SymbolInfoInteger(_Symbol, SYMBOL_TIME);
+      long age = (long)(TimeCurrent() - qt);
+      if (qt > 0 && age > InpMaxQuoteAgeSec) {
+         PrintFormat("[ZEE] [BLOCKED] quote is %d s old (limit %d) — refusing to trade on it",
+                     (int)age, InpMaxQuoteAgeSec);
+         return;
+      }
+   }
+   if (InpMaxQuoteDrift > 0) {
+      // bar 0's close arrives through the HISTORY path, so it is an INDEPENDENT
+      // witness to the quote cache. When the two disagree, one of them is lying,
+      // and on 2026-08-14 it was the quote — by 5.4 points.
+      double c0 = iClose(_Symbol, PERIOD_CURRENT, 0);
+      if (c0 > 0 && MathAbs(px - c0) > InpMaxQuoteDrift) {
+         PrintFormat("[ZEE] [BLOCKED] quote %.2f vs tape %.2f — %.2f pts apart (limit %.2f). "
+                     "This is the 2026-08-14 fault. Trade refused.",
+                     px, c0, MathAbs(px - c0), InpMaxQuoteDrift);
+         return;
+      }
+   }
    double sl = (t > 0) ? px - InpStopPts   : px + InpStopPts;
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
 
@@ -422,6 +468,25 @@ void TryFire() {
                         : trade.Sell(lots, _Symbol, 0, sl, tp, tag);
       if (!ok) break;
       total += lots; placed += 1;
+
+      // SECOND LINE OF DEFENCE. The order goes out with quote-based levels so a
+      // position is NEVER naked, then this resets the stop and target from the price
+      // the ticket ACTUALLY filled at. Even if a bad quote gets past the guard above,
+      // the target lands 1 point from the real entry instead of 6.4.
+      ulong pt = trade.ResultOrder();
+      if (pt > 0 && PositionSelectByTicket(pt)) {
+         double fill = PositionGetDouble(POSITION_PRICE_OPEN);
+         if (MathAbs(fill - px) > _Point) {
+            double nsl = (t > 0) ? fill - InpStopPts   : fill + InpStopPts;
+            double ntp = (t > 0) ? fill + InpTargetPts : fill - InpTargetPts;
+            if (!trade.PositionModify(pt, nsl, ntp))
+               PrintFormat("[ZEE] !! could not re-anchor #%I64u (%d) — still on QUOTE levels",
+                           pt, trade.ResultRetcode());
+            else if (MathAbs(fill - px) >= 1.0)
+               PrintFormat("[ZEE] !! fill %.2f vs quote %.2f (%.2f pts) — levels re-anchored "
+                           "on the fill", fill, px, MathAbs(fill - px));
+         }
+      }
       if (!InpStackLots) break;
    }
    if (placed > 0) {
