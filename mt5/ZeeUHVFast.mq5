@@ -62,6 +62,19 @@ input group "-- Stale-quote guard (Zee found this 2026-08-14) --"
 // A gap guard already exists for BARS (WindowContinuous). Nothing checked the QUOTE.
 input double InpMaxQuoteDrift = 2.0;   // InpMaxQuoteDrift — skip if the quote disagrees with bar 0 by more than this (0 = off)
 input int    InpMaxQuoteAgeSec = 90;   // InpMaxQuoteAgeSec — skip if the last quote is older than this (0 = off)
+
+input group "-- Untested free parameters (Zee 2026-08-15) --"
+// 1. HIS OWN RULE, UNGRADED. "the breakout must be QUIETER than the UHV" is enforced as
+//    volume < 1.00x, so a ratio of 0.71 and one of 0.99 are treated as equally good. On
+//    the 16 live fires the ratio ranged 0.70 to 0.99 and the one that went wrong was
+//    0.94. 1.00 reproduces the shipped behaviour exactly.
+input double InpBrkVolMax  = 1.00;  // InpBrkVolMax — breakout volume must be under this FRACTION of the UHV's
+
+// 2. HOUR OF DAY, never tested. The only genuine live loss opened at 02:15 broker, in thin
+//    overnight tape, and our own notes carry prior evidence of a night effect. Broker-time
+//    hours, allowed window [From, To). 0 and 24 = trade everything, as now.
+input int    InpHourFrom   = 0;     // InpHourFrom — first broker hour allowed
+input int    InpHourTo     = 24;    // InpHourTo — first broker hour NOT allowed
 input bool   InpVerbose     = false;  // InpVerbose — OFF for optimisation (a sweep with logging is 100x slower)
 input int    InpMinTrades   = 15;
 
@@ -207,7 +220,8 @@ bool BreakoutIsBar1(int uhv, int side) {
       if (!wantGreen && !IsRed(k))   continue;
       bool crossed = wantGreen ? (BodyHi(k) > bHigh(uhv)) : (BodyLo(k) < bLow(uhv));
       if (!crossed) continue;
-      if (BarVolume(k) >= BarVolume(uhv)) return false;   // must be quieter
+      // must be quieter — InpBrkVolMax makes 'how much quieter' a measurable thing
+      if ((double)BarVolume(k) >= (double)BarVolume(uhv) * InpBrkVolMax) return false;
       return (k == 1);
    }
    return false;
@@ -302,6 +316,13 @@ void OnDeinit(const int r) { PrintFormat("[FAST] deinit reason=%d", r); }
 
 //+------------------------------------------------------------------+
 void TryFire() {
+   if (InpHourFrom != 0 || InpHourTo != 24) {
+      MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
+      bool ok = (InpHourFrom <= InpHourTo)
+                  ? (dt.hour >= InpHourFrom && dt.hour < InpHourTo)     // plain window
+                  : (dt.hour >= InpHourFrom || dt.hour < InpHourTo);    // wraps midnight
+      if (!ok) return;
+   }
    if (OpenCount() >= InpMaxOpen) return;
    if (g_last_fire > 0 &&
        (TimeCurrent() - g_last_fire) < InpCooldownBar * PeriodSeconds()) return;
