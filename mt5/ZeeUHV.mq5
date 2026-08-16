@@ -147,6 +147,25 @@ input group "── STALE-QUOTE GUARD — the 2026-08-14 fault (v1.20) ──"
 // A gap guard for BARS has existed since 08-10. Nothing checked the QUOTE.
 input double InpMaxQuoteDrift  = 2.0;  // InpMaxQuoteDrift — refuse if the quote disagrees with bar 0 by more than this (0 = off). The fault measured 5.4; a normal fire is ~0.1.
 input int    InpMaxQuoteAgeSec = 120;  // InpMaxQuoteAgeSec — refuse if the last quote is older than this (0 = off)
+
+input group "-- Laws of Conviction from Zee's PDF, 2026-08-16 --"
+// All default OFF, so the shipped behaviour is unchanged until one earns its place.
+// UHV ANATOMY — is this candle actually what we claim it is?
+input double InpUhvVolMult   = 0.0; // InpUhvVolMult — 0 = off. UHV volume >= SMA(vol,20) x this. THE "is it genuinely ULTRA" test — we have only ever required it be the loudest of 20, never high in absolute terms.
+input double InpUhvRangeATR  = 0.0; // InpUhvRangeATR — 0 = off. UHV range >= ATR(14) x this. Effort vs result measured against VOLATILITY (the earlier test used volume).
+input double InpUhvClosePos  = 0.0; // InpUhvClosePos — 0 = off. 0.4 = the UHV must close above the bottom 40% of its own range (absorption, not collapse).
+// CONTEXT
+input double InpPreCompress  = 0.0; // InpPreCompress — 0 = off. The 5 bars before the UHV must average LESS than ATR(14) x this. Breakouts out of compression.
+input double InpMaxPullback  = 0.0; // InpMaxPullback — 0 = off. 0.618 = the retracement may not exceed this fraction of the impulse that preceded it.
+// EXECUTION
+input double InpMaxSpreadPts = 0.0; // InpMaxSpreadPts — 0 = off. Refuse entry above this spread. Measured mean 0.2014, peak 0.56 — and 0.56 is 56% of a 1-point target.
+
+// Higher-timeframe alignment. Measured as a GATE across 8 periods: drawdown lower or
+// equal in 8/8 and 18% better per trade. As a DIAMOND it was worse than shipped, so
+// its value is removing bad trades rather than sizing good ones.
+input int    InpHtfMinutes = 0;     // InpHtfMinutes — 0 = off · 15 = M15 · 60 = H1 (GATE)
+input int    InpHtfLook    = 8;     // InpHtfLook — bars of that timeframe to measure over
+
 input bool   InpVerbose     = false;  // InpVerbose — OFF for optimisation (a sweep with logging is 100x slower)
 input int    InpMinTrades   = 15;
 
@@ -166,6 +185,24 @@ datetime g_last_fire = 0;
 //| TapeProbe: iVolume returned 4 4 4 4 4 while iRealVolume returned  |
 //| 572 454 270 174. Every volume rule we owned had been blind.       |
 //+------------------------------------------------------------------+
+//--- plain ATR(14): the mean true range of bars k..k+13
+double AtrAt(int k) {
+   double sum = 0;
+   for (int i = k; i < k + 14; i++) {
+      double h = bHigh(i), l = bLow(i), pc = bClose(i + 1);
+      double tr = MathMax(h - l, MathMax(MathAbs(h - pc), MathAbs(l - pc)));
+      sum += tr;
+   }
+   return sum / 14.0;
+}
+
+//--- mean volume of the 20 bars BEFORE k (k itself excluded, or it would dilute itself)
+double AvgVolBefore(int k) {
+   double sum = 0; int n = 0;
+   for (int i = k + 1; i <= k + 20; i++) { sum += (double)BarVolume(i); n++; }
+   return (n > 0) ? sum / n : 0.0;
+}
+
 long BarVolume(int k) {
    long rv = iRealVolume(_Symbol, PERIOD_CURRENT, k);
    if (rv > 0) return rv;
@@ -265,6 +302,28 @@ int FindUhv(int origin, int side) {
    if (best < 1) return -1;
    double rng = bHigh(best) - bLow(best);
    if (rng <= 0 || MathAbs(bClose(best) - bOpen(best)) / rng < InpUhvBodyMin) return -1;
+   // --- Laws of Conviction: is this UHV worthy of the name? ---
+   if (InpUhvVolMult > 0) {                       // genuinely ULTRA, in absolute terms
+      double av = AvgVolBefore(best);
+      if (av <= 0 || (double)bestv < av * InpUhvVolMult) return -1;
+   }
+   if (InpUhvRangeATR > 0) {                      // effort vs result, against volatility
+      double atr = AtrAt(best);
+      if (atr <= 0 || rng < atr * InpUhvRangeATR) return -1;
+   }
+   if (InpUhvClosePos > 0) {                      // absorption, not collapse
+      double pos = (bClose(best) - bLow(best)) / MathMax(rng, 1e-9);
+      // for a BUY the UHV is RED and must hold up off its low; mirrored for a SELL
+      double want = wantRed ? pos : (1.0 - pos);
+      if (want < InpUhvClosePos) return -1;
+   }
+   if (InpPreCompress > 0) {                      // breaking out of compression
+      double atr = AtrAt(best);
+      double pre = 0;
+      for (int i = best + 1; i <= best + 5; i++) pre += (bHigh(i) - bLow(i));
+      pre /= 5.0;
+      if (atr <= 0 || pre > atr * InpPreCompress) return -1;
+   }
    if (BarVolume(best + 1) > bestv) return -1;      // louder than its neighbours
    if (best > 1 && BarVolume(best - 1) > bestv) return -1;
    return best;
@@ -376,7 +435,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.23 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.24 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
@@ -477,9 +536,17 @@ void TryFire() {
    else if (!InpRequireTrend) { sides[0] = +1; sides[1] = -1; nsides = 2; }
    else { if (InpVerbose) Print("[ZEE] [SKIP] ranging — his setup needs a trend"); return; }
 
+   int htf = 0;
+   if (InpHtfMinutes > 0) {
+      ENUM_TIMEFRAMES htf_tf = (InpHtfMinutes >= 60) ? PERIOD_H1 : PERIOD_M15;
+      double hnow = iClose(_Symbol, htf_tf, 1), hthen = iClose(_Symbol, htf_tf, 1 + InpHtfLook);
+      if (hnow > 0 && hthen > 0) htf = (hnow > hthen) ? +1 : ((hnow < hthen) ? -1 : 0);
+   }
+
    int origin = -1, uhv = -1, side = 0;
    for (int si = 0; si < nsides; si++) {
       int try_side = sides[si];
+      if (InpHtfMinutes > 0 && htf != 0 && try_side != htf) continue;
       int o = RetracementOrigin(try_side);
       if (o < 0) continue;
       int u = FindUhv(o, try_side);
@@ -526,6 +593,33 @@ void TryFire() {
    }
    double sl = (t > 0) ? px - InpStopPts   : px + InpStopPts;
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
+
+   if (InpMaxSpreadPts > 0 && (ask - bid) > InpMaxSpreadPts) {
+      PrintFormat("[ZEE] [BLOCKED] spread %.2f over limit %.2f", ask - bid, InpMaxSpreadPts);
+      return;
+   }
+   if (InpMaxPullback > 0) {
+      // the impulse is the leg into the retracement; the pullback is origin..1
+      double swing = 0, pull = 0;
+      if (t > 0) {
+         double lo = bLow(origin), hi = bHigh(origin);
+         for (int k = origin; k <= origin + 20; k++) if (bLow(k) < lo) lo = bLow(k);
+         for (int k = 1; k <= origin; k++) if (bHigh(k) > hi) hi = bHigh(k);
+         swing = hi - lo;
+         double pl = bLow(1);
+         for (int k = 1; k <= origin; k++) if (bLow(k) < pl) pl = bLow(k);
+         pull = hi - pl;
+      } else {
+         double hi2 = bHigh(origin), lo2 = bLow(origin);
+         for (int k = origin; k <= origin + 20; k++) if (bHigh(k) > hi2) hi2 = bHigh(k);
+         for (int k = 1; k <= origin; k++) if (bLow(k) < lo2) lo2 = bLow(k);
+         swing = hi2 - lo2;
+         double ph = bHigh(1);
+         for (int k = 1; k <= origin; k++) if (bHigh(k) > ph) ph = bHigh(k);
+         pull = ph - lo2;
+      }
+      if (swing > 0 && (pull / swing) > InpMaxPullback) return;
+   }
 
    int dia = InpUseDiamonds ? DiamondsFor(origin, uhv, t) : 0;
 

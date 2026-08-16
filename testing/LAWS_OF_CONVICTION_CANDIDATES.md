@@ -85,3 +85,61 @@ gold is OTC, our volume is a tick count).
 Priority order by expected value: **D2 volatility regime** (aims straight at the average
 loss) → **B2 genuinely-ultra volume** (tests whether our UHV is even ultra) → **A2 trend
 age** (the climax idea) → **C2 penetration depth** → **B3 retracement volume** → the rest.
+
+---
+
+# PART 2 — Zee's PDF, "The MT5 Laws of Conviction" (2026-08-16)
+
+He supplied a five-page list. Triaged first, because four of its laws are already in the EA
+and two are impossible on this instrument:
+
+| from the PDF | status |
+|---|---|
+| Body breakout vs wick sweep | **already have it** — `BreakoutIsBar1` requires the BODY to cross |
+| Liquidity sweep of prior low | **already have it** — this is Law 1, an existing diamond |
+| Low-volume retracement | **already have it** — breakout must be quieter than the UHV |
+| Trigger expiration (max bars) | **already have it** — `InpBreakWindow` |
+| Micro-delta / positive delta | **impossible** — gold is OTC, no broker publishes delta; ours is a tick count |
+| News filter | **not feasible** — the tester has no news calendar |
+| FVG / VWAP, distance-to-HTF-level, partial TP | deferred — need level detection or partial-close plumbing |
+
+**Everything below was tested on `ZeeUHV.mq5` — the LIVE EA, magic 88094 — at Zee's
+instruction, not on a copy. All new inputs default OFF and the baseline was re-verified
+first: 134 trades / 88.06% / +$838.80 / 4,137 bars, identical to the cent before and after
+the code was added.**
+
+Real ticks, 163 ms delay, 0.02 lots, stop 5 / hold 5.
+
+| law | LIVE 11-13 | Mar 02-16 | Jun 01-15 | verdict |
+|---|---|---|---|---|
+| **baseline** | 67 · **+1.27** | 228 · **−1.65** | 368 · **−0.23** | — |
+| L1 UHV vol ≥ SMA20 ×1.5 | 12 · −1.03 | 17 · +1.82 | 33 · −0.75 | ✗ 1 of 3 |
+| L1 UHV vol ≥ SMA20 ×2.0 | 4 · +2.14 | 3 · +2.75 | 6 · +1.83 | ⚠ **13 trades total — a mirage** |
+| L2 UHV range ≥ ATR ×1.2 | 37 · +0.42 | 108 · −0.36 | 162 · −0.83 | ✗ |
+| L2 UHV range ≥ ATR ×1.5 | 18 · +0.02 | 43 · +1.41 | 51 · −1.89 | ✗ |
+| L3 UHV close pos ≥ 0.4 | no trades | 13 · −0.74 | 48 · −0.62 | ✗ |
+| L4 pre-compression ≤ 1.0 | 48 · +0.92 | 126 · −2.19 | 207 · +0.37 | ✗ 1 of 3 |
+| L5 pullback ≤ 0.618 | 37 · +1.53 | 143 · −2.35 | 244 · +0.02 | ✗ 2 of 3 |
+| **L6 spread ≤ 0.30** | 67 · +1.27 | 192 · **−1.06** | 360 · **−0.22** | ✓ **never worse, better twice** |
+| L7 break window 5 | 67 · +1.27 | 228 · −1.65 | 368 · −0.23 | — **inert**, the break is always within 5 |
+| **L8 H1 alignment** | 42 · **+1.54** | 105 · **−1.42** | 193 · **+0.12** | ✓ **PASSES** |
+
+### What survived, and what it cost to find out
+
+**L8 — higher-timeframe alignment.** The only law with both a real sample and a consistent
+result. Separately validated across all eight periods: drawdown lower or equal in **8 of 8**,
+expectancy −0.500 → −0.411, and it beats shipped on the searched set *and* the unseen set.
+Use it as a **GATE, not a diamond** — as a diamond it was worse than shipped (−586.72 vs
+−559.10 over five periods), because its value is removing bad trades, not sizing good ones.
+
+**L6 — spread ceiling.** Never worse in any period, better in two. It costs nothing in the
+live window because the spread there never exceeded 0.30. Cheap insurance against the
+0.56-spread moments, which on a 1-point target would eat 56% of the prize.
+
+**L1 is the cautionary tale.** 100% win rate in three separate periods looks like the find of
+the week — on 4, 3 and 6 trades. Loosen it to ×1.5 so the sample triples, and it fails in two
+of three. **A law is not tested until it has enough trades to be wrong.**
+
+**L7 is a free lesson.** Identical results at 5 and 12 means the breakout, when it comes,
+always comes within five bars. That parameter can never matter, and now nobody needs to
+sweep it again.
