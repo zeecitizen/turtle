@@ -42,6 +42,20 @@ input int    InpRetraceBack = 20;    // identical
 input double InpUhvBodyMin  = 0.5;   // identical
 input int    InpBreakWindow = 12;    // identical
 input bool   InpRequireTrend = true; // identical
+input int    InpCooldownSec = 5;     // seconds between fires — without it a law can fire every second
+
+// Zee, 2026-08-16: "we find at an instant the diamonds. and treat those diamonds as
+// standalone setups. maybe one of them works on the micro fractals scale"
+//   0 = the FULL chain (trend -> retracement -> UHV -> breakout). Measured: -0.45/trade.
+//   1 = Law 1 SWEEP alone      poked beyond the 20-bar extreme, then closed back inside
+//   2 = Law 3 EMA-5 alone      closed decisively past the 5-EMA
+//   3 = Law 5 WICK+VOL alone   wick <= 25% of range AND quieter than the 20-bar average
+//   4 = RANDOM control         alternating, same cooldown — what noise scores here
+// Laws 1 and 5 are written against the UHV in the live EA; with no UHV they are
+// generalised to the same 20-bar window the rules already use, which is the closest
+// honest standalone reading of each.
+input int    InpLawMode    = 0;
+input bool   InpLawNeedTrend = false; // also require the trend gate on a standalone law
 
 #include <Trade/Trade.mqh>
 CTrade trade;
@@ -200,7 +214,62 @@ void AgeOutSec() {
    }
 }
 
+datetime g_lastFire = 0;
+
+double Ema5S() {
+   double k = 2.0 / 6.0, e = sC[5];
+   for (int i = 4; i >= 1; i--) e = sC[i] * k + e * (1 - k);
+   return e;
+}
+
+//--- each law as its own trigger. returns +1 buy, -1 sell, 0 nothing.
+int LawSide() {
+   if (nS < InpTrendLook + 3) return 0;
+   int t = TrendNowS();
+   if (InpLawNeedTrend && t == 0) return 0;
+
+   if (InpLawMode == 1) {                       // SWEEP: poke the extreme, close back in
+      double lo = sL[2], hi = sH[2];
+      for (int k = 2; k <= 21 && k < nS; k++) { if (sL[k] < lo) lo = sL[k]; if (sH[k] > hi) hi = sH[k]; }
+      if (sL[1] < lo && sC[1] > lo) return +1;
+      if (sH[1] > hi && sC[1] < hi) return -1;
+      return 0;
+   }
+   if (InpLawMode == 2) {                       // EMA-5 close, the live EA's Law 3
+      double e5 = Ema5S();
+      if (GreenS(1) && sC[1] > e5 + 0.10) return +1;
+      if (RedS(1)   && sC[1] < e5 - 0.10) return -1;
+      return 0;
+   }
+   if (InpLawMode == 3) {                       // wick + volume, the live EA's Law 5
+      double rng = MathMax(sH[1] - sL[1], 1e-9);
+      double avgv = 0; int n = 0;
+      for (int k = 2; k <= 21 && k < nS; k++) { avgv += (double)sV[k]; n++; }
+      if (n == 0) return 0;
+      avgv /= n;
+      if ((double)sV[1] >= avgv) return 0;
+      double wickUp = (sH[1] - MathMax(sO[1], sC[1])) / rng;
+      double wickDn = (MathMin(sO[1], sC[1]) - sL[1]) / rng;
+      if (GreenS(1) && wickUp <= 0.25) return +1;
+      if (RedS(1)   && wickDn <= 0.25) return -1;
+      return 0;
+   }
+   if (InpLawMode == 4) {                       // random control at the same cadence
+      static int flip = 0;
+      flip = 1 - flip;
+      return flip > 0 ? +1 : -1;
+   }
+   return 0;
+}
+
 void CheckRules() {
+   if (InpLawMode > 0) {                        // standalone-law modes bypass the chain
+      if (g_lastFire > 0 && (TimeCurrent() - g_lastFire) < InpCooldownSec) return;
+      int sd = LawSide();
+      if (sd == 0) return;
+      setups++; g_lastFire = TimeCurrent(); Fire(sd);
+      return;
+   }
    if (nS < InpTrendLook + InpPivot + 2) return;
    int t = TrendNowS();
    if (t == 0) { if (!InpRequireTrend) return; else return; }
