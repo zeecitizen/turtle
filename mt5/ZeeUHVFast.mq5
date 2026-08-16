@@ -75,6 +75,27 @@ input double InpBrkVolMax  = 1.00;  // InpBrkVolMax — breakout volume must be 
 //    hours, allowed window [From, To). 0 and 24 = trade everything, as now.
 input int    InpHourFrom   = 0;     // InpHourFrom — first broker hour allowed
 input int    InpHourTo     = 24;    // InpHourTo — first broker hour NOT allowed
+
+input group "-- VSA filters from Zee's reference, 2026-08-16 --"
+// NOTE ON MAPPING, because it is the difference between testing his idea and testing
+// something else: that text describes the UHV candle AS the breakout ("price must close
+// near the top 20% of the bar"). In Zee's method the UHV is the LEVEL and the breakout is
+// a separate, QUIETER candle later. So the close-position and next-candle rules are
+// applied to the BREAKOUT bar here, not to the UHV.
+//
+// 8. MULTI-TIMEFRAME. "Align 1-minute UHV entries strictly with 15-minute or 1-hour trend
+//    direction." Our trend gate is same-timeframe M1 structure only — this is untested.
+input int    InpHtfMinutes = 0;     // InpHtfMinutes — 0 = off · 15 = M15 · 60 = H1
+input int    InpHtfLook    = 8;     // InpHtfLook — bars of that timeframe to measure over
+//
+// 1. EFFORT VS RESULT. Wide spread on high volume = genuine commitment; narrow spread on
+//    high volume = churn. InpUhvBodyMin measures body/range; this measures RANGE PER UNIT
+//    OF VOLUME, which is the ratio the text actually describes.
+input double InpUhvEffortMin = 0.0; // InpUhvEffortMin — 0 = off. Min UHV range per 100 volume, in points
+//
+// 2. CLOSE POSITION. A genuine breakout closes near its extreme, not mid-bar.
+input double InpBrkClosePos = 0.0;  // InpBrkClosePos — 0 = off. 0.8 = close in the top (or bottom) 20% of the breakout bar
+
 input bool   InpVerbose     = false;  // InpVerbose — OFF for optimisation (a sweep with logging is 100x slower)
 input int    InpMinTrades   = 15;
 
@@ -193,6 +214,11 @@ int FindUhv(int origin, int side) {
    if (best < 1) return -1;
    double rng = bHigh(best) - bLow(best);
    if (rng <= 0 || MathAbs(bClose(best) - bOpen(best)) / rng < InpUhvBodyMin) return -1;
+   // 1. EFFORT VS RESULT — points of range per 100 units of volume. Low = churn.
+   if (InpUhvEffortMin > 0) {
+      double eff = rng / MathMax((double)bestv, 1.0) * 100.0;
+      if (eff < InpUhvEffortMin) return -1;
+   }
    if (BarVolume(best + 1) > bestv) return -1;      // louder than its neighbours
    if (best > 1 && BarVolume(best - 1) > bestv) return -1;
    return best;
@@ -222,6 +248,12 @@ bool BreakoutIsBar1(int uhv, int side) {
       if (!crossed) continue;
       // must be quieter — InpBrkVolMax makes 'how much quieter' a measurable thing
       if ((double)BarVolume(k) >= (double)BarVolume(uhv) * InpBrkVolMax) return false;
+      // 2. CLOSE POSITION on the BREAKOUT bar — near its extreme, not mid-bar
+      if (InpBrkClosePos > 0) {
+         double r2 = MathMax(bHigh(k) - bLow(k), 1e-9);
+         double pos = wantGreen ? (bClose(k) - bLow(k)) / r2 : (bHigh(k) - bClose(k)) / r2;
+         if (pos < InpBrkClosePos) return false;
+      }
       return (k == 1);
    }
    return false;
@@ -343,9 +375,19 @@ void TryFire() {
    else if (!InpRequireTrend) { sides[0] = +1; sides[1] = -1; nsides = 2; }
    else { if (InpVerbose) Print("[FAST] [SKIP] ranging — his setup needs a trend"); return; }
 
+   // 8. HIGHER-TIMEFRAME ALIGNMENT — refuse a side the bigger picture disagrees with
+   int htf = 0;
+   if (InpHtfMinutes > 0) {
+      ENUM_TIMEFRAMES tf = (InpHtfMinutes >= 60) ? PERIOD_H1 : PERIOD_M15;
+      double now = iClose(_Symbol, tf, 1);
+      double then = iClose(_Symbol, tf, 1 + InpHtfLook);
+      if (now > 0 && then > 0) htf = (now > then) ? +1 : ((now < then) ? -1 : 0);
+   }
+
    int origin = -1, uhv = -1, side = 0;
    for (int si = 0; si < nsides; si++) {
       int try_side = sides[si];
+      if (InpHtfMinutes > 0 && htf != 0 && try_side != htf) continue;
       int o = RetracementOrigin(try_side);
       if (o < 0) continue;
       int u = FindUhv(o, try_side);
