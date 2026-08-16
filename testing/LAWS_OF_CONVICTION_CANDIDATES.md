@@ -1,5 +1,7 @@
 # THE POSSIBLE LAWS OF CONVICTION — a testable list
 
+> **What actually SHIPPED lives in [../DIAMONDS.md](../DIAMONDS.md).** This page is the candidate list and the full test results; that page is the five live laws, their code, and their proofs.
+
 Zee, 2026-08-16: *"make a list of points we can test in MT5 strategy tester, that can lead
 to an improvement of winrate, or strengthen our breakout's conviction. call them the
 possible laws of conviction. then if some of them pass the test, we add them as filters /
