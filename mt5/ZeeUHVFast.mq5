@@ -85,7 +85,16 @@ input group "-- VSA filters from Zee's reference, 2026-08-16 --"
 //
 // 8. MULTI-TIMEFRAME. "Align 1-minute UHV entries strictly with 15-minute or 1-hour trend
 //    direction." Our trend gate is same-timeframe M1 structure only — this is untested.
-input int    InpHtfMinutes = 0;     // InpHtfMinutes — 0 = off · 15 = M15 · 60 = H1
+// Zee, 2026-08-16: "the H1 alignment favorable setup you found, we can please make it a
+// diamond. so it opens an additional trade for such aligned .. as a multiplier"
+//
+// Better than my filter version, and for a measurable reason. As a GATE, H1 alignment threw
+// away half the trades (1,691 -> 826) and that is precisely what cost Feb and Jul. As a
+// DIAMOND it blocks nothing — every setup still trades, the aligned ones simply carry an
+// extra ticket. It also gives the conviction system something real to grade: every live
+// setup so far scored D2 or D3, so the laws were never actually separating anything.
+input bool   InpHtfAsDiamond = false; // InpHtfAsDiamond — H1 alignment adds a DIAMOND instead of gating
+input int    InpHtfMinutes = 0;     // InpHtfMinutes — 0 = off · 15 = M15 · 60 = H1 (as a GATE)
 input int    InpHtfLook    = 8;     // InpHtfLook — bars of that timeframe to measure over
 //
 // 1. EFFORT VS RESULT. Wide spread on high volume = genuine commitment; narrow spread on
@@ -308,8 +317,24 @@ double Ema5(int shift) {
    return e;
 }
 
+//--- the higher-timeframe direction, shared by the gate and the diamond
+int HtfDir() {
+   int mins = (InpHtfMinutes > 0) ? InpHtfMinutes : 60;
+   ENUM_TIMEFRAMES tf = (mins >= 60) ? PERIOD_H1 : PERIOD_M15;
+   double now = iClose(_Symbol, tf, 1);
+   double then = iClose(_Symbol, tf, 1 + InpHtfLook);
+   if (now <= 0 || then <= 0) return 0;
+   return (now > then) ? +1 : ((now < then) ? -1 : 0);
+}
+
 int DiamondsFor(int origin, int uhv, int side) {
    int d = 0;
+   // LAW 6 — the higher timeframe agrees. Measured as a gate across 8 periods: drawdown
+   // lower or equal in 8 of 8, and 18% better per trade. Here it SIZES instead of blocking.
+   if (InpHtfAsDiamond) {
+      int h = HtfDir();
+      if (h != 0 && h == side) d++;
+   }
    // Law 1 — the sweep: did price poke beyond the prior extreme on the way in?
    double hi = bHigh(uhv), lo = bLow(uhv);
    for (int k = uhv + 1; k <= uhv + 20; k++) {
@@ -376,13 +401,7 @@ void TryFire() {
    else { if (InpVerbose) Print("[FAST] [SKIP] ranging — his setup needs a trend"); return; }
 
    // 8. HIGHER-TIMEFRAME ALIGNMENT — refuse a side the bigger picture disagrees with
-   int htf = 0;
-   if (InpHtfMinutes > 0) {
-      ENUM_TIMEFRAMES tf = (InpHtfMinutes >= 60) ? PERIOD_H1 : PERIOD_M15;
-      double now = iClose(_Symbol, tf, 1);
-      double then = iClose(_Symbol, tf, 1 + InpHtfLook);
-      if (now > 0 && then > 0) htf = (now > then) ? +1 : ((now < then) ? -1 : 0);
-   }
+   int htf = (InpHtfMinutes > 0) ? HtfDir() : 0;
 
    int origin = -1, uhv = -1, side = 0;
    for (int si = 0; si < nsides; si++) {
@@ -487,7 +506,10 @@ void TryFire() {
    //     Roughly 2.6 losing setups in a row would end it.
    //
    // The concern was put to him in those terms and he chose to ship it. Demo account.
-   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, 3))) * MathMax(1, InpStackMult) : 1;
+   // The cap MUST follow the number of ACTIVE laws. A hardcoded 3 silently threw away the
+   // 4th diamond once before and made a whole test return identical numbers to the cent.
+   int maxdia = 3 + (InpHtfAsDiamond ? 1 : 0);
+   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, maxdia))) * MathMax(1, InpStackMult) : 1;
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
