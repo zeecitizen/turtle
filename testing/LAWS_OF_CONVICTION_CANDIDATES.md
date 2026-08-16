@@ -143,3 +143,62 @@ of three. **A law is not tested until it has enough trades to be wrong.**
 **L7 is a free lesson.** Identical results at 5 and 12 means the breakout, when it comes,
 always comes within five bars. That parameter can never matter, and now nobody needs to
 sweep it again.
+
+
+---
+
+# PART 3 — Wyckoff/VSA composite (Zee's 2nd PDF), and why L1 became a DIAMOND
+
+Zee pushed back on my calling L1 a mirage: *"if its so good that it has a 100% winrate then
+why not?"* He was right, and the correction matters more than the result.
+
+### The arithmetic I should have shown first
+
+L1 (UHV volume ≥ SMA20 ×2.0) won **13 of 13**. At our baseline win rate of 88.06%, thirteen
+wins in a row happens **19.1% of the time by pure luck**. One run in five. That is not
+evidence of an edge — but nor is it evidence against one. It is simply too few trades.
+
+### But his conclusion was better than mine
+
+As a **GATE** L1 discards 95% of trades (67 → 4) on the strength of 13 observations —
+reckless. As a **DIAMOND** it blocks nothing and only sizes up when it fires, so a false
+signal costs almost nothing while a true one pays. **The asymmetry is entirely favourable,
+which is exactly why a thin signal belongs in a diamond and never in a filter.**
+
+Measured, and it improves **all three periods**:
+
+| | LIVE 11-13 | Mar 02-16 | Jun 01-15 |
+|---|---|---|---|
+| baseline | 67 · +1.27 | 228 · −1.65 | 368 · −0.23 |
+| **L1 as DIAMOND ×2.0** | 68 · **+1.28** | 229 · **−1.63** | 369 · **−0.22** |
+
+Total gain **+$7.36** across three periods — safe, positive, negligible in size because it
+fires on one or two setups per period. The method is what matters, not the amount.
+
+### The new Wyckoff laws
+
+| law | LIVE 11-13 | Mar 02-16 | Jun 01-15 | verdict |
+|---|---|---|---|---|
+| **Squat** (range < ATR ×1.0) | 24 · **+2.36** | 87 · −3.37 | 122 · −0.28 | ✗ great here, catastrophic in March |
+| Squat (range < ATR ×0.8) | 4 · +2.35 | 43 · −4.67 | 63 · +0.75 | ✗ |
+| Next-bar fails to extend | 29 · +0.59 | 120 · −2.44 | 223 · +0.10 | ✗ |
+| **Climax** (widest of 60) | 4 · +2.14 | 8 · −1.21 | 3 · +2.08 | ⚠ better in all 3 on **15 trades** — diamond only |
+| **PTS** (brk vol ≥ 0.8×UHV) | 45 · **+2.14** | 132 · −2.31 | 242 · −0.35 | ⚠ **100% on 45 trades here** — see below |
+
+### Two genuine contradictions worth keeping
+
+**PTS vs Zee's own rule.** His rule: the breakout must be *quieter* than the UHV. Wyckoff's
+Push Through Supply: it should be a *loud* green bar cutting through. Requiring loud gives
+**100% on 45 trades** in the live window — and 45 straight wins is a **0.33%** coincidence,
+not 19%. That is a real effect *in that regime*. It fails in March and June, so it is
+regime-dependent rather than wrong. A strong diamond candidate.
+
+**Squat vs effort-vs-result.** Wyckoff's squat wants a NARROW spread on high volume (buyers
+and sellers matched order-for-order). The effort-vs-result law wants a WIDE one. Both cannot
+be right, and the measurement says each wins in a different regime.
+
+### The rule this session produced
+
+**A thin or regime-dependent signal goes in as a DIAMOND, never as a GATE.** A gate acts on
+every trade it removes; a diamond acts only on the trades it marks. When the sample is small
+or the effect is regime-bound, that difference is the whole risk.

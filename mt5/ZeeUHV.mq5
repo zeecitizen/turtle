@@ -158,7 +158,33 @@ input double InpUhvClosePos  = 0.0; // InpUhvClosePos — 0 = off. 0.4 = the UHV
 input double InpPreCompress  = 0.0; // InpPreCompress — 0 = off. The 5 bars before the UHV must average LESS than ATR(14) x this. Breakouts out of compression.
 input double InpMaxPullback  = 0.0; // InpMaxPullback — 0 = off. 0.618 = the retracement may not exceed this fraction of the impulse that preceded it.
 // EXECUTION
-input double InpMaxSpreadPts = 0.0; // InpMaxSpreadPts — 0 = off. Refuse entry above this spread. Measured mean 0.2014, peak 0.56 — and 0.56 is 56% of a 1-point target.
+input double InpMaxSpreadPts = 0.0;
+
+input group "-- Wyckoff / VSA composite (Zee's 2nd PDF, 2026-08-16) --"
+// L1 AS A DIAMOND, at Zee's insistence and he is right. As a GATE it discards 95% of trades
+// (67 -> 4) on 13 observations, and 13 wins in a row is a 19.1% coincidence at our baseline
+// 88.06% win rate. As a DIAMOND it blocks nothing and only sizes up when it fires, so a
+// false signal costs almost nothing while a true one pays. Correct use of a small sample.
+input double InpUhvVolDia   = 0.0;  // InpUhvVolDia — 0 = off. +1 diamond when UHV volume >= SMA(vol,20) x this.
+//
+// THE SQUAT BAR — and note it CONTRADICTS the effort-vs-result law tested earlier. That one
+// wanted a WIDE spread on high volume; Wyckoff's squat wants a NARROW spread on high volume,
+// reading it as buyers and sellers matched order-for-order. Both cannot be right, so both
+// get measured.
+input double InpSquatMax    = 0.0;  // InpSquatMax — 0 = off. UHV range must be UNDER ATR(14) x this (narrow = squat).
+//
+// EFFORT-VS-RESULT FAILURE: the bar right after the UHV fails to extend past it. Heavy
+// selling with no follow-through.
+input bool   InpNextFails   = false; // InpNextFails — the bar after the UHV must NOT break the UHV's low (buy) / high (sell)
+//
+// SELLING CLIMAX: the UHV is not merely loud, it is the WIDEST bar in recent memory.
+input int    InpClimaxLook  = 0;    // InpClimaxLook — 0 = off. UHV must have the widest range of the last N bars.
+//
+// PUSH THROUGH SUPPLY — this DIRECTLY CONTRADICTS Zee's own rule. His breakout must be
+// QUIETER than the UHV; PTS says it should be a HIGH-volume green bar cutting through. His
+// rule was measured today and tightening it only removed winners, so this tests the opposite
+// direction of the same dial.
+input double InpBrkVolMin   = 0.0;  // InpBrkVolMin — 0 = off. Breakout volume must be ABOVE this fraction of the UHV's. // InpMaxSpreadPts — 0 = off. Refuse entry above this spread. Measured mean 0.2014, peak 0.56 — and 0.56 is 56% of a 1-point target.
 
 // Higher-timeframe alignment. Measured as a GATE across 8 periods: drawdown lower or
 // equal in 8/8 and 18% better per trade. As a DIAMOND it was worse than shipped, so
@@ -302,6 +328,18 @@ int FindUhv(int origin, int side) {
    if (best < 1) return -1;
    double rng = bHigh(best) - bLow(best);
    if (rng <= 0 || MathAbs(bClose(best) - bOpen(best)) / rng < InpUhvBodyMin) return -1;
+   if (InpSquatMax > 0) {                         // narrow spread on huge volume
+      double atr = AtrAt(best);
+      if (atr <= 0 || rng > atr * InpSquatMax) return -1;
+   }
+   if (InpClimaxLook > 0) {                       // widest bar in recent memory
+      for (int i = best + 1; i <= best + InpClimaxLook; i++)
+         if ((bHigh(i) - bLow(i)) > rng) return -1;
+   }
+   if (InpNextFails && best > 1) {                // the effort had no follow-through
+      if (wantRed) { if (bLow(best - 1) < bLow(best)) return -1; }
+      else         { if (bHigh(best - 1) > bHigh(best)) return -1; }
+   }
    // --- Laws of Conviction: is this UHV worthy of the name? ---
    if (InpUhvVolMult > 0) {                       // genuinely ULTRA, in absolute terms
       double av = AvgVolBefore(best);
@@ -352,6 +390,10 @@ bool BreakoutIsBar1(int uhv, int side) {
       bool crossed = wantGreen ? (BodyHi(k) > bHigh(uhv)) : (BodyLo(k) < bLow(uhv));
       if (!crossed) continue;
       if (BarVolume(k) >= BarVolume(uhv)) return false;   // must be quieter
+      // PUSH THROUGH SUPPLY tests the OTHER direction: a breakout that is too quiet may be
+      // no demand rather than absorption cleared.
+      if (InpBrkVolMin > 0 && (double)BarVolume(k) < (double)BarVolume(uhv) * InpBrkVolMin)
+         return false;
       return (k == 1);
    }
    return false;
@@ -408,6 +450,11 @@ double Ema5(int shift) {
 
 int DiamondsFor(int origin, int uhv, int side) {
    int d = 0;
+   // LAW 6 — the UHV is genuinely ULTRA in absolute terms, not merely loudest of 20
+   if (InpUhvVolDia > 0) {
+      double av = AvgVolBefore(uhv);
+      if (av > 0 && (double)BarVolume(uhv) >= av * InpUhvVolDia) d++;
+   }
    // Law 1 — the sweep: did price poke beyond the prior extreme on the way in?
    double hi = bHigh(uhv), lo = bLow(uhv);
    for (int k = uhv + 1; k <= uhv + 20; k++) {
@@ -654,7 +701,9 @@ void TryFire() {
    //     Roughly 2.6 losing setups in a row would end it.
    //
    // The concern was put to him in those terms and he chose to ship it. Demo account.
-   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, 3))) * MathMax(1, InpStackMult) : 1;
+   // the cap must follow the number of ACTIVE laws or the extra diamond is silently lost
+   int maxdia = 3 + ((InpUhvVolDia > 0) ? 1 : 0);
+   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, maxdia))) * MathMax(1, InpStackMult) : 1;
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
