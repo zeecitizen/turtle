@@ -165,7 +165,8 @@ input group "-- Wyckoff / VSA composite (Zee's 2nd PDF, 2026-08-16) --"
 // (67 -> 4) on 13 observations, and 13 wins in a row is a 19.1% coincidence at our baseline
 // 88.06% win rate. As a DIAMOND it blocks nothing and only sizes up when it fires, so a
 // false signal costs almost nothing while a true one pays. Correct use of a small sample.
-input double InpUhvVolDia   = 0.0;  // InpUhvVolDia — 0 = off. +1 diamond when UHV volume >= SMA(vol,20) x this.
+input double InpUhvVolDia   = 2.0;  // InpUhvVolDia — LAW 6, ACTIVE. +1 diamond when UHV volume >= SMA(vol,20) x this.
+input int    InpClimaxDia   = 60;   // InpClimaxDia — LAW 7, ACTIVE. +1 diamond when the UHV is the WIDEST bar of the last N.
 //
 // THE SQUAT BAR — and note it CONTRADICTS the effort-vs-result law tested earlier. That one
 // wanted a WIDE spread on high volume; Wyckoff's squat wants a NARROW spread on high volume,
@@ -450,10 +451,25 @@ double Ema5(int shift) {
 
 int DiamondsFor(int origin, int uhv, int side) {
    int d = 0;
-   // LAW 6 — the UHV is genuinely ULTRA in absolute terms, not merely loudest of 20
+   // ── LAW 6 — the UHV is genuinely ULTRA in ABSOLUTE terms, not merely loudest of 20.
+   // Zee, 2026-08-16, arguing against my dismissal of it: "if its so good that it has a
+   // 100% winrate then why not?" He was right. As a GATE it discards 95% of trades on 13
+   // observations — and 13 wins in a row is a 19.1% coincidence at our 88% baseline. As a
+   // DIAMOND it blocks nothing and only sizes up when it fires. Measured: better in all
+   // three periods (+1.27->+1.28, -1.65->-1.63, -0.23->-0.22).
    if (InpUhvVolDia > 0) {
       double av = AvgVolBefore(uhv);
       if (av > 0 && (double)BarVolume(uhv) >= av * InpUhvVolDia) d++;
+   }
+   // ── LAW 7 — SELLING CLIMAX: the UHV is not merely loud, it is the WIDEST bar in recent
+   // memory. Better in all three periods, but on only 15 trades — which is exactly why it
+   // is a diamond and not a gate.
+   if (InpClimaxDia > 0) {
+      double r7 = bHigh(uhv) - bLow(uhv);
+      bool widest = true;
+      for (int i = uhv + 1; i <= uhv + InpClimaxDia; i++)
+         if ((bHigh(i) - bLow(i)) > r7) { widest = false; break; }
+      if (widest) d++;
    }
    // Law 1 — the sweep: did price poke beyond the prior extreme on the way in?
    double hi = bHigh(uhv), lo = bLow(uhv);
@@ -482,11 +498,15 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.24 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.25 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
-               4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
-               4 * MathMax(1, InpStackMult) * InpLots * InpStopPts * 100.0);
+               (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
+                  * MathMax(1, InpStackMult),
+               (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
+                  * MathMax(1, InpStackMult) * InpLots,
+               (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
+                  * MathMax(1, InpStackMult) * InpLots * InpStopPts * 100.0);
    PrintFormat("[ZEE] PRICE via SymbolInfoTick + tick-history cross-check %s — refuse if "
                "the two disagree >%.2f pts or the tick is >%d s old · levels re-anchored "
                "on each fill (the 2026-08-14 -$695 fault)",
@@ -702,7 +722,7 @@ void TryFire() {
    //
    // The concern was put to him in those terms and he chose to ship it. Demo account.
    // the cap must follow the number of ACTIVE laws or the extra diamond is silently lost
-   int maxdia = 3 + ((InpUhvVolDia > 0) ? 1 : 0);
+   int maxdia = 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0);
    int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, maxdia))) * MathMax(1, InpStackMult) : 1;
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
