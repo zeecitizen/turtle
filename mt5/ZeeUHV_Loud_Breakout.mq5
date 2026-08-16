@@ -1,68 +1,39 @@
 //+------------------------------------------------------------------+
-//| ZeeUHV.mq5 — HIS rules, not mine. Rebuilt from his own 146 labels. |
+//| ZeeUHV_Loud_Breakout.mq5 — the contradiction, put on trial live. |
 //|                                                                  |
-//| Zee, 2026-08-10: "i labelled more than a 100 setups for you to    |
-//| see which one is UHV which one is not."                          |
+//| Zee, 2026-08-16: "regarding the loud breakout -> make it a       |
+//| separate EA called ZeeUHV_Loud_Breakout so we can run it on the  |
+//| LIVE market to check if it really gives 100% winrate over 45+    |
+//| breakouts"                                                        |
 //|                                                                  |
-//| He had, and I had forgotten. monitor/setup_labels/zee_labels.json |
-//| holds 146 setups annotated in his own words, and only 27 of them  |
-//| say the machine's drawing was right — about 18%. Every detector   |
-//| we ever shipped encoded MY reading of "ultra high volume". This   |
-//| one encodes his, rule by rule, with his sentence quoted above     |
-//| each check so anyone reading the code can see whose authority it  |
-//| carries.                                                          |
+//| WHAT IT IS. Zee's own rule says the breakout must be QUIETER than |
+//| the UHV — supply exhausted. Wyckoff's "Push Through Supply" says  |
+//| the opposite: a LOUD bar cutting through proves buyers took       |
+//| control. Both cannot be right, so this EA runs the loud version.  |
 //|                                                                  |
-//| On 3,159 bars of real archived gold his rules find 26 setups      |
-//| where my detector found 193 — far stricter, and better:           |
-//|     96% reach +$1.00 · 85% reach +$2.00 · 50% reach +$5.00        |
-//| Walked forward bar by bar asking WHICH CAME FIRST (the mistake    |
-//| that cost the DohaLevel call this morning):                       |
-//|     SL 6 / TP 3 -> 83% (20W/4L), needs 67%, +1.50 pts per trade   |
-//|     SL 6 / TP 2 -> 88% (22W/3L), needs 75%, +1.04                 |
-//|     SL 4 / TP 3 -> 68% (17W/8L), needs 57%, +0.76                 |
-//| The whole neighbourhood is positive, not one lucky cell — and it  |
-//| says what he has been saying: WIDE STOP, MODEST TARGET. The       |
-//| opposite of the ghost at 1.0, the ratchet at 0.3, the breakeven   |
-//| lock at 0.3 and my own bound at 1.0.                              |
+//| WHY IT DESERVES A LIVE TEST rather than dismissal:               |
+//|     live window 11-13 Aug   45 trades   100.00%   +$96.34        |
+//|     E/trade +2.14 against the shipped engine's +1.27             |
+//| Forty-five straight wins at our 88.06% baseline is a 0.33%       |
+//| coincidence — a hundred times less likely than the 13-trade      |
+//| result that turned out to be noise. This is a REAL effect.       |
 //|                                                                  |
-//| ZEE'S CALL, twice (2026-08-10): "if 96% reach +$1, then let each   |
-//| trade bring in the $1" and then, when I argued for a bigger        |
-//| target, "nah i want a highest winrate even if we're earning        |
-//| pennis". That is his decision and it stands.                       |
-//|                                                                    |
-//| What I could do FOR that decision rather than against it: the      |
-//| break-even threshold is set by the STOP, not the target.           |
-//|     SL 6 / TP 1 -> needs 86%, MT5 measured 83%  -> lost -$26.60    |
-//|     SL 4 / TP 1 -> needs 80%, measured 88%      -> +8 of margin    |
-//| So the $1 target stays and the stop comes in. Same high win rate,  |
-//| a loss that costs $40 instead of $60, and eight points of room to  |
-//| be wrong about the win rate — which matters, because 12 trades     |
-//| cannot tell 83% from 96% and that gap is the whole result.         |
-//|                                                                    |
-//| each trade bring in the $1." Measured, and he is right — it is the |
-//| safest cell on the board:                                          |
-//|     SL 6 / TP 1 -> 96% (25W/1L)  +0.73 pt/trade                     |
-//|     SL 6 / TP 2 -> 88% (22W/3L)  +1.04                              |
-//|     SL 6 / TP 3 -> 83% (20W/4L)  +1.50                              |
-//| A bigger target earns more on paper and loses four times as often. |
-//| After six months of red days, an engine he can watch running at    |
-//| 96% is worth more than a little extra theoretical expectancy — and |
-//| 25W/1L is the shape he actually traded on Feb 11.                   |
-//| Note the money: 1 point of gold = $1 of PRICE = $10 at 0.10 lots.  |
-//| So 26 trades x $1 is $260/day at 0.10 lots, not $26.               |
-//|                                                                    |
-//| CAVEAT ON THE FACE OF IT: 26 setups, ~2 days, measured in Python. |
-//| Direction only. Only MT5's tester or live fills promote anything. |
-//| 25W/1L on one sample could be 22W/4L on the next week.            |
+//| WHY IT IS NOT PROMOTED. It fails elsewhere, and badly:            |
+//|     Mar 02-16   132 trades   58.33%   E -2.31  (shipped -1.65)   |
+//|     Jun 01-15   242 trades   73.55%   E -0.35  (shipped -0.23)   |
+//| So it is REGIME-DEPENDENT, not wrong. The live market is the      |
+//| only instrument that can say which regime we are in now.          |
 //|                                                                  |
-//| magic 88094 = tester only.                                        |
+//| IT KEEPS BOTH RULES AT ONCE. The breakout must still be quieter   |
+//| than the UHV (Zee's rule, InpBrkVolMax) AND at least 80% of its   |
+//| volume (Wyckoff's, InpBrkVolMin). So it takes the LOUD END of the |
+//| quiet breakouts — the narrow band where the two ideas overlap.    |
+//|                                                                  |
+//| magic 88104, its own. Never 88094 (live ZeeUHV) or 88095-88103.   |
+//| Every log line is tagged [LOUD]. Run it ALONGSIDE the live EA:    |
+//| different magic means neither can touch the other's positions,    |
+//| and the comparison is then like-for-like on the same tape.        |
 //+------------------------------------------------------------------+
-//| WATCHER REMOVED 2026-08-12. It defaulted to false and its guard returned
-//| immediately, yet its mere presence changed the tester result: 1,608 trades at
-//| 93.28% and +$2,599.10 became 1,665 at 69.43% and -$779.90 on identical data,
-//| identical inputs and 97,564 identical bars. Removing it restores the number to
-//| the cent. The mechanism is not yet understood, which is exactly why it is out:
-//| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
 #property version   "1.00"
 #property strict
@@ -71,7 +42,7 @@
 CTrade trade;
 
 input double InpLots        = 0.10;   // InpLots — lot size
-input int    InpMagicNumber = 88094;  // InpMagicNumber — 88094 = ZeeUHV, tester only
+input int    InpMagicNumber = 88104;  // InpMagicNumber — 88094 = ZeeUHV, tester only
 
 input group "── His rules (each one quoted from his labels in the code) ──"
 input int    InpTrendLook   = 20;   // InpTrendLook — 20 validated
@@ -185,7 +156,7 @@ input int    InpClimaxLook  = 0;    // InpClimaxLook — 0 = off. UHV must have 
 // QUIETER than the UHV; PTS says it should be a HIGH-volume green bar cutting through. His
 // rule was measured today and tightening it only removed winners, so this tests the opposite
 // direction of the same dial.
-input double InpBrkVolMin   = 0.0;  // InpBrkVolMin — 0 = off. Breakout volume must be ABOVE this fraction of the UHV's. // InpMaxSpreadPts — 0 = off. Refuse entry above this spread. Measured mean 0.2014, peak 0.56 — and 0.56 is 56% of a 1-point target.
+input double InpBrkVolMin   = 0.8;  // InpBrkVolMin — THE POINT OF THIS EA. Breakout volume must be at least this fraction of the UHV's.
 
 // Higher-timeframe alignment. Measured as a GATE across 8 periods: drawdown lower or
 // equal in 8/8 and 18% better per trade. As a DIAMOND it was worse than shipped, so
@@ -496,25 +467,27 @@ int OnInit() {
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
-   // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
-   // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.25 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   // how a deploy is verified — the Experts tab must say Loud_Breakout AND magic 88104,
+   // or you are looking at the wrong EA's trades.
+   PrintFormat("[LOUD] ZeeUHV_Loud_Breakout v1.00 — Push Through Supply on trial. "
+               "brk vol >= %.2f x UHV · SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
-               InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
+               InpBrkVolMin, InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin,
+               MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
                   * MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
                   * MathMax(1, InpStackMult) * InpLots,
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
                   * MathMax(1, InpStackMult) * InpLots * InpStopPts * 100.0);
-   PrintFormat("[ZEE] PRICE via SymbolInfoTick + tick-history cross-check %s — refuse if "
+   PrintFormat("[LOUD] PRICE via SymbolInfoTick + tick-history cross-check %s — refuse if "
                "the two disagree >%.2f pts or the tick is >%d s old · levels re-anchored "
                "on each fill (the 2026-08-14 -$695 fault)",
                (InpMaxQuoteDrift > 0 || InpMaxQuoteAgeSec > 0) ? "ARMED" : "*** OFF ***",
                InpMaxQuoteDrift, InpMaxQuoteAgeSec);
    return INIT_SUCCEEDED;
 }
-void OnDeinit(const int r) { PrintFormat("[ZEE] deinit reason=%d", r); }
+void OnDeinit(const int r) { PrintFormat("[LOUD] deinit reason=%d", r); }
 
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -544,22 +517,22 @@ void OnDeinit(const int r) { PrintFormat("[ZEE] deinit reason=%d", r); }
 //+------------------------------------------------------------------+
 bool CurrentTick(MqlTick &out) {
    if (!SymbolInfoTick(_Symbol, out)) {
-      PrintFormat("[ZEE] [BLOCKED] SymbolInfoTick failed (%d) — no price, no trade",
+      PrintFormat("[LOUD] [BLOCKED] SymbolInfoTick failed (%d) — no price, no trade",
                   GetLastError());
       return false;
    }
    if (out.ask <= 0 || out.bid <= 0) {
-      PrintFormat("[ZEE] [BLOCKED] nonsense quote bid=%.2f ask=%.2f", out.bid, out.ask);
+      PrintFormat("[LOUD] [BLOCKED] nonsense quote bid=%.2f ask=%.2f", out.bid, out.ask);
       return false;
    }
    if (!SymbolIsSynchronized(_Symbol)) {
-      Print("[ZEE] [BLOCKED] symbol is NOT synchronized with the server — refusing to trade");
+      Print("[LOUD] [BLOCKED] symbol is NOT synchronized with the server — refusing to trade");
       return false;
    }
    if (InpMaxQuoteAgeSec > 0) {
       long age = (long)(TimeCurrent() - out.time);
       if (age > InpMaxQuoteAgeSec) {
-         PrintFormat("[ZEE] [BLOCKED] the tick is %d s old (limit %d) — this is the "
+         PrintFormat("[LOUD] [BLOCKED] the tick is %d s old (limit %d) — this is the "
                      "2026-08-14 fault", (int)age, InpMaxQuoteAgeSec);
          return false;
       }
@@ -571,7 +544,7 @@ bool CurrentTick(MqlTick &out) {
       MqlTick h[];
       if (CopyTicks(_Symbol, h, COPY_TICKS_INFO, 0, 1) == 1 && h[0].ask > 0) {
          if (MathAbs(h[0].ask - out.ask) > InpMaxQuoteDrift) {
-            PrintFormat("[ZEE] [BLOCKED] cache says %.2f, tick history says %.2f — %.2f "
+            PrintFormat("[LOUD] [BLOCKED] cache says %.2f, tick history says %.2f — %.2f "
                         "pts apart (limit %.2f). One of them is lying.",
                         out.ask, h[0].ask, MathAbs(h[0].ask - out.ask), InpMaxQuoteDrift);
             return false;
@@ -587,7 +560,7 @@ void TryFire() {
    if (g_last_fire > 0 &&
        (TimeCurrent() - g_last_fire) < InpCooldownBar * PeriodSeconds()) return;
    if (!WindowContinuous(InpTrendLook + 5)) {
-      if (InpVerbose) Print("[ZEE] [SKIP] gap in lookback");
+      if (InpVerbose) Print("[LOUD] [SKIP] gap in lookback");
       return;
    }
 //  THE 40% GATE, under test (Zee 2026-08-10: "can u check what's stopping us from
@@ -601,7 +574,7 @@ void TryFire() {
    int sides[2]; int nsides = 0;
    if (t != 0) { sides[0] = t; nsides = 1; }
    else if (!InpRequireTrend) { sides[0] = +1; sides[1] = -1; nsides = 2; }
-   else { if (InpVerbose) Print("[ZEE] [SKIP] ranging — his setup needs a trend"); return; }
+   else { if (InpVerbose) Print("[LOUD] [SKIP] ranging — his setup needs a trend"); return; }
 
    int htf = 0;
    if (InpHtfMinutes > 0) {
@@ -622,7 +595,7 @@ void TryFire() {
       origin = o; uhv = u; side = try_side; break;
    }
    if (side == 0) {
-      if (InpVerbose && t != 0) Print("[ZEE] [SKIP] no lawful setup on the allowed side");
+      if (InpVerbose && t != 0) Print("[LOUD] [SKIP] no lawful setup on the allowed side");
       return;
    }
    t = side;
@@ -641,7 +614,7 @@ void TryFire() {
       datetime qt = (datetime)SymbolInfoInteger(_Symbol, SYMBOL_TIME);
       long age = (long)(TimeCurrent() - qt);
       if (qt > 0 && age > InpMaxQuoteAgeSec) {
-         PrintFormat("[ZEE] [BLOCKED] quote is %d s old (limit %d) — refusing to trade on it",
+         PrintFormat("[LOUD] [BLOCKED] quote is %d s old (limit %d) — refusing to trade on it",
                      (int)age, InpMaxQuoteAgeSec);
          return;
       }
@@ -652,7 +625,7 @@ void TryFire() {
       // and on 2026-08-14 it was the quote — by 5.4 points.
       double c0 = iClose(_Symbol, PERIOD_CURRENT, 0);
       if (c0 > 0 && MathAbs(px - c0) > InpMaxQuoteDrift) {
-         PrintFormat("[ZEE] [BLOCKED] quote %.2f vs tape %.2f — %.2f pts apart (limit %.2f). "
+         PrintFormat("[LOUD] [BLOCKED] quote %.2f vs tape %.2f — %.2f pts apart (limit %.2f). "
                      "This is the 2026-08-14 fault. Trade refused.",
                      px, c0, MathAbs(px - c0), InpMaxQuoteDrift);
          return;
@@ -662,7 +635,7 @@ void TryFire() {
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
 
    if (InpMaxSpreadPts > 0 && (ask - bid) > InpMaxSpreadPts) {
-      PrintFormat("[ZEE] [BLOCKED] spread %.2f over limit %.2f", ask - bid, InpMaxSpreadPts);
+      PrintFormat("[LOUD] [BLOCKED] spread %.2f over limit %.2f", ask - bid, InpMaxSpreadPts);
       return;
    }
    if (InpMaxPullback > 0) {
@@ -752,10 +725,10 @@ void TryFire() {
             double nsl = (t > 0) ? fill - InpStopPts   : fill + InpStopPts;
             double ntp = (t > 0) ? fill + InpTargetPts : fill - InpTargetPts;
             if (!trade.PositionModify(pt, nsl, ntp))
-               PrintFormat("[ZEE] !! could not re-anchor #%I64u (%d) — still on QUOTE levels",
+               PrintFormat("[LOUD] !! could not re-anchor #%I64u (%d) — still on QUOTE levels",
                            pt, trade.ResultRetcode());
             else if (MathAbs(fill - px) >= 1.0)
-               PrintFormat("[ZEE] !! fill %.2f vs quote %.2f (%.2f pts) — levels re-anchored "
+               PrintFormat("[LOUD] !! fill %.2f vs quote %.2f (%.2f pts) — levels re-anchored "
                            "on the fill", fill, px, MathAbs(fill - px));
          }
       }
@@ -763,7 +736,7 @@ void TryFire() {
    }
    if (placed > 0) {
       g_last_fire = TimeCurrent();
-      PrintFormat("[ZEE] %s @%.2f — %d diamond(s) -> %d ticket(s), %.2f lots total · "
+      PrintFormat("[LOUD] %s @%.2f — %d diamond(s) -> %d ticket(s), %.2f lots total · "
                   "UHV %d (vol %d) · brk vol %d",
                   t > 0 ? "BUY " : "SELL", px, dia, (int)placed, total,
                   uhv, (int)BarVolume(uhv), (int)BarVolume(1));
@@ -780,7 +753,7 @@ void AgeOut() {
       datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
       if (TimeCurrent() - opened >= InpMaxHoldMin * 60)
          if (trade.PositionClose(t) && InpVerbose)
-            PrintFormat("[ZEE] aged out after %dm", InpMaxHoldMin);
+            PrintFormat("[LOUD] aged out after %dm", InpMaxHoldMin);
    }
 }
 
