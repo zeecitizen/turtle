@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.32"
+#property version   "1.33"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -198,6 +198,14 @@ input bool   InpImpulseOrigin = true;  // Law 9 LIVE 2026-08-17 (Zee: "make it L
 // law AND is actually broken by bar 1 (the v13 FindUhvRanked semantics, +46%% Aug in
 // the 08-13 receipts). Ships only with fresh six-period receipts, as always.
 input int    InpUhvRank      = 1;    // how many volume-ranked candidates may audition
+// ── ZEE'S FUNNEL (2026-08-18, default true = shipped behaviour) ──────────────────
+// Zee, correcting the rank-6 reading: "i meant fire on a UHV in EVERY retracement,
+// not just some retracements... out of 100 retracements all 100 should have a UHV."
+// In his model the loudest counter-candle of a retracement simply IS its UHV — the
+// body and local-peak rules (from the 146 labels) should not be able to VETO it.
+// The census counted those vetoes at 1,439 per 4,137 August bars. With this false,
+// the two vetoes are off and only the breakout decides. His theory, measurable.
+input bool   InpLocalPeak    = true; // false = body & neighbour rules cannot veto the UHV
 input double InpUhvVolDia   = 2.0;  // InpUhvVolDia — LAW 6, ACTIVE. +1 diamond when UHV volume >= SMA(vol,20) x this.
 input int    InpClimaxDia   = 60;   // InpClimaxDia — LAW 7, ACTIVE. +1 diamond when the UHV is the WIDEST bar of the last N.
 //
@@ -383,7 +391,8 @@ bool UhvLawful(int k, int side) {
    bool wantRed = (side > 0);
    long v = BarVolume(k);
    double rng = bHigh(k) - bLow(k);
-   if (rng <= 0 || MathAbs(bClose(k) - bOpen(k)) / rng < InpUhvBodyMin) { g_ureason = 2; return false; }
+   if (rng <= 0) { g_ureason = 2; return false; }
+   if (InpLocalPeak && MathAbs(bClose(k) - bOpen(k)) / rng < InpUhvBodyMin) { g_ureason = 2; return false; }
    if (InpSquatMax > 0) {
       double atr = AtrAt(k);
       if (atr <= 0 || rng > atr * InpSquatMax) { g_ureason = 9; return false; }
@@ -416,8 +425,8 @@ bool UhvLawful(int k, int side) {
       pre /= 5.0;
       if (atr <= 0 || pre > atr * InpPreCompress) { g_ureason = 9; return false; }
    }
-   if (BarVolume(k + 1) > v) { g_ureason = 7; return false; }       // louder neighbours
-   if (k > 1 && BarVolume(k - 1) > v) { g_ureason = 7; return false; }
+   if (InpLocalPeak && BarVolume(k + 1) > v) { g_ureason = 7; return false; }   // louder neighbours
+   if (InpLocalPeak && k > 1 && BarVolume(k - 1) > v) { g_ureason = 7; return false; }
    g_ureason = 0;
    return true;
 }
