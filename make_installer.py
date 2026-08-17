@@ -66,7 +66,7 @@ EXTRA_PKGS = ["requests", "psutil"]      # not imported today, but tiny and ofte
 # anything that could carry a credential.
 SKIP_DIRS = {".git", "__pycache__", "node_modules", "_loom_audio", "_vsa_audio",
              "dist", "mt5_rig",
-             "_tester_runs", "strategy_lab", "setup_labels", "daily_reports",
+             "_tester_runs", "strategy_lab", "setup_labels",
              "preserved", ".claude", "temp", "_headless",
              # 208 MB of encrypted blobs and a personal memory archive. Neither is
              # needed to place a trade, and both are private to Zee.
@@ -222,6 +222,19 @@ def build(out_dir: Path, with_extras: bool = True):
 
     shutil.copy2(ROOT / "localize.py", payload / "turtle" / "localize.py")
     print("   localize.py             bundled (rewrites paths on the new machine)")
+
+    # setup_labels/ is skipped for its 13 MB of chart PNGs, but the JSON inside it is
+    # tiny and irreplaceable: zee_labels.json is Zee's own 146 labelled setups, the
+    # source every rule in ZeeUHV.mq5 is quoted from. 29 KB. Rescue it by name.
+    lab_src = ROOT / "monitor" / "setup_labels"
+    lab_dst = payload / "turtle" / "monitor" / "setup_labels"
+    n_lab = 0
+    if lab_src.exists():
+        lab_dst.mkdir(parents=True, exist_ok=True)
+        for j in lab_src.glob("*.json"):
+            if not is_secret(j) and not has_secret_content(j):
+                shutil.copy2(j, lab_dst / j.name); n_lab += 1
+    print(f"   setup_labels/*.json     {n_lab} rescued (his 146 labels; the PNGs stay out)")
     write_installer(stage)
     print(f"\n   TOTAL {total/1e6:,.0f} MB in {time.time()-t0:.0f}s")
     print(f"\n   Copy this folder to a USB stick:\n      {stage}")

@@ -1,2 +1,14 @@
 {"seen_at": "2026-08-12T19:52:27Z", "bar": "2026-08-12 19:51", "mode": "FIRE", "t": 1786564260, "side": "buy", "entry": 4412.575, "sl": 4392.575, "tp": 4413.575, "uhv_vol": 831, "brk_vol": 271, "diamonds": 2}
 {"seen_at": "2026-08-13T00:59:01Z", "bar": "2026-08-13 00:58", "mode": "FIRE", "t": 1786582680, "side": "sell", "entry": 4427.19, "sl": 4447.19, "tp": 4426.19, "uhv_vol": 696, "brk_vol": 419, "diamonds": 2}
+{"seen_at": "2026-08-13T10:27:16Z", "bar": "2026-08-13 10:26", "mode": "FIRE", "t": 1786616760, "side": "buy", "entry": 4385.97, "sl": 4365.97, "tp": 4386.97, "uhv_vol": 246, "brk_vol": 207, "diamonds": 2}
+{"seen_at": "2026-08-13T10:53:00Z", "bar": "2026-08-13 10:52", "mode": "FIRE", "t": 1786618320, "side": "buy", "entry": 4393.62, "sl": 4373.62, "tp": 4394.62, "uhv_vol": 212, "brk_vol": 195, "diamonds": 3}
+{"seen_at": "2026-08-13T11:41:04Z", "bar": "2026-08-13 11:40", "mode": "FIRE", "t": 1786621200, "side": "sell", "entry": 4387.875, "sl": 4407.875, "tp": 4386.875, "uhv_vol": 430, "brk_vol": 241, "diamonds": 3}
+{"seen_at": "2026-08-13T12:23:07Z", "bar": "2026-08-13 12:22", "mode": "FIRE", "t": 1786623720, "side": "sell", "entry": 4385.055, "sl": 4405.055, "tp": 4384.055, "uhv_vol": 1335, "brk_vol": 837, "diamonds": 3}
+{"seen_at": "2026-08-13T13:19:11Z", "bar": "2026-08-13 13:18", "mode": "FIRE", "t": 1786627080, "side": "sell", "entry": 4391.42, "sl": 4411.42, "tp": 4390.42, "uhv_vol": 1288, "brk_vol": 571, "diamonds": 3}
+{"seen_at": "2026-08-13T16:45:07Z", "bar": "2026-08-13 16:44", "mode": "FIRE", "t": 1786639440, "side": "buy", "entry": 4367.08, "sl": 4347.08, "tp": 4368.08, "uhv_vol": 694, "brk_vol": 260, "diamonds": 3}
+{"seen_at": "2026-08-13T16:46:07Z", "bar": "2026-08-13 16:45", "mode": "FIRE", "t": 1786639500, "side": "buy", "entry": 4366.93, "sl": 4346.93, "tp": 4367.93, "uhv_vol": 694, "brk_vol": 584, "diamonds": 2}
+{"seen_at": "2026-08-14T07:21:09Z", "bar": "2026-08-14 07:20", "mode": "FIRE", "t": 1786692000, "side": "sell", "entry": 4331.815, "sl": 4351.815, "tp": 4330.815, "uhv_vol": 378, "brk_vol": 338, "diamonds": 2}
+{"seen_at": "2026-08-14T08:09:13Z", "bar": "2026-08-14 08:08", "mode": "FIRE", "t": 1786694880, "side": "buy", "entry": 4344.745, "sl": 4324.745, "tp": 4345.745, "uhv_vol": 461, "brk_vol": 421, "diamonds": 3}
+{"seen_at": "2026-08-14T10:27:05Z", "bar": "2026-08-14 10:26", "mode": "FIRE", "t": 1786703160, "side": "sell", "entry": 4351.53, "sl": 4371.53, "tp": 4350.53, "uhv_vol": 239, "brk_vol": 197, "diamonds": 3}
+{"seen_at": "2026-08-14T16:06:34Z", "bar": "2026-08-14 16:05", "mode": "FIRE", "t": 1786723500, "side": "buy", "entry": 4392.785, "sl": 4372.785, "tp": 4393.785, "uhv_vol": 428, "brk_vol": 384, "diamonds": 3}
+{"seen_at": "2026-08-14T20:54:01Z", "bar": "2026-08-14 20:53", "mode": "FIRE", "t": 1786740780, "side": "sell", "entry": 4375.355, "sl": 4395.355, "tp": 4374.355, "uhv_vol": 83, "brk_vol": 59, "diamonds": 3}
