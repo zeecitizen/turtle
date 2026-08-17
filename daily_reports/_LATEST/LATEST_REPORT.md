@@ -141,6 +141,28 @@ TurtleTradeLogger v1.04   self-healing backfill armed
 Ticket comments now carry the law bitmask: zee_sell_D2_m52 (bit 32 = Law-8-valid)
 ```
 
+## 4b. ZEESIMPLE — attempt seven at Feb-11, built and measured the same evening
+
+Zee, at dinner: *"create a new EA from scratch... any law that cuts off too many trades
+should be skipped... losses near about 2 USD... every single retracement, a frequency
+from this report."* Target spec from his real Feb-11 statement (acct 5118408): 69
+trades/day, 94.2%, avg win €12.93, avg loss −€1.32, holds 6s–3min.
+
+Built: `mt5/ZeeSimple.mq5` — EMA 5/20 trend, fire on EVERY retracement resumption
+(counter-color candle, then trend-color close beyond it), no UHV, no diamonds, no laws.
+It reaches the frequency: **140–230 trades/day.**
+
+Measured: seven exit geometries, real ticks, AUG+MAR screen, winner validated on four
+more periods. **Every arm loses.** Best (SL2/TP1/h120): 50–56% WR, −$2.10/trade, five
+of six fortnights bankrupt the tester account at 0.10 lots (nets ≈ −$4,0xx are censored
+— §0a). The per-trade loss ≈ the spread: an every-retracement trigger is approximately
+a random entry (NullEntry, §1.8 of 13-Aug report), and 200 random entries/day pay 200
+spreads with nothing to cover them. **Frequency without selection is rent, not tempo.**
+
+Shipped as v1.01 attach-ready but with defaults that tell the truth: best-arm exit,
+**0.01 lots** (tuition cap), receipts in the file header. Recommendation on record: do
+not attach at size; the frequency lever with an actual edge is rank-6 on ZeeUHV.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
