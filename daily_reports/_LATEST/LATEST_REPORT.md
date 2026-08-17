@@ -163,6 +163,15 @@ Shipped as v1.01 attach-ready but with defaults that tell the truth: best-arm ex
 **0.01 lots** (tuition cap), receipts in the file header. Recommendation on record: do
 not attach at size; the frequency lever with an actual edge is rank-6 on ZeeUHV.
 
+## 4c. THE HOLD TIMER SURVIVES ITS THIRD TRIAL (late evening)
+
+The 22:32 PKT SELL — right direction, right size (Law 10c correctly read 299/359 =
+0.83 as quiet band), right stop — was cut by the 5-minute clock at the retest top for
+−$232, two minutes before its TP filled. So the clock was re-swept under the LIVE
+v1.29 configuration (holds 8/12/20 vs h5, six periods, real ticks): every longer hold
+fails promotion — h8 −372, h12 −363, h20 −791 vs baseline. Only May improves, ever.
+h5 stays. That basket's loss is the premium on a policy the receipts say to keep.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
