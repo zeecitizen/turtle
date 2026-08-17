@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.00"
+#property version   "1.24"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -165,6 +165,19 @@ input group "-- Wyckoff / VSA composite (Zee's 2nd PDF, 2026-08-16) --"
 // (67 -> 4) on 13 observations, and 13 wins in a row is a 19.1% coincidence at our baseline
 // 88.06% win rate. As a DIAMOND it blocks nothing and only sizes up when it fires, so a
 // false signal costs almost nothing while a true one pays. Correct use of a small sample.
+// ── LAW 9 CANDIDATE (2026-08-17, default OFF — shipped behaviour unchanged) ──────
+// Zee, forensic on the 11:08 PKT loser (−$43.20/ticket): "the UHV marked is not a UHV
+// because: 1. its not the highest red volume  2. none of the red candles breaks the
+// last green's low (a valid retracement did not start)". Verified on broker bars:
+// the origin code accepted 11:04 because its body broke the low of 11:03 — a ONE-BAR
+// bounce INSIDE the pullback. Against the leg's real last green (11:01, the impulse)
+// nothing broke. Label #e014 says that means no retracement ever started.
+// With this ON the origin's reference green (BUY) / red (SELL) must be an IMPULSE bar
+// — one that expanded in the leg's direction — never pullback chop. Traced by hand on
+// the 11:08 window this widens the scope, promotes 11:02 (vol 237) to UHV candidate,
+// and the local-peak law then rejects it (11:01 louder at 266): NO TRADE, exactly his
+// reading, two laws deep.
+input bool   InpImpulseOrigin = false; // Law 9: origin must break an IMPULSE candle's extreme
 input double InpUhvVolDia   = 2.0;  // InpUhvVolDia — LAW 6, ACTIVE. +1 diamond when UHV volume >= SMA(vol,20) x this.
 input int    InpClimaxDia   = 60;   // InpClimaxDia — LAW 7, ACTIVE. +1 diamond when the UHV is the WIDEST bar of the last N.
 //
@@ -293,7 +306,16 @@ int RetracementOrigin(int side) {
       if (!wantRed && !IsGreen(k)) continue;
       int prev = -1;
       for (int j = k + 1; j <= k + 8; j++) {
-         if (wantRed ? IsGreen(j) : IsRed(j)) { prev = j; break; }
+         if (wantRed ? IsGreen(j) : IsRed(j)) {
+            // Law 9 (see input): the reference bar must be an IMPULSE bar of the leg —
+            // a green that made a new high (BUY) / a red that made a new low (SELL).
+            // A bounce inside the pullback is not a reference; keep walking.
+            if (InpImpulseOrigin) {
+               if (wantRed  && bHigh(j) <= bHigh(j + 1)) continue;
+               if (!wantRed && bLow(j)  >= bLow(j + 1))  continue;
+            }
+            prev = j; break;
+         }
       }
       if (prev < 0) continue;
       if (wantRed) { if (BodyLo(k) < bLow(prev)) return k; }
@@ -495,6 +517,45 @@ int DiamondsFor(int origin, int uhv, int side) {
    double wick = (side > 0) ? (bHigh(1) - MathMax(bOpen(1), bClose(1))) / rng
                             : (MathMin(bOpen(1), bClose(1)) - bLow(1)) / rng;
    if (wick <= 0.25 && BarVolume(1) < BarVolume(uhv)) { d++; g_lawmask |= 16; }
+   // ── LAW 8 CANDIDATE — TAG ONLY, bit 32, NOT a diamond (2026-08-17) ─────────────
+   // Zee, reading the forensic of the 12:21 PKT loser: "all the green candle's
+   // highs/lows inside this retracement do not break the last independent bar's
+   // high.. meaning this is an invalid retracement." Structural reading, confirmed
+   // by him: a RETRACEMENT is only real if it displaced past the last bar of the
+   // leg that expanded in the retracement's direction. On that loser the down-leg's
+   // last upward-independent bar (12:11) had high 4401.40 and the whole retracement
+   // topped at 4399.26 — three green candles of effort, zero displacement: chop.
+   //
+   // Mechanics (SELL; BUY mirrored):
+   //   anchor  = the leg extreme — lowest low among bars [origin .. origin+RetraceBack]
+   //   ref     = walking back from the anchor, the first bar whose high exceeded the
+   //             bar before it (the leg's last upward-independent bar)
+   //   valid   = some retracement bar [1 .. anchor-1] broke above ref's high
+   // No ref found in 20 bars, or nothing broke it -> the tag stays OFF.
+   //
+   // It only writes the comment (zee_sell_D2_m52 style) so six periods of tester
+   // receipts can judge whether it predicts BEFORE it is allowed to size anything.
+   {
+      int a8 = -1;
+      double ext8 = 0;
+      for (int k = origin; k <= origin + InpRetraceBack && k < iBars(_Symbol, PERIOD_CURRENT) - 25; k++) {
+         double e = (side < 0) ? bLow(k) : bHigh(k);
+         if (a8 < 0 || (side < 0 && e < ext8) || (side > 0 && e > ext8)) { a8 = k; ext8 = e; }
+      }
+      if (a8 > 0) {
+         int ref8 = -1;
+         for (int k = a8 + 1; k <= a8 + 20; k++) {
+            if (side < 0 && bHigh(k) > bHigh(k + 1)) { ref8 = k; break; }
+            if (side > 0 && bLow(k)  < bLow(k + 1))  { ref8 = k; break; }
+         }
+         if (ref8 > 0) {
+            for (int k = 1; k < a8; k++) {
+               if (side < 0 && bHigh(k) > bHigh(ref8)) { g_lawmask |= 32; break; }
+               if (side > 0 && bLow(k)  < bLow(ref8))  { g_lawmask |= 32; break; }
+            }
+         }
+      }
+   }
    return d;
 }
 
@@ -834,8 +895,8 @@ void AgeOut() {
 double OnTester() {
    double pnl[8]; int cnt[8], won[8];
    for (int i = 0; i < 8; i++) { pnl[i] = 0; cnt[i] = 0; won[i] = 0; }
-   double mpnl[32]; int mcnt[32], mwon[32];
-   for (int i = 0; i < 32; i++) { mpnl[i] = 0; mcnt[i] = 0; mwon[i] = 0; }
+   double mpnl[64]; int mcnt[64], mwon[64];
+   for (int i = 0; i < 64; i++) { mpnl[i] = 0; mcnt[i] = 0; mwon[i] = 0; }
 
    if (HistorySelect(0, TimeCurrent())) {
       int total = HistoryDealsTotal();
@@ -864,7 +925,7 @@ double OnTester() {
          }
          if (dia < 0 || dia > 7) continue;
          cnt[dia]++; pnl[dia] += p; if (p > 0) won[dia]++;
-         if (msk >= 0 && msk < 32) { mcnt[msk]++; mpnl[msk] += p; if (p > 0) mwon[msk]++; }
+         if (msk >= 0 && msk < 64) { mcnt[msk]++; mpnl[msk] += p; if (p > 0) mwon[msk]++; }
       }
    }
    Print("[DIA] ===== per-diamond breakdown (tickets, not baskets) =====");
@@ -873,11 +934,11 @@ double OnTester() {
       PrintFormat("[DIA] D%d  tickets %5d  won %5d  win %6.2f%%  net %10.2f  per ticket %7.3f",
                   i, cnt[i], won[i], 100.0 * won[i] / cnt[i], pnl[i], pnl[i] / cnt[i]);
    }
-   Print("[DIA] --- WHICH laws fired (bit1=ultra 2=climax 4=sweep 8=ema 16=wick) ---");
-   for (int i = 0; i < 32; i++) {
-      if (mcnt[i] < 10) continue;                 // ignore combinations too rare to read
+   Print("[DIA] --- WHICH laws fired (bit1=ultra 2=climax 4=sweep 8=ema 16=wick 32=L8indep) ---");
+   for (int i = 0; i < 64; i++) {
+      if (mcnt[i] < 1) continue;                  // print everything: the harness aggregates
       int bits = 0;
-      for (int b = 0; b < 5; b++) if ((i & (1 << b)) != 0) bits++;
+      for (int b = 0; b < 5; b++) if ((i & (1 << b)) != 0) bits++;   // bit 32 is a TAG, not a diamond
       PrintFormat("[DIA] mask %2d  D%d  tickets %5d  win %6.2f%%  net %9.2f  per ticket %7.3f",
                   i, bits, mcnt[i], 100.0 * mwon[i] / mcnt[i], mpnl[i], mpnl[i] / mcnt[i]);
    }
