@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.27"
+#property version   "1.29"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -212,6 +212,18 @@ input double InpBrkVolMin   = 0.0;  // InpBrkVolMin — 0 = off. Breakout volume
 // stopped all twelve tickets. Two independent reads of the same defect:
 input double InpBrkMarginPts = 0.0; // Law 10a: breakout must CLOSE >= this many pts beyond the trigger (0 = off)
 input double InpBrkVolMaxFrac = 0.0; // Law 10b: breakout vol <= this frac of UHV vol (0 = off; entry already requires < 1.0)
+// ── LAW 10c — the NON-BLOCKING form (Zee 2026-08-17: "can we maybe find a
+// non-blocking version of this LAW... i don't wanna cut down trades.. 6 per day is
+// already so less"). House doctrine: laws never gate; they multiply. The gate form
+// (volmax 0.85) earned +$786 over six periods but halved the trade count and blocked
+// three of today's winners. This form fires EVERY trade the current EA fires — but a
+// breakout in the loud band (vol > InpLoudVolFrac x UHV, the band where the $500
+// baskets live) opens FEWER TICKETS instead of none. Tempo untouched, tail halved.
+input double InpLoudVolFrac  = 0.85; // Law 10c: loud band starts at this fraction of UHV volume
+input double InpLoudSizeFrac = 0.25; // Law 10c LIVE 2026-08-17 (Zee: "go"). Quarter tickets in the
+                                     // loud band: recovers 68% of the gate's +786 with ZERO trades
+                                     // cut (+538.38 over six periods, better in 5 of 6, passes
+                                     // promotion). A 12:21-style basket: 6 tickets -> 2.
 
 // Higher-timeframe alignment. Measured as a GATE across 8 periods: drawdown lower or
 // equal in 8/8 and 18% better per trade. As a DIAMOND it was worse than shipped, so
@@ -592,7 +604,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.26 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.29 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -818,6 +830,15 @@ void TryFire() {
    // the cap must follow the number of ACTIVE laws or the extra diamond is silently lost
    int maxdia = 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0);
    int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, maxdia))) * MathMax(1, InpStackMult) : 1;
+   // Law 10c — size down the loud band instead of refusing it (see inputs above).
+   // Every ticket is equal-sized (StackStep 0), so scaling the COUNT scales the
+   // exposure exactly; MathMax(1, ...) guarantees no setup is ever reduced to zero —
+   // the law can shrink a trade, never delete one.
+   if (InpLoudSizeFrac > 0 && InpLoudSizeFrac < 1.0 && uhv > 1) {
+      double lr10 = (double)BarVolume(1) / MathMax(1.0, (double)BarVolume(uhv));
+      if (lr10 > InpLoudVolFrac)
+         tickets = (int)MathMax(1, MathRound(tickets * InpLoudSizeFrac));
+   }
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
