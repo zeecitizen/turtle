@@ -45,7 +45,7 @@
 //|  cover them. Frequency without selection is rent, not tempo.     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude"
-#property version   "1.01"
+#property version   "1.10"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -68,6 +68,18 @@ input int    InpTickets     = 2;     // tickets per signal (his Feb-11 fired in 
 input int    InpMaxOpen     = 2;     // concurrent setups
 input int    InpCooldownBar = 0;     // 0 = every signal (his instruction)
 input double InpMinBody     = 0.00;  // optional law, OFF: min body of resumption bar
+
+input group "── THE LADDER (2026-08-18, Zee: 'add the laws back one rung at a time') ──"
+// Each rung is a faithful port of a canonical ZeeUHV law, defaulted OFF so the live
+// EA is unchanged. The ladder run measures trades/day vs expectancy at each rung to
+// find the knee of the frequency-vs-edge curve between 230/day (no laws, ~random,
+// pays spread rent) and ZeeUHV's 6/day (edge in kind regimes).
+input bool   InpLawRetrace  = false; // R1: REAL retracement — counter-run whose origin BODY-breaks
+                                     //     an IMPULSE bar's extreme (#e014 + Law 9)
+input bool   InpLawTrendStruct = false; // R2: trend by SWING STRUCTURE (HH+HL / LL+LH, pivots d=2),
+                                     //     not just an EMA cross
+input bool   InpLawQuietBreak = false; // R3: resumption bar QUIETER than the loudest retracement
+                                     //     candle (UHV-lite: the volume law without 'ultra')
 
 input group "── Exit: the mechanical cut ──"
 input double InpStopPts     = 2.0;   // best of 7 exits swept 2026-08-17 (still negative)
@@ -178,6 +190,63 @@ void OnTick()
       else
          ok = IsGreen(2) && IsRed(1) && bClose(1) < bLow(2);
       if (ok && InpMinBody > 0 && MathAbs(bClose(1) - bOpen(1)) < InpMinBody) ok = false;
+
+      // the retracement run: consecutive counter-trend candles ending at bar 2
+      int rlen = 0;
+      if (ok) for (int k = 2; k <= 22; k++) {
+         if (try_side > 0 ? IsRed(k) : IsGreen(k)) rlen++;
+         else break;
+      }
+
+      // ── R1: the retracement must be REAL (#e014 + Law 9) ─────────────────
+      if (ok && InpLawRetrace) {
+         int origin = 2 + rlen - 1;                       // oldest counter candle
+         int ref = -1;                                    // the leg's impulse bar
+         for (int j = origin + 1; j <= origin + 8; j++) {
+            if (try_side > 0 ? IsGreen(j) : IsRed(j)) {
+               if (try_side > 0 && bHigh(j) <= bHigh(j + 1)) continue;   // Law 9
+               if (try_side < 0 && bLow(j)  >= bLow(j + 1))  continue;
+               ref = j; break;
+            }
+         }
+         if (ref < 0) ok = false;
+         else {
+            bool broke = false;                           // #e014: BODY breaks the impulse
+            for (int k = 2; k <= origin; k++) {
+               double blo = MathMin(bOpen(k), bClose(k));
+               double bhi = MathMax(bOpen(k), bClose(k));
+               if (try_side > 0 && blo < bLow(ref))  { broke = true; break; }
+               if (try_side < 0 && bhi > bHigh(ref)) { broke = true; break; }
+            }
+            if (!broke) ok = false;
+         }
+      }
+
+      // ── R2: trend by swing structure, not an EMA cross ───────────────────
+      if (ok && InpLawTrendStruct) {
+         double ph[2], pl[2]; int nh = 0, nl = 0;
+         for (int k = 3; k <= 30 && (nh < 2 || nl < 2); k++) {
+            bool isH = true, isL = true;
+            for (int d = 1; d <= 2; d++) {
+               if (bHigh(k) < bHigh(k - d) || bHigh(k) < bHigh(k + d)) isH = false;
+               if (bLow(k)  > bLow(k - d)  || bLow(k)  > bLow(k + d))  isL = false;
+            }
+            if (isH && nh < 2) ph[nh++] = bHigh(k);
+            if (isL && nl < 2) pl[nl++] = bLow(k);
+         }
+         if (nh < 2 || nl < 2) ok = false;
+         else if (try_side > 0 && !(ph[0] > ph[1] && pl[0] > pl[1])) ok = false;
+         else if (try_side < 0 && !(ph[0] < ph[1] && pl[0] < pl[1])) ok = false;
+      }
+
+      // ── R3: the resumption must be QUIETER than the retracement's loudest ─
+      if (ok && InpLawQuietBreak) {
+         long vmax = 0;
+         for (int k = 2; k <= 2 + MathMax(0, rlen - 1); k++)
+            vmax = MathMax(vmax, iVolume(_Symbol, PERIOD_CURRENT, k));
+         if (iVolume(_Symbol, PERIOD_CURRENT, 1) >= vmax) ok = false;
+      }
+
       if (ok) { Fire(try_side); break; }
       if (side != 0) break;                 // trend given: only its side is tried
       if (try_side < 0) break;              // trendless: both sides tried once
