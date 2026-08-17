@@ -449,8 +449,17 @@ double Ema5(int shift) {
    return e;
 }
 
+// WHICH laws fired, as a bitmask, so D3 can be decomposed. Zee, 2026-08-17: "look at why D3
+// specifically underperforms — it's the biggest bucket by far and something in it is
+// dragging?" With five laws, D3 is ANY THREE OF FIVE — ten different setups wearing one
+// label. The count alone can never answer his question; the mask can.
+//   bit 0 = Law 6 ultra   bit 1 = Law 7 climax   bit 2 = Law 1 sweep
+//   bit 3 = Law 3 ema     bit 4 = Law 5 wick+vol
+int g_lawmask = 0;
+
 int DiamondsFor(int origin, int uhv, int side) {
    int d = 0;
+   g_lawmask = 0;
    // ── LAW 6 — the UHV is genuinely ULTRA in ABSOLUTE terms, not merely loudest of 20.
    // Zee, 2026-08-16, arguing against my dismissal of it: "if its so good that it has a
    // 100% winrate then why not?" He was right. As a GATE it discards 95% of trades on 13
@@ -459,7 +468,7 @@ int DiamondsFor(int origin, int uhv, int side) {
    // three periods (+1.27->+1.28, -1.65->-1.63, -0.23->-0.22).
    if (InpUhvVolDia > 0) {
       double av = AvgVolBefore(uhv);
-      if (av > 0 && (double)BarVolume(uhv) >= av * InpUhvVolDia) d++;
+      if (av > 0 && (double)BarVolume(uhv) >= av * InpUhvVolDia) { d++; g_lawmask |= 1; }
    }
    // ── LAW 7 — SELLING CLIMAX: the UHV is not merely loud, it is the WIDEST bar in recent
    // memory. Better in all three periods, but on only 15 trades — which is exactly why it
@@ -469,23 +478,23 @@ int DiamondsFor(int origin, int uhv, int side) {
       bool widest = true;
       for (int i = uhv + 1; i <= uhv + InpClimaxDia; i++)
          if ((bHigh(i) - bLow(i)) > r7) { widest = false; break; }
-      if (widest) d++;
+      if (widest) { d++; g_lawmask |= 2; }
    }
    // Law 1 — the sweep: did price poke beyond the prior extreme on the way in?
    double hi = bHigh(uhv), lo = bLow(uhv);
    for (int k = uhv + 1; k <= uhv + 20; k++) {
-      if (side > 0 && bLow(k) < lo) { d++; break; }
-      if (side < 0 && bHigh(k) > hi) { d++; break; }
+      if (side > 0 && bLow(k) < lo) { d++; g_lawmask |= 4; break; }
+      if (side < 0 && bHigh(k) > hi) { d++; g_lawmask |= 4; break; }
    }
    // Law 3 — the EMA-5 close: the breakout candle closed decisively past the mean
    double e5 = Ema5(1);
-   if (side > 0 && IsGreen(1) && bClose(1) > e5 + 0.10) d++;
-   if (side < 0 && IsRed(1)   && bClose(1) < e5 - 0.10) d++;
+   if (side > 0 && IsGreen(1) && bClose(1) > e5 + 0.10) { d++; g_lawmask |= 8; }
+   if (side < 0 && IsRed(1)   && bClose(1) < e5 - 0.10) { d++; g_lawmask |= 8; }
    // Law 5 — the wick and the volume
    double rng = MathMax(bHigh(1) - bLow(1), 1e-9);
    double wick = (side > 0) ? (bHigh(1) - MathMax(bOpen(1), bClose(1))) / rng
                             : (MathMin(bOpen(1), bClose(1)) - bLow(1)) / rng;
-   if (wick <= 0.25 && BarVolume(1) < BarVolume(uhv)) d++;
+   if (wick <= 0.25 && BarVolume(1) < BarVolume(uhv)) { d++; g_lawmask |= 16; }
    return d;
 }
 
@@ -735,7 +744,7 @@ void TryFire() {
       // Zee, 2026-08-12: "measure the diamond's earnings and decide which diamond is
       // the most earner". The count must survive into the deal record to be grouped
       // later, and the comment is the only field that travels with it.
-      string tag = StringFormat("zee_%s_D%d", (t > 0 ? "buy" : "sell"), dia);
+      string tag = StringFormat("zee_%s_D%d_m%d", (t > 0 ? "buy" : "sell"), dia, g_lawmask);
       bool ok = (t > 0) ? trade.Buy (lots, _Symbol, 0, sl, tp, tag)
                         : trade.Sell(lots, _Symbol, 0, sl, tp, tag);
       if (!ok) break;
@@ -803,7 +812,77 @@ void AgeOut() {
 //|     rate. A 95% win rate that nets negative is the SL-30 trap he   |
 //|     found this afternoon, where one loss wipes thirty wins.        |
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| DO THE DIAMONDS ACTUALLY PREDICT? — per-diamond breakdown.        |
+//|                                                                  |
+//| Zee, 2026-08-17, reading the fills: "i notice that the lossy      |
+//| trades are having comment_D2 while the ones that won have         |
+//| comment_D3, is that so?"                                          |
+//|                                                                  |
+//| Live it looked true — D2 -468.90, D3 +571.80 — but the entire D2  |
+//| loss was ONE stop-out, and without it D2 was +35.50 on five       |
+//| baskets. Six baskets cannot answer this. The tester can, with     |
+//| thousands.                                                        |
+//|                                                                  |
+//| The report HTML carries no per-trade comment, so the grouping is  |
+//| done here. The closing deal's comment is overwritten by MT5 with  |
+//| "[tp ...]" or "[sl ...]", so the D count must be read from the    |
+//| OPENING deal of the same position — which is why this walks       |
+//| position IDs instead of just reading the OUT deal.                |
+//| OnTester runs in the TESTER ONLY. It can never affect live.       |
+//+------------------------------------------------------------------+
 double OnTester() {
+   double pnl[8]; int cnt[8], won[8];
+   for (int i = 0; i < 8; i++) { pnl[i] = 0; cnt[i] = 0; won[i] = 0; }
+   double mpnl[32]; int mcnt[32], mwon[32];
+   for (int i = 0; i < 32; i++) { mpnl[i] = 0; mcnt[i] = 0; mwon[i] = 0; }
+
+   if (HistorySelect(0, TimeCurrent())) {
+      int total = HistoryDealsTotal();
+      for (int i = 0; i < total; i++) {
+         ulong tk = HistoryDealGetTicket(i);
+         if (tk == 0) continue;
+         if (HistoryDealGetInteger(tk, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;
+         if (HistoryDealGetInteger(tk, DEAL_MAGIC) != InpMagicNumber) continue;
+         long pos = HistoryDealGetInteger(tk, DEAL_POSITION_ID);
+         double p = HistoryDealGetDouble(tk, DEAL_PROFIT)
+                  + HistoryDealGetDouble(tk, DEAL_SWAP)
+                  + HistoryDealGetDouble(tk, DEAL_COMMISSION);
+         // find this position's OPENING deal and read the D count from its comment
+         int dia = -1, msk = -1;
+         for (int j = 0; j < total; j++) {
+            ulong t2 = HistoryDealGetTicket(j);
+            if (t2 == 0) continue;
+            if (HistoryDealGetInteger(t2, DEAL_POSITION_ID) != pos) continue;
+            if (HistoryDealGetInteger(t2, DEAL_ENTRY) != DEAL_ENTRY_IN) continue;
+            string c = HistoryDealGetString(t2, DEAL_COMMENT);
+            int at = StringFind(c, "_D");
+            if (at >= 0) dia = (int)StringToInteger(StringSubstr(c, at + 2));
+            int am = StringFind(c, "_m");
+            if (am >= 0) msk = (int)StringToInteger(StringSubstr(c, am + 2));
+            break;
+         }
+         if (dia < 0 || dia > 7) continue;
+         cnt[dia]++; pnl[dia] += p; if (p > 0) won[dia]++;
+         if (msk >= 0 && msk < 32) { mcnt[msk]++; mpnl[msk] += p; if (p > 0) mwon[msk]++; }
+      }
+   }
+   Print("[DIA] ===== per-diamond breakdown (tickets, not baskets) =====");
+   for (int i = 0; i < 8; i++) {
+      if (cnt[i] == 0) continue;
+      PrintFormat("[DIA] D%d  tickets %5d  won %5d  win %6.2f%%  net %10.2f  per ticket %7.3f",
+                  i, cnt[i], won[i], 100.0 * won[i] / cnt[i], pnl[i], pnl[i] / cnt[i]);
+   }
+   Print("[DIA] --- WHICH laws fired (bit1=ultra 2=climax 4=sweep 8=ema 16=wick) ---");
+   for (int i = 0; i < 32; i++) {
+      if (mcnt[i] < 10) continue;                 // ignore combinations too rare to read
+      int bits = 0;
+      for (int b = 0; b < 5; b++) if ((i & (1 << b)) != 0) bits++;
+      PrintFormat("[DIA] mask %2d  D%d  tickets %5d  win %6.2f%%  net %9.2f  per ticket %7.3f",
+                  i, bits, mcnt[i], 100.0 * mwon[i] / mcnt[i], mpnl[i], mpnl[i] / mcnt[i]);
+   }
+   Print("[DIA] ==========================================================");
+
    double trades = TesterStatistics(STAT_TRADES);
    if (trades < InpMinTrades) return 0.0;
    if (TesterStatistics(STAT_PROFIT) <= 0) return 0.0;
