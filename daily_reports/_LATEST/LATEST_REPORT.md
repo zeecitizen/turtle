@@ -3,8 +3,14 @@
 **Supersedes:** the 13 August branch-search audit, archived at
 [`daily_reports/2026-08/REPORT_2026-08-13_branch_search_audit.md`](../2026-08/REPORT_2026-08-13_branch_search_audit.md).
 
-**Promoted today: LAW 9 (impulse-referenced origin) — LIVE in both EAs since ~7:10 PM PKT.**
-Everything else is tags, healing, or receipts.
+**Promoted today: LAW 9 (impulse origin, both EAs) and LAW 10c (quarter-size in the
+loud band, ZeeUHV v1.29).** Law 8 rides as a tag. Law 10a (displacement margin) failed
+at every depth — dead input. The Law 10b GATE (+786 but −48% trades) was measured and
+declined by Zee for the non-blocking 10c (+538, zero trades cut). Six-fortnight ledger,
+all laws stacked: **−$1,615 → −$639**, LIVE/Jun/Jul positive. The Loud-Breakout EA
+deliberately keeps full size — its thesis IS the loud band; its live magic is the
+counter-experiment. Frequency note for next session: Zee wants MORE trades (Feb-11 was
+69/day) — **rank-6 is the measured, unshipped lever** (+46% Aug, better Mar drawdown).
 
 ---
 
