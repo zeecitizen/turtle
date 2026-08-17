@@ -35,7 +35,7 @@
 //| and the comparison is then like-for-like on the same tape.        |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.00"
+#property version   "1.1"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -257,6 +257,8 @@ int TrendNow() {
 //|   The BODY requirement is what every earlier detector missed: he  |
 //|   rejects a retracement that only pokes past with a wick.         |
 //+------------------------------------------------------------------+
+input bool   InpImpulseOrigin = true;  // Law 9 LIVE 2026-08-17 — impulse-referenced origin (receipts in ZeeUHV v1.26)
+
 int RetracementOrigin(int side) {
    bool wantRed = (side > 0);
    for (int k = 1; k <= InpRetraceBack; k++) {
@@ -264,7 +266,18 @@ int RetracementOrigin(int side) {
       if (!wantRed && !IsGreen(k)) continue;
       int prev = -1;
       for (int j = k + 1; j <= k + 8; j++) {
-         if (wantRed ? IsGreen(j) : IsRed(j)) { prev = j; break; }
+         if (wantRed ? IsGreen(j) : IsRed(j)) {
+            // Law 9 LIVE 2026-08-17 — same fix as ZeeUHV v1.26 (see there for receipts).
+            // The reference bar must be an IMPULSE candle of the leg, never a bounce
+            // inside the pullback (Zee's label #e014, forensic on the 11:08 loser).
+            // This EA fires the SAME setups as ZeeUHV, so leaving it out would keep
+            // half of every invalid basket alive.
+            if (InpImpulseOrigin) {
+               if (wantRed  && bHigh(j) <= bHigh(j + 1)) continue;
+               if (!wantRed && bLow(j)  >= bLow(j + 1))  continue;
+            }
+            prev = j; break;
+         }
       }
       if (prev < 0) continue;
       if (wantRed) { if (BodyLo(k) < bLow(prev)) return k; }

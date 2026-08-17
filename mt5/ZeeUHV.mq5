@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.24"
+#property version   "1.26"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -177,7 +177,12 @@ input group "-- Wyckoff / VSA composite (Zee's 2nd PDF, 2026-08-16) --"
 // the 11:08 window this widens the scope, promotes 11:02 (vol 237) to UHV candidate,
 // and the local-peak law then rejects it (11:01 louder at 266): NO TRADE, exactly his
 // reading, two laws deep.
-input bool   InpImpulseOrigin = false; // Law 9: origin must break an IMPULSE candle's extreme
+input bool   InpImpulseOrigin = true;  // Law 9 LIVE 2026-08-17 (Zee: "make it LIVE: Law 9 that
+                                       // passes the promotion rule"). Receipts, six periods, real
+                                       // ticks: -1,615.18 -> -1,177.80 (+437.38), better in kind
+                                       // (LIVE +14.54, Jun +308.52 -> POSITIVE, Jul +82.70) AND
+                                       // hostile (Mar +202.42), at the cost of Apr -66.12 and
+                                       // May -104.68. ~10% fewer tickets.
 input double InpUhvVolDia   = 2.0;  // InpUhvVolDia — LAW 6, ACTIVE. +1 diamond when UHV volume >= SMA(vol,20) x this.
 input int    InpClimaxDia   = 60;   // InpClimaxDia — LAW 7, ACTIVE. +1 diamond when the UHV is the WIDEST bar of the last N.
 //
@@ -568,7 +573,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.25 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.26 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
