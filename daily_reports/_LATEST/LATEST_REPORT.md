@@ -254,6 +254,32 @@ NOTE: ZeeUHV_Loud_Breakout still runs rank-1 (the rank refactor is not ported th
 yet) — its fires are now a strict SUBSET of ZeeUHV's; port + verify next session if
 the pairing is to stay exact.
 
+## 4i. NIGHT 2 (2026-08-18 -> 19) — Zee's goodnight ideas, measured
+
+**The PROBE-BURST (his design: 0.01 scout first, basket only into pre-tested ground),
+three temperaments:** 60s/0.10 -> -326.85 · 120s/0.20 -> +127.67 · 60s/any+ -> -318.13.
+Not promotable — the +127.67 is May wearing a disguise (+450.97 there, negative in
+LIVE/Jul/Apr). BUT a real discovery inside: **ALL three probe arms transform May**
+(+346..+451) — the scout is a MAY-shaped tool; whippy tape is where pre-testing the
+region pays. Filed under the regime question, not shipped.
+
+**THE CALMER CHART — the night's headline. ZeeUHV v1.34 config on an M3 chart:**
+
+```
+              LIVE     Mar     Apr     May     Jun     Jul    TOTAL   worst
+M1 (live)   +99.68 -246.70  +29.76 -383.86 +117.24 +155.00  -228.88  -383.86
+M3           +0.96  -16.32   -7.28  -15.24  +80.12  -18.92   +23.32   -18.92
+M5          -25.40  -11.52  -92.40  -55.74  -54.22   +4.40  -234.88   -92.40
+```
+
+**M3 is the FIRST net-positive six-period configuration in the project's history**,
+with the worst period collapsing -384 -> -19 (20x variance reduction). It does not
+earn more — it stops bleeding: hostile months flatten to near zero at the cost of the
+kind months' cream. M5 failing both sides says M3 is a KNEE, not "slower is better".
+M2/M4 dial + M3 reproduction queued overnight; ships only if the shape holds and Zee
+says the word. (Accidental find, confounded, logged as curiosity: ZeeSimple-canonical
+on M5 went 78.6%% WR +26.64 in April.)
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
