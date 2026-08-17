@@ -45,7 +45,7 @@
 //|  cover them. Frequency without selection is rent, not tempo.     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude"
-#property version   "1.10"
+#property version   "1.20"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -74,11 +74,11 @@ input group "── THE LADDER (2026-08-18, Zee: 'add the laws back one rung at 
 // EA is unchanged. The ladder run measures trades/day vs expectancy at each rung to
 // find the knee of the frequency-vs-edge curve between 230/day (no laws, ~random,
 // pays spread rent) and ZeeUHV's 6/day (edge in kind regimes).
-input bool   InpLawRetrace  = false; // R1: REAL retracement — counter-run whose origin BODY-breaks
+input bool   InpLawRetrace  = true;  // R1: REAL retracement — counter-run whose origin BODY-breaks
                                      //     an IMPULSE bar's extreme (#e014 + Law 9)
-input bool   InpLawTrendStruct = false; // R2: trend by SWING STRUCTURE (HH+HL / LL+LH, pivots d=2),
+input bool   InpLawTrendStruct = true;  // R2: trend by SWING STRUCTURE (HH+HL / LL+LH, pivots d=2),
                                      //     not just an EMA cross
-input bool   InpLawQuietBreak = false; // R3: resumption bar QUIETER than the loudest retracement
+input bool   InpLawQuietBreak = true;  // R3: resumption bar QUIETER than the loudest retracement
                                      //     candle (UHV-lite: the volume law without 'ultra')
 
 input group "── Exit: the mechanical cut ──"
@@ -108,10 +108,10 @@ int OnInit()
    emaFastH = iMA(_Symbol, PERIOD_CURRENT, InpEmaFast, 0, MODE_EMA, PRICE_CLOSE);
    emaSlowH = iMA(_Symbol, PERIOD_CURRENT, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
    if (emaFastH == INVALID_HANDLE || emaSlowH == INVALID_HANDLE) return INIT_FAILED;
-   PrintFormat("[ZS] ZeeSimple v1.00 — EVERY retracement. SL %.2f / TP %.2f / hold %ds"
-               " · %d ticket(s) · magic %d · trend %s",
+   PrintFormat("[ZS] ZeeSimple v1.20 — CANONICAL: struct trend + real retracement + quiet break. "
+               "SL %.2f / TP %.2f / hold %ds · %d ticket(s) · magic %d · trend %s",
                InpStopPts, InpTargetPts, InpMaxHoldSec, InpTickets, (int)InpMagic,
-               InpRequireTrend ? "EMA5/20" : "OFF");
+               InpLawTrendStruct ? "STRUCTURE" : (InpRequireTrend ? "EMA5/20" : "OFF"));
    return INIT_SUCCEEDED;
 }
 
@@ -122,6 +122,23 @@ double Ema(int handle, int shift)
    double b[1];
    if (CopyBuffer(handle, 0, shift, 1, b) != 1) return 0;
    return b[0];
+}
+
+int StructTrend() {
+   double ph[2], pl[2]; int nh = 0, nl = 0;
+   for (int k = 3; k <= 30 && (nh < 2 || nl < 2); k++) {
+      bool isH = true, isL = true;
+      for (int d = 1; d <= 2; d++) {
+         if (bHigh(k) < bHigh(k - d) || bHigh(k) < bHigh(k + d)) isH = false;
+         if (bLow(k)  > bLow(k - d)  || bLow(k)  > bLow(k + d))  isL = false;
+      }
+      if (isH && nh < 2) ph[nh++] = bHigh(k);
+      if (isL && nl < 2) pl[nl++] = bLow(k);
+   }
+   if (nh < 2 || nl < 2) return 0;
+   if (ph[0] > ph[1] && pl[0] > pl[1]) return +1;
+   if (ph[0] < ph[1] && pl[0] < pl[1]) return -1;
+   return 0;
 }
 
 int OpenSetups()
@@ -170,9 +187,16 @@ void OnTick()
    if (InpCooldownBar > 0 && barIdx - g_lastFireBar < InpCooldownBar) return;
    if (OpenSetups() >= InpMaxOpen) return;
 
-   // ── trend: one EMA cross, nothing more ─────────────────────────────────
+   // ── trend ───────────────────────────────────────────────────────────────
+   // Zee 2026-08-18: "our original strategy did not have EMA5, that was a diamond" —
+   // correct. EMA-close is Law 3, a DIAMOND, never the trend. The canonical trend is
+   // SWING STRUCTURE (HH+HL / LL+LH), so with the structure law on, structure DEFINES
+   // the side. The EMA cross survives only as the legacy mode for A/B comparisons.
    int side = 0;
-   if (InpRequireTrend) {
+   if (InpLawTrendStruct) {
+      side = StructTrend();
+      if (side == 0 && InpRequireTrend) return;      // no structure -> no opinion
+   } else if (InpRequireTrend) {
       double f = Ema(emaFastH, 1), s = Ema(emaSlowH, 1);
       if (f <= 0 || s <= 0) return;
       side = (f > s) ? +1 : -1;
