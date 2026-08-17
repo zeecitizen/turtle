@@ -206,6 +206,8 @@ if __name__ == "__main__":
     ap.add_argument("--deposit", type=int, default=4123)
     ap.add_argument("--delay", type=int, default=0,
                     help="execution delay ms (0=ideal, -1=random). Live median is ~163.")
+    ap.add_argument("--period", default="M1",
+                    help="chart timeframe for the EA (M1/M3/M5/M15...)")
     ap.add_argument("--model", type=int, default=2,
                     help="0=interpolated ticks, 1=OHLC, 2=open only, 4=REAL ticks")
     a = ap.parse_args()
@@ -213,4 +215,4 @@ if __name__ == "__main__":
         setup(symbol=a.symbol)
     if a.ea:
         backtest(a.ea, a.symbol, a.frm, a.to, a.optimize, model=a.model,
-                 deposit=a.deposit, delay=a.delay)
+                 deposit=a.deposit, delay=a.delay, period=a.period)

@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.34"
+#property version   "1.36"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -197,6 +197,17 @@ input bool   InpImpulseOrigin = true;  // Law 9 LIVE 2026-08-17 (Zee: "make it L
 // loudest" — walks candidates by volume rank and takes the FIRST that passes every
 // law AND is actually broken by bar 1 (the v13 FindUhvRanked semantics, +46%% Aug in
 // the 08-13 receipts). Ships only with fresh six-period receipts, as always.
+// ── THE PROBE (2026-08-18 night, default OFF — Zee: "ZeeSimple opens a 0.01 lot,
+// then if its going successful, we mark the direction as a conviction (due to
+// ZeeSimple having probed the region), then when we open our trade, it results in a
+// burst of (pre-tested) environment.") Single-EA testable form: at every signal a
+// lone 0.01 scout enters first, naked (no SL/TP — the deadline is its exit, and the
+// 3-min hold sweep is the backstop). At the deadline: moved >= InpProbeMinPts our
+// way -> close the scout, open the FULL basket into pre-tested ground; otherwise
+// the scout retreats and the basket never risks itself.
+input int    InpProbeSec     = 0;    // probe duration seconds (0 = off; must be < hold*60)
+input double InpProbeMinPts  = 0.10; // conviction threshold the probe must show
+input double InpProbeLots    = 0.01; // scout size
 input int    InpUhvRank      = 6;    // LIVE 2026-08-18 (Zee: "ship rank 6"). The dial swept
                                      // {2,3,6,10}: every position positive, 6 == 10 in five of
                                      // six periods — saturation, the plateau of a real law.
@@ -742,6 +753,10 @@ bool CurrentTick(MqlTick &out) {
 // ── PIPELINE CENSUS (Zee 2026-08-18: "i dont know why our trade count is so low..
 // i wanna check if some original law is hindering trades"). Counts every bar's fate
 // through the funnel; printed by OnTester as [CEN]. Zero effect on behaviour.
+// hourly funnel (Zee 2026-08-18: "we skip the entire session mostly until 22:32...
+// is our EA so selective its skipping major hours, or did the market not give a
+// chance?") — same counters, bucketed by broker hour, printed as [HCEN].
+long h_bars[24], h_rang[24], h_noorig[24], h_nouhv[24], h_wait[24], h_fired[24];
 long z_bars=0, z_maxopen=0, z_cooldown=0, z_gap=0, z_ranging=0,
      z_no_origin=0, z_no_uhv=0, z_no_break=0, z_fired=0,
      z_u_nocand=0, z_u_body=0, z_u_neigh=0, z_u_other=0,
@@ -750,6 +765,8 @@ int g_ureason=0, g_breason=0;
 
 void TryFire() {
    z_bars++;
+   int z_hr = (int)((TimeCurrent() / 3600) % 24);
+   h_bars[z_hr]++;
    if (OpenCount() >= InpMaxOpen) { z_maxopen++; return; }
    if (g_last_fire > 0 &&
        (TimeCurrent() - g_last_fire) < InpCooldownBar * PeriodSeconds()) { z_cooldown++; return; }
@@ -769,7 +786,7 @@ void TryFire() {
    int sides[2]; int nsides = 0;
    if (t != 0) { sides[0] = t; nsides = 1; }
    else if (!InpRequireTrend) { sides[0] = +1; sides[1] = -1; nsides = 2; }
-   else { z_ranging++; if (InpVerbose) Print("[ZEE] [SKIP] ranging — his setup needs a trend"); return; }
+   else { z_ranging++; h_rang[z_hr]++; if (InpVerbose) Print("[ZEE] [SKIP] ranging — his setup needs a trend"); return; }
 
    int htf = 0;
    if (InpHtfMinutes > 0) {
@@ -783,24 +800,24 @@ void TryFire() {
       int try_side = sides[si];
       if (InpHtfMinutes > 0 && htf != 0 && try_side != htf) continue;
       int o = RetracementOrigin(try_side);
-      if (o < 0) { z_no_origin++; continue; }
+      if (o < 0) { z_no_origin++; h_noorig[z_hr]++; continue; }
       int u = FindUhvBroken(o, try_side);
       if (u < 0) {
          if (!g_hadlawful) {
-            z_no_uhv++;
+            z_no_uhv++; h_nouhv[z_hr]++;
             if (g_ureason == 1) z_u_nocand++;
             else if (g_ureason == 2) z_u_body++;
             else if (g_ureason == 7) z_u_neigh++;
             else z_u_other++;
          } else {
-            z_no_break++;
+            z_no_break++; h_wait[z_hr]++;
             if (g_breason == 2) z_b_loud++;
             else if (g_breason == 3) z_b_late++;
             else z_b_nocross++;
          }
          continue;
       }
-      z_fired++;
+      z_fired++; h_fired[z_hr]++;
       origin = o; uhv = u; side = try_side; break;
    }
    if (side == 0) {
@@ -871,6 +888,33 @@ void TryFire() {
    }
 
    int dia = InpUseDiamonds ? DiamondsFor(origin, uhv, t) : 0;
+
+   // ── THE PROBE GATE — scout first, basket only on conviction ──────────────────
+   if (InpProbeSec > 0) {
+      bool loudp = false;
+      if (InpLoudSizeFrac > 0 && InpLoudSizeFrac < 1.0 && uhv > 1) {
+         double lrp = (double)BarVolume(1) / MathMax(1.0, (double)BarVolume(uhv));
+         loudp = (lrp > InpLoudVolFrac);
+      }
+      MqlTick ptk;
+      if (!CurrentTick(ptk)) return;
+      double ppx = (t > 0) ? ptk.ask : ptk.bid;
+      bool pok = (t > 0) ? trade.Buy (InpProbeLots, _Symbol, 0, 0.0, 0.0, "zee_probe")
+                         : trade.Sell(InpProbeLots, _Symbol, 0, 0.0, 0.0, "zee_probe");
+      if (pok) {
+         g_probe_ticket   = trade.ResultOrder();
+         g_probe_open     = ppx;
+         g_probe_side     = t;
+         g_probe_dia      = dia;
+         g_probe_mask     = g_lawmask;
+         g_probe_loud     = loudp;
+         g_probe_deadline = TimeCurrent() + InpProbeSec;
+         g_last_fire      = TimeCurrent();
+         PrintFormat("[ZEE] [PROBE] scout %s @%.2f — %ds to prove %.2f pts",
+                     t > 0 ? "BUY" : "SELL", ppx, InpProbeSec, InpProbeMinPts);
+      }
+      return;
+   }
 
    // THE STACK — Zee 2026-08-10: "the diamonds should each not only add 1 trade, but
    // add the trade in twice the lots that we already have... 0.1, then 0.2, then 0.3,
@@ -1049,6 +1093,11 @@ double OnTester() {
          if (msk >= 0 && msk < 64) { mcnt[msk]++; mpnl[msk] += p; if (p > 0) mwon[msk]++; }
       }
    }
+   Print("[HCEN] hour(broker) bars ranging no-origin uhv-veto waiting FIRED");
+   for (int h = 0; h < 24; h++)
+      if (h_bars[h] > 0)
+         PrintFormat("[HCEN] %02d:00  %4d %6d %8d %8d %7d %5d",
+                     h, h_bars[h], h_rang[h], h_noorig[h], h_nouhv[h], h_wait[h], h_fired[h]);
    Print("[CEN] ======== PIPELINE CENSUS — where the bars die ========");
    PrintFormat("[CEN] bars evaluated %d", z_bars);
    PrintFormat("[CEN]   blocked: maxopen %d · cooldown %d · gap %d", z_maxopen, z_cooldown, z_gap);
@@ -1083,7 +1132,63 @@ double OnTester() {
 }
 
 //+------------------------------------------------------------------+
+// probe state: one scout at a time; the pending setup rides with it
+ulong    g_probe_ticket = 0;
+datetime g_probe_deadline = 0;
+int      g_probe_side = 0, g_probe_dia = 0, g_probe_mask = 0;
+bool     g_probe_loud = false;
+double   g_probe_open = 0;
+
+// The burst: the full stack, sized from the SIGNAL-time diamonds and loud-band flag
+// (bar indices shift while the scout works, so the decision travels as data, not as
+// indices). Deliberately lean vs the main path: the per-ticket fill-price SL/TP
+// re-reset is skipped — acceptable for a default-OFF test arm; noted for any ship.
+void FireBasket(int side, int dia, int mask, bool loud) {
+   int maxdia = 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0);
+   int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, maxdia))) * MathMax(1, InpStackMult) : 1;
+   if (InpLoudSizeFrac > 0 && InpLoudSizeFrac < 1.0 && loud)
+      tickets = (int)MathMax(1, MathRound(tickets * InpLoudSizeFrac));
+   MqlTick tk;
+   if (!CurrentTick(tk)) return;
+   double px = (side > 0) ? tk.ask : tk.bid;
+   double sl = (InpStopPts   > 0) ? (side > 0 ? px - InpStopPts   : px + InpStopPts)   : 0.0;
+   double tp = (InpTargetPts > 0) ? (side > 0 ? px + InpTargetPts : px - InpTargetPts) : 0.0;
+   string tag = StringFormat("zee_%s_D%d_m%d", (side > 0 ? "buy" : "sell"), dia, mask);
+   int placed = 0; double total = 0;
+   for (int q = 0; q < tickets; q++) {
+      double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
+      if (InpMaxRisk > 0 && total + lots > InpMaxRisk + 1e-9) break;
+      bool ok = (side > 0) ? trade.Buy (lots, _Symbol, 0, sl, tp, tag)
+                           : trade.Sell(lots, _Symbol, 0, sl, tp, tag);
+      if (!ok) break;
+      total += lots; placed++;
+   }
+   if (placed > 0) {
+      g_last_fire = TimeCurrent();
+      PrintFormat("[ZEE] BURST %s @%.2f — %d diamond(s) -> %d ticket(s), pre-tested ground",
+                  side > 0 ? "BUY" : "SELL", px, dia, placed);
+   }
+}
+
+void ProbeManage() {
+   if (g_probe_ticket == 0) return;
+   if (!PositionSelectByTicket(g_probe_ticket)) {            // swept by hold or closed
+      g_probe_ticket = 0; return;
+   }
+   if (TimeCurrent() < g_probe_deadline) return;
+   double cur = PositionGetDouble(POSITION_PRICE_CURRENT);
+   double moved = (cur - g_probe_open) * g_probe_side;
+   trade.PositionClose(g_probe_ticket);                       // scout's job is done either way
+   g_probe_ticket = 0;
+   if (moved >= InpProbeMinPts) {
+      PrintFormat("[ZEE] [PROBE] conviction %.2f pts -> BURST", moved);
+      FireBasket(g_probe_side, g_probe_dia, g_probe_mask, g_probe_loud);  // pre-tested environment
+   } else if (InpVerbose)
+      PrintFormat("[ZEE] [PROBE] only %.2f pts -> retreat, no basket", moved);
+}
+
 void OnTick() {
+   ProbeManage();
    AgeOut();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;
