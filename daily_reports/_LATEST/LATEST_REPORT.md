@@ -172,6 +172,17 @@ v1.29 configuration (holds 8/12/20 vs h5, six periods, real ticks): every longer
 fails promotion — h8 −372, h12 −363, h20 −791 vs baseline. Only May improves, ever.
 h5 stays. That basket's loss is the premium on a policy the receipts say to keep.
 
+## 4d. v1.30 — THE 3-MINUTE CLOCK (2026-08-18, after midnight)
+
+Zee watched ZeeSimple's quick scratches live and asked to port its exit to ZeeUHV. The
+grid (6 exit ports x 6 periods vs v1.29): the FULL port fails (SL2 whipsaws, h2 starves
+June/July), but **SL5 h3 passes: +288.68, better in 5 of 6 incl. both hostile months,
+April flips positive**. With last night's h8/12/20 sweep the clock is now bracketed
+from BOTH sides — these entries pay by minute 3 or not at all. Shipped as ZeeUHV v1.30
++ Loud v1.2 (clocks kept identical so the loud experiment measures the entry).
+Campaign ledger: -1,615 -> -639 (v1.29) -> **-351** (v1.30), four of six periods green.
+ZeeSimple live forward: 14 closes, 10W/4L, +$6.29 at 0.01 lots — collecting.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by

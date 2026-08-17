@@ -35,7 +35,7 @@
 //| and the comparison is then like-for-like on the same tape.        |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.1"
+#property version   "1.2"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -96,7 +96,7 @@ input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W
 // that a SECOND, independent August window (10-13 Aug) also preferred short holds. It is a
 // property of this regime, and this is the regime being traded. If the tape turns into
 // March, revisit this line first.
-input int    InpMaxHoldMin  = 5;    // InpMaxHoldMin — 5, Zee 2026-08-15, fitted to the live window
+input int    InpMaxHoldMin  = 3;    // 5 -> 3 with ZeeUHV v1.30 (2026-08-18) — exits stay IDENTICAL across both EAs so the loud-entry experiment measures the ENTRY, not a clock difference
 
 input group "── Housekeeping ──"
 input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent SETUPS (a stack counts as one)
