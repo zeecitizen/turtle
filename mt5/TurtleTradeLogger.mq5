@@ -17,7 +17,14 @@
 //|  Claude reads this file every 5 minutes for actual P&L.         |
 //+------------------------------------------------------------------+
 #property copyright "Turtle Trader by M. Zeeshan"
-#property version   "1.03"
+#property version   "1.04"
+// v1.04 (2026-08-17): BACKFILL. The logger was purely event-driven — OnTradeTransaction
+//   was its ONLY source, so any deal that closed while the terminal was off (a server-side
+//   SL, a restart, a reload) was lost forever. Found by reconciling against the broker's
+//   own ReportHistory export: 96 positions missing since Aug 3, including all six −$50
+//   stop-outs of the 17 Aug 10:21 basket (−$501.40 of that day's true −$561.90 was
+//   invisible). OnInit now replays broker history since the last logged row and appends
+//   every closed deal the file does not already contain, deduped by deal_ticket.
 // v1.03 (2026-06-09): magic 88005 re-mapped BTC_S3 → S1_M1 (S1Trader M1 scalp instance).
 //   Magic 88005 was originally for BtcS3M30Trader but that EA is dead; we re-used 88005
 //   for S1Trader's M1 instance. CSV labels were misleading (showed "BTC_S3" for XAUUSD
@@ -49,6 +56,117 @@ string EaNameForMagic(long m) {
    return "EA_" + IntegerToString(m);
 }
 
+// Deal tickets already present in the CSV — the dedup key for backfill AND for live
+// writes, so a deal can never be logged twice even across restarts.
+ulong  g_known[];
+int    g_known_n = 0;
+
+bool KnownDeal(ulong deal)
+{
+   for (int i = 0; i < g_known_n; i++) if (g_known[i] == deal) return true;
+   return false;
+}
+
+void RememberDeal(ulong deal)
+{
+   ArrayResize(g_known, g_known_n + 1);
+   g_known[g_known_n++] = deal;
+}
+
+// Write one closed (or open, if enabled) deal to the CSV. Used by the live event
+// handler and by the backfill alike — one writer, one format.
+bool LogDeal(ulong deal)
+{
+    if (!HistoryDealSelect(deal)) return false;
+
+    long deal_entry = HistoryDealGetInteger(deal, DEAL_ENTRY);
+    bool is_close   = (deal_entry == DEAL_ENTRY_OUT || deal_entry == DEAL_ENTRY_INOUT);
+    bool is_open    = (deal_entry == DEAL_ENTRY_IN);
+    if (!(is_close || (InpLogOpens && is_open))) return false;
+    if (KnownDeal(deal)) return false;
+
+    datetime deal_time   = (datetime)HistoryDealGetInteger(deal, DEAL_TIME);
+    ulong    pos_ticket  = HistoryDealGetInteger(deal, DEAL_POSITION_ID);
+    string   symbol      = HistoryDealGetString(deal,  DEAL_SYMBOL);
+    long     deal_type   = HistoryDealGetInteger(deal, DEAL_TYPE);
+    double   volume      = HistoryDealGetDouble(deal,  DEAL_VOLUME);
+    double   price       = HistoryDealGetDouble(deal,  DEAL_PRICE);
+    double   profit      = HistoryDealGetDouble(deal,  DEAL_PROFIT);
+    double   commission  = HistoryDealGetDouble(deal,  DEAL_COMMISSION);
+    double   swap        = HistoryDealGetDouble(deal,  DEAL_SWAP);
+    string   comment     = HistoryDealGetString(deal,  DEAL_COMMENT);
+    long     magic       = HistoryDealGetInteger(deal, DEAL_MAGIC);
+
+    string close_direction = (deal_type == DEAL_TYPE_SELL) ? "BUY_closed" : "SELL_closed";
+    if (is_open)
+        close_direction = (deal_type == DEAL_TYPE_BUY) ? "BUY_open" : "SELL_open";
+
+    double net_pnl = profit + commission + swap;
+    StringReplace(comment, ",", ";");
+    StringReplace(comment, "\n", " ");
+    StringReplace(comment, "\r", "");
+
+    string line = StringFormat("%s,%I64u,%I64u,%s,%s,%.2f,%.5f,%.2f,%.2f,%.2f,%.2f,%s,%I64d,%s\n",
+                               TimeToString(deal_time, TIME_DATE|TIME_SECONDS),
+                               deal, pos_ticket, symbol, close_direction, volume, price,
+                               profit, commission, swap, net_pnl, comment,
+                               magic, EaNameForMagic(magic));
+
+    int h = FileOpen(InpFileName, FILE_READ|FILE_WRITE|FILE_TXT|FILE_COMMON|FILE_ANSI);
+    if (h == INVALID_HANDLE)
+    {
+        PrintFormat("TurtleTradeLogger: ERROR opening file err=%d", GetLastError());
+        return false;
+    }
+    FileSeek(h, 0, SEEK_END);
+    FileWriteString(h, line);
+    FileClose(h);
+    RememberDeal(deal);
+    return true;
+}
+
+// Replay broker history and append every closed deal the CSV does not already hold.
+// Runs at init — so a restart HEALS the file instead of leaving a silent hole.
+void BackfillMissedDeals()
+{
+    // 1. what the file already knows, and when its record ends
+    datetime last = 0;
+    int h = FileOpen(InpFileName, FILE_READ|FILE_TXT|FILE_COMMON|FILE_ANSI);
+    if (h != INVALID_HANDLE)
+    {
+        while (!FileIsEnding(h))
+        {
+            string parts[];
+            if (StringSplit(FileReadString(h), ',', parts) < 3) continue;
+            ulong dt = (ulong)StringToInteger(parts[1]);
+            if (dt == 0) continue;                       // header or malformed
+            if (!KnownDeal(dt)) RememberDeal(dt);
+            datetime t = StringToTime(parts[0]);
+            if (t > last) last = t;
+        }
+        FileClose(h);
+    }
+
+    // 2. replay at least the last 14 days, and further back if the file's record ends
+    //    earlier than that — the dedup set makes a wide window safe, only slower.
+    datetime from = TimeCurrent() - 14 * 86400;
+    if (last > 0 && last - 86400 < from) from = last - 86400;
+    if (!HistorySelect(from, TimeCurrent() + 3600))
+    {
+        Print("TurtleTradeLogger: backfill HistorySelect failed");
+        return;
+    }
+    int added = 0;
+    int total = HistoryDealsTotal();
+    for (int i = 0; i < total; i++)
+    {
+        ulong deal = HistoryDealGetTicket(i);
+        if (deal != 0 && LogDeal(deal)) added++;
+    }
+    PrintFormat("TurtleTradeLogger: backfill scanned %d deals since %s — appended %d missed",
+                total, TimeToString(from, TIME_DATE|TIME_SECONDS), added);
+}
+
 //+------------------------------------------------------------------+
 //| EA init — write header if file is new                            |
 //+------------------------------------------------------------------+
@@ -71,11 +189,14 @@ int OnInit()
                     InpFileName, GetLastError());
     }
 
+    // Heal any hole left by downtime BEFORE resuming live logging.
+    BackfillMissedDeals();
+
     // Timer drives the live open-positions snapshot (covers EVERY magic incl.
     // manual/Human trades — the per-EA heartbeats only see their own magic).
     EventSetTimer(InpPosRefresh > 0 ? InpPosRefresh : 2);
 
-    PrintFormat("TurtleTradeLogger v1.02 ready → fills=%s, positions=%s every %ds",
+    PrintFormat("TurtleTradeLogger v1.04 ready → fills=%s, positions=%s every %ds",
                 InpFileName, InpPosFile, InpPosRefresh);
     return INIT_SUCCEEDED;
 }
@@ -144,83 +265,11 @@ void OnTradeTransaction(const MqlTradeTransaction &trans,
     if (trans.type != TRADE_TRANSACTION_DEAL_ADD)
         return;
 
-    // Pull deal details from history
-    if (!HistoryDealSelect(trans.deal))
+    if (!LogDeal(trans.deal))
         return;
-
-    long deal_entry = HistoryDealGetInteger(trans.deal, DEAL_ENTRY);
-
-    // Decide which entries to log
-    bool is_close   = (deal_entry == DEAL_ENTRY_OUT || deal_entry == DEAL_ENTRY_INOUT);
-    bool is_open    = (deal_entry == DEAL_ENTRY_IN);
-    bool should_log = is_close || (InpLogOpens && is_open);
-
-    if (!should_log)
-        return;
-
-    // --- Read deal fields ---
-    datetime deal_time   = (datetime)HistoryDealGetInteger(trans.deal, DEAL_TIME);
-    ulong    deal_ticket = trans.deal;
-    ulong    pos_ticket  = HistoryDealGetInteger(trans.deal, DEAL_POSITION_ID);
-    string   symbol      = HistoryDealGetString(trans.deal,  DEAL_SYMBOL);
-    long     deal_type   = HistoryDealGetInteger(trans.deal, DEAL_TYPE);
-    double   volume      = HistoryDealGetDouble(trans.deal,  DEAL_VOLUME);
-    double   price       = HistoryDealGetDouble(trans.deal,  DEAL_PRICE);
-    double   profit      = HistoryDealGetDouble(trans.deal,  DEAL_PROFIT);
-    double   commission  = HistoryDealGetDouble(trans.deal,  DEAL_COMMISSION);
-    double   swap        = HistoryDealGetDouble(trans.deal,  DEAL_SWAP);
-    string   comment     = HistoryDealGetString(trans.deal,  DEAL_COMMENT);
-    long     magic       = HistoryDealGetInteger(trans.deal,  DEAL_MAGIC);
-    string   ea_name     = EaNameForMagic(magic);
-
-    // Direction: closing deal type is OPPOSITE to the position direction
-    // DEAL_TYPE_BUY = buying back a short (closing short) → position was SELL
-    // DEAL_TYPE_SELL = selling a long (closing long) → position was BUY
-    string close_direction = (deal_type == DEAL_TYPE_SELL) ? "BUY_closed" : "SELL_closed";
-    if (is_open)
-        close_direction = (deal_type == DEAL_TYPE_BUY) ? "BUY_open" : "SELL_open";
-
-    double net_pnl = profit + commission + swap;
-
-    // Sanitise comment: remove commas and newlines
-    StringReplace(comment, ",", ";");
-    StringReplace(comment, "\n", " ");
-    StringReplace(comment, "\r", "");
-
-    // Format time string (broker server time — not UTC; adjust +3h for UTC if Moscow broker)
-    string time_str = TimeToString(deal_time, TIME_DATE|TIME_SECONDS);
-
-    // Build CSV line
-    string line = StringFormat("%s,%I64u,%I64u,%s,%s,%.2f,%.5f,%.2f,%.2f,%.2f,%.2f,%s,%I64d,%s\n",
-                               time_str,
-                               deal_ticket,
-                               pos_ticket,
-                               symbol,
-                               close_direction,
-                               volume,
-                               price,
-                               profit,
-                               commission,
-                               swap,
-                               net_pnl,
-                               comment,
-                               magic,
-                               ea_name);
-
-    // Append to CSV (open, seek to end, write, close)
-    int h = FileOpen(InpFileName, FILE_READ|FILE_WRITE|FILE_TXT|FILE_COMMON|FILE_ANSI);
-    if (h == INVALID_HANDLE)
-    {
-        PrintFormat("TurtleTradeLogger: ERROR opening file err=%d", GetLastError());
-        return;
-    }
-    FileSeek(h, 0, SEEK_END);
-    FileWriteString(h, line);
-    FileClose(h);
 
     // Log to MT5 journal tab as well
-    PrintFormat("TurtleTradeLogger: deal=%I64u pos=%I64u %s %s %.2f lots  net=$%.2f",
-                deal_ticket, pos_ticket, close_direction, symbol, volume, net_pnl);
+    PrintFormat("TurtleTradeLogger: logged deal=%I64u", trans.deal);
 }
 
 //+------------------------------------------------------------------+
