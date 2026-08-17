@@ -34,16 +34,28 @@
 //|  discretionary CUT, and six mechanical attempts failed to        |
 //|  reproduce it. This is attempt seven, with its own receipts.     |
 //|  Whatever the tester says, THAT is the number — not 94%.         |
+//|                                                                  |
+//|  ATTEMPT SEVEN'S RECEIPTS (2026-08-17, seven exits, real ticks): |
+//|  every arm LOSES. Best (SL2/TP1/h120): 140-230 trades/day at     |
+//|  50-56% WR, -$2.10/trade — five of six fortnights BANKRUPT the   |
+//|  $4,123 tester account at 0.10 lots. The per-trade loss is       |
+//|  roughly the SPREAD: an every-retracement trigger is ~a random   |
+//|  entry (see NullEntry, §1.8 of the 13-Aug report), and 200       |
+//|  random entries/day pay the broker 200 spreads with no edge to   |
+//|  cover them. Frequency without selection is rent, not tempo.     |
 //+------------------------------------------------------------------+
 #property copyright "Zee + Claude"
-#property version   "1.00"
+#property version   "1.01"
 #property strict
 
 #include <Trade/Trade.mqh>
 CTrade trade;
 
 input group "── Identity ──"
-input double InpLots        = 0.10;
+input double InpLots        = 0.01; // SAFETY DEFAULT after the 2026-08-17 sweep: at 0.10 the
+                                    // best exit tested still loses ~$2.10/trade at 170-230
+                                    // trades/day. 0.01 caps the tuition while live-forward
+                                    // evidence accumulates. Raise ONLY with new receipts.
 input long   InpMagic       = 88111;
 
 input group "── Trend (the only opinion this EA holds) ──"
@@ -58,7 +70,7 @@ input int    InpCooldownBar = 0;     // 0 = every signal (his instruction)
 input double InpMinBody     = 0.00;  // optional law, OFF: min body of resumption bar
 
 input group "── Exit: the mechanical cut ──"
-input double InpStopPts     = 1.0;   // sub-point stops die to spread; 1.0 = $10 at 0.10
+input double InpStopPts     = 2.0;   // best of 7 exits swept 2026-08-17 (still negative)
 input double InpTargetPts   = 1.0;
 input int    InpMaxHoldSec  = 120;   // his holds: 6s-3min. Scratch what has not worked.
 
