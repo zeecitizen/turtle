@@ -183,6 +183,40 @@ from BOTH sides — these entries pay by minute 3 or not at all. Shipped as ZeeU
 Campaign ledger: -1,615 -> -639 (v1.29) -> **-351** (v1.30), four of six periods green.
 ZeeSimple live forward: 14 closes, 10W/4L, +$6.29 at 0.01 lots — collecting.
 
+## 4e. THE LADDER (2026-08-18 ~3 AM) — the frequency-vs-edge curve, drawn
+
+Zee: "add the laws back one rung at a time and measure where each rung puts us."
+ZeeSimple v1.10 grew three faithful law-rungs (default OFF); four configs x six
+periods at 0.01 lots (uncensorable):
+
+```
+R0 bare            182.6/day  53.4%  -2,516.80  -0.201/trade
+R1 +retracement     66.0/day  54.7%    -815.84  -0.181   <- Feb-11's 69/day lives HERE
+R2 +structure       32.5/day  55.8%    -343.98  -0.155      (AUG positive from R1 up)
+R3 +quiet-break     17.9/day  56.4%    -161.33  -0.133      (JUL positive at R2/R3)
+```
+
+Monotonic — every law buys expectancy; the laws are real. R1 = "every REAL
+retracement" lands at Zee's exact Feb-11 tempo and is PROFITABLE in August tape.
+No rung crosses zero over mixed regimes: hostile months get cheaper, never green.
+**The residual is not a missing law — it is the REGIME.** Open question #1 (what
+distinguishes Aug/May from Mar/Apr, in advance) is now formally the last unsolved
+piece: R1's tempo gated by a kind-regime detector is the closest mechanical Feb-11
+that can exist. Nothing shipped; all rungs default off.
+
+## 4f. BACKTEST-vs-LIVE VERIFICATION (Zee's protocol: replay the live day, demand
+the same trades at the same times)
+
+**Friday Aug 14: both live fires reproduced TO THE SECOND** with identical side,
+diamonds, tickets and the unforgeable volume fingerprint (uhv 173/brk 162 · uhv
+206/brk 145). Price prints differed because Friday's LIVE quote feed was frozen near
+4366 (the documented "2026-08-14 fault" that birthed the stale-quote guard) — live
+printed the frozen quote; the tester replays the true tape. Tester's 5 extra fires =
+windows the tick-starved live EA never evaluated. Verdict: **the tester is faithful;
+that era's live side was the defective one, and it has since been guarded.**
+Aug-17's 7-fire replay is queued — the broker had not yet published the day's ticks
+(Bars: 0 at 3 AM; retry in the morning).
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
