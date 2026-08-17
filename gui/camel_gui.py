@@ -315,7 +315,9 @@ class Cockpit:
         import csv as _csv
         top = tk.Toplevel(self.root); top.title("📜 Trades — click 🔍 to inspect the setup")
         top.configure(bg=BG)
-        head = tk.Label(top, text="XAUUSD fills (Karachi time) · held · — 🔍 draws the UHV, trigger lines, BO candle",
+        head = tk.Label(top, text="XAUUSD fills (Karachi time) · held · — 🔍 draws the UHV, "
+                                  "trigger lines, BO candle\n"
+                                  "CLOSED fills only — a position still open cannot appear here",
                         font=("Segoe UI", 13, "bold"), bg=BG, fg=FG)
         head.pack(pady=(10, 6))
         canvas = tk.Canvas(top, bg=BG, highlightthickness=0,
@@ -340,6 +342,7 @@ class Cockpit:
             durs = {}
 
         rows = []
+        _seen = set()
         try:
             for r in self.FILLS_F.read_text(errors="ignore").splitlines():
                 c = r.split(",")
@@ -352,10 +355,16 @@ class Cockpit:
                 # gold cockpit was listing Bitcoin fills as if they were ours. A cockpit
                 # that shows another instrument's P&L is worse than one showing nothing.
                 if "XAU" not in c[3].upper(): continue
+                # DEDUP. turtle_fills.csv repeats rows — 17 Aug held 82 lines for 62 real
+                # tickets — and the duplicates were eating the display budget, so a third
+                # of the day silently vanished (Zee 2026-08-17).
+                key = (c[1], c[2])
+                if key in _seen: continue
+                _seen.add(key)
                 rows.append((c[0], c[4].replace("_closed", ""), lots, float(c[6]), pnl))
         except Exception:
             pass
-        for ts, side, lots, closepx, pnl in reversed(rows[-40:]):
+        for ts, side, lots, closepx, pnl in reversed(rows[-250:]):
             r = tk.Frame(frame, bg=BG); r.pack(fill="x", pady=1)
             col = "#2f9e44" if pnl > 0 else "#e03131"
             tk.Label(r, text=_to_karachi(ts, _karachi_shift(self.FILLS_F)), font=("Consolas", 11), bg=BG, fg=DIM,

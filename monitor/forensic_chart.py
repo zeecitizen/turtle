@@ -136,9 +136,12 @@ def _resolve_zeeuhv(close_local, side):
             continue
         day = datetime.strptime(stem, "%Y%m%d").date()
         for l in _read_log(lf):
-            if "[ZEE]" not in l or "diamond(s)" not in l:
+            # BOTH EAs, not just the live one. ZeeUHV_Loud_Breakout (magic 88104) tags
+            # its lines [LOUD], so every one of its trades reported "no matching EA fire
+            # line" until this accepted the second tag (Zee 2026-08-17).
+            if ("[ZEE]" not in l and "[LOUD]" not in l) or "diamond(s)" not in l:
                 continue
-            m = re.search(r"(\d\d:\d\d:\d\d).*\[ZEE\]\s+(BUY|SELL)\s+@([\d.]+)", l)
+            m = re.search(r"(\d\d:\d\d:\d\d).*\[(?:ZEE|LOUD)\]\s+(BUY|SELL)\s+@([\d.]+)", l)
             if not m or m.group(2) != want:
                 continue
             lt = datetime.combine(day, datetime.strptime(m.group(1), "%H:%M:%S").time())
