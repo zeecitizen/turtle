@@ -146,7 +146,10 @@ def _karachi_shift(fills_path):
             bt = datetime.strptime(last.split(",")[0], "%Y.%m.%d %H:%M:%S")
             mt = datetime.fromtimestamp(os.path.getmtime(fills_path))
             h = round((mt - bt).total_seconds() / 3600)
-            if -12 <= h <= 12:
+            # Only +2 and +3 are physically possible (broker UTC+2/+3, Karachi UTC+5).
+            # Anything else means the newest row was a BACKFILL — written long after its
+            # broker stamp — and the mtime gap is downtime, not timezone (2026-08-17).
+            if h in (2, 3):
                 _KARACHI_SHIFT_H = h
     except Exception:
         pass
@@ -364,6 +367,10 @@ class Cockpit:
                 rows.append((c[0], c[4].replace("_closed", ""), lots, float(c[6]), pnl))
         except Exception:
             pass
+        # SORT BY BROKER TIME, not file order. The logger's v1.04 backfill appends
+        # recovered deals at the END of the file regardless of when they closed, so
+        # "last 250 lines" is no longer "latest 250 trades" (Zee 2026-08-17).
+        rows.sort(key=lambda r: r[0])
         for ts, side, lots, closepx, pnl in reversed(rows[-250:]):
             r = tk.Frame(frame, bg=BG); r.pack(fill="x", pady=1)
             col = "#2f9e44" if pnl > 0 else "#e03131"
