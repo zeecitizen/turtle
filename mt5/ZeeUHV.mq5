@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.26"
+#property version   "1.27"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -204,6 +204,14 @@ input int    InpClimaxLook  = 0;    // InpClimaxLook — 0 = off. UHV must have 
 // rule was measured today and tightening it only removed winners, so this tests the opposite
 // direction of the same dial.
 input double InpBrkVolMin   = 0.0;  // InpBrkVolMin — 0 = off. Breakout volume must be ABOVE this fraction of the UHV's. // InpMaxSpreadPts — 0 = off. Refuse entry above this spread. Measured mean 0.2014, peak 0.56 — and 0.56 is 56% of a 1-point target.
+// ── LAW 10 CANDIDATES (2026-08-17, both default OFF — measurement first) ─────────
+// Zee, forensic on the 12:21 basket: "the displacement was shallow — a 15-cent
+// close-through on 90% effort. That's a testable law." The breakout closed 4397.04
+// against a 4397.19 trigger (0.15 pts) carrying 215/240 = 90% of the UHV's volume:
+// huge effort, no result — absorption at support, and the reversal that followed
+// stopped all twelve tickets. Two independent reads of the same defect:
+input double InpBrkMarginPts = 0.0; // Law 10a: breakout must CLOSE >= this many pts beyond the trigger (0 = off)
+input double InpBrkVolMaxFrac = 0.0; // Law 10b: breakout vol <= this frac of UHV vol (0 = off; entry already requires < 1.0)
 
 // Higher-timeframe alignment. Measured as a GATE across 8 periods: drawdown lower or
 // equal in 8/8 and 18% better per trade. As a DIAMOND it was worse than shipped, so
@@ -421,6 +429,17 @@ bool BreakoutIsBar1(int uhv, int side) {
       // PUSH THROUGH SUPPLY tests the OTHER direction: a breakout that is too quiet may be
       // no demand rather than absorption cleared.
       if (InpBrkVolMin > 0 && (double)BarVolume(k) < (double)BarVolume(uhv) * InpBrkVolMin)
+         return false;
+      // Law 10a — the close must DISPLACE, not graze. 15 cents is a rounding error,
+      // not a broken level (the 12:21 basket's whole story).
+      if (InpBrkMarginPts > 0) {
+         bool deep = wantGreen ? (bClose(k) > bHigh(uhv) + InpBrkMarginPts)
+                               : (bClose(k) < bLow(uhv)  - InpBrkMarginPts);
+         if (!deep) return false;
+      }
+      // Law 10b — near-UHV effort with no result is absorption, not a breakout.
+      if (InpBrkVolMaxFrac > 0 &&
+          (double)BarVolume(k) > (double)BarVolume(uhv) * InpBrkVolMaxFrac)
          return false;
       return (k == 1);
    }
