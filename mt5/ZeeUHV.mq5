@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.30"
+#property version   "1.32"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -189,6 +189,15 @@ input bool   InpImpulseOrigin = true;  // Law 9 LIVE 2026-08-17 (Zee: "make it L
                                        // (LIVE +14.54, Jun +308.52 -> POSITIVE, Jul +82.70) AND
                                        // hostile (Mar +202.42), at the cost of Apr -66.12 and
                                        // May -104.68. ~10% fewer tickets.
+// ── RANK-N (2026-08-18, default 1 = shipped behaviour byte-identical) ────────────
+// The pipeline census answered Zee's "why is our trade count so low": of 4,137 August
+// bars, 1,439 retracements died because the SINGLE loudest candidate failed a law
+// (887 body<min, 552 neighbour-louder) and no second candidate was ever examined.
+// His own rank rule from the labels — "every UHV in the retracement, not only the
+// loudest" — walks candidates by volume rank and takes the FIRST that passes every
+// law AND is actually broken by bar 1 (the v13 FindUhvRanked semantics, +46%% Aug in
+// the 08-13 receipts). Ships only with fresh six-period receipts, as always.
+input int    InpUhvRank      = 1;    // how many volume-ranked candidates may audition
 input double InpUhvVolDia   = 2.0;  // InpUhvVolDia — LAW 6, ACTIVE. +1 diamond when UHV volume >= SMA(vol,20) x this.
 input int    InpClimaxDia   = 60;   // InpClimaxDia — LAW 7, ACTIVE. +1 diamond when the UHV is the WIDEST bar of the last N.
 //
@@ -370,56 +379,76 @@ int RetracementOrigin(int side) {
 //|   only, so a louder candle outside it can never be chosen. That   |
 //|   single constraint answers most of his complaints.               |
 //+------------------------------------------------------------------+
-int FindUhv(int origin, int side) {
+bool UhvLawful(int k, int side) {
    bool wantRed = (side > 0);
-   int best = -1; long bestv = -1;
-   for (int k = origin; k >= 1; k--) {
-      if (wantRed  && !IsRed(k))   continue;
-      if (!wantRed && !IsGreen(k)) continue;
-      long v = BarVolume(k);
-      if (v > bestv) { bestv = v; best = k; }
+   long v = BarVolume(k);
+   double rng = bHigh(k) - bLow(k);
+   if (rng <= 0 || MathAbs(bClose(k) - bOpen(k)) / rng < InpUhvBodyMin) { g_ureason = 2; return false; }
+   if (InpSquatMax > 0) {
+      double atr = AtrAt(k);
+      if (atr <= 0 || rng > atr * InpSquatMax) { g_ureason = 9; return false; }
    }
-   if (best < 1) return -1;
-   double rng = bHigh(best) - bLow(best);
-   if (rng <= 0 || MathAbs(bClose(best) - bOpen(best)) / rng < InpUhvBodyMin) return -1;
-   if (InpSquatMax > 0) {                         // narrow spread on huge volume
-      double atr = AtrAt(best);
-      if (atr <= 0 || rng > atr * InpSquatMax) return -1;
+   if (InpClimaxLook > 0) {
+      for (int i = k + 1; i <= k + InpClimaxLook; i++)
+         if ((bHigh(i) - bLow(i)) > rng) { g_ureason = 9; return false; }
    }
-   if (InpClimaxLook > 0) {                       // widest bar in recent memory
-      for (int i = best + 1; i <= best + InpClimaxLook; i++)
-         if ((bHigh(i) - bLow(i)) > rng) return -1;
+   if (InpNextFails && k > 1) {
+      if (wantRed) { if (bLow(k - 1) < bLow(k)) { g_ureason = 9; return false; } }
+      else         { if (bHigh(k - 1) > bHigh(k)) { g_ureason = 9; return false; } }
    }
-   if (InpNextFails && best > 1) {                // the effort had no follow-through
-      if (wantRed) { if (bLow(best - 1) < bLow(best)) return -1; }
-      else         { if (bHigh(best - 1) > bHigh(best)) return -1; }
+   if (InpUhvVolMult > 0) {
+      double av = AvgVolBefore(k);
+      if (av <= 0 || (double)v < av * InpUhvVolMult) { g_ureason = 9; return false; }
    }
-   // --- Laws of Conviction: is this UHV worthy of the name? ---
-   if (InpUhvVolMult > 0) {                       // genuinely ULTRA, in absolute terms
-      double av = AvgVolBefore(best);
-      if (av <= 0 || (double)bestv < av * InpUhvVolMult) return -1;
+   if (InpUhvRangeATR > 0) {
+      double atr = AtrAt(k);
+      if (atr <= 0 || rng < atr * InpUhvRangeATR) { g_ureason = 9; return false; }
    }
-   if (InpUhvRangeATR > 0) {                      // effort vs result, against volatility
-      double atr = AtrAt(best);
-      if (atr <= 0 || rng < atr * InpUhvRangeATR) return -1;
-   }
-   if (InpUhvClosePos > 0) {                      // absorption, not collapse
-      double pos = (bClose(best) - bLow(best)) / MathMax(rng, 1e-9);
-      // for a BUY the UHV is RED and must hold up off its low; mirrored for a SELL
+   if (InpUhvClosePos > 0) {
+      double pos = (bClose(k) - bLow(k)) / MathMax(rng, 1e-9);
       double want = wantRed ? pos : (1.0 - pos);
-      if (want < InpUhvClosePos) return -1;
+      if (want < InpUhvClosePos) { g_ureason = 9; return false; }
    }
-   if (InpPreCompress > 0) {                      // breaking out of compression
-      double atr = AtrAt(best);
+   if (InpPreCompress > 0) {
+      double atr = AtrAt(k);
       double pre = 0;
-      for (int i = best + 1; i <= best + 5; i++) pre += (bHigh(i) - bLow(i));
+      for (int i = k + 1; i <= k + 5; i++) pre += (bHigh(i) - bLow(i));
       pre /= 5.0;
-      if (atr <= 0 || pre > atr * InpPreCompress) return -1;
+      if (atr <= 0 || pre > atr * InpPreCompress) { g_ureason = 9; return false; }
    }
-   if (BarVolume(best + 1) > bestv) return -1;      // louder than its neighbours
-   if (best > 1 && BarVolume(best - 1) > bestv) return -1;
-   return best;
+   if (BarVolume(k + 1) > v) { g_ureason = 7; return false; }       // louder neighbours
+   if (k > 1 && BarVolume(k - 1) > v) { g_ureason = 7; return false; }
+   g_ureason = 0;
+   return true;
 }
+
+// Walk candidates by DESCENDING volume (oldest wins ties, matching the old argmax),
+// up to InpUhvRank auditions: first candidate that is LAWFUL and BROKEN wins.
+// g_hadlawful tells the census whether death was a UHV law or the breakout stage.
+bool g_hadlawful = false;
+int FindUhvBroken(int origin, int side) {
+   bool wantRed = (side > 0);
+   int   idx[64]; long vol[64]; bool used[64]; int n = 0;
+   for (int k = origin; k >= 1 && n < 64; k--) {
+      if (wantRed ? IsRed(k) : IsGreen(k)) { idx[n] = k; vol[n] = BarVolume(k); used[n] = false; n++; }
+   }
+   g_hadlawful = false;
+   if (n == 0) { g_ureason = 1; return -1; }
+   int auditions = MathMax(1, InpUhvRank);
+   for (int r = 0; r < auditions; r++) {
+      int pick = -1; long pv = -1;
+      for (int j = 0; j < n; j++)
+         if (!used[j] && vol[j] > pv) { pv = vol[j]; pick = j; }
+      if (pick < 0) break;
+      used[pick] = true;
+      int c = idx[pick];
+      if (!UhvLawful(c, side)) continue;
+      g_hadlawful = true;
+      if (BreakoutIsBar1(c, side)) { g_ureason = 0; return c; }
+   }
+   return -1;
+}
+
 
 //+------------------------------------------------------------------+
 //| 3. THE BREAKOUT                                                   |
@@ -434,6 +463,7 @@ int FindUhv(int origin, int side) {
 //|    Y" (#17)                                                       |
 //+------------------------------------------------------------------+
 bool BreakoutIsBar1(int uhv, int side) {
+   g_breason = 1;                                    // default: no crossing yet
    if (uhv <= 1) return false;                       // B cannot be Y
    bool wantGreen = (side > 0);
    // the FIRST true crossing must be bar 1 — if an earlier bar already crossed,
@@ -443,11 +473,11 @@ bool BreakoutIsBar1(int uhv, int side) {
       if (!wantGreen && !IsRed(k))   continue;
       bool crossed = wantGreen ? (BodyHi(k) > bHigh(uhv)) : (BodyLo(k) < bLow(uhv));
       if (!crossed) continue;
-      if (BarVolume(k) >= BarVolume(uhv)) return false;   // must be quieter
+      if (BarVolume(k) >= BarVolume(uhv)) { g_breason = 2; return false; }   // must be quieter
       // PUSH THROUGH SUPPLY tests the OTHER direction: a breakout that is too quiet may be
       // no demand rather than absorption cleared.
       if (InpBrkVolMin > 0 && (double)BarVolume(k) < (double)BarVolume(uhv) * InpBrkVolMin)
-         return false;
+         { g_breason = 2; return false; }
       // Law 10a — the close must DISPLACE, not graze. 15 cents is a rounding error,
       // not a broken level (the 12:21 basket's whole story).
       if (InpBrkMarginPts > 0) {
@@ -459,6 +489,7 @@ bool BreakoutIsBar1(int uhv, int side) {
       if (InpBrkVolMaxFrac > 0 &&
           (double)BarVolume(k) > (double)BarVolume(uhv) * InpBrkVolMaxFrac)
          return false;
+      g_breason = (k == 1) ? 0 : 3;
       return (k == 1);
    }
    return false;
@@ -694,11 +725,22 @@ bool CurrentTick(MqlTick &out) {
    return true;
 }
 
+// ── PIPELINE CENSUS (Zee 2026-08-18: "i dont know why our trade count is so low..
+// i wanna check if some original law is hindering trades"). Counts every bar's fate
+// through the funnel; printed by OnTester as [CEN]. Zero effect on behaviour.
+long z_bars=0, z_maxopen=0, z_cooldown=0, z_gap=0, z_ranging=0,
+     z_no_origin=0, z_no_uhv=0, z_no_break=0, z_fired=0,
+     z_u_nocand=0, z_u_body=0, z_u_neigh=0, z_u_other=0,
+     z_b_nocross=0, z_b_loud=0, z_b_late=0;
+int g_ureason=0, g_breason=0;
+
 void TryFire() {
-   if (OpenCount() >= InpMaxOpen) return;
+   z_bars++;
+   if (OpenCount() >= InpMaxOpen) { z_maxopen++; return; }
    if (g_last_fire > 0 &&
-       (TimeCurrent() - g_last_fire) < InpCooldownBar * PeriodSeconds()) return;
+       (TimeCurrent() - g_last_fire) < InpCooldownBar * PeriodSeconds()) { z_cooldown++; return; }
    if (!WindowContinuous(InpTrendLook + 5)) {
+      z_gap++;
       if (InpVerbose) Print("[ZEE] [SKIP] gap in lookback");
       return;
    }
@@ -713,7 +755,7 @@ void TryFire() {
    int sides[2]; int nsides = 0;
    if (t != 0) { sides[0] = t; nsides = 1; }
    else if (!InpRequireTrend) { sides[0] = +1; sides[1] = -1; nsides = 2; }
-   else { if (InpVerbose) Print("[ZEE] [SKIP] ranging — his setup needs a trend"); return; }
+   else { z_ranging++; if (InpVerbose) Print("[ZEE] [SKIP] ranging — his setup needs a trend"); return; }
 
    int htf = 0;
    if (InpHtfMinutes > 0) {
@@ -727,10 +769,24 @@ void TryFire() {
       int try_side = sides[si];
       if (InpHtfMinutes > 0 && htf != 0 && try_side != htf) continue;
       int o = RetracementOrigin(try_side);
-      if (o < 0) continue;
-      int u = FindUhv(o, try_side);
-      if (u < 0) continue;
-      if (!BreakoutIsBar1(u, try_side)) continue;
+      if (o < 0) { z_no_origin++; continue; }
+      int u = FindUhvBroken(o, try_side);
+      if (u < 0) {
+         if (!g_hadlawful) {
+            z_no_uhv++;
+            if (g_ureason == 1) z_u_nocand++;
+            else if (g_ureason == 2) z_u_body++;
+            else if (g_ureason == 7) z_u_neigh++;
+            else z_u_other++;
+         } else {
+            z_no_break++;
+            if (g_breason == 2) z_b_loud++;
+            else if (g_breason == 3) z_b_late++;
+            else z_b_nocross++;
+         }
+         continue;
+      }
+      z_fired++;
       origin = o; uhv = u; side = try_side; break;
    }
    if (side == 0) {
@@ -979,6 +1035,16 @@ double OnTester() {
          if (msk >= 0 && msk < 64) { mcnt[msk]++; mpnl[msk] += p; if (p > 0) mwon[msk]++; }
       }
    }
+   Print("[CEN] ======== PIPELINE CENSUS — where the bars die ========");
+   PrintFormat("[CEN] bars evaluated %d", z_bars);
+   PrintFormat("[CEN]   blocked: maxopen %d · cooldown %d · gap %d", z_maxopen, z_cooldown, z_gap);
+   PrintFormat("[CEN]   RANGING (trend gate) %d  (%.1f%%)", z_ranging, z_bars>0 ? 100.0*z_ranging/z_bars : 0);
+   PrintFormat("[CEN]   no valid retracement origin %d", z_no_origin);
+   PrintFormat("[CEN]   no lawful UHV %d  = no counter candle %d · body<min %d · NEIGHBOUR LOUDER %d · other %d",
+               z_no_uhv, z_u_nocand, z_u_body, z_u_neigh, z_u_other);
+   PrintFormat("[CEN]   UHV found, no entry %d  = not crossed yet %d · crossing too LOUD %d · crossed LATE %d",
+               z_no_break, z_b_nocross, z_b_loud, z_b_late);
+   PrintFormat("[CEN]   FIRED %d", z_fired);
    Print("[DIA] ===== per-diamond breakdown (tickets, not baskets) =====");
    for (int i = 0; i < 8; i++) {
       if (cnt[i] == 0) continue;
