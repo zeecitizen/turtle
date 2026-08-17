@@ -276,8 +276,13 @@ M5          -25.40  -11.52  -92.40  -55.74  -54.22   +4.40  -234.88   -92.40
 with the worst period collapsing -384 -> -19 (20x variance reduction). It does not
 earn more — it stops bleeding: hostile months flatten to near zero at the cost of the
 kind months' cream. M5 failing both sides says M3 is a KNEE, not "slower is better".
-M2/M4 dial + M3 reproduction queued overnight; ships only if the shape holds and Zee
-says the word. (Accidental find, confounded, logged as curiosity: ZeeSimple-canonical
+**DIAL VERDICT (pre-dawn): M3 is a LONE SPIKE, not a plateau** — M2 −314.48,
+M3 +23.32 (reproduced to the cent), M4 −274.44. Neighbours as bad as M1 or worse =
+the stop-3 disguise. **M3 does NOT ship on this evidence.** One mechanical hypothesis
+survives before burial: on M3 the 3-min hold is EXACTLY ONE CANDLE (enter at open,
+judged at next open) — M2/M4 break that resonance. The one-candle-hold arm (M2/h2,
+M4/h4, M5/h5) is running: if hostile months flatten across TFs, the law is "the trade
+lives one candle" and M3 was merely where the live hold already obeyed it. (Accidental find, confounded, logged as curiosity: ZeeSimple-canonical
 on M5 went 78.6%% WR +26.64 in April.)
 
 ## 5. Open items
