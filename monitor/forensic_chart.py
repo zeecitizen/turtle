@@ -42,6 +42,66 @@ def load(day="08-07"):
     return rows
 
 
+# ── DEEP BAR SOURCES (Zee 2026-08-17: "can you also heal the forensics button") ──
+# load() reads the rolling live window plus a static history file — a few hundred
+# recent bars. Forensic on any trade older than that found NO BARS to draw, and the
+# GUI's message blamed the wrong thing ("no matching EA fire line" — the fire line
+# resolved fine, the chart just had nothing to stand on). Two deeper sources:
+#   1. tape_archive_xau.csv — the permanent OANDA record (its writer can die: it had
+#      been down since Aug 14 when this was written, which is how the gap surfaced)
+#   2. the TERMINAL itself — MT5 always holds full M1 history for its own symbol.
+#      Queried via mt5_bars_helper.py under x64 python, because the MetaTrader5
+#      wheel does not exist for the GUI's ARM64 interpreter.
+
+
+def _mt5_bars(lo, hi):
+    """Bars straight from the running terminal, in true UTC. [] on any failure."""
+    import subprocess
+    from datetime import timezone as _tz
+    helper = Path(__file__).parent / "mt5_bars_helper.py"
+    off = 5 - BROKER_TO_LOCAL_H                     # broker clock = UTC + off
+    for exe in (r"C:\Users\zeesh\AppData\Local\Python\pythoncore-3.14-64\python.exe",
+                "py"):
+        try:
+            r = subprocess.run([exe, str(helper), lo.isoformat(), hi.isoformat(), str(off)],
+                               capture_output=True, text=True, timeout=30)
+            if r.returncode != 0 or not r.stdout.strip():
+                continue
+            out = []
+            for ln in r.stdout.strip().splitlines():
+                p = ln.split(",")
+                if len(p) == 6:
+                    t = datetime.fromtimestamp(int(p[0]), tz=_tz.utc).replace(tzinfo=None)
+                    out.append((t, float(p[1]), float(p[2]), float(p[3]),
+                                float(p[4]), float(p[5])))
+            if out:
+                return out
+        except Exception:
+            continue
+    return []
+
+
+def load_deep(lo=None, hi=None):
+    """load() + the tape archive, and — if [lo, hi] is still thin — the terminal."""
+    rows = {x[0]: x for x in load()}
+    arch = Path(__file__).parent / "tape_archive_xau.csv"
+    if arch.exists():
+        try:
+            for r in csv.DictReader(open(arch, encoding="utf-8")):
+                t = datetime.fromtimestamp(int(r["time_unix"]),
+                                           tz=timezone.utc).replace(tzinfo=None)
+                rows.setdefault(t, (t, float(r["open"]), float(r["high"]),
+                                    float(r["low"]), float(r["close"]),
+                                    float(r["volume"])))
+        except Exception:
+            pass
+    if lo is not None and hi is not None:
+        if sum(1 for t in rows if lo <= t <= hi) < 8:   # too thin to draw
+            for x in _mt5_bars(lo, hi):
+                rows.setdefault(x[0], x)
+    return [rows[k] for k in sorted(rows)]
+
+
 def main():
     ap = argparse.ArgumentParser()
     for a in ("from", "to", "uhv", "bo"):
@@ -160,7 +220,8 @@ def _resolve_zeeuhv(close_local, side):
         # bar k is k minutes before the fire bar
         uhv_utc = (entry_utc - timedelta(minutes=int(um.group(1)))
                    ).replace(second=0, microsecond=0)
-        for r in load():                                    # the trigger the break crossed
+        for r in load_deep(uhv_utc - timedelta(minutes=3),
+                           uhv_utc + timedelta(minutes=3)):  # the trigger the break crossed
             if r[0] == uhv_utc:
                 lamp = r[2] if want == "BUY" else r[3]      # UHV high for a buy, low for a sell
                 break
@@ -350,8 +411,8 @@ def draw_trade(broker_ts, side, exit_px, out=None):
     if not r:
         # no fire line at all: still draw the price window around the close so the
         # trade can be inspected (Zee 2026-08-07 — a dead end is worse than a chart)
-        rows0 = load()
         ct = datetime.strptime(broker_ts, "%Y.%m.%d %H:%M:%S") - timedelta(hours=3)
+        rows0 = load_deep(ct - timedelta(seconds=1500), ct + timedelta(seconds=1500))
         win0 = [x for x in rows0 if abs((x[0] - ct).total_seconds()) <= 1500]
         if len(win0) < 8:
             return None
@@ -371,11 +432,11 @@ def draw_trade(broker_ts, side, exit_px, out=None):
         return out2
     if r["lamp"] is None:
         r["lamp"] = exit_px          # last resort: anchor the chart on the exit
-    rows = load()
     e_utc = r["entry_utc"]
     u_utc = r["uhv_utc"] or (e_utc - timedelta(minutes=10))
     lo = min(u_utc, e_utc) - timedelta(minutes=8)
     hi = e_utc + timedelta(minutes=10)
+    rows = load_deep(lo, hi)         # deep: archive + the terminal when the feed moved on
     win = [x for x in rows if lo <= x[0] <= hi]
     if len(win) < 8:
         return None
@@ -533,16 +594,21 @@ def draw_context(broker_ts, side, bars_back=180, out=None):
     line drawn through the swing peaks, so it is obvious at a glance what the trend
     and slope looked like when this trade was taken."""
     import trend_eyes as _TE
-    rows = load()
-    if not rows:
-        return None
     live = broker_ts is None
     r = None if live else resolve_trade(broker_ts, side)
     if live:
+        rows = load()
+        if not rows:
+            return None
         e_utc = rows[-1][0]
     else:
         e_utc = r["entry_utc"] if r else (datetime.strptime(broker_ts, "%Y.%m.%d %H:%M:%S")
                                           - timedelta(hours=3))
+        # deep window: enough for bars_back before the entry plus the aftermath
+        rows = load_deep(e_utc - timedelta(minutes=bars_back + 40),
+                         e_utc + timedelta(minutes=70))
+        if not rows:
+            return None
     ei = next((i for i, x in enumerate(rows)
                if x[0] <= e_utc < x[0] + timedelta(minutes=1)), None)
     if ei is None:
