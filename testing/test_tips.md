@@ -623,3 +623,19 @@ small enough to survive.
 Both faults belong in Part 4's family — **a confident, clean-looking result produced by
 something that did not do what it was asked.** That remains the dominant failure mode of
 this project, and it is now six for six.
+
+
+## Part 12 — A FRESHLY PUBLISHED DAY CAN BE CACHED HALF-BAKED (2026-08-18)
+
+Polling the tester for the just-closed day (Aug 17) every 20 minutes caught the broker
+MID-PUBLICATION: the rig cached bars that had highs/lows but NO CANDLE COLORS
+(open == close), and both EAs replayed the day with ZERO trades — while the live
+terminal's own record of the same day is 99.1%% colored. Bars and Ticks/Bars BOTH
+looked healthy (1,379 bars, 197 t/b), so the existing coverage checks passed.
+
+The cache never heals itself. Fix: delete bases/<server>/ticks/SYMBOL/YYYYMM.tkc and
+history/SYMBOL/YYYY.hcc, let the rig re-download.
+
+RULE: before trusting a same-day or next-morning replay, check the pipeline census —
+if "no valid retracement origin" swallows the day (origins are near-universal on real
+data: ~1%%), the data is half-baked and the run is VOID, whatever Bars says.

@@ -217,6 +217,24 @@ that era's live side was the defective one, and it has since been guarded.**
 Aug-17's 7-fire replay is queued — the broker had not yet published the day's ticks
 (Bars: 0 at 3 AM; retry in the morning).
 
+## 4g. ZEE'S FUNNEL PRICED · A NEW TESTER TRAP FOUND (morning, 2026-08-18)
+
+Zee's correction: he never meant rank-6 — he meant "a UHV in EVERY retracement" (his
+funnel: 100 trends -> 100 retracements -> 100 UHVs -> ~50 broken). Measured with the
+body and local-peak vetoes OFF (ZeeUHV v1.33 InpLocalPeak): the FREQUENCY arrives
+(87->374 LIVE trades, ~90-125/day) but the money leaves: -2,430.64 over six periods,
+worse in 5 of 6. The two vetoes are guardians worth $2,430 — the mechanical shadow of
+the glance his Feb-11 hand applied without noticing. April alone improves under every
+loosening ever tested (trend-off +75, body-.3 +31, no-veto +115): the regime whisper.
+Rank-6 (+121.86, passes promotion) stays shelved as an alternative — it answered a
+question he wasn't asking. Nothing shipped; v1.30 remains live.
+
+Also: the Aug-17 replay's "0 trades" was VOID — the rig cached a HALF-BAKED copy of
+the freshly published day (bars with ranges, no candle colors; live terminal's record
+is 99.1%% colored; Friday reproduces perfectly on the same binary). Cache deleted,
+re-downloading, watcher re-armed WITH a census-based half-baked-data guard.
+test_tips.md Part 12 records the trap.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
