@@ -235,6 +235,25 @@ is 99.1%% colored; Friday reproduces perfectly on the same binary). Cache delete
 re-downloading, watcher re-armed WITH a census-based half-baked-data guard.
 test_tips.md Part 12 records the trap.
 
+## 4h. THE CERTIFICATE, THE DIAL, AND v1.34 (2026-08-18, midday)
+
+**Backtest-vs-live verification COMPLETE.** Aug-17 replay on clean data (after the
+half-baked cache was caught and purged): **7/7 live fires reproduced exactly** — minute,
+side, volume fingerprint. Extras all named: one in the live disconnect window, one a
+setup live v1.29 correctly refused under Law 9, one borderline feed-vs-tape flip.
+With Friday's 2/2: the tester provably measures OUR strategy. (ZeeUHV_R1 on Aug 17:
+16 trades, 4W/12L, -7.49 at 0.01 — hostile tape, as the ladder predicts.)
+
+**The rank dial** {2,3,6,10}: +79.86 / +42.72 / +121.86 / +126.20 — every position
+positive, 6 == 10 in five of six periods = SATURATION (most retracements hold few
+serious candidates). Reproduction exact. Zee: "ship rank 6" -> **ZeeUHV v1.34 LIVE**:
+every retracement auditions up to six volume-ranked candidates; body and local-peak
+laws stay exactly as strict. Zee's two sentences reconciled in code.
+
+NOTE: ZeeUHV_Loud_Breakout still runs rank-1 (the rank refactor is not ported there
+yet) — its fires are now a strict SUBSET of ZeeUHV's; port + verify next session if
+the pairing is to stay exact.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
