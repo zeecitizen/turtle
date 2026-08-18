@@ -734,7 +734,7 @@ const server = http.createServer(async (req, res) => {
 
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
-    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/forming.png' && apexUrl !== '/api/context-now.png' && apexUrl !== '/api/versions.png' && apexUrl !== '/api/forensic.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && apexUrl !== '/docs' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/fills-history' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/forming.png' && apexUrl !== '/api/context-now.png' && apexUrl !== '/api/versions.png' && apexUrl !== '/api/forensic.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && apexUrl !== '/docs' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
       res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
       res.end();
       return;
@@ -2026,6 +2026,36 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
     res.end(JSON.stringify({ call: rd('trend_call.json'), watch: rd('case_watch.json'),
                              armed: rd('case_armed.json'), ts: Date.now() }));
+    return;
+  }
+
+  if (url === '/api/fills-history') {
+    // Per-EA gauge time-travel (Zee 2026-08-19): last 35 days of closed fills,
+    // deduped by (deal,position), trimmed to [broker_time16, magic, net].
+    try {
+      if (!global._fhCache || Date.now() - global._fhCache.at > 60000) {
+        const COMMON = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
+        const raw = fs.readFileSync(COMMON + 'turtle_fills.csv', 'utf8');
+        const cutoff = new Date(Date.now() - 35 * 86400000).toISOString().slice(0, 10).replace(/-/g, '.');
+        const seen = new Set(); const rows = [];
+        for (const ln of raw.split(/\r?\n/)) {
+          if (!ln) continue;
+          const c = ln.split(',');
+          if (!c[0] || c[0] < cutoff || !c[0].startsWith('202')) continue;
+          if (!(c[3] || '').toUpperCase().includes('XAU')) continue;
+          const key = c[1] + '_' + c[2];
+          if (seen.has(key)) continue;
+          seen.add(key);
+          rows.push([c[0].slice(0, 16), c.length >= 14 ? c[12] : '?', parseFloat(c[7] || '0')]);
+        }
+        global._fhCache = { at: Date.now(), rows };
+      }
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ rows: global._fhCache.rows }));
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: String(e) }));
+    }
     return;
   }
 
