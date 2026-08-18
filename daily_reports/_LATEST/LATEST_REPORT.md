@@ -254,7 +254,7 @@ NOTE: ZeeUHV_Loud_Breakout still runs rank-1 (the rank refactor is not ported th
 yet) — its fires are now a strict SUBSET of ZeeUHV's; port + verify next session if
 the pairing is to stay exact.
 
-## 4i. NIGHT 2 (2026-08-18 -> 19) — Zee's goodnight ideas, measured
+## 4i. NIGHT 2 (2026-08-17 -> 18) — Zee's goodnight ideas, measured
 
 **The PROBE-BURST (his design: 0.01 scout first, basket only into pre-tested ground),
 three temperaments:** 60s/0.10 -> -326.85 · 120s/0.20 -> +127.67 · 60s/any+ -> -318.13.
@@ -312,7 +312,7 @@ price of the kind months' cream). Passes the promotion letter (Jun kind ✓, Mar
 hostile ✓). Nothing shipped overnight; v1.34 on M1 remains exactly as he left it. (Accidental find, confounded, logged as curiosity: ZeeSimple-canonical
 on M5 went 78.6%% WR +26.64 in April.)
 
-## 4j. THE MARRIAGE CAMPAIGN (2026-08-19 afternoon) — 54 runs, nothing ships, much learned
+## 4j. THE MARRIAGE CAMPAIGN (2026-08-18 afternoon) — 54 runs, nothing ships, much learned
 
 Zee: "run as many experiments as you want to mix n match the two M1/M3." Verdicts:
 - **Consult dial = minefield**: look2 +300 / look3 −119 / look4 +103 / look5 +27 /

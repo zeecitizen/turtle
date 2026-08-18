@@ -1,7 +1,7 @@
 //+------------------------------------------------------------------+
 //|  ZeeUHV_M3.mq5 — SHOP B: the steady stall on the 3-minute chart  |
 //|                                                                  |
-//|  Zee, 2026-08-19: "make a new EA for shop B the 3 min one" —     |
+//|  Zee, 2026-08-18: "make a new EA for shop B the 3 min one" —     |
 //|  after the night-2 discovery: trades want ~3 minutes of LIFE and |
 //|  want to be JUDGED AT A CANDLE'S BOUNDARY. The M3 chart is where |
 //|  both hold at once, and this configuration posted the project's  |
