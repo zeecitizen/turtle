@@ -223,14 +223,14 @@ def _resolve_zeeuhv(close_local, side):
         bar_min = 3 if "[ZB]" in best[1] else 1
         uhv_utc = (entry_utc - timedelta(minutes=int(um.group(1)) * bar_min)
                    ).replace(second=0, microsecond=0)
-        for r in load_deep(uhv_utc - timedelta(minutes=3),
-                           uhv_utc + timedelta(minutes=3)):  # the trigger the break crossed
-            if r[0] == uhv_utc:
-                lamp = r[2] if want == "BUY" else r[3]      # UHV high for a buy, low for a sell
-                break
+        span = [r for r in load_deep(uhv_utc - timedelta(minutes=3),
+                                     uhv_utc + timedelta(minutes=3 * bar_min))
+                if uhv_utc <= r[0] < uhv_utc + timedelta(minutes=bar_min)]
+        if span:   # the trigger is the FULL candle's extreme (3 M1 slices for Shop B)
+            lamp = max(x[2] for x in span) if want == "BUY" else min(x[3] for x in span)
     if lamp is None:
         lamp = best[2]                                      # fall back to the logged entry
-    return dict(entry_utc=entry_utc, lamp=lamp, uhv_utc=uhv_utc, fire=best[1].strip())
+    return dict(entry_utc=entry_utc, lamp=lamp, uhv_utc=uhv_utc, fire=best[1].strip(), bar_min=bar_min)
 
 
 def resolve_trade(broker_ts, side):
@@ -405,7 +405,7 @@ def resolve_trade(broker_ts, side):
                     break
         except Exception:
             pass
-    return dict(entry_utc=entry_utc, lamp=lamp, uhv_utc=uhv_utc, fire=best[1].strip())
+    return dict(entry_utc=entry_utc, lamp=lamp, uhv_utc=uhv_utc, fire=best[1].strip(), bar_min=bar_min)
 
 
 def draw_trade(broker_ts, side, exit_px, out=None):
@@ -436,11 +436,23 @@ def draw_trade(broker_ts, side, exit_px, out=None):
     if r["lamp"] is None:
         r["lamp"] = exit_px          # last resort: anchor the chart on the exit
     e_utc = r["entry_utc"]
-    u_utc = r["uhv_utc"] or (e_utc - timedelta(minutes=10))
-    lo = min(u_utc, e_utc) - timedelta(minutes=8)
-    hi = e_utc + timedelta(minutes=10)
+    bm = int(r.get("bar_min", 1) or 1)             # Shop B draws in her own M3 candles
+    u_utc = r["uhv_utc"] or (e_utc - timedelta(minutes=10 * bm))
+    lo = min(u_utc, e_utc) - timedelta(minutes=8 * bm)
+    hi = e_utc + timedelta(minutes=10 * bm)
     rows = load_deep(lo, hi)         # deep: archive + the terminal when the feed moved on
     win = [x for x in rows if lo <= x[0] <= hi]
+    if bm > 1 and win:
+        buck = {}
+        for x in win:
+            key = int(x[0].timestamp()) // (60 * bm) * (60 * bm)
+            b = buck.get(key)
+            if b is None:
+                buck[key] = [x[0].replace(second=0) - timedelta(minutes=x[0].minute % bm),
+                             x[1], x[2], x[3], x[4], x[5]]
+            else:
+                b[2] = max(b[2], x[2]); b[3] = min(b[3], x[3]); b[4] = x[4]; b[5] += x[5]
+        win = [tuple(v) for k, v in sorted(buck.items())]
     if len(win) < 8:
         return None
     idx = pd.DatetimeIndex([x[0] + timedelta(hours=5) for x in win])
@@ -457,9 +469,9 @@ def draw_trade(broker_ts, side, exit_px, out=None):
     # to the FIRE bar and the breakout is the minute before it. Verified against Blueberry's
     # own bars for that trade: UHV 20:15 GREEN vol 206 and breakout 20:17 RED vol 145,
     # both matching the EA's log exactly. The chart was marking 20:18 — the green fire bar.
-    bo_utc = e_utc - timedelta(minutes=1)
+    bo_utc = e_utc - timedelta(minutes=bm)
     bi = next((i for i, x in enumerate(win)
-               if x[0] <= bo_utc < x[0] + timedelta(minutes=1)), None)
+               if x[0] <= bo_utc < x[0] + timedelta(minutes=bm)), None)
     uhv = win[ui] if ui is not None else None
     if uhv is None:
         # The UHV bar may be missing from the drawn window (a bridge gap, or a tape
