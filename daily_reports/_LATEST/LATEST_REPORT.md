@@ -280,9 +280,13 @@ kind months' cream. M5 failing both sides says M3 is a KNEE, not "slower is bett
 M3 +23.32 (reproduced to the cent), M4 −274.44. Neighbours as bad as M1 or worse =
 the stop-3 disguise. **M3 does NOT ship on this evidence.** One mechanical hypothesis
 survives before burial: on M3 the 3-min hold is EXACTLY ONE CANDLE (enter at open,
-judged at next open) — M2/M4 break that resonance. The one-candle-hold arm (M2/h2,
-M4/h4, M5/h5) is running: if hostile months flatten across TFs, the law is "the trade
-lives one candle" and M3 was merely where the live hold already obeyed it. (Accidental find, confounded, logged as curiosity: ZeeSimple-canonical
+judged at next open) — M2/M4 break that resonance. **THE RESONANCE IS REAL — "the trade lives ONE CANDLE" is the actual law.** Matching
+hold to one candle improved EVERY timeframe: M2 −314→−170, M4 −274→−140, M5 −235→−51
+(M3 +23 was already one-candle). March goes POSITIVE on M2 and M5, near-flat on M4 —
+the bankruptcy month flattens on every chart where the trade is judged exactly at the
+next candle's open. M3 was never magic; it was where the live 3-min hold accidentally
+obeyed the law. The completing cell — M1 with hold 1 (the law on the LIVE chart, no
+chart change needed) — is running; ship decision awaits it and Zee's word. (Accidental find, confounded, logged as curiosity: ZeeSimple-canonical
 on M5 went 78.6%% WR +26.64 in April.)
 
 ## 5. Open items
