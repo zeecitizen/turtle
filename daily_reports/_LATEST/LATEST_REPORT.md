@@ -329,6 +329,38 @@ self-aware switch (A stands down / quarter-sizes when her own rolling P&L is red
 carries) — no forecasting needed, rig-testable. Both shops live meanwhile: the week
 itself is the A/B experiment.
 
+## 4k. 🫀 THE SELF-AWARE SWITCH — the week's crown (night of Aug 19-20)
+
+Zee: "ok test it." The machine reads its own pulse (net of its last N closed
+tickets); red pulse -> quarter-size scouts (never stops — a stopped machine cannot
+feel the season change); green -> full stack. THE COURT'S VERDICT, pulse=20:
+
+```
+         v1.34      switch20       Δ
+LIVE     +99.68      +87.30      -12.38   ~tie
+Mar     -246.70      -87.40     +159.30   ✓✓
+Apr      +29.76      +98.46      +68.70   ✓ green
+May     -383.86      -90.64     +293.22   ✓✓✓
+Jun     +117.24     +130.30      +13.06   ✓ kind improves
+Jul     +155.00     +138.20      -16.80   small
+TOTAL   -228.88    **+276.22**  +505.10
+```
+
+**THE FIRST NET-POSITIVE M1 CONFIGURATION IN PROJECT HISTORY** — and the mechanism
+performed exactly as predicted: hostile months collapse, kind months untouched.
+Better/tied in 5 of 6. The dial is a HILL (pulse-10: +264.78; pulse-40 partial
+pre-crash: Mar +136.90). Season theory mechanically validated. SHIP DECISION
+(pulse-20 -> v1.44) awaits Zee's word in the morning.
+
+Caveats for the record: the pulse-40 completion run was VOID (six identical rows =
+stale-report re-reads; something from a crashed parent task held the rig — rerun in
+the morning). The original court task died at exit 127 mid-pulse-40; results above
+are from its valid completed arms. The Aug-18 Law-12 replay is still owed.
+
+The FEB-11 EXIT LAB (v1.43: scratch-on-revisit — his 18:41 cluster waited 25 min
+for the RETOUCH; that, not reflexes, made the tiny losses) runs the rest of the
+night; two rounds, judged on loss anatomy (target avgL ≈ -0.26 at court size).
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
