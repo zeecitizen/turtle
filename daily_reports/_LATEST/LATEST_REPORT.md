@@ -285,8 +285,31 @@ hold to one candle improved EVERY timeframe: M2 −314→−170, M4 −274→−
 (M3 +23 was already one-candle). March goes POSITIVE on M2 and M5, near-flat on M4 —
 the bankruptcy month flattens on every chart where the trade is judged exactly at the
 next candle's open. M3 was never magic; it was where the live 3-min hold accidentally
-obeyed the law. The completing cell — M1 with hold 1 (the law on the LIVE chart, no
-chart change needed) — is running; ship decision awaits it and Zee's word. (Accidental find, confounded, logged as curiosity: ZeeSimple-canonical
+obeyed the law. **The completing cell broke the pure law — and completed the true one.** M1/h1:
+−1,124.60 — catastrophic. One minute is not enough life for a 1-point target; the
+scratch kills winners before they arrive. The full matrix:
+
+```
+        hold=3min (wall-clock)     hold=ONE CANDLE
+M1           −228.88                 −1,124.60  (h1: candle too short for TP 1)
+M2           −314.48                   −170.44
+M3              =                       +23.32  (h3 IS one candle — the intersection)
+M4           −274.44                   −139.76
+M5           −234.88                    −50.58
+```
+
+SYNTHESIS — two separately-evidenced effects, and M3 is their unique intersection:
+(1) ~3 minutes of LIFE is the wall-clock optimum (proven twice on M1: h2 fails, h3
+beats h5/h8/h12/h20); (2) being JUDGED AT A CANDLE BOUNDARY stabilizes hostile months
+(improves M2/M4/M5 uniformly, March flattens or flips positive everywhere it holds).
+M3/h3 is the only cell where the optimal life equals exactly one candle. Not luck,
+not a magic timeframe — a mechanism with neighbourhood support on both axes.
+
+THE MORNING DECISION (Zee's, not mine): stay on M1 (earns the kind months: LIVE
++99.68, Jul +155; bleeds hostile: −384 worst) or move ZeeUHV to the M3 chart (first
+positive six-period total +23.32, worst period −19, near-flat everywhere — at the
+price of the kind months' cream). Passes the promotion letter (Jun kind ✓, Mar
+hostile ✓). Nothing shipped overnight; v1.34 on M1 remains exactly as he left it. (Accidental find, confounded, logged as curiosity: ZeeSimple-canonical
 on M5 went 78.6%% WR +26.64 in April.)
 
 ## 5. Open items
