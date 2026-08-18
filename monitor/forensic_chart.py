@@ -199,9 +199,9 @@ def _resolve_zeeuhv(close_local, side):
             # BOTH EAs, not just the live one. ZeeUHV_Loud_Breakout (magic 88104) tags
             # its lines [LOUD], so every one of its trades reported "no matching EA fire
             # line" until this accepted the second tag (Zee 2026-08-17).
-            if ("[ZEE]" not in l and "[LOUD]" not in l) or "diamond(s)" not in l:
+            if ("[ZEE]" not in l and "[LOUD]" not in l and "[ZB]" not in l) or "diamond(s)" not in l:
                 continue
-            m = re.search(r"(\d\d:\d\d:\d\d).*\[(?:ZEE|LOUD)\]\s+(BUY|SELL)\s+@([\d.]+)", l)
+            m = re.search(r"(\d\d:\d\d:\d\d).*\[(?:ZEE|LOUD|ZB)\]\s+(BUY|SELL)\s+@([\d.]+)", l)
             if not m or m.group(2) != want:
                 continue
             lt = datetime.combine(day, datetime.strptime(m.group(1), "%H:%M:%S").time())
@@ -217,8 +217,11 @@ def _resolve_zeeuhv(close_local, side):
     uhv_utc, lamp = None, None
     um = re.search(r"UHV (\d+) \(vol", best[1])
     if um:
-        # bar k is k minutes before the fire bar
-        uhv_utc = (entry_utc - timedelta(minutes=int(um.group(1)))
+        # bar k is k CANDLES before the fire bar — Shop B ([ZB]) lives on M3 candles,
+        # so her k counts threes of minutes (2026-08-18, her first native fire was
+        # invisible here until the tag and the bar size were both taught)
+        bar_min = 3 if "[ZB]" in best[1] else 1
+        uhv_utc = (entry_utc - timedelta(minutes=int(um.group(1)) * bar_min)
                    ).replace(second=0, microsecond=0)
         for r in load_deep(uhv_utc - timedelta(minutes=3),
                            uhv_utc + timedelta(minutes=3)):  # the trigger the break crossed
