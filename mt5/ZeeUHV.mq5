@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.37"
+#property version   "1.38"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -214,6 +214,11 @@ input bool   InpImpulseOrigin = true;  // Law 9 LIVE 2026-08-17 (Zee: "make it L
 //   InpEntryBoundary  = only fire when the just-closed M1 bar completes an M3 candle
 input int    InpBoundaryExit  = 0;   // 0=off · 1=next M3 boundary · 2=first boundary past 3 min
 input bool   InpEntryBoundary = false; // fire only on M3-boundary minutes
+// HtfMode 1 turns the M3 consultation from a VETO into SIZING (the Law-10c pattern):
+// a trade against the M3 drift is not refused — it opens at InpHtfSizeFrac of its
+// tickets. Laws multiply, they don't gate. (Zee 2026-08-19: "mix n match the two")
+input int    InpHtfMode      = 0;    // 0 = veto side against HTF · 1 = downsize instead
+input double InpHtfSizeFrac  = 0.25; // ticket fraction when trading against the HTF drift
 input int    InpProbeSec     = 0;    // probe duration seconds (0 = off; must be < hold*60)
 input double InpProbeMinPts  = 0.10; // conviction threshold the probe must show
 input double InpProbeLots    = 0.01; // scout size
@@ -585,6 +590,7 @@ double Ema5(int shift) {
 //   bit 0 = Law 6 ultra   bit 1 = Law 7 climax   bit 2 = Law 1 sweep
 //   bit 3 = Law 3 ema     bit 4 = Law 5 wick+vol
 int g_lawmask = 0;
+bool g_htf_against = false;
 
 int DiamondsFor(int origin, int uhv, int side) {
    int d = 0;
@@ -675,7 +681,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.37 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.38 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -817,7 +823,10 @@ void TryFire() {
    int origin = -1, uhv = -1, side = 0;
    for (int si = 0; si < nsides; si++) {
       int try_side = sides[si];
-      if (InpHtfMinutes > 0 && htf != 0 && try_side != htf) continue;
+      if (InpHtfMinutes > 0 && htf != 0 && try_side != htf) {
+         if (InpHtfMode == 0) continue;               // classic veto
+         g_htf_against = true;                         // mode 1: trade, but smaller
+      } else g_htf_against = false;
       int o = RetracementOrigin(try_side);
       if (o < 0) { z_no_origin++; h_noorig[z_hr]++; continue; }
       int u = FindUhvBroken(o, try_side);
@@ -978,6 +987,9 @@ void TryFire() {
       if (lr10 > InpLoudVolFrac)
          tickets = (int)MathMax(1, MathRound(tickets * InpLoudSizeFrac));
    }
+   // HTF-disagree sizing (InpHtfMode 1): the M3 second opinion shrinks, never blocks
+   if (InpHtfMode == 1 && g_htf_against && InpHtfSizeFrac > 0 && InpHtfSizeFrac < 1.0)
+      tickets = (int)MathMax(1, MathRound(tickets * InpHtfSizeFrac));
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
