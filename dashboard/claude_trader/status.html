@@ -990,6 +990,22 @@ th, td { border-color:#e5e5e7 !important; }
     </div>
   </div>
 
+  <!-- ── PER-EA WIN-RATE GAUGES (Zee 2026-08-19: "a car speed needle like image
+       to show which EA is doing well") — built from the same /api/today-trades
+       feed as the hero card, deduped by ticket, refreshed on the same cycle ── -->
+  <style>
+    .ea-gauges { display:flex; flex-wrap:wrap; gap:14px; justify-content:center;
+                 margin:14px auto 0; max-width:980px; }
+    .ea-gauge  { background:#111; border-radius:16px; padding:14px 18px 10px;
+                 text-align:center; min-width:190px; }
+    .ea-gauge .gname { color:#eee; font-size:13px; font-weight:700; letter-spacing:.4px; }
+    .ea-gauge .gwr   { color:#fff; font-size:26px; font-weight:800; margin-top:-30px; }
+    .ea-gauge .gsub  { color:#9a9aa0; font-size:12px; margin-top:2px; }
+    .ea-gauge .gsub .pos { color:#2bd576; } .ea-gauge .gsub .neg { color:#ff5a6a; }
+  </style>
+  <div class="ea-gauges" id="ea-gauges"></div>
+
+
   <!-- ── Investor system status (auto-updated each backtest cycle) ── -->
   <div class="ss-card" id="ss-card" style="display:none">
     <div class="ss-title"><span class="ss-pulse"></span><span>Live System Status</span></div>
@@ -1453,12 +1469,66 @@ msgText.addEventListener('keydown', (e) => {
 loadClaudeReply();
 setInterval(loadClaudeReply, 15000);
 
+
+// ── per-EA win-rate speedometers ────────────────────────────────────────
+const EA_NAMES = { '88094': 'ZeeUHV · M1', '88104': 'Loud EA', '88134': 'Shop B · M3',
+                   '88111': 'ZeeSimple', '88121': 'R1', '88020': 'Ghost' };
+function gaugeSvg(wr) {
+  const P = (pct, r) => {
+    const a = Math.PI * (1 - pct / 100);
+    return [100 + r * Math.cos(a), 95 - r * Math.sin(a)];
+  };
+  const arc = (p0, p1, color) => {
+    const [x0, y0] = P(p0, 78), [x1, y1] = P(p1, 78);
+    const large = (p1 - p0) > 50 ? 1 : 0;
+    return `<path d="M ${x0} ${y0} A 78 78 0 ${large} 1 ${x1} ${y1}" stroke="${color}"`
+         + ` stroke-width="13" fill="none" stroke-linecap="butt"/>`;
+  };
+  const [nx, ny] = P(Math.max(0, Math.min(100, wr)), 60);
+  return `<svg viewBox="0 0 200 108" width="170" height="92" role="img" aria-label="win rate ${wr}%">`
+       + arc(0, 40, '#ff5a6a') + arc(40, 55, '#f5b83d') + arc(55, 100, '#2bd576')
+       + `<line x1="100" y1="95" x2="${nx}" y2="${ny}" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>`
+       + `<circle cx="100" cy="95" r="6" fill="#fff"/>`
+       + `<text x="22" y="106" fill="#666" font-size="9">0</text>`
+       + `<text x="96" y="14" fill="#666" font-size="9">50</text>`
+       + `<text x="170" y="106" fill="#666" font-size="9">100</text>`
+       + `</svg>`;
+}
+function renderEaGauges(closed) {
+  const box = document.getElementById('ea-gauges');
+  if (!box) return;
+  const seen = new Set(), by = {};
+  for (const c of closed) {
+    const key = (c.deal_ticket || '') + '_' + (c.position_ticket || '');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const m = c.magic || '?';
+    const net = Number(c.net_pnl || c.profit || 0);
+    (by[m] = by[m] || { n: 0, w: 0, net: 0 });
+    by[m].n++; by[m].net += net; if (net > 0) by[m].w++;
+  }
+  const rows = Object.entries(by).filter(([, v]) => v.n > 0)
+    .sort((a, b) => b[1].n - a[1].n);
+  box.innerHTML = rows.map(([m, v]) => {
+    const wr = Math.round(100 * v.w / v.n);
+    const name = EA_NAMES[m] || ('EA ' + m);
+    const netCls = v.net >= 0 ? 'pos' : 'neg';
+    const netTxt = (v.net >= 0 ? '+' : '') + '$' + v.net.toFixed(2);
+    return `<div class="ea-gauge" title="${name}: ${v.w} wins of ${v.n} today">`
+         + `<div class="gname">${name}</div>` + gaugeSvg(wr)
+         + `<div class="gwr">${wr}%</div>`
+         + `<div class="gsub">${v.w}W/${v.n - v.w}L · <span class="${netCls}">${netTxt}</span></div>`
+         + `</div>`;
+  }).join('') || '<div style="color:#888;font-size:13px;">no closed trades yet today</div>';
+}
+
 // ── Today's trades (closed fills + currently-open) ──────────────────────
 async function loadTrades() {
   try {
     const r = await fetch('/api/today-trades', { cache: 'no-store' });
     if (!r.ok) throw new Error('http ' + r.status);
     const d = await r.json();
+    try { renderEaGauges(d.closed || []); } catch (_) {}
     const list = document.getElementById('trades-list');
     const items = [];
     // Closed first (most recent at top)
