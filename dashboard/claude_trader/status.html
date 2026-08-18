@@ -1002,6 +1002,8 @@ th, td { border-color:#e5e5e7 !important; }
     .ea-gauge .gwr   { color:#fff; font-size:26px; font-weight:800; margin-top:-30px; }
     .ea-gauge .gsub  { color:#9a9aa0; font-size:12px; margin-top:2px; }
     .ea-gauge .gsub .pos { color:#2bd576; } .ea-gauge .gsub .neg { color:#ff5a6a; }
+    .ea-gauge .gsel { margin-top:8px; background:#1c1c1e; color:#ddd; border:1px solid #333;
+                      border-radius:8px; padding:3px 8px; font-size:12px; }
   </style>
   <div class="ea-gauges" id="ea-gauges"></div>
 
@@ -1470,9 +1472,38 @@ loadClaudeReply();
 setInterval(loadClaudeReply, 15000);
 
 
-// ── per-EA win-rate speedometers ────────────────────────────────────────
+// ── per-EA win-rate speedometers, with time-travel (Zee 2026-08-19) ────
 const EA_NAMES = { '88094': 'ZeeUHV · M1', '88104': 'Loud EA', '88134': 'Shop B · M3',
                    '88111': 'ZeeSimple', '88121': 'R1', '88020': 'Ghost' };
+const GAUGE_PERIODS = [['today','Today'],['yday','Yesterday'],['thisweek','This week'],
+                       ['lastweek','Last week'],['d15','15 days'],['d30','30 days']];
+let _fhRows = null, _fhAt = 0;
+const _gaugeSel = JSON.parse(localStorage.getItem('gaugePeriods') || '{}');
+
+async function fetchFillsHistory() {
+  if (_fhRows && Date.now() - _fhAt < 60000) return _fhRows;
+  const r = await fetch('/api/fills-history', { cache: 'no-store' });
+  const d = await r.json();
+  _fhRows = d.rows || []; _fhAt = Date.now();
+  return _fhRows;
+}
+function isoDay(t) { return new Date(t).toISOString().slice(0, 10).replace(/-/g, '.'); }
+function inPeriod(d, kind, dates) {
+  const today = isoDay(Date.now());
+  const day = 86400000;
+  if (kind === 'today') return d === today;
+  if (kind === 'yday') {
+    const prior = dates.filter(x => x < today);
+    return prior.length ? d === prior[prior.length - 1] : false;
+  }
+  const now = new Date();
+  const dow = (now.getUTCDay() + 6) % 7;                    // Mon=0
+  const mon = isoDay(now.getTime() - dow * day);
+  if (kind === 'thisweek') return d >= mon;
+  if (kind === 'lastweek') return d >= isoDay(now.getTime() - (dow + 7) * day) && d < mon;
+  if (kind === 'd15') return d >= isoDay(Date.now() - 15 * day);
+  return d >= isoDay(Date.now() - 30 * day);                // d30
+}
 function gaugeSvg(wr, be) {
   const P = (pct, r) => {
     const a = Math.PI * (1 - pct / 100);
@@ -1497,39 +1528,50 @@ function gaugeSvg(wr, be) {
        + `<text x="170" y="106" fill="#666" font-size="9">100</text>`
        + `</svg>`;
 }
-function renderEaGauges(closed) {
+async function renderEaGauges() {
   const box = document.getElementById('ea-gauges');
   if (!box) return;
-  const seen = new Set(), by = {};
-  for (const c of closed) {
-    const key = (c.deal_ticket || '') + '_' + (c.position_ticket || '');
-    if (seen.has(key)) continue;
-    seen.add(key);
-    const m = c.magic || '?';
-    const net = Number(c.net_pnl || c.profit || 0);
-    (by[m] = by[m] || { n: 0, w: 0, net: 0, wsum: 0, lsum: 0 });
-    by[m].n++; by[m].net += net;
-    if (net > 0) { by[m].w++; by[m].wsum += net; } else { by[m].lsum += -net; }
-  }
-  const rows = Object.entries(by).filter(([, v]) => v.n > 0)
-    .sort((a, b) => b[1].n - a[1].n);
-  box.innerHTML = rows.map(([m, v]) => {
+  const rows = await fetchFillsHistory();
+  const dates = [...new Set(rows.map(x => x[0].slice(0, 10)))].sort();
+  const magics = [...new Set(rows.map(x => x[1]))].filter(m => m && m !== '?')
+    .sort((a, b) => rows.filter(x => x[1] === b).length - rows.filter(x => x[1] === a).length);
+  box.innerHTML = magics.map(m => {
+    const kind = _gaugeSel[m] || 'today';
+    const v = { n: 0, w: 0, net: 0, wsum: 0, lsum: 0 };
+    for (const [t, mg, net] of rows) {
+      if (mg !== m || !inPeriod(t.slice(0, 10), kind, dates)) continue;
+      v.n++; v.net += net;
+      if (net > 0) { v.w++; v.wsum += net; } else { v.lsum += -net; }
+    }
+    const name = EA_NAMES[m] || ('EA ' + m);
+    const sel = gaugeSelect(m, kind);
+    if (v.n === 0)
+      return `<div class="ea-gauge"><div class="gname">${name}</div>` + gaugeSvg(0, null)
+           + `<div class="gwr" style="color:#666">—</div>`
+           + `<div class="gsub">no trades in period</div>${sel}</div>`;
     const wr = Math.round(100 * v.w / v.n);
-    // this EA's OWN break-even win rate today: |avgL| / (avgW + |avgL|)
     const avgW = v.w > 0 ? v.wsum / v.w : 0;
     const avgL = (v.n - v.w) > 0 ? v.lsum / (v.n - v.w) : 0;
     const be = (avgW > 0 && avgL > 0) ? Math.round(100 * avgL / (avgW + avgL)) : null;
-    const name = EA_NAMES[m] || ('EA ' + m);
     const netCls = v.net >= 0 ? 'pos' : 'neg';
     const netTxt = (v.net >= 0 ? '+' : '') + '$' + v.net.toFixed(2);
-    return `<div class="ea-gauge" title="${name}: ${v.w}W/${v.n - v.w}L today`
-                       + `${be != null ? ' · needs ' + be + '% to break even (dashed mark)' : ''}">`
+    return `<div class="ea-gauge" title="${name}: ${v.w}W/${v.n - v.w}L`
+         + `${be != null ? ' · needs ' + be + '% to break even (dashed mark)' : ''}">`
          + `<div class="gname">${name}</div>` + gaugeSvg(wr, be)
          + `<div class="gwr">${wr}%</div>`
          + `<div class="gsub">${v.w}W/${v.n - v.w}L · <span class="${netCls}">${netTxt}</span>`
-         + `${be != null ? ' · BE ' + be + '%' : ''}</div>`
-         + `</div>`;
-  }).join('') || '<div style="color:#888;font-size:13px;">no closed trades yet today</div>';
+         + `${be != null ? ' · BE ' + be + '%' : ''}</div>${sel}</div>`;
+  }).join('') || '<div style="color:#888;font-size:13px;">no fills in the last 35 days</div>';
+}
+function gaugeSelect(m, kind) {
+  const opts = GAUGE_PERIODS.map(([k, label]) =>
+    `<option value="${k}"${k === kind ? ' selected' : ''}>${label}</option>`).join('');
+  return `<div><select class="gsel" data-magic="${m}" onchange="gaugePeriodChanged(this)">${opts}</select></div>`;
+}
+function gaugePeriodChanged(sel) {
+  _gaugeSel[sel.dataset.magic] = sel.value;
+  localStorage.setItem('gaugePeriods', JSON.stringify(_gaugeSel));
+  renderEaGauges();
 }
 
 // ── Today's trades (closed fills + currently-open) ──────────────────────
@@ -1538,7 +1580,7 @@ async function loadTrades() {
     const r = await fetch('/api/today-trades', { cache: 'no-store' });
     if (!r.ok) throw new Error('http ' + r.status);
     const d = await r.json();
-    try { renderEaGauges(d.closed || []); } catch (_) {}
+    try { renderEaGauges(); } catch (_) {}
     const list = document.getElementById('trades-list');
     const items = [];
     // Closed first (most recent at top)
