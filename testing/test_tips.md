@@ -639,3 +639,21 @@ history/SYMBOL/YYYY.hcc, let the rig re-download.
 RULE: before trusting a same-day or next-morning replay, check the pipeline census —
 if "no valid retracement origin" swallows the day (origins are near-universal on real
 data: ~1%%), the data is half-baked and the run is VOID, whatever Bars says.
+
+
+## Part 13 — THE TESTER AUTO-LOADS Profiles\Tester\<ExpertName>.set (2026-08-19)
+
+The headless ini has NO ExpertParameters line. MT5 silently loads the .set whose NAME
+MATCHES THE EXPERT. Every sweep harness that "worked" only worked because it wrote
+<EA>.set for the same <EA> it launched. The first time a runner wrote ZeeUHV_M3.set
+but launched Expert=ZeeUHV, all six arms ran the WRONG EA with a STALE set — and every
+arm returned byte-identical numbers.
+
+RULES:
+1. write_set(EA) and run(EA) must use THE SAME name — assert it in the harness.
+2. IDENTICAL NUMBERS ACROSS ARMS = VOID RUN, always. A TP-2.0 arm cannot equal a
+   TP-1.0 arm. Halt and inspect mt5/_headless_run.ini: its Expert= line is the truth
+   of what actually ran (this catch re-explains the 2026-08-13 "four identical v14
+   arms" incident as the same class of fault).
+3. The last-written <EA>.set PERSISTS between sessions — a run with no fresh
+   write_set inherits whatever the previous experiment left behind.
