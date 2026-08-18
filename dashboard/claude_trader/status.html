@@ -1473,7 +1473,7 @@ setInterval(loadClaudeReply, 15000);
 // ── per-EA win-rate speedometers ────────────────────────────────────────
 const EA_NAMES = { '88094': 'ZeeUHV · M1', '88104': 'Loud EA', '88134': 'Shop B · M3',
                    '88111': 'ZeeSimple', '88121': 'R1', '88020': 'Ghost' };
-function gaugeSvg(wr) {
+function gaugeSvg(wr, be) {
   const P = (pct, r) => {
     const a = Math.PI * (1 - pct / 100);
     return [100 + r * Math.cos(a), 95 - r * Math.sin(a)];
@@ -1489,6 +1489,9 @@ function gaugeSvg(wr) {
        + arc(0, 40, '#ff5a6a') + arc(40, 55, '#f5b83d') + arc(55, 100, '#2bd576')
        + `<line x1="100" y1="95" x2="${nx}" y2="${ny}" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/>`
        + `<circle cx="100" cy="95" r="6" fill="#fff"/>`
+       + (be != null ? (() => { const [bx0, by0] = P(be, 68), [bx1, by1] = P(be, 88);
+           return `<line x1="${bx0}" y1="${by0}" x2="${bx1}" y2="${by1}" stroke="#fff"`
+                + ` stroke-width="2" stroke-dasharray="3 2" opacity="0.9"/>`; })() : '')
        + `<text x="22" y="106" fill="#666" font-size="9">0</text>`
        + `<text x="96" y="14" fill="#666" font-size="9">50</text>`
        + `<text x="170" y="106" fill="#666" font-size="9">100</text>`
@@ -1504,20 +1507,27 @@ function renderEaGauges(closed) {
     seen.add(key);
     const m = c.magic || '?';
     const net = Number(c.net_pnl || c.profit || 0);
-    (by[m] = by[m] || { n: 0, w: 0, net: 0 });
-    by[m].n++; by[m].net += net; if (net > 0) by[m].w++;
+    (by[m] = by[m] || { n: 0, w: 0, net: 0, wsum: 0, lsum: 0 });
+    by[m].n++; by[m].net += net;
+    if (net > 0) { by[m].w++; by[m].wsum += net; } else { by[m].lsum += -net; }
   }
   const rows = Object.entries(by).filter(([, v]) => v.n > 0)
     .sort((a, b) => b[1].n - a[1].n);
   box.innerHTML = rows.map(([m, v]) => {
     const wr = Math.round(100 * v.w / v.n);
+    // this EA's OWN break-even win rate today: |avgL| / (avgW + |avgL|)
+    const avgW = v.w > 0 ? v.wsum / v.w : 0;
+    const avgL = (v.n - v.w) > 0 ? v.lsum / (v.n - v.w) : 0;
+    const be = (avgW > 0 && avgL > 0) ? Math.round(100 * avgL / (avgW + avgL)) : null;
     const name = EA_NAMES[m] || ('EA ' + m);
     const netCls = v.net >= 0 ? 'pos' : 'neg';
     const netTxt = (v.net >= 0 ? '+' : '') + '$' + v.net.toFixed(2);
-    return `<div class="ea-gauge" title="${name}: ${v.w} wins of ${v.n} today">`
-         + `<div class="gname">${name}</div>` + gaugeSvg(wr)
+    return `<div class="ea-gauge" title="${name}: ${v.w}W/${v.n - v.w}L today`
+                       + `${be != null ? ' · needs ' + be + '% to break even (dashed mark)' : ''}">`
+         + `<div class="gname">${name}</div>` + gaugeSvg(wr, be)
          + `<div class="gwr">${wr}%</div>`
-         + `<div class="gsub">${v.w}W/${v.n - v.w}L · <span class="${netCls}">${netTxt}</span></div>`
+         + `<div class="gsub">${v.w}W/${v.n - v.w}L · <span class="${netCls}">${netTxt}</span>`
+         + `${be != null ? ' · BE ' + be + '%' : ''}</div>`
          + `</div>`;
   }).join('') || '<div style="color:#888;font-size:13px;">no closed trades yet today</div>';
 }
