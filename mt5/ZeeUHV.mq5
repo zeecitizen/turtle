@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.40"
+#property version   "1.41"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -220,6 +220,12 @@ input bool   InpEntryBoundary = false; // fire only on M3-boundary minutes
 input int    InpHtfMode      = 0;    // 0 = veto side against HTF · 1 = downsize instead
 input double InpHtfSizeFrac  = 0.25; // ticket fraction when trading against the HTF drift
 input bool   InpLaw11        = false; // LAW 11: origin integrity — the retracement may not contain new leg extremes
+// ── LAW 12 (2026-08-18, Zee: "instead of 20 bars back it should be 'last highest
+// peak' because otherwise that would be another retracement like 20 bars ago") ──
+// 1 = the origin search may not walk past the leg's birth peak (SELL) / trough (BUY)
+// 2 = additionally the origin candle must have LEFT the peak's range (its high below
+//     the peak bar's low) — catches ghosts sitting AT the peak, like 14:37 today
+input int    InpLaw12        = 0;    // 0=off · 1=peak-bounded search · 2=bound + below-the-peak
 input int    InpProbeSec     = 0;    // probe duration seconds (0 = off; must be < hold*60)
 input double InpProbeMinPts  = 0.10; // conviction threshold the probe must show
 input double InpProbeLots    = 0.01; // scout size
@@ -380,7 +386,17 @@ int TrendNow() {
 //+------------------------------------------------------------------+
 int RetracementOrigin(int side) {
    bool wantRed = (side > 0);
-   for (int k = 1; k <= InpRetraceBack; k++) {
+   // LAW 12: the current swing begins at its extreme — origins beyond it are ghosts
+   int kmax = InpRetraceBack, peakbar = -1;
+   if (InpLaw12 > 0) {
+      double ext = 0;
+      for (int b = 1; b <= InpRetraceBack + 8; b++) {
+         double e = wantRed ? -bLow(b) : bHigh(b);     // BUY: leg births at a trough
+         if (peakbar < 0 || e > ext) { ext = e; peakbar = b; }
+      }
+      if (peakbar > 0 && peakbar - 1 < kmax) kmax = peakbar - 1;
+   }
+   for (int k = 1; k <= kmax; k++) {
       if (wantRed  && !IsRed(k))   continue;
       if (!wantRed && !IsGreen(k)) continue;
       int prev = -1;
@@ -415,6 +431,12 @@ int RetracementOrigin(int side) {
             if (!wantRed && bLow(g)  < bLow(k))  { ghost = true; break; }
          }
          if (ghost) continue;
+      }
+      if (InpLaw12 == 2 && peakbar > 0) {
+         // the origin must have LEFT the peak's range — a green at the peak's own
+         // shoulder is the prior swing still speaking, not a retracement of this leg
+         if (wantRed  && bLow(k)  <= bHigh(peakbar)) continue;
+         if (!wantRed && bHigh(k) >= bLow(peakbar))  continue;
       }
       return k;
    }
@@ -736,7 +758,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.40 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.41 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
