@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.36"
+#property version   "1.37"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -205,6 +205,15 @@ input bool   InpImpulseOrigin = true;  // Law 9 LIVE 2026-08-17 (Zee: "make it L
 // 3-min hold sweep is the backstop). At the deadline: moved >= InpProbeMinPts our
 // way -> close the scout, open the FULL basket into pre-tested ground; otherwise
 // the scout retreats and the basket never risks itself.
+// ── SHOP-B TRANSPLANT (2026-08-19, defaults OFF — Zee: "explore all possible paths
+// of combining the two shops"). Night-2 isolated Shop B's stabilizer: a trade wants
+// to be JUDGED EXACTLY WHEN A CANDLE ENDS, and ~3 minutes is the right life. These
+// inputs transplant that discipline onto the M1 chart, keeping M1's entry frequency:
+//   InpBoundaryExit 1 = close at the FIRST M3 boundary after entry (life 0-3 min)
+//   InpBoundaryExit 2 = close at the first boundary giving >= 3 min of life (3-6 min)
+//   InpEntryBoundary  = only fire when the just-closed M1 bar completes an M3 candle
+input int    InpBoundaryExit  = 0;   // 0=off · 1=next M3 boundary · 2=first boundary past 3 min
+input bool   InpEntryBoundary = false; // fire only on M3-boundary minutes
 input int    InpProbeSec     = 0;    // probe duration seconds (0 = off; must be < hold*60)
 input double InpProbeMinPts  = 0.10; // conviction threshold the probe must show
 input double InpProbeLots    = 0.01; // scout size
@@ -666,7 +675,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.34 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.37 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -766,6 +775,9 @@ int g_ureason=0, g_breason=0;
 void TryFire() {
    z_bars++;
    int z_hr = (int)((TimeCurrent() / 3600) % 24);
+   // Shop-B entry discipline: act only when the just-closed M1 bar COMPLETED an M3
+   // candle (bar-1 open time is the last minute of an M3 triplet).
+   if (InpEntryBoundary && (iTime(_Symbol, PERIOD_CURRENT, 0) % 180) != 0) return;
    h_bars[z_hr]++;
    if (OpenCount() >= InpMaxOpen) { z_maxopen++; return; }
    if (g_last_fire > 0 &&
@@ -790,7 +802,14 @@ void TryFire() {
 
    int htf = 0;
    if (InpHtfMinutes > 0) {
-      ENUM_TIMEFRAMES htf_tf = (InpHtfMinutes >= 60) ? PERIOD_H1 : PERIOD_M15;
+      // 2026-08-19, Zee: "we can use the 3 minute chart to add strength to the trend
+      // filter... at 1 min scale we are consulting the 3 min. this way it can help us
+      // cut loss." The night-2 matrix showed M3 is where hostile months flatten — this
+      // asks M3 for a second opinion on direction before an M1 side may fire.
+      ENUM_TIMEFRAMES htf_tf = (InpHtfMinutes >= 60) ? PERIOD_H1 :
+                               (InpHtfMinutes >= 15) ? PERIOD_M15 :
+                               (InpHtfMinutes >= 5)  ? PERIOD_M5  :
+                               (InpHtfMinutes >= 3)  ? PERIOD_M3  : PERIOD_M2;
       double hnow = iClose(_Symbol, htf_tf, 1), hthen = iClose(_Symbol, htf_tf, 1 + InpHtfLook);
       if (hnow > 0 && hthen > 0) htf = (hnow > hthen) ? +1 : ((hnow < hthen) ? -1 : 0);
    }
@@ -1006,13 +1025,21 @@ void TryFire() {
 }
 
 void AgeOut() {
-   if (InpMaxHoldMin <= 0) return;
+   if (InpMaxHoldMin <= 0 && InpBoundaryExit == 0) return;
    for (int i = PositionsTotal() - 1; i >= 0; i--) {
       ulong t = PositionGetTicket(i);
       if (t == 0 || !PositionSelectByTicket(t)) continue;
       if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
       if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
       datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
+      if (InpBoundaryExit > 0) {
+         // Shop B's judgment: the exit is an M3 candle's END, not a stopwatch
+         datetime first = ((opened / 180) + 1) * 180;                  // next boundary
+         if (InpBoundaryExit == 2 && first - opened < 180) first += 180; // guarantee >=3 min
+         if (TimeCurrent() >= first)
+            trade.PositionClose(t);
+         continue;
+      }
       if (TimeCurrent() - opened >= InpMaxHoldMin * 60)
          if (trade.PositionClose(t) && InpVerbose)
             PrintFormat("[ZEE] aged out after %dm", InpMaxHoldMin);
