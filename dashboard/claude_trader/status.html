@@ -1489,7 +1489,9 @@ async function fetchFillsHistory() {
 }
 function isoDay(t) { return new Date(t).toISOString().slice(0, 10).replace(/-/g, '.'); }
 function inPeriod(d, kind, dates) {
-  const today = isoDay(Date.now());
+  // "today" = the DATA's newest broker day (UTC clock lags the broker by ~3h,
+  // which made "Yesterday" reach one day too far at certain hours — Zee, 08-19)
+  const today = dates.length ? dates[dates.length - 1] : isoDay(Date.now());
   const day = 86400000;
   if (kind === 'today') return d === today;
   if (kind === 'yday') {
@@ -1533,6 +1535,7 @@ async function renderEaGauges() {
   if (!box) return;
   const rows = await fetchFillsHistory();
   const dates = [...new Set(rows.map(x => x[0].slice(0, 10)))].sort();
+  window._gaugeDates = dates;
   const magics = [...new Set(rows.map(x => x[1]))].filter(m => m && m !== '?')
     .sort((a, b) => rows.filter(x => x[1] === b).length - rows.filter(x => x[1] === a).length);
   box.innerHTML = magics.map(m => {
@@ -1563,10 +1566,18 @@ async function renderEaGauges() {
          + `${be != null ? ' · BE ' + be + '%' : ''}</div>${sel}</div>`;
   }).join('') || '<div style="color:#888;font-size:13px;">no fills in the last 35 days</div>';
 }
+function periodLabelDates(kind, dates) {
+  const hit = dates.filter(d => inPeriod(d, kind, dates));
+  if (!hit.length) return '';
+  const f = x => x.slice(5);   // MM.DD
+  return hit.length === 1 ? f(hit[0]) : f(hit[0]) + '–' + f(hit[hit.length - 1]);
+}
 function gaugeSelect(m, kind) {
   const opts = GAUGE_PERIODS.map(([k, label]) =>
     `<option value="${k}"${k === kind ? ' selected' : ''}>${label}</option>`).join('');
-  return `<div><select class="gsel" data-magic="${m}" onchange="gaugePeriodChanged(this)">${opts}</select></div>`;
+  const span = typeof _gaugeDates !== 'undefined' ? periodLabelDates(kind, _gaugeDates) : '';
+  return `<div><select class="gsel" data-magic="${m}" onchange="gaugePeriodChanged(this)">${opts}</select>`
+       + `${span ? `<span style="color:#777;font-size:11px;margin-left:6px;">${span}</span>` : ''}</div>`;
 }
 function gaugePeriodChanged(sel) {
   _gaugeSel[sel.dataset.magic] = sel.value;
