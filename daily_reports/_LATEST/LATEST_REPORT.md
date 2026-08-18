@@ -357,9 +357,23 @@ stale-report re-reads; something from a crashed parent task held the rig — rer
 the morning). The original court task died at exit 127 mid-pulse-40; results above
 are from its valid completed arms. The Aug-18 Law-12 replay is still owed.
 
-The FEB-11 EXIT LAB (v1.43: scratch-on-revisit — his 18:41 cluster waited 25 min
-for the RETOUCH; that, not reflexes, made the tiny losses) runs the rest of the
-night; two rounds, judged on loss anatomy (target avgL ≈ -0.26 at court size).
+**THE FEB-11 EXIT LAB — VERDICT (pre-dawn).** The retouch hypothesis (his 18:41
+cluster waited 25 min and scratched — patience, not reflexes) was built (v1.43),
+swept 11 arms, then synthesized with the switch (v1.44 InpScratchRedOnly):
+
+```
+switch p20 ALONE            +276.22   ← the crown HOLDS
+full synthesis (p20+RS)     +155.10   positive; the scratch drags -$121
+best always-on scratch      -547.20   (and it DID build his loss column: avgL
+red-only scratch alone      -299.62    collapses $40 -> $2-3 — mission failed anyway)
+```
+
+CLOSED HONESTLY: the retouch mechanically achieves Feb-11's tiny losses, but this
+strategy's winners DIP FIRST — scratching the dip scratches the $1 payers, in every
+variant, even season-gated. His hand's selectivity remains unmechanized (count: 9).
+**The machine's Feb-11 is the switch, alone.** (Lab data note: a few round-1 rows
+were stale-polluted from the earlier rig crash — identical-row tripwire visible in
+the raw table; clean arms carry the verdict.)
 
 ## 5. Open items
 
