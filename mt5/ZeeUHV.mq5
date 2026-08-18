@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.38"
+#property version   "1.39"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -219,6 +219,7 @@ input bool   InpEntryBoundary = false; // fire only on M3-boundary minutes
 // tickets. Laws multiply, they don't gate. (Zee 2026-08-19: "mix n match the two")
 input int    InpHtfMode      = 0;    // 0 = veto side against HTF · 1 = downsize instead
 input double InpHtfSizeFrac  = 0.25; // ticket fraction when trading against the HTF drift
+input bool   InpLaw11        = false; // LAW 11: origin integrity — the retracement may not contain new leg extremes
 input int    InpProbeSec     = 0;    // probe duration seconds (0 = off; must be < hold*60)
 input double InpProbeMinPts  = 0.10; // conviction threshold the probe must show
 input double InpProbeLots    = 0.01; // scout size
@@ -396,8 +397,26 @@ int RetracementOrigin(int side) {
          }
       }
       if (prev < 0) continue;
-      if (wantRed) { if (BodyLo(k) < bLow(prev)) return k; }
-      else         { if (BodyHi(k) > bHigh(prev)) return k; }
+      bool broke = wantRed ? (BodyLo(k) < bLow(prev)) : (BodyHi(k) > bHigh(prev));
+      if (!broke) continue;
+      // ── LAW 11 — ORIGIN INTEGRITY (2026-08-18, Zee on the 14:46 loser: "a UHV
+      // that's not in a valid retracement (the greens did not break the prior red)
+      // has cost us money"). The pipeline had anchored that trade's origin at 14:37 —
+      // a green from the PREVIOUS up-swing — and price then fell THROUGH it for six
+      // minutes. The tell: a true retracement cannot contain NEW EXTREMES of the leg
+      // it claims to retrace. So: between the origin and the breakout, no bar may
+      // exceed the origin's own extreme (bar 1, the breakout itself, is exempt — its
+      // job is to break). A violated origin is a GHOST from another swing: skip it
+      // and keep scanning. Default OFF until the receipts speak.
+      if (InpLaw11) {
+         bool ghost = false;
+         for (int g = 2; g < k; g++) {
+            if (wantRed  && bHigh(g) > bHigh(k)) { ghost = true; break; }
+            if (!wantRed && bLow(g)  < bLow(k))  { ghost = true; break; }
+         }
+         if (ghost) continue;
+      }
+      return k;
    }
    return -1;
 }
@@ -681,7 +700,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.38 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.39 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
