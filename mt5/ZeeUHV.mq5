@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.43"
+#property version   "1.44"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -244,6 +244,10 @@ input double InpScratchArm  = 0.0;  // adverse pts that ARM the scratch (0 = lab
 input double InpScratchOfs  = 0.0;  // scratch level vs entry (0 = breakeven, -0.1 = pay a dime)
 input int    InpScratchHold = 25;   // minutes an ARMED trade may wait for its retouch
 input bool   InpRevExit     = false; // his other described exit: first opposing candle while red
+// THE NIGHT'S SYNTHESIS: the lab proved the retouch shrinks losses to pennies but
+// also scratches the dip-first winners. His hand scratched ONLY true deaths — and
+// the pulse knows the season of deaths. Scratch ONLY while the pulse is red.
+input bool   InpScratchRedOnly = false; // scratch mode active only when RollingNet(20) < 0
 input int    InpProbeSec     = 0;    // probe duration seconds (0 = off; must be < hold*60)
 input double InpProbeMinPts  = 0.10; // conviction threshold the probe must show
 input double InpProbeLots    = 0.01; // scout size
@@ -776,7 +780,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.43 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.44 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1162,7 +1166,7 @@ void AgeOut() {
       if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
       if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
       datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
-      if (InpScratchArm > 0) {
+      if (InpScratchArm > 0 && (!InpScratchRedOnly || RollingNet(20) < 0)) {
          // FEB-11 SCRATCH MODE: once adverse by InpScratchArm, the target moves to
          // the entry (+ofs) and the trade WAITS for its retouch — the hard SL stays
          // as disaster insurance, InpScratchHold as the patience limit.
