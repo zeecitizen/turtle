@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.39"
+#property version   "1.40"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -688,6 +688,42 @@ int DiamondsFor(int origin, int uhv, int side) {
          }
       }
    }
+
+   // ── TAG bit 64 — DEFENDED LEVEL (Zee 2026-08-18, on the 14:46 loser: "price
+   // tapped this point twice before... maybe if we check for such strong support
+   // zones that we're trying to break, it could improve our winrate?"). Counts how
+   // many bars in the last 60 TAPPED the trigger zone (within 0.30) yet closed back
+   // on the defended side. 2+ prior defenses = a proven floor/ceiling under attack.
+   {
+      double trig = (side > 0) ? bHigh(uhv) : bLow(uhv);
+      int defenses = 0;
+      for (int k = uhv + 1; k <= uhv + 60; k++) {
+         if (side < 0 && bLow(k)  <= trig + 0.30 && bClose(k) > trig) defenses++;
+         if (side > 0 && bHigh(k) >= trig - 0.30 && bClose(k) < trig) defenses++;
+      }
+      if (defenses >= 2) g_lawmask |= 64;
+   }
+   // ── TAG bit 128 — LATE HUMP (Zee: "after a few humps the probability of making
+   // another hump decreases with the number of humps taken" — the camel-humps decay
+   // theory, measured before it may ever gate). Counts the current staircase of
+   // consecutive lower pivot-lows (SELL) / higher pivot-highs (BUY), d=2 pivots,
+   // 90-bar memory. 4+ humps = a mature leg being asked for one more.
+   {
+      int humps = 0; double last = 0; bool first = true;
+      for (int k = 3; k <= 90; k++) {
+         bool piv = true;
+         for (int dd = 1; dd <= 2; dd++) {
+            if (side < 0 && (bLow(k) > bLow(k - dd) || bLow(k) > bLow(k + dd))) piv = false;
+            if (side > 0 && (bHigh(k) < bHigh(k - dd) || bHigh(k) < bHigh(k + dd))) piv = false;
+         }
+         if (!piv) continue;
+         double e = (side < 0) ? bLow(k) : bHigh(k);
+         if (first) { last = e; first = false; humps = 1; continue; }
+         if ((side < 0 && e > last) || (side > 0 && e < last)) { humps++; last = e; }
+         else break;                        // the staircase ends where order breaks
+      }
+      if (humps >= 4) g_lawmask |= 128;
+   }
    return d;
 }
 
@@ -700,7 +736,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.39 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.40 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1118,8 +1154,8 @@ void AgeOut() {
 double OnTester() {
    double pnl[8]; int cnt[8], won[8];
    for (int i = 0; i < 8; i++) { pnl[i] = 0; cnt[i] = 0; won[i] = 0; }
-   double mpnl[64]; int mcnt[64], mwon[64];
-   for (int i = 0; i < 64; i++) { mpnl[i] = 0; mcnt[i] = 0; mwon[i] = 0; }
+   double mpnl[256]; int mcnt[256], mwon[256];
+   for (int i = 0; i < 256; i++) { mpnl[i] = 0; mcnt[i] = 0; mwon[i] = 0; }
 
    if (HistorySelect(0, TimeCurrent())) {
       int total = HistoryDealsTotal();
@@ -1148,7 +1184,7 @@ double OnTester() {
          }
          if (dia < 0 || dia > 7) continue;
          cnt[dia]++; pnl[dia] += p; if (p > 0) won[dia]++;
-         if (msk >= 0 && msk < 64) { mcnt[msk]++; mpnl[msk] += p; if (p > 0) mwon[msk]++; }
+         if (msk >= 0 && msk < 256) { mcnt[msk]++; mpnl[msk] += p; if (p > 0) mwon[msk]++; }
       }
    }
    Print("[HCEN] hour(broker) bars ranging no-origin uhv-veto waiting FIRED");
@@ -1172,8 +1208,8 @@ double OnTester() {
       PrintFormat("[DIA] D%d  tickets %5d  won %5d  win %6.2f%%  net %10.2f  per ticket %7.3f",
                   i, cnt[i], won[i], 100.0 * won[i] / cnt[i], pnl[i], pnl[i] / cnt[i]);
    }
-   Print("[DIA] --- WHICH laws fired (bit1=ultra 2=climax 4=sweep 8=ema 16=wick 32=L8indep) ---");
-   for (int i = 0; i < 64; i++) {
+   Print("[DIA] --- WHICH laws fired (1=ultra 2=climax 4=sweep 8=ema 16=wick 32=L8 64=DEFENDED 128=LATEHUMP) ---");
+   for (int i = 0; i < 256; i++) {
       if (mcnt[i] < 1) continue;                  // print everything: the harness aggregates
       int bits = 0;
       for (int b = 0; b < 5; b++) if ((i & (1 << b)) != 0) bits++;   // bit 32 is a TAG, not a diamond
