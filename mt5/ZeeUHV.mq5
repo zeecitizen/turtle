@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.41"
+#property version   "1.42"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -226,6 +226,13 @@ input bool   InpLaw11        = false; // LAW 11: origin integrity — the retrac
 // 2 = additionally the origin candle must have LEFT the peak's range (its high below
 //     the peak bar's low) — catches ghosts sitting AT the peak, like 14:37 today
 input int    InpLaw12        = 0;    // 0=off · 1=peak-bounded search · 2=bound + below-the-peak
+// ── THE SELF-AWARE SWITCH (2026-08-19, Zee: "ok test it" — the season calendar).
+// The machine reads its OWN pulse: the net of its last InpRegimeLook closed tickets.
+// Red pulse -> every basket opens at InpRegimeFrac of its tickets (scout size — it
+// NEVER stops, because a stopped machine cannot feel the season change). Green
+// pulse -> full stack. Harvest-and-return, mechanized. Default OFF.
+input int    InpRegimeLook   = 0;    // closed tickets in the pulse window (0 = off)
+input double InpRegimeFrac   = 0.25; // basket fraction while the pulse is red
 input int    InpProbeSec     = 0;    // probe duration seconds (0 = off; must be < hold*60)
 input double InpProbeMinPts  = 0.10; // conviction threshold the probe must show
 input double InpProbeLots    = 0.01; // scout size
@@ -758,7 +765,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.41 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.42 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -840,6 +847,24 @@ bool CurrentTick(MqlTick &out) {
       }
    }
    return true;
+}
+
+// The machine's own pulse: net of its last n closed tickets (works identically in
+// the tester and live — both read the same trade history by magic).
+double RollingNet(int n) {
+   if (!HistorySelect(0, TimeCurrent())) return 0;
+   double sum = 0; int got = 0;
+   for (int i = HistoryDealsTotal() - 1; i >= 0 && got < n; i--) {
+      ulong tk = HistoryDealGetTicket(i);
+      if (tk == 0) continue;
+      if (HistoryDealGetInteger(tk, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;
+      if (HistoryDealGetInteger(tk, DEAL_MAGIC) != InpMagicNumber) continue;
+      sum += HistoryDealGetDouble(tk, DEAL_PROFIT)
+           + HistoryDealGetDouble(tk, DEAL_SWAP)
+           + HistoryDealGetDouble(tk, DEAL_COMMISSION);
+      got++;
+   }
+   return sum;
 }
 
 // ── PIPELINE CENSUS (Zee 2026-08-18: "i dont know why our trade count is so low..
@@ -1067,6 +1092,11 @@ void TryFire() {
    // HTF-disagree sizing (InpHtfMode 1): the M3 second opinion shrinks, never blocks
    if (InpHtfMode == 1 && g_htf_against && InpHtfSizeFrac > 0 && InpHtfSizeFrac < 1.0)
       tickets = (int)MathMax(1, MathRound(tickets * InpHtfSizeFrac));
+   // the self-aware switch: red pulse -> scout size, green pulse -> full stack
+   if (InpRegimeLook > 0 && InpRegimeFrac > 0 && InpRegimeFrac < 1.0) {
+      if (RollingNet(InpRegimeLook) < 0)
+         tickets = (int)MathMax(1, MathRound(tickets * InpRegimeFrac));
+   }
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
