@@ -312,6 +312,23 @@ price of the kind months' cream). Passes the promotion letter (Jun kind ✓, Mar
 hostile ✓). Nothing shipped overnight; v1.34 on M1 remains exactly as he left it. (Accidental find, confounded, logged as curiosity: ZeeSimple-canonical
 on M5 went 78.6%% WR +26.64 in April.)
 
+## 4j. THE MARRIAGE CAMPAIGN (2026-08-19 afternoon) — 54 runs, nothing ships, much learned
+
+Zee: "run as many experiments as you want to mix n match the two M1/M3." Verdicts:
+- **Consult dial = minefield**: look2 +300 / look3 −119 / look4 +103 / look5 +27 /
+  look6 +10 / look8 −58 / look12 +44. Best cell adjacent to worst = luck's signature.
+  No veto value ships. As SIZING (C2): coherent, too weak (+43 at 0.25).
+- **Transplant refuted 3×**: Shop B's boundary exit on M1 entries = −247…−602. B is an
+  ecosystem, not parts. (Matches M1/h1's earlier failure.)
+- **Portfolio arithmetic**: B alone dominates every A/B blend on the test set — but the
+  set underweights A's feast regimes (live receipts: +300/day in its season).
+- **Leaderboard**: look2 +70.76 (spike, untrusted) · B +23.32 (worst −19) · everything
+  else negative.
+FIFTH independent pointer to the REGIME SWITCH as the real prize. Proposed next: the
+self-aware switch (A stands down / quarter-sizes when her own rolling P&L is red; B
+carries) — no forecasting needed, rig-testable. Both shops live meanwhile: the week
+itself is the A/B experiment.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
