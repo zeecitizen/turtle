@@ -379,7 +379,11 @@ def draw(bars, back=120, out=None):
     style = mpf.make_mpf_style(base_mpf_style="yahoo", gridstyle=":")
     kw = dict(type="candle", style=style, figsize=(19, 10.5), volume=True,
               title=f"camel humps [{METHOD}] — structure: {r['trend']}  |  "
-                    f"AUTO: {a['trend']} ({a['why']})")
+                    f"AUTO: {a['trend']} ({a['why']})  ·  "
+                    # freshness stamp (Zee 2026-08-19: 'the photo is not updating' —
+                    # never again guess whether the render is current)
+                    f"drawn {(datetime.utcnow() + __import__('datetime').timedelta(hours=5)):%H:%M} PKT"
+                    f" · bar {bars[-1][0]:%H:%M}utc")
     if lines:
         # EARLY SHIFT paint (Zee 2026-08-05): when a broken guard has overruled the
         # slant, the slant line goes DASHED — geometry stale, verdict shifted.
