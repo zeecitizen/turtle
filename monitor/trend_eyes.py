@@ -50,16 +50,53 @@ class Swing:
         self.i, self.t, self.price, self.kind, self.label = i, t, price, kind, "?"
 
 
+def _terminal_bars(hours=9):
+    """Bars straight from the live MT5 terminal (true UTC) — the fallback that cannot
+    rot. Same x64-python pattern as forensic_chart (no ARM64 MetaTrader5 wheel).
+    Added 2026-08-19: the humps chart was redrawing the FROZEN oanda feed (dead since
+    the TV/MSIX break on Aug 14) — regenerate 'worked' but repainted stale bars."""
+    import subprocess
+    from datetime import timedelta
+    helper = Path(__file__).parent / "mt5_bars_helper.py"
+    hi = datetime.utcnow() + timedelta(minutes=2)
+    lo = hi - timedelta(hours=hours)
+    x64 = r"C:\Users\zeesh\AppData\Local\Python\pythoncore-3.14-64\python.exe"
+    for exe in (x64, "py"):
+        try:
+            r = subprocess.run([exe, str(helper), lo.isoformat(), hi.isoformat(), "3"],
+                               capture_output=True, text=True, timeout=30)
+            if r.returncode != 0 or not r.stdout.strip():
+                continue
+            out = []
+            for ln in r.stdout.strip().splitlines():
+                c = ln.split(",")
+                if len(c) == 6:
+                    out.append((datetime.fromtimestamp(int(c[0]), tz=timezone.utc)
+                                .replace(tzinfo=None),
+                                float(c[2]), float(c[3]), float(c[4]), float(c[5])))
+            if out:
+                return out
+        except Exception:
+            continue
+    return []
+
+
 def load_bars(path=CF):
-    rows = []
-    with open(path, encoding="utf-8") as f:
-        for r in csv.DictReader(f):
-            rows.append((datetime.fromtimestamp(int(r["time_unix"]), tz=timezone.utc)
-                         .replace(tzinfo=None),
-                         float(r["high"]), float(r["low"]), float(r["close"]),
-                         float(r.get("volume", 0))))
-    rows.sort()
-    return rows
+    rows = {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                t = (datetime.fromtimestamp(int(r["time_unix"]), tz=timezone.utc)
+                     .replace(tzinfo=None))
+                rows[t] = (t, float(r["high"]), float(r["low"]), float(r["close"]),
+                           float(r.get("volume", 0)))
+    except FileNotFoundError:
+        pass
+    newest = max(rows) if rows else None
+    if newest is None or (datetime.utcnow() - newest).total_seconds() > 900:
+        for x in _terminal_bars():                    # feed stale -> the terminal speaks
+            rows[x[0]] = x
+    return [rows[k] for k in sorted(rows)]
 
 
 def _swings_fractal(bars, n):
