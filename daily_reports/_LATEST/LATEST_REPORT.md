@@ -427,8 +427,12 @@ VERDICT — three truths:
    the crash was never controllable, only pre-emptable, and the asymmetric pulse
    pre-empts it. **THE DIAL IS A RISING RIDGE, not a spike:** fast-red 3 = +376.60 · 5 = +415.96 ·
    8 = +449.26 — every position beats the champion by $100-173, worst single loss
-   -19..-22 at every setting. Crest probe at 12 running; ship candidate = the
-   crest value, on Zee's word, as v1.48 THE DIAMOND SEASON MACHINE.
+   -19..-22 at every setting. **CREST FOUND AT 8 — a perfect hill: 3=+377 · 5=+416 · 8=+449 · 12=+283** (rises,
+   peaks, falls; all four beat the champion). SHIP CANDIDATE, awaiting Zee's word:
+   **THE DIAMOND SEASON MACHINE** = DiamondMode on · slow-greed pulse 20 ·
+   fast-fear window 8 · diamond geometry SL20/TP1/h60 in green · scout machine in
+   red. Receipts: +449.26 (champion +276.22, 3 days ago -228.88), better in 4 of 6
+   vs champion incl. kind AND hostile, worst avgL -5.49, worst single -19.36.
    (Honest overfit note: fourth refinement round on the same six periods today —
    mitigated by mechanism-first design and whole-dial positivity, and the final
    config gets live-forward validation like everything else.)
