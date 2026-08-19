@@ -267,7 +267,8 @@ input bool   InpDiamondMode  = false; // green pulse trades the locked streak ge
 input double InpGreenStopPts = 20.0;  // the diamond stop
 input int    InpGreenHoldMin = 60;    // the diamond clock
 input bool   InpGreenKeep10c = false; // variant B: keep loud-band quartering in green
-input bool   InpGreenFastRed = false; // quick to fear: diamond season also needs the LAST 5 tickets green
+input bool   InpGreenFastRed = false; // quick to fear: diamond season also needs the fast window green
+input int    InpFastRedLook  = 5;    // the fast-fear window (tickets)
 // ── CRASH CONTROL (2026-08-19, Zee: "the diamond had only one defect — it kept
 // winning until the trend shifted and it gave a drop.. if only we could control
 // the crash, even without the additional laws the diamond would be a consecutive
@@ -1077,7 +1078,7 @@ void TryFire() {
       g_green = (RollingNet(InpRegimeLook) >= 0);
    bool diamond_now = (InpDiamondMode && g_green);
    // quick to fear, slow to greed: one fresh crash ends the diamond season at once
-   if (diamond_now && InpGreenFastRed && RollingNet(5) < 0)
+   if (diamond_now && InpGreenFastRed && RollingNet(InpFastRedLook) < 0)
       diamond_now = false;
    double useStop = diamond_now ? InpGreenStopPts : InpStopPts;
    double sl = (t > 0) ? px - useStop : px + useStop;
