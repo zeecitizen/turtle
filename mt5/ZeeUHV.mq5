@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.45"
+#property version   "1.47"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -254,6 +254,25 @@ input bool   InpRevExit     = false; // his other described exit: first opposing
 // also scratches the dip-first winners. His hand scratched ONLY true deaths — and
 // the pulse knows the season of deaths. Scratch ONLY while the pulse is red.
 input bool   InpScratchRedOnly = false; // scratch mode active only when RollingNet(20) < 0
+
+// ── DIAMOND SEASON (2026-08-19, Zee: "maybe the original diamond code is what we
+// need for consecutive wins" -> "do it"). The preserved streak geometry (SL 20 /
+// TP 1 — his Aug 11-13 screenshot's own S/L column) is the best KIND-season
+// harvester ever measured (93.65%% on the streak tape; random control 87.4%%), and
+// it dies in April (97%% DD receipt). Now that the pulse knows the season: GREEN
+// pulse -> the diamond machine, exactly as locked (wide stop, full stack, pure —
+// Law 10c bypassed for fidelity, variant B keeps it). RED pulse -> today's scout
+// machine (tight stop, quarter size, full guard). Two eras, one EA. Default OFF.
+input bool   InpDiamondMode  = false; // green pulse trades the locked streak geometry
+input double InpGreenStopPts = 20.0;  // the diamond stop
+input int    InpGreenHoldMin = 60;    // the diamond clock
+input bool   InpGreenKeep10c = false; // variant B: keep loud-band quartering in green
+// ── CRASH CONTROL (2026-08-19, Zee: "the diamond had only one defect — it kept
+// winning until the trend shifted and it gave a drop.. if only we could control
+// the crash, even without the additional laws the diamond would be a consecutive
+// winner." Two crash-fix designs beyond the pulse, both default OFF.) ──
+input int    InpLossCoolMin  = 0;    // stand down N minutes after any LOSING ticket (0=off)
+input double InpDayHaltLoss  = 0.0;  // halt new fires for the broker day after this day-loss (0=off)
 input int    InpProbeSec     = 0;    // probe duration seconds (0 = off; must be < hold*60)
 input double InpProbeMinPts  = 0.10; // conviction threshold the probe must show
 input double InpProbeLots    = 0.01; // scout size
@@ -786,7 +805,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.45 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.47 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -888,6 +907,40 @@ double RollingNet(int n) {
    return sum;
 }
 
+// The most recent closed ticket: its profit and close time (crash detection).
+bool LastOutDeal(double &prof, datetime &when) {
+   if (!HistorySelect(0, TimeCurrent())) return false;
+   for (int i = HistoryDealsTotal() - 1; i >= 0; i--) {
+      ulong tk = HistoryDealGetTicket(i);
+      if (tk == 0) continue;
+      if (HistoryDealGetInteger(tk, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;
+      if (HistoryDealGetInteger(tk, DEAL_MAGIC) != InpMagicNumber) continue;
+      prof = HistoryDealGetDouble(tk, DEAL_PROFIT)
+           + HistoryDealGetDouble(tk, DEAL_SWAP)
+           + HistoryDealGetDouble(tk, DEAL_COMMISSION);
+      when = (datetime)HistoryDealGetInteger(tk, DEAL_TIME);
+      return true;
+   }
+   return false;
+}
+
+// Net of the current broker day's closed tickets (the day-halt doctrine).
+double DayNet() {
+   datetime day0 = TimeCurrent() - (TimeCurrent() % 86400);
+   if (!HistorySelect(day0, TimeCurrent())) return 0;
+   double sum = 0;
+   for (int i = HistoryDealsTotal() - 1; i >= 0; i--) {
+      ulong tk = HistoryDealGetTicket(i);
+      if (tk == 0) continue;
+      if (HistoryDealGetInteger(tk, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;
+      if (HistoryDealGetInteger(tk, DEAL_MAGIC) != InpMagicNumber) continue;
+      sum += HistoryDealGetDouble(tk, DEAL_PROFIT)
+           + HistoryDealGetDouble(tk, DEAL_SWAP)
+           + HistoryDealGetDouble(tk, DEAL_COMMISSION);
+   }
+   return sum;
+}
+
 // ── PIPELINE CENSUS (Zee 2026-08-18: "i dont know why our trade count is so low..
 // i wanna check if some original law is hindering trades"). Counts every bar's fate
 // through the funnel; printed by OnTester as [CEN]. Zero effect on behaviour.
@@ -907,6 +960,14 @@ void TryFire() {
    // Shop-B entry discipline: act only when the just-closed M1 bar COMPLETED an M3
    // candle (bar-1 open time is the last minute of an M3 triplet).
    if (InpEntryBoundary && (iTime(_Symbol, PERIOD_CURRENT, 0) % 180) != 0) return;
+   // CRASH CONTROL: after a losing ticket, the trend may have shifted — sit out.
+   if (InpLossCoolMin > 0) {
+      double lp; datetime lt;
+      if (LastOutDeal(lp, lt) && lp < 0 && TimeCurrent() - lt < InpLossCoolMin * 60)
+         return;
+   }
+   // CRASH CONTROL: the day-halt doctrine — one crash is enough for one day.
+   if (InpDayHaltLoss > 0 && DayNet() <= -InpDayHaltLoss) return;
    h_bars[z_hr]++;
    if (OpenCount() >= InpMaxOpen) { z_maxopen++; return; }
    if (g_last_fire > 0 &&
@@ -1008,7 +1069,14 @@ void TryFire() {
          return;
       }
    }
-   double sl = (t > 0) ? px - InpStopPts   : px + InpStopPts;
+   // DIAMOND SEASON: read the pulse ONCE, here, before geometry — green season
+   // trades the locked streak stop, red season the scout stop. Sizing reuses this.
+   bool g_green = true;
+   if (InpRegimeLook > 0)
+      g_green = (RollingNet(InpRegimeLook) >= 0);
+   bool diamond_now = (InpDiamondMode && g_green);
+   double useStop = diamond_now ? InpGreenStopPts : InpStopPts;
+   double sl = (t > 0) ? px - useStop : px + useStop;
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
 
    if (InpMaxSpreadPts > 0 && (ask - bid) > InpMaxSpreadPts) {
@@ -1105,19 +1173,26 @@ void TryFire() {
    // Every ticket is equal-sized (StackStep 0), so scaling the COUNT scales the
    // exposure exactly; MathMax(1, ...) guarantees no setup is ever reduced to zero —
    // the law can shrink a trade, never delete one.
+   int tickets_before_loud = tickets;
+   bool loud10_applied = false;
    if (InpLoudSizeFrac > 0 && InpLoudSizeFrac < 1.0 && uhv > 1) {
       double lr10 = (double)BarVolume(1) / MathMax(1.0, (double)BarVolume(uhv));
-      if (lr10 > InpLoudVolFrac)
+      if (lr10 > InpLoudVolFrac) {
          tickets = (int)MathMax(1, MathRound(tickets * InpLoudSizeFrac));
+         loud10_applied = true;
+      }
    }
    // HTF-disagree sizing (InpHtfMode 1): the M3 second opinion shrinks, never blocks
    if (InpHtfMode == 1 && g_htf_against && InpHtfSizeFrac > 0 && InpHtfSizeFrac < 1.0)
       tickets = (int)MathMax(1, MathRound(tickets * InpHtfSizeFrac));
    // the self-aware switch: red pulse -> scout size, green pulse -> full stack
-   if (InpRegimeLook > 0 && InpRegimeFrac > 0 && InpRegimeFrac < 1.0) {
-      if (RollingNet(InpRegimeLook) < 0)
-         tickets = (int)MathMax(1, MathRound(tickets * InpRegimeFrac));
-   }
+   // (g_green/diamond_now were decided once at geometry time, above)
+   if (InpRegimeLook > 0 && !g_green && InpRegimeFrac > 0 && InpRegimeFrac < 1.0)
+      tickets = (int)MathMax(1, MathRound(tickets * InpRegimeFrac));
+   // DIAMOND SEASON: in green, the streak machine runs pure — undo the loud-band
+   // quartering (unless variant B keeps it); the wide stop was applied at px calc.
+   if (diamond_now && !InpGreenKeep10c && InpLoudSizeFrac > 0 && loud10_applied)
+      tickets = tickets_before_loud;
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
@@ -1199,7 +1274,9 @@ void AgeOut() {
             trade.PositionClose(t);
          continue;
       }
-      if (TimeCurrent() - opened >= InpMaxHoldMin * 60)
+      double stopdist = MathAbs(PositionGetDouble(POSITION_PRICE_OPEN) - PositionGetDouble(POSITION_SL));
+      int holdlim = (InpDiamondMode && stopdist > 10.0) ? InpGreenHoldMin : InpMaxHoldMin;
+      if (TimeCurrent() - opened >= holdlim * 60)
          if (trade.PositionClose(t) && InpVerbose)
             PrintFormat("[ZEE] aged out after %dm", InpMaxHoldMin);
    }
