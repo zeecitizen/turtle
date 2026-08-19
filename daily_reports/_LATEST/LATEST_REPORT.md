@@ -418,9 +418,15 @@ VERDICT — three truths:
    COUNT, never crash SIZE, and with SL 20 the damage-before-detection is fatal.
 3. THE CRASH CAN BE PRE-EMPTED: the fused machine (diamond geometry only in green
    pulse seasons) is the only diamond-bearing config in profit (+247) — $29 short
-   of the plain champion. Refinement running: quick-to-fear (green season ends on
-   a 5-ticket red flash even while entering on the slow 20) — his harvest doctrine
-   as a pulse asymmetry. If it clears +276.22 it's the new crown candidate.
+   of the plain champion. **THE REFINEMENT TOOK THE THRONE — FUSED + fast-red: +415.96** (+140 over the
+   champion). Quick to fear (5-ticket red ends the diamond season instantly), slow
+   to greed (20-ticket green opens it). LIVE +114 · Mar −62 · Apr −88 · May −148 ·
+   Jun +202 · Jul +398. Better in 4 of 6 vs the champion, kind AND hostile.
+   **Worst single loss: −19.36 — the −42 crash class is GONE** from a machine
+   carrying the 20-point diamond stop. Zee's theory vindicated in refined form:
+   the crash was never controllable, only pre-emptable, and the asymmetric pulse
+   pre-empts it. Fast-window dial test (3/8 vs 5) running — ships as v1.48 on the
+   hill-shape passing and Zee's word.
 
 ## 5. Open items
 
