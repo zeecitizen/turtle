@@ -394,6 +394,34 @@ Aug-18 data 24 times because it read the census from an unrelated log. Rule: the
 census check must come from the SAME run's output, and when it cannot be found at
 all, downgrade to a warning if bars+trades are sane. (test_tips candidate P14.)
 
+## 4m. THE DIAMOND CRASH COURT (Aug 19 midday) — his theory, tried in 54 runs
+
+Zee: "the diamond had only one defect — it kept winning until the trend shifted and
+it gave a drop. control the crash and even without the additional laws it's a
+consecutive winner. test this as thoroughly as you can."
+
+```
+FUSED pure (diamond in green season)   +247.08   Jul +410! · worst single -42
+FUSED guarded (10c kept in green)       +24.74
+RAW + pulse slow (20)                  -233.19   best pure-theory arm
+RAW + near-stop / cool60 / day-halt    -713 .. -982
+RAW + pulse fast (5)                 -1,373.27
+RAW diamond, faithfully resurrected  -1,640.61   (but POSITIVE in 4 of 6 periods!)
+(sitting champion: v1.45 pulse         +276.22)
+```
+
+VERDICT — three truths:
+1. HIS PREMISE IS TRUE: the raw diamond wins 4 of 6 fortnights (May +220, Jun +161,
+   Jul +180, LIVE +38). Only Mar (-803) and Apr (-1,437) kill it.
+2. THE CRASH CANNOT BE CONTROLLED FROM INSIDE THE RAW MACHINE: five designs, zero
+   pass. The worst-single-loss column (-42.50) never moved — crash-fixes cut crash
+   COUNT, never crash SIZE, and with SL 20 the damage-before-detection is fatal.
+3. THE CRASH CAN BE PRE-EMPTED: the fused machine (diamond geometry only in green
+   pulse seasons) is the only diamond-bearing config in profit (+247) — $29 short
+   of the plain champion. Refinement running: quick-to-fear (green season ends on
+   a 5-ticket red flash even while entering on the slow 20) — his harvest doctrine
+   as a pulse asymmetry. If it clears +276.22 it's the new crown candidate.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by

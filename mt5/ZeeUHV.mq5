@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.47"
+#property version   "1.48"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -267,6 +267,7 @@ input bool   InpDiamondMode  = false; // green pulse trades the locked streak ge
 input double InpGreenStopPts = 20.0;  // the diamond stop
 input int    InpGreenHoldMin = 60;    // the diamond clock
 input bool   InpGreenKeep10c = false; // variant B: keep loud-band quartering in green
+input bool   InpGreenFastRed = false; // quick to fear: diamond season also needs the LAST 5 tickets green
 // ── CRASH CONTROL (2026-08-19, Zee: "the diamond had only one defect — it kept
 // winning until the trend shifted and it gave a drop.. if only we could control
 // the crash, even without the additional laws the diamond would be a consecutive
@@ -805,7 +806,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.47 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.48 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1075,6 +1076,9 @@ void TryFire() {
    if (InpRegimeLook > 0)
       g_green = (RollingNet(InpRegimeLook) >= 0);
    bool diamond_now = (InpDiamondMode && g_green);
+   // quick to fear, slow to greed: one fresh crash ends the diamond season at once
+   if (diamond_now && InpGreenFastRed && RollingNet(5) < 0)
+      diamond_now = false;
    double useStop = diamond_now ? InpGreenStopPts : InpStopPts;
    double sl = (t > 0) ? px - useStop : px + useStop;
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
