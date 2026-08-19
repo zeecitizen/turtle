@@ -375,6 +375,25 @@ variant, even season-gated. His hand's selectivity remains unmechanized (count: 
 were stale-polluted from the earlier rig crash — identical-row tripwire visible in
 the raw table; clean arms carry the verdict.)
 
+## 4l. MORNING OF AUG 19 — the dial completed, v1.45 LIVE, the Aug-18 answer
+
+**v1.45 SHIPPED AND ATTACHED (05:30):** the self-aware switch live at pulse-20.
+**The dial completed clean:** p10 +264.78 · p20 +505.10 · p40 +455.16 (deltas) —
+all three ABSOLUTE-POSITIVE configs; a plateau, v1.45 on its crest. The mechanism
+is robust, not lucky.
+
+**The Aug-18 Law-12 answer (his two-day-old question), at live size:**
+OFF 30 tickets 53.3%% −37.70 · ON 10 tickets 80.0%% +75.60 — his peak-bound law
+turned that red day green and removed exactly the fires his autopsy convicted
+(12:46 + the evening ghost family). Six-fortnight receipts still carry the
+streak-tax; and with the switch now live, Law 12's marginal value must be
+re-measured ON TOP of v1.45 before any ship (they may overlap or compound).
+
+**Harness lesson (cost 8 wasted watcher-hours):** the half-baked guard vetoed valid
+Aug-18 data 24 times because it read the census from an unrelated log. Rule: the
+census check must come from the SAME run's output, and when it cannot be found at
+all, downgrade to a warning if bars+trades are sane. (test_tips candidate P14.)
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
