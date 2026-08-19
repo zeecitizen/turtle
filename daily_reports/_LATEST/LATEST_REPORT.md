@@ -425,8 +425,13 @@ VERDICT — three truths:
    **Worst single loss: −19.36 — the −42 crash class is GONE** from a machine
    carrying the 20-point diamond stop. Zee's theory vindicated in refined form:
    the crash was never controllable, only pre-emptable, and the asymmetric pulse
-   pre-empts it. Fast-window dial test (3/8 vs 5) running — ships as v1.48 on the
-   hill-shape passing and Zee's word.
+   pre-empts it. **THE DIAL IS A RISING RIDGE, not a spike:** fast-red 3 = +376.60 · 5 = +415.96 ·
+   8 = +449.26 — every position beats the champion by $100-173, worst single loss
+   -19..-22 at every setting. Crest probe at 12 running; ship candidate = the
+   crest value, on Zee's word, as v1.48 THE DIAMOND SEASON MACHINE.
+   (Honest overfit note: fourth refinement round on the same six periods today —
+   mitigated by mechanism-first design and whole-dial positivity, and the final
+   config gets live-forward validation like everything else.)
 
 ## 5. Open items
 
