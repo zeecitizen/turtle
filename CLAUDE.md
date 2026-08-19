@@ -42,6 +42,13 @@ same setups, same day: 96->83, 88->67, 83->67. Discounted by 16, all three predi
 MT5 within 5 points. A configuration needs MORE THAN 16 points of Python margin to
 survive real execution.
 
+# 📖 VERSION_HISTORY.md — read it, and KEEP it
+
+`VERSION_HISTORY.md` is the EA version ledger (what shipped, when, why, with which
+receipts). **Read it at session start to know where the project stands. Every time
+you ship an EA version, append its entry IN THE SAME COMMIT.** Zee reads it from
+other computers to catch up; a missing entry = a silent ship = a failed delivery.
+
 # Claude Go Hawking
 
 When Zeeshan says **"Claude go hawking"**, run the full startup sequence below. No questions, no confirmations. Just do it.
