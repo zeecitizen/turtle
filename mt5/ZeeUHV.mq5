@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.44"
+#property version   "1.45"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -231,7 +231,13 @@ input int    InpLaw12        = 0;    // 0=off · 1=peak-bounded search · 2=boun
 // Red pulse -> every basket opens at InpRegimeFrac of its tickets (scout size — it
 // NEVER stops, because a stopped machine cannot feel the season change). Green
 // pulse -> full stack. Harvest-and-return, mechanized. Default OFF.
-input int    InpRegimeLook   = 0;    // closed tickets in the pulse window (0 = off)
+input int    InpRegimeLook   = 20;   // LIVE 2026-08-20 (Zee: "make the 1.45 live go ahead").
+                                     // The pulse: net of the last 20 closed tickets. Red ->
+                                     // quarter-size scouts; green -> full stack. Receipts:
+                                     // six-period total -228.88 -> +276.22 — the FIRST
+                                     // net-positive M1 configuration in project history.
+                                     // Better/tied in 5 of 6 periods; dial is a hill
+                                     // (p10 +265). Mar -247->-87 · May -384->-91 · Apr green.
 input double InpRegimeFrac   = 0.25; // basket fraction while the pulse is red
 
 // Zee 2026-08-19: "feb11 exits (smallest losses) are possible, its just that we're
@@ -780,7 +786,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.44 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.45 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
