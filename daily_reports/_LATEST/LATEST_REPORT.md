@@ -428,7 +428,7 @@ VERDICT — three truths:
    pre-empts it. **THE DIAL IS A RISING RIDGE, not a spike:** fast-red 3 = +376.60 · 5 = +415.96 ·
    8 = +449.26 — every position beats the champion by $100-173, worst single loss
    -19..-22 at every setting. **CREST FOUND AT 8 — a perfect hill: 3=+377 · 5=+416 · 8=+449 · 12=+283** (rises,
-   peaks, falls; all four beat the champion). SHIP CANDIDATE, awaiting Zee's word:
+   peaks, falls; all four beat the champion). SHIPPED as v1.49 (Zee: "go ahead"), awaiting reattach:
    **THE DIAMOND SEASON MACHINE** = DiamondMode on · slow-greed pulse 20 ·
    fast-fear window 8 · diamond geometry SL20/TP1/h60 in green · scout machine in
    red. Receipts: +449.26 (champion +276.22, 3 days ago -228.88), better in 4 of 6
