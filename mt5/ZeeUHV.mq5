@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.48"
+#property version   "1.49"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -263,12 +263,20 @@ input bool   InpScratchRedOnly = false; // scratch mode active only when Rolling
 // pulse -> the diamond machine, exactly as locked (wide stop, full stack, pure —
 // Law 10c bypassed for fidelity, variant B keeps it). RED pulse -> today's scout
 // machine (tight stop, quarter size, full guard). Two eras, one EA. Default OFF.
-input bool   InpDiamondMode  = false; // green pulse trades the locked streak geometry
+input bool   InpDiamondMode  = true; // LIVE 2026-08-19 (Zee: "Ship the Diamond Season machine
+                                     // as v1.49"). GREEN season = the locked streak machine
+                                     // (SL20/TP1/h60, full stack, pure); RED season = the scout
+                                     // machine (SL5/h3, quarter size, full guard). Receipts:
+                                     // +449.26 six-period total vs champion +276.22 vs -228.88
+                                     // three days prior. Worst single loss -19.36 — the -42
+                                     // crash class extinct. His theory: crash pre-empted, never
+                                     // patched (5 patch designs failed, receipts in §4m).
 input double InpGreenStopPts = 20.0;  // the diamond stop
 input int    InpGreenHoldMin = 60;    // the diamond clock
 input bool   InpGreenKeep10c = false; // variant B: keep loud-band quartering in green
-input bool   InpGreenFastRed = false; // quick to fear: diamond season also needs the fast window green
-input int    InpFastRedLook  = 5;    // the fast-fear window (tickets)
+input bool   InpGreenFastRed = true; // quick to fear: one fast-window red flash ends the season
+input int    InpFastRedLook  = 8;    // the fast-fear window — a PERFECT HILL: 3=+377 · 5=+416 ·
+                                     // 8=+449 (crest) · 12=+283; every value beats the champion
 // ── CRASH CONTROL (2026-08-19, Zee: "the diamond had only one defect — it kept
 // winning until the trend shifted and it gave a drop.. if only we could control
 // the crash, even without the additional laws the diamond would be a consecutive
@@ -807,7 +815,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.48 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.49 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
