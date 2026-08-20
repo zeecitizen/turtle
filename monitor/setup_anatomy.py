@@ -68,7 +68,8 @@ def narrative(a=None):
     # Zee's wording (2026-08-20): name the pivot for what it IS — the last extreme
     # where the retracement began — not "topped/bottomed".
     leg = "Uptrend" if side == "BUY" else "Downtrend"
-    extword = "last highest peak" if side == "BUY" else "last lowest trough"
+    # "peak" for BOTH sides (Zee: "i call the lowest one peak too, trough is hard")
+    extword = "last highest peak" if side == "BUY" else "last lowest peak"
     pullword = "reds" if side == "BUY" else "greens"
     lines = [f"{leg}, {extword} at {_pkt(a['ext_t'])} PKT ({a['ext_px']:.2f}) "
              f"where the retracement began",

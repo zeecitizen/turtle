@@ -499,6 +499,16 @@ means early-feast recovery. TP 0.75 benched awaiting a tape-based chop detector.
 Also today: the LIVE ANATOMY shipped (cockpit panel + humps overlay + forming view
 in his exact reading format, all from rot-proof terminal bars).
 
+## 4t. THE VOLUME SOURCE — his eye's feed, finally measurable (Aug 20 night)
+
+Zee: "we want to use concretely the volume from OANDA inside Tradingview."
+tvDatafeed (websocket, no CDP) restores OANDA data AND heals oanda_m1.csv (dead
+since Aug 14). **Disagreement measured: 46.4%% of rolling 8-bar windows crown a
+DIFFERENT loudest candle** (broker ~450/min vs OANDA ~1,550/min — different
+counters entirely; only rank matters). v1.58 InpVolSource=1 reads the bridge's CSV
+in live AND tester. Reach limit: ~4 days of M1 history, so the head-to-head runs
+Aug 17-20 and the archive grows from tonight for future courts.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
