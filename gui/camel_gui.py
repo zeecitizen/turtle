@@ -236,6 +236,9 @@ class Cockpit:
         tk.Button(srow, text="👀 draw the setup forming now", font=("Segoe UI", 11, "bold"),
                   bg="#7048e8", fg="white", padx=12, pady=5, relief="flat",
                   command=self.show_forming).pack(side="left", padx=(0, 6))
+        tk.Button(srow, text="📐 Line Diagram", font=("Segoe UI", 11, "bold"),
+                  bg="#0b7285", fg="white", padx=12, pady=5, relief="flat",
+                  command=self.show_line_diagram).pack(side="left", padx=(0, 6))
         tk.Button(srow, text="🕸 possible setups", font=("Segoe UI", 11, "bold"),
                   bg="#f08c00", fg="white", padx=12, pady=5, relief="flat",
                   command=self.show_possible).pack(side="left")
@@ -515,6 +518,29 @@ class Cockpit:
                 self.root.after(0, lambda: lbl.config(text=msg))
         threading.Thread(target=work, daemon=True).start()
 
+
+    def show_line_diagram(self):
+        """Zee 2026-08-20 (his own sketch): the SANITY DIAGRAM — body-only schematic
+        of the forming setup: THE UHV, THE TRIGGER, the candle we are waiting for,
+        the required volume, and the non-negotiable terms."""
+        win = tk.Toplevel(self.root); win.title("📐 line diagram — the sanity proof")
+        win.configure(bg=BG)
+        lbl = tk.Label(win, text="drawing…", font=("Segoe UI", 14), bg=BG, fg=DIM)
+        lbl.pack(padx=20, pady=20)
+        def work():
+            try:
+                sys.path.insert(0, str(Path(TE.__file__).parent))
+                import line_diagram
+                import importlib; importlib.reload(line_diagram)
+                p, msg = line_diagram.render()
+            except Exception as ex:
+                p, msg = None, f"error: {ex}"
+            if p:
+                self.root.after(0, lambda: (self._show_pngs(win, lbl, p, None),
+                                            win.title(f"📐 {msg}")))
+            else:
+                self.root.after(0, lambda: lbl.config(text=msg))
+        threading.Thread(target=work, daemon=True).start()
 
     def show_possible(self):
         """Zee 2026-08-13: "i wanna see how many possible setups did we prune through
