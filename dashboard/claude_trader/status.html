@@ -1645,7 +1645,7 @@ async function loadTrades() {
       })();
       const side = (c.direction || '').replace('_closed', '');
       const pnl = Number(c.net_pnl || c.profit || 0);
-      const ea = c.ea || c.magic || '';
+      const ea = EA_NAMES[String(c.magic)] || c.ea || ('EA ' + (c.magic || '?'));
       const detailId = 'detail-' + i;
       const entryDisp = c.entry ? Number(c.entry).toFixed(2) : '—';
       const closeDisp = Number(c.close_price || 0).toFixed(2);
