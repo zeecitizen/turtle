@@ -65,10 +65,13 @@ def narrative(a=None):
     if a is None:
         return ("anatomy unavailable", "not enough bars to read the tape")
     side, price = a["side"], a["price"]
-    leg = "Uptrend leg" if side == "BUY" else "Downtrend leg"
-    extword = "topped" if side == "BUY" else "bottomed"
+    # Zee's wording (2026-08-20): name the pivot for what it IS — the last extreme
+    # where the retracement began — not "topped/bottomed".
+    leg = "Uptrend" if side == "BUY" else "Downtrend"
+    extword = "last highest peak" if side == "BUY" else "last lowest trough"
     pullword = "reds" if side == "BUY" else "greens"
-    lines = [f"{leg}: {extword} {_pkt(a['ext_t'])} PKT at {a['ext_px']:.2f}",
+    lines = [f"{leg}, {extword} at {_pkt(a['ext_t'])} PKT ({a['ext_px']:.2f}) "
+             f"where the retracement began",
              f"Retracement: {a['pull_n']} bars since — {pullword} pulling "
              f"{'down' if side == 'BUY' else 'up'} · price now {price:.2f}"]
     if a["uhv"] is None:
