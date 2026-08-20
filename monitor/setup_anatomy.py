@@ -96,6 +96,21 @@ def narrative(a=None):
         lines.append(f"Price is AT the trigger — if the current candle closes "
                      f"through {trig:.2f} quietly, the EA fires within a second.")
         head = f"AT THE DOOR {trig:.2f} — the next close decides"
+    # THE GATE LINE (2026-08-20, the 18:41 lesson: the door broke LAWFULLY and the
+    # trend gate benched the fire because the 18:39 swing was one confirmation bar
+    # from being structure — the panel must always show the gate's live verdict)
+    try:
+        import trend_eyes
+        r = trend_eyes.read_trend(trend_eyes.load_bars())
+        gate = r.get("trend", "?")
+        if (side == "BUY" and gate == "UPTREND") or (side == "SELL" and gate == "DOWNTREND"):
+            lines.append(f"The gate: structure reads {gate} — a lawful break WILL fire.")
+        else:
+            lines.append(f"⛔ The gate: structure reads {gate} ({r.get('why','')}) — even a "
+                         f"lawful break would be BENCHED until the structure confirms "
+                         f"(swings confirm two bars late; the gate can lag your eye).")
+    except Exception:
+        pass
     lines.append("Next, mechanically: quiet close through the trigger → fire (pulse "
                  "decides the size) · a louder counter-candle → the crown and trigger "
                  "move to it · the pullback never turns → no trade ever exists, and "
