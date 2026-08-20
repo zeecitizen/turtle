@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.56"
+#property version   "1.57"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -314,6 +314,7 @@ input double InpDiaInvLots   = 0.0;  // 0 = off · else lot MULTIPLIER at D0 (fa
 // finishes its two confirmation bars. Admits the lag-benched class; true reversals
 // still flip the verdict the moment opposite structure confirms. Default OFF.
 input int    InpTrendSticky  = 0;    // minutes a confirmed trend persists through "mixed" (0 = off)
+input bool   InpStickyGreenOnly = false; // sticky only while the pulse is GREEN (feast frees the lag-benched)
 // ── THE HOUR DIMMER (2026-08-20, Zee's window theory confirmed on BOTH datasets:
 // Feb-11 (85% of his trades = NY morning, winter clocks) and our live fills (NY
 // morning 38-for-38; the bleed lives in broker hours 02-03 and 09-10 = PKT 04-05
@@ -856,7 +857,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.56 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.57 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1039,8 +1040,10 @@ void TryFire() {
    // sticky trend: paperwork-pending "mixed" defers to the last CONFIRMED verdict
    if (t != 0) { g_sticky_trend = t; g_sticky_t = TimeCurrent(); }
    else if (InpTrendSticky > 0 && g_sticky_trend != 0
-            && TimeCurrent() - g_sticky_t <= InpTrendSticky * 60)
-      t = g_sticky_trend;
+            && TimeCurrent() - g_sticky_t <= InpTrendSticky * 60) {
+      if (!InpStickyGreenOnly || InpRegimeLook <= 0 || RollingNet(InpRegimeLook) >= 0)
+         t = g_sticky_trend;          // green season frees the lag-benched; red keeps the toll
+   }
    int sides[2]; int nsides = 0;
    if (t != 0) { sides[0] = t; nsides = 1; }
    else if (!InpRequireTrend) { sides[0] = +1; sides[1] = -1; nsides = 2; }
