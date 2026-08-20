@@ -437,6 +437,18 @@ VERDICT — three truths:
    mitigated by mechanism-first design and whole-dial positivity, and the final
    config gets live-forward validation like everything else.)
 
+## 4n. THE LOUD THESIS ON TRIAL (Aug 20) — Zee: "loud EA's winrate and totals beat the queen"
+
+True this week (era: LOUD 59%% +172.90 vs QUEEN 45%% -227.40) — so the wild twin got
+its first six-fortnight court appearance. VERDICT: **-658.44**, losing 4 of 6 periods
+(Apr -383, even Jun -185); spectacular ONLY in feast windows (LIVE +162.56 — best
+single feast harvest of any config — and Jul +248). A pure feast-weather specialist:
+this week's outperformance is regime luck; its Monday -366 was its March in preview.
+The queen's guard is worth ~$1,100/twelve-weeks vs the loud style. No changes — the
+live A/B continues with priors now set. Also today: Shop B v1.10 (pulse ported,
+AWAITING REATTACH on M3); her -258.70 autopsy: lawful setup, thrice-defended ceiling
+at rally exhaustion, damage = SIZE (8 unguarded tickets).
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
