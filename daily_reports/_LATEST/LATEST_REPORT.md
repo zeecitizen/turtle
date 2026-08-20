@@ -449,6 +449,15 @@ live A/B continues with priors now set. Also today: Shop B v1.10 (pulse ported,
 AWAITING REATTACH on M3); her -258.70 autopsy: lawful setup, thrice-defended ceiling
 at rally exhaustion, damage = SIZE (8 unguarded tickets).
 
+## 4o. THE RANK-6 AUDIT (Aug 20, Zee: "do it") — exonerated and decorated
+
+Under v1.49: rank-1 = +198.24 vs shipped rank-6 = +449.26 → **rank-6 is worth
++251.02 under the new machine** (2x its original receipts; better in 5 of 6, only
+April prefers rank-1). Live era: 15 rank-6-only fires; exactly ONE on Wednesday —
+the evening WINNER. The 0W/14L Wednesday morning was all rank-1-visible setups:
+the "extra frequency skewed the week" hypothesis is REFUTED. The queen-vs-Loud gap
+is now fully explained: feast weather + deliberate loud-quartering + winter sizing.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
