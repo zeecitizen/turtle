@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.53"
+#property version   "1.55"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -296,6 +296,18 @@ input bool   InpWickDia      = true; // wick-breakout diamond counts (Law 5)
 // and a feast tax (Aug 11: -66 while WR rose). The pulse knows the season: red ->
 // harvest the chop at 0.75; green/diamond -> let winners pay in full at 1.0.
 input double InpRedTargetPts = 0.0;  // TP while the pulse is red (0 = off, use InpTargetPts)
+// ── DIAMOND-SCALED TARGET (2026-08-20, Zee: "as laws of conviction increase we
+// increase the TP. we start from TP very small on lowest diamond; on highest
+// diamond we target the full 1 point"). TP = TargetPts x (frac + (1-frac)·D/Dmax):
+// at frac 0.35 -> D0 aims 0.35 pt, D3 aims 0.74, D5 aims the full point.
+input double InpDiaTpFrac    = 0.0;  // 0 = off · else the lowest-conviction TP fraction
+// ── Zee's inverse-lots cure + the ratio repair (2026-08-20): "whenever you're
+// reaching for lowest points like 0.35 you increase the lot size.. as the TP
+// increases we lower the lot size — inversely proportional." The wall arithmetic
+// (0.35 tp vs 5.0 sl needs 93.5%% at ANY size) demands the repair: InpDiaScaleSL
+// scales the STOP with the target so every tier fights the same 5:1 wall.
+input bool   InpDiaScaleSL   = false; // scale SL with the diamond-scaled TP (ratio constant)
+input double InpDiaInvLots   = 0.0;  // 0 = off · else lot MULTIPLIER at D0 (fades to 1x at Dmax)
 // ── THE HOUR DIMMER (2026-08-20, Zee's window theory confirmed on BOTH datasets:
 // Feb-11 (85% of his trades = NY morning, winter clocks) and our live fills (NY
 // morning 38-for-38; the bleed lives in broker hours 02-03 and 09-10 = PKT 04-05
@@ -836,7 +848,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.53 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.55 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1113,6 +1125,20 @@ void TryFire() {
    double sl = (t > 0) ? px - useStop : px + useStop;
    double useTp = (InpRedTargetPts > 0 && !g_green && !diamond_now)
                   ? InpRedTargetPts : InpTargetPts;   // chop harvests small, feast pays full
+   // conviction grades the ambition: few diamonds -> modest target, full house -> full point
+   double g_diafrac = 1.0; int g_diaearly = -1;
+   if (InpDiaTpFrac > 0 && InpDiaTpFrac < 1.0 && !diamond_now) {
+      g_diaearly = InpUseDiamonds ? DiamondsFor(origin, uhv, t) : 0;
+      int mxd = 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0);
+      g_diafrac = InpDiaTpFrac + (1.0 - InpDiaTpFrac)
+                  * MathMin(g_diaearly, mxd) / (double)mxd;
+      useTp = useTp * g_diafrac;
+      if (InpDiaScaleSL) {
+         // the repair: the stop shrinks with the target — every tier fights the
+         // same ratio wall, and only then may inverse lots amplify
+         sl = (t > 0) ? px - useStop * g_diafrac : px + useStop * g_diafrac;
+      }
+   }
    double tp = (t > 0) ? px + useTp : px - useTp;
 
    if (InpMaxSpreadPts > 0 && (ask - bid) > InpMaxSpreadPts) {
@@ -1239,6 +1265,12 @@ void TryFire() {
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
+      if (InpDiaInvLots > 1.0 && g_diaearly >= 0) {
+         int mxd2 = 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0);
+         double mult = InpDiaInvLots - (InpDiaInvLots - 1.0)
+                       * MathMin(g_diaearly, mxd2) / (double)mxd2;
+         lots = NormalizeDouble(lots * mult, 2);
+      }
       if (!InpStackLots) lots = NormalizeDouble(InpLots * (InpUseDiamonds ? ClicksFor(dia) : 1), 2);
       // 1e-9 slack: 0.20 + 0.10 evaluates to 0.30000000000000004 in doubles, so a cap
       // of 0.30 silently behaved like 0.20 and the sweep returned identical numbers for
