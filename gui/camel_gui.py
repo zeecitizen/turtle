@@ -220,6 +220,18 @@ class Cockpit:
         self.stage = tk.Label(self.body, text="", font=("Segoe UI", 26, "bold"),
                               bg=BG, fg=DIM)
         self.stage.pack(pady=(8, 0))
+        # ── THE LIVE ANATOMY (Zee 2026-08-20: "make all this information readily
+        # available on the GUI after 'hunting — no setup yet' in exactly this format
+        # so i can read and know OK here's where we stand right now") ──
+        self.anat_head = tk.Label(self.body, text="", font=("Segoe UI", 14, "bold"),
+                                  bg=BG, fg="#e8a305")
+        self.anat_head.pack(pady=(4, 0))
+        self.anat_body = tk.Label(self.body, text="", font=("Segoe UI", 11),
+                                  bg=BG, fg=FG, justify="left",
+                                  wraplength=1150, anchor="w")
+        self.anat_body.pack(pady=(2, 4), padx=18, fill="x")
+        self._anat_busy = False
+        self.tick_anatomy()
         srow = tk.Frame(self.body, bg=BG); srow.pack(pady=(2, 0))
         tk.Button(srow, text="👀 draw the setup forming now", font=("Segoe UI", 11, "bold"),
                   bg="#7048e8", fg="white", padx=12, pady=5, relief="flat",
@@ -875,6 +887,32 @@ class Cockpit:
             txt, col = "", DIM
         self.stage.config(text=txt, fg=col)
         self.root.after(3000, self.tick_stage)
+
+    def tick_anatomy(self):
+        """Refresh the live anatomy every 45 s (worker thread; UI stays smooth)."""
+        def work():
+            try:
+                import setup_anatomy
+                import importlib
+                importlib.reload(setup_anatomy)
+                head, body = setup_anatomy.narrative()
+            except Exception as e:
+                head, body = "anatomy unavailable", str(e)[:120]
+            def apply():
+                try:
+                    self.anat_head.config(text="🚪 " + head)
+                    self.anat_body.config(text=body)
+                except Exception:
+                    pass
+            try:
+                self.root.after(0, apply)
+            except Exception:
+                pass
+            self._anat_busy = False
+        if not self._anat_busy:
+            self._anat_busy = True
+            threading.Thread(target=work, daemon=True).start()
+        self.root.after(45000, self.tick_anatomy)
 
     def force_regime(self):
         ROVR.write_text(json.dumps({"until": int(time.time()) + 1800, "by": "zee"}),

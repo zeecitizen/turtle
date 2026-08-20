@@ -458,6 +458,36 @@ def draw(bars, back=120, out=None):
         _axes[0].set_ylim(_lo - _pad, _hi + _pad)
     except Exception:
         pass
+    # ── THE LIVE ANATOMY OVERLAY (Zee 2026-08-20: "draw this on the humps photo so
+    # i know exactly that we found a UHV, now we're looking for its breakout") ──
+    try:
+        import setup_anatomy as _sa
+        _an = _sa.analyze(bars)
+        if _an and _an.get("uhv") is not None:
+            _u = _an["uhv"]; _trig = _an["trigger"]
+            _ax = _axes[0]
+            _ui = next((i for i, b in enumerate(seg) if b[0] == _u[0]), None)
+            if _ui is not None:
+                _ax.axvspan(_ui - 0.45, _ui + 0.45, color="#7048e8", alpha=0.18, zorder=1)
+                _ax.annotate("UHV — the door", xy=(_ui, _trig),
+                             textcoords="offset points", xytext=(0, 26), ha="center",
+                             fontsize=12, fontweight="bold", color="#7048e8",
+                             annotation_clip=False, zorder=7,
+                             arrowprops=dict(arrowstyle="->", lw=2.0, color="#7048e8"),
+                             bbox=dict(boxstyle="round,pad=0.28", fc="white",
+                                       ec="#7048e8", lw=1.1, alpha=0.95))
+            _ax.axhline(_trig, color="#e8a305", lw=2.2, ls="--", alpha=0.95, zorder=6)
+            _dist = (_trig - _an["price"]) if _an["side"] == "BUY" else (_an["price"] - _trig)
+            _msg = (f"trigger {_trig:.2f} — waiting for a quiet "
+                    f"{'green' if _an['side'] == 'BUY' else 'red'} close "
+                    f"{'above' if _an['side'] == 'BUY' else 'below'} it"
+                    + (f"  ({_dist:.2f} pts away)" if _dist > 0 else "  — AT THE DOOR"))
+            _ax.text(len(seg) - 1, _trig, "  " + _msg, color="#8a6d00", fontsize=11,
+                     fontweight="bold", va="bottom", ha="right", zorder=7,
+                     bbox=dict(boxstyle="round,pad=0.25", fc="#fff8e1",
+                               ec="#e8a305", lw=1.0, alpha=0.92))
+    except Exception as _e:
+        import traceback; traceback.print_exc()
     if heart_xy:
         _axes[0].text(heart_xy[0], heart_xy[1], "♥", fontsize=26,
                       color="#e03131", ha="center", va="center")
