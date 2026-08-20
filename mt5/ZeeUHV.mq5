@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.57"
+#property version   "1.58"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -315,6 +315,13 @@ input double InpDiaInvLots   = 0.0;  // 0 = off · else lot MULTIPLIER at D0 (fa
 // still flip the verdict the moment opposite structure confirms. Default OFF.
 input int    InpTrendSticky  = 0;    // minutes a confirmed trend persists through "mixed" (0 = off)
 input bool   InpStickyGreenOnly = false; // sticky only while the pulse is GREEN (feast frees the lag-benched)
+// ── THE VOLUME SOURCE (2026-08-20, Zee: "we want to use concretely the volume from
+// OANDA inside Tradingview"). MEASURED: the two feeds crown a DIFFERENT loudest
+// candle in 46.4%% of rolling windows — and HIS eye, his 146 labels and Feb-11 all
+// read OANDA. 1 = read Common\Files\oanda_vol.csv (server-time keyed, written by
+// monitor/oanda_volume_bridge.py). Falls back to broker volume for any minute the
+// file does not carry. Default 0 = unchanged.
+input int    InpVolSource    = 0;    // 0 = broker tick-count · 1 = OANDA (TradingView)
 // ── THE HOUR DIMMER (2026-08-20, Zee's window theory confirmed on BOTH datasets:
 // Feb-11 (85% of his trades = NY morning, winter clocks) and our live fills (NY
 // morning 38-for-38; the bleed lives in broker hours 02-03 and 09-10 = PKT 04-05
@@ -425,7 +432,51 @@ double AvgVolBefore(int k) {
    return (n > 0) ? sum / n : 0.0;
 }
 
+// OANDA volume table, loaded once at init from Common\Files (works in the tester
+// too — the tester reads FILE_COMMON, so this source is court-testable).
+datetime g_ov_t[];
+long     g_ov_v[];
+int      g_ov_n = 0;
+
+void LoadOandaVol() {
+   g_ov_n = 0;
+   int h = FileOpen("oanda_vol.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON);
+   if (h == INVALID_HANDLE) {
+      Print("[ZEE] OANDA volume requested but oanda_vol.csv not found — using broker volume");
+      return;
+   }
+   ArrayResize(g_ov_t, 8192); ArrayResize(g_ov_v, 8192);
+   while (!FileIsEnding(h)) {
+      string ln = FileReadString(h);
+      int c = StringFind(ln, ",");
+      if (c <= 0) continue;
+      datetime t = StringToTime(StringSubstr(ln, 0, c));
+      long v = (long)StringToInteger(StringSubstr(ln, c + 1));
+      if (t <= 0) continue;
+      if (g_ov_n >= ArraySize(g_ov_t)) {
+         ArrayResize(g_ov_t, g_ov_n + 4096); ArrayResize(g_ov_v, g_ov_n + 4096);
+      }
+      g_ov_t[g_ov_n] = t; g_ov_v[g_ov_n] = v; g_ov_n++;
+   }
+   FileClose(h);
+   PrintFormat("[ZEE] OANDA volume table loaded: %d minutes", g_ov_n);
+}
+
+long OandaVolAt(datetime t) {          // binary search the sorted table
+   int lo = 0, hi = g_ov_n - 1;
+   while (lo <= hi) {
+      int mid = (lo + hi) / 2;
+      if (g_ov_t[mid] == t) return g_ov_v[mid];
+      if (g_ov_t[mid] < t) lo = mid + 1; else hi = mid - 1;
+   }
+   return -1;
+}
+
 long BarVolume(int k) {
+   if (InpVolSource == 1 && g_ov_n > 0) {
+      long ov = OandaVolAt(iTime(_Symbol, PERIOD_CURRENT, k));
+      if (ov > 0) return ov;           // his eye's feed; falls back below if absent
+   }
    long rv = iRealVolume(_Symbol, PERIOD_CURRENT, k);
    if (rv > 0) return rv;
    return iVolume(_Symbol, PERIOD_CURRENT, k);
@@ -852,12 +903,13 @@ int ClicksFor(int d) { return (d <= 1) ? 1 : ((d == 2) ? 2 : 3); }
 
 //+------------------------------------------------------------------+
 int OnInit() {
+   if (InpVolSource == 1) LoadOandaVol();
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.57 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.58 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
