@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.55"
+#property version   "1.56"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -308,6 +308,12 @@ input double InpDiaTpFrac    = 0.0;  // 0 = off · else the lowest-conviction TP
 // scales the STOP with the target so every tier fights the same 5:1 wall.
 input bool   InpDiaScaleSL   = false; // scale SL with the diamond-scaled TP (ratio constant)
 input double InpDiaInvLots   = 0.0;  // 0 = off · else lot MULTIPLIER at D0 (fades to 1x at Dmax)
+// ── STICKY TREND (2026-08-20, the 18:41 wound. Zee: "i don't want gates that stop
+// valid setups.. the basic laws if they hold, the setup should've been through.")
+// A confirmed trend stays IN FORCE until CONTRADICTED — not until the newest swing
+// finishes its two confirmation bars. Admits the lag-benched class; true reversals
+// still flip the verdict the moment opposite structure confirms. Default OFF.
+input int    InpTrendSticky  = 0;    // minutes a confirmed trend persists through "mixed" (0 = off)
 // ── THE HOUR DIMMER (2026-08-20, Zee's window theory confirmed on BOTH datasets:
 // Feb-11 (85% of his trades = NY morning, winter clocks) and our live fills (NY
 // morning 38-for-38; the bleed lives in broker hours 02-03 and 09-10 = PKT 04-05
@@ -722,6 +728,8 @@ double Ema5(int shift) {
 //   bit 3 = Law 3 ema     bit 4 = Law 5 wick+vol
 int g_lawmask = 0;
 bool g_htf_against = false;
+int g_sticky_trend = 0;
+datetime g_sticky_t = 0;
 
 int DiamondsFor(int origin, int uhv, int side) {
    int d = 0;
@@ -848,7 +856,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.55 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.56 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1028,6 +1036,11 @@ void TryFire() {
 //  tested. With InpRequireTrend=false a ranging tape may still trade: we simply try
 //  both sides and take whichever completes a lawful setup.
    int t = TrendNow();
+   // sticky trend: paperwork-pending "mixed" defers to the last CONFIRMED verdict
+   if (t != 0) { g_sticky_trend = t; g_sticky_t = TimeCurrent(); }
+   else if (InpTrendSticky > 0 && g_sticky_trend != 0
+            && TimeCurrent() - g_sticky_t <= InpTrendSticky * 60)
+      t = g_sticky_trend;
    int sides[2]; int nsides = 0;
    if (t != 0) { sides[0] = t; nsides = 1; }
    else if (!InpRequireTrend) { sides[0] = +1; sides[1] = -1; nsides = 2; }
