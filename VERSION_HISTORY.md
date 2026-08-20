@@ -51,7 +51,7 @@ hostile one, or it doesn't ship.
 | EA | magic | state | story |
 |---|---|---|---|
 | ZeeUHV_Loud_Breakout v1.2 | 88104 | LIVE | counter-experiment: fires when breakout ≥0.80×UHV (the band 10c shrinks). Has Law 9 + hold 3; NO rank-6/pulse yet (port = separate receipted step) |
-| ZeeUHV_M3 "Shop B" v1.00 | 88134 | LIVE on M3 chart | the steady stall: first-ever positive six-period config on its birth receipts (+23.32, worst period −19). MUST run on the M3 chart |
+| ZeeUHV_M3 "Shop B" **v1.10** | 88134 | LIVE on M3 chart | **2026-08-20: THE PULSE PORTED** (Zee's order, after −258.70 overnight = 2.7× her worst tested fortnight, second out-of-book day in week one). Pulse-20 default ON: red → quarter-size, green → full. Birth story: first-ever positive six-period config (+23.32, worst period −19). MUST run on the M3 chart |
 | ZeeSimple v1.20 | 88111 | RETIRED (Aug 18) | attempt 7 at Feb-11 tempo; every-retracement ≈ random entry paying spread rent. Live-forward confirmed the tester (−$37/138 closes). Ladder rungs live in its inputs |
 | ZeeUHV_R1 v1.00 | 88121 | RETIRED (Aug 18) | rung 1 frozen (real retracement only, 66/day = Feb-11's tempo); kind-tape-only |
 | TurtleTradeLogger v1.04 | — | LIVE | self-healing: `BackfillMissedDeals()` at init (the fills file had silently lost 96 positions/−$590 during disconnects) |

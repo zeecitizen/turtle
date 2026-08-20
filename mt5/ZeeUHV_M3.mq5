@@ -22,7 +22,7 @@
 //|  forensic and census tool reads it the same way.                 |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.37"
+#property version   "1.10"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -226,6 +226,14 @@ input double InpBrkVolMaxFrac = 0.0; // Law 10b: breakout vol <= this frac of UH
 // breakout in the loud band (vol > InpLoudVolFrac x UHV, the band where the $500
 // baskets live) opens FEWER TICKETS instead of none. Tempo untouched, tail halved.
 input double InpLoudVolFrac  = 0.85; // Law 10c: loud band starts at this fraction of UHV volume
+// ── THE PULSE, ported (2026-08-20, Zee: "ok port the pulse to Shop B" — after she
+// bled -258.70 in one overnight, 2.7x her worst TESTED fortnight, second
+// out-of-book day in her first week). Thesis-neutral money management: her identity
+// is "never bleed"; the pulse ENFORCES that identity. Red pulse (own last-20
+// tickets net < 0) -> quarter-size scouts; green -> full stack; never stops.
+input int    InpRegimeLook   = 20;   // pulse window (closed tickets); 0 = off
+input double InpRegimeFrac   = 0.25; // basket fraction while the pulse is red
+
 input double InpLoudSizeFrac = 0.25; // Law 10c LIVE 2026-08-17 (Zee: "go"). Quarter tickets in the
                                      // loud band: recovers 68% of the gate's +786 with ZERO trades
                                      // cut (+538.38 over six periods, better in 5 of 6, passes
@@ -633,7 +641,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZB] ZeeUHV v1.37 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZB] ZeeUHV_M3 v1.10 — SHOP B + THE PULSE. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -715,6 +723,24 @@ bool CurrentTick(MqlTick &out) {
       }
    }
    return true;
+}
+
+// The machine's own pulse: net of its last n closed tickets (tester and live read
+// the same trade history by magic). Ported from ZeeUHV v1.42.
+double RollingNet(int n) {
+   if (!HistorySelect(0, TimeCurrent())) return 0;
+   double sum = 0; int got = 0;
+   for (int i = HistoryDealsTotal() - 1; i >= 0 && got < n; i--) {
+      ulong tk = HistoryDealGetTicket(i);
+      if (tk == 0) continue;
+      if (HistoryDealGetInteger(tk, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;
+      if (HistoryDealGetInteger(tk, DEAL_MAGIC) != InpMagicNumber) continue;
+      sum += HistoryDealGetDouble(tk, DEAL_PROFIT)
+           + HistoryDealGetDouble(tk, DEAL_SWAP)
+           + HistoryDealGetDouble(tk, DEAL_COMMISSION);
+      got++;
+   }
+   return sum;
 }
 
 // ── PIPELINE CENSUS (Zee 2026-08-18: "i dont know why our trade count is so low..
@@ -928,6 +954,11 @@ void TryFire() {
       double lr10 = (double)BarVolume(1) / MathMax(1.0, (double)BarVolume(uhv));
       if (lr10 > InpLoudVolFrac)
          tickets = (int)MathMax(1, MathRound(tickets * InpLoudSizeFrac));
+   }
+   // the pulse: red -> scout size, green -> full stack (ported 2026-08-20)
+   if (InpRegimeLook > 0 && InpRegimeFrac > 0 && InpRegimeFrac < 1.0) {
+      if (RollingNet(InpRegimeLook) < 0)
+         tickets = (int)MathMax(1, MathRound(tickets * InpRegimeFrac));
    }
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
