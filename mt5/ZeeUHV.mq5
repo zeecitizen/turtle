@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.49"
+#property version   "1.50"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -286,6 +286,10 @@ input double InpDayHaltLoss  = 0.0;  // halt new fires for the broker day after 
 input int    InpProbeSec     = 0;    // probe duration seconds (0 = off; must be < hold*60)
 input double InpProbeMinPts  = 0.10; // conviction threshold the probe must show
 input double InpProbeLots    = 0.01; // scout size
+// LAW 5 TRIAL (2026-08-20, the win-rate goal): the wick diamond's mask receipts say
+// sweep+ema+wick runs 6.7x worse than sweep+ema — the oldest undecided item on the
+// books. false = the wick no longer counts as a diamond (sizing shrinks on those).
+input bool   InpWickDia      = true; // wick-breakout diamond counts (Law 5)
 input int    InpUhvRank      = 6;    // LIVE 2026-08-18 (Zee: "ship rank 6"). The dial swept
                                      // {2,3,6,10}: every position positive, 6 == 10 in five of
                                      // six periods — saturation, the plateau of a real law.
@@ -727,7 +731,7 @@ int DiamondsFor(int origin, int uhv, int side) {
    double rng = MathMax(bHigh(1) - bLow(1), 1e-9);
    double wick = (side > 0) ? (bHigh(1) - MathMax(bOpen(1), bClose(1))) / rng
                             : (MathMin(bOpen(1), bClose(1)) - bLow(1)) / rng;
-   if (wick <= 0.25 && BarVolume(1) < BarVolume(uhv)) { d++; g_lawmask |= 16; }
+   if (InpWickDia && wick <= 0.25 && BarVolume(1) < BarVolume(uhv)) { d++; g_lawmask |= 16; }
    // ── LAW 8 CANDIDATE — TAG ONLY, bit 32, NOT a diamond (2026-08-17) ─────────────
    // Zee, reading the forensic of the 12:21 PKT loser: "all the green candle's
    // highs/lows inside this retracement do not break the last independent bar's
@@ -815,7 +819,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.49 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.50 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))

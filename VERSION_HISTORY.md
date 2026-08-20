@@ -20,6 +20,7 @@ hostile one, or it doesn't ship.
 
 | ver | date | change | receipts / reason |
 |---|---|---|---|
+| v1.50 | 2026-08-20 | LAW 5 switch: `InpWickDia` (wick-breakout diamond toggleable), default true = unchanged | trial running under the win-rate goal (mask receipts: sweep+ema+wick 6.7× worse) |
 | **v1.49** | 2026-08-19 | **THE DIAMOND SEASON MACHINE (live)** — `InpDiamondMode=true`, `InpGreenFastRed=true`, `InpFastRedLook=8`. Green season (pulse-20 green AND last-8-tickets green) trades the locked streak geometry: SL 20 / TP 1 / hold 60, full stack, 10c bypassed. Red season: scout machine (SL 5 / hold 3, quarter size, full guard) | **+449.26** six-period (champion was +276.22). Fast-fear dial a perfect hill: 3/5/8/12 = +377/+416/+449/+283. Worst single loss −19.36 (the −42 crash class extinct). Born from Zee's crash theory: "the diamond only had one defect — the crash." ON PROBATION: first out-of-sample day (Aug 18 replay) lost −217 vs pulse's −38; live-forward must confirm before any lot raise |
 | v1.48 | 2026-08-19 | `InpFastRedLook` dial added (quick-to-fear window) | dial receipts above |
 | v1.47 | 2026-08-19 | Crash-control organs, default off: `InpLossCoolMin` (stand down after a losing ticket), `InpDayHaltLoss` (day-halt) | both FAILED on the raw diamond (−975/−982); kept as dead inputs with receipts |
@@ -52,7 +53,7 @@ hostile one, or it doesn't ship.
 |---|---|---|---|
 | ZeeUHV_Loud_Breakout v1.2 | 88104 | LIVE | counter-experiment: fires when breakout ≥0.80×UHV (the band 10c shrinks). Has Law 9 + hold 3; NO rank-6/pulse yet (port = separate receipted step) |
 | ZeeUHV_M3 "Shop B" **v1.10** | 88134 | LIVE on M3 chart | **2026-08-20: THE PULSE PORTED** (Zee's order, after −258.70 overnight = 2.7× her worst tested fortnight, second out-of-book day in week one). Pulse-20 default ON: red → quarter-size, green → full. Birth story: first-ever positive six-period config (+23.32, worst period −19). MUST run on the M3 chart |
-| ZeeUHV_Bull v1.00 | 88144 | BUILT (Aug 20) — court in session | Zee's long-bias theory: "gold tends to keep going up" — buys only, NO trend gate (every red pullback after a green = an uptrend retracement), full guard otherwise (Law 9, rank 6, 10c, clock, pulse). Answers "our EA is silent during upward breakouts" (the trend gate benches 50.9% of bars) |
+| ZeeUHV_Bull v1.00 | 88144 | **REFUSED by the court — never attach** | Zee's long-bias theory: "gold tends to keep going up" — buys only, NO trend gate (every red pullback after a green = an uptrend retracement), full guard otherwise (Law 9, rank 6, 10c, clock, pulse). Court verdict: loses ALL SIX periods (as-born −1,316; +diamond −1,678) — "gold tends up" is true yearly, false at M1 pullback scale; the gate's silence = losses dodged (~$1,600/twelve weeks), not harvest missed |
 | ZeeSimple v1.20 | 88111 | RETIRED (Aug 18) | attempt 7 at Feb-11 tempo; every-retracement ≈ random entry paying spread rent. Live-forward confirmed the tester (−$37/138 closes). Ladder rungs live in its inputs |
 | ZeeUHV_R1 v1.00 | 88121 | RETIRED (Aug 18) | rung 1 frozen (real retracement only, 66/day = Feb-11's tempo); kind-tape-only |
 | TurtleTradeLogger v1.04 | — | LIVE | self-healing: `BackfillMissedDeals()` at init (the fills file had silently lost 96 positions/−$590 during disconnects) |
