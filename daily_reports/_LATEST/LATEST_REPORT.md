@@ -488,6 +488,17 @@ The prune-pile's one real vein was already mined (rank-6, +251, shipped). The
 "possible setups" button shows the guard's salary being earned, not missed gold.
 Theory closed with the strongest receipt of the week.
 
+## 4s. THE +605 INVESTIGATION (Zee) — explained, attempted, honestly refused
+
+TP 0.75's virgin +605 = a CHOP HARVESTER: near-misses at 0.7-0.9 pts convert to wins
+(Feb2 WR 69→82; live chop day Aug 12 +303) while feasts get taxed (Aug 11: WR 86→91
+but −66 — the first 90%+ live day on our setups, and the honest anatomy of paid-vs-
+free win rate). The shippable form (v1.53 pulse-switched target: red→0.75) FAILED
+the triple bar (court −112 · virgin +103 · days −15): red pulse ≠ chop — it also
+means early-feast recovery. TP 0.75 benched awaiting a tape-based chop detector.
+Also today: the LIVE ANATOMY shipped (cockpit panel + humps overlay + forming view
+in his exact reading format, all from rot-proof terminal bars).
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
