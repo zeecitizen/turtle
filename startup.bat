@@ -608,3 +608,8 @@ REM the output file age and restarts the bridge when the market is open and it
 REM stops moving. tape_archive keeps every real bar so the tester ground grows.
 start "feed_supervisor" /min "%PY%" -u "%~dp0monitor/feed_supervisor.py" --loop 120
 start "tape_archive"    /min "%PY%" -u "%~dp0monitor/tape_archive.py" --loop 60
+REM OANDA VOLUME (2026-08-20, Zee: "use concretely the volume from OANDA inside
+REM Tradingview"). Pulls TV's OANDA tick-volume via websocket -> Common\Files
+REM (the EA's InpVolSource=1 table) + a growing archive for future courts.
+REM Also HEALS oanda_m1.csv without CDP (the Aug-14 MSIX break).
+start "oanda_volume"    /min "%PY%" -u "%~dp0monitor/oanda_volume_bridge.py" --loop
