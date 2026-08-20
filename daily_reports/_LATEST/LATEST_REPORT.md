@@ -458,6 +458,18 @@ the evening WINNER. The 0W/14L Wednesday morning was all rank-1-visible setups:
 the "extra frequency skewed the week" hypothesis is REFUTED. The queen-vs-Loud gap
 is now fully explained: feast weather + deliberate loud-quartering + winter sizing.
 
+## 4p. THE WIN-RATE GOAL — day one: three trials, three refusals, one conclusion
+
+Zee's standing goal (memorized): fewer losing trades at FIXED geometry. Campaign day:
+- LAW 12 on v1.49: WR 69-81%% but −275.56 net (the pulse already owns its value) — refused
+- THE BULL (buys-only, no gate): loses ALL SIX incl. July — "gold tends up" is false
+  at M1 pullback scale; the trend gate's silence = ~$1,600/12wk of dodged losses
+- LAW 5 (wick off): worse in ALL SIX (−291.28) — DECIDED, wick stays; oldest item closed
+
+CONCLUSION: v1.49 is a genuine local optimum — every single-knob deviation loses.
+Remaining trail: hour-census filter + live-forward (the pulse's first green season IS
+the win-rate event). Law 5 removed from open items.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
