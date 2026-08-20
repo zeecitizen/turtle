@@ -532,6 +532,62 @@ def draw_trade(broker_ts, side, exit_px, out=None):
 WATCH_F = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/case_watch.json")
 
 
+def _forming_from_anatomy(out=None):
+    """The forming setup drawn from the LIVE ANATOMY (terminal bars, rot-proof):
+    the crowned UHV banded purple, and the exact sentence of the hunt — 'aiming to
+    break the UHV's high at X — need a quiet green close above it (N pts away)'."""
+    import setup_anatomy, trend_eyes
+    bars = trend_eyes.load_bars()
+    a = setup_anatomy.analyze(bars)
+    if not a or a.get("uhv") is None:
+        return None, "fresh leg — no counter-candle printed yet, nothing is forming"
+    side, u, trig = a["side"], a["uhv"], a["trigger"]
+    win = bars[-70:]
+    idx = pd.DatetimeIndex([x[0] + timedelta(hours=5) for x in win])
+    df = pd.DataFrame({"Open": [x[1] for x in win], "High": [x[1] for x in win],
+                       "Low": [x[2] for x in win], "Close": [x[3] for x in win],
+                       "Volume": [x[4] for x in win]}, index=idx)
+    # honest OHLC: trend_eyes rows carry (t, high, low, close, vol) — approximate
+    # open with the prior close so candles render truthfully enough to read
+    opens = [win[0][3]] + [win[k - 1][3] for k in range(1, len(win))]
+    df["Open"] = opens
+    ui = next((i2 for i2, x in enumerate(win) if x[0] == u[0]), None)
+    px = a["price"]
+    dist = (trig - px) if side == "BUY" else (px - trig)
+    need = ("a quiet GREEN close ABOVE" if side == "BUY" else "a quiet RED close BELOW")
+    ttl = (f"FORMING — {side} hunt · AIMING TO BREAK THE UHV'S "
+           f"{'HIGH' if side == 'BUY' else 'LOW'} {trig:.2f} · need {need} it"
+           + (f" ({dist:.2f} pts away)" if dist > 0 else " — AT THE DOOR"))
+    style = mpf.make_mpf_style(base_mpf_style="yahoo", gridstyle=":")
+    other = u[2] if side == "BUY" else u[1]
+    hl = dict(hlines=[trig, other], colors=["k", "k"], linestyle="--", linewidths=[2.2, 1.4])
+    fig, axes = mpf.plot(df, type="candle", style=style, volume=True, figsize=(16, 9),
+                         hlines=hl, returnfig=True, title=ttl)
+    ax = axes[0]
+    if ui is not None:
+        ax.axvspan(ui - 0.5, ui + 0.5, color="#7048e8", alpha=0.30, zorder=0)
+        ax.annotate(f"UHV — the door (vol {int(u[4])})", xy=(ui, trig),
+                    textcoords="offset points", xytext=(0, 30), ha="center",
+                    fontsize=14, fontweight="bold", color="white",
+                    annotation_clip=False, zorder=6,
+                    bbox=dict(boxstyle="round,pad=0.35", fc="#7048e8", ec="none"),
+                    arrowprops=dict(arrowstyle="->", lw=2.4, color="#7048e8"))
+    ax.axhline(trig, color="#e8a305", lw=2.2, ls="--")
+    ax.text(len(win) - 1, trig, f"  BREAK ME: {trig:.2f}", color="#8a6d00",
+            fontsize=13, fontweight="bold", va="center")
+    ax.axhline(px, color="#f08c00", lw=1.2, ls=":")
+    ax.text(len(win) - 1, px, f"  now {px:.2f}", color="#f08c00",
+            fontsize=11, fontweight="bold", va="center")
+    lo2 = min(x[2] for x in win); hi2 = max(x[1] for x in win)
+    pad = max((hi2 - lo2) * 0.14, 0.35)
+    ax.set_ylim(min(lo2, trig) - pad, max(hi2, trig) + pad)
+    out = out or (Path(__file__).parent / "setup_labels" / "forming_now.png")
+    fig.savefig(str(out), dpi=100, bbox_inches="tight")
+    plt.close(fig)
+    return out, (f"{side} · aiming to break {trig:.2f}"
+                 + (f" · {dist:.2f} pts away" if dist > 0 else " · AT THE DOOR"))
+
+
 def draw_forming(out=None):
     """THE SETUP ON THE WAY (Zee 2026-08-07): draw the UHV currently under
     consideration and its trigger lines BEFORE any breakout — so the forming setup
@@ -540,8 +596,14 @@ def draw_forming(out=None):
     import json as _json
     try:
         w = _json.loads(WATCH_F.read_text(encoding="ascii"))
+        import time as _time
+        if _time.time() - WATCH_F.stat().st_mtime > 1800:
+            raise RuntimeError("case_watch is stale — the anatomy speaks instead")
     except Exception:
-        return None, "no setup is forming right now (no UHV boxed)"
+        # 2026-08-20 (Zee: "it should tell that we're aiming to break the marked
+        # UHV's high in a drawn form") — the matcher's case_watch died with the
+        # OANDA feed; the live anatomy is the rot-proof source now.
+        return _forming_from_anatomy(out)
     side = w["side"]; lamp = float(w["level"]); sweep = float(w["sweep"])
     hi_line, lo_line = (max(lamp, sweep), min(lamp, sweep))
     rows = load()
