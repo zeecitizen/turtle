@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.51"
+#property version   "1.52"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -294,10 +294,12 @@ input bool   InpWickDia      = true; // wick-breakout diamond counts (Law 5)
 // Feb-11 (85% of his trades = NY morning, winter clocks) and our live fills (NY
 // morning 38-for-38; the bleed lives in broker hours 02-03 and 09-10 = PKT 04-05
 // and 11-12, -$1,950 combined). Sizing, never gating: dim hours trade at frac.
-input int    InpDimHourA     = -1;   // broker hour to dim (-1 = off)
-input int    InpDimHourB     = -1;
-input int    InpDimHourC     = -1;
-input int    InpDimHourD     = -1;
+input int    InpDimHourA     = 2;    // LIVE 2026-08-20 (Zee: "ship the dimmer alone as v1.52").
+input int    InpDimHourB     = 3;    // Broker 02-03 = PKT 04-05 (the post-open bleed: -$891 live,
+input int    InpDimHourC     = 9;    // 15-44% WR) · broker 09-10 = PKT 11-12 (pre-NY dead zone:
+input int    InpDimHourD     = 10;   // -$1,059). Receipts: court +127 · VIRGIN 8 fortnights +260 ·
+                                     // live days +165 — the only candidate positive on ALL THREE
+                                     // datasets. Sourced from his Feb-11 window theory + live fills.
 input double InpDimFrac      = 0.25; // basket fraction during dim hours
 input int    InpUhvRank      = 6;    // LIVE 2026-08-18 (Zee: "ship rank 6"). The dial swept
                                      // {2,3,6,10}: every position positive, 6 == 10 in five of
@@ -828,7 +830,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.51 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.52 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))

@@ -470,6 +470,15 @@ CONCLUSION: v1.49 is a genuine local optimum — every single-knob deviation los
 Remaining trail: hour-census filter + live-forward (the pulse's first green season IS
 the win-rate event). Law 5 removed from open items.
 
+## 4q. v1.52 SHIPPED — THE HOUR DIMMER (Zee: "ok ship the dimmer alone as v1.52")
+
+The week's most-vetted candidate: 22 periods, 3 independent datasets, positive on
+all three (court +127 · virgin +260 · live days +165); surgical (byte-identical on
+days with no dim-hour trades). New court total +576.18. TP 0.75 benched with honor
+(virgin +605 — first candidate of the next promotion cycle after live-forward).
+Combined arm refused (contradicts itself across datasets = noise). NEEDS REATTACH
+(banner must say v1.52).
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
