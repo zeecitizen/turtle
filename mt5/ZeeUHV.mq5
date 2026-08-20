@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.52"
+#property version   "1.53"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -290,6 +290,12 @@ input double InpProbeLots    = 0.01; // scout size
 // sweep+ema+wick runs 6.7x worse than sweep+ema — the oldest undecided item on the
 // books. false = the wick no longer counts as a diamond (sizing shrinks on those).
 input bool   InpWickDia      = true; // wick-breakout diamond counts (Law 5)
+// ── PULSE-SWITCHED TARGET (2026-08-20, Zee: "investigate the +605.28 of TP 0.75..
+// what if we could find a way to make this work on LIVE days?"). The autopsy: 0.75
+// is a CHOP harvester (near-misses at 0.7-0.9 pts convert to wins: Feb2 WR 69->82%)
+// and a feast tax (Aug 11: -66 while WR rose). The pulse knows the season: red ->
+// harvest the chop at 0.75; green/diamond -> let winners pay in full at 1.0.
+input double InpRedTargetPts = 0.0;  // TP while the pulse is red (0 = off, use InpTargetPts)
 // ── THE HOUR DIMMER (2026-08-20, Zee's window theory confirmed on BOTH datasets:
 // Feb-11 (85% of his trades = NY morning, winter clocks) and our live fills (NY
 // morning 38-for-38; the bleed lives in broker hours 02-03 and 09-10 = PKT 04-05
@@ -830,7 +836,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.52 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.53 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1105,7 +1111,9 @@ void TryFire() {
       diamond_now = false;
    double useStop = diamond_now ? InpGreenStopPts : InpStopPts;
    double sl = (t > 0) ? px - useStop : px + useStop;
-   double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
+   double useTp = (InpRedTargetPts > 0 && !g_green && !diamond_now)
+                  ? InpRedTargetPts : InpTargetPts;   // chop harvests small, feast pays full
+   double tp = (t > 0) ? px + useTp : px - useTp;
 
    if (InpMaxSpreadPts > 0 && (ask - bid) > InpMaxSpreadPts) {
       PrintFormat("[ZEE] [BLOCKED] spread %.2f over limit %.2f", ask - bid, InpMaxSpreadPts);
