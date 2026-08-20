@@ -127,6 +127,10 @@ def render(out=None):
         f"   with volume BELOW {int(u[4])}.\n"
         f"   Distance now: {max(dist, 0):.2f} pts.\n\n"
         f"{gate_line}\n\n"
+        f"volume: BROKER tick-count (the EA's\n"
+        f"own eyes — no real vol on gold here).\n"
+        f"TV's feed can disagree by a candle;\n"
+        f"the machine trades the tape it fills on.\n\n"
         f"No other candle. No other line.\n"
         f"No other volume. That is the trade."
     )
