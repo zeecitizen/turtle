@@ -479,6 +479,15 @@ days with no dim-hour trades). New court total +576.18. TP 0.75 benched with hon
 Combined arm refused (contradicts itself across datasets = noise). NEEDS REATTACH
 (banner must say v1.52).
 
+## 4r. THE PRUNED-SETUPS THEORY (Zee: "if we took all those setups we'd be in much
+greater profit! test this") — the week's most dramatic refusal
+
+All togglable prunes off at once under v1.52: 13,674 tickets, WR 53-70%% (the trap:
+they LOOK like winners), **TOTAL −6,505.71 vs +576.18 shipped — a $7,082 swing.**
+The prune-pile's one real vein was already mined (rank-6, +251, shipped). The
+"possible setups" button shows the guard's salary being earned, not missed gold.
+Theory closed with the strongest receipt of the week.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
