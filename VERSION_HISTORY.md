@@ -20,7 +20,7 @@ hostile one, or it doesn't ship.
 
 | ver | date | change | receipts / reason |
 |---|---|---|---|
-| v1.50 | 2026-08-20 | LAW 5 switch: `InpWickDia` (wick-breakout diamond toggleable), default true = unchanged | trial running under the win-rate goal (mask receipts: sweep+ema+wick 6.7× worse) |
+| v1.50 | 2026-08-20 | LAW 5 switch: `InpWickDia` (wick-breakout diamond toggleable), default true = unchanged | **DECIDED: wick STAYS** — off is worse in ALL SIX periods (−291.28). The 6.7× mask receipt described the old machine; under v1.49 wick baskets are net contributors. Law 5 closed |
 | **v1.49** | 2026-08-19 | **THE DIAMOND SEASON MACHINE (live)** — `InpDiamondMode=true`, `InpGreenFastRed=true`, `InpFastRedLook=8`. Green season (pulse-20 green AND last-8-tickets green) trades the locked streak geometry: SL 20 / TP 1 / hold 60, full stack, 10c bypassed. Red season: scout machine (SL 5 / hold 3, quarter size, full guard) | **+449.26** six-period (champion was +276.22). Fast-fear dial a perfect hill: 3/5/8/12 = +377/+416/+449/+283. Worst single loss −19.36 (the −42 crash class extinct). Born from Zee's crash theory: "the diamond only had one defect — the crash." ON PROBATION: first out-of-sample day (Aug 18 replay) lost −217 vs pulse's −38; live-forward must confirm before any lot raise |
 | v1.48 | 2026-08-19 | `InpFastRedLook` dial added (quick-to-fear window) | dial receipts above |
 | v1.47 | 2026-08-19 | Crash-control organs, default off: `InpLossCoolMin` (stand down after a losing ticket), `InpDayHaltLoss` (day-halt) | both FAILED on the raw diamond (−975/−982); kept as dead inputs with receipts |
