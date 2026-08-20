@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.50"
+#property version   "1.51"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -290,6 +290,15 @@ input double InpProbeLots    = 0.01; // scout size
 // sweep+ema+wick runs 6.7x worse than sweep+ema — the oldest undecided item on the
 // books. false = the wick no longer counts as a diamond (sizing shrinks on those).
 input bool   InpWickDia      = true; // wick-breakout diamond counts (Law 5)
+// ── THE HOUR DIMMER (2026-08-20, Zee's window theory confirmed on BOTH datasets:
+// Feb-11 (85% of his trades = NY morning, winter clocks) and our live fills (NY
+// morning 38-for-38; the bleed lives in broker hours 02-03 and 09-10 = PKT 04-05
+// and 11-12, -$1,950 combined). Sizing, never gating: dim hours trade at frac.
+input int    InpDimHourA     = -1;   // broker hour to dim (-1 = off)
+input int    InpDimHourB     = -1;
+input int    InpDimHourC     = -1;
+input int    InpDimHourD     = -1;
+input double InpDimFrac      = 0.25; // basket fraction during dim hours
 input int    InpUhvRank      = 6;    // LIVE 2026-08-18 (Zee: "ship rank 6"). The dial swept
                                      // {2,3,6,10}: every position positive, 6 == 10 in five of
                                      // six periods — saturation, the plateau of a real law.
@@ -819,7 +828,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.50 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.51 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1202,6 +1211,13 @@ void TryFire() {
    // HTF-disagree sizing (InpHtfMode 1): the M3 second opinion shrinks, never blocks
    if (InpHtfMode == 1 && g_htf_against && InpHtfSizeFrac > 0 && InpHtfSizeFrac < 1.0)
       tickets = (int)MathMax(1, MathRound(tickets * InpHtfSizeFrac));
+   // THE HOUR DIMMER: known-bleeding hours trade at scout size (sizing, never a gate)
+   {
+      int hh = (int)((TimeCurrent() / 3600) % 24);
+      if ((hh == InpDimHourA || hh == InpDimHourB || hh == InpDimHourC || hh == InpDimHourD)
+          && InpDimFrac > 0 && InpDimFrac < 1.0)
+         tickets = (int)MathMax(1, MathRound(tickets * InpDimFrac));
+   }
    // the self-aware switch: red pulse -> scout size, green pulse -> full stack
    // (g_green/diamond_now were decided once at geometry time, above)
    if (InpRegimeLook > 0 && !g_green && InpRegimeFrac > 0 && InpRegimeFrac < 1.0)
