@@ -60,7 +60,7 @@ def _local_to_server(t: datetime) -> datetime:
     return t - off + BROKER_UTC_OFFSET
 
 
-def pull(n_bars=2000):
+def pull(n_bars=5000):
     from tvDatafeed import TvDatafeed, Interval
     tv = TvDatafeed()
     d = tv.get_hist(symbol="XAUUSD", exchange="OANDA",
