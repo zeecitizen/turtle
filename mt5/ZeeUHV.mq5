@@ -320,8 +320,13 @@ input bool   InpStickyGreenOnly = false; // sticky only while the pulse is GREEN
 // candle in 46.4%% of rolling windows — and HIS eye, his 146 labels and Feb-11 all
 // read OANDA. 1 = read Common\Files\oanda_vol.csv (server-time keyed, written by
 // monitor/oanda_volume_bridge.py). Falls back to broker volume for any minute the
-// file does not carry. Default 0 = unchanged.
-input int    InpVolSource    = 0;    // 0 = broker tick-count · 1 = OANDA (TradingView)
+// file does not carry.
+// RENAMED from InpVolSource (2026-08-20). MT5 stores chart inputs BY NAME, so the
+// saved InpVolSource=0 outlived every recompile and the setting could not be flipped
+// from code. A new name has no stored value, so this default applies on reload. The
+// old label began "0 = broker tick-count" rather than with its own name, which also
+// made it unfindable in the Inputs list where every neighbour repeats its name.
+input int    InpOandaVolume  = 1;    // InpOandaVolume — 1 = OANDA (TradingView) · 0 = broker tick-count
 // ── THE HOUR DIMMER (2026-08-20, Zee's window theory confirmed on BOTH datasets:
 // Feb-11 (85% of his trades = NY morning, winter clocks) and our live fills (NY
 // morning 38-for-38; the bleed lives in broker hours 02-03 and 09-10 = PKT 04-05
@@ -437,6 +442,9 @@ double AvgVolBefore(int k) {
 datetime g_ov_t[];
 long     g_ov_v[];
 int      g_ov_n = 0;
+int      g_ov_miss = 0;          // lookups that fell back to broker volume
+datetime g_ov_miss_bar = 0;      // last bar already reported, so one line per bar
+datetime g_ov_newest = 0;        // newest minute in the table (freshness telemetry)
 
 void LoadOandaVol() {
    g_ov_n = 0;
@@ -459,7 +467,9 @@ void LoadOandaVol() {
       g_ov_t[g_ov_n] = t; g_ov_v[g_ov_n] = v; g_ov_n++;
    }
    FileClose(h);
-   PrintFormat("[ZEE] OANDA volume table loaded: %d minutes", g_ov_n);
+   g_ov_newest = (g_ov_n > 0) ? g_ov_t[g_ov_n - 1] : 0;
+   PrintFormat("[ZEE] OANDA volume table loaded: %d minutes (newest %s)",
+               g_ov_n, TimeToString(g_ov_newest, TIME_DATE | TIME_MINUTES));
 }
 
 long OandaVolAt(datetime t) {          // binary search the sorted table
@@ -473,9 +483,22 @@ long OandaVolAt(datetime t) {          // binary search the sorted table
 }
 
 long BarVolume(int k) {
-   if (InpVolSource == 1 && g_ov_n > 0) {
-      long ov = OandaVolAt(iTime(_Symbol, PERIOD_CURRENT, k));
+   if (InpOandaVolume == 1) {
+      long ov = (g_ov_n > 0) ? OandaVolAt(iTime(_Symbol, PERIOD_CURRENT, k)) : -1;
       if (ov > 0) return ov;           // his eye's feed; falls back below if absent
+      // NO SILENT FALLBACK (Zee 2026-08-20): OANDA was asked for and could not be
+      // given. The old code dropped to broker tick-count without a word, which is
+      // indistinguishable from success — the whole point of the switch is lost.
+      // Reported once per bar so the Journal shows exactly which minutes were
+      // served by the broker instead.
+      g_ov_miss++;
+      datetime mt = iTime(_Symbol, PERIOD_CURRENT, k);
+      if (mt != g_ov_miss_bar) {
+         g_ov_miss_bar = mt;
+         PrintFormat("[ZEE] OANDA VOLUME MISS at %s (table=%d minutes) — this bar "
+                     "uses BROKER volume. Total misses: %d",
+                     TimeToString(mt, TIME_DATE | TIME_MINUTES), g_ov_n, g_ov_miss);
+      }
    }
    long rv = iRealVolume(_Symbol, PERIOD_CURRENT, k);
    if (rv > 0) return rv;
@@ -903,7 +926,7 @@ int ClicksFor(int d) { return (d <= 1) ? 1 : ((d == 2) ? 2 : 3); }
 
 //+------------------------------------------------------------------+
 int OnInit() {
-   if (InpVolSource == 1) LoadOandaVol();
+   if (InpOandaVolume == 1) LoadOandaVol();
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
@@ -1615,6 +1638,11 @@ void OnTick() {
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;
    g_last_bar = bt;
+   // LIVE REFRESH (Zee 2026-08-20): LoadOandaVol ran only in OnInit, so the table
+   // froze at attach time and every NEW minute missed the lookup and quietly used
+   // broker volume — the switch worked in the tester and never live. Re-read once
+   // per M1 bar: same cost as the init read, once a minute.
+   if (InpOandaVolume == 1) LoadOandaVol();
    RevExitSweep();
    TryFire();
 }
