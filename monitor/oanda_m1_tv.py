@@ -36,6 +36,19 @@ TV_TO_UTC = timedelta(hours=-5)
 N_BARS = 5000
 
 
+def _swap(tmp, dst, tries=6):
+    """Atomic swap that tolerates a reader holding the file (MT5 opens it every M1
+    bar). Windows raises PermissionError if the target is locked at that instant;
+    retrying beats losing the cycle."""
+    import time as _t
+    for i in range(tries):
+        try:
+            tmp.replace(dst)
+            return True
+        except PermissionError:
+            _t.sleep(0.12)
+    return False
+
 def cycle():
     from tvDatafeed import TvDatafeed, Interval
     tv = TvDatafeed()
@@ -54,7 +67,7 @@ def cycle():
                      f"{int(r['volume'])}\n")
     tmp = M1_F.with_suffix(".tmp")
     tmp.write_text("".join(lines), encoding="utf-8")
-    tmp.replace(M1_F)                       # atomic: readers never see a half file
+    _swap(tmp, M1_F)                       # atomic: readers never see a half file
 
     # the same bars, server-time keyed, for the EA
     blines = []
@@ -64,7 +77,7 @@ def cycle():
                       f"{float(r['low'])},{float(r['close'])},{int(r['volume'])}\n")
     btmp = BARS_F.with_suffix(".tmp")
     btmp.write_text("".join(blines), encoding="ascii")
-    btmp.replace(BARS_F)
+    _swap(btmp, BARS_F)
     age = (time.time() - calendar.timegm(newest.timetuple())) / 60.0
     print(f"[M1-TV] {len(d)} bars -> oanda_m1.csv · newest {newest:%Y-%m-%d %H:%M} UTC "
           f"({age:.1f} min old)", flush=True)

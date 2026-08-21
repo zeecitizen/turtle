@@ -459,7 +459,14 @@ datetime g_ov_newest = 0;        // newest minute in the table (freshness teleme
 
 void LoadOandaVol() {
    g_ov_n = 0;
-   int h = FileOpen("oanda_vol.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON);
+   // RETRY (2026-08-21): the writer swaps this file atomically every 60 s, and a
+   // read landing inside that swap failed outright — one bar silently on broker
+   // volume, logged at 21:46:02. Five quick attempts cover the swap window.
+   int h = INVALID_HANDLE;
+   for (int _try = 0; _try < 5 && h == INVALID_HANDLE; _try++) {
+      h = FileOpen("oanda_vol.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON);
+      if (h == INVALID_HANDLE && !MQLInfoInteger(MQL_TESTER)) Sleep(40);
+   }
    if (h == INVALID_HANDLE) {
       Print("[ZEE] OANDA volume requested but oanda_vol.csv not found — using broker volume");
       return;

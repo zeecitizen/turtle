@@ -96,9 +96,22 @@ def write_vol(rows):
         keep[f"{t:%Y.%m.%d %H:%M}"] = str(v)
     tmp = VOL_OUT.with_suffix(".tmp")
     tmp.write_text("".join(f"{k},{keep[k]}\n" for k in sorted(keep)), encoding="ascii")
-    tmp.replace(VOL_OUT)                     # atomic; readers never see a half file
+    _swap(tmp, VOL_OUT)                     # atomic; readers never see a half file
     return len(keep)
 
+
+def _swap(tmp, dst, tries=6):
+    """Atomic swap that tolerates a reader holding the file (MT5 opens it every M1
+    bar). Windows raises PermissionError if the target is locked at that instant;
+    retrying beats losing the cycle."""
+    import time as _t
+    for i in range(tries):
+        try:
+            tmp.replace(dst)
+            return True
+        except PermissionError:
+            _t.sleep(0.12)
+    return False
 
 def cycle():
     rows = pull()
