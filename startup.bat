@@ -612,4 +612,4 @@ REM OANDA VOLUME (2026-08-20, Zee: "use concretely the volume from OANDA inside
 REM Tradingview"). Pulls TV's OANDA tick-volume via websocket -> Common\Files
 REM (the EA's InpVolSource=1 table) + a growing archive for future courts.
 REM Also HEALS oanda_m1.csv without CDP (the Aug-14 MSIX break).
-start "oanda_volume"    /min "%PY%" -u "%~dp0monitor/oanda_vol_tv.py" --loop 60
+start "oanda_volume"    /min "%PY%" -u "%~dp0monitor/oanda_vol_supervisor.py"
