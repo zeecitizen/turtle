@@ -33,7 +33,7 @@ M1_F = COMMON / "oanda_m1.csv"
 BARS_F = COMMON / "oanda_bars.csv"
 TV_TO_SERVER = timedelta(hours=-2)
 TV_TO_UTC = timedelta(hours=-5)
-N_BARS = 2000
+N_BARS = 5000
 
 
 def cycle():
