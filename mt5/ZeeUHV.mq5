@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.58"
+#property version   "1.59"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -326,6 +326,17 @@ input bool   InpStickyGreenOnly = false; // sticky only while the pulse is GREEN
 // from code. A new name has no stored value, so this default applies on reload. The
 // old label began "0 = broker tick-count" rather than with its own name, which also
 // made it unfindable in the Inputs list where every neighbour repeats its name.
+// ── THE EYE IS TRADINGVIEW (2026-08-21). Zee: "the chart candles, the volume
+// everything is on OANDA, we finally goto blueberry just to press the buy button
+// and obviously then it buys at the blueberry price." So the EA may JUDGE every
+// candle on OANDA bars (open/high/low/close + volume, from oanda_bars.csv) while
+// ORDERS still fill at Blueberry and every stop/target is measured from that fill
+// — exactly his hand: read the break on TradingView, click buy on the broker.
+// MEASURED before building: candle COLOUR agrees 98.0%% across feeds, but OANDA
+// prices sit +0.120 median above Blueberry (max +0.845) — which is why levels are
+// never carried across; only the JUDGEMENT is. Falls back per-minute to broker
+// bars for any minute the table lacks. Default 0 until the court rules.
+input int    InpOandaBars    = 0;    // 1 = judge candles on OANDA (fills stay Blueberry)
 input int    InpOandaVolume  = 1;    // InpOandaVolume — 1 = OANDA (TradingView) · 0 = broker tick-count
 // ── THE HOUR DIMMER (2026-08-20, Zee's window theory confirmed on BOTH datasets:
 // Feb-11 (85% of his trades = NY morning, winter clocks) and our live fills (NY
@@ -505,10 +516,86 @@ long BarVolume(int k) {
    return iVolume(_Symbol, PERIOD_CURRENT, k);
 }
 
-double bOpen(int k) { return iOpen (_Symbol, PERIOD_CURRENT, k); }
-double bHigh(int k) { return iHigh (_Symbol, PERIOD_CURRENT, k); }
-double bLow(int k) { return iLow  (_Symbol, PERIOD_CURRENT, k); }
-double bClose(int k) { return iClose(_Symbol, PERIOD_CURRENT, k); }
+// OANDA bar table (server-time keyed, written by monitor/oanda_m1_tv.py). Same
+// contract as the volume table: reloaded once per M1 bar, per-minute fallback.
+datetime g_ob_t[];
+double   g_ob_o[], g_ob_h[], g_ob_l[], g_ob_c[];
+int      g_ob_n = 0;
+int      g_ob_miss = 0;
+
+void LoadOandaBars() {
+   g_ob_n = 0;
+   int h = FileOpen("oanda_bars.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON);
+   if (h == INVALID_HANDLE) {
+      Print("[ZEE] OANDA BARS requested but oanda_bars.csv not found — judging on BROKER candles");
+      return;
+   }
+   ArrayResize(g_ob_t, 4096); ArrayResize(g_ob_o, 4096);
+   ArrayResize(g_ob_h, 4096); ArrayResize(g_ob_l, 4096); ArrayResize(g_ob_c, 4096);
+   while (!FileIsEnding(h)) {
+      string ln = FileReadString(h);
+      string f[];
+      if (StringSplit(ln, ',', f) < 6) continue;
+      datetime t = StringToTime(f[0]);
+      if (t <= 0) continue;
+      if (g_ob_n >= ArraySize(g_ob_t)) {
+         int nn = g_ob_n + 2048;
+         ArrayResize(g_ob_t, nn); ArrayResize(g_ob_o, nn);
+         ArrayResize(g_ob_h, nn); ArrayResize(g_ob_l, nn); ArrayResize(g_ob_c, nn);
+      }
+      g_ob_t[g_ob_n] = t;
+      g_ob_o[g_ob_n] = StringToDouble(f[1]);
+      g_ob_h[g_ob_n] = StringToDouble(f[2]);
+      g_ob_l[g_ob_n] = StringToDouble(f[3]);
+      g_ob_c[g_ob_n] = StringToDouble(f[4]);
+      g_ob_n++;
+   }
+   FileClose(h);
+   PrintFormat("[ZEE] OANDA BARS loaded: %d minutes (newest %s) — judging on HIS chart",
+               g_ob_n, g_ob_n > 0 ? TimeToString(g_ob_t[g_ob_n - 1], TIME_DATE | TIME_MINUTES) : "-");
+}
+
+int OandaBarIdx(datetime t) {
+   int lo = 0, hi = g_ob_n - 1;
+   while (lo <= hi) {
+      int mid = (lo + hi) / 2;
+      if (g_ob_t[mid] == t) return mid;
+      if (g_ob_t[mid] < t) lo = mid + 1; else hi = mid - 1;
+   }
+   return -1;
+}
+
+// Every candle judgement flows through these four. When InpOandaBars is on they
+// answer with HIS chart; the fill price, stop and target never come from here —
+// they come from the live Blueberry quote at fire time.
+double bOpen(int k) {
+   if (InpOandaBars == 1 && g_ob_n > 0) {
+      int i = OandaBarIdx(iTime(_Symbol, PERIOD_CURRENT, k));
+      if (i >= 0) return g_ob_o[i]; else g_ob_miss++;
+   }
+   return iOpen (_Symbol, PERIOD_CURRENT, k);
+}
+double bHigh(int k) {
+   if (InpOandaBars == 1 && g_ob_n > 0) {
+      int i = OandaBarIdx(iTime(_Symbol, PERIOD_CURRENT, k));
+      if (i >= 0) return g_ob_h[i];
+   }
+   return iHigh (_Symbol, PERIOD_CURRENT, k);
+}
+double bLow(int k) {
+   if (InpOandaBars == 1 && g_ob_n > 0) {
+      int i = OandaBarIdx(iTime(_Symbol, PERIOD_CURRENT, k));
+      if (i >= 0) return g_ob_l[i];
+   }
+   return iLow  (_Symbol, PERIOD_CURRENT, k);
+}
+double bClose(int k) {
+   if (InpOandaBars == 1 && g_ob_n > 0) {
+      int i = OandaBarIdx(iTime(_Symbol, PERIOD_CURRENT, k));
+      if (i >= 0) return g_ob_c[i];
+   }
+   return iClose(_Symbol, PERIOD_CURRENT, k);
+}
 bool IsGreen(int k) { return bClose(k) > bOpen(k); }
 bool IsRed(int k) { return bClose(k) < bOpen(k); }
 double BodyHi(int k) { return MathMax(bOpen(k), bClose(k)); }
@@ -927,12 +1014,13 @@ int ClicksFor(int d) { return (d <= 1) ? 1 : ((d == 2) ? 2 : 3); }
 //+------------------------------------------------------------------+
 int OnInit() {
    if (InpOandaVolume == 1) LoadOandaVol();
+   if (InpOandaBars == 1) LoadOandaBars();
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.58 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.59 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1643,6 +1731,7 @@ void OnTick() {
    // broker volume — the switch worked in the tester and never live. Re-read once
    // per M1 bar: same cost as the init read, once a minute.
    if (InpOandaVolume == 1) LoadOandaVol();
+   if (InpOandaBars == 1) LoadOandaBars();
    RevExitSweep();
    TryFire();
 }

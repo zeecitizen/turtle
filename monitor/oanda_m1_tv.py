@@ -25,6 +25,13 @@ from pathlib import Path
 
 COMMON = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files")
 M1_F = COMMON / "oanda_m1.csv"
+# the EA-facing table: SERVER-time keyed (what iTime() hands the EA), full OHLCV.
+# 2026-08-21, Zee: "the chart candles, the volume everything is on OANDA, we finally
+# goto blueberry just to press the buy button and obviously then it buys at the
+# blueberry price" — so the EA may JUDGE on these bars while every order still
+# fills, and every stop/target is measured, at Blueberry's own price.
+BARS_F = COMMON / "oanda_bars.csv"
+TV_TO_SERVER = timedelta(hours=-2)
 TV_TO_UTC = timedelta(hours=-5)
 N_BARS = 2000
 
@@ -48,6 +55,16 @@ def cycle():
     tmp = M1_F.with_suffix(".tmp")
     tmp.write_text("".join(lines), encoding="utf-8")
     tmp.replace(M1_F)                       # atomic: readers never see a half file
+
+    # the same bars, server-time keyed, for the EA
+    blines = []
+    for ts, r in d.iterrows():
+        srv = ts.to_pydatetime() + TV_TO_SERVER
+        blines.append(f"{srv:%Y.%m.%d %H:%M},{float(r['open'])},{float(r['high'])},"
+                      f"{float(r['low'])},{float(r['close'])},{int(r['volume'])}\n")
+    btmp = BARS_F.with_suffix(".tmp")
+    btmp.write_text("".join(blines), encoding="ascii")
+    btmp.replace(BARS_F)
     age = (time.time() - calendar.timegm(newest.timetuple())) / 60.0
     print(f"[M1-TV] {len(d)} bars -> oanda_m1.csv · newest {newest:%Y-%m-%d %H:%M} UTC "
           f"({age:.1f} min old)", flush=True)
