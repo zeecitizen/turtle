@@ -23,6 +23,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 COLLECTOR = ROOT / "monitor" / "oanda_vol_tv.py"
+# 2026-08-21 (Zee: "ensure that the candles AND volume are taken from tradingview"):
+# the CANDLES need the same websocket. oanda_m1.csv had rotted 22 h since the CDP
+# bridge died, so every decision surface silently read BROKER bars.
+M1_COLLECTOR = ROOT / "monitor" / "oanda_m1_tv.py"
 VOL_F = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_vol.csv")
 LOG = ROOT / "monitor" / "oanda_vol_supervisor.log"
 HEARTBEAT = ROOT / "monitor" / "oanda_vol_heartbeat.json"
@@ -90,6 +94,16 @@ def cycle():
         say(f"HANG — collector killed after {HARD_TIMEOUT}s (this cycle lost, feed intact)")
     except Exception as e:
         say(f"ERROR {e}")
+    # the candles, from the same source
+    try:
+        r2 = subprocess.run([PY_EXE, str(M1_COLLECTOR)],
+                            capture_output=True, text=True, timeout=HARD_TIMEOUT)
+        o2 = (r2.stdout or "").strip().splitlines()
+        say("m1 " + (o2[-1] if o2 else (r2.stderr or "").strip()[:110]))
+    except subprocess.TimeoutExpired:
+        say(f"m1 HANG — killed after {HARD_TIMEOUT}s")
+    except Exception as e:
+        say(f"m1 ERROR {e}")
     age = table_age_min()
     if age is None:
         say("ALERT: oanda_vol.csv MISSING — ZeeUHV is silently on BROKER volume")
