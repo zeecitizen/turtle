@@ -21,11 +21,16 @@ Usage (live OANDA csv):
                                              #   (grade me: where am I wrong?)
 """
 from __future__ import annotations
-import csv, sys
+import csv, os, sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-CF = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_m1.csv")
+# MT5's Common\Files, resolved per-machine (2026-08-20): this was hardcoded to
+# C:/Users/zeesh, so on any other profile the reader and the bridge's writer
+# pointed at different files and the OANDA feed always looked missing.
+_COMMON = Path(os.environ.get("APPDATA", r"C:/Users/zeesh/AppData/Roaming")) / \
+          "MetaQuotes" / "Terminal" / "Common" / "Files"
+CF = _COMMON / "oanda_m1.csv"
 
 # ── the knobs to perfect ──────────────────────────────────────────────────────
 METHOD    = "fractal"  # "fractal" (K bars each side) or "zigzag" (reversal threshold —

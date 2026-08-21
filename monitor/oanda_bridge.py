@@ -31,12 +31,15 @@ Requires TradingView Desktop launched with --remote-debugging-port=9222 and the 
 on OANDA:XAUUSD, M1, with the Volume study (tradingview_launcher.bat).
 """
 from __future__ import annotations
-import argparse, asyncio, csv, json, sys, time, urllib.request
+import argparse, asyncio, csv, json, os, sys, time, urllib.request
 from pathlib import Path
 import websockets
 
 CDP_HTTP = "http://localhost:9222/json"
-OUT = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_m1.csv")
+# MT5's Common\Files, resolved per-machine (2026-08-20) — see trend_eyes.CF.
+_COMMON = Path(os.environ.get("APPDATA", r"C:/Users/zeesh/AppData/Roaming")) / \
+          "MetaQuotes" / "Terminal" / "Common" / "Files"
+OUT = _COMMON / "oanda_m1.csv"
 EXTRACT_JS = (
     "(function(){try{"
     "var b=window._exposed_chartWidgetCollection.activeChartWidget.value()"
