@@ -31,8 +31,22 @@ M1_F = COMMON / "oanda_m1.csv"
 # blueberry price" — so the EA may JUDGE on these bars while every order still
 # fills, and every stop/target is measured, at Blueberry's own price.
 BARS_F = COMMON / "oanda_bars.csv"
-TV_TO_SERVER = timedelta(hours=-2)
-TV_TO_UTC = timedelta(hours=-5)
+BROKER_UTC_OFFSET = timedelta(hours=3)      # Blueberry = UTC+3
+
+
+def _local_to_utc(t):
+    """tvDatafeed hands back NAIVE LOCAL time. Zainab established this in
+    oanda_vol_tv.py and — the important part — reads the machine's utcoffset at
+    RUNTIME so a DST change or a machine move cannot silently shift every key by an
+    hour. This file hardcoded -5h/-2h (correct only on a UTC+5 box); same lesson,
+    same cure."""
+    from datetime import datetime as _dt
+    off = _dt.now().astimezone().utcoffset() or timedelta(0)
+    return t - off
+
+
+def _local_to_server(t):
+    return _local_to_utc(t) + BROKER_UTC_OFFSET
 N_BARS = 5000
 
 
@@ -60,7 +74,7 @@ def cycle():
     lines = ["time_unix,open,high,low,close,volume\n"]
     newest = None
     for ts, r in d.iterrows():
-        utc = ts.to_pydatetime() + TV_TO_UTC
+        utc = _local_to_utc(ts.to_pydatetime())
         newest = utc
         lines.append(f"{calendar.timegm(utc.timetuple())},{float(r['open'])},"
                      f"{float(r['high'])},{float(r['low'])},{float(r['close'])},"
@@ -72,7 +86,7 @@ def cycle():
     # the same bars, server-time keyed, for the EA
     blines = []
     for ts, r in d.iterrows():
-        srv = ts.to_pydatetime() + TV_TO_SERVER
+        srv = _local_to_server(ts.to_pydatetime())
         blines.append(f"{srv:%Y.%m.%d %H:%M},{float(r['open'])},{float(r['high'])},"
                       f"{float(r['low'])},{float(r['close'])},{int(r['volume'])}\n")
     btmp = BARS_F.with_suffix(".tmp")
