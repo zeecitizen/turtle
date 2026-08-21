@@ -230,6 +230,13 @@ class Cockpit:
                                   bg=BG, fg=FG, justify="left",
                                   wraplength=1150, anchor="w")
         self.anat_body.pack(pady=(2, 4), padx=18, fill="x")
+        # ── FEED HEALTH (Zee 2026-08-21: "maybe we can display the error on the GUI
+        # camel"). ZeeUHV v1.58 judges UHVs on OANDA volume and falls back to BROKER
+        # volume when the table is stale — silently. This line makes that loud.
+        self.feed = tk.Label(self.body, text="", font=("Segoe UI", 12, "bold"),
+                             bg=BG, fg=DIM, wraplength=1150)
+        self.feed.pack(pady=(0, 6))
+        self.tick_feed()
         self._anat_busy = False
         self.tick_anatomy()
         srow = tk.Frame(self.body, bg=BG); srow.pack(pady=(2, 0))
@@ -913,6 +920,25 @@ class Cockpit:
             txt, col = "", DIM
         self.stage.config(text=txt, fg=col)
         self.root.after(3000, self.tick_stage)
+
+    def tick_feed(self):
+        """OANDA-volume chain health, every 30 s, in plain colour."""
+        def work():
+            try:
+                sys.path.insert(0, str(Path(TE.__file__).parent))
+                import oanda_vol_selftest as st
+                import importlib; importlib.reload(st)
+                ok, head, detail = st.quick_status()
+            except Exception as e:
+                ok, head, detail = False, "OANDA volume status unreadable", str(e)[:80]
+            txt = ("🔊 " if ok else "⚠️ ") + head + ("  ·  " + detail if detail else "")
+            col = "#2bd576" if ok else "#ff5a6a"
+            try:
+                self.root.after(0, lambda: self.feed.config(text=txt, fg=col))
+            except Exception:
+                pass
+        threading.Thread(target=work, daemon=True).start()
+        self.root.after(30000, self.tick_feed)
 
     def tick_anatomy(self):
         """Refresh the live anatomy every 45 s (worker thread; UI stays smooth)."""
