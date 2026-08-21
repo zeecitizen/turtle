@@ -74,12 +74,30 @@ def pull(n_bars=5000):
 
 
 def write_vol(rows):
-    """Sorted ascending, ASCII, no header — LoadOandaVol() binary-searches this."""
+    """Sorted ascending, ASCII, no header — LoadOandaVol() binary-searches this.
+
+    MERGES with what is already on disk (2026-08-21). Overwriting with the newest
+    5,000 minutes silently DESTROYED history: a merged Aug-17 table was wiped by the
+    next cycle, and the Diamond test then ran on a day with 0% OANDA coverage in one
+    arm and 89.9% in another — mixing feeds inside one comparison, which makes the
+    'quieter breakout' test trivially true (OANDA ~1,500/min vs broker ~450/min).
+    History is the asset here: every minute kept is a minute the court can use."""
     if not rows:
         return 0
-    VOL_OUT.write_text("".join(f"{t:%Y.%m.%d %H:%M},{v}\n" for t, v in rows),
-                       encoding="ascii")
-    return len(rows)
+    keep = {}
+    try:
+        for ln in VOL_OUT.read_text(encoding="ascii", errors="ignore").splitlines():
+            p = ln.split(",")
+            if len(p) == 2:
+                keep[p[0]] = p[1]
+    except FileNotFoundError:
+        pass
+    for t, v in rows:
+        keep[f"{t:%Y.%m.%d %H:%M}"] = str(v)
+    tmp = VOL_OUT.with_suffix(".tmp")
+    tmp.write_text("".join(f"{k},{keep[k]}\n" for k in sorted(keep)), encoding="ascii")
+    tmp.replace(VOL_OUT)                     # atomic; readers never see a half file
+    return len(keep)
 
 
 def cycle():
