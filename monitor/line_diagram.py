@@ -35,6 +35,16 @@ def render(out=None):
     import setup_anatomy
     bars = trend_eyes.load_bars()
     a = setup_anatomy.analyze(bars)
+    # REAL OHLC (Zee 2026-08-21: "the diagram candles color should match real candles
+    # color"). trend_eyes rows carry no OPEN, so colours came from close-vs-prev-close
+    # and could disagree with the actual chart.
+    real = {}
+    try:
+        import forensic_chart as _fc
+        for r in _fc.load_deep():
+            real[r[0]] = (r[1], r[4])           # (open, close)
+    except Exception:
+        pass
     if not a or a.get("uhv") is None:
         return None, "no UHV formed yet — nothing to diagram (fresh leg)"
     side, u, trig = a["side"], a["uhv"], a["trigger"]
@@ -51,9 +61,12 @@ def render(out=None):
                                  sharex=True, facecolor="white")
     fig.subplots_adjust(right=0.70, hspace=0.06)
 
-    opens = [win[0][3]] + [win[k - 1][3] for k in range(1, len(win))]
+    opens = [(real[b[0]][0] if b[0] in real else
+              (win[k - 1][3] if k else win[0][3])) for k, b in enumerate(win)]
     for i, b in enumerate(win):
-        o, c, v = opens[i], b[3], b[4]
+        o = opens[i]
+        c = real[b[0]][1] if b[0] in real else b[3]
+        v = b[4]
         green = c > o
         lo, hi = min(o, c), max(o, c)
         is_uhv = (i == ui)
@@ -83,19 +96,24 @@ def render(out=None):
         g_lo, g_hi = price - 0.15, trig + 0.55
     else:
         g_lo, g_hi = trig - 0.55, price + 0.15
+    # the breaker wears the colour it MUST be: a GREEN close breaks a BUY door,
+    # a RED close breaks a SELL door (Zee 2026-08-21: "uhv is opposite color
+    # than breakout" — the diagram must say that at a glance).
+    BRK = GREEN if side == "BUY" else RED
     ax.add_patch(Rectangle((gx - 0.32, min(g_lo, g_hi)), 0.64, abs(g_hi - g_lo),
-                           fill=False, edgecolor=LIME, linewidth=3.0,
+                           fill=False, edgecolor=BRK, linewidth=3.0,
                            linestyle="--", zorder=4))
-    ax.annotate("the candle we are\nWAITING FOR", xy=(gx, max(g_lo, g_hi)),
+    ax.annotate(f"the {'GREEN' if side == 'BUY' else 'RED'} candle\nwe are WAITING FOR",
+                xy=(gx, max(g_lo, g_hi)),
                 xytext=(gx - 4.6, max(g_lo, g_hi) + 1.7), fontsize=12,
-                fontweight="bold", color=LIME, ha="center",
-                arrowprops=dict(arrowstyle="->", lw=2.2, color=LIME))
+                fontweight="bold", color=BRK, ha="center",
+                arrowprops=dict(arrowstyle="->", lw=2.2, color=BRK))
     # its required volume: dashed bar UNDER the UHV's height
     req = u[4] * 0.75
-    av.add_patch(Rectangle((gx - 0.32, 0), 0.64, req, fill=False, edgecolor=LIME,
+    av.add_patch(Rectangle((gx - 0.32, 0), 0.64, req, fill=False, edgecolor=BRK,
                            linewidth=2.4, linestyle="--", zorder=4))
     av.annotate(f"must be < {int(u[4])}", xy=(gx, req), xytext=(gx - 3.9, u[4] * 0.92),
-                fontsize=11, fontweight="bold", color=LIME)
+                fontsize=11, fontweight="bold", color=BRK)
 
     # current price marker
     ax.axhline(price, color=DIM, lw=1.0, ls=":")
@@ -118,6 +136,8 @@ def render(out=None):
         f"THE SANITY TERMS — {side} hunt\n"
         f"────────────────────────────\n"
         f"1. THE UHV: the {pkt} PKT candle,\n"
+        f"   {'RED' if side == 'BUY' else 'GREEN'} — it pulls AGAINST the trend,\n"
+        f"   so the breaker is the OPPOSITE colour.\n"
         f"   vol {int(u[4])} — LOUDEST counter-candle\n"
         f"   of this retracement. Non-negotiable.\n\n"
         f"2. THE TRIGGER: {trig:.2f} — its "
