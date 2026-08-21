@@ -509,6 +509,37 @@ counters entirely; only rank matters). v1.58 InpVolSource=1 reads the bridge's C
 in live AND tester. Reach limit: ~4 days of M1 history, so the head-to-head runs
 Aug 17-20 and the archive grows from tonight for future courts.
 
+## 4u. THE OANDA REBASE (Aug 21) — the hypothesis does not survive a fourth day
+
+Zee asked for the laws to be rebased on OANDA data. Done as far as the data allows
+(OANDA history starts Aug 17 — tvDatafeed's ~5,100-minute ceiling), and the result
+CORRECTS yesterday's optimistic read:
+
+```
+4 days (Aug 17-20), live size, shipped v1.52 stack
+  BROKER vol + BROKER candles   -436.10   <- still the best of the three
+  OANDA  vol + BROKER candles   -598.40   ($162 WORSE)
+  OANDA  vol + OANDA  candles   -680.80*  (*3 days; worst of all)
+```
+
+Yesterday's "+147 better on all three days" was a 3-day window (Aug 17-19) with
+Aug 20 VOID (ticks unpublished). Aug 20 published overnight and reverses it:
+OANDA-volume arms lost -437 there vs broker's -128.
+
+TWO SEPARATE FINDINGS:
+1. OANDA CANDLES HURT (-144 vs broker candles, same volume) — exactly what the
+   basis measurement predicted: OANDA prices sit +0.120 median above Blueberry
+   (max +0.845). Judging a 1.0-pt breakout on a feed you do not fill on enters
+   trades the real tape has not broken. InpOandaBars stays 0.
+2. OANDA VOLUME is UNPROVEN, not proven: better Aug 17/18/19, much worse Aug 20.
+   Four days is noise, and the live default is currently 1 (shipped on the 3-day
+   read). Recommendation: revert live to InpOandaVolume=0 until a real sample
+   exists, keep the collector archiving, decide on weeks not days.
+
+Law rebase (3 days, OANDA eye) is directionally useless as a court — every law
+"looked" costly because the whole arm was broken by the candle basis. Only the
+trend gate held (-385 worse without it). No law verdict is revised.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
