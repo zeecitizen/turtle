@@ -13,7 +13,7 @@
 //|  It is the wild ancestor, revived for live observation.          |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.00"
+#property version   "1.10"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -21,6 +21,15 @@ CTrade trade;
 
 input double InpLots        = 0.10;   // InpLots — lot size
 input int    InpMagicNumber = 88154;  // InpMagicNumber — 88094 = ZeeUHV, tester only
+
+// ── HIS EYE, FOR THE ANCESTOR (2026-08-21). The Diamond judges UHVs on volume and
+// owns no other guard, so the volume feed IS its strategy. Measured over four days
+// at live size: broker +433.90 vs OANDA +1,358.10, better on 3 of 4 — and Aug 19,
+// the day the broker feed cost it -522.30, came back +59.40 on his eye. That day is
+// the Diamond's whole disease (one basket erases nine good days).
+// Reads Common\Files\oanda_vol.csv, reloaded once per M1 bar, per-minute fallback
+// to broker volume. Levels and fills stay Blueberry's, always. Default 0.
+input int    InpOandaVolume = 0;    // 1 = judge UHVs on OANDA (TradingView) volume
 
 input group "── His rules (each one quoted from his labels in the code) ──"
 input int    InpTrendLook   = 20;   // InpTrendLook — 20 validated
@@ -58,7 +67,56 @@ datetime g_last_fire = 0;
 //| TapeProbe: iVolume returned 4 4 4 4 4 while iRealVolume returned  |
 //| 572 454 270 174. Every volume rule we owned had been blind.       |
 //+------------------------------------------------------------------+
+// OANDA volume table, loaded once at init from Common\Files (works in the tester
+// too — the tester reads FILE_COMMON, so this source is court-testable).
+datetime g_ov_t[];
+long     g_ov_v[];
+int      g_ov_n = 0;
+int      g_ov_miss = 0;          // lookups that fell back to broker volume
+datetime g_ov_miss_bar = 0;      // last bar already reported, so one line per bar
+datetime g_ov_newest = 0;        // newest minute in the table (freshness telemetry)
+
+void LoadOandaVol() {
+   g_ov_n = 0;
+   int h = FileOpen("oanda_vol.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON);
+   if (h == INVALID_HANDLE) {
+      Print("[ZEE] OANDA volume requested but oanda_vol.csv not found — using broker volume");
+      return;
+   }
+   ArrayResize(g_ov_t, 8192); ArrayResize(g_ov_v, 8192);
+   while (!FileIsEnding(h)) {
+      string ln = FileReadString(h);
+      int c = StringFind(ln, ",");
+      if (c <= 0) continue;
+      datetime t = StringToTime(StringSubstr(ln, 0, c));
+      long v = (long)StringToInteger(StringSubstr(ln, c + 1));
+      if (t <= 0) continue;
+      if (g_ov_n >= ArraySize(g_ov_t)) {
+         ArrayResize(g_ov_t, g_ov_n + 4096); ArrayResize(g_ov_v, g_ov_n + 4096);
+      }
+      g_ov_t[g_ov_n] = t; g_ov_v[g_ov_n] = v; g_ov_n++;
+   }
+   FileClose(h);
+   g_ov_newest = (g_ov_n > 0) ? g_ov_t[g_ov_n - 1] : 0;
+   PrintFormat("[ZEE] OANDA volume table loaded: %d minutes (newest %s)",
+               g_ov_n, TimeToString(g_ov_newest, TIME_DATE | TIME_MINUTES));
+}
+
+long OandaVolAt(datetime t) {          // binary search the sorted table
+   int lo = 0, hi = g_ov_n - 1;
+   while (lo <= hi) {
+      int mid = (lo + hi) / 2;
+      if (g_ov_t[mid] == t) return g_ov_v[mid];
+      if (g_ov_t[mid] < t) lo = mid + 1; else hi = mid - 1;
+   }
+   return -1;
+}
+
 long BarVolume(int k) {
+   if (InpOandaVolume == 1 && g_ov_n > 0) {
+      long ov = OandaVolAt(iTime(_Symbol, PERIOD_CURRENT, k));
+      if (ov > 0) return ov;
+   }
    long rv = iRealVolume(_Symbol, PERIOD_CURRENT, k);
    if (rv > 0) return rv;
    return iVolume(_Symbol, PERIOD_CURRENT, k);
@@ -263,6 +321,7 @@ int ClicksFor(int d) { return (d <= 1) ? 1 : ((d == 2) ? 2 : 3); }
 
 //+------------------------------------------------------------------+
 int OnInit() {
+   if (InpOandaVolume == 1) LoadOandaVol();
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
@@ -425,6 +484,11 @@ double OnTester() {
 
 //+------------------------------------------------------------------+
 void OnTick() {
+   static datetime _ovbar = 0;
+   if (InpOandaVolume == 1) {
+      datetime _b = iTime(_Symbol, PERIOD_CURRENT, 0);
+      if (_b != _ovbar) { _ovbar = _b; LoadOandaVol(); }
+   }
    AgeOut();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;
