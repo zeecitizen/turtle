@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.59"
+#property version   "1.60"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -392,6 +392,13 @@ input double InpBrkVolMin   = 0.0;  // InpBrkVolMin — 0 = off. Breakout volume
 // stopped all twelve tickets. Two independent reads of the same defect:
 input double InpBrkMarginPts = 0.0; // Law 10a: breakout must CLOSE >= this many pts beyond the trigger (0 = off)
 input double InpBrkVolMaxFrac = 0.0; // Law 10b: breakout vol <= this frac of UHV vol (0 = off; entry already requires < 1.0)
+// ── LAW 13 — THE MOMENTUM BREAKOUT (Zee 2026-08-22, from the 23:53 forensic:
+// "breakout should be a momentum candle"). The candle that took that trade was a
+// NUDGE: a tiny green body that limped over the line and died. A break is a
+// DECISION — its body must be large against the recent tape, and it must close
+// near its own extreme, not in the middle of its range. Both default off.
+input double InpBrkBodyMult  = 0.0;  // breakout body >= this x avg body of the last 20 bars
+input double InpBrkClosePos  = 0.0;  // breakout must close in the top (1-x) of its own range
 // ── LAW 10c — the NON-BLOCKING form (Zee 2026-08-17: "can we maybe find a
 // non-blocking version of this LAW... i don't wanna cut down trades.. 6 per day is
 // already so less"). House doctrine: laws never gate; they multiply. The gate form
@@ -831,6 +838,23 @@ bool BreakoutIsBar1(int uhv, int side) {
          if (!deep) return false;
       }
       // Law 10b — near-UHV effort with no result is absorption, not a breakout.
+      // LAW 13a — a body that means it, measured against the last 20 candles
+      if (InpBrkBodyMult > 0) {
+         double avgb = 0; int gotb = 0;
+         for (int q = k + 1; q <= k + 20; q++) { avgb += MathAbs(bClose(q) - bOpen(q)); gotb++; }
+         if (gotb > 0) avgb /= gotb;
+         double body = MathAbs(bClose(k) - bOpen(k));
+         if (avgb > 0 && body < avgb * InpBrkBodyMult) { g_breason = 4; return false; }
+      }
+      // LAW 13b — a close that holds its gain: near the extreme, not mid-range
+      if (InpBrkClosePos > 0) {
+         double rng = bHigh(k) - bLow(k);
+         if (rng > 0) {
+            double pos = wantGreen ? (bClose(k) - bLow(k)) / rng
+                                   : (bHigh(k) - bClose(k)) / rng;
+            if (pos < InpBrkClosePos) { g_breason = 5; return false; }
+         }
+      }
       if (InpBrkVolMaxFrac > 0 &&
           (double)BarVolume(k) > (double)BarVolume(uhv) * InpBrkVolMaxFrac)
          return false;
@@ -1027,7 +1051,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.59 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.60 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
