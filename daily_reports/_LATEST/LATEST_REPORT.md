@@ -540,6 +540,23 @@ Law rebase (3 days, OANDA eye) is directionally useless as a court — every law
 "looked" costly because the whole arm was broken by the candle basis. Only the
 trend gate held (-385 worse without it). No law verdict is revised.
 
+## 4v. 🚨 AUG 21 — THE DIAMOND TOOK 57%% OF THE ACCOUNT
+
+```
+equity 2,675.07 -> 1,146.27 in one session
+  Diamond (88154):  56 closes 34W/22L  -2,476.50   <- all of it
+  ZeeUHV:           30 closes 17W/13L     -38.30
+  Loud EA:          35 closes 29W/ 6L    +184.60
+  Shop B:            2 closes  0W/ 2L     -45.90
+two baskets did the damage: 03:55 -1,003.60 · 17:27 -1,682.60
+split at the 21:45 OANDA switch: before -2,418.60 (40 closes) · after -57.90 (16)
+```
+Exactly the court's prediction ("crash cluster ~ -1,700/day at 0.10") and worse. The
+guarded machines were fine; the unguarded ancestor did it alone. RECOMMENDATION
+STANDING: detach the Diamond or cut it to 0.01 before Monday's open. Awaiting Zee.
+
+## 4w. LAW 13 — the momentum breakout (his 23:53 forensic), on trial Saturday.
+
 ## 5. Open items
 
 1. **TradingView CDP** — MSIX app can't be launched with `--remote-debugging-port` by
