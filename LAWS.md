@@ -20,8 +20,9 @@ an ultra high volume candle occurs within a valid retracement. so in a retraceme
 Breakout
 The breakout candle is a candle which breaks the marked high of the UHV candle. It not only breaks but closes above the high level marked in the previous step. The high of the UHV. When the breakout candle closes, and when it closes above the high of the UHV candle, only then we start the buy trade. The breakout candle should be:
 
-a. a momentum candle (no big wick)
+a. a momentum candle (no big wick) -> proven to be better than "no wick test" via tests
 b. its volume should be lower than the UHV's volume (OANDA volume from Tradingview)
+c. the breakout candle must cross - share body with - the UHV candle's high. the breakout must be the first candle to close its body through the UHV's high
 
 an extra confirmation is the following: If breakout candle closes above the EMA 5
 
