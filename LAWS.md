@@ -34,3 +34,7 @@ Until when can we trade this strategy? we stop buying, when the last low is brok
 we only trade in the NewYork session (US session) that starts at Pakistani 5:00 PM or maybe 6:00 PM (check), because the price moves fast then
 
 the strategy works in a trending market (either price is moving upwards or downwards), we don't trade in a ranging market..
+
+
+Supplementary laws: 
+we consider a red candle a noise candle if its not breaking the previous green's low. a sequence of red candle's which don't break the last green's low are still noise. we consider them part of an impulse wave. at 6:35 PM there's a low. that low is not updated . the two imtermediary lows at 6:39 and 6:45 are noise because they dont break the previous green's low. therefore when the red candle starts at 6:51 its the first time a red has broken below the last green's low, thus starting a retracement there. thus the new low forms at 6:54 PM which is higher than the last confirmed low at 6:35 pM
