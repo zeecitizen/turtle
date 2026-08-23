@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.21"
+#property version   "1.22"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -60,7 +60,17 @@ input double InpUpRunPts      = 0.0;    // and/or the run must cover this many p
 
 input group "── LAW: the breakout ──"
 input double InpMomBodyMult   = 1.0;    // "a momentum candle" — body vs the last 20
-input double InpMaxWickFrac   = 0.35;   // "(no big wick)" — wick <= this share of range
+input double InpBreakHold     = 0.50;   // "(no big wick)" measured against HIS LEVEL:
+                                        // the close must still hold this share of what
+                                        // the candle took above the UHV's high. His
+                                        // ruling: a candle that closes well above the
+                                        // level IS a momentum candle, whatever its
+                                        // shape; a wick in the breakout's direction is
+                                        // rejection and weakens the break.
+input double InpMaxWickFrac   = 0.00;   // the old shape test (wick vs the candle's own
+                                        // range). MY number, never his — retired to a
+                                        // dead input on 2026-08-23, kept so the earlier
+                                        // receipts stay reproducible.
 input bool   InpNeedEma5      = false;  // "an EXTRA confirmation" — his word, so optional
 
 input group "── LAW: closing the trade ──"
@@ -381,7 +391,26 @@ bool BreakoutOK(int uhv, int side) {
       if (avg > 0 && MathAbs(bClose(1) - bOpen(1)) < avg * InpMomBodyMult)
          { c_brk_mom++; return false; }
    }
-   // "(no big wick)"
+   // "a momentum candle (no big wick)" — MEASURED AGAINST HIS LEVEL (2026-08-23).
+   // Zee on trade #5: "the 10:02 breakout candle has a wick on top making it not a
+   // momentum candle.. its body does break the UHV high but with a very very small
+   // margin." Then the ruling that settles what the clause means: "a candle that
+   // closes well above your level is a momentum candle, whatever its shape.. the wick
+   // represents price rejection. a wick in the direction of the breakout weakens the
+   // strength of the breakout."
+   //
+   // So the wick is not judged against the candle's own height — that is a shape test
+   // blind to what was broken, and it was MY invention (0.35), not his page. It is
+   // judged against THE BREAK: of everything the candle took above his level, how much
+   // was still held at the close. Friday, his five setups:
+   //     7:02 held 100%  ·  9:10 held 82%  ·  8:10 held 68%   → the winners
+   //     8:51 held  31%  ·  10:02 held 9.6%                   → the two losers
+   if (InpBreakHold > 0) {
+      double took = up ? (bHigh(1) - lvl) : (lvl - bLow(1));   // reach past his level
+      double kept = up ? (bClose(1) - lvl) : (lvl - bClose(1));// what the close held
+      if (took > 0 && kept / took < InpBreakHold) { c_brk_wick++; return false; }
+   }
+   // the old shape test, kept as a dead input so its receipts stay reproducible
    if (InpMaxWickFrac > 0) {
       double rng = bHigh(1) - bLow(1);
       if (rng > 0) {
@@ -436,12 +465,12 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.21 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.22 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
-               "momentum body %.1fx wick<=%.0f%% · EMA5 %s · %s volume · magic %d",
+               "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
                InpNeedM5M15 ? "required" : "off", InpStopBufPips * 10.0,
-               InpTargetR, InpBreakEvenR, InpMomBodyMult, InpMaxWickFrac * 100.0,
+               InpTargetR, InpBreakEvenR, InpMomBodyMult, InpBreakHold * 100.0,
                InpNeedEma5 ? "required" : "extra/off",
                (InpOandaVolume == 1 && g_ov_n > 0) ? "OANDA" : "broker", (int)InpMagic);
    return INIT_SUCCEEDED;
