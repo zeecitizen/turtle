@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.00"
+#property version   "1.01"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -55,7 +55,10 @@ input group "── LAW: session & higher timeframes ──"
 input bool   InpNyOnly        = true;   // "we only trade in the NewYork session"
 input int    InpNyFromHour    = 15;     // broker 15:00 = 17:00 PKT
 input int    InpNyToHour      = 22;
-input bool   InpNeedM5M15     = true;   // "1 minute bullish, 5 minute also, 15 minute also"
+input bool   InpNeedM5M15     = false;  // REMOVED from LAWS.md 2026-08-23 — it was a
+                                        // preference, never a law, and as a hard gate it
+                                        // cost Friday its ONLY trade (a winner) and cut
+                                        // July from 27 setups to 5. Kept as a dead input.
 
 input group "── LAW: the volume source ──"
 input int    InpOandaVolume   = 1;      // "we read volume from tradingview's OANDA volume chart"
@@ -258,7 +261,7 @@ int OpenCount() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    if (InpOandaVolume == 1) LoadOandaVol();
-   PrintFormat("[LAW] BasedOnLaws v1.00 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.01 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx wick<=%.0f%% · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
