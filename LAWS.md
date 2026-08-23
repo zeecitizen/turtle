@@ -29,6 +29,8 @@ The take profit of this trade is placed at risk-reward ratio of 1:2, after reach
 
 Until when can we trade this strategy? we stop buying, when the last low is broken .. we keep trading until the last low is safe (unbroken below). Whenever a high is broken, the deepest point (the lowest point) is the confirmed higher low.
 
-we only trade in the NewYork session (US session) that starts at Pakistani 6:00 PM, because the price moves fast then
+we only trade in the NewYork session (US session) that starts at Pakistani 5:00 PM or maybe 6:00 PM (check), because the price moves fast then
 
 the strategy works in a trending market (either price is moving upwards or downwards), we don't trade in a ranging market..
+
+gold is mostly bullish, so we can also only focus on the buy if 1 minute is bullish, 5 minute is also bullish, 15 minute is also bullish, so then buy side trends become more favorite of the author..
