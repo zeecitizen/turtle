@@ -105,7 +105,12 @@ def write_vol(rows):
                 keep[p[0]] = p[1]
     except FileNotFoundError:
         pass
-    mutable = {f"{t:%Y.%m.%d %H:%M}" for t, _ in rows[-SETTLE_AFTER:]}
+    # "newest" must mean newest BY THE CLOCK, not newest in the pull. Over a closed
+    # weekend the pull's last row is Friday 23:59 and stays mutable forever — measured:
+    # it oscillated 33 <-> 34 on a dead market and kept tripping the court's tripwire.
+    now_srv = datetime.utcnow() + BROKER_UTC_OFFSET
+    mutable = {f"{t:%Y.%m.%d %H:%M}" for t, _ in rows
+               if (now_srv - t).total_seconds() < SETTLE_AFTER * 60}
     revised = 0
     for t, v in rows:
         k = f"{t:%Y.%m.%d %H:%M}"
