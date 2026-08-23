@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.11"
+#property version   "1.13"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -310,7 +310,7 @@ int OpenCount() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    if (InpOandaVolume == 1) LoadOandaVol();
-   PrintFormat("[LAW] BasedOnLaws v1.11 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.13 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx wick<=%.0f%% · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -397,11 +397,19 @@ void OnTick() {
    bool ok = (t > 0) ? trade.Buy(InpLots, _Symbol, 0, sl, tp, "zlaw_buy")
                      : trade.Sell(InpLots, _Symbol, 0, sl, tp, "zlaw_sell");
    if (ok) c_fired++;
-   if (ok)
-      PrintFormat("[LAW] %s @%.2f — UHV bar %d (vol %d) · retrace from %d · risk %.2f · "
-                  "stop %.2f · target %.2f (%.1fR)",
-                  t > 0 ? "BUY" : "SELL", px, uhv, (int)BarVolume(uhv), rs, risk, sl, tp,
-                  InpTargetR);
+   if (ok) {
+      // Zee 2026-08-23: "tell me which time is the retracement begin, which time is
+      // the UHV, which time is the breakout candle so i can check and verify."
+      // Every fire now stamps its three anchors as CLOCK TIMES, not bar offsets.
+      PrintFormat("[LAWX] %s | retracement began %s | UHV %s (vol %d, high %.2f) | breakout %s "
+                  "(close %.2f, vol %d) | entry %.2f stop %.2f target %.2f (%.1fR)",
+                  t > 0 ? "BUY " : "SELL",
+                  TimeToString(iTime(_Symbol, PERIOD_CURRENT, rs), TIME_MINUTES),
+                  TimeToString(iTime(_Symbol, PERIOD_CURRENT, uhv), TIME_MINUTES),
+                  (int)BarVolume(uhv), bHigh(uhv),
+                  TimeToString(iTime(_Symbol, PERIOD_CURRENT, 1), TIME_MINUTES),
+                  bClose(1), (int)BarVolume(1), px, sl, tp, InpTargetR);
+   }
 }
 
 double OnTester() {
