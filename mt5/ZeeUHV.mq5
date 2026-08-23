@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.61"
+#property version   "1.62"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -408,7 +408,14 @@ input double InpBrkClosePos  = 0.0;  // breakout must close in the top (1-x) of 
 // breakeven cost $629; 3R was worse than 2R) yet his SIMPLE entry only reaches
 // ~28% and dies just under its own bar. Ours reaches 65-78%. This grafts HIS EXITS
 // onto OUR ENTRY — the one combination never measured. All default off.
-input bool   InpStructStop   = false; // stop below the UHV's low/high instead of InpStopPts
+// 2026-08-23, Zee caught this: "did u place the stoploss below the last low's low?"
+// I had used the UHV CANDLE'S low. His law (and the teacher's) says the LOWEST POINT
+// OF THE RETRACEMENT — the last low — which is often a later, deeper candle. The UHV
+// low is therefore a systematically TIGHTER stop, and the first hybrid court showed
+// exactly that damage: win rate fell to ~50% from our usual 65-78%.
+//   1 = the UHV candle's low (what I first built, kept for comparison)
+//   2 = the RETRACEMENT'S LOWEST POINT — his law
+input int    InpStructStop   = 0;    // 0 = off · 1 = UHV's low · 2 = retracement's last low
 input double InpStructBufPts = 0.10;  // buffer beyond that extreme
 input double InpStructMinPts = 0.80;  // refuse absurdly tight structural stops
 input double InpStructMaxPts = 8.00;  // and absurdly wide ones
@@ -1066,7 +1073,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.61 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.62 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1348,8 +1355,20 @@ void TryFire() {
       diamond_now = false;
    double useStop = diamond_now ? InpGreenStopPts : InpStopPts;
    // HIS STOP: structural — under the loud candle itself, not a fixed distance
-   if (InpStructStop && uhv > 0) {
-      double ext = (t > 0) ? bLow(uhv) - InpStructBufPts : bHigh(uhv) + InpStructBufPts;
+   if (InpStructStop > 0 && uhv > 0) {
+      double anchor;
+      if (InpStructStop == 2) {
+         // his law: the deepest point of the whole retracement, origin -> now
+         anchor = (t > 0) ? bLow(1) : bHigh(1);
+         int back = (origin > 0) ? origin : uhv;
+         for (int q = 1; q <= back; q++) {
+            if (t > 0) anchor = MathMin(anchor, bLow(q));
+            else       anchor = MathMax(anchor, bHigh(q));
+         }
+      } else {
+         anchor = (t > 0) ? bLow(uhv) : bHigh(uhv);
+      }
+      double ext = (t > 0) ? anchor - InpStructBufPts : anchor + InpStructBufPts;
       double risk = MathAbs(px - ext);
       if (risk >= InpStructMinPts && risk <= InpStructMaxPts) useStop = risk;
       else if (InpVerbose)
