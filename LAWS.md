@@ -1,6 +1,7 @@
 # ⚖️ THE LAWS — what makes a setup
 
-**Status: as enforced by `mt5/ZeeUHV.mq5` v1.58, magic 88094, XAUUSD M1.**
+**Status: as enforced by `mt5/ZeeUHV.mq5` v1.60, magic 88094, XAUUSD M1.**
+*(Zainab wrote this page at v1.58; kept current as the EA moves.)*
 
 These are the **basic laws**: the six steps that decide whether a setup *exists*.
 They are gates — every one must pass, or there is no trade.
@@ -226,3 +227,24 @@ Version ledger: [VERSION_HISTORY.md](VERSION_HISTORY.md) — current.
 **Before believing any change to a law here, re-run the baseline first.** Dead code
 has moved results in this repo before. No Python result has ever promoted anything,
 and none should — MT5's Strategy Tester with real ticks, or live fills, only.
+
+
+---
+
+## Candidates that are NOT laws (tried and refused, so nobody re-litigates)
+
+A page of gates is only trustworthy if the rejected ones are listed too. Each of
+these was built, courted, and turned away — receipts in `VERSION_HISTORY.md`.
+
+| candidate | what it demanded | verdict |
+|---|---|---|
+| **Law 11 — origin integrity** | the retracement may contain no new leg extreme | −303.86 court, and it killed 8 of the golden streak's winners |
+| **Law 12 — peak-bounded origin** | the origin search may not cross the last peak | +171 alone, but −276 on top of the pulse; WR 69-81% bought with net |
+| **Law 13 — the momentum breakout** | breakout body ≥ 1.0-1.5× the last 20 bodies, and/or a close near its extreme | court −409..−633 vs virgin +324..+549 in all four shapes. It does not select better breaks, it simply trades LESS: June 366→236 tickets with win rate FALLING 77.3%→66.1%. Its sign is just the sign of the period. Deeper reason: it fights Law 6 — a quiet breakout (no supply) is rarely a big-bodied one |
+| **The Bull** (buys only, no trend gate) | "gold tends up", so every red pullback is a retracement | lost all six court periods; the gate's silence is worth ~$1,600/12wk |
+| **Taking the pruned setups** | fire on everything the vetoes discard | −6,506 vs +576. The prune pile is the laws' salary |
+| **OANDA *prices* for levels** | judge the break on TradingView's candles | −144 vs broker candles: OANDA sits +0.120 median above Blueberry (max +0.845). SELECTION may cross feeds; PRICE LEVELS may not |
+
+**The pattern in every refusal:** a filter that removes trades reduces exposure, and
+reducing exposure looks brilliant in a losing period and ruinous in a winning one.
+Only a filter that raises the win rate *while keeping the winners* is a law.
