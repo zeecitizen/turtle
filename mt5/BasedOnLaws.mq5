@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.03"
+#property version   "1.11"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -29,13 +29,19 @@ input int    InpMaxOpen       = 1;
 
 input group "── LAW: the trend (camel humps) ──"
 input bool   InpRequireTrend  = true;   // "we don't trade in a ranging market"
-input int    InpTrendLook     = 40;     // 2026-08-23: was 20 — MY number, inherited from
+input int    InpTrendLook     = 90;    // 2 hours — his 7:02 PM trade was defending
+                                        // the 5:40 PM low, 82 bars back. A 20-40 bar
+                                        // window cannot see the leg it is trading.
+                                        // 90 reproduces all three of his marked
+                                        // setups to the minute; 120 loses the first.     // 2026-08-23: was 20 — MY number, inherited from
                                         // ZeeUHV, never his. He reads camel humps across an
                                         // hour+; 20 bars declared RANGE inside a clean climb
                                         // and cost Friday 4 of its 5 setups. 40 finds all
                                         // five (3W/2L, +259.20); 60 is byte-identical — a
                                         // plateau, not a spike.
 input int    InpPivot         = 2;
+input bool   InpTrendBeforeRetrace = true;  // read the humps BEFORE the pullback,
+                                            // not through it (his 7:02 PM setup)
 input bool   InpBuyOnly       = true;   // "Buy side trade setup" · "gold is mostly bullish"
 
 input group "── LAW: the retracement ──"
@@ -68,6 +74,11 @@ input bool   InpNeedM5M15     = false;  // REMOVED from LAWS.md 2026-08-23 — i
 input group "── LAW: the volume source ──"
 input int    InpOandaVolume   = 1;      // "we read volume from tradingview's OANDA volume chart"
 input bool   InpVerbose       = false;
+// per-bar narration for a chosen window (server HHMM), so a missed setup can be
+// interrogated minute by minute. Zee 2026-08-23 gave exact times: his breakouts at
+// 7:02 / 7:56 / 9:10 PM PKT = server 1702 / 1756 / 1910.
+input int    InpDbgFrom       = 0;
+input int    InpDbgTo         = 0;
 
 datetime g_last_bar = 0;
 // CENSUS (tester only) — Zee hand-drew 4 setups on Friday and the EA took 1.
@@ -142,25 +153,45 @@ double Ema(int len, int shift) {
 
 //──── LAW: "we call it an uptrend if we're breaking above previous highs
 //──── and forming new higher lows" — and the last low we must defend.
-int TrendNow(double &lastLow) {
-   int hi1 = -1, hi2 = -1, lo1 = -1, lo2 = -1;
-   for (int i = InpPivot + 1; i <= InpTrendLook && (hi2 < 0 || lo2 < 0); i++) {
-      bool isHi = true, isLo = true;
-      for (int j = i - InpPivot; j <= i + InpPivot; j++) {
-         if (j == i) continue;
-         if (bHigh(j) >= bHigh(i)) isHi = false;
-         if (bLow(j)  <= bLow(i))  isLo = false;
-      }
-      if (isHi) { if (hi1 < 0) hi1 = i; else if (hi2 < 0) hi2 = i; }
-      if (isLo) { if (lo1 < 0) lo1 = i; else if (lo2 < 0) lo2 = i; }
-   }
+// 2026-08-23 — Zee's setup 1 exposed the flaw: this test re-measured structure on
+// the MOST RECENT bars, which during a pullback are the pullback's own. A healthy
+// retracement therefore printed lower highs and lower lows, the gate flipped to
+// DOWNTREND, and it refused the very setup the pullback had created — at 7:02 PM it
+// read trend=-1 while he was buying. He reads the humps BEFORE the pullback and then
+// trades it. So the scan may start AFTER the retracement, at bar `from`.
+// 2026-08-23 — his final clarification, and it separates TWO levels I had conflated:
+//   "4563.637, the low at 5:40 PM" = where he STARTS DRAWING THE HUMPS (the leg)
+//   "at 7:02 the low of the candle at 6:54 PM, 4577.055" = what he is DEFENDING now
+// So the trend is read from the LEG (a long, hour-scale structure), while the low
+// that stops him buying is the CURRENT RETRACEMENT'S floor — the deepest point since
+// price last broke a high, exactly as his page says: "whenever a high is broken, the
+// deepest point (the lowest point) is the confirmed higher low."
+int TrendNow(double &lastLow, int from = 1) {
+   // --- the leg: is this an uptrend at all? ---
+   int iLow = 1;
+   double legLow = bLow(1);
+   for (int i = 2; i <= InpTrendLook; i++)
+      if (bLow(i) < legLow) { legLow = bLow(i); iLow = i; }
    lastLow = 0;
-   if (hi1 < 0 || hi2 < 0 || lo1 < 0 || lo2 < 0) return 0;
-   bool hh = bHigh(hi1) > bHigh(hi2), hl = bLow(lo1) > bLow(lo2);
-   bool lh = bHigh(hi1) < bHigh(hi2), ll = bLow(lo1) < bLow(lo2);
-   if (hh && hl) { lastLow = bLow(lo1); return +1; }   // the confirmed higher low
-   if (lh && ll) { lastLow = bHigh(hi1); return -1; }
-   return 0;
+   if (iLow < 3) return 0;
+   double hiAfter = bHigh(1);
+   for (int k = 1; k < iLow; k++) hiAfter = MathMax(hiAfter, bHigh(k));
+   double hiBefore = 0;
+   for (int j = iLow; j <= InpTrendLook; j++) hiBefore = MathMax(hiBefore, bHigh(j));
+   if (!(hiAfter > hiBefore)) return 0;        // never made a higher high -> no leg
+   if (bClose(1) < legLow) return 0;           // the leg itself is finished
+
+   // --- the level he defends RIGHT NOW: the floor of the current pullback ---
+   // walk back to the most recent bar that made the running high, then take the
+   // deepest low from there to now.
+   int hb = 1; double run = bHigh(1);
+   for (int q = 2; q <= InpTrendLook; q++) {
+      if (bHigh(q) > run) { run = bHigh(q); hb = q; }
+   }
+   double floorLow = bLow(1);
+   for (int r = 1; r <= hb; r++) floorLow = MathMin(floorLow, bLow(r));
+   lastLow = (floorLow > 0) ? floorLow : legLow;
+   return +1;
 }
 
 //──── LAW: higher timeframes — "1 minute bullish, 5 minute also, 15 minute also"
@@ -178,17 +209,24 @@ bool HtfAgrees(int side) {
 
 //──── LAW: "a valid retracement starts when the last green candle's LOW is
 //──── broken by the next or next few red candles downwards"
-int RetraceStart(int side) {
-   for (int k = 2; k <= InpRetraceMax; k++) {
+// 2026-08-23, his words: "the green at 6:50 when broken by a red below it forms a
+// first retracement origin. the green at 6:55 when broken by reds below its low
+// forms the SECOND retracement origin -> this is a VALID setup too... so BOTH are
+// valid retracements." Nested pullbacks each own a retracement, each owns a UHV.
+// So we collect every origin and audition them newest-first.
+int RetraceOrigins(int side, int &out[]) {
+   int n = 0;
+   ArrayResize(out, 16);
+   for (int k = 2; k <= InpRetraceMax && n < 16; k++) {
       bool withTrend = (side > 0) ? IsGreen(k) : IsRed(k);
       if (!withTrend) continue;
       for (int j = k - 1; j >= 1; j--) {
          bool broke = (side > 0) ? (bLow(j) < bLow(k)) : (bHigh(j) > bHigh(k));
-         if (broke) return k;              // the pullback runs k -> bar 1
+         if (broke) { out[n++] = k; break; }
       }
-      return -1;                            // newest with-trend candle still intact
    }
-   return -1;
+   ArrayResize(out, n);
+   return n;
 }
 
 //──── LAW: "we compare all red colored candle's volumes; the largest is the UHV"
@@ -272,7 +310,7 @@ int OpenCount() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    if (InpOandaVolume == 1) LoadOandaVol();
-   PrintFormat("[LAW] BasedOnLaws v1.03 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.11 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx wick<=%.0f%% · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -298,8 +336,24 @@ void OnTick() {
       if (hh < InpNyFromHour || hh >= InpNyToHour) { c_session++; return; }
    }
 
+   MqlDateTime _dt; TimeToStruct(TimeCurrent(), _dt);
+   int _hm = _dt.hour * 100 + _dt.min;
+   bool _dbg = (InpDbgFrom > 0 && _hm >= InpDbgFrom && _hm <= InpDbgTo);
+
+   // the trend is STATE now: established by HH+HL, alive while its last low holds
    double lastLow = 0;
-   int t = TrendNow(lastLow);
+   int t = TrendNow(lastLow, 1);
+   if (_dbg) {
+      int _og[]; int _n = RetraceOrigins(+1, _og);
+      int _rs = (_n > 0) ? _og[0] : -1;
+      int _u  = (_rs > 0) ? UhvIn(_rs, +1) : -1;
+      PrintFormat("[DBG] %02d:%02d trend=%d lastLow=%.2f close1=%.2f | retrStart=%d "
+                  "uhv=%d uhvHi=%.2f uhvVol=%d | bar1 %s c=%.2f v=%d body=%.2f",
+                  _dt.hour, _dt.min, t, lastLow, bClose(1), _rs, _u,
+                  _u > 0 ? bHigh(_u) : 0.0, _u > 0 ? (int)BarVolume(_u) : 0,
+                  IsGreen(1) ? "GREEN" : (IsRed(1) ? "RED" : "doji"),
+                  bClose(1), (int)BarVolume(1), MathAbs(bClose(1) - bOpen(1)));
+   }
    if (InpRequireTrend && t == 0) { c_notrend++; return; }
    if (InpBuyOnly && t != +1) { c_notbuy++; return; }
    if (!HtfAgrees(t)) return;
@@ -312,11 +366,16 @@ void OnTick() {
       g_last_low = lastLow;
    }
 
-   int rs = RetraceStart(t);
-   if (rs < 0) { c_noretr++; return; }
-   int uhv = UhvIn(rs, t);
+   int origins[];
+   int no = RetraceOrigins(t, origins);
+   if (no == 0) { c_noretr++; return; }
+   int rs = -1, uhv = -1;
+   for (int oi = 0; oi < no; oi++) {          // newest origin first, as he reads them
+      int cand = UhvIn(origins[oi], t);
+      if (cand < 2) continue;
+      if (BreakoutOK(cand, t)) { rs = origins[oi]; uhv = cand; break; }
+   }
    if (uhv < 2) { c_nouhv++; return; }
-   if (!BreakoutOK(uhv, t)) return;
 
    // LAW: stop 5-7 pips below the LOWEST POINT of the retracement (the last low)
    double deep = (t > 0) ? bLow(1) : bHigh(1);
