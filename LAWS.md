@@ -1,5 +1,7 @@
 This file is edited by Zeeshan by hand only, not to be edited by Claude. 
 
+we read volume from TradingView's OANDA chart of XAUUSD, the EA makes the mistake of reading volume from Broker Blueberry. We donot want to make this mistake.
+
 Buy side trade setup: 
 
 camel humps - we identify trend by drawing camel humps. the idea is that price doesnot go up in a straight line. the price goes upwards in a lightning shape fashion. So first there is price going up in a straight slant trend line (we call this the impulse wave), then there's a retracement (pull back) . so we call it an uptrend if we're breaking above previous highs. and forming new higher lows. that's where we say okay this is an uptrend. 
