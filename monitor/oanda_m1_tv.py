@@ -102,8 +102,13 @@ def cycle():
     # in the measurement that found this (0 revisions) while volume was not (38 in one
     # cycle), but the volume field lives in this table too and a court cannot compare
     # arms across a chart that rewrites itself. Only the newest few minutes may move.
-    newest = [f"{_local_to_server(ts.to_pydatetime()):%Y.%m.%d %H:%M}"
-              for ts in list(d.index)[-3:]]
+    # mutable BY THE CLOCK, not by position in the pull — over a closed weekend the
+    # last row of the pull would otherwise stay editable forever (see oanda_vol_tv).
+    from datetime import datetime as _dtc
+    now_srv = _dtc.utcnow() + BROKER_UTC_OFFSET
+    newest = {f"{_local_to_server(ts.to_pydatetime()):%Y.%m.%d %H:%M}"
+              for ts in d.index
+              if (now_srv - _local_to_server(ts.to_pydatetime())).total_seconds() < 180}
     for ts, r in d.iterrows():
         k = f"{_local_to_server(ts.to_pydatetime()):%Y.%m.%d %H:%M}"
         if k in keep and k not in newest:
