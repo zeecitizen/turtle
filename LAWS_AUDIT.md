@@ -45,3 +45,49 @@ scored court +230.62 / virgin −820.65 — statistically level with the live ma
 closes below the last confirmed higher low, stop taking buys until structure
 re-forms. It is a *trend-invalidation* rule, not an exit — and we have never tested
 one.
+
+
+---
+
+# 🔧 WHAT IS HIS, AND WHAT IS MINE (2026-08-23)
+
+Zee: *"i never set a 20-bar window, its something introduced by claude."* Correct —
+and it was not the only one. `BasedOnLaws` needs numbers his page does not give, so
+I chose them. Every choice below is MINE unless marked HIS. None was asked for.
+
+## HIS — stated in LAWS.md, implemented verbatim
+| value | his words |
+|---|---|
+| stop 5-7 pips below the retracement's lowest point | "5-7 pips below the lowest point of the retracment (the last low)" |
+| target 1:2 | "risk-reward ratio of 1:2" |
+| breakeven at 1:1 | "after reaching 1:1 we make a BreakEven" |
+| stop buying when the last low breaks | "we stop buying, when the last low is broken" |
+| New York session only | "we only trade in the NewYork session… 5:00 PM or maybe 6:00 PM (check)" |
+| buy side only | "Buy side trade setup" · "gold is mostly bullish" |
+| UHV = loudest RED of the retracement | "the largest red colored volume" |
+| volume from TradingView's OANDA | "we read volume from tradingview's OANDA volume chart" |
+| breakout closes above the UHV's high, quieter than it | "closes above the high… its volume should be lower" |
+| EMA-5 optional | "an EXTRA confirmation" |
+
+## MINE — invented to make his words executable
+| input | value | what he actually said | status |
+|---|---|---|---|
+| `InpTrendLook` | 90 bars | "camel humps" — no window given | **MY NUMBER.** Started at 20 (inherited from ZeeUHV); 20/40/60 could not see the 5:40 PM leg he was trading. 90 reproduces his three setups |
+| `InpPivot` | 2 | nothing about swing strength | **MINE** |
+| the trend construction itself | leg low + pullback floor | "breaking above previous highs, forming higher lows" | **MY MECHANISM** — eight versions before his two prices settled it |
+| `InpRetraceMax` | 20 bars | no limit stated | **MINE** |
+| `InpMinRetraceBars` | 2 | nothing | **MINE** — added only because a 1-candle "pullback" traded itself |
+| `InpMomBodyMult` | 1.0× avg body | "a momentum candle" | **MY DEFINITION of momentum** |
+| `InpMaxWickFrac` | 0.35 | "(no big wick)" | **MY DEFINITION of a big wick** |
+| `InpMinRiskPts` / `InpMaxRiskPts` | 0.50 / 10.0 | nothing | **MINE** — a sanity band |
+| `InpNyFromHour` / `To` | broker 15-22 (PKT 17-24) | "5:00 PM or maybe 6:00 PM (check)" | **MY BOUNDS**, and he flagged it as unverified |
+| `InpStopBufPips` | 0.60 | "5-7 pips" | within his range, but the exact value is mine |
+| `InpMaxOpen` | 1 | nothing | **MINE** |
+| `InpLots` | 0.01 | nothing | **MINE** |
+
+## Why this list exists
+Because a result is only his strategy to the extent the numbers are his. Friday's
+12 trades / +225.30 rest on eleven of MY choices. Any of them can be changed by one
+sentence from him, and several probably should be — the momentum threshold and the
+wick fraction in particular decide which breakouts qualify, and he has never seen
+them.
