@@ -192,11 +192,38 @@ Same laws, same chart, same seven days — only the answer to "are we trending" 
 trade-off, from an indicator already on his page. Shipped as the default in v1.29
 (`InpTrendMode=1`, `InpEmaSlopeBars=10`) and **attached live at 0.01**.
 
-⚠️ **The "no gate at all" control arm was VOID** — identical to the gated arm to the
-cent, because switching `InpRequireTrend` off still left the buy-side line demanding
-`trend == +1`. Rebuilt as a separate EA (`BasedOnLawsNoGate`, magic 88194) so his
-attached binary is not disturbed; result pending. It matters: if no gate matches
-EMA-10, the gate is worth nothing.
+### 6a. THE CONTROL ARM — and my gate was worse than NO gate
+
+The first "no gate" run was VOID (identical to the gated arm, because switching
+`InpRequireTrend` off still left the buy-side line demanding `trend == +1`). Rebuilt
+as a separate EA — `BasedOnLawsNoGate`, magic 88194, a different name so his ATTACHED
+binary is never hot-reloaded under him — and run properly:
+
+```
+  equivalence check (EMA-10 on the control EA)   30 tr  12W/18L  40.0%  +624.00  ✓
+  NO TREND GATE AT ALL                           45 tr  15W/30L  33.3%  +403.10
+
+  vs the three gates:
+    no gate at all                45 tr  33.3%  +403.10     —
+    MY camel-hump structure       24 tr  33.3%  +296.60   -106.50
+    HIS EMA-5 slope over 10       30 tr  40.0%  +624.00   +220.90
+```
+
+**My structure gate was worse than having no gate at all.** It refused 60-80% of every
+session and earned $106 LESS than simply taking every lawful setup — and its win rate
+was identical to the no-gate coin (33.3%), so it was deleting trades at random with
+respect to quality, not filtering them. His EMA-5 slope is a real filter: it cuts 15
+trades from the no-gate set and adds $221 and nearly 7 points of win rate.
+
+Internal check that the harness is honest: "no gate" returned EXACTLY the numbers of
+"EMA slope over 1" (45 tr, 15W/30L, +403.10) — correct by mechanism, since a
+one-candle slope is almost never flat and therefore admits everything.
+
+**THE SLOPE DIAL, COMPLETE:** 1=+403 · 3=+323 · 5=+597 · **10=+624** · 15=+368 ·
+20=+328 · 30=+382 · 45=+449. The crest is 10 so the live default stays (no reattach).
+But the finding is not the number — the dial is bumpy on ~30 trades and 5-vs-10 is
+inside the noise. The robust claim: **every EMA setting beats my structure, the worst
+of them by $31 and the best by $327.**
 
 ## 7. His chart vs the broker's — the uncomfortable measurement
 
