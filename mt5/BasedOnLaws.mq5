@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.19"
+#property version   "1.20"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -87,6 +87,10 @@ input int    InpOandaVolume   = 1;      // "we read volume from tradingview's OA
 input int    InpOandaBars     = 1;      // and the CANDLES too — he reads OANDA, so the
                                         // structure must be judged there. Orders still
                                         // fill at Blueberry's price.
+input bool   InpOandaStrict   = true;   // a MISSING OANDA minute is a minute we cannot
+                                        // read: refuse the bar instead of silently
+                                        // falling back to the broker's candle and
+                                        // judging half the setup on the wrong chart.
 input bool   InpVerbose       = false;
 // per-bar narration for a chosen window (server HHMM), so a missed setup can be
 // interrogated minute by minute. Zee 2026-08-23 gave exact times: his breakouts at
@@ -99,7 +103,7 @@ datetime g_last_bar = 0;
 // Every gate counts its own refusals so the narrow one names itself.
 int c_bars=0, c_session=0, c_notrend=0, c_notbuy=0, c_lastlow=0, c_noretr=0,
     c_nouhv=0, c_brk_colour=0, c_brk_close=0, c_brk_vol=0, c_brk_mom=0,
-    c_brk_wick=0, c_brk_ema=0, c_risk=0, c_fired=0;
+    c_brk_wick=0, c_brk_ema=0, c_risk=0, c_fired=0, c_nooanda=0;
 double   g_last_low = 0;                // the confirmed higher low we are defending
 
 //──────────────────── OANDA volume (his stated source) ────────────────────
@@ -427,7 +431,7 @@ int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    if (InpOandaVolume == 1) LoadOandaVol();
    if (InpOandaBars == 1) LoadOandaBars();
-   PrintFormat("[LAW] BasedOnLaws v1.19 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.20 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx wick<=%.0f%% · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -452,6 +456,18 @@ void OnTick() {
    if (InpNyOnly) {
       int hh = (int)((TimeCurrent() / 3600) % 24);
       if (hh < InpNyFromHour || hh >= InpNyToHour) { c_session++; return; }
+   }
+
+   // HIS CHART OR NO TRADE (2026-08-23). bOpen/bHigh/... fall back to the BROKER's
+   // candle, silently, one bar at a time, whenever the OANDA table lacks that minute.
+   // A day with partial coverage therefore judges half the setup on his chart and
+   // half on Blueberry's — the same feed-mixing that voided the Aug-21 volume test,
+   // and undetectable in the result. If he reads OANDA, a missing OANDA minute is a
+   // minute we cannot read: the window must be whole or we do not fire.
+   if (InpOandaBars == 1 && InpOandaStrict) {
+      int need = InpTrendLook + InpRetraceMax + 8;
+      for (int q = 1; q <= need; q++)
+         if (ObIdx(q) < 0) { c_nooanda++; return; }
    }
 
    MqlDateTime _dt; TimeToStruct(TimeCurrent(), _dt);
@@ -531,13 +547,13 @@ void OnTick() {
 }
 
 double OnTester() {
-   PrintFormat("[LAWCEN] bars %d | out-of-session %d | no trend %d | not buy-side %d | "
-               "last low broken %d | no retracement %d | no UHV %d || breakout: colour %d, "
-               "no close past %d, too loud %d, no momentum %d, big wick %d, ema %d || "
-               "risk out of band %d || FIRED %d",
-               c_bars, c_session, c_notrend, c_notbuy, c_lastlow, c_noretr, c_nouhv,
-               c_brk_colour, c_brk_close, c_brk_vol, c_brk_mom, c_brk_wick, c_brk_ema,
-               c_risk, c_fired);
+   PrintFormat("[LAWCEN] bars %d | out-of-session %d | NO OANDA WINDOW %d | no trend %d | "
+               "not buy-side %d | last low broken %d | no retracement %d | no UHV %d || "
+               "breakout: colour %d, no close past %d, too loud %d, no momentum %d, "
+               "big wick %d, ema %d || risk out of band %d || FIRED %d",
+               c_bars, c_session, c_nooanda, c_notrend, c_notbuy, c_lastlow, c_noretr,
+               c_nouhv, c_brk_colour, c_brk_close, c_brk_vol, c_brk_mom, c_brk_wick,
+               c_brk_ema, c_risk, c_fired);
    double net = TesterStatistics(STAT_PROFIT);
    int n = (int)TesterStatistics(STAT_TRADES), w = (int)TesterStatistics(STAT_PROFIT_TRADES);
    PrintFormat("[LAW] ==== %d trades · %dW/%dL (%.1f%%) · net %.2f ====",
