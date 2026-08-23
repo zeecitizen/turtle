@@ -54,9 +54,14 @@ def main():
             seen.add(u)
             srv = dt.datetime.fromtimestamp(int(u), dt.UTC).replace(tzinfo=None) + OFFSET
             key = f"{srv:%Y.%m.%d %H:%M}"
-            vol[key] = str(int(float(r["volume"])))
-            bars[key] = (f"{float(r['open'])},{float(r['high'])},"
-                         f"{float(r['low'])},{float(r['close'])},{int(float(r['volume']))}")
+            # keep-first: OANDA restates settled volume on re-pull, so whatever the
+            # tables already hold for a minute is the value every past court used.
+            if key not in vol:
+                vol[key] = str(int(float(r["volume"])))
+            if key not in bars:
+                bars[key] = (f"{float(r['open'])},{float(r['high'])},"
+                             f"{float(r['low'])},{float(r['close'])},"
+                             f"{int(float(r['volume']))}")
 
     VOL_F.write_text("".join(f"{k},{vol[k]}\n" for k in sorted(vol)), encoding="ascii")
     BARS_F.write_text("".join(f"{k},{bars[k]}\n" for k in sorted(bars)), encoding="ascii")

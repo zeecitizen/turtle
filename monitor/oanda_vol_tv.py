@@ -48,6 +48,9 @@ BROKER_UTC_OFFSET = timedelta(hours=3)      # Blueberry = UTC+3 (verified by ali
 _COMMON = Path(os.environ.get("APPDATA", r"C:/Users/zeesh/AppData/Roaming")) / \
           "MetaQuotes" / "Terminal" / "Common" / "Files"
 VOL_OUT = _COMMON / "oanda_vol.csv"
+# how many of the newest minutes in a pull may still be updated; older ones are
+# settled and immutable (see write_vol's note on upstream volume restatements)
+SETTLE_AFTER = 3
 
 
 def _local_to_server(t: datetime) -> datetime:
@@ -81,7 +84,17 @@ def write_vol(rows):
     next cycle, and the Diamond test then ran on a day with 0% OANDA coverage in one
     arm and 89.9% in another — mixing feeds inside one comparison, which makes the
     'quieter breakout' test trivially true (OANDA ~1,500/min vs broker ~450/min).
-    History is the asset here: every minute kept is a minute the court can use."""
+    History is the asset here: every minute kept is a minute the court can use.
+
+    SETTLED MINUTES ARE IMMUTABLE (2026-08-23). Measured: one bridge cycle revised
+    38 already-settled minutes, some DAYS old — 2026.08.18 17:06 went 1841 -> 1810,
+    19:41 went 536 -> 477. OANDA restates its own tick counts on re-pull. Volume is
+    what the UHV law ranks on, so a restatement can crown a different loudest candle
+    and change a backtest's answer: Aug 18 gave 1 trade in one run and 0 in the next,
+    and a seven-day total drifted +258.80 -> +224.10 with the same binary and set.
+    So only the newest few minutes may be updated (they may still have been forming
+    when we first saw them); everything older keeps the FIRST value we ever recorded.
+    A court cannot compare arms across a chart that rewrites itself."""
     if not rows:
         return 0
     keep = {}
@@ -92,8 +105,18 @@ def write_vol(rows):
                 keep[p[0]] = p[1]
     except FileNotFoundError:
         pass
+    mutable = {f"{t:%Y.%m.%d %H:%M}" for t, _ in rows[-SETTLE_AFTER:]}
+    revised = 0
     for t, v in rows:
-        keep[f"{t:%Y.%m.%d %H:%M}"] = str(v)
+        k = f"{t:%Y.%m.%d %H:%M}"
+        if k in keep and k not in mutable:
+            if keep[k] != str(v):
+                revised += 1
+            continue                        # settled: the first value we saw stands
+        keep[k] = str(v)
+    if revised:
+        print(f"[VOL-TV] ignored {revised} upstream revisions to settled minutes",
+              flush=True)
     tmp = VOL_OUT.with_suffix(".tmp")
     tmp.write_text("".join(f"{k},{keep[k]}\n" for k in sorted(keep)), encoding="ascii")
     _swap(tmp, VOL_OUT)                     # atomic; readers never see a half file
