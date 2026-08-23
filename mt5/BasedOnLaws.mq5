@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.01"
+#property version   "1.03"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -29,7 +29,12 @@ input int    InpMaxOpen       = 1;
 
 input group "── LAW: the trend (camel humps) ──"
 input bool   InpRequireTrend  = true;   // "we don't trade in a ranging market"
-input int    InpTrendLook     = 20;
+input int    InpTrendLook     = 40;     // 2026-08-23: was 20 — MY number, inherited from
+                                        // ZeeUHV, never his. He reads camel humps across an
+                                        // hour+; 20 bars declared RANGE inside a clean climb
+                                        // and cost Friday 4 of its 5 setups. 40 finds all
+                                        // five (3W/2L, +259.20); 60 is byte-identical — a
+                                        // plateau, not a spike.
 input int    InpPivot         = 2;
 input bool   InpBuyOnly       = true;   // "Buy side trade setup" · "gold is mostly bullish"
 
@@ -65,6 +70,11 @@ input int    InpOandaVolume   = 1;      // "we read volume from tradingview's OA
 input bool   InpVerbose       = false;
 
 datetime g_last_bar = 0;
+// CENSUS (tester only) — Zee hand-drew 4 setups on Friday and the EA took 1.
+// Every gate counts its own refusals so the narrow one names itself.
+int c_bars=0, c_session=0, c_notrend=0, c_notbuy=0, c_lastlow=0, c_noretr=0,
+    c_nouhv=0, c_brk_colour=0, c_brk_close=0, c_brk_vol=0, c_brk_mom=0,
+    c_brk_wick=0, c_brk_ema=0, c_risk=0, c_fired=0;
 double   g_last_low = 0;                // the confirmed higher low we are defending
 
 //──────────────────── OANDA volume (his stated source) ────────────────────
@@ -198,31 +208,32 @@ int UhvIn(int from, int side) {
 bool BreakoutOK(int uhv, int side) {
    if (uhv < 2) return false;
    bool up = (side > 0);
-   if (up && !IsGreen(1)) return false;
-   if (!up && !IsRed(1))  return false;
+   if (up && !IsGreen(1)) { c_brk_colour++; return false; }
+   if (!up && !IsRed(1))  { c_brk_colour++; return false; }
    double lvl = up ? bHigh(uhv) : bLow(uhv);
-   if (up  && !(bClose(1) > lvl)) return false;     // CLOSES above the marked high
-   if (!up && !(bClose(1) < lvl)) return false;
-   if (BarVolume(1) >= BarVolume(uhv)) return false;   // "volume lower than the UHV's"
+   if (up  && !(bClose(1) > lvl)) { c_brk_close++; return false; }
+   if (!up && !(bClose(1) < lvl)) { c_brk_close++; return false; }
+   if (BarVolume(1) >= BarVolume(uhv)) { c_brk_vol++; return false; }
    // momentum: a real body against the recent tape
    if (InpMomBodyMult > 0) {
       double avg = 0; int n = 0;
       for (int q = 2; q <= 21; q++) { avg += MathAbs(bClose(q) - bOpen(q)); n++; }
       if (n > 0) avg /= n;
-      if (avg > 0 && MathAbs(bClose(1) - bOpen(1)) < avg * InpMomBodyMult) return false;
+      if (avg > 0 && MathAbs(bClose(1) - bOpen(1)) < avg * InpMomBodyMult)
+         { c_brk_mom++; return false; }
    }
    // "(no big wick)"
    if (InpMaxWickFrac > 0) {
       double rng = bHigh(1) - bLow(1);
       if (rng > 0) {
          double wick = up ? (bHigh(1) - BodyHi(1)) : (BodyLo(1) - bLow(1));
-         if (wick / rng > InpMaxWickFrac) return false;
+         if (wick / rng > InpMaxWickFrac) { c_brk_wick++; return false; }
       }
    }
    if (InpNeedEma5) {
       double e = Ema(5, 1);
-      if (up  && !(bClose(1) > e)) return false;
-      if (!up && !(bClose(1) < e)) return false;
+      if (up  && !(bClose(1) > e)) { c_brk_ema++; return false; }
+      if (!up && !(bClose(1) < e)) { c_brk_ema++; return false; }
    }
    return true;
 }
@@ -261,7 +272,7 @@ int OpenCount() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    if (InpOandaVolume == 1) LoadOandaVol();
-   PrintFormat("[LAW] BasedOnLaws v1.01 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.03 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx wick<=%.0f%% · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -281,29 +292,30 @@ void OnTick() {
    if (OpenCount() >= InpMaxOpen) return;
 
    // LAW: New York session only
+   c_bars++;
    if (InpNyOnly) {
       int hh = (int)((TimeCurrent() / 3600) % 24);
-      if (hh < InpNyFromHour || hh >= InpNyToHour) return;
+      if (hh < InpNyFromHour || hh >= InpNyToHour) { c_session++; return; }
    }
 
    double lastLow = 0;
    int t = TrendNow(lastLow);
-   if (InpRequireTrend && t == 0) return;
-   if (InpBuyOnly && t != +1) return;
+   if (InpRequireTrend && t == 0) { c_notrend++; return; }
+   if (InpBuyOnly && t != +1) { c_notbuy++; return; }
    if (!HtfAgrees(t)) return;
 
    // LAW: "we stop buying when the last low is broken .. we keep trading until the
    // last low is safe (unbroken below)"
    if (InpStopOnLastLow && lastLow > 0) {
-      if (t > 0 && bClose(1) < lastLow) return;
-      if (t < 0 && bClose(1) > lastLow) return;
+      if (t > 0 && bClose(1) < lastLow) { c_lastlow++; return; }
+      if (t < 0 && bClose(1) > lastLow) { c_lastlow++; return; }
       g_last_low = lastLow;
    }
 
    int rs = RetraceStart(t);
-   if (rs < 0) return;
+   if (rs < 0) { c_noretr++; return; }
    int uhv = UhvIn(rs, t);
-   if (uhv < 2) return;
+   if (uhv < 2) { c_nouhv++; return; }
    if (!BreakoutOK(uhv, t)) return;
 
    // LAW: stop 5-7 pips below the LOWEST POINT of the retracement (the last low)
@@ -318,12 +330,14 @@ void OnTick() {
    double sl = (t > 0) ? deep - InpStopBufPips : deep + InpStopBufPips;
    double risk = MathAbs(px - sl);
    if (risk < InpMinRiskPts || risk > InpMaxRiskPts) {
+      c_risk++;
       if (InpVerbose) PrintFormat("[LAW] risk %.2f pts outside band — skipped", risk);
       return;
    }
    double tp = (t > 0) ? px + risk * InpTargetR : px - risk * InpTargetR;
    bool ok = (t > 0) ? trade.Buy(InpLots, _Symbol, 0, sl, tp, "zlaw_buy")
                      : trade.Sell(InpLots, _Symbol, 0, sl, tp, "zlaw_sell");
+   if (ok) c_fired++;
    if (ok)
       PrintFormat("[LAW] %s @%.2f — UHV bar %d (vol %d) · retrace from %d · risk %.2f · "
                   "stop %.2f · target %.2f (%.1fR)",
@@ -332,6 +346,13 @@ void OnTick() {
 }
 
 double OnTester() {
+   PrintFormat("[LAWCEN] bars %d | out-of-session %d | no trend %d | not buy-side %d | "
+               "last low broken %d | no retracement %d | no UHV %d || breakout: colour %d, "
+               "no close past %d, too loud %d, no momentum %d, big wick %d, ema %d || "
+               "risk out of band %d || FIRED %d",
+               c_bars, c_session, c_notrend, c_notbuy, c_lastlow, c_noretr, c_nouhv,
+               c_brk_colour, c_brk_close, c_brk_vol, c_brk_mom, c_brk_wick, c_brk_ema,
+               c_risk, c_fired);
    double net = TesterStatistics(STAT_PROFIT);
    int n = (int)TesterStatistics(STAT_TRADES), w = (int)TesterStatistics(STAT_PROFIT_TRADES);
    PrintFormat("[LAW] ==== %d trades · %dW/%dL (%.1f%%) · net %.2f ====",
