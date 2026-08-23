@@ -10,7 +10,7 @@ an impulse wave is the one which breaks the previous high formed by the price
 
 retracement - 
 a retracement is a pull back in an uptrend. so its a sequence of red candles after a sequence of green candles (price moving up). 
-a valid retracement starts when the last green candle in an uptrend, that candle's low is broken by the next or next few red candles downwards. once a low of the last green candle is broken we say that the retracement has started. so when does a retracement start? well, the last buy candle's low (below the wick), we wait for this low to be broken (we call it broken when either 1 or more red (sell) candles together break downside the low of the last buy candle)
+a valid retracement starts when the last green candle in an uptrend, that candle's low is broken by the next or next few red candles downwards. once a low of the last green candle is broken we say that the retracement has started. so when does a retracement start? well, the last buy candle's low (below the wick), we wait for this low to be broken (we call it broken when either 1 or more red (sell) candles together break downside the low of the last buy candle). Please note specially that the low must be broken by body not wick .
 
 
 UHV
@@ -38,3 +38,4 @@ the strategy works in a trending market (either price is moving upwards or downw
 
 Supplementary laws: 
 we consider a red candle a noise candle if its not breaking the previous green's low. a sequence of red candle's which don't break the last green's low are still noise. we consider them part of an impulse wave. at 6:35 PM there's a low. that low is not updated . the two imtermediary lows at 6:39 and 6:45 are noise because they dont break the previous green's low. therefore when the red candle starts at 6:51 its the first time a red has broken below the last green's low, thus starting a retracement there. thus the new low forms at 6:54 PM which is higher than the last confirmed low at 6:35 pM
+
