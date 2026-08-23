@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.24"
+#property version   "1.25"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -77,6 +77,9 @@ input double InpMaxWickFrac   = 0.00;   // the old shape test (wick vs the candl
                                         // range). MY number, never his — retired to a
                                         // dead input on 2026-08-23, kept so the earlier
                                         // receipts stay reproducible.
+input bool   InpBodySpans     = true;   // his clause c: the breakout body must SHARE
+                                        // BODY WITH the UHV's high — straddle it, not
+                                        // open already above it
 input bool   InpNeedEma5      = false;  // "an EXTRA confirmation" — his word, so optional
 
 input group "── LAW: closing the trade ──"
@@ -120,7 +123,7 @@ bool     g_oanda_loaded = false;   // tester: read his chart once, then freeze i
 // Every gate counts its own refusals so the narrow one names itself.
 int c_bars=0, c_session=0, c_notrend=0, c_notbuy=0, c_lastlow=0, c_noretr=0,
     c_nouhv=0, c_brk_colour=0, c_brk_close=0, c_brk_vol=0, c_brk_mom=0,
-    c_brk_wick=0, c_brk_ema=0, c_risk=0, c_fired=0, c_nooanda=0;
+    c_brk_wick=0, c_brk_ema=0, c_risk=0, c_fired=0, c_nooanda=0, c_brk_span=0;
 double   g_last_low = 0;                // the confirmed higher low we are defending
 
 //──────────────────── OANDA volume (his stated source) ────────────────────
@@ -388,6 +391,16 @@ bool BreakoutOK(int uhv, int side) {
       bool earlier = up ? (BodyHi(e) > lvl) : (BodyLo(e) < lvl);
       if (earlier) { c_brk_close++; return false; }
    }
+   // "the breakout candle must cross — SHARE BODY WITH — the UHV candle's high"
+   // (his clause c, 2026-08-23). First-crossing makes this true in almost every case,
+   // but only almost: a candle that OPENS already above the level has not crossed it,
+   // it started on the far side. His words say the body must straddle the level, so
+   // that is now checked literally rather than inferred.
+   if (InpBodySpans) {
+      bool spans = up ? (BodyLo(1) <= lvl && BodyHi(1) > lvl)
+                      : (BodyHi(1) >= lvl && BodyLo(1) < lvl);
+      if (!spans) { c_brk_span++; return false; }
+   }
    if (BarVolume(1) >= BarVolume(uhv)) { c_brk_vol++; return false; }
    // momentum: a real body against the recent tape
    if (InpMomBodyMult > 0) {
@@ -471,7 +484,7 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.24 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.25 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -605,10 +618,10 @@ double OnTester() {
    PrintFormat("[LAWCEN] bars %d | out-of-session %d | NO OANDA WINDOW %d | no trend %d | "
                "not buy-side %d | last low broken %d | no retracement %d | no UHV %d || "
                "breakout: colour %d, no close past %d, too loud %d, no momentum %d, "
-               "big wick %d, ema %d || risk out of band %d || FIRED %d",
+               "big wick %d, body did not span %d, ema %d || risk out of band %d || FIRED %d",
                c_bars, c_session, c_nooanda, c_notrend, c_notbuy, c_lastlow, c_noretr,
                c_nouhv, c_brk_colour, c_brk_close, c_brk_vol, c_brk_mom, c_brk_wick,
-               c_brk_ema, c_risk, c_fired);
+               c_brk_span, c_brk_ema, c_risk, c_fired);
    double net = TesterStatistics(STAT_PROFIT);
    int n = (int)TesterStatistics(STAT_TRADES), w = (int)TesterStatistics(STAT_PROFIT_TRADES);
    PrintFormat("[LAW] ==== %d trades · %dW/%dL (%.1f%%) · net %.2f ====",
