@@ -64,7 +64,7 @@
 //| the cent. The mechanism is not yet understood, which is exactly why it is out:
 //| dead code that moves live results is not dead.
 #property copyright "Zee & his ghost"
-#property version   "1.60"
+#property version   "1.61"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -399,6 +399,21 @@ input double InpBrkVolMaxFrac = 0.0; // Law 10b: breakout vol <= this frac of UH
 // near its own extreme, not in the middle of its range. Both default off.
 input double InpBrkBodyMult  = 0.0;  // breakout body >= this x avg body of the last 20 bars
 input double InpBrkClosePos  = 0.0;  // breakout must close in the top (1-x) of its own range
+
+// ── THE TEACHER'S GEOMETRY (2026-08-23, from base_video/ — Ahmad Umair's method).
+// Our exits were invented: risk a FIXED 5.0 to make a FIXED 1.0 — 5:1 against, so
+// the machine must win ~83% merely to stand still. His are RELATIVE: stop below the
+// loud candle's low, take 2R, protect at 1R — break-even at ~33%. ZeeScalp proved
+// each of his rules earns its place (removing momentum cost $1,000; removing
+// breakeven cost $629; 3R was worse than 2R) yet his SIMPLE entry only reaches
+// ~28% and dies just under its own bar. Ours reaches 65-78%. This grafts HIS EXITS
+// onto OUR ENTRY — the one combination never measured. All default off.
+input bool   InpStructStop   = false; // stop below the UHV's low/high instead of InpStopPts
+input double InpStructBufPts = 0.10;  // buffer beyond that extreme
+input double InpStructMinPts = 0.80;  // refuse absurdly tight structural stops
+input double InpStructMaxPts = 8.00;  // and absurdly wide ones
+input double InpTargetR      = 0.0;   // 0 = keep InpTargetPts · else take this multiple of risk
+input double InpBreakEvenR   = 0.0;   // 0 = off · else move stop to entry at this multiple of risk
 // ── LAW 10c — the NON-BLOCKING form (Zee 2026-08-17: "can we maybe find a
 // non-blocking version of this LAW... i don't wanna cut down trades.. 6 per day is
 // already so less"). House doctrine: laws never gate; they multiply. The gate form
@@ -1051,7 +1066,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.20 AND name both
    // guards, the chart is still running the old binary and the change did NOT take.
-   PrintFormat("[ZEE] ZeeUHV v1.60 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[ZEE] ZeeUHV v1.61 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · hold %d min · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, InpMaxHoldMin, MathMax(1, InpStackMult),
                (1 + 3 + ((InpUhvVolDia > 0) ? 1 : 0) + ((InpClimaxDia > 0) ? 1 : 0))
@@ -1332,6 +1347,14 @@ void TryFire() {
    if (diamond_now && InpGreenFastRed && RollingNet(InpFastRedLook) < 0)
       diamond_now = false;
    double useStop = diamond_now ? InpGreenStopPts : InpStopPts;
+   // HIS STOP: structural — under the loud candle itself, not a fixed distance
+   if (InpStructStop && uhv > 0) {
+      double ext = (t > 0) ? bLow(uhv) - InpStructBufPts : bHigh(uhv) + InpStructBufPts;
+      double risk = MathAbs(px - ext);
+      if (risk >= InpStructMinPts && risk <= InpStructMaxPts) useStop = risk;
+      else if (InpVerbose)
+         PrintFormat("[ZEE] structural stop %.2f pts out of band — fixed stop used", risk);
+   }
    double sl = (t > 0) ? px - useStop : px + useStop;
    double useTp = (InpRedTargetPts > 0 && !g_green && !diamond_now)
                   ? InpRedTargetPts : InpTargetPts;   // chop harvests small, feast pays full
@@ -1349,6 +1372,8 @@ void TryFire() {
          sl = (t > 0) ? px - useStop * g_diafrac : px + useStop * g_diafrac;
       }
    }
+   // HIS TARGET: a multiple of the risk actually taken, not a fixed point
+   if (InpTargetR > 0) useTp = useStop * InpTargetR;
    double tp = (t > 0) ? px + useTp : px - useTp;
 
    if (InpMaxSpreadPts > 0 && (ask - bid) > InpMaxSpreadPts) {
@@ -1751,7 +1776,31 @@ void RevExitSweep() {
    }
 }
 
+// HIS MANDATORY RULE: at 1R, the stop goes to entry. ZeeScalp priced it at $629
+// across the court — the cheapest guard he teaches.
+void BreakEvenSweep() {
+   if (InpBreakEvenR <= 0) return;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong t = PositionGetTicket(i);
+      if (t == 0 || !PositionSelectByTicket(t)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      double entry = PositionGetDouble(POSITION_PRICE_OPEN);
+      double sl    = PositionGetDouble(POSITION_SL);
+      double tp    = PositionGetDouble(POSITION_TP);
+      double cur   = PositionGetDouble(POSITION_PRICE_CURRENT);
+      bool isBuy   = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
+      double risk  = isBuy ? (entry - sl) : (sl - entry);
+      if (risk <= 0) continue;
+      if (MathAbs(sl - entry) < 0.02) continue;              // already protected
+      double gained = isBuy ? (cur - entry) : (entry - cur);
+      if (gained >= risk * InpBreakEvenR)
+         trade.PositionModify(t, NormalizeDouble(entry, _Digits), tp);
+   }
+}
+
 void OnTick() {
+   BreakEvenSweep();
    ProbeManage();
    AgeOut();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
