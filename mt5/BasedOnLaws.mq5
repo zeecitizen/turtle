@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.18"
+#property version   "1.19"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -358,6 +358,15 @@ bool BreakoutOK(int uhv, int side) {
    double lvl = up ? bHigh(uhv) : bLow(uhv);
    if (up  && !(bClose(1) > lvl)) { c_brk_close++; return false; }
    if (!up && !(bClose(1) < lvl)) { c_brk_close++; return false; }
+   // FIRST CROSSING ONLY (2026-08-23). Zee on trade #1: "the 6:15 PM candle does not
+   // break out the 6:09 UHV." He was right — the 6:11 candle had ALREADY closed above
+   // 4583.38, so by 6:15 the level was four minutes broken and the EA bought $4 above
+   // it. A breakout is an EVENT, not a state: only the first body-close through the
+   // level counts, everything after is a chase.
+   for (int e = uhv - 1; e >= 2; e--) {
+      bool earlier = up ? (BodyHi(e) > lvl) : (BodyLo(e) < lvl);
+      if (earlier) { c_brk_close++; return false; }
+   }
    if (BarVolume(1) >= BarVolume(uhv)) { c_brk_vol++; return false; }
    // momentum: a real body against the recent tape
    if (InpMomBodyMult > 0) {
@@ -418,7 +427,7 @@ int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    if (InpOandaVolume == 1) LoadOandaVol();
    if (InpOandaBars == 1) LoadOandaBars();
-   PrintFormat("[LAW] BasedOnLaws v1.18 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.19 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx wick<=%.0f%% · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
