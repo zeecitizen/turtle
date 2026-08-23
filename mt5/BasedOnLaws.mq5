@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.22"
+#property version   "1.24"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -59,8 +59,14 @@ input int    InpUpRunBars     = 2;      // the origin must sit at the end of thi
 input double InpUpRunPts      = 0.0;    // and/or the run must cover this many points
 
 input group "── LAW: the breakout ──"
-input double InpMomBodyMult   = 1.0;    // "a momentum candle" — body vs the last 20
-input double InpBreakHold     = 0.50;   // "(no big wick)" measured against HIS LEVEL:
+input double InpMomBodyMult   = 0.0;    // RETIRED 2026-08-23. This was my second
+                                        // shape test — body vs the last 20 bodies —
+                                        // and his ruling covers it: "a candle that
+                                        // closes well above your level is a momentum
+                                        // candle, whatever its shape." Removing it is
+                                        // worth +186 on Friday and +90..+175 over the
+                                        // seven days, and it RECOVERS a winner.
+input double InpBreakHold     = 0.45;   // "(no big wick)" measured against HIS LEVEL:
                                         // the close must still hold this share of what
                                         // the candle took above the UHV's high. His
                                         // ruling: a candle that closes well above the
@@ -465,7 +471,7 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.22 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.24 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -578,14 +584,20 @@ void OnTick() {
       // Zee 2026-08-23: "tell me which time is the retracement begin, which time is
       // the UHV, which time is the breakout candle so i can check and verify."
       // Every fire now stamps its three anchors as CLOCK TIMES, not bar offsets.
+      // and how much of the break the body was still holding at the close — the
+      // number his wick clause is judged on, stamped so any fire can be re-argued.
+      double _lvl  = (t > 0) ? bHigh(uhv) : bLow(uhv);
+      double _took = (t > 0) ? (bHigh(1) - _lvl) : (_lvl - bLow(1));
+      double _kept = (t > 0) ? (bClose(1) - _lvl) : (_lvl - bClose(1));
       PrintFormat("[LAWX] %s | origin green %s (retracement began the bar after) | UHV %s (vol %d, high %.2f) | breakout %s "
-                  "(close %.2f, vol %d) | entry %.2f stop %.2f target %.2f (%.1fR)",
+                  "(close %.2f, vol %d, HELD %.0f%% of its break) | entry %.2f stop %.2f target %.2f (%.1fR)",
                   t > 0 ? "BUY " : "SELL",
                   TimeToString(iTime(_Symbol, PERIOD_CURRENT, rs), TIME_MINUTES),
                   TimeToString(iTime(_Symbol, PERIOD_CURRENT, uhv), TIME_MINUTES),
                   (int)BarVolume(uhv), bHigh(uhv),
                   TimeToString(iTime(_Symbol, PERIOD_CURRENT, 1), TIME_MINUTES),
-                  bClose(1), (int)BarVolume(1), px, sl, tp, InpTargetR);
+                  bClose(1), (int)BarVolume(1),
+                  _took > 0 ? 100.0 * _kept / _took : 100.0, px, sl, tp, InpTargetR);
    }
 }
 
