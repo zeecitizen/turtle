@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.25"
+#property version   "1.29"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -40,6 +40,23 @@ input int    InpTrendLook     = 90;    // 2 hours — his 7:02 PM trade was defe
                                         // five (3W/2L, +259.20); 60 is byte-identical — a
                                         // plateau, not a spike.
 input int    InpPivot         = 2;
+input int    InpTrendMode     = 1;      // 0 = camel-hump structure · 1 = EMA-5 SLOPE
+                                        // 2026-08-24, HIS idea, and it beat my
+                                        // structure code on every axis at once:
+                                        // 30 trades vs 24 · 40.0% vs 33.3% · +624.00
+                                        // vs +296.60 over the same seven days.
+input int    InpEmaSlopeBars  = 10;     // how many candles the EMA-5 slope spans.
+                                        // dial so far: 1=+403 · 3=+323 · 5=+597 ·
+                                        // 10=+624. 15/20/30 still running — this
+                                        // default may move when the crest is found.
+input bool   InpTrendSticky   = true;   // LAWS.md line 33: a confirmed uptrend STAYS
+                                        // in force until its last low is broken. Off =
+                                        // re-derive HH+HL every minute (the old
+                                        // behaviour, which called 80% of the week a
+                                        // range).
+input bool   InpGuardSwing    = true;   // the confirmed higher low may only move when
+                                        // a genuine SWING high (hump top) is taken
+                                        // out — not every candle that ticks higher
 input bool   InpTrendBeforeRetrace = true;  // read the humps BEFORE the pullback,
                                             // not through it (his 7:02 PM setup)
 input bool   InpBuyOnly       = true;   // "Buy side trade setup" · "gold is mostly bullish"
@@ -445,6 +462,109 @@ bool BreakoutOK(int uhv, int side) {
    return true;
 }
 
+//──── LAW 33 — THE TREND PERSISTS UNTIL THE LAST LOW BREAKS (2026-08-23).
+// His page: "we stop buying, when the last low is broken .. we keep trading until the
+// last low is safe (unbroken below). Whenever a high is broken, the deepest point
+// (the lowest point) is the confirmed higher low."
+//
+// TrendNow() re-derives the whole structure every minute and demands the LAST TWO
+// lows and the LAST TWO highs both be rising. One shallow pullback therefore ENDS the
+// uptrend and it must be re-earned from scratch. Measured on Friday 21 Aug — a day
+// Zee calls an uptrend nearly throughout — that test refused 287 of 420 session
+// minutes, flickering in and out while price climbed 4613 -> 4627. 68% of a trending
+// day declared a range, and across seven days it was 80%.
+//
+// His law is a LATCH, not a re-examination: once the humps confirm an uptrend, it
+// stands until its defended low is broken BY BODY. Every time a new high is taken,
+// the deepest point since the previous high becomes the new confirmed higher low.
+// the most recent CONFIRMED hump top: a high with InpPivot lower highs on each side.
+// Same pivot logic that draws the camel humps, so "a high" means what he draws.
+int SwingHighIdx() {
+   int p = MathMax(1, InpPivot);
+   for (int k = p + 1; k <= InpTrendLook; k++) {
+      bool top = true;
+      for (int q = 1; q <= p && top; q++)
+         if (bHigh(k) <= bHigh(k - q) || bHigh(k) <= bHigh(k + q)) top = false;
+      if (top) return k;
+   }
+   return -1;
+}
+
+// the mirror of SwingHighIdx — the last confirmed hump TROUGH. In EMA mode this is
+// what "the last low" means for the stop-buying law, since no structure walk runs.
+int SwingLowIdx() {
+   int p = MathMax(1, InpPivot);
+   for (int k = p + 1; k <= InpTrendLook; k++) {
+      bool bot = true;
+      for (int q = 1; q <= p && bot; q++)
+         if (bLow(k) >= bLow(k - q) || bLow(k) >= bLow(k + q)) bot = false;
+      if (bot) return k;
+   }
+   return -1;
+}
+
+// TREND BY EMA-5 SLOPE (2026-08-24, Zee: "what if you remove this gate, see how it
+// goes then? use the slope of EMA 5 instead as your trend line"). No structure walk,
+// no camel-hump inference, no two-point test — the trend is simply which way his
+// EMA-5 is pointing over the last InpEmaSlopeBars candles.
+int TrendByEma(double &lastLow) {
+   double now = Ema(5, 1), then = Ema(5, 1 + MathMax(1, InpEmaSlopeBars));
+   int sl = SwingLowIdx();
+   lastLow = (sl > 0) ? bLow(sl) : 0;
+   if (now > then) return +1;
+   if (now < then) return -1;
+   return 0;
+}
+
+int    g_tr_state = 0;        // 0 = none, +1 = uptrend latched
+double g_tr_defend = 0;       // the low we are defending
+double g_tr_high = 0;         // the last high that was broken
+double g_tr_deep = 0;         // deepest point since that high — the low-in-waiting
+
+int StickyTrend(int fresh, double &lastLow) {
+   // a fresh confirmation always (re)arms the latch
+   if (fresh == +1) {
+      if (g_tr_state != +1) {
+         g_tr_state = +1;
+         g_tr_defend = lastLow;
+         g_tr_high = bHigh(1);
+         g_tr_deep = bLow(1);
+      }
+   }
+   if (g_tr_state != +1) return fresh;
+
+   // "whenever a high is broken, the deepest point is the confirmed higher low"
+   //
+   // WHICH high? (2026-08-23, Zee: test the swing-high version.) Treating ANY new
+   // high as "a high broken" ratchets the guard to within a few candles of price —
+   // an ordinary pullback then kills the trend, it re-arms, and each re-arm admits a
+   // fresh batch of marginal setups. Measured: 22 trades, 7W/15L, +281.10, where the
+   // six trades it added over the strict version were 1W/5L. His camel humps are
+   // SWING highs, so only a genuine hump top being taken out may move the guard.
+   if (InpGuardSwing) {
+      int sk = SwingHighIdx();
+      if (sk > 0 && bHigh(1) > bHigh(sk)) {
+         double deep = bLow(1);
+         for (int q = 1; q <= sk; q++) deep = MathMin(deep, bLow(q));
+         if (deep > g_tr_defend) g_tr_defend = deep;          // never lower the guard
+      }
+   } else {
+      if (bLow(1) < g_tr_deep) g_tr_deep = bLow(1);
+      if (bHigh(1) > g_tr_high) {
+         if (g_tr_deep > g_tr_defend) g_tr_defend = g_tr_deep;
+         g_tr_high = bHigh(1);
+         g_tr_deep = bLow(1);
+      }
+   }
+   // "we stop buying when the last low is broken" — by BODY, his oldest rule
+   if (BodyLo(1) < g_tr_defend) {
+      g_tr_state = 0; g_tr_defend = 0; g_tr_high = 0; g_tr_deep = 0;
+      return fresh;                       // the latch is dead; only a fresh read counts
+   }
+   lastLow = g_tr_defend;
+   return +1;
+}
+
 //──── LAW: "after reaching 1:1 we make a BreakEven"
 void BreakEvenSweep() {
    if (InpBreakEvenR <= 0) return;
@@ -484,7 +604,7 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.25 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.29 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -538,7 +658,13 @@ void OnTick() {
 
    // the trend is STATE now: established by HH+HL, alive while its last low holds
    double lastLow = 0;
-   int t = TrendNow(lastLow, 1);
+   int t;
+   if (InpTrendMode == 1) {
+      t = TrendByEma(lastLow);            // his EMA-5 slope, no structure at all
+   } else {
+      t = TrendNow(lastLow, 1);
+      if (InpTrendSticky) t = StickyTrend(t, lastLow);
+   }
    if (_dbg) {
       int _og[]; int _n = RetraceOrigins(+1, _og);
       int _rs = (_n > 0) ? _og[0] : -1;
