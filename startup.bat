@@ -613,3 +613,8 @@ REM Tradingview"). Pulls TV's OANDA tick-volume via websocket -> Common\Files
 REM (the EA's InpVolSource=1 table) + a growing archive for future courts.
 REM Also HEALS oanda_m1.csv without CDP (the Aug-14 MSIX break).
 start "oanda_volume"    /min "%PY%" -u "%~dp0monitor/oanda_vol_supervisor.py"
+REM OANDA ARCHIVER (2026-08-23): oanda_m1.csv is a ROLLING ~5,000-bar window, so
+REM his own eye's tape expires after ~3.5 days. It had not run since Aug 7 and we
+REM nearly lost Aug 18-21 -- the only ground BasedOnLaws (OANDA candles + volume)
+REM can ever be judged on. This appends every finished bar to a permanent history.
+start "oanda_archiver"  /min "%PY%" -u "%~dp0monitor/oanda_archiver.py" --loop 600

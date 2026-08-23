@@ -83,14 +83,28 @@ def cycle():
     tmp.write_text("".join(lines), encoding="utf-8")
     _swap(tmp, M1_F)                       # atomic: readers never see a half file
 
-    # the same bars, server-time keyed, for the EA
-    blines = []
+    # the same bars, server-time keyed, for the EA.
+    # MERGES with what is already on disk (2026-08-23) — the identical fix
+    # oanda_vol.csv got on Aug 21, which this file never received. The pull is a
+    # ROLLING ~5,000 minutes (~3.5 days), so overwriting silently expired his own
+    # chart: Aug 17 was in the volume table but already gone from the bars table.
+    # BasedOnLaws judges the WHOLE setup on these candles, so every dropped day is
+    # a day his laws can never be tried on again. History is the asset.
+    keep = {}
+    try:
+        for ln in BARS_F.read_text(encoding="ascii", errors="ignore").splitlines():
+            p = ln.split(",", 1)
+            if len(p) == 2:
+                keep[p[0]] = p[1]
+    except FileNotFoundError:
+        pass
     for ts, r in d.iterrows():
         srv = _local_to_server(ts.to_pydatetime())
-        blines.append(f"{srv:%Y.%m.%d %H:%M},{float(r['open'])},{float(r['high'])},"
-                      f"{float(r['low'])},{float(r['close'])},{int(r['volume'])}\n")
+        keep[f"{srv:%Y.%m.%d %H:%M}"] = (f"{float(r['open'])},{float(r['high'])},"
+                                         f"{float(r['low'])},{float(r['close'])},"
+                                         f"{int(r['volume'])}")
     btmp = BARS_F.with_suffix(".tmp")
-    btmp.write_text("".join(blines), encoding="ascii")
+    btmp.write_text("".join(f"{k},{keep[k]}\n" for k in sorted(keep)), encoding="ascii")
     _swap(btmp, BARS_F)
     age = (time.time() - calendar.timegm(newest.timetuple())) / 60.0
     print(f"[M1-TV] {len(d)} bars -> oanda_m1.csv · newest {newest:%Y-%m-%d %H:%M} UTC "
