@@ -98,11 +98,18 @@ def cycle():
                 keep[p[0]] = p[1]
     except FileNotFoundError:
         pass
+    # SETTLED MINUTES ARE IMMUTABLE — same rule as oanda_vol.csv. Prices were stable
+    # in the measurement that found this (0 revisions) while volume was not (38 in one
+    # cycle), but the volume field lives in this table too and a court cannot compare
+    # arms across a chart that rewrites itself. Only the newest few minutes may move.
+    newest = [f"{_local_to_server(ts.to_pydatetime()):%Y.%m.%d %H:%M}"
+              for ts in list(d.index)[-3:]]
     for ts, r in d.iterrows():
-        srv = _local_to_server(ts.to_pydatetime())
-        keep[f"{srv:%Y.%m.%d %H:%M}"] = (f"{float(r['open'])},{float(r['high'])},"
-                                         f"{float(r['low'])},{float(r['close'])},"
-                                         f"{int(r['volume'])}")
+        k = f"{_local_to_server(ts.to_pydatetime()):%Y.%m.%d %H:%M}"
+        if k in keep and k not in newest:
+            continue
+        keep[k] = (f"{float(r['open'])},{float(r['high'])},"
+                   f"{float(r['low'])},{float(r['close'])},{int(r['volume'])}")
     btmp = BARS_F.with_suffix(".tmp")
     btmp.write_text("".join(f"{k},{keep[k]}\n" for k in sorted(keep)), encoding="ascii")
     _swap(btmp, BARS_F)
