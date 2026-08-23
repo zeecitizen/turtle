@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.13"
+#property version   "1.15"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -46,6 +46,8 @@ input bool   InpBuyOnly       = true;   // "Buy side trade setup" · "gold is mo
 
 input group "── LAW: the retracement ──"
 input int    InpRetraceMax    = 20;     // how far back the pullback may reach
+input int    InpMinRetraceBars = 2;     // a pullback must be at least this many candles,
+                                        // and must be broken BEFORE the breakout bar
 
 input group "── LAW: the breakout ──"
 input double InpMomBodyMult   = 1.0;    // "a momentum candle" — body vs the last 20
@@ -73,6 +75,9 @@ input bool   InpNeedM5M15     = false;  // REMOVED from LAWS.md 2026-08-23 — i
 
 input group "── LAW: the volume source ──"
 input int    InpOandaVolume   = 1;      // "we read volume from tradingview's OANDA volume chart"
+input int    InpOandaBars     = 1;      // and the CANDLES too — he reads OANDA, so the
+                                        // structure must be judged there. Orders still
+                                        // fill at Blueberry's price.
 input bool   InpVerbose       = false;
 // per-bar narration for a chosen window (server HHMM), so a missed setup can be
 // interrogated minute by minute. Zee 2026-08-23 gave exact times: his breakouts at
@@ -126,10 +131,64 @@ long OandaVolAt(datetime t) {
    return -1;
 }
 
-double bOpen (int k) { return iOpen (_Symbol, PERIOD_CURRENT, k); }
-double bHigh (int k) { return iHigh (_Symbol, PERIOD_CURRENT, k); }
-double bLow  (int k) { return iLow  (_Symbol, PERIOD_CURRENT, k); }
-double bClose(int k) { return iClose(_Symbol, PERIOD_CURRENT, k); }
+// ── HIS CHART, NOT THE BROKER'S (2026-08-23) ───────────────────────────────
+// Zee questioned trade #1: "can you check if a retracement begun here?" In OANDA
+// data the 4:59 green's low was NOT broken before the breakout — in Blueberry's it
+// was, by 3 cents. Every structural comparison in this EA was being made on the
+// broker's candles while he reads OANDA, and the feeds differ by up to 0.85. His
+// page says the volume comes from TradingView; the CANDLES must come from there too,
+// or the machine is judging a different chart. Fills and orders stay with Blueberry.
+datetime g_ob_t[];
+double   g_ob_o[], g_ob_h[], g_ob_l[], g_ob_c[];
+int      g_ob_n = 0;
+
+void LoadOandaBars() {
+   g_ob_n = 0;
+   int h = INVALID_HANDLE;
+   for (int t = 0; t < 5 && h == INVALID_HANDLE; t++) {
+      h = FileOpen("oanda_bars.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON);
+      if (h == INVALID_HANDLE && !MQLInfoInteger(MQL_TESTER)) Sleep(40);
+   }
+   if (h == INVALID_HANDLE) { Print("[LAW] oanda_bars.csv missing — broker candles used"); return; }
+   ArrayResize(g_ob_t, 8192); ArrayResize(g_ob_o, 8192);
+   ArrayResize(g_ob_h, 8192); ArrayResize(g_ob_l, 8192); ArrayResize(g_ob_c, 8192);
+   while (!FileIsEnding(h)) {
+      string ln = FileReadString(h);
+      string f[];
+      if (StringSplit(ln, ',', f) < 6) continue;
+      datetime t = StringToTime(f[0]);
+      if (t <= 0) continue;
+      if (g_ob_n >= ArraySize(g_ob_t)) {
+         int nn = g_ob_n + 4096;
+         ArrayResize(g_ob_t, nn); ArrayResize(g_ob_o, nn);
+         ArrayResize(g_ob_h, nn); ArrayResize(g_ob_l, nn); ArrayResize(g_ob_c, nn);
+      }
+      g_ob_t[g_ob_n] = t;
+      g_ob_o[g_ob_n] = StringToDouble(f[1]);
+      g_ob_h[g_ob_n] = StringToDouble(f[2]);
+      g_ob_l[g_ob_n] = StringToDouble(f[3]);
+      g_ob_c[g_ob_n] = StringToDouble(f[4]);
+      g_ob_n++;
+   }
+   FileClose(h);
+}
+
+int ObIdx(int k) {
+   if (InpOandaBars != 1 || g_ob_n == 0) return -1;
+   datetime t = iTime(_Symbol, PERIOD_CURRENT, k);
+   int lo = 0, hi = g_ob_n - 1;
+   while (lo <= hi) {
+      int m = (lo + hi) / 2;
+      if (g_ob_t[m] == t) return m;
+      if (g_ob_t[m] < t) lo = m + 1; else hi = m - 1;
+   }
+   return -1;
+}
+
+double bOpen (int k) { int i = ObIdx(k); return (i >= 0) ? g_ob_o[i] : iOpen (_Symbol, PERIOD_CURRENT, k); }
+double bHigh (int k) { int i = ObIdx(k); return (i >= 0) ? g_ob_h[i] : iHigh (_Symbol, PERIOD_CURRENT, k); }
+double bLow  (int k) { int i = ObIdx(k); return (i >= 0) ? g_ob_l[i] : iLow  (_Symbol, PERIOD_CURRENT, k); }
+double bClose(int k) { int i = ObIdx(k); return (i >= 0) ? g_ob_c[i] : iClose(_Symbol, PERIOD_CURRENT, k); }
 double BodyHi(int k) { return MathMax(bOpen(k), bClose(k)); }
 double BodyLo(int k) { return MathMin(bOpen(k), bClose(k)); }
 bool   IsGreen(int k) { return bClose(k) > bOpen(k); }
@@ -220,9 +279,13 @@ int RetraceOrigins(int side, int &out[]) {
    for (int k = 2; k <= InpRetraceMax && n < 16; k++) {
       bool withTrend = (side > 0) ? IsGreen(k) : IsRed(k);
       if (!withTrend) continue;
-      for (int j = k - 1; j >= 1; j--) {
+      // 2026-08-23, Zee caught trade #1: the EA called 4:59 PM a retracement whose
+      // low was broken by the 5:01 candle — the SAME candle it then traded as the
+      // breakout. A pullback must EXIST BEFORE the break, so the breaking bar may
+      // not be bar 1, and the pullback needs at least InpMinRetraceBars candles.
+      for (int j = k - 1; j >= 2; j--) {
          bool broke = (side > 0) ? (bLow(j) < bLow(k)) : (bHigh(j) > bHigh(k));
-         if (broke) { out[n++] = k; break; }
+         if (broke && (k - 1) >= InpMinRetraceBars) { out[n++] = k; break; }
       }
    }
    ArrayResize(out, n);
@@ -310,7 +373,8 @@ int OpenCount() {
 int OnInit() {
    trade.SetExpertMagicNumber(InpMagic);
    if (InpOandaVolume == 1) LoadOandaVol();
-   PrintFormat("[LAW] BasedOnLaws v1.13 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   if (InpOandaBars == 1) LoadOandaBars();
+   PrintFormat("[LAW] BasedOnLaws v1.15 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx wick<=%.0f%% · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -327,6 +391,7 @@ void OnTick() {
    if (bt == g_last_bar) return;
    g_last_bar = bt;
    if (InpOandaVolume == 1) LoadOandaVol();
+   if (InpOandaBars == 1) LoadOandaBars();
    if (OpenCount() >= InpMaxOpen) return;
 
    // LAW: New York session only
