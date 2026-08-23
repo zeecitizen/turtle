@@ -42,6 +42,18 @@ same setups, same day: 96->83, 88->67, 83->67. Discounted by 16, all three predi
 MT5 within 5 points. A configuration needs MORE THAN 16 points of Python margin to
 survive real execution.
 
+# ⛔ LAWS.md IS ZEESHAN'S — READ IT, NEVER EDIT IT
+
+`LAWS.md` is hand-maintained by Zeeshan alone (2026-08-23: *"i'm now modifying the
+laws.md myself, and we dont want it edited by anyone but zeeshan manually"*).
+
+**Read it at session start — it is the canonical statement of what makes a setup.
+Never write to it, never reformat it, never "helpfully" append to it, not even a
+status line or a correction.** If something in it looks stale or wrong against the
+code, SAY SO to Zeeshan and let him decide; the divergence is information, and the
+document is his voice. Put your own findings in `VERSION_HISTORY.md`, the daily
+report, or a new file — never in his.
+
 # 📖 VERSION_HISTORY.md — read it, and KEEP it
 
 `VERSION_HISTORY.md` is the EA version ledger (what shipped, when, why, with which
