@@ -3,6 +3,7 @@ monitor/.claude_api_key
 monitor/.openai_api_key
 monitor/.whatsapp_config.json
 monitor/.dashboard_password
+monitor/.tv_credentials.json
 
 # ─── Claude brain (PLAINTEXT must never enter git; encrypted bundle in brain_vault/ IS pushed)
 monitor/.claude_brain.db
@@ -79,6 +80,10 @@ Thumbs.db
 # ─── Large media (transcripts kept, raw audio/video excluded) ──
 monitor/_loom_audio/*.mp3
 monitor/_loom_audio/*.mp4
+# Teaching videos — GitHub hard-rejects anything over 100 MB and these run to 135 MB.
+# The transcripts and the laws drawn from them are what belong in the repo, not the
+# source footage. (2026-08-25)
+base_video/*.mp4
 monitor/_loom_audio/*.raw.*
 monitor/_loom_audio/*.chunk*.mp3
 monitor/_vsa_audio/

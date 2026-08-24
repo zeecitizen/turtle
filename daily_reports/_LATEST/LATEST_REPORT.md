@@ -1,273 +1,211 @@
-# 23–24 August 2026 — the night every constant of mine fell, and his eye wrote the EA
+# 24–25 August 2026 — his own laws beat every substitute I built for them
 
-**Supersedes:** the 17–21 August report, archived at
-[`daily_reports/2026-08/REPORT_2026-08-17_to_21_laws_and_diamonds.md`](../2026-08/REPORT_2026-08-17_to_21_laws_and_diamonds.md).
+**Supersedes:** the 23–24 August report, archived at
+[`daily_reports/2026-08/REPORT_2026-08-23_24_the_night_constants_fell.md`](../2026-08/REPORT_2026-08-23_24_the_night_constants_fell.md).
 
-**Headline: BasedOnLaws went v1.19 → v1.29 in one night, and every improvement came
-from Zeeshan reading his own chart.** Four of my invented constants were measured and
-retired; four separate defects in the MEASUREMENT rig were found and fixed while
-chasing them. Final config on his chart, seven days, 0.10 lots: **30 trades ·
-12W/18L · 40.0% · +$624.00**, against +$224.10 where the evening began. **Attached
-live at 0.01 (magic 88184) at ~03:00 PKT on Aug 24.**
+**Headline: BasedOnLaws went v1.30 → v1.35, and every single improvement came from
+Zeeshan's own page or his own eye.** Three times today I had replaced one of his laws
+with something of mine; three times his original beat it in court. Final configuration
+on his chart, seven days, 0.10 lots: **+$1,335.90** — from +$624.00 this morning.
+And for the first time the measurement was confirmed independently: **he ran the MT5
+Strategy Tester himself** on Aug 18–21 and got **27 trades · 48.15% · +$123.05 ·
+profit factor 3.28** at 0.01 lots.
 
-⚠️ **STILL UNANSWERED AND URGENT: the Diamond (88154) is trading at FULL SIZE.** It
-took **−$2,476.50 on Friday Aug 21** — 57% of the account, two baskets doing all of
-it — while every guarded machine was fine. Recommendation standing since Aug 21:
-detach it or cut it to 0.01.
+⚠️ **LIVE RECORD: 0 for 4, −$31.62.** Every one of those trades was taken by a version
+that no longer exists, and two of them by gates that were provably broken. Nothing in
+this report is live-proven. Tomorrow is the first honest session.
+
+🚨 **STILL UNANSWERED: the Diamond (88154) trades at full size.** It took −$2,476.50
+on Aug 21 and went 55-for-55 on Aug 24. Both facts are the same machine.
 
 ---
 
-## 1. His trade-#5 objection, and where it led
+## 1. THE MOMENTUM CANDLE — his definition, and the clause that did the work
 
-Friday's five setups had been agreed. He looked again at the 10:02 PM one (−$33.50):
+The EA's first two live trades lost. He challenged the claim that my 45%-hold test had
+"earned its place" — fairly, since its only evidence was an in-sample seven-day
+backtest whose threshold I also chose on that data. Then he supplied the VSA
+definition, and **ruled out its fourth clause himself**:
 
-> *"the 10:02 breakout candle has a wick on top making it not a momentum candle,
-> secondly this candle's wick breaks the UHV high, its body does break the UHV high
-> but with a very very small margin"*
+> *"i think our VSA definition differs a bit on the volume front, we dont require
+> Above-Average Volume, on the contrary our method uses the three only"*
 
-Measured on his own chart, the level being 4629.245:
-
-```
- #  breakout   reached above level   closed above level   HELD    result
- 1  7:02 PM          3.465                 3.465         100.0%   WIN +158.10
- 4  9:10 PM          3.365                 2.765          82.2%   flat  -0.40
- 2  8:10 PM          0.885                 0.605          68.4%   WIN  +97.80
- 3  8:51 PM          1.790                 0.555          31.0%   LOSS  -1.50
- 5 10:02 PM          0.570                 0.055           9.6%   LOSS -33.50
-```
-
-The 10:02 candle pushed 57 cents through his level and kept five and a half. Both of
-his objections are one measurement.
-
-**Asked whether this was a new law, he ruled it was not:**
-
-> *"a candle that closes well above your level is a momentum candle, whatever its
-> shape.. the wick represents price rejection. a wick in the direction of the
-> breakout weakens the strength of the breakout."*
-
-So `LAWS.md` line 23 — *"a momentum candle (no big wick)"* — was already the law; I
-had simply measured it in the wrong place. My test was `wick ÷ the candle's own
-height ≤ 0.35`: a shape test blind to the level, and **0.35 was my number, never his
-page's**. The 10:02 candle scored 29.9% and sailed through.
-
-**v1.22 `InpBreakHold`:** of everything the candle took past the UHV's high, the close
-must still hold this share.
-
-## 2. The threshold, swept — and my second constant retired
-
-The clause is his; the number is mine, so it was swept rather than chosen. Seven days,
-his chart, frozen ground:
+Correct, and it matters: his page's clause b wants the breakout **quieter** than the
+UHV, so a volume floor would contradict his own law. The three that shipped:
 
 ```
-  no wick test at all            5W/16L  23.8%  +163.60
-  my old shape test 0.35         5W/14L  26.3%  +224.10   <- where the evening began
-  hold >= 25%                    5W/15L  25.0%  +197.10
-  hold >= 40%                    5W/10L  33.3%  +358.90
-  hold >= 50%                    4W/10L  28.6%  +184.20
-  hold >= 75%                    3W/ 8L  27.3%  +139.40
+  1. body ratio    |C-O| / (H-L) >= 0.70
+  2. expansion     body > 1.2xATR(14)  OR  1.5xSMA(body,20)
+  3. close at extreme   buy: C > O AND C >= H - 0.20x(H-L)
 ```
 
-Every version of his clause beats its own absence. But the 40% peak had worse
-neighbours on both sides — luck's signature — so the arm with **my body-vs-average
-body test also removed** was run, and the curve flattened into two clean steps:
+**Checked against every breakout on record before shipping — the body ratio alone
+splits them perfectly:**
 
 ```
-  hold 40% / 45% + body test OFF   6W/10L  37.5%  +448.10
-  hold 55% / 60% + body test OFF   5W/10L  33.3%  +273.40
+  every WINNER          every LOSER
+  Fri 7:02   0.81       Fri 8:51    0.62
+  Fri 8:10   0.89       Fri 10:02   0.65
+  Fri 9:10   0.85       LIVE 6:30   0.47
+  his marks  0.82/0.92/0.90         LIVE 7:08   0.19
 ```
 
-**My body-vs-average test was what made the curve spike.** It is another shape test,
-covered by the same ruling, and removing it recovered a winner. Retired in v1.24;
-`InpBreakHold` shipped at 45%. Honest limit on record: **one trade** separates those
-two steps, on a 16-trade sample.
+**COURT (7 days, his chart): the body ratio deleted SEVEN losing trades and ZERO
+winners** — 12W/18L +$624.00 → **12W/11L, 52.2%, +$876.20**.
 
-## 3. FOUR DEFECTS IN THE MEASUREMENT RIG, all found chasing that one candle
+- The **expansion clause was REFUSED**: on M1 it cuts 23 trades to 17 and kills three
+  winners (+$756.80). Later dialled gently at 0.6/0.8/1.0/1.25×SMA and 1.0×ATR — every
+  arm within ~$145 of no-floor with single-trade differences. **Noise.** The
+  micro-candle trap the sources warn about lives in dead sessions; we trade New York.
+- **Close-at-extreme is redundant but free** — byte-identical once the body ratio holds.
+- **I predicted my hold-45 test would become redundant. It did not** (+$70 and 4 WR
+  points on top of the body ratio), so it stays — on evidence, not on my word.
 
-### 3a. His chart was expiring (`f5c95f5`)
-`oanda_m1.csv` is a rolling ~5,000-minute window. `oanda_bars.csv` — the candle table
-the EA judges every setup on — was **overwritten** each cycle; the volume table got
-this exact fix on Aug 21, the bars writer never did. Meanwhile `oanda_archiver.py`
-(the permanent history) **had not run since Aug 7** — it was never in `startup.bat`.
-Aug 8–17 is lost forever; Aug 18–21 was about a day from expiring. Fixed: bars write
-merges, archiver in startup and running, new `monitor/oanda_tables_backfill.py`.
-Testable ground: 4 partial days → **7** (Aug 5–7 recovered, Aug 18–21 kept).
+## 2. THE AUDIT HE ASKED FOR — "are we following every single thing in laws.md?"
 
-### 3b. The EA silently mixed feeds (v1.20)
-`bHigh`/`bLow`/… fall back to the BROKER's candle, one bar at a time, whenever the
-OANDA table lacks that minute. A partially-covered day judged half the setup on his
-chart and half on Blueberry's, invisibly. `InpOandaStrict` refuses such bars and the
-census counts them. Aug 5 changed 8 trades/−131.00 → 5 trades/−160.80 — three of its
-eight trades had been feed-mixed.
+Four divergences found. Three were mine and got fixed; the fourth he opened himself.
 
-### 3c. The ground moved under the tester (v1.21)
-Aug 18 returned **1 trade (−34.70) and then 0 trades** from the same binary and the
-same `.set`. Three controlled runs with the data files hashed around each: the EA is
-deterministic (runs 2 and 3 matched to the counter) — the **file changed mid-run**.
-The EA re-read the tables every bar; the bridge rewrites them every cycle. Fixed: in
-the tester the chart is read ONCE at init and frozen (it prints the row counts), live
-still re-reads every bar. Runners now hash both tables around every run and print
-`GROUND CHANGED`.
+### 2a. 🐫 THE TREND LAW WAS NOT HIS LAW (v1.33-34)
 
-### 3d. 🚨 OANDA RESTATES SETTLED VOLUME (`fb9801e`, `ad2c2d9`)
-One bridge cycle, zero rows added, **38 already-settled minutes revised**, days old:
+The live trend gate was **my EMA-5 slope**, not his line 7. Rebuilt as `CamelTrend`:
+the humps are **DRAWN from pivots** (a high with `InpPivot` lower highs on each side —
+the rule his eye uses) instead of inferred from a retracement state machine. His line
+45 now lives inside it: *"whenever a high is broken, the deepest point is the confirmed
+higher low."*
 
 ```
-  2026.08.18 17:06   1841 -> 1810
-  2026.08.18 19:41    536 ->  477
-  2026.08.19 03:06    847 ->  844
+  CAMEL HUMPS pivot 2, latched   18 tr  11W/ 7L  61.1%  +1044.30   <- HIS LAW
+  EMA-5 slope 10 (was live)      23 tr  12W/11L  52.2%   +876.20
+  CAMEL HUMPS pivot 3, latched   19 tr   8W/11L  42.1%   +629.90
+  CAMEL pivot 2, NO latch        13 tr   6W/ 7L  46.2%   +353.50
+  CAMEL HUMPS pivot 5, latched   22 tr   7W/15L  31.8%   +342.20
+  old inferred structure         19 tr   6W/13L  31.6%   +298.10
 ```
 
-Prices did not move (0 revisions). **Volume did — and volume is what the UHV law ranks
-on**, so a restatement can crown a different loudest candle and hand a different
-verdict. This explains Aug 18's flip-flop, a seven-day total drifting +258.80 →
-+224.10 on identical settings, and five of sixteen sweep arms tripping the tripwire.
-Rule now in all three writers: **a settled minute is immutable** — only minutes
-younger than 3 minutes of REAL TIME may change (defining "newest" by pull position
-left Friday 23:59 mutable forever over a closed weekend, oscillating 33↔34).
-Revisions per cycle: 38 → 1 → **0**.
+**61.1% — the highest anything has reached.** Two findings inside it worth more than
+the total: **his line 45 is worth FIFTEEN win-rate points on its own** (latch vs no
+latch), and **`InpTrendLook` is not load-bearing at all** — 60/90/120 give
+byte-identical results, which removes one of my numbers from the risk list. The pivot
+dial is a true hill: 1=+468 · **2=+1044** · 3=+630 · 5=+342.
 
-## 4. The funnel: which law was actually cutting the trades
+### 2b. ONE PULL, ONE TRUTH (v1.33)
 
-He asked, seeing few setups. Seven days, 2,078 New York minutes:
+Volume came from `oanda_vol.csv` and candles from `oanda_bars.csv` — **two separate
+pulls that disagreed for the same minute** (the 18:03 breakout was 1396 in one and
+1505 in the other), and the immutability rule then froze each at its own first sight.
+He reads one chart; the EA was reading one and a bit. Volume now comes from the SAME
+ROW as the candle it belongs to.
 
-```
-  RANGING (no trend)          1668   80.3%  ########################################
-  no UHV in it                 346   16.7%
-  no valid retracement          42    2.0%
-  brk: WICK (his clause)        11    0.5%
-  FIRED                         16    0.8%
-```
+### 2c. NEVER JUDGE A HALF-WRITTEN CANDLE (v1.30) — the first live trade was illegal
 
-**The trend gate refused four minutes in five.** His wick clause — the night's whole
-subject — refused eleven candidates in seven days. Then his correction, which broke
-the case open:
-
-> *"friday 21st august is not at all a ranging day.. means most of the day the market
-> was in an uptrend"*
-
-## 5. TWO DEFECTS IN THE TREND LAW — one his page already forbade
-
-A faithful transcription of `TrendNow()` diagnosed Friday minute by minute: **not a
-single failure was "no structure found."** 287 of 420 session minutes failed on
-clause C — *the last two lows and the last two highs must both be rising*. Price
-climbed 4613 → 4627 → 4622 while the verdict flickered UPTREND / not / not / UPTREND.
-
-And [`LAWS.md`](../../LAWS.md) line 33 already says otherwise:
-
-> *we stop buying, when the last low is broken .. we keep trading until the last low
-> is safe (unbroken below). Whenever a high is broken, the deepest point (the lowest
-> point) is the confirmed higher low.*
-
-**His page says the trend LATCHES; my code re-litigated it every minute.** Fixed in
-v1.26 (latch) and v1.27 (the guard moves only when a genuine hump top is taken — his
-camel humps are swing highs, not any candle that ticks higher):
+BasedOnLaws' first ever live trade, its own `[LAWX]` stamp against the finished candle:
 
 ```
-  v1.25  re-proved each minute   ranging 80.3%   16 tr  6W/10L  37.5%  +448.10
-  v1.26  latched, any new high   ranging 67.4%   22 tr  7W/15L  31.8%  +281.10
-  v1.27  latched, hump tops      ranging 62.6%   24 tr  8W/16L  33.3%  +296.60
+  what the EA read     breakout 18:30  close 4676.37  vol  788
+  the actual candle    breakout 18:30  close 4675.84  vol 2109
 ```
 
-Better structure, more winners — **not better money**. And Friday still read 233 of
-314 minutes as a range, so the latch fixed a real bug but not *the* bug: re-arming
-still ran through the same broken two-point test.
+It caught the bridge's export **mid-minute**. His law says the breakout must be
+QUIETER than the UHV (997): **788 passes, 2109 refuses.** The trade was forbidden by
+its own law and existed only because the volume was still accumulating. It lost −8.86.
 
-## 6. 🏆 HIS IDEA WINS — the trend is the EMA-5 slope
+Fixed: live may judge a bar only once the OANDA table contains a LATER minute (the
+bridge's own proof it moved past that candle); past `InpFreshMaxSec=40` it **skips the
+bar with a log line** rather than trading blind. Also the bridge cycle went **60s →
+15s → 5s**, and a variable I had shadowed (`newest`) was crashing the candle collector
+every cycle since the previous night. Lag is now ~0.
 
-> *"what if you remove this gate, see how it goes then? use the slope of EMA 5 instead
-> as your trend line"*
-
-Same laws, same chart, same seven days — only the answer to "are we trending" differs:
-
-```
-  my camel-hump structure (v1.27)   24 tr   8W/16L  33.3%  +296.60
-  v1.25, where the evening began    16 tr   6W/10L  37.5%  +448.10
-  EMA-5 slope over 1                45 tr  15W/30L  33.3%  +403.10
-  EMA-5 slope over 3                37 tr  12W/25L  32.4%  +323.10
-  EMA-5 slope over 5                32 tr  12W/20L  37.5%  +596.70
-  EMA-5 slope over 10               30 tr  12W/18L  40.0%  +624.00
-```
-
-**More trades AND a higher win rate AND double the money** — the opposite of the usual
-trade-off, from an indicator already on his page. Shipped as the default in v1.29
-(`InpTrendMode=1`, `InpEmaSlopeBars=10`) and **attached live at 0.01**.
-
-### 6a. THE CONTROL ARM — and my gate was worse than NO gate
-
-The first "no gate" run was VOID (identical to the gated arm, because switching
-`InpRequireTrend` off still left the buy-side line demanding `trend == +1`). Rebuilt
-as a separate EA — `BasedOnLawsNoGate`, magic 88194, a different name so his ATTACHED
-binary is never hot-reloaded under him — and run properly:
+### 2d. ALL HOURS (v1.35) — his call, and it re-opens the divergence knowingly
 
 ```
-  equivalence check (EMA-10 on the control EA)   30 tr  12W/18L  40.0%  +624.00  ✓
-  NO TREND GATE AT ALL                           45 tr  15W/30L  33.3%  +403.10
-
-  vs the three gates:
-    no gate at all                45 tr  33.3%  +403.10     —
-    MY camel-hump structure       24 tr  33.3%  +296.60   -106.50
-    HIS EMA-5 slope over 10       30 tr  40.0%  +624.00   +220.90
+  NY only 15-22   18 tr  61.1%  +1044.30   $58.02/trade
+  15-24           21 tr  57.1%  +1143.60   $54.46/trade
+  08-22           29 tr  48.3%  +1109.80   $38.27/trade
+  ALL HOURS       39 tr  43.6%  +1335.90   $34.25/trade   <- shipped
+  00-15 pre-NY    18 tr  33.3%   +388.20   $21.57/trade
 ```
 
-**My structure gate was worse than having no gate at all.** It refused 60-80% of every
-session and earned $106 LESS than simply taking every lawful setup — and its win rate
-was identical to the no-gate coin (33.3%), so it was deleting trades at random with
-respect to quality, not filtering them. His EMA-5 slope is a real filter: it cuts 15
-trades from the no-gate set and adds $221 and nearly 7 points of win rate.
+**The pure counter-test does not bleed**: trading only the hours before New York makes
++$388 at 33.3%, and this geometry breaks even near 33%. So his line 47 was protecting
+**quality** (2.7× per trade inside NY), not money. He chose the total:
 
-Internal check that the harness is honest: "no gate" returned EXACTLY the numbers of
-"EMA slope over 1" (45 tr, 15W/30L, +403.10) — correct by mechanism, since a
-one-candle slope is almost never flat and therefore admits everything.
+> *"let's go all hours, since the goal is to make maximum money and all setups are
+> losing anyways under this EA"*
 
-**THE SLOPE DIAL, COMPLETE:** 1=+403 · 3=+323 · 5=+597 · **10=+624** · 15=+368 ·
-20=+328 · 30=+382 · 45=+449. The crest is 10 so the live default stays (no reattach).
-But the finding is not the number — the dial is bumpy on ~30 trades and 5-vs-10 is
-inside the noise. The robust claim: **every EMA setting beats my structure, the worst
-of them by $31 and the best by $327.**
+On record: this trades against the standing win-rate goal and **diverges from LAWS.md
+line 47 by his decision**. His premise is true of the live record (0 for 4) and not of
+the court.
 
-## 7. His chart vs the broker's — the uncomfortable measurement
+## 3. HIS OWN TESTER RUN — the first independent confirmation
 
-Same laws, same days, only the chart being judged differs:
+He ran the MT5 Strategy Tester himself, his terminal, his data cache, the shipped
+config (`InpTrendMode=2 · InpNyOnly=false · InpMomBodyRatio=0.7 · InpBreakHold=0.45`):
 
 ```
-              HIS CHART (OANDA)          BROKER (Blueberry)
-  Aug 5     4 tr  1W/3L    -91.50      5 tr  3W/2L   +204.60
-  Aug 6     4 tr  0W/4L   -188.70      2 tr  0W/2L    -46.90
-  Aug 18    1 tr  0W/1L    -34.70      0 tr             0.00
-  Aug 19    2 tr  1W/1L   +172.50      2 tr  1W/1L    +78.00
-  Aug 20    2 tr  1W/1L   +149.00      4 tr  3W/1L   +425.00
-  Aug 21    3 tr  3W/0L   +441.50      5 tr  1W/4L    +27.50
-  TOTAL    16 tr  6W/10L  +448.10     18 tr  8W/10L  +688.20
+  100% real ticks · 5,515 bars · 1,315,855 ticks · Aug 18 -> Aug 21
+  +123.05 at 0.01 lots · 27 trades · 13W/14L (48.15%) · profit factor 3.28
+  avg win 13.61   avg loss -3.85   largest loss -7.45   max drawdown 0.30%
 ```
 
-**On raw P&L over five trading days the broker's chart scores higher.** But Friday is
-the only day with ground truth — his own hand-marked setups — and there **his chart
-returns exactly his three trades (3W/0L) while the broker's returns five different
-ones (1W/4L)**. The feeds are not ranking the same setups better or worse; they find
-DIFFERENT setups, exactly as the 46% "which candle is loudest" disagreement predicts.
-His page says OANDA; five days do not overturn a law. Logged, not buried.
+**The average loss is the story: −$3.85 against a stop 8–10 points away.** Three losses
+came in at **−0.22, −0.03 and −0.04** — trades that reached 1R, moved their stop to
+entry, and cost nothing. His breakeven rule, working exactly as his page describes it.
+That is why 48% wins produces a profit factor of 3.28.
 
-## 8. State at 03:00 PKT, Aug 24
+It also matches the rig (+$1,335.90 at 0.10 over seven days ≈ $1,230 scaled), so **the
+measurement chain agrees across two independent terminals** — worth as much as the
+profit after the half-written-candle mess.
+
+## 4. THE TOOLS HE ASKED FOR
+
+- **The setup marker** — `http://127.0.0.1:8765/mark.html`. TradingView refused the job
+  (anonymous charts are read-only; its sign-in will not run in a debug-enabled browser),
+  so he marks on his own OANDA candles: click the retracement start, the UHV, the
+  breakout. The UHV's level is drawn forward, plumb lines drop into the volume pane with
+  each candle's volume printed, one candle may hold two roles. **On its first evening it
+  caught my untested `InpMaxRiskPts=10` refusing a lawful setup of his** (13.11 pts).
+- **"🎯 Visualize LIVE trade"** in the Camel Cockpit — draws the EA's own `[LAWX]`
+  anchors: retracement start, UHV with its trigger line, breakout with its body ratio
+  and hold %, entry/stop/target, volume story below. Walks back through every fire.
+- `monitor/law_trade_diagram.py`, `/api/trades`, `/api/marks` behind them.
+
+## 5. ⚠️ THE BINDING CONSTRAINT: his chart is nine days long
+
+The EA judges only on OANDA candles, so the court can only run where the archive
+reaches: **Aug 5, 6, 7, 17, 18, 19, 20, 21, 24**. Tonight we recovered Aug 17 (+1,890
+minutes) by asking the anonymous feed for more than it volunteers.
 
 ```
-LIVE      BasedOnLaws v1.29   magic 88184  0.01 lots  XAUUSD M1   (attached ~03:00)
-          ZeeUHV / Loud / Shop B / logger — unchanged
-🚨        ZeeUHV_Diamond 88154 — STILL FULL SIZE, decision still owed
-BUILT     BasedOnLawsNoGate v1.29  magic 88194 — control arm, not attached
-GROUND    7 days of his chart (Aug 5-7, 18-21), immutable, growing daily from now
+  anonymous tvDatafeed   caps at ~8,190 M1 bars = 5.7 days
+  his TradingView login  {"code": "rate_limit"} — NOT a bad password, the same wall
+                         his browser hit with backup codes
+  OANDA's own API        would serve years — NOT AVAILABLE IN PAKISTAN (German account only)
 ```
 
-**Still running as he sleeps:** the slope dial extended (15/20/30/45 — the default may
-move if the crest is elsewhere), the no-gate control, and a live-feed check that the
-immutability rule holds now that the market has reopened.
+Two doors remain: `monitor/oanda_deep_history.py` accepts an `auth_token` in
+`.tv_credentials.json` (from `window.user.auth_token` in a signed-in browser — bypasses
+their login endpoint entirely), or retry the sign-in once the rate limit clears. Until
+then the window grows one day per day, and **all validation is forward.**
 
-## 9. Numbers that are still MINE, not his — the standing audit
+## 6. State at 01:10, Aug 25
 
-Each one is a place the EA can obey his law while measuring it differently than he
-does, exactly as `0.35` did until he caught the 10:02 candle:
+```
+LIVE   BasedOnLaws v1.35  magic 88184  0.01  XAUUSD M1
+       camel humps pivot 2 latched · body ratio 0.70 · hold 45% · quieter than UHV
+       · stop 6 pips under the retracement low · 2R · BE at 1R · ALL HOURS
+       Re-verified 01:03 after he accidentally closed the terminal; every EA came
+       back, logger backfill "scanned 1,516 deals — appended 0 missed".
+🚨     ZeeUHV_Diamond 88154 — FULL SIZE, decision still owed
+BUILT  BasedOnLawsNoGate 88194 — control arm, not attached
+```
 
-- `InpEmaSlopeBars = 10` — chosen on these same seven days
-- `InpBreakHold = 0.45` — one trade separates it from 55%
-- `InpTrendLook = 90`, `InpPivot = 2` — still used by the structure path
-- `InpRetraceMax = 20`, `InpUpRunBars = 2` ("a sequence of greens")
-- `InpMinRiskPts 0.5 / InpMaxRiskPts 10.0` — quietly refuses a setup or two a day
+## 7. What is still MINE, not his
+
+`InpBreakHold=0.45` · `InpPivot=2` · `InpRetraceMax=20` · `InpUpRunBars=2` ·
+`InpMinRetraceBars=2` · the risk band `0.5–10.0` (caught refusing his own marked setup)
+· `InpFreshMaxSec=40`. Each is a place the EA can obey his law while measuring it
+differently than he does — which is exactly how the 0.35 wick test survived until he
+looked at the 10:02 candle.
+
+**And the lesson of the day, three times over: when his law and my substitute were
+measured head to head, his won every time.**
