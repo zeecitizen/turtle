@@ -48,6 +48,7 @@ def _local_to_utc(t):
 def _local_to_server(t):
     return _local_to_utc(t) + BROKER_UTC_OFFSET
 N_BARS = 5000
+N_BARS_FAST = 150      # routine cycle: just enough to carry the newest minutes
 
 
 def _swap(tmp, dst, tries=6):
@@ -63,11 +64,17 @@ def _swap(tmp, dst, tries=6):
             _t.sleep(0.12)
     return False
 
-def cycle():
+def cycle(fast=False):
+    """fast=True pulls only the newest minutes. 2026-08-24: the EA waits for the
+    forming candle to appear before it will judge the one before it, so the pull's
+    latency IS the EA's entry latency — it went 40 s late and entered 1:17 after the
+    signal. History comes from the archive, not from re-pulling 5,000 bars every
+    cycle."""
     from tvDatafeed import TvDatafeed, Interval
     tv = TvDatafeed()
     d = tv.get_hist(symbol="XAUUSD", exchange="OANDA",
-                    interval=Interval.in_1_minute, n_bars=N_BARS)
+                    interval=Interval.in_1_minute,
+                    n_bars=(N_BARS_FAST if fast else N_BARS))
     if d is None or not len(d):
         print("[M1-TV] pull returned nothing", flush=True)
         return 0
@@ -106,12 +113,12 @@ def cycle():
     # last row of the pull would otherwise stay editable forever (see oanda_vol_tv).
     from datetime import datetime as _dtc
     now_srv = _dtc.utcnow() + BROKER_UTC_OFFSET
-    newest = {f"{_local_to_server(ts.to_pydatetime()):%Y.%m.%d %H:%M}"
-              for ts in d.index
-              if (now_srv - _local_to_server(ts.to_pydatetime())).total_seconds() < 180}
+    mutable = {f"{_local_to_server(ts.to_pydatetime()):%Y.%m.%d %H:%M}"
+               for ts in d.index
+               if (now_srv - _local_to_server(ts.to_pydatetime())).total_seconds() < 180}
     for ts, r in d.iterrows():
         k = f"{_local_to_server(ts.to_pydatetime()):%Y.%m.%d %H:%M}"
-        if k in keep and k not in newest:
+        if k in keep and k not in mutable:
             continue
         keep[k] = (f"{float(r['open'])},{float(r['high'])},"
                    f"{float(r['low'])},{float(r['close'])},{int(r['volume'])}")
@@ -125,8 +132,10 @@ def cycle():
 
 
 if __name__ == "__main__":
+    import sys as _sys
+    _fast = "--fast" in _sys.argv
     try:
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
-    cycle()
+    cycle(fast=_fast)

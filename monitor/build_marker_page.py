@@ -101,6 +101,8 @@ button.clr{background:#d92b3a;border-color:#bb2331;color:#fff}
   <select id="side"><option value="buy">buy</option><option value="sell">sell</option></select>
   <button class="go" id="save">Save setup</button>
   <button class="clr" id="clear">Clear picks</button>
+  <button id="livebtn" style="background:#1d6fbf;border-color:#1a5fa5;color:#fff">
+    Visualize LIVE trade</button>
   <label style="font-size:12.5px;color:#4a5a6a">vol
     <input id="volh" type="range" min="70" max="360" value="170" style="vertical-align:middle">
   </label>
@@ -118,6 +120,7 @@ button.clr{background:#d92b3a;border-color:#bb2331;color:#fff}
 const BARS = __BARS__;
 const PKT_SHIFT = __PKT_SHIFT__;      // seconds to add to unix for PKT display
 let picks = [], marks = [], view = {i0: 0, n: 260}, drag = null;
+let trade = null;      // the EA's fired trade, drawn from its own [LAWX] stamp
 let VOL_H = 170;              // volume pane height — he asked for a bigger
                               // scale: at 64px the bars were too short to
                               // compare, and comparing them IS the UHV law
@@ -192,6 +195,41 @@ function draw(){
                   x - bw * 0.5, y(b.h) - 9 - ti * 11);
     });
   });
+  // THE EA'S OWN TRADE, drawn from what it stamped when it fired (2026-08-24, his
+  // request: "how else would i know which candle was the UHV which was considered for
+  // breakout, and which candle did the breakout"). Its three anchors, its level, and
+  // the entry/stop/target it actually used.
+  if (trade){
+    const roles = [[trade.origin,'ORIGIN','#1d6fbf'], [trade.uhv,'UHV','#c2273c'],
+                   [trade.breakout,'BREAKOUT','#0a8944']];
+    roles.forEach(([srv, label, col], ri) => {
+      const bi = bs.findIndex(b => b.s === srv); if (bi < 0) return;
+      const b = bs[bi], x = bi * bw + bw / 2;
+      cx.save(); cx.strokeStyle = col; cx.globalAlpha = .5; cx.lineWidth = 1.5;
+      cx.beginPath(); cx.moveTo(x, padT); cx.lineTo(x, H - padB); cx.stroke(); cx.restore();
+      cx.strokeStyle = col; cx.lineWidth = 2;
+      cx.strokeRect(x - bw * 0.5, y(b.h) - 6, bw, y(b.l) - y(b.h) + 12);
+      const vhh = b.v / vmax * volH;
+      cx.strokeRect(x - bw * 0.5, H - padB - vhh, bw, vhh);
+      cx.fillStyle = col; cx.font = 'bold 10px system-ui';
+      cx.fillText(label + ' ' + b.v, x - bw * 0.5, y(b.h) - 10);
+    });
+    // the level the breakout had to close through, and the trade's own geometry
+    [[trade.uhv_high, 'UHV high ' + trade.uhv_high.toFixed(2), '#c2273c', [6,4]],
+     [trade.entry,    'entry '    + trade.entry.toFixed(2),    '#16202a', []],
+     [trade.stop,     'stop '     + trade.stop.toFixed(2),     '#d92b3a', [2,3]],
+     [trade.target,   'target '   + trade.target.toFixed(2),   '#0a9d4f', [2,3]]
+    ].forEach(([price, label, col, dash]) => {
+      const yy = y(price); if (yy < padT - 30 || yy > padT + chartH + 30) return;
+      cx.save(); cx.setLineDash(dash); cx.strokeStyle = col; cx.lineWidth = 1.3;
+      cx.beginPath(); cx.moveTo(0, yy); cx.lineTo(W, yy); cx.stroke(); cx.restore();
+      cx.font = 'bold 11px system-ui';
+      const tw2 = cx.measureText(label).width;
+      cx.fillStyle = 'rgba(255,255,255,.88)'; cx.fillRect(W - tw2 - 10, yy - 13, tw2 + 8, 14);
+      cx.fillStyle = col; cx.fillText(label, W - tw2 - 6, yy - 3);
+    });
+  }
+
   // THE LEVEL. The moment he marks a UHV, its high (buy) or low (sell) is drawn
   // forward as a dashed line — the price the breakout candle has to close its body
   // through. It is the same level the EA's BreakoutOK() tests, so what he sees here
@@ -278,6 +316,19 @@ function render(){
       '  <span style="color:#8a95a1">' + m.origin.slice(0,10) + '</span></div>').join('');
 }
 
+document.getElementById('livebtn').onclick = async () => {
+  const ts = await (await fetch('/api/trades')).json();
+  if (ts.error || !ts.length) return msg(ts.error || 'the EA has not fired yet', '#b8760a');
+  trade = ts[ts.length - 1];                       // the newest one it stamped
+  const bi = BARS.findIndex(b => b.s === trade.breakout);
+  if (bi < 0) return msg('its breakout candle is not in this chart window', '#b8760a');
+  view.n = 90; view.i0 = Math.max(0, bi - 55);     // frame the setup
+  sel.value = pktDay(BARS[bi].t);
+  msg(trade.side.toUpperCase() + '  UHV ' + trade.uhv.slice(11) + ' vol ' + trade.uhv_vol +
+      '  ->  breakout ' + trade.breakout.slice(11) + ' vol ' + trade.brk_vol +
+      (trade.held !== null ? '  (held ' + trade.held + '%)' : ''));
+  draw();
+};
 document.getElementById('side').onchange = () => draw();   // level flips high <-> low
 document.getElementById('volh').oninput = e => { VOL_H = +e.target.value; draw(); };
 document.getElementById('clear').onclick = () => { picks = []; draw(); render(); };
