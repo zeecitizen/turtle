@@ -17,6 +17,13 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 ROOT = Path(r"c:/Users/zeesh/Documents/GitHub/turtle/monitor/setup_labels")
 LABELS_FILE = ROOT / "zee_labels.json"
+# 2026-08-24, Zee: "is there a way that i annotate setups on tradingview chart and you
+# read them from there? that would help you gauge what i think is the method."
+# TradingView refused: anonymous charts are read-only and its sign-in will not run in a
+# debug-enabled browser. So the marks are made on HIS OWN OANDA candles instead, and
+# this file is what the grader reads. One entry per setup HE marks — the three anchors
+# the laws actually turn on, not a rectangle someone has to interpret.
+MARKS_FILE = ROOT / "zee_marks.json"
 PORT = 8765
 
 
@@ -31,6 +38,19 @@ def save_labels(d):
     LABELS_FILE.write_text(json.dumps(d, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+def load_marks():
+    if MARKS_FILE.exists():
+        try:
+            return json.loads(MARKS_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            return []
+    return []
+
+
+def save_marks(rows):
+    MARKS_FILE.write_text(json.dumps(rows, indent=1, ensure_ascii=False), encoding="utf-8")
+
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *a, **kw):
         pass  # quiet
@@ -41,6 +61,8 @@ class Handler(BaseHTTPRequestHandler):
             path = "/setups.html"
         if path == "/api/labels":
             return self._json(load_labels())
+        if path == "/api/marks":
+            return self._json(load_marks())
         # serve static
         fp = ROOT / path.lstrip("/")
         if fp.exists() and fp.is_file():
@@ -58,6 +80,28 @@ class Handler(BaseHTTPRequestHandler):
         self.send_error(404)
 
     def do_POST(self):
+        if self.path == "/api/marks":
+            n = int(self.headers.get("Content-Length", "0"))
+            try:
+                data = json.loads(self.rfile.read(n).decode("utf-8", errors="replace"))
+            except Exception:
+                return self.send_error(400)
+            marks = load_marks()
+            if data.get("delete"):
+                marks = [m for m in marks if m.get("id") != data["delete"]]
+                save_marks(marks)
+                return self._json({"ok": True, "deleted": data["delete"], "total": len(marks)})
+            need = ("origin", "uhv", "breakout")
+            if not all(k in data for k in need):
+                return self._json({"ok": False, "error": "need origin, uhv and breakout"})
+            mark = {k: data[k] for k in need}
+            mark["side"] = data.get("side", "buy")
+            mark["note"] = data.get("note", "")
+            mark["id"] = "{}-{}".format(mark["side"], mark["breakout"])
+            marks = [m for m in marks if m.get("id") != mark["id"]] + [mark]
+            marks.sort(key=lambda m: m["breakout"])
+            save_marks(marks)
+            return self._json({"ok": True, "saved": mark["id"], "total": len(marks)})
         if self.path != "/api/labels":
             return self.send_error(404)
         n = int(self.headers.get("Content-Length", "0"))
