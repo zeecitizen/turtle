@@ -24,6 +24,18 @@ a. a momentum candle (no big wick) -> proven to be better than "no wick test" vi
 b. its volume should be lower than the UHV's volume (OANDA volume from Tradingview)
 c. the breakout candle must cross - share body with - the UHV candle's high. the breakout must be the first candle to close its body through the UHV's high
 
+for reference, here's what we usually mean by a momentum candle: 
+
+1. Body Size (>= 70% of Range)
+Rule: The body must take up at least 70% of the full candle (High to Low). Formula: |Close - Open| / (High - Low) >= 0.70
+
+2. Expansion (Above Average)
+Rule: The body must be noticeably larger than recent candles. Formula: Body > 1.2 * ATR(14) OR Body > 1.5 * SMA(Body, 20)
+
+3. Extreme Close (Top / Bottom 20%)
+Bullish: Close is in the top 20% of the candle range. Close >= High - 0.20 * (High - Low). Bearish: Close is in the bottom 20% of the candle range. Close <= Low + 0.20 * (High - Low). A bullish momentum candle requires Close > Open, and a bearish one requires Close < Open.
+
+Tip:
 an extra confirmation is the following: If breakout candle closes above the EMA 5
 
 Closing the trade
