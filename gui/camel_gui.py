@@ -246,6 +246,9 @@ class Cockpit:
         tk.Button(srow, text="📐 Line Diagram", font=("Segoe UI", 11, "bold"),
                   bg="#0b7285", fg="white", padx=12, pady=5, relief="flat",
                   command=self.show_line_diagram).pack(side="left", padx=(0, 6))
+        tk.Button(srow, text="🎯 Visualize LIVE trade", font=("Segoe UI", 11, "bold"),
+                  bg="#1d6fbf", fg="white", activebackground="#1a5fa5",
+                  command=self.show_law_trade).pack(side="left", padx=6)
         tk.Button(srow, text="🕸 possible setups", font=("Segoe UI", 11, "bold"),
                   bg="#f08c00", fg="white", padx=12, pady=5, relief="flat",
                   command=self.show_possible).pack(side="left")
@@ -548,6 +551,54 @@ class Cockpit:
             else:
                 self.root.after(0, lambda: lbl.config(text=msg))
         threading.Thread(target=work, daemon=True).start()
+
+    def show_law_trade(self):
+        """Zee 2026-08-24: "add a Visualize Live trade button so i can see the live
+        trade's drawing (ditto similar to the line diagram)".
+
+        BasedOnLaws stamps its three anchors when it fires; this draws the newest one
+        on the same OANDA candles it judged — the retracement start, THE UHV with its
+        high extended as the trigger line, the breakout with its body ratio and how
+        much of the break it held, entry/stop/target, and the volume story below."""
+        win = tk.Toplevel(self.root); win.title("🎯 the live trade")
+        win.configure(bg=BG)
+        bar = tk.Frame(win, bg=BG); bar.pack(pady=(10, 0))
+        lbl = tk.Label(win, text="drawing…", font=("Segoe UI", 14), bg=BG, fg=DIM)
+        lbl.pack(padx=20, pady=20)
+        state = {"idx": -1}
+
+        def work():
+            import traceback
+            try:
+                sys.path.insert(0, str(Path(TE.__file__).parent))
+                import law_trade_diagram as LT
+                import importlib; importlib.reload(LT)
+                p, msg = LT.render(index=state["idx"])
+            except Exception:
+                err = traceback.format_exc().strip().splitlines()[-1]
+                self.root.after(0, lambda: lbl.config(text="could not draw: " + err))
+                return
+            if p:
+                self.root.after(0, lambda: (self._show_pngs(win, lbl, p, None),
+                                            win.title("🎯 " + msg)))
+            else:
+                self.root.after(0, lambda: lbl.config(text=msg))
+
+        def go(delta=0):
+            state["idx"] += delta
+            lbl.config(text="drawing…")
+            threading.Thread(target=work, daemon=True).start()
+
+        tk.Button(bar, text="◀ earlier trade", font=("Segoe UI", 10, "bold"),
+                  bg="#495057", fg="white",
+                  command=lambda: go(-1)).pack(side="left", padx=4)
+        tk.Button(bar, text="later trade ▶", font=("Segoe UI", 10, "bold"),
+                  bg="#495057", fg="white",
+                  command=lambda: go(+1)).pack(side="left", padx=4)
+        tk.Button(bar, text="↻ redraw newest", font=("Segoe UI", 10, "bold"),
+                  bg="#1c7ed6", fg="white",
+                  command=lambda: (state.__setitem__("idx", -1), go(0))).pack(side="left", padx=4)
+        go(0)
 
     def show_possible(self):
         """Zee 2026-08-13: "i wanna see how many possible setups did we prune through
