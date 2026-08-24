@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.34"
+#property version   "1.35"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -129,7 +129,20 @@ input group "── LAW: when to stop trading ──"
 input bool   InpStopOnLastLow = true;   // "we stop buying when the last low is broken"
 
 input group "── LAW: session & higher timeframes ──"
-input bool   InpNyOnly        = true;   // "we only trade in the NewYork session"
+input bool   InpNyOnly        = false;  // "we only trade in the NewYork session"
+                                        // 2026-08-24, HIS CALL: "let's go all hours,
+                                        // since the goal is to make maximum money".
+                                        // The court, camel humps, seven days:
+                                        //   NY only   18 tr 61.1% +1044.30  ($58/trade)
+                                        //   ALL HOURS 39 tr 43.6% +1335.90  ($34/trade)
+                                        //   pre-NY    18 tr 33.3%  +388.20  ($22/trade)
+                                        // Outside NY the edge is ~break-even, not a
+                                        // bleed — his session law protected QUALITY,
+                                        // not money. All hours earns +$292 more in
+                                        // total by taking 21 more trades at 17 fewer
+                                        // win-rate points. NOTE: this now DIVERGES from
+                                        // LAWS.md line 47 by his decision, not by
+                                        // oversight.
 input int    InpNyFromHour    = 15;     // broker 15:00 = 17:00 PKT
 input int    InpNyToHour      = 22;
 input bool   InpNeedM5M15     = false;  // REMOVED from LAWS.md 2026-08-23 — it was a
@@ -734,7 +747,7 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.34 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.35 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
