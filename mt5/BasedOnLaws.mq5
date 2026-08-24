@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.32"
+#property version   "1.34"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -29,7 +29,10 @@ input int    InpMaxOpen       = 1;
 
 input group "── LAW: the trend (camel humps) ──"
 input bool   InpRequireTrend  = true;   // "we don't trade in a ranging market"
-input int    InpTrendLook     = 90;    // 2 hours — his 7:02 PM trade was defending
+input int    InpTrendLook     = 90;    // NOT LOAD-BEARING under camel humps: 60, 90
+                                        // and 120 give byte-identical results (the
+                                        // same humps are found either way).
+                                        // 2 hours — his 7:02 PM trade was defending
                                         // the 5:40 PM low, 82 bars back. A 20-40 bar
                                         // window cannot see the leg it is trading.
                                         // 90 reproduces all three of his marked
@@ -40,7 +43,12 @@ input int    InpTrendLook     = 90;    // 2 hours — his 7:02 PM trade was defe
                                         // five (3W/2L, +259.20); 60 is byte-identical — a
                                         // plateau, not a spike.
 input int    InpPivot         = 2;
-input int    InpTrendMode     = 1;      // 0 = camel-hump structure · 1 = EMA-5 SLOPE
+input int    InpTrendMode     = 2;      // 0 = old inferred structure · 1 = EMA-5 SLOPE
+                                        // 2026-08-24: HIS OWN LAW WINS. Camel humps
+                                        // drawn from pivots beat the EMA substitute
+                                        // 61.1%/+1044.30 vs 52.2%/+876.20 over seven
+                                        // days, and the page and the code now agree.
+                                        // 2 = CAMEL HUMPS drawn from pivots (his line 7)
                                         // 2026-08-24, HIS idea, and it beat my
                                         // structure code on every axis at once:
                                         // 30 trades vs 24 · 40.0% vs 33.3% · +624.00
@@ -206,6 +214,7 @@ long OandaVolAt(datetime t) {
 // or the machine is judging a different chart. Fills and orders stay with Blueberry.
 datetime g_ob_t[];
 double   g_ob_o[], g_ob_h[], g_ob_l[], g_ob_c[];
+long     g_ob_v[];        // the volume that came in the SAME row as the candle
 int      g_ob_n = 0;
 
 void LoadOandaBars() {
@@ -218,6 +227,7 @@ void LoadOandaBars() {
    if (h == INVALID_HANDLE) { Print("[LAW] oanda_bars.csv missing — broker candles used"); return; }
    ArrayResize(g_ob_t, 8192); ArrayResize(g_ob_o, 8192);
    ArrayResize(g_ob_h, 8192); ArrayResize(g_ob_l, 8192); ArrayResize(g_ob_c, 8192);
+   ArrayResize(g_ob_v, 8192);
    while (!FileIsEnding(h)) {
       string ln = FileReadString(h);
       string f[];
@@ -225,6 +235,7 @@ void LoadOandaBars() {
       datetime t = StringToTime(f[0]);
       if (t <= 0) continue;
       if (g_ob_n >= ArraySize(g_ob_t)) {
+         ArrayResize(g_ob_v, g_ob_n + 4096);
          int nn = g_ob_n + 4096;
          ArrayResize(g_ob_t, nn); ArrayResize(g_ob_o, nn);
          ArrayResize(g_ob_h, nn); ArrayResize(g_ob_l, nn); ArrayResize(g_ob_c, nn);
@@ -234,6 +245,7 @@ void LoadOandaBars() {
       g_ob_h[g_ob_n] = StringToDouble(f[2]);
       g_ob_l[g_ob_n] = StringToDouble(f[3]);
       g_ob_c[g_ob_n] = StringToDouble(f[4]);
+      g_ob_v[g_ob_n] = (long)StringToInteger(f[5]);
       g_ob_n++;
    }
    FileClose(h);
@@ -261,6 +273,16 @@ bool   IsGreen(int k) { return bClose(k) > bOpen(k); }
 bool   IsRed  (int k) { return bClose(k) < bOpen(k); }
 
 long BarVolume(int k) {
+   // ONE PULL, ONE TRUTH (2026-08-24). oanda_vol.csv and oanda_bars.csv are written by
+   // TWO SEPARATE pulls at different instants, so the same minute can carry different
+   // volumes in each — tonight's 18:03 breakout was 1396 in the volume table and 1505
+   // in the candle table, and the immutability rule then froze each at its own first
+   // sight. Zee reads ONE chart; the EA was reading one and a bit. When the candles
+   // come from the OANDA table, the volume must come from the SAME ROW.
+   if (InpOandaBars == 1) {
+      int ib = ObIdx(k);
+      if (ib >= 0 && g_ob_v[ib] > 0) return g_ob_v[ib];
+   }
    if (InpOandaVolume == 1 && g_ov_n > 0) {
       long ov = OandaVolAt(iTime(_Symbol, PERIOD_CURRENT, k));
       if (ov > 0) return ov;
@@ -559,6 +581,58 @@ int SwingLowIdx() {
    return -1;
 }
 
+// ── THE CAMEL HUMPS, DRAWN (2026-08-24, his line 7, rebuilt on his own words) ──
+//
+//   "we identify trend by drawing camel humps.. price goes upwards in a lightning
+//    shape fashion. first there is price going up in a straight slant trend line (the
+//    impulse wave), then there's a retracement. so we call it an uptrend if we're
+//    breaking above previous highs. and forming new higher lows."
+//
+// The first attempt (TrendNow) inferred the humps from a retracement state machine and
+// re-proved the whole trend every minute, demanding the last TWO lows and the last TWO
+// highs both be rising. It called 80% of a clean uptrend a range, and the control arm
+// showed it was worse than having no gate at all. This one DRAWS the humps instead:
+// pivot highs and pivot lows (InpPivot bars lower on each side — the same rule that
+// draws them on a chart), then his two tests on the drawn swings.
+//
+// And his line 45 lives here, where it belongs: "whenever a high is broken, the
+// deepest point (the lowest point) is the confirmed higher low."
+int CamelTrend(double &lastLow) {
+   int p = MathMax(1, InpPivot);
+   double hs[24], ls[24];
+   int    hidx[24], lidx[24];
+   int nh = 0, nl = 0;
+   for (int k = InpTrendLook; k >= p + 1; k--) {          // oldest -> newest
+      bool ph = true, pl = true;
+      for (int q = 1; q <= p; q++) {
+         if (bHigh(k) <= bHigh(k - q) || bHigh(k) <= bHigh(k + q)) ph = false;
+         if (bLow(k)  >= bLow(k - q)  || bLow(k)  >= bLow(k + q))  pl = false;
+      }
+      if (ph && nh < 24) { hs[nh] = bHigh(k); hidx[nh] = k; nh++; }
+      if (pl && nl < 24) { ls[nl] = bLow(k);  lidx[nl] = k; nl++; }
+   }
+   if (nh < 2 || nl < 2) return 0;                        // not enough humps drawn yet
+   bool higher_high = hs[nh - 1] > hs[nh - 2];            // "breaking above previous highs"
+   bool higher_low  = ls[nl - 1] > ls[nl - 2];            // "forming new higher lows"
+   if (!(higher_high && higher_low)) return 0;
+
+   double defend = ls[nl - 1];
+   // his line 45: once the newest hump top is taken out, the deepest point since it
+   // becomes the confirmed higher low — the level we defend from then on.
+   int peak_bar = hidx[nh - 1];
+   double peak = hs[nh - 1];
+   bool taken = false;
+   for (int q = peak_bar - 1; q >= 1; q--)
+      if (bHigh(q) > peak) { taken = true; break; }
+   if (taken) {
+      double deep = bLow(1);
+      for (int q = 1; q <= peak_bar; q++) deep = MathMin(deep, bLow(q));
+      if (deep > defend) defend = deep;                   // the guard only ever rises
+   }
+   lastLow = defend;
+   return +1;
+}
+
 // TREND BY EMA-5 SLOPE (2026-08-24, Zee: "what if you remove this gate, see how it
 // goes then? use the slope of EMA 5 instead as your trend line"). No structure walk,
 // no camel-hump inference, no two-point test — the trend is simply which way his
@@ -660,7 +734,7 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.32 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.34 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -747,6 +821,9 @@ void OnTick() {
    int t;
    if (InpTrendMode == 1) {
       t = TrendByEma(lastLow);            // his EMA-5 slope, no structure at all
+   } else if (InpTrendMode == 2) {
+      t = CamelTrend(lastLow);            // his camel humps, drawn from pivots
+      if (InpTrendSticky) t = StickyTrend(t, lastLow);
    } else {
       t = TrendNow(lastLow, 1);
       if (InpTrendSticky) t = StickyTrend(t, lastLow);
