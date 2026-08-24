@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.29"
+#property version   "1.30"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -123,6 +123,10 @@ input int    InpOandaVolume   = 1;      // "we read volume from tradingview's OA
 input int    InpOandaBars     = 1;      // and the CANDLES too — he reads OANDA, so the
                                         // structure must be judged there. Orders still
                                         // fill at Blueberry's price.
+input int    InpFreshMaxSec   = 40;     // LIVE ONLY: how long to wait for the bridge
+                                        // to publish the just-closed candle before
+                                        // giving up on it. Judging a half-written
+                                        // candle cost the first live trade -8.86.
 input bool   InpOandaStrict   = true;   // a MISSING OANDA minute is a minute we cannot
                                         // read: refuse the bar instead of silently
                                         // falling back to the broker's candle and
@@ -136,11 +140,12 @@ input int    InpDbgTo         = 0;
 
 datetime g_last_bar = 0;
 bool     g_oanda_loaded = false;   // tester: read his chart once, then freeze it
+uint     g_last_reload  = 0;       // live: throttle the re-read while waiting for a bar
 // CENSUS (tester only) — Zee hand-drew 4 setups on Friday and the EA took 1.
 // Every gate counts its own refusals so the narrow one names itself.
 int c_bars=0, c_session=0, c_notrend=0, c_notbuy=0, c_lastlow=0, c_noretr=0,
     c_nouhv=0, c_brk_colour=0, c_brk_close=0, c_brk_vol=0, c_brk_mom=0,
-    c_brk_wick=0, c_brk_ema=0, c_risk=0, c_fired=0, c_nooanda=0, c_brk_span=0;
+    c_brk_wick=0, c_brk_ema=0, c_risk=0, c_fired=0, c_nooanda=0, c_brk_span=0, c_stale=0;
 double   g_last_low = 0;                // the confirmed higher low we are defending
 
 //──────────────────── OANDA volume (his stated source) ────────────────────
@@ -604,7 +609,7 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.29 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.30 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -619,18 +624,48 @@ void OnTick() {
    BreakEvenSweep();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;
-   g_last_bar = bt;
    // THE GROUND MUST NOT MOVE UNDER A TEST (2026-08-23). These tables are rewritten
    // every cycle by the live OANDA bridge, and re-reading them on every bar let the
    // file change MID-RUN: Aug 18 returned 1 trade (-34.70) and then 0 trades from the
    // same binary and the same .set, purely because two bytes landed in oanda_bars.csv
-   // between the runs. Live still re-reads every bar (it must — the newest minute is
-   // the point); the tester reads once and judges a frozen chart.
-   if (!MQLInfoInteger(MQL_TESTER) || !g_oanda_loaded) {
-      if (InpOandaVolume == 1) LoadOandaVol();
-      if (InpOandaBars == 1) LoadOandaBars();
-      g_oanda_loaded = true;
+   // between the runs. The tester reads once and judges a frozen chart.
+   if (MQLInfoInteger(MQL_TESTER)) {
+      if (!g_oanda_loaded) {
+         if (InpOandaVolume == 1) LoadOandaVol();
+         if (InpOandaBars == 1) LoadOandaBars();
+         g_oanda_loaded = true;
+      }
+   } else {
+      // ── NEVER JUDGE A CANDLE THE BRIDGE HAS NOT FINISHED WRITING (2026-08-24) ──
+      // The first live trade proved this the expensive way. At 18:31:00.386 the EA
+      // read the 18:30 candle as "close 4676.37, vol 788" and fired. The finished
+      // candle was "close 4675.84, vol 2109" — it had simply caught the bridge's
+      // export mid-minute. His law says the breakout must be QUIETER than the UHV
+      // (997): 788 passes, 2109 REFUSES. The trade was forbidden by its own law and
+      // was taken only because the volume was still accumulating. It lost -8.86.
+      //
+      // A candle is safe to judge only once the table already contains a row for a
+      // LATER minute — that is the bridge's own proof it has moved past it.
+      uint nowms = GetTickCount();
+      if (nowms - g_last_reload >= 900 || g_ob_n == 0) {
+         if (InpOandaVolume == 1) LoadOandaVol();
+         if (InpOandaBars == 1) LoadOandaBars();
+         g_last_reload = nowms;
+      }
+      if (InpOandaBars == 1 && InpFreshMaxSec > 0) {
+         datetime newest = (g_ob_n > 0) ? g_ob_t[g_ob_n - 1] : 0;
+         if (newest < bt) {                       // the closed bar is not published yet
+            if (TimeCurrent() - bt < InpFreshMaxSec)
+               return;                            // wait — and RETRY on the next tick
+            c_stale++;                            // waited too long: refuse the bar
+            g_last_bar = bt;
+            PrintFormat("[LAW] bar %s skipped — OANDA still %d s behind (bridge stalled?)",
+                        TimeToString(bt, TIME_MINUTES), (int)(TimeCurrent() - bt));
+            return;
+         }
+      }
    }
+   g_last_bar = bt;
    if (OpenCount() >= InpMaxOpen) return;
 
    // LAW: New York session only

@@ -30,7 +30,13 @@ M1_COLLECTOR = ROOT / "monitor" / "oanda_m1_tv.py"
 VOL_F = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/Files/oanda_vol.csv")
 LOG = ROOT / "monitor" / "oanda_vol_supervisor.log"
 HEARTBEAT = ROOT / "monitor" / "oanda_vol_heartbeat.json"
-CYCLE_SEC = 60
+# 2026-08-24: was 60. On an M1 EA a 60-second cycle means the just-closed candle can
+# be up to a minute late, and the EA either waits (entering a minute after the signal,
+# at a materially different price) or judges a half-written bar. The first live
+# BasedOnLaws trade did the latter: it read the breakout as vol 788 when the finished
+# candle was 2109, which flipped his "breakout quieter than the UHV" law from REFUSE
+# to PASS. 15s bounds the staleness to a few seconds.
+CYCLE_SEC = 15
 HARD_TIMEOUT = 45          # a cycle that outlives this is a hang: kill it
 STALE_WARN_MIN = 5         # table older than this = the EA is silently on broker vol
 
