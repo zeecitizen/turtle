@@ -9,7 +9,7 @@ Run:
 Then open http://127.0.0.1:8765/setups.html in browser.
 """
 from __future__ import annotations
-import json, sys, os
+import json, sys, os, re
 from pathlib import Path
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -38,6 +38,47 @@ def save_labels(d):
     LABELS_FILE.write_text(json.dumps(d, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+LOGDIR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/"
+              r"DBE9B8B347D025DD139E103EE3B63FD8/MQL5/Logs")
+LAWX = re.compile(
+    r"\[LAWX\] (BUY|SELL)\s*\| origin green (\d\d:\d\d).*?\| UHV (\d\d:\d\d) "
+    r"\(vol (\d+), high ([\d.]+)\).*?\| breakout (\d\d:\d\d) "
+    r"\(close ([\d.]+), vol (\d+)(?:, HELD (\d+)%[^)]*)?\).*?"
+    r"entry ([\d.]+) stop ([\d.]+) target ([\d.]+)")
+
+
+def load_trades():
+    """Every trade BasedOnLaws has fired, read from its own [LAWX] stamp.
+
+    2026-08-24, Zee: "how else would i know which candle was the UHV which was
+    considered for breakout, and which candle did the breakout" — the EA already
+    prints all three anchors when it fires; this just hands them to the chart."""
+    out = []
+    for f in sorted(LOGDIR.glob("*.log"), key=lambda x: x.stat().st_mtime)[-3:]:
+        day = f.stem                                   # 20260824
+        if len(day) != 8 or not day.isdigit():
+            continue
+        date = f"{day[:4]}.{day[4:6]}.{day[6:]}"
+        raw = f.read_bytes()
+        txt = (raw.decode("utf-16-le", "ignore") if raw[:2] == b"\xff\xfe"
+               else raw.decode("utf-8", "ignore"))
+        for ln in txt.splitlines():
+            m = LAWX.search(ln)
+            if not m:
+                continue
+            (side, org, uhv, uvol, uhigh, brk, bclose, bvol, held,
+             entry, stop, target) = m.groups()
+            out.append(dict(date=date, side=side.lower(),
+                            origin=f"{date} {org}", uhv=f"{date} {uhv}",
+                            breakout=f"{date} {brk}",
+                            uhv_vol=int(uvol), uhv_high=float(uhigh),
+                            brk_close=float(bclose), brk_vol=int(bvol),
+                            held=int(held) if held else None,
+                            entry=float(entry), stop=float(stop),
+                            target=float(target)))
+    return out
+
+
 def load_marks():
     if MARKS_FILE.exists():
         try:
@@ -63,6 +104,11 @@ class Handler(BaseHTTPRequestHandler):
             return self._json(load_labels())
         if path == "/api/marks":
             return self._json(load_marks())
+        if path == "/api/trades":
+            try:
+                return self._json(load_trades())
+            except Exception as e:
+                return self._json({"error": str(e)})
         # serve static
         fp = ROOT / path.lstrip("/")
         if fp.exists() and fp.is_file():

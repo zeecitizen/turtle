@@ -36,7 +36,7 @@ HEARTBEAT = ROOT / "monitor" / "oanda_vol_heartbeat.json"
 # BasedOnLaws trade did the latter: it read the breakout as vol 788 when the finished
 # candle was 2109, which flipped his "breakout quieter than the UHV" law from REFUSE
 # to PASS. 15s bounds the staleness to a few seconds.
-CYCLE_SEC = 15
+CYCLE_SEC = 5
 HARD_TIMEOUT = 45          # a cycle that outlives this is a hang: kill it
 STALE_WARN_MIN = 5         # table older than this = the EA is silently on broker vol
 
@@ -102,7 +102,13 @@ def cycle():
         say(f"ERROR {e}")
     # the candles, from the same source
     try:
-        r2 = subprocess.run([PY_EXE, str(M1_COLLECTOR)],
+        # --fast on routine cycles (150 bars, ~1.3s); a FULL 5,000-bar pull every
+        # 20th cycle keeps the archive/backfill honest. 2026-08-24: the EA waits for
+        # the forming candle before judging the one before it, so this pull's latency
+        # IS the entry latency — it was running 40s late.
+        globals()["_n"] = globals().get("_n", 0) + 1
+        args = [PY_EXE, str(M1_COLLECTOR)] + ([] if globals()["_n"] % 20 == 1 else ["--fast"])
+        r2 = subprocess.run(args,
                             capture_output=True, text=True, timeout=HARD_TIMEOUT)
         o2 = (r2.stdout or "").strip().splitlines()
         say("m1 " + (o2[-1] if o2 else (r2.stderr or "").strip()[:110]))

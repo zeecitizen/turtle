@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.30"
+#property version   "1.32"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -83,6 +83,17 @@ input double InpMomBodyMult   = 0.0;    // RETIRED 2026-08-23. This was my secon
                                         // candle, whatever its shape." Removing it is
                                         // worth +186 on Friday and +90..+175 over the
                                         // seven days, and it RECOVERS a winner.
+input double InpMomBodyRatio  = 0.70;   // 1. |C-O| / (H-L) — the body must dominate
+input double InpMomAtrMult    = 0.0;    // 2. body > this x ATR(14) — REFUSED by the
+                                        // court: with expansion on, 23 trades become
+                                        // 17 and THREE WINNERS die (+756.80 vs
+                                        // +876.20). Too strict for M1. Dead input.
+input double InpMomSmaMult    = 0.0;    // ... OR body > this x SMA(body,20) — same verdict
+input double InpMomClosePos   = 0.20;   // 3. close inside this share of the extreme —
+                                        // byte-identical with and without it once the
+                                        // body ratio is enforced (a 0.70 body already
+                                        // closes near its extreme). Kept: his clause,
+                                        // costs nothing.
 input double InpBreakHold     = 0.45;   // "(no big wick)" measured against HIS LEVEL:
                                         // the close must still hold this share of what
                                         // the candle took above the UHV's high. His
@@ -432,6 +443,46 @@ bool BreakoutOK(int uhv, int side) {
       if (avg > 0 && MathAbs(bClose(1) - bOpen(1)) < avg * InpMomBodyMult)
          { c_brk_mom++; return false; }
    }
+   // ── "A MOMENTUM CANDLE", QUANTIFIED (2026-08-24) ──────────────────────────
+   // He supplied the VSA definition and ruled out its fourth clause himself: "we
+   // dont require Above-Average Volume, on the contrary our method uses the three
+   // only" — because his own page says the breakout must be QUIETER than the UHV.
+   //   1. dominant body   |C-O| / (H-L) >= 0.70      (small wicks, minimal rejection)
+   //   2. expansion       body > 1.2*ATR(14)  OR  body > 1.5*SMA(body,20)
+   //   3. close at the extreme   buy: C > O AND C >= H - 0.20*(H-L)
+   //
+   // Measured against every breakout on record before shipping — the body ratio
+   // alone splits them perfectly:
+   //   winners 0.81 · 0.89 · 0.85   |   losers 0.62 · 0.65 · 0.47 · 0.19
+   // and it refuses BOTH of the EA's first two live trades, which lost -8.86 and
+   // -10.13 on candles that were never momentum candles at all.
+   if (InpMomBodyRatio > 0 || InpMomAtrMult > 0 || InpMomSmaMult > 0 || InpMomClosePos > 0) {
+      double mrng = bHigh(1) - bLow(1);
+      double mbody = MathAbs(bClose(1) - bOpen(1));
+      if (mrng <= 0) { c_brk_mom++; return false; }
+      if (InpMomBodyRatio > 0 && mbody / mrng < InpMomBodyRatio) { c_brk_mom++; return false; }
+      if (InpMomAtrMult > 0 || InpMomSmaMult > 0) {
+         double atr = 0; int na = 0;
+         for (int q = 2; q <= 15; q++) {
+            double pc = bClose(q + 1), hh = bHigh(q), ll = bLow(q);
+            atr += MathMax(hh - ll, MathMax(MathAbs(hh - pc), MathAbs(ll - pc))); na++;
+         }
+         if (na > 0) atr /= na;
+         double sb = 0; int nb = 0;
+         for (int q = 2; q <= 21; q++) { sb += MathAbs(bClose(q) - bOpen(q)); nb++; }
+         if (nb > 0) sb /= nb;
+         bool expand = (InpMomAtrMult > 0 && atr > 0 && mbody > InpMomAtrMult * atr)
+                    || (InpMomSmaMult > 0 && sb  > 0 && mbody > InpMomSmaMult * sb);
+         if (!expand) { c_brk_mom++; return false; }
+      }
+      if (InpMomClosePos > 0) {
+         bool at_extreme = up
+            ? (bClose(1) > bOpen(1) && bClose(1) >= bHigh(1) - InpMomClosePos * mrng)
+            : (bClose(1) < bOpen(1) && bClose(1) <= bLow(1)  + InpMomClosePos * mrng);
+         if (!at_extreme) { c_brk_mom++; return false; }
+      }
+   }
+
    // "a momentum candle (no big wick)" — MEASURED AGAINST HIS LEVEL (2026-08-23).
    // Zee on trade #5: "the 10:02 breakout candle has a wick on top making it not a
    // momentum candle.. its body does break the UHV high but with a very very small
@@ -609,7 +660,7 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.30 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.32 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
