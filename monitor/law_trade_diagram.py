@@ -81,7 +81,10 @@ def _bars():
     return rows
 
 
-def render(out=None, index=-1, pad_before=14, pad_after=10):
+def render(out=None, index=-1, pad_before=14, pad_after=10, near=None):
+    """near="YYYY.MM.DD HH:MM" (broker time, e.g. a fill's close) picks the trade whose
+    breakout is the latest one at or before it — so the cockpit's Trades list can hand
+    a row straight to this drawing (Zee 2026-08-25)."""
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -91,7 +94,13 @@ def render(out=None, index=-1, pad_before=14, pad_after=10):
     tr = _trades()
     if not tr:
         return None, "the EA has not fired yet — no [LAWX] stamp in the logs"
-    t = tr[index]
+    if near:
+        earlier = [x for x in tr if x["breakout"] <= near]
+        if not earlier:
+            return None, f"no [LAWX] stamp at or before {near}"
+        t = earlier[-1]
+    else:
+        t = tr[index]
     bars = _bars()
     keys = sorted(bars)
     if t["breakout"] not in bars or t["origin"] not in bars:

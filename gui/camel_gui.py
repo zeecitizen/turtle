@@ -377,7 +377,12 @@ class Cockpit:
                 if len(c) < 8 or not c[0].startswith("2026."): continue
                 try: lots, pnl = float(c[5]), float(c[7])
                 except ValueError: continue
-                if lots not in (0.10, 0.20, 0.30, 0.60): continue
+                # 2026-08-25, Zee: "the 5 trades taken by laws EA, can we have a visual
+                # of them.. add the trades taken by this EA to the Trades button".
+                # They were never in the list: BasedOnLaws runs 0.01 lots and this
+                # filter only admitted the basket sizes. A cockpit that silently drops
+                # an EA's whole record is worse than one that shows nothing.
+                if lots not in (0.01, 0.10, 0.20, 0.30, 0.60): continue
                 # SYMBOL FILTER (Zee 2026-08-10: "are these XAUUSD?" — they were not.
                 # turtle_fills.csv carries every instrument the terminal trades, so the
                 # gold cockpit was listing Bitcoin fills as if they were ours. A cockpit
@@ -389,14 +394,17 @@ class Cockpit:
                 key = (c[1], c[2])
                 if key in _seen: continue
                 _seen.add(key)
-                rows.append((c[0], c[4].replace("_closed", ""), lots, float(c[6]), pnl))
+                magic = c[12].strip() if len(c) > 12 else ""
+                rows.append((c[0], c[4].replace("_closed", ""), lots, float(c[6]), pnl, magic))
         except Exception:
             pass
         # SORT BY BROKER TIME, not file order. The logger's v1.04 backfill appends
         # recovered deals at the END of the file regardless of when they closed, so
         # "last 250 lines" is no longer "latest 250 trades" (Zee 2026-08-17).
         rows.sort(key=lambda r: r[0])
-        for ts, side, lots, closepx, pnl in reversed(rows[-250:]):
+        EA_OF = {"88094": "ZeeUHV", "88104": "Loud", "88134": "ShopB",
+                 "88154": "Diamond", "88184": "LAWS", "88194": "NoGate"}
+        for ts, side, lots, closepx, pnl, magic in reversed(rows[-250:]):
             r = tk.Frame(frame, bg=BG); r.pack(fill="x", pady=1)
             col = "#2f9e44" if pnl > 0 else "#e03131"
             tk.Label(r, text=_to_karachi(ts, _karachi_shift(self.FILLS_F)), font=("Consolas", 11), bg=BG, fg=DIM,
@@ -405,6 +413,10 @@ class Cockpit:
                      fg="#4dabf7" if side == "BUY" else "#f08c00", width=5).pack(side="left")
             tk.Label(r, text=f"{lots:.2f}", font=("Consolas", 11), bg=BG, fg=DIM,
                      width=6).pack(side="left")
+            ea = EA_OF.get(magic, magic or "?")
+            tk.Label(r, text=ea, font=("Consolas", 10, "bold"), bg=BG,
+                     fg="#1d6fbf" if ea == "LAWS" else DIM,
+                     width=8, anchor="w").pack(side="left")
             tk.Label(r, text=f"{pnl:+8.2f}", font=("Consolas", 12, "bold"), bg=BG,
                      fg=col, width=10).pack(side="left")
             # HELD FOR — blank when the open time cannot be established, never guessed.
@@ -414,10 +426,18 @@ class Cockpit:
             tk.Label(r, text=held, font=("Consolas", 11), bg=BG,
                      fg="#f59f00" if (d is not None and d > 30) else DIM,
                      width=7, anchor="e").pack(side="left")
-            tk.Button(r, text="🔍 forensic", font=("Segoe UI", 10, "bold"),
-                      bg="#343a40", fg=FG, relief="flat", padx=8,
-                      command=lambda t=ts, s2=side, x=closepx: self.forensic(t, s2, x)
-                      ).pack(side="left", padx=8)
+            # BasedOnLaws stamps its own three anchors when it fires, so its rows go
+            # to that drawing rather than to the tag-sniffing resolver.
+            if magic == "88184":
+                tk.Button(r, text="🔍 forensic", font=("Segoe UI", 10, "bold"),
+                          bg="#1d6fbf", fg="white", relief="flat", padx=8,
+                          command=lambda t=ts: self.show_law_trade(near=t)
+                          ).pack(side="left", padx=8)
+            else:
+                tk.Button(r, text="🔍 forensic", font=("Segoe UI", 10, "bold"),
+                          bg="#343a40", fg=FG, relief="flat", padx=8,
+                          command=lambda t=ts, s2=side, x=closepx: self.forensic(t, s2, x)
+                          ).pack(side="left", padx=8)
 
             # ── TEACH THE MACHINE (Zee 2026-08-10) ──────────────────────────────
             # "you can add a comment field under each trade we take wherein i can
@@ -552,7 +572,7 @@ class Cockpit:
                 self.root.after(0, lambda: lbl.config(text=msg))
         threading.Thread(target=work, daemon=True).start()
 
-    def show_law_trade(self):
+    def show_law_trade(self, near=None):
         """Zee 2026-08-24: "add a Visualize Live trade button so i can see the live
         trade's drawing (ditto similar to the line diagram)".
 
@@ -565,7 +585,7 @@ class Cockpit:
         bar = tk.Frame(win, bg=BG); bar.pack(pady=(10, 0))
         lbl = tk.Label(win, text="drawing…", font=("Segoe UI", 14), bg=BG, fg=DIM)
         lbl.pack(padx=20, pady=20)
-        state = {"idx": -1}
+        state = {"idx": -1, "near": near}
 
         def work():
             import traceback
@@ -573,7 +593,8 @@ class Cockpit:
                 sys.path.insert(0, str(Path(TE.__file__).parent))
                 import law_trade_diagram as LT
                 import importlib; importlib.reload(LT)
-                p, msg = LT.render(index=state["idx"])
+                p, msg = (LT.render(near=state["near"]) if state["near"]
+                          else LT.render(index=state["idx"]))
             except Exception:
                 err = traceback.format_exc().strip().splitlines()[-1]
                 self.root.after(0, lambda: lbl.config(text="could not draw: " + err))
@@ -585,6 +606,8 @@ class Cockpit:
                 self.root.after(0, lambda: lbl.config(text=msg))
 
         def go(delta=0):
+            if delta:
+                state["near"] = None            # stepping leaves the pinned trade
             state["idx"] += delta
             lbl.config(text="drawing…")
             threading.Thread(target=work, daemon=True).start()
@@ -597,7 +620,9 @@ class Cockpit:
                   command=lambda: go(+1)).pack(side="left", padx=4)
         tk.Button(bar, text="↻ redraw newest", font=("Segoe UI", 10, "bold"),
                   bg="#1c7ed6", fg="white",
-                  command=lambda: (state.__setitem__("idx", -1), go(0))).pack(side="left", padx=4)
+                  command=lambda: (state.__setitem__("idx", -1),
+                                   state.__setitem__("near", None),
+                                   go(0))).pack(side="left", padx=4)
         go(0)
 
     def show_possible(self):
