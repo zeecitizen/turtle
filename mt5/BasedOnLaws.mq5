@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.35"
+#property version   "1.42"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -62,14 +62,27 @@ input bool   InpTrendSticky   = true;   // LAWS.md line 33: a confirmed uptrend 
                                         // re-derive HH+HL every minute (the old
                                         // behaviour, which called 80% of the week a
                                         // range).
+input int    InpHighTest      = 1;      // what "breaking above previous highs" means:
+                                        // 0 = the last two confirmed hump tops are
+                                        //     rising (my old test — blind while a leg
+                                        //     is pushing, because a pivot confirms
+                                        //     only InpPivot bars late)
+                                        // 1 = PRICE has taken out the last confirmed
+                                        //     hump top (his words, present tense)
+                                        // 2 = either
 input bool   InpGuardSwing    = true;   // the confirmed higher low may only move when
                                         // a genuine SWING high (hump top) is taken
                                         // out — not every candle that ticks higher
 input bool   InpTrendBeforeRetrace = true;  // read the humps BEFORE the pullback,
                                             // not through it (his 7:02 PM setup)
-input bool   InpBuyOnly       = true;   // "Buy side trade setup" · "gold is mostly bullish"
+input bool   InpBuyOnly       = false;   // "Buy side trade setup" · "gold is mostly bullish"
 
 input group "── LAW: the retracement ──"
+input double InpUhvVolMult    = 0.0;    // the UHV must be at least this many times the
+                                        // average volume of the preceding InpUhvVolLook
+                                        // candles. 0 = off (his page has no floor — it
+                                        // only says "loudest of the pullback")
+input int    InpUhvVolLook    = 60;     // how far back that average is measured
 input int    InpRetraceMax    = 20;     // how far back the pullback may reach
 input int    InpMinRetraceBars = 2;     // a pullback must be at least this many candles,
                                         // and must be broken BEFORE the breakout bar
@@ -91,7 +104,10 @@ input double InpMomBodyMult   = 0.0;    // RETIRED 2026-08-23. This was my secon
                                         // candle, whatever its shape." Removing it is
                                         // worth +186 on Friday and +90..+175 over the
                                         // seven days, and it RECOVERS a winner.
-input double InpMomBodyRatio  = 0.70;   // 1. |C-O| / (H-L) — the body must dominate
+input double InpBrkVolMax     = 1.5;    // breakout volume ceiling, as a multiple of
+                                        // the UHV's. 1.0 = his clause b exactly.
+                                        // 0 = no volume test at all.
+input double InpMomBodyRatio  = 0.50;   // 1. |C-O| / (H-L) — the body must dominate
 input double InpMomAtrMult    = 0.0;    // 2. body > this x ATR(14) — REFUSED by the
                                         // court: with expansion on, 23 trades become
                                         // 17 and THREE WINNERS die (+756.80 vs
@@ -120,6 +136,24 @@ input bool   InpNeedEma5      = false;  // "an EXTRA confirmation" — his word,
 
 input group "── LAW: closing the trade ──"
 input double InpStopBufPips   = 0.60;   // "5-7 pips below the lowest point" (0.1/pip)
+input double InpFixedStopPts  = 0.0;    // 2026-08-25, HIS CALL: "activate this winrate
+                                        // on law based EA. let's see if it holds in
+                                        // real life" — tp 0.24 / sl 5.0 scored 94.8%
+                                        // (73W/4L) in the seven-day court.
+                                        // 0 = his law (under the retracement's low).
+                                        // > 0 = a FIXED stop this many points from
+                                        // entry, the Diamond's shape. Breaks his law;
+                                        // on trial only.
+input double InpTpPoints      = 0.0;   // THE WIN-RATE EXPERIMENT. At 0.01 lots this
+                                        // is 24 cents a win against $5.00 a loss, so
+                                        // it needs 95.4%% merely to break even, and the
+                                        // court has it earning $54 over seven days vs
+                                        // $1,363 for his own 1:2. It is not shipped to
+                                        // make money — it is shipped to find out
+                                        // whether a high win rate survives live at all,
+                                        // after 0-for-13 on the profitable geometry.
+                                        // 0 = his 1:2. > 0 = a FIXED target this many
+                                        // points from entry.
 input double InpTargetR       = 2.0;    // "risk-reward ratio of 1:2"
 input double InpBreakEvenR    = 1.0;    // "after reaching 1:1 we make a BreakEven"
 input double InpMinRiskPts    = 0.50;
@@ -177,7 +211,7 @@ uint     g_last_reload  = 0;       // live: throttle the re-read while waiting f
 // Every gate counts its own refusals so the narrow one names itself.
 int c_bars=0, c_session=0, c_notrend=0, c_notbuy=0, c_lastlow=0, c_noretr=0,
     c_nouhv=0, c_brk_colour=0, c_brk_close=0, c_brk_vol=0, c_brk_mom=0,
-    c_brk_wick=0, c_brk_ema=0, c_risk=0, c_fired=0, c_nooanda=0, c_brk_span=0, c_stale=0;
+    c_brk_wick=0, c_brk_ema=0, c_risk=0, c_fired=0, c_nooanda=0, c_brk_span=0, c_stale=0, c_uhvquiet=0;
 double   g_last_low = 0;                // the confirmed higher low we are defending
 
 //──────────────────── OANDA volume (his stated source) ────────────────────
@@ -469,7 +503,17 @@ bool BreakoutOK(int uhv, int side) {
                       : (BodyHi(1) >= lvl && BodyLo(1) < lvl);
       if (!spans) { c_brk_span++; return false; }
    }
-   if (BarVolume(1) >= BarVolume(uhv)) { c_brk_vol++; return false; }
+   // ── HOW MUCH QUIETER? (2026-08-26) ─────────────────────────────────────────
+   // His clause b: "its volume should be lower than the UHV's volume". Scanning the
+   // clean uptrend he watched from 10:30 PM, SIX of the eleven refusals were this
+   // clause — because in a strong continuation the breakout candle is LOUD, which is
+   // what a continuation looks like. The law systematically declines the most forceful
+   // pushes in exactly the conditions he was pointing at. InpBrkVolMax = 1.0 is his
+   // law untouched; higher values relax it, 0 removes it. Courted, not assumed.
+   if (InpBrkVolMax > 0 &&
+       (double)BarVolume(1) >= InpBrkVolMax * (double)BarVolume(uhv)) {
+      c_brk_vol++; return false;
+   }
    // momentum: a real body against the recent tape
    if (InpMomBodyMult > 0) {
       double avg = 0; int n = 0;
@@ -625,25 +669,85 @@ int CamelTrend(double &lastLow) {
       if (pl && nl < 24) { ls[nl] = bLow(k);  lidx[nl] = k; nl++; }
    }
    if (nh < 2 || nl < 2) return 0;                        // not enough humps drawn yet
-   bool higher_high = hs[nh - 1] > hs[nh - 2];            // "breaking above previous highs"
-   bool higher_low  = ls[nl - 1] > ls[nl - 2];            // "forming new higher lows"
-   if (!(higher_high && higher_low)) return 0;
 
-   double defend = ls[nl - 1];
-   // his line 45: once the newest hump top is taken out, the deepest point since it
-   // becomes the confirmed higher low — the level we defend from then on.
-   int peak_bar = hidx[nh - 1];
-   double peak = hs[nh - 1];
-   bool taken = false;
-   for (int q = peak_bar - 1; q >= 1; q--)
-      if (bHigh(q) > peak) { taken = true; break; }
-   if (taken) {
-      double deep = bLow(1);
-      for (int q = 1; q <= peak_bar; q++) deep = MathMin(deep, bLow(q));
-      if (deep > defend) defend = deep;                   // the guard only ever rises
+   // ── "BREAKING ABOVE PREVIOUS HIGHS" — present tense (2026-08-25) ────────────
+   // Zee, at 4 AM: "at 11:46 pm there's a uhv in a retracement of an uptrend, also
+   // at 12:25 am, during an uptrend.. can you check why the law ea is silent since
+   // 10 hours now." Both setups passed every breakout law and were refused by THIS
+   // clause, and the fault was mine.
+   //
+   // A pivot high is only CONFIRMED InpPivot bars after it forms, so the newest
+   // "confirmed hump top" is always stale — 4 bars old in his first case, 7 in the
+   // second. Comparing two stale tops to each other asks "were they rising?" and is
+   // structurally blind at the very moment a leg pushes into new ground:
+   //     11:57 PM  tops 4635.53 vs 4635.93 -> "not rising"  yet the breakout closed 4636.66
+   //     12:36 AM  tops 4642.39 vs 4645.00 -> "not rising"  yet the breakout closed 4645.01
+   // His page says "we call it an uptrend if we're BREAKING ABOVE previous highs" —
+   // price against the prior high, not two old pivots against each other. The
+   // higher-LOW half passed in both cases, exactly as an uptrend should.
+   bool higher_low = ls[nl - 1] > ls[nl - 2];             // "forming new higher lows"
+   bool rising_tops = hs[nh - 1] > hs[nh - 2];            // my old test, kept for the court
+   bool broke_top = false;                                // his words, measured
+   for (int q = hidx[nh - 1] - 1; q >= 1; q--)
+      if (BodyHi(q) > hs[nh - 1]) { broke_top = true; break; }
+   bool higher_high = (InpHighTest == 0) ? rising_tops
+                    : (InpHighTest == 1) ? broke_top
+                                         : (broke_top || rising_tops);
+
+   // ── THE SELL MIRROR (2026-08-25, on his instruction, "be very very careful") ──
+   // His page describes the BUY setup and says the strategy "works in a trending
+   // market (either price is moving upwards or downwards)". The mirror of line 7 is
+   // exact, term for term:
+   //     uptrend    breaking ABOVE previous highs  AND forming new HIGHER LOWS
+   //     downtrend  breaking BELOW previous lows   AND forming new LOWER HIGHS
+   // and the mirror of line 45 likewise: whenever a LOW is broken, the HIGHEST point
+   // since it becomes the confirmed lower high — the level a short defends, and it
+   // only ever FALLS, exactly as the long's guard only ever rises.
+   bool lower_high = hs[nh - 1] < hs[nh - 2];             // "forming new lower highs"
+   bool falling_bottoms = ls[nl - 1] < ls[nl - 2];
+   bool broke_bottom = false;
+   for (int q = lidx[nl - 1] - 1; q >= 1; q--)
+      if (BodyLo(q) < ls[nl - 1]) { broke_bottom = true; break; }
+   bool lower_low = (InpHighTest == 0) ? falling_bottoms
+                  : (InpHighTest == 1) ? broke_bottom
+                                       : (broke_bottom || falling_bottoms);
+
+   bool up   = (higher_high && higher_low);
+   bool down = (lower_low   && lower_high);
+   if (up == down) return 0;          // neither, or a contradiction: stand aside
+
+   if (up) {
+      double defend = ls[nl - 1];
+      // his line 45: once the newest hump top is taken out, the deepest point since
+      // it becomes the confirmed higher low — the level we defend from then on.
+      int peak_bar = hidx[nh - 1];
+      double peak = hs[nh - 1];
+      bool taken = false;
+      for (int q = peak_bar - 1; q >= 1; q--)
+         if (bHigh(q) > peak) { taken = true; break; }
+      if (taken) {
+         double deep = bLow(1);
+         for (int q = 1; q <= peak_bar; q++) deep = MathMin(deep, bLow(q));
+         if (deep > defend) defend = deep;                // the guard only ever rises
+      }
+      lastLow = defend;
+      return +1;
    }
-   lastLow = defend;
-   return +1;
+
+   // the short's guard: the last confirmed hump TOP, lowered when a trough is broken
+   double defendH = hs[nh - 1];
+   int trough_bar = lidx[nl - 1];
+   double trough = ls[nl - 1];
+   bool broken = false;
+   for (int q = trough_bar - 1; q >= 1; q--)
+      if (bLow(q) < trough) { broken = true; break; }
+   if (broken) {
+      double peakSince = bHigh(1);
+      for (int q = 1; q <= trough_bar; q++) peakSince = MathMax(peakSince, bHigh(q));
+      if (peakSince < defendH) defendH = peakSince;       // the guard only ever falls
+   }
+   lastLow = defendH;                  // "lastLow" is the DEFENDED LEVEL, high or low
+   return -1;
 }
 
 // TREND BY EMA-5 SLOPE (2026-08-24, Zee: "what if you remove this gate, see how it
@@ -665,16 +769,42 @@ double g_tr_high = 0;         // the last high that was broken
 double g_tr_deep = 0;         // deepest point since that high — the low-in-waiting
 
 int StickyTrend(int fresh, double &lastLow) {
-   // a fresh confirmation always (re)arms the latch
-   if (fresh == +1) {
-      if (g_tr_state != +1) {
-         g_tr_state = +1;
-         g_tr_defend = lastLow;
-         g_tr_high = bHigh(1);
-         g_tr_deep = bLow(1);
-      }
+   // a fresh confirmation always (re)arms the latch, in EITHER direction, and a
+   // confirmation the OTHER way flips it rather than being ignored (2026-08-25).
+   if (fresh != 0 && g_tr_state != fresh) {
+      g_tr_state = fresh;
+      g_tr_defend = lastLow;
+      g_tr_high = bHigh(1);
+      g_tr_deep = bLow(1);
    }
-   if (g_tr_state != +1) return fresh;
+   if (g_tr_state == 0) return fresh;
+
+   // ── THE SHORT'S LATCH: the exact mirror ─────────────────────────────────────
+   // whenever a LOW is broken, the highest point since becomes the confirmed lower
+   // high; the guard only ever FALLS; the latch dies when a BODY closes above it.
+   if (g_tr_state == -1) {
+      if (InpGuardSwing) {
+         int sl_i = SwingLowIdx();
+         if (sl_i > 0 && bLow(1) < bLow(sl_i)) {
+            double pk = bHigh(1);
+            for (int q = 1; q <= sl_i; q++) pk = MathMax(pk, bHigh(q));
+            if (pk < g_tr_defend) g_tr_defend = pk;
+         }
+      } else {
+         if (bHigh(1) > g_tr_high) g_tr_high = bHigh(1);
+         if (bLow(1) < g_tr_deep) {
+            if (g_tr_high < g_tr_defend) g_tr_defend = g_tr_high;
+            g_tr_deep = bLow(1);
+            g_tr_high = bHigh(1);
+         }
+      }
+      if (BodyHi(1) > g_tr_defend) {     // "we stop selling when the last high breaks"
+         g_tr_state = 0; g_tr_defend = 0; g_tr_high = 0; g_tr_deep = 0;
+         return fresh;
+      }
+      lastLow = g_tr_defend;
+      return -1;
+   }
 
    // "whenever a high is broken, the deepest point is the confirmed higher low"
    //
@@ -747,7 +877,7 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.35 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.42 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
@@ -871,6 +1001,23 @@ void OnTick() {
    for (int oi = 0; oi < no; oi++) {          // newest origin first, as he reads them
       int cand = UhvIn(origins[oi], t);
       if (cand < 2) continue;
+      // ── AN ULTRA-HIGH-VOLUME CANDLE MUST ACTUALLY BE ONE (2026-08-25) ─────────
+      // His law picks the LOUDEST RED OF THE PULLBACK — a purely relative test. In a
+      // dead hour every candle is quiet, so the loudest of five quiet candles still
+      // qualifies. On 25 Aug the EA crowned UHVs of 785, 713, 493 and 371 and traded
+      // them; the only trade that behaved had a UHV of 1,177 and lived 18 minutes.
+      // His Friday setups were 1501/1255/1465/1221. By eye he would never mark a stub
+      // in the volume pane as ultra-high-volume — the floor was never written down
+      // because it never needed to be. Measured against the RECENT TAPE, not an
+      // absolute number, since the Asian morning and the New York afternoon are not
+      // the same market. Zee: "it makes sense that the UHV is genuinely a high volume
+      // candle."
+      if (InpUhvVolMult > 0) {
+         double av = 0; int na = 0;
+         for (int q = cand + 1; q <= cand + InpUhvVolLook; q++) { av += (double)BarVolume(q); na++; }
+         if (na > 0) av /= na;
+         if (av > 0 && (double)BarVolume(cand) < InpUhvVolMult * av) { c_uhvquiet++; continue; }
+      }
       if (BreakoutOK(cand, t)) { rs = origins[oi]; uhv = cand; break; }
    }
    if (uhv < 2) { c_nouhv++; return; }
@@ -885,13 +1032,25 @@ void OnTick() {
    if (!SymbolInfoTick(_Symbol, tk)) return;
    double px = (t > 0) ? tk.ask : tk.bid;
    double sl = (t > 0) ? deep - InpStopBufPips : deep + InpStopBufPips;
+   // ── THE DIAMOND'S BARGAIN, ON TRIAL (2026-08-25) ───────────────────────────
+   // Zee: "in Diamond EA we catch the breakout with 0.1 lots and every trade lasts
+   // few seconds to 2 minutes.. test the new law based EA on the same formula."
+   // Re-scoring the live trades showed a 0.24-point target would have won 11 of 12
+   // (91.7%) AND STILL LOST MONEY: eleven wins bring 2.64 while the single loser pays
+   // its full structural stop of 5.58. Break-even at that target needs 94.9%. The
+   // tiny target only works with a tiny stop — which BREAKS his law (the stop belongs
+   // under the retracement's low), so it is an input, defaulted off, and courted.
+   if (InpFixedStopPts > 0)
+      sl = (t > 0) ? px - InpFixedStopPts : px + InpFixedStopPts;
    double risk = MathAbs(px - sl);
    if (risk < InpMinRiskPts || risk > InpMaxRiskPts) {
       c_risk++;
       if (InpVerbose) PrintFormat("[LAW] risk %.2f pts outside band — skipped", risk);
       return;
    }
-   double tp = (t > 0) ? px + risk * InpTargetR : px - risk * InpTargetR;
+   double tp = (InpTpPoints > 0)
+             ? ((t > 0) ? px + InpTpPoints : px - InpTpPoints)
+             : ((t > 0) ? px + risk * InpTargetR : px - risk * InpTargetR);
    bool ok = (t > 0) ? trade.Buy(InpLots, _Symbol, 0, sl, tp, "zlaw_buy")
                      : trade.Sell(InpLots, _Symbol, 0, sl, tp, "zlaw_sell");
    if (ok) c_fired++;
@@ -904,9 +1063,9 @@ void OnTick() {
       double _lvl  = (t > 0) ? bHigh(uhv) : bLow(uhv);
       double _took = (t > 0) ? (bHigh(1) - _lvl) : (_lvl - bLow(1));
       double _kept = (t > 0) ? (bClose(1) - _lvl) : (_lvl - bClose(1));
-      PrintFormat("[LAWX] %s | origin green %s (retracement began the bar after) | UHV %s (vol %d, high %.2f) | breakout %s "
+      PrintFormat("[LAWX] %s | origin %s %s (retracement began the bar after) | UHV %s (vol %d, high %.2f) | breakout %s "
                   "(close %.2f, vol %d, HELD %.0f%% of its break) | entry %.2f stop %.2f target %.2f (%.1fR)",
-                  t > 0 ? "BUY " : "SELL",
+                  t > 0 ? "BUY " : "SELL", t > 0 ? "green" : "red",
                   TimeToString(iTime(_Symbol, PERIOD_CURRENT, rs), TIME_MINUTES),
                   TimeToString(iTime(_Symbol, PERIOD_CURRENT, uhv), TIME_MINUTES),
                   (int)BarVolume(uhv), bHigh(uhv),
@@ -922,7 +1081,7 @@ double OnTester() {
                "breakout: colour %d, no close past %d, too loud %d, no momentum %d, "
                "big wick %d, body did not span %d, ema %d || risk out of band %d || FIRED %d",
                c_bars, c_session, c_nooanda, c_notrend, c_notbuy, c_lastlow, c_noretr,
-               c_nouhv, c_brk_colour, c_brk_close, c_brk_vol, c_brk_mom, c_brk_wick,
+               c_nouhv, c_uhvquiet, c_brk_colour, c_brk_close, c_brk_vol, c_brk_mom, c_brk_wick,
                c_brk_span, c_brk_ema, c_risk, c_fired);
    double net = TesterStatistics(STAT_PROFIT);
    int n = (int)TesterStatistics(STAT_TRADES), w = (int)TesterStatistics(STAT_PROFIT_TRADES);
