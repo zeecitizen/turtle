@@ -22,7 +22,7 @@ The breakout candle is a candle which breaks the marked high of the UHV candle. 
 
 a. a momentum candle (no big wick) -> proven to be better than "no wick test" via tests
 b. its volume should be lower than the UHV's volume (OANDA volume from Tradingview)
-c. the breakout candle must cross - share body with - the UHV candle's high. the breakout must be the first candle to close its body through the UHV's high
+c. the breakout candle must cross - share body with - the UHV candle's high. the breakout candle can come after several candles which fail to break the high level. so let's say there could be a green and red and green and then the candle to close its body above the UHV's high comes and it would be valid.
 
 for reference, here's what we usually mean by a momentum candle: 
 

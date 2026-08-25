@@ -489,8 +489,15 @@ bool BreakoutOK(int uhv, int side) {
    // 4583.38, so by 6:15 the level was four minutes broken and the EA bought $4 above
    // it. A breakout is an EVENT, not a state: only the first body-close through the
    // level counts, everything after is a chase.
+   // HIS CORRECTION (2026-08-26), propagated from BasedOnLaws.mq5. He rewrote clause
+   // c: "if a candle already crossed the line but didnot close above the line, then we
+   // can be the second third or tenth candle to cross n close above and that's fine..
+   // the breakout candle can come after several candles which FAIL to break the high
+   // level." The old test used BodyHi, which on a RED candle is its OPEN — so a red
+   // that opened above the level and closed back below counted as having taken it,
+   // though it had failed. Only a CLOSE through the level consumes it.
    for (int e = uhv - 1; e >= 2; e--) {
-      bool earlier = up ? (BodyHi(e) > lvl) : (BodyLo(e) < lvl);
+      bool earlier = up ? (bClose(e) > lvl) : (bClose(e) < lvl);
       if (earlier) { c_brk_close++; return false; }
    }
    // "the breakout candle must cross — SHARE BODY WITH — the UHV candle's high"

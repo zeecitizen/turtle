@@ -83,6 +83,19 @@ input double InpUhvVolMult    = 0.0;    // the UHV must be at least this many ti
                                         // candles. 0 = off (his page has no floor — it
                                         // only says "loudest of the pullback")
 input int    InpUhvVolLook    = 60;     // how far back that average is measured
+// ── TWO OTHER WAYS TO ASK "IS IT ULTRA?" (2026-08-26) ────────────────────────────
+// The 60-bar rolling average is MY yardstick and the court found no hill in it — 1.2x
+// scored well between two worse neighbours, which is luck's signature, not a filter.
+// His word is "ULTRA high volume", and an eye judging that does not compare a candle
+// to an hour of unrelated tape. It compares it to what is around it:
+//   InpUhvVsRetr    — the UHV must tower over the OTHER candles of its own pullback
+//   InpUhvVsImpulse — the UHV must be loud against the move it is supposedly ending
+// Both 0 = off, both his law untouched. Courted before either is ever shipped.
+input double InpUhvVsRetr     = 0.0;    // UHV >= this x the average of the pullback's
+                                        // other candles (1.5 = half again louder)
+input double InpUhvVsImpulse  = 0.0;    // UHV >= this x the average of the impulse
+                                        // candles that ran before the pullback began
+input int    InpImpulseLook   = 15;     // how many pre-origin candles are "the impulse"
 input int    InpRetraceMax    = 20;     // how far back the pullback may reach
 input int    InpMinRetraceBars = 2;     // a pullback must be at least this many candles,
                                         // and must be broken BEFORE the breakout bar
@@ -489,8 +502,16 @@ bool BreakoutOK(int uhv, int side) {
    // 4583.38, so by 6:15 the level was four minutes broken and the EA bought $4 above
    // it. A breakout is an EVENT, not a state: only the first body-close through the
    // level counts, everything after is a chase.
+   // HIS CORRECTION (2026-08-26). He rewrote clause c after seeing this refuse a
+   // lawful setup: "if a candle already crossed the line but didnot close above the
+   // line, then we can be the second third or tenth candle to cross n close above and
+   // that's fine.. the breakout candle can come after several candles which FAIL to
+   // break the high level." The comment above always said body-CLOSE, but the test
+   // used BodyHi — which on a RED candle is its OPEN, so a red that opened above the
+   // level and closed back below was counted as having taken it. It had failed.
+   // Only a CLOSE through the level consumes it now.
    for (int e = uhv - 1; e >= 2; e--) {
-      bool earlier = up ? (BodyHi(e) > lvl) : (BodyLo(e) < lvl);
+      bool earlier = up ? (bClose(e) > lvl) : (bClose(e) < lvl);
       if (earlier) { c_brk_close++; return false; }
    }
    // "the breakout candle must cross — SHARE BODY WITH — the UHV candle's high"
@@ -1018,6 +1039,32 @@ void OnTick() {
          if (na > 0) av /= na;
          if (av > 0 && (double)BarVolume(cand) < InpUhvVolMult * av) { c_uhvquiet++; continue; }
       }
+      // AGAINST ITS OWN PULLBACK. Every candle of the retracement except the
+      // candidate itself — this is the comparison an eye actually makes when it
+      // points at one bar in the volume pane and calls it the loud one.
+      if (InpUhvVsRetr > 0) {
+         double av = 0; int na = 0;
+         for (int q = 1; q <= origins[oi]; q++) {
+            if (q == cand) continue;
+            av += (double)BarVolume(q); na++;
+         }
+         if (na > 0) {
+            av /= na;
+            if (av > 0 && (double)BarVolume(cand) < InpUhvVsRetr * av) { c_uhvquiet++; continue; }
+         }
+      }
+      // AGAINST THE IMPULSE IT ENDS. A genuine exhaustion candle is loud relative to
+      // the run that preceded it — the sellers arriving into the buyers' move.
+      if (InpUhvVsImpulse > 0) {
+         double av = 0; int na = 0;
+         for (int q = origins[oi] + 1; q <= origins[oi] + MathMax(1, InpImpulseLook); q++) {
+            av += (double)BarVolume(q); na++;
+         }
+         if (na > 0) {
+            av /= na;
+            if (av > 0 && (double)BarVolume(cand) < InpUhvVsImpulse * av) { c_uhvquiet++; continue; }
+         }
+      }
       if (BreakoutOK(cand, t)) { rs = origins[oi]; uhv = cand; break; }
    }
    if (uhv < 2) { c_nouhv++; return; }
@@ -1063,12 +1110,16 @@ void OnTick() {
       double _lvl  = (t > 0) ? bHigh(uhv) : bLow(uhv);
       double _took = (t > 0) ? (bHigh(1) - _lvl) : (_lvl - bLow(1));
       double _kept = (t > 0) ? (bClose(1) - _lvl) : (_lvl - bClose(1));
-      PrintFormat("[LAWX] %s | origin %s %s (retracement began the bar after) | UHV %s (vol %d, high %.2f) | breakout %s "
+      PrintFormat("[LAWX] %s | origin %s %s (retracement began the bar after) | UHV %s (vol %d, %s %.2f) | breakout %s "
                   "(close %.2f, vol %d, HELD %.0f%% of its break) | entry %.2f stop %.2f target %.2f (%.1fR)",
                   t > 0 ? "BUY " : "SELL", t > 0 ? "green" : "red",
                   TimeToString(iTime(_Symbol, PERIOD_CURRENT, rs), TIME_MINUTES),
                   TimeToString(iTime(_Symbol, PERIOD_CURRENT, uhv), TIME_MINUTES),
-                  (int)BarVolume(uhv), bHigh(uhv),
+                  // 2026-08-26: print the LEVEL THE EA ACTUALLY USED (_lvl), named
+                  // for the side. It used to print bHigh(uhv) on both sides, so a
+                  // lawful sell read as if it had broken the UHV's high. The label and
+                  // the logic can no longer disagree, because they are now one value.
+                  (int)BarVolume(uhv), (t > 0 ? "high" : "low "), _lvl,
                   TimeToString(iTime(_Symbol, PERIOD_CURRENT, 1), TIME_MINUTES),
                   bClose(1), (int)BarVolume(1),
                   _took > 0 ? 100.0 * _kept / _took : 100.0, px, sl, tp, InpTargetR);

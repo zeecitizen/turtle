@@ -52,9 +52,28 @@ def quick_status(miss_window_min=5):
                     misses += 1
         except Exception:
             pass
-        if age > STALE_MIN or lag > STALE_MIN:
+        # IS THE MARKET SIMPLY SHUT? (2026-08-26). At 2:16 AM PKT the cockpit cried
+        # "STALE 16 min" while the bridge had written the file ONE SECOND earlier —
+        # Blueberry's XAUUSD settlement break had stopped BOTH feeds at 23:59, so there
+        # was nothing to fetch. A staleness test measured against the CLOCK will cry
+        # wolf every night at the same hour. Measured against the BROKER'S OWN newest
+        # minute, it only fires when our chain is behind the market rather than with it.
+        broker_lag = None
+        try:
+            # the terminal's own last tick, via the tick log the loggers keep — if the
+            # BROKER has also gone quiet, the market is shut and we are not behind it
+            ticks = sorted(COMMON.glob("shano_ticks_*.csv"), key=lambda f: f.stat().st_mtime)
+            if ticks:
+                broker_lag = (time.time() - ticks[-1].stat().st_mtime) / 60.0
+        except Exception:
+            broker_lag = None
+        market_shut = (broker_lag is not None and broker_lag > STALE_MIN * 0.6)
+        if (age > STALE_MIN or lag > STALE_MIN) and not market_shut:
             return (False, f"OANDA VOLUME STALE {max(age, lag):.0f} min — EA fell back to BROKER volume",
                     f"file {age:.1f} min old · newest minute {lag:.1f} min behind")
+        if market_shut and lag > STALE_MIN:
+            return (True, f"market shut — both feeds paused {lag:.0f} min ago",
+                    f"bridge healthy: file written {age*60:.0f} s ago · nothing new to fetch")
         if misses:
             return (False, f"OANDA VOLUME MISSES ×{misses} in {miss_window_min} min — some bars used BROKER volume",
                     f"table fresh ({age:.1f} min) but the EA could not find those minutes")
