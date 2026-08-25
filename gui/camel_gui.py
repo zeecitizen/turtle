@@ -382,7 +382,13 @@ class Cockpit:
                 # They were never in the list: BasedOnLaws runs 0.01 lots and this
                 # filter only admitted the basket sizes. A cockpit that silently drops
                 # an EA's whole record is worse than one that shows nothing.
-                if lots not in (0.01, 0.10, 0.20, 0.30, 0.60): continue
+                # 2026-08-26, Zee: "these last trades are not visible on the trades
+                # window". They were 0.40-lot fills from the BasedOnLaws A/B/C arms
+                # (88185/86/87) and the whitelist below admitted only five sizes, so
+                # the THREE LARGEST positions on the account were invisible. A
+                # whitelist of lot sizes cannot survive a new EA; a range can. Anything
+                # a broker would accept is shown, and nothing is silently dropped.
+                if not (0.0 < lots <= 5.0): continue
                 # SYMBOL FILTER (Zee 2026-08-10: "are these XAUUSD?" — they were not.
                 # turtle_fills.csv carries every instrument the terminal trades, so the
                 # gold cockpit was listing Bitcoin fills as if they were ours. A cockpit
@@ -403,7 +409,8 @@ class Cockpit:
         # "last 250 lines" is no longer "latest 250 trades" (Zee 2026-08-17).
         rows.sort(key=lambda r: r[0])
         EA_OF = {"88094": "ZeeUHV", "88104": "Loud", "88134": "ShopB",
-                 "88154": "Diamond", "88184": "LAWS", "88194": "NoGate"}
+                 "88154": "Diamond", "88184": "LAWS", "88194": "NoGate",
+                 "88185": "LAWS-A", "88186": "LAWS-B", "88187": "LAWS-C"}
         for ts, side, lots, closepx, pnl, magic in reversed(rows[-250:]):
             r = tk.Frame(frame, bg=BG); r.pack(fill="x", pady=1)
             col = "#2f9e44" if pnl > 0 else "#e03131"
@@ -428,7 +435,12 @@ class Cockpit:
                      width=7, anchor="e").pack(side="left")
             # BasedOnLaws stamps its own three anchors when it fires, so its rows go
             # to that drawing rather than to the tag-sniffing resolver.
-            if magic == "88184":
+            # 2026-08-26, Zee: "its showing two same colored candles on this 1:51 AM
+            # trade". It was: the A/B/C arms are 88185/86/87, so the window sent them
+            # to the old tag-sniffing resolver, which guessed the wrong candles AND
+            # labelled broker time as PKT. They stamp [LAWX] exactly like 88184 does,
+            # so every arm belongs in the law drawing. The trade itself was lawful.
+            if magic in ("88184", "88185", "88186", "88187"):
                 tk.Button(r, text="🔍 forensic", font=("Segoe UI", 10, "bold"),
                           bg="#1d6fbf", fg="white", relief="flat", padx=8,
                           command=lambda t=ts: self.show_law_trade(near=t)
