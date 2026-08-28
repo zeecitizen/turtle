@@ -94,3 +94,42 @@ hostile one, or it doesn't ship.
 3. A freshly published day can be cached half-baked in the rig (Part 12).
 4. v1.49 carries an overfit caveat (heavy same-day iteration on the six court periods)
    — live-forward receipts required before lots rise; revert path = v1.45 defaults.
+
+## BasedOnLaws v1.43 — 2026-08-28 — HIS PAGE RESTORED, on receipts
+
+Zee: *"let's please test the variants of the LAWS EA. because that's the one written per
+our rules. and if some rule is bent by us, test the variants etc."*
+
+Two clauses I had shipped LOOSER than LAWS.md now carry his own values. Court: MT5
+Strategy Tester, 100% real ticks, 5–27 Aug, 0.01 lots, his OANDA chart in strict mode.
+
+| clause | I shipped | HIS TEXT | net at mine | net at his |
+|---|---|---|---|---|
+| a. momentum body | 0.50 | **0.70** | +83.39 (PF 1.19) | **+98.82 (PF 1.25)** |
+| b. breakout quieter than the UHV | 1.5x | **1.0** | +83.39 | **+102.16 (PF 1.30)** |
+
+Clause b is monotone on his tape — 1.0 (+102.16) > 1.2 (+77.71) > 1.5 (+83.39) > off
+(+66.84). A hill, not a spike, which is the shape three other findings this week failed
+to produce.
+
+**Combined, with the two guards I invented kept in place: +158.35 all hours (119 trades,
+PF 1.54) or +134.97 New York only (39 trades, 46% WR, PF 2.32, $3.46/trade against the
+shipped machine's $0.49).**
+
+ALSO MEASURED, and left ON with receipts rather than as silent defaults:
+* `InpBreakHold 0.45` — my invention, not on his page. Removing it costs **−18.29**.
+* `InpMaxRiskPts 10.0` — my invention, picked with no evidence. Removing it turns the
+  machine NEGATIVE (−40.70, PF 0.93) and nearly doubles the worst trade (−10.18 →
+  −19.94). It is load-bearing.
+
+NOT CHANGED, and his to decide: **line 47, New York only.** He chose all-hours on 25 Aug
+from v1.30 receipts (+1,335 vs +1,044 over 7 days). With these clauses corrected the
+ranking REVERSES — NY-only now wins on quality and nearly matches on money. The evidence
+moved; the choice is his.
+
+LIMITS, stated plainly: eight days of OANDA archive is the entire testable world for this
+EA, twenty configurations were tried on that one tape, and the live record is four
+trades. The DIRECTION is sturdy (his values won on every clause separately and together);
+the MAGNITUDES are not. Full report: daily_reports/_LATEST/LAWS_VARIANTS_REPORT.md
+
+Propagated to BasedOnLawsA/B/C so the arms do not drift from the main EA.
