@@ -104,10 +104,10 @@ input double InpMomBodyMult   = 0.0;    // RETIRED 2026-08-23. This was my secon
                                         // candle, whatever its shape." Removing it is
                                         // worth +186 on Friday and +90..+175 over the
                                         // seven days, and it RECOVERS a winner.
-input double InpBrkVolMax     = 1.5;    // breakout volume ceiling, as a multiple of
+input double InpBrkVolMax     = 1.0;    // breakout volume ceiling, as a multiple of
                                         // the UHV's. 1.0 = his clause b exactly.
                                         // 0 = no volume test at all.
-input double InpMomBodyRatio  = 0.50;   // 1. |C-O| / (H-L) — the body must dominate
+input double InpMomBodyRatio  = 0.70;   // 1. |C-O| / (H-L) — the body must dominate
 input double InpMomAtrMult    = 0.0;    // 2. body > this x ATR(14) — REFUSED by the
                                         // court: with expansion on, 23 trades become
                                         // 17 and THREE WINNERS die (+756.80 vs

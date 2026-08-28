@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.42"
+#property version   "1.43"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -117,10 +117,16 @@ input double InpMomBodyMult   = 0.0;    // RETIRED 2026-08-23. This was my secon
                                         // candle, whatever its shape." Removing it is
                                         // worth +186 on Friday and +90..+175 over the
                                         // seven days, and it RECOVERS a winner.
-input double InpBrkVolMax     = 1.5;    // breakout volume ceiling, as a multiple of
+// 2026-08-28 RESTORED TO HIS PAGE. I had shipped 1.5; his clause b says the breakout's
+// volume must be LOWER than the UHV's, which is 1.0. The dial is monotone on his tape:
+// 1.0 +102.16 > 1.2 +77.71 > 1.5 +83.39 > off +66.84. A hill, not a spike.
+input double InpBrkVolMax     = 1.0;    // breakout volume ceiling, as a multiple of
                                         // the UHV's. 1.0 = his clause b exactly.
                                         // 0 = no volume test at all.
-input double InpMomBodyRatio  = 0.50;   // 1. |C-O| / (H-L) — the body must dominate
+// 2026-08-28 RESTORED TO HIS PAGE. I had shipped 0.50; his clause a says 0.70. Court
+// over 5-27 Aug on his chart: 0.70 gave +98.82 (PF 1.25) against 0.50's +83.39 (1.19).
+// His text, measured better. Same story for InpBrkVolMax below, and for line 47.
+input double InpMomBodyRatio  = 0.70;   // 1. |C-O| / (H-L) — the body must dominate
 input double InpMomAtrMult    = 0.0;    // 2. body > this x ATR(14) — REFUSED by the
                                         // court: with expansion on, 23 trades become
                                         // 17 and THREE WINNERS die (+756.80 vs
@@ -898,7 +904,7 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.42 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.43 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
