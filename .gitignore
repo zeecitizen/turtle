@@ -124,3 +124,10 @@ monitor/.tasks_state.json
 # Build output of make_installer.py. Regenerable in seconds, 167 MB and 4,198 files,
 # and committing it once already added 3,706 files to history for no benefit.
 dist/
+
+# MT5 Strategy Tester output (2026-08-30). Every headless run drops an .htm report plus
+# its .png charts; a single court writes dozens. 328 of them were sitting untracked and
+# VS Code's git extension re-scans the lot on every poll — which is what made console
+# windows flash across the screen all week. Same reasoning as dist/ above: regenerable
+# by re-running the court, and the numbers that matter are quoted in the daily reports.
+mt5/_tester_runs/
