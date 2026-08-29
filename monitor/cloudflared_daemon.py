@@ -71,10 +71,86 @@ _state = {
 _state_lock = threading.Lock()
 
 
+# ── UNKILLABLE CONNECTORS (2026-08-29) ────────────────────────────────────────────
+# Zee: "there's a cloudflared window that keeps relaunching (command prompt) is that on
+# purpose". It was not. The daemon had been looping for days:
+#
+#   [18:46:03] URL dead 3x — killing cloudflared to force fresh tunnel
+#   [18:49:34] URL dead 3x — killing cloudflared to force fresh tunnel
+#   [18:53:41] ... and so on, several times an hour
+#
+# Cause: on Windows both terminate() and kill() are TerminateProcess. A cloudflared
+# wedged in a kernel wait ACCEPTS the request and never exits — pid 10464 sat at ONE
+# thread for eighteen hours through repeated kill attempts, elevated and not. The old
+# code called terminate(), swallowed the timeout, called kill(), never checked, and
+# spawned a replacement regardless. Every cycle left a corpse and added a connector to
+# the same named tunnel — which degrades Cloudflare's routing, which fails the health
+# probe, which triggers another restart. The daemon was manufacturing its own symptom.
+#
+# So: verify the kill, and refuse to pile up. One replacement is fine; a third connector
+# is the runaway starting, and at that point the honest move is to stop and say so.
+MAX_LIVE_CONNECTORS = 2
+
+
+def _connector_pids() -> list[int]:
+    """Every cloudflared.exe currently alive, by pid. Best-effort and never fatal —
+    if the query fails we return empty and behave exactly as before."""
+    try:
+        out = subprocess.run(["tasklist", "/FI", "IMAGENAME eq cloudflared.exe", "/FO", "CSV"],
+                             capture_output=True, text=True, errors="replace", timeout=15).stdout
+    except Exception:
+        return []
+    pids = []
+    for line in out.splitlines():
+        parts = [p.strip('"') for p in line.split('","')]
+        if len(parts) > 1 and parts[0].lower().startswith("cloudflared"):
+            try:
+                pids.append(int(parts[1]))
+            except ValueError:
+                pass
+    return pids
+
+
+def hard_stop(proc, timeout: float = 8.0) -> bool:
+    """Terminate and CONFIRM. Returns True only when the process is genuinely gone.
+
+    The old code assumed a kill request equalled a dead process. On Windows that is
+    false for a process stuck in a kernel wait, and that assumption is what produced
+    the restart loop."""
+    for attempt in (proc.terminate, proc.kill):
+        try:
+            attempt()
+        except Exception:
+            pass
+        try:
+            proc.wait(timeout=timeout / 2)
+            return True
+        except Exception:
+            continue
+    gone = proc.poll() is not None
+    if not gone:
+        log(f"WARNING: cloudflared pid {proc.pid} did NOT die — it is wedged "
+            f"(a kernel wait; only a reboot clears this). Not spawning over it.")
+    return gone
+
+
+LOG_MAX_BYTES = 5_000_000        # the restart loop grew this to 11 MB unnoticed
+
+
 def log(msg: str) -> None:
     line = f"[{datetime.now().strftime('%H:%M:%S')}] {msg}"
     print(line, flush=True)
     try:
+        # Rotate before writing. An unbounded log is how a fault stays invisible: this
+        # file reached 11 MB of the same restart line before anyone looked at it.
+        if LOG_FILE.exists() and LOG_FILE.stat().st_size > LOG_MAX_BYTES:
+            old = LOG_FILE.with_suffix(".log.1")
+            try:
+                if old.exists():
+                    old.unlink()
+                LOG_FILE.rename(old)
+            except Exception:
+                pass
         with open(LOG_FILE, "a", encoding="utf-8") as f:
             f.write(line + "\n")
     except Exception:
@@ -390,6 +466,22 @@ def main() -> None:
                 _state["last_line_ts"] = time.time()
 
             mode = "named" if NAMED_TUNNEL else "quick"
+            # ADOPT OR REFUSE (2026-08-29). The daemon used to assume it was the only
+            # thing running this tunnel. It was not: its own child from the previous
+            # night survived eighteen hours of kill attempts while the daemon happily
+            # spawned successors alongside it. Look before spawning.
+            pre = _connector_pids()
+            if len(pre) >= MAX_LIVE_CONNECTORS:
+                log(f"NOT spawning — {len(pre)} cloudflared already alive {pre}. "
+                    f"One of them is probably serving the tunnel; a wedged one needs a "
+                    f"reboot. Waiting {RESTART_BACKOFF_SEC}s and re-checking.")
+                write_heartbeat("stuck", last_url_box[0] if last_url_box else "",
+                                {"live_connectors": pre,
+                                 "needs": "reboot to clear a wedged cloudflared"})
+                time.sleep(RESTART_BACKOFF_SEC)
+                continue
+            if pre:
+                log(f"note: {len(pre)} cloudflared already alive {pre} before spawn")
             log(f"spawning cloudflared ({mode} mode)")
             try:
                 if NAMED_TUNNEL:
@@ -478,12 +570,25 @@ def main() -> None:
                         log(f"URL health probe FAILED ({health_fail_count}/{HEALTH_FAIL_LIMIT}) for {cur_url}")
                         if health_fail_count >= HEALTH_FAIL_LIMIT:
                             log(f"URL dead {HEALTH_FAIL_LIMIT}x — killing cloudflared to force fresh tunnel")
-                            try:
-                                proc.terminate()
-                                proc.wait(timeout=5)
-                            except Exception:
-                                try: proc.kill()
-                                except Exception: pass
+                            died = hard_stop(proc)
+                            live = _connector_pids()
+                            if not died and len(live) >= MAX_LIVE_CONNECTORS:
+                                # The runaway starts here. Spawning a third connector on
+                                # one named tunnel makes the edge routing WORSE, which
+                                # fails the next probe, which spawns a fourth. Stop.
+                                log(f"REFUSING to respawn: {len(live)} cloudflared still "
+                                    f"alive {live} and the old one will not die. The tunnel "
+                                    f"may still be served by a survivor; a reboot clears the "
+                                    f"wedged process. Sleeping instead of piling up.")
+                                write_heartbeat("stuck", cur_url, {
+                                    "child_pid": proc.pid,
+                                    "health_fails": health_fail_count,
+                                    "live_connectors": live,
+                                    "needs": "reboot to clear a wedged cloudflared",
+                                })
+                                health_fail_count = 0        # re-probe rather than spin
+                                last_health_probe = time.time()
+                                continue
                             need_restart = True
                             break
 
