@@ -857,11 +857,23 @@ th, td { border-color:#e5e5e7 !important; }
        footprint, and the needle art scales with them. */
     .ea-gauges { display:flex; flex-wrap:wrap; gap:18px; justify-content:center;
                  margin:12px auto 0; max-width:980px; }
-    .ea-gauge  { background:#111; border-radius:50%; padding:0;
+    /* 2026-08-31, Zee: "replace the black circles with some vibrant color". Deep
+       saturated gradients rather than pastels — the needle art and the white type both
+       have to stay legible on top, and a light fill would kill the contrast. Each EA
+       gets its own so the two are distinguishable at a glance. */
+    .ea-gauge  { background:linear-gradient(150deg,#2d3561 0%,#1b2447 55%,#141c38 100%);
+                 border-radius:50%; padding:0;
                  width:186px; height:186px; text-align:center;
                  display:flex; flex-direction:column; align-items:center;
                  justify-content:center; gap:1px;
-                 box-shadow:0 4px 14px rgba(0,0,0,.18); }
+                 box-shadow:0 6px 18px rgba(24,32,64,.28); }
+    /* Diamond — sapphire. BasedOnLaws — violet, for the scroll. */
+    .ea-gauge[data-m="88154"] {
+      background:linear-gradient(150deg,#0f5ea8 0%,#124a86 52%,#0d2f5c 100%);
+      box-shadow:0 6px 18px rgba(15,94,168,.30); }
+    .ea-gauge[data-m="88184"] {
+      background:linear-gradient(150deg,#6d3bd4 0%,#542ba8 52%,#371c72 100%);
+      box-shadow:0 6px 18px rgba(109,59,212,.28); }
     .ea-gauge svg    { width:112px; height:auto; margin-bottom:-6px; }
     .ea-gauge .gname { color:#eee; font-size:11px; font-weight:700; letter-spacing:.3px;
                        max-width:150px; overflow:hidden; text-overflow:ellipsis;
@@ -1134,8 +1146,10 @@ th, td { border-color:#e5e5e7 !important; }
            border:1px solid #e5e5e7;margin-top:6px;"/>
     </div>
   </div>
+  <!-- 2026-08-31, Zee: "replace the black bg with some vibrant color" -->
   <div id="ea-news" style="max-width:980px;margin:10px auto 0;text-align:center;
-       background:#111;border-radius:14px;padding:12px 18px;font-size:14.5px;
+       background:linear-gradient(96deg,#0f5ea8 0%,#6d3bd4 100%);
+       border-radius:14px;padding:11px 18px;font-size:14.5px;
        font-weight:700;color:#eee;letter-spacing:.2px;display:none;"></div>
 
 
@@ -1703,7 +1717,7 @@ async function renderEaGauges() {
     const name = EA_NAMES[m] || ('EA ' + m);
     const sel = gaugeSelect(m, kind);
     if (v.n === 0)
-      return `<div class="ea-gauge"><div class="gname">${name}</div>` + gaugeSvg(0, null)
+      return `<div class="ea-gauge" data-m="${m}"><div class="gname">${name}</div>` + gaugeSvg(0, null)
            + `<div class="gwr" style="color:#666">—</div>`
            + `<div class="gsub">no trades in period</div>${sel}</div>`;
     const wr = Math.round(100 * v.w / v.n);
@@ -1712,7 +1726,7 @@ async function renderEaGauges() {
     const be = (avgW > 0 && avgL > 0) ? Math.round(100 * avgL / (avgW + avgL)) : null;
     const netCls = v.net >= 0 ? 'pos' : 'neg';
     const netTxt = (v.net >= 0 ? '+' : '') + '$' + v.net.toFixed(2);
-    return `<div class="ea-gauge" title="${name}: ${v.w}W/${v.n - v.w}L`
+    return `<div class="ea-gauge" data-m="${m}" title="${name}: ${v.w}W/${v.n - v.w}L`
          + `${be != null ? ' · needs ' + be + '% to break even (dashed mark)' : ''}">`
          + `<div class="gname">${name}</div>` + gaugeSvg(wr, be)
          + `<div class="gwr">${wr}%</div>`
