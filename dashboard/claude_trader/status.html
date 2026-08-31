@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0a0e17; --bg2: #0f1521; --panel: #141b2b; --panel2: #1a2336;
@@ -30,20 +30,46 @@
      font style so it has some personality". Orbitron reads as instrumentation rather
      than sci-fi pastiche; the fallbacks are faces Windows already has, so it stays
      technical even if the webfont is blocked or the machine is offline. */
+  /* the logo sits inline with the wordmark, so they scale and wrap together */
+  header h1.brand .brand-logo {
+    height: 46px; width: 46px; object-fit: contain;
+    vertical-align: middle; margin-right: 12px;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
+  }
+  @media (max-width: 480px) { header h1.brand .brand-logo { height: 34px; width: 34px;
+                                                            margin-right: 8px; } }
   header h1.brand {
     font-family: 'Orbitron', 'Rajdhani', 'Consolas', 'Cascadia Mono', ui-monospace, monospace;
     font-size: 30px;
     font-weight: 800;
     letter-spacing: 6px;
     margin: 0 0 6px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  header h1.brand span {
     background: linear-gradient(92deg, var(--gold) 0%, #2bd576 55%, #4dabf7 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
-    text-shadow: none;
   }
   @media (max-width: 480px) { header h1.brand { font-size: 24px; letter-spacing: 4px; } }
   header .sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  /* the clock under the wordmark — Share Tech Mono has the even stroke weight and
+     squared terminals of a real instrument readout, and every digit is the same width
+     so the line does not twitch as the minutes change. */
+  header .sub#now {
+    font-family: 'Share Tech Mono', 'Orbitron', 'Consolas', ui-monospace, monospace;
+    font-size: 30px;
+    font-weight: 400;
+    letter-spacing: 3px;
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 0 14px rgba(255,196,84,.28);
+    margin-top: 2px; margin-bottom: 18px;
+  }
+  header .sub#now .ampm { font-size: 15px; letter-spacing: 2px; opacity: .72;
+                          margin-left: 6px; }
+  @media (max-width: 480px) { header .sub#now { font-size: 23px; letter-spacing: 2px; } }
   .ask-btn {
     display: block; width: 100%;
     background: linear-gradient(180deg, #f5c842, #d9a300);
@@ -737,7 +763,7 @@ th, td { border-color:#e5e5e7 !important; }
 <body>
 <div class="container">
   <header>
-    <h1 class="brand">TURTLE</h1>
+    <h1 class="brand"><img src="/assets/logo.png" alt="" class="brand-logo"><span>TURTLE</span></h1>
     <div class="sub" id="now">loading…</div>
   </header>
 
@@ -1159,6 +1185,22 @@ th, td { border-color:#e5e5e7 !important; }
 </div>
 
 <script>
+// 2026-08-31, Zee: "instead say: 10:13 PM (add a beautiful digital clock font)".
+// Pakistan time, 12-hour, no date and no status text — the header is a clock now.
+setInterval(() => { const el = document.getElementById('now');
+                    if (el) el.innerHTML = pktClock(); }, 1000);
+
+function pktClock() {
+  const d = new Date();
+  const utc = d.getTime() + d.getTimezoneOffset() * 60000;
+  const pkt = new Date(utc + 5 * 3600000);
+  let h = pkt.getHours();
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12; if (h === 0) h = 12;
+  return h + ':' + String(pkt.getMinutes()).padStart(2, '0') +
+         ' <span class="ampm">' + ampm + '</span>';
+}
+
 function pktNow() {
   const d = new Date();
   const utc = d.getTime() + d.getTimezoneOffset() * 60000;
@@ -1168,7 +1210,7 @@ function pktNow() {
 }
 
 async function load() {
-  document.getElementById('now').innerHTML = `<span class="pkt">${pktNow()}</span> · <span style="color:#2bd576;">● LIVE</span> · pushes via WebSocket + 1s fallback`;
+  document.getElementById('now').innerHTML = pktClock();
   try {
     const r = await fetch('/api/status');
     if (!r.ok) throw new Error('http ' + r.status);
