@@ -1613,6 +1613,20 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   // ── Status dashboard (claudezeeshan.com root + /status) — TASK-008 ───
   // Lives at claudezeeshan.com/ (apex skip-redirect above) AND me.../status.
   // Lists open tasks + EA snapshot + "Ask Claude for status" button.
+  // 2026-08-31, Zee: "put this logo on the top left where it says turtle". The server
+  // serves named routes only, so the image needs its own. Cached for a day — it is a
+  // 536 KB PNG and the page auto-refreshes every 15 seconds.
+  if (url === '/assets/logo.png') {
+    try {
+      const buf = fs.readFileSync(path.join(__dirname, 'assets', 'logo.png'));
+      res.writeHead(200, { 'Content-Type': 'image/png',
+                           'Cache-Control': 'public, max-age=86400' });
+      return res.end(buf);
+    } catch (e) {
+      res.writeHead(404); return res.end('logo missing');
+    }
+  }
+
   if (url === '/' || url === '/status' || url === '/status.html') {
     try {
       const html = fs.readFileSync(path.join(__dirname, 'status.html'), 'utf8');
