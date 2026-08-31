@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Zee · Claude — Live Status</title>
+<title>TURTLE — Live Status</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #0a0e17; --bg2: #0f1521; --panel: #141b2b; --panel2: #1a2336;
@@ -23,6 +26,23 @@
   }
   .container { max-width: 720px; margin: 0 auto; padding: 18px; }
   header h1 { font-size: 22px; margin: 0 0 4px; color: var(--gold); font-weight: 600; letter-spacing: -0.3px; }
+  /* 2026-08-31, Zee: "change the heading Zee · Claude -> Turtle .. in some technological
+     font style so it has some personality". Orbitron reads as instrumentation rather
+     than sci-fi pastiche; the fallbacks are faces Windows already has, so it stays
+     technical even if the webfont is blocked or the machine is offline. */
+  header h1.brand {
+    font-family: 'Orbitron', 'Rajdhani', 'Consolas', 'Cascadia Mono', ui-monospace, monospace;
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: 6px;
+    margin: 0 0 6px;
+    background: linear-gradient(92deg, var(--gold) 0%, #2bd576 55%, #4dabf7 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+  }
+  @media (max-width: 480px) { header h1.brand { font-size: 24px; letter-spacing: 4px; } }
   header .sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
   .ask-btn {
     display: block; width: 100%;
@@ -717,7 +737,7 @@ th, td { border-color:#e5e5e7 !important; }
 <body>
 <div class="container">
   <header>
-    <h1>Zee · Claude</h1>
+    <h1 class="brand">TURTLE</h1>
     <div class="sub" id="now">loading…</div>
   </header>
 
