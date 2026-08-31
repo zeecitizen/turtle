@@ -13,7 +13,7 @@
 //|  It is the wild ancestor, revived for live observation.          |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.13"
+#property version   "1.14"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -144,6 +144,41 @@ input int    InpReqLaws     = 4;      // bitmask of laws that must ALL hold to f
 // Consecutive, not cumulative: one green inside a fall is noise, three in a row is a
 // change of hands. Reset whenever a candle closes our way. 0 = off.
 input int    InpFailCandles = 0;      // >0: close the basket after N candles against us
+
+// ── HIS LINE 42, AT LAST (2026-09-01) ────────────────────────────────────────────
+// Zee: "can you test setting the SL at the last low (retracement's low) 5-7 pips
+// beneath it maybe".
+//
+// LAWS.md line 42: "The stop loss of this trade is placed at 5-7 pips below the lowest
+// point of the retracement (the last low)". The Diamond has never done this. It puts the
+// stop a flat $20 from wherever the first ticket happened to fill, which is why one bad
+// basket costs 8 x 20 x 0.10 x 100 = $1,600 regardless of what the chart was doing.
+//
+// UNITS, and they matter: gold quotes 0.01 per point and 0.10 per pip, so 0.60 in PRICE
+// is 6 pips — which is how BasedOnLaws has always done it. The D07 variant multiplied by
+// 10 * _Point on top, giving 0.6 pips, and then went 0-for-4 in the eleven-law court.
+// That result was measuring my arithmetic, not his law.
+//
+// 0 = off, the flat InpStopPts. >0 = this many PRICE units beyond the retracement's
+// extreme, so 0.60 is his six pips.
+// SHIPPED 2026-09-01 as 0.50 — FIVE PIPS under the retracement. His line 42, obeyed
+// for the first time. Court on his chart at random delay, v1.13 as it traded:
+//                      flat $20                 5 pips structural
+//   20-29 Aug   +4,337 PF2.73 DD18.9%     +2,579 PF1.96 DD 9.1%   (in-sample)
+//   17-19 Aug       +3 PF1.00 DD15.8%       +202 PF1.20 DD 7.7%
+//   05-07 Aug   -1,243 PF0.59 DD37.8%       -342 PF0.84 DD22.2%
+//
+// IT MAKES LESS MONEY: -658 across the three windows. It is shipped anyway, because
+// it HALVES THE DRAWDOWN in every window (37.8->22.2, 15.8->7.7, 18.9->9.1) and cuts
+// the worst window by 73%. Nothing else tested has touched the bad days at all; every
+// other candidate improved good tape and left the catastrophes exactly where they
+// were. This account has been to $53.99 once.
+//
+// 5 pips beat his 6 — both inside noise of each other, and both inside his 5-7.
+// UNITS: gold is 0.01/point, 0.10/pip, so 0.50 in PRICE is five pips. The D07
+// variant multiplied by 10 * _Point on top, tested 0.6 pips, went 0-for-4, and I
+// reported that as "his structural stop never helps". It was my arithmetic.
+input double InpStructStop  = 0.50;   // stop this far (price) beyond the retracement extreme
 input double InpDiaLoudMult = 1.30;   // law 1: how loud the UHV must be vs its neighbours
 
 datetime g_last_bar = 0;
@@ -503,7 +538,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.10 with stack x2, the
    // chart is still running the old binary and the change did NOT take.
-   PrintFormat("[DIA] ZeeUHV v1.13 — LAW 4 (sweep) REQUIRED, hold 20m. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[DIA] ZeeUHV v1.14 — sweep REQUIRED, hold 20m, STRUCTURAL stop 5 pips. SL %.1f / TP %.1f · magic %d"
                " · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
@@ -554,6 +589,13 @@ void TryFire() {
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double px = (t > 0) ? ask : bid;
    double sl = (t > 0) ? px - InpStopPts   : px + InpStopPts;
+   // HIS LINE 42 — the stop belongs under the retracement, not at a fixed distance the
+   // market has never heard of. Still one price shared by the whole basket, because the
+   // target is too, and splitting only one of them would change two things at once.
+   if (InpStructStop > 0) {
+      double ext = RetraceExtreme(origin, t);
+      sl = (t > 0) ? ext - InpStructStop : ext + InpStructStop;
+   }
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
 
    // DiamondsFor also fills g_dia_mask, so it must run even when diamonds are off —
@@ -665,6 +707,15 @@ void TryFire() {
 }
 
 // Close the whole basket once the tape has argued against it N candles running.
+// The deepest point of the retracement we are trading — his "last low" for a buy,
+// the mirror high for a sell. Walks from the origin down to the breakout bar.
+double RetraceExtreme(int origin, int side) {
+   double v = (side > 0) ? bLow(1) : bHigh(1);
+   for (int k = 1; k <= origin; k++)
+      v = (side > 0) ? MathMin(v, bLow(k)) : MathMax(v, bHigh(k));
+   return v;
+}
+
 void FailCandleCheck() {
    if (InpFailCandles <= 0 || g_fail_side == 0) return;
    if (OpenCount() == 0) { g_against = 0; return; }

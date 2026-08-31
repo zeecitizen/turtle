@@ -182,3 +182,41 @@ It has been worthless since the feed changed.
 
 **Limits.** Three windows. And no law rescues bad tape — 05-07 Aug loses under every one
 of the eight.
+
+## ZeeUHV_Diamond v1.14 — his line 42, obeyed at last (2026-09-01)
+
+**magic 88154 · `InpStructStop = 0.50` (five pips) · hold 20m · sweep required**
+
+Zee: *"can you test setting the SL at the last low (retracement's low) 5-7 pips beneath
+it maybe"* — then, on the result, *"ok ship the structural stop"*.
+
+LAWS.md line 42 has said this from the beginning. The Diamond never did it: a flat $20
+from wherever the first ticket filled, which is why one bad basket cost 8 x 20 x 0.10 x
+100 = $1,600 no matter what the chart was doing.
+
+| window | flat $20 | 5 pips structural |
+|---|---|---|
+| 20-29 Aug *(in-sample)* | +4,337 · PF 2.73 · **DD 18.9%** | +2,579 · PF 1.96 · **DD 9.1%** |
+| 17-19 Aug | +3 · PF 1.00 · DD 15.8% | +202 · PF 1.20 · **DD 7.7%** |
+| 05-07 Aug | −1,243 · PF 0.59 · DD 37.8% | **−342** · PF 0.84 · **DD 22.2%** |
+| **three windows** | **+3,097** | **+2,439** |
+
+**It makes less money — −$658 — and shipped anyway.** It halves the drawdown in every
+window (37.8→22.2, 15.8→7.7, 18.9→9.1) and cuts the worst window by 73%. Nothing else
+tested this fortnight has touched the bad days at all: the sweep, the hold cap, the 2R
+target, the volume floor and deliberate spacing all improved good tape and left the
+catastrophes exactly where they were. This account has been to $53.99 once.
+
+Five pips beat his six; both sit inside noise of each other and both inside his stated
+5–7.
+
+**A CORRECTION THIS COURT FORCED.** On 28 Aug the D07 variant "tested" this law, went
+0-for-4, and I reported *"your structural stop never helps this machine"*. D07 computed
+the buffer as `InpLawStructStop * 10 * _Point` — 0.60 became 0.06 in price, six TENTHS
+of a pip. It stopped out on almost any tick. That court measured my arithmetic, not his
+law. BasedOnLaws has had the units right since it was written (`sl = deep - 0.60`, and
+0.60 in price IS six pips) — and BasedOnLaws is the one EA with no catastrophic day.
+
+**The Diamond now, cumulatively:** v1.11 on this window made +2,184 at PF 1.45. v1.14
+makes +2,579 at PF 1.96 with half the drawdown — and every change came from a law on
+his page that the machine had been ignoring.
