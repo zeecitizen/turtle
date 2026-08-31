@@ -133,3 +133,52 @@ trades. The DIRECTION is sturdy (his values won on every clause separately and t
 the MAGNITUDES are not. Full report: daily_reports/_LATEST/LAWS_VARIANTS_REPORT.md
 
 Propagated to BasedOnLawsA/B/C so the arms do not drift from the main EA.
+
+## ZeeUHV_Diamond v1.12 — THE SWEEP REQUIRED (2026-09-01)
+
+**magic 88154 · 0.10 lots · stacked x2 · `InpReqLaws = 4`**
+
+Zee, 31 Aug: *"there were some laws of conviction before the OANDA volume was used, can
+you test them all now on the OANDA volume? ... be careful while testing to simulate exact
+real environments such as random delays etc"*
+
+All eight Laws of Conviction were built and tuned while the EA judged UHVs on **Blueberry
+volume** — the feed proved on 30 Aug to invert the sign of a day. The Diamond carried only
+three of them, and only as SIZE: they added tickets to trades it took anyway and never
+refused one. `InpReqLaws` makes any subset a GATE; the other five were ported from
+ZeeUHV.mq5 verbatim in behaviour.
+
+Environment: **his OANDA chart, RANDOM delay** (fixed 163 ms produces ladder spread 0.13
+against live's 0.57; random produces 0.99), 0.10 lots stacked — as it trades.
+
+| law required | trades | WR | net | PF |
+|---|---|---|---|---|
+| none — as it traded | 511 | 91% | +2,184.40 | 1.45 |
+| **4 — THE SWEEP** | **488** | **93%** | **+4,332.80** | **2.81** |
+| 16 wick + quieter | 433 | 93% | +3,043.90 | 1.95 |
+| 8 EMA-5 close | 508 | 91% | +1,800.10 | 1.37 |
+| 2 selling climax | 124 | 95% | +427.30 | 1.39 |
+| 64 defended level | 440 | 89% | +577.50 | 1.12 |
+| 1 UHV is loud *(vol)* | 199 | 93% | +99.50 | 1.05 |
+| 32 ref-8 break | 241 | 89% | −654.80 | 0.82 |
+
+**OUT OF SAMPLE — the test that killed three other candidates this week:**
+
+| window | none | sweep |
+|---|---|---|
+| 05-07 Aug | −1,223 / PF 0.56 | −1,261 / PF 0.56 |
+| 17-19 Aug | +692 / PF 1.74 | **+1,297 / PF 5.22** |
+| 20-29 Aug *(in-sample)* | +2,184 / PF 1.45 | **+4,333 / PF 2.81** |
+| **three windows** | **+1,653** | **+4,369** |
+
+It raises PROFIT FACTOR rather than trade count — 488 against 511, refusing 23 setups
+and nearly doubling the money. The 2R target, the volume floor and deliberate spacing all
+reversed sign out of sample; this did not.
+
+**What did NOT ship, and why it matters:** law 1 ("the UHV is loud") collapses on his
+chart — +99.50 against +2,184.40. Its threshold is a multiple of neighbouring volume,
+tuned when those numbers were Blueberry's, which run about a fifth the scale of OANDA's.
+It has been worthless since the feed changed.
+
+**Limits.** Three windows. And no law rescues bad tape — 05-07 Aug loses under every one
+of the eight.

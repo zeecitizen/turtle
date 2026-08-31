@@ -13,7 +13,7 @@
 //|  It is the wild ancestor, revived for live observation.          |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.11"
+#property version   "1.12"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -42,7 +42,10 @@ input int    InpBreakWindow = 12;     // InpBreakWindow — bars after the UHV i
 input group "── Exit: SL 6 / TP 3 measured on his own setups ──"
 input double InpStopPts     = 20.0;   // InpStopPts — 20 validated: 93.3% on 1,608 trades, 100% on both unseen sets
 input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W/1L, 96%, his own Feb-11 shape
-input int    InpMaxHoldMin  = 60;   // InpMaxHoldMin — 60 — Zee: every breakout eventually gives the bump, so give it time
+// 2026-08-30, Zee: "i want to check these minutes holding a trade for 0.3, 0.5,
+// 1, 2, 3, 5, 10, 20, 30, 60". An int cannot express 18 or 30 seconds, so the
+// hold cap is now a DOUBLE. 0.3 = 18s. Default unchanged at 60.
+input double InpMaxHoldMin  = 60;   // minutes to hold before closing at market
 
 input group "── Housekeeping ──"
 input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent SETUPS (a stack counts as one)
@@ -58,8 +61,81 @@ input bool   InpStackLots   = true;   // InpStackLots — each diamond opens ANO
 input double InpStackStep   = 0.0;   // InpStackStep — 0.0 = every diamond ticket stays at InpLots (Zee's call)
 input int    InpStackMult   = 2;      // InpStackMult — multiplies the whole stack. 2 => 8 tickets at 3 diamonds (Zee 2026-08-13)
 
+// ── ONE ORDER, OR EIGHT? (2026-08-30) ────────────────────────────────────────────
+// Zee saw the fills and said the right thing: "the diamond is oblivious of this — it
+// just places an order and the fills are at the broker's responsibility". Exactly. The
+// EA issues N market orders in a synchronous loop; the SPACING between them is round
+// trip latency, not design. Nobody built a ladder — one fell out of the wiring.
+//
+// And because the stop and target are anchored to the FIRST fill, every later fill sits
+// better against those fixed exits:
+//     multiplier 1  sold 4560.21  risks 13.28 to make  7.72   1 : 0.58
+//     multiplier 8  sold 4563.66  risks  9.83 to make 11.17   1 : 1.14
+// So the accident may be HELPING. InpOneOrder places the whole size as a single market
+// order instead — the implementation anyone would write on purpose — which hands the
+// entire position multiplier 1's inferior geometry. Default false: live is unchanged.
+input bool   InpOneOrder    = false;  // true = one order of the full size, no ladder
+
+// ── DELIBERATE SPACING (2026-08-30) ──────────────────────────────────────────────
+// The accident is worth double the clean design: at RANDOM delay the 8x0.10 ladder made
+// +2,128.60 against one 0.80 order's +1,055.40, and at ZERO delay the two are identical
+// to the cent — so the whole difference IS the spacing between fills.
+//
+// If unintended spacing is worth $1,073 over nine days, what is INTENDED spacing worth?
+// InpSpaceSec spreads the basket over N seconds on purpose instead of placing it as fast
+// as the broker allows. The stop and target stay anchored to the FIRST fill, because
+// that anchoring is the mechanism: every later fill sits better against fixed exits.
+//
+// Not a blocking Sleep — that would freeze OnTick for half a minute live. The basket is
+// remembered and one ticket is released per tick once its moment arrives.
+input double InpSpaceSec    = 0.0;    // >0 = spread the basket over this many seconds
+
+// ── THE LAWS OF CONVICTION, AS GATES (2026-08-31) ────────────────────────────────
+// Zee: "there were some laws of conviction before the OANDA volume was used, can you
+// test them all now on the OANDA volume?"
+//
+// Every one of these was built and tuned while the EA judged UHVs on BLUEBERRY volume —
+// the feed we proved on 30 Aug inverts the sign of a day (broker -2,096 vs his chart
+// +166 on the same two days). So their receipts are all suspect, and two of them read
+// volume directly, which makes them suspect twice over.
+//
+// The Diamond carries only three of the eight, and only as SIZE — they add tickets and
+// never refuse a setup. InpReqLaws makes any subset a GATE instead, so a law can be
+// asked the harder question: does requiring you make the trades better?
+//
+//     1  UHV is LOUD      volume >= InpDiaLoudMult x the 20 bars before it   [volume]
+//     2  SELLING CLIMAX   the UHV is the widest bar of the last 7
+//     4  THE SWEEP        price poked beyond the prior extreme on the way in
+//     8  EMA-5 CLOSE      the breakout closed decisively past the mean
+//    16  WICK + QUIET     wick <= 0.25 of range AND breakout quieter than UHV [volume]
+//    32  REF-8 BREAK      the 8-bar reference high/low was taken out
+//    64  DEFENDED LEVEL   2+ prior bars tapped the trigger and closed back
+//   128  LATE HUMP        4+ humps already in this staircase
+//
+// Sum the bits you want required. 0 = off, which is how it trades today.
+// SHIPPED 2026-09-01 as 4 — THE SWEEP required. Court on his chart at random delay,
+// three windows, the law demanded rather than merely counted:
+//   20-29 Aug   none +2,184 PF 1.45  ->  sweep +4,333 PF 2.81   (in-sample)
+//   17-19 Aug   none   +692 PF 1.74  ->  sweep +1,297 PF 5.22
+//   05-07 Aug   none -1,223 PF 0.56  ->  sweep -1,261 PF 0.56   (inside noise)
+// It raises PROFIT FACTOR rather than trade count — 488 trades against 511, so it
+// refuses 23 setups and nearly doubles the money. Every other law tested WORSE as a
+// gate, including law 1 (UHV is loud), whose threshold was tuned on Blueberry volume
+// and collapses on his chart: +99 against +2,184.
+// It does not rescue a bad window. 05-07 Aug loses under every law.
+input int    InpReqLaws     = 4;      // bitmask of laws that must ALL hold to fire
+input double InpDiaLoudMult = 1.30;   // law 1: how loud the UHV must be vs its neighbours
+
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
+
+// the basket still being released, when InpSpaceSec > 0
+int      g_pend_left  = 0;      // tickets still to place
+int      g_pend_side  = 0;
+double   g_pend_lots  = 0, g_pend_sl = 0, g_pend_tp = 0;
+int      g_pend_dia   = 0;
+datetime g_pend_next  = 0;
+int      g_pend_gap   = 0;      // seconds between releases
 
 //+------------------------------------------------------------------+
 //| The tester overwrites tick_volume with its synthesised tick count |
@@ -304,23 +380,92 @@ double Ema5(int shift) {
    return e;
 }
 
+double AvgVolBefore(int k) {
+   double sum = 0; int n = 0;
+   for (int i = k + 1; i <= k + 20; i++) { sum += (double)BarVolume(i); n++; }
+   return (n > 0) ? sum / n : 0.0;
+}
+
+int g_dia_mask = 0;      // which laws held on the setup just judged
+
 int DiamondsFor(int origin, int uhv, int side) {
+   g_dia_mask = 0;
    int d = 0;
    // Law 1 — the sweep: did price poke beyond the prior extreme on the way in?
    double hi = bHigh(uhv), lo = bLow(uhv);
    for (int k = uhv + 1; k <= uhv + 20; k++) {
-      if (side > 0 && bLow(k) < lo) { d++; break; }
-      if (side < 0 && bHigh(k) > hi) { d++; break; }
+      if (side > 0 && bLow(k) < lo) { d++; g_dia_mask |= 4; break; }
+      if (side < 0 && bHigh(k) > hi) { d++; g_dia_mask |= 4; break; }
    }
    // Law 3 — the EMA-5 close: the breakout candle closed decisively past the mean
    double e5 = Ema5(1);
-   if (side > 0 && IsGreen(1) && bClose(1) > e5 + 0.10) d++;
-   if (side < 0 && IsRed(1)   && bClose(1) < e5 - 0.10) d++;
+   if (side > 0 && IsGreen(1) && bClose(1) > e5 + 0.10) { d++; g_dia_mask |= 8; }
+   if (side < 0 && IsRed(1)   && bClose(1) < e5 - 0.10) { d++; g_dia_mask |= 8; }
    // Law 5 — the wick and the volume
    double rng = MathMax(bHigh(1) - bLow(1), 1e-9);
    double wick = (side > 0) ? (bHigh(1) - MathMax(bOpen(1), bClose(1))) / rng
                             : (MathMin(bOpen(1), bClose(1)) - bLow(1)) / rng;
-   if (wick <= 0.25 && BarVolume(1) < BarVolume(uhv)) d++;
+   if (wick <= 0.25 && BarVolume(1) < BarVolume(uhv)) { d++; g_dia_mask |= 16; }
+   // ── LAW 1 — the UHV is LOUD against its own neighbourhood (volume-dependent)
+   {
+      double av = AvgVolBefore(uhv);
+      if (av > 0 && (double)BarVolume(uhv) >= av * InpDiaLoudMult) g_dia_mask |= 1;
+   }
+   // ── LAW 7 — SELLING CLIMAX: the UHV is the widest bar of the last 7
+   {
+      double r7 = bHigh(uhv) - bLow(uhv);
+      bool widest = true;
+      for (int i = uhv + 1; i <= uhv + 7; i++)
+         if ((bHigh(i) - bLow(i)) > r7) { widest = false; break; }
+      if (widest) g_dia_mask |= 2;
+   }
+   // ── REF-8 BREAK: the 8-bar reference extreme was taken out
+   {
+      int a8 = -1; double ext8 = 0;
+      for (int k = origin; k <= origin + InpRetraceBack && k < iBars(_Symbol, PERIOD_CURRENT) - 25; k++) {
+         double e = (side < 0) ? bLow(k) : bHigh(k);
+         if (a8 < 0 || (side < 0 && e < ext8) || (side > 0 && e > ext8)) { a8 = k; ext8 = e; }
+      }
+      if (a8 > 0) {
+         int ref8 = -1;
+         for (int k = a8 + 1; k <= a8 + 20; k++) {
+            if (side < 0 && bHigh(k) > bHigh(k + 1)) { ref8 = k; break; }
+            if (side > 0 && bLow(k)  < bLow(k + 1))  { ref8 = k; break; }
+         }
+         if (ref8 > 0)
+            for (int k = 1; k < a8; k++) {
+               if (side < 0 && bHigh(k) > bHigh(ref8)) { g_dia_mask |= 32; break; }
+               if (side > 0 && bLow(k)  < bLow(ref8))  { g_dia_mask |= 32; break; }
+            }
+      }
+   }
+   // ── DEFENDED LEVEL: 2+ prior bars tapped the trigger and closed back
+   {
+      double trig = (side > 0) ? bHigh(uhv) : bLow(uhv);
+      int defenses = 0;
+      for (int k = uhv + 1; k <= uhv + 60; k++) {
+         if (side < 0 && bLow(k)  <= trig + 0.30 && bClose(k) > trig) defenses++;
+         if (side > 0 && bHigh(k) >= trig - 0.30 && bClose(k) < trig) defenses++;
+      }
+      if (defenses >= 2) g_dia_mask |= 64;
+   }
+   // ── LATE HUMP: 4+ humps already in this staircase
+   {
+      int humps = 0; double last = 0; bool first = true;
+      for (int k = 3; k <= 90; k++) {
+         bool piv = true;
+         for (int dd = 1; dd <= 2; dd++) {
+            if (side < 0 && (bLow(k) > bLow(k - dd) || bLow(k) > bLow(k + dd))) piv = false;
+            if (side > 0 && (bHigh(k) < bHigh(k - dd) || bHigh(k) < bHigh(k + dd))) piv = false;
+         }
+         if (!piv) continue;
+         double e = (side < 0) ? bLow(k) : bHigh(k);
+         if (first) { last = e; first = false; humps = 1; continue; }
+         if ((side < 0 && e > last) || (side > 0 && e < last)) { humps++; last = e; }
+         else break;
+      }
+      if (humps >= 4) g_dia_mask |= 128;
+   }
    return d;
 }
 
@@ -334,7 +479,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.10 with stack x2, the
    // chart is still running the old binary and the change did NOT take.
-   PrintFormat("[DIA] ZeeUHV v1.10 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[DIA] ZeeUHV v1.12 — HIS rules + LAW 4 (the sweep) REQUIRED. SL %.1f / TP %.1f · magic %d"
                " · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
@@ -387,7 +532,17 @@ void TryFire() {
    double sl = (t > 0) ? px - InpStopPts   : px + InpStopPts;
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
 
-   int dia = InpUseDiamonds ? DiamondsFor(origin, uhv, t) : 0;
+   // DiamondsFor also fills g_dia_mask, so it must run even when diamonds are off —
+   // otherwise a law gate would be judging a stale mask from the previous setup.
+   int dia = DiamondsFor(origin, uhv, t);
+   if (!InpUseDiamonds) dia = 0;
+   // THE LAWS AS A GATE (2026-08-31). Every required bit must hold or the setup is
+   // refused outright — which is the opposite of how these laws have ever been used.
+   if (InpReqLaws != 0 && (g_dia_mask & InpReqLaws) != InpReqLaws) {
+      if (InpVerbose)
+         PrintFormat("[DIA] [SKIP] laws %d required, setup had %d", InpReqLaws, g_dia_mask);
+      return;
+   }
 
    // THE STACK — Zee 2026-08-10: "the diamonds should each not only add 1 trade, but
    // add the trade in twice the lots that we already have... 0.1, then 0.2, then 0.3,
@@ -421,10 +576,20 @@ void TryFire() {
    //
    // The concern was put to him in those terms and he chose to ship it. Demo account.
    int tickets = InpStackLots ? (1 + MathMax(0, MathMin(dia, 3))) * MathMax(1, InpStackMult) : 1;
+   // ONE ORDER: same total size, placed in a single round trip, so there is no spacing
+   // and every lot carries the first fill's risk-reward.
+   double oneLots = 0;
+   if (InpOneOrder) {
+      oneLots = NormalizeDouble(InpLots * tickets, 2);
+      if (InpMaxRisk > 0 && oneLots > InpMaxRisk + 1e-9)
+         oneLots = NormalizeDouble(InpMaxRisk, 2);
+      tickets = 1;
+   }
    double placed = 0, total = 0;
    for (int q = 0; q < tickets; q++) {
       double lots = NormalizeDouble(InpLots + InpStackStep * q, 2);
       if (!InpStackLots) lots = NormalizeDouble(InpLots * (InpUseDiamonds ? ClicksFor(dia) : 1), 2);
+      if (InpOneOrder) lots = oneLots;
       // 1e-9 slack: 0.20 + 0.10 evaluates to 0.30000000000000004 in doubles, so a cap
       // of 0.30 silently behaved like 0.20 and the sweep returned identical numbers for
       // both. Floating point must never quietly move a risk limit.
@@ -438,13 +603,39 @@ void TryFire() {
       if (!ok) break;
       total += lots; placed += 1;
       if (!InpStackLots) break;
+      if (InpSpaceSec > 0 && tickets > 1) {
+         // hand the remainder to ReleasePending, evenly spread over InpSpaceSec
+         g_pend_left = tickets - 1;
+         g_pend_side = t;
+         g_pend_lots = lots;
+         g_pend_sl   = sl;
+         g_pend_tp   = tp;
+         g_pend_dia  = dia;
+         g_pend_gap  = (int)MathMax(1, MathRound(InpSpaceSec / (double)(tickets - 1)));
+         g_pend_next = TimeCurrent() + g_pend_gap;
+         break;
+      }
    }
    if (placed > 0) {
       g_last_fire = TimeCurrent();
-      PrintFormat("[DIA] %s @%.2f — %d diamond(s) -> %d ticket(s), %.2f lots total · "
-                  "UHV %d (vol %d) · brk vol %d",
-                  t > 0 ? "BUY " : "SELL", px, dia, (int)placed, total,
-                  uhv, (int)BarVolume(uhv), (int)BarVolume(1));
+      // 2026-08-26: it used to print UHV as a BAR SHIFT ("UHV 7"), which is
+      // meaningless once the trade is over — the cockpit's forensic button could not
+      // resolve a single Diamond fire. With eleven variants running, inspecting a fire
+      // IS the experiment, so it now stamps the three anchors as TIMES in the same
+      // [LAWX] grammar the laws EA uses, which law_trade_diagram.py already parses.
+      PrintFormat("[LAWX] %s | origin %s %s (retracement began the bar after) | "
+                  "UHV %s (vol %d, %s %.2f) | breakout %s (close %.2f, vol %d) | "
+                  "entry %.2f stop %.2f target %.2f | %d diamond(s) m%d -> %d ticket(s), %.2f lots",
+                  t > 0 ? "BUY " : "SELL",
+                  t > 0 ? "green" : "red",
+                  TimeToString(iTime(_Symbol, PERIOD_CURRENT, origin), TIME_MINUTES),
+                  TimeToString(iTime(_Symbol, PERIOD_CURRENT, uhv), TIME_MINUTES),
+                  (int)BarVolume(uhv),
+                  (t > 0 ? "high" : "low "),
+                  (t > 0 ? bHigh(uhv) : bLow(uhv)),
+                  TimeToString(iTime(_Symbol, PERIOD_CURRENT, 1), TIME_MINUTES),
+                  bClose(1), (int)BarVolume(1),
+                  px, sl, tp, dia, g_dia_mask, (int)placed, total);
    }
 }
 
@@ -456,7 +647,7 @@ void AgeOut() {
       if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
       if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
       datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
-      if (TimeCurrent() - opened >= InpMaxHoldMin * 60)
+      if ((double)(TimeCurrent() - opened) >= InpMaxHoldMin * 60.0)
          if (trade.PositionClose(t) && InpVerbose)
             PrintFormat("[DIA] aged out after %dm", InpMaxHoldMin);
    }
@@ -490,6 +681,21 @@ double OnTester() {
 }
 
 //+------------------------------------------------------------------+
+// Release one ticket of a spaced basket when its moment arrives. Runs on every tick,
+// never blocks, and inherits the FIRST fill's stop and target exactly as the accidental
+// ladder does.
+void ReleasePending() {
+   if (g_pend_left <= 0) return;
+   if (TimeCurrent() < g_pend_next) return;
+   string tag = StringFormat("zdia_%s_D%d", (g_pend_side > 0 ? "buy" : "sell"), g_pend_dia);
+   bool ok = (g_pend_side > 0)
+             ? trade.Buy (g_pend_lots, _Symbol, 0, g_pend_sl, g_pend_tp, tag)
+             : trade.Sell(g_pend_lots, _Symbol, 0, g_pend_sl, g_pend_tp, tag);
+   if (!ok) { g_pend_left = 0; return; }       // broker refused — abandon the rest
+   g_pend_left--;
+   g_pend_next = TimeCurrent() + g_pend_gap;
+}
+
 void OnTick() {
    static datetime _ovbar = 0;
    if (InpOandaVolume == 1) {
@@ -497,6 +703,7 @@ void OnTick() {
       if (_b != _ovbar) { _ovbar = _b; LoadOandaVol(); }
    }
    AgeOut();
+   ReleasePending();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;
    g_last_bar = bt;
