@@ -1217,7 +1217,6 @@ th, td { border-color:#e5e5e7 !important; }
     <div id="trades-list">
       <div style="color:#888; font-size:12px;">loading…</div>
     </div>
-    <div class="trades-summary" id="trades-summary"></div>
   </div>
 
   <!-- ── Achievements / activity feed (family-monitor surface) ── -->
@@ -1869,8 +1868,11 @@ async function loadTrades() {
     const totalClosed = closed.reduce((s, c) => s + Number(c.net_pnl || c.profit || 0), 0);
     const wins = closed.filter(c => Number(c.net_pnl || c.profit || 0) > 0).length;
     const losses = closed.filter(c => Number(c.net_pnl || c.profit || 0) < 0).length;
-    document.getElementById('trades-summary').innerHTML =
-      `<b>${closed.length}</b> closed (${wins}W / ${losses}L) · net <b>${totalClosed >= 0 ? '+' : ''}$${totalClosed.toFixed(2)}</b> · ${d.open.length} open · broker date ${d.today_broker}`;
+    // 2026-08-31, Zee: "remove this line from the end ... its too much data to be
+    // readable". Every figure in it already appears in the profit line at the top —
+    // closed count, wins, losses, net — so the row was pure duplication.
+    const _ts = document.getElementById('trades-summary');
+    if (_ts) _ts.innerHTML = '';
 
     // HERO card update — P&L is the BIG number, WR is one of the small stats
     const totalClosedN = closed.length;
