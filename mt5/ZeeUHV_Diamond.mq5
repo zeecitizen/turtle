@@ -13,7 +13,7 @@
 //|  It is the wild ancestor, revived for live observation.          |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.12"
+#property version   "1.13"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -45,7 +45,13 @@ input double InpTargetPts   = 1.0;    // InpTargetPts — 1.0 is ZEE'S CALL: 25W
 // 2026-08-30, Zee: "i want to check these minutes holding a trade for 0.3, 0.5,
 // 1, 2, 3, 5, 10, 20, 30, 60". An int cannot express 18 or 30 seconds, so the
 // hold cap is now a DOUBLE. 0.3 = 18s. Default unchanged at 60.
-input double InpMaxHoldMin  = 60;   // minutes to hold before closing at market
+// SHIPPED 2026-09-01 as 20 (was 60). Court on his chart at random delay, 20-29 Aug,
+// ten values from 18 seconds to an hour. A monotone ramp, not a spike:
+//   0.3m -725 · 1m -787 · 3m +592 · 5m +1055 · 10m +1104 · 20m +3248 · 60m +2522
+// Cutting fast destroys it — the ladder needs price to retrace to the FIRST fill, and
+// that takes minutes. But an hour is pure exposure: 20m earns +725 more than 60m AND
+// drops the worst ticket from -200.20 to -125.90.
+input double InpMaxHoldMin  = 20;   // minutes to hold before closing at market
 
 input group "── Housekeeping ──"
 input int    InpMaxOpen     = 1;      // InpMaxOpen — concurrent SETUPS (a stack counts as one)
@@ -124,10 +130,27 @@ input double InpSpaceSec    = 0.0;    // >0 = spread the basket over this many s
 // and collapses on his chart: +99 against +2,184.
 // It does not rescue a bad window. 05-07 Aug loses under every law.
 input int    InpReqLaws     = 4;      // bitmask of laws that must ALL hold to fire
+
+// ── THE BREAKOUT HAS FAILED (2026-09-01) ─────────────────────────────────────────
+// Zee, watching a basket 10 points underwater: "its a theory that if 1-X candles go
+// against us after the breakout, the breakout has failed... on this open trade right now
+// the down trend ended to give way to an uptrend (that's the only loss after so many
+// wins, when the trend shifts)".
+//
+// A time cap cannot tell a slow winner from a dead trade — it only counts minutes. This
+// counts EVIDENCE: consecutive closed candles running counter to the breakout. A sell
+// that keeps printing greens is not slow, it is wrong.
+//
+// Consecutive, not cumulative: one green inside a fall is noise, three in a row is a
+// change of hands. Reset whenever a candle closes our way. 0 = off.
+input int    InpFailCandles = 0;      // >0: close the basket after N candles against us
 input double InpDiaLoudMult = 1.30;   // law 1: how loud the UHV must be vs its neighbours
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
+
+int      g_fail_side = 0;      // direction of the basket being watched
+int      g_against   = 0;      // consecutive candles closed against it
 
 // the basket still being released, when InpSpaceSec > 0
 int      g_pend_left  = 0;      // tickets still to place
@@ -159,7 +182,8 @@ void LoadOandaVol() {
    // volume, logged at 21:46:02. Five quick attempts cover the swap window.
    int h = INVALID_HANDLE;
    for (int _try = 0; _try < 5 && h == INVALID_HANDLE; _try++) {
-      h = FileOpen("oanda_vol.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON);
+      h = FileOpen("oanda_vol.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON |
+                                FILE_SHARE_READ | FILE_SHARE_WRITE);
       if (h == INVALID_HANDLE && !MQLInfoInteger(MQL_TESTER)) Sleep(40);
    }
    if (h == INVALID_HANDLE) {
@@ -479,7 +503,7 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.10 with stack x2, the
    // chart is still running the old binary and the change did NOT take.
-   PrintFormat("[DIA] ZeeUHV v1.12 — HIS rules + LAW 4 (the sweep) REQUIRED. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[DIA] ZeeUHV v1.13 — LAW 4 (sweep) REQUIRED, hold 20m. SL %.1f / TP %.1f · magic %d"
                " · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
@@ -618,6 +642,7 @@ void TryFire() {
    }
    if (placed > 0) {
       g_last_fire = TimeCurrent();
+      g_fail_side = t; g_against = 0;   // a fresh basket to watch
       // 2026-08-26: it used to print UHV as a BAR SHIFT ("UHV 7"), which is
       // meaningless once the trade is over — the cockpit's forensic button could not
       // resolve a single Diamond fire. With eleven variants running, inspecting a fire
@@ -637,6 +662,29 @@ void TryFire() {
                   bClose(1), (int)BarVolume(1),
                   px, sl, tp, dia, g_dia_mask, (int)placed, total);
    }
+}
+
+// Close the whole basket once the tape has argued against it N candles running.
+void FailCandleCheck() {
+   if (InpFailCandles <= 0 || g_fail_side == 0) return;
+   if (OpenCount() == 0) { g_against = 0; return; }
+   static datetime _fcbar = 0;
+   datetime b = iTime(_Symbol, PERIOD_CURRENT, 0);
+   if (b == _fcbar) return;                 // judge once per closed candle
+   _fcbar = b;
+   bool against = (g_fail_side > 0) ? IsRed(1) : IsGreen(1);
+   g_against = against ? g_against + 1 : 0;
+   if (g_against < InpFailCandles) return;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+      trade.PositionClose(tk);
+   }
+   if (InpVerbose)
+      PrintFormat("[DIA] breakout failed — %d candles against, basket closed", g_against);
+   g_against = 0;
 }
 
 void AgeOut() {
@@ -703,6 +751,7 @@ void OnTick() {
       if (_b != _ovbar) { _ovbar = _b; LoadOandaVol(); }
    }
    AgeOut();
+   FailCandleCheck();
    ReleasePending();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bt == g_last_bar) return;

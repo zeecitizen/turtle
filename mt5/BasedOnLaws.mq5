@@ -16,7 +16,7 @@
 //|  Magic 88184 · log tag [LAW] · tickets zlaw_*                    |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan's LAWS.md, mechanized"
-#property version   "1.43"
+#property version   "1.44"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -240,10 +240,32 @@ void LoadOandaVol() {
    g_ov_n = 0;
    int h = INVALID_HANDLE;
    for (int t = 0; t < 5 && h == INVALID_HANDLE; t++) {
-      h = FileOpen("oanda_vol.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON);
+      // 2026-09-01: SHARE flags added. Live mode reloads every 900ms — sixty times more
+      // often than the Diamond, which reads once a bar — so it collided with the bridge
+      // writing this 371 KB file constantly and logged "missing" seven times in ten
+      // seconds. The file was never missing; MT5 simply cannot open a file another
+      // process holds without asking to share it.
+      h = FileOpen("oanda_vol.csv",
+                   FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON |
+                   FILE_SHARE_READ | FILE_SHARE_WRITE);
       if (h == INVALID_HANDLE && !MQLInfoInteger(MQL_TESTER)) Sleep(40);
    }
-   if (h == INVALID_HANDLE) { Print("[LAW] oanda_vol.csv missing — broker volume used"); return; }
+   if (h == INVALID_HANDLE) {
+      // AND THE MESSAGE WAS A LIE. BarVolume() takes volume from the BARS table first
+      // (his "one pull, one truth" rule, 24 Aug); this file is only a fallback. Saying
+      // "broker volume used" while the bars table was loading fine sent us hunting a
+      // catastrophe that was not happening. Say what is actually true.
+      static uint _warned = 0;
+      uint nowms = GetTickCount();
+      if (nowms - _warned > 60000) {          // once a minute, not once a second
+         _warned = nowms;
+         if (InpOandaBars == 1 && g_ob_n > 0)
+            Print("[LAW] oanda_vol.csv busy — volume still coming from the OANDA bars table");
+         else
+            Print("[LAW] oanda_vol.csv unreadable AND no bars table — BROKER volume in use");
+      }
+      return;
+   }
    ArrayResize(g_ov_t, 8192); ArrayResize(g_ov_v, 8192);
    while (!FileIsEnding(h)) {
       string ln = FileReadString(h);
@@ -904,7 +926,7 @@ int OnInit() {
    if (MQLInfoInteger(MQL_TESTER))
       PrintFormat("[LAW] chart FROZEN for this run — %d OANDA volume rows, %d OANDA bars",
                   g_ov_n, g_ob_n);
-   PrintFormat("[LAW] BasedOnLaws v1.43 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
+   PrintFormat("[LAW] BasedOnLaws v1.44 — LAWS.md only. buy%s · NY %s · M5+M15 %s · "
                "stop %.1f pips under the last low · %.1fR target · BE at %.1fR · "
                "momentum body %.1fx · break must HOLD %.0f%% of what it took · EMA5 %s · %s volume · magic %d",
                InpBuyOnly ? " only" : "+sell", InpNyOnly ? "only" : "off",
