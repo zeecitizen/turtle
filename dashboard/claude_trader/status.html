@@ -740,6 +740,27 @@ th, td { border-color:#e5e5e7 !important; }
     </div>
   </div>
 
+  <!-- 2026-08-31, Zee: "move these too to the very top". The per-EA dials sat
+       below the harvest card and the setup viewer; they now follow the live P&L
+       directly, so the two numbers he checks are the first things on the page. -->
+  <!-- ── PER-EA WIN-RATE GAUGES (Zee 2026-08-19: "a car speed needle like image
+       to show which EA is doing well") — built from the same /api/today-trades
+       feed as the hero card, deduped by ticket, refreshed on the same cycle ── -->
+  <style>
+    .ea-gauges { display:flex; flex-wrap:wrap; gap:14px; justify-content:center;
+                 margin:14px auto 0; max-width:980px; }
+    .ea-gauge  { background:#111; border-radius:16px; padding:14px 18px 10px;
+                 text-align:center; min-width:190px; }
+    .ea-gauge .gname { color:#eee; font-size:13px; font-weight:700; letter-spacing:.4px; }
+    .ea-gauge .gwr   { color:#fff; font-size:26px; font-weight:800; margin-top:-30px; }
+    .ea-gauge .gsub  { color:#9a9aa0; font-size:12px; margin-top:2px; }
+    .ea-gauge .gsub .pos { color:#2bd576; } .ea-gauge .gsub .neg { color:#ff5a6a; }
+    .ea-gauge .gsel { margin-top:8px; background:#1c1c1e; color:#ddd; border:1px solid #333;
+                      border-radius:8px; padding:3px 8px; font-size:12px; }
+  </style>
+  <div class="ea-gauges" id="ea-gauges"></div>
+
+
 
   <!-- ── HARVEST MODE: fires when daily target hit (Age of Empires theme) ── -->
   <div class="harvest-card" id="harvest-card" style="display:none;">
@@ -1000,22 +1021,6 @@ th, td { border-color:#e5e5e7 !important; }
            border:1px solid #e5e5e7;margin-top:6px;"/>
     </div>
   </div>
-  <!-- ── PER-EA WIN-RATE GAUGES (Zee 2026-08-19: "a car speed needle like image
-       to show which EA is doing well") — built from the same /api/today-trades
-       feed as the hero card, deduped by ticket, refreshed on the same cycle ── -->
-  <style>
-    .ea-gauges { display:flex; flex-wrap:wrap; gap:14px; justify-content:center;
-                 margin:14px auto 0; max-width:980px; }
-    .ea-gauge  { background:#111; border-radius:16px; padding:14px 18px 10px;
-                 text-align:center; min-width:190px; }
-    .ea-gauge .gname { color:#eee; font-size:13px; font-weight:700; letter-spacing:.4px; }
-    .ea-gauge .gwr   { color:#fff; font-size:26px; font-weight:800; margin-top:-30px; }
-    .ea-gauge .gsub  { color:#9a9aa0; font-size:12px; margin-top:2px; }
-    .ea-gauge .gsub .pos { color:#2bd576; } .ea-gauge .gsub .neg { color:#ff5a6a; }
-    .ea-gauge .gsel { margin-top:8px; background:#1c1c1e; color:#ddd; border:1px solid #333;
-                      border-radius:8px; padding:3px 8px; font-size:12px; }
-  </style>
-  <div class="ea-gauges" id="ea-gauges"></div>
   <div id="ea-news" style="max-width:980px;margin:10px auto 0;text-align:center;
        background:#111;border-radius:14px;padding:12px 18px;font-size:14.5px;
        font-weight:700;color:#eee;letter-spacing:.2px;display:none;"></div>
