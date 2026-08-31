@@ -721,6 +721,26 @@ th, td { border-color:#e5e5e7 !important; }
     <div class="sub" id="now">loading…</div>
   </header>
 
+  <!-- 2026-08-31, Zee: "can you move this section to the very top". The live P&L
+       was sitting below the harvest card and the setup viewer, so the one number he
+       opens the page for was several screens down on a phone. -->
+<div class="hero-card" id="hero-card">
+    <div class="hero-label"><span style="display:inline-block;margin-right:4px;"><span class="live" style="display:inline-block;width:7px;height:7px;background:#30d158;border-radius:50%;vertical-align:middle;margin-right:5px;"></span></span>TODAY'S LIVE PROFIT</div>
+    <div class="hero-wr">
+      <span class="num" id="hero-net-big">$0.00</span>
+      <div class="sub" id="hero-sub">awaiting first close…</div>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="v pos" id="hero-wins">0</div><div class="l">wins</div></div>
+      <div class="hero-stat"><div class="v neg" id="hero-losses">0</div><div class="l">losses</div></div>
+      <div class="hero-stat"><div class="v" id="hero-wr-small">—</div><div class="l">win rate</div></div>
+    </div>
+    <div class="hero-foot">
+      <span class="live"></span><span id="hero-foot-txt">👻 Ghost EA v1.40 (CaseSignalExecutor) LIVE · XAUUSD M1 · OANDA volume · bursts 0.10–0.60 · auto-refreshes every 15s</span>
+    </div>
+  </div>
+
+
   <!-- ── HARVEST MODE: fires when daily target hit (Age of Empires theme) ── -->
   <div class="harvest-card" id="harvest-card" style="display:none;">
     <div class="harvest-banner">🏆 Daily Target Achieved · Storehouse FULL</div>
@@ -980,23 +1000,6 @@ th, td { border-color:#e5e5e7 !important; }
            border:1px solid #e5e5e7;margin-top:6px;"/>
     </div>
   </div>
-
-  <div class="hero-card" id="hero-card">
-    <div class="hero-label"><span style="display:inline-block;margin-right:4px;"><span class="live" style="display:inline-block;width:7px;height:7px;background:#30d158;border-radius:50%;vertical-align:middle;margin-right:5px;"></span></span>TODAY'S LIVE PROFIT</div>
-    <div class="hero-wr">
-      <span class="num" id="hero-net-big">$0.00</span>
-      <div class="sub" id="hero-sub">awaiting first close…</div>
-    </div>
-    <div class="hero-stats">
-      <div class="hero-stat"><div class="v pos" id="hero-wins">0</div><div class="l">wins</div></div>
-      <div class="hero-stat"><div class="v neg" id="hero-losses">0</div><div class="l">losses</div></div>
-      <div class="hero-stat"><div class="v" id="hero-wr-small">—</div><div class="l">win rate</div></div>
-    </div>
-    <div class="hero-foot">
-      <span class="live"></span><span id="hero-foot-txt">👻 Ghost EA v1.40 (CaseSignalExecutor) LIVE · XAUUSD M1 · OANDA volume · bursts 0.10–0.60 · auto-refreshes every 15s</span>
-    </div>
-  </div>
-
   <!-- ── PER-EA WIN-RATE GAUGES (Zee 2026-08-19: "a car speed needle like image
        to show which EA is doing well") — built from the same /api/today-trades
        feed as the hero card, deduped by ticket, refreshed on the same cycle ── -->
