@@ -34,7 +34,6 @@
   header h1.brand .brand-logo {
     height: 46px; width: 46px; object-fit: contain;
     vertical-align: middle; margin-right: 12px;
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
   }
   @media (max-width: 480px) { header h1.brand .brand-logo { height: 34px; width: 34px;
                                                             margin-right: 8px; } }
@@ -45,31 +44,34 @@
     letter-spacing: 6px;
     margin: 0 0 6px;
     display: flex; align-items: center; justify-content: center;
+    flex-wrap: wrap; row-gap: 4px;
   }
-  header h1.brand span {
-    background: linear-gradient(92deg, var(--gold) 0%, #2bd576 55%, #4dabf7 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
+  /* 2026-08-31: "the TURTLE written in techno font can be in black color as before".
+     The page forces a light theme further down, so black is what he was seeing. */
+  header h1.brand span { color: #1d1d1f; }
   @media (max-width: 480px) { header h1.brand { font-size: 24px; letter-spacing: 4px; } }
   header .sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
   /* the clock under the wordmark — Share Tech Mono has the even stroke weight and
      squared terminals of a real instrument readout, and every digit is the same width
      so the line does not twitch as the minutes change. */
-  header .sub#now {
-    font-family: 'Share Tech Mono', 'Orbitron', 'Consolas', ui-monospace, monospace;
-    font-size: 30px;
-    font-weight: 400;
-    letter-spacing: 3px;
-    color: var(--gold);
-    font-variant-numeric: tabular-nums;
-    text-shadow: 0 0 14px rgba(255,196,84,.28);
-    margin-top: 2px; margin-bottom: 18px;
+  /* 2026-08-31, Zee: "the 10:17 PM time can go after the logo + TURTLE + 10:17 PM
+     <- here on same line". It now lives inside the h1 as a flex item, so the three
+     pieces share one baseline and scale together. */
+  header h1.brand .brand-sep {
+    width: 1px; height: 26px; margin: 0 16px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,.22), transparent);
   }
-  header .sub#now .ampm { font-size: 15px; letter-spacing: 2px; opacity: .72;
-                          margin-left: 6px; }
-  @media (max-width: 480px) { header .sub#now { font-size: 23px; letter-spacing: 2px; } }
+  header h1.brand #now {
+    font-family: 'Share Tech Mono', 'Orbitron', 'Consolas', ui-monospace, monospace;
+    font-size: 25px; font-weight: 400; letter-spacing: 2px;
+    color: #6e6e73; font-variant-numeric: tabular-nums;
+  }
+  header h1.brand #now .ampm { font-size: 13px; letter-spacing: 1px; opacity: .65;
+                               margin-left: 5px; }
+  @media (max-width: 480px) {
+    header h1.brand .brand-sep { height: 20px; margin: 0 10px; }
+    header h1.brand #now { font-size: 19px; letter-spacing: 1px; }
+  }
   .ask-btn {
     display: block; width: 100%;
     background: linear-gradient(180deg, #f5c842, #d9a300);
@@ -280,7 +282,22 @@
   .trade-row .t-side.buy { background: rgba(48,209,88,0.15); color: var(--green); }
   .trade-row .t-side.sell { background: rgba(255,69,58,0.15); color: var(--red); }
   .trade-row .t-info { color: var(--text); }
-  .trade-row .t-info small { color: var(--muted); font-size: 11px; }
+  .trade-row .t-info small { color: var(--muted); font-size: 11px; display:block;
+                             margin-top: 2px; }
+  /* 2026-08-31, Zee: "under today's trades it repeatedly says XAUUSD.. remove that
+     word repeat" and "make the today's trades section more neat". Every row is the
+     same instrument, so the symbol was pure noise. What is left lines up in columns:
+     lot size, entry, close — tabular figures so the decimal points stack. */
+  .trade-row .t-info .t-line {
+    display: block; font-variant-numeric: tabular-nums; font-size: 14px;
+    margin-top: 1px;
+  }
+  .trade-row .t-info .t-lots {
+    display: inline-block; min-width: 42px; color: var(--muted);
+    font-size: 12px; font-weight: 600;
+  }
+  .trade-row .t-info .t-line b { font-weight: 700; }
+  .trade-row .t-info .t-arrow { color: var(--muted); margin: 0 7px; font-size: 12px; }
   /* 2026-08-31, Zee: "under Today's trades can you show with big titles, which EA
      is the one taking this trade.. currently it says in small EA_number". The name
      was buried in the same <small> as the comment; now it leads the row. */
@@ -680,7 +697,7 @@
   .hero-card {
     background: linear-gradient(180deg, #1a1d23 0%, #0f1014 100%);
     border: 1.5px solid rgba(48, 209, 88, 0.25);
-    border-radius: 16px; padding: 24px 22px; margin-bottom: 20px;
+    border-radius: 16px; padding: 18px 20px 16px; margin-bottom: 20px;
     box-shadow: 0 4px 32px rgba(48, 209, 88, 0.12), 0 1px 8px rgba(0,0,0,0.5);
   }
   .hero-card.flat { border-color: rgba(245, 200, 66, 0.3); box-shadow: 0 4px 32px rgba(245, 200, 66, 0.1); }
@@ -688,8 +705,11 @@
   .hero-label { font-size: 11px; text-transform: uppercase; letter-spacing: 2px;
     color: var(--muted); margin-bottom: 14px; text-align: center; }
   .hero-wr { text-align: center; line-height: 1; }
+  @media (max-width: 480px) { .hero-wr .num { font-size: 36px; letter-spacing: -1px; } }
   .hero-wr .num {
-    font-size: 84px; font-weight: 800; letter-spacing: -3px;
+    /* 2026-08-31, Zee: "reduce the size ... its taking the entire page" — 84px
+       filled a phone screen with a single figure. */
+    font-size: 46px; font-weight: 800; letter-spacing: -1.5px;
     background: linear-gradient(180deg, #5cffa3 0%, #2bb066 100%);
     -webkit-background-clip: text; background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -710,9 +730,12 @@
   .hero-wr .sub { font-size: 13px; color: var(--muted); margin-top: 8px; letter-spacing: 0.5px; }
   .hero-stats { display: grid; grid-template-columns: repeat(3, 1fr);
     gap: 10px; margin-top: 22px; }
+  /* 2026-08-31, Zee: "the color of 61% is not visible on the black box its written on,
+     remove the black background boxes". The dark card is a dark-theme leftover; the
+     light theme forces dark text, which then disappeared into it. No box, no clash. */
   .hero-stat {
-    background: #0c0d10; border: 1px solid #1f2127;
-    border-radius: 10px; padding: 12px 8px; text-align: center;
+    background: none; border: 0; border-radius: 0;
+    padding: 6px 8px; text-align: center;
   }
   .hero-stat .v { font-size: 24px; font-weight: 700; color: var(--text);
     font-variant-numeric: tabular-nums; line-height: 1.1; }
@@ -763,8 +786,7 @@ th, td { border-color:#e5e5e7 !important; }
 <body>
 <div class="container">
   <header>
-    <h1 class="brand"><img src="/assets/logo.png" alt="" class="brand-logo"><span>TURTLE</span></h1>
-    <div class="sub" id="now">loading…</div>
+    <h1 class="brand"><img src="/assets/logo.png" alt="" class="brand-logo"><span>TURTLE</span><span class="brand-sep"></span><span id="now">…</span></h1>
   </header>
 
   <!-- 2026-08-31, Zee: "can you move this section to the very top". The live P&L
@@ -780,9 +802,6 @@ th, td { border-color:#e5e5e7 !important; }
       <div class="hero-stat"><div class="v pos" id="hero-wins">0</div><div class="l">wins</div></div>
       <div class="hero-stat"><div class="v neg" id="hero-losses">0</div><div class="l">losses</div></div>
       <div class="hero-stat"><div class="v" id="hero-wr-small">—</div><div class="l">win rate</div></div>
-    </div>
-    <div class="hero-foot">
-      <span class="live"></span><span id="hero-foot-txt">👻 Ghost EA v1.40 (CaseSignalExecutor) LIVE · XAUUSD M1 · OANDA volume · bursts 0.10–0.60 · auto-refreshes every 15s</span>
     </div>
   </div>
 
@@ -1038,19 +1057,14 @@ th, td { border-color:#e5e5e7 !important; }
   <!-- ── HERO: today's NET P&L (the number that matters) ── -->
   <!-- ── The Ghost — live hunt ── -->
   <div class="trades-card" id="ghost-card">
-    <h3>👻 The Ghost — live hunt (camel humps · UHV box · sweep)</h3>
-    <div id="ghost-state" style="font-size:13px;color:#6e6e73;margin:6px 0 10px;line-height:1.6;">loading…</div>
     <img id="camel-img" src="/api/camel.png" alt="camel humps — live trend chart"
          style="width:100%;border-radius:12px;background:#fff;border:1px solid #e5e5e7;"/>
     <div id="cockpit-row" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">
-      <button onclick="camelRegen()" style="background:#1d1d1f !important;">🔄 Regenerate humps</button>
-      <button onclick="showForming()" style="background:#7048e8 !important;">👀 Setup forming now</button>
-      <button onclick="showVersions()" style="background:#1c7ed6 !important;">📊 Versions</button>
-      <button onclick="sendCall('UPTREND')" style="background:#2f9e44 !important;">📈 UPTREND — buy lamps</button>
-      <button onclick="sendCall('DOWNTREND')" style="background:#e03131 !important;">📉 DOWNTREND — sell lamps</button>
-      <button onclick="sendCall('RANGE')" style="background:#f08c00 !important;">📦 RANGE — ghost waits</button>
+      <!-- 2026-08-31, Zee: "remove these buttons / rename the regenerate humps to
+           Refresh (one button only)". The rest set a manual trend call or opened
+           viewers; the gate runs on AUTO and the humps decide. -->
+      <button onclick="camelRegen()" style="background:#1d1d1f !important;">🔄 Refresh</button>
     </div>
-    <div id="call-status" style="font-size:13px;font-weight:600;margin-top:8px;color:#6e6e73;">…</div>
     <!-- COCKPIT PARITY (Zee 2026-08-07): the same pictures the desktop cockpit shows —
          the setup forming, any trade's anatomy, and the circumstances around it. -->
     <div id="viewer" style="display:none;margin-top:16px;border-top:1px solid #e5e5e7;padding-top:14px;">
@@ -1769,7 +1783,7 @@ async function loadTrades() {
       items.push(`<div class="trade-row expandable" data-detail="${detailId}">
         <div class="t-time">${pkt}<small style="display:block;color:#999;font-size:10px;">${ts} brk</small></div>
         <div class="t-side ${side.toLowerCase()}">${side}</div>
-        <div class="t-info"><span class="t-ea">${ea}</span>${c.symbol} ${c.volume} @ <b>$${entryDisp}</b> → <b>$${closeDisp}</b><br/><small>${c.comment || 'trail exit'}</small></div>
+        <div class="t-info"><span class="t-ea">${ea}</span><span class="t-line"><span class="t-lots">${c.volume}</span>${entryDisp !== '—' ? `<b>${entryDisp}</b><span class="t-arrow">→</span>` : ''}<b>${closeDisp}</b></span><small>${c.comment || 'trail exit'}</small></div>
         <div class="t-pnl ${pnl >= 0 ? 'win' : 'loss'}">${pnl >= 0 ? '+' : ''}$${pnl.toFixed(2)}<br/><span class="explore-btn" data-detail="${detailId}">Explore →</span><br/><span class="explore-btn" style="color:#7048e8;" onclick="event.stopPropagation();showForensic('${c.broker_time}','${side}',${closeDisp})">🔍 forensic</span></div>
       </div>
       <div class="trade-detail" id="${detailId}">${detailHtml}</div>`);
@@ -1782,7 +1796,7 @@ async function loadTrades() {
       items.push(`<div class="trade-row open">
         <div class="t-time">OPEN</div>
         <div class="t-side ${side.toLowerCase()}">${side}</div>
-        <div class="t-info">XAUUSD ${o.lots} @ ${o.entry}<br/><small>SL ${o.sl} · TP ${o.tp} · ${o.ea} v${o.version || ''} ${tf}</small></div>
+        <div class="t-info"><span class="t-ea">${o.ea || 'open'}</span><span class="t-line"><span class="t-lots">${o.lots}</span><b>${o.entry}</b></span><small>SL ${o.sl} · TP ${o.tp} ${tf}</small></div>
         <div class="t-pnl">${fpnl >= 0 ? '+' : ''}$${fpnl.toFixed(2)}</div>
       </div>`);
     }
@@ -1821,11 +1835,14 @@ async function loadTrades() {
       hero.className = 'hero-card' + (totalClosed > 0 ? '' : (totalClosed === 0 ? ' flat' : ' loss'));
     }
     // Footer: live EA version + reset note
-    const footEl = document.getElementById('hero-foot-txt');
+    const footEl = document.getElementById('hero-foot-txt');   // removed 2026-08-31
     if (footEl) {
       const ver = d.current_ea_version || '';
       const rst = d.reset_at_broker_ts ? ` · WR counting from broker ${d.reset_at_broker_ts}` : '';
-      footEl.textContent = `S1Trader v${ver} LIVE · M1 · 0.10 lots${rst} · auto-refresh 15s`;
+      // 2026-08-31, Zee: "remove this line: S1Trader v2.75 LIVE ...". The element is
+      // gone and the text was stale anyway — S1Trader retired in June; this account
+      // runs the Diamond and BasedOnLaws.
+      if (footEl) footEl.textContent = '';
     }
   } catch (e) {
     document.getElementById('trades-list').innerHTML =
@@ -1856,7 +1873,9 @@ async function loadGhost() {
     else
       parts.push('no UHV boxed right now — hunting');
     parts.push(g.armed ? '🚪 ghost AT THE DOOR (fires on tick-cross)' : '👻 ghost watching');
-    document.getElementById('ghost-state').innerHTML = parts.join(' &nbsp;·&nbsp; ');
+    // 2026-08-31, Zee: "remove all this extra information" — the panel is the chart now.
+    const _gs = document.getElementById('ghost-state');
+    if (_gs) _gs.innerHTML = parts.join(' &nbsp;·&nbsp; ');
     document.getElementById('camel-img').src = '/api/camel.png?t=' + Date.now();
   } catch (_) {}
 }
