@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//|  ZeeUHV_D08.mq5 — THE UNTOUCHED DIAMOND, resurrected         |
+//|  ZeeUHV_D00.mq5 — THE UNTOUCHED DIAMOND, resurrected         |
 //|  Byte-identical to commit 718b68a (the streak-era machine,       |
 //|  Aug 11-13 2026: 14 baskets, 100%, +$614) except this nameplate, |
 //|  magic 88094->88154, [ZEE]->[DIA], zee_->zdia_ ticket tags.      |
@@ -20,7 +20,7 @@
 CTrade trade;
 
 input double InpLots        = 0.01;   // InpLots — lot size
-input int    InpMagicNumber = 88208;  // InpMagicNumber — 88094 = ZeeUHV, tester only
+input int    InpMagicNumber = 88200;  // InpMagicNumber — 88094 = ZeeUHV, tester only
 
 // ── HIS EYE, FOR THE ANCESTOR (2026-08-21). The Diamond judges UHVs on volume and
 // owns no other guard, so the volume feed IS its strategy. Measured over four days
@@ -69,7 +69,7 @@ input bool   InpLawBodySpans  = false; // body must straddle the level AND be fi
 input bool   InpLawEma5       = false; // breakout must close beyond EMA-5 — as a gate
 input bool   InpLawNoPeak     = false; // drop the neighbour-peak test (he revoked it 2026-08-04)
 input double InpLawStructStop = 0.0;   // >0: stop this many pips under the retracement low
-input double InpLawTargetR    = 2.00;   // >0: target at this R of the real risk
+input double InpLawTargetR    = 0.0;   // >0: target at this R of the real risk
 input double InpLawBreakEven  = 0.0;   // >0: stop to breakeven at this R
 input bool   InpLawNyOnly     = false; // New York only, broker hours 15-22
 
@@ -103,7 +103,7 @@ void LoadOandaVol() {
       if (h == INVALID_HANDLE && !MQLInfoInteger(MQL_TESTER)) Sleep(40);
    }
    if (h == INVALID_HANDLE) {
-      Print("[D08] OANDA volume requested but oanda_vol.csv not found — using broker volume");
+      Print("[D00] OANDA volume requested but oanda_vol.csv not found — using broker volume");
       return;
    }
    ArrayResize(g_ov_t, 8192); ArrayResize(g_ov_v, 8192);
@@ -121,7 +121,7 @@ void LoadOandaVol() {
    }
    FileClose(h);
    g_ov_newest = (g_ov_n > 0) ? g_ov_t[g_ov_n - 1] : 0;
-   PrintFormat("[D08] OANDA volume table loaded: %d minutes (newest %s)",
+   PrintFormat("[D00] OANDA volume table loaded: %d minutes (newest %s)",
                g_ov_n, TimeToString(g_ov_newest, TIME_DATE | TIME_MINUTES));
 }
 
@@ -354,14 +354,14 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.10 with stack x2, the
    // chart is still running the old binary and the change did NOT take.
-   PrintFormat("[D08] ZeeUHV v1.10 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[D00] ZeeUHV v1.10 — HIS rules from 146 labels. SL %.1f / TP %.1f · magic %d"
                " · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
                4 * MathMax(1, InpStackMult) * InpLots * InpStopPts * 100.0);
    return INIT_SUCCEEDED;
 }
-void OnDeinit(const int r) { PrintFormat("[D08] deinit reason=%d", r); }
+void OnDeinit(const int r) { PrintFormat("[D00] deinit reason=%d", r); }
 
 //+------------------------------------------------------------------+
 
@@ -415,7 +415,7 @@ void TryFire() {
    if (g_last_fire > 0 &&
        (TimeCurrent() - g_last_fire) < InpCooldownBar * PeriodSeconds()) return;
    if (!WindowContinuous(InpTrendLook + 5)) {
-      if (InpVerbose) Print("[D08] [SKIP] gap in lookback");
+      if (InpVerbose) Print("[D00] [SKIP] gap in lookback");
       return;
    }
 //  THE 40% GATE, under test (Zee 2026-08-10: "can u check what's stopping us from
@@ -433,7 +433,7 @@ void TryFire() {
    int sides[2]; int nsides = 0;
    if (t != 0) { sides[0] = t; nsides = 1; }
    else if (!InpRequireTrend) { sides[0] = +1; sides[1] = -1; nsides = 2; }
-   else { if (InpVerbose) Print("[D08] [SKIP] ranging — his setup needs a trend"); return; }
+   else { if (InpVerbose) Print("[D00] [SKIP] ranging — his setup needs a trend"); return; }
 
    int origin = -1, uhv = -1, side = 0;
    for (int si = 0; si < nsides; si++) {
@@ -447,7 +447,7 @@ void TryFire() {
       origin = o; uhv = u; side = try_side; break;
    }
    if (side == 0) {
-      if (InpVerbose && t != 0) Print("[D08] [SKIP] no lawful setup on the allowed side");
+      if (InpVerbose && t != 0) Print("[D00] [SKIP] no lawful setup on the allowed side");
       return;
    }
    t = side;
@@ -516,7 +516,7 @@ void TryFire() {
       // Zee, 2026-08-12: "measure the diamond's earnings and decide which diamond is
       // the most earner". The count must survive into the deal record to be grouped
       // later, and the comment is the only field that travels with it.
-      string tag = StringFormat("zd08_%s_D%d", (t > 0 ? "buy" : "sell"), dia);
+      string tag = StringFormat("zd00_%s_D%d", (t > 0 ? "buy" : "sell"), dia);
       bool ok = (t > 0) ? trade.Buy (lots, _Symbol, 0, sl, tp, tag)
                         : trade.Sell(lots, _Symbol, 0, sl, tp, tag);
       if (!ok) break;
@@ -556,7 +556,7 @@ void AgeOut() {
       datetime opened = (datetime)PositionGetInteger(POSITION_TIME);
       if (TimeCurrent() - opened >= InpMaxHoldMin * 60)
          if (trade.PositionClose(t) && InpVerbose)
-            PrintFormat("[D08] aged out after %dm", InpMaxHoldMin);
+            PrintFormat("[D00] aged out after %dm", InpMaxHoldMin);
    }
 }
 

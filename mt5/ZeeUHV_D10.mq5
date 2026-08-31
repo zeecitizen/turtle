@@ -72,6 +72,11 @@ input double InpLawStructStop = 0.0;   // >0: stop this many pips under the retr
 input double InpLawTargetR    = 0.0;   // >0: target at this R of the real risk
 input double InpLawBreakEven  = 0.0;   // >0: stop to breakeven at this R
 input bool   InpLawNyOnly     = true; // New York only, broker hours 15-22
+input int    InpLawFromHour   = 15;    // window start, broker hour (inclusive)
+input int    InpLawToHour     = 22;    // window end, broker hour (exclusive).
+                                       // from > to WRAPS midnight, so 22->15 is
+                                       // 'the night' — the counter-test his
+                                       // question needs (Zee 2026-08-26).
 
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
@@ -98,7 +103,8 @@ void LoadOandaVol() {
    // volume, logged at 21:46:02. Five quick attempts cover the swap window.
    int h = INVALID_HANDLE;
    for (int _try = 0; _try < 5 && h == INVALID_HANDLE; _try++) {
-      h = FileOpen("oanda_vol.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON);
+      h = FileOpen("oanda_vol.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON |
+                                FILE_SHARE_READ | FILE_SHARE_WRITE);
       if (h == INVALID_HANDLE && !MQLInfoInteger(MQL_TESTER)) Sleep(40);
    }
    if (h == INVALID_HANDLE) {
@@ -426,7 +432,13 @@ void TryFire() {
 //  both sides and take whichever completes a lawful setup.
    if (InpLawNyOnly) {
       MqlDateTime dt; TimeToStruct(TimeCurrent(), dt);
-      if (dt.hour < 15 || dt.hour >= 22) return;   // his line 47
+      int h = dt.hour;
+      int hFrom = InpLawFromHour;
+      int hTo   = InpLawToHour;
+      bool inside;
+      if (hFrom < hTo) inside = (h >= hFrom && h < hTo);
+      else             inside = (h >= hFrom || h < hTo);   // wraps midnight
+      if (!inside) return;                         // his line 47, dialable
    }
    int t = TrendNow();
    int sides[2]; int nsides = 0;
@@ -524,10 +536,24 @@ void TryFire() {
    }
    if (placed > 0) {
       g_last_fire = TimeCurrent();
-      PrintFormat("[D10] %s @%.2f — %d diamond(s) -> %d ticket(s), %.2f lots total · "
-                  "UHV %d (vol %d) · brk vol %d",
-                  t > 0 ? "BUY " : "SELL", px, dia, (int)placed, total,
-                  uhv, (int)BarVolume(uhv), (int)BarVolume(1));
+      // 2026-08-26: it used to print UHV as a BAR SHIFT ("UHV 7"), which is
+      // meaningless once the trade is over — the cockpit's forensic button could not
+      // resolve a single Diamond fire. With eleven variants running, inspecting a fire
+      // IS the experiment, so it now stamps the three anchors as TIMES in the same
+      // [LAWX] grammar the laws EA uses, which law_trade_diagram.py already parses.
+      PrintFormat("[LAWX] %s | origin %s %s (retracement began the bar after) | "
+                  "UHV %s (vol %d, %s %.2f) | breakout %s (close %.2f, vol %d) | "
+                  "entry %.2f stop %.2f target %.2f | %d diamond(s) -> %d ticket(s), %.2f lots",
+                  t > 0 ? "BUY " : "SELL",
+                  t > 0 ? "green" : "red",
+                  TimeToString(iTime(_Symbol, PERIOD_CURRENT, origin), TIME_MINUTES),
+                  TimeToString(iTime(_Symbol, PERIOD_CURRENT, uhv), TIME_MINUTES),
+                  (int)BarVolume(uhv),
+                  (t > 0 ? "high" : "low "),
+                  (t > 0 ? bHigh(uhv) : bLow(uhv)),
+                  TimeToString(iTime(_Symbol, PERIOD_CURRENT, 1), TIME_MINUTES),
+                  bClose(1), (int)BarVolume(1),
+                  px, sl, tp, dia, (int)placed, total);
    }
 }
 
