@@ -220,3 +220,227 @@ law. BasedOnLaws has had the units right since it was written (`sl = deep - 0.60
 **The Diamond now, cumulatively:** v1.11 on this window made +2,184 at PF 1.45. v1.14
 makes +2,579 at PF 1.96 with half the drawdown — and every change came from a law on
 his page that the machine had been ignoring.
+
+## ZeeUHV_Diamond v1.15 — his eye or no trade (2026-09-06)
+
+**magic 88154 · `InpOandaVolume = 1` · `InpOandaStrict = true` · `InpVolFreshSec = 90`**
+
+Zee: *"we donot wish to use broker volume, we want to completely transition to OANDA
+volume taken from tradingview. any broker volume trades waste our time"*
+
+**WHAT PROMPTED IT.** He opened Friday's review page, looked at the 04:28 SELL that lost
+$123.10, and the chart did not match the trade. The EA logged `UHV 02:23 (vol 87, low
+4472.48)` — Blueberry's numbers to the decimal. His own chart shows **150** that minute,
+and makes **02:22 (152)** the louder bar. A different candle, a different trigger, a
+trade that does not exist on his chart.
+
+**THE SWITCH ALONE WAS NEVER ENOUGH.** `InpOandaVolume` has existed since v1.10 and
+defaulted to 0, but flipping it would not have fixed this: `BarVolume()` fell back to
+the broker **per bar, silently**, whenever the table lacked a minute. A single decision
+could read his chart for the UHV and Blueberry's for the neighbours. Three changes:
+
+* `InpOandaStrict` — a missing OANDA minute returns −1, and `VolWindowWhole()` refuses
+  the whole setup. Checked across all `InpTrendLook + InpRetraceBack + 8` bars, because
+  checking only the UHV leaves the loudness test, the quieter-than-UHV test and the
+  20-bar average reading broker numbers one level down.
+* `InpVolFreshSec` — a stalled bridge stands down instead of reverting. The bridge died
+  for **61.8 hours** over 5–6 Sep and nothing noticed; without this the EA would have
+  run on broker volume the whole time and called the results his.
+* Both gates run BEFORE any law, so a feed fault can never be misread as the laws
+  refusing a setup.
+
+Levels, stops and fills stay Blueberry's. We trade his broker, we judge his chart.
+
+### The court — same EA, same window, only the feed changes (real ticks, 163 ms)
+
+| window | broker | OANDA + strict | OANDA loose | trades b / s / l |
+|---|---|---|---|---|
+| 31 Aug – 4 Sep | −555.40 | **−229.40** | −229.40 | 108 / 106 / 106 |
+| 17–22 Aug | −1,165.80 | **+377.80** | +483.50 | 256 / 266 / 274 |
+| 5–8 Aug *(see caveat)* | −1,245.40 | +869.40 | −270.00 | 198 / 98 / 208 |
+
+**THE CAVEAT, AND IT IS LOAD-BEARING.** The 5–8 Aug row is **not an apples-to-apples
+comparison and must not be quoted as one.** `oanda_vol.csv` begins 05 Aug 15:11 and ends
+07 Aug 04:26 — 2,108 minutes of a ~4,320-minute window. Strict therefore traded *a
+different and smaller slice of time* than broker did; its +869.40 and PF 5.07 are
+measured on under half the window and are contaminated by a time-of-day selection
+effect. The honest reading of that row is "strict refused the half it could not see",
+not "strict earns $1,139".
+
+**The two clean windows carry the finding.** 17–22 Aug has 97% coverage (266 trades
+against 274) and still turns **−1,165.80 into +377.80**. 31 Aug – 4 Sep returns
+*identical* numbers strict and loose — no holes at all — and still gains **$326**. Both
+windows move the same way, and both improve profit factor (0.62→1.20, 0.66→0.82) and
+drawdown (3.69→1.38, 3.05→2.21) alongside the money.
+
+This corroborates the four-day live measurement recorded at v1.58: broker +433.90 vs
+OANDA +1,358.10, better on 3 of 4.
+
+**REQUIRES A REATTACH.** `InpOandaVolume` already exists on the attached chart with a
+stored value of 0; a changed default only applies on a fresh attach. F7 + drag before
+the Monday open or it keeps trading on broker volume.
+
+**NEW OPERATIONAL RISK, STATED PLAINLY.** With no fallback, the OANDA bridge is a single
+point of failure. It runs ~40 s behind routinely and was dead for 61.8 hours this
+weekend. BasedOnLaws, already strict, skipped 6.0% of its bars for this reason and 100%
+of Friday's last two hours. A dead bridge is now a dead EA — which is what he asked for,
+and it means the bridge's own alerting (GreenAPI, currently 401) is no longer optional.
+
+**RIG TRAP FOUND (worth its own line).** The headless rig silently auto-updated to build
+6182 mid-court; every later launch tried to install it, hit a sharing violation and
+exited in 2 s with **no report** — which looks exactly like "strict refused everything".
+Two windows had to be re-run. Kill the `liveupdate` stubs by PATH (never the Blueberry
+terminal) and clear the payload before trusting a court that returns no report.
+
+## LAW 45 as a gate on the Diamond — TESTED, NOT SHIPPED (2026-09-07)
+
+**`InpStopOnLastLow`, default false. Built, measured, left dark.**
+
+Zee: *"the EA keeps performing until there occurs the end of a trend. at the end of the
+trend the EA expects the price to go upwards still whereas the price takes a turn
+downwards. that last trade is in much loss ... that last losing trade eats up all the
+profit"*
+
+His diagnosis is exactly right, and his own LAWS.md line 45 already states the cure:
+*"we stop buying, when the last low is broken .. we keep trading until the last low is
+safe (unbroken below). Whenever a high is broken, the deepest point (the lowest point)
+is the confirmed higher low."* The Diamond has never implemented it. Ported MQL->MQL
+from BasedOnLaws' `CamelTrend()`, which has carried the law since 2026-08-23.
+
+**WHY `TrendNow()` CANNOT DO THIS JOB.** It declares an uptrend dead only after TWO new
+pivot lows print with the newer below the older, and a pivot needs `InpPivot` bars each
+side to confirm. At a top the structure breaks and `TrendNow()` keeps returning +1
+through the confirmation lag. That lag is the window the losing trade is taken in.
+
+### THE FINDING THAT COST THE MOST: line 45 is a STATE, not a test
+
+The first implementation asked *"is the close below the last low right now"* at the
+moment of the breakout. **0 refusals in 2,763 bars** — 106 trades with the gate off,
+106 with it on, identical to the cent. The test was evaluated at the one instant it
+cannot fail: a breakout is a candle thrusting UP through a level, while the guard is a
+pivot low confirmed at least `InpPivot` bars earlier.
+
+His sentence is a latch. *"We STOP buying, WHEN the last low is broken .. we KEEP
+trading UNTIL the last low is safe."* Buying stops at the break and stays stopped until
+a high is broken and a new higher low is confirmed under it. At a trend's end the low
+breaks, price bounces, and the breakout fires on the bounce — the trade Zee describes,
+and the one a snapshot waves through. Rebuilt as `LastLowUpdate()`, run once per closed
+bar: break by BODY (his line 13: *"the low must be broken by body not wick"*), resume
+only on a body close above the last hump top. Guard only ever rises. Short side mirrored.
+
+### The court — real ticks, 163 ms, OANDA volume, v1.15 strict
+
+| window | off | ON | delta | tickets off/ON | refused | DD off → ON |
+|---|---|---|---|---|---|---|
+| 31 Aug – 5 Sep | −229.40 | **−12.50** | **+216.90** | 106 / 98 | 8 | 2.21 → 2.14 |
+| 17–22 Aug | +377.80 | +215.80 | **−162.00** | 266 / 228 | 38 | 1.38 → **1.70** |
+| 5–8 Aug | +869.40 | +869.40 | 0.00 | 98 / 98 | 0 | 0.78 → 0.78 |
+| **three windows** | **+1,017.80** | **+1,072.70** | **+54.90** | 470 / 424 | 46 | — |
+
+**VERDICT: NOT SHIPPED.** One window helped, one hurt, one was untouched. The
+three-window gain of $54.90 is the residue of +216.90 and −162.00 cancelling — noise,
+not signal, on 470 tickets.
+
+The in-sample window is genuinely striking: it refused ONE basket of 8 tickets and that
+basket carried −$216.90, turning the week from −229.40 to −12.50. That is exactly the
+shape Zee described. But out of sample the same latch refused 38 tickets and gave back
+$162, and made drawdown WORSE (1.38 → 1.70). It is not selectively removing the
+trend-end trade; it removes good trades at the same rate.
+
+**This is the 2R target's failure repeating** — excellent in-sample, sign-reversed out.
+Kept as a dead input with receipts, default false, so the next session does not rebuild
+it from his page and read the first window as a result.
+
+**WHAT IS STILL TRUE AND UNADDRESSED.** Law 45 targets the trade that ends the run. It
+does nothing about the geometry that makes that trade fatal: last week's live R:R ran
+0.05R to 0.63R, median 0.18R, where one full loss erases five and a half wins. Even
+with the latch on, the best window is PF 0.99 — break-even, not profitable.
+
+### Rig traps found on the way (all produced a clean exit code and a report file)
+
+1. **Bool sweep syntax.** MT5 needs numeric `0||1||1`; `false||0||true` is rejected with
+   *"no optimized parameter selected"*, ends in ~55 s, writes a header-only report.
+2. **`sync_experts()` overwrites the rig build.** It copies every `.ex5` from the LIVE
+   terminal, including the EA under test. Compile into the rig AFTER the sync or the
+   court silently tests yesterday's binary.
+3. **Do not verify a build by searching the `.ex5` for an input name.** MQL5 stores them
+   encoded — `InpTargetPts` does not appear either. Check the compiled SOURCE, and check
+   the optimisation report's COLUMNS afterwards.
+
+A run that tests nothing and a run that finds nothing are indistinguishable except by
+the clock: 55 s where 600 s is expected.
+
+## ZeeUHV_Diamond v1.16 — the hump budget (2026-09-09)
+
+**magic 88154 · `InpMaxHumps = 3` · SHIPPED AGAINST THE BACKTEST, ON HIS INSTRUCTION**
+
+Zee, with a drawing of an uptrend labelled *trend begins* / *trend ends*: *"When a trend
+starts on 1 minute scale it makes 2..3..X definite camel humps.. after a certain number
+of humps the trend expires ... if we stop after the price has made a new trend and the X
+number of humps are done, we might be able to avoid the ONE LAST TRADE that is taken at
+the end of the trend."*
+
+**WHY THIS MECHANISM IS DIFFERENT FROM EVERY EARLIER ATTEMPT.** `TrendNow` needs two
+fresh pivots; law 45 needs the low already broken. Both answer *after* the reversal has
+begun — late by construction, which is when the losing trade is taken. Counting FORWARD
+from a trend's birth needs no confirmation: the fourth hump is the fourth hump whether
+or not the top has printed.
+
+### The measurement that set the number
+
+Instrumented over **113 trends**, 31 Aug – 5 Sep, real ticks:
+
+| humps before the trend flips | trends | cumulative |
+|---|---|---|
+| 1 | 15 | 13% |
+| 2 | 34 | 43% |
+| **3** | **25** | **65%** |
+| 4 | 11 | 75% |
+| 5–9 | 26 | 98% |
+| 11, 17 | 2 | 100% |
+
+**median 3 · mean 3.5 · max 17.** His model — *"hump 3 trade, hump 4 hmm maybe it
+shifts"* — is what the tape does. He had the number right.
+
+### Why 8 was withdrawn
+
+The sweep's best arm was budget 8: +2,427.30 across three windows, positive in 3/3,
+against OFF's +2,287.40 in 2/3. A diff of the deal lists named the single basket it
+refused — the 01 Sep 03:28 buy at 4460.34, which is the live −$323.40 trade taken 19
+minutes after the 4454.43 buy had just won +$75.30, six dollars higher, at the top of
+the same push. Real mechanism, real trade.
+
+**But the trade-by-hump histogram killed it.** Of 28 fires: hump 0 → 14 trades, hump 1
+→ 5, hump 2 → 4, hump 3 → 2, humps 5/6/8 → one each. **Budget 8 refuses ONE trade in
+28.** Its whole three-window edge rests on a single basket — a placebo that happened to
+catch a loser. Zee spotted this before the ledger did: *"i hope u're sure.. because
+otherwise this number could be so high that it might result in a loss."*
+
+### What 3 costs, stated plainly
+
+| budget | three windows | windows won | refuses |
+|---|---|---|---|
+| OFF | **+2,287.40** | 2/3 | — |
+| **3 (SHIPPED)** | **+768.10** | 1/3 | ~4-5 of 28 |
+| 8 (withdrawn) | +2,427.30 | 3/3 | 1 of 28 |
+
+**This ships knowingly below the backtest.** He read the numbers and chose the rule that
+actually implements his law over the one that scores better by doing nothing: *"let's set
+it at 3 and activate it on the diamond. this could result in us avoiding trades taken at
+the end of a trend where trend starts to shift."* Forward days are the jury.
+
+### The open question this leaves
+
+**68% of fires happen at hump 0 or 1** — right after a direction flip, at the START of a
+trend. So the Diamond is not systematically trading late into exhausted trends. But the
+counter resets on the ENGINE's direction flip, and `TrendNow` flips when it finally
+catches up rather than when a new trend truly begins — so a "hump 0" trade can still sit
+at the top of a larger move. If so the theory is right and the instrument is coarse, and
+humps counted against the M15 structure (the only other arm to go 3/3 this week) is the
+untested version.
+
+Also shipped in this version, all default OFF and each with receipts in the session log:
+`InpTrendMode` (0 stale-pivot · 1 CamelTrend · 2 EMA slope), `InpTrendTF` (read the trend
+on M5/M15), `InpLastLowMode` (law 45 snapshot or latch), `InpSlMode` (stop at the
+defended low), `InpTargetR` / `InpBreakEvenR` (the teacher's 1:2 with breakeven at 1:1 —
+REFUSED, 27% win rate against the 33% a 2R design needs), `InpNyOnly` (NY session).

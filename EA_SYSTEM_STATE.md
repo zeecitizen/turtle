@@ -147,6 +147,7 @@ The old "H1 FVG for everything" was the systematic mistake. Matching each fixed 
 
 | Idea | Why rejected |
 |---|---|
+| **Diamond 1:2 R:R target** (`InpTargetR`, 2026-09-04) | Zee asked what the past few days' baskets would have done at 1:2 instead of the flat 1.00. Answered in MT5, real ticks, 24 combinations × 3 windows — see the court below. **Sign-reverses across windows and triples the drawdown. NOT SHIPPED.** |
 | Absorption-candle breakout (Lesson: ddvZYdA2ETo) | In-sample +$875 but **walk-forward train +$2491 → test −$1616**. Textbook overfit. |
 | S3 add sell-side / bidirectional | Sells lose on gold's bullish bias (−$46); bidirectional +$1450 < buy-only +$1496. Keep buy-only. |
 | H1 hard trend-gate on S3 | Raises WR to 78% but LOWERS total (+$1382 vs +$1496) on bullish data. Regime guard, not net-positive. |
@@ -265,3 +266,60 @@ R:R 2.0 needs sustained trends gold's chop rarely gives. The PDF's 80%/6.0-PF/29
 are forex majors / crypto / cherry-picked trend conditions, NOT validated OOS on gold.
 VERDICT: do not deploy. Confirms VSA reversal EAs (S1/S3/NSND) are the right tool for gold;
 trend-following Ichimoku is not. Do not re-test unless on a different (trending FX) instrument.
+
+---
+
+## THE TARGET-R COURT — 2026-09-04 (Diamond, `InpTargetR`)
+
+Zee: *"check for every basket we took in past few days + today, what would've happened
+if we set TP to 1:2 R:R .. instead of the current tight TP"*
+
+Answered in **MT5's Strategy Tester on 100% real ticks**, 163 ms execution delay, not a
+Python replay of our own fills — walking our fills and asking whether the 2R level came
+before the stop IS simulating trades, the exact move CLAUDE.md records as the failure
+that turned a real −$657 into a reported +$876.
+
+**Rig:** `ZeeUHV_DiamondTR` (magic 88164), the Diamond byte-for-byte plus `InpTargetR`,
+compiled into the portable rig ONLY — the live Diamond was attached over an open basket
+throughout and was never written to. Scripts: `monitor/strategy_lab/target_r_court.py`
+(one arm per run) and `target_r_sweep.py` (24 combinations across all 8 agents, 10 min).
+
+**WHY THE HOLD CAP IS IN THE GRID.** `InpMaxHoldMin = 20` closes at market after twenty
+minutes. The stock 1.00 target is hit in minutes; 2R on v1.14's structural stop is 3-8
+away. Testing 2R at hold 20 alone would have measured the clock and called it the target.
+
+### Net P&L by window (TargetR 0 = the machine as it runs today)
+
+| TargetR | hold | this_week | aug17-22 | aug05-07 | THREE-WINDOW | worst DD% | windows won |
+|---|---|---|---|---|---|---|---|
+| **0** | **20** | **−555.40** | **−1,165.80** | **−1,245.40** | **−2,966.60** | **3.79** | 0/3 |
+| 0 | 40+ | −555.40 | −1,422.70 | −1,753.70 | −3,731.80 | 4.65 | 0/3 |
+| 1 | 20 | −574.40 | +907.10 | −4,754.60 | −4,421.90 | 11.79 | 1/3 |
+| 1 | 40 | −262.30 | +965.20 | −4,524.30 | −3,821.40 | 13.49 | 1/3 |
+| 2 | 20 | −370.60 | −369.70 | −5,060.60 | −5,800.90 | 13.09 | 0/3 |
+| 2 | 40 | −623.20 | +1,469.10 | −2,480.50 | −1,634.60 | 13.76 | 1/3 |
+| 2 | 60 | −1,577.10 | +1,114.00 | −2,468.20 | −2,931.30 | 13.74 | 1/3 |
+| 3 | 40 | −1,099.20 | +2,547.30 | −2,460.50 | −1,012.40 | 14.25 | 1/3 |
+| 3 | 60 | −1,817.10 | +2,814.50 | −3,750.20 | −2,752.80 | 16.53 | 1/3 |
+
+### THE VERDICT
+
+1. **All 24 combinations lose over three windows. Not one is positive in more than one
+   of three.** No target geometry rescues this machine.
+2. **The 2R target sign-reverses**: −$1,577 on this week's tape, +$1,114 on Aug 17-22,
+   −$2,468 on Aug 5-7. `VERSION_HISTORY` already recorded this reversal before v1.14;
+   it reproduces on the structural stop, where R finally means something.
+3. **The "best" three-window totals are single-window artefacts.** 3R/h40 (−$1,012) and
+   2R/h40 (−$1,635) beat the baseline's −$2,967 — but their whole margin comes from
+   Aug 17-22 alone, and both LOSE to the baseline in the other two windows.
+4. **Drawdown is the killer.** Every R arm runs 11.8-17.0% worst-window equity drawdown
+   against the baseline's 3.79%. v1.14 shipped a −$658 REDUCTION in profit precisely to
+   halve drawdown; buying a speculative +$1,300 back for 3.6x the drawdown reverses
+   that decision on weaker evidence than the one that made it.
+5. **What IS consistent: the current flat 1.00 target loses in all three windows too**
+   (−555 / −1,166 / −1,245), steadily and with low drawdown. Its 72% win rate needs 85%
+   to break even (median live geometry 0.18R). The target is not the lever — this is the
+   same conclusion as [[project_exit_interference_costs]] and the Feb-11 finding that
+   the edge lived in the DISCRETIONARY exit.
+
+**NOT SHIPPED. `InpTargetR` exists only in `ZeeUHV_DiamondTR`, defaulted to 0 (off).**

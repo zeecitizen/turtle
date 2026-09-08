@@ -81,8 +81,30 @@ def _mt5_bars(lo, hi):
     return []
 
 
+# DRAW THE FEED THE EA JUDGED ON (Zee 2026-09-06, pointing at the 04:28 SELL).
+#
+# Every source below is OANDA. But an EA with InpOandaVolume=0 — which is the
+# Diamond's default — ranks UHVs on the BROKER's volume, and the two feeds disagree
+# about which candle is loudest in 46.4% of rolling 8-bar windows. On that 04:28 trade
+# the EA logged "UHV 02:23 (vol 87, low 4472.48)", which is broker to the decimal;
+# OANDA shows 150 and 4472.63 for the same minute, and makes 02:22 the louder bar.
+#
+# So a forensic drawn on OANDA for a broker-judged trade marks a candle the EA never
+# chose, on volume bars it never saw. The picture contradicts the decision it claims to
+# explain. Set this to True for those EAs and the chart is built from the terminal's
+# own bars instead.
+FORCE_BROKER_BARS = False
+
+
 def load_deep(lo=None, hi=None):
     """load() + the tape archive, and — if [lo, hi] is still thin — the terminal."""
+    if FORCE_BROKER_BARS and lo is not None and hi is not None:
+        # a pad either side, so the drawing window is never clipped by the request
+        b = _mt5_bars(lo - timedelta(minutes=90), hi + timedelta(minutes=90))
+        if b:
+            return b
+        print("[forensic] broker bars unavailable — falling back to OANDA; "
+              "the volume pane is NOT the feed this EA judged on")
     rows = {x[0]: x for x in load()}
     arch = Path(__file__).parent / "tape_archive_xau.csv"
     if arch.exists():
@@ -233,9 +255,90 @@ def _resolve_zeeuhv(close_local, side):
     return dict(entry_utc=entry_utc, lamp=lamp, uhv_utc=uhv_utc, fire=best[1].strip(), bar_min=bar_min)
 
 
-def resolve_trade(broker_ts, side):
+def _resolve_lawx(close_local, side, ea=None):
+    """Resolve a ZeeUHV_Diamond fire. Same dict shape as resolve_trade, or None.
+
+    THE DIAMOND SPEAKS A THIRD DIALECT (2026-09-06). _resolve_zeeuhv accepts [ZEE],
+    [LOUD] and [ZB] and requires the words "diamond(s)"; the Diamond writes
+
+      [LAWX] BUY | origin green 23:45 (...) | UHV 23:45 (vol 91, high 4472.39)
+             | breakout 23:48 (close 4472.78, vol 69)
+             | entry 4473.17 stop 4471.13 target 4474.17 | 3 diamond(s) m220 -> 8 ticket(s)
+
+    so every Diamond trade fell through to "no EA fire line in the logs" and was drawn
+    as bare candles — the exact failure this file's own header comment records from
+    2026-08-15, repeating because a new EA arrived. Zee asked for Friday's setups drawn
+    and got plain charts; that is what sent me here.
+
+    This line is BETTER than the [ZEE] one: it states the UHV's clock time and the very
+    price that formed the trigger, so nothing has to be inferred from a bar index."""
+    want = "BUY" if side.upper().startswith("B") else "SELL"
+    best = None
+    want_days = {(close_local - timedelta(days=d)).strftime("%Y%m%d") for d in (0, 1)}
+    for lf in sorted(glob.glob(MT5D + "/MQL5/Logs/*.log")):
+        stem = os.path.basename(lf)[:8]
+        if not stem.isdigit() or stem not in want_days:
+            continue
+        day = datetime.strptime(stem, "%Y%m%d").date()
+        for l in _read_log(lf):
+            if "[LAWX]" not in l:
+                continue
+            # FIVE EAs SPEAK THIS DIALECT (measured 2026-09-06): ZeeUHV_Diamond,
+            # BasedOnLaws and its A/B/C control arms all write [LAWX]. Taking "the
+            # latest [LAWX] before the close" would happily draw a Diamond trade from
+            # a BasedOnLawsB fire — harmless on a day when only one is active, wrong
+            # on 31 Aug when four were. When the caller knows the EA, insist on it.
+            if ea and not re.search(rf"\t{re.escape(ea)} \(", l):
+                continue
+            m = re.search(r"(\d\d:\d\d:\d\d).*\[LAWX\]\s+(BUY|SELL)", l)
+            if not m or m.group(2) != want:
+                continue
+            # a fire with no tickets is a rejected setup, not a trade
+            tk = re.search(r"->\s*(\d+)\s*ticket", l)
+            if tk and int(tk.group(1)) == 0:
+                continue
+            lt = datetime.combine(day, datetime.strptime(m.group(1), "%H:%M:%S").time())
+            if not (timedelta(0) <= (close_local - lt) <= timedelta(hours=6)):
+                continue
+            if best is None or lt > best[0]:
+                best = (lt, l)
+    if best is None:
+        return None
+
+    lt, line = best
+    entry_utc = lt - timedelta(hours=5)                     # Karachi log -> UTC
+
+    uhv_utc = lamp = None
+    um = re.search(r"UHV (\d\d):(\d\d) \(vol \d+,\s*(high|low)\s*([\d.]+)\)", line)
+    if um:
+        # TWO CLOCKS IN ONE LINE. The log's timestamp prefix is the PC's (Karachi), but
+        # the times the EA PRINTS INSIDE the line — origin, UHV, breakout — are the
+        # chart's, i.e. BROKER time = UTC+3 = PKT-2. Reading the inner ones as Karachi
+        # put the UHV marker two hours to the left of the candle it names; the proof is
+        # the same line's "breakout 23:48" against a 01:49 PKT fire, which is one minute
+        # before the entry only when 23:48 is read as broker.
+        hh, mm = int(um.group(1)), int(um.group(2))
+        fire_broker = entry_utc + timedelta(hours=3)
+        u_broker = fire_broker.replace(hour=hh, minute=mm, second=0, microsecond=0)
+        if u_broker > fire_broker:       # the UHV cannot follow its own breakout:
+            u_broker -= timedelta(days=1)  # the fire crossed midnight
+        uhv_utc = u_broker - timedelta(hours=3)
+        lamp = float(um.group(4))         # the UHV candle's own high/low IS the trigger
+    if lamp is None:
+        em = re.search(r"entry ([\d.]+)", line)
+        if em:
+            lamp = float(em.group(1))
+    return dict(entry_utc=entry_utc, lamp=lamp, uhv_utc=uhv_utc,
+                fire=line.strip(), bar_min=1)
+
+
+def resolve_trade(broker_ts, side, ea=None):
     """Return dict(entry_utc, lamp, uhv_utc, entry_px, exit_px) for one fill."""
     close_local = datetime.strptime(broker_ts, "%Y.%m.%d %H:%M:%S") + timedelta(hours=BROKER_TO_LOCAL_H)
+
+    lawx = _resolve_lawx(close_local, side, ea=ea)
+    if lawx:
+        return lawx
 
     # ── ZeeUHV FIRST (2026-08-15) ────────────────────────────────────────────────
     # Zee: "when i click forensic on trades page, it says no EA fire line in the logs".
@@ -408,9 +511,9 @@ def resolve_trade(broker_ts, side):
     return dict(entry_utc=entry_utc, lamp=lamp, uhv_utc=uhv_utc, fire=best[1].strip(), bar_min=bar_min)
 
 
-def draw_trade(broker_ts, side, exit_px, out=None):
+def draw_trade(broker_ts, side, exit_px, out=None, ea=None):
     """Render the forensic chart for one fill; returns the PNG path (or None)."""
-    r = resolve_trade(broker_ts, side)
+    r = resolve_trade(broker_ts, side, ea=ea)
     if not r:
         # no fire line at all: still draw the price window around the close so the
         # trade can be inspected (Zee 2026-08-07 — a dead end is worse than a chart)

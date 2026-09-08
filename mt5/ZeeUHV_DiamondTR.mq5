@@ -1,4 +1,13 @@
 //+------------------------------------------------------------------+
+//|  ZeeUHV_DiamondTR.mq5 — TEST ARM ONLY. NEVER ATTACH TO LIVE.     |
+//|  Byte-identical to ZeeUHV_Diamond v1.14 except: this nameplate,  |
+//|  magic 88154->88164, and InpTargetR (default 0 = OFF, i.e. the   |
+//|  stock flat InpTargetPts target). Built 2026-09-04 to answer     |
+//|  Zee: "what would've happened if we set TP to 1:2 R:R instead    |
+//|  of the current tight TP".                                       |
+//|  WHY A SEPARATE FILE: the Diamond is attached and holding an     |
+//|  open basket; recompiling it would hot-reload the live EA.       |
+//+------------------------------------------------------------------+
 //|  ZeeUHV_Diamond.mq5 — THE UNTOUCHED DIAMOND, resurrected         |
 //|  Byte-identical to commit 718b68a (the streak-era machine,       |
 //|  Aug 11-13 2026: 14 baskets, 100%, +$614) except this nameplate, |
@@ -13,14 +22,14 @@
 //|  It is the wild ancestor, revived for live observation.          |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.16"
+#property version   "1.15"
 #property strict
 
 #include <Trade/Trade.mqh>
 CTrade trade;
 
 input double InpLots        = 0.10;   // InpLots — lot size
-input int    InpMagicNumber = 88154;  // InpMagicNumber — 88094 = ZeeUHV, tester only
+input int    InpMagicNumber = 88164;  // InpMagicNumber — TEST ARM. 88154 = the live Diamond, never reuse it
 
 // ── HIS EYE, FOR THE ANCESTOR (2026-08-21). The Diamond judges UHVs on volume and
 // owns no other guard, so the volume feed IS its strategy. Measured over four days
@@ -29,24 +38,7 @@ input int    InpMagicNumber = 88154;  // InpMagicNumber — 88094 = ZeeUHV, test
 // the Diamond's whole disease (one basket erases nine good days).
 // Reads Common\Files\oanda_vol.csv, reloaded once per M1 bar, per-minute fallback
 // to broker volume. Levels and fills stay Blueberry's, always. Default 0.
-// ── HIS EYE OR NO TRADE (Zee 2026-09-06) ─────────────────────────────────────────
-// "we donot wish to use broker volume, we want to completely transition to OANDA
-//  volume taken from tradingview. any broker volume trades waste our time"
-//
-// Default flipped 0 -> 1. But the switch alone was never enough, and the 04:28 SELL
-// of 04 Sep is the proof: BarVolume() falls back to the broker PER BAR, silently,
-// whenever the table lacks a minute. That trade logged "UHV 02:23 (vol 87)" — broker
-// to the decimal — while his own chart showed 150 that minute and made 02:22 the
-// louder bar. A different candle, a different trigger, a trade that does not exist on
-// his chart. It lost $123.10.
-//
-// So the fallback itself is the defect, not the default. InpOandaStrict makes a
-// missing OANDA minute a minute we CANNOT READ: no fire, rather than a fire judged on
-// a feed he does not use. InpVolFreshSec does the same for a stalled bridge.
-// Levels, stops and fills stay Blueberry's — we trade his broker, we judge his chart.
-input int    InpOandaVolume = 1;    // 1 = judge UHVs on OANDA (TradingView) volume
-input bool   InpOandaStrict = true; // a missing OANDA minute = no trade, never broker
-input int    InpVolFreshSec = 90;   // table older than this = stalled bridge, no trade
+input int    InpOandaVolume = 0;    // 1 = judge UHVs on OANDA (TradingView) volume
 
 input group "── His rules (each one quoted from his labels in the code) ──"
 input int    InpTrendLook   = 20;   // InpTrendLook — 20 validated
@@ -197,108 +189,24 @@ input int    InpFailCandles = 0;      // >0: close the basket after N candles ag
 // reported that as "his structural stop never helps". It was my arithmetic.
 input double InpStructStop  = 0.50;   // stop this far (price) beyond the retracement extreme
 input double InpDiaLoudMult = 1.30;   // law 1: how loud the UHV must be vs its neighbours
-// ── THE TREND ENGINE (2026-09-08) ────────────────────────────────────────────────
-// Zee: "our diamond EA is only lacking one thing. a proper trend checking system. we
-// rely on camel humps. but the end of the trend is not reliably detected. this makes
-// our EA lose hard when the trend is shifting."
-//
-// TrendNow() (mode 0) compares two STALE pivots to each other: highs[n-1] > highs[n-2]
-// and lows[n-1] > lows[n-2]. A pivot is only confirmed InpPivot bars after it forms, so
-// the test is structurally blind at the very moment a leg pushes into new ground — and
-// BasedOnLaws measured the same test refusing 287 of 420 session minutes on a day Zee
-// reads as an uptrend throughout. 80% of clean trends called a range across seven days.
-// That is BOTH of tonight's failures at once: it misses setups inside strong moves, and
-// it keeps saying "uptrend" through the confirmation lag at the top.
-//
-// Mode 1 is CamelTrend, ported MQL->MQL from BasedOnLaws v1.33-34 where it scored
-// 61.1% / +1044.30 against the stale-pivot version's 31.6% / +298.10. It draws the humps
-// from pivots and asks his question in the PRESENT TENSE — "are we breaking above
-// previous highs" — instead of asking whether two old pivots were rising.
-// ── READ THE TREND ON A SLOWER CHART, TRADE ON THIS ONE (2026-09-08) ─────────────
-// Zee: "maybe i think the problem could be that the 1 minute timeframe shifts alot
-// between trends ... it seems that shifting trend is the cause of the problem"
-//
-// He is describing the TREND, not the entry. Running the whole EA on M5 tests something
-// else entirely — it moves the trend AND the entries AND the structural stop at once,
-// and the court showed why that fails: setups collapse from ~1,000 to ~100 and the stop
-// widens with the slower swings while the target stays a flat 1.00.
-//
-// This isolates his claim. The structure walk reads InpTrendTF; everything else — the
-// retracement, the UHV, the breakout, the stop, the fills — stays on the trading chart.
-// 0 = the chart the EA is attached to (unchanged behaviour).
-// ── THE TEACHER'S ECONOMICS (Zee 2026-09-08) ─────────────────────────────────────
-// "the idea is that if we maintain a low with us. we then have an SL for a trade at the
-//  last low (the deeper low amongst the lows if there's more than one confirmed low).
-//  then we target R:R ratio 1:2 as the TP. at R:R ratio 1:1 we breakeven and let it run
-//  to R:R ratio 1:2 in TP. This is what the original author of the strategy said."
-//
-// The Diamond has never run this shape. Its target is a FLAT 1.00 against a structural
-// stop of 2-4, i.e. ~0.2R, which needs ~83% just to break even; the live book delivers
-// 67-81% and loses. Every loss costs three winners. This is the first configuration
-// that changes the payoff instead of chasing the hit rate.
-//
-// InpSlMode 1 uses the level the trend engine DEFENDS — the deepest confirmed low —
-// rather than the retracement's own extreme, which is his "deeper low amongst the lows".
-input int    InpSlMode      = 0;      // 0 = retracement extreme (line 42) · 1 = defended structural low
-input double InpTargetR     = 0.0;    // >0: TP = this many R. 0 = the flat InpTargetPts
-input double InpBreakEvenR  = 0.0;    // >0: at this R move the stop to entry (his 1:1 rule)
-input double InpBeBufferPts = 0.0;    // park breakeven this far the profitable side of entry
 
-// ── NEW YORK ONLY (Zee 2026-09-08, his LAWS.md line 47) ──────────────────────────
-// "ok YES let's make Diamond NY only.. to target a 91% winrate"
-// Measured on 601 real Diamond tickets, 20 Aug - 8 Sep, split by broker hour:
-//   NY (broker 15-23)  264 tk  91% WR  +494.60   +38.05/day   11 green days / 2 red
-//   outside            337 tk  74% WR -1976.80  -141.20/day    7 green / 6 red
-// Broker is UTC+3 and New York 08:00-17:00 ET is UTC-4 in September, so his session
-// is broker 15:00-23:59. Hours are the BROKER's, which is what TimeCurrent() returns.
-// ── THE HUMP BUDGET (Zee 2026-09-09, with his drawing) ──────────────────────────
-// "When a trend starts on 1 minute scale it makes 2..3..X definite camel humps.. after
-//  a certain number of humps the trend expires. price starts shifting to a new trend.
-//  if we stop after the price has made a new trend and the X number of humps are done,
-//  we might be able to avoid the ONE LAST TRADE that is taken at the end of the trend."
+// ── THE R-MULTIPLE TARGET (2026-09-04, Zee: "what would've happened if we set TP to
+// 1:2 R:R instead of the current tight TP").
 //
-// A trend gets a BUDGET of humps rather than a verdict. Every other attempt on this
-// problem asked "has the trend ended yet?" and answered too late by construction —
-// TrendNow needs two fresh pivots, and line 45 needs the low already broken. Counting
-// forward from the trend's birth needs no confirmation at all: the fourth hump is the
-// fourth hump whether or not the top has printed.
+// The Diamond has never had one. Its target is InpTargetPts — a FLAT 1.00 in price,
+// fixed since the streak era when the stop was also flat (20 points = 2.00). Back
+// then 1.00 against 2.00 was a constant 0.5R and the ratio never moved.
 //
-// A hump = one confirmed swing in the trend's own direction — the orange arcs he drew.
-// The count resets whenever the trend direction changes, so a new trend gets a new
-// budget. 0 = off.
-// SHIPPED AT 3 (Zee 2026-09-09): "let's set it at 3 and activate it on the diamond.
-// this could result in us avoiding trades taken at the end of a trend where trend
-// starts to shift."
+// v1.14 changed the stop to STRUCTURAL — under the retracement extreme — so the risk
+// is now whatever the chart says and varies trade to trade, while the target stayed
+// nailed at 1.00. The ratio is therefore no longer a design choice; it is an accident
+// of how deep the retracement happened to be. On the live basket of 2026-09-04
+// 01:49 AM PKT the stop sat 2.04 away and the target 1.00 — 0.49R.
 //
-// 3 is the MEASURED median. Instrumented over 113 trends on 31 Aug - 5 Sep: 1 hump 15
-// trends, 2 humps 34, 3 humps 25, 4 humps 11 — median 3, mean 3.5, and 75% of trends
-// are finished by hump 4. His model ("hump 3 trade, hump 4 hmm maybe it shifts") is
-// what the tape actually does.
-//
-// SHIPPED AGAINST THE BACKTEST, ON HIS INSTRUCTION AND WITH THE NUMBER IN FRONT OF HIM.
-// Three windows, real ticks: budget 3 = +768.10 (1/3 windows) against OFF = +2,287.40
-// (2/3). Budget 8 scored better (+2,427.30, 3/3) but refuses ONE trade in 28 — a
-// placebo, which is why it was withdrawn. 3 refuses 4-5 in 28 and is the only setting
-// that actually implements the rule he is asking for.
-input int    InpMaxHumps    = 3;      // >0: stop taking setups once the trend has made this many humps
-input bool   InpNyOnly      = false;  // true = trade only the New York session
-input int    InpNyFromHour  = 15;     // broker hour, inclusive
-input int    InpNyToHour    = 24;     // broker hour, exclusive
-input int    InpTrendTF     = 0;      // 0 = this chart · 5 = read trend on M5 · 15 = M15
-input int    InpTrendMode   = 0;      // 0 = TrendNow (stale pivots) · 1 = CamelTrend · 2 = EMA slope
-input int    InpHighTest    = 1;      // CamelTrend: 0 = rising pivots · 1 = broke_top (his words) · 2 = either
-input int    InpEmaSlopeBars = 10;    // mode 2: slope of EMA-5 measured over N bars
-input int    InpLastLowMode = 0;      // 0 = off · 1 = snapshot (BasedOnLaws) · 2 = latch
-input bool   InpStopOnLastLow = false; // LAW 45: stop buying once the last low breaks
+// 0 = OFF, keeping the stock flat InpTargetPts. New behaviour defaults off, per
+// feedback_backtests_hallucinate_take_all_chances.
+input double InpTargetR     = 0.0;    // >0: target = this many multiples of the ACTUAL stop distance
 
-double   g_guard = 0;          // law 45: the level being defended, for the log
-int      g_hump_dir = 0;      // the trend whose humps we are counting
-int      g_hump_n = 0;        // humps completed since that trend began
-datetime g_hump_last = 0;     // the newest swing already counted
-int      c_humps = 0;         // setups the budget refused
-bool     g_ll_dead_up = false; // law 45 LATCH: buying stopped, the last low broke
-bool     g_ll_dead_dn = false; // the short mirror
-int      c_law45 = 0;          // setups the latch refused
 datetime g_last_bar = 0;
 datetime g_last_fire = 0;
 
@@ -372,68 +280,14 @@ long OandaVolAt(datetime t) {          // binary search the sorted table
    return -1;
 }
 
-// ── THE TABLE IS PER-MINUTE; THE CHART NEED NOT BE (2026-09-08) ──────────────────
-// Zee: "what if we test our EA on the OANDA, on the 5 minute timeframe instead of 1
-// minute. maybe that one is much better due to having a stable trend."
-//
-// oanda_vol.csv holds ONE ROW PER MINUTE. OandaVolAt(iTime(...)) therefore returns the
-// volume of the bar's FIRST MINUTE ONLY. On M1 that is the whole bar and correct; on M5
-// it is about a fifth of it — and since every UHV test is a comparison BETWEEN bars,
-// each reading a different fifth, the entire ranking would be wrong while every number
-// still looked plausible. An M5 court run on that would have answered his question with
-// noise.
-//
-// A bar's volume is the SUM of the minutes it spans. Under strict mode a single missing
-// minute voids the whole bar: half a candle of his volume is not his candle.
-long OandaVolSpan(datetime t, int mins) {
-   if (mins <= 1) return OandaVolAt(t);
-   long sum = 0;
-   for (int m = 0; m < mins; m++) {
-      long v = OandaVolAt(t + m * 60);
-      if (v <= 0) {
-         if (InpOandaStrict) return -1;   // an incomplete candle is not his candle
-         continue;
-      }
-      sum += v;
-   }
-   return (sum > 0) ? sum : -1;
-}
-
 long BarVolume(int k) {
    if (InpOandaVolume == 1 && g_ov_n > 0) {
-      long ov = OandaVolSpan(iTime(_Symbol, PERIOD_CURRENT, k),
-                             (int)(PeriodSeconds() / 60));
+      long ov = OandaVolAt(iTime(_Symbol, PERIOD_CURRENT, k));
       if (ov > 0) return ov;
    }
-   // THE SILENT FALLBACK, NOW LOUD AND FATAL. Reaching here under strict mode means
-   // the table lacks this minute; returning the broker's number would decide a UHV on
-   // a feed Zee does not read. -1 propagates as "unreadable" and VolWindowWhole()
-   // refuses the setup outright.
-   if (InpOandaVolume == 1 && InpOandaStrict) return -1;
    long rv = iRealVolume(_Symbol, PERIOD_CURRENT, k);
    if (rv > 0) return rv;
    return iVolume(_Symbol, PERIOD_CURRENT, k);
-}
-
-// EVERY BAR THE DECISION TOUCHES MUST BE HIS. Checking only the UHV would still let
-// the neighbour comparisons (loudness, "quieter than the UHV", the 20-bar average)
-// read broker numbers, which is the same feed-mixing one level down.
-bool VolWindowWhole(int need) {
-   if (InpOandaVolume != 1 || !InpOandaStrict) return true;
-   if (g_ov_n <= 0) return false;
-   for (int q = 1; q <= need; q++)
-      if (OandaVolSpan(iTime(_Symbol, PERIOD_CURRENT, q),
-                       (int)(PeriodSeconds() / 60)) <= 0) return false;
-   return true;
-}
-
-// A STALLED BRIDGE IS NOT A QUIET MARKET. It died for 61.8 hours over 5-6 Sep and
-// nothing stopped trading; without this the EA would simply have run on broker volume
-// the whole time and called the results his.
-bool VolFeedFresh() {
-   if (InpOandaVolume != 1 || InpVolFreshSec <= 0) return true;
-   if (MQLInfoInteger(MQL_TESTER)) return true;      // the tester replays a frozen table
-   return (g_ov_newest > 0 && (TimeCurrent() - g_ov_newest) <= InpVolFreshSec);
 }
 
 double bOpen(int k) { return iOpen (_Symbol, PERIOD_CURRENT, k); }
@@ -454,283 +308,17 @@ double BodyLo(int k) { return MathMin(bOpen(k), bClose(k)); }
 //|   'price made a lower low' or 'formed HH' — so this reads swing   |
 //|   pivots, and returns 0 when they disagree.                       |
 //+------------------------------------------------------------------+
-// ── LAW 45 — THE TREND IS OVER WHEN THE LAST LOW BREAKS (2026-09-07) ─────────────
-//
-// Zee: "the EA keeps performing until there occurs the end of a trend. at the end of
-// the trend the EA expects the price to go upwards still whereas the price takes a
-// turn downwards. that last trade is in much loss ... that last losing trade eats up
-// all the profit"
-//
-// His LAWS.md line 45 already answers this, and the Diamond has never implemented it:
-//   "Until when can we trade this strategy? we stop buying, when the last low is
-//    broken .. we keep trading until the last low is safe (unbroken below). Whenever
-//    a high is broken, the deepest point (the lowest point) is the confirmed higher
-//    low."
-//
-// WHY TrendNow() CANNOT DO THIS JOB. It declares an uptrend dead only once TWO new
-// pivot lows have printed and the newer sits under the older — and a pivot needs
-// InpPivot bars on each side before it is confirmed at all. At a top the structure
-// breaks first and TrendNow() keeps returning +1 through the confirmation lag. That
-// lag is the window his losing trade is taken in. Line 45 needs no confirmation: one
-// level is broken, buying stops, immediately.
-//
-// Ported MQL->MQL from BasedOnLaws' CamelTrend(), which has carried this law since
-// 2026-08-23 — including the refinement that the guard only ever RISES (once the last
-// hump top is taken out, the deepest point since it becomes the new defended low) and
-// the exact mirror for shorts.
-//
-// DEFAULT OFF. A new gate ships dark and earns its way on with receipts.
-bool LastLowSafe(int side) {
-   if (InpLastLowMode != 2) return true;
-   return (side > 0) ? !g_ll_dead_up : !g_ll_dead_dn;
-}
-
-// ── THE LATCH (2026-09-07, after the snapshot version scored 0 skips in 2,763 bars) ──
-//
-// The first implementation asked "is the close under the last low RIGHT NOW" at the
-// moment of the breakout — and a breakout is a candle thrusting UP through a level,
-// while the guard is a pivot low confirmed at least InpPivot bars earlier. The test was
-// evaluated at the one instant it cannot fail: 106 trades, 106 with the gate on, not a
-// single refusal.
-//
-// His line 45 is not a sample, it is a STATE: "we stop buying, WHEN the last low is
-// broken .. we KEEP trading UNTIL the last low is safe". Buying stops at the break and
-// stays stopped; it resumes only when "a high is broken" and the deepest point since
-// becomes the new confirmed higher low. At a trend's end the low breaks, price bounces,
-// and the breakout fires on the bounce — which is precisely the trade Zee describes as
-// eating the week, and precisely the one a snapshot waves through.
-//
-// Updated once per CLOSED BAR, before any setup is searched for.
-void LastLowUpdate() {
-   if (InpLastLowMode != 2) return;
-   int p = MathMax(1, InpPivot);
-   double hs[64], ls[64];
-   int    hidx[64], lidx[64];
-   int nh = 0, nl = 0;
-   for (int k = InpTrendLook; k >= p + 1; k--) {
-      bool ph = true, pl = true;
-      for (int q = 1; q <= p; q++) {
-         if (bHigh(k) <= bHigh(k - q) || bHigh(k) <= bHigh(k + q)) ph = false;
-         if (bLow(k)  >= bLow(k - q)  || bLow(k)  >= bLow(k + q))  pl = false;
-      }
-      if (ph && nh < 64) { hs[nh] = bHigh(k); hidx[nh] = k; nh++; }
-      if (pl && nl < 64) { ls[nl] = bLow(k);  lidx[nl] = k; nl++; }
-   }
-   if (nh < 2 || nl < 2) return;          // no structure drawn: leave the latch alone
-
-   double defend = ls[nl - 1];
-   int    peak_bar = hidx[nh - 1];
-   double peak = hs[nh - 1];
-   bool taken = false;
-   for (int q = peak_bar - 1; q >= 1; q--)
-      if (bHigh(q) > peak) { taken = true; break; }
-   if (taken) {                            // "whenever a high is broken, the deepest
-      double deep = bLow(1);               //  point since is the confirmed higher low"
-      for (int q = 1; q <= peak_bar; q++) deep = MathMin(deep, bLow(q));
-      if (deep > defend) defend = deep;    // the guard only ever rises
-   }
-   g_guard = defend;
-
-   // LONG SIDE. Break the defended low by BODY (his line 13 measures breaks by body,
-   // "the low must be broken by body not wick") and buying stops. It resumes only when
-   // a body closes above the last hump top — a new high broken, a new leg, and by his
-   // own sentence a new confirmed higher low underneath it.
-   if (!g_ll_dead_up) {
-      if (BodyLo(1) < defend) g_ll_dead_up = true;
-   } else if (BodyHi(1) > hs[nh - 1]) {
-      g_ll_dead_up = false;
-   }
-
-   // SHORT MIRROR: selling stops when the defended high is taken by body, and resumes
-   // when a body closes below the last trough.
-   double defendH = hs[nh - 1];
-   if (!g_ll_dead_dn) {
-      if (BodyHi(1) > defendH) g_ll_dead_dn = true;
-   } else if (BodyLo(1) < ls[nl - 1]) {
-      g_ll_dead_dn = false;
-   }
-}
-
-ENUM_TIMEFRAMES TrendTF() {
-   if (InpTrendTF == 5)  return PERIOD_M5;
-   if (InpTrendTF == 15) return PERIOD_M15;
-   if (InpTrendTF == 3)  return PERIOD_M3;
-   if (InpTrendTF == 30) return PERIOD_M30;
-   return PERIOD_CURRENT;
-}
-// structure accessors — identical to b*() when InpTrendTF is 0
-double tHigh(int k)  { return iHigh (_Symbol, TrendTF(), k); }
-double tLow(int k)   { return iLow  (_Symbol, TrendTF(), k); }
-double tOpen(int k)  { return iOpen (_Symbol, TrendTF(), k); }
-double tClose(int k) { return iClose(_Symbol, TrendTF(), k); }
-double tBodyHi(int k) { return MathMax(tOpen(k), tClose(k)); }
-double tBodyLo(int k) { return MathMin(tOpen(k), tClose(k)); }
-
-// ── CAMEL HUMPS, DRAWN — his line 7 in the present tense ─────────────────────────
-// Ported from BasedOnLaws CamelTrend(). Returns +1/-1/0 and hands back the level his
-// line 45 defends. The guard only ever RISES for a long (falls for a short): once the
-// newest hump top is taken out, the deepest point since it becomes the confirmed
-// higher low.
-int CamelTrendD(double &lastLow) {
-   int p = MathMax(1, InpPivot);
-   double hs[64], ls[64];
-   int    hidx[64], lidx[64];
-   int nh = 0, nl = 0;
-   for (int k = InpTrendLook; k >= p + 1; k--) {          // oldest -> newest
-      bool ph = true, pl = true;
-      for (int q = 1; q <= p; q++) {
-         if (tHigh(k) <= tHigh(k - q) || tHigh(k) <= tHigh(k + q)) ph = false;
-         if (tLow(k)  >= tLow(k - q)  || tLow(k)  >= tLow(k + q))  pl = false;
-      }
-      if (ph && nh < 64) { hs[nh] = tHigh(k); hidx[nh] = k; nh++; }
-      if (pl && nl < 64) { ls[nl] = tLow(k);  lidx[nl] = k; nl++; }
-   }
-   lastLow = 0;
-   if (nh < 2 || nl < 2) return 0;
-
-   bool higher_low   = ls[nl - 1] > ls[nl - 2];
-   bool rising_tops  = hs[nh - 1] > hs[nh - 2];
-   bool broke_top = false;                    // "we are BREAKING ABOVE previous highs"
-   for (int q = hidx[nh - 1] - 1; q >= 1; q--)
-      if (tBodyHi(q) > hs[nh - 1]) { broke_top = true; break; }
-   bool higher_high = (InpHighTest == 0) ? rising_tops
-                    : (InpHighTest == 1) ? broke_top
-                                         : (broke_top || rising_tops);
-
-   bool lower_high      = hs[nh - 1] < hs[nh - 2];
-   bool falling_bottoms = ls[nl - 1] < ls[nl - 2];
-   bool broke_bottom = false;
-   for (int q = lidx[nl - 1] - 1; q >= 1; q--)
-      if (tBodyLo(q) < ls[nl - 1]) { broke_bottom = true; break; }
-   bool lower_low = (InpHighTest == 0) ? falling_bottoms
-                  : (InpHighTest == 1) ? broke_bottom
-                                       : (broke_bottom || falling_bottoms);
-
-   bool up   = (higher_high && higher_low);
-   bool down = (lower_low   && lower_high);
-   if (up == down) return 0;
-
-   if (up) {
-      double defend = ls[nl - 1];
-      int    peak_bar = hidx[nh - 1];
-      double peak = hs[nh - 1];
-      bool taken = false;
-      for (int q = peak_bar - 1; q >= 1; q--)
-         if (tHigh(q) > peak) { taken = true; break; }
-      if (taken) {
-         double deep = tLow(1);
-         for (int q = 1; q <= peak_bar; q++) deep = MathMin(deep, tLow(q));
-         if (deep > defend) defend = deep;
-      }
-      lastLow = defend;
-      return +1;
-   }
-   double defendH = hs[nh - 1];
-   int    trough_bar = lidx[nl - 1];
-   double trough = ls[nl - 1];
-   bool broken = false;
-   for (int q = trough_bar - 1; q >= 1; q--)
-      if (tLow(q) < trough) { broken = true; break; }
-   if (broken) {
-      double peakSince = tHigh(1);
-      for (int q = 1; q <= trough_bar; q++) peakSince = MathMax(peakSince, tHigh(q));
-      if (peakSince < defendH) defendH = peakSince;
-   }
-   lastLow = defendH;
-   return -1;
-}
-
-// His "extra confirmation" as a trend in its own right: the slope of EMA-5 over N bars.
-// Scored +624 on BasedOnLaws where the stale-pivot structure scored +296.
-int TrendByEma(double &lastLow) {
-   lastLow = 0;
-   int n = MathMax(1, InpEmaSlopeBars);
-   double e0 = 0, e1 = 0;
-   int h = iMA(_Symbol, PERIOD_CURRENT, 5, 0, MODE_EMA, PRICE_CLOSE);
-   if (h == INVALID_HANDLE) return 0;
-   double buf[];
-   if (CopyBuffer(h, 0, 1, n + 1, buf) < n + 1) return 0;
-   e0 = buf[n];          // newest
-   e1 = buf[0];          // n bars older
-   int p = MathMax(1, InpPivot);
-   for (int k = p + 1; k <= InpTrendLook; k++) {   // the level line 45 defends
-      bool bot = true;
-      for (int q = 1; q <= p && bot; q++)
-         if (bLow(k) >= bLow(k - q) || bLow(k) >= bLow(k + q)) bot = false;
-      if (bot) { lastLow = bLow(k); break; }
-   }
-   if (e0 > e1) return +1;
-   if (e0 < e1) return -1;
-   return 0;
-}
-
-// Counts the trend's completed swings. Runs once per CLOSED BAR, before any gate, so
-// the tally is right even on bars where the EA would not have traded anyway.
-void HumpUpdate() {
-   if (InpMaxHumps <= 0) return;
-   double ll = 0;
-   int t = TrendEngineFwd(ll);
-   // ZERO IS NOT A NEW TREND — it is the absence of a reading, and both engines return
-   // it constantly DURING a retracement, which is exactly when a hump is forming. The
-   // first version reset on any change including t==0, so every hump erased its own
-   // count and the tally never passed 1: budgets 2..8 were byte-identical to "off".
-   // Only a genuine direction FLIP starts a new budget; a flicker to 0 is ignored and
-   // the count keeps running against the direction last confirmed, which is what his
-   // drawing shows — the trend persists through its own pullbacks.
-   if (t != 0 && t != g_hump_dir) {
-      if (InpVerbose && g_hump_dir != 0)
-         PrintFormat("[HUMP] flip %s -> %s after %d humps",
-                     (g_hump_dir > 0 ? "UP" : "DN"), (t > 0 ? "UP" : "DN"), g_hump_n);
-      g_hump_dir = t;
-      g_hump_n = 0;
-      g_hump_last = 0;
-   }
-   int dir = g_hump_dir;
-   if (dir == 0) return;
-   int p = MathMax(1, InpPivot);
-   for (int k = p + 1; k <= InpTrendLook; k++) {
-      bool ok = true;
-      for (int q = 1; q <= p && ok; q++) {
-         if (dir > 0) {
-            if (tHigh(k) <= tHigh(k - q) || tHigh(k) <= tHigh(k + q)) ok = false;
-         } else {
-            if (tLow(k) >= tLow(k - q) || tLow(k) >= tLow(k + q)) ok = false;
-         }
-      }
-      if (!ok) continue;
-      // the NEWEST confirmed swing only; older ones were counted when they printed
-      datetime pt = iTime(_Symbol, TrendTF(), k);
-      if (pt != g_hump_last) {
-         g_hump_last = pt;
-         g_hump_n++;
-         if (InpVerbose)
-            PrintFormat("[HUMP] %s hump %d at %s", (dir > 0 ? "UP" : "DN"),
-                        g_hump_n, TimeToString(pt, TIME_MINUTES));
-      }
-      break;
-   }
-}
-
-int TrendEngine(double &lastLow) {
-   if (InpTrendMode == 1) return CamelTrendD(lastLow);
-   if (InpTrendMode == 2) return TrendByEma(lastLow);
-   lastLow = 0;
-   return TrendNow();
-}
-
-int TrendEngineFwd(double &lastLow) { return TrendEngine(lastLow); }
-
 int TrendNow() {
    double highs[]; double lows[];
    ArrayResize(highs, 0); ArrayResize(lows, 0);
    for (int k = InpTrendLook; k >= InpPivot + 1; k--) {
       bool ph = true, pl = true;
       for (int d = 1; d <= InpPivot; d++) {
-         if (tHigh(k) < tHigh(k - d) || tHigh(k) < tHigh(k + d)) ph = false;
-         if (tLow(k) > tLow(k - d) || tLow(k) > tLow(k + d)) pl = false;
+         if (bHigh(k) < bHigh(k - d) || bHigh(k) < bHigh(k + d)) ph = false;
+         if (bLow(k) > bLow(k - d) || bLow(k) > bLow(k + d)) pl = false;
       }
-      if (ph) { int n = ArraySize(highs); ArrayResize(highs, n + 1); highs[n] = tHigh(k); }
-      if (pl) { int n = ArraySize(lows);  ArrayResize(lows,  n + 1); lows[n]  = tLow(k); }
+      if (ph) { int n = ArraySize(highs); ArrayResize(highs, n + 1); highs[n] = bHigh(k); }
+      if (pl) { int n = ArraySize(lows);  ArrayResize(lows,  n + 1); lows[n]  = bLow(k); }
    }
    int nh = ArraySize(highs), nl = ArraySize(lows);
    if (nh < 2 || nl < 2) return 0;
@@ -976,12 +564,9 @@ int OnInit() {
    // The load fingerprint. Hot-reload of an attached chart is UNRELIABLE, so this line is
    // how a deploy is verified — if the Experts tab does not say v1.10 with stack x2, the
    // chart is still running the old binary and the change did NOT take.
-   // KEEP THIS STRING IN STEP WITH #property version. It said v1.14 for the whole of
-   // the v1.15 ship (2026-09-06) and the live log therefore misreported which machine
-   // was trading — the one thing the load fingerprint exists to settle.
-   PrintFormat("[DIA] ZeeUHV v1.16 — OANDA volume STRICT, HUMP BUDGET %d, sweep REQUIRED, hold 20m, STRUCTURAL stop 5 pips. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[DIA] ZeeUHV v1.14 — sweep REQUIRED, hold 20m, STRUCTURAL stop 5 pips. SL %.1f / TP %.1f · magic %d"
                " · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
-               InpMaxHumps, InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
+               InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
                4 * MathMax(1, InpStackMult) * InpLots * InpStopPts * 100.0);
    return INIT_SUCCEEDED;
@@ -990,47 +575,11 @@ void OnDeinit(const int r) { PrintFormat("[DIA] deinit reason=%d", r); }
 
 //+------------------------------------------------------------------+
 void TryFire() {
-   LastLowUpdate();            // his line 45 is a STATE — updated every closed bar,
-                               // not sampled at the moment of a breakout
-   HumpUpdate();               // and so is the hump tally
-   // THE BUDGET IS SPENT. Checked before the session and before every law, because a
-   // refusal here is about the trend's AGE, not about the setup in front of us.
-   if (InpMaxHumps > 0 && g_hump_n >= InpMaxHumps) {
-      c_humps++;
-      if (InpVerbose)
-         PrintFormat("[DIA] [SKIP] hump budget spent — %d humps on this %s trend",
-                     g_hump_n, (g_hump_dir > 0 ? "up" : "down"));
-      return;
-   }
-   // HIS LINE 47. Checked first: a session refusal is not a law refusal, and mixing
-   // the two would make the skip counters lie about why the EA stood down.
-   if (InpNyOnly) {
-      MqlDateTime _t; TimeToStruct(TimeCurrent(), _t);
-      if (_t.hour < InpNyFromHour || _t.hour >= InpNyToHour) return;
-   }
    if (OpenCount() >= InpMaxOpen) return;
    if (g_last_fire > 0 &&
        (TimeCurrent() - g_last_fire) < InpCooldownBar * PeriodSeconds()) return;
    if (!WindowContinuous(InpTrendLook + 5)) {
       if (InpVerbose) Print("[DIA] [SKIP] gap in lookback");
-      return;
-   }
-   // HIS EYE OR NO TRADE — checked BEFORE any law is consulted, so a feed problem can
-   // never be mistaken for the laws refusing a setup.
-   if (!VolFeedFresh()) {
-      static datetime _stale_said = 0;
-      datetime _b = iTime(_Symbol, PERIOD_CURRENT, 0);
-      if (_b != _stale_said) {                       // one line per bar, not per tick
-         _stale_said = _b;
-         PrintFormat("[DIA] [SKIP] OANDA volume %d s stale (bridge stalled?) — "
-                     "standing down rather than judging on broker volume",
-                     (int)(TimeCurrent() - g_ov_newest));
-      }
-      return;
-   }
-   if (!VolWindowWhole(InpTrendLook + InpRetraceBack + 8)) {
-      g_ov_miss++;
-      if (InpVerbose) Print("[DIA] [SKIP] OANDA table has a hole in the window");
       return;
    }
 //  THE 40% GATE, under test (Zee 2026-08-10: "can u check what's stopping us from
@@ -1040,20 +589,7 @@ void TryFire() {
 //  consulted. It is the single largest brake on trade count, and it was assumed, never
 //  tested. With InpRequireTrend=false a ranging tape may still trade: we simply try
 //  both sides and take whichever completes a lawful setup.
-   double lastLow = 0;
-   int t = TrendEngine(lastLow);
-   g_guard = lastLow;
-   // HIS LINE 45, mode 1: the snapshot BasedOnLaws ships — refuse while price sits the
-   // wrong side of the defended level. Mode 2 is the latch (LastLowUpdate). Mode 0 off.
-   if (InpLastLowMode == 1 && lastLow > 0 && t != 0) {
-      if ((t > 0 && bClose(1) < lastLow) || (t < 0 && bClose(1) > lastLow)) {
-         c_law45++;
-         if (InpVerbose)
-            PrintFormat("[DIA] [SKIP] law 45 snapshot — guard %.2f, close %.2f",
-                        lastLow, bClose(1));
-         return;
-      }
-   }
+   int t = TrendNow();
    int sides[2]; int nsides = 0;
    if (t != 0) { sides[0] = t; nsides = 1; }
    else if (!InpRequireTrend) { sides[0] = +1; sides[1] = -1; nsides = 2; }
@@ -1067,16 +603,6 @@ void TryFire() {
       int u = FindUhv(o, try_side);
       if (u < 0) continue;
       if (!BreakoutIsBar1(u, try_side)) continue;
-      // HIS LINE 45, checked last: a lawful setup on a side whose defended level has
-      // already broken is exactly the trade that ends the run. Inside the loop, so
-      // blocking one side still lets the other be tried.
-      if (!LastLowSafe(try_side)) {
-         c_law45++;
-         if (InpVerbose)
-            PrintFormat("[DIA] [SKIP] law 45 — %s guard %.2f broken by close %.2f",
-                        (try_side > 0 ? "last low" : "last high"), g_guard, bClose(1));
-         continue;
-      }
       origin = o; uhv = u; side = try_side; break;
    }
    if (side == 0) {
@@ -1093,19 +619,13 @@ void TryFire() {
    // market has never heard of. Still one price shared by the whole basket, because the
    // target is too, and splitting only one of them would change two things at once.
    if (InpStructStop > 0) {
-      // InpSlMode 1: "the deeper low amongst the lows if there's more than one
-      // confirmed low" — the level the trend engine is defending, which by his line 45
-      // only ever rises. Falls back to the retracement extreme when the structure has
-      // not drawn one, so the stop is never left undefined.
       double ext = RetraceExtreme(origin, t);
-      if (InpSlMode == 1 && g_guard > 0) {
-         ext = (t > 0) ? MathMin(ext, g_guard) : MathMax(ext, g_guard);
-      }
       sl = (t > 0) ? ext - InpStructStop : ext + InpStructStop;
    }
    double tp = (t > 0) ? px + InpTargetPts : px - InpTargetPts;
-   // HIS 1:2. Measured from the SAME entry the stop is, so "1:2" is the real distance
-   // to the real stop rather than a nominal figure.
+   // R-MULTIPLE TARGET. Measured from the SAME entry the stop is measured from, so
+   // "1:2" means the real distance to the real stop, not a nominal figure. When the
+   // structural stop is off this reduces to InpStopPts and is still exact.
    if (InpTargetR > 0) {
       double risk = MathAbs(px - sl);
       if (risk > 0) tp = (t > 0) ? px + InpTargetR * risk : px - InpTargetR * risk;
@@ -1205,7 +725,7 @@ void TryFire() {
       // [LAWX] grammar the laws EA uses, which law_trade_diagram.py already parses.
       PrintFormat("[LAWX] %s | origin %s %s (retracement began the bar after) | "
                   "UHV %s (vol %d, %s %.2f) | breakout %s (close %.2f, vol %d) | "
-                  "entry %.2f stop %.2f target %.2f | hump %d | %d diamond(s) m%d -> %d ticket(s), %.2f lots",
+                  "entry %.2f stop %.2f target %.2f | %d diamond(s) m%d -> %d ticket(s), %.2f lots",
                   t > 0 ? "BUY " : "SELL",
                   t > 0 ? "green" : "red",
                   TimeToString(iTime(_Symbol, PERIOD_CURRENT, origin), TIME_MINUTES),
@@ -1215,7 +735,7 @@ void TryFire() {
                   (t > 0 ? bHigh(uhv) : bLow(uhv)),
                   TimeToString(iTime(_Symbol, PERIOD_CURRENT, 1), TIME_MINUTES),
                   bClose(1), (int)BarVolume(1),
-                  px, sl, tp, g_hump_n, dia, g_dia_mask, (int)placed, total);
+                  px, sl, tp, dia, g_dia_mask, (int)placed, total);
    }
 }
 
@@ -1249,38 +769,6 @@ void FailCandleCheck() {
    if (InpVerbose)
       PrintFormat("[DIA] breakout failed — %d candles against, basket closed", g_against);
    g_against = 0;
-}
-
-// ── HIS 1:1 BREAKEVEN ────────────────────────────────────────────────────────────
-// "at R:R ratio 1:1 we breakeven and let it run to R:R ratio 1:2 in TP."
-// The basket shares one stop and one target anchored to the FIRST fill, so R is
-// measured per ticket against that ticket's own entry — the later fills of a ladder sit
-// better against the shared exits and would otherwise arm late.
-void BreakEvenCheck() {
-   if (InpBreakEvenR <= 0) return;
-   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
-   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   for (int i = PositionsTotal() - 1; i >= 0; i--) {
-      ulong t = PositionGetTicket(i);
-      if (t == 0 || !PositionSelectByTicket(t)) continue;
-      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
-      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
-      double entry = PositionGetDouble(POSITION_PRICE_OPEN);
-      double sl    = PositionGetDouble(POSITION_SL);
-      double tp    = PositionGetDouble(POSITION_TP);
-      if (sl <= 0) continue;
-      bool isBuy = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY);
-      double risk = MathAbs(entry - sl);
-      if (risk <= 0) continue;
-      double be = isBuy ? entry + InpBeBufferPts : entry - InpBeBufferPts;
-      // already at or past breakeven: nothing to do
-      if (isBuy ? (sl >= be - _Point) : (sl <= be + _Point)) continue;
-      double gain = isBuy ? (bid - entry) : (entry - ask);
-      if (gain < InpBreakEvenR * risk) continue;
-      if (trade.PositionModify(t, be, tp) && InpVerbose)
-         PrintFormat("[DIA] breakeven armed at %.1fR — stop %.2f -> %.2f",
-                     InpBreakEvenR, sl, be);
-   }
 }
 
 void AgeOut() {
@@ -1347,7 +835,6 @@ void OnTick() {
       if (_b != _ovbar) { _ovbar = _b; LoadOandaVol(); }
    }
    AgeOut();
-   BreakEvenCheck();
    FailCandleCheck();
    ReleasePending();
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);

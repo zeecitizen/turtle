@@ -430,6 +430,7 @@ function denyAuth(res, gate) {
 const COMMON_DIR = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
 const PY_EXE = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python313-arm64\\python.exe';
 const REPO = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\';
+const OANDA_VOL_CSV = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\oanda_vol.csv';
 
 // Python-backed services that CAN be restarted by spawning their script.
 // (MT5 EAs/loggers — S3/S1/NSND/TurtleTradeLogger/ShanoTickLogger — run INSIDE
@@ -734,7 +735,7 @@ const server = http.createServer(async (req, res) => {
 
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
-    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/fills-history' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/forming.png' && apexUrl !== '/api/context-now.png' && apexUrl !== '/api/versions.png' && apexUrl !== '/api/forensic.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/home' && apexUrl !== '/docs' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/fills-history' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/forming.png' && apexUrl !== '/api/context-now.png' && apexUrl !== '/api/versions.png' && apexUrl !== '/api/forensic.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/api/oanda-volume-status' && apexUrl !== '/home' && apexUrl !== '/docs' && apexUrl !== '/today-setups' && apexUrl !== '/today' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
       res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
       res.end();
       return;
@@ -840,18 +841,41 @@ const server = http.createServer(async (req, res) => {
   // ── Watchdog status (public, no auth — read-only health) ──
   if (url === '/api/watchdog') {
     try {
-      const txt = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.watchdog_latest.json', 'utf8');
-      res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+      const txt = fs.readFileSync('C:\Users\zeesh\Documents\GitHub\turtle\monitor\.watchdog_latest.json', 'utf8');
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
       res.end(txt);
     } catch (e) {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
+      res.writeHead(404, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
       res.end(JSON.stringify({ error: 'watchdog_status_missing' }));
     }
     return;
   }
 
-  // ── /docs — render HOME_GUIDE.md as a styled HTML page (public, no auth) ──
-  if (url === '/docs') {
+  // ?? OANDA volume feed freshness (public, no auth) ??
+  if (url === '/api/oanda-volume-status') {
+    try {
+      const stat = fs.statSync(OANDA_VOL_CSV);
+      const lastWrite = new Date(stat.mtimeMs).toISOString();
+      const ageSec = Math.max(0, Math.floor((Date.now() - stat.mtimeMs) / 1000));
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({
+        exists: true,
+        file: OANDA_VOL_CSV,
+        last_write_utc: lastWrite,
+        age_sec: ageSec,
+      }));
+    } catch (e) {
+      res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
+      res.end(JSON.stringify({
+        exists: false,
+        file: OANDA_VOL_CSV,
+        error: e.message,
+      }));
+    }
+    return;
+  }
+
+if (url === '/docs') {
     try {
       const md = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\HOME_GUIDE.md', 'utf8');
       const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>home.claudezeeshan.com — User Guide</title>
@@ -892,7 +916,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   if (url === '/home') {
     try {
       const html = fs.readFileSync(path.join(__dirname, 'home.html'), 'utf8');
-      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
       res.end(html);
     } catch (e) {
       res.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -1540,6 +1564,55 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
       res.writeHead(500, { 'Content-Type': 'text/plain' });
       res.end('read err: ' + e.message);
     }
+    return;
+  }
+
+  // ── TODAY'S SETUPS, DRAWN (Zee 2026-09-08) ─────────────────────────────────
+  // "i want you to add a button below the circular dials: Visualize today's trades
+  //  <- this button leads to a page ... wherein i can visualize every trade setup
+  //  from today. This helps me debug what's going on with the failing ones"
+  //
+  // The page is BUILT, not stored: monitor/build_setup_review.py draws each basket
+  // with monitor/forensic_chart.py and embeds the PNGs as base64. Rendering ~12
+  // baskets takes ~40 s, far too long to do on every click, so the result is cached
+  // and rebuilt only when older than STALE_MS. A rebuild already running is not
+  // started twice — a second click waits for the first.
+  if (url === '/today-setups' || url === '/today') {
+    const outFile = path.join(__dirname, '..', 'reviews', 'today.html');
+    const STALE_MS = 10 * 60 * 1000;
+    const fresh = () => {
+      try { return Date.now() - fs.statSync(outFile).mtimeMs < STALE_MS; }
+      catch (e) { return false; }
+    };
+    const serve = () => {
+      try {
+        const html = fs.readFileSync(outFile, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8',
+                             'Cache-Control': 'no-store' });
+        res.end(html);
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('could not build the setups page: ' + e.message);
+      }
+    };
+    if (fresh()) { serve(); return; }
+    if (global.__todaySetupsBuilding) {
+      global.__todaySetupsBuilding.then(serve, serve);
+      return;
+    }
+    // PY_EXE is defined once at the top with the backslashes escaped properly. Writing
+    // the path inline here produced 'C:UserszeeshAppData...' — JS drops unknown escapes
+    // like \U and \z silently, and node --check passes it without a word.
+    const script = path.join(__dirname, '..', '..', 'monitor', 'build_setup_review.py');
+    global.__todaySetupsBuilding = new Promise((resolve) => {
+      const { execFile } = require('child_process');
+      execFile(PY_EXE, [script, '--today', '--ea', 'all', '--out', outFile],
+               { timeout: 240000, windowsHide: true }, () => {
+        global.__todaySetupsBuilding = null;
+        resolve();
+      });
+    });
+    global.__todaySetupsBuilding.then(serve, serve);
     return;
   }
 
@@ -3757,7 +3830,7 @@ Keep replies under 60 words unless he asks for detail. If something is broken, s
 
   if (url === '/' || url === '/index.html') {
     try {
-      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
       res.end(fs.readFileSync(HTML_FILE, 'utf8'));
     } catch(e) {
       res.writeHead(500); res.end('HTML missing: ' + e.message);
