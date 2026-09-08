@@ -114,6 +114,13 @@
     border-top: 1px solid #2a2a2d; padding-top: 16px;
   }
   .footer a { color: var(--accent); }
+  .oanda-strip {
+    margin-top: 18px; padding: 10px 12px; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; background: rgba(255,255,255,0.02); color: var(--muted);
+    font-size: 11.5px; letter-spacing: 0.2px; text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .oanda-strip strong { color: var(--text); }
   .pkt { color: var(--accent); font-weight: 600; }
 
   /* ── Investor status card (above Ask button) ─ Apple-look ───── */
@@ -884,11 +891,35 @@ th, td { border-color:#e5e5e7 !important; }
     .ea-gauge .gsel { margin-top:4px; background:#1c1c1e; color:#ddd; border:1px solid #333;
                       border-radius:8px; padding:2px 6px; font-size:10.5px; }
     .ea-gauge .gsel + span { display:none; }   /* the date tail does not fit a circle */
+    .viz-row  { display:flex; justify-content:center; margin:2px 0 20px; }
+    .viz-btn  { display:inline-flex; flex-direction:column; align-items:center;
+                gap:2px; padding:11px 22px; border-radius:11px; text-decoration:none;
+                background:linear-gradient(150deg,#2d3561 0%,#1b2447 60%,#141c38 100%);
+                border:1px solid #3a4680; color:#eef1ff; font-weight:700;
+                font-size:13.5px; letter-spacing:.2px; cursor:pointer;
+                transition:border-color .15s, transform .15s; }
+    .viz-btn:hover, .viz-btn:focus-visible { border-color:#7f96ff; transform:translateY(-1px); }
+    .viz-btn:focus-visible { outline:2px solid #7f96ff; outline-offset:2px; }
+    .viz-btn .vi { font-size:15px; }
+    .viz-btn .vh { color:#9aa3c0; font-weight:400; font-size:10.5px; letter-spacing:.1px; }
+    .viz-btn.loading { opacity:.75; pointer-events:none; }
     @media (max-width: 480px) { .ea-gauge { width:154px; height:154px; }
                                 .ea-gauge svg { width:94px; }
                                 .ea-gauge .gwr { font-size:16px; margin-top:-18px; } }
   </style>
   <div class="ea-gauges" id="ea-gauges"></div>
+
+  <!-- 2026-09-08, Zee: "add a button below the circular dials: Visualize today's
+       trades ... wherein i can visualize every trade setup from today. This helps me
+       debug what's going on with the failing ones". The page is drawn on demand by
+       monitor/build_setup_review.py, so the first click after a new trade takes ~40 s
+       while the charts render — the button says so rather than looking broken. -->
+  <div class="viz-row">
+    <a class="viz-btn" href="/today-setups" id="viz-today">
+      <span class="vi">&#128200;</span> Visualize today&#39;s trades
+      <span class="vh">every setup drawn, with a comment box</span>
+    </a>
+  </div>
 
 
 
@@ -1257,6 +1288,8 @@ th, td { border-color:#e5e5e7 !important; }
     </div>
   </div>
 
+  <div class="oanda-strip" id="oanda-strip">OANDA volume: loading…</div>
+
 </div>
 
 <script>
@@ -1352,6 +1385,36 @@ async function loadSystemStatus() {
 }
 loadSystemStatus();
 setInterval(loadSystemStatus, 60000);
+
+function oandaApiUrl() {
+  const host = window.location && window.location.hostname;
+  return host === 'claudezeeshan.com' ? 'https://me.claudezeeshan.com/api/oanda-volume-status' : '/api/oanda-volume-status';
+}
+
+async function loadOandaStatus() {
+  const el = document.getElementById('oanda-strip');
+  if (!el) return;
+  try {
+    const r = await fetch(oandaApiUrl(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('http ' + r.status);
+    const d = await r.json();
+    if (!d || !d.exists) {
+      el.innerHTML = 'OANDA volume: <strong>missing</strong>';
+      el.style.color = '#ff5a6a';
+      return;
+    }
+    const ts = new Date(d.last_write_utc);
+    const ageSec = Math.max(0, Math.floor((Date.now() - ts.getTime()) / 1000));
+    const ageText = ageSec < 60 ? `${ageSec}s ago` : ageSec < 3600 ? `${Math.floor(ageSec/60)}m ago` : `${Math.floor(ageSec/3600)}h ago`;
+    el.innerHTML = `OANDA volume: <strong>${ts.toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC')}</strong> (${ageText})`;
+    el.style.color = ageSec < 300 ? '#2bd576' : '#ffb33e';
+  } catch (e) {
+    el.innerHTML = 'OANDA volume: <strong>offline</strong>';
+    el.style.color = '#ff5a6a';
+  }
+}
+loadOandaStatus();
+setInterval(loadOandaStatus, 60000);
 
 // ── World session clocks ───────────────────────────────────────────────
 // Session UTC windows (May 2026: AU off DST → UTC+10; London BST; New York EDT)
@@ -1626,6 +1689,18 @@ msgText.addEventListener('keydown', (e) => {
 loadClaudeReply();
 setInterval(loadClaudeReply, 15000);
 
+
+// The setups page is RENDERED on request (matplotlib, ~40 s for a full day), so the
+// first click after new trades sits on a blank tab with no feedback. Say so on the
+// button itself rather than letting it look dead.
+(function () {
+  const b = document.getElementById('viz-today');
+  if (!b) return;
+  b.addEventListener('click', () => {
+    b.classList.add('loading');
+    b.querySelector('.vh').textContent = 'drawing the charts, up to a minute…';
+  });
+})();
 
 // ── per-EA win-rate speedometers, with time-travel (Zee 2026-08-19) ────
 const EA_NAMES = { '88094': 'ZeeUHV · M1', '88104': 'Loud EA', '88134': 'Shop B · M3',
