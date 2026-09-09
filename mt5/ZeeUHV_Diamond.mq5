@@ -13,7 +13,7 @@
 //|  It is the wild ancestor, revived for live observation.          |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.16"
+#property version   "1.17"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -280,7 +280,15 @@ input double InpBeBufferPts = 0.0;    // park breakeven this far the profitable 
 // (2/3). Budget 8 scored better (+2,427.30, 3/3) but refuses ONE trade in 28 — a
 // placebo, which is why it was withdrawn. 3 refuses 4-5 in 28 and is the only setting
 // that actually implements the rule he is asking for.
-input int    InpMaxHumps    = 3;      // >0: stop taking setups once the trend has made this many humps
+input int    InpMaxHumps    = 2;      // >0: stop taking setups once the trend has made this many humps
+// 2026-09-09, same day, his second call: "let's make it 2 instead of 3."
+// 2 refuses 9 of 28 fires where 3 refuses 5, and cuts the three-window trade count to
+// 324 against 462. It scores slightly BETTER than 3 (+830.30 vs +768.10, positive in
+// 2 of 3 windows against 1 of 3) — but it is worse on aug31 specifically (-506.90 vs
+// -215.10), which is the window holding the trend-shift losses this rule exists to
+// stop. And it is one tier STRICTER than the model he described ("hump 1 trade, hump 2
+// trade, hump 3 trade, hump 4 hmm"): budget 3 allows humps 0-1-2, budget 2 allows 0-1.
+// Shipped on his instruction with both numbers in front of him.
 input bool   InpNyOnly      = false;  // true = trade only the New York session
 input int    InpNyFromHour  = 15;     // broker hour, inclusive
 input int    InpNyToHour    = 24;     // broker hour, exclusive
@@ -979,7 +987,7 @@ int OnInit() {
    // KEEP THIS STRING IN STEP WITH #property version. It said v1.14 for the whole of
    // the v1.15 ship (2026-09-06) and the live log therefore misreported which machine
    // was trading — the one thing the load fingerprint exists to settle.
-   PrintFormat("[DIA] ZeeUHV v1.16 — OANDA volume STRICT, HUMP BUDGET %d, sweep REQUIRED, hold 20m, STRUCTURAL stop 5 pips. SL %.1f / TP %.1f · magic %d"
+   PrintFormat("[DIA] ZeeUHV v1.17 — OANDA volume STRICT, HUMP BUDGET %d, sweep REQUIRED, hold 20m, STRUCTURAL stop 5 pips. SL %.1f / TP %.1f · magic %d"
                " · stack x%d (max %d tickets = %.2f lots, risk %.0f per failed setup)",
                InpMaxHumps, InpStopPts, InpTargetPts, InpMagicNumber, MathMax(1, InpStackMult),
                4 * MathMax(1, InpStackMult), 4 * MathMax(1, InpStackMult) * InpLots,
