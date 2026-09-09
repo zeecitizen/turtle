@@ -444,3 +444,27 @@ Also shipped in this version, all default OFF and each with receipts in the sess
 on M5/M15), `InpLastLowMode` (law 45 snapshot or latch), `InpSlMode` (stop at the
 defended low), `InpTargetR` / `InpBreakEvenR` (the teacher's 1:2 with breakeven at 1:1 —
 REFUSED, 27% win rate against the 33% a 2R design needs), `InpNyOnly` (NY session).
+
+## ZeeUHV_Diamond v1.17 — hump budget 3 -> 2 (2026-09-09)
+
+Zee, hours after v1.16 shipped: *"let's make it 2 instead of 3. what difference would
+that make?"*
+
+| budget | aug17 | aug24 | aug31 | three windows | trades | windows won | refuses |
+|---|---|---|---|---|---|---|---|
+| OFF | +378 | +2,139 | −229 | **+2,287.40** | 762 | 2/3 | — |
+| **2 (SHIPPED)** | **+277** | +1,060 | **−507** | **+830.30** | **324** | **2/3** | 9 of 28 |
+| 3 (v1.16) | −526 | +1,509 | −215 | +768.10 | 462 | 1/3 | 5 of 28 |
+
+**2 beats 3 on total and on window consistency** — it rescues aug17 (−526 → +277) — but
+it is WORSE on aug31 (−506.90 against −215.10), the window that holds the end-of-trend
+losses this rule exists to prevent. It blocks hump-2 trades that were paying there.
+
+It is also one tier stricter than his own stated model. He described *"hump 1 trade,
+hump 2 trade, hump 3 trade, hump 4 hmm maybe it shifts"*; budget 3 permits humps 0-1-2,
+budget 2 permits 0-1. Shipped on his instruction with both tables in front of him.
+
+**Trade count is the thing to watch live:** 324 against the unrestricted 762 over three
+windows — roughly a third of setups declined. If the forward days show the trade count
+collapsing without the end-of-trend loser disappearing, the budget is cutting the wrong
+trades and 3 (or off) is the fallback.
