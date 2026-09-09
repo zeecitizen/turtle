@@ -112,9 +112,19 @@ volume to escalate.
 **EA form:** a rolling lookback (`InpVolLookback`) over recent bars; a bar is "big" when
 its volume reaches `InpBigPct` of the lookback maximum. No indicator, no fixed constant.
 
-**⚠️ Conflict with our platform:** MT5's Strategy Tester overwrites `tick_volume` with a
-constant ~4/bar. Only `iRealVolume()` survives. `BarVolume()` in the EA reads real volume,
-per `project_tester_volume_blind`.
+**⚠️ MEASURED, not assumed — what "volume" actually is here.** `BarVolume()` asks
+`iRealVolume()` first. Over Feb–Aug 2026 on XAUUSD it returned **0 reads from
+`iRealVolume` and 8,006,496 tick-count fallbacks** — the broker publishes no exchange
+volume for gold CFD, so **every VSISA decision is made on TICK COUNT.**
+
+This is defensible: tick count is what the teacher's own retail terminal shows him, so
+we are reading roughly the number he reads. But it is not exchange volume, and it is a
+third number alongside broker real volume and the OANDA feed the Diamond uses. The EA
+prints the split at the end of every run so this can never quietly change underneath us.
+
+(The `project_tester_volume_blind` warning still applies elsewhere: outside real-tick
+mode MT5 fabricates `tick_volume` at ~4/bar. Under model 4 it is the genuine tick count,
+which is the only reason this strategy is testable at all.)
 
 ---
 
@@ -288,6 +298,48 @@ smuggled in as an assumption. LAW 10 is not implemented.
   has no meaning on a single instrument.
 - *Part 16/17*'s fib-50/61.8 + Automatic-Rally-line method — a genuinely different second
   strategy, not a variant of this one.
+
+---
+
+## VERDICTS — what the MT5 Strategy Tester said (2026-09-09)
+
+Seven months of real XAUUSD M5 ticks, 2026-02-02 to 2026-09-01, model 4, delay 163 ms.
+Every line below is an MT5 result, not a Python screen. Full receipts in
+`VERSION_HISTORY.md` under *VSISA v1.00*.
+
+| law | verdict | evidence |
+|---|---|---|
+| 1 · big volume is a question | **KEPT** — structural, cannot be tested alone | — |
+| 2 · the reaction names the side | **KEPT** — structural | — |
+| 3 · reaction must be QUIET | **CONFIRMED** | unconstrained +$621 vs constrained +$1,024 |
+| 3b · quiet vs the CLIMAX | **CONFIRMED** | `QuietRef=0` swept every top row |
+| 4 · the cluster | **CONFIRMED at 2 bars** | 2-bar beats 3-bar on net in every sweep |
+| 4b · rising cluster volume | **REJECTED** | +$580 best vs +$3,376 |
+| 5 · "big" is relative | **CONFIRMED**, plateau 30-105 bars | no spike — see the ledger |
+| 6 · the wick | **REJECTED** | `WickMode=0` beats require and override alike |
+| 7 · the anomaly | **REJECTED** | collapses to 1-4 trades; best +$305 |
+| 8 · tight stop, R-multiple target | **CONFIRMED at 2.5R + BE@1R** | BE on +$1,386 vs off +$1,213 |
+| 8b · his 2-3 pip stop | **DID NOT TRANSFER** | FX pips ≠ gold; 30-pt buffer, 60-pt floor |
+| 9 · trade with the H1 trend | **CONFIRMED — the biggest single win** | same net, HALF the trades, 27% -> 34% WR |
+| 10 · never chase, buy the retracement | **NOT IMPLEMENTED** | — |
+| 11 · session | **NOT TESTED** | shipped open |
+| 12 · falling volume ≠ bullish | **KEPT** — encoded as cluster-first | — |
+| 13 · the fake break | **REJECTED** | absent from all 30 top rows of a 336-pass sweep |
+| — · the no-supply test (confirmed entry) | **REJECTED, after a repair** | see below |
+
+**The no-supply test deserves its own paragraph, because I nearly libelled it.** My first
+implementation compared the test bar's volume to the REACTION bar — which LAW 3 has
+already forced to be quiet — so it demanded the test be quieter than something already
+quiet. It fired **zero trades in 48 passes across seven months**. That is my arithmetic
+failing, not his rule failing, and reporting it as "tested and rejected" would have been
+false. Re-measured against the climax, like every other "small volume" in the course, it
+fires properly — and then genuinely loses: **+$233 best, most variants negative**, against
++$3,213 for the aggressive entry. Only the second number is evidence.
+
+**Three of Zee's own emphases did not survive** — the wick, the anomaly, and the fake
+break he calls the *strongest* case. That is worth saying plainly rather than burying:
+they may still be real on his FX pairs, on his timeframe, or to his eye. What the receipts
+say is narrower — on XAUUSD M5, mechanised this way, they cost money.
 
 ---
 

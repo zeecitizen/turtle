@@ -468,3 +468,142 @@ budget 2 permits 0-1. Shipped on his instruction with both tables in front of hi
 windows — roughly a third of setups declined. If the forward days show the trade count
 collapsing without the end-of-trend loser disappearing, the budget is cutting the wrong
 trades and 3 (or off) is the fallback.
+
+---
+
+## VSISA v1.00 — a NEW EA, a new strategy (2026-09-09)
+
+**Zee:** *"Since the diamond EA is not converging to a profitable strategy, we will
+tonight write a new EA based on a new strategy... so i've written a new strategy called
+LAWS_VSISA. Read and implement this strategy as an EA. then test this EA's performance
+on the 5 minute chart."*
+
+Volume Spread Imbalance Shift Analysis — Sajid Ahmed's method, from the 22-part course
+Zee downloaded plus his own `LAWS_VSISA.md`. Rules inferred into `LAWS_VSISA_INFER.md`
+(13 laws, each carrying the quote it came from). **Magic 88201. XAUUSD M5.** Entirely
+separate from the Diamond — different magic, different timeframe, nothing shared.
+
+### The engine, in four lines
+
+1. a **cluster** of 2 same-direction bars carrying big volume — effort;
+2. a **reaction** bar closing the other way — that names which side the volume was;
+3. the reaction arrives on **LOW volume** — the resting orders are gone. *This is the
+   trigger and it is a veto, not a score;*
+4. enter on its close, stop past the extreme, target a multiple of the risk.
+
+### Receipts — SEVEN MONTHS of real ticks, not one
+
+M5 XAUUSD, model 4 (real ticks), delay 163 ms, 0.10 lots, deposit 50,000,
+2026.02.02 → 2026.09.01. Tuned on August alone, then run on the six months it had
+never seen.
+
+| month | SHIP (H1 trend) | no trend filter |
+|---|---|---|
+| 2026-02 | −49.20 | −277.50 |
+| 2026-03 | +207.80 | +355.60 |
+| 2026-04 | +658.30 | +424.10 |
+| 2026-05 | +156.20 | +366.60 |
+| 2026-06 | +685.30 | +525.30 |
+| 2026-07 | +638.60 | +432.90 |
+| 2026-08 *(tuned)* | +830.60 | +1386.50 |
+| **TOTAL** | **+3,127.60** | **+3,213.50** |
+| trades | 120 | 244 |
+| win rate | **34%** | 27% |
+| profit factor | **1.94** | 1.42 |
+| max equity DD | 0.95% | 0.99% |
+| green months | 6/7 | 6/7 |
+
+**Shipped WITH the H1 trend filter**: same money for HALF the trades and seven more
+points of win rate at identical geometry — which is exactly the standing goal
+(`project_goal_winrate`), and it is bought with fewer trades rather than wider stops.
+
+August is the best month and August is where it was tuned, so some of that is fit. The
+other six months are the honest number: **+$2,297 across months it never saw, five of
+six green.**
+
+### Laws that EARNED their place
+
+| law | receipt |
+|---|---|
+| LAW 3 — reaction must be quiet | leaving it unconstrained (LowVolPct>1.1) scores **+$621** against **+$1,024** constrained, same August window |
+| LAW 3 — quiet vs the CLIMAX, not vs normal | `QuietRef=0` swept every top row; `QuietRef=1` appears once, at rank 22, on 2 trades |
+| LAW 8 — breakeven at 1R | +$1,386.50 with, +$1,212.70 without, otherwise identical |
+| LAW 8 — target 2.5R | interior optimum; 1.5R and 3.0R both worse |
+| LAW 9 — trade with the H1 trend | the whole reason the ship config exists — see the table |
+| LAW 4 — 2-bar cluster | beats 3-bar on net in every sweep (3-bar wins on PF with a third the trades) |
+
+### Laws that were TESTED and did NOT survive
+
+| law | receipt |
+|---|---|
+| LAW 13 — the fake break | `FakeBreak=false` in **all 30 top rows** of a 336-pass August sweep. This is Zee's own tier-3 "strongest" case, and it does not hold up on M5 gold |
+| LAW 6 — the wick | `WickMode=0` beats both "require" and "override" in every paired comparison |
+| the no-supply test (confirmed entry) | **+$233 best, most variants negative**, against +$3,213 for the aggressive entry |
+
+**The no-supply test needed fixing before it could be judged.** The first cut compared
+the test bar's volume to the REACTION bar — which LAW 3 has already forced to be quiet —
+so it asked the test to be quieter than something already quiet, and fired **zero trades
+in 48 passes across seven months**. That was my arithmetic, not his rule. Re-measured
+against the climax like every other "small volume" in the course, it fires properly and
+then genuinely loses. Only the second number is evidence.
+
+### What "volume" actually is here — MEASURED, not assumed
+
+```
+VOLUME SOURCE iRealVolume 0 reads, tick-count fallback 8,006,496 reads
+             — EVERY judgement used TICK COUNT
+```
+
+The broker publishes no exchange volume for gold CFD, so every VSISA decision is made on
+**tick count**. Defensible — it is roughly what the teacher reads on his own retail
+terminal — but it is a THIRD number alongside broker real volume and the OANDA feed the
+Diamond uses, and the EA prints the split at the end of every run so it can never
+quietly change underneath us.
+
+### Also tested, also rejected (seven months each)
+
+| variant | receipt |
+|---|---|
+| LAW 7 — the anomaly (tiny spread, huge volume) | every `Anomaly=true` pass collapsed to 1-4 trades; best +$305, several at zero |
+| engulfing reaction required | +$640 best against +$3,376 |
+| rising cluster volume required | +$580 best |
+| `QuietRef=1` (quiet vs the market, not vs the climax) | one appearance at rank 22, on 2 trades |
+
+### The lookback is a PLATEAU, which is the reassuring part
+
+Seven months, net by `InpVolLookback`: 30 -> $3,284 · 45 -> $3,385 · **60 -> $3,377** ·
+75 -> $3,050 · 90 -> $3,196 · **100 -> $3,128** · 105 -> $2,948.
+
+No spike anywhere — a broad flat region, which is what a real effect looks like and what
+a curve fit does not. Adjacent settings swing ~$300, so the $249 by which 60 beats 100
+is noise. **Shipped at 100** because with net indistinguishable the standing goal decides:
+34% WR / PF 1.94 / 120 trades against 60's 31% / 1.83 / 153, at identical geometry.
+Lookback 60 is validated too (+$3,376.50 · 153 trades · 31% · 6/7 green) and is a
+one-line change if he wants the trades instead.
+
+### A tester trap worth remembering
+
+An "run it on the compiled defaults" validation returned **0 trades**, and its REACH line
+quoted thresholds that had been replaced two hours earlier. **An empty `[TesterInputs]`
+section does NOT fall back to the EA's compiled defaults — MT5 reuses the inputs it
+cached for that EA from a previous run.** `vsisa_court.run_arm()` now refuses to launch
+with an empty input list rather than produce a confident wrong answer.
+
+### Honest cautions
+
+- **February loses** (−$49.20) and it is the earliest month. Not fatal, but the strategy
+  is not all-weather.
+- **27–34% win rate is by design** (2.5R target), not a defect — but it means long
+  losing streaks are normal and must not be read as a broken EA.
+- **His 2–3 pip stops did not transfer.** Those are FX-major pips; the ship uses a 30-pt
+  buffer with a 60-pt floor because a stop narrower than gold's spread is a guaranteed
+  loss on entry. Results were insensitive to this (10/30/50/70 all close), which is
+  reassuring.
+- **The tester's spread is the broker's recorded spread**, and 120 trades over seven
+  months is roughly 17 a month. Live behaviour is the only thing that settles it.
+
+### Files
+
+`mt5/VSISA.mq5` · `LAWS_VSISA_INFER.md` · `monitor/_vsisa_transcripts/` ·
+`monitor/strategy_lab/vsisa_court.py` (per-day + funnel) ·
+`vsisa_sweep.py` (parallel variant search) · `vsisa_validate.py` (month by month)

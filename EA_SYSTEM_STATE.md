@@ -323,3 +323,55 @@ away. Testing 2R at hold 20 alone would have measured the clock and called it th
    the edge lived in the DISCRETIONARY exit.
 
 **NOT SHIPPED. `InpTargetR` exists only in `ZeeUHV_DiamondTR`, defaulted to 0 (off).**
+
+## VSISA v1.00 — NEW EA, magic 88201, XAUUSD **M5** (2026-09-09)
+
+A second strategy running beside the Diamond, not replacing it. Zee: *"Since the diamond
+EA is not converging to a profitable strategy, we will tonight write a new EA based on a
+new strategy."*
+
+**Different magic (88201), different timeframe (M5), no shared state with ZeeUHV_Diamond.**
+They can run on separate charts at the same time without interfering.
+
+### Live config (the compiled defaults — all validated)
+
+```
+InpClusterBars  2      2 same-direction big-volume bars = the effort
+InpBigMode      1      only the LOUDEST cluster bar must reach the peak test
+InpBigPct       0.80   ...at 80% of the rolling max
+InpBigAvg       1.20   ...and every bar >= 1.2x the rolling average
+InpVolLookback  100    what "recent" means (~8h of M5)
+InpQuietRef     0      "low volume" measured against the CLIMAX, not the market
+InpLowVolPct    1.00   the reaction must not be louder than the cluster  <-- THE TRIGGER
+InpBodyFrac     0.35   the reaction's body must carry the bar
+InpTargetR      2.5    TP as a multiple of risk
+InpBreakEvenR   1.0    stop to entry at 1R
+InpSlBufPts     30     points past the setup extreme  (floor 60)
+InpTrendTF      60     trade only with the H1 trend
+InpLots         0.10   x1 ticket
+```
+
+### Receipts
+
+Seven months of real ticks (2026-02-02 -> 2026-09-01), M5, model 4, delay 163 ms:
+**+$3,127.60 · 120 trades · 34% win rate · PF 1.94 · max equity DD 0.95% · 6/7 green
+months.** Tuned on August only; the six unseen months contributed **+$2,297, five of six
+green**. February is the single losing month (-$49.20).
+
+### REJECTED here, with receipts (do not re-litigate without new evidence)
+
+- **the fake break** (Zee's own "strongest" tier-3 case) — absent from all 30 top rows of
+  a 336-pass sweep
+- **the wick rule** — `WickMode=0` beats both "require" and "override"
+- **the anomaly** (small spread / huge volume) — collapses to 1-4 trades
+- **the no-supply test / confirmed entry** — +$233 best vs +$3,213 aggressive
+- **engulfing reaction**, **rising cluster volume**, **quiet-vs-market** — all far worse
+
+### Known and stated, not hidden
+
+- **Every decision is made on TICK COUNT.** `iRealVolume` returned 0 reads and the
+  tick-count fallback 8,006,496 over the full span — the broker publishes no exchange
+  volume for gold CFD. The EA prints this split at the end of every run.
+- **31-34% win rate is the design** (2.5R target), so losing streaks are normal here and
+  are not evidence of a broken EA.
+- The strategy has never traded live. Everything above is the Strategy Tester.
