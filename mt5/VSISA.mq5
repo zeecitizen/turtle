@@ -1,0 +1,566 @@
+//+------------------------------------------------------------------+
+//|  VSISA.mq5 — Volume Spread Imbalance Shift Analysis               |
+//|                                                                   |
+//|  Sajid Ahmed's method, as inferred in LAWS_VSISA_INFER.md from     |
+//|  Zee's LAWS_VSISA.md and the 22-part course transcripts.           |
+//|                                                                   |
+//|  THE WHOLE ENGINE IN FOUR LINES:                                   |
+//|    1. a CLUSTER of 2-3 same-direction bars carrying big volume     |
+//|       (effort) — somebody is transacting hard in one place;        |
+//|    2. a REACTION bar closing the OTHER way — that names which side  |
+//|       the big volume actually was (LAW 2);                         |
+//|    3. that reaction arrives on LOW volume — the resting orders are  |
+//|       GONE, which is the imbalance shift itself (LAW 3);           |
+//|    4. enter on its close, stop a few points past its extreme,      |
+//|       target a multiple of that risk (LAW 8).                      |
+//|                                                                   |
+//|  Everything else in the course ships as an input defaulting OFF so |
+//|  it can be convicted on its own MT5 receipts rather than smuggled  |
+//|  in. Per feedback_backtests_hallucinate_take_all_chances.          |
+//|                                                                   |
+//|  VOLUME — WHAT THIS EA ACTUALLY JUDGES. BarVolume() asks iRealVolume |
+//|  first, but MEASURED over Feb-Aug 2026 on XAUUSD it got 0 reads from  |
+//|  it and 8,006,496 tick-count fallbacks: the broker publishes no real  |
+//|  volume for gold CFD, so EVERY judgement below is made on TICK COUNT. |
+//|  That is defensible — it is the same number the teacher reads on his  |
+//|  own retail terminal — but it is NOT exchange volume, and a later     |
+//|  session must not assume it is. OnDeinit prints the split every run.  |
+//|  (The old project_tester_volume_blind warning still stands for M1     |
+//|  work: in NON-real-tick modes MT5 fakes tick_volume at ~4/bar. Under  |
+//|  model 4 it is the true tick count, which is why this works at all.)  |
+//+------------------------------------------------------------------+
+#property copyright "Zee & his ghost"
+#property version   "1.00"
+#property strict
+
+#include <Trade/Trade.mqh>
+CTrade trade;
+
+//--- money -----------------------------------------------------------------
+input double InpLots        = 0.10;   // InpLots — lot size per ticket
+input int    InpTickets     = 1;      // InpTickets — tickets per decision (basket)
+input int    InpMagicNumber = 88201;  // InpMagicNumber — VSISA
+input int    InpMaxOpen     = 1;      // InpMaxOpen — max concurrent decisions
+
+//--- LAW 4: the cluster ----------------------------------------------------
+input int    InpClusterBars = 2;      // InpClusterBars — 2 or 3 same-direction effort bars
+input bool   InpRisingVol   = false;  // InpRisingVol — require each cluster bar louder than the last
+input bool   InpStrictDir   = true;   // InpStrictDir — every cluster bar must close its own way
+
+//--- LAW 5: what "big" means, relative to recent bars -----------------------
+// LOOKBACK IS A PLATEAU, NOT A PEAK. Over seven months: 30->$3284, 45->$3385,
+// 60->$3377, 75->$3050, 90->$3196, 105->$2948. Adjacent settings swing ~$300, so the
+// $249 by which 60 beats 100 is noise, not signal. With net indistinguishable the
+// choice falls to the standing goal (project_goal_winrate: fewer losing trades at
+// FIXED geometry) — and 100 delivers 34% WR / PF 1.94 / 120 trades against 60's
+// 31% / 1.83 / 153, on identical geometry. Change this line to 60 for ~7% more net
+// and three points less win rate; both are validated.
+input int    InpVolLookback = 100;    // InpVolLookback — bars defining "recent" (~8h)
+input int    InpBigMode     = 1;      // InpBigMode — 0 EVERY cluster bar loud · 1 only the loudest
+input double InpBigPct      = 0.80;   // InpBigPct — cluster volume >= this x lookback max
+input double InpBigAvg      = 1.20;   // InpBigAvg — ...and >= this x lookback average
+
+//--- LAW 3: the low-volume reaction. THE TRIGGER. --------------------------
+input int    InpQuietRef    = 0;      // InpQuietRef — 0 quiet vs CLUSTER · 1 quiet vs lookback AVERAGE
+input double InpLowVolPct   = 1.00;   // InpLowVolPct — reaction volume <= this x the reference
+input double InpBodyFrac    = 0.35;   // InpBodyFrac — reaction body >= this x its own range
+input int    InpConfirmMode = 0;      // InpConfirmMode — 0 enter on reaction · 1 wait for no-supply TEST + confirm
+input double InpTestVolPct  = 0.90;   // InpTestVolPct — the test bar's volume <= this x the LAW 3 reference
+input bool   InpEngulf      = false;  // InpEngulf — reaction must engulf the last cluster bar
+
+//--- LAW 8: geometry -------------------------------------------------------
+input int    InpSlBufPts    = 30;     // InpSlBufPts — points beyond the setup extreme
+input int    InpMinSlPts    = 60;     // InpMinSlPts — floor, so spread cannot eat the stop
+input int    InpMaxSlPts    = 900;    // InpMaxSlPts — refuse setups whose risk is absurd
+input double InpTargetR     = 2.5;    // InpTargetR — TP as a multiple of risk
+input double InpBreakEvenR  = 1.0;    // InpBreakEvenR — >0: move stop to entry at this R
+
+//--- LAW 6: the wick override (default OFF) --------------------------------
+input int    InpWickMode    = 0;      // InpWickMode — 0 off · 1 require · 2 override big volume
+input double InpWickFrac    = 0.35;   // InpWickFrac — wick >= this x the bar's range
+
+//--- LAW 7: anomaly, tiny spread on huge volume (default OFF) --------------
+input bool   InpAnomaly     = false;  // InpAnomaly — cluster's last bar must be a spread anomaly
+input double InpAnomalyMax  = 0.70;   // InpAnomalyMax — its range <= this x recent average range
+
+//--- LAW 13: fake break of a recent extreme (default OFF) ------------------
+input bool   InpFakeBreak   = false;  // InpFakeBreak — cluster must sweep a recent extreme
+input int    InpSweepLook   = 30;     // InpSweepLook — bars defining that extreme
+
+//--- LAW 9: higher-timeframe trend (default OFF) ---------------------------
+input int    InpTrendTF     = 60;     // InpTrendTF — 0 off · 15 = M15 · 60 = H1
+input int    InpTrendBars   = 20;     // InpTrendBars — bars of slope on that timeframe
+
+//--- LAW 11: session (default open) ----------------------------------------
+input int    InpSessFrom    = 0;      // InpSessFrom — broker hour, inclusive
+input int    InpSessTo      = 24;     // InpSessTo — broker hour, exclusive
+
+//--- housekeeping ----------------------------------------------------------
+input int    InpCoolBars    = 3;      // InpCoolBars — bars to wait after a decision
+input bool   InpBuys        = true;   // InpBuys — allow long setups
+input bool   InpSells       = true;   // InpSells — allow short setups
+input bool   InpVerbose     = true;   // InpVerbose — print every fire line
+
+//--- state -----------------------------------------------------------------
+datetime g_last_bar = 0;
+datetime g_last_fire = 0;
+int      g_cool     = 0;
+int      g_fires    = 0;
+
+// THE FUNNEL. v1.00 fired zero trades over five days of real M5 ticks and the report
+// could not say why — "no trades" looks identical whether the cluster never formed or
+// the reaction was never quiet enough. These count the bar at which each candidate
+// died, and OnDeinit prints them, so a tightening can be aimed instead of guessed.
+int g_seen = 0, g_rej_dir = 0, g_rej_loud = 0, g_rej_rise = 0, g_rej_anom = 0;
+int g_rej_fake = 0, g_rej_react = 0, g_rej_body = 0, g_rej_quiet = 0, g_rej_trend = 0;
+int g_rej_test = 0;
+long g_rv_hit = 0, g_rv_miss = 0;
+
+// HOW CLOSE DID WE GET. A funnel says which gate rejected; these say by how much, which
+// is the difference between "loosen this threshold a little" and "this law never
+// happens on M5 gold at all". Also proves the volume feed is populated — a max of 0
+// would mean iRealVolume is empty and every ratio in this file is meaningless.
+long   g_vmax_seen = 0;
+double g_best_loud = 0;    // best (weakest cluster bar / lookback max) reached
+double g_best_quiet = 999; // lowest (reaction vol / cluster vol) reached
+
+//+------------------------------------------------------------------+
+//| Bar accessors                                                     |
+//+------------------------------------------------------------------+
+double bHigh(int k)  { return iHigh (_Symbol, PERIOD_CURRENT, k); }
+double bLow(int k)   { return iLow  (_Symbol, PERIOD_CURRENT, k); }
+double bOpen(int k)  { return iOpen (_Symbol, PERIOD_CURRENT, k); }
+double bClose(int k) { return iClose(_Symbol, PERIOD_CURRENT, k); }
+double bRange(int k) { return bHigh(k) - bLow(k); }
+double bBody(int k)  { return MathAbs(bClose(k) - bOpen(k)); }
+bool   bUp(int k)    { return bClose(k) > bOpen(k); }
+bool   bDown(int k)  { return bClose(k) < bOpen(k); }
+
+// iRealVolume, NOT iVolume. See the header — in the tester iVolume is a constant and
+// every ratio in this file would silently become 1.0.
+long BarVolume(int k) {
+   long rv = iRealVolume(_Symbol, PERIOD_CURRENT, k);
+   if (rv > 0) { g_rv_hit++; return rv; }
+   // WHICH NUMBER IS ACTUALLY BEING JUDGED. On an exchange-traded symbol iRealVolume is
+   // contracts; on a CFD the broker often publishes none and this line quietly hands
+   // back the TICK COUNT instead. Both are defensible proxies — the teacher reads his
+   // own terminal's tick volume — but they are not the same number, and a strategy
+   // built on "volume" must be able to say which one it saw. OnDeinit prints the split.
+   g_rv_miss++;
+   return iVolume(_Symbol, PERIOD_CURRENT, k);
+}
+
+//+------------------------------------------------------------------+
+//| LAW 5 — "big" is relative to the recent past, never a band        |
+//|                                                                   |
+//| Part 1: "these bands are misleading... compare with the big volumes|
+//| of the previous two or three days". So the yardstick is a rolling  |
+//| window, and a bar is loud when it stands up against BOTH the peak  |
+//| and the average of that window — peak alone lets a merely-average  |
+//| bar through on a quiet stretch, average alone lets a mid-sized bar |
+//| through next to a genuine climax.                                  |
+//+------------------------------------------------------------------+
+bool VolStats(int from, long &vmax, double &vavg, double &ravg) {
+   vmax = 0; vavg = 0; ravg = 0;
+   int n = 0;
+   for (int k = from; k < from + InpVolLookback; k++) {
+      long v = BarVolume(k);
+      double r = bRange(k);
+      if (v <= 0) continue;
+      if (v > vmax) vmax = v;
+      vavg += (double)v;
+      ravg += r;
+      n++;
+   }
+   // Half the window is enough to judge by; less than that and we are at the very
+   // start of the data with no "recent past" to compare against, so stand down.
+   if (n < InpVolLookback / 2 || vmax <= 0) return false;
+   vavg /= n;
+   ravg /= n;
+   return true;
+}
+
+//+------------------------------------------------------------------+
+//| LAW 9 — higher-timeframe trend, OFF by default                    |
+//| Returns +1 up, -1 down, 0 flat/unknown.                           |
+//+------------------------------------------------------------------+
+int TrendDir() {
+   if (InpTrendTF <= 0) return 0;
+   ENUM_TIMEFRAMES tf = (InpTrendTF == 15) ? PERIOD_M15
+                      : (InpTrendTF == 30) ? PERIOD_M30
+                      : (InpTrendTF == 60) ? PERIOD_H1 : PERIOD_H4;
+   int n = MathMax(3, InpTrendBars);
+   double now  = iClose(_Symbol, tf, 1);
+   double then = iClose(_Symbol, tf, n);
+   if (now == 0 || then == 0) return 0;
+   if (now > then) return 1;
+   if (now < then) return -1;
+   return 0;
+}
+
+bool InSession() {
+   MqlDateTime t;
+   TimeToStruct(TimeCurrent(), t);
+   if (InpSessFrom <= InpSessTo) return (t.hour >= InpSessFrom && t.hour < InpSessTo);
+   return (t.hour >= InpSessFrom || t.hour < InpSessTo);   // window wrapping midnight
+}
+
+int OpenDecisions() {
+   int n = 0;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) == InpMagicNumber) n++;
+   }
+   return n;
+}
+
+//+------------------------------------------------------------------+
+//| The setup.  side = +1 buy, -1 sell.                               |
+//|                                                                   |
+//| Bar indices are set by InpConfirmMode (see below); the cluster sits |
+//| behind the reaction, oldest last. The whole judgement is made on    |
+//| CLOSED bars only — a forming bar's volume is a fraction of what it |
+//| will end as, and comparing it to a finished bar is the classic way |
+//| to invent a signal that evaporates on the next tick.               |
+//+------------------------------------------------------------------+
+bool Detect(int side, double &sl_level, string &why) {
+   int nb = MathMax(2, MathMin(3, InpClusterBars));
+
+   // WHERE THE REACTION BAR SITS.
+   // Mode 0 is his aggressive entry — Part 9: "I take an aggressive entry, my entry is
+   // right here" — the reaction bar IS the entry bar, so it is bar 1.
+   // Mode 1 is his confirmed entry — Part 9: "after this they did a testing, we call it
+   // a NO SUPPLY TEST... if the test has small volume you should wait for the next bar
+   // to be bullish, then the setup is confirmed." That costs two bars, so the reaction
+   // sits at bar 3 with the test at bar 2 and the confirming bar at bar 1.
+   int r = (InpConfirmMode == 1) ? 3 : 1;      // index of the REACTION bar
+   int c0 = r + 1;                              // index of the newest CLUSTER bar
+   int need = c0 + nb + InpVolLookback + 2;
+   if (Bars(_Symbol, PERIOD_CURRENT) < need) return false;
+
+   long vmax; double vavg, ravg;
+   if (!VolStats(c0 + nb, vmax, vavg, ravg)) return false;
+   g_seen++;
+   if (vmax > g_vmax_seen) g_vmax_seen = vmax;
+
+   //--- LAW 4: the cluster runs AGAINST the trade we are about to take.
+   // Buying needs the effort to have been on the way DOWN (bars closing down);
+   // that is where the absorbed selling sits.
+   long vsum = 0, vmin_cluster = 0;
+   double worst_loud = 1.0, best_loud_bar = 0.0;
+   double ext = (side > 0) ? bLow(c0) : bHigh(c0);
+   for (int q = 0; q < nb; q++) {
+      int k = c0 + q;
+      if (InpStrictDir) {
+         if (side > 0 && !bDown(k)) { g_rej_dir++; return false; }
+         if (side < 0 && !bUp(k))   { g_rej_dir++; return false; }
+      }
+      long v = BarVolume(k);
+      if (v <= 0) return false;
+
+      // LAW 5, two readings of the same sentence. Zee wrote "these volumes will be
+      // that SESSION'S HIGHEST VOLUMES" (plural — mode 0, every bar stands up against
+      // the rolling peak). Part 8 says "the BIGGEST volume is here", singular — mode 1,
+      // one standout bar carries the cluster while the rest need only beat the average.
+      // Mode 0 is the literal reading and is tested first; mode 1 exists because three
+      // consecutive bars each at 70% of a rolling maximum may simply never happen.
+      double loud = (double)v / (double)vmax;
+      if (q == 0 || loud < worst_loud) worst_loud = loud;
+      if (loud > best_loud_bar) best_loud_bar = loud;
+      if (InpBigMode == 0 && (double)v < InpBigPct * (double)vmax) {
+         if (worst_loud > g_best_loud) g_best_loud = worst_loud;
+         g_rej_loud++; return false;
+      }
+      if ((double)v < InpBigAvg * vavg) { g_rej_loud++; return false; }
+
+      // LAW 4 — optional: the effort must ESCALATE. Part 4: the second bar's volume
+      // higher than the first, the third "even higher than the previous two".
+      if (InpRisingVol && q > 0) {
+         long prev = BarVolume(k - 1);      // k-1 is the NEWER bar
+         if (prev <= v) { g_rej_rise++; return false; }
+      }
+      vsum += v;
+      if (vmin_cluster == 0 || v < vmin_cluster) vmin_cluster = v;
+      if (side > 0) ext = MathMin(ext, bLow(k));
+      else          ext = MathMax(ext, bHigh(k));
+   }
+   double vcluster = (double)vsum / nb;
+   if (InpBigMode == 1 && best_loud_bar < InpBigPct) {
+      if (best_loud_bar > g_best_loud) g_best_loud = best_loud_bar;
+      g_rej_loud++; return false;
+   }
+   double reach = (InpBigMode == 1) ? best_loud_bar : worst_loud;
+   if (reach > g_best_loud) g_best_loud = reach;
+
+   //--- LAW 7: anomaly — the last cluster bar spends huge volume for tiny spread.
+   if (InpAnomaly) {
+      if (ravg <= 0) return false;
+      if (bRange(c0) > InpAnomalyMax * ravg) { g_rej_anom++; return false; }
+   }
+
+   //--- LAW 13: the fake break. The cluster must take out a recent extreme, and the
+   // reaction must close back INSIDE it — Zee's tier-3 "strongest" case.
+   if (InpFakeBreak) {
+      double lvl = (side > 0) ? bLow(c0 + nb) : bHigh(c0 + nb);
+      for (int k = c0 + nb; k < c0 + nb + InpSweepLook; k++) {
+         if (side > 0) lvl = MathMin(lvl, bLow(k));
+         else          lvl = MathMax(lvl, bHigh(k));
+      }
+      if (side > 0) {
+         if (ext >= lvl)       { g_rej_fake++; return false; }  // never swept the low
+         if (bClose(r) <= lvl) { g_rej_fake++; return false; }  // no close back inside
+      } else {
+         if (ext <= lvl)       { g_rej_fake++; return false; }
+         if (bClose(r) >= lvl) { g_rej_fake++; return false; }
+      }
+   }
+
+   //--- LAW 2: the reaction names the side.
+   if (side > 0 && !bUp(r))   { g_rej_react++; return false; }
+   if (side < 0 && !bDown(r)) { g_rej_react++; return false; }
+
+   // Part 15: "its closing is strongly bullish". A doji that happens to close a tick
+   // up is not a reaction, so the body has to carry the bar.
+   double rng1 = bRange(r);
+   if (rng1 <= 0) return false;
+   if (bBody(r) < InpBodyFrac * rng1) { g_rej_body++; return false; }
+
+   if (InpEngulf) {
+      if (side > 0 && bClose(r) <= bHigh(c0)) return false;
+      if (side < 0 && bClose(r) >= bLow(c0))  return false;
+   }
+
+   //--- LAW 3: THE TRIGGER. The reaction must arrive on LOW volume.
+   // Part 15: "the lower the volume on it, the stronger the signal. If a big volume
+   // comes, SKIP it, wait more." So this is a veto, not a score.
+   long v1 = BarVolume(r);
+   if (v1 <= 0) return false;
+   // WHICH "LOW" DOES HE MEAN? Mode 0 reads it as low RELATIVE TO THE CLIMAX just
+   // seen — the collapse he draws on the chart. Mode 1 reads it as low for this market
+   // generally, i.e. below the recent average. Volume is strongly autocorrelated, so
+   // the bar right after three loud bars is itself usually loud: the two-day probe
+   // never got below 0.83x cluster. Mode 1 exists because if that holds over a month,
+   // mode 0 is not a strict rule — it is an impossible one, and the distinction is
+   // worth a receipt rather than a guess.
+   double vref = (InpQuietRef == 1) ? vavg : vcluster;
+   double qr = (double)v1 / MathMax(1.0, vref);
+   if (qr < g_best_quiet) g_best_quiet = qr;
+   bool quiet = ((double)v1 <= InpLowVolPct * vref);
+
+   //--- LAW 6: the wick. On a big-volume bar a wick against the move says the volume
+   // was aggression that WON, not absorption that is still sitting there — which is
+   // the one case the teacher says not to wait on.
+   double upper = bHigh(r) - MathMax(bOpen(r), bClose(r));
+   double lower = MathMin(bOpen(r), bClose(r)) - bLow(r);
+   bool wick = (side > 0) ? (lower >= InpWickFrac * rng1)
+                          : (upper >= InpWickFrac * rng1);
+
+   if (InpWickMode == 1 && !wick) { g_rej_quiet++; return false; }  // require outright
+   if (!quiet) {
+      // Part 6: "in the case of aggressive selling, even if a big volume comes, you
+      // don't wait — you enter here." Mode 2 is that exception, and ONLY that.
+      if (!(InpWickMode == 2 && wick)) { g_rej_quiet++; return false; }
+   }
+
+   //--- THE NO-SUPPLY TEST (InpConfirmMode = 1).
+   // Part 9: "after this they did a testing — we call it a NO SUPPLY TEST. If the test
+   // has a small volume you should wait for the next bar to be bullish, then the setup
+   // is confirmed. A big volume on the test would have meant sustained buying."
+   //
+   // So the test bar must (a) probe BACK toward the cluster, (b) do it on volume lower
+   // than the reaction's, and (c) FAIL to take out the setup extreme — a test that
+   // breaks the low is not a test, it is the setup being wrong. Then the bar after it
+   // has to close our way, which is the actual entry bar.
+   if (InpConfirmMode == 1) {
+      long vt = BarVolume(2);
+      if (vt <= 0) { g_rej_test++; return false; }
+      // MEASURED AGAINST THE CLIMAX, NOT AGAINST THE REACTION. The first cut of this
+      // compared the test bar to the reaction bar — but LAW 3 has already forced the
+      // reaction to be quiet, so that asked the test to be quieter than something
+      // already quiet. It rejected 100% of setups: 48 sweep passes over seven months
+      // fired ZERO trades. Every "small volume" the teacher names is small next to the
+      // effort that came before it, so the test uses the same reference as LAW 3.
+      if ((double)vt > InpTestVolPct * vref) { g_rej_test++; return false; }
+      if (side > 0) {
+         if (bLow(2) <= ext)  { g_rej_test++; return false; }   // broke the low: not a test
+         if (!bUp(1))         { g_rej_test++; return false; }   // no confirming bar
+         if (bClose(1) <= bClose(2)) { g_rej_test++; return false; }
+      } else {
+         if (bHigh(2) >= ext) { g_rej_test++; return false; }
+         if (!bDown(1))       { g_rej_test++; return false; }
+         if (bClose(1) >= bClose(2)) { g_rej_test++; return false; }
+      }
+   }
+
+   //--- LAW 9 (off by default)
+   int td = TrendDir();
+   if (td != 0 && td != side) { g_rej_trend++; return false; }
+
+   //--- LAW 8: the stop sits just past the extreme the setup defended.
+   if (side > 0) ext = MathMin(ext, bLow(r));
+   else          ext = MathMax(ext, bHigh(r));
+   if (InpConfirmMode == 1) {
+      // the test and the confirming bar happened after the reaction; the stop has to
+      // sit outside everything the setup has already defended, not just the reaction
+      for (int k = 1; k <= 2; k++) {
+         if (side > 0) ext = MathMin(ext, bLow(k));
+         else          ext = MathMax(ext, bHigh(k));
+      }
+   }
+   double buf = InpSlBufPts * _Point;
+   sl_level = (side > 0) ? ext - buf : ext + buf;
+
+   why = StringFormat("cluster %d bars vol %.0f (max %d avg %.0f) | reaction vol %d = %.2fx%s%s",
+                      nb, vcluster, (int)vmax, vavg, (int)v1,
+                      (double)v1 / MathMax(1.0, vcluster),
+                      quiet ? " QUIET" : " LOUD",
+                      wick ? " +wick" : "");
+   return true;
+}
+
+//+------------------------------------------------------------------+
+//| Fire                                                              |
+//+------------------------------------------------------------------+
+void Fire(int side, double sl_level, string why) {
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double entry = (side > 0) ? ask : bid;
+   double risk  = MathAbs(entry - sl_level);
+
+   // The floor exists because his 2-3 pips are FX pips on a pair whose spread is a
+   // fraction of gold's. A stop narrower than the spread is not a tight stop, it is a
+   // guaranteed loss on entry.
+   double minr = InpMinSlPts * _Point;
+   double maxr = InpMaxSlPts * _Point;
+   if (risk < minr) {
+      risk = minr;
+      sl_level = (side > 0) ? entry - risk : entry + risk;
+   }
+   if (risk > maxr) {
+      if (InpVerbose)
+         PrintFormat("[VSISA] refused: risk %.0f pts > cap %d", risk / _Point, InpMaxSlPts);
+      return;
+   }
+
+   double tp = (InpTargetR > 0)
+             ? ((side > 0) ? entry + InpTargetR * risk : entry - InpTargetR * risk)
+             : 0.0;
+
+   int dg = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+   sl_level = NormalizeDouble(sl_level, dg);
+   if (tp > 0) tp = NormalizeDouble(tp, dg);
+
+   int n = MathMax(1, InpTickets);
+   int placed = 0;
+   for (int i = 0; i < n; i++) {
+      string tag = StringFormat("vsisa_%d_%d", g_fires, i);
+      bool ok = (side > 0) ? trade.Buy (InpLots, _Symbol, 0, sl_level, tp, tag)
+                           : trade.Sell(InpLots, _Symbol, 0, sl_level, tp, tag);
+      if (ok) placed++;
+   }
+   if (placed == 0) {
+      if (InpVerbose) PrintFormat("[VSISA] send failed: %d %s", trade.ResultRetcode(),
+                                  trade.ResultRetcodeDescription());
+      return;
+   }
+   g_fires++;
+   g_cool = InpCoolBars;
+   g_last_fire = iTime(_Symbol, PERIOD_CURRENT, 0);
+
+   if (InpVerbose)
+      PrintFormat("[VSISA] #%d %s @ %.2f SL %.2f (%.0f pts) TP %.2f (%.1fR) | %s",
+                  g_fires, (side > 0) ? "BUY" : "SELL", entry, sl_level,
+                  risk / _Point, tp, InpTargetR, why);
+}
+
+//+------------------------------------------------------------------+
+//| Breakeven — LAW 8's optional half                                 |
+//+------------------------------------------------------------------+
+void BreakEvenCheck() {
+   if (InpBreakEvenR <= 0) return;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+
+      double open = PositionGetDouble(POSITION_PRICE_OPEN);
+      double sl   = PositionGetDouble(POSITION_SL);
+      double tp   = PositionGetDouble(POSITION_TP);
+      if (sl == 0) continue;
+      long   type = PositionGetInteger(POSITION_TYPE);
+      double risk = MathAbs(open - sl);
+      if (risk <= 0) continue;
+
+      double px = (type == POSITION_TYPE_BUY)
+                ? SymbolInfoDouble(_Symbol, SYMBOL_BID)
+                : SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      double gained = (type == POSITION_TYPE_BUY) ? (px - open) : (open - px);
+      if (gained < InpBreakEvenR * risk) continue;
+
+      // already at or past breakeven — nothing to do
+      if (type == POSITION_TYPE_BUY  && sl >= open) continue;
+      if (type == POSITION_TYPE_SELL && sl <= open) continue;
+      trade.PositionModify(tk, NormalizeDouble(open, _Digits), tp);
+   }
+}
+
+//+------------------------------------------------------------------+
+int OnInit() {
+   trade.SetExpertMagicNumber(InpMagicNumber);
+   trade.SetTypeFillingBySymbol(_Symbol);
+   trade.SetDeviationInPoints(30);
+   // KEEP THIS STRING IN STEP WITH #property version — the Diamond's banner said
+   // v1.14 for nine versions and nobody could tell from a log which build was live.
+   PrintFormat("[VSISA] v1.00 — cluster %d bars (bigmode %d, big>=%.2fxmax/%.2fxavg) | "
+               "reaction<=%.2fx%s | TP %.1fR, BE %.1fR, SL buf %d pts (floor %d) | "
+               "trendTF %d, confirm %d, wick %d, anomaly %d, fake %d | %.2f lots x%d | "
+               "magic %d",
+               InpClusterBars, InpBigMode, InpBigPct, InpBigAvg,
+               InpLowVolPct, (InpQuietRef == 1) ? " avg" : " cluster",
+               InpTargetR, InpBreakEvenR, InpSlBufPts, InpMinSlPts,
+               InpTrendTF, InpConfirmMode, InpWickMode, (int)InpAnomaly,
+               (int)InpFakeBreak, InpLots, InpTickets, InpMagicNumber);
+   return INIT_SUCCEEDED;
+}
+
+void OnDeinit(const int reason) {
+   PrintFormat("[VSISA] stopped, %d decisions taken", g_fires);
+   // The funnel, widest gate first. Whichever line eats the candidates is the law to
+   // aim a variant at — guessing which one is what cost the first five-day run.
+   PrintFormat("[VSISA] FUNNEL candidates %d | dir %d | not loud %d | not rising %d | "
+               "anomaly %d | fake %d | reaction %d | body %d | not quiet %d | test %d "
+               "| trend %d | FIRED %d",
+               g_seen, g_rej_dir, g_rej_loud, g_rej_rise, g_rej_anom, g_rej_fake,
+               g_rej_react, g_rej_body, g_rej_quiet, g_rej_test, g_rej_trend, g_fires);
+   PrintFormat("[VSISA] VOLUME SOURCE iRealVolume %I64d reads, tick-count fallback "
+               "%I64d reads — %s", g_rv_hit, g_rv_miss,
+               (g_rv_hit == 0) ? "EVERY judgement used TICK COUNT"
+                               : ((g_rv_miss == 0) ? "all real volume" : "MIXED"));
+   PrintFormat("[VSISA] REACH loudest lookback max %d | best cluster/max %.2f "
+               "(need %.2f) | best reaction/cluster %.2f (need %.2f)",
+               (int)g_vmax_seen, g_best_loud, InpBigPct,
+               (g_best_quiet > 900 ? -1.0 : g_best_quiet), InpLowVolPct);
+}
+
+void OnTick() {
+   BreakEvenCheck();
+
+   // One decision per closed bar. Everything this EA judges is a finished bar, so
+   // running the detector on every tick would only re-answer the same question.
+   datetime t = iTime(_Symbol, PERIOD_CURRENT, 0);
+   if (t == g_last_bar) return;
+   g_last_bar = t;
+
+   if (g_cool > 0) { g_cool--; return; }
+   if (!InSession()) return;
+   if (OpenDecisions() >= InpMaxOpen) return;
+
+   double sl = 0;
+   string why = "";
+   if (InpBuys  && Detect(+1, sl, why)) { Fire(+1, sl, why); return; }
+   if (InpSells && Detect(-1, sl, why)) { Fire(-1, sl, why); return; }
+}
+//+------------------------------------------------------------------+
