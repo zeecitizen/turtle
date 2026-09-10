@@ -735,7 +735,7 @@ const server = http.createServer(async (req, res) => {
 
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
-    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/fills-history' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/forming.png' && apexUrl !== '/api/context-now.png' && apexUrl !== '/api/versions.png' && apexUrl !== '/api/forensic.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/api/oanda-volume-status' && apexUrl !== '/home' && apexUrl !== '/docs' && apexUrl !== '/today-setups' && apexUrl !== '/today' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/fills-history' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/forming.png' && apexUrl !== '/api/context-now.png' && apexUrl !== '/api/versions.png' && apexUrl !== '/api/forensic.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/api/oanda-volume-status' && apexUrl !== '/home' && apexUrl !== '/docs' && apexUrl !== '/today-setups' && apexUrl !== '/today' && apexUrl !== '/vsisa' && apexUrl !== '/vsisa-paper' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
       res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
       res.end();
       return;
@@ -1613,6 +1613,46 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
       });
     });
     global.__todaySetupsBuilding.then(serve, serve);
+    return;
+  }
+
+  // VSISA — the laws, the expected setup, and every setup the EA has taken.
+  // Zee, 2026-09-10: "create ... a button that leads to a new page called VSISA ...
+  // Draw the expected setup and write the rules 1 by 1 ... Draw every setup taken by
+  // our EA VSISA. so i can visually inspect it".
+  // Built on demand by monitor/build_vsisa_page.py (~21 s for 126 cards, ~8 MB of
+  // embedded PNGs), then cached — same pattern as /today-setups, and for the same
+  // reason: far too slow to redraw on every click.
+  if (url === '/vsisa') {
+    const outFile = path.join(__dirname, '..', 'reviews', 'vsisa.html');
+    const STALE_MS = 15 * 60 * 1000;
+    const fresh = () => {
+      try { return Date.now() - fs.statSync(outFile).mtimeMs < STALE_MS; }
+      catch (e) { return false; }
+    };
+    const serve = () => {
+      try {
+        const html = fs.readFileSync(outFile, 'utf8');
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8',
+                             'Cache-Control': 'no-store' });
+        res.end(html);
+      } catch (e) {
+        res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('could not build the VSISA page: ' + e.message);
+      }
+    };
+    if (fresh()) { serve(); return; }
+    if (global.__vsisaBuilding) { global.__vsisaBuilding.then(serve, serve); return; }
+    const script = path.join(__dirname, '..', '..', 'monitor', 'build_vsisa_page.py');
+    global.__vsisaBuilding = new Promise((resolve) => {
+      const { execFile } = require('child_process');
+      execFile(PY_EXE, [script, '--out', outFile],
+               { timeout: 300000, windowsHide: true }, () => {
+        global.__vsisaBuilding = null;
+        resolve();
+      });
+    });
+    global.__vsisaBuilding.then(serve, serve);
     return;
   }
 
@@ -3207,8 +3247,10 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     return;
   }
 
-  // VSISA DASHBOARD - paper-trader live results from vsisa_paper_trader.py
-  if (url === '/vsisa') {
+  // VSISA PAPER TRADER (May 2026) — the Python paper-trader dashboard. /vsisa now
+  // belongs to the real EA's page (see the route further up), so this keeps its own
+  // URL rather than being deleted: it is still the only view of that experiment.
+  if (url === '/vsisa-paper') {
     try {
       const htmlPath = path.join(__dirname, 'vsisa.html');
       const html = fs.readFileSync(htmlPath, 'utf8');

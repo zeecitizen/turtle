@@ -179,11 +179,12 @@ def per_day(p: Path):
     return dict(day), wins, losses
 
 
-def run_arm(label, inputs, frm, to, period, deposit, delay, model, idx):
+def run_arm(label, inputs, frm, to, period, deposit, delay, model, idx,
+            symbol="XAUUSD"):
     name = "VSISA_%d_%s" % (idx, datetime.now().strftime("%H%M%S"))
     ini = ROOT / "mt5" / "_vsisa_court.ini"
     lines = ["[Tester]"]
-    for k, v in [("Expert", EA), ("Symbol", "XAUUSD"), ("Period", period),
+    for k, v in [("Expert", EA), ("Symbol", symbol), ("Period", period),
                  ("Model", model), ("FromDate", frm), ("ToDate", to),
                  ("Deposit", deposit), ("Currency", "USD"), ("Leverage", "1:500"),
                  ("ExecutionMode", delay), ("Optimization", 0),
@@ -254,6 +255,7 @@ def main():
     ap.add_argument("--from", dest="frm", default="2026.08.05")
     ap.add_argument("--to", dest="to", default="2026.09.06")
     ap.add_argument("--period", default="M5")
+    ap.add_argument("--symbol", default="XAUUSD")
     ap.add_argument("--arms", default="core")
     ap.add_argument("--inputs", default="", help="one-off arm, space separated Inp=..")
     ap.add_argument("--deposit", type=int, default=50000)
@@ -280,7 +282,7 @@ def main():
     out = []
     for i, (label, inputs) in enumerate(arms):
         r = run_arm(label, inputs, args.frm, args.to, args.period,
-                    args.deposit, args.delay, args.model, i)
+                    args.deposit, args.delay, args.model, i, args.symbol)
         if r:
             out.append(r)
     if not out:
