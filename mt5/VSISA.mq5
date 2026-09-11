@@ -47,6 +47,19 @@ input int    InpClusterBars = 2;      // InpClusterBars — 2 or 3 same-directio
 input bool   InpRisingVol   = false;  // InpRisingVol — require each cluster bar louder than the last
 input bool   InpStrictDir   = true;   // InpStrictDir — every cluster bar must close its own way
 
+//--- THE FEED (2026-09-11) -------------------------------------------------
+// Zee, 2026-09-06: "we donot wish to use broker volume, we want to completely
+// transition to OANDA volume taken from tradingview. any broker volume trades waste
+// our time." VSISA v1.00 shipped reading BROKER TICK COUNT because the bridge was
+// never wired in — an omission, not a decision. This is the Diamond's proven reader,
+// ported verbatim.
+//
+// DEFAULT 0 ON PURPOSE, FOR NOW. All seven months of VSISA's receipts were earned on
+// broker tick volume; OANDA coverage only begins 2026-08-05 (23 trading days), so the
+// two cannot yet be compared over the same evidence. Flip this once the court says so.
+input int    InpOandaVolume = 0;      // InpOandaVolume — 1 = judge on OANDA (TradingView) volume
+input bool   InpOandaStrict = true;   // InpOandaStrict — a missing OANDA minute = no trade, never broker
+
 //--- LAW 5: what "big" means, relative to recent bars -----------------------
 // LOOKBACK IS A PLATEAU, NOT A PEAK. Over seven months: 30->$3284, 45->$3385,
 // 60->$3377, 75->$3050, 90->$3196, 105->$2948. Adjacent settings swing ~$300, so the
@@ -114,7 +127,7 @@ int      g_fires    = 0;
 int g_seen = 0, g_rej_dir = 0, g_rej_loud = 0, g_rej_rise = 0, g_rej_anom = 0;
 int g_rej_fake = 0, g_rej_react = 0, g_rej_body = 0, g_rej_quiet = 0, g_rej_trend = 0;
 int g_rej_test = 0;
-long g_rv_hit = 0, g_rv_miss = 0;
+long g_rv_hit = 0, g_rv_miss = 0, g_ov_hit = 0;
 
 // HOW CLOSE DID WE GET. A funnel says which gate rejected; these say by how much, which
 // is the difference between "loosen this threshold a little" and "this law never
@@ -136,9 +149,98 @@ double bBody(int k)  { return MathAbs(bClose(k) - bOpen(k)); }
 bool   bUp(int k)    { return bClose(k) > bOpen(k); }
 bool   bDown(int k)  { return bClose(k) < bOpen(k); }
 
+datetime g_ov_t[];
+long     g_ov_v[];
+int      g_ov_n = 0;
+int      g_ov_miss = 0;          // lookups that fell back to broker volume
+datetime g_ov_miss_bar = 0;      // last bar already reported, so one line per bar
+datetime g_ov_newest = 0;        // newest minute in the table (freshness telemetry)
+
+void LoadOandaVol() {
+   g_ov_n = 0;
+   // RETRY (2026-08-21): the writer swaps this file atomically every 60 s, and a
+   // read landing inside that swap failed outright — one bar silently on broker
+   // volume, logged at 21:46:02. Five quick attempts cover the swap window.
+   int h = INVALID_HANDLE;
+   for (int _try = 0; _try < 5 && h == INVALID_HANDLE; _try++) {
+      h = FileOpen("oanda_vol.csv", FILE_READ | FILE_TXT | FILE_ANSI | FILE_COMMON |
+                                FILE_SHARE_READ | FILE_SHARE_WRITE);
+      if (h == INVALID_HANDLE && !MQLInfoInteger(MQL_TESTER)) Sleep(40);
+   }
+   if (h == INVALID_HANDLE) {
+      Print("[VSISA] OANDA volume requested but oanda_vol.csv not found — using broker volume");
+      return;
+   }
+   ArrayResize(g_ov_t, 8192); ArrayResize(g_ov_v, 8192);
+   while (!FileIsEnding(h)) {
+      string ln = FileReadString(h);
+      int c = StringFind(ln, ",");
+      if (c <= 0) continue;
+      datetime t = StringToTime(StringSubstr(ln, 0, c));
+      long v = (long)StringToInteger(StringSubstr(ln, c + 1));
+      if (t <= 0) continue;
+      if (g_ov_n >= ArraySize(g_ov_t)) {
+         ArrayResize(g_ov_t, g_ov_n + 4096); ArrayResize(g_ov_v, g_ov_n + 4096);
+      }
+      g_ov_t[g_ov_n] = t; g_ov_v[g_ov_n] = v; g_ov_n++;
+   }
+   FileClose(h);
+   g_ov_newest = (g_ov_n > 0) ? g_ov_t[g_ov_n - 1] : 0;
+   PrintFormat("[VSISA] OANDA volume table loaded: %d minutes (newest %s)",
+               g_ov_n, TimeToString(g_ov_newest, TIME_DATE | TIME_MINUTES));
+}
+
+long OandaVolAt(datetime t) {          // binary search the sorted table
+   int lo = 0, hi = g_ov_n - 1;
+   while (lo <= hi) {
+      int mid = (lo + hi) / 2;
+      if (g_ov_t[mid] == t) return g_ov_v[mid];
+      if (g_ov_t[mid] < t) lo = mid + 1; else hi = mid - 1;
+   }
+   return -1;
+}
+
+// ── THE TABLE IS PER-MINUTE; THE CHART NEED NOT BE (2026-09-08) ──────────────────
+// Zee: "what if we test our EA on the OANDA, on the 5 minute timeframe instead of 1
+// minute. maybe that one is much better due to having a stable trend."
+//
+// oanda_vol.csv holds ONE ROW PER MINUTE. OandaVolAt(iTime(...)) therefore returns the
+// volume of the bar's FIRST MINUTE ONLY. On M1 that is the whole bar and correct; on M5
+// it is about a fifth of it — and since every UHV test is a comparison BETWEEN bars,
+// each reading a different fifth, the entire ranking would be wrong while every number
+// still looked plausible. An M5 court run on that would have answered his question with
+// noise.
+//
+// A bar's volume is the SUM of the minutes it spans. Under strict mode a single missing
+// minute voids the whole bar: half a candle of his volume is not his candle.
+long OandaVolSpan(datetime t, int mins) {
+   if (mins <= 1) return OandaVolAt(t);
+   long sum = 0;
+   for (int m = 0; m < mins; m++) {
+      long v = OandaVolAt(t + m * 60);
+      if (v <= 0) {
+         if (InpOandaStrict) return -1;   // an incomplete candle is not his candle
+         continue;
+      }
+      sum += v;
+   }
+   return (sum > 0) ? sum : -1;
+}
+
+
 // iRealVolume, NOT iVolume. See the header — in the tester iVolume is a constant and
 // every ratio in this file would silently become 1.0.
 long BarVolume(int k) {
+   if (InpOandaVolume == 1 && g_ov_n > 0) {
+      long ov = OandaVolSpan(iTime(_Symbol, PERIOD_CURRENT, k),
+                             (int)(PeriodSeconds() / 60));
+      if (ov > 0) { g_ov_hit++; return ov; }
+   }
+   // NO SILENT FALLBACK UNDER STRICT MODE. Reaching here with OANDA requested means the
+   // table lacks this bar; handing back the broker's number would decide a setup on a
+   // feed Zee does not read. -1 propagates and VolWhole() refuses the setup outright.
+   if (InpOandaVolume == 1 && InpOandaStrict) return -1;
+
    long rv = iRealVolume(_Symbol, PERIOD_CURRENT, k);
    if (rv > 0) { g_rv_hit++; return rv; }
    // WHICH NUMBER IS ACTUALLY BEING JUDGED. On an exchange-traded symbol iRealVolume is
@@ -174,6 +276,10 @@ bool VolStats(int from, long &vmax, double &vavg, double &ravg) {
    }
    // Half the window is enough to judge by; less than that and we are at the very
    // start of the data with no "recent past" to compare against, so stand down.
+   // UNDER STRICT OANDA THE WINDOW MUST BE WHOLE. Skipping absent minutes would quietly
+   // shrink the yardstick every setup is measured against — the same feed-mixing one
+   // level down that InpOandaStrict exists to prevent.
+   if (InpOandaVolume == 1 && InpOandaStrict && n < InpVolLookback) return false;
    if (n < InpVolLookback / 2 || vmax <= 0) return false;
    vavg /= n;
    ravg /= n;
@@ -509,6 +615,7 @@ void BreakEvenCheck() {
 
 //+------------------------------------------------------------------+
 int OnInit() {
+   if (InpOandaVolume == 1) LoadOandaVol();
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
    trade.SetDeviationInPoints(30);
@@ -516,13 +623,42 @@ int OnInit() {
    // v1.14 for nine versions and nobody could tell from a log which build was live.
    PrintFormat("[VSISA] v1.00 — cluster %d bars (bigmode %d, big>=%.2fxmax/%.2fxavg) | "
                "reaction<=%.2fx%s | TP %.1fR, BE %.1fR, SL buf %d pts (floor %d) | "
-               "trendTF %d, confirm %d, wick %d, anomaly %d, fake %d | %.2f lots x%d | "
+               "trendTF %d, confirm %d, wick %d, anomaly %d, fake %d | feed %s | %.2f lots x%d | "
                "magic %d",
                InpClusterBars, InpBigMode, InpBigPct, InpBigAvg,
                InpLowVolPct, (InpQuietRef == 1) ? " avg" : " cluster",
                InpTargetR, InpBreakEvenR, InpSlBufPts, InpMinSlPts,
                InpTrendTF, InpConfirmMode, InpWickMode, (int)InpAnomaly,
-               (int)InpFakeBreak, InpLots, InpTickets, InpMagicNumber);
+               (int)InpFakeBreak,
+               (InpOandaVolume == 1) ? (InpOandaStrict ? "OANDA-STRICT" : "OANDA")
+                                     : "BROKER-TICKS",
+               InpLots, InpTickets, InpMagicNumber);
+
+   // WHICH NUMBER IS THIS BROKER ACTUALLY GIVING US (2026-09-12).
+   // Zee moved VSISA to Axi because "AXI volume happens to be more accurate on the
+   // VSISA strategy". Whether that is true is a FACT ABOUT THE FEED, and it is knowable
+   // in one line at startup instead of guessed: on Blueberry iRealVolume returned 0 for
+   // gold CFD on every one of 8,006,496 reads, so the strategy silently ran on tick
+   // count. This says out loud which one Axi hands back, on the symbol actually attached.
+   {
+      long rv = 0, tv = 0; int probed = 0;
+      for (int k = 1; k <= 20; k++) {
+         long r = iRealVolume(_Symbol, PERIOD_CURRENT, k);
+         long t = iVolume(_Symbol, PERIOD_CURRENT, k);
+         if (t > 0) { rv += r; tv += t; probed++; }
+      }
+      if (probed == 0)
+         Print("[VSISA] FEED PROBE: no bars yet — check again once history loads");
+      else if (rv > 0)
+         PrintFormat("[VSISA] FEED PROBE on %s: REAL VOLUME available (%d bars: real %I64d "
+                     "vs tick %I64d). BarVolume() will judge on REAL volume.",
+                     _Symbol, probed, rv, tv);
+      else
+         PrintFormat("[VSISA] FEED PROBE on %s: no real volume (%d bars, tick total "
+                     "%I64d). BarVolume() falls back to TICK COUNT, same as Blueberry.",
+                     _Symbol, probed, tv);
+   }
+
    return INIT_SUCCEEDED;
 }
 
@@ -535,10 +671,12 @@ void OnDeinit(const int reason) {
                "| trend %d | FIRED %d",
                g_seen, g_rej_dir, g_rej_loud, g_rej_rise, g_rej_anom, g_rej_fake,
                g_rej_react, g_rej_body, g_rej_quiet, g_rej_test, g_rej_trend, g_fires);
-   PrintFormat("[VSISA] VOLUME SOURCE iRealVolume %I64d reads, tick-count fallback "
-               "%I64d reads — %s", g_rv_hit, g_rv_miss,
-               (g_rv_hit == 0) ? "EVERY judgement used TICK COUNT"
-                               : ((g_rv_miss == 0) ? "all real volume" : "MIXED"));
+   PrintFormat("[VSISA] VOLUME SOURCE OANDA %I64d | iRealVolume %I64d | broker tick "
+               "count %I64d — %s", g_ov_hit, g_rv_hit, g_rv_miss,
+               (g_ov_hit > 0 && g_rv_miss == 0 && g_rv_hit == 0)
+                   ? "ALL OANDA (his feed)"
+                   : ((g_ov_hit == 0 && g_rv_hit == 0)
+                      ? "EVERY judgement used BROKER TICK COUNT" : "MIXED"));
    PrintFormat("[VSISA] REACH loudest lookback max %d | best cluster/max %.2f "
                "(need %.2f) | best reaction/cluster %.2f (need %.2f)",
                (int)g_vmax_seen, g_best_loud, InpBigPct,

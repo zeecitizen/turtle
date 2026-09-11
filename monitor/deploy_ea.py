@@ -23,9 +23,45 @@ import re, shutil, subprocess, sys, tempfile
 from pathlib import Path
 
 REPO_MQ5 = Path(__file__).resolve().parent.parent / "mt5"
-TERMINAL = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/DBE9B8B347D025DD139E103EE3B63FD8")
+
+# MORE THAN ONE MT5 NOW (2026-09-12). Zee: "i want to move our VSISA EA from Blueberry
+# MT5 to AXI MT5 ... this enables us to use AXI volume which happens to be more accurate
+# on the VSISA strategy." An EA deployed to the wrong terminal looks like a successful
+# deploy and simply never runs, so the target is named rather than assumed.
+TERMINALS = {
+    "blueberry": {
+        "data": Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal"
+                     r"/DBE9B8B347D025DD139E103EE3B63FD8"),
+        "editor": Path(r"C:/Program Files/Blueberry Markets MetaTrader 5"
+                       r"/metaeditor64.exe"),
+    },
+    "axi": {
+        "data": Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal"
+                     r"/0FE5F202FCDE117C6EFAB41A7BC984CD"),
+        "editor": Path(r"C:/Users/zeesh/AppData/Roaming/Axi MetaTrader 5 Terminal"
+                       r"/metaeditor64.exe"),
+    },
+}
+DEFAULT_TERMINAL = "blueberry"
+
+TERMINAL = TERMINALS[DEFAULT_TERMINAL]["data"]
 EXPERTS = TERMINAL / "MQL5" / "Experts"
-METAEDITOR = Path(r"C:/Program Files/Blueberry Markets MetaTrader 5/metaeditor64.exe")
+METAEDITOR = TERMINALS[DEFAULT_TERMINAL]["editor"]
+
+
+def use_terminal(key: str):
+    """Point the module at one of the installs above."""
+    global TERMINAL, EXPERTS, METAEDITOR
+    if key not in TERMINALS:
+        raise SystemExit("unknown terminal %r — have %s"
+                         % (key, ", ".join(TERMINALS)))
+    TERMINAL = TERMINALS[key]["data"]
+    EXPERTS = TERMINAL / "MQL5" / "Experts"
+    METAEDITOR = TERMINALS[key]["editor"]
+    if not METAEDITOR.exists():
+        raise SystemExit("MetaEditor missing for %r at %s" % (key, METAEDITOR))
+    EXPERTS.mkdir(parents=True, exist_ok=True)
+    print("[deploy] target: %s  ->  %s" % (key, EXPERTS))
 
 
 def deploy(name: str) -> bool:
@@ -59,6 +95,12 @@ def deploy(name: str) -> bool:
 
 
 if __name__ == "__main__":
-    names = sys.argv[1:] or ["CaseSignalExecutor"]
+    args = sys.argv[1:]
+    # --terminal axi | --terminal blueberry   (default: blueberry)
+    if "--terminal" in args:
+        i = args.index("--terminal")
+        use_terminal(args[i + 1])
+        del args[i:i + 2]
+    names = args or ["CaseSignalExecutor"]
     results = [deploy(n.removesuffix(".mq5")) for n in names]
     sys.exit(0 if all(results) else 1)
