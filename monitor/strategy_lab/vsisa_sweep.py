@@ -58,6 +58,27 @@ GRIDS = {
         "InpBodyFrac=0.35",
         "InpTargetR=2.0",
     ],
+    # ONE WEEK, THE THREE THINGS ZEE JUST LIFTED. He asked for a week, not seven months
+    # ("that takes too long"), and an optimisation answers all eight combinations in the
+    # time one backtest takes — the cost is history sync, not simulation.
+    "quick": [
+        "InpStrictDir=0||0||1||1||Y",
+        "InpTrendTF=0||0||60||60||Y",
+        "InpMaxOpen=10||1||9||10||Y",
+        "InpCoolBars=0",
+        "InpVolLookback=100",
+        "InpBigMode=1",
+        "InpClusterBars=2",
+        "InpBigPct=0.80",
+        "InpBigAvg=1.20",
+        "InpLowVolPct=1.00",
+        "InpQuietRef=0",
+        "InpBodyFrac=0.35",
+        "InpTargetR=2.5",
+        "InpSlBufPts=30",
+        "InpMinSlPts=60",
+        "InpBreakEvenR=1",
+    ],
     # THE EDGES. The first "open" sweep returned BigPct=0.80 and LowVolPct=0.95 in
     # every one of its top rows — and both were the LARGEST value offered. When a
     # winner sits on the wall of the grid, the grid picked it, not the data. This runs
