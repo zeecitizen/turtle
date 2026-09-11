@@ -57,7 +57,7 @@ COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files"
 M5 = 300
 PRE = 26          # bars drawn before the entry bar
 POST = 14         # bars drawn after
-CLUSTER_BARS = 2  # the shipped default
+SETUP_BARS = 2  # the shipped default
 
 INK = "#101418"
 GRID = "#dfe4ea"
@@ -256,29 +256,29 @@ def components(tr, bars):
     """Recompute what the EA saw, so each card can name its parts."""
     t = tr["ts"]
     react = bars.get(t - M5)
-    cl = [bars.get(t - M5 * (2 + i)) for i in range(CLUSTER_BARS)]
+    cl = [bars.get(t - M5 * (2 + i)) for i in range(SETUP_BARS)]
     cl = [c for c in cl if c]
-    look = [bars[t - M5 * k] for k in range(2 + CLUSTER_BARS,
-                                            2 + CLUSTER_BARS + 100)
+    look = [bars[t - M5 * k] for k in range(2 + SETUP_BARS,
+                                            2 + SETUP_BARS + 100)
             if (t - M5 * k) in bars]
-    d = {"react": react, "cluster": cl, "n_look": len(look)}
+    d = {"react": react, "setup": cl, "n_look": len(look)}
     if look:
         vols = [b[4] for b in look]
         d["vmax"] = max(vols)
         d["vavg"] = sum(vols) / len(vols)
     if cl:
-        d["vcluster"] = sum(c[4] for c in cl) / len(cl)
+        d["vsetup"] = sum(c[4] for c in cl) / len(cl)
         if d.get("vmax"):
             d["loudest"] = max(c[4] for c in cl) / d["vmax"]
-    if react and d.get("vcluster"):
-        d["quiet"] = react[4] / d["vcluster"]
+    if react and d.get("vsetup"):
+        d["quiet"] = react[4] / d["vsetup"]
 
     # THE DISTRIBUTION CHECK. Not a rule in the EA — it is the diagnosis of the first
     # live loss, where the loudest bar of the session closed UP and the next bar closed
     # DOWN (the EA's own LAW 2 calling that volume SELLING) twenty minutes before it
     # bought. Shown on every card so the pattern can be counted, not argued about.
     warn = None
-    for k in range(2 + CLUSTER_BARS, 2 + CLUSTER_BARS + 8):
+    for k in range(2 + SETUP_BARS, 2 + SETUP_BARS + 8):
         b = bars.get(t - M5 * k)
         nxt = bars.get(t - M5 * (k - 1))
         if not b or not nxt or not d.get("vmax"):
@@ -357,7 +357,7 @@ def draw_setup(tr, bars, comp):
                 fontsize=8, va="center", ha="left", zorder=6)
 
     # THE ENTRY BAR gets a vertical rule instead of a tag, so it cannot collide with
-    # the cluster labels sitting on the bars right beside it.
+    # the setup labels sitting on the bars right beside it.
     ax.axvline(e, color=INK, lw=0.8, ls=":", alpha=0.45, zorder=2)
     ax.text(e, yhi + span * 0.245, "ENTRY", ha="center", va="bottom", fontsize=8.2,
             color=INK, fontweight="bold", zorder=7)
@@ -379,9 +379,9 @@ def draw_setup(tr, bars, comp):
                                     shrinkA=1, shrinkB=3))
 
     below = tr["side"] > 0          # for a BUY the setup extreme is underneath
-    for i in range(len(comp["cluster"])):
+    for i in range(len(comp["setup"])):
         tag(t - M5 * (2 + i), "C%d" % (i + 1), CLUSTER, not below, i % 2)
-    tag(t - M5, "R", REACT, not below, len(comp["cluster"]) % 2)
+    tag(t - M5, "R", REACT, not below, len(comp["setup"]) % 2)
 
     # the exit, if it is known
     if tr.get("exit_ts"):
@@ -398,9 +398,9 @@ def draw_setup(tr, bars, comp):
         s.set_color(GRID)
     ax.tick_params(labelsize=7.5, colors=MUTED)
 
-    # ── volume, coloured to match, with the cluster and reaction called out
+    # ── volume, coloured to match, with the setup bars and reaction called out
     for i, (ts, o, h, l, c) in enumerate(seq):
-        col = CLUSTER if ts in [t - M5 * (2 + j) for j in range(len(comp["cluster"]))] \
+        col = CLUSTER if ts in [t - M5 * (2 + j) for j in range(len(comp["setup"]))] \
             else (REACT if ts == t - M5 else (UP if c >= o else DOWN))
         a = 1.0 if col in (CLUSTER, REACT) else 0.40
         av.bar(i, vols[i], width=0.66, color=col, alpha=a, zorder=3)
@@ -440,7 +440,7 @@ def draw_schematic(side):
     """The EXPECTED setup, drawn rather than described. Idealised bars, so the shape is
     unmistakable: effort into the move, then a quiet reaction the other way."""
     up = side > 0
-    # (open, close, volume) — a down-cluster then a quiet up-reaction, or the mirror
+    # (open, close, volume) — a down setup then a quiet up-reaction, or the mirror
     base = 100.0
     if up:
         seq = [(base + 6, base + 5, 30), (base + 5, base + 4.4, 26),
@@ -522,20 +522,20 @@ LAWS = [
     (3, "The reaction must arrive on LOW volume — THE TRIGGER", "CONFIRMED",
      "The lower the volume on it, the stronger the signal. If a big volume comes, SKIP "
      "it, wait more.",
-     "reaction volume ≤ 1.00 × cluster volume. A veto, not a score. Receipt: leaving it "
+     "reaction volume ≤ 1.00 × the 2 bar setup's volume. A veto, not a score. Receipt: leaving it "
      "unconstrained scored +$621 against +$1,024 constrained on the same window."),
     (3.5, "\"Low\" means low against the CLIMAX, not against the market", "CONFIRMED",
      "This low volume — do not call it no demand. Call it low supply.",
-     "Measured against the cluster just seen. Receipt: that reading swept every top row; "
+     "Measured against the setup just seen. Receipt: that reading swept every top row; "
      "measuring against the rolling average appeared once, at rank 22, on 2 trades."),
-    (4, "The cluster: two bars of effort", "CONFIRMED at 2",
+    (4, "The 2 bar setup: two bars of effort", "CONFIRMED at 2",
      "This three-bar formation is stronger compared to the two-bar.",
      "2 same-direction bars carrying big volume. Receipt: 2-bar beat 3-bar on net in "
      "every sweep; 3-bar wins on profit factor with a third of the trades."),
     (5, "\"Big\" is relative to the recent past — never a VSA band", "CONFIRMED",
      "These bands are misleading. The more you get rid of them, the better you perform. "
      "Compare with the big volumes of the previous two or three days.",
-     "Loudest cluster bar ≥ 0.80 × the 100-bar maximum, and every cluster bar ≥ 1.20 × "
+     "Loudest setup bar ≥ 0.80 × the lookback maximum, and every setup bar ≥ 1.20 × "
      "the 100-bar average. Receipt: net is a PLATEAU across lookbacks 30–105, not a "
      "spike — which is what a real effect looks like."),
     (6, "The wick tells aggression from absorption", "REJECTED",
@@ -567,7 +567,7 @@ LAWS = [
     (12, "Falling volume on a fall is NOT automatically bullish", "STRUCTURAL",
      "Rising prices rising volume, falling prices falling volume is bullish — this is "
      "wrong. This is incomplete.",
-     "Encoded by making the engine CLUSTER-FIRST: quiet volume only means anything "
+     "Encoded by making the engine SETUP-FIRST: quiet volume only means anything "
      "straight after effort. The EA never scans for low volume on its own."),
     (13, "The fake break of a level", "REJECTED",
      "the previous support is broken by a pinbar... this is even the strongest setup",
@@ -643,9 +643,9 @@ def esc(s):
 
 def card_html(tr, comp, png):
     side = "BUY" if tr["side"] > 0 else "SELL"
-    bg = ("SELLING BACKGROUND — two down bars on big volume; effort DOWN that failed"
+    bg = ("SELLING BACKGROUND — the 2 bar setup: two down bars on big volume, effort DOWN that failed"
           if tr["side"] > 0 else
-          "BUYING BACKGROUND — two up bars on big volume; effort UP that failed")
+          "BUYING BACKGROUND — the 2 bar setup: two up bars on big volume, effort UP that failed")
     react_txt = ("REACTION bullish — supply is gone" if tr["side"] > 0
                  else "REACTION bearish — demand is gone")
     risk = abs(tr["entry"] - tr["sl"]) * 100 if tr["sl"] else 0
@@ -653,18 +653,18 @@ def card_html(tr, comp, png):
         ("Setup", "<b>%s</b> · %s" % (side, esc(bg))),
         ("Reaction (R)", "%s%s" % (
             esc(react_txt),
-            (" · volume <b>%.2f×</b> the cluster %s" % (
+            (" · volume <b>%.2f×</b> the setup %s" % (
                 comp["quiet"],
                 "— QUIET, trigger satisfied" if comp["quiet"] <= 1.0 else "— LOUD")
              ) if comp.get("quiet") else "")),
     ]
-    if comp.get("loudest") and comp.get("vcluster"):
-        rows.append(("Cluster volume (C1,C2)",
-                     "avg <b>%d</b> ticks · loudest bar <b>%.2f×</b> the 100-bar max "
-                     "(needs ≥ 0.80×)" % (comp["vcluster"], comp["loudest"])))
+    if comp.get("loudest") and comp.get("vsetup"):
+        rows.append(("2 bar setup volume (C1,C2)",
+                     "avg <b>%d</b> ticks · loudest bar <b>%.2f×</b> the lookback max "
+                     "(needs ≥ 0.80×)" % (comp["vsetup"], comp["loudest"])))
     if comp.get("vmax"):
         rows.append(("Recent yardstick",
-                     "100-bar max <b>%d</b> · average <b>%d</b>"
+                     "lookback max <b>%d</b> · average <b>%d</b>"
                      % (comp["vmax"], comp["vavg"])))
     if risk:
         rows.append(("Geometry",
@@ -690,11 +690,11 @@ def card_html(tr, comp, png):
         '<h3>%s &nbsp;%s%s</h3>'
         '<img src="data:image/png;base64,%s" alt="setup">'
         '<div class="legend">'
-        '<span><span class="dot" style="background:%s"></span><b>C1 C2</b> cluster</span>'
+        '<span><span class="dot" style="background:%s"></span><b>C1 C2</b> the 2 bar setup</span>'
         '<span><span class="dot" style="background:%s"></span><b>R</b> reaction</span>'
         '<span><span class="dot" style="background:%s"></span>up bar</span>'
         '<span><span class="dot" style="background:%s"></span>down bar</span>'
-        '<span>dotted line = 100-bar volume max</span></div>'
+        '<span>dotted line = lookback volume max</span></div>'
         '<table class="k">%s</table>%s</div>'
         % (esc(tr["tag"]),
            esc(time.strftime("%a %d %b %Y  %H:%M", time.gmtime(tr["ts"]))) + " broker",
@@ -758,13 +758,13 @@ def build(out_path: Path, limit=0):
         "<div><img src='data:image/png;base64,%s' alt='sell schematic'></div>"
         "</div>"
         "<table class='k'>"
-        "<tr><td>C1, C2 — the cluster</td><td>Two bars closing the SAME way on big "
+        "<tr><td>C1, C2 — the 2 bar setup</td><td>Two bars closing the SAME way on big "
         "volume. That is <b>effort</b>: somebody is transacting hard. For a BUY they "
         "close DOWN (the selling background); for a SELL they close UP.</td></tr>"
         "<tr><td>R — the reaction</td><td>The next bar closes the OTHER way. This names "
         "which side the big volume really was.</td></tr>"
         "<tr><td>The trigger</td><td>R arrives on <b>LOW volume</b> — no louder than the "
-        "cluster. The resting orders are gone; price can now travel cheaply. If R is "
+        "the setup. The resting orders are gone; price can now travel cheaply. If R is "
         "loud the setup is <b>cancelled</b>, not weakened.</td></tr>"
         "<tr><td>Entry</td><td>At R's close.</td></tr>"
         "<tr><td>Stop</td><td>30 points beyond the extreme the setup defended "
@@ -783,8 +783,8 @@ def build(out_path: Path, limit=0):
         "<div class='sec'>3 · Every setup — %d drawn (%d live, %d tester)</div>"
         "<div class='card'><div class='note'>Labels sit in the empty margin above and "
         "below the price, with a leader line down to the bar — nothing is written over "
-        "a candle. <b>C1/C2</b> mark the cluster, <b>R</b> the reaction, and the volume "
-        "panel highlights those same bars against the 100-bar maximum (dotted) and "
+        "a candle. <b>C1/C2</b> mark the 2 bar setup, <b>R</b> the reaction, and the volume "
+        "panel highlights those same bars against the lookback maximum (dotted) and "
         "average (dashed). Tester setups are drawn on broker M5 bars; September ones on "
         "our own recorded ticks, which have gaps.</div></div>"
         "%s"

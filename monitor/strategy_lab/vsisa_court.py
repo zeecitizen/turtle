@@ -63,6 +63,25 @@ ARM_SETS = {
                                      "InpLowVolPct=0.90", "InpBigPct=0.40",
                                      "InpBigAvg=1.20", "InpBodyFrac=0.35"]),
     ],
+    # LIFTING THE PLUMBING. Zee, 2026-09-12: "remove the InpMaxOpen = 1 and cooldown
+    # for now." The funnel said 47% of fully-qualified setups were discarded while a
+    # trade was already running — refused by a limit, not by a law. These arms price
+    # that decision instead of assuming more trades is better.
+    "open": [
+        ("SHIPPED  max 1, cool 3", ['InpVolLookback=100', 'InpBigMode=1', 'InpClusterBars=2', 'InpBigPct=0.80', 'InpBigAvg=1.20', 'InpLowVolPct=1.00', 'InpQuietRef=0', 'InpBodyFrac=0.35', 'InpTargetR=2.5', 'InpSlBufPts=30', 'InpMinSlPts=60', 'InpBreakEvenR=1', 'InpTrendTF=60'] + ["InpMaxOpen=1", "InpCoolBars=3"]),
+        ("max 3, no cooldown", ['InpVolLookback=100', 'InpBigMode=1', 'InpClusterBars=2', 'InpBigPct=0.80', 'InpBigAvg=1.20', 'InpLowVolPct=1.00', 'InpQuietRef=0', 'InpBodyFrac=0.35', 'InpTargetR=2.5', 'InpSlBufPts=30', 'InpMinSlPts=60', 'InpBreakEvenR=1', 'InpTrendTF=60'] + ["InpMaxOpen=3", "InpCoolBars=0"]),
+        ("max 10, no cooldown", ['InpVolLookback=100', 'InpBigMode=1', 'InpClusterBars=2', 'InpBigPct=0.80', 'InpBigAvg=1.20', 'InpLowVolPct=1.00', 'InpQuietRef=0', 'InpBodyFrac=0.35', 'InpTargetR=2.5', 'InpSlBufPts=30', 'InpMinSlPts=60', 'InpBreakEvenR=1', 'InpTrendTF=60'] + ["InpMaxOpen=10", "InpCoolBars=0"]),
+    ],
+    # THE FEED. Zee, 2026-09-11: "which volume are we using for VSISA? broker volume?"
+    # It was — the OANDA bridge was never wired in. Now it is, and this is the court
+    # that decides the default. Window starts 2026-08-05 because that is where OANDA
+    # coverage begins; anything earlier would silently compare a live feed against an
+    # empty table.
+    "feed": [
+        ("BROKER tick count (shipped)", ['InpVolLookback=100', 'InpBigMode=1', 'InpClusterBars=2', 'InpBigPct=0.80', 'InpBigAvg=1.20', 'InpLowVolPct=1.00', 'InpQuietRef=0', 'InpBodyFrac=0.35', 'InpTargetR=2.5', 'InpSlBufPts=30', 'InpMinSlPts=60', 'InpBreakEvenR=1', 'InpTrendTF=60'] + ["InpOandaVolume=0"]),
+        ("OANDA strict (his feed)", ['InpVolLookback=100', 'InpBigMode=1', 'InpClusterBars=2', 'InpBigPct=0.80', 'InpBigAvg=1.20', 'InpLowVolPct=1.00', 'InpQuietRef=0', 'InpBodyFrac=0.35', 'InpTargetR=2.5', 'InpSlBufPts=30', 'InpMinSlPts=60', 'InpBreakEvenR=1', 'InpTrendTF=60'] + ["InpOandaVolume=1", "InpOandaStrict=true"]),
+        ("OANDA, fallback allowed", ['InpVolLookback=100', 'InpBigMode=1', 'InpClusterBars=2', 'InpBigPct=0.80', 'InpBigAvg=1.20', 'InpLowVolPct=1.00', 'InpQuietRef=0', 'InpBodyFrac=0.35', 'InpTargetR=2.5', 'InpSlBufPts=30', 'InpMinSlPts=60', 'InpBreakEvenR=1', 'InpTrendTF=60'] + ["InpOandaVolume=1", "InpOandaStrict=false"]),
+    ],
     # Does the engine fire at all, and does the shape of the cluster matter?
     "core": [
         ("BASE  3-bar, 2R", []),

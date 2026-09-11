@@ -5,7 +5,7 @@
 //|  Zee's LAWS_VSISA.md and the 22-part course transcripts.           |
 //|                                                                   |
 //|  THE WHOLE ENGINE IN FOUR LINES:                                   |
-//|    1. a CLUSTER of 2-3 same-direction bars carrying big volume     |
+//|    1. a 2-BAR SETUP of 2-3 same-direction bars carrying big volume     |
 //|       (effort) — somebody is transacting hard in one place;        |
 //|    2. a REACTION bar closing the OTHER way — that names which side  |
 //|       the big volume actually was (LAW 2);                         |
@@ -40,12 +40,28 @@ CTrade trade;
 input double InpLots        = 0.10;   // InpLots — lot size per ticket
 input int    InpTickets     = 1;      // InpTickets — tickets per decision (basket)
 input int    InpMagicNumber = 88201;  // InpMagicNumber — VSISA
-input int    InpMaxOpen     = 1;      // InpMaxOpen — max concurrent decisions
+// MAX OPEN / COOLDOWN LIFTED (2026-09-12). Zee: "remove the InpMaxOpen = 1 and
+// cooldown for now." The funnel is why: over seven months 236 setups passed EVERY law
+// and only 124 fired — 47% were thrown away while a trade was already running, refused
+// by plumbing rather than by anything the strategy believes.
+//
+// NOT set to unlimited. Detection runs once per CLOSED M5 bar and fires at most one
+// decision per bar, so the real rate limit is one entry per 5 minutes either way; the
+// ceiling only bounds how much can be open at once. 10 x 0.10 lots at the ~$45 average
+// risk is roughly $450 exposed if every one is open and wrong together. Lower it if
+// that is more than the account should carry.
+input int    InpMaxOpen     = 10;     // InpMaxOpen — max concurrent decisions
 
-//--- LAW 4: the cluster ----------------------------------------------------
-input int    InpClusterBars = 2;      // InpClusterBars — 2 or 3 same-direction effort bars
-input bool   InpRisingVol   = false;  // InpRisingVol — require each cluster bar louder than the last
-input bool   InpStrictDir   = true;   // InpStrictDir — every cluster bar must close its own way
+//--- LAW 4: the 2-bar setup ----------------------------------------------------
+input int    InpSetupBars   = 2;      // InpSetupBars — his 2 bar setup (2) or 3 bar setup (3)
+input bool   InpRisingVol   = false;  // InpRisingVol — require each 2-bar setup bar louder than the last
+// STRICT DIRECTION LIFTED (2026-09-12, Zee: "remove this condition"). It was the
+// widest gate in the whole EA — 46,266 of 81,061 candidates, 57%, died here because
+// BOTH 2-bar setup bars had to close the same way. His own 2-bar setup describes the
+// SHAPE ("red down bars on big volume"), and demanding two perfect closes turns a
+// description into a straitjacket: one bar closing a tick the wrong way voided the
+// whole setup no matter how the volume looked.
+input bool   InpStrictDir   = false;  // InpStrictDir — every setup bar must close its own way
 
 //--- THE FEED (2026-09-11) -------------------------------------------------
 // Zee, 2026-09-06: "we donot wish to use broker volume, we want to completely
@@ -68,18 +84,23 @@ input bool   InpOandaStrict = true;   // InpOandaStrict — a missing OANDA minu
 // FIXED geometry) — and 100 delivers 34% WR / PF 1.94 / 120 trades against 60's
 // 31% / 1.83 / 153, on identical geometry. Change this line to 60 for ~7% more net
 // and three points less win rate; both are validated.
-input int    InpVolLookback = 100;    // InpVolLookback — bars defining "recent" (~8h)
-input int    InpBigMode     = 1;      // InpBigMode — 0 EVERY cluster bar loud · 1 only the loudest
-input double InpBigPct      = 0.80;   // InpBigPct — cluster volume >= this x lookback max
+// TEN BARS, NOT A HUNDRED (2026-09-12). Zee: "the 100-bar maximum.. that's alot of
+// bars to check from.. we can just check the last 10 bars." It also matches what he
+// actually does by eye — he compares a candle to the handful around it, not to eight
+// hours of history. Smaller window = smaller maximum = the loudness test is far easier
+// to satisfy, so this loosens the EA considerably on its own.
+input int    InpVolLookback = 10;     // InpVolLookback — bars defining "recent"
+input int    InpBigMode     = 1;      // InpBigMode — 0 EVERY 2-bar setup bar loud · 1 only the loudest
+input double InpBigPct      = 0.80;   // InpBigPct — 2-bar setup volume >= this x lookback max
 input double InpBigAvg      = 1.20;   // InpBigAvg — ...and >= this x lookback average
 
 //--- LAW 3: the low-volume reaction. THE TRIGGER. --------------------------
-input int    InpQuietRef    = 0;      // InpQuietRef — 0 quiet vs CLUSTER · 1 quiet vs lookback AVERAGE
+input int    InpQuietRef    = 0;      // InpQuietRef — 0 quiet vs the SETUP · 1 quiet vs lookback AVERAGE
 input double InpLowVolPct   = 1.00;   // InpLowVolPct — reaction volume <= this x the reference
 input double InpBodyFrac    = 0.35;   // InpBodyFrac — reaction body >= this x its own range
 input int    InpConfirmMode = 0;      // InpConfirmMode — 0 enter on reaction · 1 wait for no-supply TEST + confirm
 input double InpTestVolPct  = 0.90;   // InpTestVolPct — the test bar's volume <= this x the LAW 3 reference
-input bool   InpEngulf      = false;  // InpEngulf — reaction must engulf the last cluster bar
+input bool   InpEngulf      = false;  // InpEngulf — reaction must engulf the last 2-bar setup bar
 
 //--- LAW 8: geometry -------------------------------------------------------
 input int    InpSlBufPts    = 30;     // InpSlBufPts — points beyond the setup extreme
@@ -93,15 +114,19 @@ input int    InpWickMode    = 0;      // InpWickMode — 0 off · 1 require · 2
 input double InpWickFrac    = 0.35;   // InpWickFrac — wick >= this x the bar's range
 
 //--- LAW 7: anomaly, tiny spread on huge volume (default OFF) --------------
-input bool   InpAnomaly     = false;  // InpAnomaly — cluster's last bar must be a spread anomaly
+input bool   InpAnomaly     = false;  // InpAnomaly — 2-bar setup's last bar must be a spread anomaly
 input double InpAnomalyMax  = 0.70;   // InpAnomalyMax — its range <= this x recent average range
 
 //--- LAW 13: fake break of a recent extreme (default OFF) ------------------
-input bool   InpFakeBreak   = false;  // InpFakeBreak — cluster must sweep a recent extreme
+input bool   InpFakeBreak   = false;  // InpFakeBreak — 2-bar setup must sweep a recent extreme
 input int    InpSweepLook   = 30;     // InpSweepLook — bars defining that extreme
 
 //--- LAW 9: higher-timeframe trend (default OFF) ---------------------------
-input int    InpTrendTF     = 60;     // InpTrendTF — 0 off · 15 = M15 · 60 = H1
+// H1 TREND FILTER OFF (2026-09-12, Zee: "remove"). Worth recording what this costs,
+// because the seven-month court liked it: with it ON the EA made the SAME money on
+// HALF the trades and seven more points of win rate (34% vs 27%). Off, it trades far
+// more and wins less often for about the same net. His call; the receipt stands.
+input int    InpTrendTF     = 0;      // InpTrendTF — 0 off · 15 = M15 · 60 = H1
 input int    InpTrendBars   = 20;     // InpTrendBars — bars of slope on that timeframe
 
 //--- LAW 11: session (default open) ----------------------------------------
@@ -109,7 +134,7 @@ input int    InpSessFrom    = 0;      // InpSessFrom — broker hour, inclusive
 input int    InpSessTo      = 24;     // InpSessTo — broker hour, exclusive
 
 //--- housekeeping ----------------------------------------------------------
-input int    InpCoolBars    = 3;      // InpCoolBars — bars to wait after a decision
+input int    InpCoolBars    = 0;      // InpCoolBars — bars to wait after a decision (0 = none)
 input bool   InpBuys        = true;   // InpBuys — allow long setups
 input bool   InpSells       = true;   // InpSells — allow short setups
 input bool   InpVerbose     = true;   // InpVerbose — print every fire line
@@ -121,7 +146,7 @@ int      g_cool     = 0;
 int      g_fires    = 0;
 
 // THE FUNNEL. v1.00 fired zero trades over five days of real M5 ticks and the report
-// could not say why — "no trades" looks identical whether the cluster never formed or
+// could not say why — "no trades" looks identical whether the 2-bar setup never formed or
 // the reaction was never quiet enough. These count the bar at which each candidate
 // died, and OnDeinit prints them, so a tightening can be aimed instead of guessed.
 int g_seen = 0, g_rej_dir = 0, g_rej_loud = 0, g_rej_rise = 0, g_rej_anom = 0;
@@ -134,8 +159,8 @@ long g_rv_hit = 0, g_rv_miss = 0, g_ov_hit = 0;
 // happens on M5 gold at all". Also proves the volume feed is populated — a max of 0
 // would mean iRealVolume is empty and every ratio in this file is meaningless.
 long   g_vmax_seen = 0;
-double g_best_loud = 0;    // best (weakest cluster bar / lookback max) reached
-double g_best_quiet = 999; // lowest (reaction vol / cluster vol) reached
+double g_best_loud = 0;    // best (weakest 2-bar setup bar / lookback max) reached
+double g_best_quiet = 999; // lowest (reaction vol / 2-bar setup vol) reached
 
 //+------------------------------------------------------------------+
 //| Bar accessors                                                     |
@@ -325,14 +350,14 @@ int OpenDecisions() {
 //+------------------------------------------------------------------+
 //| The setup.  side = +1 buy, -1 sell.                               |
 //|                                                                   |
-//| Bar indices are set by InpConfirmMode (see below); the cluster sits |
+//| Bar indices are set by InpConfirmMode (see below); the 2-bar setup sits |
 //| behind the reaction, oldest last. The whole judgement is made on    |
 //| CLOSED bars only — a forming bar's volume is a fraction of what it |
 //| will end as, and comparing it to a finished bar is the classic way |
 //| to invent a signal that evaporates on the next tick.               |
 //+------------------------------------------------------------------+
 bool Detect(int side, double &sl_level, string &why) {
-   int nb = MathMax(2, MathMin(3, InpClusterBars));
+   int nb = MathMax(2, MathMin(3, InpSetupBars));
 
    // WHERE THE REACTION BAR SITS.
    // Mode 0 is his aggressive entry — Part 9: "I take an aggressive entry, my entry is
@@ -342,7 +367,7 @@ bool Detect(int side, double &sl_level, string &why) {
    // to be bullish, then the setup is confirmed." That costs two bars, so the reaction
    // sits at bar 3 with the test at bar 2 and the confirming bar at bar 1.
    int r = (InpConfirmMode == 1) ? 3 : 1;      // index of the REACTION bar
-   int c0 = r + 1;                              // index of the newest CLUSTER bar
+   int c0 = r + 1;                              // index of the newest 2-BAR SETUP bar
    int need = c0 + nb + InpVolLookback + 2;
    if (Bars(_Symbol, PERIOD_CURRENT) < need) return false;
 
@@ -351,10 +376,10 @@ bool Detect(int side, double &sl_level, string &why) {
    g_seen++;
    if (vmax > g_vmax_seen) g_vmax_seen = vmax;
 
-   //--- LAW 4: the cluster runs AGAINST the trade we are about to take.
+   //--- LAW 4: the 2-bar setup runs AGAINST the trade we are about to take.
    // Buying needs the effort to have been on the way DOWN (bars closing down);
    // that is where the absorbed selling sits.
-   long vsum = 0, vmin_cluster = 0;
+   long vsum = 0, vmin_setup = 0;
    double worst_loud = 1.0, best_loud_bar = 0.0;
    double ext = (side > 0) ? bLow(c0) : bHigh(c0);
    for (int q = 0; q < nb; q++) {
@@ -369,7 +394,7 @@ bool Detect(int side, double &sl_level, string &why) {
       // LAW 5, two readings of the same sentence. Zee wrote "these volumes will be
       // that SESSION'S HIGHEST VOLUMES" (plural — mode 0, every bar stands up against
       // the rolling peak). Part 8 says "the BIGGEST volume is here", singular — mode 1,
-      // one standout bar carries the cluster while the rest need only beat the average.
+      // one standout bar carries the 2-bar setup while the rest need only beat the average.
       // Mode 0 is the literal reading and is tested first; mode 1 exists because three
       // consecutive bars each at 70% of a rolling maximum may simply never happen.
       double loud = (double)v / (double)vmax;
@@ -388,11 +413,11 @@ bool Detect(int side, double &sl_level, string &why) {
          if (prev <= v) { g_rej_rise++; return false; }
       }
       vsum += v;
-      if (vmin_cluster == 0 || v < vmin_cluster) vmin_cluster = v;
+      if (vmin_setup == 0 || v < vmin_setup) vmin_setup = v;
       if (side > 0) ext = MathMin(ext, bLow(k));
       else          ext = MathMax(ext, bHigh(k));
    }
-   double vcluster = (double)vsum / nb;
+   double vsetup = (double)vsum / nb;
    if (InpBigMode == 1 && best_loud_bar < InpBigPct) {
       if (best_loud_bar > g_best_loud) g_best_loud = best_loud_bar;
       g_rej_loud++; return false;
@@ -400,13 +425,13 @@ bool Detect(int side, double &sl_level, string &why) {
    double reach = (InpBigMode == 1) ? best_loud_bar : worst_loud;
    if (reach > g_best_loud) g_best_loud = reach;
 
-   //--- LAW 7: anomaly — the last cluster bar spends huge volume for tiny spread.
+   //--- LAW 7: anomaly — the last 2-bar setup bar spends huge volume for tiny spread.
    if (InpAnomaly) {
       if (ravg <= 0) return false;
       if (bRange(c0) > InpAnomalyMax * ravg) { g_rej_anom++; return false; }
    }
 
-   //--- LAW 13: the fake break. The cluster must take out a recent extreme, and the
+   //--- LAW 13: the fake break. The 2-bar setup must take out a recent extreme, and the
    // reaction must close back INSIDE it — Zee's tier-3 "strongest" case.
    if (InpFakeBreak) {
       double lvl = (side > 0) ? bLow(c0 + nb) : bHigh(c0 + nb);
@@ -447,10 +472,10 @@ bool Detect(int side, double &sl_level, string &why) {
    // seen — the collapse he draws on the chart. Mode 1 reads it as low for this market
    // generally, i.e. below the recent average. Volume is strongly autocorrelated, so
    // the bar right after three loud bars is itself usually loud: the two-day probe
-   // never got below 0.83x cluster. Mode 1 exists because if that holds over a month,
+   // never got below 0.83x 2-bar setup. Mode 1 exists because if that holds over a month,
    // mode 0 is not a strict rule — it is an impossible one, and the distinction is
    // worth a receipt rather than a guess.
-   double vref = (InpQuietRef == 1) ? vavg : vcluster;
+   double vref = (InpQuietRef == 1) ? vavg : vsetup;
    double qr = (double)v1 / MathMax(1.0, vref);
    if (qr < g_best_quiet) g_best_quiet = qr;
    bool quiet = ((double)v1 <= InpLowVolPct * vref);
@@ -475,7 +500,7 @@ bool Detect(int side, double &sl_level, string &why) {
    // has a small volume you should wait for the next bar to be bullish, then the setup
    // is confirmed. A big volume on the test would have meant sustained buying."
    //
-   // So the test bar must (a) probe BACK toward the cluster, (b) do it on volume lower
+   // So the test bar must (a) probe BACK toward the 2-bar setup, (b) do it on volume lower
    // than the reaction's, and (c) FAIL to take out the setup extreme — a test that
    // breaks the low is not a test, it is the setup being wrong. Then the bar after it
    // has to close our way, which is the actual entry bar.
@@ -518,9 +543,9 @@ bool Detect(int side, double &sl_level, string &why) {
    double buf = InpSlBufPts * _Point;
    sl_level = (side > 0) ? ext - buf : ext + buf;
 
-   why = StringFormat("cluster %d bars vol %.0f (max %d avg %.0f) | reaction vol %d = %.2fx%s%s",
-                      nb, vcluster, (int)vmax, vavg, (int)v1,
-                      (double)v1 / MathMax(1.0, vcluster),
+   why = StringFormat("2-bar setup %d bars vol %.0f (max %d avg %.0f) | reaction vol %d = %.2fx%s%s",
+                      nb, vsetup, (int)vmax, vavg, (int)v1,
+                      (double)v1 / MathMax(1.0, vsetup),
                       quiet ? " QUIET" : " LOUD",
                       wick ? " +wick" : "");
    return true;
@@ -621,12 +646,12 @@ int OnInit() {
    trade.SetDeviationInPoints(30);
    // KEEP THIS STRING IN STEP WITH #property version — the Diamond's banner said
    // v1.14 for nine versions and nobody could tell from a log which build was live.
-   PrintFormat("[VSISA] v1.00 — cluster %d bars (bigmode %d, big>=%.2fxmax/%.2fxavg) | "
+   PrintFormat("[VSISA] v1.00 — 2-bar setup %d bars (bigmode %d, big>=%.2fxmax/%.2fxavg) | "
                "reaction<=%.2fx%s | TP %.1fR, BE %.1fR, SL buf %d pts (floor %d) | "
                "trendTF %d, confirm %d, wick %d, anomaly %d, fake %d | feed %s | %.2f lots x%d | "
                "magic %d",
-               InpClusterBars, InpBigMode, InpBigPct, InpBigAvg,
-               InpLowVolPct, (InpQuietRef == 1) ? " avg" : " cluster",
+               InpSetupBars, InpBigMode, InpBigPct, InpBigAvg,
+               InpLowVolPct, (InpQuietRef == 1) ? " avg" : " 2-bar setup",
                InpTargetR, InpBreakEvenR, InpSlBufPts, InpMinSlPts,
                InpTrendTF, InpConfirmMode, InpWickMode, (int)InpAnomaly,
                (int)InpFakeBreak,
@@ -677,8 +702,8 @@ void OnDeinit(const int reason) {
                    ? "ALL OANDA (his feed)"
                    : ((g_ov_hit == 0 && g_rv_hit == 0)
                       ? "EVERY judgement used BROKER TICK COUNT" : "MIXED"));
-   PrintFormat("[VSISA] REACH loudest lookback max %d | best cluster/max %.2f "
-               "(need %.2f) | best reaction/cluster %.2f (need %.2f)",
+   PrintFormat("[VSISA] REACH loudest lookback max %d | best 2-bar setup/max %.2f "
+               "(need %.2f) | best reaction/2-bar setup %.2f (need %.2f)",
                (int)g_vmax_seen, g_best_loud, InpBigPct,
                (g_best_quiet > 900 ? -1.0 : g_best_quiet), InpLowVolPct);
 }
