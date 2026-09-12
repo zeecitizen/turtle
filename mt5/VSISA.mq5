@@ -103,7 +103,16 @@ input double InpTestVolPct  = 0.90;   // InpTestVolPct — the test bar's volume
 input bool   InpEngulf      = false;  // InpEngulf — reaction must engulf the last 2-bar setup bar
 
 //--- LAW 8: geometry -------------------------------------------------------
-input int    InpSlBufPts    = 30;     // InpSlBufPts — points beyond the setup extreme
+// WHICH CANDLE THE STOP HANGS FROM (2026-09-12). His LAWS_VSISA.md is explicit:
+// "Stop loss 2-3 pips below the bullish blue candle" — the REACTION candle, the blue
+// one we enter on. The EA had been measuring from the lowest low of ALL THREE bars, and
+// since the setup bars ARE the down-move their lows sit far below, every stop came out
+// systematically too wide: the two live trades risked 526 and 876 points. That single
+// reference error changed the R multiple of every trade in every test.
+// Mode 0 is his specification. Mode 1 is the old behaviour, kept only so the two can be
+// compared honestly rather than swapped on faith.
+input int    InpStopRef     = 0;      // InpStopRef — 0 = below the REACTION candle (his spec) · 1 = whole setup
+input int    InpSlBufPts    = 30;     // InpSlBufPts — points beyond it (30 pts = 3 gold pips)
 input int    InpMinSlPts    = 60;     // InpMinSlPts — floor, so spread cannot eat the stop
 input int    InpMaxSlPts    = 900;    // InpMaxSlPts — refuse setups whose risk is absurd
 input double InpTargetR     = 2.5;    // InpTargetR — TP as a multiple of risk
@@ -529,19 +538,24 @@ bool Detect(int side, double &sl_level, string &why) {
    int td = TrendDir();
    if (td != 0 && td != side) { g_rej_trend++; return false; }
 
-   //--- LAW 8: the stop sits just past the extreme the setup defended.
-   if (side > 0) ext = MathMin(ext, bLow(r));
-   else          ext = MathMax(ext, bHigh(r));
+   //--- LAW 8: the stop. `ext` above is the SETUP's extreme and is still what the
+   // fake-break and no-supply tests need, so the stop gets its own reference.
+   double sref;
+   if (InpStopRef == 0)
+      sref = (side > 0) ? bLow(r) : bHigh(r);          // his spec: the reaction candle
+   else
+      sref = (side > 0) ? MathMin(ext, bLow(r))        // the old, wider behaviour
+                        : MathMax(ext, bHigh(r));
    if (InpConfirmMode == 1) {
       // the test and the confirming bar happened after the reaction; the stop has to
       // sit outside everything the setup has already defended, not just the reaction
       for (int k = 1; k <= 2; k++) {
-         if (side > 0) ext = MathMin(ext, bLow(k));
-         else          ext = MathMax(ext, bHigh(k));
+         if (side > 0) sref = MathMin(sref, bLow(k));
+         else          sref = MathMax(sref, bHigh(k));
       }
    }
    double buf = InpSlBufPts * _Point;
-   sl_level = (side > 0) ? ext - buf : ext + buf;
+   sl_level = (side > 0) ? sref - buf : sref + buf;
 
    why = StringFormat("2-bar setup %d bars vol %.0f (max %d avg %.0f) | reaction vol %d = %.2fx%s%s",
                       nb, vsetup, (int)vmax, vavg, (int)v1,
