@@ -53,15 +53,39 @@ input int    InpMagicNumber = 88201;  // InpMagicNumber — VSISA
 input int    InpMaxOpen     = 10;     // InpMaxOpen — max concurrent decisions
 
 //--- LAW 4: the 2-bar setup ----------------------------------------------------
-input int    InpSetupBars   = 2;      // InpSetupBars — his 2 bar setup (2) or 3 bar setup (3)
-input bool   InpRisingVol   = false;  // InpRisingVol — require each 2-bar setup bar louder than the last
+// HOW LONG IS THE SETUP? HE COUNTS NOTHING — HE WAITS (2026-09-13).
+// "we wait until the red reds keep appearing.. we wait until the reaction candle
+// becomes bullish (blue).. IT COULD BE THREE OR MORE REDS". So the run is not a fixed
+// 2 or 3; it is however many same-direction bars precede the turn. InpSetupBars is now
+// only the fallback when auto is off.
+//
+// NOTE THIS REINSTATES DIRECTION. A run "until the reds stop" is meaningless unless the
+// bars are reds, so auto mode requires each setup bar to close its own way regardless of
+// InpStrictDir. His document defines the setup that way; removing direction earlier made
+// the pattern something he never drew.
+input bool   InpSetupAuto   = true;   // InpSetupAuto — count the run until the turn, don't fix it
+input int    InpSetupMin    = 2;      // InpSetupMin — at least this many bars in the run
+input int    InpSetupMax    = 10;     // InpSetupMax — stop counting back at this many
+input int    InpSetupBars   = 2;      // InpSetupBars — fixed length, used only when auto is off
+// "the THIRD red candle with EVEN HIGHER VOLUME than previous two means: people are
+// buying even more". Read literally that is "the bar nearest the turn is the loudest of
+// the run" — which is what this requires. Not strict monotonicity: that would be a
+// harder rule than he states and would break on one noisy bar mid-run.
+// OFF — BIG IS THE RULE, RISING IS NOT (2026-09-14). Zee: "big volumes show increased
+// transactions, i don't think we need in specific 'increasing' volumes, they can just be
+// big (not incrementally increasing).." His diagram1 text describes a run that happened
+// to rise (150, 200) but the REQUIREMENT is only that the volume is big — increased
+// transactions means somebody is absorbing, whatever order the bars arrive in. Requiring
+// a rising sequence was me reading a description as a rule; it refused 136 setups in
+// September alone. Kept as an input so the stricter reading stays testable.
+input bool   InpRisingVol   = false;  // InpRisingVol — require the bar nearest the turn to be loudest
 // STRICT DIRECTION LIFTED (2026-09-12, Zee: "remove this condition"). It was the
 // widest gate in the whole EA — 46,266 of 81,061 candidates, 57%, died here because
 // BOTH 2-bar setup bars had to close the same way. His own 2-bar setup describes the
 // SHAPE ("red down bars on big volume"), and demanding two perfect closes turns a
 // description into a straitjacket: one bar closing a tick the wrong way voided the
 // whole setup no matter how the volume looked.
-input bool   InpStrictDir   = false;  // InpStrictDir — every setup bar must close its own way
+input bool   InpStrictDir   = true;   // InpStrictDir — every setup bar must close its own way
 
 //--- THE FEED (2026-09-11) -------------------------------------------------
 // Zee, 2026-09-06: "we donot wish to use broker volume, we want to completely
@@ -89,7 +113,23 @@ input bool   InpOandaStrict = true;   // InpOandaStrict — a missing OANDA minu
 // actually does by eye — he compares a candle to the handful around it, not to eight
 // hours of history. Smaller window = smaller maximum = the loudness test is far easier
 // to satisfy, so this loosens the EA considerably on its own.
-input int    InpVolLookback = 10;     // InpVolLookback — bars defining "recent"
+// 24 HOURS, BECAUSE HE SAYS 24 HOURS (2026-09-13). LAWS_VSISA.md, "Three bar
+// formation": "Ultra high volume -> is this volume abnormal? compare it to let's say
+// 24 hour volume". On M5 that is 288 bars. It had been 10 (fifty minutes), which let a
+// bar qualify as the session's climax for being the loudest of the last three-quarters
+// of an hour — the term "ultra high volume" stopped meaning anything.
+// THE YARDSTICK IS THE CURRENT SWING (2026-09-13). Zee: "i think the 24 hour was for
+// 1D chart.. on 5 min chart we can just see the current swing." That is how the eye
+// actually does it — is this the loudest bar of THIS leg? — and it is self-scaling: a
+// fast leg gets a short window, a slow grind a long one, with no magic bar count.
+//
+// The swing is measured back to the last pivot AGAINST the setup: for a buy (the setup
+// bars are falling) that is the most recent swing HIGH, i.e. where this down-leg began.
+// InpVolLookback survives as the cap and as the fallback when window mode is 0.
+input int    InpVolWindow   = 1;      // InpVolWindow — 0 = fixed bar count · 1 = the current swing
+input int    InpSwingPivot  = 3;      // InpSwingPivot — bars each side that define a pivot
+input int    InpSwingMin    = 10;     // InpSwingMin — never judge on fewer bars than this
+input int    InpVolLookback = 200;    // InpVolLookback — fixed count, and the cap on a swing
 input int    InpBigMode     = 1;      // InpBigMode — 0 EVERY 2-bar setup bar loud · 1 only the loudest
 input double InpBigPct      = 0.80;   // InpBigPct — 2-bar setup volume >= this x lookback max
 input double InpBigAvg      = 1.20;   // InpBigAvg — ...and >= this x lookback average
@@ -112,14 +152,37 @@ input bool   InpEngulf      = false;  // InpEngulf — reaction must engulf the 
 // Mode 0 is his specification. Mode 1 is the old behaviour, kept only so the two can be
 // compared honestly rather than swapped on faith.
 input int    InpStopRef     = 0;      // InpStopRef — 0 = below the REACTION candle (his spec) · 1 = whole setup
-input int    InpSlBufPts    = 30;     // InpSlBufPts — points beyond it (30 pts = 3 gold pips)
+// 80 POINTS = 8 GOLD PIPS (2026-09-15). Zee, reading the charts: "some trades could have
+// been saved if the stop loss was a bit more relaxed". Measured, and he was right — going
+// from 30 to 180 removes 17 losing trades in Apr-Jun and 10 in Jul-Sep, and EVERY buffer
+// value beat 30 on both halves. 80 is chosen rather than the maximum because the halves
+// disagree about the best value (Apr-Jun wants 180, Jul-Sep wants 80), which is noise;
+// what they agree on is that 30 is too tight. It is also defensible as HIS number: the
+// teacher gives "3 to 8 pips" in Part 10, and Axi gold spread is ~9 points, so a 30-point
+// stop sat barely 3x the spread where ordinary noise reaches it.
+input int    InpSlBufPts    = 80;     // InpSlBufPts — points beyond the reaction candle (8 pips)
 input int    InpMinSlPts    = 60;     // InpMinSlPts — floor, so spread cannot eat the stop
 input int    InpMaxSlPts    = 900;    // InpMaxSlPts — refuse setups whose risk is absurd
-input double InpTargetR     = 2.5;    // InpTargetR — TP as a multiple of risk
-input double InpBreakEvenR  = 1.0;    // InpBreakEvenR — >0: move stop to entry at this R
+// 2.0R (2026-09-15). Zee: "i also think we are loosing some wins because the TP is too
+// high. try tightening the TP." He was right that 2.5 was costing wins, and 2.0 is the
+// only target strong in BOTH halves (+$2,471 / +$1,651). It is also his document's own
+// number - 1:2 - where 2.5 was mine. Targets below 0.75R were tested too and every one
+// buys win rate with money: 0.20R reaches 82% and LOSES in both halves at every stop
+// width, because at 0.2:1 break-even needs 83.3%.
+input double InpTargetR     = 2.0;    // InpTargetR — TP as a multiple of risk
+// BREAKEVEN OFF (2026-09-15). It was CUTTING WINNERS: price reaches 1R, the stop jumps
+// to entry, price dips back to entry and closes flat - then runs on to 2R without us.
+// Measured at 2.0R with the corrected stop: OFF gives +$2,471/+$1,651 against ON at
+// +$962/+$1,199, nearly double AND a higher win rate (44% vs 31%), consistent in both
+// halves. Note this REVERSES an earlier finding made on the old build, where the stop
+// was measured from the whole setup and breakeven did help - the correction changed it.
+input double InpBreakEvenR  = 0.0;    // InpBreakEvenR — >0: move stop to entry at this R
 
 //--- LAW 6: the wick override (default OFF) --------------------------------
-input int    InpWickMode    = 0;      // InpWickMode — 0 off · 1 require · 2 override big volume
+// "since the fourth bullish blue candle has still somewhat bigger volume .. if there
+// were no lower wick we wouldn't buy immediately, we would wait .. and here we see a
+// lower wick". The wick is how he judges a reaction that is NOT quiet enough — mode 2.
+input int    InpWickMode    = 2;      // InpWickMode — 0 off · 1 require · 2 override big volume
 input double InpWickFrac    = 0.35;   // InpWickFrac — wick >= this x the bar's range
 
 //--- LAW 7: anomaly, tiny spread on huge volume (default OFF) --------------
@@ -161,6 +224,7 @@ int      g_fires    = 0;
 int g_seen = 0, g_rej_dir = 0, g_rej_loud = 0, g_rej_rise = 0, g_rej_anom = 0;
 int g_rej_fake = 0, g_rej_react = 0, g_rej_body = 0, g_rej_quiet = 0, g_rej_trend = 0;
 int g_rej_test = 0;
+int g_last_span = 0;      // bars in the yardstick on the last judgement, for the log
 long g_rv_hit = 0, g_rv_miss = 0, g_ov_hit = 0;
 
 // HOW CLOSE DID WE GET. A funnel says which gate rejected; these say by how much, which
@@ -296,10 +360,35 @@ long BarVolume(int k) {
 //| bar through on a quiet stretch, average alone lets a mid-sized bar |
 //| through next to a genuine climax.                                  |
 //+------------------------------------------------------------------+
-bool VolStats(int from, long &vmax, double &vavg, double &ravg) {
+// How many bars back does the CURRENT SWING run? Walks back from `from` looking for the
+// pivot that started this leg — a bar whose high (buy) or low (sell) stands clear of
+// InpSwingPivot bars on each side. Clamped so a missing pivot cannot return 3 bars or
+// the whole chart.
+int SwingLen(int from, int side) {
+   int cap = MathMax(InpSwingMin + 1, InpVolLookback);
+   for (int k = from + InpSwingPivot; k < from + cap; k++) {
+      bool piv = true;
+      for (int q = 1; q <= InpSwingPivot && piv; q++) {
+         if (side > 0) {                       // buy: the leg began at a swing HIGH
+            if (bHigh(k) <= bHigh(k - q) || bHigh(k) <= bHigh(k + q)) piv = false;
+         } else {                              // sell: at a swing LOW
+            if (bLow(k) >= bLow(k - q) || bLow(k) >= bLow(k + q)) piv = false;
+         }
+      }
+      if (!piv) continue;
+      int len = k - from + 1;
+      if (len < InpSwingMin) continue;         // too short to judge anything by
+      return len;
+   }
+   return cap;                                  // no pivot found — fall back to the cap
+}
+
+bool VolStats(int from, long &vmax, double &vavg, double &ravg, int side) {
    vmax = 0; vavg = 0; ravg = 0;
+   int span = (InpVolWindow == 1) ? SwingLen(from, side) : InpVolLookback;
+   g_last_span = span;
    int n = 0;
-   for (int k = from; k < from + InpVolLookback; k++) {
+   for (int k = from; k < from + span; k++) {
       long v = BarVolume(k);
       double r = bRange(k);
       if (v <= 0) continue;
@@ -313,8 +402,8 @@ bool VolStats(int from, long &vmax, double &vavg, double &ravg) {
    // UNDER STRICT OANDA THE WINDOW MUST BE WHOLE. Skipping absent minutes would quietly
    // shrink the yardstick every setup is measured against — the same feed-mixing one
    // level down that InpOandaStrict exists to prevent.
-   if (InpOandaVolume == 1 && InpOandaStrict && n < InpVolLookback) return false;
-   if (n < InpVolLookback / 2 || vmax <= 0) return false;
+   if (InpOandaVolume == 1 && InpOandaStrict && n < span) return false;
+   if (n < span / 2 || n < 5 || vmax <= 0) return false;
    vavg /= n;
    ravg /= n;
    return true;
@@ -368,6 +457,22 @@ int OpenDecisions() {
 bool Detect(int side, double &sl_level, string &why) {
    int nb = MathMax(2, MathMin(3, InpSetupBars));
 
+   // THE RUN, COUNTED NOT ASSUMED. He waits for the turn: "it could be three or more
+   // reds". So walk back from the bar before the reaction while the bars keep closing
+   // the setup's way, and let THAT be the setup. Direction is mandatory here — a run
+   // "until the reds stop" has no meaning if the bars need not be red.
+   int rr = (InpConfirmMode == 1) ? 3 : 1;
+   if (InpSetupAuto) {
+      int run = 0;
+      for (int k = rr + 1; k <= rr + MathMax(InpSetupMin, InpSetupMax); k++) {
+         bool ours = (side > 0) ? bDown(k) : bUp(k);
+         if (!ours) break;
+         run++;
+      }
+      if (run < MathMax(2, InpSetupMin)) { g_rej_dir++; return false; }
+      nb = run;
+   }
+
    // WHERE THE REACTION BAR SITS.
    // Mode 0 is his aggressive entry — Part 9: "I take an aggressive entry, my entry is
    // right here" — the reaction bar IS the entry bar, so it is bar 1.
@@ -378,10 +483,10 @@ bool Detect(int side, double &sl_level, string &why) {
    int r = (InpConfirmMode == 1) ? 3 : 1;      // index of the REACTION bar
    int c0 = r + 1;                              // index of the newest 2-BAR SETUP bar
    int need = c0 + nb + InpVolLookback + 2;
-   if (Bars(_Symbol, PERIOD_CURRENT) < need) return false;
+   if (Bars(_Symbol, PERIOD_CURRENT) < need + InpVolLookback) return false;
 
    long vmax; double vavg, ravg;
-   if (!VolStats(c0 + nb, vmax, vavg, ravg)) return false;
+   if (!VolStats(c0 + nb, vmax, vavg, ravg, side)) return false;
    g_seen++;
    if (vmax > g_vmax_seen) g_vmax_seen = vmax;
 
@@ -393,7 +498,7 @@ bool Detect(int side, double &sl_level, string &why) {
    double ext = (side > 0) ? bLow(c0) : bHigh(c0);
    for (int q = 0; q < nb; q++) {
       int k = c0 + q;
-      if (InpStrictDir) {
+      if (InpStrictDir || InpSetupAuto) {
          if (side > 0 && !bDown(k)) { g_rej_dir++; return false; }
          if (side < 0 && !bUp(k))   { g_rej_dir++; return false; }
       }
@@ -417,10 +522,10 @@ bool Detect(int side, double &sl_level, string &why) {
 
       // LAW 4 — optional: the effort must ESCALATE. Part 4: the second bar's volume
       // higher than the first, the third "even higher than the previous two".
-      if (InpRisingVol && q > 0) {
-         long prev = BarVolume(k - 1);      // k-1 is the NEWER bar
-         if (prev <= v) { g_rej_rise++; return false; }
-      }
+      // HIS SENSE OF RISING: the bar nearest the turn (q == 0, index c0) must be the
+      // loudest of the whole run — "the third red candle with even higher volume than
+      // previous two".
+      if (InpRisingVol && q > 0 && v >= BarVolume(c0)) { g_rej_rise++; return false; }
       vsum += v;
       if (vmin_setup == 0 || v < vmin_setup) vmin_setup = v;
       if (side > 0) ext = MathMin(ext, bLow(k));
@@ -557,8 +662,9 @@ bool Detect(int side, double &sl_level, string &why) {
    double buf = InpSlBufPts * _Point;
    sl_level = (side > 0) ? sref - buf : sref + buf;
 
-   why = StringFormat("2-bar setup %d bars vol %.0f (max %d avg %.0f) | reaction vol %d = %.2fx%s%s",
-                      nb, vsetup, (int)vmax, vavg, (int)v1,
+   why = StringFormat("setup %d bars vol %.0f | swing %d bars (max %d avg %.0f) | "
+                      "reaction vol %d = %.2fx%s%s",
+                      nb, vsetup, g_last_span, (int)vmax, vavg, (int)v1,
                       (double)v1 / MathMax(1.0, vsetup),
                       quiet ? " QUIET" : " LOUD",
                       wick ? " +wick" : "");
@@ -660,15 +766,25 @@ int OnInit() {
    trade.SetDeviationInPoints(30);
    // KEEP THIS STRING IN STEP WITH #property version — the Diamond's banner said
    // v1.14 for nine versions and nobody could tell from a log which build was live.
-   PrintFormat("[VSISA] v1.00 — 2-bar setup %d bars (bigmode %d, big>=%.2fxmax/%.2fxavg) | "
-               "reaction<=%.2fx%s | TP %.1fR, BE %.1fR, SL buf %d pts (floor %d) | "
-               "trendTF %d, confirm %d, wick %d, anomaly %d, fake %d | feed %s | %.2f lots x%d | "
-               "magic %d",
-               InpSetupBars, InpBigMode, InpBigPct, InpBigAvg,
-               InpLowVolPct, (InpQuietRef == 1) ? " avg" : " 2-bar setup",
-               InpTargetR, InpBreakEvenR, InpSlBufPts, InpMinSlPts,
-               InpTrendTF, InpConfirmMode, InpWickMode, (int)InpAnomaly,
-               (int)InpFakeBreak,
+   // THE BANNER MUST DESCRIBE THE BUILD THAT IS RUNNING. It was still announcing
+   // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
+   // the swing window or which candle the stop hangs from - the three things that
+   // actually changed. A banner that misreports the build is worse than no banner.
+   PrintFormat("[VSISA] v1.00 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+               "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
+               "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
+               "| %.2f lots x%d | magic %d",
+               InpSetupAuto ? StringFormat("AUTO %d-%d bars", InpSetupMin, InpSetupMax)
+                            : StringFormat("fixed %d bars", InpSetupBars),
+               (InpVolWindow == 1) ? StringFormat("SWING (pivot %d min %d cap %d)",
+                                                  InpSwingPivot, InpSwingMin, InpVolLookback)
+                                   : StringFormat("last %d bars", InpVolLookback),
+               InpBigPct, InpBigAvg,
+               InpLowVolPct, (InpQuietRef == 1) ? "avg" : "setup",
+               (InpStopRef == 0) ? "under REACTION candle" : "under whole setup",
+               InpSlBufPts, InpMinSlPts, InpMaxSlPts,
+               InpTargetR, InpBreakEvenR,
+               InpTrendTF, InpWickMode, InpConfirmMode, (int)InpAnomaly, (int)InpFakeBreak,
                (InpOandaVolume == 1) ? (InpOandaStrict ? "OANDA-STRICT" : "OANDA")
                                      : "BROKER-TICKS",
                InpLots, InpTickets, InpMagicNumber);
