@@ -160,7 +160,15 @@ input int    InpStopRef     = 0;      // InpStopRef — 0 = below the REACTION c
 // what they agree on is that 30 is too tight. It is also defensible as HIS number: the
 // teacher gives "3 to 8 pips" in Part 10, and Axi gold spread is ~9 points, so a 30-point
 // stop sat barely 3x the spread where ordinary noise reaches it.
-input int    InpSlBufPts    = 80;     // InpSlBufPts — points beyond the reaction candle (8 pips)
+// 120 POINTS = 12 GOLD PIPS (2026-09-15). Zee: "i want you to try a still wider stop
+// than 8 pips.. see what it does" - and 120 is a genuine INTERIOR peak, better than 80
+// in BOTH halves (+$3,621/+$1,741 vs +$2,471/+$1,651) with 160 and 200 both worse.
+// Past 200 it collapses: Jul-Sep turns negative at 250 and 350, because the target moves
+// out with the stop (2.0R) so a wider stop needs a proportionally bigger move to win,
+// and fewer setups clear the 900-point risk cap at all.
+// Still defensible against his "3 to 8 pips": that is FX majors with ~1-point spreads,
+// and Axi gold spreads ~9 points, so 12 pips here is proportionally tighter than 8 there.
+input int    InpSlBufPts    = 120;    // InpSlBufPts — points beyond the reaction candle (12 pips)
 input int    InpMinSlPts    = 60;     // InpMinSlPts — floor, so spread cannot eat the stop
 input int    InpMaxSlPts    = 900;    // InpMaxSlPts — refuse setups whose risk is absurd
 // 2.0R (2026-09-15). Zee: "i also think we are loosing some wins because the TP is too

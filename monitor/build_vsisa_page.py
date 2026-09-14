@@ -54,7 +54,7 @@ BARS_DIR = ROOT / "monitor" / "_vsisa_bars"
 # lookback and the stop under the whole setup. All three are wrong now, so it
 # was drawing setups the EA would no longer take. Both sources below are Axi
 # and both are the current logic.
-REPORT = ROOT / "mt5" / "_tester_runs" / "axi" / "AXI_bt_043237.htm"
+REPORT = ROOT / "mt5" / "_tester_runs" / "axi" / "AXI_bt_044939.htm"
 LIVE_LOG_DIR = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal"
                     r"\6FBEE76C719DC78AB2AE839B5A0C7442\MQL5\Logs")
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
@@ -827,9 +827,9 @@ def build(out_path: Path, limit=0):
         "the setup. The resting orders are gone; price can now travel cheaply. If R is "
         "loud the setup is <b>cancelled</b>, not weakened.</td></tr>"
         "<tr><td>Entry</td><td>At R's close.</td></tr>"
-        "<tr><td>Stop</td><td>30 points beyond the extreme the setup defended "
+        "<tr><td>Stop</td><td>120 points beyond the reaction candle "
         "(60-point floor).</td></tr>"
-        "<tr><td>Target</td><td>2.0 × risk, with the stop moved to entry at 1R.</td></tr>"
+        "<tr><td>Target</td><td>2.0 × risk, with no breakeven move - it was cutting winners.</td></tr>"
         "<tr><td>Filter</td><td>Only in the direction of the H1 trend.</td></tr>"
         "</table>"
         "<div class='note'>Volume here is the <b>tick count</b> per M5 bar. Measured, "
