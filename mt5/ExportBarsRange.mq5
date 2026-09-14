@@ -14,11 +14,11 @@
 #property script_show_inputs
 #property version "1.00"
 
-input string InpSymbol = "XAUUSD";             // symbol (custom symbols allowed)
+input string InpSymbol = "XAUUSD.pro";             // symbol (custom symbols allowed)
 input int    InpTfMin  = 5;                    // timeframe in minutes
-input string InpFrom   = "2026.02.01";         // inclusive
-input string InpTo     = "2026.09.11";         // exclusive
-input string InpFile   = "vsisa_bars_m5.csv";  // -> Common\Files
+input string InpFrom   = "2026.03.01";         // inclusive
+input string InpTo     = "2026.09.16";         // exclusive
+input string InpFile   = "vsisa_bars_axi.csv";  // -> Common\Files
 
 ENUM_TIMEFRAMES TF(int m) {
    switch (m) {

@@ -53,6 +53,13 @@ LIVE_AXI = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal"
 # The real-tick window Axi actually holds.
 FROM, TO = "2026.09.01", "2026.09.12"
 
+# AXI PRO COMMISSION — $4.50 round trip PER LOT, from Axi's own account page. At the
+# shipped 0.10 lots that is $0.45 a trade, and the demo server reports it as ZERO so the
+# tester never charges it. That silence is not harmless: the September-tuned config
+# earned $0.79/trade gross and hands $0.45 of it back, losing 57% of its whole result to
+# a cost the report printed as 0.00. Every ranking below is NET OF COMMISSION.
+COMMISSION_PER_TRADE = 0.45
+
 BASE = [
     "InpSetupBars=2", "InpBigMode=1", "InpBigPct=0.80", "InpBigAvg=1.20",
     "InpVolLookback=10", "InpQuietRef=0", "InpLowVolPct=1.00", "InpBodyFrac=0.35",
@@ -189,6 +196,55 @@ GRIDS = {
         "InpVolLookback=42||36||12||120||Y",
         "InpBigAvg=1.80||1.60||0.20||2.20||Y",
         "InpBigPct=0.80||0.65||0.15||0.95||Y",
+    ],
+    # ── WALK-FORWARD, 2026-09-14. Tuned on Apr-Jun ONLY; Jul-Sep is never looked at
+    # until a config is chosen. Zee is relying on this to be real income, so the
+    # out-of-sample number is the only one that will be reported as a result.
+    "wf_geom": ["InpVolWindow=1", "InpSetupAuto=true", "InpStrictDir=true", "InpRisingVol=false", "InpStopRef=0", "InpTrendTF=0", "InpMaxOpen=10", "InpCoolBars=0", "InpQuietRef=0", "InpBigMode=1", "InpVolLookback=200", "InpOandaVolume=0", "InpConfirmMode=0", "InpAnomaly=false", "InpFakeBreak=false", "InpEngulf=false",
+        "InpSwingPivot=3", "InpSwingMin=10", "InpSetupMin=2", "InpSetupMax=10",
+        "InpBigPct=0.80", "InpBigAvg=1.20", "InpLowVolPct=1.00", "InpBodyFrac=0.35",
+        "InpWickMode=2",
+        "InpTargetR=2.5||1.5||0.5||4.0||Y",
+        "InpSlBufPts=30||10||20||70||Y",
+        "InpMinSlPts=60||20||20||80||Y",
+        "InpBreakEvenR=1||0||1||1||Y",
+    ],
+    "wf_shape": ["InpVolWindow=1", "InpSetupAuto=true", "InpStrictDir=true", "InpRisingVol=false", "InpStopRef=0", "InpTrendTF=0", "InpMaxOpen=10", "InpCoolBars=0", "InpQuietRef=0", "InpBigMode=1", "InpVolLookback=200", "InpOandaVolume=0", "InpConfirmMode=0", "InpAnomaly=false", "InpFakeBreak=false", "InpEngulf=false",
+        "InpSetupMin=2", "InpSetupMax=10", "InpLowVolPct=1.00", "InpBodyFrac=0.35",
+        "InpWickMode=2",
+        "InpBigPct=0.80||0.50||0.15||0.95||Y",
+        "InpBigAvg=1.20||0.80||0.20||1.80||Y",
+        "InpSwingPivot=3||2||1||5||Y",
+        "InpSwingMin=10||6||6||24||Y",
+    ],
+    "wf_trigger": ["InpVolWindow=1", "InpSetupAuto=true", "InpStrictDir=true", "InpRisingVol=false", "InpStopRef=0", "InpTrendTF=0", "InpMaxOpen=10", "InpCoolBars=0", "InpQuietRef=0", "InpBigMode=1", "InpVolLookback=200", "InpOandaVolume=0", "InpConfirmMode=0", "InpAnomaly=false", "InpFakeBreak=false", "InpEngulf=false",
+        "InpSwingPivot=3", "InpSwingMin=10", "InpSetupMax=10",
+        "InpBigPct=0.80", "InpBigAvg=1.20",
+        "InpLowVolPct=1.00||0.50||0.15||1.25||Y",
+        "InpBodyFrac=0.35||0.15||0.15||0.60||Y",
+        "InpWickMode=2||0||2||2||Y",
+        "InpSetupMin=2||2||1||4||Y",
+    ],
+    # geometry + shape winners PINNED from the Apr-Jun tune; now the trigger, and
+    # SwingMin pushed past the 24 wall it landed on.
+    "wf_final": ["InpVolWindow=1", "InpSetupAuto=true", "InpStrictDir=true", "InpRisingVol=false", "InpStopRef=0", "InpTrendTF=0", "InpMaxOpen=10", "InpCoolBars=0", "InpQuietRef=0", "InpBigMode=1", "InpVolLookback=200", "InpOandaVolume=0", "InpConfirmMode=0", "InpAnomaly=false", "InpFakeBreak=false", "InpEngulf=false", "InpSetupMax=10",
+        "InpTargetR=2.5", "InpSlBufPts=10", "InpMinSlPts=60", "InpBreakEvenR=0",
+        "InpBigPct=0.80", "InpBigAvg=1.20", "InpSwingPivot=2",
+        "InpSwingMin=24||18||6||42||Y",
+        "InpLowVolPct=1.00||0.60||0.20||1.20||Y",
+        "InpBodyFrac=0.35||0.15||0.15||0.60||Y",
+        "InpWickMode=2||0||2||2||Y",
+    ],
+    # M1. On a 1-minute chart the reaction candle is tiny, so the stop taken from it is
+    # tiny too and InpMinSlPts stops being a safety floor and becomes THE stop on most
+    # trades — the structure gets overwritten by a constant. Commission also bites far
+    # harder at 5x the trade count. So M1 is swept on exactly the parameters that decide
+    # whether the geometry survives the smaller candles.
+    "m1": ["InpVolWindow=1", "InpSetupAuto=true", "InpStrictDir=true", "InpRisingVol=false", "InpStopRef=0", "InpTrendTF=0", "InpMaxOpen=10", "InpCoolBars=0", "InpQuietRef=0", "InpBigMode=1", "InpVolLookback=200", "InpOandaVolume=0", "InpConfirmMode=0", "InpAnomaly=false", "InpFakeBreak=false", "InpEngulf=false", "InpSetupMax=10", "InpSetupMin=2", "InpBigPct=0.80", "InpBigAvg=1.20", "InpLowVolPct=1.00", "InpBodyFrac=0.35", "InpWickMode=2", "InpSwingPivot=3", "InpMaxSlPts=900",
+        "InpMinSlPts=60||20||20||80||Y",
+        "InpSlBufPts=30||5||10||35||Y",
+        "InpTargetR=2.5||2.0||0.5||3.5||Y",
+        "InpSwingMin=10||10||10||30||Y",
     ],
     # 5. HOW MANY AT ONCE.
     "flow": [
@@ -336,7 +392,9 @@ def sweep(gridname, args):
     ini = ROOT / "mt5" / "_axi_sweep.ini"
     write_ini(ini, name, inputs, True, args.frm, args.to, args.period,
               args.model, args.delay, args.deposit)
-    swept = [g.split("=")[0] for g in grid]
+    # only the parameters actually being SWEPT deserve a column; the fixed ones
+    # made the table 20 columns wide and unreadable
+    swept = [g.split("=")[0] for g in grid if "||" in g]
     print("\n=== GRID %s ===" % gridname.upper(), flush=True)
     for g in grid:
         print("   " + g)
@@ -348,22 +406,28 @@ def sweep(gridname, args):
     rows = parse_xml(rep)
     scored = []
     for r in rows:
+        gross = num(col(r, "Profit", "Net Profit"))
+        tr = int(num(col(r, "Trades", "Total Trades")))
         scored.append({
-            "profit": num(col(r, "Profit", "Net Profit")),
-            "trades": int(num(col(r, "Trades", "Total Trades"))),
+            "gross": gross,
+            "profit": gross - tr * args.comm,     # what actually reaches the account
+            "comm": tr * args.comm,
+            "trades": tr,
             "pf": num(col(r, "Profit Factor")),
             "dd": num(col(r, "Equity DD %", "Drawdown")),
             "vals": {s: col(r, s) for s in swept},
         })
     scored.sort(key=lambda x: -x["profit"])
     print("[axi] %s: %d passes in %.0fs" % (gridname, len(scored), el))
-    hdr = "%9s %7s %6s %7s  " % ("profit", "trades", "PF", "DD%") + \
-          "  ".join("%-13s" % s.replace("Inp", "") for s in swept)
+    hdr = "%10s %10s %8s %7s %6s %6s  " % ("NET", "gross", "comm", "trades",
+                                            "PF", "DD%%") + "  ".join(
+        "%-12s" % s.replace("Inp", "") for s in swept)
     print(hdr)
     print("-" * len(hdr))
     for r in scored[:args.top]:
-        print("%9.2f %7d %6.2f %7.2f  " % (r["profit"], r["trades"], r["pf"], r["dd"])
-              + "  ".join("%-13s" % r["vals"].get(s, "") for s in swept))
+        print("%10.2f %10.2f %8.2f %7d %6.2f %6.2f  "
+              % (r["profit"], r["gross"], -r["comm"], r["trades"], r["pf"], r["dd"])
+              + "  ".join("%-12s" % r["vals"].get(s, "") for s in swept))
     live = [r for r in scored if r["trades"] >= args.minlive]
     print("\n  %d/%d passes took >= %d trades" % (len(live), len(scored), args.minlive))
     if live:
@@ -376,6 +440,7 @@ def sweep(gridname, args):
 
 
 def main():
+    global SYMBOL
     ap = argparse.ArgumentParser()
     ap.add_argument("--grid", default="")
     ap.add_argument("--all", action="store_true")
@@ -389,8 +454,12 @@ def main():
     ap.add_argument("--deposit", type=int, default=50000)
     ap.add_argument("--top", type=int, default=18)
     ap.add_argument("--minlive", type=int, default=8)
+    ap.add_argument("--comm", type=float, default=COMMISSION_PER_TRADE)
+    ap.add_argument("--symbol", default="")
     args = ap.parse_args()
 
+    if args.symbol:
+        SYMBOL = args.symbol
     if not EXE.exists():
         sys.exit("[axi] no rig at %s" % EXE)
     sync_ea()
@@ -409,8 +478,10 @@ def main():
             print("[axi] NO REPORT after %.0fs" % el)
             sys.exit(1)
         d, w, l = per_day(rep)
-        print("[axi] %d days, %dW/%dL, net %.2f  (%.0fs)  -> %s"
-              % (len(d), w, l, sum(d.values()), el, rep.name))
+        gross = sum(d.values())
+        comm = (w + l) * args.comm
+        print("[axi] %d days, %dW/%dL, gross %.2f - comm %.2f = NET %.2f  (%.0fs) -> %s"
+              % (len(d), w, l, gross, comm, gross - comm, el, rep.name))
         for k in sorted(d):
             print("   %s  %9.2f" % (k, d[k]))
         return

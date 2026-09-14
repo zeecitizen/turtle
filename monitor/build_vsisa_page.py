@@ -49,15 +49,23 @@ except Exception:
 
 ROOT = Path(__file__).parent.parent
 BARS_DIR = ROOT / "monitor" / "_vsisa_bars"
-REPORT = ROOT / "mt5" / "_tester_runs" / "headless" / "VSISA_500_075455.htm"
+# AXI, AND THE CORRECTED BUILD (2026-09-15). The page used to draw the old
+# Blueberry seven-month run, which used a FIXED 2-bar setup, a fixed volume
+# lookback and the stop under the whole setup. All three are wrong now, so it
+# was drawing setups the EA would no longer take. Both sources below are Axi
+# and both are the current logic.
+REPORT = ROOT / "mt5" / "_tester_runs" / "axi" / "AXI_bt_043237.htm"
 LIVE_LOG_DIR = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal"
-                    r"\DBE9B8B347D025DD139E103EE3B63FD8\MQL5\Logs")
+                    r"\6FBEE76C719DC78AB2AE839B5A0C7442\MQL5\Logs")
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
 
 M5 = 300
 PRE = 26          # bars drawn before the entry bar
 POST = 14         # bars drawn after
-SETUP_BARS = 2  # the shipped default
+# The run is COUNTED now, not fixed - these mirror InpSetupMin / InpSetupMax and
+# the swing yardstick, so a card marks exactly the bars the EA judged.
+SETUP_MIN, SETUP_MAX = 2, 10
+SWING_PIVOT, SWING_MIN, SWING_CAP = 3, 10, 200
 
 INK = "#101418"
 GRID = "#dfe4ea"
@@ -253,51 +261,88 @@ def live_trades():
 
 # ────────────────────────────────────────────── strategy read-out ──
 def components(tr, bars):
-    """Recompute what the EA saw, so each card can name its parts."""
+    """Recompute what the EA saw. The run length and the volume window are DERIVED the
+    same way the EA derives them, so a card marks the bars it actually judged rather
+    than a fixed two."""
     t = tr["ts"]
+    side = tr["side"]
     react = bars.get(t - M5)
-    cl = [bars.get(t - M5 * (2 + i)) for i in range(SETUP_BARS)]
-    cl = [c for c in cl if c]
-    look = [bars[t - M5 * k] for k in range(2 + SETUP_BARS,
-                                            2 + SETUP_BARS + 100)
+
+    # THE RUN: walk back while the bars keep closing the setup's way.
+    run = []
+    for k in range(2, 2 + SETUP_MAX):
+        b = bars.get(t - M5 * k)
+        if not b:
+            break
+        ours = (b[3] < b[0]) if side > 0 else (b[3] > b[0])
+        if not ours:
+            break
+        run.append(b)
+    nb = max(SETUP_MIN, len(run))
+    d = {"react": react, "setup": run, "nb": nb}
+
+    # THE SWING: back to the pivot that started this leg.
+    first = 2 + nb
+    span = SWING_CAP
+    for k in range(first + SWING_PIVOT, first + SWING_CAP):
+        piv = True
+        for q in range(1, SWING_PIVOT + 1):
+            a = bars.get(t - M5 * k)
+            l = bars.get(t - M5 * (k - q))
+            r = bars.get(t - M5 * (k + q))
+            if not a or not l or not r:
+                piv = False
+                break
+            if side > 0:
+                if a[1] <= l[1] or a[1] <= r[1]:
+                    piv = False
+            else:
+                if a[2] >= l[2] or a[2] >= r[2]:
+                    piv = False
+            if not piv:
+                break
+        if piv and (k - first + 1) >= SWING_MIN:
+            span = k - first + 1
+            break
+    d["span"] = span
+
+    look = [bars[t - M5 * k] for k in range(first, first + span)
             if (t - M5 * k) in bars]
-    d = {"react": react, "setup": cl, "n_look": len(look)}
     if look:
         vols = [b[4] for b in look]
         d["vmax"] = max(vols)
         d["vavg"] = sum(vols) / len(vols)
-    if cl:
-        d["vsetup"] = sum(c[4] for c in cl) / len(cl)
+        d["n_look"] = len(look)
+    if run:
+        d["vsetup"] = sum(b[4] for b in run) / len(run)
         if d.get("vmax"):
-            d["loudest"] = max(c[4] for c in cl) / d["vmax"]
+            d["loudest"] = max(b[4] for b in run) / d["vmax"]
     if react and d.get("vsetup"):
         d["quiet"] = react[4] / d["vsetup"]
 
-    # THE DISTRIBUTION CHECK. Not a rule in the EA — it is the diagnosis of the first
-    # live loss, where the loudest bar of the session closed UP and the next bar closed
-    # DOWN (the EA's own LAW 2 calling that volume SELLING) twenty minutes before it
-    # bought. Shown on every card so the pattern can be counted, not argued about.
+    # THE DISTRIBUTION WARNING - the pattern behind the first live loss: a
+    # near-maximum bar closing one way whose NEXT bar closes the other, which the
+    # EA's own LAW 2 reads as the opposite side. Shown so it can be counted.
     warn = None
-    for k in range(2 + SETUP_BARS, 2 + SETUP_BARS + 8):
+    for k in range(first, first + 8):
         b = bars.get(t - M5 * k)
         nxt = bars.get(t - M5 * (k - 1))
         if not b or not nxt or not d.get("vmax"):
             continue
         if b[4] < 0.85 * d["vmax"]:
             continue
-        if tr["side"] > 0 and b[3] > b[0] and nxt[3] < nxt[0]:
-            warn = "loud UP bar %d bars back, next bar closed DOWN — LAW 2 reads that " \
-                   "volume as SELLING, yet this is a BUY" % k
+        if side > 0 and b[3] > b[0] and nxt[3] < nxt[0]:
+            warn = ("loud UP bar %d bars back, next bar closed DOWN - LAW 2 reads "
+                    "that volume as SELLING, yet this is a BUY" % k)
             break
-        if tr["side"] < 0 and b[3] < b[0] and nxt[3] > nxt[0]:
-            warn = "loud DOWN bar %d bars back, next bar closed UP — LAW 2 reads that " \
-                   "volume as BUYING, yet this is a SELL" % k
+        if side < 0 and b[3] < b[0] and nxt[3] > nxt[0]:
+            warn = ("loud DOWN bar %d bars back, next bar closed UP - LAW 2 reads "
+                    "that volume as BUYING, yet this is a SELL" % k)
             break
     d["warn"] = warn
     return d
 
 
-# ────────────────────────────────────────────────────── drawing ──
 def candles(ax, seq, x0):
     for i, (ts, o, h, l, c) in enumerate(seq):
         x = x0 + i
@@ -379,9 +424,9 @@ def draw_setup(tr, bars, comp):
                                     shrinkA=1, shrinkB=3))
 
     below = tr["side"] > 0          # for a BUY the setup extreme is underneath
-    for i in range(len(comp["setup"])):
+    for i in range(comp.get("nb", 2)):
         tag(t - M5 * (2 + i), "C%d" % (i + 1), CLUSTER, not below, i % 2)
-    tag(t - M5, "R", REACT, not below, len(comp["setup"]) % 2)
+    tag(t - M5, "R", REACT, not below, comp.get("nb", 2) % 2)
 
     # the exit, if it is known
     if tr.get("exit_ts"):
@@ -400,13 +445,13 @@ def draw_setup(tr, bars, comp):
 
     # ── volume, coloured to match, with the setup bars and reaction called out
     for i, (ts, o, h, l, c) in enumerate(seq):
-        col = CLUSTER if ts in [t - M5 * (2 + j) for j in range(len(comp["setup"]))] \
+        col = CLUSTER if ts in [t - M5 * (2 + j) for j in range(comp.get("nb", 2))] \
             else (REACT if ts == t - M5 else (UP if c >= o else DOWN))
         a = 1.0 if col in (CLUSTER, REACT) else 0.40
         av.bar(i, vols[i], width=0.66, color=col, alpha=a, zorder=3)
     if comp.get("vmax"):
         av.axhline(comp["vmax"], color=MUTED, lw=0.8, ls=":", alpha=0.8)
-        av.text(len(seq) + 0.2, comp["vmax"], " 100 bar max", fontsize=7,
+        av.text(len(seq) + 0.2, comp["vmax"], " swing max", fontsize=7,
                 color=MUTED, va="center")
     if comp.get("vavg"):
         av.axhline(comp["vavg"], color=MUTED, lw=0.8, ls="--", alpha=0.5)
@@ -517,73 +562,88 @@ LAWS = [
      "A loud bar never fires a trade by itself. It only ARMS a setup."),
     (2, "The next bar's REACTION resolves it", "STRUCTURAL",
      "Reaction to that candle will determine whether it was supply or demand.",
-     "Big volume down + next bar UP = that volume was BUYING → we buy. Mirror for sells. "
-     "This is what picks the side."),
+     "Big volume down + next bar UP = that volume was BUYING, so we buy. Mirror for "
+     "sells. This is what picks the side."),
     (3, "The reaction must arrive on LOW volume — THE TRIGGER", "CONFIRMED",
      "The lower the volume on it, the stronger the signal. If a big volume comes, SKIP "
      "it, wait more.",
-     "reaction volume ≤ 1.00 × the 2 bar setup's volume. A veto, not a score. Receipt: leaving it "
-     "unconstrained scored +$621 against +$1,024 constrained on the same window."),
-    (3.5, "\"Low\" means low against the CLIMAX, not against the market", "CONFIRMED",
-     "This low volume — do not call it no demand. Call it low supply.",
-     "Measured against the setup just seen. Receipt: that reading swept every top row; "
-     "measuring against the rolling average appeared once, at rank 22, on 2 trades."),
-    (4, "The 2 bar setup: two bars of effort", "CONFIRMED at 2",
-     "This three-bar formation is stronger compared to the two-bar.",
-     "2 same-direction bars carrying big volume. Receipt: 2-bar beat 3-bar on net in "
-     "every sweep; 3-bar wins on profit factor with a third of the trades."),
-    (5, "\"Big\" is relative to the recent past — never a VSA band", "CONFIRMED",
-     "These bands are misleading. The more you get rid of them, the better you perform. "
-     "Compare with the big volumes of the previous two or three days.",
-     "Loudest setup bar ≥ 0.80 × the lookback maximum, and every setup bar ≥ 1.20 × "
-     "the 100-bar average. Receipt: net is a PLATEAU across lookbacks 30–105, not a "
-     "spike — which is what a real effect looks like."),
-    (6, "The wick tells aggression from absorption", "REJECTED",
-     "If this lower wick had not been there, this could be a supply.",
-     "Built as an input, tested, and it loses: WickMode=0 beats both \"require\" and "
-     "\"override\" in every paired comparison. Shipped OFF."),
-    (7, "Anomaly — tiny spread on huge volume", "REJECTED",
-     "Such a small candle, such a big volume — this is the most powerful signal. Bag "
-     "holding.",
-     "Every pass requiring it collapsed to 1–4 trades; best +$305. Shipped OFF."),
-    (8, "Tight stop, R-multiple target", "CONFIRMED at 2.5R + BE",
-     "There is no need to keep extra pips of stop loss. Just 2 or 3 pips maximum. Entry "
-     "on the closing of that bullish candle.",
-     "Stop 30 points beyond the setup extreme (60-point floor), target 2.5R, stop to "
-     "entry at 1R. Receipt: breakeven ON +$1,386 vs OFF +$1,213, otherwise identical."),
-    (8.5, "His 2–3 pip stop did NOT transfer", "ADAPTED",
-     "your SL should be from 3 pips up to 8 pips",
-     "Those are FX-major pips. A stop narrower than gold's spread is a guaranteed loss "
-     "on entry, so we use 30 points with a 60-point floor. Results were insensitive "
-     "across 10/30/50/70, which is reassuring."),
-    (9, "Trade with the higher-timeframe trend", "CONFIRMED — biggest single win",
+     "reaction volume ≤ 1.00 × the setup's volume. A veto, not a score."),
+    (4, "The setup — counted, not fixed", "CORRECTED 2026-09-13",
+     "we wait until the red reds keep appearing.. we wait until the reaction candle "
+     "becomes bullish (blue).. it could be three or more reds",
+     "The EA now WAITS for the turn instead of assuming 2 or 3 bars: it walks back while "
+     "the bars keep closing the setup's way (2 to 10). A card showing \"setup 7 bars\" is "
+     "a run a fixed length would have missed entirely."),
+    (4.5, "Big, not incrementally increasing", "CORRECTED 2026-09-14",
+     "big volumes show increased transactions, i don't think we need in specific "
+     "'increasing' volumes, they can just be big (not incrementally increasing)",
+     "Requiring a rising sequence was reading a description as a rule; it refused 136 "
+     "setups in September alone. Now only bigness is required."),
+    (5, "\"Big\" is judged against THE CURRENT SWING", "CORRECTED 2026-09-13",
+     "i think the 24 hour was for 1D chart.. on 5 min chart we can just see the current "
+     "swing",
+     "The yardstick runs back to the pivot that began this leg — a swing high for a buy, "
+     "a swing low for a sell — so a fast leg gets a short window and a grind a long one. "
+     "It replaced a fixed 10-bar window (50 minutes), which let a bar qualify as the "
+     "climax for being loudest of three-quarters of an hour."),
+    (6, "The wick decides a reaction that is NOT quiet", "CONFIRMED — now ON",
+     "since the fourth bullish blue candle has still somewhat bigger volume .. if there "
+     "were no lower wick we wouldn't buy immediately, we would wait .. and here we see a "
+     "lower wick",
+     "InpWickMode 2. A reaction too loud to qualify is still taken IF it carries the "
+     "wick against the move. Cards marked \"LOUD +wick\" are exactly this case. It was "
+     "OFF until 2026-09-13 — the earlier REJECTED verdict was measured on a build whose "
+     "stop and volume window were both wrong."),
+    (8, "Entry at the reaction candle's close", "CONFIRMED — his ruling",
+     "it doesnot mean a stop order above its high.. it means same as line 16",
+     "Zee settled the ambiguity on 2026-09-12: lines 16 and 33 describe the same trade. "
+     "The EA was already correct."),
+    (8.5, "Stop 2-3 pips below THE BLUE CANDLE", "CORRECTED 2026-09-12",
+     "Stop loss 2-3 pips below the bullish blue candle.",
+     "The EA had been measuring from the lowest low of the WHOLE setup, and since the "
+     "setup bars are the down-move their lows sit far below — every stop came out too "
+     "wide (the two live trades risked 526 and 876 points). Now 30 points (3 gold pips) "
+     "below the reaction candle only. This changed the R multiple of every trade."),
+    (8.6, "The risk cap", "ADDED — earns its place",
+     "(not his rule — a safety rail)",
+     "Setups whose stop exceeds 900 points are refused, so risk per trade stays uniform. "
+     "Tested: raising it to 3000 adds 58 trades and destroys $1,476 of profit."),
+    (9, "Trade with the higher-timeframe trend", "OFF on his instruction",
      "That setup comes on H1, and we take entry on M5... take the trade in trend "
      "direction. Do not catch the top.",
-     "H1 close now vs 20 bars back. Receipt: the SAME net for HALF the trades and seven "
-     "more points of win rate — 27% → 34% at identical geometry."),
+     "Built (InpTrendTF) and currently OFF at Zee's request. Worth recording what it "
+     "cost when it was measured: with it ON the EA made the same money on HALF the "
+     "trades and seven more points of win rate."),
     (10, "Never chase — trade the retracement", "NOT IMPLEMENTED",
      "Never chase the market. Always catch the market on a retracement.",
-     "Not built into v1.00. The base engine has to earn its keep first."),
+     "No retracement concept exists in the EA. Still outstanding."),
     (12, "Falling volume on a fall is NOT automatically bullish", "STRUCTURAL",
      "Rising prices rising volume, falling prices falling volume is bullish — this is "
      "wrong. This is incomplete.",
      "Encoded by making the engine SETUP-FIRST: quiet volume only means anything "
      "straight after effort. The EA never scans for low volume on its own."),
-    (13, "The fake break of a level", "REJECTED",
-     "the previous support is broken by a pinbar... this is even the strongest setup",
-     "Zee's own tier-3 \"strongest\" case. Absent from all 30 top rows of a 336-pass "
-     "sweep. Shipped OFF."),
-    (0, "The no-supply TEST (his confirmed entry)", "REJECTED after a repair",
-     "after this they did a testing, we call it a no supply test... wait for the next bar "
-     "to be bullish, then the setup is confirmed",
-     "First implementation compared the test bar to the already-quiet reaction bar and "
-     "fired ZERO trades in 48 passes — my arithmetic, not his rule. Re-measured against "
-     "the climax it fires properly, and then genuinely loses: +$233 best against +$3,213 "
-     "for the aggressive entry."),
+    (0, "The BASE CASE — effort against result", "NOT IMPLEMENTED",
+     "if the candle is getting smaller it means that supply is getting hit more.. and "
+     "price is getting capped",
+     "His Example A: volume RISING while the candle SHRINKS means supply is capping the "
+     "move. Nothing in the EA measures volume against distance travelled. This is the "
+     "rule that would have refused the -$89.50 trade on 09 Sep, where effort per dollar "
+     "tripled (8.85 -> 2.67 per 1000 ticks) before the reversal."),
+    (0, "Tiers 2 and 3 — support, and the fake break", "NOT IMPLEMENTED / REJECTED",
+     "case 2. 2 bar setup + low volume candle + support (stronger) — case 3. + fake "
+     "break of this support .. (strongest)",
+     "Tier 2 was never built. Tier 3 (InpFakeBreak) was built and tested OFF on the OLD "
+     "implementation; that verdict predates the stop and swing corrections and should be "
+     "re-tested before being trusted."),
 ]
 
 VERDICT_CLASS = {
-    "CONFIRMED": "ok", "CONFIRMED at 2": "ok", "CONFIRMED at 2.5R + BE": "ok",
+    "CONFIRMED": "ok", "CONFIRMED — now ON": "ok",
+    "CONFIRMED — his ruling": "ok",
+    "CORRECTED 2026-09-12": "ok", "CORRECTED 2026-09-13": "ok",
+    "CORRECTED 2026-09-14": "ok", "ADDED — earns its place": "ok",
+    "OFF on his instruction": "warn",
+    "NOT IMPLEMENTED / REJECTED": "muted", "CONFIRMED at 2": "ok", "CONFIRMED at 2.5R + BE": "ok",
     "CONFIRMED — biggest single win": "ok", "STRUCTURAL": "core", "ADAPTED": "warn",
     "REJECTED": "bad", "REJECTED after a repair": "bad", "NOT IMPLEMENTED": "muted",
 }
@@ -669,7 +729,7 @@ def card_html(tr, comp, png):
     if risk:
         rows.append(("Geometry",
                      "risk <b>%.0f points</b> ($%.2f at 0.10 lots) · stop %.2f · "
-                     "target %.2f (2.5R)" % (risk, risk * 0.10, tr["sl"], tr["tp"])))
+                     "target %.2f (2.0R)" % (risk, risk * 0.10, tr["sl"], tr["tp"])))
     if tr.get("profit") is not None:
         rows.append(("Outcome", "<b>%s</b> at %.2f · <b>%+.2f</b>"
                      % (esc(tr.get("how") or ""), tr.get("exit") or 0, tr["profit"])))
@@ -694,7 +754,7 @@ def card_html(tr, comp, png):
         '<span><span class="dot" style="background:%s"></span><b>R</b> reaction</span>'
         '<span><span class="dot" style="background:%s"></span>up bar</span>'
         '<span><span class="dot" style="background:%s"></span>down bar</span>'
-        '<span>dotted line = lookback volume max</span></div>'
+        '<span>dotted line = loudest bar of the swing</span></div>'
         '<table class="k">%s</table>%s</div>'
         % (esc(tr["tag"]),
            esc(time.strftime("%a %d %b %Y  %H:%M", time.gmtime(tr["ts"]))) + " broker",
@@ -705,7 +765,7 @@ def card_html(tr, comp, png):
 
 def build(out_path: Path, limit=0):
     t0 = time.time()
-    bars = load_bars(BARS_DIR / "vsisa_bars_xauusd.csv")
+    bars = load_bars(BARS_DIR / "vsisa_bars_axi.csv")
     print("[vsisa-page] %d broker M5 bars" % len(bars), flush=True)
     sep = bars_from_ticks()
     print("[vsisa-page] %d September M5 bars from our ticks" % len(sep), flush=True)
@@ -769,7 +829,7 @@ def build(out_path: Path, limit=0):
         "<tr><td>Entry</td><td>At R's close.</td></tr>"
         "<tr><td>Stop</td><td>30 points beyond the extreme the setup defended "
         "(60-point floor).</td></tr>"
-        "<tr><td>Target</td><td>2.5 × risk, with the stop moved to entry at 1R.</td></tr>"
+        "<tr><td>Target</td><td>2.0 × risk, with the stop moved to entry at 1R.</td></tr>"
         "<tr><td>Filter</td><td>Only in the direction of the H1 trend.</td></tr>"
         "</table>"
         "<div class='note'>Volume here is the <b>tick count</b> per M5 bar. Measured, "
