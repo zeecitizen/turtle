@@ -235,6 +235,42 @@ GRIDS = {
         "InpBodyFrac=0.35||0.15||0.15||0.60||Y",
         "InpWickMode=2||0||2||2||Y",
     ],
+    # ZEE, 2026-09-15: "if the reaction candle volume is too near the selling volumes
+    # then our setup might be failing.. can u test the difference X between the reaction
+    # volume vs the high volumes in the background". His example, 11 Sep 04:30 broker
+    # (-$86.30), fired at reaction/setup = 0.87 — the MEDIAN of all 1442 fires, so the
+    # current 1.00 ceiling is barely a filter at all (94% of fires pass it).
+    #
+    # This sweeps that ceiling at the CURRENT geometry (stop 120, 2.0R, BE off). The old
+    # wf_trigger verdict on this parameter predates the stop correction and is stale.
+    # InpWickMode is swept alongside because mode 2 lets a LOUD reaction through when it
+    # carries a wick — it is a hole in whatever ceiling we set.
+    "vratio": ["InpVolWindow=1", "InpSetupAuto=true", "InpStrictDir=true",
+        "InpRisingVol=false", "InpStopRef=0", "InpTrendTF=0", "InpMaxOpen=10",
+        "InpCoolBars=0", "InpQuietRef=0", "InpBigMode=1", "InpVolLookback=200",
+        "InpOandaVolume=0", "InpConfirmMode=0", "InpAnomaly=false",
+        "InpFakeBreak=false", "InpEngulf=false",
+        "InpSetupMin=2", "InpSetupMax=10", "InpSwingPivot=3", "InpSwingMin=10",
+        "InpBigPct=0.80", "InpBigAvg=1.20", "InpBodyFrac=0.35",
+        "InpSlBufPts=120", "InpMinSlPts=60", "InpMaxSlPts=900",
+        "InpTargetR=2.0", "InpBreakEvenR=0",
+        "InpLowVolPct=0.85||0.50||0.05||1.05||Y",
+        "InpWickMode=2||0||2||2||Y",
+    ],
+    # THE FLOOR. Same pinned geometry as "vratio"; sweeps the NEW lower bound on the
+    # reaction, which is what the joined trade-by-trade data actually pointed at.
+    "vfloor": ["InpVolWindow=1", "InpSetupAuto=true", "InpStrictDir=true",
+        "InpRisingVol=false", "InpStopRef=0", "InpTrendTF=0", "InpMaxOpen=10",
+        "InpCoolBars=0", "InpQuietRef=0", "InpBigMode=1", "InpVolLookback=200",
+        "InpOandaVolume=0", "InpConfirmMode=0", "InpAnomaly=false",
+        "InpFakeBreak=false", "InpEngulf=false",
+        "InpSetupMin=2", "InpSetupMax=10", "InpSwingPivot=3", "InpSwingMin=10",
+        "InpBigPct=0.80", "InpBigAvg=1.20", "InpBodyFrac=0.35",
+        "InpSlBufPts=120", "InpMinSlPts=60", "InpMaxSlPts=900",
+        "InpTargetR=2.0", "InpBreakEvenR=0", "InpWickMode=2",
+        "InpMinVolPct=0.00||0.00||0.04||0.84||Y",
+        "InpLowVolPct=1.00||0.95||0.05||1.00||Y",
+    ],
     # M1. On a 1-minute chart the reaction candle is tiny, so the stop taken from it is
     # tiny too and InpMinSlPts stops being a safety floor and becomes THE stop on most
     # trades — the structure gets overwritten by a constant. Commission also bites far

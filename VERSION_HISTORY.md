@@ -471,6 +471,60 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.01 — the reaction-volume floor, built and left OFF (2026-09-15)
+
+**Who ordered it.** Zee: *"i think the reaction candle's volume as compared to the --
+high volume selling background candle's volume .. if the reaction candle volume is too
+near the selling volumes then our setup might be failing.. such as the setup at Fri 11
+Sep 2026 04:30 broker TESTER -86.30 / can u test the difference X between the reaction
+volume vs the high volumes in the background"*
+
+**What changed in code.** One new input, `InpMinVolPct` (default **0.00 = off**): a LOWER
+bound on the reaction volume, mirroring the existing `InpLowVolPct` ceiling. No
+behavioural change at the shipped default. Version and banner string bumped together.
+
+**The receipts — his hypothesis is not supported.** 322 fires from one Axi real-tick run
+(Apr 1 → Sep 15, M5, model 4) were joined 1:1 to their own MT5 outcomes, 305 closed:
+
+| measure of "too near the selling volume" | winners' median | losers' median | gap |
+|---|---|---|---|
+| reaction / setup average (the live rule) | 0.856 | 0.865 | +0.009 |
+| reaction / swing MAX (his literal words) | 0.815 | 0.810 | −0.005 |
+| reaction / swing average | 1.385 | 1.335 | −0.050 |
+
+No separation in any form. His named trade, 11 Sep 04:30 (−$86.30), fired at 0.87 — the
+**52nd percentile**, inside the best-performing band. It was an ordinary setup that lost.
+
+**What the same data DID show — the shape is a band, not a ceiling.** By quintile of
+reaction/setup, and stable in both walk-forward halves independently:
+
+| band | trades | WR | $/trade |
+|---|---|---|---|
+| 0.39–0.76 (quietest) | 61 | 36% | **6.40** |
+| 0.76–0.83 | 61 | 46% | 23.13 |
+| 0.83–0.89 | 61 | 48% | **27.38** |
+| 0.89–0.94 | 61 | 39% | 12.89 |
+| 0.94–2.05 (loudest) | 61 | 39% | 5.68 |
+
+The QUIETEST fifth is the worst group on the book. That contradicts the document's *"the
+lower the volume on it, the stronger the signal"* read as a monotonic rule.
+
+**Why the floor still ships OFF.** Swept 0.00→0.84 at the shipped geometry. Apr–Jun picked
+0.72 (+$3,600 vs +$3,545 with no floor, +$55 on 13 fewer trades); Jul–Sep gave that same
+0.72 **+$1,640 vs +$1,672 with no floor** — worse. The out-of-sample best was 0.56, a
+different value. A $55 in-sample gain that inverts out-of-sample is noise, so the
+parameter exists and stays off.
+
+**Ceiling re-confirmed at 1.00.** Full sweep 0.50→1.05 × WickMode {0,2}, both halves:
+1.00 is an interior optimum, not a bound — 1.05 is worse in Apr–Jun, tightening is
+monotonically worse from 0.95 down. Tightening to 0.85 (the value that would have
+refused his named trade) costs **$2,473 of the $5,217**.
+
+**Receipts:** `mt5/_tester_runs/axi/AXI_bt_051034.htm` · grids `vratio`, `vfloor` in
+`monitor/strategy_lab/axi_sweep.py` · 24-pass sweeps per half, Axi XAUUSD.pro M5 model 4.
+
+---
+
 ## VSISA v1.00 — a NEW EA, a new strategy (2026-09-09)
 
 **Zee:** *"Since the diamond EA is not converging to a profitable strategy, we will
