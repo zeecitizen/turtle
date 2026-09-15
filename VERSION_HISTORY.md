@@ -471,6 +471,41 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.13 — SHIPPED: InpMaxOpen 10 -> 2 (2026-09-16)
+
+**Who ordered it.** Zee: *"ok ship InpMaxOpen=2"*.
+
+**What changed.** `InpMaxOpen` default **10 -> 2**. Nothing else; no logic touched.
+
+**Shipped on RISK, not on return — and the distinction is the point.** Walk-forward:
+
+| | Apr–Jun | Jul–Sep |
+|---|---|---|
+| maxOpen=10 | +$4,004 · DD $898 | +$4,004 · DD $950 |
+| **maxOpen=2** | +$4,004 · DD $898 — **identical, the cap never binds** | +$4,192 · DD $905 |
+
+One half is untouched and the other moves on FOUR trades. +$188 is not a result worth
+defending and is not why this shipped. What is solid: the cap costs nothing measurable in
+either half while cutting worst-case concurrent exposure from ~$450 to ~$90 — and on a
+funded account with a hard breach line, a free reduction in tail exposure is worth taking.
+
+Measured, the EA rarely holds more than three positions anyway — maxOpen 10, 5 and 3 return
+BYTE-IDENTICAL results over Apr–Sep. This binds only in the crowded moments, which are
+exactly the moments a breach line cares about.
+
+**Ship verification.** The compiled v1.13 binary, Apr 1 → Sep 15, Axi real ticks M5:
+**79W/239L, NET $8,197.60** — four fewer trades than v1.05's 79W/243L and $189 more, exactly
+the Jul–Sep difference measured before shipping.
+
+**Current shipped configuration (v1.13):**
+`InpLots 0.10 · InpMaxOpen 2 · M5 · InpTargetMode 0 · InpTargetR 5.0 · InpStopRef 0 ·
+InpSlBufPts 120 · InpMinSlPts 60 · InpMaxSlPts 900 · InpBreakEvenR 0 · InpLowVolPct 1.00 ·
+InpWickMode 2 · InpTrendTF 0` — every experimental input from v1.01–v1.12 defaults OFF.
+
+**ZEE MUST REATTACH** — MT5 does not hot-reload inputs. The banner must read `v1.13`.
+
+---
+
 ## VSISA v1.12 — can the drawdown at 0.20 lots be cut? No. (2026-09-16)
 
 **Who ordered it.** Zee: *"if we use flat 0.2 .. can't we reduce the drawdown from 19% by
