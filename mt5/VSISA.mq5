@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.07"
+#property version   "1.09"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -159,6 +159,29 @@ input bool   InpTestRed     = false;  // InpTestRed — the test bar must close 
 // BUY, a loud bar closing back down means the supply never left, so the setup has failed
 // and there is no reason to wait for the stop. That is a strictly post-entry decision and
 // it is what this tests.
+// LAW 10 — THE RETRACEMENT, at last (Zee, 2026-09-15):
+// "if we miss such a breakout on low volume, then we wait for a retracement to the same low
+// where we initially got to when the red candle's happened giving way to bullish move. that
+// retracement low when it touches the low line of the missed setup is also a valid setup ..
+// infact sometimes it can touch several times (increasing the strength of the upcoming move)"
+//
+// His document has said this from the start — "Never chase the market. Always catch the
+// market on a retracement" — and the audit has carried it as NOT IMPLEMENTED since day one.
+// This is it: every setup the detector sees leaves a LEVEL behind at the low the move began
+// from, and a later touch of that level is its own entry, with the stop hung off the level
+// rather than off a fresh candle.
+input bool   InpRetrace     = false;  // InpRetrace — re-enter when price returns to a past setup's level
+input int    InpRetraceBars = 60;     // InpRetraceBars — how long a level stays live
+input int    InpRetraceTol  = 30;     // InpRetraceTol — points either side that count as a touch
+input int    InpRetraceMin  = 1;      // InpRetraceMin — touches required before entering (his "several times")
+input int    InpRetraceMax  = 2;      // InpRetraceMax — entries allowed per level
+// THE TOUCH MUST ARRIVE ON NO SUPPLY. The first cut entered on price alone — it touched
+// the line, it closed back, we bought — and that is not this method at all: every other
+// entry in this EA is a VOLUME judgement, and a price-only re-entry throws away the one
+// thing the strategy reads. Measured, that version lost $9.46 a trade over 409 trades
+// while the base setups made $13.35. This asks the retest to be QUIET, which is the same
+// question Law 3 asks of the reaction: if supply had really gone, the retest is cheap.
+input double InpRetraceQuiet = 0.00;  // InpRetraceQuiet — touch bar volume <= this x avg (0 = no volume test)
 input double InpTestExit    = 0.00;   // InpTestExit — close if the TEST bar is louder than this x avg (0 = off)
 input int    InpTestWindow  = 3;      // InpTestWindow — only watch this many bars after entry
 input int    InpTestAvgBars = 20;     // InpTestAvgBars — bars in the volume average the test is judged against
@@ -328,6 +351,14 @@ int g_rej_fake = 0, g_rej_react = 0, g_rej_body = 0, g_rej_quiet = 0, g_rej_tren
 int g_rej_test = 0;
 double g_swing_px = 0.0;  // price the leg STARTED from - the structural target (mode 2)
 double g_eff_avg = 0.0;   // average volume-per-point-of-range over the swing (diagram 9)
+#define VSISA_MAXLVL 64
+double   g_lvl_px[VSISA_MAXLVL];      // LAW 10: the low a past setup turned from
+int      g_lvl_side[VSISA_MAXLVL];
+datetime g_lvl_t[VSISA_MAXLVL];
+int      g_lvl_touch[VSISA_MAXLVL];
+int      g_lvl_fired[VSISA_MAXLVL];
+int      g_lvl_n = 0;
+int      g_retrace_fires = 0;
 int g_rej_tgt = 0;        // candidates refused because the structural target was too near
 int g_rej_cap = 0;        // refused: the last setup bar was not the capped, loud one
 int g_rej_loc = 0;        // refused: the reaction did not close at its own extreme
@@ -817,6 +848,14 @@ bool Detect(int side, double &sl_level, string &why) {
                       (double)v1 / MathMax(1.0, vsetup),
                       quiet ? " QUIET" : " LOUD",
                       wick ? " +wick" : "");
+
+   // LAW 10: leave the level behind. The "low line" is the lowest point the pattern
+   // reached before it turned - the setup's own extreme or the reaction's, whichever is
+   // further - because that is the line he draws and retraces back to.
+   if (InpRetrace) {
+      double line = (side > 0) ? MathMin(ext, bLow(r)) : MathMax(ext, bHigh(r));
+      AddLevel(side, line);
+   }
    return true;
 }
 
@@ -945,7 +984,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.07 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.09 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
@@ -1015,6 +1054,78 @@ void OnDeinit(const int reason) {
                (g_best_quiet > 900 ? -1.0 : g_best_quiet), InpLowVolPct);
 }
 
+void AddLevel(int side, double px) {
+   if (g_lvl_n >= VSISA_MAXLVL) {           // drop the oldest to make room
+      for (int k = 1; k < g_lvl_n; k++) {
+         g_lvl_px[k-1] = g_lvl_px[k];   g_lvl_side[k-1]  = g_lvl_side[k];
+         g_lvl_t[k-1]  = g_lvl_t[k];    g_lvl_touch[k-1] = g_lvl_touch[k];
+         g_lvl_fired[k-1] = g_lvl_fired[k];
+      }
+      g_lvl_n--;
+   }
+   g_lvl_px[g_lvl_n]    = px;
+   g_lvl_side[g_lvl_n]  = side;
+   g_lvl_t[g_lvl_n]     = iTime(_Symbol, PERIOD_CURRENT, 0);
+   g_lvl_touch[g_lvl_n] = 0;
+   g_lvl_fired[g_lvl_n] = 0;
+   g_lvl_n++;
+}
+
+void DropLevel(int i) {
+   for (int k = i + 1; k < g_lvl_n; k++) {
+      g_lvl_px[k-1] = g_lvl_px[k];   g_lvl_side[k-1]  = g_lvl_side[k];
+      g_lvl_t[k-1]  = g_lvl_t[k];    g_lvl_touch[k-1] = g_lvl_touch[k];
+      g_lvl_fired[k-1] = g_lvl_fired[k];
+   }
+   g_lvl_n--;
+}
+
+//+------------------------------------------------------------------+
+//| LAW 10 — price comes back to a level a setup already turned from. |
+//| A touch that CLOSES BACK on the right side is the entry; touches  |
+//| accumulate, so InpRetraceMin can demand the "several times" he    |
+//| says makes the move stronger.                                     |
+//+------------------------------------------------------------------+
+void RetraceCheck() {
+   if (!InpRetrace || g_lvl_n == 0) return;
+   datetime now = iTime(_Symbol, PERIOD_CURRENT, 0);
+   int ps = (int)PeriodSeconds();
+   if (ps <= 0) return;
+   double tol = InpRetraceTol * _Point;
+   double buf = InpSlBufPts * _Point;
+
+   for (int i = g_lvl_n - 1; i >= 0; i--) {
+      int age = (int)((now - g_lvl_t[i]) / ps);
+      if (age > InpRetraceBars || g_lvl_fired[i] >= InpRetraceMax) { DropLevel(i); continue; }
+      if (age < 1) continue;                       // not the setup's own bar
+
+      double lvl = g_lvl_px[i];
+      bool touched, held;
+      if (g_lvl_side[i] > 0) { touched = (bLow(1)  <= lvl + tol); held = (bClose(1) > lvl); }
+      else                   { touched = (bHigh(1) >= lvl - tol); held = (bClose(1) < lvl); }
+      if (!touched) continue;
+
+      g_lvl_touch[i]++;                            // count it even if it did not hold
+      if (!held || g_lvl_touch[i] < InpRetraceMin) continue;
+
+      // No supply on the retest, or it is just a price touch.
+      if (InpRetraceQuiet > 0.0) {
+         double av = AvgVolN(InpTestAvgBars);
+         long   vt = BarVolume(1);
+         if (av <= 0 || vt <= 0) continue;
+         if ((double)vt > InpRetraceQuiet * av) continue;
+      }
+      if (OpenDecisions() >= InpMaxOpen) continue;
+
+      double sl = (g_lvl_side[i] > 0) ? lvl - buf : lvl + buf;
+      g_retrace_fires++;
+      Fire(g_lvl_side[i], sl,
+           StringFormat("RETRACE touch %d of level %.2f (set %d bars ago)",
+                        g_lvl_touch[i], lvl, age));
+      g_lvl_fired[i]++;
+   }
+}
+
 double AvgVolN(int n) {
    double a = 0; int c = 0;
    for (int k = 1; k <= n; k++) {
@@ -1070,6 +1181,7 @@ void OnTick() {
    g_last_bar = t;
 
    TestExitCheck();
+   RetraceCheck();
 
    if (g_cool > 0) { g_cool--; return; }
    if (!InSession()) return;
