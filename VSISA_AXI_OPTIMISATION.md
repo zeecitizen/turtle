@@ -269,3 +269,59 @@ It is identical in the first half — the cap never engages — and +$188 with $
 in the second, from removing 4 trades. The PROFIT evidence is thin and one-sided. The RISK
 case is not: it bounds concurrent exposure at roughly $90 instead of a possible $450, at no
 measured cost in either half. Worth shipping on safety grounds, not on the $188.
+
+---
+
+## The five-step "win rate fix" — four refuted, ONE real (2026-09-16)
+
+An external analysis attributed the 22-25% win rate to five parameter choices and proposed a
+fix for each. Tested at the shipped v1.13 geometry, Axi real ticks, Apr 1 → Sep 15.
+
+| step | proposal | measured |
+|---|---|---|
+| 1 | `InpTargetR` 5.0 → 2.0 | WR claim CORRECT (43%), profit claim WRONG: **+$5,502 vs +$8,196** |
+| 2 | `InpConfirmMode` 0 → 1/2 | mode 1: 30 trades, $18.63/trade; mode 2: 20 trades, $24.53 — vs base $25.78 |
+| 3 | **`InpFakeBreak` = true** | **REAL — see below** |
+| 4 | `InpSlBufPts` 120 → 250 | **+$5,975**, $21.81/trade vs base $25.78 |
+| 5 | session 7–19 | +$4,655, $25.44/trade — same per trade, just fewer. No quality gain |
+| — | all five combined | +$3,253 on 39 trades |
+
+**Its central assumption is the error: that a higher win rate is better.** The whole R ladder
+was measured on 2026-09-15 — 2.0R does give 43%, and it earns $2,694 LESS at the same
+drawdown. The analysis's projection of "50% WR at 1:2 = $50/trade" is not measured; the
+actual 2.0R figure is **$17.09/trade against 5.0R's $25.78**. Its drawdown percentages also
+depend on the tester's deposit (37.52% of $5,000 is $1,875) and are not comparable to figures
+quoted against $50,000.
+
+### Step 3 was right, and it is the best filter found on this project
+
+`InpFakeBreak` requires the setup to SWEEP a recent extreme and the reaction to close back
+inside it — Zee's own tier-3 "strongest" case, built long ago and never re-tested since the
+geometry corrections. Walk-forward, per trade:
+
+| sweep | Apr–Jun | Jul–Sep |
+|---|---|---|
+| off | 25% WR · $23.66 | 24% WR · $28.21 |
+| 20 bars | 33% · **$45.40** | 31% · **$51.46** |
+| 30 bars | 34% · **$48.76** | 32% · **$54.50** |
+| 50 bars | 38% · **$57.65** | 31% · **$59.39** |
+
+**Win rate and per-trade value both roughly double, in BOTH halves, at EVERY sweep length.**
+That is a plateau, not a spike — the opposite signature to the cap bar, volume floor, close
+location, effort-per-range and quiet retracement, all of which failed this exact test.
+
+It also halves the pain: **worst losing streak 15 → 9**, drawdown $905 → $586.
+
+**But it does not beat the shipped config per unit of risk:**
+
+| config | net | trades | WR | maxDD | streak | **net per $1 DD** |
+|---|---|---|---|---|---|---|
+| **SHIPPED 0.10** | +$8,196 | 318 | 25% | $905 | 15 | **9.06** |
+| fakeBreak30 0.10 | +$3,991 | 78 | 33% | $586 | 9 | 6.81 |
+| fakeBreak30 0.20 | +$7,981 | 78 | 33% | $1,173 | 9 | 6.81 |
+| fakeBreak20 0.20 | +$8,348 | 87 | 32% | $1,173 | 9 | 7.12 |
+
+Sized up to match, it earns slightly less for more drawdown. So it is not a free upgrade —
+it is a genuine CHOICE: **+8 points of win rate and a 9-loss worst streak instead of 15, for
+about half the income.** Given Zee's stated difficulty in bearing loss runs, that trade is
+his to make and it is the first time tonight the option has been real.
