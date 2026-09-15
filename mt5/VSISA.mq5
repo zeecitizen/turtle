@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.11"
+#property version   "1.12"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -51,6 +51,16 @@ input int    InpMagicNumber = 88201;  // InpMagicNumber — VSISA
 // risk is roughly $450 exposed if every one is open and wrong together. Lower it if
 // that is more than the account should carry.
 input int    InpMaxOpen     = 10;     // InpMaxOpen — max concurrent decisions
+// DAILY LOSS LIMIT (Zee, 2026-09-16: "if we use flat 0.2 .. can't we reduce the drawdown
+// from 19%?"). Measured, the drawdown is not caused by concurrency — maxOpen 10, 5 and 3
+// return IDENTICAL results, so the EA rarely holds more than three — nor by a few oversized
+// stops. It is a RUN OF BAD DAYS: the worst drawdown at 0.20 lots is $1,587 spread over
+// five sessions, 22-29 July, with single days of -$635, -$590, -$483 and -$477.
+//
+// A daily limit is the tool aimed at exactly that, and a funded account imposes one anyway
+// (typically 5% = $500 on $10k). Stop opening new trades once the day's realised loss on
+// this magic passes the line; open positions keep their own stops.
+input double InpDayLossStop = 0.00;   // InpDayLossStop — stop opening for the day after this loss (0 = off)
 
 //--- LAW 4: the 2-bar setup ----------------------------------------------------
 // HOW LONG IS THE SETUP? HE COUNTS NOTHING — HE WAITS (2026-09-13).
@@ -1068,7 +1078,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.11 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.12 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
@@ -1256,6 +1266,33 @@ void TestExitCheck() {
    }
 }
 
+//+------------------------------------------------------------------+
+//| Has today's realised loss on this magic passed the line?           |
+//+------------------------------------------------------------------+
+bool DayLossHit() {
+   if (InpDayLossStop <= 0.0) return false;
+   datetime now = TimeCurrent();
+   MqlDateTime dt;
+   TimeToStruct(now, dt);
+   dt.hour = 0; dt.min = 0; dt.sec = 0;
+   datetime d0 = StructToTime(dt);
+   if (!HistorySelect(d0, now + 60)) return false;
+
+   double p = 0.0;
+   int nd = HistoryDealsTotal();
+   for (int i = 0; i < nd; i++) {
+      ulong tk = HistoryDealGetTicket(i);
+      if (tk == 0) continue;
+      if (HistoryDealGetString(tk, DEAL_SYMBOL) != _Symbol) continue;
+      if (HistoryDealGetInteger(tk, DEAL_MAGIC) != InpMagicNumber) continue;
+      if (HistoryDealGetInteger(tk, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;
+      p += HistoryDealGetDouble(tk, DEAL_PROFIT)
+         + HistoryDealGetDouble(tk, DEAL_COMMISSION)
+         + HistoryDealGetDouble(tk, DEAL_SWAP);
+   }
+   return (p <= -InpDayLossStop);
+}
+
 void OnTick() {
    BreakEvenCheck();
 
@@ -1268,6 +1305,7 @@ void OnTick() {
    TestExitCheck();
    RetraceCheck();
 
+   if (DayLossHit()) return;
    if (g_cool > 0) { g_cool--; return; }
    if (!InSession()) return;
    if (OpenDecisions() >= InpMaxOpen) return;

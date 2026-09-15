@@ -471,6 +471,57 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.12 — can the drawdown at 0.20 lots be cut? No. (2026-09-16)
+
+**Who ordered it.** Zee: *"if we use flat 0.2 .. can't we reduce the drawdown from 19% by
+setting a tighter stop? or something else.. check?"*
+
+**What shipped.** `InpDayLossStop` — stop opening new trades once the day's realised loss on
+this magic passes a line, the standard funded-account tool. **Default OFF.**
+
+**Every lever tested at 0.20 lots. Baseline +$16,017, DD $1,901 = 19.0%, ratio 8.43.**
+
+| lever | net | maxDD | % of $10k | net per $1 DD |
+|---|---|---|---|---|
+| **baseline** | +$16,017 | $1,901 | 19.0% | **8.43** |
+| maxOpen 5 | +$16,017 | $1,901 | 19.0% | 8.43 |
+| maxOpen 3 | +$16,017 | $1,901 | 19.0% | 8.43 |
+| maxOpen 2 | +$16,392 | $1,810 | 18.1% | 9.06 |
+| maxOpen 1 | +$13,532 | $1,673 | 16.7% | 8.09 |
+| maxSlPts 600 | +$5,974 | $2,125 | 21.3% | 2.81 |
+| **maxSlPts 450** | +$3,830 | **$721** | **7.2%** | **5.31** |
+| daily stop −$500 | +$16,017 | $1,901 | 19.0% | 8.43 |
+| daily stop −$400 | +$13,980 | $1,856 | 18.6% | 7.53 |
+| daily stop −$250 | +$13,941 | $1,685 | 16.8% | 8.28 |
+
+**Why each one fails:**
+
+- **A tighter stop is not a lever at all.** At a fixed 5R the target moves in with the stop,
+  so everything scales together — arithmetically identical to trading smaller lots, minus the
+  extra stop-outs.
+- **Concurrency is not the cause.** maxOpen 10, 5 and 3 return IDENTICAL numbers: the EA
+  rarely holds more than three positions. maxOpen 2 is the one mild win (ratio 9.06).
+- **The risk cap reaches the target and destroys the edge.** maxSlPts 450 gets to 7.2% but
+  at ratio 5.31 — far worse than simply trading 0.10 lots, which gives 9.5% at ratio 8.43.
+- **The daily stop CANNOT WORK HERE, and the reason is structural.** A −$500 limit returns
+  results byte-identical to OFF even though the worst day is −$635. At a 5R target positions
+  live for days, so most of a day's damage comes from trades opened on PREVIOUS days, and a
+  rule that only blocks new entries cannot touch them.
+
+**THE FINDING: the drawdown is the losing streak, and the streak is the 25% win rate.**
+The worst drawdown is $1,587 over five sessions (22–29 July). 15 consecutive losses at
+~$113 each IS $1,695. Nothing in the trade-selection or risk machinery moves it, because it
+is not a defect — it is what a 25%-win-rate, 4.9:1-payoff system looks like.
+
+Net per $1 of drawdown sits at **8.43 across every lot size and nearly every variant**. That
+constant is the strategy; drawdown is simply lot size times it.
+
+**So the practical answer is capital, not settings.** 0.20 lots needs a **$20k** funded
+account to sit inside a 10% rule (DD $1,901 = 9.5% of $20k). On $10k the ceiling is
+**0.10-0.11 lots**. Defaults unchanged.
+
+---
+
 ## VSISA v1.11 — sizing by reaction spread, and why the "quality signal" was not one (2026-09-16)
 
 **Who ordered it.** Zee: *"yes let's let it do position sizing. test"* — after v1.10 found
