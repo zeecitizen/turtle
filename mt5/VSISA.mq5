@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.06"
+#property version   "1.07"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -146,6 +146,22 @@ input double InpTestVolPct  = 0.90;   // InpTestVolPct — the test bar's volume
 // TEST". The first cut only required the bar not to break the setup extreme, so a bar
 // closing UP could serve as the "test" of a buy — which is not a test of supply at all.
 input bool   InpTestRed     = false;  // InpTestRed — the test bar must close AGAINST the trade
+// THE NO-SUPPLY TEST AS AN ADDED CONFIRMATION, NOT A GATE (Zee, 2026-09-15):
+// "maybe the no-supply test is not working as a gate, but its something that acts as a
+// strong confirmation right? so can we test it as an addition?"
+//
+// He is right that InpConfirmMode was the wrong use of it. That mode DELAYS the entry two
+// bars and so replaces the trade rather than confirming it. But the test cannot filter the
+// entry either, because it happens AFTER it — at entry time the test bar does not exist.
+//
+// What it CAN do is judge a trade already open, which is his law used forwards:
+// "if in case on no supply test it were big volume it would mean sustained buying" — for a
+// BUY, a loud bar closing back down means the supply never left, so the setup has failed
+// and there is no reason to wait for the stop. That is a strictly post-entry decision and
+// it is what this tests.
+input double InpTestExit    = 0.00;   // InpTestExit — close if the TEST bar is louder than this x avg (0 = off)
+input int    InpTestWindow  = 3;      // InpTestWindow — only watch this many bars after entry
+input int    InpTestAvgBars = 20;     // InpTestAvgBars — bars in the volume average the test is judged against
 input bool   InpEngulf      = false;  // InpEngulf — reaction must engulf the last 2-bar setup bar
 
 //--- LAW 8: geometry -------------------------------------------------------
@@ -929,7 +945,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.06 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.07 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
@@ -999,6 +1015,51 @@ void OnDeinit(const int reason) {
                (g_best_quiet > 900 ? -1.0 : g_best_quiet), InpLowVolPct);
 }
 
+double AvgVolN(int n) {
+   double a = 0; int c = 0;
+   for (int k = 1; k <= n; k++) {
+      long v = BarVolume(k);
+      if (v > 0) { a += (double)v; c++; }
+   }
+   return (c > 0) ? a / c : 0.0;
+}
+
+//+------------------------------------------------------------------+
+//| The no-supply test, applied to a trade that is ALREADY OPEN.      |
+//| Runs once per closed bar. Called from the new-bar block.          |
+//+------------------------------------------------------------------+
+void TestExitCheck() {
+   if (InpTestExit <= 0.0) return;
+   double av = AvgVolN(InpTestAvgBars);
+   if (av <= 0) return;
+   long v1 = BarVolume(1);
+   if (v1 <= 0) return;
+   if ((double)v1 < InpTestExit * av) return;      // not a loud test - nothing to say
+
+   datetime now = iTime(_Symbol, PERIOD_CURRENT, 0);
+   int      ps  = (int)PeriodSeconds();
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+
+      long type = PositionGetInteger(POSITION_TYPE);
+      // The test closes AGAINST the trade - that is what makes it a test of supply.
+      bool against = (type == POSITION_TYPE_BUY) ? bDown(1) : bUp(1);
+      if (!against) continue;
+
+      datetime ot = (datetime)PositionGetInteger(POSITION_TIME);
+      if (ps <= 0) continue;
+      int bars = (int)((now - ot) / ps);
+      if (bars < 1 || bars > InpTestWindow) continue;
+
+      if (trade.PositionClose(tk) && InpVerbose)
+         PrintFormat("[VSISA] no-supply test FAILED %d bar(s) in: test vol %I64d >= %.2fx avg %.0f - closing #%I64u",
+                     bars, v1, InpTestExit, av, tk);
+   }
+}
+
 void OnTick() {
    BreakEvenCheck();
 
@@ -1007,6 +1068,8 @@ void OnTick() {
    datetime t = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (t == g_last_bar) return;
    g_last_bar = t;
+
+   TestExitCheck();
 
    if (g_cool > 0) { g_cool--; return; }
    if (!InSession()) return;
