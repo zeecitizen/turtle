@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.05"
+#property version   "1.06"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -141,6 +141,11 @@ input double InpMinVolPct   = 0.00;   // InpMinVolPct — reaction volume >= thi
 input double InpBodyFrac    = 0.35;   // InpBodyFrac — reaction body >= this x its own range
 input int    InpConfirmMode = 0;      // InpConfirmMode — 0 enter on reaction · 1 wait for no-supply TEST + confirm
 input double InpTestVolPct  = 0.90;   // InpTestVolPct — the test bar's volume <= this x the LAW 3 reference
+// DIAGRAM 11 is explicit that the test bar CLOSES AGAINST the trade: "the next bar is
+// again red (after the blue surprisingly) -> this is testing -> WE CALL IT THE NO SUPPLY
+// TEST". The first cut only required the bar not to break the setup extreme, so a bar
+// closing UP could serve as the "test" of a buy — which is not a test of supply at all.
+input bool   InpTestRed     = false;  // InpTestRed — the test bar must close AGAINST the trade
 input bool   InpEngulf      = false;  // InpEngulf — reaction must engulf the last 2-bar setup bar
 
 //--- LAW 8: geometry -------------------------------------------------------
@@ -752,6 +757,10 @@ bool Detect(int side, double &sl_level, string &why) {
       // fired ZERO trades. Every "small volume" the teacher names is small next to the
       // effort that came before it, so the test uses the same reference as LAW 3.
       if ((double)vt > InpTestVolPct * vref) { g_rej_test++; return false; }
+      if (InpTestRed) {
+         bool against = (side > 0) ? bDown(2) : bUp(2);
+         if (!against) { g_rej_test++; return false; }
+      }
       if (side > 0) {
          if (bLow(2) <= ext)  { g_rej_test++; return false; }   // broke the low: not a test
          if (!bUp(1))         { g_rej_test++; return false; }   // no confirming bar
@@ -920,7 +929,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.05 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.06 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",

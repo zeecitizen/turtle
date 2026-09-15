@@ -471,6 +471,52 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.06 — diagrams 10-12: the NO SUPPLY TEST, made faithful and measured (2026-09-15)
+
+**Who ordered it.** Zee: *"i've added an important concept in the diagram 11,12 read and test"*.
+
+**The concept.** Diagram 11 spells out the full sequence, and d12 repeats it:
+increasing red volumes with a very large volume on the last bar -> a bullish bar confirming
+the reds were buying -> *"the next bar is again red (after the blue surprisingly) -> this is
+testing -> WE CALL IT THE NO SUPPLY TEST -> if on testing volume is SMALL WE MUST WAIT FOR
+NEXT BAR BULLISH MEANS SETUP CONFIRMED we take entry -> if in case on no supply test it
+were big volume it would mean sustained buying."*
+
+This is `InpConfirmMode = 1`, which already existed and already matched the sequence —
+EXCEPT for one gap. The old code only required the test bar not to break the setup extreme,
+so a bar closing UP could serve as the "test" of a buy, which is not a test of supply at
+all. **`InpTestRed` added** (default false) to require the test bar to close AGAINST the
+trade, as he draws it.
+
+**The fidelity fix genuinely helps — and the rule still fails.** Apr 1 -> Sep 15, 5.0R:
+
+| config | trades | WR | net | $/trade |
+|---|---|---|---|---|
+| **baseline, no test** | **322** | **25%** | **+$8,010** | **+$24.88** |
+| test, any direction, vol<=0.90 | 51 | 20% | +$106 | +$2.07 |
+| **test, RED bar (faithful), vol<=0.90** | 30 | 23% | +$559 | +$18.63 |
+| test, RED bar, vol<=0.70 | 12 | 17% | +$57 | +$4.72 |
+| test, RED bar, vol<=1.10 | 40 | 18% | −$66 | −$1.65 |
+
+Requiring the red bar multiplies the net five-fold ($106 -> $559), so the gap was real. But
+the test as a MANDATORY gate removes **91% of all trades** (322 -> 30) and returns $559
+against $8,010.
+
+**And it is not a quality filter either — that is the decisive test.** A confirmation tier
+should earn MORE PER TRADE than the base setup. It earns **$18.63 against the base's
+$24.88**, on a lower win rate (23% vs 25%). So the no-supply test does not identify better
+setups; it identifies fewer of the same ones, two bars later and with a wider stop — because
+entry moves to the confirming bar while the stop stays under the reaction candle.
+
+**Diagram 10 and the rest of 11 were already covered.** d10's *"when going up the market has
+lower volumes ... lower than the reds previously"* IS Law 3, the live trigger. d11's *"small
+candle with high volume is a very powerful signal"* is the cap bar, tested and negative in
+v1.03, and again as effort-per-range in v1.04.
+
+**Default unchanged: `InpConfirmMode = 0`.** The shipped 1:5 config is untouched.
+
+---
+
 ## VSISA v1.05 — SHIPPED: the target runs to 1:5 (2026-09-15)
 
 **Who ordered it.** Zee: *"SL should not be tied to TP. SL can be below the first reaction
