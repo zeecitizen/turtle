@@ -471,6 +471,51 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.17 — SHIPPED: the ratchet ON at 2.0R, and 0.28 lots (2026-09-16)
+
+**Who ordered it.** Zee: *"ok let's go for: ratchet 2.0/1.0, 0.28 lots +$7,918 51% 7 $1,232"*.
+
+**What changed.** `InpRatchetStart` 0 -> **2.00**, `InpRatchetStep` **1.00**, `InpLots`
+0.15 -> **0.28**. No logic touched — the ratchet itself shipped (off) in v1.16.
+
+**Ship verification.** Compiled v1.17, Jan 1 -> Sep 16, Axi real ticks M5:
+**94 trades · 48 wins (51%) · NET +$7,918.12 · maxDD $1,232 · worst streak 7** — every
+figure matching the pre-ship measurement exactly.
+
+**Against what it replaces:**
+
+| | v1.15 (no ratchet, 0.15) | **v1.17 (ratchet 2.0, 0.28)** |
+|---|---|---|
+| net, Jan–Sep | +$5,571 | **+$7,918** |
+| win rate | 30% | **51%** |
+| worst losing streak | 13 | **7** |
+| max drawdown | $1,232 | $1,232 |
+
+Same risk, +42% money, +21 points of win rate, half the streak.
+
+**THE TWO CHANGES ARE ONE CHANGE AND MUST NOT BE SEPARATED.** The ratchet cut drawdown from
+$1,232 to $660 at 0.15 lots; the lot rise spends exactly that headroom back. Turning the
+ratchet OFF while leaving 0.28 lots would roughly DOUBLE drawdown to ~$2,300. This is
+written into the source beside both defaults.
+
+**THE FUNDED-ACCOUNT WARNING, unchanged and now inherited.** $1,232 is **12.3% of $10,000**
+and would breach a 10% rule. Zee chose it knowing that — it is the drawdown he was already
+carrying at v1.15. For a 10% limit the size is **~0.22 lots** (about $968).
+
+**The caveat from v1.16 still stands.** Walk-forward, the win-rate and streak gains hold in
+BOTH halves (27%→42% and 31%→56%; streak 13→7 and 9→4), but risk-adjusted return is 0.99
+against 1.14 in the first half and 8.17 against 4.73 in the second. Strongly better in one
+half, marginally worse in the other.
+
+**Current shipped configuration (v1.17):**
+`M5 · InpLots 0.28 · InpMaxOpen 2 · InpTargetR 5.0 · InpStopRef 0 · InpSlBufPts 120 ·
+InpMinSlPts 60 · InpMaxSlPts 900 · InpBreakEvenR 0 · InpRatchetStart 2.0 / Step 1.0 ·
+InpLowVolPct 1.00 · InpWickMode 2 · InpFakeBreak TRUE / InpSweepLook 30 · InpTrendTF 0`
+
+**ZEE MUST REATTACH.** Banner must read `v1.17` and `0.28 lots x1`.
+
+---
+
 ## VSISA v1.16 — THE RATCHET. Zee's ladder, and it beats the shipped build (2026-09-16)
 
 **Who ordered it.** Zee, after seeing the 11 Sep trade peak at 4.77R and still lose:
