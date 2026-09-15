@@ -471,6 +471,53 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.02 — the target decoupled from the stop (2026-09-15)
+
+**Who ordered it.** Zee: *"yes try decoupling them to check what's the best config"* —
+after the 14 Sep 04:10 loss showed that widening the stop cannot rescue a trade while
+the target is a multiple of it, because the target retreats as fast as the stop widens.
+
+**What changed in code.** `InpTargetMode`: 0 = R multiple (the coupled original, still
+the DEFAULT), 1 = a fixed distance `InpTargetPts`, 2 = the swing origin — the level the
+leg came from, read off the pivot `SwingLen()` already finds. Guards `InpTgtMinR` /
+`InpTgtMaxR` refuse a target on the wrong side of entry or too close to pay the spread.
+Mode 0 regression-checked: identical 170 trades, +$3,621.05 Apr–Jun, unchanged.
+
+**The receipts.** Axi real ticks, M5, model 4, buffer 120 throughout:
+
+| config | Apr–Jun (tuned) | WR | maxDD | Jul–Sep (unseen) | WR | maxDD | total |
+|---|---|---|---|---|---|---|---|
+| **mode 0, 2R — shipped** | +$3,621 | 46% | $460 | +$1,741 | 39% | $910 | +$5,362 |
+| mode 1, 2400 pts | +$3,949 | 27% | $765 | **+$3,309** | 26% | $906 | +$7,257 |
+| mode 1, 3900 pts | +$4,117 | 18% | $1,449 | **+$5,947** | 21% | $862 | +$10,063 |
+| mode 1, 4500 pts | +$4,885 | 17% | $1,847 | +$5,784 | 18% | $865 | +$10,669 |
+
+Decoupling is a REAL out-of-sample gain, not a tune: every fixed-target row beats the
+shipped config on the half it was never fitted to. Exits were audited — all 152 trades
+in the 3900 run closed as tp (32) or sl (120), none marked out at test end.
+
+**Mode 2 (swing origin) LOST**: best +$2,949 Apr–Jun against mode 0's +$3,621, and its
+optimum sat on the `InpTgtMaxR=3.0` bound — it only works by being capped back into R
+terms, which is the coupling it was meant to escape. Not recommended.
+
+**The far targets turn over** past ~9,000 points and drawdown explodes (6.93% at 12,000,
+10.28% at 15,000), so 3900–4500 is a real interior band, not a runaway.
+
+**The stop stays at 120.** Buffer 400 with a near target — the exact pair that would have
+saved his 14 Sep trade — makes +$3,978 on the tuned half and **−$1,056** on the unseen
+one. Every version of "widen the stop" has now failed out-of-sample three times.
+
+**His named trade is still a loss** under every config above: it was stopped at 04:15
+before any target mattered, and only a 361pt+ buffer changes that.
+
+**DEFAULT UNCHANGED at mode 0.** This trades win rate (46% → 27%) for money, which runs
+against the standing win-rate goal, so it is Zee's call and not a silent flip.
+
+**Receipts:** grids `tgt_fixed`, `tgt_swing`, `wide` in `monitor/strategy_lab/axi_sweep.py`
+· reports `AXI_bt_1940*`–`1943*`.
+
+---
+
 ## VSISA v1.01 — the reaction-volume floor, built and left OFF (2026-09-15)
 
 **Who ordered it.** Zee: *"i think the reaction candle's volume as compared to the --

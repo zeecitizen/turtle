@@ -288,6 +288,20 @@ GRIDS = {
         "InpSlBufPts=120||120||40||400||Y",
         "InpMaxSlPts=900||900||600||1500||Y",
     ],
+    # TARGET DECOUPLED FROM STOP (Zee, 2026-09-15: "yes try decoupling them to check
+    # what's the best config"). Mode 1 = a fixed distance; mode 2 = the swing origin,
+    # the level the leg came from. Buffer is swept WITH them because the whole point is
+    # that a wider stop no longer drags the target along.
+    "tgt_fixed": ["InpVolWindow=1", "InpSetupAuto=true", "InpStrictDir=true", "InpRisingVol=false", "InpStopRef=0", "InpTrendTF=0", "InpMaxOpen=10", "InpCoolBars=0", "InpQuietRef=0", "InpBigMode=1", "InpVolLookback=200", "InpOandaVolume=0", "InpConfirmMode=0", "InpAnomaly=false", "InpFakeBreak=false", "InpEngulf=false", "InpMinVolPct=0.00", "InpSetupMin=2", "InpSetupMax=10", "InpSwingPivot=3", "InpSwingMin=10", "InpBigPct=0.80", "InpBigAvg=1.20", "InpBodyFrac=0.35", "InpMinSlPts=60", "InpMaxSlPts=900", "InpBreakEvenR=0", "InpWickMode=2", "InpLowVolPct=1.00", "InpTargetMode=1", "InpTgtMaxR=0",
+        "InpTargetPts=4500||4500||1500||15000||Y",
+        "InpSlBufPts=120",
+        "InpTgtMinR=0.50",
+    ],
+    "tgt_swing": ["InpVolWindow=1", "InpSetupAuto=true", "InpStrictDir=true", "InpRisingVol=false", "InpStopRef=0", "InpTrendTF=0", "InpMaxOpen=10", "InpCoolBars=0", "InpQuietRef=0", "InpBigMode=1", "InpVolLookback=200", "InpOandaVolume=0", "InpConfirmMode=0", "InpAnomaly=false", "InpFakeBreak=false", "InpEngulf=false", "InpMinVolPct=0.00", "InpSetupMin=2", "InpSetupMax=10", "InpSwingPivot=3", "InpSwingMin=10", "InpBigPct=0.80", "InpBigAvg=1.20", "InpBodyFrac=0.35", "InpMinSlPts=60", "InpMaxSlPts=900", "InpBreakEvenR=0", "InpWickMode=2", "InpLowVolPct=1.00", "InpTargetMode=2",
+        "InpTgtMinR=0.50||0.25||0.25||1.25||Y",
+        "InpTgtMaxR=0.00||0.00||1.50||3.00||Y",
+        "InpSlBufPts=120||120||90||300||Y",
+    ],
     # M1. On a 1-minute chart the reaction candle is tiny, so the stop taken from it is
     # tiny too and InpMinSlPts stops being a safety floor and becomes THE stop on most
     # trades — the structure gets overwritten by a constant. Commission also bites far
