@@ -54,7 +54,10 @@ BARS_DIR = ROOT / "monitor" / "_vsisa_bars"
 # lookback and the stop under the whole setup. All three are wrong now, so it
 # was drawing setups the EA would no longer take. Both sources below are Axi
 # and both are the current logic.
-REPORT = ROOT / "mt5" / "_tester_runs" / "axi" / "AXI_bt_044939.htm"
+# v1.15 AS SHIPPED, Jan 1 -> Sep 16 2026, Axi real ticks, 0.15 lots. Every card below is
+# a trade this exact build took - the fake break is ON, so these are only the setups that
+# swept a recent extreme and closed back inside it.
+REPORT = ROOT / "mt5" / "_tester_runs" / "axi" / "AXI_bt_041215.htm"
 LIVE_LOG_DIR = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal"
                     r"\6FBEE76C719DC78AB2AE839B5A0C7442\MQL5\Logs")
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
@@ -614,31 +617,46 @@ LAWS = [
      "Built (InpTrendTF) and currently OFF at Zee's request. Worth recording what it "
      "cost when it was measured: with it ON the EA made the same money on HALF the "
      "trades and seven more points of win rate."),
-    (10, "Never chase — trade the retracement", "NOT IMPLEMENTED",
-     "Never chase the market. Always catch the market on a retracement.",
-     "No retracement concept exists in the EA. Still outstanding."),
+    (10, "Never chase — trade the retracement", "BUILT 2026-09-16, OFF",
+     "if we miss such a breakout on low volume, then we wait for a retracement to the same "
+     "low .. that retracement low when it touches the low line of the missed setup is also "
+     "a valid setup .. sometimes it can touch several times",
+     "Built at last (InpRetrace). The price-only version is REFUTED on a clean 409-trade "
+     "sample: −$9.46 a trade against the base setup's +$13.35. Requiring the retest to "
+     "arrive QUIET flips the sign, but its best value is an isolated spike with worse "
+     "results either side, so it ships OFF."),
     (12, "Falling volume on a fall is NOT automatically bullish", "STRUCTURAL",
      "Rising prices rising volume, falling prices falling volume is bullish — this is "
      "wrong. This is incomplete.",
      "Encoded by making the engine SETUP-FIRST: quiet volume only means anything "
      "straight after effort. The EA never scans for low volume on its own."),
-    (0, "The BASE CASE — effort against result", "NOT IMPLEMENTED",
+    (0, "The BASE CASE — effort against result", "TESTED, NOT PROVEN",
      "if the candle is getting smaller it means that supply is getting hit more.. and "
      "price is getting capped",
-     "His Example A: volume RISING while the candle SHRINKS means supply is capping the "
-     "move. Nothing in the EA measures volume against distance travelled. This is the "
-     "rule that would have refused the -$89.50 trade on 09 Sep, where effort per dollar "
-     "tripled (8.85 -> 2.67 per 1000 ticks) before the reversal."),
-    (0, "Tiers 2 and 3 — support, and the fake break", "NOT IMPLEMENTED / REJECTED",
-     "case 2. 2 bar setup + low volume candle + support (stronger) — case 3. + fake "
-     "break of this support .. (strongest)",
-     "Tier 2 was never built. Tier 3 (InpFakeBreak) was built and tested OFF on the OLD "
-     "implementation; that verdict predates the stop and swing corrections and should be "
-     "re-tested before being trusted."),
+     "Diagram 9 states it exactly — two candles of THE SAME SPREAD, and the one with more "
+     "volume is where supply was hit. That is volume-per-range, and it is now built twice "
+     "(InpCapVol, InpEffortMin). Both are OFF: the strict setting reaches 67% on 15 trades "
+     "and decays to the 43% baseline as soon as the sample grows."),
+    (13, "THE FAKE BREAK — his tier-3 case, now LIVE", "SHIPPED 2026-09-16",
+     "case 3. 2 bar setup + fake break of this support + forms a wick + closing again "
+     "inside support .. (strongest)",
+     "The setup must SWEEP a recent extreme and the reaction must close back INSIDE it. "
+     "Built early, tested OFF on the old broken build, and only re-examined after the "
+     "geometry was fixed. It is the best filter on this project: win rate 25% → 33% and "
+     "the worst losing streak 15 → 9, holding in BOTH walk-forward halves at EVERY sweep "
+     "length. It costs 75% of the trades to get it."),
+    (8.7, "THE TARGET IS 1:5, AND IT IS NOT TIED TO THE STOP", "SHIPPED 2026-09-15",
+     "SL should not be tied to TP. SL can be below the first reaction candle's low .. and "
+     "TP can be very high up until 1:7",
+     "Zee was right and my 2.0R was a LOCAL peak — the curve dips at 2.5R and climbs to a "
+     "second, higher one. 5.0R earns +48% more than 2.0R for IDENTICAL drawdown, and the "
+     "two walk-forward halves land within 1% of each other. The stop never moved: it is "
+     "still 120 points under the reaction candle."),
 ]
 
 VERDICT_CLASS = {
-    "CONFIRMED": "ok", "CONFIRMED — now ON": "ok",
+    "CONFIRMED": "ok", "SHIPPED 2026-09-16": "ok", "SHIPPED 2026-09-15": "ok",
+    "BUILT 2026-09-16, OFF": "warn", "TESTED, NOT PROVEN": "warn", "CONFIRMED — now ON": "ok",
     "CONFIRMED — his ruling": "ok",
     "CORRECTED 2026-09-12": "ok", "CORRECTED 2026-09-13": "ok",
     "CORRECTED 2026-09-14": "ok", "ADDED — earns its place": "ok",
