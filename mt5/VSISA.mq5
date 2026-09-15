@@ -30,14 +30,28 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.14"
+#property version   "1.15"
 #property strict
 
 #include <Trade/Trade.mqh>
 CTrade trade;
 
 //--- money -----------------------------------------------------------------
-input double InpLots        = 0.10;   // InpLots — lot size per ticket
+// 0.15 LOTS - SHIPPED 2026-09-16 on Zee's call ("ok 0.15 lot adjustment"), and it is
+// spending the headroom LAW 13 just created, not adding new risk on top of the old.
+//
+// v1.14 turned on the fake break, which cut drawdown from $905 to $586 - 5.9% of the $10k
+// funded account he is heading for - while halving the income to $3,998. Raising the lot
+// takes some of that income back inside the same 10% breach line:
+//        0.10 lots   net $3,999   DD $586    5.9%
+//        0.15 lots   net $5,999   DD $879    8.8%   <- HERE
+//        0.20 lots   net $7,998   DD $1,172 11.7%   breaches
+//
+// THE HARD CEILING IS 0.17 LOTS on $10k. Drawdown scales linearly with size and nothing
+// in the risk machinery changes it - that was settled in v1.12, where a tighter stop, a
+// concurrency cap, a risk cap and a daily loss limit were all tested and none moved it.
+// The 9-loss worst streak is unchanged; at 0.15 lots that run costs about $780.
+input double InpLots        = 0.15;   // InpLots — lot size per ticket
 input int    InpTickets     = 1;      // InpTickets — tickets per decision (basket)
 input int    InpMagicNumber = 88201;  // InpMagicNumber — VSISA
 // MAX OPEN / COOLDOWN LIFTED (2026-09-12). Zee: "remove the InpMaxOpen = 1 and
@@ -1112,7 +1126,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.14 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.15 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
