@@ -214,3 +214,58 @@ throughout). Only the winners run: avg win +$279.62 against 2.0R's +$114.99, pay
 $8,010) and leaves win rate at 24%. Its win-rate benefit was specific to 2.0R.
 
 Receipts: `AXI_bt_2231*`–`2235*`, Axi XAUUSD.pro M5 model 4, stop 120 structural throughout.
+
+---
+
+## Timeframes re-tested at 1:5 — M5 is not a preference, it is the whole edge (2026-09-16)
+
+Zee: *"i want you to check how our EA would perform on the 1 min, 2 min, 3min, 10 min, 15
+min scales.. maybe we can take more trades there? or a better winrate?"*
+
+**The first pass was rigged and I re-ran it.** `InpSlBufPts=120` is an ABSOLUTE distance
+tuned on M5 — on M1 that is enormous next to the candle, on M15 it is tiny. So the stop
+floor and cap were scaled by sqrt(timeframe) for a fair comparison (M1 40/25/400 …
+M15 200/105/1560). Axi real ticks, Apr 1 → Sep 15, 0.10 lots, everything else shipped.
+
+| timeframe | net | trades | WR | maxDD | net per $1 DD |
+|---|---|---|---|---|---|
+| M1 buf 40 | −$2,047 | 1,192 | 16% | $2,890 | −0.71 |
+| M1 buf 60 | −$1,520 | 1,161 | 16% | $2,580 | −0.59 |
+| M2 buf 60 | −$705 | 641 | 17% | $1,845 | −0.38 |
+| M2 buf 120 (unscaled) | +$3,482 | 738 | 18% | $2,030 | 1.72 |
+| M3 buf 90 | −$2,364 | 476 | 15% | $3,117 | −0.76 |
+| **M5 buf 120 — SHIPPED** | **+$8,008** | **322** | **25%** | **$950** | **8.43** |
+| M10 buf 170 | +$3,559 | 200 | 20% | $1,833 | 1.94 |
+| M10 buf 240 | +$1,672 | 188 | 18% | $3,203 | 0.52 |
+| M15 buf 200 | −$2,460 | 172 | 15% | $3,986 | −0.62 |
+| M15 buf 300 | −$4,777 | 160 | 12% | $5,545 | −0.86 |
+
+**Both of his hopes are answered, and one of them backwards.** More trades: yes, abundantly —
+M1 takes 1,192 against M5's 322. Better win rate: **no, the opposite.** M5 is 25% and every
+other timeframe lands between 12% and 20%. Scaling the stop did not move that; the win rate
+is a property of the timeframe, not of the geometry.
+
+M5's nearest rival is M10 at ratio 1.94, against M5's 8.43 — a **4.3x** gap, not a margin.
+Both immediate neighbours, M3 and M10, are far worse, so this is not a plateau M5 happens to
+sit on top of.
+
+**Is it overfitting?** The parameters were tuned on M5, which is the obvious worry — but the
+stop was RE-tuned per timeframe here and the gap survived. And M5's two walk-forward halves
+are +$4,004 and +$4,004, as stable as anything measured on this project. The most likely
+reading is that 5-minute bars match the rhythm of the absorption-then-test pattern on gold:
+faster and the reaction candle is noise, slower and the imbalance has already resolved inside
+the bar.
+
+**Treat M5 as part of the strategy, not a setting.** Nothing changed; the EA stays on M5.
+
+### maxOpen=2, walk-forwarded on the same day
+
+| | Apr–Jun | Jul–Sep |
+|---|---|---|
+| maxOpen=10 | +$4,004 · DD $898 | +$4,004 · DD $950 |
+| maxOpen=2 | +$4,004 · DD $898 (**never binds**) | +$4,192 · DD $905 |
+
+It is identical in the first half — the cap never engages — and +$188 with $45 less drawdown
+in the second, from removing 4 trades. The PROFIT evidence is thin and one-sided. The RISK
+case is not: it bounds concurrent exposure at roughly $90 instead of a possible $450, at no
+measured cost in either half. Worth shipping on safety grounds, not on the $188.
