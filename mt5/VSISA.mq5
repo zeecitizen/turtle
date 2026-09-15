@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.09"
+#property version   "1.10"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -67,6 +67,18 @@ input bool   InpSetupAuto   = true;   // InpSetupAuto — count the run until th
 input int    InpSetupMin    = 2;      // InpSetupMin — at least this many bars in the run
 input int    InpSetupMax    = 10;     // InpSetupMax — stop counting back at this many
 input int    InpSetupBars   = 2;      // InpSetupBars — fixed length, used only when auto is off
+// THE BACKGROUND CAMPAIGN NEED NOT BE CONSECUTIVE (Zee, 2026-09-16):
+// "the initial bullish/bearish candles need not be all consecutive to form the background
+// campaign (yes we call it that).. several bullish candles with a single red candle in
+// between them for example breaking the consecutive nature, again followed by a larger
+// spread low volume engulfing reaction candle .. can be an entry"
+//
+// The run-counter broke at the FIRST bar closing the wrong way, so one contrary candle
+// inside a campaign voided the whole thing — and the same rule then re-checked every bar
+// and refused the setup outright. A campaign is an accumulation of effort over a stretch
+// of bars, not an unbroken ribbon of one colour. This is the budget for odd bars inside
+// it; the bar touching the reaction must still be ours, and the run may not end on one.
+input int    InpSetupGaps   = 0;      // InpSetupGaps — contrary bars tolerated inside the campaign
 // "the THIRD red candle with EVEN HIGHER VOLUME than previous two means: people are
 // buying even more". Read literally that is "the bar nearest the turn is the loudest of
 // the run" — which is what this requires. Not strict monotonicity: that would be a
@@ -139,7 +151,16 @@ input int    InpQuietRef    = 0;      // InpQuietRef — 0 quiet vs the SETUP ·
 input double InpLowVolPct   = 1.00;   // InpLowVolPct — reaction volume <= this x the reference
 input double InpMinVolPct   = 0.00;   // InpMinVolPct — reaction volume >= this x the reference (0 = no floor)
 input double InpBodyFrac    = 0.35;   // InpBodyFrac — reaction body >= this x its own range
-input int    InpConfirmMode = 0;      // InpConfirmMode — 0 enter on reaction · 1 wait for no-supply TEST + confirm
+// "a LARGER SPREAD low volume engulfing reaction candle" — the reaction that ends a gapped
+// campaign is described as a big one, not merely a bar that closed the other way.
+input double InpReactSpread = 0.00;   // InpReactSpread — reaction range >= this x avg range (0 = off)
+// MODE 2 (Zee, 2026-09-16): "what if the no-supply is itself a reaction candle?"
+// He is right, and it answers my objection that the test cannot filter the entry. Mode 1
+// waits for a CONFIRMING bar after the test, which costs two bars of drift and was measured
+// at $18.63 a trade against the base setup's $24.88. If the quiet test bar is itself the
+// reaction — a low-volume bar closing against the move — then it IS the entry bar, and the
+// trade is taken at its close, at a better price, with no bar wasted waiting.
+input int    InpConfirmMode = 0;      // InpConfirmMode — 0 enter on reaction · 1 TEST + confirm bar · 2 enter ON the test
 input double InpTestVolPct  = 0.90;   // InpTestVolPct — the test bar's volume <= this x the LAW 3 reference
 // DIAGRAM 11 is explicit that the test bar CLOSES AGAINST the trade: "the next bar is
 // again red (after the blue surprisingly) -> this is testing -> WE CALL IT THE NO SUPPLY
@@ -607,14 +628,22 @@ bool Detect(int side, double &sl_level, string &why) {
    // reds". So walk back from the bar before the reaction while the bars keep closing
    // the setup's way, and let THAT be the setup. Direction is mandatory here — a run
    // "until the reds stop" has no meaning if the bars need not be red.
-   int rr = (InpConfirmMode == 1) ? 3 : 1;
+   int rr = (InpConfirmMode == 1) ? 3 : ((InpConfirmMode == 2) ? 2 : 1);
    if (InpSetupAuto) {
-      int run = 0;
+      int run = 0, gaps = 0, lastOurs = 0;
       for (int k = rr + 1; k <= rr + MathMax(InpSetupMin, InpSetupMax); k++) {
          bool ours = (side > 0) ? bDown(k) : bUp(k);
-         if (!ours) break;
+         if (!ours) {
+            // The bar touching the reaction must be ours, and the budget is finite.
+            if (k == rr + 1 || gaps >= InpSetupGaps) break;
+            gaps++;
+            run++;
+            continue;
+         }
          run++;
+         lastOurs = run;                 // never let the campaign END on a contrary bar
       }
+      run = lastOurs;
       if (run < MathMax(2, InpSetupMin)) { g_rej_dir++; return false; }
       nb = run;
    }
@@ -626,7 +655,7 @@ bool Detect(int side, double &sl_level, string &why) {
    // a NO SUPPLY TEST... if the test has small volume you should wait for the next bar
    // to be bullish, then the setup is confirmed." That costs two bars, so the reaction
    // sits at bar 3 with the test at bar 2 and the confirming bar at bar 1.
-   int r = (InpConfirmMode == 1) ? 3 : 1;      // index of the REACTION bar
+   int r = (InpConfirmMode == 1) ? 3 : ((InpConfirmMode == 2) ? 2 : 1);  // the REACTION bar
    int c0 = r + 1;                              // index of the newest 2-BAR SETUP bar
    int need = c0 + nb + InpVolLookback + 2;
    if (Bars(_Symbol, PERIOD_CURRENT) < need + InpVolLookback) return false;
@@ -642,11 +671,16 @@ bool Detect(int side, double &sl_level, string &why) {
    long vsum = 0, vmin_setup = 0;
    double worst_loud = 1.0, best_loud_bar = 0.0;
    double ext = (side > 0) ? bLow(c0) : bHigh(c0);
+   int dirGaps = 0;
    for (int q = 0; q < nb; q++) {
       int k = c0 + q;
       if (InpStrictDir || InpSetupAuto) {
-         if (side > 0 && !bDown(k)) { g_rej_dir++; return false; }
-         if (side < 0 && !bUp(k))   { g_rej_dir++; return false; }
+         bool ours = (side > 0) ? bDown(k) : bUp(k);
+         if (!ours) {
+            // Spend the same gap budget the run-counter used, instead of refusing outright.
+            if (dirGaps >= InpSetupGaps) { g_rej_dir++; return false; }
+            dirGaps++;
+         }
       }
       long v = BarVolume(k);
       if (v <= 0) return false;
@@ -730,6 +764,12 @@ bool Detect(int side, double &sl_level, string &why) {
    if (rng1 <= 0) return false;
    if (bBody(r) < InpBodyFrac * rng1) { g_rej_body++; return false; }
 
+   // "a LARGER SPREAD low volume engulfing reaction candle"
+   if (InpReactSpread > 0.0) {
+      if (ravg <= 0) return false;
+      if (rng1 < InpReactSpread * ravg) { g_rej_body++; return false; }
+   }
+
    // WHERE the close sits, not just how big the body is.
    if (InpCloseLoc > 0.0) {
       double loc = (side > 0) ? (bClose(r) - bLow(r)) / rng1
@@ -794,8 +834,9 @@ bool Detect(int side, double &sl_level, string &why) {
    // than the reaction's, and (c) FAIL to take out the setup extreme — a test that
    // breaks the low is not a test, it is the setup being wrong. Then the bar after it
    // has to close our way, which is the actual entry bar.
-   if (InpConfirmMode == 1) {
-      long vt = BarVolume(2);
+   if (InpConfirmMode == 1 || InpConfirmMode == 2) {
+      int tb = (InpConfirmMode == 1) ? 2 : 1;      // the TEST bar
+      long vt = BarVolume(tb);
       if (vt <= 0) { g_rej_test++; return false; }
       // MEASURED AGAINST THE CLIMAX, NOT AGAINST THE REACTION. The first cut of this
       // compared the test bar to the reaction bar — but LAW 3 has already forced the
@@ -805,17 +846,23 @@ bool Detect(int side, double &sl_level, string &why) {
       // effort that came before it, so the test uses the same reference as LAW 3.
       if ((double)vt > InpTestVolPct * vref) { g_rej_test++; return false; }
       if (InpTestRed) {
-         bool against = (side > 0) ? bDown(2) : bUp(2);
+         bool against = (side > 0) ? bDown(tb) : bUp(tb);
          if (!against) { g_rej_test++; return false; }
       }
-      if (side > 0) {
-         if (bLow(2) <= ext)  { g_rej_test++; return false; }   // broke the low: not a test
-         if (!bUp(1))         { g_rej_test++; return false; }   // no confirming bar
-         if (bClose(1) <= bClose(2)) { g_rej_test++; return false; }
-      } else {
-         if (bHigh(2) >= ext) { g_rej_test++; return false; }
-         if (!bDown(1))       { g_rej_test++; return false; }
-         if (bClose(1) >= bClose(2)) { g_rej_test++; return false; }
+      // A test that BREAKS the setup extreme is not a test, it is the setup being wrong.
+      if (side > 0) { if (bLow(tb)  <= ext) { g_rej_test++; return false; } }
+      else          { if (bHigh(tb) >= ext) { g_rej_test++; return false; } }
+
+      // Mode 1 alone waits for the bar AFTER the test to close our way. Mode 2 treats the
+      // test as the reaction itself and enters on it, so there is nothing further to wait for.
+      if (InpConfirmMode == 1) {
+         if (side > 0) {
+            if (!bUp(1))                { g_rej_test++; return false; }
+            if (bClose(1) <= bClose(2)) { g_rej_test++; return false; }
+         } else {
+            if (!bDown(1))              { g_rej_test++; return false; }
+            if (bClose(1) >= bClose(2)) { g_rej_test++; return false; }
+         }
       }
    }
 
@@ -831,10 +878,11 @@ bool Detect(int side, double &sl_level, string &why) {
    else
       sref = (side > 0) ? MathMin(ext, bLow(r))        // the old, wider behaviour
                         : MathMax(ext, bHigh(r));
-   if (InpConfirmMode == 1) {
-      // the test and the confirming bar happened after the reaction; the stop has to
-      // sit outside everything the setup has already defended, not just the reaction
-      for (int k = 1; k <= 2; k++) {
+   if (InpConfirmMode == 1 || InpConfirmMode == 2) {
+      // whatever happened after the reaction, the stop has to sit outside everything the
+      // setup has already defended - mode 1 has test+confirm, mode 2 has the test alone
+      int deep = (InpConfirmMode == 1) ? 2 : 1;
+      for (int k = 1; k <= deep; k++) {
          if (side > 0) sref = MathMin(sref, bLow(k));
          else          sref = MathMax(sref, bHigh(k));
       }
@@ -984,7 +1032,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.09 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.10 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",

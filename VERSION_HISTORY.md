@@ -471,6 +471,67 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.10 — the gapped campaign, the wide reaction, and entering ON the test (2026-09-16)
+
+**Who ordered it.** Two ideas from Zee, 2026-09-16.
+
+**(1) "what if the no-supply is itself a reaction candle?"** — a fair answer to my objection
+that the test cannot filter the entry. `InpConfirmMode = 2` added: the quiet test bar IS the
+reaction, so the trade is taken at ITS close, no confirming bar, no two bars of drift.
+
+**(2) "the initial bullish/bearish candles need not be all consecutive to form the background
+campaign (yes we call it that).. several bullish candles with a single red candle in between
+them .. again followed by a larger spread low volume engulfing reaction candle"** —
+`InpSetupGaps` (contrary bars tolerated inside the campaign; the bar touching the reaction
+must still be ours and the run may not END on one) and `InpReactSpread` (reaction range >= x
+the average). **All default OFF; regression at gaps=0/mode 0 reproduces 79W/243L, $8,010.00
+exactly.**
+
+**Results, 1:5 geometry, Apr 1 -> Sep 15. Shipped = 322 trades, 25% WR, +$8,010, $24.88/trade.**
+
+| idea | trades | WR | net | $/trade |
+|---|---|---|---|---|
+| **(1) mode 2, test vol <=0.70** | 20 | 30% | +$491 | $24.53 |
+| (1) mode 2, test vol <=1.10 | 97 | 20% | +$1,041 | $10.73 |
+| **(2a) gaps=1** | 406 | 21% | +$6,304 | $15.53 |
+| (2a) gaps=2 | 407 | 21% | +$5,270 | $12.95 |
+| (2a) gaps=3 | 411 | 23% | +$7,204 | $17.53 |
+| gaps=1 + spread 1.20x | 191 | 21% | +$3,526 | $18.46 |
+| gaps=1 + spread 1.20x + engulf | 95 | 20% | +$1,236 | $13.01 |
+
+**(1) and (2a) both fail.** Mode 2 is at best neutral per trade (and on 20 trades); the gapped
+campaign is negative at every setting, with or without the wide reaction and the engulfing
+requirement. Letting contrary bars into the campaign admits setups that are worth LESS per
+trade than the consecutive ones, which is the opposite of the intent.
+
+**(2b) THE WIDE REACTION IS THE FIRST REAL QUALITY SIGNAL OF THE SESSION.** Alone, with no
+gaps, $/trade rises MONOTONICALLY with the reaction's spread — no spike anywhere:
+
+| spread >= | trades | WR | $/trade |
+|---|---|---|---|
+| off | 322 | 25% | $24.88 |
+| 1.00x | 214 | 24% | $24.77 |
+| 1.20x | 154 | 25% | $28.33 |
+| 1.40x | 103 | 25% | $36.23 |
+| 1.60x | 62 | 26% | $37.50 |
+| 1.80x | 39 | 28% | $45.83 |
+
+**Walk-forward tempers it but does not kill it.** Per trade, Apr–Jun / Jul–Sep:
+off $23.66 / $26.24 · **1.20x $26.12 / $30.61 (better in BOTH)** · 1.40x $50.92 / $22.90
+(the monotonic slope above is partly Apr–Jun's 1.40x spike, which does NOT replicate) ·
+1.60x $43.16 / $33.41 (better in both, on 26 and 36 trades).
+
+So **spread >= 1.20x is a small, consistent grading: +10% and +17% per trade in the two
+halves.** It is NOT shippable as a gate — it halves the trade count and takes net from
+$8,010 to $4,363. Its honest use is POSITION SIZING, not filtering: the wide-reaction setups
+are worth more per trade, consistently, in both halves. That is the first thing found all
+session that grades setups rather than just thinning them, and it came from a clause Zee
+wrote in passing.
+
+**Defaults unchanged. The shipped 1:5 config is untouched.**
+
+---
+
 ## VSISA v1.08/1.09 — LAW 10, the retracement re-entry, finally built (2026-09-16)
 
 **Who ordered it.** Zee: *"if we miss such a breakout on low volume, then we wait for a
