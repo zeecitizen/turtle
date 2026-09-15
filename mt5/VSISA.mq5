@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.13"
+#property version   "1.14"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -374,8 +374,30 @@ input double InpCloseLoc    = 0.00;   // InpCloseLoc — reaction close in this 
 // spend for the distance it travelled?
 input double InpEffortMin   = 0.00;   // InpEffortMin — last setup bar's vol/range >= this x avg (0 = off)
 
-//--- LAW 13: fake break of a recent extreme (default OFF) ------------------
-input bool   InpFakeBreak   = false;  // InpFakeBreak — 2-bar setup must sweep a recent extreme
+//--- LAW 13: fake break of a recent extreme -- ON, SHIPPED 2026-09-16 -------
+// Zee's own tier-3 case, from his document: "case 3. 2 bar setup + fake break of this
+// support + forms a wick + closing again inside support .. (strongest)". It was built
+// early, tested OFF on the OLD build, and never re-examined after the stop and swing
+// corrections. Re-tested at the 1:5 geometry it is THE BEST FILTER ON THIS PROJECT.
+//
+// Walk-forward, per trade -- and note it holds at EVERY sweep length, which is a plateau,
+// not a spike. Every filter that failed this year (cap bar, volume floor, close location,
+// effort-per-range, quiet retracement) was good at ONE setting and worthless at its
+// neighbours. This is the opposite:
+//        off       25% WR $23.66  |  24% WR $28.21
+//        20 bars   33%    $45.40  |  31%    $51.46
+//        30 bars   34%    $48.76  |  32%    $54.50   <- SHIPPED
+//        50 bars   38%    $57.65  |  31%    $59.39
+//
+// WHAT IT BUYS: win rate 25% -> 33%, and the worst losing streak 15 -> 9. Drawdown falls
+// from $905 to $586. Zee turned it on for the streak: "its hard to psychologically bear
+// losses."
+//
+// WHAT IT COSTS, and this is not free: it refuses 75% of setups (318 -> 78), so at 0.10
+// lots the net falls from $8,196 to $3,991. Per unit of drawdown it is WORSE than leaving
+// it off (6.81 against 9.06) -- a bigger lot with the filter off earns more for the same
+// risk. It is a deliberate trade of income for bearability, not an upgrade.
+input bool   InpFakeBreak   = true;   // InpFakeBreak — 2-bar setup must sweep a recent extreme
 input int    InpSweepLook   = 30;     // InpSweepLook — bars defining that extreme
 
 //--- LAW 9: higher-timeframe trend (default OFF) ---------------------------
@@ -1090,7 +1112,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.13 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.14 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
