@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.12"
+#property version   "1.13"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -45,12 +45,24 @@ input int    InpMagicNumber = 88201;  // InpMagicNumber — VSISA
 // and only 124 fired — 47% were thrown away while a trade was already running, refused
 // by plumbing rather than by anything the strategy believes.
 //
-// NOT set to unlimited. Detection runs once per CLOSED M5 bar and fires at most one
-// decision per bar, so the real rate limit is one entry per 5 minutes either way; the
-// ceiling only bounds how much can be open at once. 10 x 0.10 lots at the ~$45 average
-// risk is roughly $450 exposed if every one is open and wrong together. Lower it if
-// that is more than the account should carry.
-input int    InpMaxOpen     = 10;     // InpMaxOpen — max concurrent decisions
+// TIGHTENED TO 2 — SHIPPED 2026-09-16 ON ZEE'S CALL ("ok ship InpMaxOpen=2").
+// Detection runs once per CLOSED M5 bar and fires at most one decision per bar, so the rate
+// limit is one entry per 5 minutes whatever this says; the ceiling only bounds how much can
+// be open AT ONCE. At 10 that is ~$450 exposed if every position is open and wrong together;
+// at 2 it is ~$90.
+//
+// THE PROFIT EVIDENCE IS THIN AND THIS SHIPPED ON RISK, NOT ON RETURN. Walk-forward:
+//   Apr-Jun   +$4,004 DD $898   -- IDENTICAL to maxOpen=10; the cap never binds
+//   Jul-Sep   +$4,192 DD $905   against +$4,004 DD $950, from removing FOUR trades
+// One half is untouched and the other moves on four trades, so +$188 is not a result worth
+// defending. What IS solid is that the cap costs nothing measurable in either half while
+// cutting worst-case concurrent exposure five-fold — and on a funded account with a hard
+// breach line, a free reduction in tail exposure is worth taking.
+//
+// Measured, the EA rarely holds more than three positions anyway: maxOpen 10, 5 and 3 return
+// BYTE-IDENTICAL results over Apr-Sep. This binds only in the crowded moments, which are
+// exactly the moments a breach line cares about.
+input int    InpMaxOpen     = 2;      // InpMaxOpen — max concurrent decisions
 // DAILY LOSS LIMIT (Zee, 2026-09-16: "if we use flat 0.2 .. can't we reduce the drawdown
 // from 19%?"). Measured, the drawdown is not caused by concurrency — maxOpen 10, 5 and 3
 // return IDENTICAL results, so the EA rarely holds more than three — nor by a few oversized
@@ -1078,7 +1090,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.12 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.13 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
