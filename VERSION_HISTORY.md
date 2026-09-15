@@ -471,6 +471,61 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.08/1.09 — LAW 10, the retracement re-entry, finally built (2026-09-16)
+
+**Who ordered it.** Zee: *"if we miss such a breakout on low volume, then we wait for a
+retracement to the same low where we initially got to when the red candle's happened giving
+way to bullish move. that retracement low when it touches the low line of the missed setup
+is also a valid setup .. infact sometimes it can touch several times (increasing the
+strength of the upcoming move)"*
+
+His document has said this from the beginning — *"Never chase the market. Always catch the
+market on a retracement"* — and `VSISA_IMPLEMENTATION_AUDIT.md` has carried LAW 10 as **NOT
+IMPLEMENTED** since day one. This is it.
+
+**What shipped.** Every detected setup now leaves a LEVEL behind at the low the move turned
+from (`MathMin(setup extreme, reaction low)`), and a later touch that CLOSES BACK above it is
+its own entry, stop hung off the level. Touches accumulate, so `InpRetraceMin` can demand the
+"several times" he describes. `InpRetrace` (off), `InpRetraceBars` 60, `InpRetraceTol` 30,
+`InpRetraceMin` 1, `InpRetraceMax` 2, `InpRetraceQuiet` 0. **All default OFF.**
+
+**v1.08, price-only — clearly NEGATIVE, and it taught the lesson.** Entering on the touch
+alone, attributed trade-by-trade from the tester log over the same run:
+
+| | trades | WR | $/trade |
+|---|---|---|---|
+| BASE setups | 222 | 22% | **+$13.35** |
+| RETRACE entries | 409 | 14% | **−$9.46** |
+
+409 trades is a real sample and the verdict is unambiguous. The fault was mine, not his:
+every other entry in this EA is a VOLUME judgement, and I had built a price-only re-entry,
+which discards the one thing the method reads.
+
+**v1.09 adds `InpRetraceQuiet` — the retest must arrive on no supply.** Same question Law 3
+asks of the reaction: if supply had really gone, the retest is cheap. That flips the sign:
+
+| retest quiet <= | trades | net | vs shipped |
+|---|---|---|---|
+| **off (shipped)** | 322 | **+$8,010** | — |
+| 0.90x | 650 | +$7,596 | −$414 |
+| 0.65x | 412 | +$7,838 | −$172 |
+| **0.55x** | 354 | **+$8,554** | **+$544** |
+| 0.45x | 332 | +$7,932 | −$78 |
+| 0.35x | 324 | +$7,969 | −$41 |
+
+**NOT PROVEN, and it should not ship.** 0.55x is a single point with WORSE values on both
+sides of it — 0.65x and 0.45x both lose to shipped. And the walk-forward is one-sided:
+Apr–Jun **+$27** (flat) against Jul–Sep **+$517**. A rule that does nothing in half the data
+and sits on an isolated spike in the other is the same shape as the cap bar and the volume
+floor before it.
+
+**What it is worth keeping.** The price-only version is REFUTED with a clean 409-trade
+sample — that is a genuine negative result about the idea, not a shrug. The quiet version is
+undecided on 32 extra trades, and would need more history to settle. LAW 10 is now built, so
+the audit line changes from "not implemented" to "implemented, default off, unproven".
+
+---
+
 ## VSISA v1.07 — the no-supply test as an ADDITION, not a gate (2026-09-15)
 
 **Who ordered it.** Zee: *"maybe the no-supply test is not working as a gate, but its
