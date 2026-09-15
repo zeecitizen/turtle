@@ -16,8 +16,8 @@
 
 input string InpSymbol = "XAUUSD.pro";             // symbol (custom symbols allowed)
 input int    InpTfMin  = 5;                    // timeframe in minutes
-input string InpFrom   = "2026.03.01";         // inclusive
-input string InpTo     = "2026.09.16";         // exclusive
+input string InpFrom   = "2026.01.01";         // inclusive
+input string InpTo     = "2026.09.17";         // exclusive
 input string InpFile   = "vsisa_bars_axi.csv";  // -> Common\Files
 
 ENUM_TIMEFRAMES TF(int m) {
