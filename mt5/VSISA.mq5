@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.10"
+#property version   "1.11"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -154,6 +154,23 @@ input double InpBodyFrac    = 0.35;   // InpBodyFrac — reaction body >= this x
 // "a LARGER SPREAD low volume engulfing reaction candle" — the reaction that ends a gapped
 // campaign is described as a big one, not merely a bar that closed the other way.
 input double InpReactSpread = 0.00;   // InpReactSpread — reaction range >= this x avg range (0 = off)
+// POSITION SIZING BY REACTION SPREAD (Zee, 2026-09-16: "yes let's let it do position
+// sizing. test"). InpReactSpread as a GATE halves the trade count and takes net from
+// $8,010 to $4,363 — the wide reactions are worth more per trade but there are not enough
+// of them to live on. Sizing keeps every setup and pays attention to the good ones.
+//
+// The grading, measured per trade and CONSISTENT IN BOTH walk-forward halves:
+//   spread < 1.20x avg   $23.66 / $26.24   (the ordinary setups)
+//   spread >= 1.20x      $26.12 / $30.61
+//   spread >= 1.60x      $43.16 / $33.41   (on 26 and 36 trades - thin)
+// Tier 0 exists so risk can be TAKEN OFF the ordinary setups instead of only added to the
+// good ones; on a funded account that is the difference between a bigger edge and a breach.
+input bool   InpSizeBySpread = false; // InpSizeBySpread — scale lots by the reaction's spread
+input double InpSizeT1      = 1.20;   // InpSizeT1 — spread x avg for tier 1
+input double InpSizeT2      = 1.60;   // InpSizeT2 — spread x avg for tier 2
+input double InpSizeM0      = 1.00;   // InpSizeM0 — lot multiplier below tier 1
+input double InpSizeM1      = 1.50;   // InpSizeM1 — lot multiplier at tier 1
+input double InpSizeM2      = 2.00;   // InpSizeM2 — lot multiplier at tier 2
 // MODE 2 (Zee, 2026-09-16): "what if the no-supply is itself a reaction candle?"
 // He is right, and it answers my objection that the test cannot filter the entry. Mode 1
 // waits for a CONFIRMING bar after the test, which costs two bars of drift and was measured
@@ -372,6 +389,7 @@ int g_rej_fake = 0, g_rej_react = 0, g_rej_body = 0, g_rej_quiet = 0, g_rej_tren
 int g_rej_test = 0;
 double g_swing_px = 0.0;  // price the leg STARTED from - the structural target (mode 2)
 double g_eff_avg = 0.0;   // average volume-per-point-of-range over the swing (diagram 9)
+double g_react_ratio = 0.0;  // the reaction bar's range / average range - drives sizing
 #define VSISA_MAXLVL 64
 double   g_lvl_px[VSISA_MAXLVL];      // LAW 10: the low a past setup turned from
 int      g_lvl_side[VSISA_MAXLVL];
@@ -764,6 +782,8 @@ bool Detect(int side, double &sl_level, string &why) {
    if (rng1 <= 0) return false;
    if (bBody(r) < InpBodyFrac * rng1) { g_rej_body++; return false; }
 
+   g_react_ratio = (ravg > 0) ? (rng1 / ravg) : 0.0;
+
    // "a LARGER SPREAD low volume engulfing reaction candle"
    if (InpReactSpread > 0.0) {
       if (ravg <= 0) return false;
@@ -964,12 +984,27 @@ void Fire(int side, double sl_level, string why) {
    sl_level = NormalizeDouble(sl_level, dg);
    if (tp > 0) tp = NormalizeDouble(tp, dg);
 
+   // SIZE BY THE GRADE OF THE REACTION, not by conviction in general.
+   double lots = InpLots;
+   if (InpSizeBySpread) {
+      double m = InpSizeM0;
+      if      (g_react_ratio >= InpSizeT2) m = InpSizeM2;
+      else if (g_react_ratio >= InpSizeT1) m = InpSizeM1;
+      lots = InpLots * m;
+      double st = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+      double lo = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+      double hi = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
+      if (st > 0) lots = MathFloor(lots / st + 0.5) * st;
+      if (lo > 0) lots = MathMax(lo, lots);
+      if (hi > 0) lots = MathMin(hi, lots);
+   }
+
    int n = MathMax(1, InpTickets);
    int placed = 0;
    for (int i = 0; i < n; i++) {
       string tag = StringFormat("vsisa_%d_%d", g_fires, i);
-      bool ok = (side > 0) ? trade.Buy (InpLots, _Symbol, 0, sl_level, tp, tag)
-                           : trade.Sell(InpLots, _Symbol, 0, sl_level, tp, tag);
+      bool ok = (side > 0) ? trade.Buy (lots, _Symbol, 0, sl_level, tp, tag)
+                           : trade.Sell(lots, _Symbol, 0, sl_level, tp, tag);
       if (ok) placed++;
    }
    if (placed == 0) {
@@ -982,10 +1017,11 @@ void Fire(int side, double sl_level, string why) {
    g_last_fire = iTime(_Symbol, PERIOD_CURRENT, 0);
 
    if (InpVerbose)
-      PrintFormat("[VSISA] #%d %s @ %.2f SL %.2f (%.0f pts) TP %.2f (%.1fR) | %s",
-                  g_fires, (side > 0) ? "BUY" : "SELL", entry, sl_level,
+      PrintFormat("[VSISA] #%d %s %.2f lots @ %.2f SL %.2f (%.0f pts) TP %.2f (%.1fR) | spread %.2fx | %s",
+                  g_fires, (side > 0) ? "BUY" : "SELL", lots, entry, sl_level,
                   risk / _Point, tp,
-                  (tp > 0 ? MathAbs(tp - entry) / MathMax(risk, _Point) : 0.0), why);
+                  (tp > 0 ? MathAbs(tp - entry) / MathMax(risk, _Point) : 0.0),
+                  g_react_ratio, why);
 }
 
 //+------------------------------------------------------------------+
@@ -1032,7 +1068,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.10 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.11 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
@@ -1167,6 +1203,7 @@ void RetraceCheck() {
 
       double sl = (g_lvl_side[i] > 0) ? lvl - buf : lvl + buf;
       g_retrace_fires++;
+      g_react_ratio = 0.0;       // a level touch has no reaction bar to grade
       Fire(g_lvl_side[i], sl,
            StringFormat("RETRACE touch %d of level %.2f (set %d bars ago)",
                         g_lvl_touch[i], lvl, age));

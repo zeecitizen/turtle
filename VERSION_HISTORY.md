@@ -471,6 +471,59 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.11 — sizing by reaction spread, and why the "quality signal" was not one (2026-09-16)
+
+**Who ordered it.** Zee: *"yes let's let it do position sizing. test"* — after v1.10 found
+that wide-reaction setups were worth more per trade in both walk-forward halves.
+
+**What shipped.** `InpSizeBySpread` with two thresholds and three multipliers
+(`InpSizeT1/T2`, `InpSizeM0/M1/M2`), so risk can be added to the graded setups OR taken off
+the ordinary ones. **Default OFF.**
+
+**Raw profit rises a lot.** Apr 1 -> Sep 15, 1:5 geometry, commission taken from the report
+itself (it scales with lots — $193.96 against the flat $144.90, so a flat $0.45/trade
+assumption would have flattered these):
+
+| config | net | maxDD | % of $10k |
+|---|---|---|---|
+| flat 0.10 (shipped) | +$8,008 | $950 | 9.5% |
+| sized up 1 / 1.5 / 2.0 | +$11,350 | $1,377 | 13.8% |
+| sized up 1 / 2.0 / 3.0 | +$14,693 | $1,804 | 18.0% |
+| sized down 0.6 / 1 / 1.5 | +$7,710 | $932 | 9.3% |
+
+**But it is pure leverage, and it is DOMINATED by simply trading a bigger flat lot:**
+
+| config | net | maxDD | **net per $1 of drawdown** |
+|---|---|---|---|
+| **flat 0.10** | +$8,008 | $950 | **8.43** |
+| sized up 1/1.5/2.0 | +$11,350 | $1,377 | 8.24 |
+| **flat 0.15** | +$12,011 | $1,426 | **8.42** |
+| sized up 1/2.0/3.0 | +$14,693 | $1,804 | 8.14 |
+| **flat 0.20** | +$16,017 | $1,901 | **8.43** |
+| sized down 0.6/1/1.5 | +$7,710 | $932 | 8.27 |
+
+Flat lots return 8.42-8.43 per $1 of drawdown at EVERY size. Every sized variant returns
+LESS (8.14-8.27). Whatever drawdown budget is chosen, a flat lot at that budget earns more.
+
+**THE MECHANISM — and it retracts v1.10's conclusion.** I called the wide reaction "the first
+real quality signal of the session". It was not. Measured from the fire log:
+
+| reaction | trades | median risk | WR |
+|---|---|---|---|
+| narrow (<1.20x) | 167 | **452 pts** | 25% |
+| wide (>=1.20x) | 155 | **612 pts** | 25% |
+
+**The wide-reaction trades risk 35% more per trade** — the stop hangs under the reaction
+candle's low, so a wider candle mechanically puts the stop further away. Their win rate is
+IDENTICAL (25% vs 25%). The higher $/trade was never better setup selection; it was a bigger
+bet measured in dollars. Sizing up on them doubles down on the trades that already carry the
+most risk, which is why drawdown outruns profit.
+
+**This is the test that separates an edge from leverage**, and the spread grading failed it.
+Default OFF; the shipped 1:5 config is untouched.
+
+---
+
 ## VSISA v1.10 — the gapped campaign, the wide reaction, and entering ON the test (2026-09-16)
 
 **Who ordered it.** Two ideas from Zee, 2026-09-16.
