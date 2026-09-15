@@ -471,6 +471,49 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.07 — the no-supply test as an ADDITION, not a gate (2026-09-15)
+
+**Who ordered it.** Zee: *"maybe the no-supply test is not working as a gate, but its
+something that acts as a strong confirmation right? so can we test it as an addition?
+means test / check its variants etc as an added confirmation? does it help someway"*
+
+**He was right about the diagnosis.** `InpConfirmMode` DELAYS the entry two bars, so it
+replaces the trade rather than confirming it. But the test cannot filter the entry either —
+at entry time the test bar does not exist yet. The only honest place for it is on a trade
+ALREADY OPEN, which is his own law read forwards: *"if in case on no supply test it were big
+volume it would mean sustained buying"* — for a buy, a loud bar closing back down says the
+supply never left, so the setup has failed and there is no reason to wait for the stop.
+
+**What shipped.** `InpTestExit` (0 = off) — close the position when a bar closing AGAINST it
+arrives louder than this multiple of the recent average volume; `InpTestWindow` (bars after
+entry to watch) and `InpTestAvgBars` (the average it is judged against). **Default OFF.**
+
+**The receipts — no durable gain.** Shipped 1:5 geometry, Axi real ticks:
+
+| variant | Apr–Jun | Jul–Sep | full-window net | WR |
+|---|---|---|---|---|
+| **OFF (shipped)** | +$4,022 | +$3,988 | **+$8,010** | 25% |
+| 2.20x / 3 bars | +$4,022 | +$4,162 | +$8,184 | 25% |
+| 1.50x / 1 bar | +$3,974 | +$4,151 | +$8,125 | 24% |
+| 1.20x / 3 bars | +$2,225 | +$3,418 | +$5,643 | **32%** |
+
+- **The best-net variant is a no-op.** 2.20x/3bars returns numbers IDENTICAL to OFF across
+  Apr–Jun — it never fired once in that half. Its whole +$174 comes from a handful of
+  instances in the other half. A rule that does nothing in half the sample is not evidence.
+- **1.50x/1bar** is −$48 in one half and +$163 in the other. Noise.
+- **1.20x/3bars DOES raise win rate consistently** — 33% and 31%, the most stable
+  high-WR behaviour found all session (the earlier 1.25R+trend+floor collapsed 64% -> 49%).
+  It costs $2,367 to do it.
+
+**But that purchase is DOMINATED, which settles it.** Simply running 2.0R instead buys a
+**43% win rate for +$5,502** — more money AND eleven more points of win rate than the
+test-exit's 32% for +$5,643. If win rate is what is wanted, the target is the cheaper lever
+and the no-supply test adds nothing on top of it.
+
+**Default stays OFF.** The shipped 1:5 config is untouched.
+
+---
+
 ## VSISA v1.06 — diagrams 10-12: the NO SUPPLY TEST, made faithful and measured (2026-09-15)
 
 **Who ordered it.** Zee: *"i've added an important concept in the diagram 11,12 read and test"*.
