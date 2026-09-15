@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.16"
+#property version   "1.17"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -51,7 +51,19 @@ CTrade trade;
 // in the risk machinery changes it - that was settled in v1.12, where a tighter stop, a
 // concurrency cap, a risk cap and a daily loss limit were all tested and none moved it.
 // The 9-loss worst streak is unchanged; at 0.15 lots that run costs about $780.
-input double InpLots        = 0.15;   // InpLots — lot size per ticket
+// 0.28 LOTS - SHIPPED 2026-09-16 WITH THE RATCHET, on Zee's call. The two belong together
+// and must not be separated: the ratchet cut drawdown from $1,232 to $660 at 0.15 lots, and
+// this spends exactly that headroom back. Turning the ratchet OFF while leaving 0.28 here
+// would roughly DOUBLE the drawdown to ~$2,300.
+//
+// Matched-risk comparison, Jan-Sep, both at $1,232 maximum drawdown:
+//     no ratchet, 0.15 lots   +$5,571   30% WR   worst streak 13
+//     ratchet 2.0, 0.28 lots  +$7,918   51% WR   worst streak  7
+//
+// ON A FUNDED ACCOUNT THIS IS 12.3% OF $10,000 AND WOULD BREACH A 10% RULE. Zee chose it
+// knowing that; it matches the drawdown he was already carrying. For a 10% limit the size
+// is ~0.22 lots (about $968).
+input double InpLots        = 0.28;   // InpLots — lot size per ticket
 input int    InpTickets     = 1;      // InpTickets — tickets per decision (basket)
 input int    InpMagicNumber = 88201;  // InpMagicNumber — VSISA
 // MAX OPEN / COOLDOWN LIFTED (2026-09-12). Zee: "remove the InpMaxOpen = 1 and
@@ -359,8 +371,8 @@ input double InpBreakEvenR  = 0.0;    // InpBreakEvenR — >0: move stop to entr
 //
 // The ladder is start, start+step, start+2*step ... and the stop locks to the highest rung
 // price has actually reached. It never moves backwards.
-input double InpRatchetStart = 0.00;  // InpRatchetStart — first R rung that gets locked (0 = off)
-input double InpRatchetStep  = 0.25;  // InpRatchetStep — spacing of the rungs above it
+input double InpRatchetStart = 2.00;  // InpRatchetStart — first R rung that gets locked (0 = off)
+input double InpRatchetStep  = 1.00;  // InpRatchetStep — spacing of the rungs above it
 
 //--- LAW 6: the wick override (default OFF) --------------------------------
 // "since the fourth bullish blue candle has still somewhat bigger volume .. if there
@@ -1189,7 +1201,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.16 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.17 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
