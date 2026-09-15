@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.02"
+#property version   "1.03"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -214,6 +214,27 @@ input double InpWickFrac    = 0.35;   // InpWickFrac — wick >= this x the bar'
 //--- LAW 7: anomaly, tiny spread on huge volume (default OFF) --------------
 input bool   InpAnomaly     = false;  // InpAnomaly — 2-bar setup's last bar must be a spread anomaly
 input double InpAnomalyMax  = 0.70;   // InpAnomalyMax — its range <= this x recent average range
+// THE CAP BAR (LAWS_VSISA diagrams 4, 6, 7 — added 2026-09-15). This is the Base Case
+// Example A finally written down, and Zee states it four separate times:
+//   d4 (buy):  "small candle with big volume shows that big demand came that caps the
+//              market and not letting the market going down"
+//   d6 (sell): "next candle is small blue with a large volume -> supply was hit -> this
+//              small candle means agressive selling happened which didnot let the price move"
+//   d7 (sell): "next blue candle has low height / spread but volume is bigger .. this
+//              shows end of rising market -> supply orders hit -> price capped"
+// The signature is BOTH ON THE SAME BAR: huge effort, no result. InpAnomaly already had
+// the small-spread half; this is the big-volume half, which was missing entirely —
+// and with InpBigMode=1 only ONE bar of the run had to be loud, so the capped bar
+// itself could be quiet and the pattern he draws would never be required.
+input double InpCapVol      = 0.00;   // InpCapVol — the last setup bar's volume >= this x avg (0 = off)
+// THE REACTION MUST CLOSE AT ITS EXTREME (diagrams 7 and 8).
+//   d7: "closing of reaction candle's body is strong bearish -> so we will sell"
+//   d8: "top wick on reaction candle + strong bearish closing (on the low the closing
+//        of candle happened)"
+// InpBodyFrac only asks that the BODY is large; it cannot tell a bar that closed on its
+// low from one that closed mid-range with a long wick each side. This asks where the
+// close actually sits in the bar's range, which is what he points at.
+input double InpCloseLoc    = 0.00;   // InpCloseLoc — reaction close in this top/bottom fraction (0 = off)
 
 //--- LAW 13: fake break of a recent extreme (default OFF) ------------------
 input bool   InpFakeBreak   = false;  // InpFakeBreak — 2-bar setup must sweep a recent extreme
@@ -252,6 +273,8 @@ int g_rej_fake = 0, g_rej_react = 0, g_rej_body = 0, g_rej_quiet = 0, g_rej_tren
 int g_rej_test = 0;
 double g_swing_px = 0.0;  // price the leg STARTED from - the structural target (mode 2)
 int g_rej_tgt = 0;        // candidates refused because the structural target was too near
+int g_rej_cap = 0;        // refused: the last setup bar was not the capped, loud one
+int g_rej_loc = 0;        // refused: the reaction did not close at its own extreme
 int g_last_span = 0;      // bars in the yardstick on the last judgement, for the log
 long g_rv_hit = 0, g_rv_miss = 0, g_ov_hit = 0;
 
@@ -577,6 +600,11 @@ bool Detect(int side, double &sl_level, string &why) {
       if (ravg <= 0) return false;
       if (bRange(c0) > InpAnomalyMax * ravg) { g_rej_anom++; return false; }
    }
+   // ...and the other half of the same candle: the effort that bought nothing.
+   if (InpCapVol > 0.0) {
+      if (vavg <= 0) return false;
+      if ((double)BarVolume(c0) < InpCapVol * vavg) { g_rej_cap++; return false; }
+   }
 
    //--- LAW 13: the fake break. The 2-bar setup must take out a recent extreme, and the
    // reaction must close back INSIDE it — Zee's tier-3 "strongest" case.
@@ -604,6 +632,13 @@ bool Detect(int side, double &sl_level, string &why) {
    double rng1 = bRange(r);
    if (rng1 <= 0) return false;
    if (bBody(r) < InpBodyFrac * rng1) { g_rej_body++; return false; }
+
+   // WHERE the close sits, not just how big the body is.
+   if (InpCloseLoc > 0.0) {
+      double loc = (side > 0) ? (bClose(r) - bLow(r)) / rng1
+                              : (bHigh(r) - bClose(r)) / rng1;
+      if (loc < InpCloseLoc) { g_rej_loc++; return false; }
+   }
 
    if (InpEngulf) {
       if (side > 0 && bClose(r) <= bHigh(c0)) return false;
@@ -840,7 +875,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.02 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.03 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
@@ -896,7 +931,8 @@ void OnDeinit(const int reason) {
                "| trend %d | FIRED %d",
                g_seen, g_rej_dir, g_rej_loud, g_rej_rise, g_rej_anom, g_rej_fake,
                g_rej_react, g_rej_body, g_rej_quiet, g_rej_test, g_rej_trend, g_fires);
-   PrintFormat("[VSISA] FUNNEL target-too-near refusals: %d", g_rej_tgt);
+   PrintFormat("[VSISA] FUNNEL target-too-near %d | cap-bar %d | close-loc %d",
+               g_rej_tgt, g_rej_cap, g_rej_loc);
    PrintFormat("[VSISA] VOLUME SOURCE OANDA %I64d | iRealVolume %I64d | broker tick "
                "count %I64d — %s", g_ov_hit, g_rv_hit, g_rv_miss,
                (g_ov_hit > 0 && g_rv_miss == 0 && g_rv_hit == 0)

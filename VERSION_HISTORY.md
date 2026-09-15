@@ -471,6 +471,68 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.03 — diagrams 3-8 read, encoded, and MEASURED (2026-09-15)
+
+**Who ordered it.** Zee: *"i've added new diagrams and their description (until diagram 8)
+in the LAWS_VSISA. can you read them and check the diagrams and use this better
+understanding to improve our winrate?"*
+
+**What the new diagrams actually add.** Three testable laws, none previously in the EA:
+
+1. **THE CAP BAR — effort against result.** Stated four times: d4 *"small candle with big
+   volume shows that big demand came that caps the market"*; d6 *"next candle is small blue
+   with a large volume -> supply was hit"*; d7 *"low height / spread but volume is bigger ->
+   end of rising market -> price capped"*. The signature is both halves ON THE SAME BAR.
+   `InpAnomaly` had the small-spread half; the loud half was missing.
+2. **THE REACTION CLOSES AT ITS EXTREME.** d7 *"closing of reaction candle's body is strong
+   bearish"*; d8 *"on the low the closing of candle happened"*. `InpBodyFrac` only sizes the
+   body; it cannot tell a close-on-the-low from a mid-range close with wicks both sides.
+3. **THE REACTION ENGULFS the previous body** (d8) — `InpEngulf` already existed, untested
+   since the geometry corrections.
+
+**What shipped.** `InpCapVol` (last setup bar's volume >= x avg) and `InpCloseLoc`
+(reaction close within the top/bottom fraction of its range). **Both default 0 = OFF.**
+
+**The receipts — none of them improved win rate durably.** Axi real ticks, Apr 1 -> Sep 15,
+M5, geometry fixed at stop 120 / 2.0R:
+
+| rule | trades | WR | net |
+|---|---|---|---|
+| **baseline** | 322 | **43%** | **+$5,362** |
+| cap bar 0.70 / 1.2 | 15 | 67% | +$786 |
+| cap bar 0.80 / 1.0 | 45 | 44% | +$706 |
+| cap bar 0.90 / 1.0 | 58 | 43% | +$733 |
+| cap bar 1.00 / 1.0 | 84 | 39% | +$534 |
+| close loc 0.60 | 293 | 42% | +$4,630 |
+| close loc 0.70 | 244 | 42% | +$3,769 |
+| close loc 0.80 | 188 | 40% | +$2,599 |
+| engulf | 111 | 45% | +$2,698 |
+
+- **Cap bar: NOT PROVEN.** The 67% is 15 trades (4W/3L and 6W/2L across the two halves) and
+  it decays monotonically to baseline as the sample grows. `InpCapVol` 1.00 and 1.20 return
+  BYTE-IDENTICAL results, so the volume half never binds — bars small enough to pass the
+  spread test are already loud. The rule as written adds nothing the spread test did not.
+- **Close location: REFUTED.** 42% against 43%, at every threshold, costing money throughout.
+- **Engulf:** +2 points of WR for half the profit.
+
+**What the diagrams DID corroborate.** d3 *"reaction candle has high volume, means there is
+still alot of supply here... so its not a strong setup"* and d5 *"the pink volume is also
+relatively big on the reaction candle... so there's buying on this bar too"*. Both say a
+LOUD reaction is a weak setup — and the trade-by-trade data agrees exactly:
+
+| reaction | trades | WR | $/trade |
+|---|---|---|---|
+| QUIET (the core rule) | 289 | 43% | +$16.55 |
+| **LOUD + wick (the InpWickMode=2 exception)** | 16 | **25%** | **−$11.12** |
+
+The wick exception is a losing group, and on sells it is 22% WR / −$21.89 a trade. But it is
+only 16 of 322 trades, so removing it moves win rate 43% -> 43.8% and costs $131. Left ON.
+
+**Conclusion: no win-rate lever was found in diagrams 3-8.** The best WR config on the book
+remains 2.0R + H1 trend + vol floor (48% full window, 43% out-of-sample). Defaults unchanged.
+
+---
+
 ## VSISA v1.02 — the target decoupled from the stop (2026-09-15)
 
 **Who ordered it.** Zee: *"yes try decoupling them to check what's the best config"* —
