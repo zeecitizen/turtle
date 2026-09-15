@@ -471,6 +471,54 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.04 — diagram 9: effort per unit of result (2026-09-15)
+
+**Who ordered it.** Zee: *"i've added another diagram 9. test it?"*
+
+**What diagram 9 adds, and why it matters.** It is the Base Case stated properly for the
+first time. He picks two candles and holds one variable fixed: *"let's take the forth blue
+candle, and the seventh blue candle -> both has same spread (height of candle body). 4th ->
+volume low -> low supply. 7th -> supply hit so a big volume."*
+
+Comparing volume at EQUAL SPREAD is volume-per-range. That diagnoses the v1.03 cap-bar
+failure exactly: `InpAnomaly` demanded a small ABSOLUTE range, which is rare and discards
+every large bar that is also working hard. Normalising by range asks only the question he
+asks — how much volume did this bar spend for the distance it travelled?
+
+**What shipped.** `InpEffortMin` — the last setup bar's volume/range against the swing
+average volume/range. **Default 0.00 = OFF.**
+
+**The receipts — no win-rate gain. Again.** Axi real ticks, Apr 1 -> Sep 15, stop 120 / 2.0R:
+
+| InpEffortMin | trades | WR | net |
+|---|---|---|---|
+| **0 (off)** | 322 | **43%** | **+$5,362** |
+| 1.00 | 196 | 41% | +$2,379 |
+| 1.20 | 140 | 42% | +$1,650 |
+| 1.40 | 83 | 43% | +$1,094 |
+| 1.60 | 45 | 40% | +$460 |
+| 1.80 | 28 | 54% | +$871 |
+| 2.00 | 10 | 40% | +$72 |
+
+The 54% at 1.80 has 40% on both sides of it and rests on 28 trades — a spike, not a plateau.
+
+**Diagram 9's conjunction also tested.** He describes the ideal as low volume AND a small
+top wick AND closing near the low. Run as quiet-only (WickMode 0) x close location x
+ceiling, every cell landed between 42% and 45% against the 43% baseline, each one costing
+money for the trades it removed.
+
+**THE STANDING RESULT AFTER ~30 FILTER CONFIGURATIONS TODAY.** Win rate has not moved off
+39-45% for ANY candle-or-volume-shape filter: reaction volume ratio, a volume floor, cap
+bar, close location, engulfing, effort per range, the wick exception. Each one removes
+winners and losers in almost the same proportion. The single exception is the H1 TREND
+filter — market context, not candle shape — which reaches 48%.
+
+That is now a measured claim about where this strategy's edge is NOT, and it should stop a
+future session re-testing the same family of ideas: the entry-shape features are exhausted;
+context and exit are where the remaining leverage sits.
+
+---
+
 ## VSISA v1.03 — diagrams 3-8 read, encoded, and MEASURED (2026-09-15)
 
 **Who ordered it.** Zee: *"i've added new diagrams and their description (until diagram 8)

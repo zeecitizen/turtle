@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.03"
+#property version   "1.04"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -235,6 +235,18 @@ input double InpCapVol      = 0.00;   // InpCapVol — the last setup bar's volu
 // low from one that closed mid-range with a long wick each side. This asks where the
 // close actually sits in the bar's range, which is what he points at.
 input double InpCloseLoc    = 0.00;   // InpCloseLoc — reaction close in this top/bottom fraction (0 = off)
+// EFFORT PER UNIT OF RESULT (LAWS_VSISA diagram 9 — added 2026-09-15). This is the Base
+// Case stated properly at last. Zee picks TWO CANDLES OF THE SAME SPREAD and reads the
+// difference in their volume: "let's take the forth blue candle, and the seventh blue
+// candle -> both has same spread (height of candle body). 4th -> volume low -> low
+// supply. 7th -> supply hit so a big volume."
+//
+// Holding spread constant and comparing volume IS volume-per-range. That is why the
+// v1.03 cap bar failed: InpAnomaly demands a small ABSOLUTE range, which is rare and
+// throws away every large bar that is also working hard. Normalising by range keeps
+// them, and asks the only question he actually asks — how much volume did this bar
+// spend for the distance it travelled?
+input double InpEffortMin   = 0.00;   // InpEffortMin — last setup bar's vol/range >= this x avg (0 = off)
 
 //--- LAW 13: fake break of a recent extreme (default OFF) ------------------
 input bool   InpFakeBreak   = false;  // InpFakeBreak — 2-bar setup must sweep a recent extreme
@@ -272,6 +284,7 @@ int g_seen = 0, g_rej_dir = 0, g_rej_loud = 0, g_rej_rise = 0, g_rej_anom = 0;
 int g_rej_fake = 0, g_rej_react = 0, g_rej_body = 0, g_rej_quiet = 0, g_rej_trend = 0;
 int g_rej_test = 0;
 double g_swing_px = 0.0;  // price the leg STARTED from - the structural target (mode 2)
+double g_eff_avg = 0.0;   // average volume-per-point-of-range over the swing (diagram 9)
 int g_rej_tgt = 0;        // candidates refused because the structural target was too near
 int g_rej_cap = 0;        // refused: the last setup bar was not the capped, loud one
 int g_rej_loc = 0;        // refused: the reaction did not close at its own extreme
@@ -442,12 +455,14 @@ bool VolStats(int from, long &vmax, double &vavg, double &ravg, int side) {
    // THE LEG ORIGIN. This loop already walks back to the pivot that began the move, so
    // the extreme it passes IS the level price retraced from - mode 2's target.
    g_swing_px = (side > 0) ? -1.0 : 1e18;
+   double eff = 0.0; int neff = 0;
    for (int k = from; k < from + span; k++) {
       long v = BarVolume(k);
       double r = bRange(k);
       if (side > 0) { if (bHigh(k) > g_swing_px) g_swing_px = bHigh(k); }
       else          { if (bLow(k)  < g_swing_px) g_swing_px = bLow(k);  }
       if (v <= 0) continue;
+      if (r > 0) { eff += (double)v / r; neff++; }
       if (v > vmax) vmax = v;
       vavg += (double)v;
       ravg += r;
@@ -462,6 +477,7 @@ bool VolStats(int from, long &vmax, double &vavg, double &ravg, int side) {
    if (n < span / 2 || n < 5 || vmax <= 0) return false;
    vavg /= n;
    ravg /= n;
+   g_eff_avg = (neff > 0) ? eff / neff : 0.0;
    return true;
 }
 
@@ -604,6 +620,13 @@ bool Detect(int side, double &sl_level, string &why) {
    if (InpCapVol > 0.0) {
       if (vavg <= 0) return false;
       if ((double)BarVolume(c0) < InpCapVol * vavg) { g_rej_cap++; return false; }
+   }
+
+   // DIAGRAM 9: the same bar judged the way he judges it - volume against distance.
+   if (InpEffortMin > 0.0) {
+      double rc = bRange(c0);
+      if (rc <= 0 || g_eff_avg <= 0) return false;
+      if (((double)BarVolume(c0) / rc) < InpEffortMin * g_eff_avg) { g_rej_cap++; return false; }
    }
 
    //--- LAW 13: the fake break. The 2-bar setup must take out a recent extreme, and the
@@ -875,7 +898,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.03 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.04 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
