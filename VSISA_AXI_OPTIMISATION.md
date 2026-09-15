@@ -370,3 +370,48 @@ The one thing 200 does consistently is a 6-loss worst streak in both halves agai
 
 **NOT SHIPPED. 120 stands** — it has the best net and the best win rate at the real risk cap,
 and the claim that it is too tight for gold is unsupported at every width tested.
+
+---
+
+## Jan → Sep 2026, month by month — and the 0.15 lot is too big (2026-09-16)
+
+Zee asked for every month from January plus a combined total. Axi holds ticks back to Sept
+2024, so January is real coverage. v1.15 exactly as shipped, one continuous run.
+
+| month | trades | W-L | WR | NET | running |
+|---|---|---|---|---|---|
+| January | 5 | 1-4 | 20% | +$36.35 | +$36 |
+| February | 4 | 1-3 | 25% | +$190.48 | +$227 |
+| **March** | 7 | **0-7** | **0%** | **−$641.66** | −$415 |
+| **April** | 10 | 2-8 | 20% | **−$218.15** | −$633 |
+| May | 16 | 7-9 | 44% | +$1,943.47 | +$1,310 |
+| June | 16 | 5-11 | 31% | +$1,061.47 | +$2,372 |
+| July | 22 | 6-16 | 27% | +$1,233.04 | +$3,605 |
+| August | 6 | 2-4 | 33% | +$787.77 | +$4,393 |
+| September (to 14th) | 6 | 3-3 | 50% | +$761.82 | **+$5,155** |
+
+**TOTAL: 92 trades · 27-65 · 29% WR · +$5,154.59 · 7 of 9 months green**
+avg win +$417.43 · avg loss −$93.13 · payoff 4.48:1 · expectancy +$56.03/trade
+
+**THE FINDING THAT MATTERS: max drawdown is $1,232.32 = 12.3% of $10,000. That BREACHES a
+10% funded rule**, and the worst losing streak over the longer window is **13, not 9**.
+
+The 0.15 lot was chosen on 2026-09-16 from the Apr–Sep window, where drawdown measured $879
+(8.8%) and the worst streak was 9. Both numbers were understated because that window happens
+to start AFTER the bad stretch. Jan–Apr is four months netting **−$634**, with March going
+0-for-7.
+
+| lots | Jan–Sep net | Jan–Sep maxDD | % of $10k | Apr–Sep maxDD (what it was chosen on) |
+|---|---|---|---|---|
+| **0.10** | +$3,714 | **$822** | **8.2%** | $586 |
+| 0.12 | +$4,457 | $986 | 9.9% | $703 |
+| **0.15 — SHIPPED** | +$5,571 | **$1,232** | **12.3% BREACH** | $879 |
+
+0.12 sits at 9.9% — technically inside, with no margin at all for a period worse than any in
+this sample. **0.10 is the defensible size on $10k**, and it is what the EA shipped at before
+v1.15.
+
+This is a walk-forward lesson about ME, not about the strategy: I sized the position on a
+window that excluded the drawdown, then verified against that same window. The Apr–Sep split
+was built to test ENTRY RULES out-of-sample; it was never a safe basis for a risk decision,
+because both halves sit inside the good stretch.
