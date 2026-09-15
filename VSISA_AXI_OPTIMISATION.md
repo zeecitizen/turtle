@@ -325,3 +325,48 @@ Sized up to match, it earns slightly less for more drawdown. So it is not a free
 it is a genuine CHOICE: **+8 points of win rate and a 9-loss worst streak instead of 15, for
 about half the income.** Given Zee's stated difficulty in bearing loss runs, that trade is
 his to make and it is the first time tonight the option has been real.
+
+---
+
+## Is the 120pt stop too tight? No — tested 3 pips to 3 dollars (2026-09-16)
+
+Zee: *"is our stop too tight? can we test 3-8 pips"*, quoting the claim that *"M5 Gold
+volatility regularly generates $1.50–$2.50 noise wicks"* and that 120 points should be 250.
+
+"Pips" on gold is ambiguous, so the whole range was swept — 30 points ($0.30/oz) to 300
+points ($3.00/oz) — at the shipped v1.15 config (0.15 lots, fake break on, cap 900):
+
+| buffer | net | trades | WR | maxDD | net per $1 DD |
+|---|---|---|---|---|---|
+| 30 pts ($0.30) | +$4,046 | 84 | 29% | $885 | 4.57 |
+| 60 pts ($0.60) | +$5,130 | 82 | 32% | $918 | 5.59 |
+| 80 pts ($0.80) | +$4,649 | 81 | 31% | $840 | 5.53 |
+| **120 pts ($1.20) — SHIPPED** | **+$5,986** | 78 | **33%** | $879 | 6.81 |
+| 160 pts ($1.60) | +$5,281 | 75 | 32% | $779 | 6.78 |
+| 200 pts ($2.00) | +$5,828 | 71 | 32% | **$588** | **9.90** |
+| 250 pts ($2.50) — suggested | +$5,349 | 67 | 31% | $634 | 8.44 |
+| 300 pts ($3.00) | +$4,224 | 63 | 29% | $1,067 | 3.96 |
+
+**Tightening to 3–8 pips is refused outright** — 30/60/80 points all earn less AND draw more
+than 120. The stop is not too tight in that direction.
+
+**200 points looked like a real upgrade and is not.** Its full-window drawdown of $588
+against 120's $879 implied room for a bigger lot, and at 0.22 lots it measured +$8,548 at
+$863 DD with a 6-loss streak — apparently beating the shipped +$5,986 at $879 on every axis.
+Then the halves:
+
+| at 0.15 lots | Apr–Jun (tuned) | Jul–Sep (unseen) |
+|---|---|---|
+| buf 120 | +$3,203 · DD **$879** · 34% · streak 9 | +$2,783 · DD **$522** · 32% · streak 6 |
+| buf 200 | +$3,251 · DD **$531** · 33% · streak 6 | +$2,577 · DD **$588** · 31% · streak 6 |
+
+**The entire drawdown advantage is one half.** In Apr–Jun 200 draws $531 against 120's $879;
+in the unseen half it draws MORE ($588 against $522). The full-window figure was reporting
+Apr–Jun's number, and the whole case for sizing up rested on it. On net across both halves
+120 wins ($5,986 against $5,828).
+
+The one thing 200 does consistently is a 6-loss worst streak in both halves against 120's
+9 then 6. Not enough to pay for it.
+
+**NOT SHIPPED. 120 stands** — it has the best net and the best win rate at the real risk cap,
+and the claim that it is too tight for gold is unsupported at every width tested.
