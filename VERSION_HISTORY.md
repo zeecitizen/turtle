@@ -471,6 +471,45 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.15 — SHIPPED: 0.15 lots (2026-09-16)
+
+**Who ordered it.** Zee: *"ok 0.15 lot adjustment"*.
+
+**What changed.** `InpLots` **0.10 -> 0.15**. Nothing else.
+
+**This spends headroom v1.14 created; it does not add new risk.** Turning on the fake break
+cut drawdown from $905 to $586 while halving the income. Raising the lot takes some of that
+income back inside the same 10% breach line. MEASURED, not extrapolated:
+
+| lots | net | trades | WR | maxDD | % of $10k | worst streak | worst trade |
+|---|---|---|---|---|---|---|---|
+| 0.10 | +$3,991 | 78 | 33% | $586 | 5.9% | 9 | −$93 |
+| **0.15 — SHIPPED** | **+$5,986** | 78 | 33% | **$879** | **8.8%** | 9 | −$139 |
+| 0.17 | +$6,784 | 78 | 33% | $997 | 10.0% | 9 | −$158 |
+
+**0.17 is the hard ceiling on $10k** — exactly 10.0%, no margin at all. 0.15 leaves 1.2
+points of room, which is the whole reason to stop there rather than squeeze.
+
+Drawdown scales linearly with size and nothing in the risk machinery changes that: v1.12
+tested a tighter stop, a concurrency cap, a risk cap and a daily loss limit, and none of
+them moved it. The 9-loss worst streak is unchanged by lot size; at 0.15 it costs about
+$780 to sit through.
+
+**Where the account stands now.** Against the shipped v1.13 (no fake break, 0.10 lots,
++$8,196 at 9.0% DD), this configuration earns **$2,210 less** for **33% win rate instead of
+25%** and a **9-loss streak instead of 15**. That is the trade Zee chose, made twice — once
+with the filter and once with the lot — and it is recorded here so it is never mistaken for
+an optimisation.
+
+**Current shipped configuration (v1.15):**
+`M5 · InpLots 0.15 · InpMaxOpen 2 · InpTargetR 5.0 · InpStopRef 0 · InpSlBufPts 120 ·
+InpMinSlPts 60 · InpMaxSlPts 900 · InpBreakEvenR 0 · InpLowVolPct 1.00 · InpWickMode 2 ·
+InpFakeBreak TRUE / InpSweepLook 30 · InpTrendTF 0`
+
+**ZEE MUST REATTACH.** Banner must read `v1.15`, `fake 1`, `0.15 lots x1`.
+
+---
+
 ## VSISA v1.14 — SHIPPED: the fake break is ON (2026-09-16)
 
 **Who ordered it.** Zee: *"activate turn on InpFakeBreak with InpSweepLook=30."*
