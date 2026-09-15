@@ -29,6 +29,7 @@ LOG_FILE      = HERE / "cloudflared_daemon.log"
 WHATSAPP_CFG  = HERE / ".whatsapp_config.json"
 DASHBOARD_PW  = HERE / ".dashboard_password"
 CC_CHAT_FILE  = HERE / "cc_chat.jsonl"
+ALERT_FILE    = HERE / "UNDELIVERED_ALERTS.txt"   # when WhatsApp cannot reach him
 CHAT_STATE    = HERE / ".cloudflared_chat_watchdog.json"  # tracks last-nudge to avoid spam
 
 CLOUDFLARED   = r"C:\Program Files (x86)\cloudflared\cloudflared.exe"
@@ -202,14 +203,6 @@ def release_pid_lock() -> None:
 
 
 def whatsapp_url(url: str, is_change: bool) -> None:
-    if not WHATSAPP_CFG.exists():
-        return
-    try:
-        cfg = json.loads(WHATSAPP_CFG.read_text(encoding="utf-8"))
-        host = cfg["api_host"]; iid = cfg["instance_id"]; tok = cfg["api_token"]
-    except Exception as e:
-        log(f"whatsapp config error: {e}")
-        return
     prefix = "🔄 New" if is_change else "🟢"
     msg = (
         f"{prefix} /me tunnel URL:\n"
@@ -218,14 +211,7 @@ def whatsapp_url(url: str, is_change: bool) -> None:
         f"Bookmark this — quick tunnels rotate when daemon restarts. "
         f"Daemon auto-WhatsApps you the new URL each time."
     )
-    api = f"{host}/waInstance{iid}/sendMessage/{tok}"
-    body = json.dumps({"chatId": ZEE_CHAT_ID, "message": msg}, ensure_ascii=False).encode("utf-8")
-    req = urllib.request.Request(api, data=body, headers={"Content-Type": "application/json; charset=utf-8"})
-    try:
-        with urllib.request.urlopen(req, timeout=15) as r:
-            log(f"whatsapp sent: {r.read().decode('utf-8')[:80]}")
-    except Exception as e:
-        log(f"whatsapp send error: {e}")
+    wa_send(msg, "tunnel url")
 
 
 def post_to_me_chat(url: str, is_change: bool) -> None:
@@ -327,12 +313,6 @@ def chat_watchdog_check() -> None:
         # Send WhatsApp nudge
         if not WHATSAPP_CFG.exists():
             return
-        try:
-            cfg = json.loads(WHATSAPP_CFG.read_text(encoding="utf-8"))
-            host = cfg["api_host"]; iid = cfg["instance_id"]; tok = cfg["api_token"]
-        except Exception as e:
-            log(f"watchdog whatsapp config error: {e}")
-            return
         zee_text_preview = (last_zee.get("text") or "")[:90]
         msg = (
             f"⚠️ Claude hasn't replied to your /me chat in {int(age_sec/60)} min.\n\n"
@@ -342,21 +322,87 @@ def chat_watchdog_check() -> None:
             f"missed messages and reply.\n\n"
             f"https://me.claudezeeshan.com/me"
         )
-        api = f"{host}/waInstance{iid}/sendMessage/{tok}"
-        body = json.dumps({"chatId": ZEE_CHAT_ID, "message": msg}, ensure_ascii=False).encode("utf-8")
-        req = urllib.request.Request(api, data=body, headers={"Content-Type": "application/json; charset=utf-8"})
-        try:
-            with urllib.request.urlopen(req, timeout=15) as r:
-                log(f"watchdog nudge sent (msg age {int(age_sec/60)}m): {r.read().decode('utf-8')[:80]}")
-            CHAT_STATE.write_text(json.dumps({
-                "last_nudge_ts_ms": int(time.time() * 1000),
-                "nudged_for_zee_msg_ts_ms": zee_ts,
-                "stale_msg_preview": zee_text_preview,
-            }), encoding="utf-8")
-        except Exception as e:
-            log(f"watchdog whatsapp send error: {e}")
+        # Record the nudge whether or not WhatsApp carried it. Before, a failed send
+        # left CHAT_STATE unwritten, so the next tick tried again 16s later - which is
+        # exactly how one expired key produced thousands of log lines.
+        wa_send(msg, f"chat stale {int(age_sec/60)}m")
+        CHAT_STATE.write_text(json.dumps({
+            "last_nudge_ts_ms": int(time.time() * 1000),
+            "nudged_for_zee_msg_ts_ms": zee_ts,
+            "stale_msg_preview": zee_text_preview,
+        }), encoding="utf-8")
     except Exception as e:
         log(f"chat_watchdog_check exception: {e}")
+
+
+# ── THE ALARM THAT WAS ITSELF BROKEN (2026-09-15) ───────────────────────────────
+# The site went down and nothing told Zee, because every alert here goes through
+# GreenAPI and that key is expired. The daemon retried it every ~16s and wrote 401
+# after 401 into this log — thousands of lines, burying anything real, and still no
+# alert. A watchdog whose only channel is dead is worse than none: it looks alive.
+#
+# So: latch on auth failure (401/403 means the KEY is wrong, retrying cannot fix it)
+# and fall back to a file Zee can actually see. The latch clears by itself when the
+# config file is edited — i.e. the moment he pastes a new key in, alerts resume with
+# no restart needed.
+_wa_auth_dead = None          # mtime of the config that was rejected
+
+def wa_send(msg: str, what: str) -> bool:
+    """Send via GreenAPI. Returns True if it actually went out. On an auth failure it
+    latches until .whatsapp_config.json changes, and always leaves a local alert."""
+    global _wa_auth_dead
+    if not WHATSAPP_CFG.exists():
+        alert_locally(msg, what, "no whatsapp config")
+        return False
+    try:
+        mtime = WHATSAPP_CFG.stat().st_mtime
+        cfg = json.loads(WHATSAPP_CFG.read_text(encoding="utf-8"))
+        host = cfg["api_host"]; iid = cfg["instance_id"]; tok = cfg["api_token"]
+    except Exception as e:
+        alert_locally(msg, what, f"config error: {e}")
+        return False
+
+    if _wa_auth_dead is not None and _wa_auth_dead == mtime:
+        alert_locally(msg, what, "whatsapp key rejected earlier - not retrying")
+        return False
+    if _wa_auth_dead is not None:
+        log("whatsapp config changed - retrying after earlier auth failure")
+        _wa_auth_dead = None
+
+    api = f"{host}/waInstance{iid}/sendMessage/{tok}"
+    body = json.dumps({"chatId": ZEE_CHAT_ID, "message": msg},
+                      ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        api, data=body, headers={"Content-Type": "application/json; charset=utf-8"})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            log(f"whatsapp sent ({what}): {r.read().decode('utf-8')[:80]}")
+        return True
+    except urllib.error.HTTPError as e:
+        if e.code in (401, 403):
+            _wa_auth_dead = mtime
+            log(f"WHATSAPP KEY REJECTED (HTTP {e.code}) - alerts LATCHED OFF until "
+                f"{WHATSAPP_CFG.name} is updated. Falling back to {ALERT_FILE.name}.")
+        else:
+            log(f"whatsapp send error ({what}): HTTP {e.code}")
+        alert_locally(msg, what, f"whatsapp HTTP {e.code}")
+        return False
+    except Exception as e:
+        log(f"whatsapp send error ({what}): {e}")
+        alert_locally(msg, what, str(e))
+        return False
+
+
+def alert_locally(msg: str, what: str, why: str) -> None:
+    """Last-resort channel: append to a plain file, newest first in its own block, so an
+    undelivered alarm still exists somewhere Zee or a future session can find it."""
+    try:
+        stamp = time.strftime("%Y-%m-%d %H:%M:%S")
+        with open(ALERT_FILE, "a", encoding="utf-8") as f:
+            f.write("\n[%s] UNDELIVERED ALERT (%s) - %s\n%s\n"
+                    % (stamp, what, why, msg))
+    except Exception as e:
+        log(f"alert_locally failed: {e}")
 
 
 def open_in_default_browser(url: str) -> None:
