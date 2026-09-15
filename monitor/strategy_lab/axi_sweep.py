@@ -271,6 +271,23 @@ GRIDS = {
         "InpMinVolPct=0.00||0.00||0.04||0.84||Y",
         "InpLowVolPct=1.00||0.95||0.05||1.00||Y",
     ],
+    # ZEE, 2026-09-15, on the 14 Sep 04:10 trade (-$85.20): "this trade was narrowly
+    # stopped, so can you check if increasing the SL would've rescued it into a profit?"
+    # That trade needed a 361pt buffer to survive (it has 120) - and at 2R the target
+    # moves out with the stop, so the wider version never reached ITS target either.
+    # This sweeps the buffer far past the band tested before, with InpMaxSlPts raised so
+    # the 900pt cap does not silently refuse the wide setups and flatter the result.
+    "wide": ["InpVolWindow=1", "InpSetupAuto=true", "InpStrictDir=true",
+        "InpRisingVol=false", "InpStopRef=0", "InpTrendTF=0", "InpMaxOpen=10",
+        "InpCoolBars=0", "InpQuietRef=0", "InpBigMode=1", "InpVolLookback=200",
+        "InpOandaVolume=0", "InpConfirmMode=0", "InpAnomaly=false",
+        "InpFakeBreak=false", "InpEngulf=false", "InpMinVolPct=0.00",
+        "InpSetupMin=2", "InpSetupMax=10", "InpSwingPivot=3", "InpSwingMin=10",
+        "InpBigPct=0.80", "InpBigAvg=1.20", "InpBodyFrac=0.35",
+        "InpMinSlPts=60", "InpTargetR=2.0", "InpBreakEvenR=0", "InpWickMode=2",
+        "InpSlBufPts=120||120||40||400||Y",
+        "InpMaxSlPts=900||900||600||1500||Y",
+    ],
     # M1. On a 1-minute chart the reaction candle is tiny, so the stop taken from it is
     # tiny too and InpMinSlPts stops being a safety floor and becomes THE stop on most
     # trades — the structure gets overwritten by a constant. Commission also bites far

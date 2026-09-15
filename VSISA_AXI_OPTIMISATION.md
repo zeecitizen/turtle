@@ -133,3 +133,43 @@ py monitor/strategy_lab/vsisa_validate.py --label X --inputs "<config>"   # Blue
 
 The Axi rig is `C:/axi_rig`, a portable clone of the Axi install plus a copy of its
 history. Nothing in that harness can reach the terminal the EA is attached to.
+
+---
+
+## Widening the stop — asked 2026-09-15, answered NO
+
+Zee, on the 14 Sep 04:10 trade (−$85.20): *"this trade was narrowly stopped, so can you
+check if increasing the SL would've rescued it into a profit?"*
+
+**That trade, exactly.** Reaction candle 04:05 low 4329.80, stop 4328.60 (the 120pt
+buffer). Price ran to 4326.19 — it needed a **361pt buffer** to survive, three times what
+it has. But the target is 2R, so it travels outward with the stop:
+
+| buffer | stop | risk | 2R target | outcome |
+|---|---|---|---|---|
+| 120 (shipped) | 4328.60 | 846 | 4353.98 | stopped 04:15 |
+| 300 | 4326.80 | 1026 | 4357.58 | stopped 04:20 |
+| 361 | 4326.19 | 1087 | 4358.80 | stopped 04:20 |
+| 400 | 4325.80 | 1126 | 4359.58 | stopped 07:35 |
+
+The highest price in the 24h after entry was **4355.51**. Every target from 200pts of
+buffer upward sits above it. Widening the stop converts this loss into a **bigger** loss —
+it never rescues it, because at a fixed R multiple the target retreats exactly as fast as
+the stop widens. Only holding the target STILL rescues it (400pt buffer, original target
+4352.51, hit 04:55 at 1.37R) — and that is a change to the TP rule, not the SL.
+
+**In aggregate it is an overfit.** Buffer 120→400 × cap 900/1500, both halves, Axi real
+ticks M5:
+
+| config | Apr–Jun (tuned) | Jul–Sep (unseen) | max DD |
+|---|---|---|---|
+| **120 / 900 — shipped** | +$3,545 | **+$1,672** | 0.89% / 1.75% |
+| 240 / 1500 — Apr–Jun winner | **+$5,529** | **−$14** | 1.80% / 3.56% |
+| 120 / 1500 | +$4,798 | +$279 | 1.32% / 3.33% |
+
+Raising the 900pt cap looks like +56% on the tuning half and inverts to a loss on the
+unseen one, with drawdown roughly doubled. Against $500 of real capital that is
+disqualifying twice over. **Shipped 120 / 900 is the best out-of-sample config in the
+grid and stays.**
+
+Receipts: grid `wide` in `monitor/strategy_lab/axi_sweep.py`, 16 passes per half.
