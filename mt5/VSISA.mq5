@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.00"
+#property version   "1.01"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -137,6 +137,7 @@ input double InpBigAvg      = 1.20;   // InpBigAvg — ...and >= this x lookback
 //--- LAW 3: the low-volume reaction. THE TRIGGER. --------------------------
 input int    InpQuietRef    = 0;      // InpQuietRef — 0 quiet vs the SETUP · 1 quiet vs lookback AVERAGE
 input double InpLowVolPct   = 1.00;   // InpLowVolPct — reaction volume <= this x the reference
+input double InpMinVolPct   = 0.00;   // InpMinVolPct — reaction volume >= this x the reference (0 = no floor)
 input double InpBodyFrac    = 0.35;   // InpBodyFrac — reaction body >= this x its own range
 input int    InpConfirmMode = 0;      // InpConfirmMode — 0 enter on reaction · 1 wait for no-supply TEST + confirm
 input double InpTestVolPct  = 0.90;   // InpTestVolPct — the test bar's volume <= this x the LAW 3 reference
@@ -602,6 +603,17 @@ bool Detect(int side, double &sl_level, string &why) {
    if (qr < g_best_quiet) g_best_quiet = qr;
    bool quiet = ((double)v1 <= InpLowVolPct * vref);
 
+   //--- THE FLOOR (Zee, 2026-09-15). He asked whether a reaction sitting too CLOSE to
+   // the selling volume is what fails. Measured over 305 joined fires it is not: the
+   // winners' median ratio is 0.856 and the losers' 0.865 — no separation. What the
+   // same data does show, in BOTH walk-forward halves independently, is the opposite
+   // end: the quietest fifth (below 0.76x) is the WORST group on the book — 36% WR and
+   // $6.40 a trade against $27 in the middle band. A reaction that dead is not a
+   // stronger imbalance, it is nobody turning up, and the move does not follow through.
+   // So the shape is a BAND, not a ceiling. This is the floor; it is OFF by default
+   // until it survives out-of-sample.
+   if (InpMinVolPct > 0.0 && (double)v1 < InpMinVolPct * vref) { g_rej_quiet++; return false; }
+
    //--- LAW 6: the wick. On a big-volume bar a wick against the move says the volume
    // was aggression that WON, not absorption that is still sitting there — which is
    // the one case the teacher says not to wait on.
@@ -778,7 +790,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.00 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.01 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
