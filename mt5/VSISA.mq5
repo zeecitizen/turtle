@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.15"
+#property version   "1.16"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -343,6 +343,24 @@ input double InpTgtMaxR     = 0.00;   // InpTgtMaxR — cap the target at this R
 // halves. Note this REVERSES an earlier finding made on the old build, where the stop
 // was measured from the whole setup and breakeven did help - the correction changed it.
 input double InpBreakEvenR  = 0.0;    // InpBreakEvenR — >0: move stop to entry at this R
+// THE RATCHET (Zee, 2026-09-16): "if 0.75R is reached we breakeven to 0.75R / if 1R is
+// reached we breakeven to 1R / if 2R is reached we breakeven to 2R / if XR is reached we
+// breakeven to XR".
+//
+// This is NOT InpBreakEvenR. That one moves the stop to ENTRY and then stops caring, so a
+// trade that reaches 4R and reverses still closes at zero. This climbs with the trade and
+// never gives the level back: reach 2R and 2R is banked, whatever happens after.
+//
+// WHY IT IS WORTH TESTING AT 5.0R. Of the 65 losing trades Jan-Sep, FOUR ran past 4R before
+// being stopped for a full loss - 20 May peaked 4.80R, 11 Sep 4.77R, 3 Jun 4.61R, 17 Mar
+// 4.02R - and another three passed 3R. At 2.0R the old breakeven was measured as actively
+// destructive (+$962/+$1,199 with it on against +$2,471/+$1,651 off) because it cut winners
+// early. The journey to 5R is far longer, so the same test has to be run again here.
+//
+// The ladder is start, start+step, start+2*step ... and the stop locks to the highest rung
+// price has actually reached. It never moves backwards.
+input double InpRatchetStart = 0.00;  // InpRatchetStart — first R rung that gets locked (0 = off)
+input double InpRatchetStep  = 0.25;  // InpRatchetStep — spacing of the rungs above it
 
 //--- LAW 6: the wick override (default OFF) --------------------------------
 // "since the fourth bullish blue candle has still somewhat bigger volume .. if there
@@ -1085,6 +1103,51 @@ void Fire(int side, double sl_level, string why) {
 //+------------------------------------------------------------------+
 //| Breakeven — LAW 8's optional half                                 |
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| THE RATCHET — lock the highest R rung the trade has reached.       |
+//+------------------------------------------------------------------+
+void RatchetCheck() {
+   if (InpRatchetStart <= 0.0 || InpRatchetStep <= 0.0) return;
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong tk = PositionGetTicket(i);
+      if (tk == 0 || !PositionSelectByTicket(tk)) continue;
+      if (PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      if (PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+
+      double open = PositionGetDouble(POSITION_PRICE_OPEN);
+      double sl   = PositionGetDouble(POSITION_SL);
+      double tp   = PositionGetDouble(POSITION_TP);
+      long   type = PositionGetInteger(POSITION_TYPE);
+
+      // The ORIGINAL risk, which the ratchet has usually already eaten into, so it is
+      // rebuilt from the target rather than from the live stop.
+      double risk = 0.0;
+      if (tp > 0 && InpTargetR > 0)
+         risk = MathAbs(tp - open) / InpTargetR;
+      if (risk <= 0.0 && sl > 0) risk = MathAbs(open - sl);
+      if (risk <= 0.0) continue;
+
+      double px = (type == POSITION_TYPE_BUY)
+                ? SymbolInfoDouble(_Symbol, SYMBOL_BID)
+                : SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      double gained = ((type == POSITION_TYPE_BUY) ? (px - open) : (open - px)) / risk;
+      if (gained < InpRatchetStart) continue;
+
+      // highest rung actually reached
+      double rungs = MathFloor((gained - InpRatchetStart) / InpRatchetStep);
+      double lock  = InpRatchetStart + rungs * InpRatchetStep;
+      if (lock <= 0.0) continue;
+
+      double want = (type == POSITION_TYPE_BUY) ? open + lock * risk
+                                                : open - lock * risk;
+      want = NormalizeDouble(want, _Digits);
+      // never backwards, and never through the market
+      if (type == POSITION_TYPE_BUY  && (want <= sl || want >= px)) continue;
+      if (type == POSITION_TYPE_SELL && (want >= sl || want <= px)) continue;
+      trade.PositionModify(tk, want, tp);
+   }
+}
+
 void BreakEvenCheck() {
    if (InpBreakEvenR <= 0) return;
    for (int i = PositionsTotal() - 1; i >= 0; i--) {
@@ -1126,7 +1189,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.15 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.16 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
@@ -1343,6 +1406,7 @@ bool DayLossHit() {
 
 void OnTick() {
    BreakEvenCheck();
+   RatchetCheck();
 
    // One decision per closed bar. Everything this EA judges is a finished bar, so
    // running the detector on every tick would only re-answer the same question.

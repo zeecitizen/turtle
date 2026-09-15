@@ -471,6 +471,59 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.16 — THE RATCHET. Zee's ladder, and it beats the shipped build (2026-09-16)
+
+**Who ordered it.** Zee, after seeing the 11 Sep trade peak at 4.77R and still lose:
+*"if 0.75R is reached we breakeven to 0.75R / if 1R is reached we breakeven to 1R / if 2R
+is reached we breakeven to 2R / if XR is reached we breakeven to XR"*.
+
+**What it is, and why it is NOT InpBreakEvenR.** The old breakeven moves the stop to ENTRY
+and then stops caring, so a trade that reaches 4R and reverses still closes at zero. This
+CLIMBS: reach 2R and 2R is banked whatever happens next. `InpRatchetStart` (first rung),
+`InpRatchetStep` (spacing). **Default OFF.**
+
+**What prompted it.** Of the 65 losing trades Jan–Sep, four ran past 4R before being stopped
+for a full loss (20 May 4.80R, 11 Sep 4.77R, 3 Jun 4.61R, 17 Mar 4.02R) and three more
+passed 3R. Nothing protected any of it.
+
+**The ladder matters enormously — and his literal 0.75R start is the wrong rung:**
+
+| ratchet | net | WR | avg win | maxDD | streak | net per $1 DD |
+|---|---|---|---|---|---|---|
+| **OFF (shipped)** | +$5,571 | 30% | +$420 | $1,232 | 13 | 4.52 |
+| start 0.75 step 0.25 | +$1,356 | **67%** | +$69 | $558 | 4 | 2.43 |
+| start 1.00 step 1.00 | +$1,819 | 61% | +$93 | $403 | 4 | 4.51 |
+| **start 2.00 step 1.00** | **+$4,241** | **51%** | +$178 | **$660** | **7** | **6.42** |
+| start 3.00 step 1.00 | +$3,598 | 38% | +$252 | $759 | 8 | 4.74 |
+
+Locking from 0.75R reaches 67% win rate and earns a quarter of the money — it banks 0.75R
+on trades that were going to 5R. Starting at 2.0R is the peak on every risk-adjusted measure.
+
+**AT MATCHED DRAWDOWN IT DOMINATES THE SHIPPED BUILD.** Sized to the same $1,232:
+
+| | net | WR | worst streak | maxDD |
+|---|---|---|---|---|
+| shipped, no ratchet, 0.15 lots | +$5,571 | 30% | 13 | $1,232 |
+| **ratchet 2.0/1.0, 0.28 lots** | **+$7,918** | **51%** | **7** | $1,232 |
+
+**+42% more money, 21 more points of win rate, and half the losing streak, for identical
+risk.** Nothing else tested this year has improved all three at once.
+
+**Walk-forward, 0.15 lots, Jan–mid-May vs mid-May–Sep:**
+
+| | H1 | H2 |
+|---|---|---|
+| OFF | 27% WR · +$1,407 · streak 13 · ratio 1.14 | 31% WR · +$4,164 · streak 9 · ratio 4.73 |
+| ratchet 2.0 | 42% WR · +$655 · streak 7 · ratio 0.99 | 56% WR · +$3,586 · streak 4 · ratio 8.17 |
+
+The win-rate and streak gains hold in BOTH halves (27→42 and 31→56; 13→7 and 9→4). The
+risk-adjusted return is a slight loss in H1 (0.99 vs 1.14) and a large gain in H2. So it is
+not universally dominant — but the two things Zee actually asked for are consistent.
+
+**Not shipped pending his call.** Recommended: `InpRatchetStart 2.0`, `InpRatchetStep 1.0`.
+
+---
+
 ## VSISA v1.15 — SHIPPED: 0.15 lots (2026-09-16)
 
 **Who ordered it.** Zee: *"ok 0.15 lot adjustment"*.
