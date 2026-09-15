@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.04"
+#property version   "1.05"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -172,13 +172,35 @@ input int    InpStopRef     = 0;      // InpStopRef — 0 = below the REACTION c
 input int    InpSlBufPts    = 120;    // InpSlBufPts — points beyond the reaction candle (12 pips)
 input int    InpMinSlPts    = 60;     // InpMinSlPts — floor, so spread cannot eat the stop
 input int    InpMaxSlPts    = 900;    // InpMaxSlPts — refuse setups whose risk is absurd
-// 2.0R (2026-09-15). Zee: "i also think we are loosing some wins because the TP is too
-// high. try tightening the TP." He was right that 2.5 was costing wins, and 2.0 is the
-// only target strong in BOTH halves (+$2,471 / +$1,651). It is also his document's own
-// number - 1:2 - where 2.5 was mine. Targets below 0.75R were tested too and every one
-// buys win rate with money: 0.20R reaches 82% and LOSES in both halves at every stop
-// width, because at 0.2:1 break-even needs 83.3%.
-input double InpTargetR     = 2.0;    // InpTargetR — TP as a multiple of risk
+// 5.0R — SHIPPED 2026-09-15 ON ZEE'S CALL. "SL should not be tied to TP. SL can be below
+// the first reaction candle's low .. and TP can be very high up until 1:7 .. can you test
+// this?" Then, on the result: "ship 5.0".
+//
+// I HAD THIS WRONG, and the error is worth keeping. I swept the R ladder only to 2.5R,
+// found it worse than 2.0R, and called 2.0R the optimum. 2.0R is a LOCAL peak: the curve
+// dips at 2.5R and climbs to a second, higher one.
+//
+//     2.0R  43% WR  +$5,502  DD $946     <- the old default
+//     3.0R  32% WR  +$4,624              <- the dip that fooled me
+//     4.0R  27% WR  +$6,374  DD $1,014   breaches a 10% funded limit
+//     5.0R  25% WR  +$8,153  DD $950     <- HERE
+//     6.0R  22% WR  +$8,744  DD $1,322   breaches
+//
+// +48% profit for IDENTICAL drawdown, and the only rung under a 10% limit. It walks
+// forward better than anything else tested: Apr-Jun +$4,022, Jul-Sep +$3,988 — the two
+// halves within 1% of each other, beating the old default on BOTH and doubling the unseen
+// one (+$3,621 / +$1,741).
+//
+// NOTHING ABOUT THE RISK CHANGED. Same 322 setups, same structural stop, same average loss
+// (-$57.35 at every rung). Only the winners run: avg win +$279.62 against 2.0R's +$114.99.
+// That is what decoupling the target from the stop actually buys.
+//
+// THE COST, so no future session mistakes it for free: win rate 43% -> 25%, and the worst
+// losing streak goes 11 -> 15. Targets below 0.75R were tested too and every one buys win
+// rate with money: 0.20R reaches 82% and LOSES at every stop width, because at 0.2:1
+// break-even needs 83.3%. The H1 trend filter does NOT rescue the win rate here — at 5.0R
+// it halves the profit and leaves WR at 24%; its benefit was specific to 2.0R.
+input double InpTargetR     = 5.0;    // InpTargetR — TP as a multiple of risk
 // TARGET DECOUPLED FROM STOP (Zee, 2026-09-15). He asked whether a wider stop would have
 // saved the 14 Sep 04:10 trade. It would not — because at a fixed R multiple the target
 // travels outward with the stop, so widening moves the finish line away exactly as fast
@@ -898,7 +920,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.04 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.05 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",

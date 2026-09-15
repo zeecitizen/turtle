@@ -471,6 +471,54 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.05 — SHIPPED: the target runs to 1:5 (2026-09-15)
+
+**Who ordered it.** Zee: *"SL should not be tied to TP. SL can be below the first reaction
+candle's low (low volume bullish candle after bearish background big volumes).. and TP can
+be very high up until 1:7 .. can you test this?"* — then, on the result: **"ship 5.0"**.
+
+**What changed.** `InpTargetR` default **2.0 -> 5.0**. That is the whole change; no logic was
+touched, and the stop rule is untouched and still structural (`InpStopRef=0`, 120 points
+under the reaction candle's low — which is already exactly what he describes).
+
+**I HAD THIS WRONG and the error is recorded in the source.** I swept the R ladder only as
+far as 2.5R, found it worse than 2.0R, and shipped 2.0R as the optimum. 2.0R is a LOCAL
+peak — the curve dips at 2.5-3.0R and climbs to a second, higher one:
+
+| InpTargetR | WR | net | maxDD | % of $10k funded |
+|---|---|---|---|---|
+| **2.0 — the old default** | 43% | +$5,502 | $946 | 9.5% |
+| 2.5 | 36% | +$4,503 | — | |
+| 3.0 | 32% | +$4,624 | — | the dip that fooled me |
+| 4.0 | 27% | +$6,374 | $1,014 | 10.1% ⚠ breach |
+| **5.0 — SHIPPED** | **25%** | **+$8,153** | **$950** | **9.5%** |
+| 6.0 | 22% | +$8,744 | $1,322 | 13.2% ⚠ breach |
+| 7.0 | 19% | +$8,112 | — | |
+
+**+48% profit for identical drawdown**, and the only rung that stays under a 10% funded
+limit — 6.0R earns $591 more and would breach the account.
+
+**Walk-forward — the best of the whole session.** Apr–Jun **+$4,022** · Jul–Sep **+$3,988**:
+the two halves within 1% of each other on a split it was never fitted to, beating the old
+default on BOTH (+$3,621 / +$1,741) and more than doubling the unseen half.
+
+**Nothing about the risk changed.** Same 322 setups, same structural stop, same average loss
+(−$57.35 at every rung). Only the winners run: avg win **+$279.62** against 2.0R's +$114.99,
+payoff 4.9:1. That is precisely what decoupling the target from the stop buys.
+
+**THE COST, so it is never mistaken for free:** win rate **43% -> 25%**, worst losing streak
+**11 -> 15**. The H1 trend filter does not rescue it — at 5.0R it halves the profit and
+leaves WR at 24%; that benefit was specific to 2.0R.
+
+**Ship verification.** The compiled v1.05 binary re-run on Apr 1 -> Sep 15 returned
+**79W/243L, NET $8,010.00** — identical to the pre-ship measurement, so the default in the
+source is the one that was tested. Report `AXI_bt_224426.htm`.
+
+**ZEE MUST REATTACH** — MT5 does not hot-reload inputs. The live chart keeps running 2.0R
+until the EA is re-dragged onto it, and the banner line must read `v1.05`.
+
+---
+
 ## VSISA v1.04 — diagram 9: effort per unit of result (2026-09-15)
 
 **Who ordered it.** Zee: *"i've added another diagram 9. test it?"*
