@@ -471,6 +471,54 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.14 — SHIPPED: the fake break is ON (2026-09-16)
+
+**Who ordered it.** Zee: *"activate turn on InpFakeBreak with InpSweepLook=30."*
+
+**What changed.** `InpFakeBreak` **false -> true**, `InpSweepLook` stays 30. No logic touched.
+
+**What it is.** His own tier-3 case, written in `LAWS_VSISA.md` from the start: *"case 3.
+2 bar setup + fake break of this support + forms a wick + closing again inside support ..
+(strongest)"*. The setup must SWEEP a recent extreme and the reaction must close back inside
+it. Built early, tested OFF on the OLD build, and never re-examined after the stop and swing
+corrections — it took an external analysis naming `InpFakeBreak` to send me back to it.
+
+**It is the best filter found on this project.** Walk-forward, per trade:
+
+| sweep | Apr–Jun | Jul–Sep |
+|---|---|---|
+| off | 25% WR · $23.66 | 24% WR · $28.21 |
+| 20 bars | 33% · $45.40 | 31% · $51.46 |
+| **30 bars — SHIPPED** | **34% · $48.76** | **32% · $54.50** |
+| 50 bars | 38% · $57.65 | 31% · $59.39 |
+
+Win rate and per-trade value both roughly double, in BOTH halves, at EVERY sweep length.
+That plateau is the signature that separates it from everything rejected this year — the cap
+bar, the volume floor, close location, effort-per-range and the quiet retracement were each
+good at ONE setting and worthless at its neighbours.
+
+**What it buys:** win rate **25% -> 33%**, worst losing streak **15 -> 9**, drawdown
+**$905 -> $586** (5.9% of a $10k funded account). Zee turned it on for the streak.
+
+**What it costs, and it is NOT free:** it refuses 75% of setups (318 -> 78), so net falls
+**$8,196 -> $3,998** at 0.10 lots. Per unit of drawdown it is WORSE than off — 6.81 against
+9.06 — meaning a bigger lot with the filter off earns more for the same risk. This is a
+deliberate trade of income for bearability, recorded in the source so no future session
+reads it as an upgrade.
+
+**Ship verification.** Compiled v1.14, Apr 1 → Sep 15, Axi real ticks M5:
+**26W/52L, NET $3,998.63** — matching the pre-ship measurement exactly. Report
+`AXI_bt_032102.htm`.
+
+**Current shipped configuration (v1.14):**
+`M5 · InpLots 0.10 · InpMaxOpen 2 · InpTargetR 5.0 · InpStopRef 0 · InpSlBufPts 120 ·
+InpMinSlPts 60 · InpMaxSlPts 900 · InpBreakEvenR 0 · InpLowVolPct 1.00 · InpWickMode 2 ·
+InpFakeBreak TRUE / InpSweepLook 30 · InpTrendTF 0` — all other experimental inputs OFF.
+
+**ZEE MUST REATTACH.** The banner must read `v1.14` and `fake 1`.
+
+---
+
 ## VSISA v1.13 — SHIPPED: InpMaxOpen 10 -> 2 (2026-09-16)
 
 **Who ordered it.** Zee: *"ok ship InpMaxOpen=2"*.
