@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.01"
+#property version   "1.02"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -179,6 +179,23 @@ input int    InpMaxSlPts    = 900;    // InpMaxSlPts — refuse setups whose ris
 // buys win rate with money: 0.20R reaches 82% and LOSES in both halves at every stop
 // width, because at 0.2:1 break-even needs 83.3%.
 input double InpTargetR     = 2.0;    // InpTargetR — TP as a multiple of risk
+// TARGET DECOUPLED FROM STOP (Zee, 2026-09-15). He asked whether a wider stop would have
+// saved the 14 Sep 04:10 trade. It would not — because at a fixed R multiple the target
+// travels outward with the stop, so widening moves the finish line away exactly as fast
+// as it moves the stop. That trade needed a 361pt buffer to survive and its 2R target
+// then sat at 4358.80, above the 4355.51 high of the next 24 hours. Holding the target
+// STILL rescued it (400pt buffer, original target, hit at 1.37R).
+//
+// So the target gets its own rule:
+//   mode 0  R multiple of the stop            — the coupled original
+//   mode 1  a fixed distance in points        — same target whatever the stop does
+//   mode 2  the swing origin, i.e. the level the leg came FROM — structural, and the
+//           one the method actually implies: a retracement is finished when price is
+//           back where the move began.
+input int    InpTargetMode  = 0;      // InpTargetMode — 0 R-multiple · 1 fixed points · 2 swing origin
+input int    InpTargetPts   = 300;    // InpTargetPts — TP distance for mode 1
+input double InpTgtMinR     = 0.50;   // InpTgtMinR — refuse if the target is nearer than this in R
+input double InpTgtMaxR     = 0.00;   // InpTgtMaxR — cap the target at this R (0 = uncapped)
 // BREAKEVEN OFF (2026-09-15). It was CUTTING WINNERS: price reaches 1R, the stop jumps
 // to entry, price dips back to entry and closes flat - then runs on to 2R without us.
 // Measured at 2.0R with the corrected stop: OFF gives +$2,471/+$1,651 against ON at
@@ -233,6 +250,8 @@ int      g_fires    = 0;
 int g_seen = 0, g_rej_dir = 0, g_rej_loud = 0, g_rej_rise = 0, g_rej_anom = 0;
 int g_rej_fake = 0, g_rej_react = 0, g_rej_body = 0, g_rej_quiet = 0, g_rej_trend = 0;
 int g_rej_test = 0;
+double g_swing_px = 0.0;  // price the leg STARTED from - the structural target (mode 2)
+int g_rej_tgt = 0;        // candidates refused because the structural target was too near
 int g_last_span = 0;      // bars in the yardstick on the last judgement, for the log
 long g_rv_hit = 0, g_rv_miss = 0, g_ov_hit = 0;
 
@@ -397,9 +416,14 @@ bool VolStats(int from, long &vmax, double &vavg, double &ravg, int side) {
    int span = (InpVolWindow == 1) ? SwingLen(from, side) : InpVolLookback;
    g_last_span = span;
    int n = 0;
+   // THE LEG ORIGIN. This loop already walks back to the pivot that began the move, so
+   // the extreme it passes IS the level price retraced from - mode 2's target.
+   g_swing_px = (side > 0) ? -1.0 : 1e18;
    for (int k = from; k < from + span; k++) {
       long v = BarVolume(k);
       double r = bRange(k);
+      if (side > 0) { if (bHigh(k) > g_swing_px) g_swing_px = bHigh(k); }
+      else          { if (bLow(k)  < g_swing_px) g_swing_px = bLow(k);  }
       if (v <= 0) continue;
       if (v > vmax) vmax = v;
       vavg += (double)v;
@@ -715,9 +739,34 @@ void Fire(int side, double sl_level, string why) {
       return;
    }
 
-   double tp = (InpTargetR > 0)
-             ? ((side > 0) ? entry + InpTargetR * risk : entry - InpTargetR * risk)
-             : 0.0;
+   double tp = 0.0;
+   if (InpTargetMode == 1) {
+      double d = InpTargetPts * _Point;
+      tp = (side > 0) ? entry + d : entry - d;
+   } else if (InpTargetMode == 2) {
+      tp = g_swing_px;                       // the level the leg came FROM
+   } else if (InpTargetR > 0) {
+      tp = (side > 0) ? entry + InpTargetR * risk : entry - InpTargetR * risk;
+   }
+
+   // GUARDS for the decoupled modes. Once the target stops being a multiple of the
+   // stop it can land anywhere - on the wrong side of entry, or so close that the
+   // spread eats it. Reward is measured in R purely so the two bounds read in the same
+   // unit as everything else; it does not re-couple the target to the stop.
+   if (tp > 0.0 && InpTargetMode != 0) {
+      double reward = (side > 0) ? (tp - entry) : (entry - tp);
+      if (reward <= 0.0 || reward < InpTgtMinR * risk) {
+         g_rej_tgt++;
+         if (InpVerbose)
+            PrintFormat("[VSISA] refused: target %.2f is %.2fR from entry %.2f (min %.2fR)",
+                        tp, reward / MathMax(risk, _Point), entry, InpTgtMinR);
+         return;
+      }
+      if (InpTgtMaxR > 0.0 && reward > InpTgtMaxR * risk) {
+         reward = InpTgtMaxR * risk;
+         tp = (side > 0) ? entry + reward : entry - reward;
+      }
+   }
 
    int dg = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
    sl_level = NormalizeDouble(sl_level, dg);
@@ -743,7 +792,8 @@ void Fire(int side, double sl_level, string why) {
    if (InpVerbose)
       PrintFormat("[VSISA] #%d %s @ %.2f SL %.2f (%.0f pts) TP %.2f (%.1fR) | %s",
                   g_fires, (side > 0) ? "BUY" : "SELL", entry, sl_level,
-                  risk / _Point, tp, InpTargetR, why);
+                  risk / _Point, tp,
+                  (tp > 0 ? MathAbs(tp - entry) / MathMax(risk, _Point) : 0.0), why);
 }
 
 //+------------------------------------------------------------------+
@@ -790,7 +840,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.01 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.02 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
@@ -846,6 +896,7 @@ void OnDeinit(const int reason) {
                "| trend %d | FIRED %d",
                g_seen, g_rej_dir, g_rej_loud, g_rej_rise, g_rej_anom, g_rej_fake,
                g_rej_react, g_rej_body, g_rej_quiet, g_rej_test, g_rej_trend, g_fires);
+   PrintFormat("[VSISA] FUNNEL target-too-near refusals: %d", g_rej_tgt);
    PrintFormat("[VSISA] VOLUME SOURCE OANDA %I64d | iRealVolume %I64d | broker tick "
                "count %I64d — %s", g_ov_hit, g_rv_hit, g_rv_miss,
                (g_ov_hit > 0 && g_rv_miss == 0 && g_rv_hit == 0)
