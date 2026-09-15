@@ -173,3 +173,44 @@ disqualifying twice over. **Shipped 120 / 900 is the best out-of-sample config i
 grid and stays.**
 
 Receipts: grid `wide` in `monitor/strategy_lab/axi_sweep.py`, 16 passes per half.
+
+---
+
+## The stop is structural, the target runs — Zee's call, 2026-09-15
+
+*"SL should not be tied to TP. SL can be below the first reaction candle's low (low volume
+bullish candle after bearish background big volumes).. and TP can be very high up until
+1:7 .. can you test this?"*
+
+**He was right, and my earlier reading was wrong.** I had tested the R ladder only as far as
+2.5R, found it worse than 2.0R, and concluded 2.0R was the peak. It is not — it is a LOCAL
+peak. The curve dips at 2.5R and then climbs to a second, higher one:
+
+| InpTargetR | trades | WR | net | maxDD | % of $10k |
+|---|---|---|---|---|---|
+| **2.0 — shipped** | 322 | **43%** | +$5,502 | $946 | 9.5% |
+| 2.5 | 322 | 36% | +$4,503 | — | — |
+| 3.0 | 322 | 32% | +$4,624 | — | — |
+| 3.5 | 322 | 29% | +$5,016 | — | — |
+| 4.0 | 322 | 27% | +$6,374 | $1,014 | 10.1% ⚠ |
+| **5.0** | 322 | **25%** | **+$8,153** | **$950** | **9.5%** |
+| 6.0 | 322 | 22% | +$8,744 | $1,322 | 13.2% ⚠ |
+| 7.0 | 322 | 19% | +$8,112 | — | — |
+
+**1:5 is the answer.** +48% profit over the shipped config for IDENTICAL drawdown ($950 vs
+$946). 6.0 makes $591 more but draws $1,322 — a 13.2% breach of a standard funded limit —
+and 4.0 breaches marginally at 10.1%. Only 5.0 sits under the line.
+
+**It walks forward better than anything else tested.** Apr–Jun +$4,022 · Jul–Sep +$3,988 —
+the two halves within 1% of each other, on a split it was never fitted to. The shipped 2.0R
+manages +$3,621 / +$1,741, so 5.0R beats it on BOTH halves, doubling the unseen one.
+
+The trade count never changes (322) — same setups, same stops, same losses (avg −$57.35
+throughout). Only the winners run: avg win +$279.62 against 2.0R's +$114.99, payoff 4.9:1.
+
+**The cost is win rate: 43% → 25%, and the worst losing streak goes 11 → 15.**
+
+**Context filters do NOT help at high R.** H1 trend at 5.0R halves the profit ($4,231 vs
+$8,010) and leaves win rate at 24%. Its win-rate benefit was specific to 2.0R.
+
+Receipts: `AXI_bt_2231*`–`2235*`, Axi XAUUSD.pro M5 model 4, stop 120 structural throughout.
