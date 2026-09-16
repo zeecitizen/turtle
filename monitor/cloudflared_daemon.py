@@ -16,7 +16,8 @@ dies, sleeps 5s and respawns. URL change → notify.
 
 Sheriff Hawk will see this via the heartbeat freshness, same as other hawks.
 """
-import json, os, re, signal, subprocess, sys, threading, time, urllib.request, base64
+import json, os, re, signal, socket, subprocess, sys, threading, time, urllib.request, base64
+import urllib.error
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -464,18 +465,41 @@ def stdout_reader_thread(proc, last_url_box, on_new_url):
 
 
 def probe_url_alive(url: str) -> bool:
-    """Quick HEAD-style health check on the public URL. Returns True on 2xx/3xx/401
-    (401 = gate works = tunnel works), False on DNS/network/5xx errors."""
+    """Is the TUNNEL up? Returns True on 2xx/3xx/401, and — deliberately — on a TIMEOUT.
+
+    A BUSY ORIGIN IS NOT A DEAD TUNNEL (2026-09-17). Zee: "there's a black window that comes
+    and goes.. vanishes and rebuilds again and again. its cloudflared.exe". The daemon had
+    killed the tunnel at 01:18 after three failed probes — and the three failures were mine:
+    /vsisa rebuilds synchronously for 20-30s and blocks Node's single event loop, so an 8s
+    probe against /api/state timed out three times running while the server was perfectly
+    alive and the tunnel perfectly up.
+
+    That is the daemon reading "slow" as "dead". The distinction matters because the cure
+    for a dead tunnel (kill cloudflared) does nothing for a busy origin except make a window
+    flash and drop whatever was in flight.
+
+    So: a socket timeout now counts as ALIVE. Only a refusal, a DNS failure or a 5xx — the
+    things that actually mean the tunnel is not carrying traffic — count against it. The
+    timeout is also raised to 20s so an ordinary page build does not even reach that path.
+    """
     if not url:
         return False
     req = urllib.request.Request(url + "/api/state", method="GET",
                                  headers={"User-Agent": BROWSER_UA})
     try:
-        with urllib.request.urlopen(req, timeout=8) as r:
+        with urllib.request.urlopen(req, timeout=20) as r:
             return r.status < 500
     except urllib.error.HTTPError as e:
         # 401/403 = tunnel reachable, gate working — that's healthy
         return e.code < 500
+    except socket.timeout:
+        log("health probe timed out — origin busy, NOT treating the tunnel as dead")
+        return True
+    except urllib.error.URLError as e:
+        if isinstance(getattr(e, "reason", None), socket.timeout):
+            log("health probe timed out — origin busy, NOT treating the tunnel as dead")
+            return True
+        return False
     except Exception:
         return False
 
