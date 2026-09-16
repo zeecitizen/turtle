@@ -471,6 +471,60 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.19 — SHIPPED: camel humps on M30 (2026-09-16)
+
+**Who ordered it.** Zee: *"ok ship M30"*.
+
+**What changed.** `InpTrendTF` 0 -> **30**, `InpTrendMode` 0 -> **1** (camel humps). No
+logic touched — both shipped as options in v1.18.
+
+**Ship verification.** Compiled v1.19, Jan 1 → Sep 16, Axi real ticks M5, 0.28 lots:
+**66 trades · 39 wins (59%) · NET +$8,018.64 · maxDD $875 (8.8% of $10k) · worst streak 5**
+— matching the pre-ship measurement exactly.
+
+**Against what it replaces:**
+
+| | v1.17 (no trend filter) | **v1.19 (camel M30)** |
+|---|---|---|
+| net, Jan–Sep | +$7,918 | **+$8,019** |
+| win rate | 51% | **59%** |
+| worst streak | 7 | **5** |
+| max drawdown | $1,232 (12.3%) | **$875 (8.8%)** |
+| trades | 94 | 66 |
+
+More money, +8 points of win rate, a shorter streak, and **29% less drawdown on 28 fewer
+trades**. It is the only change this year to improve all four in BOTH walk-forward halves.
+
+**AND IT PUTS THE ACCOUNT BACK INSIDE A 10% FUNDED RULE.** v1.17 sat at 12.3% and breached;
+this is **8.8%**. The 0.28 lot was chosen to match v1.15's drawdown, and the trend filter has
+now given 3.5 points of that back for free.
+
+**Month by month at 0.28 lots** — and the four-month opening slump is much shallower than the
+filter-less build's −$634:
+
+| Jan | Feb | Mar | Apr | May | Jun | Jul | Aug | Sep |
+|---|---|---|---|---|---|---|---|---|
+| +$619 | −$217 | +$226 | +$83 | +$2,284 | +$1,692 | +$2,713 | +$309 | +$392 |
+
+**8 of 9 months green**, and March — 0-for-7 in the filter-less build — is now **2-3 and
+positive**. That is the filter doing exactly what it should: standing aside when structure
+says the move is against us.
+
+**Why M30 over H1.** Full window they are tied ($8,019 vs $8,096, under 1%). They separate on
+the halves and M30 owns the harder one: 2.06 against 1.27 in Jan–mid-May, 50% win rate
+against 43%. That half holds March. H1 is better in the kinder half and is the timeframe the
+teacher names, so its case was never numeric. Zee took the conservative read.
+
+**Current shipped configuration (v1.19):**
+`M5 · InpLots 0.28 · InpMaxOpen 2 · InpTargetR 5.0 · InpStopRef 0 · InpSlBufPts 120 ·
+InpMinSlPts 60 · InpMaxSlPts 900 · InpBreakEvenR 0 · InpRatchetStart 2.0 / Step 1.0 ·
+InpLowVolPct 1.00 · InpWickMode 2 · InpFakeBreak TRUE / InpSweepLook 30 ·
+InpTrendTF 30 / InpTrendMode 1 / InpCamelPivot 2 / InpCamelLook 120`
+
+**ZEE MUST REATTACH.** Banner must read `v1.19` and `trendTF 30`.
+
+---
+
 ## VSISA v1.18 — THE CAMEL HUMPS. Zee's own trend reading, and it wins (2026-09-16)
 
 **Who ordered it.** Zee: *"test if we check trend first what happens then? test all

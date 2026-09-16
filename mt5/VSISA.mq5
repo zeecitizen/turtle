@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.18"
+#property version   "1.19"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -449,7 +449,27 @@ input int    InpSweepLook   = 30;     // InpSweepLook — bars defining that ext
 // because the seven-month court liked it: with it ON the EA made the SAME money on
 // HALF the trades and seven more points of win rate (34% vs 27%). Off, it trades far
 // more and wins less often for about the same net. His call; the receipt stands.
-input int    InpTrendTF     = 0;      // InpTrendTF — 0 off · 15 = M15 · 60 = H1
+// M30 + CAMEL HUMPS - SHIPPED 2026-09-16 on Zee's call ("ok ship M30").
+//
+// Full window Jan-Sep at 0.28 lots, net per $1 of drawdown, and HIS reading beats the slope
+// at EVERY timeframe - swing structure carries what a 20-bar slope does not:
+//        slope M15 0.77   M30 3.29   H1 8.76   H4 7.55
+//        camel M15 5.55   M30 9.16   H1 9.36   H4 8.35
+//
+// Against the shipped filter-less build (+$7,918, 94 trades, 51% WR, DD $1,232, streak 7),
+// camel M30 returns +$8,019 on 66 trades at 59% WR, DD $875, streak 5 - more money, more
+// win rate, 29% less drawdown, shorter streak.
+//
+// WHY M30 AND NOT H1. Full window they are tied ($8,019 vs $8,096 - under 1%, noise). They
+// separate on the HALVES, and M30 owns the harder one: 2.06 against 1.27 in Jan-mid-May,
+// and 50% win rate against 43%. That half contains March's 0-for-7, so it is the honest
+// half to weight. H1 is better in the kinder second half (12.53 vs 11.15) and is the
+// timeframe the teacher names - "That setup comes on H1, and we take entry on M5" - so the
+// case for it was never numeric. Zee chose the conservative read.
+//
+// This is the rare filter that improved win rate, drawdown, streak AND risk-adjusted return
+// in BOTH walk-forward halves. Nothing else tested this year did all four.
+input int    InpTrendTF     = 30;     // InpTrendTF — 0 off · 15 M15 · 30 M30 · 60 H1 · 240 H4 · 1440 D1
 input int    InpTrendBars   = 20;     // InpTrendBars — bars of slope on that timeframe
 // TWO WAYS TO READ THE TREND (Zee, 2026-09-16: "test all timeframes for the trend and their
 // impact on us ... also TEST the trend detector (camel humps) from our previous UHV strategy
@@ -464,7 +484,7 @@ input int    InpTrendBars   = 20;     // InpTrendBars — bars of slope on that 
 // structure, not slope, and it is the reading trend_eyes.py was built around for the UHV
 // work - fractal pivots, K bars clear on each side, then HH+HL for up and LH+LL for down.
 // Anything mixed is a RANGE and returns 0, which passes everything through.
-input int    InpTrendMode   = 0;      // InpTrendMode — 0 slope · 1 camel humps (HH/HL structure)
+input int    InpTrendMode   = 1;      // InpTrendMode — 0 slope · 1 camel humps (HH/HL structure)
 input int    InpCamelPivot  = 2;      // InpCamelPivot — bars each side that define a swing
 input int    InpCamelLook   = 120;    // InpCamelLook — bars of that timeframe to scan
 
@@ -1267,7 +1287,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.18 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.19 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
