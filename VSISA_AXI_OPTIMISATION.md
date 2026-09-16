@@ -556,3 +556,27 @@ month across six symbols is 48 a month. This could not be tested tonight — Axi
 2026 ticks for XAUUSD.pro only (EURUSD and XAUUSD have one month each, from the Blueberry
 era), and downloading history needs the rig logged into the account, which risks knocking the
 live terminal offline while Zee sleeps. **Recommended as the first job of the morning.**
+
+## 6-8. THE EXIT, RE-READ — one lock beats a trail, and the target was never the exit
+
+| config | net | trades | WR | maxDD | streak | ratio | h1 | h2 |
+|---|---|---|---|---|---|---|---|---|
+| v1.19 shipped | +$8,019 | 66 | 59% | $875 | 5 | 9.16 | 2.06 | 11.15 |
+| wick0 only | +$8,396 | 62 | 61% | $634 | 4 | 13.25 | 3.22 | 11.39 |
+| w0 + swing6 + step2 + t10 | +$8,954 | 58 | 64% | $624 | 4 | 14.36 | 3.67 | 11.95 |
+| w0 + swing6 + step3 | +$9,221 | 58 | 64% | $624 | 4 | 14.78 | 3.67 | 12.43 |
+| w0 + swing6 + step8 | +$9,261 | 58 | 64% | $624 | 4 | 14.85 | 3.67 | 12.50 |
+| w0 + swing6 + **step20** | +$9,261 | 58 | 64% | $624 | 4 | **14.85** | 3.67 | 12.50 |
+| **w0 + swing5 + step8 — SHIPPED** | **+$8,979** | 54 | **65%** | **$558** | **3** | **16.09** | **4.79** | **11.72** |
+| w0 + swing4 + step8 | +$6,593 | 44 | 68% | $465 | 3 | 14.19 | **8.13** | 8.49 |
+
+**Step 8 and step 20 are IDENTICAL**, which is the proof: no second rung is ever reached, so
+the rule is *lock 2R once and hands off*. Trailing beyond the first rung cuts winners.
+
+Neighbours agree on every axis — step 1.5/2/2.5/3/5/8 all sit 14.0-14.9, ratchetStart 2.0 is
+a clean peak (1.75 → 12.43, 2.25 → 11.60), and targetR 8/10/12 are identical. This is a
+plateau, not a spike.
+
+`swingMin 4` is worth noting for a future session: only 44 trades but **h1 ratio 8.13**, by
+far the best first-half number seen. Too few trades to ship on, but if more history ever
+arrives it is the first place to look.

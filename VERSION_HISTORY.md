@@ -471,6 +471,64 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.20 — SHIPPED: the night's four answers (2026-09-17)
+
+**Who ordered it.** Zee, going to bed: *"i want you to through the night experiment
+thoroughly with the following: wicks .. finding out if we're taking all possible setups ..
+solving the no-supply candle's mystery .. tuning this strategy further .. increasing the
+frequency of trading .. keep working in a loop till you find optimal values."*
+
+**Four defaults moved. Every one is better in BOTH walk-forward halves.**
+
+| input | was | now | why |
+|---|---|---|---|
+| `InpWickMode` | 2 | **0** | the "a LOUD reaction is fine if it has a wick" exception was losing money |
+| `InpSwingMin` | 10 | **5** | a shorter yardstick grades the volume better |
+| `InpRatchetStep` | 1.0 | **8.0** | NOT a tighter trail — ONE LOCK AT 2R AND HANDS OFF |
+| `InpTargetR` | 5.0 | **10.0** | the target is decorative; raising it stops the ratchet colliding with it |
+
+| | v1.19 | **v1.20** |
+|---|---|---|
+| net, Jan–Sep | +$8,019 | **+$8,979** |
+| trades | 66 | 54 |
+| win rate | 59% | **65%** |
+| max drawdown | $875 (8.8%) | **$558 (5.6%)** |
+| worst streak | 5 | **3** |
+| net per $1 DD | 9.16 | **16.09** |
+| walk-forward halves | 2.06 / 11.15 | **4.79 / 11.72** |
+
+**Ship-verified:** 54 trades · 65% WR · NET **+$8,979.32** · maxDD $558 · streak 3 —
+matching the pre-ship measurement exactly. **8 of 9 months green** (only February red, −$135).
+
+### The two discoveries behind it
+
+**1. The target has been decorative since the ratchet shipped.** Over the full window ALL
+trades close at the STOP and not one reaches the target — average stop-exit **+$136.68**, so
+most stops are now taken in profit. The ratchet locked at 5R exactly where the 5R target sat,
+so the stop always arrived first. That is why `InpTargetR` 4/6/7 returned byte-identical
+numbers. "65% win rate" means 65% got past 2R and ratcheted into profit, NOT that they
+reached a target.
+
+**2. The right rule is one lock, not a trail.** Step 8.0 and step 20.0 return identical
+results, which proves no second rung is ever reached. Trailing beyond the first rung was
+cutting winners; locking 2R once and leaving it alone is worth ratio 14.85 against 14.36.
+
+### Refuted the same night — recorded so they are not re-tested
+
+- **The no-supply test, third geometry.** Every variant far worse (best 1.24 against base
+  13.25, several negative). Written three ways including his own diagram-11 sequence.
+- **Frequency by loosening the volume gate.** 62 trades can become 170, and the first half
+  goes NEGATIVE (−0.50) while drawdown quadruples. The big-volume requirement is load-bearing.
+
+### The funnel, counted
+
+`dir 75,487 | not loud 21,895 of 24,498 (89%) | fake 2,342 | trend 36 | FIRED 62`
+
+**ZEE MUST REATTACH — and note the live chart is still on v1.17**, which he attached before
+the camel filter shipped. Banner must read `v1.20`, `trendTF 30`, `wick 0`, `0.28 lots`.
+
+---
+
 ## VSISA v1.19 — SHIPPED: camel humps on M30 (2026-09-16)
 
 **Who ordered it.** Zee: *"ok ship M30"*.
