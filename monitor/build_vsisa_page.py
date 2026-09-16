@@ -373,12 +373,17 @@ def components(tr, bars):
                 break
         if best is not None:
             r = best / risk
-            if r >= 2.0:
-                read.append("ran to %.1fR, so the ratchet locked 2R" % r)
+            # HONEST ABOUT THE MEASUREMENT. This peak is read off M5 BAR HIGHS; the
+            # ratchet acts on the tick-level bid. Within a few hundredths of an R the two
+            # disagree, which is how a card came to read "peaked at 2.00R - short of the
+            # 2R lock". So the lock is only asserted where the gap is wider than the
+            # measurement error, and in the ambiguous band the peak is simply stated.
+            if r >= 2.05:
+                read.append("ran to %.2fR, past the 2R lock" % r)
+            elif r <= 1.95:
+                read.append("peaked at %.2fR, short of the 2R lock" % r)
             else:
-                # two decimals below the lock, so a 1.96R near-miss cannot round to
-                # "2.0R" and then claim it never reached 2R
-                read.append("peaked at %.2fR - short of the 2R lock" % r)
+                read.append("peaked at %.2fR, right at the 2R lock" % r)
 
     d["read"] = " · ".join(read) if read else None
     d["warn"] = None
