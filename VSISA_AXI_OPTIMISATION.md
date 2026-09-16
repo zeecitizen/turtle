@@ -415,3 +415,82 @@ This is a walk-forward lesson about ME, not about the strategy: I sized the posi
 window that excluded the drawdown, then verified against that same window. The Apr–Sep split
 was built to test ENTRY RULES out-of-sample; it was never a safe basis for a risk decision,
 because both halves sit inside the good stretch.
+
+---
+
+# THE NIGHT OF 16-17 SEPTEMBER — five questions Zee left
+
+*"i want you to through the night experiment thoroughly with the following: wicks on candle's
+we consider and their impact / finding out if we're taking all possible setups? / solving the
+no-supply candle's mystery / tuning this strategy further, try diff config combinations /
+increasing the frequency of trading, can we take more setups per day? its boring to sit idle
+n wait all day only to find out it was a loss and then wait another few days for next trade."*
+
+All of it measured with `monitor/strategy_lab/vsisa_lab.py`, written for the night: every
+config runs the FULL window AND both walk-forward halves, and is judged on **net per $1 of
+drawdown** — the only fair comparison when position risk differs — alongside win rate and
+worst losing streak. Baseline throughout is v1.19 as shipped, 0.28 lots.
+
+## 1. WICKS — the exception is harmful, and turning it off is the night's best find
+
+| config | net | trades | WR | maxDD | streak | ratio | h1 | h2 |
+|---|---|---|---|---|---|---|---|---|
+| **v1.19 shipped (wick 2, frac .35)** | +$8,019 | 66 | 59% | $875 | 5 | 9.16 | 2.06 | 11.15 |
+| wick 2, frac 0.20 | +$7,716 | 71 | 56% | $1,257 | 6 | 6.14 | 0.90 | 11.81 |
+| wick 2, frac 0.50 | +$8,181 | 63 | 60% | $634 | 4 | 12.91 | 3.22 | 11.01 |
+| **wick 0 — OFF** | **+$8,396** | 62 | **61%** | **$634** | **4** | **13.25** | **3.22** | **11.39** |
+| wick 1, require, frac 0.20 | +$2,080 | 21 | 57% | $499 | 3 | 4.17 | 1.65 | 2.77 |
+| wick 1, require, frac 0.35 | +$110 | 8 | 50% | $489 | 2 | 0.22 | 1.99 | −0.62 |
+
+`InpWickMode 2` lets a LOUD reaction through when it carries a wick. **It is costing money.**
+Switching it off is better on every axis and in BOTH halves — ratio 9.16 → **13.25**,
+drawdown −28%, win rate +2 points, streak 5 → 4, for four fewer trades. Note frac 0.65 gives
+numbers identical to OFF, because at that threshold the exception becomes unreachable.
+
+This corroborates the trade-level result from 2026-09-15 (LOUD+wick ran 25% WR and −$11.12 a
+trade) which was then too small to act on. At the current geometry it is worth $377 and 241
+dollars of drawdown.
+
+**REQUIRING a wick (mode 1) is not a filter, it is a famine** — 8 trades at frac 0.35.
+
+## 2. ARE WE TAKING ALL POSSIBLE SETUPS? — the funnel, counted
+
+```
+dir        75,487 rejected    <- the setup bars must all close the same way
+candidates 24,498 reach the volume test
+not loud   21,895 of those    <- 89% die here
+fake        2,342
+trend          36
+FIRED          62
+```
+
+Two gates do nearly all the work: **direction** and **loudness**. The fake break, which cuts
+75% of what reaches it, is a distant third. Everything downstream — reaction, body, quiet,
+trend — together refuses about 180.
+
+So: we are NOT taking all possible setups, by design, and the 89% loudness gate is where the
+missing ones are. Section 5 tests whether they are worth having.
+
+## 3. THE NO-SUPPLY MYSTERY — SOLVED, and the answer is no
+
+Re-tested at the v1.19 geometry, both as a gate (mode 1, wait for the test then a confirming
+bar) and as the entry itself (mode 2, enter ON the test bar), with and without requiring the
+test bar to close against the trade:
+
+| config | net | trades | WR | ratio | h1 | h2 |
+|---|---|---|---|---|---|---|
+| **base, no test** | **+$8,396** | 62 | 61% | **13.25** | 3.22 | 11.39 |
+| mode 1, test ≤0.90 | +$42 | 16 | 38% | 0.03 | 0.21 | −0.22 |
+| mode 1, RED test ≤0.90 | −$847 | 10 | 20% | −0.83 | −0.74 | −0.70 |
+| mode 1, test ≤1.20 | +$982 | 19 | 47% | 1.20 | 1.07 | 0.19 |
+| mode 2, enter on test ≤1.20 | +$1,023 | 23 | 43% | 1.24 | −0.15 | 3.42 |
+| mode 2, enter on test ≤0.70 | −$387 | 4 | 0% | −1.00 | −1.00 | −1.00 |
+
+**Every single variant is far worse than not testing at all**, and several are negative. This
+is now the THIRD geometry it has been refuted on (v1.06 at 2.0R, v1.10 at 5.0R, v1.19 here).
+
+The mystery is not that the encoding is wrong — it has been written three ways, including
+Zee's own diagram-11 sequence with the red test bar. It is that the no-supply test, applied
+mechanically to gold M5, removes 70-95% of trades and the survivors are no better than the
+ones it removed. Whatever the teacher is reading on that bar is not in the price-and-volume
+of the bar itself. **Recommend it be closed as an idea rather than re-encoded a fourth time.**
