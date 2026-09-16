@@ -54,10 +54,10 @@ BARS_DIR = ROOT / "monitor" / "_vsisa_bars"
 # lookback and the stop under the whole setup. All three are wrong now, so it
 # was drawing setups the EA would no longer take. Both sources below are Axi
 # and both are the current logic.
-# v1.15 AS SHIPPED, Jan 1 -> Sep 16 2026, Axi real ticks, 0.15 lots. Every card below is
+# v1.20 AS SHIPPED, Jan 1 -> Sep 16 2026, Axi real ticks, 0.15 lots. Every card below is
 # a trade this exact build took - the fake break is ON, so these are only the setups that
 # swept a recent extreme and closed back inside it.
-REPORT = ROOT / "mt5" / "_tester_runs" / "axi" / "AXI_bt_041215.htm"
+REPORT = ROOT / "mt5" / "_tester_runs" / "axi" / "AXI_bt_073213.htm"
 LIVE_LOG_DIR = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal"
                     r"\6FBEE76C719DC78AB2AE839B5A0C7442\MQL5\Logs")
 COMMON = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
@@ -68,7 +68,7 @@ POST = 14         # bars drawn after
 # The run is COUNTED now, not fixed - these mirror InpSetupMin / InpSetupMax and
 # the swing yardstick, so a card marks exactly the bars the EA judged.
 SETUP_MIN, SETUP_MAX = 2, 10
-SWING_PIVOT, SWING_MIN, SWING_CAP = 3, 10, 200
+SWING_PIVOT, SWING_MIN, SWING_CAP = 3, 5, 200
 
 INK = "#101418"
 GRID = "#dfe4ea"
@@ -589,14 +589,15 @@ LAWS = [
      "a swing low for a sell — so a fast leg gets a short window and a grind a long one. "
      "It replaced a fixed 10-bar window (50 minutes), which let a bar qualify as the "
      "climax for being loudest of three-quarters of an hour."),
-    (6, "The wick decides a reaction that is NOT quiet", "CONFIRMED — now ON",
+    (6, "The wick does NOT rescue a loud reaction", "REFUTED 2026-09-17, now OFF",
      "since the fourth bullish blue candle has still somewhat bigger volume .. if there "
      "were no lower wick we wouldn't buy immediately, we would wait .. and here we see a "
      "lower wick",
-     "InpWickMode 2. A reaction too loud to qualify is still taken IF it carries the "
-     "wick against the move. Cards marked \"LOUD +wick\" are exactly this case. It was "
-     "OFF until 2026-09-13 — the earlier REJECTED verdict was measured on a build whose "
-     "stop and volume window were both wrong."),
+     "This was ON for four days and it was losing money. Diagram 4's loud reaction is "
+     "acceptable because it also has the capped bar before it, not because of the wick "
+     "alone — and diagrams 3 and 5 say plainly that a loud reaction is a WEAK setup. "
+     "Measured: the LOUD+wick group ran 25% win rate and −$11.12 a trade. Switching it "
+     "off improved every metric in both walk-forward halves."),
     (8, "Entry at the reaction candle's close", "CONFIRMED — his ruling",
      "it doesnot mean a stop order above its high.. it means same as line 16",
      "Zee settled the ambiguity on 2026-09-12: lines 16 and 33 describe the same trade. "
@@ -611,6 +612,58 @@ LAWS = [
      "(not his rule — a safety rail)",
      "Setups whose stop exceeds 900 points are refused, so risk per trade stays uniform. "
      "Tested: raising it to 3000 adds 58 trades and destroys $1,476 of profit."),
+    (9, "Trade with the higher-timeframe trend", "OFF on his instruction",
+     "That setup comes on H1, and we take entry on M5... take the trade in trend "
+     "direction. Do not catch the top.",
+     "Built (InpTrendTF) and currently OFF at Zee's request. Worth recording what it "
+     "cost when it was measured: with it ON the EA made the same money on HALF the "
+     "trades and seven more points of win rate."),
+    (10, "Never chase — trade the retracement", "BUILT 2026-09-16, OFF",
+     "if we miss such a breakout on low volume, then we wait for a retracement to the same "
+     "low .. that retracement low when it touches the low line of the missed setup is also "
+     "a valid setup .. sometimes it can touch several times",
+     "Built at last (InpRetrace). The price-only version is REFUTED on a clean 409-trade "
+     "sample: −$9.46 a trade against the base setup's +$13.35. Requiring the retest to "
+     "arrive QUIET flips the sign, but its best value is an isolated spike with worse "
+     "results either side, so it ships OFF."),
+    (12, "Falling volume on a fall is NOT automatically bullish", "STRUCTURAL",
+     "Rising prices rising volume, falling prices falling volume is bullish — this is "
+     "wrong. This is incomplete.",
+     "Encoded by making the engine SETUP-FIRST: quiet volume only means anything "
+     "straight after effort. The EA never scans for low volume on its own."),
+    (0, "The BASE CASE — effort against result", "TESTED, NOT PROVEN",
+     "if the candle is getting smaller it means that supply is getting hit more.. and "
+     "price is getting capped",
+     "Diagram 9 states it exactly — two candles of THE SAME SPREAD, and the one with more "
+     "volume is where supply was hit. That is volume-per-range, and it is now built twice "
+     "(InpCapVol, InpEffortMin). Both are OFF: the strict setting reaches 67% on 15 trades "
+     "and decays to the 43% baseline as soon as the sample grows."),
+    (13, "THE FAKE BREAK — his tier-3 case, now LIVE", "SHIPPED 2026-09-16",
+     "case 3. 2 bar setup + fake break of this support + forms a wick + closing again "
+     "inside support .. (strongest)",
+     "The setup must SWEEP a recent extreme and the reaction must close back INSIDE it. "
+     "Built early, tested OFF on the old broken build, and only re-examined after the "
+     "geometry was fixed. It is the best filter on this project: win rate 25% → 33% and "
+     "the worst losing streak 15 → 9, holding in BOTH walk-forward halves at EVERY sweep "
+     "length. It costs 75% of the trades to get it."),
+    (8.7, "THE EXIT IS A LOCK AT 2R — the target never pays", "CORRECTED 2026-09-17",
+     "SL should not be tied to TP .. TP can be very high up until 1:7 / if 2R is reached "
+     "we breakeven to 2R / if XR is reached we breakeven to XR",
+     "Both of his instructions, and the second one overtook the first. EVERY trade now "
+     "closes at the STOP and not one reaches the target — the average stop-exit is "
+     "+$136.68, because the stop has been RATCHETED above entry. So the 1:5 target that "
+     "was shipped on 15 Sep is decorative; it is set to 10R purely so the ratchet cannot "
+     "collide with it. And the ratchet is ONE LOCK, not a trail: stepping it at 8R and at "
+     "20R gives identical results, which proves no second rung is ever reached. Lock 2R, "
+     "hands off."),
+    (9.5, "THE CAMEL HUMPS — his own trend reading", "SHIPPED 2026-09-16",
+     "we identify trend by drawing camel humps .. we call it an uptrend if we're breaking "
+     "above previous highs. and forming new higher lows",
+     "Ported from LAWS.md and the UHV compass. Higher highs AND higher lows for up, the "
+     "mirror for down, anything mixed is a range and gates nothing. It beat the 20-bar "
+     "slope at EVERY timeframe — M30 went 3.29 to 9.16 — and on M30 it improved win rate, "
+     "drawdown, streak and risk-adjusted return in BOTH halves. March, which was 0-for-7 "
+     "without it, turned positive."),
     (9, "Trade with the higher-timeframe trend", "OFF on his instruction",
      "That setup comes on H1, and we take entry on M5... take the trade in trend "
      "direction. Do not catch the top.",
