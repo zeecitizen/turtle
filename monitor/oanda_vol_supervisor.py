@@ -21,6 +21,17 @@ import subprocess, sys, time
 from datetime import datetime
 from pathlib import Path
 
+# NO FLASHING WINDOWS (2026-09-17). Zee: "there's a black window that comes and goes..
+# vanishes and rebuilds again and again", and then "it has intensified now. the window is
+# coming every 1 second". Two of my own processes were doing it, and this was the one that
+# survived: a 5-second cycle that spawns the collector TWICE per cycle, and on Windows each
+# spawn from a console-less parent allocates a new console — which, with Windows Terminal as
+# the default console host, is a window that appears and vanishes.
+#
+# CREATE_NO_WINDOW costs nothing and is the whole fix. Every subprocess here is captured
+# output anyway; none of them was ever meant to show a window.
+NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
+
 ROOT = Path(__file__).parent.parent
 COLLECTOR = ROOT / "monitor" / "oanda_vol_tv.py"
 # 2026-08-21 (Zee: "ensure that the candles AND volume are taken from tradingview"):
@@ -69,7 +80,8 @@ def _find_python():
     for exe in cands:
         try:
             r = subprocess.run([exe, "-c", "import tvDatafeed"],
-                               capture_output=True, text=True, timeout=30)
+                               capture_output=True, text=True, timeout=30,
+                               creationflags=NO_WINDOW)
             if r.returncode == 0:
                 return exe
         except Exception:
@@ -91,7 +103,8 @@ def cycle():
     t0 = time.time()
     try:
         r = subprocess.run([PY_EXE, str(COLLECTOR)],
-                           capture_output=True, text=True, timeout=HARD_TIMEOUT)
+                           capture_output=True, text=True, timeout=HARD_TIMEOUT,
+                           creationflags=NO_WINDOW)
         out = (r.stdout or "").strip().splitlines()
         tail = out[-1] if out else (r.stderr or "").strip()[:120]
         ok = "-> oanda_vol.csv" in (r.stdout or "")
@@ -109,7 +122,8 @@ def cycle():
         globals()["_n"] = globals().get("_n", 0) + 1
         args = [PY_EXE, str(M1_COLLECTOR)] + ([] if globals()["_n"] % 20 == 1 else ["--fast"])
         r2 = subprocess.run(args,
-                            capture_output=True, text=True, timeout=HARD_TIMEOUT)
+                            capture_output=True, text=True, timeout=HARD_TIMEOUT,
+                            creationflags=NO_WINDOW)
         o2 = (r2.stdout or "").strip().splitlines()
         say("m1 " + (o2[-1] if o2 else (r2.stderr or "").strip()[:110]))
     except subprocess.TimeoutExpired:
