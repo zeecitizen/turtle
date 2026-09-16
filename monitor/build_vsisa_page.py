@@ -844,7 +844,16 @@ def build(out_path: Path, limit=0):
     for k, v in sep.items():
         merged.setdefault(k, v)
 
-    trades = tester_trades(REPORT) + live_trades()
+    # LIVE CARDS OFF (Zee, 2026-09-17): "remove the LIVE trades .. and keep only the ones
+    # from the current EA version (tested ones)". He is right that they were misleading —
+    # the only two live fills on record were taken by v1.00/v1.01 at 2.0R and 2.5R, before
+    # the stop correction, the fake break, the ratchet and the camel filter existed. Drawn
+    # beside v1.20 cards they read as examples of the current strategy, and they are not.
+    #
+    # Flip this back to True once v1.20 has real fills of its own; the reader is worth
+    # nothing if the page cannot show what the EA actually did.
+    INCLUDE_LIVE = False
+    trades = tester_trades(REPORT) + (live_trades() if INCLUDE_LIVE else [])
     trades.sort(key=lambda x: -x["ts"])
     print("[vsisa-page] %d trades (%d live)"
           % (len(trades), sum(1 for t in trades if t["src"] == "LIVE")), flush=True)
