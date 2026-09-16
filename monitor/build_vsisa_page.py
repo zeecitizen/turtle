@@ -323,26 +323,65 @@ def components(tr, bars):
     if react and d.get("vsetup"):
         d["quiet"] = react[4] / d["vsetup"]
 
-    # THE DISTRIBUTION WARNING - the pattern behind the first live loss: a
-    # near-maximum bar closing one way whose NEXT bar closes the other, which the
-    # EA's own LAW 2 reads as the opposite side. Shown so it can be counted.
-    warn = None
-    for k in range(first, first + 8):
-        b = bars.get(t - M5 * k)
-        nxt = bars.get(t - M5 * (k - 1))
-        if not b or not nxt or not d.get("vmax"):
-            continue
-        if b[4] < 0.85 * d["vmax"]:
-            continue
-        if side > 0 and b[3] > b[0] and nxt[3] < nxt[0]:
-            warn = ("loud UP bar %d bars back, next bar closed DOWN - LAW 2 reads "
-                    "that volume as SELLING, yet this is a BUY" % k)
-            break
-        if side < 0 and b[3] < b[0] and nxt[3] > nxt[0]:
-            warn = ("loud DOWN bar %d bars back, next bar closed UP - LAW 2 reads "
-                    "that volume as BUYING, yet this is a SELL" % k)
-            break
-    d["warn"] = warn
+    # THE READ (replaces the old "Distribution warning", 2026-09-17).
+    #
+    # Zee: "can we maybe make that more informative / relevant?" — and measuring it first
+    # showed the old warning was not merely vague, it was BACKWARDS. It flagged a loud bar
+    # whose next bar closed the other way as suspicious; across the 54 v1.20 setups the
+    # flagged ones ran 73% WR and +$227 a trade against 52% and +$74 for the unflagged.
+    # Of course they did: a loud bar followed by a reversal IS the absorption this strategy
+    # is built on. It was labelling the best setups as a defect.
+    #
+    # What follows instead is the four things that actually decide a v1.20 trade, in the
+    # EA's own terms, so the card can be checked against the laws by eye.
+    read = []
+
+    # 1. THE SWEEP - LAW 13, now the strongest filter on the project.
+    line = None
+    look = [bars[t - M5 * k] for k in range(first, first + 30) if (t - M5 * k) in bars]
+    if look and react:
+        if side > 0:
+            line = min(b[2] for b in look)
+            ext = min(b[2] for b in d["setup"]) if d["setup"] else react[2]
+            if ext < line:
+                read.append("swept the 30-bar low by %.2f and closed back above it"
+                            % (line - ext))
+        else:
+            line = max(b[1] for b in look)
+            ext = max(b[1] for b in d["setup"]) if d["setup"] else react[1]
+            if ext > line:
+                read.append("swept the 30-bar high by %.2f and closed back inside"
+                            % (ext - line))
+
+    # 2. HOW QUIET the reaction was - LAW 3, the trigger itself.
+    if d.get("quiet") is not None:
+        read.append("reaction %.2fx the setup's volume" % d["quiet"])
+
+    # 3. HOW FAR IT RAN, in R - the only unit the exit understands.
+    risk = abs(tr["entry"] - tr["sl"]) if tr.get("sl") else 0
+    if risk > 0:
+        best = None
+        k = 0
+        while True:
+            b = bars.get(tr["ts"] + M5 * k)
+            if not b or (tr.get("exit_ts") and tr["ts"] + M5 * k > tr["exit_ts"]):
+                break
+            fav = (b[1] - tr["entry"]) if side > 0 else (tr["entry"] - b[2])
+            best = fav if best is None else max(best, fav)
+            k += 1
+            if k > 600:
+                break
+        if best is not None:
+            r = best / risk
+            if r >= 2.0:
+                read.append("ran to %.1fR, so the ratchet locked 2R" % r)
+            else:
+                # two decimals below the lock, so a 1.96R near-miss cannot round to
+                # "2.0R" and then claim it never reached 2R
+                read.append("peaked at %.2fR - short of the 2R lock" % r)
+
+    d["read"] = " · ".join(read) if read else None
+    d["warn"] = None
     return d
 
 
@@ -755,6 +794,8 @@ table.k td:first-child{color:#6b7684;width:210px;white-space:nowrap}
 .v.ok{background:#e8f5ee;color:#1b8f5a}.v.bad{background:#fdeceb;color:#c8382f}
 .v.core{background:#eef2f7;color:#55606e}.v.warn{background:#fff5e6;color:#a1620a}
 .v.muted{background:#f2f4f7;color:#8b95a1}
+.read{background:#eef5ff;border:1px solid #cfe0f7;color:#1c4a80;border-radius:8px;
+      padding:8px 11px;margin-top:9px;font-size:12.5px;line-height:1.5}
 .warn{background:#fff8e8;border:1px solid #f2dcae;color:#8a5d00;border-radius:8px;
  padding:9px 12px;margin-top:12px;font-size:13px}
 .legend{display:flex;flex-wrap:wrap;gap:16px;margin:10px 0 2px;font-size:12.5px;
@@ -813,8 +854,8 @@ def card_html(tr, comp, png):
     if tr.get("profit") is not None:
         res = ' <span class="badge %s">%+.2f</span>' % (
             "b-win" if tr["profit"] > 0 else "b-loss", tr["profit"])
-    warn = ('<div class="warn"><b>Distribution warning:</b> %s</div>' % esc(comp["warn"])
-            ) if comp.get("warn") else ""
+    warn = ('<div class="read"><b>The read:</b> %s</div>' % esc(comp["read"])
+            ) if comp.get("read") else ""
 
     return (
         '<div class="card" id="%s">'
