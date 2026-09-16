@@ -580,3 +580,59 @@ plateau, not a spike.
 `swingMin 4` is worth noting for a future session: only 44 trades but **h1 ratio 8.13**, by
 far the best first-half number seen. Too few trades to ship on, but if more history ever
 arrives it is the first place to look.
+
+---
+
+## LAW 14 — THE FADE. Zee's own eye, and it beats the shipped build (2026-09-17)
+
+He took a trade the EA refused — 16 Sep 22:33 broker, **+$858 on 1 lot** — and described how
+he read it:
+
+> *"i filtered out the red candles: saw that reds are ultra highs .. then tried to find a
+> green reaction candle.. i saw that the green's had reduced alot from one green to another
+> green. so it meant that now buyers have to apply less force to bring the price up.."*
+
+**That is not the shipped setup and no loosening reaches it.** Gaps up to 3 contrary bars
+fire nothing that night. Two things differ:
+
+1. **The background is not adjacent.** He reads the red bars of the whole recent leg. At his
+   entry there was no red run at all — the bar before was green.
+2. **The comparison is GREEN-TO-GREEN.** The EA asks "is the reaction quieter than the reds
+   behind it". He asks "is each green quieter than the LAST GREEN" — falling effort for the
+   same result, the Base Case read forwards.
+
+Built as `InpFadeMode` — a SECOND entry path, tried only after the ordinary setup refuses.
+
+**It failed badly at first, and the failure was informative.** Without a sweep requirement it
+fired 1,455–5,558 times over 8½ months at ratio 0.03–1.46 against the shipped 9.16. His eye
+was doing more than he said: he was looking at **a low that had just been made**. Applying
+LAW 13 to the fade path too roughly doubled every variant.
+
+**Then it had to survive the spike test.** 0.60/look4 first appeared between neighbours of
+5.39 and 6.40 — the shape this project has rejected all week. A fine grid settled it:
+
+| fade ≤ | look3 | look4 | look5 |
+|---|---|---|---|
+| 0.55 | 5.19 | 6.58 | 5.62 |
+| **0.60** | 6.26 | **15.75** | **12.99** |
+| 0.65 | 6.00 | 9.58 | 8.36 |
+
+The 0.60 column wins at every lookback. It is a ridge, not a cell.
+
+**fade ≤0.60 / look 4, against v1.20 as shipped:**
+
+| | v1.20 | fade 0.60/look4 |
+|---|---|---|
+| net, Jan–Sep | +$8,019 | **+$10,400** |
+| trades | 66 | **121** |
+| win rate | 59% | 51% |
+| max drawdown | $875 | **$661** |
+| worst streak | 5 | **4** |
+| net per $1 DD | 9.16 | **15.75** |
+| walk-forward halves | 2.06 / 11.15 | **4.16 / 12.43** |
+
+**+30% money, nearly double the trades, LESS drawdown, a shorter streak, and better in BOTH
+halves.** The only thing that falls is win rate, 59% → 51%.
+
+This is the first thing all week to answer the frequency question without paying for it —
+and it came from him watching a chart, not from any parameter search.
