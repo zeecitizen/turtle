@@ -29,8 +29,30 @@
 //|  work: in NON-real-tick modes MT5 fakes tick_volume at ~4/bar. Under  |
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
+// ── THE NIGHT OF 16-17 SEPTEMBER ─────────────────────────────────────────────────
+// Zee went to bed asking for wicks, the funnel, the no-supply mystery, tuning, and more
+// frequency. Four defaults moved as a result, each better in BOTH walk-forward halves:
+//
+//   InpWickMode  2 -> 0    the "LOUD reaction is fine if it has a wick" exception was
+//                          losing money; off is better on every axis (ratio 9.16 -> 13.25)
+//   InpSwingMin 10 -> 5    a shorter yardstick grades the volume better (-> 16.09)
+//   InpRatchetStep 1 -> 8  NOT a smaller trail - a LARGER one. Step 8 and step 20 return
+//                          identical numbers, which proves no second rung is ever reached:
+//                          the right rule is ONE LOCK AT 2R AND HANDS OFF. Trailing beyond
+//                          the first rung was cutting winners.
+//   InpTargetR   5 -> 10   the target is DECORATIVE and always has been since the ratchet
+//                          shipped: all trades exit at the stop, none reach the target.
+//                          Raising it only stops the ratchet colliding with it.
+//
+//   v1.19  +$8,019  66 trades  59% WR  DD $875  streak 5  ratio  9.16  (2.06 / 11.15)
+//   v1.20  +$8,979  54 trades  65% WR  DD $558  streak 3  ratio 16.09  (4.79 / 11.72)
+//
+// REFUTED the same night, so nobody re-tests them: the no-supply test (third geometry,
+// every variant far worse), and loosening the volume gate for frequency (62 -> 170 trades
+// takes the first half NEGATIVE).
+// ─────────────────────────────────────────────────────────────────────────────────
 #property copyright "Zee & his ghost"
-#property version   "1.19"
+#property version   "1.20"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -188,7 +210,7 @@ input bool   InpOandaStrict = true;   // InpOandaStrict — a missing OANDA minu
 // InpVolLookback survives as the cap and as the fallback when window mode is 0.
 input int    InpVolWindow   = 1;      // InpVolWindow — 0 = fixed bar count · 1 = the current swing
 input int    InpSwingPivot  = 3;      // InpSwingPivot — bars each side that define a pivot
-input int    InpSwingMin    = 10;     // InpSwingMin — never judge on fewer bars than this
+input int    InpSwingMin    = 5;     // InpSwingMin — never judge on fewer bars than this
 input int    InpVolLookback = 200;    // InpVolLookback — fixed count, and the cap on a swing
 input int    InpBigMode     = 1;      // InpBigMode — 0 EVERY 2-bar setup bar loud · 1 only the loudest
 input double InpBigPct      = 0.80;   // InpBigPct — 2-bar setup volume >= this x lookback max
@@ -330,7 +352,7 @@ input int    InpMaxSlPts    = 900;    // InpMaxSlPts — refuse setups whose ris
 // rate with money: 0.20R reaches 82% and LOSES at every stop width, because at 0.2:1
 // break-even needs 83.3%. The H1 trend filter does NOT rescue the win rate here — at 5.0R
 // it halves the profit and leaves WR at 24%; its benefit was specific to 2.0R.
-input double InpTargetR     = 5.0;    // InpTargetR — TP as a multiple of risk
+input double InpTargetR     = 10.0;    // InpTargetR — TP as a multiple of risk
 // TARGET DECOUPLED FROM STOP (Zee, 2026-09-15). He asked whether a wider stop would have
 // saved the 14 Sep 04:10 trade. It would not — because at a fixed R multiple the target
 // travels outward with the stop, so widening moves the finish line away exactly as fast
@@ -372,13 +394,13 @@ input double InpBreakEvenR  = 0.0;    // InpBreakEvenR — >0: move stop to entr
 // The ladder is start, start+step, start+2*step ... and the stop locks to the highest rung
 // price has actually reached. It never moves backwards.
 input double InpRatchetStart = 2.00;  // InpRatchetStart — first R rung that gets locked (0 = off)
-input double InpRatchetStep  = 1.00;  // InpRatchetStep — spacing of the rungs above it
+input double InpRatchetStep  = 8.00;  // InpRatchetStep — spacing of the rungs above it
 
 //--- LAW 6: the wick override (default OFF) --------------------------------
 // "since the fourth bullish blue candle has still somewhat bigger volume .. if there
 // were no lower wick we wouldn't buy immediately, we would wait .. and here we see a
 // lower wick". The wick is how he judges a reaction that is NOT quiet enough — mode 2.
-input int    InpWickMode    = 2;      // InpWickMode — 0 off · 1 require · 2 override big volume
+input int    InpWickMode    = 0;      // InpWickMode — 0 off · 1 require · 2 override big volume
 input double InpWickFrac    = 0.35;   // InpWickFrac — wick >= this x the bar's range
 
 //--- LAW 7: anomaly, tiny spread on huge volume (default OFF) --------------
@@ -1287,7 +1309,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.19 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.20 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
