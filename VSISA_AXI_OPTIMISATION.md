@@ -494,3 +494,65 @@ Zee's own diagram-11 sequence with the red test bar. It is that the no-supply te
 mechanically to gold M5, removes 70-95% of trades and the survivors are no better than the
 ones it removed. Whatever the teacher is reading on that bar is not in the price-and-volume
 of the bar itself. **Recommend it be closed as an idea rather than re-encoded a fourth time.**
+
+## 4. TUNING — the shipped values are right, and the exit is not what we thought
+
+| config | net | trades | WR | maxDD | streak | ratio | h1 | h2 |
+|---|---|---|---|---|---|---|---|---|
+| **BASE wick0** | +$8,396 | 62 | 61% | $634 | 4 | **13.25** | 3.22 | 11.39 |
+| ratchet start 1.50 | +$5,868 | 62 | 65% | $634 | 4 | 9.26 | 1.78 | 10.21 |
+| ratchet start 2.50 | +$8,414 | 62 | 52% | $841 | 5 | 10.00 | 3.10 | 8.79 |
+| ratchet start 3.00 | +$8,006 | 62 | 47% | $938 | 5 | 8.54 | 3.98 | 5.39 |
+| **ratchet OFF** | **+$10,352** | 62 | 35% | $1,701 | 10 | 6.08 | 2.45 | 4.63 |
+| targetR 4.0 / 6.0 / 7.0 | +$8,392–8,396 | 62 | 61% | $634 | 4 | 13.25 | — | — |
+| camelPivot 1 | +$5,293 | 60 | 52% | $777 | 4 | 6.82 | 1.76 | 8.45 |
+| camelPivot 3 | +$8,253 | 63 | 60% | $710 | 3 | 11.62 | 2.29 | 11.87 |
+| camelLook 60 / 240 | +$8,396 | 62 | 61% | $634 | 4 | 13.25 | — | — |
+
+**Ratchet start 2.0, camelPivot 2 and camelLook 120 are all already optimal.** Nothing in
+the shipped trend or exit settings wants moving.
+
+**THE FINDING THAT MATTERS — the 5R target is decorative.** Over the full window **all 62
+trades close at the STOP and not one reaches the target**, and the average stop-exit is
+**+$136.68**, i.e. most stops are now taken in PROFIT. The mechanism is arithmetic: the
+ratchet locks at 5R exactly where the 5R target sits, so the stop always arrives first. That
+is why `InpTargetR` 4.0, 6.0 and 7.0 return byte-identical numbers — **the target has not
+been the exit since the ratchet shipped.** The trailing step is the only exit parameter left
+that can matter.
+
+It also reframes the win rate. "61% win rate" does not mean 61% of trades reached a 5R
+target; it means 61% got past 2R and ratcheted into profit before turning back.
+
+**And it prices the ratchet honestly.** Switching it off earns **+$10,352 against +$8,396** —
+$1,956 MORE money — at 35% win rate, a 10-trade losing streak and $1,701 of drawdown. The
+ratchet is buying calm with about a fifth of the profit. That is the trade Zee chose on
+2026-09-16 and it remains his to re-choose.
+
+## 5. FREQUENCY — the honest answer is that it costs more than it earns
+
+The 89% gate is `not loud`, so that is where more trades live. Loosening it:
+
+| config | trades | net | maxDD | WR | ratio | **h1 ratio** |
+|---|---|---|---|---|---|---|
+| **BASE wick0** | **62** | +$8,396 | $634 | 61% | **13.25** | **3.22** |
+| BigPct 0.70 | 68 | +$7,934 | $812 | 57% | 9.77 | 2.90 |
+| BigAvg 1.00 | 106 | +$6,870 | $1,425 | 47% | 4.82 | **0.08** |
+| BigAvg 0.80 | 157 | +$4,804 | $2,419 | 41% | 1.99 | **−0.50** |
+| BigAvg 0.60 | 170 | +$5,078 | $2,161 | 40% | 2.35 | **−0.38** |
+| BigMode 0 (every bar loud) | 45 | +$6,306 | $793 | 62% | 7.95 | 1.22 |
+| swingMin 14 | 66 | +$6,517 | $820 | 53% | 7.95 | 1.95 |
+| swingMin 20 | 66 | +$5,914 | $820 | 50% | 7.21 | 2.37 |
+
+**Trades are available — 62 can become 170 — but the edge is not.** At 106 trades the first
+half is already flat (0.08); at 157 and 170 it is NEGATIVE. Drawdown quadruples. The big-
+volume requirement is load-bearing, not decoration: it is the whole reason the reaction means
+anything.
+
+Tightening the sweep instead (`InpSweepLook` 40, 60) reduces trades further, so there is no
+free direction: **60-ish trades in 8½ months is what this edge supports on one instrument.**
+
+**The route that WOULD work is more instruments, not looser setups.** The same 8 trades a
+month across six symbols is 48 a month. This could not be tested tonight — Axi's rig holds
+2026 ticks for XAUUSD.pro only (EURUSD and XAUUSD have one month each, from the Blueberry
+era), and downloading history needs the rig logged into the account, which risks knocking the
+live terminal offline while Zee sleeps. **Recommended as the first job of the morning.**
