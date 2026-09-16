@@ -30,7 +30,7 @@
 //|  model 4 it is the true tick count, which is why this works at all.)  |
 //+------------------------------------------------------------------+
 #property copyright "Zee & his ghost"
-#property version   "1.17"
+#property version   "1.18"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -451,6 +451,22 @@ input int    InpSweepLook   = 30;     // InpSweepLook — bars defining that ext
 // more and wins less often for about the same net. His call; the receipt stands.
 input int    InpTrendTF     = 0;      // InpTrendTF — 0 off · 15 = M15 · 60 = H1
 input int    InpTrendBars   = 20;     // InpTrendBars — bars of slope on that timeframe
+// TWO WAYS TO READ THE TREND (Zee, 2026-09-16: "test all timeframes for the trend and their
+// impact on us ... also TEST the trend detector (camel humps) from our previous UHV strategy
+// onto this strategy VSISA as a trend checker -- maybe it works?").
+//
+// Mode 0 is the SLOPE the EA already had: close now against close N bars back. Crude - a
+// single spike at either end decides it.
+//
+// Mode 1 is the CAMEL HUMPS, his own definition from LAWS.md: "we identify trend by drawing
+// camel humps .. price goes upwards in a lightning shape fashion .. so we call it an uptrend
+// if we're breaking above previous highs. and forming new higher lows." That is swing
+// structure, not slope, and it is the reading trend_eyes.py was built around for the UHV
+// work - fractal pivots, K bars clear on each side, then HH+HL for up and LH+LL for down.
+// Anything mixed is a RANGE and returns 0, which passes everything through.
+input int    InpTrendMode   = 0;      // InpTrendMode — 0 slope · 1 camel humps (HH/HL structure)
+input int    InpCamelPivot  = 2;      // InpCamelPivot — bars each side that define a swing
+input int    InpCamelLook   = 120;    // InpCamelLook — bars of that timeframe to scan
 
 //--- LAW 11: session (default open) ----------------------------------------
 input int    InpSessFrom    = 0;      // InpSessFrom — broker hour, inclusive
@@ -686,11 +702,61 @@ bool VolStats(int from, long &vmax, double &vavg, double &ravg, int side) {
 //| LAW 9 — higher-timeframe trend, OFF by default                    |
 //| Returns +1 up, -1 down, 0 flat/unknown.                           |
 //+------------------------------------------------------------------+
+ENUM_TIMEFRAMES TrendTf() {
+   switch (InpTrendTF) {
+      case 1:    return PERIOD_M1;
+      case 5:    return PERIOD_M5;
+      case 15:   return PERIOD_M15;
+      case 30:   return PERIOD_M30;
+      case 60:   return PERIOD_H1;
+      case 240:  return PERIOD_H4;
+      case 1440: return PERIOD_D1;
+   }
+   return PERIOD_H1;
+}
+
+//+------------------------------------------------------------------+
+//| CAMEL HUMPS — higher highs AND higher lows, or the mirror.        |
+//| Zee, LAWS.md: "we call it an uptrend if we're breaking above      |
+//| previous highs. and forming new higher lows."                     |
+//| Returns +1 up, -1 down, 0 RANGE (which gates nothing).            |
+//+------------------------------------------------------------------+
+int CamelDir(ENUM_TIMEFRAMES tf) {
+   int K = MathMax(1, InpCamelPivot);
+   int look = MathMax(4 * K + 4, InpCamelLook);
+   double hi[4], lo[4];
+   int nh = 0, nl = 0;
+
+   // newest first: a swing high is the highest high of K bars each side
+   for (int k = 1 + K; k < look && (nh < 2 || nl < 2); k++) {
+      if (nh < 2) {
+         bool ph = true;
+         double h0 = iHigh(_Symbol, tf, k);
+         for (int q = 1; q <= K && ph; q++)
+            if (h0 <= iHigh(_Symbol, tf, k - q) || h0 <= iHigh(_Symbol, tf, k + q)) ph = false;
+         if (ph) { hi[nh++] = h0; }
+      }
+      if (nl < 2) {
+         bool pl = true;
+         double l0 = iLow(_Symbol, tf, k);
+         for (int q = 1; q <= K && pl; q++)
+            if (l0 >= iLow(_Symbol, tf, k - q) || l0 >= iLow(_Symbol, tf, k + q)) pl = false;
+         if (pl) { lo[nl++] = l0; }
+      }
+   }
+   if (nh < 2 || nl < 2) return 0;            // not enough structure to judge
+
+   bool up   = (hi[0] > hi[1]) && (lo[0] > lo[1]);
+   bool down = (hi[0] < hi[1]) && (lo[0] < lo[1]);
+   if (up)   return  1;
+   if (down) return -1;
+   return 0;                                   // mixed = range = no opinion
+}
+
 int TrendDir() {
    if (InpTrendTF <= 0) return 0;
-   ENUM_TIMEFRAMES tf = (InpTrendTF == 15) ? PERIOD_M15
-                      : (InpTrendTF == 30) ? PERIOD_M30
-                      : (InpTrendTF == 60) ? PERIOD_H1 : PERIOD_H4;
+   ENUM_TIMEFRAMES tf = TrendTf();
+   if (InpTrendMode == 1) return CamelDir(tf);
    int n = MathMax(3, InpTrendBars);
    double now  = iClose(_Symbol, tf, 1);
    double then = iClose(_Symbol, tf, n);
@@ -1201,7 +1267,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.17 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.18 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",

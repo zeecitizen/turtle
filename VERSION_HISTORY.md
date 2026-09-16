@@ -471,6 +471,63 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.18 — THE CAMEL HUMPS. Zee's own trend reading, and it wins (2026-09-16)
+
+**Who ordered it.** Zee: *"test if we check trend first what happens then? test all
+timeframes for the trend and their impact on us ... because i heard the teacher say
+something about trading with the trend ... also TEST the trend detector (camel humps) from
+our previous UHV strategy onto this strategy VSISA as a trend checker -- maybe it works?"*
+
+**What shipped (as options, default OFF).** `InpTrendMode` — 0 = the slope the EA already
+had, 1 = **CAMEL HUMPS**, his own definition from `LAWS.md`: *"we identify trend by drawing
+camel humps .. we call it an uptrend if we're breaking above previous highs. and forming new
+higher lows."* Fractal pivots, K bars clear each side, then HH+HL for up, LH+LL for down,
+anything mixed is a RANGE and gates nothing. Ported from `trend_eyes.py`, the UHV compass.
+`InpTrendTF` also widened from {M15, M30, H1, else H4} to the full ladder M1…D1.
+
+**Full window, Jan 1 → Sep 16, v1.17 geometry at 0.28 lots:**
+
+| trend filter | net | trades | WR | maxDD | streak | net per $1 DD |
+|---|---|---|---|---|---|---|
+| **OFF (shipped)** | +$7,918 | 94 | 51% | $1,232 | 7 | 6.43 |
+| slope M15 | +$680 | 23 | 43% | $880 | 5 | 0.77 |
+| slope M30 | +$3,212 | 40 | 52% | $975 | 4 | 3.29 |
+| slope H1 | +$5,942 | 50 | 58% | $679 | 3 | 8.76 |
+| slope H4 | +$6,299 | 50 | 56% | $834 | 3 | 7.55 |
+| camel M15 | +$4,875 | 64 | 50% | $879 | 4 | 5.55 |
+| **camel M30** | **+$8,019** | 66 | **59%** | $875 | 5 | **9.16** |
+| **camel H1** | **+$8,096** | 67 | 57% | **$865** | 5 | **9.36** |
+| camel H4 | +$6,842 | 73 | 52% | $819 | 4 | 8.35 |
+| camel D1 | +$3,401 | 64 | 45% | $903 | 5 | 3.77 |
+
+**His reading beats mine at every single timeframe.** Swing structure carries information the
+20-bar slope does not, and the difference is not small: M30 goes 3.29 → 9.16, M15 0.77 → 5.55.
+
+**CAMEL H1 DOMINATES THE SHIPPED CONFIG ON EVERY AXIS AT ONCE** — more money (+$8,096 vs
++$7,918), higher win rate (57% vs 51%), 30% LESS drawdown ($865 vs $1,232), shorter worst
+streak (5 vs 7), on 27 fewer trades. And M30/H1/H4 are all strong, so it is a plateau rather
+than a spike.
+
+**Walk-forward — and this is the rare one that holds in BOTH halves:**
+
+| | H1 (Jan–mid-May) | H2 (mid-May–Sep) |
+|---|---|---|
+| OFF | 42% WR · +$1,223 · DD $1,232 · streak 7 · **0.99** | 56% · +$6,695 · DD $819 · streak 4 · **8.17** |
+| **camel H1** | 43% · +$1,101 · DD $865 · streak 5 · **1.27** | **64%** · +$6,995 · DD $558 · streak 3 · **12.53** |
+| camel M30 | **50%** · +$1,798 · DD $875 · streak 5 · **2.06** | **65%** · +$6,220 · DD $558 · streak 3 · **11.15** |
+| camel H4 | 52% · +$2,195 · DD $612 · streak 3 · 3.59 | 52% · +$4,647 · DD $819 · streak 4 · 5.67 |
+
+Camel H1 and camel M30 improve win rate, drawdown, streak AND risk-adjusted return in BOTH
+halves. Nothing else tested this year has done that — every other candidate was strong in
+one half and flat or negative in the other.
+
+**The teacher's own words back H1 specifically:** *"That setup comes on H1, and we take entry
+on M5... take the trade in trend direction. Do not catch the top."*
+
+**Recommended: `InpTrendTF 60`, `InpTrendMode 1`. Not shipped pending Zee's call.**
+
+---
+
 ## VSISA v1.17 — SHIPPED: the ratchet ON at 2.0R, and 0.28 lots (2026-09-16)
 
 **Who ordered it.** Zee: *"ok let's go for: ratchet 2.0/1.0, 0.28 lots +$7,918 51% 7 $1,232"*.
