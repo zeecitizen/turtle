@@ -471,6 +471,64 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## VSISA v1.21-1.23 — SHIPPED: LAW 14, the FADE (2026-09-17)
+
+**Who ordered it.** Zee took a trade the EA refused — 16 Sep 22:33 broker, **+$858 on 1
+lot** — and described how he read it: *"i filtered out the red candles: saw that reds are
+ultra highs .. then tried to find a green reaction candle.. i saw that the green's had
+reduced alot from one green to another green. so it meant that now buyers have to apply
+less force to bring the price up.."* Then: **"ok ship it"**.
+
+**Why the EA could not see it.** Two differences, and neither is a threshold:
+1. **His background is not adjacent.** He reads the reds of the whole recent leg. At his
+   entry there was no red run at all — the bar before was green. Gaps up to 3 contrary bars
+   still fire nothing that night.
+2. **His comparison is GREEN-TO-GREEN.** The EA asks "is the reaction quieter than the reds
+   behind it". He asks "is each green quieter than the LAST GREEN" — the Base Case forwards.
+
+**What shipped.** `InpFadeMode` = 1 — a SECOND entry path, tried only after the ordinary
+setup refuses, so it can only ever ADD trades. `InpFadePct` 0.60, `InpFadeLook` 4,
+`InpFadeBigPct` 0.80.
+
+**Two things had to be learned first, and both are in the source.**
+
+*His eye did more than his words.* Built exactly as described it fired **1,455 to 5,558
+times** at 0.03–1.46 net per $1 of drawdown against the shipped 9.16. He was also looking at
+**a low that had just been made** — applying LAW 13's sweep to this path doubled every
+variant.
+
+*It had to survive the spike test.* 0.60/look4 first appeared between neighbours of 5.39 and
+6.40 — the shape refused all week. The fine grid made it a RIDGE:
+
+| fade ≤ | look3 | look4 | look5 |
+|---|---|---|---|
+| 0.55 | 5.19 | 6.58 | 5.62 |
+| **0.60** | 6.26 | **15.75** | **12.99** |
+| 0.65 | 6.00 | 9.58 | 8.36 |
+
+**Ship-verified:** 121 trades · 51% WR · **NET +$10,400.18** · maxDD $661 (6.6%) · streak 4 ·
+ratio 15.75 — matching the pre-ship measurement exactly.
+
+| | v1.20 | **v1.23** |
+|---|---|---|
+| net, Jan–Sep | +$8,019 | **+$10,400** |
+| trades | 66 | **121** |
+| win rate | 59% | 51% |
+| max drawdown | $875 (8.8%) | **$661 (6.6%)** |
+| worst streak | 5 | **4** |
+| net per $1 DD | 9.16 | **15.75** |
+| halves | 2.06 / 11.15 | **4.16 / 12.43** |
+
+**9 of 9 months green.** Jan +$664, Feb +$598, Mar +$84, Apr +$66, May +$2,754, Jun +$1,422,
+Jul +$3,496, Aug +$1,163, Sep +$306.
+
+This answers the frequency question I told him on 2026-09-17 I could not solve — and it came
+from him watching a chart and taking the trade, not from any parameter search.
+
+**ZEE MUST REATTACH.** Banner must read `v1.23`.
+
+---
+
 ## VSISA v1.20 — SHIPPED: the night's four answers (2026-09-17)
 
 **Who ordered it.** Zee, going to bed: *"i want you to through the night experiment

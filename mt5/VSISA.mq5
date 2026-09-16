@@ -52,7 +52,7 @@
 // takes the first half NEGATIVE).
 // ─────────────────────────────────────────────────────────────────────────────────
 #property copyright "Zee & his ghost"
-#property version   "1.22"
+#property version   "1.23"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -486,11 +486,30 @@ input int    InpSweepLook   = 30;     // InpSweepLook — bars defining that ext
 // Measured on the bars he was looking at: greens 2719, 2690, 2409, 2395, 2431, 2401, 2238
 // against reds of 2786, 2757, 2699, 2622, 2600, 2512.
 //
-// This is a SECOND ENTRY PATH, tried only when the ordinary one refuses, so it can add
-// trades without disturbing anything already proven. Default OFF.
-input int    InpFadeMode    = 0;      // InpFadeMode — 1 = also take the green-fade entry
-input int    InpFadeLook    = 12;     // InpFadeLook — bars of leg the fade is read over
-input double InpFadePct     = 0.90;   // InpFadePct — this green <= that x the previous green
+// This is a SECOND ENTRY PATH, tried only when the ordinary one refuses, so it can only
+// ever ADD trades. SHIPPED ON 2026-09-17 at fade<=0.60 over a 4-bar leg.
+//
+// TWO THINGS HAD TO BE LEARNED BEFORE IT WORKED, and both are worth keeping:
+//
+//   1. HIS EYE DID MORE THAN HIS WORDS. Built exactly as described - greens fading over
+//      loud reds - it fired 1,455 to 5,558 times over 8.5 months at 0.03-1.46 net per $1
+//      of drawdown, against the shipped 9.16. He was also looking at A LOW THAT HAD JUST
+//      BEEN MADE. Applying LAW 13's sweep to this path too doubled every variant.
+//   2. IT HAD TO SURVIVE THE SPIKE TEST. 0.60/look4 first showed up between neighbours of
+//      5.39 and 6.40 - the shape refused all week. The fine grid made it a RIDGE, not a
+//      cell: the 0.60 column wins at every lookback (6.26 / 15.75 / 12.99 at look 3/4/5).
+//
+//      fade<=   look3   look4   look5
+//      0.55      5.19    6.58    5.62
+//      0.60      6.26   15.75   12.99
+//      0.65      6.00    9.58    8.36
+//
+// Against v1.20: net +$8,019 -> +$10,400, trades 66 -> 121, drawdown $875 -> $661, worst
+// streak 5 -> 4, ratio 9.16 -> 15.75, and better in BOTH walk-forward halves
+// (2.06/11.15 -> 4.16/12.43). The cost is win rate, 59% -> 51%.
+input int    InpFadeMode    = 1;      // InpFadeMode — 1 = also take the green-fade entry
+input int    InpFadeLook    = 4;      // InpFadeLook — bars of leg the fade is read over
+input double InpFadePct     = 0.60;   // InpFadePct — this green <= that x the previous green
 input double InpFadeBigPct  = 0.80;   // InpFadeBigPct — loudest opposite bar >= this x swing max
 
 //--- LAW 9: higher-timeframe trend (default OFF) ---------------------------
@@ -1413,7 +1432,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.22 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.23 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
