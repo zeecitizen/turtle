@@ -375,3 +375,59 @@ green**. February is the single losing month (-$49.20).
 - **31-34% win rate is the design** (2.5R target), so losing streaks are normal here and
   are not evidence of a broken EA.
 - The strategy has never traded live. Everything above is the Strategy Tester.
+
+---
+
+## 2026-09-17 — the Diamond had been standing down for three days
+
+Zee asked whether the VSISA learnings could lift the UHV breakout's win rate. Looking at
+the live EA first turned up something more urgent.
+
+**`ZeeUHV_Diamond` v1.17 on Blueberry had taken ZERO trades since 14 September.** Its log,
+every minute:
+
+```
+[DIA] [SKIP] OANDA volume 240000 s stale (bridge stalled?) — standing down
+             rather than judging on broker volume
+```
+
+The EA was behaving exactly as designed — `InpOandaStrict = true` makes a missing OANDA
+minute a minute it CANNOT READ, so it refuses rather than silently reverting to broker
+volume. But the OANDA bridge had stopped on 14 Sep 05:03 and nothing restarted it, so the
+EA was correct and idle for 2.8 days.
+
+**Fixed:** started `monitor/oanda_vol_supervisor.py` detached. The table went from 29,718
+minutes (newest 14 Sep 05:03) to 33,606 (newest 16 Sep 23:59) within a minute. The
+supervisor exists precisely for this — it runs the collector as a one-shot subprocess with
+a hard timeout every 5s, so a hung websocket costs one cycle instead of the feed.
+
+**Lesson worth keeping: `InpOandaStrict` converts a data outage into a SILENT TRADING
+OUTAGE.** That is the right trade — judging on the wrong feed is worse — but it means the
+feed needs its own alarm. The cloudflared watchdog was disabled the same day for emailing
+false alarms, so nothing was watching this.
+
+### The answer to his actual question
+
+**The camel humps are ALREADY IN the Diamond and switched OFF.** `InpTrendMode`:
+0 = TrendNow (stale pivots) · **1 = CamelTrend** · 2 = EMA slope. The shipped default is 0.
+
+The EA's own source says why that is probably wrong (lines 205-216):
+
+> *"TrendNow() (mode 0) compares two STALE pivots to each other ... structurally blind at
+> the very moment a leg pushes into new ground ... 80% of clean trends called a range across
+> seven days. That is BOTH of tonight's failures at once: it misses setups inside strong
+> moves, and it keeps saying 'uptrend' through the confirmation lag at the top."*
+>
+> *"Mode 1 is CamelTrend ... where it scored 61.1% / +1044.30 against the stale-pivot
+> version's 31.6% / +298.10."*
+
+**"Keeps saying uptrend through the confirmation lag at the top" IS his complaint** — the EA
+firing into a breakout that is about to fail.
+
+And it matches VSISA independently: camel beat the slope reading at EVERY timeframe there
+(M30 went 3.29 -> 9.16 net per $1 of drawdown) and was the only change to improve win rate,
+drawdown, streak AND risk-adjusted return in both walk-forward halves.
+
+**NOT FLIPPED YET.** The 61.1% figure comes from BasedOnLaws, a different EA, ported across —
+it has never been measured in the Diamond itself. The Blueberry rig holds 2024-2026 history
+so it can be tested properly, and that is the next job.
