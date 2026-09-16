@@ -52,7 +52,7 @@
 // takes the first half NEGATIVE).
 // ─────────────────────────────────────────────────────────────────────────────────
 #property copyright "Zee & his ghost"
-#property version   "1.20"
+#property version   "1.22"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -465,6 +465,33 @@ input double InpEffortMin   = 0.00;   // InpEffortMin — last setup bar's vol/r
 // risk. It is a deliberate trade of income for bearability, not an upgrade.
 input bool   InpFakeBreak   = true;   // InpFakeBreak — 2-bar setup must sweep a recent extreme
 input int    InpSweepLook   = 30;     // InpSweepLook — bars defining that extreme
+
+//--- LAW 14: THE FADE — Zee's own eye, 2026-09-17 ---------------------------------
+// He took a trade the EA refused (16 Sep 22:33 broker, +$858 on 1 lot) and described how
+// he read it: "i filtered out the red candles: saw that reds are ultra highs .. then tried
+// to find a green reaction candle.. i saw that the green's had reduced alot from one green
+// to another green. so it meant that now buyers have to apply less force to bring the price
+// up.."
+//
+// That is NOT the shipped setup, and no loosening of it reaches his trade — gaps up to 3
+// still fire nothing that night. Two things differ:
+//
+//   1. THE BACKGROUND IS NOT ADJACENT. He reads the red bars of the whole recent leg, not a
+//      run touching the reaction. At his entry there was no red run at all — the bar before
+//      was green.
+//   2. THE COMPARISON IS GREEN-TO-GREEN. The EA asks "is the reaction quieter than the reds
+//      behind it". He asks "is each green quieter than the LAST GREEN" — falling effort for
+//      the same result, which is the Base Case read forwards.
+//
+// Measured on the bars he was looking at: greens 2719, 2690, 2409, 2395, 2431, 2401, 2238
+// against reds of 2786, 2757, 2699, 2622, 2600, 2512.
+//
+// This is a SECOND ENTRY PATH, tried only when the ordinary one refuses, so it can add
+// trades without disturbing anything already proven. Default OFF.
+input int    InpFadeMode    = 0;      // InpFadeMode — 1 = also take the green-fade entry
+input int    InpFadeLook    = 12;     // InpFadeLook — bars of leg the fade is read over
+input double InpFadePct     = 0.90;   // InpFadePct — this green <= that x the previous green
+input double InpFadeBigPct  = 0.80;   // InpFadeBigPct — loudest opposite bar >= this x swing max
 
 //--- LAW 9: higher-timeframe trend (default OFF) ---------------------------
 // H1 TREND FILTER OFF (2026-09-12, Zee: "remove"). Worth recording what this costs,
@@ -1126,6 +1153,83 @@ bool Detect(int side, double &sl_level, string &why) {
 //+------------------------------------------------------------------+
 //| Fire                                                              |
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| LAW 14 — the FADE. Loud opposite bars behind, and each bar our    |
+//| way quieter than the last one our way. Tried only after the       |
+//| ordinary setup has refused, so it only ever ADDS trades.          |
+//+------------------------------------------------------------------+
+bool DetectFade(int side, double &sl_level, string &why) {
+   if (InpFadeMode != 1) return false;
+   int r = 1;                                   // the reaction is the bar just closed
+   if (side > 0 && !bUp(r))   return false;
+   if (side < 0 && !bDown(r)) return false;
+
+   double rng = bRange(r);
+   if (rng <= 0) return false;
+   if (bBody(r) < InpBodyFrac * rng) return false;
+
+   long v1 = BarVolume(r);
+   if (v1 <= 0) return false;
+
+   // THE PREVIOUS BAR OUR WAY — the one his eye compares against.
+   int prev = -1;
+   for (int k = r + 1; k <= r + InpFadeLook; k++) {
+      bool same = (side > 0) ? bUp(k) : bDown(k);
+      if (same) { prev = k; break; }
+   }
+   if (prev < 0) return false;
+   long vp = BarVolume(prev);
+   if (vp <= 0) return false;
+   if ((double)v1 > InpFadePct * vp) return false;      // "reduced alot from one green to another"
+
+   long vmax; double vavg, ravg;
+   if (!VolStats(r + 1, vmax, vavg, ravg, side)) return false;
+
+   // "the reds are ultra highs" — the loudest bar AGAINST us in the leg.
+   long oppMax = 0;
+   for (int k = r + 1; k <= r + InpFadeLook; k++) {
+      bool opp = (side > 0) ? bDown(k) : bUp(k);
+      if (opp) { long v = BarVolume(k); if (v > oppMax) oppMax = v; }
+   }
+   if (oppMax <= 0 || vmax <= 0) return false;
+   if ((double)oppMax < InpFadeBigPct * (double)vmax) return false;
+
+   // LAW 13 APPLIES HERE TOO. The first cut of this let the fade in without a sweep and
+   // it fired 1,455-5,558 times over 8 months - six times worse per unit of drawdown than
+   // the shipped setup. His eye was doing more than "greens fading over loud reds": he was
+   // looking at a LOW THAT HAD JUST BEEN MADE. That is the fake break, and it is the
+   // strongest filter on this project, so the fade has to pass it as well.
+   if (InpFakeBreak) {
+      double lvl = (side > 0) ? bLow(r + 1) : bHigh(r + 1);
+      for (int k = r + 1; k < r + 1 + InpSweepLook; k++) {
+         if (side > 0) lvl = MathMin(lvl, bLow(k));
+         else          lvl = MathMax(lvl, bHigh(k));
+      }
+      double legExt = (side > 0) ? bLow(r) : bHigh(r);
+      for (int k = r; k <= r + InpFadeLook; k++) {
+         if (side > 0) legExt = MathMin(legExt, bLow(k));
+         else          legExt = MathMax(legExt, bHigh(k));
+      }
+      if (side > 0) {
+         if (legExt > lvl)     { g_rej_fake++; return false; }
+         if (bClose(r) <= lvl) { g_rej_fake++; return false; }
+      } else {
+         if (legExt < lvl)     { g_rej_fake++; return false; }
+         if (bClose(r) >= lvl) { g_rej_fake++; return false; }
+      }
+   }
+
+   // the stop hangs off the reaction, exactly as everywhere else
+   double sref = (side > 0) ? bLow(r) : bHigh(r);
+   double buf  = InpSlBufPts * _Point;
+   sl_level = (side > 0) ? sref - buf : sref + buf;
+
+   why = StringFormat("FADE %s %d -> %d (%.2fx) | loudest opposite %d = %.2fx swing max %d",
+                      (side > 0) ? "greens" : "reds", (int)vp, (int)v1,
+                      (double)v1 / vp, (int)oppMax, (double)oppMax / vmax, (int)vmax);
+   return true;
+}
+
 void Fire(int side, double sl_level, string why) {
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
@@ -1309,7 +1413,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.20 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.22 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
@@ -1546,5 +1650,8 @@ void OnTick() {
    string why = "";
    if (InpBuys  && Detect(+1, sl, why)) { Fire(+1, sl, why); return; }
    if (InpSells && Detect(-1, sl, why)) { Fire(-1, sl, why); return; }
+   // LAW 14 only gets a look once the ordinary setup has said no.
+   if (InpBuys  && DetectFade(+1, sl, why)) { Fire(+1, sl, why); return; }
+   if (InpSells && DetectFade(-1, sl, why)) { Fire(-1, sl, why); return; }
 }
 //+------------------------------------------------------------------+
