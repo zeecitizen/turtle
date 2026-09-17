@@ -68,10 +68,11 @@
 //|  fills may promote a default.                                      |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan"
-#property version   "1.12"
+#property version   "1.35"
 #property strict
 
 #include <Trade/Trade.mqh>
+#include <Canvas/Canvas.mqh>
 
 input group "=== size and identity ==="
 input double InpLots        = 1.00;  // InpLots - lots per ticket (his hand size)
@@ -109,7 +110,15 @@ input group "=== the exit ==="
 //  rate - it is the TAIL: how deep does the worst open trade go, and how long is it held,
 //  before price comes back? Mode 1 exists to MEASURE that, with InpMaxAdverse as the
 //  catastrophe brake that his own hand does not have.
-input int    InpExitMode    = 1;     // InpExitMode - 0 = TP/SL - 1 = wait for profit (HIS way)
+//  2026-09-18, the deal: "then perfect me the entry 100% and i'll exit myself. i'll start
+//  the EA only when i'm sitting on the computer."
+//  MODE 2 IS THAT DEAL. The EA opens and then NEVER touches the position - no stop, no
+//  target, no time exit, no brake. It is his trade from the moment it fills. This is the
+//  honest division: four months of testing showed the entry is mechanisable and every exit
+//  I encoded lost money, while his exit has taken 17 of 17 live. Mode 2 must only ever run
+//  while he is watching, which is the condition he set himself.
+input bool   InpMeterOnly   = true;  // InpMeterOnly - DRAW ONLY, never place a trade (his call)
+input int    InpExitMode    = 1;     // InpExitMode - 0 = TP/SL - 1 = wait for profit - 2 = ENTRY ONLY
 input int    InpProfitPts   = 80;    // InpProfitPts - mode 1: close once this far in profit
 input int    InpMaxHoldBars = 120;   // InpMaxHoldBars - mode 1: give up after this many bars
 input int    InpMaxAdverse  = 600;   // InpMaxAdverse - mode 1: catastrophe brake (0 = none)
@@ -159,6 +168,62 @@ input int    InpSessFrom    = 0;     // InpSessFrom - broker hour, inclusive
 input int    InpSessTo      = 24;    // InpSessTo - broker hour, exclusive
 input bool   InpVerbose     = true;  // InpVerbose - print every decision
 
+input group "=== the running commentary ==="
+//  Zee, 2026-09-18: "the EA should verbally tell me at each minute what its THINKING..
+//  so i'm never left waiting to see oh whats this EA doing its complete silence all day."
+//
+//  Every closed minute it says, in words, what the sellers did, what the buyers did, and
+//  which condition is still missing. It paints on the chart (always visible) and writes to
+//  the Experts log, so the reasoning can be read back afterwards against what price did.
+input group "=== the imbalance meter (a real gauge, drawn live) ==="
+//  Zee, 2026-09-18: "make an imbalance meter .. real-time .. are u allowed to draw on an
+//  MT5 chart the realtime imbalance meter >> LIKE A speedometer."
+//
+//  Yes - CCanvas renders a bitmap on the chart, so this is a real gauge and not a text
+//  readout. The needle is the one number he trades: who is getting more price per unit of
+//  effort. It reads the TICK tape, so it moves continuously inside the forming candle
+//  rather than once a minute - which is the thing he says he actually watches.
+//
+//      needle hard LEFT   sellers are moving price easily
+//      needle CENTRE      neither side is getting anywhere (the absorption he waits for)
+//      needle hard RIGHT  buyers are moving price easily
+//  2026-09-18, on which feed the meter should read:
+//  "the same volume numbers you see on TradingView .. because the colors of volumes on
+//   MT5 follow a different convention than tradingview and my eyes are trained on
+//   tradingview's volumes.. on MT5 a red volume doesnot mean its selling, it means its
+//   smaller than previous candle, duh!"
+//
+//  He is right, and it is a real trap. MT5 colours a volume bar by comparing it with the
+//  PREVIOUS bar - red means "smaller than the last one", nothing to do with direction.
+//  TradingView colours by the candle: green when close > open. Same numbers, opposite
+//  meaning. This meter uses the TradingView convention, and source 1 reads the OANDA
+//  minute table - the same feed his chart draws - so the numbers on the gauge are the
+//  numbers under his eye.
+//
+//  The trade-off, stated plainly: OANDA volume arrives once a MINUTE, so on source 1 the
+//  needle steps each minute instead of flowing with every tick. Source 0 flows tick by
+//  tick but counts TICKS as effort, because this broker publishes no real volume for gold.
+input int    InpMeterSource = 1;     // InpMeterSource - 0 = live ticks (broker) · 1 = OANDA volume (TradingView)
+input int    InpMeterBars   = 6;     // InpMeterBars - minutes the two sides are compared over
+input string InpOandaFile   = "oanda_bars.csv"; // InpOandaFile - in Common\Files
+//  2026-09-18: "oh can u create a tick by tick dial too .. live tick responsiveness.. its
+//  ok it can be based on broker volume.. as sometimes i trade based on very fast decisions
+//  and a candle forming"
+//  So both dials are drawn together. LEFT is the true-volume read his eye is trained on,
+//  stepping once a minute. RIGHT is the broker tick tape, flowing continuously inside the
+//  forming candle. When they agree, the read is solid on both clocks; when the fast dial
+//  swings and the slow one has not yet, that is the move happening before the minute closes.
+input bool   InpGaugeDual   = true;  // InpGaugeDual - draw BOTH dials: volume (slow) + ticks (fast)
+input bool   InpGauge       = true;  // InpGauge - draw the live imbalance meter
+input int    InpGaugeCorner = 0;     // InpGaugeCorner - 0 TL · 1 TR · 2 BL · 3 BR
+input int    InpGaugeX      = 20;    // InpGaugeX - pixels from that corner
+input int    InpGaugeY      = 110;   // InpGaugeY - pixels from that corner (clears the commentary)
+input int    InpGaugeSize   = 460;   // InpGaugeSize - width of ONE dial, in pixels
+
+input bool   InpNarrate     = true;  // InpNarrate - say what it is thinking every minute
+input bool   InpNarrateChart = true; // InpNarrateChart - also paint it on the chart
+input bool   InpAlertOnNear = true;  // InpAlertOnNear - alert when only ONE condition is missing
+
 void OpenTrade(const int dir, const string why);
 
 CTrade  trade;
@@ -180,18 +245,23 @@ int      g_streak    = 0;
 //+------------------------------------------------------------------+
 int OnInit()
   {
+   GaugeCreate();
    ArrayResize(g_tape, MathMax(InpTickWindow * 2, 64));
    ArrayInitialize(g_tape, 0.0);
    g_tapeN = 0; g_tapeHead = 0; g_barTicks = 0;
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
+   if(InpMeterOnly)
+      Print("[VSISA_MIN] METER ONLY. This EA will NOT trade. It draws the imbalance gauge and tells you what it sees; every entry and exit is yours.");
+   if(InpExitMode == 2)
+      Print("[VSISA_MIN] ENTRY-ONLY MODE. This EA will OPEN trades and NEVER close them. No stop, no target. Run it ONLY while you are at the screen.");
    if(InpExitMode == 0 && InpStopPts <= 0)
      {
       Print("[VSISA_MIN] REFUSING to run with no stop. A 1.00-lot scalper without a cap "
             "is one bad minute away from giving back a week.");
       return(INIT_PARAMETERS_INCORRECT);
      }
-   PrintFormat("[VSISA_MIN] v1.12 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
+   PrintFormat("[VSISA_MIN] v1.35 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
                "release<=%.2fx | confirm %d | hold %d bar(s) | tp %d | stop %d | day stop %.0f | %s",
                InpAbsorbVol, InpAbsorbBars, InpAbsorbStuck, InpLegMin, InpReleaseVol,
                InpConfirmBars, InpHoldBars, InpTargetPts, InpStopPts, InpDayLossStop,
@@ -199,7 +269,12 @@ int OnInit()
    return(INIT_SUCCEEDED);
   }
 
-void OnDeinit(const int reason) { PrintFormat("[VSISA_MIN] stopped (reason %d)", reason); }
+void OnDeinit(const int reason)
+  {
+   GaugeDestroy();
+   Comment("");
+   PrintFormat("[VSISA_MIN] stopped (reason %d)", reason);
+  }
 
 //+------------------------------------------------------------------+
 double BarVolume(const int shift)
@@ -403,6 +478,343 @@ bool Qualifies(const int shift, int &dir, string &why)
   }
 
 //+------------------------------------------------------------------+
+//| THE IMBALANCE METER - a real gauge, drawn on the chart.           |
+//|                                                                   |
+//| The needle is the imbalance he reads by eye:                      |
+//|                                                                   |
+//|     imbalance = (buyers' points-per-tick - sellers' points-per-tick)
+//|                 -------------------------------------------------- |
+//|                 (buyers' points-per-tick + sellers' points-per-tick)
+//|                                                                   |
+//| bounded -1 .. +1, so the needle cannot run off the dial however    |
+//| violent the tape gets. It is computed from the TICK ring, so it    |
+//| moves inside the forming candle instead of once a minute.         |
+//+------------------------------------------------------------------+
+CCanvas g_gauge;
+bool    g_gaugeOK = false;
+
+//--- the OANDA minute table: the same feed his TradingView chart draws.
+#define OV_KEEP 400
+datetime g_ovTime[OV_KEEP];
+double   g_ovOpen[OV_KEEP], g_ovClose[OV_KEEP], g_ovHigh[OV_KEEP], g_ovLow[OV_KEEP];
+double   g_ovVol[OV_KEEP];
+int      g_ovN = 0;
+datetime g_ovLastRead = 0;
+
+//+------------------------------------------------------------------+
+//| Pull the OANDA minute rows. Cheap: re-reads only every 5 seconds, |
+//| and keeps just the newest OV_KEEP minutes.                        |
+//+------------------------------------------------------------------+
+void OandaRefresh()
+  {
+   if(TimeLocal() - g_ovLastRead < 5) return;
+   g_ovLastRead = TimeLocal();
+
+   int h = FileOpen(InpOandaFile, FILE_READ | FILE_CSV | FILE_COMMON |
+                 FILE_SHARE_READ | FILE_SHARE_WRITE, ',');
+   if(h == INVALID_HANDLE)
+     {
+      static datetime lastMoan = 0;
+      if(TimeLocal() - lastMoan > 60)
+        {
+         lastMoan = TimeLocal();
+         PrintFormat("[VSISA_MIN] cannot open %s in the shared Files folder (error %d) - "
+                     "the VOLUME dial will stay blank", InpOandaFile, GetLastError());
+        }
+      return;
+     }
+
+   // walk the whole file but keep only the tail - it is a few MB and read once per 5s
+   int n = 0;
+   datetime tt[OV_KEEP]; double oo[OV_KEEP], hh[OV_KEEP], ll[OV_KEEP], cc[OV_KEEP], vv[OV_KEEP];
+   while(!FileIsEnding(h))
+     {
+      string ts = FileReadString(h);
+      if(ts == "") break;
+      double o = StringToDouble(FileReadString(h));
+      double hi = StringToDouble(FileReadString(h));
+      double lo = StringToDouble(FileReadString(h));
+      double c  = StringToDouble(FileReadString(h));
+      double v  = StringToDouble(FileReadString(h));
+      datetime t = StringToTime(ts);
+      if(t <= 0) continue;
+      int slot = n % OV_KEEP;
+      tt[slot] = t; oo[slot] = o; hh[slot] = hi; ll[slot] = lo; cc[slot] = c; vv[slot] = v;
+      n++;
+     }
+   FileClose(h);
+   if(n <= 0) return;
+
+   int keep = MathMin(n, OV_KEEP);
+   static bool announced = false;
+   if(!announced && keep > 0)
+     {
+      announced = true;
+      PrintFormat("[VSISA_MIN] OANDA volume table read: %d rows, keeping newest %d", n, keep);
+     }
+   g_ovN = keep;
+   for(int i = 0; i < keep; i++)
+     {
+      int slot = (n - keep + i) % OV_KEEP;
+      g_ovTime[i] = tt[slot]; g_ovOpen[i] = oo[slot]; g_ovHigh[i] = hh[slot];
+      g_ovLow[i] = ll[slot]; g_ovClose[i] = cc[slot]; g_ovVol[i] = vv[slot];
+     }
+  }
+
+//+------------------------------------------------------------------+
+//| The imbalance on the OANDA table, TradingView's convention:       |
+//| a bar is BUYING when close > open, SELLING when close < open -    |
+//| never "smaller than the previous bar", which is MT5's colouring   |
+//| and means nothing about direction.                                |
+//+------------------------------------------------------------------+
+double OandaImbalance(double &effUpOut, double &effDnOut, int &barsOut, double &ageOut)
+  {
+   effUpOut = 0.0; effDnOut = 0.0; barsOut = 0; ageOut = -1;
+   if(g_ovN < InpMeterBars + 1) return(0.0);
+   int from = g_ovN - InpMeterBars;
+   double upP = 0.0, dnP = 0.0, upV = 0.0, dnV = 0.0;
+   for(int i = from; i < g_ovN; i++)
+     {
+      double body = g_ovClose[i] - g_ovOpen[i];
+      double v = g_ovVol[i];
+      if(v <= 0.0) continue;
+      if(body > 0)      { upP += body;  upV += v; }
+      else if(body < 0) { dnP += -body; dnV += v; }
+     }
+   barsOut = InpMeterBars;
+   ageOut = (double)(TimeCurrent() - g_ovTime[g_ovN - 1]) / 60.0;
+   if(upV <= 0.0 || dnV <= 0.0) return(0.0);
+   double effUp = upP / upV, effDn = dnP / dnV;
+   effUpOut = effUp; effDnOut = effDn;
+   if(effUp + effDn <= 0.0) return(0.0);
+   return((effUp - effDn) / (effUp + effDn));
+  }
+
+double TapeImbalance(double &effUpOut, double &effDnOut, int &ticksOut)
+  {
+   effUpOut = 0.0; effDnOut = 0.0; ticksOut = g_tapeN;
+   int cap = ArraySize(g_tape);
+   if(cap <= 0 || g_tapeN < 20) return(0.0);
+   int n = MathMin(g_tapeN, InpTickWindow);
+   double upP = 0.0, dnP = 0.0;
+   int upT = 0, dnT = 0;
+   double prev = 0.0; bool first = true;
+   for(int i = g_tapeN - n; i < g_tapeN; i++)
+     {
+      int idx = (g_tapeHead - g_tapeN + i + cap * 2) % cap;
+      double px = g_tape[idx];
+      if(first) { prev = px; first = false; continue; }
+      double d = px - prev;
+      if(d > 0)      { upP += d;  upT++; }
+      else if(d < 0) { dnP += -d; dnT++; }
+      prev = px;
+     }
+   if(upT < 2 || dnT < 2) return(0.0);
+   double effUp = upP / upT, effDn = dnP / dnT;
+   effUpOut = effUp; effDnOut = effDn;
+   if(effUp + effDn <= 0.0) return(0.0);
+   return((effUp - effDn) / (effUp + effDn));      // -1 .. +1
+  }
+
+void GaugeCreate()
+  {
+   if(!InpGauge) return;
+   int w = InpGaugeDual ? (int)(InpGaugeSize * 1.92) : InpGaugeSize;
+   int h = (int)(InpGaugeSize * 0.86);
+   if(!g_gauge.CreateBitmapLabel("vsisa_gauge", InpGaugeX, InpGaugeY, w, h,
+                                 COLOR_FORMAT_ARGB_NORMALIZE))
+     { Print("[VSISA_MIN] gauge could not be created"); return; }
+   ObjectSetInteger(0, "vsisa_gauge", OBJPROP_CORNER, InpGaugeCorner);
+   ObjectSetInteger(0, "vsisa_gauge", OBJPROP_ANCHOR, ANCHOR_LEFT_UPPER);
+   // with a right/bottom corner the offset is measured to the object's own edge, so a wide
+   // canvas anchored 20px from the right runs off the chart - push it in by its own size.
+   int px = InpGaugeX, py = InpGaugeY;
+   if(InpGaugeCorner == 1 || InpGaugeCorner == 3) px = InpGaugeX + w;
+   if(InpGaugeCorner == 2 || InpGaugeCorner == 3) py = InpGaugeY + h;
+   ObjectSetInteger(0, "vsisa_gauge", OBJPROP_XDISTANCE, px);
+   ObjectSetInteger(0, "vsisa_gauge", OBJPROP_YDISTANCE, py);
+   ObjectSetInteger(0, "vsisa_gauge", OBJPROP_BACK, false);
+   ObjectSetInteger(0, "vsisa_gauge", OBJPROP_SELECTABLE, true);
+   ObjectSetInteger(0, "vsisa_gauge", OBJPROP_HIDDEN, false);
+   PrintFormat("[VSISA_MIN] gauge %dx%d at corner %d (%d,%d) - drag it if it sits badly",
+               w, h, InpGaugeCorner, px, py);
+   g_gaugeOK = true;
+  }
+
+void GaugeDestroy()
+  {
+   if(g_gaugeOK) { g_gauge.Destroy(); g_gaugeOK = false; }
+   ObjectDelete(0, "vsisa_gauge");
+  }
+
+//+------------------------------------------------------------------+
+//| One dial. `imb` is -1..+1; the needle sweeps 180 degrees.         |
+//+------------------------------------------------------------------+
+void DrawDial(const int cx, const int cy, const int R, const double imb,
+              const string title, const string footer, const uint footCol)
+  {
+   for(int deg = 0; deg <= 180; deg += 2)
+     {
+      double a = (180 - deg) * M_PI / 180.0;
+      double f = deg / 180.0;
+      uint col;
+      if(f < 0.38)      col = ARGB(255, 214, 69, 65);
+      else if(f > 0.62) col = ARGB(255, 46, 170, 122);
+      else              col = ARGB(255, 150, 150, 60);
+      int inner = R - MathMax(16, R / 5);
+      int x1 = cx + (int)(MathCos(a) * inner), y1 = cy - (int)(MathSin(a) * inner);
+      int x2 = cx + (int)(MathCos(a) * R),        y2 = cy - (int)(MathSin(a) * R);
+      g_gauge.LineAA(x1, y1, x2, y2, col);
+     }
+   double ang = (1.0 - (imb + 1.0) / 2.0) * M_PI;
+   int nx = cx + (int)(MathCos(ang) * (R - MathMax(20, R / 4)));
+   int ny = cy - (int)(MathSin(ang) * (R - MathMax(20, R / 4)));
+   for(int t = -2; t <= 2; t++)
+      g_gauge.LineAA(cx + t, cy, nx, ny, ARGB(255, 245, 245, 250));
+   for(int t = -2; t <= 2; t++)
+      g_gauge.LineAA(cx, cy + t, nx, ny, ARGB(255, 245, 245, 250));
+   g_gauge.FillCircle(cx, cy, MathMax(7, R / 14), ARGB(255, 235, 235, 240));
+
+   g_gauge.FontSet("Arial Bold", MathMax(16, R / 5));
+   g_gauge.TextOut(cx, cy - R / 2 - R / 8, StringFormat("%+.2f", imb),
+                   ARGB(255, 240, 240, 245), TA_CENTER | TA_TOP);
+   g_gauge.FontSet("Arial", MathMax(10, R / 14));
+   g_gauge.TextOut(cx, cy - R - R / 6, title, ARGB(255, 150, 155, 165), TA_CENTER | TA_TOP);
+   g_gauge.TextOut(cx - R + 2, cy + 8, "SELL", ARGB(255, 214, 69, 65), TA_LEFT | TA_TOP);
+   g_gauge.TextOut(cx + R - 2, cy + 8, "BUY", ARGB(255, 46, 170, 122), TA_RIGHT | TA_TOP);
+   g_gauge.TextOut(cx, cy + MathMax(24, R / 6), footer, footCol, TA_CENTER | TA_TOP);
+  }
+
+void GaugeDraw()
+  {
+   if(!g_gaugeOK) return;
+
+   double vUp, vDn, age = -1; int vBars = 0;
+   OandaRefresh();
+   double imbVol = OandaImbalance(vUp, vDn, vBars, age);
+   bool stale = (age < 0 || age > 3.0);
+
+   double tUp, tDn; int ticks = 0;
+   double imbTick = TapeImbalance(tUp, tDn, ticks);
+
+   int w = g_gauge.Width(), h = g_gauge.Height();
+   g_gauge.Erase(ARGB(220, 18, 20, 26));
+   g_gauge.Rectangle(0, 0, w - 1, h - 1, ARGB(255, 60, 64, 76));
+
+   int cy = (int)(h * 0.76);
+   if(InpGaugeDual)
+     {
+      int R = (int)MathMin(w * 0.225, h * 0.58);
+      DrawDial((int)(w * 0.26), cy, R, imbVol, "VOLUME (TradingView) 1 min",
+               (age < 0) ? "NO DATA" : (stale ? StringFormat("STALE %.0f min", age)
+                                      : StringFormat("%d min", vBars)),
+               stale ? ARGB(255, 230, 120, 60) : ARGB(255, 150, 155, 165));
+      DrawDial((int)(w * 0.74), cy, R, imbTick, "TICKS (live) this candle",
+               StringFormat("%d ticks", ticks), ARGB(255, 150, 155, 165));
+      g_gauge.LineAA(w / 2, 24, w / 2, h - 10, ARGB(120, 70, 74, 86));
+     }
+   else
+     {
+      int R = (int)MathMin(w * 0.42, h * 0.60);
+      bool useVol = (InpMeterSource == 1);
+      DrawDial(w / 2, cy, R, useVol ? imbVol : imbTick,
+               useVol ? "VOLUME (TradingView)" : "TICKS (live)",
+               useVol ? (stale ? StringFormat("STALE %.0f min", age)
+                               : StringFormat("%d min", vBars))
+                      : StringFormat("%d ticks", ticks),
+               (useVol && stale) ? ARGB(255, 230, 120, 60) : ARGB(255, 150, 155, 165));
+     }
+
+   g_gauge.FontSet("Arial Bold", 12);
+   g_gauge.TextOut(w / 2, 8, "IMBALANCE - price gained per unit of effort",
+                   ARGB(255, 175, 180, 190), TA_CENTER | TA_TOP);
+   g_gauge.Update();
+  }
+
+//+------------------------------------------------------------------+
+//| THE RUNNING COMMENTARY.                                           |
+//|                                                                   |
+//| Says what the tape just did in the same terms he reads it in -    |
+//| how much ground each side bought for its volume - then names the  |
+//| condition that is still missing. Silence is the thing he asked me |
+//| to remove, so this speaks every minute whether or not it acts.    |
+//+------------------------------------------------------------------+
+void Narrate(const int shift)
+  {
+   if(!InpNarrate) return;
+
+   double volSum = 0.0, spSum = 0.0;
+   int look0 = shift + InpAbsorbBars + 1;
+   for(int k = look0; k < look0 + InpLook; k++)
+     { volSum += BarVolume(k); spSum += Spread(k); }
+   double volAvg = volSum / InpLook, spAvg = spSum / InpLook;
+   if(volAvg <= 0.0 || spAvg <= 0.0) return;
+
+   int a0 = shift + 1, a1 = shift + InpAbsorbBars;
+   double aVol = 0.0;
+   for(int k = a0; k <= a1; k++) aVol += BarVolume(k);
+   aVol /= InpAbsorbBars;
+   double entered = iOpen(_Symbol, PERIOD_CURRENT, a1);
+   double left    = iClose(_Symbol, PERIOD_CURRENT, a0);
+   double net     = MathAbs(left - entered);
+
+   // what each side bought for its effort, over the comparison window
+   double upP = 0.0, dnP = 0.0, upV = 0.0, dnV = 0.0;
+   for(int k = shift; k < shift + InpSideBars; k++)
+     {
+      double bd = Body(k), v = BarVolume(k);
+      if(v <= 0.0) continue;
+      double amt = (InpSideMeasure == 1) ? Spread(k) : MathAbs(bd);
+      if(bd > 0)      { upP += amt; upV += v; }
+      else if(bd < 0) { dnP += amt; dnV += v; }
+     }
+   double effUp = (upV > 0.0) ? upP / upV : 0.0;
+   double effDn = (dnV > 0.0) ? dnP / dnV : 0.0;
+
+   double sp = Spread(shift), bd0 = Body(shift), vol = BarVolume(shift);
+   int    dir = (bd0 > 0) ? 1 : -1;
+   double edge = 0.0;
+   if(effUp > 0.0 && effDn > 0.0) edge = (dir > 0) ? effUp / effDn : effDn / effUp;
+
+   // score the conditions
+   bool cLoud    = (aVol >= InpAbsorbVol * volAvg);
+   bool cStuck   = (net <= InpAbsorbStuck * spAvg);
+   bool cRelease = (InpReleaseVol <= 0.0 || vol <= InpReleaseVol * aVol);
+   bool cBody    = (sp > 0.0 && MathAbs(bd0) >= InpBodyFrac * sp);
+   bool cEdge    = (edge >= InpSideMult);
+   int missing = (!cLoud) + (!cStuck) + (!cRelease) + (!cBody) + (!cEdge);
+
+   string verdict;
+   if(missing == 0)      verdict = "*** ALL CONDITIONS MET - taking the " + (dir > 0 ? "BUY" : "SELL") + " ***";
+   else if(missing == 1) verdict = "CLOSE - one condition short";
+   else                  verdict = "watching";
+
+   string why = "";
+   if(!cLoud)    why += StringFormat("needs heavier selling/buying first (%.2fx, want %.2fx) · ", aVol/volAvg, InpAbsorbVol);
+   if(!cStuck)   why += StringFormat("that effort IS moving price (%.2fx, want <=%.2fx) · ", net/spAvg, InpAbsorbStuck);
+   if(!cRelease) why += StringFormat("this bar is not quieter than the fight (%.2fx, want <=%.2fx) · ", (aVol>0?vol/aVol:0), InpReleaseVol);
+   if(!cBody)    why += StringFormat("indecisive bar (body %.2f, want %.2f) · ", (sp>0?MathAbs(bd0)/sp:0), InpBodyFrac);
+   if(!cEdge)    why += StringFormat("neither side is winning (%.2fx, want %.2fx) · ", edge, InpSideMult);
+   if(why == "") why = "-";
+
+   string line = StringFormat(
+      "[VSISA_MIN] %s  %s\n"
+      "  sellers: %.0f volume bought %.2f of ground   (%.3f per 100)\n"
+      "  buyers : %.0f volume bought %.2f of ground   (%.3f per 100)\n"
+      "  who is winning: %.2fx   |  fight was %.2fx as loud as normal, moved %.2fx a bar\n"
+      "  %s",
+      TimeToString(iTime(_Symbol, PERIOD_CURRENT, shift), TIME_MINUTES), verdict,
+      dnV, dnP, effDn * 100.0,
+      upV, upP, effUp * 100.0,
+      edge, aVol / volAvg, net / spAvg,
+      missing == 0 ? "GO" : why);
+
+   Print(line);
+   if(InpNarrateChart) Comment(line);
+   if(InpAlertOnNear && missing == 1) Alert(StringFormat("VSISA_MIN: one condition short - %s", why));
+  }
+
+//+------------------------------------------------------------------+
 void CloseAll(const string tag)
   {
    for(int i = PositionsTotal() - 1; i >= 0; i--)
@@ -430,6 +842,8 @@ void OnTick()
       if(g_tapeN < ArraySize(g_tape)) g_tapeN++;
      }
 
+   GaugeDraw();                    // the meter moves with the tape, not with the bar
+
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
    bool newBar = (bt != g_lastBar);
    if(newBar) g_barTicks = 0; else g_barTicks++;
@@ -439,7 +853,8 @@ void OnTick()
    //    trade, its not going in our direction at all.. i maybe wait upto 1 minute and
    //    then bam i have to close it somehow". Taking profit the moment it appears, and
    //    giving up after about a minute, both need tick resolution to be faithful.
-   if(InpExitMode == 1 && OpenCount() > 0)
+   if(InpExitMode == 2) { /* ENTRY ONLY - the position is HIS */ }
+   else if(InpExitMode == 1 && OpenCount() > 0)
      {
       double pt = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
       double best = -1e9, worst = 1e9;
@@ -468,7 +883,7 @@ void OnTick()
 
    //--- INTRABAR: he acts while the candle is still forming, so the decision cannot
    //    wait for the close. The bar-close path below still runs afterwards.
-   if(InpIntrabar && !newBar && OpenCount() == 0 && g_barTicks >= InpTickMinBar &&
+   if(!InpMeterOnly && InpIntrabar && !newBar && OpenCount() == 0 && g_barTicks >= InpTickMinBar &&
       g_barIndex >= g_coolUntil && (InpDayLossStop <= 0.0 || g_dayLoss < InpDayLossStop))
      {
       MqlDateTime ts; TimeToStruct(bt, ts);
@@ -500,7 +915,7 @@ void OnTick()
    MqlDateTime t; TimeToStruct(bt, t);
    if(t.day != g_dayStamp) { g_dayStamp = t.day; g_dayLoss = 0.0; }
 
-   if(OpenCount() > 0)
+   if(InpExitMode != 2 && OpenCount() > 0)
      {
       int held = g_barIndex - g_openedBar;
 
@@ -555,12 +970,12 @@ void OnTick()
    if(t.hour < InpSessFrom || t.hour >= InpSessTo) return;
    if(OpenCount() >= InpMaxOpen) return;
 
+   Narrate(1);                     // he asked never to be left in silence
+
    int dir = 0; string why = "";
    if(!Qualifies(1, dir, why))
      {
       g_streak = 0;
-      if(InpVerbose && g_barIndex % 240 == 0)
-         PrintFormat("[VSISA_MIN] watching - %s", why);
       return;
      }
 
@@ -576,6 +991,14 @@ void OnTick()
    if(dir > 0 && !InpBuys)  return;
    if(dir < 0 && !InpSells) return;
 
+   if(InpMeterOnly)
+     {
+      PrintFormat("[VSISA_MIN] SIGNAL (meter-only, not trading): %s %s",
+                  dir > 0 ? "BUY" : "SELL", why);
+      if(InpAlertOnNear) Alert(StringFormat("VSISA imbalance: %s  %s",
+                               dir > 0 ? "BUY" : "SELL", why));
+      return;
+     }
    OpenTrade(dir, why);
   }
 
