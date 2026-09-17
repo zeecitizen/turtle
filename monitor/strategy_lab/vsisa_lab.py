@@ -34,26 +34,36 @@ FULL = ("2026.01.01", "2026.09.16")
 H1 = ("2026.01.01", "2026.05.15")
 H2 = ("2026.05.15", "2026.09.16")
 
-# v1.19 AS SHIPPED. Every experiment below is this, with one or two things moved.
+# v1.23 AS SHIPPED — re-pinned 2026-09-17 straight from the `input` lines of
+# mt5/VSISA.mq5. The previous copy of this dict was still v1.19 (wick 2, ratchet step
+# 1.0, swing 10, target 5R) and carried no fade inputs at all, so every "baseline" it
+# printed was a config that has not been shipped for four versions. Every experiment
+# below is THIS, with one or two things moved.
 SHIPPED = {
-    "InpLots": "0.28", "InpVolWindow": "1", "InpSetupAuto": "true",
-    "InpStrictDir": "true", "InpRisingVol": "false", "InpStopRef": "0",
-    "InpMaxOpen": "2", "InpCoolBars": "0", "InpQuietRef": "0", "InpBigMode": "1",
-    "InpVolLookback": "200", "InpOandaVolume": "0", "InpFakeBreak": "true",
-    "InpSweepLook": "30", "InpEngulf": "false", "InpAnomaly": "false",
-    "InpCapVol": "0", "InpEffortMin": "0", "InpCloseLoc": "0", "InpTestExit": "0",
-    "InpRetrace": "false", "InpSetupGaps": "0", "InpConfirmMode": "0",
-    "InpReactSpread": "0", "InpSizeBySpread": "false", "InpDayLossStop": "0",
-    "InpSetupMin": "2", "InpSetupMax": "10", "InpSwingPivot": "3", "InpSwingMin": "10",
-    "InpBigPct": "0.80", "InpBigAvg": "1.20", "InpBodyFrac": "0.35",
-    "InpSlBufPts": "120", "InpMinSlPts": "60", "InpMaxSlPts": "900",
-    "InpBreakEvenR": "0", "InpRatchetStart": "2.0", "InpRatchetStep": "1.0",
-    "InpLowVolPct": "1.00", "InpMinVolPct": "0.00", "InpWickMode": "2",
-    "InpWickFrac": "0.35", "InpTargetMode": "0", "InpTargetR": "5.0",
-    "InpTgtMinR": "0.25", "InpTgtMaxR": "0", "InpSessFrom": "0", "InpSessTo": "24",
-    "InpTrendTF": "30", "InpTrendMode": "1", "InpTrendBars": "20",
-    "InpCamelPivot": "2", "InpCamelLook": "120", "InpTestVolPct": "0.9",
-    "InpTestRed": "false", "InpMinVolPct": "0.00",
+    "InpLots": "0.28", "InpTickets": "1", "InpMaxOpen": "2", "InpDayLossStop": "0.00",
+    "InpSetupAuto": "true", "InpSetupMin": "2", "InpSetupMax": "10",
+    "InpSetupBars": "2", "InpSetupGaps": "0", "InpRisingVol": "false",
+    "InpStrictDir": "true", "InpOandaVolume": "0", "InpOandaStrict": "true",
+    "InpVolWindow": "1", "InpSwingPivot": "3", "InpSwingMin": "5",
+    "InpVolLookback": "200", "InpBigMode": "1", "InpBigPct": "0.80",
+    "InpBigAvg": "1.20", "InpQuietRef": "0", "InpLowVolPct": "1.00",
+    "InpMinVolPct": "0.00", "InpBodyFrac": "0.35", "InpReactSpread": "0.00",
+    "InpSizeBySpread": "false", "InpConfirmMode": "0", "InpTestVolPct": "0.90",
+    "InpTestRed": "false", "InpRetrace": "false", "InpTestExit": "0.00",
+    "InpTestWindow": "3", "InpTestAvgBars": "20", "InpEngulf": "false",
+    "InpStopRef": "0", "InpSlBufPts": "120", "InpMinSlPts": "60",
+    "InpMaxSlPts": "900", "InpTargetR": "10.0", "InpTargetMode": "0",
+    "InpTargetPts": "300", "InpTgtMinR": "0.50", "InpTgtMaxR": "0.00",
+    "InpBreakEvenR": "0.0", "InpRatchetStart": "2.00", "InpRatchetStep": "8.00",
+    "InpWickMode": "0", "InpWickFrac": "0.35", "InpAnomaly": "false",
+    "InpCapVol": "0.00", "InpCloseLoc": "0.00", "InpEffortMin": "0.00",
+    "InpFakeBreak": "true", "InpSweepLook": "30",
+    "InpFadeMode": "1", "InpFadeLook": "4", "InpFadePct": "0.60",
+    "InpFadeBigPct": "0.80",
+    "InpTrendTF": "30", "InpTrendBars": "20", "InpTrendMode": "1",
+    "InpCamelPivot": "2", "InpCamelLook": "120",
+    "InpSessFrom": "0", "InpSessTo": "24", "InpCoolBars": "0",
+    "InpBuys": "true", "InpSells": "true",
 }
 
 

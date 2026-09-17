@@ -1622,3 +1622,63 @@ with an empty input list rather than produce a confident wrong answer.
 `mt5/VSISA.mq5` · `LAWS_VSISA_INFER.md` · `monitor/_vsisa_transcripts/` ·
 `monitor/strategy_lab/vsisa_court.py` (per-day + funnel) ·
 `vsisa_sweep.py` (parallel variant search) · `vsisa_validate.py` (month by month)
+
+---
+
+## VSISA v1.24 — the loud gate was too strict (2026-09-17)
+
+**Shipped:** `InpBigAvg 1.20 → 1.10` · `InpBigPct 0.80 → 0.70`. Nothing else moved.
+
+**Why.** Zee asked for more trades: *"waiting the entire day for the EA to take just 1
+trade is slow n boring."* The tester's own funnel says 89% of candidate reactions die at
+the LOUD test, so that gate was asked what it charges to relax rather than removed.
+
+**Receipts** (Axi rig, real ticks, 2026.01.01–09.16, 0.28 lots, MT5 Strategy Tester):
+
+| | v1.23 | **v1.24** |
+|---|---|---|
+| net | +$11,911 | **+$13,689** |
+| trades | 120 | **143** |
+| win rate | 52% | 51% |
+| max drawdown | $650 | $778 |
+| net per $1 DD | 18.32 | 17.59 |
+| walk-forward halves | 5.52 / 13.67 | **6.58** / 12.09 |
+
++15% money and +19% trades with the win rate intact. Ship-verified: a run with the
+inputs pinned to the new values returned 143 / +$13,689 / 51% / $778 — the experiment
+exactly.
+
+**It is a ridge, not a spike.** bigAvg at bigPct 0.70: 1.05 $11,927 · **1.10 $13,689** ·
+1.15 $12,828 · 1.20 $12,028 · 1.25 $10,470. bigPct at bigAvg 1.10: **0.70 $13,689** ·
+0.75 $13,642 · 0.80 $12,927 · 0.85 $12,141. A smooth hill both ways, every neighbour at
+or above shipped.
+
+### What was REJECTED the same night, and why
+
+Frequency beyond ~1 trade/day does not pay. Resized so each config's worst drawdown fits
+a 10K funded account's 10% limit, the raw-net ranking **inverts**: `no fake break` looks
+like +63% money (+$19,460) and becomes **+$5,660** at the 0.081 lots it needs to survive.
+`LOUD+fade0.65/look5` earns the most raw money of all (+$14,719, 1.40 trades/day) and
+lands at +$9,826 — below shipped.
+
+- **`InpMaxOpen` 3 and 4 are byte-identical to 2** — the concurrency cap never refused a
+  trade. Same for `InpSetupMax 14`. Do not re-test these.
+- **The exit is exhausted.** `InpRatchetStep 12` is byte-identical to step 8 and
+  `InpTargetR 15` barely moves — third confirmation that these trades all die on ONE
+  ratchet lock and never see the target. `InpRatchetStart 2.00` is optimal.
+- **`InpSetupGaps 1`** destructive again: +$7,672 at $1,578 DD.
+
+### The harness bug this ship uncovered
+
+`monitor/strategy_lab/vsisa_lab.py`'s `SHIPPED` dict was still the **v1.19** pin — wick 2,
+ratchet step 1.0, swing 10, target 5R — and passed **no fade inputs at all**, four
+versions after the fade shipped. Every "baseline" row it printed was a retired config. It
+is now re-pinned line-by-line from the `input` declarations in `mt5/VSISA.mq5`, and the
+corrected baseline reproduces v1.23 exactly. **Any VSISA comparison made against that dict
+between v1.20 and 2026-09-17 should be re-checked.**
+
+### Files
+
+`mt5/VSISA.mq5` · `monitor/strategy_lab/vsisa_lab.py` (re-pinned) ·
+`monitor/strategy_lab/_vsisa_freq{,2,3,4,5}.py` · `_vsisa_ship124.py` ·
+`VSISA_AXI_OPTIMISATION.md`

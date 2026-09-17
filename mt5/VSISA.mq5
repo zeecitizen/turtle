@@ -1,4 +1,4 @@
-//+------------------------------------------------------------------+
+﻿//+------------------------------------------------------------------+
 //|  VSISA.mq5 — Volume Spread Imbalance Shift Analysis               |
 //|                                                                   |
 //|  Sajid Ahmed's method, as inferred in LAWS_VSISA_INFER.md from     |
@@ -52,7 +52,7 @@
 // takes the first half NEGATIVE).
 // ─────────────────────────────────────────────────────────────────────────────────
 #property copyright "Zee & his ghost"
-#property version   "1.23"
+#property version   "1.24"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -213,8 +213,8 @@ input int    InpSwingPivot  = 3;      // InpSwingPivot — bars each side that d
 input int    InpSwingMin    = 5;     // InpSwingMin — never judge on fewer bars than this
 input int    InpVolLookback = 200;    // InpVolLookback — fixed count, and the cap on a swing
 input int    InpBigMode     = 1;      // InpBigMode — 0 EVERY 2-bar setup bar loud · 1 only the loudest
-input double InpBigPct      = 0.80;   // InpBigPct — 2-bar setup volume >= this x lookback max
-input double InpBigAvg      = 1.20;   // InpBigAvg — ...and >= this x lookback average
+input double InpBigPct      = 0.70;   // InpBigPct — 2-bar setup volume >= this x lookback max
+input double InpBigAvg      = 1.10;   // InpBigAvg — ...and >= this x lookback average
 
 //--- LAW 3: the low-volume reaction. THE TRIGGER. --------------------------
 input int    InpQuietRef    = 0;      // InpQuietRef — 0 quiet vs the SETUP · 1 quiet vs lookback AVERAGE
@@ -1432,7 +1432,7 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.23 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.24 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
                "| %.2f lots x%d | magic %d",
