@@ -68,7 +68,7 @@
 //|  fills may promote a default.                                      |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan"
-#property version   "1.38"
+#property version   "1.41"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -219,10 +219,17 @@ input int    InpGaugeCorner = 0;     // InpGaugeCorner - 0 TL · 1 TR · 2 BL ·
 input int    InpGaugeX      = 20;    // InpGaugeX - pixels from that corner
 input int    InpGaugeY      = 110;   // InpGaugeY - pixels from that corner (clears the commentary)
 input int    InpGaugeSize   = 460;   // InpGaugeSize - width of ONE dial, in pixels
+input int    InpFontScale   = 150;   // InpFontScale - percent. 100 = normal, 150 = half again bigger
 
 input bool   InpNarrate     = true;  // InpNarrate - say what it is thinking every minute
 input bool   InpNarrateChart = true; // InpNarrateChart - also paint it on the chart
-input bool   InpAlertOnNear = true;  // InpAlertOnNear - alert when only ONE condition is missing
+//  Alerts were firing on every near-miss and MT5 opens a modal window for each one -
+//  four pop-ups in fifteen minutes, stealing focus while he is trying to trade.
+//  0 = silent (the chart still shows everything)
+//  1 = only when ALL conditions are met - a real signal
+//  2 = also when one condition is short - the heads-up
+input int    InpAlertMode   = 0;     // InpAlertMode - 0 silent (the panel says it all) · 1 signals · 2 near-misses
+input bool   InpAlertSound  = true;  // InpAlertSound - a sound instead of a pop-up window
 
 void OpenTrade(const int dir, const string why);
 
@@ -284,7 +291,7 @@ int OnInit()
             "is one bad minute away from giving back a week.");
       return(INIT_PARAMETERS_INCORRECT);
      }
-   PrintFormat("[VSISA_MIN] v1.38 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
+   PrintFormat("[VSISA_MIN] v1.41 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
                "release<=%.2fx | confirm %d | hold %d bar(s) | tp %d | stop %d | day stop %.0f | %s",
                InpAbsorbVol, InpAbsorbBars, InpAbsorbStuck, InpLegMin, InpReleaseVol,
                InpConfirmBars, InpHoldBars, InpTargetPts, InpStopPts, InpDayLossStop,
@@ -516,6 +523,13 @@ bool Qualifies(const int shift, int &dir, string &why)
 CCanvas g_gauge;
 bool    g_gaugeOK = false;
 
+//--- what the last closed minute decided, in words, for the panel under the dials
+string g_stVerdict = "starting up";
+string g_stSellers = "";
+string g_stBuyers  = "";
+string g_stNeed    = "";
+uint   g_stColour  = 0xFFB0B4BE;
+
 //--- the OANDA minute table: the same feed his TradingView chart draws.
 #define OV_KEEP 400
 datetime g_ovTime[OV_KEEP];
@@ -652,7 +666,7 @@ void GaugeCreate()
   {
    if(!InpGauge) return;
    int w = InpGaugeDual ? (int)(InpGaugeSize * 1.92) : InpGaugeSize;
-   int h = (int)(InpGaugeSize * 0.95);
+   int h = (int)(InpGaugeSize * 1.22) + (MathMax(80, InpFontScale) - 100) * InpGaugeSize / 260;
    if(!g_gauge.CreateBitmapLabel("vsisa_gauge", InpGaugeX, InpGaugeY, w, h,
                                  COLOR_FORMAT_ARGB_NORMALIZE))
      { Print("[VSISA_MIN] gauge could not be created"); return; }
@@ -724,17 +738,17 @@ void DrawDial(const int cx, const int cy, const int R, const double imb,
       g_gauge.LineAA(cx, cy + t, nx, ny, ARGB(255, 245, 245, 250));
    g_gauge.FillCircle(cx, cy, MathMax(7, R / 14), ARGB(255, 235, 235, 240));
 
-   g_gauge.FontSet("Arial Bold", MathMax(16, R / 5));
+   g_gauge.FontSet("Arial Bold", MathMax(20, R / 5) * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(cx, cy - R / 2 - R / 8, StringFormat("%+.2f", imb),
                    ARGB(255, 240, 240, 245), TA_CENTER | TA_TOP);
-   g_gauge.FontSet("Arial", MathMax(10, R / 14));
+   g_gauge.FontSet("Arial", MathMax(12, R / 14) * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(cx, cy - R - R / 6, title, ARGB(255, 150, 155, 165), TA_CENTER | TA_TOP);
    g_gauge.TextOut(cx - R + 2, cy + 8, "SELL", ARGB(255, 214, 69, 65), TA_LEFT | TA_TOP);
    g_gauge.TextOut(cx + R - 2, cy + 8, "BUY", ARGB(255, 46, 170, 122), TA_RIGHT | TA_TOP);
    uint vcol; string verdict = ResistanceWords(imb, vcol);
-   g_gauge.FontSet("Arial Bold", MathMax(11, R / 11));
+   g_gauge.FontSet("Arial Bold", MathMax(13, R / 11) * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(cx, cy + MathMax(24, R / 6), verdict, vcol, TA_CENTER | TA_TOP);
-   g_gauge.FontSet("Arial", MathMax(9, R / 16));
+   g_gauge.FontSet("Arial", MathMax(11, R / 16) * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(cx, cy + MathMax(46, R / 6 + R / 8), footer, footCol, TA_CENTER | TA_TOP);
   }
 
@@ -754,17 +768,17 @@ void GaugeDraw()
    g_gauge.Erase(ARGB(220, 18, 20, 26));
    g_gauge.Rectangle(0, 0, w - 1, h - 1, ARGB(255, 60, 64, 76));
 
-   int cy = (int)(h * 0.70);
+   int cy = (int)(h * 0.53);
    if(InpGaugeDual)
      {
-      int R = (int)MathMin(w * 0.225, h * 0.58);
+      int R = (int)MathMin(w * 0.225, h * 0.40);
       DrawDial((int)(w * 0.26), cy, R, imbVol, "VOLUME (TradingView) 1 min",
                (age < 0) ? "NO DATA" : (stale ? StringFormat("STALE %.0f min", age)
                                       : StringFormat("%d min", vBars)),
                stale ? ARGB(255, 230, 120, 60) : ARGB(255, 150, 155, 165));
       DrawDial((int)(w * 0.74), cy, R, imbTick, "TICKS (live) this candle",
                StringFormat("%d ticks", ticks), ARGB(255, 150, 155, 165));
-      g_gauge.LineAA(w / 2, 24, w / 2, h - 10, ARGB(120, 70, 74, 86));
+      g_gauge.LineAA(w / 2, 24, w / 2, (int)(h * 0.74), ARGB(120, 70, 74, 86));
      }
    else
      {
@@ -778,7 +792,27 @@ void GaugeDraw()
                (useVol && stale) ? ARGB(255, 230, 120, 60) : ARGB(255, 150, 155, 165));
      }
 
-   g_gauge.FontSet("Arial Bold", 12);
+   int sc  = MathMax(80, InpFontScale);
+   int fB  = 18 * sc / 100;          // the verdict
+   int fR  = 15 * sc / 100;          // the two effort lines
+   int fN  = 13 * sc / 100;          // what is still needed
+   int lh  = (int)(fR * 1.85);       // line height
+
+   int py = (int)(h * 0.76);
+   g_gauge.LineAA(16, py - 10, w - 16, py - 10, ARGB(120, 70, 74, 86));
+   g_gauge.FontSet("Arial Bold", fB);
+   g_gauge.TextOut(w / 2, py, g_stVerdict, (uint)(0xFF000000 | (g_stColour & 0x00FFFFFF)),
+                   TA_CENTER | TA_TOP);
+   g_gauge.FontSet("Arial", fR);
+   g_gauge.TextOut(w / 2, py + (int)(fB * 1.7), g_stSellers,
+                   ARGB(255, 226, 120, 115), TA_CENTER | TA_TOP);
+   g_gauge.TextOut(w / 2, py + (int)(fB * 1.7) + lh, g_stBuyers,
+                   ARGB(255, 120, 215, 175), TA_CENTER | TA_TOP);
+   g_gauge.FontSet("Arial", fN);
+   g_gauge.TextOut(w / 2, py + (int)(fB * 1.7) + lh * 2, g_stNeed,
+                   ARGB(255, 180, 186, 196), TA_CENTER | TA_TOP);
+
+   g_gauge.FontSet("Arial Bold", 14 * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(w / 2, 8, "IMBALANCE - price gained per unit of effort",
                    ARGB(255, 175, 180, 190), TA_CENTER | TA_TOP);
    g_gauge.Update();
@@ -862,9 +896,37 @@ void Narrate(const int shift)
       edge, aVol / volAvg, net / spAvg,
       missing == 0 ? "GO" : why);
 
+   g_stSellers = StringFormat("SELLERS spent %.0f volume and got %.2f of ground  (%.2f per 100)",
+                              dnV, dnP, effDn * 100.0);
+   g_stBuyers  = StringFormat("BUYERS  spent %.0f volume and got %.2f of ground  (%.2f per 100)",
+                              upV, upP, effUp * 100.0);
+   if(missing == 0)
+     {
+      g_stVerdict = StringFormat("READY - every condition met for a %s", dir > 0 ? "BUY" : "SELL");
+      g_stColour  = (dir > 0) ? 0xFF46AA7A : 0xFFD64541;
+      g_stNeed    = "this is the moment the method describes";
+     }
+   else
+     {
+      g_stVerdict = (missing == 1) ? "ALMOST - one condition short" : "WAITING";
+      g_stColour  = (missing == 1) ? 0xFFE1C85A : 0xFF9AA0AC;
+      string n = why;
+      StringReplace(n, " · ", "; ");
+      g_stNeed = "still needed: " + n;
+     }
+
    Print(line);
    if(InpNarrateChart) Comment(line);
-   if(InpAlertOnNear && missing == 1) Alert(StringFormat("VSISA_MIN: one condition short - %s", why));
+   if(missing == 0 && InpAlertMode >= 1)
+     {
+      string msg = StringFormat("VSISA: ALL CONDITIONS MET - %s", dir > 0 ? "BUY" : "SELL");
+      if(InpAlertSound) { PlaySound("alert2.wav"); Print(msg); } else Alert(msg);
+     }
+   else if(missing == 1 && InpAlertMode >= 2)
+     {
+      string msg = StringFormat("VSISA: one condition short - %s", why);
+      if(InpAlertSound) { PlaySound("tick.wav"); Print(msg); } else Alert(msg);
+     }
   }
 
 //+------------------------------------------------------------------+
@@ -1048,8 +1110,11 @@ void OnTick()
      {
       PrintFormat("[VSISA_MIN] SIGNAL (meter-only, not trading): %s %s",
                   dir > 0 ? "BUY" : "SELL", why);
-      if(InpAlertOnNear) Alert(StringFormat("VSISA imbalance: %s  %s",
-                               dir > 0 ? "BUY" : "SELL", why));
+      if(InpAlertMode >= 1)
+        {
+         string m = StringFormat("VSISA imbalance: %s  %s", dir > 0 ? "BUY" : "SELL", why);
+         if(InpAlertSound) { PlaySound("alert2.wav"); Print(m); } else Alert(m);
+        }
       return;
      }
    OpenTrade(dir, why);
