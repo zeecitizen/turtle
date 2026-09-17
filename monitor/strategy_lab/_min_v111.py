@@ -35,7 +35,7 @@ from vsisa_lab import stats, PY as PYEXE, SWEEP
 BASE = {
     "InpLots": "1.00", "InpTickets": "1", "InpMagicNumber": "88203", "InpMaxOpen": "1",
     "InpLook": "20", "InpAbsorbBars": "6", "InpAbsorbVol": "1.30",
-    "InpAbsorbStuck": "1.60", "InpLegMin": "0.50", "InpReleaseVol": "0.00",
+    "InpAbsorbStuck": "1.20", "InpLegMin": "0.50", "InpReleaseVol": "0.85",
     "InpBodyFrac": "0.40", "InpConfirmBars": "1",
     "InpSideBars": "3", "InpSideMult": "1.30", "InpSideMeasure": "0",  # HIS word: height
     "InpUseAbsorb": "true",
@@ -51,6 +51,9 @@ BASE = {
     "InpFlatAtBreak": "false", "InpLots": "1.00",
 }
 
+
+def run(over, frm="2026.08.15", to="2026.09.16"):
+    pass
 
 def run(over, frm="2026.08.15", to="2026.09.16"):
     cfg = dict(BASE)
@@ -75,16 +78,18 @@ def show(name, over):
     print("  %-28s %s" % (name, line), flush=True)
 
 
-print("VSISA_Minute v1.11 - BAR ENGINE ONLY (InpIntrabar pinned false)")
-print("the stuck threshold 1.20 -> 1.60 was FITTED to one trade - this is its test")
+print("MODE 0 (stop + target) out of sample - the only shape left standing")
+print("his exit scored 96-99% WR in all four windows and -$13,014 in total.")
 print()
-show("v1.11, mode 0 (stop+tp)", {"InpExitMode": "0"})
-show("v1.11, his exit brake600", {})
-show("v1.11, his exit NO brake", {"InpMaxAdverse": "0", "InpMaxHoldBars": "600"})
-show("stuck back to 1.20", {"InpExitMode": "0", "InpAbsorbStuck": "1.20"})
-show("stuck 2.00 (looser still)", {"InpExitMode": "0", "InpAbsorbStuck": "2.00"})
-show("edge 1.60", {"InpExitMode": "0", "InpSideMult": "1.60"})
-show("edge 2.00", {"InpExitMode": "0", "InpSideMult": "2.00"})
-show("range measure", {"InpExitMode": "0", "InpSideMeasure": "1"})
-show("side window 6", {"InpExitMode": "0", "InpSideBars": "6"})
-show("release-quiet back ON", {"InpExitMode": "0", "InpReleaseVol": "0.85"})
+for frm, to, lab in (("2026.08.15", "2026.09.16", "AUG-SEP (where it was found)"),
+                     ("2026.06.01", "2026.07.15", "JUN-JUL (out of sample)"),
+                     ("2026.07.15", "2026.08.15", "JUL-AUG (out of sample)"),
+                     ("2026.04.01", "2026.05.15", "APR-MAY (out of sample)")):
+    import re as _re
+    r = run({"InpExitMode": "0"}, frm, to)
+    st = stats(r) if r else None
+    if st:
+        print("  %-30s n %4d  net %+8.0f  wr %2.0f%%  exp %7.2f  maxDD %7.0f  strk %2d"
+              % (lab, st["n"], st["net"], st["wr"], st["net"]/st["n"], st["dd"], st["streak"]), flush=True)
+    else:
+        print("  %-30s NO TRADES" % lab, flush=True)
