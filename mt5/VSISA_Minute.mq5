@@ -44,11 +44,31 @@
 //|  and a 1.00-lot scalper without a cap is one bad minute away from  |
 //|  giving back a week.                                               |
 //|                                                                   |
+//|                                                                   |
+//|  v1.11 -> v1.12: THE TESTER OVERRULED ME, TWICE.                  |
+//|  I removed the release-quiet gate on the reasoning that he never   |
+//|  asked for the green bar to be quiet - only for the two sides to   |
+//|  be compared. That was wrong at the root: his FIRST description    |
+//|  said "i were able to make a larger spread with LOWER VOLUME than  |
+//|  before", which IS this gate. I overrode his own words because a   |
+//|  single trade (01:28 on 18 Sep) did not fit them. Over a month it  |
+//|  is the only thing keeping the EA positive:                        |
+//|      release-quiet ON   n=151  +$1,160  45% WR  maxDD  $999        |
+//|      release-quiet OFF  n=406  -$2,741  40% WR  maxDD $4,218       |
+//|                                                                    |
+//|  I also loosened InpAbsorbStuck 1.20 -> 1.60 to admit that same    |
+//|  trade, and flagged it as fitted. It was: 1.20 -$2,256, 1.60       |
+//|  -$2,741, 2.00 -$2,997 - monotonically worse the more it is bent.  |
+//|                                                                    |
+//|  And the side-edge FAILS the authenticity test: demanding more of  |
+//|  it (1.60, 2.00) makes results WORSE, where a real edge strengthens|
+//|  under pressure. It is kept but is not the load-bearing part.      |
+//|                                                                    |
 //|  NOT PROMOTED - CLAUDE.md. Only MT5's Strategy Tester or live      |
 //|  fills may promote a default.                                      |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan"
-#property version   "1.03"
+#property version   "1.12"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -67,12 +87,12 @@ input double InpAbsorbStuck = 1.20;  // InpAbsorbStuck - net progress <= x avg r
 input double InpLegMin      = 0.50;  // InpLegMin - price fell into it by >= x avg range
 
 input group "=== release: the effort collapses ==="
-input double InpReleaseVol  = 0.85;  // InpReleaseVol - trigger volume <= x the absorption avg
+input double InpReleaseVol  = 0.85;  // InpReleaseVol - reaction volume <= x the absorption avg. HIS WORDS, restored
 input double InpBodyFrac    = 0.40;  // InpBodyFrac - trigger body >= x its own range
 input int    InpConfirmBars = 1;     // InpConfirmBars - qualifying bars in a row before entering
 
 input group "=== who moves price more easily (his crossover) ==="
-input int    InpSideBars    = 6;     // InpSideBars - window the two sides are compared over
+input int    InpSideBars    = 3;     // InpSideBars - window the two sides are compared over
 input double InpSideMult    = 1.30;  // InpSideMult - our side's efficiency >= x the other side's
 input int    InpSideMeasure = 0;     // InpSideMeasure - 0 = body (progress) - 1 = range (his "height")
 input bool   InpUseAbsorb   = true;  // InpUseAbsorb - also require the absorption context
@@ -98,7 +118,39 @@ input int    InpTargetPts   = 150;   // InpTargetPts - mode 0: take profit
 input int    InpStopPts     = 100;   // InpStopPts - mode 0: HARD stop
 input bool   InpTrailOnBar  = false; // InpTrailOnBar - mode 0: pull the stop up each bar
 
+input group "=== INTRABAR: reading the candle while it forms ==="
+//  Zee, 2026-09-18: "i see the candle while its being formed.. the way the volume is
+//  moving the price.. tells me something.. everything.."
+//
+//  This is the gap in every version above. A CLOSED bar collapses hundreds of ticks into
+//  four prices and one volume - the exact information he is reading is destroyed by the
+//  abstraction. He watches 600 ticks arrive, sees the last 200 barely move price down,
+//  then sees it lift easily on fewer ticks, and acts BEFORE the candle closes.
+//
+//  His crossover works identically on ticks: points gained per tick of effort for the up
+//  moves, against the same for the down moves. Effort is the tick COUNT (every tick is
+//  someone trading), result is the points travelled. Absorption intrabar is many ticks
+//  with no net progress; release is progress arriving on fewer ticks.
+//
+//  MT5's real-tick model replays every tick, so this is testable rather than a story.
+input bool   InpIntrabar    = false;  // InpIntrabar - UNTESTED tick path. Default OFF: it bypasses every bar gate
+input int    InpTickWindow  = 240;   // InpTickWindow - ticks of tape held in view
+input int    InpTickSlice   = 80;    // InpTickSlice - the recent slice judged against the rest
+input double InpTickMult    = 1.40;  // InpTickMult - our side's points/tick >= x the other side's
+input int    InpTickMinBar  = 120;   // InpTickMinBar - ticks into the bar before it may decide
+input double InpTickStall   = 0.35;  // InpTickStall - the older tape's net move <= x its travel
+
 input group "=== guards ==="
+//  THE PRE-CLOSE GUARD, written from a live trade on 2026-09-18.
+//  He opened 4 unstopped lots at 23:35, 24 minutes before the daily break. The feed then
+//  stopped for 65 minutes (last bar 23:59, next 01:04) with the position 161 points under
+//  water and no way to act on it. It reopened ~$3 higher and paid +$189.50 a lot.
+//  The same gap downward is about -$1,200 across four lots, and nobody is managing it.
+//  This is the one risk in his method that has nothing to do with reading the tape.
+input int    InpNoOpenBefore = 20;   // InpNoOpenBefore - no NEW trades within this many minutes of the break
+input int    InpBreakHour    = 0;    // InpBreakHour - broker hour the daily break starts (0 = midnight)
+input int    InpBreakMin     = 0;    // InpBreakMin - ...and the minute
+input bool   InpFlatAtBreak  = true; // InpFlatAtBreak - close everything before the break
 input double InpDayLossStop = 400.0; // InpDayLossStop - stop for the day after this loss (0 = off)
 input int    InpCoolBars    = 1;     // InpCoolBars - bars to wait after a decision
 input bool   InpBuys        = true;  // InpBuys - his ten tickets were all BUY
@@ -107,7 +159,16 @@ input int    InpSessFrom    = 0;     // InpSessFrom - broker hour, inclusive
 input int    InpSessTo      = 24;    // InpSessTo - broker hour, exclusive
 input bool   InpVerbose     = true;  // InpVerbose - print every decision
 
+void OpenTrade(const int dir, const string why);
+
 CTrade  trade;
+
+//--- the tape: a ring of recent tick prices, newest last.
+double   g_tape[];
+int      g_tapeN     = 0;   // how many ticks are actually in it
+int      g_tapeHead  = 0;   // next write slot
+int      g_barTicks  = 0;   // ticks seen inside the FORMING bar
+
 datetime g_lastBar   = 0;
 int      g_openedBar = 0;
 int      g_coolUntil = 0;
@@ -119,6 +180,9 @@ int      g_streak    = 0;
 //+------------------------------------------------------------------+
 int OnInit()
   {
+   ArrayResize(g_tape, MathMax(InpTickWindow * 2, 64));
+   ArrayInitialize(g_tape, 0.0);
+   g_tapeN = 0; g_tapeHead = 0; g_barTicks = 0;
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
    if(InpExitMode == 0 && InpStopPts <= 0)
@@ -127,7 +191,7 @@ int OnInit()
             "is one bad minute away from giving back a week.");
       return(INIT_PARAMETERS_INCORRECT);
      }
-   PrintFormat("[VSISA_MIN] v1.03 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
+   PrintFormat("[VSISA_MIN] v1.12 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
                "release<=%.2fx | confirm %d | hold %d bar(s) | tp %d | stop %d | day stop %.0f | %s",
                InpAbsorbVol, InpAbsorbBars, InpAbsorbStuck, InpLegMin, InpReleaseVol,
                InpConfirmBars, InpHoldBars, InpTargetPts, InpStopPts, InpDayLossStop,
@@ -158,6 +222,70 @@ int OpenCount()
       if(PositionGetSymbol(i) == _Symbol &&
          PositionGetInteger(POSITION_MAGIC) == InpMagicNumber) n++;
    return(n);
+  }
+
+//+------------------------------------------------------------------+
+//| THE TAPE - his crossover, measured on TICKS inside the forming    |
+//| candle instead of on closed bars.                                 |
+//|                                                                   |
+//| Effort is the tick COUNT; result is the points travelled. Split   |
+//| the window into an OLDER part and a RECENT SLICE:                 |
+//|                                                                   |
+//|   older part  - lots of ticks, little NET move = absorption       |
+//|                 (measured as |net| / total travel <= InpTickStall)|
+//|   recent slice - one side now getting more points per tick        |
+//|                                                                   |
+//| Returns the recent slice's edge for `dir`; 0 if the tape is not   |
+//| yet readable.                                                     |
+//+------------------------------------------------------------------+
+double TapeRead(const int dir, bool &stalled, string &why)
+  {
+   stalled = false;
+   if(g_tapeN < InpTickWindow) { why = "tape filling"; return(0.0); }
+
+   int oldN = InpTickWindow - InpTickSlice;
+   if(oldN < 20 || InpTickSlice < 10) { why = "window too small"; return(0.0); }
+
+   double travel = 0.0, net = 0.0;
+   double prev = 0.0;
+   bool   first = true;
+   // the OLDER part: is the tape churning without getting anywhere?
+   for(int i = 0; i < oldN; i++)
+     {
+      int idx = (g_tapeHead - g_tapeN + i + ArraySize(g_tape) * 2) % ArraySize(g_tape);
+      double px = g_tape[idx];
+      if(first) { prev = px; first = false; continue; }
+      travel += MathAbs(px - prev);
+      prev = px;
+     }
+   int i0 = (g_tapeHead - g_tapeN + ArraySize(g_tape) * 2) % ArraySize(g_tape);
+   int i1 = (g_tapeHead - g_tapeN + oldN - 1 + ArraySize(g_tape) * 2) % ArraySize(g_tape);
+   net = MathAbs(g_tape[i1] - g_tape[i0]);
+   if(travel <= 0.0) { why = "no travel"; return(0.0); }
+   stalled = (net / travel) <= InpTickStall;
+
+   // the RECENT SLICE: points per tick, each side separately
+   double upPts = 0.0, dnPts = 0.0;
+   int    upTk = 0, dnTk = 0;
+   first = true;
+   for(int i = oldN; i < InpTickWindow; i++)
+     {
+      int idx = (g_tapeHead - g_tapeN + i + ArraySize(g_tape) * 2) % ArraySize(g_tape);
+      double px = g_tape[idx];
+      if(first) { prev = px; first = false; continue; }
+      double d = px - prev;
+      if(d > 0)      { upPts += d;  upTk++; }
+      else if(d < 0) { dnPts += -d; dnTk++; }
+      prev = px;
+     }
+   if(upTk < 3 || dnTk < 3) { why = "one-sided slice"; return(0.0); }
+   double effUp = upPts / upTk;
+   double effDn = dnPts / dnTk;
+   if(effUp <= 0.0 || effDn <= 0.0) { why = "flat slice"; return(0.0); }
+   double edge = (dir > 0) ? effUp / effDn : effDn / effUp;
+   why = StringFormat("tape stall %.2f edge %.2fx (%d ticks in bar)",
+                      net / travel, edge, g_barTicks);
+   return(edge);
   }
 
 //+------------------------------------------------------------------+
@@ -236,7 +364,7 @@ bool Qualifies(const int shift, int &dir, string &why)
       if(net > InpAbsorbStuck * spAvg)
         { why = StringFormat("not stuck %.2fx (max %.2fx)", net/spAvg, InpAbsorbStuck); return(false); }
       // RELEASE: effort collapses on this bar
-      if(vol > InpReleaseVol * aVol)
+      if(InpReleaseVol > 0.0 && vol > InpReleaseVol * aVol)
         { why = StringFormat("no release %.2fx (max %.2fx)", vol/aVol, InpReleaseVol); return(false); }
      }
    // a decided bar, not a doji
@@ -292,8 +420,80 @@ void CloseAll(const string tag)
 //+------------------------------------------------------------------+
 void OnTick()
   {
+   //--- the tape is fed on EVERY tick, whatever mode we are in
+   double mid = (SymbolInfoDouble(_Symbol, SYMBOL_BID) +
+                 SymbolInfoDouble(_Symbol, SYMBOL_ASK)) / 2.0;
+   if(ArraySize(g_tape) > 0)
+     {
+      g_tape[g_tapeHead] = mid;
+      g_tapeHead = (g_tapeHead + 1) % ArraySize(g_tape);
+      if(g_tapeN < ArraySize(g_tape)) g_tapeN++;
+     }
+
    datetime bt = iTime(_Symbol, PERIOD_CURRENT, 0);
-   if(bt == g_lastBar) return;            // one decision per CLOSED bar
+   bool newBar = (bt != g_lastBar);
+   if(newBar) g_barTicks = 0; else g_barTicks++;
+
+   //--- MODE 1 EXITS ARE CHECKED ON EVERY TICK, not once a minute.
+   //    He watches it continuously - "if i feel like after few seconds of entering the
+   //    trade, its not going in our direction at all.. i maybe wait upto 1 minute and
+   //    then bam i have to close it somehow". Taking profit the moment it appears, and
+   //    giving up after about a minute, both need tick resolution to be faithful.
+   if(InpExitMode == 1 && OpenCount() > 0)
+     {
+      double pt = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
+      double best = -1e9, worst = 1e9;
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+        {
+         if(PositionGetSymbol(i) != _Symbol) continue;
+         if(PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+         double op = PositionGetDouble(POSITION_PRICE_OPEN);
+         double nw = PositionGetDouble(POSITION_PRICE_CURRENT);
+         double gain = (PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY)
+                       ? (nw - op) / pt : (op - nw) / pt;
+         best  = MathMax(best, gain);
+         worst = MathMin(worst, gain);
+        }
+      int heldBars = g_barIndex - g_openedBar;
+      if(best >= InpProfitPts)
+        { CloseAll(StringFormat("in profit %.0f pts", best));
+          g_coolUntil = g_barIndex + InpCoolBars; return; }
+      if(InpMaxAdverse > 0 && worst <= -InpMaxAdverse)
+        { CloseAll(StringFormat("CATASTROPHE BRAKE %.0f pts", worst));
+          g_coolUntil = g_barIndex + InpCoolBars; return; }
+      if(heldBars >= InpMaxHoldBars)
+        { CloseAll(StringFormat("gave up after %d bars at %.0f pts", heldBars, worst));
+          g_coolUntil = g_barIndex + InpCoolBars; return; }
+     }
+
+   //--- INTRABAR: he acts while the candle is still forming, so the decision cannot
+   //    wait for the close. The bar-close path below still runs afterwards.
+   if(InpIntrabar && !newBar && OpenCount() == 0 && g_barTicks >= InpTickMinBar &&
+      g_barIndex >= g_coolUntil && (InpDayLossStop <= 0.0 || g_dayLoss < InpDayLossStop))
+     {
+      MqlDateTime ts; TimeToStruct(bt, ts);
+      if(ts.hour >= InpSessFrom && ts.hour < InpSessTo)
+        {
+         int   tdir = (InpBuys && !InpSells) ? 1 : ((InpSells && !InpBuys) ? -1 : 0);
+         int   tries[2]; tries[0] = 1; tries[1] = -1;
+         for(int a = 0; a < 2; a++)
+           {
+            int d = tries[a];
+            if(d > 0 && !InpBuys)  continue;
+            if(d < 0 && !InpSells) continue;
+            if(tdir != 0 && d != tdir) continue;
+            bool stalled = false; string twhy = "";
+            double edge = TapeRead(d, stalled, twhy);
+            if(edge >= InpTickMult && stalled)
+              {
+               OpenTrade(d, StringFormat("INTRABAR %s", twhy));
+               return;
+              }
+           }
+        }
+     }
+
+   if(!newBar) return;                    // the rest is a CLOSED-bar decision
    g_lastBar = bt;
    g_barIndex++;
 
@@ -376,6 +576,12 @@ void OnTick()
    if(dir > 0 && !InpBuys)  return;
    if(dir < 0 && !InpSells) return;
 
+   OpenTrade(dir, why);
+  }
+
+//+------------------------------------------------------------------+
+void OpenTrade(const int dir, const string why)
+  {
    double pt  = SymbolInfoDouble(_Symbol, SYMBOL_POINT);
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
@@ -386,7 +592,6 @@ void OnTick()
       sl = (dir > 0) ? px - InpStopPts * pt : px + InpStopPts * pt;
       if(InpTargetPts > 0) tp = (dir > 0) ? px + InpTargetPts * pt : px - InpTargetPts * pt;
      }
-
    int sent = 0;
    for(int k = 0; k < InpTickets; k++)
       if((dir > 0) ? trade.Buy(InpLots, _Symbol, 0.0, sl, tp, "vsisa_min")
@@ -398,4 +603,5 @@ void OnTick()
                   dir > 0 ? "BUY" : "SELL", sent, InpLots, px, sl, tp, why);
      }
   }
+
 //+------------------------------------------------------------------+
