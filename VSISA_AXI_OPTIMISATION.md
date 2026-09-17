@@ -707,3 +707,68 @@ survive. Every config busier than ~1 trade/day earns less.
 rate intact at 51%, still fits the limit at full 0.28 lots, better in H1 (6.58 vs 5.52).
 `lowVolPct 1.10` + `bodyFrac 0.25` is the dial if he wants 1.04/day and will pay ~$1,400
 for it. NOT SHIPPED — his call.
+
+## Working backwards from the chart — the bottom study, and what it cost to believe
+
+Zee, 2026-09-17: *"find out all places where price rises -> let's call these places bottoms
+-> now on the bottoms apply the VSISA concepts you've learnt -> compare your prediction ..
+-> now use those applied rules to create the VSISA that trades several times a day."*
+
+Right instruction: every search until now started from the filters and asked what passes,
+which cannot reveal a setup the EA is BLIND to. This started from what price did.
+
+**The study** (`_vsisa_bottoms.py`, 59 pivot-low bottoms over 5 M5 sessions, 11.8/session):
+
+| population | n | reach 2R | median R |
+|---|---|---|---|
+| all bottoms | 59 | 32% | 0.92 |
+| quiet ≤0.60 — *no supply*, the law VSISA trades | 5 | 20% | 1.38 |
+| quiet ≥1.60 — very LOUD | 2 | 100% | 5.70 |
+| **quiet ≥1.0 AND spread ≥1.0** | 11 | **54%** | **3.62** |
+| swept a 30-bar low (what `InpFakeBreak` demands) | **0** | — | — |
+
+Two things came out of it. **`InpFakeBreak` rejects all 59 bottoms, five sessions running** —
+those bottoms are minor pullback lows, not 30-bar sweep extremes, so the EA's best filter
+and these setups can both be real; they are different populations. And **`InpBigAvg ≥1.10`
+independently selected the better bottoms** (41% vs 32%), arrived at from price action with
+no knowledge of the sweep that shipped v1.24 the same morning.
+
+**The hypothesis: stopping volume.** A quiet reaction is *no supply* and belongs in an
+established uptrend. At a bottom after heavy selling the turn is made by a LOUD wide
+bullish bar — demand overwhelming supply. VSISA has only ever traded the first mechanism.
+`InpMinVolPct` — a floor on reaction volume, unused at 0.00 since it was added — expresses
+the second with no new code.
+
+### REFUTED, and the haircut called it in advance
+
+The study predicted 54% reach-2R. **MT5 returned 37%** — a 17-point drop against this
+project's documented ~16-point Python haircut. The rule predicted the refutation before
+the run finished.
+
+| config | net | trades | WR | maxDD | h1 / h2 |
+|---|---|---|---|---|---|
+| STOPVOL fakeBreak off | +$5,621 | 457 | 37% | $3,451 | 2.72 / **−0.36** |
+| STOPVOL floor 1.20 | +$4,923 | 349 | 37% | $3,133 | 3.32 / **−0.43** |
+| STOPVOL floor 1.60 | +$2,503 | 310 | 36% | $2,897 | 2.21 / **−0.58** |
+
+Every pure stopping-volume variant has a **negative second half**. It worked in H1 and
+stopped working in H2 — a regime artefact, not a law. Do not rebuild this.
+
+### The wall, now reached four independent ways
+
+| config | net | tr/day | maxDD | lots @10K | net @10K |
+|---|---|---|---|---|---|
+| **v1.24 shipped** | $13,689 | 0.80 | $778 | 0.280 | **+$13,689** |
+| BUSY fade 0.70/5 | $14,525 | 2.17 | $1,342 | 0.209 | +$10,823 |
+| STOPVOL floor 0.80 | $17,282 | 3.52 | $3,116 | 0.090 | +$5,546 |
+| BOTH bands | $19,755 | **5.18** | $4,231 | 0.066 | **+$4,669** |
+
+Removing the fake break, loosening the fade, loosening the loud gate, and adding a whole
+new entry population all produce the same curve: **more trades, more raw money, and less
+money once sized to survive.** The busiest config found (5.18 trades/day) earns a third of
+what the shipped one does.
+
+**VSISA's trade rate is limited by drawdown, not by its filters.** ~1/day at 0.28 lots is
+the frontier. Anything faster has to come from a smaller loss per trade, and the two
+attempts at that (`InpMaxSlPts 600`, `InpDayLossStop`) both made drawdown WORSE — the day
+stop by removing the trades that recover the day.
