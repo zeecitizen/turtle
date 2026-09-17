@@ -772,3 +772,56 @@ what the shipped one does.
 the frontier. Anything faster has to come from a smaller loss per trade, and the two
 attempts at that (`InpMaxSlPts 600`, `InpDayLossStop`) both made drawdown WORSE — the day
 stop by removing the trades that recover the day.
+
+## The pullback EA: proposed, tested, NOT built
+
+I proposed a separate `VSISA_PULLBACKS` EA on one claim: *smaller risk per trade is the
+only lever that both adds trades and shrinks drawdown*. Zee approved testing it and framed
+it well — a separate EA, so the live one is never disturbed. **The claim is false.**
+
+Tested with parameters first, because every ingredient already exists as an input
+(`InpFakeBreak=false` admits the pullback population, `InpSlBufPts` is the buffer,
+`InpMaxSlPts` the risk cap, `InpTargetR` the fixed target), so a negative result costs one
+run instead of a new EA:
+
+| config | net | trades | tr/day | WR | maxDD | ratio | h1 / h2 |
+|---|---|---|---|---|---|---|---|
+| v1.24 shipped | $13,689 | 143 | 0.80 | 51% | $778 | **17.59** | 6.58 / 12.09 |
+| pullback, buf 120 | $19,740 | 755 | 4.21 | 39% | $4,207 | 4.69 | 2.05 / 3.86 |
+| pullback, buf 40 | $10,821 | 790 | 4.40 | 36% | $4,340 | 2.49 | 1.25 / 1.33 |
+| pullback buf40 maxSl400 | $3,098 | 421 | 2.35 | 36% | $2,064 | 1.50 | 4.20 / **−0.16** |
+| pullback 2R target | $2,554 | 421 | 2.35 | 36% | $2,406 | 1.06 | 4.42 / **−0.42** |
+
+**Tightening the stop made BOTH numbers worse** — buffer 120→40 took net $19,740→$10,821
+and drawdown $4,207→$4,340. The Python study had said the tighter stop survives (buffer
+120→20 cost only 5 points of stop-out and lifted median R 1.10→1.46). Real execution said
+the opposite; spread and slippage eat a tight stop in a way bar data cannot show. Fourth
+time in one night the ~16-point haircut earned its keep.
+
+The population is real and large — 108 candidates over 5 sessions, 4.4 trades/day in the
+tester, exactly the frequency asked for — but it cannot carry its own risk. **Do not build
+it.** On a shared funded account its drawdown would consume VSISA's entire $1,000 budget
+for a third of the return.
+
+## The session filter: also refuted, and a lesson about transfer
+
+The pullback scan's strongest split was the clock: Asian hours 21% reach-2R vs London 52%
+and NY 51%. `InpSessFrom/InpSessTo` had sat at 0–24 untested since the EA was written.
+
+| window | net | trades | WR | maxDD | ratio |
+|---|---|---|---|---|---|
+| **0–24 (shipped)** | **$13,689** | 143 | 51% | $778 | **17.59** |
+| 8–24 (drop Asian) | $8,331 | 98 | 48% | $782 | 10.65 |
+| 8–23 | $8,801 | 75 | **55%** | $1,002 | 8.79 |
+| London 8–17 | $7,742 | 62 | **55%** | $906 | 8.55 |
+| NY 13–24 | $5,564 | 57 | 47% | $816 | 6.82 |
+
+**The Asian session is profitable for VSISA.** Cutting it loses 45 trades and $5,358 while
+drawdown does not move ($778→$782) — so removing trades does NOT shrink drawdown here; the
+drawdown is set by a bad run elsewhere. The 21% figure was measured on the PULLBACK
+population, which the EA does not trade, and did not transfer. A split found on one
+population is not evidence about another.
+
+Keep for later: 8–23 and London-only both lift win rate 51%→55% at a cost of about a third
+of the profit. That is the trade to make if losing streaks ever become the binding
+constraint rather than money.
