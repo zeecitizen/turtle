@@ -68,7 +68,7 @@
 //|  fills may promote a default.                                      |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan"
-#property version   "1.35"
+#property version   "1.38"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -249,6 +249,29 @@ int OnInit()
    ArrayResize(g_tape, MathMax(InpTickWindow * 2, 64));
    ArrayInitialize(g_tape, 0.0);
    g_tapeN = 0; g_tapeHead = 0; g_barTicks = 0;
+
+   // the tick dial was blank for the first minute after every reattach - prefill it from
+   // the terminal's own tick history so it is useful the moment it is dragged on.
+   MqlTick pre[];
+   int got = CopyTicks(_Symbol, pre, COPY_TICKS_ALL, 0, InpTickWindow * 2);
+   if(got > 0)
+     {
+      int cap = ArraySize(g_tape);
+      int take = MathMin(got, cap);
+      for(int i = got - take; i < got; i++)
+        {
+         double mid = (pre[i].bid + pre[i].ask) / 2.0;
+         if(mid <= 0.0) mid = pre[i].last;
+         if(mid <= 0.0) continue;
+         g_tape[g_tapeHead] = mid;
+         g_tapeHead = (g_tapeHead + 1) % cap;
+         if(g_tapeN < cap) g_tapeN++;
+        }
+      PrintFormat("[VSISA_MIN] tick dial primed with %d ticks from history", g_tapeN);
+     }
+   else
+      PrintFormat("[VSISA_MIN] no tick history available (error %d) - the fast dial will "
+                  "fill as ticks arrive", GetLastError());
    trade.SetExpertMagicNumber(InpMagicNumber);
    trade.SetTypeFillingBySymbol(_Symbol);
    if(InpMeterOnly)
@@ -261,7 +284,7 @@ int OnInit()
             "is one bad minute away from giving back a week.");
       return(INIT_PARAMETERS_INCORRECT);
      }
-   PrintFormat("[VSISA_MIN] v1.35 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
+   PrintFormat("[VSISA_MIN] v1.38 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
                "release<=%.2fx | confirm %d | hold %d bar(s) | tp %d | stop %d | day stop %.0f | %s",
                InpAbsorbVol, InpAbsorbBars, InpAbsorbStuck, InpLegMin, InpReleaseVol,
                InpConfirmBars, InpHoldBars, InpTargetPts, InpStopPts, InpDayLossStop,
@@ -510,7 +533,7 @@ void OandaRefresh()
    if(TimeLocal() - g_ovLastRead < 5) return;
    g_ovLastRead = TimeLocal();
 
-   int h = FileOpen(InpOandaFile, FILE_READ | FILE_CSV | FILE_COMMON |
+   int h = FileOpen(InpOandaFile, FILE_READ | FILE_CSV | FILE_COMMON | FILE_ANSI |
                  FILE_SHARE_READ | FILE_SHARE_WRITE, ',');
    if(h == INVALID_HANDLE)
      {
@@ -524,7 +547,16 @@ void OandaRefresh()
       return;
      }
 
-   // walk the whole file but keep only the tail - it is a few MB and read once per 5s
+   // seek to near the end: we want the newest OV_KEEP minutes, nothing older. A row is
+   // about 45 bytes, so this reads a small tail instead of the whole 2 MB table.
+   ulong size = FileSize(h);
+   ulong want = (ulong)OV_KEEP * 80;
+   if(size > want)
+     {
+      FileSeek(h, (long)(size - want), SEEK_SET);
+      FileReadString(h);          // discard the partial line we landed in the middle of
+      while(!FileIsLineEnding(h) && !FileIsEnding(h)) FileReadString(h);
+     }
    int n = 0;
    datetime tt[OV_KEEP]; double oo[OV_KEEP], hh[OV_KEEP], ll[OV_KEEP], cc[OV_KEEP], vv[OV_KEEP];
    while(!FileIsEnding(h))
@@ -620,7 +652,7 @@ void GaugeCreate()
   {
    if(!InpGauge) return;
    int w = InpGaugeDual ? (int)(InpGaugeSize * 1.92) : InpGaugeSize;
-   int h = (int)(InpGaugeSize * 0.86);
+   int h = (int)(InpGaugeSize * 0.95);
    if(!g_gauge.CreateBitmapLabel("vsisa_gauge", InpGaugeX, InpGaugeY, w, h,
                                  COLOR_FORMAT_ARGB_NORMALIZE))
      { Print("[VSISA_MIN] gauge could not be created"); return; }
@@ -645,6 +677,23 @@ void GaugeDestroy()
   {
    if(g_gaugeOK) { g_gauge.Destroy(); g_gaugeOK = false; }
    ObjectDelete(0, "vsisa_gauge");
+  }
+
+//+------------------------------------------------------------------+
+//| The needle in his own language. He reads this as RESISTANCE -     |
+//| "it measures resistance based on volume" - so the dial says which |
+//| side is meeting less of it, rather than making him read a decimal.|
+//| The middle band is the one that matters most: neither side is     |
+//| getting anywhere, which is the absorption he waits for.           |
+//+------------------------------------------------------------------+
+string ResistanceWords(const double imb, uint &col)
+  {
+   if(imb >= 0.40) { col = ARGB(255,  70, 220, 150); return("LOW RESISTANCE FOR BUYERS"); }
+   if(imb >= 0.15) { col = ARGB(255,  60, 180, 130); return("buyers finding it easier"); }
+   if(imb <= -0.40){ col = ARGB(255, 240,  90,  85); return("LOW RESISTANCE FOR SELLERS"); }
+   if(imb <= -0.15){ col = ARGB(255, 205,  85,  80); return("sellers finding it easier"); }
+   col = ARGB(255, 225, 200, 90);
+   return("BOTH SIDES STUCK - absorption");
   }
 
 //+------------------------------------------------------------------+
@@ -682,7 +731,11 @@ void DrawDial(const int cx, const int cy, const int R, const double imb,
    g_gauge.TextOut(cx, cy - R - R / 6, title, ARGB(255, 150, 155, 165), TA_CENTER | TA_TOP);
    g_gauge.TextOut(cx - R + 2, cy + 8, "SELL", ARGB(255, 214, 69, 65), TA_LEFT | TA_TOP);
    g_gauge.TextOut(cx + R - 2, cy + 8, "BUY", ARGB(255, 46, 170, 122), TA_RIGHT | TA_TOP);
-   g_gauge.TextOut(cx, cy + MathMax(24, R / 6), footer, footCol, TA_CENTER | TA_TOP);
+   uint vcol; string verdict = ResistanceWords(imb, vcol);
+   g_gauge.FontSet("Arial Bold", MathMax(11, R / 11));
+   g_gauge.TextOut(cx, cy + MathMax(24, R / 6), verdict, vcol, TA_CENTER | TA_TOP);
+   g_gauge.FontSet("Arial", MathMax(9, R / 16));
+   g_gauge.TextOut(cx, cy + MathMax(46, R / 6 + R / 8), footer, footCol, TA_CENTER | TA_TOP);
   }
 
 void GaugeDraw()
@@ -701,7 +754,7 @@ void GaugeDraw()
    g_gauge.Erase(ARGB(220, 18, 20, 26));
    g_gauge.Rectangle(0, 0, w - 1, h - 1, ARGB(255, 60, 64, 76));
 
-   int cy = (int)(h * 0.76);
+   int cy = (int)(h * 0.70);
    if(InpGaugeDual)
      {
       int R = (int)MathMin(w * 0.225, h * 0.58);
