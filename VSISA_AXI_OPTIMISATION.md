@@ -825,3 +825,49 @@ population is not evidence about another.
 Keep for later: 8–23 and London-only both lift win rate 51%→55% at a cost of about a third
 of the profit. That is the trade to make if losing streaks ever become the binding
 constraint rather than money.
+
+## The 5% DAILY rule — measured at last, and it decides the two-EA question
+
+Every drawdown number in this document above this line is TOTAL drawdown, scored against a
+funded account's 10% rule. Prop firms kill accounts far more often on the DAILY rule: ~5%
+of starting balance lost within one broker day, measured on running intraday equity — a day
+that runs +$300 and falls back to −$400 is scored as a $700 swing, not a $400 loss.
+`monitor/strategy_lab/daily_dd.py` reads MT5's own deal list and scores it that way.
+
+**Each EA alone, 10K account, $500 daily limit:**
+
+| EA | lots | worst day | breaches |
+|---|---|---|---|
+| **VSISA v1.24** | 0.28 | $449 | **0 of 92 days** |
+| VSISA_Pullbacks v1.00 | 0.28 | $1,490 | **89 of 182 days** |
+| VSISA_Pullbacks v1.00 | **0.084** | $447 | **0 of 182 days** |
+
+v1.24 is clean at full size on both rules. The pullback EA at 0.28 breaches on nearly every
+second trading day — it does not survive a week of funded trading. 0.084 is its last clean
+size, and it satisfies the 10% total rule at the same figure.
+
+**Both on ONE account — they fail together despite each passing alone:**
+
+| sizing | worst day | breaches |
+|---|---|---|
+| v1.24 0.28 alone | $449 | 0 of 92 |
+| v1.24 0.28 + pb 0.084 | $646 | **8 of 182** |
+| v1.24 0.28 + pb 0.056 | $550 | 3 of 182 |
+| **v1.24 0.20 + pb 0.056** | $447 | **0 of 182** |
+
+Their bad days coincide. Sharing one account forces v1.24 down from 0.28 to 0.20 — the new
+EA costs the proven one 29% of its size.
+
+- one account, both: ~$9,778 + ~$5,751 = **~$15,529** (13% better than v1.24 alone)
+- two accounts: ~$13,689 + ~$8,627 = **~$22,316** on 20K of funding
+
+**VSISA_Pullbacks is worth running only on its OWN account.** On a shared account it
+cannibalises v1.24's size instead of adding return, for roughly $6,800 a year.
+
+### Also caught
+
+`VSISA_Pullbacks` was attached to an **M1** chart from 23:11 to 23:33 on 2026-09-17. Every
+figure behind it (1,864 trades, +$28,757, 42% WR) came from M5 — `axi_sweep.py` defaults to
+`--period M5` and `_pb_ship.py` passes no override. On M1 the 200-bar swing window is 200
+minutes rather than ~17 hours. It took **no trades** in that window and is now on M5.
+**A new EA's ship checklist must include the CHART TIMEFRAME, not just the version string.**
