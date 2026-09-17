@@ -636,3 +636,74 @@ halves.** The only thing that falls is win rate, 59% → 51%.
 
 This is the first thing all week to answer the frequency question without paying for it —
 and it came from him watching a chart, not from any parameter search.
+
+---
+
+# The night of 17 Sep — "make it trade more", and the constraint that answers it
+
+Zee, going to bed: *"for the VSISA EA i want you to see if you can make it trade more ..
+because currently waiting the entire day for the EA to take just 1 trade is slow n
+boring."*
+
+## First, the harness was measuring the wrong EA
+
+`vsisa_lab.py`'s `SHIPPED` dict was still the **v1.19** pin — wick 2, ratchet step 1.0,
+swing 10, target 5R — and it passed **no fade inputs at all**, four versions after the
+fade shipped. Every "baseline" row it printed was a config we retired in August. It is now
+re-pinned line-by-line from the `input` declarations in `mt5/VSISA.mq5`, and the corrected
+baseline reproduces v1.23 exactly: **120 trades, +$11,911, 52% WR, $650 DD.**
+
+Nothing above this line in this document is affected — those runs predate the drift — but
+any comparison made against that dict between v1.20 and tonight should be re-checked.
+
+## The loud gate was too strict, and it is a ridge
+
+The funnel says 89% of candidates die at the LOUD test. Relaxing it slightly buys trades
+AND money, and the neighbours prove it is not a curve-fit:
+
+| bigAvg (at bigPct 0.70) | 1.05 | **1.10** | 1.15 | 1.20 | 1.25 |
+|---|---|---|---|---|---|
+| net | $11,927 | **$13,689** | $12,828 | $12,028 | $10,470 |
+
+| bigPct (at bigAvg 1.10) | **0.70** | 0.75 | 0.80 | 0.85 |
+|---|---|---|---|---|
+| net | **$13,689** | $13,642 | $12,927 | $12,141 |
+
+A smooth hill in both directions, every neighbour at or above shipped.
+
+## The exit has nothing left
+
+`InpRatchetStep 12` returns **byte-identical** results to step 8, and `InpTargetR 15`
+barely moves the needle — the third independent confirmation that these trades all die on
+ONE ratchet lock and never see the target. `ratchetStart` 1.50 buys win rate at a cost in
+money; 3.00 buys money at 39% WR and double the drawdown. **2.00 is already optimal.**
+The answer to "would a change to TP/SL bring further profit" is no.
+
+## Two dead ends, recorded so they are not re-tried
+
+- **`InpMaxOpen` 3 and 4 are byte-identical to 2.** The concurrency cap was never
+  refusing trades. Same for `InpSetupMax 14`.
+- **`InpSetupGaps 1`** (his gapped-campaign idea) is actively destructive again:
+  +$7,672 at $1,578 DD against +$13,689 at $778.
+
+## THE FINDING: frequency is affordable only to about one trade a day
+
+Raw net says trade much more. Resized so each config's worst drawdown fits a 10K funded
+account's 10% limit — the only comparison that pays out — **the ranking inverts**:
+
+| config | net | tr/day | WR | maxDD | lots | net @ 10K |
+|---|---|---|---|---|---|---|
+| **LOUD 1.10/0.70** | $13,689 | 0.80 | 51% | $778 | 0.280 | **+$13,689** |
+| LOUD+lowVol1.10+body0.25 | $13,660 | 1.04 | 47% | $1,115 | 0.251 | +$12,251 |
+| v1.23 shipped | $11,911 | 0.67 | 52% | $650 | 0.280 | +$11,911 |
+| LOUD+fade0.70/look5 | $14,525 | 2.17 | 40% | $1,342 | 0.209 | +$10,823 |
+| LOUD+fade0.65/look5 | $14,719 | 1.40 | 45% | $1,498 | 0.187 | +$9,826 |
+| no fake break | $19,460 | 3.17 | 40% | $3,438 | 0.081 | +$5,660 |
+
+Dropping `InpFakeBreak` looks like +63% money and becomes **half of shipped** once sized to
+survive. Every config busier than ~1 trade/day earns less.
+
+**Recommended: `InpBigAvg 1.10` + `InpBigPct 0.70` alone** — +19% trades, +15% money, win
+rate intact at 51%, still fits the limit at full 0.28 lots, better in H1 (6.58 vs 5.52).
+`lowVolPct 1.10` + `bodyFrac 0.25` is the dial if he wants 1.04/day and will pay ~$1,400
+for it. NOT SHIPPED — his call.
