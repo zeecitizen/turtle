@@ -24,6 +24,8 @@ agree — not just the top row.
 from __future__ import annotations
 
 import argparse
+
+EA_NAME = "VSISA"
 import re
 import shutil
 import subprocess
@@ -324,7 +326,7 @@ GRIDS = {
 
 def write_ini(path, name, grid, optimize, frm, to, period, model, delay, deposit):
     lines = ["[Tester]"]
-    for k, v in [("Expert", "VSISA"), ("Symbol", SYMBOL), ("Period", period),
+    for k, v in [("Expert", EA_NAME), ("Symbol", SYMBOL), ("Period", period),
                  ("Model", model), ("FromDate", frm), ("ToDate", to),
                  ("Deposit", deposit), ("Currency", "USD"), ("Leverage", "1:500"),
                  ("ExecutionMode", delay),
@@ -347,9 +349,9 @@ def kill_rig():
 
 def sync_ea():
     """Always test the build that is actually deployed."""
-    src = LIVE_AXI / "MQL5" / "Experts" / "VSISA.ex5"
+    src = LIVE_AXI / "MQL5" / "Experts" / (EA_NAME + ".ex5")
     if src.exists():
-        dst = RIG / "MQL5" / "Experts" / "VSISA.ex5"
+        dst = RIG / "MQL5" / "Experts" / (EA_NAME + ".ex5")
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dst)
 
@@ -507,7 +509,7 @@ def sweep(gridname, args):
 
 
 def main():
-    global SYMBOL
+    global SYMBOL, EA_NAME
     ap = argparse.ArgumentParser()
     ap.add_argument("--grid", default="")
     ap.add_argument("--all", action="store_true")
@@ -523,10 +525,15 @@ def main():
     ap.add_argument("--minlive", type=int, default=8)
     ap.add_argument("--comm", type=float, default=COMMISSION_PER_TRADE)
     ap.add_argument("--symbol", default="")
+    # VSISA_Pullbacks (magic 88202) is a second EA on the same rig, so the
+    # expert name can no longer be hardcoded.
+    ap.add_argument("--ea", default="VSISA")
     args = ap.parse_args()
 
     if args.symbol:
         SYMBOL = args.symbol
+    if args.ea:
+        EA_NAME = args.ea
     if not EXE.exists():
         sys.exit("[axi] no rig at %s" % EXE)
     sync_ea()
