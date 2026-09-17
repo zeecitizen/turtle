@@ -1682,3 +1682,69 @@ between v1.20 and 2026-09-17 should be re-checked.**
 `mt5/VSISA.mq5` · `monitor/strategy_lab/vsisa_lab.py` (re-pinned) ·
 `monitor/strategy_lab/_vsisa_freq{,2,3,4,5}.py` · `_vsisa_ship124.py` ·
 `VSISA_AXI_OPTIMISATION.md`
+
+---
+
+## VSISA_Pullbacks v1.00 — a SECOND EA, built for frequency (2026-09-17)
+
+**New EA. Magic 88202.** VSISA (88201) is untouched and keeps trading its own way.
+
+**Why.** Zee, after a night in which six separate routes to a busier VSISA all failed the
+funded-account drawdown test: *"we're not beating the live EA here. we want a separate EA
+based on VSISA which trades more frequently. i know there's a drawdown thing going on ..
+maybe in future days we'd find a hack ;) to make it less drawdown or more accurate?"*
+
+A deliberate product decision — frequency now, drawdown later, on an EA that cannot hurt
+the live one. v1.24 is therefore NOT the benchmark. The objective was the most trades per
+day that stays clearly profitable with **both walk-forward halves positive**; robustness
+was the one thing not deferred, because a config that dies in H2 is not a drawdown problem,
+it is the absence of an edge.
+
+**Receipts** (Axi rig, real ticks, 0.28 lots, MT5 Strategy Tester) — ship-verified, the
+compiled binary reproduced all three windows to the dollar:
+
+| window | trades | net | WR | maxDD | net per $1 DD |
+|---|---|---|---|---|---|
+| **FULL** Jan 1 – Sep 16 | **1,864** (10.38/day) | **+$28,757** | 42% | $3,340 | 8.61 |
+| H1 Jan – May | 860 | +$19,144 | 43% | $3,340 | 5.73 |
+| H2 May – Sep | 1,004 | +$9,756 | 41% | $2,831 | 3.45 |
+
+**10.38 trades a day against the live EA's 0.80** — 13×, with both halves strongly
+positive and H2 taking MORE trades than H1.
+
+### What makes it a different EA, not a preset
+
+| input | VSISA v1.24 | **Pullbacks** | why |
+|---|---|---|---|
+| `InpFakeBreak` | true | **false** | admits PULLBACK lows — dips inside a move. A chart study of 59 bottoms found the sweep requirement rejected **all** of them, five sessions running. |
+| `InpLowVolPct` | 1.00 | **5.00** | quiet CAP lifted, so no-supply *and* loud stopping-volume reactions both qualify |
+| `InpTrendTF` | 30 | **0** | the camel trend HELPS VSISA and HURTS this EA — built to read sweep reversals, wrong tool for pullbacks. Removing it added trades, money and half-stability at once. |
+| `InpRatchetStart` | 2.00 | **1.50** | the accuracy lever: 38% → 42% WR and the best ratio in the regime. Ridge: 1.00 $12,359 · 1.25 $19,195 · **1.50 $28,757** · 1.75 $27,468 · 2.00 $23,824 |
+| `InpFadePct` / `Look` | 0.60 / 4 | **0.70 / 5** | the frequency lever |
+
+The three levers reinforce: together they beat every one alone, and drawdown FELL from the
+base's $4,231 to $3,340.
+
+### The deferred problem, stated plainly
+
+$3,340 of drawdown does not fit a 10K funded account's 10% limit at 0.28 lots. At the
+**0.084 lots** that do fit, it returns about **$8,610** against v1.24's $13,689. That is
+Zee's accepted trade, not an oversight. **Their drawdowns ADD on a shared account** — this
+EA needs its own account or a carved-out allocation.
+
+When the hack is hunted, two doors are already known to be shut, both tested 2026-09-17:
+**a tighter stop** (buffer 120→40 took net $19,740→$10,821 AND raised drawdown
+$4,207→$4,340) and **`InpDayLossStop`** (made drawdown worse at every setting, by removing
+the trades that recover the day). The live doors are sizing, a better exit — `ratchetStart`
+already bought 4 points of win rate — or a separate account.
+
+### Harness change shipped with it
+
+`axi_sweep.py` hardcoded `Expert=VSISA`. A second EA on the same rig would have silently
+tested the WRONG BINARY and reported v1.24's numbers under a Pullbacks label — the same
+class of bug as the stale-compile found the same morning. It now takes `--ea`.
+
+### Files
+
+`mt5/VSISA_Pullbacks.mq5` (new) · `monitor/strategy_lab/axi_sweep.py` (`--ea`) ·
+`_vsisa_freqea.py` · `_vsisa_freqea2.py` · `_pb_ship.py`
