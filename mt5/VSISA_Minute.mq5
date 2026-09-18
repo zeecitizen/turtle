@@ -68,7 +68,7 @@
 //|  fills may promote a default.                                      |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan"
-#property version   "1.41"
+#property version   "1.55"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -143,7 +143,8 @@ input group "=== INTRABAR: reading the candle while it forms ==="
 //
 //  MT5's real-tick model replays every tick, so this is testable rather than a story.
 input bool   InpIntrabar    = false;  // InpIntrabar - UNTESTED tick path. Default OFF: it bypasses every bar gate
-input int    InpTickWindow  = 240;   // InpTickWindow - ticks of tape held in view
+input int    InpTickWindow  = 120;   // InpTickWindow - ticks of tape held in view
+input double InpTickGain    = 3.0;   // InpTickGain - spreads the needle over the dial (see notes)
 input int    InpTickSlice   = 80;    // InpTickSlice - the recent slice judged against the rest
 input double InpTickMult    = 1.40;  // InpTickMult - our side's points/tick >= x the other side's
 input int    InpTickMinBar  = 120;   // InpTickMinBar - ticks into the bar before it may decide
@@ -204,7 +205,18 @@ input group "=== the imbalance meter (a real gauge, drawn live) ==="
 //  needle steps each minute instead of flowing with every tick. Source 0 flows tick by
 //  tick but counts TICKS as effort, because this broker publishes no real volume for gold.
 input int    InpMeterSource = 1;     // InpMeterSource - 0 = live ticks (broker) · 1 = OANDA volume (TradingView)
-input int    InpMeterBars   = 6;     // InpMeterBars - minutes the two sides are compared over
+//  2026-09-18: "it says buyers finding it easier on the tradingview dial... when infact
+//  buyer volumes have stopped coming and now its red volumes coming with price moving
+//  downwards"
+//  He was right and it was a lag, not a miscalculation: a flat 6-minute average still
+//  carried four big green bars from BEFORE the turn, so the dial described the stretch he
+//  had already stopped trading. A meter for spotting turns cannot weight a six-minute-old
+//  bar the same as the one forming now.
+//  InpMeterDecay fixes it: each older minute counts less. At 0.55 the newest bar carries
+//  about twice the weight of the one before it and eight times the one three back, so the
+//  needle turns with the tape while still being an average rather than a single candle.
+input int    InpMeterBars   = 5;     // InpMeterBars - minutes in view (newest weigh most)
+input double InpMeterDecay  = 0.55;  // InpMeterDecay - weight of each older minute (1.0 = flat average)
 input string InpOandaFile   = "oanda_bars.csv"; // InpOandaFile - in Common\Files
 //  2026-09-18: "oh can u create a tick by tick dial too .. live tick responsiveness.. its
 //  ok it can be based on broker volume.. as sometimes i trade based on very fast decisions
@@ -291,7 +303,7 @@ int OnInit()
             "is one bad minute away from giving back a week.");
       return(INIT_PARAMETERS_INCORRECT);
      }
-   PrintFormat("[VSISA_MIN] v1.41 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
+   PrintFormat("[VSISA_MIN] v1.55 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
                "release<=%.2fx | confirm %d | hold %d bar(s) | tp %d | stop %d | day stop %.0f | %s",
                InpAbsorbVol, InpAbsorbBars, InpAbsorbStuck, InpLegMin, InpReleaseVol,
                InpConfirmBars, InpHoldBars, InpTargetPts, InpStopPts, InpDayLossStop,
@@ -525,9 +537,14 @@ bool    g_gaugeOK = false;
 
 //--- what the last closed minute decided, in words, for the panel under the dials
 string g_stVerdict = "starting up";
-string g_stSellers = "";
-string g_stBuyers  = "";
+double g_stEffUp   = 0.0;      // ground per 100 volume, buyers - NOW
+double g_stEffDn   = 0.0;      // ground per 100 volume, sellers - NOW
+string g_stUpWord  = "";       // are the buyers getting stronger or weaker than they were?
+string g_stDnWord  = "";
+uint   g_stUpCol   = 0xFF6ED7AF;
+uint   g_stDnCol   = 0xFFE27873;
 string g_stNeed    = "";
+string g_stNote    = "";
 uint   g_stColour  = 0xFFB0B4BE;
 
 //--- the OANDA minute table: the same feed his TradingView chart draws.
@@ -536,6 +553,15 @@ datetime g_ovTime[OV_KEEP];
 double   g_ovOpen[OV_KEEP], g_ovClose[OV_KEEP], g_ovHigh[OV_KEEP], g_ovLow[OV_KEEP];
 double   g_ovVol[OV_KEEP];
 int      g_ovN = 0;
+
+//--- the strength needs a memory: 95%% on the way UP is a setup, 60%% on the way DOWN is a
+//--- move that already happened. Zee: "after imbalance it switches to forming.. instead it
+//--- could measure and say let's say: imbalance fading out".
+double   g_stPeak     = 0.0;      // highest strength lately
+double   g_stPrev     = 0.0;      // what it was on the previous minute
+datetime g_stPeakTime = 0;
+datetime g_stLastBar  = 0;
+double   g_stCurr     = 0.0;
 datetime g_ovLastRead = 0;
 
 //+------------------------------------------------------------------+
@@ -619,47 +645,95 @@ double OandaImbalance(double &effUpOut, double &effDnOut, int &barsOut, double &
    if(g_ovN < InpMeterBars + 1) return(0.0);
    int from = g_ovN - InpMeterBars;
    double upP = 0.0, dnP = 0.0, upV = 0.0, dnV = 0.0;
+   double decay = (InpMeterDecay <= 0.0 || InpMeterDecay > 1.0) ? 1.0 : InpMeterDecay;
    for(int i = from; i < g_ovN; i++)
      {
       double body = g_ovClose[i] - g_ovOpen[i];
       double v = g_ovVol[i];
       if(v <= 0.0) continue;
-      if(body > 0)      { upP += body;  upV += v; }
-      else if(body < 0) { dnP += -body; dnV += v; }
+      int age = (g_ovN - 1) - i;                  // 0 = the newest closed minute
+      double wgt = MathPow(decay, age);
+      if(body > 0)      { upP += body * wgt;  upV += v * wgt; }
+      else if(body < 0) { dnP += -body * wgt; dnV += v * wgt; }
      }
    barsOut = InpMeterBars;
    ageOut = (double)(TimeCurrent() - g_ovTime[g_ovN - 1]) / 60.0;
-   if(upV <= 0.0 || dnV <= 0.0) return(0.0);
-   double effUp = upP / upV, effDn = dnP / dnV;
-   effUpOut = effUp; effDnOut = effDn;
-   if(effUp + effDn <= 0.0) return(0.0);
-   return((effUp - effDn) / (effUp + effDn));
+
+   // the BARS keep the efficiency comparison - ground per unit of volume, each side
+   if(upV > 0.0) effUpOut = upP / upV;
+   if(dnV > 0.0) effDnOut = dnP / dnV;
+
+//  THE NEEDLE IS DIRECTION, NOT EFFICIENCY.
+//  v1.46 put efficiency on the dial and Zee caught it twice: "the tradingview dial says
+//  buyers finding it easier.. when the price is moving downwards for past 3 red candles".
+//  Both readings were arithmetically right - one big efficient green outscores three heavy
+//  inefficient reds on ground-per-volume - but a NEEDLE that points BUY while the candles
+//  fall is a meter that contradicts the chart, and he would be right to stop trusting it.
+//  So the dial now answers "which way is price actually getting somewhere", and the bars
+//  underneath answer "who is finding it easier". Two different questions, two places, and
+//  the dial can never disagree with the candles again.
+   double net = upP - dnP;          // both are already recency-weighted
+   double tot = upP + dnP;
+   if(tot <= 0.0) return(0.0);
+   double imb = net / tot;
+   if(imb > 1.0)  imb = 1.0;
+   if(imb < -1.0) imb = -1.0;
+   return(imb);
   }
 
 double TapeImbalance(double &effUpOut, double &effDnOut, int &ticksOut)
   {
+//  WHY THIS IS NOT THE SAME FORMULA AS THE VOLUME DIAL.
+//  v1.42 compared average points per UPTICK against average points per DOWNTICK, which is
+//  the volume dial's formula with ticks standing in for volume. Zee caught it immediately:
+//  "ticks dial say both sides stuck but its a very large down candle". He was right, and
+//  the fault is structural - a tick is roughly a fixed size, so points-per-tick is about
+//  equal for both sides ALWAYS. A collapse is made of MANY downticks, not bigger ones, and
+//  that formula cannot see a count asymmetry at all. It would read "balanced" through a
+//  crash.
+//
+//  On the tape the honest measure of the same idea is net displacement against total
+//  travel: of all the ground covered, how much became actual progress?
+//
+//      imbalance = (last - first) / sum(|tick moves|)
+//
+//  A hard down candle: travelled 5.0, ended 4.0 lower -> -0.80, pinned left.
+//  Churn that goes nowhere: travelled 5.0, ended 0.1 lower -> -0.02, centre. THAT is
+//  absorption - lots of effort, no ground - and it is exactly what he waits for.
    effUpOut = 0.0; effDnOut = 0.0; ticksOut = g_tapeN;
    int cap = ArraySize(g_tape);
    if(cap <= 0 || g_tapeN < 20) return(0.0);
    int n = MathMin(g_tapeN, InpTickWindow);
-   double upP = 0.0, dnP = 0.0;
-   int upT = 0, dnT = 0;
-   double prev = 0.0; bool first = true;
+
+   double travel = 0.0, upP = 0.0, dnP = 0.0;
+   double first = 0.0, last = 0.0, prev = 0.0;
+   bool started = false;
    for(int i = g_tapeN - n; i < g_tapeN; i++)
      {
       int idx = (g_tapeHead - g_tapeN + i + cap * 2) % cap;
       double px = g_tape[idx];
-      if(first) { prev = px; first = false; continue; }
+      if(!started) { first = px; prev = px; started = true; continue; }
       double d = px - prev;
-      if(d > 0)      { upP += d;  upT++; }
-      else if(d < 0) { dnP += -d; dnT++; }
+      travel += MathAbs(d);
+      if(d > 0) upP += d; else dnP += -d;
       prev = px;
+      last = px;
      }
-   if(upT < 2 || dnT < 2) return(0.0);
-   double effUp = upP / upT, effDn = dnP / dnT;
-   effUpOut = effUp; effDnOut = effDn;
-   if(effUp + effDn <= 0.0) return(0.0);
-   return((effUp - effDn) / (effUp + effDn));      // -1 .. +1
+   if(travel <= 0.0 || !started) return(0.0);
+
+   // the bars under the panel still want "ground per unit of effort" for each side
+   effUpOut = upP / n;
+   effDnOut = dnP / n;
+
+//  GAIN. net/travel is correct but COMPRESSED: over a long tick window `travel` collects
+//  every micro-oscillation, so even a hard candle scores ~0.17 and lands inside the
+//  "going nowhere" band. Zee: "the right dial direction keeps saying going nowhere.. even
+//  at fast forming large candles." The ratio was right, the scale was not - so it is
+//  stretched to use the whole dial, and the window shortened to track the forming candle.
+   double imb = (last - first) / travel * InpTickGain;
+   if(imb > 1.0)  imb = 1.0;
+   if(imb < -1.0) imb = -1.0;
+   return(imb);
   }
 
 void GaugeCreate()
@@ -700,28 +774,162 @@ void GaugeDestroy()
 //| The middle band is the one that matters most: neither side is     |
 //| getting anywhere, which is the absorption he waits for.           |
 //+------------------------------------------------------------------+
+//+------------------------------------------------------------------+
+//| Is this side getting MORE or LESS for its effort than it was?     |
+//| "ok sellers seem to not be able to move it further.. ok buyers    |
+//|  seem to move it relatively easily now" - that is a change over   |
+//| time, so each side is compared with ITSELF over the previous      |
+//| stretch, not with the other side (the bar lengths already show    |
+//| the contest).                                                     |
+//|                                                                   |
+//| NOT a probability. Nothing here is calibrated against outcomes,   |
+//| and calling it one would invite trusting it further than it has   |
+//| earned. It says what the tape just did, not what happens next.    |
+//+------------------------------------------------------------------+
+string SideWord(const double now, const double before, uint &col, const bool isSeller)
+  {
+//  Every label must say a STATE or a CHANGE. v1.45 printed the bare noun "selling" when
+//  there was no earlier selling to compare against, which reads as neither - Zee: "the word
+//  selling is neutral.. it doesnot say if its a verb / comparison etc". These all answer
+//  "what are they doing, compared with a moment ago".
+   if(now <= 0.0)
+     {
+      col = isSeller ? 0xFF8A6A68 : 0xFF6A8A7C;
+      return(isSeller ? "sellers gone" : "buyers gone");
+     }
+   if(before <= 0.0)
+     {
+      col = isSeller ? 0xFFFF6B66 : 0xFF3FE39B;
+      return(isSeller ? "SELLERS JUST ARRIVED" : "BUYERS JUST ARRIVED");
+     }
+   double r = now / before;
+   if(r >= 1.35) { col = isSeller ? 0xFFFF6B66 : 0xFF3FE39B;
+                   return(isSeller ? "SELLERS STRONGER" : "BUYERS STRONGER"); }
+   if(r <= 0.65) { col = 0xFFE1C85A;
+                   return(isSeller ? "SELLERS WEAKENING" : "BUYERS WEAKENING"); }
+   col = isSeller ? 0xFFE27873 : 0xFF6ED7AF;
+   return(isSeller ? "sellers holding steady" : "buyers holding steady");
+  }
+
+//+------------------------------------------------------------------+
+//| IMBALANCE STRENGTH - 0 to 1. Not a direction.                     |
+//|                                                                   |
+//| Zee, 2026-09-18: "the first dial.. it should be the imbalance      |
+//| strength, low to high.. when it touches highest -> we look at the  |
+//| tick dial and see if its making a move in which direction and take |
+//| a trade in that direction". And on why direction was the wrong     |
+//| thing to put there: "the current price movement we can also read   |
+//| from chart's candles" - a needle that repeats the chart is wasted  |
+//| space, and it was contradicting the candles besides.               |
+//|                                                                   |
+//| Strength is how RIPE the setup is, from the three things his       |
+//| method actually requires:                                          |
+//|   LOUD    the fight is heavier than normal      (effort)           |
+//|   STUCK   all that effort is going nowhere      (no result)        |
+//|   GAP     one side is getting far more per unit (someone winning)  |
+//+------------------------------------------------------------------+
+double ImbalanceStrength(double &loudOut, double &stuckOut, double &gapOut)
+  {
+   loudOut = 0.0; stuckOut = 0.0; gapOut = 0.0;
+   if(g_ovN < InpMeterBars + 2) return(0.0);
+
+   double decay = (InpMeterDecay <= 0.0 || InpMeterDecay > 1.0) ? 1.0 : InpMeterDecay;
+   int from = g_ovN - InpMeterBars;
+
+   double volNow = 0.0, wsum = 0.0;
+   double upP = 0.0, dnP = 0.0, upV = 0.0, dnV = 0.0;
+   for(int i = from; i < g_ovN; i++)
+     {
+      int age = (g_ovN - 1) - i;
+      double wgt = MathPow(decay, age);
+      double body = g_ovClose[i] - g_ovOpen[i];
+      double v = g_ovVol[i];
+      volNow += v * wgt; wsum += wgt;
+      if(v <= 0.0) continue;
+      if(body > 0)      { upP += body * wgt;  upV += v * wgt; }
+      else if(body < 0) { dnP += -body * wgt; dnV += v * wgt; }
+     }
+   if(wsum <= 0.0) return(0.0);
+   volNow /= wsum;
+
+   // the normal to judge against: the stretch before this one, unweighted
+   double volBase = 0.0, rngBase = 0.0; int nb = 0;
+   for(int i = MathMax(0, from - 20); i < from; i++)
+     { volBase += g_ovVol[i]; rngBase += (g_ovHigh[i] - g_ovLow[i]); nb++; }
+   if(nb <= 0 || volBase <= 0.0 || rngBase <= 0.0) return(0.0);
+   volBase /= nb; rngBase /= nb;
+
+   double net = MathAbs(g_ovClose[g_ovN - 1] - g_ovOpen[from]);
+
+   double loud  = volNow / volBase;
+   double stuck = net / (rngBase * InpMeterBars);
+   double effUp = (upV > 0.0) ? upP / upV : 0.0;
+   double effDn = (dnV > 0.0) ? dnP / dnV : 0.0;
+   double gap   = (effUp + effDn > 0.0)
+                  ? MathAbs(effUp - effDn) / (effUp + effDn) : 0.0;
+
+   loudOut  = MathMin(1.0, MathMax(0.0, (loud - 0.80) / 0.80));
+   stuckOut = MathMin(1.0, MathMax(0.0, 1.0 - stuck / 0.60));
+   gapOut   = MathMin(1.0, gap / 0.60);
+
+   return(MathMin(1.0, loudOut * 0.40 + stuckOut * 0.35 + gapOut * 0.25));
+  }
+
+string StrengthWords(const double st, uint &col)
+  {
+   bool falling = (st < g_stPrev - 0.03);
+   bool spent   = (g_stPeak >= 0.65 && st < g_stPeak - 0.12);
+
+   if(st >= 0.80) { col = ARGB(255,  80, 235, 160); return("IMBALANCE READY - check direction"); }
+   if(spent)
+     {
+      col = ARGB(255, 150, 140, 200);
+      return(StringFormat("IMBALANCE FADING - peaked at %.0f%%", g_stPeak * 100));
+     }
+   if(st >= 0.60)
+     {
+      col = ARGB(255, 225, 200, 90);
+      return(falling ? "easing off" : "BUILDING - nearly there");
+     }
+   if(st >= 0.35)
+     {
+      col = ARGB(255, 190, 170, 110);
+      return(falling ? "fading" : "forming");
+     }
+   col = ARGB(255, 130, 136, 148);
+   return("nothing here yet");
+  }
+
 string ResistanceWords(const double imb, uint &col)
   {
-   if(imb >= 0.40) { col = ARGB(255,  70, 220, 150); return("LOW RESISTANCE FOR BUYERS"); }
-   if(imb >= 0.15) { col = ARGB(255,  60, 180, 130); return("buyers finding it easier"); }
-   if(imb <= -0.40){ col = ARGB(255, 240,  90,  85); return("LOW RESISTANCE FOR SELLERS"); }
-   if(imb <= -0.15){ col = ARGB(255, 205,  85,  80); return("sellers finding it easier"); }
+   if(imb >= 0.40) { col = ARGB(255,  70, 230, 155); return("BUY - buyers meet no resistance"); }
+   if(imb >= 0.15) { col = ARGB(255,  60, 185, 135); return("leaning BUY"); }
+   if(imb <= -0.40){ col = ARGB(255, 255,  95,  90); return("SELL - sellers meet no resistance"); }
+   if(imb <= -0.15){ col = ARGB(255, 215,  90,  85); return("leaning SELL"); }
    col = ARGB(255, 225, 200, 90);
-   return("BOTH SIDES STUCK - absorption");
+   return("no side favoured yet");
   }
 
 //+------------------------------------------------------------------+
 //| One dial. `imb` is -1..+1; the needle sweeps 180 degrees.         |
 //+------------------------------------------------------------------+
 void DrawDial(const int cx, const int cy, const int R, const double imb,
-              const string title, const string footer, const uint footCol)
+              const string title, const string footer, const uint footCol,
+              const bool strengthMode = false, const double strength = 0.0)
   {
    for(int deg = 0; deg <= 180; deg += 2)
      {
       double a = (180 - deg) * M_PI / 180.0;
       double f = deg / 180.0;
       uint col;
-      if(f < 0.38)      col = ARGB(255, 214, 69, 65);
+      if(strengthMode)
+        {
+         if(f < 0.35)      col = ARGB(255,  90,  96, 110);
+         else if(f < 0.60) col = ARGB(255, 170, 155,  90);
+         else if(f < 0.80) col = ARGB(255, 225, 200,  90);
+         else              col = ARGB(255,  70, 230, 155);
+        }
+      else if(f < 0.38) col = ARGB(255, 214, 69, 65);
       else if(f > 0.62) col = ARGB(255, 46, 170, 122);
       else              col = ARGB(255, 150, 150, 60);
       int inner = R - MathMax(16, R / 5);
@@ -739,13 +947,21 @@ void DrawDial(const int cx, const int cy, const int R, const double imb,
    g_gauge.FillCircle(cx, cy, MathMax(7, R / 14), ARGB(255, 235, 235, 240));
 
    g_gauge.FontSet("Arial Bold", MathMax(20, R / 5) * MathMax(80, InpFontScale) / 100);
-   g_gauge.TextOut(cx, cy - R / 2 - R / 8, StringFormat("%+.2f", imb),
+   g_gauge.TextOut(cx, cy - R / 2 - R / 8,
+                   strengthMode ? StringFormat("%.0f%%", strength * 100)
+                                : StringFormat("%+.2f", imb),
                    ARGB(255, 240, 240, 245), TA_CENTER | TA_TOP);
    g_gauge.FontSet("Arial", MathMax(12, R / 14) * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(cx, cy - R - R / 6, title, ARGB(255, 150, 155, 165), TA_CENTER | TA_TOP);
-   g_gauge.TextOut(cx - R + 2, cy + 8, "SELL", ARGB(255, 214, 69, 65), TA_LEFT | TA_TOP);
-   g_gauge.TextOut(cx + R - 2, cy + 8, "BUY", ARGB(255, 46, 170, 122), TA_RIGHT | TA_TOP);
-   uint vcol; string verdict = ResistanceWords(imb, vcol);
+   g_gauge.TextOut(cx - R + 2, cy + 8, strengthMode ? "LOW" : "SELL",
+                   strengthMode ? ARGB(255, 130, 136, 148) : ARGB(255, 214, 69, 65),
+                   TA_LEFT | TA_TOP);
+   g_gauge.TextOut(cx + R - 2, cy + 8, strengthMode ? "HIGH" : "BUY",
+                   strengthMode ? ARGB(255, 70, 230, 155) : ARGB(255, 46, 170, 122),
+                   TA_RIGHT | TA_TOP);
+   uint vcol;
+   string verdict = strengthMode ? StrengthWords(strength, vcol)
+                                 : ResistanceWords(imb, vcol);
    g_gauge.FontSet("Arial Bold", MathMax(13, R / 11) * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(cx, cy + MathMax(24, R / 6), verdict, vcol, TA_CENTER | TA_TOP);
    g_gauge.FontSet("Arial", MathMax(11, R / 16) * MathMax(80, InpFontScale) / 100);
@@ -772,12 +988,38 @@ void GaugeDraw()
    if(InpGaugeDual)
      {
       int R = (int)MathMin(w * 0.225, h * 0.40);
-      DrawDial((int)(w * 0.26), cy, R, imbVol, "VOLUME (TradingView) 1 min",
+      double lo, stk, gp;
+      double strength = ImbalanceStrength(lo, stk, gp);
+
+      if(g_ovN > 0 && g_ovTime[g_ovN - 1] != g_stLastBar)
+        {
+         g_stLastBar = g_ovTime[g_ovN - 1];
+         g_stPrev = g_stCurr;
+         if(strength >= g_stPeak) { g_stPeak = strength; g_stPeakTime = g_stLastBar; }
+         // a peak older than ten minutes stops counting as "recent"
+         if(g_stLastBar - g_stPeakTime > 600) { g_stPeak = strength; g_stPeakTime = g_stLastBar; }
+        }
+      g_stCurr = strength;
+      DrawDial((int)(w * 0.26), cy, R, strength * 2.0 - 1.0,
+               "IMBALANCE STRENGTH (volume)",
                (age < 0) ? "NO DATA" : (stale ? StringFormat("STALE %.0f min", age)
-                                      : StringFormat("%d min", vBars)),
-               stale ? ARGB(255, 230, 120, 60) : ARGB(255, 150, 155, 165));
-      DrawDial((int)(w * 0.74), cy, R, imbTick, "TICKS (live) this candle",
-               StringFormat("%d ticks", ticks), ARGB(255, 150, 155, 165));
+                                      : StringFormat("loud %.0f%%   stuck %.0f%%   gap %.0f%%",
+                                                     lo * 100, stk * 100, gp * 100)),
+               stale ? ARGB(255, 230, 120, 60) : ARGB(255, 150, 155, 165), true, strength);
+//  THE RIGHT DIAL IS THE IMBALANCE'S OWN DIRECTION, not the tape.
+//  Zee, 2026-09-18: "instead of the dial on left saying direction now (live ticks), lets
+//  replace it with Imbalance supports direction: and the dial goes from red SELL on the
+//  left to right BUY.. so the first needle on left tells us ok imbalance ready.. the
+//  second needle on the dial on the right tells us whether to buy or sell."
+//  Both dials now read from the same measurement - one says HOW RIPE, the other says
+//  WHICH WAY - so they can never tell contradictory stories. The live tape stays on the
+//  panel as a note, where it says whether price has turned yet.
+      double dirImb = 0.0;
+      if(g_stEffUp + g_stEffDn > 0.0)
+         dirImb = (g_stEffUp - g_stEffDn) / (g_stEffUp + g_stEffDn);
+      DrawDial((int)(w * 0.74), cy, R, dirImb, "IMBALANCE SUPPORTS",
+               StringFormat("live tape %+.2f  ·  %d ticks", imbTick, ticks),
+               ARGB(255, 150, 155, 165), false, 0.0);
       g_gauge.LineAA(w / 2, 24, w / 2, (int)(h * 0.74), ARGB(120, 70, 74, 86));
      }
    else
@@ -798,19 +1040,86 @@ void GaugeDraw()
    int fN  = 13 * sc / 100;          // what is still needed
    int lh  = (int)(fR * 1.85);       // line height
 
+//  THE CALL. Zee: "instead of the constant text called WAITING.. can we say BUY NOW,
+//  SELL NOW.. based on the imbalance strength when its READY.. so we calculate direction
+//  buy/sell somehow from our calculations".
+//  DIRECTION COMES FROM THE IMBALANCE ITSELF. v1.53 let the live tape veto the call;
+//  he corrected it: "no i think the direction comes from imbalance.. if small volumes are
+//  making large spreads of red, it means SELL.. if small green volumes are causing large
+//  spreads of green it means buy". That is precisely ground-per-unit-of-volume, one side
+//  against the other - the same number the bars draw. The tape no longer overrules it; if
+//  it happens to be pointing the other way that is shown as a note, not a block, because
+//  price moving against the side that is meeting no resistance is what the setup looks
+//  like just before it turns.
+   string callTxt = g_stVerdict;
+   uint   callCol = (uint)(0xFF000000 | (g_stColour & 0x00FFFFFF));
+   if(InpGaugeDual)
+     {
+      double lo2, stk2, gp2;
+      double st2 = ImbalanceStrength(lo2, stk2, gp2);
+      if(st2 >= 0.80)
+        {
+         int d = 0;
+         if(g_stEffUp > g_stEffDn * 1.15)      d =  1;   // greens buy more ground per volume
+         else if(g_stEffDn > g_stEffUp * 1.15) d = -1;   // reds do
+
+         double tUp2, tDn2; int tk2;
+         double tImb = TapeImbalance(tUp2, tDn2, tk2);
+         int tickDir = (tImb >= 0.15) ? 1 : ((tImb <= -0.15) ? -1 : 0);
+
+         if(d > 0)      { callTxt = "BUY NOW";  callCol = ARGB(255,  70, 235, 155); }
+         else if(d < 0) { callTxt = "SELL NOW"; callCol = ARGB(255, 255,  95,  90); }
+         else           { callTxt = "READY - neither side is cheaper yet";
+                          callCol = ARGB(255, 225, 200, 90); }
+
+         if(d != 0 && tickDir != 0 && tickDir != d)
+            g_stNote = (d > 0) ? "note: price still falling - the turn has not shown yet"
+                               : "note: price still rising - the turn has not shown yet";
+         else
+            g_stNote = "";
+        }
+     }
+
    int py = (int)(h * 0.76);
    g_gauge.LineAA(16, py - 10, w - 16, py - 10, ARGB(120, 70, 74, 86));
    g_gauge.FontSet("Arial Bold", fB);
-   g_gauge.TextOut(w / 2, py, g_stVerdict, (uint)(0xFF000000 | (g_stColour & 0x00FFFFFF)),
-                   TA_CENTER | TA_TOP);
-   g_gauge.FontSet("Arial", fR);
-   g_gauge.TextOut(w / 2, py + (int)(fB * 1.7), g_stSellers,
-                   ARGB(255, 226, 120, 115), TA_CENTER | TA_TOP);
-   g_gauge.TextOut(w / 2, py + (int)(fB * 1.7) + lh, g_stBuyers,
-                   ARGB(255, 120, 215, 175), TA_CENTER | TA_TOP);
+   g_gauge.FontSet("Arial Bold", (callTxt == "BUY NOW" || callTxt == "SELL NOW")
+                                 ? (int)(fB * 1.6) : fB);
+   g_gauge.TextOut(w / 2, py, callTxt, callCol, TA_CENTER | TA_TOP);
+   // TWO BARS. Longer bar = that side is moving price more easily for its volume.
+   // No sentence to parse: the eye compares two lengths in a fraction of a second.
+   int by   = py + (int)(fB * 1.7);
+   int barH = (int)(fR * 1.15);
+   int x0   = (int)(w * 0.26);                 // bars start after the labels
+   int maxW = (int)(w * 0.40);
+   double top = MathMax(g_stEffUp, g_stEffDn);
+   if(top <= 0.0) top = 1.0;
+
+   g_gauge.FontSet("Arial Bold", fR);
+   g_gauge.TextOut(x0 - 12, by, "SELLERS", ARGB(255, 226, 120, 115), TA_RIGHT | TA_TOP);
+   g_gauge.TextOut(x0 - 12, by + lh, "BUYERS", ARGB(255, 120, 215, 175), TA_RIGHT | TA_TOP);
+
+   int wDn = (int)(maxW * g_stEffDn / top);
+   int wUp = (int)(maxW * g_stEffUp / top);
+   g_gauge.FillRectangle(x0, by + 2, x0 + MathMax(wDn, 2), by + barH,
+                         ARGB(255, 214, 69, 65));
+   g_gauge.FillRectangle(x0, by + lh + 2, x0 + MathMax(wUp, 2), by + lh + barH,
+                         ARGB(255, 46, 170, 122));
+
+   g_gauge.FontSet("Arial Bold", fR);
+   g_gauge.TextOut(x0 + maxW + 14, by, g_stDnWord,
+                   (uint)(0xFF000000 | (g_stDnCol & 0x00FFFFFF)), TA_LEFT | TA_TOP);
+   g_gauge.TextOut(x0 + maxW + 14, by + lh, g_stUpWord,
+                   (uint)(0xFF000000 | (g_stUpCol & 0x00FFFFFF)), TA_LEFT | TA_TOP);
    g_gauge.FontSet("Arial", fN);
-   g_gauge.TextOut(w / 2, py + (int)(fB * 1.7) + lh * 2, g_stNeed,
-                   ARGB(255, 180, 186, 196), TA_CENTER | TA_TOP);
+   g_gauge.TextOut(w / 2, by - (int)(fN * 1.5),
+                   "how much ground each side is getting for its volume  (longer = easier)",
+                   ARGB(255, 150, 156, 166), TA_CENTER | TA_TOP);
+   g_gauge.FontSet("Arial", fN);
+   g_gauge.TextOut(w / 2, py + (int)(fB * 1.7) + lh * 2,
+                   (g_stNote != "") ? g_stNote : g_stNeed,
+                   (g_stNote != "") ? ARGB(255, 225, 200, 90) : ARGB(255, 180, 186, 196),
+                   TA_CENTER | TA_TOP);
 
    g_gauge.FontSet("Arial Bold", 14 * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(w / 2, 8, "IMBALANCE - price gained per unit of effort",
@@ -896,10 +1205,24 @@ void Narrate(const int shift)
       edge, aVol / volAvg, net / spAvg,
       missing == 0 ? "GO" : why);
 
-   g_stSellers = StringFormat("SELLERS spent %.0f volume and got %.2f of ground  (%.2f per 100)",
-                              dnV, dnP, effDn * 100.0);
-   g_stBuyers  = StringFormat("BUYERS  spent %.0f volume and got %.2f of ground  (%.2f per 100)",
-                              upV, upP, effUp * 100.0);
+   g_stEffDn = effDn * 100.0;
+   g_stEffUp = effUp * 100.0;
+
+   // the same two numbers, measured over the PREVIOUS stretch of the same length
+   double pUpP = 0.0, pDnP = 0.0, pUpV = 0.0, pDnV = 0.0;
+   for(int k = shift + InpSideBars; k < shift + InpSideBars * 2; k++)
+     {
+      double b2 = Body(k), v2 = BarVolume(k);
+      if(v2 <= 0.0) continue;
+      double a2 = (InpSideMeasure == 1) ? Spread(k) : MathAbs(b2);
+      if(b2 > 0)      { pUpP += a2; pUpV += v2; }
+      else if(b2 < 0) { pDnP += a2; pDnV += v2; }
+     }
+   double pEffUp = (pUpV > 0.0) ? pUpP / pUpV * 100.0 : 0.0;
+   double pEffDn = (pDnV > 0.0) ? pDnP / pDnV * 100.0 : 0.0;
+
+   g_stDnWord = SideWord(g_stEffDn, pEffDn, g_stDnCol, true);
+   g_stUpWord = SideWord(g_stEffUp, pEffUp, g_stUpCol, false);
    if(missing == 0)
      {
       g_stVerdict = StringFormat("READY - every condition met for a %s", dir > 0 ? "BUY" : "SELL");
