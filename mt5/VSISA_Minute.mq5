@@ -68,7 +68,7 @@
 //|  fills may promote a default.                                      |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan"
-#property version   "1.55"
+#property version   "1.58"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -303,7 +303,7 @@ int OnInit()
             "is one bad minute away from giving back a week.");
       return(INIT_PARAMETERS_INCORRECT);
      }
-   PrintFormat("[VSISA_MIN] v1.55 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
+   PrintFormat("[VSISA_MIN] v1.58 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
                "release<=%.2fx | confirm %d | hold %d bar(s) | tp %d | stop %d | day stop %.0f | %s",
                InpAbsorbVol, InpAbsorbBars, InpAbsorbStuck, InpLegMin, InpReleaseVol,
                InpConfirmBars, InpHoldBars, InpTargetPts, InpStopPts, InpDayLossStop,
@@ -740,7 +740,7 @@ void GaugeCreate()
   {
    if(!InpGauge) return;
    int w = InpGaugeDual ? (int)(InpGaugeSize * 1.92) : InpGaugeSize;
-   int h = (int)(InpGaugeSize * 1.22) + (MathMax(80, InpFontScale) - 100) * InpGaugeSize / 260;
+   int h = (int)(InpGaugeSize * 1.46) + (MathMax(80, InpFontScale) - 100) * InpGaugeSize / 260;
    if(!g_gauge.CreateBitmapLabel("vsisa_gauge", InpGaugeX, InpGaugeY, w, h,
                                  COLOR_FORMAT_ARGB_NORMALIZE))
      { Print("[VSISA_MIN] gauge could not be created"); return; }
@@ -861,18 +861,108 @@ double ImbalanceStrength(double &loudOut, double &stuckOut, double &gapOut)
 
    double net = MathAbs(g_ovClose[g_ovN - 1] - g_ovOpen[from]);
 
-   double loud  = volNow / volBase;
-   double stuck = net / (rngBase * InpMeterBars);
+//  RECALIBRATED 2026-09-18. The first formula scored a total imbalance at 26%:
+//  "the left dial for imbalance strength said nothing here yet even when the right one
+//  kept saying buyers meet no resistance" - with sellers GONE and buyers taking 770 volume
+//  for 7.38 of ground, it read loud 0%, stuck 4%, gap 100%.
+//  Two errors. It demanded a LOUD fight, when one side simply vanishing is every bit as
+//  strong a signal. And STUCK punished price for moving - so the score collapsed at the
+//  very moment the imbalance resolved, which is backwards for an instrument meant to say
+//  "now". The three parts are now the three ways an imbalance is actually strong:
+//
+//    GAP    one side gets far more ground per unit of volume   (who is winning)
+//    SHARE  ...and the other side has largely stopped trading  (how one-sided)
+//    PUSH   ...with real volume behind it, not a dead tape     (conviction)
    double effUp = (upV > 0.0) ? upP / upV : 0.0;
    double effDn = (dnV > 0.0) ? dnP / dnV : 0.0;
    double gap   = (effUp + effDn > 0.0)
                   ? MathAbs(effUp - effDn) / (effUp + effDn) : 0.0;
 
-   loudOut  = MathMin(1.0, MathMax(0.0, (loud - 0.80) / 0.80));
-   stuckOut = MathMin(1.0, MathMax(0.0, 1.0 - stuck / 0.60));
-   gapOut   = MathMin(1.0, gap / 0.60);
+   double winV  = (effUp >= effDn) ? upV : dnV;
+   double loseV = (effUp >= effDn) ? dnV : upV;
+   double share = (winV + loseV > 0.0) ? winV / (winV + loseV) : 0.5;
+   double push  = volNow / volBase;
 
-   return(MathMin(1.0, loudOut * 0.40 + stuckOut * 0.35 + gapOut * 0.25));
+   gapOut   = MathMin(1.0, gap / 0.60);                              // 0.60+ = total
+   stuckOut = MathMin(1.0, MathMax(0.0, (share - 0.50) * 2.0));      // one-sidedness
+   loudOut  = MathMin(1.0, MathMax(0.0, (push - 0.70) / 0.60));      // 1.30x = full
+
+   return(MathMin(1.0, gapOut * 0.45 + stuckOut * 0.30 + loudOut * 0.25));
+  }
+
+//+------------------------------------------------------------------+
+//| WHICH STAGE OF THE SETUP ARE WE IN?                               |
+//|                                                                   |
+//| Zee, 2026-09-18: "we classify our strategy into two things:       |
+//|   Selling campaign (high volume red candles)                      |
+//|   Low volume reaction Candle                                      |
+//|   Price moving up on low volume candles                           |
+//|  beneath the dials maybe we can show which stage of the setup     |
+//|  we're in right now."                                             |
+//|                                                                   |
+//| The dials say how strong and which way; this says HOW FAR ALONG,  |
+//| which is the part that tells him whether to get ready or to act.  |
+//| Mirrored for the short side: a BUYING campaign, a low-volume       |
+//| reaction, then price sliding on low volume.                       |
+//|                                                                   |
+//| Returns 0 nothing · 1 campaign · 2 reaction · 3 moving away.      |
+//| `dir` is the direction the SETUP points (campaign down -> buy).   |
+//+------------------------------------------------------------------+
+int SetupStage(int &dir, double &campVol, int &campLen)
+  {
+   dir = 0; campVol = 0.0; campLen = 0;
+   if(g_ovN < 26) return(0);
+
+   int last = g_ovN - 1;
+
+   // the normal to judge "heavy" against
+   double base = 0.0; int nb = 0;
+   for(int i = g_ovN - 26; i < g_ovN - 6; i++) { base += g_ovVol[i]; nb++; }
+   if(nb <= 0 || base <= 0.0) return(0);
+   base /= nb;
+
+   // 1. THE CAMPAIGN - a run of same-direction bars on heavy volume, somewhere in the
+   //    last dozen minutes. Walk back from the newest bar looking for where it ended.
+   int campEnd = -1, campDir = 0;
+   for(int e = last; e >= last - 9 && e >= 3; e--)
+     {
+      int d = (g_ovClose[e] > g_ovOpen[e]) ? 1 : ((g_ovClose[e] < g_ovOpen[e]) ? -1 : 0);
+      if(d == 0) continue;
+      int len = 0; double vsum = 0.0;
+      for(int k = e; k >= 0 && len < 8; k--)
+        {
+         int dk = (g_ovClose[k] > g_ovOpen[k]) ? 1 : ((g_ovClose[k] < g_ovOpen[k]) ? -1 : 0);
+         if(dk != d) break;
+         vsum += g_ovVol[k]; len++;
+        }
+      if(len >= 2 && (vsum / len) >= base * 1.15)
+        { campEnd = e; campDir = d; campVol = vsum / len; campLen = len; break; }
+     }
+   if(campEnd < 0) return(0);
+
+   dir = -campDir;                       // a SELLING campaign sets up a BUY
+
+   // 2. THE REACTION - after the campaign, a quiet bar that stops going its way
+   int react = -1;
+   for(int i = campEnd + 1; i <= last; i++)
+     {
+      if(g_ovVol[i] <= campVol * InpReleaseVol)
+        {
+         int di = (g_ovClose[i] > g_ovOpen[i]) ? 1 : ((g_ovClose[i] < g_ovOpen[i]) ? -1 : 0);
+         if(di != campDir) { react = i; break; }
+        }
+     }
+   if(react < 0) return(1);
+   if(react == last) return(2);
+
+   // 3. MOVING AWAY - price continuing against the campaign, still on light volume
+   int moved = 0;
+   for(int i = react + 1; i <= last; i++)
+     {
+      int di = (g_ovClose[i] > g_ovOpen[i]) ? 1 : ((g_ovClose[i] < g_ovOpen[i]) ? -1 : 0);
+      if(di == dir && g_ovVol[i] <= campVol) moved++;
+     }
+   return(moved > 0 ? 3 : 2);
   }
 
 string StrengthWords(const double st, uint &col)
@@ -984,10 +1074,10 @@ void GaugeDraw()
    g_gauge.Erase(ARGB(220, 18, 20, 26));
    g_gauge.Rectangle(0, 0, w - 1, h - 1, ARGB(255, 60, 64, 76));
 
-   int cy = (int)(h * 0.53);
+   int cy = (int)(h * 0.52);
    if(InpGaugeDual)
      {
-      int R = (int)MathMin(w * 0.225, h * 0.40);
+      int R = (int)MathMin(w * 0.225, h * 0.30);
       double lo, stk, gp;
       double strength = ImbalanceStrength(lo, stk, gp);
 
@@ -1003,8 +1093,8 @@ void GaugeDraw()
       DrawDial((int)(w * 0.26), cy, R, strength * 2.0 - 1.0,
                "IMBALANCE STRENGTH (volume)",
                (age < 0) ? "NO DATA" : (stale ? StringFormat("STALE %.0f min", age)
-                                      : StringFormat("loud %.0f%%   stuck %.0f%%   gap %.0f%%",
-                                                     lo * 100, stk * 100, gp * 100)),
+                                      : StringFormat("gap %.0f%%   one-sided %.0f%%   push %.0f%%",
+                                                     gp * 100, stk * 100, lo * 100)),
                stale ? ARGB(255, 230, 120, 60) : ARGB(255, 150, 155, 165), true, strength);
 //  THE RIGHT DIAL IS THE IMBALANCE'S OWN DIRECTION, not the tape.
 //  Zee, 2026-09-18: "instead of the dial on left saying direction now (live ticks), lets
@@ -1020,7 +1110,7 @@ void GaugeDraw()
       DrawDial((int)(w * 0.74), cy, R, dirImb, "IMBALANCE SUPPORTS",
                StringFormat("live tape %+.2f  ·  %d ticks", imbTick, ticks),
                ARGB(255, 150, 155, 165), false, 0.0);
-      g_gauge.LineAA(w / 2, 24, w / 2, (int)(h * 0.74), ARGB(120, 70, 74, 86));
+      g_gauge.LineAA(w / 2, (int)(h * 0.22), w / 2, (int)(h * 0.66), ARGB(120, 70, 74, 86));
      }
    else
      {
@@ -1080,7 +1170,7 @@ void GaugeDraw()
         }
      }
 
-   int py = (int)(h * 0.76);
+   int py = (int)(h * 0.70);
    g_gauge.LineAA(16, py - 10, w - 16, py - 10, ARGB(120, 70, 74, 86));
    g_gauge.FontSet("Arial Bold", fB);
    g_gauge.FontSet("Arial Bold", (callTxt == "BUY NOW" || callTxt == "SELL NOW")
@@ -1120,6 +1210,37 @@ void GaugeDraw()
                    (g_stNote != "") ? g_stNote : g_stNeed,
                    (g_stNote != "") ? ARGB(255, 225, 200, 90) : ARGB(255, 180, 186, 196),
                    TA_CENTER | TA_TOP);
+
+   // --- the three stages of the setup, left to right
+   int sdir = 0, sclen = 0; double scvol = 0.0;
+   int stage = SetupStage(sdir, scvol, sclen);
+   string s1 = (sdir > 0) ? "1. SELLING CAMPAIGN" : ((sdir < 0) ? "1. BUYING CAMPAIGN"
+                                                                : "1. CAMPAIGN");
+   string s2 = "2. QUIET REACTION";
+   string s3 = (sdir > 0) ? "3. RISING ON LOW VOLUME" : ((sdir < 0) ? "3. FALLING ON LOW VOLUME"
+                                                                   : "3. MOVING AWAY");
+   int sy = (int)(fN * 2.6);            // just under the title, above the dials
+   int col1 = (int)(w * 0.19), col2 = (int)(w * 0.50), col3 = (int)(w * 0.81);
+   g_gauge.FontSet("Arial Bold", (int)(fN * 1.15));
+   uint dim = ARGB(255, 110, 116, 128), donec = ARGB(255, 120, 190, 150),
+        nowc = ARGB(255, 255, 220, 110);
+   g_gauge.TextOut(col1, sy, s1, (stage >= 2) ? donec : ((stage == 1) ? nowc : dim),
+                   TA_CENTER | TA_TOP);
+   g_gauge.TextOut(col2, sy, s2, (stage >= 3) ? donec : ((stage == 2) ? nowc : dim),
+                   TA_CENTER | TA_TOP);
+   g_gauge.TextOut(col3, sy, s3, (stage == 3) ? nowc : dim, TA_CENTER | TA_TOP);
+   g_gauge.FontSet("Arial", (int)(fN * 0.92));
+   string stageNote;
+   if(stage == 0)      stageNote = "no campaign yet - nothing to set up from";
+   else if(stage == 1) stageNote = StringFormat("campaign running: %d bars at %.0f volume - waiting for it to stall",
+                                                sclen, scvol);
+   else if(stage == 2) stageNote = "the quiet reaction has appeared - this is the moment";
+   else                stageNote = (sdir > 0) ? "moving up on light volume - the setup is playing out"
+                                              : "moving down on light volume - the setup is playing out";
+   g_gauge.TextOut(w / 2, sy + (int)(fN * 1.8), stageNote,
+                   ARGB(255, 160, 166, 176), TA_CENTER | TA_TOP);
+   g_gauge.LineAA(16, sy + (int)(fN * 3.3), w - 16, sy + (int)(fN * 3.3),
+                  ARGB(120, 70, 74, 86));
 
    g_gauge.FontSet("Arial Bold", 14 * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(w / 2, 8, "IMBALANCE - price gained per unit of effort",
