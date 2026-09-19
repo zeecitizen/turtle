@@ -101,17 +101,24 @@ plot(showAvg ? volAvgN : na, color = color.new(color.silver, 40), title = "avera
 //  cannot repaint a bar it has already drawn, so a box is stretched back over the whole
 //  run instead. It appears the moment the run reaches minRun and extends as the run
 //  grows, so it is right live as well as in history.
+//  IT MUST WRAP THE BARS, NOT BISECT THEM. Zee: "the box now starts its right vertical
+//  line at mid second bar and draws till mid first bar.. maybe the box needs to be around
+//  the bars instead of cutting them at mid." Exactly so - bar_index addresses the CENTRE
+//  of a candle, so an index-anchored box always slices the first and last one in half.
+//  Time coordinates do not have that problem: a bar spans from its own open time to the
+//  next one, so the box runs from the first bar's open to the END of the current bar.
+barMs = timeframe.in_seconds() * 1000
 var box campBox = na
 var int campStart = na
 if isCampaign
     lo = bar_index - runLen + 1
     if na(campBox) or campStart != lo
         campStart := lo
-        campBox := box.new(lo, runPeak, bar_index, 0, border_color = campCol, border_width = 2, bgcolor = color.new(campCol, 82))
+        campBox := box.new(time[runLen - 1], runPeak, time + barMs, 0, xloc = xloc.bar_time, border_color = campCol, border_width = 2, bgcolor = color.new(campCol, 88))
     else
-        box.set_right(campBox, bar_index)
+        box.set_right(campBox, time + barMs)
         box.set_top(campBox, runPeak)
-        box.set_bgcolor(campBox, color.new(campCol, 82))
+        box.set_bgcolor(campBox, color.new(campCol, 88))
         box.set_border_color(campBox, campCol)
 else
     campBox := na
