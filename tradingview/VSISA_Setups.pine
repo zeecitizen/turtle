@@ -435,8 +435,22 @@ if buySig or sellSig
     //  LAW LINE 156, the full definition: "aggressive selling: supply has hit + has a
     //  wick + closing strong bearish". All three present is the strongest reading the
     //  document offers, so it gets said in those words rather than left to be inferred.
-    aggressive = hasWick and strongClose
-    line4 = aggressive ? (buySig ? "\nAGGRESSIVE BUYING - wick below and closed on its high" : "\nAGGRESSIVE SELLING - wick above and closed on its low") : (strongClose ? (buySig ? "\nstrong bullish closing" : "\nstrong bearish closing") : "")
+    //  AGGRESSIVE SELLING, on the exact conditions Zee set out on 2026-09-20: "ONLY if an
+    //  end of rising market occurs.. then if the reaction is bearish BUT IT HAS A LARGE
+    //  VOLUME (almost equal to the candle before it).. then if the bearish reaction candle
+    //  has a wick on top of it. then we can label it aggressive selling".
+    //  That is line 113 - "because small blue candle has big volume (end of rising market
+    //  type) + next bar with wick on top -> so means this big red volume is of AGGRESSIVE
+    //  SELLING and not of demand" - and line 250 says the same.
+    //  THE LOUD VOLUME IS THE POINT. A quiet reaction is already the ideal case and needs
+    //  no rescuing; this names the OTHER case, where the reaction is as heavy as the bar
+    //  before it and would look like demand without the capping and the wick. My previous
+    //  version used line 156's wording (wick + strong close) and ignored the volume
+    //  condition, so it was calling quiet reactions aggressive too.
+    loudReact  = not quiet
+    cappedBefore = eorNow or eorHere
+    aggressive = loudReact and cappedBefore and hasWick
+    line4 = aggressive ? (buySig ? "\nAGGRESSIVE BUYING - loud reaction, but capped before and wicked below" : "\nAGGRESSIVE SELLING - loud reaction, but capped before and wicked above") : (strongClose ? (buySig ? "\nstrong bullish closing" : "\nstrong bearish closing") : "")
     //  STRONG IMBALANCE - the reaction did not just qualify as quiet, it collapsed. The
     //  other side has stopped showing up, which is line 98's ideal case.
     volRatio = quietBase > 0 ? volume / quietBase * 100 : 100
