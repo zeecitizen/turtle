@@ -51,7 +51,6 @@ needCont = input.bool(true, "Require the next bar to continue on light volume", 
 grpD   = "Drawing"
 showCamp = input.bool(true, "Shade the campaign", group = grpD)
 showRun  = input.bool(false, "Arrow every bar in a 2+ run", group = grpD)
-paintBar = input.bool(true, "Colour the candles of a run", group = grpD)
 showAll  = input.bool(true, "Mark reactions that never confirmed", group = grpD)
 showTbl  = input.bool(true, "Show the counter", group = grpD)
 
@@ -116,8 +115,10 @@ inRunNow = runNow >= minRun
 campNow  = inRunNow and heavyNow
 
 // ---- drawing ---------------------------------------------------------------------------
-runCol = dir < 0 ? color.red : color.teal
-barcolor(paintBar and campNow ? runCol : na)
+// NO barcolor() HERE. Zee: "can u remove all colors from the candle bodies.. to retain
+// original candle colors". The candles keep TradingView's own colouring; the campaign is
+// already carried by the background shade and by the volume pane, so repainting the bodies
+// was a third copy of the same fact and it buried the price action underneath it.
 
 plotshape(showRun and inRunNow and dir < 0, title = "in a selling run", style = shape.triangledown, location = location.abovebar, size = size.tiny, color = color.new(color.red, 20))
 plotshape(showRun and inRunNow and dir > 0, title = "in a buying run", style = shape.triangleup, location = location.belowbar, size = size.tiny, color = color.new(color.teal, 20))
