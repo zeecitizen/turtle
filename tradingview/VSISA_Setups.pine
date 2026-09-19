@@ -181,7 +181,7 @@ if buySig or sellSig
     warn = not hasWick
     side = buySig ? "lower" : "upper"
     base = buySig ? "BUY SETUP" : "SELL SETUP"
-    flag = warn ? "  [!]" : ""
+    flag = warn ? "  ⚠️" : ""
     line2 = side + " wick " + str.tostring(wickPct, "#") + "%  -  " + wickMeaning
     txt  = base + flag + "\n" + line2
     bCol = warn ? color.new(color.orange, 0) : (buySig ? color.new(color.teal, 0) : color.new(color.red, 0))
