@@ -12,7 +12,12 @@
 //    dim grey     a bar on its own - no run
 //    amber        part of a run of 2+ the same way, but not heavy enough to be a campaign
 //    RED / TEAL   a campaign: the run is 2+ AND its loudest bar clears the threshold
-//    white dot    the reaction - the first bar back the other way that shows absorption
+//    "QUIET"      the reaction, qualified by low volume
+//    "WICK"       the reaction, qualified by a rejection wick on a LOUD bar
+//
+//  Words, not symbols. Zee: "instead of diamonds can u write labels.. because its hard
+//  to track so many colors / diamonds etc". A shape has to be remembered; a word does
+//  not, and in a fast session that difference is the whole point of the display.
 //
 //  Heavy is measured the same two ways as the setups script, because they are different
 //  tests and the choice matters: AVERAGE of the last N, or PEAK (the run's loudest bar
@@ -21,7 +26,8 @@
 //  TradingView convention throughout: a bar is buying when close > open. MT5 colours
 //  volume by comparison with the PREVIOUS bar, which says nothing about direction.
 // =====================================================================================
-indicator("VSISA Volume", overlay = false, format = format.volume, precision = 0)
+indicator("VSISA Volume", overlay = false, format = format.volume, precision = 0,
+          max_labels_count = 500)
 
 minRun = input.int(2,    "Minimum bars to call it a run", minval = 1)
 maxRun = input.int(8,    "Most bars to count back",        minval = 2)
@@ -87,11 +93,8 @@ col = isCampaign ? (dir < 0 ? color.new(color.red, 0) : color.new(color.teal, 0)
 plot(volume, style = plot.style_columns, color = col, title = "volume")
 plot(showAvg ? volAvgN : na, color = color.new(color.silver, 40), title = "average")
 
-plotshape(isReaction and quiet, title = "reaction (quiet)", style = shape.circle,
-     location = location.top, size = size.tiny, color = color.new(color.yellow, 0))
-plotshape(isReaction and not quiet, title = "reaction (wick)", style = shape.diamond,
-     location = location.top, size = size.tiny, color = color.new(color.orange, 0))
-
-// --- the run length, so it is readable at a glance
-plotchar(inRun and runLen >= 2, title = "run length", char = "",
-     location = location.bottom, size = size.tiny, color = color.new(color.white, 0))
+if isReaction
+    label.new(bar_index, volume, quiet ? "QUIET" : "WICK",
+         style = label.style_label_down,
+         color = quiet ? color.new(color.yellow, 10) : color.new(color.orange, 10),
+         textcolor = color.black, size = size.small)
