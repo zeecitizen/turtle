@@ -35,8 +35,7 @@ indicator("VSISA Setups", overlay = true, max_labels_count = 500, max_boxes_coun
 grpC   = "Campaign"
 minRun = input.int(2,    "Campaign: minimum bars in the run", minval = 1, group = grpC)
 maxRun = input.int(8,    "Campaign: most bars to count back", minval = 2, group = grpC)
-method = input.string("PEAK (like the EA)", "Heavy volume measured against",
-         options = ["AVERAGE of last N", "PEAK (like the EA)"], group = grpC)
+method = input.string("PEAK (like the EA)", "Heavy volume measured against", options = ["AVERAGE of last N", "PEAK (like the EA)"], group = grpC)
 lookN  = input.int(20,   "N bars for that yardstick", minval = 5, group = grpC)
 avgX   = input.float(1.15, "AVERAGE method: run avg >= x average", step = 0.05, group = grpC)
 pkX    = input.float(0.70, "PEAK method: run's loudest >= x peak",  step = 0.05, group = grpC)
@@ -79,8 +78,7 @@ campAvg = runLen > 0 ? runVol / runLen : 0.0
 // ---- is it heavy? ---------------------------------------------------------------------
 volAvgN  = ta.sma(volume, lookN)[1]
 volPeakN = ta.highest(volume, lookN)[1]
-heavy = method == "AVERAGE of last N" ? (campAvg >= volAvgN * avgX)
-                                      : (runPeak >= volPeakN * pkX)
+heavy = method == "AVERAGE of last N" ? campAvg >= volAvgN * avgX : runPeak >= volPeakN * pkX
 isCampaign = runLen >= minRun and heavy and campAvg > 0
 
 // ---- the reaction: THIS bar, opposite to the campaign ---------------------------------
@@ -94,9 +92,8 @@ absorbed = isCampaign and (quiet or wicked)
 
 // ---- confirmation arrives on the NEXT bar ---------------------------------------------
 contDir  = -runDir                                   // a selling campaign sets up a BUY
-confirmed = absorbed[1] and needCont
-       and (contDir[1] > 0 ? close > open : close < open)
-       and volume <= campAvg[1]
+contUp    = contDir[1] > 0 ? close > open : close < open
+confirmed = absorbed[1] and needCont and contUp and volume <= campAvg[1]
 fired = needCont ? confirmed : absorbed
 
 // ---- the run ending ON THIS BAR, so it can be marked live rather than in hindsight ----
@@ -112,43 +109,35 @@ if dir != 0
         volNow  += volume[k]
         peakNow := math.max(peakNow, volume[k])
 avgNow   = runNow > 0 ? volNow / runNow : 0.0
-heavyNow = method == "AVERAGE of last N" ? (avgNow >= ta.sma(volume, lookN)[runNow] * avgX)
-                                         : (peakNow >= ta.highest(volume, lookN)[runNow] * pkX)
+smaNow  = ta.sma(volume, lookN)
+hiNow   = ta.highest(volume, lookN)
+heavyNow = method == "AVERAGE of last N" ? avgNow >= smaNow[runNow] * avgX : peakNow >= hiNow[runNow] * pkX
 inRunNow = runNow >= minRun
 campNow  = inRunNow and heavyNow
 
 // ---- drawing ---------------------------------------------------------------------------
-barcolor(paintBar and campNow ? (dir < 0 ? color.red : color.teal)
-       : paintBar and inRunNow ? color.orange : na)
+runCol = dir < 0 ? color.red : color.teal
+barcolor(paintBar and campNow ? runCol : na)
 
-plotshape(showRun and inRunNow and dir < 0, title = "in a selling run",
-     style = shape.triangledown, location = location.abovebar, size = size.tiny,
-     color = campNow ? color.new(color.red, 0) : color.new(color.orange, 45))
-plotshape(showRun and inRunNow and dir > 0, title = "in a buying run",
-     style = shape.triangleup, location = location.belowbar, size = size.tiny,
-     color = campNow ? color.new(color.teal, 0) : color.new(color.orange, 45))
+plotshape(showRun and inRunNow and dir < 0, title = "in a selling run", style = shape.triangledown, location = location.abovebar, size = size.tiny, color = color.new(color.red, 20))
+plotshape(showRun and inRunNow and dir > 0, title = "in a buying run", style = shape.triangleup, location = location.belowbar, size = size.tiny, color = color.new(color.teal, 20))
 
-bgcolor(showCamp and isCampaign ? (runDir < 0 ? color.new(color.red, 88)
-                                              : color.new(color.teal, 88)) : na)
+bgCol = runDir < 0 ? color.new(color.red, 88) : color.new(color.teal, 88)
+bgcolor(showCamp and isCampaign ? bgCol : na)
 
 // WORDS, NOT SYMBOLS. Zee: "instead of diamonds can u write labels.. because its hard to
 // track so many colors / diamonds etc". A shape has to be remembered; a word does not.
 if showAll and absorbed
-    label.new(bar_index, runDir < 0 ? low : high,
-         quiet ? "reaction: QUIET" : "reaction: WICK",
-         style = runDir < 0 ? label.style_label_up : label.style_label_down,
-         color = quiet ? color.new(color.yellow, 15) : color.new(color.orange, 15),
-         textcolor = color.black, size = size.small)
+    rLab = quiet ? "reaction: QUIET" : "reaction: WICK"
+    rCol = quiet ? color.new(color.yellow, 15) : color.new(color.orange, 15)
+    rSty = runDir < 0 ? label.style_label_up : label.style_label_down
+    label.new(bar_index, runDir < 0 ? low : high, rLab, style = rSty, color = rCol, textcolor = color.black, size = size.small)
 
 buySig  = fired and (needCont ? contDir[1] > 0 : contDir > 0)
 sellSig = fired and (needCont ? contDir[1] < 0 : contDir < 0)
 
-plotshape(buySig,  title = "BUY setup",  style = shape.labelup,
-     location = location.belowbar, size = size.normal,
-     color = color.new(color.teal, 0), text = "BUY SETUP", textcolor = color.white)
-plotshape(sellSig, title = "SELL setup", style = shape.labeldown,
-     location = location.abovebar, size = size.normal,
-     color = color.new(color.red, 0),  text = "SELL SETUP", textcolor = color.white)
+plotshape(buySig, title = "BUY setup", style = shape.labelup, location = location.belowbar, size = size.normal, color = color.new(color.teal, 0), text = "BUY SETUP", textcolor = color.white)
+plotshape(sellSig, title = "SELL setup", style = shape.labeldown, location = location.abovebar, size = size.normal, color = color.new(color.red, 0), text = "SELL SETUP", textcolor = color.white)
 
 alertcondition(buySig,  "VSISA buy setup",  "VSISA: quiet reaction after a selling campaign")
 alertcondition(sellSig, "VSISA sell setup", "VSISA: quiet reaction after a buying campaign")
