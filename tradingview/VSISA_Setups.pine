@@ -143,6 +143,14 @@ grpX   = "Confirmation"
 //  division of labour as the meter: the machine finds them, he decides.
 needCont = input.bool(false, "Require the next bar to continue on light volume", group = grpX)
 
+grpW   = "Why not?"
+//  Zee, 2026-09-20: "i still dont see the 12:10 setup labelled". Rather than keep
+//  diagnosing from my copy of the OANDA table - which may not be the bar he is looking at
+//  at all - this puts the verdict on HIS chart. Every bar that turns against a run of
+//  minRun or more, but does not become a setup, says which gate refused it and with what
+//  numbers. A disagreement then points at a specific figure instead of a mystery.
+showWhy = input.bool(false, "Explain every bar that ALMOST qualified", group = grpW)
+
 grpD   = "Drawing"
 showRun  = input.bool(false, "Arrow every bar in a 2+ run", group = grpD)
 showAll  = input.bool(true, "Mark reactions that never confirmed (only when confirmation is ON)", group = grpD)
@@ -503,6 +511,19 @@ if buySig or sellSig
     bCol = warn ? color.new(color.orange, 0) : (buySig ? color.new(color.teal, 0) : color.new(color.red, 0))
     bSty = buySig ? label.style_label_up : label.style_label_down
     label.new(bar_index, buySig ? low : high, txt, style = bSty, color = bCol, textcolor = color.white, size = size.normal)
+
+// ---- WHY NOT? ---------------------------------------------------------------------------
+//  Only on bars that turned against a run of minRun or more - i.e. the ones that had a
+//  chance. Shows the actual numbers behind every gate, so a bar that should have marked
+//  can be argued about with figures rather than guessed at.
+if showWhy and runLen >= minRun and not fired
+    wPct  = rng > 0 ? wick / rng * 100 : 0
+    vPct  = quietBase > 0 ? volume / quietBase * 100 : 0
+    peakPct = volPeakN > 0 ? runPeak / volPeakN * 100 : 0
+    reason = not isCampaign ? "campaign NOT heavy" : (not quiet and not wicked) ? "reaction neither quiet nor wicked" : (not quiet and wicked and not cappedRun) ? "loud + wicked, but NO capping in the campaign" : "?"
+    wTxt = "no setup: " + reason
+    wSub = "campaign " + str.tostring(runLen) + " bars, peak " + str.tostring(peakPct, "#") + "% of the " + str.tostring(lookN) + "-bar high (need " + str.tostring(pkX * 100, "#") + "%)" + "\nreaction vol " + str.tostring(vPct, "#") + "% of ref (quiet needs <=" + str.tostring(relX * 100, "#") + "%)" + "\nwick " + str.tostring(wPct, "#") + "% (needs " + str.tostring(wickX * 100, "#") + "%)   capped in campaign: " + (cappedRun ? "yes" : "no")
+    label.new(bar_index, runDir < 0 ? low : high, wTxt + "\n" + wSub, style = runDir < 0 ? label.style_label_up : label.style_label_down, color = color.new(color.gray, 25), textcolor = color.white, size = size.tiny)
 
 alertcondition(buySig,  "VSISA buy setup",  "VSISA: quiet reaction after a selling campaign")
 alertcondition(sellSig, "VSISA sell setup", "VSISA: quiet reaction after a buying campaign")
