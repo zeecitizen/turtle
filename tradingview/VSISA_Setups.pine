@@ -181,6 +181,22 @@ avgRange = ta.sma(high - low, lookN)
 volSma   = ta.sma(volume, lookN)
 prevCapped = ((high[1] - low[1]) <= avgRange[1] * eorSpread or math.abs(close[1] - open[1]) <= avgRange[1] * eorBody) and volume[1] >= volSma[1] * eorVol
 
+//  ...AND ANYWHERE ELSE IN THE CAMPAIGN, not only on its last candle.
+//  Zee, 2026-09-20: "but the second last bar before the 12:10 AM bar was capping.. can u
+//  check?" He was right and the rule was too narrow. On 18 Sep 22:10 the campaign ran
+//  21:55 / 22:00 / 22:05, and 21:55 is capped on the script's own thresholds - spread 0.67
+//  of average on 1.31x volume - but sat three bars back where nothing looked. The supply
+//  that caps a rise does not have to land on the very last candle before the turn.
+//  prevCapped is kept separately because line 250's end-of-rising SEQUENCE specifically
+//  needs the capped bar to be the last one, with the reaction right after it.
+cappedRun = false
+if runLen > 0
+    for k = 1 to runLen
+        isCap = ((high[k] - low[k]) <= avgRange[k] * eorSpread or math.abs(close[k] - open[k]) <= avgRange[k] * eorBody) and volume[k] >= volSma[k] * eorVol
+        if isCap
+            cappedRun := true
+            break
+
 // ---- is it heavy? ---------------------------------------------------------------------
 volAvgN  = ta.sma(volume, lookN)[1]
 volPeakN = ta.highest(volume, lookN)[1]
@@ -205,7 +221,7 @@ wicked   = useWick and rng > 0 and (wick / rng) >= wickX
 //             WAIT", and line 111 "we would not sell it".
 //  I previously let ANY wicked reaction qualify whatever its volume, which admitted loud
 //  reactions with nothing capping them - exactly the demand case the law refuses.
-loudOK   = wicked and prevCapped
+loudOK   = wicked and cappedRun
 absorbed = isCampaign and (quiet or loudOK)
 
 // ---- confirmation arrives on the NEXT bar ---------------------------------------------
@@ -471,7 +487,7 @@ if buySig or sellSig
     //  version used line 156's wording (wick + strong close) and ignored the volume
     //  condition, so it was calling quiet reactions aggressive too.
     loudReact  = not quiet
-    cappedBefore = eorNow or eorHere
+    cappedBefore = eorNow or eorHere or cappedRun
     aggressive = loudReact and cappedBefore and hasWick
     line4 = aggressive ? (buySig ? "\nAGGRESSIVE BUYING - loud reaction, but capped before and wicked below" : "\nAGGRESSIVE SELLING - loud reaction, but capped before and wicked above") : (strongClose ? (buySig ? "\nstrong bullish closing" : "\nstrong bearish closing") : "")
     //  STRONG IMBALANCE - the reaction did not just qualify as quiet, it collapsed. The
