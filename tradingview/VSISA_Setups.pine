@@ -141,8 +141,23 @@ if showAll and absorbed and needCont
 buySig  = fired and (needCont ? contDir[1] > 0 : contDir > 0)
 sellSig = fired and (needCont ? contDir[1] < 0 : contDir < 0)
 
-plotshape(buySig, title = "BUY setup", style = shape.labelup, location = location.belowbar, size = size.normal, color = color.new(color.teal, 0), text = "BUY SETUP", textcolor = color.white)
-plotshape(sellSig, title = "SELL setup", style = shape.labeldown, location = location.abovebar, size = size.normal, color = color.new(color.red, 0), text = "SELL SETUP", textcolor = color.white)
+// --- THE WICK WARNING, straight out of LAWS_VSISA.md line 219:
+//  "now if this blue candle has NO WICK below it .. then it means supply is being hit..
+//   we wouldn't buy.. we hold .. a wick below means aggressive buying happened"
+//  and line 243: "bullish candle with a wick below it.. if there was no wick we'd say
+//  there's still supply".
+//  So the wick is the GOOD sign - buy orders turned the candle - and its ABSENCE is the
+//  caution. Zee asked for the warning on the wick; his own law puts it on the missing
+//  one, and the law wins. Mirrored for sells: a red reaction wants a wick on TOP, and
+//  without one "we would say we have a demand still we would wait" (line 250).
+//  The setup still prints - this only marks it as the weaker version.
+hasWick = rng > 0 and (wick / rng) >= wickX
+if buySig or sellSig
+    warn = not hasWick
+    txt  = (buySig ? "BUY SETUP" : "SELL SETUP") + (warn ? "  [!] no wick - supply may still be there" : "")
+    bCol = warn ? color.new(color.orange, 0) : (buySig ? color.new(color.teal, 0) : color.new(color.red, 0))
+    bSty = buySig ? label.style_label_up : label.style_label_down
+    label.new(bar_index, buySig ? low : high, txt, style = bSty, color = bCol, textcolor = color.white, size = size.normal)
 
 alertcondition(buySig,  "VSISA buy setup",  "VSISA: quiet reaction after a selling campaign")
 alertcondition(sellSig, "VSISA sell setup", "VSISA: quiet reaction after a buying campaign")
