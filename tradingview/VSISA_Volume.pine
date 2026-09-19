@@ -26,13 +26,11 @@
 //  TradingView convention throughout: a bar is buying when close > open. MT5 colours
 //  volume by comparison with the PREVIOUS bar, which says nothing about direction.
 // =====================================================================================
-indicator("VSISA Volume", overlay = false, format = format.volume, precision = 0,
-          max_labels_count = 500)
+indicator("VSISA Volume", overlay = false, format = format.volume, precision = 0, max_labels_count = 500)
 
 minRun = input.int(2,    "Minimum bars to call it a run", minval = 1)
 maxRun = input.int(8,    "Most bars to count back",        minval = 2)
-method = input.string("PEAK (like the EA)", "Heavy measured against",
-         options = ["AVERAGE of last N", "PEAK (like the EA)"])
+method = input.string("PEAK (like the EA)", "Heavy measured against", options = ["AVERAGE of last N", "PEAK (like the EA)"])
 lookN  = input.int(20,   "N bars for that yardstick", minval = 5)
 avgX   = input.float(1.15, "AVERAGE: run avg >= x average", step = 0.05)
 pkX    = input.float(0.70, "PEAK: run's loudest >= x peak",  step = 0.05)
@@ -58,8 +56,7 @@ campAvg = runLen > 0 ? runVol / runLen : 0.0
 
 volAvgN  = ta.sma(volume, lookN)
 volPeakN = ta.highest(volume, lookN)
-heavy = method == "AVERAGE of last N" ? (campAvg >= volAvgN[runLen] * avgX)
-                                      : (runPeak >= volPeakN[runLen] * pkX)
+heavy = method == "AVERAGE of last N" ? campAvg >= volAvgN[runLen] * avgX : runPeak >= volPeakN[runLen] * pkX
 inRun      = runLen >= minRun
 isCampaign = inRun and heavy
 
@@ -77,8 +74,7 @@ if dir != 0 and prevDir != 0 and dir != prevDir
         pVol  += volume[k]
         pPeak := math.max(pPeak, volume[k])
 pAvg = pLen > 0 ? pVol / pLen : 0.0
-pHeavy = method == "AVERAGE of last N" ? (pAvg >= volAvgN[pLen + 1] * avgX)
-                                       : (pPeak >= volPeakN[pLen + 1] * pkX)
+pHeavy = method == "AVERAGE of last N" ? pAvg >= volAvgN[pLen + 1] * avgX : pPeak >= volPeakN[pLen + 1] * pkX
 rng   = high - low
 wick  = prevDir < 0 ? (math.min(open, close) - low) : (high - math.max(open, close))
 quiet = pAvg > 0 and volume <= pAvg * relX
@@ -91,15 +87,12 @@ isReaction = pLen >= minRun and pHeavy and (quiet or wickd)
 //  The amber was "in a run but not heavy enough" - a state with no decision attached to
 //  it, so it cost attention and paid nothing back. Everything that is not one of the
 //  three things he trades is now simply dim.
-col = isReaction ? color.new(color.yellow, 0)
-    : isCampaign ? (dir < 0 ? color.new(color.red, 0) : color.new(color.teal, 0))
-    :              color.new(color.gray, 75)
+campCol = dir < 0 ? color.new(color.red, 0) : color.new(color.teal, 0)
+col = isReaction ? color.new(color.yellow, 0) : isCampaign ? campCol : color.new(color.gray, 75)
 
 plot(volume, style = plot.style_columns, color = col, title = "volume")
 plot(showAvg ? volAvgN : na, color = color.new(color.silver, 40), title = "average")
 
 if isReaction
-    label.new(bar_index, volume, quiet ? "QUIET" : "WICK",
-         style = label.style_label_down,
-         color = quiet ? color.new(color.yellow, 10) : color.new(color.orange, 10),
-         textcolor = color.black, size = size.small)
+    labCol = quiet ? color.new(color.yellow, 10) : color.new(color.orange, 10)
+    label.new(bar_index, volume, quiet ? "QUIET" : "WICK", style = label.style_label_down, color = labCol, textcolor = color.black, size = size.small)
