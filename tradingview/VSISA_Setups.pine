@@ -29,7 +29,7 @@
 //  Volume colour follows TRADINGVIEW's convention throughout: a bar is buying when
 //  close > open. Never MT5's "smaller than the previous bar".
 // =====================================================================================
-indicator("VSISA Setups", overlay = true, max_labels_count = 500, max_boxes_count = 500)
+indicator("VSISA Setups", overlay = true, max_labels_count = 500, max_boxes_count = 500, max_lines_count = 500)
 
 // ---- inputs -------------------------------------------------------------------------
 grpC   = "Campaign"
@@ -91,6 +91,19 @@ grpL   = "Last campaign candle"
 //  a buying campaign - an upper wick on its last blue candle means sellers were there.
 showLast = input.bool(true,  "Label a wick on the campaign's last candle", group = grpL)
 lastWick = input.float(0.25, "That wick >= x of its range", step = 0.05, group = grpL)
+
+grpF   = "Support / fake break"
+//  LAWS_VSISA.md line 35: "if we draw a line called SUPPORT below the LAST LOW before the
+//  reaction candle, then if our red volume candles are BREAKING DOWN BELOW the support
+//  line WITH A WICK and CLOSING ABOVE the support line, its a strong sign."
+//  Line 234: "2 bar setup + FAKE BREAK of this support + forms a wick + closing again
+//  inside support (STRONGEST)". Line 243: "previous low (support) is broken by a pinbar
+//  (wick).. strong move because fake break of support happened with a wick."
+//  The support is the last swing low before the campaign - taken here as the most recent
+//  confirmed pivot, which is what "the last low point" means on a chart.
+showSup   = input.bool(true, "Draw support / resistance and mark fake breaks", group = grpF)
+pivLeft   = input.int(3, "Bars each side that define the pivot", minval = 1, group = grpF)
+pivRight  = input.int(3, "...bars to the right (the confirmation lag)", minval = 1, group = grpF)
 
 grpS   = "Strong closing"
 //  LAWS_VSISA.md line 277: "the red candle's closing is near the low (NEAR ZERO LOWER
@@ -200,6 +213,39 @@ if showAll and absorbed and needCont
     rCol = quiet ? color.new(color.yellow, 15) : color.new(color.orange, 15)
     rSty = runDir < 0 ? label.style_label_up : label.style_label_down
     label.new(bar_index, runDir < 0 ? low : high, rLab, style = rSty, color = rCol, textcolor = color.black, size = size.small)
+
+// ---- SUPPORT / RESISTANCE, AND THE FAKE BREAK -------------------------------------------
+//  The level is the last confirmed swing low (for a selling campaign) or swing high (for a
+//  buying one) - "the horizontal line coming from the last low point", as Zee put it.
+//  A FAKE BREAK is that level pierced by a WICK and taken back before the close: line 35's
+//  "breaking down below the support line with a wick and CLOSING ABOVE the support line".
+//  It is checked on the campaign's LAST candle, which is where he asked for it, and again
+//  on the reaction itself - line 234 calls that combination the strongest case there is.
+var float supLvl = na
+var float resLvl = na
+pl = ta.pivotlow(low, pivLeft, pivRight)
+ph = ta.pivothigh(high, pivLeft, pivRight)
+if not na(pl)
+    supLvl := pl
+if not na(ph)
+    resLvl := ph
+
+lvl = runDir < 0 ? supLvl : resLvl
+//  pierced and recovered - on the campaign's last bar
+fakeLast = not na(lvl) and (runDir < 0 ? (low[1] < lvl and close[1] > lvl) : (high[1] > lvl and close[1] < lvl))
+//  ...and on the reaction bar itself
+fakeReact = not na(lvl) and (runDir < 0 ? (low < lvl and close > lvl) : (high > lvl and close < lvl))
+fakeBreak = fakeLast or fakeReact
+
+if showSup and isCampaign and fakeLast
+    fTxt = runDir < 0 ? "FAKE BREAK of support" : "FAKE BREAK of resistance"
+    fSub = runDir < 0 ? "wicked below " + str.tostring(lvl, format.mintick) + " and closed back above" : "wicked above " + str.tostring(lvl, format.mintick) + " and closed back below"
+    fCol = color.new(color.purple, 15)
+    fSty = runDir < 0 ? label.style_label_up : label.style_label_down
+    label.new(bar_index - 1, runDir < 0 ? low[1] : high[1], fTxt + "\n" + fSub, style = fSty, color = fCol, textcolor = color.white, size = size.small)
+
+if showSup and isCampaign and not na(lvl)
+    line.new(bar_index - runLen - 2, lvl, bar_index + 2, lvl, color = color.new(color.purple, 40), style = line.style_dashed, width = 1)
 
 // ---- THE CAMPAIGN'S LAST CANDLE ---------------------------------------------------------
 //  Zee, 2026-09-19: "we can label the last candle of campaign if it has a large lower wick
