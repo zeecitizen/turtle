@@ -533,7 +533,10 @@ if buySig or sellSig
     //  setup is not merely valid - the document calls it the strongest case it describes.
     line6 = fakeBreak ? (fakeReact ? "\nSTRONGER DUE TO FAKE BREAK - the reaction itself took the level back" : "\nSTRONGER DUE TO FAKE BREAK - the campaign pierced support and lost it") : ""
     line7 = engulfN >= 2 ? "\nStronger: engulfs last " + str.tostring(engulfN) : ""
-    txt  = base + flag + "\n" + line2 + line3 + line4 + line5 + line6 + line7
+    //  Named plainly, with the number, so the contradiction is visible rather than hidden
+    //  inside a colour change.
+    line8 = contraWick ? (buySig ? "\nWEAKENED: " + str.tostring(closePct, "#") + "% wick ABOVE too - supply pushed back inside this bar" : "\nWEAKENED: " + str.tostring(closePct, "#") + "% wick BELOW too - demand pushed back inside this bar") : ""
+    txt  = base + flag + "\n" + line2 + line3 + line4 + line5 + line6 + line7 + line8
     bCol = warn ? color.new(color.orange, 0) : (buySig ? color.new(color.teal, 0) : color.new(color.red, 0))
     bSty = buySig ? label.style_label_up : label.style_label_down
     label.new(bar_index, buySig ? low : high, txt, style = bSty, color = bCol, textcolor = color.white, size = size.normal)
