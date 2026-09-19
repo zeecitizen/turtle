@@ -84,7 +84,7 @@ grpE   = "End of rising / falling market"
 //  Without either, the law stands down. Mirrored as END OF FALLING for the buy side.
 showEOR  = input.bool(true,  "Mark end of rising / falling market", group = grpE)
 eorSpread= input.float(0.70, "Its candle's spread <= x average range", step = 0.05, group = grpE)
-eorVol   = input.float(1.30, "...while its volume >= x average volume", step = 0.05, group = grpE)
+eorVol   = input.float(1.15, "...while its volume >= x average volume", step = 0.05, group = grpE)
 eorPrev  = input.float(1.10, "The bar before it: spread >= x average", step = 0.05, group = grpE)
 eorLook  = input.int(3,      "Look back this many bars from the reaction", minval = 1, group = grpE)
 //  Zee, 2026-09-20: "if campaign's last candle is very small BODIED, and has a very large
@@ -197,13 +197,25 @@ prevCapped = ((high[1] - low[1]) <= avgRange[1] * eorSpread or math.abs(close[1]
 //  that caps a rise does not have to land on the very last candle before the turn.
 //  prevCapped is kept separately because line 250's end-of-rising SEQUENCE specifically
 //  needs the capped bar to be the last one, with the reaction right after it.
+//  The best candidate is remembered even when it fails, so the Why-not label can show how
+//  close it came. On 18 Sep 22:10 the capping bar cleared the volume test by ONE PERCENT
+//  in my own check and landed just under it on the chart, because Pine's rolling average
+//  covers a slightly different window - a knife-edge that looked like a flat "no".
 cappedRun = false
+capBestSpread = 99.0
+capBestBody   = 99.0
+capBestVol    = 0.0
 if runLen > 0
     for k = 1 to runLen
-        isCap = ((high[k] - low[k]) <= avgRange[k] * eorSpread or math.abs(close[k] - open[k]) <= avgRange[k] * eorBody) and volume[k] >= volSma[k] * eorVol
-        if isCap
+        sR = avgRange[k] > 0 ? (high[k] - low[k]) / avgRange[k] : 99.0
+        bR = avgRange[k] > 0 ? math.abs(close[k] - open[k]) / avgRange[k] : 99.0
+        vR = volSma[k] > 0 ? volume[k] / volSma[k] : 0.0
+        if (sR <= eorSpread or bR <= eorBody) and vR >= eorVol
             cappedRun := true
-            break
+        if math.min(sR, bR) < math.min(capBestSpread, capBestBody)
+            capBestSpread := sR
+            capBestBody   := bR
+            capBestVol    := vR
 
 // ---- is it heavy? ---------------------------------------------------------------------
 volAvgN  = ta.sma(volume, lookN)[1]
