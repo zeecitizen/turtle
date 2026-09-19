@@ -168,6 +168,19 @@ if dir != 0 and runDir != 0 and dir != runDir
 
 campAvg = runLen > 0 ? runVol / runLen : 0.0
 
+// ---- WAS THE CAMPAIGN'S LAST CANDLE CAPPED? --------------------------------------------
+//  Computed HERE, before the reaction is judged, because it decides whether a LOUD
+//  reaction is allowed at all. Zee, 2026-09-20: "please note that here the reaction
+//  candle's volume CAN BE LARGER than the campaign's last volume.. its the ONLY case where
+//  we can allow a larger volume (instead of the usual lower volume case)".
+//  Line 250 spells out the negative: "the red reaction candle has a large volume, IF
+//  previous candles were NOT end of rising market.. then we would be CAUTIOUS that there's
+//  some demand.. if there were no wick on top of the red reaction candle then we would say
+//  we have a demand still WE WOULD WAIT."
+avgRange = ta.sma(high - low, lookN)
+volSma   = ta.sma(volume, lookN)
+prevCapped = ((high[1] - low[1]) <= avgRange[1] * eorSpread or math.abs(close[1] - open[1]) <= avgRange[1] * eorBody) and volume[1] >= volSma[1] * eorVol
+
 // ---- is it heavy? ---------------------------------------------------------------------
 volAvgN  = ta.sma(volume, lookN)[1]
 volPeakN = ta.highest(volume, lookN)[1]
@@ -183,7 +196,17 @@ quietBase = quietRef == "LAST bar of the campaign" ? volume[1] : quietRef == "ca
 quiet    = quietBase > 0 and volume <= quietBase * relX
 strongImb = quietBase > 0 and volume <= quietBase * imbX
 wicked   = useWick and rng > 0 and (wick / rng) >= wickX
-absorbed = isCampaign and (quiet or wicked)
+
+//  TWO WAYS IN, AND THEY ARE NOT EQUAL.
+//    QUIET  - the usual case. Low volume qualifies on its own; that IS the imbalance.
+//    LOUD   - allowed ONLY with the capping AND the wick together. This is the single
+//             exception where a reaction may carry as much volume as the campaign's last
+//             bar, or more. Without both, line 250 says "we have a demand still we would
+//             WAIT", and line 111 "we would not sell it".
+//  I previously let ANY wicked reaction qualify whatever its volume, which admitted loud
+//  reactions with nothing capping them - exactly the demand case the law refuses.
+loudOK   = wicked and prevCapped
+absorbed = isCampaign and (quiet or loudOK)
 
 // ---- confirmation arrives on the NEXT bar ---------------------------------------------
 contDir  = -runDir                                   // a selling campaign sets up a BUY
@@ -292,10 +315,11 @@ if showLast and isCampaign and lastHas
 //  is the imbalance that precedes the cap. Line 90 allows the relaxed version: "if small
 //  candle big volume and previously bullish candle and its reaction is bearish.. then its
 //  not a perfect end of rising but still its like end of rising market".
-avgRange = ta.sma(high - low, lookN)
+//  avgRange, volSma and prevCapped are declared further up, next to the campaign, because
+//  the reaction's own test needs them before this point.
 smallBar = (high - low) <= avgRange * eorSpread
-loudBar  = volume >= ta.sma(volume, lookN) * eorVol
-wideQuietBefore = (high[1] - low[1]) >= avgRange[1] * eorPrev and volume[1] <= ta.sma(volume, lookN)[1]
+loudBar  = volume >= volSma * eorVol
+wideQuietBefore = (high[1] - low[1]) >= avgRange[1] * eorPrev and volume[1] <= volSma[1]
 
 smallBody = math.abs(close - open) <= avgRange * eorBody
 cappedBar = (smallBar or smallBody) and loudBar
@@ -307,7 +331,6 @@ eorIdeal = wideQuietBefore
 //  THE COMPLETED SEQUENCE - the capped bar is the campaign's LAST candle and THIS bar is
 //  the reaction that turns. Line 250 only calls it end of rising market once the next bar
 //  goes the other way, so it is judged here rather than on the capped bar itself.
-prevCapped = ((high[1] - low[1]) <= avgRange[1] * eorSpread or math.abs(close[1] - open[1]) <= avgRange[1] * eorBody) and volume[1] >= ta.sma(volume, lookN)[1] * eorVol
 eorSellNow = isCampaign and runDir > 0 and prevCapped and dir < 0
 eorBuyNow  = isCampaign and runDir < 0 and prevCapped and dir > 0
 eorNow     = eorSellNow or eorBuyNow
