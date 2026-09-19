@@ -151,10 +151,20 @@ sellSig = fired and (needCont ? contDir[1] < 0 : contDir < 0)
 //  one, and the law wins. Mirrored for sells: a red reaction wants a wick on TOP, and
 //  without one "we would say we have a demand still we would wait" (line 250).
 //  The setup still prints - this only marks it as the weaker version.
+//  SAY THE MEASUREMENT, NOT A VERDICT. Zee: "this red candle is QUIET. it has large wick
+//  on top and also on below. but it has a label saying no wick". The detection was right
+//  but the wording was not: the test is wick / RANGE >= 25%, so on a tall candle with
+//  wicks both sides and a big body, a wick that looks large can still be under a quarter
+//  of the whole bar. "no wick" claimed something false about the candle. It now prints
+//  the number, so a disagreement is a threshold to argue with rather than a puzzle.
+//  Which wick counts depends on the side: a BUY wants it BELOW, a SELL wants it ABOVE.
 hasWick = rng > 0 and (wick / rng) >= wickX
+wickPct = rng > 0 ? wick / rng * 100 : 0
 if buySig or sellSig
     warn = not hasWick
-    txt  = (buySig ? "BUY SETUP" : "SELL SETUP") + (warn ? "  [!] no wick - supply may still be there" : "")
+    side = buySig ? "lower" : "upper"
+    base = buySig ? "BUY SETUP" : "SELL SETUP"
+    txt  = warn ? base + "   [!] " + side + " wick " + str.tostring(wickPct, "#") + "% (want " + str.tostring(wickX * 100, "#") + "%) - supply may still be there" : base + "   " + side + " wick " + str.tostring(wickPct, "#") + "%"
     bCol = warn ? color.new(color.orange, 0) : (buySig ? color.new(color.teal, 0) : color.new(color.red, 0))
     bSty = buySig ? label.style_label_up : label.style_label_down
     label.new(bar_index, buySig ? low : high, txt, style = bSty, color = bCol, textcolor = color.white, size = size.normal)
