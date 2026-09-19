@@ -10,7 +10,7 @@
 //  Put VSISA Setups on the price chart and this underneath it.
 //
 //  THREE COLOURS, AND ONLY THREE:
-//    RED      a selling campaign - boxed across EVERY bar of the run, not just the last
+//    RED      a selling campaign - EVERY bar of the run, including its first
 //    TEAL     a buying campaign
 //    YELLOW   the reaction - labelled QUIET or WICK so the reason is on the bar
 //    dim grey everything else - not part of anything he trades
@@ -26,7 +26,7 @@
 //  TradingView convention throughout: a bar is buying when close > open. MT5 colours
 //  volume by comparison with the PREVIOUS bar, which says nothing about direction.
 // =====================================================================================
-indicator("VSISA Volume", overlay = false, format = format.volume, precision = 0, max_labels_count = 500, max_boxes_count = 500)
+indicator("VSISA Volume", overlay = false, format = format.volume, precision = 0, max_labels_count = 500)
 
 minRun = input.int(2,    "Minimum bars to call it a run", minval = 1)
 maxRun = input.int(8,    "Most bars to count back",        minval = 2)
@@ -93,36 +93,20 @@ col = isReaction ? color.new(color.yellow, 0) : isCampaign ? campCol : color.new
 plot(volume, style = plot.style_columns, color = col, title = "volume")
 plot(showAvg ? volAvgN : na, color = color.new(color.silver, 40), title = "average")
 
-// --- THE CAMPAIGN'S FIRST BAR WAS BEING LOST.
-//  Zee, 2026-09-19: "the background campaign only highlights 1 red volume.. whereas its
-//  a 2 bar setup with 2 red large volumes that need to be colored".
-//  The run is measured from the bar it ENDS on, so the first bar of a 2-bar run scores
-//  runLen = 1 and never qualified - only the second bar onward was ever coloured. Pine
-//  cannot repaint a bar it has already drawn, so a box is stretched back over the whole
-//  run instead. It appears the moment the run reaches minRun and extends as the run
-//  grows, so it is right live as well as in history.
-//  IT MUST WRAP THE BARS, NOT BISECT THEM. Zee: "the box now starts its right vertical
-//  line at mid second bar and draws till mid first bar.. maybe the box needs to be around
-//  the bars instead of cutting them at mid." Exactly so - bar_index addresses the CENTRE
-//  of a candle, so an index-anchored box always slices the first and last one in half.
-//  Time coordinates do not have that problem: a bar spans from its own open time to the
-//  next one, so the box runs from the first bar's open to the END of the current bar.
-barMs = timeframe.in_seconds() * 1000
-var box campBox = na
-var int campStart = na
-if isCampaign
-    lo = bar_index - runLen + 1
-    if na(campBox) or campStart != lo
-        campStart := lo
-        campBox := box.new(time[runLen - 1], runPeak, time + barMs, 0, xloc = xloc.bar_time, border_color = campCol, border_width = 2, bgcolor = color.new(campCol, 88))
-    else
-        box.set_right(campBox, time + barMs)
-        box.set_top(campBox, runPeak)
-        box.set_bgcolor(campBox, color.new(campCol, 88))
-        box.set_border_color(campBox, campCol)
-else
-    campBox := na
-    campStart := na
+// --- PAINTING THE BARS THE MAIN PLOT CANNOT REACH.
+//  Zee: "couldn't we just color the volume bars instead of having a box? the colored
+//  volume bars looked fine.. they only skipped one bar". Right, and the box was solving
+//  it the hard way. The skip is a causality problem: a run is measured from the bar it
+//  ENDS on, so at the first bar of a run there is nothing yet to say it is a run - and
+//  Pine cannot repaint a bar once drawn.
+//  What Pine CAN do is draw a column at a negative offset. So when a run is recognised
+//  as a campaign, these plots reach back and paint the bars that were still anonymous
+//  when they printed. Three of them, which covers runs up to four bars; longer runs get
+//  their later bars from the main plot anyway.
+fixCol = color.new(campCol, 0)
+plot(isCampaign and runLen >= 2 ? volume[1] : na, style = plot.style_columns, color = fixCol, offset = -1, title = "campaign bar -1")
+plot(isCampaign and runLen >= 3 ? volume[2] : na, style = plot.style_columns, color = fixCol, offset = -2, title = "campaign bar -2")
+plot(isCampaign and runLen >= 4 ? volume[3] : na, style = plot.style_columns, color = fixCol, offset = -3, title = "campaign bar -3")
 
 if isReaction
     labCol = quiet ? color.new(color.yellow, 10) : color.new(color.orange, 10)
