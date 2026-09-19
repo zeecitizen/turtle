@@ -46,11 +46,15 @@ wickX  = input.float(0.25, "OR rejection wick >= x of the bar range", step = 0.0
 useWick= input.bool(true,  "Let a wick qualify a LOUD reaction", group = grpR)
 
 grpX   = "Confirmation"
-needCont = input.bool(true, "Require the next bar to continue on light volume", group = grpX)
+//  OFF by default, 2026-09-19. The confirmation bar costs 61% of the setups - 11.21
+//  reactions a day become 4.36 - and nobody has measured whether the ones it throws away
+//  would have worked. Zee chose to see them all and judge himself, which is the same
+//  division of labour as the meter: the machine finds them, he decides.
+needCont = input.bool(false, "Require the next bar to continue on light volume", group = grpX)
 
 grpD   = "Drawing"
 showRun  = input.bool(false, "Arrow every bar in a 2+ run", group = grpD)
-showAll  = input.bool(true, "Mark reactions that never confirmed", group = grpD)
+showAll  = input.bool(true, "Mark reactions that never confirmed (only when confirmation is ON)", group = grpD)
 showTbl  = input.bool(true, "Show the counter", group = grpD)
 
 // ---- the bar's own direction, TradingView convention --------------------------------
@@ -128,7 +132,7 @@ plotshape(showRun and inRunNow and dir > 0, title = "in a buying run", style = s
 
 // WORDS, NOT SYMBOLS. Zee: "instead of diamonds can u write labels.. because its hard to
 // track so many colors / diamonds etc". A shape has to be remembered; a word does not.
-if showAll and absorbed
+if showAll and absorbed and needCont
     rLab = quiet ? "reaction: QUIET" : "reaction: WICK"
     rCol = quiet ? color.new(color.yellow, 15) : color.new(color.orange, 15)
     rSty = runDir < 0 ? label.style_label_up : label.style_label_down
