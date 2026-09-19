@@ -68,7 +68,7 @@
 //|  fills may promote a default.                                      |
 //+------------------------------------------------------------------+
 #property copyright "Zeeshan"
-#property version   "1.58"
+#property version   "1.61"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -215,6 +215,11 @@ input int    InpMeterSource = 1;     // InpMeterSource - 0 = live ticks (broker)
 //  InpMeterDecay fixes it: each older minute counts less. At 0.55 the newest bar carries
 //  about twice the weight of the one before it and eight times the one three back, so the
 //  needle turns with the tape while still being an average rather than a single candle.
+//  2026-09-18: "i think the left dial can work on 5 minute scale as 1 minute is too
+//  noisy" - so the stage detector groups the OANDA minutes into candles of its own before
+//  it looks for a campaign. The right dial and the panel stay on the minute; only the
+//  structure read changes, which is where noise actually hurts.
+input int    InpStageTF     = 5;     // InpStageTF - minutes per candle for the STAGE dial (1 = off)
 input int    InpMeterBars   = 5;     // InpMeterBars - minutes in view (newest weigh most)
 input double InpMeterDecay  = 0.55;  // InpMeterDecay - weight of each older minute (1.0 = flat average)
 input string InpOandaFile   = "oanda_bars.csv"; // InpOandaFile - in Common\Files
@@ -303,7 +308,7 @@ int OnInit()
             "is one bad minute away from giving back a week.");
       return(INIT_PARAMETERS_INCORRECT);
      }
-   PrintFormat("[VSISA_MIN] v1.58 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
+   PrintFormat("[VSISA_MIN] v1.61 - absorb>=%.2fx over %d bars | stuck<=%.2fx | leg>=%.2fx | "
                "release<=%.2fx | confirm %d | hold %d bar(s) | tp %d | stop %d | day stop %.0f | %s",
                InpAbsorbVol, InpAbsorbBars, InpAbsorbStuck, InpLegMin, InpReleaseVol,
                InpConfirmBars, InpHoldBars, InpTargetPts, InpStopPts, InpDayLossStop,
@@ -828,9 +833,10 @@ string SideWord(const double now, const double before, uint &col, const bool isS
 //|   STUCK   all that effort is going nowhere      (no result)        |
 //|   GAP     one side is getting far more per unit (someone winning)  |
 //+------------------------------------------------------------------+
-double ImbalanceStrength(double &loudOut, double &stuckOut, double &gapOut)
+double ImbalanceStrength(double &loudOut, double &stuckOut, double &gapOut,
+                         string &plainOut)
   {
-   loudOut = 0.0; stuckOut = 0.0; gapOut = 0.0;
+   loudOut = 0.0; stuckOut = 0.0; gapOut = 0.0; plainOut = "";
    if(g_ovN < InpMeterBars + 2) return(0.0);
 
    double decay = (InpMeterDecay <= 0.0 || InpMeterDecay > 1.0) ? 1.0 : InpMeterDecay;
@@ -883,9 +889,23 @@ double ImbalanceStrength(double &loudOut, double &stuckOut, double &gapOut)
    double share = (winV + loseV > 0.0) ? winV / (winV + loseV) : 0.5;
    double push  = volNow / volBase;
 
-   gapOut   = MathMin(1.0, gap / 0.60);                              // 0.60+ = total
-   stuckOut = MathMin(1.0, MathMax(0.0, (share - 0.50) * 2.0));      // one-sidedness
-   loudOut  = MathMin(1.0, MathMax(0.0, (push - 0.70) / 0.60));      // 1.30x = full
+   gapOut   = MathMin(1.0, gap / 0.60);
+   stuckOut = MathMin(1.0, MathMax(0.0, (share - 0.50) * 2.0));
+   loudOut  = MathMin(1.0, MathMax(0.0, (push - 0.70) / 0.60));
+
+//  SAY IT IN PLAIN NUMBERS. "gap / one-sided / push" were my words for the three parts and
+//  he could not read them at a glance - fair, they describe the arithmetic rather than the
+//  market. These say the same things as facts about the tape.
+   double effWin  = MathMax(effUp, effDn);
+   double effLose = MathMin(effUp, effDn);
+   string winner  = (effUp >= effDn) ? "buyers" : "sellers";
+   string loser   = (effUp >= effDn) ? "sellers" : "buyers";
+   string cheaper = (effLose > 0.0)
+                    ? StringFormat("%s get %.1fx more per volume", winner, effWin / effLose)
+                    : StringFormat("only %s are moving it", winner);
+   plainOut = StringFormat("%s  ·  %s %.0f%% gone  ·  volume %.1fx normal",
+                           cheaper, loser, (1.0 - (loseV / MathMax(winV + loseV, 1.0))) * 100.0,
+                           push);
 
    return(MathMin(1.0, gapOut * 0.45 + stuckOut * 0.30 + loudOut * 0.25));
   }
@@ -908,16 +928,63 @@ double ImbalanceStrength(double &loudOut, double &stuckOut, double &gapOut)
 //| Returns 0 nothing · 1 campaign · 2 reaction · 3 moving away.      |
 //| `dir` is the direction the SETUP points (campaign down -> buy).   |
 //+------------------------------------------------------------------+
+//--- the stage dial's own candles, built from the OANDA minutes
+#define SG_MAX 120
+double   g_sgOpen[SG_MAX], g_sgHigh[SG_MAX], g_sgLow[SG_MAX], g_sgClose[SG_MAX], g_sgVol[SG_MAX];
+int      g_sgN = 0;
+
+void BuildStageBars()
+  {
+   g_sgN = 0;
+   int tf = MathMax(1, InpStageTF);
+   if(tf == 1)
+     {
+      int take = MathMin(g_ovN, SG_MAX);
+      for(int i = g_ovN - take; i < g_ovN; i++)
+        {
+         g_sgOpen[g_sgN] = g_ovOpen[i]; g_sgHigh[g_sgN] = g_ovHigh[i];
+         g_sgLow[g_sgN]  = g_ovLow[i];  g_sgClose[g_sgN] = g_ovClose[i];
+         g_sgVol[g_sgN]  = g_ovVol[i];  g_sgN++;
+        }
+      return;
+     }
+   // group the minutes on clock boundaries, oldest first
+   int i0 = MathMax(0, g_ovN - SG_MAX * tf);
+   bool open = false;
+   for(int i = i0; i < g_ovN; i++)
+     {
+      MqlDateTime mt; TimeToStruct(g_ovTime[i], mt);
+      bool boundary = (mt.min % tf == 0);
+      if(boundary || !open)
+        {
+         if(g_sgN >= SG_MAX) break;
+         g_sgOpen[g_sgN] = g_ovOpen[i]; g_sgHigh[g_sgN] = g_ovHigh[i];
+         g_sgLow[g_sgN]  = g_ovLow[i];  g_sgClose[g_sgN] = g_ovClose[i];
+         g_sgVol[g_sgN]  = g_ovVol[i];
+         g_sgN++; open = true;
+        }
+      else
+        {
+         int k = g_sgN - 1;
+         g_sgHigh[k]  = MathMax(g_sgHigh[k], g_ovHigh[i]);
+         g_sgLow[k]   = MathMin(g_sgLow[k],  g_ovLow[i]);
+         g_sgClose[k] = g_ovClose[i];
+         g_sgVol[k]  += g_ovVol[i];
+        }
+     }
+  }
+
 int SetupStage(int &dir, double &campVol, int &campLen)
   {
    dir = 0; campVol = 0.0; campLen = 0;
-   if(g_ovN < 26) return(0);
+   BuildStageBars();
+   if(g_sgN < 26) return(0);
 
-   int last = g_ovN - 1;
+   int last = g_sgN - 1;
 
    // the normal to judge "heavy" against
    double base = 0.0; int nb = 0;
-   for(int i = g_ovN - 26; i < g_ovN - 6; i++) { base += g_ovVol[i]; nb++; }
+   for(int i = g_sgN - 26; i < g_sgN - 6; i++) { base += g_sgVol[i]; nb++; }
    if(nb <= 0 || base <= 0.0) return(0);
    base /= nb;
 
@@ -926,14 +993,14 @@ int SetupStage(int &dir, double &campVol, int &campLen)
    int campEnd = -1, campDir = 0;
    for(int e = last; e >= last - 9 && e >= 3; e--)
      {
-      int d = (g_ovClose[e] > g_ovOpen[e]) ? 1 : ((g_ovClose[e] < g_ovOpen[e]) ? -1 : 0);
+      int d = (g_sgClose[e] > g_sgOpen[e]) ? 1 : ((g_sgClose[e] < g_sgOpen[e]) ? -1 : 0);
       if(d == 0) continue;
       int len = 0; double vsum = 0.0;
       for(int k = e; k >= 0 && len < 8; k--)
         {
-         int dk = (g_ovClose[k] > g_ovOpen[k]) ? 1 : ((g_ovClose[k] < g_ovOpen[k]) ? -1 : 0);
+         int dk = (g_sgClose[k] > g_sgOpen[k]) ? 1 : ((g_sgClose[k] < g_sgOpen[k]) ? -1 : 0);
          if(dk != d) break;
-         vsum += g_ovVol[k]; len++;
+         vsum += g_sgVol[k]; len++;
         }
       if(len >= 2 && (vsum / len) >= base * 1.15)
         { campEnd = e; campDir = d; campVol = vsum / len; campLen = len; break; }
@@ -946,9 +1013,9 @@ int SetupStage(int &dir, double &campVol, int &campLen)
    int react = -1;
    for(int i = campEnd + 1; i <= last; i++)
      {
-      if(g_ovVol[i] <= campVol * InpReleaseVol)
+      if(g_sgVol[i] <= campVol * InpReleaseVol)
         {
-         int di = (g_ovClose[i] > g_ovOpen[i]) ? 1 : ((g_ovClose[i] < g_ovOpen[i]) ? -1 : 0);
+         int di = (g_sgClose[i] > g_sgOpen[i]) ? 1 : ((g_sgClose[i] < g_sgOpen[i]) ? -1 : 0);
          if(di != campDir) { react = i; break; }
         }
      }
@@ -959,35 +1026,20 @@ int SetupStage(int &dir, double &campVol, int &campLen)
    int moved = 0;
    for(int i = react + 1; i <= last; i++)
      {
-      int di = (g_ovClose[i] > g_ovOpen[i]) ? 1 : ((g_ovClose[i] < g_ovOpen[i]) ? -1 : 0);
-      if(di == dir && g_ovVol[i] <= campVol) moved++;
+      int di = (g_sgClose[i] > g_sgOpen[i]) ? 1 : ((g_sgClose[i] < g_sgOpen[i]) ? -1 : 0);
+      if(di == dir && g_sgVol[i] <= campVol) moved++;
      }
    return(moved > 0 ? 3 : 2);
   }
 
 string StrengthWords(const double st, uint &col)
   {
-   bool falling = (st < g_stPrev - 0.03);
-   bool spent   = (g_stPeak >= 0.65 && st < g_stPeak - 0.12);
-
-   if(st >= 0.80) { col = ARGB(255,  80, 235, 160); return("IMBALANCE READY - check direction"); }
-   if(spent)
-     {
-      col = ARGB(255, 150, 140, 200);
-      return(StringFormat("IMBALANCE FADING - peaked at %.0f%%", g_stPeak * 100));
-     }
-   if(st >= 0.60)
-     {
-      col = ARGB(255, 225, 200, 90);
-      return(falling ? "easing off" : "BUILDING - nearly there");
-     }
-   if(st >= 0.35)
-     {
-      col = ARGB(255, 190, 170, 110);
-      return(falling ? "fading" : "forming");
-     }
+   int stage = (int)MathRound(st * 3.0);
+   if(stage >= 3) { col = ARGB(255, 120, 190, 150); return("3. MOVING AWAY - you are late"); }
+   if(stage == 2) { col = ARGB(255, 255, 220, 110); return("2. QUIET REACTION - the moment"); }
+   if(stage == 1) { col = ARGB(255, 225, 150,  90); return("1. CAMPAIGN - wait for it to stall"); }
    col = ARGB(255, 130, 136, 148);
-   return("nothing here yet");
+   return("no campaign - nothing to set up from");
   }
 
 string ResistanceWords(const double imb, uint &col)
@@ -1038,15 +1090,15 @@ void DrawDial(const int cx, const int cy, const int R, const double imb,
 
    g_gauge.FontSet("Arial Bold", MathMax(20, R / 5) * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(cx, cy - R / 2 - R / 8,
-                   strengthMode ? StringFormat("%.0f%%", strength * 100)
+                   strengthMode ? StringFormat("%d of 3", (int)MathRound(strength * 3.0))
                                 : StringFormat("%+.2f", imb),
                    ARGB(255, 240, 240, 245), TA_CENTER | TA_TOP);
    g_gauge.FontSet("Arial", MathMax(12, R / 14) * MathMax(80, InpFontScale) / 100);
    g_gauge.TextOut(cx, cy - R - R / 6, title, ARGB(255, 150, 155, 165), TA_CENTER | TA_TOP);
-   g_gauge.TextOut(cx - R + 2, cy + 8, strengthMode ? "LOW" : "SELL",
+   g_gauge.TextOut(cx - R + 2, cy + 8, strengthMode ? "CAMPAIGN" : "SELL",
                    strengthMode ? ARGB(255, 130, 136, 148) : ARGB(255, 214, 69, 65),
                    TA_LEFT | TA_TOP);
-   g_gauge.TextOut(cx + R - 2, cy + 8, strengthMode ? "HIGH" : "BUY",
+   g_gauge.TextOut(cx + R - 2, cy + 8, strengthMode ? "MOVING" : "BUY",
                    strengthMode ? ARGB(255, 70, 230, 155) : ARGB(255, 46, 170, 122),
                    TA_RIGHT | TA_TOP);
    uint vcol;
@@ -1078,24 +1130,26 @@ void GaugeDraw()
    if(InpGaugeDual)
      {
       int R = (int)MathMin(w * 0.225, h * 0.30);
-      double lo, stk, gp;
-      double strength = ImbalanceStrength(lo, stk, gp);
-
-      if(g_ovN > 0 && g_ovTime[g_ovN - 1] != g_stLastBar)
-        {
-         g_stLastBar = g_ovTime[g_ovN - 1];
-         g_stPrev = g_stCurr;
-         if(strength >= g_stPeak) { g_stPeak = strength; g_stPeakTime = g_stLastBar; }
-         // a peak older than ten minutes stops counting as "recent"
-         if(g_stLastBar - g_stPeakTime > 600) { g_stPeak = strength; g_stPeakTime = g_stLastBar; }
-        }
-      g_stCurr = strength;
-      DrawDial((int)(w * 0.26), cy, R, strength * 2.0 - 1.0,
-               "IMBALANCE STRENGTH (volume)",
-               (age < 0) ? "NO DATA" : (stale ? StringFormat("STALE %.0f min", age)
-                                      : StringFormat("gap %.0f%%   one-sided %.0f%%   push %.0f%%",
-                                                     gp * 100, stk * 100, lo * 100)),
-               stale ? ARGB(255, 230, 120, 60) : ARGB(255, 150, 155, 165), true, strength);
+//  THE LEFT DIAL IS NOW THE STAGE OF THE SETUP, not a strength score.
+//  The score was calibrated on 2026-09-18 against 32,070 readings of the OANDA table and
+//  it did not predict: at 80-100% the direction it called was right 47.5% of the time and
+//  price moved an average of -18 points against it over the next three minutes, while
+//  "nothing here yet" did slightly BETTER. The gradient was monotone - accuracy fell as
+//  the score rose - so the READY light was worse than theatre, it was mildly contrarian.
+//  Zee: "then in this case, lets replace the left dial to read the 3 states".
+//  A stage is an observation about what the tape HAS done. It cannot be wrong the way a
+//  prediction can, and he supplies the judgement about what it means.
+      double lo, stk, gp; string plain;
+      ImbalanceStrength(lo, stk, gp, plain);
+      int sdirD = 0, sclenD = 0; double scvolD = 0.0;
+      int stageD = SetupStage(sdirD, scvolD, sclenD);
+      double needle = -1.0;
+      if(stageD == 1)      needle = -0.55;
+      else if(stageD == 2) needle =  0.05;
+      else if(stageD == 3) needle =  0.75;
+      DrawDial((int)(w * 0.26), cy, R, needle, "STAGE OF THE SETUP",
+               (age < 0) ? "NO DATA" : (stale ? StringFormat("STALE %.0f min", age) : plain),
+               stale ? ARGB(255, 230, 120, 60) : ARGB(255, 150, 155, 165), true, stageD / 3.0);
 //  THE RIGHT DIAL IS THE IMBALANCE'S OWN DIRECTION, not the tape.
 //  Zee, 2026-09-18: "instead of the dial on left saying direction now (live ticks), lets
 //  replace it with Imbalance supports direction: and the dial goes from red SELL on the
@@ -1145,13 +1199,11 @@ void GaugeDraw()
    uint   callCol = (uint)(0xFF000000 | (g_stColour & 0x00FFFFFF));
    if(InpGaugeDual)
      {
-      double lo2, stk2, gp2;
-      double st2 = ImbalanceStrength(lo2, stk2, gp2);
-      if(st2 >= 0.80)
+      int cdir = 0, clen = 0; double cvol = 0.0;
+      int stg = SetupStage(cdir, cvol, clen);
+      if(stg == 2)                      // the quiet reaction has just appeared
         {
-         int d = 0;
-         if(g_stEffUp > g_stEffDn * 1.15)      d =  1;   // greens buy more ground per volume
-         else if(g_stEffDn > g_stEffUp * 1.15) d = -1;   // reds do
+         int d = cdir;                  // a SELLING campaign sets up a BUY
 
          double tUp2, tDn2; int tk2;
          double tImb = TapeImbalance(tUp2, tDn2, tk2);
