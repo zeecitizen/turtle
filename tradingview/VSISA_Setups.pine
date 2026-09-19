@@ -51,7 +51,7 @@ needCont = input.bool(true, "Require the next bar to continue on light volume", 
 
 grpD   = "Drawing"
 showCamp = input.bool(true, "Shade the campaign", group = grpD)
-showRun  = input.bool(true, "Arrow every bar in a 2+ run", group = grpD)
+showRun  = input.bool(false, "Arrow every bar in a 2+ run", group = grpD)
 paintBar = input.bool(true, "Colour the candles of a run", group = grpD)
 showAll  = input.bool(true, "Mark reactions that never confirmed", group = grpD)
 showTbl  = input.bool(true, "Show the counter", group = grpD)
@@ -131,22 +131,24 @@ plotshape(showRun and inRunNow and dir > 0, title = "in a buying run",
 bgcolor(showCamp and isCampaign ? (runDir < 0 ? color.new(color.red, 88)
                                               : color.new(color.teal, 88)) : na)
 
-plotshape(showAll and absorbed and not quiet, title = "reaction (wick)",
-     style = shape.diamond, location = location.belowbar, size = size.tiny,
-     color = color.new(color.orange, 20))
-plotshape(showAll and absorbed and quiet, title = "reaction (quiet)",
-     style = shape.circle, location = location.belowbar, size = size.tiny,
-     color = color.new(color.yellow, 20))
+// WORDS, NOT SYMBOLS. Zee: "instead of diamonds can u write labels.. because its hard to
+// track so many colors / diamonds etc". A shape has to be remembered; a word does not.
+if showAll and absorbed
+    label.new(bar_index, runDir < 0 ? low : high,
+         quiet ? "reaction: QUIET" : "reaction: WICK",
+         style = runDir < 0 ? label.style_label_up : label.style_label_down,
+         color = quiet ? color.new(color.yellow, 15) : color.new(color.orange, 15),
+         textcolor = color.black, size = size.small)
 
 buySig  = fired and (needCont ? contDir[1] > 0 : contDir > 0)
 sellSig = fired and (needCont ? contDir[1] < 0 : contDir < 0)
 
 plotshape(buySig,  title = "BUY setup",  style = shape.labelup,
-     location = location.belowbar, size = size.small,
-     color = color.new(color.teal, 0), text = "BUY", textcolor = color.white)
+     location = location.belowbar, size = size.normal,
+     color = color.new(color.teal, 0), text = "BUY SETUP", textcolor = color.white)
 plotshape(sellSig, title = "SELL setup", style = shape.labeldown,
-     location = location.abovebar, size = size.small,
-     color = color.new(color.red, 0),  text = "SELL", textcolor = color.white)
+     location = location.abovebar, size = size.normal,
+     color = color.new(color.red, 0),  text = "SELL SETUP", textcolor = color.white)
 
 alertcondition(buySig,  "VSISA buy setup",  "VSISA: quiet reaction after a selling campaign")
 alertcondition(sellSig, "VSISA sell setup", "VSISA: quiet reaction after a buying campaign")
