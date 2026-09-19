@@ -9,11 +9,11 @@
 //  recolour it, so this REPLACES it: same histogram, coloured by what the run is doing.
 //  Put VSISA Setups on the price chart and this underneath it.
 //
-//    dim grey     a bar on its own - no run
-//    amber        part of a run of 2+ the same way, but not heavy enough to be a campaign
-//    RED / TEAL   a campaign: the run is 2+ AND its loudest bar clears the threshold
-//    "QUIET"      the reaction, qualified by low volume
-//    "WICK"       the reaction, qualified by a rejection wick on a LOUD bar
+//  THREE COLOURS, AND ONLY THREE:
+//    RED      a selling campaign
+//    TEAL     a buying campaign
+//    YELLOW   the reaction - labelled QUIET or WICK so the reason is on the bar
+//    dim grey everything else - not part of anything he trades
 //
 //  Words, not symbols. Zee: "instead of diamonds can u write labels.. because its hard
 //  to track so many colors / diamonds etc". A shape has to be remembered; a word does
@@ -85,10 +85,15 @@ quiet = pAvg > 0 and volume <= pAvg * relX
 wickd = rng > 0 and (wick / rng) >= wickX
 isReaction = pLen >= minRun and pHeavy and (quiet or wickd)
 
-// --- colours
-col = isCampaign ? (dir < 0 ? color.new(color.red, 0) : color.new(color.teal, 0))
-    : inRun      ? color.new(color.orange, 35)
-    :              color.new(color.gray, 70)
+// --- THREE COLOURS, AND ONLY THREE.
+//  Zee: "it should have just three colors: red campaign / green campaign / reaction
+//  volume colored.. its hard to understand what the yellow/amber volume colors mean".
+//  The amber was "in a run but not heavy enough" - a state with no decision attached to
+//  it, so it cost attention and paid nothing back. Everything that is not one of the
+//  three things he trades is now simply dim.
+col = isReaction ? color.new(color.yellow, 0)
+    : isCampaign ? (dir < 0 ? color.new(color.red, 0) : color.new(color.teal, 0))
+    :              color.new(color.gray, 75)
 
 plot(volume, style = plot.style_columns, color = col, title = "volume")
 plot(showAvg ? volAvgN : na, color = color.new(color.silver, 40), title = "average")
