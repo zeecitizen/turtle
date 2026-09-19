@@ -1,0 +1,97 @@
+//@version=5
+// =====================================================================================
+//  VSISA VOLUME - the campaign, coloured on the volume bars themselves
+//
+//  Zee, 2026-09-19: "can we highlight the volumes which are 2+ one way by either
+//  coloring the volume bar or marking it with an arrow?"
+//
+//  TradingView's built-in volume lives in its own pane and an overlay script cannot
+//  recolour it, so this REPLACES it: same histogram, coloured by what the run is doing.
+//  Put VSISA Setups on the price chart and this underneath it.
+//
+//    dim grey     a bar on its own - no run
+//    amber        part of a run of 2+ the same way, but not heavy enough to be a campaign
+//    RED / TEAL   a campaign: the run is 2+ AND its loudest bar clears the threshold
+//    white dot    the reaction - the first bar back the other way that shows absorption
+//
+//  Heavy is measured the same two ways as the setups script, because they are different
+//  tests and the choice matters: AVERAGE of the last N, or PEAK (the run's loudest bar
+//  against the loudest of the last N - what VSISA the EA actually demands at 0.70x).
+//
+//  TradingView convention throughout: a bar is buying when close > open. MT5 colours
+//  volume by comparison with the PREVIOUS bar, which says nothing about direction.
+// =====================================================================================
+indicator("VSISA Volume", overlay = false, format = format.volume, precision = 0)
+
+minRun = input.int(2,    "Minimum bars to call it a run", minval = 1)
+maxRun = input.int(8,    "Most bars to count back",        minval = 2)
+method = input.string("PEAK (like the EA)", "Heavy measured against",
+         options = ["AVERAGE of last N", "PEAK (like the EA)"])
+lookN  = input.int(20,   "N bars for that yardstick", minval = 5)
+avgX   = input.float(1.15, "AVERAGE: run avg >= x average", step = 0.05)
+pkX    = input.float(0.70, "PEAK: run's loudest >= x peak",  step = 0.05)
+relX   = input.float(0.85, "Reaction: volume <= x campaign avg", step = 0.05)
+wickX  = input.float(0.25, "...OR a rejection wick >= x of range", step = 0.05)
+showAvg = input.bool(true, "Draw the average line")
+
+dir = close > open ? 1 : close < open ? -1 : 0
+
+// --- how long is the run ENDING ON THIS BAR, and how loud
+runLen  = 0
+runVol  = 0.0
+runPeak = 0.0
+if dir != 0
+    for k = 0 to maxRun - 1
+        d = close[k] > open[k] ? 1 : close[k] < open[k] ? -1 : 0
+        if d != dir
+            break
+        runLen  += 1
+        runVol  += volume[k]
+        runPeak := math.max(runPeak, volume[k])
+campAvg = runLen > 0 ? runVol / runLen : 0.0
+
+volAvgN  = ta.sma(volume, lookN)
+volPeakN = ta.highest(volume, lookN)
+heavy = method == "AVERAGE of last N" ? (campAvg >= volAvgN[runLen] * avgX)
+                                      : (runPeak >= volPeakN[runLen] * pkX)
+inRun      = runLen >= minRun
+isCampaign = inRun and heavy
+
+// --- the reaction: this bar goes the other way to the run behind it, and shows absorption
+prevDir  = dir[1]
+pLen = 0
+pVol = 0.0
+pPeak = 0.0
+if dir != 0 and prevDir != 0 and dir != prevDir
+    for k = 1 to maxRun
+        d = close[k] > open[k] ? 1 : close[k] < open[k] ? -1 : 0
+        if d != prevDir
+            break
+        pLen  += 1
+        pVol  += volume[k]
+        pPeak := math.max(pPeak, volume[k])
+pAvg = pLen > 0 ? pVol / pLen : 0.0
+pHeavy = method == "AVERAGE of last N" ? (pAvg >= volAvgN[pLen + 1] * avgX)
+                                       : (pPeak >= volPeakN[pLen + 1] * pkX)
+rng   = high - low
+wick  = prevDir < 0 ? (math.min(open, close) - low) : (high - math.max(open, close))
+quiet = pAvg > 0 and volume <= pAvg * relX
+wickd = rng > 0 and (wick / rng) >= wickX
+isReaction = pLen >= minRun and pHeavy and (quiet or wickd)
+
+// --- colours
+col = isCampaign ? (dir < 0 ? color.new(color.red, 0) : color.new(color.teal, 0))
+    : inRun      ? color.new(color.orange, 35)
+    :              color.new(color.gray, 70)
+
+plot(volume, style = plot.style_columns, color = col, title = "volume")
+plot(showAvg ? volAvgN : na, color = color.new(color.silver, 40), title = "average")
+
+plotshape(isReaction and quiet, title = "reaction (quiet)", style = shape.circle,
+     location = location.top, size = size.tiny, color = color.new(color.yellow, 0))
+plotshape(isReaction and not quiet, title = "reaction (wick)", style = shape.diamond,
+     location = location.top, size = size.tiny, color = color.new(color.orange, 0))
+
+// --- the run length, so it is readable at a glance
+plotchar(inRun and runLen >= 2, title = "run length", char = "",
+     location = location.bottom, size = size.tiny, color = color.new(color.white, 0))
