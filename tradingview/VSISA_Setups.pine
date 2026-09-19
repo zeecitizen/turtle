@@ -160,11 +160,31 @@ sellSig = fired and (needCont ? contDir[1] < 0 : contDir < 0)
 //  Which wick counts depends on the side: a BUY wants it BELOW, a SELL wants it ABOVE.
 hasWick = rng > 0 and (wick / rng) >= wickX
 wickPct = rng > 0 ? wick / rng * 100 : 0
+
+//  AND TRANSLATE IT. Zee: "i appreciate the percentages.. but then translate it too.. so
+//  say BUY SETUP lower wick 38% means XXX". The number is the evidence; this is what the
+//  law reads INTO it. For a buy, the wick below is how far sellers drove it before buy
+//  orders took it back - line 243: "wick below says buy order was hit.. if there was no
+//  wick this could be a supply". For a sell it is the same story upside down, line 250:
+//  "the wick tells that when market was trying to go up there was a large sell order".
+wickMeaning = ""
+if wickPct >= 45
+    wickMeaning := buySig ? "buyers took it back hard - aggressive buying" : "sellers slammed it back - aggressive selling"
+else if wickPct >= 25
+    wickMeaning := buySig ? "buy orders turned the candle" : "sell orders turned the candle"
+else if wickPct >= 10
+    wickMeaning := buySig ? "only a weak push back from buyers" : "only a weak push back from sellers"
+else
+    wickMeaning := buySig ? "nothing pushed back - supply still available, the law says HOLD" : "nothing pushed back - demand still there, the law says WAIT"
+
 if buySig or sellSig
     warn = not hasWick
     side = buySig ? "lower" : "upper"
     base = buySig ? "BUY SETUP" : "SELL SETUP"
-    txt  = warn ? base + "   [!] " + side + " wick " + str.tostring(wickPct, "#") + "% (want " + str.tostring(wickX * 100, "#") + "%) - supply may still be there" : base + "   " + side + " wick " + str.tostring(wickPct, "#") + "%"
+    flag = warn ? "  [!]" : ""
+    line2 = side + " wick " + str.tostring(wickPct, "#") + "%  -  " + wickMeaning
+    txt  = base + flag + "
+" + line2
     bCol = warn ? color.new(color.orange, 0) : (buySig ? color.new(color.teal, 0) : color.new(color.red, 0))
     bSty = buySig ? label.style_label_up : label.style_label_down
     label.new(bar_index, buySig ? low : high, txt, style = bSty, color = bCol, textcolor = color.white, size = size.normal)
