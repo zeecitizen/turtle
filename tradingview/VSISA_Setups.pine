@@ -45,6 +45,40 @@ relX   = input.float(0.85, "Low volume: reaction <= x campaign avg", step = 0.05
 wickX  = input.float(0.25, "OR rejection wick >= x of the bar range", step = 0.05, group = grpR)
 useWick= input.bool(true,  "Let a wick qualify a LOUD reaction", group = grpR)
 
+grpE   = "End of rising / falling market"
+//  LAWS_VSISA.md line 249-250: "End of rising market: large blue bar with SMALL volume,
+//  means there's an imbalance, supply is less, so small volume moved large spread.. then
+//  SMALL blue bar even though HIGH volume.. in a bullish trend.. means supply hit.. and
+//  its reaction bearish.. that I call end of rising market.. sell setup"
+//  Line 258: "end of rising scenario.. as small blue candle has a large volume"
+//
+//  WHY IT MATTERS, line 111-113 - it is a QUALIFIER, not decoration:
+//    "IF no small candle big volume previously AND not wick on top of the red reaction
+//     candle -> WE WOULD NOT SELL IT"
+//    "but because small blue candle has big volume (end of rising market type) + next bar
+//     with wick on top -> this big red volume is of AGGRESSIVE SELLING and not of demand"
+//  So it does the same job as the wick: it is what makes a LOUD reaction tradeable.
+//  Without either, the law stands down. Mirrored as END OF FALLING for the buy side.
+showEOR  = input.bool(true,  "Mark end of rising / falling market", group = grpE)
+eorSpread= input.float(0.70, "Its candle's spread <= x average range", step = 0.05, group = grpE)
+eorVol   = input.float(1.30, "...while its volume >= x average volume", step = 0.05, group = grpE)
+eorPrev  = input.float(1.10, "The bar before it: spread >= x average", step = 0.05, group = grpE)
+eorLook  = input.int(3,      "Look back this many bars from the reaction", minval = 1, group = grpE)
+
+grpS   = "Strong closing"
+//  LAWS_VSISA.md line 277: "the red candle's closing is near the low (NEAR ZERO LOWER
+//  WICK)". Line 125: "top wick on reaction candle + STRONG BEARISH CLOSING (on the low the
+//  closing of candle happened) + it broke below the main bullish candle.. so this could be
+//  taken as AGGRESSIVE SELLING instead of demand".
+//  And the full definition, line 156: "aggressive selling: supply has hit + has a wick +
+//  closing strong bearish".
+//
+//  Note it is the OPPOSITE wick from the rejection one. A sell wants a wick ON TOP
+//  (sellers hit it) AND almost nothing below (they held it down into the close). The two
+//  together are what separate aggressive selling from demand.
+showClose  = input.bool(true, "Mark strong bearish / bullish closings", group = grpS)
+closeMax   = input.float(0.12, "Closing wick <= x of the bar range", step = 0.02, group = grpS)
+
 grpX   = "Confirmation"
 //  OFF by default, 2026-09-19. The confirmation bar costs 61% of the setups - 11.21
 //  reactions a day become 4.36 - and nobody has measured whether the ones it throws away
@@ -138,6 +172,38 @@ if showAll and absorbed and needCont
     rSty = runDir < 0 ? label.style_label_up : label.style_label_down
     label.new(bar_index, runDir < 0 ? low : high, rLab, style = rSty, color = rCol, textcolor = color.black, size = size.small)
 
+// ---- END OF RISING / FALLING MARKET ---------------------------------------------------
+//  The signature is effort without result at the END of a move: a candle whose spread is
+//  SMALL while its volume is LARGE, in the direction the market has been going. Line 88:
+//  "small blue with a large volume -> supply was hit -> this small candle means aggressive
+//  selling happened which didnot let the price move".
+//  The ideal adds the bar before it - large spread on small volume, line 254-255 - which
+//  is the imbalance that precedes the cap. Line 90 allows the relaxed version: "if small
+//  candle big volume and previously bullish candle and its reaction is bearish.. then its
+//  not a perfect end of rising but still its like end of rising market".
+avgRange = ta.sma(high - low, lookN)
+smallBar = (high - low) <= avgRange * eorSpread
+loudBar  = volume >= ta.sma(volume, lookN) * eorVol
+wideQuietBefore = (high[1] - low[1]) >= avgRange[1] * eorPrev and volume[1] <= ta.sma(volume, lookN)[1]
+
+eorUp   = dir > 0 and smallBar and loudBar and dir[1] > 0        // end of RISING  -> sell
+eorDown = dir < 0 and smallBar and loudBar and dir[1] < 0        // end of FALLING -> buy
+eorIdeal = wideQuietBefore
+
+// did one happen within reach of this reaction?
+eorNearUp = false
+eorNearDn = false
+for k = 1 to eorLook
+    eorNearUp := eorNearUp or eorUp[k]
+    eorNearDn := eorNearDn or eorDown[k]
+
+if showEOR and (eorUp or eorDown)
+    eLab = (eorUp ? "END OF RISING MARKET" : "END OF FALLING MARKET") + (eorIdeal ? " (ideal)" : "")
+    eSub = eorUp ? "small blue candle, big volume - supply hit, the rise is capped" : "small red candle, big volume - demand hit, the fall is capped"
+    eCol = eorUp ? color.new(color.maroon, 10) : color.new(color.green, 10)
+    eSty = eorUp ? label.style_label_down : label.style_label_up
+    label.new(bar_index, eorUp ? high : low, eLab + "\n" + eSub, style = eSty, color = eCol, textcolor = color.white, size = size.small)
+
 buySig  = fired and (needCont ? contDir[1] > 0 : contDir > 0)
 sellSig = fired and (needCont ? contDir[1] < 0 : contDir < 0)
 
@@ -177,13 +243,40 @@ else if wickPct >= 10
 else
     wickMeaning := buySig ? "nothing pushed back - supply still available, the law says HOLD" : "nothing pushed back - demand still there, the law says WAIT"
 
+//  THE TWO WAYS A LOUD REACTION BECOMES TRADEABLE (line 111-113). Either a wick, or an
+//  end-of-rising/falling before it. With neither, the law does not take it - so the
+//  warning only stands when BOTH are missing, and the end-of-market note is shown when it
+//  is what rescued the setup.
+eorHere = buySig ? eorNearDn : eorNearUp
+
+// ---- STRONG CLOSING -------------------------------------------------------------------
+//  The wick on the CLOSING side, which the law wants to be nearly absent: a red candle
+//  closing on its low, a blue candle closing on its high. That is the side holding what it
+//  took, rather than giving it back before the bell.
+closeWick = dir < 0 ? lowWick : highWick
+closePct  = rng > 0 ? closeWick / rng * 100 : 100
+strongClose = rng > 0 and (closeWick / rng) <= closeMax
+
+if showClose and strongClose and (buySig or sellSig)
+    cTxt = dir < 0 ? "strong bearish closing" : "strong bullish closing"
+    cSub = dir < 0 ? "closed on its low - sellers held every inch" : "closed on its high - buyers held every inch"
+    cCol = dir < 0 ? color.new(color.red, 25) : color.new(color.teal, 25)
+    cSty = dir < 0 ? label.style_label_left : label.style_label_left
+    label.new(bar_index, close, cTxt + "\n" + cSub, style = cSty, color = cCol, textcolor = color.white, size = size.small)
+
 if buySig or sellSig
-    warn = not hasWick
+    warn = not hasWick and not eorHere
     side = buySig ? "lower" : "upper"
     base = buySig ? "BUY SETUP" : "SELL SETUP"
     flag = warn ? "  ⚠️" : ""
     line2 = side + " wick " + str.tostring(wickPct, "#") + "%  -  " + wickMeaning
-    txt  = base + flag + "\n" + line2
+    line3 = eorHere ? (buySig ? "\nend of falling market just before - the fall was already capped" : "\nend of rising market just before - the rise was already capped") : ""
+    //  LAW LINE 156, the full definition: "aggressive selling: supply has hit + has a
+    //  wick + closing strong bearish". All three present is the strongest reading the
+    //  document offers, so it gets said in those words rather than left to be inferred.
+    aggressive = hasWick and strongClose
+    line4 = aggressive ? (buySig ? "\nAGGRESSIVE BUYING - wick below and closed on its high" : "\nAGGRESSIVE SELLING - wick above and closed on its low") : (strongClose ? (buySig ? "\nstrong bullish closing" : "\nstrong bearish closing") : "")
+    txt  = base + flag + "\n" + line2 + line3 + line4
     bCol = warn ? color.new(color.orange, 0) : (buySig ? color.new(color.teal, 0) : color.new(color.red, 0))
     bSty = buySig ? label.style_label_up : label.style_label_down
     label.new(bar_index, buySig ? low : high, txt, style = bSty, color = bCol, textcolor = color.white, size = size.normal)
