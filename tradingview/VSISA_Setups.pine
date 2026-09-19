@@ -87,6 +87,16 @@ eorSpread= input.float(0.70, "Its candle's spread <= x average range", step = 0.
 eorVol   = input.float(1.30, "...while its volume >= x average volume", step = 0.05, group = grpE)
 eorPrev  = input.float(1.10, "The bar before it: spread >= x average", step = 0.05, group = grpE)
 eorLook  = input.int(3,      "Look back this many bars from the reaction", minval = 1, group = grpE)
+//  Zee, 2026-09-20: "if campaign's last candle is very small BODIED, and has a very large
+//  volume, and its reaction (next bar) is bearish.. label it end of rising market.. sell
+//  setup". That is line 250 word for word: "if choti c candle pe bohot bara volume ayay,
+//  means supply hit, aur usska reaction bearish ho, next bar down jaey, ussko END OF
+//  RISING MARKET bolta hu.. SELL SETUP".
+//  The sequence only completes when the NEXT bar turns - so this is checked at the
+//  reaction, not at the capped bar, and it renames the whole setup rather than adding a
+//  footnote. Body is measured as well as spread because he said "bodied": a pin bar can
+//  have a wide range and still be a tiny body, and that is capping too.
+eorBody  = input.float(0.35, "...or its BODY <= x average range", step = 0.05, group = grpE)
 
 grpL   = "Last campaign candle"
 //  LAWS_VSISA.md line 279: "if there was a WICK BELOW the red candle, then the bigger
@@ -287,9 +297,20 @@ smallBar = (high - low) <= avgRange * eorSpread
 loudBar  = volume >= ta.sma(volume, lookN) * eorVol
 wideQuietBefore = (high[1] - low[1]) >= avgRange[1] * eorPrev and volume[1] <= ta.sma(volume, lookN)[1]
 
-eorUp   = dir > 0 and smallBar and loudBar and dir[1] > 0        // end of RISING  -> sell
-eorDown = dir < 0 and smallBar and loudBar and dir[1] < 0        // end of FALLING -> buy
+smallBody = math.abs(close - open) <= avgRange * eorBody
+cappedBar = (smallBar or smallBody) and loudBar
+
+eorUp   = dir > 0 and cappedBar and dir[1] > 0        // end of RISING  -> sell
+eorDown = dir < 0 and cappedBar and dir[1] < 0        // end of FALLING -> buy
 eorIdeal = wideQuietBefore
+
+//  THE COMPLETED SEQUENCE - the capped bar is the campaign's LAST candle and THIS bar is
+//  the reaction that turns. Line 250 only calls it end of rising market once the next bar
+//  goes the other way, so it is judged here rather than on the capped bar itself.
+prevCapped = ((high[1] - low[1]) <= avgRange[1] * eorSpread or math.abs(close[1] - open[1]) <= avgRange[1] * eorBody) and volume[1] >= ta.sma(volume, lookN)[1] * eorVol
+eorSellNow = isCampaign and runDir > 0 and prevCapped and dir < 0
+eorBuyNow  = isCampaign and runDir < 0 and prevCapped and dir > 0
+eorNow     = eorSellNow or eorBuyNow
 
 // did one happen within reach of this reaction?
 eorNearUp = false
@@ -403,7 +424,11 @@ if buySig or sellSig
     //  "the orange label.. can it say WEAK BUY SETUP.. add the word WEAK on all orange
     //  ones". A colour has to be remembered; the word is read. It is orange because the
     //  law would stand down here - no wick and no end-of-market to justify the reaction.
-    base = (warn ? "WEAK " : "") + (buySig ? "BUY SETUP" : "SELL SETUP")
+    //  When the campaign's last candle was capped and THIS bar turned, the document has
+    //  its own name for the whole thing, so the headline says that instead of the generic
+    //  one - line 250: "ussko END OF RISING MARKET bolta hu.. SELL SETUP".
+    headline = eorNow ? (buySig ? "END OF FALLING MARKET - BUY SETUP" : "END OF RISING MARKET - SELL SETUP") : (buySig ? "BUY SETUP" : "SELL SETUP")
+    base = (warn ? "WEAK " : "") + headline
     flag = warn ? "  ⚠️" : ""
     line2 = side + " wick " + str.tostring(wickPct, "#") + "%  -  " + wickMeaning
     line3 = eorHere ? (buySig ? "\nend of falling market just before - the fall was already capped" : "\nend of rising market just before - the rise was already capped") : ""
