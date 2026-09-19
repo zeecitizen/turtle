@@ -1,0 +1,164 @@
+//@version=5
+// =====================================================================================
+//  VSISA SETUPS - the three-stage pattern, drawn on the chart
+//
+//  Zee, 2026-09-19: "let's create a drawing on a tradingview indicator of our setups..
+//  what if we make the heavy volume as the heaviest of the last"
+//
+//  Counted on 28 sessions of OANDA M5, the funnel runs:
+//      runs of 2+ one way                  60.68 / day
+//      ...heavy volume (campaign)          18.29   -70%
+//      ...then an opposite bar             18.25    -0%
+//      ...low volume OR wick               11.21   -39%
+//      ...then continues on light volume    4.36   -61%
+//
+//  TWO WAYS TO CALL A CAMPAIGN HEAVY, because they are not the same test:
+//    AVERAGE  - the run averages >= x the last N bars' average volume. Loose; this is
+//               what the counting script used and it gave 18.29 campaigns a day.
+//    PEAK     - the run's loudest bar reaches >= x the loudest bar of the last N. This
+//               is what VSISA the EA actually demands (0.70 x the swing peak) and it is
+//               far stricter - the likeliest reason the EA fires 0.80 times a day
+//               against the pattern's 4.36.
+//  Switch between them and see which marks the setups you would really take.
+//
+//  THE WICK IS AN ALTERNATIVE, NOT AN EXTRA. A reaction qualifies on LOW VOLUME or on a
+//  REJECTION WICK - measured on OANDA data, the wick nearly doubles the qualifying
+//  reactions (148 -> 284), because absorption inside a loud bar is the same information
+//  as a quiet bar, arriving differently.
+//
+//  Volume colour follows TRADINGVIEW's convention throughout: a bar is buying when
+//  close > open. Never MT5's "smaller than the previous bar".
+// =====================================================================================
+indicator("VSISA Setups", overlay = true, max_labels_count = 500, max_boxes_count = 500)
+
+// ---- inputs -------------------------------------------------------------------------
+grpC   = "Campaign"
+minRun = input.int(2,    "Campaign: minimum bars in the run", minval = 1, group = grpC)
+maxRun = input.int(8,    "Campaign: most bars to count back", minval = 2, group = grpC)
+method = input.string("PEAK (like the EA)", "Heavy volume measured against",
+         options = ["AVERAGE of last N", "PEAK (like the EA)"], group = grpC)
+lookN  = input.int(20,   "N bars for that yardstick", minval = 5, group = grpC)
+avgX   = input.float(1.15, "AVERAGE method: run avg >= x average", step = 0.05, group = grpC)
+pkX    = input.float(0.70, "PEAK method: run's loudest >= x peak",  step = 0.05, group = grpC)
+
+grpR   = "Reaction"
+relX   = input.float(0.85, "Low volume: reaction <= x campaign avg", step = 0.05, group = grpR)
+wickX  = input.float(0.25, "OR rejection wick >= x of the bar range", step = 0.05, group = grpR)
+useWick= input.bool(true,  "Let a wick qualify a LOUD reaction", group = grpR)
+
+grpX   = "Confirmation"
+needCont = input.bool(true, "Require the next bar to continue on light volume", group = grpX)
+
+grpD   = "Drawing"
+showCamp = input.bool(true, "Shade the campaign", group = grpD)
+showAll  = input.bool(true, "Mark reactions that never confirmed", group = grpD)
+showTbl  = input.bool(true, "Show the counter", group = grpD)
+
+// ---- the bar's own direction, TradingView convention --------------------------------
+dir = close > open ? 1 : close < open ? -1 : 0
+
+// ---- find the run that ENDED on the previous bar -------------------------------------
+// this bar goes the other way, so the run behind it is a candidate campaign
+runDir  = dir[1]
+runLen  = 0
+runVol  = 0.0
+runPeak = 0.0
+if dir != 0 and runDir != 0 and dir != runDir
+    for k = 1 to maxRun
+        d = close[k] > open[k] ? 1 : close[k] < open[k] ? -1 : 0
+        if d != runDir
+            break
+        runLen  += 1
+        runVol  += volume[k]
+        runPeak := math.max(runPeak, volume[k])
+
+campAvg = runLen > 0 ? runVol / runLen : 0.0
+
+// ---- is it heavy? ---------------------------------------------------------------------
+volAvgN  = ta.sma(volume, lookN)[1]
+volPeakN = ta.highest(volume, lookN)[1]
+heavy = method == "AVERAGE of last N" ? (campAvg >= volAvgN * avgX)
+                                      : (runPeak >= volPeakN * pkX)
+isCampaign = runLen >= minRun and heavy and campAvg > 0
+
+// ---- the reaction: THIS bar, opposite to the campaign ---------------------------------
+rng      = high - low
+lowWick  = math.min(open, close) - low
+highWick = high - math.max(open, close)
+wick     = runDir < 0 ? lowWick : highWick          // rejection against the campaign
+quiet    = volume <= campAvg * relX
+wicked   = useWick and rng > 0 and (wick / rng) >= wickX
+absorbed = isCampaign and (quiet or wicked)
+
+// ---- confirmation arrives on the NEXT bar ---------------------------------------------
+contDir  = -runDir                                   // a selling campaign sets up a BUY
+confirmed = absorbed[1] and needCont
+       and (contDir[1] > 0 ? close > open : close < open)
+       and volume <= campAvg[1]
+fired = needCont ? confirmed : absorbed
+
+// ---- drawing ---------------------------------------------------------------------------
+bgcolor(showCamp and isCampaign ? (runDir < 0 ? color.new(color.red, 88)
+                                              : color.new(color.teal, 88)) : na)
+
+plotshape(showAll and absorbed and not quiet, title = "reaction (wick)",
+     style = shape.diamond, location = location.belowbar, size = size.tiny,
+     color = color.new(color.orange, 20))
+plotshape(showAll and absorbed and quiet, title = "reaction (quiet)",
+     style = shape.circle, location = location.belowbar, size = size.tiny,
+     color = color.new(color.yellow, 20))
+
+buySig  = fired and (needCont ? contDir[1] > 0 : contDir > 0)
+sellSig = fired and (needCont ? contDir[1] < 0 : contDir < 0)
+
+plotshape(buySig,  title = "BUY setup",  style = shape.labelup,
+     location = location.belowbar, size = size.small,
+     color = color.new(color.teal, 0), text = "BUY", textcolor = color.white)
+plotshape(sellSig, title = "SELL setup", style = shape.labeldown,
+     location = location.abovebar, size = size.small,
+     color = color.new(color.red, 0),  text = "SELL", textcolor = color.white)
+
+alertcondition(buySig,  "VSISA buy setup",  "VSISA: quiet reaction after a selling campaign")
+alertcondition(sellSig, "VSISA sell setup", "VSISA: quiet reaction after a buying campaign")
+
+// ---- the counter ------------------------------------------------------------------------
+var int nRuns = 0, var int nCamp = 0, var int nAbs = 0, var int nFire = 0
+var int nWick = 0, var int nDays = 0
+if dir != 0 and runDir != 0 and dir != runDir and runLen >= minRun
+    nRuns += 1
+if isCampaign
+    nCamp += 1
+if absorbed
+    nAbs += 1
+    if not quiet
+        nWick += 1
+if fired
+    nFire += 1
+isNewDay = ta.change(time("D")) != 0
+if isNewDay
+    nDays += 1
+
+if showTbl and barstate.islast
+    var table t = table.new(position.top_right, 3, 7, border_width = 1)
+    d = math.max(nDays, 1)
+    table.cell(t, 0, 0, "VSISA funnel",  text_color = color.white, bgcolor = color.new(color.blue, 40))
+    table.cell(t, 1, 0, "total",         text_color = color.white, bgcolor = color.new(color.blue, 40))
+    table.cell(t, 2, 0, "per day",       text_color = color.white, bgcolor = color.new(color.blue, 40))
+    table.cell(t, 0, 1, "runs of " + str.tostring(minRun) + "+ one way", text_color = color.gray)
+    table.cell(t, 1, 1, str.tostring(nRuns),  text_color = color.gray)
+    table.cell(t, 2, 1, str.tostring(nRuns / d, "#.##"), text_color = color.gray)
+    table.cell(t, 0, 2, "heavy (campaign)",   text_color = color.silver)
+    table.cell(t, 1, 2, str.tostring(nCamp),  text_color = color.silver)
+    table.cell(t, 2, 2, str.tostring(nCamp / d, "#.##"), text_color = color.silver)
+    table.cell(t, 0, 3, "low volume OR wick", text_color = color.yellow)
+    table.cell(t, 1, 3, str.tostring(nAbs),   text_color = color.yellow)
+    table.cell(t, 2, 3, str.tostring(nAbs / d, "#.##"), text_color = color.yellow)
+    table.cell(t, 0, 4, "   of those, by WICK", text_color = color.orange)
+    table.cell(t, 1, 4, str.tostring(nWick),  text_color = color.orange)
+    table.cell(t, 2, 4, str.tostring(nWick / d, "#.##"), text_color = color.orange)
+    table.cell(t, 0, 5, "CONFIRMED setups",   text_color = color.lime)
+    table.cell(t, 1, 5, str.tostring(nFire),  text_color = color.lime)
+    table.cell(t, 2, 5, str.tostring(nFire / d, "#.##"), text_color = color.lime)
+    table.cell(t, 0, 6, "days counted",       text_color = color.gray)
+    table.cell(t, 1, 6, str.tostring(nDays),  text_color = color.gray)
+    table.cell(t, 2, 6, "", text_color = color.gray)
