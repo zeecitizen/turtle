@@ -292,8 +292,17 @@ for k = 1 to eorLook
     eorNearDn := eorNearDn or eorDown[k]
 
 if showEOR and (eorUp or eorDown)
-    eLab = (eorUp ? "END OF RISING MARKET" : "END OF FALLING MARKET") + (eorIdeal ? " (ideal)" : "")
-    eSub = eorUp ? "small blue candle, big volume - supply hit, the rise is capped" : "small red candle, big volume - demand hit, the fall is capped"
+    //  PRICE CAPPED is Zee's wording for this bar and it is the clearer one - 2026-09-19:
+    //  "if during campaign we notice a very small red candle with a large volume.. it
+    //  means its capping.. supply is being hit and the buy orders are not letting it fall
+    //  down further.. can we label this baby candle as price capped".
+    //  It is the SAME measurement as end of rising/falling - line 53: "small candle with
+    //  big volume shows that big demand came that CAPS THE MARKET and not letting the
+    //  market going down" - so it gets one label, not two. The end-of-market name is kept
+    //  for the full pattern, where the wide quiet bar before it makes it the terminal case
+    //  rather than a pause mid-campaign.
+    eLab = eorIdeal ? (eorUp ? "PRICE CAPPED - END OF RISING MARKET" : "PRICE CAPPED - END OF FALLING MARKET") : "PRICE CAPPED"
+    eSub = eorUp ? "small blue candle on big volume - supply hit, the rise is being capped" : "small red candle on big volume - demand hit, the fall is being capped"
     eCol = eorUp ? color.new(color.maroon, 10) : color.new(color.green, 10)
     eSty = eorUp ? label.style_label_down : label.style_label_up
     label.new(bar_index, eorUp ? high : low, eLab + "\n" + eSub, style = eSty, color = eCol, textcolor = color.white, size = size.small)
