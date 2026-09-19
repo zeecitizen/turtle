@@ -74,6 +74,17 @@ eorVol   = input.float(1.30, "...while its volume >= x average volume", step = 0
 eorPrev  = input.float(1.10, "The bar before it: spread >= x average", step = 0.05, group = grpE)
 eorLook  = input.int(3,      "Look back this many bars from the reaction", minval = 1, group = grpE)
 
+grpL   = "Last campaign candle"
+//  LAWS_VSISA.md line 279: "if there was a WICK BELOW the red candle, then the bigger
+//  volume would mean its DEMAND". And line 35: "if our red volume candles are breaking
+//  down below the support line WITH A WICK and closing above the support line, its a
+//  strong sign."
+//  So the campaign's own last candle can give the tell BEFORE the reaction prints: a red
+//  bar pushed back off its low means buyers were already arriving inside it. Mirrored for
+//  a buying campaign - an upper wick on its last blue candle means sellers were there.
+showLast = input.bool(true,  "Label a wick on the campaign's last candle", group = grpL)
+lastWick = input.float(0.25, "That wick >= x of its range", step = 0.05, group = grpL)
+
 grpS   = "Strong closing"
 //  LAWS_VSISA.md line 277: "the red candle's closing is near the low (NEAR ZERO LOWER
 //  WICK)". Line 125: "top wick on reaction candle + STRONG BEARISH CLOSING (on the low the
@@ -181,6 +192,25 @@ if showAll and absorbed and needCont
     rCol = quiet ? color.new(color.yellow, 15) : color.new(color.orange, 15)
     rSty = runDir < 0 ? label.style_label_up : label.style_label_down
     label.new(bar_index, runDir < 0 ? low : high, rLab, style = rSty, color = rCol, textcolor = color.black, size = size.small)
+
+// ---- THE CAMPAIGN'S LAST CANDLE ---------------------------------------------------------
+//  Zee, 2026-09-19: "we can label the last candle of campaign if it has a large lower wick
+//  on its closing, it should say: lower wick suggests buying".
+//  That is line 279 - "if there was a wick below the red candle, then the bigger volume
+//  would mean its DEMAND" - and it is the earliest tell in the whole sequence: the other
+//  side showing up INSIDE the campaign, one bar before the reaction prints.
+lastRng   = high[1] - low[1]
+lastLow   = math.min(open[1], close[1]) - low[1]
+lastHigh  = high[1] - math.max(open[1], close[1])
+lastWickV = runDir < 0 ? lastLow : lastHigh
+lastHas   = lastRng > 0 and (lastWickV / lastRng) >= lastWick
+
+if showLast and isCampaign and lastHas
+    lTxt = runDir < 0 ? "lower wick suggests buying" : "upper wick suggests selling"
+    lSub = runDir < 0 ? "pushed off its low on the last campaign bar - demand already there" : "pushed off its high on the last campaign bar - supply already there"
+    lCol = runDir < 0 ? color.new(color.teal, 30) : color.new(color.red, 30)
+    lSty = runDir < 0 ? label.style_label_up : label.style_label_down
+    label.new(bar_index - 1, runDir < 0 ? low[1] : high[1], lTxt + "\n" + lSub, style = lSty, color = lCol, textcolor = color.white, size = size.small)
 
 // ---- END OF RISING / FALLING MARKET ---------------------------------------------------
 //  The signature is effort without result at the END of a move: a candle whose spread is
