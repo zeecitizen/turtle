@@ -49,7 +49,6 @@ grpX   = "Confirmation"
 needCont = input.bool(true, "Require the next bar to continue on light volume", group = grpX)
 
 grpD   = "Drawing"
-showCamp = input.bool(true, "Shade the campaign", group = grpD)
 showRun  = input.bool(false, "Arrow every bar in a 2+ run", group = grpD)
 showAll  = input.bool(true, "Mark reactions that never confirmed", group = grpD)
 showTbl  = input.bool(true, "Show the counter", group = grpD)
@@ -123,8 +122,9 @@ campNow  = inRunNow and heavyNow
 plotshape(showRun and inRunNow and dir < 0, title = "in a selling run", style = shape.triangledown, location = location.abovebar, size = size.tiny, color = color.new(color.red, 20))
 plotshape(showRun and inRunNow and dir > 0, title = "in a buying run", style = shape.triangleup, location = location.belowbar, size = size.tiny, color = color.new(color.teal, 20))
 
-bgCol = runDir < 0 ? color.new(color.red, 88) : color.new(color.teal, 88)
-bgcolor(showCamp and isCampaign ? bgCol : na)
+// NO bgcolor() EITHER. Zee: "can you remove the background vertical lines from the
+// chart". With the candle bodies already left alone, the price chart now carries only
+// WORDS - the campaign is read in the volume pane, where it is a fact about volume.
 
 // WORDS, NOT SYMBOLS. Zee: "instead of diamonds can u write labels.. because its hard to
 // track so many colors / diamonds etc". A shape has to be remembered; a word does not.
