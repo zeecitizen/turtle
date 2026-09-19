@@ -59,6 +59,13 @@ relX   = input.float(0.85, "Low volume: reaction <= x that reference", step = 0.
 //  is qualifying; collapsing to half is the other side walking away.
 imbX   = input.float(0.55, "STRONG imbalance: reaction <= x that reference", step = 0.05, group = grpR)
 wickX  = input.float(0.25, "OR rejection wick >= x of the bar range", step = 0.05, group = grpR)
+aggWickX = input.float(0.10, "Call it aggressive buying/selling past x", step = 0.05, group = grpR)
+//  LAWS_VSISA.md line 125: "it broke below the main bullish candle (ENGULFED THE BODY of
+//  previous candle)". Zee, 2026-09-19: "we can also check if the candle body envelopes
+//  (engulfs) the last two campaign candle's bodies, we can add to the label Stronger:
+//  engulfs last 2". The reaction taking back two or three whole bodies in one bar is the
+//  campaign being undone faster than it was built.
+showEngulf = input.bool(true, "Count campaign bodies the reaction engulfs", group = grpR)
 useWick= input.bool(true,  "Let a wick qualify a LOUD reaction", group = grpR)
 
 grpE   = "End of rising / falling market"
@@ -330,19 +337,37 @@ sellSig = fired and (needCont ? contDir[1] < 0 : contDir < 0)
 hasWick = rng > 0 and (wick / rng) >= wickX
 wickPct = rng > 0 ? wick / rng * 100 : 0
 
+// ---- HOW MANY CAMPAIGN BODIES DID THE REACTION SWALLOW? --------------------------------
+//  Bodies only, not wicks - line 125 says "engulfed the BODY of previous candle". Counted
+//  backwards from the nearest campaign bar and stopping at the first one it does not
+//  cover, so "engulfs last 3" really means the three immediately behind it.
+bodyTop = math.max(open, close)
+bodyBot = math.min(open, close)
+engulfN = 0
+if showEngulf and runLen > 0
+    for k = 1 to runLen
+        if bodyTop >= math.max(open[k], close[k]) and bodyBot <= math.min(open[k], close[k])
+            engulfN += 1
+        else
+            break
+
 //  AND TRANSLATE IT. Zee: "i appreciate the percentages.. but then translate it too.. so
 //  say BUY SETUP lower wick 38% means XXX". The number is the evidence; this is what the
 //  law reads INTO it. For a buy, the wick below is how far sellers drove it before buy
 //  orders took it back - line 243: "wick below says buy order was hit.. if there was no
 //  wick this could be a supply". For a sell it is the same story upside down, line 250:
 //  "the wick tells that when market was trying to go up there was a large sell order".
+//  NO TIERS. Zee, 2026-09-19: "we don't need tiers.. infact any existance of lower wick
+//  greater than 10% is enough to classify it". His law never graded it either - line 219
+//  says flatly "a wick below means AGGRESSIVE BUYING happened", line 243 "the wick suggests
+//  the big volume is due to aggressive buying". My 25/45 bands were an invention on top of
+//  a document that makes a binary call, so they are gone: past 10% it is aggressive buying,
+//  and 45% only intensifies the same verdict rather than changing it.
 wickMeaning = ""
 if wickPct >= 45
-    wickMeaning := buySig ? "buyers took it back hard - aggressive buying" : "sellers slammed it back - aggressive selling"
-else if wickPct >= 25
-    wickMeaning := buySig ? "buy orders turned the candle" : "sell orders turned the candle"
-else if wickPct >= 10
-    wickMeaning := buySig ? "only a weak push back from buyers" : "only a weak push back from sellers"
+    wickMeaning := buySig ? "STRONG aggressive buying" : "STRONG aggressive selling"
+else if wickPct >= aggWickX * 100
+    wickMeaning := buySig ? "aggressive buying" : "aggressive selling"
 else
     wickMeaning := buySig ? "nothing pushed back - supply still available, the law says HOLD" : "nothing pushed back - demand still there, the law says WAIT"
 
@@ -391,7 +416,8 @@ if buySig or sellSig
     //  inside support (STRONGEST)". So when the level was pierced and taken back, the
     //  setup is not merely valid - the document calls it the strongest case it describes.
     line6 = fakeBreak ? (fakeReact ? "\nSTRONGER DUE TO FAKE BREAK - the reaction itself took the level back" : "\nSTRONGER DUE TO FAKE BREAK - the campaign pierced support and lost it") : ""
-    txt  = base + flag + "\n" + line2 + line3 + line4 + line5 + line6
+    line7 = engulfN >= 2 ? "\nStronger: engulfs last " + str.tostring(engulfN) : ""
+    txt  = base + flag + "\n" + line2 + line3 + line4 + line5 + line6 + line7
     bCol = warn ? color.new(color.orange, 0) : (buySig ? color.new(color.teal, 0) : color.new(color.red, 0))
     bSty = buySig ? label.style_label_up : label.style_label_down
     label.new(bar_index, buySig ? low : high, txt, style = bSty, color = bCol, textcolor = color.white, size = size.normal)
