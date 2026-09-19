@@ -41,7 +41,16 @@ avgX   = input.float(1.15, "AVERAGE method: run avg >= x average", step = 0.05, 
 pkX    = input.float(0.70, "PEAK method: run's loudest >= x peak",  step = 0.05, group = grpC)
 
 grpR   = "Reaction"
-relX   = input.float(0.85, "Low volume: reaction <= x campaign avg", step = 0.05, group = grpR)
+//  WHAT IS "LOW VOLUME" LOW AGAINST? Zee, 2026-09-19, after a setup he would have taken
+//  went unmarked: "i think we compare the reaction candle's volume to the LAST CANDLE of
+//  the campaign (the candle before the reaction candle is the last candle of the
+//  campaign)". His law says only "then we have a low volume bullish candle" (line 223)
+//  and leaves the yardstick open, so this was my choice, not his - and mine was wrong for
+//  the bar he was looking at. The 18 Sep 12:50 reaction came in at 2,313 against a
+//  campaign AVERAGING 2,162 (107% - failed) but against its LAST bar of 3,280 it is 71%,
+//  which passes comfortably. His eye was comparing it to the big red right before it.
+quietRef = input.string("LAST bar of the campaign", "Low volume measured against", options = ["LAST bar of the campaign", "campaign AVERAGE", "campaign PEAK"], group = grpR)
+relX   = input.float(0.85, "Low volume: reaction <= x that reference", step = 0.05, group = grpR)
 wickX  = input.float(0.25, "OR rejection wick >= x of the bar range", step = 0.05, group = grpR)
 useWick= input.bool(true,  "Let a wick qualify a LOUD reaction", group = grpR)
 
@@ -122,7 +131,8 @@ rng      = high - low
 lowWick  = math.min(open, close) - low
 highWick = high - math.max(open, close)
 wick     = runDir < 0 ? lowWick : highWick          // rejection against the campaign
-quiet    = volume <= campAvg * relX
+quietBase = quietRef == "LAST bar of the campaign" ? volume[1] : quietRef == "campaign PEAK" ? runPeak : campAvg
+quiet    = quietBase > 0 and volume <= quietBase * relX
 wicked   = useWick and rng > 0 and (wick / rng) >= wickX
 absorbed = isCampaign and (quiet or wicked)
 

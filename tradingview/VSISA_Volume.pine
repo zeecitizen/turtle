@@ -34,7 +34,8 @@ method = input.string("PEAK (like the EA)", "Heavy measured against", options = 
 lookN  = input.int(20,   "N bars for that yardstick", minval = 5)
 avgX   = input.float(1.15, "AVERAGE: run avg >= x average", step = 0.05)
 pkX    = input.float(0.70, "PEAK: run's loudest >= x peak",  step = 0.05)
-relX   = input.float(0.85, "Reaction: volume <= x campaign avg", step = 0.05)
+quietRef = input.string("LAST bar of the campaign", "Low volume measured against", options = ["LAST bar of the campaign", "campaign AVERAGE", "campaign PEAK"])
+relX   = input.float(0.85, "Reaction: volume <= x that reference", step = 0.05)
 wickX  = input.float(0.25, "...OR a rejection wick >= x of range", step = 0.05)
 showAvg = input.bool(true, "Draw the average line")
 
@@ -77,7 +78,8 @@ pAvg = pLen > 0 ? pVol / pLen : 0.0
 pHeavy = method == "AVERAGE of last N" ? pAvg >= volAvgN[pLen + 1] * avgX : pPeak >= volPeakN[pLen + 1] * pkX
 rng   = high - low
 wick  = prevDir < 0 ? (math.min(open, close) - low) : (high - math.max(open, close))
-quiet = pAvg > 0 and volume <= pAvg * relX
+qBase = quietRef == "LAST bar of the campaign" ? volume[1] : quietRef == "campaign PEAK" ? pPeak : pAvg
+quiet = qBase > 0 and volume <= qBase * relX
 wickd = rng > 0 and (wick / rng) >= wickX
 isReaction = pLen >= minRun and pHeavy and (quiet or wickd)
 
