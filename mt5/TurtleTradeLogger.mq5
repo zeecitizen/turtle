@@ -17,7 +17,18 @@
 //|  Claude reads this file every 5 minutes for actual P&L.         |
 //+------------------------------------------------------------------+
 #property copyright "Turtle Trader by M. Zeeshan"
-#property version   "1.04"
+#property version   "1.06"
+// v1.06 (2026-09-25): BACKFILL WAS SILENTLY LOGGING NOTHING. Found on Zee's Blueberry
+//   account (5116967, BlueberryMarketsSVG-Live): he traded all day, the logger reported
+//   "backfill scanned 545 deals — appended 0 missed", and turtle_fills.csv did not grow.
+//   Cause: HistoryDealSelect() CLEARS the selected-history list and refills it with the
+//   one requested deal, and LogDeal() calls it on its first line - so the loop destroyed
+//   the list it was walking on iteration zero. On a fresh funded account deal zero is the
+//   opening BALANCE credit, rejected as not-a-trade, so the cache was wiped before a
+//   single real fill was reached. Tickets are now collected BEFORE any of them is logged.
+//   This failure is invisible from outside: the open-positions snapshot keeps ticking and
+//   the scan count looks healthy, so an account can trade for days and record nothing.
+// v1.05 (2026-09-25): ACCOUNT + SERVER columns - see the note beside HEADER.
 // v1.04 (2026-08-17): BACKFILL. The logger was purely event-driven — OnTradeTransaction
 //   was its ONLY source, so any deal that closed while the terminal was off (a server-side
 //   SL, a restart, a reload) was lost forever. Found by reconciling against the broker's
@@ -39,7 +50,15 @@ input string InpPosFile     = "open_positions.json";// Live open-positions snaps
 input int    InpPosRefresh  = 2;                    // How often to refresh that snapshot (seconds)
 
 //--- CSV header
-const string HEADER = "broker_time,deal_ticket,position_ticket,symbol,direction,volume,close_price,profit,commission,swap,net_pnl,comment,magic,ea\n";
+//  WHICH ACCOUNT DID THIS TRADE HAPPEN ON? Zee, 2026-09-25: "can the manual circular meter
+//  take trade history from the blueberry account.. these trades are taken by me today on
+//  blueberry". It could not, and MAGIC is why. This file is written to COMMON files, which
+//  every terminal on this machine shares, so rows from different brokers land in one file
+//  with nothing to tell them apart. Magic separates EA from EA; it cannot separate
+//  Zee-on-Blueberry from Zee-on-anything-else, because both are magic 0.
+//  account and server are appended at the END so every existing reader keeps working -
+//  server.js reads its columns by index, and the old rows simply have no 14/15.
+const string HEADER = "broker_time,deal_ticket,position_ticket,symbol,direction,volume,close_price,profit,commission,swap,net_pnl,comment,magic,ea,account,server\n";
 
 // Map a deal's magic number to the EA that opened it (magic 0 = manual/Human).
 string EaNameForMagic(long m) {
@@ -106,11 +125,16 @@ bool LogDeal(ulong deal)
     StringReplace(comment, "\n", " ");
     StringReplace(comment, "\r", "");
 
-    string line = StringFormat("%s,%I64u,%I64u,%s,%s,%.2f,%.5f,%.2f,%.2f,%.2f,%.2f,%s,%I64d,%s\n",
+    //  the two new columns - see the note beside HEADER
+    long   acct = AccountInfoInteger(ACCOUNT_LOGIN);
+    string srv  = AccountInfoString(ACCOUNT_SERVER);
+    StringReplace(srv, ",", ";");
+
+    string line = StringFormat("%s,%I64u,%I64u,%s,%s,%.2f,%.5f,%.2f,%.2f,%.2f,%.2f,%s,%I64d,%s,%I64d,%s\n",
                                TimeToString(deal_time, TIME_DATE|TIME_SECONDS),
                                deal, pos_ticket, symbol, close_direction, volume, price,
                                profit, commission, swap, net_pnl, comment,
-                               magic, EaNameForMagic(magic));
+                               magic, EaNameForMagic(magic), acct, srv);
 
     int h = FileOpen(InpFileName, FILE_READ|FILE_WRITE|FILE_TXT|FILE_COMMON|FILE_ANSI);
     if (h == INVALID_HANDLE)
@@ -156,13 +180,29 @@ void BackfillMissedDeals()
         Print("TurtleTradeLogger: backfill HistorySelect failed");
         return;
     }
-    int added = 0;
+    //  COLLECT THE TICKETS FIRST, THEN LOG THEM. Zee, 2026-09-25, on a freshly attached
+    //  logger that saw his Blueberry trades and wrote none of them:
+    //      "backfill scanned 545 deals since 2026.09.10 — appended 0 missed"
+    //  HistoryDealSelect() is documented to CLEAR the selected history list and refill it
+    //  with the single deal requested - and LogDeal() calls it on its first line. So the
+    //  old loop was destroying, on iteration zero, the very list it was iterating: every
+    //  later HistoryDealGetTicket(i) returned 0 and the loop silently did nothing.
+    //  On a fresh funded account deal zero is the opening BALANCE credit, which is not a
+    //  trade and gets rejected - so the cache was wiped and not one real fill was reached.
+    //  This is why an account could trade all day and log nothing while looking healthy:
+    //  the open-positions snapshot kept ticking, and the backfill reported a large scan.
     int total = HistoryDealsTotal();
+    ulong tickets[];
+    ArrayResize(tickets, total);
+    int nt = 0;
     for (int i = 0; i < total; i++)
     {
         ulong deal = HistoryDealGetTicket(i);
-        if (deal != 0 && LogDeal(deal)) added++;
+        if (deal != 0) tickets[nt++] = deal;
     }
+    int added = 0;
+    for (int i = 0; i < nt; i++)
+        if (LogDeal(tickets[i])) added++;
     PrintFormat("TurtleTradeLogger: backfill scanned %d deals since %s — appended %d missed",
                 total, TimeToString(from, TIME_DATE|TIME_SECONDS), added);
 }
@@ -196,7 +236,7 @@ int OnInit()
     // manual/Human trades — the per-EA heartbeats only see their own magic).
     EventSetTimer(InpPosRefresh > 0 ? InpPosRefresh : 2);
 
-    PrintFormat("TurtleTradeLogger v1.04 ready → fills=%s, positions=%s every %ds",
+    PrintFormat("TurtleTradeLogger v1.06 ready → fills=%s, positions=%s every %ds",
                 InpFileName, InpPosFile, InpPosRefresh);
     return INIT_SUCCEEDED;
 }

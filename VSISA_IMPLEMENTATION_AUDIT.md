@@ -8,8 +8,13 @@ profit? i've to yet fully understand what you're doing"*
 He is right to stop. This is the audit: every clause of the EA, side by side with
 `LAWS_VSISA.md` and the transcripts, with the deviations named rather than buried.
 
-**Headline: the live configuration implements roughly the first half of the method and
-none of the second, on the wrong volume feed, with a wider stop than specified.**
+**Headline (as first written): the live configuration implements roughly the first half
+of the method and none of the second, on the wrong volume feed, with a wider stop than
+specified.**
+
+**Corrected 2026-09-13:** the volume feed was never wrong — see §1. The stop is fixed,
+the entry was already right, and the yardstick is now the current swing. What remains is
+the missing CONTEXT (trend, retracement, session) and the upper tiers.
 
 ---
 
@@ -37,19 +42,27 @@ Bar 1 = the just-closed bar. Bars 2–3 = the setup. Bars 4–13 = the volume ya
 
 ## THE DEVIATIONS
 
-### 1. The volume feed is wrong — and his own LAWS.md says so in line 2
+### 1. The volume feed — NOT a deviation. I was wrong.
 
-> *LAWS.md, line 2:* "we read volume from TradingView's OANDA chart of XAUUSD, **the EA
-> makes the mistake of reading volume from Broker Blueberry. We donot want to make this
-> mistake.**"
+I cited `LAWS.md` line 2 ("the EA makes the mistake of reading volume from Broker
+Blueberry. We donot want to make this mistake") against VSISA.
 
-VSISA judges **broker tick count**. Measured, not assumed: `iRealVolume` returned 0 reads
-on both Blueberry and Axi (gold CFD publishes none), so every comparison falls back to
-the broker's tick count. The OANDA reader is built and wired in but defaults OFF because
-the bridge's coverage cannot yet support it.
+**Zee, 2026-09-13: "this LAWS_VSISA is separate from LAWS.md.. the laws.md was a separate
+strategy .. this VSISA is a different strategy.. so for vsisa we use broker tick count
+(and AXI volume in specific)."**
 
-**Everything else below is secondary to this. The strategy is a volume method being run
-on a volume number he does not read.**
+`LAWS.md` governs the DIAMOND — the UHV-breakout method, which is read on TradingView's
+OANDA feed. `LAWS_VSISA.md` is a different strategy and is read on the BROKER's own tick
+volume. Applying one document's rule to the other strategy was my mistake and it turned
+a correct design into an imaginary bug.
+
+**So the current behaviour is right:** `iRealVolume` returns 0 for gold CFD, `BarVolume()`
+falls back to the broker's tick count, and on Axi that is Axi's tick count — exactly what
+this strategy wants. The FEED PROBE line reporting "falls back to TICK COUNT" is the
+DESIRED state, not a warning.
+
+`InpOandaVolume` stays at 0. The OANDA reader is dormant, harmless, and should not be
+turned on for this EA.
 
 ### 2. "That session's highest volumes" became "the last 10 bars"
 
