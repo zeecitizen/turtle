@@ -35,7 +35,33 @@ TERMINALS = {
         "editor": Path(r"C:/Program Files/Blueberry Markets MetaTrader 5"
                        r"/metaeditor64.exe"),
     },
+    # Axi REINSTALLED itself into Program Files on 2026-09-12, which gave it a NEW
+    # data folder and orphaned everything in the old one. The previous pair is kept
+    # below so an older deploy can still be found if it is ever needed.
     "axi": {
+        "data": Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal"
+                     r"/6FBEE76C719DC78AB2AE839B5A0C7442"),
+        "editor": Path(r"C:/Program Files/Axi MetaTrader 5 Terminal"
+                       r"/MetaEditor64.exe"),
+    },
+    # PXBT (Zee 2026-10-03: "have you placed the EA in the prime XBT folders"). Note the
+    # editor here is MetaEditor64.exe with capitals - a lowercase glob misses it.
+    "pxbt": {
+        "data": Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal"
+                     r"/BCB580088311575081ABF4FB040CCFF8"),
+        "editor": Path(r"C:/Program Files/PXBT Trading MT5 Terminal"
+                       r"/MetaEditor64.exe"),
+    },
+    # EXNESS, added 2026-10-05. This is the first feed in the project with gold OPEN and a
+    # real DOM, which is what every "test it on gold" note in TICK_SPEED.md has been waiting
+    # for. Editor is MetaEditor64.exe with capitals, same as PXBT.
+    "exness": {
+        "data": Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal"
+                     r"/53785E099C927DB68A545C249CDBCE06"),
+        "editor": Path(r"C:/Program Files/MetaTrader 5 EXNESS"
+                       r"/MetaEditor64.exe"),
+    },
+    "axi-old": {
         "data": Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal"
                      r"/0FE5F202FCDE117C6EFAB41A7BC984CD"),
         "editor": Path(r"C:/Users/zeesh/AppData/Roaming/Axi MetaTrader 5 Terminal"
@@ -43,6 +69,15 @@ TERMINALS = {
     },
 }
 DEFAULT_TERMINAL = "blueberry"
+
+# An EA that lives on a particular broker must FOLLOW it. VSISA and its pullback
+# sibling were moved to Axi for the volume feed; deploying them with the default
+# target silently compiled them into Blueberry, where nothing ever ran them.
+# An explicit --terminal still wins.
+EA_HOME = {
+    "VSISA": "axi",
+    "VSISA_Pullbacks": "axi",
+}
 
 TERMINAL = TERMINALS[DEFAULT_TERMINAL]["data"]
 EXPERTS = TERMINAL / "MQL5" / "Experts"
@@ -97,10 +132,16 @@ def deploy(name: str) -> bool:
 if __name__ == "__main__":
     args = sys.argv[1:]
     # --terminal axi | --terminal blueberry   (default: blueberry)
+    explicit_terminal = "--terminal" in args
     if "--terminal" in args:
         i = args.index("--terminal")
         use_terminal(args[i + 1])
         del args[i:i + 2]
     names = args or ["CaseSignalExecutor"]
-    results = [deploy(n.removesuffix(".mq5")) for n in names]
+    results = []
+    for n in names:
+        n = n.removesuffix(".mq5")
+        if not explicit_terminal:
+            use_terminal(EA_HOME.get(n, DEFAULT_TERMINAL))
+        results.append(deploy(n))
     sys.exit(0 if all(results) else 1)

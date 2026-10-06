@@ -135,16 +135,6 @@ grpS   = "Strong closing"
 //  together are what separate aggressive selling from demand.
 showClose  = input.bool(true, "Mark strong bearish / bullish closings", group = grpS)
 closeMax   = input.float(0.12, "Closing wick <= x of the bar range", step = 0.02, group = grpS)
-//  THE WICK ON THE WRONG SIDE. Zee, 2026-09-20, on an END OF RISING MARKET - SELL SETUP
-//  that was followed by price rising: "the same candle has a wick at the bottom of the
-//  candle.. market goes upwards after it.. could our wick laws have classified it here as
-//  weak or something?"
-//  Yes, and line 279 is explicit: "if there was a WICK BELOW the red candle, then the
-//  bigger volume would mean its DEMAND". I built that rule for the campaign's last candle
-//  and never for the REACTION itself. That bar had a 21% wick above and a 16% wick below -
-//  nearly symmetric, which is indecision rather than rejection - and price went +6.21 over
-//  the next four bars. A sell worth taking wants a wick above and almost nothing below.
-oppWickX   = input.float(0.15, "A wick on the WRONG side past x weakens the setup", step = 0.05, group = grpS)
 
 grpX   = "Confirmation"
 //  OFF by default, 2026-09-19. The confirmation bar costs 61% of the setups - 11.21
@@ -486,12 +476,8 @@ if showClose and strongClose and (buySig or sellSig)
     cSty = dir < 0 ? label.style_label_left : label.style_label_left
     label.new(bar_index, close, cTxt + "\n" + cSub, style = cSty, color = cCol, textcolor = color.white, size = size.small)
 
-//  contraWick: the closing-side wick, which on a sell is the LOWER one. Past oppWickX it
-//  is demand showing up inside the very bar being sold, so the setup is downgraded.
-contraWick = rng > 0 and (closeWick / rng) >= oppWickX
-
 if buySig or sellSig
-    warn = (not hasWick and not eorHere) or contraWick
+    warn = not hasWick and not eorHere
     side = buySig ? "lower" : "upper"
     //  The orange label says WEAK outright rather than relying on the colour. Zee:
     //  "the orange label.. can it say WEAK BUY SETUP.. add the word WEAK on all orange
@@ -533,10 +519,7 @@ if buySig or sellSig
     //  setup is not merely valid - the document calls it the strongest case it describes.
     line6 = fakeBreak ? (fakeReact ? "\nSTRONGER DUE TO FAKE BREAK - the reaction itself took the level back" : "\nSTRONGER DUE TO FAKE BREAK - the campaign pierced support and lost it") : ""
     line7 = engulfN >= 2 ? "\nStronger: engulfs last " + str.tostring(engulfN) : ""
-    //  Named plainly, with the number, so the contradiction is visible rather than hidden
-    //  inside a colour change.
-    line8 = contraWick ? (buySig ? "\nWEAKENED: " + str.tostring(closePct, "#") + "% wick ABOVE too - supply pushed back inside this bar" : "\nWEAKENED: " + str.tostring(closePct, "#") + "% wick BELOW too - demand pushed back inside this bar") : ""
-    txt  = base + flag + "\n" + line2 + line3 + line4 + line5 + line6 + line7 + line8
+    txt  = base + flag + "\n" + line2 + line3 + line4 + line5 + line6 + line7
     bCol = warn ? color.new(color.orange, 0) : (buySig ? color.new(color.teal, 0) : color.new(color.red, 0))
     bSty = buySig ? label.style_label_up : label.style_label_down
     label.new(bar_index, buySig ? low : high, txt, style = bSty, color = bCol, textcolor = color.white, size = size.normal)

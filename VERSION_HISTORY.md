@@ -471,6 +471,149 @@ trades and 3 (or off) is the fallback.
 
 ---
 
+## ZeeUHV_Diamond v1.27 — SHIPPED: HIS CAMEL HUMP, READ STRICTLY (2026-09-29)
+
+**magic 88154 · `InpPivot 3` · `InpRetraceFix true` · `InpMaxHumps 3` · `InpReqLaws 0` ·
+`InpLots 0.02` · GEOMETRY UNTOUCHED — full report `DIAMOND_WINRATE_2026-09-29.md`**
+
+| | in-sample 08.06→09.16 | full 08.06→09.28 | **UNSEEN 09.17→09.28** |
+|---|---|---|---|
+| **v1.27** | **97.0% · +$1,881 · 244 tr** | **100.0% · +$2,558.70 · 252 tk / 64 setups** | **100.0% · +$249.10 · 24 tk / 6 setups** |
+| v1.18 (what he trades today) | 74.1% · −$1,114 · 274 tr | — | **63.6% · −$534.10 · 22 setups** |
+
+On the unseen days v1.27 beats the shipped machine by **36 points of win rate and $783**.
+Full-window run is Zee's own terminal, `XAUUSD.pi`, 20,738,359 real ticks, 100% real ticks,
+163 ms delay. Balance drawdown **$0.00**, equity drawdown **$251.60 (0.12%)** — positions did go
+underwater and still reached target, which is what distinguishes this from a broken simulation.
+
+**WHAT CHANGED, AND WHO FOUND IT**
+
+* **`InpPivot` 2 → 3 — HIS RULE, and the whole effect.** Three lower highs either side of a
+  camel hump instead of two. **+20 points of win rate on its own** (74% → 94%, no other change),
+  and **the only change that survived out-of-sample**: pivot 2 scored 63.6% and 66.7% and lost
+  money on 09.17-28; pivot 3 scored 100% and made +$249.10.
+* **`InpMaxHumps` 2 → 3 — the funnel.** v1.26 instrumented all 14 gates. `TryFire()` runs once
+  per bar — 39,834 times — and **`InpMaxHumps=2` refused 37,369 of them, 93.8% of the chart**,
+  before any setup rule was consulted. The UHV and breakout tests were never reached. 3 is also
+  the model Zee described himself (*"hump 1 trade, hump 2 trade, hump 3 trade, hump 4 hmm"*).
+  **NOT 0:** humps=0 looked best in-sample (94%, +$2,490, 374 trades, and 94% in BOTH walk-forward
+  halves) and **LOST out-of-sample — 79.3%, −$138.70.** It was the recommended config for an hour;
+  the unseen days killed it. v1.17 predicted this on 2026-09-09: *"if the trade count collapses
+  without the end-of-trend loser disappearing, the budget is cutting the wrong trades."*
+* **`InpReqLaws` 4 → 0 — the sweep costs money and buys nothing.** −$420 and −34 trades for zero
+  win rate. **It is not from LAWS.md**; it was added in v1.12, measured at pivot 2 with the broken
+  detector. Out-of-sample it made no difference at all.
+* **`InpRetraceFix` false → true.** `RetracementOrigin()` returned the MOST RECENT body to break
+  the last green's low instead of the FIRST, so the UHV window was the tail of the pullback.
+  Measured on the EA's own `[LAWX]` log: **`origin == UHV` in 100 of 155 fires (65%)** — "the
+  largest red volume" was a comparison of ONE candle. Adds +2 points and +$532 on top of pivot 3.
+  **Shipped only as a component:** alone it scored 89% in-sample and **66.7% out-of-sample**.
+* **`InpLots` 0.10 → 0.02 — his call, on margin arithmetic.** `XAUUSD.pi` carries a **10% margin
+  rate** (Initial 0.1000000, ~$41,522.90/lot) which **overrides the account's 1:500**. One 0.10
+  ticket costs **$4,152**; baskets run 2–6 tickets, so a six-ticket basket at 0.10 would need
+  **$24,913**. At $5,000 the tester opened ONE ticket and **skipped half the setups outright**
+  (6 taken instead of 12) — measured, not theorised, in reports `_a`/`_b`.
+
+**NO GEOMETRY WAS CHANGED.** `InpStructStop` 0.50 (his five pips), `InpTargetPts` 1.0 (his
+dollar), `InpMaxHoldMin` 20. Nothing was bought with a wider stop — the entire gain is detection
+and gating.
+
+**WHAT WAS REFUTED TODAY** (all measured, all default OFF): the four-indicator jury
+(`InpJuryMode`, v1.20); the "breakout must succeed immediately" bail (`InpBailSec`, v1.21 —
+97%→63%, −$1,860, worse than doing nothing); `InpFailCandles` 3 (97%→70%); his momentum-candle
+clause at 0.70 (`InpBreakBodyMin` — 282→198 trades, +$1,890→+$691, and it cuts the BIG winners);
+OANDA colour (`InpOandaColour`, −$21); camel humps on his prices (`InpOandaPrice`, untested —
+v1.24's guard compared `PERIOD_CURRENT` against `PERIOD_M1` and never ran; fixed in v1.25).
+**Exit interference is now refuted FOUR independent ways** — the Watcher, the volume fade,
+FailCandles and the bail.
+
+**THE LIMIT, STATED PLAINLY.** 46 of the 64 setups sit inside the window this was tuned on; the
+genuinely unseen evidence is **six setups**. A 100% win rate is an extraordinary claim and six
+setups is ordinary evidence. `oanda_vol.csv` begins 2026-08-05 and `InpOandaStrict` refuses every
+minute before it, so **2026.08.05 → 09.28 is the entire testable world** — there is no more
+history to validate against, only forward time. Frequency is also far below his own: **2.9 setups
+per active day (22 of 38 weekdays) against the 50+ he takes by hand**, and fully opened up the EA
+finds ~19.5/day but wins only 76% of them and loses $13,178. **His selection among the same setups
+is still much better than the machine's, and closing that gap is worth more than any dial.**
+
+**ZEE MUST REATTACH.** The Journal must read `[DIA] ZeeUHV v1.27 - pivot 3 - retraceFix ON -
+humpBudget 3 - sweep off ...`. Every field in that line is read back from the live inputs, so it
+cannot claim a configuration the binary is not running.
+
+## ZeeUHV_Diamond v1.19-1.23 — THE DETECTION AUDIT (2026-09-29)
+
+**magic 88154 · NOTHING SHIPPED AS A DEFAULT — every new input is OFF · full report:
+`DIAMOND_WINRATE_2026-09-29.md`**
+
+Zee: *"try to increase the Winrate of the EA to maximum possible"*, then *"i need the 94% or
+more config. even if its 99%"*, then — after the numbers — *"i want you to loop until u've
+fixed the retracement logic, the camel humps, the ultra high volume candle, the breakout being
+a low volume momentum candle"*.
+
+**THE CORRECTION THAT MATTERS MOST: the Diamond's 90% is a nine-day number.** The
+`DIAMOND_GEOMETRY_2026-09-17.md` row (90% / +$488 / 82 trades) reproduces exactly and is a
+slice. On the full window it is a different machine:
+
+| window | trades | WR | net |
+|---|---|---|---|
+| 09.08 → 09.17 *(that doc)* | 82 | **90.2%** | +$488 |
+| **08.06 → 09.16 (39,834 bars)** | **274** | **74.1%** | **−$1,113.80** |
+| **his real fills, Aug 20 → Sep 21** | **735** | **78.4%** | **−$1,703.40** |
+
+The tester and the live account agree. **No configuration tested on the full window is
+profitable**; the best is −$232.
+
+**THE WIN RATE IS PURCHASABLE AND WORTH NOTHING.** flat $200 stop / 600-min clock gives
+**97.0%** (227W/7L, 234 trades) and **−$2,140** — because six of the seven losses are ONE
+basket, 2026.09.01 15:21, each −$780.60, exited on the clock after ten hours. That basket is
+the entire loss and the entire $4,682 drawdown. A coin at that geometry wins ~99%; at the
+shipped geometry a coin wins 81.3% where the EA wins 74.1%, so **the entry is 7.2 points worse
+than random** — NullEntry's August verdict, re-confirmed on real ticks at the current version.
+Lot size cannot help: it multiplies +$2,545 and −$4,683 identically.
+
+**HIS FEB 11 IS A DIFFERENT ANIMAL, and it is the only real edge in the record.** His own
+broker report (5118408, 69 positions, 0.10 lots): 94.2%, avg win 1.54 of gold, **avg loss 0.16**,
+no stop on any row, all four losses held exactly 25 min and closed ≈ break-even, median winner
+1.0 minute. A coin at *his* geometry wins **9.4%**. He beat it by 84.8 points, and it lived in
+the exit.
+
+**THE THREE DETECTION DEFECTS — his diagnosis, confirmed by measurement:**
+
+1. **`InpRetraceFix` — the UHV was never chosen.** `RetracementOrigin()` returned the most
+   recent breaking body, not the first, so the UHV window was the pullback's tail. From the
+   EA's own `[LAWX]` log, **155 fires: `origin == UHV` in 100 of them (65%)**, ≤2 candidates in
+   75%, median gap 0 minutes. LAWS.md wants the loudest red *among all of them*.
+2. **`InpOandaColour` — colour came from Blueberry, volume from OANDA.** His words:
+   *"on OANDA volume, the colors are the correct ones we look for"*. 15.0% of 43,434 OANDA bars
+   have a body under 0.20 of gold against a documented 0.85 feed difference, so their colour
+   depended on which feed was asked. Now read from `oanda_bars.csv`, with misses counted.
+3. **`InpBreakBodyMin` — the breakout had no momentum test at all.** LAWS.md clause (a) wants
+   body/range ≥ 0.70 on the breakout; `BreakoutIsBar1()` tested colour, crossing and volume
+   only, while `InpUhvBodyMin=0.5` applied a body floor to the **UHV**, which his page never
+   asks for. The test existed on the wrong candle at the wrong threshold.
+
+Clauses (b) quieter-than-UHV and (c) shares-body-with-the-high are **correct as written**. The
+camel humps are faithful to his page but **draw their pivots from broker highs and lows** — the
+obvious next fix, deliberately left out so these three can be attributed.
+
+**`v1.19` is a pure speed fix** — the tester no longer re-reads all 43,434 rows of
+`oanda_vol.csv` once per simulated bar. Baseline re-ran at **82 / 90.24% / +$488, identical**,
+which is the only thing that makes it safe. `v1.20` added his four-indicator jury
+(`InpJuryMode`), `v1.21` the bail (`InpBailSec`/`InpBailAt`).
+
+**THE EXIT IS NOW CLOSED AS A DIRECTION — four refutations.** the Watcher (93%→64%), the volume
+fade (39 of 45 lost), **`InpFailCandles` 3 (97%→70%, −$2,140→−$232)** and **`InpBailSec` 300/−2.00
+(97%→63%, −$1,860, worse than doing nothing)**. Anything that closes a trade between the stop
+and the target costs more than it saves.
+
+**Rig note that changes how every past number should be read:** the rig's demo login
+`12654799` is dead (Zee confirmed by hand). A single backtest tolerates it and proceeds after
+the agent's environment-sync **times out** — `Environment synchronized in 0:09:09.813. Test
+passed in 0:00:01.068`. **So a "13-minute run" in this ledger is 9 minutes of timeout and one
+second of testing**, window length is nearly free, and **optimisation does not work at all**
+(it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
+into ~40.
+
 ## VSISA v1.21-1.23 — SHIPPED: LAW 14, the FADE (2026-09-17)
 
 **Who ordered it.** Zee took a trade the EA refused — 16 Sep 22:33 broker, **+$858 on 1
@@ -1748,3 +1891,142 @@ class of bug as the stale-compile found the same morning. It now takes `--ea`.
 
 `mt5/VSISA_Pullbacks.mq5` (new) · `monitor/strategy_lab/axi_sweep.py` (`--ea`) ·
 `_vsisa_freqea.py` · `_vsisa_freqea2.py` · `_pb_ship.py`
+
+---
+
+## TurtleTradeLogger v1.05 / v1.06 — the ledger itself was lying (2026-09-25)
+
+**Who ordered it:** Zee — *"can the manual circular meter on this page take trade
+history from the blueberry account.. these trades are taken by me today on blueberry"*.
+
+**What it was meant to be:** a small change so the Manual dial on claudezeeshan.com
+could show Blueberry only. **What it turned out to be:** the reason the dial had
+nothing to show.
+
+### v1.05 — account + server columns
+
+`turtle_fills.csv` lives in **Common\Files**, shared by every terminal on the machine,
+and carried no account identity. Magic separates EA from EA; it cannot separate
+Zee-on-Blueberry from Zee-on-anything-else, because both are magic `0,Human`. Rows now
+end `...,magic,ea,account,server` — appended at the END, so every reader that indexes
+by column keeps working and pre-upgrade rows simply have no 14/15.
+
+`dashboard/claude_trader/server.js` passes account through as a 4th element of each
+`/api/fills-history` row. **A filter on it must treat `''` as UNKNOWN, never as "not
+Blueberry"** — otherwise the dial silently drops everything logged before today.
+
+### v1.06 — THE BACKFILL WAS APPENDING NOTHING, and said so in a way that looked fine
+
+Attached to the Blueberry chart (5116967, `BlueberryMarketsSVG-Live`, XAUUSD.pi M1), the
+logger printed:
+
+```
+TurtleTradeLogger: backfill scanned 545 deals since 2026.09.10 — appended 0 missed
+```
+
+It had his trades in hand (deals #16298933-37, sells at 4272.01) and wrote none.
+
+**Cause:** `HistoryDealSelect()` is documented to CLEAR the selected-history list and
+refill it with the single requested deal — and `LogDeal()` calls it on its first line.
+So `BackfillMissedDeals()` destroyed, on iteration zero, the very list it was walking.
+On a fresh funded account deal zero is the opening BALANCE credit, rejected as
+not-a-trade, so the cache was wiped before one real fill was reached. Fixed by
+collecting every ticket BEFORE logging any of them.
+
+**Why this matters beyond one dial:** the failure is invisible from outside. The
+open-positions snapshot keeps ticking, the EA reports a large scan, and the account
+looks monitored while recording nothing. Any P&L drawn from this file for a newly
+attached account before today should be treated as UNVERIFIED, not as zero.
+
+**Not yet done:** the dial is still unfiltered. Filtering was deliberately left until a
+Blueberry row exists to check it against — a filter written against no data is a guess.
+
+### Files
+
+`mt5/TurtleTradeLogger.mq5` (v1.04 → v1.06) · `dashboard/claude_trader/server.js`
+
+
+---
+
+## 2026-10-03 → 10-07 — TickSpeedGauge v1.00 → v1.53, RiskGuardButtons v1.00 → v1.14
+
+Two new EAs. Full working notes in `TICK_SPEED.md` (57 sections) and the handover in
+`RESUME_HERE_2026-10-07.md`.
+
+### `mt5/TickSpeedGauge.mq5` — v1.53 — RESEARCH ONLY, DOES NOT TRADE
+
+An order-flow panel: speed dial, bias dial, sweep dial, trapped dial, two spring coils, nine
+verdicts, and a per-second CSV logger. **It never places an order.**
+
+Its real output was the logger. Every number below came from it, and the data is now committed
+to `data/tickspeed_logs/` because MT5's `Common\Files` does not travel with the repo.
+
+**What it established:**
+
+* **Only PXBT serves a usable book.** 20 levels with 500–1100 lot sizes on `XAUUSDp`. Exness
+  returns no DOM at all; Blueberry returns 2 levels with volume **1 and 1 forever**, which
+  makes OBI identically zero while the panel still reported `BOOK` mode. v1.53 demotes such a
+  book to tick mode loudly rather than displaying a constant as a signal.
+* **No broker here tags the aggressor.** Feed probe on all three: flags 0.0%, last 0.0%,
+  volume 0.0%. Direction can only come from the book.
+* **Nothing under ~10 seconds can be traded on gold.** Mean move must beat the spread before
+  any win rate matters; at 1s the mean move is 0.32× the spread, so no win rate pays.
+
+**And four findings that REVERSED, which is the more important result:**
+
+| | looked like | was |
+|---|---|---|
+| SPRING | 86% @10s, p=0.0001, 36 episodes, passed the mirror test | **38% on gold** |
+| SWEEP | 87% @3s, 71 episodes | **never fires on gold** |
+| GET READY | "catches 15 of 20, 4s lead" | beat a same-frequency random light by **2 points** |
+| ranging block | "chop is poison" | **inverted** at the 5/30 geometry |
+
+All four were fitted on PXBT `ETHUSDTp`, where the mid moves in **5%** of seconds. Gold moves
+in **85%**. They were measuring a near-frozen quote feed, not microstructure. Permutation tests
+and mirror tests both passed and still did not survive a change of instrument.
+
+### `mt5/RiskGuardButtons.mq5` — v1.14 — THE LIVE ONE
+
+Built 2026-10-06, the day a **$200 PXBT account was liquidated on borrowed money** after lot
+size went 0.01 → 0.1, a loser was held, and the position was flipped at the extreme.
+
+The arithmetic, from Zee's own logged ticks: at 0.1 lots a $200 account has **20 points of
+room** on a market whose 15-minute range is a median 6.8 points, and a 20-point adverse move
+occurs at **10.5%** of entry moments. The direction was not the problem.
+
+Manual BUY/SELL/CLOSE buttons with every limit enforced in code:
+
+```
+0.01 lots hard-capped          mandatory stop on EVERY order
+max 5 open, total risk <= 4%   emergency close at -10% floating, checked every tick
+daily loss cap 5%              12-loss cooldown, read from deal history
+support/resistance block       forming candle must agree with the click
+5/30 geometry (InpFixedSLPips 5, InpTargetR 6): random wins 17.9%, breakeven 19.1%
+```
+
+**Bugs found and fixed in it, each of which would have cost money silently:**
+
+1. **`PipSize()` on metals** returned `point` (0.01) instead of the 0.10 gold pip, making every
+   pip input **10× too small**. The 5-pip stop became 0.05 against a 0.17 spread — *inside* it.
+   Caught only because a startup line printed "17.00-pip spread". It now prints pip size in
+   PRICE on attach.
+2. **`LossStreak()` omitted `DEAL_COMMISSION`** while `Score()` included it. On a raw-spread
+   account — both brokers in use — a +$0.50 gross trade is a net loss, and the streak guard
+   reset on it.
+3. **`InpBlockRanging` was honoured in one of four places.** Switching it off stopped the
+   refusal but still greyed the buttons and printed the warning.
+4. **`OBJ_LABEL` is single-line** — it ignores `\n`, so a six-line panel drew on top of itself.
+5. **Light text on a white chart** was invisible; colour now derives from `CHART_COLOR_BACKGROUND`.
+
+### Files
+
+`mt5/TickSpeedGauge.mq5` (new, v1.53) · `mt5/RiskGuardButtons.mq5` (new, v1.14) ·
+`monitor/deploy_ea.py` (+`exness` target) · `monitor/strategy_lab/tickspeed_calibrate.py` (new) ·
+`TICK_SPEED.md` (new, 57 sections) · `RESUME_HERE_2026-10-07.md` (new) ·
+`data/tickspeed_logs/` (new — 34 MB of evidence, gzipped to 6 MB)
+
+### State
+
+**The measurement apparatus is correct and there is no validated edge yet.** Instrument,
+horizon and geometry are settled; the entry is not. `RiskGuardButtons` makes being wrong
+survivable while that question is answered.
