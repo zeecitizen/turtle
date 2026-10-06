@@ -28,15 +28,36 @@
 // =====================================================================================
 indicator("VSISA Volume", overlay = false, format = format.volume, precision = 0, max_labels_count = 500)
 
-minRun = input.int(2,    "Minimum bars to call it a run", minval = 1)
+//  SYNCED WITH VSISA_Setups.pine, 2026-09-21. These had drifted badly: this pane was
+//  still on PEAK / 0.85 / 0.25 from the day it was written, while the setups script moved
+//  to AVERAGE / 1.20 / 0.70 / 0.15 and a per-direction minimum. So the coloured volume
+//  bars were answering a DIFFERENT question from the labels above them - a run could show
+//  grey here and be a perfectly good campaign there. Zee hit exactly that on 18 Sep 14:10:
+//  "campaign before is marked grey due to low volume so this is never considered a setup".
+//  Two scripts on one chart must agree about what a campaign is, or the chart argues with
+//  itself and there is no way to tell which half is right.
+minRun = input.int(2,    "Minimum bars to call it a run (BUY setups)", minval = 1)
+minRunSell = input.int(3, "...and for SELL setups", minval = 1)
+//  MIRRORS VSISA_Setups.pine's sellSoft. Zee, 2026-09-25: "yes make them agree".
+//  The campaign colouring here used minRun for BOTH directions while the setups script
+//  used minRunSell for the sell side. With sellSoft ON the two happen to agree, because
+//  it admits sells at the buy-side minimum too - but switch sellSoft off over there and
+//  this pane would go on colouring 2-bar rises that the labels above had stopped
+//  accepting. Same class of drift the two scripts were re-synced for on 2026-09-21, and
+//  the reason it matters is that Zee reads them together: a grey bar has to mean the
+//  same thing in both panes or neither can be trusted.
+//  KEEP THIS EQUAL TO sellSoft IN THE SETUPS SCRIPT. There is no way for one Pine script
+//  to read another's inputs, so this is a hand-kept pair - which is exactly why it is
+//  written down here rather than left as a matching default.
+sellSoft = input.bool(true, "Colour shorter SELL campaigns too (match Setups)")
 maxRun = input.int(8,    "Most bars to count back",        minval = 2)
-method = input.string("PEAK (like the EA)", "Heavy measured against", options = ["AVERAGE of last N", "PEAK (like the EA)"])
+method = input.string("AVERAGE of last N", "Heavy measured against", options = ["AVERAGE of last N", "PEAK (like the EA)"])
 lookN  = input.int(20,   "N bars for that yardstick", minval = 5)
-avgX   = input.float(1.15, "AVERAGE: run avg >= x average", step = 0.05)
+avgX   = input.float(1.20, "AVERAGE: run avg >= x average", step = 0.05)
 pkX    = input.float(0.70, "PEAK: run's loudest >= x peak",  step = 0.05)
 quietRef = input.string("LAST bar of the campaign", "Low volume measured against", options = ["LAST bar of the campaign", "campaign AVERAGE", "campaign PEAK"])
-relX   = input.float(0.85, "Reaction: volume <= x that reference", step = 0.05)
-wickX  = input.float(0.25, "...OR a rejection wick >= x of range", step = 0.05)
+relX   = input.float(0.70, "Reaction: volume <= x that reference", step = 0.05)
+wickX  = input.float(0.15, "...OR a rejection wick >= x of range", step = 0.05)
 showAvg = input.bool(true, "Draw the average line")
 
 dir = close > open ? 1 : close < open ? -1 : 0
@@ -58,7 +79,12 @@ campAvg = runLen > 0 ? runVol / runLen : 0.0
 volAvgN  = ta.sma(volume, lookN)
 volPeakN = ta.highest(volume, lookN)
 heavy = method == "AVERAGE of last N" ? campAvg >= volAvgN[runLen] * avgX : runPeak >= volPeakN[runLen] * pkX
-inRun      = runLen >= minRun
+//  ONE MINIMUM PER DIRECTION, the same arithmetic as the setups script. dir > 0 is a
+//  BUYING run, so the setup that would follow it is a SELL - and that is the side
+//  minRunSell governs. See the sellSoft note above.
+minRunSellAdmit = sellSoft ? math.min(minRun, minRunSell) : minRunSell
+minRunHere = dir > 0 ? minRunSellAdmit : minRun
+inRun      = runLen >= minRunHere
 isCampaign = inRun and heavy
 
 // --- the reaction: this bar goes the other way to the run behind it, and shows absorption
@@ -81,7 +107,14 @@ wick  = prevDir < 0 ? (math.min(open, close) - low) : (high - math.max(open, clo
 qBase = quietRef == "LAST bar of the campaign" ? volume[1] : quietRef == "campaign PEAK" ? pPeak : pAvg
 quiet = qBase > 0 and volume <= qBase * relX
 wickd = rng > 0 and (wick / rng) >= wickX
-isReaction = pLen >= minRun and pHeavy and (quiet or wickd)
+//  same per-direction minimum as the setups script: prevDir > 0 is a BUYING campaign,
+//  so the reaction after it is a SELL, and that is the side needing the longer run.
+//  ...and the same softening, so the YELLOW reaction bar appears under exactly the sells
+//  the setups script is willing to label. Without this the pane would withhold the yellow
+//  bar beneath a WEAK SELL SETUP - the label would say "here" and the volume would say
+//  "nothing here".
+pMin = prevDir > 0 ? minRunSellAdmit : minRun
+isReaction = pLen >= pMin and pHeavy and (quiet or wickd)
 
 // --- THREE COLOURS, AND ONLY THREE.
 //  Zee: "it should have just three colors: red campaign / green campaign / reaction

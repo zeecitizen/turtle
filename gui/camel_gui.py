@@ -410,7 +410,11 @@ class Cockpit:
         rows.sort(key=lambda r: r[0])
         EA_OF = {"88094": "ZeeUHV", "88104": "Loud", "88134": "ShopB",
                  "88154": "Diamond", "88184": "LAWS", "88194": "NoGate",
-                 "88185": "LAWS-A", "88186": "LAWS-B", "88187": "LAWS-C"}
+                 "88185": "LAWS-A", "88186": "LAWS-B", "88187": "LAWS-C",
+                 "88200": "D00-ctl", "88201": "D01-body", "88202": "D02-close",
+                 "88203": "D03-expa", "88204": "D04-span", "88205": "D05-ema5",
+                 "88206": "D06-peak", "88207": "D07-stop", "88208": "D08-2R",
+                 "88209": "D09-BE",   "88210": "D10-NY"}
         for ts, side, lots, closepx, pnl, magic in reversed(rows[-250:]):
             r = tk.Frame(frame, bg=BG); r.pack(fill="x", pady=1)
             col = "#2f9e44" if pnl > 0 else "#e03131"
@@ -440,7 +444,11 @@ class Cockpit:
             # to the old tag-sniffing resolver, which guessed the wrong candles AND
             # labelled broker time as PKT. They stamp [LAWX] exactly like 88184 does,
             # so every arm belongs in the law drawing. The trade itself was lawful.
-            if magic in ("88184", "88185", "88186", "88187"):
+            # 2026-08-26: the Diamond family now stamps [LAWX] with real TIMES (it
+            # used to print bar shifts, so the forensic button resolved nothing —
+            # "no EA fire line in the logs"). Every EA that stamps goes to the law
+            # drawing; only genuinely unstamped magics fall back to the guesser.
+            if magic in ("88184", "88185", "88186", "88187", "88154") or                (magic.isdigit() and 88200 <= int(magic) <= 88210):
                 tk.Button(r, text="🔍 forensic", font=("Segoe UI", 10, "bold"),
                           bg="#1d6fbf", fg="white", relief="flat", padx=8,
                           command=lambda t=ts: self.show_law_trade(near=t)

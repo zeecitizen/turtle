@@ -878,6 +878,10 @@ th, td { border-color:#e5e5e7 !important; }
     .ea-gauge[data-m="88154"] {
       background:linear-gradient(150deg,#0f5ea8 0%,#124a86 52%,#0d2f5c 100%);
       box-shadow:0 6px 18px rgba(15,94,168,.30); }
+    /* Manual - warm amber, so the human dial never reads as another EA at a glance. */
+    .ea-gauge[data-m="0"] {
+      background:linear-gradient(150deg,#6b4a12 0%,#4a3208 55%,#2e1f05 100%);
+      box-shadow:0 10px 26px rgba(224,168,42,0.28); }
     .ea-gauge[data-m="88184"] {
       background:linear-gradient(150deg,#6d3bd4 0%,#542ba8 52%,#371c72 100%);
       box-shadow:0 6px 18px rgba(109,59,212,.28); }
@@ -1718,12 +1722,43 @@ const EA_NAMES = { '88094': 'ZeeUHV · M1', '88104': 'Loud EA', '88134': 'Shop B
                    '88111': 'ZeeSimple', '88121': 'R1', '88020': 'Ghost',
                    '88154': 'Diamond 💎 (untouched)', '88184': 'BasedOnLaws 📜',
                    '88185': 'LAWS-A', '88186': 'LAWS-B', '88187': 'LAWS-C',
-                   '0': 'Manual (Zee)' };
+                   '0': 'Manual · Blueberry ✋' };
 // 2026-08-31, Zee: "on this website the dials, we can remove all except diamond and
 // lawbasedEA". A dial used to appear for ANY magic present in the fills, so retired
 // EAs and the 0.40 A/B/C arms all kept theirs. SHOW_ONLY is now the whitelist; add a
 // magic here to give it a dial back.
-const SHOW_ONLY = ['88154', '88184'];
+// 2026-09-23, Zee: "can you make a similar circular meter for Manual trades taken by
+// Zeeshan on Blueberry.. we already have two circular dials on the page". Magic 0 is
+// what MT5 stamps on a hand-placed trade and the logger tags it "Human", so the fills
+// were already there - 322 of them - just not whitelisted.
+// NOTE ON SCOPE: the fills file carries no ACCOUNT column, so this dial is "every manual
+// trade the logger saw", not "manual trades on Blueberry" specifically. With the logger
+// attached to the Blueberry terminal those are the same set; if it is ever attached to
+// two terminals at once they would merge silently. Worth an account column one day.
+const SHOW_ONLY = ['88154', '88184', '0'];
+
+// ── THE MANUAL DIAL IS ONE ACCOUNT, NOT "every manual trade ever seen" ──────────
+// Zee, 2026-09-25: "can the manual circular meter take trade history from the
+// blueberry account.. these trades are taken by me today on blueberry".
+// turtle_fills.csv is written to MT5's COMMON folder, shared by every terminal on
+// the machine, and magic 0 means "a human did this" on ALL of them - so before
+// TurtleTradeLogger v1.05 stamped account+server on each row there was no way to
+// tell Zee-on-Blueberry from Zee-on-any-other-broker. Now there is.
+// Rows written BEFORE that upgrade carry no account at all. They are excluded here,
+// and that is safe for one specific reason: Blueberry logging did not exist until
+// the upgrade, so a row without an account cannot be a Blueberry row. It is NOT
+// safe to reason the other way round - an empty account means UNKNOWN, never
+// "some other broker" - which is why nothing else in this file filters on it.
+// Consequence worth knowing: this dial no longer shows manual trades from the old
+// broker (including the -$914 stop-out of 21 Sep). Those rows are still in the CSV.
+const MANUAL_ACCOUNT = '5116967';           // Blueberry Funded, BlueberryMarketsSVG-Live
+// One place that decides whether a fills row belongs to a dial, so the gauge and the
+// news leader below can never disagree about what they are counting.
+function rowIsFor(m, r) {
+  if (r[1] !== m) return false;
+  if (m === '0') return (r[3] || '') === MANUAL_ACCOUNT;
+  return true;
+}
 const GAUGE_PERIODS = [['today','Today'],['yday','Yesterday'],['thisweek','This week'],
                        ['lastweek','Last week'],['d15','15 days'],['d30','30 days']];
 let _fhRows = null, _fhAt = 0;
@@ -1794,8 +1829,9 @@ async function renderEaGauges() {
   box.innerHTML = magics.map(m => {
     const kind = _gaugeSel[m] || 'today';
     const v = { n: 0, w: 0, net: 0, wsum: 0, lsum: 0 };
-    for (const [t, mg, net] of rows) {
-      if (mg !== m || !inPeriod(t.slice(0, 10), kind, dates)) continue;
+    for (const r of rows) {
+      const [t, , net] = r;
+      if (!rowIsFor(m, r) || !inPeriod(t.slice(0, 10), kind, dates)) continue;
       v.n++; v.net += net;
       if (net > 0) { v.w++; v.wsum += net; } else { v.lsum += -net; }
     }
@@ -1829,8 +1865,9 @@ function renderWinningNews(rows, dates, magics) {
   const day15 = new Date(Date.now() - 15 * 86400000).toISOString().slice(0, 10).replace(/-/g, '.');
   const stats = magics.map(m => {
     const v = { m, n: 0, w: 0, net: 0, streak: 0, best: 0, bestDate: '' };
-    for (const [t, mg, net] of rows) {
-      if (mg !== m || t.slice(0, 10) < day15) continue;
+    for (const r of rows) {
+      const [t, , net] = r;
+      if (!rowIsFor(m, r) || t.slice(0, 10) < day15) continue;
       v.n++; v.net += net;
       if (net > 0) { v.w++; v.streak++;
         if (v.streak > v.best) { v.best = v.streak; v.bestDate = t.slice(0, 10); } }

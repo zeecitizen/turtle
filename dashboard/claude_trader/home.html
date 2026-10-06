@@ -183,6 +183,7 @@
   <span class="pill">day P&L: <b id="ls-pnl">…</b></span>
   <span class="pill">heartbeat: <b id="ls-hb">…</b></span>
   <span class="pill">status: <b id="ls-status">…</b></span>
+  <span class="pill">OANDA: <b id="ls-oanda">…</b></span>
 </div>
 
 <div class="container">
@@ -664,9 +665,38 @@ async function refreshLiveStrip() {
   } catch (e) {}
 }
 
+function oandaApiUrl() {
+  const host = window.location && window.location.hostname;
+  return host === 'claudezeeshan.com' ? 'https://me.claudezeeshan.com/api/oanda-volume-status' : '/api/oanda-volume-status';
+}
+
+async function refreshOandaStatus() {
+  try {
+    const r = await fetch(oandaApiUrl(), { credentials: 'same-origin' });
+    const d = await r.json();
+    const el = document.getElementById('ls-oanda');
+    if (!d || !d.exists) {
+      el.textContent = 'missing';
+      el.style.color = 'var(--red)';
+      return;
+    }
+    const ts = new Date(d.last_write_utc);
+    const ageSec = Math.max(0, Math.floor((Date.now() - ts.getTime()) / 1000));
+    const ageText = ageSec < 60 ? ageSec + 's ago' : ageSec < 3600 ? Math.floor(ageSec / 60) + 'm ago' : Math.floor(ageSec / 3600) + 'h ago';
+    el.textContent = ts.toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC') + ' (' + ageText + ')';
+    el.style.color = ageSec < 300 ? 'var(--green)' : 'var(--red)';
+  } catch (e) {
+    const el = document.getElementById('ls-oanda');
+    el.textContent = 'unknown';
+    el.style.color = 'var(--muted)';
+  }
+}
+
 loadFiles();
 refreshLiveStrip();
+refreshOandaStatus();
 setInterval(refreshLiveStrip, 30000);
+setInterval(refreshOandaStatus, 60000);
 </script>
 </body>
 </html>

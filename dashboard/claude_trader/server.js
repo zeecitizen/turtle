@@ -2173,7 +2173,19 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
           const key = c[1] + '_' + c[2];
           if (seen.has(key)) continue;
           seen.add(key);
-          rows.push([c[0].slice(0, 16), c.length >= 14 ? c[12] : '?', parseFloat(c[7] || '0')]);
+          // NET, NOT GROSS. Column 7 is `profit`; column 10 is `net_pnl` (profit +
+          // commission + swap). The gauges had been reading 7, so every dial understated
+          // the damage - manual trades showed -$753.56 against a real -$1,200.56, a $447
+          // gap from swap on held positions, and Diamond -$1,593 against -$1,703.
+          // Old rows written before net_pnl existed fall back to gross.
+          const _net = c.length >= 11 && c[10] !== '' ? parseFloat(c[10]) : parseFloat(c[7] || '0');
+          // WHICH ACCOUNT (Zee 2026-09-25, asking whether the Manual dial could be made
+          // Blueberry-only). TurtleTradeLogger v1.05 stamps login + server on every row;
+          // rows written before it have neither, so they come through as ''. A filter on
+          // this column must therefore treat '' as UNKNOWN, never as "not Blueberry" -
+          // otherwise the dial would silently drop every trade older than the upgrade.
+          rows.push([c[0].slice(0, 16), c.length >= 14 ? c[12] : '?', isNaN(_net) ? 0 : _net,
+                     c.length >= 15 ? (c[14] || '').trim() : '']);
         }
         global._fhCache = { at: Date.now(), rows };
       }

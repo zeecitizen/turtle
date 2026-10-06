@@ -66,6 +66,18 @@ SHIPPED = {
     "InpNyToHour": "24", "InpTrendTF": "0", "InpTrendMode": "0",
     "InpHighTest": "1", "InpEmaSlopeBars": "10", "InpLastLowMode": "0",
     "InpStopOnLastLow": "false",
+    # v1.20 - THE JURY (Zee 2026-09-29). Pinned OFF here so every run that does not
+    # explicitly ask for it is measuring the machine without it.
+    "InpJuryMode": "0", "InpJuryBars": "2", "InpJuryVotes": "2",
+    "InpJuryRsiN": "14", "InpJuryMomN": "14", "InpJuryAdxN": "14",
+    "InpJuryStochK": "5", "InpJuryStochD": "3", "InpJuryStochS": "3",
+    # v1.21 - THE BAIL ("it has to succeed immediately"). Pinned OFF.
+    "InpBailSec": "0", "InpBailAt": "0.0",
+    # v1.22 - THE DETECTION FIXES. Pinned OFF: the baseline must stay the
+    # baseline, and each fix is credited only when asked for explicitly.
+    "InpRetraceFix": "false", "InpOandaColour": "false",
+    "InpBreakBodyMin": "0.0",   # v1.23 - his clause (a). 0.70 is his number.
+    "InpOandaPrice": "false",   # v1.24 - camel humps on HIS highs/lows.
 }
 
 
@@ -100,7 +112,13 @@ def sync_ea() -> None:
         dst.write_bytes(src.read_bytes())
 
 
-def run(over: dict, frm: str, to: str, model: int = 4) -> str | None:
+def run(over: dict, frm: str, to: str, model: int = 4,
+        deposit: int = 4123) -> str | None:
+    # DEPOSIT IS AN ARGUMENT, not a constant (2026-09-29). A run that blows the account
+    # stops early and reports a net CENSORED AT THE BALANCE, which looks like a result.
+    # A wide structural stop makes that reachable: at InpStructStop 20 one 8-ticket basket
+    # can lose ~$1,600, which is 39% of the old hardcoded $4,123. When the question is a
+    # RATE rather than a P&L, fund the test well enough to finish the window.
     cfg = dict(SHIPPED)
     cfg.update({k: str(v) for k, v in over.items()})
     name = "DIA_%s" % datetime.now().strftime("%H%M%S%f")[:12]
@@ -108,7 +126,7 @@ def run(over: dict, frm: str, to: str, model: int = 4) -> str | None:
     lines = ["[Tester]"]
     for k, v in [("Expert", EA), ("Symbol", SYMBOL), ("Period", "M1"),
                  ("Model", model), ("FromDate", frm), ("ToDate", to),
-                 ("Deposit", 4123), ("Currency", "USD"), ("Leverage", "1:500"),
+                 ("Deposit", deposit), ("Currency", "USD"), ("Leverage", "1:500"),
                  ("ExecutionMode", 163), ("Optimization", 0),
                  ("Report", name), ("ReplaceReport", 1),
                  ("ShutdownTerminal", 1), ("Visual", 0)]:

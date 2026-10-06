@@ -19,6 +19,11 @@ bridge itself.
 import argparse
 import os
 import subprocess
+
+# 2026-08-30, Zee: "there's still blinking black windows". This supervisor makes FOUR
+# powershell calls per cycle and --loop 120 runs it every two minutes, so four consoles
+# flashed across his screen all day. subprocess spawns a conhost unless told not to.
+NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
 import sys
 import time
 from datetime import datetime, timezone
@@ -69,7 +74,7 @@ def web_alive():
                     "Start-Process -WindowStyle Hidden -FilePath 'node' "
                     "-ArgumentList 'server.js' -WorkingDirectory "
                     f"'{ROOT / 'dashboard' / 'claude_trader'}'"],
-                   capture_output=True, timeout=30)
+                   capture_output=True, timeout=30, creationflags=NO_WINDOW)
     time.sleep(8)
     try:
         urllib.request.urlopen("http://localhost:3457/", timeout=8)
@@ -103,7 +108,7 @@ def running(script_name):
           "Measure-Object | Select-Object -ExpandProperty Count")
     try:
         r = subprocess.run(["powershell", "-NoProfile", "-Command", ps],
-                           capture_output=True, text=True, timeout=25)
+                           capture_output=True, text=True, timeout=25, creationflags=NO_WINDOW)
         return int((r.stdout or "0").strip() or 0)
     except Exception:
         return 0
@@ -114,12 +119,12 @@ def restart(script):
                     "Get-CimInstance Win32_Process -Filter \"Name like 'py%'\" | "
                     f"Where-Object {{ $_.CommandLine -match '{script.name}' }} | "
                     "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -Confirm:$false }"],
-                   capture_output=True, timeout=30)
+                   capture_output=True, timeout=30, creationflags=NO_WINDOW)
     time.sleep(1)
     subprocess.run(["powershell", "-NoProfile", "-Command",
                     f"Start-Process -WindowStyle Hidden -FilePath '{PY}' "
                     f"-ArgumentList '-u','{script}','--loop','20' -WorkingDirectory '{ROOT}'"],
-                   capture_output=True, timeout=30)
+                   capture_output=True, timeout=30, creationflags=NO_WINDOW)
 
 
 def check():
