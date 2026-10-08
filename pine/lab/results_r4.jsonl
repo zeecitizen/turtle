@@ -1,0 +1,16 @@
+{"label": "LN+BVD+CR+H15", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15"}, "won": 35, "n": 50, "wr": 70.0, "older": "76%", "newer": "64%", "sim_pnl": "+$894.8"}
+{"label": "LN+BVD+CR+H15+rUS", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "rUS": true}, "won": 20, "n": 27, "wr": 74.1, "older": "85%", "newer": "64%", "sim_pnl": "+$473.6"}
+{"label": "LN+BVD+CR+H15+UHVbody50", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "uUHVBdOn": true}, "won": 18, "n": 26, "wr": 69.2, "older": "77%", "newer": "62%", "sim_pnl": "+$415"}
+{"label": "LN+BVD+CR+H15+sells", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "uDir": "Bear only"}, "won": 28, "n": 38, "wr": 73.7, "older": "74%", "newer": "74%", "sim_pnl": "+$644.4"}
+{"label": "LN+BVD+CR+H15+buys", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "uDir": "Bull only"}, "won": 7, "n": 12, "wr": 58.3, "older": "100%", "newer": "17%", "sim_pnl": "+$250.4"}
+{"label": "LN+BVD+CR+H15+CD0", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "uCd": 0}, "won": 36, "n": 51, "wr": 70.6, "older": "76%", "newer": "65%", "sim_pnl": "+$934.8"}
+{"label": "LN+BVD+CR+H15+rUS+body50", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "rUS": true, "uUHVBdOn": true}, "won": 13, "n": 17, "wr": 76.5, "older": "88%", "newer": "67%", "sim_pnl": "+$290.8"}
+{"label": "LN+BVD+CR+H15+rUS+CD0", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "rUS": true, "uCd": 0}, "won": 21, "n": 28, "wr": 75.0, "older": "86%", "newer": "64%", "sim_pnl": "+$513.6"}
+{"label": "LN+BVD+CR+H15+ADX", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "avoidRng": true}, "won": 27, "n": 41, "wr": 65.9, "older": "75%", "newer": "57%", "sim_pnl": "+$686"}
+{"label": "LN+BVD+CR+H15+rSwT", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "rSwT": true}, "won": 15, "n": 23, "wr": 65.2, "older": "91%", "newer": "42%", "sim_pnl": "+$377"}
+{"label": "LN+BVD+CR+H15+NY", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "sessW": "New York only"}, "won": 19, "n": 30, "wr": 63.3, "older": "73%", "newer": "53%", "sim_pnl": "+$188.8"}
+{"label": "LN+BVD+CR+H15+London", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "sessW": "London only"}, "won": 19, "n": 27, "wr": 70.4, "older": "85%", "newer": "57%", "sim_pnl": "+$642.2"}
+{"label": "LN+BVD+CR+H15+HTF5", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "5"}, "won": 26, "n": 38, "wr": 68.4, "older": "68%", "newer": "68%", "sim_pnl": "+$654.4"}
+{"label": "LN+BVD+CR+H15+HTF60", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "60"}, "won": 36, "n": 53, "wr": 67.9, "older": "73%", "newer": "63%", "sim_pnl": "+$808.6"}
+{"label": "LN+BVD+CR+H15+scN2", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "scN": 2}, "won": 30, "n": 50, "wr": 60.0, "older": "56%", "newer": "64%", "sim_pnl": "+$894.8"}
+{"label": "LN+BVD+CR+H15+BVD10", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15", "uBrkVR": 10}, "won": 30, "n": 45, "wr": 66.7, "older": "73%", "newer": "61%", "sim_pnl": "+$718.4"}
