@@ -16,6 +16,17 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Test EAs — RandomTouch v1.00 · SignalReplay v1.00 (2026-10-09, not for live trading)
+
+| EA | magic | what | receipts |
+|---|---|---|---|
+| RandomTouch v1.00 | 77101 | random-entry baseline: random/always-buy/always-sell/follow/fade-colour entries, server TP/SL from the fill, time exit | Prime XBT XAUUSDp real ticks, 28 Sep – 8 Oct: 0 of 828 exit combinations profitable, all ≈ −$1.70/trade (= the $0.17 spread). Exit speed: $1 banked 80.6% at 0 ms, 52% at random delay |
+| SignalReplay v1.00 | 77201 | replays the TradingView indicator's own signals (exported by `test_tv_indicator_on_mt5.py`) on broker ticks: waits for the broker's cross of the same UHV candle, server TP/SL, time exit | 193 signals / 178 traded: TP $1 no stop **+$0.96/trade** vs random −$1.74; TP $5 no stop +$0.78 vs −$1.79 — in-sample, out-of-sample pending. Full story: `winning_indicator.md` |
+
+Both run only on the portable test copy `C:\mt5_rig_pxbt` (`mt5/run_rig.ps1`).
+
+---
+
 ## ZeeUHV (main EA, magic 88094, XAUUSD M1)
 
 | ver | date | change | receipts / reason |

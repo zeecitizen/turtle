@@ -1,0 +1,83 @@
+{
+ "base": {},
+ "runs": [
+  {
+   "label": "BASE  $1",
+   "set": {
+    "scMin": 1
+   }
+  },
+  {
+   "label": "BASE  $5",
+   "set": {
+    "scMin": 5
+   }
+  },
+  {
+   "label": "B50+H60  $1",
+   "set": {
+    "uUHVBdOn": true,
+    "uHTD": "60",
+    "scMin": 1
+   }
+  },
+  {
+   "label": "B50+H60  $5",
+   "set": {
+    "uUHVBdOn": true,
+    "uHTD": "60",
+    "scMin": 5
+   }
+  },
+  {
+   "label": "rSwT+H60  $1",
+   "set": {
+    "rSwT": true,
+    "uHTD": "60",
+    "scMin": 1
+   }
+  },
+  {
+   "label": "rSwT+H60  $5",
+   "set": {
+    "rSwT": true,
+    "uHTD": "60",
+    "scMin": 5
+   }
+  },
+  {
+   "label": "rSwT+H15+CD10  $1",
+   "set": {
+    "rSwT": true,
+    "uHTD": "15",
+    "uCd": 10,
+    "scMin": 1
+   }
+  },
+  {
+   "label": "rSwT+H15+CD10  $5",
+   "set": {
+    "rSwT": true,
+    "uHTD": "15",
+    "uCd": 10,
+    "scMin": 5
+   }
+  },
+  {
+   "label": "rSwT+B50  $1",
+   "set": {
+    "rSwT": true,
+    "uUHVBdOn": true,
+    "scMin": 1
+   }
+  },
+  {
+   "label": "rSwT+B50  $5",
+   "set": {
+    "rSwT": true,
+    "uUHVBdOn": true,
+    "scMin": 5
+   }
+  }
+ ]
+}

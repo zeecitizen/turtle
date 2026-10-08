@@ -1,0 +1,196 @@
+{
+ "base": {},
+ "runs": [
+  {
+   "label": "BASE",
+   "set": {}
+  },
+  {
+   "label": "wait past UHV high $0.05",
+   "set": {
+    "uPBsD": 0.05
+   }
+  },
+  {
+   "label": "wait past UHV high $0.1",
+   "set": {
+    "uPBsD": 0.1
+   }
+  },
+  {
+   "label": "wait past UHV high $0.2",
+   "set": {
+    "uPBsD": 0.2
+   }
+  },
+  {
+   "label": "wait past UHV high $0.3",
+   "set": {
+    "uPBsD": 0.3
+   }
+  },
+  {
+   "label": "wait past UHV high $0.5",
+   "set": {
+    "uPBsD": 0.5
+   }
+  },
+  {
+   "label": "fire before UHV high $0.1",
+   "set": {
+    "uPBD": 0.1
+   }
+  },
+  {
+   "label": "fire before UHV high $0.3",
+   "set": {
+    "uPBD": 0.3
+   }
+  },
+  {
+   "label": "camOn off",
+   "set": {
+    "camOn": false
+   }
+  },
+  {
+   "label": "camRet off",
+   "set": {
+    "camRet": false
+   }
+  },
+  {
+   "label": "camStrong 0",
+   "set": {
+    "camStrong": 0
+   }
+  },
+  {
+   "label": "camStrong 3",
+   "set": {
+    "camStrong": 3
+   }
+  },
+  {
+   "label": "camPiv 2",
+   "set": {
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "camPiv 3",
+   "set": {
+    "camPiv": 3
+   }
+  },
+  {
+   "label": "cooldown 0",
+   "set": {
+    "uCd": 0
+   }
+  },
+  {
+   "label": "cooldown 10",
+   "set": {
+    "uCd": 10
+   }
+  },
+  {
+   "label": "buys only",
+   "set": {
+    "uDir": "Bull only"
+   }
+  },
+  {
+   "label": "sells only",
+   "set": {
+    "uDir": "Bear only"
+   }
+  },
+  {
+   "label": "London+NY",
+   "set": {
+    "sFilt": true
+   }
+  },
+  {
+   "label": "HTF 5",
+   "set": {
+    "uHTD": "5"
+   }
+  },
+  {
+   "label": "HTF 15",
+   "set": {
+    "uHTD": "15"
+   }
+  },
+  {
+   "label": "HTF 60",
+   "set": {
+    "uHTD": "60"
+   }
+  },
+  {
+   "label": "sweep rUS",
+   "set": {
+    "rUS": true
+   }
+  },
+  {
+   "label": "UHV loud vs 20",
+   "set": {
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "UHV body 50",
+   "set": {
+    "uUHVBdOn": true
+   }
+  },
+  {
+   "label": "UHV wide spread",
+   "set": {
+    "uWSpOn": true
+   }
+  },
+  {
+   "label": "prev candle momentum 70",
+   "set": {
+    "uMomB": true,
+    "uMomBR": 70
+   }
+  },
+  {
+   "label": "structural trend",
+   "set": {
+    "rSwT": true
+   }
+  },
+  {
+   "label": "avoid ranging",
+   "set": {
+    "avoidRng": true
+   }
+  },
+  {
+   "label": "bRWLB 3",
+   "set": {
+    "bRWLB": 3
+   }
+  },
+  {
+   "label": "climax bg",
+   "set": {
+    "uSBgOn": true
+   }
+  },
+  {
+   "label": "min bars after UHV 2",
+   "set": {
+    "uSB": 2
+   }
+  }
+ ]
+}

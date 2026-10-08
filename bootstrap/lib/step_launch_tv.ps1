@@ -27,7 +27,13 @@ function Invoke-StepLaunchTV {
     $appxPkg = Get-AppxPackage -Name "TradingView.Desktop" -ErrorAction SilentlyContinue
     if ($appxPkg) {
         $appId = "TradingView.Desktop_n534cwy3pjxzj!TradingView.Desktop"
+        # The MSIX app crashes if its exe is run outside the package, so it is launched in-package
+        # with ELECTRON_EXTRA_LAUNCH_ARGS set (user scope, so the in-package launch sees it) as well
+        # as the flag. Every Electron app reads that variable - VS Code would grab 9222 too - so it
+        # is set only for the launch and cleared straight after.
+        # Verified 2026-10-08: CDP up within 5s on TradingView 3.4.1.8194.
         try {
+            [Environment]::SetEnvironmentVariable('ELECTRON_EXTRA_LAUNCH_ARGS', '--remote-debugging-port=9222', 'User')
             Start-Process "shell:AppsFolder\$appId" -ArgumentList "--remote-debugging-port=9222"
             $waited = 0
             do {
@@ -39,6 +45,9 @@ function Invoke-StepLaunchTV {
                 return @{ success = $true; summary = "TV (UWP) launched with CDP on 9222" }
             }
         } catch {}
+        finally {
+            [Environment]::SetEnvironmentVariable('ELECTRON_EXTRA_LAUNCH_ARGS', $null, 'User')
+        }
     }
 
     # 3b. Fallback: traditional desktop installer .exe
