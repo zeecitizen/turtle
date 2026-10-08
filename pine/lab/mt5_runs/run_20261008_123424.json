@@ -1,0 +1,16 @@
+{
+ "signals": 166,
+ "from": "2026.09.27",
+ "to": "2026.10.09",
+ "offset_s": 0,
+ "results": [
+  {
+   "tp": 1.0,
+   "sl": 0.0,
+   "window": 1,
+   "delay": -1,
+   "indicator": "2026.10.07 23:59:58   [REPLAY] signals 166 | taken 153 | missed 6 (no cross on this broker in that minute) | won 119 = 77.8% | BUY 40/54 SELL 79/99 | net $146.60 = $0.958/trade | TP/SL placement refused 30",
+   "random": "2026.10.07 23:59:58   [RANDOMTOUCH] trades 7611  won 5588  = 73.4%  | BUY 2777/3789  SELL 2811/3822 | net $-12718.20 ($-1.671/trade) | target $1.00 lots 0.10 window +1"
+  }
+ ]
+}

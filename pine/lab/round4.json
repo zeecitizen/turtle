@@ -1,0 +1,195 @@
+{
+ "base": {
+  "camOn": true,
+  "camRet": true,
+  "camStrong": 2,
+  "camPiv": 1,
+  "rULV": true,
+  "uUHVBdOn": false,
+  "uUHVBdPct": 50,
+  "bRW": true,
+  "bRWLB": 8,
+  "uMomB": false,
+  "uMomBR": 80,
+  "uMomW": false,
+  "rUS": false,
+  "uVTOn": false,
+  "uVLB": 20,
+  "uWSpOn": false,
+  "uSBgOn": false,
+  "avoidRng": false,
+  "uCd": 3,
+  "uDir": "Both",
+  "sFilt": false,
+  "rSwT": false,
+  "mTS": 0,
+  "uBrkVROn": false,
+  "uTVOn": false,
+  "uHTD": "Off",
+  "uSB": 0,
+  "scN": 1,
+  "sessW": "London + NY",
+  "uBrkVR": 5
+ },
+ "runs": [
+  {
+   "label": "LN+BVD+CR+H15",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15"
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+rUS",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "rUS": true
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+UHVbody50",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "uUHVBdOn": true
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+sells",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "uDir": "Bear only"
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+buys",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "uDir": "Bull only"
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+CD0",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "uCd": 0
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+rUS+body50",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "rUS": true,
+    "uUHVBdOn": true
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+rUS+CD0",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "rUS": true,
+    "uCd": 0
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+ADX",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "avoidRng": true
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+rSwT",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "rSwT": true
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+NY",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "sessW": "New York only"
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+London",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "sessW": "London only"
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+HTF5",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "5"
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+HTF60",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "60"
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+scN2",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "scN": 2
+   }
+  },
+  {
+   "label": "LN+BVD+CR+H15+BVD10",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15",
+    "uBrkVR": 10
+   }
+  }
+ ]
+}

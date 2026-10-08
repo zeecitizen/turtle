@@ -1,0 +1,32 @@
+{"label": "BASE", "set": {}, "won": 456, "n": 500, "wr": 91.2, "older": "92%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.8}
+{"label": "wait past UHV high $0.05", "set": {"uPBsD": 0.05}, "won": 434, "n": 480, "wr": 90.4, "older": "91%", "newer": "90%", "sim_pnl": "?", "random": "84", "edge": 6.0}
+{"label": "wait past UHV high $0.1", "set": {"uPBsD": 0.1}, "won": 419, "n": 466, "wr": 89.9, "older": "91%", "newer": "89%", "sim_pnl": "?", "random": "84", "edge": 5.5}
+{"label": "wait past UHV high $0.2", "set": {"uPBsD": 0.2}, "won": 381, "n": 433, "wr": 88.0, "older": "91%", "newer": "85%", "sim_pnl": "?", "random": "84", "edge": 3.5}
+{"label": "wait past UHV high $0.3", "set": {"uPBsD": 0.3}, "won": 361, "n": 407, "wr": 88.7, "older": "90%", "newer": "87%", "sim_pnl": "?", "random": "84", "edge": 4.3}
+{"label": "wait past UHV high $0.5", "set": {"uPBsD": 0.5}, "won": 301, "n": 331, "wr": 90.9, "older": "91%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.5}
+{"label": "fire before UHV high $0.1", "set": {"uPBD": 0.1}, "won": 264, "n": 1368, "wr": 19.3, "older": "21%", "newer": "18%", "sim_pnl": "?", "random": "84", "edge": -65.1}
+{"label": "fire before UHV high $0.3", "set": {"uPBD": 0.3}, "won": 809, "n": 1377, "wr": 58.8, "older": "59%", "newer": "58%", "sim_pnl": "?", "random": "84", "edge": -25.7}
+{"label": "camOn off", "set": {"camOn": false}, "won": 457, "n": 501, "wr": 91.2, "older": "92%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.8}
+{"label": "camRet off", "set": {"camRet": false}, "won": 380, "n": 418, "wr": 90.9, "older": "93%", "newer": "89%", "sim_pnl": "?", "random": "84", "edge": 6.5}
+{"label": "camStrong 0", "set": {"camStrong": 0}, "won": 456, "n": 500, "wr": 91.2, "older": "92%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.8}
+{"label": "camStrong 3", "set": {"camStrong": 3}, "won": 456, "n": 500, "wr": 91.2, "older": "92%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.8}
+{"label": "camPiv 2", "set": {"camPiv": 2}, "won": 528, "n": 580, "wr": 91.0, "older": "93%", "newer": "89%", "sim_pnl": "?", "random": "84", "edge": 6.6}
+{"label": "camPiv 3", "set": {"camPiv": 3}, "won": 548, "n": 606, "wr": 90.4, "older": "92%", "newer": "89%", "sim_pnl": "?", "random": "84", "edge": 6.0}
+{"label": "cooldown 0", "set": {"uCd": 0}, "won": 468, "n": 513, "wr": 91.2, "older": "92%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.8}
+{"label": "cooldown 10", "set": {"uCd": 10}, "won": 347, "n": 380, "wr": 91.3, "older": "92%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.9}
+{"label": "buys only", "set": {"uDir": "Bull only"}, "won": 170, "n": 185, "wr": 91.9, "older": "93%", "newer": "90%", "sim_pnl": "?", "random": "84", "edge": 7.5}
+{"label": "sells only", "set": {"uDir": "Bear only"}, "won": 287, "n": 316, "wr": 90.8, "older": "91%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.4}
+{"label": "London+NY", "set": {"sFilt": true}, "won": 159, "n": 170, "wr": 93.5, "older": "92%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 9.1}
+{"label": "HTF 5", "set": {"uHTD": "5"}, "won": 271, "n": 301, "wr": 90.0, "older": "90%", "newer": "90%", "sim_pnl": "?", "random": "84", "edge": 5.6}
+{"label": "HTF 15", "set": {"uHTD": "15"}, "won": 304, "n": 332, "wr": 91.6, "older": "91%", "newer": "92%", "sim_pnl": "?", "random": "84", "edge": 7.1}
+{"label": "HTF 60", "set": {"uHTD": "60"}, "won": 262, "n": 286, "wr": 91.6, "older": "92%", "newer": "92%", "sim_pnl": "?", "random": "84", "edge": 7.2}
+{"label": "sweep rUS", "set": {"rUS": true}, "won": 247, "n": 271, "wr": 91.1, "older": "93%", "newer": "89%", "sim_pnl": "?", "random": "84", "edge": 6.7}
+{"label": "UHV loud vs 20", "set": {"uVTOn": true}, "won": 103, "n": 118, "wr": 87.3, "older": "90%", "newer": "85%", "sim_pnl": "?", "random": "84", "edge": 2.8}
+{"label": "UHV body 50", "set": {"uUHVBdOn": true}, "won": 264, "n": 284, "wr": 93.0, "older": "92%", "newer": "94%", "sim_pnl": "?", "random": "84", "edge": 8.5}
+{"label": "UHV wide spread", "set": {"uWSpOn": true}, "won": 35, "n": 36, "wr": 97.2, "older": "100%", "newer": "94%", "sim_pnl": "?", "random": "84", "edge": 12.8}
+{"label": "prev candle momentum 70", "set": {"uMomB": true, "uMomBR": 70}, "won": 52, "n": 58, "wr": 89.7, "older": "90%", "newer": "90%", "sim_pnl": "?", "random": "84", "edge": 5.2}
+{"label": "structural trend", "set": {"rSwT": true}, "won": 193, "n": 205, "wr": 94.1, "older": "93%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 9.7}
+{"label": "avoid ranging", "set": {"avoidRng": true}, "won": 403, "n": 442, "wr": 91.2, "older": "91%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.7}
+{"label": "bRWLB 3", "set": {"bRWLB": 3}, "won": 436, "n": 477, "wr": 91.4, "older": "91%", "newer": "92%", "sim_pnl": "?", "random": "84", "edge": 7.0}
+{"label": "climax bg", "set": {"uSBgOn": true}, "won": 445, "n": 488, "wr": 91.2, "older": "91%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.7}
+{"label": "min bars after UHV 2", "set": {"uSB": 2}, "won": 277, "n": 306, "wr": 90.5, "older": "91%", "newer": "90%", "sim_pnl": "?", "random": "84", "edge": 6.1}

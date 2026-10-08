@@ -1,0 +1,34 @@
+{"label": "BASE", "set": {}, "won": 456, "n": 500, "wr": 91.2, "older": "92%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.8}
+{"label": "rSwT+LN", "set": {"rSwT": true, "sFilt": true}, "won": 65, "n": 69, "wr": 94.2, "older": "91%", "newer": "97%", "sim_pnl": "?", "random": "84", "edge": 9.8}
+{"label": "rSwT+B50", "set": {"rSwT": true, "uUHVBdOn": true}, "won": 106, "n": 110, "wr": 96.4, "older": "93%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 11.9}
+{"label": "rSwT+H15", "set": {"rSwT": true, "uHTD": "15"}, "won": 144, "n": 153, "wr": 94.1, "older": "93%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 9.7}
+{"label": "rSwT+H60", "set": {"rSwT": true, "uHTD": "60"}, "won": 119, "n": 124, "wr": 96.0, "older": "95%", "newer": "97%", "sim_pnl": "?", "random": "84", "edge": 11.5}
+{"label": "rSwT+CD10", "set": {"rSwT": true, "uCd": 10}, "won": 159, "n": 168, "wr": 94.6, "older": "94%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 10.2}
+{"label": "LN+B50", "set": {"sFilt": true, "uUHVBdOn": true}, "won": 87, "n": 91, "wr": 95.6, "older": "96%", "newer": "96%", "sim_pnl": "?", "random": "84", "edge": 11.2}
+{"label": "LN+H15", "set": {"sFilt": true, "uHTD": "15"}, "won": 107, "n": 115, "wr": 93.0, "older": "91%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 8.6}
+{"label": "LN+H60", "set": {"sFilt": true, "uHTD": "60"}, "won": 101, "n": 109, "wr": 92.7, "older": "91%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 8.2}
+{"label": "LN+CD10", "set": {"sFilt": true, "uCd": 10}, "won": 124, "n": 134, "wr": 92.5, "older": "90%", "newer": "96%", "sim_pnl": "?", "random": "84", "edge": 8.1}
+{"label": "B50+H15", "set": {"uUHVBdOn": true, "uHTD": "15"}, "won": 169, "n": 181, "wr": 93.4, "older": "92%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 8.9}
+{"label": "B50+H60", "set": {"uUHVBdOn": true, "uHTD": "60"}, "won": 153, "n": 162, "wr": 94.4, "older": "94%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 10.0}
+{"label": "B50+CD10", "set": {"uUHVBdOn": true, "uCd": 10}, "won": 214, "n": 233, "wr": 91.8, "older": "91%", "newer": "92%", "sim_pnl": "?", "random": "84", "edge": 7.4}
+{"label": "H15+CD10", "set": {"uHTD": "15", "uCd": 10}, "won": 250, "n": 272, "wr": 91.9, "older": "91%", "newer": "93%", "sim_pnl": "?", "random": "84", "edge": 7.5}
+{"label": "H60+CD10", "set": {"uHTD": "60", "uCd": 10}, "won": 213, "n": 233, "wr": 91.4, "older": "91%", "newer": "92%", "sim_pnl": "?", "random": "84", "edge": 7.0}
+{"label": "rSwT+LN+B50", "set": {"rSwT": true, "sFilt": true, "uUHVBdOn": true}, "won": 39, "n": 40, "wr": 97.5, "older": "95%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 13.1}
+{"label": "rSwT+LN+H15", "set": {"rSwT": true, "sFilt": true, "uHTD": "15"}, "won": 51, "n": 54, "wr": 94.4, "older": "89%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 10.0}
+{"label": "rSwT+LN+H60", "set": {"rSwT": true, "sFilt": true, "uHTD": "60"}, "won": 51, "n": 54, "wr": 94.4, "older": "89%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 10.0}
+{"label": "rSwT+LN+CD10", "set": {"rSwT": true, "sFilt": true, "uCd": 10}, "won": 54, "n": 57, "wr": 94.7, "older": "93%", "newer": "97%", "sim_pnl": "?", "random": "84", "edge": 10.3}
+{"label": "rSwT+B50+H15", "set": {"rSwT": true, "uUHVBdOn": true, "uHTD": "15"}, "won": 80, "n": 82, "wr": 97.6, "older": "95%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 13.1}
+{"label": "rSwT+B50+H60", "set": {"rSwT": true, "uUHVBdOn": true, "uHTD": "60"}, "won": 67, "n": 68, "wr": 98.5, "older": "97%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 14.1}
+{"label": "rSwT+B50+CD10", "set": {"rSwT": true, "uUHVBdOn": true, "uCd": 10}, "won": 92, "n": 96, "wr": 95.8, "older": "92%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 11.4}
+{"label": "rSwT+H15+CD10", "set": {"rSwT": true, "uHTD": "15", "uCd": 10}, "won": 121, "n": 127, "wr": 95.3, "older": "95%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 10.8}
+{"label": "rSwT+H60+CD10", "set": {"rSwT": true, "uHTD": "60", "uCd": 10}, "won": 96, "n": 101, "wr": 95.0, "older": "94%", "newer": "96%", "sim_pnl": "?", "random": "84", "edge": 10.6}
+{"label": "LN+B50+H15", "set": {"sFilt": true, "uUHVBdOn": true, "uHTD": "15"}, "won": 59, "n": 61, "wr": 96.7, "older": "100%", "newer": "94%", "sim_pnl": "?", "random": "84", "edge": 12.3}
+{"label": "LN+B50+H60", "set": {"sFilt": true, "uUHVBdOn": true, "uHTD": "60"}, "won": 54, "n": 55, "wr": 98.2, "older": "100%", "newer": "96%", "sim_pnl": "?", "random": "84", "edge": 13.7}
+{"label": "LN+B50+CD10", "set": {"sFilt": true, "uUHVBdOn": true, "uCd": 10}, "won": 72, "n": 76, "wr": 94.7, "older": "95%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 10.3}
+{"label": "LN+H15+CD10", "set": {"sFilt": true, "uHTD": "15", "uCd": 10}, "won": 89, "n": 97, "wr": 91.8, "older": "90%", "newer": "94%", "sim_pnl": "?", "random": "84", "edge": 7.3}
+{"label": "LN+H60+CD10", "set": {"sFilt": true, "uHTD": "60", "uCd": 10}, "won": 84, "n": 91, "wr": 92.3, "older": "89%", "newer": "96%", "sim_pnl": "?", "random": "84", "edge": 7.9}
+{"label": "B50+H15+CD10", "set": {"uUHVBdOn": true, "uHTD": "15", "uCd": 10}, "won": 148, "n": 159, "wr": 93.1, "older": "92%", "newer": "94%", "sim_pnl": "?", "random": "84", "edge": 8.6}
+{"label": "B50+H60+CD10", "set": {"uUHVBdOn": true, "uHTD": "60", "uCd": 10}, "won": 132, "n": 140, "wr": 94.3, "older": "94%", "newer": "94%", "sim_pnl": "?", "random": "84", "edge": 9.8}
+{"label": "rSwT+LN+B50+H60", "set": {"rSwT": true, "sFilt": true, "uUHVBdOn": true, "uHTD": "60"}, "won": 31, "n": 31, "wr": 100.0, "older": "100%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 15.6}
+{"label": "rSwT+LN+B50+H15", "set": {"rSwT": true, "sFilt": true, "uUHVBdOn": true, "uHTD": "15"}, "won": 31, "n": 31, "wr": 100.0, "older": "100%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 15.6}
+{"label": "rSwT+B50+H60+CD10", "set": {"rSwT": true, "uUHVBdOn": true, "uHTD": "60", "uCd": 10}, "won": 59, "n": 60, "wr": 98.3, "older": "97%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 13.9}

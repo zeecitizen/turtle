@@ -1,0 +1,232 @@
+{
+ "base": {
+  "camOn": true,
+  "camRet": true,
+  "camStrong": 2,
+  "camPiv": 1,
+  "rULV": true,
+  "uUHVBdOn": false,
+  "uUHVBdPct": 50,
+  "bRW": true,
+  "bRWLB": 8,
+  "uMomB": false,
+  "uMomBR": 80,
+  "uMomW": false,
+  "rUS": false,
+  "uVTOn": false,
+  "uVLB": 20,
+  "uWSpOn": false,
+  "uSBgOn": false,
+  "avoidRng": false,
+  "uCd": 3,
+  "uDir": "Both",
+  "sFilt": false,
+  "rSwT": false,
+  "mTS": 0,
+  "uBrkVROn": false,
+  "uTVOn": false,
+  "uHTD": "Off",
+  "uSB": 0,
+  "scN": 1
+ },
+ "runs": [
+  {
+   "label": "BASE",
+   "set": {}
+  },
+  {
+   "label": "camOn off",
+   "set": {
+    "camOn": false
+   }
+  },
+  {
+   "label": "camRet off",
+   "set": {
+    "camRet": false
+   }
+  },
+  {
+   "label": "camOn+camRet off",
+   "set": {
+    "camOn": false,
+    "camRet": false
+   }
+  },
+  {
+   "label": "camStrong 0",
+   "set": {
+    "camStrong": 0
+   }
+  },
+  {
+   "label": "camStrong 1",
+   "set": {
+    "camStrong": 1
+   }
+  },
+  {
+   "label": "camStrong 3",
+   "set": {
+    "camStrong": 3
+   }
+  },
+  {
+   "label": "camPiv 2",
+   "set": {
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "camPiv 3",
+   "set": {
+    "camPiv": 3
+   }
+  },
+  {
+   "label": "rULV off",
+   "set": {
+    "rULV": false
+   }
+  },
+  {
+   "label": "UHV body>=50",
+   "set": {
+    "uUHVBdOn": true
+   }
+  },
+  {
+   "label": "bRWLB 3",
+   "set": {
+    "bRWLB": 3
+   }
+  },
+  {
+   "label": "momentum body>=70 (LAWS)",
+   "set": {
+    "uMomB": true,
+    "uMomBR": 70
+   }
+  },
+  {
+   "label": "momentum small wicks",
+   "set": {
+    "uMomW": true
+   }
+  },
+  {
+   "label": "sweep after UHV (rUS)",
+   "set": {
+    "rUS": true
+   }
+  },
+  {
+   "label": "UHV loud vs 20",
+   "set": {
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "UHV wide spread",
+   "set": {
+    "uWSpOn": true
+   }
+  },
+  {
+   "label": "climax background",
+   "set": {
+    "uSBgOn": true
+   }
+  },
+  {
+   "label": "avoid ranging ADX",
+   "set": {
+    "avoidRng": true
+   }
+  },
+  {
+   "label": "cooldown 0",
+   "set": {
+    "uCd": 0
+   }
+  },
+  {
+   "label": "cooldown 10",
+   "set": {
+    "uCd": 10
+   }
+  },
+  {
+   "label": "buys only",
+   "set": {
+    "uDir": "Bull only"
+   }
+  },
+  {
+   "label": "sells only",
+   "set": {
+    "uDir": "Bear only"
+   }
+  },
+  {
+   "label": "London+NY only",
+   "set": {
+    "sFilt": true
+   }
+  },
+  {
+   "label": "structural trend (rSwT)",
+   "set": {
+    "rSwT": true
+   }
+  },
+  {
+   "label": "min trend strength 50",
+   "set": {
+    "mTS": 50
+   }
+  },
+  {
+   "label": "breakout vol drop",
+   "set": {
+    "uBrkVROn": true
+   }
+  },
+  {
+   "label": "tick velocity",
+   "set": {
+    "uTVOn": true
+   }
+  },
+  {
+   "label": "HTF 5m align",
+   "set": {
+    "uHTD": "5"
+   }
+  },
+  {
+   "label": "HTF 15m align",
+   "set": {
+    "uHTD": "15"
+   }
+  },
+  {
+   "label": "win test 2 candles",
+   "set": {
+    "scN": 2
+   }
+  },
+  {
+   "label": "win test 3 candles",
+   "set": {
+    "scN": 3
+   }
+  },
+  {
+   "label": "win test 5 candles",
+   "set": {
+    "scN": 5
+   }
+  }
+ ]
+}
