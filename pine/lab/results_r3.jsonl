@@ -1,0 +1,30 @@
+{"label": "BEST LN+BVD+CR", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false}, "won": 46, "n": 69, "wr": 66.7, "older": "74%", "newer": "60%", "sim_pnl": "+$1083.6"}
+{"label": "BEST+sessW NY", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "sessW": "New York only"}, "won": 27, "n": 43, "wr": 62.8, "older": "71%", "newer": "55%", "sim_pnl": "+$323.8"}
+{"label": "BEST+sessW London", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "sessW": "London only"}, "won": 23, "n": 36, "wr": 63.9, "older": "72%", "newer": "56%", "sim_pnl": "+$642"}
+{"label": "BEST+H15", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uHTD": "15"}, "won": 35, "n": 50, "wr": 70.0, "older": "76%", "newer": "64%", "sim_pnl": "+$894.8"}
+{"label": "BEST+S0", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "camStrong": 0}, "won": 46, "n": 69, "wr": 66.7, "older": "74%", "newer": "60%", "sim_pnl": "+$1083.6"}
+{"label": "BEST+S1", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "camStrong": 1}, "won": 46, "n": 69, "wr": 66.7, "older": "74%", "newer": "60%", "sim_pnl": "+$1083.6"}
+{"label": "BEST+S3", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "camStrong": 3}, "won": 46, "n": 69, "wr": 66.7, "older": "74%", "newer": "60%", "sim_pnl": "+$1083.6"}
+{"label": "BEST+P2", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "camPiv": 2}, "won": 41, "n": 74, "wr": 55.4, "older": "59%", "newer": "51%", "sim_pnl": "+$696.2"}
+{"label": "BEST+P3", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "camPiv": 3}, "won": 41, "n": 78, "wr": 52.6, "older": "62%", "newer": "44%", "sim_pnl": "+$556.2"}
+{"label": "BEST+CD0", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uCd": 0}, "won": 49, "n": 75, "wr": 65.3, "older": "70%", "newer": "61%", "sim_pnl": "+$1130.8"}
+{"label": "BEST+CD10", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uCd": 10}, "won": 43, "n": 68, "wr": 63.2, "older": "74%", "newer": "53%", "sim_pnl": "+$920.2"}
+{"label": "BEST+rULV off", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "rULV": false}, "won": 46, "n": 69, "wr": 66.7, "older": "74%", "newer": "60%", "sim_pnl": "+$1083.6"}
+{"label": "BEST+UHVbody50", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uUHVBdOn": true}, "won": 22, "n": 33, "wr": 66.7, "older": "69%", "newer": "65%", "sim_pnl": "+$452.4"}
+{"label": "BEST+mom70", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uMomB": true, "uMomBR": 70}, "won": 22, "n": 44, "wr": 50.0, "older": "55%", "newer": "45%", "sim_pnl": "+$276.4"}
+{"label": "BEST+smallwick", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uMomW": true}, "won": 28, "n": 50, "wr": 56.0, "older": "64%", "newer": "48%", "sim_pnl": "+$649.6"}
+{"label": "BEST+rUS", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "rUS": true}, "won": 28, "n": 41, "wr": 68.3, "older": "75%", "newer": "62%", "sim_pnl": "+$622.6"}
+{"label": "BEST+loudUHV", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uVTOn": true}, "won": 25, "n": 49, "wr": 51.0, "older": "50%", "newer": "52%", "sim_pnl": "+$528"}
+{"label": "BEST+ADX", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "avoidRng": true}, "won": 37, "n": 59, "wr": 62.7, "older": "69%", "newer": "57%", "sim_pnl": "+$834.8"}
+{"label": "BEST+rSwT", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "rSwT": true}, "won": 21, "n": 32, "wr": 65.6, "older": "81%", "newer": "50%", "sim_pnl": "+$464.8"}
+{"label": "BEST+mTS50", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "mTS": 50}, "won": 24, "n": 40, "wr": 60.0, "older": "70%", "newer": "50%", "sim_pnl": "+$440.4"}
+{"label": "BEST+buys", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uDir": "Bull only"}, "won": 17, "n": 28, "wr": 60.7, "older": "64%", "newer": "57%", "sim_pnl": "+$399.2"}
+{"label": "BEST+sells", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uDir": "Bear only"}, "won": 31, "n": 46, "wr": 67.4, "older": "74%", "newer": "61%", "sim_pnl": "+$691.6"}
+{"label": "BEST+scN2", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "scN": 2}, "won": 41, "n": 69, "wr": 59.4, "older": "62%", "newer": "57%", "sim_pnl": "+$1083.6"}
+{"label": "BEST+scN3", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "scN": 3}, "won": 41, "n": 69, "wr": 59.4, "older": "59%", "newer": "60%", "sim_pnl": "+$1083.6"}
+{"label": "BEST+BVD10", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uBrkVR": 10}, "won": 42, "n": 65, "wr": 64.6, "older": "72%", "newer": "58%", "sim_pnl": "+$950.8"}
+{"label": "BEST+BVD20", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uBrkVR": 20}, "won": 31, "n": 54, "wr": 57.4, "older": "63%", "newer": "52%", "sim_pnl": "+$601"}
+{"label": "BEST+BVD30", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uBrkVR": 30}, "won": 25, "n": 42, "wr": 59.5, "older": "67%", "newer": "52%", "sim_pnl": "+$572.8"}
+{"label": "BEST+camOn off", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "camOn": false}, "won": 84, "n": 151, "wr": 55.6, "older": "63%", "newer": "49%", "sim_pnl": "+$1301.2"}
+{"label": "BEST+bRWLB3", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "bRWLB": 3}, "won": 45, "n": 68, "wr": 66.2, "older": "76%", "newer": "56%", "sim_pnl": "+$1073.4"}
+{"label": "BEST+climax", "set": {"sFilt": true, "uBrkVROn": true, "camRet": false, "uSBgOn": true}, "won": 46, "n": 69, "wr": 66.7, "older": "74%", "newer": "60%", "sim_pnl": "+$1083.6"}

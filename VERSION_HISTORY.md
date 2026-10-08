@@ -16,6 +16,28 @@ hostile one, or it doesn't ship.
 
 ---
 
+## TurtleUHV v1.00 · ZeeBreakout v1.00 (2026-10-09) — NOT PROMOTED, do not attach
+
+| EA | magic | what | receipts |
+|---|---|---|---|
+| TurtleUHV v1.00 | 88601 | native MT5 port of the TradingView indicator (`turtle.pine`, Instant at Breakout, camel humps): `InpVolSource` 0 = broker volume, 1 = `Common\Files\oanda_vol.csv` | parity: 0 state differences over 3,407 candles, 56/56 signals vs TradingView. Blueberry real ticks, random delay, 0.1 lot, TP 1.50 / SL 3.50 / 5 min — broker volume Jul–Sep **−$2.70/trade** (1,526 trades, DD $4,174); OANDA volume 17–22 Aug −$1.92/trade, 24–26 Aug −$3.72, 28 Sep–8 Oct +$0.08. **Loses.** |
+| ZeeBreakout v1.00 | 88501 | live bridge EA: trades the indicator's armed setup written by `pine/tv_armed_bridge.py`, with Blueberry Prime funded-account guards | its in-sample +$1.48/trade came from SignalReplay mode 0, which was later shown to be selection-biased; the honest native port above loses. **Do not attach.** Its source/ex5 sit in the live Blueberry Experts folder (copied 2026-10-08). |
+
+Full story and the selection-bias correction: `winning_indicator.md`. The indicator version
+these were built from is commit 25ecfc0 (branch `optimise-for-expectancy`) and
+`pine/.tv_lab_last_pushed.pine` — not the `turtle.pine` on this branch.
+
+## Test EAs — RandomTouch v1.00 · SignalReplay v1.00 (2026-10-09, not for live trading)
+
+| EA | magic | what | receipts |
+|---|---|---|---|
+| RandomTouch v1.00 | 77101 | random-entry baseline: random/always-buy/always-sell/follow/fade-colour entries, server TP/SL from the fill, time exit | Prime XBT XAUUSDp real ticks, 28 Sep – 8 Oct: 0 of 828 exit combinations profitable, all ≈ −$1.70/trade (= the $0.17 spread). Exit speed: $1 banked 80.6% at 0 ms, 52% at random delay |
+| SignalReplay v1.00 | 77201 | replays the TradingView indicator's own signals (exported by `test_tv_indicator_on_mt5.py`) on broker ticks: waits for the broker's cross of the same UHV candle, server TP/SL, time exit | 193 signals / 178 traded: TP $1 no stop **+$0.96/trade** vs random −$1.74; TP $5 no stop +$0.78 vs −$1.79 — in-sample, out-of-sample pending. Full story: `winning_indicator.md` |
+
+Both run only on the portable test copy `C:\mt5_rig_pxbt` (`mt5/run_rig.ps1`).
+
+---
+
 ## ZeeUHV (main EA, magic 88094, XAUUSD M1)
 
 | ver | date | change | receipts / reason |

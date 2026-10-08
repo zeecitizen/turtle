@@ -1,0 +1,10 @@
+{"label": "BASE  $1", "set": {"scMin": 1}, "won": 456, "n": 500, "wr": 91.2, "older": "92%", "newer": "91%", "sim_pnl": "?", "random": "84", "edge": 6.8}
+{"label": "BASE  $5", "set": {"scMin": 5}, "won": 344, "n": 500, "wr": 68.8, "older": "71%", "newer": "66%", "sim_pnl": "?", "random": "64", "edge": 4.9}
+{"label": "B50+H60  $1", "set": {"uUHVBdOn": true, "uHTD": "60", "scMin": 1}, "won": 153, "n": 162, "wr": 94.4, "older": "94%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 10.0}
+{"label": "B50+H60  $5", "set": {"uUHVBdOn": true, "uHTD": "60", "scMin": 5}, "won": 122, "n": 162, "wr": 75.3, "older": "78%", "newer": "73%", "sim_pnl": "?", "random": "64", "edge": 11.4}
+{"label": "rSwT+H60  $1", "set": {"rSwT": true, "uHTD": "60", "scMin": 1}, "won": 119, "n": 124, "wr": 96.0, "older": "95%", "newer": "97%", "sim_pnl": "?", "random": "84", "edge": 11.5}
+{"label": "rSwT+H60  $5", "set": {"rSwT": true, "uHTD": "60", "scMin": 5}, "won": 90, "n": 124, "wr": 72.6, "older": "74%", "newer": "71%", "sim_pnl": "?", "random": "64", "edge": 8.7}
+{"label": "rSwT+H15+CD10  $1", "set": {"rSwT": true, "uHTD": "15", "uCd": 10, "scMin": 1}, "won": 121, "n": 127, "wr": 95.3, "older": "95%", "newer": "95%", "sim_pnl": "?", "random": "84", "edge": 10.8}
+{"label": "rSwT+H15+CD10  $5", "set": {"rSwT": true, "uHTD": "15", "uCd": 10, "scMin": 5}, "won": 92, "n": 127, "wr": 72.4, "older": "76%", "newer": "69%", "sim_pnl": "?", "random": "64", "edge": 8.5}
+{"label": "rSwT+B50  $1", "set": {"rSwT": true, "uUHVBdOn": true, "scMin": 1}, "won": 106, "n": 110, "wr": 96.4, "older": "93%", "newer": "100%", "sim_pnl": "?", "random": "84", "edge": 11.9}
+{"label": "rSwT+B50  $5", "set": {"rSwT": true, "uUHVBdOn": true, "scMin": 5}, "won": 84, "n": 110, "wr": 76.4, "older": "82%", "newer": "71%", "sim_pnl": "?", "random": "64", "edge": 12.5}

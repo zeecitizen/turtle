@@ -1,0 +1,306 @@
+{
+ "base": {
+  "camOn": true,
+  "camRet": true,
+  "camStrong": 2,
+  "camPiv": 1,
+  "rULV": true,
+  "uUHVBdOn": false,
+  "uUHVBdPct": 50,
+  "bRW": true,
+  "bRWLB": 8,
+  "uMomB": false,
+  "uMomBR": 80,
+  "uMomW": false,
+  "rUS": false,
+  "uVTOn": false,
+  "uVLB": 20,
+  "uWSpOn": false,
+  "uSBgOn": false,
+  "avoidRng": false,
+  "uCd": 3,
+  "uDir": "Both",
+  "sFilt": false,
+  "rSwT": false,
+  "mTS": 0,
+  "uBrkVROn": false,
+  "uTVOn": false,
+  "uHTD": "Off",
+  "uSB": 0,
+  "scN": 1,
+  "sessW": "London + NY",
+  "uBrkVR": 5
+ },
+ "runs": [
+  {
+   "label": "BEST LN+BVD+CR",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false
+   }
+  },
+  {
+   "label": "BEST+sessW NY",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "sessW": "New York only"
+   }
+  },
+  {
+   "label": "BEST+sessW London",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "sessW": "London only"
+   }
+  },
+  {
+   "label": "BEST+H15",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uHTD": "15"
+   }
+  },
+  {
+   "label": "BEST+S0",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "camStrong": 0
+   }
+  },
+  {
+   "label": "BEST+S1",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "camStrong": 1
+   }
+  },
+  {
+   "label": "BEST+S3",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "camStrong": 3
+   }
+  },
+  {
+   "label": "BEST+P2",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "BEST+P3",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "camPiv": 3
+   }
+  },
+  {
+   "label": "BEST+CD0",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uCd": 0
+   }
+  },
+  {
+   "label": "BEST+CD10",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "BEST+rULV off",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "rULV": false
+   }
+  },
+  {
+   "label": "BEST+UHVbody50",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uUHVBdOn": true
+   }
+  },
+  {
+   "label": "BEST+mom70",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uMomB": true,
+    "uMomBR": 70
+   }
+  },
+  {
+   "label": "BEST+smallwick",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uMomW": true
+   }
+  },
+  {
+   "label": "BEST+rUS",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "rUS": true
+   }
+  },
+  {
+   "label": "BEST+loudUHV",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "BEST+ADX",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "avoidRng": true
+   }
+  },
+  {
+   "label": "BEST+rSwT",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "rSwT": true
+   }
+  },
+  {
+   "label": "BEST+mTS50",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "mTS": 50
+   }
+  },
+  {
+   "label": "BEST+buys",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uDir": "Bull only"
+   }
+  },
+  {
+   "label": "BEST+sells",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uDir": "Bear only"
+   }
+  },
+  {
+   "label": "BEST+scN2",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "scN": 2
+   }
+  },
+  {
+   "label": "BEST+scN3",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "scN": 3
+   }
+  },
+  {
+   "label": "BEST+BVD10",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uBrkVR": 10
+   }
+  },
+  {
+   "label": "BEST+BVD20",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uBrkVR": 20
+   }
+  },
+  {
+   "label": "BEST+BVD30",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uBrkVR": 30
+   }
+  },
+  {
+   "label": "BEST+camOn off",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "camOn": false
+   }
+  },
+  {
+   "label": "BEST+bRWLB3",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "bRWLB": 3
+   }
+  },
+  {
+   "label": "BEST+climax",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false,
+    "uSBgOn": true
+   }
+  }
+ ]
+}

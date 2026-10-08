@@ -1,0 +1,32 @@
+{
+ "signals": 193,
+ "from": "2026.09.27",
+ "to": "2026.10.09",
+ "offset_s": 10800,
+ "results": [
+  {
+   "tp": 20.0,
+   "sl": 35.0,
+   "window": 5,
+   "delay": -1,
+   "indicator": "2026.10.07 23:58:59   [REPLAY] signals 193 | taken 174 | missed 12 (no cross on this broker in that minute) | won 12 = 6.9% | BUY 5/71 SELL 7/103 | net $158.40 = $0.910/trade | TP/SL placement refused 0",
+   "random": "2026.10.07 23:58:59   [RANDOMTOUCH] trades 2809  won 249  = 8.9%  | BUY 121/1388  SELL 128/1421 | net $-4836.40 ($-1.722/trade) | target $20.00 lots 0.10 window +5"
+  },
+  {
+   "tp": 15.0,
+   "sl": 35.0,
+   "window": 5,
+   "delay": -1,
+   "indicator": "2026.10.07 23:58:59   [REPLAY] signals 193 | taken 174 | missed 12 (no cross on this broker in that minute) | won 21 = 12.1% | BUY 12/71 SELL 9/103 | net $257.90 = $1.482/trade | TP/SL placement refused 3",
+   "random": "2026.10.07 23:58:59   [RANDOMTOUCH] trades 3103  won 292  = 9.4%  | BUY 146/1529  SELL 146/1574 | net $-8158.50 ($-2.629/trade) | target $15.00 lots 0.10 window +5"
+  },
+  {
+   "tp": 25.0,
+   "sl": 35.0,
+   "window": 5,
+   "delay": -1,
+   "indicator": "2026.10.07 23:58:59   [REPLAY] signals 193 | taken 174 | missed 12 (no cross on this broker in that minute) | won 11 = 6.3% | BUY 5/71 SELL 6/103 | net $116.40 = $0.669/trade | TP/SL placement refused 0",
+   "random": "2026.10.07 23:58:59   [RANDOMTOUCH] trades 2594  won 192  = 7.4%  | BUY 94/1274  SELL 98/1320 | net $-4588.20 ($-1.769/trade) | target $25.00 lots 0.10 window +5"
+  }
+ ]
+}

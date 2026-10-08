@@ -1,0 +1,696 @@
+{
+ "base": {
+  "camOn": true,
+  "camRet": true,
+  "camStrong": 2,
+  "camPiv": 1,
+  "rULV": true,
+  "uUHVBdOn": false,
+  "uUHVBdPct": 50,
+  "bRW": true,
+  "bRWLB": 8,
+  "uMomB": false,
+  "uMomBR": 80,
+  "uMomW": false,
+  "rUS": false,
+  "uVTOn": false,
+  "uVLB": 20,
+  "uWSpOn": false,
+  "uSBgOn": false,
+  "avoidRng": false,
+  "uCd": 3,
+  "uDir": "Both",
+  "sFilt": false,
+  "rSwT": false,
+  "mTS": 0,
+  "uBrkVROn": false,
+  "uTVOn": false,
+  "uHTD": "Off",
+  "uSB": 0,
+  "scN": 1
+ },
+ "runs": [
+  {
+   "label": "LN+H15",
+   "set": {
+    "sFilt": true,
+    "uHTD": "15"
+   }
+  },
+  {
+   "label": "LN+BVD",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true
+   }
+  },
+  {
+   "label": "LN+S0",
+   "set": {
+    "sFilt": true,
+    "camStrong": 0
+   }
+  },
+  {
+   "label": "LN+P2",
+   "set": {
+    "sFilt": true,
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "LN+CR",
+   "set": {
+    "sFilt": true,
+    "camRet": false
+   }
+  },
+  {
+   "label": "LN+CD10",
+   "set": {
+    "sFilt": true,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "LN+VT",
+   "set": {
+    "sFilt": true,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "H15+BVD",
+   "set": {
+    "uHTD": "15",
+    "uBrkVROn": true
+   }
+  },
+  {
+   "label": "H15+S0",
+   "set": {
+    "uHTD": "15",
+    "camStrong": 0
+   }
+  },
+  {
+   "label": "H15+P2",
+   "set": {
+    "uHTD": "15",
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "H15+CR",
+   "set": {
+    "uHTD": "15",
+    "camRet": false
+   }
+  },
+  {
+   "label": "H15+CD10",
+   "set": {
+    "uHTD": "15",
+    "uCd": 10
+   }
+  },
+  {
+   "label": "H15+VT",
+   "set": {
+    "uHTD": "15",
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "BVD+S0",
+   "set": {
+    "uBrkVROn": true,
+    "camStrong": 0
+   }
+  },
+  {
+   "label": "BVD+P2",
+   "set": {
+    "uBrkVROn": true,
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "BVD+CR",
+   "set": {
+    "uBrkVROn": true,
+    "camRet": false
+   }
+  },
+  {
+   "label": "BVD+CD10",
+   "set": {
+    "uBrkVROn": true,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "BVD+VT",
+   "set": {
+    "uBrkVROn": true,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "S0+P2",
+   "set": {
+    "camStrong": 0,
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "S0+CR",
+   "set": {
+    "camStrong": 0,
+    "camRet": false
+   }
+  },
+  {
+   "label": "S0+CD10",
+   "set": {
+    "camStrong": 0,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "S0+VT",
+   "set": {
+    "camStrong": 0,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "P2+CR",
+   "set": {
+    "camPiv": 2,
+    "camRet": false
+   }
+  },
+  {
+   "label": "P2+CD10",
+   "set": {
+    "camPiv": 2,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "P2+VT",
+   "set": {
+    "camPiv": 2,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "CR+CD10",
+   "set": {
+    "camRet": false,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "CR+VT",
+   "set": {
+    "camRet": false,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "CD10+VT",
+   "set": {
+    "uCd": 10,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "LN+H15+BVD",
+   "set": {
+    "sFilt": true,
+    "uHTD": "15",
+    "uBrkVROn": true
+   }
+  },
+  {
+   "label": "LN+H15+S0",
+   "set": {
+    "sFilt": true,
+    "uHTD": "15",
+    "camStrong": 0
+   }
+  },
+  {
+   "label": "LN+H15+P2",
+   "set": {
+    "sFilt": true,
+    "uHTD": "15",
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "LN+H15+CR",
+   "set": {
+    "sFilt": true,
+    "uHTD": "15",
+    "camRet": false
+   }
+  },
+  {
+   "label": "LN+H15+CD10",
+   "set": {
+    "sFilt": true,
+    "uHTD": "15",
+    "uCd": 10
+   }
+  },
+  {
+   "label": "LN+H15+VT",
+   "set": {
+    "sFilt": true,
+    "uHTD": "15",
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "LN+BVD+S0",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camStrong": 0
+   }
+  },
+  {
+   "label": "LN+BVD+P2",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "LN+BVD+CR",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "camRet": false
+   }
+  },
+  {
+   "label": "LN+BVD+CD10",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "LN+BVD+VT",
+   "set": {
+    "sFilt": true,
+    "uBrkVROn": true,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "LN+S0+P2",
+   "set": {
+    "sFilt": true,
+    "camStrong": 0,
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "LN+S0+CR",
+   "set": {
+    "sFilt": true,
+    "camStrong": 0,
+    "camRet": false
+   }
+  },
+  {
+   "label": "LN+S0+CD10",
+   "set": {
+    "sFilt": true,
+    "camStrong": 0,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "LN+S0+VT",
+   "set": {
+    "sFilt": true,
+    "camStrong": 0,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "LN+P2+CR",
+   "set": {
+    "sFilt": true,
+    "camPiv": 2,
+    "camRet": false
+   }
+  },
+  {
+   "label": "LN+P2+CD10",
+   "set": {
+    "sFilt": true,
+    "camPiv": 2,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "LN+P2+VT",
+   "set": {
+    "sFilt": true,
+    "camPiv": 2,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "LN+CR+CD10",
+   "set": {
+    "sFilt": true,
+    "camRet": false,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "LN+CR+VT",
+   "set": {
+    "sFilt": true,
+    "camRet": false,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "LN+CD10+VT",
+   "set": {
+    "sFilt": true,
+    "uCd": 10,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "H15+BVD+S0",
+   "set": {
+    "uHTD": "15",
+    "uBrkVROn": true,
+    "camStrong": 0
+   }
+  },
+  {
+   "label": "H15+BVD+P2",
+   "set": {
+    "uHTD": "15",
+    "uBrkVROn": true,
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "H15+BVD+CR",
+   "set": {
+    "uHTD": "15",
+    "uBrkVROn": true,
+    "camRet": false
+   }
+  },
+  {
+   "label": "H15+BVD+CD10",
+   "set": {
+    "uHTD": "15",
+    "uBrkVROn": true,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "H15+BVD+VT",
+   "set": {
+    "uHTD": "15",
+    "uBrkVROn": true,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "H15+S0+P2",
+   "set": {
+    "uHTD": "15",
+    "camStrong": 0,
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "H15+S0+CR",
+   "set": {
+    "uHTD": "15",
+    "camStrong": 0,
+    "camRet": false
+   }
+  },
+  {
+   "label": "H15+S0+CD10",
+   "set": {
+    "uHTD": "15",
+    "camStrong": 0,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "H15+S0+VT",
+   "set": {
+    "uHTD": "15",
+    "camStrong": 0,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "H15+P2+CR",
+   "set": {
+    "uHTD": "15",
+    "camPiv": 2,
+    "camRet": false
+   }
+  },
+  {
+   "label": "H15+P2+CD10",
+   "set": {
+    "uHTD": "15",
+    "camPiv": 2,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "H15+P2+VT",
+   "set": {
+    "uHTD": "15",
+    "camPiv": 2,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "H15+CR+CD10",
+   "set": {
+    "uHTD": "15",
+    "camRet": false,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "H15+CR+VT",
+   "set": {
+    "uHTD": "15",
+    "camRet": false,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "H15+CD10+VT",
+   "set": {
+    "uHTD": "15",
+    "uCd": 10,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "BVD+S0+P2",
+   "set": {
+    "uBrkVROn": true,
+    "camStrong": 0,
+    "camPiv": 2
+   }
+  },
+  {
+   "label": "BVD+S0+CR",
+   "set": {
+    "uBrkVROn": true,
+    "camStrong": 0,
+    "camRet": false
+   }
+  },
+  {
+   "label": "BVD+S0+CD10",
+   "set": {
+    "uBrkVROn": true,
+    "camStrong": 0,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "BVD+S0+VT",
+   "set": {
+    "uBrkVROn": true,
+    "camStrong": 0,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "BVD+P2+CR",
+   "set": {
+    "uBrkVROn": true,
+    "camPiv": 2,
+    "camRet": false
+   }
+  },
+  {
+   "label": "BVD+P2+CD10",
+   "set": {
+    "uBrkVROn": true,
+    "camPiv": 2,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "BVD+P2+VT",
+   "set": {
+    "uBrkVROn": true,
+    "camPiv": 2,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "BVD+CR+CD10",
+   "set": {
+    "uBrkVROn": true,
+    "camRet": false,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "BVD+CR+VT",
+   "set": {
+    "uBrkVROn": true,
+    "camRet": false,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "BVD+CD10+VT",
+   "set": {
+    "uBrkVROn": true,
+    "uCd": 10,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "S0+P2+CR",
+   "set": {
+    "camStrong": 0,
+    "camPiv": 2,
+    "camRet": false
+   }
+  },
+  {
+   "label": "S0+P2+CD10",
+   "set": {
+    "camStrong": 0,
+    "camPiv": 2,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "S0+P2+VT",
+   "set": {
+    "camStrong": 0,
+    "camPiv": 2,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "S0+CR+CD10",
+   "set": {
+    "camStrong": 0,
+    "camRet": false,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "S0+CR+VT",
+   "set": {
+    "camStrong": 0,
+    "camRet": false,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "S0+CD10+VT",
+   "set": {
+    "camStrong": 0,
+    "uCd": 10,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "P2+CR+CD10",
+   "set": {
+    "camPiv": 2,
+    "camRet": false,
+    "uCd": 10
+   }
+  },
+  {
+   "label": "P2+CR+VT",
+   "set": {
+    "camPiv": 2,
+    "camRet": false,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "P2+CD10+VT",
+   "set": {
+    "camPiv": 2,
+    "uCd": 10,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "CR+CD10+VT",
+   "set": {
+    "camRet": false,
+    "uCd": 10,
+    "uVTOn": true
+   }
+  },
+  {
+   "label": "LN+H15+BVD scN2",
+   "set": {
+    "sFilt": true,
+    "uHTD": "15",
+    "uBrkVROn": true,
+    "scN": 2
+   }
+  },
+  {
+   "label": "LN+H15+BVD scN3",
+   "set": {
+    "sFilt": true,
+    "uHTD": "15",
+    "uBrkVROn": true,
+    "scN": 3
+   }
+  }
+ ]
+}

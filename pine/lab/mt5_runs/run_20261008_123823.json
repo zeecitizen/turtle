@@ -1,0 +1,40 @@
+{
+ "signals": 193,
+ "from": "2026.09.27",
+ "to": "2026.10.09",
+ "offset_s": 0,
+ "results": [
+  {
+   "tp": 1.0,
+   "sl": 0.0,
+   "window": 1,
+   "delay": -1,
+   "indicator": "2026.10.07 23:59:58   [REPLAY] signals 193 | taken 178 | missed 8 (no cross on this broker in that minute) | won 137 = 77.0% | BUY 58/73 SELL 79/105 | net $171.10 = $0.961/trade | TP/SL placement refused 41",
+   "random": "2026.10.07 23:59:58   [RANDOMTOUCH] trades 7663  won 5632  = 73.5%  | BUY 2789/3824  SELL 2843/3839 | net $-13300.50 ($-1.736/trade) | target $1.00 lots 0.10 window +1"
+  },
+  {
+   "tp": 1.0,
+   "sl": 5.0,
+   "window": 1,
+   "delay": -1,
+   "indicator": "2026.10.07 23:59:58   [REPLAY] signals 193 | taken 178 | missed 8 (no cross on this broker in that minute) | won 85 = 47.8% | BUY 32/73 SELL 53/105 | net $-79.30 = $-0.446/trade | TP/SL placement refused 55",
+   "random": "2026.10.07 23:59:58   [RANDOMTOUCH] trades 8650  won 4269  = 49.4%  | BUY 2101/4323  SELL 2168/4327 | net $-14847.50 ($-1.716/trade) | target $1.00 lots 0.10 window +1"
+  },
+  {
+   "tp": 5.0,
+   "sl": 0.0,
+   "window": 1,
+   "delay": -1,
+   "indicator": "2026.10.07 23:59:58   [REPLAY] signals 193 | taken 178 | missed 8 (no cross on this broker in that minute) | won 126 = 70.8% | BUY 51/73 SELL 75/105 | net $139.20 = $0.782/trade | TP/SL placement refused 7",
+   "random": "2026.10.07 23:59:58   [RANDOMTOUCH] trades 6983  won 4175  = 59.8%  | BUY 2045/3479  SELL 2130/3504 | net $-12515.90 ($-1.792/trade) | target $5.00 lots 0.10 window +1"
+  },
+  {
+   "tp": 5.0,
+   "sl": 5.0,
+   "window": 1,
+   "delay": -1,
+   "indicator": "2026.10.07 23:59:58   [REPLAY] signals 193 | taken 178 | missed 8 (no cross on this broker in that minute) | won 77 = 43.3% | BUY 33/73 SELL 44/105 | net $-52.80 = $-0.297/trade | TP/SL placement refused 34",
+   "random": "2026.10.07 23:59:58   [RANDOMTOUCH] trades 8866  won 3330  = 37.6%  | BUY 1615/4425  SELL 1715/4441 | net $-14328.10 ($-1.616/trade) | target $5.00 lots 0.10 window +1"
+  }
+ ]
+}
