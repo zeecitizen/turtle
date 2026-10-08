@@ -131,3 +131,6 @@ dist/
 # windows flash across the screen all week. Same reasoning as dist/ above: regenerable
 # by re-running the court, and the numbers that matter are quoted in the daily reports.
 mt5/_tester_runs/
+
+# tv_lab push cache (regenerated automatically)
+pine/.tv_lab_last_pushed.pine
