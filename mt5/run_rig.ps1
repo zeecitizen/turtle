@@ -10,7 +10,9 @@ param(
   [string]$To = "2026.10.08",
   [string]$Symbol = "XAUUSDp",
   [string]$Grep = "RANDOMTOUCH",
-  [string]$Rig = "C:\mt5_rig_pxbt"   # C:\mt5_rig_bb = Blueberry
+  [string]$Rig = "C:\mt5_rig_pxbt",  # C:\mt5_rig_bb = Blueberry
+  [string]$Period = "M1",
+  [int]$Deposit = 10000
 )
 $rig = $Rig
 Copy-Item "C:\Users\zeesh\turtle\mt5\$Ea.mq5" "$rig\MQL5\Experts\$Ea.mq5" -Force
@@ -22,7 +24,7 @@ if ($Inputs) {
   $ti = "[TesterInputs]`r`n"
   foreach ($kv in $Inputs.Split(";")) { $k, $v = $kv.Split("="); $ti += "$k=$v||$v||0||$v||N`r`n" }
 }
-$ini = "[Tester]`r`nExpert=$Ea`r`nSymbol=$Symbol`r`nPeriod=M1`r`nModel=4`r`nFromDate=$From`r`nToDate=$To`r`nDeposit=10000`r`nCurrency=USD`r`nLeverage=1:500`r`nExecutionMode=$Exec`r`nOptimization=0`r`nReport=${Ea}_report`r`nReplaceReport=1`r`nShutdownTerminal=1`r`nVisual=0`r`n$ti"
+$ini = "[Tester]`r`nExpert=$Ea`r`nSymbol=$Symbol`r`nPeriod=$Period`r`nModel=4`r`nFromDate=$From`r`nToDate=$To`r`nDeposit=$Deposit`r`nCurrency=USD`r`nLeverage=1:500`r`nExecutionMode=$Exec`r`nOptimization=0`r`nReport=${Ea}_report`r`nReplaceReport=1`r`nShutdownTerminal=1`r`nVisual=0`r`n$ti"
 Set-Content "$rig\run.ini" $ini -Encoding Unicode
 $p = Start-Process "$rig\terminal64.exe" -ArgumentList "/portable", "/config:`"$rig\run.ini`"" -PassThru
 if (-not $p.WaitForExit(1800000)) { "timeout"; exit 2 }
