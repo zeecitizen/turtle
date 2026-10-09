@@ -1,0 +1,11 @@
+RANGEPROBE XAUUSD.pro bars 125332 avgM5range 453.9 pts avgSpread 12.8 pts point 0.01 digits 2 tickvalue 1.00000 contract 100.00 minlot 0.01
+RANGEPROBE XPTUSD.pro bars 124930 avgM5range 4025.8 pts avgSpread 5977.4 pts point 0.001 digits 3 tickvalue 0.10000 contract 100.00 minlot 0.01
+RANGEPROBE US30 bars 123984 avgM5range 2938.0 pts avgSpread 101.3 pts point 0.01 digits 2 tickvalue 0.01000 contract 1.00 minlot 0.10
+RANGEPROBE USTECH bars 123992 avgM5range 2261.6 pts avgSpread 72.8 pts point 0.01 digits 2 tickvalue 0.01000 contract 1.00 minlot 0.10
+RANGEPROBE US500 bars 123996 avgM5range 437.8 pts avgSpread 29.3 pts point 0.01 digits 2 tickvalue 0.01000 contract 1.00 minlot 0.10
+RANGEPROBE GER40 bars 120455 avgM5range 1850.8 pts avgSpread 117.5 pts point 0.01 digits 2 tickvalue 0.01120 contract 1.00 minlot 0.10
+RANGEPROBE EURUSD.pro none
+RANGEPROBE GBPUSD.pro bars 131903 avgM5range 45.6 pts avgSpread 4.8 pts point 1e-05 digits 5 tickvalue 1.00000 contract 100000.00 minlot 0.01
+RANGEPROBE USDJPY.pro bars 131898 avgM5range 60.5 pts avgSpread 6.4 pts point 0.001 digits 3 tickvalue 0.63257 contract 100000.00 minlot 0.01
+RANGEPROBE USOIL bars 125162 avgM5range 146.7 pts avgSpread 22.6 pts point 0.001 digits 3 tickvalue 0.01000 contract 10.00 minlot 0.10
+RANGEPROBE BTCUSD bars 185451 avgM5range 14826.4 pts avgSpread 1197.6 pts point 0.01 digits 2 tickvalue 0.01000 contract 1.00 minlot 0.10

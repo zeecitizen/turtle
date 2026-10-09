@@ -52,7 +52,7 @@
 // takes the first half NEGATIVE).
 // ─────────────────────────────────────────────────────────────────────────────────
 #property copyright "Zee & his ghost"
-#property version   "1.24"
+#property version   "1.28"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -86,6 +86,25 @@ CTrade trade;
 // knowing that; it matches the drawdown he was already carrying. For a 10% limit the size
 // is ~0.22 lots (about $968).
 input double InpLots        = 0.28;   // InpLots — lot size per ticket
+// FIXED-FRACTIONAL RISK (v1.25, 2026-10-09). Zee: "Transitioning from a static fixed lot
+// (0.28) to a Fixed Fractional Risk Model (e.g., risking strictly 0.5% or 1.0% of account
+// equity per trade)". 0 = OFF (fixed InpLots, the tested behaviour). >0 = size every
+// decision so that a full stop (plus commission) loses this % of CURRENT equity, split
+// across InpTickets. For scale: 0.28 lots on $25k averaged a $134 loss = ~0.54% risk.
+input double InpRiskPct     = 0.0;    // InpRiskPct — % of equity risked per decision (0 = fixed lots)
+input double InpRiskMaxLots = 5.0;    // InpRiskMaxLots — hard cap per ticket when sizing by risk
+// EQUITY-PROPORTIONAL LOTS (v1.26, 2026-10-09). The v1.25 test showed equal-risk sizing LOSES
+// to fixed lots (0.5%: PF 2.27 vs 2.55) because fixed lots put more money on the wide-stop
+// setups, which are the better ones. This compounds WITHOUT re-weighting: lots =
+// InpLots x equity / InpCompoundBase, so 0.28 lots at $25k becomes 0.34 at $30k.
+// 0 = OFF (fixed InpLots). Ignored when InpRiskPct > 0.
+// KEPT OFF IN v1.28 - THE SHIP TEST CHANGED THE ANSWER (2026-10-10). Zee approved "fade 0.65/5
+// + compounding at 25000", but the pre-ship run with BOTH as defaults read +$19,390 at 6.63% DD
+// against +$17,745 at 4.08% for the same fade on fixed lots - 9% more money for 70% more
+// drawdown, because lots had grown to 0.49 by the weak late months. (On the old 0.60/4 fade it
+// was +$19,291 at 3.85% vs +$17,014 at 3.8%.) Set this to YOUR account's starting equity to
+// compound; 0 keeps the tested fixed-lot behaviour.
+input double InpCompoundBase = 0.0;    // InpCompoundBase — equity that InpLots is sized for (0 = no compounding)
 input int    InpTickets     = 1;      // InpTickets — tickets per decision (basket)
 input int    InpMagicNumber = 88201;  // InpMagicNumber — VSISA
 // MAX OPEN / COOLDOWN LIFTED (2026-09-12). Zee: "remove the InpMaxOpen = 1 and
@@ -324,6 +343,15 @@ input int    InpStopRef     = 0;      // InpStopRef — 0 = below the REACTION c
 input int    InpSlBufPts    = 120;    // InpSlBufPts — points beyond the reaction candle (12 pips)
 input int    InpMinSlPts    = 60;     // InpMinSlPts — floor, so spread cannot eat the stop
 input int    InpMaxSlPts    = 900;    // InpMaxSlPts — refuse setups whose risk is absurd
+// OTHER MARKETS (v1.27, 2026-10-09). Zee: "let's aggressively find more trades". Every
+// point input above was tuned on gold, where 120 points = $1.20 ~ a third of an M5 candle.
+// On EURUSD 120 points is 12 pips (two candles); on an index it can be a fraction of a tick
+// of movement. InpPtsScale multiplies EVERY point input (buffer, floor, cap, fixed target,
+// retrace tolerance) so a market can be run at gold's proportions:
+//    scale = that market's average M5 range in points / gold's average M5 range in points
+// 1.0 = gold, and leaves every gold result byte-identical.
+input double InpPtsScale    = 1.0;    // InpPtsScale — multiplier on every point input (1 = gold)
+double Pt() { return _Point * InpPtsScale; }
 // 5.0R — SHIPPED 2026-09-15 ON ZEE'S CALL. "SL should not be tied to TP. SL can be below
 // the first reaction candle's low .. and TP can be very high up until 1:7 .. can you test
 // this?" Then, on the result: "ship 5.0".
@@ -508,8 +536,19 @@ input int    InpSweepLook   = 30;     // InpSweepLook — bars defining that ext
 // streak 5 -> 4, ratio 9.16 -> 15.75, and better in BOTH walk-forward halves
 // (2.06/11.15 -> 4.16/12.43). The cost is win rate, 59% -> 51%.
 input int    InpFadeMode    = 1;      // InpFadeMode — 1 = also take the green-fade entry
-input int    InpFadeLook    = 4;      // InpFadeLook — bars of leg the fade is read over
-input double InpFadePct     = 0.60;   // InpFadePct — this green <= that x the previous green
+// LOOSENED TO 0.65 / 5 BARS - SHIPPED v1.28 (2026-10-10, Zee: "ok ship it") after he asked
+// for "as many setups as possible within a single day". Axi real ticks Jan 1 - Oct 8, $25k,
+// 0.28 fixed lots, random delay - the whole neighbourhood is profitable (trades, net):
+//      fade<=   look4          look5          look6
+//      0.60     163 +$17.5k    195 +$15.5k    229 +$15.4k
+//      0.65     230 +$17.2k    288 +$19.4k    339 +$14.0k
+//      0.70     345 +$11.8k    437 +$18.4k    505 +$16.3k
+//      0.75     493 +$14.1k    636 +$15.5k    728 +$13.4k
+// 0.65/5 against the old 0.60/4: trades 163 -> 288, days with a trade 104 -> 141, net
+// +$17,486 -> +$19,417, better in BOTH halves (Jan-Apr +$2.3k -> +$3.4k, May-Oct +$15.1k ->
+// +$16.0k), every month green. The price: drawdown 2.65% -> 4.1%, PF 2.60 -> 1.96.
+input int    InpFadeLook    = 5;      // InpFadeLook — bars of leg the fade is read over
+input double InpFadePct     = 0.65;   // InpFadePct — this green <= that x the previous green
 input double InpFadeBigPct  = 0.80;   // InpFadeBigPct — loudest opposite bar >= this x swing max
 
 //--- LAW 9: higher-timeframe trend (default OFF) ---------------------------
@@ -1149,7 +1188,7 @@ bool Detect(int side, double &sl_level, string &why) {
          else          sref = MathMax(sref, bHigh(k));
       }
    }
-   double buf = InpSlBufPts * _Point;
+   double buf = InpSlBufPts * Pt();
    sl_level = (side > 0) ? sref - buf : sref + buf;
 
    why = StringFormat("setup %d bars vol %.0f | swing %d bars (max %d avg %.0f) | "
@@ -1240,7 +1279,7 @@ bool DetectFade(int side, double &sl_level, string &why) {
 
    // the stop hangs off the reaction, exactly as everywhere else
    double sref = (side > 0) ? bLow(r) : bHigh(r);
-   double buf  = InpSlBufPts * _Point;
+   double buf  = InpSlBufPts * Pt();
    sl_level = (side > 0) ? sref - buf : sref + buf;
 
    why = StringFormat("FADE %s %d -> %d (%.2fx) | loudest opposite %d = %.2fx swing max %d",
@@ -1258,21 +1297,21 @@ void Fire(int side, double sl_level, string why) {
    // The floor exists because his 2-3 pips are FX pips on a pair whose spread is a
    // fraction of gold's. A stop narrower than the spread is not a tight stop, it is a
    // guaranteed loss on entry.
-   double minr = InpMinSlPts * _Point;
-   double maxr = InpMaxSlPts * _Point;
+   double minr = InpMinSlPts * Pt();
+   double maxr = InpMaxSlPts * Pt();
    if (risk < minr) {
       risk = minr;
       sl_level = (side > 0) ? entry - risk : entry + risk;
    }
    if (risk > maxr) {
       if (InpVerbose)
-         PrintFormat("[VSISA] refused: risk %.0f pts > cap %d", risk / _Point, InpMaxSlPts);
+         PrintFormat("[VSISA] refused: risk %.0f pts > cap %d", risk / Pt(), InpMaxSlPts);
       return;
    }
 
    double tp = 0.0;
    if (InpTargetMode == 1) {
-      double d = InpTargetPts * _Point;
+      double d = InpTargetPts * Pt();
       tp = (side > 0) ? entry + d : entry - d;
    } else if (InpTargetMode == 2) {
       tp = g_swing_px;                       // the level the leg came FROM
@@ -1305,6 +1344,46 @@ void Fire(int side, double sl_level, string why) {
 
    // SIZE BY THE GRADE OF THE REACTION, not by conviction in general.
    double lots = InpLots;
+   if (InpRiskPct <= 0.0 && InpCompoundBase > 0.0) {
+      lots = InpLots * AccountInfoDouble(ACCOUNT_EQUITY) / InpCompoundBase;
+      double m1 = 0.0;
+      if (OrderCalcMargin(side > 0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, _Symbol, 1.0, entry, m1) && m1 > 0)
+         lots = MathMin(lots, 0.8 * AccountInfoDouble(ACCOUNT_MARGIN_FREE) / m1 / MathMax(1, InpTickets));
+      lots = MathMin(lots, InpRiskMaxLots);
+      double st = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+      double lo = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+      if (st > 0) lots = MathFloor(lots / st) * st;             // round DOWN
+      if (lots < lo) {
+         if (InpVerbose) PrintFormat("[VSISA] refused: compounding gives %.3f lots, below the minimum %.2f", lots, lo);
+         return;
+      }
+   }
+   if (InpRiskPct > 0.0) {
+      // Money lost on ONE lot if the stop is hit, measured by the terminal itself so
+      // contract size, tick value and account currency are all handled.
+      double loss1 = 0.0;
+      if (!OrderCalcProfit(side > 0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, _Symbol, 1.0,
+                           entry, sl_level, loss1) || loss1 >= 0.0) {
+         if (InpVerbose) Print("[VSISA] refused: could not price the stop for risk sizing");
+         return;
+      }
+      double budget = AccountInfoDouble(ACCOUNT_EQUITY) * InpRiskPct / 100.0;
+      double comm1  = 1.12 / 0.28;           // Axi commission per lot ($1.12 per 0.28-lot entry, measured 2026-10-09)
+      lots = budget / (MathAbs(loss1) + comm1) / MathMax(1, InpTickets);
+      // never ask for more margin than is free (the 0.28-lot "not enough money" lesson)
+      double m1 = 0.0;
+      if (OrderCalcMargin(side > 0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, _Symbol, 1.0, entry, m1) && m1 > 0)
+         lots = MathMin(lots, 0.8 * AccountInfoDouble(ACCOUNT_MARGIN_FREE) / m1 / MathMax(1, InpTickets));
+      lots = MathMin(lots, InpRiskMaxLots);
+      double st = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+      double lo = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+      if (st > 0) lots = MathFloor(lots / st) * st;             // round DOWN: never over-risk
+      if (lots < lo) {
+         if (InpVerbose) PrintFormat("[VSISA] refused: %.1f%% risk buys %.3f lots, below the minimum %.2f",
+                                     InpRiskPct, lots, lo);
+         return;
+      }
+   }
    if (InpSizeBySpread) {
       double m = InpSizeM0;
       if      (g_react_ratio >= InpSizeT2) m = InpSizeM2;
@@ -1316,6 +1395,16 @@ void Fire(int side, double sl_level, string why) {
       if (st > 0) lots = MathFloor(lots / st + 0.5) * st;
       if (lo > 0) lots = MathMax(lo, lots);
       if (hi > 0) lots = MathMin(hi, lots);
+   }
+   // v1.27: every market has its own lot step (gold 0.01, US30 0.1). A fixed InpLots that is
+   // not a multiple of it is refused by the server ("10014 invalid volume") on EVERY trade,
+   // which is how the first US30 run fired zero. Snap to the nearest step; gold is unchanged.
+   {
+      double st = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+      double lo = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+      if (st > 0) lots = MathRound(lots / st) * st;
+      if (lo > 0) lots = MathMax(lo, lots);
+      lots = NormalizeDouble(lots, 2);
    }
 
    int n = MathMax(1, InpTickets);
@@ -1432,10 +1521,10 @@ int OnInit() {
    // "2-bar setup 2 bars" after the run became self-counting, and said nothing about
    // the swing window or which candle the stop hangs from - the three things that
    // actually changed. A banner that misreports the build is worse than no banner.
-   PrintFormat("[VSISA] v1.24 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
+   PrintFormat("[VSISA] v1.28 - setup %s | vol vs %s | big>=%.2fxmax/%.2fxavg | "
                "reaction<=%.2fx %s | stop %s +%dpts (floor %d cap %d) | TP %.1fR BE %.1fR "
                "| trendTF %d wick %d confirm %d anomaly %d fake %d | feed %s "
-               "| %.2f lots x%d | magic %d",
+               "| %s x%d | magic %d",
                InpSetupAuto ? StringFormat("AUTO %d-%d bars", InpSetupMin, InpSetupMax)
                             : StringFormat("fixed %d bars", InpSetupBars),
                (InpVolWindow == 1) ? StringFormat("SWING (pivot %d min %d cap %d)",
@@ -1449,7 +1538,10 @@ int OnInit() {
                InpTrendTF, InpWickMode, InpConfirmMode, (int)InpAnomaly, (int)InpFakeBreak,
                (InpOandaVolume == 1) ? (InpOandaStrict ? "OANDA-STRICT" : "OANDA")
                                      : "BROKER-TICKS",
-               InpLots, InpTickets, InpMagicNumber);
+               (InpRiskPct > 0 ? StringFormat("RISK %.2f%% of equity (cap %.2f lots)", InpRiskPct, InpRiskMaxLots)
+                               : (InpCompoundBase > 0 ? StringFormat("%.2f lots per $%.0f equity (compounding)", InpLots, InpCompoundBase)
+                                                    : StringFormat("%.2f lots", InpLots))),
+               InpTickets, InpMagicNumber);
 
    // WHICH NUMBER IS THIS BROKER ACTUALLY GIVING US (2026-09-12).
    // Zee moved VSISA to Axi because "AXI volume happens to be more accurate on the
@@ -1539,8 +1631,8 @@ void RetraceCheck() {
    datetime now = iTime(_Symbol, PERIOD_CURRENT, 0);
    int ps = (int)PeriodSeconds();
    if (ps <= 0) return;
-   double tol = InpRetraceTol * _Point;
-   double buf = InpSlBufPts * _Point;
+   double tol = InpRetraceTol * Pt();
+   double buf = InpSlBufPts * Pt();
 
    for (int i = g_lvl_n - 1; i >= 0; i--) {
       int age = (int)((now - g_lvl_t[i]) / ps);
