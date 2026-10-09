@@ -20,7 +20,7 @@
 //|  Volume (LAWS.md: judge on OANDA volume): InpVolSource 0 = this   |
 //|  symbol's own volume (a custom symbol loaded with OANDA candles   |
 //|  carries OANDA volume); 1 = OANDA volume from Common\Files\         |
-//|  oanda_vol.csv (time_utc,volume), falling back to broker volume.  |
+//|  oanda_vol_utc.csv (time_utc,volume), falling back to broker volume.  |
 //+------------------------------------------------------------------+
 #property copyright "Zee"
 #property version   "1.00"
@@ -41,7 +41,7 @@ input int    InpDir         = 0;      // 0 both, 1 buys only, -1 sells only
 
 input group "── Data ──"
 input int    InpVolSource   = 0;      // 0 this symbol's volume, 1 OANDA file
-input string InpOandaFile   = "oanda_vol.csv";
+input string InpOandaFile   = "oanda_vol_utc.csv";  // UTC epoch seconds; oanda_vol.csv is the Diamond's server-time table
 input int    InpUtcOffsetH  = 0;      // this symbol's time minus UTC (custom OANDA symbol: 0; Blueberry: 3)
 input bool   InpExport      = true;   // write every signal to Common\Files\ea_signals.csv
 input bool   InpExportState = false;  // write end-of-candle state to Common\Files\ea_state.csv (parity checks)
