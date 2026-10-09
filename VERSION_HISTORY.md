@@ -636,6 +636,88 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## VSISA v1.28 — the looser fade ships: 288 trades instead of 163 (2026-10-10)
+
+**magic 88201 · XAUUSD.pro M5 on Axi · `InpFadePct 0.60 → 0.65` · `InpFadeLook 4 → 5`**
+
+Zee: *"ok ship it"* — for his ask *"we can take as many setups as possible within a single
+day.. so we're not kept waiting all day long"*.
+
+**Ship receipt** (Axi rig, v1.28 compiled defaults with no overrides, real ticks, random delay,
+$25k, 0.28 fixed lots, 2026-01-01 → 10-08): **+$17,745 · 288 trades · 43.8% WR · PF 1.86 · max
+equity DD $1,679 (4.08%) · a trade on 141 days (was 104).** The same settings in the night's
+court read +$19,417 / PF 1.96 — random delay alone. Against v1.27's +$17,486 / 163 / 2.65%:
+77% more trades, the same money, more drawdown. Every cell of the 0.60–0.75 × 4–6 fade grid
+was profitable; 0.65/5 led it and beat 0.60/4 in both halves of the year.
+
+**Compounding stays OFF (`InpCompoundBase = 0`) — a change from what Zee approved.** He
+approved "fade 0.65/5 + compounding at 25000". The pre-ship run with both as defaults gave
++$19,390 at **6.63% DD** ($2,879), PF 1.66: 9% more money than fixed lots for 70% more drawdown,
+because lots had grown to 0.49 by the weak late months. On v1.26's fade compounding had kept
+DD flat (3.85% vs 3.8%); with this fade it does not. It is one input away for whoever wants it.
+
+**ZEE MUST REFRESH + REATTACH.** Navigator → Expert Advisors → right-click → Refresh; the
+Journal must read `[VSISA] v1.28 - setup AUTO ...`. In the tester, reset inputs to defaults
+(MT5 reuses cached inputs) — `InpFadePct` must show 0.65 and `InpFadeLook` 5.
+
+## VSISA v1.27 — other markets, lot-step fix, and the more-trades court (2026-10-09)
+
+**magic 88201 · defaults unchanged on gold (`InpPtsScale = 1.0` → byte-identical: 163 trades)**
+
+Zee: *"let's aggressively find more trades"*. Two code changes, both inert on gold:
+- **`InpPtsScale`** multiplies every point input (stop buffer, floor, cap, fixed target,
+  retrace tolerance) so another market runs at gold's proportions.
+- **Lots snap to the symbol's volume step.** US30's step is 0.1, so a fixed 4.33 lots was
+  refused on every trade ("10014 invalid volume") and the first US30 run fired zero.
+
+**Court** (Axi rig `C:\mt5_rig_axi`, real ticks, random delay, $25k, Jan 1 → Oct 8; harness
+`monitor/strategy_lab/axi_rig.py` + `vsisa_more_trades.py`): **other markets and timeframes
+fail** — US30 PF 0.96, USTECH 1.13, GER40 1.00, BTC 0.89, GBPUSD 0.74, USDJPY 0.67, gold M15 1.21, gold M1 0.89. **The extra
+trades are in the fade path on gold M5**: `InpFadePct 0.65 / InpFadeLook 5` → 288 trades vs
+163, +$19,417 vs +$17,486, better in both halves, every month green, DD 2.65% → 4.1%; the
+whole 0.60–0.75 × 4–6 grid is profitable. Fake break off with it: 1,192 trades, PF 1.15,
+DD 11.5% — rejected again. **Fade change NOT shipped as default — awaiting Zee.** Full tables:
+`WINNING_STRATEGY_VSISA.md` → "More trades per day".
+
+## VSISA v1.26 — equity-proportional compounding, and the v1.25 verdict (2026-10-09)
+
+**v1.25 risk-sizing test** (Zee's Axi runs, random delay, $25k, Jan 1 → Oct 8, 163 trades each):
+fixed 0.28 lots +$17,014 PF 2.55 DD 3.8% · 0.5% risk +$16,470 PF 2.27 DD 4.3% · 1.0% risk
++$46,897 PF 2.37 DD 8.5%. **Equal-risk sizing loses to fixed lots at the same scale** — fixed
+lots weight the wide-stop setups, which are the better ones. `InpRiskPct` stays 0.
+
+**v1.26 adds `InpCompoundBase`** (0 = off): lots = InpLots × equity / base — compounding
+without re-weighting the setups. Default off. Details: `WINNING_STRATEGY_VSISA.md`.
+
+**v1.26 receipt** (Zee's Axi run, `InpRiskPct = 0`, `InpCompoundBase = 25000`, same window/settings):
+**+$19,291 · PF 2.34 · max equity DD 3.85% · 163 trades · 49.7% WR · lots 0.27→0.49 · every month
+green · unseen 18 Sep → 8 Oct +$3,638.** Same DD % as fixed lots (3.8%) with +$2.3k more over 9
+months. (An earlier "compound" report had `InpRiskPct = 1` left on, so it was a second 1% run:
++$48,842, DD 6.9% — 1% risk varies 6.9–8.5% DD run to run.)
+
+## VSISA v1.25 — optional risk sizing + the Axi receipt (2026-10-09)
+
+**magic 88201 · XAUUSD.pro M5 on Axi · defaults unchanged (`InpRiskPct = 0` → fixed 0.28 lots)**
+
+**Receipt (Zee's own Axi demo runs, v1.24 defaults, 2026-01-01 → 10-08, 99% real ticks, $25k):**
+
+| | zero latency | random delay |
+|---|---|---|
+| net | +$14,968.82 | **+$15,817.64** |
+| PF | 2.39 | 2.41 |
+| trades / WR | 163 / 51.5% | 163 / 49.7% |
+| max equity DD | $1,014 (2.7%) | $1,042 (3.3%) |
+
+Every month green; largest win 11% of profit. Unseen days (18 Sep → 7 Oct, after v1.24
+shipped): +$2,010.62 random delay / +$1,278.70 zero latency, ~19 trades. Same weeks on
+Blueberry tick counts: −$801 — VSISA belongs on Axi.
+
+**v1.25 change (Zee: "Transitioning from a static fixed lot (0.28) to a Fixed Fractional
+Risk Model"):** `InpRiskPct` (0 = off) sizes each decision so a full stop + commission loses
+that % of equity; `InpRiskMaxLots` caps it; never more than 80% of free margin; lots round
+down. **Not yet tested — default OFF.** Test plan and the full how-to-run guide:
+`WINNING_STRATEGY_VSISA.md`.
+
 ## VSISA v1.21-1.23 — SHIPPED: LAW 14, the FADE (2026-09-17)
 
 **Who ordered it.** Zee took a trade the EA refused — 16 Sep 22:33 broker, **+$858 on 1
