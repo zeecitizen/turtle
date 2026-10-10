@@ -75,6 +75,10 @@ iTrPips  = input.float(30, 'X pips   (more = looser)', minval = 1, step = 1, gro
 iTrAtr   = input.float(1.5, 'ATR multiple   (more = looser)', minval = 0.1, step = 0.1, group = g7)
 iTrStart = input.float(0, 'Without "let winners run": start trailing after this many pips of profit   (0 = at once)', minval = 0, step = 1, group = g7)
 
+g8 = "⑧ LONG RULE — which EMA is the setup, which is the exit"
+iLRule   = input.string("9 EMA setup → exit at 50 EMA", 'LONG rule', options = ["9 EMA setup → exit at 50 EMA", "50 EMA setup → exit at 9 EMA", "Both"], group = g8,
+     tooltip = "The rules: a bullish pin / marubozu ON the 9 EMA, exit when a candle touches the 50 EMA.\nThe inverse: ON the 50 EMA, exit when a candle touches the 9 EMA.\n'Both' takes either; each trade exits at the OTHER EMA.\nIn the inverse and Both modes this replaces 'LONG setups must be on'; 'LONG only when the exit EMA is above' still applies.")
+
 // LINES ────────────────────────────────────────────────────────────────────
 e9  = ta.ema(close, iFast)
 e50 = ta.ema(close, iSlow)
@@ -83,6 +87,7 @@ plot(e50, "EMA slow", color = color.new(#2962ff, 0), linewidth = 2)
 atr = ta.atr(14)
 pip = 0.10
 usd(d) => d * iLots * iCs
+exitVal(int which) => which == 9 ? e9 : e50
 
 // ① SHAPE: +1 bullish, -1 bearish, 2 = a pin whose direction the EMA decides ─
 rng  = high - low
@@ -152,6 +157,8 @@ var int   tN = 0
 var bool  tBe = false
 var float tBest = na       // best price since entry (for the trailing stop)
 var bool  tRide = false    // the TP was reached and the trade is now riding the trailing stop
+var int   pExitE = 50      // waiting LONG setup: which EMA will be its exit (9 or 50)
+var int   tExitE = 50      // open LONG: which EMA is its exit
 var line  lEn = na
 var line  lSl = na
 var line  lTp = na
@@ -188,7 +195,7 @@ closeTrade(px, why) =>
     label.set_x(xSl, bar_index)
     label.set_x(xTp, bar_index)
     if tSide > 0 and iLTpP == 0
-        label.set_y(xTp, e50)
+        label.set_y(xTp, exitVal(tExitE))
     pnl
 
 trLow  = ta.lowest(low, iTrN)       // computed every candle (Pine needs history functions outside conditions)
@@ -202,8 +209,9 @@ if tSide != 0 and bar_index > tBar
     string why = ""
     ltol = iLTpP * pip
     if tSide > 0
-        tgt = e50 >= tEn ? e50 - ltol : e50 + ltol
-        hitTp = iLTp == "Candle touches the 50 EMA" ? (low <= tgt and high >= tgt) : (e50 >= tEn ? close >= tgt : close <= tgt)
+        eX  = exitVal(tExitE)
+        tgt = eX >= tEn ? eX - ltol : eX + ltol
+        hitTp = iLTp == "Candle touches the 50 EMA" ? (low <= tgt and high >= tgt) : (eX >= tEn ? close >= tgt : close <= tgt)
         if low <= tSl
             exitPx := tSl, why := tRide or tSl > tEn ? "trailing stop hit" : tBe ? "breakeven stop" : "stop loss hit"
         else if hitTp and not tRide
@@ -213,7 +221,7 @@ if tSide != 0 and bar_index > tBar
                      color = color.new(color.teal, 10), textcolor = color.white, size = size.tiny)
             else
                 exitPx := iLTp == "Candle touches the 50 EMA" ? tgt : close
-                why := "50 EMA " + (iLTp == "Candle touches the 50 EMA" ? "touched" : "close") + " (TP)"
+                why := str.tostring(tExitE) + " EMA " + (iLTp == "Candle touches the 50 EMA" ? "touched" : "close") + " (TP)"
     else
         if high >= tSl
             exitPx := tSl, why := tRide or tSl < tEn ? "trailing stop hit" : tBe ? "breakeven stop" : "stop loss hit"
@@ -284,6 +292,7 @@ if pSide != 0 and tSide == 0 and bar_index > pBar
         tBe := false
         tBest := na
         tRide := false
+        tExitE := pExitE
         if pSide < 0 and (na(tTp) or tTp >= tEn)
             tSide := 0                                   // the EA skips a short with no support below
             if iShowSk
@@ -299,7 +308,7 @@ if pSide != 0 and tSide == 0 and bar_index > pBar
             tip = (pSide > 0 ? "BUY" : "SELL") + "  #" + str.tostring(tN) +
                  "\nEntry: " + str.tostring(tEn, "#.##") +
                  "\nSL:    " + str.tostring(tSl, "#.##") + "  −$" + str.tostring(usd(risk), "#.##") +
-                 "\nTP:    " + (pSide > 0 ? "the 50 EMA" :
+                 "\nTP:    " + (pSide > 0 ? "the " + str.tostring(tExitE) + " EMA" :
                                  str.tostring(tTp, "#.##") + "  +$" + str.tostring(usd(tEn - tTp), "#.##") + " (last support)") +
                  "\nLots:  " + str.tostring(iLots, "#.##")
             label.new(bar_index, pSide > 0 ? low : high,
@@ -313,13 +322,13 @@ if pSide != 0 and tSide == 0 and bar_index > pBar
             xSl := label.new(bar_index + 2, tSl, "④ SL: " + str.tostring(iSlPips, "#") + " pips " + (pSide > 0 ? "below" : "above") +
                  " the candle = " + str.tostring(tSl, "#.##") + "  (−$" + str.tostring(usd(risk), "#.##") + ")",
                  style = label.style_label_left, color = color.new(color.red, 15), textcolor = color.white, size = size.small)
-            xTp := label.new(bar_index + 2, pSide > 0 ? e50 : tTp,
-                 pSide > 0 ? "⑤ TP: exit when a candle " + (iLTp == "Candle touches the 50 EMA" ? "touches" : "closes at") + " the 50 EMA" +
+            xTp := label.new(bar_index + 2, pSide > 0 ? exitVal(tExitE) : tTp,
+                 pSide > 0 ? "⑤ TP: exit when a candle " + (iLTp == "Candle touches the 50 EMA" ? "touches" : "closes at") + " the " + str.tostring(tExitE) + " EMA" +
                              (iLTpP > 0 ? " (−" + str.tostring(iLTpP, "#") + " pips)" : "") :
                  "⑤ TP: last support (liquidity) = " + str.tostring(tTp, "#.##") + "  (+$" + str.tostring(usd(tEn - tTp), "#.##") + ")",
                  style = label.style_label_left, color = color.new(color.green, 15), textcolor = color.white, size = size.small)
             status := (pSide > 0 ? "IN LONG #" : "IN SHORT #") + str.tostring(tN) + " @ " + str.tostring(tEn, "#.##") +
-                 " | SL " + str.tostring(tSl, "#.##") + " | TP " + (pSide > 0 ? "50 EMA" : str.tostring(tTp, "#.##"))
+                 " | SL " + str.tostring(tSl, "#.##") + " | TP " + (pSide > 0 ? str.tostring(tExitE) + " EMA" : str.tostring(tTp, "#.##"))
         pSide := 0
     else
         pLeft -= 1
@@ -340,13 +349,16 @@ if tSide != 0
     label.set_x(xSl, bar_index + 2)
     label.set_x(xTp, bar_index + 2)
     if tSide > 0
-        label.set_y(xTp, e50)
+        label.set_y(xTp, exitVal(tExitE))
 
 // 3) A NEW SETUP ON THE CANDLE THAT JUST CLOSED ───────────────────────────
 if barstate.isconfirmed and tSide == 0 and pSide == 0 and shape != 0 and inSess
-    longLine  = lineFor(iLongLn, 1)
+    // ⑧ which long rule(s) this candle satisfies: the original (on 9, exit 50) and/or the inverse (on 50, exit 9)
+    bool rulesOk = iLRule != "50 EMA setup → exit at 9 EMA" and (iLRule == "Both" ? onLine(e9, 1) : lineFor(iLongLn, 1)) and not (iL50Up and e50 <= high)
+    bool invOk   = iLRule != "9 EMA setup → exit at 50 EMA" and onLine(e50, 1) and not (iL50Up and e9 <= high)
+    longLine  = rulesOk or invOk
     shortLine = lineFor(iShrtLn, -1)
-    longOk  = iBuys  and longLine  and (shape == 1 or (shape == 2 and (not shortLine or close >= open))) and not (iL50Up and e50 <= high)
+    longOk  = iBuys  and longLine  and (shape == 1 or (shape == 2 and (not shortLine or close >= open)))
     shortOk = iSells and shortLine and (shape == -1 or shape == 2) and not longOk
     if longOk or shortOk
         if choppy
@@ -358,10 +370,11 @@ if barstate.isconfirmed and tSide == 0 and pSide == 0 and shape != 0 and inSess
         else
             pSide := longOk ? 1 : -1
             pHi := high, pLo := low, pLeft := iBreak, pBar := bar_index
+            pExitE := rulesOk ? 50 : 9
             box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.yellow, 0), 2, bgcolor = color.new(color.yellow, 85))
             label.new(bar_index, longOk ? high : low,
                  "① " + (longOk ? "LONG" : "SHORT") + " SETUP: " + kind + " on " +
-                 (longOk ? lineName(iLongLn, 1) : lineName(iShrtLn, -1)) +
+                 (longOk ? (rulesOk ? (iLRule == "Both" ? "the 9 EMA" : lineName(iLongLn, 1)) : "the 50 EMA") + " → exit at the " + str.tostring(rulesOk ? 50 : 9) + " EMA" : lineName(iShrtLn, -1)) +
                  "\n② wait max " + str.tostring(iBreak) + " candle" + (iBreak > 1 ? "s" : "") + " for a " + (iBrkC ? "close " : "") +
                  "break of its " + (longOk ? "HIGH " + str.tostring(high, "#.##") : "LOW " + str.tostring(low, "#.##")) +
                  (iBrkP > 0 ? " ±" + str.tostring(iBrkP, "#") + " pips" : ""),
@@ -388,13 +401,15 @@ if barstate.islast and iShowRules
          border_color = color.new(color.gray, 70), border_width = 1)
     table.cell(rb, 0, 0, "📜 SAAD'S RULES — step by step   (LONG · SHORT) — current settings", text_color = color.yellow, text_size = size.small)
     table.merge_cells(rb, 0, 0, 1, 0)
-    rr(rb, 1, "①", (iPinDir ? "Thumb pin" : "Any pin") + (iMaru ? " / marubozu" : "") + " on the " + iLongLn + "  ·  on the " + iShrtLn +
+    rr(rb, 1, "①", (iPinDir ? "Thumb pin" : "Any pin") + (iMaru ? " / marubozu" : "") + " on the " +
+         (iLRule == "Both" ? "9 or 50 EMA" : iLRule == "50 EMA setup → exit at 9 EMA" ? "50 EMA" : iLongLn) + "  ·  on the " + iShrtLn +
          (iTouchP > 0 ? "  (±" + str.tostring(iTouchP, "#") + " pips)" : "") + (iTouch == "Candle touches the EMA" ? "" : "  · body on trade side"))
     rr(rb, 2, "②", "Wait max " + str.tostring(iBreak) + " candle" + (iBreak > 1 ? "s" : "") + " for the break" + (iBrkC ? " (on a close)" : "") +
          (iBrkP > 0 ? " by " + str.tostring(iBrkP, "#") + " pips" : ""))
     rr(rb, 3, "③", "High broken → BUY  ·  low broken → SELL" + (not iBuys ? "   (longs OFF)" : "") + (not iSells ? "   (shorts OFF)" : ""))
     rr(rb, 4, "④", "SL " + str.tostring(iSlPips, "#") + " pips below  ·  above the pin / marubozu")
-    rr(rb, 5, "⑤", "TP: candle " + (iLTp == "Candle touches the 50 EMA" ? "touches" : "closes at") + " the 50 EMA  ·  last support (swing " + str.tostring(iPivot) + ")")
+    rr(rb, 5, "⑤", "TP: candle " + (iLTp == "Candle touches the 50 EMA" ? "touches" : "closes at") + " the " +
+         (iLRule == "Both" ? "other EMA" : iLRule == "50 EMA setup → exit at 9 EMA" ? "9 EMA" : "50 EMA") + "  ·  last support (swing " + str.tostring(iPivot) + ")")
     rr(rb, 6, "⑥", "Exit at TP or SL" + (iBeUsd > 0 ? "  · breakeven after $" + str.tostring(iBeUsd, "#.#") : "") +
          (iTrail ? "  · ⑦ trailing " + iTrSide + (iTrRide ? " after the TP" : "") : ""))
     rr(rb, 7, "✖", "Skip: not broken in " + str.tostring(iBreak) + (iEr > 0 ? " · choppy (ER < " + str.tostring(iEr, "#.##") + ")" : "") +
