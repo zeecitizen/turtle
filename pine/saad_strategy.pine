@@ -79,6 +79,12 @@ g8 = "⑧ LONG RULE — which EMA is the setup, which is the exit"
 iLRule   = input.string("9 EMA setup → exit at 50 EMA", 'LONG rule', options = ["9 EMA setup → exit at 50 EMA", "50 EMA setup → exit at 9 EMA", "Both"], group = g8,
      tooltip = "The rules: a bullish pin / marubozu ON the 9 EMA, exit when a candle touches the 50 EMA.\nThe inverse: ON the 50 EMA, exit when a candle touches the 9 EMA.\n'Both' takes either; each trade exits at the OTHER EMA.\nIn the inverse and Both modes this replaces 'LONG setups must be on'; 'LONG only when the exit EMA is above' still applies.")
 
+g9 = "⑨ HAMMERS — accept them as setup candles too"
+iHammer  = input.bool(false, 'Also accept hammers (LONG) and shooting stars (SHORT)', group = g9,
+     tooltip = "Hammer: long LOWER wick at least N × the body, little or no upper wick, any colour.\nShooting star: the mirror (long UPPER wick) for SHORT setups.\nA pin bar needs its wick to be 60% of the whole candle; a hammer only needs it to be N × the body, so hammers with a bigger body now count.")
+iHamRatio = input.float(2.0, 'Hammer: long wick at least this × the body   (higher = stricter; classic = 2)', minval = 1.0, step = 0.5, group = g9)
+iHamNose  = input.float(0.10, 'Hammer: opposite wick at most this share of the candle   (lower = stricter)', minval = 0.0, maxval = 0.5, step = 0.05, group = g9)
+
 // LINES ────────────────────────────────────────────────────────────────────
 e9  = ta.ema(close, iFast)
 e50 = ta.ema(close, iSlow)
@@ -97,9 +103,11 @@ lo   = math.min(open, close) - low
 bigEnough = rng > 0 and (iMinAtr <= 0 or rng >= iMinAtr * atr)
 pinBull = bigEnough and body <= iBody * rng and lo >= iWick * rng and up <= iNose * rng
 pinBear = bigEnough and body <= iBody * rng and up >= iWick * rng and lo <= iNose * rng
-maru    = bigEnough and iMaru and body >= iMaruB * rng and not pinBull and not pinBear
-shape   = (pinBull or pinBear) and not iPinDir ? 2 : pinBull ? 1 : pinBear ? -1 : maru ? (close > open ? 1 : -1) : 0
-kind    = pinBull or pinBear ? "PIN BAR" : "MARUBOZU"
+hamBull = bigEnough and iHammer and not pinBull and not pinBear and lo >= iHamRatio * body and lo > 0 and up <= iHamNose * rng
+hamBear = bigEnough and iHammer and not pinBull and not pinBear and up >= iHamRatio * body and up > 0 and lo <= iHamNose * rng
+maru    = bigEnough and iMaru and body >= iMaruB * rng and not pinBull and not pinBear and not hamBull and not hamBear
+shape   = (pinBull or pinBear) and not iPinDir ? 2 : pinBull ? 1 : pinBear ? -1 : hamBull ? 1 : hamBear ? -1 : maru ? (close > open ? 1 : -1) : 0
+kind    = pinBull or pinBear ? "PIN BAR" : hamBull ? "HAMMER" : hamBear ? "SHOOTING STAR" : "MARUBOZU"
 
 // ① ON THE EMA ─────────────────────────────────────────────────────────────
 tol = iTouchP * pip
@@ -401,7 +409,7 @@ if barstate.islast and iShowRules
          border_color = color.new(color.gray, 70), border_width = 1)
     table.cell(rb, 0, 0, "📜 SAAD'S RULES — step by step   (LONG · SHORT) — current settings", text_color = color.yellow, text_size = size.small)
     table.merge_cells(rb, 0, 0, 1, 0)
-    rr(rb, 1, "①", (iPinDir ? "Thumb pin" : "Any pin") + (iMaru ? " / marubozu" : "") + " on the " +
+    rr(rb, 1, "①", (iPinDir ? "Thumb pin" : "Any pin") + (iHammer ? " / hammer" : "") + (iMaru ? " / marubozu" : "") + " on the " +
          (iLRule == "Both" ? "9 or 50 EMA" : iLRule == "50 EMA setup → exit at 9 EMA" ? "50 EMA" : iLongLn) + "  ·  on the " + iShrtLn +
          (iTouchP > 0 ? "  (±" + str.tostring(iTouchP, "#") + " pips)" : "") + (iTouch == "Candle touches the EMA" ? "" : "  · body on trade side"))
     rr(rb, 2, "②", "Wait max " + str.tostring(iBreak) + " candle" + (iBreak > 1 ? "s" : "") + " for the break" + (iBrkC ? " (on a close)" : "") +
