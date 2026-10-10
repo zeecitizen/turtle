@@ -25,7 +25,7 @@
 //|    each side) within InpSwingLook bars, below the entry.         |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "3.10"
+#property version   "3.20"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -47,7 +47,7 @@ input int    InpBreakBars   = 2;      // InpBreakBars — the high/low must brea
 input bool   InpLong50Above = true;   // InpLong50Above — longs only when the 50 EMA is above (TP is a profit)
 
 //--- exits
-input int    InpSlPips      = 20;     // InpSlPips — stop beyond the pin/marubozu
+input int    InpSlPips      = 25;     // InpSlPips — stop beyond the pin/marubozu (rules 20; v3.20 25: 15<20<25~30>35)
 input int    InpPipPts      = 10;     // InpPipPts — points per pip (gold 10)
 input int    InpSwingPivot  = 3;      // InpSwingPivot — bars each side that make a swing low
 input int    InpSwingLook   = 100;    // InpSwingLook — bars back to search for "last support"
@@ -71,6 +71,10 @@ input int    InpChopErLook   = 14;    // InpChopErLook — candles the efficienc
 input double InpChopSlope    = 0.0;   // InpChopSlope — skip if the 50 EMA moved fewer pips than this...
 input int    InpChopSlopeLook = 5;    // InpChopSlopeLook — ...over this many candles
 input double InpChopAdx      = 0.0;   // InpChopAdx — skip if ADX(14) is below this (e.g. 20)
+
+//--- v3.20 (2026-10-11) - off by default; the v3.10 baseline is unchanged
+input int    InpLongMode    = 0;      // InpLongMode — 0 rules (pin on 9 EMA, TP 50 EMA) · 1 MIRROR (pin on 50 EMA, EMA9>EMA50, TP last swing high)
+input int    InpTpPips      = 0;      // InpTpPips — fixed take profit in pips for BOTH sides (0 = the rules' targets)
 
 //--- trading
 input double InpLots        = 0.10;   // InpLots — lot size
@@ -105,7 +109,7 @@ int OnInit()
    }
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
-   PrintFormat("[SAAD] v3.10 - EMA %d (long) / %d (short + long TP) | pin %.2f/%.2f/%.2f marubozu %s>=%.2f "
+   PrintFormat("[SAAD] v3.20 - EMA %d (long) / %d (short + long TP) | pin %.2f/%.2f/%.2f marubozu %s>=%.2f "
                "| break within %d | SL %d pips (%d pts/pip) | long needs 50 above: %s | BE %s",
                InpEmaFast, InpEmaSlow, InpWickMin, InpBodyMax, InpNoseMax, InpMarubozu ? "on " : "off ",
                InpMaruBody, InpBreakBars, InpSlPips, InpPipPts, InpLong50Above ? "yes" : "no",
@@ -236,7 +240,7 @@ void Manage(ulong t)
    double tp = PositionGetDouble(POSITION_TP);
 
    // LONG TP: any candle touching the 50 EMA — checked on the live candle, tick by tick
-   if (buy && InpLongTp == 0) {
+   if (buy && InpLongTp == 0 && InpLongMode == 0 && InpTpPips == 0) {
       double e50 = Buf(hSlow, 0);
       double hi = iHigh(_Symbol, PERIOD_CURRENT, 0), lo = iLow(_Symbol, PERIOD_CURRENT, 0);
       if (e50 > 0 && lo <= e50 && hi >= e50) {
@@ -292,8 +296,10 @@ void OnTick()
       if (g_pSide > 0 && ask > g_pHigh) {
          double sl = StopFor(+1, g_pHigh, g_pLow);
          double ltp = 0;
-         if (InpLongTp == 1) ltp = LastResistance(ask, 1);
-         if (InpLongTp == 1 && ltp <= 0) {
+         bool swingTp = (InpLongTp == 1 || InpLongMode == 1);
+         if (InpTpPips > 0) ltp = ask + InpTpPips * pip;
+         else if (swingTp) ltp = LastResistance(ask, 1);
+         if (InpTpPips <= 0 && swingTp && ltp <= 0) {
             g_noTarget++;
             g_pSide = 0;
             return;
@@ -306,7 +312,7 @@ void OnTick()
          g_pSide = 0;
       } else if (g_pSide < 0 && bid < g_pLow) {
          double sl = StopFor(-1, g_pHigh, g_pLow);
-         double tp = LastSupport(bid, 1);
+         double tp = InpTpPips > 0 ? bid - InpTpPips * pip : LastSupport(bid, 1);
          g_risk0 = sl - bid;
          if (tp <= 0) {
             g_noTarget++;
@@ -348,10 +354,15 @@ void OnTick()
    if (side == 0) return;
    if (Choppy()) { g_chop++; return; }
    if (InpTrendAlign && ((side > 0 && e9 <= e50) || (side < 0 && e9 >= e50))) return;
-   if (side > 0 && InpBuys && on9) {
-      if (InpLong50Above && e50 <= h) return;          // the target must be above, else the TP is a loss
+   bool longOk = false;
+   if (side > 0 && InpBuys) {
+      if (InpLongMode == 1) longOk = on50 && e9 > e50;           // mirror: buy the 50 EMA pullback in an uptrend
+      else                  longOk = on9 && !(InpLong50Above && e50 <= h);   // rules: TP must sit above
+   }
+   if (longOk) {
       g_pSide = +1; g_pHigh = h; g_pLow = l; g_pLeft = InpBreakBars; g_setups++;
-      if (InpVerbose) PrintFormat("[SAAD] long setup on 9 EMA %.2f | waiting for > %.2f", e9, h);
+      if (InpVerbose) PrintFormat("[SAAD] long setup on %s EMA %.2f | waiting for > %.2f",
+                                  InpLongMode == 1 ? "50" : "9", InpLongMode == 1 ? e50 : e9, h);
    } else if (side < 0 && InpSells && on50) {
       g_pSide = -1; g_pHigh = h; g_pLow = l; g_pLeft = InpBreakBars; g_setups++;
       if (InpVerbose) PrintFormat("[SAAD] short setup on 50 EMA %.2f | waiting for < %.2f", e50, l);

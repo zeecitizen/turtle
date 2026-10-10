@@ -636,6 +636,20 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy v3.20 — SHIPPED to Axi: 25-pip stop (2026-10-11)
+
+**magic 88301 · XAUUSD.pro M5 on Axi · defaults: hours 08–17 server (10 AM–7 PM PKT) ·
+efficiency ratio ≥ 0.20 · `InpSlPips 20 → 25` · everything else = Saad's rules.**
+Zee: *"Yes, commit v3.20 with the 25-pip stop as the default and compile it directly into the
+Axi terminal."*
+
+**Ship receipt** (Axi rig, compiled defaults, no overrides, real ticks, random delay, $25k,
+0.10 lots, 2026-01-01 → 10-08): **+$5,679 · 272 trades · 65.8% WR · PF 1.66 · max equity DD
+$1,135 (4.40%) · a trade on 162 days.** Stop plateau 25–30 pips (court below).
+The worst stretch is 20–27 March 2026 (balance −$892, gold's fast slide): setups fired both
+ways into a hard trend and stopped out; it is the same cluster in nearly every variant.
+Compiled into the Axi terminal: 0 errors, 0 warnings. **Not attached** — Zee attaches it.
+
 ## Saad_strategy v2.00 — built from RULES_EMA_SAAD.md, NOT shipped (2026-10-11)
 
 **magic 88301 · EMA 9 / EMA 50 · pin bar or marubozu on the line, enter on the break of its
@@ -687,6 +701,30 @@ Defaults now `InpSessFrom 8` · `InpSessTo 17` (Axi server time, UTC+3 = 10 AM�
 `InpChopEr 0.20`; every other variant stays off. Ship receipt with NO input overrides:
 **+$4,801 · 273 trades · 62.6% WR · PF 1.55 · DD $1,135 (4.42%)** — the same 273 trades as the
 court row. Not attached anywhere; Axi demo only after the v3.20 tests.
+
+**v3.20 court (2026-10-11) — Zee's four tests, each against the v3.10 baseline.** New inputs,
+both off: `InpLongMode 1` = MIRROR longs (pin/marubozu on the 50 EMA, EMA9 > EMA50, TP last
+swing high) · `InpTpPips` = fixed TP for both sides.
+| test | trades | WR | net | PF | DD | Jan–Apr / May–Oct | losing months |
+|---|---|---|---|---|---|---|---|
+| v3.10 baseline | 273 | 63% | +$5,012 | 1.58 | 4.4% | +$3,781 / +$1,230 | 2 |
+| 1 mirror longs | 210 | 59% | +$3,297 | 1.42 | 4.5% | +$2,272 / +$1,025 | 3 |
+| 2A TP 30 pips | 289 | 71% | −$343 | 0.95 | 5.2% | −$378 / +$35 | 5 |
+| 2B TP 40 pips | 286 | 69% | +$992 | 1.14 | 4.4% | +$176 / +$815 | 5 |
+| 3A SL 15 pips | 274 | 59% | +$4,251 | 1.48 | 4.4% | +$3,488 / +$763 | 3 |
+| **3B SL 25 pips** | **271** | **65%** | **+$5,654** | **1.66** | **4.4%** | **+$4,119 / +$1,534** | **1** |
+| SL 30 pips | 271 | 66% | +$5,760 | 1.67 | 4.4% | +$4,145 / +$1,615 | 1 |
+| SL 35 pips | 271 | 66% | +$5,177 | 1.57 | 4.4% | +$3,763 / +$1,414 | 2 |
+| 4 shorts only | 145 | 65% | +$3,381 | 1.73 | 4.4% | +$2,655 / +$726 | 2 |
+| shorts only, SL 25 | 144 | 67% | +$4,021 | 1.91 | 4.4% | +$3,144 / +$876 | 2 |
+| mirror + TP 30 / 40 | 231 / 224 | 77 / 72% | +$1,330 / +$1,689 | 1.30 / 1.33 | 2.1 / 2.9% | | 3 / 3 |
+| longs only: rules / mirror | 139 / 81 | 60 / 46% | +$1,452 / −$351 | 1.34 / 0.91 | | | 6 / 6 |
+
+Findings: the mirror longs LOSE on their own (PF 0.91) — the rules' counter-trend longs
+(+$1,452) are better. Fixed targets lose to the structural ones (TP 30 is negative).
+**The stop is a plateau at 25–30 pips** (15 < 20 < 25 ≈ 30 > 35): +$5,654–5,760, PF 1.66–1.67,
+one losing month. The max-drawdown event ($1,135.40) is the same cluster in almost every arm.
+Shorts-only has the best PF (1.91 at SL 25) but half the trades and less money.
 
 ## VSISA v1.28 — the looser fade ships: 288 trades instead of 163 (2026-10-10)
 
