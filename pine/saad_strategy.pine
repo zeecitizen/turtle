@@ -106,6 +106,8 @@ var int   tN = 0
 var line  lEn = na
 var line  lSl = na
 var line  lTp = na
+var label xSl = na
+var label xTp = na
 var int   nT = 0
 var int   nW = 0
 var int   nL = 0
@@ -128,12 +130,16 @@ closeTrade(px, why) =>
     d   = tSide > 0 ? px - tEn : tEn - px
     pnl = usd(d)
     win = pnl > 0
-    txt = (win ? "✅ #" : "❌ #") + str.tostring(tN) + " " + why + "  " + (pnl >= 0 ? "+$" : "−$") + str.tostring(math.abs(pnl), "#.##")
+    txt = "⑥ EXIT #" + str.tostring(tN) + (win ? " ✅ " : " ❌ ") + why + "\n" + (pnl >= 0 ? "+$" : "−$") + str.tostring(math.abs(pnl), "#.##")
     label.new(bar_index, tSide > 0 ? high : low, txt, style = tSide > 0 ? label.style_label_down : label.style_label_up,
          color = win ? color.new(color.green, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
     line.set_x2(lEn, bar_index), line.set_x2(lSl, bar_index)
     if not na(lTp)
         line.set_x2(lTp, bar_index)
+    label.set_x(xSl, bar_index)
+    label.set_x(xTp, bar_index)
+    if tSide > 0
+        label.set_y(xTp, e50)
     pnl
 
 // 1) MANAGE THE OPEN TRADE (stop checked first: the conservative order) ───
@@ -142,14 +148,14 @@ if tSide != 0 and bar_index > tBar
     string why = ""
     if tSide > 0
         if low <= tSl
-            exitPx := tSl, why := "SL hit"
+            exitPx := tSl, why := "stop loss hit"
         else if low <= e50 and high >= e50
-            exitPx := e50, why := "50 EMA touch"
+            exitPx := e50, why := "candle touched 50 EMA (TP)"
     else
         if high >= tSl
-            exitPx := tSl, why := "SL hit"
+            exitPx := tSl, why := "stop loss hit"
         else if low <= tTp
-            exitPx := tTp, why := "Support hit"
+            exitPx := tTp, why := "reached last support (TP)"
     if not na(exitPx)
         pnl = closeTrade(exitPx, why)
         nT += 1, nToday += 1, pnlToday += pnl
@@ -176,7 +182,7 @@ if pSide != 0 and tSide == 0 and bar_index > pBar
         if pSide < 0 and na(tTp)
             tSide := 0                                   // the EA skips a short with no support below
             if iShowSk
-                label.new(bar_index, high, "⏭ no support below", style = label.style_label_down,
+                label.new(bar_index, high, "✖ SKIP: no support below to target", style = label.style_label_down,
                      color = color.new(color.gray, 30), textcolor = color.white, size = size.tiny)
         else
             tN += 1
@@ -191,13 +197,21 @@ if pSide != 0 and tSide == 0 and bar_index > pBar
                  "\nTP:    " + (pSide > 0 ? "first candle touching the 50 EMA" :
                                  str.tostring(tTp, "#.##") + "  +$" + str.tostring(usd(tEn - tTp), "#.##") + " (last support)") +
                  "\nLots:  " + str.tostring(iLots, "#.##")
-            label.new(bar_index, pSide > 0 ? low : high, pSide > 0 ? "BUY" : "SELL",
+            label.new(bar_index, pSide > 0 ? low : high,
+                 pSide > 0 ? "③ HIGH BROKEN → BUY\n@ " + str.tostring(tEn, "#.##") : "③ LOW BROKEN → SELL\n@ " + str.tostring(tEn, "#.##"),
                  style = pSide > 0 ? label.style_label_up : label.style_label_down,
                  color = pSide > 0 ? color.new(#089981, 0) : color.new(#f23645, 0), textcolor = color.white,
                  size = size.normal, tooltip = tip)
             lEn := line.new(bar_index, tEn, bar_index + 1, tEn, color = color.new(color.white, 20), width = 1)
             lSl := line.new(bar_index, tSl, bar_index + 1, tSl, color = color.new(color.red, 0), width = 2, style = line.style_dashed)
             lTp := pSide < 0 ? line.new(bar_index, tTp, bar_index + 1, tTp, color = color.new(color.lime, 0), width = 2, style = line.style_dashed) : na
+            xSl := label.new(bar_index + 2, tSl, "④ SL: " + str.tostring(iSlPips, "#") + " pips " + (pSide > 0 ? "below" : "above") +
+                 " the candle = " + str.tostring(tSl, "#.##") + "  (−$" + str.tostring(usd(risk), "#.##") + ")",
+                 style = label.style_label_left, color = color.new(color.red, 15), textcolor = color.white, size = size.small)
+            xTp := label.new(bar_index + 2, pSide > 0 ? e50 : tTp,
+                 pSide > 0 ? "⑤ TP: exit when a candle touches the 50 EMA" :
+                 "⑤ TP: last support (liquidity) = " + str.tostring(tTp, "#.##") + "  (+$" + str.tostring(usd(tEn - tTp), "#.##") + ")",
+                 style = label.style_label_left, color = color.new(color.green, 15), textcolor = color.white, size = size.small)
             status := (pSide > 0 ? "IN LONG #" : "IN SHORT #") + str.tostring(tN) + " @ " + str.tostring(tEn, "#.##") +
                  " | SL " + str.tostring(tSl, "#.##") + " | TP " + (pSide > 0 ? "50 EMA touch" : str.tostring(tTp, "#.##"))
         pSide := 0
@@ -205,7 +219,7 @@ if pSide != 0 and tSide == 0 and bar_index > pBar
         pLeft -= 1
         if pLeft <= 0
             if iShowSk
-                label.new(bar_index, pSide > 0 ? high : low, "⏭ not broken in " + str.tostring(iBreak),
+                label.new(bar_index, pSide > 0 ? high : low, "✖ SKIP (rule): " + (pSide > 0 ? "high" : "low") + " not broken within " + str.tostring(iBreak) + " candles",
                      style = pSide > 0 ? label.style_label_down : label.style_label_up,
                      color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
             nSkip += 1
@@ -217,6 +231,10 @@ if tSide != 0
     line.set_x2(lEn, bar_index + 1), line.set_x2(lSl, bar_index + 1)
     if not na(lTp)
         line.set_x2(lTp, bar_index + 1)
+    label.set_x(xSl, bar_index + 2)
+    label.set_x(xTp, bar_index + 2)
+    if tSide > 0
+        label.set_y(xTp, e50)
 
 // 3) A NEW SETUP ON THE CANDLE THAT JUST CLOSED ───────────────────────────
 if barstate.isconfirmed and tSide == 0 and pSide == 0 and shape != 0 and inSess
@@ -226,7 +244,7 @@ if barstate.isconfirmed and tSide == 0 and pSide == 0 and shape != 0 and inSess
         if choppy
             nChop += 1
             if iShowSk
-                label.new(bar_index, longOk ? low : high, "〰 choppy (ER " + str.tostring(er, "#.##") + ")",
+                label.new(bar_index, longOk ? low : high, "✖ SKIP: choppy market (ER " + str.tostring(er, "#.##") + " < " + str.tostring(iEr, "#.##") + ")",
                      style = longOk ? label.style_label_up : label.style_label_down,
                      color = color.new(color.gray, 50), textcolor = color.white, size = size.tiny)
         else
@@ -234,8 +252,10 @@ if barstate.isconfirmed and tSide == 0 and pSide == 0 and shape != 0 and inSess
             pHi := high, pLo := low, pLeft := iBreak, pBar := bar_index
             box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.yellow, 0), 2, bgcolor = color.new(color.yellow, 85))
             label.new(bar_index, longOk ? high : low,
-                 (kind == "PIN" ? "📌 PIN" : "🧱 MARUBOZU") + (longOk ? " on 9 EMA" : " on 50 EMA") +
-                 "\nwaiting for " + (longOk ? "> " + str.tostring(high, "#.##") : "< " + str.tostring(low, "#.##")),
+                 "① " + (longOk ? "LONG" : "SHORT") + " SETUP: " + (kind == "PIN" ? "PIN BAR" : "MARUBOZU") +
+                 (longOk ? " on the 9 EMA" : " on the 50 EMA") +
+                 "\n② wait max " + str.tostring(iBreak) + " candles for a break of its " +
+                 (longOk ? "HIGH " + str.tostring(high, "#.##") : "LOW " + str.tostring(low, "#.##")),
                  style = longOk ? label.style_label_down : label.style_label_up,
                  color = color.new(color.yellow, 10), textcolor = color.black, size = size.small)
             line.new(bar_index, longOk ? high : low, bar_index + iBreak, longOk ? high : low,
@@ -249,6 +269,25 @@ bgcolor(iSess and inSess ? color.new(color.blue, 94) : na, title = "Trading hour
 row(table t, int r, string k, string v, color c) =>
     table.cell(t, 0, r, k, text_color = color.new(color.silver, 10), text_size = size.small, text_halign = text.align_left)
     table.cell(t, 1, r, v, text_color = c, text_size = size.small, text_halign = text.align_right)
+
+// RULES BOX: the steps of mt5/RULES_EMA_SAAD.md, numbered as on the chart ─
+gR = "📜 Rules box"
+iShowRules = input.bool(true, 'Show the numbered rules box', group = gR)
+rr(table t, int r, string n, string tx) =>
+    table.cell(t, 0, r, n, text_color = color.yellow, text_size = size.small)
+    table.cell(t, 1, r, tx, text_color = color.white, text_size = size.small, text_halign = text.align_left)
+if barstate.islast and iShowRules
+    var table rb = table.new(position.top_right, 2, 9, bgcolor = color.new(color.black, 15),
+         border_color = color.new(color.gray, 70), border_width = 1)
+    table.cell(rb, 0, 0, "📜 SAAD'S RULES — step by step   (LONG · SHORT)", text_color = color.yellow, text_size = size.small)
+    table.merge_cells(rb, 0, 0, 1, 0)
+    rr(rb, 1, "①", "Pin bar / marubozu ON the 9 EMA  ·  ON the 50 EMA")
+    rr(rb, 2, "②", "Wait for the next or next-to-next candle (max " + str.tostring(iBreak) + ")")
+    rr(rb, 3, "③", "Its high broken → BUY  ·  its low broken → SELL")
+    rr(rb, 4, "④", "SL " + str.tostring(iSlPips, "#") + " pips below  ·  above the pin / marubozu")
+    rr(rb, 5, "⑤", "TP: a candle touches the 50 EMA  ·  last support (liquidity)")
+    rr(rb, 6, "⑥", "Exit at TP or SL")
+    rr(rb, 7, "✖", "Skip: not broken in " + str.tostring(iBreak) + " candles · choppy · outside 08–17")
 
 // PANELS ──────────────────────────────────────────────────────────────────
 if barstate.islast
