@@ -65,6 +65,16 @@ iShowSk = input.bool(true, 'Show skipped setups', group = gV)
 iShowPn = input.bool(true, 'Show stats panel', group = gV)
 iShowRules = input.bool(true, 'Show the numbered rules box', group = gV)
 
+g7 = "⑦ TRAILING STOP (test — not in the rules)"
+iTrail   = input.bool(false, 'Use a trailing stop', group = g7)
+iTrSide  = input.string("LONG only", 'Apply it to', options = ["LONG only", "SHORT only", "Both"], group = g7)
+iTrRide  = input.bool(true, 'Let winners run: when the TP is reached, start trailing instead of exiting', group = g7)
+iTrMode  = input.string("Low / high of the last N candles", 'Trail the stop by', options = ["Low / high of the last N candles", "X pips behind the best price", "ATR multiple behind the best price"], group = g7)
+iTrN     = input.int(3, 'N candles   (more = looser)', minval = 1, maxval = 20, group = g7)
+iTrPips  = input.float(30, 'X pips   (more = looser)', minval = 1, step = 1, group = g7)
+iTrAtr   = input.float(1.5, 'ATR multiple   (more = looser)', minval = 0.1, step = 0.1, group = g7)
+iTrStart = input.float(0, 'Without "let winners run": start trailing after this many pips of profit   (0 = at once)', minval = 0, step = 1, group = g7)
+
 // LINES ────────────────────────────────────────────────────────────────────
 e9  = ta.ema(close, iFast)
 e50 = ta.ema(close, iSlow)
@@ -140,6 +150,8 @@ var float tTp = na
 var int   tBar = na
 var int   tN = 0
 var bool  tBe = false
+var float tBest = na       // best price since entry (for the trailing stop)
+var bool  tRide = false    // the TP was reached and the trade is now riding the trailing stop
 var line  lEn = na
 var line  lSl = na
 var line  lTp = na
@@ -179,6 +191,11 @@ closeTrade(px, why) =>
         label.set_y(xTp, e50)
     pnl
 
+trLow  = ta.lowest(low, iTrN)       // computed every candle (Pine needs history functions outside conditions)
+trHigh = ta.highest(high, iTrN)
+trailOn(int side) =>
+    iTrail and (iTrSide == "Both" or (side > 0 and iTrSide == "LONG only") or (side < 0 and iTrSide == "SHORT only"))
+
 // 1) MANAGE THE OPEN TRADE (stop checked first: the conservative order) ───
 if tSide != 0 and bar_index > tBar
     float exitPx = na
@@ -188,15 +205,25 @@ if tSide != 0 and bar_index > tBar
         tgt = e50 >= tEn ? e50 - ltol : e50 + ltol
         hitTp = iLTp == "Candle touches the 50 EMA" ? (low <= tgt and high >= tgt) : (e50 >= tEn ? close >= tgt : close <= tgt)
         if low <= tSl
-            exitPx := tSl, why := tBe ? "breakeven stop" : "stop loss hit"
-        else if hitTp
-            exitPx := iLTp == "Candle touches the 50 EMA" ? tgt : close
-            why := "50 EMA " + (iLTp == "Candle touches the 50 EMA" ? "touched" : "close") + " (TP)"
+            exitPx := tSl, why := tRide or tSl > tEn ? "trailing stop hit" : tBe ? "breakeven stop" : "stop loss hit"
+        else if hitTp and not tRide
+            if trailOn(1) and iTrRide
+                tRide := true
+                label.new(bar_index, high, "⑤ TP reached → now trailing", style = label.style_label_down,
+                     color = color.new(color.teal, 10), textcolor = color.white, size = size.tiny)
+            else
+                exitPx := iLTp == "Candle touches the 50 EMA" ? tgt : close
+                why := "50 EMA " + (iLTp == "Candle touches the 50 EMA" ? "touched" : "close") + " (TP)"
     else
         if high >= tSl
-            exitPx := tSl, why := tBe ? "breakeven stop" : "stop loss hit"
-        else if low <= tTp
-            exitPx := tTp, why := "reached last support (TP)"
+            exitPx := tSl, why := tRide or tSl < tEn ? "trailing stop hit" : tBe ? "breakeven stop" : "stop loss hit"
+        else if low <= tTp and not tRide
+            if trailOn(-1) and iTrRide
+                tRide := true
+                label.new(bar_index, low, "⑤ TP reached → now trailing", style = label.style_label_up,
+                     color = color.new(color.teal, 10), textcolor = color.white, size = size.tiny)
+            else
+                exitPx := tTp, why := "reached last support (TP)"
     if not na(exitPx)
         pnl = closeTrade(exitPx, why)
         nT += 1, nToday += 1, pnlToday += pnl
@@ -210,7 +237,27 @@ if tSide != 0 and bar_index > tBar
             netS += pnl
         tSide := 0
         status := "Trade closed: " + why + " — waiting for the next setup"
-    else if iBeUsd > 0 and not tBe
+    else if trailOn(tSide)
+        tBest := tSide > 0 ? math.max(nz(tBest, tEn), high) : math.min(nz(tBest, tEn), low)
+        started = iTrRide ? tRide : (tSide > 0 ? tBest - tEn : tEn - tBest) >= iTrStart * pip
+        if started
+            float lvl = na
+            if iTrMode == "Low / high of the last N candles"
+                lvl := tSide > 0 ? trLow : trHigh
+            else if iTrMode == "X pips behind the best price"
+                lvl := tSide > 0 ? tBest - iTrPips * pip : tBest + iTrPips * pip
+            else
+                lvl := tSide > 0 ? tBest - iTrAtr * atr : tBest + iTrAtr * atr
+            better = tSide > 0 ? lvl > tSl and lvl < close : lvl < tSl and lvl > close
+            if better
+                // end the old stop segment here and start a new, tighter one: the stop is drawn as steps
+                line.set_x2(lSl, bar_index)
+                tSl := lvl
+                lSl := line.new(bar_index, tSl, bar_index + 1, tSl, color = color.new(color.orange, 0), width = 2, style = line.style_dashed)
+                label.set_y(xSl, tSl)
+                label.set_text(xSl, "④ TRAILING SL = " + str.tostring(tSl, "#.##") + "  (" + (tSide > 0 ? (tSl >= tEn ? "+$" : "−$") : (tSl <= tEn ? "+$" : "−$")) +
+                     str.tostring(math.abs(usd(tSide > 0 ? tSl - tEn : tEn - tSl)), "#.##") + " locked)")
+    if tSide != 0 and iBeUsd > 0 and not tBe
         // ⑥ breakeven: judged on this candle's best price, applied from the next one
         best = tSide > 0 ? high - tEn : tEn - low
         gain = iBeMode == "Price moved $X" ? best : usd(best)
@@ -235,6 +282,8 @@ if pSide != 0 and tSide == 0 and bar_index > pBar
         tTp := pSide > 0 ? na : (na(sup) ? na : sup + iSTpP * pip)
         tBar := bar_index
         tBe := false
+        tBest := na
+        tRide := false
         if pSide < 0 and (na(tTp) or tTp >= tEn)
             tSide := 0                                   // the EA skips a short with no support below
             if iShowSk
@@ -346,7 +395,8 @@ if barstate.islast and iShowRules
     rr(rb, 3, "③", "High broken → BUY  ·  low broken → SELL" + (not iBuys ? "   (longs OFF)" : "") + (not iSells ? "   (shorts OFF)" : ""))
     rr(rb, 4, "④", "SL " + str.tostring(iSlPips, "#") + " pips below  ·  above the pin / marubozu")
     rr(rb, 5, "⑤", "TP: candle " + (iLTp == "Candle touches the 50 EMA" ? "touches" : "closes at") + " the 50 EMA  ·  last support (swing " + str.tostring(iPivot) + ")")
-    rr(rb, 6, "⑥", "Exit at TP or SL" + (iBeUsd > 0 ? "  · breakeven after $" + str.tostring(iBeUsd, "#.#") : ""))
+    rr(rb, 6, "⑥", "Exit at TP or SL" + (iBeUsd > 0 ? "  · breakeven after $" + str.tostring(iBeUsd, "#.#") : "") +
+         (iTrail ? "  · ⑦ trailing " + iTrSide + (iTrRide ? " after the TP" : "") : ""))
     rr(rb, 7, "✖", "Skip: not broken in " + str.tostring(iBreak) + (iEr > 0 ? " · choppy (ER < " + str.tostring(iEr, "#.##") + ")" : "") +
          (iSess ? " · outside " + str.tostring(iFrom) + "–" + str.tostring(iTo) : ""))
 
