@@ -10,6 +10,13 @@ from pathlib import Path
 
 RIG = Path(r"C:\mt5_rig_axi")
 SRC = Path(r"C:\Users\zeesh\turtle\mt5")
+RIGS = {"axi": r"C:\mt5_rig_axi", "bb": r"C:\mt5_rig_bb", "pxbt": r"C:\mt5_rig_pxbt"}
+
+
+def use(rig):
+    """Point every call at another portable rig: 'axi', 'bb', 'pxbt' or a path."""
+    global RIG
+    RIG = Path(RIGS.get(rig, rig))
 
 
 def compile_ea(ea):

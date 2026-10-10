@@ -636,6 +636,58 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy v2.00 — built from RULES_EMA_SAAD.md, NOT shipped (2026-10-11)
+
+**magic 88301 · EMA 9 / EMA 50 · pin bar or marubozu on the line, enter on the break of its
+high/low within 2 candles · long TP = candle touches 50 EMA · short TP = last swing low ·
+SL 20 pips ($2.00 gold) beyond the candle.** v1.00 (EMA 9/15, my own reading before the
+rules file existed) lost −$6,196 / PF 0.89 and is superseded.
+
+Court (Axi rig, XAUUSD.pro M5, real ticks, random delay, $25k, 0.10 lots, Jan 1 → Oct 8):
+rules as written **+$2,112 · 1,536 trades · 58% WR · PF 1.04 · DD 12.3% · 5 losing months**.
+Shorts carry it (+$3,103, PF 1.09, DD 6.3%); longs lose (−$1,928, PF 0.93). The rules'
+breakeven-at-$3 test HURTS: price-move $3 → −$1,530, profit $3 → −$352. Longs with no
+"50 EMA above" condition +$2,591 but DD 21%; pins only (no marubozu) +$83; M15 +$1,152, DD 20%.
+No edge strong enough to ship. Harness: `monitor/strategy_lab/saad_court.py`.
+
+**v3.00 (same day) — the suggested fixes, each an input, all OFF by default.** Same court:
+| variant | trades | WR | net | PF | DD |
+|---|---|---|---|---|---|
+| rules | 1,536 | 58% | +$2,112 | 1.04 | 12.3% |
+| pin either wick direction | 1,559 | 58% | +$2,227 | 1.04 | 13.3% |
+| breakeven at 1R | 1,589 | 57% | +$1,288 | 1.02 | 10.9% |
+| trail last 2 candles | 1,833 | 51% | −$2,010 | 0.96 | 13.5% |
+| long TP = last swing high | 1,423 | 55% | −$766 | 0.99 | 17.8% |
+| SL 1.5×ATR | 1,328 | 68% | −$2,725 | 0.96 | 33.3% |
+| SL prior swing + 5 pips | 1,331 | 67% | +$2,414 | 1.04 | 21.1% |
+| trend EMA9 vs EMA50 | 424 | 55% | +$3,462 | 1.20 | 4.7% |
+| **hours 08–17 broker** | **669** | **63%** | **+$6,056** | **1.28** | **5.4%** |
+| hours 10–19 | 658 | 63% | +$4,718 | 1.19 | 9.3% |
+| hours 07–18 / 09–16 | 798 / 508 | 61 / 62% | +$4,815 / +$2,986 | 1.17 / 1.18 | 8.2 / 6.1% |
+| candle ≥ 1×ATR | 975 | 64% | +$2,089 | 1.06 | 8.1% |
+| all suggestions at once | 117 | 74% | +$2,405 | 1.39 | 5.4% |
+
+**The trend filter silently removes every long:** the rules take a long only when the 50 EMA
+is above the candle, and the filter wants EMA9 > EMA50 — never both (longs-only + trend = 0
+trades). Best: **hours 08–17, nothing else** — +$6,056, PF 1.28, positive both halves
+(Jan–Apr +$4,457, May–Oct +$1,599), losing June (−$255) and August (−$358). Within it shorts
++$4,627 (PF 1.36) vs longs +$1,245 (PF 1.13). Defaults still = the rules; not shipped.
+
+**v3.10 — chop filters** (Zee: *"we want to avoid choppy markets"*), all off by default, tested
+on top of hours 08–17 (base re-run +$5,816 · 669 tr · PF 1.27 · DD 5.6%):
+efficiency ratio ≥0.20 **273 tr +$4,960 PF 1.57 DD 4.4%** · ≥0.30 124 tr +$2,687 PF 1.68 ·
+≥0.40 45 tr +$754 · EMA crosses ≤1/≤2/≤4 in 20: +$4,659 / +$6,032 / +$5,972 (PF 1.25–1.29) ·
+50 EMA slope ≥1/2/4 pips: +$5,227 / +$4,971 / +$4,874 (PF 1.25–1.28) · ADX ≥15/20/25:
++$4,791 / +$5,286 / +$3,766 (PF 1.22 / 1.31 / 1.30). Only the efficiency ratio clearly lifts
+quality, at the cost of frequency (~1.3 trades/day vs ~3). Blueberry/PrimeXBT runs dropped on
+Zee's call ("stick to 1 broker"); Blueberry serves real ticks only from Sep 2026 (35% real).
+
+**v3.10 SHIPPED AS THE BASELINE (2026-10-11, Zee: "commit v3.10 as the new baseline").**
+Defaults now `InpSessFrom 8` · `InpSessTo 17` (Axi server time, UTC+3 = 10 AM–7 PM PKT) ·
+`InpChopEr 0.20`; every other variant stays off. Ship receipt with NO input overrides:
+**+$4,801 · 273 trades · 62.6% WR · PF 1.55 · DD $1,135 (4.42%)** — the same 273 trades as the
+court row. Not attached anywhere; Axi demo only after the v3.20 tests.
+
 ## VSISA v1.28 — the looser fade ships: 288 trades instead of 163 (2026-10-10)
 
 **magic 88201 · XAUUSD.pro M5 on Axi · `InpFadePct 0.60 → 0.65` · `InpFadeLook 4 → 5`**
