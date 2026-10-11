@@ -71,8 +71,10 @@ Values in **bold** differ from the indicator's defaults (= the EA's MT5-tested v
 
 1. **Checked against screenshots.** Every value matches the Inputs pages. The exported list
    had the hammer switch out of place (a stray "0" after breakeven); the screenshot shows it
-   **ON**. The LONG-exit dropdown is cut off in the screenshot ("Candle …" — both choices start
-   that way); the list says "Candle CLOSES at / beyond the 50 EMA".
+   **ON**. The LONG exit is confirmed by a screenshot of the open dropdown: "Candle CLOSES at /
+   beyond the 50 EMA". With the LONG rule on "Both", a long set up on the 50 EMA exits on a
+   close at / beyond the **9** EMA — the dropdown still says "50 EMA" because its wording
+   predates the inverse rule.
 2. **Hammer settings 3 and 0.5:** a wick of 3 × the body is stricter than the classic 2, but
    allowing the opposite wick to be half the candle is very loose — such a candle is closer to
    a spinning top than a hammer. Worth a second look if hammers are switched on.
