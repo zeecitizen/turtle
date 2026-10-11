@@ -26,7 +26,7 @@ iLongLn = input.string("9 EMA",  'LONG setups must be on', options = ["9 EMA", "
 iShrtLn = input.string("50 EMA", 'SHORT setups must be on', options = ["50 EMA", "9 EMA", "Either EMA"], group = g1b)
 iTouch  = input.string("Candle touches the EMA", '"On the EMA" means', options = ["Candle touches the EMA", "Wick touches, body stays on the trade side"], group = g1b)
 iTouchP = input.float(0.0, 'Touch tolerance in pips   (0 = must really touch; higher = near-misses count)', minval = 0.0, step = 1.0, group = g1b)
-iL50Up  = input.bool(true, 'LONG only when the 50 EMA is above the candle (so the 50 EMA exit is a profit)', group = g1b)
+iL50Up  = input.bool(true, 'LONG only when its EXIT EMA is above the candle (so the exit is a profit; 50 EMA in the rules, 9 EMA in the inverse)', group = g1b)
 
 g2 = "② WAIT FOR THE BREAK — next or next-to-next candle"
 iBreak  = input.int(2, 'Candles allowed to break the high / low   (rule = 2; 1 = stricter)', minval = 1, maxval = 10, group = g2)
@@ -41,8 +41,9 @@ g4 = "④ STOP LOSS"
 iSlPips = input.float(25, 'Stop this many pips beyond the pin / marubozu   (rules 20; EA tested best 25–30)', minval = 1, step = 1, group = g4)
 
 g5 = "⑤ TAKE PROFIT"
-iLTp    = input.string("Candle touches the 50 EMA", 'LONG exit', options = ["Candle touches the 50 EMA", "Candle CLOSES at / beyond the 50 EMA"], group = g5)
-iLTpP   = input.float(0.0, 'LONG: take profit this many pips before the 50 EMA   (0 = at the line)', minval = 0.0, step = 1.0, group = g5)
+iLTp    = input.string("Candle touches the 50 EMA", 'LONG exit', options = ["Candle touches the 50 EMA", "Candle CLOSES at / beyond the 50 EMA"], group = g5,
+     tooltip = "'50 EMA' here means the long's EXIT EMA: the 50 EMA for the rules' longs, the 9 EMA for inverse longs (⑧ LONG rule).")
+iLTpP   = input.float(0.0, 'LONG: take profit this many pips before the exit EMA   (0 = at the line)', minval = 0.0, step = 1.0, group = g5)
 iPivot  = input.int(3, 'SHORT "last support" = a swing low with this many candles each side   (higher = bigger, further levels)', minval = 1, maxval = 10, group = g5)
 iSTpP   = input.float(0.0, 'SHORT: take profit this many pips before the support   (0 = at the level)', minval = 0.0, step = 1.0, group = g5)
 
