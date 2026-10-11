@@ -636,6 +636,35 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.06 — TP1 → $3 trail, TP2 → TP3 ladder, for LONGs and SHORTs (2026-10-12)
+
+Zee (RULES_EMA_SAAD.md): *"Set TP to next liquidity (last resistance), call this the TP2. If we
+reach the TP2 ... set the TP further to TP3 ... last to last resistance <= In essence we'll exit
+at the Trailing SL ... do the same for SHORT trades TP"*.
+
+- **LONG:** TP1 = a touch of the exit EMA. The stop goes to bid − $3 and trails. TP2 = the next
+  resistance. When TP2 is reached, TP3 = the resistance beyond it, and so on.
+- **SHORT (`InpShortTouch 1`, `InpShortTrailUsd 3`):** TP1 = the last support. The stop goes to
+  ask + $3 and trails. TP2 = the next support below, then TP3, and so on.
+- **TP2 and TP3 are watched by the EA, not sent to the broker.** A broker TP would close the
+  trade at TP2 and TP3 could never happen. The exit is the trailing stop, as the rule says. The
+  ladder is drawn on the chart: "TP2 reached → TP3 …".
+
+Court (Axi M15, Jan 1–Oct 8, **1 lot**, no delay):
+
+| arm | net | WR | PF | max DD | worst day |
+|---|---|---|---|---|---|
+| v1.05 (old short exit: lock + ATR trail) | +$147,294 | 41.2% | 1.39 | $22,753 (16.3%) | −$5,859 |
+| **v1.06 default (shorts: $3 trail + ladder)** | +$141,492 | 45.2% | 1.36 | **$21,043 (15.3%)** | −$5,425 |
+| v1.06, short trail $2 | +$148,471 | 45.8% | 1.38 | $19,839 (14.1%) | −$5,324 |
+| v1.06, short trail $5 | +$127,070 | 44.1% | 1.32 | $24,156 (18.8%) | −$5,624 |
+| v1.06, both trails $2 | **+$151,069** | 45.8% | 1.39 | **$19,552 (13.9%)** | −$5,227 |
+
+**Readings:**
+- **Zee's short rule at $3** costs about $5.8k against the old short exit, but cuts the drawdown
+  and lifts the win rate.
+- **At $2 for both sides** it is the best seen: +$151k, DD 13.9%. Defaults stay at Zee's $3.
+
 ## Saad_strategy_15min v1.05 — the 30-minute no-new-trades rule removed (2026-10-12)
 
 Zee: *"REMOVE the condition: No new setups or entries in the last 30 minutes before the close.
