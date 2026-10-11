@@ -636,6 +636,17 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.05 — the 30-minute no-new-trades rule removed (2026-10-12)
+
+Zee: *"REMOVE the condition: No new setups or entries in the last 30 minutes before the close.
+keep the other one"*. `InpNoNewMins` 30 → **0**. Losers are still shut 3 minutes before the close
+(`InpCloseLossMins 3`). CTC 75% and the v1.04 long exit stay on.
+
+**Ship receipt** (compiled defaults, Axi M15, Jan 1–Oct 8, **1 lot**, no delay): **+$147,253 ·
+895 trades · WR 41.2% · PF 1.39 · max DD $22,753 (16.3%) · worst day −$5,859 · 1 losing month.**
+With the old long exit (`InpLongTouch 0`) it reproduces Zee's chosen row exactly: +$138,133, PF
+1.37, DD 17.6%.
+
 ## Saad_strategy_15min v1.04 — Zee's LONG exit: touch the 50 EMA → trail $3 + TP at the last resistance (2026-10-12)
 
 `mt5/RULES_EMA_SAAD.md` (Zee): *"In case of TP touched 50 EMA -> 1. Activate Trailing SL at 3 USD
