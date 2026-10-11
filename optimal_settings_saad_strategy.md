@@ -1,6 +1,7 @@
 # Optimal settings — Saad Strategy indicator (TradingView)
 
-*Saved 2026-10-11 from Zee's chart (TradingView "Save settings" list), indicator
+*Saved 2026-10-11 from Zee's chart (TradingView "Save settings" list, checked against
+screenshots of every Inputs page), indicator
 `pine/saad_strategy.pine` (title "Saad Strategy v3.20 — EMA 9/50 pin & marubozu"),
 OANDA:XAUUSD, 5-minute chart.*
 
@@ -41,7 +42,6 @@ Values in **bold** differ from the indicator's defaults (= the EA's MT5-tested v
 | 23 | | SHORT "last support" swing size (candles each side) | 3 | 3 |
 | 24 | | SHORT: take profit X pips before the support | 0 | 0 |
 | 25 | ⑥ Breakeven | Move stop to entry after $ | 0 (off) | 0 |
-| — | | *(an extra "0" appears here in the list — see note 1)* | 0 | — |
 | 26 | | Measure the $ as | Price moved $X | same |
 | 27 | ✖ Skip filters | Skip choppy: efficiency ratio below | **0.1** | 0.20 |
 | 28 | | Efficiency ratio length | **16** | 14 |
@@ -63,18 +63,16 @@ Values in **bold** differ from the indicator's defaults (= the EA's MT5-tested v
 | 44 | | ATR multiple (not used in "last N candles" mode) | **1.3** | 1.5 |
 | 45 | | Start trailing after X pips | 0 | 0 |
 | 46 | ⑧ LONG rule | Which EMA is the setup / the exit | **Both** (9 → exit 50, and 50 → exit 9) | 9 EMA setup → exit at 50 EMA |
-| 47 | ⑨ Hammers | Also accept hammers / shooting stars | *not in the list — see note 2* | OFF |
+| 47 | ⑨ Hammers | Also accept hammers / shooting stars | **ON** | OFF |
 | 48 | | Hammer: long wick at least × the body | **3** | 2 |
 | 49 | | Hammer: opposite wick at most this share | **0.5** | 0.10 |
 
 ## Notes
 
-1. **One value doesn't line up.** The list has 49 values and the indicator has 49 settings,
-   but between "breakeven $ = 0" and "Price moved $X" there is one more "0" than there are
-   settings, and the hammer ON/OFF switch (a yes/no setting) has no ON/OFF in the list.
-   Everything before and after lines up exactly by type, so the most likely reading is that
-   the hammer switch was exported out of place. **Check the ⑨ Hammers switch on the chart**
-   and correct row 47.
+1. **Checked against screenshots.** Every value matches the Inputs pages. The exported list
+   had the hammer switch out of place (a stray "0" after breakeven); the screenshot shows it
+   **ON**. The LONG-exit dropdown is cut off in the screenshot ("Candle …" — both choices start
+   that way); the list says "Candle CLOSES at / beyond the 50 EMA".
 2. **Hammer settings 3 and 0.5:** a wick of 3 × the body is stricter than the classic 2, but
    allowing the opposite wick to be half the candle is very loose — such a candle is closer to
    a spinning top than a hammer. Worth a second look if hammers are switched on.
