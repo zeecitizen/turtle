@@ -636,6 +636,30 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy v4.03 — more than one trade at a time: TESTED, left OFF (2026-10-11)
+
+Zee: *"we should allow our EA to have more than 1 trade at one time.. we don't wanna miss out
+on setups"*. New input `InpExtraDir` (0 any side · 1 same side as the open trade · 2 opposite).
+Defaults unchanged (`InpMaxPos 1`), so v4.03 trades exactly like v4.02.
+
+Court: Axi, real ticks, Jan 1–Oct 8, v4.02 settings, 3 random-delay runs per arm, averages.
+
+| positions | trades | WR | net | PF | max DD | green days | worst day |
+|---|---|---|---|---|---|---|---|
+| **1 (shipped)** | 1,349 | 46.5% | **+$15,349** | **1.35** | **7.6%** | **65.5%** | −$593 |
+| 2 | 2,077 | 43.4% | +$13,623 | 1.19 | 11.8% | 61.5% | −$869 |
+| 3 | 2,560 | 41.7% | +$5,819 | 1.07 | 20.0% | 58.3% | −$1,246 |
+| 5 | 2,874 | 41.5% | +$4,727 | 1.05 | 21.1% | 55.9% | −$1,401 |
+| 2 + newer setup replaces the waiting one | 2,255 | 43.2% | +$8,991 | 1.12 | 16.2% | 61.0% | −$864 |
+| 2, extra only on the same side | 1,896 | 43.2% | +$13,348 | 1.21 | 10.0% | 60.6% | −$844 |
+| 3, extras only on the same side | 2,084 | 43.7% | +$14,065 | 1.21 | 12.0% | 60.9% | −$986 |
+| 2, extra only on the opposite side | 2,027 | 42.9% | +$7,456 | 1.11 | 12.0% | 57.3% | −$717 |
+
+**The setups skipped while a trade is open lose money on average** (about −$2.40 per extra
+trade at 2 positions). Same-side extras come closest to break-even. Opposite-side extras
+(hedging the open trade) are the worst. If Zee wants more trades anyway, the least costly
+choice is `InpMaxPos=3, InpExtraDir=1`: +55% trades, about −$1.3k, drawdown 7.6% → 12%.
+
 ## Saad_strategy v4.02 — SHIPPED to Axi: the TradingView indicator, ported and tuned (2026-10-11)
 
 **magic 88301 · gold M5 · Axi `XAUUSD.pro` / PrimeXBT `XAUUSDp`.** Zee (while asleep):

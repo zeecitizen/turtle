@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//| Saad_strategy.mq5  v4.02                                         |
+//| Saad_strategy.mq5  v4.03                                         |
 //| Built from mt5/RULES_EMA_SAAD.md. EMA 9 + EMA 50.                |
 //|                                                                  |
 //| v4.00 (2026-10-12) ports the TradingView indicator               |
@@ -31,7 +31,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "4.02"
+#property version   "4.03"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -116,6 +116,7 @@ input int    InpCoolBars    = 0;      // InpCoolBars — after a losing trade, n
 //--- tuning: more trades / daily guard
 input int    InpMaxPos      = 1;      // InpMaxPos — positions open at the same time
 input bool   InpReplace     = false;  // InpReplace — a newer setup replaces the one waiting for its break
+input int    InpExtraDir    = 0;      // InpExtraDir — extra positions (InpMaxPos > 1): 0 any side · 1 only the SAME side as the open one · 2 only the OPPOSITE side
 input double InpDayLossUsd  = 0;      // InpDayLossUsd — no new trades today once the day lost this $ (0 = off)
 input double InpDayTargetUsd = 150;     // InpDayTargetUsd — no new trades today once the day made this $ (0 = off) [v4.02: 0->150 at 0.10 lots]
 
@@ -156,7 +157,7 @@ int OnInit()
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
-   PrintFormat("[SAAD] v4.02 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD] v4.03 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -479,6 +480,10 @@ void DetectSetup()
       if ((InpDayLossUsd > 0 && d <= -InpDayLossUsd) || (InpDayTargetUsd > 0 && d >= InpDayTargetUsd)) { g_dayStop++; return; }
    }
    if (ArraySize(g_pos) >= InpMaxPos || (g_pSide != 0 && !InpReplace)) { g_busy++; return; }
+   if (ArraySize(g_pos) > 0 && InpExtraDir != 0) {
+      bool same = g_pos[0].side == side;
+      if ((InpExtraDir == 1 && !same) || (InpExtraDir == 2 && same)) { g_busy++; return; }
+   }
 
    g_pSide = side; g_pHigh = h; g_pLow = l; g_pLeft = InpBreakBars; g_setups++;
    g_pExit = side > 0 ? (rulesOk ? 50 : 9) : 0;
