@@ -636,6 +636,36 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.09 — marubozu body ≥ 50% of the candle (2026-10-12)
+
+Zee: *"let's goto 0.50 (50%) with +$207,274"*. `InpMaruBody` 0.70 → **0.50**: the two wicks may
+now be up to half the candle. Pins and hammers are still recognised first.
+
+Sweep (1 lot, Axi M15, Jan 1–Oct 8, no delay; net / PF / max DD):
+
+| body ≥ | net | PF | max DD |
+|---|---|---|---|
+| 0.95 | +$60.7k | 1.19 | 24.2% |
+| 0.90 | +$77.2k | 1.24 | 22.9% |
+| 0.80 | +$118.6k | 1.33 | 19.2% |
+| 0.75 | +$127.0k | 1.34 | 13.3% |
+| 0.70 (old) | +$167.3k | 1.43 | 12.1% |
+| 0.65 | +$162.8k | 1.39 | 13.7% |
+| 0.60 | +$182.9k | 1.43 | 13.3% |
+| 0.55 | +$190.2k | 1.44 | 11.8% |
+| **0.50** | **+$207.3k** | **1.48** | **10.3%** |
+| 0.45 | +$192.9k | 1.43 | 11.1% |
+| 0.40 | +$203.7k | 1.45 | 11.7% |
+| 0.35 | +$195.1k | 1.42 | 12.7% |
+| 0.30 | +$185.3k | 1.39 | 12.3% |
+| no marubozu | +$57.3k | 1.19 | 25.7% |
+
+0.35–0.55 is a plateau, and 0.50 sits in the middle of it.
+
+**Ship receipt** (compiled defaults): 1 lot **+$207,274 · 1,027 trades (5.4/day) · WR 47.6% ·
+PF 1.48 · max DD $19,180 (10.3%) · worst day −$4,840 · 1 losing month (Jul −$6.2k)**. 0.10 lots:
++$20,727, DD 4.7%. Tuned on the same nine months it is scored on — expect less live.
+
 ## Saad_strategy_15min v1.08 — directional pin bars: TESTED, left OFF (2026-10-12)
 
 Zee: *"if the direction is long then we accept a bullish pinbar only (body on top of wick and
