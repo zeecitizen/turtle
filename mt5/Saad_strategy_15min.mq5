@@ -34,7 +34,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.08"
+#property version   "1.09"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -51,7 +51,7 @@ input bool   InpPinDir      = false;  // InpPinDir — pin must point the trade 
 input bool   InpPinColor    = false;  // InpPinColor — pin body must close the trade way too: LONG green, SHORT red (with InpPinDir)
 input bool   InpUsePin      = true;   // InpUsePin — accept pin bars
 input bool   InpMarubozu    = true;   // InpMarubozu — accept a marubozu
-input double InpMaruBody    = 0.70;   // InpMaruBody — marubozu: body >= this x range
+input double InpMaruBody    = 0.50;   // InpMaruBody — marubozu: body >= this x range [v1.09: 0.70->0.50, Zee; 0.35-0.55 plateau]
 input bool   InpHammer      = true;   // InpHammer — accept hammers (LONG)
 input bool   InpStar        = true;   // InpStar — accept shooting stars (SHORT)
 input double InpHamRatio    = 3.0;    // InpHamRatio — hammer: long wick >= this x body
@@ -174,7 +174,7 @@ int OnInit()
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
-   PrintFormat("[SAAD-15min] v1.08 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.09 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
