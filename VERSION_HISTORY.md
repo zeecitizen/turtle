@@ -636,6 +636,26 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.01 — chart labels for the visual tester (2026-10-12)
+
+Zee: *"put labels on each setup and their exit candles etc. the labels similar to tradingview ...
+such that I can see the labels in the strategy tester while testing with visualization = ON"*.
+
+Drawn only in the visual tester or on a live chart (`InpDraw`, `InpDrawSkips`, both on), so
+ordinary tester runs are not slowed. Labels are plain text, since MT5 shows no emoji:
+- **SETUP** — a gold box around the candle and the break level, with the candle type and EMA.
+  The tooltip gives the exit rule.
+- **SKIP** — grey notes: not broken in time, stop too far, no support, choppy, market closed.
+- **BUY/SELL #n** — an arrow, the SL, and the TP (support level, or the EMA close for longs).
+  The tooltip gives the risk in $.
+- **Stop path** — red dashed steps before the TP, orange after. "TP reached → trailing" marks
+  the TP, and says when the broker refused the lock.
+- **EXIT #n** — the reason (stop loss / trailing stop / TP / EMA close) and the $ result, plus a
+  dotted line from entry to exit.
+
+No trading change: the compiled v1.01 reproduces v1.00 exactly (+$13,344, 796 trades, Axi M15,
+no delay). Compiled into the Axi terminal.
+
 ## Saad_strategy_15min v1.00 — the 15-minute variant (2026-10-11)
 
 **`mt5/Saad_strategy_15min.mq5` · magic 88302 · attach on M15 only.** Zee: *"create a variant of
