@@ -636,6 +636,36 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.07 — $2 trails on both sides; widening tested and rejected (2026-10-12)
+
+Zee: *"ok let's activate: A fixed $2 trail on both sides"*. `InpLongTrailUsd` and
+`InpShortTrailUsd` 3 → **2**. Added `InpTrailStepUsd` (0 = off), which widens the trail at each
+TP after TP1. Zee asked to test $2 → $3 → $4.
+
+**THE DATA MOVED UNDER US.** Between the v1.06 runs and these, the rig re-synced Axi's gold ticks:
+59,886,606 → 59,410,491 ticks for Jan 1–Oct 8, and the report's history quality now reads "n/a".
+The same v1.06 build went from +$141,492 to +$158,490 at 1 lot. Compare only arms run on the
+same data. Everything below is on the new data.
+
+| arm (1 lot, Axi M15, Jan 1–Oct 8, no delay) | net | WR | PF | max DD | worst day |
+|---|---|---|---|---|---|
+| $3 fixed (v1.06) | +$158,490 | 46.9% | 1.41 | $18,395 (13.1%) | −$5,340 |
+| $3, +$1 per TP | +$154,794 | 46.8% | 1.40 | 13.4% | −$5,340 |
+| **$2 fixed (v1.07 ship)** | **+$167,345** | 47.0% | **1.43** | **$17,458 (12.1%)** | −$5,140 |
+| $2 → $3 → $4 (Zee's idea) | +$164,413 | 47.0% | 1.42 | 12.3% | −$5,140 |
+| $2, +$0.50 / +$2 per TP | +$165,960 / +$161,715 | 47.0% | 1.43 / 1.42 | 12.2 / 12.5% | −$5,140 |
+
+**Widening never helps:** a looser trail after TP2 gives back more. The ship receipt is the
+compiled defaults with no overrides: 0.10 lots +$16,734 (DD 4.7%); 1 lot +$167,345.
+
+**Monthly at 1 lot:**
+
+| Jan | Feb | Mar | Apr | May | Jun | Jul | Aug | Sep | Oct 1–8 |
+|---|---|---|---|---|---|---|---|---|---|
+| +$38,448 | +$12,092 | +$15,935 | +$43,525 | −$5,192 | +$13,706 | −$4,818 | +$29,482 | +$17,314 | +$6,854 |
+
+Compiled into the Axi terminal.
+
 ## Saad_strategy_15min v1.06 — TP1 → $3 trail, TP2 → TP3 ladder, for LONGs and SHORTs (2026-10-12)
 
 Zee (RULES_EMA_SAAD.md): *"Set TP to next liquidity (last resistance), call this the TP2. If we
