@@ -116,3 +116,23 @@ delay. Full receipts are in [VERSION_HISTORY.md](VERSION_HISTORY.md).
 | **v4.02** | **+$14,800 · WR 46% · PF 1.33 · DD 7% · 65% of days green** | **+$2,830 · WR 51% · PF 1.42 · DD 3.2%** |
 
 To make the TradingView alerts trade like the EA, set these six inputs on the indicator.
+
+## 15-minute settings — follow `mt5/Saad_strategy_15min.mq5` (set on the chart 2026-10-11)
+
+Set on the TradingView indicator (OANDA:XAUUSD, **15-minute**) to match the 15min EA's defaults.
+Changes from the table at the top:
+
+| Indicator input | Before | Now (= 15min EA) |
+|---|---|---|
+| SHORT setups must be on | Either EMA | **9 EMA** |
+| Candles allowed to break the high / low | 2 | **1** |
+| Break must clear the high / low by (pips) | 0 | **2** |
+| Stop this many pips beyond the candle | 34 | **30** |
+| Trail the stop by | Low / high of the last N candles | **ATR multiple behind the best price** |
+| ATR multiple | 1.3 | **2.0** |
+| Lock this many pips short of the TP | 2 | **0** |
+| Skip a setup whose stop is more than $ from the entry | 9 | **15** |
+
+Everything else was already the same as the EA. One small difference can't be matched with an
+input: the indicator searches the last 60 swing lows for "last support", while the EA searches
+the last 100 candles. In MT5 the difference in that search changed the result by under $50.
