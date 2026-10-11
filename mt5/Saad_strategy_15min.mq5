@@ -34,7 +34,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.07"
+#property version   "1.08"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -48,6 +48,7 @@ input double InpWickMin     = 0.35;   // InpWickMin — pin: long wick >= this x
 input double InpBodyMax     = 0.60;   // InpBodyMax — pin: body <= this x range
 input double InpNoseMax     = 0.20;   // InpNoseMax — pin: short wick <= this x range
 input bool   InpPinDir      = false;  // InpPinDir — pin must point the trade way (false = any pin, the EMA decides)
+input bool   InpPinColor    = false;  // InpPinColor — pin body must close the trade way too: LONG green, SHORT red (with InpPinDir)
 input bool   InpUsePin      = true;   // InpUsePin — accept pin bars
 input bool   InpMarubozu    = true;   // InpMarubozu — accept a marubozu
 input double InpMaruBody    = 0.70;   // InpMaruBody — marubozu: body >= this x range
@@ -173,7 +174,7 @@ int OnInit()
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
-   PrintFormat("[SAAD-15min] v1.07 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.08 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -211,6 +212,7 @@ int Shape(int s)
       if (!InpUsePin) return 0;
       g_kind = 1;
       if (!InpPinDir) return 2;
+      if (InpPinColor && (pinBull ? c < o : c > o)) return 0;   // body against the trade's direction
       return pinBull ? +1 : -1;
    }
    if (hamBull) { if (!InpHammer) return 0; g_kind = 2; return +1; }
