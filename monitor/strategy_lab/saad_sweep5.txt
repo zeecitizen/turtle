@@ -1,0 +1,10 @@
+InpBreakPips=2,InpTrailMode=2,InpTrailAtr=1.75,InpDayTargetUsd=150
+InpBreakPips=2,InpTrailMode=2,InpTrailAtr=2.25,InpDayTargetUsd=150
+InpBreakPips=2,InpTrailMode=2,InpTrailAtr=2.0,InpDayTargetUsd=150,InpLockPips=0,InpSlPips=30
+InpBreakPips=2,InpDayTargetUsd=150
+InpBreakPips=2,InpDayTargetUsd=150,InpTrailN=9
+InpBreakPips=2,InpDayTargetUsd=150,InpTrailN=12
+InpBreakPips=2,InpFixTpPips=10
+InpBreakPips=2,InpFixTpPips=15
+InpBreakPips=2,InpFixTpPips=30
+InpBreakPips=2,InpLockAtUsd=2,InpLockUsd=0.5

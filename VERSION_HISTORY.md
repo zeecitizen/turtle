@@ -636,6 +636,109 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy v4.02 — SHIPPED to Axi: the TradingView indicator, ported and tuned (2026-10-11)
+
+**magic 88301 · gold M5 · Axi `XAUUSD.pro` / PrimeXBT `XAUUSDp`.** Zee (while asleep):
+*"port these settings to an EA. check how its performing on a daily basis.. does it make us
+profit daily? try to tune the EA's settings to see if you can achieve a higher profit / winrate"*
+and *"tune it to the max possible. try everything u can."*
+
+**What v4 is.** A rewrite that trades what the indicator `pine/saad_strategy.pine` (v4 engine)
+draws. Setup candles:
+- pin bars in any direction, with the EMA picking the side
+- marubozu
+- hammer / shooting star
+
+Longs follow the rule (9 EMA setup → exit at the 50 EMA) and the inverse (50 EMA setup → exit
+at the 9 EMA); the exit is a candle close at the EMA. Shorts set up on either EMA and target the
+last support at least 5 pips away. Every trade:
+- SL beyond the candle
+- skipped if the risk is above $9
+- "let winners run": at the TP the stop is locked, then a trailing stop takes over
+- a waiting setup is cancelled across the daily close
+
+v4.01 added tuning switches, all OFF by default:
+- maximum positions; a newer setup replaces the waiting one
+- daily loss stop and daily target
+- per-candle and per-line switches
+- trend, slope, EMA-gap and price-side filters
+- spread filter, maximum TP distance
+- fixed TP, a "lock $Y at $X" ratchet, time exit, cooldown after a loss
+
+**v4.02 defaults** = Zee's chart settings ([optimal_settings_saad_strategy.md](optimal_settings_saad_strategy.md)) plus six court winners:
+- `InpBreakPips` 0 → **2**
+- `InpSlPips` 34 → **30**
+- `InpTrailMode` → **2** (ATR)
+- `InpTrailAtr` → **2.0**
+- `InpLockPips` 2 → **0** (lock exactly at the TP)
+- `InpDayTargetUsd` → **150** (no new trades once the day made +$150 at 0.10 lots)
+
+**Ship receipt** (compiled defaults, no overrides, real ticks, random delay, $25k, 0.10 lots):
+
+| | trades | per day | WR | PF | net | max DD | green days | worst day |
+|---|---|---|---|---|---|---|---|---|
+| Axi Jan 1–Oct 8, 3 runs | 1,350–1,366 | 7.6 | 46.0–46.8% | 1.32–1.35 | **+$14,457 – +$15,219** | 6.8–8.0% | 122–126 / 192 | −$588 |
+| PrimeXBT Sep 1–Oct 8, 2 runs | 203–207 | 7.2 | 50.7–51.2% | 1.41–1.43 | **+$2,741 – +$2,921** | 3.2% | 22–23 / 30 | −$681 |
+
+**Daily, honestly:**
+- **Axi:** not every day is green — 126 green / 66 red. The worst run was 6 red days in a row
+  and the worst week −$1,323. 30 of 41 weeks were green; the average day was +$79. 2 losing
+  months, both halves of the year positive.
+- **PrimeXBT (5 weeks):** every week green; worst day 29 Sep (−$681).
+
+**The court (`monitor/strategy_lab/saad_v4.py`, `saad_v4.jsonl`, `saad_summ.py`; logs
+`saad_sweep1..5.log`).**
+
+1. **Random delay makes single runs noisy.** The same build gave +$4.4k to +$7.9k over four
+   runs, because one-trade-at-a-time is path-dependent. From sweep 3 on, every arm ran
+   **3× with random delay**; the averages are what count. (No-delay runs repeat exactly.)
+2. **Zee's chart settings in MT5:** +$5,653 average, WR 44%, PF 1.08, DD 12%, 51% of days
+   green. The chart showed 54% WR. The gap is the measured Python/chart haircut again.
+3. **Changes that helped** (one at a time, 3 runs each):
+   - break must clear the high/low by 2 pips: +$8,763, PF 1.14
+   - then ATR × 2 trail: +$11,814, PF 1.18
+   - then day target $150: **+$12,191, WR 50.3%, PF 1.28, DD 5.1%, 62.5% of days green**
+   - then lock at the TP and SL 30: +$14,770, PF 1.33, DD 7.3%, 64% of days green — the ship
+4. **Plateaus:**
+   - day target: 100 / 150 / 200 / 250 all fine (+$10.3k – $12.2k)
+   - break pips: 2 ≈ 3
+   - ATR multiple: 1.75 – 2.5 = +$9.2k – $12.2k, but **1.5 (+$3.1k) and 3.0 (+$4.2k) collapse**.
+     Treat 2.0 as the middle of a narrow plateau, not a knife-edge, and expect about +$9–12k.
+5. **Win rate is geometry, again.** Fixed TPs win often and lose money (3 runs each):
+
+   | Variant | WR | Net |
+   |---|---|---|
+   | Fixed TP 10 pips | 86% | −$5,075 |
+   | Fixed TP 15 pips | 82% | −$4,763 |
+   | Fixed TP 30 pips | 71% | −$3,384 |
+   | Lock $0.5 at $2 | 74% | +$4,692 |
+
+   None ships.
+6. **Rejected** (single runs, Zee's settings as the base; inside the noise unless large):
+   - session hours: 08–17 was −$6.8k worse here, the reverse of v3
+   - trend alignment, price side, EMA slope (−$9.5k)
+   - maximum TP distance
+   - a second or third position (+DD)
+   - newer setup replaces the waiting one
+   - daily loss stop
+   - breakeven at $3
+   - wick-only touches
+   - "long only when the exit EMA is above"
+   - longs only / shorts only (each side alone ≈ $0)
+   - no risk cap: **−$2,086, DD 54%** — the $9 cap is essential
+   - skipping Monday or Friday
+7. **On PrimeXBT's own ticks** (Sep–Oct) Zee's chart settings did best over those five weeks
+   (+$3.7k, PF 1.34). The ship (+$2.8k, PF 1.42, DD 3.2%) is the one that holds up across nine
+   months on Axi too.
+
+**Rig notes.** With ~3 GB free RAM the portable terminal sometimes hangs *after* a finished test
+("tester forced to close"). `saad_v4.py` now times out at 240 s, kills only the rig's terminal,
+and retries.
+
+Compiled into the Axi terminal: 0 errors, 0 warnings. **Not attached.** Inputs are stored by
+name, so if the v3.20 EA was ever attached, remove it and attach fresh; otherwise the old
+hours 08–17 and ER 0.20 would carry over.
+
 ## Saad_strategy v3.20 — SHIPPED to Axi: 25-pip stop (2026-10-11)
 
 **magic 88301 · XAUUSD.pro M5 on Axi · defaults: hours 08–17 server (10 AM–7 PM PKT) ·

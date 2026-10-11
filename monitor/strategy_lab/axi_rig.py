@@ -72,11 +72,17 @@ def parse(path):
     deals = re.findall(r"<tr[^>]*><td>(\d{4}\.\d\d\.\d\d) [\d:]+</td><td>\d+</td><td>[^<]+</td>"
                        r"<td>(?:buy|sell)</td><td>(in|out)</td><td>[\d.]+</td><td>[\d.]+</td>"
                        r"<td>\d+</td><td>([-\d. ]+)</td><td>([-\d. ]+)</td><td>([-\d. ]+)</td>", t)
-    months, days = {}, set()
+    months, days, daily = {}, set(), {}
     for d, io, c, s, p in deals:
-        months[d[:7]] = months.get(d[:7], 0) + num(c) + num(s) + num(p)
+        v = num(c) + num(s) + num(p)
+        months[d[:7]] = months.get(d[:7], 0) + v
+        daily[d] = daily.get(d, 0) + v
         if io == "in":
             days.add(d)
+    dv = list(daily.values())
+    day_stats = {"days": len(dv), "green": sum(v > 0 for v in dv), "red": sum(v < 0 for v in dv),
+                 "worst": round(min(dv), 2) if dv else 0, "best": round(max(dv), 2) if dv else 0,
+                 "median": round(sorted(dv)[len(dv) // 2], 2) if dv else 0}
     dd = field("Equity Drawdown Maximal")
     net = num(field("Total Net Profit") or "0")
     ddv = num(dd.split("(")[0]) if dd else 0
@@ -85,7 +91,8 @@ def parse(path):
     return {"net": net, "pf": field("Profit Factor"), "trades": trades,
             "wr": pt.split("(")[-1].rstrip(")") if pt else "",
             "dd": dd, "net_per_dd": round(net / ddv, 2) if ddv else None,
-            "quality": field("History Quality"), "trade_days": len(days),
+            "quality": field("History Quality"), "trade_days": len(days), "day_stats": day_stats,
+            "daily": {k: round(v, 2) for k, v in sorted(daily.items())},
             "months": {k: round(v, 2) for k, v in sorted(months.items())}}
 
 

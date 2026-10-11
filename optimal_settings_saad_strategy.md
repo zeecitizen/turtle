@@ -94,3 +94,25 @@ button on the top bar) — unsaved layouts revert to the last save when TradingV
 Port the missing options into the EA (trailing stop with "let winners run", either-EMA setups,
 long exit on close, the inverse long rule, hammers) and run this exact set against the v3.20
 baseline in the Axi Strategy Tester (real ticks, Jan 1 → Oct 8).
+
+## EA v4.02 settings — MT5-tested (2026-10-11)
+
+`mt5/Saad_strategy.mq5` v4.02 trades the settings above with **six changes**, chosen in the
+Axi Strategy Tester. The method: real ticks, Jan 1–Oct 8, every variant run 3× with random
+delay. Full receipts are in [VERSION_HISTORY.md](VERSION_HISTORY.md).
+
+| Indicator input | Your setting | EA v4.02 |
+|---|---|---|
+| ② Break must clear the high / low by (pips) | 0 | **2** |
+| ④ Stop this many pips beyond the candle | 34 | **30** |
+| ⑦ Trail the stop by | Low / high of the last N candles | **ATR multiple behind the best price** |
+| ⑦ ATR multiple | 1.3 | **2.0** |
+| ⑩ Lock this many pips short of the TP | 2 | **0** |
+| ⑩ Stop for the day once today made this many $ | (new) | **150** |
+
+| Settings | Axi, 9 months | PrimeXBT, Sep 1–Oct 8 |
+|---|---|---|
+| Your settings | +$5,653 · WR 44% · PF 1.08 · DD 12% · 51% of days green | +$3,776 · PF 1.34 · DD 4.8% |
+| **v4.02** | **+$14,800 · WR 46% · PF 1.33 · DD 7% · 65% of days green** | **+$2,830 · WR 51% · PF 1.42 · DD 3.2%** |
+
+To make the TradingView alerts trade like the EA, set these six inputs on the indicator.
