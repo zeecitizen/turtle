@@ -636,6 +636,44 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.00 — the 15-minute variant (2026-10-11)
+
+**`mt5/Saad_strategy_15min.mq5` · magic 88302 · attach on M15 only.** Zee: *"create a variant of
+this EA, which i can test on 15 minutes scale ... find out why 15 mins timeframe is losing"*.
+The engine is identical to Saad_strategy v4.03. Five defaults change:
+
+| input | M5 EA | 15min |
+|---|---|---|
+| `InpMaxRiskUsd` | 9 | **15** |
+| `InpBreakBars` | 2 | **1** |
+| `InpSwingLook` | 300 | **100** |
+| `InpShortLine` | 2 (either EMA) | **1 (9 EMA)** |
+| `InpDayTargetUsd` | 150 | **0** |
+
+**Why M5 settings lose on M15** (Axi, real ticks, Jan 1–Oct 8, 0.10 lots): −$1,780, 250
+trades, 29% WR, PF 0.87, 8 losing months. The EA's own count: of 2,980 setups, **1,907 were
+skipped because the stop was more than $9 away**. Every pips/$ input was sized for 5-minute
+candles. On M15 the $9 cap keeps only the smallest candles — the quiet, indecisive ones —
+and those lose.
+
+**Ship receipt** (compiled defaults, no overrides, no execution delay): **+$13,344 · 796
+trades (4.2/day) · WR 42.1% · PF 1.30 · max DD 6.1% · 0 losing months**. At 1 lot:
++$133,444, DD 18.1%. Monthly at 0.10: Jan +2,083 · Feb +871 · Mar +1,004 · Apr +3,914 ·
+May +227 · Jun +704 · Jul +710 · Aug +2,122 · Sep +1,030 · Oct (1–8) +679. Only 91 of 188
+days were green: fewer, bigger winners than on M5.
+
+**Robustness:**
+- risk cap $14 / $16 / $18 → +$10.0k / +$12.3k / +$10.0k; **$20 falls to +$7.5k (DD 15%)**
+- PrimeXBT M15, Sep 1–Oct 8: +$1,400 (the M5 settings lost −$1,298)
+
+**The court** (`monitor/strategy_lab/m15_grid/m15c/m15d`, one no-delay run each, at Zee's request):
+- 33 + 71 + 18 variants, each one change from the best-so-far
+- helped: shorts on the 9 EMA, no day target, a 4-candle pause after a loss, break +4 pips
+- hurt: session hours, trend alignment, 2–3 trades at once, breakeven at $3, longer ER,
+  dropping pin bars or marubozu
+
+The court used no-delay runs only; random-delay runs are still to do.
+
 ## Saad_strategy v4.03 — more than one trade at a time: TESTED, left OFF (2026-10-11)
 
 Zee: *"we should allow our EA to have more than 1 trade at one time.. we don't wanna miss out
