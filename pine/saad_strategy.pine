@@ -115,6 +115,7 @@ iGapSkip = input.bool(true, 'Cancel a waiting setup across the daily close / wee
      tooltip = "The market reopens with a wide spread and a jump; a setup from before the close is stale.")
 iMinTp   = input.float(5, 'TP at least this many pips from the entry   (SHORT: look further down for support; LONG: no TP, trail instead)', minval = 0, step = 1, group = g10,
      tooltip = "A target a few cents away cannot beat the spread: the lock 'short of the TP' would sit below the entry.")
+iDayTgt  = input.float(0, 'Stop for the day once today made this many $ (at the lots above; 0 = off; the EA uses 150)', minval = 0, step = 10, group = g10)
 
 var int   brkK  = -1       // minute of the break on the entry candle
 var bool  tNoTp = false    // an open LONG whose exit EMA was below its entry: no target, trailing / EMA-cross manages it
@@ -509,7 +510,7 @@ var int nBusy = 0
 if barstate.isconfirmed and (tSide != 0 or pSide != 0) and shape != 0 and inSess and bar_index > iSlow * 2 and not choppy
     if (iBuys and (onLine(e9, 1) or onLine(e50, 1))) or (iSells and lineFor(iShrtLn, -1))
         nBusy += 1
-if barstate.isconfirmed and tSide == 0 and pSide == 0 and shape != 0 and inSess and bar_index > iSlow * 2
+if barstate.isconfirmed and tSide == 0 and pSide == 0 and shape != 0 and inSess and bar_index > iSlow * 2 and not (iDayTgt > 0 and pnlToday >= iDayTgt)
     // ⑧ which long rule(s) this candle satisfies: the original (on 9, exit 50) and/or the inverse (on 50, exit 9)
     bool rulesOk = iLRule != "50 EMA setup → exit at 9 EMA" and (iLRule == "Both" ? onLine(e9, 1) : lineFor(iLongLn, 1)) and not (iL50Up and e50 <= high)
     bool invOk   = iLRule != "9 EMA setup → exit at 50 EMA" and onLine(e50, 1) and not (iL50Up and e9 <= high)
@@ -594,7 +595,7 @@ if barstate.islast
         wr  = nT > 0 ? float(nW) / nT * 100.0 : 0.0
         net = gW - gL
         cWhite = color.white, cDim = color.new(color.silver, 10)
-        table.cell(p, 0, 0, "📊 SAAD STRATEGY v3.20", text_color = color.yellow, text_size = size.small)
+        table.cell(p, 0, 0, "📊 SAAD STRATEGY (EA v4.02)", text_color = color.yellow, text_size = size.small)
         table.merge_cells(p, 0, 0, 1, 0)
         table.cell(p, 0, 1, "EMA " + str.tostring(iFast) + " / " + str.tostring(iSlow) + " · SL " + str.tostring(iSlPips, "#") + " pips · results for THESE settings", text_color = cDim, text_size = size.tiny)
         table.merge_cells(p, 0, 1, 1, 1)
@@ -606,9 +607,9 @@ if barstate.islast
         row(p, 7,  "Today", str.tostring(nToday) + " trades  " + (pnlToday >= 0 ? "+$" : "−$") + str.tostring(math.abs(pnlToday), "#.##"), pnlToday >= 0 ? color.lime : color.red)
         row(p, 8,  "Skipped: no break / choppy / busy", str.tostring(nSkip) + " / " + str.tostring(nChop) + " / " + str.tostring(nBusy), cDim)
         row(p, 9,  "Efficiency ratio now", str.tostring(er, "#.##") + (choppy ? "  CHOPPY" : "  ok"), choppy ? color.orange : color.lime)
-        table.cell(p, 0, 10, "MT5 receipt, DEFAULT settings (Axi gold M5, real ticks, Jan–Oct 2026)", text_color = color.aqua, text_size = size.tiny)
+        table.cell(p, 0, 10, "MT5 receipt, EA v4.02 settings (Axi gold M5, real ticks, Jan–Oct 2026)", text_color = color.aqua, text_size = size.tiny)
         table.merge_cells(p, 0, 10, 1, 10)
-        table.cell(p, 0, 11, "+$5,679 · 272 trades · 65.8% · PF 1.66 · DD 4.4%", text_color = color.aqua, text_size = size.small)
+        table.cell(p, 0, 11, "+$14,800 · 1,360 trades · 46% · PF 1.33 · DD 7% · 65% days green", text_color = color.aqua, text_size = size.small)
         table.merge_cells(p, 0, 11, 1, 11)
         table.cell(p, 0, 12, "Chart counts are a bar-close sketch; MT5 is the judge", text_color = cDim, text_size = size.tiny)
         table.merge_cells(p, 0, 12, 1, 12)
