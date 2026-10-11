@@ -4,7 +4,7 @@ rows=[json.loads(l) for l in open('saad_v4.jsonl')][int(sys.argv[1]) if len(sys.
 g=collections.OrderedDict()
 for r in rows:
     if 'net' not in r or not r.get('day_stats',{}).get('days'): continue
-    g.setdefault((r['arm'],r.get('frm'),r.get('exec',-1),r.get('rig','axi')),[]).append(r)
+    g.setdefault((r['arm'],r.get('frm'),r.get('exec',-1),r.get('rig','axi')+'_'+r.get('period','M5')),[]).append(r)
 for (arm,frm,ex,rig),rs in g.items():
     f=lambda k: st.mean(float(str(x[k]).rstrip('%')) for x in rs)
     gd=st.mean(x['day_stats']['green']/max(1,x['day_stats']['days']) for x in rs)

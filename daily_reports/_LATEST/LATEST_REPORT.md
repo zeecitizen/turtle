@@ -1,211 +1,154 @@
-# 24–25 August 2026 — his own laws beat every substitute I built for them
+# 11–12 October 2026 — Saad's strategy: indicator audited, EA ported, a 15-minute EA that works
 
-**Supersedes:** the 23–24 August report, archived at
-[`daily_reports/2026-08/REPORT_2026-08-23_24_the_night_constants_fell.md`](../2026-08/REPORT_2026-08-23_24_the_night_constants_fell.md).
+**Supersedes:** the 24–25 August report, archived at
+[`daily_reports/2026-08/REPORT_2026-08-24_25_his_own_laws_beat_every_substitute.md`](../2026-08/REPORT_2026-08-24_25_his_own_laws_beat_every_substitute.md).
 
-**Headline: BasedOnLaws went v1.30 → v1.35, and every single improvement came from
-Zeeshan's own page or his own eye.** Three times today I had replaced one of his laws
-with something of mine; three times his original beat it in court. Final configuration
-on his chart, seven days, 0.10 lots: **+$1,335.90** — from +$624.00 this morning.
-And for the first time the measurement was confirmed independently: **he ran the MT5
-Strategy Tester himself** on Aug 18–21 and got **27 trades · 48.15% · +$123.05 ·
-profit factor 3.28** at 0.01 lots.
+**Headline: `mt5/Saad_strategy_15min.mq5` v1.09 (magic 88302, XAUUSD M15 on Axi).**
+Measured in the MT5 Strategy Tester on Axi real ticks, Jan 1 → Oct 8/11 2026, at 1 lot:
 
-⚠️ **LIVE RECORD: 0 for 4, −$31.62.** Every one of those trades was taken by a version
-that no longer exists, and two of them by gates that were provably broken. Nothing in
-this report is live-proven. Tomorrow is the first honest session.
+| Execution | Net | Trades | Win rate | PF | Max drawdown |
+|---|---|---|---|---|---|
+| **Random delay — the realistic figure** | **+$177,545 / +$180,815** (two runs) | 1,033 | 46.5% | 1.40 | 13–14% |
+| No delay | +$207,274 | 1,027 | 47.6% | 1.48 | 10.3% |
 
-🚨 **STILL UNANSWERED: the Diamond (88154) trades at full size.** It took −$2,476.50
-on Aug 21 and went 55-for-55 on Aug 24. Both facts are the same machine.
+At 0.10 lots the no-delay result is +$20,727 with a 4.7% drawdown. There was **1 losing month**
+(July). Nothing is live-proven. The settings were tuned on the same nine months they are scored
+on, so expect less live.
+
+⚠️ **Zee could not reproduce +$207k at first** — and he was right to question it. Two causes:
+1. His Strategy Tester was still holding the old input `InpMaruBody = 0.7`. MT5 keeps the last
+   run's inputs when an EA's defaults change.
+2. +$207k was a **no-delay** figure. With random delay it is +$178k–181k.
+
+His own run (0.7, random delay) made +$143,343. My copy under the same conditions made
++$141,909. **Always quote the random-delay number.**
 
 ---
 
-## 1. THE MOMENTUM CANDLE — his definition, and the clause that did the work
+## 1. What exists now
 
-The EA's first two live trades lost. He challenged the claim that my 45%-hold test had
-"earned its place" — fairly, since its only evidence was an in-sample seven-day
-backtest whose threshold I also chose on that data. Then he supplied the VSA
-definition, and **ruled out its fourth clause himself**:
+| File | What | Status |
+|---|---|---|
+| `mt5/Saad_strategy_15min.mq5` v1.09 | **The 15-minute EA.** Magic 88302. | Compiled into the Axi terminal; Zee is testing it |
+| `mt5/Saad_strategy.mq5` v4.03 | The 5-minute EA (indicator port). Magic 88301. | Compiled into Axi |
+| `pine/saad_strategy.pine` | TradingView indicator (v4 engine, PineConnector alerts, journal) | On Zee's chart, set to the 15min EA's settings. **Uncommitted edits from another session** (SL in dollars `iSlUsd`, "Trail from the TP price" option) |
+| `mt5/Saad_strategy_BTC.mq5`, `mt5/Saad_strategy_15min_BTC.mq5` | BTC variants | **NOT promoted — they lose** (§5) |
+| `SAAD_SETUPS.md`, `SAAD_INDICATOR_AUDIT.md` | Every indicator trade with its rule / SL / TP / outcome; the bug list; PineConnector steps | Done |
+| `optimal_settings_saad_strategy.md` | Zee's chart settings, the EA v4.02 settings, and the 15-minute settings | Done |
 
-> *"i think our VSA definition differs a bit on the volume front, we dont require
-> Above-Average Volume, on the contrary our method uses the three only"*
+## 2. How the 15-minute EA trades (v1.09 defaults)
 
-Correct, and it matters: his page's clause b wants the breakout **quieter** than the
-UHV, so a volume floor would contradict his own law. The three that shipped:
+**Setups**
+- Pin bar (any direction — the EMA decides the side), marubozu (body ≥ **50%** of the candle),
+  hammer or shooting star.
+- Longs: on the 9 EMA (exit at the 50) or on the 50 EMA (exit at the 9).
+- Shorts: on the 9 EMA.
+- Efficiency ratio ≥ 0.10.
+- Break of the high/low by 2 pips **within 1 candle**.
 
-```
-  1. body ratio    |C-O| / (H-L) >= 0.70
-  2. expansion     body > 1.2xATR(14)  OR  1.5xSMA(body,20)
-  3. close at extreme   buy: C > O AND C >= H - 0.20x(H-L)
-```
+**Before the TP**
+- SL 30 pips beyond the candle; skip the setup if the risk is above $15.
+- **CTC:** at 75% of the way to the TP, the stop moves to the entry.
 
-**Checked against every breakout on record before shipping — the body ratio alone
-splits them perfectly:**
+**After the TP**
+- **TP1:**
+  - long = a touch of the exit EMA
+  - short = the last support
+- At TP1 the stop moves to **$2** behind the market and trails tick by tick.
+- **TP2** = the next resistance (long) or support (short). When it is reached, the target moves to
+  **TP3**, the level beyond it, and so on.
+- The EA watches TP2 and TP3 itself, without broker take-profits. The exit is always the trailing
+  stop.
 
-```
-  every WINNER          every LOSER
-  Fri 7:02   0.81       Fri 8:51    0.62
-  Fri 8:10   0.89       Fri 10:02   0.65
-  Fri 9:10   0.85       LIVE 6:30   0.47
-  his marks  0.82/0.92/0.90         LIVE 7:08   0.19
-```
+**Day close**
+- 3 minutes before the broker's daily close (Friday included), trades in loss are shut and
+  winners stay open.
 
-**COURT (7 days, his chart): the body ratio deleted SEVEN losing trades and ZERO
-winners** — 12W/18L +$624.00 → **12W/11L, 52.2%, +$876.20**.
+**Chart labels** appear in the visual tester and on a live chart: setup boxes, entries, stop path,
+TP1/TP2/TP3 notes and exits with their $ result.
 
-- The **expansion clause was REFUSED**: on M1 it cuts 23 trades to 17 and kills three
-  winners (+$756.80). Later dialled gently at 0.6/0.8/1.0/1.25×SMA and 1.0×ATR — every
-  arm within ~$145 of no-floor with single-trade differences. **Noise.** The
-  micro-candle trap the sources warn about lives in dead sessions; we trade New York.
-- **Close-at-extreme is redundant but free** — byte-identical once the body ratio holds.
-- **I predicted my hold-45 test would become redundant. It did not** (+$70 and 4 WR
-  points on top of the body ratio), so it stays — on evidence, not on my word.
+## 3. The night's chain, in order (1 lot, Axi M15, no delay unless stated)
 
-## 2. THE AUDIT HE ASKED FOR — "are we following every single thing in laws.md?"
+| Version | Change (who asked) | Net | PF | Max DD |
+|---|---|---|---|---|
+| M5 EA on M15 | — | −$15.6k | 0.87 | — |
+| v1.00 | risk cap $15, break in 1 candle, shorts on 9 EMA, no day target (my M15 court) | +$133.4k | 1.30 | 18.1% |
+| v1.02–1.03 | CTC at 75%, shut losers at the close, no new trades in the last 30 min (Zee) | +$126.9k | 1.34 | 21.2% |
+| v1.04 | long: touch the 50 EMA → trail $3 + TP at the resistance (Zee) | +$135.8k | 1.36 | 16.6% |
+| v1.05 | the 30-minute rule removed (Zee) | +$147.3k | 1.39 | 16.3% |
+| v1.06 | TP1 → $3 trail → TP2 → TP3 ladder, longs and shorts (Zee) | +$141.5k | 1.36 | 15.3% |
+| *(rig tick data re-synced here — see §6)* | | | | |
+| v1.07 | trails $3 → $2 (Zee) | +$167.3k | 1.43 | 12.1% |
+| v1.08 | directional pins tested — **rejected** | +$167.3k | 1.43 | 12.1% |
+| v1.09 | marubozu body 0.70 → 0.50 (Zee) | **+$207.3k** (random delay +$178–181k) | 1.48 | 10.3% |
 
-Four divergences found. Three were mine and got fixed; the fourth he opened himself.
+## 4. Tested and REJECTED tonight (do not re-test without a new reason)
 
-### 2a. 🐫 THE TREND LAW WAS NOT HIS LAW (v1.33-34)
+- **Zee's indicator settings unchanged on M15:** −$2,161. The $9 risk cap skipped most setups,
+  and waiting 2 candles for the break was too slow.
+- **More than one trade at a time** (2, 3, 5; same side only; opposite side only): always less
+  profit and more drawdown. The skipped setups lose money on average.
+- **Fixed TPs** (10/15/30 pips): win 71–86% of trades and lose money.
+- **"No new trades 30 min before the close":** −$11k at 1 lot. Removed at Zee's request.
+- **Widening the trail per TP** ($2 → $3 → $4, or steps of $0.50 / $2): always slightly worse
+  than a fixed $2.
+- **Directional pins only:**
 
-The live trend gate was **my EMA-5 slope**, not his line 7. Rebuilt as `CamelTrend`:
-the humps are **DRAWN from pivots** (a high with `InpPivot` lower highs on each side —
-the rule his eye uses) instead of inferred from a retracement state machine. His line
-45 now lives inside it: *"whenever a high is broken, the deepest point is the confirmed
-higher low."*
+  | Variant | Net |
+  |---|---|
+  | Wick must point the trade's way | +$90k |
+  | ...and body closes the trade's way | +$124k |
+  | Current (any pin) | +$167k |
 
-```
-  CAMEL HUMPS pivot 2, latched   18 tr  11W/ 7L  61.1%  +1044.30   <- HIS LAW
-  EMA-5 slope 10 (was live)      23 tr  12W/11L  52.2%   +876.20
-  CAMEL HUMPS pivot 3, latched   19 tr   8W/11L  42.1%   +629.90
-  CAMEL pivot 2, NO latch        13 tr   6W/ 7L  46.2%   +353.50
-  CAMEL HUMPS pivot 5, latched   22 tr   7W/15L  31.8%   +342.20
-  old inferred structure         19 tr   6W/13L  31.6%   +298.10
-```
+  The "inverted" pins earn about half the profit.
+- **Strict marubozu** (body ≥ 0.8–0.95): +$61k–119k. The plateau is 0.35–0.55.
+- On the 5-minute EA: session hours, trend / slope / price-side filters, daily loss stop,
+  breakeven at $3, and no risk cap (−$2k with a 54% drawdown).
 
-**61.1% — the highest anything has reached.** Two findings inside it worth more than
-the total: **his line 45 is worth FIFTEEN win-rate points on its own** (latch vs no
-latch), and **`InpTrendLook` is not load-bearing at all** — 60/90/120 give
-byte-identical results, which removes one of my numbers from the risk list. The pivot
-dial is a true hill: 1=+468 · **2=+1044** · 3=+630 · 5=+342.
+## 5. BTC — no edge (weekend experiment)
 
-### 2b. ONE PULL, ONE TRUTH (v1.33)
+Gold was closed for the weekend, so I tried the same strategy on BTCUSD. Axi: 1 BTC per lot,
+M5 candle ≈ $148, spread $12.
+- Rescaled versions **lost on both timeframes**: M5 −$4.7k, M15 −$3.7k at 0.10 lots.
+- The spread costs about 3× more than on gold, relative to the size of the move.
+- 52 single changes each on M5 and M15 found none that profit.
+- The best M15 combination (EMA slope + trend alignment + hours 08–20) made +$1.8k, PF 1.26.
+  That is small and in-sample.
+- **Stopped by Zee.** The BTC EAs are not compiled into Axi; do not trade them.
 
-Volume came from `oanda_vol.csv` and candles from `oanda_bars.csv` — **two separate
-pulls that disagreed for the same minute** (the 18:03 breakout was 1396 in one and
-1505 in the other), and the immutability rule then froze each at its own first sight.
-He reads one chart; the EA was reading one and a bit. Volume now comes from the SAME
-ROW as the candle it belongs to.
+## 6. Lessons that cost time tonight (read these)
 
-### 2c. NEVER JUDGE A HALF-WRITTEN CANDLE (v1.30) — the first live trade was illegal
+1. **Quote the random-delay result, not the no-delay one.** Zee said delays don't matter. With
+   $2 trailing stops they cost about 13% (+$207k → +$178–181k).
+2. **The MT5 Strategy Tester keeps old inputs** when an EA's defaults change. Tell Zee to
+   right-click Inputs → **Defaults** after every new version, and check his tester log
+   (`AppData/Roaming/MetaQuotes/Terminal/6FBEE…/Tester/logs`) when his numbers differ.
+3. **The test copy's tick history changed mid-session:** 59,886,606 → 59,410,491 ticks for
+   Jan–Oct, history quality "n/a". The same v1.06 build moved from +$141k to +$158k. Compare
+   only runs on the same data. Zee's terminal still has the original 59.88M ticks.
+4. The rig terminal sometimes hangs after a finished test. `saad_v4.py` now times out at 240 s,
+   kills only the rig's own terminal, and retries.
+5. A rig compile of a renamed EA must be done again (`--ea NAME` without `--nocompile`), or
+   every run returns "no report".
 
-BasedOnLaws' first ever live trade, its own `[LAWX]` stamp against the finished candle:
+## 7. Open items
 
-```
-  what the EA read     breakout 18:30  close 4676.37  vol  788
-  the actual candle    breakout 18:30  close 4675.84  vol 2109
-```
+- Zee to re-run v1.09 in his own tester with the inputs reset to defaults. Expect about
+  +$175k–185k at 1 lot.
+- **Lot size:** a $19k–24k drawdown at 1 lot is a lot of risk for a $25k account. For the
+  $500 account the equivalent is about 0.01–0.02 lots.
+- **The indicator** (`pine/saad_strategy.pine`) has the 15min EA's settings, but not yet:
+  - CTC
+  - the $2 trail with the TP1/TP2/TP3 ladder
+  - the day-close rule
+  - marubozu 0.50
 
-It caught the bridge's export **mid-minute**. His law says the breakout must be
-QUIETER than the UHV (997): **788 passes, 2109 refuses.** The trade was forbidden by
-its own law and existed only because the volume was still accumulating. It lost −8.86.
+  Another Claude session (turtle-7e) owns the file's uncommitted trailing-stop edit. Coordinate
+  before pushing anything to TradingView.
+- **PrimeXBT:** the spread there (about 18 points) is wider than Axi's (about 13), so live
+  results there will be lower. The 15min EA has not been run on the PXBT rig since v1.00.
+- **A weekend-gap trade** (#720 in Zee's run, −$3,864 at 1 lot) is now covered by "shut losers
+  at the close". A winner held over the weekend can still gap against the trade.
 
-Fixed: live may judge a bar only once the OANDA table contains a LATER minute (the
-bridge's own proof it moved past that candle); past `InpFreshMaxSec=40` it **skips the
-bar with a log line** rather than trading blind. Also the bridge cycle went **60s →
-15s → 5s**, and a variable I had shadowed (`newest`) was crashing the candle collector
-every cycle since the previous night. Lag is now ~0.
-
-### 2d. ALL HOURS (v1.35) — his call, and it re-opens the divergence knowingly
-
-```
-  NY only 15-22   18 tr  61.1%  +1044.30   $58.02/trade
-  15-24           21 tr  57.1%  +1143.60   $54.46/trade
-  08-22           29 tr  48.3%  +1109.80   $38.27/trade
-  ALL HOURS       39 tr  43.6%  +1335.90   $34.25/trade   <- shipped
-  00-15 pre-NY    18 tr  33.3%   +388.20   $21.57/trade
-```
-
-**The pure counter-test does not bleed**: trading only the hours before New York makes
-+$388 at 33.3%, and this geometry breaks even near 33%. So his line 47 was protecting
-**quality** (2.7× per trade inside NY), not money. He chose the total:
-
-> *"let's go all hours, since the goal is to make maximum money and all setups are
-> losing anyways under this EA"*
-
-On record: this trades against the standing win-rate goal and **diverges from LAWS.md
-line 47 by his decision**. His premise is true of the live record (0 for 4) and not of
-the court.
-
-## 3. HIS OWN TESTER RUN — the first independent confirmation
-
-He ran the MT5 Strategy Tester himself, his terminal, his data cache, the shipped
-config (`InpTrendMode=2 · InpNyOnly=false · InpMomBodyRatio=0.7 · InpBreakHold=0.45`):
-
-```
-  100% real ticks · 5,515 bars · 1,315,855 ticks · Aug 18 -> Aug 21
-  +123.05 at 0.01 lots · 27 trades · 13W/14L (48.15%) · profit factor 3.28
-  avg win 13.61   avg loss -3.85   largest loss -7.45   max drawdown 0.30%
-```
-
-**The average loss is the story: −$3.85 against a stop 8–10 points away.** Three losses
-came in at **−0.22, −0.03 and −0.04** — trades that reached 1R, moved their stop to
-entry, and cost nothing. His breakeven rule, working exactly as his page describes it.
-That is why 48% wins produces a profit factor of 3.28.
-
-It also matches the rig (+$1,335.90 at 0.10 over seven days ≈ $1,230 scaled), so **the
-measurement chain agrees across two independent terminals** — worth as much as the
-profit after the half-written-candle mess.
-
-## 4. THE TOOLS HE ASKED FOR
-
-- **The setup marker** — `http://127.0.0.1:8765/mark.html`. TradingView refused the job
-  (anonymous charts are read-only; its sign-in will not run in a debug-enabled browser),
-  so he marks on his own OANDA candles: click the retracement start, the UHV, the
-  breakout. The UHV's level is drawn forward, plumb lines drop into the volume pane with
-  each candle's volume printed, one candle may hold two roles. **On its first evening it
-  caught my untested `InpMaxRiskPts=10` refusing a lawful setup of his** (13.11 pts).
-- **"🎯 Visualize LIVE trade"** in the Camel Cockpit — draws the EA's own `[LAWX]`
-  anchors: retracement start, UHV with its trigger line, breakout with its body ratio
-  and hold %, entry/stop/target, volume story below. Walks back through every fire.
-- `monitor/law_trade_diagram.py`, `/api/trades`, `/api/marks` behind them.
-
-## 5. ⚠️ THE BINDING CONSTRAINT: his chart is nine days long
-
-The EA judges only on OANDA candles, so the court can only run where the archive
-reaches: **Aug 5, 6, 7, 17, 18, 19, 20, 21, 24**. Tonight we recovered Aug 17 (+1,890
-minutes) by asking the anonymous feed for more than it volunteers.
-
-```
-  anonymous tvDatafeed   caps at ~8,190 M1 bars = 5.7 days
-  his TradingView login  {"code": "rate_limit"} — NOT a bad password, the same wall
-                         his browser hit with backup codes
-  OANDA's own API        would serve years — NOT AVAILABLE IN PAKISTAN (German account only)
-```
-
-Two doors remain: `monitor/oanda_deep_history.py` accepts an `auth_token` in
-`.tv_credentials.json` (from `window.user.auth_token` in a signed-in browser — bypasses
-their login endpoint entirely), or retry the sign-in once the rate limit clears. Until
-then the window grows one day per day, and **all validation is forward.**
-
-## 6. State at 01:10, Aug 25
-
-```
-LIVE   BasedOnLaws v1.35  magic 88184  0.01  XAUUSD M1
-       camel humps pivot 2 latched · body ratio 0.70 · hold 45% · quieter than UHV
-       · stop 6 pips under the retracement low · 2R · BE at 1R · ALL HOURS
-       Re-verified 01:03 after he accidentally closed the terminal; every EA came
-       back, logger backfill "scanned 1,516 deals — appended 0 missed".
-🚨     ZeeUHV_Diamond 88154 — FULL SIZE, decision still owed
-BUILT  BasedOnLawsNoGate 88194 — control arm, not attached
-```
-
-## 7. What is still MINE, not his
-
-`InpBreakHold=0.45` · `InpPivot=2` · `InpRetraceMax=20` · `InpUpRunBars=2` ·
-`InpMinRetraceBars=2` · the risk band `0.5–10.0` (caught refusing his own marked setup)
-· `InpFreshMaxSec=40`. Each is a place the EA can obey his law while measuring it
-differently than he does — which is exactly how the 0.35 wick test survived until he
-looked at the 10:02 candle.
-
-**And the lesson of the day, three times over: when his law and my substitute were
-measured head to head, his won every time.**
+Full receipts for every version: [VERSION_HISTORY.md](../../VERSION_HISTORY.md) (Saad_strategy_15min
+v1.00–v1.09, Saad_strategy v4.00–v4.03). Raw results: `monitor/strategy_lab/saad_v4.jsonl`.
