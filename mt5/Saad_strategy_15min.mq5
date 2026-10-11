@@ -34,7 +34,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.01"
+#property version   "1.03"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -82,6 +82,9 @@ input double InpMaxTpPips   = 0;      // InpMaxTpPips — skip a SHORT whose sup
 
 //--- ⑥ breakeven
 input double InpBeUsd       = 0.0;    // InpBeUsd — stop to entry once price moved this $ (0 = off)
+input int    InpNoNewMins   = 30;     // InpNoNewMins — no new setups / entries this many minutes before the day's close (0 = off) [v1.03, Zee]
+input int    InpCloseLossMins = 3;    // InpCloseLossMins — this many minutes before the close: shut trades in loss, keep winners (0 = off) [v1.03, Zee]
+input double InpBeTpPct     = 0.75;   // InpBeTpPct — CTC: stop to entry once price covered this share of the way to the TP (0 = off) [v1.02, Zee]
 
 //--- ⑦ trailing
 input bool   InpTrail       = true;   // InpTrail — use a trailing stop
@@ -131,7 +134,7 @@ input int    InpPipPts      = 10;     // InpPipPts — points per pip (gold 10)
 input int    InpMagicNumber = 88302;  // InpMagicNumber — Saad_strategy [M15 variant: own magic, can run beside the M5 EA]
 input bool   InpVerbose     = false;  // InpVerbose — print every decision
 input bool   InpDraw        = true;   // InpDraw — labels on the chart (visual tester + live): setups, entries, stop moves, exits
-input bool   InpDrawSkips   = true;   // InpDrawSkips — also label setups that were skipped (no break, risk, no support, choppy)
+input bool   InpDrawSkips   = false;   // InpDrawSkips — also label setups that were skipped (no break, risk, no support, choppy)
 
 CTrade   trade;
 int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE;
@@ -148,6 +151,7 @@ struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bo
                   int num; double slNow; datetime slFrom; string why; };
 PosState g_pos[];
 
+int g_ctc = 0, g_skipClose = 0, g_closeLoss = 0;
 int g_setups = 0, g_entries = 0, g_skipBreak = 0, g_skipGap = 0, g_skipRisk = 0, g_skipSup = 0, g_chop = 0,
     g_busy = 0, g_rides = 0, g_lockFail = 0, g_dayStop = 0, g_filtered = 0;
 
@@ -163,15 +167,19 @@ int OnInit()
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
-   PrintFormat("[SAAD-15min] v1.01 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.03 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
+   datetime e = SessionEnd(TimeCurrent());
+   PrintFormat("[SAAD] day close for %s: %s (no new trades %d min before; losers shut %d min before)", _Symbol,
+               e == 0 ? "none found (no daily break)" : TimeToString(e), InpNoNewMins, InpCloseLossMins);
    return INIT_SUCCEEDED;
 }
 
 void OnDeinit(const int reason)
 {
+   PrintFormat("[SAAD] CTC breakevens %d | day close: setups dropped %d, losing trades shut %d", g_ctc, g_skipClose, g_closeLoss);
    PrintFormat("[SAAD] setups %d, entries %d | skipped: no break %d, gap %d, risk %d, no support %d, choppy %d, filters %d, busy %d, day guard %d | rides %d, lock refused %d",
                g_setups, g_entries, g_skipBreak, g_skipGap, g_skipRisk, g_skipSup, g_chop, g_filtered, g_busy, g_dayStop, g_rides, g_lockFail);
 }
@@ -242,6 +250,29 @@ bool Choppy()
 }
 
 
+//--- the day's close, from the broker's trading sessions for this symbol (covers the Friday close too)
+datetime SessionEnd(datetime now)
+{
+   MqlDateTime d; TimeToStruct(now, d);
+   long sec = d.hour * 3600 + d.min * 60 + d.sec;
+   datetime day0 = now - (datetime)sec;
+   datetime from, to;
+   for (uint k = 0; k < 10; k++) {
+      if (!SymbolInfoSessionTrade(_Symbol, (ENUM_DAY_OF_WEEK)d.day_of_week, k, from, to)) break;
+      long f = (long)from % 86400, t = (long)to; if (t > 86400) t = t % 86400; if (t == 0) t = 86400;
+      if (sec >= f && sec < t) {
+         // a session running to 24:00 that the next day continues at 00:00 is not a close
+         if (t == 86400) {
+            datetime f2, t2; MqlDateTime n; TimeToStruct(day0 + 86400, n);
+            if (SymbolInfoSessionTrade(_Symbol, (ENUM_DAY_OF_WEEK)n.day_of_week, 0, f2, t2) && (long)f2 % 86400 == 0) return 0;
+         }
+         return day0 + (datetime)t;
+      }
+   }
+   return 0;
+}
+int MinsToClose() { datetime e = SessionEnd(TimeCurrent()); return e == 0 ? 100000 : (int)((e - TimeCurrent()) / 60); }
+
 //--- chart labels (like the TradingView indicator). Plain text: MT5 shows no emoji.
 int      g_obj = 0, g_num = 0;
 string   g_pDesc = "";            // the waiting setup, for its labels
@@ -293,13 +324,26 @@ void DArrow(datetime t, double price, int side)
    ObjectSetInteger(0, n, OBJPROP_WIDTH, 2);
    ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
 }
+// a label placed `lvl` x ATR away from the candle (above when up=true) with an arrow pointing back to (t, price)
+void Callout(datetime t, double price, bool up, double lvl, string txt, color c, int size = 9, string tip = "")
+{
+   if (!Drawing()) return;
+   double a = Buf(hAtr, 1); if (a <= 0) a = 10 * Pip();
+   double ty = up ? price + lvl * a : price - lvl * a;
+   string n = ObjName();
+   ObjectCreate(0, n, OBJ_ARROWED_LINE, 0, t, ty, t, price);
+   ObjectSetInteger(0, n, OBJPROP_COLOR, c);
+   ObjectSetInteger(0, n, OBJPROP_WIDTH, 1);
+   ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
+   ObjectSetInteger(0, n, OBJPROP_BACK, true);
+   DText(t, ty, txt, c, size, up ? ANCHOR_LOWER : ANCHOR_UPPER, tip);
+}
 // a skipped setup: grey note under (long) / over (short) its candle
 void DSkip(int side, string why)
 {
    if (!InpDrawSkips || g_pTime == 0) return;
    double off = 2 * Pip();
-   DText(g_pTime, side > 0 ? g_pLow - off : g_pHigh + off, "x SKIP: " + why, clrGray, 7,
-         side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER, "skipped: " + why + " | " + g_pDesc);
+   Callout(g_pTime, side > 0 ? g_pLow - off : g_pHigh + off, side < 0, 1.0, "skip: " + why, clrGray, 7, "skipped: " + why + " | " + g_pDesc);
 }
 // the stop moved: end the old segment, start a new one
 void SlMoved(int i, double newSl, string note)
@@ -324,14 +368,16 @@ void DrawExit(PosState &p)
    }
    if (t == 0) return;
    string why = p.why;
-   if (reason == DEAL_REASON_SL) why = (p.ride || (p.side > 0 ? p.slNow > p.entry : p.slNow < p.entry)) ? "trailing stop" : "stop loss";
+   if (reason == DEAL_REASON_SL)
+      why = MathAbs(p.slNow - p.entry) < _Point ? "breakeven (CTC)"
+          : (p.ride || (p.side > 0 ? p.slNow > p.entry : p.slNow < p.entry)) ? "trailing stop" : "stop loss";
    else if (reason == DEAL_REASON_TP) why = "TP (last support)";
    else if (why == "") why = "closed";
    DLine(p.slFrom, p.slNow, t, p.slNow, p.ride ? clrOrange : clrRed, STYLE_DASH, 2);
    DLine(p.entryTime, p.entry, t, px, pnl >= 0 ? clrLime : clrRed, STYLE_DOT, 1);
    color c = pnl > 0 ? clrLimeGreen : clrRed;
    string txt = StringFormat("EXIT #%d %s %s$%.2f", p.num, why, pnl >= 0 ? "+" : "-", MathAbs(pnl));
-   DText(t, px, txt, c, 8, p.side > 0 ? ANCHOR_LEFT_LOWER : ANCHOR_LEFT_UPPER,
+   Callout(t, px, p.side > 0, 4.0, txt, c, 10,
          StringFormat("#%d %s  entry %.2f -> exit %.2f  (%s)  %s$%.2f", p.num, p.side > 0 ? "BUY" : "SELL", p.entry, px, why,
                       pnl >= 0 ? "+" : "-", MathAbs(pnl)));
 }
@@ -387,7 +433,7 @@ bool TpReached(int i, double tpLv)
             else { g_lockFail++; note += " (lock refused: too close)"; }
          }
       }
-      DText(TimeCurrent(), tpLv, note, clrTeal, 7, g_pos[i].side > 0 ? ANCHOR_LEFT_LOWER : ANCHOR_LEFT_UPPER);
+      Callout(TimeCurrent(), tpLv, g_pos[i].side > 0, 1.5, note, clrAqua, 8);
       return false;
    }
    g_pos[i].why = g_pos[i].side > 0 ? StringFormat("%d EMA (TP)", g_pos[i].exitE) : "TP (last support)";
@@ -406,6 +452,21 @@ void ManageTick()
          if (moved >= InpLockAtUsd && (g_pos[i].side > 0 ? want > cur + _Point : (cur == 0 || want < cur - _Point)) && ModifySl(g_pos[i].ticket, want)) SlMoved(i, want, "lock");
       }
       if (InpMaxBars > 0 && TimeCurrent() - g_pos[i].entryTime >= InpMaxBars * PeriodSeconds()) { g_pos[i].why = "time exit"; trade.PositionClose(g_pos[i].ticket); continue; }
+      if (InpBeTpPct > 0 && !g_pos[i].ride && PositionSelectByTicket(g_pos[i].ticket)) {
+         // the TP this trade is heading for: the support (SHORT), the exit EMA now (LONG), or a fixed TP
+         double tpRef = g_pos[i].side < 0 || InpFixTpPips > 0 ? g_pos[i].tp
+                      : (g_pos[i].noTp ? 0 : Ema(g_pos[i].exitE, 0) - InpLongTpPips * Pip());
+         double dist = g_pos[i].side > 0 ? tpRef - g_pos[i].entry : g_pos[i].entry - tpRef;
+         double cur = PositionGetDouble(POSITION_SL);
+         bool atEntry = g_pos[i].side > 0 ? cur >= g_pos[i].entry : (cur > 0 && cur <= g_pos[i].entry);
+         if (tpRef > 0 && dist > 0 && !atEntry) {
+            double moved = g_pos[i].side > 0 ? bid - g_pos[i].entry : g_pos[i].entry - ask0;
+            if (moved >= InpBeTpPct * dist && ModifySl(g_pos[i].ticket, g_pos[i].entry)) {
+               g_ctc++;
+               SlMoved(i, g_pos[i].entry, StringFormat("CTC: %d%% of TP -> SL to entry", (int)MathRound(InpBeTpPct * 100)));
+            }
+         }
+      }
       if (InpFixTpPips > 0) continue;
       if (g_pos[i].ride) continue;
       if (g_pos[i].side < 0) {
@@ -476,6 +537,7 @@ double DayPnl()
 void TryEntry()
 {
    if (g_pSide == 0 || ArraySize(g_pos) >= InpMaxPos) return;
+   if (InpNoNewMins > 0 && MinsToClose() <= InpNoNewMins) { g_skipClose++; DSkip(g_pSide, "too close to the day's close"); g_pSide = 0; return; }
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double pip = Pip();
    int side = g_pSide;
@@ -516,9 +578,8 @@ void TryEntry()
                               : StringFormat("%.2f (last support)", tp);
       double risk = MathAbs(p.entry - sl) * InpLots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
       DArrow(p.entryTime, p.entry, side);
-      DText(p.entryTime, side > 0 ? p.entry - 3 * pip : p.entry + 3 * pip,
-            StringFormat("%s #%d @ %.2f", side > 0 ? "BUY" : "SELL", p.num, p.entry), side > 0 ? clrDodgerBlue : clrOrangeRed, 9,
-            side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER,
+      Callout(p.entryTime, p.entry, side < 0, 3.0,
+            StringFormat("%s #%d @ %.2f", side > 0 ? "BUY" : "SELL", p.num, p.entry), side > 0 ? clrDodgerBlue : clrOrangeRed, 10,
             StringFormat("%s #%d  entry %.2f | SL %.2f (-$%.2f) | TP %s | %s", side > 0 ? "BUY" : "SELL", p.num, p.entry, sl, risk, tpTxt, g_pDesc));
       DText(p.entryTime, sl, StringFormat("SL %.2f", sl), clrRed, 7, side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
       if (side < 0) {
@@ -531,8 +592,20 @@ void TryEntry()
                                side > 0 ? (noTp ? "none (trail)" : StringFormat("EMA%d", g_pExit)) : DoubleToString(tp, 2));
 }
 
+void DayCloseCheck()
+{
+   if (InpCloseLossMins <= 0 || ArraySize(g_pos) == 0 || MinsToClose() > InpCloseLossMins) return;
+   for (int i = ArraySize(g_pos) - 1; i >= 0; i--) {
+      if (!PositionSelectByTicket(g_pos[i].ticket)) continue;
+      double pl = PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP);
+      if (pl < 0) { g_pos[i].why = "day close, in loss"; if (trade.PositionClose(g_pos[i].ticket)) g_closeLoss++; }
+   }
+}
+
 void OnTick()
 {
+   SyncPos();
+   DayCloseCheck();
    SyncPos();
    ManageTick();
    SyncPos();
@@ -573,6 +646,7 @@ void CheckCooldown()
 
 void DetectSetup()
 {
+   if (InpNoNewMins > 0 && MinsToClose() <= InpNoNewMins) return;   // too close to the day's close
    CheckCooldown();
    if (TimeCurrent() < g_coolUntil) return;
    int shape = Shape(1);
@@ -595,8 +669,7 @@ void DetectSetup()
    if (!longOk && !shortOk) return;
    if (Choppy()) {
       g_chop++;
-      if (InpDrawSkips) DText(iTime(_Symbol, PERIOD_CURRENT, 1), longOk ? l - 2 * Pip() : h + 2 * Pip(), "x choppy", clrDarkGray, 7,
-                              longOk ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
+      if (InpDrawSkips) Callout(iTime(_Symbol, PERIOD_CURRENT, 1), longOk ? l : h, !longOk, 1.0, "skip: choppy", clrDimGray, 7);
       return;
    }
    int side = longOk ? 1 : -1;
@@ -627,10 +700,9 @@ void DetectSetup()
       double lvl = side > 0 ? h + InpBreakPips * Pip() : l - InpBreakPips * Pip();
       DBox(g_pTime, h, g_pTime + PeriodSeconds(), l, clrGold);
       DLine(g_pTime, lvl, g_pTime + (InpBreakBars + 1) * PeriodSeconds(), lvl, clrGold, STYLE_DOT, 1, "break level");
-      DText(g_pTime, side > 0 ? h + 4 * Pip() : l - 4 * Pip(),
-            StringFormat("SETUP %s: %s on %s", side > 0 ? "LONG" : "SHORT", kindTxt, lineTxt), clrGold, 8,
-            side > 0 ? ANCHOR_LEFT_LOWER : ANCHOR_LEFT_UPPER,
-            StringFormat("%s | wait max %d candle(s) for a break %s %.2f", g_pDesc, InpBreakBars, side > 0 ? "above" : "below", lvl));
+      Callout(g_pTime + PeriodSeconds() / 2, side > 0 ? h : l, side > 0, 2.5,
+              StringFormat("SETUP %s: %s on %s", side > 0 ? "LONG" : "SHORT", kindTxt, lineTxt), clrGold, 9,
+              StringFormat("%s | wait max %d candle(s) for a break %s %.2f", g_pDesc, InpBreakBars, side > 0 ? "above" : "below", lvl));
    }
    if (InpVerbose) PrintFormat("[SAAD] %s setup (%s) on %s | waiting for %s %.2f", side > 0 ? "LONG" : "SHORT",
                                g_kind == 1 ? "pin" : g_kind == 2 ? "hammer/star" : "marubozu",

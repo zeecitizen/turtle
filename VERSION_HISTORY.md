@@ -636,6 +636,46 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.02–v1.03 — CTC at 75% of the TP, day-close rules, clearer labels (2026-10-12)
+
+Zee: *"if 75% of TP has been reached, then CTC breakeven the trade moving the SL to Entry price.
+Trailing SL should be activated after TP is hit"* and *"0.5 hours before day close don't take a
+trade. if a trade is open on day close, if it is profit, keep it open. if a trade is in loss
+on day close, then shut it down"*.
+
+- **v1.02 `InpBeTpPct 0.75`:** once price has covered 75% of the way from entry to the TP, the
+  stop moves to the entry. The TP used is the support level for shorts, the exit EMA at that
+  moment for longs, or a fixed TP if one is set. Longs with no TP are not affected. Exits at the
+  entry are labelled "breakeven (CTC)".
+- **Trailing after the TP** was already the behaviour (`InpRide`): before the TP the stop stays
+  beyond the candle, or at the entry after CTC. Longs with no TP still trail from the entry.
+- **v1.03 `InpNoNewMins 30`, `InpCloseLossMins 3`:** the close comes from the broker's own
+  trading sessions for the symbol, so the Friday close counts too. No setups and no entries in
+  the last 30 minutes. 3 minutes before the close, trades in loss are shut and winners stay open.
+  The log reports the counts.
+- **Labels:** text now sits 2.5–4 ATR away from the candle, with an arrow pointing back to it.
+  Skip notes are off by default (`InpDrawSkips`).
+
+Court (Axi M15, Jan 1–Oct 8, 0.10 lots, no delay):
+
+| arm | net | trades | WR | PF | max DD | losing months |
+|---|---|---|---|---|---|---|
+| v1.01 (no CTC, no day rules) | +$13,344 | 796 | 42.1% | 1.30 | 6.1% | 0 |
+| + CTC 75% | +$13,431 | 865 | 38.7% | 1.35 | 7.3% | 1 |
+| CTC 50% / 90% | +$11,864 / +$11,910 | — | — | 1.32 / 1.29 | 7.5 / 10.4% | 1 |
+| + CTC + shut losers at close only | **+$13,813** | 885 | 37.9% | **1.37** | **6.3%** | 1 |
+| + CTC + no new trades 30 min only | +$12,424 | 855 | 38.8% | 1.33 | 7.4% | 1 |
+| **+ CTC + both day rules (v1.03 default)** | +$12,686 | 872 | 38.1% | 1.34 | 7.6% | 1 |
+
+At 1 lot, v1.03 makes +$126,863 with a 21.2% drawdown.
+
+**Readings:**
+- **CTC:** 75% is the best of 50 / 75 / 90, but only slightly better than no CTC. It lowers
+  the win rate, because breakeven exits lose the spread.
+- **Shutting losers at the close helps** (+$382, drawdown 7.3 → 6.3%).
+- **"No new trades in the last 30 min" costs about $1,000** over nine months. It ships ON
+  because Zee asked for it; `InpNoNewMins=0` switches it off.
+
 ## Saad_strategy_15min v1.01 — chart labels for the visual tester (2026-10-12)
 
 Zee: *"put labels on each setup and their exit candles etc. the labels similar to tradingview ...
