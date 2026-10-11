@@ -636,6 +636,24 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.08 — directional pin bars: TESTED, left OFF (2026-10-12)
+
+Zee: *"if the direction is long then we accept a bullish pinbar only (body on top of wick and
+body in direction of breakout) AND we don't accept the inverted pinbar. same for SHORT"*. Added
+`InpPinColor`: the pin's body must close the trade's way, green for LONG and red for SHORT.
+It works with the existing `InpPinDir` (the long wick points away from the trade). Both stay OFF.
+
+| arm (1 lot, Axi M15, Jan 1–Oct 8, no delay) | net | trades | WR | PF | max DD |
+|---|---|---|---|---|---|
+| **any pin, the EMA decides (v1.07, kept)** | **+$167,345** | 926 | 47.0% | **1.43** | **12.1%** |
+| pin must point the trade's way | +$89,951 | 955 | 45.6% | 1.22 | 22.8% |
+| ...and body closes the trade's way | +$124,020 | 834 | 46.6% | 1.35 | 16.0% |
+| no pin bars at all | +$89,466 | 629 | 46.1% | 1.33 | 26.6% |
+
+**The "inverted" pins earn about half the profit.** A pin with its wick toward the trade, at the
+EMA, is a rejection the market then breaks through. Every month got worse with directional
+pins. No trading change in v1.08.
+
 ## Saad_strategy_15min v1.07 — $2 trails on both sides; widening tested and rejected (2026-10-12)
 
 Zee: *"ok let's activate: A fixed $2 trail on both sides"*. `InpLongTrailUsd` and
