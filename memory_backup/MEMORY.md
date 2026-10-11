@@ -8,12 +8,16 @@
 
 ## 💻 This laptop (since the Oct 2026 reset)
 - [Laptop migration + branch trap](old-machine-memory-and-branch.md) — repo at C:\Users\zeesh\turtle (not Documents\GitHub); Python312-arm64; Sep–Oct work on feature/optimise-for-expectancy; search all branches.
+- [oanda_vol.csv format contract](oanda-vol-file-format.md) — server-time "YYYY.MM.DD HH:MM,vol" only; I broke it once (Diamond fired 0); VSISA = M5, needs margin
 - [TradingView bridge setup](tradingview-bridge-setup.md) — launch TV with CDP on the MSIX build, inject Pine via pine/inject_pine.py
 - [Session handoff files](session-handoff-file.md) — read winning_indicator.md, then current_claude_session.md, at repo root first
 - [Pine save & chart update traps](pine-save-and-chart-update.md) — inject can silently not save; chart copy won't auto-update; inputs stored by position
+- [🧹 Purification page (Labelling Setups)](project_purification_page.md) — Zee labels every Saad trade OK / NOT OKAY + why at 127.0.0.1:8766; labels in monitor/purification/purification_labels.json → learn + optimise
+- [TradingView traps 2026-10-11](tradingview_pine_traps_2026_10_11.md) — input.color breaks API input changes ("Can't parse pine", settings reset); covered window stops painting → _updateAndPaint()
 ## ⭐ Read-first (current state)
 - [🎯 STANDING GOAL: win rate](project_goal_winrate.md) — fewer losing trades at FIXED geometry; report WR beside net in every court table; never buy WR with wider stops.
 - [🛡️ Oct 2026: TickSpeed + RiskGuard EAs](project_tickspeed_and_riskguard.md) — $200 account liquidated on size, not direction; FOUR "validated" signals all reversed on a different instrument. Read RESUME_HERE_2026-10-07.md on any new machine.
+- [🥇 Saad 15-min EA (Oct 2026)](C:/Users/zeesh/turtle/daily_reports/2026-10/REPORT_2026-10-11_12_saad_15min.md) — mt5/Saad_strategy_15min.mq5 v1.09 magic 88302, Axi M15 +$178–181k at 1 lot w/ random delay; BTC variants lose.
 - [🎯 Current context freeze-frame](current_context.md) — read BEFORE replying; trading state, open items, opening line.
 - [📒 Latest daily report](C:/Users/zeesh/turtle/daily_reports/_LATEST/LATEST_REPORT.md) — RULE: read at session start, write a new one at session end. Stops the rediscover loop.
 - [📊 User expectations](C:/Users/zeesh/turtle/users_expectations.md) — READ EVERY SESSION: catch every UHV, no explanations, match MT5 reality.
@@ -47,6 +51,7 @@
 - [🛠️ Modify EA defaults, not the input dialog](feedback_modify_ea_defaults_not_inputs.md) — edit .mq5 defaults, bump version, ask Zee to F7+drag.
 - [🏆 Everything visible on claudezeeshan.com](feedback_everything_visible_on_apex.md) — silent shipping = failed delivery.
 - [🧘 Patience is the edge](feedback_patience_is_the_edge.md) — quiet windows are capital preservation.
+- [⏱️ Quote random-delay MT5 results; tester keeps old inputs](feedback_quote_random_delay_and_tester_inputs.md) — no-delay +$207k was +$178k with delay; Zee's tester held InpMaruBody 0.7; rig ticks re-synced mid-session.
 - [🧪 MT5 tester, never a Python port of the EA](feedback_use_mt5_tester_not_python_port.md) — re-implementing EA logic in Python adds its own bugs and is not a backtest.
 - [⛔ LAWS.md is Zeeshan's — never edit](feedback_laws_md_is_zees.md) — read every session; his voice, his document; findings go elsewhere.
 - [🗣️ Save Zee's words VERBATIM](feedback_save_master_words_verbatim.md) — letter-by-letter incl. punctuation; paraphrase loses the precision. His words ARE the strategy.
