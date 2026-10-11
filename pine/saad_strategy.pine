@@ -86,6 +86,56 @@ iHammer  = input.bool(false, 'Also accept hammers (LONG) and shooting stars (SHO
 iHamRatio = input.float(2.0, 'Hammer: long wick at least this × the body   (higher = stricter; classic = 2)', minval = 1.0, step = 0.5, group = g9)
 iHamNose  = input.float(0.10, 'Hammer: opposite wick at most this share of the candle   (lower = stricter)', minval = 0.0, maxval = 0.5, step = 0.05, group = g9)
 
+gLog = "🧾 AUDIT LOG"
+iLog = input.bool(false, 'Write every setup / entry / stop move / exit to the Pine Logs (for checking)', group = gLog)
+ts(t) => str.format_time(t, "yyyy-MM-dd HH:mm", "UTC")
+var string pDesc = ""      // the waiting setup, described for the log
+iJPage = input.int(0, 'Trade journal page (40 trades per page; 0 = hidden)', minval = 0, group = gLog)
+var array<string> jRows = array.new<string>()   // one finished trade per row
+var string jOpen = ""      // the open trade's entry half of its row
+var int    jMoves = 0      // trailing / breakeven stop moves in the open trade
+
+g10 = "⑩ ACCURACY & COSTS (so the panel matches what a broker would do)"
+iIntra   = input.bool(true, 'Decide stop vs target minute by minute inside each candle (1-minute data)', group = g10,
+     tooltip = "Without it, a candle that touches both the stop and the target is guessed (stop first), and the entry candle itself is never checked.")
+iRideLock = input.string("TP level", 'When the TP is reached and the trade rides, lock the stop at', options = ["TP level", "Entry (breakeven)", "Don't lock"], group = g10,
+     tooltip = "TP level: a trade that reached its target can no longer end below it.\nWithout a lock, the trailing stop could sit on the wrong side of the entry and turn a reached target into a loss.")
+iLockBuf = input.float(2, 'Lock this many pips short of the TP (room for spread; 0 = exactly at the TP)', minval = 0, step = 1, group = g10)
+iMaxRisk = input.float(9.0, 'Skip a setup whose stop is more than this many $ from the entry   (0 = no limit; the EA uses 9)', minval = 0, step = 0.5, group = g10)
+iSpread  = input.float(0.20, 'Spread cost per trade, $ of price   (PrimeXBT gold ≈ 0.19, Axi ≈ 0.13)', minval = 0, step = 0.01, group = g10)
+iComm    = input.float(0.0, 'Commission per lot per round trip, $', minval = 0, step = 0.5, group = g10)
+
+gPC = "🔌 PINECONNECTOR ALERTS"
+iPC      = input.bool(false, 'Send PineConnector alert messages (create ONE alert: condition = this indicator, "Any alert() function call")', group = gPC)
+iPCLic   = input.string("", 'PineConnector license ID', group = gPC)
+iPCSym   = input.string("XAUUSD", 'Symbol name at the broker', group = gPC,
+     tooltip = "Messages: buy / sell with sl= (and tp= for SHORTs that do not ride) and risk=lots; closelong / closeshort on every exit; newsltplong / newsltpshort when the stop is locked, trailed or moved to breakeven.\nSet the PineConnector EA to read sl / tp as PRICES and risk as LOTS.")
+// (added last so the saved positions of every earlier input stay the same)
+iGapSkip = input.bool(true, 'Cancel a waiting setup across the daily close / weekend gap', group = g10,
+     tooltip = "The market reopens with a wide spread and a jump; a setup from before the close is stale.")
+iMinTp   = input.float(5, 'TP at least this many pips from the entry   (SHORT: look further down for support; LONG: no TP, trail instead)', minval = 0, step = 1, group = g10,
+     tooltip = "A target a few cents away cannot beat the spread: the lock 'short of the TP' would sit below the entry.")
+
+var int   brkK  = -1       // minute of the break on the entry candle
+var bool  tNoTp = false    // an open LONG whose exit EMA was below its entry: no target, trailing / EMA-cross manages it
+// lower-timeframe highs / lows of THIS candle, oldest first; falls back to the whole candle
+[mH, mL] = request.security_lower_tf(syminfo.tickerid, "1", [high, low])
+useM   = iIntra and array.size(mH) > 0
+nSteps = useM ? array.size(mH) : 1
+mHi(int k) => useM ? array.get(mH, k) : high
+mLo(int k) => useM ? array.get(mL, k) : low
+// PineConnector: each message at most once per candle, only on live candles
+varip array<string> pcSent = array.new<string>()
+varip array<int>    pcBarA = array.new<int>(1, -1)
+pcSend(string msg) =>
+    if iPC and barstate.isrealtime and iPCLic != ""
+        if array.get(pcBarA, 0) != bar_index
+            array.set(pcBarA, 0, bar_index)
+            array.clear(pcSent)
+        if not array.includes(pcSent, msg)
+            array.push(pcSent, msg)
+            alert(msg, alert.freq_all)
+
 // LINES ────────────────────────────────────────────────────────────────────
 e9  = ta.ema(close, iFast)
 e50 = ta.ema(close, iSlow)
@@ -192,9 +242,15 @@ if ta.change(dayofweek(time, iTz)) != 0
     pnlToday := 0.0
 
 closeTrade(px, why) =>
-    d   = tSide > 0 ? px - tEn : tEn - px
-    pnl = usd(d)
+    d    = tSide > 0 ? px - tEn : tEn - px
+    cost = iSpread * iLots * iCs + iComm * iLots
+    pnl  = usd(d) - cost
     win = pnl > 0
+    array.push(jRows, jOpen + " || OUT " + ts(time) + " " + why + " @ " + str.tostring(px, "#.##") + (tRide ? " [rode]" : "") +
+         " moves " + str.tostring(jMoves) + " || " + (pnl >= 0 ? "+" : "") + str.tostring(pnl, "#.##"))
+    if iLog
+        log.info("EXIT|#{0}|{1}|{2}|px={3}|pnl={4}|entry={5}|sl={6}", tN, ts(time), why, str.tostring(px, "#.###"), str.tostring(pnl, "#.##"), str.tostring(tEn, "#.###"), str.tostring(tSl, "#.###"))
+    pcSend(iPCLic + "," + (tSide > 0 ? "closelong" : "closeshort") + "," + iPCSym)
     txt = "⑥ EXIT #" + str.tostring(tN) + (win ? " ✅ " : pnl == 0 ? " ⚪ " : " ❌ ") + why + "\n" + (pnl >= 0 ? "+$" : "−$") + str.tostring(math.abs(pnl), "#.##")
     label.new(bar_index, tSide > 0 ? high : low, txt, style = tSide > 0 ? label.style_label_down : label.style_label_up,
          color = win ? color.new(color.green, 10) : pnl == 0 ? color.new(color.gray, 10) : color.new(color.red, 10), textcolor = color.white, size = size.small)
@@ -203,7 +259,7 @@ closeTrade(px, why) =>
         line.set_x2(lTp, bar_index)
     label.set_x(xSl, bar_index)
     label.set_x(xTp, bar_index)
-    if tSide > 0 and iLTpP == 0
+    if tSide > 0 and iLTpP == 0 and not tNoTp
         label.set_y(xTp, exitVal(tExitE))
     pnl
 
@@ -211,36 +267,176 @@ trLow  = ta.lowest(low, iTrN)       // computed every candle (Pine needs history
 trHigh = ta.highest(high, iTrN)
 trailOn(int side) =>
     iTrail and (iTrSide == "Both" or (side > 0 and iTrSide == "LONG only") or (side < 0 and iTrSide == "SHORT only"))
+fp(float v) => str.tostring(v, "#.##")
+pcMod(float sl) => iPCLic + "," + (tSide > 0 ? "newsltplong" : "newsltpshort") + "," + iPCSym + ",sl=" + fp(sl)
 
-// 1) MANAGE THE OPEN TRADE (stop checked first: the conservative order) ───
-if tSide != 0 and bar_index > tBar
+// a candle that opens after a gap in time (daily close, weekend)
+gapBar = time - time[1] > timeframe.in_seconds() * 1500
+
+// ═ A) A WAITING SETUP: does this candle break it? (the minute of the break is found in the 1-minute data) ═
+if pSide != 0 and tSide == 0 and bar_index > pBar and iGapSkip and gapBar
+    if iShowSk
+        label.new(bar_index, pSide > 0 ? high : low, "✖ SKIP: market closed in between", style = pSide > 0 ? label.style_label_down : label.style_label_up,
+             color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
+    nSkip += 1
+    if iLog
+        log.info("SKIP|{0}|gap|{1}", ts(time), pDesc)
+    pSide := 0
+if pSide != 0 and tSide == 0 and bar_index > pBar
+    lvl = pSide > 0 ? pHi + iBrkP * pip : pLo - iBrkP * pip
+    int k0 = -1
+    if iBrkC
+        if pSide > 0 ? close > lvl : close < lvl
+            k0 := nSteps - 1
+    else
+        for k = 0 to nSteps - 1
+            if pSide > 0 ? mHi(k) > lvl : mLo(k) < lvl
+                k0 := k
+                break
+    if k0 >= 0
+        tSide := pSide
+        // the stop order fills at the level, or at the candle's open if it gapped past it
+        tEn := iBrkC ? close : k0 == 0 ? (pSide > 0 ? math.max(open, lvl) : math.min(open, lvl)) : lvl
+        tSl := pSide > 0 ? pLo - iSlPips * pip : pHi + iSlPips * pip
+        sup = pSide < 0 ? lastSupport(tEn - iMinTp * pip) : na
+        tTp := pSide > 0 ? na : (na(sup) ? na : sup + iSTpP * pip)
+        tBar := bar_index
+        brkK := k0
+        tBe := false
+        tBest := na
+        tRide := false
+        tExitE := pExitE
+        tNoTp := pSide > 0 and exitVal(pExitE) - iLTpP * pip < tEn + iMinTp * pip
+        risk = math.abs(tEn - tSl)
+        string skipWhy = pSide < 0 and (na(tTp) or tTp >= tEn) ? "no support below to target" :
+             iMaxRisk > 0 and risk > iMaxRisk ? "stop too far ($" + fp(risk) + " > $" + fp(iMaxRisk) + ")" : ""
+        if skipWhy != ""
+            tSide := 0
+            nSkip += 1
+            if iLog
+                log.info("SKIP|{0}|{1}|{2}", ts(time), skipWhy, pDesc)
+            if iShowSk
+                label.new(bar_index, pSide > 0 ? high : low, "✖ SKIP: " + skipWhy, style = pSide > 0 ? label.style_label_down : label.style_label_up,
+                     color = color.new(color.gray, 30), textcolor = color.white, size = size.tiny)
+        else
+            tN += 1
+            jMoves := 0
+            bool sendTp = pSide < 0 and not (trailOn(-1) and iTrRide)
+            pcSend(iPCLic + "," + (pSide > 0 ? "buy" : "sell") + "," + iPCSym + ",sl=" + fp(tSl) + (sendTp ? ",tp=" + fp(tTp) : "") + ",risk=" + str.tostring(iLots))
+            jOpen := "#" + str.tostring(tN) + " | " + pDesc + " || IN " + ts(time) + " " + (pSide > 0 ? "BUY" : "SELL") + " " + str.tostring(tEn, "#.##") +
+                 " SL " + str.tostring(tSl, "#.##") + " TP " + (pSide > 0 ? (tNoTp ? "none (EMA" + str.tostring(pExitE) + " below / too close to entry)" : "EMA" + str.tostring(pExitE)) : str.tostring(tTp, "#.##"))
+            if iLog
+                log.info("ENTRY|#{0}|{1}|{2}|entry={3}|sl={4}|tp={5}|exitEMA={6}|setup: {7}", tN, ts(time), pSide > 0 ? "LONG" : "SHORT",
+                     str.tostring(tEn, "#.###"), str.tostring(tSl, "#.###"), pSide > 0 ? "EMA" + str.tostring(pExitE) : str.tostring(tTp, "#.###"), pSide > 0 ? str.tostring(pExitE) : "-", pDesc)
+            if pSide > 0
+                nLong += 1
+            else
+                nShort += 1
+            tip = (pSide > 0 ? "BUY" : "SELL") + "  #" + str.tostring(tN) +
+                 "\nEntry: " + str.tostring(tEn, "#.##") +
+                 "\nSL:    " + str.tostring(tSl, "#.##") + "  −$" + str.tostring(usd(risk), "#.##") +
+                 "\nTP:    " + (pSide > 0 ? (tNoTp ? "none — the exit EMA is below / too close to the entry" : "the " + str.tostring(tExitE) + " EMA") :
+                                 str.tostring(tTp, "#.##") + "  +$" + str.tostring(usd(tEn - tTp), "#.##") + " (last support)") +
+                 "\nLots:  " + str.tostring(iLots, "#.##")
+            label.new(bar_index, pSide > 0 ? low : high,
+                 (pSide > 0 ? "③ HIGH BROKEN → BUY" : "③ LOW BROKEN → SELL") + (iBrkC ? " (close)" : "") + "\n@ " + str.tostring(tEn, "#.##"),
+                 style = pSide > 0 ? label.style_label_up : label.style_label_down,
+                 color = pSide > 0 ? color.new(#089981, 0) : color.new(#f23645, 0), textcolor = color.white,
+                 size = size.normal, tooltip = tip)
+            lEn := line.new(bar_index, tEn, bar_index + 1, tEn, color = color.new(color.white, 20), width = 1)
+            lSl := line.new(bar_index, tSl, bar_index + 1, tSl, color = color.new(color.red, 0), width = 2, style = line.style_dashed)
+            lTp := pSide < 0 ? line.new(bar_index, tTp, bar_index + 1, tTp, color = color.new(color.lime, 0), width = 2, style = line.style_dashed) : na
+            xSl := label.new(bar_index + 2, tSl, "④ SL: " + str.tostring(iSlPips, "#") + " pips " + (pSide > 0 ? "below" : "above") +
+                 " the candle = " + str.tostring(tSl, "#.##") + "  (−$" + str.tostring(usd(risk), "#.##") + ")",
+                 style = label.style_label_left, color = color.new(color.red, 15), textcolor = color.white, size = size.small)
+            xTp := label.new(bar_index + 2, pSide > 0 ? exitVal(tExitE) : tTp,
+                 pSide > 0 ? (tNoTp ? "⑤ no TP: the " + str.tostring(tExitE) + " EMA is below the entry" + (trailOn(1) ? " — trailing from entry" : " — exits if a candle closes below it") :
+                             "⑤ TP: exit when a candle " + (iLTp == "Candle touches the 50 EMA" ? "touches" : "closes at") + " the " + str.tostring(tExitE) + " EMA" +
+                             (iLTpP > 0 ? " (−" + str.tostring(iLTpP, "#") + " pips)" : "")) :
+                 "⑤ TP: last support (liquidity) = " + str.tostring(tTp, "#.##") + "  (+$" + str.tostring(usd(tEn - tTp), "#.##") + ")",
+                 style = label.style_label_left, color = color.new(color.green, 15), textcolor = color.white, size = size.small)
+            if tNoTp and trailOn(1)
+                tRide := true            // nothing to take profit at: the trailing stop manages it from entry
+            status := (pSide > 0 ? "IN LONG #" : "IN SHORT #") + str.tostring(tN) + " @ " + str.tostring(tEn, "#.##") +
+                 " | SL " + str.tostring(tSl, "#.##") + " | TP " + (pSide > 0 ? (tNoTp ? "none (trailing)" : str.tostring(tExitE) + " EMA") : str.tostring(tTp, "#.##"))
+        pSide := 0
+    else
+        pLeft -= 1
+        if pLeft <= 0
+            if iShowSk
+                label.new(bar_index, pSide > 0 ? high : low, "✖ SKIP (rule): " + (pSide > 0 ? "high" : "low") + " not broken within " + str.tostring(iBreak) + " candle" + (iBreak > 1 ? "s" : ""),
+                     style = pSide > 0 ? label.style_label_down : label.style_label_up,
+                     color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
+            nSkip += 1
+            if iLog
+                log.info("SKIP|{0}|not broken in {1}|{2}", ts(time), iBreak, pDesc)
+            status := "Setup skipped: its " + (pSide > 0 ? "high" : "low") + " was not broken"
+            pSide := 0
+
+// ═ B) MANAGE THE OPEN TRADE — minute by minute, so stop vs target is decided in the order it happened ═
+if tSide != 0
     float exitPx = na
     string why = ""
     ltol = iLTpP * pip
-    if tSide > 0
-        eX  = exitVal(tExitE)
-        tgt = eX >= tEn ? eX - ltol : eX + ltol
-        hitTp = iLTp == "Candle touches the 50 EMA" ? (low <= tgt and high >= tgt) : (eX >= tEn ? close >= tgt : close <= tgt)
-        if low <= tSl
-            exitPx := tSl, why := tRide or tSl > tEn ? "trailing stop hit" : tBe ? "breakeven stop" : "stop loss hit"
-        else if hitTp and not tRide
+    eX = exitVal(tExitE)
+    float tgtL = tSide > 0 and not tNoTp ? eX - ltol : na
+    bool tpValidL = not na(tgtL) and tgtL > tEn          // a LONG target only counts while it is above the entry
+    bool touchMode = iLTp == "Candle touches the 50 EMA"
+    startK = tBar == bar_index ? brkK + 1 : 0              // on the entry candle: only the minutes AFTER the break
+    if startK < nSteps
+        for k = startK to nSteps - 1
+            h = mHi(k)
+            l = mLo(k)
+            if tSide > 0 ? l <= tSl : h >= tSl
+                exitPx := tSl
+                why := tRide or (tSide > 0 ? tSl > tEn : tSl < tEn) ? "trailing stop hit" : tBe ? "breakeven stop" : "stop loss hit"
+                break
+            if not tRide
+                bool tpHit = tSide > 0 ? (touchMode and tpValidL and h >= tgtL) : (not na(tTp) and l <= tTp)
+                if tpHit
+                    tpLv = tSide > 0 ? tgtL : tTp
+                    if trailOn(tSide) and iTrRide
+                        tRide := true
+                        label.new(bar_index, tSide > 0 ? high : low, "⑤ TP reached → now trailing", style = tSide > 0 ? label.style_label_down : label.style_label_up,
+                             color = color.new(color.teal, 10), textcolor = color.white, size = size.tiny)
+                        if iLog
+                            log.info("RIDE|#{0}|{1}|TP reached, now trailing", tN, ts(time))
+                        float lockLv = iRideLock == "TP level" ? (tSide > 0 ? tpLv - iLockBuf * pip : tpLv + iLockBuf * pip) : iRideLock == "Entry (breakeven)" ? tEn : na
+                        if not na(lockLv) and (tSide > 0 ? lockLv > tSl : lockLv < tSl)
+                            line.set_x2(lSl, bar_index)
+                            tSl := lockLv
+                            jMoves += 1
+                            lSl := line.new(bar_index, tSl, bar_index + 1, tSl, color = color.new(color.orange, 0), width = 2, style = line.style_dashed)
+                            label.set_y(xSl, tSl)
+                            label.set_text(xSl, "④ SL locked at the " + (iRideLock == "TP level" ? "TP" : "entry") + " = " + fp(tSl))
+                            pcSend(pcMod(tSl))
+                    else
+                        exitPx := tpLv
+                        why := tSide > 0 ? str.tostring(tExitE) + " EMA touched (TP)" : "reached last support (TP)"
+                        break
+    // candle-close exits (decided only when the candle has closed)
+    if na(exitPx) and tSide > 0 and not tRide
+        if not touchMode and tpValidL and close >= tgtL
             if trailOn(1) and iTrRide
                 tRide := true
-                label.new(bar_index, high, "⑤ TP reached → now trailing", style = label.style_label_down,
+                label.new(bar_index, high, "⑤ TP reached (close) → now trailing", style = label.style_label_down,
                      color = color.new(color.teal, 10), textcolor = color.white, size = size.tiny)
-            else
-                exitPx := iLTp == "Candle touches the 50 EMA" ? tgt : close
-                why := str.tostring(tExitE) + " EMA " + (iLTp == "Candle touches the 50 EMA" ? "touched" : "close") + " (TP)"
-    else
-        if high >= tSl
-            exitPx := tSl, why := tRide or tSl < tEn ? "trailing stop hit" : tBe ? "breakeven stop" : "stop loss hit"
-        else if low <= tTp and not tRide
-            if trailOn(-1) and iTrRide
-                tRide := true
-                label.new(bar_index, low, "⑤ TP reached → now trailing", style = label.style_label_up,
-                     color = color.new(color.teal, 10), textcolor = color.white, size = size.tiny)
-            else
-                exitPx := tTp, why := "reached last support (TP)"
+                float lockC = iRideLock == "TP level" ? tgtL - iLockBuf * pip : iRideLock == "Entry (breakeven)" ? tEn : na
+                if not na(lockC) and lockC > tSl and lockC < close
+                    line.set_x2(lSl, bar_index)
+                    tSl := lockC
+                    jMoves += 1
+                    lSl := line.new(bar_index, tSl, bar_index + 1, tSl, color = color.new(color.orange, 0), width = 2, style = line.style_dashed)
+                    label.set_y(xSl, tSl)
+                    label.set_text(xSl, "④ SL locked at the " + (iRideLock == "TP level" ? "TP" : "entry") + " = " + fp(tSl))
+                    if barstate.isconfirmed
+                        pcSend(pcMod(tSl))
+            else if barstate.isconfirmed
+                exitPx := close
+                why := str.tostring(tExitE) + " EMA close (TP)"
+        else if tNoTp and close < eX and barstate.isconfirmed
+            exitPx := close
+            why := "closed below the " + str.tostring(tExitE) + " EMA"
     if not na(exitPx)
         pnl = closeTrade(exitPx, why)
         nT += 1, nToday += 1, pnlToday += pnl
@@ -254,7 +450,7 @@ if tSide != 0 and bar_index > tBar
             netS += pnl
         tSide := 0
         status := "Trade closed: " + why + " — waiting for the next setup"
-    else if trailOn(tSide)
+    else if trailOn(tSide) and bar_index > tBar
         tBest := tSide > 0 ? math.max(nz(tBest, tEn), high) : math.min(nz(tBest, tEn), low)
         started = iTrRide ? tRide : (tSide > 0 ? tBest - tEn : tEn - tBest) >= iTrStart * pip
         if started
@@ -270,85 +466,32 @@ if tSide != 0 and bar_index > tBar
                 // end the old stop segment here and start a new, tighter one: the stop is drawn as steps
                 line.set_x2(lSl, bar_index)
                 tSl := lvl
+                jMoves += 1
+                if iLog
+                    log.info("TRAIL|#{0}|{1}|newSL={2}|ride={3}", tN, ts(time), str.tostring(tSl, "#.###"), tRide)
                 lSl := line.new(bar_index, tSl, bar_index + 1, tSl, color = color.new(color.orange, 0), width = 2, style = line.style_dashed)
                 label.set_y(xSl, tSl)
                 label.set_text(xSl, "④ TRAILING SL = " + str.tostring(tSl, "#.##") + "  (" + (tSide > 0 ? (tSl >= tEn ? "+$" : "−$") : (tSl <= tEn ? "+$" : "−$")) +
                      str.tostring(math.abs(usd(tSide > 0 ? tSl - tEn : tEn - tSl)), "#.##") + " locked)")
-    if tSide != 0 and iBeUsd > 0 and not tBe
+                if barstate.isconfirmed
+                    pcSend(pcMod(tSl))
+    if tSide != 0 and iBeUsd > 0 and not tBe and bar_index > tBar
         // ⑥ breakeven: judged on this candle's best price, applied from the next one
         best = tSide > 0 ? high - tEn : tEn - low
         gain = iBeMode == "Price moved $X" ? best : usd(best)
-        if gain > iBeUsd
+        if gain > iBeUsd and (tSide > 0 ? tEn > tSl : tEn < tSl)
             tBe := true
             tSl := tEn
+            jMoves += 1
+            if iLog
+                log.info("BE|#{0}|{1}|SL=entry {2}", tN, ts(time), str.tostring(tEn, "#.###"))
             line.set_y1(lSl, tEn), line.set_y2(lSl, tEn)
             label.set_y(xSl, tEn)
             label.set_text(xSl, "④ SL moved to entry (breakeven) = " + str.tostring(tEn, "#.##"))
             label.new(bar_index, tSide > 0 ? high : low, "BE", style = tSide > 0 ? label.style_label_down : label.style_label_up,
                  color = color.new(color.gray, 20), textcolor = color.white, size = size.tiny)
-
-// 2) A WAITING SETUP: does this candle break it? ──────────────────────────
-if pSide != 0 and tSide == 0 and bar_index > pBar
-    lvl = pSide > 0 ? pHi + iBrkP * pip : pLo - iBrkP * pip
-    brk = iBrkC ? (pSide > 0 ? close > lvl : close < lvl) : (pSide > 0 ? high > lvl : low < lvl)
-    if brk
-        tSide := pSide
-        tEn := iBrkC ? close : (pSide > 0 ? math.max(open, lvl) : math.min(open, lvl))
-        tSl := pSide > 0 ? pLo - iSlPips * pip : pHi + iSlPips * pip
-        sup = pSide < 0 ? lastSupport(tEn) : na
-        tTp := pSide > 0 ? na : (na(sup) ? na : sup + iSTpP * pip)
-        tBar := bar_index
-        tBe := false
-        tBest := na
-        tRide := false
-        tExitE := pExitE
-        if pSide < 0 and (na(tTp) or tTp >= tEn)
-            tSide := 0                                   // the EA skips a short with no support below
-            if iShowSk
-                label.new(bar_index, high, "✖ SKIP: no support below to target", style = label.style_label_down,
-                     color = color.new(color.gray, 30), textcolor = color.white, size = size.tiny)
-        else
-            tN += 1
-            if pSide > 0
-                nLong += 1
-            else
-                nShort += 1
-            risk = math.abs(tEn - tSl)
-            tip = (pSide > 0 ? "BUY" : "SELL") + "  #" + str.tostring(tN) +
-                 "\nEntry: " + str.tostring(tEn, "#.##") +
-                 "\nSL:    " + str.tostring(tSl, "#.##") + "  −$" + str.tostring(usd(risk), "#.##") +
-                 "\nTP:    " + (pSide > 0 ? "the " + str.tostring(tExitE) + " EMA" :
-                                 str.tostring(tTp, "#.##") + "  +$" + str.tostring(usd(tEn - tTp), "#.##") + " (last support)") +
-                 "\nLots:  " + str.tostring(iLots, "#.##")
-            label.new(bar_index, pSide > 0 ? low : high,
-                 (pSide > 0 ? "③ HIGH BROKEN → BUY" : "③ LOW BROKEN → SELL") + (iBrkC ? " (close)" : "") + "\n@ " + str.tostring(tEn, "#.##"),
-                 style = pSide > 0 ? label.style_label_up : label.style_label_down,
-                 color = pSide > 0 ? color.new(#089981, 0) : color.new(#f23645, 0), textcolor = color.white,
-                 size = size.normal, tooltip = tip)
-            lEn := line.new(bar_index, tEn, bar_index + 1, tEn, color = color.new(color.white, 20), width = 1)
-            lSl := line.new(bar_index, tSl, bar_index + 1, tSl, color = color.new(color.red, 0), width = 2, style = line.style_dashed)
-            lTp := pSide < 0 ? line.new(bar_index, tTp, bar_index + 1, tTp, color = color.new(color.lime, 0), width = 2, style = line.style_dashed) : na
-            xSl := label.new(bar_index + 2, tSl, "④ SL: " + str.tostring(iSlPips, "#") + " pips " + (pSide > 0 ? "below" : "above") +
-                 " the candle = " + str.tostring(tSl, "#.##") + "  (−$" + str.tostring(usd(risk), "#.##") + ")",
-                 style = label.style_label_left, color = color.new(color.red, 15), textcolor = color.white, size = size.small)
-            xTp := label.new(bar_index + 2, pSide > 0 ? exitVal(tExitE) : tTp,
-                 pSide > 0 ? "⑤ TP: exit when a candle " + (iLTp == "Candle touches the 50 EMA" ? "touches" : "closes at") + " the " + str.tostring(tExitE) + " EMA" +
-                             (iLTpP > 0 ? " (−" + str.tostring(iLTpP, "#") + " pips)" : "") :
-                 "⑤ TP: last support (liquidity) = " + str.tostring(tTp, "#.##") + "  (+$" + str.tostring(usd(tEn - tTp), "#.##") + ")",
-                 style = label.style_label_left, color = color.new(color.green, 15), textcolor = color.white, size = size.small)
-            status := (pSide > 0 ? "IN LONG #" : "IN SHORT #") + str.tostring(tN) + " @ " + str.tostring(tEn, "#.##") +
-                 " | SL " + str.tostring(tSl, "#.##") + " | TP " + (pSide > 0 ? str.tostring(tExitE) + " EMA" : str.tostring(tTp, "#.##"))
-        pSide := 0
-    else
-        pLeft -= 1
-        if pLeft <= 0
-            if iShowSk
-                label.new(bar_index, pSide > 0 ? high : low, "✖ SKIP (rule): " + (pSide > 0 ? "high" : "low") + " not broken within " + str.tostring(iBreak) + " candle" + (iBreak > 1 ? "s" : ""),
-                     style = pSide > 0 ? label.style_label_down : label.style_label_up,
-                     color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny)
-            nSkip += 1
-            status := "Setup skipped: its " + (pSide > 0 ? "high" : "low") + " was not broken"
-            pSide := 0
+            if barstate.isconfirmed
+                pcSend(pcMod(tSl))
 
 // stretch the open trade's lines to the current bar
 if tSide != 0
@@ -357,11 +500,16 @@ if tSide != 0
         line.set_x2(lTp, bar_index + 1)
     label.set_x(xSl, bar_index + 2)
     label.set_x(xTp, bar_index + 2)
-    if tSide > 0
+    if tSide > 0 and not tNoTp
         label.set_y(xTp, exitVal(tExitE))
 
 // 3) A NEW SETUP ON THE CANDLE THAT JUST CLOSED ───────────────────────────
-if barstate.isconfirmed and tSide == 0 and pSide == 0 and shape != 0 and inSess
+// a setup candle that appears while a trade is open or another setup is waiting is not taken (one at a time) — counted
+var int nBusy = 0
+if barstate.isconfirmed and (tSide != 0 or pSide != 0) and shape != 0 and inSess and bar_index > iSlow * 2 and not choppy
+    if (iBuys and (onLine(e9, 1) or onLine(e50, 1))) or (iSells and lineFor(iShrtLn, -1))
+        nBusy += 1
+if barstate.isconfirmed and tSide == 0 and pSide == 0 and shape != 0 and inSess and bar_index > iSlow * 2
     // ⑧ which long rule(s) this candle satisfies: the original (on 9, exit 50) and/or the inverse (on 50, exit 9)
     bool rulesOk = iLRule != "50 EMA setup → exit at 9 EMA" and (iLRule == "Both" ? onLine(e9, 1) : lineFor(iLongLn, 1)) and not (iL50Up and e50 <= high)
     bool invOk   = iLRule != "9 EMA setup → exit at 50 EMA" and onLine(e50, 1) and not (iL50Up and e9 <= high)
@@ -372,12 +520,18 @@ if barstate.isconfirmed and tSide == 0 and pSide == 0 and shape != 0 and inSess
     if longOk or shortOk
         if choppy
             nChop += 1
+            if iLog
+                log.info("CHOPPY|{0}|{1} {2}|ER={3}", ts(time), longOk ? "LONG" : "SHORT", kind, str.tostring(er, "#.##"))
             if iShowSk
                 label.new(bar_index, longOk ? low : high, "✖ SKIP: choppy market (ER " + str.tostring(er, "#.##") + " < " + str.tostring(iEr, "#.##") + ")",
                      style = longOk ? label.style_label_up : label.style_label_down,
                      color = color.new(color.gray, 50), textcolor = color.white, size = size.tiny)
         else
             pSide := longOk ? 1 : -1
+            pDesc := ts(time) + " " + (longOk ? "LONG " : "SHORT ") + kind + " on " +
+                 (longOk ? (rulesOk ? "EMA9(rule:9->exit50)" : "EMA50(inverse:50->exit9)") : (onLine(e50, -1) ? "EMA50" : "EMA9")) +
+                 " O=" + str.tostring(open, "#.###") + " H=" + str.tostring(high, "#.###") + " L=" + str.tostring(low, "#.###") + " C=" + str.tostring(close, "#.###") +
+                 " e9=" + str.tostring(e9, "#.###") + " e50=" + str.tostring(e50, "#.###") + " ER=" + str.tostring(er, "#.##")
             pHi := high, pLo := low, pLeft := iBreak, pBar := bar_index
             pExitE := rulesOk ? 50 : 9
             box.new(bar_index - 1, high, bar_index + 1, low, color.new(color.yellow, 0), 2, bgcolor = color.new(color.yellow, 85))
@@ -446,11 +600,11 @@ if barstate.islast
         table.merge_cells(p, 0, 1, 1, 1)
         row(p, 2,  "Trades on this chart", str.tostring(nT) + "  (" + str.tostring(nLong) + " long · " + str.tostring(nShort) + " short)", cWhite)
         row(p, 3,  "Win rate", str.tostring(wr, "#.#") + "%  (" + str.tostring(nW) + "W / " + str.tostring(nL) + "L)", wr >= 50 ? color.lime : color.orange)
-        row(p, 4,  "Net @ " + str.tostring(iLots, "#.##") + " lots", (net >= 0 ? "+$" : "−$") + str.tostring(math.abs(net), "#.##"), net >= 0 ? color.lime : color.red)
+        row(p, 4,  "Net @ " + str.tostring(iLots, "#.##") + " lots, after $" + str.tostring(iSpread, "#.##") + " spread", (net >= 0 ? "+$" : "−$") + str.tostring(math.abs(net), "#.##"), net >= 0 ? color.lime : color.red)
         row(p, 5,  "Profit factor", na(pf) ? "—" : str.tostring(pf, "#.##"), na(pf) or pf >= 1 ? color.lime : color.red)
         row(p, 6,  "Longs / shorts net", (netL >= 0 ? "+$" : "−$") + str.tostring(math.abs(netL), "#") + " / " + (netS >= 0 ? "+$" : "−$") + str.tostring(math.abs(netS), "#"), cWhite)
         row(p, 7,  "Today", str.tostring(nToday) + " trades  " + (pnlToday >= 0 ? "+$" : "−$") + str.tostring(math.abs(pnlToday), "#.##"), pnlToday >= 0 ? color.lime : color.red)
-        row(p, 8,  "Skipped: no break / choppy", str.tostring(nSkip) + " / " + str.tostring(nChop), cDim)
+        row(p, 8,  "Skipped: no break / choppy / busy", str.tostring(nSkip) + " / " + str.tostring(nChop) + " / " + str.tostring(nBusy), cDim)
         row(p, 9,  "Efficiency ratio now", str.tostring(er, "#.##") + (choppy ? "  CHOPPY" : "  ok"), choppy ? color.orange : color.lime)
         table.cell(p, 0, 10, "MT5 receipt, DEFAULT settings (Axi gold M5, real ticks, Jan–Oct 2026)", text_color = color.aqua, text_size = size.tiny)
         table.merge_cells(p, 0, 10, 1, 10)
@@ -458,3 +612,14 @@ if barstate.islast
         table.merge_cells(p, 0, 11, 1, 11)
         table.cell(p, 0, 12, "Chart counts are a bar-close sketch; MT5 is the judge", text_color = cDim, text_size = size.tiny)
         table.merge_cells(p, 0, 12, 1, 12)
+
+// TRADE JOURNAL ────────────────────────────────────────────────────────────
+if barstate.islast and iJPage > 0
+    var table jt = table.new(position.middle_center, 1, 42, bgcolor = color.new(color.black, 5), border_width = 0)
+    n = array.size(jRows)
+    first = (iJPage - 1) * 40
+    table.cell(jt, 0, 0, "TRADE JOURNAL page " + str.tostring(iJPage) + " of " + str.tostring(math.ceil(n / 40.0)) + "  (" + str.tostring(n) + " closed trades)",
+         text_color = color.yellow, text_size = size.tiny, text_halign = text.align_left)
+    for r = 0 to 39
+        i = first + r
+        table.cell(jt, 0, r + 1, i < n ? array.get(jRows, i) : "", text_color = color.white, text_size = size.tiny, text_halign = text.align_left)
