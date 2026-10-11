@@ -636,6 +636,37 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.04 — Zee's LONG exit: touch the 50 EMA → trail $3 + TP at the last resistance (2026-10-12)
+
+`mt5/RULES_EMA_SAAD.md` (Zee): *"In case of TP touched 50 EMA -> 1. Activate Trailing SL at 3 USD
+less than current price of the market 2. Set TP to next liquidity (last resistance)"*.
+
+`InpLongTouch 1` (default) · `InpLongTrailUsd 3.0` · `InpLongResTp true`. When the bid touches
+the long's exit EMA (the 50 EMA, or the 9 EMA for the inverse rule), three things happen:
+- the stop goes to bid − $3
+- the TP is set at the last swing high at least 5 pips above
+- the stop then follows the market $3 behind, tick by tick, in steps of at least $0.10, and never
+  moves back
+
+These longs skip the ATR trail. Shorts and no-TP longs are unchanged.
+
+Court (Axi M15, Jan 1–Oct 8, **1 lot**, no delay):
+
+| arm | net | WR | PF | max DD | worst day |
+|---|---|---|---|---|---|
+| v1.03 default (old long exit) | +$126,863 | 38.1% | 1.34 | $26,625 (21.2%) | −$5,104 |
+| **v1.04 default (touch → $3 trail + resistance TP)** | **+$135,759** | 41.5% | 1.36 | **$22,980 (16.6%)** | −$5,859 |
+| v1.04, trail $2 / $5 / $8 | +$137,210 / +$124,202 / +$127,448 | — | 1.36 / 1.33 / 1.34 | 16.3 / 18.2 / 18.3% | — |
+| v1.04 without the resistance TP | +$135,800 | 41.5% | 1.36 | 16.6% | — |
+| v1.04 + `InpNoNewMins 0` | **+$147,253** | 41.2% | **1.39** | $22,753 (16.3%) | −$5,859 |
+
+**Readings:**
+- **Zee's long exit beats the old one:** +$8.9k, and the drawdown falls from 21.2% to 16.6%.
+- **$2 and $3 trails are equal** within noise; $5 or more is worse.
+- **The resistance TP almost never fires** before the $3 trail closes the trade (same result
+  with or without it). It is kept because the rule asks for it.
+- The 30-minute no-new-trades rule still costs about $11k at 1 lot.
+
 ## Saad_strategy_15min v1.02–v1.03 — CTC at 75% of the TP, day-close rules, clearer labels (2026-10-12)
 
 Zee: *"if 75% of TP has been reached, then CTC breakeven the trade moving the SL to Entry price.
