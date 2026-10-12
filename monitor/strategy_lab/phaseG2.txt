@@ -1,0 +1,7 @@
+InpLots=1
+InpLots=1,InpMinRangeAtr=0.55
+InpLots=1,InpMaruBody=0.53
+InpLots=1,InpChopEr=0.11
+InpLots=1,InpMinRangeAtr=0.55,InpMaruBody=0.53
+InpLots=1,InpMinRangeAtr=0.55,InpChopEr=0.11
+InpLots=1,InpMinRangeAtr=0.55,InpMaruBody=0.53,InpChopEr=0.11

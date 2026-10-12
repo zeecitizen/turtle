@@ -1,5 +1,5 @@
 //+------------------------------------------------------------------+
-//| EA_100USD.mq5 - Saad_strategy_15min v1.13 for a $100 account      
+//| EA_100USD.mq5 - Saad_strategy_15min v1.14 for a $100 account      
 //| XAUUSD M15, fixed 0.01 lot (the smallest trade Axi allows).        
 //|                                                                    
 //| VERDICT: HIGH RISK - wiped out in 2 of 9 test months
@@ -50,7 +50,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.13"
+#property version   "1.14"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -67,12 +67,12 @@ input bool   InpPinDir      = false;  // InpPinDir — pin must point the trade 
 input bool   InpPinColor    = false;  // InpPinColor — pin body must close the trade way too: LONG green, SHORT red (with InpPinDir)
 input bool   InpUsePin      = true;   // InpUsePin — accept pin bars
 input bool   InpMarubozu    = true;   // InpMarubozu — accept a marubozu
-input double InpMaruBody    = 0.50;   // InpMaruBody — marubozu: body >= this x range [v1.09: 0.70->0.50, Zee; 0.35-0.55 plateau]
+input double InpMaruBody    = 0.53;   // InpMaruBody — marubozu: body >= this x range [v1.09: 0.70->0.50, Zee; 0.35-0.55 plateau] [v1.14: 0.50->0.53]
 input bool   InpHammer      = true;   // InpHammer — accept hammers (LONG)
 input bool   InpStar        = true;   // InpStar — accept shooting stars (SHORT)
 input double InpHamRatio    = 2.5;    // InpHamRatio — hammer: long wick >= this x body [v1.13: 3->2.5]
 input double InpHamNose     = 0.50;   // InpHamNose — hammer: opposite wick <= this x range
-input double InpMinRangeAtr = 0.50;   // InpMinRangeAtr — candle range >= this x ATR(14) (0 = off)
+input double InpMinRangeAtr = 0.55;   // InpMinRangeAtr — candle range >= this x ATR(14) (0 = off) [v1.14: 0.50->0.55]
 
 //--- ① on the EMA
 input int    InpLongRule    = 2;      // InpLongRule — 0 on 9 EMA exit 50 (rules) · 1 on 50 exit 9 (inverse) · 2 both
@@ -124,7 +124,7 @@ input int    InpRideLock    = 0;      // InpRideLock — when the TP is reached 
 input double InpLockPips    = 0;      // InpLockPips — lock this many pips short of the TP [v4.02: 2->0]
 
 //--- ✖ filters
-input double InpChopEr      = 0.10;   // InpChopEr — skip if the efficiency ratio is below this (0 = off)
+input double InpChopEr      = 0.11;   // InpChopEr — skip if the efficiency ratio is below this (0 = off) [v1.14: 0.10->0.11]
 input int    InpChopErLook  = 16;     // InpChopErLook — efficiency ratio length
 input int    InpSessFrom    = 0;      // InpSessFrom — broker hour, inclusive (Axi UTC+3; 0/24 = all day)
 input int    InpSessTo      = 24;     // InpSessTo — broker hour, exclusive
@@ -223,7 +223,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[EA_100USD] v1.13 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[EA_100USD] v1.14 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
