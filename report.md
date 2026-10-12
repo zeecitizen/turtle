@@ -289,4 +289,18 @@ tested. 1 lot, $25,000, Jan 6 – Oct 8, real ticks.
 
 The question is whether it raises the win rate (v1.14: 47.8%, +$206,705).
 
-*Results pending — queued behind the FVG batch.*
+| Rule | Trades | Win rate | Net | PF | Biggest loss | Worst day | Max DD | Losing months |
+|---|---|---|---|---|---|---|---|---|
+| **No filter (v1.14)** | 867 | **47.8%** | **+$206,705** | **1.62** | −$2,570 | **−$3,966** | **$13,271** | **0** |
+| **Buy above / sell below the 200 EMA** | 611 | 43.7% | +$53,271 | 1.21 | −$1,496 | −$5,313 | $19,226 | 3 |
+| Same with the 100 EMA | 634 | 43.5% | +$64,740 | 1.25 | −$1,504 | −$5,313 | $19,616 | 6 |
+| Same with the 150 EMA | 622 | 44.5% | +$67,777 | 1.27 | −$1,496 | −$5,313 | $13,190 | 4 |
+| Same with the 300 EMA | 593 | 43.5% | +$65,645 | 1.26 | −$2,570 | −$5,313 | $21,235 | 3 |
+
+**Verdict: no, it doesn't raise the win rate. It lowers it (47.8% → 43.7%)**, cuts profit by about
+three quarters, and makes the worst day and the drawdown *worse*.
+
+This strategy earns a lot of its money on the **first trades of a new trend**: buying the dip at the
+EMA while price is still below the 200 EMA as a downtrend turns up (and the mirror image for sells).
+The 200 EMA rule blocks exactly those trades and keeps the later ones, after the move has matured.
+The earlier 1-hour / 4-hour trend filter failed for the same reason (section 2).
