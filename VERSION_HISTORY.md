@@ -643,20 +643,22 @@ least one trade an hour. Each tier file is `Saad_strategy_15min` v1.13 at a **fi
 (Axi's minimum), magic 88310–88314, with its survival numbers in the header. Compiled into the
 Axi terminal.
 
-**Survival court:** XAUUSD_TK real ticks, 1:1000, 200 ms delay; one-month runs started at each
-month Jan–Sep (9 starts per tier).
+**Survival court:** XAUUSD_TK real ticks, 200 ms delay; one-month runs started at each month
+Jan–Sep (9 starts per tier).
 
-| tier | losing months | lost >50% | worst month end | median month end |
-|---|---|---|---|---|
-| $20 | 8/9 | 8/9 | $1.81 | $5.89 |
-| $40 | 6/9 | 6/9 | −$1.57 | $11.20 |
-| $80 | 2/9 | 2/9 | $3.47 | $263 |
-| $100 | 2/9 | 2/9 | $1.53 | $283 |
-| **$200** | **1/9** | **0/9** | **$136** | **$383** |
+The first pass silently ran at 1:400, because axi_rig ignored `--leverage` (since fixed).
+Re-run at a confirmed **1:1000**:
 
-Risk-% sizing (2%, with a min-lot guard) gives the same, because it falls back to 0.01 at these
-balances. Compounding at 5–10% risk reached $17k–126k on one 9-month path, but with a 46–69%
-drawdown and worst days of up to −$19k. That is gambling, and it is not shipped.
+| tier | months losing more than half | worst month end | median month end |
+|---|---|---|---|
+| $20 | 6/9 | −$2.41 | $3.82 |
+| $40 | 5/9 | −$2.63 | $0.93 |
+| $80 | 2/9 | −$5.44 | $263 |
+| $100 | 2/9 | −$3.70 | $283 |
+| **$200** | **0/9 (1 losing month)** | **$136** | **$383** |
+
+PXBT XAUUSDp also has a 0.01 minimum lot (contract 100, spread ~17 pts), so the maths is the
+same there.
 
 **Why the small tiers fail:** one stop at 0.01 lot costs $8–15. Leverage only changes margin.
 Tighter stops, which would make small accounts viable, all lost money on real ticks.

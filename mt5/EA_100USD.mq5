@@ -8,7 +8,7 @@
 //| one-month runs started at each month Jan-Sep 2026 (9 starts):      
 //|   months ending in a loss      : 2 of 9
 //|   months losing more than half : 2 of 9
-//|   worst month-end balance      : $1.53 (wiped)
+//|   worst month-end balance      : -$3.70 (wiped)
 //|   typical (median) month end   : $283
 //| One loss at 0.01 lot costs $8-15 (stop = candle + 35 pips, cap $15).
 //| Leverage only lowers the margin; it does NOT make a loss smaller.  

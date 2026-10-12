@@ -13,4 +13,4 @@ for dep in deps:
     for frm, to in months:
         subprocess.run([P, str(HERE / "saad_v4.py"), "--rig", rig, "--nocompile", "--ea", "Saad_strategy_15min",
                         "--exec", "200", "--period", "M15", "--symbol", "XAUUSD_TK", "--from", frm, "--to", to,
-                        "--deposit", dep, "--leverage", "1:1000", "--out", "zee_tiers_monthly.jsonl"] + arms)
+                        "--deposit", dep, "--leverage", "1:1000", "--out", "zee_tiers_monthly_1000.jsonl"] + arms)

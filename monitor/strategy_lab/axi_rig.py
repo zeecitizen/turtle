@@ -63,7 +63,7 @@ def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=250
     ti = "".join(f"{k}={v}||{v}||0||{v}||N\r\n" for k, v in inputs.items())
     ini = (f"[Tester]\r\nExpert={ea}\r\nSymbol={symbol}\r\nPeriod={period}\r\nModel={model}\r\n"
            f"FromDate={frm}\r\nToDate={to}\r\nDeposit={deposit}\r\nCurrency=USD\r\n"
-           f"Leverage=1:400\r\nExecutionMode={exec_mode}\r\nOptimization=0\r\n"
+           f"Leverage={leverage}\r\nExecutionMode={exec_mode}\r\nOptimization=0\r\n"
            f"Report=reports\\{tag}\r\nReplaceReport=1\r\nShutdownTerminal=1\r\nVisual=0\r\n"
            f"[TesterInputs]\r\n{ti}")
     (RIG / "reports").mkdir(exist_ok=True)
