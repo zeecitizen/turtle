@@ -1,0 +1,10 @@
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=64
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=96
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=48,InpChopEr=0.15
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=48,InpChopEr=0.08
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=48,InpMinRangeAtr=1.0
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=48,InpEmaFast=27,InpEmaSlow=150
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=64,InpEmaFast=27,InpEmaSlow=150
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=48,InpMinRangeAtr=0.8
+InpLots=1,InpMaxRiskUsd=12,InpSlPips=25,InpChopErLook=48
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=48,InpBreakBars=2

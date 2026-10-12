@@ -372,3 +372,28 @@ This strategy earns a lot of its money on the **first trades of a new trend**: b
 EMA while price is still below the 200 EMA as a downtrend turns up (and the mirror image for sells).
 The 200 EMA rule blocks exactly those trades and keeps the later ones, after the move has matured.
 The earlier 1-hour / 4-hour trend filter failed for the same reason (section 2).
+
+---
+
+## 11. 5-minute variant: `Saad_strategy_5min` (13 Oct)
+
+**What it is:** the 15-minute EA v1.17, including the half-at-TP1 + breakeven rule, rescaled for
+5-minute candles:
+- risk cap $9
+- stop 20 pips beyond the candle
+- choppy-filter window 48 candles (the same 4 hours as 16 on M15)
+
+It has its own magic number (88320), so it can run beside the 15-minute EA.
+
+**Testing:** 30 variants, 1 lot, real Axi ticks. Tuned on Jan–Jun, checked on Jul–Oct.
+
+| Version | Jan–Jun | Jul–Oct (unseen) |
+|---|---|---|
+| v1.17 settings unchanged, on M5 | −$32,853 | −$20,853 |
+| Rescaled (risk $9, stop 20 pips) | −$41,448 | +$2,569 |
+| **Best on Jan–Jun: + 48-candle choppy window (the EA's defaults)** | **+$16,243** (PF 1.06) | **−$27,816** |
+| Other 27 variants | −$60k to +$16k | — |
+
+**Verdict: not profitable. Demo only.** On 5-minute candles each trade is small, and Axi's spread
+plus $4/lot commission eat the edge. Results flip between periods, which is noise, not an edge. The
+15-minute EA (v1.17) remains the one to trade.
