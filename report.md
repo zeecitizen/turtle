@@ -483,3 +483,48 @@ biggest loss −$2,570 · worst day −$3,806.
 
 **Not used:** the pasted "Python slippage model" step. Only MT5's tester can promote a change
 (CLAUDE.md). All these runs already include a 200 ms delay.
+
+## 13. Meta-labeling (XGBoost "second opinion" on each trade) — built and tested (13 Oct)
+
+**What:** your two Meta-Labeling PDFs, implemented in `meta_labeling_system/` (see its README) and
+`mt5/Saad_meta.mq5`. Before each entry, the EA computes 15 market features. An XGBoost model then
+estimates the chance the trade ends in profit, and the trade is skipped if that chance is below a
+threshold.
+
+**Changes from the PDFs:**
+- The model is **compiled into the EA** (`mt5/SaadMetaModel.mqh`), so MT5's tester can judge it.
+  The tester can't call a web server.
+- The PDF's FastAPI server + WebRequest gate is also built (`InpMetaMode=2`, `run_server.bat`), for
+  live use.
+- No mock data.
+- Label = the trade's real final net, counting the 50% partial, runner and $4/lot.
+
+**How it was tested (walk-forward):**
+1. The EA logged all 867 trades of Jan 6 – Oct 8 from an unfiltered run (its total equals v1.17's
+   +$202,221.80 to the cent).
+2. The model trained on **Jan–Jun only** (502 trades).
+3. MT5 then ran the gated EA on **Jul 1 – Oct 8, which the model never saw**.
+
+The EA's in-tester probabilities match Python's to 1e-7 on all 469 entries.
+
+| Jul 1 – Oct 8, 1 lot, real ticks | Net | Trades | Win rate | Worst day |
+|---|---|---|---|---|
+| **No filter (v1.17)** | **+$67,681** | 365 | 60% | −$3,806 |
+| model ≥ 0.40 | +$33,169 | 334 | 64% | −$5,092 |
+| model ≥ 0.45 | −$1,723 | 300 | 63% | −$4,415 |
+| model ≥ 0.50 | −$25,502 | 196 | 63% | −$4,415 |
+| model ≥ 0.55 | −$13,996 | 189 | 67% | −$3,578 |
+| model ≥ 0.60 | −$4,151 | 128 | 68% | −$3,324 |
+| model ≥ 0.65 | −$2,090 | 72 | **70%** | −$1,660 |
+
+(Trades = positions. The win rate is MT5's, counted per deal.)
+
+**Verdict: REJECTED.**
+- **The win rate does go up, from 60% to 70%, but profit collapses.** The model learns to skip the
+  trades that look risky, and those include the rare big winners that pay for everything (the
+  largest single win was +$19k).
+- **Even inside the training months, every threshold made less than taking every trade.**
+- Same lesson as §12: on this strategy, filtering for win rate costs money.
+
+`Saad_strategy_15min` v1.17 is untouched. The meta-labeling system stays in the repo, ready to
+retrain on more data later: `py meta_labeling_system\src\train_metalabel.py`.
