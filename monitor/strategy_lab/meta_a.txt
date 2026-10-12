@@ -1,0 +1,3 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMetaMode=1,InpMetaThr=0.40,InpMetaLog=true,InpMetaTag=2
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMetaMode=1,InpMetaThr=0.50
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMetaMode=1,InpMetaThr=0.60
