@@ -1,0 +1,9 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpLongTrailUsd=3,InpShortTrailUsd=3
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpLongTrailUsd=4,InpShortTrailUsd=4
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpLongTrailUsd=5,InpShortTrailUsd=5
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpLongTrailUsd=7,InpShortTrailUsd=7
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpTrailStepUsd=1
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpLongTouch=0,InpShortTouch=0
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpBuys=false
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpSells=false

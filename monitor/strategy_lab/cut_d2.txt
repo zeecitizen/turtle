@@ -1,0 +1,1 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpFlatMode=2
