@@ -1,0 +1,16 @@
+InpLots=1,InpMinRangeAtr=0.6
+InpLots=1,InpMinRangeAtr=0.65
+InpLots=1,InpMaruBody=0.55
+InpLots=1,InpMaruBody=0.51
+InpLots=1,InpChopEr=0.12
+InpLots=1,InpChopEr=0.13
+InpLots=1,InpSlPips=40
+InpLots=1,InpSlPips=32
+InpLots=1,InpWickMin=0.5
+InpLots=1,InpHamRatio=3
+InpLots=1,InpMaxRiskUsd=17
+InpLots=1,InpMaxRiskUsd=13
+InpLots=1,InpBreakPips=1.5
+InpLots=1,InpBreakPips=2.5
+InpLots=1,InpBeTpPct=0.72
+InpLots=1,InpBeTpPct=0.78

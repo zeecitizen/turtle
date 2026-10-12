@@ -34,7 +34,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.14"
+#property version   "1.15"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -113,6 +113,8 @@ input int    InpChopErLook  = 16;     // InpChopErLook — efficiency ratio leng
 input int    InpSessFrom    = 0;      // InpSessFrom — broker hour, inclusive (Axi UTC+3; 0/24 = all day)
 input int    InpSessTo      = 24;     // InpSessTo — broker hour, exclusive
 input bool   InpGapCancel   = true;   // InpGapCancel — cancel a waiting setup across the daily close / weekend
+input int    InpHtfMin      = 0;      // InpHtfMin — higher-timeframe trend filter: 0 off · 15 / 30 / 60 / 240 minutes (trade only with that timeframe's trend)
+input int    InpHtfEma      = 50;     // InpHtfEma — the HTF trend EMA (LONG: HTF close above it and it is rising; SHORT the opposite)
 input bool   InpTrendAlign  = false;  // InpTrendAlign — LONG only if EMA9 > EMA50, SHORT only if EMA9 < EMA50
 input bool   InpPriceSide   = false;  // InpPriceSide — LONG only if the close is above the 50 EMA, SHORT below
 input double InpSlopePips   = 0;      // InpSlopePips — the 50 EMA must move this many pips the trade's way...
@@ -166,7 +168,8 @@ input bool   InpLogCsv      = true;   // InpLogCsv — one CSV row per closed tr
 input bool   InpDrawSkips   = false;   // InpDrawSkips — also label setups that were skipped (no break, risk, no support, choppy)
 
 CTrade   trade;
-int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE;
+int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE;
+ENUM_TIMEFRAMES g_htf = PERIOD_CURRENT;
 datetime g_lastBar = 0;
 
 // the setup waiting for its break
@@ -204,10 +207,15 @@ int OnInit()
    hFast = iMA(_Symbol, PERIOD_CURRENT, InpEmaFast, 0, MODE_EMA, PRICE_CLOSE);
    hSlow = iMA(_Symbol, PERIOD_CURRENT, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
+   if (InpHtfMin > 0) {
+      g_htf = InpHtfMin == 15 ? PERIOD_M15 : InpHtfMin == 30 ? PERIOD_M30 : InpHtfMin == 60 ? PERIOD_H1 : InpHtfMin == 240 ? PERIOD_H4 : PERIOD_M15;
+      hHtf = iMA(_Symbol, g_htf, InpHtfEma, 0, MODE_EMA, PRICE_CLOSE);
+      if (hHtf == INVALID_HANDLE) return INIT_FAILED;
+   }
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-15min] v1.14 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.15 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -973,6 +981,12 @@ void DetectSetup()
    }
    int side = longOk ? 1 : -1;
 
+   if (hHtf != INVALID_HANDLE) {
+      // the last CLOSED higher-timeframe candle: price on the trade's side of its EMA, and the EMA moving that way
+      double hc = iClose(_Symbol, g_htf, 1), he1 = Buf(hHtf, 1), he2 = Buf(hHtf, 2);
+      bool ok = side > 0 ? (hc > he1 && he1 > he2) : (hc < he1 && he1 < he2);
+      if (he1 <= 0 || he2 <= 0 || !ok) { g_filtered++; return; }
+   }
    if ((InpTrendAlign && (side > 0 ? e9 <= e50 : e9 >= e50)) ||
        (InpPriceSide && (side > 0 ? c <= e50 : c >= e50)) ||
        (InpSlopePips > 0 && (Buf(hSlow, 1) - Buf(hSlow, 1 + InpSlopeLook)) * side < InpSlopePips * Pip()) ||

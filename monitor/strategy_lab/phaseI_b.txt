@@ -1,0 +1,16 @@
+InpLots=1
+InpLots=1,InpChopErLook=15
+InpLots=1,InpChopErLook=17
+InpLots=1,InpSwingPivot=3
+InpLots=1,InpSwingLook=150
+InpLots=1,InpMinTpPips=4
+InpLots=1,InpMinTpPips=6
+InpLots=1,InpNoseMax=0.25
+InpLots=1,InpHamNose=0.45
+InpLots=1,InpHamNose=0.55
+InpLots=1,InpTrailAtr=2.5
+InpLots=1,InpLongTrailUsd=2,InpShortTrailUsd=1.5
+InpLots=1,InpLongTrailUsd=1.5,InpShortTrailUsd=2
+InpLots=1,InpEmaSlow=52
+InpLots=1,InpEmaSlow=48
+InpLots=1,InpEmaFast=9

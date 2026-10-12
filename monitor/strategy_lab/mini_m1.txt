@@ -1,0 +1,6 @@
+InpLots=1,InpHtfMin=15
+InpLots=1,InpHtfMin=60
+InpLots=1,InpHtfMin=60,InpMaxRiskUsd=5
+InpLots=1,InpHtfMin=60,InpSlPips=15,InpMaxRiskUsd=6
+InpLots=1,InpHtfMin=15,InpMaxRiskUsd=6,InpSlPips=15
+InpLots=1,InpHtfMin=60,InpSessFrom=8,InpSessTo=20
