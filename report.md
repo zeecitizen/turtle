@@ -196,3 +196,27 @@ The results and full receipts are in `VERSION_HISTORY.md`. The raw data is in
 - [LuxAlgo: breakout-pullback](https://www.luxalgo.com/library/concept/breakout-pullback-continuation/)
 - [LuxAlgo: Turtle Soup](https://www.luxalgo.com/library/concept/turtle-soup/)
 - [Oxford Strat: Turtle Soup](https://oxfordstrat.com/?p=5614)
+
+---
+
+## 8. Take 50% profit at TP1 and move the rest to breakeven (Zee's rule, 12 Oct)
+
+**The setting:** when the first target (TP1) is reached:
+- close **half** the position (0.5 of 1 lot), with `InpPartialPct = 0.5`
+- move the stop on the remaining half to **breakeven**, the entry price, with `InpTp1Be = true`
+
+The rest then trails behind the price ($2 by default) and can never turn into a loss.
+
+It is built into the test EA `Saad_guard` and is tested at **1 lot on a $25,000 balance**, Jan 6 –
+Oct 8, real ticks, 200 ms delay.
+
+| Version | Net | Win rate | PF | Biggest loss | Worst day | Max DD |
+|---|---|---|---|---|---|---|
+| v1.14 (current) | ⏳ | | | | | |
+| 50% at TP1, no breakeven | ⏳ | | | | | |
+| **50% at TP1 + breakeven (Zee's rule)** | ⏳ | | | | | |
+| Breakeven at TP1 only | ⏳ | | | | | |
+| 50% + breakeven + $3 trail on the rest | ⏳ | | | | | |
+| 50% + breakeven + $5 trail on the rest | ⏳ | | | | | |
+
+*Results are being filled in as the tests finish.*

@@ -151,8 +151,10 @@ input double InpSweepSlPips = 10;     // InpSweepSlPips — mode 2: stop this ma
 input int    InpSlMode      = 0;      // InpSlMode — 0 InpSlPips beyond the setup candle · 1 InpSlAtrMult x ATR from the entry · 2 InpSlUsd from the entry
 input double InpSlAtrMult   = 1.0;    // InpSlAtrMult — stop mode 1
 input double InpSlUsd       = 5.0;    // InpSlUsd — stop mode 2, $ of price
+input bool   InpTp1Be       = false;  // InpTp1Be — at TP1 the rest of the position's stop is never worse than the entry (breakeven)
 input double InpPartialPct  = 0;      // InpPartialPct — close this share of the position at TP1 (0 = off)
 input double InpRiskPct     = 0;      // InpRiskPct — size each trade to risk this % of equity (0 = fixed InpLots)
+input double InpRiskUsd     = 0;      // InpRiskUsd — size each trade to lose this fixed $ at its stop (0 = off; capped by InpMaxLots)
 input double InpMinLotRiskPct = 0;    // InpMinLotRiskPct — with InpRiskPct: skip a trade when even the minimum lot would risk more than this % of equity (0 = take it at the minimum lot)
 input double InpMaxLots     = 50;     // InpMaxLots — upper limit for InpRiskPct sizing
 input int    InpModBackoffSec = 3;   // InpModBackoffSec — after the broker refuses a stop change, wait this many seconds before trying again (60 s when the market is closed)
@@ -567,6 +569,7 @@ void LongTouched(int i, double bid)
    if (!PositionSelectByTicket(g_pos[i].ticket)) return;
    double cur = PositionGetDouble(POSITION_SL);
    double sl = NormalizeDouble(MathMax(cur, bid - InpLongTrailUsd), _Digits);
+   if (InpTp1Be && g_pos[i].entry < bid) sl = NormalizeDouble(MathMax(sl, g_pos[i].entry), _Digits);
    double res = InpLongResTp ? LastResistance(bid + InpMinTpPips * Pip()) : 0;
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
    if (sl >= bid - lvl) sl = cur;
@@ -591,6 +594,7 @@ void ShortTouched(int i, double bid)
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double cur = PositionGetDouble(POSITION_SL);
    double sl = NormalizeDouble(cur > 0 ? MathMin(cur, ask + InpShortTrailUsd) : ask + InpShortTrailUsd, _Digits);
+   if (InpTp1Be && g_pos[i].entry > ask) sl = NormalizeDouble(MathMin(sl, g_pos[i].entry), _Digits);
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
    if (sl <= ask + lvl) sl = cur;
    if (sl != cur && ModifySl(g_pos[i].ticket, sl)) SlMoved(i, sl, "");
@@ -816,14 +820,14 @@ double StopFor(int side, double en, double hi, double lo)
 // lots for this trade: fixed, or InpRiskPct of equity (0 = skip)
 double LotsFor(int side, double en, double sl)
 {
-   if (InpRiskPct <= 0) return InpLots;
+   if (InpRiskPct <= 0 && InpRiskUsd <= 0) return InpLots;
    double eq = AccountInfoDouble(ACCOUNT_EQUITY);
    double tv = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE), ts = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
    double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP), mn = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
    if (tv <= 0 || ts <= 0 || step <= 0) return InpLots;
    double perLot = MathAbs(en - sl) / ts * tv;                  // $ lost per 1 lot at the stop
    if (perLot <= 0) return 0;
-   double lots = MathFloor(eq * InpRiskPct / 100.0 / perLot / step) * step;
+   double lots = MathFloor((InpRiskUsd > 0 ? InpRiskUsd : eq * InpRiskPct / 100.0) / perLot / step) * step;
    if (lots < mn) {
       if (InpMinLotRiskPct > 0 && mn * perLot > eq * InpMinLotRiskPct / 100.0) { g_skipMinLot++; return 0; }
       lots = mn;
