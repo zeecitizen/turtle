@@ -51,6 +51,7 @@
 - [🛠️ Modify EA defaults, not the input dialog](feedback_modify_ea_defaults_not_inputs.md) — edit .mq5 defaults, bump version, ask Zee to F7+drag.
 - [🏆 Everything visible on claudezeeshan.com](feedback_everything_visible_on_apex.md) — silent shipping = failed delivery.
 - [🧘 Patience is the edge](feedback_patience_is_the_edge.md) — quiet windows are capital preservation.
+- [🧪 Axi gold tester data half-synthetic → use XAUUSD_TK](project-axi-real-tick-symbol.md) — since Oct 10-11 2026; real-tick custom symbol in the rigs; leverage/kill-pattern traps.
 - [⏱️ Quote random-delay MT5 results; tester keeps old inputs](feedback_quote_random_delay_and_tester_inputs.md) — no-delay +$207k was +$178k with delay; Zee's tester held InpMaruBody 0.7; rig ticks re-synced mid-session.
 - [🧪 MT5 tester, never a Python port of the EA](feedback_use_mt5_tester_not_python_port.md) — re-implementing EA logic in Python adds its own bugs and is not a backtest.
 - [⛔ LAWS.md is Zeeshan's — never edit](feedback_laws_md_is_zees.md) — read every session; his voice, his document; findings go elsewhere.
