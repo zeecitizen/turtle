@@ -1,0 +1,4 @@
+InpLots=1,InpSideEma=200
+InpLots=1,InpSideEma=100
+InpLots=1,InpSideEma=150
+InpLots=1,InpSideEma=300
