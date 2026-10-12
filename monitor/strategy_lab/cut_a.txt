@@ -1,0 +1,17 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMaxRiskUsd=3.5
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMaxRiskUsd=4
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMaxRiskUsd=5
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMaxRiskUsd=6
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMaxRiskUsd=8
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMaxRiskUsd=10
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpHardCutUsd=300
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpHardCutUsd=400
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpHardCutUsd=600
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpHardCutUsd=800
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpEmaExit=true
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMaxSpreadPts=25
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMaxSpreadPts=35
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpChopEr=0.14
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpChopEr=0.16
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpChopEr=0.18

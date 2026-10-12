@@ -1,0 +1,7 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpChopEr=0.20
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpChopEr=0.25
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpChopEr=0.30
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpChopEr=0.40
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpBodyMax=0.3
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpWickMin=0.6
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpBodyMax=0.3,InpWickMin=0.6

@@ -397,3 +397,89 @@ It has its own magic number (88320), so it can run beside the 15-minute EA.
 **Verdict: not profitable. Demo only.** On 5-minute candles each trade is small, and Axi's spread
 plus $4/lot commission eat the edge. Results flip between periods, which is noise, not an edge. The
 15-minute EA (v1.17) remains the one to trade.
+
+## 12. Cutting the losing trades — 50 tests of the pasted suggestions (13 Oct)
+
+**Why:** on 12 Oct, two winners made **+$365** and **+$114**, then two losers took **−$786** and
+**−$1,185**. Both losers were LONGs that never moved in our favour (best price after entry +$0.39
+and +$2.39).
+
+**Setup:**
+- v1.17 at 1 lot, $25k, Jan 6 – Oct 8, Axi real ticks (XAUUSD_TK + $4/lot), 200 ms delay
+- test copy `mt5/Saad_cut.mq5` (built by `monitor/strategy_lab/patch_cut.py`)
+- its baseline reproduces v1.17 to the cent (**+$202,221.80**)
+- raw results: `monitor/strategy_lab/zee_cut.jsonl`
+
+**Baseline:** +$202,222 · 867 trades · win rate 61.3% · PF 1.60 · average loss −$757 ·
+biggest loss −$2,570 · worst day −$3,806.
+
+### First list (stops, exits, filters)
+
+| Idea | Net | Win rate | Average loss | Worst day |
+|---|---|---|---|---|
+| Stop cap `InpMaxRiskUsd` 3.5 / 4 / 5 / 6 | **0 trades** | – | – | – |
+| Stop cap 8 / 10 | +$21k / +$40k | 56% / 53% | −$496 / −$655 | −$1.5k / −$2.9k |
+| Hard $ cut −$300 / −$400 / −$600 / −$800 | **−$13k** / +$5k / +$41k / +$88k | 34–54% | −$293 to −$638 | −$4.4k to −$5.8k |
+| Close after 4 / 6 / 8 / 12 candles (`InpMaxBars`) | +$77k / $105k / $119k / $134k | ~61% | −$656 to −$755 | −$4.4k to −$5.9k |
+| Close if still losing after 4 / 6 / 8 candles | +$151k / $155k / $166k | 56–59% | ~−$680 | −$5.6k |
+| Exit on a candle closing beyond the 9 EMA | +$96k | 54% | −$615 | −$4.7k |
+| Cooldown after a loss, 2 / 3 / 4 candles | +$166k / $161k / $166k | 60–61% | ~−$770 | −$4.9k |
+| Daily loss limit $600 / $800 / $1,500 | +$85k / $96k / $141k | 60% | ~−$790 | **−$2.6k / −$2.6k / −$2.8k** |
+| Spread filter 25 / 35 points | +$193k / **+$203k** | 61% | −$761 | −$4.6k / −$3.8k |
+| Choppy filter 0.14 / 0.16 / 0.18 | +$144k / $114k / $106k | 58–60% | ~−$770 | −$3.4k to −$4.7k |
+| H1 / H4 trend filter | +$64k / +$83k | 57–58% | ~−$780 | −$4.7k / −$4.9k |
+| 9 EMA above / below the 50 EMA (`InpTrendAlign`) | +$69k | 54% | −$752 | −$5.2k |
+| Close above / below the 50 EMA (`InpPriceSide`) | +$73k | 55% | −$752 | −$4.3k |
+| Full "recommended plan" (cap 4, 6 candles, cooldown 3, $600/day, align, H1) | **0 trades** | – | – | – |
+
+### Second list (runner trail, pin bars, longs vs shorts)
+
+| Idea | Net | Win rate | Worst day |
+|---|---|---|---|
+| Wider runner trail after TP1: $3 / $4 / $5 / $7 | +$199k / $194k / $191k / $197k | 57–61% | ~−$3.7k |
+| Widen the trail $1 at each later TP (`InpTrailStepUsd=1`) | +$201k | 61% | −$3.8k |
+| Old exit (ATR trail, `InpLongTouch=0, InpShortTouch=0`) | +$210k | **40%** | −$4.8k |
+| Choppy filter 0.20 / 0.25 / 0.30 / 0.40 | +$84k / +$8k / +$8k / **−$10k** | 54–57% | |
+| Pin bar body ≤ 0.3 / wick ≥ 0.6 / both | +$150k / $160k / $147k | 60% | −$3.4k to −$3.5k |
+| Shorts only | +$102k | **65%** | −$3.9k |
+| Longs only | +$53k | 52% | −$4.7k |
+
+### Weekend gap
+
+| Idea | Net | Biggest loss | Worst day |
+|---|---|---|---|
+| Close every trade, winners included, 3 min before every day's close | +$155k | −$1,565 | −$5.9k |
+| **Close every trade 3 min before the FRIDAY close only** | **+$178.5k** | **−$1,565** | −$3.8k |
+
+### What we learned
+
+1. **The stop can't be shrunk.** It sits 35 pips beyond the setup candle, and gold's M15 candles are
+   big. All 4,567 setups had a stop more than $6 away; yesterday's four trades were $9–13 away,
+   winners included. A $3.5–6 cap means **no trades at all**.
+2. **Cutting losers early cuts winners too.** The hard $ cut, time exits, fail-bars and the 9 EMA
+   exit all made the average loss smaller. But they also closed trades that would have come back,
+   so profit fell by $36k to $215k and the worst day got *worse*. The strategy needs room to
+   breathe.
+3. **No filter raised the win rate.** Every entry filter (trend, EMA alignment, price side,
+   choppy, H1/H4, stricter pins) lowered it or kept it the same, and all cost profit.
+4. **The quick runner exit isn't a bug.** 80% of runners close within 3 minutes of the 50%
+   partial, on the $2 trail. They still made **+$161k in total (+$568 each)**. A wider trail made
+   slightly less.
+5. **The biggest loss of the year (−$2,612) was a weekend gap.** A short already at breakeven on
+   Friday 24 Jul gapped $26 against us at Monday's open. The **Friday-close rule removes it**:
+   biggest loss −$2,570 → −$1,565. It costs about $24k a year, because weekend gaps sometimes pay us
+   too.
+6. **The only real "bad day cap" is the daily loss limit.** At $1,500 it caps the worst day near
+   −$2.8k for −$61k of profit.
+
+### Options for Zee (none shipped yet — your choice)
+
+| Option | What it buys | What it costs (Jan–Oct) |
+|---|---|---|
+| Keep v1.17 as is | most profit, +$202k | worst day −$3.8k, a rare weekend gap −$2.6k |
+| + Friday flat (needs a new version) | no weekend gap, biggest loss −$1,565 | −$24k |
+| + `InpDayLossUsd=1500` (an input, no new version) | worst day about −$2.8k | −$61k |
+| + `InpMaxSpreadPts=35` (an input) | blocks news-spike entries | none measured |
+
+**Not used:** the pasted "Python slippage model" step. Only MT5's tester can promote a change
+(CLAUDE.md). All these runs already include a 200 ms delay.
