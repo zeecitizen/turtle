@@ -1,5 +1,5 @@
 import json, collections
-rows=[json.loads(l) for l in open('zee_tiers_monthly.jsonl')]
+rows=[json.loads(l) for l in open(__import__('sys').argv[1] if len(__import__('sys').argv)>1 else 'zee_tiers_monthly.jsonl')]
 g=collections.defaultdict(list)
 for r in rows:
     g[(int(r['deposit']), r['arm'])].append(r)
