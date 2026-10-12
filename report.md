@@ -283,6 +283,28 @@ before TP1. To shrink those, the trade itself must be smaller:
 - size by risk (`InpRiskUsd`, section 2)
 - or cut trades whose first target is too close to the risk (minimum reward:risk)
 
+### Confirmation backtests on Axi (1 lot, $25,000 start)
+
+| Test | Data | Net | Trades (deals) | Win rate | PF | Biggest loss | Worst day | Green days | Max DD | Losing months |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **Zee's rule**, random delay, run 1 | Axi real ticks, Jan 6–Oct 8 | **+$201,922** | 1,164 | 59.5% | 1.60 | −$2,556 | −$4,186 | 103 / 185 | $12,488 | 0 |
+| **Zee's rule**, random delay, run 2 | Axi real ticks, Jan 6–Oct 8 | **+$207,971** | 1,164 | 59.9% | 1.62 | −$2,576 | −$3,967 | 107 / 185 | $12,736 | 0 |
+| **Zee's rule**, 200 ms delay | XAUUSD.pro, Jan 1–Oct 11 | +$208,441 | 1,199 | 61.4% | 1.59 | −$2,546 | −$3,764 | 108 / 190 | $14,238 | 0 |
+| v1.14 (no half close), 200 ms | XAUUSD.pro, Jan 1–Oct 11 | +$219,046 | 894 | 48.2% | 1.62 | −$2,546 | −$3,924 | 107 / 190 | $13,703 | 0 |
+
+**Notes:**
+- **Two data sets.** XAUUSD.pro is what you trade and test on. Its history currently contains
+  invented ticks for about half the minutes (section 3.1), so its numbers run a little higher. The
+  real-tick rows are the honest ones.
+- **Win rate counts deals.** "Trades" are deals: each half close counts as its own deal. That is why
+  the win rate shows about 60% for Zee's rule.
+- **Same story on both data sets.** Zee's rule gives up about 2–5% of the profit, nudges the worst
+  day down slightly, and leaves the biggest single loss unchanged.
+
+**The MT5 reports, to open yourself:**
+- `testing/ZeeRule_50pct_TP1_BE_realticks_1lot.htm`
+- `testing/ZeeRule_50pct_TP1_BE_XAUUSDpro_1lot.htm`
+
 **If you want it anyway:** set `InpPartialPct = 0.5` and `InpTp1Be = true`. Both are in the test EA
 `Saad_guard` now and can be added to the main EA on request.
 
