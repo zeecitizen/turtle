@@ -4,12 +4,12 @@
 //|                                                                    
 //| VERDICT: NOT VIABLE - most months end near $0
 //|                                                                    
-//| MT5 Strategy Tester, Axi real ticks (XAUUSD_TK), 1:1000 leverage,  
+//| MT5 Strategy Tester (v1.14), Axi real ticks (XAUUSD_TK), 1:1000 leverage,
 //| one-month runs started at each month Jan-Sep 2026 (9 starts):      
 //|   months ending in a loss      : 6 of 9
 //|   months losing more than half : 6 of 9
-//|   worst month-end balance      : -$2.41 (wiped)
-//|   typical (median) month end   : $3.82
+//|   worst month-end balance      : $0.24 (wiped)
+//|   typical (median) month end   : $2.13
 //| One loss at 0.01 lot costs $8-15 (stop = candle + 35 pips, cap $15).
 //| Leverage only lowers the margin; it does NOT make a loss smaller.  
 //| Use money you can afford to lose completely. Test on demo first.   
