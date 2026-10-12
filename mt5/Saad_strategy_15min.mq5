@@ -34,7 +34,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.11"
+#property version   "1.13"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -44,7 +44,7 @@ input int    InpEmaFast     = 9;      // InpEmaFast
 input int    InpEmaSlow     = 50;     // InpEmaSlow
 
 //--- ① setup candle
-input double InpWickMin     = 0.35;   // InpWickMin — pin: long wick >= this x range
+input double InpWickMin     = 0.45;   // InpWickMin — pin: long wick >= this x range [v1.13: 0.35->0.45]
 input double InpBodyMax     = 0.60;   // InpBodyMax — pin: body <= this x range
 input double InpNoseMax     = 0.20;   // InpNoseMax — pin: short wick <= this x range
 input bool   InpPinDir      = false;  // InpPinDir — pin must point the trade way (false = any pin, the EMA decides)
@@ -54,7 +54,7 @@ input bool   InpMarubozu    = true;   // InpMarubozu — accept a marubozu
 input double InpMaruBody    = 0.50;   // InpMaruBody — marubozu: body >= this x range [v1.09: 0.70->0.50, Zee; 0.35-0.55 plateau]
 input bool   InpHammer      = true;   // InpHammer — accept hammers (LONG)
 input bool   InpStar        = true;   // InpStar — accept shooting stars (SHORT)
-input double InpHamRatio    = 3.0;    // InpHamRatio — hammer: long wick >= this x body
+input double InpHamRatio    = 2.5;    // InpHamRatio — hammer: long wick >= this x body [v1.13: 3->2.5]
 input double InpHamNose     = 0.50;   // InpHamNose — hammer: opposite wick <= this x range
 input double InpMinRangeAtr = 0.50;   // InpMinRangeAtr — candle range >= this x ATR(14) (0 = off)
 
@@ -71,7 +71,7 @@ input double InpBreakPips   = 2;      // InpBreakPips — break must clear the h
 input bool   InpTrigBid     = true;   // InpTrigBid — LONG break judged on the BID like the chart (false = the ASK, a real buy stop)
 
 //--- ④ stop · ⑤ target
-input double InpSlPips      = 30;     // InpSlPips — stop beyond the candle [v4.02: 34->30]
+input double InpSlPips      = 35;     // InpSlPips — stop beyond the candle [v4.02: 34->30] [v1.13: 30->35, real-tick court + Jul-Oct holdout]
 input double InpMaxRiskUsd  = 15.0;    // InpMaxRiskUsd — skip if the stop is more than this $ of price away (0 = off) [M15: 9->15; 14-18 plateau, 9 skips 2/3 of M15 setups]
 input int    InpLongExit    = 1;      // InpLongExit — 0 a candle touches the exit EMA · 1 a candle CLOSES at / beyond it
 input double InpLongTpPips  = 0;      // InpLongTpPips — LONG: take profit this many pips before the EMA
@@ -88,7 +88,8 @@ input int    InpCloseLossMins = 3;    // InpCloseLossMins — this many minutes 
 input int    InpLongTouch   = 1;      // InpLongTouch — LONG at the exit EMA: 1 on a TOUCH trail $X below the market + TP at the last resistance (Zee 2026-10-12) · 0 old exit
 input double InpLongTrailUsd = 2.0;   // InpLongTrailUsd — ...the trailing stop's distance below the market, $ of price [v1.07: 3->2, Zee]
 input bool   InpLongResTp   = true;   // InpLongResTp — ...and aim for the next liquidity: TP2 = last resistance, then TP3 = the one beyond (watched by the EA; the exit is the trail)
-input bool   InpLongResTp1  = true;   // InpLongResTp1 — LONG whose exit EMA is below / too close to the entry: TP1 = the next resistance above the entry (false = no TP, trail from entry) [v1.11, Zee]
+input bool   InpLongResTp1  = false;  // InpLongResTp1 — LONG whose exit EMA is below / too close to the entry: TP1 = the next resistance above the entry (false = no TP, trail from entry) [v1.11 Zee; v1.12 OFF: -$70k on real ticks (trailing from entry is better)]
+input bool   InpResTp1Ride  = true;   // InpResTp1Ride — with InpLongResTp1: also trail from the entry (2xATR) until that resistance is reached
 input int    InpShortTouch  = 1;      // InpShortTouch — SHORT at the support (TP1): 1 trail $X above the market + TP2/TP3 = the supports below (Zee 2026-10-12) · 0 old (lock + ATR trail)
 input double InpTrailStepUsd = 0;     // InpTrailStepUsd — widen the $ trail by this much at each TP reached after TP1 (TP2 +1x, TP3 +2x ...; 0 = fixed)
 input double InpShortTrailUsd = 2.0;  // InpShortTrailUsd — ...the trailing stop's distance above the market, $ of price [v1.07: 3->2, Zee]
@@ -134,6 +135,24 @@ input int    InpExtraDir    = 0;      // InpExtraDir — extra positions (InpMax
 input double InpDayLossUsd  = 0;      // InpDayLossUsd — no new trades today once the day lost this $ (0 = off)
 input double InpDayTargetUsd = 0;     // InpDayTargetUsd — no new trades today once the day made this $ (0 = off) [v4.02: 0->150 at 0.10 lots] [M15: 150->0]
 
+//--- v1.12 variants (all off = v1.11 behaviour)
+input int    InpEntryMode   = 0;      // InpEntryMode — 0 market on the break · 1 after the break wait for a dip (retest) · 2 liquidity sweep of the candle's low/high, then enter
+input double InpRetestFrac  = 0.5;    // InpRetestFrac — mode 1: dip to this share back into the setup candle (0 = retest of the broken high/low, 0.5 = its middle, 1 = its far end)
+input int    InpRetestBars  = 2;      // InpRetestBars — mode 1: candles to wait for the dip after the break
+input double InpSweepPips   = 0;      // InpSweepPips — mode 2: price must trade this far beyond the setup candle's low (LONG) / high (SHORT)
+input int    InpSweepBars   = 3;      // InpSweepBars — mode 2: candles allowed for the sweep and the entry
+input int    InpSweepEntry  = 0;      // InpSweepEntry — mode 2: 0 enter when price reclaims the candle's low/high · 1 enter on the break of the candle's far end after the sweep
+input double InpSweepSlPips = 10;     // InpSweepSlPips — mode 2: stop this many pips beyond the sweep's extreme
+input int    InpSlMode      = 0;      // InpSlMode — 0 InpSlPips beyond the setup candle · 1 InpSlAtrMult x ATR from the entry · 2 InpSlUsd from the entry
+input double InpSlAtrMult   = 1.0;    // InpSlAtrMult — stop mode 1
+input double InpSlUsd       = 5.0;    // InpSlUsd — stop mode 2, $ of price
+input double InpPartialPct  = 0;      // InpPartialPct — close this share of the position at TP1 (0 = off)
+input double InpRiskPct     = 0;      // InpRiskPct — size each trade to risk this % of equity (0 = fixed InpLots)
+input double InpMinLotRiskPct = 0;    // InpMinLotRiskPct — with InpRiskPct: skip a trade when even the minimum lot would risk more than this % of equity (0 = take it at the minimum lot)
+input double InpMaxLots     = 50;     // InpMaxLots — upper limit for InpRiskPct sizing
+input int    InpModBackoffSec = 3;   // InpModBackoffSec — after the broker refuses a stop change, wait this many seconds before trying again (60 s when the market is closed)
+input double InpDayLossPct  = 0;      // InpDayLossPct — no new trades today after losing this % of the day's starting equity (0 = off)
+
 //--- trading
 input double InpLots        = 0.10;   // InpLots — lot size
 input bool   InpBuys        = true;   // InpBuys — allow longs
@@ -155,6 +174,15 @@ int      g_pSide = 0;
 double   g_pHigh = 0, g_pLow = 0;
 int      g_pLeft = 0;
 int      g_pExit = 50;           // long: which EMA is its exit
+// v1.12: entry armed after the break (mode 1) / sweep tracking (mode 2)
+int      g_aSide = 0;            // mode 1: waiting for the dip
+double   g_aLevel = 0, g_aHigh = 0, g_aLow = 0;
+int      g_aLeft = 0, g_aExit = 50;
+bool     g_swept = false;        // mode 2: the setup candle's low/high has been swept
+double   g_sweepExt = 0;
+double   g_dayStartEq = 0; int g_dayKey = -1;
+datetime g_modBlockUntil = 0; int g_modFails = 0;
+int      g_skipDip = 0, g_skipSweep = 0, g_skipMinLot = 0, g_dayLossStop = 0, g_partials = 0;
 
 // per-position state
 struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bool noTp; bool ride; datetime entryTime; double best; bool usdTrail; double tpNext; int tpStage; bool resTp1;
@@ -178,7 +206,8 @@ int OnInit()
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
-   PrintFormat("[SAAD-15min] v1.11 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
+   PrintFormat("[SAAD-15min] v1.13 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -190,6 +219,7 @@ int OnInit()
 
 void OnDeinit(const int reason)
 {
+   PrintFormat("[SAAD] v1.12: refused stop changes %d | no dip %d, no sweep %d, min-lot too risky %d, day loss stops %d, partial closes %d", g_modFails, g_skipDip, g_skipSweep, g_skipMinLot, g_dayLossStop, g_partials);
    PrintFormat("[SAAD] CTC breakevens %d | day close: setups dropped %d, losing trades shut %d", g_ctc, g_skipClose, g_closeLoss);
    PrintFormat("[SAAD] setups %d, entries %d | skipped: no break %d, gap %d, risk %d, no support %d, choppy %d, filters %d, busy %d, day guard %d | rides %d, lock refused %d",
                g_setups, g_entries, g_skipBreak, g_skipGap, g_skipRisk, g_skipSup, g_chop, g_filtered, g_busy, g_dayStop, g_rides, g_lockFail);
@@ -475,7 +505,13 @@ bool ModifySl(ulong t, double sl)
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
    sl = NormalizeDouble(sl, _Digits);
    if (buy ? sl >= bid - lvl : sl <= ask + lvl) return false;     // too close: the broker would refuse it
-   return trade.PositionModify(t, sl, PositionGetDouble(POSITION_TP));
+   if (TimeCurrent() < g_modBlockUntil) return false;             // v1.12: backing off after a refused modify
+   if (trade.PositionModify(t, sl, PositionGetDouble(POSITION_TP))) return true;
+   uint rc = trade.ResultRetcode();
+   // market closed / trade disabled: wait a minute; anything else (invalid stops, requote...): wait a few seconds
+   g_modBlockUntil = TimeCurrent() + ((rc == TRADE_RETCODE_MARKET_CLOSED || rc == TRADE_RETCODE_TRADE_DISABLED) ? 60 : InpModBackoffSec);
+   g_modFails++;
+   return false;
 }
 
 // TP reached: ride (lock + trail) or close. Returns true when the position was closed.
@@ -500,9 +536,22 @@ bool TpReached(int i, double tpLv)
    return trade.PositionClose(g_pos[i].ticket);
 }
 
+// v1.12: bank part of the position at TP1
+void PartialAtTp1(int i)
+{
+   if (InpPartialPct <= 0 || !PositionSelectByTicket(g_pos[i].ticket)) return;
+   double vol = PositionGetDouble(POSITION_VOLUME), step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP), mn = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   double part = MathFloor(vol * InpPartialPct / step) * step;
+   if (part >= mn && vol - part >= mn - 1e-9 && trade.PositionClosePartial(g_pos[i].ticket, NormalizeDouble(part, 2))) {
+      g_partials++;
+      Log(StringFormat("#%d TP1: closed %.2f of %.2f lots", g_pos[i].num, part, vol));
+   }
+}
+
 // LONG: a candle touched the exit EMA -> trail $X below the market and aim for the last resistance
 void LongTouched(int i, double bid)
 {
+   PartialAtTp1(i);
    g_pos[i].ride = true; g_pos[i].usdTrail = true; g_rides++;
    if (!PositionSelectByTicket(g_pos[i].ticket)) return;
    double cur = PositionGetDouble(POSITION_SL);
@@ -525,6 +574,7 @@ void LongTouched(int i, double bid)
 // SHORT: the support (TP1) reached -> trail $X above the market, aim for the next support (TP2)
 void ShortTouched(int i, double bid)
 {
+   PartialAtTp1(i);
    g_pos[i].ride = true; g_pos[i].usdTrail = true; g_rides++;
    if (!PositionSelectByTicket(g_pos[i].ticket)) return;
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
@@ -607,7 +657,7 @@ void ManageTick()
          }
          continue;
       }
-      if (InpLongTouch == 1 && g_pos[i].side > 0 && !g_pos[i].ride && !g_pos[i].noTp) {
+      if (InpLongTouch == 1 && g_pos[i].side > 0 && (!g_pos[i].ride || g_pos[i].resTp1) && !g_pos[i].noTp) {
          double tgt = g_pos[i].resTp1 ? g_pos[i].tp : Ema(g_pos[i].exitE, 0) - InpLongTpPips * Pip();
          if (tgt > g_pos[i].entry && bid >= tgt) { LongTouched(i, bid); continue; }
       }
@@ -686,12 +736,86 @@ void TryEntry()
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double pip = Pip();
    int side = g_pSide;
+   if (InpEntryMode == 2) {
+      // liquidity sweep: price first runs the stops beyond the setup candle, then comes back
+      double far = side > 0 ? g_pLow - InpSweepPips * pip : g_pHigh + InpSweepPips * pip;
+      if (!g_swept && (side > 0 ? bid < far : ask > far)) { g_swept = true; g_sweepExt = side > 0 ? bid : ask; Log(StringFormat("SWEEP of the setup candle's %s at %s", side > 0 ? "low" : "high", Px(g_sweepExt))); }
+      if (g_swept) g_sweepExt = side > 0 ? MathMin(g_sweepExt, bid) : MathMax(g_sweepExt, ask);
+      if (!g_swept) return;
+      bool go = InpSweepEntry == 0 ? (side > 0 ? bid > g_pLow : ask < g_pHigh)
+                                   : (side > 0 ? bid > g_pHigh + InpBreakPips * pip : bid < g_pLow - InpBreakPips * pip);
+      if (!go) return;
+      if (InpMaxSpreadPts > 0 && (ask - bid) / _Point > InpMaxSpreadPts) return;
+      g_pSide = 0; g_swept = false;
+      DoEntry(side, side > 0 ? g_sweepExt - InpSweepSlPips * pip : g_sweepExt + InpSweepSlPips * pip);
+      return;
+   }
    bool hit = side > 0 ? (InpTrigBid ? bid : ask) > g_pHigh + InpBreakPips * pip : bid < g_pLow - InpBreakPips * pip;
    if (!hit) return;
    if (InpMaxSpreadPts > 0 && (ask - bid) / _Point > InpMaxSpreadPts) return;    // wait for a normal spread
    g_pSide = 0;
+   if (InpEntryMode == 1) {
+      // the break happened: now wait for the dip back into the setup candle
+      g_aSide = side; g_aHigh = g_pHigh; g_aLow = g_pLow; g_aExit = g_pExit; g_aLeft = InpRetestBars;
+      g_aLevel = side > 0 ? g_pHigh - InpRetestFrac * (g_pHigh - g_pLow) : g_pLow + InpRetestFrac * (g_pHigh - g_pLow);
+      Log(StringFormat("BREAK %s -> waiting %d candle(s) for a dip to %s", side > 0 ? "up" : "down", InpRetestBars, Px(g_aLevel)));
+      return;
+   }
+   DoEntry(side, StopFor(side, side > 0 ? ask : bid, g_pHigh, g_pLow));
+}
+
+// mode 1: the dip after the break
+void TryDip()
+{
+   if (g_aSide == 0 || ArraySize(g_pos) >= InpMaxPos) return;
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   int side = g_aSide;
+   if (side > 0 ? ask > g_aLevel : bid < g_aLevel) return;
+   double sl = StopFor(side, side > 0 ? ask : bid, g_aHigh, g_aLow);
+   g_aSide = 0;
+   if (side > 0 ? bid <= sl : ask >= sl) { g_skipDip++; Log("dip went through the stop - skipped"); return; }
+   g_pHigh = g_aHigh; g_pLow = g_aLow; g_pExit = g_aExit;
+   DoEntry(side, sl);
+}
+
+// the stop for an entry at `en` from a setup candle [lo, hi]
+double StopFor(int side, double en, double hi, double lo)
+{
+   double pip = Pip();
+   if (InpSlMode == 1) { double a = Buf(hAtr, 1) * InpSlAtrMult; return side > 0 ? en - a : en + a; }
+   if (InpSlMode == 2) return side > 0 ? en - InpSlUsd : en + InpSlUsd;
+   return side > 0 ? lo - InpSlPips * pip : hi + InpSlPips * pip;
+}
+
+// lots for this trade: fixed, or InpRiskPct of equity (0 = skip)
+double LotsFor(int side, double en, double sl)
+{
+   if (InpRiskPct <= 0) return InpLots;
+   double eq = AccountInfoDouble(ACCOUNT_EQUITY);
+   double tv = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE), ts = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP), mn = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   if (tv <= 0 || ts <= 0 || step <= 0) return InpLots;
+   double perLot = MathAbs(en - sl) / ts * tv;                  // $ lost per 1 lot at the stop
+   if (perLot <= 0) return 0;
+   double lots = MathFloor(eq * InpRiskPct / 100.0 / perLot / step) * step;
+   if (lots < mn) {
+      if (InpMinLotRiskPct > 0 && mn * perLot > eq * InpMinLotRiskPct / 100.0) { g_skipMinLot++; return 0; }
+      lots = mn;
+   }
+   lots = MathMin(lots, InpMaxLots);
+   // margin: keep 10% free
+   double m = 0;
+   while (lots >= mn && OrderCalcMargin(side > 0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, _Symbol, lots, en, m) && m > AccountInfoDouble(ACCOUNT_MARGIN_FREE) * 0.9)
+      lots = MathFloor((lots - step) / step) * step;
+   if (lots < mn) { g_skipMinLot++; return 0; }
+   return NormalizeDouble(lots, 2);
+}
+
+void DoEntry(int side, double sl)
+{
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double pip = Pip();
    double en = side > 0 ? ask : bid;
-   double sl = side > 0 ? g_pLow - InpSlPips * pip : g_pHigh + InpSlPips * pip;
    if (InpMaxRiskUsd > 0 && MathAbs(en - sl) > InpMaxRiskUsd) { g_skipRisk++; DSkip(side, StringFormat("stop too far ($%.2f > $%.2f)", MathAbs(en - sl), InpMaxRiskUsd)); return; }
    double tp = 0;
    bool noTp = false, resTp1 = false;
@@ -709,19 +833,21 @@ void TryEntry()
    }
    bool rideShort = side < 0 && TrailOn(-1) && InpRide && InpFixTpPips <= 0;
    if (InpFixTpPips > 0) { tp = side > 0 ? en + InpFixTpPips * pip : en - InpFixTpPips * pip; noTp = false; }
-   bool ok = side > 0 ? trade.Buy(InpLots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, "saad_long")
-                      : trade.Sell(InpLots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), "saad_short");
+   double lots = LotsFor(side, en, sl);
+   if (lots <= 0) { DSkip(side, "even the minimum lot risks too much of this account"); return; }
+   bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, "saad_long")
+                      : trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), "saad_short");
    if (!ok) return;
    ulong t = trade.ResultOrder();
    ulong deal = trade.ResultDeal();
    if (deal > 0 && HistoryDealSelect(deal)) t = (ulong)HistoryDealGetInteger(deal, DEAL_POSITION_ID);
    PosState p;
    p.ticket = t; p.side = side; p.entry = trade.ResultPrice() > 0 ? trade.ResultPrice() : en; p.tp = tp;
-   p.exitE = g_pExit; p.noTp = noTp; p.resTp1 = resTp1; p.ride = side > 0 && noTp && TrailOn(1) && InpFixTpPips <= 0;
+   p.exitE = g_pExit; p.noTp = noTp; p.resTp1 = resTp1; p.ride = side > 0 && (noTp || (resTp1 && InpResTp1Ride)) && TrailOn(1) && InpFixTpPips <= 0;
    p.entryTime = TimeCurrent(); p.best = p.entry;
-   p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.resTp1 = false; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0;
+   p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0;
    p.setup = g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry;
-   p.risk = MathAbs(p.entry - sl) * InpLots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
+   p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    p.tp1 = side > 0 ? (noTp ? "none (exit EMA below entry, no resistance above) - trailing from entry"
                             : resTp1 ? StringFormat("next resistance %.2f (the %d EMA is below the entry)", tp, g_pExit)
                             : StringFormat("touch of the %d EMA (now %.2f)", g_pExit, Ema(g_pExit, 0)))
@@ -729,12 +855,12 @@ void TryEntry()
    int n = ArraySize(g_pos); ArrayResize(g_pos, n + 1); g_pos[n] = p;
    g_entries++;
    Log(StringFormat("ENTRY #%d %s %.2f lots @ %s | SL %s (risk $%.2f) | TP1 %s | setup: %s",
-                    p.num, side > 0 ? "BUY" : "SELL", InpLots, Px(p.entry), Px(p.sl0), p.risk, p.tp1, p.setup));
+                    p.num, side > 0 ? "BUY" : "SELL", lots, Px(p.entry), Px(p.sl0), p.risk, p.tp1, p.setup));
    if (Drawing()) {
       string tpTxt = side > 0 ? (noTp ? "none - trailing from entry" : resTp1 ? StringFormat("%.2f (next resistance)", tp)
                                                                                : StringFormat("touch of the %d EMA", g_pExit))
                               : StringFormat("%.2f (last support)", tp);
-      double risk = MathAbs(p.entry - sl) * InpLots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
+      double risk = p.risk;
       DArrow(p.entryTime, p.entry, side);
       Callout(p.entryTime, p.entry, side < 0, 3.0,
             StringFormat("%s #%d @ %.2f", side > 0 ? "BUY" : "SELL", p.num, p.entry), side > 0 ? clrDodgerBlue : clrOrangeRed, 10,
@@ -769,6 +895,8 @@ void DayCloseCheck()
 
 void OnTick()
 {
+   MqlDateTime dn; TimeToStruct(TimeCurrent(), dn);
+   if (dn.day_of_year != g_dayKey) { g_dayKey = dn.day_of_year; g_dayStartEq = AccountInfoDouble(ACCOUNT_EQUITY); }
    SyncPos();
    DayCloseCheck();
    SyncPos();
@@ -781,6 +909,11 @@ void OnTick()
          ManageBar();
          SyncPos();
          // the waiting setup: a gap in time cancels it, otherwise one fewer candle to break
+         if (g_aSide != 0) {
+            if (InpGapCancel && iTime(_Symbol, PERIOD_CURRENT, 0) - iTime(_Symbol, PERIOD_CURRENT, 1) > PeriodSeconds() * 3 / 2) { g_aSide = 0; g_skipDip++; }
+            else if (--g_aLeft <= 0) { g_aSide = 0; g_skipDip++; Log("no dip within the window - skipped"); }
+         }
+         if (g_pSide != 0 && InpEntryMode == 2 && g_pLeft <= 1) { if (!g_swept) g_skipSweep++; }
          if (g_pSide != 0) {
             if (InpGapCancel && iTime(_Symbol, PERIOD_CURRENT, 0) - iTime(_Symbol, PERIOD_CURRENT, 1) > PeriodSeconds() * 3 / 2) { g_skipGap++; DSkip(g_pSide, "market closed in between"); g_pSide = 0; }
             else if (--g_pLeft <= 0) { g_skipBreak++; DSkip(g_pSide, StringFormat("%s not broken in %d candle%s", g_pSide > 0 ? "high" : "low", InpBreakBars, InpBreakBars > 1 ? "s" : "")); g_pSide = 0; }
@@ -789,6 +922,7 @@ void OnTick()
       }
    }
    TryEntry();
+   TryDip();
 }
 
 // a new setup on the candle that just closed
@@ -848,13 +982,14 @@ void DetectSetup()
       double d = DayPnl();
       if ((InpDayLossUsd > 0 && d <= -InpDayLossUsd) || (InpDayTargetUsd > 0 && d >= InpDayTargetUsd)) { g_dayStop++; return; }
    }
-   if (ArraySize(g_pos) >= InpMaxPos || (g_pSide != 0 && !InpReplace)) { g_busy++; return; }
+   if (InpDayLossPct > 0 && AccountInfoDouble(ACCOUNT_EQUITY) <= g_dayStartEq * (1 - InpDayLossPct / 100.0)) { g_dayLossStop++; return; }
+   if (ArraySize(g_pos) >= InpMaxPos || ((g_pSide != 0 || g_aSide != 0) && !InpReplace)) { g_busy++; return; }
    if (ArraySize(g_pos) > 0 && InpExtraDir != 0) {
       bool same = g_pos[0].side == side;
       if ((InpExtraDir == 1 && !same) || (InpExtraDir == 2 && same)) { g_busy++; return; }
    }
 
-   g_pSide = side; g_pHigh = h; g_pLow = l; g_pLeft = InpBreakBars; g_setups++;
+   g_pSide = side; g_pHigh = h; g_pLow = l; g_pLeft = InpEntryMode == 2 ? InpSweepBars : InpBreakBars; g_setups++; g_swept = false; g_aSide = 0;
    g_pExit = side > 0 ? (rulesOk ? 50 : 9) : 0;
    string kindTxt = g_kind == 1 ? "PIN BAR" : g_kind == 2 ? (side > 0 ? "HAMMER" : "SHOOTING STAR") : "MARUBOZU";
    string lineTxt = side > 0 ? (rulesOk ? "9 EMA" : "50 EMA") : (OnLine(1, e9, -1) ? "9 EMA" : "50 EMA");

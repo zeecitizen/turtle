@@ -10,7 +10,7 @@ from pathlib import Path
 
 RIG = Path(r"C:\mt5_rig_axi")
 SRC = Path(r"C:\Users\zeesh\turtle\mt5")
-RIGS = {"axi": r"C:\mt5_rig_axi", "bb": r"C:\mt5_rig_bb", "pxbt": r"C:\mt5_rig_pxbt"}
+RIGS = {"axi": r"C:\mt5_rig_axi", "axi2": r"C:\mt5_rig_axi2", "bb": r"C:\mt5_rig_bb", "pxbt": r"C:\mt5_rig_pxbt"}
 
 
 def use(rig):
@@ -42,7 +42,7 @@ def kill_rig():
     """Kill ONLY the rig's own terminal / tester agents (never a live terminal)."""
     subprocess.run(["powershell", "-NoProfile", "-Command",
                     f"Get-Process terminal64,metatester64 -ErrorAction SilentlyContinue | "
-                    f"Where-Object {{ $_.Path -like '{RIG}*' }} | Stop-Process -Force"], capture_output=True)
+                    f"Where-Object {{ $_.Path -like '{RIG}\*' }} | Stop-Process -Force"], capture_output=True)
 
 
 def prune_logs(max_mb=50):
