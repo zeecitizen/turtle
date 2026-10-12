@@ -22,7 +22,7 @@ if __name__ == "__main__":
     ap.add_argument("--rig", default="axi"); ap.add_argument("--symbol", default=None); ap.add_argument("--nocompile", action="store_true"); ap.add_argument("--exec", type=int, default=-1); ap.add_argument("--period", default="M5"); ap.add_argument("--ea", default="Saad_strategy"); ap.add_argument("--deposit", type=float, default=25000); ap.add_argument("--leverage", default="1:400"); ap.add_argument("--timeout", type=int, default=300); ap.add_argument("--out", default=None)
     a = ap.parse_args()
     axi_rig.use(a.rig)
-    sym = a.symbol or {"axi": "XAUUSD.pro", "pxbt": "XAUUSDp"}.get(a.rig, "XAUUSD")
+    sym = a.symbol or {"axi": "XAUUSD.pro", "axi2": "XAUUSD.pro", "pxbt": "XAUUSDp"}.get(a.rig, "XAUUSD")
     if not a.nocompile: axi_rig.compile_ea(a.ea)
     axi_rig.prune_logs()
     if a.out: OUT = Path(__file__).with_name(a.out)
@@ -36,7 +36,7 @@ if __name__ == "__main__":
             r = {"error": str(e)[:80]}
             import subprocess   # kill only the RIG's terminal, never a live one
             subprocess.run(["powershell", "-NoProfile", "-Command",
-                            f"Get-Process terminal64,metatester64 -ErrorAction SilentlyContinue | Where-Object {{ $_.Path -like '{axi_rig.RIG}*' }} | Stop-Process -Force"])
+                            f"Get-Process terminal64,metatester64 -ErrorAction SilentlyContinue | Where-Object {{ $_.Path -like '{axi_rig.RIG}\*' }} | Stop-Process -Force"])
         r.update(arm=n, rig=a.rig, frm=a.frm, to=a.to, exec=a.exec, period=a.period, ea=a.ea, deposit=a.deposit, leverage=a.leverage)
         try:   # the EA's own funnel line from the newest agent log
             import glob, os

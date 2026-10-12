@@ -636,6 +636,55 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.12–v1.13 — real-tick court, the v1.11 fix, SL 35 + hammer 2.5 + wick 0.45 (2026-10-12)
+
+**THE DATA.** Around Oct 10–11, Axi revised its gold history. Since then the tester discards real
+ticks for 135,070 of 271,894 Jan–Oct minutes on XAUUSD.pro ("tick prices not matched … every tick
+generation used") and invents ticks from the candles. Per month: Jan–Jul 48–68%, Aug 28%,
+Sep–Oct 12–13%. Zee's terminal has the same problem since Oct 11; his Oct 9–10 runs show ~92
+minutes, which is clean. Re-downloading ticks and candles in the rig did not fix it.
+
+The fix is `mt5/AxiTickClone.mq5`, which builds the custom symbol **XAUUSD_TK** from Axi's 60.4M
+real ticks, with Axi's sessions and contract specs. The tester builds candles from those same
+ticks, so 0 minutes are discarded. The harness adds $4/lot commission on _TK. Every number below
+is on XAUUSD_TK. Synthetic minutes had inflated the strategy: the v1.09 control went from +$187.8k
+to **+$151.9k** at 1 lot.
+
+**v1.12:**
+- FIX: v1.11 reset `p.resTp1` straight after setting it, which cost ~$39k. Fixed, the rule
+  itself still loses −$70k on real ticks, so `InpLongResTp1` defaults OFF.
+- A trading call is retried only after a 3 s back-off, or 60 s when the market is closed.
+- Quiet CTrade logs in non-visual tests. Agent logs had reached 381–866 MB, and the terminal
+  tester log 3.2 GB.
+- Variant switches: entry mode (dip / sweep), stop mode (ATR / $), partial close at TP1,
+  risk-% sizing with a min-lot guard and margin check, daily loss %.
+
+**v1.13 defaults:** `InpSlPips` 30 → **35**, `InpHamRatio` 3 → **2.5**, `InpWickMin` 0.35 → **0.45**.
+
+Court: 200 ms fixed delay, $100k deposit, 1 lot; tune on Jan 6–Jul 1, holdout Jul 1–Oct 8.
+
+| arm | Jan–Jun | Jul–Oct holdout | full Jan 6–Oct 8 | PF | max DD |
+|---|---|---|---|---|---|
+| v1.12 base (= v1.09) | +$112,935 | +$37,958 | +$150,893 | 1.36 | 10.0% |
+| **v1.13 (SL 35 + ham 2.5 + wick 0.45)** | — | **+$48,220** | **+$167,534** | **1.43** | **9.5%** |
+| SL 35 alone | +$117,393 | +$44,291 | +$161,684 | 1.40 | 9.3% |
+| shorts with the old exit (`InpShortTouch 0`) | +$124,718 | +$35,475 ✗ | — | | |
+| risk cap $20 | +$126,727 | +$41,615 | +$168,342 | 1.28 | 15.1%, worst day −$8.5k |
+
+**Rejected on real ticks:**
+- tighter stops: 5–25 pips, 0.5–1.5×ATR, $2–$10 from entry
+- wait for a dip after the break: 0/25/50/75/100% into the candle, 1–3 candles
+- liquidity sweep then enter: 20 variants, all losing
+- partial close at TP1
+- break by 0 pips
+- 2×ATR stop: PF 2.04 on Jan–Jun, but only +$17k on the holdout
+- choppy filter length 12/20, which collapses the result (a fragile setting)
+- CTC at 60% or 90%: 75% is a narrow peak
+
+Logs: `monitor/strategy_lab/zee_loop.jsonl`, `zee_oos.jsonl`, `zee_full.jsonl`.
+
+Compiled into the Axi terminal (0 errors); default lots 0.10.
+
 ## Saad_strategy_15min v1.10–v1.11 — trade log; TP1 = next resistance for longs with the EMA below (2026-10-12)
 
 **v1.10 — trade log** (`InpLog`, `InpLogCsv`, both on). Zee asked: *"i want to know what the TP was set
