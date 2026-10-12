@@ -1,0 +1,12 @@
+InpLots=1,InpHtfMin=15
+InpLots=1,InpHtfMin=60
+InpLots=1,InpHtfMin=240
+InpLots=1,InpHtfMin=60,InpMaxRiskUsd=9
+InpLots=1,InpHtfMin=60,InpMaxRiskUsd=12
+InpLots=1,InpHtfMin=60,InpChopEr=0.05
+InpLots=1,InpHtfMin=60,InpChopEr=0.15
+InpLots=1,InpHtfMin=60,InpBreakBars=2
+InpLots=1,InpHtfMin=15,InpMaxRiskUsd=9
+InpLots=1,InpHtfMin=60,InpSlPips=20
+InpLots=1,InpHtfMin=60,InpLongTouch=0,InpShortTouch=0
+InpLots=1,InpHtfMin=60,InpSessFrom=8,InpSessTo=20

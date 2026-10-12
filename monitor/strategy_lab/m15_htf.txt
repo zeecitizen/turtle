@@ -1,0 +1,7 @@
+InpLots=1
+InpLots=1,InpHtfMin=60
+InpLots=1,InpHtfMin=240
+InpLots=1,InpHtfMin=60,InpHtfEma=20
+InpLots=1,InpHtfMin=240,InpHtfEma=20
+InpLots=1,InpDayLossPct=2
+InpLots=1,InpDayLossPct=1

@@ -1,0 +1,6 @@
+InpLots=1,InpHtfMin=240,InpMaxRiskUsd=9
+InpLots=1,InpHtfMin=240,InpChopEr=0.05
+InpLots=1,InpHtfMin=60,InpMinRangeAtr=0.8
+InpLots=1,InpHtfMin=60,InpLongTrailUsd=1.5,InpShortTrailUsd=1.5
+InpLots=1,InpHtfMin=60,InpLongTrailUsd=3,InpShortTrailUsd=3
+InpLots=1,InpHtfMin=60,InpMaxPos=2,InpExtraDir=1

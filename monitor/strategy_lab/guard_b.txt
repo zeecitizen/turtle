@@ -1,0 +1,8 @@
+InpLots=1,InpInvalid=2,InpFailBars=4
+InpLots=1,InpMinRR=0.5,InpInvalid=2
+InpLots=1,InpHtfMin=60,InpInvalid=2
+InpLots=1,InpHtfMin=60,InpMinRR=0.5
+InpLots=1,InpHtfMin=240,InpInvalid=2
+InpLots=1,InpMinRR=0.3,InpFailBars=6
+InpLots=1,InpHtfMin=60,InpFailBars=4
+InpLots=1,InpInvalid=1,InpFailBars=6
