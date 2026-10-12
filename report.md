@@ -8,6 +8,52 @@ Strategy Tester on Axi's real tick history, Jan 6 – Oct 8 2026*
 
 ---
 
+## 0. What changed from v1.09 to v1.14
+
+### Settings that changed (these make the trading difference)
+
+| Setting | v1.09 | **v1.14** | What it means |
+|---|---|---|---|
+| `InpSlPips` | 30 | **35** | Stop 35 pips ($3.50) beyond the setup candle instead of 30: a little more room for noise |
+| `InpHamRatio` | 3.0 | **2.5** | A hammer / shooting star counts when its long wick is ≥ 2.5 × the body (was 3): a few more hammers accepted |
+| `InpWickMin` | 0.35 | **0.45** | A pin bar's long wick must be ≥ 45% of the candle (was 35%): only clearer pin bars |
+| `InpMinRangeAtr` | 0.50 | **0.55** | The setup candle must be ≥ 0.55 × ATR(14) tall (was 0.50): tiny candles skipped |
+| `InpMaruBody` | 0.50 | **0.53** | A marubozu's body must be ≥ 53% of the candle (was 50%): only firmer push candles |
+| `InpChopEr` | 0.10 | **0.11** | Choppy-market filter slightly stricter: skip when the efficiency ratio < 0.11 |
+
+v1.13 brought the first three, which beat v1.09 on Jan–Jun, on the unseen Jul–Oct period and over
+all 9 months. v1.14 added the last three: tuned on Jan–Jun only, then confirmed on Jul–Oct.
+
+### Code that changed (no effect on trading unless switched on)
+
+| Version | Change |
+|---|---|
+| v1.10 | **Trade log:** every setup, entry, CTC, TP1/TP2/TP3, stop move, day-close and exit is printed to the Experts tab, plus one CSV row per trade in `Common\Files` |
+| v1.11 | Long rule "TP1 = next resistance when the 50 EMA is below the entry". It had a bug (set then reset), which v1.12 fixed. Fixed, the rule loses −$70k, so it is **off** (`InpLongResTp1 = false`) |
+| v1.12 | **Retry back-off:** after the broker refuses a stop change, wait 3 s (60 s if the market is closed) instead of retrying on every tick. **Quiet tester logs**, which fixed the hung tests. New **test switches**, all off: entry modes (wait for the dip, liquidity sweep), stop modes (ATR, fixed $), partial close at TP1, risk-% sizing, daily loss %. |
+| v1.13–v1.14 | Only the default settings above |
+
+### Unchanged (same as v1.09)
+
+- the setups: pin bar, marubozu and hammer on the 9 / 50 EMA, then a break of the candle within one candle
+- the 75% CTC breakeven
+- TP1 → $2 trailing stop → TP2 / TP3 ladder
+- shutting losers 3 minutes before the daily close
+- magic number 88302
+
+### The effect (1 lot, real ticks, Jan 6 – Oct 8)
+
+| | v1.09 | v1.14 |
+|---|---|---|
+| Net profit | +$150,893 | **+$206,705** (+37%) |
+| Profit factor | 1.36 | **1.62** |
+| Win rate | 44.6% | **47.8%** |
+| Max drawdown | 10.0% | **5.5%** |
+| Losing months | 1 | **0** |
+| Trades | 1,007 | 867 (fewer, cleaner) |
+
+---
+
 ## 1. Summary
 
 | | Before (v1.09) | **Now (v1.14)** |
