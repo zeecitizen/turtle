@@ -38,8 +38,25 @@ def ea_defaults(ea):
     return out
 
 
+def kill_rig():
+    """Kill ONLY the rig's own terminal / tester agents (never a live terminal)."""
+    subprocess.run(["powershell", "-NoProfile", "-Command",
+                    f"Get-Process terminal64,metatester64 -ErrorAction SilentlyContinue | "
+                    f"Where-Object {{ $_.Path -like '{RIG}*' }} | Stop-Process -Force"], capture_output=True)
+
+
+def prune_logs(max_mb=50):
+    """Agent logs grew to 381-866 MB (the $2 trail modifies the stop on most ticks); drop the big ones."""
+    for f in list((RIG / "Tester").glob("Agent-*/logs/*.log")) + list((RIG / "Tester" / "logs").glob("*.log")):
+        try:
+            if f.stat().st_size > max_mb * 1024 * 1024 and f.resolve().is_relative_to(RIG.resolve()):
+                f.unlink()
+        except Exception:
+            pass
+
+
 def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=25000,
-        exec_mode=-1, tag=None, timeout=21600, model=4):
+        exec_mode=-1, tag=None, timeout=21600, model=4, leverage="1:400", watchdog=True):
     inputs = ea_defaults(ea)
     inputs.update(sets)
     tag = tag or f"{ea}_{symbol}_{period}".replace(".", "_")
@@ -51,18 +68,39 @@ def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=250
            f"[TesterInputs]\r\n{ti}")
     (RIG / "reports").mkdir(exist_ok=True)
     (RIG / "run.ini").write_text(ini, encoding="utf-16")
+    prune_logs()
     t0 = time.time()
-    subprocess.run([str(RIG / "terminal64.exe"), "/portable", f"/config:{RIG / 'run.ini'}"],
-                   timeout=timeout)
     rep = RIG / "reports" / f"{tag}.htm"
+    proc = subprocess.Popen([str(RIG / "terminal64.exe"), "/portable", f"/config:{RIG / 'run.ini'}"])
+    last_size, stable = -1, 0
+    while True:
+        time.sleep(1)
+        done = proc.poll() is not None
+        if rep.exists() and rep.stat().st_mtime >= t0:
+            sz = rep.stat().st_size
+            stable = stable + 1 if sz == last_size and sz > 0 else 0
+            last_size = sz
+            if watchdog and stable >= 2:          # report written and no longer growing: stop waiting
+                break
+        if done:
+            break
+        if time.time() - t0 > timeout:
+            kill_rig()
+            return {"tag": tag, "error": f"timeout {timeout}s"}
+    if proc.poll() is None:
+        time.sleep(1)
+        kill_rig()
     if not rep.exists() or rep.stat().st_mtime < t0:
         return {"tag": tag, "error": "no report"}
-    r = parse(rep)
+    r = parse(rep, comm_per_lot=4.0 if symbol.endswith("_TK") else 0.0)
+    r["comm_added"] = symbol.endswith("_TK")
     r.update(tag=tag, symbol=symbol, period=period, sets=sets, secs=round(time.time() - t0))
     return r
 
 
-def parse(path):
+def parse(path, comm_per_lot=0.0):
+    """comm_per_lot: charge this $ per lot per round trip on exit deals when the report shows no commission
+    (custom tick symbols carry none; Axi XAUUSD.pro charges ~$4/lot round trip)."""
     t = Path(path).read_text(encoding="utf-16", errors="ignore").replace("\xa0", " ")
     num = lambda s: float(s.replace(" ", ""))
 
@@ -70,28 +108,57 @@ def parse(path):
         m = re.search(re.escape(label) + r"[^<]*:</td>\s*<td[^>]*><b>([^<]*)", t)
         return m.group(1) if m else ""
     deals = re.findall(r"<tr[^>]*><td>(\d{4}\.\d\d\.\d\d) [\d:]+</td><td>\d+</td><td>[^<]+</td>"
-                       r"<td>(?:buy|sell)</td><td>(in|out)</td><td>[\d.]+</td><td>[\d.]+</td>"
+                       r"<td>(?:buy|sell)</td><td>(in|out)</td><td>([\d.]+)</td><td>[\d.]+</td>"
                        r"<td>\d+</td><td>([-\d. ]+)</td><td>([-\d. ]+)</td><td>([-\d. ]+)</td>", t)
+    has_comm = any(num(c) != 0 for d, io, vol, c, s, p in deals)
+    extra = 0.0
+    if comm_per_lot and not has_comm:
+        fixed = []
+        for d, io, vol, c, s, p in deals:
+            cc = -comm_per_lot * float(vol) if io == "out" else 0.0
+            extra += cc
+            fixed.append((d, io, vol, str(cc), s, p))
+        deals = fixed
     months, days, daily = {}, set(), {}
-    for d, io, c, s, p in deals:
+    for d, io, vol, c, s, p in deals:
         v = num(c) + num(s) + num(p)
         months[d[:7]] = months.get(d[:7], 0) + v
         daily[d] = daily.get(d, 0) + v
         if io == "in":
             days.add(d)
+    # per trade (one position at a time): its entry commission + all its exit deals (partial closes included)
+    tr, cur = [], None
+    for d, io, vol, c, s, p in deals:
+        v = num(c) + num(s) + num(p)
+        if io == "in":
+            if cur is not None:
+                tr.append(cur)
+            cur = v
+        else:
+            cur = (cur or 0) + v
+    if cur is not None:
+        tr.append(cur)
+    streak = mx = 0
+    for v in tr:
+        streak = streak + 1 if v < 0 else 0
+        mx = max(mx, streak)
+    wins = [v for v in tr if v > 0]; losses = [v for v in tr if v < 0]
+    trade_stats = {"n": len(tr), "largest_loss": round(min(tr), 2) if tr else 0, "largest_win": round(max(tr), 2) if tr else 0,
+                   "avg_win": round(sum(wins) / len(wins), 2) if wins else 0, "avg_loss": round(sum(losses) / len(losses), 2) if losses else 0,
+                   "max_loss_streak": mx, "per_trade": round(sum(tr) / len(tr), 2) if tr else 0}
     dv = list(daily.values())
     day_stats = {"days": len(dv), "green": sum(v > 0 for v in dv), "red": sum(v < 0 for v in dv),
                  "worst": round(min(dv), 2) if dv else 0, "best": round(max(dv), 2) if dv else 0,
                  "median": round(sorted(dv)[len(dv) // 2], 2) if dv else 0}
     dd = field("Equity Drawdown Maximal")
-    net = num(field("Total Net Profit") or "0")
+    net = num(field("Total Net Profit") or "0") + extra
     ddv = num(dd.split("(")[0]) if dd else 0
     trades = int(field("Total Trades") or 0)
     pt = field("Profit Trades")
     return {"net": net, "pf": field("Profit Factor"), "trades": trades,
             "wr": pt.split("(")[-1].rstrip(")") if pt else "",
             "dd": dd, "net_per_dd": round(net / ddv, 2) if ddv else None,
-            "quality": field("History Quality"), "trade_days": len(days), "day_stats": day_stats,
+            "quality": field("History Quality"), "trade_days": len(days), "day_stats": day_stats, "trade_stats": trade_stats,
             "daily": {k: round(v, 2) for k, v in sorted(daily.items())},
             "months": {k: round(v, 2) for k, v in sorted(months.items())}}
 
