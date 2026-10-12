@@ -1,0 +1,10 @@
+InpLots=1
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpMinRangeAtr=0.8
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpMinRangeAtr=1.0
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopEr=0.15
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopEr=0.2
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopEr=0.25
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpBreakBars=2
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpBreakPips=1
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpBreakPips=4

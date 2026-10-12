@@ -1,0 +1,10 @@
+InpLots=1,InpMaxRiskUsd=12,InpSlPips=25
+InpLots=1,InpMaxRiskUsd=7,InpSlPips=15
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=24
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=32
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpChopErLook=48
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpMinRangeAtr=0.8,InpChopEr=0.2
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpHtfMin=60
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpLongTrailUsd=1.5,InpShortTrailUsd=1.5
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpEmaFast=27,InpEmaSlow=150
+InpLots=1,InpMaxRiskUsd=9,InpSlPips=20,InpEmaFast=15,InpEmaSlow=80
