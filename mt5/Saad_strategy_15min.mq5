@@ -34,7 +34,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.15"
+#property version   "1.16"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -148,7 +148,8 @@ input double InpSweepSlPips = 10;     // InpSweepSlPips — mode 2: stop this ma
 input int    InpSlMode      = 0;      // InpSlMode — 0 InpSlPips beyond the setup candle · 1 InpSlAtrMult x ATR from the entry · 2 InpSlUsd from the entry
 input double InpSlAtrMult   = 1.0;    // InpSlAtrMult — stop mode 1
 input double InpSlUsd       = 5.0;    // InpSlUsd — stop mode 2, $ of price
-input double InpPartialPct  = 0;      // InpPartialPct — close this share of the position at TP1 (0 = off)
+input double InpPartialPct  = 0.5;    // InpPartialPct — close this share of the position at TP1 (0 = off) [v1.16: 0 -> 0.5, Zee's rule]
+input bool   InpTp1Be       = true;   // InpTp1Be — at TP1 the rest of the position's stop is never worse than the entry (breakeven) [v1.16, Zee's rule]
 input double InpRiskPct     = 0;      // InpRiskPct — size each trade to risk this % of equity (0 = fixed InpLots)
 input double InpMinLotRiskPct = 0;    // InpMinLotRiskPct — with InpRiskPct: skip a trade when even the minimum lot would risk more than this % of equity (0 = take it at the minimum lot)
 input double InpMaxLots     = 50;     // InpMaxLots — upper limit for InpRiskPct sizing
@@ -215,7 +216,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-15min] v1.15 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.16 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -564,6 +565,7 @@ void LongTouched(int i, double bid)
    if (!PositionSelectByTicket(g_pos[i].ticket)) return;
    double cur = PositionGetDouble(POSITION_SL);
    double sl = NormalizeDouble(MathMax(cur, bid - InpLongTrailUsd), _Digits);
+   if (InpTp1Be && g_pos[i].entry < bid) sl = NormalizeDouble(MathMax(sl, g_pos[i].entry), _Digits);
    double res = InpLongResTp ? LastResistance(bid + InpMinTpPips * Pip()) : 0;
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
    if (sl >= bid - lvl) sl = cur;
@@ -588,6 +590,7 @@ void ShortTouched(int i, double bid)
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double cur = PositionGetDouble(POSITION_SL);
    double sl = NormalizeDouble(cur > 0 ? MathMin(cur, ask + InpShortTrailUsd) : ask + InpShortTrailUsd, _Digits);
+   if (InpTp1Be && g_pos[i].entry > ask) sl = NormalizeDouble(MathMin(sl, g_pos[i].entry), _Digits);
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
    if (sl <= ask + lvl) sl = cur;
    if (sl != cur && ModifySl(g_pos[i].ticket, sl)) SlMoved(i, sl, "");
