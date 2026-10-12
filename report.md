@@ -210,13 +210,32 @@ The rest then trails behind the price ($2 by default) and can never turn into a 
 It is built into the test EA `Saad_guard` and is tested at **1 lot on a $25,000 balance**, Jan 6 –
 Oct 8, real ticks, 200 ms delay.
 
-| Version | Net | Win rate | PF | Biggest loss | Worst day | Max DD |
+| Version | Net | Win rate (deals) | PF | Biggest loss | Worst day | Max DD |
 |---|---|---|---|---|---|---|
-| v1.14 (current) | ⏳ | | | | | |
-| 50% at TP1, no breakeven | ⏳ | | | | | |
-| **50% at TP1 + breakeven (Zee's rule)** | ⏳ | | | | | |
-| Breakeven at TP1 only | ⏳ | | | | | |
-| 50% + breakeven + $3 trail on the rest | ⏳ | | | | | |
-| 50% + breakeven + $5 trail on the rest | ⏳ | | | | | |
+| v1.14 (current) | **+$206,705** | 47.8% | 1.62 | −$2,570 | −$3,966 | $13,271 (8.1%) |
+| 50% at TP1, no breakeven | +$201,750 | 61.3% | 1.60 | −$2,570 | −$3,806 | $13,422 (8.4%) |
+| **50% at TP1 + breakeven (Zee's rule)** | **+$202,222** | **61.3%** | 1.60 | −$2,570 | **−$3,806** | $13,422 (8.4%) |
+| Breakeven at TP1 only | +$207,130 | 47.6% | 1.62 | −$2,570 | −$3,966 | $13,271 (8.1%) |
+| 50% + breakeven + $3 trail on the rest | +$199,263 | 60.6% | 1.59 | −$2,570 | −$3,716 | $14,261 (8.3%) |
+| 50% + breakeven + $5 trail on the rest | +$191,182 | 58.4% | 1.57 | −$2,570 | −$3,716 | $14,849 (9.5%) |
 
-*Results are being filled in as the tests finish.*
+**What it does:**
+
+- **Profit −$4,483 (−2%)** over 9 months. Half of every trade that reaches TP1 is banked there
+  instead of riding the trail, and occasionally that half would have run much further.
+- **The win rate jumps to 61%.** MT5 counts the TP1 half as its own winning deal, so most trades
+  now show a win. Per position nothing changes: the same trades still lose.
+- **Worst day improves a little:** −$3,806 vs −$3,966.
+- **The biggest single loss does not change (−$2,570).** Losses happen *before* TP1, while the full
+  lot is still open with the original stop. Banking half at TP1 cannot touch them.
+- **Breakeven adds almost nothing.** At TP1 the $2 trail usually puts the stop past the entry
+  already; breakeven matters only when TP1 is less than $2 from the entry.
+
+**Verdict:** this rule makes days feel smoother (more wins, slightly smaller bad days) for about
+2% of the profit. **It does not reduce the big losses like today's**, which all hit the stop
+before TP1. To shrink those, the trade itself must be smaller:
+- size by risk (`InpRiskUsd`, section 2)
+- or cut trades whose first target is too close to the risk (minimum reward:risk)
+
+**If you want it anyway:** set `InpPartialPct = 0.5` and `InpTp1Be = true`. Both are in the test EA
+`Saad_guard` now and can be added to the main EA on request.
