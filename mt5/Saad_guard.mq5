@@ -116,6 +116,7 @@ input bool   InpGapCancel   = true;   // InpGapCancel — cancel a waiting setup
 input double InpMinRR       = 0;      // InpMinRR — skip a trade whose TP1 is closer than this x its risk (0 = off)
 input int    InpFailBars    = 0;      // InpFailBars — close a trade still in loss after this many closed candles, if CTC/TP1 not reached (0 = off)
 input int    InpInvalid     = 0;      // InpInvalid — before CTC/TP1, close when a candle closes back through the setup candle: 0 off · 1 its far side · 2 its middle
+input int    InpSideEma     = 0;      // InpSideEma — side filter (Zee): BUY only above this EMA, SELL only below it, on the chart timeframe (0 = off; 200 = Zee's rule)
 input int    InpHtfMin      = 0;      // InpHtfMin — higher-timeframe trend filter: 0 off · 15 / 30 / 60 / 240 minutes (trade only with that timeframe's trend)
 input int    InpHtfEma      = 50;     // InpHtfEma — the HTF trend EMA (LONG: HTF close above it and it is rising; SHORT the opposite)
 input bool   InpTrendAlign  = false;  // InpTrendAlign — LONG only if EMA9 > EMA50, SHORT only if EMA9 < EMA50
@@ -173,7 +174,7 @@ input bool   InpLogCsv      = true;   // InpLogCsv — one CSV row per closed tr
 input bool   InpDrawSkips   = false;   // InpDrawSkips — also label setups that were skipped (no break, risk, no support, choppy)
 
 CTrade   trade;
-int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE;
+int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE, hSide = INVALID_HANDLE;
 ENUM_TIMEFRAMES g_htf = PERIOD_CURRENT;
 datetime g_lastBar = 0;
 
@@ -212,6 +213,7 @@ int OnInit()
    hFast = iMA(_Symbol, PERIOD_CURRENT, InpEmaFast, 0, MODE_EMA, PRICE_CLOSE);
    hSlow = iMA(_Symbol, PERIOD_CURRENT, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
+   if (InpSideEma > 0) { hSide = iMA(_Symbol, PERIOD_CURRENT, InpSideEma, 0, MODE_EMA, PRICE_CLOSE); if (hSide == INVALID_HANDLE) return INIT_FAILED; }
    if (InpHtfMin > 0) {
       g_htf = InpHtfMin == 15 ? PERIOD_M15 : InpHtfMin == 30 ? PERIOD_M30 : InpHtfMin == 60 ? PERIOD_H1 : InpHtfMin == 240 ? PERIOD_H4 : PERIOD_M15;
       hHtf = iMA(_Symbol, g_htf, InpHtfEma, 0, MODE_EMA, PRICE_CLOSE);
@@ -1008,6 +1010,10 @@ void DetectSetup()
    }
    int side = longOk ? 1 : -1;
 
+   if (hSide != INVALID_HANDLE) {
+      double es = Buf(hSide, 1);                 // the setup candle's close vs the long EMA
+      if (es <= 0 || (side > 0 ? c <= es : c >= es)) { g_filtered++; return; }
+   }
    if (hHtf != INVALID_HANDLE) {
       // the last CLOSED higher-timeframe candle: price on the trade's side of its EMA, and the EMA moving that way
       double hc = iClose(_Symbol, g_htf, 1), he1 = Buf(hHtf, 1), he2 = Buf(hHtf, 2);

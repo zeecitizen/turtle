@@ -1,0 +1,10 @@
+InpLots=1
+InpLots=1,InpFvgMode=1,InpFvgMinAtr=0.3,InpFvgWin=4
+InpLots=1,InpFvgMode=1,InpFvgMinAtr=0.3,InpFvgWin=8
+InpLots=1,InpFvgMode=1,InpFvgMinAtr=0.3,InpFvgWin=16
+InpLots=1,InpFvgMode=1,InpFvgMinAtr=0.5,InpFvgWin=4
+InpLots=1,InpFvgMode=1,InpFvgMinAtr=0.5,InpFvgWin=8
+InpLots=1,InpFvgMode=1,InpFvgMinAtr=0.5,InpFvgWin=16
+InpLots=1,InpFvgMode=1,InpFvgMinAtr=1.0,InpFvgWin=4
+InpLots=1,InpFvgMode=1,InpFvgMinAtr=1.0,InpFvgWin=8
+InpLots=1,InpFvgMode=1,InpFvgMinAtr=1.0,InpFvgWin=16

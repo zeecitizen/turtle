@@ -239,3 +239,36 @@ before TP1. To shrink those, the trade itself must be smaller:
 
 **If you want it anyway:** set `InpPartialPct = 0.5` and `InpTp1Be = true`. Both are in the test EA
 `Saad_guard` now and can be added to the main EA on request.
+
+---
+
+## 9. FVG tap "safe zone" (Zee's idea, 12 Oct)
+
+**The idea:** a Fair Value Gap (FVG) is a three-candle gap. For a bullish FVG, candle 1's high and
+candle 3's low don't overlap. Price often comes back to **tap** the gap, collecting the stops resting
+there, before continuing. Once a large FVG has been tapped and has **held** (no candle closes
+through it), the stop hunt has happened, so the area is treated as a **safe zone** for setups in the
+same direction.
+
+**Variants** (test EA `Saad_fvg`; 1 lot, $25,000, Jan 6 – Oct 8, real ticks):
+- `InpFvgMode` 1: trade only within N candles after a same-side FVG was tapped and held.
+  `InpFvgMode` 2: the setup candle itself taps the FVG.
+- `InpFvgMinAtr`: only "large" FVGs, 0.3 / 0.5 / 1.0 × ATR.
+- `InpFvgWin`: safe-zone length, 4 / 8 / 16 candles.
+- `InpFvgTf`: FVGs from the 15-minute or the 1-hour chart.
+- `InpFvgSl`: stop just beyond the FVG's far edge (5 / 10 / 20 pips), or the tighter of that and
+  the normal stop.
+
+*Results pending — the batch is running.*
+
+---
+
+## 10. 200 EMA side filter (Zee's idea, 12 Oct)
+
+**The rule:** on the 15-minute chart, **buy only when price is above the 200 EMA, sell only when it
+is below.** Setting: `InpSideEma = 200` in the test EA `Saad_guard`; 100 / 150 / 300 are also
+tested. 1 lot, $25,000, Jan 6 – Oct 8, real ticks.
+
+The question is whether it raises the win rate (v1.14: 47.8%, +$206,705).
+
+*Results pending — queued behind the FVG batch.*
