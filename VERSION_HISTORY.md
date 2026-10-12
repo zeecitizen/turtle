@@ -636,6 +636,32 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.10–v1.11 — trade log; TP1 = next resistance for longs with the EMA below (2026-10-12)
+
+**v1.10 — trade log** (`InpLog`, `InpLogCsv`, both on). Zee asked: *"i want to know what the TP was set
+to etc. how can i see that?"*. The broker shows `tp: 0.00` because the EA never sends TPs: TP1 is a
+trigger for the trail, and TP2/TP3 are watched by the EA.
+- **Experts tab:** every event — SETUP, SKIP, ENTRY (SL, $ risk, TP1 rule), CTC, TP1 (price, TP2),
+  TPn → TPn+1, day-close shut, and EXIT (reason, best price, number of SL moves, profit /
+  commission / swap).
+- **CSV:** one row per closed trade in `Common\Files\Saad15_trades_<symbol>_<magic>.csv`. In the
+  visual tester the file name ends `_tester`. Nothing is written in ordinary tester runs.
+- Checked on Oct 1–8 at 1 lot: the same trades and result with and without logging (+$10,309).
+
+**v1.11 — `InpLongResTp1 true`.** Zee: *"in case of long entry at time of entry if the 50 EMA is below
+our entry, then instead of having 0 tp ... we should have the first target as the TP which is the
+next resistance level"*. A long whose exit EMA is below the entry, or within 5 pips of it, now gets:
+- **TP1** = the newest swing high at least 5 pips above the entry (pivot 3, last 100 candles)
+- **at TP1:** the same as an EMA touch — the stop goes to $2 behind the market, then TP2 / TP3
+- **CTC** measured toward that resistance
+- only if no resistance exists: trail from the entry, as before
+
+Zee's live PXBT trade #58513632 (BUY 1 lot @ 4191.87, closed at 4191.40, −$47) fits this case. Its
+stop moved at the first tick of the 04:45 candle: the 2×ATR candle-close trail of a no-TP long.
+
+**NOT yet measured in MT5.** The rig hung during the full-period check and Zee stopped the runs.
+Compiled into the Axi terminal (0 errors). Expect a trading change versus v1.09.
+
 ## Saad_strategy_15min v1.09 — marubozu body ≥ 50% of the candle (2026-10-12)
 
 Zee: *"let's goto 0.50 (50%) with +$207,274"*. `InpMaruBody` 0.70 → **0.50**: the two wicks may
