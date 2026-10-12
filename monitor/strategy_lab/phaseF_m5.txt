@@ -1,0 +1,10 @@
+InpLots=1,InpSlPips=35,InpHamRatio=2.5,InpWickMin=0.45
+InpLots=1,InpSlPips=35,InpHamRatio=2.5,InpWickMin=0.45,InpMaxRiskUsd=9
+InpLots=1,InpSlPips=35,InpHamRatio=2.5,InpWickMin=0.45,InpMaxRiskUsd=12
+InpLots=1,InpSlPips=35,InpHamRatio=2.5,InpWickMin=0.45,InpSlPips=30,InpMaxRiskUsd=9
+InpLots=1,InpSlPips=35,InpHamRatio=2.5,InpWickMin=0.45,InpBreakBars=2
+InpLots=1,InpSlPips=35,InpHamRatio=2.5,InpWickMin=0.45,InpBreakBars=2,InpMaxRiskUsd=9
+InpLots=1,InpSlPips=35,InpHamRatio=2.5,InpWickMin=0.45,InpChopEr=0.05
+InpLots=1,InpSlPips=35,InpHamRatio=2.5,InpWickMin=0.45,InpChopEr=0
+InpLots=1,InpSlPips=35,InpHamRatio=2.5,InpWickMin=0.45,InpMaxPos=2,InpExtraDir=1
+InpLots=1,InpSlPips=35,InpHamRatio=2.5,InpWickMin=0.45,InpMaxRiskUsd=9,InpChopEr=0.05

@@ -1,0 +1,14 @@
+InpLots=1,InpLongTouch=0,InpShortTouch=0
+InpLots=1,InpLongTouch=0,InpShortTouch=0,InpMinRangeAtr=0.8
+InpLots=1,InpLongTouch=0,InpShortTouch=0,InpMinRangeAtr=1.0
+InpLots=1,InpLongTouch=0,InpShortTouch=0,InpChopEr=0.2
+InpLots=1,InpLongTouch=0,InpShortTouch=0,InpChopEr=0.3
+InpLots=1,InpLongTouch=0,InpShortTouch=0,InpSessFrom=8,InpSessTo=20
+InpLots=1,InpLongTouch=0,InpShortTouch=0,InpSlMode=1,InpSlAtrMult=2
+InpLots=1,InpLongTouch=0,InpShortTouch=0,InpTrailAtr=3
+InpLots=1,InpLongTouch=0,InpShortTouch=0,InpBreakPips=5
+InpLots=1,InpLongTouch=0,InpShortTouch=0,InpMaxRiskUsd=9,InpChopEr=0.2
+InpLots=1,InpMinRangeAtr=1.0,InpChopEr=0.2
+InpLots=1,InpSessFrom=8,InpSessTo=20,InpChopEr=0.2
+InpLots=1,InpLongTouch=0,InpShortTouch=0,InpMinRangeAtr=0.8,InpChopEr=0.2,InpSessFrom=8,InpSessTo=20
+InpLots=1,InpLongTrailUsd=4,InpShortTrailUsd=4,InpChopEr=0.2
