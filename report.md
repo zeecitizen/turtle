@@ -259,7 +259,25 @@ same direction.
 - `InpFvgSl`: stop just beyond the FVG's far edge (5 / 10 / 20 pips), or the tighter of that and
   the normal stop.
 
-*Results pending — the batch is running.*
+| Variant | Trades | Win rate | Net | PF | Biggest loss | Worst day | Max DD |
+|---|---|---|---|---|---|---|---|
+| **v1.14 (no FVG filter)** | 867 | **47.8%** | **+$206,705** | **1.62** | −$2,570 | −$3,966 | $13,271 |
+| FVG ≥ 0.3×ATR, safe 4 / 8 / 16 candles | 399–486 | 44.2–45.4% | +$41k / +$43k / +$46k | 1.24–1.27 | −$1,536 | −$3,258 to −$4,242 | $15.6k–16.9k |
+| FVG ≥ 0.5×ATR, safe 4 / 8 / 16 candles | 311–382 | 44.0–47.6% | +$31k / +$31k / +$19k | 1.13–1.27 | −$1,536 | −$3,176 to −$3,258 | $13.3k–17.4k |
+| FVG ≥ 1.0×ATR, safe 4 / 8 / 16 candles | 126–168 | 43.5–48.4% | +$18k / +$14k / +$12k | 1.17–1.36 | −$1,483 | −$3,832 | $8.8k–11.3k |
+| Setup candle itself taps the FVG (0.3 / 0.5) | 225–280 | 43.9–45.3% | +$16k / +$9k | 1.11–1.15 | −$1,517 | −$3,258 | $15.9k–16.6k |
+| 1-hour FVGs, safe 16 candles | 205 | 46.8% | +$19k | 1.25 | −$1,504 | −$2,987 | $15.3k |
+| Stop beyond the FVG edge (5 / 10 / 20 pips) | 137–167 | 40.6–41.9% | **−$5k to −$7k** | 0.90–0.93 | −$1,587 | | |
+| Tighter of normal / FVG stop | 341–501 | 42.3–44.3% | +$18k to +$30k | 1.13–1.15 | | | |
+
+*(1-hour FVGs with an 8-candle window made 0 trades.)*
+
+**Verdict: the FVG safe zone doesn't help this strategy.**
+- It blocks 40–85% of the trades **without raising the win rate** (43–48% vs 47.8%).
+- Profit collapses from +$207k to at most +$46k, and the drawdown is about as big.
+- A stop beyond the FVG edge turns the strategy into a loser.
+- Our setups' edge isn't "after the hunt": the EA's own break-of-the-candle entry already acts
+  after a pullback to the EMA, and adding the FVG condition mostly removes good trades.
 
 ---
 
