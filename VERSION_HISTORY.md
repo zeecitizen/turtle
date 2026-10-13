@@ -636,6 +636,25 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## TradeLifecycle v1.01 — labels that never overlap (2026-10-14)
+
+Zee, with a screenshot of v1.00 (labels piled on the newest candles, the panel's text cut off): *"on the
+candles i want clear labels. means they are not overlapping, not overlapping the candles, not labels with each
+other."*
+
+**What changed:**
+- **Labels are queued, then placed in screen pixels:**
+  - each one is measured with `TextGetSize`
+  - it starts above the highest wick (or below the lowest wick) of the candles under it, on its preferred
+    side, and moves further out until it doesn't touch another label or the panel
+  - if neither side fits, it tries the left of its point
+  - a dotted leader line joins it to its exact point
+- **Re-laid out** on every scroll, zoom or resize (`CHARTEVENT_CHART_CHANGE`).
+- **Chart shift on (30%),** so an open trade's labels have room right of the last candle.
+- **The panel is sized from the measured text,** so no line is cut off.
+
+No change to what is recorded or analysed.
+
 ## TradeLifecycle v1.00 — a trade-lifecycle diagram on the chart (2026-10-13)
 
 **Who:** Zee: *"build a trade analyzer EA … if there's a current position open or the last closed trade … it

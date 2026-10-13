@@ -1,5 +1,7 @@
 //+------------------------------------------------------------------+
-//| TradeLifecycle.mq5  v1.00  (2026-10-13)                           |
+//| TradeLifecycle.mq5  v1.01  (2026-10-14)  v1.01: labels placed in   |
+//| free space (never on a candle or another label), leader lines,      |
+//| re-laid out on scroll/zoom; panel sized to its text.                |
 //| A trade ANALYZER, it never trades. Attach it to any chart.         |
 //| It picks ONE trade - the open position, or else the last closed    |
 //| one (or the ticket you type) - and draws its whole life on the     |
@@ -20,7 +22,7 @@
 //|  * 1-minute candles for the best / worst price during the trade.    |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.00"
+#property version   "1.01"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -351,21 +353,111 @@ void Arrow(datetime t, double p, int code, color c, int w)
    ObjectSetInteger(0, n, OBJPROP_ARROWCODE, code); ObjectSetInteger(0, n, OBJPROP_COLOR, c); ObjectSetInteger(0, n, OBJPROP_WIDTH, w);
    ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
 }
+//--- labels: queued while drawing, then placed in screen pixels so they never sit on a candle or on each other
+struct Lab { datetime t; double p; string text; color c; int size; int pref; };   // pref +1 above, -1 below
+Lab g_lab[];
+int g_box[][4];          // placed boxes in pixels: x1, y1, x2, y2
+void QLab(datetime t, double p, string text, color c, int size, int pref)
+{
+   int n = ArraySize(g_lab); ArrayResize(g_lab, n + 1);
+   g_lab[n].t = t; g_lab[n].p = p; g_lab[n].text = text; g_lab[n].c = c; g_lab[n].size = size; g_lab[n].pref = pref;
+}
+bool BoxFree(int x1, int y1, int x2, int y2)
+{
+   for (int i = 0; i < ArrayRange(g_box, 0); i++)
+      if (x1 < g_box[i][2] + 4 && x2 + 4 > g_box[i][0] && y1 < g_box[i][3] + 2 && y2 + 2 > g_box[i][1]) return false;
+   return true;
+}
+void AddBox(int x1, int y1, int x2, int y2)
+{
+   int n = ArrayRange(g_box, 0); ArrayResize(g_box, n + 1);
+   g_box[n][0] = x1; g_box[n][1] = y1; g_box[n][2] = x2; g_box[n][3] = y2;
+}
+// pixel y of the highest high / lowest low of the candles under the pixel span [x1, x2] (false = no candles there)
+bool CandleSpan(int x1, int x2, int &yHigh, int &yLow)
+{
+   datetime ta, tb; double pa, pb; int sw;
+   if (!ChartXYToTimePrice(0, MathMax(0, x1), 10, sw, ta, pa) || !ChartXYToTimePrice(0, MathMax(0, x2), 10, sw, tb, pb)) return false;
+   int sa = iBarShift(_Symbol, PERIOD_CURRENT, ta, false), sb = iBarShift(_Symbol, PERIOD_CURRENT, tb, false);
+   if (tb > iTime(_Symbol, PERIOD_CURRENT, 0)) sb = 0;
+   if (ta > iTime(_Symbol, PERIOD_CURRENT, 0)) return false;          // the empty space right of the last candle
+   int lo = MathMin(sa, sb), cnt = MathAbs(sa - sb) + 1;
+   double hh = iHigh(_Symbol, PERIOD_CURRENT, iHighest(_Symbol, PERIOD_CURRENT, MODE_HIGH, cnt, lo));
+   double ll = iLow(_Symbol, PERIOD_CURRENT, iLowest(_Symbol, PERIOD_CURRENT, MODE_LOW, cnt, lo));
+   int x; if (!ChartTimePriceToXY(0, 0, iTime(_Symbol, PERIOD_CURRENT, lo), hh, x, yHigh)) return false;
+   ChartTimePriceToXY(0, 0, iTime(_Symbol, PERIOD_CURRENT, lo), ll, x, yLow);
+   return true;
+}
+void Layout()
+{
+   ObjectsDeleteAll(0, PFX + "L");
+   ArrayResize(g_box, 0);
+   int W = (int)ChartGetInteger(0, CHART_WIDTH_IN_PIXELS), H = (int)ChartGetInteger(0, CHART_HEIGHT_IN_PIXELS);
+   if (W <= 0 || H <= 0) return;
+   if (ObjectFind(0, PFX + "panel") >= 0)                         // keep clear of the panel
+      AddBox(0, 0, (int)ObjectGetInteger(0, PFX + "panel", OBJPROP_XSIZE) + 12, (int)ObjectGetInteger(0, PFX + "panel", OBJPROP_YSIZE) + 26);
+   for (int i = 0; i < ArraySize(g_lab); i++) {
+      int x0, y0;
+      if (!ChartTimePriceToXY(0, 0, g_lab[i].t, g_lab[i].p, x0, y0)) continue;
+      if (x0 < 0 || x0 > W) continue;                              // scrolled off the chart
+      uint tw, th;
+      TextSetFont("Consolas", -g_lab[i].size * 10);
+      TextGetSize(g_lab[i].text, tw, th);
+      int w = (int)tw + 6, h = (int)th + 2;
+      bool placed = false; int bx = 0, by = 0;
+      for (int side = 0; side < 2 && !placed; side++) {
+         int dir = side == 0 ? g_lab[i].pref : -g_lab[i].pref;   // preferred side first, then the other
+         for (int hx = 0; hx < 2 && !placed; hx++) {
+            int x1 = hx == 0 ? x0 + 10 : x0 - 10 - w;              // right of the point, else left
+            if (x1 < 2 || x1 + w > W - 2) continue;
+            int yh, yl, start;
+            bool cand = CandleSpan(x1, x1 + w, yh, yl);
+            if (dir > 0) start = (cand ? MathMin(yh, y0) : y0) - 8 - h;
+            else         start = (cand ? MathMax(yl, y0) : y0) + 8;
+            for (int k = 0; k < 40; k++) {
+               int y1 = dir > 0 ? start - k * (h + 2) : start + k * (h + 2);
+               if (y1 < 2 || y1 + h > H - 2) break;
+               if (BoxFree(x1, y1, x1 + w, y1 + h)) { bx = x1; by = y1; placed = true; break; }
+            }
+         }
+      }
+      if (!placed) continue;                                       // no room on screen: the arrow + panel still show it
+      AddBox(bx, by, bx + w, by + h);
+      datetime lt; double lp; int sw;
+      if (!ChartXYToTimePrice(0, bx + 3, by + 1, sw, lt, lp)) continue;
+      string n = PFX + "L" + IntegerToString(i);
+      ObjectCreate(0, n, OBJ_TEXT, 0, lt, lp);
+      ObjectSetString(0, n, OBJPROP_TEXT, g_lab[i].text); ObjectSetString(0, n, OBJPROP_FONT, "Consolas");
+      ObjectSetInteger(0, n, OBJPROP_FONTSIZE, g_lab[i].size); ObjectSetInteger(0, n, OBJPROP_COLOR, g_lab[i].c);
+      ObjectSetInteger(0, n, OBJPROP_ANCHOR, ANCHOR_LEFT_UPPER); ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
+      // leader line from the event's exact point to the nearest corner of the label
+      int cx = bx + w / 2 < x0 ? bx + w : bx, cy = by + h / 2 < y0 ? by + h : by;
+      datetime ct; double cp;
+      if (ChartXYToTimePrice(0, cx, cy, sw, ct, cp)) {
+         string l = PFX + "Lk" + IntegerToString(i);
+         ObjectCreate(0, l, OBJ_TREND, 0, g_lab[i].t, g_lab[i].p, ct, cp);
+         ObjectSetInteger(0, l, OBJPROP_COLOR, g_lab[i].c); ObjectSetInteger(0, l, OBJPROP_STYLE, STYLE_DOT);
+         ObjectSetInteger(0, l, OBJPROP_RAY_RIGHT, false); ObjectSetInteger(0, l, OBJPROP_SELECTABLE, false); ObjectSetInteger(0, l, OBJPROP_BACK, true);
+      }
+   }
+   ChartRedraw();
+}
+
 void Draw()
 {
-   Del();
+   Del(); ArrayResize(g_lab, 0);
    if (g_pid == 0) {
-      Txt(TimeCurrent(), SymbolInfoDouble(_Symbol, SYMBOL_BID), "TradeLifecycle: no trade found (check InpMagic / InpLookbackDays)", clrOrange, 10, ANCHOR_RIGHT);
-      ChartRedraw(); return;
+      QLab(TimeCurrent(), SymbolInfoDouble(_Symbol, SYMBOL_BID), "TradeLifecycle: no trade found (check InpMagic / InpLookbackDays)", clrOrange, 10, 1);
+      Layout(); return;
    }
    if (g_sym != _Symbol) return;   // the chart is switching to the trade's symbol
    datetime tEnd = g_open ? TimeCurrent() : g_t1;
-   int ps = PeriodSeconds();
    bool up = g_side > 0;
-   // average entry line, first TP
+   // room on the right of the last candle for the labels of an open trade
+   ChartSetInteger(0, CHART_SHIFT, true);
+   ChartSetDouble(0, CHART_SHIFT_SIZE, 30);
+   // average entry line; stop-loss and take-profit paths as steps
    Seg(g_t0, g_entry, tEnd, g_entry, clrDodgerBlue, STYLE_DOT, 1);
-   Txt(g_t0, g_entry, StringFormat("  entry %s", Px(g_entry)), clrDodgerBlue, 8, ANCHOR_LEFT_LOWER);
-   // stop-loss path (and TP path) as steps
    double sl = g_sl0, tp = g_tp0; datetime from = g_t0;
    for (int i = 0; i < ArraySize(g_ev); i++) {
       if (g_ev[i].kind != EV_SL && g_ev[i].kind != EV_TP) continue;
@@ -375,56 +467,57 @@ void Draw()
    }
    if (sl > 0) Seg(from, sl, tEnd, sl, clrRed, STYLE_DASH, 2);
    if (tp > 0) Seg(from, tp, tEnd, tp, clrLimeGreen, STYLE_DASH, 2);
-   if (g_sl0 > 0) Txt(g_t0, g_sl0, StringFormat("  first stop %s (risk $%.2f)", Px(g_sl0), g_risk), clrRed, 8, up ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
-   if (g_tp0 > 0) Txt(g_t0, g_tp0, StringFormat("  first TP %s", Px(g_tp0)), clrLimeGreen, 8, up ? ANCHOR_LEFT_LOWER : ANCHOR_LEFT_UPPER);
-   // events
-   int nInfo = 0;
+   if (g_sl0 > 0) QLab(g_t0, g_sl0, StringFormat("first stop %s (risk $%.0f)", Px(g_sl0), g_risk), clrRed, 8, up ? -1 : 1);
+   if (g_tp0 > 0) QLab(g_t0, g_tp0, StringFormat("first TP %s", Px(g_tp0)), clrLimeGreen, 8, up ? 1 : -1);
+   if (g_open && sl > 0 && MathAbs(sl - g_sl0) > _Point) QLab(tEnd, sl, StringFormat("stop now %s", Px(sl)), clrRed, 8, up ? -1 : 1);
    for (int i = 0; i < ArraySize(g_ev); i++) {
       Ev e = g_ev[i];
       switch (e.kind) {
          case EV_ENTRY:
          case EV_ADD:
             Arrow(e.t, e.price, up ? 233 : 234, up ? clrDodgerBlue : clrOrangeRed, e.kind == EV_ENTRY ? 3 : 2);
-            Txt(e.t, e.price, (e.kind == EV_ENTRY ? "ENTRY " : "ADD ") + e.txt, up ? clrDodgerBlue : clrOrangeRed, 9, up ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
+            QLab(e.t, e.price, (e.kind == EV_ENTRY ? "ENTRY " : "ADD ") + e.txt, up ? clrDodgerBlue : clrOrangeRed, 9, up ? -1 : 1);
             break;
          case EV_PARTIAL:
          case EV_EXIT:
             Arrow(e.t, e.price, e.kind == EV_EXIT ? 251 : 159, e.pl >= 0 ? clrLimeGreen : clrRed, 3);
-            Txt(e.t, e.price, "  " + e.txt, e.pl >= 0 ? clrLimeGreen : clrRed, 9, up ? ANCHOR_LEFT_LOWER : ANCHOR_LEFT_UPPER);
+            QLab(e.t, e.price, e.txt, e.pl >= 0 ? clrLimeGreen : clrRed, 9, up ? 1 : -1);
             break;
          case EV_SL:
-            if (e.pl > 0) {   // labelled stop move
-               Arrow(e.t, e.sl, 4, StringFind(e.txt, "WIDENED") >= 0 ? clrMagenta : clrOrange, 1);
-               Txt(e.t, e.sl, "  " + e.txt, StringFind(e.txt, "WIDENED") >= 0 ? clrMagenta : clrOrange, 8, up ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
+            if (e.pl > 0) {
+               color c = StringFind(e.txt, "WIDENED") >= 0 ? clrMagenta : clrOrange;
+               Arrow(e.t, e.sl, 159, c, 2);
+               QLab(e.t, e.sl, e.txt, c, 8, up ? -1 : 1);
             }
             break;
          case EV_TP:
-            Arrow(e.t, e.tp, 4, clrLimeGreen, 1);
-            Txt(e.t, e.tp, "  " + e.txt, clrLimeGreen, 8, ANCHOR_LEFT_LOWER);
+            Arrow(e.t, e.tp, 159, clrLimeGreen, 2);
+            QLab(e.t, e.tp, e.txt, clrLimeGreen, 8, up ? 1 : -1);
             break;
          case EV_INFO: {
-            double y = e.price > 0 ? e.price : g_entry + (up ? -1 : 1) * (2 + nInfo++) * MathMax(_Point * 50, (g_mfe + g_mae) * 0.08);
-            Seg(e.t, y, e.t, g_entry, clrGold, STYLE_DOT, 1);
-            Txt(e.t, y, "  " + e.txt, clrGold, 8, ANCHOR_LEFT);
+            double p = e.price > 0 ? e.price : g_entry;
+            Arrow(e.t, p, 159, clrGold, 2);
+            QLab(e.t, p, e.txt, clrGold, 8, up ? 1 : -1);
             break;
          }
       }
    }
-   // best / worst
-   if (g_mfeT > 0) { double p = up ? g_entry + g_mfe : g_entry - g_mfe; Arrow(g_mfeT, p, 159, clrAqua, 2); Txt(g_mfeT, p, StringFormat("  best +$%.2f", g_mfe), clrAqua, 8, up ? ANCHOR_LEFT_LOWER : ANCHOR_LEFT_UPPER); }
-   if (g_maeT > 0) { double p = up ? g_entry - g_mae : g_entry + g_mae; Arrow(g_maeT, p, 159, clrSalmon, 2); Txt(g_maeT, p, StringFormat("  worst -$%.2f", g_mae), clrSalmon, 8, up ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER); }
-   // panel
+   if (g_mfeT > 0) { double p = up ? g_entry + g_mfe : g_entry - g_mfe; Arrow(g_mfeT, p, 159, clrAqua, 2); QLab(g_mfeT, p, StringFormat("best +$%.2f", g_mfe), clrAqua, 8, up ? 1 : -1); }
+   if (g_maeT > 0) { double p = up ? g_entry - g_mae : g_entry + g_mae; Arrow(g_maeT, p, 159, clrSalmon, 2); QLab(g_maeT, p, StringFormat("worst -$%.2f", g_mae), clrSalmon, 8, up ? -1 : 1); }
+   // panel, sized from the measured text
    if (InpShowPanel) {
-      int lh = InpPanelFont + 6, w = 0;
-      for (int i = 0; i < ArraySize(g_lines); i++) w = MathMax(w, StringLen(g_lines[i]));
+      TextSetFont("Consolas", -InpPanelFont * 10);
+      uint mw = 0, lh = 0;
+      for (int i = 0; i < ArraySize(g_lines); i++) { uint w, h; TextGetSize(g_lines[i], w, h); mw = MathMax(mw, w); lh = MathMax(lh, h); }
+      lh += 3;
       string bg = PFX + "panel";
       ObjectCreate(0, bg, OBJ_RECTANGLE_LABEL, 0, 0, 0);
       ObjectSetInteger(0, bg, OBJPROP_XDISTANCE, 8); ObjectSetInteger(0, bg, OBJPROP_YDISTANCE, 22);
-      ObjectSetInteger(0, bg, OBJPROP_XSIZE, (int)(w * InpPanelFont * 0.78) + 20); ObjectSetInteger(0, bg, OBJPROP_YSIZE, ArraySize(g_lines) * lh + 12);
+      ObjectSetInteger(0, bg, OBJPROP_XSIZE, (int)mw + 24); ObjectSetInteger(0, bg, OBJPROP_YSIZE, ArraySize(g_lines) * (int)lh + 14);
       ObjectSetInteger(0, bg, OBJPROP_BGCOLOR, C'16,22,36'); ObjectSetInteger(0, bg, OBJPROP_BORDER_COLOR, clrGoldenrod); ObjectSetInteger(0, bg, OBJPROP_SELECTABLE, false);
       for (int i = 0; i < ArraySize(g_lines); i++) {
          string n = N("p"); ObjectCreate(0, n, OBJ_LABEL, 0, 0, 0);
-         ObjectSetInteger(0, n, OBJPROP_XDISTANCE, 16); ObjectSetInteger(0, n, OBJPROP_YDISTANCE, 28 + i * lh);
+         ObjectSetInteger(0, n, OBJPROP_XDISTANCE, 18); ObjectSetInteger(0, n, OBJPROP_YDISTANCE, 29 + i * (int)lh);
          ObjectSetString(0, n, OBJPROP_TEXT, g_lines[i]); ObjectSetString(0, n, OBJPROP_FONT, "Consolas"); ObjectSetInteger(0, n, OBJPROP_FONTSIZE, InpPanelFont);
          ObjectSetInteger(0, n, OBJPROP_COLOR, i == 0 ? clrGold : StringFind(g_lines[i], "---") == 0 ? clrGoldenrod : clrWhiteSmoke); ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
       }
@@ -433,8 +526,9 @@ void Draw()
    ChartSetInteger(0, CHART_AUTOSCROLL, false);
    int sh = iBarShift(_Symbol, PERIOD_CURRENT, g_t0);
    int vis = (int)ChartGetInteger(0, CHART_VISIBLE_BARS);
-   if (sh >= 0) ChartNavigate(0, CHART_END, -MathMax(0, sh - vis / 4));
+   if (sh >= 0) ChartNavigate(0, CHART_END, -MathMax(0, sh - vis / 3));
    ChartRedraw();
+   Layout();
 }
 
 void Refresh()
@@ -476,7 +570,7 @@ int OnInit()
    RecPoll();
    EventSetTimer(1);
    Refresh();
-   PrintFormat("[TradeLifecycle] v1.00 | showing position %I64u %s | recording SL/TP changes to Common\\Files\\%s", g_pid, g_sym, g_recFile);
+   PrintFormat("[TradeLifecycle] v1.01 | showing position %I64u %s | recording SL/TP changes to Common\\Files\\%s", g_pid, g_sym, g_recFile);
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int reason) { EventKillTimer(); if (reason != REASON_CHARTCHANGE) Del(); }
@@ -494,6 +588,10 @@ void OnTick()
 {
    if (InpSelfTest) SelfTest();
    if (MQLInfoInteger(MQL_TESTER)) RecPoll();   // the tester has no timer between ticks
+}
+void OnChartEvent(const int id, const long &lp, const double &dp, const string &sp)
+{
+   if (id == CHARTEVENT_CHART_CHANGE && g_pid != 0 && g_sym == _Symbol) Layout();   // scrolled / zoomed / resized: re-place the labels
 }
 void OnTradeTransaction(const MqlTradeTransaction &tr, const MqlTradeRequest &rq, const MqlTradeResult &rs)
 {
