@@ -22,6 +22,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | Small-account tiers | `EA_20USD … EA_200USD.mq5` | 88310–88314 | v1.14 base (2026-10-12) | XAUUSD M15 | READY ($80+ only) |
 | Saad (M5 original) | `Saad_strategy.mq5` | 88301 | v4.03 (2026-10-11) | XAUUSD M5 | RETIRED by the 15-min |
 | VSISA | `VSISA.mq5` (+ 4 `Vsisa*.mqh` model files) | 88201 | **v1.30** (2026-10-14) | XAUUSD M5 | READY: ML filters ON + live status panel |
+| **saad_vsisa_hybrid** | `saad_vsisa_hybrid.mq5` (+ `saad_vsisa_hybrid_saad.mqh` + 4 `Vsisa*.mqh`) | 88350 Saad part · 88351 VSISA part | **v1.00** (2026-10-14) | XAUUSD **M5** (Saad part reads M15 itself) | READY, demo first; do not run beside Saad 15-min / VSISA on the same account (it already trades both) |
 | VSISA_Pullbacks | `VSISA_Pullbacks.mq5` | 88202 | v1.00 (2026-09-17) | XAUUSD | BUILT |
 | ZeeUHV_Diamond | `ZeeUHV_Diamond.mq5` | 88154 | v1.27 (2026-09-29) | XAUUSD M1 | BUILT |
 | BasedOnLaws | `BasedOnLaws.mq5` | 88184 | v1.44 (file) / v1.43 ledger (2026-08-28) | XAUUSD M1 | BUILT |
@@ -89,6 +90,12 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | v4.02 | 2026-10-11 | **Shipped to Axi:** the TradingView indicator, ported and tuned (break +2 pips, SL 30, ATR ×2 trail) | |
 | v3.20 | 2026-10-11 | Shipped to Axi: 25-pip stop | |
 | v2.00 | 2026-10-11 | Built from `RULES_EMA_SAAD.md`, not shipped | |
+
+## saad_vsisa_hybrid (magics 88350 Saad part / 88351 VSISA part, XAUUSD M5)
+
+| Version | Date | What changed | Result / note |
+|---|---|---|---|
+| **v1.00** | 2026-10-14 | Saad 15-min v1.18 + VSISA v1.30 in one EA. Both trade on their own; a Saad trade opens at **2× lots** (comment "x2") when VSISA opened a same-direction trade within the last 60 min. Best of ~50 blend variants (report §29–31) | MT5 XAUUSD_TK, random delay: Jul–Oct **+$88,194** (net÷DD 7.26 vs 6.43 for both EAs side by side), full year **+$241,320** (21.45 vs 19.57). Own defaults reproduce the 200 ms test to the cent. Only ~28 boosted trades/yr: judge live |
 
 ## VSISA (magic 88201) · VSISA_Pullbacks (magic 88202)
 

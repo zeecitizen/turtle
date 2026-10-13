@@ -636,6 +636,42 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## saad_vsisa_hybrid v1.00 — Saad 15-min + VSISA 5-min in one EA (2026-10-14)
+
+**Who:** Zee: *"develop a new hybrid EA which uses the 15 minute saad EA to open a probe trade..."*, then *"what
+if the pyramidding inner trade is saad's EA and the outer one is the 5 minute VSISA?"*, *"try loosening the
+vsisa version a bit"*, and finally *"ok pick the best variant and call this EA it saad_vsisa_hybrid and compile
+this EA"*.
+
+**What:**
+- `mt5/saad_vsisa_hybrid.mq5` v1.00 runs two engines on one **M5** chart:
+  - **Saad part:** Saad v1.18 rules on its own M15 candles, magic **88350**
+  - **VSISA part:** VSISA v1.30 with ML layers on, magic **88351**
+- **Both trade on their own.** A Saad trade opens at 2× lots (`InpHybConfMult`) when VSISA opened a
+  same-direction trade within the last 60 minutes (`InpHybSaadGate 2`, `InpHybSaadAct 1`, `InpHybWinMin 60`).
+- **Trade comments:** `SVHyb v1.00 SAAD [x2] BUY/SELL` and `SVHyb v1.00 VSISA n_i`.
+- **Files that must sit next to it:** `saad_vsisa_hybrid_saad.mqh` plus the four `Vsisa*.mqh` model files.
+- **How it's generated:** `build_hybrid.py` → `patch_hybrid_stats.py` → `patch_hybrid_blend.py` →
+  `build_saad_vsisa_hybrid.py`.
+- **Why this variant:** about 50 variants were tested (report §29–31). Gating either engine on the other only
+  removed trades. This 60-minute lot boost is the only blend that beat running the two EAs side by side, in
+  both periods and with random delay.
+
+**Receipts** (XAUUSD_TK real ticks + $4/lot; Saad 1 lot, VSISA 0.28 lots; $25k):
+- **Own defaults, 200 ms:** Jul–Oct +$86,560.10 (net ÷ DD 7.82); full year +$238,730.58 (19.90). Identical to
+  the research build.
+- **Random delay:**
+  - Jul–Oct +$88,194, net ÷ DD 7.26 (side by side: +$77,149, 6.43)
+  - Full year +$241,320, net ÷ DD 21.45 (side by side: +$224,258, 19.57)
+
+**Cautions:**
+- **Small sample:** only about 28 Saad trades a year get boosted, at 61% WR.
+- **Selection:** the 60-minute window was the best of about 7 splits tried, at about 1.4 standard errors.
+- **Bigger as a share of the account:** the full-year drawdown is a larger % of the account (17.9% vs 7.0%).
+- **Don't double up:** do not attach it on an account that also runs Saad 15-min or VSISA; it already trades
+  both.
+- **Where it's compiled:** the Axi terminal (`saad_vsisa_hybrid.ex5`). Not attached.
+
 ## VSISA v1.30 — live status panel (2026-10-14)
 
 **Who:** Zee: *"when i attach it to the chart. it shows what its doing in real time. is it waiting for setup?
