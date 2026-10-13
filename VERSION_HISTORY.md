@@ -636,6 +636,25 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## TradeLifecycle v1.02 — expected TP1 and the 75% breakeven level (2026-10-14)
+
+Zee: *"also show the TP.. what is the expected TP. what is its 75% etc"*.
+
+The Saad EAs never send a take-profit to the broker, so for their trades (magic 88302 / 88330 / 88320) the
+analyzer recomputes the EA's own TP1 with the EA's rules:
+- **SELL:** the last support (a swing low with 3 candles on each side, within 100 candles, at least 5 pips
+  below the entry; 30 pips for the 5-min EA)
+- **BUY:** the setup candle (the one before the entry) on the 9 EMA → target the 50 EMA, on the 50 → the 9 EMA.
+  The target EMA is drawn bar by bar as a moving line. If it's below the entry (or under the minimum), the
+  analyzer shows "no TP1, 2×ATR trail".
+
+**Drawn:** the TP1 line, the **75% line** (where the stop jumps to breakeven), and labels for both. **In the
+panel:** the expected TP1, the 75% level, and "at TP1: close half, trail $2" ($4 for the 5-min EA).
+
+**Not yet verified:** a tester check against the TP1 values the EAs logged for five real Axi trades (12–13 Oct)
+was started but produced no output before Zee asked to finalize. The `InpVerify` mode is in the code for that
+check.
+
 ## TradeLifecycle v1.01 — labels that never overlap (2026-10-14)
 
 Zee, with a screenshot of v1.00 (labels piled on the newest candles, the panel's text cut off): *"on the

@@ -1,5 +1,6 @@
 //+------------------------------------------------------------------+
-//| TradeLifecycle.mq5  v1.01  (2026-10-14)  v1.01: labels placed in   |
+//| TradeLifecycle.mq5  v1.02  (2026-10-14)  v1.02: Saad EA trades show|
+//| the EA's own expected TP1 + its 75% breakeven level. v1.01: labels  |
 //| free space (never on a candle or another label), leader lines,      |
 //| re-laid out on scroll/zoom; panel sized to its text.                |
 //| A trade ANALYZER, it never trades. Attach it to any chart.         |
@@ -22,7 +23,7 @@
 //|  * 1-minute candles for the best / worst price during the trade.    |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.01"
+#property version   "1.02"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -35,7 +36,9 @@ input bool   InpRecord        = true;   // InpRecord — record every SL/TP chan
 input double InpLabelStepUsd  = 1.0;    // InpLabelStepUsd — label a stop move when it moved at least this $ since the last label (breakeven / widening always labelled)
 input bool   InpShowPanel     = true;   // InpShowPanel — the summary panel with the timeline
 input int    InpPanelFont     = 9;      // InpPanelFont — panel font size
-input bool   InpSelfTest      = false;  // InpSelfTest — TESTER ONLY: open + manage a demo trade, then print its reconstructed lifecycle
+input bool   InpSaadTargets   = true;   // InpSaadTargets — for Saad EA trades (magic 88302 / 88330 / 88320): recompute the EA's own TP1 and its 75% breakeven level
+input bool   InpSelfTest      = false;
+input string InpVerify        = "";     // InpVerify — TESTER ONLY: "time|side|price|magic;..." recompute the Saad TP1 for these entries and print it  // InpSelfTest — TESTER ONLY: open + manage a demo trade, then print its reconstructed lifecycle
 
 #define PFX "TLA_"
 //--- one event of the trade's life
@@ -213,6 +216,57 @@ datetime g_t0 = 0, g_t1 = 0, g_mfeT = 0, g_maeT = 0;
 long g_magic = 0;
 string g_openWho = "", g_comment = "";
 
+//--- the Saad EAs' own first target (they never send a TP to the broker) -----
+int      g_xKind = 0;          // 0 none, 1 SELL: last support, 2 BUY: exit-EMA touch, 3 BUY: no TP1 (2xATR trail)
+int      g_xEma = 0;           // BUY: which EMA is the target (9 / 50)
+double   g_xTp0 = 0;           // TP1 at the entry
+double   g_xTpNow = 0;         // TP1 now (the EMA moves) / at the exit
+string   g_xEa = "";
+double   g_xTrail = 2.0;
+ENUM_TIMEFRAMES g_xTf = PERIOD_M15;
+double EmaAt(string sym, ENUM_TIMEFRAMES tf, int period, int shift)
+{
+   int h = iMA(sym, tf, period, 0, MODE_EMA, PRICE_CLOSE);
+   if (h == INVALID_HANDLE) return 0;
+   double v[1]; double r = 0;
+   for (int k = 0; k < 20 && r == 0; k++) { if (CopyBuffer(h, 0, shift, 1, v) == 1) r = v[0]; else Sleep(50); }
+   IndicatorRelease(h);
+   return r;
+}
+void SaadTargets()
+{
+   g_xKind = 0; g_xEma = 0; g_xTp0 = g_xTpNow = 0; g_xEa = "";
+   if (!InpSaadTargets || (g_magic != 88302 && g_magic != 88330 && g_magic != 88320)) return;
+   bool m5 = g_magic == 88320;
+   g_xTf = m5 ? PERIOD_M5 : PERIOD_M15;
+   g_xEa = m5 ? "Saad 5-min" : (g_magic == 88330 ? "Saad 15-min pyramiding" : "Saad 15-min");
+   g_xTrail = m5 ? 4.0 : 2.0;
+   double pip = 10 * SymbolInfoDouble(g_sym, SYMBOL_POINT), minTp = (m5 ? 30 : 5) * pip;
+   int eb = iBarShift(g_sym, g_xTf, g_t0, false);
+   if (eb < 0) return;
+   int sb = eb + 1;                                                   // the setup candle closed just before the entry candle
+   double entryPx = g_ev[0].price;
+   if (g_side < 0) {                                                  // SELL: last support below the entry (the EA's LastSupport)
+      int pv = 3;
+      for (int i = eb + 1 + pv; i < eb + 1 + pv + 100; i++) {
+         double l = iLow(g_sym, g_xTf, i);
+         if (l <= 0) break;
+         if (l >= entryPx - minTp) continue;
+         bool piv = true;
+         for (int k = 1; k <= pv && piv; k++) if (iLow(g_sym, g_xTf, i - k) <= l || iLow(g_sym, g_xTf, i + k) < l) piv = false;
+         if (piv) { g_xTp0 = g_xTpNow = l; g_xKind = 1; break; }
+      }
+      return;
+   }
+   double e9 = EmaAt(g_sym, g_xTf, 9, sb), e50 = EmaAt(g_sym, g_xTf, 50, sb);
+   double h = iHigh(g_sym, g_xTf, sb), l = iLow(g_sym, g_xTf, sb);
+   g_xEma = (l <= e9 && h >= e9) ? 50 : 9;                            // on the 9 EMA -> exit at the 50; on the 50 -> exit at the 9
+   g_xTp0 = EmaAt(g_sym, g_xTf, g_xEma, eb);
+   int nowShift = g_open ? 0 : MathMax(0, iBarShift(g_sym, g_xTf, g_t1, false));
+   g_xTpNow = EmaAt(g_sym, g_xTf, g_xEma, nowShift);
+   g_xKind = g_xTp0 < entryPx + minTp ? 3 : 2;
+}
+
 bool Build()
 {
    ArrayResize(g_ev, 0); ArrayResize(g_lines, 0);
@@ -307,12 +361,20 @@ bool Build()
       if (adv > g_mae) { g_mae = adv; g_maeT = m[i].time; }
    }
    SortEv();
+   SaadTargets();
    // the panel text
    Line(StringFormat("TRADE LIFECYCLE  #%I64u  %s  %s", g_pid, g_sym, g_open ? "OPEN" : "CLOSED"));
    Line(StringFormat("%s %.2f lots  avg entry %s  |  opened by %s%s", g_side > 0 ? "BUY" : "SELL", g_vol, Px(g_entry), g_openWho,
                      g_magic != 0 ? StringFormat(" (magic %I64d)", g_magic) : ""));
    if (setup != "") Line("setup: " + setup);
    Line(StringFormat("first stop %s   first TP %s   risk %s", Px(g_sl0), g_tp0 > 0 ? Px(g_tp0) : "none at the broker", g_risk > 0 ? "$" + DoubleToString(g_risk, 2) : "-"));
+   if (g_xKind == 1 || g_xKind == 2) {
+      double tp = g_xKind == 1 ? g_xTp0 : g_xTpNow, lv75 = g_entry + 0.75 * (tp - g_entry);
+      Line(StringFormat("expected TP1 (%s, watched by the EA, not at the broker): %s", g_xEa,
+                        g_xKind == 1 ? "last support " + Px(g_xTp0) : StringFormat("touch of the %d EMA, %s now (was %s at entry)", g_xEma, Px(g_xTpNow), Px(g_xTp0))));
+      Line(StringFormat("75%% of the way -> stop to breakeven at %s%s  |  at TP1: close half, trail the rest $%.0f", Px(lv75), g_xKind == 2 ? " (moves with the EMA)" : "", g_xTrail));
+   } else if (g_xKind == 3)
+      Line(StringFormat("expected TP1: none - the %d EMA (%s) was under the entry: the EA trails 2 x ATR below the best high", g_xEma, Px(g_xTp0)));
    Line("--- timeline ---");
    int shown = 0;
    for (int i = 0; i < ArraySize(g_ev); i++) {
@@ -502,6 +564,26 @@ void Draw()
          }
       }
    }
+   if (g_xKind == 1) {                                               // SELL: fixed support target
+      double lv75 = g_entry + 0.75 * (g_xTp0 - g_entry);
+      Seg(g_t0, g_xTp0, tEnd, g_xTp0, clrLime, STYLE_DASH, 1);
+      Seg(g_t0, lv75, tEnd, lv75, clrOrange, STYLE_DOT, 1);
+      QLab(tEnd, g_xTp0, StringFormat("expected TP1 %s (last support) - EA closes half here", Px(g_xTp0)), clrLime, 8, -1);
+      QLab(tEnd, lv75, StringFormat("75%% %s - stop jumps to breakeven", Px(lv75)), clrOrange, 8, 1);
+   } else if (g_xKind == 2) {                                        // BUY: the exit EMA, bar by bar
+      int b0 = iBarShift(_Symbol, g_xTf, g_t0, false), b1 = g_open ? 0 : MathMax(0, iBarShift(_Symbol, g_xTf, g_t1, false));
+      double prevT = 0, prevE = 0, prevM = 0;
+      for (int b = b0; b >= b1; b--) {
+         double e = EmaAt(_Symbol, g_xTf, g_xEma, b), m = g_entry + 0.75 * (e - g_entry);
+         datetime t = iTime(_Symbol, g_xTf, b);
+         if (prevT > 0) { Seg((datetime)prevT, prevE, t, e, clrLime, STYLE_SOLID, 1); Seg((datetime)prevT, prevM, t, m, clrOrange, STYLE_DOT, 1); }
+         prevT = (double)t; prevE = e; prevM = m;
+      }
+      double lv75 = g_entry + 0.75 * (g_xTpNow - g_entry);
+      QLab(tEnd, g_xTpNow, StringFormat("expected TP1: %d EMA, %s now - EA closes half on the touch", g_xEma, Px(g_xTpNow)), clrLime, 8, 1);
+      QLab(tEnd, lv75, StringFormat("75%% %s - stop jumps to breakeven (moves with the EMA)", Px(lv75)), clrOrange, 8, 1);
+   } else if (g_xKind == 3)
+      QLab(g_t0, g_entry, StringFormat("no TP1 (%d EMA below the entry): EA trails 2 x ATR", g_xEma), clrGold, 8, 1);
    if (g_mfeT > 0) { double p = up ? g_entry + g_mfe : g_entry - g_mfe; Arrow(g_mfeT, p, 159, clrAqua, 2); QLab(g_mfeT, p, StringFormat("best +$%.2f", g_mfe), clrAqua, 8, up ? 1 : -1); }
    if (g_maeT > 0) { double p = up ? g_entry - g_mae : g_entry + g_mae; Arrow(g_maeT, p, 159, clrSalmon, 2); QLab(g_maeT, p, StringFormat("worst -$%.2f", g_mae), clrSalmon, 8, up ? -1 : 1); }
    // panel, sized from the measured text
@@ -570,7 +652,7 @@ int OnInit()
    RecPoll();
    EventSetTimer(1);
    Refresh();
-   PrintFormat("[TradeLifecycle] v1.01 | showing position %I64u %s | recording SL/TP changes to Common\\Files\\%s", g_pid, g_sym, g_recFile);
+   PrintFormat("[TradeLifecycle] v1.02 | showing position %I64u %s | recording SL/TP changes to Common\\Files\\%s", g_pid, g_sym, g_recFile);
    return INIT_SUCCEEDED;
 }
 void OnDeinit(const int reason) { EventKillTimer(); if (reason != REASON_CHARTCHANGE) Del(); }
@@ -584,8 +666,23 @@ void OnTimer()
       if (TimeCurrent() - g_lastDraw >= 2 || was != shown) { Refresh(); shown = g_pid; }
    }
 }
+void VerifyTargets()
+{
+   static bool done = false;
+   if (done || InpVerify == "" || !MQLInfoInteger(MQL_TESTER)) return;
+   done = true;
+   string cases[]; int n = StringSplit(InpVerify, ';', cases);
+   for (int c = 0; c < n; c++) {
+      string f[]; if (StringSplit(cases[c], '|', f) < 4) continue;
+      g_sym = _Symbol; g_t0 = StringToTime(f[0]); g_side = (int)StringToInteger(f[1]); g_magic = StringToInteger(f[3]); g_open = false; g_t1 = g_t0;
+      ArrayResize(g_ev, 1); g_ev[0].price = StringToDouble(f[2]); g_entry = g_ev[0].price;
+      SaadTargets();
+      PrintFormat("[TLA-VERIFY] %s %s @ %s -> kind %d ema %d TP1 at entry %.2f", f[0], g_side > 0 ? "BUY" : "SELL", f[2], g_xKind, g_xEma, g_xTp0);
+   }
+}
 void OnTick()
 {
+   VerifyTargets();
    if (InpSelfTest) SelfTest();
    if (MQLInfoInteger(MQL_TESTER)) RecPoll();   // the tester has no timer between ticks
 }
