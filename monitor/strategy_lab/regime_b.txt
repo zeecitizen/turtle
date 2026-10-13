@@ -1,0 +1,2 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpRegimeMode=1,InpRegTrendEr=0.11,InpRegChopEr=0.11,InpRegNormEr=0.11
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpRegimeMode=1,InpRegTrendEr=0.11,InpRegChopEr=0.11,InpRegNormEr=0.15,InpRegTrendBe=true,InpRegTrendAtrExit=false
