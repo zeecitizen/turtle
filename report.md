@@ -886,3 +886,45 @@ Every run: 1 lot, $25k, Jan 6 – Oct 8, real ticks, 200 ms.
 relies on one huge trade. If Zee wants more profit and accepts bigger drawdowns, **2 lots on plain
 v1.17** gives about 2× the profit for 2× the drawdown, which is a better deal than the H4 exit
 (+12% profit for 3.3× the drawdown).
+
+## 21. Scale-in pyramiding (anti-martingale "grid") — tested (13 Oct)
+
+**What:** `mt5/Saad_pyramid.mq5` (built by `patch_pyramid.py`).
+- While v1.17's trade is open and price has moved **X pips beyond the last entry**, add a position of
+  **0.5×** the last one's size, up to 3 positions in total.
+- **Breakeven lock** (the spec's step): when an add-on fills, every stop moves to the basket's
+  average entry + 20 points.
+- **One change from the paste:** add-ons are tracked as add-ons. They always carry at least the base
+  trade's stop and close with the base trade, so the EA doesn't "adopt" them as new trades with their
+  own exits.
+
+Every run: base 1 lot, $25k, Jan 6 – Oct 8, real ticks, 200 ms.
+
+| Version | Net | Jan–Jun | Jul–Oct | Max DD | Net ÷ DD | Worst day | Losing months |
+|---|---|---|---|---|---|---|---|
+| **v1.17 (1 lot)** | **+$202,222** | +$134,541 | +$67,681 | $13.4k | **15.1** | −$3,806 | 0 |
+| **The spec:** +30 pips, ×0.5, 3 tiers, breakeven lock | +$35,506 | +$46,054 | **−$10,547** | $36.1k | 1.0 | −$4,559 | 2 |
+| spec, +20 / +50 / +100 pips | +$28.8k / +$37.6k / +$158.6k | | | $29–51k / $21.4k | 1.0 / 0.7 / 7.4 | | 0–3 |
+| spec, equal-size add-ons (×1.0) | +$42,046 | +$39,266 | +$2,780 | $39.8k | 1.1 | −$4,708 | 4 |
+| spec, 2 tiers / 5 tiers | +$47.4k / +$33.7k | | | $31.8k / $36.5k | 1.5 / 0.9 | | 3 |
+| **No breakeven lock**, +30 pips, ×0.5, 3 tiers | **+$306,664** | +$203,194 | +$103,470 | $23.6k | 13.0 | −$7,349 | 0 |
+| No breakeven lock, +50 pips | +$286,907 | +$192,422 | +$94,484 | $23.7k | 12.1 | −$7,679 | 0 |
+| **v1.17 at 2 lots (no pyramiding)** | **+$404,444** | | | $26.8k | **15.1** | −$7,611 | 0 |
+
+**What it shows:**
+1. **The breakeven lock is what breaks the spec.**
+   - The first add-on comes only $3 after the entry, so "stop at the basket's average entry" pulls
+     the base trade's stop from about −$11 up to about +$1.
+   - Normal gold noise then scratches the trade right before the real move.
+   - Result: profit collapses from $202k to $36k and the unseen Jul–Oct period loses money.
+2. **Without the lock, pyramiding makes more money in both halves** (+$307k vs +$202k), because
+   adding to trades that are already working does follow the trend.
+3. **But it's a worse way to take extra risk than simply trading more lots:**
+   - v1.17 at **2 lots** makes **+$404k** with a $26.8k drawdown and a −$7.6k worst day.
+   - Pyramiding makes +$307k with a $23.6k drawdown and a −$7.3k worst day: about the same bad days
+     for **$98k less**.
+   - Profit per unit of drawdown falls from 15.1 to 13.0.
+   - Scaling in adds size *late*, at worse prices, right where reversals hit.
+
+**Verdict: not adopted.** If Zee wants more profit and accepts bigger swings, plain v1.17 at 2 lots
+(`InpLots = 2`) beats every pyramid version on profit, drawdown ratio and simplicity.
