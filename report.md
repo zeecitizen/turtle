@@ -964,3 +964,50 @@ Re-run: **+$306,664.42**, identical. MT5 report: `testing/Pyramid_nolock_30pips_
 **Why plain extra lots are still better:** a constant 1.75 lots of v1.17 would make about +$354k
 with a similar drawdown (about $23.5k) and a smaller worst day (about −$6.7k). The pyramid makes
 +$307k with a $23.6k drawdown and a −$7.3k worst day.
+
+## 22. Pyramiding v2: ATR spacing, volatility sizing, protection — tested (13 Oct)
+
+**Starting point:** the best pyramid from §21: no breakeven lock, +30 pips, ×0.5, 3 tiers.
+**New options in `Saad_pyramid`:**
+- `InpPyrSpacingAtr`: next add-on after N × ATR(14) instead of 30 pips
+- `InpPyrRiskPct`: each add-on risks X% of equity to its real stop
+- `InpPyrTrailAtr`: trail the whole basket to 2× ATR when an add-on fills
+
+Same run settings (base 1 lot, $25k, Jan 6 – Oct 8, real ticks, 200 ms). **"Net ÷ DD"** is profit per
+dollar of max drawdown, the fair way to compare things that take different amounts of risk.
+
+| Version | Net | Jan–Jun | Jul–Oct | Max DD | **Net ÷ DD** | Worst day | Biggest loss |
+|---|---|---|---|---|---|---|---|
+| **v1.17 (1 lot)** | +$202,222 | +$134,541 | +$67,681 | $13.4k | **15.1** | −$3,806 | −$2,570 |
+| **v1.17 at 2 lots** | +$404,444 | | | $26.8k | **15.1** | −$7,611 | −$5,139 |
+| Pyramid, 30 pips (§21 best) | +$306,664 | +$203,194 | +$103,470 | $23.6k | 13.0 | −$7,349 | |
+| ATR spacing 0.25× | +$311,076 | +$207,666 | +$103,410 | $25.7k | 12.1 | −$7,357 | −$4,781 |
+| ATR spacing 0.5× | +$294,624 | +$196,937 | +$97,687 | $24.4k | 12.1 | −$7,147 | −$4,848 |
+| ATR spacing 0.75× | +$279,478 | +$188,770 | +$90,708 | $20.6k | 13.6 | −$6,287 | −$4,991 |
+| **ATR spacing 1.0×** | +$277,796 | +$190,076 | +$87,720 | $19.2k | **14.5** | −$5,944 | −$4,214 |
+| ATR spacing 1.5× | +$255,260 | +$174,943 | +$80,317 | $18.3k | 14.0 | −$4,970 | −$4,341 |
+| Risk sizing 0.5% per add-on | +$328,564 | +$183,701 | +$144,863 | $32.7k | 10.1 | −$10,282 | −$6,800 |
+| Risk sizing 1% per add-on | +$406,672 | +$246,102 | +$160,570 | $41.1k | 9.9 | **−$13,299** | −$8,644 |
+| 2× ATR basket trail on each add-on | +$259,598 | +$166,808 | +$92,790 | $35.5k | 7.3 | −$6,548 | −$4,810 |
+| Breakeven lock + 1× ATR spacing | +$103,946 | +$77,456 | +$26,490 | $24.1k | 4.3 | −$5,124 | −$4,214 |
+
+**What it shows:**
+1. **ATR spacing helps the pyramid,** and it holds in both halves of the year:
+   - 1× ATR keeps most of the profit (+$278k) with a smaller drawdown ($19.2k vs $23.6k) and smaller
+     bad days (−$5.9k vs −$7.3k).
+   - Profit per unit of drawdown rises from 13.0 to **14.5**.
+   - It waits for a move that's big *for the current market* before adding, so fewer add-ons get
+     stopped in chop.
+2. **Volatility sizing makes it worse.** At 0.5–1% risk per add-on, the add-ons grow as the account
+   grows and when the stop is close. The worst day reaches **−$13.3k** and net ÷ DD falls to about 10.
+3. **Protection on add-on (breakeven lock or 2× ATR trail) still hurts.** Tightening the base trade's
+   stop right after it moves our way scratches the trade before the real move. This is the same
+   result as §21.
+4. **No pyramid beats plain lots on a like-for-like basis.** Every version's net ÷ DD (4.3–14.5) is
+   below plain v1.17's **15.1** at any lot size. For the same $19.2k drawdown as "ATR 1.0×", about
+   1.43 lots of plain v1.17 would make about +$289k with about a −$5.4k worst day, a bit more than the
+   pyramid's +$278k.
+
+**Verdict:** if Zee wants a pyramid, **ATR spacing 1.0× (no lock, ×0.5, 3 tiers)** is the best one
+found. It's consistent in both halves and the safest pyramid tested. But for the same risk, simply
+raising `InpLots` is still slightly better and has no extra moving parts. Not shipped.
