@@ -4,6 +4,31 @@
     "title": "Saad 15-min EA Report",
     "eyebrow": "XAUUSD · M15 · Axi real ticks · Jan 6 – Oct 8 2026",
     "subtitle": "Every idea tested on `Saad_strategy_15min` in MT5's Strategy Tester. Tuned on Jan–Jun, judged on unseen Jul–Oct. The shipped version is v1.17.",
-    "facts": [["v1.17 net (1 lot)", "+$202,222"], ["Jul–Oct unseen", "+$67,681"], ["Max DD", "$13.4k"], ["Worst day", "−$3,806"], ["Losing months", "0"]]
+    "facts": [
+      [
+        "v1.17 net (1 lot)",
+        "+$202,222"
+      ],
+      [
+        "Jul–Oct unseen",
+        "+$67,681"
+      ],
+      [
+        "Max DD",
+        "$13.4k"
+      ],
+      [
+        "Worst day",
+        "−$3,806"
+      ],
+      [
+        "Losing months",
+        "0"
+      ]
+    ]
+  },
+  "lifecycle.md": {
+    "url": "https://claude.ai/artifact/LF5pMTLE11ENxPQU3V2wE1",
+    "title": "Trade lifecycle"
   }
 }
