@@ -1403,3 +1403,73 @@ v1.28 plus, all trained on Jan–Jun:
   `VsisaDrlPolicy.mqh` must sit next to `VSISA.mq5`.
 - **Switching back:** setting `InpMetaMode`, `InpRegimeMode` and `InpExhMode` to 0 gives plain v1.28.
 - **Retrain from time to time** on newer data with `vsisa_train.py`.
+
+## 29. Hybrid EA: Saad 15-min probe + VSISA 5-min adds — does the combined win rate rise? (14 Oct)
+
+**Zee asked:** *"develop a new hybrid EA which uses the 15 minute saad EA to open a probe trade. When that trade
+becomes sufficiently mature, the EA looks for the 5 minute VSISA setup and executes by pyramidding ... tell me if
+winrate of these both EA's combined into 1 ea is higher.."*
+
+**Short answer: no.** The combined win rate is **47%**, Saad's own rate. VSISA almost never finds a setup while
+a same-direction Saad trade is open and mature: **2 of 146 VSISA setups in Jul–Oct, 6 of 322 over the full
+year.** The gate blocks nearly every VSISA trade, so the hybrid is Saad alone plus a handful of adds.
+
+### The EA
+
+`mt5/Hybrid_Saad15_VSISA5.mq5` v1.00 (attach on XAUUSD **M5**). It is built by
+`monitor/strategy_lab/build_hybrid.py` (+ `patch_hybrid_stats.py`):
+- **Probe engine:** `mt5/SaadEngine15.mqh` is Saad v1.18 with every name prefixed `S_` and its candles fixed
+  to M15. It opens the probe trades (magic **88340**).
+- **Add engine:** VSISA v1.30 on M5. A VSISA setup may fire only when a **same-direction** probe is open and
+  mature (`InpHybMature`):
+  - 0 = probe just open
+  - 1 = probe in profit ≥ `InpHybMatureR` × its risk (default 0.5R)
+  - 2 = probe stop at or past breakeven
+- **Adds** use magic **88341**.
+- **At the end of a test** the EA prints its own per-engine win rates, counted **per position**.
+- **Copies are exact.** With VSISA off, the hybrid reproduces Saad's full year to the cent (+$202,221.80). With
+  Saad off and ML off, it reproduces VSISA v1.28's Jul–Oct to the cent (+$7,378.64).
+
+### Results
+
+XAUUSD_TK real ticks, $4/lot, 200 ms; Saad 1 lot, VSISA 0.28 lots. **WR = winning positions ÷ positions.**
+
+**Jul 1 – Oct 8** (unseen by the VSISA models):
+
+| Setup | Saad trades (WR) | VSISA trades (WR) | **Combined WR** | Net |
+|---|---|---|---|---|
+| Saad alone | 365 (46.8%) | — | **46.8%** | +$67,681 |
+| VSISA v1.30 alone | — | 83 (60.2%) | **60.2%** | +$10,019 |
+| Both side by side (no gate) | 365 (46.8%) | 83 (60.2%) | **49.3%** | **+$77,696** |
+| Hybrid, mature = just open | 365 (46.8%) | 3 (2 wins) | 47.0% | +$68,233 |
+| **Hybrid, mature = 0.5R (default)** | 365 (46.8%) | **2 (1 win)** | **46.9%** | +$67,833 |
+| Hybrid, mature = 1.0R | 365 (46.8%) | 1 (1 win) | 47.0% | +$67,982 |
+| Hybrid, mature = breakeven | 365 (46.8%) | 0 | 46.8% | +$67,681 |
+| Hybrid 0.5R + close adds with the probe | 365 (46.8%) | 2 (1 win) | 46.9% | +$67,833 (identical: the adds had closed first) |
+| Hybrid 0.5R, VSISA ML off | 365 (46.8%) | 2 (1 win) | 46.9% | +$67,833 |
+
+**Full year (Jan 6 – Oct 8)** (Jan–Jun is in-sample for the VSISA models):
+
+| Setup | Saad trades (WR) | VSISA trades (WR) | **Combined WR** | Net |
+|---|---|---|---|---|
+| Saad alone | 867 (47.9%) | — | 47.9% | +$202,222 |
+| VSISA v1.30 alone | — | 163 (65.6%) | 65.6% | +$22,078 |
+| Both side by side | 867 (47.9%) | 162 (65.4%) | **50.6%** | **+$224,321** |
+| Hybrid 0.5R | 867 (47.9%) | 4 (3 wins) | 48.0% | +$202,760 |
+
+### What it means
+
+1. **The gate is the problem, not the threshold.** Even "probe just open, same direction" lets only 6 of 146
+   setups through. The most likely reason: Saad trades the breakout, while VSISA (a fade) trades the
+   reversal. When both are active they mostly point opposite ways, or VSISA fires when Saad is flat.
+2. **The adds' win rate can't be judged.** 1–4 trades is far too few; 75% on 4 trades means nothing.
+3. **Running both EAs separately beats the hybrid on everything.** Side by side scores a higher combined win
+   rate (49.3% vs 46.9% in Jul–Oct), about +$10k more profit in Jul–Oct and +$22k more over the year.
+   Different magics (88302 / 88201) already let them share one account.
+4. **VSISA's win rate comes from its ML layers, not from Saad.** VSISA with ML off is 44.0% (141 trades); with
+   ML on it is 60.2% (83 trades).
+
+**Verdict: not shipped.** The hybrid stays in the repo as a tested, working build. Zee's idea ("VSISA trades
+only with Saad's confirmation") could be tested in a looser form, where VSISA needs Saad's **direction or bias**
+on M15 instead of an open trade. That is a different hypothesis; per this section's numbers, it hasn't been
+tested.
