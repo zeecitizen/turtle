@@ -636,6 +636,71 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min_pyramiding_max_3 v1.00 — v1.17 + scale-in pyramiding (2026-10-13)
+
+**Who:** Zee: *"ATR 0.25×, 5 tiers, ×0.75 add-ons .. +$479,815 this is the result we want to put into:
+make it another EA named as *_pyramiding_max_3"*.
+**File:** `mt5/Saad_strategy_15min_pyramiding_max_3.mq5`, built by `monitor/strategy_lab/build_pyr_max3.py`.
+Magic **88330**, so it can run beside the plain EA (88302). Compiled into the Axi terminal.
+
+**What:** Saad_strategy_15min v1.17, unchanged, plus the pyramid engine copied verbatim from the test EA
+`Saad_pyramid`:
+- when the trade is **0.25 × ATR(14)** beyond the last entry, add **0.75 ×** the last position's lots
+- up to **5 positions**, about 3.05 lots at `InpLots = 1`
+- add-ons carry the base trade's stop and close with it; **no breakeven lock**
+
+**Receipts** (XAUUSD_TK real ticks + $4/lot, 1 lot, $25k, Jan 6 – Oct 8):
+
+| Run | Net | PF | Max DD | Worst day | Losing months |
+|---|---|---|---|---|---|
+| EA defaults, 200 ms | **+$479,814.52** (identical to the test EA) | 1.58 | $41.8k | −$12,338 | 0 |
+| EA defaults, random delay | +$468,074.90 | 1.56 | $42.8k | −$13,035 | 0 |
+
+The 200 ms run splits **Jan–Jun +$320,169 / Jul–Oct +$159,646**.
+
+**Caution (report.md §23):** this is bigger size, not a better entry.
+- Plain v1.17 at about 3 lots would make about +$607k for the same drawdown.
+- Profit per $ of drawdown is 11.5 here vs 15.1 for plain v1.17.
+- The worst day is −$12k to −$13k on a $25k account.
+- Demo first.
+
+## Saad_strategy_5min v1.00 — 5-minute variant: NOT profitable, demo only (2026-10-13)
+
+Commit `1ad36d0`. Magic 88320. v1.17 rescaled for M5 (risk cap $9, stop 20 pips, choppy window 48).
+30 variants on real ticks, tuned Jan–Jun:
+- best Jan–Jun +$16,243
+- the same settings on Jul–Oct: **−$27,816**
+
+Spread + commission eat M5 moves. Report §11.
+
+## Saad_strategy_15min v1.17 — default lot 1 (2026-10-13)
+
+Commit `e9cfea7`. Zee: default `InpLots` 0.10 → **1.00**. No logic change.
+Receipt: +$202,221.80 at 1 lot (Jan 6 – Oct 8, real ticks, 200 ms), PF 1.60, 0 losing months.
+
+## Saad_strategy_15min v1.16 — Zee's rule: 50% at TP1 + breakeven (2026-10-12)
+
+Commit `f14c8b5`. `InpPartialPct` 0 → **0.5**, `InpTp1Be` → **true**. When TP1 is hit, half the trade
+closes and the rest's stop is never worse than the entry.
+- Ship receipt: **+$202,221.80** at 1 lot, vs v1.14's +$206,705.
+- Worst day −$3,806 vs −$3,966; biggest loss unchanged (−$2,570).
+- MT5 win rate (per deal) 61% vs 48%.
+- Random delay: +$201,922 / +$207,971. Report §8.
+
+## Saad_strategy_15min v1.15 — HTF trend filter switch, OFF (2026-10-12)
+
+Commit `e8dec27`. Adds `InpHtfMin` (H1/H4 trend filter), **off by default**. Tested: costs most of the
+profit (H1 +$64k, H4 +$83k vs +$202k). Report §2/§12.
+
+## Saad_strategy_15min v1.14 — min candle 0.55, marubozu 0.53, choppy 0.11 (2026-10-12)
+
+Commit `56e5dcb`. Tuned on Jan–Jun, confirmed on unseen Jul–Oct:
+- Jul–Oct **+$68.6k** vs v1.13's +$48.2k
+- full period **+$206.7k**, PF 1.62, DD 5.5%, 0 losing months
+- random delay +$205k (commit `7f84039`)
+
+Report §0/§3.
+
 ## EA_20USD … EA_200USD v1.13 — small-account tiers; M5 "frequent" variant rejected (2026-10-12)
 
 Zee asked for EAs for $20/$40/$80/$100/$200 accounts at high leverage, and for a variant with at
