@@ -1057,7 +1057,12 @@ This is the plain EA, without pyramiding, with its default settings. It's read f
 
 ### 1. Entry and the first stop
 
-- A setup candle (pin bar, marubozu, hammer or shooting star) forms on the 9 or 50 EMA.
+- A setup candle forms touching an EMA:
+  - **SELL:** on the 9 EMA, a red marubozu, a shooting star, or a pin bar that closes red
+  - **BUY:** on the 9 or 50 EMA, a green marubozu, a hammer, or a pin bar (green or flat on the 9 EMA, any
+    colour on the 50)
+- **Filters:** the candle is at least 0.55 × ATR(14) tall, and the market isn't choppy (efficiency ratio ≥
+  0.11 over 16 candles). Full shape rules: `lifecycle.md`.
 - The trade opens when the **next candle breaks its high (BUY) or low (SELL) by 2 pips**. If that
   doesn't happen within one candle, or the market closes in between, the setup is dropped.
 - **Stop loss:** **35 pips ($3.50) beyond the setup candle**, below its low for a BUY, above its high
