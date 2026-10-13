@@ -30,6 +30,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | ZeeUHV_M3 "Shop B" | `ZeeUHV_M3.mq5` | 88134 | v1.10 (2026-08-20) | XAUUSD M3 | RETIRED |
 | TurtleUHV | `TurtleUHV.mq5` | 88601 | v1.00 (2026-10-09) | XAUUSD | REFUSED (not promoted) |
 | ZeeBreakout | `ZeeBreakout.mq5` | 88501 | v1.00 (2026-10-09) | XAUUSD | REFUSED (not promoted) |
+| **TradeLifecycle** | `TradeLifecycle.mq5` | — | v1.00 (2026-10-13) | any | READY tool: draws one trade's whole life on the chart, never trades |
 | RiskGuardButtons | `RiskGuardButtons.mq5` | 77001 | v1.14 (2026-10-07) | any | LIVE tool (risk buttons) |
 | TickSpeedGauge | `TickSpeedGauge.mq5` | — | v1.53 (2026-10-07) | any | research panel, never trades |
 | TurtleTradeLogger | `TurtleTradeLogger.mq5` | — | v1.06 (2026-09-25) | any | LIVE logger |
@@ -175,6 +176,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | EA / Version | Date | What changed |
 |---|---|---|
+| TradeLifecycle v1.00 | 2026-10-13 | Trade analyzer (Zee: "a lifecycle diagram EA"): picks the open or last closed trade (or a ticket), draws entries/add-ons, the SL/TP path, labelled stop moves (breakeven / trail / widened), partial closes, exit + who/why, best/worst price, and a timeline panel. Records every SL/TP change of every open position to `Common\Files\TradeLifecycle\<login>.csv` (MT5 keeps no SL/TP history). Self-test in the tester passed |
 | TurtleUHV v1.00 (88601) · ZeeBreakout v1.00 (88501) | 2026-10-09 | MT5 port of the TradingView indicator + live bridge: not promoted |
 | RandomTouch v1.00 (77101) · SignalReplay v1.00 (77201) | 2026-10-09 | Test EAs (random baseline, indicator replay), rig only |
 | RiskGuardButtons v1.00 → v1.14 (77001) | 2026-10-03..07 | Risk buttons, the live one |

@@ -636,6 +636,33 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## TradeLifecycle v1.00 — a trade-lifecycle diagram on the chart (2026-10-13)
+
+**Who:** Zee: *"build a trade analyzer EA … if there's a current position open or the last closed trade … it
+explains everything by writing on the chart and drawing labels like trail / tp updates / sl updates … a
+lifecycle diagram EA"*.
+
+**What it is:** `mt5/TradeLifecycle.mq5`. **It never trades.**
+- **Which trade:** the newest open position, otherwise the last closed one within `InpLookbackDays`. Can be
+  limited by `InpMagic` / `InpChartSymbolOnly`, or set to one `InpTicket`.
+- **What it draws:**
+  - entry and add-on arrows
+  - the average entry line, and the SL and TP paths as steps
+  - labelled stop moves: breakeven / trail / tightened / **WIDENED** / removed, and TP changes
+  - partial closes and the exit, with $ and who/why (EA, desktop, phone, web, stop loss, take profit,
+    stop-out, from the deal/order reason)
+  - the best and worst price (1-minute candles)
+  - Saad EA extras (setup, breakeven time, TP1 time) from their CSV
+  - a summary panel with the timeline, net, duration and R
+- **The limit it works around:** MT5 stores no history of SL/TP modifications. So the EA records every SL/TP
+  change of every open position on the account once a second (plus on each trade event) to
+  `Common\Files\TradeLifecycle\<login>.csv`. Trades from before it was attached show only the first stop
+  (from the opening order) and the final stop (from the exit deal).
+
+**Receipt:** the Strategy Tester self-test (`InpSelfTest=true`, XAUUSD_TK) scripted a BUY:
+breakeven, a 0.5-lot partial, a trail, then a stop exit. The analyzer reproduced every step, with net +$283.50
+(0.57 R). Compiled into the Axi and PXBT terminals.
+
 ## Saad_strategy_5min v1.01 — a profitable M5 variant: sell only (2026-10-13)
 
 **Who:** Zee: *"find a profitable variant of this EA on 5 minute timeframe using whatever tools you have.
