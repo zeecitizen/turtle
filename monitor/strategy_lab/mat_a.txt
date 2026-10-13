@@ -1,0 +1,3 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMatureMode=1
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMatureMode=1,InpMatureR=0
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpMatureMode=1,InpMatureBars=0

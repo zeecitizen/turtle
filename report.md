@@ -841,3 +841,48 @@ smart timing from simply betting bigger.
 **Simple, honest alternative now that 2 lots is allowed:** constant sizing scales profit and
 drawdown together (net÷DD stays 5.1). At **2 lots constant**, Jul–Oct would be roughly +$135k with
 about $26.6k max DD and about a −$7.6k worst day. That's simply v1.17 × 2, with no model to trust.
+
+## 20. "Mature runner" exit: hand long-running winners to H1/H4 structure — tested (13 Oct)
+
+**What:** `mt5/Saad_mature.mq5` (built by `patch_mature.py`).
+- **When a trade becomes MATURE:** after 20 candles open while in profit, and/or at +3R.
+- **What changes:** the EA stops all M15 management of it ($ trail, ATR trail, EMA exits,
+  breakeven). Once per candle, the stop goes to the previous **H1** or **H4** swing low/high minus
+  10 pips, or to a **3–4× ATR** trail from the best price.
+- **Rules for the stop:** never worse than the entry, and it only tightens after the switch.
+- **Not modelled:** swap (Zee: "we're not worried about swap").
+
+Every run: 1 lot, $25k, Jan 6 – Oct 8, real ticks, 200 ms.
+
+| Version | Net | Jan–Jun | Jul–Oct | Max DD | Biggest win | Worst day | Losing months |
+|---|---|---|---|---|---|---|---|
+| **v1.17** | **+$202,222** | +$134,541 | +$67,681 | **$13.4k** | +$19,088 | **−$3,806** | 0 |
+| H4 swing, mature by time or +3R | +$211,408 | +$131,108 | +$80,301 | $44.4k | **+$55,237** | −$5,926 | 1 |
+| H4 swing, mature by time only | **+$225,839** | +$158,303 | +$67,536 | $44.4k | +$55,237 | −$5,264 | 1 |
+| H1 swing, mature at +3R only | +$203,525 | +$124,748 | +$78,778 | $18.6k | +$18,595 | −$5,926 | 0 |
+| H1 swing, time or +3R | +$176,454 | +$99,887 | +$76,567 | $22.2k | +$18,595 | −$5,926 | 0 |
+| H1 swing, time only | +$161,396 | +$98,393 | +$63,003 | $22.2k | +$15,676 | −$5,264 | 0 |
+| H1 swing, 20-pip buffer | +$174,095 | +$98,690 | +$75,405 | $22.3k | +$18,475 | −$5,926 | 0 |
+| 3× ATR trail | +$173,731 | +$106,672 | +$67,059 | $20.4k | +$17,814 | −$5,264 | 1 |
+| 4× ATR trail | +$177,744 | +$108,205 | +$69,538 | $22.0k | +$16,428 | −$5,264 | 1 |
+| 3× ATR, time only | +$168,157 | +$102,844 | +$65,313 | $20.4k | +$17,814 | −$5,264 | 1 |
+
+**What it shows:**
+1. **The H4 exit does catch a monster.** One trade made **+$55,237** (v1.17's biggest is $19k). But
+   the max drawdown **triples** ($13.4k → $44.4k, 37% of the account), May turns negative, and it
+   trades on fewer days, because a held runner blocks new setups (one position at a time).
+2. **No version is better in both halves of the year:**
+   - "H4, time only" wins Jan–Jun (+$24k) and ties Jul–Oct.
+   - "H4, time or +3R" loses Jan–Jun and wins Jul–Oct (+$13k).
+   - "H1 at +3R" is −$10k then +$11k, about the same as v1.17 in total, with a bigger drawdown.
+
+   An edge that flips between halves is mostly the luck of which trends happened.
+3. **Every version makes the worst day worse** (−$5.3k to −$5.9k vs −$3.8k). Wider stops give back
+   more on reversal days, the "+$12k collapsing" risk the paste itself warned about.
+4. **The H1 and ATR versions lose $25–41k.** The quick $2 trail after TP1 really is better for M15
+   setups than wide structure stops (same finding as §12's wider-trail test).
+
+**Verdict: not adopted.** The only version with more profit (H4) buys it with 3× the drawdown and
+relies on one huge trade. If Zee wants more profit and accepts bigger drawdowns, **2 lots on plain
+v1.17** gives about 2× the profit for 2× the drawdown, which is a better deal than the H4 exit
+(+12% profit for 3.3× the drawdown).
