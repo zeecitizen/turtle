@@ -1474,3 +1474,93 @@ XAUUSD_TK real ticks, $4/lot, 200 ms; Saad 1 lot, VSISA 0.28 lots. **WR = winnin
 only with Saad's confirmation") could be tested in a looser form, where VSISA needs Saad's **direction or bias**
 on M15 instead of an open trade. That is a different hypothesis; per this section's numbers, it hasn't been
 tested.
+
+## 30. Blending the other way: VSISA confirms, Saad trades — does a double confirmation double the win rate? (14 Oct)
+
+**Zee asked:** *"what if the pyramidding inner trade is saad's EA and the outer one is the 5 minute VSISA? ...
+the VSISA can tell hey the market is moving up now.. then Saad's EA takes its trade and that's a doubled
+confirmation so the chances of that trade winning should double."*
+
+**Short answer: no.** The win rate doesn't double, and doesn't reliably rise at all.
+- When VSISA agreed, Saad won **50.0%** over the full year vs **47.5%** when it didn't.
+- In the unseen Jul–Oct period it was **45.8% vs 47.2%**.
+- The one stronger split is "VSISA traded the same way within the last hour": 61% (17/28). That is too few
+  trades to trust; it's about 1.4 standard errors from Saad's average.
+
+### What was added to the hybrid EA (v1.00 build, still not shipped)
+
+`monitor/strategy_lab/patch_hybrid_blend.py`:
+- **Saad confirmed by VSISA** (`InpHybSaadGate`), same direction, by one of three definitions:
+  - 1 = a VSISA trade is **open**
+  - 2 = VSISA **opened** a trade within `InpHybWinMin` minutes
+  - 3 = VSISA **saw** a setup (before its ML filters) within that window
+- **What happens to unconfirmed Saad trades** (`InpHybSaadAct`):
+  - 0 = Saad skips them
+  - 1 = Saad takes every trade, confirmed ones at 2× lots
+- **The reverse** (`InpHybVsGate` 2/3): VSISA trades only when Saad confirms.
+- **Tagging:** every trade is tagged at open with every definition. The test then prints the win rate of each
+  group, measured on the same trades in one run.
+- **Gates off = no change:** with no gate, the results match §29's side-by-side run exactly.
+
+### 1. Same trades, split by confirmation (both EAs ungated, per position)
+
+| Saad trades… | Jul–Oct n | WR | Full-year n | WR |
+|---|---|---|---|---|
+| all | 365 | 46.8% | 867 | 47.9% |
+| VSISA trade open, same dir | 10 | 60.0% | 18 | 66.7% |
+| VSISA traded same dir, last 60 min | 14 | 64.3% | 28 | 60.7% |
+| VSISA traded same dir, last 240 min | 40 | 45.0% | 71 | 47.9% |
+| VSISA setup same dir, last 60 min | 22 | 50.0% | 44 | 50.0% |
+| VSISA setup same dir, last 240 min | 59 | 45.8% | 124 | 50.0% |
+| **no VSISA confirmation at all** | 305 | **47.2%** | 741 | **47.5%** |
+| VSISA's last setup was the **opposite** way | 61 | 52.5% | 112 | 52.7% |
+
+- **The two engines more often disagree than agree.** Over the full year, 48 VSISA trades opened against an
+  open Saad trade, and only 11 alongside one.
+- **Disagreement is not bad for Saad.** When VSISA's last setup pointed the other way, Saad did slightly
+  better (52.7%). VSISA (a fade) and Saad (a breakout) read the same move differently.
+- **VSISA trades confirmed by Saad:** 65.7% (35 trades) vs 65.5% unconfirmed. No lift.
+
+### 2. Gated and boosted runs (MT5, XAUUSD_TK real ticks, $4/lot, 200 ms; Saad 1 lot, VSISA 0.28 lots)
+
+WR is per position. Combined = Saad + VSISA positions together.
+
+| Variant | Jul–Oct Saad n / WR | Combined WR | Net | Net ÷ DD | Full-year combined WR | Net | Net ÷ DD |
+|---|---|---|---|---|---|---|---|
+| **Both side by side (no gate)** | 365 / 46.8% | 49.3% | **+$77,696** | **7.18** | 50.6% | +$224,321 | 18.70 |
+| Saad alone | 365 / 46.8% | 46.8% | +$67,681 | 5.10 | 47.9% | +$202,222 | 15.07 |
+| Saad only if a VSISA trade is open | 21 / 38.1% | 55.8% | +$4,401 | 1.22 | 62.9% | +$18,726 | 5.17 |
+| Saad only if VSISA traded ≤60 min | 25 / 48.0% | 57.4% | +$17,102 | 6.01 | 62.4% | +$35,135 | 10.31 |
+| Saad only if VSISA traded ≤240 min | 60 / 40.0% | 51.7% | +$4,842 | 0.43 | 57.4% | +$29,906 | 2.67 |
+| Saad only if VSISA setup ≤60 min | 38 / 39.5% | 53.7% | +$12,208 | 1.97 | 59.0% | +$28,725 | 4.64 |
+| Saad only if VSISA setup ≤240 min | 85 / 41.2% | 50.6% | +$10,524 | 1.09 | 55.4% | +$52,305 | 5.41 |
+| same, VSISA ML off | 85 / 41.2% | 42.9% | +$7,884 | 0.69 | — | — | — |
+| Saad all, 2× lots if VSISA trade open | 365 / 46.8% | 49.3% | +$78,406 | 6.36 | 50.6% | +$226,855 | 18.39 |
+| Saad all, 2× lots if VSISA traded ≤240 | 365 / 46.8% | 49.3% | +$80,441 | 6.46 | 50.6% | +$239,625 | 19.25 |
+| Saad all, 2× lots if VSISA setup ≤240 | 365 / 46.8% | 49.3% | +$86,377 | 6.64 | 50.6% | +$263,394 | 19.41 |
+| VSISA only if Saad traded ≤240 min | 365 / 46.8% | 47.8% | +$70,456 | 6.11 | 48.6% | +$208,045 | 15.86 |
+| VSISA only if Saad setup ≤60 min | 365 / 46.8% | 47.0% | +$68,415 | 5.34 | 48.0% | +$204,013 | 15.20 |
+| VSISA only if Saad setup ≤240 min | 365 / 46.8% | 47.5% | +$69,949 | 6.07 | 48.2% | +$206,308 | 15.27 |
+| Both must agree (setups ≤240 min) | 85 / 41.2% | 42.9% | +$1,880 | 0.16 | 48.0% | +$34,857 | 2.97 |
+
+### What it means
+
+1. **Gating Saad raises the COMBINED win rate only by changing the mix.** The gates cut Saad from 365 trades
+   to 21–85, so VSISA's 60% trades make up more of the total. Saad's own win rate under a gate is about the
+   same or lower (38–48%), and net profit falls by $60–73k in Jul–Oct. That is fewer trades, not better
+   trades.
+2. **Doubling the lots on confirmed Saad trades makes more money only because it trades bigger.**
+   - Full year: net ÷ drawdown 19.41 vs 18.70 for side by side.
+   - Unseen Jul–Oct: worse, 6.64 vs 7.18.
+   - The drawdown in % of the account doubled over the full year (15% vs 7%).
+   - Not an edge.
+3. **Gating VSISA on Saad's direction just removes VSISA trades.** It loses money, and VSISA's win rate
+   doesn't rise over the full year.
+4. **Best blend = no blend.** Run both EAs side by side on one account (magics 88302 and 88201). This was the
+   best net ÷ drawdown in the unseen period, with a combined WR of 49.3% (Jul–Oct) / 50.6% (full year).
+5. **One thread worth watching, not acting on:** Saad entries within an hour after a same-direction VSISA
+   trade won 61% (28 trades, both halves of the year). If it holds as live trades accumulate, a lot boost
+   for only that case could be tested. With 28 trades it's a hypothesis.
+
+**Verdict: no version ships.** The hybrid EA keeps every mode for future tests. Results:
+`testing/hybrid_blend_runs.jsonl`; summary: `monitor/strategy_lab/blend_summary.py`.
