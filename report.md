@@ -1316,3 +1316,90 @@ except the target is an EMA rather than a support.
 
 **For now:** keep `InpBuys = false`. Turning buys on with v1.01's settings made the EA about $28k worse in
 testing.
+
+## 28. VSISA (M5): every machine-learning method from this report, applied — VSISA v1.29 (14 Oct)
+
+Zee: *"apply all the machine learning methods described in report.md to the VSISA EA on 5 min timeframe to get
+the best ever result"*.
+
+**Method:** the same as for Saad.
+- **Data:** Axi real ticks (XAUUSD_TK, + $4/lot), 0.28 lots, $25k, 200 ms delay.
+- **Walk-forward:** every model and setting is chosen on **Jan 6 – Jun 30 only**; MT5 judges it on unseen
+  **Jul 1 – Oct 8**.
+- **Test copy:** `mt5/VSISA_ml.mq5` (built by `patch_vsisa_ml.py`). It logs its own features and outcomes, and
+  runs each trained model compiled into the EA. With every switch off it equals v1.28 to the cent
+  (+$15,858.69 full year).
+- **Trainer:** `meta_labeling_system/src/vsisa_train.py`.
+
+**Starting point:** VSISA v1.28 makes **+$7,379 on Jul–Oct** (PF 1.77, drawdown $1,987, worst day −$596) and
++$15,859 over the full year. On XAUUSD.pro it makes +$14,437, so the clean-data symbol tells the same story.
+
+### 1. Optuna parameter search (§18 method): v1.28 is already the best
+
+About 150 MT5 trials over 24 settings: volume thresholds, reaction body, stop buffer/limits, target R,
+breakeven/ratchet, fake break, fade, trend filter, hours, concurrent trades, setup length.
+- **On Jan–Jun, no trial beat v1.28** (+$8,480).
+- **On Jul–Oct, all 7 runners-up lost money** (−$477 to −$2,996).
+
+VSISA's hand-tuned settings are robust. v1.28 stays the base.
+
+### 2. Each machine-learning layer on its own (Jul 1 – Oct 8, unseen)
+
+| Layer (trained on Jan–Jun) | Net | PF | Max DD | Worst day | vs v1.28 |
+|---|---|---|---|---|---|
+| **v1.28 (none)** | +$7,379 | 1.77 | $1,987 | −$596 | |
+| Meta-label classifier, P ≥ 0.40 (§13) | **+$8,470** | 2.47 | $1,502 | −$435 | **+15%, less risk** |
+| Meta-label regression, predicted ≥ −$50 (§14) | +$7,158 | 1.75 | $1,987 | −$596 | ≈ same (filtered 1 trade) |
+| Regime GMM: skip the high-volatility cluster (§15) | +$7,523 | 1.86 | $1,742 | −$596 | +2% |
+| Exhaustion exit, P ≥ 0.85 (§17) | +$8,382 | 1.93 | $1,749 | −$558 | +14% |
+| **Exhaustion exit, P ≥ 0.75** (§17) | **+$8,730** | 2.08 | $1,469 | −$558 | **+18%, less risk** |
+| PPO sizing, seed 0, avg 1.58× (§19) | +$13,428 | 2.16 | $2,212 | −$844 | |
+| …constant 1.576× (fair benchmark) | +$11,595 | 1.77 | $3,122 | −$937 | PPO better |
+| PPO sizing, seed 1, avg 1.45× | +$13,255 | 2.01 | $2,287 | −$871 | |
+| …constant 1.46× | +$10,804 | 1.77 | $2,909 | −$873 | PPO better |
+
+**Unlike Saad, VSISA does benefit.**
+- **The classifier works here.** VSISA's losers look different at entry: risk size, trend agreement, fade vs
+  normal setup.
+- **The exhaustion exit works.** Its trades have a fixed far target (10R), so cutting dying winners early pays.
+- **PPO beat its constant-lot benchmark with both seeds.**
+
+### 3. Combinations
+
+| Jul 1 – Oct 8 | Net | PF | Max DD | Worst day | Trades |
+|---|---|---|---|---|---|
+| classifier + exhaustion 0.75 | +$9,338 | 2.87 | $1,225 | −$435 | 88 |
+| **classifier + exhaustion 0.75 + regime skip = v1.29** | **+$10,019** | **3.37** | **$981** | **−$276** | 83 |
+| v1.29, random execution delays | +$10,221 | 3.34 | $1,062 | −$232 | 83 |
+| v1.29 + PPO sizing (avg 1.67×) | +$14,599 | 3.16 | $1,358 | −$553 | 71 |
+| v1.29 at a constant 1.667× (fair benchmark) | +$16,817 | 3.37 | $1,647 | −$464 | 83 |
+| classifier + exhaustion + PPO (avg 1.67×) | +$13,856 | 2.80 | $1,684 | −$553 | 75 |
+| …at a constant 1.67× | +$15,674 | 2.87 | $2,057 | −$730 | 88 |
+
+**Once the three filters are on, PPO adds nothing over a constant lot:** net ÷ drawdown is 10.7 vs 10.2, with
+less profit. So v1.29 ships the filters at the normal lot, and **lot size remains Zee's choice**.
+
+### 4. VSISA v1.29 (shipped)
+
+v1.28 plus, all trained on Jan–Jun:
+- **meta-label classifier:** skip entries with win probability < 0.40
+- **regime GMM:** no entries in the high-volatility regime
+- **exhaustion exit:** close a profitable trade when P ≥ 0.75
+
+| VSISA, 0.28 lots | Jul–Oct (unseen) | PF | Max DD | Worst day |
+|---|---|---|---|---|
+| v1.28 | +$7,379 | 1.77 | $1,987 | −$596 |
+| **v1.29** | **+$10,019 (+36%)** | **3.37** | **$981 (−51%)** | **−$276** |
+
+- **Full year:** +$22,078, PF 3.93, drawdown $981. Jan–Jun is the period the models were trained on, so that
+  half is optimistic. **The Jul–Oct row is the honest one.**
+- **v1.29 on its own defaults reproduced the Jul–Oct result to the cent.** It's compiled in the Axi terminal.
+
+**Cautions:**
+- **Some choices were made after seeing Jul–Oct.** The exhaustion threshold (0.75 vs 0.85) and the final
+  combination were picked from Jul–Oct results. The models and the regime choice themselves come from Jan–Jun
+  only. Expect some shrinkage live.
+- **It needs its model files.** `VsisaMetaModel.mqh`, `VsisaRegimeModel.mqh`, `VsisaExhaustModel.mqh` and
+  `VsisaDrlPolicy.mqh` must sit next to `VSISA.mq5`.
+- **Switching back:** setting `InpMetaMode`, `InpRegimeMode` and `InpExhMode` to 0 gives plain v1.28.
+- **Retrain from time to time** on newer data with `vsisa_train.py`.

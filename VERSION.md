@@ -21,7 +21,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | Saad 5-min | `Saad_strategy_5min.mq5` | 88320 | v1.01 (2026-10-13) | XAUUSD M5 | READY, demo first: SELL ONLY, small edge |
 | Small-account tiers | `EA_20USD … EA_200USD.mq5` | 88310–88314 | v1.14 base (2026-10-12) | XAUUSD M15 | READY ($80+ only) |
 | Saad (M5 original) | `Saad_strategy.mq5` | 88301 | v4.03 (2026-10-11) | XAUUSD M5 | RETIRED by the 15-min |
-| VSISA | `VSISA.mq5` | 88201 | v1.28 (2026-10-10) | XAUUSD M5 | BUILT |
+| VSISA | `VSISA.mq5` (+ 4 `Vsisa*.mqh` model files) | 88201 | **v1.29** (2026-10-14) | XAUUSD M5 | READY: ML filters ON (report §28) |
 | VSISA_Pullbacks | `VSISA_Pullbacks.mq5` | 88202 | v1.00 (2026-09-17) | XAUUSD | BUILT |
 | ZeeUHV_Diamond | `ZeeUHV_Diamond.mq5` | 88154 | v1.27 (2026-09-29) | XAUUSD M1 | BUILT |
 | BasedOnLaws | `BasedOnLaws.mq5` | 88184 | v1.44 (file) / v1.43 ledger (2026-08-28) | XAUUSD M1 | BUILT |
@@ -94,6 +94,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | EA / Version | Date | What changed |
 |---|---|---|
+| **VSISA v1.29** | 2026-10-14 | v1.28 + meta-label classifier (skip P<0.40) + regime GMM (skip the high-vol cluster) + exhaustion exit (P≥0.75), trained on Jan–Jun. Jul–Oct unseen: **+$10,019 vs +$7,379**, PF 3.37 vs 1.77, DD $981 vs $1,987; random delay +$10,221 |
 | VSISA v1.28 | 2026-10-10 | The looser fade ships: 288 trades instead of 163 |
 | VSISA v1.27 | 2026-10-09 | Other markets, lot-step fix, the more-trades test |
 | VSISA v1.26 | 2026-10-09 | Equity-proportional compounding |

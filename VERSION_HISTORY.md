@@ -636,6 +636,29 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## VSISA v1.29 — three machine-learning layers on top of v1.28 (2026-10-14)
+
+**Who:** Zee: *"optimize the VSISA EA that runs on 5 minutes timeframe to maximize profits"* and *"apply all the
+machine learning methods described in report.md to the VSISA EA on 5 min timeframe to get the best ever result"*.
+
+**What:**
+- `mt5/VSISA.mq5` v1.29 = v1.28 + the hooks from `VSISA_ml.mq5` with three layers ON. The models are trained on
+  Jan–Jun only by `meta_labeling_system/src/vsisa_train.py` and compiled in as `VsisaMetaModel.mqh`
+  (XGBoost classifier, threshold 0.40), `VsisaRegimeModel.mqh` (3-cluster GMM, skip mask 4) and
+  `VsisaExhaustModel.mqh` (threshold 0.75).
+- `VsisaDrlPolicy.mqh` ships too, but the PPO sizing is OFF: with the filters on it didn't beat a constant lot.
+- Banner: `[VSISA] v1.29 (ML: meta 1 thr 0.40, regime skip 4, exhaustion 1 thr 0.75)`. Magic 88201 unchanged.
+
+**Receipts** (XAUUSD_TK real ticks + $4/lot, 0.28 lots, $25k, 200 ms):
+- **Jul 1 – Oct 8 (unseen):** v1.29 **+$10,018.82**, PF 3.37, DD $981, worst day −$276, vs v1.28 +$7,378.64,
+  PF 1.77, DD $1,987. Random delay: +$10,221.
+- **Full year:** +$22,078 (Jan–Jun is in-sample for the models).
+- **Optuna** (about 150 trials) found nothing better than v1.28's own settings; all runners-up lost on Jul–Oct.
+
+**Caution:** the 0.75 exhaustion threshold and the final combination were chosen after seeing Jul–Oct results.
+Every layer can be switched off with its `Inp*Mode = 0`. Compiled into the Axi terminal with its four .mqh
+files. Full results: report.md §28.
+
 ## TradeLifecycle v1.02 — expected TP1 and the 75% breakeven level (2026-10-14)
 
 Zee: *"also show the TP.. what is the expected TP. what is its 75% etc"*.
