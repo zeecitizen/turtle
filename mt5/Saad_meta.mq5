@@ -923,7 +923,7 @@ string MetaHeader() { string h = "pos_id,time,side"; for (int i = 0; i < META_NF
 // mode 2: the PDF's gatekeeper (WebRequest cannot run in the Strategy Tester)
 double MetaApi(int side, const double &f[])
 {
-   if (MQLInfoInteger(MQL_TESTER)) return InpApiFailPass ? 1.0 : 0.0;
+   if (MQLInfoInteger(MQL_TESTER)) return InpApiFailPass ? 1e9 : -1e9;   // beats / fails any threshold, probability or $
    string payload = "{\"features\": [";
    for (int i = 0; i < META_NF; i++) payload += (i ? "," : "") + StringFormat("%.8f", f[i]);
    payload += "]}";
@@ -938,7 +938,7 @@ double MetaApi(int side, const double &f[])
       if (k >= 0) return StringToDouble(StringSubstr(resp, k + 14));
    }
    PrintFormat("[SAAD-META] API unreachable (HTTP %d, error %d) -> %s", res, GetLastError(), InpApiFailPass ? "taking the trade" : "skipping the trade");
-   return InpApiFailPass ? 1.0 : 0.0;
+   return InpApiFailPass ? 1e9 : -1e9;   // beats / fails any threshold, probability or $
 }
 // the trade is fully closed: its net over every deal of the position
 void MetaOutcome(ulong pos)

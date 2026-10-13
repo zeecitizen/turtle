@@ -528,3 +528,49 @@ The EA's in-tester probabilities match Python's to 1e-7 on all 469 entries.
 
 `Saad_strategy_15min` v1.17 is untouched. The meta-labeling system stays in the repo, ready to
 retrain on more data later: `py meta_labeling_system\src\train_metalabel.py`.
+
+## 14. Meta-labeling, regression version (predict the trade's net $) — tested (13 Oct)
+
+**The idea:** the §13 classifier treated a +$50 trade the same as a +$19k runner, so it cut the
+big winners. This version predicts each trade's **net dollars** instead (XGBoost
+`reg:squarederror`) and skips a trade when the prediction is below a $ threshold. Optionally,
+trades are weighted by |net $| so the big ones count more.
+
+**Files:** `meta_labeling_system/src/train_metalabel_reg.py`; models `models/meta_model_xauusd_reg_*.pkl`
+and `mt5/SaadMetaModel_reg_*.mqh`. `api_server.py --model <pkl>` serves it live.
+
+**Method:** same data and walk-forward as §13.
+1. Train on Jan–Jun (502 trades).
+2. Pick the threshold inside Jan–Jun.
+3. MT5 runs the gated EA on the unseen **Jul 1 – Oct 8**.
+
+Exported trees match XGBoost to under 1 cent.
+
+| Jul 1 – Oct 8, 1 lot, real ticks | Net | Trades | Win rate | Biggest win | Worst day |
+|---|---|---|---|---|---|
+| **No filter (v1.17)** | **+$67,681** | 365 | 60.1% | +$11,511 | −$3,806 |
+| weighted by \|$\|, depth 3, skip if predicted < $0 (the pasted spec) | +$48,420 | 276 | 61.0% | +$11,511 | −$4,659 |
+| same, skip if < −$250 (picked on Jan–Jun) | +$53,041 | 308 | 59.3% | +$11,511 | −$4,659 |
+| unweighted, depth 3, < $0 | +$40,437 | 275 | 61.3% | **+$8,412** (the $11.5k runner was skipped) | −$4,659 |
+| unweighted, depth 3, < −$250 | +$63,386 | 319 | 60.6% | +$11,511 | −$4,659 |
+| weighted, depth 2, < $0 | +$67,961 | 359 | 59.7% | +$11,511 | −$3,989 |
+| weighted, depth 2, < −$500 (picked on Jan–Jun) | +$67,681 | 365 | 60.1% | +$11,511 | −$3,806 |
+| unweighted, depth 2, < $0 | +$58,363 | 298 | 60.8% | +$11,511 | **−$2,875** |
+| unweighted, depth 2, < −$250 | +$66,832 | 364 | 60.0% | +$11,511 | −$3,806 |
+
+**Verdict: REJECTED. No regression model beats taking every trade.**
+- **Weighting by $ does keep the big runners**, so the losses are much smaller than the
+  classifier's in §13. But no variant made more money.
+  - The best, weighted depth 2 at $0, made +$280 more by skipping 6 trades, with a worse worst
+    day. That's noise.
+  - The threshold picked on Jan–Jun (−$500) skipped nothing at all.
+- **The pasted spec** (weighted, depth 3, $0) made **−$19k** less than no filter.
+- **One interesting row:** unweighted depth 2 at $0 cut the worst day to −$2,875 for −$9k of
+  profit. That's about the same trade-off as the `InpDayLossUsd` daily limit (§12), which is simpler
+  and needs no model.
+
+**Why:** with only about 500 trades to learn from, there isn't enough information in these 15
+features to tell, at entry, which trades will lose. The same lesson came from the 50 filter tests in
+§12.
+
+v1.17 stays untouched.
