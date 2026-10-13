@@ -1,0 +1,1000 @@
+//+------------------------------------------------------------------+
+//| saad_vsisa_hybrid_saad.mqh - GENERATED (build_saad_vsisa_hybrid.py) from |
+//| Saad_strategy_15min.mq5 v1.18: every name prefixed S_, timeframe = M15.   |
+//| Do not edit; rebuild instead.                                              |
+//+------------------------------------------------------------------+
+input group "=== Saad 15-min engine (v1.18 rules, M15 candles) ==="
+// v1.18 (Zee): every S_trade's comment names the EA + version, so the account history shows where it came from
+#define S_EA_COMMENT "SVHyb v1.00 SAAD"
+
+//--- the two lines
+input int    S_InpEmaFast     = 9;      // S_InpEmaFast
+input int    S_InpEmaSlow     = 50;     // S_InpEmaSlow
+
+//--- ① setup candle
+input double S_InpWickMin     = 0.45;   // S_InpWickMin — pin: long wick >= this x range [v1.13: 0.35->0.45]
+input double S_InpBodyMax     = 0.60;   // S_InpBodyMax — pin: body <= this x range
+input double S_InpNoseMax     = 0.20;   // S_InpNoseMax — pin: short wick <= this x range
+input bool   S_InpPinDir      = false;  // S_InpPinDir — pin must point the S_trade way (false = any pin, the EMA decides)
+input bool   S_InpPinColor    = false;  // S_InpPinColor — pin body must close the S_trade way too: LONG green, SHORT red (with S_InpPinDir)
+input bool   S_InpUsePin      = true;   // S_InpUsePin — accept pin bars
+input bool   S_InpMarubozu    = true;   // S_InpMarubozu — accept a marubozu
+input double S_InpMaruBody    = 0.53;   // S_InpMaruBody — marubozu: body >= this x range [v1.09: 0.70->0.50, Zee; 0.35-0.55 plateau] [v1.14: 0.50->0.53]
+input bool   S_InpHammer      = true;   // S_InpHammer — accept hammers (LONG)
+input bool   S_InpStar        = true;   // S_InpStar — accept shooting stars (SHORT)
+input double S_InpHamRatio    = 2.5;    // S_InpHamRatio — hammer: long wick >= this x body [v1.13: 3->2.5]
+input double S_InpHamNose     = 0.50;   // S_InpHamNose — hammer: opposite wick <= this x range
+input double S_InpMinRangeAtr = 0.55;   // S_InpMinRangeAtr — candle range >= this x ATR(14) (0 = off) [v1.14: 0.50->0.55]
+
+//--- ① on the EMA
+input int    S_InpLongRule    = 2;      // S_InpLongRule — 0 on 9 EMA exit 50 (rules) · 1 on 50 exit 9 (inverse) · 2 both
+input int    S_InpShortLine   = 1;      // S_InpShortLine — 0 the 50 EMA (rules) · 1 the 9 EMA · 2 either [M15: 2->1, SHORT setups on the 9 EMA]
+input int    S_InpTouchMode   = 0;      // S_InpTouchMode — 0 candle touches the EMA · 1 wick touches, body on the S_trade side
+input double S_InpTouchPips   = 0;      // S_InpTouchPips — touch tolerance
+input bool   S_InpLongExitAbove = false;// S_InpLongExitAbove — LONG only when its exit EMA is above the candle
+
+//--- ② break · ③ entry
+input int    S_InpBreakBars   = 1;      // S_InpBreakBars — the high/low must break within this many candles [M15: 2->1, one 15-min candle = three 5-min ones]
+input double S_InpBreakPips   = 2;      // S_InpBreakPips — break must clear the high/low by this many pips [v4.02: 0->2, MT5 court]
+input bool   S_InpTrigBid     = true;   // S_InpTrigBid — LONG break judged on the BID like the chart (false = the ASK, a real buy stop)
+
+//--- ④ stop · ⑤ target
+input double S_InpSlPips      = 35;     // S_InpSlPips — stop beyond the candle [v4.02: 34->30] [v1.13: 30->35, real-tick court + Jul-Oct holdout]
+input double S_InpMaxRiskUsd  = 15.0;    // S_InpMaxRiskUsd — skip if the stop is more than this $ of price away (0 = off) [M15: 9->15; 14-18 plateau, 9 skips 2/3 of M15 setups]
+input int    S_InpLongExit    = 1;      // S_InpLongExit — 0 a candle touches the exit EMA · 1 a candle CLOSES at / beyond it
+input double S_InpLongTpPips  = 0;      // S_InpLongTpPips — LONG: take profit this many pips before the EMA
+input int    S_InpSwingPivot  = 3;      // S_InpSwingPivot — SHORT "last support" = swing low with this many candles each side
+input int    S_InpSwingLook   = 100;    // S_InpSwingLook — candles back to search for the support [M15: 300->100 candles = 25 hours]
+input double S_InpShortTpPips = 0;      // S_InpShortTpPips — SHORT: take profit this many pips before the support
+input double S_InpMinTpPips   = 5;      // S_InpMinTpPips — TP at least this far from the entry
+input double S_InpMaxTpPips   = 0;      // S_InpMaxTpPips — skip a SHORT whose support is further than this (0 = off)
+
+//--- ⑥ breakeven
+input double S_InpBeUsd       = 0.0;    // S_InpBeUsd — stop to entry once price moved this $ (0 = off)
+input int    S_InpNoNewMins   = 0;      // S_InpNoNewMins — no new setups / entries this many minutes before the day's close (0 = off) [v1.03 30; v1.05 OFF, Zee: costs ~$11k at 1 lot]
+input int    S_InpCloseLossMins = 3;    // S_InpCloseLossMins — this many minutes before the close: shut trades in loss, keep winners (0 = off) [v1.03, Zee]
+input int    S_InpLongTouch   = 1;      // S_InpLongTouch — LONG at the exit EMA: 1 on a TOUCH trail $X below the market + TP at the last resistance (Zee 2026-10-12) · 0 old exit
+input double S_InpLongTrailUsd = 2.0;   // S_InpLongTrailUsd — ...the trailing stop's distance below the market, $ of price [v1.07: 3->2, Zee]
+input bool   S_InpLongResTp   = true;   // S_InpLongResTp — ...and aim for the next liquidity: TP2 = last resistance, then TP3 = the one beyond (watched by the EA; the exit is the trail)
+input bool   S_InpLongResTp1  = false;  // S_InpLongResTp1 — LONG whose exit EMA is below / too close to the entry: TP1 = the next resistance above the entry (false = no TP, trail from entry) [v1.11 Zee; v1.12 OFF: -$70k on real ticks (trailing from entry is better)]
+input bool   S_InpResTp1Ride  = true;   // S_InpResTp1Ride — with S_InpLongResTp1: also trail from the entry (2xATR) until that resistance is reached
+input int    S_InpShortTouch  = 1;      // S_InpShortTouch — SHORT at the support (TP1): 1 trail $X above the market + TP2/TP3 = the supports below (Zee 2026-10-12) · 0 old (lock + ATR trail)
+input double S_InpTrailStepUsd = 0;     // S_InpTrailStepUsd — widen the $ trail by this much at each TP reached after TP1 (TP2 +1x, TP3 +2x ...; 0 = fixed)
+input double S_InpShortTrailUsd = 2.0;  // S_InpShortTrailUsd — ...the trailing stop's distance above the market, $ of price [v1.07: 3->2, Zee]
+input double S_InpBeTpPct     = 0.75;   // S_InpBeTpPct — CTC: stop to entry once price covered this share of the way to the TP (0 = off) [v1.02, Zee]
+
+//--- ⑦ trailing
+input bool   S_InpTrail       = true;   // S_InpTrail — use a trailing stop
+input int    S_InpTrailSide   = 2;      // S_InpTrailSide — 0 LONG only · 1 SHORT only · 2 both
+input bool   S_InpRide        = true;   // S_InpRide — let winners run: trail from the TP instead of exiting
+input int    S_InpTrailMode   = 2;      // S_InpTrailMode — 0 low/high of last N candles · 1 X pips behind best · 2 ATR x behind best [v4.02: 0->2 ATR]
+input int    S_InpTrailN      = 6;      // S_InpTrailN — N candles
+input double S_InpTrailPips   = 30;     // S_InpTrailPips — X pips
+input double S_InpTrailAtr    = 2.0;    // S_InpTrailAtr — ATR multiple [v4.02: 1.3->2.0; 1.75-2.5 plateau]
+input double S_InpTrailStart  = 0;      // S_InpTrailStart — without ride: start trailing after this many pips of profit
+input int    S_InpRideLock    = 0;      // S_InpRideLock — when the TP is reached lock the stop at: 0 the TP · 1 the entry · 2 don't lock
+input double S_InpLockPips    = 0;      // S_InpLockPips — lock this many pips short of the TP [v4.02: 2->0]
+
+//--- ✖ filters
+input double S_InpChopEr      = 0.11;   // S_InpChopEr — skip if the efficiency ratio is below this (0 = off) [v1.14: 0.10->0.11]
+input int    S_InpChopErLook  = 16;     // S_InpChopErLook — efficiency ratio length
+input int    S_InpSessFrom    = 0;      // S_InpSessFrom — broker hour, inclusive (Axi UTC+3; 0/24 = all day)
+input int    S_InpSessTo      = 24;     // S_InpSessTo — broker hour, exclusive
+input bool   S_InpGapCancel   = true;   // S_InpGapCancel — cancel a waiting setup across the daily close / weekend
+input int    S_InpHtfMin      = 0;      // S_InpHtfMin — higher-timeframe trend filter: 0 off · 15 / 30 / 60 / 240 minutes (S_trade only with that timeframe's trend)
+input int    S_InpHtfEma      = 50;     // S_InpHtfEma — the HTF trend EMA (LONG: HTF close above it and it is rising; SHORT the opposite)
+input bool   S_InpTrendAlign  = false;  // S_InpTrendAlign — LONG only if EMA9 > EMA50, SHORT only if EMA9 < EMA50
+input bool   S_InpPriceSide   = false;  // S_InpPriceSide — LONG only if the close is above the 50 EMA, SHORT below
+input double S_InpSlopePips   = 0;      // S_InpSlopePips — the 50 EMA must move this many pips the S_trade's way...
+input int    S_InpSlopeLook   = 5;      // S_InpSlopeLook — ...over this many candles (0 pips = off)
+input double S_InpEmaGapPips  = 0;      // S_InpEmaGapPips — skip if the 9 and 50 EMA are closer than this (0 = off)
+input double S_InpMaxSpreadPts = 0;     // S_InpMaxSpreadPts — skip an entry while the spread is wider (0 = off)
+input int    S_InpSkipDow     = -1;     // S_InpSkipDow — no new setups on this weekday (0 Sun .. 6 Sat; -1 none)
+
+//--- v4.01 tuning: geometry
+input double S_InpLockAtUsd   = 0;      // S_InpLockAtUsd — once price moved this $ the S_trade's way... (0 = off; VSISA's one-lock ratchet)
+input double S_InpLockUsd     = 0;      // S_InpLockUsd — ...lock the stop this $ beyond the entry
+input double S_InpFixTpPips   = 0;      // S_InpFixTpPips — fixed take profit for both sides, no ride (0 = the rules' targets)
+input int    S_InpMaxBars     = 0;      // S_InpMaxBars — close a S_trade still open after this many candles (0 = off)
+input int    S_InpCoolBars    = 0;      // S_InpCoolBars — after a losing S_trade, no new setups for this many candles (0 = off)
+
+//--- tuning: more trades / daily guard
+input int    S_InpMaxPos      = 1;      // S_InpMaxPos — positions open at the same time
+input bool   S_InpReplace     = false;  // S_InpReplace — a newer setup replaces the one waiting for its break
+input int    S_InpExtraDir    = 0;      // S_InpExtraDir — extra positions (S_InpMaxPos > 1): 0 any side · 1 only the SAME side as the open one · 2 only the OPPOSITE side
+input double S_InpDayLossUsd  = 0;      // S_InpDayLossUsd — no new trades today once the day lost this $ (0 = off)
+input double S_InpDayTargetUsd = 0;     // S_InpDayTargetUsd — no new trades today once the day made this $ (0 = off) [v4.02: 0->150 at 0.10 lots] [M15: 150->0]
+
+//--- v1.12 variants (all off = v1.11 behaviour)
+input int    S_InpEntryMode   = 0;      // S_InpEntryMode — 0 market on the break · 1 after the break wait for a dip (retest) · 2 liquidity sweep of the candle's low/high, then enter
+input double S_InpRetestFrac  = 0.5;    // S_InpRetestFrac — mode 1: dip to this share back into the setup candle (0 = retest of the broken high/low, 0.5 = its middle, 1 = its far end)
+input int    S_InpRetestBars  = 2;      // S_InpRetestBars — mode 1: candles to wait for the dip after the break
+input double S_InpSweepPips   = 0;      // S_InpSweepPips — mode 2: price must S_trade this far beyond the setup candle's low (LONG) / high (SHORT)
+input int    S_InpSweepBars   = 3;      // S_InpSweepBars — mode 2: candles allowed for the sweep and the entry
+input int    S_InpSweepEntry  = 0;      // S_InpSweepEntry — mode 2: 0 enter when price reclaims the candle's low/high · 1 enter on the break of the candle's far end after the sweep
+input double S_InpSweepSlPips = 10;     // S_InpSweepSlPips — mode 2: stop this many pips beyond the sweep's extreme
+input int    S_InpSlMode      = 0;      // S_InpSlMode — 0 S_InpSlPips beyond the setup candle · 1 S_InpSlAtrMult x ATR from the entry · 2 S_InpSlUsd from the entry
+input double S_InpSlAtrMult   = 1.0;    // S_InpSlAtrMult — stop mode 1
+input double S_InpSlUsd       = 5.0;    // S_InpSlUsd — stop mode 2, $ of price
+input double S_InpPartialPct  = 0.5;    // S_InpPartialPct — close this share of the position at TP1 (0 = off) [v1.16: 0 -> 0.5, Zee's rule]
+input bool   S_InpTp1Be       = true;   // S_InpTp1Be — at TP1 the rest of the position's stop is never worse than the entry (breakeven) [v1.16, Zee's rule]
+input double S_InpRiskPct     = 0;      // S_InpRiskPct — size each S_trade to risk this % of equity (0 = fixed S_InpLots)
+input double S_InpMinLotRiskPct = 0;    // S_InpMinLotRiskPct — with S_InpRiskPct: skip a S_trade when even the minimum lot would risk more than this % of equity (0 = take it at the minimum lot)
+input double S_InpMaxLots     = 50;     // S_InpMaxLots — upper limit for S_InpRiskPct sizing
+input int    S_InpModBackoffSec = 3;   // S_InpModBackoffSec — after the broker refuses a stop change, wait this many seconds before trying again (60 s when the market is closed)
+input double S_InpDayLossPct  = 0;      // S_InpDayLossPct — no new trades today after losing this % of the day's starting equity (0 = off)
+
+//--- trading
+input double S_InpLots        = 1.00;   // S_InpLots — lot size [v1.17: 0.10 -> 1, Zee]
+input bool   S_InpBuys        = true;   // S_InpBuys — allow longs
+input bool   S_InpSells       = true;   // S_InpSells — allow shorts
+input int    S_InpPipPts      = 10;     // S_InpPipPts — points per pip (gold 10)
+input int    S_InpMagicNumber = 88350;  // S_InpMagicNumber — Saad_strategy [M15 variant: own magic, can run beside the M5 EA]
+input bool   S_InpVerbose     = false;  // S_InpVerbose — print every decision
+input bool   S_InpDraw        = true;   // S_InpDraw — labels on the chart (visual tester + live): setups, entries, stop moves, exits
+input bool   S_InpLog         = true;   // S_InpLog — print every S_trade event to the Experts tab (live + visual tester)
+input bool   S_InpLogCsv      = true;   // S_InpLogCsv — one CSV row per closed S_trade in Common\Files (live + visual tester)
+input bool   S_InpDrawSkips   = false;   // S_InpDrawSkips — also label setups that were skipped (no break, risk, no support, choppy)
+
+CTrade   S_trade;
+int      S_hFast = INVALID_HANDLE, S_hSlow = INVALID_HANDLE, S_hAtr = INVALID_HANDLE, S_hHtf = INVALID_HANDLE;
+ENUM_TIMEFRAMES g_htf = PERIOD_M15;
+datetime S_g_lastBar = 0;
+
+// the setup waiting for its break
+int      S_g_pSide = 0;
+double   S_g_pHigh = 0, S_g_pLow = 0;
+int      S_g_pLeft = 0;
+int      S_g_pExit = 50;           // long: which EMA is its exit
+// v1.12: entry armed after the break (mode 1) / sweep tracking (mode 2)
+int      S_g_aSide = 0;            // mode 1: waiting for the dip
+double   S_g_aLevel = 0, S_g_aHigh = 0, S_g_aLow = 0;
+int      S_g_aLeft = 0, S_g_aExit = 50;
+bool     S_g_swept = false;        // mode 2: the setup candle's low/high has been swept
+double   S_g_sweepExt = 0;
+double   S_g_dayStartEq = 0; int g_dayKey = -1;
+datetime S_g_modBlockUntil = 0; int g_modFails = 0;
+int      S_g_skipDip = 0, S_g_skipSweep = 0, S_g_skipMinLot = 0, S_g_dayLossStop = 0, S_g_partials = 0;
+
+// per-position state
+struct S_PosState { ulong ticket; int side; double entry; double tp; int exitE; bool noTp; bool ride; datetime entryTime; double best; bool usdTrail; double tpNext; int tpStage; bool resTp1;
+                  string setup; double sl0; double risk; string tp1; datetime tp1At; string tps; datetime ctcAt; int moves; double mfe;
+                  int num; double slNow; datetime slFrom; string why; };
+S_PosState S_g_pos[];
+
+int S_g_ctc = 0, S_g_skipClose = 0, S_g_closeLoss = 0;
+int S_g_setups = 0, S_g_entries = 0, S_g_skipBreak = 0, S_g_skipGap = 0, S_g_skipRisk = 0, S_g_skipSup = 0, S_g_chop = 0,
+    S_g_busy = 0, S_g_rides = 0, S_g_lockFail = 0, S_g_dayStop = 0, S_g_filtered = 0;
+
+double S_Pip() { return S_InpPipPts * _Point; }
+double S_Buf(int h, int s) { double v[1]; return CopyBuffer(h, 0, s, 1, v) == 1 ? v[0] : 0.0; }
+double S_Ema(int which, int s) { return S_Buf(which == 9 ? S_hFast : S_hSlow, s); }
+bool   S_TrailOn(int side) { return S_InpTrail && (S_InpTrailSide == 2 || (side > 0 && S_InpTrailSide == 0) || (side < 0 && S_InpTrailSide == 1)); }
+
+int S_OnInit()
+{
+   S_hFast = iMA(_Symbol, PERIOD_M15, S_InpEmaFast, 0, MODE_EMA, PRICE_CLOSE);
+   S_hSlow = iMA(_Symbol, PERIOD_M15, S_InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
+   S_hAtr  = iATR(_Symbol, PERIOD_M15, 14);
+   if (S_InpHtfMin > 0) {
+      g_htf = S_InpHtfMin == 15 ? PERIOD_M15 : S_InpHtfMin == 30 ? PERIOD_M30 : S_InpHtfMin == 60 ? PERIOD_H1 : S_InpHtfMin == 240 ? PERIOD_H4 : PERIOD_M15;
+      S_hHtf = iMA(_Symbol, g_htf, S_InpHtfEma, 0, MODE_EMA, PRICE_CLOSE);
+      if (S_hHtf == INVALID_HANDLE) return INIT_FAILED;
+   }
+   if (S_hFast == INVALID_HANDLE || S_hSlow == INVALID_HANDLE || S_hAtr == INVALID_HANDLE) return INIT_FAILED;
+   S_trade.SetExpertMagicNumber(S_InpMagicNumber);
+   if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) S_trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
+   PrintFormat("[SAAD-15min] v1.18 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+               _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
+               (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), S_InpSlPips, S_InpMaxRiskUsd, S_InpChopEr, S_InpChopErLook, S_InpSessFrom, S_InpSessTo,
+               S_InpTrail ? "on" : "off", S_InpTrailN, S_InpRide ? "on" : "off", S_InpMaxPos);
+   datetime e = S_SessionEnd(TimeCurrent());
+   PrintFormat("[SAAD] day close for %s: %s (no new trades %d min before; losers shut %d min before)", _Symbol,
+               e == 0 ? "none found (no daily break)" : TimeToString(e), S_InpNoNewMins, S_InpCloseLossMins);
+   return INIT_SUCCEEDED;
+}
+
+void S_OnDeinit(const int reason)
+{
+   PrintFormat("[SAAD] v1.12: refused stop changes %d | no dip %d, no sweep %d, min-lot too risky %d, day loss stops %d, partial closes %d", g_modFails, S_g_skipDip, S_g_skipSweep, S_g_skipMinLot, S_g_dayLossStop, S_g_partials);
+   PrintFormat("[SAAD] CTC breakevens %d | day close: setups dropped %d, losing trades shut %d", S_g_ctc, S_g_skipClose, S_g_closeLoss);
+   PrintFormat("[SAAD] setups %d, entries %d | skipped: no break %d, gap %d, risk %d, no support %d, choppy %d, filters %d, busy %d, day guard %d | rides %d, lock refused %d",
+               S_g_setups, S_g_entries, S_g_skipBreak, S_g_skipGap, S_g_skipRisk, S_g_skipSup, S_g_chop, S_g_filtered, S_g_busy, S_g_dayStop, S_g_rides, S_g_lockFail);
+}
+
+//--- ① shape of closed bar s: +1 bullish, -1 bearish, 2 pin whose side the EMA decides, 0 none
+int S_g_kind = 0;   // 1 pin, 2 hammer/star, 3 marubozu
+int S_Shape(int s)
+{
+   S_g_kind = 0;
+   double o = iOpen(_Symbol, PERIOD_M15, s), c = iClose(_Symbol, PERIOD_M15, s);
+   double h = iHigh(_Symbol, PERIOD_M15, s), l = iLow(_Symbol, PERIOD_M15, s);
+   double rng = h - l;
+   if (rng <= 0) return 0;
+   if (S_InpMinRangeAtr > 0 && rng < S_InpMinRangeAtr * S_Buf(S_hAtr, s)) return 0;
+   double body = MathAbs(c - o), up = h - MathMax(o, c), lo = MathMin(o, c) - l;
+   bool pinBull = body <= S_InpBodyMax * rng && lo >= S_InpWickMin * rng && up <= S_InpNoseMax * rng;
+   bool pinBear = body <= S_InpBodyMax * rng && up >= S_InpWickMin * rng && lo <= S_InpNoseMax * rng;
+   bool isPin = pinBull || pinBear;
+   bool hamBull = !isPin && lo >= S_InpHamRatio * body && lo > 0 && up <= S_InpHamNose * rng;
+   bool hamBear = !isPin && up >= S_InpHamRatio * body && up > 0 && lo <= S_InpHamNose * rng;
+   bool maru = !isPin && !hamBull && !hamBear && body >= S_InpMaruBody * rng;
+   if (isPin) {
+      if (!S_InpUsePin) return 0;
+      S_g_kind = 1;
+      if (!S_InpPinDir) return 2;
+      if (S_InpPinColor && (pinBull ? c < o : c > o)) return 0;   // body against the S_trade's direction
+      return pinBull ? +1 : -1;
+   }
+   if (hamBull) { if (!S_InpHammer) return 0; S_g_kind = 2; return +1; }
+   if (hamBear) { if (!S_InpStar)   return 0; S_g_kind = 2; return -1; }
+   if (maru)    { if (!S_InpMarubozu) return 0; S_g_kind = 3; return c > o ? +1 : -1; }
+   return 0;
+}
+
+bool S_OnLine(int s, double e, int side)
+{
+   double o = iOpen(_Symbol, PERIOD_M15, s), c = iClose(_Symbol, PERIOD_M15, s);
+   double h = iHigh(_Symbol, PERIOD_M15, s), l = iLow(_Symbol, PERIOD_M15, s);
+   double tol = S_InpTouchPips * S_Pip();
+   if (e <= 0) return false;
+   if (S_InpTouchMode == 0) return l - tol <= e && h + tol >= e;
+   return side > 0 ? (l - tol <= e && MathMin(o, c) >= e) : (h + tol >= e && MathMax(o, c) <= e);
+}
+
+// the most recent confirmed swing low below `below`
+double S_LastSupport(double below)
+{
+   int p = S_InpSwingPivot;
+   for (int i = 1 + p; i < 1 + p + S_InpSwingLook; i++) {
+      double l = iLow(_Symbol, PERIOD_M15, i);
+      if (l <= 0) break;
+      if (l >= below) continue;
+      bool piv = true;
+      for (int k = 1; k <= p && piv; k++)
+         if (iLow(_Symbol, PERIOD_M15, i - k) <= l || iLow(_Symbol, PERIOD_M15, i + k) < l) piv = false;
+      if (piv) return l;
+   }
+   return 0.0;
+}
+
+// the most recent confirmed swing high above `above` (the "next liquidity" for a LONG)
+double S_LastResistance(double above)
+{
+   int p = S_InpSwingPivot;
+   for (int i = 1 + p; i < 1 + p + S_InpSwingLook; i++) {
+      double h = iHigh(_Symbol, PERIOD_M15, i);
+      if (h <= 0) break;
+      if (h <= above) continue;
+      bool piv = true;
+      for (int k = 1; k <= p && piv; k++)
+         if (iHigh(_Symbol, PERIOD_M15, i - k) >= h || iHigh(_Symbol, PERIOD_M15, i + k) > h) piv = false;
+      if (piv) return h;
+   }
+   return 0.0;
+}
+
+bool S_Choppy()
+{
+   if (S_InpChopEr <= 0) return false;
+   double net = MathAbs(iClose(_Symbol, PERIOD_M15, 1) - iClose(_Symbol, PERIOD_M15, S_InpChopErLook + 1));
+   double path = 0;
+   for (int i = 1; i <= S_InpChopErLook; i++)
+      path += MathAbs(iClose(_Symbol, PERIOD_M15, i) - iClose(_Symbol, PERIOD_M15, i + 1));
+   return path <= 0 || net / path < S_InpChopEr;
+}
+
+
+//--- the day's close, from the broker's trading sessions for this symbol (covers the Friday close too)
+datetime S_SessionEnd(datetime now)
+{
+   MqlDateTime d; TimeToStruct(now, d);
+   long sec = d.hour * 3600 + d.min * 60 + d.sec;
+   datetime day0 = now - (datetime)sec;
+   datetime from, to;
+   for (uint k = 0; k < 10; k++) {
+      if (!SymbolInfoSessionTrade(_Symbol, (ENUM_DAY_OF_WEEK)d.day_of_week, k, from, to)) break;
+      long f = (long)from % 86400, t = (long)to; if (t > 86400) t = t % 86400; if (t == 0) t = 86400;
+      if (sec >= f && sec < t) {
+         // a session running to 24:00 that the next day continues at 00:00 is not a close
+         if (t == 86400) {
+            datetime f2, t2; MqlDateTime n; TimeToStruct(day0 + 86400, n);
+            if (SymbolInfoSessionTrade(_Symbol, (ENUM_DAY_OF_WEEK)n.day_of_week, 0, f2, t2) && (long)f2 % 86400 == 0) return 0;
+         }
+         return day0 + (datetime)t;
+      }
+   }
+   return 0;
+}
+int S_MinsToClose() { datetime e = S_SessionEnd(TimeCurrent()); return e == 0 ? 100000 : (int)((e - TimeCurrent()) / 60); }
+
+//--- chart labels (like the TradingView indicator). Plain text: MT5 shows no emoji.
+int      S_g_obj = 0, S_g_num = 0;
+string   S_g_pDesc = "";            // the waiting setup, for its labels
+datetime S_g_pTime = 0;
+bool S_Drawing() { return S_InpDraw && (!MQLInfoInteger(MQL_TESTER) || MQLInfoInteger(MQL_VISUAL_MODE)); }
+string S_ObjName() { return StringFormat("SAAD_%d", S_g_obj++); }
+bool S_LogOn() { return S_InpLog && (!MQLInfoInteger(MQL_TESTER) || MQLInfoInteger(MQL_VISUAL_MODE) || S_InpVerbose); }
+void S_Log(string msg) { if (S_LogOn()) Print("[SAAD-15min] ", msg); }
+string S_Ts(datetime t) { return t == 0 ? "" : TimeToString(t, TIME_DATE | TIME_SECONDS); }
+string S_Px(double v) { return v == 0 ? "" : DoubleToString(v, _Digits); }
+// one row per closed S_trade: Common\Files\Saad15_trades_<symbol>_<magic>[_tester].csv
+void S_CsvRow(string row)
+{
+   if (!S_InpLogCsv || (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE))) return;
+   string fn = StringFormat("Saad15_trades_%s_%d%s.csv", _Symbol, S_InpMagicNumber, MQLInfoInteger(MQL_TESTER) ? "_tester" : "");
+   int h = FileOpen(fn, FILE_READ | FILE_WRITE | FILE_TXT | FILE_ANSI | FILE_COMMON | FILE_SHARE_READ);
+   if (h == INVALID_HANDLE) { Print("[SAAD-15min] cannot write ", fn, " error ", GetLastError()); return; }
+   if (FileSize(h) == 0)
+      FileWriteString(h, "num,symbol,side,setup,entry_time,entry,sl_initial,risk_usd,tp1_rule,tp1_time,tp_levels,ctc_time,"
+                         "sl_moves,best_price,sl_final,exit_time,exit,exit_reason,profit,commission,swap,net\r\n");
+   FileSeek(h, 0, SEEK_END);
+   FileWriteString(h, row + "\r\n");
+   FileClose(h);
+}
+void S_DText(datetime t, double price, string txt, color c, int size = 8, ENUM_ANCHOR_POINT anc = ANCHOR_LEFT_LOWER, string tip = "")
+{
+   if (!S_Drawing()) return;
+   string n = S_ObjName();
+   ObjectCreate(0, n, OBJ_TEXT, 0, t, price);
+   ObjectSetString(0, n, OBJPROP_TEXT, txt);
+   ObjectSetString(0, n, OBJPROP_FONT, "Arial");
+   ObjectSetInteger(0, n, OBJPROP_FONTSIZE, size);
+   ObjectSetInteger(0, n, OBJPROP_COLOR, c);
+   ObjectSetInteger(0, n, OBJPROP_ANCHOR, anc);
+   ObjectSetString(0, n, OBJPROP_TOOLTIP, tip == "" ? txt : tip);
+   ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
+}
+void S_DLine(datetime t1, double p1, datetime t2, double p2, color c, ENUM_LINE_STYLE st = STYLE_SOLID, int w = 1, string tip = "")
+{
+   if (!S_Drawing()) return;
+   string n = S_ObjName();
+   ObjectCreate(0, n, OBJ_TREND, 0, t1, p1, t2, p2);
+   ObjectSetInteger(0, n, OBJPROP_COLOR, c);
+   ObjectSetInteger(0, n, OBJPROP_STYLE, st);
+   ObjectSetInteger(0, n, OBJPROP_WIDTH, w);
+   ObjectSetInteger(0, n, OBJPROP_RAY_RIGHT, false);
+   ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
+   if (tip != "") ObjectSetString(0, n, OBJPROP_TOOLTIP, tip);
+}
+void S_DBox(datetime t1, double p1, datetime t2, double p2, color c)
+{
+   if (!S_Drawing()) return;
+   string n = S_ObjName();
+   ObjectCreate(0, n, OBJ_RECTANGLE, 0, t1, p1, t2, p2);
+   ObjectSetInteger(0, n, OBJPROP_COLOR, c);
+   ObjectSetInteger(0, n, OBJPROP_FILL, false);
+   ObjectSetInteger(0, n, OBJPROP_WIDTH, 2);
+   ObjectSetInteger(0, n, OBJPROP_BACK, true);
+   ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
+}
+void S_DArrow(datetime t, double price, int side)
+{
+   if (!S_Drawing()) return;
+   string n = S_ObjName();
+   ObjectCreate(0, n, side > 0 ? OBJ_ARROW_BUY : OBJ_ARROW_SELL, 0, t, price);
+   ObjectSetInteger(0, n, OBJPROP_COLOR, side > 0 ? clrDodgerBlue : clrOrangeRed);
+   ObjectSetInteger(0, n, OBJPROP_WIDTH, 2);
+   ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
+}
+// a label placed `lvl` x ATR away from the candle (above when up=true) with an arrow pointing back to (t, price)
+void S_Callout(datetime t, double price, bool up, double lvl, string txt, color c, int size = 9, string tip = "")
+{
+   if (!S_Drawing()) return;
+   double a = S_Buf(S_hAtr, 1); if (a <= 0) a = 10 * S_Pip();
+   double ty = up ? price + lvl * a : price - lvl * a;
+   string n = S_ObjName();
+   ObjectCreate(0, n, OBJ_ARROWED_LINE, 0, t, ty, t, price);
+   ObjectSetInteger(0, n, OBJPROP_COLOR, c);
+   ObjectSetInteger(0, n, OBJPROP_WIDTH, 1);
+   ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
+   ObjectSetInteger(0, n, OBJPROP_BACK, true);
+   S_DText(t, ty, txt, c, size, up ? ANCHOR_LOWER : ANCHOR_UPPER, tip);
+}
+// a skipped setup: grey note under (long) / over (short) its candle
+void S_DSkip(int side, string why)
+{
+   S_Log("SKIP: " + why + " | " + S_g_pDesc);
+   if (!S_InpDrawSkips || S_g_pTime == 0) return;
+   double off = 2 * S_Pip();
+   S_Callout(S_g_pTime, side > 0 ? S_g_pLow - off : S_g_pHigh + off, side < 0, 1.0, "skip: " + why, clrGray, 7, "skipped: " + why + " | " + S_g_pDesc);
+}
+// the stop moved: end the old segment, start a new one
+void S_SlMoved(int i, double newSl, string note)
+{
+   S_g_pos[i].moves++;
+   if (note != "" && StringFind(note, "trail") != 0) S_Log(StringFormat("#%d SL %s -> %s (%s)", S_g_pos[i].num, S_Px(S_g_pos[i].slNow), S_Px(newSl), note));
+   if (!S_Drawing()) { S_g_pos[i].slNow = newSl; return; }
+   datetime now = TimeCurrent();
+   S_DLine(S_g_pos[i].slFrom, S_g_pos[i].slNow, now, S_g_pos[i].slNow, S_g_pos[i].ride ? clrOrange : clrRed, STYLE_DASH, 2);
+   S_g_pos[i].slNow = newSl; S_g_pos[i].slFrom = now;
+   if (note != "") S_DText(now, newSl, note, clrOrange, 7, S_g_pos[i].side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
+}
+// the position is gone: label its exit from the closing deal
+void S_DrawExit(S_PosState &p)
+{
+   if (!(S_Drawing() || S_LogOn() || S_InpLogCsv) || !HistorySelectByPosition(p.ticket)) return;
+   double px = 0, pnl = 0, prof = 0, comm = 0, swp = 0; datetime t = 0; long reason = -1;
+   for (int k = HistoryDealsTotal() - 1; k >= 0; k--) {
+      ulong d = HistoryDealGetTicket(k);
+      comm += HistoryDealGetDouble(d, DEAL_COMMISSION);          // entry + exit commission
+      if (HistoryDealGetInteger(d, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;
+      px = HistoryDealGetDouble(d, DEAL_PRICE); t = (datetime)HistoryDealGetInteger(d, DEAL_TIME);
+      prof += HistoryDealGetDouble(d, DEAL_PROFIT); swp += HistoryDealGetDouble(d, DEAL_SWAP);
+      reason = HistoryDealGetInteger(d, DEAL_REASON);
+   }
+   if (t == 0) return;
+   pnl = prof + comm + swp;
+   string why = p.why;
+   if (reason == DEAL_REASON_SL)
+      why = p.usdTrail ? StringFormat("trailing stop ($%.0f) after TP%d", p.side > 0 ? S_InpLongTrailUsd : S_InpShortTrailUsd, p.tpStage - 1) : MathAbs(p.slNow - p.entry) < _Point ? "breakeven (CTC)"
+          : (p.ride || (p.side > 0 ? p.slNow > p.entry : p.slNow < p.entry)) ? "trailing stop" : "stop loss";
+   else if (reason == DEAL_REASON_TP) why = p.side > 0 ? "TP (last resistance)" : "TP (last support)";
+   else if (why == "") why = "closed";
+   S_Log(StringFormat("EXIT #%d %s %s @ %s | entry %s | %s | best %s | SL moves %d | net %s%.2f (profit %.2f, commission %.2f, swap %.2f)",
+                    p.num, p.side > 0 ? "BUY" : "SELL", S_Ts(t), S_Px(px), S_Px(p.entry), why, S_Px(p.mfe), p.moves,
+                    pnl >= 0 ? "+" : "-", MathAbs(pnl), prof, comm, swp));
+   string setupCsv = p.setup; StringReplace(setupCsv, ",", ";");
+   string tp1Csv = p.tp1; StringReplace(tp1Csv, ",", ";");
+   S_CsvRow(StringFormat("%d,%s,%s,%s,%s,%s,%s,%.2f,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%.2f,%.2f,%.2f,%.2f",
+                       p.num, _Symbol, p.side > 0 ? "BUY" : "SELL", setupCsv, S_Ts(p.entryTime), S_Px(p.entry), S_Px(p.sl0), p.risk,
+                       tp1Csv, S_Ts(p.tp1At), p.tps, S_Ts(p.ctcAt), p.moves, S_Px(p.mfe), S_Px(p.slNow), S_Ts(t), S_Px(px), why,
+                       prof, comm, swp, pnl));
+   S_DLine(p.slFrom, p.slNow, t, p.slNow, p.ride ? clrOrange : clrRed, STYLE_DASH, 2);
+   S_DLine(p.entryTime, p.entry, t, px, pnl >= 0 ? clrLime : clrRed, STYLE_DOT, 1);
+   color c = pnl > 0 ? clrLimeGreen : clrRed;
+   string txt = StringFormat("EXIT #%d %s %s$%.2f", p.num, why, pnl >= 0 ? "+" : "-", MathAbs(pnl));
+   S_Callout(t, px, p.side > 0, 4.0, txt, c, 10,
+         StringFormat("#%d %s  entry %.2f -> exit %.2f  (%s)  %s$%.2f", p.num, p.side > 0 ? "BUY" : "SELL", p.entry, px, why,
+                      pnl >= 0 ? "+" : "-", MathAbs(pnl)));
+}
+
+//--- positions
+int S_FindPos(ulong t) { for (int i = 0; i < ArraySize(S_g_pos); i++) if (S_g_pos[i].ticket == t) return i; return -1; }
+
+void S_SyncPos()
+{
+   for (int i = ArraySize(S_g_pos) - 1; i >= 0; i--)
+      if (!PositionSelectByTicket(S_g_pos[i].ticket)) {
+         S_DrawExit(S_g_pos[i]);
+         for (int j = i; j < ArraySize(S_g_pos) - 1; j++) S_g_pos[j] = S_g_pos[j + 1];
+         ArrayResize(S_g_pos, ArraySize(S_g_pos) - 1);
+      }
+   // positions opened before a restart: adopt with default state
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong t = PositionGetTicket(i);
+      if (t == 0 || PositionGetString(POSITION_SYMBOL) != _Symbol || PositionGetInteger(POSITION_MAGIC) != S_InpMagicNumber) continue;
+      if (S_FindPos(t) >= 0) continue;
+      S_PosState p;
+      p.ticket = t; p.side = PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY ? 1 : -1;
+      p.entry = PositionGetDouble(POSITION_PRICE_OPEN); p.tp = PositionGetDouble(POSITION_TP);
+      p.exitE = 50; p.noTp = p.side > 0; p.ride = S_TrailOn(p.side); p.entryTime = (datetime)PositionGetInteger(POSITION_TIME); p.best = p.entry;
+      p.num = ++S_g_num; p.slNow = PositionGetDouble(POSITION_SL); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.resTp1 = false; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0;
+      int n = ArraySize(S_g_pos); ArrayResize(S_g_pos, n + 1); S_g_pos[n] = p;
+   }
+}
+
+bool S_ModifySl(ulong t, double sl)
+{
+   if (!PositionSelectByTicket(t)) return false;
+   bool buy = PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY;
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
+   sl = NormalizeDouble(sl, _Digits);
+   if (buy ? sl >= bid - lvl : sl <= ask + lvl) return false;     // too close: the broker would refuse it
+   if (TimeCurrent() < S_g_modBlockUntil) return false;             // v1.12: backing off after a refused modify
+   if (S_trade.PositionModify(t, sl, PositionGetDouble(POSITION_TP))) return true;
+   uint rc = S_trade.ResultRetcode();
+   // market closed / S_trade disabled: wait a minute; anything else (invalid stops, requote...): wait a few seconds
+   S_g_modBlockUntil = TimeCurrent() + ((rc == TRADE_RETCODE_MARKET_CLOSED || rc == TRADE_RETCODE_TRADE_DISABLED) ? 60 : S_InpModBackoffSec);
+   g_modFails++;
+   return false;
+}
+
+// TP reached: ride (lock + trail) or close. Returns true when the position was closed.
+bool S_TpReached(int i, double tpLv)
+{
+   if (S_TrailOn(S_g_pos[i].side) && S_InpRide) {
+      S_g_pos[i].ride = true; S_g_rides++;
+      string note = "TP reached -> trailing";
+      if (S_InpRideLock != 2 && PositionSelectByTicket(S_g_pos[i].ticket)) {
+         double cur = PositionGetDouble(POSITION_SL);
+         double lock = S_InpRideLock == 0 ? (S_g_pos[i].side > 0 ? tpLv - S_InpLockPips * S_Pip() : tpLv + S_InpLockPips * S_Pip()) : S_g_pos[i].entry;
+         bool better = S_g_pos[i].side > 0 ? lock > cur : (cur == 0 || lock < cur);
+         if (better) {
+            if (S_ModifySl(S_g_pos[i].ticket, lock)) { S_SlMoved(i, lock, ""); note += StringFormat(", SL locked %.2f", lock); }
+            else { S_g_lockFail++; note += " (lock refused: too close)"; }
+         }
+      }
+      S_Callout(TimeCurrent(), tpLv, S_g_pos[i].side > 0, 1.5, note, clrAqua, 8);
+      return false;
+   }
+   S_g_pos[i].why = S_g_pos[i].side > 0 ? StringFormat("%d EMA (TP)", S_g_pos[i].exitE) : "TP (last support)";
+   return S_trade.PositionClose(S_g_pos[i].ticket);
+}
+
+// v1.12: bank part of the position at TP1
+void S_PartialAtTp1(int i)
+{
+   if (S_InpPartialPct <= 0 || !PositionSelectByTicket(S_g_pos[i].ticket)) return;
+   double vol = PositionGetDouble(POSITION_VOLUME), step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP), mn = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   double part = MathFloor(vol * S_InpPartialPct / step) * step;
+   if (part >= mn && vol - part >= mn - 1e-9 && S_trade.PositionClosePartial(S_g_pos[i].ticket, NormalizeDouble(part, 2))) {
+      S_g_partials++;
+      S_Log(StringFormat("#%d TP1: closed %.2f of %.2f lots", S_g_pos[i].num, part, vol));
+   }
+}
+
+// LONG: a candle touched the exit EMA -> trail $X below the market and aim for the last resistance
+void S_LongTouched(int i, double bid)
+{
+   S_PartialAtTp1(i);
+   S_g_pos[i].ride = true; S_g_pos[i].usdTrail = true; S_g_rides++;
+   if (!PositionSelectByTicket(S_g_pos[i].ticket)) return;
+   double cur = PositionGetDouble(POSITION_SL);
+   double sl = NormalizeDouble(MathMax(cur, bid - S_InpLongTrailUsd), _Digits);
+   if (S_InpTp1Be && S_g_pos[i].entry < bid) sl = NormalizeDouble(MathMax(sl, S_g_pos[i].entry), _Digits);
+   double res = S_InpLongResTp ? S_LastResistance(bid + S_InpMinTpPips * S_Pip()) : 0;
+   double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
+   if (sl >= bid - lvl) sl = cur;
+   if (sl != cur && S_ModifySl(S_g_pos[i].ticket, sl)) S_SlMoved(i, sl, "");
+   S_g_pos[i].tpNext = res; S_g_pos[i].tpStage = 2; S_g_pos[i].tp1At = TimeCurrent();
+   S_g_pos[i].tps = res > 0 ? "TP2 " + S_Px(res) : "TP2 none";
+   S_Log(StringFormat("#%d TP1: %s @ %s (entry %s, +$%.2f) | SL -> %s ($%.2f trail) | TP2 %s",
+                    S_g_pos[i].num, S_g_pos[i].resTp1 ? "resistance " + S_Px(S_g_pos[i].tp) + " reached" : StringFormat("%d EMA touched", S_g_pos[i].exitE), S_Px(bid), S_Px(S_g_pos[i].entry), bid - S_g_pos[i].entry, S_Px(sl), S_InpLongTrailUsd,
+                    res > 0 ? S_Px(res) + " (last resistance)" : "none above"));
+   string note = StringFormat("TP1: %s -> trail $%.2f below%s", S_g_pos[i].resTp1 ? "resistance reached" : StringFormat("%d EMA touched", S_g_pos[i].exitE), S_InpLongTrailUsd,
+                              res > 0 ? StringFormat(", TP2 %.2f (last resistance)", res) : ", no resistance above");
+   S_Callout(TimeCurrent(), bid, true, 1.5, note, clrAqua, 8);
+   if (res > 0) S_DLine(TimeCurrent(), res, TimeCurrent() + 8 * PeriodSeconds(PERIOD_M15), res, clrLime, STYLE_DASH, 1, "TP2: last resistance");
+}
+
+// SHORT: the support (TP1) reached -> trail $X above the market, aim for the next support (TP2)
+void S_ShortTouched(int i, double bid)
+{
+   S_PartialAtTp1(i);
+   S_g_pos[i].ride = true; S_g_pos[i].usdTrail = true; S_g_rides++;
+   if (!PositionSelectByTicket(S_g_pos[i].ticket)) return;
+   double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double cur = PositionGetDouble(POSITION_SL);
+   double sl = NormalizeDouble(cur > 0 ? MathMin(cur, ask + S_InpShortTrailUsd) : ask + S_InpShortTrailUsd, _Digits);
+   if (S_InpTp1Be && S_g_pos[i].entry > ask) sl = NormalizeDouble(MathMin(sl, S_g_pos[i].entry), _Digits);
+   double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
+   if (sl <= ask + lvl) sl = cur;
+   if (sl != cur && S_ModifySl(S_g_pos[i].ticket, sl)) S_SlMoved(i, sl, "");
+   double sup = S_LastSupport(bid - S_InpMinTpPips * S_Pip());
+   S_g_pos[i].tpNext = sup; S_g_pos[i].tpStage = 2; S_g_pos[i].tp1At = TimeCurrent();
+   S_g_pos[i].tps = sup > 0 ? "TP2 " + S_Px(sup) : "TP2 none";
+   S_Log(StringFormat("#%d TP1: support reached @ %s (entry %s, +$%.2f) | SL -> %s ($%.2f trail) | TP2 %s",
+                    S_g_pos[i].num, S_Px(bid), S_Px(S_g_pos[i].entry), S_g_pos[i].entry - bid, S_Px(sl), S_InpShortTrailUsd,
+                    sup > 0 ? S_Px(sup) + " (next support)" : "none below"));
+   string note = StringFormat("TP1: support reached -> trail $%.2f above%s", S_InpShortTrailUsd,
+                              sup > 0 ? StringFormat(", TP2 %.2f (next support)", sup) : ", no support below");
+   S_Callout(TimeCurrent(), bid, false, 1.5, note, clrAqua, 8);
+   if (sup > 0) S_DLine(TimeCurrent(), sup, TimeCurrent() + 8 * PeriodSeconds(PERIOD_M15), sup, clrLime, STYLE_DASH, 1, "TP2: next support");
+}
+
+// TPn reached: label it and draw the next target
+void S_NextTpLabel(int i, double was)
+{
+   int sd = S_g_pos[i].side;
+   double nx = S_g_pos[i].tpNext;
+   S_g_pos[i].tps += StringFormat(" > TP%d %s", S_g_pos[i].tpStage, nx > 0 ? S_Px(nx) : "none");
+   S_Log(StringFormat("#%d TP%d %s reached -> TP%d %s", S_g_pos[i].num, S_g_pos[i].tpStage - 1, S_Px(was), S_g_pos[i].tpStage,
+                    nx > 0 ? S_Px(nx) : "none (riding the trailing stop)"));
+   string note = StringFormat("TP%d %.2f reached -> %s", S_g_pos[i].tpStage - 1, was,
+                              nx > 0 ? StringFormat("TP%d %.2f (%s)", S_g_pos[i].tpStage, nx, sd > 0 ? "next resistance" : "next support")
+                                     : "no further level: riding the trailing stop");
+   S_Callout(TimeCurrent(), was, sd > 0, 1.5, note, clrAqua, 8);
+   if (nx > 0) S_DLine(TimeCurrent(), nx, TimeCurrent() + 8 * PeriodSeconds(PERIOD_M15), nx, clrLime, STYLE_DASH, 1, StringFormat("TP%d", S_g_pos[i].tpStage));
+}
+
+// tick by tick: target touches
+void S_ManageTick()
+{
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+   double ask0 = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   for (int i = ArraySize(S_g_pos) - 1; i >= 0; i--) {
+      S_g_pos[i].mfe = S_g_pos[i].side > 0 ? MathMax(S_g_pos[i].mfe, bid) : (S_g_pos[i].mfe == 0 ? ask0 : MathMin(S_g_pos[i].mfe, ask0));
+      if (S_InpLockAtUsd > 0 && PositionSelectByTicket(S_g_pos[i].ticket)) {
+         double moved = S_g_pos[i].side > 0 ? bid - S_g_pos[i].entry : S_g_pos[i].entry - ask0;
+         double want = S_g_pos[i].entry + S_g_pos[i].side * S_InpLockUsd, cur = PositionGetDouble(POSITION_SL);
+         if (moved >= S_InpLockAtUsd && (S_g_pos[i].side > 0 ? want > cur + _Point : (cur == 0 || want < cur - _Point)) && S_ModifySl(S_g_pos[i].ticket, want)) S_SlMoved(i, want, "lock");
+      }
+      if (S_InpMaxBars > 0 && TimeCurrent() - S_g_pos[i].entryTime >= S_InpMaxBars * PeriodSeconds(PERIOD_M15)) { S_g_pos[i].why = "time exit"; S_trade.PositionClose(S_g_pos[i].ticket); continue; }
+      if (S_InpBeTpPct > 0 && !S_g_pos[i].ride && PositionSelectByTicket(S_g_pos[i].ticket)) {
+         // the TP this S_trade is heading for: the support (SHORT), the exit EMA now (LONG), or a fixed TP
+         double tpRef = S_g_pos[i].side < 0 || S_InpFixTpPips > 0 ? S_g_pos[i].tp
+                      : (S_g_pos[i].noTp ? 0 : S_g_pos[i].resTp1 ? S_g_pos[i].tp : S_Ema(S_g_pos[i].exitE, 0) - S_InpLongTpPips * S_Pip());
+         double dist = S_g_pos[i].side > 0 ? tpRef - S_g_pos[i].entry : S_g_pos[i].entry - tpRef;
+         double cur = PositionGetDouble(POSITION_SL);
+         bool atEntry = S_g_pos[i].side > 0 ? cur >= S_g_pos[i].entry : (cur > 0 && cur <= S_g_pos[i].entry);
+         if (tpRef > 0 && dist > 0 && !atEntry) {
+            double moved = S_g_pos[i].side > 0 ? bid - S_g_pos[i].entry : S_g_pos[i].entry - ask0;
+            if (moved >= S_InpBeTpPct * dist && S_ModifySl(S_g_pos[i].ticket, S_g_pos[i].entry)) {
+               S_g_ctc++; S_g_pos[i].ctcAt = TimeCurrent();
+               S_SlMoved(i, S_g_pos[i].entry, StringFormat("CTC: %d%% of TP -> SL to entry", (int)MathRound(S_InpBeTpPct * 100)));
+            }
+         }
+      }
+      if (S_InpFixTpPips > 0) continue;
+      if (S_g_pos[i].usdTrail && PositionSelectByTicket(S_g_pos[i].ticket)) {
+         // after TP1: the stop follows the market $X away, never back
+         int sd = S_g_pos[i].side;
+         double dist = (sd > 0 ? S_InpLongTrailUsd : S_InpShortTrailUsd) + S_InpTrailStepUsd * MathMax(0, S_g_pos[i].tpStage - 2);
+         double want = NormalizeDouble(sd > 0 ? bid - dist : ask0 + dist, _Digits), cur = PositionGetDouble(POSITION_SL);
+         if ((sd > 0 ? want >= cur + 10 * _Point : (cur == 0 || want <= cur - 10 * _Point)) && S_ModifySl(S_g_pos[i].ticket, want)) {
+            S_g_pos[i].slNow = want;      // drawn as one line at the exit, not a step per tick
+            S_g_pos[i].moves++;
+         }
+         // the next liquidity reached: aim for the one beyond (TP2 -> TP3 -> ...)
+         if (S_g_pos[i].tpNext > 0 && (sd > 0 ? bid >= S_g_pos[i].tpNext : bid <= S_g_pos[i].tpNext)) {
+            double was = S_g_pos[i].tpNext;
+            S_g_pos[i].tpStage++;
+            S_g_pos[i].tpNext = sd > 0 ? S_LastResistance(was + S_InpMinTpPips * S_Pip()) : S_LastSupport(was - S_InpMinTpPips * S_Pip());
+            S_NextTpLabel(i, was);
+         }
+         continue;
+      }
+      if (S_InpLongTouch == 1 && S_g_pos[i].side > 0 && (!S_g_pos[i].ride || S_g_pos[i].resTp1) && !S_g_pos[i].noTp) {
+         double tgt = S_g_pos[i].resTp1 ? S_g_pos[i].tp : S_Ema(S_g_pos[i].exitE, 0) - S_InpLongTpPips * S_Pip();
+         if (tgt > S_g_pos[i].entry && bid >= tgt) { S_LongTouched(i, bid); continue; }
+      }
+      if (S_g_pos[i].ride) continue;
+      if (S_g_pos[i].side < 0) {
+         // SHORT that will ride: no TP at the broker, so watch the support here (chart price = bid)
+         if (S_g_pos[i].tp > 0 && S_InpShortTouch == 1 && bid <= S_g_pos[i].tp) { S_ShortTouched(i, bid); continue; }
+         if (S_g_pos[i].tp > 0 && S_TrailOn(-1) && S_InpRide && bid <= S_g_pos[i].tp) S_TpReached(i, S_g_pos[i].tp);
+      } else if (!S_g_pos[i].noTp && S_InpLongExit == 0) {
+         double tgt = S_Ema(S_g_pos[i].exitE, 0) - S_InpLongTpPips * S_Pip();
+         if (tgt > S_g_pos[i].entry && bid >= tgt) S_TpReached(i, tgt);
+      }
+   }
+}
+
+// candle close: close-mode exits, trailing, breakeven
+void S_ManageBar()
+{
+   double c1 = iClose(_Symbol, PERIOD_M15, 1), h1 = iHigh(_Symbol, PERIOD_M15, 1), l1 = iLow(_Symbol, PERIOD_M15, 1);
+   datetime t1 = iTime(_Symbol, PERIOD_M15, 1);
+   for (int i = ArraySize(S_g_pos) - 1; i >= 0; i--) {
+      ulong t = S_g_pos[i].ticket;
+      if (!PositionSelectByTicket(t)) continue;
+      int side = S_g_pos[i].side;
+      double sl = PositionGetDouble(POSITION_SL);
+      if (S_g_pos[i].usdTrail) continue;              // LONG after the touch: trailed tick by tick
+      if (side > 0 && !S_g_pos[i].ride && S_InpFixTpPips <= 0 && S_InpLongTouch == 0) {
+         double tgt = S_Ema(S_g_pos[i].exitE, 1) - S_InpLongTpPips * S_Pip();
+         if (!S_g_pos[i].noTp && S_InpLongExit == 1 && tgt > S_g_pos[i].entry && c1 >= tgt) {
+            if (S_TpReached(i, tgt) || !PositionSelectByTicket(t)) continue;
+            sl = PositionGetDouble(POSITION_SL);        // locked; the trail may tighten it on this same candle
+         }
+         if (S_g_pos[i].noTp && !S_TrailOn(1) && c1 < S_Ema(S_g_pos[i].exitE, 1)) { S_g_pos[i].why = StringFormat("closed below %d EMA", S_g_pos[i].exitE); S_trade.PositionClose(t); continue; }
+      }
+      bool afterEntryBar = S_g_pos[i].entryTime < t1;
+      if (S_TrailOn(side) && afterEntryBar) {
+         S_g_pos[i].best = side > 0 ? MathMax(S_g_pos[i].best, h1) : MathMin(S_g_pos[i].best, l1);
+         bool started = S_InpRide ? S_g_pos[i].ride : (side > 0 ? S_g_pos[i].best - S_g_pos[i].entry : S_g_pos[i].entry - S_g_pos[i].best) >= S_InpTrailStart * S_Pip();
+         if (started) {
+            double lvl;
+            if (S_InpTrailMode == 0) {
+               lvl = side > 0 ? DBL_MAX : 0;
+               for (int k = 1; k <= S_InpTrailN; k++)
+                  lvl = side > 0 ? MathMin(lvl, iLow(_Symbol, PERIOD_M15, k)) : MathMax(lvl, iHigh(_Symbol, PERIOD_M15, k));
+            } else if (S_InpTrailMode == 1) lvl = side > 0 ? S_g_pos[i].best - S_InpTrailPips * S_Pip() : S_g_pos[i].best + S_InpTrailPips * S_Pip();
+            else lvl = side > 0 ? S_g_pos[i].best - S_InpTrailAtr * S_Buf(S_hAtr, 1) : S_g_pos[i].best + S_InpTrailAtr * S_Buf(S_hAtr, 1);
+            bool better = side > 0 ? (lvl > sl + _Point && lvl < c1) : ((sl == 0 || lvl < sl - _Point) && lvl > c1);
+            if (better && S_ModifySl(t, lvl)) { S_SlMoved(i, lvl, StringFormat("trail %.2f", lvl)); sl = lvl; }
+         }
+      }
+      if (S_InpBeUsd > 0 && afterEntryBar) {
+         double best = side > 0 ? h1 - S_g_pos[i].entry : S_g_pos[i].entry - l1;
+         bool done = side > 0 ? sl >= S_g_pos[i].entry : (sl > 0 && sl <= S_g_pos[i].entry);
+         if (!done && best > S_InpBeUsd && S_ModifySl(t, S_g_pos[i].entry)) S_SlMoved(i, S_g_pos[i].entry, "BE");
+      }
+   }
+}
+
+double S_DayPnl()
+{
+   MqlDateTime d; TimeToStruct(TimeCurrent(), d); d.hour = 0; d.min = 0; d.sec = 0;
+   if (!HistorySelect(StructToTime(d), TimeCurrent() + 60)) return 0;
+   double s = 0;
+   for (int i = HistoryDealsTotal() - 1; i >= 0; i--) {
+      ulong k = HistoryDealGetTicket(i);
+      if (HistoryDealGetInteger(k, DEAL_MAGIC) != S_InpMagicNumber) continue;
+      s += HistoryDealGetDouble(k, DEAL_PROFIT) + HistoryDealGetDouble(k, DEAL_COMMISSION) + HistoryDealGetDouble(k, DEAL_SWAP);
+   }
+   return s;
+}
+
+void S_TryEntry()
+{
+   if (S_g_pSide == 0 || ArraySize(S_g_pos) >= S_InpMaxPos) return;
+   if (S_InpNoNewMins > 0 && S_MinsToClose() <= S_InpNoNewMins) { S_g_skipClose++; S_DSkip(S_g_pSide, "too close to the day's close"); S_g_pSide = 0; return; }
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double pip = S_Pip();
+   int side = S_g_pSide;
+   if (S_InpEntryMode == 2) {
+      // liquidity sweep: price first runs the stops beyond the setup candle, then comes back
+      double far = side > 0 ? S_g_pLow - S_InpSweepPips * pip : S_g_pHigh + S_InpSweepPips * pip;
+      if (!S_g_swept && (side > 0 ? bid < far : ask > far)) { S_g_swept = true; S_g_sweepExt = side > 0 ? bid : ask; S_Log(StringFormat("SWEEP of the setup candle's %s at %s", side > 0 ? "low" : "high", S_Px(S_g_sweepExt))); }
+      if (S_g_swept) S_g_sweepExt = side > 0 ? MathMin(S_g_sweepExt, bid) : MathMax(S_g_sweepExt, ask);
+      if (!S_g_swept) return;
+      bool go = S_InpSweepEntry == 0 ? (side > 0 ? bid > S_g_pLow : ask < S_g_pHigh)
+                                   : (side > 0 ? bid > S_g_pHigh + S_InpBreakPips * pip : bid < S_g_pLow - S_InpBreakPips * pip);
+      if (!go) return;
+      if (S_InpMaxSpreadPts > 0 && (ask - bid) / _Point > S_InpMaxSpreadPts) return;
+      S_g_pSide = 0; S_g_swept = false;
+      S_DoEntry(side, side > 0 ? S_g_sweepExt - S_InpSweepSlPips * pip : S_g_sweepExt + S_InpSweepSlPips * pip);
+      return;
+   }
+   bool hit = side > 0 ? (S_InpTrigBid ? bid : ask) > S_g_pHigh + S_InpBreakPips * pip : bid < S_g_pLow - S_InpBreakPips * pip;
+   if (!hit) return;
+   if (S_InpMaxSpreadPts > 0 && (ask - bid) / _Point > S_InpMaxSpreadPts) return;    // wait for a normal spread
+   S_g_pSide = 0;
+   if (S_InpEntryMode == 1) {
+      // the break happened: now wait for the dip back into the setup candle
+      S_g_aSide = side; S_g_aHigh = S_g_pHigh; S_g_aLow = S_g_pLow; S_g_aExit = S_g_pExit; S_g_aLeft = S_InpRetestBars;
+      S_g_aLevel = side > 0 ? S_g_pHigh - S_InpRetestFrac * (S_g_pHigh - S_g_pLow) : S_g_pLow + S_InpRetestFrac * (S_g_pHigh - S_g_pLow);
+      S_Log(StringFormat("BREAK %s -> waiting %d candle(s) for a dip to %s", side > 0 ? "up" : "down", S_InpRetestBars, S_Px(S_g_aLevel)));
+      return;
+   }
+   S_DoEntry(side, S_StopFor(side, side > 0 ? ask : bid, S_g_pHigh, S_g_pLow));
+}
+
+// mode 1: the dip after the break
+void S_TryDip()
+{
+   if (S_g_aSide == 0 || ArraySize(S_g_pos) >= S_InpMaxPos) return;
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   int side = S_g_aSide;
+   if (side > 0 ? ask > S_g_aLevel : bid < S_g_aLevel) return;
+   double sl = S_StopFor(side, side > 0 ? ask : bid, S_g_aHigh, S_g_aLow);
+   S_g_aSide = 0;
+   if (side > 0 ? bid <= sl : ask >= sl) { S_g_skipDip++; S_Log("dip went through the stop - skipped"); return; }
+   S_g_pHigh = S_g_aHigh; S_g_pLow = S_g_aLow; S_g_pExit = S_g_aExit;
+   S_DoEntry(side, sl);
+}
+
+// the stop for an entry at `en` from a setup candle [lo, hi]
+double S_StopFor(int side, double en, double hi, double lo)
+{
+   double pip = S_Pip();
+   if (S_InpSlMode == 1) { double a = S_Buf(S_hAtr, 1) * S_InpSlAtrMult; return side > 0 ? en - a : en + a; }
+   if (S_InpSlMode == 2) return side > 0 ? en - S_InpSlUsd : en + S_InpSlUsd;
+   return side > 0 ? lo - S_InpSlPips * pip : hi + S_InpSlPips * pip;
+}
+
+// lots for this S_trade: fixed, or S_InpRiskPct of equity (0 = skip)
+double S_LotsFor(int side, double en, double sl)
+{
+   if (S_InpRiskPct <= 0) return S_InpLots;
+   double eq = AccountInfoDouble(ACCOUNT_EQUITY);
+   double tv = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE), ts = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP), mn = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   if (tv <= 0 || ts <= 0 || step <= 0) return S_InpLots;
+   double perLot = MathAbs(en - sl) / ts * tv;                  // $ lost per 1 lot at the stop
+   if (perLot <= 0) return 0;
+   double lots = MathFloor(eq * S_InpRiskPct / 100.0 / perLot / step) * step;
+   if (lots < mn) {
+      if (S_InpMinLotRiskPct > 0 && mn * perLot > eq * S_InpMinLotRiskPct / 100.0) { S_g_skipMinLot++; return 0; }
+      lots = mn;
+   }
+   lots = MathMin(lots, S_InpMaxLots);
+   // margin: keep 10% free
+   double m = 0;
+   while (lots >= mn && OrderCalcMargin(side > 0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, _Symbol, lots, en, m) && m > AccountInfoDouble(ACCOUNT_MARGIN_FREE) * 0.9)
+      lots = MathFloor((lots - step) / step) * step;
+   if (lots < mn) { S_g_skipMinLot++; return 0; }
+   return NormalizeDouble(lots, 2);
+}
+
+void S_DoEntry(int side, double sl)
+{
+   HybRaw(0, side);
+   if (!HybSaadOk(side)) return;
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double pip = S_Pip();
+   double en = side > 0 ? ask : bid;
+   if (S_InpMaxRiskUsd > 0 && MathAbs(en - sl) > S_InpMaxRiskUsd) { S_g_skipRisk++; S_DSkip(side, StringFormat("stop too far ($%.2f > $%.2f)", MathAbs(en - sl), S_InpMaxRiskUsd)); return; }
+   double tp = 0;
+   bool noTp = false, resTp1 = false;
+   if (side < 0) {
+      double sup = S_LastSupport(bid - S_InpMinTpPips * pip);
+      if (sup <= 0) { S_g_skipSup++; S_DSkip(side, "no support below to target"); return; }
+      tp = sup + S_InpShortTpPips * pip;
+      if (S_InpMaxTpPips > 0 && bid - tp > S_InpMaxTpPips * pip) { S_g_skipSup++; S_DSkip(side, "support too far"); return; }
+   } else {
+      noTp = S_Ema(S_g_pExit, 0) - S_InpLongTpPips * pip < en + S_InpMinTpPips * pip;
+      if (noTp && S_InpLongResTp1 && S_InpLongTouch == 1) {
+         double res = S_LastResistance(en + S_InpMinTpPips * pip);
+         if (res > 0) { tp = res; noTp = false; resTp1 = true; }
+      }
+   }
+   bool rideShort = side < 0 && S_TrailOn(-1) && S_InpRide && S_InpFixTpPips <= 0;
+   if (S_InpFixTpPips > 0) { tp = side > 0 ? en + S_InpFixTpPips * pip : en - S_InpFixTpPips * pip; noTp = false; }
+   double lots = S_LotsFor(side, en, sl);
+   lots = HybSaadLots(side, lots);
+   if (lots <= 0) { S_DSkip(side, "even the minimum lot risks too much of this account"); return; }
+   bool ok = side > 0 ? S_trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), S_InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, S_EA_COMMENT + HybTag() + " BUY")
+                      : S_trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), S_EA_COMMENT + HybTag() + " SELL");
+   if (!ok) return;
+   ulong t = S_trade.ResultOrder();
+   ulong deal = S_trade.ResultDeal();
+   if (deal > 0 && HistoryDealSelect(deal)) t = (ulong)HistoryDealGetInteger(deal, DEAL_POSITION_ID);
+   S_PosState p;
+   p.ticket = t; p.side = side; p.entry = S_trade.ResultPrice() > 0 ? S_trade.ResultPrice() : en; p.tp = tp;
+   p.exitE = S_g_pExit; p.noTp = noTp; p.resTp1 = resTp1; p.ride = side > 0 && (noTp || (resTp1 && S_InpResTp1Ride)) && S_TrailOn(1) && S_InpFixTpPips <= 0;
+   p.entryTime = TimeCurrent(); p.best = p.entry;
+   p.num = ++S_g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0;
+   p.setup = S_g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry;
+   p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
+   p.tp1 = side > 0 ? (noTp ? "none (exit EMA below entry, no resistance above) - trailing from entry"
+                            : resTp1 ? StringFormat("next resistance %.2f (the %d EMA is below the entry)", tp, S_g_pExit)
+                            : StringFormat("touch of the %d EMA (now %.2f)", S_g_pExit, S_Ema(S_g_pExit, 0)))
+                    : StringFormat("last support %.2f", tp);
+   int n = ArraySize(S_g_pos); ArrayResize(S_g_pos, n + 1); S_g_pos[n] = p;
+   S_g_entries++;
+   S_Log(StringFormat("ENTRY #%d %s %.2f lots @ %s | SL %s (risk $%.2f) | TP1 %s | setup: %s",
+                    p.num, side > 0 ? "BUY" : "SELL", lots, S_Px(p.entry), S_Px(p.sl0), p.risk, p.tp1, p.setup));
+   if (S_Drawing()) {
+      string tpTxt = side > 0 ? (noTp ? "none - trailing from entry" : resTp1 ? StringFormat("%.2f (next resistance)", tp)
+                                                                               : StringFormat("touch of the %d EMA", S_g_pExit))
+                              : StringFormat("%.2f (last support)", tp);
+      double risk = p.risk;
+      S_DArrow(p.entryTime, p.entry, side);
+      S_Callout(p.entryTime, p.entry, side < 0, 3.0,
+            StringFormat("%s #%d @ %.2f", side > 0 ? "BUY" : "SELL", p.num, p.entry), side > 0 ? clrDodgerBlue : clrOrangeRed, 10,
+            StringFormat("%s #%d  entry %.2f | SL %.2f (-$%.2f) | TP %s | %s", side > 0 ? "BUY" : "SELL", p.num, p.entry, sl, risk, tpTxt, S_g_pDesc));
+      S_DText(p.entryTime, sl, StringFormat("SL %.2f", sl), clrRed, 7, side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
+      if (side < 0) {
+         S_DLine(p.entryTime, tp, p.entryTime + 8 * PeriodSeconds(PERIOD_M15), tp, clrLime, STYLE_DASH, 1, "TP: last support");
+         S_DText(p.entryTime, tp, StringFormat("TP %.2f (last support)", tp), clrLime, 7, ANCHOR_LEFT_UPPER);
+      } else if (resTp1) {
+         S_DLine(p.entryTime, tp, p.entryTime + 8 * PeriodSeconds(PERIOD_M15), tp, clrLime, STYLE_DASH, 1, "TP1: next resistance");
+         S_DText(p.entryTime, tp, StringFormat("TP1 %.2f (next resistance)", tp), clrLime, 7, ANCHOR_LEFT_LOWER);
+      } else if (!noTp)
+         S_DText(p.entryTime + PeriodSeconds(PERIOD_M15), S_Ema(S_g_pExit, 0), StringFormat("TP1: touch of the %d EMA", S_g_pExit), clrLime, 7, ANCHOR_LEFT_LOWER);
+   }
+   if (S_InpVerbose) PrintFormat("[SAAD] %s at %.2f | SL %.2f | TP %s", side > 0 ? "BUY" : "SELL", p.entry, sl,
+                               side > 0 ? (noTp ? "none (trail)" : StringFormat("EMA%d", S_g_pExit)) : DoubleToString(tp, 2));
+}
+
+void S_DayCloseCheck()
+{
+   if (S_InpCloseLossMins <= 0 || ArraySize(S_g_pos) == 0 || S_MinsToClose() > S_InpCloseLossMins) return;
+   for (int i = ArraySize(S_g_pos) - 1; i >= 0; i--) {
+      if (!PositionSelectByTicket(S_g_pos[i].ticket)) continue;
+      double pl = PositionGetDouble(POSITION_PROFIT) + PositionGetDouble(POSITION_SWAP);
+      if (pl < 0) {
+         S_g_pos[i].why = "day close, in loss";
+         S_Log(StringFormat("#%d day close in %d min and the S_trade is $%.2f down -> shutting it", S_g_pos[i].num, S_MinsToClose(), pl));
+         if (S_trade.PositionClose(S_g_pos[i].ticket)) S_g_closeLoss++;
+      }
+   }
+}
+
+void S_OnTick()
+{
+   MqlDateTime dn; TimeToStruct(TimeCurrent(), dn);
+   if (dn.day_of_year != g_dayKey) { g_dayKey = dn.day_of_year; S_g_dayStartEq = AccountInfoDouble(ACCOUNT_EQUITY); }
+   S_SyncPos();
+   S_DayCloseCheck();
+   S_SyncPos();
+   S_ManageTick();
+   S_SyncPos();
+   datetime bar = iTime(_Symbol, PERIOD_M15, 0);
+   if (bar != S_g_lastBar) {
+      S_g_lastBar = bar;
+      if (Bars(_Symbol, PERIOD_M15) >= S_InpEmaSlow * 2 + 20) {
+         S_ManageBar();
+         S_SyncPos();
+         // the waiting setup: a gap in time cancels it, otherwise one fewer candle to break
+         if (S_g_aSide != 0) {
+            if (S_InpGapCancel && iTime(_Symbol, PERIOD_M15, 0) - iTime(_Symbol, PERIOD_M15, 1) > PeriodSeconds(PERIOD_M15) * 3 / 2) { S_g_aSide = 0; S_g_skipDip++; }
+            else if (--S_g_aLeft <= 0) { S_g_aSide = 0; S_g_skipDip++; S_Log("no dip within the window - skipped"); }
+         }
+         if (S_g_pSide != 0 && S_InpEntryMode == 2 && S_g_pLeft <= 1) { if (!S_g_swept) S_g_skipSweep++; }
+         if (S_g_pSide != 0) {
+            if (S_InpGapCancel && iTime(_Symbol, PERIOD_M15, 0) - iTime(_Symbol, PERIOD_M15, 1) > PeriodSeconds(PERIOD_M15) * 3 / 2) { S_g_skipGap++; S_DSkip(S_g_pSide, "market closed in between"); S_g_pSide = 0; }
+            else if (--S_g_pLeft <= 0) { S_g_skipBreak++; S_DSkip(S_g_pSide, StringFormat("%s not broken in %d candle%s", S_g_pSide > 0 ? "high" : "low", S_InpBreakBars, S_InpBreakBars > 1 ? "s" : "")); S_g_pSide = 0; }
+         }
+         S_DetectSetup();
+      }
+   }
+   S_TryEntry();
+   S_TryDip();
+}
+
+// a new setup on the candle that just closed
+datetime S_g_coolUntil = 0;
+void S_CheckCooldown()
+{
+   static int seen = 0;
+   if (S_InpCoolBars <= 0) return;
+   if (!HistorySelect(TimeCurrent() - 86400 * 3, TimeCurrent() + 60)) return;
+   int n = HistoryDealsTotal();
+   if (n == seen) return;
+   seen = n;
+   for (int i = n - 1; i >= 0; i--) {
+      ulong k = HistoryDealGetTicket(i);
+      if (HistoryDealGetInteger(k, DEAL_MAGIC) != S_InpMagicNumber || HistoryDealGetInteger(k, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;
+      if (HistoryDealGetDouble(k, DEAL_PROFIT) < 0) S_g_coolUntil = MathMax(S_g_coolUntil, (datetime)HistoryDealGetInteger(k, DEAL_TIME) + S_InpCoolBars * PeriodSeconds(PERIOD_M15));
+      break;
+   }
+}
+
+void S_DetectSetup()
+{
+   if (S_InpNoNewMins > 0 && S_MinsToClose() <= S_InpNoNewMins) return;   // too close to the day's close
+   S_CheckCooldown();
+   if (TimeCurrent() < S_g_coolUntil) return;
+   int shape = S_Shape(1);
+   if (shape == 0) return;
+   MqlDateTime dt; TimeToStruct(iTime(_Symbol, PERIOD_M15, 1), dt);
+   if (dt.hour < S_InpSessFrom || dt.hour >= S_InpSessTo) return;
+   if (S_InpSkipDow >= 0 && dt.day_of_week == S_InpSkipDow) return;
+   double e9 = S_Buf(S_hFast, 1), e50 = S_Buf(S_hSlow, 1);
+   if (e9 <= 0 || e50 <= 0) return;
+   double h = iHigh(_Symbol, PERIOD_M15, 1), l = iLow(_Symbol, PERIOD_M15, 1);
+   double o = iOpen(_Symbol, PERIOD_M15, 1), c = iClose(_Symbol, PERIOD_M15, 1);
+
+   bool on9L = S_OnLine(1, e9, 1), on50L = S_OnLine(1, e50, 1);
+   bool rulesOk = S_InpLongRule != 1 && on9L  && !(S_InpLongExitAbove && e50 <= h);
+   bool invOk   = S_InpLongRule != 0 && on50L && !(S_InpLongExitAbove && e9 <= h);
+   bool longLine = rulesOk || invOk;
+   bool shortLine = S_InpShortLine == 0 ? S_OnLine(1, e50, -1) : S_InpShortLine == 1 ? S_OnLine(1, e9, -1) : (S_OnLine(1, e50, -1) || S_OnLine(1, e9, -1));
+   bool longOk  = S_InpBuys && longLine && (shape == 1 || (shape == 2 && (!shortLine || c >= o)));
+   bool shortOk = S_InpSells && shortLine && (shape == -1 || shape == 2) && !longOk;
+   if (!longOk && !shortOk) return;
+   if (S_Choppy()) {
+      S_g_chop++;
+      if (S_InpDrawSkips) S_Callout(iTime(_Symbol, PERIOD_M15, 1), longOk ? l : h, !longOk, 1.0, "skip: choppy", clrDimGray, 7);
+      return;
+   }
+   int side = longOk ? 1 : -1;
+
+   if (S_hHtf != INVALID_HANDLE) {
+      // the last CLOSED higher-timeframe candle: price on the S_trade's side of its EMA, and the EMA moving that way
+      double hc = iClose(_Symbol, g_htf, 1), he1 = S_Buf(S_hHtf, 1), he2 = S_Buf(S_hHtf, 2);
+      bool ok = side > 0 ? (hc > he1 && he1 > he2) : (hc < he1 && he1 < he2);
+      if (he1 <= 0 || he2 <= 0 || !ok) { S_g_filtered++; return; }
+   }
+   if ((S_InpTrendAlign && (side > 0 ? e9 <= e50 : e9 >= e50)) ||
+       (S_InpPriceSide && (side > 0 ? c <= e50 : c >= e50)) ||
+       (S_InpSlopePips > 0 && (S_Buf(S_hSlow, 1) - S_Buf(S_hSlow, 1 + S_InpSlopeLook)) * side < S_InpSlopePips * S_Pip()) ||
+       (S_InpEmaGapPips > 0 && MathAbs(e9 - e50) < S_InpEmaGapPips * S_Pip())) { S_g_filtered++; return; }
+
+   if (S_InpDayLossUsd > 0 || S_InpDayTargetUsd > 0) {
+      double d = S_DayPnl();
+      if ((S_InpDayLossUsd > 0 && d <= -S_InpDayLossUsd) || (S_InpDayTargetUsd > 0 && d >= S_InpDayTargetUsd)) { S_g_dayStop++; return; }
+   }
+   if (S_InpDayLossPct > 0 && AccountInfoDouble(ACCOUNT_EQUITY) <= S_g_dayStartEq * (1 - S_InpDayLossPct / 100.0)) { S_g_dayLossStop++; return; }
+   if (ArraySize(S_g_pos) >= S_InpMaxPos || ((S_g_pSide != 0 || S_g_aSide != 0) && !S_InpReplace)) { S_g_busy++; return; }
+   if (ArraySize(S_g_pos) > 0 && S_InpExtraDir != 0) {
+      bool same = S_g_pos[0].side == side;
+      if ((S_InpExtraDir == 1 && !same) || (S_InpExtraDir == 2 && same)) { S_g_busy++; return; }
+   }
+
+   S_g_pSide = side; S_g_pHigh = h; S_g_pLow = l; S_g_pLeft = S_InpEntryMode == 2 ? S_InpSweepBars : S_InpBreakBars; S_g_setups++; S_g_swept = false; S_g_aSide = 0;
+   S_g_pExit = side > 0 ? (rulesOk ? 50 : 9) : 0;
+   string kindTxt = S_g_kind == 1 ? "PIN BAR" : S_g_kind == 2 ? (side > 0 ? "HAMMER" : "SHOOTING STAR") : "MARUBOZU";
+   string lineTxt = side > 0 ? (rulesOk ? "9 EMA" : "50 EMA") : (S_OnLine(1, e9, -1) ? "9 EMA" : "50 EMA");
+   S_g_pTime = iTime(_Symbol, PERIOD_M15, 1);
+   S_g_pDesc = StringFormat("%s %s on the %s%s", side > 0 ? "LONG" : "SHORT", kindTxt, lineTxt,
+                          side > 0 ? (rulesOk ? " (exit at 50 EMA)" : " (exit at 9 EMA)") : " (TP last support)");
+   S_Log(StringFormat("SETUP %s | candle %s H %s L %s | waiting 1 candle for a break %s %s", S_g_pDesc, S_Ts(S_g_pTime), S_Px(h), S_Px(l),
+                    side > 0 ? "above" : "below", S_Px(side > 0 ? h + S_InpBreakPips * S_Pip() : l - S_InpBreakPips * S_Pip())));
+   if (S_Drawing()) {
+      double lvl = side > 0 ? h + S_InpBreakPips * S_Pip() : l - S_InpBreakPips * S_Pip();
+      S_DBox(S_g_pTime, h, S_g_pTime + PeriodSeconds(PERIOD_M15), l, clrGold);
+      S_DLine(S_g_pTime, lvl, S_g_pTime + (S_InpBreakBars + 1) * PeriodSeconds(PERIOD_M15), lvl, clrGold, STYLE_DOT, 1, "break level");
+      S_Callout(S_g_pTime + PeriodSeconds(PERIOD_M15) / 2, side > 0 ? h : l, side > 0, 2.5,
+              StringFormat("SETUP %s: %s on %s", side > 0 ? "LONG" : "SHORT", kindTxt, lineTxt), clrGold, 9,
+              StringFormat("%s | wait max %d candle(s) for a break %s %.2f", S_g_pDesc, S_InpBreakBars, side > 0 ? "above" : "below", lvl));
+   }
+   if (S_InpVerbose) PrintFormat("[SAAD] %s setup (%s) on %s | waiting for %s %.2f", side > 0 ? "LONG" : "SHORT",
+                               S_g_kind == 1 ? "pin" : S_g_kind == 2 ? "hammer/star" : "marubozu",
+                               side > 0 ? (rulesOk ? "9 EMA, exit 50" : "50 EMA, exit 9") : "EMA", side > 0 ? ">" : "<", side > 0 ? h : l);
+}
