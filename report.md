@@ -1184,3 +1184,72 @@ On Jul–Oct, 7 of the top 10 Jan–Jun settings were profitable.
 - **Caution 2: the pick is flattered.** Trial 126 was picked from the top 10 by its Jul–Oct result.
 - **Caution 3: it's lumpy.** 5 of 10 months were negative.
 - It makes about 1/6 of the 15-min EA's profit (+$202k). **The 15-min EA stays the main one.**
+
+## 26. Trade lifecycle: Saad_strategy_5min v1.01 (the optimized 5-minute EA)
+
+Read from the EA's defaults (`mt5/Saad_strategy_5min.mq5` v1.01, magic 88320, XAUUSD **M5**). It uses the same
+engine as the 15-min EA (§24 / `lifecycle.md`) with different settings. **It only sells** (`InpBuys = false`).
+At 1 lot, $1 of gold = $100.
+
+### SELL trade, step by step
+
+1. **Setup:** a **5-minute** candle closes as a pin bar, marubozu or shooting star (hammers are allowed too, but
+   only SELLs are taken) touching the **9 EMA**.
+2. **Filters**, all must pass, otherwise the setup is ignored:
+   - **big candle:** the setup candle is at least **1.1 × ATR(14)** tall. This is the main v1.01 filter; most
+     small M5 candles are skipped
+   - **trading hours:** the setup candle starts at **broker hour 8 or later** (Axi server time, UTC+3;
+     11:00 Pakistan time). Nothing new in the first 8 hours of the broker day
+   - **not too choppy:** the efficiency ratio over the last **40 candles** (3 h 20 min) is at least **0.06**
+   - **a target exists:** a **support** (a swing low with 3 lower candles on each side, within the last
+     100 candles ≈ 8 hours) at least **30 pips ($3) below** the price. No support that far → no trade
+3. **Entry:** the **next 5-minute candle** must break the setup candle's **low by 1 pip**. It sells the moment
+   that happens; otherwise the setup is dropped (also across the daily close or weekend).
+4. **Stop loss:** **15 pips ($1.50) above the setup candle's high**, sent to the broker with the order. If that's
+   more than **$8** from the entry ($800 at 1 lot), the trade is skipped.
+5. **Target:** **TP1 = that support**, at least $3 away. The EA watches it; no take-profit is sent to the broker.
+6. **Breakeven:** once price has covered **75% of the way to TP1**, the stop moves to the **entry price**.
+7. **TP1 touched:**
+   - **half the trade closes** and that profit is banked
+   - the stop on the other half jumps to **price + $4**, never worse than the entry
+   - **TP2** becomes the next support below
+8. **Trailing:** the stop follows price down, **$4 above it, tick by tick**, and never moves back up. TP2, TP3…
+   are labels only.
+9. **Exit**, whichever comes first:
+   - **original stop** → full loss (at most $800 at 1 lot)
+   - **breakeven stop** → about $0
+   - **$4 trail** after TP1 → win
+   - **3 minutes before the daily close while in loss** → closed
+
+**One trade at a time.** Setups during an open trade are skipped. Winners stay open overnight and over weekends.
+
+### How it differs from the 15-min EA
+
+| | 15-min EA (v1.18) | 5-min EA (v1.01) |
+|---|---|---|
+| Candles | M15 | **M5** |
+| Directions | BUY and SELL | **SELL only** |
+| Setup candle size | ≥ 0.55 × ATR | **≥ 1.1 × ATR** (only big candles) |
+| Hours | all day | **broker hour 8 → close** |
+| Choppy filter | ER ≥ 0.11 over 16 candles | ER ≥ 0.06 over 40 candles |
+| Break needed | 2 pips | 1 pip |
+| Stop | 35 pips beyond the candle, max $15 | **15 pips**, max **$8** |
+| First target | last support ≥ 5 pips away | last support **≥ 30 pips** away |
+| Breakeven | at 75% to TP1 | same |
+| At TP1 | half closed, $2 trail | half closed, **$4 trail** |
+| BUY "trail from entry" path | yes | not used (no BUYs) |
+
+### Worked example (illustrative numbers)
+
+1. A 5-minute bearish marubozu on the 9 EMA at 12:35 broker time: high 4120.00, low 4115.60 (4.4 = 1.2 × ATR;
+   big enough). The last support is 4110.80, which is $4.60 below: more than 30 pips, so it's a valid target.
+2. The next candle breaks **4115.50** (low − 1 pip) → **SELL 1 lot at 4115.50**.
+3. **Stop** 4121.50 (4120.00 + $1.50) = **$600 risk**. **TP1** 4110.80 ($4.70 away).
+4. Price reaches **4111.97** (75% of $4.70) → **stop to 4115.50**. The trade is now risk-free.
+5. Price touches **4110.80** → **0.50 lot closed, +$235**. The stop on the other 0.50 moves to **4114.80**
+   ($4 above).
+6. Price falls to 4104.00 → the stop follows to **4108.00**.
+7. Price bounces to 4108.00 → **the second half closes, +$375**. Total about **+$610**, minus $4 commission.
+
+**Broker vs EA:** the same as §24. Only the stop loss sits at the broker. TP1, the half-close, breakeven and
+the $4 trail need the PC and MT5 running.
