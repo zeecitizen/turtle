@@ -12,6 +12,9 @@ V = {   # (EA, chart, inputs)
     "gate_any":      ("svh_diamond", "M5", {"InpHybDiaGate": 1}),
     "gate_same":     ("svh_diamond", "M5", {"InpHybDiaGate": 2}),
     "svh_only":      ("svh_diamond", "M5", {"InpHybDia": "false"}),
+    "dia_boost3_240": ("svh_diamond", "M5", {"InpHybDiaGate": 2, "InpHybSaadGate": 3, "InpHybWinMin": 240}),
+    "dia_b3_120":     ("svh_diamond", "M5", {"InpHybDiaGate": 2, "InpHybSaadGate": 3, "InpHybWinMin": 120}),
+    "dia_boost2_240": ("svh_diamond", "M5", {"InpHybDiaGate": 2, "InpHybSaadGate": 2, "InpHybWinMin": 240}),
 }
 PERIODS = {"full": ("2026.01.06", "2026.10.08"), "julo": ("2026.07.01", "2026.10.08")}
 OUT = Path(r"C:\Users\zeesh\turtle\testing\svh_diamond_runs.jsonl")

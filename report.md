@@ -1709,3 +1709,29 @@ MT5, XAUUSD_TK real ticks + $4/lot, 200 ms; Diamond default size, 0.02 lots per 
 
 **Verdict:** not shipped. If Diamond is wanted inside the hybrid, gate 2 is the safe mode (it costs nothing),
 but it adds no profit. Results: `testing/svh_diamond_runs.jsonl`.
+
+### Profit table: the Diamond hybrid on every top setting (added 14 Oct)
+
+Zee saw graphs above 270k. **The MT5 graph shows the BALANCE, including the $25,000 deposit**, so a +$263k run
+ends at about $288k. Diamond (same-direction gate) was added to the three top-earning boost settings from §31.
+
+| Setting (full year Jan 6 – Oct 8, 200 ms) | Net profit | **End balance** | Max DD | Net ÷ DD | Jul–Oct net | Jul–Oct net ÷ DD |
+|---|---|---|---|---|---|---|
+| **Diamond + Saad 2× if VSISA setup ≤240 min** | +$263,367 | **$288,367** | $13,572 (15.0%) | 19.40 | +$86,405 | 6.64 |
+| same without Diamond | +$263,394 | $288,394 | $13,572 (15.0%) | 19.41 | +$86,377 | 6.64 |
+| **Diamond + Saad 2× if VSISA setup ≤120 min** | +$242,774 | **$267,774** | $13,404 (7.3%) | 18.11 | +$81,500 | 6.92 |
+| same without Diamond | +$242,802 | $267,802 | $13,293 (7.3%) | 18.27 | +$81,471 | 6.94 |
+| **Diamond + Saad 2× if VSISA traded ≤240 min** | +$239,597 | **$264,597** | $12,487 (6.2%) | 19.19 | +$80,470 | 6.44 |
+| same without Diamond | +$239,625 | $264,625 | $12,448 (6.1%) | 19.25 | +$80,441 | 6.46 |
+| **Diamond + saad_vsisa_hybrid v1.00 (2× if VSISA traded ≤60 min)** | +$238,703 | **$263,703** | $12,105 (6.9%) | 19.72 | +$86,589 | 7.80 |
+| saad_vsisa_hybrid v1.00 alone | +$238,731 | $263,731 | $11,994 (6.9%) | **19.90** | +$86,560 | **7.82** |
+| Diamond during any hybrid trade (v1.00) | +$238,312 | $263,312 | $12,164 (7.0%) | 19.59 | +$86,513 | 7.74 |
+| Diamond free (v1.00) | +$236,869 | $261,869 | $12,185 (7.1%) | 19.44 | +$86,513 | 7.77 |
+| Saad + VSISA side by side (no boost) | +$224,321 | $249,321 | $11,994 (7.1%) | 18.70 | +$77,696 | 7.18 |
+| Saad alone | +$202,222 | $227,222 | $13,422 (8.4%) | 15.07 | +$67,681 | 5.10 |
+
+**Reading it:**
+- **Diamond changes every row by less than ±$100.** The money comes from the Saad 2× boost, not from Diamond.
+- **The $288k run only trades bigger.** It boosts more Saad trades (any VSISA setup within 4 hours), so its
+  drawdown doubles to 15%. In the unseen Jul–Oct it is no better per unit of risk (6.64 vs 7.82).
+- **saad_vsisa_hybrid v1.00 stays the best per unit of risk** in both periods.
