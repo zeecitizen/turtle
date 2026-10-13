@@ -34,6 +34,9 @@ V = {
     "vg3_240":    {"InpHybVsGate": 3, "InpHybWinMin": 240},
     # both must agree
     "both3_240":  {"InpHybVsGate": 3, "InpHybSaadGate": 3, "InpHybWinMin": 240},
+    "boost2_60":  {"InpHybNeedProbe": "false", "InpHybSaadGate": 2, "InpHybWinMin": 60, "InpHybSaadAct": 1},
+    "mir_05R":    {"InpHybNeedProbe": "false", "InpHybSaadGate": 1, "InpHybSaadMature": 1, "InpHybSaadMatR": 0.5},
+    "mir_be":     {"InpHybNeedProbe": "false", "InpHybSaadGate": 1, "InpHybSaadMature": 2},
 }
 PERIODS = {"full": ("2026.01.06", "2026.10.08"), "julo": ("2026.07.01", "2026.10.08")}
 OUT = Path(r"C:\Users\zeesh\turtle\testing\hybrid_blend_runs.jsonl")
@@ -61,8 +64,9 @@ for name in sys.argv[2:]:
     sets = {"InpVerbose": "false", **V[var]}
     for attempt in range(3):
         t0 = time.time() - 2
-        r = axi_rig.run("Hybrid_Saad15_VSISA5", "XAUUSD_TK", "M5", sets, frm=frm, to=to, exec_mode=200,
+        r = axi_rig.run("Hybrid_Saad15_VSISA5", "XAUUSD_TK", "M5", sets, frm=frm, to=to, exec_mode=int(__import__("os").environ.get("HYB_EXEC", "200")),
                         tag=f"hyb_{var}_{per}")
+        r["exec"] = __import__("os").environ.get("HYB_EXEC", "200")
         if "error" not in r and r.get("trades", 1) != 0:
             break
         time.sleep(20)
