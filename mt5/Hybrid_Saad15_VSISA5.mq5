@@ -646,7 +646,8 @@ input double InpHybConfMult = 2.0;    // InpHybConfMult — lot multiplier for c
 input int    InpHybVsGate   = 0;      // InpHybVsGate — Saad confirms VSISA: 0 the probe rule above · 2 Saad traded within InpHybWinMin · 3 Saad setup seen within InpHybWinMin
 input int    InpHybWinMin   = 240;    // InpHybWinMin — confirmation window, minutes
 input int    InpHybSaadMature = 0;    // InpHybSaadMature — gate 1 only: the open VSISA probe must be 0 just open · 1 in profit >= InpHybSaadMatR x its initial risk · 2 stop at/after breakeven
-input double InpHybSaadMatR = 0.5;    // InpHybSaadMatR  // InpHybNeedProbe — false = VSISA trades freely (benchmark: both EAs side by side)
+input double InpHybSaadMatR = 0.5;    // InpHybSaadMatR
+input double InpHybSigThr   = 0.3;    // InpHybSigThr — gate 4: a VSISA setup that passed its regime filter + guards and scored >= this (VSISA itself still trades only >= InpMetaThr)  // InpHybNeedProbe — false = VSISA trades freely (benchmark: both EAs side by side)
 input group "=== Machine learning (v1.29: meta-label + regime + exhaustion ON; report.md section 28) ==="
 input bool   InpMlLog       = false;  // InpMlLog — log features / outcomes / open positions / regime features (training data)
 input int    InpMlTag       = 1;      // InpMlTag — log file number vml_<n>_*.csv (one per rig/run)
@@ -1689,6 +1690,7 @@ void Fire(int side, double sl_level, string why) {
    if (mlOn) MlFeatures(side, entry, sl_level, tp, why, mlf);
    if (InpMetaMode > 0) {
       mlscore = V_MetaModelScore(mlf); g_dMeta = mlscore; g_dMetaT = TimeCurrent();
+      if (mlscore >= InpHybSigThr) HybSoft(side);
       if (mlscore < InpMetaThr) { g_mlMetaVeto++; if (InpMlLog) MlAppend("feat", MlHeader(), MlRow(0, mlf, mlscore, 1)); return; }
    }
    if (InpDrlMode > 0) {
@@ -2050,6 +2052,8 @@ datetime g_hRawT[2] = {0, 0}; int g_hRawS[2] = {0, 0};   // last raw setup seen
 datetime g_hOpnT[2] = {0, 0}; int g_hOpnS[2] = {0, 0};   // last trade opened
 ulong g_hMaxId = 0; ulong g_hTagId[]; int g_hTagF[], g_hTagE[]; double g_hTagSl0[]; int g_hTagN = 0;
 int g_hSaadBlocked = 0, g_hSaadAllowed = 0, g_hSaadBoosted = 0;
+datetime g_hSoftT = 0; int g_hSoftS = 0;
+void HybSoft(int side) { g_hSoftT = TimeCurrent(); g_hSoftS = side; }
 void HybRaw(int eng, int side) { g_hRawT[eng] = TimeCurrent(); g_hRawS[eng] = side; }
 bool HybOpenSide(int eng, int side)
 {
@@ -2067,6 +2071,7 @@ bool HybConf(int eng, int side, int def, int winMin)
    if (def == 1) return HybOpenSide(eng, side);
    if (def == 2) return g_hOpnS[eng] == side && now - g_hOpnT[eng] <= winMin * 60;
    if (def == 3) return g_hRawS[eng] == side && now - g_hRawT[eng] <= winMin * 60;
+   if (def == 4 && eng == 1) return g_hSoftS == side && now - g_hSoftT <= winMin * 60;
    return false;
 }
 // the mirror of the original hybrid: a same-direction VSISA probe that is mature
@@ -2121,6 +2126,7 @@ void HybTrack()
       if (HybConf(o, side, 3, 240)) f |= 16;
       if (HybOpenSide(o, -side)) f |= 32;
       if (HybConf(o, -side, 3, 240)) f |= 64;
+      if (eng == 0 && InpHybSaadGate > 0 && HybConf(1, side, InpHybSaadGate, InpHybWinMin)) f |= 128;
       g_hTagN++; ArrayResize(g_hTagId, g_hTagN, 512); ArrayResize(g_hTagF, g_hTagN, 512); ArrayResize(g_hTagE, g_hTagN, 512); ArrayResize(g_hTagSl0, g_hTagN, 512); g_hTagSl0[g_hTagN - 1] = PositionGetDouble(POSITION_SL);
       g_hTagId[g_hTagN - 1] = id; g_hTagF[g_hTagN - 1] = f; g_hTagE[g_hTagN - 1] = eng;
       g_hOpnT[eng] = TimeCurrent(); g_hOpnS[eng] = side;
@@ -2147,15 +2153,15 @@ void HybTagStats()
       net[k] += HistoryDealGetDouble(d, DEAL_PROFIT) + HistoryDealGetDouble(d, DEAL_COMMISSION) + HistoryDealGetDouble(d, DEAL_SWAP);
    }
    string en[2] = {"SAAD", "VSISA"};
-   string bn[9] = {"all", "other OPEN same dir", "other TRADED same dir 60m", "other TRADED same dir 240m",
+   string bn[11] = {"all", "other OPEN same dir", "other TRADED same dir 60m", "other TRADED same dir 240m",
                    "other SETUP same dir 60m", "other SETUP same dir 240m", "other OPEN opposite dir",
-                   "other last SETUP opposite 240m", "no same-dir confirmation (bits0-4 none)"};
+                   "other last SETUP opposite 240m", "no same-dir confirmation (bits0-4 none)", "CONFIRMED by the Saad gate in use", "NOT confirmed by the Saad gate in use"};
    for (int g = 0; g < 2; g++)
-      for (int b = 0; b < 9; b++) {
+      for (int b = 0; b < 11; b++) {
          int c = 0, w = 0; double tot = 0;
          for (int j = 0; j < g_hTagN; j++) {
             if (g_hTagE[j] != g) continue;
-            bool in = b == 0 ? true : (b == 8 ? (g_hTagF[j] & 31) == 0 : ((g_hTagF[j] >> (b - 1)) & 1) == 1);
+            bool in = b == 0 ? true : (b == 8 ? (g_hTagF[j] & 31) == 0 : (b == 9 ? (g_hTagF[j] & 128) != 0 : (b == 10 ? (g_hTagF[j] & 128) == 0 : ((g_hTagF[j] >> (b - 1)) & 1) == 1)));
             if (!in) continue;
             double x = net[j] - (com[j] == 0 ? 4.0 * vin[j] : 0); c++; tot += x; if (x > 0) w++;
          }
