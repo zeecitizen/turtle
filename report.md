@@ -719,3 +719,40 @@ last candle body, hour, share of the position still open.
   the same "higher win rate, less money" pattern as §13.
 - **The data explains why:** in Jan–Jun, closing at a given candle beat holding only **50.2%** of
   the time, a coin flip. The features can't tell which runners are about to die.
+
+### 17b. "65% win rate": does it mean fewer losing trades? Trade by trade (Zee's question)
+
+Jul 1 – Oct 8. v1.17 and the 0.75 exhaustion exit were both re-run with every trade's full result
+logged (the 50% partial and the runner counted as **one** trade), then matched trade by trade.
+
+| Jul–Oct, per TRADE | Trades | Winners | **Losers** | Trade win rate | Avg win | Avg loss | All wins | All losses | Net |
+|---|---|---|---|---|---|---|---|---|---|
+| **v1.17** | 365 | 171 | **194** | 46.8% | $1,201 | −$710 | $205,359 | −$137,678 | **+$67,681** |
+| exhaustion ≥ 0.75 | 398 | 216 | **182** | 54.3% | $892 | −$800 | $192,760 | −$145,571 | +$47,189 |
+
+**Why MT5 says 60% / 65% but this table says 47% / 54%:** MT5's win rate counts *deals*, and the
+50% partial at TP1 is a separate winning deal. Per whole trade, v1.17 wins 47% of the time and makes
+its money because the average win ($1,201) is much bigger than the average loss ($710).
+
+**What the exit really did:**
+1. **It saved some losers.** It closed 86 trades early. Of the 72 that also exist in v1.17,
+   **27 would have ended as losses** and were closed in profit instead. On 52 of the 72, closing
+   early beat holding.
+2. **It killed the big winners.** The other 20 were runners cut short:
+   - **$11,511 → $194**
+   - $5,721 → $1,113
+   - $5,267 → $768
+   - $4,877 → $290
+   - $3,153 → $222
+
+   The 52 small wins don't pay for these.
+3. **Losing trades fell only from 194 to 182 (−12), not −27.** Closing trades early frees the EA to
+   take setups it used to skip while busy. That added 50 new trades (net −$1,932), with their own
+   losers.
+4. **The average loss got *bigger*** (−$710 → −$800), while the average win shrank ($1,201 → $892).
+
+**Answer:** the higher win rate is real, and there are slightly fewer losing trades (−12 in 3
+months). But it comes from booking many small wins early and cutting the few big runners that pay
+for the strategy, so net profit falls by **$20,492 (−30%)** in 3 months. More winning trades
+doesn't mean more money: what decides profit is (win rate × average win) − (loss rate ×
+average loss).
