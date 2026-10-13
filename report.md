@@ -756,3 +756,45 @@ months). But it comes from booking many small wins early and cutting the few big
 for the strategy, so net profit falls by **$20,492 (−30%)** in 3 months. More winning trades
 doesn't mean more money: what decides profit is (win rate × average win) − (loss rate ×
 average loss).
+
+## 18. Optuna (Bayesian optimisation over 10 settings) — 92 real MT5 runs (13 Oct)
+
+**What:** your Optuna pipeline, `monitor/strategy_lab/optuna_mt5.py`. Every trial is a real
+Strategy Tester run.
+
+**Changes from the paste:**
+- **Rigs, not your live terminal:** it ran on the test rigs (3 in parallel, one shared study), never
+  the terminal you trade on.
+- **No `OnTester()` edit:** metrics come from MT5's own report.
+- **Same data as everything else:** XAUUSD_TK real ticks + $4/lot, 1 lot, $25k, 200 ms delay.
+
+**Search space:**
+- the pasted six: EMA fast 5–15, EMA slow 30–80, chop ER 0.05–0.25, ATR trail 1–4, pin wick 0.30–0.60,
+  pin body 0.20–0.60
+- plus four already-tuned settings: stop 20–50 pips, marubozu body 0.40–0.70, minimum range
+  0.30–0.80 ATR, hammer ratio 1.5–3.5
+
+**Fitness:** the paste's own: net × win rate, minus 3 × max drawdown above $2,500.
+**Tuned on:** Jan 6 – Jun 30 only. Trial 0 = v1.17's settings.
+
+**Result on Jan–Jun:** after 92 trials, **no setting beat v1.17**, on fitness or on net. v1.17 made
++$134,541; the best alternative made +$99,598.
+
+**The 5 best alternatives on the unseen Jul 1 – Oct 8:**
+
+| Settings | Jan–Jun net | **Jul–Oct net** | Win rate | Max DD | Worst day |
+|---|---|---|---|---|---|
+| **v1.17** | **+$134,541** | **+$67,681** | 60.1% | $13.3k | −$3,806 |
+| trial 83 (EMA 9/34, trail 1.0, range 0.65) | +$99,598 | +$24,213 | 62.0% | $14.0k | −$3,470 |
+| trial 46 (EMA 9/33, trail 1.1) | +$92,194 | +$34,481 | 60.2% | $13.5k | −$3,470 |
+| trial 51 (EMA 8/34, trail 1.5, range 0.70) | +$94,276 | +$52,717 | 62.5% | $9.9k | −$3,789 |
+| trial 38 (EMA 10/37, trail 1.2) | +$86,547 | +$31,029 | 60.5% | $10.7k | −$3,896 |
+| trial 88 (EMA 6/40, wick 0.55, ham 3.25) | +$88,915 | +$10,797 | 58.6% | $20.6k | −$4,699 |
+
+**Verdict:** v1.17 already sits at the top of this 10-setting space, on both the tuning months and
+the unseen months.
+- Optuna kept circling back to v1.17's stop (35), chop ER (0.11) and pin wick (0.45).
+- Every alternative it found made **less** on the unseen months, by 22–84%.
+
+Nothing to change. The study is saved in `monitor/strategy_lab/optuna_saad.db`; every trial is in
+`zee_optuna.jsonl`.
