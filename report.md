@@ -928,3 +928,39 @@ Every run: base 1 lot, $25k, Jan 6 – Oct 8, real ticks, 200 ms.
 
 **Verdict: not adopted.** If Zee wants more profit and accepts bigger swings, plain v1.17 at 2 lots
 (`InpLots = 2`) beats every pyramid version on profit, drawdown ratio and simplicity.
+
+### 21b. How "no breakeven lock, +30 pips, ×0.5, 3 tiers" actually trades
+
+Re-run: **+$306,664.42**, identical. MT5 report: `testing/Pyramid_nolock_30pips_x05_3tiers_1lot.htm`.
+
+**The rules in plain words:**
+1. **v1.17 opens its normal 1-lot trade.** Same setups, same stop, same TP1 / 50% partial / $2
+   trail. The base trade behaves exactly like v1.17's.
+2. **Price moves $3 (30 pips) our way → add 0.5 lot.**
+3. **Another $3 our way → add 0.25 lot.** At most 1.75 lots are open at once.
+4. **The add-ons always carry the base trade's stop,** and that stop moves with v1.17's rules. When
+   the base trade closes, the add-ons close with it.
+
+**What happened over Jan 6 – Oct 8 (867 trades):**
+
+| Trade reached… | Trades | Their net | Add-ons' part |
+|---|---|---|---|
+| base only (never got $3 ahead) | 207 | −$158,789 | – |
+| base + 1 add-on (got $3 ahead, not $6) | 180 | −$146,962 | **−$62,547** (lost on 150 of 161) |
+| base + 2 add-ons (got $6 ahead) | 468 | +$593,240 | **+$157,160** |
+
+- **Add-ons fire within minutes.** $3 is small next to gold's normal M15 range, so **54% of all
+  trades end up holding 1.75 lots.** In practice it's "1 lot, becoming 1.75 lots if the trade starts
+  well".
+- **The add-ons' extra +$100k comes entirely from the big runners.** On the year's best trade
+  (27 Jan, BUY):
+  - 1 lot at 5093.74, +0.5 at 5097.14 four minutes later, +0.25 at 5100.31 five minutes after that
+  - all closed at 5285.28 the next morning
+  - **+$33,178** instead of +$19,088
+- **On losers, the add-ons lose with the base, and more per dollar,** because they sit closer to the
+  far stop's price but use the same stop. A typical loser (1 Apr, SELL): base −$1,504, add-ons −$1,438,
+  **basket −$2,948**. The biggest basket loss was **−$4,880** (the 24 Jul weekend gap).
+
+**Why plain extra lots are still better:** a constant 1.75 lots of v1.17 would make about +$354k
+with a similar drawdown (about $23.5k) and a smaller worst day (about −$6.7k). The pyramid makes
++$307k with a $23.6k drawdown and a −$7.3k worst day.
