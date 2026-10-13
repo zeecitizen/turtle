@@ -632,3 +632,49 @@ year). The CHOP trades are profitable: +$22.5k in Jan–Jun, +$13.1k in Jul–Oc
 tell apart, so switching behaviour by state removes good trades.
 
 v1.17 stays untouched.
+
+## 16. "v1.18" macro risk controls — TESTED ONLY, not shipped (13 Oct)
+
+Zee: *"don't ship v1.18.. just test.."*. The code lives in a test copy, `mt5/Saad_v118test.mq5`
+(built by `monitor/strategy_lab/patch_v118.py`). `Saad_strategy_15min.mq5` is still v1.17.
+
+**What was built (the pasted spec, with two safety changes):**
+- **Daily loss circuit breaker:** when today's equity (including open trades) is **$1,500** below the
+  day's start, close this EA's trades and take no new ones until the next server day.
+- **Friday close:** from **21:30 server time** on Friday, close this EA's trades and take no new
+  ones. Optionally, the time can instead be 3 min before the broker's own close.
+- **Change 1:** only this EA's positions (its magic and symbol) are closed, never manual trades or
+  another EA's.
+- **Change 2:** trade management keeps running after a trigger. The spec's early `return` from
+  `OnTick` would freeze trailing stops.
+
+With both off, the test copy reproduces v1.17 to the cent.
+
+| Jan 6 – Oct 8, 1 lot, real ticks, 200 ms | Net | Trades | Win rate | Biggest loss | Worst day | Max DD | Losing months |
+|---|---|---|---|---|---|---|---|
+| **v1.17 (both off)** | **+$202,222** | 867 | 61.3% | −$2,570 | −$3,806 | $13.4k | 0 |
+| **v1.18 as pasted** ($1,500 close-all + Friday 21:30) | +$82,522 | 708 | 57.6% | −$1,565 | **−$1,826** | $23.1k | 2 |
+| $1,500 close-all daily limit only | +$93,981 | 708 | 57.8% | −$2,570 | −$2,570 | $18.6k | 2 |
+| Old daily limit $1,500 (stops new trades only, §12) | +$140,900 | 770 | 60.3% | −$2,570 | −$2,821 | $17.6k | 1 |
+| Friday close 21:30 only | +$175,244 | 859 | 61.0% | −$1,565 | **−$4,377** | $16.9k | 0 |
+| Friday close 3 min before the broker's close only | +$178,517 | 874 | 61.3% | −$1,565 | −$3,806 | $15.2k | 0 |
+
+**What it shows:**
+1. **The pasted v1.18 does cap the bad day** (−$3,806 → −$1,826), but it costs **$120k of $202k (59%)**.
+   It also makes the account's drawdown *bigger* ($13.4k → $23.1k) and adds 2 losing months.
+   - The close-all limit shuts trades that were down but would have recovered, often runners that
+     were going to come back. It then sits out the rest of the day.
+2. **"Stop new trades only" is much cheaper than "close everything":** +$141k vs +$94k, for nearly the
+   same worst day (−$2.8k vs −$2.6k).
+3. **Friday 21:30 is worse than closing at the broker's close.** It cuts trades 2½ hours early,
+   which gave a *new* worst day (−$4,377, a Friday trade closed at a loss). Closing 3 min before
+   the real close removes the weekend gap (biggest loss −$1,565) with the worst day unchanged.
+
+**If Zee wants protection, the cheapest combination measured:**
+
+| Setting | Cost (Jan–Oct) | Buys |
+|---|---|---|
+| Friday close 3 min before the broker's close | −$24k | no weekend gap: biggest loss −$2,570 → −$1,565 |
+| + daily limit that only stops new trades (`InpDayLossClose=false`) | about −$61k more | worst day about −$2.8k |
+
+Not shipped. Waiting for Zee's decision.
