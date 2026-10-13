@@ -1,0 +1,3 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpEnablePyramid=true,InpPyramidMultiplier=1.0
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpEnablePyramid=true,InpPyrLockBe=false
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpEnablePyramid=true,InpMaxTiers=2

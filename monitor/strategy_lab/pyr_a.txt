@@ -1,0 +1,3 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpEnablePyramid=true
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpEnablePyramid=true,InpPyramidSpacing=50
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpEnablePyramid=true,InpPyramidSpacing=100
