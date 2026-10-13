@@ -792,6 +792,8 @@ double S_LotsFor(int side, double en, double sl)
 
 void S_DoEntry(int side, double sl)
 {
+   HybRaw(0, side);
+   if (!HybSaadOk(side)) return;
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double pip = S_Pip();
    double en = side > 0 ? ask : bid;
@@ -813,6 +815,7 @@ void S_DoEntry(int side, double sl)
    bool rideShort = side < 0 && S_TrailOn(-1) && S_InpRide && S_InpFixTpPips <= 0;
    if (S_InpFixTpPips > 0) { tp = side > 0 ? en + S_InpFixTpPips * pip : en - S_InpFixTpPips * pip; noTp = false; }
    double lots = S_LotsFor(side, en, sl);
+   lots = HybSaadLots(side, lots);
    if (lots <= 0) { S_DSkip(side, "even the minimum lot risks too much of this account"); return; }
    bool ok = side > 0 ? S_trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), S_InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, S_EA_COMMENT + " BUY")
                       : S_trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), S_EA_COMMENT + " SELL");

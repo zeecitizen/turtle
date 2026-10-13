@@ -1,5 +1,5 @@
 """Backtest the Saad15 x VSISA5 hybrid variants on one rig (XAUUSD_TK real ticks, M5, 200 ms).
-    py run_hybrid.py <rig> <variant> [<variant> ...]      results -> testing/hybrid_runs.jsonl
+    py run_hybrid.py <rig> <variant> [<variant> ...]      results -> testing/hybrid_blend_runs.jsonl
 Per-engine, per-position win rates come from the EA's own [HYBRID-STATS] lines in the agent log."""
 import json, sys, time
 from pathlib import Path
@@ -17,9 +17,26 @@ V = {
     "m1_05R_mloff": {"InpHybMature": 1, "InpHybMatureR": 0.5, **ML_OFF},
     "side_mloff":  {"InpHybNeedProbe": "false", **ML_OFF},
     "vsisa_only_mloff": {"InpHybSaad": "false", "InpHybNeedProbe": "false", **ML_OFF},
+    # blend (Zee 2026-10-14): VSISA is the outer confirmation, Saad the inner trade
+    "saad_only": {"InpHybVsisa": "false"},
+    "sg1_open":   {"InpHybNeedProbe": "false", "InpHybSaadGate": 1},
+    "sg2_60":     {"InpHybNeedProbe": "false", "InpHybSaadGate": 2, "InpHybWinMin": 60},
+    "sg2_240":    {"InpHybNeedProbe": "false", "InpHybSaadGate": 2, "InpHybWinMin": 240},
+    "sg3_60":     {"InpHybNeedProbe": "false", "InpHybSaadGate": 3, "InpHybWinMin": 60},
+    "sg3_240":    {"InpHybNeedProbe": "false", "InpHybSaadGate": 3, "InpHybWinMin": 240},
+    "sg3_240_mloff": {"InpHybNeedProbe": "false", "InpHybSaadGate": 3, "InpHybWinMin": 240, **ML_OFF},
+    "boost1_open": {"InpHybNeedProbe": "false", "InpHybSaadGate": 1, "InpHybSaadAct": 1},
+    "boost2_240": {"InpHybNeedProbe": "false", "InpHybSaadGate": 2, "InpHybWinMin": 240, "InpHybSaadAct": 1},
+    "boost3_240": {"InpHybNeedProbe": "false", "InpHybSaadGate": 3, "InpHybWinMin": 240, "InpHybSaadAct": 1},
+    # reverse: Saad confirms VSISA
+    "vg2_240":    {"InpHybVsGate": 2, "InpHybWinMin": 240},
+    "vg3_60":     {"InpHybVsGate": 3, "InpHybWinMin": 60},
+    "vg3_240":    {"InpHybVsGate": 3, "InpHybWinMin": 240},
+    # both must agree
+    "both3_240":  {"InpHybVsGate": 3, "InpHybSaadGate": 3, "InpHybWinMin": 240},
 }
 PERIODS = {"full": ("2026.01.06", "2026.10.08"), "julo": ("2026.07.01", "2026.10.08")}
-OUT = Path(r"C:\Users\zeesh\turtle\testing\hybrid_runs.jsonl")
+OUT = Path(r"C:\Users\zeesh\turtle\testing\hybrid_blend_runs.jsonl")
 
 
 def hyb_lines(t0):
@@ -30,7 +47,9 @@ def hyb_lines(t0):
         with open(f, "rb") as fh:
             fh.seek(max(0, f.stat().st_size - 4_000_000))
             txt = fh.read().decode("utf-16-le", errors="ignore")
-        out += [ln.strip()[ln.find("[HYBRID"):] for ln in txt.splitlines() if "[HYBRID" in ln and "v1.00" not in ln]
+        lines = txt.splitlines()
+        start = max([i for i, ln in enumerate(lines) if "[HYBRID Saad15xVSISA5]" in ln] or [0])   # this run only
+        out += [ln.strip()[ln.find("[HYBRID"):] for ln in lines[start:] if "[HYBRID" in ln and "v1.00" not in ln]
     return out
 
 
@@ -51,4 +70,4 @@ for name in sys.argv[2:]:
     r["variant"], r["per"] = var, per
     with open(OUT, "a", encoding="utf-8") as f:
         f.write(json.dumps(r) + "\n")
-    print(name, r.get("net"), r.get("hybrid"), flush=True)
+    print(name, round(r.get("net") or 0), r.get("wr"), len(r.get("hybrid", [])), "lines", flush=True)
