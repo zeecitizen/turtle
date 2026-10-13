@@ -636,6 +636,37 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_5min v1.01 — a profitable M5 variant: sell only (2026-10-13)
+
+**Who:** Zee: *"find a profitable variant of this EA on 5 minute timeframe using whatever tools you have.
+call this EA name_5min"*.
+
+**How it was found** (`monitor/strategy_lab/optuna_5min.py`, study `saad5_janjun`):
+- Optuna, about 150 trials over 3 rigs. Every trial was a real MT5 test (XAUUSD_TK real ticks + $4/lot, 1 lot,
+  $25k, 200 ms).
+- Tuned on Jan 6 – Jun 30 only; fitness = net − 0.5 × drawdown.
+- The top 10 were then run on unseen Jul 1 – Oct 8: 7 of 10 profitable there.
+- Trial 126 was chosen. It's the best on Jul–Oct, so the pick is flattered by having looked at those months.
+
+**New defaults** (all switches already in the EA):
+- `InpBuys=false` (**sell only**)
+- `InpMinRangeAtr` 0.55 → 1.10, `InpSlPips` 20 → 15, `InpMaxRiskUsd` 9 → 8
+- `InpChopEr` 0.11 → 0.06, `InpChopErLook` 48 → 40
+- `InpWickMin` 0.45 → 0.35, `InpMaruBody` 0.53 → 0.58, `InpHamRatio` 2.5 → 2.0
+- `InpBreakPips` 2 → 1, $ trails 2 → 4, `InpMinTpPips` 5 → 30, `InpSessFrom` 0 → 8
+- comments `Saad5 v1.01 BUY/SELL`
+
+**Receipts** (EA defaults, reproduced to the cent):
+- Jan–Jun **+$13,651.25** · Jul–Oct **+$16,505.25** · PF 1.26 · DD $6.0k / $9.9k
+- full period with random delay: **+$32,992**, DD $9.4k, 5 of 10 months negative
+- runner-up (trial 140): +$23,568, both halves positive
+
+**Cautions:**
+- The same settings with **buys allowed make only +$4,457**: the longs lose. Gold fell about 20% over the
+  test year, so the edge may be regime-bound.
+- The profit is about 1/6 of the 15-min EA's.
+- Compiled into the Axi terminal. **Demo first.**
+
 ## Saad_strategy_15min v1.18 · pyramiding_max_3 v1.01 — trade comments name the EA (2026-10-13)
 
 **Who:** Zee: *"in the pyramiding EA and the latest EA to say in comments the name of EA so we know

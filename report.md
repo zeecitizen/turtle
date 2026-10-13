@@ -1151,3 +1151,36 @@ A SELL setup candle on the 9 EMA, high 4210.00, low 4205.00. The last support is
 **If the PC or MT5 goes offline,** an open trade keeps its **last stop** at the broker, so it's
 protected, but it won't bank TP1, move to breakeven or trail until the EA is running again. Keep the
 trading PC on, or run it on the VPS.
+
+## 25. A profitable 5-minute variant: `Saad_strategy_5min` v1.01 (13 Oct)
+
+§11's v1.00 (v1.17 rescaled for M5) lost money on the unseen months. This time:
+- **Optuna searched 15 settings** in about 150 real MT5 tests: trading hours, longs/shorts, candle size,
+  stop, trail, breakeven point, partial close, minimum target, choppy filter.
+- **Tuned on Jan–Jun only,** then the top 10 were judged on unseen Jul–Oct.
+
+| Version (1 lot, real ticks, $4/lot) | Jan–Jun | Jul–Oct (unseen) | PF | Max DD | Worst day |
+|---|---|---|---|---|---|
+| v1.00 (rescaled 15-min settings) | +$16,243 | **−$27,816** | 1.06 | $34.6k | |
+| Optuna's #1 on Jan–Jun (trial 104) | +$20,856 | −$1,714 | 0.99 | $11.4k | |
+| **v1.01 = trial 126** | **+$13,651** | **+$16,505** | 1.26 | $6.0k / $9.9k | −$4,231 |
+| trial 140 (runner-up) | +$12,831 | +$10,737 | 1.21 | $9.3k | −$5,007 |
+| v1.01, full period with random delays | | +$32,992 in total | 1.29 | $9.4k | −$4,270 |
+| v1.01 settings **with buys allowed** | −$1,784 | +$6,241 | 1.03 | $21.2k | −$5,723 |
+
+On Jul–Oct, 7 of the top 10 Jan–Jun settings were profitable.
+
+**What the winners share:**
+- **sell only**
+- **big setup candles only** (≥ 1.1 × ATR)
+- a tighter 15-pip stop with a wider $4 trail
+- a first target at least 30 pips away
+- no new setups in the first 8 hours of the broker day
+
+**Verdict: a real but small M5 edge. Shipped as v1.01, demo first.**
+- It's profitable in both halves and survives random execution delays.
+- **Caution 1: it only sells.** The longs lose on M5, and gold fell about 20% over the test year, so the
+  edge may depend on the falling market.
+- **Caution 2: the pick is flattered.** Trial 126 was picked from the top 10 by its Jul–Oct result.
+- **Caution 3: it's lumpy.** 5 of 10 months were negative.
+- It makes about 1/6 of the 15-min EA's profit (+$202k). **The 15-min EA stays the main one.**

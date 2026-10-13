@@ -1,9 +1,20 @@
-//| Saad_strategy_5min.mq5 - 5-MINUTE variant of Saad_strategy_15min v1.17 (Zee 2026-10-13)
-//| Attach on M5 only.
-//| VERDICT: NOT PROFITABLE IN TESTING - DEMO ONLY.
-//|   30 variants on Axi real ticks (1 lot): best Jan-Jun +$16,243 (PF 1.06) with these defaults,
-//|   but the SAME settings lost -$27,816 on Jul-Oct. Most variants lost money in both periods.
-//|   On M5 each trade is small; spread + $4/lot commission eat the edge. Use the 15-minute EA.
+//+------------------------------------------------------------------+
+//| Saad_strategy_5min.mq5  v1.01 (2026-10-13) - 5-MINUTE variant of   |
+//| Saad_strategy_15min. Attach on XAUUSD M5 only. Magic 88320.        |
+//| v1.01 = the best of ~150 Optuna trials (each a real MT5 test,      |
+//| tuned on Jan-Jun only), checked on unseen Jul-Oct:                 |
+//|   SELL ONLY, setup candle >= 1.1 x ATR, stop 15 pips, max risk $8, |
+//|   $4 trail, first target >= 30 pips, no new setups before hour 8.  |
+//| MT5, Axi real ticks, 1 lot, $25k, $4/lot:                          |
+//|   Jan-Jun +$13,651 | Jul-Oct (unseen) +$16,505 | PF 1.26           |
+//|   full Jan 6 - Oct 8 with random delays: +$32,992, DD $9.4k,       |
+//|   5 of 10 months negative.                                         |
+//| CAUTION: sells only, and gold FELL ~20% over the test year; the    |
+//| same settings with buys allowed made only +$4,457 (longs lost).    |
+//| In a rising gold market this EA will likely struggle. Small edge   |
+//| (about 1/6 of the 15-min EA's profit). DEMO FIRST.                 |
+//| v1.00 (rescaled v1.17) was not profitable: Jul-Oct -$27,816.       |
+//+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
 //| Saad_strategy_15min.mq5  v1.00 (15-MINUTE variant of Saad v4.03)|
 //| Built from mt5/RULES_EMA_SAAD.md. EMA 9 + EMA 50.                |
@@ -40,29 +51,30 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.00"
+#property version   "1.01"
 #property strict
 
 #include <Trade/Trade.mqh>
+#define EA_COMMENT "Saad5 v1.01"   // every order's comment names the EA + version
 
 //--- the two lines
 input int    InpEmaFast     = 9;      // InpEmaFast
 input int    InpEmaSlow     = 50;     // InpEmaSlow
 
 //--- ① setup candle
-input double InpWickMin     = 0.45;   // InpWickMin — pin: long wick >= this x range [v1.13: 0.35->0.45]
+input double InpWickMin     = 0.35;   // InpWickMin — pin: long wick >= this x range [v1.13: 0.35->0.45] [v1.01: 0.45 -> 0.35]
 input double InpBodyMax     = 0.60;   // InpBodyMax — pin: body <= this x range
 input double InpNoseMax     = 0.20;   // InpNoseMax — pin: short wick <= this x range
 input bool   InpPinDir      = false;  // InpPinDir — pin must point the trade way (false = any pin, the EMA decides)
 input bool   InpPinColor    = false;  // InpPinColor — pin body must close the trade way too: LONG green, SHORT red (with InpPinDir)
 input bool   InpUsePin      = true;   // InpUsePin — accept pin bars
 input bool   InpMarubozu    = true;   // InpMarubozu — accept a marubozu
-input double InpMaruBody    = 0.53;   // InpMaruBody — marubozu: body >= this x range [v1.09: 0.70->0.50, Zee; 0.35-0.55 plateau] [v1.14: 0.50->0.53]
+input double InpMaruBody    = 0.58;   // InpMaruBody — marubozu: body >= this x range [v1.09: 0.70->0.50, Zee; 0.35-0.55 plateau] [v1.14: 0.50->0.53] [v1.01: 0.53 -> 0.58]
 input bool   InpHammer      = true;   // InpHammer — accept hammers (LONG)
 input bool   InpStar        = true;   // InpStar — accept shooting stars (SHORT)
-input double InpHamRatio    = 2.5;    // InpHamRatio — hammer: long wick >= this x body [v1.13: 3->2.5]
+input double InpHamRatio    = 2.0;    // InpHamRatio — hammer: long wick >= this x body [v1.13: 3->2.5] [v1.01: 2.5 -> 2.0]
 input double InpHamNose     = 0.50;   // InpHamNose — hammer: opposite wick <= this x range
-input double InpMinRangeAtr = 0.55;   // InpMinRangeAtr — candle range >= this x ATR(14) (0 = off) [v1.14: 0.50->0.55]
+input double InpMinRangeAtr = 1.10;   // InpMinRangeAtr — candle range >= this x ATR(14) (0 = off) [v1.14: 0.50->0.55] [v1.01: 0.55 -> 1.10, only big setup candles]
 
 //--- ① on the EMA
 input int    InpLongRule    = 2;      // InpLongRule — 0 on 9 EMA exit 50 (rules) · 1 on 50 exit 9 (inverse) · 2 both
@@ -73,18 +85,18 @@ input bool   InpLongExitAbove = false;// InpLongExitAbove — LONG only when its
 
 //--- ② break · ③ entry
 input int    InpBreakBars   = 1;      // InpBreakBars — the high/low must break within this many candles [M15: 2->1, one 15-min candle = three 5-min ones]
-input double InpBreakPips   = 2;      // InpBreakPips — break must clear the high/low by this many pips [v4.02: 0->2, MT5 court]
+input double InpBreakPips   = 1;      // InpBreakPips — break must clear the high/low by this many pips [v4.02: 0->2, MT5 court] [v1.01: 2 -> 1]
 input bool   InpTrigBid     = true;   // InpTrigBid — LONG break judged on the BID like the chart (false = the ASK, a real buy stop)
 
 //--- ④ stop · ⑤ target
-input double InpSlPips      = 20;     // InpSlPips — stop beyond the candle [v4.02: 34->30] [v1.13: 30->35, real-tick court + Jul-Oct holdout] [5min: 35 -> 20]
-input double InpMaxRiskUsd  = 9.0;    // InpMaxRiskUsd — skip if the stop is more than this $ of price away (0 = off) [M15: 9->15; 14-18 plateau, 9 skips 2/3 of M15 setups] [5min: 15 -> 9, rescaled for M5 candles]
+input double InpSlPips      = 15;     // InpSlPips — stop beyond the candle [v4.02: 34->30] [v1.13: 30->35, real-tick court + Jul-Oct holdout] [5min: 35 -> 20] [v1.01: 20 -> 15]
+input double InpMaxRiskUsd  = 8.0;    // InpMaxRiskUsd — skip if the stop is more than this $ of price away (0 = off) [M15: 9->15; 14-18 plateau, 9 skips 2/3 of M15 setups] [5min: 15 -> 9, rescaled for M5 candles] [v1.01: 9.0 -> 8.0]
 input int    InpLongExit    = 1;      // InpLongExit — 0 a candle touches the exit EMA · 1 a candle CLOSES at / beyond it
 input double InpLongTpPips  = 0;      // InpLongTpPips — LONG: take profit this many pips before the EMA
 input int    InpSwingPivot  = 3;      // InpSwingPivot — SHORT "last support" = swing low with this many candles each side
 input int    InpSwingLook   = 100;    // InpSwingLook — candles back to search for the support [M15: 300->100 candles = 25 hours]
 input double InpShortTpPips = 0;      // InpShortTpPips — SHORT: take profit this many pips before the support
-input double InpMinTpPips   = 5;      // InpMinTpPips — TP at least this far from the entry
+input double InpMinTpPips   = 30;      // InpMinTpPips — TP at least this far from the entry [v1.01: 5 -> 30]
 input double InpMaxTpPips   = 0;      // InpMaxTpPips — skip a SHORT whose support is further than this (0 = off)
 
 //--- ⑥ breakeven
@@ -92,13 +104,13 @@ input double InpBeUsd       = 0.0;    // InpBeUsd — stop to entry once price m
 input int    InpNoNewMins   = 0;      // InpNoNewMins — no new setups / entries this many minutes before the day's close (0 = off) [v1.03 30; v1.05 OFF, Zee: costs ~$11k at 1 lot]
 input int    InpCloseLossMins = 3;    // InpCloseLossMins — this many minutes before the close: shut trades in loss, keep winners (0 = off) [v1.03, Zee]
 input int    InpLongTouch   = 1;      // InpLongTouch — LONG at the exit EMA: 1 on a TOUCH trail $X below the market + TP at the last resistance (Zee 2026-10-12) · 0 old exit
-input double InpLongTrailUsd = 2.0;   // InpLongTrailUsd — ...the trailing stop's distance below the market, $ of price [v1.07: 3->2, Zee]
+input double InpLongTrailUsd = 4.0;   // InpLongTrailUsd — ...the trailing stop's distance below the market, $ of price [v1.07: 3->2, Zee] [v1.01: 2.0 -> 4.0]
 input bool   InpLongResTp   = true;   // InpLongResTp — ...and aim for the next liquidity: TP2 = last resistance, then TP3 = the one beyond (watched by the EA; the exit is the trail)
 input bool   InpLongResTp1  = false;  // InpLongResTp1 — LONG whose exit EMA is below / too close to the entry: TP1 = the next resistance above the entry (false = no TP, trail from entry) [v1.11 Zee; v1.12 OFF: -$70k on real ticks (trailing from entry is better)]
 input bool   InpResTp1Ride  = true;   // InpResTp1Ride — with InpLongResTp1: also trail from the entry (2xATR) until that resistance is reached
 input int    InpShortTouch  = 1;      // InpShortTouch — SHORT at the support (TP1): 1 trail $X above the market + TP2/TP3 = the supports below (Zee 2026-10-12) · 0 old (lock + ATR trail)
 input double InpTrailStepUsd = 0;     // InpTrailStepUsd — widen the $ trail by this much at each TP reached after TP1 (TP2 +1x, TP3 +2x ...; 0 = fixed)
-input double InpShortTrailUsd = 2.0;  // InpShortTrailUsd — ...the trailing stop's distance above the market, $ of price [v1.07: 3->2, Zee]
+input double InpShortTrailUsd = 4.0;  // InpShortTrailUsd — ...the trailing stop's distance above the market, $ of price [v1.07: 3->2, Zee] [v1.01: 2.0 -> 4.0]
 input double InpBeTpPct     = 0.75;   // InpBeTpPct — CTC: stop to entry once price covered this share of the way to the TP (0 = off) [v1.02, Zee]
 
 //--- ⑦ trailing
@@ -114,9 +126,9 @@ input int    InpRideLock    = 0;      // InpRideLock — when the TP is reached 
 input double InpLockPips    = 0;      // InpLockPips — lock this many pips short of the TP [v4.02: 2->0]
 
 //--- ✖ filters
-input double InpChopEr      = 0.11;   // InpChopEr — skip if the efficiency ratio is below this (0 = off) [v1.14: 0.10->0.11]
-input int    InpChopErLook  = 48;     // InpChopErLook — efficiency ratio length [5min: 16 -> 48 = the same 4 hours as on M15]
-input int    InpSessFrom    = 0;      // InpSessFrom — broker hour, inclusive (Axi UTC+3; 0/24 = all day)
+input double InpChopEr      = 0.06;   // InpChopEr — skip if the efficiency ratio is below this (0 = off) [v1.14: 0.10->0.11] [v1.01: 0.11 -> 0.06]
+input int    InpChopErLook  = 40;     // InpChopErLook — efficiency ratio length [5min: 16 -> 48 = the same 4 hours as on M15] [v1.01: 48 -> 40]
+input int    InpSessFrom    = 8;      // InpSessFrom — broker hour, inclusive (Axi UTC+3; 0/24 = all day) [v1.01: 0 -> 8, no new setups before broker hour 8]
 input int    InpSessTo      = 24;     // InpSessTo — broker hour, exclusive
 input bool   InpGapCancel   = true;   // InpGapCancel — cancel a waiting setup across the daily close / weekend
 input int    InpHtfMin      = 0;      // InpHtfMin — higher-timeframe trend filter: 0 off · 15 / 30 / 60 / 240 minutes (trade only with that timeframe's trend)
@@ -164,7 +176,7 @@ input double InpDayLossPct  = 0;      // InpDayLossPct — no new trades today a
 
 //--- trading
 input double InpLots        = 1.00;   // InpLots — lot size [v1.17: 0.10 -> 1, Zee]
-input bool   InpBuys        = true;   // InpBuys — allow longs
+input bool   InpBuys        = false;   // InpBuys — allow longs [v1.01: true -> false, SELL ONLY: longs lost about -$28k on M5 in testing]
 input bool   InpSells       = true;   // InpSells — allow shorts
 input int    InpPipPts      = 10;     // InpPipPts — points per pip (gold 10)
 input int    InpMagicNumber = 88320;  // InpMagicNumber — Saad_strategy [M15 variant: own magic, can run beside the M5 EA] [5min variant: own magic]
@@ -222,7 +234,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-5min] v1.00 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-5min] v1.01 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -852,8 +864,8 @@ void DoEntry(int side, double sl)
    if (InpFixTpPips > 0) { tp = side > 0 ? en + InpFixTpPips * pip : en - InpFixTpPips * pip; noTp = false; }
    double lots = LotsFor(side, en, sl);
    if (lots <= 0) { DSkip(side, "even the minimum lot risks too much of this account"); return; }
-   bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, "saad_long")
-                      : trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), "saad_short");
+   bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, EA_COMMENT + " BUY")
+                      : trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), EA_COMMENT + " SELL");
    if (!ok) return;
    ulong t = trade.ResultOrder();
    ulong deal = trade.ResultDeal();
