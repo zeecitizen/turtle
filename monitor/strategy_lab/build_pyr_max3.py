@@ -40,14 +40,16 @@ rep("int g_ctc = 0,", "int g_pyrAdds = 0, g_pyrLocks = 0; datetime g_pyrBlock = 
 rep("bool ModifySl(ulong t, double sl)", engine + "bool ModifySl(ulong t, double sl)")
 rep("   ManageTick();\n", "   ManageTick();\n   ManagePyramid();\n")
 rep('   PrintFormat("[SAAD] CTC breakevens %d', '   PrintFormat("[SAAD-PYR3] add-ons %d, basket locks %d", g_pyrAdds, g_pyrLocks);\n   PrintFormat("[SAAD] CTC breakevens %d')
-rep('#property version   "1.17"', '#property version   "1.00"')
-rep('PrintFormat("[SAAD-15min] v1.17 %s', 'PrintFormat("[SAAD-PYR3] v1.00 (Saad_strategy_15min v1.17 + pyramiding: ATR x%.2f, %d tiers, x%.2f) %s')
+rep('#property version   "1.18"', '#property version   "1.01"')
+rep('#define EA_COMMENT "Saad15 v1.18"', '#define EA_COMMENT "Saad15-PYR3 v1.01"   // base trades: "Saad15-PYR3 v1.01 BUY/SELL"; add-ons: "... ADD"')
+rep('PrintFormat("[SAAD-15min] v1.18 %s', 'PrintFormat("[SAAD-PYR3] v1.01 (Saad_strategy_15min v1.18 + pyramiding: ATR x%.2f, %d tiers, x%.2f) %s')
 # the init print gets three extra values in front of its existing arguments
-m = re.search(r'PrintFormat\("\[SAAD-PYR3\] v1\.00 \(Saad_strategy_15min v1\.17 \+ pyramiding: ATR x%\.2f, %d tiers, x%\.2f\) %s[^"]*",\s*', s)
+m = re.search(r'PrintFormat\("\[SAAD-PYR3\] v1\.01 \(Saad_strategy_15min v1\.18 \+ pyramiding: ATR x%\.2f, %d tiers, x%\.2f\) %s[^"]*",\s*', s)
 s = s[:m.end()] + "InpPyrSpacingAtr, InpMaxTiers, InpPyramidMultiplier, " + s[m.end():]
 header = """//+------------------------------------------------------------------+
-//| Saad_strategy_15min_pyramiding_max_3.mq5  v1.00  (2026-10-13)     |
-//| = Saad_strategy_15min v1.17, unchanged, PLUS scale-in pyramiding: |
+//| Saad_strategy_15min_pyramiding_max_3.mq5  v1.01  (2026-10-13)     |
+//| v1.01: trade comments name the EA (Saad15-PYR3 v1.01 BUY/SELL/ADD)|
+//| = Saad_strategy_15min v1.18, unchanged, PLUS scale-in pyramiding: |
 //|   when the trade moves 0.25 x ATR(14) beyond the last entry, add  |
 //|   0.75 x the last position's lots, up to 5 positions (about 3.05  |
 //|   lots at InpLots 1). Add-ons carry the base trade's stop and     |
@@ -59,6 +61,10 @@ header = """//+-----------------------------------------------------------------
 //|   exists because Zee chose it. Demo first; needs a big account.   |
 //+------------------------------------------------------------------+
 """
+# add-ons: named in their comment, recognised by it (was the bare "saad_pyr")
+s = s.replace('PositionGetString(POSITION_COMMENT) == "saad_pyr"', 'StringFind(PositionGetString(POSITION_COMMENT), " ADD") >= 0')
+s = s.replace('"saad_pyr")', 'EA_COMMENT + " ADD")')
+assert 'saad_pyr' not in s.replace('comment "saad_pyr"', '')
 s = header + s
 open(DST, 'w', encoding='utf-8').write(s)
 print('wrote', DST)

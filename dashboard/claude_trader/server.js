@@ -8,10 +8,10 @@ const { execSync } = require('child_process');
 
 const PORT            = 3457;
 const ANTHROPIC_KEY   = (() => {
-  try { return fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.claude_api_key', 'utf8').trim(); }
+  try { return fs.readFileSync('C:\\Users\\zeesh\\turtle\\monitor\\.claude_api_key', 'utf8').trim(); }
   catch { return ''; }
 })();
-const CHAT_LOG_FILE   = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\chat_log.json';
+const CHAT_LOG_FILE   = 'C:\\Users\\zeesh\\turtle\\monitor\\chat_log.json';
 
 // XAUUSD market state classification:
 //   open:        Mon 00:00 UTC – Fri 21:00 UTC, minus daily maintenance window
@@ -141,11 +141,11 @@ const FILLS_CSV       = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Termina
 const ACTIVE_SYMBOL   = 'XAUUSD';
 // Live account label — AtmosGlobal-LIVE = the Nova Challenge account (acc 3033901)
 const ACCOUNT_BROKER  = 'AtmosGlobal-LIVE';
-const LIVE_TRADE_JSON = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\live_trade_open.json';
-const WATCH_STATE_JSON= 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\watch_state.json';
-const LAST_UHV_ID     = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.last_uhv_id';
-const ALERT_CONFIG    = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.alert_config.json';
-const REFLECTIONS_JSON= 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\reflections.json';
+const LIVE_TRADE_JSON = 'C:\\Users\\zeesh\\turtle\\monitor\\live_trade_open.json';
+const WATCH_STATE_JSON= 'C:\\Users\\zeesh\\turtle\\monitor\\watch_state.json';
+const LAST_UHV_ID     = 'C:\\Users\\zeesh\\turtle\\monitor\\.last_uhv_id';
+const ALERT_CONFIG    = 'C:\\Users\\zeesh\\turtle\\monitor\\.alert_config.json';
+const REFLECTIONS_JSON= 'C:\\Users\\zeesh\\turtle\\monitor\\reflections.json';
 const HTML_FILE       = path.join(__dirname, 'index.html');
 
 // ── Health checks ───────────────────────────────────────────────────────────
@@ -357,7 +357,7 @@ function buildState() {
 
 // Password gates — per-user. Zee (/me + /api/cc-chat*) and Hammad (/hammad + /api/hammad-chat*)
 // are separate; each user can only access their own gated routes.
-const PASSWORD_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.dashboard_password';
+const PASSWORD_FILE = 'C:\\Users\\zeesh\\turtle\\monitor\\.dashboard_password';
 let DASHBOARD_PASSWORD = '28973';
 try {
   const stored = fs.readFileSync(PASSWORD_FILE, 'utf8').trim();
@@ -428,8 +428,8 @@ function denyAuth(res, gate) {
 }
 
 const COMMON_DIR = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\';
-const PY_EXE = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python313-arm64\\python.exe';
-const REPO = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\';
+const PY_EXE = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python312-arm64\\python.exe';
+const REPO = 'C:\\Users\\zeesh\\turtle\\';
 const OANDA_VOL_CSV = 'C:\\Users\\zeesh\\AppData\\Roaming\\MetaQuotes\\Terminal\\Common\\Files\\oanda_vol.csv';
 
 // Python-backed services that CAN be restarted by spawning their script.
@@ -447,7 +447,7 @@ const RESTARTABLE = {
 
 // EA deployment manifest — drives the dashboard "EA Status" table. Version is read
 // live from each EA's heartbeat when present (parsed.version), else from repo source.
-const MT5_SRC = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\mt5\\';
+const MT5_SRC = 'C:\\Users\\zeesh\\turtle\\mt5\\';
 // tf = EXPECTED chart timeframe (validated). 'ANY' = TF doesn't matter (loggers).
 const EA_MANIFEST = [
   { key: 's1_trader',          label: 'S1Trader',          name: 'UHV Breakout Engine',   file: 'S1Trader.mq5',          mt5: 'S1Trader',          tf: 'M1'  },
@@ -511,7 +511,7 @@ function readBody(req) { return new Promise((resolve) => { let b = ''; req.on('d
 // ── /home auth: HMAC-signed cookie. Code-word "28973" upgrades guest → admin_zeeshan ──
 const __crypto_for_auth = require('crypto');
 const HOME_AUTH_SECRET = (() => {
-  try { return require('fs').readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.dashboard_password', 'utf8').trim(); }
+  try { return require('fs').readFileSync('C:\\Users\\zeesh\\turtle\\monitor\\.dashboard_password', 'utf8').trim(); }
   catch { return 'fallback-secret-do-not-use-in-prod'; }
 })();
 function homeSignRole(role) {
@@ -567,7 +567,7 @@ function homeTokenize(text) {
 let HOME_INDEX = null;   // { docs: [{name, content, tokens, tf, length}], idf: Map, builtAt }
 function homeBuildIndex() {
   const memDirs = [
-    'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-Documents-GitHub-turtle\\memory',
+    'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-turtle\\memory',
     'C:\\Users\\Administrator\\.claude\\projects\\c--turtle\\memory',
   ];
   let memDir = null;
@@ -735,7 +735,7 @@ const server = http.createServer(async (req, res) => {
 
   if (host === 'claudezeeshan.com' || host === 'www.claudezeeshan.com') {
     const apexUrl = req.url.split('?')[0];
-    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/fills-history' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/forming.png' && apexUrl !== '/api/context-now.png' && apexUrl !== '/api/versions.png' && apexUrl !== '/api/forensic.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/api/oanda-volume-status' && apexUrl !== '/home' && apexUrl !== '/docs' && apexUrl !== '/today-setups' && apexUrl !== '/today' && apexUrl !== '/vsisa' && apexUrl !== '/vsisa-paper' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
+    if (apexUrl !== '/' && apexUrl !== '/status' && apexUrl !== '/status-old' && apexUrl !== '/api/ea-dashboard' && apexUrl !== '/assets/logo.png' && apexUrl !== '/api/status' && apexUrl !== '/api/canonical-status' && apexUrl !== '/api/weekly' && apexUrl !== '/api/achievements' && apexUrl !== '/api/today-trades' && apexUrl !== '/api/fills-history' && apexUrl !== '/api/camel.png' && apexUrl !== '/api/forming.png' && apexUrl !== '/api/context-now.png' && apexUrl !== '/api/versions.png' && apexUrl !== '/api/forensic.png' && apexUrl !== '/api/ghost-state' && apexUrl !== '/api/trend-call' && apexUrl !== '/api/dashboard-message' && apexUrl !== '/api/dashboard-messages' && apexUrl !== '/api/claude-reply' && apexUrl !== '/zee-chat' && apexUrl !== '/api/zee-chat' && apexUrl !== '/api/zee-chat/send' && apexUrl !== '/api/harvest' && apexUrl !== '/api/harvest-lock' && apexUrl !== '/api/runtime-config' && apexUrl !== '/grab' && apexUrl !== '/ws' && apexUrl !== '/api/watchdog' && apexUrl !== '/api/oanda-volume-status' && apexUrl !== '/home' && apexUrl !== '/docs' && apexUrl !== '/today-setups' && apexUrl !== '/today' && apexUrl !== '/vsisa' && apexUrl !== '/vsisa-paper' && !apexUrl.startsWith('/api/home/') && apexUrl !== '/api/home/whoami' && apexUrl !== '/api/home/auth' && apexUrl !== '/api/home/logout') {
       res.writeHead(301, { Location: 'https://me.claudezeeshan.com' + req.url });
       res.end();
       return;
@@ -841,7 +841,7 @@ const server = http.createServer(async (req, res) => {
   // ── Watchdog status (public, no auth — read-only health) ──
   if (url === '/api/watchdog') {
     try {
-      const txt = fs.readFileSync('C:\Users\zeesh\Documents\GitHub\turtle\monitor\.watchdog_latest.json', 'utf8');
+      const txt = fs.readFileSync(path.join(__dirname, '..', '..', 'monitor', '.watchdog_latest.json'), 'utf8');
       res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'no-store' });
       res.end(txt);
     } catch (e) {
@@ -877,7 +877,7 @@ const server = http.createServer(async (req, res) => {
 
 if (url === '/docs') {
     try {
-      const md = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\HOME_GUIDE.md', 'utf8');
+      const md = fs.readFileSync('C:\\Users\\zeesh\\turtle\\HOME_GUIDE.md', 'utf8');
       const html = `<!doctype html><html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>home.claudezeeshan.com — User Guide</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
@@ -1069,7 +1069,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
       const role = homeRoleFromReq(req);
       if (role !== 'admin_zeeshan') { res.writeHead(403); res.end(JSON.stringify({ error: 'admin only' })); return; }
       try {
-        const apiKey = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.claude_api_key', 'utf8').trim();
+        const apiKey = fs.readFileSync('C:\\Users\\zeesh\\turtle\\monitor\\.claude_api_key', 'utf8').trim();
         // Minimal ping: 1-token request, will fail fast on credit/auth issues
         const reqBody = JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1, messages: [{ role: 'user', content: 'hi' }] });
         const apiReq = https.request({
@@ -1150,7 +1150,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
           { role: 'user', content: userMsg },
         ];
 
-        const apiKey = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.claude_api_key', 'utf8').trim();
+        const apiKey = fs.readFileSync('C:\\Users\\zeesh\\turtle\\monitor\\.claude_api_key', 'utf8').trim();
         const reqBody = JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 2048,
@@ -1280,7 +1280,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
         ];
 
         // Call Anthropic API
-        const apiKey = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.claude_api_key', 'utf8').trim();
+        const apiKey = fs.readFileSync('C:\\Users\\zeesh\\turtle\\monitor\\.claude_api_key', 'utf8').trim();
         const reqBody = JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 2048,
@@ -1376,7 +1376,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     try {
       const role = homeRoleFromReq(req);
       const memDirs = [
-        'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-Documents-GitHub-turtle\\memory',
+        'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-turtle\\memory',
         'C:\\Users\\Administrator\\.claude\\projects\\c--turtle\\memory',
       ];
       let memDir = null;
@@ -1459,7 +1459,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
       }
 
       const memDirs = [
-        'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-Documents-GitHub-turtle\\memory',
+        'C:\\Users\\zeesh\\.claude\\projects\\c--Users-zeesh-turtle\\memory',
         'C:\\Users\\Administrator\\.claude\\projects\\c--turtle\\memory',
       ];
       let memDir = null;
@@ -1550,9 +1550,9 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   }
   if (url.startsWith('/api/morning/')) {
     const docs = {
-      'ZEE_MORNING':            'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\ZEE_MORNING.md',
-      'OVERNIGHT_SUMMARY':      'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\OVERNIGHT_SUMMARY.md',
-      'v3_40_proposed_patch':   'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\v3_40_proposed_patch.md',
+      'ZEE_MORNING':            'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\ZEE_MORNING.md',
+      'OVERNIGHT_SUMMARY':      'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\OVERNIGHT_SUMMARY.md',
+      'v3_40_proposed_patch':   'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\v3_40_proposed_patch.md',
     };
     const name = url.replace('/api/morning/', '');
     if (!docs[name]) { res.writeHead(404, { 'Content-Type': 'text/plain' }); res.end('not found'); return; }
@@ -1740,7 +1740,40 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     }
   }
 
-  if (url === '/' || url === '/status' || url === '/status.html') {
+  // 2026-10-13 (Zee): the main page is now the gold-EA dashboard (running EAs, live + backtest dials,
+  // the daily report, versions). The old status page stays reachable at /status and /status-old.
+  if (url === '/' || url === '/ea' || url === '/ea-dashboard') {
+    try {
+      const html = fs.readFileSync(path.join(__dirname, 'ea_dashboard.html'), 'utf8');
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(html);
+    } catch (e) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' });
+      res.end('ea_dashboard.html missing: ' + e.message);
+    }
+    return;
+  }
+  if (url === '/api/ea-dashboard') {
+    const now = Date.now();
+    if (global.__eaDash && now - global.__eaDash.at < 30000) {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      return res.end(global.__eaDash.body);
+    }
+    const { execFile } = require('child_process');
+    execFile(PY_EXE, [path.join(__dirname, '..', '..', 'monitor', 'ea_dashboard_data.py')],
+             { maxBuffer: 32 * 1024 * 1024, timeout: 60000, windowsHide: true }, (err, stdout, stderr) => {
+      if (err) {
+        res.writeHead(500, { 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ error: String(err.message).slice(0, 300), stderr: String(stderr).slice(0, 300) }));
+      }
+      global.__eaDash = { at: Date.now(), body: stdout };
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end(stdout);
+    });
+    return;
+  }
+
+  if (url === '/status' || url === '/status-old' || url === '/status.html') {
     try {
       const html = fs.readFileSync(path.join(__dirname, 'status.html'), 'utf8');
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
@@ -1753,7 +1786,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   }
   // ── Monday's-test weekly tracker (GET/POST) ──
   if (url === '/api/weekly' || url.startsWith('/api/weekly?')) {
-    const WEEKLY_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\weekly_tracker.json';
+    const WEEKLY_FILE = 'C:\\Users\\zeesh\\turtle\\monitor\\weekly_tracker.json';
     if (req.method === 'GET') {
       try {
         const body = fs.readFileSync(WEEKLY_FILE, 'utf8');
@@ -1842,7 +1875,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   }
   // ── Zee's chat API: gated by ?key=28973 ──
   const ZEE_CHAT_KEY = '28973';
-  const ZEE_CHAT_LOG = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\zee_chat.jsonl';
+  const ZEE_CHAT_LOG = 'C:\\Users\\zeesh\\turtle\\monitor\\zee_chat.jsonl';
   if (url.startsWith('/api/zee-chat/send') && req.method === 'POST') {
     const u = new URL(req.url, 'http://x');
     if (u.searchParams.get('key') !== ZEE_CHAT_KEY) {
@@ -1861,7 +1894,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
         // Mirror to cc_chat so Claude sees it through the existing chat panel too
         try {
           fs.appendFileSync(
-            'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\cc_chat.jsonl',
+            'C:\\Users\\zeesh\\turtle\\monitor\\cc_chat.jsonl',
             JSON.stringify({ ...rec, source: 'zee-chat-private' }) + '\n', 'utf8');
         } catch {}
         res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -1887,7 +1920,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
       // Also include Claude's manual replies from claude_dashboard_replies.jsonl tagged as 'claude'
       try {
         const raw = fs.readFileSync(
-          'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\claude_dashboard_replies.jsonl', 'utf8');
+          'C:\\Users\\zeesh\\turtle\\monitor\\claude_dashboard_replies.jsonl', 'utf8');
         for (const l of raw.split('\n')) {
           if (!l.trim()) continue;
           try {
@@ -1910,7 +1943,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   // ── Claude's reply panel (read latest reply, or write new one) ──
   if (url === '/api/claude-reply' && req.method === 'GET') {
     try {
-      const path = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\claude_dashboard_replies.jsonl';
+      const path = 'C:\\Users\\zeesh\\turtle\\monitor\\claude_dashboard_replies.jsonl';
       let last = null;
       try {
         const lines = fs.readFileSync(path, 'utf8').split('\n').filter(l => l.trim());
@@ -1935,7 +1968,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
         }
         const rec = { ts: Date.now(), text: text.trim() };
         fs.appendFileSync(
-          'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\claude_dashboard_replies.jsonl',
+          'C:\\Users\\zeesh\\turtle\\monitor\\claude_dashboard_replies.jsonl',
           JSON.stringify(rec) + '\n', 'utf8');
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ ok: true }));
@@ -1965,8 +1998,8 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
         // (her recognizable patterns — strict `;)` was too rigid)
         const authed = /;\)|😳|🤍|\bjaan\b|\bumm\b|\bcz now\b|\bdonot\b/i.test(trimmed);
         const ts = Date.now();
-        const dashLog = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\dashboard_messages.jsonl';
-        const chatLog = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\cc_chat.jsonl';
+        const dashLog = 'C:\\Users\\zeesh\\turtle\\monitor\\dashboard_messages.jsonl';
+        const chatLog = 'C:\\Users\\zeesh\\turtle\\monitor\\cc_chat.jsonl';
         const rec = {
           ts, from: authed ? 'zee' : 'dashboard-anon',
           text: trimmed,
@@ -1985,7 +2018,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
         try {
           const reply = { ts: Date.now(), text: "Got your msg, i'm on it sire." };
           fs.appendFileSync(
-            'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\claude_dashboard_replies.jsonl',
+            'C:\\Users\\zeesh\\turtle\\monitor\\claude_dashboard_replies.jsonl',
             JSON.stringify(reply) + '\n', 'utf8');
         } catch {}
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -2001,7 +2034,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   // GET — list last N dashboard messages (most recent first)
   if (url === '/api/dashboard-messages' || url.startsWith('/api/dashboard-messages?')) {
     try {
-      const path = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\dashboard_messages.jsonl';
+      const path = 'C:\\Users\\zeesh\\turtle\\monitor\\dashboard_messages.jsonl';
       let lines = [];
       try {
         lines = fs.readFileSync(path, 'utf8').split('\n').filter(l => l.trim());
@@ -2024,7 +2057,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   if (url === '/api/harvest' && req.method === 'GET') {
     try {
       const cfg = JSON.parse(fs.readFileSync(
-        'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\daily_profit_target.json', 'utf8'));
+        'C:\\Users\\zeesh\\turtle\\monitor\\daily_profit_target.json', 'utf8'));
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
                             'Cache-Control': 'no-store' });
       res.end(JSON.stringify(cfg));
@@ -2040,7 +2073,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     req.on('end', () => {
       try {
         const { broker_date } = JSON.parse(body || '{}');
-        const path = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\daily_profit_target.json';
+        const path = 'C:\\Users\\zeesh\\turtle\\monitor\\daily_profit_target.json';
         let cfg = { target_usd: 150 };
         try { cfg = JSON.parse(fs.readFileSync(path, 'utf8')); } catch {}
         cfg.harvest_locked_date_broker = broker_date || new Date().toISOString().slice(0, 10).replace(/-/g, '.');
@@ -2060,9 +2093,9 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   // ── COCKPIT PARITY ON THE WEB (Zee 2026-08-07): the same buttons and pictures
   // the desktop cockpit has — the forming setup, any trade's anatomy + the
   // circumstances around it, and the version-vs-winrate graph.
-  const PYEXE = 'C:/Users/zeesh/AppData/Local/Programs/Python/Python313-arm64/python.exe';
-  const WEBCH = 'C:/Users/zeesh/Documents/GitHub/turtle/monitor/web_charts.py';
-  const LABELS = 'C:/Users/zeesh/Documents/GitHub/turtle/monitor/setup_labels/';
+  const PYEXE = 'C:/Users/zeesh/AppData/Local/Programs/Python/Python312-arm64/python.exe';
+  const WEBCH = 'C:/Users/zeesh/turtle/monitor/web_charts.py';
+  const LABELS = 'C:/Users/zeesh/turtle/monitor/setup_labels/';
   const drawThen = (args, key, cb) => {
     if (global['_busy_' + key]) return cb();
     global['_busy_' + key] = true;
@@ -2105,7 +2138,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     return;
   }
   if (url === '/api/camel.png') {
-    const png = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\setup_labels\\camel_humps.png';
+    const png = 'C:\\Users\\zeesh\\turtle\\monitor\\setup_labels\\camel_humps.png';
     try {
       // Regenerate at most once a minute so friends always see a fresh hunt.
       // (?force=1 — the cockpit's Regenerate button — bypasses the throttle.)
@@ -2114,8 +2147,8 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
       if ((age > 60000 || force) && !global._camelBusy) {
         global._camelBusy = true;
         require('child_process').execFile(
-          'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python313-arm64\\python.exe',
-          ['C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\trend_eyes.py', '--draw', '120'],
+          'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python312-arm64\\python.exe',
+          ['C:\\Users\\zeesh\\turtle\\monitor\\trend_eyes.py', '--draw', '120'],
           { timeout: 45000 }, () => { global._camelBusy = false; });
       }
       res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-store' });
@@ -2132,7 +2165,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
       try {
         const d = JSON.parse(body || '{}');
         const want = fs.readFileSync(
-          'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.dashboard_password', 'utf8').trim();
+          'C:\\Users\\zeesh\\turtle\\monitor\\.dashboard_password', 'utf8').trim();
         if (!d.pin || d.pin.trim() !== want) { res.writeHead(403); res.end('nope'); return; }
         const ALLOW = { UPTREND: ['BUY'], DOWNTREND: ['SELL'], RANGE: [], AUTO: ['BUY', 'SELL'] };
         if (!(d.trend in ALLOW)) { res.writeHead(400); res.end('bad trend'); return; }
@@ -2206,7 +2239,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
       let resetTs = null, resetVer = null;
       try {
         const rj = JSON.parse(fs.readFileSync(
-          'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\dashboard_reset.json', 'utf8'));
+          'C:\\Users\\zeesh\\turtle\\monitor\\dashboard_reset.json', 'utf8'));
         resetTs = rj.reset_at_broker_ts || null;
         resetVer = rj.current_ea_version || null;
       } catch (_) {}
@@ -2369,7 +2402,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   // ── Achievements / activity feed (family-monitor surface, family rule 2026-06-08) ──
   if (url === '/api/achievements') {
     try {
-      const p = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\achievements.json';
+      const p = 'C:\\Users\\zeesh\\turtle\\monitor\\achievements.json';
       const body = fs.readFileSync(p, 'utf8');
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
                             'Cache-Control': 'no-store, max-age=0' });
@@ -2384,7 +2417,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   // ── Investor status feed (powers status.html "Live System Status" card) ──
   if (url === '/api/canonical-status') {
     try {
-      const p = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\canonical_status.json';
+      const p = 'C:\\Users\\zeesh\\turtle\\monitor\\canonical_status.json';
       const body = fs.readFileSync(p, 'utf8');
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8',
                             'Cache-Control': 'no-store, max-age=0' });
@@ -2494,7 +2527,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   }
   if (url === '/api/save-to-usb' && req.method === 'POST') {
     const { spawn } = require('child_process');
-    const py = 'C:/Users/zeesh/AppData/Local/Programs/Python/Python313-arm64/python.exe';
+    const py = 'C:/Users/zeesh/AppData/Local/Programs/Python/Python312-arm64/python.exe';
     const script = path.join(__dirname, '..', '..', 'monitor', 'pack_to_usb.py');
     let body = '';
     req.on('data', c => { body += c; if (body.length > 1e5) req.destroy(); });
@@ -3063,7 +3096,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     // Log freshness — a hung daemon's process exists but its log stops
     // updating. Frontend uses these to mark stale dots as RED.
     shano.log_ages_sec = {};
-    const MON = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\';
+    const MON = 'C:\\Users\\zeesh\\turtle\\monitor\\';
     const logFiles = {
       shano_hawk:    MON + 'shano_hawk.log',
       sheriff_hawk:  MON + 'sheriff_hawk.log',
@@ -3084,7 +3117,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     } catch {}
 
     try {
-      const stateFile = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.shano_state.json';
+      const stateFile = 'C:\\Users\\zeesh\\turtle\\monitor\\.shano_state.json';
       if (fs.existsSync(stateFile)) {
         shano.shano_state = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
       }
@@ -3093,8 +3126,8 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     // Live MT5 enrichment via shano_status.py — realized P&L, open positions w/ floating P&L,
     // current price, recent EA events. Fast (~80ms).
     try {
-      const PY = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python313-arm64\\python.exe';
-      const STATUS = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\shano_status.py';
+      const PY = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python312-arm64\\python.exe';
+      const STATUS = 'C:\\Users\\zeesh\\turtle\\monitor\\shano_status.py';
       const out = execSync(`"${PY}" "${STATUS}"`, { timeout: 4000 }).toString();
       shano.live = JSON.parse(out);
     } catch (e) { shano.live_error = String(e.message || e); }
@@ -3103,8 +3136,8 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     // Cached for 30s — file parsing isn't free.
     if (!global._rulesCache || Date.now() - global._rulesAt > 30000) {
       try {
-        const PY = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python313-arm64\\python.exe';
-        const RULES = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\shano_rules.py';
+        const PY = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python312-arm64\\python.exe';
+        const RULES = 'C:\\Users\\zeesh\\turtle\\monitor\\shano_rules.py';
         const out = execSync(`"${PY}" "${RULES}"`, { timeout: 5000 }).toString();
         global._rulesCache = JSON.parse(out);
         global._rulesAt = Date.now();
@@ -3201,7 +3234,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     const since = parseInt((url.split('since=')[1] || '0'), 10) || 0;
     let all = [];
     try {
-      const raw = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\shano_chat.jsonl', 'utf8');
+      const raw = fs.readFileSync('C:\\Users\\zeesh\\turtle\\monitor\\shano_chat.jsonl', 'utf8');
       all = raw.split('\n').filter(l => l.trim()).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
     } catch {}
     const filtered = since ? all.filter(e => e.ts > since) : all;
@@ -3214,7 +3247,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     const since = parseInt((url.split('since=')[1] || '0'), 10) || 0;
     let all = [];
     try {
-      const raw = fs.readFileSync('C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\hammad_chat.jsonl', 'utf8');
+      const raw = fs.readFileSync('C:\\Users\\zeesh\\turtle\\monitor\\hammad_chat.jsonl', 'utf8');
       all = raw.split('\n').filter(l => l.trim()).map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
     } catch {}
     const filtered = since ? all.filter(e => e.ts > since) : all;
@@ -3278,10 +3311,10 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   // VSISA API - live state from monitor/vsisa_live.json
   if (url === '/api/vsisa') {
     try {
-      const vsisaPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\vsisa_live.json';
+      const vsisaPath = 'C:\\Users\\zeesh\\turtle\\monitor\\vsisa_live.json';
       const data = fs.existsSync(vsisaPath) ? JSON.parse(fs.readFileSync(vsisaPath, 'utf8')) : { error: 'vsisa_live.json missing' };
       // Read backtest report summary if available
-      const cfgPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\vsisa_live_config.json';
+      const cfgPath = 'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\vsisa_live_config.json';
       if (fs.existsSync(cfgPath)) {
         try { data.backtest = JSON.parse(fs.readFileSync(cfgPath, 'utf8')).stats; } catch {}
       }
@@ -3312,10 +3345,10 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   // London-Sajid API
   if (url === '/api/london-sajid') {
     try {
-      const livePath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\london_sajid_live.json';
-      const lbBtPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_london_breakout_results.json';
-      const vsisaBtPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_vsisa_m5_proper_results.json';
-      const nyBtPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_ny_breakout_results.json';
+      const livePath = 'C:\\Users\\zeesh\\turtle\\monitor\\london_sajid_live.json';
+      const lbBtPath = 'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\_london_breakout_results.json';
+      const vsisaBtPath = 'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\_vsisa_m5_proper_results.json';
+      const nyBtPath = 'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\_ny_breakout_results.json';
       const data = fs.existsSync(livePath) ? JSON.parse(fs.readFileSync(livePath, 'utf8')) : { error: 'live state missing — daemon not running?' };
       data.backtest = {};
       try {
@@ -3337,19 +3370,19 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
         }
       } catch (e) { /* ny breakout backtest may not be done yet */ }
       try {
-        const wfPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_walk_forward_results.json';
+        const wfPath = 'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\_walk_forward_results.json';
         if (fs.existsSync(wfPath)) {
           data.backtest.walk_forward = JSON.parse(fs.readFileSync(wfPath, 'utf8'));
         }
       } catch (e) { /* walk-forward optional */ }
       try {
-        const pPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_portfolio_results.json';
+        const pPath = 'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\_portfolio_results.json';
         if (fs.existsSync(pPath)) {
           data.backtest.portfolio = JSON.parse(fs.readFileSync(pPath, 'utf8'));
         }
       } catch (e) { /* portfolio optional */ }
       try {
-        const ubPath = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\_lb_ny_uhv_burst_results.json';
+        const ubPath = 'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\_lb_ny_uhv_burst_results.json';
         if (fs.existsSync(ubPath)) {
           data.backtest.uhv_burst = JSON.parse(fs.readFileSync(ubPath, 'utf8'));
         }
@@ -3386,7 +3419,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
   // ─ GET  /api/shadow/<id>          → fetch one experiment's config
   // ─ POST /api/shadow/<id>          → update config (params, name)
   // ─ DELETE /api/shadow/<id>        → remove experiment
-  const EXP_DIR = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\experiments';
+  const EXP_DIR = 'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\experiments';
   try { fs.mkdirSync(EXP_DIR, { recursive: true }); } catch {}
 
   function _expPath(id) { return path.join(EXP_DIR, id + '.json'); }
@@ -3458,8 +3491,8 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     }
     if (req.method === 'POST') {
       try {
-        const PY = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python313-arm64\\python.exe';
-        const SCRIPT = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\strategy_lab\\compute_experiment.py';
+        const PY = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python312-arm64\\python.exe';
+        const SCRIPT = 'C:\\Users\\zeesh\\turtle\\monitor\\strategy_lab\\compute_experiment.py';
         const out = execSync(`"${PY}" "${SCRIPT}" "${id}"`, { timeout: 30000 }).toString();
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(out);
@@ -3570,8 +3603,8 @@ self.addEventListener('fetch',e=>{/* network only */});`;
         // Get current system snapshot for context
         let snapshot = {};
         try {
-          const PY = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python313-arm64\\python.exe';
-          const STATUS = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\shano_status.py';
+          const PY = 'C:\\Users\\zeesh\\AppData\\Local\\Programs\\Python\\Python312-arm64\\python.exe';
+          const STATUS = 'C:\\Users\\zeesh\\turtle\\monitor\\shano_status.py';
           snapshot = JSON.parse(execSync(`"${PY}" "${STATUS}"`, { timeout: 4000 }).toString());
         } catch (e) { snapshot = { error: String(e.message) }; }
 
@@ -3684,7 +3717,7 @@ Keep replies under 60 words unless he asks for detail. If something is broken, s
   // not the dashboard Haiku). Zee writes from phone -> file. Claude Code polls
   // the file via Read tool, responds by appending to the same file.
   // Single log: monitor/cc_chat.jsonl (one JSON per line).
-  const CC_CHAT_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\cc_chat.jsonl';
+  const CC_CHAT_FILE = 'C:\\Users\\zeesh\\turtle\\monitor\\cc_chat.jsonl';
   const readCcChat = () => {
     try {
       const raw = fs.readFileSync(CC_CHAT_FILE, 'utf8');
@@ -3725,8 +3758,8 @@ Keep replies under 60 words unless he asks for detail. If something is broken, s
   }
 
   // ─── HAMMAD CHAT (parallel to cc-chat) ───────────────────────────────────
-  const HAMMAD_CHAT_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\hammad_chat.jsonl';
-  const HAMMAD_TYPING_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.hammad_typing.json';
+  const HAMMAD_CHAT_FILE = 'C:\\Users\\zeesh\\turtle\\monitor\\hammad_chat.jsonl';
+  const HAMMAD_TYPING_FILE = 'C:\\Users\\zeesh\\turtle\\monitor\\.hammad_typing.json';
   const readHammadChat = () => {
     try {
       const raw = fs.readFileSync(HAMMAD_CHAT_FILE, 'utf8');
@@ -3789,8 +3822,8 @@ Keep replies under 60 words unless he asks for detail. If something is broken, s
   }
 
   // ─── SHANO CHAT (parallel to cc-chat + hammad-chat) ────────────────────
-  const SHANO_CHAT_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\shano_chat.jsonl';
-  const SHANO_TYPING_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.shano_typing.json';
+  const SHANO_CHAT_FILE = 'C:\\Users\\zeesh\\turtle\\monitor\\shano_chat.jsonl';
+  const SHANO_TYPING_FILE = 'C:\\Users\\zeesh\\turtle\\monitor\\.shano_typing.json';
   const readShanoChat = () => {
     try {
       const raw = fs.readFileSync(SHANO_CHAT_FILE, 'utf8');
@@ -3853,7 +3886,7 @@ Keep replies under 60 words unless he asks for detail. If something is broken, s
   }
   // Typing indicator: GET reads {typing, since}, POST sets {state: true|false}
   // Auto-expires after 90s of staleness so a crashed setter doesn't show forever.
-  const TYPING_FILE = 'C:\\Users\\zeesh\\Documents\\GitHub\\turtle\\monitor\\.cc_typing.json';
+  const TYPING_FILE = 'C:\\Users\\zeesh\\turtle\\monitor\\.cc_typing.json';
   if (req.url.split('?')[0] === '/api/cc-chat/typing') {
     if (req.method === 'POST') {
       let body = '';
