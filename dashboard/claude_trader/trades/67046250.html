@@ -26,23 +26,23 @@ body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(-
 .eyebrow { font: 700 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
 h1 { font: 800 clamp(24px, 4vw, 34px)/1.1 var(--display); letter-spacing: 2px; margin: 8px 0 6px; }
 .sub { color: var(--muted); margin: 0; max-width: 70ch; }
-.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 18px 0 6px; }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 18px 0 6px; }
 .strip div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
 .strip b { display: block; font: 700 18px var(--mono); }
+.strip b.pos { color: var(--green); }
 .strip span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
 h2 { font: 800 15px var(--display); letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin: 32px 0 10px; }
 .tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
 th, td { padding: 9px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
 th { background: var(--panel2); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
 tr:last-child td { border-bottom: 0; }
-td.t { font-family: var(--mono); white-space: nowrap; }
-.tag { display: inline-block; font: 700 11px var(--body); padding: 2px 8px; border-radius: 99px; background: var(--panel2); color: var(--muted); white-space: nowrap; }
-.tag.ok { color: var(--green); } .tag.no { color: var(--red); } .tag.q { color: var(--amber); }
+td.t, td.n { font-family: var(--mono); white-space: nowrap; }
+.pos { color: var(--green); font-weight: 700; } .q { color: var(--amber); font-weight: 700; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin: 10px 0; }
 .card h3 { margin: 0 0 6px; font-size: 16px; }
 .card p, .card li { max-width: 74ch; margin: 4px 0; }
-.warn { border-left: 4px solid var(--red); }
+.warn { border-left: 4px solid var(--amber); }
 code { font: .9em var(--mono); background: var(--panel2); padding: 1px 5px; border-radius: 4px; }
 a { color: var(--blue); }
 footer { margin-top: 30px; color: var(--muted); font-size: 12.5px; }
@@ -51,71 +51,53 @@ footer { margin-top: 30px; color: var(--muted); font-size: 12.5px; }
 <body>
 <div class="wrap">
   <div class="top">
-    <div class="eyebrow">PrimeXBT demo · account 1364880 · XAUUSDp · 13 Oct 2026</div>
+    <div class="eyebrow">PrimeXBT demo · account 1364880 · XAUUSDp M15 · 13 Oct 2026</div>
     <h1>Trade 67046250</h1>
-    <p class="sub">A 2-lot SELL on gold. Below: when it opened, what its target and stop were, which stop changes were attempted, and who placed it. Every line comes from the trading PC's own MetaTrader logs.</p>
+    <p class="sub">A 2-lot SELL on gold by Saad_strategy_15min v1.17. It ran exactly as the EA is designed: stop to breakeven at 75% of the way to the target, half banked at the target, the rest trailed $2 behind the price.</p>
     <div class="strip">
       <div><span>Direction</span><b>SELL 2 lots</b></div>
       <div><span>Entry</span><b>4165.57</b></div>
-      <div><span>Opened</span><b>20:01:06 PKT</b></div>
-      <div><span>Target (TP1)</span><b>last support</b></div>
-      <div><span>Placed by</span><b>EA elsewhere</b></div>
+      <div><span>Target (TP1)</span><b>4150.75</b></div>
+      <div><span>First stop</span><b>4176.61</b></div>
+      <div><span>Duration</span><b>2 h 1 min</b></div>
+      <div><span>Result</span><b class="pos">+$2,799</b></div>
     </div>
   </div>
 
-  <h2>Timeline</h2>
-  <p class="sub">Times are the trading PC's clock (Pakistan time). The broker's server time is 5 hours behind.</p>
+  <h2>Lifecycle</h2>
+  <p class="sub">Times are the trading machine's clock. Sources: that machine's Experts log and Journal.</p>
   <div class="tw"><table>
-    <thead><tr><th>Time</th><th>What happened</th><th>Result</th></tr></thead>
+    <thead><tr><th>Time</th><th>What happened</th><th>Stop</th><th>Result</th></tr></thead>
     <tbody>
-      <tr><td class="t">20:00:00</td><td><b>Setup found:</b> a SHORT PIN BAR on the 9 EMA (the 14:45 server-time candle: high 4173.11, low 4166.05). The EA waits one candle for the price to break below <b>4165.85</b> (2 pips under the low).</td><td><span class="tag">setup</span></td></tr>
-      <tr><td class="t">20:01:06.334</td><td>The EA on this PC tries to <b>SELL 0.10 lot</b> with a stop at 4176.11.</td><td><span class="tag no">rejected: Algo Trading is off here</span></td></tr>
-      <tr><td class="t">20:01:06.523</td><td><b>Deal #58966373: SELL 2 lots at 4165.57</b>, order #67046250. This PC's terminal did not send it: its journal has no order request, only the fill.</td><td><span class="tag ok">filled</span></td></tr>
-      <tr><td class="t">20:30:00</td><td>This PC's EA tries to move the stop to <b>4175.91</b></td><td><span class="tag no">rejected</span></td></tr>
-      <tr><td class="t">20:45:00</td><td>… to <b>4175.60</b></td><td><span class="tag no">rejected</span></td></tr>
-      <tr><td class="t">21:00:00</td><td>… to <b>4172.85</b></td><td><span class="tag no">rejected</span></td></tr>
-      <tr><td class="t">21:15:00</td><td>… to <b>4170.55</b></td><td><span class="tag no">rejected</span></td></tr>
-      <tr><td class="t">21:30:00</td><td>… to <b>4170.16</b></td><td><span class="tag no">rejected</span></td></tr>
-      <tr><td class="t">21:45:00</td><td>… to <b>4169.26</b></td><td><span class="tag no">rejected</span></td></tr>
+      <tr><td class="t">19:59:51</td><td><b>Setup:</b> a SHORT PIN BAR on the 9 EMA (the 14:45 server-time candle: high 4173.11, low 4166.05). The EA waits one candle for a break below <b>4165.85</b>.</td><td class="n">–</td><td></td></tr>
+      <tr><td class="t">20:00:57.9</td><td>Price breaks below → the EA sends <b>market SELL 2 lots, stop 4176.61</b> (35 pips above the candle's high).</td><td class="n">4176.61</td><td></td></tr>
+      <tr><td class="t">20:00:58.1</td><td><b>Filled at 4165.57</b> (deal #58966373, in 185 ms). Risk $2,208. <b>TP1 = the last support 4150.75</b>, watched by the EA; no take-profit at the broker.</td><td class="n">4176.61</td><td></td></tr>
+      <tr><td class="t">20:01 – 21:52</td><td><span class="q">Unexplained:</span> the stop was changed to <b>4169.74</b>. Neither EA logged this move (see below).</td><td class="n q">4169.74</td><td></td></tr>
+      <tr><td class="t">21:52:56</td><td>Price covered <b>75% of the way to TP1</b> → the EA moves the stop to the <b>entry price</b> ("CTC"). From here the trade can't lose.</td><td class="n">4165.57</td><td>risk-free</td></tr>
+      <tr><td class="t">22:00:37.0</td><td><b>TP1 reached</b> (bid 4150.65) → <b>1 of 2 lots closed at 4150.68</b> (deal #58997818).</td><td class="n"></td><td class="pos">+$1,489</td></tr>
+      <tr><td class="t">22:00:37.2</td><td>The stop on the remaining lot jumps to <b>price + $2</b>. No TP2: there's no support further below.</td><td class="n">4152.68</td><td></td></tr>
+      <tr><td class="t">22:00:37.6</td><td>The $2 trail follows the price one tick lower.</td><td class="n">4152.46</td><td></td></tr>
+      <tr><td class="t">22:01:48.9</td><td>Gold bounces → <b>trail hit, the last lot closes at 4152.47</b> (deal #58998586).</td><td class="n"></td><td class="pos">+$1,310</td></tr>
     </tbody>
   </table></div>
+  <p class="sub"><b>Total: +$2,799</b> (1 lot × $14.89 + 1 lot × $13.10, at $100 per $1 per lot; no commission on this demo account).</p>
 
-  <h2>Target and stop</h2>
-  <div class="card">
-    <h3>Take-profit: none at the broker</h3>
-    <p>This EA never sends a take-profit with a SELL (every request shows <code>tp: 0.00</code>). It watches its first target itself: the <b>last support</b>, the most recent swing low below the entry. On Axi, the same setup gave <b>TP1 = 4150.66</b>.</p>
-    <p>At TP1 the EA (v1.16 and later) closes <b>half</b> of the trade and trails the rest <b>$2</b> above the price.</p>
-  </div>
-  <div class="card">
-    <h3>Stop loss: set by the EA that opened it</h3>
-    <ul>
-      <li>EA version 1.17 or 1.18: <b>4176.61</b> (35 pips above the candle's high 4173.11, about $11 of risk per lot).</li>
-      <li>Old version 1.11: <b>4176.11</b> (30 pips above).</li>
-    </ul>
-    <p>The <b>S/L column</b> of this position in PrimeXBT's Trade tab shows the real current stop.</p>
-  </div>
-  <div class="card">
-    <h3>Why this PC's EA tried those stop moves, and why none happened</h3>
-    <p>The EA on this PC is an old version (v1.11). The position carries its magic number (88302), so it "adopted" the trade and treated it as a runner, trailing the stop <b>2 × ATR above the lowest price since entry</b>. That's why the levels kept falling as gold fell. Algo Trading is off in this terminal, so <b>every attempt was rejected</b> and the real stop was never touched from here.</p>
-  </div>
-  <div class="card">
-    <h3>What the real stop probably did</h3>
-    <p>That's up to the EA on the other machine. If it runs v1.17 or v1.18, it behaves like Axi's identical trade (#3, SELL 1 lot at 4165.48): the stop moved to the <b>entry price</b> once gold covered 75% of the way to TP1 (Axi did this at <b>21:53 PKT</b>). After that the trade can't lose, apart from spread and commission.</p>
-  </div>
-
-  <h2>Who placed it</h2>
+  <h2>Notes</h2>
   <div class="card warn">
-    <h3>Another copy of the EA, on another machine</h3>
-    <ul>
-      <li>It filled <b>0.2 seconds</b> after this PC's EA saw the same break, on the same setup.</li>
-      <li>It carries the EA's magic number <b>88302</b> (this PC's EA adopted it, and it only adopts its own magic number).</li>
-      <li>It's sized at <b>2 lots</b>, not this PC's 0.10.</li>
-      <li>The account journal shows logins from other places: <b>39.44.93.88</b> (13 Oct, 14:20) and 119.154.92.250 (12 Oct).</li>
-    </ul>
-    <p><b>To do:</b> find that machine (probably the VPS or another laptop) and check its EA version. Don't switch Algo Trading on in this PC's PrimeXBT terminal while the other one trades: both EAs use magic 88302 and would fight over the same stop. To run both, give each a different <code>InpMagicNumber</code>.</p>
+    <h3>Who moved the stop to 4169.74?</h3>
+    <p>Not the EA that placed the trade. Its log shows exactly 3 stop moves (breakeven at 21:52, the jump at TP1, one trail tick), all accounted for above. Not the old EA on Claude's PC either: Algo Trading is off there, and every change it attempted was rejected before reaching the broker. The change was most likely made by hand (a phone or another terminal).</p>
+    <p>The account journal shows sessions from <b>39.44.93.88</b> and <b>119.154.92.250</b>. If nobody moved it by hand, check who else is logged into this account.</p>
+  </div>
+  <div class="card">
+    <h3>Algo Trading was off on this machine for most of the day</h3>
+    <p>Between 11:33 and 18:00 the EA found 8 setups, and every order was refused with "auto trading disabled by client". Algo Trading was switched on shortly before 20:00, in time for this trade.</p>
+  </div>
+  <div class="card">
+    <h3>How this EA manages every trade</h3>
+    <p>Stop 35 pips beyond the setup candle, sent to the broker. Breakeven at 75% of the way to TP1. Half closed at TP1. The rest trailed $2 behind the price, tick by tick. Losing trades are closed 3 minutes before the daily close. Full step-by-step: <code>lifecycle.md</code> in the project.</p>
   </div>
 
-  <footer>Sources: PrimeXBT terminal journal and Experts log (13 Oct 2026), Axi terminal Experts log. <a href="/">Back to the dashboard</a></footer>
+  <footer>Sources: PrimeXBT terminal Experts log and Journal of the trading machine (13 Oct 2026), and the Journal of Claude's PC. <a href="/">Back to the dashboard</a></footer>
 </div>
 </body>
 </html>
