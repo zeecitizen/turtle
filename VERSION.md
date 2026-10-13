@@ -18,7 +18,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 |---|---|---|---|---|---|
 | **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.18** (2026-10-13) | XAUUSD M15 | **LIVE** on Axi (v1.17 attached; v1.18 = same trades + named comments) |
 | Saad 15-min + pyramiding | `Saad_strategy_15min_pyramiding_max_3.mq5` | 88330 | v1.01 (2026-10-13) | XAUUSD M15 | READY, demo first (bigger risk) |
-| Saad 5-min | `Saad_strategy_5min.mq5` | 88320 | v1.00 (2026-10-13) | XAUUSD M5 | BUILT, not profitable, demo only |
+| Saad 5-min | `Saad_strategy_5min.mq5` | 88320 | v1.01 (2026-10-13) | XAUUSD M5 | READY, demo first: SELL ONLY, small edge |
 | Small-account tiers | `EA_20USD … EA_200USD.mq5` | 88310–88314 | v1.14 base (2026-10-12) | XAUUSD M15 | READY ($80+ only) |
 | Saad (M5 original) | `Saad_strategy.mq5` | 88301 | v4.03 (2026-10-11) | XAUUSD M5 | RETIRED by the 15-min |
 | VSISA | `VSISA.mq5` | 88201 | v1.28 (2026-10-10) | XAUUSD M5 | BUILT |
@@ -70,6 +70,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | Version | Date | What changed | Result / note |
 |---|---|---|---|
+| **v1.01** | 2026-10-13 | Optuna winner (150 MT5 trials): **sell only**, setup ≥ 1.1 ATR, stop 15 pips, risk ≤ $8, $4 trail, TP1 ≥ 30 pips, no setups before hour 8; comments `Saad5 v1.01 SELL` | Jan–Jun +$13,651, Jul–Oct (unseen) +$16,505, PF 1.26; random delay +$32,992. Gold fell in the test year; buys allowed = only +$4,457 |
 | v1.00 | 2026-10-13 | v1.17 rescaled for M5 (risk cap $9, stop 20 pips, choppy window 48) | NOT profitable: best Jan–Jun +$16k, Jul–Oct −$28k. Demo only |
 
 ## EA_20USD · EA_40USD · EA_80USD · EA_100USD · EA_200USD (magics 88310–88314, XAUUSD M15)
