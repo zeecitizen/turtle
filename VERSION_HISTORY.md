@@ -636,6 +636,30 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## VSISA v1.30 — live status panel (2026-10-14)
+
+**Who:** Zee: *"when i attach it to the chart. it shows what its doing in real time. is it waiting for setup?
+which stage of setup is it in. which candle is it monitoring.. we can't leave the user with a blank chart when
+we load the EA until our first trade.. and even after the first trade.."*
+
+**What:** a panel at the top left (`InpDashboard = true`), refreshed every second (`OnTimer`) and at each candle
+close. It shows:
+- the version, symbol and lots, and which ML layers are on
+- **STATE:** waiting for a setup / managing trades / outside trading hours / cooling down / max open trades /
+  daily loss stop, plus a countdown to the next candle check
+- trend direction and market regime ("HIGH VOL: entries paused" when skipped)
+- **the last candle checked**, with a BUY and a SELL verdict: SETUP FOUND, or the stage where it failed. Taken
+  from VSISA's own rejection counters: setup bars not one way / no loud setup bar / volume not rising / no
+  spread anomaly / no fake break / no reaction / body too small / reaction not quiet / against the trend /
+  test failed / target too near / not capped / close not at the extreme / no setup run
+- whether a found setup became a trade, was vetoed by the ML filter (with the score), or was refused
+- the last meta-label score; open trades with entry, SL, TP, floating $, R reached and the exhaustion reading
+- today's funnel (candles checked → setups → ML vetoes → trades) and the top 3 rejection reasons
+- **on the chart:** a box around the candle just checked, with a short tag above it
+
+**Display only:** Jul 1 – Oct 8 is identical to v1.29 (+$10,018.82). It's hidden in non-visual tester runs.
+Compiled into the Axi terminal.
+
 ## VSISA v1.29 — three machine-learning layers on top of v1.28 (2026-10-14)
 
 **Who:** Zee: *"optimize the VSISA EA that runs on 5 minutes timeframe to maximize profits"* and *"apply all the
