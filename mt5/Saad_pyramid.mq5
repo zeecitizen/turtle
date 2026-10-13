@@ -120,6 +120,10 @@ input double InpPyramidMultiplier = 0.5; // InpPyramidMultiplier — add-on volu
 input int    InpMaxTiers    = 3;      // InpMaxTiers — positions in total (base + add-ons)
 input bool   InpPyrLockBe   = true;   // InpPyrLockBe — on each add-on, move every stop to the basket's average entry (+ buffer) if better
 input double InpPyrBeBufPts = 20;     // InpPyrBeBufPts — buffer beyond the average entry, points
+input double InpPyrSpacingAtr = 0;    // InpPyrSpacingAtr — >0: spacing = this x ATR(14) instead of InpPyramidSpacing pips
+input double InpPyrRiskPct = 0;       // InpPyrRiskPct — >0: add-on size = this % of equity / the $ risk to its stop (instead of the multiplier)
+input double InpPyrMaxLots = 1.0;     // InpPyrMaxLots — cap for one add-on with InpPyrRiskPct
+input double InpPyrTrailAtr = 0;      // InpPyrTrailAtr — >0: when an add-on fills, trail every stop to price -/+ this x ATR (if better)
 input int    InpFlatMode    = 0;      // InpFlatMode — InpCloseLossMins before the close also shut WINNERS: 0 off · 1 Fridays only (weekend gap) · 2 every day
 input double InpHardCutUsd  = 0;      // InpHardCutUsd — close a position once its open loss reaches this many account $ (0 = off)
 input bool   InpEmaExit     = false;  // InpEmaExit — before CTC/TP1: close when a candle closes against the trade beyond the 9 EMA
@@ -549,13 +553,33 @@ void ManagePyramid()
    }
    if (n + 1 >= InpMaxTiers || TimeCurrent() < g_pyrBlock || dayEnd) return;
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   if ((side > 0 ? bid - lastPx : lastPx - ask) < InpPyramidSpacing * Pip()) return;
+   double atr = Buf(hAtr, 1);
+   double spacing = InpPyrSpacingAtr > 0 && atr > 0 ? InpPyrSpacingAtr * atr : InpPyramidSpacing * Pip();
+   if ((side > 0 ? bid - lastPx : lastPx - ask) < spacing) return;
    double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP), mn = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
    double vol = NormalizeDouble(MathMax(mn, MathRound(lastVol * InpPyramidMultiplier / step) * step), 2);
+   if (InpPyrRiskPct > 0) {                                   // volatility sizing: fixed % risk to the add-on's real stop
+      double dist = baseSl > 0 ? (side > 0 ? ask - baseSl : baseSl - bid) : 2 * atr;
+      if (dist < atr * 0.25) dist = atr * 0.25;
+      double perLot = dist / SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE) * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+      vol = perLot > 0 ? AccountInfoDouble(ACCOUNT_EQUITY) * InpPyrRiskPct / 100.0 / perLot : mn;
+      vol = NormalizeDouble(MathMin(InpPyrMaxLots, MathMax(mn, MathFloor(vol / step) * step)), 2);
+   }
    bool ok = side > 0 ? trade.Buy(vol, _Symbol, 0, baseSl, 0, "saad_pyr") : trade.Sell(vol, _Symbol, 0, baseSl, 0, "saad_pyr");
    if (!ok) { g_pyrBlock = TimeCurrent() + 60; return; }
    g_pyrAdds++;
    Log(StringFormat("PYRAMID add-on %d: %s %.2f lots at %s", n + 1, side > 0 ? "BUY" : "SELL", vol, Px(trade.ResultPrice())));
+   if (InpPyrTrailAtr > 0 && atr > 0) {                      // trail the whole basket on each add-on
+      double want = NormalizeDouble(side > 0 ? bid - InpPyrTrailAtr * atr : ask + InpPyrTrailAtr * atr, _Digits);
+      for (int i = PositionsTotal() - 1; i >= 0; i--) {
+         ulong t = PositionGetTicket(i);
+         if (t == 0 || PositionGetString(POSITION_SYMBOL) != _Symbol || PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
+         double sl = PositionGetDouble(POSITION_SL);
+         if (!(side > 0 ? want > sl + _Point : (sl == 0 || want < sl - _Point))) continue;
+         if (t == g_pos[0].ticket) { if (ModifySl(t, want)) SlMoved(0, want, "basket ATR trail"); }
+         else trade.PositionModify(t, want, 0);
+      }
+   }
    if (!InpPyrLockBe) return;
    // basket VWAP -> lock every stop at break-even + buffer (only if better)
    double cost = 0, tv = 0; ulong all[]; int m = 0;
