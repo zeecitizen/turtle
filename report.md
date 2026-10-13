@@ -1253,3 +1253,61 @@ At 1 lot, $1 of gold = $100.
 
 **Broker vs EA:** the same as §24. Only the stop loss sits at the broker. TP1, the half-close, breakeven and
 the $4 trail need the PC and MT5 running.
+
+## 27. BUY rules of the 5-minute EA (off by default in v1.01)
+
+`Saad_strategy_5min` v1.01 ships with **`InpBuys = false`**. If buys are switched on (Inputs tab →
+`InpBuys = true`), the EA uses the rules below with v1.01's settings. They mirror the SELL side in §26,
+except the target is an EMA rather than a support.
+
+### BUY trade, step by step
+
+1. **Setup:** a **5-minute** candle closes as a **pin bar, marubozu or hammer** touching an EMA. With
+   `InpLongRule = 2` both kinds count:
+   - **on the 9 EMA** → its exit (target) EMA is the **50 EMA**
+   - **on the 50 EMA** → its exit EMA is the **9 EMA**
+2. **Filters**, the same as for SELLs:
+   - the setup candle is **≥ 1.1 × ATR(14)** tall
+   - it starts at **broker hour 8 or later**
+   - efficiency ratio over 40 candles **≥ 0.06**
+3. **Entry:** the **next 5-minute candle** must break the setup candle's **high by 1 pip** (judged on the bid,
+   like the chart). It buys the moment that happens.
+4. **Stop loss:** **15 pips ($1.50) below the setup candle's low**, sent to the broker. More than **$8** away →
+   skipped.
+5. **Which path the trade takes:**
+
+   **Path A: the exit EMA is at least 30 pips above the entry (the normal case)**
+   1. **TP1 = the price touching the exit EMA.** It's re-read every tick and moves with the EMA. No TP at the
+      broker.
+   2. At **75% of the way** to the EMA → **stop to the entry**.
+   3. **EMA touched:** **half closes**, the stop jumps to **price − $4** (never below the entry), and **TP2**
+      becomes the next swing high above (a label only).
+   4. The stop follows price up, **$4 below it, tick by tick**.
+
+   **Path B: the exit EMA is below the entry or less than 30 pips above it**
+   1. There's no TP1: **no half-close, no 75% step.**
+   2. From the second candle on, at each 5-minute close, the stop rises to
+      **the highest high since entry − 2 × ATR(14)**. It never moves down.
+
+   Note: v1.01's 30-pip minimum target (`InpMinTpPips = 30`) sends many more BUYs down Path B than the 15-min
+   EA's 5 pips does.
+6. **Exit:** the original stop, the breakeven stop, the trail, or "3 minutes before the daily close while in
+   loss".
+
+### Why buys are off: the test results
+
+| v1.01 settings, 1 lot, real ticks, $4/lot | Jan–Jun | Jul–Oct | Full period | PF | Max DD |
+|---|---|---|---|---|---|
+| **SELL only (shipped)** | +$13,651 | +$16,505 | +$32,992 (random delay) | 1.26–1.29 | $9.4k |
+| **BUY + SELL** | −$1,784 | +$6,241 | +$4,457 | 1.03 | $21.2k |
+| → what the BUYs added | about −$15k | about −$10k | **about −$28k** | | |
+
+- **The buys lost in both halves of the year,** and they doubled the drawdown.
+- **The likely reason:** gold fell about 20% over the test year (about 5,100 → 4,100), and these settings
+  were tuned for selling.
+- **The open question:** whether different, buy-specific settings could make buys pay on M5. The next step
+  is a buy-only Optuna search, tuned on Jan–Jun and judged on Jul–Oct. If a buy setup holds up, v1.02 would
+  give buys and sells separate settings, so the sell side stays as tested.
+
+**For now:** keep `InpBuys = false`. Turning buys on with v1.01's settings made the EA about $28k worse in
+testing.
