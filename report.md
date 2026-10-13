@@ -798,3 +798,46 @@ the unseen months.
 
 Nothing to change. The study is saved in `monitor/strategy_lab/optuna_saad.db`; every trial is in
 `zee_optuna.jsonl`.
+
+## 19. Deep reinforcement learning position sizing (PPO) — 4 agents, MT5 holdout (13 Oct)
+
+**What:** your PPO pipeline. Before each entry, an agent chooses a lot multiplier from **0 to 2**
+(Zee: up to 2 lots is fine). Its reward is log wealth growth, the Kelly objective.
+
+**Files:**
+- `meta_labeling_system/src/drl_train.py` (Stable-Baselines3 PPO, PyTorch 2.14)
+- `mt5/Saad_drl.mq5` (built by `patch_drl.py`)
+- `mt5/SaadDrlPolicy*.mqh`: the policy network compiled into the EA. It matches PyTorch to 5e-7 on
+  every MT5 entry.
+
+**How:**
+1. The EA logged, at every entry, the observation it will use: ER(14), ATR14/ATR200, realized
+   volatility, distance to the 50 EMA, and side. It also logged the trade's final net at 1 lot. The
+   logging run equals v1.17 to the cent.
+2. PPO trained on **Jan–Jun trades only**.
+3. MT5 ran the sized EA on **Jul 1 – Oct 8**.
+
+**The fair benchmark** is a **constant lot equal to the agent's own average size**. That separates
+smart timing from simply betting bigger.
+
+| Jul 1 – Oct 8 (unseen), MT5, real ticks | Agent avg size | **PPO net** | Constant-lot net | PPO max DD | Constant DD | PPO worst day | Constant worst day | Net÷DD PPO / constant |
+|---|---|---|---|---|---|---|---|---|
+| seed 0 | 1.77 | **+$126,025** | +$119,810 | $18.9k | $23.5k | −$7,563 | −$6,736 | **6.7** / 5.1 |
+| seed 1 | 1.34 | **+$115,080** | +$90,693 | $18.4k | $17.8k | −$5,934 | −$5,099 | **6.3** / 5.1 |
+| seed 2 | 1.53 | +$87,808 | **+$103,567** | $28.9k | $20.3k | −$7,437 | −$5,823 | 3.0 / **5.1** |
+| seed 3 | 1.59 | +$109,356 | +$107,628 | $25.4k | $21.1k | −$6,792 | −$6,051 | 4.3 / **5.1** |
+| (1 lot, v1.17) | 1.00 | | +$67,681 | | $13.3k | | −$3,806 | 5.1 |
+
+**Verdict: interesting, but NOT reliable enough to use.**
+- **2 of 4 agents beat their benchmark clearly** (seeds 0 and 1: +$6k and +$24k, net÷DD 6.3–6.7 vs
+  5.1).
+- **The other 2 were worse** (seed 2: −$16k and a bigger drawdown) or no better (seed 3).
+- **The worst day was worse than the benchmark in all 4.** The agents bet near 2 lots on the days
+  that went badly.
+- With identical data and settings, only the random seed decides whether the agent helps or hurts.
+  That's the signature of noise, not a learned edge. In Python on Jan–Jun, every agent "made"
+  $272–291k vs $136k at 1 lot: heavy overfitting.
+
+**Simple, honest alternative now that 2 lots is allowed:** constant sizing scales profit and
+drawdown together (net÷DD stays 5.1). At **2 lots constant**, Jul–Oct would be roughly +$135k with
+about $26.6k max DD and about a −$7.6k worst day. That's simply v1.17 × 2, with no model to trust.
