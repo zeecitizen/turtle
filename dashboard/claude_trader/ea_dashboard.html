@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>TURTLE — Gold EAs</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Share+Tech+Mono&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* layout: one centred column; status first, then live dials, backtest dials, trades, the full report, versions last */
+:root {
+  --bg: #f4f6fa; --panel: #ffffff; --panel2: #eef1f7; --ink: #151a26; --muted: #5e6879; --faint: #8a93a3;
+  --line: #dde2ec; --gold: #b07a10; --green: #13985a; --red: #d23b4b; --blue: #2f6fd6;
+  --dial-bg: linear-gradient(150deg, #2d3561 0%, #1b2447 55%, #141c38 100%); --dial-ink: #ffffff; --dial-sub: #b9bfd3;
+  --display: 'Orbitron', 'Consolas', ui-monospace, monospace;
+  --mono: 'Share Tech Mono', 'Consolas', ui-monospace, monospace;
+  --body: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b0f18; --panel: #131a29; --panel2: #1a2336; --ink: #e6ebf5; --muted: #98a3b8; --faint: #6b7588;
+  --line: #263046; --gold: #ffcf66; --green: #2bd576; --red: #ff6b7a; --blue: #6aa8ff; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0b0f18; --panel: #131a29; --panel2: #1a2336; --ink: #e6ebf5; --muted: #98a3b8; --faint: #6b7588;
+  --line: #263046; --gold: #ffcf66; --green: #2bd576; --red: #ff6b7a; --blue: #6aa8ff; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--body); -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 18px 60px; }
+header { text-align: center; padding-bottom: 14px; border-bottom: 2px solid var(--gold); margin-bottom: 22px; }
+.brand { font: 800 30px/1 var(--display); letter-spacing: 6px; display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 4px 0 8px; }
+.brand img { width: 44px; height: 44px; object-fit: contain; }
+.brand .clock { font: 400 20px var(--mono); letter-spacing: 1px; color: var(--muted); }
+.sub { color: var(--muted); font-size: 13.5px; max-width: 64ch; margin: 0 auto; }
+h2 { font: 800 15px/1.2 var(--display); letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin: 34px 0 12px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+h2 small { font: 600 12px var(--body); letter-spacing: 0; text-transform: none; color: var(--faint); }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; min-width: 0; }
+.card h3 { margin: 0 0 2px; font-size: 18px; }
+.meta { color: var(--muted); font: 13px var(--mono); }
+.pill { display: inline-flex; align-items: center; gap: 6px; font: 700 12px var(--body); padding: 3px 10px; border-radius: 99px; margin-bottom: 8px; }
+.pill.on { background: color-mix(in srgb, var(--green) 16%, transparent); color: var(--green); }
+.pill.off { background: var(--panel2); color: var(--muted); }
+.pill.on::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--green); animation: pulse 1.6s infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .pill.on::before { animation: none; } }
+.what { font-size: 14px; color: var(--ink); margin: 10px 0 0; }
+.open { margin-top: 12px; background: var(--panel2); border-radius: 10px; padding: 10px 12px; font: 13.5px var(--mono); }
+.open b { font-family: var(--body); }
+.source { font-size: 12.5px; color: var(--faint); margin: -4px 0 12px; }
+.dials { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.dial { background: var(--dial-bg); color: var(--dial-ink); border-radius: 16px; padding: 12px 10px 14px; text-align: center; min-width: 0; }
+.dial svg { width: 120px; max-width: 100%; height: auto; display: block; margin: 0 auto -10px; }
+.dial .v { font: 800 22px/1.1 var(--body); font-variant-numeric: tabular-nums; }
+.dial .l { font: 700 11px var(--body); letter-spacing: .6px; text-transform: uppercase; color: var(--dial-sub); margin-top: 4px; }
+.dial .s { font-size: 11.5px; color: var(--dial-sub); margin-top: 2px; }
+.pos { color: #3ee08a; } .neg { color: #ff7d8a; }
+.card .pos, .tw .pos { color: var(--green); } .card .neg, .tw .neg { color: var(--red); }
+.ea-block { margin-bottom: 22px; }
+.ea-block > .name { font-weight: 800; font-size: 15px; margin: 0 0 8px; }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); margin: 10px 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--panel2); color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+.doc { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 6px 20px 18px; min-width: 0; }
+.doc h1 { font-size: 22px; } .doc h2 { font: 700 19px/1.3 var(--body); letter-spacing: 0; text-transform: none; color: var(--ink); margin: 30px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+.doc h3 { font-size: 16px; margin: 22px 0 8px; } .doc p, .doc li { max-width: 80ch; } .doc code { font: .88em var(--mono); background: var(--panel2); padding: 1px 5px; border-radius: 4px; }
+.doc blockquote { margin: 12px 0; padding: 10px 14px; border-left: 3px solid var(--gold); background: var(--panel2); border-radius: 0 8px 8px 0; }
+.doc td strong { color: var(--gold); }
+details.fold > summary { cursor: pointer; font-weight: 700; color: var(--blue); margin: 6px 0 12px; }
+.links { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13.5px; }
+.links a { color: var(--blue); }
+.err { color: var(--red); }
+footer { margin-top: 30px; color: var(--faint); font-size: 12.5px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand"><img src="/assets/logo.png" alt=""><span>TURTLE</span><span class="clock" id="clock">--:--</span></div>
+    <p class="sub">Claude's gold trading robots (Expert Advisors) on Zee's Axi account: what is running right now, how it is doing live, and how it did in testing.</p>
+  </header>
+
+  <h2>Running now <small id="gen">loading…</small></h2>
+  <div class="cards" id="running"></div>
+
+  <h2>Live performance <small>real trades on the Axi account</small></h2>
+  <p class="source">From each EA's own trade log on the trading PC. Closed trades only; the open trade is shown above.</p>
+  <div id="live"></div>
+
+  <h2>Backtest <small>MT5 Strategy Tester, not real money</small></h2>
+  <p class="source">Simulated on Axi's real tick history, Jan 6 – Oct 8 2026, at 1 lot on a $25,000 account, including Axi's $4/lot commission. Past results don't guarantee future ones.</p>
+  <div id="backtest"></div>
+
+  <h2>Recent live trades</h2>
+  <div id="trades"></div>
+
+  <h2>Daily report <small id="repat"></small></h2>
+  <div class="links"><a href="https://claude.ai/artifact/CooMxfS1PAojydyfMkAGkb" target="_blank" rel="noopener">Open the report as its own page</a><a href="/status-old">Old status page</a></div>
+  <details class="fold" open><summary>Show / hide the full report</summary><div class="doc" id="report">loading…</div></details>
+
+  <h2>Versions <small id="verat"></small></h2>
+  <details class="fold" open><summary>Show / hide every EA version</summary><div class="doc" id="versions">loading…</div></details>
+
+  <footer>Updates every minute · numbers come from the trading PC's own files · built by Claude</footer>
+</div>
+<script>
+const $ = s => document.querySelector(s);
+const money = v => (v == null ? '–' : (v < 0 ? '−$' : '$') + Math.abs(Math.round(v)).toLocaleString('en-US'));
+const sgn = v => v == null ? '' : (v > 0 ? 'pos' : (v < 0 ? 'neg' : ''));
+function clock() { const d = new Date(); $('#clock').textContent = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }); }
+clock(); setInterval(clock, 15000);
+
+// semicircle gauge: frac 0..1 of the arc, colour by meaning
+function gauge(frac, color) {
+  frac = Math.max(0, Math.min(1, frac || 0));
+  const r = 46, cx = 60, cy = 58, a0 = Math.PI, a1 = Math.PI * (1 - frac);
+  const x = cx + r * Math.cos(a1), y = cy - r * Math.sin(a1);
+  const large = frac > 0.5 ? 1 : 0;
+  return `<svg viewBox="0 0 120 66" aria-hidden="true">
+    <path d="M14 58 A46 46 0 0 1 106 58" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="10" stroke-linecap="round"/>
+    ${frac > 0.005 ? `<path d="M14 58 A46 46 0 ${large} 1 ${x.toFixed(1)} ${y.toFixed(1)}" fill="none" stroke="${color}" stroke-width="10" stroke-linecap="round"/>` : ''}
+  </svg>`;
+}
+const G = '#3ee08a', R = '#ff7d8a', Y = '#ffd166', B = '#7fb2ff';
+function dial(label, value, sub, frac, color, cls) {
+  return `<div class="dial">${gauge(frac, color)}<div class="v ${cls || ''}">${value}</div><div class="l">${label}</div>${sub ? `<div class="s">${sub}</div>` : ''}</div>`;
+}
+
+function render(d) {
+  $('#gen').textContent = 'checked ' + d.generated;
+  $('#running').innerHTML = d.eas.map(e => {
+    const s = e.state, on = s.running;
+    const open = s.open.length ? s.open.map(o => `<div class="open"><b>Open trade:</b> ${o.side} ${o.lots} lot @ ${o.entry} · stop ${o.sl} (risks ${money(o.risk)}) · since ${o.time}</div>`).join('') : (on ? '<div class="open">No open trade right now.</div>' : '');
+    return `<div class="card">
+      <span class="pill ${on ? 'on' : 'off'}">${on ? 'Running' : 'Not attached'}</span>
+      <h3>${e.name} ${s.version ? `<span class="meta">${s.version}</span>` : ''}</h3>
+      <div class="meta">${e.file}.mq5 · magic ${e.magic} · ${e.chart}</div>
+      ${on ? `<div class="meta">last activity ${s.last_seen}</div>` : '<div class="meta">compiled and ready in the terminal, not on a chart</div>'}
+      <p class="what">${e.what}</p>${open}</div>`;
+  }).join('');
+
+  $('#live').innerHTML = d.eas.filter(e => e.live.trades > 0 || e.state.running).map(e => {
+    const L = e.live, wr = L.win_rate;
+    return `<div class="ea-block"><p class="name">${e.name} ${e.state.version || ''} <span class="meta">· since ${L.first || '–'}</span></p><div class="dials">
+      ${dial('Win rate', wr == null ? '–' : wr + '%', `${L.wins} won · ${L.losses} lost`, (wr || 0) / 100, (wr || 0) >= 50 ? G : Y)}
+      ${dial('Net result', money(L.net), `${L.trades} closed trades`, Math.min(1, Math.abs(L.net) / 5000), L.net >= 0 ? G : R, sgn(L.net))}
+      ${dial('Today', money(L.today), 'closed today', Math.min(1, Math.abs(L.today) / 2000), L.today >= 0 ? G : R, sgn(L.today))}
+      ${dial('Best trade', money(L.best), 'biggest win', Math.min(1, Math.abs(L.best || 0) / 3000), G, sgn(L.best))}
+      ${dial('Worst trade', money(L.worst), 'biggest loss', Math.min(1, Math.abs(L.worst || 0) / 3000), R, sgn(L.worst))}
+    </div></div>`;
+  }).join('') || '<p class="meta">No live trades yet.</p>';
+
+  $('#backtest').innerHTML = d.eas.map(e => {
+    const b = e.backtest;
+    return `<div class="ea-block"><p class="name">${e.name}</p><p class="source">${b.label}</p><div class="dials">
+      ${dial('Net profit', money(b.net), `${b.trades} trades · ${b.per_day}/day`, Math.min(1, b.net / 500000), G, 'pos')}
+      ${dial('Unseen months', money(b.holdout), b.holdout_label, Math.min(1, b.holdout / 200000), B, 'pos')}
+      ${dial('Profit factor', b.pf.toFixed(2), '$ won per $ lost', Math.min(1, (b.pf - 1) / 1.5), Y)}
+      ${dial('Win rate', b.wr + '%', 'per deal', b.wr / 100, Y)}
+      ${dial('Max drawdown', money(-b.dd), 'deepest dip from a peak', Math.min(1, b.dd / 50000), R, 'neg')}
+      ${dial('Worst day', money(b.worst_day), `${b.losing_months} losing months`, Math.min(1, Math.abs(b.worst_day) / 15000), R, 'neg')}
+    </div></div>`;
+  }).join('');
+
+  const rows = d.eas.flatMap(e => e.live.recent.map(t => ({ ...t, ea: e.name })));
+  $('#trades').innerHTML = rows.length ? `<div class="tw"><table><thead><tr><th>EA</th><th>Side</th><th>Opened</th><th>Entry</th><th>Closed</th><th>Exit</th><th>How it closed</th><th>Result</th></tr></thead><tbody>${
+    rows.map(t => `<tr><td>${t.ea}</td><td>${t.side}</td><td>${t.entry_time}</td><td>${t.entry}</td><td>${t.exit_time}</td><td>${t.exit}</td><td>${t.reason}</td><td class="${sgn(t.net)}">${money(t.net)}</td></tr>`).join('')
+  }</tbody></table></div>` : '<p class="meta">No closed live trades yet.</p>';
+
+  $('#report').innerHTML = d.report_html; $('#repat').textContent = d.report_updated ? 'report.md, updated ' + d.report_updated : '';
+  $('#versions').innerHTML = d.versions_html; $('#verat').textContent = d.versions_updated ? 'VERSION.md, updated ' + d.versions_updated : '';
+}
+
+async function load() {
+  try {
+    const r = await fetch('/api/ea-dashboard', { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    render(await r.json());
+  } catch (e) {
+    $('#gen').innerHTML = `<span class="err">could not load the latest numbers (${e.message}); retrying</span>`;
+  }
+}
+load(); setInterval(load, 60000);
+</script>
+</body>
+</html>

@@ -16,8 +16,8 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | EA | File (`mt5/`) | Magic | Latest | Chart | Status |
 |---|---|---|---|---|---|
-| **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.17** (2026-10-13) | XAUUSD M15 | **READY**, the main one |
-| Saad 15-min + pyramiding | `Saad_strategy_15min_pyramiding_max_3.mq5` | 88330 | v1.00 (2026-10-13) | XAUUSD M15 | READY, demo first (bigger risk) |
+| **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.18** (2026-10-13) | XAUUSD M15 | **LIVE** on Axi (v1.17 attached; v1.18 = same trades + named comments) |
+| Saad 15-min + pyramiding | `Saad_strategy_15min_pyramiding_max_3.mq5` | 88330 | v1.01 (2026-10-13) | XAUUSD M15 | READY, demo first (bigger risk) |
 | Saad 5-min | `Saad_strategy_5min.mq5` | 88320 | v1.00 (2026-10-13) | XAUUSD M5 | BUILT, not profitable, demo only |
 | Small-account tiers | `EA_20USD … EA_200USD.mq5` | 88310–88314 | v1.14 base (2026-10-12) | XAUUSD M15 | READY ($80+ only) |
 | Saad (M5 original) | `Saad_strategy.mq5` | 88301 | v4.03 (2026-10-11) | XAUUSD M5 | RETIRED by the 15-min |
@@ -42,7 +42,8 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | Version | Date | What changed | Result / note |
 |---|---|---|---|
-| **v1.17** | 2026-10-13 | Default lot 0.10 → **1.00** (Zee) | +$202,222 at 1 lot, Jan 6 – Oct 8, real ticks |
+| **v1.18** | 2026-10-13 | Trade comments name the EA: `Saad15 v1.18 BUY` / `SELL` (Zee). No trading change | +$202,221.80, identical to v1.17 |
+| v1.17 | 2026-10-13 | Default lot 0.10 → **1.00** (Zee) | +$202,222 at 1 lot, Jan 6 – Oct 8, real ticks |
 | v1.16 | 2026-10-12 | **Zee's rule:** close 50% at TP1 + breakeven on the rest (`InpPartialPct 0.5`, `InpTp1Be`) | +$202,222; win rate per deal 48% → 61%; worst day −$3,806 |
 | v1.15 | 2026-10-12 | H1/H4 trend filter switch `InpHtfMin`, **off** | tested: costs most of the profit |
 | v1.14 | 2026-10-12 | Min candle 0.55 ATR, marubozu body 0.53, choppy filter 0.11 | +$206,705, PF 1.62, DD 5.5%, 0 losing months |
@@ -62,6 +63,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | Version | Date | What changed | Result / note |
 |---|---|---|---|
+| v1.01 | 2026-10-13 | Built on v1.18; comments name the EA: `Saad15-PYR3 v1.01 BUY` / `SELL`, add-ons `… ADD` (Zee) | +$479,814.52, identical to v1.00 |
 | v1.00 | 2026-10-13 | v1.17 + scale-in pyramid: add 0.75× after each 0.25× ATR move, up to 5 positions (about 3.05 lots), no breakeven lock (Zee's pick) | +$479,815 (random delay +$468,075), max DD $41.8k, worst day −$12,338 |
 
 ## Saad_strategy_5min (magic 88320, XAUUSD M5)

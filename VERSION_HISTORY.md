@@ -636,6 +636,25 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## Saad_strategy_15min v1.18 · pyramiding_max_3 v1.01 — trade comments name the EA (2026-10-13)
+
+**Who:** Zee: *"in the pyramiding EA and the latest EA to say in comments the name of EA so we know
+exactly where the trade is coming from.."*
+
+**What changed:**
+- **v1.18** writes `Saad15 v1.18 BUY` / `Saad15 v1.18 SELL` as each order's comment (was `saad_long` /
+  `saad_short`), through `#define EA_COMMENT`.
+- **pyramiding_max_3 v1.01** is built on v1.18 and writes `Saad15-PYR3 v1.01 BUY/SELL`, with add-ons
+  `Saad15-PYR3 v1.01 ADD`. It recognises its add-ons by " ADD" in the comment (was the bare `saad_pyr`).
+
+**No trading change.** MT5 receipts, unchanged to the cent (Jan 6 – Oct 8, real ticks, 1 lot, 200 ms):
+- v1.18: +$202,221.80
+- pyramiding v1.01: +$479,814.52
+
+**Compiled:**
+- pyramiding v1.01 into the Axi terminal
+- v1.18 **not yet**: v1.17 was attached with an open trade, and recompiling would reload it mid-trade
+
 ## Saad_strategy_15min_pyramiding_max_3 v1.00 — v1.17 + scale-in pyramiding (2026-10-13)
 
 **Who:** Zee: *"ATR 0.25×, 5 tiers, ×0.75 add-ons .. +$479,815 this is the result we want to put into:

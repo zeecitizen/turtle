@@ -1,6 +1,7 @@
 //+------------------------------------------------------------------+
-//| Saad_strategy_15min_pyramiding_max_3.mq5  v1.00  (2026-10-13)     |
-//| = Saad_strategy_15min v1.17, unchanged, PLUS scale-in pyramiding: |
+//| Saad_strategy_15min_pyramiding_max_3.mq5  v1.01  (2026-10-13)     |
+//| v1.01: trade comments name the EA (Saad15-PYR3 v1.01 BUY/SELL/ADD)|
+//| = Saad_strategy_15min v1.18, unchanged, PLUS scale-in pyramiding: |
 //|   when the trade moves 0.25 x ATR(14) beyond the last entry, add  |
 //|   0.75 x the last position's lots, up to 5 positions (about 3.05  |
 //|   lots at InpLots 1). Add-ons carry the base trade's stop and     |
@@ -47,10 +48,12 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.00"
+#property version   "1.01"
 #property strict
 
 #include <Trade/Trade.mqh>
+// v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
+#define EA_COMMENT "Saad15-PYR3 v1.01"   // base trades: "Saad15-PYR3 v1.01 BUY/SELL"; add-ons: "... ADD"
 
 //--- the two lines
 input int    InpEmaFast     = 9;      // InpEmaFast
@@ -241,7 +244,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-PYR3] v1.00 (Saad_strategy_15min v1.17 + pyramiding: ATR x%.2f, %d tiers, x%.2f) %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-PYR3] v1.01 (Saad_strategy_15min v1.18 + pyramiding: ATR x%.2f, %d tiers, x%.2f) %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                InpPyrSpacingAtr, InpMaxTiers, InpPyramidMultiplier, _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -522,7 +525,7 @@ void SyncPos()
    for (int i = PositionsTotal() - 1; i >= 0; i--) {
       ulong t = PositionGetTicket(i);
       if (t == 0 || PositionGetString(POSITION_SYMBOL) != _Symbol || PositionGetInteger(POSITION_MAGIC) != InpMagicNumber) continue;
-      if (PositionGetString(POSITION_COMMENT) == "saad_pyr") continue;   // pyramiding add-on, managed by ManagePyramid()
+      if (StringFind(PositionGetString(POSITION_COMMENT), " ADD") >= 0) continue;   // pyramiding add-on, managed by ManagePyramid()
       if (FindPos(t) >= 0) continue;
       PosState p;
       p.ticket = t; p.side = PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY ? 1 : -1;
@@ -534,7 +537,7 @@ void SyncPos()
 }
 
 //--- scale-in pyramiding ----------------------------------------------------------
-bool IsAddOn() { return PositionGetString(POSITION_SYMBOL) == _Symbol && PositionGetInteger(POSITION_MAGIC) == InpMagicNumber && PositionGetString(POSITION_COMMENT) == "saad_pyr"; }
+bool IsAddOn() { return PositionGetString(POSITION_SYMBOL) == _Symbol && PositionGetInteger(POSITION_MAGIC) == InpMagicNumber && StringFind(PositionGetString(POSITION_COMMENT), " ADD") >= 0; }
 void ManagePyramid()
 {
    if (!InpEnablePyramid) return;
@@ -570,7 +573,7 @@ void ManagePyramid()
       vol = perLot > 0 ? AccountInfoDouble(ACCOUNT_EQUITY) * InpPyrRiskPct / 100.0 / perLot : mn;
       vol = NormalizeDouble(MathMin(InpPyrMaxLots, MathMax(mn, MathFloor(vol / step) * step)), 2);
    }
-   bool ok = side > 0 ? trade.Buy(vol, _Symbol, 0, baseSl, 0, "saad_pyr") : trade.Sell(vol, _Symbol, 0, baseSl, 0, "saad_pyr");
+   bool ok = side > 0 ? trade.Buy(vol, _Symbol, 0, baseSl, 0, EA_COMMENT + " ADD") : trade.Sell(vol, _Symbol, 0, baseSl, 0, EA_COMMENT + " ADD");
    if (!ok) { g_pyrBlock = TimeCurrent() + 60; return; }
    g_pyrAdds++;
    Log(StringFormat("PYRAMID add-on %d: %s %.2f lots at %s", n + 1, side > 0 ? "BUY" : "SELL", vol, Px(trade.ResultPrice())));
@@ -947,8 +950,8 @@ void DoEntry(int side, double sl)
    if (InpFixTpPips > 0) { tp = side > 0 ? en + InpFixTpPips * pip : en - InpFixTpPips * pip; noTp = false; }
    double lots = LotsFor(side, en, sl);
    if (lots <= 0) { DSkip(side, "even the minimum lot risks too much of this account"); return; }
-   bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, "saad_long")
-                      : trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), "saad_short");
+   bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, EA_COMMENT + " BUY")
+                      : trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), EA_COMMENT + " SELL");
    if (!ok) return;
    ulong t = trade.ResultOrder();
    ulong deal = trade.ResultDeal();
