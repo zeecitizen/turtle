@@ -574,3 +574,61 @@ features to tell, at entry, which trades will lose. The same lesson came from th
 §12.
 
 v1.17 stays untouched.
+
+## 15. Market-regime detection (GMM) — built and tested (13 Oct)
+
+**The idea:** don't veto trades. Classify the market's state each candle, then adapt the EA's
+settings to it:
+
+| Regime | Settings |
+|---|---|
+| **TREND** | no breakeven at TP1; after TP1, trail by 2.5× ATR instead of the $2 trail; choppy filter 0.10 |
+| **CHOP** | choppy filter 0.35 |
+| **NORMAL** | choppy filter 0.15 |
+
+**Files:**
+- `mt5/Saad_regime.mq5` (built by `monitor/strategy_lab/patch_regime.py`)
+- `meta_labeling_system/src/train_regime_gmm.py`
+- `mt5/SaadRegimeModel.mqh` (the GMM compiled into the EA)
+- `regime_server.py` (optional)
+
+**How:**
+1. Every closed M15 candle, the EA computes ER(14), ATR14/ATR200 and 14-candle realized volatility.
+   With logging on, its trades match v1.17 to the cent.
+2. A 3-cluster Gaussian Mixture is fitted on **Jan–Jun candles only** (11,435).
+3. MT5 runs the adaptive EA on the unseen **Jul 1 – Oct 8**.
+
+The EA's regime matches scikit-learn's on all 17,940 candles, and on 6,506 out of 6,506 candles
+inside the tester.
+
+**What the clusters turned out to be:**
+
+| Cluster | ER | ATR14/ATR200 | Realized vol | Share of candles |
+|---|---|---|---|---|
+| TREND | 0.42 | 1.46 | 0.0044 | 9% |
+| CHOP | 0.21 | 1.13 | 0.0021 | 27% |
+| NORMAL | 0.27 | 0.85 | 0.0011 | 64% |
+
+"TREND" is really **high-volatility spikes**, and v1.17 almost never trades in them (6 trades all
+year). The CHOP trades are profitable: +$22.5k in Jan–Jun, +$13.1k in Jul–Oct.
+
+| Jul 1 – Oct 8, 1 lot, real ticks | Net | Trades | Win rate | Biggest loss | Worst day |
+|---|---|---|---|---|---|
+| **v1.17, no regimes** | **+$67,681** | 365 | 60.1% | −$2,570 | −$3,806 |
+| Full mapping as pasted | +$23,206 | 302 | 57.5% | −$1,516 | −$2,782 |
+| Only CHOP choppy filter 0.35 | +$50,104 | 340 | 59.2% | −$1,516 | −$3,989 |
+| Only NORMAL choppy filter 0.15 | +$40,847 | 332 | 58.7% | −$2,570 | −$2,788 |
+| Only TREND exits (no breakeven, 2.5× ATR trail) | +$67,427 | 365 | 60.1% | −$2,570 | −$3,806 |
+
+**Verdict: REJECTED.**
+- **The regime-based exits in TREND change almost nothing (−$254),** because the EA barely trades
+  in that state.
+- **All the damage comes from the stricter choppy filter.** It blocks good CHOP and NORMAL trades.
+  Even blocking only the CHOP ones costs $17.6k.
+- **The full mapping cuts the worst day** (−$2.8k) at a cost of **−$44k in 3 months**, a much worse
+  trade-off than the simple `InpDayLossUsd` limit.
+
+**Same lesson as §12–14:** v1.17's setups are profitable in every market state these features can
+tell apart, so switching behaviour by state removes good trades.
+
+v1.17 stays untouched.
