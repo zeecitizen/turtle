@@ -37,6 +37,23 @@ V = {
     "boost2_60":  {"InpHybNeedProbe": "false", "InpHybSaadGate": 2, "InpHybWinMin": 60, "InpHybSaadAct": 1},
     "mir_05R":    {"InpHybNeedProbe": "false", "InpHybSaadGate": 1, "InpHybSaadMature": 1, "InpHybSaadMatR": 0.5},
     "mir_be":     {"InpHybNeedProbe": "false", "InpHybSaadGate": 1, "InpHybSaadMature": 2},
+    "side_big0":  {"InpHybNeedProbe": "false", "InpBigMode": 0},
+    "b3_60_big0": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 3, "InpHybWinMin": 60, "InpBigMode": 0},
+    "b3_120_big0": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 3, "InpHybWinMin": 120, "InpBigMode": 0},
+    "b2_60": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 2, "InpHybWinMin": 60},
+    "b2_90": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 2, "InpHybWinMin": 90},
+    "b2_120": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 2, "InpHybWinMin": 120},
+    "b2_180": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 2, "InpHybWinMin": 180},
+    "b4_03_60": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 4, "InpHybSigThr": 0.3, "InpHybWinMin": 60},
+    "b4_03_120": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 4, "InpHybSigThr": 0.3, "InpHybWinMin": 120},
+    "b4_02_60": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 4, "InpHybSigThr": 0.2, "InpHybWinMin": 60},
+    "b4_02_120": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 4, "InpHybSigThr": 0.2, "InpHybWinMin": 120},
+    "b4_01_60": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 4, "InpHybSigThr": 0.1, "InpHybWinMin": 60},
+    "b4_01_120": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 4, "InpHybSigThr": 0.1, "InpHybWinMin": 120},
+    "b4_00_60": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 4, "InpHybSigThr": 0.0, "InpHybWinMin": 60},
+    "b4_00_120": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 4, "InpHybSigThr": 0.0, "InpHybWinMin": 120},
+    "b3_60": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 3, "InpHybWinMin": 60},
+    "b3_120": {"InpHybNeedProbe": "false", "InpHybSaadAct": 1, "InpHybSaadGate": 3, "InpHybWinMin": 120},
 }
 PERIODS = {"full": ("2026.01.06", "2026.10.08"), "julo": ("2026.07.01", "2026.10.08")}
 OUT = Path(r"C:\Users\zeesh\turtle\testing\hybrid_blend_runs.jsonl")

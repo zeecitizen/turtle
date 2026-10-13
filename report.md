@@ -1595,3 +1595,56 @@ The mirror of §29 (VSISA as the probe, Saad as the add) finds Saad trades behin
 
 **Verdict: no version ships.** The 60-minute boost is the only candidate (point 5). The hybrid EA keeps every mode for future tests. Results:
 `testing/hybrid_blend_runs.jsonl`; summary: `monitor/strategy_lab/blend_summary.py`.
+
+## 31. Loosening the VSISA confirmation for the 2× Saad boost: more trades, but the edge fades (14 Oct)
+
+**Zee asked:** *"try loosening the vsisa version a bit to achieve much more than 28 trades.. then check"*
+
+**What was loosened.** Only the signal: VSISA's own trades stay exactly as they were. Saad takes every trade,
+at 2× lots when VSISA confirms by one of these:
+- **VSISA traded** the same direction within 60 / 90 / 120 / 180 min
+- **soft signal:** a VSISA setup that passed its regime filter and guards and scored ≥ 0.3 / 0.2 / 0.1 / 0.0
+  on its meta model, within 60 / 120 min. VSISA itself still needs 0.40 to trade.
+- **raw setup:** any VSISA setup, before every filter, within 60 / 120 min
+- **looser VSISA detector** (`InpBigMode 0`: every loud setup bar, not just the loudest)
+
+The no-boost baseline (both EAs side by side) re-ran identically: Jul–Oct +$77,696 (net ÷ DD 7.18), full
+year +$224,321 (18.70).
+
+**"vs random"** is what boosting the same number of RANDOM Saad trades would add on average: N × Saad's
+average trade ($185 Jul–Oct, $233 full year). Saad makes money, so any 2× boost adds profit. The question is
+whether the confirmed trades add more than random ones.
+
+| Confirmation | Jul–Oct boosted n | Their WR | Extra net | vs random | Net ÷ DD | Full-yr boosted n | Their WR | Extra net | vs random | Net ÷ DD |
+|---|---|---|---|---|---|---|---|---|---|---|
+| **VSISA traded ≤60 min** (§30) | 14 | 64.3% | +$8,864 | +$2,600 | **7.82** | 28 | 60.7% | +$14,410 | +$6,500 | **19.90** |
+| VSISA traded ≤90 min | 18 | 55.6% | +$6,912 | +$3,300 | 7.65 | 36 | 52.8% | +$11,433 | +$8,400 | 19.66 |
+| VSISA traded ≤120 min | 22 | 45.5% | +$4,766 | +$4,100 | 7.45 | 42 | 47.6% | +$11,641 | +$9,800 | 17.75 |
+| VSISA traded ≤180 min | 29 | 44.8% | +$5,211 | +$5,400 | 6.96 | 53 | 47.2% | +$10,854 | +$12,300 | 18.15 |
+| Raw setup ≤60 min | 22 | 50.0% | +$6,746 | +$4,100 | 7.63 | 44 | 50.0% | +$11,444 | +$10,300 | 19.66 |
+| Raw setup ≤120 min | 34 | 41.2% | +$3,775 | +$6,300 | 6.94 | 69 | 44.9% | +$18,480 | +$16,100 | 18.27 |
+| Soft score ≥0.3, ≤60 min | 22 | 50.0% | +$6,746 | +$4,100 | 7.63 | 40 | 52.5% | +$11,818 | +$9,300 | 19.69 |
+| Soft score ≥0.3, ≤120 min | 31 | 41.9% | +$4,247 | +$5,700 | 7.40 | 60 | 46.7% | +$12,600 | +$14,000 | 17.82 |
+| Soft score ≥0.0–0.2, ≤60 min | 22 | 50.0% | +$6,746 | +$4,100 | 7.63 | 42 | 50.0% | +$10,582 | +$9,800 | 19.58 |
+| Soft score ≥0.0–0.2, ≤120 min | 32 | 40.6% | +$3,680 | +$5,900 | 6.93 | 65 | 44.6% | +$17,524 | +$15,100 | 18.19 |
+| Looser detector, raw ≤60 min* | 22 | 50.0% | +$6,855 | +$4,100 | 7.64 | 43 | 48.8% | +$10,118 | +$10,000 | 19.49 |
+| Looser detector, raw ≤120 min* | 34 | 41.2% | +$3,775 | +$6,300 | 6.95 | 68 | 44.1% | +$17,154 | +$15,800 | 18.12 |
+
+\*Measured against its own side-by-side baseline: +$77,804 / +$223,702.
+
+### What it means
+
+1. **"Much more than 28" isn't available from VSISA.** VSISA finds only about 320 setups a year, before any
+   filter, so even the loosest version boosts just 65–69 Saad trades a year. Its looser detector setting
+   changes almost nothing.
+2. **The looser the confirmation, the closer the boosted trades come to an ordinary Saad trade.**
+   - Their win rate: 60.7% (28) → 52.8% (36) → 50% (42–44) → 44–47% (53–69).
+   - Saad's normal is 47.9%.
+   - Past 90 minutes, the boosted trades are no better than random Saad trades. In Jul–Oct, the 120- and
+     180-minute versions added *less* than boosting random trades would.
+3. **Only the tight versions (≤60–90 min) beat side by side on net ÷ drawdown in both periods.** Their edge
+   over random is a few thousand dollars on 14–36 trades. That is the profile of a small-sample effect, not
+   a confirmed one.
+
+**Verdict:** loosening doesn't produce a bigger, stronger confirmation. It produces more ordinary Saad trades
+at double size. Nothing ships. If anything is kept, it's §30's tight 60-minute boost, judged on live trades.
