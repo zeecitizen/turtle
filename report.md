@@ -1542,6 +1542,21 @@ WR is per position. Combined = Saad + VSISA positions together.
 | VSISA only if Saad setup ≤60 min | 365 / 46.8% | 47.0% | +$68,415 | 5.34 | 48.0% | +$204,013 | 15.20 |
 | VSISA only if Saad setup ≤240 min | 365 / 46.8% | 47.5% | +$69,949 | 6.07 | 48.2% | +$206,308 | 15.27 |
 | Both must agree (setups ≤240 min) | 85 / 41.2% | 42.9% | +$1,880 | 0.16 | 48.0% | +$34,857 | 2.97 |
+| **Mirror of §29:** Saad adds only behind a VSISA probe at ≥0.5R | 15 / 40.0% | 57.1% | +$3,037 | 0.96 | 64.2% | +$18,268 | 5.77 |
+| **Mirror:** VSISA probe stop at breakeven | 0 | 60.2% | +$10,019 | 10.21 | 65.6% | +$22,078 | 22.50 |
+| **Saad all, 2× lots if VSISA traded same dir ≤60 min** | 365 / 46.8% | 49.3% | **+$86,560** | **7.82** | 50.6% | **+$238,731** | **19.90** |
+
+The mirror of §29 (VSISA as the probe, Saad as the add) finds Saad trades behind a mature VSISA probe only
+15–24 times at 0.5R, and never at breakeven. That is too few to judge, and it makes far less money.
+
+**The 60-minute boost, rechecked with MT5's random execution delay:**
+
+| Random delay | Net | Max DD | Net ÷ DD |
+|---|---|---|---|
+| Side by side, Jul–Oct | +$77,149 | $11,992 | 6.43 |
+| **2× lots ≤60 min, Jul–Oct** | **+$88,194** | $12,152 | **7.26** |
+| Side by side, full year | +$224,258 | $11,462 (6.95%) | 19.57 |
+| **2× lots ≤60 min, full year** | **+$241,320** | $11,251 (17.89%) | **21.45** |
 
 ### What it means
 
@@ -1558,9 +1573,25 @@ WR is per position. Combined = Saad + VSISA positions together.
    doesn't rise over the full year.
 4. **Best blend = no blend.** Run both EAs side by side on one account (magics 88302 and 88201). This was the
    best net ÷ drawdown in the unseen period, with a combined WR of 49.3% (Jul–Oct) / 50.6% (full year).
-5. **One thread worth watching, not acting on:** Saad entries within an hour after a same-direction VSISA
-   trade won 61% (28 trades, both halves of the year). If it holds as live trades accumulate, a lot boost
-   for only that case could be tested. With 28 trades it's a hypothesis.
+5. **The one blend that tested positive: a lot boost, not a gate.** Saad entries within 60 minutes after a
+   same-direction VSISA trade won 61% (17 of 28, full year).
+   - **A gate on that condition does nothing.** Saad's own WR stays at 48–50%. Skipping the other entries
+     changes which later Saad trades happen, so the gate never selects those 28 trades.
+   - **Doubling the lots on exactly those trades does work.** It keeps Saad's trades identical and beats side
+     by side on net ÷ drawdown in both periods, with 200 ms and with random delay:
+     - Jul–Oct: 7.26 vs 6.43 (random delay)
+     - Full year: 21.45 vs 19.57 (random delay)
+     - The extra profit is positive in both halves of the year (about +$5.5k in Jan–Jun, +$8.9k in Jul–Oct
+       at 200 ms).
+   - **Cautions:**
+     - 61% was the best of about 7 splits I tried, at about 1.4 standard errors. A gap that size often comes
+       from chance alone.
+     - The 60-minute window was chosen after seeing the splits.
+     - Only 28 trades are boosted over 9 months.
+     - The drawdown in money is the same, but it hit at a lower account balance, so it is 17.9% vs 7.0% of
+       the account.
+   - **So it's a candidate, not a ship.** If Zee wants it, it would ship as a small boost (×1.5, say) on the
+     side-by-side setup and be judged on live trades.
 
-**Verdict: no version ships.** The hybrid EA keeps every mode for future tests. Results:
+**Verdict: no version ships.** The 60-minute boost is the only candidate (point 5). The hybrid EA keeps every mode for future tests. Results:
 `testing/hybrid_blend_runs.jsonl`; summary: `monitor/strategy_lab/blend_summary.py`.

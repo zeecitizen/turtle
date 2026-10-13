@@ -644,7 +644,9 @@ input int    InpHybSaadGate = 0;      // InpHybSaadGate — VSISA confirms Saad:
 input int    InpHybSaadAct  = 0;      // InpHybSaadAct — 0 skip unconfirmed Saad trades · 1 take all, confirmed ones x InpHybConfMult lots
 input double InpHybConfMult = 2.0;    // InpHybConfMult — lot multiplier for confirmed Saad trades (InpHybSaadAct 1)
 input int    InpHybVsGate   = 0;      // InpHybVsGate — Saad confirms VSISA: 0 the probe rule above · 2 Saad traded within InpHybWinMin · 3 Saad setup seen within InpHybWinMin
-input int    InpHybWinMin   = 240;    // InpHybWinMin — confirmation window, minutes  // InpHybNeedProbe — false = VSISA trades freely (benchmark: both EAs side by side)
+input int    InpHybWinMin   = 240;    // InpHybWinMin — confirmation window, minutes
+input int    InpHybSaadMature = 0;    // InpHybSaadMature — gate 1 only: the open VSISA probe must be 0 just open · 1 in profit >= InpHybSaadMatR x its initial risk · 2 stop at/after breakeven
+input double InpHybSaadMatR = 0.5;    // InpHybSaadMatR  // InpHybNeedProbe — false = VSISA trades freely (benchmark: both EAs side by side)
 input group "=== Machine learning (v1.29: meta-label + regime + exhaustion ON; report.md section 28) ==="
 input bool   InpMlLog       = false;  // InpMlLog — log features / outcomes / open positions / regime features (training data)
 input int    InpMlTag       = 1;      // InpMlTag — log file number vml_<n>_*.csv (one per rig/run)
@@ -2046,7 +2048,7 @@ bool DayLossHit() {
 // --- blend: who confirmed whom (engine 0 = Saad, 1 = VSISA) ---
 datetime g_hRawT[2] = {0, 0}; int g_hRawS[2] = {0, 0};   // last raw setup seen
 datetime g_hOpnT[2] = {0, 0}; int g_hOpnS[2] = {0, 0};   // last trade opened
-ulong g_hMaxId = 0; ulong g_hTagId[]; int g_hTagF[], g_hTagE[]; int g_hTagN = 0;
+ulong g_hMaxId = 0; ulong g_hTagId[]; int g_hTagF[], g_hTagE[]; double g_hTagSl0[]; int g_hTagN = 0;
 int g_hSaadBlocked = 0, g_hSaadAllowed = 0, g_hSaadBoosted = 0;
 void HybRaw(int eng, int side) { g_hRawT[eng] = TimeCurrent(); g_hRawS[eng] = side; }
 bool HybOpenSide(int eng, int side)
@@ -2067,9 +2069,28 @@ bool HybConf(int eng, int side, int def, int winMin)
    if (def == 3) return g_hRawS[eng] == side && now - g_hRawT[eng] <= winMin * 60;
    return false;
 }
+// the mirror of the original hybrid: a same-direction VSISA probe that is mature
+bool HybVsMature(int side)
+{
+   for (int i = PositionsTotal() - 1; i >= 0; i--) {
+      ulong t = PositionGetTicket(i);
+      if (t == 0 || PositionGetInteger(POSITION_MAGIC) != InpMagicNumber || PositionGetString(POSITION_SYMBOL) != _Symbol) continue;
+      int sd = PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY ? 1 : -1;
+      if (sd != side) continue;
+      double en = PositionGetDouble(POSITION_PRICE_OPEN), sl = PositionGetDouble(POSITION_SL), sl0 = 0;
+      ulong id = (ulong)PositionGetInteger(POSITION_IDENTIFIER);
+      for (int k = g_hTagN - 1; k >= 0; k--) if (g_hTagId[k] == id) { sl0 = g_hTagSl0[k]; break; }
+      double risk = sl0 > 0 ? MathAbs(en - sl0) : (sl > 0 ? MathAbs(en - sl) : 0);
+      double px = sd > 0 ? SymbolInfoDouble(_Symbol, SYMBOL_BID) : SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      if (InpHybSaadMature == 1 && risk > 0 && sd * (px - en) >= InpHybSaadMatR * risk) return true;
+      if (InpHybSaadMature == 2 && sl > 0 && (sd > 0 ? sl >= en : sl <= en)) return true;
+   }
+   return false;
+}
 bool HybSaadOk(int side)
 {
    if (InpHybSaadGate <= 0 || InpHybSaadAct == 1) return true;
+   if (InpHybSaadGate == 1 && InpHybSaadMature > 0) { if (HybVsMature(side)) { g_hSaadAllowed++; return true; } g_hSaadBlocked++; return false; }
    if (HybConf(1, side, InpHybSaadGate, InpHybWinMin)) { g_hSaadAllowed++; return true; }
    g_hSaadBlocked++; return false;
 }
@@ -2100,7 +2121,7 @@ void HybTrack()
       if (HybConf(o, side, 3, 240)) f |= 16;
       if (HybOpenSide(o, -side)) f |= 32;
       if (HybConf(o, -side, 3, 240)) f |= 64;
-      g_hTagN++; ArrayResize(g_hTagId, g_hTagN, 512); ArrayResize(g_hTagF, g_hTagN, 512); ArrayResize(g_hTagE, g_hTagN, 512);
+      g_hTagN++; ArrayResize(g_hTagId, g_hTagN, 512); ArrayResize(g_hTagF, g_hTagN, 512); ArrayResize(g_hTagE, g_hTagN, 512); ArrayResize(g_hTagSl0, g_hTagN, 512); g_hTagSl0[g_hTagN - 1] = PositionGetDouble(POSITION_SL);
       g_hTagId[g_hTagN - 1] = id; g_hTagF[g_hTagN - 1] = f; g_hTagE[g_hTagN - 1] = eng;
       g_hOpnT[eng] = TimeCurrent(); g_hOpnS[eng] = side;
    }
