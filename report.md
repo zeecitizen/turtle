@@ -1011,3 +1011,40 @@ dollar of max drawdown, the fair way to compare things that take different amoun
 **Verdict:** if Zee wants a pyramid, **ATR spacing 1.0× (no lock, ×0.5, 3 tiers)** is the best one
 found. It's consistent in both halves and the safest pyramid tested. But for the same risk, simply
 raising `InpLots` is still slightly better and has no extra moving parts. Not shipped.
+
+## 23. Pyramiding: more tiers, smaller ATR spacing — tested (13 Oct)
+
+Zee: *"can u try more than 3 tiers? and lesser ATR?"* Base 1 lot, no breakeven lock, $25k,
+Jan 6 – Oct 8, real ticks, 200 ms. "Max lots" is the most the basket can hold at once.
+
+| Version | Max lots | Net | Jan–Jun | Jul–Oct | Max DD | Net ÷ DD | Worst day |
+|---|---|---|---|---|---|---|---|
+| **v1.17, 1 lot** | 1.00 | +$202,222 | +$134,541 | +$67,681 | $13.4k | **15.1** | −$3,806 |
+| **v1.17, 2 lots** | 2.00 | **+$404,444** | | | **$26.8k** | **15.1** | **−$7,611** |
+| ATR 1.0×, 3 tiers (§22) | 1.75 | +$277,796 | +$190,076 | +$87,720 | $19.2k | 14.5 | −$5,944 |
+| ATR 1.0×, 5 tiers | 1.94 | +$287,668 | +$196,446 | +$91,222 | $20.0k | 14.4 | −$5,944 |
+| ATR 0.5×, 5 / 7 / 10 tiers | 1.94–2.00 | +$310k / +$314k / +$316k | ~+$210k | ~+$103k | $25.1k | 12.3–12.6 | −$7,389 |
+| ATR 0.25×, 5 / 7 / 10 tiers | 1.94–2.00 | +$336k / +$341k / +$342k | ~+$227k | ~+$113k | $27.2–27.7k | 12.3–12.4 | −$7,933 to −$8,137 |
+| ATR 0.5×, 5 tiers, ×0.75 add-ons | 3.05 | +$417,330 | +$283,685 | +$133,645 | $36.6k | 11.4 | −$11,064 |
+| ATR 0.25×, 5 tiers, ×0.75 add-ons | 3.05 | +$479,815 | +$320,169 | +$159,646 | $41.8k | 11.5 | −$12,338 |
+| *(v1.17, 3 lots: 3× the 1-lot run)* | 3.00 | *≈ +$607k* | | | *≈ $40.3k* | *15.1* | *≈ −$11.4k* |
+
+**What it shows:**
+1. **Smaller spacing and more tiers do make more money,** and in both halves of the year: up to
+   +$342k with ×0.5 add-ons and +$480k with ×0.75.
+2. **Above 5 tiers, the extra tiers barely matter.** With ×0.5 they're tiny (0.125, then 0.06 lot…),
+   so 7 and 10 tiers add only $1–5k.
+3. **The extra money is bought with extra risk, at a worse rate than just trading more lots:**
+   - ATR 0.25×, 10 tiers: +$342k, $27.7k drawdown, −$8.1k worst day.
+   - v1.17 at **2 lots**: +$404k, $26.8k drawdown, −$7.6k worst day. More profit for about the same
+     risk.
+   - ATR 0.25× with ×0.75 add-ons: +$480k, $41.8k drawdown, −$12.3k worst day.
+   - v1.17 at about 3 lots: about +$607k for the same drawdown.
+   - Every pyramid's net ÷ DD (11.4–14.5) stays below plain lots (15.1).
+4. **Why:** tight spacing fills the add-ons within minutes on most trades, so it acts like trading
+   about 2 lots. But the add-ons are bought at worse prices than the entry and share the entry's far
+   stop, so on losing trades they lose more per lot than the base does.
+
+**Verdict:** more tiers and smaller ATR spacing = more profit **and** proportionally more risk; it's
+a bigger position, not a better one. For any amount of risk Zee is willing to take, plain v1.17 with
+a higher `InpLots` gives more profit than the matching pyramid.
