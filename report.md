@@ -678,3 +678,44 @@ With both off, the test copy reproduces v1.17 to the cent.
 | + daily limit that only stops new trades (`InpDayLossClose=false`) | about −$61k more | worst day about −$2.8k |
 
 Not shipped. Waiting for Zee's decision.
+
+## 17. In-trade exhaustion classifier (close a winning trade when "momentum is dying") — tested (13 Oct)
+
+**What:** at every M15 candle close, an XGBoost model looks at each open, profitable position and
+closes it when its probability is at least the threshold (0.85 in the paste).
+
+**Files:**
+- `mt5/Saad_exhaust.mq5` (built by `patch_exhaust.py`)
+- `meta_labeling_system/src/train_exhaustion.py`
+- `mt5/SaadExhaustModel.mqh` (the model compiled into the EA; matches XGBoost to 2e-7)
+- `exhaustion_server.py` (optional, live)
+
+**Changes from the paste:**
+- **No synthetic data.** The EA logged every open position at every candle of the year: 5,392
+  position-candles from 867 trades, with totals equal to v1.17's +$202,221.80.
+- **A different label.** The paste asked "does price reverse within 3 bars?". This one asks **"would
+  closing at this candle have booked more than the way v1.17 really closed the trade?"**
+  (realized so far + open profit now vs the trade's final profit). That's the question that
+  matters for money.
+
+**Features:** side, candles held, open profit in R, best so far in R, giveback from best, ER now,
+distances to the 9/50 EMA, ATR ratio, stage (before TP1 / after TP1 / riding), room to the stop,
+last candle body, hour, share of the position still open.
+
+**Training:** Jan–Jun only. Even there, closing early at every threshold made **less** than holding
+(−$71k at 0.55, −$21k at 0.85, −$5k at 0.95).
+
+| Jul 1 – Oct 8 (unseen), 1 lot, real ticks | Net | Trades | Win rate | Early closes | Biggest win | Worst day |
+|---|---|---|---|---|---|---|
+| **v1.17** | **+$67,681** | 365 | 60.1% | – | +$11,511 | −$3,806 |
+| model ≥ 0.85 (the paste) | +$68,020 | 378 | 62.1% | 44 | +$11,511 | −$3,611 |
+| model ≥ 0.75 | +$47,189 | 398 | 65.3% | 86 | +$8,412 | −$3,611 |
+| model ≥ 0.95 | +$66,600 | 365 | 60.1% | 1 | +$11,511 | −$3,806 |
+
+**Verdict: no real improvement. Not adopted.**
+- **0.85 made +$339 more over 3 months (+0.5%) by closing 44 trades early.** That's within noise,
+  and in Jan–Jun the same rule *lost* $21k.
+- **At 0.75 the win rate rises to 65%, but profit falls by $20k.** The model cut the $11.5k runner,
+  the same "higher win rate, less money" pattern as §13.
+- **The data explains why:** in Jan–Jun, closing at a given candle beat holding only **50.2%** of
+  the time, a coin flip. The features can't tell which runners are about to die.

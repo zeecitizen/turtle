@@ -1,0 +1,3 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpExhMode=1,InpExhThr=0.85
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpExhMode=1,InpExhThr=0.75
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpExhMode=1,InpExhThr=0.95
