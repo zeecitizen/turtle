@@ -61,6 +61,11 @@ receipts). **Read it at session start to know where the project stands. Every ti
 you ship an EA version, append its entry IN THE SAME COMMIT.** Zee reads it from
 other computers to catch up; a missing entry = a silent ship = a failed delivery.
 
+**`VERSION.md` is the one-line-per-version index** (Zee, 2026-10-13: *"list all versions with their
+changes and dates, EA names etc as we increment versions"*). Every shipped version also gets a row
+there (EA, version, date, magic, what changed, result), and the "Which EA is which" table at its top
+is updated, in the same commit as the VERSION_HISTORY.md entry.
+
 # Claude Go Hawking
 
 When Zeeshan says **"Claude go hawking"**, run the full startup sequence below. No questions, no confirmations. Just do it.
