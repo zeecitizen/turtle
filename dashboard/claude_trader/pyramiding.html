@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pyramiding EA</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&family=Share+Tech+Mono&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* layout: one reading column; a tier ladder diagram up top, then real trades, results, risks, settings */
+:root {
+  --bg: #f4f6fa; --panel: #ffffff; --panel2: #eef1f7; --ink: #151a26; --muted: #5e6879; --line: #dde2ec;
+  --gold: #b07a10; --green: #13985a; --red: #d23b4b; --blue: #2f6fd6; --amber: #b9770e;
+  --t1: #2f6fd6; --t2: #4f8ae6; --t3: #77a6ee; --t4: #9cc0f4; --t5: #c1d8f8;
+  --display: 'Orbitron', 'Consolas', monospace; --mono: 'Share Tech Mono', 'Consolas', monospace; --body: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b0f18; --panel: #131a29; --panel2: #1a2336; --ink: #e6ebf5; --muted: #98a3b8; --line: #263046;
+  --gold: #ffcf66; --green: #2bd576; --red: #ff6b7a; --blue: #6aa8ff; --amber: #ffb347;
+  --t1: #6aa8ff; --t2: #5a93e6; --t3: #4a7ccc; --t4: #3c66ab; --t5: #30528a; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0b0f18; --panel: #131a29; --panel2: #1a2336; --ink: #e6ebf5; --muted: #98a3b8; --line: #263046;
+  --gold: #ffcf66; --green: #2bd576; --red: #ff6b7a; --blue: #6aa8ff; --amber: #ffb347;
+  --t1: #6aa8ff; --t2: #5a93e6; --t3: #4a7ccc; --t4: #3c66ab; --t5: #30528a; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+.wrap { max-width: 920px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 60px; }
+.top { border-bottom: 2px solid var(--gold); padding-bottom: 14px; margin-bottom: 18px; }
+.eyebrow { font: 700 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+h1 { font: 800 clamp(24px, 4vw, 36px)/1.1 var(--display); letter-spacing: 2px; margin: 8px 0 8px; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0; max-width: 72ch; }
+h2 { font: 800 15px var(--display); letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin: 34px 0 10px; }
+p, li { max-width: 74ch; }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 16px 0 4px; }
+.strip div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.strip b { display: block; font: 700 18px var(--mono); }
+.strip span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.ladder { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+.rung { display: grid; grid-template-columns: 92px 1fr 70px; gap: 10px; align-items: center; margin: 6px 0; font-size: 14px; }
+.rung .lab { font: 700 13px var(--mono); color: var(--muted); }
+.bar { height: 26px; border-radius: 6px; display: flex; align-items: center; padding-left: 10px; color: #fff; font: 700 13px var(--mono); white-space: nowrap; overflow: hidden; }
+.rung .lots { font: 700 14px var(--mono); text-align: right; }
+.ladder .note { font-size: 13px; color: var(--muted); margin: 10px 0 0; }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); margin: 10px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+th { background: var(--panel2); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+tr.pick td { background: color-mix(in srgb, var(--gold) 12%, transparent); font-weight: 700; }
+td.n { font-family: var(--mono); white-space: nowrap; }
+.pos { color: var(--green); font-weight: 700; } .neg { color: var(--red); font-weight: 700; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; min-width: 0; }
+.card h3 { margin: 0 0 6px; font-size: 16px; }
+.card.win { border-top: 4px solid var(--green); } .card.loss { border-top: 4px solid var(--red); } .card.warn { border-left: 4px solid var(--amber); }
+.steps { margin: 6px 0 0; padding-left: 20px; font-size: 14px; }
+code { font: .9em var(--mono); background: var(--panel2); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--blue); }
+.exs { display: grid; gap: 16px; }
+.ex { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; min-width: 0; }
+.ex h3 { margin: 0 0 4px; font-size: 17px; } .ex p { margin: 0 0 8px; font-size: 14px; }
+.ex.win { border-top: 4px solid var(--green); } .ex.loss { border-top: 4px solid var(--red); } .ex.flat { border-top: 4px solid var(--amber); }
+.tchart { width: 100%; height: auto; display: block; margin: 4px 0 6px; }
+.tchart .grid { stroke: var(--line); stroke-width: 1; } .tchart .ax { fill: var(--muted); font: 11px var(--mono); }
+.tchart .lbl { fill: var(--ink); font: 700 11px var(--mono); } .tchart .path { fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.tchart .stop { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 6 4; }
+.tchart .e1 { fill: var(--t1); } .tchart .e2 { fill: var(--t2); } .tchart .e3 { fill: var(--t3); } .tchart .e4 { fill: var(--t4); } .tchart .e5 { fill: var(--t5); stroke: var(--t1); }
+.tchart .xw { fill: var(--green); } .tchart .xl { fill: var(--red); }
+.ex .tw table { font-size: 13px; }
+footer { margin-top: 32px; color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="eyebrow">Saad_strategy_15min_pyramiding_max_3 · v1.01 · magic 88330 · XAUUSD M15</div>
+    <h1>The pyramiding EA</h1>
+    <p class="sub">The same trades as our main gold robot (Saad 15-min v1.18). The difference: when a trade starts going our way, this version <b>adds more to it</b>, step by step, up to about <b>3 lots</b>. More profit on strong moves, bigger losses on reversals.</p>
+    <div class="strip">
+      <div><span>Backtest net</span><b class="pos">+$479,815</b></div>
+      <div><span>Plain EA, same test</span><b>+$202,222</b></div>
+      <div><span>Max drawdown</span><b class="neg">−$41,825</b></div>
+      <div><span>Worst day</span><b class="neg">−$12,338</b></div>
+      <div><span>Max position</span><b>≈ 3.05 lots</b></div>
+    </div>
+    <p class="sub" style="margin-top:8px;font-size:13px">Backtest = MT5 Strategy Tester on Axi's real tick history, Jan 6 – Oct 8 2026, base 1 lot, $25,000 account, $4/lot commission. Not real money; past results don't guarantee future ones.</p>
+  </div>
+
+  <h2>How it adds to a trade</h2>
+  <div class="ladder" role="img" aria-label="Five tiers: 1, 0.75, 0.56, 0.42 and 0.32 lots, each opened 0.25 ATR further in profit">
+    <div class="rung"><span class="lab">Tier 1</span><div class="bar" style="width:100%;background:var(--t1)">the normal entry</div><span class="lots">1.00</span></div>
+    <div class="rung"><span class="lab">Tier 2</span><div class="bar" style="width:75%;background:var(--t2)">+0.25 ATR</div><span class="lots">0.75</span></div>
+    <div class="rung"><span class="lab">Tier 3</span><div class="bar" style="width:56%;background:var(--t3)">+0.25 ATR</div><span class="lots">0.56</span></div>
+    <div class="rung"><span class="lab">Tier 4</span><div class="bar" style="width:42%;background:var(--t4)">+0.25</div><span class="lots">0.42</span></div>
+    <div class="rung"><span class="lab">Tier 5</span><div class="bar" style="width:32%;background:var(--t5)">+0.25</div><span class="lots">0.32</span></div>
+    <p class="note">Each add-on is 0.75 × the previous one ("an upright pyramid": most of the size sits at the earliest, best price). Total at most about 3.05 lots.</p>
+  </div>
+
+  <h2>The rules, step by step</h2>
+  <ol class="steps">
+    <li><b>The base trade is exactly the main EA's trade:</b> same setups (pin bar, marubozu, hammer on the 9 / 50 EMA), same stop 35 pips beyond the candle, same 50% close at the first target and $2 trailing stop.</li>
+    <li><b>The price moves 0.25 × ATR in our favour</b> beyond the last entry (ATR = the average 15-minute candle size; about $1.50–2 on normal days) → <b>add 0.75 × the last position</b>.</li>
+    <li>Repeat until there are <b>5 positions</b> in total.</li>
+    <li><b>Every add-on carries the base trade's stop</b>, and follows it as the base trade's stop moves (breakeven at 75% of the way to the target, then the $2 trail).</li>
+    <li><b>When the base trade closes, every add-on closes with it.</b> Add-ons in loss are also closed 3 minutes before the daily close.</li>
+    <li><b>No breakeven lock when adding.</b> Tested: pulling all stops to the average entry on each add-on wiped out most of the profit.</li>
+  </ol>
+  <p>Every order's comment names the EA: <code>Saad15-PYR3 v1.01 BUY</code> / <code>SELL</code> for the base trade, <code>Saad15-PYR3 v1.01 ADD</code> for add-ons. You can always see in MetaTrader where a trade came from.</p>
+
+  <!--EXAMPLES-->
+<h2>Real trades from the test, drawn from their actual fills</h2>
+<p class="sub">Every example is a real trade of this exact EA (v1.01, default settings) from its MT5 verification run. Prices are to scale; each fill time gets its own slot along the bottom, and the line joins the fills (it doesn't show every price tick).</p>
+<div class="exs"><div class="ex win"><h3>The year&#x27;s best trade, 27 Jan BUY: <span class="pos">+$57,071</span></h3>
+<p>All 5 tiers filled within 12 minutes as gold took off. The trailing stop then rode the move all night and closed all five the next morning, $191 higher. The plain EA made +$19,150 on the same trade.</p><svg viewBox="0 0 640 280" class="tchart" role="img" aria-label="price chart of this trade's fills"><line x1="64" x2="620" y1="234.0" y2="234.0" class="grid"/><text x="58" y="238.0" class="ax" text-anchor="end">5070.72</text><line x1="64" x2="620" y1="180.5" y2="180.5" class="grid"/><text x="58" y="184.5" class="ax" text-anchor="end">5130.19</text><line x1="64" x2="620" y1="127.0" y2="127.0" class="grid"/><text x="58" y="131.0" class="ax" text-anchor="end">5189.66</text><line x1="64" x2="620" y1="73.5" y2="73.5" class="grid"/><text x="58" y="77.5" class="ax" text-anchor="end">5249.13</text><line x1="64" x2="620" y1="20.0" y2="20.0" class="grid"/><text x="58" y="24.0" class="ax" text-anchor="end">5308.60</text><polyline class="path" points="64.0,213.3 175.2,210.8 286.4,208.4 397.6,204.3 508.8,201.9 620.0,41.0 620.0,41.0 620.0,41.0 620.0,41.0 620.0,41.0"/><line x1="64" x2="620" y1="40.7" y2="40.7" class="stop"/><text x="620" y="35.7" class="lbl" text-anchor="end">final stop 5285.58</text><circle cx="64.0" cy="213.3" r="12.0" class="e1"/><text x="64.0" y="197.3" class="lbl" text-anchor="middle">1</text><circle cx="175.2" cy="210.8" r="10.2" class="e2"/><text x="175.2" y="196.6" class="lbl" text-anchor="middle">0.75</text><circle cx="286.4" cy="208.4" r="8.9" class="e3"/><text x="286.4" y="195.4" class="lbl" text-anchor="middle">0.56</text><circle cx="397.6" cy="204.3" r="7.9" class="e4"/><text x="397.6" y="192.4" class="lbl" text-anchor="middle">0.42</text><circle cx="508.8" cy="201.9" r="7.2" class="e5"/><text x="508.8" y="190.6" class="lbl" text-anchor="middle">0.32</text><rect x="614.0" y="35.0" width="12" height="12" class="xw"/><rect x="614.0" y="35.0" width="12" height="12" class="xw"/><rect x="614.0" y="35.0" width="12" height="12" class="xw"/><rect x="614.0" y="35.0" width="12" height="12" class="xw"/><rect x="614.0" y="35.0" width="12" height="12" class="xw"/><text x="64.0" y="252" class="ax" text-anchor="start">01.27 21:51</text><text x="175.2" y="252" class="ax" text-anchor="middle">21:55</text><text x="286.4" y="252" class="ax" text-anchor="middle">21:55</text><text x="397.6" y="252" class="ax" text-anchor="middle">22:03</text><text x="508.8" y="252" class="ax" text-anchor="middle">22:03</text><text x="620.0" y="252" class="ax" text-anchor="end">01.28 10:45</text><text x="64" y="274" class="ax">● entries (size = lots, colour = tier)   ■ exits (green = profit, red = loss)</text></svg>
+<div class="tw"><table><thead><tr><th></th><th>Time</th><th>Lots</th><th>Price</th><th>Result</th></tr></thead><tbody><tr><td>Tier 1</td><td class='n'>01.27 21:51</td><td class='n'>1</td><td class='n'>5093.74</td></tr><tr><td>Tier 2</td><td class='n'>01.27 21:55</td><td class='n'>0.75</td><td class='n'>5096.46</td></tr><tr><td>Tier 3</td><td class='n'>01.27 21:55</td><td class='n'>0.56</td><td class='n'>5099.22</td></tr><tr><td>Tier 4</td><td class='n'>01.27 22:03</td><td class='n'>0.42</td><td class='n'>5103.72</td></tr><tr><td>Tier 5</td><td class='n'>01.27 22:03</td><td class='n'>0.32</td><td class='n'>5106.45</td></tr><tr><td>Exit</td><td class='n'>01.28 10:45</td><td class='n'>1</td><td class='n'>5285.28</td><td class='n pos'>+$19,150</td></tr><tr><td>Exit</td><td class='n'>01.28 10:45</td><td class='n'>0.75</td><td class='n'>5285.28</td><td class='n pos'>+$14,158</td></tr><tr><td>Exit</td><td class='n'>01.28 10:45</td><td class='n'>0.56</td><td class='n'>5285.28</td><td class='n pos'>+$10,417</td></tr><tr><td>Exit</td><td class='n'>01.28 10:45</td><td class='n'>0.42</td><td class='n'>5285.28</td><td class='n pos'>+$7,624</td></tr><tr><td>Exit</td><td class='n'>01.28 10:45</td><td class='n'>0.32</td><td class='n'>5285.28</td><td class='n pos'>+$5,721</td></tr></tbody></table></div></div><div class="ex win"><h3>A typical full-pyramid win, 13 Jan SELL: <span class="pos">+$3,189</span></h3>
+<p>The middle winner among trades that reached 5 tiers. Half the base trade was banked at the first target; the $2 trail closed everything else a minute later.</p><svg viewBox="0 0 640 280" class="tchart" role="img" aria-label="price chart of this trade's fills"><line x1="64" x2="620" y1="234.0" y2="234.0" class="grid"/><text x="58" y="238.0" class="ax" text-anchor="end">4576.25</text><line x1="64" x2="620" y1="180.5" y2="180.5" class="grid"/><text x="58" y="184.5" class="ax" text-anchor="end">4580.64</text><line x1="64" x2="620" y1="127.0" y2="127.0" class="grid"/><text x="58" y="131.0" class="ax" text-anchor="end">4585.03</text><line x1="64" x2="620" y1="73.5" y2="73.5" class="grid"/><text x="58" y="77.5" class="ax" text-anchor="end">4589.43</text><line x1="64" x2="620" y1="20.0" y2="20.0" class="grid"/><text x="58" y="24.0" class="ax" text-anchor="end">4593.82</text><polyline class="path" points="64.0,40.7 156.7,69.6 249.3,97.2 342.0,129.6 434.7,161.8 527.3,213.3 620.0,210.5 620.0,210.5 620.0,210.5 620.0,210.5 620.0,210.5"/><line x1="64" x2="620" y1="213.0" y2="213.0" class="stop"/><text x="620" y="208.0" class="lbl" text-anchor="end">final stop 4577.97</text><circle cx="64.0" cy="40.7" r="12.0" class="e1"/><text x="64.0" y="24.7" class="lbl" text-anchor="middle">1</text><circle cx="156.7" cy="69.6" r="10.2" class="e2"/><text x="156.7" y="55.3" class="lbl" text-anchor="middle">0.75</text><circle cx="249.3" cy="97.2" r="8.9" class="e3"/><text x="249.3" y="84.3" class="lbl" text-anchor="middle">0.56</text><circle cx="342.0" cy="129.6" r="7.9" class="e4"/><text x="342.0" y="117.7" class="lbl" text-anchor="middle">0.42</text><circle cx="434.7" cy="161.8" r="7.2" class="e5"/><text x="434.7" y="150.5" class="lbl" text-anchor="middle">0.32</text><rect x="521.3" y="207.3" width="12" height="12" class="xw"/><rect x="614.0" y="204.5" width="12" height="12" class="xw"/><rect x="614.0" y="204.5" width="12" height="12" class="xw"/><rect x="614.0" y="204.5" width="12" height="12" class="xw"/><rect x="614.0" y="204.5" width="12" height="12" class="xw"/><rect x="614.0" y="204.5" width="12" height="12" class="xw"/><text x="64.0" y="252" class="ax" text-anchor="start">01.13 02:15</text><text x="156.7" y="252" class="ax" text-anchor="middle">02:29</text><text x="249.3" y="252" class="ax" text-anchor="middle">02:30</text><text x="342.0" y="252" class="ax" text-anchor="middle">02:38</text><text x="434.7" y="252" class="ax" text-anchor="middle">03:04</text><text x="527.3" y="252" class="ax" text-anchor="middle">03:31</text><text x="620.0" y="252" class="ax" text-anchor="end">03:32</text><text x="64" y="274" class="ax">● entries (size = lots, colour = tier)   ■ exits (green = profit, red = loss)</text></svg>
+<div class="tw"><table><thead><tr><th></th><th>Time</th><th>Lots</th><th>Price</th><th>Result</th></tr></thead><tbody><tr><td>Tier 1</td><td class='n'>01.13 02:15</td><td class='n'>1</td><td class='n'>4592.12</td></tr><tr><td>Tier 2</td><td class='n'>01.13 02:29</td><td class='n'>0.75</td><td class='n'>4589.75</td></tr><tr><td>Tier 3</td><td class='n'>01.13 02:30</td><td class='n'>0.56</td><td class='n'>4587.48</td></tr><tr><td>Tier 4</td><td class='n'>01.13 02:38</td><td class='n'>0.42</td><td class='n'>4584.82</td></tr><tr><td>Tier 5</td><td class='n'>01.13 03:04</td><td class='n'>0.32</td><td class='n'>4582.18</td></tr><tr><td>Exit</td><td class='n'>01.13 03:31</td><td class='n'>0.5</td><td class='n'>4577.95</td><td class='n pos'>+$706</td></tr><tr><td>Exit</td><td class='n'>01.13 03:32</td><td class='n'>0.5</td><td class='n'>4578.18</td><td class='n pos'>+$695</td></tr><tr><td>Exit</td><td class='n'>01.13 03:32</td><td class='n'>0.75</td><td class='n'>4578.18</td><td class='n pos'>+$865</td></tr><tr><td>Exit</td><td class='n'>01.13 03:32</td><td class='n'>0.56</td><td class='n'>4578.18</td><td class='n pos'>+$519</td></tr><tr><td>Exit</td><td class='n'>01.13 03:32</td><td class='n'>0.42</td><td class='n'>4578.18</td><td class='n pos'>+$277</td></tr><tr><td>Exit</td><td class='n'>01.13 03:32</td><td class='n'>0.32</td><td class='n'>4578.18</td><td class='n pos'>+$127</td></tr></tbody></table></div></div><div class="ex flat"><h3>A full pyramid that scratched, 30 Sep BUY: <span class="pos">+$1</span></h3>
+<p>All tiers filled, then gold came back. The base trade's stop had already moved into profit, so the early tiers won and the late ones lost: about $0 overall.</p><svg viewBox="0 0 640 280" class="tchart" role="img" aria-label="price chart of this trade's fills"><line x1="64" x2="620" y1="234.0" y2="234.0" class="grid"/><text x="58" y="238.0" class="ax" text-anchor="end">4184.01</text><line x1="64" x2="620" y1="180.5" y2="180.5" class="grid"/><text x="58" y="184.5" class="ax" text-anchor="end">4186.28</text><line x1="64" x2="620" y1="127.0" y2="127.0" class="grid"/><text x="58" y="131.0" class="ax" text-anchor="end">4188.55</text><line x1="64" x2="620" y1="73.5" y2="73.5" class="grid"/><text x="58" y="77.5" class="ax" text-anchor="end">4190.81</text><line x1="64" x2="620" y1="20.0" y2="20.0" class="grid"/><text x="58" y="24.0" class="ax" text-anchor="end">4193.08</text><polyline class="path" points="64.0,213.3 175.2,172.9 286.4,131.6 397.6,94.3 508.8,40.7 620.0,152.9 620.0,152.9 620.0,152.9 620.0,152.9 620.0,152.9"/><line x1="64" x2="620" y1="152.6" y2="152.6" class="stop"/><text x="620" y="147.6" class="lbl" text-anchor="end">final stop 4187.46</text><circle cx="64.0" cy="213.3" r="12.0" class="e1"/><text x="64.0" y="197.3" class="lbl" text-anchor="middle">1</text><circle cx="175.2" cy="172.9" r="10.2" class="e2"/><text x="175.2" y="158.7" class="lbl" text-anchor="middle">0.75</text><circle cx="286.4" cy="131.6" r="8.9" class="e3"/><text x="286.4" y="118.7" class="lbl" text-anchor="middle">0.56</text><circle cx="397.6" cy="94.3" r="7.9" class="e4"/><text x="397.6" y="82.4" class="lbl" text-anchor="middle">0.42</text><circle cx="508.8" cy="40.7" r="7.2" class="e5"/><text x="508.8" y="29.5" class="lbl" text-anchor="middle">0.32</text><rect x="614.0" y="146.9" width="12" height="12" class="xw"/><rect x="614.0" y="146.9" width="12" height="12" class="xw"/><rect x="614.0" y="146.9" width="12" height="12" class="xl"/><rect x="614.0" y="146.9" width="12" height="12" class="xl"/><rect x="614.0" y="146.9" width="12" height="12" class="xl"/><text x="64.0" y="252" class="ax" text-anchor="start">09.30 09:16</text><text x="175.2" y="252" class="ax" text-anchor="middle">09:51</text><text x="286.4" y="252" class="ax" text-anchor="middle">09:51</text><text x="397.6" y="252" class="ax" text-anchor="middle">09:52</text><text x="508.8" y="252" class="ax" text-anchor="middle">09:53</text><text x="620.0" y="252" class="ax" text-anchor="end">12:21</text><text x="64" y="274" class="ax">● entries (size = lots, colour = tier)   ■ exits (green = profit, red = loss)</text></svg>
+<div class="tw"><table><thead><tr><th></th><th>Time</th><th>Lots</th><th>Price</th><th>Result</th></tr></thead><tbody><tr><td>Tier 1</td><td class='n'>09.30 09:16</td><td class='n'>1</td><td class='n'>4184.89</td></tr><tr><td>Tier 2</td><td class='n'>09.30 09:51</td><td class='n'>0.75</td><td class='n'>4186.60</td></tr><tr><td>Tier 3</td><td class='n'>09.30 09:51</td><td class='n'>0.56</td><td class='n'>4188.35</td></tr><tr><td>Tier 4</td><td class='n'>09.30 09:52</td><td class='n'>0.42</td><td class='n'>4189.93</td></tr><tr><td>Tier 5</td><td class='n'>09.30 09:53</td><td class='n'>0.32</td><td class='n'>4192.20</td></tr><tr><td>Exit</td><td class='n'>09.30 12:21</td><td class='n'>1</td><td class='n'>4187.45</td><td class='n pos'>+$252</td></tr><tr><td>Exit</td><td class='n'>09.30 12:21</td><td class='n'>0.75</td><td class='n'>4187.45</td><td class='n pos'>+$61</td></tr><tr><td>Exit</td><td class='n'>09.30 12:21</td><td class='n'>0.56</td><td class='n'>4187.45</td><td class='n neg'>−$53</td></tr><tr><td>Exit</td><td class='n'>09.30 12:21</td><td class='n'>0.42</td><td class='n'>4187.45</td><td class='n neg'>−$106</td></tr><tr><td>Exit</td><td class='n'>09.30 12:21</td><td class='n'>0.32</td><td class='n'>4187.45</td><td class='n neg'>−$153</td></tr></tbody></table></div></div><div class="ex loss"><h3>A loser that never got going, 15 Apr BUY: <span class="neg">−$1,162</span></h3>
+<p>Price never moved 0.25 ATR our way, so nothing was added. It lost exactly what the plain EA loses. This is the most common kind of loss.</p><svg viewBox="0 0 640 280" class="tchart" role="img" aria-label="price chart of this trade's fills"><line x1="64" x2="620" y1="234.0" y2="234.0" class="grid"/><text x="58" y="238.0" class="ax" text-anchor="end">4830.18</text><line x1="64" x2="620" y1="180.5" y2="180.5" class="grid"/><text x="58" y="184.5" class="ax" text-anchor="end">4833.77</text><line x1="64" x2="620" y1="127.0" y2="127.0" class="grid"/><text x="58" y="131.0" class="ax" text-anchor="end">4837.36</text><line x1="64" x2="620" y1="73.5" y2="73.5" class="grid"/><text x="58" y="77.5" class="ax" text-anchor="end">4840.95</text><line x1="64" x2="620" y1="20.0" y2="20.0" class="grid"/><text x="58" y="24.0" class="ax" text-anchor="end">4844.54</text><polyline class="path" points="64.0,40.7 620.0,213.3"/><line x1="64" x2="620" y1="212.4" y2="212.4" class="stop"/><text x="620" y="207.4" class="lbl" text-anchor="end">final stop 4831.63</text><circle cx="64.0" cy="40.7" r="12.0" class="e1"/><text x="64.0" y="24.7" class="lbl" text-anchor="middle">1</text><rect x="614.0" y="207.3" width="12" height="12" class="xl"/><text x="64.0" y="252" class="ax" text-anchor="start">04.15 02:45</text><text x="620.0" y="252" class="ax" text-anchor="end">03:15</text><text x="64" y="274" class="ax">● entries (size = lots, colour = tier)   ■ exits (green = profit, red = loss)</text></svg>
+<div class="tw"><table><thead><tr><th></th><th>Time</th><th>Lots</th><th>Price</th><th>Result</th></tr></thead><tbody><tr><td>Tier 1</td><td class='n'>04.15 02:45</td><td class='n'>1</td><td class='n'>4843.15</td></tr><tr><td>Exit</td><td class='n'>04.15 03:15</td><td class='n'>1</td><td class='n'>4831.57</td><td class='n neg'>−$1,162</td></tr></tbody></table></div></div><div class="ex loss"><h3>The year&#x27;s worst trade, 24 Jul SELL: <span class="neg">−$9,051</span></h3>
+<p>All 5 tiers were on and the stop had moved to breakeven by Friday night, but gold gapped $26 higher at Monday's open, straight past the stop. With 3.05 lots on, the gap cost −$9,051 (the plain EA lost −$2,610 on the same gap).</p><svg viewBox="0 0 640 280" class="tchart" role="img" aria-label="price chart of this trade's fills"><line x1="64" x2="620" y1="234.0" y2="234.0" class="grid"/><text x="58" y="238.0" class="ax" text-anchor="end">4053.56</text><line x1="64" x2="620" y1="180.5" y2="180.5" class="grid"/><text x="58" y="184.5" class="ax" text-anchor="end">4064.33</text><line x1="64" x2="620" y1="127.0" y2="127.0" class="grid"/><text x="58" y="131.0" class="ax" text-anchor="end">4075.09</text><line x1="64" x2="620" y1="73.5" y2="73.5" class="grid"/><text x="58" y="77.5" class="ax" text-anchor="end">4085.85</text><line x1="64" x2="620" y1="20.0" y2="20.0" class="grid"/><text x="58" y="24.0" class="ax" text-anchor="end">4096.62</text><polyline class="path" points="64.0,170.2 175.2,186.0 286.4,195.3 397.6,204.9 508.8,213.3 620.0,40.7 620.0,40.7 620.0,40.7 620.0,40.7 620.0,40.7"/><line x1="64" x2="620" y1="170.2" y2="170.2" class="stop"/><text x="620" y="165.2" class="lbl" text-anchor="end">final stop 4066.39</text><circle cx="64.0" cy="170.2" r="12.0" class="e1"/><text x="64.0" y="154.2" class="lbl" text-anchor="middle">1</text><circle cx="175.2" cy="186.0" r="10.2" class="e2"/><text x="175.2" y="171.8" class="lbl" text-anchor="middle">0.75</text><circle cx="286.4" cy="195.3" r="8.9" class="e3"/><text x="286.4" y="182.4" class="lbl" text-anchor="middle">0.56</text><circle cx="397.6" cy="204.9" r="7.9" class="e4"/><text x="397.6" y="193.0" class="lbl" text-anchor="middle">0.42</text><circle cx="508.8" cy="213.3" r="7.2" class="e5"/><text x="508.8" y="202.1" class="lbl" text-anchor="middle">0.32</text><rect x="614.0" y="34.7" width="12" height="12" class="xl"/><rect x="614.0" y="34.7" width="12" height="12" class="xl"/><rect x="614.0" y="34.7" width="12" height="12" class="xl"/><rect x="614.0" y="34.7" width="12" height="12" class="xl"/><rect x="614.0" y="34.7" width="12" height="12" class="xl"/><text x="64.0" y="252" class="ax" text-anchor="start">07.24 19:45</text><text x="175.2" y="252" class="ax" text-anchor="middle">20:12</text><text x="286.4" y="252" class="ax" text-anchor="middle">21:03</text><text x="397.6" y="252" class="ax" text-anchor="middle">21:20</text><text x="508.8" y="252" class="ax" text-anchor="middle">21:22</text><text x="620.0" y="252" class="ax" text-anchor="end">07.27 01:01</text><text x="64" y="274" class="ax">● entries (size = lots, colour = tier)   ■ exits (green = profit, red = loss)</text></svg>
+<div class="tw"><table><thead><tr><th></th><th>Time</th><th>Lots</th><th>Price</th><th>Result</th></tr></thead><tbody><tr><td>Tier 1</td><td class='n'>07.24 19:45</td><td class='n'>1</td><td class='n'>4066.39</td></tr><tr><td>Tier 2</td><td class='n'>07.24 20:12</td><td class='n'>0.75</td><td class='n'>4063.22</td></tr><tr><td>Tier 3</td><td class='n'>07.24 21:03</td><td class='n'>0.56</td><td class='n'>4061.34</td></tr><tr><td>Tier 4</td><td class='n'>07.24 21:20</td><td class='n'>0.42</td><td class='n'>4059.41</td></tr><tr><td>Tier 5</td><td class='n'>07.24 21:22</td><td class='n'>0.32</td><td class='n'>4057.73</td></tr><tr><td>Exit</td><td class='n'>07.27 01:01</td><td class='n'>1</td><td class='n'>4092.45</td><td class='n neg'>−$2,610</td></tr><tr><td>Exit</td><td class='n'>07.27 01:01</td><td class='n'>0.75</td><td class='n'>4092.45</td><td class='n neg'>−$2,195</td></tr><tr><td>Exit</td><td class='n'>07.27 01:01</td><td class='n'>0.56</td><td class='n'>4092.45</td><td class='n neg'>−$1,744</td></tr><tr><td>Exit</td><td class='n'>07.27 01:01</td><td class='n'>0.42</td><td class='n'>4092.45</td><td class='n neg'>−$1,389</td></tr><tr><td>Exit</td><td class='n'>07.27 01:01</td><td class='n'>0.32</td><td class='n'>4092.45</td><td class='n neg'>−$1,112</td></tr></tbody></table></div></div></div>
+<h2>Where the money comes from</h2>
+<p class="sub">Net profit of all 867 trades in the test, grouped by how many tiers the trade reached. Trades that never reach the top lose money; the ones that do pay for everything.</p>
+<div class="ladder"><svg viewBox="0 0 640 240" class="tchart" role="img" aria-label="net profit by how many tiers a trade reached"><line x1="40" x2="630" y1="150" y2="150" class="grid"/><rect x="50" y="150.0" width="92" height="15.8" class="xl"/><text x="96" y="179.8" class="lbl" text-anchor="middle">−$121k</text><text x="96" y="216" class="ax" text-anchor="middle">1 tier</text><text x="96" y="232" class="ax" text-anchor="middle">141 trades</text><rect x="162" y="150.0" width="92" height="22.0" class="xl"/><text x="208" y="186.0" class="lbl" text-anchor="middle">−$169k</text><text x="208" y="216" class="ax" text-anchor="middle">2 tiers</text><text x="208" y="232" class="ax" text-anchor="middle">140 trades</text><rect x="274" y="150.0" width="92" height="20.3" class="xl"/><text x="320" y="184.3" class="lbl" text-anchor="middle">−$156k</text><text x="320" y="216" class="ax" text-anchor="middle">3 tiers</text><text x="320" y="232" class="ax" text-anchor="middle">122 trades</text><rect x="386" y="150.0" width="92" height="9.1" class="xl"/><text x="432" y="173.1" class="lbl" text-anchor="middle">−$70k</text><text x="432" y="216" class="ax" text-anchor="middle">4 tiers</text><text x="432" y="232" class="ax" text-anchor="middle">80 trades</text><rect x="498" y="20.0" width="92" height="130.0" class="xw"/><text x="544" y="14.0" class="lbl" text-anchor="middle">+$997k</text><text x="544" y="216" class="ax" text-anchor="middle">5+ tiers</text><text x="544" y="232" class="ax" text-anchor="middle">384 trades</text></svg></div>
+<!--/EXAMPLES-->
+
+  <h2>What we tested to choose these settings</h2>
+  <div class="tw"><table>
+    <thead><tr><th>Version (base 1 lot)</th><th>Net</th><th>Max drawdown</th><th>Worst day</th></tr></thead>
+    <tbody>
+      <tr><td>Plain EA, no pyramiding</td><td class="n">+$202,222</td><td class="n">$13.4k</td><td class="n">−$3,806</td></tr>
+      <tr><td>Add after 30 pips, ×0.5, 3 tiers, breakeven lock (the original idea)</td><td class="n neg">+$35,506</td><td class="n">$36.1k</td><td class="n">−$4,559</td></tr>
+      <tr><td>Same, no breakeven lock</td><td class="n">+$306,664</td><td class="n">$23.6k</td><td class="n">−$7,349</td></tr>
+      <tr><td>ATR 1.0×, ×0.5, 3 tiers (the safest pyramid)</td><td class="n">+$277,796</td><td class="n">$19.2k</td><td class="n">−$5,944</td></tr>
+      <tr><td>ATR 0.25×, ×0.5, 5 tiers</td><td class="n">+$336,427</td><td class="n">$27.2k</td><td class="n">−$7,933</td></tr>
+      <tr class="pick"><td>ATR 0.25×, ×0.75, 5 tiers: <b>this EA</b></td><td class="n pos">+$479,815</td><td class="n">$41.8k</td><td class="n">−$12,338</td></tr>
+      <tr><td>Same, with random order delays (realism check)</td><td class="n">+$468,075</td><td class="n">$42.8k</td><td class="n">−$13,035</td></tr>
+    </tbody>
+  </table></div>
+  <p>The profit holds in both halves of the year: <b>Jan–Jun +$320,169, Jul–Oct +$159,646</b>, with no losing month.</p>
+
+  <h2>The honest trade-off</h2>
+  <div class="cards">
+    <div class="card warn">
+      <h3>Bigger swings, both ways</h3>
+      <p>It holds up to about 3 lots, so a bad day is about 3× a bad day of the plain EA (−$12k to −$13k on a $25k account). It needs that capital and the margin.</p>
+    </div>
+    <div class="card warn">
+      <h3>Plain extra lots are slightly better per $ of risk</h3>
+      <p>The plain EA at about 3 lots would make about +$607k for the same drawdown. Pyramiding adds size late, at worse prices, which costs more on reversals. This version exists because Zee chose it.</p>
+    </div>
+    <div class="card warn">
+      <h3>Run it alone, or with its own magic</h3>
+      <p>It uses magic number 88330, so it won't touch the plain EA's trades (88302). Don't run two copies with the same magic on one account: they adopt and fight over each other's stops.</p>
+    </div>
+  </div>
+
+  <h2>How to run it</h2>
+  <ol class="steps">
+    <li>In MetaTrader (Axi), drag <b>Saad_strategy_15min_pyramiding_max_3</b> onto an <b>XAUUSD M15</b> chart.</li>
+    <li>On the Inputs tab press <b>Reset</b>, so the tested defaults are used.</li>
+    <li>Check the Experts tab shows <code>[SAAD-PYR3] v1.01 (… ATR x0.25, 5 tiers, x0.75)</code>.</li>
+    <li><b>Demo account first.</b> Keep Algo Trading on and the PC running: the add-ons and the trailing are managed by the EA, not by the broker.</li>
+  </ol>
+
+  <footer>Full test details: report.md sections 21–23 · version history: VERSION.md · <a href="/">Back to the dashboard</a></footer>
+</div>
+</body>
+</html>
