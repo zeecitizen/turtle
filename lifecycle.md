@@ -2,20 +2,29 @@
 
 How the EA opens, protects and closes a SELL and a BUY: `mt5/Saad_strategy_15min.mq5` **v1.18**, magic
 88302, XAUUSD M15, default settings. Read from the code (`DoEntry`, `ManageTick`, `ManageBar`,
-`LongTouched`, `ShortTouched`, `DayCloseCheck`). At 1 lot, **$1 of gold price = $100**.
+`LongTouched`, `ShortTouched`, `DayCloseCheck`, `DetectSetup`, `Shape`).
+Re-verified against the code on 13 Oct 2026. At 1 lot, **$1 of gold price = $100**.
 
 ---
 
 ## SELL trade
 
-1. **Setup:** a 15-minute candle closes as a **pin bar, marubozu or shooting star** touching the
-   **9 EMA**.
-2. **Target check:** the EA looks for the **last support**, the most recent swing low (the lowest of 3
-   candles on each side, within the last 100 candles) at least 5 pips below the price.
-   **No support → no trade.**
+1. **Setup:** a 15-minute candle closes touching the **9 EMA** (its high-low range includes the EMA) as
+   one of:
+   - a **red (bearish) marubozu**
+   - a **shooting star**
+   - a **pin bar that closes red**. A pin bar on the 9 EMA that closes green or flat is taken as a BUY
+     instead (see below).
+2. **Filters**, all must pass:
+   - the candle is at least **0.55 × ATR(14)** tall
+   - the market isn't choppy: the efficiency ratio over the last **16 candles** is at least **0.11**
+   - no trade is open and no other setup is waiting
 3. **Entry:** the **next candle** must break the setup candle's **low by 2 pips**. The EA sells the
    moment that happens. If it doesn't happen within one candle, or the market closes in between, the
    setup is dropped.
+   **At that moment** the EA looks for the **last support**: the most recent swing low (the lowest of 3
+   candles on each side, within the last 100 candles) at least 5 pips below the price.
+   **No support → no trade.**
 4. **Stop loss:** **35 pips ($3.50) above the setup candle's high**, sent to the broker with the
    order. If the stop would be more than **$15** from the entry, the trade is skipped.
 5. **Target:** **TP1 = that support level.** The EA watches it; **no take-profit is sent to the
@@ -38,13 +47,21 @@ How the EA opens, protects and closes a SELL and a BUY: `mt5/Saad_strategy_15min
 
 ## BUY trade
 
-1. **Setup:** a **pin bar, marubozu or hammer** closes touching the **9 EMA or the 50 EMA**.
-   Its **exit EMA** is the other one: the 50 EMA for a setup on the 9, the 9 EMA for a setup on the 50.
-2. **Entry:** the **next candle** must break the setup candle's **high by 2 pips**. The EA buys the
-   moment that happens.
-3. **Stop loss:** **35 pips below the setup candle's low**, sent to the broker. More than **$15**
+1. **Setup:** a 15-minute candle closes touching the **9 EMA or the 50 EMA** as one of:
+   - a **green (bullish) marubozu**
+   - a **hammer**
+   - a **pin bar**: on the 9 EMA only if it closes green or flat (a red one is a SELL); touching only
+     the 50 EMA, any colour
+   Its **exit EMA** is the other one: the 50 EMA for a setup on the 9 (also when the candle touches both),
+   the 9 EMA for a setup on the 50.
+2. **Filters:** the same as for a SELL (≥ 0.55 × ATR, not choppy, nothing open or waiting). If a candle
+   qualifies as both a BUY and a SELL, the BUY wins.
+3. **Entry:** the **next candle** must break the setup candle's **high by 2 pips** (judged on the bid,
+   like the chart). The EA buys the moment that happens; otherwise the setup is dropped after one
+   candle.
+4. **Stop loss:** **35 pips below the setup candle's low**, sent to the broker. More than **$15**
    away → skipped.
-4. **Which path the trade takes:**
+5. **Which path the trade takes:**
 
    **Path A: the exit EMA is above the entry (the normal case)**
    1. **TP1 = the price touching the exit EMA.** The EMA moves, so TP1 moves with it. The EA watches
@@ -58,10 +75,21 @@ How the EA opens, protects and closes a SELL and a BUY: `mt5/Saad_strategy_15min
    1. There's no TP1, so there is **no half-close and no 75% breakeven step.**
    2. From the second candle on, at each candle close, the stop rises to
       **the highest high since entry − 2 × ATR(14)**. It never moves down.
-5. **Exit:** the original stop, the breakeven stop, the trail, or "3 minutes before the daily close
+6. **Exit:** the original stop, the breakeven stop, the trail, or "3 minutes before the daily close
    while in loss". Same as a SELL.
 
 ---
+
+## The candle shapes (default settings)
+
+| Shape | Rule (range = high − low) | Counts for |
+|---|---|---|
+| Pin bar | body ≤ 60% of the range, long wick ≥ 45%, other wick ≤ 20% | BUY or SELL, decided by the EMA and the close (above) |
+| Hammer | lower wick ≥ 2.5 × body, upper wick ≤ 50% of the range | BUY |
+| Shooting star | upper wick ≥ 2.5 × body, lower wick ≤ 50% of the range | SELL |
+| Marubozu | body ≥ 53% of the range | green → BUY, red → SELL |
+
+A candle is checked as a pin bar first, then as a hammer or shooting star, then as a marubozu.
 
 ## The same for both
 
@@ -87,7 +115,7 @@ How the EA opens, protects and closes a SELL and a BUY: `mt5/Saad_strategy_15min
 
 ## Worked SELL example (illustrative numbers)
 
-1. Setup candle on the 9 EMA: high 4210.00, low 4205.00. Last support 4198.00.
+1. A red marubozu on the 9 EMA: high 4210.00, low 4205.00 ($5, more than 0.55 × ATR). Last support 4198.00.
 2. The next candle breaks **4204.80** → **SELL 1 lot at 4204.80**.
 3. **Stop** 4213.50 (4210.00 + $3.50) = **$870 risk**. **TP1** 4198.00 ($6.80 away).
 4. Price reaches **4199.70** (75% of $6.80) → **stop to 4204.80**. The trade is now risk-free.
