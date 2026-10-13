@@ -10,7 +10,7 @@ from pathlib import Path
 
 RIG = Path(r"C:\mt5_rig_axi")
 SRC = Path(r"C:\Users\zeesh\turtle\mt5")
-RIGS = {"axi": r"C:\mt5_rig_axi", "axi2": r"C:\mt5_rig_axi2", "bb": r"C:\mt5_rig_bb", "pxbt": r"C:\mt5_rig_pxbt"}
+RIGS = {"axi": r"C:\mt5_rig_axi", "axi2": r"C:\mt5_rig_axi2", "axi3": r"C:\mt5_rig_axi3","bb": r"C:\mt5_rig_bb", "pxbt": r"C:\mt5_rig_pxbt"}
 
 
 def use(rig):
