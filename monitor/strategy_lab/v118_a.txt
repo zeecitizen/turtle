@@ -1,0 +1,3 @@
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpEnableDayLoss=false,InpFridayClose=false
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpFridayClose=false
+InpLots=1,InpPartialPct=0.5,InpTp1Be=true,InpEnableDayLoss=false,InpFridayCloseHour=-1
