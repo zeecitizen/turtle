@@ -1048,3 +1048,106 @@ Jan 6 – Oct 8, real ticks, 200 ms. "Max lots" is the most the basket can hold 
 **Verdict:** more tiers and smaller ATR spacing = more profit **and** proportionally more risk; it's
 a bigger position, not a better one. For any amount of risk Zee is willing to take, plain v1.17 with
 a higher `InpLots` gives more profit than the matching pyramid.
+
+## 24. How Saad_strategy_15min (v1.18) manages a trade: stop, targets, trailing
+
+This is the plain EA, without pyramiding, with its default settings. It's read from the code
+(`mt5/Saad_strategy_15min.mq5`: `DoEntry`, `ManageTick`, `ManageBar`, `LongTouched`, `ShortTouched`,
+`DayCloseCheck`). At 1 lot, **$1 of gold price = $100**.
+
+### 1. Entry and the first stop
+
+- A setup candle (pin bar, marubozu, hammer or shooting star) forms on the 9 or 50 EMA.
+- The trade opens when the **next candle breaks its high (BUY) or low (SELL) by 2 pips**. If that
+  doesn't happen within one candle, or the market closes in between, the setup is dropped.
+- **Stop loss:** **35 pips ($3.50) beyond the setup candle**, below its low for a BUY, above its high
+  for a SELL. It's sent to the broker with the order, so it protects the trade even if the PC is off.
+- **Too-wide stops are skipped:** if the stop would be more than **$15** from the entry ($1,500 at 1
+  lot), there's no trade.
+- **One trade at a time.**
+
+### 2. The first target (TP1), different for BUY and SELL
+
+| | BUY | SELL |
+|---|---|---|
+| **TP1** | the price **touches the "exit" EMA**: the 50 EMA for a setup on the 9 EMA, the 9 EMA for a setup on the 50 EMA. It's re-read every tick, so it moves with the EMA | the **last support**: the most recent swing low (lowest of 3 candles each side, within the last 100 candles) at least 5 pips below the entry |
+| No target available | if the exit EMA is below the entry (or less than 5 pips above), there is no TP1: the trade **trails from the start** (see 5) | if there's no support below, **no trade** |
+| Sent to the broker? | **no**, the EA watches it | **no**, the EA watches it |
+
+### 3. Before TP1: move the stop to the entry at 75%
+
+While the trade heads for TP1, the stop stays at its original level. Once price has covered **75% of
+the distance from the entry to TP1**, the stop moves to the **entry price**. From then on the trade
+can't lose, apart from spread and commission. The EA logs this as "CTC" (cover the cost). It doesn't
+apply to BUYs with no TP1.
+
+### 4. At TP1: bank half, trail the rest $2 behind
+
+The moment TP1 is touched:
+1. **Half the position is closed** (0.50 of 1 lot), and that profit is banked.
+2. **The stop on the other half jumps to $2 behind the price** (BUY: price − $2; SELL: price + $2),
+   and **never worse than the entry**.
+3. From then on **the stop follows the price, tick by tick, $2 behind**. It only ever moves in our
+   favour, in steps of 10 cents or more.
+4. **TP2, TP3…** are the next swing highs (BUY) or swing lows (SELL) beyond TP1. They are **only
+   labels**: when price reaches TP2, the EA logs it and points at TP3. Nothing closes there. **The
+   exit is always the $2 trail.** A strong trend can run through several levels, which is where the
+   +$19k trades came from.
+
+### 5. BUYs with no TP1: the 2× ATR trail
+
+When a BUY's exit EMA is already below the entry, there's no TP1 to aim for. The trade rides from the
+start:
+- At every 15-minute candle close (from the second candle on), the stop moves to **the highest high
+  since entry − 2 × ATR(14)**, if that's higher than the current stop and below the last close.
+- It never moves down. There's no 50% partial close on this path.
+
+### 6. The daily close
+
+**3 minutes before the broker's daily close, any trade that is in loss is closed.** Winning trades are
+kept overnight and keep trailing.
+- A waiting setup is dropped across the close or the weekend.
+- An open trade is **not** closed for the weekend. That's how the 24 Jul breakeven SELL was hit by a
+  $26 Monday gap (−$2,612, §12). A Friday close was tested and is available if wanted (§16).
+
+### 7. Where the money comes from (per trade, Jan 6 – Oct 8 at 1 lot)
+
+| Outcome | What happened |
+|---|---|
+| Full loss (about −$700 to −$1,500) | price never got 75% of the way to TP1, and the original stop was hit |
+| About $0 | 75% reached, stop at entry, then price came back |
+| Small win (+$100 to +$600) | TP1 reached, half banked, the rest trailed out $2 later |
+| Big win (+$2k to +$19k) | TP1 reached, the $2-trailed half rode a trend through TP2, TP3… |
+
+Per whole trade it wins about 47% of the time. The average win ($1,201) is about 1.7× the average
+loss ($710), and the few big runners pay for the losers (§17b).
+
+### 8. Worked example (illustrative numbers)
+
+A SELL setup candle on the 9 EMA, high 4210.00, low 4205.00. The last support is 4198.00.
+1. The next candle breaks 4204.80 (low − 2 pips) → **SELL 1 lot at 4204.80**.
+2. **Stop** = 4210.00 + $3.50 = **4213.50** (risk $8.70 = **$870**). **TP1** = **4198.00**
+   ($6.80 away).
+3. Price falls to **4199.70** (75% of $6.80) → **stop moves to 4204.80** (entry). The trade is now
+   risk-free.
+4. Price touches **4198.00** → **0.50 lot closed (+$340 banked)**. The stop on the other 0.50 jumps to
+   **4200.00** ($2 above).
+5. Price keeps falling to 4190.00 → the stop follows to **4192.00**. TP2 (the next support, say
+   4193.50) is passed and only logged.
+6. Price bounces to 4192.00 → **the second half closes at 4192.00 (+$640)**. Total about **+$980**,
+   minus $4 commission.
+
+### 9. Important: what the broker holds vs what the EA does
+
+| Item | Held by the broker (works if the PC is off) | Done by the EA (needs the PC + MT5 running) |
+|---|---|---|
+| Original stop loss | ✅ | |
+| Stop to entry at 75% (CTC) | ✅ once moved | the move itself |
+| TP1 half-close | | ✅ |
+| $2 trail, 2× ATR trail | ✅ each new stop level, once moved | the moving |
+| TP2 / TP3 labels | | ✅ (labels only) |
+| Closing losers 3 min before the daily close | | ✅ |
+
+**If the PC or MT5 goes offline,** an open trade keeps its **last stop** at the broker, so it's
+protected, but it won't bank TP1, move to breakeven or trail until the EA is running again. Keep the
+trading PC on, or run it on the VPS.
