@@ -72,10 +72,10 @@ footer { margin-top: 30px; color: var(--muted); font-size: 12.5px; }
       <tr><td class="t">19:59:51</td><td><b>Setup:</b> a SHORT PIN BAR on the 9 EMA (the 14:45 server-time candle: high 4173.11, low 4166.05). The EA waits one candle for a break below <b>4165.85</b>.</td><td class="n">–</td><td></td></tr>
       <tr><td class="t">20:00:57.9</td><td>Price breaks below → the EA sends <b>market SELL 2 lots, stop 4176.61</b> (35 pips above the candle's high).</td><td class="n">4176.61</td><td></td></tr>
       <tr><td class="t">20:00:58.1</td><td><b>Filled at 4165.57</b> (deal #58966373, in 185 ms). Risk $2,208. <b>TP1 = the last support 4150.75</b>, watched by the EA; no take-profit at the broker.</td><td class="n">4176.61</td><td></td></tr>
-      <tr><td class="t">20:01 – 21:52</td><td><span class="q">Unexplained:</span> the stop was changed to <b>4169.74</b>. Neither EA logged this move (see below).</td><td class="n q">4169.74</td><td></td></tr>
+      <tr><td class="t">≈21:30 – 21:45</td><td>The stop was changed to <b>4169.74</b> by a <b>third copy of the bot</b> on another terminal (see below), not by the EA that opened the trade.</td><td class="n q">4169.74</td><td></td></tr>
       <tr><td class="t">21:52:56</td><td>Price covered <b>75% of the way to TP1</b> → the EA moves the stop to the <b>entry price</b> ("CTC"). From here the trade can't lose.</td><td class="n">4165.57</td><td>risk-free</td></tr>
       <tr><td class="t">22:00:37.0</td><td><b>TP1 reached</b> (bid 4150.65) → <b>1 of 2 lots closed at 4150.68</b> (deal #58997818).</td><td class="n"></td><td class="pos">+$1,489</td></tr>
-      <tr><td class="t">22:00:37.2</td><td>The stop on the remaining lot jumps to <b>price + $2</b>. No TP2: there's no support further below. (The journal shows the stop as 4165.47 just before this move, 10 cents under the entry, right after the half-close. It changes nothing.)</td><td class="n">4152.68</td><td></td></tr>
+      <tr><td class="t">22:00:37.2</td><td>The stop on the remaining lot jumps to <b>price + $2</b>. No TP2: there's no support further below. (Just before this, at 22:00:00 on Claude's PC, the old v1.11 copy there moved the stop to 4165.47, after Algo Trading was switched on in that terminal.)</td><td class="n">4152.68</td><td></td></tr>
       <tr><td class="t">22:00:37.6</td><td>The $2 trail follows the price one tick lower.</td><td class="n">4152.46</td><td></td></tr>
       <tr><td class="t">22:01:48.9</td><td>Gold bounces → <b>trail hit, the last lot closes at 4152.47</b> (deal #58998586; 1 cent past the 4152.46 stop).</td><td class="n"></td><td class="pos">+$1,310</td></tr>
     </tbody>
@@ -84,9 +84,14 @@ footer { margin-top: 30px; color: var(--muted); font-size: 12.5px; }
 
   <h2>Notes</h2>
   <div class="card warn">
-    <h3>Who moved the stop to 4169.74?</h3>
-    <p>Not the EA that placed the trade. Its log shows exactly 3 stop moves (breakeven at 21:52, the jump at TP1, one trail tick), all accounted for above. Not the old EA on Claude's PC either: Algo Trading is off there, and every change it attempted was rejected before reaching the broker. The change was most likely made by hand (a phone or another terminal).</p>
-    <p>The account journal shows sessions from <b>39.44.93.88</b> and <b>119.154.92.250</b>. If nobody moved it by hand, check who else is logged into this account.</p>
+    <h3>Who moved the stop: old copies of the bot</h3>
+    <p>Every Saad_strategy_15min copy uses magic number <b>88302</b>. A copy that finds a position with its magic number that it didn't open "adopts" it and trails the stop <b>2 × ATR from the lowest price</b>. Two such copies touched this trade:</p>
+    <ul>
+      <li><b>4169.74 (around 21:30–21:45): a third copy on another terminal.</b> The 2-lot machine's journal has no modify request before 21:52, and Claude's PC tried 4170.16 (21:30) and 4169.26 (21:45) but was blocked. 4169.74 falls right between those, which is what another adopting copy would calculate.</li>
+      <li><b>4165.47 (22:00:00): the old v1.11 copy on Claude's PC</b>, once Algo Trading was switched on in that terminal (between 21:45 and 22:00). This one is in the journal: "accepted modify #67046250 … sl: 4165.47".</li>
+    </ul>
+    <p><b>To find the third copy:</b> on each machine logged into account 1364880 (other laptops, the VPS, a phone), look in MT5's Journal for <code>modify #67046250 … -&gt; sl: 4169.74</code> on 13 Oct. Sessions came from 39.44.93.88 and 119.154.92.250.</p>
+    <p><b>To stop it happening again:</b> run one bot per account, or give each copy its own <code>InpMagicNumber</code>, and remove old versions from every terminal.</p>
   </div>
   <div class="card">
     <h3>Algo Trading was off on this machine for most of the day</h3>
