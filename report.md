@@ -1455,6 +1455,7 @@ XAUUSD_TK real ticks, $4/lot, 200 ms; Saad 1 lot, VSISA 0.28 lots. **WR = winnin
 | Saad alone | 867 (47.9%) | — | 47.9% | +$202,222 |
 | VSISA v1.30 alone | — | 163 (65.6%) | 65.6% | +$22,078 |
 | Both side by side | 867 (47.9%) | 162 (65.4%) | **50.6%** | **+$224,321** |
+| Hybrid, mature = just open | 867 (47.9%) | 11 (8 wins) | 48.1% | +$204,194 |
 | Hybrid 0.5R | 867 (47.9%) | 4 (3 wins) | 48.0% | +$202,760 |
 
 ### What it means
