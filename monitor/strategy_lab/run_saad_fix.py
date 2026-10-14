@@ -23,6 +23,7 @@ for _m in (2, 3, 5): V[f"multi{_m}"] = ("Saad_strategy_15min", {"InpMaxPos": _m}
 V["multi2same"] = ("Saad_strategy_15min", {"InpMaxPos": 2, "InpExtraDir": 1})
 V["multi2opp"] = ("Saad_strategy_15min", {"InpMaxPos": 2, "InpExtraDir": 2})
 for _h in (45, 55, 60): V[f"hamnose{_h}"] = ("Saad_strategy_15min", {"InpHamNose": _h / 100})
+for _s in (10, 20): V[f"sl{_s}"] = ("Saad_strategy_15min", {"InpSlPips": _s})
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 P["fullrnd"] = P["full"]      # same dates, random delay (exec -1)
 axi_rig.use(sys.argv[1])
