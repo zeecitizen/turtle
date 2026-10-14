@@ -34,14 +34,15 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.20"
+#property version   "1.21"
 #property strict
 
 #include <Trade/Trade.mqh>
+// v1.21 (Zee): EXIT label and SETUP label text in black; the TP1 labels in blue (InpExitTextColor / InpSetupTextColor / InpTpTextColor)
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad15 v1.20"
+#define EA_COMMENT "Saad15 v1.21"
 
 //--- the two lines
 input int    InpEmaFast     = 9;      // InpEmaFast
@@ -172,6 +173,9 @@ input bool   InpLog         = true;   // InpLog — print every trade event to t
 input bool   InpLogCsv      = true;   // InpLogCsv — one CSV row per closed trade in Common\Files (live + visual tester)
 input color  InpLongColor   = clrGreen; // InpLongColor — chart text/marks for LONG setups and trades (Zee: dark green)
 input color  InpShortColor  = clrRed;   // InpShortColor — chart text/marks for SHORT setups and trades
+input color  InpSetupTextColor = clrBlack; // InpSetupTextColor — the "SETUP LONG/SHORT: ..." label text (Zee: black); its box and break line keep the side colour
+input color  InpTpTextColor = clrBlue;   // InpTpTextColor — the TP1 labels ("TP1: touch of the 50 EMA", "TP ... (last support)", "TP1 ... (next resistance)"; Zee: blue)
+input color  InpExitTextColor = clrBlack; // InpExitTextColor — the "EXIT #n ... $" label (Zee: black; was green/red by profit)
 input color  InpSlTextColor = clrBlack; // InpSlTextColor — stop-loss TEXT (the "SL price" label and stop-move notes; Zee: black). Lines stay red
 input bool   InpDrawSkips   = false;   // InpDrawSkips — also label setups that were skipped (no break, risk, no support, choppy)
 
@@ -223,7 +227,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-15min] v1.20 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.21 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -481,7 +485,7 @@ void DrawExit(PosState &p)
                        prof, comm, swp, pnl));
    DLine(p.slFrom, p.slNow, t, p.slNow, p.ride ? clrOrange : clrRed, STYLE_DASH, 2);
    DLine(p.entryTime, p.entry, t, px, pnl >= 0 ? clrLime : clrRed, STYLE_DOT, 1);
-   color c = pnl > 0 ? clrLimeGreen : clrRed;
+   color c = InpExitTextColor;
    string txt = StringFormat("EXIT #%d %s %s$%.2f", p.num, why, pnl >= 0 ? "+" : "-", MathAbs(pnl));
    Callout(t, px, p.side > 0, 4.0, txt, c, 10,
          StringFormat("#%d %s  entry %.2f -> exit %.2f  (%s)  %s$%.2f", p.num, p.side > 0 ? "BUY" : "SELL", p.entry, px, why,
@@ -886,12 +890,12 @@ void DoEntry(int side, double sl)
       DText(p.entryTime, sl, StringFormat("SL %.2f", sl), InpSlTextColor, 7, side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
       if (side < 0) {
          DLine(p.entryTime, tp, p.entryTime + 8 * PeriodSeconds(), tp, clrLime, STYLE_DASH, 1, "TP: last support");
-         DText(p.entryTime, tp, StringFormat("TP %.2f (last support)", tp), clrLime, 7, ANCHOR_LEFT_UPPER);
+         DText(p.entryTime, tp, StringFormat("TP %.2f (last support)", tp), InpTpTextColor, 7, ANCHOR_LEFT_UPPER);
       } else if (resTp1) {
          DLine(p.entryTime, tp, p.entryTime + 8 * PeriodSeconds(), tp, clrLime, STYLE_DASH, 1, "TP1: next resistance");
-         DText(p.entryTime, tp, StringFormat("TP1 %.2f (next resistance)", tp), clrLime, 7, ANCHOR_LEFT_LOWER);
+         DText(p.entryTime, tp, StringFormat("TP1 %.2f (next resistance)", tp), InpTpTextColor, 7, ANCHOR_LEFT_LOWER);
       } else if (!noTp)
-         DText(p.entryTime + PeriodSeconds(), Ema(g_pExit, 0), StringFormat("TP1: touch of the %d EMA", g_pExit), clrLime, 7, ANCHOR_LEFT_LOWER);
+         DText(p.entryTime + PeriodSeconds(), Ema(g_pExit, 0), StringFormat("TP1: touch of the %d EMA", g_pExit), InpTpTextColor, 7, ANCHOR_LEFT_LOWER);
    }
    if (InpVerbose) PrintFormat("[SAAD] %s at %.2f | SL %.2f | TP %s", side > 0 ? "BUY" : "SELL", p.entry, sl,
                                side > 0 ? (noTp ? "none (trail)" : StringFormat("EMA%d", g_pExit)) : DoubleToString(tp, 2));
@@ -1028,7 +1032,7 @@ void DetectSetup()
       DBox(g_pTime, h, g_pTime + PeriodSeconds(), l, sc);
       DLine(g_pTime, lvl, g_pTime + (InpBreakBars + 1) * PeriodSeconds(), lvl, sc, STYLE_DOT, 1, "break level");
       Callout(g_pTime + PeriodSeconds() / 2, side > 0 ? h : l, side > 0, 2.5,
-              StringFormat("SETUP %s: %s on %s", side > 0 ? "LONG" : "SHORT", kindTxt, lineTxt), sc, 9,
+              StringFormat("SETUP %s: %s on %s", side > 0 ? "LONG" : "SHORT", kindTxt, lineTxt), InpSetupTextColor, 9,
               StringFormat("%s | wait max %d candle(s) for a break %s %.2f", g_pDesc, InpBreakBars, side > 0 ? "above" : "below", lvl));
    }
    if (InpVerbose) PrintFormat("[SAAD] %s setup (%s) on %s | waiting for %s %.2f", side > 0 ? "LONG" : "SHORT",

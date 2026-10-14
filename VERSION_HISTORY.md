@@ -867,6 +867,29 @@ machine learning methods described in report.md to the VSISA EA on 5 min timefra
 Every layer can be switched off with its `Inp*Mode = 0`. Compiled into the Axi terminal with its four .mqh
 files. Full results: report.md §28.
 
+## Saad_strategy_15min v1.21 — exit / setup text black, TP1 labels blue (2026-10-14)
+
+**Who:** Zee: *"EXIT #3 Closed $-4.10 should be in black color"*, *"CTC / SL hit text is blue color"*, *"SETUP LONG:
+MARUBOZU on 9 EMA this text can be black in color"*, *"TP1: touch of the 50 EMA should be blue in color"*.
+
+**What** (display only, every colour an input):
+
+| Text | Colour |
+|---|---|
+| "EXIT #n …" label (was green/red by profit) | black (`InpExitTextColor`) |
+| "SETUP LONG/SHORT: …" label text | black (`InpSetupTextColor`) |
+| "SL price" label and CTC / stop-move notes | black (`InpSlTextColor`, since v1.20) |
+| the three TP1 labels | blue (`InpTpTextColor`) |
+| setup box, break line, entry arrow, "BUY #n @ price" / "SELL …" label, TP-reached notes | side colour (long dark green, short red, since v1.19) |
+| stop lines | red |
+| target lines | lime |
+
+The blue CTC / SL text Zee saw is the older v1.17 / v1.18 on his chart; in v1.20+ it's black.
+
+**Check:** the full year is identical: +$202,221.80, 1,169 deals.
+
+**Where it's compiled:** the Axi and PXBT terminals on Claude's PC.
+
 ## Saad_strategy_15min v1.20 — stop-loss text in black (2026-10-14)
 
 **Who:** Zee: *"set the Stop Loss text to black on the saad 15 min"*.
