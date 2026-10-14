@@ -1735,3 +1735,81 @@ ends at about $288k. Diamond (same-direction gate) was added to the three top-ea
 - **The $288k run only trades bigger.** It boosts more Saad trades (any VSISA setup within 4 hours), so its
   drawdown doubles to 15%. In the unseen Jul–Oct it is no better per unit of risk (6.64 vs 7.82).
 - **saad_vsisa_hybrid v1.00 stays the best per unit of risk** in both periods.
+
+## 33. Optuna on saad_vsisa_diamond_hybrid (the "$288k" setting) (14 Oct)
+
+**Zee asked:** *"this EA with $288,367, compile it and run ML algos on it to tune it to higher profit"*.
+
+**Build.** `mt5/saad_vsisa_diamond_hybrid.mq5` v1.00 (`build_svd.py`):
+- **Settings:** the $288k setting (Saad 2× when VSISA saw a same-direction setup ≤240 min; Diamond only during
+  same-direction trades).
+- **Magics:** 88360 / 88361 / 88362.
+- **Verified on its own defaults:** +$263,366.54, DD $13,572 (15%). Compiled in the Axi terminal.
+
+**Tuning.** `optuna_svd.py`: TPE (Bayesian), 120 MT5 trials on Jan–Jun, 14 settings:
+- the boost: gate type, window, multiplier, soft score
+- Diamond: on/off, gate, lots, basket size
+- Saad: lot, maximum stop distance
+- VSISA: lot, meta and exhaustion thresholds, regime mask
+
+Score = profit, minus 3× any drawdown above v1.00's $13,572.
+
+| | Jan–Jun net | DD | Jul–Oct net | DD | Full-year net | DD | Full net ÷ DD |
+|---|---|---|---|---|---|---|---|
+| **v1.00 (baseline trial 0)** | +$176,961 | $13,572 | +$86,405 | $13,012 | **+$263,367** | $13,572 | **19.40** |
+| Trial 94 (Saad 1.9–2.0 lots) | +$471,631 | $43,612 | +$232,595 | $48,434 | +$699,790 | $48,434 | 14.45 |
+| Trial 106 | +$447,866 | $36,997 | +$228,546 | $40,090 | +$676,411 | $40,090 | 16.87 |
+| Trial 105 | +$460,084 | $41,253 | +$222,003 | $49,925 | +$677,873 | $49,925 | 13.58 |
+| Trial 90 | +$456,617 | $41,353 | +$219,689 | $50,576 | +$672,091 | $50,576 | 13.29 |
+
+**What it means:**
+- **Nothing beats v1.00 at the same drawdown.** The best in-cap trials made +$116k / +$90k on Jan–Jun, below
+  v1.00's +$177k.
+- **Every higher-profit trial trades bigger.** Saad runs at 1.8–2.0 lots and gets doubled again. Profit
+  roughly 2.6×, drawdown 3.6×, worse net ÷ DD in both periods.
+- **Almost every top trial turns Diamond off.**
+- **The penalty was too soft:** the big-lot trials still out-scored v1.00 on the tuner's own score. That's why
+  they were judged by net ÷ DD here.
+- **v1.00 stays.** The big-lot settings are available as a size choice: about 2.6× the profit for about 3.6×
+  the drawdown.
+
+## 34. UHV Diamond filtered by Saad's trend and VSISA's volume read: 94% win rate (14 Oct)
+
+**Zee asked:** *"we're looking for the UHV diamond EA to filter out all bad trades by using trend / volume
+confirmations from saad and vsisa .. so that the UHV diamond winrate increases to a very high winrate like 94%"*.
+
+**How.** Trinity_1min's Diamond engine (M1, Axi volume, 0.01 lots) checks filters at the moment it would fire
+(`patch_trinity_filter.py`):
+- **from Saad's core:** M15 EMA9/EMA50 trend, the 50 EMA's slope, the efficiency ratio (chop)
+- **from VSISA's core:** its last setup's direction and age, its volatility regime
+- **from Diamond's own law:** session hours
+
+One full-year run logged all 818 Diamond positions with those readings (`testing/trinity_dia_feat_full.csv`).
+Splitting them suggested which filters to try. **Every number below is an MT5 run with the filter switched on.**
+They match the split exactly: the filter doesn't change which Diamond trades happen.
+
+**The key fact:** Diamond's average win is $1.12 and its average loss −$5.85 per 0.01 ticket, so it needs
+about **84%** wins just to break even. Unfiltered it wins 76–80%, which is why it always lost.
+
+| Diamond filter | Full-yr tickets | WR | Net (0.01) | Jul–Oct tickets | WR | Net |
+|---|---|---|---|---|---|---|
+| none | 821 | 75.9% | −$463 | 274 | 79.6% | −$13 |
+| M15 trend: price beyond EMA50 | 404 | 76.5% | −$271 | — | — | — |
+| + EMA9 beyond EMA50 | 338 | 77.2% | −$177 | — | — | — |
+| + EMA50 sloping with the trade | 331 | 78.9% | −$138 | — | — | — |
+| chop: efficiency ratio ≥ 0.25 | 379 | 81.3% | −$93 | — | — | — |
+| chop ≥ 0.38 | 205 | 87.3% | −$6 | 89 | 86.5% | +$49 |
+| chop ≥ 0.38 + skip VSISA's high-vol regime | 170 | 88.8% | +$57 | 78 | 84.6% | +$37 |
+| chop ≥ 0.42 + skip high-vol regime | 138 | 91.3% | **+$76** | 63 | 87.3% | +$49 |
+| **chop ≥ 0.45** | 135 | **94.1%** | +$19 | 54 | **100%** | +$56 |
+| **chop ≥ 0.38 + full M15 EMA trend** | 77 | **94.8%** | +$28 | 40 | **100%** | +$42 |
+| same + skip high-vol regime | 75 | 94.7% | +$24 | 40 | 100% | +$42 |
+
+**What it means:**
+- **Saad's chop filter is the key.** Diamond only works when the 15-minute market is moving cleanly, not
+  chopping. With chop ≥ 0.45, or chop ≥ 0.38 plus the M15 EMA trend, **Diamond wins 94–95%** for the full
+  year and 100% in Jul–Oct.
+- **Even at 94% it barely makes money.** One stopped basket costs about 5 winners: +$19–76 a year at 0.01
+  lots. To make real money, Diamond's stop/target shape would have to change too.
+- **Caution:** the thresholds (0.38 / 0.45) were read from the full-year split, so Jul–Oct is not fully
+  unseen. On Jan–Jun alone, the 94% filters won 89–90%.
