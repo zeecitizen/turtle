@@ -16,7 +16,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | EA | File (`mt5/`) | Magic | Latest | Chart | Status |
 |---|---|---|---|---|---|
-| **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.21** (2026-10-14) | XAUUSD M15 | **LIVE** on Axi / PXBT as v1.17 (v1.18–v1.21: comments + chart colours only; same trades) |
+| **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.22** (2026-10-14) | XAUUSD M15 | **LIVE** on Axi / PXBT as v1.17 (v1.18–v1.22: comments, chart colours, EMA lines only; same trades) |
 | Saad 15-min + pyramiding | `Saad_strategy_15min_pyramiding_max_3.mq5` | 88330 | v1.01 (2026-10-13) | XAUUSD M15 | READY, demo first (bigger risk) |
 | Saad 5-min | `Saad_strategy_5min.mq5` | 88320 | v1.01 (2026-10-13) | XAUUSD M5 | READY, demo first: SELL ONLY, small edge |
 | Small-account tiers | `EA_20USD … EA_200USD.mq5` | 88310–88314 | v1.14 base (2026-10-12) | XAUUSD M15 | READY ($80+ only) |
@@ -47,6 +47,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | Version | Date | What changed | Result / note |
 |---|---|---|---|
+| **v1.22** | 2026-10-14 | The EMA 9 (thick blue) and EMA 50 (thick red) are drawn on the chart when the EA is attached (embedded `SaadEMAs` indicator, `InpShowEmas`); same timeframe and periods the EA trades on | Display only, skipped in the fast tester: trades identical to v1.21 |
 | **v1.21** | 2026-10-14 | More chart text colours (Zee): the EXIT label and the SETUP label text in **black** (`InpExitTextColor`, `InpSetupTextColor`); the TP1 labels ("TP1: touch of the 50 EMA", "TP … (last support)", "TP1 … (next resistance)") in **blue** (`InpTpTextColor`). The setup box/break line keep the side colour; stop lines red, target lines lime | Trades identical: +$202,221.80, 1,169 deals |
 | **v1.20** | 2026-10-14 | Stop-loss TEXT in black (Zee): the "SL price" label at entry and the stop-move notes; input `InpSlTextColor` (default clrBlack). The stop lines stay red | Trades identical: +$202,221.80, 1,169 deals |
 | **v1.19** | 2026-10-14 | Chart colours by side (Zee: "anything about the LONG trades should be dark green ... anything related to SHORTS should be red"): setup box / break line / SETUP label, entry arrow, "BUY #n @ price" / "SELL #n @ price", TP-reached notes. Inputs `InpLongColor` (clrGreen) / `InpShortColor` (clrRed). Stop lines stay red, target lines lime; exit label keeps profit/loss colour | Trades identical to v1.18: full year +$202,221.80, 1,169 deals |
