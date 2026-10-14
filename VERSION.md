@@ -16,7 +16,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | EA | File (`mt5/`) | Magic | Latest | Chart | Status |
 |---|---|---|---|---|---|
-| **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.18** (2026-10-13) | XAUUSD M15 | **LIVE** on Axi (v1.17 attached; v1.18 = same trades + named comments) |
+| **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.19** (2026-10-14) | XAUUSD M15 | **LIVE** on Axi / PXBT as v1.17 (v1.18 = named comments, v1.19 = side colours on the chart; same trades) |
 | Saad 15-min + pyramiding | `Saad_strategy_15min_pyramiding_max_3.mq5` | 88330 | v1.01 (2026-10-13) | XAUUSD M15 | READY, demo first (bigger risk) |
 | Saad 5-min | `Saad_strategy_5min.mq5` | 88320 | v1.01 (2026-10-13) | XAUUSD M5 | READY, demo first: SELL ONLY, small edge |
 | Small-account tiers | `EA_20USD … EA_200USD.mq5` | 88310–88314 | v1.14 base (2026-10-12) | XAUUSD M15 | READY ($80+ only) |
@@ -47,6 +47,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | Version | Date | What changed | Result / note |
 |---|---|---|---|
+| **v1.19** | 2026-10-14 | Chart colours by side (Zee: "anything about the LONG trades should be dark green ... anything related to SHORTS should be red"): setup box / break line / SETUP label, entry arrow, "BUY #n @ price" / "SELL #n @ price", TP-reached notes. Inputs `InpLongColor` (clrGreen) / `InpShortColor` (clrRed). Stop lines stay red, target lines lime; exit label keeps profit/loss colour | Trades identical to v1.18: full year +$202,221.80, 1,169 deals |
 | **v1.18** | 2026-10-13 | Trade comments name the EA: `Saad15 v1.18 BUY` / `SELL` (Zee). No trading change | +$202,221.80, identical to v1.17 |
 | v1.17 | 2026-10-13 | Default lot 0.10 → **1.00** (Zee) | +$202,222 at 1 lot, Jan 6 – Oct 8, real ticks |
 | v1.16 | 2026-10-12 | **Zee's rule:** close 50% at TP1 + breakeven on the rest (`InpPartialPct 0.5`, `InpTp1Be`) | +$202,222; win rate per deal 48% → 61%; worst day −$3,806 |
