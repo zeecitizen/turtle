@@ -898,6 +898,23 @@ machine learning methods described in report.md to the VSISA EA on 5 min timefra
 Every layer can be switched off with its `Inp*Mode = 0`. Compiled into the Axi terminal with its four .mqh
 files. Full results: report.md §28.
 
+## Saad_raw v1.00 — the core Saad strategy with every filter removed (2026-10-14)
+
+**Who:** Zee: *"create an EA version called saad_raw wherein you remove all bells n whistles like filters etc. and just
+keep the core raw strategy of SAAD with trailing SL / TP"*.
+
+**What:** `mt5/Saad_raw.mq5`, a fresh ~230-line EA (magic 88303, comment "SaadRaw v1.00"). Setup = pin bar
+(wick 0.45 / body 0.60 / nose 0.20) or marubozu (body 0.53) touching the 9 EMA, candle colour = side; entry = the next
+candle breaks the high / low by 2 pips; SL 35 pips beyond the candle; TP1 = touch of the 50 EMA (long) or the last
+support (short); at TP1 a $2 trail; a long whose 50 EMA is below the entry trails 2x ATR. One trade at a time.
+Removed: chop filter, size minimum, $15 risk cap, CTC, partial close, day-close rule, gap cancel, touch tolerance,
+hammers / stars, the inverse 50-EMA longs.
+
+**MT5 receipt** (Axi XAUUSD_TK real ticks, 6 Jan – 8 Oct, M15, 1 lot, $25k): **+$76,834**, PF 1.07, max DD
+**$76,520**, worst day −$14,062 — vs v1.23 +$211,032 / PF 1.63 / DD $13,119 / −$3,806. Jan–Jun +$50,275, Jul–Oct
++$27,303 (both halves from the build before the stop-retry backoff; trading logic identical). **Research only — do
+not attach live**: the filters are what make the strategy tradeable.
+
 ## Saad_strategy_15min v1.23 — 1-pip EMA touch tolerance (2026-10-14)
 
 **Who:** Zee asked whether a candle that comes NEAR the EMA should count (the 10:00 server pin bar on 14 Oct missed
