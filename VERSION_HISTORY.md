@@ -636,6 +636,37 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## bread_winner v1.03 — the New York 8:00 AM momentum minute as a filler (2026-10-14)
+
+**Who:** Zee: *"can you check if we can use thesee times 8:00–8:30 AM New York. for the bread_winner EA .. maybe the
+momentum can help us because it relies on momentum"*, then *"yes ok let's go with the burst minute"*.
+
+**What:** a new trigger, `InpTrig` 128 (default now 165 = 37 + 128). Between **8:00 and 8:45 AM New York** (covers the
+8:00 and 8:30 candles all year; server time − 7 h), a closed 1-minute candle with a **body ≥ 60%** of its range and a
+**range ≥ 1.5× ATR(14) of M1** takes the day's shot **in its own direction**. It only fires when nothing else has fired
+that Pakistan day, so it fills empty days. Same geometry: 0.12 lots, TP $1, SL $8, re-anchored to the fill. Trade
+comment "Bread v1.03 NYBURST". Built by `build_bread_final.py` + `bread_ny_patch.py` (the same edits as the research
+copy `mt5/bread_nymom.mq5`; the generator check confirmed identical output).
+
+**Receipts** (MT5, Axi XAUUSD_TK real ticks, 6 Jan – 8 Oct, scored by Pakistan day):
+
+| | Bread days (≥ $10) | Red | No shot | Net |
+|---|---|---|---|---|
+| Full year, 200 ms | **181 / 196 (92.3%)** (v1.02: 172) | 13 (9) | 1 (14) | +$1,407 (+$1,712) |
+| Jan–Jun, 200 ms | 116 / 125 (109) | 7 (4) | 1 | +$900 (+$1,141) |
+| Jul–Oct, 200 ms | 65 / 71 (63) | 6 (5) | 0 | +$521 (+$584) |
+| Full year, random delay | **173 / 196 (88.3%)** (164) | 15 (11) | 1 (15) | +$1,295 (+$1,472) |
+| Jul–Oct, random delay | 64 / 71 (61) | 7 (5) | 0 (3) | +$400 (+$556) |
+
+The burst shots themselves: 41 a year, 37 won, +$95. Net falls because on some days the burst takes the shot that a
+later, better Diamond / VSISA shot would have taken. On their own the momentum shots LOSE (burst alone −$297, the M15
+candle alone −$1,130; PULSE minute only 28 shots). Zee chose more bread days over money.
+
+**Caution:** 8:30 AM New York is US news time. The M15-candle variant lost −$450.60 on Fri 4 Sep 8:30 (jobs report,
+a jump through the $8 stop). The burst version did not trade that day, but a news gap can hit it.
+
+Compiled in the Axi terminal and the three rigs: 0 errors (1 old warning in bread_vsisa2.mqh).
+
 ## bread_winner v1.02 — VSISA_Pullbacks as a late fallback (2026-10-14)
 
 **What changed:**

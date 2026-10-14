@@ -2120,3 +2120,45 @@ full-year check, and the fixes tested in MT5.
 **Same session, display only:**
 - TradeLifecycle v1.03: the EMAs on the chart.
 - Saad_strategy_15min v1.19–v1.21: chart colours, trades identical.
+
+
+## 38. bread_winner v1.03: the New York 8:00 AM momentum minute as a filler (14 Oct)
+
+**Zee asked:** *"can you check if we can use thesee times 8:00–8:30 AM New York. for the bread_winner EA .. maybe the
+momentum can help us because it relies on momentum"*.
+
+**Tested in MT5** (Axi real ticks, 6 Jan – 8 Oct, 200 ms; bread_winner's geometry: 0.12 lots, TP $1, SL $8, one shot
+per Pakistan day). Window: 8:00–8:45 AM New York, which covers the 8:00 and 8:30 candles all year.
+
+| Trigger in the window | On its own | Added to v1.02: bread days / red / no shot / net |
+|---|---|---|
+| none (v1.02) | — | 172 / 9 / 14 / +$1,712 |
+| 1. PULSE minute (trend side + context) | 28 shots, +$25 | 174 / 11 / 10 / +$1,543 |
+| **2. BURST minute** (body ≥ 60%, range ≥ 1.5× ATR M1, its own way) | 195 shots, 87% WR, **−$297** | **181 / 13 / 1 / +$1,407** |
+| 3. strong M15 candle, its own way at its close | 123 shots, 80% WR, **−$1,130** | 175 / 12 / 8 / +$1,457 |
+
+**Why the burst wins as a filler:**
+- On its own, momentum doesn't pay at a $1 target and an $8 stop: an 80–87% win rate isn't enough.
+- As a filler, it fires only on days with no shot yet. Those 41 shots won 37 (+$95) and filled 13 of the 14 empty days.
+- Net falls by about $300 a year, because the burst sometimes takes the shot a later Diamond / VSISA shot would have taken.
+- Better bread days in both halves: Jan–Jun 116 vs 109, Jul–Oct 65 vs 63.
+
+Zee chose it: *"yes ok let's go with the burst minute"*. **Shipped as bread_winner v1.03** (`InpTrig` 165, `InpNyMode` 2).
+
+| v1.03 on its own defaults | Bread days | Red | No shot | Net |
+|---|---|---|---|---|
+| Full year, 200 ms | **181 / 196 (92.3%)** | 13 | 1 | +$1,407 |
+| Full year, random delay | **173 / 196 (88.3%)** | 15 | 1 | +$1,295 |
+| Jul–Oct, random delay | 64 / 71 (90.1%) | 7 | 0 | +$400 |
+
+**Caution:** 8:30 New York is US news time. The M15 variant lost −$450.60 on Fri 4 Sep (jobs report, a jump through
+the stop).
+
+**Same session, Saad (all tested in MT5, none shipped):**
+
+| Test | Full year (now +$202,222) | Verdict |
+|---|---|---|
+| No chop filter / 0.05 | +$150,050 / +$154,161 | rejected, worse in both halves |
+| Sells on the 50 EMA too | +$199,880 | mixed halves |
+| Extra sell EMA 13 / 20 / 21 / 26 / 34 / 100 / 200 | 205.6k / 202.2k / 200.9k / 193.7k / 193.1k / 198.0k / 204.1k | none better in both halves |
+| 5:00 / 5:30 PM PKT candles skip chop / chop + risk | +$196,344 / +$169,556 | rejected |
