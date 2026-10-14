@@ -14,6 +14,8 @@ V = {"base": ("Saad_strategy_15min", {}),
      "short50only": ("Saad_strategy_15min", {"InpShortLine": 0})}
 for _n in (0, 13, 20, 21, 26, 34, 100, 200): V[f"sema{_n}"] = ("Saad_shortema", {"InpShortEma2": _n})
 for _m in (1, 2, 3): V[f"mom{_m}"] = ("Saad_mom", {"InpMomMode": _m})
+for _n in (6, 8, 12): V[f"rb{_n}"] = ("Saad_rangebrk", {"InpRangeBars": _n})
+V["rb8s"] = ("Saad_rangebrk", {"InpRangeBars": 8, "InpRangeBody": 0.70})
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 axi_rig.use(sys.argv[1])
 for name in sys.argv[2:]:
