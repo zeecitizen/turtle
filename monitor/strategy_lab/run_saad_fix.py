@@ -12,6 +12,7 @@ V = {"base": ("Saad_strategy_15min", {}),
      "chop05": ("Saad_strategy_15min", {"InpChopEr": 0.05}),
      "short9and50": ("Saad_strategy_15min", {"InpShortLine": 2}),
      "short50only": ("Saad_strategy_15min", {"InpShortLine": 0})}
+for _n in (0, 13, 20, 21, 26, 34, 100, 200): V[f"sema{_n}"] = ("Saad_shortema", {"InpShortEma2": _n})
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 axi_rig.use(sys.argv[1])
 for name in sys.argv[2:]:
