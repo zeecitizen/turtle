@@ -18,6 +18,7 @@ for _n in (6, 8, 12): V[f"rb{_n}"] = ("Saad_rangebrk", {"InpRangeBars": _n})
 V["rb8s"] = ("Saad_rangebrk", {"InpRangeBars": 8, "InpRangeBody": 0.70})
 V["maruL"] = ("Saad_maruclose", {"InpMaruClose": 1})
 V["maruLS"] = ("Saad_maruclose", {"InpMaruClose": 2})
+for _t in (3, 5, 10, 15): V[f"tol{_t}"] = ("Saad_strategy_15min", {"InpTouchPips": _t})
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 axi_rig.use(sys.argv[1])
 for name in sys.argv[2:]:
