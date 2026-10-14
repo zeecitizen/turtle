@@ -34,7 +34,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | ZeeUHV_M3 "Shop B" | `ZeeUHV_M3.mq5` | 88134 | v1.10 (2026-08-20) | XAUUSD M3 | RETIRED |
 | TurtleUHV | `TurtleUHV.mq5` | 88601 | v1.00 (2026-10-09) | XAUUSD | REFUSED (not promoted) |
 | ZeeBreakout | `ZeeBreakout.mq5` | 88501 | v1.00 (2026-10-09) | XAUUSD | REFUSED (not promoted) |
-| **TradeLifecycle** | `TradeLifecycle.mq5` | — | v1.02 (2026-10-14) | any | READY tool: draws one trade's whole life on the chart, never trades |
+| **TradeLifecycle** | `TradeLifecycle.mq5` (+ `SaadEMAs.mq5`, embedded) | — | **v1.03** (2026-10-14) | any | READY tool: draws one trade's whole life on the chart + the Saad EMAs (50 red, 9 blue), never trades |
 | RiskGuardButtons | `RiskGuardButtons.mq5` | 77001 | v1.14 (2026-10-07) | any | LIVE tool (risk buttons) |
 | TickSpeedGauge | `TickSpeedGauge.mq5` | — | v1.53 (2026-10-07) | any | research panel, never trades |
 | TurtleTradeLogger | `TurtleTradeLogger.mq5` | — | v1.06 (2026-09-25) | any | LIVE logger |
@@ -208,6 +208,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | EA / Version | Date | What changed |
 |---|---|---|
+| TradeLifecycle v1.03 | 2026-10-14 | The two EMAs Saad trades on, drawn thick on the chart (Zee: "the 50 EMA (thick line red) and 9 EMA (thick line blue)"): EMA 50 red / EMA 9 blue, width 3, computed on M15 by default (`InpEmaTF`) so they're right on any chart timeframe; a small indicator `SaadEMAs` embedded as a resource, so nothing extra to install. Checked: 1,902 M5 bars equal the M15 iMA values, 0 mismatches |
 | TradeLifecycle v1.02 | 2026-10-14 | Saad EA trades (magic 88302/88330/88320): the EA's own expected TP1, recomputed with its rules (SELL: last support; BUY: the exit EMA drawn bar by bar, or "no TP1, 2×ATR trail"), the 75% breakeven line, and what happens at TP1, on the chart and in the panel. Not yet cross-checked against the EAs' logged TP1 values |
 | TradeLifecycle v1.01 | 2026-10-14 | Labels placed in free screen space: measured with TextGetSize, kept above/below the candles under them and off each other and the panel, with dotted leader lines; re-laid out on scroll/zoom; room on the right for open trades; panel sized to its text (Zee: "clear labels … not overlapping") |
 | TradeLifecycle v1.00 | 2026-10-13 | Trade analyzer (Zee: "a lifecycle diagram EA"): picks the open or last closed trade (or a ticket), draws entries/add-ons, the SL/TP path, labelled stop moves (breakeven / trail / widened), partial closes, exit + who/why, best/worst price, and a timeline panel. Records every SL/TP change of every open position to `Common\Files\TradeLifecycle\<login>.csv` (MT5 keeps no SL/TP history). Self-test in the tester passed |

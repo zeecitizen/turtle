@@ -1,5 +1,7 @@
 //+------------------------------------------------------------------+
-//| TradeLifecycle.mq5  v1.02  (2026-10-14)  v1.02: Saad EA trades show|
+//| TradeLifecycle.mq5  v1.03  (2026-10-14)  v1.03: the two Saad EMAs   |
+//| drawn thick on the chart: EMA 50 red, EMA 9 blue (M15 by default).|
+//| v1.02: Saad EA trades show                                          |
 //| the EA's own expected TP1 + its 75% breakeven level. v1.01: labels  |
 //| free space (never on a candle or another label), leader lines,      |
 //| re-laid out on scroll/zoom; panel sized to its text.                |
@@ -23,10 +25,11 @@
 //|  * 1-minute candles for the best / worst price during the trade.    |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.02"
+#property version   "1.03"
 #property strict
 
 #include <Trade/Trade.mqh>
+#resource "\\Indicators\\SaadEMAs.ex5"   // EMA 9 (blue) + EMA 50 (red), embedded: no separate install
 
 input ulong  InpTicket        = 0;      // InpTicket — position ticket to show (0 = the open position, else the last closed one)
 input long   InpMagic         = -1;     // InpMagic — only trades with this magic number (-1 = any)
@@ -37,6 +40,10 @@ input double InpLabelStepUsd  = 1.0;    // InpLabelStepUsd — label a stop move
 input bool   InpShowPanel     = true;   // InpShowPanel — the summary panel with the timeline
 input int    InpPanelFont     = 9;      // InpPanelFont — panel font size
 input bool   InpSaadTargets   = true;   // InpSaadTargets — for Saad EA trades (magic 88302 / 88330 / 88320): recompute the EA's own TP1 and its 75% breakeven level
+input bool   InpShowEmas      = true;   // InpShowEmas — draw the two Saad EMAs thick on the chart: EMA 50 red, EMA 9 blue
+input ENUM_TIMEFRAMES InpEmaTF = PERIOD_M15; // InpEmaTF — timeframe of those EMAs (M15 = the candles Saad trades on)
+input int    InpEmaFast       = 9;      // InpEmaFast — the blue EMA
+input int    InpEmaSlow       = 50;     // InpEmaSlow — the red EMA
 input bool   InpSelfTest      = false;
 input string InpVerify        = "";     // InpVerify — TESTER ONLY: "time|side|price|magic;..." recompute the Saad TP1 for these entries and print it  // InpSelfTest — TESTER ONLY: open + manage a demo trade, then print its reconstructed lifecycle
 
@@ -644,18 +651,26 @@ void SelfTest()
 }
 
 //+------------------------------------------------------------------+
+int g_hEmas = INVALID_HANDLE;
+void EmasShow()
+{
+   if (!InpShowEmas || ChartIndicatorGet(0, 0, "SaadEMAs") != INVALID_HANDLE) return;   // already on the chart (e.g. after a symbol switch)
+   g_hEmas = iCustom(_Symbol, PERIOD_CURRENT, "::Indicators\\SaadEMAs.ex5", InpEmaTF, InpEmaFast, InpEmaSlow);
+   if (g_hEmas == INVALID_HANDLE || !ChartIndicatorAdd(0, 0, g_hEmas)) PrintFormat("[TradeLifecycle] could not draw the EMAs (error %d)", GetLastError());
+}
 int OnInit()
 {
+   EmasShow();
    g_recFile = RecPath();
    g_sym = "";
    if (InpSelfTest && MQLInfoInteger(MQL_TESTER)) g_stT = TimeCurrent() + 3600;
    RecPoll();
    EventSetTimer(1);
    Refresh();
-   PrintFormat("[TradeLifecycle] v1.02 | showing position %I64u %s | recording SL/TP changes to Common\\Files\\%s", g_pid, g_sym, g_recFile);
+   PrintFormat("[TradeLifecycle] v1.03 | showing position %I64u %s | recording SL/TP changes to Common\\Files\\%s", g_pid, g_sym, g_recFile);
    return INIT_SUCCEEDED;
 }
-void OnDeinit(const int reason) { EventKillTimer(); if (reason != REASON_CHARTCHANGE) Del(); }
+void OnDeinit(const int reason) { EventKillTimer(); if (reason != REASON_CHARTCHANGE) { Del(); ChartIndicatorDelete(0, 0, "SaadEMAs"); } }
 void OnTimer()
 {
    RecPoll();
