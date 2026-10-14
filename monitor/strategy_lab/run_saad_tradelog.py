@@ -11,7 +11,7 @@ C = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\Common\Files")
 T = Path(r"C:\Users\zeesh\turtle\testing")
 t0 = time.time()
 if what == "saad":
-    r = axi_rig.run("Saad_tradelog", sym, "M15", {"InpLots": 1.0, "InpLog": "false", "InpLogCsv": "true", "InpDraw": "false"},
+    r = axi_rig.run("Saad_tradelog", sym, "M15", {"InpLots": 1.0, "InpLog": "false", "InpLogCsv": "true", "InpDraw": "false", "InpTouchPips": float(sys.argv[7]) if len(sys.argv) > 7 else 0},
                     frm=frm, to=to, exec_mode=200, tag=f"saadlog_{tag}", deposit=25000, timeout=7200)
     f = C / f"Saad15_trades_{sym}_88302_tester.csv"
     dst = T / f"saad_trades_{tag}.csv"
