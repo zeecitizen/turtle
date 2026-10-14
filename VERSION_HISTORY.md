@@ -867,6 +867,24 @@ machine learning methods described in report.md to the VSISA EA on 5 min timefra
 Every layer can be switched off with its `Inp*Mode = 0`. Compiled into the Axi terminal with its four .mqh
 files. Full results: report.md §28.
 
+## Saad_strategy_15min v1.22 — the EMA 9 and EMA 50 drawn on the chart (2026-10-14)
+
+**Who:** Zee: *"have you added the EMA lines 9 and 50 .. to the saad strategy EA.. when i attach in on chart it
+doesnot show the two lines"*. Until now the lines were only drawn by TradeLifecycle v1.03.
+
+**What** (display only):
+- When the EA is attached, it adds the embedded `SaadEMAs` indicator to the chart. The indicator is built into the
+  .ex5 as a `#resource`, so nothing else needs installing.
+- EMA 9 is thick blue and EMA 50 is thick red. Both use the chart's own timeframe and the EA's `InpEmaFast` and
+  `InpEmaSlow`, so they are exactly the lines it trades on.
+- `InpShowEmas = true` switches it on. If the lines are already on the chart, they aren't added twice. They are
+  removed when the EA is removed, but kept on a timeframe change or an inputs change.
+- Skipped in the fast (non-visual) tester, so the trades can't change. They stay identical to v1.21
+  (+$202,221.80, 1,169 deals).
+
+Compiled in Axi and PXBT with 0 errors and 0 warnings. The trading machine needs the new .mq5: F7, then re-drag.
+Close any open Saad trade first.
+
 ## Saad_strategy_15min v1.21 — exit / setup text black, TP1 labels blue (2026-10-14)
 
 **Who:** Zee: *"EXIT #3 Closed $-4.10 should be in black color"*, *"CTC / SL hit text is blue color"*, *"SETUP LONG:
