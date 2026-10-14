@@ -2012,3 +2012,39 @@ That keeps a win above $10 even when the target fill slips under random delays. 
 **Still not "every day":**
 - about 1 weekday in 9 has no qualifying setup
 - about 1 in 20 loses
+
+
+### bread_winner v1.02: VSISA_Pullbacks as a late fallback (14 Oct, same evening)
+
+**What changed:**
+- If no shot has fired by **PKT 22:00** (1 PM New York), VSISA_Pullbacks may take the day's shot.
+- Settings: `InpUsePb = true`, trigger 32 (`InpTrig = 37`), `InpPbFrom = 22`.
+
+**Why:**
+- On its own, Pullbacks has no edge at this geometry (82%).
+- But late in the NY session, on days with no other setup, its shots won about 9 out of 9. That filled 8 empty
+  days without adding a red day.
+- 21:00–23:00 is a plateau:
+
+  | Fallback from | Bread days | Red |
+  |---|---|---|
+  | 21:00 | 171 | 10 |
+  | 22:00 | 172 | 9 |
+  | 23:00 | 169 | 9 |
+
+- Starting at 18:00 fills more days (177) but adds red days (14) and loses money.
+
+**Receipts, v1.02 on its own defaults** (scored by Pakistan day):
+
+| | Bread days (≥ $10) | Red | No shot | Net | Per weekday | Worst day | Max DD |
+|---|---|---|---|---|---|---|---|
+| Full year, 200 ms | **172 / 196 (87.8%)** | 9 | 14 | +$1,712 | $8.74 | −$134 | $338 |
+| Jan–Jun, 200 ms | 109 / 125 (87.2%) | 4 | 11 | +$1,141 | $9.13 | −$134 | $244 |
+| **Full year, random delay** | **164 / 196 (83.7%)** | 11 | 15 | +$1,472 | $7.51 | −$134 | $419 |
+| Jul–Oct, random delay | 61 / 71 (85.9%) | 5 | 3 | +$556 | $7.82 | −$105 | $413 |
+
+**Still not every day:**
+- about 1 weekday in 14 has no shot
+- about 1 in 20 loses (about −$100 to −$134)
+
+Compiled in the Axi terminal: 0 errors.

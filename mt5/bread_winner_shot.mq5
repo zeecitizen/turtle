@@ -35,7 +35,8 @@ input bool   InpVsLate      = true;
 input double InpDiaMaxStop  = 0;      // InpDiaMaxStop — skip a Diamond setup whose stop is further than this $ of price (0 = off)
 input double InpDiaFrom     = -1;     // InpDiaFrom — Diamond may fire only from this PKT hour (-1 = the window start)
 input double InpSaadFrom    = -1;     // InpSaadFrom — Saad may fire only from this PKT hour (-1 = the window start)
-input double InpVsFrom      = -1;     // InpVsFrom — VSISA may fire only from this PKT hour (-1 = the window start)
+input double InpVsFrom      = -1;
+input double InpPbFrom      = -1;     // InpPbFrom — VSISA_Pullbacks may fire only from this PKT hour (-1 = window start): a late FALLBACK     // InpVsFrom — VSISA may fire only from this PKT hour (-1 = the window start)
 input int    InpShotTag     = 0;
 input double InpDiaWith4h   = 0;      // InpDiaWith4h — Diamond only when the last 16 M15 candles (4h) moved at least this $ its way (0 = off) [census: 11.5 -> 93% both halves]
 input int    InpSaadNoVsMin = 0;
@@ -227,7 +228,7 @@ bool BwVs2Hook(int side, double sl)     // the 2nd VSISA engine reports a setup 
 bool BwPbHook(int side, double sl)      // VSISA_Pullbacks reports a setup (trigger 32)
 {
    g_sig[5]++;
-   if ((InpTrig & 32) == 0 || !BwShotAvailable() || ((InpCtxMask & 32) != 0 && !BwContextOk(side))) return true;
+   if ((InpTrig & 32) == 0 || !BwFromOk(InpPbFrom) || !BwShotAvailable() || ((InpCtxMask & 32) != 0 && !BwContextOk(side))) return true;
    g_scoutSl = sl; BwHostShot(side, 5);
    return true;
 }

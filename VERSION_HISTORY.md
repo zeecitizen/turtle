@@ -636,6 +636,28 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## bread_winner v1.02 — VSISA_Pullbacks as a late fallback (2026-10-14)
+
+**What changed:**
+- `InpUsePb = true`, `InpTrig = 37` (Diamond + VSISA + Pullbacks), `InpPbFrom = 22`.
+- If no shot has fired by PKT 22:00, a VSISA_Pullbacks setup may take the day's shot.
+- Everything else is v1.01 ($8 stop, 0.12 lots, re-anchored to the fill).
+
+**Why:** on its own Pullbacks is random-level here. As a late fallback it filled 8 empty days with no extra red
+day. 21:00–23:00 is a plateau (171 / 172 / 169 bread days), and it held in both halves:
+- Jan–Jun: 109 / 125
+- Jul–Oct: 63 / 71
+
+**Receipts** (own defaults, scored by Pakistan weekday):
+
+| Run | Bread days (≥ $10) | Red | No shot | Net | Per day | Worst day | DD |
+|---|---|---|---|---|---|---|---|
+| Full year, 200 ms | **172 / 196 (87.8%)** | 9 | 14 | +$1,712 | $8.74 | −$134 | $338 |
+| Full year, random delay | 164 / 196 (83.7%) | 11 | — | +$1,472 | — | — | — |
+| Jul–Oct, random delay | 61 / 71 (85.9%) | 5 | — | +$556 | — | — | — |
+
+Compiled in the Axi terminal: 0 errors (checked before this entry). Not attached.
+
 ## bread_winner v1.01 — $8 stop, 0.12 lots (2026-10-14)
 
 **What changed:**

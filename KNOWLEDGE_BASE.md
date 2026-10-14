@@ -197,3 +197,9 @@ filters above, and the looser VSISA.
 first-of-day policy the stop plateau $8–10 beat $6 on bread days AND money, in both halves. This is the opposite
 of the all-setups census, where wider stops lost money: the first-of-day selection changes the answer.
 **VSISA on M3 / M4 / M6 / M10: 82–85%, all negative.** Only M5 works.
+
+**v1.02:** VSISA_Pullbacks is random-level on its own. As a **late fallback** (only after PKT 22:00, only on
+days with no shot) it filled 8 empty days with no extra red days: 172 / 196 bread days (87.8%), 9 red, +$1,712.
+- 21:00–23:00 is a plateau.
+- An 18:00 start fills more days but adds red days.
+- Lesson: a weak scout can still help as a **conditional fallback** in a narrow late window.
