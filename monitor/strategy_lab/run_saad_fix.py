@@ -30,6 +30,12 @@ for _t in (10, 15, 20): V[f"tall{_t}"] = ("Saad_tallmaru", {"InpTallMaruAtr": _t
 V["capM"] = ("Saad_capstop", {"InpCapStop": 1})
 V["capAll"] = ("Saad_capstop", {"InpCapStop": 2})
 for _c in range(10, 21): V[f"capM{_c}"] = ("Saad_capstop", {"InpCapStop": 1, "InpCapUsd": _c})
+V["noham"] = ("Saad_strategy_15min", {"InpHammer": "false", "InpStar": "false"})
+V["pindir"] = ("Saad_strategy_15min", {"InpPinDir": "true"})
+V["pindir_noham"] = ("Saad_strategy_15min", {"InpPinDir": "true", "InpHammer": "false", "InpStar": "false"})
+for _w in (35, 55, 65): V[f"wick{_w}"] = ("Saad_strategy_15min", {"InpWickMin": _w / 100})
+for _n in (10, 30): V[f"nose{_n}"] = ("Saad_strategy_15min", {"InpNoseMax": _n / 100})
+V["body40"] = ("Saad_strategy_15min", {"InpBodyMax": 0.40})
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 P["fullrnd"] = P["full"]      # same dates, random delay (exec -1)
 axi_rig.use(sys.argv[1])
