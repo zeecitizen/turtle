@@ -16,6 +16,25 @@ hostile one, or it doesn't ship.
 
 ---
 
+## FractalBreakout v1.00 (2026-10-15) — TEST, not promoted, do not attach
+
+Zee: *"there is william fractals indicator .. on tradingview i've applied it with setting Periods 25... it draws these arrows on the 5 min timeframe. i want to backtest a strategy based on this"* — entry chosen: breakout of the fractal level; exit: *"trailing stop loss.. and tp is when trailing sl is hit"*.
+
+- **What:** `mt5/FractalBreakout.mq5`, magic 88410, M5. Own 25-bar fractal detector on closed bars (MT5's `iFractals` is fixed at 2). A level is armed only when CONFIRMED, 25 bars after the pivot (2h05m on M5); TradingView paints the arrow back on the pivot bar, so the chart looks better than anything tradeable. BuyStop at the newest up-fractal high, SellStop at the newest down-fractal low, one position at a time, each level used once. Exit is a trailing stop only: `InpTrailMode` 0 = fixed $ distance (also the initial stop), 1 = newest opposite confirmed fractal (initial stop capped at $30). `InpEntryMode` 1 = no-rules control (alternate buy/sell every 24 bars when flat) with the identical exit.
+- **Detector parity:** on 952 OANDA M5 bars (Oct 9–14) the EA's logic matches TradingView's built-in `STD;Whilliams_Fractals` (Periods 25) 12/12 up and 10/10 down, no extras. TV stores each signal 25 bars after the pivot.
+- **Receipts** (MT5 Strategy Tester, XAUUSD_TK on the Axi rigs, real ticks 100%, no discards, random delay, $4/lot commission added, 0.10 lot, 2026-01-06 → 2026-10-08):
+
+| exit | FRACTAL net · WR · trades · DD · $/trade | CONTROL net · WR · trades |
+|---|---|---|
+| trail $2 | +$2,431 · 40.7% · 696 · $659 · +3.49 | −$3,501 · 33.4% · 2,156 |
+| trail $3 | +$2,670 · 40.4% · 694 · $814 · +3.85 | −$7,316 · 32.9% · 2,137 |
+| trail $5 | +$2,472 · 39.3% · 694 · $1,848 · +3.56 | −$4,730 · 34.2% · 2,003 |
+| trail $8 | +$602 · 37.2% · 694 · $3,511 · +0.87 | −$5,653 · 33.1% · 1,770 |
+| trail $12 | +$7,001 · 38.5% · 684 · $2,242 · +10.24 | +$5,340 · 37.7% · 1,437 |
+| fractal trail | +$11,162 · 30.6% · 284 · $4,912 · +39.30 | +$2,053 · 26.3% · 445 |
+
+- **Reading:** the fractal entry beats the control at every exit, with a higher WR at every trail. But it is regime-dependent: at $2/$3 almost all the money came Jan–Mar (trail $2: Apr–Oct ≈ −$276), and the wide trails ride gold's trend (the control alone makes +$5,340 at $12). Not promoted. Runner: `monitor/strategy_lab/run_fractal.py`.
+
 ## TurtleUHV v1.00 · ZeeBreakout v1.00 (2026-10-09) — NOT PROMOTED, do not attach
 
 | EA | magic | what | receipts |
