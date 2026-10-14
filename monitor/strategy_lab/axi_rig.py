@@ -32,9 +32,14 @@ def compile_ea(ea):
 def ea_defaults(ea):
     """Every `input` default straight from the source, so nothing is left to the cache."""
     out = {}
-    for m in re.finditer(r"^input\s+\w+\s+(\w+)\s*=\s*([^;]+);", (SRC / f"{ea}.mq5").read_text(
-            encoding="utf-8", errors="ignore"), re.M):
-        out[m.group(1)] = m.group(2).strip().strip('"')
+    src = (SRC / f"{ea}.mq5").read_text(encoding="utf-8", errors="ignore")
+    # inputs declared in local include files too (engine .mqh): unpinned, MT5 reuses the LAST run's values
+    for inc in re.findall(r'^#include\s+"([^"]+\.mqh)"', src, re.M):
+        if (SRC / inc).exists():
+            src = (SRC / inc).read_text(encoding="utf-8", errors="ignore") + "\n" + src
+    for m in re.finditer(r"^input\s+\w+\s+(\w+)\s*=\s*([^;]+);", src, re.M):
+        v = m.group(2).strip().strip('"')
+        out[m.group(1)] = {"PERIOD_M1": "1", "PERIOD_M5": "5", "PERIOD_M15": "15", "PERIOD_M30": "30", "PERIOD_H1": "16385"}.get(v, v)
     return out
 
 
