@@ -1,6 +1,6 @@
 //@version=5
 // ═══════════════════════════════════════════════════════════════════════════
-// Saad 15min v1.22 — TradingView mirror of mt5/Saad_strategy_15min.mq5 v1.22 (2026-10-14)
+// Saad 15min v1.23 — TradingView mirror of mt5/Saad_strategy_15min.mq5 v1.23 (2026-10-14)
 // Same numbers, same lifecycle as the EA. Attach on a 15-minute gold chart.
 //
 // EA input            EA default   here
@@ -17,7 +17,7 @@
 // InpMinRangeAtr      0.55         0.55   candle range >= x ATR(14)  (ATR = MT5's: SIMPLE average of true range)
 // InpLongRule         2 (both)     Both   on 9 EMA -> exit 50 EMA · on 50 EMA -> exit 9 EMA
 // InpShortLine        1 (9 EMA)    9 EMA
-// InpTouchMode/Pips   0 / 0        candle touches the EMA / 0 pips
+// InpTouchMode/Pips   0 / 1        candle touches the EMA, 1 pip ($0.10) tolerance (v1.23)
 // InpLongExitAbove    false        false
 // InpBreakBars        1            1      the next candle must break
 // InpBreakPips        2            2      by 2 pips ($0.20) beyond the high / low (judged on the bid = chart price)
@@ -51,7 +51,7 @@
 // Inside each candle the 1-minute data decides what happened first (stop checked first in a minute).
 // This is a bar-and-minute sketch of the EA: the MT5 Strategy Tester is the judge of money.
 // ═══════════════════════════════════════════════════════════════════════════
-indicator("Saad 15min v1.22 — mirror of the EA", "Saad15", overlay = true,
+indicator("Saad 15min v1.23 — mirror of the EA", "Saad15", overlay = true,
      max_labels_count = 500, max_lines_count = 500, max_boxes_count = 500, max_bars_back = 300)
 
 g1 = "① SETUP CANDLE"
@@ -75,7 +75,7 @@ iSlow    = input.int(50, 'InpEmaSlow', group = g2)
 iLRule   = input.string("Both", 'InpLongRule — LONG setups', options = ["On 9 EMA, exit 50", "On 50 EMA, exit 9", "Both"], group = g2)
 iSLine   = input.string("9 EMA", 'InpShortLine — SHORT setups on', options = ["50 EMA", "9 EMA", "Either"], group = g2)
 iTouchM  = input.string("Candle touches", 'InpTouchMode', options = ["Candle touches", "Wick touches, body on trade side"], group = g2)
-iTouchP  = input.float(0, 'InpTouchPips — touch tolerance', step = 1, group = g2)
+iTouchP  = input.float(1, 'InpTouchPips — touch tolerance', step = 1, group = g2)
 iLExitAb = input.bool(false, 'InpLongExitAbove — LONG only when its exit EMA is above the candle', group = g2)
 
 g3 = "② BREAK · ③ ENTRY · ④ STOP"
@@ -586,7 +586,7 @@ rr(table t, int r, string n, string tx) =>
     table.cell(t, 1, r, tx, text_color = color.white, text_size = size.small, text_halign = text.align_left)
 if barstate.islast and iShowRules
     var table rb = table.new(position.top_right, 2, 8, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
-    table.cell(rb, 0, 0, "📜 SAAD 15-MIN RULES — EA v1.22 settings", text_color = color.yellow, text_size = size.small)
+    table.cell(rb, 0, 0, "📜 SAAD 15-MIN RULES — EA v1.23 settings", text_color = color.yellow, text_size = size.small)
     table.merge_cells(rb, 0, 0, 1, 0)
     rr(rb, 1, "①", "Pin / hammer / marubozu (body ≥ " + str.tostring(iMaruB, "#.##") + ") ≥ " + str.tostring(iMinAtr, "#.##") + "×ATR on the EMA  ·  LONG 9 (exit 50) or 50 (exit 9)  ·  SHORT on the " + iSLine)
     rr(rb, 2, "②", "Break the high / low by " + str.tostring(iBreakP, "#") + " pips within " + str.tostring(iBreakB) + " candle")
@@ -605,7 +605,7 @@ if barstate.islast and iPanel
     pf  = gL > 0 ? gW / gL : na
     wr  = nT > 0 ? float(nW) / nT * 100.0 : 0.0
     net = gW - gL
-    table.cell(p, 0, 0, "📊 SAAD 15-MIN — mirror of EA v1.22", text_color = color.yellow, text_size = size.small)
+    table.cell(p, 0, 0, "📊 SAAD 15-MIN — mirror of EA v1.23", text_color = color.yellow, text_size = size.small)
     table.merge_cells(p, 0, 0, 1, 0)
     row(p, 1, "Trades on this chart", str.tostring(nT) + "  (" + str.tostring(nLong) + " long · " + str.tostring(nShort) + " short)", color.white)
     row(p, 2, "Win rate", str.tostring(wr, "#.#") + "%  (" + str.tostring(nW) + "W / " + str.tostring(nL) + "L)", wr >= 50 ? color.lime : color.orange)
@@ -616,7 +616,7 @@ if barstate.islast and iPanel
     row(p, 7, "Setups · TP1 · CTC · day-close shuts", str.tostring(nSetups) + " · " + str.tostring(nTp1) + " · " + str.tostring(nCtc) + " · " + str.tostring(nDayClose), color.silver)
     row(p, 8, "Skipped: no break · choppy · busy · risk · no support · gap", str.tostring(nNoBrk) + " · " + str.tostring(nChop) + " · " + str.tostring(nBusy) + " · " + str.tostring(nRisk) + " · " + str.tostring(nNoSup) + " · " + str.tostring(nGap), color.silver)
     row(p, 9, "Efficiency ratio now", str.tostring(er, "#.###") + (choppy ? "  CHOPPY" : "  ok"), choppy ? color.orange : color.lime)
-    table.cell(p, 0, 10, "MT5 receipt, EA v1.22 (Axi gold M15 real ticks, Jan 6 – Oct 8 2026, 1 lot): +$202,222 · PF 1.60 · DD $13,422", text_color = color.aqua, text_size = size.tiny)
+    table.cell(p, 0, 10, "MT5 receipt, EA v1.23 (Axi gold M15 real ticks, Jan 6 – Oct 8 2026, 1 lot): +$211,032 · PF 1.63 · DD $13,119", text_color = color.aqua, text_size = size.tiny)
     table.merge_cells(p, 0, 10, 1, 10)
     table.cell(p, 0, 11, "Chart figures are a bar-and-minute sketch; MT5 is the judge", text_color = color.silver, text_size = size.tiny)
     table.merge_cells(p, 0, 11, 1, 11)

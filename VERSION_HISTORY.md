@@ -898,6 +898,33 @@ machine learning methods described in report.md to the VSISA EA on 5 min timefra
 Every layer can be switched off with its `Inp*Mode = 0`. Compiled into the Axi terminal with its four .mqh
 files. Full results: report.md §28.
 
+## Saad_strategy_15min v1.23 — 1-pip EMA touch tolerance (2026-10-14)
+
+**Who:** Zee asked whether a candle that comes NEAR the EMA should count (the 10:00 server pin bar on 14 Oct missed
+the 9 EMA by $0.93): *"can u test what would happen if we included it coz of nearness to the line ?"*, then *"yes test
+thoroughly"*, then *"yes ship Saad_strategy_15min v1.23 with InpTouchPips = 1"*.
+
+**What:** `InpTouchPips` 0 → 1. A candle whose range comes within 1 pip ($0.10) of the EMA counts as on it (both
+sides, both EMAs). Nothing else changed. The TradingView mirror `pine/saad_15min.pine` got the same default and is on
+the chart as "Saad 15min v1.23".
+
+**Receipts** (MT5, Axi XAUUSD_TK real ticks, 6 Jan – 8 Oct, M15, 1 lot, $25k):
+
+| Tolerance | Full year | Jan–Jun | Jul–Oct | PF | Max DD |
+|---|---|---|---|---|---|
+| 0 (v1.22) | +$202,222 | +$134,541 | +$67,681 | 1.60 | $13,422 |
+| **1 (v1.23)** | **+$211,032** | +$138,308 | +$72,724 | **1.63** | **$13,119** |
+| 2 | +$209,138 | +$138,872 | +$70,457 | 1.62 | $13,386 |
+| 3 | +$208,613 | +$134,382 | +$74,423 | 1.60 | $13,743 |
+| 4 | +$202,289 | +$134,437 | +$68,042 | 1.57 | $14,625 |
+| 5 / 10 / 15 | +$191,921 / +$183,882 / +$195,014 | | | ≤ 1.53 | ≥ $16,780 |
+
+Random delay, full year: 1 pip **+$210,737** vs 0 pips +$203,260; 3 pips +$208,924. A smooth curve (best at 1, fading
+to flat at 4, worse from 5) and better in both halves at 1–2 pips. The shipped file reproduced +$211,032 exactly.
+Wide tolerances (the $0.93 miss = 10 pips) LOSE money: −$18.3k.
+
+Compiled in Axi and PXBT: 0 errors. The trading machine runs v1.17: copy the .mq5, F7, re-drag (close any open trade first).
+
 ## Saad_strategy_15min v1.22 — the EMA 9 and EMA 50 drawn on the chart (2026-10-14)
 
 **Who:** Zee: *"have you added the EMA lines 9 and 50 .. to the saad strategy EA.. when i attach in on chart it
