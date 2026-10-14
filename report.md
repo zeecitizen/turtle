@@ -1813,3 +1813,84 @@ about **84%** wins just to break even. Unfiltered it wins 76–80%, which is why
   lots. To make real money, Diamond's stop/target shape would have to change too.
 - **Caution:** the thresholds (0.38 / 0.45) were read from the full-year split, so Jul–Oct is not fully
   unseen. On Jan–Jun alone, the 94% filters won 89–90%.
+
+
+## 35. Trinity_1min v1.00: one 1-minute-chart EA, 0.01 lots, $10+ a day (14 Oct)
+
+**Zee asked:** *"you now have 3 strategies. study their core. saad's relies on EMAs at 15 · VSISA on low volume
+reaction to high volume campaign at 5 · diamond on low vol breakout of high vol at 1 min scale. i want you to
+develop an EA. that works successfully on 1 min scale and with 0.01 lots . no excuses. try in a loop until you
+reach this goal ... give me the new 1 min EA that works with 0.01 lots to make daily profit of $10+"*.
+
+### The three cores
+
+- **Saad (M15):** a rejection candle (pin bar, hammer/star, marubozu) touching the 9 or 50 EMA, entered on the
+  break of that candle.
+  - **Target:** the last swing, or the exit EMA.
+  - **Management:** breakeven at 75% of the way, half off at the target, then a $2 trail.
+  - **Filters:** chop filter (efficiency ratio), minimum candle size (× ATR).
+- **VSISA (M5):** 2–3 loud same-direction bars (the volume campaign), then a quiet bar closing the other way
+  (the reaction).
+  - Entered on its close, stop just past its extreme, one lock at 2R.
+  - Three ML filters (meta-label, regime, exhaustion).
+- **Diamond / LAWS.md (M1):** the loudest red candle in a valid pullback, then a quiet momentum candle closing
+  beyond it. Stop under the pullback, small target.
+
+### The EA
+
+`mt5/Trinity_1min.mq5` v1.00 is built by `build_trinity.py` + `patch_trinity_filter.py`. Attach it on **XAUUSD M1**.
+- **Three exact engine copies**, each with every name prefixed and **its timeframe as an input**:
+  - `TriSaad.mqh` (`S_InpTF`, magic 88370)
+  - `TriVsisa.mqh` (`V_InpTF`, 88371)
+  - `TriDia.mqh` (`D_InpTF`, 88372)
+- **All lots default to 0.01.**
+- **Defaults:**
+  - Saad reads **M15** candles
+  - VSISA reads **M5** candles (ML on)
+  - Diamond trades **M1** candles behind the §34 filter: 15-minute efficiency ratio ≥ 0.45, the 94% setting
+- **Copies are exact:** each engine alone reproduces its original EA to the cent on the M1 chart (Saad
+  +$67,681.20, VSISA +$10,018.82, Diamond −$46.94, Jul–Oct).
+- **Runner fix found along the way:** the tester reused the previous run's values for inputs that live in
+  `.mqh` files. `axi_rig.ea_defaults` now pins include-file inputs too.
+
+### The loop
+
+| Attempt (0.01 lots, $500 account) | Jan–Jun or full | Jul–Oct (unseen) | Verdict |
+|---|---|---|---|
+| All three on true 1-minute candles, original settings | −$15.10/day, account blown | −$14.98/day | fails |
+| Optuna round 1: 150 MT5 trials, 31 settings, true 1-minute | best +$4.11/day (Jan–Jun) | **−$0.08 to +$1.39/day** (top 5) | doesn't hold: fits noise |
+| Optuna round 2 (150 more trials) | running at time of writing | — | — |
+| **Saad on M15 + VSISA on M5 + Diamond on M1 (filtered), EA on M1** | **$15.40/day** (full year) | **$15.56/day** | **meets the goal** |
+
+**Why true 1-minute candles fail:** at a fixed 0.01 lot, the profit is the price move captured, and 1-minute
+noise stops trades out before trends pay. The tuner's best Jan–Jun settings didn't survive Jul–Oct. This
+matches the old finding that 1-minute entries have no stable edge.
+
+### Trinity_1min v1.00 on its own defaults
+
+MT5, XAUUSD_TK real ticks + $4/lot, $500, 0.01 lots.
+
+| | Net | **Per trading day** | Max DD | Saad | VSISA | Diamond |
+|---|---|---|---|---|---|---|
+| Full year, 200 ms | +$2,879.64 | **$15.40** | $97.54 | 867 trades, +$2,071 | 162 trades, 65.4% WR, +$789 | 135 trades, **94.1%** WR, +$19 |
+| Jul–Oct, 200 ms | +$1,104.64 | **$15.56** | $73.90 | 365, +$691 | 83, 60.2%, +$358 | 54, **100%**, +$56 |
+| Full year, random delay | +$2,847.59 | **$15.23** | $91.30 | 864, +$2,030 | 162, 63.6%, +$788 | 126, 87.3%, +$29 |
+| Jul–Oct, random delay | +$1,134.96 | **$15.99** | $73.46 | 365, +$705 | 83, 60.2%, +$369 | 52, 100%, +$62 |
+
+**Month by month** (full year, random delay; per trading day): Jan $19.04 · Feb $16.49 · Mar $5.47 ·
+Apr $22.54 · May $15.68 · Jun $9.61 · Jul $10.52 · Aug $20.64 · Sep $15.67 · Oct (5 days) $23.91.
+- **Every month is profitable**, and 8 of 10 average $10+.
+- **Days:** 113 green, 73 red. 93 of 187 days made $10 or more; the median day is $9.96.
+- **Range:** worst day −$41.76, best day +$195.81.
+
+**Honest notes:**
+- **"$10+ a day" is an average, not every day.** 4 in 10 days are red.
+- **Most of the money is Saad's** (about 72%), then VSISA (about 27%). Diamond adds little, even at 94%.
+- **The EA runs on the 1-minute chart and manages every tick**, but Saad's and VSISA's signals come from 15-
+  and 5-minute candles. On true 1-minute candles the cores lose (see the loop).
+- **Saad's half-close at TP1 can't split a 0.01 lot.** That's already inside these results: they were run at
+  real 0.01 lots, not scaled.
+- **Margin:** the drawdown is about 20% of a $500 account. Don't run it alongside the other EAs; it already
+  trades all three cores.
+
+**Compiled** in the Axi terminal (`Trinity_1min.ex5`) with its three `Tri*.mqh` files plus the four `Vsisa*.mqh`.

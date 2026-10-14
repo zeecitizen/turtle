@@ -24,6 +24,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | VSISA | `VSISA.mq5` (+ 4 `Vsisa*.mqh` model files) | 88201 | **v1.30** (2026-10-14) | XAUUSD M5 | READY: ML filters ON + live status panel |
 | **saad_vsisa_hybrid** | `saad_vsisa_hybrid.mq5` (+ `saad_vsisa_hybrid_saad.mqh` + 4 `Vsisa*.mqh`) | 88350 Saad part · 88351 VSISA part | **v1.00** (2026-10-14) | XAUUSD **M5** (Saad part reads M15 itself) | READY, demo first; do not run beside Saad 15-min / VSISA on the same account (it already trades both) |
 | **saad_vsisa_diamond_hybrid** | `saad_vsisa_diamond_hybrid.mq5` (+ `svd_saad.mqh`, `svd_diamond.mqh`, 4 `Vsisa*.mqh`) | 88360 Saad · 88361 VSISA · 88362 Diamond | **v1.00** (2026-10-14) | XAUUSD **M5** | READY, demo first: bigger drawdown (15%) than saad_vsisa_hybrid |
+| **Trinity_1min** | `Trinity_1min.mq5` (+ `TriSaad.mqh`, `TriVsisa.mqh`, `TriDia.mqh`, 4 `Vsisa*.mqh`) | 88370 Saad · 88371 VSISA · 88372 Diamond | **v1.00** (2026-10-14) | XAUUSD **M1**, 0.01 lots | READY, demo first: ~$15/day at 0.01 lots on $500 |
 | VSISA_Pullbacks | `VSISA_Pullbacks.mq5` | 88202 | v1.00 (2026-09-17) | XAUUSD | BUILT |
 | ZeeUHV_Diamond | `ZeeUHV_Diamond.mq5` | 88154 | v1.27 (2026-09-29) | XAUUSD M1 | BUILT |
 | BasedOnLaws | `BasedOnLaws.mq5` | 88184 | v1.44 (file) / v1.43 ledger (2026-08-28) | XAUUSD M1 | BUILT |
@@ -91,6 +92,12 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | v4.02 | 2026-10-11 | **Shipped to Axi:** the TradingView indicator, ported and tuned (break +2 pips, SL 30, ATR ×2 trail) | |
 | v3.20 | 2026-10-11 | Shipped to Axi: 25-pip stop | |
 | v2.00 | 2026-10-11 | Built from `RULES_EMA_SAAD.md`, not shipped | |
+
+## Trinity_1min (magics 88370 / 88371 / 88372, XAUUSD M1, 0.01 lots)
+
+| Version | Date | What changed | Result / note |
+|---|---|---|---|
+| **v1.00** | 2026-10-14 | Saad, VSISA and UHV Diamond as three exact engines in one M1-chart EA, each on its own timeframe input (defaults M15 / M5 / M1), all 0.01 lots; Diamond only when the 15-min efficiency ratio ≥ 0.45 (94% WR, report §34) | $500 account: full year **+$2,880 = $15.40/trading day**, DD $98; Jul–Oct **$15.56/day**; random delay $15.23 / $15.99. Every month green. True 1-minute candles for Saad/VSISA failed on unseen data (report §35) |
 
 ## saad_vsisa_diamond_hybrid (magics 88360 / 88361 / 88362, XAUUSD M5)
 

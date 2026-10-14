@@ -29,14 +29,14 @@ rep('TriDia.mqh', '   int tickets = D_InpStackLots ?', '   if (!TriDiaOk(t, dia)
 HOST = r'''
 input group "=== Diamond filters (trend from Saad's core, volume from VSISA's core) ==="
 input int    InpDiaTrend    = 0;      // InpDiaTrend — 0 off · 1 price beyond the M15 EMA50 on the trade side · 2 + EMA9 beyond EMA50 · 3 + EMA50 sloping that way
-input double InpDiaMinER    = 0.0;    // InpDiaMinER — M15 efficiency ratio (16 candles) at least this (0 = off)
+input double InpDiaMinER    = 0.45;   // InpDiaMinER — M15 efficiency ratio (16 candles) at least this (0 = off) [v1.00: 0.45 = 94% WR, report §34]
 input bool   InpDiaVsNoOpp  = false;  // InpDiaVsNoOpp — skip when VSISA's last setup within 240 min pointed the other way
 input int    InpDiaVsSame   = 0;      // InpDiaVsSame — require a same-direction VSISA setup within this many minutes (0 = off)
 input bool   InpDiaSaadSame = false;  // InpDiaSaadSame — require an open same-direction Saad position
 input int    InpDiaRegSkip  = 0;      // InpDiaRegSkip — skip in these VSISA regimes (bit mask, 4 = high-vol cluster)
 input int    InpDiaHourFrom = 0;      // InpDiaHourFrom — server hour window start
 input int    InpDiaHourTo   = 0;      // InpDiaHourTo — window end (<= start = off)
-input bool   InpDiaLog      = true;   // InpDiaLog — one CSV row per Diamond position (Common\Files\trinity_dia_feat.csv)
+input bool   InpDiaLog      = false;  // InpDiaLog — one CSV row per Diamond position (Common\Files\trinity_dia_feat.csv)
 
 datetime g_tvRawT = 0; int g_tvRawS = 0, g_tvRawSPrev = 0; datetime g_tvRawTPrev = 0;
 void TriVsRaw(int side) { g_tvRawTPrev = g_tvRawT; g_tvRawSPrev = g_tvRawS; g_tvRawT = TimeCurrent(); g_tvRawS = side; }

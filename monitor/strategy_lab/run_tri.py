@@ -30,6 +30,7 @@ V = {
     "dfD_er38_reg": {"S_InpTF": 15, "V_InpTF": 5, "D_InpTF": 1, "V_InpVerbose": "false", "InpDiaLog": "false", "InpDiaMinER": 0.38, "InpDiaRegSkip": 4},
     "dfE_er42_reg": {"S_InpTF": 15, "V_InpTF": 5, "D_InpTF": 1, "V_InpVerbose": "false", "InpDiaLog": "false", "InpDiaMinER": 0.42, "InpDiaRegSkip": 4},
     "dfF_er38_reg_tr3": {"S_InpTF": 15, "V_InpTF": 5, "D_InpTF": 1, "V_InpVerbose": "false", "InpDiaLog": "false", "InpDiaMinER": 0.38, "InpDiaRegSkip": 4, "InpDiaTrend": 3},
+    "default":  {},
     # everything on true 1-minute candles, untuned
     "pure1m": {"S_InpTF": 1, "V_InpTF": 1, "D_InpTF": 1, "V_InpVerbose": "false", "V_InpMetaMode": 0, "V_InpRegimeMode": 0, "V_InpExhMode": 0},
 }
