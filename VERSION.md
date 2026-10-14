@@ -26,6 +26,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | **saad_vsisa_diamond_hybrid** | `saad_vsisa_diamond_hybrid.mq5` (+ `svd_saad.mqh`, `svd_diamond.mqh`, 4 `Vsisa*.mqh`) | 88360 Saad · 88361 VSISA · 88362 Diamond | **v1.00** (2026-10-14) | XAUUSD **M5** | READY, demo first: bigger drawdown (15%) than saad_vsisa_hybrid |
 | **Trinity_1min** | `Trinity_1min.mq5` (+ `TriSaad.mqh`, `TriVsisa.mqh`, `TriDia.mqh`, 4 `Vsisa*.mqh`) | 88370 Saad · 88371 VSISA · 88372 Diamond | **v1.00** (2026-10-14) | XAUUSD **M1**, 0.01 lots | READY, demo first: ~$15/day at 0.01 lots on $500 |
 | **Saad raw** | `Saad_raw.mq5` | 88303 | **v1.00** (2026-10-14) | XAUUSD M15 | RESEARCH, do not attach: the core Saad rules with no filters (Zee) - MT5 full year +$76,834, DD $76,520 vs v1.23 +$211,032 / $13,119 |
+| **FractalBreakout** | `FractalBreakout.mq5` | 88410 | **v1.00** (2026-10-15) | XAUUSD **M5** | TEST, do not attach: Williams Fractals (25) breakout + trailing stop. Beats a no-rules control at every trail, but most of the profit was Jan–Mar |
 | **bread_winner** | `bread_winner.mq5` (+ `bread_saad/vsisa/dia/pb/vsisa2.mqh`, 4 `Vsisa*.mqh`) | 88390–88395 (shots 88393, Diamond 88392) | **v1.03** (2026-10-14) | XAUUSD, any chart | READY, demo first: ONE ~$11.5 shot per Pakistan day; ~92% of weekdays bread (88% random delay), ~1 in 15 red |
 | VSISA_Pullbacks | `VSISA_Pullbacks.mq5` | 88202 | v1.00 (2026-09-17) | XAUUSD | BUILT |
 | ZeeUHV_Diamond | `ZeeUHV_Diamond.mq5` | 88154 | v1.27 (2026-09-29) | XAUUSD M1 | BUILT |
@@ -99,6 +100,12 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | v4.02 | 2026-10-11 | **Shipped to Axi:** the TradingView indicator, ported and tuned (break +2 pips, SL 30, ATR ×2 trail) | |
 | v3.20 | 2026-10-11 | Shipped to Axi: 25-pip stop | |
 | v2.00 | 2026-10-11 | Built from `RULES_EMA_SAAD.md`, not shipped | |
+
+## FractalBreakout (magic 88410, XAUUSD M5)
+
+| Version | Date | What changed | Result / note |
+|---|---|---|---|
+| **v1.00** | 2026-10-15 | Zee's TradingView "Williams Fractals, Periods 25" on M5. BuyStop at the newest CONFIRMED up-fractal high, SellStop at the newest confirmed down-fractal low (confirmed = 25 bars later, 2h05m); one trade at a time; exit = trailing stop only, no target. `InpEntryMode` 1 = no-rules control | MT5, XAUUSD_TK real ticks, random delay, 0.10 lot, Jan 6–Oct 8: trail $2 **+$2,431** (696 tr, 40.7% WR, DD $659) · $3 **+$2,670** (40.4%, DD $814) · $12 +$7,001 (38.5%, DD $2,242) · fractal-to-fractal trail +$11,162 (30.6%, DD $4,912). Control, same exits: −$3,501 / −$7,316 / +$5,340 / +$2,053. Detector = TradingView 22/22 fractals. $2–3 trail: Apr–Oct ≈ flat |
 
 ## bread_winner (magics 88390–88394, XAUUSD, one shot per Pakistan day)
 
