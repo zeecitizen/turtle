@@ -25,6 +25,7 @@ V["multi2opp"] = ("Saad_strategy_15min", {"InpMaxPos": 2, "InpExtraDir": 2})
 for _h in (45, 55, 60): V[f"hamnose{_h}"] = ("Saad_strategy_15min", {"InpHamNose": _h / 100})
 for _s in (10, 20): V[f"sl{_s}"] = ("Saad_strategy_15min", {"InpSlPips": _s})
 for _r in (6, 8, 10, 12, 20): V[f"risk{_r}"] = ("Saad_strategy_15min", {"InpMaxRiskUsd": _r})
+for _c in (100, 105, 115, 120): V[f"chop{_c}"] = ("Saad_strategy_15min", {"InpChopEr": _c / 1000})
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 P["fullrnd"] = P["full"]      # same dates, random delay (exec -1)
 axi_rig.use(sys.argv[1])
@@ -34,5 +35,12 @@ for name in sys.argv[2:]:
     sets = {"InpLots": 1.0, "InpLog": "false", "InpDraw": "false", **sets}
     r = axi_rig.run(ea, "XAUUSD_TK", "M15", sets, frm=P[per][0], to=P[per][1], exec_mode=-1 if per.endswith("rnd") else 200, tag=f"saadfix_{var}_{per}", deposit=25000, timeout=3600)
     rec = {"variant": var, "per": per, **{k: r.get(k) for k in ("net", "trades", "wr", "pf", "dd", "net_per_dd", "day_stats", "trade_stats")}}
+    try:   # the EA's own end-of-run counts: setups, entries, skipped (no break, gap, risk, no support, choppy, busy ...)
+        import glob, os
+        lg = max(glob.glob(str(axi_rig.RIG / "Tester" / "logs" / "*.log")), key=os.path.getmtime)
+        rows = [x for x in open(lg, encoding="utf-16", errors="ignore").read().splitlines() if "[SAAD] setups" in x]
+        rec["ea_counts"] = rows[-1].split("[SAAD] ", 1)[1] if rows else None
+    except Exception as e:
+        rec["ea_counts"] = f"n/a ({e})"
     with open(Path(r"C:\Users\zeesh\turtle\testing\saad_fix_runs.jsonl"), "a") as f: f.write(json.dumps(rec) + "\n")
     print(f"{name}: net {r.get('net'):,.0f} | deals {r.get('trades')} | PF {r.get('pf')} | DD {r.get('dd')} | net/DD {r.get('net_per_dd')} | worst day {r.get('day_stats', {}).get('worst')}", flush=True)
