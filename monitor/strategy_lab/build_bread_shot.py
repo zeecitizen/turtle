@@ -68,6 +68,7 @@ HOST = r'''//+------------------------------------------------------------------
 #include "bws_saad.mqh"
 #include "bws_vsisa.mqh"
 #include "bws_dia.mqh"
+#include "bws_pb.mqh"
 
 input group "=== bread_winner: the shot ==="
 input int    InpTrig        = 1;      // InpTrig — triggers: 1 Diamond · 2 Saad · 4 VSISA · 8 PULSE · 16 RANDOM control (add them up)
@@ -90,7 +91,17 @@ input double InpDiaMaxStop  = 0;      // InpDiaMaxStop — skip a Diamond setup 
 input double InpDiaFrom     = -1;     // InpDiaFrom — Diamond may fire only from this PKT hour (-1 = the window start)
 input double InpSaadFrom    = -1;     // InpSaadFrom — Saad may fire only from this PKT hour (-1 = the window start)
 input double InpVsFrom      = -1;     // InpVsFrom — VSISA may fire only from this PKT hour (-1 = the window start)
-input int    InpShotTag     = 0;      // InpShotTag — shot log file bread_shots_<tag>.csv   // InpVsLate — VSISA fires the shot only after its own filters (regime, risk, target, META-LABEL ML)
+input int    InpShotTag     = 0;
+input double InpDiaWith4h   = 0;      // InpDiaWith4h — Diamond only when the last 16 M15 candles (4h) moved at least this $ its way (0 = off) [census: 11.5 -> 93% both halves]
+input int    InpSaadNoVsMin = 0;
+input int    InpSrvBlockFrom = 0;     // InpSrvBlockFrom — no shot from this SERVER hour... (the thin rollover hour before gold's daily break)
+input int    InpSrvBlockTo   = 0;     // InpSrvBlockTo — ...until this server hour (wraps past midnight; From = To = off)
+input bool   InpFriLate      = false;
+input bool   InpReanchor     = true;  // InpReanchor — after the fill, move TP/SL to exact $ distances from the FILL price (slippage-proof $10)
+input int    InpSlMode       = 0;     // InpSlMode — host shot stop: 0 fixed InpShotSl · 1 the scout's own structural stop, clamped to [InpSlMin, InpSlMax]
+input double InpSlMin        = 3.0;   // InpSlMin — $ of price
+input double InpSlMax        = 10.0;  // InpSlMax — $ of price
+input double InpMaxSpread    = 0;     // InpMaxSpread — no shot while the spread is wider than this $ (0 = off)  // InpFriLate — no shot on Friday after server 20:00 (weekend gap)      // InpSaadNoVsMin — Saad only when VSISA's last setup is older than this many minutes (0 = off) [census: 587]      // InpShotTag — shot log file bread_shots_<tag>.csv   // InpVsLate — VSISA fires the shot only after its own filters (regime, risk, target, META-LABEL ML)
 
 input group "=== bread_winner: the context (Saad's trend + VSISA's volume read) ==="
 input int    InpCtxTrend    = 1;      // InpCtxTrend — 0 off · 1 price beyond the M15 EMA50 on the shot side · 2 + EMA9 beyond EMA50 · 3 + EMA50 sloping that way
@@ -104,13 +115,14 @@ input group "=== which engines run (scouts) ==="
 input bool InpUseSaad  = true;   // InpUseSaad — Saad engine (needed for trigger 2)
 input bool InpUseVsisa = true;   // InpUseVsisa — VSISA engine (needed for trigger 4 and InpCtxVsNoOpp / InpCtxRegSkip)
 input bool InpUseDia   = true;   // InpUseDia — Diamond engine (needed for trigger 1)
+input bool InpUsePb    = false;  // InpUsePb — VSISA_Pullbacks engine (needed for trigger 32)
 
 CTrade g_bwT;
 datetime g_tvRawT = 0; int g_tvRawS = 0;
 void TriVsRaw(int side) { g_tvRawT = TimeCurrent(); g_tvRawS = side; }
 int g_hE9 = INVALID_HANDLE, g_hE50 = INVALID_HANDLE;
 int g_shots = 0, g_shotDay = -1, g_shotsTotal = 0;
-int g_sig[5]; int g_fired[5];
+int g_sig[6]; int g_fired[6];
 ulong g_shotPos = 0; datetime g_shotOpen = 0;
 string g_rowFeat[]; ulong g_rowPos[]; int g_rowTrig[]; int g_rowN = 0; string g_lastRow = ""; int g_lastTrig = 0;
 datetime g_lastBar = 0; int g_randMin = -1;
@@ -183,27 +195,49 @@ void BwDayRoll()
    int d = BwPktDay(TimeCurrent());
    if (d != g_shotDay) { g_shotDay = d; g_shots = 0; g_randMin = -1; }
 }
+bool BwSrvBlocked()
+{
+   MqlDateTime d; TimeToStruct(TimeCurrent(), d);
+   if (InpFriLate && d.day_of_week == 5 && d.hour >= 20) return true;
+   if (InpSrvBlockFrom == InpSrvBlockTo) return false;
+   if (InpSrvBlockFrom < InpSrvBlockTo) return d.hour >= InpSrvBlockFrom && d.hour < InpSrvBlockTo;
+   return d.hour >= InpSrvBlockFrom || d.hour < InpSrvBlockTo;
+}
 bool BwShotAvailable()
 {
    BwDayRoll();
-   return g_shots < InpShotMax && BwInWindow(TimeCurrent());
+   if (InpMaxSpread > 0 && SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID) > InpMaxSpread) return false;
+   return g_shots < InpShotMax && BwInWindow(TimeCurrent()) && !BwSrvBlocked();
 }
 bool BwDiaRiskOk(double stop) { return InpDiaMaxStop <= 0 || stop <= InpDiaMaxStop; }
+bool BwSaadVsOk() { return InpSaadNoVsMin <= 0 || g_tvRawT == 0 || (TimeCurrent() - g_tvRawT) / 60 > InpSaadNoVsMin; }
+bool BwDiaWithOk(int side) { if (InpDiaWith4h <= 0) return true; double net = 0; BwER(16, net); return side * net >= InpDiaWith4h; }
 bool BwFromOk(double from) { return from < 0 || BwPktHour(TimeCurrent()) >= from; }
 void BwNoteShot(int trig) { g_shots++; g_shotsTotal++; g_fired[trig]++; g_lastTrig = trig; }
+double g_scoutSl = 0;   // the calling scout's own stop level (set by the hooks)
 bool BwHostShot(int side, int trig)   // open a host-geometry shot
 {
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK), bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    double en = side > 0 ? ask : bid;
-   double sl = side > 0 ? en - InpShotSl : en + InpShotSl, tp = side > 0 ? en + InpShotTp : en - InpShotTp;
+   double dist = InpShotSl;
+   if (InpSlMode == 1 && g_scoutSl > 0) dist = MathMin(InpSlMax, MathMax(InpSlMin, MathAbs(en - g_scoutSl)));
+   g_scoutSl = 0;
+   double sl = side > 0 ? en - dist : en + dist, tp = side > 0 ? en + InpShotTp : en - InpShotTp;
    g_bwT.SetExpertMagicNumber(InpShotMagic);
-   string cm = StringFormat("Bread @VER@ %s %s", trig == 2 ? "SAAD" : trig == 3 ? "VSISA" : trig == 4 ? "PULSE" : "RAND", side > 0 ? "BUY" : "SELL");
+   string cm = StringFormat("Bread @VER@ %s %s", trig == 2 ? "SAAD" : trig == 3 ? "VSISA" : trig == 5 ? "VSPB" : trig == 4 ? "PULSE" : "RAND", side > 0 ? "BUY" : "SELL");
    bool ok = side > 0 ? g_bwT.Buy(InpShotLots, _Symbol, 0, NormalizeDouble(sl, _Digits), NormalizeDouble(tp, _Digits), cm)
                       : g_bwT.Sell(InpShotLots, _Symbol, 0, NormalizeDouble(sl, _Digits), NormalizeDouble(tp, _Digits), cm);
    if (!ok) return false;
    ulong deal = g_bwT.ResultDeal();
    g_shotPos = (deal > 0 && HistoryDealSelect(deal)) ? (ulong)HistoryDealGetInteger(deal, DEAL_POSITION_ID) : g_bwT.ResultOrder();
    g_shotOpen = TimeCurrent();
+   // re-anchor the target and stop to the ACTUAL fill: a delayed / slipped fill otherwise leaves the $1 target short
+   double fill = g_bwT.ResultPrice();
+   if (InpReanchor && fill > 0 && MathAbs(fill - en) > _Point / 2) {
+      double nsl = side > 0 ? fill - dist : fill + dist, ntp = side > 0 ? fill + InpShotTp : fill - InpShotTp;
+      if (!g_bwT.PositionModify(g_shotPos, NormalizeDouble(nsl, _Digits), NormalizeDouble(ntp, _Digits)))
+         PrintFormat("[BREAD] re-anchor failed (%d) - keeping the original TP/SL", g_bwT.ResultRetcode());
+   }
    BwNoteShot(trig);
    BwContextOk(side);                       // refresh the readings for THIS shot (the hook may have skipped the context check)
    BwLogRow(g_shotPos, trig, side);
@@ -221,14 +255,14 @@ bool BwSaadHook(int side, double sl)
 {
    g_sig[2]++;
    if (InpSaadLate) return false;          // let Saad run its own checks; BwSaadLate decides
-   if ((InpTrig & 2) == 0 || !BwFromOk(InpSaadFrom) || !BwShotAvailable() || ((InpCtxMask & 2) != 0 && !BwContextOk(side))) return true;
-   BwHostShot(side, 2);
+   if ((InpTrig & 2) == 0 || !BwSaadVsOk() || !BwFromOk(InpSaadFrom) || !BwShotAvailable() || ((InpCtxMask & 2) != 0 && !BwContextOk(side))) return true;
+   g_scoutSl = sl; BwHostShot(side, 2);
    return true;
 }
 bool BwSaadLate(int side, double sl)
 {
-   if ((InpTrig & 2) == 0 || !BwFromOk(InpSaadFrom) || !BwShotAvailable() || ((InpCtxMask & 2) != 0 && !BwContextOk(side))) return true;
-   BwHostShot(side, 2);
+   if ((InpTrig & 2) == 0 || !BwSaadVsOk() || !BwFromOk(InpSaadFrom) || !BwShotAvailable() || ((InpCtxMask & 2) != 0 && !BwContextOk(side))) return true;
+   g_scoutSl = sl; BwHostShot(side, 2);
    return true;
 }
 bool BwVsisaHook(int side, double sl)
@@ -236,19 +270,26 @@ bool BwVsisaHook(int side, double sl)
    g_sig[3]++;
    if (InpVsLate) return false;            // let VSISA run its filters + ML; BwVsisaLate decides
    if ((InpTrig & 4) == 0 || !BwFromOk(InpVsFrom) || !BwShotAvailable() || ((InpCtxMask & 4) != 0 && !BwContextOk(side))) return true;
-   BwHostShot(side, 3);
+   g_scoutSl = sl; BwHostShot(side, 3);
    return true;
 }
 bool BwVsisaLate(int side, double sl)
 {
    if ((InpTrig & 4) == 0 || !BwFromOk(InpVsFrom) || !BwShotAvailable() || ((InpCtxMask & 4) != 0 && !BwContextOk(side))) return true;
-   BwHostShot(side, 3);
+   g_scoutSl = sl; BwHostShot(side, 3);
+   return true;
+}
+bool BwPbHook(int side, double sl)      // VSISA_Pullbacks reports a setup (trigger 32)
+{
+   g_sig[5]++;
+   if ((InpTrig & 32) == 0 || !BwShotAvailable() || ((InpCtxMask & 32) != 0 && !BwContextOk(side))) return true;
+   g_scoutSl = sl; BwHostShot(side, 5);
    return true;
 }
 bool TriDiaOk(int side, int dia)   // the Diamond engine asks before it fires
 {
    g_sig[1]++;
-   if ((InpTrig & 1) == 0 || !BwFromOk(InpDiaFrom) || !BwShotAvailable() || ((InpCtxMask & 1) != 0 && !BwContextOk(side))) return false;
+   if ((InpTrig & 1) == 0 || !BwDiaWithOk(side) || !BwFromOk(InpDiaFrom) || !BwShotAvailable() || ((InpCtxMask & 1) != 0 && !BwContextOk(side))) return false;
    BwContextOk(side);   // fill the log row
    BwNoteShot(1);
    g_lastTrig = 1;
@@ -323,9 +364,9 @@ void BwReport()
          if (cm == 0 && HistoryDealGetInteger(d, DEAL_ENTRY) != DEAL_ENTRY_IN) net[k] -= 4.0 * HistoryDealGetDouble(d, DEAL_VOLUME);
       }
       for (int j = 0; j < n; j++) { c++; tot += net[j]; if (net[j] > 0) w++; }
-      int tc[5], tw[5]; double tn[5]; ArrayInitialize(tc, 0); ArrayInitialize(tw, 0); ArrayInitialize(tn, 0);
-      for (int r = 0; r < g_rowN; r++) for (int j = 0; j < n; j++) if (ids[j] == g_rowPos[r]) { int k = MathMin(4, MathMax(0, g_rowTrig[r])); tc[k]++; tn[k] += net[j]; if (net[j] > 0) tw[k]++; }
-      PrintFormat("[BREAD-TRIG] diamond %d/%d %.2f | saad %d/%d %.2f | vsisa %d/%d %.2f | pulse/rand %d/%d %.2f", tw[1], tc[1], tn[1], tw[2], tc[2], tn[2], tw[3], tc[3], tn[3], tw[4], tc[4], tn[4]);
+      int tc[6], tw[6]; double tn[6]; ArrayInitialize(tc, 0); ArrayInitialize(tw, 0); ArrayInitialize(tn, 0);
+      for (int r = 0; r < g_rowN; r++) for (int j = 0; j < n; j++) if (ids[j] == g_rowPos[r]) { int k = MathMin(5, MathMax(0, g_rowTrig[r])); tc[k]++; tn[k] += net[j]; if (net[j] > 0) tw[k]++; }
+      PrintFormat("[BREAD-TRIG] diamond %d/%d %.2f | saad %d/%d %.2f | vsisa %d/%d %.2f | pulse/rand %d/%d %.2f | pullbacks %d/%d %.2f", tw[1], tc[1], tn[1], tw[2], tc[2], tn[2], tw[3], tc[3], tn[3], tw[4], tc[4], tn[4], tw[5], tc[5], tn[5]);
       if (InpShotLog && g_rowN > 0) {
          int h = FileOpen(StringFormat("bread_shots_%d.csv", InpShotTag), FILE_WRITE | FILE_TXT | FILE_ANSI | FILE_COMMON);
          if (h != INVALID_HANDLE) {
@@ -348,6 +389,7 @@ int OnInit()
    if (InpUseSaad  && S_OnInit() != INIT_SUCCEEDED) return INIT_FAILED;
    if (InpUseVsisa && V_OnInit() != INIT_SUCCEEDED) return INIT_FAILED;
    if (InpUseDia   && D_OnInit() != INIT_SUCCEEDED) return INIT_FAILED;
+   if (InpUsePb    && P_OnInit() != INIT_SUCCEEDED) return INIT_FAILED;
    PrintFormat("[BREAD] bread_winner_shot @VER@ | trig %d | window PKT %.2f-%.2f | shot %.2f lots TP $%.2f SL $%.2f | ctx trend %d ER %.2f",
                InpTrig, InpWinFrom, InpWinTo, InpShotLots, InpShotTp, InpShotSl, InpCtxTrend, InpCtxMinER);
    return INIT_SUCCEEDED;
@@ -358,6 +400,7 @@ void OnDeinit(const int reason)
    if (InpUseSaad)  S_OnDeinit(reason);
    if (InpUseVsisa) V_OnDeinit(reason);
    if (InpUseDia)   D_OnDeinit(reason);
+   if (InpUsePb)    P_OnDeinit(reason);
 }
 void OnTick()
 {
@@ -366,6 +409,7 @@ void OnTick()
    if (InpUseSaad)  S_OnTick();
    if (InpUseVsisa) V_OnTick();
    if (InpUseDia)   D_OnTick();
+   if (InpUsePb)    P_OnTick();
    BwTrackDia();
    BwBarTriggers();
 }

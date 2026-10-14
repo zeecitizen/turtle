@@ -73,6 +73,25 @@ V = {
     "census_vF_trend60": {"InpTrig": 4, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpShotMax": 99, "InpVsLate": "false", "V_InpTrendTF": 60},
     "census_vAD":      {"InpTrig": 4, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpShotMax": 99, "InpVsLate": "false", "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25},
     "census_vD_h20":   {"InpTrig": 4, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpShotMax": 99, "InpVsLate": "false", "V_InpBodyFrac": 0.25, "InpShotHoldMin": 20},
+    "census_vAD_sl1":   {"InpTrig": 4, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpShotMax": 99, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpSlMode": 1, "InpSlMin": 3, "InpSlMax": 10},
+    "census_vAD_sl2":   {"InpTrig": 4, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpShotMax": 99, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpSlMode": 1, "InpSlMin": 4, "InpSlMax": 8},
+    "census_vAD_sl3":   {"InpTrig": 4, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpShotMax": 99, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpSlMode": 1, "InpSlMin": 5, "InpSlMax": 12},
+    "census_pb":  {"InpTrig": 32, "InpUsePb": "true", "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpShotMax": 99},
+    "polA_pb":    {"InpTrig": 37, "InpUsePb": "true", "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false"},
+    "polA_fri":   {"InpTrig": 5, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpFriLate": "true"},
+    "polA_spr20": {"InpTrig": 5, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpMaxSpread": 0.20},
+    "polA_spr30": {"InpTrig": 5, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpMaxSpread": 0.30},
+    "polA_spr15": {"InpTrig": 5, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpMaxSpread": 0.15},
+    "polA_off":  {"InpTrig": 5, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpSrvBlockFrom": 0, "InpSrvBlockTo": 0, "InpFriLate": "false"},
+    "polA_b22":  {"InpTrig": 5, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpSrvBlockFrom": 22, "InpSrvBlockTo": 1},
+    "polA_b21":  {"InpTrig": 5, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpSrvBlockFrom": 21, "InpSrvBlockTo": 2},
+    "polA_b22_2": {"InpTrig": 5, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpSrvBlockFrom": 22, "InpSrvBlockTo": 2},
+    "polC_b22":  {"InpTrig": 7, "InpCtxMask": 2, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "InpSaadFrom": 17.25, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpSrvBlockFrom": 22, "InpSrvBlockTo": 1},
+    "polB_b22":  {"InpTrig": 7, "InpCtxMask": 2, "InpWinFrom": 12, "InpWinTo": 24, "InpDiaWith4h": 11.5, "InpSaadNoVsMin": 587, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false", "InpSrvBlockFrom": 22, "InpSrvBlockTo": 1},
+    "polA":  {"InpTrig": 5, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false"},
+    "polA4": {"InpTrig": 5, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaWith4h": 11.5, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false"},
+    "polB":  {"InpTrig": 7, "InpCtxMask": 2, "InpWinFrom": 12, "InpWinTo": 24, "InpDiaWith4h": 11.5, "InpSaadNoVsMin": 587, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false"},
+    "polC":  {"InpTrig": 7, "InpCtxMask": 2, "InpWinFrom": 0, "InpWinTo": 24, "InpDiaFrom": 17, "InpSaadFrom": 17.25, "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "V_InpBodyFrac": 0.25, "InpVsLate": "false"},
     "census_vlo_h10":  {"InpTrig": 4, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpShotMax": 99, "InpVsLate": "false", "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "InpShotHoldMin": 10},
     "census_vlo_h20":  {"InpTrig": 4, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpShotMax": 99, "InpVsLate": "false", "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "InpShotHoldMin": 20},
     "census_vlo_h30":  {"InpTrig": 4, "InpCtxMask": 0, "InpWinFrom": 0, "InpWinTo": 24, "InpShotMax": 99, "InpVsLate": "false", "V_InpBigPct": 0.60, "V_InpBigAvg": 1.00, "InpShotHoldMin": 30},
@@ -106,6 +125,22 @@ def day_stats(r, frm, to):
     return {"weekdays": n, "shot_days": len(shot), "bread": bread, "near": near, "red": red,
             "bread_pct": round(100 * bread / n, 1), "shot_wr": round(100 * sum(1 for x in shot if x > 0) / len(shot), 1) if shot else 0,
             "worst": round(min(shot), 2) if shot else 0, "net": round(sum(shot), 2), "per_weekday": round(sum(shot) / n, 2)}
+
+
+def pkt_stats(csv, frm, to):
+    """Score by PAKISTAN day from the EA's own shot log (one row per shot: pkt_time, ..., net)."""
+    import pandas as pd
+    d = pd.read_csv(csv)
+    if not len(d):
+        return {"weekdays": len(weekdays(frm, to)), "shots": 0, "wr": 0, "bread": 0, "bread_pct": 0, "red": 0, "empty": len(weekdays(frm, to)), "net": 0, "per_day": 0, "worst": 0}
+    d["day"] = pd.to_datetime(d.pkt_time, format="%Y.%m.%d %H:%M").dt.strftime("%Y.%m.%d")
+    g = d.groupby("day").net.sum()
+    days = weekdays(frm, to)
+    v = [g.get(x) for x in days if g.get(x) is not None]
+    n = len(days)
+    bread = sum(1 for x in v if x >= 10); red = sum(1 for x in v if x < 0)
+    return {"weekdays": n, "shots": int(len(d)), "wr": round(100 * float((d.net > 0).mean()), 1), "bread": bread, "bread_pct": round(100 * bread / n, 1),
+            "red": red, "empty": n - len(v), "net": round(float(d.net.sum()), 2), "per_day": round(float(d.net.sum()) / n, 2), "worst": round(min(v), 2) if v else 0}
 
 
 def lines(t0):
@@ -142,9 +177,16 @@ if __name__ == "__main__":
         r.update(variant=var, per=per)
         tag = zlib.crc32(name.encode()) % 100000
         src = Path(os.path.expandvars(r"%APPDATA%")) / "MetaQuotes" / "Terminal" / "Common" / "Files" / f"bread_shots_{tag}.csv"
-        if src.exists():
-            shutil.copy(src, OUT.parent / f"bread_shots_{var}_{per}.csv")
+        pk = None
+        if src.exists() and src.stat().st_mtime > time.time() - 7200:
+            dst = OUT.parent / f"bread_shots_{var}_{per}.csv"
+            shutil.copy(src, dst)
+            pk = pkt_stats(dst, *PERIODS[per])
+            r["pkt_days"] = pk
         with open(OUT, "a", encoding="utf-8") as f:
             f.write(json.dumps(r) + "\n")
-        d = r["days"]
-        print(f"{name}: bread days {d['bread']}/{d['weekdays']} ({d['bread_pct']}%) | shot days {d['shot_days']} WR {d['shot_wr']}% red {d['red']} worst {d['worst']} | net {d['net']} ({d['per_weekday']}/weekday) | {r['shot']}", flush=True)
+        if pk:
+            print(f"{name}: PKT days {pk['weekdays']} | shots {pk['shots']} WR {pk['wr']}% | BREAD {pk['bread']} ({pk['bread_pct']}%) | red {pk['red']} | empty {pk['empty']} | net {pk['net']} ({pk['per_day']}/day) | worst {pk['worst']} | {r['shot'][-1:]}", flush=True)
+        else:
+            d = r["days"]
+            print(f"{name}: (server days) bread {d['bread']}/{d['weekdays']} red {d['red']} net {d['net']} | {r['shot']}", flush=True)

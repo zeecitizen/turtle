@@ -636,6 +636,42 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## bread_winner v1.00 — one perfect shot a day for $10 (2026-10-14)
+
+**Who:** Zee: *"The EA takes 1 trade -> 1 perfect shot -> then it ends the day -> at the end of the day i withdraw
+the money made by that EA ($10)"*, *"the only evaluation criteria the EA needs to pass: earn $10 per day
+consistently everyday"*, *"you're allowed to take 0.01, 0.1 or even 1 lot"*.
+
+**What:**
+- `mt5/bread_winner.mq5` v1.00 (`build_bread_final.py` ← `build_bread_shot.py` + `build_bws_pb.py`) holds
+  scout engines:
+  - **Diamond** (M1, magic 88392)
+  - **VSISA** (M5, never trades itself, magic 88391)
+  - **Saad, VSISA_Pullbacks:** off
+- **The shot:** at most one per Pakistan day. It's the first VSISA setup (looser settings) or the first Diamond
+  setup after PKT 17:00. 0.11 lots, TP $1, SL $6, re-anchored to the fill, magic 88393.
+- **Files that must sit next to it:** `bread_saad.mqh`, `bread_vsisa.mqh`, `bread_dia.mqh`, `bread_pb.mqh` and
+  the four `Vsisa*.mqh` files.
+- **Where it's compiled:** the Axi terminal. Not attached.
+- **Knowledge base:** `KNOWLEDGE_BASE.md` (new).
+
+**Receipts** (XAUUSD_TK + $4/lot, $10,000, own defaults, scored by PKT weekday):
+
+| Run | Bread days (≥ $10) | Red | Net | Per day | Worst day | DD |
+|---|---|---|---|---|---|---|
+| Full year, 200 ms | 157 / 196 (80.1%) | 16 | +$1,163 | — | — | — |
+| **Full year, random delay** | **151 / 196 (77.0%)** | 15 | +$1,219 | $6.22 | −$69 | $377 |
+| Jul–Oct, random delay | 57 / 71 (80.3%) | 6 | +$521 | — | — | — |
+
+**How it was chosen** (report §36):
+- A census of every setup, a 1,400-policy search replayed from MT5 outcomes, and real one-shot confirmations.
+- Rejected: ML at both levels (fails out-of-sample), time stops, session/rollover/spread/Friday blocks, and
+  structural or wider/tighter stops.
+
+**Caution:**
+- **Not yet "every day":** about 1 in 12 weekdays loses about $66, and about 1 in 9 has no setup.
+- **Demo first.**
+
 ## Trinity_1min v1.00 — three cores, one M1 EA, 0.01 lots, $10+/day (2026-10-14)
 
 **Who:** Zee: *"develop an EA. that works successfully on 1 min scale and with 0.01 lots . no excuses. try in a
