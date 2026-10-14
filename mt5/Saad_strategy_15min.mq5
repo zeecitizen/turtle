@@ -34,13 +34,14 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.19"
+#property version   "1.20"
 #property strict
 
 #include <Trade/Trade.mqh>
+// v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad15 v1.19"
+#define EA_COMMENT "Saad15 v1.20"
 
 //--- the two lines
 input int    InpEmaFast     = 9;      // InpEmaFast
@@ -171,6 +172,7 @@ input bool   InpLog         = true;   // InpLog — print every trade event to t
 input bool   InpLogCsv      = true;   // InpLogCsv — one CSV row per closed trade in Common\Files (live + visual tester)
 input color  InpLongColor   = clrGreen; // InpLongColor — chart text/marks for LONG setups and trades (Zee: dark green)
 input color  InpShortColor  = clrRed;   // InpShortColor — chart text/marks for SHORT setups and trades
+input color  InpSlTextColor = clrBlack; // InpSlTextColor — stop-loss TEXT (the "SL price" label and stop-move notes; Zee: black). Lines stay red
 input bool   InpDrawSkips   = false;   // InpDrawSkips — also label setups that were skipped (no break, risk, no support, choppy)
 
 CTrade   trade;
@@ -221,7 +223,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-15min] v1.19 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.20 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -445,7 +447,7 @@ void SlMoved(int i, double newSl, string note)
    datetime now = TimeCurrent();
    DLine(g_pos[i].slFrom, g_pos[i].slNow, now, g_pos[i].slNow, g_pos[i].ride ? clrOrange : clrRed, STYLE_DASH, 2);
    g_pos[i].slNow = newSl; g_pos[i].slFrom = now;
-   if (note != "") DText(now, newSl, note, clrOrange, 7, g_pos[i].side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
+   if (note != "") DText(now, newSl, note, InpSlTextColor, 7, g_pos[i].side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
 }
 // the position is gone: label its exit from the closing deal
 void DrawExit(PosState &p)
@@ -881,7 +883,7 @@ void DoEntry(int side, double sl)
       Callout(p.entryTime, p.entry, side < 0, 3.0,
             StringFormat("%s #%d @ %.2f", side > 0 ? "BUY" : "SELL", p.num, p.entry), side > 0 ? InpLongColor : InpShortColor, 10,
             StringFormat("%s #%d  entry %.2f | SL %.2f (-$%.2f) | TP %s | %s", side > 0 ? "BUY" : "SELL", p.num, p.entry, sl, risk, tpTxt, g_pDesc));
-      DText(p.entryTime, sl, StringFormat("SL %.2f", sl), clrRed, 7, side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
+      DText(p.entryTime, sl, StringFormat("SL %.2f", sl), InpSlTextColor, 7, side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
       if (side < 0) {
          DLine(p.entryTime, tp, p.entryTime + 8 * PeriodSeconds(), tp, clrLime, STYLE_DASH, 1, "TP: last support");
          DText(p.entryTime, tp, StringFormat("TP %.2f (last support)", tp), clrLime, 7, ANCHOR_LEFT_UPPER);
