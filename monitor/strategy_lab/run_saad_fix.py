@@ -29,6 +29,7 @@ for _c in (100, 105, 115, 120): V[f"chop{_c}"] = ("Saad_strategy_15min", {"InpCh
 for _t in (10, 15, 20): V[f"tall{_t}"] = ("Saad_tallmaru", {"InpTallMaruAtr": _t / 10})
 V["capM"] = ("Saad_capstop", {"InpCapStop": 1})
 V["capAll"] = ("Saad_capstop", {"InpCapStop": 2})
+for _c in range(10, 21): V[f"capM{_c}"] = ("Saad_capstop", {"InpCapStop": 1, "InpCapUsd": _c})
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 P["fullrnd"] = P["full"]      # same dates, random delay (exec -1)
 axi_rig.use(sys.argv[1])

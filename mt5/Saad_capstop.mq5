@@ -82,6 +82,7 @@ input bool   InpTrigBid     = true;   // InpTrigBid — LONG break judged on the
 //--- ④ stop · ⑤ target
 input double InpSlPips      = 35;     // InpSlPips — stop beyond the candle [v4.02: 34->30] [v1.13: 30->35, real-tick court + Jul-Oct holdout]
 input int    InpCapStop     = 0;      // InpCapStop — RESEARCH (Zee): stop further than InpMaxRiskUsd -> put it AT InpMaxRiskUsd from the entry and trade: 0 off (skip) · 1 marubozu setups only · 2 every setup
+input double InpCapUsd      = 0;      // InpCapUsd — RESEARCH: with InpCapStop 1, a MARUBOZU's stop is never further than this $ from the entry (0 = InpMaxRiskUsd); other setups keep the InpMaxRiskUsd skip
 input double InpMaxRiskUsd  = 15.0;    // InpMaxRiskUsd — skip if the stop is more than this $ of price away (0 = off) [M15: 9->15; 14-18 plateau, 9 skips 2/3 of M15 setups]
 input int    InpLongExit    = 1;      // InpLongExit — 0 a candle touches the exit EMA · 1 a candle CLOSES at / beyond it
 input double InpLongTpPips  = 0;      // InpLongTpPips — LONG: take profit this many pips before the EMA
@@ -855,11 +856,13 @@ void DoEntry(int side, double sl)
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double pip = Pip();
    double en = side > 0 ? ask : bid;
-   if (InpMaxRiskUsd > 0 && MathAbs(en - sl) > InpMaxRiskUsd && (InpCapStop == 2 || (InpCapStop == 1 && g_pKind == 3))) {
-      Log(StringFormat("stop %.2f is $%.2f away -> capped at $%.2f", sl, MathAbs(en - sl), InpMaxRiskUsd));
-      sl = side > 0 ? en - InpMaxRiskUsd : en + InpMaxRiskUsd;
+   double capV = InpCapStop == 1 && g_pKind == 3 && InpCapUsd > 0 ? InpCapUsd : InpMaxRiskUsd;
+   bool capped = InpCapStop == 2 || (InpCapStop == 1 && g_pKind == 3);
+   if (capV > 0 && MathAbs(en - sl) > capV && capped) {
+      Log(StringFormat("stop %.2f is $%.2f away -> capped at $%.2f", sl, MathAbs(en - sl), capV));
+      sl = side > 0 ? en - capV : en + capV;
    }
-   if (InpMaxRiskUsd > 0 && MathAbs(en - sl) > InpMaxRiskUsd) { g_skipRisk++; DSkip(side, StringFormat("stop too far ($%.2f > $%.2f)", MathAbs(en - sl), InpMaxRiskUsd)); return; }
+   if (InpMaxRiskUsd > 0 && !capped && MathAbs(en - sl) > InpMaxRiskUsd) { g_skipRisk++; DSkip(side, StringFormat("stop too far ($%.2f > $%.2f)", MathAbs(en - sl), InpMaxRiskUsd)); return; }
    double tp = 0;
    bool noTp = false, resTp1 = false;
    if (side < 0) {
