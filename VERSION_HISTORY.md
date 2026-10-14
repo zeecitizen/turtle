@@ -867,6 +867,20 @@ machine learning methods described in report.md to the VSISA EA on 5 min timefra
 Every layer can be switched off with its `Inp*Mode = 0`. Compiled into the Axi terminal with its four .mqh
 files. Full results: report.md §28.
 
+## Saad_strategy_15min v1.20 — stop-loss text in black (2026-10-14)
+
+**Who:** Zee: *"set the Stop Loss text to black on the saad 15 min"*.
+
+**What:**
+- The "SL price" label at entry and the stop-move notes (breakeven / trail) are now drawn in `InpSlTextColor`
+  (default **black**). They were red / orange.
+- The stop **lines** stay red.
+- Black is invisible on MT5's default black chart background; change the input there.
+
+**Check:** the full year is identical to v1.18 / v1.19: +$202,221.80, 1,169 deals.
+
+**Where it's compiled:** the Axi and PXBT terminals on Claude's PC.
+
 ## Saad_strategy_15min v1.19 — chart colours by side (2026-10-14)
 
 **Who:** Zee: *"set the color of text on chart that says BUY #4 @ 4162.51 .. its currently blue in color. let's make
