@@ -25,6 +25,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | **saad_vsisa_hybrid** | `saad_vsisa_hybrid.mq5` (+ `saad_vsisa_hybrid_saad.mqh` + 4 `Vsisa*.mqh`) | 88350 Saad part · 88351 VSISA part | **v1.00** (2026-10-14) | XAUUSD **M5** (Saad part reads M15 itself) | READY, demo first; do not run beside Saad 15-min / VSISA on the same account (it already trades both) |
 | **saad_vsisa_diamond_hybrid** | `saad_vsisa_diamond_hybrid.mq5` (+ `svd_saad.mqh`, `svd_diamond.mqh`, 4 `Vsisa*.mqh`) | 88360 Saad · 88361 VSISA · 88362 Diamond | **v1.00** (2026-10-14) | XAUUSD **M5** | READY, demo first: bigger drawdown (15%) than saad_vsisa_hybrid |
 | **Trinity_1min** | `Trinity_1min.mq5` (+ `TriSaad.mqh`, `TriVsisa.mqh`, `TriDia.mqh`, 4 `Vsisa*.mqh`) | 88370 Saad · 88371 VSISA · 88372 Diamond | **v1.00** (2026-10-14) | XAUUSD **M1**, 0.01 lots | READY, demo first: ~$15/day at 0.01 lots on $500 |
+| **Saad raw** | `Saad_raw.mq5` | 88303 | **v1.00** (2026-10-14) | XAUUSD M15 | RESEARCH, do not attach: the core Saad rules with no filters (Zee) - MT5 full year +$76,834, DD $76,520 vs v1.23 +$211,032 / $13,119 |
 | **bread_winner** | `bread_winner.mq5` (+ `bread_saad/vsisa/dia/pb/vsisa2.mqh`, 4 `Vsisa*.mqh`) | 88390–88395 (shots 88393, Diamond 88392) | **v1.03** (2026-10-14) | XAUUSD, any chart | READY, demo first: ONE ~$11.5 shot per Pakistan day; ~92% of weekdays bread (88% random delay), ~1 in 15 red |
 | VSISA_Pullbacks | `VSISA_Pullbacks.mq5` | 88202 | v1.00 (2026-09-17) | XAUUSD | BUILT |
 | ZeeUHV_Diamond | `ZeeUHV_Diamond.mq5` | 88154 | v1.27 (2026-09-29) | XAUUSD M1 | BUILT |
@@ -239,3 +240,9 @@ Built to measure ideas; each one reproduces the parent EA exactly when its new s
 | `Saad_drl` | 2026-10-13 | PPO position sizing (report §19) |
 | `Saad_mature` | 2026-10-13 | Mature-runner H1/H4 exit (report §20) |
 | `Saad_pyramid` | 2026-10-13 | Pyramiding: spacing, tiers, sizing, locks (report §21–23) |
+
+## Saad_raw (magic 88303, XAUUSD M15)
+
+| Version | Date | What changed | Result / note |
+|---|---|---|---|
+| **v1.00** | 2026-10-14 | New, written from scratch (Zee: "remove all bells n whistles like filters etc. and just keep the core raw strategy of SAAD with trailing SL / TP"): pin / marubozu on the 9 EMA, 1-candle break by 2 pips, SL 35 pips, TP1 = 50 EMA touch (long) / last support (short), then $2 trail; no-TP1 longs trail 2xATR. No chop, size, risk cap, CTC, partial, day close, gap, hammers | Full year **+$76,834**, PF 1.07, DD **$76,520**, worst day -$14,062 (v1.23: +$211,032 / 1.63 / $13,119 / -$3,806) |

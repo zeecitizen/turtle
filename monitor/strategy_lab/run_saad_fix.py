@@ -44,6 +44,7 @@ V["ntbe4l1"] = (W, {"InpNoTpBeUsd": 4, "InpNoTpBeLock": 1})
 for _x in (1.0, 1.5, 2.5, 3.0): V[f"atr{int(_x*10)}"] = (W, {"InpTrailAtr": _x})
 for _x in (1.0, 1.5, 3.0, 4.0): V[f"tr{int(_x*10)}"] = (W, {"InpLongTrailUsd": _x, "InpShortTrailUsd": _x})
 for _x in (0.5, 0.6): V[f"bepct{int(_x*100)}"] = (W, {"InpBeTpPct": _x})
+V["raw"] = ("Saad_raw", {})
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 P["fullrnd"] = P["full"]      # same dates, random delay (exec -1)
 axi_rig.use(sys.argv[1])
