@@ -34,17 +34,18 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.22"
+#property version   "1.23"
 #property strict
 
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
+// v1.23 (Zee): EMA touch tolerance 1 pip ($0.10) - a candle within 10 cents of the EMA counts as on it (MT5: +$8.8k full year, both halves, random delay +$7.5k)
 // v1.22 (Zee): the two EMAs it trades on are drawn on the chart when attached - EMA 9 thick blue, EMA 50 thick red (InpShowEmas)
 // v1.21 (Zee): EXIT label and SETUP label text in black; the TP1 labels in blue (InpExitTextColor / InpSetupTextColor / InpTpTextColor)
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad15 v1.22"
+#define EA_COMMENT "Saad15 v1.23"
 
 //--- the two lines
 input int    InpEmaFast     = 9;      // InpEmaFast
@@ -70,7 +71,7 @@ input double InpMinRangeAtr = 0.55;   // InpMinRangeAtr — candle range >= this
 input int    InpLongRule    = 2;      // InpLongRule — 0 on 9 EMA exit 50 (rules) · 1 on 50 exit 9 (inverse) · 2 both
 input int    InpShortLine   = 1;      // InpShortLine — 0 the 50 EMA (rules) · 1 the 9 EMA · 2 either [M15: 2->1, SHORT setups on the 9 EMA]
 input int    InpTouchMode   = 0;      // InpTouchMode — 0 candle touches the EMA · 1 wick touches, body on the trade side
-input double InpTouchPips   = 0;      // InpTouchPips — touch tolerance
+input double InpTouchPips   = 1;      // InpTouchPips — touch tolerance [v1.23: 0->1; 1-3 pips plateau, 4+ worse]
 input bool   InpLongExitAbove = false;// InpLongExitAbove — LONG only when its exit EMA is above the candle
 
 //--- ② break · ③ entry
@@ -240,7 +241,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-15min] v1.22 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.23 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
