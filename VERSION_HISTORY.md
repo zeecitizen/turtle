@@ -664,7 +664,7 @@ into ~40.
 | Full year, random delay | 156 / 196 (79.6%) | 11 | +$1,464 | — | — | — |
 | Jul–Oct, random delay | 59 / 71 (83.1%) | 6 | — | — | — | — |
 
-Compiled in the Axi terminal. Not attached.
+Compiled in the Axi terminal (0 errors) with all five `bread_*.mqh` files, including `bread_vsisa2.mqh` (a second VSISA scout, off). The first Axi compile of v1.01 failed because that file was missing from the terminal folder; fixed in the next commit, and the full year re-confirmed: 164 bread days, +$1,615.27. Not attached.
 
 ## bread_winner v1.00 — one perfect shot a day for $10 (2026-10-14)
 
