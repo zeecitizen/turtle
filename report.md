@@ -1859,7 +1859,7 @@ reach this goal ... give me the new 1 min EA that works with 0.01 lots to make d
 |---|---|---|---|
 | All three on true 1-minute candles, original settings | −$15.10/day, account blown | −$14.98/day | fails |
 | Optuna round 1: 150 MT5 trials, 31 settings, true 1-minute | best +$4.11/day (Jan–Jun) | **−$0.08 to +$1.39/day** (top 5) | doesn't hold: fits noise |
-| Optuna round 2 (150 more trials) | running at time of writing | — | — |
+| Optuna round 2 (92 more trials, 242 in total) | best +$5.12/day (Jan–Jun) | **−$0.72 to +$1.00/day** (top 5) | worse: the better it fits Jan–Jun, the worse Jul–Oct |
 | **Saad on M15 + VSISA on M5 + Diamond on M1 (filtered), EA on M1** | **$15.40/day** (full year) | **$15.56/day** | **meets the goal** |
 
 **Why true 1-minute candles fail:** at a fixed 0.01 lot, the profit is the price move captured, and 1-minute
