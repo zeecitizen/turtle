@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trade 67111138</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&family=Share+Tech+Mono&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* layout: one reading column; a summary strip, the timeline as a table, then findings */
+:root {
+  --bg: #f4f6fa; --panel: #ffffff; --panel2: #eef1f7; --ink: #151a26; --muted: #5e6879; --line: #dde2ec;
+  --gold: #b07a10; --green: #13985a; --red: #d23b4b; --blue: #2f6fd6; --amber: #b9770e;
+  --display: 'Orbitron', 'Consolas', monospace; --mono: 'Share Tech Mono', 'Consolas', monospace; --body: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b0f18; --panel: #131a29; --panel2: #1a2336; --ink: #e6ebf5; --muted: #98a3b8; --line: #263046;
+  --gold: #ffcf66; --green: #2bd576; --red: #ff6b7a; --blue: #6aa8ff; --amber: #ffb347; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0b0f18; --panel: #131a29; --panel2: #1a2336; --ink: #e6ebf5; --muted: #98a3b8; --line: #263046;
+  --gold: #ffcf66; --green: #2bd576; --red: #ff6b7a; --blue: #6aa8ff; --amber: #ffb347; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+.wrap { max-width: 900px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 60px; }
+.top { border-bottom: 2px solid var(--gold); padding-bottom: 14px; margin-bottom: 20px; }
+.eyebrow { font: 700 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+h1 { font: 800 clamp(24px, 4vw, 34px)/1.1 var(--display); letter-spacing: 2px; margin: 8px 0 6px; }
+.sub { color: var(--muted); margin: 0; max-width: 70ch; }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 18px 0 6px; }
+.strip div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.strip b { display: block; font: 700 18px var(--mono); }
+.strip b.pos { color: var(--green); }
+.strip span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+h2 { font: 800 15px var(--display); letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin: 32px 0 10px; }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+th { background: var(--panel2); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.t, td.n { font-family: var(--mono); white-space: nowrap; }
+.pos { color: var(--green); font-weight: 700; } .q { color: var(--amber); font-weight: 700; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin: 10px 0; }
+.card h3 { margin: 0 0 6px; font-size: 16px; }
+.card p, .card li { max-width: 74ch; margin: 4px 0; }
+.warn { border-left: 4px solid var(--amber); }
+code { font: .9em var(--mono); background: var(--panel2); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--blue); }
+footer { margin-top: 30px; color: var(--muted); font-size: 12.5px; }
+
+.chart { width: 100%; height: auto; display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .ax { fill: var(--muted); font: 11px var(--mono); }
+.chart .lbl { fill: var(--muted); font: 700 11px var(--mono); }
+.chart .wu, .chart .wd { stroke-width: 1.2; } .chart .wu { stroke: var(--green); } .chart .wd { stroke: var(--red); }
+.chart .cu { fill: var(--green); } .chart .cd { fill: var(--red); }
+.chart .e9 { stroke: #2f6fd6; stroke-width: 3; } .chart .e50 { stroke: #d23b4b; stroke-width: 3; opacity: .85; }
+.chart .sl { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 6 4; } .chart .slt { fill: var(--red); }
+.chart .tp { stroke: var(--green); stroke-width: 1.5; stroke-dasharray: 6 4; } .chart .tpt { fill: var(--green); }
+.chart .ctc { stroke: var(--amber); stroke-width: 1.2; stroke-dasharray: 2 4; } .chart .ctct { fill: var(--amber); }
+.chart .en { stroke: var(--gold); stroke-width: 1.2; stroke-dasharray: 3 3; } .chart .ent { fill: var(--gold); }
+.chart path.mk.en { fill: var(--gold); stroke: none; } .chart .mkx { stroke: var(--ink); stroke-width: 3; fill: none; }
+.chart .setupbg { fill: var(--gold); opacity: .12; }
+.legend { font-size: 12.5px; color: var(--muted); margin: 6px 2px 0; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.legend .k { display: inline-block; width: 18px; height: 4px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.e9k { background: #2f6fd6; } .e50k { background: #d23b4b; } .enk { background: var(--gold); } .slk { background: var(--red); } .tpk { background: var(--green); } .ctck { background: var(--amber); } .xk { background: var(--ink); }
+.neg { color: var(--red); font-weight: 700; } .strip b.neg { color: var(--red); }
+.verdict { border-left: 4px solid var(--red); } .good { border-left: 4px solid var(--green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="eyebrow">PrimeXBT demo · account 1364880 · XAUUSDp · 13 Oct 2026 · <a href="/saad-review">all trades of 13–14 Oct</a></div>
+    <h1>Trade 67111138</h1>
+    <p class="sub">A 2-lot BUY taken at the market's reopen from a setup candle formed before the daily break — a hole in the EA's gap protection. It never moved more than 51 cents our way, and the stop was hit at the exact low of the night before gold rallied $8.83.</p>
+    <div class="strip"><div><span>Direction</span><b class="">BUY 2 lots</b></div><div><span>Entry</span><b class="">4162.39</b></div><div><span>First stop</span><b class="">4154.77</b></div><div><span>Target (TP1)</span><b class="">≈ 4167.2</b></div><div><span>Duration</span><b class="">1 h 57 min</b></div><div><span>Result</span><b class="neg">−$1,524</b></div></div>
+  </div>
+
+  <h2>The chart (PrimeXBT's own candles)</h2>
+  <svg viewBox="0 0 880 400" role="img" aria-label="price chart" class="chart">
+<line x1="10" x2="806" y1="320.8" y2="320.8" class="grid"/><text x="812" y="324.8" class="ax">4150</text>
+<line x1="10" x2="806" y1="252.1" y2="252.1" class="grid"/><text x="812" y="256.1" class="ax">4155</text>
+<line x1="10" x2="806" y1="183.4" y2="183.4" class="grid"/><text x="812" y="187.4" class="ax">4160</text>
+<line x1="10" x2="806" y1="114.7" y2="114.7" class="grid"/><text x="812" y="118.7" class="ax">4165</text>
+<line x1="10" x2="806" y1="46.0" y2="46.0" class="grid"/><text x="812" y="50.0" class="ax">4170</text>
+<rect x="358.6" y="16" width="35.0" height="350" class="setupbg"/>
+<text x="376.2" y="27" class="lbl" text-anchor="middle">setup</text>
+<line x1="25.9" x2="25.9" y1="140.8" y2="344.8" class="wu"/>
+<rect x="15.1" y="203.4" width="21.7" height="138.5" class="cu"/>
+<text x="25.9" y="388" class="ax" text-anchor="middle">11:00 PM</text>
+<line x1="57.8" x2="57.8" y1="154.8" y2="217.2" class="wu"/>
+<rect x="46.9" y="185.0" width="21.7" height="18.3" class="cu"/>
+<line x1="89.6" x2="89.6" y1="155.1" y2="215.0" class="wu"/>
+<rect x="78.8" y="165.0" width="21.7" height="19.8" class="cu"/>
+<line x1="121.4" x2="121.4" y1="124.0" y2="167.1" class="wu"/>
+<rect x="110.6" y="136.2" width="21.7" height="28.6" class="cu"/>
+<text x="121.4" y="388" class="ax" text-anchor="middle">11:45 PM</text>
+<line x1="153.3" x2="153.3" y1="123.6" y2="158.9" class="wd"/>
+<rect x="142.5" y="136.6" width="21.7" height="7.0" class="cd"/>
+<line x1="185.1" x2="185.1" y1="98.7" y2="159.3" class="wu"/>
+<rect x="174.3" y="112.5" width="21.7" height="31.3" class="cu"/>
+<line x1="217.0" x2="217.0" y1="95.4" y2="137.3" class="wd"/>
+<rect x="206.1" y="112.5" width="21.7" height="9.9" class="cd"/>
+<text x="217.0" y="388" class="ax" text-anchor="middle">12:30 AM</text>
+<line x1="248.8" x2="248.8" y1="94.7" y2="156.0" class="wd"/>
+<rect x="238.0" y="122.6" width="21.7" height="14.2" class="cd"/>
+<line x1="280.6" x2="280.6" y1="127.6" y2="155.9" class="wd"/>
+<rect x="269.8" y="137.2" width="21.7" height="15.3" class="cd"/>
+<line x1="312.5" x2="312.5" y1="152.4" y2="217.2" class="wd"/>
+<rect x="301.7" y="152.6" width="21.7" height="39.8" class="cd"/>
+<text x="312.5" y="388" class="ax" text-anchor="middle">1:15 AM</text>
+<line x1="344.3" x2="344.3" y1="188.6" y2="218.3" class="wd"/>
+<rect x="333.5" y="192.3" width="21.7" height="11.0" class="cd"/>
+<line x1="376.2" x2="376.2" y1="155.5" y2="207.1" class="wu"/>
+<rect x="365.3" y="169.6" width="21.7" height="33.7" class="cu"/>
+<line x1="408.0" x2="408.0" y1="148.7" y2="186.2" class="wd"/>
+<rect x="397.2" y="163.2" width="21.7" height="19.5" class="cd"/>
+<text x="408.0" y="388" class="ax" text-anchor="middle">3:00 AM</text>
+<line x1="439.8" x2="439.8" y1="163.4" y2="192.2" class="wu"/>
+<rect x="429.0" y="171.7" width="21.7" height="11.0" class="cu"/>
+<line x1="471.7" x2="471.7" y1="161.8" y2="194.2" class="wu"/>
+<rect x="460.9" y="163.7" width="21.7" height="8.0" class="cu"/>
+<line x1="503.5" x2="503.5" y1="143.5" y2="174.3" class="wd"/>
+<rect x="492.7" y="163.6" width="21.7" height="2.3" class="cd"/>
+<text x="503.5" y="388" class="ax" text-anchor="middle">3:45 AM</text>
+<line x1="535.4" x2="535.4" y1="158.2" y2="218.7" class="wd"/>
+<rect x="524.5" y="166.0" width="21.7" height="46.2" class="cd"/>
+<line x1="567.2" x2="567.2" y1="208.6" y2="251.2" class="wd"/>
+<rect x="556.4" y="212.1" width="21.7" height="22.1" class="cd"/>
+<line x1="599.0" x2="599.0" y1="223.1" y2="245.5" class="wd"/>
+<rect x="588.2" y="234.3" width="21.7" height="8.8" class="cd"/>
+<text x="599.0" y="388" class="ax" text-anchor="middle">4:30 AM</text>
+<line x1="630.9" x2="630.9" y1="220.9" y2="255.2" class="wd"/>
+<rect x="620.1" y="243.1" width="21.7" height="7.4" class="cd"/>
+<line x1="662.7" x2="662.7" y1="133.9" y2="255.4" class="wu"/>
+<rect x="651.9" y="143.7" width="21.7" height="107.2" class="cu"/>
+<line x1="694.6" x2="694.6" y1="138.6" y2="212.8" class="wd"/>
+<rect x="683.7" y="143.7" width="21.7" height="31.7" class="cd"/>
+<text x="694.6" y="388" class="ax" text-anchor="middle">5:15 AM</text>
+<line x1="726.4" x2="726.4" y1="161.0" y2="257.6" class="wd"/>
+<rect x="715.6" y="175.7" width="21.7" height="49.7" class="cd"/>
+<line x1="758.2" x2="758.2" y1="207.3" y2="258.1" class="wd"/>
+<rect x="747.4" y="225.4" width="21.7" height="26.5" class="cd"/>
+<line x1="790.1" x2="790.1" y1="195.2" y2="304.5" class="wd"/>
+<rect x="779.3" y="251.9" width="21.7" height="45.1" class="cd"/>
+<text x="790.1" y="388" class="ax" text-anchor="middle">6:00 AM</text>
+<polyline points="25.9,37.2 57.8,43.0 89.6,47.8 121.4,51.2 153.3,54.9 185.1,57.1 217.0,59.7 248.8,62.7 280.6,66.2 312.5,71.2 344.3,76.4 376.2,80.0 408.0,84.0 439.8,87.5 471.7,90.5 503.5,93.4 535.4,98.1 567.2,103.4 599.0,108.9 630.9,114.5 662.7,115.6 694.6,117.9 726.4,122.2 758.2,127.3 790.1,133.9" class="e50" fill="none"/>
+<polyline points="25.9,233.0 57.8,223.4 89.6,211.7 121.4,196.6 153.3,186.0 185.1,171.3 217.0,161.5 248.8,156.6 280.6,155.8 312.5,163.1 344.3,171.1 376.2,170.8 408.0,173.2 439.8,172.9 471.7,171.1 503.5,170.0 535.4,178.5 567.2,189.6 599.0,200.3 630.9,210.4 662.7,197.0 694.6,192.7 726.4,199.2 758.2,209.8 790.1,227.2" class="e9" fill="none"/>
+<line x1="10" x2="806" y1="150.5" y2="150.5" class="en"/><text x="14" y="146.5" class="lbl ent">entry 4162.39</text>
+<line x1="10" x2="806" y1="255.2" y2="255.2" class="sl"/><text x="14" y="251.2" class="lbl slt">stop 4154.77</text>
+<line x1="10" x2="806" y1="84.0" y2="84.0" class="tp"/><text x="14" y="80.0" class="lbl tpt">TP1 4167.23</text>
+<line x1="10" x2="806" y1="100.7" y2="100.7" class="ctc"/><text x="14" y="96.7" class="lbl ctct">75% → breakeven 4166.02</text>
+<path d="M408.0,150.5 l-7,12 l14,0 z" class="mk en"/>
+<path d="M624.9,249.2 l12,12 M636.9,249.2 l-12,12" class="mkx"/>
+</svg><div class="legend"><span class="k e9k"></span>EMA 9 (M15)<span class="k e50k"></span>EMA 50 (M15)<span class="k enk"></span>entry ▲▼<span class="k slk"></span>stop<span class="k tpk"></span>TP1<span class="k ctck"></span>breakeven trigger<span class="k xk"></span>exit ✕ · the gap between 20:45 and 22:00 = the daily break</div>
+
+  <h2>Lifecycle</h2>
+  <p class="sub">PKT = Pakistan time; server = PrimeXBT's clock (UTC). Sources below.</p>
+  <div class="tw"><table>
+    <thead><tr><th>PKT</th><th>Server</th><th>What happened</th><th>Stop</th><th>Result</th></tr></thead>
+    <tbody>
+<tr><td class="t">1:45 – 2:00 AM</td><td class="t">20:45 – 21:00</td><td><b>Setup</b>: the <b>last 15-minute candle before PrimeXBT's daily break</b> (20:45): a <b>GREEN MARUBOZU on the 9 EMA</b> (4160.91): high 4162.03, low 4158.27. Exit EMA = the 50 (4167.52), above → TP1 = touching the 50 EMA. Chop 0.187.</td><td class="n">–</td><td class="n"></td></tr>
+<tr><td class="t">2:00 – 3:00 AM</td><td class="t">21:00 – 22:00</td><td><b>Market closed</b> (daily break). The candle closed at the break, so the EA only saw it when trading resumed.</td><td class="n">–</td><td class="n"></td></tr>
+<tr><td class="t">3:01:49 AM</td><td class="t">22:01:49</td><td>First minute after the reopen: price is above the setup's high + 2 pips (4162.23) → <b>BUY 2 lots filled at 4162.39</b>. Stop 35 pips under the setup candle's low: <b>4154.77</b> → risk <b>$1,524</b>. TP1 ≈ 4167.2 (the 50 EMA, sloping down).</td><td class="n">4154.77</td><td class="n"></td></tr>
+<tr><td class="t">3:52 AM</td><td class="t">22:52</td><td>Best moment: <b>4162.90 — only +$0.51</b>.</td><td class="n">4154.77</td><td class="n">+$102 open</td></tr>
+<tr><td class="t">4:00 – 4:58 AM</td><td class="t">23:00 – 23:58</td><td>Gold slides: candles close 4157.90, 4156.30, 4155.65, 4155.11 — making a cluster of lows at 4155.06 / 4155.48 just above the stop.</td><td class="n">4154.77</td><td class="n"></td></tr>
+<tr><td class="t">4:58:51 AM</td><td class="t">23:58:51</td><td><b>Stop hit at 4154.77</b> — the exact low of the night, to the cent.</td><td class="n"></td><td class="n"><span class='neg'>−$1,524</span></td></tr>
+<tr><td class="t">5:00 – 5:15 AM</td><td class="t">00:00 – 00:15</td><td>Gold rallies <b>$8.83</b> in one 15-minute candle (4154.76 → 4163.60), back above the entry.</td><td class="n"></td><td class="n"></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Why it didn't make money</h2>
+<div class="card verdict"><h3>1. A hole in the EA's gap protection (a real bug)</h3><p><code>InpGapCancel</code> is meant to drop a waiting setup when the market closes before it can trigger. In the code, at each new candle the EA first cancels a <i>waiting</i> setup if there was a gap, and only <b>then</b> looks for a new setup on the candle that just closed. At the reopen, the candle that just closed is the last one before the break — so a setup from it is created <b>after</b> the gap check, and its break is traded on the reopen candle, across the closure. The same thing can happen every daily reopen and every Monday open.</p></div>
+<div class="card verdict"><h3>2. Bought into a fading, choppy market</h3><p>The 9 EMA (4160.91) was $6.61 under the 50 (4167.52): the 15-minute trend was down. The reopen hour is thin (tick volume 1,381 vs 1,764–4,442 in the candles before the break). The trade never got more than 51 cents in profit.</p></div>
+<div class="card "><h3>3. The stop sat where stops get hunted</h3><p>The stop (4154.77) was just under the night's cluster of lows (4155.06, 4155.48). Price took exactly that level and then reversed $8.83 within 15 minutes — a classic sweep of the stops under the lows. The EA's 35-pip stop is mechanical (candle low − $3.50), so it can't avoid such levels.</p></div>
+<div class="card warn"><h3>The size: 2 lots on a $10,000 account</h3><p>Over the full year (MT5, 1 lot) this EA had <b>27 losing streaks of 4+ trades</b> (longest: 11), <b>29 of 184 trading days as bad as yesterday</b>, a worst day of −$3,782 and a worst drawdown of $12,681. At <b>2 lots</b> those become a worst day of −$7,563 and a drawdown of <b>$25,361 — 254% of a $10,000 account</b>. Every stop here cost $1,500–2,200 (15–22% of the account). The strategy is profitable over the year, but at this size its ordinary bad stretches empty the account first.</p></div>
+
+  <h2>One-off or a pattern? The full-year check</h2>
+<div class="card"><p>On Axi's full year this gap case happened only <b>2 times</b> (+$869 in total) — Axi's break falls at a different hour than PrimeXBT's. So it's rare, but it's a genuine hole: the EA does something its own setting says it shouldn't.</p></div>
+
+  <h2>What would have prevented it</h2>
+<div class="card"><p><b>Fix the gap hole</b>: don't create a setup from the last candle before a market closure. Built and tested as <code>Saad_gapfix.mq5</code>.</p><p><b>Gap fix</b> (MT5, full year, Axi real ticks, 1 lot): net <b>+$201,361</b> vs +$202,222 today's rules; Jan–Jun +$133,680 vs +$134,541; Jul–Oct +$67,681 vs +$67,681; max drawdown 14 115.00 (23.97%) vs 13 422.40 (8.35%).</p><p>On Axi's year it removes just two trades, and one of them was a big winner, so it costs $861 (Jul–Oct unchanged). It makes the EA do what its own setting promises, but it is <b>not a profit fix</b>. Your call whether to ship it; I'd keep it as an option.</p></div>
+
+  <footer>Sources: PrimeXBT's XAUUSDp 1-minute and 15-minute candles for 12–14 Oct (downloaded from the broker), the account's deals (PrimeXBT journal on Claude's PC, matching Zee's statement), the EA's rules (Saad_strategy_15min v1.17, <code>lifecycle.md</code>) and its own target code, and the full-year MT5 test of the same EA on Axi real ticks. The trading machine's own Experts log was not available, so the EA's decisions are reconstructed from its rules; the same reconstruction gives TP1 = 4150.75 for trade 67046250, exactly what that EA logged. <a href="/saad-review">All trades of 13–14 Oct</a> · <a href="/">Dashboard</a></footer>
+</div>
+</body>
+</html>

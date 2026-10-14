@@ -2048,3 +2048,75 @@ That keeps a win above $10 even when the target fill slips under random delays. 
 - about 1 in 20 loses (about −$100 to −$134)
 
 Compiled in the Axi terminal: 0 errors.
+
+
+## 37. Why the Saad trades lost money on PrimeXBT, 13–14 Oct (post-mortem)
+
+**Zee asked:** *"investigate why our strategy setups are failing Saad_strategy_15 min by looking at the trades from
+today/yesterday (past 24 hours).. i want to have a lifecycle page for each of the setups explaining why that
+particular trade failed to make money ... please leave no stone unturned"*.
+
+**The account:** PrimeXBT demo 1364880. 8 trades in 24 hours took it from $10,000 to $6,511.83 (−$3,488):
+- 2 winners: +$2,799, +$1,007
+- 1 scratch: $0
+- 4 BUYs at 2 lots: −$424, −$1,524, −$2,200, −$1,812
+- 1 tiny trade: −$4.10, from a stray copy
+
+**Pages** (claudezeeshan.com):
+- `/saad-review`: the summary
+- `/trade67099697.html`, `/trade67111138.html`, `/trade67117659.html`, `/trade67138222.html`,
+  `/trade67144848.html`, `/trade67082390.html`
+
+Each page has a chart drawn from PrimeXBT's own candles (EMA 9 blue, EMA 50 red), the lifecycle, the reasons, the
+full-year check, and the fixes tested in MT5.
+
+**Sources:**
+- PrimeXBT's XAUUSDp candles for 12–14 Oct, downloaded from the broker with `BarDumpLiveEA` (the MT5 tester won't
+  serve the current day).
+- The account's deals, from the PrimeXBT journal on Claude's PC, matching the statement.
+- The v1.11 copy's own log.
+- Full-year MT5 tests on Axi real ticks.
+- The trading machine's own Experts log wasn't available, so its choices are reconstructed from the rules and
+  code. Check: the reconstruction reproduces 67046250's logged TP1, 4150.75, exactly.
+
+### Causes, biggest first
+
+1. **Size.**
+   - 2 lots on $10,000 is 5× the designed risk (1 lot per $25,000).
+   - Over the full year at 1 lot the EA made +$202,222, but had 27 losing streaks of 4+ trades (longest 11) and
+     **29 of 184 days as bad as yesterday**. Its worst drawdown was $12,681.
+   - At 2 lots that drawdown is $25,361, **254% of $10k**.
+   - 0.2 lots on $10k gives about a 25% worst drawdown.
+2. **A normal losing streak.** BUYs against the 15-minute EMA trend, in chop. Over the year these categories are
+   profitable:
+   - against-trend buys: +$44,361 on 257 trades
+   - low chop: +$53,561
+   - path-B buys: +$77,462
+
+   Trend filters already failed (report §10).
+3. **Operations.**
+   - Two EA copies were on one account with the same magic: v1.17 on the trading machine and v1.11 on Claude's PC.
+     The v1.11 copy, switched to an M1 chart, opened 67082390. It has since been removed.
+   - The trading machine reconnected every few minutes (connection quality 46%).
+   - On Axi, VSISA is attached to an H1 chart.
+4. **A code hole: `InpGapCancel` misses setups formed by the last candle before a market closure.** Those setups
+   are created at the reopen, after the gap check, and traded on the reopen candle. That was 67111138.
+
+### Fixes tested in MT5 (full year, 1 lot, Axi real ticks)
+
+| Change | Full year | Jan–Jun | Jul–Oct | Verdict |
+|---|---|---|---|---|
+| Today's rules | +$202,222 | +$134,541 | +$67,681 | baseline |
+| No BUYs on the 50 EMA (`InpLongRule = 0`) | +$179,104 | +$120,141 | +$58,963 | **rejected**: worse in both halves (the trades blocked get replaced by worse ones) |
+| Gap fix (`Saad_gapfix.mq5`) | +$201,361 | +$133,680 | +$67,681 | correct behaviour, not a profit fix (2 trades a year on Axi) |
+
+**Recommendations:**
+- 0.2 lots on $10k (or about $50k for 2 lots).
+- One EA per account, with its own magic number.
+- Saad on M15 only, VSISA on M5.
+- A stable connection or a VPS for the trading machine.
+- The gap fix as an optional setting.
+
+**Same session, display only:**
+- TradeLifecycle v1.03: the EMAs on the chart.
+- Saad_strategy_15min v1.19–v1.21: chart colours, trades identical.

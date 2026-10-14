@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Trade 67082390</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&family=Share+Tech+Mono&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* layout: one reading column; a summary strip, the timeline as a table, then findings */
+:root {
+  --bg: #f4f6fa; --panel: #ffffff; --panel2: #eef1f7; --ink: #151a26; --muted: #5e6879; --line: #dde2ec;
+  --gold: #b07a10; --green: #13985a; --red: #d23b4b; --blue: #2f6fd6; --amber: #b9770e;
+  --display: 'Orbitron', 'Consolas', monospace; --mono: 'Share Tech Mono', 'Consolas', monospace; --body: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b0f18; --panel: #131a29; --panel2: #1a2336; --ink: #e6ebf5; --muted: #98a3b8; --line: #263046;
+  --gold: #ffcf66; --green: #2bd576; --red: #ff6b7a; --blue: #6aa8ff; --amber: #ffb347; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0b0f18; --panel: #131a29; --panel2: #1a2336; --ink: #e6ebf5; --muted: #98a3b8; --line: #263046;
+  --gold: #ffcf66; --green: #2bd576; --red: #ff6b7a; --blue: #6aa8ff; --amber: #ffb347; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+.wrap { max-width: 900px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 60px; }
+.top { border-bottom: 2px solid var(--gold); padding-bottom: 14px; margin-bottom: 20px; }
+.eyebrow { font: 700 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+h1 { font: 800 clamp(24px, 4vw, 34px)/1.1 var(--display); letter-spacing: 2px; margin: 8px 0 6px; }
+.sub { color: var(--muted); margin: 0; max-width: 70ch; }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 18px 0 6px; }
+.strip div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.strip b { display: block; font: 700 18px var(--mono); }
+.strip b.pos { color: var(--green); }
+.strip span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+h2 { font: 800 15px var(--display); letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin: 32px 0 10px; }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+th { background: var(--panel2); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.t, td.n { font-family: var(--mono); white-space: nowrap; }
+.pos { color: var(--green); font-weight: 700; } .q { color: var(--amber); font-weight: 700; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin: 10px 0; }
+.card h3 { margin: 0 0 6px; font-size: 16px; }
+.card p, .card li { max-width: 74ch; margin: 4px 0; }
+.warn { border-left: 4px solid var(--amber); }
+code { font: .9em var(--mono); background: var(--panel2); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--blue); }
+footer { margin-top: 30px; color: var(--muted); font-size: 12.5px; }
+
+.chart { width: 100%; height: auto; display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .ax { fill: var(--muted); font: 11px var(--mono); }
+.chart .lbl { fill: var(--muted); font: 700 11px var(--mono); }
+.chart .wu, .chart .wd { stroke-width: 1.2; } .chart .wu { stroke: var(--green); } .chart .wd { stroke: var(--red); }
+.chart .cu { fill: var(--green); } .chart .cd { fill: var(--red); }
+.chart .e9 { stroke: #2f6fd6; stroke-width: 3; } .chart .e50 { stroke: #d23b4b; stroke-width: 3; opacity: .85; }
+.chart .sl { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 6 4; } .chart .slt { fill: var(--red); }
+.chart .tp { stroke: var(--green); stroke-width: 1.5; stroke-dasharray: 6 4; } .chart .tpt { fill: var(--green); }
+.chart .ctc { stroke: var(--amber); stroke-width: 1.2; stroke-dasharray: 2 4; } .chart .ctct { fill: var(--amber); }
+.chart .en { stroke: var(--gold); stroke-width: 1.2; stroke-dasharray: 3 3; } .chart .ent { fill: var(--gold); }
+.chart path.mk.en { fill: var(--gold); stroke: none; } .chart .mkx { stroke: var(--ink); stroke-width: 3; fill: none; }
+.chart .setupbg { fill: var(--gold); opacity: .12; }
+.legend { font-size: 12.5px; color: var(--muted); margin: 6px 2px 0; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.legend .k { display: inline-block; width: 18px; height: 4px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.e9k { background: #2f6fd6; } .e50k { background: #d23b4b; } .enk { background: var(--gold); } .slk { background: var(--red); } .tpk { background: var(--green); } .ctck { background: var(--amber); } .xk { background: var(--ink); }
+.neg { color: var(--red); font-weight: 700; } .strip b.neg { color: var(--red); }
+.verdict { border-left: 4px solid var(--red); } .good { border-left: 4px solid var(--green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="eyebrow">PrimeXBT demo · account 1364880 · XAUUSDp · 13 Oct 2026 · <a href="/saad-review">all trades of 13–14 Oct</a></div>
+    <h1>Trade 67082390</h1>
+    <p class="sub">Not the real EA: an old v1.11 copy on Claude's PC, running on a 1-MINUTE chart by mistake, took this 0.1-lot BUY from a 48-cent "marubozu". It was closed by hand two minutes later and the copy was removed.</p>
+    <div class="strip"><div><span>Direction</span><b class="">BUY 0.1 lots</b></div><div><span>Entry</span><b class="">4156.63</b></div><div><span>First stop</span><b class="">4152.76</b></div><div><span>Target (TP1)</span><b class="">4157.89</b></div><div><span>Duration</span><b class="">1 min 48 s</b></div><div><span>Result</span><b class="neg">−$4.10</b></div></div>
+  </div>
+
+  <h2>The chart (PrimeXBT's own candles)</h2>
+  <svg viewBox="0 0 880 400" role="img" aria-label="price chart" class="chart">
+<line x1="10" x2="806" y1="348.9" y2="348.9" class="grid"/><text x="812" y="352.9" class="ax">4150</text>
+<line x1="10" x2="806" y1="309.9" y2="309.9" class="grid"/><text x="812" y="313.9" class="ax">4151</text>
+<line x1="10" x2="806" y1="271.0" y2="271.0" class="grid"/><text x="812" y="275.0" class="ax">4152</text>
+<line x1="10" x2="806" y1="232.1" y2="232.1" class="grid"/><text x="812" y="236.1" class="ax">4153</text>
+<line x1="10" x2="806" y1="193.1" y2="193.1" class="grid"/><text x="812" y="197.1" class="ax">4154</text>
+<line x1="10" x2="806" y1="154.2" y2="154.2" class="grid"/><text x="812" y="158.2" class="ax">4155</text>
+<line x1="10" x2="806" y1="115.3" y2="115.3" class="grid"/><text x="812" y="119.3" class="ax">4156</text>
+<line x1="10" x2="806" y1="76.3" y2="76.3" class="grid"/><text x="812" y="80.3" class="ax">4157</text>
+<line x1="10" x2="806" y1="37.4" y2="37.4" class="grid"/><text x="812" y="41.4" class="ax">4158</text>
+<rect x="389.8" y="16" width="19.0" height="350" class="setupbg"/>
+<text x="399.3" y="27" class="lbl" text-anchor="middle">setup</text>
+<line x1="18.7" x2="18.7" y1="211.4" y2="340.3" class="wd"/>
+<rect x="12.8" y="242.6" width="11.8" height="46.3" class="cd"/>
+<text x="18.7" y="388" class="ax" text-anchor="middle">10:00 PM</text>
+<line x1="36.0" x2="36.0" y1="255.8" y2="334.8" class="wu"/>
+<rect x="30.1" y="257.0" width="11.8" height="32.3" class="cu"/>
+<line x1="53.3" x2="53.3" y1="253.9" y2="295.5" class="wu"/>
+<rect x="47.4" y="253.9" width="11.8" height="3.5" class="cu"/>
+<line x1="70.6" x2="70.6" y1="214.2" y2="253.9" class="wu"/>
+<rect x="64.7" y="239.9" width="11.8" height="14.0" class="cu"/>
+<line x1="87.9" x2="87.9" y1="227.0" y2="252.7" class="wu"/>
+<rect x="82.0" y="233.6" width="11.8" height="6.2" class="cu"/>
+<line x1="105.2" x2="105.2" y1="212.6" y2="246.9" class="wu"/>
+<rect x="99.3" y="220.8" width="11.8" height="13.2" class="cu"/>
+<text x="105.2" y="388" class="ax" text-anchor="middle">10:05 PM</text>
+<line x1="122.5" x2="122.5" y1="190.8" y2="226.6" class="wu"/>
+<rect x="116.6" y="208.3" width="11.8" height="12.5" class="cu"/>
+<line x1="139.8" x2="139.8" y1="167.1" y2="215.3" class="wu"/>
+<rect x="133.9" y="186.5" width="11.8" height="21.8" class="cu"/>
+<line x1="157.1" x2="157.1" y1="184.2" y2="203.7" class="wd"/>
+<rect x="151.2" y="186.1" width="11.8" height="8.6" class="cd"/>
+<line x1="174.4" x2="174.4" y1="181.5" y2="206.8" class="wu"/>
+<rect x="168.5" y="189.6" width="11.8" height="5.1" class="cu"/>
+<line x1="191.7" x2="191.7" y1="185.7" y2="229.0" class="wd"/>
+<rect x="185.8" y="189.2" width="11.8" height="25.3" class="cd"/>
+<text x="191.7" y="388" class="ax" text-anchor="middle">10:10 PM</text>
+<line x1="209.0" x2="209.0" y1="155.8" y2="213.0" class="wu"/>
+<rect x="203.1" y="157.3" width="11.8" height="55.7" class="cu"/>
+<line x1="226.3" x2="226.3" y1="96.6" y2="159.3" class="wu"/>
+<rect x="220.4" y="101.7" width="11.8" height="56.1" class="cu"/>
+<line x1="243.6" x2="243.6" y1="92.7" y2="114.9" class="wd"/>
+<rect x="237.7" y="100.9" width="11.8" height="5.5" class="cd"/>
+<line x1="260.9" x2="260.9" y1="69.0" y2="107.1" class="wu"/>
+<rect x="255.0" y="75.2" width="11.8" height="30.8" class="cu"/>
+<line x1="278.2" x2="278.2" y1="61.6" y2="83.7" class="wu"/>
+<rect x="272.3" y="70.5" width="11.8" height="5.1" class="cu"/>
+<text x="278.2" y="388" class="ax" text-anchor="middle">10:15 PM</text>
+<line x1="295.5" x2="295.5" y1="41.7" y2="80.6" class="wu"/>
+<rect x="289.6" y="62.3" width="11.8" height="8.2" class="cu"/>
+<line x1="312.8" x2="312.8" y1="55.3" y2="106.7" class="wd"/>
+<rect x="306.9" y="62.3" width="11.8" height="31.5" class="cd"/>
+<line x1="330.1" x2="330.1" y1="72.8" y2="93.9" class="wu"/>
+<rect x="324.2" y="76.0" width="11.8" height="17.9" class="cu"/>
+<line x1="347.4" x2="347.4" y1="76.0" y2="107.5" class="wd"/>
+<rect x="341.6" y="76.3" width="11.8" height="23.7" class="cd"/>
+<line x1="364.7" x2="364.7" y1="74.8" y2="102.4" class="wu"/>
+<rect x="358.9" y="93.1" width="11.8" height="5.8" class="cu"/>
+<text x="364.7" y="388" class="ax" text-anchor="middle">10:20 PM</text>
+<line x1="382.0" x2="382.0" y1="88.4" y2="122.7" class="wd"/>
+<rect x="376.2" y="93.1" width="11.8" height="29.6" class="cd"/>
+<line x1="399.3" x2="399.3" y1="105.9" y2="124.6" class="wu"/>
+<rect x="393.5" y="107.1" width="11.8" height="15.6" class="cu"/>
+<line x1="416.7" x2="416.7" y1="56.5" y2="112.9" class="wu"/>
+<rect x="410.8" y="58.1" width="11.8" height="49.4" class="cu"/>
+<line x1="434.0" x2="434.0" y1="55.7" y2="121.1" class="wd"/>
+<rect x="428.1" y="58.1" width="11.8" height="59.6" class="cd"/>
+<line x1="451.3" x2="451.3" y1="97.0" y2="136.3" class="wu"/>
+<rect x="445.4" y="102.8" width="11.8" height="15.2" class="cu"/>
+<text x="451.3" y="388" class="ax" text-anchor="middle">10:25 PM</text>
+<line x1="468.6" x2="468.6" y1="99.7" y2="149.1" class="wd"/>
+<rect x="462.7" y="102.8" width="11.8" height="21.8" class="cd"/>
+<line x1="485.9" x2="485.9" y1="62.3" y2="133.2" class="wu"/>
+<rect x="480.0" y="67.0" width="11.8" height="57.2" class="cu"/>
+<line x1="503.2" x2="503.2" y1="65.1" y2="99.7" class="wd"/>
+<rect x="497.3" y="67.0" width="11.8" height="19.9" class="cd"/>
+<line x1="520.5" x2="520.5" y1="86.9" y2="234.0" class="wd"/>
+<rect x="514.6" y="86.9" width="11.8" height="129.6" class="cd"/>
+<line x1="537.8" x2="537.8" y1="157.7" y2="223.9" class="wu"/>
+<rect x="531.9" y="166.3" width="11.8" height="50.6" class="cu"/>
+<text x="537.8" y="388" class="ax" text-anchor="middle">10:30 PM</text>
+<line x1="555.1" x2="555.1" y1="149.5" y2="236.0" class="wd"/>
+<rect x="549.2" y="165.9" width="11.8" height="53.7" class="cd"/>
+<line x1="572.4" x2="572.4" y1="177.2" y2="225.1" class="wu"/>
+<rect x="566.5" y="181.5" width="11.8" height="38.2" class="cu"/>
+<line x1="589.7" x2="589.7" y1="146.8" y2="181.5" class="wu"/>
+<rect x="583.8" y="151.9" width="11.8" height="29.6" class="cu"/>
+<line x1="607.0" x2="607.0" y1="146.0" y2="162.4" class="wu"/>
+<rect x="601.1" y="149.1" width="11.8" height="3.1" class="cu"/>
+<line x1="624.3" x2="624.3" y1="112.2" y2="165.5" class="wu"/>
+<rect x="618.4" y="140.2" width="11.8" height="9.0" class="cu"/>
+<text x="624.3" y="388" class="ax" text-anchor="middle">10:35 PM</text>
+<line x1="641.6" x2="641.6" y1="128.9" y2="152.7" class="wu"/>
+<rect x="635.7" y="137.5" width="11.8" height="2.3" class="cu"/>
+<line x1="658.9" x2="658.9" y1="105.5" y2="135.9" class="wu"/>
+<rect x="653.0" y="115.7" width="11.8" height="19.9" class="cu"/>
+<line x1="676.2" x2="676.2" y1="104.4" y2="125.8" class="wu"/>
+<rect x="670.3" y="109.8" width="11.8" height="5.1" class="cu"/>
+<line x1="693.5" x2="693.5" y1="100.9" y2="136.3" class="wd"/>
+<rect x="687.6" y="109.8" width="11.8" height="17.1" class="cd"/>
+<line x1="710.8" x2="710.8" y1="97.0" y2="130.5" class="wu"/>
+<rect x="704.9" y="97.4" width="11.8" height="30.4" class="cu"/>
+<text x="710.8" y="388" class="ax" text-anchor="middle">10:40 PM</text>
+<line x1="728.1" x2="728.1" y1="84.9" y2="106.3" class="wd"/>
+<rect x="722.2" y="98.2" width="11.8" height="0.8" class="cd"/>
+<line x1="745.4" x2="745.4" y1="91.1" y2="130.9" class="wd"/>
+<rect x="739.6" y="98.9" width="11.8" height="22.6" class="cd"/>
+<line x1="762.7" x2="762.7" y1="86.1" y2="127.0" class="wu"/>
+<rect x="756.9" y="112.2" width="11.8" height="9.3" class="cu"/>
+<line x1="780.0" x2="780.0" y1="109.8" y2="126.6" class="wd"/>
+<rect x="774.2" y="112.2" width="11.8" height="13.6" class="cd"/>
+<line x1="797.3" x2="797.3" y1="125.8" y2="182.6" class="wd"/>
+<rect x="791.5" y="126.2" width="11.8" height="56.1" class="cd"/>
+<text x="797.3" y="388" class="ax" text-anchor="middle">10:45 PM</text>
+<polyline points="18.7,93.4 36.0,99.8 53.3,105.9 70.6,111.1 87.9,115.9 105.2,120.0 122.5,123.5 139.8,126.0 157.1,128.7 174.4,131.1 191.7,134.3 209.0,135.2 226.3,133.9 243.6,132.8 260.9,130.6 278.2,128.2 295.5,125.6 312.8,124.4 330.1,122.5 347.4,121.6 364.7,120.5 382.0,120.6 399.3,120.0 416.7,117.6 434.0,117.6 451.3,117.0 468.6,117.3 485.9,115.4 503.2,114.2 520.5,118.3 537.8,120.1 555.1,124.0 572.4,126.3 589.7,127.3 607.0,128.2 624.3,128.6 641.6,129.0 658.9,128.4 676.2,127.7 693.5,127.7 710.8,126.5 728.1,125.4 745.4,125.3 762.7,124.8 780.0,124.8 797.3,127.0" class="e50" fill="none"/>
+<polyline points="18.7,200.8 36.0,212.1 53.3,220.4 70.6,224.3 87.9,226.2 105.2,225.1 122.5,221.7 139.8,214.7 157.1,210.7 174.4,206.5 191.7,208.1 209.0,197.9 226.3,178.7 243.6,164.2 260.9,146.4 278.2,131.2 295.5,117.4 312.8,112.7 330.1,105.4 347.4,104.3 364.7,102.1 382.0,106.2 399.3,106.4 416.7,96.7 434.0,100.9 451.3,101.3 468.6,105.9 485.9,98.2 503.2,95.9 520.5,120.0 537.8,129.3 555.1,147.3 572.4,154.2 589.7,153.7 607.0,152.8 624.3,150.3 641.6,147.7 658.9,141.3 676.2,135.0 693.5,133.4 710.8,126.2 728.1,120.7 745.4,120.9 762.7,119.1 780.0,120.5 797.3,132.8" class="e9" fill="none"/>
+<line x1="10" x2="806" y1="90.8" y2="90.8" class="en"/><text x="14" y="86.8" class="lbl ent">entry 4156.63</text>
+<line x1="10" x2="806" y1="241.4" y2="241.4" class="sl"/><text x="14" y="237.4" class="lbl slt">stop 4152.76</text>
+<line x1="10" x2="806" y1="41.7" y2="41.7" class="tp"/><text x="14" y="37.7" class="lbl tpt">TP1 4157.89</text>
+<path d="M416.7,90.8 l-7,12 l14,0 z" class="mk en"/>
+<path d="M445.3,100.7 l12,12 M457.3,100.7 l-12,12" class="mkx"/>
+</svg><div class="legend"><span class="k e9k"></span>EMA 9 (M15)<span class="k e50k"></span>EMA 50 (M15)<span class="k enk"></span>entry ▲▼<span class="k slk"></span>stop<span class="k tpk"></span>TP1<span class="k ctck"></span>breakeven trigger<span class="k xk"></span>exit ✕ · 1-minute candles; EMAs on 1-minute here, as the v1.11 copy saw them</div>
+
+  <h2>Lifecycle</h2>
+  <p class="sub">PKT = Pakistan time; server = PrimeXBT's clock (UTC). Sources below.</p>
+  <div class="tw"><table>
+    <thead><tr><th>PKT</th><th>Server</th><th>What happened</th><th>Stop</th><th>Result</th></tr></thead>
+    <tbody>
+<tr><td class="t">10:16:51 PM</td><td class="t">17:16:51</td><td>On Claude's PC the chart running the old <b>Saad v1.11</b> is switched to <b>M1</b>; the EA restarts on 1-minute candles (its log: "Saad_strategy_15min (XAUUSDp,M1)").</td><td class="n">–</td><td class="n"></td></tr>
+<tr><td class="t">10:20 – 10:23 PM</td><td class="t">17:20 – 17:23</td><td>It now treats 1-minute candles as setups: 4 setups in 3 minutes, each with a range of 50–90 cents.</td><td class="n">–</td><td class="n"></td></tr>
+<tr><td class="t">10:23:13 PM</td><td class="t">17:23:13</td><td><b>BUY 0.10 at 4156.63</b> off the 17:22 one-minute GREEN MARUBOZU (range $0.48). v1.11's settings: stop 30 pips → <b>4152.76</b>; TP1 = next resistance 4157.89.</td><td class="n">4152.76</td><td class="n"></td></tr>
+<tr><td class="t">10:24:59 PM</td><td class="t">17:24:59</td><td>"One click trading has been enabled" in that terminal.</td><td class="n">4152.76</td><td class="n"></td></tr>
+<tr><td class="t">10:25:01 PM</td><td class="t">17:25:01</td><td><b>Closed at 4156.22</b> two seconds later — a manual close (the EA logged it as "closed", not a stop).</td><td class="n"></td><td class="n"><span class='neg'>−$4.10</span></td></tr>
+<tr><td class="t">10:25:14 PM</td><td class="t">17:25:14</td><td>The v1.11 copy is <b>removed</b> from the chart.</td><td class="n"></td><td class="n"></td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Why it didn't make money</h2>
+<div class="card verdict"><h3>1. The wrong chart and the wrong version</h3><p>The 15-minute strategy ran on 1-minute candles, where its rules have no edge (report.md §5, §35: on M1 spread and noise eat everything). And it was v1.11 — six versions old, with the 30-pip stop and the broken long rule that v1.12 fixed.</p></div>
+<div class="card verdict"><h3>2. Two copies on one account</h3><p>This copy shared magic number 88302 with the real EA on the trading machine. Earlier the same day it also tried to move the stop of trade 67046250 (blocked while Algo Trading was off). Two copies with one magic number can adopt and manage each other's trades.</p></div>
+
+  <h2>One-off or a pattern? The full-year check</h2>
+<div class="card"><p>Not applicable — this wasn't the strategy's decision.</p></div>
+
+  <h2>What would have prevented it</h2>
+<div class="card good"><p><b>One EA per account, with its own magic number.</b> The v1.11 copy is now gone from Claude's PC (its last line is the 22:25 removal; nothing since). Keep the 15-minute EA on M15 charts only.</p></div>
+
+  <footer>Sources: PrimeXBT's XAUUSDp 1-minute and 15-minute candles for 12–14 Oct (downloaded from the broker), the account's deals (PrimeXBT journal on Claude's PC, matching Zee's statement), the EA's rules (Saad_strategy_15min v1.17, <code>lifecycle.md</code>) and its own target code, and the full-year MT5 test of the same EA on Axi real ticks. The trading machine's own Experts log was not available, so the EA's decisions are reconstructed from its rules; the same reconstruction gives TP1 = 4150.75 for trade 67046250, exactly what that EA logged. <a href="/saad-review">All trades of 13–14 Oct</a> · <a href="/">Dashboard</a></footer>
+</div>
+</body>
+</html>

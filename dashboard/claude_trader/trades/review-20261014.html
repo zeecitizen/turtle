@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Saad Trades Review</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800&family=Share+Tech+Mono&family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* layout: one reading column; a summary strip, the timeline as a table, then findings */
+:root {
+  --bg: #f4f6fa; --panel: #ffffff; --panel2: #eef1f7; --ink: #151a26; --muted: #5e6879; --line: #dde2ec;
+  --gold: #b07a10; --green: #13985a; --red: #d23b4b; --blue: #2f6fd6; --amber: #b9770e;
+  --display: 'Orbitron', 'Consolas', monospace; --mono: 'Share Tech Mono', 'Consolas', monospace; --body: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b0f18; --panel: #131a29; --panel2: #1a2336; --ink: #e6ebf5; --muted: #98a3b8; --line: #263046;
+  --gold: #ffcf66; --green: #2bd576; --red: #ff6b7a; --blue: #6aa8ff; --amber: #ffb347; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0b0f18; --panel: #131a29; --panel2: #1a2336; --ink: #e6ebf5; --muted: #98a3b8; --line: #263046;
+  --gold: #ffcf66; --green: #2bd576; --red: #ff6b7a; --blue: #6aa8ff; --amber: #ffb347; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.6 var(--body); }
+.wrap { max-width: 900px; margin: 0 auto; padding-inline: 16px; padding-block: 20px 60px; }
+.top { border-bottom: 2px solid var(--gold); padding-bottom: 14px; margin-bottom: 20px; }
+.eyebrow { font: 700 12px var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--gold); }
+h1 { font: 800 clamp(24px, 4vw, 34px)/1.1 var(--display); letter-spacing: 2px; margin: 8px 0 6px; }
+.sub { color: var(--muted); margin: 0; max-width: 70ch; }
+.strip { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 18px 0 6px; }
+.strip div { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+.strip b { display: block; font: 700 18px var(--mono); }
+.strip b.pos { color: var(--green); }
+.strip span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+h2 { font: 800 15px var(--display); letter-spacing: 1.5px; text-transform: uppercase; color: var(--gold); margin: 32px 0 10px; }
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+th { background: var(--panel2); color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.t, td.n { font-family: var(--mono); white-space: nowrap; }
+.pos { color: var(--green); font-weight: 700; } .q { color: var(--amber); font-weight: 700; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin: 10px 0; }
+.card h3 { margin: 0 0 6px; font-size: 16px; }
+.card p, .card li { max-width: 74ch; margin: 4px 0; }
+.warn { border-left: 4px solid var(--amber); }
+code { font: .9em var(--mono); background: var(--panel2); padding: 1px 5px; border-radius: 4px; }
+a { color: var(--blue); }
+footer { margin-top: 30px; color: var(--muted); font-size: 12.5px; }
+
+.chart { width: 100%; height: auto; display: block; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .ax { fill: var(--muted); font: 11px var(--mono); }
+.chart .lbl { fill: var(--muted); font: 700 11px var(--mono); }
+.chart .wu, .chart .wd { stroke-width: 1.2; } .chart .wu { stroke: var(--green); } .chart .wd { stroke: var(--red); }
+.chart .cu { fill: var(--green); } .chart .cd { fill: var(--red); }
+.chart .e9 { stroke: #2f6fd6; stroke-width: 3; } .chart .e50 { stroke: #d23b4b; stroke-width: 3; opacity: .85; }
+.chart .sl { stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 6 4; } .chart .slt { fill: var(--red); }
+.chart .tp { stroke: var(--green); stroke-width: 1.5; stroke-dasharray: 6 4; } .chart .tpt { fill: var(--green); }
+.chart .ctc { stroke: var(--amber); stroke-width: 1.2; stroke-dasharray: 2 4; } .chart .ctct { fill: var(--amber); }
+.chart .en { stroke: var(--gold); stroke-width: 1.2; stroke-dasharray: 3 3; } .chart .ent { fill: var(--gold); }
+.chart path.mk.en { fill: var(--gold); stroke: none; } .chart .mkx { stroke: var(--ink); stroke-width: 3; fill: none; }
+.chart .setupbg { fill: var(--gold); opacity: .12; }
+.legend { font-size: 12.5px; color: var(--muted); margin: 6px 2px 0; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
+.legend .k { display: inline-block; width: 18px; height: 4px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.e9k { background: #2f6fd6; } .e50k { background: #d23b4b; } .enk { background: var(--gold); } .slk { background: var(--red); } .tpk { background: var(--green); } .ctck { background: var(--amber); } .xk { background: var(--ink); }
+.neg { color: var(--red); font-weight: 700; } .strip b.neg { color: var(--red); }
+.verdict { border-left: 4px solid var(--red); } .good { border-left: 4px solid var(--green); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="eyebrow">PrimeXBT demo · account 1364880 · XAUUSDp · 13–14 Oct 2026 · Saad_strategy_15min</div>
+    <h1>Why the Saad trades lost money</h1>
+    <p class="sub">Eight trades in 24 hours took the account from $10,000 to $6,511.83: two winners, one scratch, five losers. Below are each trade, the causes in order of money, what the full-year MT5 test says about each pattern, and what to change.</p>
+    <div class="strip">
+      <div><span>Trades</span><b>8</b></div><div><span>Winners</span><b class="pos">2 · +$3,806</b></div>
+      <div><span>Losers</span><b class="neg">5 · −$5,964</b></div><div><span>Net</span><b class="neg">−$3,488</b></div>
+      <div><span>Balance</span><b>$6,511.83</b></div>
+    </div>
+  </div>
+
+  <h2>The trades</h2>
+  <p class="sub">PKT times. Click a ticket for its full lifecycle, chart and diagnosis (67046250 has its own page from yesterday).</p>
+  <div class="tw"><table>
+    <thead><tr><th>PKT</th><th>Ticket</th><th>Side</th><th>Entry → exit</th><th>Result</th><th>In one line</th></tr></thead>
+    <tbody>
+<tr><td class="t">13 Oct 8:01 PM</td><td class="t"><a href="/trade67046250.html">67046250</a></td><td class="t">SELL 2</td><td class="t">4165.57 → 4151.58</td><td class="n pos">+$2,799.00</td><td>Pin bar on the 9 EMA with the trend. TP1 banked, rest trailed. Worked exactly as designed.</td></tr>
+<tr><td class="t">13 Oct 10:23 PM</td><td class="t"><a href="/trade67082390.html">67082390</a></td><td class="t">BUY 0.1</td><td class="t">4156.63 → 4156.22</td><td class="n neg">−$4.10</td><td>An old v1.11 copy on Claude's PC, on a 1-minute chart by mistake. Closed by hand; copy removed.</td></tr>
+<tr><td class="t">13 Oct 11:45 PM</td><td class="t"><a href="/trade67099697.html">67099697</a></td><td class="t">BUY 2</td><td class="t">4162.51 → 4160.39</td><td class="n neg">−$424.00</td><td>Bounce off the 9 EMA in a falling market; never near TP1; shut by the daily-close rule.</td></tr>
+<tr><td class="t">14 Oct 3:01 AM</td><td class="t"><a href="/trade67111138.html">67111138</a></td><td class="t">BUY 2</td><td class="t">4162.39 → 4154.77</td><td class="n neg">−$1,524.00</td><td>Setup from before the daily break, bought at the reopen (a code hole). Stopped at the night's exact low.</td></tr>
+<tr><td class="t">14 Oct 5:33 AM</td><td class="t"><a href="/trade67117659.html">67117659</a></td><td class="t">SELL 2</td><td class="t">4157.62 → 4157.62</td><td class="n ">$0.00</td><td>Reached breakeven, missed TP1 by 66 cents, then an $11 snap-back. The breakeven step saved $1,828.</td></tr>
+<tr><td class="t">14 Oct 8:16 AM</td><td class="t"><a href="/trade67138222.html">67138222</a></td><td class="t">BUY 2</td><td class="t">4169.02 → 4158.02</td><td class="n neg">−$2,200.00</td><td>Pin bar on the 50 EMA, bought at the top of a rally, no target. Best move +$1.37.</td></tr>
+<tr><td class="t">14 Oct 9:45 AM</td><td class="t"><a href="/trade67144848.html">67144848</a></td><td class="t">BUY 2</td><td class="t">4166.69 → 4157.63</td><td class="n neg">−$1,812.00</td><td>EMAs merged (no trend), chop exactly at the limit, no target. Best move +$0.37.</td></tr>
+<tr><td class="t">14 Oct 1:31 PM</td><td class="t">67182851</td><td class="t">SELL 2</td><td class="t">4149.33 → 4144.30</td><td class="n pos">+$1,007.00</td><td>Pin bar on the 9 EMA with the trend. TP1 banked, rest trailed. Worked as designed.</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>The causes, biggest first</h2>
+  <div class="card verdict"><h3>1. The size: 2 lots on $10,000 is five times the designed risk</h3>
+    <p>The EA was built and tested at <b>1 lot per $25,000</b>. Over the full year (MT5, Axi real ticks, 1 lot) it made <b>+$202,222</b>. Along the way it had <b>27 losing streaks of 4+ trades</b> (the longest was 11), <b>29 days out of 184 as bad as yesterday</b>, a worst day of −$3,782 and a worst drawdown of $12,681.</p>
+    <p>At 2 lots on $10,000 the same ordinary bad stretch becomes a worst day of <b>−$7,563</b> and a drawdown of <b>$25,361, which is 254% of the account</b>. Yesterday wasn't unusual for the strategy. The size turned it into a 35% loss.</p>
+    <div class="tw"><table><thead><tr><th>Lots on $10,000</th><th>Worst day (year)</th><th>Worst drawdown (year)</th><th>As % of $10k</th></tr></thead><tbody>
+      <tr><td class="n">2 (now)</td><td class="n neg">−$7,563</td><td class="n neg">$25,361</td><td class="n neg">254%</td></tr>
+      <tr><td class="n">0.4 (the report's 0.1 per $2,500)</td><td class="n">−$1,513</td><td class="n">$5,072</td><td class="n">51%</td></tr>
+      <tr><td class="n"><b>0.2</b></td><td class="n">−$756</td><td class="n">$2,536</td><td class="n"><b>25%</b></td></tr>
+      <tr><td class="n">0.1</td><td class="n">−$378</td><td class="n">$1,268</td><td class="n">13%</td></tr>
+    </tbody></table></div></div>
+  <div class="card"><h3>2. A normal losing streak: buys into a falling, choppy market</h3>
+    <p>All four big losers were <b>BUYs while the 15-minute 9 EMA was under the 50 EMA</b>. The chop reading was near the EA's 0.11 limit, and most of them went almost nothing our way (+$0.37 to +$3.94) before reversing. Both winners were SELLs with the trend.</p>
+    <p>But over the full year these are <b>not losing categories</b>:</p>
+    <ul>
+      <li>buys against the 15-minute trend: +$44,361 (257 trades)</li>
+      <li>low-chop setups: +$53,561</li>
+      <li>"no target" buys: +$77,462</li>
+    </ul>
+    <p>The strategy makes its money at turns, so it has days like this. Report.md §10 tested "buy only with the trend": it cut the year's profit by about 75%.</p></div>
+  <div class="card warn"><h3>3. Operations: two bots on one account, a wrong chart, a shaky connection</h3>
+    <ul><li><b>Two copies of the EA</b> share account 1364880 and magic number 88302: v1.17 on the trading machine and an old <b>v1.11</b> on Claude's PC. On the 13th the v1.11 copy tried to move 67046250's stop. After its chart was switched to <b>M1</b>, it opened 67082390 off a 1-minute candle. It has since been removed (nothing logged after 10:25 PM).</li>
+    <li><b>The trading machine kept reconnecting.</b> On the 14th from 7:10 to 8:26 AM PKT the account was re-authorised from 119.154.92.250 every few minutes, after the connection quality dropped to 46%. Stops live at the broker, so no trade lost money because of it. But the breakeven, TP1 and trail steps need the EA online.</li>
+    <li>On Axi, <b>VSISA is attached to an H1 chart</b> (loaded 2:42 AM today). VSISA reads the chart's candles, so on H1 it trades hourly candles, not the 5-minute ones it was tested on.</li></ul></div>
+  <div class="card"><h3>4. A code hole: setups across the daily break</h3>
+    <p><code>InpGapCancel</code> cancels a <i>waiting</i> setup when the market closes. But a setup formed by the last candle before the break is only created at the reopen, after that check, and then traded on the reopen candle. That was trade 67111138 (−$1,524). It's fixed in a research copy (<code>Saad_gapfix.mq5</code>).</p></div>
+
+  <h2>What I tested in MT5 (full year, Axi real ticks, 1 lot)</h2>
+  <div class="tw"><table><thead><tr><th>Change</th><th>Full year</th><th>Jan–Jun</th><th>Jul–Oct</th><th>Verdict</th></tr></thead><tbody>
+    <tr><td>Today's rules (v1.17 trades)</td><td class="n">+$202,222</td><td class="n">+$134,541</td><td class="n">+$67,681</td><td>baseline</td></tr>
+    <tr><td>No BUYs on the 50 EMA (<code>InpLongRule = 0</code>)</td><td class="n">+$179,104</td><td class="n">+$120,141</td><td class="n">+$58,963</td><td class="neg">rejected: worse in both halves</td></tr>
+    <tr><td>Gap fix (no setup from the candle before a closure)</td><td class="n">+$201,361</td><td class="n">+$133,680</td><td class="n">+$67,681</td><td>correct behaviour, not a profit fix (2 trades a year)</td></tr>
+  </tbody></table></div>
+
+  <h2>What to change</h2>
+  <div class="card good"><ol>
+    <li><b>Size: 0.2 lots on $10,000</b> (a worst-year drawdown of about 25% of the account). Trading 2 lots needs about $50,000.</li>
+    <li><b>One EA per account.</b> Remove every other copy (old versions on other terminals, the VPS, phones). Give any second EA its own <code>InpMagicNumber</code>.</li>
+    <li><b>The 15-minute EA on M15 charts only</b>, and VSISA on M5. TradeLifecycle v1.03 now draws the two EMAs, so a wrong timeframe is easy to spot.</li>
+    <li><b>A stable connection for the trading machine</b> (or a VPS), so the breakeven, TP1 and trail steps happen on time.</li>
+    <li>Optional: ship the gap fix as a setting, for correctness.</li>
+  </ol></div>
+
+  <footer>Data: PrimeXBT's own XAUUSDp candles (downloaded from the broker for 12–14 Oct), the account's deals (PrimeXBT journal on Claude's PC, matching the statement), the v1.11 copy's own log, and full-year MT5 tests of the same EA on Axi real ticks (Jan 6 – Oct 8 2026). The trading machine's own Experts log wasn't available, so the EA's choices are reconstructed from its rules and code. The reconstruction was checked: it reproduces 67046250's logged TP1 (4150.75) exactly. <a href="/">Dashboard</a></footer>
+</div>
+</body>
+</html>
