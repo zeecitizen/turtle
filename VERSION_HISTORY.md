@@ -636,6 +636,36 @@ second of testing**, window length is nearly free, and **optimisation does not w
 (it waits on the sync forever). Reviving any valid login turns the loop from 6 configs/hour
 into ~40.
 
+## bread_winner v1.01 — $8 stop, 0.12 lots (2026-10-14)
+
+**What changed:**
+- `InpShotSl` 6 → **8** and `InpShotLots` / Diamond lots 0.11 → **0.12**.
+- A win is about $11.52, which stays ≥ $10 even when the target fill slips.
+- Same scouts, same one-shot-per-PKT-day policy.
+
+**Why** (report §36):
+- In the one-shot policy the wider stop raised win rate, bread days **and** profit, in both halves:
+
+  | Stop | Bread days | Red | Net |
+  |---|---|---|---|
+  | $6 | 157 | 16 | +$1,163 |
+  | $8 | 163 | 9 | +$1,481 |
+  | $9 | 164 | 8 | +$1,505 |
+
+- $8–10 is a plateau; $8 is its most conservative point.
+- This touches Zee's "never buy win rate with wider stops" rule. It's shipped because expectancy rises with the
+  win rate here; it isn't bought from it.
+
+**Receipts** (own defaults, scored by Pakistan weekday):
+
+| Run | Bread days (≥ $10) | Red | Net | Per day | Worst day | DD |
+|---|---|---|---|---|---|---|
+| Full year, 200 ms | **164 / 196 (83.7%)** | 9 | +$1,615 | $8.24 | −$134 | $338 |
+| Full year, random delay | 156 / 196 (79.6%) | 11 | +$1,464 | — | — | — |
+| Jul–Oct, random delay | 59 / 71 (83.1%) | 6 | — | — | — | — |
+
+Compiled in the Axi terminal. Not attached.
+
 ## bread_winner v1.00 — one perfect shot a day for $10 (2026-10-14)
 
 **Who:** Zee: *"The EA takes 1 trade -> 1 perfect shot -> then it ends the day -> at the end of the day i withdraw

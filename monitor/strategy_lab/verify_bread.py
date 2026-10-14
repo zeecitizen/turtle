@@ -22,5 +22,5 @@ pk = pkt_stats(dst, *PERIODS[per])
 r["pkt_days"] = pk
 with open(Path(r"C:\Users\zeesh\turtle\testing\bread_verify_runs.jsonl"), "a", encoding="utf-8") as f:
     f.write(json.dumps({k: v for k, v in r.items() if k != "daily"} | {"per": per, "exec": ex}) + "\n")
-print(f"bread_winner v1.00 {per} exec {ex}: PKT weekdays {pk['weekdays']} | shots {pk['shots']} WR {pk['wr']}% | BREAD {pk['bread']} ({pk['bread_pct']}%) | "
+print(f"bread_winner {per} exec {ex}: PKT weekdays {pk['weekdays']} | shots {pk['shots']} WR {pk['wr']}% | BREAD {pk['bread']} ({pk['bread_pct']}%) | "
       f"red {pk['red']} | empty {pk['empty']} | net {pk['net']} ({pk['per_day']}/day) | worst day {pk['worst']} | max DD {r.get('dd')}", flush=True)

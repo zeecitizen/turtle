@@ -25,7 +25,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | **saad_vsisa_hybrid** | `saad_vsisa_hybrid.mq5` (+ `saad_vsisa_hybrid_saad.mqh` + 4 `Vsisa*.mqh`) | 88350 Saad part · 88351 VSISA part | **v1.00** (2026-10-14) | XAUUSD **M5** (Saad part reads M15 itself) | READY, demo first; do not run beside Saad 15-min / VSISA on the same account (it already trades both) |
 | **saad_vsisa_diamond_hybrid** | `saad_vsisa_diamond_hybrid.mq5` (+ `svd_saad.mqh`, `svd_diamond.mqh`, 4 `Vsisa*.mqh`) | 88360 Saad · 88361 VSISA · 88362 Diamond | **v1.00** (2026-10-14) | XAUUSD **M5** | READY, demo first: bigger drawdown (15%) than saad_vsisa_hybrid |
 | **Trinity_1min** | `Trinity_1min.mq5` (+ `TriSaad.mqh`, `TriVsisa.mqh`, `TriDia.mqh`, 4 `Vsisa*.mqh`) | 88370 Saad · 88371 VSISA · 88372 Diamond | **v1.00** (2026-10-14) | XAUUSD **M1**, 0.01 lots | READY, demo first: ~$15/day at 0.01 lots on $500 |
-| **bread_winner** | `bread_winner.mq5` (+ `bread_saad/vsisa/dia/pb.mqh`, 4 `Vsisa*.mqh`) | 88390–88394 (shots 88393, Diamond 88392) | **v1.00** (2026-10-14) | XAUUSD, any chart | READY, demo first: ONE $10 shot per Pakistan day; ~8 in 10 days bread |
+| **bread_winner** | `bread_winner.mq5` (+ `bread_saad/vsisa/dia/pb.mqh`, 4 `Vsisa*.mqh`) | 88390–88394 (shots 88393, Diamond 88392) | **v1.01** (2026-10-14) | XAUUSD, any chart | READY, demo first: ONE ~$11.5 shot per Pakistan day; ~8 in 10 days bread, ~1 in 20 red |
 | VSISA_Pullbacks | `VSISA_Pullbacks.mq5` | 88202 | v1.00 (2026-09-17) | XAUUSD | BUILT |
 | ZeeUHV_Diamond | `ZeeUHV_Diamond.mq5` | 88154 | v1.27 (2026-09-29) | XAUUSD M1 | BUILT |
 | BasedOnLaws | `BasedOnLaws.mq5` | 88184 | v1.44 (file) / v1.43 ledger (2026-08-28) | XAUUSD M1 | BUILT |
@@ -98,6 +98,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | Version | Date | What changed | Result / note |
 |---|---|---|---|
+| **v1.01** | 2026-10-14 | Stop $6 → **$8**, lots 0.11 → **0.12** (win ≈ $11.52, stays ≥ $10 under slippage). $8–10 was a plateau that raised bread days AND money in both halves | Full year: **164 / 196 weekdays ≥ $10 (83.7%)**, 9 red, +$1,615 ($8.24/day); random delay 156 (79.6%), 11 red, +$1,464; Jul–Oct random delay 59/71 (83%). Worst day about −$134 (report §36) |
 | **v1.00** | 2026-10-14 | One shot per PKT day: the first VSISA low-volume reaction (looser: campaign ≥ 0.60× max, ≥ 1.0× avg, body ≥ 25%) or Diamond UHV breakout after PKT 17:00; 0.11 lots, TP $1 (≈ $10.56), SL $6, re-anchored to the fill; then waits for tomorrow | Full year, random delay: **151 of 196 weekdays ≥ $10 (77%)**, 15 red, 24 no shot, +$1,219 ($6.22/day), worst day −$69, DD $377. Jul–Oct random delay 57/71 (80%). Not yet "every day" (report §36) |
 
 ## Trinity_1min (magics 88370 / 88371 / 88372, XAUUSD M1, 0.01 lots)

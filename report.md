@@ -1973,3 +1973,42 @@ XAUUSD.
   days**, but 23 red days and about half the profit.
 - **Volume** is Axi's tick volume (Zee's permission for tests). LAWS.md's OANDA volume isn't available for the
   test period.
+
+
+### bread_winner v1.01: $8 stop, 0.12 lots (14 Oct, same evening)
+
+**What changed:** the stop went from $6 to **$8** and the lots from 0.11 to **0.12**, so a win is about $11.52.
+That keeps a win above $10 even when the target fill slips under random delays. Everything else is v1.00.
+
+**Why the stop (it touches Zee's "never buy win rate with wider stops" rule):**
+- **It is not buying win rate at the cost of expectancy here.** In the one-shot policy the wider stop raised the
+  win rate, the bread days **and** the money, in both halves of the year:
+
+  | Policy A stop | Bread days | Red | Net |
+  |---|---|---|---|
+  | $6 | 157 | 16 | +$1,163 |
+  | $7 | 160 | 13 | +$1,258 |
+  | **$8** | **163** | **9** | **+$1,481** |
+  | $9 | 164 | 8 | +$1,505 |
+  | $10 | 164 | 8 | +$1,439 |
+
+- **$8–10 is a plateau.** $8 is its most conservative point, with the smallest loss per red day.
+- **The cost:** a losing day is bigger, about −$100 to −$134 instead of about −$70.
+
+**Receipts, v1.01 on its own defaults** (scored by Pakistan day):
+
+| | Bread days (≥ $10) | Red | No shot | Net | Per weekday | Worst day | Max DD |
+|---|---|---|---|---|---|---|---|
+| Full year, 200 ms | **164 / 196 (83.7%)** | 9 | 22 | +$1,615 | $8.24 | −$134 | $338 |
+| Jan–Jun, 200 ms | 104 / 125 (83.2%) | 4 | 16 | +$1,080 | $8.64 | −$134 | $244 |
+| **Full year, random delay** | **156 / 196 (79.6%)** | 11 | 22 | +$1,464 | $7.47 | −$104 | $412 |
+| Jul–Oct, random delay | 59 / 71 (83.1%) | 6 | 6 | +$423 | $5.95 | −$108 | $425 |
+
+**Also tried after v1.00, all rejected:**
+- VSISA on M3 / M4 / M6 / M10 (82–85%, negative)
+- later window starts (fewer bread days, Jul–Oct turns negative)
+- VSISA_Pullbacks as a scout (fills the empty days but loses money)
+
+**Still not "every day":**
+- about 1 weekday in 9 has no qualifying setup
+- about 1 in 20 loses
