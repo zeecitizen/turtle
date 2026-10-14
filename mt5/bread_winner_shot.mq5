@@ -13,6 +13,7 @@
 #include "bws_vsisa.mqh"
 #include "bws_dia.mqh"
 #include "bws_pb.mqh"
+#include "bws_vsisa2.mqh"
 
 input group "=== bread_winner: the shot ==="
 input int    InpTrig        = 1;      // InpTrig — triggers: 1 Diamond · 2 Saad · 4 VSISA · 8 PULSE · 16 RANDOM control (add them up)
@@ -59,14 +60,15 @@ input group "=== which engines run (scouts) ==="
 input bool InpUseSaad  = true;   // InpUseSaad — Saad engine (needed for trigger 2)
 input bool InpUseVsisa = true;   // InpUseVsisa — VSISA engine (needed for trigger 4 and InpCtxVsNoOpp / InpCtxRegSkip)
 input bool InpUseDia   = true;   // InpUseDia — Diamond engine (needed for trigger 1)
-input bool InpUsePb    = false;  // InpUsePb — VSISA_Pullbacks engine (needed for trigger 32)
+input bool InpUsePb    = false;
+input bool InpUseVs2   = false;  // InpUseVs2 — 2nd VSISA engine on W_InpTF (needed for trigger 64)  // InpUsePb — VSISA_Pullbacks engine (needed for trigger 32)
 
 CTrade g_bwT;
 datetime g_tvRawT = 0; int g_tvRawS = 0;
 void TriVsRaw(int side) { g_tvRawT = TimeCurrent(); g_tvRawS = side; }
 int g_hE9 = INVALID_HANDLE, g_hE50 = INVALID_HANDLE;
 int g_shots = 0, g_shotDay = -1, g_shotsTotal = 0;
-int g_sig[6]; int g_fired[6];
+int g_sig[7]; int g_fired[7];
 ulong g_shotPos = 0; datetime g_shotOpen = 0;
 string g_rowFeat[]; ulong g_rowPos[]; int g_rowTrig[]; int g_rowN = 0; string g_lastRow = ""; int g_lastTrig = 0;
 datetime g_lastBar = 0; int g_randMin = -1;
@@ -160,7 +162,7 @@ bool BwHostShot(int side, int trig)   // open a host-geometry shot
    g_scoutSl = 0;
    double sl = side > 0 ? en - dist : en + dist, tp = side > 0 ? en + InpShotTp : en - InpShotTp;
    g_bwT.SetExpertMagicNumber(InpShotMagic);
-   string cm = StringFormat("Bread 1.00 %s %s", trig == 2 ? "SAAD" : trig == 3 ? "VSISA" : trig == 5 ? "VSPB" : trig == 4 ? "PULSE" : "RAND", side > 0 ? "BUY" : "SELL");
+   string cm = StringFormat("Bread 1.00 %s %s", trig == 2 ? "SAAD" : trig == 3 ? "VSISA" : trig == 6 ? "VS2" : trig == 5 ? "VSPB" : trig == 4 ? "PULSE" : "RAND", side > 0 ? "BUY" : "SELL");
    bool ok = side > 0 ? g_bwT.Buy(InpShotLots, _Symbol, 0, NormalizeDouble(sl, _Digits), NormalizeDouble(tp, _Digits), cm)
                       : g_bwT.Sell(InpShotLots, _Symbol, 0, NormalizeDouble(sl, _Digits), NormalizeDouble(tp, _Digits), cm);
    if (!ok) return false;
@@ -213,6 +215,13 @@ bool BwVsisaLate(int side, double sl)
 {
    if ((InpTrig & 4) == 0 || !BwFromOk(InpVsFrom) || !BwShotAvailable() || ((InpCtxMask & 4) != 0 && !BwContextOk(side))) return true;
    g_scoutSl = sl; BwHostShot(side, 3);
+   return true;
+}
+bool BwVs2Hook(int side, double sl)     // the 2nd VSISA engine reports a setup (trigger 64)
+{
+   g_sig[6]++;
+   if ((InpTrig & 64) == 0 || !BwShotAvailable() || ((InpCtxMask & 64) != 0 && !BwContextOk(side))) return true;
+   g_scoutSl = sl; BwHostShot(side, 6);
    return true;
 }
 bool BwPbHook(int side, double sl)      // VSISA_Pullbacks reports a setup (trigger 32)
@@ -300,9 +309,9 @@ void BwReport()
          if (cm == 0 && HistoryDealGetInteger(d, DEAL_ENTRY) != DEAL_ENTRY_IN) net[k] -= 4.0 * HistoryDealGetDouble(d, DEAL_VOLUME);
       }
       for (int j = 0; j < n; j++) { c++; tot += net[j]; if (net[j] > 0) w++; }
-      int tc[6], tw[6]; double tn[6]; ArrayInitialize(tc, 0); ArrayInitialize(tw, 0); ArrayInitialize(tn, 0);
-      for (int r = 0; r < g_rowN; r++) for (int j = 0; j < n; j++) if (ids[j] == g_rowPos[r]) { int k = MathMin(5, MathMax(0, g_rowTrig[r])); tc[k]++; tn[k] += net[j]; if (net[j] > 0) tw[k]++; }
-      PrintFormat("[BREAD-TRIG] diamond %d/%d %.2f | saad %d/%d %.2f | vsisa %d/%d %.2f | pulse/rand %d/%d %.2f | pullbacks %d/%d %.2f", tw[1], tc[1], tn[1], tw[2], tc[2], tn[2], tw[3], tc[3], tn[3], tw[4], tc[4], tn[4], tw[5], tc[5], tn[5]);
+      int tc[7], tw[7]; double tn[7]; ArrayInitialize(tc, 0); ArrayInitialize(tw, 0); ArrayInitialize(tn, 0);
+      for (int r = 0; r < g_rowN; r++) for (int j = 0; j < n; j++) if (ids[j] == g_rowPos[r]) { int k = MathMin(6, MathMax(0, g_rowTrig[r])); tc[k]++; tn[k] += net[j]; if (net[j] > 0) tw[k]++; }
+      PrintFormat("[BREAD-TRIG] diamond %d/%d %.2f | saad %d/%d %.2f | vsisa %d/%d %.2f | pulse/rand %d/%d %.2f | pullbacks %d/%d %.2f | vsisa2 %d/%d %.2f", tw[1], tc[1], tn[1], tw[2], tc[2], tn[2], tw[3], tc[3], tn[3], tw[4], tc[4], tn[4], tw[5], tc[5], tn[5], tw[6], tc[6], tn[6]);
       if (InpShotLog && g_rowN > 0) {
          int h = FileOpen(StringFormat("bread_shots_%d.csv", InpShotTag), FILE_WRITE | FILE_TXT | FILE_ANSI | FILE_COMMON);
          if (h != INVALID_HANDLE) {
@@ -326,6 +335,7 @@ int OnInit()
    if (InpUseVsisa && V_OnInit() != INIT_SUCCEEDED) return INIT_FAILED;
    if (InpUseDia   && D_OnInit() != INIT_SUCCEEDED) return INIT_FAILED;
    if (InpUsePb    && P_OnInit() != INIT_SUCCEEDED) return INIT_FAILED;
+   if (InpUseVs2   && W_OnInit() != INIT_SUCCEEDED) return INIT_FAILED;
    PrintFormat("[BREAD] bread_winner_shot 1.00 | trig %d | window PKT %.2f-%.2f | shot %.2f lots TP $%.2f SL $%.2f | ctx trend %d ER %.2f",
                InpTrig, InpWinFrom, InpWinTo, InpShotLots, InpShotTp, InpShotSl, InpCtxTrend, InpCtxMinER);
    return INIT_SUCCEEDED;
@@ -337,6 +347,7 @@ void OnDeinit(const int reason)
    if (InpUseVsisa) V_OnDeinit(reason);
    if (InpUseDia)   D_OnDeinit(reason);
    if (InpUsePb)    P_OnDeinit(reason);
+   if (InpUseVs2)   W_OnDeinit(reason);
 }
 void OnTick()
 {
@@ -346,6 +357,7 @@ void OnTick()
    if (InpUseVsisa) V_OnTick();
    if (InpUseDia)   D_OnTick();
    if (InpUsePb)    P_OnTick();
+   if (InpUseVs2)   W_OnTick();
    BwTrackDia();
    BwBarTriggers();
 }

@@ -192,3 +192,8 @@ filters above, and the looser VSISA.
 - **Full year:** 150 of 196 weekdays ≥ $10 (76.5%), 16 red, 22 without a shot, +$1,173 (+$6/day).
 - **Both halves agree:** Jan–Jun 77.6%, Jul–Oct 74.6%.
 - **Adding VSISA_Pullbacks as a scout:** 161 bread days (82.1%), 0 empty days, but 23 red days and +$610.
+
+**v1.01 (same evening):** a $8 stop + 0.12 lots: 164 / 196 bread days (83.7%), 9 red, +$1,615. In the
+first-of-day policy the stop plateau $8–10 beat $6 on bread days AND money, in both halves. This is the opposite
+of the all-setups census, where wider stops lost money: the first-of-day selection changes the answer.
+**VSISA on M3 / M4 / M6 / M10: 82–85%, all negative.** Only M5 works.
