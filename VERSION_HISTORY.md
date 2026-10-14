@@ -867,6 +867,28 @@ machine learning methods described in report.md to the VSISA EA on 5 min timefra
 Every layer can be switched off with its `Inp*Mode = 0`. Compiled into the Axi terminal with its four .mqh
 files. Full results: report.md §28.
 
+## Saad_strategy_15min v1.19 — chart colours by side (2026-10-14)
+
+**Who:** Zee: *"set the color of text on chart that says BUY #4 @ 4162.51 .. its currently blue in color. let's make
+it green. so what we can do is anything about the LONG trades should be dark green in color. and anything related
+to SHORTS should be red in color"*.
+
+**What changed** (display only):
+- **LONG elements are dark green** (`InpLongColor`, default `clrGreen`) and **SHORT elements red**
+  (`InpShortColor`, default `clrRed`). This covers:
+  - the setup box, its break line and its "SETUP LONG/SHORT …" label (were gold)
+  - the entry arrow and the "BUY #n @ price" / "SELL #n @ price" label (were blue / orange-red)
+  - the TP-reached and next-target notes (were aqua)
+- **Kept on purpose:**
+  - stop-loss lines red for both sides, and target lines lime, so a stop and a target never look alike
+  - the exit label's profit/loss colour
+- The comment prefix is now `Saad15 v1.19`.
+
+**Check:** the full year on XAUUSD_TK is identical to v1.18: +$202,221.80, 1,169 deals.
+
+**Where it's compiled:** the Axi and PXBT terminals on Claude's PC (Saad wasn't attached in either). The 2-lot
+trading machine still runs v1.17; copy `Saad_strategy_15min.mq5` there to get the colours.
+
 ## TradeLifecycle v1.03 — the Saad EMAs on the chart (2026-10-14)
 
 **Who:** Zee: *"the trade lifecycle EA, in this one can you add the two EMAs we use on it. the 50 EMA (thick line

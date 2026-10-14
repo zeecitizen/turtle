@@ -34,12 +34,13 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.18"
+#property version   "1.19"
 #property strict
 
 #include <Trade/Trade.mqh>
+// v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad15 v1.18"
+#define EA_COMMENT "Saad15 v1.19"
 
 //--- the two lines
 input int    InpEmaFast     = 9;      // InpEmaFast
@@ -168,6 +169,8 @@ input bool   InpVerbose     = false;  // InpVerbose — print every decision
 input bool   InpDraw        = true;   // InpDraw — labels on the chart (visual tester + live): setups, entries, stop moves, exits
 input bool   InpLog         = true;   // InpLog — print every trade event to the Experts tab (live + visual tester)
 input bool   InpLogCsv      = true;   // InpLogCsv — one CSV row per closed trade in Common\Files (live + visual tester)
+input color  InpLongColor   = clrGreen; // InpLongColor — chart text/marks for LONG setups and trades (Zee: dark green)
+input color  InpShortColor  = clrRed;   // InpShortColor — chart text/marks for SHORT setups and trades
 input bool   InpDrawSkips   = false;   // InpDrawSkips — also label setups that were skipped (no break, risk, no support, choppy)
 
 CTrade   trade;
@@ -218,7 +221,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-15min] v1.18 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.19 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -407,7 +410,7 @@ void DArrow(datetime t, double price, int side)
    if (!Drawing()) return;
    string n = ObjName();
    ObjectCreate(0, n, side > 0 ? OBJ_ARROW_BUY : OBJ_ARROW_SELL, 0, t, price);
-   ObjectSetInteger(0, n, OBJPROP_COLOR, side > 0 ? clrDodgerBlue : clrOrangeRed);
+   ObjectSetInteger(0, n, OBJPROP_COLOR, side > 0 ? InpLongColor : InpShortColor);
    ObjectSetInteger(0, n, OBJPROP_WIDTH, 2);
    ObjectSetInteger(0, n, OBJPROP_SELECTABLE, false);
 }
@@ -540,7 +543,7 @@ bool TpReached(int i, double tpLv)
             else { g_lockFail++; note += " (lock refused: too close)"; }
          }
       }
-      Callout(TimeCurrent(), tpLv, g_pos[i].side > 0, 1.5, note, clrAqua, 8);
+      Callout(TimeCurrent(), tpLv, g_pos[i].side > 0, 1.5, note, g_pos[i].side > 0 ? InpLongColor : InpShortColor, 8);
       return false;
    }
    g_pos[i].why = g_pos[i].side > 0 ? StringFormat("%d EMA (TP)", g_pos[i].exitE) : "TP (last support)";
@@ -579,7 +582,7 @@ void LongTouched(int i, double bid)
                     res > 0 ? Px(res) + " (last resistance)" : "none above"));
    string note = StringFormat("TP1: %s -> trail $%.2f below%s", g_pos[i].resTp1 ? "resistance reached" : StringFormat("%d EMA touched", g_pos[i].exitE), InpLongTrailUsd,
                               res > 0 ? StringFormat(", TP2 %.2f (last resistance)", res) : ", no resistance above");
-   Callout(TimeCurrent(), bid, true, 1.5, note, clrAqua, 8);
+   Callout(TimeCurrent(), bid, true, 1.5, note, InpLongColor, 8);
    if (res > 0) DLine(TimeCurrent(), res, TimeCurrent() + 8 * PeriodSeconds(), res, clrLime, STYLE_DASH, 1, "TP2: last resistance");
 }
 
@@ -604,7 +607,7 @@ void ShortTouched(int i, double bid)
                     sup > 0 ? Px(sup) + " (next support)" : "none below"));
    string note = StringFormat("TP1: support reached -> trail $%.2f above%s", InpShortTrailUsd,
                               sup > 0 ? StringFormat(", TP2 %.2f (next support)", sup) : ", no support below");
-   Callout(TimeCurrent(), bid, false, 1.5, note, clrAqua, 8);
+   Callout(TimeCurrent(), bid, false, 1.5, note, InpShortColor, 8);
    if (sup > 0) DLine(TimeCurrent(), sup, TimeCurrent() + 8 * PeriodSeconds(), sup, clrLime, STYLE_DASH, 1, "TP2: next support");
 }
 
@@ -619,7 +622,7 @@ void NextTpLabel(int i, double was)
    string note = StringFormat("TP%d %.2f reached -> %s", g_pos[i].tpStage - 1, was,
                               nx > 0 ? StringFormat("TP%d %.2f (%s)", g_pos[i].tpStage, nx, sd > 0 ? "next resistance" : "next support")
                                      : "no further level: riding the trailing stop");
-   Callout(TimeCurrent(), was, sd > 0, 1.5, note, clrAqua, 8);
+   Callout(TimeCurrent(), was, sd > 0, 1.5, note, sd > 0 ? InpLongColor : InpShortColor, 8);
    if (nx > 0) DLine(TimeCurrent(), nx, TimeCurrent() + 8 * PeriodSeconds(), nx, clrLime, STYLE_DASH, 1, StringFormat("TP%d", g_pos[i].tpStage));
 }
 
@@ -876,7 +879,7 @@ void DoEntry(int side, double sl)
       double risk = p.risk;
       DArrow(p.entryTime, p.entry, side);
       Callout(p.entryTime, p.entry, side < 0, 3.0,
-            StringFormat("%s #%d @ %.2f", side > 0 ? "BUY" : "SELL", p.num, p.entry), side > 0 ? clrDodgerBlue : clrOrangeRed, 10,
+            StringFormat("%s #%d @ %.2f", side > 0 ? "BUY" : "SELL", p.num, p.entry), side > 0 ? InpLongColor : InpShortColor, 10,
             StringFormat("%s #%d  entry %.2f | SL %.2f (-$%.2f) | TP %s | %s", side > 0 ? "BUY" : "SELL", p.num, p.entry, sl, risk, tpTxt, g_pDesc));
       DText(p.entryTime, sl, StringFormat("SL %.2f", sl), clrRed, 7, side > 0 ? ANCHOR_LEFT_UPPER : ANCHOR_LEFT_LOWER);
       if (side < 0) {
@@ -1019,10 +1022,11 @@ void DetectSetup()
                     side > 0 ? "above" : "below", Px(side > 0 ? h + InpBreakPips * Pip() : l - InpBreakPips * Pip())));
    if (Drawing()) {
       double lvl = side > 0 ? h + InpBreakPips * Pip() : l - InpBreakPips * Pip();
-      DBox(g_pTime, h, g_pTime + PeriodSeconds(), l, clrGold);
-      DLine(g_pTime, lvl, g_pTime + (InpBreakBars + 1) * PeriodSeconds(), lvl, clrGold, STYLE_DOT, 1, "break level");
+      color sc = side > 0 ? InpLongColor : InpShortColor;
+      DBox(g_pTime, h, g_pTime + PeriodSeconds(), l, sc);
+      DLine(g_pTime, lvl, g_pTime + (InpBreakBars + 1) * PeriodSeconds(), lvl, sc, STYLE_DOT, 1, "break level");
       Callout(g_pTime + PeriodSeconds() / 2, side > 0 ? h : l, side > 0, 2.5,
-              StringFormat("SETUP %s: %s on %s", side > 0 ? "LONG" : "SHORT", kindTxt, lineTxt), clrGold, 9,
+              StringFormat("SETUP %s: %s on %s", side > 0 ? "LONG" : "SHORT", kindTxt, lineTxt), sc, 9,
               StringFormat("%s | wait max %d candle(s) for a break %s %.2f", g_pDesc, InpBreakBars, side > 0 ? "above" : "below", lvl));
    }
    if (InpVerbose) PrintFormat("[SAAD] %s setup (%s) on %s | waiting for %s %.2f", side > 0 ? "LONG" : "SHORT",
