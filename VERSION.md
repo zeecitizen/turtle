@@ -25,7 +25,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | **saad_vsisa_hybrid** | `saad_vsisa_hybrid.mq5` (+ `saad_vsisa_hybrid_saad.mqh` + 4 `Vsisa*.mqh`) | 88350 Saad part · 88351 VSISA part | **v1.00** (2026-10-14) | XAUUSD **M5** (Saad part reads M15 itself) | READY, demo first; do not run beside Saad 15-min / VSISA on the same account (it already trades both) |
 | **saad_vsisa_diamond_hybrid** | `saad_vsisa_diamond_hybrid.mq5` (+ `svd_saad.mqh`, `svd_diamond.mqh`, 4 `Vsisa*.mqh`) | 88360 Saad · 88361 VSISA · 88362 Diamond | **v1.00** (2026-10-14) | XAUUSD **M5** | READY, demo first: bigger drawdown (15%) than saad_vsisa_hybrid |
 | **Trinity_1min** | `Trinity_1min.mq5` (+ `TriSaad.mqh`, `TriVsisa.mqh`, `TriDia.mqh`, 4 `Vsisa*.mqh`) | 88370 Saad · 88371 VSISA · 88372 Diamond | **v1.00** (2026-10-14) | XAUUSD **M1**, 0.01 lots | READY, demo first: ~$15/day at 0.01 lots on $500 |
-| **bread_winner** | `bread_winner.mq5` (+ `bread_saad/vsisa/dia/pb.mqh`, 4 `Vsisa*.mqh`) | 88390–88394 (shots 88393, Diamond 88392) | **v1.01** (2026-10-14) | XAUUSD, any chart | READY, demo first: ONE ~$11.5 shot per Pakistan day; ~8 in 10 days bread, ~1 in 20 red |
+| **bread_winner** | `bread_winner.mq5` (+ `bread_saad/vsisa/dia/pb/vsisa2.mqh`, 4 `Vsisa*.mqh`) | 88390–88395 (shots 88393, Diamond 88392) | **v1.01** (2026-10-14) | XAUUSD, any chart | READY, demo first: ONE ~$11.5 shot per Pakistan day; ~8 in 10 days bread, ~1 in 20 red |
 | VSISA_Pullbacks | `VSISA_Pullbacks.mq5` | 88202 | v1.00 (2026-09-17) | XAUUSD | BUILT |
 | ZeeUHV_Diamond | `ZeeUHV_Diamond.mq5` | 88154 | v1.27 (2026-09-29) | XAUUSD M1 | BUILT |
 | BasedOnLaws | `BasedOnLaws.mq5` | 88184 | v1.44 (file) / v1.43 ledger (2026-08-28) | XAUUSD M1 | BUILT |

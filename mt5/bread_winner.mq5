@@ -15,7 +15,7 @@
 #include "bread_vsisa.mqh"
 #include "bread_dia.mqh"
 #include "bread_pb.mqh"
-#include "bws_vsisa2.mqh"
+#include "bread_vsisa2.mqh"
 
 input group "=== bread_winner: the shot ==="
 input int    InpTrig        = 5;      // InpTrig — triggers: 1 Diamond · 2 Saad · 4 VSISA · 8 PULSE · 16 RANDOM control (add them up)

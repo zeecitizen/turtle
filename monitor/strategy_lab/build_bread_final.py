@@ -17,7 +17,7 @@ def setdef(txt, name, val):
 
 
 eng = {}
-for f in ('saad', 'vsisa', 'dia', 'pb'):
+for f in ('saad', 'vsisa', 'dia', 'pb', 'vsisa2'):
     eng[f] = (M / f'bws_{f}.mqh').read_text(encoding='utf-8').replace('as a signal scout for bread_winner', f'bread_winner v{VER} scout')
 eng["dia"] = setdef(eng["dia"], "D_InpLots", "0.12")
 for k, v in (('V_InpBigPct', '0.60'), ('V_InpBigAvg', '1.00'), ('V_InpBodyFrac', '0.25'), ('V_InpVerbose', 'false')):
@@ -26,11 +26,11 @@ for f, t in eng.items():
     (M / f'bread_{f}.mqh').write_text(t.replace('Bread v1.00', f'Bread v{VER}'), encoding='utf-8')
 
 h = (M / 'bread_winner_shot.mq5').read_text(encoding='utf-8')
-for f in ('saad', 'vsisa', 'dia', 'pb'):
+for f in ('saad', 'vsisa', 'dia', 'pb', 'vsisa2'):
     h = h.replace(f'#include "bws_{f}.mqh"', f'#include "bread_{f}.mqh"')
 for k, v in (('InpTrig', '5'), ('InpShotMax', '1'), ('InpWinFrom', '0'), ('InpWinTo', '24'), ("InpShotLots", "0.12"),
              ('InpShotTp', '1.0'), ("InpShotSl", "8.0"), ('InpShotLog', 'false'), ('InpVsLate', 'false'), ('InpDiaFrom', '17'),
-             ('InpCtxMask', '0'), ('InpUseSaad', 'false'), ('InpUsePb', 'false')):
+             ('InpCtxMask', '0'), ('InpUseSaad', 'false'), ('InpUsePb', 'false'), ('InpUseVs2', 'false')):
     h = setdef(h, k, v)
 h = re.sub(r'^//\+-+\+\n(//\|.*\n)+//\+-+\+\n', '', h, count=1)
 h = (f'//+------------------------------------------------------------------+\n'
