@@ -154,3 +154,41 @@ Python hypothesis, never promotion-grade (CLAUDE.md).
   falls while the hit rate rises.
 - **The trade-off:** bigger lots plus a loss limit cut red days to about 9%, but single days lost
   $125–274.
+
+## J. bread_winner research (2026-10-14): one $1 shot a day
+
+Geometry: TP $1, SL $6, 0.11 lots (a win ≈ +$10.56). Random entry wins about 83%; break-even is about 86%.
+Every number below is MT5, real ticks (`XAUUSD_TK`), Jan 6 – Oct 8.
+
+**Census** (every setup fired, all day; per-setup WR, net at 0.11 lots):
+
+| Scout | Setups | WR | Net | Verdict |
+|---|---|---|---|---|
+| **VSISA M5, loose** (campaign ≥ 0.60× max, ≥ 1.0× avg, reaction body ≥ 0.25), raw signal | 407 | **87.2%** | **+$1,019** | **the robust core** |
+| VSISA M5, shipped settings, raw signal | 320 | 86.3% | +$557 | good |
+| VSISA M5, after its ML filter | 163 | 88.3% | +$372 | good, fewer |
+| Diamond (all hours) | 225 | 76.4% | −$1,235 | needs a filter |
+| Diamond, only when the 4h (16×M15) net move ≥ $11.5 its way | 56 | 92.9% (94.6 / 89.5) | +$397 | strong but rare |
+| Saad (M15 chop + trend context) | 182 | 83.5% | −$536 | weak, except NY hours (89%) |
+| VSISA M1 / M15, Saad M5, PULSE, VSISA_Pullbacks | 113–3,466 | 77–83% | all negative | **no edge at this geometry** |
+
+**What failed:**
+
+| Idea | Result |
+|---|---|
+| ML on 94k random moments (MT5-labelled) | test AUC 0.518: moments are unpredictable |
+| ML on the structural shots | train AUC 0.92 → test 0.505: overfit |
+| Time stops (10 / 20 / 30 / 60 min) | all lose money vs none: winners get cut |
+| Rollover-hour block (server 22–01) | 150 → 134 bread days: the losing days lose anyway |
+| Spread caps ($0.15 / $0.20) | fewer bread days, more red days |
+| Friday-close block | −$276, no fewer red days |
+| VSISA's own structural stop (clamped 3–10 / 4–8 / 5–12) | worse than a fixed $6 |
+| Wider ($10) / tighter ($4) fixed stops | less money |
+
+**What worked:** taking the first good setup of the PKT day (it beats the average setup), the per-scout
+filters above, and the looser VSISA.
+
+**Best policy, `bread_winner` v1.00:** Diamond (after PKT 17:00) + loose VSISA, one shot per PKT day.
+- **Full year:** 150 of 196 weekdays ≥ $10 (76.5%), 16 red, 22 without a shot, +$1,173 (+$6/day).
+- **Both halves agree:** Jan–Jun 77.6%, Jul–Oct 74.6%.
+- **Adding VSISA_Pullbacks as a scout:** 161 bread days (82.1%), 0 empty days, but 23 red days and +$610.

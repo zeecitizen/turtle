@@ -1894,3 +1894,82 @@ Apr $22.54 · May $15.68 · Jun $9.61 · Jul $10.52 · Aug $20.64 · Sep $15.67 
   trades all three cores.
 
 **Compiled** in the Axi terminal (`Trinity_1min.ex5`) with its three `Tri*.mqh` files plus the four `Vsisa*.mqh`.
+
+
+## 36. bread_winner v1.00: one perfect shot a day for $10 (14 Oct)
+
+**Zee asked:** *"read the entire repo. Build a database of knowledge -> convert that knowledge into an EA -> test
+that EA on MT5 -> Implement Machine Learning and Deep Learning ... -> Make an EA that i can attach on a XAUUSD chart
+at Pakistan time 6:30 PM ... -> The EA takes 1 trade -> 1 perfect shot -> then it ends the day -> at the end of the
+day i withdraw the money made by that EA ($10)"*, then *"the only evaluation criteria the EA needs to pass: earn $10
+per day consistently everyday"*, and *"you're allowed to take 0.01, 0.1 or even 1 lot"*.
+
+### Knowledge base
+
+`KNOWLEDGE_BASE.md`: every validated finding, refuted idea and rule from the repo, with sources. Three lessons
+shaped this EA:
+1. **Win rate is mostly geometry.** A random entry with a $1 target and $6 stop wins about 83%. So every
+   candidate here was judged against a random control at the same geometry.
+2. **Only MT5 promotes an idea.** Python here only proposed which filters to try.
+3. **Exits between the stop and the target cost money.** That was re-confirmed here: time stops lost.
+
+### The EA
+
+`mt5/bread_winner.mq5` v1.00 (`build_bread_final.py` from the research build `bread_winner_shot.mq5`). Attach on
+XAUUSD.
+- **Scouts** (exact engine copies, prefixed names):
+  - **Diamond:** the UHV low-volume breakout, M1
+  - **VSISA:** the low-volume reaction to a volume campaign, M5. Looser settings: campaign ≥ 0.60× the
+    recent max and ≥ 1.0× the average, reaction body ≥ 25%.
+  - **Saad and VSISA_Pullbacks** are built in but off.
+- **The shot:** at most **one per Pakistan day**: the first VSISA setup, or the first Diamond setup after PKT
+  17:00. 0.11 lots, TP $1 (≈ +$10.56 after commission), SL $6. The TP and SL are re-anchored to the actual fill,
+  so slippage can't leave a win under $10.
+- **Then it waits for tomorrow.** Nothing else trades.
+- **Magics** 88390–88394; comments `Bread v1.00 VSISA/DIA BUY/SELL`.
+- **Files that must sit next to it:** `bread_saad/vsisa/dia/pb.mqh` plus the four `Vsisa*.mqh` model files.
+
+### The loop: what was tried, all MT5 on real ticks
+
+1. **One shot per day by trigger:**
+   - Random coin flip: 83% WR, −$338
+   - Saad in context: 93% but only 30 days
+   - Diamond: 89–94% but rare
+2. **ML on 94,000 random moments**, each labelled by a real MT5 fill: test AUC 0.518, so moments are
+   unpredictable.
+3. **Census of every setup, all day:** only VSISA M5 beats break-even on its own (86–87%). VSISA on M1/M15, Saad
+   on M5, PULSE and VSISA_Pullbacks all fall to random level.
+4. **Policy search over 1,400 combinations**, replayed from MT5 outcomes and checked on both halves. The replay
+   matched the real one-shot runs to the cent.
+5. **Rejected:**
+   - ML on the structural shots (train AUC 0.92 → test 0.505)
+   - time stops
+   - a rollover-hour block
+   - spread caps
+   - a Friday-close block
+   - VSISA's own structural stop
+   - wider and tighter fixed stops
+
+### Results (bread_winner v1.00 on its own defaults, scored by Pakistan day)
+
+| | Weekdays | **Bread days (≥ $10)** | Red days | No shot | Net | Per weekday | Worst day | Max DD |
+|---|---|---|---|---|---|---|---|---|
+| Full year, 200 ms | 196 | **157 (80.1%)** | 16 | 22 | +$1,163 | $5.93 | −$78 | $296 |
+| **Full year, random delay** | 196 | **151 (77.0%)** | 15 | 24 | **+$1,219** | **$6.22** | −$69 | $377 |
+| Jan–Jun, 200 ms | 125 | 97 (77.6%)* | 9 | 16 | +$745 | $5.96 | −$72 | $171 |
+| **Jul–Oct, random delay** | 71 | **57 (80.3%)** | 6 | 6 | +$521 | $7.34 | −$70 | $294 |
+
+\*Jan–Jun was measured before the fill re-anchoring was added, which counts a few more wins as ≥ $10.
+
+**Honest notes:**
+- **It does not pass "every day" yet.** About 8 in 10 weekdays end at +$10, about 1 in 12 loses (about −$66,
+  roughly 6 days of bread), and about 1 in 9 has no qualifying setup.
+- **The average is about $6 a weekday at 0.11 lots.** To average $10 a day the lots would scale to about 0.18;
+  the losing days scale with them (about −$110).
+- **It's consistent across both halves of the year and with random delays.**
+- **Window:** the default is any hour of the PKT day. Zee's PKT 18:30–24:00 window (`InpWinFrom 18.5`) trades
+  on far fewer days. The London+NY policy B (report grid) gets 118 bread days with only 10 red days.
+- **Option:** `InpUsePb = true` plus trigger 32 adds VSISA_Pullbacks. That gives 161 bread days and **no empty
+  days**, but 23 red days and about half the profit.
+- **Volume** is Axi's tick volume (Zee's permission for tests). LAWS.md's OANDA volume isn't available for the
+  test period.
