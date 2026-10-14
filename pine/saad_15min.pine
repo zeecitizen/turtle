@@ -119,19 +119,21 @@ iLog     = input.bool(false, 'Write every setup / entry / stop move / exit to th
 iDrawTo  = input.time(0, 'Draw labels only up to this time (0 = all; TradingView keeps the newest 500 labels)', group = g6)
 vis = iDrawTo == 0 or time <= iDrawTo
 
-// colours: the EA's (v1.21) — constants, never input.color (breaks the bridge)
-cLong  = #008000    // dark green: everything about a LONG
-cShort = #ff0000    // red: everything about a SHORT
-cText  = #000000    // setup / exit / stop-loss text: black
-cTp    = #0000ff    // TP1 labels: blue
+// colours: the old saad_strategy.pine theme (Zee 2026-10-14: "it looked beautiful") — constants, never input.color
+cBuy   = #2196f3                       // BUY tag: blue, never a candle colour
+cSell  = #e040fb                       // SELL tag: magenta
+cWin   = #00e676                       // winning exit
+cLoss  = #ff5252                       // losing exit
+cTag   = color.new(#363a45, 10)        // dark tag background: never the colour of a candle
+cYel   = color.yellow
 cNone  = color.new(color.white, 100)
 pip = 0.10          // gold: 1 pip = $0.10 (InpPipPts 10 x 0.01)
 
 // ── LINES ────────────────────────────────────────────────────────────────
 e9  = ta.ema(close, iFast)
 e50 = ta.ema(close, iSlow)
-plot(e9,  "EMA 9",  color = #1e66f5, linewidth = 3)
-plot(e50, "EMA 50", color = #ff0000, linewidth = 3)
+plot(e9,  "EMA 9",  color = color.new(color.orange, 0), linewidth = 2)
+plot(e50, "EMA 50", color = color.new(#2962ff, 0), linewidth = 2)
 atr = ta.sma(ta.tr(true), 14)                      // MT5 iATR = simple average (checked: PXBT 04:15 = 8.556)
 e9p  = e9[1]
 e50p = e50[1]
@@ -258,6 +260,9 @@ var bool   sCtc = false
 var int    sMoves = 0
 var string sDesc = ""
 var line   sLSl = na
+var line   sLTp = na
+var label  sXSl = na
+var label  sXTp = na
 var int    sSlFrom = na
 // stats
 var int nT = 0
@@ -285,22 +290,25 @@ if ta.change(dayofweek(time, iCloseTz)) != 0
     pnlToday := 0.0
     nToday := 0
 
-note(float y, bool above, string txt, color c, string tip = "") =>
+// a small tag on this candle (TP reached, CTC ...): the long explanation is in the tooltip
+note(float y, bool above, string txt, color bg, string tip = "") =>
     if vis
-        label.new(bar_index, y, txt, style = above ? label.style_label_down : label.style_label_up, color = cNone, textcolor = c, size = size.small, tooltip = tip == "" ? txt : tip)
+        label.new(bar_index, y, txt, style = above ? label.style_label_down : label.style_label_up, color = bg, textcolor = color.white, size = size.tiny, tooltip = tip == "" ? txt : tip)
 skipNote(int side, string why) =>
     if iLog
         log.info("SKIP|{0}|{1}|{2}", ts(time), why, pDesc)
     if iSkips and vis
-        label.new(pBar, side > 0 ? pLo : pHi, "skip: " + why, xloc = xloc.bar_index, style = side > 0 ? label.style_label_up : label.style_label_down,
-             color = cNone, textcolor = color.gray, size = size.tiny, tooltip = "skipped: " + why + " | " + pDesc)
+        label.new(bar_index, side > 0 ? high : low, "✖ skip", style = side > 0 ? label.style_label_down : label.style_label_up,
+             color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: " + why + " | " + pDesc)
 // the stop moved: end the old segment, start a new one (orange once the trade rides)
 slMoved(float newSl, string txt) =>
     if vis and not na(sLSl)
         line.set_x2(sLSl, bar_index)
     line l = vis ? line.new(bar_index, newSl, bar_index + 1, newSl, color = sRide ? color.orange : color.red, style = line.style_dashed, width = 2) : na
-    if txt != "" and vis
-        label.new(bar_index, newSl, txt, style = sSide > 0 ? label.style_label_upper_left : label.style_label_lower_left, color = cNone, textcolor = cText, size = size.tiny)
+    if not na(sXSl)
+        label.set_y(sXSl, newSl)
+        label.set_text(sXSl, (sRide ? "TRAIL SL " : "SL ") + fp(newSl))
+        label.set_tooltip(sXSl, txt == "" ? "stop moved to " + fp(newSl) : txt)
     l
 
 // ═ A) THE WAITING SETUP: the market closed in between (only matters with InpBreakBars > 1) ═
@@ -344,6 +352,7 @@ for k = 0 to nSteps - 1
                     sMoves += 1
                     sSl := sEn
                     sLSl := slMoved(sSl, "CTC: " + str.tostring(math.round(iBePct * 100)) + "% of TP -> SL to entry")
+                    note(sSide > 0 ? high : low, sSide > 0, "BE", color.new(color.gray, 20), "CTC: price covered " + str.tostring(math.round(iBePct * 100)) + "% of the way to TP1 -> SL moved to the entry " + fp(sEn))
                     if iLog
                         log.info("CTC|#{0}|{1}|SL=entry {2}", sNum, ts(tk), fp(sEn))
         if sUsd
@@ -358,9 +367,8 @@ for k = 0 to nSteps - 1
                 float was = sNext
                 sStage += 1
                 sNext := sSide > 0 ? lastResistance(was + iMinTp * pip) : lastSupport(was - iMinTp * pip)
-                if vis
-                    note(was, sSide > 0, "TP" + str.tostring(sStage - 1) + " " + fp(was) + " reached -> " + (na(sNext) ? "no further level: riding the trailing stop" :
-                         "TP" + str.tostring(sStage) + " " + fp(sNext) + (sSide > 0 ? " (next resistance)" : " (next support)")), sSide > 0 ? cLong : cShort)
+                note(sSide > 0 ? high : low, sSide > 0, "TP" + str.tostring(sStage - 1) + " ✓", color.new(color.teal, 10), "TP" + str.tostring(sStage - 1) + " " + fp(was) + " reached -> " + (na(sNext) ? "no further level: riding the trailing stop" :
+                     "TP" + str.tostring(sStage) + " " + fp(sNext) + (sSide > 0 ? " (next resistance)" : " (next support)")))
             continue
         // LONG TP1: a candle touches the exit EMA (live EMA of the forming candle)
         if sSide > 0 and not sRide and not sNoTp
@@ -387,8 +395,8 @@ for k = 0 to nSteps - 1
                     sSl := nsl
                     sMoves += 1
                     sLSl := slMoved(sSl, "")
-                note(px, true, "TP1: " + str.tostring(sExit) + " EMA touched -> trail $" + str.tostring(iLTrail, "#.00") + " below" +
-                     (na(sNext) ? ", no resistance above" : ", TP2 " + fp(sNext) + " (last resistance)"), cLong)
+                note(high, true, "TP ✓ riding", color.new(color.teal, 10), "TP1: " + str.tostring(sExit) + " EMA touched at " + fp(px) + " -> half closed, trail $" + str.tostring(iLTrail, "#.00") + " below" +
+                     (na(sNext) ? ", no resistance above" : ", TP2 " + fp(sNext) + " (last resistance)"))
                 if iLog
                     log.info("TP1|#{0}|{1}|EMA{2} touched @ {3}|SL {4}|TP2 {5}", sNum, ts(tk), sExit, fp(px), fp(sSl), fp(sNext))
                 continue
@@ -414,8 +422,8 @@ for k = 0 to nSteps - 1
                 sSl := nsl
                 sMoves += 1
                 sLSl := slMoved(sSl, "")
-            note(px, false, "TP1: support reached -> trail $" + str.tostring(iSTrail, "#.00") + " above" +
-                 (na(sNext) ? ", no support below" : ", TP2 " + fp(sNext) + " (next support)"), cShort)
+            note(low, false, "TP ✓ riding", color.new(color.teal, 10), "TP1: support " + fp(px) + " reached -> half closed, trail $" + str.tostring(iSTrail, "#.00") + " above" +
+                 (na(sNext) ? ", no support below" : ", TP2 " + fp(sNext) + " (next support)"))
             if iLog
                 log.info("TP1|#{0}|{1}|support reached @ {2}|SL {3}|TP2 {4}", sNum, ts(tk), fp(px), fp(sSl), fp(sNext))
     else if sSide == 0 and pSide != 0 and bar_index > pBar
@@ -461,16 +469,15 @@ for k = 0 to nSteps - 1
                 float risk = math.abs(en - sl) * iLots * iCs
                 string tpTxt = side > 0 ? (noTp ? "none - trailing from entry" : "touch of the " + str.tostring(pExit) + " EMA") : fp(tp) + " (last support)"
                 if vis
-                    label.new(bar_index, en, "", style = side > 0 ? label.style_triangleup : label.style_triangledown, color = side > 0 ? cLong : cShort, size = size.tiny)
-                    label.new(bar_index, side > 0 ? low - 1.5 * atr : high + 1.5 * atr, (side > 0 ? "BUY #" : "SELL #") + str.tostring(tN) + " @ " + fp(en),
-                         style = side > 0 ? label.style_label_up : label.style_label_down, color = cNone, textcolor = side > 0 ? cLong : cShort, size = size.normal,
-                         tooltip = (side > 0 ? "BUY #" : "SELL #") + str.tostring(tN) + "  entry " + fp(en) + " | SL " + fp(sl) + " (-$" + fp(risk) + ") | TP " + tpTxt + " | " + pDesc)
-                    label.new(bar_index, sl, "SL " + fp(sl), style = side > 0 ? label.style_label_upper_left : label.style_label_lower_left, color = cNone, textcolor = cText, size = size.tiny)
-                    if side < 0
-                        line.new(bar_index, tp, bar_index + 8, tp, color = color.lime, style = line.style_dashed, width = 1)
-                        label.new(bar_index, tp, "TP " + fp(tp) + " (last support)", style = label.style_label_upper_left, color = cNone, textcolor = cTp, size = size.tiny)
-                    else if not noTp
-                        label.new(bar_index + 1, emaLive(pExit, bid), "TP1: touch of the " + str.tostring(pExit) + " EMA", style = label.style_label_lower_left, color = cNone, textcolor = cTp, size = size.tiny)
+                    label.new(bar_index, side > 0 ? low : high, (side > 0 ? "▲ BUY #" : "▼ SELL #") + str.tostring(tN) + "\n" + fp(en),
+                         style = side > 0 ? label.style_label_up : label.style_label_down, color = side > 0 ? cBuy : cSell, textcolor = color.white, size = size.normal,
+                         tooltip = (side > 0 ? "BUY" : "SELL") + "  #" + str.tostring(tN) + "\nEntry: " + fp(en) + "\nSL:    " + fp(sl) + "  -$" + fp(risk) + "\nTP1:   " + tpTxt +
+                         "\nLots:  " + str.tostring(iLots, "#.##") + "\n\nWhy: " + pDesc + (side > 0 ? " - its HIGH was broken" : " - its LOW was broken"))
+                    sXSl := label.new(bar_index + 2, sl, "SL " + fp(sl) + "  -$" + fp(risk), style = label.style_label_left, color = color.new(color.red, 15), textcolor = color.white, size = size.small,
+                         tooltip = "④ SL: " + str.tostring(iSlPips, "#") + " pips beyond the setup candle = " + fp(sl))
+                    sXTp := label.new(bar_index + 2, side < 0 ? tp : emaLive(pExit, bid), side < 0 ? "TP " + fp(tp) + "  +$" + fp((en - tp) * iLots * iCs) : noTp ? "no TP1 · 2xATR trail" : "TP1 " + str.tostring(pExit) + " EMA",
+                         style = label.style_label_left, color = color.new(color.green, 15), textcolor = color.white, size = size.small, tooltip = "⑤ TP1: " + tpTxt)
+                    sLTp := side < 0 ? line.new(bar_index, tp, bar_index + 1, tp, color = color.new(color.lime, 0), width = 2, style = line.style_dashed) : na
                 sLSl := vis ? line.new(bar_index, sl, bar_index + 1, sl, color = sRide ? color.orange : color.red, style = line.style_dashed, width = 2) : na
                 if iLog
                     log.info("ENTRY|#{0}|{1}|{2}|entry={3}|sl={4}|risk=${5}|TP1 {6}|setup: {7}", tN, ts(tk), side > 0 ? "BUY" : "SELL", fp(en), fp(sl), fp(risk), tpTxt, pDesc)
@@ -490,11 +497,20 @@ if not na(exitPx)
     if vis
         if not na(sLSl)
             line.set_x2(sLSl, bar_index)
-        line.new(sBar, sEn, bar_index, exitPx, color = pnl >= 0 ? color.lime : color.red, style = line.style_dotted, width = 2)
-        label.new(bar_index, sSide > 0 ? high + 2.5 * atr : low - 2.5 * atr, "EXIT #" + str.tostring(sNum) + " " + why + " " + (pnl >= 0 ? "+$" : "-$") + fp(math.abs(pnl)),
-             style = sSide > 0 ? label.style_label_down : label.style_label_up, color = cNone, textcolor = cText, size = size.small,
-             tooltip = "#" + str.tostring(sNum) + (sSide > 0 ? " BUY" : " SELL") + "  entry " + fp(sEn) + " -> exit " + fp(exitPx) + "  (" + why + ")  " +
-             (pnl >= 0 ? "+$" : "-$") + fp(math.abs(pnl)) + "\n" + sDesc)
+        color rc = pnl > 0 ? cWin : pnl == 0 ? color.gray : cLoss
+        string money = (pnl >= 0 ? "+$" : "-$") + fp(math.abs(pnl))
+        string tipX = "EXIT #" + str.tostring(sNum) + " (" + (sSide > 0 ? "BUY" : "SELL") + ")\n" + why + "\nEntry: " + fp(sEn) + "\nExit:  " + fp(exitPx) + "\nResult: " + money + "\n" + sDesc
+        line.new(sBar, sEn, bar_index, exitPx, color = rc, style = line.style_dotted, width = 2)
+        label.new(bar_index, exitPx, "", style = label.style_xcross, color = rc, size = size.tiny, tooltip = tipX)
+        label.new(bar_index, sSide > 0 ? high : low, "EXIT #" + str.tostring(sNum) + "\n" + money, style = sSide > 0 ? label.style_label_down : label.style_label_up,
+             color = cTag, textcolor = rc, size = size.small, tooltip = tipX)
+        if not na(sLTp)
+            line.set_x2(sLTp, bar_index)
+    label.delete(sXSl)
+    label.delete(sXTp)
+    sXSl := na
+    sXTp := na
+    sLTp := na
     if iLog
         log.info("EXIT|#{0}|{1}|{2}|px={3}|pnl={4}|entry={5}|sl0={6}|moves={7}", sNum, ts(time), why, fp(exitPx), fp(pnl), fp(sEn), fp(sSl0), sMoves)
     sSide := 0
@@ -510,6 +526,13 @@ if sSide != 0 and not sUsd and sRide and bar_index > sBar
         sLSl := slMoved(sSl, "trail " + fp(lvl))
 if sSide != 0 and vis and not na(sLSl)
     line.set_x2(sLSl, bar_index + 1)
+if sSide != 0 and vis
+    if not na(sLTp)
+        line.set_x2(sLTp, bar_index + 1)
+    label.set_x(sXSl, bar_index + 2)
+    label.set_x(sXTp, bar_index + 2)
+    if sSide > 0 and not sNoTp and not sRide
+        label.set_y(sXTp, sExit == 50 ? e50 : e9)
 
 if pSide != 0 and bar_index > pBar
     pLeft -= 1
@@ -531,8 +554,8 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
         if choppy
             nChop += 1
             if iSkips and vis
-                label.new(bar_index, longOk ? low : high, "skip: choppy (ER " + str.tostring(er, "#.###") + ")", style = longOk ? label.style_label_up : label.style_label_down,
-                     color = cNone, textcolor = color.gray, size = size.tiny)
+                label.new(bar_index, longOk ? low : high, "✖ skip", style = longOk ? label.style_label_up : label.style_label_down,
+                     color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: choppy market (ER " + str.tostring(er, "#.###") + " < " + str.tostring(iEr, "#.##") + ")")
             if iLog
                 log.info("CHOPPY|{0}|{1}|ER={2}", ts(time), longOk ? "LONG" : "SHORT", str.tostring(er, "#.###"))
         else if sSide != 0 or pSide != 0
@@ -546,15 +569,32 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
             string lineTxt = side > 0 ? (rulesOk ? "9 EMA" : "50 EMA") : (onLine(e9, -1) ? "9 EMA" : "50 EMA")
             pDesc := (side > 0 ? "LONG " : "SHORT ") + kindTxt + " on the " + lineTxt + (side > 0 ? (rulesOk ? " (exit at 50 EMA)" : " (exit at 9 EMA)") : " (TP last support)")
             float blvl = side > 0 ? high + iBreakP * pip : low - iBreakP * pip
-            color sc = side > 0 ? cLong : cShort
             if vis
-                box.new(bar_index, high, bar_index + 1, low, border_color = sc, border_width = 2, bgcolor = cNone)
-                line.new(bar_index, blvl, bar_index + iBreakB + 1, blvl, color = sc, style = line.style_dotted, width = 1)
-                label.new(bar_index, side > 0 ? high + 2.5 * atr : low - 2.5 * atr, "SETUP " + (side > 0 ? "LONG: " : "SHORT: ") + kindTxt + " on " + lineTxt,
-                     style = side > 0 ? label.style_label_down : label.style_label_up, color = cNone, textcolor = cText, size = size.small,
-                     tooltip = pDesc + " | wait max " + str.tostring(iBreakB) + " candle(s) for a break " + (side > 0 ? "above " : "below ") + fp(blvl))
+                box.new(bar_index - 1, high, bar_index + 1, low, color.new(cYel, 40), 1, bgcolor = color.new(cYel, 94))
+                line.new(bar_index, blvl, bar_index + iBreakB + 1, blvl, color = color.new(cYel, 0), style = line.style_dotted, width = 1)
+                label.new(bar_index, side > 0 ? high : low, (side > 0 ? "long setup · " : "short setup · ") + str.lower(kindTxt),
+                     style = side > 0 ? label.style_label_down : label.style_label_up, color = cTag, textcolor = cYel, size = size.tiny,
+                     tooltip = "① " + (side > 0 ? "LONG" : "SHORT") + " SETUP: " + kindTxt + " on the " + lineTxt + (side > 0 ? " -> exit at the " + str.tostring(pExit) + " EMA" : " -> TP1 = last support") +
+                     "\n② wait max " + str.tostring(iBreakB) + " candle for a break " + (side > 0 ? "above " : "below ") + fp(blvl) + "\nER " + str.tostring(er, "#.###"))
             if iLog
                 log.info("SETUP|{0}|{1}|H {2} L {3}|break {4} {5}|ER {6}", ts(time), pDesc, fp(high), fp(low), side > 0 ? "above" : "below", fp(blvl), str.tostring(er, "#.###"))
+
+// ── RULES BOX (top right) ────────────────────────────────────────────────
+iShowRules = input.bool(true, 'Show the numbered rules box', group = g6)
+rr(table t, int r, string n, string tx) =>
+    table.cell(t, 0, r, n, text_color = color.yellow, text_size = size.small)
+    table.cell(t, 1, r, tx, text_color = color.white, text_size = size.small, text_halign = text.align_left)
+if barstate.islast and iShowRules
+    var table rb = table.new(position.top_right, 2, 8, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    table.cell(rb, 0, 0, "📜 SAAD 15-MIN RULES — EA v1.22 settings", text_color = color.yellow, text_size = size.small)
+    table.merge_cells(rb, 0, 0, 1, 0)
+    rr(rb, 1, "①", "Pin / hammer / marubozu (body ≥ " + str.tostring(iMaruB, "#.##") + ") ≥ " + str.tostring(iMinAtr, "#.##") + "×ATR on the EMA  ·  LONG 9 (exit 50) or 50 (exit 9)  ·  SHORT on the " + iSLine)
+    rr(rb, 2, "②", "Break the high / low by " + str.tostring(iBreakP, "#") + " pips within " + str.tostring(iBreakB) + " candle")
+    rr(rb, 3, "③", "High broken → BUY  ·  low broken → SELL  (skip if the stop is over $" + str.tostring(iMaxRisk, "#") + ")")
+    rr(rb, 4, "④", "SL " + str.tostring(iSlPips, "#") + " pips beyond the candle  ·  CTC to entry at " + str.tostring(math.round(iBePct * 100)) + "% of TP1")
+    rr(rb, 5, "⑤", "TP1: LONG touch of the exit EMA (none → 2×ATR trail)  ·  SHORT last support  ·  half closed, then $" + str.tostring(iLTrail, "#") + " trail, TP2/TP3 next swings")
+    rr(rb, 6, "⑥", "Losers shut " + str.tostring(iCloseM) + " min before the " + iCloseT + " New York close")
+    rr(rb, 7, "✖", "Skip: not broken in " + str.tostring(iBreakB) + " · choppy (ER < " + str.tostring(iEr, "#.##") + ") · busy (one trade at a time)")
 
 // ── PANEL ────────────────────────────────────────────────────────────────
 row(table t, int r, string k, string v, color c) =>
