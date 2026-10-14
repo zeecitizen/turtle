@@ -9,7 +9,9 @@ V = {"base": ("Saad_strategy_15min", {}),
      "gapfix": ("Saad_gapfix", {}),
      "both": ("Saad_gapfix", {"InpLongRule": 0}),
      "nochop": ("Saad_strategy_15min", {"InpChopEr": 0}),
-     "chop05": ("Saad_strategy_15min", {"InpChopEr": 0.05})}
+     "chop05": ("Saad_strategy_15min", {"InpChopEr": 0.05}),
+     "short9and50": ("Saad_strategy_15min", {"InpShortLine": 2}),
+     "short50only": ("Saad_strategy_15min", {"InpShortLine": 0})}
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 axi_rig.use(sys.argv[1])
 for name in sys.argv[2:]:
