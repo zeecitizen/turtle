@@ -18,14 +18,15 @@ for _n in (6, 8, 12): V[f"rb{_n}"] = ("Saad_rangebrk", {"InpRangeBars": _n})
 V["rb8s"] = ("Saad_rangebrk", {"InpRangeBars": 8, "InpRangeBody": 0.70})
 V["maruL"] = ("Saad_maruclose", {"InpMaruClose": 1})
 V["maruLS"] = ("Saad_maruclose", {"InpMaruClose": 2})
-for _t in (3, 5, 10, 15): V[f"tol{_t}"] = ("Saad_strategy_15min", {"InpTouchPips": _t})
+for _t in (1, 2, 3, 4, 5, 10, 15): V[f"tol{_t}"] = ("Saad_strategy_15min", {"InpTouchPips": _t})
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
+P["fullrnd"] = P["full"]      # same dates, random delay (exec -1)
 axi_rig.use(sys.argv[1])
 for name in sys.argv[2:]:
     var, per = name.split("@")
     ea, sets = V[var]
     sets = {"InpLots": 1.0, "InpLog": "false", "InpDraw": "false", **sets}
-    r = axi_rig.run(ea, "XAUUSD_TK", "M15", sets, frm=P[per][0], to=P[per][1], exec_mode=200, tag=f"saadfix_{var}_{per}", deposit=25000, timeout=3600)
+    r = axi_rig.run(ea, "XAUUSD_TK", "M15", sets, frm=P[per][0], to=P[per][1], exec_mode=-1 if per.endswith("rnd") else 200, tag=f"saadfix_{var}_{per}", deposit=25000, timeout=3600)
     rec = {"variant": var, "per": per, **{k: r.get(k) for k in ("net", "trades", "wr", "pf", "dd", "net_per_dd", "day_stats", "trade_stats")}}
     with open(Path(r"C:\Users\zeesh\turtle\testing\saad_fix_runs.jsonl"), "a") as f: f.write(json.dumps(rec) + "\n")
     print(f"{name}: net {r.get('net'):,.0f} | deals {r.get('trades')} | PF {r.get('pf')} | DD {r.get('dd')} | net/DD {r.get('net_per_dd')} | worst day {r.get('day_stats', {}).get('worst')}", flush=True)
