@@ -26,6 +26,7 @@ for _h in (45, 55, 60): V[f"hamnose{_h}"] = ("Saad_strategy_15min", {"InpHamNose
 for _s in (10, 20): V[f"sl{_s}"] = ("Saad_strategy_15min", {"InpSlPips": _s})
 for _r in (6, 8, 10, 12, 20): V[f"risk{_r}"] = ("Saad_strategy_15min", {"InpMaxRiskUsd": _r})
 for _c in (100, 105, 115, 120): V[f"chop{_c}"] = ("Saad_strategy_15min", {"InpChopEr": _c / 1000})
+for _t in (10, 15, 20): V[f"tall{_t}"] = ("Saad_tallmaru", {"InpTallMaruAtr": _t / 10})
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 P["fullrnd"] = P["full"]      # same dates, random delay (exec -1)
 axi_rig.use(sys.argv[1])
