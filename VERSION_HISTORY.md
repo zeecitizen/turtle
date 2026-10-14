@@ -867,6 +867,26 @@ machine learning methods described in report.md to the VSISA EA on 5 min timefra
 Every layer can be switched off with its `Inp*Mode = 0`. Compiled into the Axi terminal with its four .mqh
 files. Full results: report.md §28.
 
+## TradeLifecycle v1.03 — the Saad EMAs on the chart (2026-10-14)
+
+**Who:** Zee: *"the trade lifecycle EA, in this one can you add the two EMAs we use on it. the 50 EMA (thick line
+red) and 9 EMA (thick line blue)"*.
+
+**What:**
+- `mt5/TradeLifecycle.mq5` v1.03 draws **EMA 50 in red and EMA 9 in blue**, width 3. Inputs: `InpShowEmas`,
+  `InpEmaTF` (default M15, the candles Saad trades on), `InpEmaFast`, `InpEmaSlow`.
+- **On a lower timeframe**, each bar shows the M15 value of the M15 candle it belongs to.
+- **The indicator** is `mt5/SaadEMAs.mq5`, embedded in the EA as a resource (`#resource`), so it installs as one
+  file.
+- **Housekeeping:** it's added once (not duplicated after a symbol switch) and removed with the EA's drawings
+  when the EA is removed.
+
+**Check:** a tester helper (`EmaCheck.mq5`) compared the embedded indicator on an M5 chart with `iMA` on M15:
+1,902 bars, 0 mismatches.
+
+**Where it's compiled:** the Axi and PXBT terminals, 0 errors. Re-attach TradeLifecycle (or press F7 → OK) to
+load v1.03.
+
 ## TradeLifecycle v1.02 — expected TP1 and the 75% breakeven level (2026-10-14)
 
 Zee: *"also show the TP.. what is the expected TP. what is its 75% etc"*.
