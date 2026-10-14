@@ -7,7 +7,9 @@ import axi_rig
 V = {"base": ("Saad_strategy_15min", {}),
      "no50long": ("Saad_strategy_15min", {"InpLongRule": 0}),
      "gapfix": ("Saad_gapfix", {}),
-     "both": ("Saad_gapfix", {"InpLongRule": 0})}
+     "both": ("Saad_gapfix", {"InpLongRule": 0}),
+     "nochop": ("Saad_strategy_15min", {"InpChopEr": 0}),
+     "chop05": ("Saad_strategy_15min", {"InpChopEr": 0.05})}
 P = {"full": ("2026.01.06", "2026.10.08"), "tune": ("2026.01.06", "2026.07.01"), "julo": ("2026.07.01", "2026.10.08")}
 axi_rig.use(sys.argv[1])
 for name in sys.argv[2:]:
