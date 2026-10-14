@@ -1,0 +1,582 @@
+//@version=5
+// ═══════════════════════════════════════════════════════════════════════════
+// Saad 15min v1.22 — TradingView mirror of mt5/Saad_strategy_15min.mq5 v1.22 (2026-10-14)
+// Same numbers, same lifecycle as the EA. Attach on a 15-minute gold chart.
+//
+// EA input            EA default   here
+// InpEmaFast/Slow     9 / 50       9 / 50                (EMA 9 thick blue, EMA 50 thick red)
+// InpWickMin          0.45         0.45   pin: long wick >= x range
+// InpBodyMax          0.60         0.60   pin: body <= x range
+// InpNoseMax          0.20         0.20   pin: short wick <= x range
+// InpPinDir/PinColor  false/false  false/false (any pin; the EMA decides the side)
+// InpUsePin/Marubozu  true/true    true/true
+// InpMaruBody         0.53         0.53   marubozu: body >= x range
+// InpHammer/Star      true/true    true/true
+// InpHamRatio         2.5          2.5    hammer: long wick >= x body
+// InpHamNose          0.50         0.50   hammer: opposite wick <= x range
+// InpMinRangeAtr      0.55         0.55   candle range >= x ATR(14)  (ATR = MT5's: SIMPLE average of true range)
+// InpLongRule         2 (both)     Both   on 9 EMA -> exit 50 EMA · on 50 EMA -> exit 9 EMA
+// InpShortLine        1 (9 EMA)    9 EMA
+// InpTouchMode/Pips   0 / 0        candle touches the EMA / 0 pips
+// InpLongExitAbove    false        false
+// InpBreakBars        1            1      the next candle must break
+// InpBreakPips        2            2      by 2 pips ($0.20) beyond the high / low (judged on the bid = chart price)
+// InpSlPips           35           35     stop 35 pips ($3.50) beyond the setup candle
+// InpMaxRiskUsd       15           15     skip if the stop is more than $15 of price from the entry
+// InpSwingPivot/Look  3 / 100      3 / 100  "last support / resistance" = swing with 3 candles each side, 100 candles back
+// InpShortTpPips      0            0
+// InpMinTpPips        5            5      targets at least 5 pips from the price
+// InpMaxTpPips        0            0 (off)
+// InpLongTpPips       0            0
+// InpBeTpPct          0.75         0.75   CTC: stop to entry at 75% of the way to TP1
+// InpPartialPct       0.5          0.5    close half at TP1
+// InpTp1Be            true         true   after TP1 the stop is never worse than the entry
+// InpLongTrailUsd     2.0          2.0    after TP1 trail $2 below the market (LONG)
+// InpShortTrailUsd    2.0          2.0    after TP1 trail $2 above the market (SHORT)
+// InpLongResTp        true         true   TP2 / TP3 = next resistances (labels; the exit is the trail)
+// InpLongResTp1       false        false  LONG whose exit EMA is below / too close: no TP1, 2xATR trail from the entry
+// InpTrail/Side/Ride  true/both/true       built in
+// InpTrailMode/Atr    2 (ATR) / 2.0  2.0  the 2xATR trail behind the best price (candle close)
+// InpChopEr/Look      0.11 / 16    0.11 / 16  skip if the efficiency ratio is below 0.11
+// InpGapCancel        true         true
+// InpCloseLossMins    3            3      3 min before the day's close (4:59 PM New York) shut trades in loss
+// InpSessFrom/To      0 / 24       all hours
+// InpLots             1.00         1.00
+// Off in the EA and NOT built here (all 0 / false there): InpBeUsd, InpNoNewMins, InpHtfMin, InpTrendAlign,
+//   InpPriceSide, InpSlopePips, InpEmaGapPips, InpMaxSpreadPts, InpSkipDow, InpLockAtUsd, InpFixTpPips, InpMaxBars,
+//   InpCoolBars, InpDayLossUsd, InpDayTargetUsd, InpDayLossPct, InpRiskPct, InpTrailStepUsd, InpEntryMode (0),
+//   InpSlMode (0), InpMaxPos (1), InpReplace (false), InpLongTouch (1), InpShortTouch (1), InpLongExit (1, unused with touch 1).
+//
+// Prices: the chart is the BID. A BUY fills at the ask (bid + spread); a SELL's stop triggers on the ask.
+// Inside each candle the 1-minute data decides what happened first (stop checked first in a minute).
+// This is a bar-and-minute sketch of the EA: the MT5 Strategy Tester is the judge of money.
+// ═══════════════════════════════════════════════════════════════════════════
+indicator("Saad 15min v1.22 — mirror of the EA", "Saad15", overlay = true,
+     max_labels_count = 500, max_lines_count = 500, max_boxes_count = 500, max_bars_back = 300)
+
+g1 = "① SETUP CANDLE"
+iWick    = input.float(0.45, 'InpWickMin — pin: long wick >= x range', step = 0.05, group = g1)
+iBodyMax = input.float(0.60, 'InpBodyMax — pin: body <= x range', step = 0.05, group = g1)
+iNose    = input.float(0.20, 'InpNoseMax — pin: short wick <= x range', step = 0.05, group = g1)
+iPinDir  = input.bool(false, 'InpPinDir — pin must point the trade way', group = g1)
+iPinCol  = input.bool(false, 'InpPinColor — pin body must close the trade way (with PinDir)', group = g1)
+iUsePin  = input.bool(true, 'InpUsePin — accept pin bars', group = g1)
+iMaru    = input.bool(true, 'InpMarubozu — accept a marubozu', group = g1)
+iMaruB   = input.float(0.53, 'InpMaruBody — marubozu: body >= x range', step = 0.01, group = g1)
+iHammer  = input.bool(true, 'InpHammer — accept hammers (LONG)', group = g1)
+iStar    = input.bool(true, 'InpStar — accept shooting stars (SHORT)', group = g1)
+iHamR    = input.float(2.5, 'InpHamRatio — hammer: long wick >= x body', step = 0.5, group = g1)
+iHamN    = input.float(0.50, 'InpHamNose — hammer: opposite wick <= x range', step = 0.05, group = g1)
+iMinAtr  = input.float(0.55, 'InpMinRangeAtr — candle range >= x ATR(14) (0 = off)', step = 0.05, group = g1)
+
+g2 = "① ON THE EMA"
+iFast    = input.int(9, 'InpEmaFast', group = g2)
+iSlow    = input.int(50, 'InpEmaSlow', group = g2)
+iLRule   = input.string("Both", 'InpLongRule — LONG setups', options = ["On 9 EMA, exit 50", "On 50 EMA, exit 9", "Both"], group = g2)
+iSLine   = input.string("9 EMA", 'InpShortLine — SHORT setups on', options = ["50 EMA", "9 EMA", "Either"], group = g2)
+iTouchM  = input.string("Candle touches", 'InpTouchMode', options = ["Candle touches", "Wick touches, body on trade side"], group = g2)
+iTouchP  = input.float(0, 'InpTouchPips — touch tolerance', step = 1, group = g2)
+iLExitAb = input.bool(false, 'InpLongExitAbove — LONG only when its exit EMA is above the candle', group = g2)
+
+g3 = "② BREAK · ③ ENTRY · ④ STOP"
+iBreakB  = input.int(1, 'InpBreakBars — candles allowed for the break', minval = 1, group = g3)
+iBreakP  = input.float(2, 'InpBreakPips — break must clear the high / low by', step = 1, group = g3)
+iSlPips  = input.float(35, 'InpSlPips — stop beyond the candle', step = 1, group = g3)
+iMaxRisk = input.float(15, 'InpMaxRiskUsd — skip if the stop is more than $ away (0 = off)', step = 0.5, group = g3)
+iBuys    = input.bool(true, 'InpBuys', group = g3)
+iSells   = input.bool(true, 'InpSells', group = g3)
+
+g4 = "⑤ TARGETS · ⑥ CTC · ⑦ TRAIL"
+iPivot   = input.int(3, 'InpSwingPivot — candles each side of a swing', minval = 1, group = g4)
+iLook    = input.int(100, 'InpSwingLook — candles back to search', minval = 10, group = g4)
+iSTpP    = input.float(0, 'InpShortTpPips — SHORT TP this many pips before the support', group = g4)
+iLTpP    = input.float(0, 'InpLongTpPips — LONG TP this many pips before the EMA', group = g4)
+iMinTp   = input.float(5, 'InpMinTpPips — target at least this far', group = g4)
+iMaxTp   = input.float(0, 'InpMaxTpPips — skip a SHORT whose support is further (0 = off)', group = g4)
+iBePct   = input.float(0.75, 'InpBeTpPct — CTC: stop to entry at this share of the way to TP1 (0 = off)', step = 0.05, group = g4)
+iPartial = input.float(0.5, 'InpPartialPct — close this share at TP1', step = 0.05, group = g4)
+iTp1Be   = input.bool(true, 'InpTp1Be — after TP1 the stop is never worse than the entry', group = g4)
+iLTrail  = input.float(2.0, 'InpLongTrailUsd — after TP1 trail $ below the market', step = 0.5, group = g4)
+iSTrail  = input.float(2.0, 'InpShortTrailUsd — after TP1 trail $ above the market', step = 0.5, group = g4)
+iTrAtr   = input.float(2.0, 'InpTrailAtr — no-TP1 LONG: trail x ATR behind the best price', step = 0.1, group = g4)
+
+g5 = "✖ FILTERS · DAY CLOSE"
+iEr      = input.float(0.11, 'InpChopEr — skip if the efficiency ratio is below (0 = off)', step = 0.01, group = g5)
+iErLen   = input.int(16, 'InpChopErLook — efficiency ratio length', minval = 2, group = g5)
+iGap     = input.bool(true, 'InpGapCancel — cancel a waiting setup across the daily close / weekend', group = g5)
+iCloseM  = input.int(3, 'InpCloseLossMins — this many min before the close shut trades in loss (0 = off)', group = g5)
+iCloseT  = input.string("16:59", 'Day close (EA reads it from the broker: PXBT 20:59, Axi 23:59 = 4:59 PM New York)', group = g5)
+iCloseTz = input.string("America/New_York", 'Day close timezone', group = g5)
+
+g6 = "💲 MONEY · DISPLAY"
+iLots    = input.float(1.0, 'InpLots', step = 0.01, group = g6)
+iCs      = input.float(100, 'Contract size ($ per $1 per lot)', group = g6)
+iSpread  = input.float(0.17, 'Spread, $ of price (PXBT XAUUSDp 0.17)', step = 0.01, group = g6)
+iComm    = input.float(0, 'Commission per lot, round trip $', step = 0.5, group = g6)
+iSkips   = input.bool(false, 'InpDrawSkips — also label skipped setups', group = g6)
+iPanel   = input.bool(true, 'Show the stats panel', group = g6)
+iLog     = input.bool(false, 'Write every setup / entry / stop move / exit to the Pine Logs', group = g6)
+iDrawTo  = input.time(0, 'Draw labels only up to this time (0 = all; TradingView keeps the newest 500 labels)', group = g6)
+vis = iDrawTo == 0 or time <= iDrawTo
+
+// colours: the EA's (v1.21) — constants, never input.color (breaks the bridge)
+cLong  = #008000    // dark green: everything about a LONG
+cShort = #ff0000    // red: everything about a SHORT
+cText  = #000000    // setup / exit / stop-loss text: black
+cTp    = #0000ff    // TP1 labels: blue
+cNone  = color.new(color.white, 100)
+pip = 0.10          // gold: 1 pip = $0.10 (InpPipPts 10 x 0.01)
+
+// ── LINES ────────────────────────────────────────────────────────────────
+e9  = ta.ema(close, iFast)
+e50 = ta.ema(close, iSlow)
+plot(e9,  "EMA 9",  color = #1e66f5, linewidth = 3)
+plot(e50, "EMA 50", color = #ff0000, linewidth = 3)
+atr = ta.sma(ta.tr(true), 14)                      // MT5 iATR = simple average (checked: PXBT 04:15 = 8.556)
+e9p  = e9[1]
+e50p = e50[1]
+emaPrev(int which) => which == 9 ? e9p : e50p
+emaLen(int which) => which == 9 ? iFast : iSlow
+// the EA's Ema(x, 0): the EMA of the FORMING candle, with the current price as its close
+emaLive(int which, float px) => emaPrev(which) + 2.0 / (emaLen(which) + 1) * (px - emaPrev(which))
+fp(float v) => str.tostring(v, "#.##")
+ts(t) => str.format_time(t, "yyyy-MM-dd HH:mm", "UTC")
+
+// ── ① SHAPE of this (closed) candle ──────────────────────────────────────
+rng  = high - low
+body = math.abs(close - open)
+up   = high - math.max(open, close)
+lo   = math.min(open, close) - low
+big  = rng > 0 and (iMinAtr <= 0 or rng >= iMinAtr * atr)
+pinBull = big and body <= iBodyMax * rng and lo >= iWick * rng and up <= iNose * rng
+pinBear = big and body <= iBodyMax * rng and up >= iWick * rng and lo <= iNose * rng
+isPin   = pinBull or pinBear
+hamBull = big and not isPin and lo >= iHamR * body and lo > 0 and up <= iHamN * rng
+hamBear = big and not isPin and up >= iHamR * body and up > 0 and lo <= iHamN * rng
+maru    = big and not isPin and not hamBull and not hamBear and body >= iMaruB * rng
+int shape = 0
+int kindN = 0          // 1 pin, 2 hammer/star, 3 marubozu
+if isPin
+    if iUsePin
+        kindN := 1
+        shape := not iPinDir ? 2 : (iPinCol and (pinBull ? close < open : close > open)) ? 0 : pinBull ? 1 : -1
+else if hamBull
+    shape := iHammer ? 1 : 0
+    kindN := iHammer ? 2 : 0
+else if hamBear
+    shape := iStar ? -1 : 0
+    kindN := iStar ? 2 : 0
+else if maru
+    shape := iMaru ? (close > open ? 1 : -1) : 0
+    kindN := iMaru ? 3 : 0
+
+tol = iTouchP * pip
+onLine(float e, int side) =>
+    iTouchM == "Candle touches" ? (low - tol <= e and high + tol >= e) :
+     side > 0 ? (low - tol <= e and math.min(open, close) >= e) : (high + tol >= e and math.max(open, close) <= e)
+
+// ── ✖ CHOP: efficiency ratio of the last iErLen closes ───────────────────
+path   = math.sum(math.abs(close - close[1]), iErLen)
+er     = path > 0 ? math.abs(close - close[iErLen]) / path : 0.0
+choppy = iEr > 0 and (path <= 0 or er < iEr)
+
+// ── LAST SUPPORT / RESISTANCE: the EA's own loop (not ta.pivotlow: different tie rules) ──
+lastSupport(float below) =>
+    float r = na
+    for i = 1 + iPivot to iPivot + iLook
+        float l = low[i]
+        if na(l)
+            break
+        if l < below
+            bool piv = true
+            for k = 1 to iPivot
+                if low[i - k] <= l or low[i + k] < l
+                    piv := false
+                    break
+            if piv
+                r := l
+                break
+    r
+lastResistance(float above) =>
+    float r = na
+    for i = 1 + iPivot to iPivot + iLook
+        float h = high[i]
+        if na(h)
+            break
+        if h > above
+            bool piv = true
+            for k = 1 to iPivot
+                if high[i - k] >= h or high[i + k] > h
+                    piv := false
+                    break
+            if piv
+                r := h
+                break
+    r
+
+// ── 1-minute data inside this candle ─────────────────────────────────────
+[mO, mH, mL, mT] = request.security_lower_tf(syminfo.tickerid, "1", [open, high, low, time])
+useM   = array.size(mH) > 0
+nSteps = useM ? array.size(mH) : 1
+mOp(int k) => useM ? array.get(mO, k) : open
+mHi(int k) => useM ? array.get(mH, k) : high
+mLw(int k) => useM ? array.get(mL, k) : low
+mTm(int k) => useM ? array.get(mT, k) : time
+closeMins = str.length(iCloseT) == 5 ? int(str.tonumber(str.substring(iCloseT, 0, 2))) * 60 + int(str.tonumber(str.substring(iCloseT, 3, 5))) : 1019
+// the EA's MinsToClose() <= InpCloseLossMins: (close - now) / 60 truncated, so the window opens (mins + 1) before the close
+inCloseWin(int t) =>
+    m = hour(t, iCloseTz) * 60 + minute(t, iCloseTz)
+    dw = dayofweek(t, iCloseTz)
+    iCloseM > 0 and dw != dayofweek.saturday and dw != dayofweek.sunday and m >= closeMins - iCloseM - 1 and m <= closeMins
+
+// ── STATE ────────────────────────────────────────────────────────────────
+var int    pSide = 0          // the setup waiting for its break
+var float  pHi = na
+var float  pLo = na
+var int    pLeft = 0
+var int    pBar = na
+var int    pExit = 50
+var string pDesc = ""
+var int    tN = 0
+var int    sSide = 0          // the open trade (InpMaxPos = 1)
+var float  sEn = na
+var float  sSl = na
+var float  sSl0 = na
+var float  sTp = na           // SHORT TP1 = last support; LONG unused
+var int    sExit = 50
+var bool   sNoTp = false
+var bool   sRide = false
+var bool   sUsd = false       // after TP1: the $ trail
+var float  sBest = na
+var int    sBar = na
+var int    sNum = 0
+var int    sStage = 1
+var float  sNext = na         // TP2, TP3 ...
+var float  sRem = 1.0         // share of the position still open
+var float  sReal = 0.0        // $ banked by the partial close
+var bool   sCtc = false
+var int    sMoves = 0
+var string sDesc = ""
+var line   sLSl = na
+var int    sSlFrom = na
+// stats
+var int nT = 0
+var int nW = 0
+var int nL = 0
+var int nLong = 0
+var int nShort = 0
+var int nSetups = 0
+var int nNoBrk = 0
+var int nGap = 0
+var int nRisk = 0
+var int nNoSup = 0
+var int nChop = 0
+var int nBusy = 0
+var int nCtc = 0
+var int nTp1 = 0
+var int nDayClose = 0
+var float gW = 0.0
+var float gL = 0.0
+var float netL = 0.0
+var float netS = 0.0
+var float pnlToday = 0.0
+var int nToday = 0
+if ta.change(dayofweek(time, iCloseTz)) != 0
+    pnlToday := 0.0
+    nToday := 0
+
+note(float y, bool above, string txt, color c, string tip = "") =>
+    if vis
+        label.new(bar_index, y, txt, style = above ? label.style_label_down : label.style_label_up, color = cNone, textcolor = c, size = size.small, tooltip = tip == "" ? txt : tip)
+skipNote(int side, string why) =>
+    if iLog
+        log.info("SKIP|{0}|{1}|{2}", ts(time), why, pDesc)
+    if iSkips and vis
+        label.new(pBar, side > 0 ? pLo : pHi, "skip: " + why, xloc = xloc.bar_index, style = side > 0 ? label.style_label_up : label.style_label_down,
+             color = cNone, textcolor = color.gray, size = size.tiny, tooltip = "skipped: " + why + " | " + pDesc)
+// the stop moved: end the old segment, start a new one (orange once the trade rides)
+slMoved(float newSl, string txt) =>
+    if vis and not na(sLSl)
+        line.set_x2(sLSl, bar_index)
+    line l = vis ? line.new(bar_index, newSl, bar_index + 1, newSl, color = sRide ? color.orange : color.red, style = line.style_dashed, width = 2) : na
+    if txt != "" and vis
+        label.new(bar_index, newSl, txt, style = sSide > 0 ? label.style_label_upper_left : label.style_label_lower_left, color = cNone, textcolor = cText, size = size.tiny)
+    l
+
+// ═ A) THE WAITING SETUP: the market closed in between (only matters with InpBreakBars > 1) ═
+if pSide != 0 and bar_index > pBar + 1 and iGap and time - time[1] > timeframe.in_seconds() * 1500
+    nGap += 1
+    skipNote(pSide, "market closed in between")
+    pSide := 0
+
+// ═ B) MINUTE BY MINUTE INSIDE THIS CANDLE: manage the open trade, or wait for the break ═
+float exitPx = na
+string why = ""
+int entryK = -1
+for k = 0 to nSteps - 1
+    float bO = mOp(k)
+    float bH = mHi(k)
+    float bL = mLw(k)
+    int   tk = mTm(k)
+    if sSide != 0 and (bar_index > sBar or k > entryK)
+        // DayCloseCheck: 3 min before the close, a trade in loss is shut at the first tick
+        if inCloseWin(tk) and (sSide > 0 ? bO < sEn : bO + iSpread > sEn)
+            exitPx := sSide > 0 ? bO : bO + iSpread
+            why := "day close, in loss"
+            nDayClose += 1
+            break
+        // the broker's stop (a SELL's stop triggers on the ask)
+        if sSide > 0 ? bL <= sSl : bH + iSpread >= sSl
+            exitPx := sSide > 0 ? math.min(sSl, bO) : math.max(sSl, bO + iSpread)
+            why := sUsd ? "trailing stop ($" + str.tostring(sSide > 0 ? iLTrail : iSTrail, "#") + ") after TP" + str.tostring(sStage - 1) :
+                 math.abs(sSl - sEn) < 0.005 ? "breakeven (CTC)" : (sRide or (sSide > 0 ? sSl > sEn : sSl < sEn)) ? "trailing stop" : "stop loss"
+            break
+        // CTC: stop to entry once price covered 75% of the way to TP1
+        if iBePct > 0 and not sRide and not sCtc
+            float tpRef = sSide < 0 ? sTp : (sNoTp ? na : emaLive(sExit, bH) - iLTpP * pip)
+            float dist  = na(tpRef) ? na : (sSide > 0 ? tpRef - sEn : sEn - tpRef)
+            bool atEntry = sSide > 0 ? sSl >= sEn : sSl <= sEn
+            if not na(dist) and dist > 0 and not atEntry
+                float moved = sSide > 0 ? bH - sEn : sEn - (bL + iSpread)
+                if moved >= iBePct * dist
+                    sCtc := true
+                    nCtc += 1
+                    sMoves += 1
+                    sSl := sEn
+                    sLSl := slMoved(sSl, "CTC: " + str.tostring(math.round(iBePct * 100)) + "% of TP -> SL to entry")
+                    if iLog
+                        log.info("CTC|#{0}|{1}|SL=entry {2}", sNum, ts(tk), fp(sEn))
+        if sUsd
+            // after TP1: the stop follows the market $X away, never back (moves of 10 points or more)
+            float d = sSide > 0 ? iLTrail : iSTrail
+            float want = math.round(sSide > 0 ? bH - d : bL + iSpread + d, 2)
+            if sSide > 0 ? want >= sSl + 0.10 : want <= sSl - 0.10
+                sSl := want
+                sMoves += 1
+            // the next liquidity reached: aim for the one beyond (labels only; the exit is the trail)
+            if not na(sNext) and (sSide > 0 ? bH >= sNext : bL <= sNext)
+                float was = sNext
+                sStage += 1
+                sNext := sSide > 0 ? lastResistance(was + iMinTp * pip) : lastSupport(was - iMinTp * pip)
+                if vis
+                    note(was, sSide > 0, "TP" + str.tostring(sStage - 1) + " " + fp(was) + " reached -> " + (na(sNext) ? "no further level: riding the trailing stop" :
+                         "TP" + str.tostring(sStage) + " " + fp(sNext) + (sSide > 0 ? " (next resistance)" : " (next support)")), sSide > 0 ? cLong : cShort)
+            continue
+        // LONG TP1: a candle touches the exit EMA (live EMA of the forming candle)
+        if sSide > 0 and not sRide and not sNoTp
+            float a = 2.0 / (emaLen(sExit) + 1)
+            float ep = emaPrev(sExit)
+            float off = iLTpP * pip
+            // bid >= EMA_live(bid) - off  and  EMA_live(bid) - off > entry
+            float thr = math.max(ep - off / (1 - a), ep + (sEn + off - ep) / a + 0.001)
+            if bH >= thr
+                float px = math.max(thr, bO)
+                float part = math.floor(iLots * iPartial / 0.01 + 1e-9) * 0.01
+                if iPartial > 0 and part >= 0.01 and iLots - part >= 0.01 - 1e-9
+                    sReal += (px - sEn) * part * iCs
+                    sRem := (iLots - part) / iLots
+                sRide := true
+                sUsd := true
+                nTp1 += 1
+                float nsl = math.round(math.max(sSl, px - iLTrail), 2)
+                if iTp1Be and sEn < px
+                    nsl := math.max(nsl, sEn)
+                sNext := lastResistance(px + iMinTp * pip)
+                sStage := 2
+                if nsl != sSl
+                    sSl := nsl
+                    sMoves += 1
+                    sLSl := slMoved(sSl, "")
+                note(px, true, "TP1: " + str.tostring(sExit) + " EMA touched -> trail $" + str.tostring(iLTrail, "#.00") + " below" +
+                     (na(sNext) ? ", no resistance above" : ", TP2 " + fp(sNext) + " (last resistance)"), cLong)
+                if iLog
+                    log.info("TP1|#{0}|{1}|EMA{2} touched @ {3}|SL {4}|TP2 {5}", sNum, ts(tk), sExit, fp(px), fp(sSl), fp(sNext))
+                continue
+        if sRide
+            continue
+        // SHORT TP1: the last support reached
+        if sSide < 0 and not na(sTp) and bL <= sTp
+            float px  = math.min(sTp, bO)
+            float ask = px + iSpread
+            float part = math.floor(iLots * iPartial / 0.01 + 1e-9) * 0.01
+            if iPartial > 0 and part >= 0.01 and iLots - part >= 0.01 - 1e-9
+                sReal += (sEn - ask) * part * iCs
+                sRem := (iLots - part) / iLots
+            sRide := true
+            sUsd := true
+            nTp1 += 1
+            float nsl = math.round(math.min(sSl, ask + iSTrail), 2)
+            if iTp1Be and sEn > ask
+                nsl := math.min(nsl, sEn)
+            sNext := lastSupport(px - iMinTp * pip)
+            sStage := 2
+            if nsl != sSl
+                sSl := nsl
+                sMoves += 1
+                sLSl := slMoved(sSl, "")
+            note(px, false, "TP1: support reached -> trail $" + str.tostring(iSTrail, "#.00") + " above" +
+                 (na(sNext) ? ", no support below" : ", TP2 " + fp(sNext) + " (next support)"), cShort)
+            if iLog
+                log.info("TP1|#{0}|{1}|support reached @ {2}|SL {3}|TP2 {4}", sNum, ts(tk), fp(px), fp(sSl), fp(sNext))
+    else if sSide == 0 and pSide != 0 and bar_index > pBar
+        // TryEntry: the break, judged on the bid (chart price)
+        float lvl = pSide > 0 ? pHi + iBreakP * pip : pLo - iBreakP * pip
+        if pSide > 0 ? bH > lvl : bL < lvl
+            float bid = pSide > 0 ? math.max(lvl + 0.01, bO) : math.min(lvl - 0.01, bO)
+            float en  = pSide > 0 ? bid + iSpread : bid
+            float sl  = pSide > 0 ? pLo - iSlPips * pip : pHi + iSlPips * pip
+            int side = pSide
+            pSide := 0
+            string skipWhy = ""
+            float tp = na
+            bool noTp = false
+            if iMaxRisk > 0 and math.abs(en - sl) > iMaxRisk
+                skipWhy := "stop too far ($" + fp(math.abs(en - sl)) + " > $" + fp(iMaxRisk) + ")"
+                nRisk += 1
+            else if side < 0
+                float sup = lastSupport(bid - iMinTp * pip)
+                if na(sup)
+                    skipWhy := "no support below to target"
+                    nNoSup += 1
+                else
+                    tp := sup + iSTpP * pip
+                    if iMaxTp > 0 and bid - tp > iMaxTp * pip
+                        skipWhy := "support too far"
+                        nNoSup += 1
+            else
+                noTp := emaLive(pExit, bid) - iLTpP * pip < en + iMinTp * pip
+            if skipWhy != ""
+                skipNote(side, skipWhy)
+            else
+                tN += 1
+                sSide := side, sEn := en, sSl := sl, sSl0 := sl, sTp := tp, sExit := pExit, sNoTp := noTp
+                sRide := side > 0 and noTp
+                sUsd := false, sBest := en, sBar := bar_index, sNum := tN, sStage := 1, sNext := na, sRem := 1.0, sReal := 0.0
+                sCtc := false, sMoves := 0, sDesc := pDesc, sSlFrom := bar_index
+                entryK := k
+                if side > 0
+                    nLong += 1
+                else
+                    nShort += 1
+                float risk = math.abs(en - sl) * iLots * iCs
+                string tpTxt = side > 0 ? (noTp ? "none - trailing from entry" : "touch of the " + str.tostring(pExit) + " EMA") : fp(tp) + " (last support)"
+                if vis
+                    label.new(bar_index, en, "", style = side > 0 ? label.style_triangleup : label.style_triangledown, color = side > 0 ? cLong : cShort, size = size.tiny)
+                    label.new(bar_index, side > 0 ? low - 1.5 * atr : high + 1.5 * atr, (side > 0 ? "BUY #" : "SELL #") + str.tostring(tN) + " @ " + fp(en),
+                         style = side > 0 ? label.style_label_up : label.style_label_down, color = cNone, textcolor = side > 0 ? cLong : cShort, size = size.normal,
+                         tooltip = (side > 0 ? "BUY #" : "SELL #") + str.tostring(tN) + "  entry " + fp(en) + " | SL " + fp(sl) + " (-$" + fp(risk) + ") | TP " + tpTxt + " | " + pDesc)
+                    label.new(bar_index, sl, "SL " + fp(sl), style = side > 0 ? label.style_label_upper_left : label.style_label_lower_left, color = cNone, textcolor = cText, size = size.tiny)
+                    if side < 0
+                        line.new(bar_index, tp, bar_index + 8, tp, color = color.lime, style = line.style_dashed, width = 1)
+                        label.new(bar_index, tp, "TP " + fp(tp) + " (last support)", style = label.style_label_upper_left, color = cNone, textcolor = cTp, size = size.tiny)
+                    else if not noTp
+                        label.new(bar_index + 1, emaLive(pExit, bid), "TP1: touch of the " + str.tostring(pExit) + " EMA", style = label.style_label_lower_left, color = cNone, textcolor = cTp, size = size.tiny)
+                sLSl := vis ? line.new(bar_index, sl, bar_index + 1, sl, color = sRide ? color.orange : color.red, style = line.style_dashed, width = 2) : na
+                if iLog
+                    log.info("ENTRY|#{0}|{1}|{2}|entry={3}|sl={4}|risk=${5}|TP1 {6}|setup: {7}", tN, ts(tk), side > 0 ? "BUY" : "SELL", fp(en), fp(sl), fp(risk), tpTxt, pDesc)
+
+// the trade ended inside this candle
+if not na(exitPx)
+    float pnl = sReal + (sSide > 0 ? exitPx - sEn : sEn - exitPx) * sRem * iLots * iCs - iComm * iLots
+    nT += 1, nToday += 1, pnlToday += pnl
+    if pnl > 0
+        nW += 1, gW += pnl
+    else if pnl < 0
+        nL += 1, gL -= pnl
+    if sSide > 0
+        netL += pnl
+    else
+        netS += pnl
+    if vis
+        if not na(sLSl)
+            line.set_x2(sLSl, bar_index)
+        line.new(sBar, sEn, bar_index, exitPx, color = pnl >= 0 ? color.lime : color.red, style = line.style_dotted, width = 2)
+        label.new(bar_index, sSide > 0 ? high + 2.5 * atr : low - 2.5 * atr, "EXIT #" + str.tostring(sNum) + " " + why + " " + (pnl >= 0 ? "+$" : "-$") + fp(math.abs(pnl)),
+             style = sSide > 0 ? label.style_label_down : label.style_label_up, color = cNone, textcolor = cText, size = size.small,
+             tooltip = "#" + str.tostring(sNum) + (sSide > 0 ? " BUY" : " SELL") + "  entry " + fp(sEn) + " -> exit " + fp(exitPx) + "  (" + why + ")  " +
+             (pnl >= 0 ? "+$" : "-$") + fp(math.abs(pnl)) + "\n" + sDesc)
+    if iLog
+        log.info("EXIT|#{0}|{1}|{2}|px={3}|pnl={4}|entry={5}|sl0={6}|moves={7}", sNum, ts(time), why, fp(exitPx), fp(pnl), fp(sEn), fp(sSl0), sMoves)
+    sSide := 0
+    sLSl := na
+
+// ═ C) CANDLE CLOSE (= the EA's next-candle open): the 2xATR trail of a no-TP1 LONG, then the waiting setup, then a new setup ═
+if sSide != 0 and not sUsd and sRide and bar_index > sBar
+    sBest := sSide > 0 ? math.max(sBest, high) : math.min(sBest, low)
+    float lvl = sSide > 0 ? sBest - iTrAtr * atr : sBest + iTrAtr * atr
+    if sSide > 0 ? (lvl > sSl + 0.01 and lvl < close) : (lvl < sSl - 0.01 and lvl > close)
+        sSl := lvl
+        sMoves += 1
+        sLSl := slMoved(sSl, "trail " + fp(lvl))
+if sSide != 0 and vis and not na(sLSl)
+    line.set_x2(sLSl, bar_index + 1)
+
+if pSide != 0 and bar_index > pBar
+    pLeft -= 1
+    if pLeft <= 0
+        nNoBrk += 1
+        skipNote(pSide, (pSide > 0 ? "high" : "low") + " not broken in " + str.tostring(iBreakB) + " candle" + (iBreakB > 1 ? "s" : ""))
+        pSide := 0
+
+// DetectSetup on the candle that just closed
+if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
+    bool on9L  = onLine(e9, 1)
+    bool on50L = onLine(e50, 1)
+    bool rulesOk = iLRule != "On 50 EMA, exit 9" and on9L and not (iLExitAb and e50 <= high)
+    bool invOk   = iLRule != "On 9 EMA, exit 50" and on50L and not (iLExitAb and e9 <= high)
+    bool shortLine = iSLine == "50 EMA" ? onLine(e50, -1) : iSLine == "9 EMA" ? onLine(e9, -1) : (onLine(e50, -1) or onLine(e9, -1))
+    bool longOk  = iBuys and (rulesOk or invOk) and (shape == 1 or (shape == 2 and (not shortLine or close >= open)))
+    bool shortOk = iSells and shortLine and (shape == -1 or shape == 2) and not longOk
+    if longOk or shortOk
+        if choppy
+            nChop += 1
+            if iSkips and vis
+                label.new(bar_index, longOk ? low : high, "skip: choppy (ER " + str.tostring(er, "#.###") + ")", style = longOk ? label.style_label_up : label.style_label_down,
+                     color = cNone, textcolor = color.gray, size = size.tiny)
+            if iLog
+                log.info("CHOPPY|{0}|{1}|ER={2}", ts(time), longOk ? "LONG" : "SHORT", str.tostring(er, "#.###"))
+        else if sSide != 0 or pSide != 0
+            nBusy += 1
+        else
+            int side = longOk ? 1 : -1
+            nSetups += 1
+            pSide := side, pHi := high, pLo := low, pLeft := iBreakB, pBar := bar_index
+            pExit := side > 0 ? (rulesOk ? 50 : 9) : 0
+            string kindTxt = kindN == 1 ? "PIN BAR" : kindN == 2 ? (side > 0 ? "HAMMER" : "SHOOTING STAR") : "MARUBOZU"
+            string lineTxt = side > 0 ? (rulesOk ? "9 EMA" : "50 EMA") : (onLine(e9, -1) ? "9 EMA" : "50 EMA")
+            pDesc := (side > 0 ? "LONG " : "SHORT ") + kindTxt + " on the " + lineTxt + (side > 0 ? (rulesOk ? " (exit at 50 EMA)" : " (exit at 9 EMA)") : " (TP last support)")
+            float blvl = side > 0 ? high + iBreakP * pip : low - iBreakP * pip
+            color sc = side > 0 ? cLong : cShort
+            if vis
+                box.new(bar_index, high, bar_index + 1, low, border_color = sc, border_width = 2, bgcolor = cNone)
+                line.new(bar_index, blvl, bar_index + iBreakB + 1, blvl, color = sc, style = line.style_dotted, width = 1)
+                label.new(bar_index, side > 0 ? high + 2.5 * atr : low - 2.5 * atr, "SETUP " + (side > 0 ? "LONG: " : "SHORT: ") + kindTxt + " on " + lineTxt,
+                     style = side > 0 ? label.style_label_down : label.style_label_up, color = cNone, textcolor = cText, size = size.small,
+                     tooltip = pDesc + " | wait max " + str.tostring(iBreakB) + " candle(s) for a break " + (side > 0 ? "above " : "below ") + fp(blvl))
+            if iLog
+                log.info("SETUP|{0}|{1}|H {2} L {3}|break {4} {5}|ER {6}", ts(time), pDesc, fp(high), fp(low), side > 0 ? "above" : "below", fp(blvl), str.tostring(er, "#.###"))
+
+// ── PANEL ────────────────────────────────────────────────────────────────
+row(table t, int r, string k, string v, color c) =>
+    table.cell(t, 0, r, k, text_color = color.new(color.silver, 10), text_size = size.small, text_halign = text.align_left)
+    table.cell(t, 1, r, v, text_color = c, text_size = size.small, text_halign = text.align_right)
+if barstate.islast and iPanel
+    var table p = table.new(position.bottom_right, 2, 12, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    pf  = gL > 0 ? gW / gL : na
+    wr  = nT > 0 ? float(nW) / nT * 100.0 : 0.0
+    net = gW - gL
+    table.cell(p, 0, 0, "📊 SAAD 15-MIN — mirror of EA v1.22", text_color = color.yellow, text_size = size.small)
+    table.merge_cells(p, 0, 0, 1, 0)
+    row(p, 1, "Trades on this chart", str.tostring(nT) + "  (" + str.tostring(nLong) + " long · " + str.tostring(nShort) + " short)", color.white)
+    row(p, 2, "Win rate", str.tostring(wr, "#.#") + "%  (" + str.tostring(nW) + "W / " + str.tostring(nL) + "L)", wr >= 50 ? color.lime : color.orange)
+    row(p, 3, "Net @ " + str.tostring(iLots, "#.##") + " lots (spread $" + str.tostring(iSpread, "#.##") + ")", (net >= 0 ? "+$" : "-$") + str.tostring(math.abs(net), "#,###.##"), net >= 0 ? color.lime : color.red)
+    row(p, 4, "Profit factor", na(pf) ? "-" : str.tostring(pf, "#.##"), na(pf) or pf >= 1 ? color.lime : color.red)
+    row(p, 5, "Longs / shorts net", (netL >= 0 ? "+$" : "-$") + str.tostring(math.abs(netL), "#") + " / " + (netS >= 0 ? "+$" : "-$") + str.tostring(math.abs(netS), "#"), color.white)
+    row(p, 6, "Today", str.tostring(nToday) + " trades  " + (pnlToday >= 0 ? "+$" : "-$") + str.tostring(math.abs(pnlToday), "#.##"), pnlToday >= 0 ? color.lime : color.red)
+    row(p, 7, "Setups · TP1 · CTC · day-close shuts", str.tostring(nSetups) + " · " + str.tostring(nTp1) + " · " + str.tostring(nCtc) + " · " + str.tostring(nDayClose), color.silver)
+    row(p, 8, "Skipped: no break · choppy · busy · risk · no support · gap", str.tostring(nNoBrk) + " · " + str.tostring(nChop) + " · " + str.tostring(nBusy) + " · " + str.tostring(nRisk) + " · " + str.tostring(nNoSup) + " · " + str.tostring(nGap), color.silver)
+    row(p, 9, "Efficiency ratio now", str.tostring(er, "#.###") + (choppy ? "  CHOPPY" : "  ok"), choppy ? color.orange : color.lime)
+    table.cell(p, 0, 10, "MT5 receipt, EA v1.22 (Axi gold M15 real ticks, Jan 6 – Oct 8 2026, 1 lot): +$202,222 · PF 1.60 · DD $13,422", text_color = color.aqua, text_size = size.tiny)
+    table.merge_cells(p, 0, 10, 1, 10)
+    table.cell(p, 0, 11, "Chart figures are a bar-and-minute sketch; MT5 is the judge", text_color = color.silver, text_size = size.tiny)
+    table.merge_cells(p, 0, 11, 1, 11)
