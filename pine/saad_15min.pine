@@ -142,6 +142,10 @@ adRunN = input.int(0, "Cut: N candles in a row against the trade while in loss -
 adBars = input.int(0, "Cut: still in loss after N candles -> close at the next open (0 = off)", minval = 0, group = G10)
 adEmaX = input.bool(false, "Cut: a candle closes beyond the slow EMA against the trade while in loss -> close at the next open", group = G10)
 adMaxUsd = input.float(0, "Cut: max loss - stop no further than $X from the entry (0 = off, the EA's stop)", step = 0.5, minval = 0, group = G10)
+G11 = "TOP / BOTTOM FILTER (chart-only, not in the EA yet)"
+rpLook = input.int(20, "Range: the last N closed candles", minval = 2, group = G11)
+rpMax = input.float(0, "Skip a BUY entering above X% of that range / a SELL below (100 - X)% (0 = off; over 100 = a new high/low)", step = 5, minval = 0, group = G11)
+rpDiag = input.bool(false, "Show the diagnostics table: this month's trades by how near the top (BUY) / bottom (SELL) they entered", group = G11)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -174,6 +178,9 @@ pkOn  = pkBeUsd > 0 or pkLockAt > 0 or pkGive > 0 or pkTrail > 0 or pkAtr > 0 or
 pkLow  = ta.lowest(low, math.max(pkLowN, 1))
 pkHigh = ta.highest(high, math.max(pkLowN, 1))
 pkEmaV = ta.ema(close, math.max(pkEma, 1))
+// TOP / BOTTOM: the range of the last rpLook CLOSED candles (the forming candle is not in it)
+rpHi = ta.highest(high, rpLook)[1]
+rpLo = ta.lowest(low, rpLook)[1]
 e9p  = e9[1]
 e50p = e50[1]
 emaPrev(int which) => which == 9 ? e9p : e50p
@@ -293,6 +300,10 @@ var bool   sPk = false        // STOP NEAR PEAK moved this trade's stop
 var int    adRun = 0          // CUT LOSERS: candles in a row against the trade
 var string adWhy = ""         // CUT LOSERS: set at a candle close -> the trade closes at the next open
 var bool   pConf = false      // ENTRY close mode: a candle closed beyond the setup candle
+var float  sChase = na        // TOP / BOTTOM: where in the last rpLook candles' range this trade entered (BUY: 0 bottom .. 100 top; SELL mirrored)
+var array<int>   dgN = array.new<int>(5, 0)       // diagnostics, this month: < 25 · 25-50 · 50-75 · 75-100 · over 100 (a new high / low)
+var array<int>   dgW = array.new<int>(5, 0)
+var array<float> dgP = array.new<float>(5, 0.0)
 var float  sBest = na
 var int    sBar = na
 var int    sNum = 0
@@ -353,6 +364,7 @@ if ta.change(monthKey(time)) != 0
     array.push(pmKey, monthKey(time[1])), array.push(pmT, nT), array.push(pmW, nW), array.push(pmL, nL), array.push(pmGW, gW), array.push(pmGL, gL)
     nT := 0, nW := 0, nL := 0, nLong := 0, nShort := 0, nSetups := 0, nNoBrk := 0, nGap := 0, nRisk := 0, nNoSup := 0
     nChop := 0, nBusy := 0, nCtc := 0, nTp1 := 0, nDayClose := 0, gW := 0.0, gL := 0.0, netL := 0.0, netS := 0.0
+    array.fill(dgN, 0), array.fill(dgW, 0), array.fill(dgP, 0.0)
 
 // a small tag on this candle (TP reached, CTC ...): the long explanation is in the tooltip
 note(float y, bool above, string txt, color bg, string tip = "") =>
@@ -539,7 +551,11 @@ for k = 0 to nSteps - 1
             string skipWhy = ""
             float tp = na
             bool noTp = false
-            if iMaxRisk > 0 and math.abs(en - sl) > iMaxRisk
+            float rng = rpHi - rpLo
+            float chase = rng > 0 ? (side > 0 ? (bid - rpLo) / rng : (rpHi - bid) / rng) * 100 : 50
+            if rpMax > 0 and chase > rpMax
+                skipWhy := (side > 0 ? "BUY at " : "SELL at ") + str.tostring(chase, "#") + "% of the last " + str.tostring(rpLook) + " candles' range (" + (side > 0 ? "top" : "bottom") + " filter " + str.tostring(rpMax, "#") + "%)"
+            else if iMaxRisk > 0 and math.abs(en - sl) > iMaxRisk
                 skipWhy := "stop too far ($" + fp(math.abs(en - sl)) + " > $" + fp(iMaxRisk) + ")"
                 nRisk += 1
             else if side < 0
@@ -560,7 +576,7 @@ for k = 0 to nSteps - 1
                 tN += 1
                 sSide := side, sEn := en, sSl := sl, sSl0 := sl, sTp := tp, sExit := pExit, sNoTp := noTp
                 sRide := side > 0 and noTp
-                sUsd := false, pkBest := en, sPk := false, adRun := 0, adWhy := "", sBest := en, sBar := bar_index, sNum := tN, sStage := 1, sNext := na, sRem := 1.0, sReal := 0.0
+                sUsd := false, pkBest := en, sPk := false, adRun := 0, adWhy := "", sChase := chase, sBest := en, sBar := bar_index, sNum := tN, sStage := 1, sNext := na, sRem := 1.0, sReal := 0.0
                 sCtc := false, sMoves := 0, sDesc := pDesc, sSlFrom := bar_index
                 entryK := k
                 float risk = math.abs(en - sl) * iLots * iCs
@@ -588,6 +604,10 @@ if not na(exitPx)
     // rounded to the cent, exactly as its EXIT label prints it, so the labels add up to the panel to the penny
     float pnl = math.round((sReal + (sSide > 0 ? exitPx - sEn : sEn - exitPx) * sRem * iLots * iCs - iComm * iLots) * 100) / 100
     nT += 1, nToday += 1, pnlToday += pnl
+    int bk = na(sChase) ? 2 : sChase < 25 ? 0 : sChase < 50 ? 1 : sChase < 75 ? 2 : sChase <= 100 ? 3 : 4
+    array.set(dgN, bk, array.get(dgN, bk) + 1), array.set(dgP, bk, array.get(dgP, bk) + pnl)
+    if pnl > 0
+        array.set(dgW, bk, array.get(dgW, bk) + 1)
     // the AVERAGE exit over the whole position (TP1 part + the rest): Zee 2026-10-16, #274 showed only the last 5%'s exit
     float avgEx = math.round((sSide > 0 ? sEn + (pnl + iComm * iLots) / (iLots * iCs) : sEn - (pnl + iComm * iLots) / (iLots * iCs)) * 100) / 100
     array.push(aNum, sNum), array.push(aSide, sSide), array.push(aEn, sEn), array.push(aEx, avgEx), array.push(aPnl, pnl), array.push(aTime, time)
@@ -810,3 +830,20 @@ if barstate.islast and iPanel
     if timeframe.period != "15"
         table.cell(p, 0, r, "⚠ Switch the chart to 15 min", text_color = color.orange, text_size = size.normal)
         table.merge_cells(p, 0, r, 3, r)
+
+// ── TOP / BOTTOM diagnostics (top left, off by default) ──
+if barstate.islast and rpDiag
+    var table dg = table.new(position.top_left, 4, 7, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    table.cell(dg, 0, 0, "Entry position in the last " + str.tostring(rpLook) + " candles (this month)", text_color = color.yellow, text_size = size.normal)
+    table.merge_cells(dg, 0, 0, 3, 0)
+    table.cell(dg, 0, 1, "BUY near the top / SELL near the bottom", text_color = color.silver, text_size = size.small)
+    table.cell(dg, 1, 1, "trades", text_color = color.silver, text_size = size.small)
+    table.cell(dg, 2, 1, "win rate", text_color = color.silver, text_size = size.small)
+    table.cell(dg, 3, 1, "net", text_color = color.silver, text_size = size.small)
+    for b = 0 to 4
+        int n = array.get(dgN, b)
+        float pn = array.get(dgP, b)
+        table.cell(dg, 0, b + 2, array.get(array.from("0-25% (far from the extreme)", "25-50%", "50-75%", "75-100%", "over 100% (a new high / low)"), b), text_color = color.white, text_size = size.normal, text_halign = text.align_left)
+        table.cell(dg, 1, b + 2, str.tostring(n), text_color = color.white, text_size = size.normal)
+        table.cell(dg, 2, b + 2, n > 0 ? str.tostring(100.0 * array.get(dgW, b) / n, "#") + "%" : "-", text_color = color.white, text_size = size.normal)
+        table.cell(dg, 3, b + 2, fm(pn), text_color = pn >= 0 ? color.lime : color.red, text_size = size.normal)
