@@ -864,7 +864,7 @@ if barstate.islast and iShowRules
                             w += pn > 0 ? 1 : 0
                             l += pn < 0 ? 1 : 0
                             table.cell(gd, c, row0 + n, (pn >= 0 ? "+$" : "-$") + str.tostring(math.abs(pn), "#,##0"), text_color = pn > 0 ? color.lime : pn < 0 ? color.red : color.silver, text_size = TSZ, text_halign = text.align_right)
-                    table.cell(gd, c, row0, dayTxt(k) + "  " + fm(tot), text_color = tot >= 0 ? color.lime : color.red, text_size = TSZ, bgcolor = color.new(color.black, 0))
+                    table.cell(gd, c, row0, dayTxt(k) + "  " + fm(tot) + "  " + str.tostring(n > 0 ? 100.0 * w / n : 0, "#") + "%", text_color = tot >= 0 ? color.lime : color.red, text_size = TSZ, bgcolor = color.new(color.black, 0))
                     maxN := math.max(maxN, n)
             for c = 0 to 2
                 int d = blk * 3 + c
