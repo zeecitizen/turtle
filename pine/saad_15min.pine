@@ -667,7 +667,7 @@ if barstate.islast and iShowRules
         table.merge_cells(rb, 0, nxt, 1, nxt)
         dayBlock(rb, prevDay, "Yesterday", nxt + 1)
 
-// ── PANEL (bottom right): one row per month - this month + the 3 before it (Zee 2026-10-15) ──
+// ── PANEL (bottom right): one row per month - this month + the 5 before it (Zee 2026-10-15) ──
 // Win rate and net large, the rest small. This month's net is the sum of its EXIT labels, to the cent
 // (labels are drawn for this month only). * = the chart's history starts inside that month.
 monTxt(int k) => array.get(array.from("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), k % 100 - 1) + " " + str.tostring(int(k / 100))
@@ -681,8 +681,8 @@ monthRow(table t, int r, int k, int n, int w, int l, float gw, float gl) =>
     table.cell(t, 2, r, (net >= 0 ? "+$" : "-$") + str.tostring(math.abs(net), "#,##0.00"), text_color = net >= 0 ? color.lime : color.red, text_size = size.large, text_halign = text.align_right)
     table.cell(t, 3, r, str.tostring(n) + " tr · " + str.tostring(w) + "W/" + str.tostring(l) + "L · PF " + (na(pf) ? "-" : str.tostring(pf, "#.##")), text_color = color.silver, text_size = size.small, text_halign = text.align_left)
 if barstate.islast and iPanel
-    var table p = table.new(position.bottom_right, 4, 7, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
-    table.clear(p, 0, 0, 3, 6)
+    var table p = table.new(position.bottom_right, 4, 9, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    table.clear(p, 0, 0, 3, 8)
     table.cell(p, 0, 0, "📊 Saad 15-min · " + str.tostring(iLots, "#.##") + " lots", text_color = color.yellow, text_size = size.small, text_halign = text.align_left)
     table.cell(p, 1, 0, "Win rate", text_color = color.silver, text_size = size.small, text_halign = text.align_right)
     table.cell(p, 2, 0, "Net", text_color = color.silver, text_size = size.small, text_halign = text.align_right)
@@ -690,8 +690,9 @@ if barstate.islast and iPanel
     monthRow(p, 1, monthKey(time), nT, nW, nL, gW, gL)
     int r = 2
     int m = array.size(pmKey)
-    for i = m - 1 to math.max(m - 3, 0)
-        if m > 0
+    for i = m - 1 to math.max(m - 5, 0)
+        // the month the chart's history starts in can be all indicator warm-up with no trades: leave it out
+        if m > 0 and not (array.get(pmKey, i) == firstKey and array.get(pmT, i) == 0)
             monthRow(p, r, array.get(pmKey, i), array.get(pmT, i), array.get(pmW, i), array.get(pmL, i), array.get(pmGW, i), array.get(pmGL, i))
             r += 1
     // the EA is a 15-minute EA; on any other chart the candles, and so the trades, are different
