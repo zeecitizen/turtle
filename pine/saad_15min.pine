@@ -122,6 +122,19 @@ iDayTz     = input.string("UTC+0", "Today's trades box: MT5 server timezone (PXB
 iDetailDays = input.int(3, 'Detail tags (setups, skips, BE/TP, exit X) only for the last N days - TradingView keeps 500 labels, so the BUY/SELL + EXIT labels of the whole month always fit', minval = 0, group = G8)
 iSkipBoth = input.bool(false, 'Skip a setup candle that touches BOTH EMAs (9 and 50) - not in the EA', group = G8)
 iTightTrail = input.bool(false, 'Tight trail: when InpTrailAtr would put the stop above the price, put it 1 pip under the candle close instead of not moving it - not in the EA yet', group = G8)
+G9 = "STOP NEAR PEAK (chart-only, not in the EA yet)"
+pkApply = input.string("No-TP1 longs only", "Apply to", options = ["No-TP1 longs only", "All trades"], group = G9)
+pkStart = input.float(0, "Start: giveback / $ trail / ATR / candle / EMA only once the trade is this many $ in profit", step = 0.5, minval = 0, group = G9)
+pkBeUsd = input.float(0, "① Breakeven: stop to the entry once $X in profit (0 = off)", step = 0.5, minval = 0, group = G9)
+pkBeOff = input.float(0, "    ...and lock this many $ beyond the entry", step = 0.1, minval = 0, group = G9)
+pkLockAt = input.float(0, "② Lock: once $X in profit... (0 = off)", step = 0.5, minval = 0, group = G9)
+pkLockUsd = input.float(0, "    ...lock the stop this many $ beyond the entry", step = 0.5, minval = 0, group = G9)
+pkStep = input.float(0, "③ Ladder (with ②): every further $X of profit raises the lock by $X (0 = off)", step = 0.5, minval = 0, group = G9)
+pkGive = input.float(0, "④ Giveback: keep (100 - X)% of the best profit, e.g. 30 = give back 30% (0 = off)", step = 5, minval = 0, maxval = 100, group = G9)
+pkTrail = input.float(0, "⑤ $ trail: stop this many $ behind the best price (0 = off)", step = 0.5, minval = 0, group = G9)
+pkAtr = input.float(0, "⑥ ATR trail: stop this many x ATR behind the best price (0 = off)", step = 0.1, minval = 0, group = G9)
+pkLowN = input.int(0, "⑦ Candle trail: stop under the lowest low of the last N closed candles (0 = off)", minval = 0, group = G9)
+pkEma = input.int(0, "⑧ EMA trail: stop 1 pip under this EMA of the closed candle (0 = off)", minval = 0, group = G9)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -149,6 +162,11 @@ e50 = ta.ema(close, iSlow)
 plot(e9,  "EMA 9",  color = color.new(color.orange, 0), linewidth = 2)
 plot(e50, "EMA 50", color = color.new(#2962ff, 0), linewidth = 2)
 atr = ta.sma(ta.tr(true), 14)                      // MT5 iATR = simple average (checked: PXBT 04:15 = 8.556)
+// STOP NEAR PEAK helpers (chart-only): closed-candle levels for the candle / EMA trails
+pkOn  = pkBeUsd > 0 or pkLockAt > 0 or pkGive > 0 or pkTrail > 0 or pkAtr > 0 or pkLowN > 0 or pkEma > 0
+pkLow  = ta.lowest(low, math.max(pkLowN, 1))
+pkHigh = ta.highest(high, math.max(pkLowN, 1))
+pkEmaV = ta.ema(close, math.max(pkEma, 1))
 e9p  = e9[1]
 e50p = e50[1]
 emaPrev(int which) => which == 9 ? e9p : e50p
@@ -263,6 +281,8 @@ var int    sExit = 50
 var bool   sNoTp = false
 var bool   sRide = false
 var bool   sUsd = false       // after TP1: the $ trail
+var float  pkBest = na        // STOP NEAR PEAK: best price since entry (a SHORT's on the ask)
+var bool   sPk = false        // STOP NEAR PEAK moved this trade's stop
 var float  sBest = na
 var int    sBar = na
 var int    sNum = 0
@@ -354,6 +374,7 @@ if pSide != 0 and bar_index > pBar + 1 and iGap and time - time[1] > timeframe.i
 // ═ B) MINUTE BY MINUTE INSIDE THIS CANDLE: manage the open trade, or wait for the break ═
 float exitPx = na
 string why = ""
+bool pkMoved = false
 int entryK = -1
 for k = 0 to nSteps - 1
     float bO = mOp(k)
@@ -370,9 +391,37 @@ for k = 0 to nSteps - 1
         // the broker's stop (a SELL's stop triggers on the ask)
         if sSide > 0 ? bL <= sSl : bH + iSpread >= sSl
             exitPx := sSide > 0 ? math.min(sSl, bO) : math.max(sSl, bO + iSpread)
-            why := sUsd ? "trailing stop ($" + str.tostring(sSide > 0 ? iLTrail : iSTrail, "#") + ") after TP" + str.tostring(sStage - 1) :
+            why := sPk and not sUsd ? "stop near peak" : sUsd ? "trailing stop ($" + str.tostring(sSide > 0 ? iLTrail : iSTrail, "#") + ") after TP" + str.tostring(sStage - 1) :
                  math.abs(sSl - sEn) < 0.005 ? "breakeven (CTC)" : (sRide or (sSide > 0 ? sSl > sEn : sSl < sEn)) ? "trailing stop" : "stop loss"
             break
+        // STOP NEAR PEAK (Zee 2026-10-16, chart-only): every method switched on proposes a level, the tightest wins.
+        // Set from this minute's best, it applies from the NEXT minute and must sit beyond this minute's low (high + spread).
+        if pkOn and (pkApply == "All trades" or (sSide > 0 and sNoTp))
+            int pkS = sSide
+            pkBest := pkS > 0 ? math.max(pkBest, bH) : math.min(pkBest, bL + iSpread)
+            float pkPr = pkS > 0 ? pkBest - sEn : sEn - pkBest
+            float pkU = na
+            if pkBeUsd > 0 and pkPr >= pkBeUsd
+                pkU := pkBeOff
+            if pkLockAt > 0 and pkPr >= pkLockAt
+                pkU := math.max(nz(pkU, -1e9), pkLockUsd + (pkStep > 0 ? math.floor((pkPr - pkLockAt) / pkStep) * pkStep : 0))
+            if pkPr >= pkStart and pkPr > 0
+                if pkGive > 0
+                    pkU := math.max(nz(pkU, -1e9), pkPr * (1 - pkGive / 100))
+                if pkTrail > 0
+                    pkU := math.max(nz(pkU, -1e9), pkPr - pkTrail)
+                if pkAtr > 0
+                    pkU := math.max(nz(pkU, -1e9), pkPr - pkAtr * atr)
+                if pkLowN > 0
+                    pkU := math.max(nz(pkU, -1e9), pkS > 0 ? pkLow[1] - sEn : sEn - pkHigh[1])
+                if pkEma > 0
+                    pkU := math.max(nz(pkU, -1e9), pkS > 0 ? pkEmaV[1] - pip - sEn : sEn - (pkEmaV[1] + pip))
+            if not na(pkU)
+                float pkC = math.round(sEn + pkS * pkU, 2)
+                if pkS > 0 ? (pkC > sSl + 0.01 and pkC < bL) : (pkC < sSl - 0.01 and pkC > bH + iSpread)
+                    sSl := pkC
+                    sPk := true
+                    pkMoved := true
         // CTC: stop to entry once price covered 75% of the way to TP1
         if iBePct > 0 and not sRide and not sCtc
             float tpRef = sSide < 0 ? sTp : (sNoTp ? na : emaLive(sExit, bH) - iLTpP * pip)
@@ -493,7 +542,7 @@ for k = 0 to nSteps - 1
                 tN += 1
                 sSide := side, sEn := en, sSl := sl, sSl0 := sl, sTp := tp, sExit := pExit, sNoTp := noTp
                 sRide := side > 0 and noTp
-                sUsd := false, sBest := en, sBar := bar_index, sNum := tN, sStage := 1, sNext := na, sRem := 1.0, sReal := 0.0
+                sUsd := false, pkBest := en, sPk := false, sBest := en, sBar := bar_index, sNum := tN, sStage := 1, sNext := na, sRem := 1.0, sReal := 0.0
                 sCtc := false, sMoves := 0, sDesc := pDesc, sSlFrom := bar_index
                 entryK := k
                 float risk = math.abs(en - sl) * iLots * iCs
@@ -512,6 +561,10 @@ for k = 0 to nSteps - 1
                 if iLog
                     log.info("ENTRY|#{0}|{1}|{2}|entry={3}|sl={4}|risk=${5}|TP1 {6}|setup: {7}", tN, ts(tk), side > 0 ? "BUY" : "SELL", fp(en), fp(sl), fp(risk), tpTxt, pDesc)
 
+// STOP NEAR PEAK moved the stop inside this candle: draw it once per candle (the line budget is 500)
+if pkMoved and na(exitPx) and sSide != 0
+    sMoves += 1
+    sLSl := slMoved(sSl, "stop near peak -> " + fp(sSl))
 // the trade ended inside this candle
 if not na(exitPx)
     // rounded to the cent, exactly as its EXIT label prints it, so the labels add up to the panel to the penny
