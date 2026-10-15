@@ -309,16 +309,16 @@ if ta.change(dayKey(time)) != 0
     pnlToday := 0.0
     nToday := 0
 // a new server month: keep the month that just ended for the "previous month" block, then start from zero
-var int pmT = 0
-var int pmW = 0
-var int pmL = 0
-var float pmGW = 0.0
-var float pmGL = 0.0
-var int pmKey = 0
+var array<int>   pmKey = array.new<int>()     // every finished month: key, trades, wins, losses, gross won, gross lost
+var array<int>   pmT   = array.new<int>()
+var array<int>   pmW   = array.new<int>()
+var array<int>   pmL   = array.new<int>()
+var array<float> pmGW  = array.new<float>()
+var array<float> pmGL  = array.new<float>()
 var int firstKey = monthKey(time)         // the month the chart's history starts in (that month may be partial)
 var int firstDay = dayKey(time)
 if ta.change(monthKey(time)) != 0
-    pmT := nT, pmW := nW, pmL := nL, pmGW := gW, pmGL := gL, pmKey := monthKey(time[1])
+    array.push(pmKey, monthKey(time[1])), array.push(pmT, nT), array.push(pmW, nW), array.push(pmL, nL), array.push(pmGW, gW), array.push(pmGL, gL)
     nT := 0, nW := 0, nL := 0, nLong := 0, nShort := 0, nSetups := 0, nNoBrk := 0, nGap := 0, nRisk := 0, nNoSup := 0
     nChop := 0, nBusy := 0, nCtc := 0, nTp1 := 0, nDayClose := 0, gW := 0.0, gL := 0.0, netL := 0.0, netS := 0.0
 
@@ -667,34 +667,34 @@ if barstate.islast and iShowRules
         table.merge_cells(rb, 0, nxt, 1, nxt)
         dayBlock(rb, prevDay, "Yesterday", nxt + 1)
 
-// ── PANEL (bottom right): this month + the month before, minimal, large text (Zee 2026-10-15) ──
-// Each month's net is the sum of that month's EXIT labels, to the cent (labels are drawn for this month only).
-row(table t, int r, string k, string v, color c) =>
-    table.cell(t, 0, r, k, text_color = color.new(color.silver, 10), text_size = size.normal, text_halign = text.align_left)
-    table.cell(t, 1, r, v, text_color = c, text_size = size.normal, text_halign = text.align_right)
+// ── PANEL (bottom right): one row per month - this month + the 3 before it (Zee 2026-10-15) ──
+// Win rate and net large, the rest small. This month's net is the sum of its EXIT labels, to the cent
+// (labels are drawn for this month only). * = the chart's history starts inside that month.
 monTxt(int k) => array.get(array.from("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), k % 100 - 1) + " " + str.tostring(int(k / 100))
-monthBlock(table t, int r0, string title, int n, int w, int l, float gw, float gl) =>
+monthRow(table t, int r, int k, int n, int w, int l, float gw, float gl) =>
     float pf  = gl > 0 ? gw / gl : na
     float wr  = n > 0 ? float(w) / n * 100.0 : 0.0
     float net = gw - gl
-    table.cell(t, 0, r0, title, text_color = color.yellow, text_size = size.normal)
-    table.merge_cells(t, 0, r0, 1, r0)
-    row(t, r0 + 1, "Trades", str.tostring(n) + "  (" + str.tostring(w) + "W / " + str.tostring(l) + "L)", color.white)
-    row(t, r0 + 2, "Win rate", str.tostring(wr, "#.#") + "%", wr >= 50 ? color.lime : color.orange)
-    row(t, r0 + 3, "Net", (net >= 0 ? "+$" : "-$") + str.tostring(math.abs(net), "#,##0.00"), net >= 0 ? color.lime : color.red)
-    row(t, r0 + 4, "Profit factor", na(pf) ? "-" : str.tostring(pf, "#.##"), na(pf) or pf >= 1 ? color.lime : color.red)
-    r0 + 5
+    string star = k == firstKey and firstDay % 100 > 1 ? "*" : ""
+    table.cell(t, 0, r, monTxt(k) + star, text_color = color.silver, text_size = size.small, text_halign = text.align_left)
+    table.cell(t, 1, r, str.tostring(wr, "#") + "%", text_color = wr >= 50 ? color.lime : color.orange, text_size = size.large, text_halign = text.align_right)
+    table.cell(t, 2, r, (net >= 0 ? "+$" : "-$") + str.tostring(math.abs(net), "#,##0.00"), text_color = net >= 0 ? color.lime : color.red, text_size = size.large, text_halign = text.align_right)
+    table.cell(t, 3, r, str.tostring(n) + " tr · " + str.tostring(w) + "W/" + str.tostring(l) + "L · PF " + (na(pf) ? "-" : str.tostring(pf, "#.##")), text_color = color.silver, text_size = size.small, text_halign = text.align_left)
 if barstate.islast and iPanel
-    var table p = table.new(position.bottom_right, 2, 13, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
-    table.clear(p, 0, 0, 1, 12)
-    string lots = " · " + str.tostring(iLots, "#.##") + " lots"
-    int r = monthBlock(p, 0, "📊 Saad 15-min · " + monTxt(monthKey(time)) + lots, nT, nW, nL, gW, gL)
-    if pmKey > 0
-        table.cell(p, 0, r, "", text_size = size.tiny)
-        table.merge_cells(p, 0, r, 1, r)
-        string part = pmKey == firstKey and firstDay % 100 > 1 ? "  (chart starts " + str.tostring(firstDay % 100) + " " + monTxt(pmKey) + ")" : ""
-        r := monthBlock(p, r + 1, "📊 Previous month · " + monTxt(pmKey) + lots + part, pmT, pmW, pmL, pmGW, pmGL)
+    var table p = table.new(position.bottom_right, 4, 7, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    table.clear(p, 0, 0, 3, 6)
+    table.cell(p, 0, 0, "📊 Saad 15-min · " + str.tostring(iLots, "#.##") + " lots", text_color = color.yellow, text_size = size.small, text_halign = text.align_left)
+    table.cell(p, 1, 0, "Win rate", text_color = color.silver, text_size = size.small, text_halign = text.align_right)
+    table.cell(p, 2, 0, "Net", text_color = color.silver, text_size = size.small, text_halign = text.align_right)
+    table.cell(p, 3, 0, "trades · W/L · PF", text_color = color.silver, text_size = size.small, text_halign = text.align_left)
+    monthRow(p, 1, monthKey(time), nT, nW, nL, gW, gL)
+    int r = 2
+    int m = array.size(pmKey)
+    for i = m - 1 to math.max(m - 3, 0)
+        if m > 0
+            monthRow(p, r, array.get(pmKey, i), array.get(pmT, i), array.get(pmW, i), array.get(pmL, i), array.get(pmGW, i), array.get(pmGL, i))
+            r += 1
     // the EA is a 15-minute EA; on any other chart the candles, and so the trades, are different
     if timeframe.period != "15"
         table.cell(p, 0, r, "⚠ Switch the chart to 15 min", text_color = color.orange, text_size = size.normal)
-        table.merge_cells(p, 0, r, 1, r)
+        table.merge_cells(p, 0, r, 3, r)
