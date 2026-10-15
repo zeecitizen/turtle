@@ -157,6 +157,7 @@ G14 = "TRADES BOX DATE RANGE (chart-only)"
 lsFrom = input.time(0, "Top-right box: list the trades closed from this date (0 = today + yesterday)", group = G14)
 lsTo = input.time(0, "...up to this date (0 = now)", group = G14)
 rpMin = input.float(0, "TOP / BOTTOM: skip a BUY entering BELOW X% of the range / a SELL above (100 - X)% (0 = off; with the max = keep only a band, e.g. 75-100)", step = 5, minval = 0, group = G11)
+iDetMax = input.int(200, "Detail tags (setups, skips, BE/TP, exit X): keep at most N - the rest of TradingView's 500 labels stays for BUY / SELL / EXIT", minval = 0, group = G8)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -167,6 +168,13 @@ fm(float v) => (v >= 0 ? "+$" : "-$") + str.tostring(math.abs(v), "#,##0.00")
 inMonth = monthKey(time) == monthKey(timenow)
 vis = iDrawTo == 0 ? inMonth : time <= iDrawTo
 det = vis and (iDrawTo != 0 or time >= timenow - iDetailDays * 86400000)
+// Zee 2026-10-16: on a 1-min chart the setup / skip tags of 3 days are thousands and pushed the BUY / SELL / EXIT labels
+// out of TradingView's 500. Every detail tag is registered here; past iDetMax the oldest one is deleted.
+var array<label> dLab = array.new<label>()
+dReg(label l) =>
+    array.push(dLab, l)
+    if array.size(dLab) > iDetMax
+        label.delete(array.shift(dLab))
 
 // colours: the old saad_strategy.pine theme (Zee 2026-10-14: "it looked beautiful") — constants, never input.color
 cBuy   = #2196f3                       // BUY tag: blue, never a candle colour
@@ -383,13 +391,13 @@ if ta.change(monthKey(time)) != 0
 // a small tag on this candle (TP reached, CTC ...): the long explanation is in the tooltip
 note(float y, bool above, string txt, color bg, string tip = "") =>
     if det
-        label.new(bar_index, y, txt, style = above ? label.style_label_down : label.style_label_up, color = bg, textcolor = color.white, size = size.tiny, tooltip = tip == "" ? txt : tip)
+        dReg(label.new(bar_index, y, txt, style = above ? label.style_label_down : label.style_label_up, color = bg, textcolor = color.white, size = size.tiny, tooltip = tip == "" ? txt : tip))
 skipNote(int side, string why) =>
     if iLog
         log.info("SKIP|{0}|{1}|{2}", ts(time), why, pDesc)
     if iSkips and det
-        label.new(bar_index, side > 0 ? high : low, "✖ skip", style = side > 0 ? label.style_label_down : label.style_label_up,
-             color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: " + why + " | " + pDesc)
+        dReg(label.new(bar_index, side > 0 ? high : low, "✖ skip", style = side > 0 ? label.style_label_down : label.style_label_up,
+             color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: " + why + " | " + pDesc))
 // the stop moved: end the old segment, start a new one (orange once the trade rides)
 slMoved(float newSl, string txt) =>
     if vis and not na(sLSl)
@@ -648,7 +656,7 @@ if not na(exitPx)
         string tipX = "EXIT #" + str.tostring(sNum) + " (" + (sSide > 0 ? "BUY" : "SELL") + ")\n" + why + "\nEntry: " + fp(sEn) + (sRem < 1 ? "\nTP1:   " + str.tostring(math.round((1 - sRem) * 100)) + "% closed at TP1\nRest:  " + fp(exitPx) + "\nAverage exit: " + fp(avgEx) : "\nExit:  " + fp(exitPx)) + "\nResult: " + money + "\n" + sDesc
         line.new(sBar, sEn, bar_index, exitPx, color = rc, style = line.style_dotted, width = 2)
         if det
-            label.new(bar_index, exitPx, "", style = label.style_xcross, color = rc, size = size.tiny, tooltip = tipX)
+            dReg(label.new(bar_index, exitPx, "", style = label.style_xcross, color = rc, size = size.tiny, tooltip = tipX))
         label.new(bar_index, sSide > 0 ? high : low, "EXIT #" + str.tostring(sNum) + "\n" + money, style = sSide > 0 ? label.style_label_down : label.style_label_up,
              color = cTag, textcolor = rc, size = size.small, tooltip = tipX)
         if not na(sLTp)
@@ -733,15 +741,15 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
     if longOk or shortOk
         if iSkipBoth and touchBoth
             if iSkips and det
-                label.new(bar_index, longOk ? low : high, "✖ skip", style = longOk ? label.style_label_up : label.style_label_down,
-                     color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: the candle touches BOTH EMAs (9 " + fp(e9) + " and 50 " + fp(e50) + ")")
+                dReg(label.new(bar_index, longOk ? low : high, "✖ skip", style = longOk ? label.style_label_up : label.style_label_down,
+                     color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: the candle touches BOTH EMAs (9 " + fp(e9) + " and 50 " + fp(e50) + ")"))
             if iLog
                 log.info("BOTHEMA|{0}|{1}", ts(time), longOk ? "LONG" : "SHORT")
         else if choppy
             nChop += 1
             if iSkips and det
-                label.new(bar_index, longOk ? low : high, "✖ skip", style = longOk ? label.style_label_up : label.style_label_down,
-                     color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: choppy market (ER " + str.tostring(er, "#.###") + " < " + str.tostring(iEr, "#.##") + ")")
+                dReg(label.new(bar_index, longOk ? low : high, "✖ skip", style = longOk ? label.style_label_up : label.style_label_down,
+                     color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: choppy market (ER " + str.tostring(er, "#.###") + " < " + str.tostring(iEr, "#.##") + ")"))
             if iLog
                 log.info("CHOPPY|{0}|{1}|ER={2}", ts(time), longOk ? "LONG" : "SHORT", str.tostring(er, "#.###"))
         else if sSide != 0 or pSide != 0
@@ -758,10 +766,10 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
             if det
                 box.new(bar_index - 1, high, bar_index + 1, low, color.new(cYel, 40), 1, bgcolor = color.new(cYel, 94))
                 line.new(bar_index, blvl, bar_index + iBreakB + 1, blvl, color = color.new(cYel, 0), style = line.style_dotted, width = 1)
-                label.new(bar_index, side > 0 ? high : low, (side > 0 ? "long setup · " : "short setup · ") + str.lower(kindTxt),
+                dReg(label.new(bar_index, side > 0 ? high : low, (side > 0 ? "long setup · " : "short setup · ") + str.lower(kindTxt),
                      style = side > 0 ? label.style_label_down : label.style_label_up, color = cTag, textcolor = cYel, size = size.tiny,
                      tooltip = "① " + (side > 0 ? "LONG" : "SHORT") + " SETUP: " + kindTxt + " on the " + lineTxt + (side > 0 ? " -> exit at the " + str.tostring(pExit) + " EMA" : " -> TP1 = last support") +
-                     "\n② wait max " + str.tostring(iBreakB) + " candle for a break " + (side > 0 ? "above " : "below ") + fp(blvl) + "\nER " + str.tostring(er, "#.###"))
+                     "\n② wait max " + str.tostring(iBreakB) + " candle for a break " + (side > 0 ? "above " : "below ") + fp(blvl) + "\nER " + str.tostring(er, "#.###")))
             if iLog
                 log.info("SETUP|{0}|{1}|H {2} L {3}|break {4} {5}|ER {6}", ts(time), pDesc, fp(high), fp(low), side > 0 ? "above" : "below", fp(blvl), str.tostring(er, "#.###"))
 
