@@ -849,6 +849,10 @@ if barstate.islast and iShowRules
                 if not array.includes(days, k) and array.size(days) < 6
                     array.push(days, k)
         int row0 = 0
+        // no trades at all: say why instead of showing an empty box (Zee 2026-10-16: a low TOP/BOTTOM max skipped every entry)
+        if array.size(days) == 0
+            table.cell(gd, 0, 0, "No closed trades with these settings - a filter may be skipping every entry (e.g. TOP / BOTTOM max " + str.tostring(rpMax, "#") + "%: breakout entries sit near / above the top of the range)",
+                 text_color = color.orange, text_size = TSZ, text_halign = text.align_left)
         for blk = 0 to 1
             int maxN = 0
             for c = 0 to 2
