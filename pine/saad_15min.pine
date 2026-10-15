@@ -54,70 +54,82 @@
 indicator("Saad 15min v1.23 — mirror of the EA", "Saad15", overlay = true,
      max_labels_count = 500, max_lines_count = 500, max_boxes_count = 500, max_bars_back = 300)
 
-g1 = "① SETUP CANDLE"
-iWick    = input.float(0.45, 'InpWickMin — pin: long wick >= x range', step = 0.05, group = g1)
-iBodyMax = input.float(0.60, 'InpBodyMax — pin: body <= x range', step = 0.05, group = g1)
-iNose    = input.float(0.20, 'InpNoseMax — pin: short wick <= x range', step = 0.05, group = g1)
-iPinDir  = input.bool(false, 'InpPinDir — pin must point the trade way', group = g1)
-iPinCol  = input.bool(false, 'InpPinColor — pin body must close the trade way (with PinDir)', group = g1)
-iUsePin  = input.bool(true, 'InpUsePin — accept pin bars', group = g1)
-iMaru    = input.bool(true, 'InpMarubozu — accept a marubozu', group = g1)
-iMaruB   = input.float(0.53, 'InpMaruBody — marubozu: body >= x range', step = 0.01, group = g1)
-iHammer  = input.bool(true, 'InpHammer — accept hammers (LONG)', group = g1)
-iStar    = input.bool(true, 'InpStar — accept shooting stars (SHORT)', group = g1)
-iHamR    = input.float(2.5, 'InpHamRatio — hammer: long wick >= x body', step = 0.5, group = g1)
-iHamN    = input.float(0.50, 'InpHamNose — hammer: opposite wick <= x range', step = 0.05, group = g1)
-iMinAtr  = input.float(0.55, 'InpMinRangeAtr — candle range >= x ATR(14) (0 = off)', step = 0.05, group = g1)
-
-g2 = "① ON THE EMA"
-iFast    = input.int(9, 'InpEmaFast', group = g2)
-iSlow    = input.int(50, 'InpEmaSlow', group = g2)
-iLRule   = input.string("Both", 'InpLongRule — LONG setups', options = ["On 9 EMA, exit 50", "On 50 EMA, exit 9", "Both"], group = g2)
-iSLine   = input.string("9 EMA", 'InpShortLine — SHORT setups on', options = ["50 EMA", "9 EMA", "Either"], group = g2)
-iTouchM  = input.string("Candle touches", 'InpTouchMode', options = ["Candle touches", "Wick touches, body on trade side"], group = g2)
-iTouchP  = input.float(1, 'InpTouchPips — touch tolerance', step = 1, group = g2)
-iLExitAb = input.bool(false, 'InpLongExitAbove — LONG only when its exit EMA is above the candle', group = g2)
-
-g3 = "② BREAK · ③ ENTRY · ④ STOP"
-iBreakB  = input.int(1, 'InpBreakBars — candles allowed for the break', minval = 1, group = g3)
-iBreakP  = input.float(2, 'InpBreakPips — break must clear the high / low by', step = 1, group = g3)
-iSlPips  = input.float(35, 'InpSlPips — stop beyond the candle', step = 1, group = g3)
-iMaxRisk = input.float(15, 'InpMaxRiskUsd — skip if the stop is more than $ away (0 = off)', step = 0.5, group = g3)
-iBuys    = input.bool(true, 'InpBuys', group = g3)
-iSells   = input.bool(true, 'InpSells', group = g3)
-
-g4 = "⑤ TARGETS · ⑥ CTC · ⑦ TRAIL"
-iPivot   = input.int(3, 'InpSwingPivot — candles each side of a swing', minval = 1, group = g4)
-iLook    = input.int(100, 'InpSwingLook — candles back to search', minval = 10, group = g4)
-iSTpP    = input.float(0, 'InpShortTpPips — SHORT TP this many pips before the support', group = g4)
-iLTpP    = input.float(0, 'InpLongTpPips — LONG TP this many pips before the EMA', group = g4)
-iMinTp   = input.float(5, 'InpMinTpPips — target at least this far', group = g4)
-iMaxTp   = input.float(0, 'InpMaxTpPips — skip a SHORT whose support is further (0 = off)', group = g4)
-iBePct   = input.float(0.75, 'InpBeTpPct — CTC: stop to entry at this share of the way to TP1 (0 = off)', step = 0.05, group = g4)
-iPartial = input.float(0.5, 'InpPartialPct — close this share at TP1', step = 0.05, group = g4)
-iTp1Be   = input.bool(true, 'InpTp1Be — after TP1 the stop is never worse than the entry', group = g4)
-iLTrail  = input.float(2.0, 'InpLongTrailUsd — after TP1 trail $ below the market', step = 0.5, group = g4)
-iSTrail  = input.float(2.0, 'InpShortTrailUsd — after TP1 trail $ above the market', step = 0.5, group = g4)
-iTrAtr   = input.float(2.0, 'InpTrailAtr — no-TP1 LONG: trail x ATR behind the best price', step = 0.1, group = g4)
-
-g5 = "✖ FILTERS · DAY CLOSE"
-iEr      = input.float(0.11, 'InpChopEr — skip if the efficiency ratio is below (0 = off)', step = 0.01, group = g5)
-iErLen   = input.int(16, 'InpChopErLook — efficiency ratio length', minval = 2, group = g5)
-iGap     = input.bool(true, 'InpGapCancel — cancel a waiting setup across the daily close / weekend', group = g5)
-iCloseM  = input.int(3, 'InpCloseLossMins — this many min before the close shut trades in loss (0 = off)', group = g5)
-iCloseT  = input.string("16:59", 'Day close (EA reads it from the broker: PXBT 20:59, Axi 23:59 = 4:59 PM New York)', group = g5)
-iCloseTz = input.string("America/New_York", 'Day close timezone', group = g5)
-
-g6 = "💲 MONEY · DISPLAY"
-iLots    = input.float(1.0, 'InpLots', step = 0.01, group = g6)
-iCs      = input.float(100, 'Contract size ($ per $1 per lot)', group = g6)
-iSpread  = input.float(0.17, 'Spread, $ of price (PXBT XAUUSDp 0.17)', step = 0.01, group = g6)
-iComm    = input.float(0, 'Commission per lot, round trip $', step = 0.5, group = g6)
-iSkips   = input.bool(false, 'InpDrawSkips — also label skipped setups', group = g6)
-iPanel   = input.bool(true, 'Show the stats panel', group = g6)
-iLog     = input.bool(false, 'Write every setup / entry / stop move / exit to the Pine Logs', group = g6)
-iDrawTo  = input.time(0, 'Draw labels only up to this time (0 = all; TradingView keeps the newest 500 labels)', group = g6)
-vis = iDrawTo == 0 or time <= iDrawTo
+// ── SETTINGS: every MT5 EA input first, in the EA's own order and under its own name (Zee 2026-10-15),
+// then the chart-only ones. Chart settings are stored by POSITION: after any reorder re-map them by name.
+G0 = "EA · EMAs"
+iFast    = input.int(9, 'InpEmaFast', group = G0)
+iSlow    = input.int(50, 'InpEmaSlow', group = G0)
+G1 = "EA · ① setup candle"
+iWick    = input.float(0.45, 'InpWickMin — pin: long wick >= x range', step = 0.05, group = G1)
+iBodyMax = input.float(0.60, 'InpBodyMax — pin: body <= x range', step = 0.05, group = G1)
+iNose    = input.float(0.20, 'InpNoseMax — pin: short wick <= x range', step = 0.05, group = G1)
+iPinDir  = input.bool(false, 'InpPinDir — pin must point the trade way', group = G1)
+iPinCol  = input.bool(false, 'InpPinColor — pin body must close the trade way (with PinDir)', group = G1)
+iUsePin  = input.bool(true, 'InpUsePin — accept pin bars', group = G1)
+iMaru    = input.bool(true, 'InpMarubozu — accept a marubozu', group = G1)
+iMaruB   = input.float(0.53, 'InpMaruBody — marubozu: body >= x range', step = 0.01, group = G1)
+iHammer  = input.bool(true, 'InpHammer — accept hammers (LONG)', group = G1)
+iStar    = input.bool(true, 'InpStar — accept shooting stars (SHORT)', group = G1)
+iHamR    = input.float(2.5, 'InpHamRatio — hammer: long wick >= x body', step = 0.5, group = G1)
+iHamN    = input.float(0.50, 'InpHamNose — hammer: opposite wick <= x range', step = 0.05, group = G1)
+iMinAtr  = input.float(0.55, 'InpMinRangeAtr — candle range >= x ATR(14) (0 = off)', step = 0.05, group = G1)
+G2 = "EA · ① on the EMA"
+iLRule   = input.string("Both", 'InpLongRule — LONG setups', options = ["On 9 EMA, exit 50", "On 50 EMA, exit 9", "Both"], group = G2)
+iSLine   = input.string("9 EMA", 'InpShortLine — SHORT setups on', options = ["50 EMA", "9 EMA", "Either"], group = G2)
+iTouchM  = input.string("Candle touches", 'InpTouchMode', options = ["Candle touches", "Wick touches, body on trade side"], group = G2)
+iTouchP  = input.float(1, 'InpTouchPips — touch tolerance', step = 1, group = G2)
+iLExitAb = input.bool(false, 'InpLongExitAbove — LONG only when its exit EMA is above the candle', group = G2)
+G3 = "EA · ② break · ③ entry · ④ stop"
+iBreakB  = input.int(1, 'InpBreakBars — candles allowed for the break', minval = 1, group = G3)
+iBreakP  = input.float(2, 'InpBreakPips — break must clear the high / low by', step = 1, group = G3)
+iSlPips  = input.float(35, 'InpSlPips — stop beyond the candle', step = 1, group = G3)
+iMaxRisk = input.float(15, 'InpMaxRiskUsd — skip if the stop is more than $ away (0 = off)', step = 0.5, group = G3)
+G4 = "EA · ⑤ targets"
+iLTpP    = input.float(0, 'InpLongTpPips — LONG TP this many pips before the EMA', group = G4)
+iPivot   = input.int(3, 'InpSwingPivot — candles each side of a swing', minval = 1, group = G4)
+iLook    = input.int(100, 'InpSwingLook — candles back to search', minval = 10, group = G4)
+iSTpP    = input.float(0, 'InpShortTpPips — SHORT TP this many pips before the support', group = G4)
+iMinTp   = input.float(5, 'InpMinTpPips — target at least this far', group = G4)
+iMaxTp   = input.float(0, 'InpMaxTpPips — skip a SHORT whose support is further (0 = off)', group = G4)
+G5 = "EA · ⑥ CTC · ⑦ trail · day close"
+iCloseM  = input.int(3, 'InpCloseLossMins — this many min before the close shut trades in loss (0 = off)', group = G5)
+iLTrail  = input.float(2.0, 'InpLongTrailUsd — after TP1 trail $ below the market', step = 0.5, group = G5)
+iSTrail  = input.float(2.0, 'InpShortTrailUsd — after TP1 trail $ above the market', step = 0.5, group = G5)
+iBePct   = input.float(0.75, 'InpBeTpPct — CTC: stop to entry at this share of the way to TP1 (0 = off)', step = 0.05, group = G5)
+iTrAtr   = input.float(2.0, 'InpTrailAtr — no-TP1 LONG: trail x ATR behind the best price', step = 0.1, group = G5)
+G6 = "EA · ✖ filters"
+iEr      = input.float(0.11, 'InpChopEr — skip if the efficiency ratio is below (0 = off)', step = 0.01, group = G6)
+iErLen   = input.int(16, 'InpChopErLook — efficiency ratio length', minval = 2, group = G6)
+iGap     = input.bool(true, 'InpGapCancel — cancel a waiting setup across the daily close / weekend', group = G6)
+G7 = "EA · partial · money · display"
+iPartial = input.float(0.5, 'InpPartialPct — close this share at TP1', step = 0.05, group = G7)
+iTp1Be   = input.bool(true, 'InpTp1Be — after TP1 the stop is never worse than the entry', group = G7)
+iLots    = input.float(1.0, 'InpLots', step = 0.01, group = G7)
+iBuys    = input.bool(true, 'InpBuys', group = G7)
+iSells   = input.bool(true, 'InpSells', group = G7)
+iSkips   = input.bool(false, 'InpDrawSkips — also label skipped setups', group = G7)
+G8 = "CHART ONLY (not in the EA)"
+iCloseT  = input.string("16:59", 'Day close (EA reads it from the broker: PXBT 20:59, Axi 23:59 = 4:59 PM New York)', group = G8)
+iCloseTz = input.string("America/New_York", 'Day close timezone', group = G8)
+iCs      = input.float(100, 'Contract size ($ per $1 per lot)', group = G8)
+iSpread  = input.float(0.17, 'Spread, $ of price (PXBT XAUUSDp 0.17)', step = 0.01, group = G8)
+iComm    = input.float(0, 'Commission per lot, round trip $', step = 0.5, group = G8)
+iPanel   = input.bool(true, 'Show the stats panel', group = G8)
+iLog     = input.bool(false, 'Write every setup / entry / stop move / exit to the Pine Logs', group = G8)
+iDrawTo  = input.time(0, 'Draw labels only up to this time (0 = all; TradingView keeps the newest 500 labels)', group = G8)
+iShowRules = input.bool(true, "Show today's trades box (top right)", group = G8)
+iDayTz     = input.string("UTC+0", "Today's trades box: MT5 server timezone (PXBT = UTC+0)", group = G8)
+iDetailDays = input.int(3, 'Detail tags (setups, skips, BE/TP, exit X) only for the last N days - TradingView keeps 500 labels, so the BUY/SELL + EXIT labels of the whole month always fit', minval = 0, group = G8)
+// the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
+dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
+monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
+fm(float v) => (v >= 0 ? "+$" : "-$") + str.tostring(math.abs(v), "#,##0.00")
+// Zee 2026-10-15: the stats panel counts THIS month only, and every trade it counts has its EXIT label on the
+// chart (sum of the EXIT labels = the panel's net). So labels are drawn for this month only, unless
+// "Draw labels only up to" is set for a screenshot of an older trade.
+inMonth = monthKey(time) == monthKey(timenow)
+vis = iDrawTo == 0 ? inMonth : time <= iDrawTo
+det = vis and (iDrawTo != 0 or time >= timenow - iDetailDays * 86400000)
 
 // colours: the old saad_strategy.pine theme (Zee 2026-10-14: "it looked beautiful") — constants, never input.color
 cBuy   = #2196f3                       // BUY tag: blue, never a candle colour
@@ -293,18 +305,22 @@ var array<float> aEn   = array.new<float>()
 var array<float> aEx   = array.new<float>()
 var array<float> aPnl  = array.new<float>()
 var array<int>   aTime = array.new<int>()
-if ta.change(dayofweek(time, iCloseTz)) != 0
+if ta.change(dayKey(time)) != 0
     pnlToday := 0.0
     nToday := 0
+// a new server month: the stats panel starts again from zero
+if ta.change(monthKey(time)) != 0
+    nT := 0, nW := 0, nL := 0, nLong := 0, nShort := 0, nSetups := 0, nNoBrk := 0, nGap := 0, nRisk := 0, nNoSup := 0
+    nChop := 0, nBusy := 0, nCtc := 0, nTp1 := 0, nDayClose := 0, gW := 0.0, gL := 0.0, netL := 0.0, netS := 0.0
 
 // a small tag on this candle (TP reached, CTC ...): the long explanation is in the tooltip
 note(float y, bool above, string txt, color bg, string tip = "") =>
-    if vis
+    if det
         label.new(bar_index, y, txt, style = above ? label.style_label_down : label.style_label_up, color = bg, textcolor = color.white, size = size.tiny, tooltip = tip == "" ? txt : tip)
 skipNote(int side, string why) =>
     if iLog
         log.info("SKIP|{0}|{1}|{2}", ts(time), why, pDesc)
-    if iSkips and vis
+    if iSkips and det
         label.new(bar_index, side > 0 ? high : low, "✖ skip", style = side > 0 ? label.style_label_down : label.style_label_up,
              color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: " + why + " | " + pDesc)
 // the stop moved: end the old segment, start a new one (orange once the trade rides)
@@ -469,10 +485,6 @@ for k = 0 to nSteps - 1
                 sUsd := false, sBest := en, sBar := bar_index, sNum := tN, sStage := 1, sNext := na, sRem := 1.0, sReal := 0.0
                 sCtc := false, sMoves := 0, sDesc := pDesc, sSlFrom := bar_index
                 entryK := k
-                if side > 0
-                    nLong += 1
-                else
-                    nShort += 1
                 float risk = math.abs(en - sl) * iLots * iCs
                 string tpTxt = side > 0 ? (noTp ? "none - trailing from entry" : "touch of the " + str.tostring(pExit) + " EMA") : fp(tp) + " (last support)"
                 if vis
@@ -491,7 +503,8 @@ for k = 0 to nSteps - 1
 
 // the trade ended inside this candle
 if not na(exitPx)
-    float pnl = sReal + (sSide > 0 ? exitPx - sEn : sEn - exitPx) * sRem * iLots * iCs - iComm * iLots
+    // rounded to the cent, exactly as its EXIT label prints it, so the labels add up to the panel to the penny
+    float pnl = math.round((sReal + (sSide > 0 ? exitPx - sEn : sEn - exitPx) * sRem * iLots * iCs - iComm * iLots) * 100) / 100
     nT += 1, nToday += 1, pnlToday += pnl
     array.push(aNum, sNum), array.push(aSide, sSide), array.push(aEn, sEn), array.push(aEx, exitPx), array.push(aPnl, pnl), array.push(aTime, time)
     if array.size(aNum) > 60
@@ -501,9 +514,9 @@ if not na(exitPx)
     else if pnl < 0
         nL += 1, gL -= pnl
     if sSide > 0
-        netL += pnl
+        netL += pnl, nLong += 1
     else
-        netS += pnl
+        netS += pnl, nShort += 1
     if vis
         if not na(sLSl)
             line.set_x2(sLSl, bar_index)
@@ -511,7 +524,8 @@ if not na(exitPx)
         string money = (pnl >= 0 ? "+$" : "-$") + fp(math.abs(pnl))
         string tipX = "EXIT #" + str.tostring(sNum) + " (" + (sSide > 0 ? "BUY" : "SELL") + ")\n" + why + "\nEntry: " + fp(sEn) + "\nExit:  " + fp(exitPx) + "\nResult: " + money + "\n" + sDesc
         line.new(sBar, sEn, bar_index, exitPx, color = rc, style = line.style_dotted, width = 2)
-        label.new(bar_index, exitPx, "", style = label.style_xcross, color = rc, size = size.tiny, tooltip = tipX)
+        if det
+            label.new(bar_index, exitPx, "", style = label.style_xcross, color = rc, size = size.tiny, tooltip = tipX)
         label.new(bar_index, sSide > 0 ? high : low, "EXIT #" + str.tostring(sNum) + "\n" + money, style = sSide > 0 ? label.style_label_down : label.style_label_up,
              color = cTag, textcolor = rc, size = size.small, tooltip = tipX)
         if not na(sLTp)
@@ -563,7 +577,7 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
     if longOk or shortOk
         if choppy
             nChop += 1
-            if iSkips and vis
+            if iSkips and det
                 label.new(bar_index, longOk ? low : high, "✖ skip", style = longOk ? label.style_label_up : label.style_label_down,
                      color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: choppy market (ER " + str.tostring(er, "#.###") + " < " + str.tostring(iEr, "#.##") + ")")
             if iLog
@@ -579,7 +593,7 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
             string lineTxt = side > 0 ? (rulesOk ? "9 EMA" : "50 EMA") : (onLine(e9, -1) ? "9 EMA" : "50 EMA")
             pDesc := (side > 0 ? "LONG " : "SHORT ") + kindTxt + " on the " + lineTxt + (side > 0 ? (rulesOk ? " (exit at 50 EMA)" : " (exit at 9 EMA)") : " (TP last support)")
             float blvl = side > 0 ? high + iBreakP * pip : low - iBreakP * pip
-            if vis
+            if det
                 box.new(bar_index - 1, high, bar_index + 1, low, color.new(cYel, 40), 1, bgcolor = color.new(cYel, 94))
                 line.new(bar_index, blvl, bar_index + iBreakB + 1, blvl, color = color.new(cYel, 0), style = line.style_dotted, width = 1)
                 label.new(bar_index, side > 0 ? high : low, (side > 0 ? "long setup · " : "short setup · ") + str.lower(kindTxt),
@@ -594,10 +608,6 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
 // SERVER day and PXBT's server clock is UTC (its 20:59 day close = 4:59 PM New York), so "today" = trades
 // whose exit candle falls on the last candle's server date. Open trades are not counted (MT5 history only
 // lists closed ones). Each row carries the trade # printed on its chart label.
-iShowRules = input.bool(true, "Show today's trades box (top right)", group = g6)
-iDayTz     = input.string("UTC+0", "Today's trades box: MT5 server timezone (PXBT = UTC+0)", group = g6)
-dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
-fm(float v) => (v >= 0 ? "+$" : "-$") + str.tostring(math.abs(v), "#,##0.00")
 dayTxt(int k) => str.tostring(k % 100) + " " + array.get(array.from("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), int(k / 100) % 100 - 1)
 // "yesterday" = the previous TRADING day on the server clock (Monday shows Friday)
 var int prevDay = 0
@@ -628,7 +638,7 @@ dayBlock(table t, int k, string name, int r0) =>
                  text_color = color.white, text_size = TSZ, text_halign = text.align_left)
             table.cell(t, 1, r, fm(p), text_color = p > 0 ? color.lime : p < 0 ? color.red : color.silver, text_size = TSZ, text_halign = text.align_right)
             r += 1
-    table.cell(t, 0, r0, name + "'s total PNL (" + dayTxt(k) + ", MT5 server day " + iDayTz + ")", text_color = color.yellow, text_size = TSZ, text_halign = text.align_left)
+    table.cell(t, 0, r0, name + "'s total PNL (" + dayTxt(k) + ", MT5)", text_color = color.yellow, text_size = TSZ, text_halign = text.align_left)
     table.cell(t, 1, r0, fm(tot), text_color = tot >= 0 ? color.lime : color.red, text_size = TSZ, text_halign = text.align_right)
     if n == 0
         table.cell(t, 0, r, "No closed trades", text_color = color.silver, text_size = TSZ, text_halign = text.align_left)
@@ -648,27 +658,25 @@ if barstate.islast and iShowRules
         table.merge_cells(rb, 0, nxt, 1, nxt)
         dayBlock(rb, prevDay, "Yesterday", nxt + 1)
 
-// ── PANEL ────────────────────────────────────────────────────────────────
+// ── PANEL (bottom right): this month only, minimal, large text (Zee 2026-10-15: "too small and too busy") ──
+// Its net is the sum of this month's EXIT labels, to the cent.
 row(table t, int r, string k, string v, color c) =>
-    table.cell(t, 0, r, k, text_color = color.new(color.silver, 10), text_size = size.small, text_halign = text.align_left)
-    table.cell(t, 1, r, v, text_color = c, text_size = size.small, text_halign = text.align_right)
+    table.cell(t, 0, r, k, text_color = color.new(color.silver, 10), text_size = size.normal, text_halign = text.align_left)
+    table.cell(t, 1, r, v, text_color = c, text_size = size.normal, text_halign = text.align_right)
 if barstate.islast and iPanel
-    var table p = table.new(position.bottom_right, 2, 12, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    var table p = table.new(position.bottom_right, 2, 6, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    table.clear(p, 0, 0, 1, 5)
     pf  = gL > 0 ? gW / gL : na
     wr  = nT > 0 ? float(nW) / nT * 100.0 : 0.0
     net = gW - gL
-    table.cell(p, 0, 0, "📊 SAAD 15-MIN — mirror of EA v1.23", text_color = color.yellow, text_size = size.small)
+    string mon = array.get(array.from("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), month(time, iDayTz) - 1) + " " + str.tostring(year(time, iDayTz))
+    table.cell(p, 0, 0, "📊 Saad 15-min · " + mon + " · " + str.tostring(iLots, "#.##") + " lots", text_color = color.yellow, text_size = size.normal)
     table.merge_cells(p, 0, 0, 1, 0)
-    row(p, 1, "Trades on this chart", str.tostring(nT) + "  (" + str.tostring(nLong) + " long · " + str.tostring(nShort) + " short)", color.white)
-    row(p, 2, "Win rate", str.tostring(wr, "#.#") + "%  (" + str.tostring(nW) + "W / " + str.tostring(nL) + "L)", wr >= 50 ? color.lime : color.orange)
-    row(p, 3, "Net @ " + str.tostring(iLots, "#.##") + " lots (spread $" + str.tostring(iSpread, "#.##") + ")", (net >= 0 ? "+$" : "-$") + str.tostring(math.abs(net), "#,###.##"), net >= 0 ? color.lime : color.red)
+    row(p, 1, "Trades", str.tostring(nT) + "  (" + str.tostring(nW) + "W / " + str.tostring(nL) + "L)", color.white)
+    row(p, 2, "Win rate", str.tostring(wr, "#.#") + "%", wr >= 50 ? color.lime : color.orange)
+    row(p, 3, "Net", (net >= 0 ? "+$" : "-$") + str.tostring(math.abs(net), "#,##0.00"), net >= 0 ? color.lime : color.red)
     row(p, 4, "Profit factor", na(pf) ? "-" : str.tostring(pf, "#.##"), na(pf) or pf >= 1 ? color.lime : color.red)
-    row(p, 5, "Longs / shorts net", (netL >= 0 ? "+$" : "-$") + str.tostring(math.abs(netL), "#") + " / " + (netS >= 0 ? "+$" : "-$") + str.tostring(math.abs(netS), "#"), color.white)
-    row(p, 6, "Today", str.tostring(nToday) + " trades  " + (pnlToday >= 0 ? "+$" : "-$") + str.tostring(math.abs(pnlToday), "#.##"), pnlToday >= 0 ? color.lime : color.red)
-    row(p, 7, "Setups · TP1 · CTC · day-close shuts", str.tostring(nSetups) + " · " + str.tostring(nTp1) + " · " + str.tostring(nCtc) + " · " + str.tostring(nDayClose), color.silver)
-    row(p, 8, "Skipped: no break · choppy · busy · risk · no support · gap", str.tostring(nNoBrk) + " · " + str.tostring(nChop) + " · " + str.tostring(nBusy) + " · " + str.tostring(nRisk) + " · " + str.tostring(nNoSup) + " · " + str.tostring(nGap), color.silver)
-    row(p, 9, "Efficiency ratio now", str.tostring(er, "#.###") + (choppy ? "  CHOPPY" : "  ok"), choppy ? color.orange : color.lime)
-    table.cell(p, 0, 10, "MT5 receipt, EA v1.23 (Axi gold M15 real ticks, Jan 6 – Oct 8 2026, 1 lot): +$211,032 · PF 1.63 · DD $13,119", text_color = color.aqua, text_size = size.tiny)
-    table.merge_cells(p, 0, 10, 1, 10)
-    table.cell(p, 0, 11, "Chart figures are a bar-and-minute sketch; MT5 is the judge", text_color = color.silver, text_size = size.tiny)
-    table.merge_cells(p, 0, 11, 1, 11)
+    // the EA is a 15-minute EA; on any other chart the candles, and so the trades, are different
+    if timeframe.period != "15"
+        table.cell(p, 0, 5, "⚠ Switch the chart to 15 min", text_color = color.orange, text_size = size.normal)
+        table.merge_cells(p, 0, 5, 1, 5)
