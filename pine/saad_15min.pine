@@ -121,6 +121,7 @@ iShowRules = input.bool(true, "Show today's trades box (top right)", group = G8)
 iDayTz     = input.string("UTC+0", "Today's trades box: MT5 server timezone (PXBT = UTC+0)", group = G8)
 iDetailDays = input.int(3, 'Detail tags (setups, skips, BE/TP, exit X) only for the last N days - TradingView keeps 500 labels, so the BUY/SELL + EXIT labels of the whole month always fit', minval = 0, group = G8)
 iSkipBoth = input.bool(false, 'Skip a setup candle that touches BOTH EMAs (9 and 50) - not in the EA', group = G8)
+iTightTrail = input.bool(false, 'Tight trail: when InpTrailAtr would put the stop above the price, put it 1 pip under the candle close instead of not moving it - not in the EA yet', group = G8)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -554,6 +555,10 @@ if not na(exitPx)
 if sSide != 0 and not sUsd and sRide and bar_index > sBar
     sBest := sSide > 0 ? math.max(sBest, high) : math.min(sBest, low)
     float lvl = sSide > 0 ? sBest - iTrAtr * atr : sBest + iTrAtr * atr
+    // Zee 2026-10-16: with a tiny InpTrailAtr (0.1) the level is usually above the close and the EA refuses it,
+    // so the stop never moved (#239). Tight trail: clamp it to 1 pip on the safe side of the close instead.
+    if iTightTrail
+        lvl := sSide > 0 ? math.min(lvl, close - pip) : math.max(lvl, close + pip)
     if sSide > 0 ? (lvl > sSl + 0.01 and lvl < close) : (lvl < sSl - 0.01 and lvl > close)
         sSl := lvl
         sMoves += 1
