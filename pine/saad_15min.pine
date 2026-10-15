@@ -146,6 +146,10 @@ G11 = "TOP / BOTTOM FILTER (chart-only, not in the EA yet)"
 rpLook = input.int(20, "Range: the last N closed candles", minval = 2, group = G11)
 rpMax = input.float(0, "Skip a BUY entering above X% of that range / a SELL below (100 - X)% (0 = off; over 100 = a new high/low)", step = 5, minval = 0, group = G11)
 rpDiag = input.bool(false, "Show the diagnostics table: this month's trades by how near the top (BUY) / bottom (SELL) they entered", group = G11)
+G12 = "COOL-DOWN AFTER AN EXIT (chart-only, not in the EA yet)"
+coolN = input.int(0, "No new trade for N candles after a trade closes (0 = off; 2 = the exit candle + the next 2)", minval = 0, group = G12)
+coolDir = input.string("Same direction", "...blocks", options = ["Same direction", "Both directions"], group = G12)
+coolWin = input.bool(false, "...only after a WINNING exit", group = G12)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -300,6 +304,9 @@ var bool   sPk = false        // STOP NEAR PEAK moved this trade's stop
 var int    adRun = 0          // CUT LOSERS: candles in a row against the trade
 var string adWhy = ""         // CUT LOSERS: set at a candle close -> the trade closes at the next open
 var bool   pConf = false      // ENTRY close mode: a candle closed beyond the setup candle
+var int    lxBar = -100000   // COOL-DOWN: the last exit candle, its side and whether it won
+var int    lxSide = 0
+var bool   lxWin = false
 var float  sChase = na        // TOP / BOTTOM: where in the last rpLook candles' range this trade entered (BUY: 0 bottom .. 100 top; SELL mirrored)
 var array<int>   dgN = array.new<int>(5, 0)       // diagnostics, this month: < 25 · 25-50 · 50-75 · 75-100 · over 100 (a new high / low)
 var array<int>   dgW = array.new<int>(5, 0)
@@ -553,7 +560,9 @@ for k = 0 to nSteps - 1
             bool noTp = false
             float rng = rpHi - rpLo
             float chase = rng > 0 ? (side > 0 ? (bid - rpLo) / rng : (rpHi - bid) / rng) * 100 : 50
-            if rpMax > 0 and chase > rpMax
+            if coolN > 0 and bar_index - lxBar <= coolN and (coolDir == "Both directions" or side == lxSide) and (not coolWin or lxWin)
+                skipWhy := "cool-down: " + str.tostring(bar_index - lxBar) + " candle(s) after the last " + (lxSide > 0 ? "BUY" : "SELL") + " closed" + (lxWin ? " in profit" : "")
+            else if rpMax > 0 and chase > rpMax
                 skipWhy := (side > 0 ? "BUY at " : "SELL at ") + str.tostring(chase, "#") + "% of the last " + str.tostring(rpLook) + " candles' range (" + (side > 0 ? "top" : "bottom") + " filter " + str.tostring(rpMax, "#") + "%)"
             else if iMaxRisk > 0 and math.abs(en - sl) > iMaxRisk
                 skipWhy := "stop too far ($" + fp(math.abs(en - sl)) + " > $" + fp(iMaxRisk) + ")"
@@ -604,6 +613,7 @@ if not na(exitPx)
     // rounded to the cent, exactly as its EXIT label prints it, so the labels add up to the panel to the penny
     float pnl = math.round((sReal + (sSide > 0 ? exitPx - sEn : sEn - exitPx) * sRem * iLots * iCs - iComm * iLots) * 100) / 100
     nT += 1, nToday += 1, pnlToday += pnl
+    lxBar := bar_index, lxSide := sSide, lxWin := pnl > 0
     int bk = na(sChase) ? 2 : sChase < 25 ? 0 : sChase < 50 ? 1 : sChase < 75 ? 2 : sChase <= 100 ? 3 : 4
     array.set(dgN, bk, array.get(dgN, bk) + 1), array.set(dgP, bk, array.get(dgP, bk) + pnl)
     if pnl > 0
