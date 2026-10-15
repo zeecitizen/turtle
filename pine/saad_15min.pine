@@ -120,6 +120,7 @@ iDrawTo  = input.time(0, 'Draw labels only up to this time (0 = all; TradingView
 iShowRules = input.bool(true, "Show today's trades box (top right)", group = G8)
 iDayTz     = input.string("UTC+0", "Today's trades box: MT5 server timezone (PXBT = UTC+0)", group = G8)
 iDetailDays = input.int(3, 'Detail tags (setups, skips, BE/TP, exit X) only for the last N days - TradingView keeps 500 labels, so the BUY/SELL + EXIT labels of the whole month always fit', minval = 0, group = G8)
+iSkipBoth = input.bool(false, 'Skip a setup candle that touches BOTH EMAs (9 and 50) - not in the EA', group = G8)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -583,8 +584,16 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
     bool shortLine = iSLine == "50 EMA" ? onLine(e50, -1) : iSLine == "9 EMA" ? onLine(e9, -1) : (onLine(e50, -1) or onLine(e9, -1))
     bool longOk  = iBuys and (rulesOk or invOk) and (shape == 1 or (shape == 2 and (not shortLine or close >= open)))
     bool shortOk = iSells and shortLine and (shape == -1 or shape == 2) and not longOk
+    // Zee 2026-10-15: option - a setup candle whose range reaches both EMAs (within the touch tolerance) is skipped
+    bool touchBoth = low - tol <= e9 and high + tol >= e9 and low - tol <= e50 and high + tol >= e50
     if longOk or shortOk
-        if choppy
+        if iSkipBoth and touchBoth
+            if iSkips and det
+                label.new(bar_index, longOk ? low : high, "✖ skip", style = longOk ? label.style_label_up : label.style_label_down,
+                     color = color.new(color.gray, 40), textcolor = color.white, size = size.tiny, tooltip = "SKIPPED: the candle touches BOTH EMAs (9 " + fp(e9) + " and 50 " + fp(e50) + ")")
+            if iLog
+                log.info("BOTHEMA|{0}|{1}", ts(time), longOk ? "LONG" : "SHORT")
+        else if choppy
             nChop += 1
             if iSkips and det
                 label.new(bar_index, longOk ? low : high, "✖ skip", style = longOk ? label.style_label_up : label.style_label_down,
