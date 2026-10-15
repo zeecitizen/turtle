@@ -286,6 +286,13 @@ var float netL = 0.0
 var float netS = 0.0
 var float pnlToday = 0.0
 var int nToday = 0
+// every closed trade (newest 60) for the "today" panel: its label number, side, entry, exit, $ and exit candle time
+var array<int>   aNum  = array.new<int>()
+var array<int>   aSide = array.new<int>()
+var array<float> aEn   = array.new<float>()
+var array<float> aEx   = array.new<float>()
+var array<float> aPnl  = array.new<float>()
+var array<int>   aTime = array.new<int>()
 if ta.change(dayofweek(time, iCloseTz)) != 0
     pnlToday := 0.0
     nToday := 0
@@ -486,6 +493,9 @@ for k = 0 to nSteps - 1
 if not na(exitPx)
     float pnl = sReal + (sSide > 0 ? exitPx - sEn : sEn - exitPx) * sRem * iLots * iCs - iComm * iLots
     nT += 1, nToday += 1, pnlToday += pnl
+    array.push(aNum, sNum), array.push(aSide, sSide), array.push(aEn, sEn), array.push(aEx, exitPx), array.push(aPnl, pnl), array.push(aTime, time)
+    if array.size(aNum) > 60
+        array.shift(aNum), array.shift(aSide), array.shift(aEn), array.shift(aEx), array.shift(aPnl), array.shift(aTime)
     if pnl > 0
         nW += 1, gW += pnl
     else if pnl < 0
@@ -579,22 +589,47 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
             if iLog
                 log.info("SETUP|{0}|{1}|H {2} L {3}|break {4} {5}|ER {6}", ts(time), pDesc, fp(high), fp(low), side > 0 ? "above" : "below", fp(blvl), str.tostring(er, "#.###"))
 
-// ── RULES BOX (top right) ────────────────────────────────────────────────
-iShowRules = input.bool(true, 'Show the numbered rules box', group = g6)
-rr(table t, int r, string n, string tx) =>
-    table.cell(t, 0, r, n, text_color = color.yellow, text_size = size.small)
-    table.cell(t, 1, r, tx, text_color = color.white, text_size = size.small, text_halign = text.align_left)
+// ── TODAY BOX (top right) ────────────────────────────────────────────────
+// Zee 2026-10-15: "Today's total PNL (must match Prime XBT MT5 history)". MT5's history day is the broker
+// SERVER day and PXBT's server clock is UTC (its 20:59 day close = 4:59 PM New York), so "today" = trades
+// whose exit candle falls on the last candle's server date. Open trades are not counted (MT5 history only
+// lists closed ones). Each row carries the trade # printed on its chart label.
+iShowRules = input.bool(true, "Show today's trades box (top right)", group = g6)
+iDayTz     = input.string("UTC+0", "Today's trades box: MT5 server timezone (PXBT = UTC+0)", group = g6)
+dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
+fm(float v) => (v >= 0 ? "+$" : "-$") + str.tostring(math.abs(v), "#,##0.00")
 if barstate.islast and iShowRules
-    var table rb = table.new(position.top_right, 2, 8, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
-    table.cell(rb, 0, 0, "📜 SAAD 15-MIN RULES — EA v1.23 settings", text_color = color.yellow, text_size = size.small)
-    table.merge_cells(rb, 0, 0, 1, 0)
-    rr(rb, 1, "①", "Pin / hammer / marubozu (body ≥ " + str.tostring(iMaruB, "#.##") + ") ≥ " + str.tostring(iMinAtr, "#.##") + "×ATR on the EMA  ·  LONG 9 (exit 50) or 50 (exit 9)  ·  SHORT on the " + iSLine)
-    rr(rb, 2, "②", "Break the high / low by " + str.tostring(iBreakP, "#") + " pips within " + str.tostring(iBreakB) + " candle")
-    rr(rb, 3, "③", "High broken → BUY  ·  low broken → SELL  (skip if the stop is over $" + str.tostring(iMaxRisk, "#") + ")")
-    rr(rb, 4, "④", "SL " + str.tostring(iSlPips, "#") + " pips beyond the candle  ·  CTC to entry at " + str.tostring(math.round(iBePct * 100)) + "% of TP1")
-    rr(rb, 5, "⑤", "TP1: LONG touch of the exit EMA (none → 2×ATR trail)  ·  SHORT last support  ·  half closed, then $" + str.tostring(iLTrail, "#") + " trail, TP2/TP3 next swings")
-    rr(rb, 6, "⑥", "Losers shut " + str.tostring(iCloseM) + " min before the " + iCloseT + " New York close")
-    rr(rb, 7, "✖", "Skip: not broken in " + str.tostring(iBreakB) + " · choppy (ER < " + str.tostring(iEr, "#.##") + ") · busy (one trade at a time)")
+    var table rb = table.new(position.top_right, 2, 64, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    table.clear(rb, 0, 0, 1, 63)
+    int today = dayKey(time)
+    float tot = 0.0
+    int w = 0
+    int l = 0
+    int n = 0
+    int r = 1
+    for i = 0 to array.size(aNum) - 1
+        if dayKey(array.get(aTime, i)) == today
+            float p = array.get(aPnl, i)
+            tot += p, n += 1
+            if p > 0
+                w += 1
+            else if p < 0
+                l += 1
+            int sd = array.get(aSide, i)
+            table.cell(rb, 0, r, "Trade #" + str.tostring(array.get(aNum, i)) + "  " + (sd > 0 ? "BUY " : "SELL ") + fp(array.get(aEn, i)) + " → " + fp(array.get(aEx, i)),
+                 text_color = color.white, text_size = size.small, text_halign = text.align_left)
+            table.cell(rb, 1, r, fm(p), text_color = p > 0 ? color.lime : p < 0 ? color.red : color.silver, text_size = size.small, text_halign = text.align_right)
+            r += 1
+    table.cell(rb, 0, 0, "Today's total PNL (" + str.format("{0,date,dd MMM}", time) + ", MT5 server day " + iDayTz + ")", text_color = color.yellow, text_size = size.small, text_halign = text.align_left)
+    table.cell(rb, 1, 0, fm(tot), text_color = tot >= 0 ? color.lime : color.red, text_size = size.small, text_halign = text.align_right)
+    if n == 0
+        table.cell(rb, 0, r, "No closed trades yet today", text_color = color.silver, text_size = size.small, text_halign = text.align_left)
+        table.merge_cells(rb, 0, r, 1, r)
+        r += 1
+    float wrT = n > 0 ? float(w) / n * 100.0 : 0.0
+    table.cell(rb, 0, r, "Winrate " + str.tostring(wrT, "#") + "%  |  Profit " + fm(tot) + "  |  Wins vs Losses " + str.tostring(w) + ":" + str.tostring(l),
+         text_color = color.aqua, text_size = size.small, text_halign = text.align_left)
+    table.merge_cells(rb, 0, r, 1, r)
 
 // ── PANEL ────────────────────────────────────────────────────────────────
 row(table t, int r, string k, string v, color c) =>
