@@ -16,6 +16,22 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.00 (2026-10-16) — REFUSED, do not attach
+
+Zee: *"can you take these settings from tradingview and saad_strategy_15 code and create a new EA from this called saad_strategy_1min. then test these settings on 1 min timeframe in mt5"*
+
+- **What:** `mt5/Saad_strategy_1min.mq5`, magic 88305 - the Saad_strategy_15min v1.23 engine unchanged (it reads the chart's own candles), defaults = Zee's TradingView settings of 16 Oct on VANTAGE:XAUUSD 1 min (EMA 3/4, wick 0.40, hammer ratio 2, min range 0.40 ATR, break 5 pips, SL 43 pips, max risk $10.5, swing pivot 8 / look 90, close-loss 1 min, long trail $0.5, short trail $2.5, CTC 60%, trail ATR 0.2, chop ER 0.02, partial 95%, 2 lots, lock at $2 -> $5.5), plus three chart-only rules he had on: `InpTrailGapUsd` 0.1 (ATR stop at least $X from the close), `InpCutRunN` 6 (6 candles in a row against a losing trade -> out), `InpRangeLook/Min/Max` 7 / 25 / 35 (enter only between 25% and 35% of the last 7 candles' range).
+- **The chart said:** Oct 11-15 (1-min history), 27 trades, 78%, +$15,447, PF 4.8.
+- **MT5 said** (real ticks 100%, random delay, 2 lots):
+
+| rig | period | positions | WR | net | PF | DD |
+|---|---|---|---|---|---|---|
+| PXBT XAUUSDp | Oct 1 - 14 | 77 | 55% | **-$8,888** | 0.76 | $19,228 |
+| Axi XAUUSD_TK (+$4/lot) | Jul 1 - Oct 8 | 686 | 54% | **-$79,975** | 0.79 | $80,042 (77%) |
+
+  Axi by month: Jul -$15,098 · Aug -$34,166 · Sep -$18,475 · Oct (to the 8th) -$12,236; 48 of 71 days red.
+- **Why the chart and MT5 disagree:** the settings were tuned by hand on ~4 days of 1-minute chart history (fitting noise), and on a 1-minute chart the indicator's minute-by-minute engine has only one step per candle, so it cannot see the order of the high and the low inside a candle - the "bar-and-minute sketch" the panel warns about is at its weakest exactly here.
+
 ## FractalBreakout v1.00 (2026-10-15) — TEST, not promoted, do not attach
 
 Zee: *"there is william fractals indicator .. on tradingview i've applied it with setting Periods 25... it draws these arrows on the 5 min timeframe. i want to backtest a strategy based on this"* — entry chosen: breakout of the fractal level; exit: *"trailing stop loss.. and tp is when trailing sl is hit"*.

@@ -26,6 +26,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | **saad_vsisa_diamond_hybrid** | `saad_vsisa_diamond_hybrid.mq5` (+ `svd_saad.mqh`, `svd_diamond.mqh`, 4 `Vsisa*.mqh`) | 88360 Saad · 88361 VSISA · 88362 Diamond | **v1.00** (2026-10-14) | XAUUSD **M5** | READY, demo first: bigger drawdown (15%) than saad_vsisa_hybrid |
 | **Trinity_1min** | `Trinity_1min.mq5` (+ `TriSaad.mqh`, `TriVsisa.mqh`, `TriDia.mqh`, 4 `Vsisa*.mqh`) | 88370 Saad · 88371 VSISA · 88372 Diamond | **v1.00** (2026-10-14) | XAUUSD **M1**, 0.01 lots | READY, demo first: ~$15/day at 0.01 lots on $500 |
 | **Saad raw** | `Saad_raw.mq5` | 88303 | **v1.00** (2026-10-14) | XAUUSD M15 | RESEARCH, do not attach: the core Saad rules with no filters (Zee) - MT5 full year +$76,834, DD $76,520 vs v1.23 +$211,032 / $13,119 |
+| Saad 1-min | `Saad_strategy_1min.mq5` | 88305 | v1.00 (2026-10-16) | XAUUSD **M1** | REFUSED, do not attach: Zee's TradingView 1-min settings - MT5 Axi real ticks Jul 1 - Oct 8 **-$79,975**, PF 0.79, every month red |
 | **FractalBreakout** | `FractalBreakout.mq5` | 88410 | **v1.00** (2026-10-15) | XAUUSD **M5** | TEST, do not attach: Williams Fractals (25) breakout + trailing stop. Beats a no-rules control at every trail, but most of the profit was Jan–Mar |
 | **bread_winner** | `bread_winner.mq5` (+ `bread_saad/vsisa/dia/pb/vsisa2.mqh`, 4 `Vsisa*.mqh`) | 88390–88395 (shots 88393, Diamond 88392) | **v1.03** (2026-10-14) | XAUUSD, any chart | READY, demo first: ONE ~$11.5 shot per Pakistan day; ~92% of weekdays bread (88% random delay), ~1 in 15 red |
 | VSISA_Pullbacks | `VSISA_Pullbacks.mq5` | 88202 | v1.00 (2026-09-17) | XAUUSD | BUILT |
@@ -100,6 +101,12 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | v4.02 | 2026-10-11 | **Shipped to Axi:** the TradingView indicator, ported and tuned (break +2 pips, SL 30, ATR ×2 trail) | |
 | v3.20 | 2026-10-11 | Shipped to Axi: 25-pip stop | |
 | v2.00 | 2026-10-11 | Built from `RULES_EMA_SAAD.md`, not shipped | |
+
+## Saad_strategy_1min (magic 88305, XAUUSD M1)
+
+| Version | Date | What changed | Result / note |
+|---|---|---|---|
+| v1.00 | 2026-10-16 | Saad_strategy_15min v1.23 engine with Zee's TradingView settings of 16 Oct (VANTAGE 1 min: EMA 3/4, SL 43 pips, break 5 pips, max risk $10.5, pivot 8/90, trail ATR 0.2, CTC 60%, partial 95%, lock $2 -> $5.5, 2 lots) + 3 chart-only rules ported: InpTrailGapUsd 0.1, InpCutRunN 6, entry band 25-35% of the last 7 candles | **REFUSED.** Chart (Oct 11-15): 27 trades, 78%, +$15,447, PF 4.8. MT5 real ticks, random delay: PXBT XAUUSDp Oct 1-14 **-$8,888** (55%, PF 0.76); Axi XAUUSD_TK Jul 1 - Oct 8 **-$79,975** (54%, PF 0.79, DD 77%, every month red) |
 
 ## FractalBreakout (magic 88410, XAUUSD M5)
 
