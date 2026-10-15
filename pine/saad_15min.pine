@@ -811,7 +811,9 @@ dayBlock(table t, int k, string name, int r0) =>
     r + 1
 if barstate.islast and iShowRules
     var table rb = table.new(position.top_right, 2, 400, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    var table gd = table.new(position.top_right, 3, 400, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
     table.clear(rb, 0, 0, 1, 399)
+    table.clear(gd, 0, 0, 2, 399)
     if lsFrom > 0
         // Zee 2026-10-16: "List the trades from last Monday 5 till last Friday 9th" - one block per server day in the range
         int hiT = lsTo > 0 ? lsTo : timenow
@@ -835,11 +837,50 @@ if barstate.islast and iShowRules
         table.cell(rb, 0, r, "Range total: " + str.tostring(n) + " trades · win rate " + (n > 0 ? str.tostring(100.0 * w / n, "#") : "0") + "%", text_color = color.yellow, text_size = TSZ, text_halign = text.align_left)
         table.cell(rb, 1, r, fm(tot), text_color = tot >= 0 ? color.lime : color.red, text_size = TSZ, text_halign = text.align_right)
     else
-        int nxt = dayBlock(rb, curDay, "Today", 0)
-        if prevDay > 0
-            table.cell(rb, 0, nxt, "", text_size = size.tiny)
-            table.merge_cells(rb, 0, nxt, 1, nxt)
-            dayBlock(rb, prevDay, "Yesterday", nxt + 1)
+        // Zee 2026-10-16: the last 6 trading days as narrow columns - 3 side by side, then the next 3 below.
+        // Each column: the day + its total, then one profit / loss per trade, then win rate and W:L.
+        array<int> days = array.new<int>()
+        if array.size(aNum) > 0
+            for i = array.size(aNum) - 1 to 0
+                int k = dayKey(array.get(aTime, i))
+                if not array.includes(days, k) and array.size(days) < 6
+                    array.push(days, k)
+        int row0 = 0
+        for blk = 0 to 1
+            int maxN = 0
+            for c = 0 to 2
+                int d = blk * 3 + c
+                if d < array.size(days)
+                    int k = array.get(days, d)
+                    float tot = 0.0
+                    int n = 0
+                    int w = 0
+                    int l = 0
+                    for i = 0 to array.size(aNum) - 1
+                        if dayKey(array.get(aTime, i)) == k
+                            float pn = array.get(aPnl, i)
+                            tot += pn
+                            n += 1
+                            w += pn > 0 ? 1 : 0
+                            l += pn < 0 ? 1 : 0
+                            table.cell(gd, c, row0 + n, (pn >= 0 ? "+$" : "-$") + str.tostring(math.abs(pn), "#,##0"), text_color = pn > 0 ? color.lime : pn < 0 ? color.red : color.silver, text_size = TSZ, text_halign = text.align_right)
+                    table.cell(gd, c, row0, dayTxt(k) + "  " + fm(tot), text_color = tot >= 0 ? color.lime : color.red, text_size = TSZ, bgcolor = color.new(color.black, 0))
+                    maxN := math.max(maxN, n)
+            for c = 0 to 2
+                int d = blk * 3 + c
+                if d < array.size(days)
+                    int k = array.get(days, d)
+                    int n = 0
+                    int w = 0
+                    int l = 0
+                    for i = 0 to array.size(aNum) - 1
+                        if dayKey(array.get(aTime, i)) == k
+                            float pn = array.get(aPnl, i)
+                            n += 1
+                            w += pn > 0 ? 1 : 0
+                            l += pn < 0 ? 1 : 0
+                    table.cell(gd, c, row0 + maxN + 1, str.tostring(n > 0 ? 100.0 * w / n : 0, "#") + "% · " + str.tostring(w) + ":" + str.tostring(l), text_color = color.aqua, text_size = TSZ)
+            row0 += maxN + 2
 
 // ── PANEL (bottom right): one row per month - this month + the 5 before it (Zee 2026-10-15) ──
 // Win rate and net large, the rest small. This month's net is the sum of its EXIT labels, to the cent
