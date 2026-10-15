@@ -150,6 +150,9 @@ G12 = "COOL-DOWN AFTER AN EXIT (chart-only, not in the EA yet)"
 coolN = input.int(0, "No new trade for N candles after a trade closes (0 = off; 2 = the exit candle + the next 2)", minval = 0, group = G12)
 coolDir = input.string("Same direction", "...blocks", options = ["Same direction", "Both directions"], group = G12)
 coolWin = input.bool(false, "...only after a WINNING exit", group = G12)
+G13 = "FAILED ENTRY EXIT (chart-only, not in the EA yet)"
+fxOn = input.bool(false, "Exit when the candle AFTER the entry candle closes beyond it: BUY below its low, SELL above its open/high -> out at the next open", group = G13)
+fxSellRef = input.string("Entry candle's open", "...SELL: the line it must close above", options = ["Entry candle's open", "Entry candle's high", "Never (BUY only)"], group = G13)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -659,7 +662,10 @@ if sSide != 0 and bar_index > sBar and adWhy == ""
     bool loss = sSide > 0 ? close < sEn : close + iSpread > sEn
     bool against = sSide > 0 ? close < open : close > open
     adRun := against ? adRun + 1 : 0
-    if loss
+    // FAILED ENTRY (Zee 2026-10-16): judged once, at the close of the candle right after the entry candle
+    if fxOn and bar_index == sBar + 1 and (sSide > 0 or fxSellRef != "Never (BUY only)") and (sSide > 0 ? close < low[1] : close > (fxSellRef == "Entry candle's open" ? open[1] : high[1]))
+        adWhy := "failed entry: the next candle closed " + (sSide > 0 ? "below the entry candle's low" : "above the entry candle's " + (fxSellRef == "Entry candle's open" ? "open" : "high"))
+    else if loss
         if adRunN > 0 and adRun >= adRunN
             adWhy := str.tostring(adRun) + " candles against the trade"
         else if adBars > 0 and bar_index - sBar >= adBars
