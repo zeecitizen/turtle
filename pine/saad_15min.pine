@@ -598,38 +598,55 @@ iShowRules = input.bool(true, "Show today's trades box (top right)", group = g6)
 iDayTz     = input.string("UTC+0", "Today's trades box: MT5 server timezone (PXBT = UTC+0)", group = g6)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 fm(float v) => (v >= 0 ? "+$" : "-$") + str.tostring(math.abs(v), "#,##0.00")
-if barstate.islast and iShowRules
-    var table rb = table.new(position.top_right, 2, 64, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
-    table.clear(rb, 0, 0, 1, 63)
-    int today = dayKey(time)
+dayTxt(int k) => str.tostring(k % 100) + " " + array.get(array.from("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"), int(k / 100) % 100 - 1)
+// "yesterday" = the previous TRADING day on the server clock (Monday shows Friday)
+var int prevDay = 0
+var int curDay = 0
+int dk = dayKey(time)
+if dk != curDay
+    prevDay := curDay
+    curDay := dk
+TSZ = size.normal
+// one day's block: header with the total, one row per closed trade, then winrate | profit | W:L. Returns the next free row.
+dayBlock(table t, int k, string name, int r0) =>
     float tot = 0.0
     int w = 0
     int l = 0
     int n = 0
-    int r = 1
+    int r = r0 + 1
     for i = 0 to array.size(aNum) - 1
-        if dayKey(array.get(aTime, i)) == today
+        if dayKey(array.get(aTime, i)) == k
             float p = array.get(aPnl, i)
-            tot += p, n += 1
+            tot += p
+            n += 1
             if p > 0
                 w += 1
             else if p < 0
                 l += 1
             int sd = array.get(aSide, i)
-            table.cell(rb, 0, r, "Trade #" + str.tostring(array.get(aNum, i)) + "  " + (sd > 0 ? "BUY " : "SELL ") + fp(array.get(aEn, i)) + " → " + fp(array.get(aEx, i)),
-                 text_color = color.white, text_size = size.small, text_halign = text.align_left)
-            table.cell(rb, 1, r, fm(p), text_color = p > 0 ? color.lime : p < 0 ? color.red : color.silver, text_size = size.small, text_halign = text.align_right)
+            table.cell(t, 0, r, "Trade #" + str.tostring(array.get(aNum, i)) + "  " + (sd > 0 ? "BUY " : "SELL ") + fp(array.get(aEn, i)) + " → " + fp(array.get(aEx, i)),
+                 text_color = color.white, text_size = TSZ, text_halign = text.align_left)
+            table.cell(t, 1, r, fm(p), text_color = p > 0 ? color.lime : p < 0 ? color.red : color.silver, text_size = TSZ, text_halign = text.align_right)
             r += 1
-    table.cell(rb, 0, 0, "Today's total PNL (" + str.format("{0,date,dd MMM}", time) + ", MT5 server day " + iDayTz + ")", text_color = color.yellow, text_size = size.small, text_halign = text.align_left)
-    table.cell(rb, 1, 0, fm(tot), text_color = tot >= 0 ? color.lime : color.red, text_size = size.small, text_halign = text.align_right)
+    table.cell(t, 0, r0, name + "'s total PNL (" + dayTxt(k) + ", MT5 server day " + iDayTz + ")", text_color = color.yellow, text_size = TSZ, text_halign = text.align_left)
+    table.cell(t, 1, r0, fm(tot), text_color = tot >= 0 ? color.lime : color.red, text_size = TSZ, text_halign = text.align_right)
     if n == 0
-        table.cell(rb, 0, r, "No closed trades yet today", text_color = color.silver, text_size = size.small, text_halign = text.align_left)
-        table.merge_cells(rb, 0, r, 1, r)
+        table.cell(t, 0, r, "No closed trades", text_color = color.silver, text_size = TSZ, text_halign = text.align_left)
+        table.merge_cells(t, 0, r, 1, r)
         r += 1
     float wrT = n > 0 ? float(w) / n * 100.0 : 0.0
-    table.cell(rb, 0, r, "Winrate " + str.tostring(wrT, "#") + "%  |  Profit " + fm(tot) + "  |  Wins vs Losses " + str.tostring(w) + ":" + str.tostring(l),
-         text_color = color.aqua, text_size = size.small, text_halign = text.align_left)
-    table.merge_cells(rb, 0, r, 1, r)
+    table.cell(t, 0, r, "Winrate " + str.tostring(wrT, "#") + "%  |  Profit " + fm(tot) + "  |  Wins vs Losses " + str.tostring(w) + ":" + str.tostring(l),
+         text_color = color.aqua, text_size = TSZ, text_halign = text.align_left)
+    table.merge_cells(t, 0, r, 1, r)
+    r + 1
+if barstate.islast and iShowRules
+    var table rb = table.new(position.top_right, 2, 130, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    table.clear(rb, 0, 0, 1, 129)
+    int nxt = dayBlock(rb, curDay, "Today", 0)
+    if prevDay > 0
+        table.cell(rb, 0, nxt, "", text_size = size.tiny)
+        table.merge_cells(rb, 0, nxt, 1, nxt)
+        dayBlock(rb, prevDay, "Yesterday", nxt + 1)
 
 // ── PANEL ────────────────────────────────────────────────────────────────
 row(table t, int r, string k, string v, color c) =>
