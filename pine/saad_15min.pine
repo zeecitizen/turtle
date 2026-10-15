@@ -571,7 +571,9 @@ if not na(exitPx)
     // rounded to the cent, exactly as its EXIT label prints it, so the labels add up to the panel to the penny
     float pnl = math.round((sReal + (sSide > 0 ? exitPx - sEn : sEn - exitPx) * sRem * iLots * iCs - iComm * iLots) * 100) / 100
     nT += 1, nToday += 1, pnlToday += pnl
-    array.push(aNum, sNum), array.push(aSide, sSide), array.push(aEn, sEn), array.push(aEx, exitPx), array.push(aPnl, pnl), array.push(aTime, time)
+    // the AVERAGE exit over the whole position (TP1 part + the rest): Zee 2026-10-16, #274 showed only the last 5%'s exit
+    float avgEx = math.round((sSide > 0 ? sEn + (pnl + iComm * iLots) / (iLots * iCs) : sEn - (pnl + iComm * iLots) / (iLots * iCs)) * 100) / 100
+    array.push(aNum, sNum), array.push(aSide, sSide), array.push(aEn, sEn), array.push(aEx, avgEx), array.push(aPnl, pnl), array.push(aTime, time)
     if array.size(aNum) > 60
         array.shift(aNum), array.shift(aSide), array.shift(aEn), array.shift(aEx), array.shift(aPnl), array.shift(aTime)
     if pnl > 0
@@ -587,7 +589,7 @@ if not na(exitPx)
             line.set_x2(sLSl, bar_index)
         color rc = pnl > 0 ? cWin : pnl == 0 ? color.gray : cLoss
         string money = (pnl >= 0 ? "+$" : "-$") + fp(math.abs(pnl))
-        string tipX = "EXIT #" + str.tostring(sNum) + " (" + (sSide > 0 ? "BUY" : "SELL") + ")\n" + why + "\nEntry: " + fp(sEn) + "\nExit:  " + fp(exitPx) + "\nResult: " + money + "\n" + sDesc
+        string tipX = "EXIT #" + str.tostring(sNum) + " (" + (sSide > 0 ? "BUY" : "SELL") + ")\n" + why + "\nEntry: " + fp(sEn) + (sRem < 1 ? "\nTP1:   " + str.tostring(math.round((1 - sRem) * 100)) + "% closed at TP1\nRest:  " + fp(exitPx) + "\nAverage exit: " + fp(avgEx) : "\nExit:  " + fp(exitPx)) + "\nResult: " + money + "\n" + sDesc
         line.new(sBar, sEn, bar_index, exitPx, color = rc, style = line.style_dotted, width = 2)
         if det
             label.new(bar_index, exitPx, "", style = label.style_xcross, color = rc, size = size.tiny, tooltip = tipX)
