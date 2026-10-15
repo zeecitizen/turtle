@@ -919,7 +919,7 @@ if barstate.islast and iPanel
 
 // ── TOP / BOTTOM diagnostics (top left, off by default) ──
 if barstate.islast and rpDiag
-    var table dg = table.new(position.top_left, 4, 7, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    var table dg = table.new(position.middle_left, 4, 7, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
     table.cell(dg, 0, 0, "Entry position in the last " + str.tostring(rpLook) + " candles (this month)", text_color = color.yellow, text_size = size.normal)
     table.merge_cells(dg, 0, 0, 3, 0)
     table.cell(dg, 0, 1, "BUY near the top / SELL near the bottom", text_color = color.silver, text_size = size.small)
