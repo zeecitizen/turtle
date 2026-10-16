@@ -1,0 +1,840 @@
+{
+ "saved": "2026-10-16 06:36",
+ "chart": "BLUEBERRY:XAUUSD, 1 min",
+ "indicator": "Saad 15min v1.23 — mirror of the EA",
+ "tradingview_script": "Saad Strategy v3.20 — EMA 9/50 pin & marubozu (USER;2f829a55b3fe41e4a338c6eb0f19838a)",
+ "result_on_chart": {
+  "october": "83 trades · 83% win rate · +$34,591.20 · PF 4.87 (2 lots)",
+  "days": {
+   "12 Oct": "+$8,145.11 · 96% (22:1)",
+   "13 Oct": "+$3,726.97 · 75% (9:3)",
+   "14 Oct": "+$14,489.27 · 83% (20:4)",
+   "15 Oct": "+$8,229.85 · 75% (18:6)",
+   "BUY entries (25-50% of last 7)": "77 trades · 84% · +$29,371.73",
+   "SELL entries (30-35% of last 7)": "5 trades · 80% · +$5,266.10"
+  }
+ },
+ "values_by_position": [
+  3,
+  4,
+  0.4,
+  0.6,
+  0.21,
+  false,
+  false,
+  true,
+  true,
+  0.53,
+  true,
+  true,
+  2,
+  0.5,
+  0.4,
+  "Both",
+  "9 EMA",
+  "Candle touches",
+  1,
+  false,
+  1,
+  5,
+  37,
+  11,
+  0,
+  8,
+  32,
+  0,
+  1,
+  0,
+  1,
+  0.5,
+  2.5,
+  0.6,
+  0.2,
+  0.01,
+  16,
+  true,
+  0.95,
+  true,
+  2,
+  true,
+  true,
+  true,
+  "16:59",
+  "America/New_York",
+  100,
+  0.17,
+  0,
+  true,
+  false,
+  0,
+  true,
+  "UTC+0",
+  3,
+  false,
+  false,
+  "All trades",
+  0,
+  0,
+  0,
+  2,
+  5.5,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0,
+  0.1,
+  "Wick break (EA)",
+  6,
+  0,
+  false,
+  0,
+  7,
+  50,
+  true,
+  0,
+  "Both directions",
+  false,
+  false,
+  "Entry candle's open",
+  0,
+  0,
+  25,
+  200,
+  false,
+  7,
+  35,
+  30
+ ],
+ "settings": [
+  {
+   "in": "in_0",
+   "var": "iFast",
+   "group": "EA · EMAs",
+   "title": "InpEmaFast",
+   "value": 3,
+   "default": "9"
+  },
+  {
+   "in": "in_1",
+   "var": "iSlow",
+   "group": "EA · EMAs",
+   "title": "InpEmaSlow",
+   "value": 4,
+   "default": "50"
+  },
+  {
+   "in": "in_2",
+   "var": "iWick",
+   "group": "EA · ① setup candle",
+   "title": "InpWickMin — pin: long wick >= x range",
+   "value": 0.4,
+   "default": "0.45"
+  },
+  {
+   "in": "in_3",
+   "var": "iBodyMax",
+   "group": "EA · ① setup candle",
+   "title": "InpBodyMax — pin: body <= x range",
+   "value": 0.6,
+   "default": "0.60"
+  },
+  {
+   "in": "in_4",
+   "var": "iNose",
+   "group": "EA · ① setup candle",
+   "title": "InpNoseMax — pin: short wick <= x range",
+   "value": 0.21,
+   "default": "0.20"
+  },
+  {
+   "in": "in_5",
+   "var": "iPinDir",
+   "group": "EA · ① setup candle",
+   "title": "InpPinDir — pin must point the trade way",
+   "value": false,
+   "default": "false"
+  },
+  {
+   "in": "in_6",
+   "var": "iPinCol",
+   "group": "EA · ① setup candle",
+   "title": "InpPinColor — pin body must close the trade way (with PinDir)",
+   "value": false,
+   "default": "false"
+  },
+  {
+   "in": "in_7",
+   "var": "iUsePin",
+   "group": "EA · ① setup candle",
+   "title": "InpUsePin — accept pin bars",
+   "value": true,
+   "default": "true"
+  },
+  {
+   "in": "in_8",
+   "var": "iMaru",
+   "group": "EA · ① setup candle",
+   "title": "InpMarubozu — accept a marubozu",
+   "value": true,
+   "default": "true"
+  },
+  {
+   "in": "in_9",
+   "var": "iMaruB",
+   "group": "EA · ① setup candle",
+   "title": "InpMaruBody — marubozu: body >= x range",
+   "value": 0.53,
+   "default": "0.53"
+  },
+  {
+   "in": "in_10",
+   "var": "iHammer",
+   "group": "EA · ① setup candle",
+   "title": "InpHammer — accept hammers (LONG)",
+   "value": true,
+   "default": "true"
+  },
+  {
+   "in": "in_11",
+   "var": "iStar",
+   "group": "EA · ① setup candle",
+   "title": "InpStar — accept shooting stars (SHORT)",
+   "value": true,
+   "default": "true"
+  },
+  {
+   "in": "in_12",
+   "var": "iHamR",
+   "group": "EA · ① setup candle",
+   "title": "InpHamRatio — hammer: long wick >= x body",
+   "value": 2,
+   "default": "2.5"
+  },
+  {
+   "in": "in_13",
+   "var": "iHamN",
+   "group": "EA · ① setup candle",
+   "title": "InpHamNose — hammer: opposite wick <= x range",
+   "value": 0.5,
+   "default": "0.50"
+  },
+  {
+   "in": "in_14",
+   "var": "iMinAtr",
+   "group": "EA · ① setup candle",
+   "title": "InpMinRangeAtr — candle range >= x ATR(14) (0 = off)",
+   "value": 0.4,
+   "default": "0.55"
+  },
+  {
+   "in": "in_15",
+   "var": "iLRule",
+   "group": "EA · ① on the EMA",
+   "title": "InpLongRule — LONG setups",
+   "value": "Both",
+   "default": "Both"
+  },
+  {
+   "in": "in_16",
+   "var": "iSLine",
+   "group": "EA · ① on the EMA",
+   "title": "InpShortLine — SHORT setups on",
+   "value": "9 EMA",
+   "default": "9 EMA"
+  },
+  {
+   "in": "in_17",
+   "var": "iTouchM",
+   "group": "EA · ① on the EMA",
+   "title": "InpTouchMode",
+   "value": "Candle touches",
+   "default": "Candle touches"
+  },
+  {
+   "in": "in_18",
+   "var": "iTouchP",
+   "group": "EA · ① on the EMA",
+   "title": "InpTouchPips — touch tolerance",
+   "value": 1,
+   "default": "1"
+  },
+  {
+   "in": "in_19",
+   "var": "iLExitAb",
+   "group": "EA · ① on the EMA",
+   "title": "InpLongExitAbove — LONG only when its exit EMA is above the candle",
+   "value": false,
+   "default": "false"
+  },
+  {
+   "in": "in_20",
+   "var": "iBreakB",
+   "group": "EA · ② break · ③ entry · ④ stop",
+   "title": "InpBreakBars — candles allowed for the break",
+   "value": 1,
+   "default": "1"
+  },
+  {
+   "in": "in_21",
+   "var": "iBreakP",
+   "group": "EA · ② break · ③ entry · ④ stop",
+   "title": "InpBreakPips — break must clear the high / low by",
+   "value": 5,
+   "default": "2"
+  },
+  {
+   "in": "in_22",
+   "var": "iSlPips",
+   "group": "EA · ② break · ③ entry · ④ stop",
+   "title": "InpSlPips — stop beyond the candle",
+   "value": 37,
+   "default": "35"
+  },
+  {
+   "in": "in_23",
+   "var": "iMaxRisk",
+   "group": "EA · ② break · ③ entry · ④ stop",
+   "title": "InpMaxRiskUsd — skip if the stop is more than $ away (0 = off)",
+   "value": 11,
+   "default": "15"
+  },
+  {
+   "in": "in_24",
+   "var": "iLTpP",
+   "group": "EA · ⑤ targets",
+   "title": "InpLongTpPips — LONG TP this many pips before the EMA",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_25",
+   "var": "iPivot",
+   "group": "EA · ⑤ targets",
+   "title": "InpSwingPivot — candles each side of a swing",
+   "value": 8,
+   "default": "3"
+  },
+  {
+   "in": "in_26",
+   "var": "iLook",
+   "group": "EA · ⑤ targets",
+   "title": "InpSwingLook — candles back to search",
+   "value": 32,
+   "default": "100"
+  },
+  {
+   "in": "in_27",
+   "var": "iSTpP",
+   "group": "EA · ⑤ targets",
+   "title": "InpShortTpPips — SHORT TP this many pips before the support",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_28",
+   "var": "iMinTp",
+   "group": "EA · ⑤ targets",
+   "title": "InpMinTpPips — target at least this far",
+   "value": 1,
+   "default": "5"
+  },
+  {
+   "in": "in_29",
+   "var": "iMaxTp",
+   "group": "EA · ⑤ targets",
+   "title": "InpMaxTpPips — skip a SHORT whose support is further (0 = off)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_30",
+   "var": "iCloseM",
+   "group": "EA · ⑥ CTC · ⑦ trail · day close",
+   "title": "InpCloseLossMins — this many min before the close shut trades in loss (0 = off)",
+   "value": 1,
+   "default": "3"
+  },
+  {
+   "in": "in_31",
+   "var": "iLTrail",
+   "group": "EA · ⑥ CTC · ⑦ trail · day close",
+   "title": "InpLongTrailUsd — after TP1 trail $ below the market",
+   "value": 0.5,
+   "default": "2.0"
+  },
+  {
+   "in": "in_32",
+   "var": "iSTrail",
+   "group": "EA · ⑥ CTC · ⑦ trail · day close",
+   "title": "InpShortTrailUsd — after TP1 trail $ above the market",
+   "value": 2.5,
+   "default": "2.0"
+  },
+  {
+   "in": "in_33",
+   "var": "iBePct",
+   "group": "EA · ⑥ CTC · ⑦ trail · day close",
+   "title": "InpBeTpPct — CTC: stop to entry at this share of the way to TP1 (0 = off)",
+   "value": 0.6,
+   "default": "0.75"
+  },
+  {
+   "in": "in_34",
+   "var": "iTrAtr",
+   "group": "EA · ⑥ CTC · ⑦ trail · day close",
+   "title": "InpTrailAtr — no-TP1 LONG: trail x ATR behind the best price",
+   "value": 0.2,
+   "default": "2.0"
+  },
+  {
+   "in": "in_35",
+   "var": "iEr",
+   "group": "EA · ✖ filters",
+   "title": "InpChopEr — skip if the efficiency ratio is below (0 = off)",
+   "value": 0.01,
+   "default": "0.11"
+  },
+  {
+   "in": "in_36",
+   "var": "iErLen",
+   "group": "EA · ✖ filters",
+   "title": "InpChopErLook — efficiency ratio length",
+   "value": 16,
+   "default": "16"
+  },
+  {
+   "in": "in_37",
+   "var": "iGap",
+   "group": "EA · ✖ filters",
+   "title": "InpGapCancel — cancel a waiting setup across the daily close / weekend",
+   "value": true,
+   "default": "true"
+  },
+  {
+   "in": "in_38",
+   "var": "iPartial",
+   "group": "EA · partial · money · display",
+   "title": "InpPartialPct — close this share at TP1",
+   "value": 0.95,
+   "default": "0.5"
+  },
+  {
+   "in": "in_39",
+   "var": "iTp1Be",
+   "group": "EA · partial · money · display",
+   "title": "InpTp1Be — after TP1 the stop is never worse than the entry",
+   "value": true,
+   "default": "true"
+  },
+  {
+   "in": "in_40",
+   "var": "iLots",
+   "group": "EA · partial · money · display",
+   "title": "InpLots",
+   "value": 2,
+   "default": "1.0"
+  },
+  {
+   "in": "in_41",
+   "var": "iBuys",
+   "group": "EA · partial · money · display",
+   "title": "InpBuys",
+   "value": true,
+   "default": "true"
+  },
+  {
+   "in": "in_42",
+   "var": "iSells",
+   "group": "EA · partial · money · display",
+   "title": "InpSells",
+   "value": true,
+   "default": "true"
+  },
+  {
+   "in": "in_43",
+   "var": "iSkips",
+   "group": "EA · partial · money · display",
+   "title": "InpDrawSkips — also label skipped setups",
+   "value": true,
+   "default": "false"
+  },
+  {
+   "in": "in_44",
+   "var": "iCloseT",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Day close (EA reads it from the broker: PXBT 20:59, Axi 23:59 = 4:59 PM New York)",
+   "value": "16:59",
+   "default": "16:59"
+  },
+  {
+   "in": "in_45",
+   "var": "iCloseTz",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Day close timezone",
+   "value": "America/New_York",
+   "default": "America/New_York"
+  },
+  {
+   "in": "in_46",
+   "var": "iCs",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Contract size ($ per $1 per lot)",
+   "value": 100,
+   "default": "100"
+  },
+  {
+   "in": "in_47",
+   "var": "iSpread",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Spread, $ of price (PXBT XAUUSDp 0.17)",
+   "value": 0.17,
+   "default": "0.17"
+  },
+  {
+   "in": "in_48",
+   "var": "iComm",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Commission per lot, round trip $",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_49",
+   "var": "iPanel",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Show the stats panel",
+   "value": true,
+   "default": "true"
+  },
+  {
+   "in": "in_50",
+   "var": "iLog",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Write every setup / entry / stop move / exit to the Pine Logs",
+   "value": false,
+   "default": "false"
+  },
+  {
+   "in": "in_51",
+   "var": "iDrawTo",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Draw labels only up to this time (0 = all; TradingView keeps the newest 500 labels)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_52",
+   "var": "iShowRules",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Show today's trades box (top right)",
+   "value": true,
+   "default": "true"
+  },
+  {
+   "in": "in_53",
+   "var": "iDayTz",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Today's trades box: MT5 server timezone (PXBT = UTC+0)",
+   "value": "UTC+0",
+   "default": "UTC+0"
+  },
+  {
+   "in": "in_54",
+   "var": "iDetailDays",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Detail tags (setups, skips, BE/TP, exit X) only for the last N days - TradingView keeps 500 labels, so the BUY/SELL + EXIT labels of the whole month always fit",
+   "value": 3,
+   "default": "3"
+  },
+  {
+   "in": "in_55",
+   "var": "iSkipBoth",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Skip a setup candle that touches BOTH EMAs (9 and 50) - not in the EA",
+   "value": false,
+   "default": "false"
+  },
+  {
+   "in": "in_56",
+   "var": "iTightTrail",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Tight trail: when InpTrailAtr would put the stop above the price, put it 1 pip under the candle close instead of not moving it - not in the EA yet",
+   "value": false,
+   "default": "false"
+  },
+  {
+   "in": "in_57",
+   "var": "pkApply",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "Apply to",
+   "value": "All trades",
+   "default": "No-TP1 longs only"
+  },
+  {
+   "in": "in_58",
+   "var": "pkStart",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "Start: giveback / $ trail / ATR / candle / EMA only once the trade is this many $ in profit",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_59",
+   "var": "pkBeUsd",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "① Breakeven: stop to the entry once $X in profit (0 = off)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_60",
+   "var": "pkBeOff",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "    ...and lock this many $ beyond the entry",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_61",
+   "var": "pkLockAt",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "② Lock: once $X in profit... (0 = off)",
+   "value": 2,
+   "default": "0"
+  },
+  {
+   "in": "in_62",
+   "var": "pkLockUsd",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "    ...lock the stop this many $ beyond the entry",
+   "value": 5.5,
+   "default": "0"
+  },
+  {
+   "in": "in_63",
+   "var": "pkStep",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "③ Ladder (with ②): every further $X of profit raises the lock by $X (0 = off)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_64",
+   "var": "pkGive",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "④ Giveback: keep (100 - X)% of the best profit, e.g. 30 = give back 30% (0 = off)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_65",
+   "var": "pkTrail",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "⑤ $ trail: stop this many $ behind the best price (0 = off)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_66",
+   "var": "pkAtr",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "⑥ ATR trail: stop this many x ATR behind the best price (0 = off)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_67",
+   "var": "pkLowN",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "⑦ Candle trail: stop under the lowest low of the last N closed candles (0 = off)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_68",
+   "var": "pkEma",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "⑧ EMA trail: stop 1 pip under this EMA of the closed candle (0 = off)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_69",
+   "var": "pkGap",
+   "group": "STOP NEAR PEAK (chart-only, not in the EA yet)",
+   "title": "⑨ ATR-trail gap: when InpTrailAtr moves the stop, keep it at least $X under the candle close (0 = off)",
+   "value": 0.1,
+   "default": "0"
+  },
+  {
+   "in": "in_70",
+   "var": "enMode",
+   "group": "ENTRY + CUT LOSERS EARLY (chart-only, not in the EA yet)",
+   "title": "Entry: wick break of the setup candle, or wait for a candle CLOSE beyond it (enter at the next open)",
+   "value": "Wick break (EA)",
+   "default": "Wick break (EA)"
+  },
+  {
+   "in": "in_71",
+   "var": "adRunN",
+   "group": "ENTRY + CUT LOSERS EARLY (chart-only, not in the EA yet)",
+   "title": "Cut: N candles in a row against the trade while in loss -> close at the next open (0 = off)",
+   "value": 6,
+   "default": "0"
+  },
+  {
+   "in": "in_72",
+   "var": "adBars",
+   "group": "ENTRY + CUT LOSERS EARLY (chart-only, not in the EA yet)",
+   "title": "Cut: still in loss after N candles -> close at the next open (0 = off)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_73",
+   "var": "adEmaX",
+   "group": "ENTRY + CUT LOSERS EARLY (chart-only, not in the EA yet)",
+   "title": "Cut: a candle closes beyond the slow EMA against the trade while in loss -> close at the next open",
+   "value": false,
+   "default": "false"
+  },
+  {
+   "in": "in_74",
+   "var": "adMaxUsd",
+   "group": "ENTRY + CUT LOSERS EARLY (chart-only, not in the EA yet)",
+   "title": "Cut: max loss - stop no further than $X from the entry (0 = off, the EA's stop)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_75",
+   "var": "rpLook",
+   "group": "TOP / BOTTOM FILTER (chart-only, not in the EA yet)",
+   "title": "BUY: range = the last N closed candles",
+   "value": 7,
+   "default": "20"
+  },
+  {
+   "in": "in_76",
+   "var": "rpMax",
+   "group": "TOP / BOTTOM FILTER (chart-only, not in the EA yet)",
+   "title": "BUY: skip entering ABOVE X% of that range (0 = off; over 100 = a new high)",
+   "value": 50,
+   "default": "0"
+  },
+  {
+   "in": "in_77",
+   "var": "rpDiag",
+   "group": "TOP / BOTTOM FILTER (chart-only, not in the EA yet)",
+   "title": "Show the diagnostics table: this month's trades by how near the top (BUY) / bottom (SELL) they entered",
+   "value": true,
+   "default": "false"
+  },
+  {
+   "in": "in_78",
+   "var": "coolN",
+   "group": "COOL-DOWN AFTER AN EXIT (chart-only, not in the EA yet)",
+   "title": "No new trade for N candles after a trade closes (0 = off; 2 = the exit candle + the next 2)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_79",
+   "var": "coolDir",
+   "group": "COOL-DOWN AFTER AN EXIT (chart-only, not in the EA yet)",
+   "title": "...blocks",
+   "value": "Both directions",
+   "default": "Same direction"
+  },
+  {
+   "in": "in_80",
+   "var": "coolWin",
+   "group": "COOL-DOWN AFTER AN EXIT (chart-only, not in the EA yet)",
+   "title": "...only after a WINNING exit",
+   "value": false,
+   "default": "false"
+  },
+  {
+   "in": "in_81",
+   "var": "fxOn",
+   "group": "FAILED ENTRY EXIT (chart-only, not in the EA yet)",
+   "title": "Exit when the candle AFTER the entry candle closes beyond it: BUY below its low, SELL above its open/high -> out at the next open",
+   "value": false,
+   "default": "false"
+  },
+  {
+   "in": "in_82",
+   "var": "fxSellRef",
+   "group": "FAILED ENTRY EXIT (chart-only, not in the EA yet)",
+   "title": "...SELL: the line it must close above",
+   "value": "Entry candle's open",
+   "default": "Entry candle's open"
+  },
+  {
+   "in": "in_83",
+   "var": "lsFrom",
+   "group": "TRADES BOX DATE RANGE (chart-only)",
+   "title": "Top-right box: list the trades closed from this date (0 = today + yesterday)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_84",
+   "var": "lsTo",
+   "group": "TRADES BOX DATE RANGE (chart-only)",
+   "title": "...up to this date (0 = now)",
+   "value": 0,
+   "default": "0"
+  },
+  {
+   "in": "in_85",
+   "var": "rpMin",
+   "group": "TOP / BOTTOM FILTER (chart-only, not in the EA yet)",
+   "title": "BUY: skip entering BELOW X% of the range (0 = off; with the max = keep only a band, e.g. 25-55)",
+   "value": 25,
+   "default": "0"
+  },
+  {
+   "in": "in_86",
+   "var": "iDetMax",
+   "group": "CHART ONLY (not in the EA)",
+   "title": "Detail tags (setups, skips, BE/TP, exit X): keep at most N - the rest of TradingView's 500 labels stays for BUY / SELL / EXIT",
+   "value": 200,
+   "default": "200"
+  },
+  {
+   "in": "in_87",
+   "var": "exOn",
+   "group": "TRADES BOX DATE RANGE (chart-only)",
+   "title": "Trade export table (bottom centre): every trade with entry / exit times (UTC), for comparing with MT5 - uses the date range above, else all trades",
+   "value": false,
+   "default": "false"
+  },
+  {
+   "in": "in_88",
+   "var": "rpLookS",
+   "group": "TOP / BOTTOM FILTER (chart-only, not in the EA yet)",
+   "title": "TOP / BOTTOM · SELL: range = the last N closed candles",
+   "value": 7,
+   "default": "20"
+  },
+  {
+   "in": "in_89",
+   "var": "rpMaxS",
+   "group": "TOP / BOTTOM FILTER (chart-only, not in the EA yet)",
+   "title": "TOP / BOTTOM · SELL: skip entering LOWER than X% from the top of that range (0 = off; over 100 = a new low)",
+   "value": 35,
+   "default": "0"
+  },
+  {
+   "in": "in_90",
+   "var": "rpMinS",
+   "group": "TOP / BOTTOM FILTER (chart-only, not in the EA yet)",
+   "title": "TOP / BOTTOM · SELL: skip entering HIGHER than X% from the top (0 = off; with the max = keep only a band)",
+   "value": 30,
+   "default": "0"
+  }
+ ]
+}
