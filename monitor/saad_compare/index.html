@@ -51,6 +51,12 @@ code { font-size: 12px; }
 .sync .st.issue { color: var(--loss); } .sync .st.fixed { color: var(--accent); } .sync .st.ok { color: var(--win); } .sync .st.info { color: var(--muted); }
 .sync .d { color: var(--muted); font-size: 12.5px; margin-top: 2px; overflow-wrap: anywhere; }
 .sync .sum { font-size: 13px; color: var(--muted); }
+.yr td.bar { width: 28%; min-width: 120px; }
+.yr .b { height: 10px; border-radius: 3px; display: inline-block; vertical-align: middle; }
+.yr .b.w { background: var(--win); } .yr .b.l { background: var(--loss); }
+.yr tr.tot td { font-weight: 700; border-top: 2px solid var(--line); }
+.yr .chg { font-size: 12.5px; color: var(--muted); margin: 6px 0 2px; overflow-wrap: anywhere; }
+.yr .run { color: var(--accent); } .yr .q { color: var(--muted); }
 .doc { line-height: 1.55; }
 .doc h3 { font-size: 14px; margin: 18px 0 6px; }
 .doc p, .doc li { max-width: 980px; }
@@ -117,6 +123,25 @@ code { font-size: 12px; }
         <tbody id="rows"><tr><td class="l" colspan="11">-</td></tr></tbody>
       </table>
     </div>
+  </div>
+
+  <div class="card yr" id="yearCard">
+    <h2>10 months in MT5 with the chart's settings <span class="sum" id="yrSum" style="font-weight:400;color:var(--muted);font-size:13px"></span></h2>
+    <div class="controls" style="margin-bottom:8px">
+      <label style="flex-direction:row;align-items:center;gap:6px;color:var(--ink)"><input type="checkbox" id="yrAuto" checked> re-run by itself when I change a setting on the chart</label>
+      <label>Execution delay
+        <select id="yrDelay"><option value="-1">random (realistic)</option><option value="0">none (same numbers every run)</option></select></label>
+      <button id="yrRun" class="ghost">Run now</button>
+    </div>
+    <div class="chg" id="yrChg"></div>
+    <div class="scroll" style="max-height:none">
+      <table>
+        <thead><tr><th class="l">Month</th><th>Trades</th><th>Win rate</th><th>Net</th><th>vs before</th><th>PF</th><th>Green days</th><th class="l bar">Net</th><th class="l">MT5</th></tr></thead>
+        <tbody id="yrRows"><tr><td class="l" colspan="9">-</td></tr></tbody>
+      </table>
+    </div>
+    <div class="chg">Axi XAUUSD_TK real ticks, Jan – 8 Oct 2026, one MT5 pass per month on 6 rigs in parallel (~40 s); a pass already run with the same settings shows at once.
+      The EA reads MT5's own candles here (the chart holds only ~5 days of 1-minute history). Settings that exist only on the chart do not change these numbers.</div>
   </div>
 
   <div class="card"><details><summary>Settings sent to the EA</summary><div id="sets" style="margin-top:10px"></div></details></div>
@@ -225,6 +250,15 @@ mt5/Saad_strategy_1min.mq5  InpBarSource=1  (FILE_COMMON, so the tester agents a
           <li>Fixes on its own: re-exports the candle file (merge, never shrink), recompiles the EA if Blueberry's .ex5 is older than the code, corrects the page's server time.</li>
           <li>Reports the rest: wrong symbol or timeframe, chart-only settings, settings changed since the last MT5 run, unmatched trades (each with a reason), and exits in a different minute.</li>
         </ul></li>
+      <li><b>10 months in MT5</b> (<code>year_runner.py</code>, <code>GET/POST /api/year</code>), started with the server:
+        <ul>
+          <li><b>Watching:</b> a thread reads the chart's settings every 2 s (<code>server.read_settings</code>, one CDP call). Only the mapped EA inputs count, so chart-only and display settings never trigger a run.</li>
+          <li><b>On a change:</b> once the change has held for one more poll, the run in progress is cancelled (<code>axi_rig.run(cancel=…)</code> kills the rig's terminal) and Jan–Oct 2026 is queued as 10 one-month passes (<code>ToDate</code> is exclusive: 1st → next 1st).</li>
+          <li><b>Running:</b> the passes spread over 6 portable rigs, <code>C:\mt5_rig_axi2</code>–<code>axi7</code> (axi5–7 copied from axi4 on 16 Oct; "axi" stays free for the compare runs). XAUUSD_TK real ticks, 100,000 deposit, <code>InpBarSource=0</code> (MT5's own candles).</li>
+          <li><b>Speed:</b> one pass takes ~19 s alone and 50–90 s with 6 in parallel, so an uncached batch is ~1.5 min.</li>
+          <li><b>Cache:</b> results are kept in <code>why_out\year_cache.json</code>, keyed by settings + delay + the EA source's mtime, so going back to a setting is instant.</li>
+          <li><b>Empty passes:</b> a pass that processes no ticks (quality without "real ticks", 0 trades) is a tester hiccup seen with parallel starts. It is retried up to 3 times and never cached.</li>
+        </ul></li>
       <li><b>After a restart:</b> <code>ensure_up.py --watch</code> starts at logon from <code>Startup\saad_compare_page.vbs</code> (pythonw, no window) and restarts <code>server.py</code> within 20 s if it dies. By hand: <code>py monitor\saad_compare\ensure_up.py --open</code> or <code>start_compare_page.bat</code>. A page served from 127.0.0.1 cannot start its own server, so this is the way. Full guide: <code>saad_strategy_1min_optimized\claude_read_me.md</code>.</li>
       <li><b>Records:</b> commits <code>9cd4eec8</code> (v1.03) and <code>39d238e4</code> (v1.04); VERSION.md and VERSION_HISTORY.md; memory <code>project_tv_bars_bridge.md</code>.</li>
     </ul>
@@ -329,6 +363,56 @@ $('btnMt5').onclick = () => {
   call('/api/mt5', { from: $('from').value, to: $('to').value, symbol: $('symbol').value, offset: $('offset').value, delay: $('delay').value },
        'Reading TradingView, then running the MT5 Strategy Tester on Axi… (a week of 1-minute ticks takes about 30 s – 3 min)');
 };
+// ── 10 months in MT5 ──────────────────────────────────────────────────────
+const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+let Y = null, yrBusy = false;
+const pct = s => parseFloat(String(s || '0').replace('%', '')) || 0;
+function renderYear() {
+  if (!Y) return;
+  $('yrAuto').checked = Y.auto; $('yrDelay').value = Y.delay;
+  const rows = Y.order.map(m => ({ m, v: Y.months[m] || { status: 'idle' } }));
+  const done = rows.filter(r => r.v.status === 'done' && r.v.result && r.v.result.net != null);
+  const mx = Math.max(1, ...done.map(r => Math.abs(r.v.result.net)));
+  const prev = Y.prev || {};
+  let T = { n: 0, w: 0, net: 0, pn: 0, pc: 0, gd: 0, d: 0 };
+  $('yrRows').innerHTML = rows.map(({ m, v }) => {
+    const name = MN[+m.slice(5) - 1] + ' ' + m.slice(0, 4) + (m === '2026.10' ? ' (1-8)' : '');
+    if (v.status !== 'done') {
+      const st = v.status === 'running' ? `<span class="run">running on ${v.rig} · ${Math.round(Date.now() / 1000 - v.since)} s</span>`
+               : v.status === 'error' ? `<span class="loss">${esc((v.result || {}).error || 'error')}</span>` : `<span class="q">${v.status}</span>`;
+      return `<tr><td class="l">${name}</td><td colspan="7" class="l">${st}</td><td class="l"></td></tr>`;
+    }
+    const r = v.result, n = r.trades || 0, wr = pct(r.wr);
+    T.n += n; T.w += n * wr / 100; T.net += r.net; T.gd += r.green || 0; T.d += r.days || 0;
+    const p = prev[m]; let dlt = '';
+    if (p && p.net != null) { const d = r.net - p.net; T.pn += d; T.pc++; dlt = `<span class="${d >= 0 ? 'win' : 'loss'}">${d >= 0 ? '+' : ''}${fmt(d).replace(/^\+/, '')}</span>`; }
+    const w = Math.round(Math.abs(r.net) / mx * 100);
+    return `<tr><td class="l">${name}</td><td>${n}</td><td>${wr.toFixed(1)}%</td><td class="${cls(r.net)}">${fmt(r.net)}</td><td>${dlt}</td>
+      <td>${esc(r.pf)}</td><td>${r.green ?? '-'} / ${r.days ?? '-'}</td><td class="l bar"><span class="b ${r.net >= 0 ? 'w' : 'l'}" style="width:${w}%"></span></td>
+      <td class="l" style="color:var(--muted)">${v.cached ? 'cached' : (v.rig || '') + (v.secs ? ' · ' + v.secs + ' s' : '')}</td></tr>`;
+  }).join('') + (done.length ? `<tr class="tot"><td class="l">${done.length} month${done.length > 1 ? 's' : ''}</td><td>${T.n}</td>
+      <td>${T.n ? (T.w / T.n * 100).toFixed(1) : '0'}%</td><td class="${cls(T.net)}">${fmt(T.net)}</td>
+      <td>${T.pc ? `<span class="${T.pn >= 0 ? 'win' : 'loss'}">${T.pn >= 0 ? '+' : ''}${fmt(T.pn).replace(/^\+/, '')}</span>` : ''}</td>
+      <td></td><td>${T.gd} / ${T.d}</td><td></td><td></td></tr>` : '');
+  const green = done.filter(r => r.v.result.net > 0).length;
+  $('yrSum').textContent = Y.error ? '· ' + Y.error : Y.running ? `· running… ${Y.elapsed ?? 0} s (${done.length} of ${rows.length} months)`
+    : Y.at ? `· ${done.length} months, ${green} green · settings of ${Y.at}, took ${Y.elapsed} s` : '· waiting for the chart';
+  const ch = (Y.changed || []).map(c => `${c.k} ${c.was} → ${c.now}`).join(', ');
+  $('yrChg').innerHTML = (ch ? `<b>Changed since the run before:</b> ${esc(ch)} - "vs before" shows its effect per month.` : '')
+    + (Y.notes && Y.notes.length ? `<div class="warn" style="margin-top:6px">${Y.notes.map(esc).join('<br>')}</div>` : '');
+}
+async function pollYear() {
+  try { Y = await (await fetch('/api/year')).json(); renderYear(); } catch (e) { $('yrSum').textContent = '· page server not answering'; }
+  setTimeout(pollYear, Y && Y.running ? 1000 : 2500);
+}
+async function setYear(body) {
+  try { Y = await (await fetch('/api/year', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })).json(); renderYear(); } catch (e) {}
+}
+$('yrAuto').onchange = () => setYear({ auto: $('yrAuto').checked });
+$('yrDelay').onchange = () => setYear({ delay: $('yrDelay').value });
+$('yrRun').onclick = () => setYear({ run: true });
+pollYear();
+
 $('btnSync').onclick = () => call('/api/sync', { offset: $('offset').value },
   'Checking sync: the chart, its candles vs the file the EA reads, the EA build, server time, and the last MT5 run trade by trade…');
 $('onlyChart').onchange = render;

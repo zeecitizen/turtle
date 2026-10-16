@@ -101,7 +101,9 @@ def money(s):
     return float(s.replace("−", "-"))
 
 
-def read_tv():
+def read_settings():
+    """The indicator's settings only (one quick CDP call, no trade table) -> (study info, settings, EA inputs, notes).
+    The year view polls this every 2 s to see a setting change."""
     st = tv_eval(JS_STUDY)
     if "error" in st:
         raise RuntimeError(st["error"])
@@ -110,6 +112,29 @@ def read_tv():
     if len(names) != len(vals):
         raise RuntimeError(f"the chart has {len(vals)} settings but pine/saad_15min.pine declares {len(names)} - update the indicator on the chart")
     settings = dict(zip(names, vals))
+    sets, notes = ea_sets_from(settings)
+    return st, settings, sets, notes
+
+
+def ea_sets_from(settings):
+    sets, notes = {}, []
+    for pv, ea in DIRECT.items():
+        v = settings.get(pv)
+        sets[ea] = ("true" if v else "false") if isinstance(v, bool) else str(v)
+    for pv, (ea, m) in CHOICES.items():
+        sets[ea] = str(m.get(settings.get(pv), 0))
+    if settings.get("pkLockAt", 0) and settings.get("pkApply") != "All trades":
+        notes.append("Lock is set to 'No-TP1 longs only' on the chart; the EA's lock (InpLockAtUsd) applies to ALL trades")
+    for pv, off, what in NOT_IN_EA:
+        if settings.get(pv, off) != off:
+            notes.append(f"{what} is ON on the chart but the EA does not have it - MT5 runs without it")
+    sets["InpLogCsv"] = "false"
+    return sets, notes
+
+
+def read_tv():
+    st, settings, sets, notes = read_settings()
+    names = pine_inputs()
     ex_idx = names.index("exOn")
     was = settings["exOn"]
     rows = []
@@ -135,18 +160,6 @@ def read_tv():
             continue
         trades.append({"num": c[0], "side": c[1], "in": c[2], "en": float(c[3]), "sl": float(c[4]), "out": c[5],
                        "ex": float(c[6]), "pnl": money(c[7]), "why": c[8] if len(c) > 8 else ""})
-    sets, notes = {}, []
-    for pv, ea in DIRECT.items():
-        v = settings.get(pv)
-        sets[ea] = ("true" if v else "false") if isinstance(v, bool) else str(v)
-    for pv, (ea, m) in CHOICES.items():
-        sets[ea] = str(m.get(settings.get(pv), 0))
-    if settings.get("pkLockAt", 0) and settings.get("pkApply") != "All trades":
-        notes.append("Lock is set to 'No-TP1 longs only' on the chart; the EA's lock (InpLockAtUsd) applies to ALL trades")
-    for pv, off, what in NOT_IN_EA:
-        if settings.get(pv, off) != off:
-            notes.append(f"{what} is ON on the chart but the EA does not have it - MT5 runs without it")
-    sets["InpLogCsv"] = "false"
     return {"symbol": st["symbol"], "res": st["res"], "period": PERIODS.get(st["res"], "M1"), "settings": settings,
             "ea_sets": sets, "notes": notes, "trades": trades, "read_at": datetime.now().strftime("%H:%M:%S")}
 
@@ -260,6 +273,18 @@ def run_mt5(frm, to, symbol, offset_h, delay):
             "delay": delay, "ran_at": datetime.now().strftime("%H:%M:%S"), "sets_used": dict(tvd["ea_sets"])}
 
 
+_YEAR = None
+
+
+def year():
+    """The "10 months in MT5" runner (year_runner.py): started with the server, watches the chart's settings."""
+    global _YEAR
+    if _YEAR is None:
+        import year_runner
+        _YEAR = year_runner.YearRunner()
+    return _YEAR
+
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
@@ -277,11 +302,19 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, (HERE / "index.html").read_text(encoding="utf-8"), "text/html")
         if self.path == "/api/state":
             return self.send(200, json.dumps(STATE))
+        if self.path == "/api/year":
+            return self.send(200, json.dumps(year().state()))
         self.send(404, "{}")
 
     def do_POST(self):
         n = int(self.headers.get("Content-Length", 0) or 0)
         q = json.loads(self.rfile.read(n) or b"{}")
+        if self.path == "/api/year":                 # quick: never waits for the page's lock
+            try:
+                year().configure(q)
+                return self.send(200, json.dumps(year().state()))
+            except Exception as e:
+                return self.send(500, json.dumps({"error": str(e)}))
         if not LOCK.acquire(blocking=False):
             return self.send(409, json.dumps({"error": f"busy: {STATE['busy']}"}))
         try:
@@ -311,4 +344,5 @@ class H(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     print(f"Saad compare page: http://127.0.0.1:{PORT}")
+    year()
     ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()
