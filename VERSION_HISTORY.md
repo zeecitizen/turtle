@@ -16,6 +16,21 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.07 (2026-10-16) — TP1 METHOD: normal / fixed $ / Fibonacci / partial
+
+Zee: *"161.8 fibonnacci option in the Exit Lab table.. can u add it as a configurable setting in the settings of the indicator?"* · *"yes add Fixed Target TP for both sells and buys as a setting"* · *"partial half at +2 and trails at 2, add it as a configurable option as well in the settings"*
+
+- **Indicator:** one "TP1 METHOD" choice in ④ TAKE PROFIT, with each option's numbers labelled:
+  - Normal: BUY = touch of the other EMA, SELL = last swing low (the default; unchanged).
+  - Fixed $ target: BUY entry + $X, SELL entry - $X.
+  - Fibonacci extension of the setup candle: BUY low + X% of its range, SELL high - X% (161.8).
+  - Partial: close a share (0.5) at the fixed $ target, then trail the rest $X ($2). It uses its own share and trail instead of ⑤ AFTER TP1's.
+  - For the fixed / Fibonacci methods, ⑤ AFTER TP1 applies at TP1 (Zee's 0.95 share, then the trails).
+  - A BUY with a fixed-price TP1 waits for that price instead of the EMA touch; CTC is measured to it.
+  - A target that is not the minimum TP1 distance beyond the entry falls back to the normal TP1.
+- **EA:** `InpTpMode` 0-3 + `InpTpFixUsdB/S`, `InpTpFibPct`, `InpTpPartPct`, `InpTpPartTrailUsd`. A fixed-price LONG TP1 uses the resistance-TP1 path, with no ride before the target. `PartPct()`, `TrailL()`, `TrailS()` pick the partial method's share and trail. The compare page maps the chart's choice.
+- Default = normal, so results are unchanged until the method is switched. Judge a method on the 10-month view, not the 6-day EXIT LAB sketch.
+
 ## Saad_strategy_1min v1.06 (2026-10-16) — higher-timeframe trend table + filter
 
 Zee: *"below the top left panel Entry position in the range. add another panel which shows the effect of :: If we were to enable alignment with higher time frame. for example: Require 5 min trend alignment | winrate / net for the month ... Require 4 hour trend alignment"*

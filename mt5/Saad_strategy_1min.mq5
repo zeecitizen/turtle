@@ -23,6 +23,7 @@
 //|        InpNoEntryExitBar - no entry in the candle of an exit       |
 //| v1.05: InpBandsB / InpBandsS - 21 range tick-boxes (5% each)     |
 //| v1.06: InpHtfMin also 5 (the chart's "Require trend alignment")  |
+//| v1.07: InpTpMode - TP1 method: normal / fixed $ / Fib / partial   |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -61,7 +62,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.06"
+#property version   "1.07"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -72,7 +73,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.06"
+#define EA_COMMENT "Saad1m v1.07"
 
 //--- the two lines
 input int    InpEmaFast     = 3;      // InpEmaFast
@@ -228,6 +229,12 @@ input int    InpUsdTrailMode = 1;     // InpUsdTrailMode - the $ trail after TP1
 input bool   InpNoEntryExitBar = true; // InpNoEntryExitBar - no new trade in the candle where the last one closed (the chart's minute-by-minute engine)
 input string InpBandsB      = "111111111111111111111"; // InpBandsB - BUY ranges of the last InpRangeLook candles, one digit each: 0-5%, 5-10% ... 95-100%, over 100% (1 = trade, 0 = skip) - the chart's TOP / BOTTOM tick-boxes
 input string InpBandsS      = "111111111111111111111"; // InpBandsS - SELL ranges, measured down from the high, same 21 digits
+input int    InpTpMode      = 0;      // InpTpMode - TP1 method: 0 normal (BUY other-EMA touch, SELL last swing low) · 1 fixed $ · 2 Fibonacci extension of the setup candle · 3 partial (a share at the fixed $, the rest trails)
+input double InpTpFixUsdB   = 2.0;    // InpTpFixUsdB - modes 1 / 3: BUY TP1 = the entry + $X
+input double InpTpFixUsdS   = 2.0;    // InpTpFixUsdS - modes 1 / 3: SELL TP1 = the entry - $X
+input double InpTpFibPct    = 161.8;  // InpTpFibPct - mode 2: BUY TP1 = setup low + X% of its range, SELL = setup high - X%
+input double InpTpPartPct   = 0.5;    // InpTpPartPct - mode 3: close this share at the target (instead of InpPartialPct)
+input double InpTpPartTrailUsd = 2.0; // InpTpPartTrailUsd - mode 3: the rest trails $X (instead of InpLongTrailUsd / InpShortTrailUsd)
 
 CTrade   trade;
 int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE;
@@ -261,6 +268,10 @@ int g_setups = 0, g_entries = 0, g_skipBreak = 0, g_skipGap = 0, g_skipRisk = 0,
     g_busy = 0, g_rides = 0, g_lockFail = 0, g_dayStop = 0, g_filtered = 0;
 
 double Pip() { return InpPipPts * _Point; }
+// v1.07 TP1 METHOD 3 (partial) brings its own share and trail
+double PartPct() { return InpTpMode == 3 ? InpTpPartPct : InpPartialPct; }
+double TrailL()  { return InpTpMode == 3 ? InpTpPartTrailUsd : InpLongTrailUsd; }
+double TrailS()  { return InpTpMode == 3 ? InpTpPartTrailUsd : InpShortTrailUsd; }
 double Buf(int h, int s) { double v[1]; return CopyBuffer(h, 0, s, 1, v) == 1 ? v[0] : 0.0; }
 //--- v1.04 (Zee 2026-10-16: "the only way we can succeed is to sync both mt5 with tradingview"): every candle, EMA and ATR
 // the strategy judges comes from ONE place. InpBarSource 1 = the TradingView chart's own candles, so the EA sees the
@@ -373,7 +384,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.06 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.07 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -619,7 +630,7 @@ void DrawExit(PosState &p)
    pnl = prof + comm + swp;
    string why = p.why;
    if (reason == DEAL_REASON_SL)
-      why = p.usdTrail ? StringFormat("trailing stop ($%.0f) after TP%d", p.side > 0 ? InpLongTrailUsd : InpShortTrailUsd, p.tpStage - 1) : MathAbs(p.slNow - p.entry) < _Point ? "breakeven (CTC)"
+      why = p.usdTrail ? StringFormat("trailing stop ($%.0f) after TP%d", p.side > 0 ? TrailL() : TrailS(), p.tpStage - 1) : MathAbs(p.slNow - p.entry) < _Point ? "breakeven (CTC)"
           : (p.ride || (p.side > 0 ? p.slNow > p.entry : p.slNow < p.entry)) ? "trailing stop" : "stop loss";
    else if (reason == DEAL_REASON_TP) why = p.side > 0 ? "TP (last resistance)" : "TP (last support)";
    else if (why == "") why = "closed";
@@ -709,9 +720,9 @@ bool TpReached(int i, double tpLv)
 // v1.12: bank part of the position at TP1
 void PartialAtTp1(int i)
 {
-   if (InpPartialPct <= 0 || !PositionSelectByTicket(g_pos[i].ticket)) return;
+   if (PartPct() <= 0 || !PositionSelectByTicket(g_pos[i].ticket)) return;
    double vol = PositionGetDouble(POSITION_VOLUME), step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP), mn = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
-   double part = MathFloor(vol * InpPartialPct / step) * step;
+   double part = MathFloor(vol * PartPct() / step) * step;
    if (part >= mn && vol - part >= mn - 1e-9 && trade.PositionClosePartial(g_pos[i].ticket, NormalizeDouble(part, 2))) {
       g_partials++;
       Log(StringFormat("#%d TP1: closed %.2f of %.2f lots", g_pos[i].num, part, vol));
@@ -725,7 +736,7 @@ void LongTouched(int i, double bid)
    g_pos[i].ride = true; g_pos[i].usdTrail = true; g_rides++;
    if (!PositionSelectByTicket(g_pos[i].ticket)) return;
    double cur = PositionGetDouble(POSITION_SL);
-   double sl = NormalizeDouble(MathMax(cur, bid - InpLongTrailUsd), _Digits);
+   double sl = NormalizeDouble(MathMax(cur, bid - TrailL()), _Digits);
    if (InpTp1Be && g_pos[i].entry < bid) sl = NormalizeDouble(MathMax(sl, g_pos[i].entry), _Digits);
    double res = InpLongResTp ? LastResistance(bid + InpMinTpPips * Pip()) : 0;
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
@@ -734,9 +745,9 @@ void LongTouched(int i, double bid)
    g_pos[i].tpNext = res; g_pos[i].tpStage = 2; g_pos[i].tp1At = TimeCurrent();
    g_pos[i].tps = res > 0 ? "TP2 " + Px(res) : "TP2 none";
    Log(StringFormat("#%d TP1: %s @ %s (entry %s, +$%.2f) | SL -> %s ($%.2f trail) | TP2 %s",
-                    g_pos[i].num, g_pos[i].resTp1 ? "resistance " + Px(g_pos[i].tp) + " reached" : StringFormat("%d EMA touched", g_pos[i].exitE), Px(bid), Px(g_pos[i].entry), bid - g_pos[i].entry, Px(sl), InpLongTrailUsd,
+                    g_pos[i].num, g_pos[i].resTp1 ? "resistance " + Px(g_pos[i].tp) + " reached" : StringFormat("%d EMA touched", g_pos[i].exitE), Px(bid), Px(g_pos[i].entry), bid - g_pos[i].entry, Px(sl), TrailL(),
                     res > 0 ? Px(res) + " (last resistance)" : "none above"));
-   string note = StringFormat("TP1: %s -> trail $%.2f below%s", g_pos[i].resTp1 ? "resistance reached" : StringFormat("%d EMA touched", g_pos[i].exitE), InpLongTrailUsd,
+   string note = StringFormat("TP1: %s -> trail $%.2f below%s", g_pos[i].resTp1 ? "resistance reached" : StringFormat("%d EMA touched", g_pos[i].exitE), TrailL(),
                               res > 0 ? StringFormat(", TP2 %.2f (last resistance)", res) : ", no resistance above");
    Callout(TimeCurrent(), bid, true, 1.5, note, InpLongColor, 8);
    if (res > 0) DLine(TimeCurrent(), res, TimeCurrent() + 8 * PeriodSeconds(), res, clrLime, STYLE_DASH, 1, "TP2: last resistance");
@@ -750,7 +761,7 @@ void ShortTouched(int i, double bid)
    if (!PositionSelectByTicket(g_pos[i].ticket)) return;
    double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double cur = PositionGetDouble(POSITION_SL);
-   double sl = NormalizeDouble(cur > 0 ? MathMin(cur, ask + InpShortTrailUsd) : ask + InpShortTrailUsd, _Digits);
+   double sl = NormalizeDouble(cur > 0 ? MathMin(cur, ask + TrailS()) : ask + TrailS(), _Digits);
    if (InpTp1Be && g_pos[i].entry > ask) sl = NormalizeDouble(MathMin(sl, g_pos[i].entry), _Digits);
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
    if (sl <= ask + lvl) sl = cur;
@@ -759,9 +770,9 @@ void ShortTouched(int i, double bid)
    g_pos[i].tpNext = sup; g_pos[i].tpStage = 2; g_pos[i].tp1At = TimeCurrent();
    g_pos[i].tps = sup > 0 ? "TP2 " + Px(sup) : "TP2 none";
    Log(StringFormat("#%d TP1: support reached @ %s (entry %s, +$%.2f) | SL -> %s ($%.2f trail) | TP2 %s",
-                    g_pos[i].num, Px(bid), Px(g_pos[i].entry), g_pos[i].entry - bid, Px(sl), InpShortTrailUsd,
+                    g_pos[i].num, Px(bid), Px(g_pos[i].entry), g_pos[i].entry - bid, Px(sl), TrailS(),
                     sup > 0 ? Px(sup) + " (next support)" : "none below"));
-   string note = StringFormat("TP1: support reached -> trail $%.2f above%s", InpShortTrailUsd,
+   string note = StringFormat("TP1: support reached -> trail $%.2f above%s", TrailS(),
                               sup > 0 ? StringFormat(", TP2 %.2f (next support)", sup) : ", no support below");
    Callout(TimeCurrent(), bid, false, 1.5, note, InpShortColor, 8);
    if (sup > 0) DLine(TimeCurrent(), sup, TimeCurrent() + 8 * PeriodSeconds(), sup, clrLime, STYLE_DASH, 1, "TP2: next support");
@@ -814,7 +825,7 @@ void ManageTick()
       if (g_pos[i].usdTrail && PositionSelectByTicket(g_pos[i].ticket)) {
          // after TP1: the stop follows the market $X away, never back
          int sd = g_pos[i].side;
-         double dist = (sd > 0 ? InpLongTrailUsd : InpShortTrailUsd) + InpTrailStepUsd * MathMax(0, g_pos[i].tpStage - 2);
+         double dist = (sd > 0 ? TrailL() : TrailS()) + InpTrailStepUsd * MathMax(0, g_pos[i].tpStage - 2);
          double want = NormalizeDouble(sd > 0 ? bid - dist : ask0 + dist, _Digits), cur = PositionGetDouble(POSITION_SL);
          if (InpUsdTrailMode == 0 && (sd > 0 ? want >= cur + 10 * _Point : (cur == 0 || want <= cur - 10 * _Point)) && ModifySl(g_pos[i].ticket, want)) {
             g_pos[i].slNow = want;      // drawn as one line at the exit, not a step per tick
@@ -880,7 +891,7 @@ void ManageBar()
       // v1.04 (chart vs MT5 #37 -> #38): the chart moves the $ trail after TP1 once per candle, from that candle's extreme;
       // tick by tick the EA was taken out 2 minutes earlier and the next trade started at another candle.
       if (g_pos[i].usdTrail && InpUsdTrailMode == 1 && g_pos[i].entryTime < t1 && g_pos[i].tp1At < t1) {   // not from the TP1 candle itself (chart)
-         double dist = (side > 0 ? InpLongTrailUsd : InpShortTrailUsd) + InpTrailStepUsd * MathMax(0, g_pos[i].tpStage - 2);
+         double dist = (side > 0 ? TrailL() : TrailS()) + InpTrailStepUsd * MathMax(0, g_pos[i].tpStage - 2);
          double spr3 = SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID);
          double want = NormalizeDouble(side > 0 ? h1 - dist : l1 + spr3 + dist, _Digits);
          if (side > 0 ? want >= sl + 0.10 - 1e-9 : (sl == 0 || want <= sl - 0.10 + 1e-9)) {
@@ -1062,7 +1073,14 @@ void DoEntry(int side, double sl)
    if (InpMaxRiskUsd > 0 && MathAbs(en - sl) > InpMaxRiskUsd) { g_skipRisk++; DSkip(side, StringFormat("stop too far ($%.2f > $%.2f)", MathAbs(en - sl), InpMaxRiskUsd)); return; }
    double tp = 0;
    bool noTp = false, resTp1 = false;
-   if (side < 0) {
+   // v1.07 TP1 METHOD (Zee 2026-10-16, the chart's EXIT LAB): a fixed $ or Fibonacci TP1 replaces the normal one
+   double fix = 0;
+   if (InpTpMode == 1 || InpTpMode == 3) fix = en + side * (side > 0 ? InpTpFixUsdB : InpTpFixUsdS);
+   else if (InpTpMode == 2) fix = side > 0 ? g_pLow + InpTpFibPct / 100.0 * (g_pHigh - g_pLow) : g_pHigh - InpTpFibPct / 100.0 * (g_pHigh - g_pLow);
+   if (fix != 0 && (fix - en) * side < InpMinTpPips * pip) fix = 0;     // not far enough beyond the entry: the normal TP1
+   if (side < 0 && fix != 0) tp = fix;
+   else if (side > 0 && fix != 0) { tp = fix; resTp1 = true; }        // a fixed-price LONG TP1: the resistance-TP1 path
+   else if (side < 0) {
       double sup = LastSupport(bid - InpMinTpPips * pip);
       if (sup <= 0) { g_skipSup++; DSkip(side, "no support below to target"); return; }
       tp = sup + InpShortTpPips * pip;
@@ -1086,15 +1104,16 @@ void DoEntry(int side, double sl)
    if (deal > 0 && HistoryDealSelect(deal)) t = (ulong)HistoryDealGetInteger(deal, DEAL_POSITION_ID);
    PosState p;
    p.ticket = t; p.side = side; p.entry = trade.ResultPrice() > 0 ? trade.ResultPrice() : en; p.tp = tp;
-   p.exitE = g_pExit; p.noTp = noTp; p.resTp1 = resTp1; p.ride = side > 0 && (noTp || (resTp1 && InpResTp1Ride)) && TrailOn(1) && InpFixTpPips <= 0;
+   p.exitE = g_pExit; p.noTp = noTp; p.resTp1 = resTp1; p.ride = side > 0 && (noTp || (resTp1 && InpResTp1Ride && fix == 0)) && TrailOn(1) && InpFixTpPips <= 0;
    p.entryTime = TimeCurrent(); p.best = p.entry;
    p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0; p.adRun = 0; p.lbest = p.entry;
    p.setup = g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry;
    p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    p.tp1 = side > 0 ? (noTp ? "none (exit EMA below entry, no resistance above) - trailing from entry"
+                            : fix != 0 ? StringFormat("%.2f (TP1 method %d)", tp, InpTpMode)
                             : resTp1 ? StringFormat("next resistance %.2f (the %d EMA is below the entry)", tp, g_pExit)
                             : StringFormat("touch of the %d EMA (now %.2f)", g_pExit, Ema(g_pExit, 0)))
-                    : StringFormat("last support %.2f", tp);
+                    : fix != 0 ? StringFormat("%.2f (TP1 method %d)", tp, InpTpMode) : StringFormat("last support %.2f", tp);
    int n = ArraySize(g_pos); ArrayResize(g_pos, n + 1); g_pos[n] = p;
    g_entries++;
    Log(StringFormat("ENTRY #%d %s %.2f lots @ %s | SL %s (risk $%.2f) | TP1 %s | setup: %s",
