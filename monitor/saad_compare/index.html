@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saad Chart vs MT5</title>
+<style>
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --ink: #1b1f24; --muted: #667085; --line: #e4e7ec;
+  --win: #11845b; --loss: #c8372d; --accent: #2f6fde; --warn-bg: #fff6e5; --warn: #9a5b00; --row: #fafbfc;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1216; --card: #171b21; --ink: #e8ebef; --muted: #98a2b3; --line: #2a3039;
+          --win: #3fcf8e; --loss: #ff6b5e; --accent: #6ea0ff; --warn-bg: #2b2210; --warn: #f5b84a; --row: #1b2027; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.sub { color: var(--muted); margin: 0 0 18px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.controls label { display: flex; flex-direction: column; font-size: 12px; color: var(--muted); gap: 4px; }
+input, select { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; }
+button { background: var(--accent); color: #fff; border: 0; border-radius: 7px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+button:disabled { opacity: .5; cursor: wait; }
+#status { color: var(--muted); font-size: 13px; min-height: 18px; margin-top: 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.kpis { display: flex; flex-wrap: wrap; gap: 18px; }
+.kpi .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .k { font-size: 12px; color: var(--muted); }
+.win { color: var(--win); } .loss { color: var(--loss); }
+.warn { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 8px 12px; margin: 4px 0; font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { color: var(--muted); font-weight: 600; font-size: 12px; position: sticky; top: 0; background: var(--card); }
+td.l, th.l { text-align: left; }
+tbody tr:nth-child(even) { background: var(--row); }
+.sep { border-left: 2px solid var(--line); }
+.tag { font-size: 11px; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); }
+.tag.ok { color: var(--win); border-color: var(--win); }
+.scroll { overflow-x: auto; max-height: 70vh; overflow-y: auto; }
+h2 { font-size: 15px; margin: 0 0 10px; }
+details summary { cursor: pointer; color: var(--muted); }
+code { font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Saad: TradingView chart vs the real EA in MT5</h1>
+  <p class="sub">Tune the indicator on TradingView, then run the same settings through <b>Saad_strategy_1min</b> on Axi's MT5 Strategy Tester (real ticks). Trades are matched by entry minute (UTC) and side.</p>
+
+  <div class="card">
+    <div class="controls">
+      <button id="btnTv">1 · Read TradingView</button>
+      <label>From <input type="date" id="from"></label>
+      <label>To <input type="date" id="to"></label>
+      <label>Symbol
+        <select id="symbol"><option value="XAUUSD.pro">XAUUSD.pro (Axi, up to today)</option><option value="XAUUSD_TK">XAUUSD_TK (Axi real-tick copy, to 8 Oct)</option></select></label>
+      <label>Server time
+        <select id="offset"><option value="3">UTC+3 (Axi summer)</option><option value="2">UTC+2 (Axi winter)</option></select></label>
+      <label>Execution delay
+        <select id="delay"><option value="-1">random (realistic)</option><option value="0">none</option><option value="163">163 ms (live median)</option></select></label>
+      <button id="btnMt5">2 · Run MT5 with these settings</button>
+      <label style="flex-direction:row;align-items:center;gap:6px;color:var(--ink)"><input type="checkbox" id="onlyChart"> only dates the chart covers</label>
+    </div>
+    <div id="status">Start TradingView with the Saad indicator on the chart, then press 1.</div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h2>TradingView chart</h2><div class="kpis" id="kTv"><span class="k">not read yet</span></div></div>
+    <div class="card"><h2>MT5 Strategy Tester (Axi)</h2><div class="kpis" id="kMt"><span class="k">not run yet</span></div></div>
+  </div>
+
+  <div id="notes"></div>
+
+  <div class="grid">
+    <div class="card"><h2>MT5 by month</h2><div id="months" class="k">-</div></div>
+    <div class="card"><h2>Match</h2><div id="match" class="k">-</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Trades</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th class="l">TradingView entry (UTC)</th><th>side</th><th>entry</th><th>exit</th><th>P/L</th>
+          <th class="sep l">match</th>
+          <th class="sep l">MT5 entry (UTC)</th><th>side</th><th>entry</th><th>avg exit</th><th>P/L</th>
+        </tr></thead>
+        <tbody id="rows"><tr><td class="l" colspan="11">-</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card"><details><summary>Settings sent to the EA</summary><div id="sets" style="margin-top:10px"></div></details></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let S = { tv: null, mt5: null };
+const fmt = v => (v >= 0 ? '+$' : '−$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const cls = v => v > 0 ? 'win' : v < 0 ? 'loss' : '';
+const mins = s => new Date(s.replace(' ', 'T') + ':00Z').getTime() / 60000;
+
+function kpis(list) {
+  const n = list.length, w = list.filter(t => t.pnl > 0).length, net = list.reduce((a, t) => a + t.pnl, 0);
+  const gw = list.filter(t => t.pnl > 0).reduce((a, t) => a + t.pnl, 0), gl = -list.filter(t => t.pnl < 0).reduce((a, t) => a + t.pnl, 0);
+  return { n, w, wr: n ? 100 * w / n : 0, net, pf: gl > 0 ? gw / gl : null };
+}
+function kpiHtml(k, extra = '') {
+  return `<div class="kpi"><div class="v">${k.n}</div><div class="k">trades</div></div>
+    <div class="kpi"><div class="v">${k.wr.toFixed(0)}%</div><div class="k">win rate</div></div>
+    <div class="kpi"><div class="v ${cls(k.net)}">${fmt(k.net)}</div><div class="k">net</div></div>
+    <div class="kpi"><div class="v">${k.pf == null ? '-' : k.pf.toFixed(2)}</div><div class="k">profit factor</div></div>${extra}`;
+}
+
+function render() {
+  const tv = S.tv, mt = S.mt5;
+  const tvT = tv ? tv.trades : [];
+  let mtP = mt ? mt.positions : [];
+  const first = tvT.length ? tvT[0].in.slice(0, 10) : null, last = tvT.length ? tvT[tvT.length - 1].out.slice(0, 10) : null;
+  if ($('onlyChart').checked && first) mtP = mtP.filter(p => p.in.slice(0, 10) >= first && p.in.slice(0, 10) <= last);
+
+  if (tv) {
+    $('kTv').innerHTML = kpiHtml(kpis(tvT)) + `<div class="kpi"><div class="v" style="font-size:14px">${tv.symbol} · ${tv.res} min</div><div class="k">read ${tv.read_at}${first ? ' · ' + first + ' → ' + last : ''}</div></div>`;
+    $('sets').innerHTML = '<code>' + Object.entries(tv.ea_sets).map(([k, v]) => `${k}=${v}`).join(' · ') + '</code>';
+    $('notes').innerHTML = tv.notes.map(n => `<div class="warn">⚠ ${n}</div>`).join('');
+    if (!$('from').value && first) { $('from').value = first; }
+    if (!$('to').value && last) { const d = new Date(last + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); $('to').value = d.toISOString().slice(0, 10); }
+  }
+  if (mt) {
+    const s = mt.summary;
+    $('kMt').innerHTML = kpiHtml(kpis(mtP), `<div class="kpi"><div class="v" style="font-size:14px">${s.dd || '-'}</div><div class="k">max drawdown</div></div>
+      <div class="kpi"><div class="v" style="font-size:14px">${s.quality || '-'}</div><div class="k">${mt.symbol} · ${mt.frm} → ${mt.to} · ran ${mt.ran_at}</div></div>`);
+    const m = s.months || {};
+    $('months').innerHTML = Object.keys(m).length ? '<table><tbody>' + Object.entries(m).map(([k, v]) => `<tr><td class="l">${k}</td><td class="${cls(v)}">${fmt(v)}</td></tr>`).join('') + '</tbody></table>' : '-';
+  }
+
+  // match: same side, entry within 2 minutes
+  const used = new Set(), rows = [];
+  let same = 0;
+  for (const t of tvT) {
+    let best = -1, bd = 1e9;
+    mtP.forEach((p, i) => { if (used.has(i) || p.side !== t.side) return; const d = Math.abs(mins(p.in) - mins(t.in)); if (d <= 2 && d < bd) { bd = d; best = i; } });
+    if (best >= 0) { used.add(best); same++; rows.push({ k: mins(t.in), t, p: mtP[best] }); } else rows.push({ k: mins(t.in), t, p: null });
+  }
+  mtP.forEach((p, i) => { if (!used.has(i)) rows.push({ k: mins(p.in), t: null, p }); });
+  rows.sort((a, b) => a.k - b.k);
+  if (tv && mt) $('match').innerHTML = `<div class="kpis"><div class="kpi"><div class="v">${same}</div><div class="k">same trade on both</div></div>
+    <div class="kpi"><div class="v">${tvT.length - same}</div><div class="k">chart only</div></div><div class="kpi"><div class="v">${mtP.length - same}</div><div class="k">MT5 only</div></div></div>`;
+  const cell = (x, side) => x ? `<td class="l ${side ? 'sep' : ''}">${x.in}</td><td>${x.side}</td><td>${x.en.toFixed(2)}</td><td>${x.ex.toFixed(2)}</td><td class="${cls(x.pnl)}">${fmt(x.pnl)}</td>`
+                                : `<td class="l ${side ? 'sep' : ''}" colspan="5" style="color:var(--muted)">—</td>`;
+  $('rows').innerHTML = rows.length ? rows.map(r => `<tr>${cell(r.t, false)}<td class="sep l">${r.t && r.p ? '<span class="tag ok">same</span>' : ''}</td>${cell(r.p, true)}</tr>`).join('')
+                                    : '<tr><td class="l" colspan="11">-</td></tr>';
+}
+
+async function call(path, body, msg) {
+  $('btnTv').disabled = $('btnMt5').disabled = true;
+  $('status').textContent = msg;
+  const t0 = Date.now(), tick = setInterval(() => $('status').textContent = msg + ` (${Math.round((Date.now() - t0) / 1000)} s)`, 1000);
+  try {
+    const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+    const j = await r.json();
+    if (j.error) throw new Error(j.error);
+    S = j; render();
+    $('status').textContent = 'Done.';
+  } catch (e) { $('status').textContent = 'Error: ' + e.message; }
+  finally { clearInterval(tick); $('btnTv').disabled = $('btnMt5').disabled = false; }
+}
+$('btnTv').onclick = () => call('/api/tv', {}, 'Reading the indicator\'s settings and trades from TradingView…');
+$('btnMt5').onclick = () => {
+  if (!$('from').value || !$('to').value) { $('status').textContent = 'Pick the dates first.'; return; }
+  call('/api/mt5', { from: $('from').value, to: $('to').value, symbol: $('symbol').value, offset: $('offset').value, delay: $('delay').value },
+       'Reading TradingView, then running the MT5 Strategy Tester on Axi… (a week of 1-minute ticks takes about 30 s – 3 min)');
+};
+$('onlyChart').onchange = render;
+fetch('/api/state').then(r => r.json()).then(j => { S = j; render(); }).catch(() => {});
+</script>
+</body>
+</html>

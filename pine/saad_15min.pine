@@ -158,7 +158,7 @@ lsFrom = input.time(0, "Top-right box: list the trades closed from this date (0 
 lsTo = input.time(0, "...up to this date (0 = now)", group = G14)
 rpMin = input.float(0, "TOP / BOTTOM: skip a BUY entering BELOW X% of the range / a SELL above (100 - X)% (0 = off; with the max = keep only a band, e.g. 75-100)", step = 5, minval = 0, group = G11)
 iDetMax = input.int(200, "Detail tags (setups, skips, BE/TP, exit X): keep at most N - the rest of TradingView's 500 labels stays for BUY / SELL / EXIT", minval = 0, group = G8)
-exOn = input.bool(false, "Trade export table (bottom centre): every trade with entry / exit times (UTC), for comparing with MT5 - uses the date range above, else the last 40", group = G14)
+exOn = input.bool(false, "Trade export table (bottom centre): every trade with entry / exit times (UTC), for comparing with MT5 - uses the date range above, else all trades", group = G14)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -957,8 +957,8 @@ if barstate.islast and rpDiag
 
 // ── TRADE EXPORT (bottom centre, off by default): one row per trade, UTC times, for a trade-by-trade check against MT5 ──
 if barstate.islast and exOn
-    var table ex = table.new(position.bottom_center, 8, 130, bgcolor = color.new(color.black, 10), border_color = color.new(color.gray, 70), border_width = 1)
-    table.clear(ex, 0, 0, 7, 129)
+    var table ex = table.new(position.bottom_center, 8, 502, bgcolor = color.new(color.black, 10), border_color = color.new(color.gray, 70), border_width = 1)
+    table.clear(ex, 0, 0, 7, 501)
     array<string> hd = array.from("#", "side", "entry UTC", "entry", "SL0", "exit UTC", "avg exit", "P/L")
     for c = 0 to 7
         table.cell(ex, c, 0, array.get(hd, c), text_color = color.yellow, text_size = size.small)
@@ -966,17 +966,17 @@ if barstate.islast and exOn
     int r = 1
     if sz > 0
         int hiT = lsTo > 0 ? lsTo : timenow
-        int i0 = lsFrom > 0 ? 0 : math.max(sz - 40, 0)
+        int i0 = 0   // every trade the indicator remembers (500) - the compare page reads them all
         for i = i0 to sz - 1
             int tt = array.get(aTime, i)
-            if (lsFrom == 0 or (tt >= lsFrom and tt <= hiT)) and r < 129
+            if (lsFrom == 0 or (tt >= lsFrom and tt <= hiT)) and r < 501
                 float pn = array.get(aPnl, i)
                 table.cell(ex, 0, r, str.tostring(array.get(aNum, i)), text_color = color.white, text_size = size.small)
                 table.cell(ex, 1, r, array.get(aSide, i) > 0 ? "BUY" : "SELL", text_color = color.white, text_size = size.small)
-                table.cell(ex, 2, r, str.format_time(array.get(aEnT, i), "MM-dd HH:mm", "UTC"), text_color = color.white, text_size = size.small)
+                table.cell(ex, 2, r, str.format_time(array.get(aEnT, i), "yyyy-MM-dd HH:mm", "UTC"), text_color = color.white, text_size = size.small)
                 table.cell(ex, 3, r, fp(array.get(aEn, i)), text_color = color.white, text_size = size.small)
                 table.cell(ex, 4, r, fp(array.get(aSl0, i)), text_color = color.white, text_size = size.small)
-                table.cell(ex, 5, r, str.format_time(tt, "MM-dd HH:mm", "UTC"), text_color = color.white, text_size = size.small)
+                table.cell(ex, 5, r, str.format_time(tt, "yyyy-MM-dd HH:mm", "UTC"), text_color = color.white, text_size = size.small)
                 table.cell(ex, 6, r, fp(array.get(aEx, i)), text_color = color.white, text_size = size.small)
                 table.cell(ex, 7, r, fm(pn), text_color = pn > 0 ? color.lime : pn < 0 ? color.red : color.silver, text_size = size.small)
                 r += 1
