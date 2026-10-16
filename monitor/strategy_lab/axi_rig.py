@@ -15,6 +15,17 @@ RIGS = {"axi": r"C:\mt5_rig_axi", "axi2": r"C:\mt5_rig_axi2", "axi3": r"C:\mt5_r
         "bb": r"C:\mt5_rig_bb", "pxbt": r"C:\mt5_rig_pxbt"}
 
 
+NO_WINDOW = 0x08000000        # CREATE_NO_WINDOW: no console flashing up when called from a windowless server (pythonw)
+
+
+def _quiet():
+    """Start a rig's MetaEditor / terminal minimised and without taking the focus (the year view starts 6 at once)."""
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = 7            # SW_SHOWMINNOACTIVE
+    return si
+
+
 def _R(rig=None):
     """rig=None -> the rig chosen with use(); otherwise a name or path. Pass it explicitly from threads
     (saad_compare/year_runner.py drives several rigs at once; use() is one global)."""
@@ -32,7 +43,7 @@ def compile_ea(ea, rig=None):
     shutil.copy(SRC / f"{ea}.mq5", R / "MQL5" / "Experts" / f"{ea}.mq5")
     log = R / "compile.log"
     subprocess.run([str(R / "MetaEditor64.exe"), "/portable",
-                    f"/compile:{R / 'MQL5' / 'Experts' / (ea + '.mq5')}", f"/log:{log}"])
+                    f"/compile:{R / 'MQL5' / 'Experts' / (ea + '.mq5')}", f"/log:{log}"], creationflags=NO_WINDOW, startupinfo=_quiet())
     txt = log.read_text(encoding="utf-16", errors="ignore")
     if not re.search(r"Result: 0 errors", txt):
         sys.exit("compile failed:\n" + txt[-2000:])
@@ -57,7 +68,7 @@ def kill_rig(rig=None):
     R = _R(rig)
     subprocess.run(["powershell", "-NoProfile", "-Command",
                     f"Get-Process terminal64,metatester64 -ErrorAction SilentlyContinue | "
-                    f"Where-Object {{ $_.Path -like '{R}\*' }} | Stop-Process -Force"], capture_output=True)
+                    f"Where-Object {{ $_.Path -like '{R}\*' }} | Stop-Process -Force"], capture_output=True, creationflags=NO_WINDOW)
 
 
 def prune_logs(max_mb=50, rig=None):
@@ -102,7 +113,7 @@ def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=250
     prune_logs(rig=R)
     t0 = time.time()
     rep = R / "reports" / f"{tag}.htm"
-    proc = subprocess.Popen([str(R / "terminal64.exe"), "/portable", f"/config:{R / 'run.ini'}"])
+    proc = subprocess.Popen([str(R / "terminal64.exe"), "/portable", f"/config:{R / 'run.ini'}"], startupinfo=_quiet())
     last_size, stable = -1, 0
     while True:
         time.sleep(1)

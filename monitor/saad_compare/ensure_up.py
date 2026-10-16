@@ -74,7 +74,8 @@ def watch(every=20):
 def bridge_running():
     cmd = ("Get-CimInstance Win32_Process -Filter \"Name like 'python%'\" | Where-Object { $_.CommandLine -like '*tv_bars_bridge*--live*' } "
            "| Select-Object -ExpandProperty ProcessId")
-    return subprocess.run(["powershell", "-NoProfile", "-Command", cmd], capture_output=True, text=True, timeout=60).stdout.strip()
+    return subprocess.run(["powershell", "-NoProfile", "-Command", cmd], capture_output=True, text=True, timeout=60,
+                          creationflags=0x08000000).stdout.strip()
 
 
 def install():

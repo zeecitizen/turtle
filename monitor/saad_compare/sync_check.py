@@ -95,7 +95,7 @@ def check(state, page_offset=None):
             dst = ex5.with_suffix(".mq5")
             dst.write_bytes(src.read_bytes())
             log = server.BB_DATA / "compare_compile.log"
-            subprocess.run([str(me), f"/compile:{dst}", f"/log:{log}"], timeout=180)
+            subprocess.run([str(me), f"/compile:{dst}", f"/log:{log}"], timeout=180, creationflags=server.NO_WINDOW)
             ok = "Result: 0 errors" in log.read_text(encoding="utf-16", errors="ignore")
             _r(out, "fixed" if ok else "issue", "EA in the Blueberry terminal was older than the code" + ("" if ok else " - compile FAILED"),
                f"Copied mt5/{server.EA}.mq5 and compiled it in the Blueberry terminal" + ("" if ok else f"; see {log}"))
