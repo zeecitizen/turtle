@@ -18,6 +18,9 @@
 //| v1.02: BUY and SELL entry bands are separate (InpRange*S)        |
 //| v1.03: InpLockMode 1 - the lock per candle close, like the chart |
 //|        InpBandAtLevel - entry band judged at the break level      |
+//| v1.04: InpBarSource 1 - the TradingView chart's candles (bridge) |
+//|        InpUsdTrailMode 1 - the $ trail after TP1 per candle        |
+//|        InpNoEntryExitBar - no entry in the candle of an exit       |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -56,7 +59,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.03"
+#property version   "1.04"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -67,7 +70,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.03"
+#define EA_COMMENT "Saad1m v1.04"
 
 //--- the two lines
 input int    InpEmaFast     = 3;      // InpEmaFast
@@ -216,6 +219,11 @@ input double InpRangeMaxS   = 35;     // InpRangeMaxS - SELL: skip entering lowe
 input int    InpLockMode    = 1;      // InpLockMode - 0 the lock on every tick (v1.02) · 1 at each candle close like the TradingView chart: set only once a closed candle's low (BUY) / high + spread (SELL) is past the lock level
 input bool   InpBandAtLevel = true;   // InpBandAtLevel - judge the entry band at the break level + 0.01 (or the candle open past it), as the TradingView chart does; false = at the live bid (v1.02)
 input bool   InpDumpBars    = false;  // InpDumpBars - debug: write every closed candle with its EMAs to Common\Files\saad1m_bars.csv (chart vs MT5 feed check)
+input int    InpBarSource   = 1;      // InpBarSource - 0 the MT5 candles · 1 the TradingView chart's candles (Common\Files\InpTvFile, written by monitor/saad_compare/tv_bars_bridge.py) - same setups as the chart
+input string InpTvFile      = "tv_bars_XAUUSD.csv"; // InpTvFile - the chart's closed 1-min candles in broker server time: "YYYY.MM.DD HH:MM,open,high,low,close"
+input int    InpTvWaitSec   = 20;     // InpTvWaitSec - live: wait up to N s after a new candle for the chart's closed candle to arrive
+input int    InpUsdTrailMode = 1;     // InpUsdTrailMode - the $ trail after TP1: 0 every tick (v1.03) · 1 once per candle from its high (BUY) / low + spread (SELL), like the chart
+input bool   InpNoEntryExitBar = true; // InpNoEntryExitBar - no new trade in the candle where the last one closed (the chart's minute-by-minute engine)
 
 CTrade   trade;
 int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE;
@@ -242,6 +250,7 @@ struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bo
                   string setup; double sl0; double risk; string tp1; datetime tp1At; string tps; datetime ctcAt; int moves; double mfe;
                   int num; double slNow; datetime slFrom; string why; int adRun; double lbest; };
 PosState g_pos[];
+datetime g_exitBar = 0;   // the candle in which the last position closed
 
 int g_ctc = 0, g_skipClose = 0, g_closeLoss = 0;
 int g_setups = 0, g_entries = 0, g_skipBreak = 0, g_skipGap = 0, g_skipRisk = 0, g_skipSup = 0, g_chop = 0,
@@ -249,7 +258,88 @@ int g_setups = 0, g_entries = 0, g_skipBreak = 0, g_skipGap = 0, g_skipRisk = 0,
 
 double Pip() { return InpPipPts * _Point; }
 double Buf(int h, int s) { double v[1]; return CopyBuffer(h, 0, s, 1, v) == 1 ? v[0] : 0.0; }
-double Ema(int which, int s) { return Buf(which == 9 ? hFast : hSlow, s); }
+//--- v1.04 (Zee 2026-10-16: "the only way we can succeed is to sync both mt5 with tradingview"): every candle, EMA and ATR
+// the strategy judges comes from ONE place. InpBarSource 1 = the TradingView chart's own candles, so the EA sees the
+// setups the chart sees; orders, stops and fills stay on the MT5 price. Shift 0 (the forming candle) is always MT5's.
+datetime tvT[]; double tvO[], tvH[], tvL[], tvC[], tvEF[], tvES[], tvA[];
+bool g_tvStale = false;              // live: the chart's candle never came - no setups / candle stops on an old candle
+int g_tvN = 0, g_tvEnd = -1;          // g_tvEnd = index of the last CLOSED chart candle (shift 1)
+uint g_tvReadMs = 0;
+bool TvLoad()
+{
+   g_tvReadMs = GetTickCount();
+   int fh = FileOpen(InpTvFile, FILE_READ | FILE_CSV | FILE_ANSI | FILE_COMMON | FILE_SHARE_READ | FILE_SHARE_WRITE, ',');
+   if (fh == INVALID_HANDLE) return false;
+   int n = 0, cap = MathMax(ArraySize(tvT), 1024);
+   ArrayResize(tvT, cap); ArrayResize(tvO, cap); ArrayResize(tvH, cap); ArrayResize(tvL, cap); ArrayResize(tvC, cap);
+   while (!FileIsEnding(fh)) {
+      string ts = FileReadString(fh);
+      if (FileIsLineEnding(fh) || FileIsEnding(fh)) continue;
+      double o = FileReadNumber(fh), h = FileReadNumber(fh), l = FileReadNumber(fh), c = FileReadNumber(fh);
+      while (!FileIsLineEnding(fh) && !FileIsEnding(fh)) FileReadString(fh);
+      datetime bt = StringToTime(ts);
+      if (bt <= 0 || o <= 0 || h <= 0 || l <= 0 || c <= 0 || (n > 0 && bt <= tvT[n - 1])) continue;   // a half-written or repeated line
+      if (n >= cap) { cap *= 2; ArrayResize(tvT, cap); ArrayResize(tvO, cap); ArrayResize(tvH, cap); ArrayResize(tvL, cap); ArrayResize(tvC, cap); }
+      tvT[n] = bt; tvO[n] = o; tvH[n] = h; tvL[n] = l; tvC[n] = c; n++;
+   }
+   FileClose(fh);
+   g_tvN = n;
+   ArrayResize(tvEF, MathMax(n, 1)); ArrayResize(tvES, MathMax(n, 1)); ArrayResize(tvA, MathMax(n, 1));
+   double af = 2.0 / (InpEmaFast + 1), as = 2.0 / (InpEmaSlow + 1), trs = 0;
+   double tr[]; ArrayResize(tr, MathMax(n, 1));
+   for (int i = 0; i < n; i++) {
+      tvEF[i] = i == 0 ? tvC[0] : tvEF[i - 1] + af * (tvC[i] - tvEF[i - 1]);
+      tvES[i] = i == 0 ? tvC[0] : tvES[i - 1] + as * (tvC[i] - tvES[i - 1]);
+      tr[i] = i == 0 ? tvH[0] - tvL[0] : MathMax(tvH[i], tvC[i - 1]) - MathMin(tvL[i], tvC[i - 1]);   // ta.tr(true)
+      trs += tr[i]; if (i >= 14) trs -= tr[i - 14];
+      tvA[i] = trs / MathMin(i + 1, 14);                                                                  // ta.sma(tr, 14) = MT5 iATR
+   }
+   return n > 0;
+}
+// the last chart candle that closed before the MT5 candle opening at `bar`
+void TvSync(datetime bar)
+{
+   int lo = 0, hi = g_tvN - 1, r = -1;
+   while (lo <= hi) { int m = (lo + hi) / 2; if (tvT[m] <= bar - PeriodSeconds()) { r = m; lo = m + 1; } else hi = m - 1; }
+   g_tvEnd = r;
+}
+// live: the chart's candle for the minute that just closed has arrived (or we waited long enough)
+bool TvReady(datetime bar)
+{
+   if (InpBarSource != 1) return true;
+   if (g_tvN == 0 || tvT[g_tvN - 1] < bar - PeriodSeconds()) {
+      if (!MQLInfoInteger(MQL_TESTER) && GetTickCount() - g_tvReadMs >= 1000) TvLoad();
+   }
+   static int lastEnd = -2;
+   TvSync(bar);
+   g_tvStale = g_tvEnd < 0 || g_tvEnd == lastEnd;          // no new chart candle: the chart takes no step either
+   if (g_tvEnd >= 0 && tvT[g_tvEnd] >= bar - PeriodSeconds()) { lastEnd = g_tvEnd; return true; }
+   if (MQLInfoInteger(MQL_TESTER)) { lastEnd = g_tvEnd; return true; }   // the file is complete; a missing chart minute stays missing
+   if (TimeCurrent() - bar < InpTvWaitSec) return false;
+   lastEnd = g_tvEnd;
+   if (!g_tvStale) return true;
+   static datetime warned = 0;
+   if (warned != bar) { warned = bar; PrintFormat("[SAAD-1min] WARNING: no TradingView candle for %s after %d s - is tv_bars_bridge.py running? Setups paused until it is back (last %s)",
+                                                  TimeToString(bar - PeriodSeconds()), InpTvWaitSec, g_tvEnd >= 0 ? TimeToString(tvT[g_tvEnd]) : "none"); }
+   return true;
+}
+int    TvI(int s) { int i = g_tvEnd - s + 1; return i >= 0 && i <= g_tvEnd ? i : -1; }
+double BOpen(int s)  { if (InpBarSource != 1 || s <= 0) return iOpen(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvO[i]; }
+double BHigh(int s)  { if (InpBarSource != 1 || s <= 0) return iHigh(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvH[i]; }
+double BLow(int s)   { if (InpBarSource != 1 || s <= 0) return iLow(_Symbol, PERIOD_CURRENT, s);   int i = TvI(s); return i < 0 ? 0 : tvL[i]; }
+double BClose(int s) { if (InpBarSource != 1 || s <= 0) return iClose(_Symbol, PERIOD_CURRENT, s); int i = TvI(s); return i < 0 ? 0 : tvC[i]; }
+datetime BTime(int s){ if (InpBarSource != 1 || s <= 0) return iTime(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvT[i]; }
+double Atr(int s)    { if (InpBarSource != 1) return Buf(hAtr, s); int i = TvI(MathMax(s, 1)); return i < 0 ? 0 : tvA[i]; }
+double EmaX(int fast, int s)
+{
+   if (InpBarSource != 1) return Buf(fast ? hFast : hSlow, s);
+   int i = TvI(MathMax(s, 1)); if (i < 0) return 0;
+   double e = fast ? tvEF[i] : tvES[i];
+   if (s > 0) return e;
+   double a = 2.0 / ((fast ? InpEmaFast : InpEmaSlow) + 1);              // the forming candle: the chart's emaLive, at the bid
+   return e + a * (SymbolInfoDouble(_Symbol, SYMBOL_BID) - e);
+}
+double Ema(int which, int s) { return EmaX(which == 9 ? 1 : 0, s); }
 bool   TrailOn(int side) { return InpTrail && (InpTrailSide == 2 || (side > 0 && InpTrailSide == 0) || (side < 0 && InpTrailSide == 1)); }
 
 int g_hEmas = INVALID_HANDLE;
@@ -273,9 +363,13 @@ int OnInit()
       if (hHtf == INVALID_HANDLE) return INIT_FAILED;
    }
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
+   if (InpBarSource == 1) {
+      if (!TvLoad()) { PrintFormat("[SAAD-1min] InpBarSource 1: cannot read Common\\Files\\%s - run monitor/saad_compare/tv_bars_bridge.py first", InpTvFile); return INIT_FAILED; }
+      PrintFormat("[SAAD-1min] TradingView candles: %d from %s to %s (%s)", g_tvN, TimeToString(tvT[0]), TimeToString(tvT[g_tvN - 1]), InpTvFile);
+   }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.03 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.04 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -299,11 +393,11 @@ int g_kind = 0;   // 1 pin, 2 hammer/star, 3 marubozu
 int Shape(int s)
 {
    g_kind = 0;
-   double o = iOpen(_Symbol, PERIOD_CURRENT, s), c = iClose(_Symbol, PERIOD_CURRENT, s);
-   double h = iHigh(_Symbol, PERIOD_CURRENT, s), l = iLow(_Symbol, PERIOD_CURRENT, s);
+   double o = BOpen(s), c = BClose(s);
+   double h = BHigh(s), l = BLow(s);
    double rng = h - l;
    if (rng <= 0) return 0;
-   if (InpMinRangeAtr > 0 && rng < InpMinRangeAtr * Buf(hAtr, s)) return 0;
+   if (InpMinRangeAtr > 0 && rng < InpMinRangeAtr * Atr(s)) return 0;
    double body = MathAbs(c - o), up = h - MathMax(o, c), lo = MathMin(o, c) - l;
    bool pinBull = body <= InpBodyMax * rng && lo >= InpWickMin * rng && up <= InpNoseMax * rng;
    bool pinBear = body <= InpBodyMax * rng && up >= InpWickMin * rng && lo <= InpNoseMax * rng;
@@ -326,8 +420,8 @@ int Shape(int s)
 
 bool OnLine(int s, double e, int side)
 {
-   double o = iOpen(_Symbol, PERIOD_CURRENT, s), c = iClose(_Symbol, PERIOD_CURRENT, s);
-   double h = iHigh(_Symbol, PERIOD_CURRENT, s), l = iLow(_Symbol, PERIOD_CURRENT, s);
+   double o = BOpen(s), c = BClose(s);
+   double h = BHigh(s), l = BLow(s);
    double tol = InpTouchPips * Pip();
    if (e <= 0) return false;
    if (InpTouchMode == 0) return l - tol <= e && h + tol >= e;
@@ -339,12 +433,12 @@ double LastSupport(double below)
 {
    int p = InpSwingPivot;
    for (int i = 1 + p; i < 1 + p + InpSwingLook; i++) {
-      double l = iLow(_Symbol, PERIOD_CURRENT, i);
+      double l = BLow(i);
       if (l <= 0) break;
       if (l >= below) continue;
       bool piv = true;
       for (int k = 1; k <= p && piv; k++)
-         if (iLow(_Symbol, PERIOD_CURRENT, i - k) <= l || iLow(_Symbol, PERIOD_CURRENT, i + k) < l) piv = false;
+         if (BLow(i - k) <= l || BLow(i + k) < l) piv = false;
       if (piv) return l;
    }
    return 0.0;
@@ -355,12 +449,12 @@ double LastResistance(double above)
 {
    int p = InpSwingPivot;
    for (int i = 1 + p; i < 1 + p + InpSwingLook; i++) {
-      double h = iHigh(_Symbol, PERIOD_CURRENT, i);
+      double h = BHigh(i);
       if (h <= 0) break;
       if (h <= above) continue;
       bool piv = true;
       for (int k = 1; k <= p && piv; k++)
-         if (iHigh(_Symbol, PERIOD_CURRENT, i - k) >= h || iHigh(_Symbol, PERIOD_CURRENT, i + k) > h) piv = false;
+         if (BHigh(i - k) >= h || BHigh(i + k) > h) piv = false;
       if (piv) return h;
    }
    return 0.0;
@@ -369,10 +463,10 @@ double LastResistance(double above)
 bool Choppy()
 {
    if (InpChopEr <= 0) return false;
-   double net = MathAbs(iClose(_Symbol, PERIOD_CURRENT, 1) - iClose(_Symbol, PERIOD_CURRENT, InpChopErLook + 1));
+   double net = MathAbs(BClose(1) - BClose(InpChopErLook + 1));
    double path = 0;
    for (int i = 1; i <= InpChopErLook; i++)
-      path += MathAbs(iClose(_Symbol, PERIOD_CURRENT, i) - iClose(_Symbol, PERIOD_CURRENT, i + 1));
+      path += MathAbs(BClose(i) - BClose(i + 1));
    return path <= 0 || net / path < InpChopEr;
 }
 
@@ -473,7 +567,7 @@ void DArrow(datetime t, double price, int side)
 void Callout(datetime t, double price, bool up, double lvl, string txt, color c, int size = 9, string tip = "")
 {
    if (!Drawing()) return;
-   double a = Buf(hAtr, 1); if (a <= 0) a = 10 * Pip();
+   double a = Atr(1); if (a <= 0) a = 10 * Pip();
    double ty = up ? price + lvl * a : price - lvl * a;
    string n = ObjName();
    ObjectCreate(0, n, OBJ_ARROWED_LINE, 0, t, ty, t, price);
@@ -511,9 +605,11 @@ void DrawExit(PosState &p)
       ulong d = HistoryDealGetTicket(k);
       comm += HistoryDealGetDouble(d, DEAL_COMMISSION);          // entry + exit commission
       if (HistoryDealGetInteger(d, DEAL_ENTRY) != DEAL_ENTRY_OUT) continue;
-      px = HistoryDealGetDouble(d, DEAL_PRICE); t = (datetime)HistoryDealGetInteger(d, DEAL_TIME);
+      if (t == 0) {   // v1.04: the LAST closing deal (newest first) - a TP1 partial used to be reported as the exit
+         px = HistoryDealGetDouble(d, DEAL_PRICE); t = (datetime)HistoryDealGetInteger(d, DEAL_TIME);
+         reason = HistoryDealGetInteger(d, DEAL_REASON);
+      }
       prof += HistoryDealGetDouble(d, DEAL_PROFIT); swp += HistoryDealGetDouble(d, DEAL_SWAP);
-      reason = HistoryDealGetInteger(d, DEAL_REASON);
    }
    if (t == 0) return;
    pnl = prof + comm + swp;
@@ -549,6 +645,7 @@ void SyncPos()
    for (int i = ArraySize(g_pos) - 1; i >= 0; i--)
       if (!PositionSelectByTicket(g_pos[i].ticket)) {
          DrawExit(g_pos[i]);
+         g_exitBar = iTime(_Symbol, PERIOD_CURRENT, 0);
          for (int j = i; j < ArraySize(g_pos) - 1; j++) g_pos[j] = g_pos[j + 1];
          ArrayResize(g_pos, ArraySize(g_pos) - 1);
       }
@@ -715,7 +812,7 @@ void ManageTick()
          int sd = g_pos[i].side;
          double dist = (sd > 0 ? InpLongTrailUsd : InpShortTrailUsd) + InpTrailStepUsd * MathMax(0, g_pos[i].tpStage - 2);
          double want = NormalizeDouble(sd > 0 ? bid - dist : ask0 + dist, _Digits), cur = PositionGetDouble(POSITION_SL);
-         if ((sd > 0 ? want >= cur + 10 * _Point : (cur == 0 || want <= cur - 10 * _Point)) && ModifySl(g_pos[i].ticket, want)) {
+         if (InpUsdTrailMode == 0 && (sd > 0 ? want >= cur + 10 * _Point : (cur == 0 || want <= cur - 10 * _Point)) && ModifySl(g_pos[i].ticket, want)) {
             g_pos[i].slNow = want;      // drawn as one line at the exit, not a step per tick
             g_pos[i].moves++;
          }
@@ -747,8 +844,8 @@ void ManageTick()
 // candle close: close-mode exits, trailing, breakeven
 void ManageBar()
 {
-   double c1 = iClose(_Symbol, PERIOD_CURRENT, 1), h1 = iHigh(_Symbol, PERIOD_CURRENT, 1), l1 = iLow(_Symbol, PERIOD_CURRENT, 1);
-   datetime t1 = iTime(_Symbol, PERIOD_CURRENT, 1);
+   double c1 = BClose(1), h1 = BHigh(1), l1 = BLow(1);
+   datetime t1 = BTime(1);
    for (int i = ArraySize(g_pos) - 1; i >= 0; i--) {
       ulong t = g_pos[i].ticket;
       if (!PositionSelectByTicket(t)) continue;
@@ -756,7 +853,7 @@ void ManageBar()
       double sl = PositionGetDouble(POSITION_SL);
       // InpCutRunN: N candles in a row closing against a trade that is in loss at the close -> out now (the next open)
       if (InpCutRunN > 0 && g_pos[i].entryTime < t1) {
-         double o1 = iOpen(_Symbol, PERIOD_CURRENT, 1), spr = SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID);
+         double o1 = BOpen(1), spr = SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID);
          bool against = side > 0 ? c1 < o1 : c1 > o1;
          g_pos[i].adRun = against ? g_pos[i].adRun + 1 : 0;
          bool loss = side > 0 ? c1 < g_pos[i].entry : c1 + spr > g_pos[i].entry;
@@ -774,6 +871,18 @@ void ManageBar()
             double bNow = SymbolInfoDouble(_Symbol, SYMBOL_BID), aNow = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
             if (side > 0 ? want >= bNow : want <= aNow) { g_pos[i].why = StringFormat("lock %.2f already passed at the open", want); trade.PositionClose(t); continue; }
             if (ModifySl(t, want)) { SlMoved(i, want, "lock"); sl = want; }
+         }
+      }
+      // v1.04 (chart vs MT5 #37 -> #38): the chart moves the $ trail after TP1 once per candle, from that candle's extreme;
+      // tick by tick the EA was taken out 2 minutes earlier and the next trade started at another candle.
+      if (g_pos[i].usdTrail && InpUsdTrailMode == 1 && g_pos[i].entryTime < t1 && g_pos[i].tp1At < t1) {   // not from the TP1 candle itself (chart)
+         double dist = (side > 0 ? InpLongTrailUsd : InpShortTrailUsd) + InpTrailStepUsd * MathMax(0, g_pos[i].tpStage - 2);
+         double spr3 = SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID);
+         double want = NormalizeDouble(side > 0 ? h1 - dist : l1 + spr3 + dist, _Digits);
+         if (side > 0 ? want >= sl + 0.10 - 1e-9 : (sl == 0 || want <= sl - 0.10 + 1e-9)) {
+            double bNow = SymbolInfoDouble(_Symbol, SYMBOL_BID), aNow = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+            if (side > 0 ? want >= bNow : want <= aNow) { g_pos[i].why = StringFormat("trailing stop %.2f already passed at the open", want); trade.PositionClose(t); continue; }
+            if (ModifySl(t, want)) { g_pos[i].slNow = want; g_pos[i].moves++; sl = want; }
          }
       }
       if (g_pos[i].usdTrail) continue;              // LONG after the touch: trailed tick by tick
@@ -794,9 +903,9 @@ void ManageBar()
             if (InpTrailMode == 0) {
                lvl = side > 0 ? DBL_MAX : 0;
                for (int k = 1; k <= InpTrailN; k++)
-                  lvl = side > 0 ? MathMin(lvl, iLow(_Symbol, PERIOD_CURRENT, k)) : MathMax(lvl, iHigh(_Symbol, PERIOD_CURRENT, k));
+                  lvl = side > 0 ? MathMin(lvl, BLow(k)) : MathMax(lvl, BHigh(k));
             } else if (InpTrailMode == 1) lvl = side > 0 ? g_pos[i].best - InpTrailPips * Pip() : g_pos[i].best + InpTrailPips * Pip();
-            else lvl = side > 0 ? g_pos[i].best - InpTrailAtr * Buf(hAtr, 1) : g_pos[i].best + InpTrailAtr * Buf(hAtr, 1);
+            else lvl = side > 0 ? g_pos[i].best - InpTrailAtr * Atr(1) : g_pos[i].best + InpTrailAtr * Atr(1);
             bool better = side > 0 ? (lvl > sl + _Point && lvl < c1) : ((sl == 0 || lvl < sl - _Point) && lvl > c1);
             // InpTrailGapUsd: an accepted ATR level is pulled back to at least $X from the close (a 0.1 x ATR stop sat ON the close)
             if (better && InpTrailMode == 2 && InpTrailGapUsd > 0) {
@@ -836,6 +945,8 @@ double DayPnl()
 void TryEntry()
 {
    if (g_pSide == 0 || ArraySize(g_pos) >= InpMaxPos) return;
+   // v1.04 (chart vs MT5 #38): the chart steps minute by minute and never opens a trade in the minute it closed one
+   if (InpNoEntryExitBar && g_exitBar == iTime(_Symbol, PERIOD_CURRENT, 0)) return;
    if (InpNoNewMins > 0 && MinsToClose() <= InpNoNewMins) { g_skipClose++; DSkip(g_pSide, "too close to the day's close"); g_pSide = 0; return; }
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double pip = Pip();
@@ -869,14 +980,14 @@ void TryEntry()
    int    bLook = side > 0 ? InpRangeLook : InpRangeLookS;
    double bMin = side > 0 ? InpRangeMin : InpRangeMinS, bMax = side > 0 ? InpRangeMax : InpRangeMaxS;
    if (bMin > 0 || bMax > 0) {
-      double hi = iHigh(_Symbol, PERIOD_CURRENT, iHighest(_Symbol, PERIOD_CURRENT, MODE_HIGH, bLook, 1));
-      double lo = iLow(_Symbol, PERIOD_CURRENT, iLowest(_Symbol, PERIOD_CURRENT, MODE_LOW, bLook, 1));
+      double hi = 0, lo = DBL_MAX;
+      for (int k = 1; k <= bLook; k++) { hi = MathMax(hi, BHigh(k)); lo = MathMin(lo, BLow(k)); }
       // v1.03 (chart vs MT5 #16 #22 #32 #40 #56 #61 #62 #73 #75 #78): the chart judges the band at the break level, the EA judged
       // it at the tick that fired, a few cents further - 50% became 51-52% and the trade was skipped.
-      double lvl = side > 0 ? g_pHigh + InpBreakPips * pip : g_pLow - InpBreakPips * pip, o0 = iOpen(_Symbol, PERIOD_CURRENT, 0);
+      double lvl = side > 0 ? g_pHigh + InpBreakPips * pip : g_pLow - InpBreakPips * pip, o0 = BOpen(0);
       double px = !InpBandAtLevel ? bid : side > 0 ? MathMax(lvl + 0.01, o0) : MathMin(lvl - 0.01, o0);
       double chase = hi > lo ? (side > 0 ? (px - lo) / (hi - lo) : (hi - px) / (hi - lo)) * 100 : 50;
-      if ((bMin > 0 && chase < bMin) || (bMax > 0 && chase > bMax)) {
+      if ((bMin > 0 && chase < bMin - 1e-6) || (bMax > 0 && chase > bMax + 1e-6)) {     // v1.04 #32: 50.000000000008% is 50%
          DSkip(side, StringFormat("entry at %.0f%% of the last %d candles' range (band %.0f-%.0f%%)", chase, bLook, bMin, bMax));
          return;
       }
@@ -902,7 +1013,7 @@ void TryDip()
 double StopFor(int side, double en, double hi, double lo)
 {
    double pip = Pip();
-   if (InpSlMode == 1) { double a = Buf(hAtr, 1) * InpSlAtrMult; return side > 0 ? en - a : en + a; }
+   if (InpSlMode == 1) { double a = Atr(1) * InpSlAtrMult; return side > 0 ? en - a : en + a; }
    if (InpSlMode == 2) return side > 0 ? en - InpSlUsd : en + InpSlUsd;
    return side > 0 ? lo - InpSlPips * pip : hi + InpSlPips * pip;
 }
@@ -1023,7 +1134,7 @@ void OnTick()
    ManageTick();
    SyncPos();
    datetime bar = iTime(_Symbol, PERIOD_CURRENT, 0);
-   if (bar != g_lastBar) {
+   if (bar != g_lastBar && TvReady(bar)) {
       g_lastBar = bar;
       if (InpDumpBars) {
          static int fh = INVALID_HANDLE;
@@ -1031,17 +1142,17 @@ void OnTick()
          if (fh != INVALID_HANDLE) { FileWrite(fh, TimeToString(iTime(_Symbol, PERIOD_CURRENT, 1), TIME_DATE | TIME_MINUTES), Px(iOpen(_Symbol, PERIOD_CURRENT, 1)), Px(iHigh(_Symbol, PERIOD_CURRENT, 1)),
                                                Px(iLow(_Symbol, PERIOD_CURRENT, 1)), Px(iClose(_Symbol, PERIOD_CURRENT, 1)), DoubleToString(Buf(hFast, 1), 3), DoubleToString(Buf(hSlow, 1), 3)); FileFlush(fh); }
       }
-      if (Bars(_Symbol, PERIOD_CURRENT) >= InpEmaSlow * 2 + 20) {
+      if (Bars(_Symbol, PERIOD_CURRENT) >= InpEmaSlow * 2 + 20 && !g_tvStale && (InpBarSource != 1 || g_tvEnd >= InpEmaSlow * 2 + 19)) {
          ManageBar();
          SyncPos();
          // the waiting setup: a gap in time cancels it, otherwise one fewer candle to break
          if (g_aSide != 0) {
-            if (InpGapCancel && iTime(_Symbol, PERIOD_CURRENT, 0) - iTime(_Symbol, PERIOD_CURRENT, 1) > PeriodSeconds() * 3 / 2) { g_aSide = 0; g_skipDip++; }
+            if (InpGapCancel && iTime(_Symbol, PERIOD_CURRENT, 0) - BTime(1) > PeriodSeconds() * 3 / 2) { g_aSide = 0; g_skipDip++; }
             else if (--g_aLeft <= 0) { g_aSide = 0; g_skipDip++; Log("no dip within the window - skipped"); }
          }
          if (g_pSide != 0 && InpEntryMode == 2 && g_pLeft <= 1) { if (!g_swept) g_skipSweep++; }
          if (g_pSide != 0) {
-            if (InpGapCancel && iTime(_Symbol, PERIOD_CURRENT, 0) - iTime(_Symbol, PERIOD_CURRENT, 1) > PeriodSeconds() * 3 / 2) { g_skipGap++; DSkip(g_pSide, "market closed in between"); g_pSide = 0; }
+            if (InpGapCancel && iTime(_Symbol, PERIOD_CURRENT, 0) - BTime(1) > PeriodSeconds() * 3 / 2) { g_skipGap++; DSkip(g_pSide, "market closed in between"); g_pSide = 0; }
             else if (--g_pLeft <= 0) { g_skipBreak++; DSkip(g_pSide, StringFormat("%s not broken in %d candle%s", g_pSide > 0 ? "high" : "low", InpBreakBars, InpBreakBars > 1 ? "s" : "")); g_pSide = 0; }
          }
          DetectSetup();
@@ -1076,13 +1187,13 @@ void DetectSetup()
    if (TimeCurrent() < g_coolUntil) return;
    int shape = Shape(1);
    if (shape == 0) return;
-   MqlDateTime dt; TimeToStruct(iTime(_Symbol, PERIOD_CURRENT, 1), dt);
+   MqlDateTime dt; TimeToStruct(BTime(1), dt);
    if (dt.hour < InpSessFrom || dt.hour >= InpSessTo) return;
    if (InpSkipDow >= 0 && dt.day_of_week == InpSkipDow) return;
-   double e9 = Buf(hFast, 1), e50 = Buf(hSlow, 1);
+   double e9 = EmaX(1, 1), e50 = EmaX(0, 1);
    if (e9 <= 0 || e50 <= 0) return;
-   double h = iHigh(_Symbol, PERIOD_CURRENT, 1), l = iLow(_Symbol, PERIOD_CURRENT, 1);
-   double o = iOpen(_Symbol, PERIOD_CURRENT, 1), c = iClose(_Symbol, PERIOD_CURRENT, 1);
+   double h = BHigh(1), l = BLow(1);
+   double o = BOpen(1), c = BClose(1);
 
    bool on9L = OnLine(1, e9, 1), on50L = OnLine(1, e50, 1);
    bool rulesOk = InpLongRule != 1 && on9L  && !(InpLongExitAbove && e50 <= h);
@@ -1094,7 +1205,7 @@ void DetectSetup()
    if (!longOk && !shortOk) return;
    if (Choppy()) {
       g_chop++;
-      if (InpDrawSkips) Callout(iTime(_Symbol, PERIOD_CURRENT, 1), longOk ? l : h, !longOk, 1.0, "skip: choppy", clrDimGray, 7);
+      if (InpDrawSkips) Callout(BTime(1), longOk ? l : h, !longOk, 1.0, "skip: choppy", clrDimGray, 7);
       return;
    }
    int side = longOk ? 1 : -1;
@@ -1107,7 +1218,7 @@ void DetectSetup()
    }
    if ((InpTrendAlign && (side > 0 ? e9 <= e50 : e9 >= e50)) ||
        (InpPriceSide && (side > 0 ? c <= e50 : c >= e50)) ||
-       (InpSlopePips > 0 && (Buf(hSlow, 1) - Buf(hSlow, 1 + InpSlopeLook)) * side < InpSlopePips * Pip()) ||
+       (InpSlopePips > 0 && (EmaX(0, 1) - EmaX(0, 1 + InpSlopeLook)) * side < InpSlopePips * Pip()) ||
        (InpEmaGapPips > 0 && MathAbs(e9 - e50) < InpEmaGapPips * Pip())) { g_filtered++; return; }
 
    if (InpDayLossUsd > 0 || InpDayTargetUsd > 0) {
@@ -1125,7 +1236,7 @@ void DetectSetup()
    g_pExit = side > 0 ? (rulesOk ? 50 : 9) : 0;
    string kindTxt = g_kind == 1 ? "PIN BAR" : g_kind == 2 ? (side > 0 ? "HAMMER" : "SHOOTING STAR") : "MARUBOZU";
    string lineTxt = side > 0 ? (rulesOk ? "9 EMA" : "50 EMA") : (OnLine(1, e9, -1) ? "9 EMA" : "50 EMA");
-   g_pTime = iTime(_Symbol, PERIOD_CURRENT, 1);
+   g_pTime = BTime(1);
    g_pDesc = StringFormat("%s %s on the %s%s", side > 0 ? "LONG" : "SHORT", kindTxt, lineTxt,
                           side > 0 ? (rulesOk ? " (exit at 50 EMA)" : " (exit at 9 EMA)") : " (TP last support)");
    Log(StringFormat("SETUP %s | candle %s H %s L %s | waiting 1 candle for a break %s %s", g_pDesc, Ts(g_pTime), Px(h), Px(l),
