@@ -16,6 +16,19 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.23 (2026-10-17) — no chart candles for a date: MT5's own candles
+
+Zee: *"something is wrong with the 10 month run you do on the webpage. see photo. the graph for 10 months keeps going upwards! while the 10 months net says −$584,047.49"*
+
+- **Cause:** his own 10-month test in the Blueberry terminal ran with the default `InpBarSource=1` (the chart's candles). The chart's file only starts on 11 Oct, so for Jan 1 - Oct 10 the EA had no candles and took **no trades**. The graph's dates jump from 2026.02.25 straight to 2026.10.12. Its +$33,404 was really 12-16 Oct only.
+- **The page's 10-month view was right.** It runs `InpBarSource=0` (MT5's own candles). Check on XAUUSD_BB:
+  - 11-17 Oct chart candles: +$37,031.
+  - 11-17 Oct MT5 candles: +$26,120.
+  - 1-10 Oct MT5 candles: -$28,496.
+  - So the view's October (+$2,880) adds up.
+- **Fix:** where no chart candles exist for a date (before the chart's first 1-min candles + warm-up, or after the file ends in the tester), the EA uses MT5's own candles (`g_useTv`). A long test now trades every month. Check: Oct 11-17 +$37,190 (unchanged); Oct 1-17 +$8,694.
+- Also learned: never run manual tests on rigs axi2-axi7 while the 10-month auto-run is on. They collided ("authorization failed") and returned an empty report. Use the compare page's own copy (`rig1`).
+
 ## Saad_strategy_1min v1.11 - v1.20 (2026-10-17) — every chart trade in MT5
 
 Zee: *"set to pause 3 and sync each trade with each other on the webpage"* · *"we want all trades to match, no questions.."*
