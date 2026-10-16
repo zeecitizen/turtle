@@ -104,6 +104,7 @@ code { font-size: 12px; }
 <script>
 const $ = id => document.getElementById(id);
 let S = { tv: null, mt5: null };
+let symPicked = false;
 const fmt = v => (v >= 0 ? '+$' : '−$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const cls = v => v > 0 ? 'win' : v < 0 ? 'loss' : '';
 const mins = s => new Date(s.replace(' ', 'T') + ':00Z').getTime() / 60000;
@@ -131,7 +132,7 @@ function render() {
     $('kTv').innerHTML = kpiHtml(kpis(tvT)) + `<div class="kpi"><div class="v" style="font-size:14px">${tv.symbol} · ${tv.res} min</div><div class="k">read ${tv.read_at}${first ? ' · ' + first + ' → ' + last : ''}</div></div>`;
     $('sets').innerHTML = '<code>' + Object.entries(tv.ea_sets).map(([k, v]) => `${k}=${v}`).join(' · ') + '</code>';
     $('notes').innerHTML = tv.notes.map(n => `<div class="warn">⚠ ${n}</div>`).join('');
-    if (!S._symPicked) { $('symbol').value = tv.symbol.startsWith('BLUEBERRY') ? 'bb|XAUUSD' : 'axi|XAUUSD.pro'; S._symPicked = true; }
+    if (!symPicked) { $('symbol').value = tv.symbol.startsWith('BLUEBERRY') ? 'bb|XAUUSD' : 'axi|XAUUSD.pro'; symPicked = true; }
     if (!$('from').value && first) { $('from').value = first; }
     if (!$('to').value && last) { const d = new Date(last + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); $('to').value = d.toISOString().slice(0, 10); }
   }
