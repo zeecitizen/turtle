@@ -70,7 +70,7 @@ code { font-size: 12px; }
 <body>
 <div class="wrap">
   <h1>Saad: TradingView chart vs the real EA in MT5</h1>
-  <p class="sub">Tune the indicator on TradingView, then run the same settings through <b>Saad_strategy_1min</b> on Axi's MT5 Strategy Tester (real ticks). Trades are matched by entry minute (UTC) and side.</p>
+  <p class="sub">Tune the indicator on TradingView, then run the same settings through <b>Saad_strategy_1min</b> on Blueberry's MT5 Strategy Tester (real ticks). Trades are matched by entry minute (UTC) and side.</p>
 
   <div class="card">
     <div class="controls">
@@ -81,10 +81,9 @@ code { font-size: 12px; }
         <select id="symbol">
           <option value="bblive|XAUUSD">Blueberry demo XAUUSD - your open terminal (closes it for the test, reopens it)</option>
           <option value="bb|XAUUSD.pi">Blueberry XAUUSD.pi (test copy, SVG-Live, data to 9 Oct)</option>
-          <option value="axi|XAUUSD.pro">Axi XAUUSD.pro (up to today)</option>
-          <option value="axi|XAUUSD_TK">Axi XAUUSD_TK (real-tick copy, to 8 Oct)</option></select></label>
+          <option value="rig1|XAUUSD_BB">Blueberry XAUUSD_BB (real-tick copy of your terminal's ticks, Jan 1 - Oct 17; your terminal stays open)</option></select></label>
       <label>Server time
-        <select id="offset"><option value="3">UTC+3 (Axi summer)</option><option value="2">UTC+2 (Axi winter)</option></select></label>
+        <select id="offset"><option value="3">UTC+3 (Blueberry, US summer time)</option><option value="2">UTC+2 (Blueberry, US winter time)</option></select></label>
       <label>Execution delay
         <select id="delay"><option value="-1">random (realistic)</option><option value="0">none</option><option value="163">163 ms (live median)</option></select></label>
       <button id="btnMt5">2 · Run MT5 with these settings</button>
@@ -108,7 +107,7 @@ code { font-size: 12px; }
 
   <div class="grid">
     <div class="card"><h2>TradingView chart</h2><div class="kpis" id="kTv"><span class="k">not read yet</span></div></div>
-    <div class="card"><h2>MT5 Strategy Tester (Axi)</h2><div class="kpis" id="kMt"><span class="k">not run yet</span></div></div>
+    <div class="card"><h2>MT5 Strategy Tester (Blueberry)</h2><div class="kpis" id="kMt"><span class="k">not run yet</span></div></div>
   </div>
 
   <div id="notes"></div>
@@ -157,7 +156,7 @@ code { font-size: 12px; }
     <h2>How MT5 is synced with TradingView (16 Oct 2026, Saad_strategy_1min v1.03 → v1.04)</h2>
     <p>Zee: <i>"the only way we can succeed is to sync both mt5 with tradingview. so find a way. i can't miss out on entries i've spent entire day tuning on tradingview"</i></p>
     <p><b>Result:</b> on BLUEBERRY:XAUUSD 1 min, 12–15 Oct 2026, <b>83 of 83 chart trades</b> are the same trade in the MT5 Strategy Tester of Zee's own Blueberry terminal (side and entry minute; 79 also exit in the same minute). Chart +$34,588 vs MT5 +$32,219: the ~$28 a trade gap is real spread and slippage the chart does not charge. Before this work: 63 of 75.</p>
-    <p><b>Read this first:</b> matching the chart is not the same as being profitable. The same settings lost −$53,632 (PF 0.76) on Axi XAUUSD_TK 15 Sep – 15 Oct. The mirror shows the chart's trades faithfully; only MT5 over many weeks, or live fills, can promote a setting (CLAUDE.md).</p>
+    <p><b>Read this first:</b> matching the chart is not the same as being profitable. The same settings lost money in MT5 over the months around the tuning week (see the 10-month view). The mirror shows the chart's trades faithfully; only MT5 over many weeks, or live fills, can promote a setting (CLAUDE.md).</p>
 
     <h3>1. Why the trades did not match: the causes, in the order found</h3>
     <table>
@@ -185,7 +184,7 @@ monitor/saad_compare/tv_bars_bridge.py   --export (all history) | --live (append
 mt5/Saad_strategy_1min.mq5  InpBarSource=1  (FILE_COMMON, so the tester agents and the live terminal read the same file)
    candles / EMA / ATR of shift ≥ 1  ← the chart's candles      orders, SL/TP, fills, ticks ← MT5</pre>
     <ul>
-      <li><b>Time:</b> TradingView bar times are UTC epochs. The broker's server time is New York + 7 h: UTC+3 while the US is on summer time (2nd Sunday of March 07:00 UTC to 1st Sunday of November 06:00 UTC), otherwise UTC+2. <code>server_time()</code> does this; no tzdata is needed. PXBT's server is UTC, so this file is for Blueberry and Axi only.</li>
+      <li><b>Time:</b> TradingView bar times are UTC epochs. The broker's server time is New York + 7 h: UTC+3 while the US is on summer time (2nd Sunday of March 07:00 UTC to 1st Sunday of November 06:00 UTC), otherwise UTC+2. <code>server_time()</code> does this; no tzdata is needed. PXBT's server is UTC, so this file is for Blueberry only.</li>
       <li><b>Candle layer in the EA:</b> every strategy read goes through <code>BOpen/BHigh/BLow/BClose/BTime(s)</code>, <code>Atr(s)</code> and <code>EmaX(fast, s)</code>. <code>InpBarSource=1</code> answers shift ≥ 1 from the arrays <code>tvT/tvO/tvH/tvL/tvC</code>. <code>TvI(s) = g_tvEnd − s + 1</code>, where <code>g_tvEnd</code> is the last chart candle with <code>time ≤ MT5 bar open − 60 s</code> (binary search in <code>TvSync</code>; no look-ahead in the tester, even though the file holds the future). Shift 0 (the forming candle) stays MT5's.</li>
       <li><b>Indicators on the chart's candles</b> (<code>TvLoad</code>):
         <ul>
@@ -236,7 +235,7 @@ mt5/Saad_strategy_1min.mq5  InpBarSource=1  (FILE_COMMON, so the tester agents a
               <li>reopens the terminal. Zee authorised this on 16 Oct; never copy or read its <code>accounts.dat</code>/<code>servers.dat</code>.</li>
             </ul></li>
         </ul></li>
-      <li><b>Tester INI:</b> numbers and bools are written <code>k=v||v||0||v||N</code>; <b>strings must be plain <code>k=v</code></b> (<code>axi_rig.ini_input</code>), or the range text becomes the string's value (the first v1.04 run read "tv_bars_XAUUSD.csv||tv_bars…||N" and traded nothing).</li>
+      <li><b>Tester INI:</b> numbers and bools are written <code>k=v||v||0||v||N</code>; <b>strings must be plain <code>k=v</code></b> (<code>ini_input()</code> in the rig runner), or the range text becomes the string's value (the first v1.04 run read "tv_bars_XAUUSD.csv||tv_bars…||N" and traded nothing).</li>
       <li>Trades are matched by side and entry minute (±2 min, UTC). Server time = UTC+3 until the US clocks change in November, then UTC+2 (pick it in "Server time").</li>
     </ol>
 
@@ -260,8 +259,8 @@ mt5/Saad_strategy_1min.mq5  InpBarSource=1  (FILE_COMMON, so the tester agents a
       <li><b>10 months in MT5</b> (<code>year_runner.py</code>, <code>GET/POST /api/year</code>), started with the server:
         <ul>
           <li><b>Watching:</b> a thread reads the chart's settings every 2 s (<code>server.read_settings</code>, one CDP call). Only the mapped EA inputs count, so chart-only and display settings never trigger a run.</li>
-          <li><b>On a change:</b> once the change has held for one more poll, the run in progress is cancelled (<code>axi_rig.run(cancel=…)</code> kills the rig's terminal) and Jan–Oct 2026 is queued as 10 one-month passes (<code>ToDate</code> is exclusive: 1st → next 1st).</li>
-          <li><b>Running:</b> the passes spread over 6 portable rigs, <code>C:\mt5_rig_axi2</code>–<code>axi7</code> (axi5–7 copied from axi4 on 16 Oct; "axi" stays free for the compare runs). XAUUSD_TK real ticks, 100,000 deposit, <code>InpBarSource=0</code> (MT5's own candles).</li>
+          <li><b>On a change:</b> once the change has held for one more poll, the run in progress is cancelled (the rig runner's <code>run(cancel=…)</code> kills that test's terminal) and Jan–Oct 2026 is queued as 10 one-month passes (<code>ToDate</code> is exclusive: 1st → next 1st).</li>
+          <li><b>Running:</b> the passes spread over 6 portable MT5 test copies (one more stays free for the compare runs). XAUUSD_BB = Blueberry real ticks, 100,000 deposit, <code>InpBarSource=0</code> (MT5's own candles).</li>
           <li><b>Speed:</b> one pass takes ~19 s alone and 50–90 s with 6 in parallel, so an uncached batch is ~1.5 min.</li>
           <li><b>Cache:</b> results are kept in <code>why_out\year_cache.json</code>, keyed by settings + delay + the EA source's mtime, so going back to a setting is instant.</li>
           <li><b>Empty passes:</b> a pass that processes no ticks (quality without "real ticks", 0 trades) is a tester hiccup seen with parallel starts. It is retried up to 3 times and never cached.</li>
@@ -303,7 +302,7 @@ function render() {
     $('kTv').innerHTML = kpiHtml(kpis(tvT)) + `<div class="kpi"><div class="v" style="font-size:14px">${tv.symbol} · ${tv.res} min</div><div class="k">read ${tv.read_at}${first ? ' · ' + first + ' → ' + last : ''}</div></div>`;
     $('sets').innerHTML = '<code>' + Object.entries(tv.ea_sets).map(([k, v]) => `${k}=${v}`).join(' · ') + '</code>';
     $('notes').innerHTML = tv.notes.map(n => `<div class="warn">⚠ ${n}</div>`).join('');
-    if (!symPicked) { $('symbol').value = tv.symbol.startsWith('BLUEBERRY') ? 'bblive|XAUUSD' : 'axi|XAUUSD.pro'; symPicked = true; }
+    if (!symPicked) { $('symbol').value = tv.symbol.startsWith('BLUEBERRY') ? 'bblive|XAUUSD' : 'rig1|XAUUSD_BB'; symPicked = true; }
     if (!$('from').value && first) { $('from').value = first; }
     if (!$('to').value && last) { const d = new Date(last + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); $('to').value = d.toISOString().slice(0, 10); }
   }
@@ -378,9 +377,10 @@ $('btnTv').onclick = () => call('/api/tv', {}, 'Reading the indicator\'s setting
 $('btnMt5').onclick = () => {
   if (!$('from').value || !$('to').value) { $('status').textContent = 'Pick the dates first.'; return; }
   call('/api/mt5', { from: $('from').value, to: $('to').value, symbol: $('symbol').value, offset: $('offset').value, delay: $('delay').value },
-       'Reading TradingView, then running the MT5 Strategy Tester on Axi… (a week of 1-minute ticks takes about 30 s – 3 min)');
+       'Reading TradingView, then running the MT5 Strategy Tester on Blueberry… (a week of 1-minute ticks takes about 30 s – 3 min)');
 };
 // ── 10 months in MT5 ──────────────────────────────────────────────────────
+const rigName = r => r ? 'MT5 copy ' + ((String(r).match(/\d+$/) || ['1'])[0]) : '';
 const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 let Y = null, yrBusy = false;
 const pct = s => parseFloat(String(s || '0').replace('%', '')) || 0;
@@ -395,7 +395,7 @@ function renderYear() {
   $('yrRows').innerHTML = rows.map(({ m, v }) => {
     const name = MN[+m.slice(5) - 1] + ' ' + m.slice(0, 4) + (m === '2026.10' ? ' (1-17)' : '');
     if (v.status !== 'done') {
-      const st = v.status === 'running' ? `<span class="run">running on ${v.rig} · ${Math.round(Date.now() / 1000 - v.since)} s</span>`
+      const st = v.status === 'running' ? `<span class="run">running on ${rigName(v.rig)} · ${Math.round(Date.now() / 1000 - v.since)} s</span>`
                : v.status === 'error' ? `<span class="loss">${esc((v.result || {}).error || 'error')}</span>` : `<span class="q">${v.status}</span>`;
       return `<tr><td class="l">${name}</td><td colspan="7" class="l">${st}</td><td class="l"></td></tr>`;
     }
@@ -406,7 +406,7 @@ function renderYear() {
     const w = Math.round(Math.abs(r.net) / mx * 100);
     return `<tr><td class="l">${name}</td><td>${n}</td><td>${wr.toFixed(1)}%</td><td class="${cls(r.net)}">${fmt(r.net)}</td><td>${dlt}</td>
       <td>${esc(r.pf)}</td><td>${r.green ?? '-'} / ${r.days ?? '-'}</td><td class="l bar"><span class="b ${r.net >= 0 ? 'w' : 'l'}" style="width:${w}%"></span></td>
-      <td class="l" style="color:var(--muted)">${v.cached ? 'cached' : (v.rig || '') + (v.secs ? ' · ' + v.secs + ' s' : '')}</td></tr>`;
+      <td class="l" style="color:var(--muted)">${v.cached ? 'cached' : rigName(v.rig || '') + (v.secs ? ' · ' + v.secs + ' s' : '')}</td></tr>`;
   }).join('') + (done.length ? `<tr class="tot"><td class="l">${done.length} month${done.length > 1 ? 's' : ''}</td><td>${T.n}</td>
       <td>${T.n ? (T.w / T.n * 100).toFixed(1) : '0'}%</td><td class="${cls(T.net)}">${fmt(T.net)}</td>
       <td>${T.pc ? `<span class="${T.pn >= 0 ? 'win' : 'loss'}">${T.pn >= 0 ? '+' : ''}${fmt(T.pn).replace(/^\+/, '')}</span>` : ''}</td>

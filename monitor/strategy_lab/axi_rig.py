@@ -12,7 +12,8 @@ RIG = Path(r"C:\mt5_rig_axi")
 SRC = Path(r"C:\Users\zeesh\turtle\mt5")
 RIGS = {"axi": r"C:\mt5_rig_axi", "axi2": r"C:\mt5_rig_axi2", "axi3": r"C:\mt5_rig_axi3", "axi4": r"C:\mt5_rig_axi4",
         "axi5": r"C:\mt5_rig_axi5", "axi6": r"C:\mt5_rig_axi6", "axi7": r"C:\mt5_rig_axi7",
-        "bb": r"C:\mt5_rig_bb", "pxbt": r"C:\mt5_rig_pxbt"}
+        "bb": r"C:\mt5_rig_bb", "pxbt": r"C:\mt5_rig_pxbt",
+        "rig1": r"C:\mt5_rig_axi"}   # rig1 = the compare page's own test copy (Zee 2026-10-17: no "Axi" on the page)
 
 
 NO_WINDOW = 0x08000000        # CREATE_NO_WINDOW: no console flashing up when called from a windowless server (pythonw)
