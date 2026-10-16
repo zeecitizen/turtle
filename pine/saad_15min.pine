@@ -57,156 +57,162 @@ indicator("Saad 15min v1.23 — mirror of the EA", "Saad15", overlay = true,
 // ── SETTINGS: every MT5 EA input first, in the EA's own order and under its own name (Zee 2026-10-15),
 // then the chart-only ones. Chart settings are stored by POSITION: after any reorder re-map them by name.
 G0 = "EA · EMAs"
-iFast    = input.int(9, 'InpEmaFast', group = G0)
-iSlow    = input.int(50, 'InpEmaSlow', group = G0)
+iFast    = input.int(9, 'InpEmaFast', group = G0, display = display.none)
+iSlow    = input.int(50, 'InpEmaSlow', group = G0, display = display.none)
 G1 = "EA · ① setup candle"
-iWick    = input.float(0.45, 'InpWickMin — pin: long wick >= x range', step = 0.05, group = G1)
-iBodyMax = input.float(0.60, 'InpBodyMax — pin: body <= x range', step = 0.05, group = G1)
-iNose    = input.float(0.20, 'InpNoseMax — pin: short wick <= x range', step = 0.05, group = G1)
-iPinDir  = input.bool(false, 'InpPinDir — pin must point the trade way', group = G1)
-iPinCol  = input.bool(false, 'InpPinColor — pin body must close the trade way (with PinDir)', group = G1)
-iUsePin  = input.bool(true, 'InpUsePin — accept pin bars', group = G1)
-iMaru    = input.bool(true, 'InpMarubozu — accept a marubozu', group = G1)
-iMaruB   = input.float(0.53, 'InpMaruBody — marubozu: body >= x range', step = 0.01, group = G1)
-iHammer  = input.bool(true, 'InpHammer — accept hammers (LONG)', group = G1)
-iStar    = input.bool(true, 'InpStar — accept shooting stars (SHORT)', group = G1)
-iHamR    = input.float(2.5, 'InpHamRatio — hammer: long wick >= x body', step = 0.5, group = G1)
-iHamN    = input.float(0.50, 'InpHamNose — hammer: opposite wick <= x range', step = 0.05, group = G1)
-iMinAtr  = input.float(0.55, 'InpMinRangeAtr — candle range >= x ATR(14) (0 = off)', step = 0.05, group = G1)
+iWick    = input.float(0.45, 'InpWickMin — pin: long wick >= x range', step = 0.05, group = G1, display = display.none)
+iBodyMax = input.float(0.60, 'InpBodyMax — pin: body <= x range', step = 0.05, group = G1, display = display.none)
+iNose    = input.float(0.20, 'InpNoseMax — pin: short wick <= x range', step = 0.05, group = G1, display = display.none)
+iPinDir  = input.bool(false, 'InpPinDir — pin must point the trade way', group = G1, display = display.none)
+iPinCol  = input.bool(false, 'InpPinColor — pin body must close the trade way (with PinDir)', group = G1, display = display.none)
+iUsePin  = input.bool(true, 'InpUsePin — accept pin bars', group = G1, display = display.none)
+iMaru    = input.bool(true, 'InpMarubozu — accept a marubozu', group = G1, display = display.none)
+iMaruB   = input.float(0.53, 'InpMaruBody — marubozu: body >= x range', step = 0.01, group = G1, display = display.none)
+iHammer  = input.bool(true, 'InpHammer — accept hammers (LONG)', group = G1, display = display.none)
+iStar    = input.bool(true, 'InpStar — accept shooting stars (SHORT)', group = G1, display = display.none)
+iHamR    = input.float(2.5, 'InpHamRatio — hammer: long wick >= x body', step = 0.5, group = G1, display = display.none)
+iHamN    = input.float(0.50, 'InpHamNose — hammer: opposite wick <= x range', step = 0.05, group = G1, display = display.none)
+iMinAtr  = input.float(0.55, 'InpMinRangeAtr — candle range >= x ATR(14) (0 = off)', step = 0.05, group = G1, display = display.none)
 G2 = "EA · ① on the EMA"
-iLRule   = input.string("Both", 'InpLongRule — LONG setups', options = ["On 9 EMA, exit 50", "On 50 EMA, exit 9", "Both"], group = G2)
-iSLine   = input.string("9 EMA", 'InpShortLine — SHORT setups on', options = ["50 EMA", "9 EMA", "Either"], group = G2)
-iTouchM  = input.string("Candle touches", 'InpTouchMode', options = ["Candle touches", "Wick touches, body on trade side"], group = G2)
-iTouchP  = input.float(1, 'InpTouchPips — touch tolerance', step = 1, group = G2)
-iLExitAb = input.bool(false, 'InpLongExitAbove — LONG only when its exit EMA is above the candle', group = G2)
+iLRule   = input.string("Both", 'InpLongRule — LONG setups', options = ["On 9 EMA, exit 50", "On 50 EMA, exit 9", "Both"], group = G2, display = display.none)
+iSLine   = input.string("9 EMA", 'InpShortLine — SHORT setups on', options = ["50 EMA", "9 EMA", "Either"], group = G2, display = display.none)
+iTouchM  = input.string("Candle touches", 'InpTouchMode', options = ["Candle touches", "Wick touches, body on trade side"], group = G2, display = display.none)
+iTouchP  = input.float(1, 'InpTouchPips — touch tolerance', step = 1, group = G2, display = display.none)
+iLExitAb = input.bool(false, 'InpLongExitAbove — LONG only when its exit EMA is above the candle', group = G2, display = display.none)
 G3 = "EA · ② break · ③ entry · ④ stop"
-iBreakB  = input.int(1, 'InpBreakBars — candles allowed for the break', minval = 1, group = G3)
-iBreakP  = input.float(2, 'InpBreakPips — break must clear the high / low by', step = 1, group = G3)
-iSlPips  = input.float(35, 'InpSlPips — stop beyond the candle', step = 1, group = G3)
-iMaxRisk = input.float(15, 'InpMaxRiskUsd — skip if the stop is more than $ away (0 = off)', step = 0.5, group = G3)
+iBreakB  = input.int(1, 'InpBreakBars — candles allowed for the break', minval = 1, group = G3, display = display.none)
+iBreakP  = input.float(2, 'InpBreakPips — break must clear the high / low by', step = 1, group = G3, display = display.none)
+iSlPips  = input.float(35, 'InpSlPips — stop beyond the candle', step = 1, group = G3, display = display.none)
+iMaxRisk = input.float(15, 'InpMaxRiskUsd — skip if the stop is more than $ away (0 = off)', step = 0.5, group = G3, display = display.none)
 G4 = "EA · ⑤ targets"
-iLTpP    = input.float(0, 'InpLongTpPips — LONG TP this many pips before the EMA', group = G4)
-iPivot   = input.int(3, 'InpSwingPivot — candles each side of a swing', minval = 1, group = G4)
-iLook    = input.int(100, 'InpSwingLook — candles back to search', minval = 10, group = G4)
-iSTpP    = input.float(0, 'InpShortTpPips — SHORT TP this many pips before the support', group = G4)
-iMinTp   = input.float(5, 'InpMinTpPips — target at least this far', group = G4)
-iMaxTp   = input.float(0, 'InpMaxTpPips — skip a SHORT whose support is further (0 = off)', group = G4)
+iLTpP    = input.float(0, 'InpLongTpPips — LONG TP this many pips before the EMA', group = G4, display = display.none)
+iPivot   = input.int(3, 'InpSwingPivot — candles each side of a swing', minval = 1, group = G4, display = display.none)
+iLook    = input.int(100, 'InpSwingLook — candles back to search', minval = 10, group = G4, display = display.none)
+iSTpP    = input.float(0, 'InpShortTpPips — SHORT TP this many pips before the support', group = G4, display = display.none)
+iMinTp   = input.float(5, 'InpMinTpPips — target at least this far', group = G4, display = display.none)
+iMaxTp   = input.float(0, 'InpMaxTpPips — skip a SHORT whose support is further (0 = off)', group = G4, display = display.none)
 G5 = "EA · ⑥ CTC · ⑦ trail · day close"
-iCloseM  = input.int(3, 'InpCloseLossMins — this many min before the close shut trades in loss (0 = off)', group = G5)
-iLTrail  = input.float(2.0, 'InpLongTrailUsd — after TP1 trail $ below the market', step = 0.5, group = G5)
-iSTrail  = input.float(2.0, 'InpShortTrailUsd — after TP1 trail $ above the market', step = 0.5, group = G5)
-iBePct   = input.float(0.75, 'InpBeTpPct — CTC: stop to entry at this share of the way to TP1 (0 = off)', step = 0.05, group = G5)
-iTrAtr   = input.float(2.0, 'InpTrailAtr — no-TP1 LONG: trail x ATR behind the best price', step = 0.1, group = G5)
+iCloseM  = input.int(3, 'InpCloseLossMins — this many min before the close shut trades in loss (0 = off)', group = G5, display = display.none)
+iLTrail  = input.float(2.0, 'InpLongTrailUsd — after TP1 trail $ below the market', step = 0.5, group = G5, display = display.none)
+iSTrail  = input.float(2.0, 'InpShortTrailUsd — after TP1 trail $ above the market', step = 0.5, group = G5, display = display.none)
+iBePct   = input.float(0.75, 'InpBeTpPct — CTC: stop to entry at this share of the way to TP1 (0 = off)', step = 0.05, group = G5, display = display.none)
+iTrAtr   = input.float(2.0, 'InpTrailAtr — no-TP1 LONG: trail x ATR behind the best price', step = 0.1, group = G5, display = display.none)
 G6 = "EA · ✖ filters"
-iEr      = input.float(0.11, 'InpChopEr — skip if the efficiency ratio is below (0 = off)', step = 0.01, group = G6)
-iErLen   = input.int(16, 'InpChopErLook — efficiency ratio length', minval = 2, group = G6)
-iGap     = input.bool(true, 'InpGapCancel — cancel a waiting setup across the daily close / weekend', group = G6)
+iEr      = input.float(0.11, 'InpChopEr — skip if the efficiency ratio is below (0 = off)', step = 0.01, group = G6, display = display.none)
+iErLen   = input.int(16, 'InpChopErLook — efficiency ratio length', minval = 2, group = G6, display = display.none)
+iGap     = input.bool(true, 'InpGapCancel — cancel a waiting setup across the daily close / weekend', group = G6, display = display.none)
 G7 = "EA · partial · money · display"
-iPartial = input.float(0.5, 'InpPartialPct — close this share at TP1', step = 0.05, group = G7)
-iTp1Be   = input.bool(true, 'InpTp1Be — after TP1 the stop is never worse than the entry', group = G7)
-iLots    = input.float(1.0, 'InpLots', step = 0.01, group = G7)
-iBuys    = input.bool(true, 'InpBuys', group = G7)
-iSells   = input.bool(true, 'InpSells', group = G7)
-iSkips   = input.bool(false, 'InpDrawSkips — also label skipped setups', group = G7)
+iPartial = input.float(0.5, 'InpPartialPct — close this share at TP1', step = 0.05, group = G7, display = display.none)
+iTp1Be   = input.bool(true, 'InpTp1Be — after TP1 the stop is never worse than the entry', group = G7, display = display.none)
+iLots    = input.float(1.0, 'InpLots', step = 0.01, group = G7, display = display.none)
+iBuys    = input.bool(true, 'InpBuys', group = G7, display = display.none)
+iSells   = input.bool(true, 'InpSells', group = G7, display = display.none)
+iSkips   = input.bool(false, 'InpDrawSkips — also label skipped setups', group = G7, display = display.none)
 G8 = "CHART ONLY (not in the EA)"
-iCloseT  = input.string("16:59", 'Day close (EA reads it from the broker: PXBT 20:59, Axi 23:59 = 4:59 PM New York)', group = G8)
-iCloseTz = input.string("America/New_York", 'Day close timezone', group = G8)
-iCs      = input.float(100, 'Contract size ($ per $1 per lot)', group = G8)
-iSpread  = input.float(0.17, 'Spread, $ of price (PXBT XAUUSDp 0.17)', step = 0.01, group = G8)
-iComm    = input.float(0, 'Commission per lot, round trip $', step = 0.5, group = G8)
-iPanel   = input.bool(true, 'Show the stats panel', group = G8)
-iLog     = input.bool(false, 'Write every setup / entry / stop move / exit to the Pine Logs', group = G8)
-iDrawTo  = input.time(0, 'Draw labels only up to this time (0 = all; TradingView keeps the newest 500 labels)', group = G8)
-iShowRules = input.bool(true, "Show today's trades box (top right)", group = G8)
-iDayTz     = input.string("UTC+0", "Today's trades box: MT5 server timezone (PXBT = UTC+0)", group = G8)
-iDetailDays = input.int(3, 'Detail tags (setups, skips, BE/TP, exit X) only for the last N days - TradingView keeps 500 labels, so the BUY/SELL + EXIT labels of the whole month always fit', minval = 0, group = G8)
-iSkipBoth = input.bool(false, 'Skip a setup candle that touches BOTH EMAs (9 and 50) - not in the EA', group = G8)
-iTightTrail = input.bool(false, 'Tight trail: when InpTrailAtr would put the stop above the price, put it 1 pip under the candle close instead of not moving it - not in the EA yet', group = G8)
+iCloseT  = input.string("16:59", 'Day close (EA reads it from the broker: PXBT 20:59, Axi 23:59 = 4:59 PM New York)', group = G8, display = display.none)
+iCloseTz = input.string("America/New_York", 'Day close timezone', group = G8, display = display.none)
+iCs      = input.float(100, 'Contract size ($ per $1 per lot)', group = G8, display = display.none)
+iSpread  = input.float(0.17, 'Spread, $ of price (PXBT XAUUSDp 0.17)', step = 0.01, group = G8, display = display.none)
+iComm    = input.float(0, 'Commission per lot, round trip $', step = 0.5, group = G8, display = display.none)
+iPanel   = input.bool(true, 'Show the stats panel', group = G8, display = display.none)
+iLog     = input.bool(false, 'Write every setup / entry / stop move / exit to the Pine Logs', group = G8, display = display.none)
+iDrawTo  = input.time(0, 'Draw labels only up to this time (0 = all; TradingView keeps the newest 500 labels)', group = G8, display = display.none)
+iShowRules = input.bool(true, "Show today's trades box (top right)", group = G8, display = display.none)
+iDayTz     = input.string("UTC+0", "Today's trades box: MT5 server timezone (PXBT = UTC+0)", group = G8, display = display.none)
+iDetailDays = input.int(3, 'Detail tags (setups, skips, BE/TP, exit X) only for the last N days - TradingView keeps 500 labels, so the BUY/SELL + EXIT labels of the whole month always fit', minval = 0, group = G8, display = display.none)
+iSkipBoth = input.bool(false, 'Skip a setup candle that touches BOTH EMAs (9 and 50) - not in the EA', group = G8, display = display.none)
+iTightTrail = input.bool(false, 'Tight trail: when InpTrailAtr would put the stop above the price, put it 1 pip under the candle close instead of not moving it - not in the EA yet', group = G8, display = display.none)
 G9 = "STOP NEAR PEAK (chart-only, not in the EA yet)"
-pkApply = input.string("No-TP1 longs only", "Apply to", options = ["No-TP1 longs only", "All trades"], group = G9)
-pkStart = input.float(0, "Start: giveback / $ trail / ATR / candle / EMA only once the trade is this many $ in profit", step = 0.5, minval = 0, group = G9)
-pkBeUsd = input.float(0, "① Breakeven: stop to the entry once $X in profit (0 = off)", step = 0.5, minval = 0, group = G9)
-pkBeOff = input.float(0, "    ...and lock this many $ beyond the entry", step = 0.1, minval = 0, group = G9)
-pkLockAt = input.float(0, "② Lock: once $X in profit... (0 = off)", step = 0.5, minval = 0, group = G9)
-pkLockUsd = input.float(0, "    ...lock the stop this many $ beyond the entry", step = 0.5, minval = 0, group = G9)
-pkStep = input.float(0, "③ Ladder (with ②): every further $X of profit raises the lock by $X (0 = off)", step = 0.5, minval = 0, group = G9)
-pkGive = input.float(0, "④ Giveback: keep (100 - X)% of the best profit, e.g. 30 = give back 30% (0 = off)", step = 5, minval = 0, maxval = 100, group = G9)
-pkTrail = input.float(0, "⑤ $ trail: stop this many $ behind the best price (0 = off)", step = 0.5, minval = 0, group = G9)
-pkAtr = input.float(0, "⑥ ATR trail: stop this many x ATR behind the best price (0 = off)", step = 0.1, minval = 0, group = G9)
-pkLowN = input.int(0, "⑦ Candle trail: stop under the lowest low of the last N closed candles (0 = off)", minval = 0, group = G9)
-pkEma = input.int(0, "⑧ EMA trail: stop 1 pip under this EMA of the closed candle (0 = off)", minval = 0, group = G9)
-pkGap = input.float(0, "⑨ ATR-trail gap: when InpTrailAtr moves the stop, keep it at least $X under the candle close (0 = off)", step = 0.25, minval = 0, group = G9)
+pkApply = input.string("No-TP1 longs only", "Apply to", options = ["No-TP1 longs only", "All trades"], group = G9, display = display.none)
+pkStart = input.float(0, "Start: giveback / $ trail / ATR / candle / EMA only once the trade is this many $ in profit", step = 0.5, minval = 0, group = G9, display = display.none)
+pkBeUsd = input.float(0, "① Breakeven: stop to the entry once $X in profit (0 = off)", step = 0.5, minval = 0, group = G9, display = display.none)
+pkBeOff = input.float(0, "    ...and lock this many $ beyond the entry", step = 0.1, minval = 0, group = G9, display = display.none)
+pkLockAt = input.float(0, "② Lock: once $X in profit... (0 = off)", step = 0.5, minval = 0, group = G9, display = display.none)
+pkLockUsd = input.float(0, "    ...lock the stop this many $ beyond the entry", step = 0.5, minval = 0, group = G9, display = display.none)
+pkStep = input.float(0, "③ Ladder (with ②): every further $X of profit raises the lock by $X (0 = off)", step = 0.5, minval = 0, group = G9, display = display.none)
+pkGive = input.float(0, "④ Giveback: keep (100 - X)% of the best profit, e.g. 30 = give back 30% (0 = off)", step = 5, minval = 0, maxval = 100, group = G9, display = display.none)
+pkTrail = input.float(0, "⑤ $ trail: stop this many $ behind the best price (0 = off)", step = 0.5, minval = 0, group = G9, display = display.none)
+pkAtr = input.float(0, "⑥ ATR trail: stop this many x ATR behind the best price (0 = off)", step = 0.1, minval = 0, group = G9, display = display.none)
+pkLowN = input.int(0, "⑦ Candle trail: stop under the lowest low of the last N closed candles (0 = off)", minval = 0, group = G9, display = display.none)
+pkEma = input.int(0, "⑧ EMA trail: stop 1 pip under this EMA of the closed candle (0 = off)", minval = 0, group = G9, display = display.none)
+pkGap = input.float(0, "⑨ ATR-trail gap: when InpTrailAtr moves the stop, keep it at least $X under the candle close (0 = off)", step = 0.25, minval = 0, group = G9, display = display.none)
 G10 = "ENTRY + CUT LOSERS EARLY (chart-only, not in the EA yet)"
-enMode = input.string("Wick break (EA)", "Entry: wick break of the setup candle, or wait for a candle CLOSE beyond it (enter at the next open)", options = ["Wick break (EA)", "Candle close beyond"], group = G10)
-adRunN = input.int(0, "Cut: N candles in a row against the trade while in loss -> close at the next open (0 = off)", minval = 0, group = G10)
-adBars = input.int(0, "Cut: still in loss after N candles -> close at the next open (0 = off)", minval = 0, group = G10)
-adEmaX = input.bool(false, "Cut: a candle closes beyond the slow EMA against the trade while in loss -> close at the next open", group = G10)
-adMaxUsd = input.float(0, "Cut: max loss - stop no further than $X from the entry (0 = off, the EA's stop)", step = 0.5, minval = 0, group = G10)
+enMode = input.string("Wick break (EA)", "Entry: wick break of the setup candle, or wait for a candle CLOSE beyond it (enter at the next open)", options = ["Wick break (EA)", "Candle close beyond"], group = G10, display = display.none)
+adRunN = input.int(0, "Cut: N candles in a row against the trade while in loss -> close at the next open (0 = off)", minval = 0, group = G10, display = display.none)
+adBars = input.int(0, "Cut: still in loss after N candles -> close at the next open (0 = off)", minval = 0, group = G10, display = display.none)
+adEmaX = input.bool(false, "Cut: a candle closes beyond the slow EMA against the trade while in loss -> close at the next open", group = G10, display = display.none)
+adMaxUsd = input.float(0, "Cut: max loss - stop no further than $X from the entry (0 = off, the EA's stop)", step = 0.5, minval = 0, group = G10, display = display.none)
 G11 = "TOP / BOTTOM FILTER - which part of the recent candles' range may a trade enter in"
 rpLook = input.int(20, "BUY · how many recent candles make the range (their low = 0%, their high = 100%)", minval = 2, group = G11,
-     tooltip = "How it works: take the last N candles. Their lowest low = 0%, their highest high = 100%. Example with N = 7: lowest low 4100, highest high 4110 (a $10 range) -> 25% = 4102.50, 50% = 4105, 75% = 4107.50. A BUY that would enter at 4104 is at 40%.")
-rpB00 = input.bool(true, "BUY 0-5%", inline = "rpB0", group = G11, tooltip = "Take the last N candles: their lowest low = 0%, their highest high = 100%. Where would this BUY enter? Example, N = 7, low 4100, high 4110: a buy at 4101.20 is in 10-15%, at 4104 in 40-45%, at 4109.70 in 95-100%, at 4111 over 100% (above the high - a breakout). Untick a range to stop buying there; its row in the diagnostics table turns grey (OFF).")
-rpB01 = input.bool(true, "5-10%", inline = "rpB0", group = G11)
-rpB02 = input.bool(true, "10-15%", inline = "rpB0", group = G11)
-rpB03 = input.bool(true, "15-20%", inline = "rpB0", group = G11)
-rpB04 = input.bool(true, "20-25%", inline = "rpB0", group = G11)
-rpB05 = input.bool(true, "BUY 25-30%", inline = "rpB1", group = G11)
-rpB06 = input.bool(true, "30-35%", inline = "rpB1", group = G11)
-rpB07 = input.bool(true, "35-40%", inline = "rpB1", group = G11)
-rpB08 = input.bool(true, "40-45%", inline = "rpB1", group = G11)
-rpB09 = input.bool(true, "45-50%", inline = "rpB1", group = G11)
-rpB10 = input.bool(true, "BUY 50-55%", inline = "rpB2", group = G11)
-rpB11 = input.bool(true, "55-60%", inline = "rpB2", group = G11)
-rpB12 = input.bool(true, "60-65%", inline = "rpB2", group = G11)
-rpB13 = input.bool(true, "65-70%", inline = "rpB2", group = G11)
-rpB14 = input.bool(true, "70-75%", inline = "rpB2", group = G11)
-rpB15 = input.bool(true, "BUY 75-80%", inline = "rpB3", group = G11)
-rpB16 = input.bool(true, "80-85%", inline = "rpB3", group = G11)
-rpB17 = input.bool(true, "85-90%", inline = "rpB3", group = G11)
-rpB18 = input.bool(true, "90-95%", inline = "rpB3", group = G11)
-rpB19 = input.bool(true, "95-100%", inline = "rpB3", group = G11)
-rpB20 = input.bool(true, "BUY over 100%", inline = "rpB4", group = G11)
-rpDiag = input.bool(false, "Show the diagnostics table: this month's trades grouped by where in the range they entered (BUY from the low, SELL from the high)", group = G11)
+     tooltip = "How it works: take the last N candles. Their lowest low = 0%, their highest high = 100%. Example with N = 7: lowest low 4100, highest high 4110 (a $10 range) -> 25% = 4102.50, 50% = 4105, 75% = 4107.50. A BUY that would enter at 4104 is at 40%.", display = display.none)
+rpB00 = input.bool(true, "BUY 0-5%", inline = "rpB0", group = G11, tooltip = "Take the last N candles: their lowest low = 0%, their highest high = 100%. Where would this BUY enter? Example, N = 7, low 4100, high 4110: a buy at 4101.20 is in 10-15%, at 4104 in 40-45%, at 4109.70 in 95-100%, at 4111 over 100% (above the high - a breakout). Untick a range to stop buying there; its row in the diagnostics table turns grey (OFF).", display = display.none)
+rpB01 = input.bool(true, "5-10%", inline = "rpB0", group = G11, display = display.none)
+rpB02 = input.bool(true, "10-15%", inline = "rpB0", group = G11, display = display.none)
+rpB03 = input.bool(true, "15-20%", inline = "rpB0", group = G11, display = display.none)
+rpB04 = input.bool(true, "20-25%", inline = "rpB0", group = G11, display = display.none)
+rpB05 = input.bool(true, "BUY 25-30%", inline = "rpB1", group = G11, display = display.none)
+rpB06 = input.bool(true, "30-35%", inline = "rpB1", group = G11, display = display.none)
+rpB07 = input.bool(true, "35-40%", inline = "rpB1", group = G11, display = display.none)
+rpB08 = input.bool(true, "40-45%", inline = "rpB1", group = G11, display = display.none)
+rpB09 = input.bool(true, "45-50%", inline = "rpB1", group = G11, display = display.none)
+rpB10 = input.bool(true, "BUY 50-55%", inline = "rpB2", group = G11, display = display.none)
+rpB11 = input.bool(true, "55-60%", inline = "rpB2", group = G11, display = display.none)
+rpB12 = input.bool(true, "60-65%", inline = "rpB2", group = G11, display = display.none)
+rpB13 = input.bool(true, "65-70%", inline = "rpB2", group = G11, display = display.none)
+rpB14 = input.bool(true, "70-75%", inline = "rpB2", group = G11, display = display.none)
+rpB15 = input.bool(true, "BUY 75-80%", inline = "rpB3", group = G11, display = display.none)
+rpB16 = input.bool(true, "80-85%", inline = "rpB3", group = G11, display = display.none)
+rpB17 = input.bool(true, "85-90%", inline = "rpB3", group = G11, display = display.none)
+rpB18 = input.bool(true, "90-95%", inline = "rpB3", group = G11, display = display.none)
+rpB19 = input.bool(true, "95-100%", inline = "rpB3", group = G11, display = display.none)
+rpB20 = input.bool(true, "BUY over 100%", inline = "rpB4", group = G11, display = display.none)
+rpDiag = input.bool(false, "Show the diagnostics table: this month's trades grouped by where in the range they entered (BUY from the low, SELL from the high)", group = G11, display = display.none)
 rpOff = input.string("Stand aside while it would have run", "When a range is unticked", options = ["Stand aside while it would have run", "Skip it and take the next setup"], group = G11,
-     tooltip = "Stand aside (Zee 2026-10-16): the trade in an unticked range is not taken and NO other trade starts until it would have closed - so every other range keeps exactly the same trades and the diagnostics table does not shift. It is invisible on the chart and not counted anywhere. Skip it and take the next setup: the next setup may start right away, which changes the trades after it (MT5's EA works this way).")
+     tooltip = "Stand aside (Zee 2026-10-16): the trade in an unticked range is not taken and NO other trade starts until it would have closed - so every other range keeps exactly the same trades and the diagnostics table does not shift. It is invisible on the chart and not counted anywhere. Skip it and take the next setup: the next setup may start right away, which changes the trades after it (MT5's EA works this way).", display = display.none)
 G12 = "COOL-DOWN AFTER AN EXIT (chart-only, not in the EA yet)"
-coolN = input.int(0, "No new trade for N candles after a trade closes (0 = off; 2 = the exit candle + the next 2)", minval = 0, group = G12)
-coolDir = input.string("Same direction", "...blocks", options = ["Same direction", "Both directions"], group = G12)
-coolWin = input.bool(false, "...only after a WINNING exit", group = G12)
+coolN = input.int(0, "No new trade for N candles after a trade closes (0 = off; 2 = the exit candle + the next 2)", minval = 0, group = G12, display = display.none)
+coolDir = input.string("Same direction", "...blocks", options = ["Same direction", "Both directions"], group = G12, display = display.none)
+coolWin = input.bool(false, "...only after a WINNING exit", group = G12, display = display.none)
 G13 = "FAILED ENTRY EXIT (chart-only, not in the EA yet)"
-fxOn = input.bool(false, "Exit when the candle AFTER the entry candle closes beyond it: BUY below its low, SELL above its open/high -> out at the next open", group = G13)
-fxSellRef = input.string("Entry candle's open", "...SELL: the line it must close above", options = ["Entry candle's open", "Entry candle's high", "Never (BUY only)"], group = G13)
+fxOn = input.bool(false, "Exit when the candle AFTER the entry candle closes beyond it: BUY below its low, SELL above its open/high -> out at the next open", group = G13, display = display.none)
+fxSellRef = input.string("Entry candle's open", "...SELL: the line it must close above", options = ["Entry candle's open", "Entry candle's high", "Never (BUY only)"], group = G13, display = display.none)
 G14 = "TRADES BOX (top right) AND THE MONTH'S TRADES (chart-only)"
-lsFrom = input.time(0, "Top-right box: list the days from this date (0 = the last 30 days)", group = G14)
-lsTo = input.time(0, "...up to this date (0 = now)", group = G14)
-iDetMax = input.int(200, "Detail tags (setups, skips, BE/TP, exit X): keep at most N - the rest of TradingView's 500 labels stays for BUY / SELL / EXIT", minval = 0, group = G8)
-exOn = input.bool(false, "Trade export table (bottom centre): every trade with entry / exit times (UTC), for comparing with MT5 - uses the date range above, else all trades", group = G14)
+lsFrom = input.time(0, "Top-right box: list the days from this date (0 = the last 30 days)", group = G14, display = display.none)
+lsTo = input.time(0, "...up to this date (0 = now)", group = G14, display = display.none)
+iDetMax = input.int(200, "Detail tags (setups, skips, BE/TP, exit X): keep at most N - the rest of TradingView's 500 labels stays for BUY / SELL / EXIT", minval = 0, group = G8, display = display.none)
+exOn = input.bool(false, "Trade export table (bottom centre): every trade with entry / exit times (UTC), for comparing with MT5 - uses the date range above, else all trades", group = G14, display = display.none)
 rpLookS = input.int(20, "SELL · how many recent candles make the range (their high = 0%, their low = 100%)", minval = 2, group = G11,
-     tooltip = "How it works for a SELL, measured DOWN from the top: take the last N candles. Their highest high = 0%, their lowest low = 100%. Example with N = 7: highest high 4110, lowest low 4100 -> 25% = 4107.50, 50% = 4105, 75% = 4102.50. A SELL that would enter at 4106 is at 40%.")
-rpS00 = input.bool(true, "SELL 0-5%", inline = "rpS0", group = G11, tooltip = "Take the last N candles: their highest high = 0%, their lowest low = 100% (a SELL is measured DOWN from the top). Where would this SELL enter? Example, N = 7, high 4110, low 4100: a sell at 4108.80 is in 10-15%, at 4106 in 40-45%, at 4100.30 in 95-100%, at 4099 over 100% (below the low - a breakdown). Untick a range to stop selling there; its row in the diagnostics table turns grey (OFF).")
-rpS01 = input.bool(true, "5-10%", inline = "rpS0", group = G11)
-rpS02 = input.bool(true, "10-15%", inline = "rpS0", group = G11)
-rpS03 = input.bool(true, "15-20%", inline = "rpS0", group = G11)
-rpS04 = input.bool(true, "20-25%", inline = "rpS0", group = G11)
-rpS05 = input.bool(true, "SELL 25-30%", inline = "rpS1", group = G11)
-rpS06 = input.bool(true, "30-35%", inline = "rpS1", group = G11)
-rpS07 = input.bool(true, "35-40%", inline = "rpS1", group = G11)
-rpS08 = input.bool(true, "40-45%", inline = "rpS1", group = G11)
-rpS09 = input.bool(true, "45-50%", inline = "rpS1", group = G11)
-rpS10 = input.bool(true, "SELL 50-55%", inline = "rpS2", group = G11)
-rpS11 = input.bool(true, "55-60%", inline = "rpS2", group = G11)
-rpS12 = input.bool(true, "60-65%", inline = "rpS2", group = G11)
-rpS13 = input.bool(true, "65-70%", inline = "rpS2", group = G11)
-rpS14 = input.bool(true, "70-75%", inline = "rpS2", group = G11)
-rpS15 = input.bool(true, "SELL 75-80%", inline = "rpS3", group = G11)
-rpS16 = input.bool(true, "80-85%", inline = "rpS3", group = G11)
-rpS17 = input.bool(true, "85-90%", inline = "rpS3", group = G11)
-rpS18 = input.bool(true, "90-95%", inline = "rpS3", group = G11)
-rpS19 = input.bool(true, "95-100%", inline = "rpS3", group = G11)
-rpS20 = input.bool(true, "SELL over 100%", inline = "rpS4", group = G11)
-mtOn = input.bool(false, "Trades of one month: a centre panel listing every trade (off by default)", group = G14)
+     tooltip = "How it works for a SELL, measured DOWN from the top: take the last N candles. Their highest high = 0%, their lowest low = 100%. Example with N = 7: highest high 4110, lowest low 4100 -> 25% = 4107.50, 50% = 4105, 75% = 4102.50. A SELL that would enter at 4106 is at 40%.", display = display.none)
+rpS00 = input.bool(true, "SELL 0-5%", inline = "rpS0", group = G11, tooltip = "Take the last N candles: their highest high = 0%, their lowest low = 100% (a SELL is measured DOWN from the top). Where would this SELL enter? Example, N = 7, high 4110, low 4100: a sell at 4108.80 is in 10-15%, at 4106 in 40-45%, at 4100.30 in 95-100%, at 4099 over 100% (below the low - a breakdown). Untick a range to stop selling there; its row in the diagnostics table turns grey (OFF).", display = display.none)
+rpS01 = input.bool(true, "5-10%", inline = "rpS0", group = G11, display = display.none)
+rpS02 = input.bool(true, "10-15%", inline = "rpS0", group = G11, display = display.none)
+rpS03 = input.bool(true, "15-20%", inline = "rpS0", group = G11, display = display.none)
+rpS04 = input.bool(true, "20-25%", inline = "rpS0", group = G11, display = display.none)
+rpS05 = input.bool(true, "SELL 25-30%", inline = "rpS1", group = G11, display = display.none)
+rpS06 = input.bool(true, "30-35%", inline = "rpS1", group = G11, display = display.none)
+rpS07 = input.bool(true, "35-40%", inline = "rpS1", group = G11, display = display.none)
+rpS08 = input.bool(true, "40-45%", inline = "rpS1", group = G11, display = display.none)
+rpS09 = input.bool(true, "45-50%", inline = "rpS1", group = G11, display = display.none)
+rpS10 = input.bool(true, "SELL 50-55%", inline = "rpS2", group = G11, display = display.none)
+rpS11 = input.bool(true, "55-60%", inline = "rpS2", group = G11, display = display.none)
+rpS12 = input.bool(true, "60-65%", inline = "rpS2", group = G11, display = display.none)
+rpS13 = input.bool(true, "65-70%", inline = "rpS2", group = G11, display = display.none)
+rpS14 = input.bool(true, "70-75%", inline = "rpS2", group = G11, display = display.none)
+rpS15 = input.bool(true, "SELL 75-80%", inline = "rpS3", group = G11, display = display.none)
+rpS16 = input.bool(true, "80-85%", inline = "rpS3", group = G11, display = display.none)
+rpS17 = input.bool(true, "85-90%", inline = "rpS3", group = G11, display = display.none)
+rpS18 = input.bool(true, "90-95%", inline = "rpS3", group = G11, display = display.none)
+rpS19 = input.bool(true, "95-100%", inline = "rpS3", group = G11, display = display.none)
+rpS20 = input.bool(true, "SELL over 100%", inline = "rpS4", group = G11, display = display.none)
+G15 = "HIGHER-TIMEFRAME TREND (EA: InpHtfMin / InpHtfEma)"
+htReq = input.string("Off", "Require trend alignment with", options = ["Off", "5 min", "15 min", "30 min", "1 hour", "4 hour"], group = G15,
+     tooltip = "The EA's higher-timeframe filter (InpHtfMin). On the last CLOSED candle of that timeframe: a BUY needs its close ABOVE its EMA and the EMA rising; a SELL needs the close BELOW it and the EMA falling. A setup against that trend is skipped (the next setup may be taken).", display = display.none)
+htEma = input.int(50, "...trend EMA length on that timeframe", minval = 2, group = G15, display = display.none)
+htDiag = input.bool(true, "Show the trend table: this month's win rate / net if only trades WITH each timeframe's trend were kept", group = G15,
+     tooltip = "Each row keeps only this month's trades that were with that timeframe's trend at their setup, and removes the rest (like unticking a range - the other trades stay the same). Turning the filter above ON skips those setups instead, so the next setup may be taken and the result can differ a little.", display = display.none)
+mtOn = input.bool(false, "Trades of one month: a centre panel listing every trade (off by default)", group = G14, display = display.none)
 mtMonth = input.string("This month", "...which month", options = ["This month", "Last month", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"], group = G14,
-     tooltip = "A month name = its latest occurrence (this year, or last year if it has not come yet). The indicator remembers the last 500 trades, and a 1-minute chart only holds a few days of history.")
+     tooltip = "A month name = its latest occurrence (this year, or last year if it has not come yet). The indicator remembers the last 500 trades, and a 1-minute chart only holds a few days of history.", display = display.none)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -216,6 +222,23 @@ monTxt(int k) => array.get(array.from("Jan", "Feb", "Mar", "Apr", "May", "Jun", 
 // chart (sum of the EXIT labels = the panel's net). So labels are drawn for this month only, unless
 // "Draw labels only up to" is set for a screenshot of an older trade.
 inMonth = monthKey(time) == monthKey(timenow)
+// lookahead off: on the chart bar where a higher-timeframe candle closes, it is that candle; before that, the one before it
+htfDir(string tf) =>
+    [hc, e1, e2] = request.security(syminfo.tickerid, tf, [close, ta.ema(close, htEma), ta.ema(close, htEma)[1]])
+    na(e2) ? 0 : hc > e1 and e1 > e2 ? 1 : hc < e1 and e1 < e2 ? -1 : 0
+htD5 = htfDir("5")
+htD15 = htfDir("15")
+htD30 = htfDir("30")
+htD60 = htfDir("60")
+htD240 = htfDir("240")
+// which timeframes a setup on `side` is WITH: 1 = 5m, 2 = 15m, 4 = 30m, 8 = 1h, 16 = 4h
+htMask(int side) => (htD5 == side ? 1 : 0) + (htD15 == side ? 2 : 0) + (htD30 == side ? 4 : 0) + (htD60 == side ? 8 : 0) + (htD240 == side ? 16 : 0)
+htBit(int m, int i) => int(m / math.pow(2, i)) % 2 == 1
+var int    pHtM = 0
+var int    sHtM = 0
+var array<int>   htN = array.new<int>(6, 0)       // trend table, this month: 0-4 = 5m 15m 30m 1h 4h, 5 = every trade
+var array<int>   htW = array.new<int>(6, 0)
+var array<float> htP = array.new<float>(6, 0.0)
 var bool sGhost = false       // Zee 2026-10-16: a trade in an unticked range, "stand aside": runs unseen and uncounted
 // the range bucket of an entry = the rows of the diagnostics table: 0-5% ... 95-100% (0..19), over 100% (20)
 rpBucket(float chase) => na(chase) ? 10 : chase > 100 ? 20 : chase <= 0 ? 0 : math.min(int(math.floor(chase / 5)), 19)
@@ -449,6 +472,7 @@ if ta.change(monthKey(time)) != 0
     nT := 0, nW := 0, nL := 0, nLong := 0, nShort := 0, nSetups := 0, nNoBrk := 0, nGap := 0, nRisk := 0, nNoSup := 0
     nChop := 0, nBusy := 0, nCtc := 0, nTp1 := 0, nDayClose := 0, gW := 0.0, gL := 0.0, netL := 0.0, netS := 0.0
     array.fill(dgN, 0), array.fill(dgW, 0), array.fill(dgP, 0.0)
+    array.fill(htN, 0), array.fill(htW, 0), array.fill(htP, 0.0)
 
 // a small tag on this candle (TP reached, CTC ...): the long explanation is in the tooltip
 note(float y, bool above, string txt, color bg, string tip = "") =>
@@ -671,6 +695,7 @@ for k = 0 to nSteps - 1
                 sUsd := false, pkBest := en, sPk := false, adRun := 0, adWhy := "", sChase := chase, sBest := en, sBar := bar_index, sNum := tN, sStage := 1, sNext := na, sRem := 1.0, sReal := 0.0
                 sCtc := false, sMoves := 0, sDesc := pDesc, sSlFrom := bar_index, sEnT := tk
                 sNum := sGhost ? 0 : tN
+                sHtM := pHtM
                 entryK := k
                 float risk = math.abs(en - sl) * iLots * iCs
                 string tpTxt = side > 0 ? (noTp ? "none - trailing from entry" : "touch of the " + str.tostring(pExit) + " EMA") : fp(tp) + " (last support)"
@@ -704,6 +729,11 @@ if not na(exitPx)
         array.set(dgW, bk, array.get(dgW, bk) + 1)
     if not sGhost
         nT += 1, nToday += 1, pnlToday += pnl
+        for h = 0 to 5
+            if h == 5 or htBit(sHtM, h)
+                array.set(htN, h, array.get(htN, h) + 1), array.set(htP, h, array.get(htP, h) + pnl)
+                if pnl > 0
+                    array.set(htW, h, array.get(htW, h) + 1)
     // the AVERAGE exit over the whole position (TP1 part + the rest): Zee 2026-10-16, #274 showed only the last 5%'s exit
     if not sGhost
         float avgEx = math.round((sSide > 0 ? sEn + (pnl + iComm * iLots) / (iLots * iCs) : sEn - (pnl + iComm * iLots) / (iLots * iCs)) * 100) / 100
@@ -827,9 +857,12 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
                 log.info("CHOPPY|{0}|{1}|ER={2}", ts(time), longOk ? "LONG" : "SHORT", str.tostring(er, "#.###"))
         else if sSide != 0 or pSide != 0
             nBusy += 1
+        else if htReq != "Off" and not htBit(htMask(longOk ? 1 : -1), array.indexof(array.from("5 min", "15 min", "30 min", "1 hour", "4 hour"), htReq))
+            skipNote(longOk ? 1 : -1, "against the " + htReq + " trend")
         else
             int side = longOk ? 1 : -1
             nSetups += 1
+            pHtM := htMask(side)
             pSide := side, pHi := high, pLo := low, pLeft := iBreakB, pBar := bar_index, pConf := false
             pExit := side > 0 ? (rulesOk ? 50 : 9) : 0
             string kindTxt = kindN == 1 ? "PIN BAR" : kindN == 2 ? (side > 0 ? "HAMMER" : "SHOOTING STAR") : "MARUBOZU"
@@ -1028,32 +1061,58 @@ if barstate.islast and iPanel
         table.merge_cells(p, 0, r, 3, r)
 
 // ── TOP / BOTTOM diagnostics (middle left, off by default): BUY and SELL side by side, each on its own window ──
-if barstate.islast and rpDiag
-    var table dg = table.new(position.middle_left, 7, 24, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
-    table.cell(dg, 0, 0, "Entry position in the range (this month)", text_color = color.yellow, text_size = size.normal)
-    table.merge_cells(dg, 0, 0, 6, 0)
-    table.cell(dg, 0, 1, "", text_size = size.small)
-    table.cell(dg, 1, 1, "BUY · last " + str.tostring(rpLook) + " candles", text_color = color.aqua, text_size = size.small)
-    table.merge_cells(dg, 1, 1, 3, 1)
-    table.cell(dg, 4, 1, "SELL · last " + str.tostring(rpLookS) + " candles", text_color = color.fuchsia, text_size = size.small)
-    table.merge_cells(dg, 4, 1, 6, 1)
-    table.cell(dg, 0, 2, "BUY near the top / SELL near the bottom", text_color = color.silver, text_size = size.small)
-    for s = 0 to 1
-        table.cell(dg, 1 + 3 * s, 2, "trades", text_color = color.silver, text_size = size.small)
-        table.cell(dg, 2 + 3 * s, 2, "win rate", text_color = color.silver, text_size = size.small)
-        table.cell(dg, 3 + 3 * s, 2, "net", text_color = color.silver, text_size = size.small)
-    for b = 0 to 20
-        table.cell(dg, 0, b + 3, rpName(b) + (b == 0 ? " (far from the extreme)" : b == 20 ? " (a new high / low)" : ""), text_color = color.white, text_size = size.small, text_halign = text.align_left)
+// (+ the higher-timeframe trend rows below them, Zee 2026-10-16)
+if barstate.islast and (rpDiag or htDiag)
+    var table dg = table.new(position.middle_left, 7, 33, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    table.clear(dg, 0, 0, 6, 32)
+    int r0 = 0
+    if rpDiag
+        table.cell(dg, 0, 0, "Entry position in the range (this month)", text_color = color.yellow, text_size = size.normal)
+        table.merge_cells(dg, 0, 0, 6, 0)
+        table.cell(dg, 0, 1, "", text_size = size.small)
+        table.cell(dg, 1, 1, "BUY · last " + str.tostring(rpLook) + " candles", text_color = color.aqua, text_size = size.small)
+        table.merge_cells(dg, 1, 1, 3, 1)
+        table.cell(dg, 4, 1, "SELL · last " + str.tostring(rpLookS) + " candles", text_color = color.fuchsia, text_size = size.small)
+        table.merge_cells(dg, 4, 1, 6, 1)
+        table.cell(dg, 0, 2, "BUY near the top / SELL near the bottom", text_color = color.silver, text_size = size.small)
         for s = 0 to 1
-            int k = b + 21 * s
-            int n = array.get(dgN, k)
-            float pn = array.get(dgP, k)
-            bool on = rpOn(s == 0 ? 1 : -1, b)
-            color tc = on ? color.white : color.new(color.gray, 30)
-            table.cell(dg, 1 + 3 * s, b + 3, on ? str.tostring(n) : "OFF · " + str.tostring(n), text_color = tc, text_size = size.small,
-                 tooltip = on ? "" : "Unticked: " + (rpOff == "Skip it and take the next setup" ? "these setups are skipped (0 trades)" : "not traded, not counted - the numbers show what these trades would have done"))
-            table.cell(dg, 2 + 3 * s, b + 3, n > 0 ? str.tostring(100.0 * array.get(dgW, k) / n, "#") + "%" : "-", text_color = tc, text_size = size.small)
-            table.cell(dg, 3 + 3 * s, b + 3, fm(pn), text_color = on ? (pn >= 0 ? color.lime : color.red) : color.new(color.gray, 30), text_size = size.small)
+            table.cell(dg, 1 + 3 * s, 2, "trades", text_color = color.silver, text_size = size.small)
+            table.cell(dg, 2 + 3 * s, 2, "win rate", text_color = color.silver, text_size = size.small)
+            table.cell(dg, 3 + 3 * s, 2, "net", text_color = color.silver, text_size = size.small)
+        for b = 0 to 20
+            table.cell(dg, 0, b + 3, rpName(b) + (b == 0 ? " (far from the extreme)" : b == 20 ? " (a new high / low)" : ""), text_color = color.white, text_size = size.small, text_halign = text.align_left)
+            for s = 0 to 1
+                int k = b + 21 * s
+                int n = array.get(dgN, k)
+                float pn = array.get(dgP, k)
+                bool on = rpOn(s == 0 ? 1 : -1, b)
+                color tc = on ? color.white : color.new(color.gray, 30)
+                table.cell(dg, 1 + 3 * s, b + 3, on ? str.tostring(n) : "OFF · " + str.tostring(n), text_color = tc, text_size = size.small,
+                     tooltip = on ? "" : "Unticked: " + (rpOff == "Skip it and take the next setup" ? "these setups are skipped (0 trades)" : "not traded, not counted - the numbers show what these trades would have done"))
+                table.cell(dg, 2 + 3 * s, b + 3, n > 0 ? str.tostring(100.0 * array.get(dgW, k) / n, "#") + "%" : "-", text_color = tc, text_size = size.small)
+                table.cell(dg, 3 + 3 * s, b + 3, fm(pn), text_color = on ? (pn >= 0 ? color.lime : color.red) : color.new(color.gray, 30), text_size = size.small)
+        r0 := 24
+    if htDiag
+        table.cell(dg, 0, r0, "With the higher-timeframe trend (this month, " + str.tostring(htEma) + " EMA)", text_color = color.yellow, text_size = size.normal)
+        table.merge_cells(dg, 0, r0, 6, r0)
+        table.cell(dg, 0, r0 + 1, "keep only the trades WITH ...", text_color = color.silver, text_size = size.small, text_halign = text.align_left)
+        table.cell(dg, 1, r0 + 1, "trades", text_color = color.silver, text_size = size.small)
+        table.cell(dg, 2, r0 + 1, "win rate", text_color = color.silver, text_size = size.small)
+        table.cell(dg, 3, r0 + 1, "net", text_color = color.silver, text_size = size.small)
+        table.cell(dg, 4, r0 + 1, "vs now", text_color = color.silver, text_size = size.small)
+        float allP = array.get(htP, 5)
+        for h = 0 to 5
+            int n = array.get(htN, h)
+            float pn = array.get(htP, h)
+            float wr = n > 0 ? 100.0 * array.get(htW, h) / n : 0.0
+            bool req = htReq != "Off" and h == array.indexof(array.from("5 min", "15 min", "30 min", "1 hour", "4 hour"), htReq)
+            string nm = h == 5 ? "Now (every trade)" + (htReq != "Off" ? " - " + htReq + " filter ON" : "") : "Require " + array.get(array.from("5 min", "15 min", "30 min", "1 hour", "4 hour"), h) + " trend alignment" + (req ? " (ON)" : "")
+            int r = r0 + 2 + h
+            table.cell(dg, 0, r, nm, text_color = h == 5 ? color.aqua : req ? color.yellow : color.white, text_size = size.normal, text_halign = text.align_left)
+            table.cell(dg, 1, r, str.tostring(n), text_color = color.white, text_size = size.normal)
+            table.cell(dg, 2, r, n > 0 ? str.tostring(wr, "#") + "%" : "-", text_color = wr >= 50 ? color.lime : color.orange, text_size = size.normal)
+            table.cell(dg, 3, r, fm(pn), text_color = pn >= 0 ? color.lime : color.red, text_size = size.normal)
+            table.cell(dg, 4, r, h == 5 ? "" : fm(pn - allP), text_color = pn - allP >= 0 ? color.lime : color.red, text_size = size.small)
 
 // ── TRADE EXPORT (bottom centre, off by default): one row per trade, UTC times, for a trade-by-trade check against MT5 ──
 if barstate.islast and exOn
