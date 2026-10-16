@@ -179,14 +179,73 @@ def parse_positions(path, offset_h):
     return pos
 
 
+BB_EXE = Path(r"C:\Program Files\Blueberry Markets MetaTrader 5 Terminal\terminal64.exe")
+BB_DATA = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\27280402C90F04230EE7E17540AE21E1")
+
+
+def _ps(cmd):
+    return subprocess.run(["powershell", "-NoProfile", "-Command", cmd], capture_output=True, text=True, timeout=120).stdout.strip()
+
+
+def bb_live_run(sets, period, frm, to, delay, tag):
+    """Zee 2026-10-16: "can you use the blueberry demo account already logged in. its ok to use the blueberry already open".
+    The Strategy Tester of his OWN Blueberry terminal (demo 12665564, symbol XAUUSD = TradingView's BLUEBERRY:XAUUSD feed).
+    MT5 runs one copy per data folder, so the open terminal is closed first (gracefully), the test runs with
+    ShutdownTerminal=1, and the terminal is opened again afterwards."""
+    me = BB_EXE.with_name("MetaEditor64.exe")
+    for src, sub in ((ROOT / "mt5" / "SaadEMAs.mq5", "Indicators"), (ROOT / "mt5" / f"{EA}.mq5", "Experts")):
+        dst = BB_DATA / "MQL5" / sub / src.name
+        dst.write_bytes(src.read_bytes())
+        log = BB_DATA / "compare_compile.log"
+        subprocess.run([str(me), f"/compile:{dst}", f"/log:{log}"], timeout=180)
+        txt = log.read_text(encoding="utf-16", errors="ignore")
+        if "Result: 0 errors" not in txt:
+            raise RuntimeError(f"compile of {src.name} in the Blueberry terminal failed: {txt[-600:]}")
+    exe = str(BB_EXE).replace("'", "''")
+    _ps(f"Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object {{ $_.Path -eq '{exe}' }} | ForEach-Object {{ $_.CloseMainWindow() | Out-Null }}")
+    for _ in range(30):
+        if not _ps(f"Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object {{ $_.Path -eq '{exe}' }} | Select-Object -ExpandProperty Id"):
+            break
+        time.sleep(1)
+    else:
+        raise RuntimeError("the Blueberry terminal did not close (a dialog open?) - close it and run again")
+    inputs = axi_rig.ea_defaults(EA)
+    inputs.update(sets)
+    ti = "".join(f"{k}={v}||{v}||0||{v}||N\r\n" for k, v in inputs.items())
+    ini = (f"[Tester]\r\nExpert={EA}\r\nSymbol=XAUUSD\r\nPeriod={period}\r\nModel=4\r\nFromDate={frm}\r\nToDate={to}\r\n"
+           f"Deposit=100000\r\nCurrency=USD\r\nLeverage=1:500\r\nExecutionMode={delay}\r\nOptimization=0\r\n"
+           f"Report=reports\\{tag}\r\nReplaceReport=1\r\nShutdownTerminal=1\r\nVisual=0\r\n[TesterInputs]\r\n{ti}")
+    (BB_DATA / "reports").mkdir(exist_ok=True)     # MT5 writes no report at all when this folder is missing
+    cfg = BB_DATA / "compare_run.ini"
+    cfg.write_text(ini, encoding="utf-16")
+    cands = [BB_DATA / "reports" / f"{tag}.htm", BB_EXE.parent / "reports" / f"{tag}.htm"]
+    t0 = time.time()
+    try:
+        subprocess.run([str(BB_EXE), f"/config:{cfg}"], timeout=3600)
+    finally:
+        subprocess.Popen([str(BB_EXE)], creationflags=0x00000008)   # give Zee his terminal back (detached)
+    rep = next((c for c in cands if c.exists() and c.stat().st_mtime >= t0), None)
+    if rep is None:
+        raise RuntimeError("the Blueberry tester wrote no report - see the terminal's Journal")
+    r = axi_rig.parse(rep)
+    r.update(tag=tag, symbol="XAUUSD", period=period)
+    return r, rep
+
+
 def run_mt5(frm, to, symbol, offset_h, delay):
     tvd = STATE["tv"]
     if not tvd:
         raise RuntimeError("read TradingView first")
     rig, _, symbol = symbol.partition("|") if "|" in symbol else ("axi", "", symbol)
+    tag = "compare_page"
+    if rig == "bblive":
+        r, rep = bb_live_run(tvd["ea_sets"], tvd["period"], frm.replace("-", "."), to.replace("-", "."), int(delay), tag)
+        pos = parse_positions(rep, offset_h)
+        r.pop("daily", None)
+        return {"summary": r, "positions": pos, "symbol": "Blueberry demo XAUUSD (your terminal)", "frm": frm, "to": to,
+                "offset": offset_h, "delay": delay, "ran_at": datetime.now().strftime("%H:%M:%S")}
     axi_rig.use(rig)               # 'axi' = C:/mt5_rig_axi, 'bb' = C:/mt5_rig_bb (Blueberry)
     axi_rig.compile_ea(EA)
-    tag = "compare_page"
     r = axi_rig.run(EA, symbol, tvd["period"], tvd["ea_sets"], frm=frm.replace("-", "."), to=to.replace("-", "."),
                     deposit=100000, exec_mode=int(delay), tag=tag)
     if r.get("error"):
