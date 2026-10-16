@@ -39,6 +39,7 @@
 //| v1.20: stop decisions use the chart's entry price (EnJ)          |
 //| v1.21: TP1 reached on the chart's candle -> TP1 at the next open  |
 //| v1.22: a chart-candle stop = closed during that candle (not busy) |
+//| v1.23: no chart candles for a date -> MT5's own candles          |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -77,7 +78,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.22"
+#property version   "1.23"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -88,7 +89,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.22"
+#define EA_COMMENT "Saad1m v1.23"
 
 //--- the two lines
 input int    InpEmaFast     = 3;      // InpEmaFast
@@ -309,6 +310,7 @@ double Buf(int h, int s) { double v[1]; return CopyBuffer(h, 0, s, 1, v) == 1 ? 
 // the strategy judges comes from ONE place. InpBarSource 1 = the TradingView chart's own candles, so the EA sees the
 // setups the chart sees; orders, stops and fills stay on the MT5 price. Shift 0 (the forming candle) is always MT5's.
 datetime tvT[]; double tvO[], tvH[], tvL[], tvC[], tvEF[], tvES[], tvA[];
+bool g_useTv = false;                // v1.23: this candle has chart candles behind it (else MT5's own candles - Zee's 10-month run traded only Oct 12-16)
 bool g_tvStale = false;              // live: the chart's candle never came - no setups / candle stops on an old candle
 int g_tvN = 0, g_tvEnd = -1;          // g_tvEnd = index of the last CLOSED chart candle (shift 1)
 uint g_tvReadMs = 0;
@@ -353,12 +355,17 @@ void TvSync(datetime bar)
 // live: the chart's candle for the minute that just closed has arrived (or we waited long enough)
 bool TvReady(datetime bar)
 {
-   if (InpBarSource != 1) return true;
+   if (InpBarSource != 1) { g_useTv = false; return true; }
    if (g_tvN == 0 || tvT[g_tvN - 1] < bar - PeriodSeconds()) {
       if (!MQLInfoInteger(MQL_TESTER) && GetTickCount() - g_tvReadMs >= 1000) TvLoad();
    }
    static int lastEnd = -2;
    TvSync(bar);
+   // v1.23 (Zee 2026-10-17: "the graph for 10 months keeps going upwards"): before the chart's first candles (+ warm-up), or after the
+   // file ends in the tester, the EA uses MT5's own candles instead of standing still - a long test trades every month
+   int warm = MathMin(InpEmaSlow * 2 + 19, g_tvN - 1);
+   g_useTv = g_tvN > 0 && warm >= 0 && bar - PeriodSeconds() >= tvT[warm] && (!MQLInfoInteger(MQL_TESTER) || bar - PeriodSeconds() <= tvT[g_tvN - 1]);
+   if (!g_useTv) { g_tvStale = false; lastEnd = g_tvEnd; return true; }
    g_tvStale = g_tvEnd < 0 || g_tvEnd == lastEnd;          // no new chart candle: the chart takes no step either
    if (g_tvEnd >= 0 && tvT[g_tvEnd] >= bar - PeriodSeconds()) { lastEnd = g_tvEnd; return true; }
    if (MQLInfoInteger(MQL_TESTER)) { lastEnd = g_tvEnd; return true; }   // the file is complete; a missing chart minute stays missing
@@ -371,15 +378,15 @@ bool TvReady(datetime bar)
    return true;
 }
 int    TvI(int s) { int i = g_tvEnd - s + 1; return i >= 0 && i <= g_tvEnd ? i : -1; }
-double BOpen(int s)  { if (InpBarSource != 1 || s <= 0) return iOpen(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvO[i]; }
-double BHigh(int s)  { if (InpBarSource != 1 || s <= 0) return iHigh(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvH[i]; }
-double BLow(int s)   { if (InpBarSource != 1 || s <= 0) return iLow(_Symbol, PERIOD_CURRENT, s);   int i = TvI(s); return i < 0 ? 0 : tvL[i]; }
-double BClose(int s) { if (InpBarSource != 1 || s <= 0) return iClose(_Symbol, PERIOD_CURRENT, s); int i = TvI(s); return i < 0 ? 0 : tvC[i]; }
-datetime BTime(int s){ if (InpBarSource != 1 || s <= 0) return iTime(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvT[i]; }
-double Atr(int s)    { if (InpBarSource != 1) return Buf(hAtr, s); int i = TvI(MathMax(s, 1)); return i < 0 ? 0 : tvA[i]; }
+double BOpen(int s)  { if (!g_useTv || s <= 0) return iOpen(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvO[i]; }
+double BHigh(int s)  { if (!g_useTv || s <= 0) return iHigh(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvH[i]; }
+double BLow(int s)   { if (!g_useTv || s <= 0) return iLow(_Symbol, PERIOD_CURRENT, s);   int i = TvI(s); return i < 0 ? 0 : tvL[i]; }
+double BClose(int s) { if (!g_useTv || s <= 0) return iClose(_Symbol, PERIOD_CURRENT, s); int i = TvI(s); return i < 0 ? 0 : tvC[i]; }
+datetime BTime(int s){ if (!g_useTv || s <= 0) return iTime(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvT[i]; }
+double Atr(int s)    { if (!g_useTv) return Buf(hAtr, s); int i = TvI(MathMax(s, 1)); return i < 0 ? 0 : tvA[i]; }
 double EmaX(int fast, int s)
 {
-   if (InpBarSource != 1) return Buf(fast ? hFast : hSlow, s);
+   if (!g_useTv) return Buf(fast ? hFast : hSlow, s);
    int i = TvI(MathMax(s, 1)); if (i < 0) return 0;
    double e = fast ? tvEF[i] : tvES[i];
    if (s > 0) return e;
@@ -416,7 +423,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.22 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.23 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -856,7 +863,7 @@ void LongTouched(int i, double bid)
    double cur = PositionGetDouble(POSITION_SL);
    double sl = NormalizeDouble(MathMax(cur, bid - TrailL()), _Digits);
    if (InpTp1Be && g_pos[i].entry < bid) sl = NormalizeDouble(MathMax(sl, g_pos[i].entry), _Digits);
-   if (InpTvVerdict && InpBarSource == 1 && InpSlNextBar) { g_pos[i].tp1Pend = true; g_pos[i].tp1Lvl = g_pos[i].resTp1 ? g_pos[i].tp : bid; g_pos[i].tp1Bar = iTime(_Symbol, PERIOD_CURRENT, 0); sl = cur; }   // v1.19: decided on the chart's TP1 candle
+   if (InpTvVerdict && g_useTv && InpSlNextBar) { g_pos[i].tp1Pend = true; g_pos[i].tp1Lvl = g_pos[i].resTp1 ? g_pos[i].tp : bid; g_pos[i].tp1Bar = iTime(_Symbol, PERIOD_CURRENT, 0); sl = cur; }   // v1.19: decided on the chart's TP1 candle
    double res = InpLongResTp ? LastResistance(bid + InpMinTpPips * Pip()) : 0;
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
    if (sl >= bid - lvl) sl = cur;
@@ -882,7 +889,7 @@ void ShortTouched(int i, double bid)
    double cur = PositionGetDouble(POSITION_SL);
    double sl = NormalizeDouble(cur > 0 ? MathMin(cur, ask + TrailS()) : ask + TrailS(), _Digits);
    if (InpTp1Be && g_pos[i].entry > ask) sl = NormalizeDouble(MathMin(sl, g_pos[i].entry), _Digits);
-   if (InpTvVerdict && InpBarSource == 1 && InpSlNextBar) { g_pos[i].tp1Pend = true; g_pos[i].tp1Lvl = g_pos[i].tp; g_pos[i].tp1Bar = iTime(_Symbol, PERIOD_CURRENT, 0); sl = cur; }   // v1.19: decided on the chart's TP1 candle
+   if (InpTvVerdict && g_useTv && InpSlNextBar) { g_pos[i].tp1Pend = true; g_pos[i].tp1Lvl = g_pos[i].tp; g_pos[i].tp1Bar = iTime(_Symbol, PERIOD_CURRENT, 0); sl = cur; }   // v1.19: decided on the chart's TP1 candle
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
    if (sl <= ask + lvl) sl = cur;
    if (sl != cur) QueueSl(i, sl, "");
@@ -1335,10 +1342,10 @@ void OnTick()
          if (fh != INVALID_HANDLE) { FileWrite(fh, TimeToString(iTime(_Symbol, PERIOD_CURRENT, 1), TIME_DATE | TIME_MINUTES), Px(iOpen(_Symbol, PERIOD_CURRENT, 1)), Px(iHigh(_Symbol, PERIOD_CURRENT, 1)),
                                                Px(iLow(_Symbol, PERIOD_CURRENT, 1)), Px(iClose(_Symbol, PERIOD_CURRENT, 1)), DoubleToString(Buf(hFast, 1), 3), DoubleToString(Buf(hSlow, 1), 3)); FileFlush(fh); }
       }
-      if (InpTvVerdict && InpBarSource == 1) { TvVerdict(); SyncPos(); }
+      if (InpTvVerdict && g_useTv) { TvVerdict(); SyncPos(); }
       ApplyPendingSl();
       SyncPos();
-      if (Bars(_Symbol, PERIOD_CURRENT) >= InpEmaSlow * 2 + 20 && !g_tvStale && (InpBarSource != 1 || g_tvEnd >= InpEmaSlow * 2 + 19)) {
+      if (Bars(_Symbol, PERIOD_CURRENT) >= InpEmaSlow * 2 + 20 && !g_tvStale && (!g_useTv || g_tvEnd >= InpEmaSlow * 2 + 19)) {
          ManageBar();
          SyncPos();
          // the waiting setup: a gap in time cancels it, otherwise one fewer candle to break
@@ -1350,7 +1357,7 @@ void OnTick()
          if (g_pSide != 0) {
             if (InpGapCancel && iTime(_Symbol, PERIOD_CURRENT, 0) - BTime(1) > PeriodSeconds() * 3 / 2) { g_skipGap++; DSkip(g_pSide, "market closed in between"); g_pSide = 0; }
             else if (g_retryUntil > TimeCurrent()) { /* waiting for the broker to open: keep the setup */ }
-            else if (InpTvVerdict && InpBarSource == 1 && InpEntryMode == 0 && ArraySize(g_pos) == 0 && BTime(1) > g_pTime &&
+            else if (InpTvVerdict && g_useTv && InpEntryMode == 0 && ArraySize(g_pos) == 0 && BTime(1) > g_pTime &&
                      (g_pSide > 0 ? BHigh(1) > g_pHigh + InpBreakPips * Pip() : BLow(1) < g_pLow - InpBreakPips * Pip())) {
                Log(StringFormat("the chart's candle broke the %s (MT5's ticks did not) - entering at this open", g_pSide > 0 ? "high" : "low"));
                g_late = true; TryEntry(); g_late = false;
