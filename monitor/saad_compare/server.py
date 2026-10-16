@@ -33,6 +33,9 @@ CLI = r"C:\Users\zeesh\Documents\GitHub\tradingview-mcp\src\cli\index.js"
 PINE = ROOT / "pine" / "saad_15min.pine"
 EA = "Saad_strategy_1min"
 PORT = 8772
+# Zee 2026-10-16: "its opening a lot of black windows which dissappear immediately.. window title says node js" -
+# the server runs under pythonw (no console), so every node / powershell child opened its own console window.
+NO_WINDOW = 0x08000000    # CREATE_NO_WINDOW on every console child
 LOCK = threading.Lock()
 STATE = {"tv": None, "mt5": None, "sync": None, "busy": ""}
 
@@ -64,7 +67,8 @@ PERIODS = {"1": "M1", "5": "M5", "15": "M15", "30": "M30", "60": "H1"}
 
 
 def tv(*args):
-    r = subprocess.run([NODE, CLI, *args], capture_output=True, text=True, encoding="utf-8", errors="ignore", timeout=120)
+    r = subprocess.run([NODE, CLI, *args], capture_output=True, text=True, encoding="utf-8", errors="ignore", timeout=120,
+                       creationflags=NO_WINDOW)
     try:
         return json.loads(r.stdout)
     except Exception:
@@ -197,7 +201,8 @@ BB_DATA = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Terminal\27280402C90F
 
 
 def _ps(cmd):
-    return subprocess.run(["powershell", "-NoProfile", "-Command", cmd], capture_output=True, text=True, timeout=120).stdout.strip()
+    return subprocess.run(["powershell", "-NoProfile", "-Command", cmd], capture_output=True, text=True, timeout=120,
+                          creationflags=NO_WINDOW).stdout.strip()
 
 
 def bb_live_run(sets, period, frm, to, delay, tag):
@@ -210,7 +215,7 @@ def bb_live_run(sets, period, frm, to, delay, tag):
         dst = BB_DATA / "MQL5" / sub / src.name
         dst.write_bytes(src.read_bytes())
         log = BB_DATA / "compare_compile.log"
-        subprocess.run([str(me), f"/compile:{dst}", f"/log:{log}"], timeout=180)
+        subprocess.run([str(me), f"/compile:{dst}", f"/log:{log}"], timeout=180, creationflags=NO_WINDOW)
         txt = log.read_text(encoding="utf-16", errors="ignore")
         if "Result: 0 errors" not in txt:
             raise RuntimeError(f"compile of {src.name} in the Blueberry terminal failed: {txt[-600:]}")
