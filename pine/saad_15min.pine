@@ -170,7 +170,7 @@ rpB18 = input.bool(true, "90-95%", inline = "rpB3", group = G11, display = displ
 rpB19 = input.bool(true, "95-100%", inline = "rpB3", group = G11, display = display.none)
 rpB20 = input.bool(true, "BUY over 100%", inline = "rpB4", group = G11, display = display.none)
 rpDiag = input.bool(false, "Show the diagnostics table: this month's trades grouped by where in the range they entered (BUY from the low, SELL from the high)", group = G11, display = display.none)
-rpOff = input.string("Stand aside while it would have run", "When a range is unticked", options = ["Stand aside while it would have run", "Skip it and take the next setup"], group = G11,
+rpOff = input.string("Stand aside while it would have run", "When a range is unticked", options = ["Stand aside while it would have run", "Skip it and take the next setup", "Pause N candles (MT5 can do this)"], group = G11,
      tooltip = "Stand aside (Zee 2026-10-16): the trade in an unticked range is not taken and NO other trade starts until it would have closed - so every other range keeps exactly the same trades and the diagnostics table does not shift. It is invisible on the chart and not counted anywhere. Skip it and take the next setup: the next setup may start right away, which changes the trades after it (MT5's EA works this way).", display = display.none)
 G12 = "COOL-DOWN AFTER AN EXIT (chart-only, not in the EA yet)"
 coolN = input.int(0, "No new trade for N candles after a trade closes (0 = off; 2 = the exit candle + the next 2)", minval = 0, group = G12, display = display.none)
@@ -224,6 +224,7 @@ tpFib = input.float(161.8, "Fibonacci · TP1 at X% of the setup candle's range (
 tpPart = input.float(0.5, "Partial · close this share at the target (0.5 = half)", step = 0.05, minval = 0, maxval = 1, group = GTP, tooltip = "EA: InpTpPartPct. Used only by the Partial method; the other methods use the AFTER TP1 share.", display = display.none)
 tpPartTr = input.float(2.0, "Partial · the rest trails $X behind the best price", step = 0.5, minval = 0.1, group = GTP, tooltip = "EA: InpTpPartTrailUsd. Used only by the Partial method; the other methods use the AFTER TP1 trails.", display = display.none)
 tpNoFix = input.string("Use the normal TP1", "Fixed $ / Fibonacci / Partial · target not far enough beyond the entry", options = ["Use the normal TP1", "Skip the trade"], group = GTP, tooltip = "Zee 2026-10-17. Skip the trade = what the EXIT LAB row does (it only counts trades whose target exists). EA: InpTpNoFixSkip.", display = display.none)
+rpPause = input.int(10, "...with Pause: no new trade for N candles after a trade is skipped in an unticked range", minval = 1, group = G11, tooltip = "Zee 2026-10-17: stand aside is a kind of cool-down - this one MT5 can execute. EA: InpBandPauseBars.", display = display.none)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -272,6 +273,7 @@ xRsi = ta.rsi(close, 14)
 xPart = tpMode == "Partial: close a share at a fixed $ target, trail the rest" ? tpPart : iPartial
 xTrL = tpMode == "Partial: close a share at a fixed $ target, trail the rest" ? tpPartTr : iLTrail
 xTrS = tpMode == "Partial: close a share at a fixed $ target, trail the rest" ? tpPartTr : iSTrail
+var int  rpUntil = -1            // Pause: no entry up to this bar (after a trade skipped in an unticked range)
 var bool sGhost = false       // Zee 2026-10-16: a trade in an unticked range, "stand aside": runs unseen and uncounted
 // the range bucket of an entry = the rows of the diagnostics table: 0-5% ... 95-100% (0..19), over 100% (20)
 rpBucket(float chase) => na(chase) ? 10 : chase > 100 ? 20 : chase <= 0 ? 0 : math.min(int(math.floor(chase / 5)), 19)
@@ -712,8 +714,12 @@ for k = 0 to nSteps - 1
             int bandLook = side > 0 ? rpLook : rpLookS
             if coolN > 0 and bar_index - lxBar <= coolN and (coolDir == "Both directions" or side == lxSide) and (not coolWin or lxWin)
                 skipWhy := "cool-down: " + str.tostring(bar_index - lxBar) + " candle(s) after the last " + (lxSide > 0 ? "BUY" : "SELL") + " closed" + (lxWin ? " in profit" : "")
-            else if rangeOff and rpOff == "Skip it and take the next setup"
+            else if rpOff == "Pause N candles (MT5 can do this)" and bar_index <= rpUntil
+                skipWhy := "pausing " + str.tostring(rpPause) + " candles after a trade skipped in an unticked range"
+            else if rangeOff and (rpOff == "Skip it and take the next setup" or rpOff == "Pause N candles (MT5 can do this)")
                 skipWhy := (side > 0 ? "BUY at " : "SELL at ") + str.tostring(chase, "#") + "% of the last " + str.tostring(bandLook) + " candles' range: the " + rpName(bkE) + " range is unticked"
+                if rpOff == "Pause N candles (MT5 can do this)"
+                    rpUntil := bar_index + rpPause
             else if iMaxRisk > 0 and math.abs(en - sl) > iMaxRisk
                 skipWhy := "stop too far ($" + fp(math.abs(en - sl)) + " > $" + fp(iMaxRisk) + ")"
                 nRisk += 1

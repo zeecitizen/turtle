@@ -26,6 +26,7 @@
 //| v1.07: InpTpMode - TP1 method: normal / fixed $ / Fib / partial   |
 //| v1.08: a TP1 share of 1 closes the whole trade at TP1            |
 //| v1.09: InpTpNoFixSkip - skip a trade whose method target is near |
+//| v1.10: InpBandPauseBars - pause N candles after a range skip       |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -64,7 +65,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.09"
+#property version   "1.10"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -75,7 +76,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.09"
+#define EA_COMMENT "Saad1m v1.10"
 
 //--- the two lines
 input int    InpEmaFast     = 3;      // InpEmaFast
@@ -231,6 +232,7 @@ input int    InpUsdTrailMode = 1;     // InpUsdTrailMode - the $ trail after TP1
 input bool   InpNoEntryExitBar = true; // InpNoEntryExitBar - no new trade in the candle where the last one closed (the chart's minute-by-minute engine)
 input string InpBandsB      = "111111111111111111111"; // InpBandsB - BUY ranges of the last InpRangeLook candles, one digit each: 0-5%, 5-10% ... 95-100%, over 100% (1 = trade, 0 = skip) - the chart's TOP / BOTTOM tick-boxes
 input string InpBandsS      = "111111111111111111111"; // InpBandsS - SELL ranges, measured down from the high, same 21 digits
+input int    InpBandPauseBars = 0;   // InpBandPauseBars - after a trade skipped in an unticked range, no new trade for N candles (0 = take the next setup; the chart's "Pause N candles")
 input int    InpTpMode      = 0;      // InpTpMode - TP1 method: 0 normal (BUY other-EMA touch, SELL last swing low) · 1 fixed $ · 2 Fibonacci extension of the setup candle · 3 partial (a share at the fixed $, the rest trails)
 input double InpTpFixUsdB   = 2.0;    // InpTpFixUsdB - modes 1 / 3: BUY TP1 = the entry + $X
 input double InpTpFixUsdS   = 2.0;    // InpTpFixUsdS - modes 1 / 3: SELL TP1 = the entry - $X
@@ -387,7 +389,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.09 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.10 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -1000,6 +1002,9 @@ void TryEntry()
    int    bLook = side > 0 ? InpRangeLook : InpRangeLookS;
    double bMin = side > 0 ? InpRangeMin : InpRangeMinS, bMax = side > 0 ? InpRangeMax : InpRangeMaxS;
    string bands = side > 0 ? InpBandsB : InpBandsS;
+   // v1.10 (Zee 2026-10-17, "the stand aside is just a form of a cooldown"): pausing after a trade skipped in an unticked range
+   static datetime pauseUntil = 0;
+   if (InpBandPauseBars > 0 && BTime(0) <= pauseUntil) { DSkip(side, StringFormat("pausing %d candles after a trade skipped in an unticked range", InpBandPauseBars)); return; }
    if (bMin > 0 || bMax > 0 || StringFind(bands, "0") >= 0) {
       double hi = 0, lo = DBL_MAX;
       for (int k = 1; k <= bLook; k++) { hi = MathMax(hi, BHigh(k)); lo = MathMin(lo, BLow(k)); }
@@ -1017,6 +1022,7 @@ void TryEntry()
       if (StringLen(bands) > bk && StringGetCharacter(bands, bk) == '0') {
          DSkip(side, StringFormat("entry at %.0f%% of the last %d candles' range: the %s range is unticked", chase, bLook,
                                   bk == 20 ? "over 100%" : StringFormat("%d-%d%%", bk * 5, bk * 5 + 5)));
+         if (InpBandPauseBars > 0) pauseUntil = BTime(0) + InpBandPauseBars * PeriodSeconds();
          return;
       }
    }

@@ -139,6 +139,7 @@ def ea_sets_from(settings):
     sets["InpRangeMin"] = sets["InpRangeMax"] = sets["InpRangeMinS"] = sets["InpRangeMaxS"] = "0"
     for side, pre in (("B", "rpB"), ("S", "rpS")):
         sets[f"InpBands{side}"] = "".join("1" if settings.get(f"{pre}{b:02d}", True) else "0" for b in range(21))
+    sets["InpBandPauseBars"] = str(settings.get("rpPause", 10)) if str(settings.get("rpOff", "")).startswith("Pause") else "0"
     if "0" in sets["InpBandsB"] + sets["InpBandsS"] and settings.get("rpOff", "").startswith("Stand aside"):
         notes.append("TOP / BOTTOM: a range is unticked with 'Stand aside while it would have run' - MT5 skips that trade and may take "
                      "the next setup instead, so trades after it can differ from the chart (pick 'Skip it and take the next setup' for an exact match)")

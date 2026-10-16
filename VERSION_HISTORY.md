@@ -16,6 +16,29 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.09 + v1.10 (2026-10-17) — skip when the target is too close; pause after a range skip
+
+Zee: *"but you can make your settings in a way that turns off the settings required to come to the point shown in the table : Fibonnacci 161.8 .. 94% and 95% .. try hard"* · *"i think the stand aside is just a form of a cooldown. which we can execute in mt5 too.. maybe we can convert this setting into a cooldown period?"*
+
+- **v1.09 `InpTpNoFixSkip`** (chart: "target not far enough beyond the entry: use the normal TP1 / skip the trade"). Fibonacci 161.8 with everything else off (close all at TP1, CTC, lock, cut, day-close cut) reached 83% (396 trades, +$14.6k), against the EXIT LAB row's 94-95% (146 trades, +$14.7k). Same net. The gap is the trade set: the EXIT LAB keeps the original entries; the engine takes 2.7x as many, weaker trades once exits are quick.
+- **v1.10 `InpBandPauseBars`** (chart: "When a range is unticked: Pause N candles"). After a trade skipped in an unticked range, no new trade for N candles. MT5 can do this; it cannot stand aside, because it never knows when a trade it did not open would have closed.
+- **Measured on Zee's chart (Oct 11-16, his ranges):**
+
+| mode | trades | WR | net |
+|---|---|---|---|
+| stand aside | 265 | 88% | +$45,075 |
+| skip, take the next | 389 | 83% | +$29,700 |
+| pause 3 | 333 | 84% | +$39,011 |
+| pause 5 | 296 | 83% | +$31,003 |
+| pause 8 | 260 | 83% | +$28,064 |
+| pause 10 | 252 | 85% | +$24,796 |
+| pause 15 | 205 | 81% | +$13,097 |
+| pause 20 | 177 | 85% | +$17,787 |
+| pause 30 | 124 | 85% | +$13,592 |
+
+- No fixed pause reproduces stand-aside. Its waiting time is the skipped trade's own life, which no constant matches. Chart-only sketch on the tuning days; judge on the 10-month view.
+- The sync check that started this: with stand-aside, 174 of 207 chart trades matched in MT5; with "skip", 280 of 307. The rest is still being traced (13 Oct 02:13: MT5 sold with a Fibonacci TP1 $0.29 away; the chart did not take that SELL).
+
 ## Saad_strategy_1min v1.08 (2026-10-17) — a TP1 share of 1 closes everything
 
 Zee: *"the fibonnaci extension in the Table EXIT LAB: shows 94% and 95% .. but if i select is as an option in the settings it shows in the bottom right panel the same winrate of around 75%.. can u check if the fibonnaci setting has been implemented correctly?"*
