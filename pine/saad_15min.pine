@@ -79,31 +79,34 @@ iSLine   = input.string("9 EMA", 'InpShortLine — SHORT setups on', options = [
 iTouchM  = input.string("Candle touches", 'InpTouchMode', options = ["Candle touches", "Wick touches, body on trade side"], group = G2, display = display.none)
 iTouchP  = input.float(1, 'InpTouchPips — touch tolerance', step = 1, group = G2, display = display.none)
 iLExitAb = input.bool(false, 'InpLongExitAbove — LONG only when its exit EMA is above the candle', group = G2, display = display.none)
-G3 = "EA · ② break · ③ entry · ④ stop"
+G3 = "② ENTRY - the break of the setup candle's high (BUY) / low (SELL)"
+GSL = "③ STOP LOSS - it starts X pips beyond the setup candle: a BUY's stop under its LOW, a SELL's stop over its HIGH"
+GTP = "④ TAKE PROFIT (TP1) - BUY: the touch of the OTHER EMA (set up on the fast EMA -> TP1 at the slow one, set up on the slow -> at the fast) · SELL: the last swing LOW (support) below the entry"
+GAT = "⑤ AFTER TP1 - a share is closed at TP1, the rest rides a $ trailing stop"
 iBreakB  = input.int(1, 'InpBreakBars — candles allowed for the break', minval = 1, group = G3, display = display.none)
 iBreakP  = input.float(2, 'InpBreakPips — break must clear the high / low by', step = 1, group = G3, display = display.none)
-iSlPips  = input.float(35, 'InpSlPips — stop beyond the candle', step = 1, group = G3, display = display.none)
-iMaxRisk = input.float(15, 'InpMaxRiskUsd — skip if the stop is more than $ away (0 = off)', step = 0.5, group = G3, display = display.none)
+iSlPips  = input.float(35, "Stop distance beyond the setup candle, in pips (1 pip = $0.10, so 35 = $3.50)", step = 1, group = GSL, tooltip = "EA: InpSlPips. BUY: stop = setup candle low - X pips. SELL: stop = setup candle high + X pips.", display = display.none)
+iMaxRisk = input.float(15, "Skip the trade if that stop is more than $X away from the entry (0 = never skip)", step = 0.5, group = GSL, tooltip = "EA: InpMaxRiskUsd. A big setup candle gives a far stop; this refuses those trades.", display = display.none)
 G4 = "EA · ⑤ targets"
-iLTpP    = input.float(0, 'InpLongTpPips — LONG TP this many pips before the EMA', group = G4, display = display.none)
-iPivot   = input.int(3, 'InpSwingPivot — candles each side of a swing', minval = 1, group = G4, display = display.none)
-iLook    = input.int(100, 'InpSwingLook — candles back to search', minval = 10, group = G4, display = display.none)
-iSTpP    = input.float(0, 'InpShortTpPips — SHORT TP this many pips before the support', group = G4, display = display.none)
-iMinTp   = input.float(5, 'InpMinTpPips — target at least this far', group = G4, display = display.none)
-iMaxTp   = input.float(0, 'InpMaxTpPips — skip a SHORT whose support is further (0 = off)', group = G4, display = display.none)
+iLTpP    = input.float(0, "BUY · TP1 this many pips BEFORE the EMA (0 = exactly on the EMA)", group = GTP, tooltip = "EA: InpLongTpPips. TP1 = the touch of the exit EMA minus X pips.", display = display.none)
+iPivot   = input.int(3, "SELL · a swing low = a low with X higher candles on each side", minval = 1, group = GTP, tooltip = "EA: InpSwingPivot.", display = display.none)
+iLook    = input.int(100, "SELL · look back at most X candles for that swing low", minval = 10, group = GTP, tooltip = "EA: InpSwingLook.", display = display.none)
+iSTpP    = input.float(0, "SELL · TP1 this many pips BEFORE (above) the swing low (0 = exactly on it)", group = GTP, tooltip = "EA: InpShortTpPips.", display = display.none)
+iMinTp   = input.float(5, "BUY + SELL · TP1 must be at least X pips from the entry (closer: a BUY gets no TP1, a SELL is skipped)", group = GTP, tooltip = "EA: InpMinTpPips.", display = display.none)
+iMaxTp   = input.float(0, "SELL · skip the trade if the swing low is more than X pips away (0 = off)", group = GTP, tooltip = "EA: InpMaxTpPips.", display = display.none)
 G5 = "EA · ⑥ CTC · ⑦ trail · day close"
-iCloseM  = input.int(3, 'InpCloseLossMins — this many min before the close shut trades in loss (0 = off)', group = G5, display = display.none)
-iLTrail  = input.float(2.0, 'InpLongTrailUsd — after TP1 trail $ below the market', step = 0.5, group = G5, display = display.none)
-iSTrail  = input.float(2.0, 'InpShortTrailUsd — after TP1 trail $ above the market', step = 0.5, group = G5, display = display.none)
-iBePct   = input.float(0.75, 'InpBeTpPct — CTC: stop to entry at this share of the way to TP1 (0 = off)', step = 0.05, group = G5, display = display.none)
-iTrAtr   = input.float(2.0, 'InpTrailAtr — no-TP1 LONG: trail x ATR behind the best price', step = 0.1, group = G5, display = display.none)
+iCloseM  = input.int(3, "Day close: shut trades still in LOSS this many minutes before the close (0 = off)", group = GSL, tooltip = "EA: InpCloseLossMins. The close is 4:59 PM New York.", display = display.none)
+iLTrail  = input.float(2.0, "BUY · after TP1 the stop trails $X under the best price", step = 0.5, group = GAT, tooltip = "EA: InpLongTrailUsd. Moves once per candle on the chart (and in the EA).", display = display.none)
+iSTrail  = input.float(2.0, "SELL · after TP1 the stop trails $X over the best price", step = 0.5, group = GAT, tooltip = "EA: InpShortTrailUsd. Moves once per candle on the chart (and in the EA).", display = display.none)
+iBePct   = input.float(0.75, "Breakeven (CTC): move the stop to the entry once price has covered X of the way to TP1 (0.75 = 75% · 0 = off)", step = 0.05, group = GSL, tooltip = "EA: InpBeTpPct. Only for trades that have a TP1.", display = display.none)
+iTrAtr   = input.float(2.0, "BUY with no TP1 (the exit EMA is not above the entry) · trailing stop X x ATR behind the best price", step = 0.1, group = GTP, tooltip = "EA: InpTrailAtr. Moves once per candle close, from the entry onwards.", display = display.none)
 G6 = "EA · ✖ filters"
 iEr      = input.float(0.11, 'InpChopEr — skip if the efficiency ratio is below (0 = off)', step = 0.01, group = G6, display = display.none)
 iErLen   = input.int(16, 'InpChopErLook — efficiency ratio length', minval = 2, group = G6, display = display.none)
 iGap     = input.bool(true, 'InpGapCancel — cancel a waiting setup across the daily close / weekend', group = G6, display = display.none)
 G7 = "EA · partial · money · display"
-iPartial = input.float(0.5, 'InpPartialPct — close this share at TP1', step = 0.05, group = G7, display = display.none)
-iTp1Be   = input.bool(true, 'InpTp1Be — after TP1 the stop is never worse than the entry', group = G7, display = display.none)
+iPartial = input.float(0.5, "Close this share at TP1 (0.5 = half · 0.95 = 95%), the rest keeps running", step = 0.05, group = GAT, tooltip = "EA: InpPartialPct.", display = display.none)
+iTp1Be   = input.bool(true, "After TP1 the stop is never worse than the entry", group = GAT, tooltip = "EA: InpTp1Be.", display = display.none)
 iLots    = input.float(1.0, 'InpLots', step = 0.01, group = G7, display = display.none)
 iBuys    = input.bool(true, 'InpBuys', group = G7, display = display.none)
 iSells   = input.bool(true, 'InpSells', group = G7, display = display.none)
@@ -122,7 +125,7 @@ iDayTz     = input.string("UTC+0", "Today's trades box: MT5 server timezone (PXB
 iDetailDays = input.int(3, 'Detail tags (setups, skips, BE/TP, exit X) only for the last N days - TradingView keeps 500 labels, so the BUY/SELL + EXIT labels of the whole month always fit', minval = 0, group = G8, display = display.none)
 iSkipBoth = input.bool(false, 'Skip a setup candle that touches BOTH EMAs (9 and 50) - not in the EA', group = G8, display = display.none)
 iTightTrail = input.bool(false, 'Tight trail: when InpTrailAtr would put the stop above the price, put it 1 pip under the candle close instead of not moving it - not in the EA yet', group = G8, display = display.none)
-G9 = "STOP NEAR PEAK (chart-only, not in the EA yet)"
+G9 = "⑥ STOP NEAR PEAK - more ways to move the stop up while in profit"
 pkApply = input.string("No-TP1 longs only", "Apply to", options = ["No-TP1 longs only", "All trades"], group = G9, display = display.none)
 pkStart = input.float(0, "Start: giveback / $ trail / ATR / candle / EMA only once the trade is this many $ in profit", step = 0.5, minval = 0, group = G9, display = display.none)
 pkBeUsd = input.float(0, "① Breakeven: stop to the entry once $X in profit (0 = off)", step = 0.5, minval = 0, group = G9, display = display.none)
@@ -135,8 +138,8 @@ pkTrail = input.float(0, "⑤ $ trail: stop this many $ behind the best price (0
 pkAtr = input.float(0, "⑥ ATR trail: stop this many x ATR behind the best price (0 = off)", step = 0.1, minval = 0, group = G9, display = display.none)
 pkLowN = input.int(0, "⑦ Candle trail: stop under the lowest low of the last N closed candles (0 = off)", minval = 0, group = G9, display = display.none)
 pkEma = input.int(0, "⑧ EMA trail: stop 1 pip under this EMA of the closed candle (0 = off)", minval = 0, group = G9, display = display.none)
-pkGap = input.float(0, "⑨ ATR-trail gap: when InpTrailAtr moves the stop, keep it at least $X under the candle close (0 = off)", step = 0.25, minval = 0, group = G9, display = display.none)
-G10 = "ENTRY + CUT LOSERS EARLY (chart-only, not in the EA yet)"
+pkGap = input.float(0, "BUY with no TP1 · keep that trailing stop at least $X under the candle close (0 = off)", step = 0.25, minval = 0, group = GTP, tooltip = "EA: InpTrailGapUsd. A small ATR multiple can put the stop right on the close; this keeps it $X lower.", display = display.none)
+G10 = "⑦ CUT LOSERS EARLY (chart-only) + entry on a candle close"
 enMode = input.string("Wick break (EA)", "Entry: wick break of the setup candle, or wait for a candle CLOSE beyond it (enter at the next open)", options = ["Wick break (EA)", "Candle close beyond"], group = G10, display = display.none)
 adRunN = input.int(0, "Cut: N candles in a row against the trade while in loss -> close at the next open (0 = off)", minval = 0, group = G10, display = display.none)
 adBars = input.int(0, "Cut: still in loss after N candles -> close at the next open (0 = off)", minval = 0, group = G10, display = display.none)
