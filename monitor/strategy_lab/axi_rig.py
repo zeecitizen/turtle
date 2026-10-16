@@ -60,12 +60,24 @@ def prune_logs(max_mb=50):
             pass
 
 
+def ini_input(k, v):
+    """One [TesterInputs] line. Numbers / bools take the optimiser form "v||v||0||v||N"; a string input must be
+    plain "k=v" - the range form became the string's value itself (Saad_strategy_1min v1.04 InpTvFile)."""
+    s = str(v)
+    try:
+        float(s)
+        num = True
+    except ValueError:
+        num = s.lower() in ("true", "false")
+    return f"{k}={s}||{s}||0||{s}||N\r\n" if num else f"{k}={s}\r\n"
+
+
 def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=25000,
         exec_mode=-1, tag=None, timeout=21600, model=4, leverage="1:400", watchdog=True):
     inputs = ea_defaults(ea)
     inputs.update(sets)
     tag = tag or f"{ea}_{symbol}_{period}".replace(".", "_")
-    ti = "".join(f"{k}={v}||{v}||0||{v}||N\r\n" for k, v in inputs.items())
+    ti = "".join(ini_input(k, v) for k, v in inputs.items())
     ini = (f"[Tester]\r\nExpert={ea}\r\nSymbol={symbol}\r\nPeriod={period}\r\nModel={model}\r\n"
            f"FromDate={frm}\r\nToDate={to}\r\nDeposit={deposit}\r\nCurrency=USD\r\n"
            f"Leverage={leverage}\r\nExecutionMode={exec_mode}\r\nOptimization=0\r\n"

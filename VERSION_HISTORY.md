@@ -16,6 +16,19 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.04 (2026-10-16) — the chart's own candles: 83 of 83 trades
+
+Zee: *"the only way we can succeed is to sync both mt5 with tradingview. so find a way. i can't miss out on entries i've spent entire day tuning on tradingview"*
+
+v1.03 left 9 chart trades unmatched, all from 1-27 cents of difference between Blueberry's TradingView feed and its MT5 feed on the setup candle. No rule can fix a different candle, so the EA now reads the chart's candles.
+
+- **`monitor/saad_compare/tv_bars_bridge.py`** copies the chart's closed 1-min candles (BLUEBERRY:XAUUSD, via the TradingView CDP bridge) to `Common\Files	v_bars_XAUUSD.csv` in broker server time (UTC+3 in US summer time, else UTC+2). `--export` = all the chart's history (for the tester; the compare page does it before every run), `--live` = append each candle ~2 s after it closes (`start_tv_bars_bridge.bat`; keep it open while the EA trades).
+- **`InpBarSource` 1 (default):** shape, EMAs (own EMA on the chart's closes), ATR (SMA of true range = the indicator's), entry band, swing support/resistance, chop, lock, trail, cut rules - all on the chart's candles. Orders, stops and fills stay on MT5. The forming candle stays MT5's. Live: waits up to `InpTvWaitSec` (20 s) for the candle; no new chart candle = no step (as on the chart) and a warning if the bridge is down. `InpBarSource=0` = v1.03.
+- **Three engine differences found once the candles were equal:** the $ trail after TP1 moved per tick, the chart per candle and not from the TP1 candle (`InpUsdTrailMode` 1; #37 exited 2 minutes early, so #38 started on another candle); the chart never opens a trade in the minute it closed one (`InpNoEntryExitBar`); #32's band was 50.000000000008% (tolerance 1e-6). Also the EXIT report took the first closing deal (the TP1 partial) instead of the last.
+- **Receipts (Zee's Blueberry MT5, real ticks, delay 0, Oct 11-17 vs the chart):** **83 of 83 trades identical** in side and entry minute, 79 exit in the same minute. Per day chart / MT5: Oct 12 +$8,146 / +$7,768 · Oct 13 +$3,725 / +$3,363 · Oct 14 +$14,488 / +$13,696 · Oct 15 +$8,229 / +$7,392; wins 69 / 68. MT5 report +$32,219, PF 4.36. The ~$28 a trade gap is the real spread and slippage the chart does not charge (largest: #75 -$1,170 vs -$1,376, a slipped stop).
+- **Not a promotion:** these settings lost on Axi TK Sep 15 - Oct 15 (v1.03 entry). The mirror now shows the chart's trades faithfully; it does not make them profitable outside the tuning week. Demo first. Long-period courts must pass `InpBarSource=0` (the chart only holds ~5 days of 1-min candles).
+- Tester INI fix: string inputs are written `k=v` (the `v||v||0||v||N` range form became the string itself) - `axi_rig.ini_input`.
+
 ## Saad_strategy_1min v1.03 (2026-10-16) — REFUSED, do not attach
 
 Zee: *"i want you to find out the reason why the trades are not matching. check each trade. find out the reason. fix the mt5 ea to match the tradingview reality presented on webpage"*

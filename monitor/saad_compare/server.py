@@ -211,7 +211,7 @@ def bb_live_run(sets, period, frm, to, delay, tag):
         raise RuntimeError("the Blueberry terminal did not close (a dialog open?) - close it and run again")
     inputs = axi_rig.ea_defaults(EA)
     inputs.update(sets)
-    ti = "".join(f"{k}={v}||{v}||0||{v}||N\r\n" for k, v in inputs.items())
+    ti = "".join(axi_rig.ini_input(k, v) for k, v in inputs.items())
     ini = (f"[Tester]\r\nExpert={EA}\r\nSymbol=XAUUSD\r\nPeriod={period}\r\nModel=4\r\nFromDate={frm}\r\nToDate={to}\r\n"
            f"Deposit=100000\r\nCurrency=USD\r\nLeverage=1:500\r\nExecutionMode={delay}\r\nOptimization=0\r\n"
            f"Report=reports\\{tag}\r\nReplaceReport=1\r\nShutdownTerminal=1\r\nVisual=0\r\n[TesterInputs]\r\n{ti}")
@@ -238,6 +238,10 @@ def run_mt5(frm, to, symbol, offset_h, delay):
         raise RuntimeError("read TradingView first")
     rig, _, symbol = symbol.partition("|") if "|" in symbol else ("axi", "", symbol)
     tag = "compare_page"
+    # Saad_strategy_1min v1.04 InpBarSource 1: the EA judges the chart's own candles - refresh them from TradingView first
+    if str(tvd["ea_sets"].get("InpBarSource", axi_rig.ea_defaults(EA).get("InpBarSource", "0"))) == "1":
+        import tv_bars_bridge
+        tv_bars_bridge.export(tv_bars_bridge.COMMON / "tv_bars_XAUUSD.csv", more=2)
     if rig == "bblive":
         r, rep = bb_live_run(tvd["ea_sets"], tvd["period"], frm.replace("-", "."), to.replace("-", "."), int(delay), tag)
         pos = parse_positions(rep, offset_h)
