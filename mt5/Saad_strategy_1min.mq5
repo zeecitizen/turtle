@@ -15,6 +15,7 @@
 //|                   last N closed candles' range (BUY from the     |
 //|                   bottom, SELL mirrored)                         |
 //| v1.01: a trail level already passed at the open closes at market |
+//| v1.02: BUY and SELL entry bands are separate (InpRange*S)        |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -53,7 +54,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.01"
+#property version   "1.02"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -64,7 +65,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.01"
+#define EA_COMMENT "Saad1m v1.02"
 
 //--- the two lines
 input int    InpEmaFast     = 3;      // InpEmaFast
@@ -204,9 +205,12 @@ input bool   InpDrawSkips   = true;   // InpDrawSkips — also label setups that
 input group "1-MIN ADDITIONS (from the TradingView indicator, 16 Oct 2026)"
 input double InpTrailGapUsd = 0.1;    // InpTrailGapUsd - the ATR trail stops at least this $ under (BUY) / over (SELL) the candle close (0 = off)
 input int    InpCutRunN     = 6;      // InpCutRunN - this many candles in a row against a trade that is in loss: close it (0 = off)
-input int    InpRangeLook   = 7;      // InpRangeLook - range of the last N closed candles for the entry band
+input int    InpRangeLook   = 7;      // InpRangeLook - BUY: range of the last N closed candles for the entry band
 input double InpRangeMin    = 25;     // InpRangeMin - skip a BUY entering below this % of that range (SELL mirrored; 0 = off)
-input double InpRangeMax    = 35;     // InpRangeMax - skip a BUY entering above this % of that range (SELL mirrored; 0 = off; over 100 = a new high/low)
+input double InpRangeMax    = 35;     // InpRangeMax - skip a BUY entering above this % of that range (0 = off; over 100 = a new high)
+input int    InpRangeLookS  = 7;      // InpRangeLookS - SELL: range of the last N closed candles (v1.02: BUY and SELL have their own band)
+input double InpRangeMinS   = 25;     // InpRangeMinS - SELL: skip entering higher than this % from the top of that range (0 = off)
+input double InpRangeMaxS   = 35;     // InpRangeMaxS - SELL: skip entering lower than this % from the top (0 = off; over 100 = a new low)
 
 CTrade   trade;
 int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE;
@@ -266,7 +270,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.01 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.02 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -843,12 +847,14 @@ void TryEntry()
       return;
    }
    // InpRangeMin/Max: where this entry sits in the last InpRangeLook closed candles (BUY 0 = bottom .. 100 = top; SELL mirrored)
-   if (InpRangeMin > 0 || InpRangeMax > 0) {
-      double hi = iHigh(_Symbol, PERIOD_CURRENT, iHighest(_Symbol, PERIOD_CURRENT, MODE_HIGH, InpRangeLook, 1));
-      double lo = iLow(_Symbol, PERIOD_CURRENT, iLowest(_Symbol, PERIOD_CURRENT, MODE_LOW, InpRangeLook, 1));
+   int    bLook = side > 0 ? InpRangeLook : InpRangeLookS;
+   double bMin = side > 0 ? InpRangeMin : InpRangeMinS, bMax = side > 0 ? InpRangeMax : InpRangeMaxS;
+   if (bMin > 0 || bMax > 0) {
+      double hi = iHigh(_Symbol, PERIOD_CURRENT, iHighest(_Symbol, PERIOD_CURRENT, MODE_HIGH, bLook, 1));
+      double lo = iLow(_Symbol, PERIOD_CURRENT, iLowest(_Symbol, PERIOD_CURRENT, MODE_LOW, bLook, 1));
       double chase = hi > lo ? (side > 0 ? (bid - lo) / (hi - lo) : (hi - bid) / (hi - lo)) * 100 : 50;
-      if ((InpRangeMin > 0 && chase < InpRangeMin) || (InpRangeMax > 0 && chase > InpRangeMax)) {
-         DSkip(side, StringFormat("entry at %.0f%% of the last %d candles' range (band %.0f-%.0f%%)", chase, InpRangeLook, InpRangeMin, InpRangeMax));
+      if ((bMin > 0 && chase < bMin) || (bMax > 0 && chase > bMax)) {
+         DSkip(side, StringFormat("entry at %.0f%% of the last %d candles' range (band %.0f-%.0f%%)", chase, bLook, bMin, bMax));
          return;
       }
    }

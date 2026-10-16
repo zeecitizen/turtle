@@ -143,8 +143,8 @@ adBars = input.int(0, "Cut: still in loss after N candles -> close at the next o
 adEmaX = input.bool(false, "Cut: a candle closes beyond the slow EMA against the trade while in loss -> close at the next open", group = G10)
 adMaxUsd = input.float(0, "Cut: max loss - stop no further than $X from the entry (0 = off, the EA's stop)", step = 0.5, minval = 0, group = G10)
 G11 = "TOP / BOTTOM FILTER (chart-only, not in the EA yet)"
-rpLook = input.int(20, "Range: the last N closed candles", minval = 2, group = G11)
-rpMax = input.float(0, "Skip a BUY entering above X% of that range / a SELL below (100 - X)% (0 = off; over 100 = a new high/low)", step = 5, minval = 0, group = G11)
+rpLook = input.int(20, "BUY: range = the last N closed candles", minval = 2, group = G11)
+rpMax = input.float(0, "BUY: skip entering ABOVE X% of that range (0 = off; over 100 = a new high)", step = 5, minval = 0, group = G11)
 rpDiag = input.bool(false, "Show the diagnostics table: this month's trades by how near the top (BUY) / bottom (SELL) they entered", group = G11)
 G12 = "COOL-DOWN AFTER AN EXIT (chart-only, not in the EA yet)"
 coolN = input.int(0, "No new trade for N candles after a trade closes (0 = off; 2 = the exit candle + the next 2)", minval = 0, group = G12)
@@ -156,9 +156,12 @@ fxSellRef = input.string("Entry candle's open", "...SELL: the line it must close
 G14 = "TRADES BOX DATE RANGE (chart-only)"
 lsFrom = input.time(0, "Top-right box: list the trades closed from this date (0 = today + yesterday)", group = G14)
 lsTo = input.time(0, "...up to this date (0 = now)", group = G14)
-rpMin = input.float(0, "TOP / BOTTOM: skip a BUY entering BELOW X% of the range / a SELL above (100 - X)% (0 = off; with the max = keep only a band, e.g. 75-100)", step = 5, minval = 0, group = G11)
+rpMin = input.float(0, "BUY: skip entering BELOW X% of the range (0 = off; with the max = keep only a band, e.g. 25-55)", step = 5, minval = 0, group = G11)
 iDetMax = input.int(200, "Detail tags (setups, skips, BE/TP, exit X): keep at most N - the rest of TradingView's 500 labels stays for BUY / SELL / EXIT", minval = 0, group = G8)
 exOn = input.bool(false, "Trade export table (bottom centre): every trade with entry / exit times (UTC), for comparing with MT5 - uses the date range above, else all trades", group = G14)
+rpLookS = input.int(20, "TOP / BOTTOM · SELL: range = the last N closed candles", minval = 2, group = G11)
+rpMaxS = input.float(0, "TOP / BOTTOM · SELL: skip entering LOWER than X% from the top of that range (0 = off; over 100 = a new low)", step = 5, minval = 0, group = G11)
+rpMinS = input.float(0, "TOP / BOTTOM · SELL: skip entering HIGHER than X% from the top (0 = off; with the max = keep only a band)", step = 5, minval = 0, group = G11)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -201,6 +204,9 @@ pkEmaV = ta.ema(close, math.max(pkEma, 1))
 // TOP / BOTTOM: the range of the last rpLook CLOSED candles (the forming candle is not in it)
 rpHi = ta.highest(high, rpLook)[1]
 rpLo = ta.lowest(low, rpLook)[1]
+// Zee 2026-10-16: BUY and SELL have their own range and band
+rpHiS = ta.highest(high, rpLookS)[1]
+rpLoS = ta.lowest(low, rpLookS)[1]
 e9p  = e9[1]
 e50p = e50[1]
 emaPrev(int which) => which == 9 ? e9p : e50p
@@ -577,14 +583,17 @@ for k = 0 to nSteps - 1
             string skipWhy = ""
             float tp = na
             bool noTp = false
-            float rng = rpHi - rpLo
-            float chase = rng > 0 ? (side > 0 ? (bid - rpLo) / rng : (rpHi - bid) / rng) * 100 : 50
+            float rng = side > 0 ? rpHi - rpLo : rpHiS - rpLoS
+            float chase = rng > 0 ? (side > 0 ? (bid - rpLo) / rng : (rpHiS - bid) / rng) * 100 : 50
+            float bandMin = side > 0 ? rpMin : rpMinS
+            float bandMax = side > 0 ? rpMax : rpMaxS
+            int bandLook = side > 0 ? rpLook : rpLookS
             if coolN > 0 and bar_index - lxBar <= coolN and (coolDir == "Both directions" or side == lxSide) and (not coolWin or lxWin)
                 skipWhy := "cool-down: " + str.tostring(bar_index - lxBar) + " candle(s) after the last " + (lxSide > 0 ? "BUY" : "SELL") + " closed" + (lxWin ? " in profit" : "")
-            else if rpMin > 0 and chase < rpMin
-                skipWhy := (side > 0 ? "BUY at " : "SELL at ") + str.tostring(chase, "#") + "% of the last " + str.tostring(rpLook) + " candles' range (below the " + str.tostring(rpMin, "#") + "% minimum)"
-            else if rpMax > 0 and chase > rpMax
-                skipWhy := (side > 0 ? "BUY at " : "SELL at ") + str.tostring(chase, "#") + "% of the last " + str.tostring(rpLook) + " candles' range (" + (side > 0 ? "top" : "bottom") + " filter " + str.tostring(rpMax, "#") + "%)"
+            else if bandMin > 0 and chase < bandMin
+                skipWhy := (side > 0 ? "BUY at " : "SELL at ") + str.tostring(chase, "#") + "% of the last " + str.tostring(bandLook) + " candles' range (below the " + str.tostring(bandMin, "#") + "% minimum)"
+            else if bandMax > 0 and chase > bandMax
+                skipWhy := (side > 0 ? "BUY at " : "SELL at ") + str.tostring(chase, "#") + "% of the last " + str.tostring(bandLook) + " candles' range (" + (side > 0 ? "top" : "bottom") + " filter " + str.tostring(bandMax, "#") + "%)"
             else if iMaxRisk > 0 and math.abs(en - sl) > iMaxRisk
                 skipWhy := "stop too far ($" + fp(math.abs(en - sl)) + " > $" + fp(iMaxRisk) + ")"
                 nRisk += 1
