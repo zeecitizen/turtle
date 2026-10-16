@@ -134,7 +134,7 @@ def read_tv():
         if len(c) < 8:
             continue
         trades.append({"num": c[0], "side": c[1], "in": c[2], "en": float(c[3]), "sl": float(c[4]), "out": c[5],
-                       "ex": float(c[6]), "pnl": money(c[7])})
+                       "ex": float(c[6]), "pnl": money(c[7]), "why": c[8] if len(c) > 8 else ""})
     sets, notes = {}, []
     for pv, ea in DIRECT.items():
         v = settings.get(pv)
