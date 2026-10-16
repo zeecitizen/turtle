@@ -51,7 +51,7 @@ DIRECT = {"iFast": "InpEmaFast", "iSlow": "InpEmaSlow", "iWick": "InpWickMin", "
           "iPartial": "InpPartialPct", "iTp1Be": "InpTp1Be", "iLots": "InpLots", "iBuys": "InpBuys", "iSells": "InpSells",
           "pkLockAt": "InpLockAtUsd", "pkLockUsd": "InpLockUsd", "pkGap": "InpTrailGapUsd", "adRunN": "InpCutRunN",
           "rpLook": "InpRangeLook", "rpLookS": "InpRangeLookS", "htEma": "InpHtfEma",
-          "tpFixB": "InpTpFixUsdB", "tpFixS": "InpTpFixUsdS", "tpFib": "InpTpFibPct", "tpPart": "InpTpPartPct", "tpPartTr": "InpTpPartTrailUsd"}
+          "iSpread": "InpChartSpread", "tpFixB": "InpTpFixUsdB", "tpFixS": "InpTpFixUsdS", "tpFib": "InpTpFibPct", "tpPart": "InpTpPartPct", "tpPartTr": "InpTpPartTrailUsd"}
 CHOICES = {"iLRule": ("InpLongRule", {"On 9 EMA, exit 50": 0, "On 50 EMA, exit 9": 1, "Both": 2}),
            "iSLine": ("InpShortLine", {"50 EMA": 0, "9 EMA": 1, "Either": 2}),
            "iTouchM": ("InpTouchMode", {"Candle touches": 0, "Wick touches, body on trade side": 1}),
@@ -139,12 +139,30 @@ def ea_sets_from(settings):
     sets["InpRangeMin"] = sets["InpRangeMax"] = sets["InpRangeMinS"] = sets["InpRangeMaxS"] = "0"
     for side, pre in (("B", "rpB"), ("S", "rpS")):
         sets[f"InpBands{side}"] = "".join("1" if settings.get(f"{pre}{b:02d}", True) else "0" for b in range(21))
+    # Zee 2026-10-17: the chart skips entries while Blueberry is closed - MT5 must not retry them at the open either
+    sets["InpClosedRetryMins"] = "0" if settings.get("bcOn", False) else "5"
     sets["InpBandPauseBars"] = str(settings.get("rpPause", 10)) if str(settings.get("rpOff", "")).startswith("Pause") else "0"
     if "0" in sets["InpBandsB"] + sets["InpBandsS"] and settings.get("rpOff", "").startswith("Stand aside"):
         notes.append("TOP / BOTTOM: a range is unticked with 'Stand aside while it would have run' - MT5 skips that trade and may take "
                      "the next setup instead, so trades after it can differ from the chart (pick 'Skip it and take the next setup' for an exact match)")
     sets["InpLogCsv"] = "false"
     return sets, notes
+
+
+def mt5_validity(settings, sets, notes):
+    """Zee 2026-10-17: "All settings on tradingview are matching MT5 EA and are implementable in MT5 (no settings use future
+    candles, or stuff that MT5 cannot calculate in realtime)". True = every setting that changes a trade is passed to the EA
+    and the EA computes it the same way from closed candles; the chart-only ones that are switched on are listed."""
+    why = list(notes)                                                   # chart-only rules ON, stand-aside with an unticked range
+    dfl = axi_rig.ea_defaults(EA)
+    missing = [ea for ea in list(DIRECT.values()) + [c[0] for c in CHOICES.values()] if ea not in dfl]
+    if missing:
+        why.append("the EA has no input for: " + ", ".join(missing))
+    for k, v in {"InpBarSource": "1", "InpLockMode": "1", "InpBandAtLevel": "true", "InpUsdTrailMode": "1",
+                 "InpNoEntryExitBar": "true", "InpWaitEntryBar": "true"}.items():
+        if str(sets.get(k, dfl.get(k, ""))).lower() != v:
+            why.append(f"EA chart-alignment input {k} is not {v}")
+    return {"ok": not why, "why": why, "at": datetime.now().strftime("%H:%M:%S")}
 
 
 def read_tv():

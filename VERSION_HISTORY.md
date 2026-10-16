@@ -16,6 +16,33 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.11 - v1.20 (2026-10-17) — every chart trade in MT5
+
+Zee: *"set to pause 3 and sync each trade with each other on the webpage"* · *"we want all trades to match, no questions.."*
+
+Traced one mismatch at a time with the new tools. The indicator's debug event table (`skEx`: every setup and skip with its reason) and `monitor/saad_compare/diff_window.py` (the chart's events next to the EA's log for a time window) showed where the two first disagree each time. The causes, in the order found:
+
+| ver | the chart does | MT5 did | fix |
+|---|---|---|---|
+| 1.11 | nothing inside the entry minute | took TP1 9 s after the entry | `InpWaitEntryBar` |
+| 1.12 | a stop moved during a minute counts from the next minute | broker stop live at once (hit 7 s later) | `InpSlNextBar`: queue, apply at the next open (already passed = close) |
+| 1.13 | judges TP1 distance / no-TP1 / support / risk at break level + 0.01 + spread | at the real fill (a Fib TP1 $0.15 away became $0.02 -> no TP1) | `enJ` / `bidJ` |
+| 1.14 | its candle decides | MT5 ticks decided | `InpTvVerdict`: the chart broke and MT5 did not -> enter at the next open; MT5 broke and the chart did not -> out at the next open; the chart's candle hit the stop and MT5 did not -> out |
+| 1.15 | no setup on a candle that closed with a trade open | took one | busy rule |
+| 1.16 | buys at 6:00 PM New York | the broker refused ("market closed" until 6:01) | retry, `InpClosedRetryMins`; the chart now skips 4:59-6:01 PM New York (`bcOn`), and the page sets no retry |
+| 1.17 | decides with its fixed spread 0.17 | live spread | `InpChartSpread`. Also: a fixed TP1 one cent below the real fill never fired (13 Oct #83 rode 6 h to -$1,146) |
+| 1.18 | the level touched exactly = no break | a cent above = a range skip -> pause | the pause is undone when the chart's candle did not break |
+| 1.19 | CTC + TP1 judged on the whole TP1 minute | tick by tick, CTC missed | the stop after TP1 is set at the next open from the chart's TP1 candle |
+| 1.20 | stop decisions vs its own entry price | vs the fill | `EnJ()` for CTC, lock, TP1 floor, cut rules, day close. Fix: the entry line wiped the chart-break and chart-entry fields, so the v1.14 cancel had never run |
+
+- **Result** (Zee's Blueberry terminal, real ticks, delay 0, his settings):
+  - Oct 11-15: **264 of 264 chart trades are the same trade in MT5**, from 174 of 207 (stand aside) and 240 of 264 (first pause 3 run).
+  - The 3 MT5-only trades are MT5 ticks crossing a level the chart's candle never crossed. The EA cannot know the chart's candle before its minute closes, so it enters and leaves at the next open (-$458).
+  - 16 Oct: 67 of 69.
+- Blueberry's spread, measured over 638 orders: mean $0.169, median $0.17 - the chart's setting is right.
+- Page: a live "Settings Valid for MT5 -> True / False" line. Every setting that changes a trade must reach the EA; the chart-only ones switched on are listed.
+- Chart: "Pause N candles" (v1.10) and the broker-closed window. EA tools: `diff_window.py`, `why_compare.py`.
+
 ## Saad_strategy_1min v1.09 + v1.10 (2026-10-17) — skip when the target is too close; pause after a range skip
 
 Zee: *"but you can make your settings in a way that turns off the settings required to come to the point shown in the table : Fibonnacci 161.8 .. 94% and 95% .. try hard"* · *"i think the stand aside is just a form of a cooldown. which we can execute in mt5 too.. maybe we can convert this setting into a cooldown period?"*

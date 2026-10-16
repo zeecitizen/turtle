@@ -225,6 +225,12 @@ tpPart = input.float(0.5, "Partial · close this share at the target (0.5 = half
 tpPartTr = input.float(2.0, "Partial · the rest trails $X behind the best price", step = 0.5, minval = 0.1, group = GTP, tooltip = "EA: InpTpPartTrailUsd. Used only by the Partial method; the other methods use the AFTER TP1 trails.", display = display.none)
 tpNoFix = input.string("Use the normal TP1", "Fixed $ / Fibonacci / Partial · target not far enough beyond the entry", options = ["Use the normal TP1", "Skip the trade"], group = GTP, tooltip = "Zee 2026-10-17. Skip the trade = what the EXIT LAB row does (it only counts trades whose target exists). EA: InpTpNoFixSkip.", display = display.none)
 rpPause = input.int(10, "...with Pause: no new trade for N candles after a trade is skipped in an unticked range", minval = 1, group = G11, tooltip = "Zee 2026-10-17: stand aside is a kind of cool-down - this one MT5 can execute. EA: InpBandPauseBars.", display = display.none)
+skEx = input.bool(false, "Debug: event export table (every setup and skip with its reason, UTC) - for the compare page's sync check", group = G14, display = display.none)
+skFrom = input.time(0, "...events from (0 = the last 300)", group = G14, display = display.none)
+skTo = input.time(0, "...events up to (0 = now)", group = G14, display = display.none)
+bcOn = input.bool(true, "No new trades while the broker is closed (Blueberry: 4:59 PM to 6:01 PM New York)", group = G3, tooltip = "Zee 2026-10-17: MT5 cannot trade then - Blueberry has no 4:59 PM candle and refuses orders until 6:01 PM (it quotes from 6:00). EA: no retry at the open.", display = display.none)
+bcFrom = input.string("16:59", "...closed from (New York time)", group = G3, display = display.none)
+bcTo = input.string("18:01", "...open again at (New York time)", group = G3, display = display.none)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -407,6 +413,10 @@ mLw(int k) => useM ? array.get(mL, k) : low
 mTm(int k) => useM ? array.get(mT, k) : time
 closeMins = str.length(iCloseT) == 5 ? int(str.tonumber(str.substring(iCloseT, 0, 2))) * 60 + int(str.tonumber(str.substring(iCloseT, 3, 5))) : 1019
 // the EA's MinsToClose() <= InpCloseLossMins: (close - now) / 60 truncated, so the window opens (mins + 1) before the close
+// the broker's closed window (New York time, the minute of the entry): no new trades
+hmNy(int t) => hour(t, "America/New_York") * 60 + minute(t, "America/New_York")
+hmStr(string s) => int(str.tonumber(str.substring(s, 0, 2))) * 60 + int(str.tonumber(str.substring(s, 3, 5)))
+brokerClosed(int t) => bcOn and hmNy(t) >= hmStr(bcFrom) and hmNy(t) < hmStr(bcTo)
 inCloseWin(int t) =>
     m = hour(t, iCloseTz) * 60 + minute(t, iCloseTz)
     dw = dayofweek(t, iCloseTz)
@@ -514,7 +524,16 @@ if ta.change(monthKey(time)) != 0
 note(float y, bool above, string txt, color bg, string tip = "") =>
     if det
         dReg(label.new(bar_index, y, txt, style = above ? label.style_label_down : label.style_label_up, color = bg, textcolor = color.white, size = size.tiny, tooltip = tip == "" ? txt : tip))
+// Zee 2026-10-17 "we want all trades to match, no questions": every setup / skip is kept for the debug export table
+var array<int>    evT = array.new<int>()
+var array<string> evW = array.new<string>()
+evPush(string w) =>
+    if skEx and (skFrom == 0 or (time >= skFrom and (skTo == 0 or time <= skTo)))
+        array.push(evT, time), array.push(evW, w)
+        if array.size(evT) > 300
+            array.shift(evT), array.shift(evW)
 skipNote(int side, string why) =>
+    evPush("SKIP " + (side > 0 ? "BUY" : "SELL") + ": " + why)
     if iLog
         log.info("SKIP|{0}|{1}|{2}", ts(time), why, pDesc)
     if iSkips and det
@@ -712,7 +731,9 @@ for k = 0 to nSteps - 1
             int   bkE = rpBucket(chase)
             bool  rangeOff = not rpOn(side, bkE)
             int bandLook = side > 0 ? rpLook : rpLookS
-            if coolN > 0 and bar_index - lxBar <= coolN and (coolDir == "Both directions" or side == lxSide) and (not coolWin or lxWin)
+            if brokerClosed(tk)
+                skipWhy := "the broker is closed (" + bcFrom + " - " + bcTo + " New York)"
+            else if coolN > 0 and bar_index - lxBar <= coolN and (coolDir == "Both directions" or side == lxSide) and (not coolWin or lxWin)
                 skipWhy := "cool-down: " + str.tostring(bar_index - lxBar) + " candle(s) after the last " + (lxSide > 0 ? "BUY" : "SELL") + " closed" + (lxWin ? " in profit" : "")
             else if rpOff == "Pause N candles (MT5 can do this)" and bar_index <= rpUntil
                 skipWhy := "pausing " + str.tostring(rpPause) + " candles after a trade skipped in an unticked range"
@@ -1006,6 +1027,7 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
             int side = longOk ? 1 : -1
             nSetups += 1
             pSide := side, pHi := high, pLo := low, pLeft := iBreakB, pBar := bar_index, pConf := false
+            evPush("SETUP " + (side > 0 ? "LONG" : "SHORT") + " H " + fp(high) + " L " + fp(low))
             pExit := side > 0 ? (rulesOk ? 50 : 9) : 0
             string kindTxt = kindN == 1 ? "PIN BAR" : kindN == 2 ? (side > 0 ? "HAMMER" : "SHOOTING STAR") : "MARUBOZU"
             string lineTxt = side > 0 ? (rulesOk ? "9 EMA" : "50 EMA") : (onLine(e9, -1) ? "9 EMA" : "50 EMA")
@@ -1260,6 +1282,17 @@ if barstate.islast and (rpDiag or xDiag)
                 table.cell(dg, 2 + 3 * s, r, n > 0 ? str.tostring(wr, "#") + "%" : "-", text_color = wr >= 50 ? color.lime : color.orange, text_size = size.small)
                 table.cell(dg, 3 + 3 * s, r, fm(pn), text_color = pn >= 0 ? color.lime : color.red, text_size = size.small,
                      tooltip = m == 0 ? "" : "vs your real exits: " + fm(pn - base))
+
+// ── EVENT EXPORT (top centre, debug, off by default): setups and skips with their reasons, read by the compare page ──
+if barstate.islast and skEx
+    var table ev = table.new(position.top_center, 2, 302, bgcolor = color.new(color.black, 10), border_color = color.new(color.gray, 70), border_width = 1)
+    table.clear(ev, 0, 0, 1, 301)
+    table.cell(ev, 0, 0, "event UTC", text_color = color.yellow, text_size = size.tiny)
+    table.cell(ev, 1, 0, "setup / skip", text_color = color.yellow, text_size = size.tiny)
+    if array.size(evT) > 0
+        for i = 0 to array.size(evT) - 1
+            table.cell(ev, 0, i + 1, ts(array.get(evT, i)), text_color = color.white, text_size = size.tiny)
+            table.cell(ev, 1, i + 1, array.get(evW, i), text_color = color.white, text_size = size.tiny, text_halign = text.align_left)
 
 // ── TRADE EXPORT (bottom centre, off by default): one row per trade, UTC times, for a trade-by-trade check against MT5 ──
 if barstate.islast and exOn

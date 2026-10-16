@@ -93,6 +93,12 @@ code { font-size: 12px; }
     <div id="status">Start TradingView with the Saad indicator on the chart, then press 1.</div>
   </div>
 
+  <div class="card" id="validCard">
+    <div style="font-size:13.5px">All settings on TradingView are matching MT5 EA and are implementable in MT5 (no settings use future candles, or stuff that MT5 cannot calculate in realtime)</div>
+    <div style="margin-top:6px;font-size:16px;font-weight:700">Status: Settings Valid for MT5 &rarr; <span id="validVal" class="q">checking…</span> <span id="validAt" class="sum" style="font-weight:400;color:var(--muted);font-size:12px"></span></div>
+    <ul id="validWhy" style="margin:6px 0 0;padding-left:20px;font-size:13px;color:var(--muted)"></ul>
+  </div>
+
   <div class="card sync" id="syncCard" style="display:none">
     <h2>Sync check <span class="sum" id="syncSum"></span></h2>
     <ul id="syncList"></ul>
@@ -401,8 +407,16 @@ function renderYear() {
   $('yrChg').innerHTML = (ch ? `<b>Changed since the run before:</b> ${esc(ch)} - "vs before" shows its effect per month.` : '')
     + (Y.notes && Y.notes.length ? `<div class="warn" style="margin-top:6px">${Y.notes.map(esc).join('<br>')}</div>` : '');
 }
+function renderValid() {
+  const v = (Y && Y.valid) || { ok: null, why: [] };
+  const el = $('validVal');
+  el.textContent = v.ok === true ? 'True' : v.ok === false ? 'False' : 'unknown';
+  el.className = v.ok === true ? 'win' : v.ok === false ? 'loss' : 'q';
+  $('validAt').textContent = v.at ? '· checked ' + v.at + ' (every 2 s)' : '';
+  $('validWhy').innerHTML = v.ok === true ? '' : (v.why || []).map(w => `<li>${esc(w)}</li>`).join('');
+}
 async function pollYear() {
-  try { Y = await (await fetch('/api/year')).json(); renderYear(); } catch (e) { $('yrSum').textContent = '· page server not answering'; }
+  try { Y = await (await fetch('/api/year')).json(); renderYear(); renderValid(); } catch (e) { $('yrSum').textContent = '· page server not answering'; }
   setTimeout(pollYear, Y && Y.running ? 1000 : 2500);
 }
 async function setYear(body) {

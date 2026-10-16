@@ -51,6 +51,7 @@ class YearRunner:
         self.started = self.finished = None
         self.error = ""
         self.notes = []
+        self.valid = {"ok": None, "why": ["waiting for the chart"], "at": ""}
         self.seen = None            # last settings read from the chart
         self.q = queue.Queue()
         self.compiled = {}          # rig -> EA source mtime compiled there
@@ -80,15 +81,17 @@ class YearRunner:
         pending = None
         while True:
             time.sleep(POLL)
+            try:
+                _, settings, sets, notes = server.read_settings()
+            except Exception as e:
+                self.error = f"cannot read the chart: {e}"
+                self.valid = {"ok": None, "why": [f"cannot read the chart: {e}"], "at": time.strftime("%H:%M:%S")}
+                continue
+            self.error = ""
+            self.valid = server.mt5_validity(settings, sets, notes)       # Zee 2026-10-17: the "Settings Valid for MT5" line
             if not self.auto:
                 pending = None
                 continue
-            try:
-                _, _, sets, notes = server.read_settings()
-            except Exception as e:
-                self.error = f"cannot read the chart: {e}"
-                continue
-            self.error = ""
             sets = self._run_sets(sets)
             if sets == self.sets:
                 pending = None
@@ -193,7 +196,7 @@ class YearRunner:
             now = time.time()
             return {"auto": self.auto, "delay": self.delay, "months": self.months, "order": MONTHS,
                     "prev": (self.prev or {}).get("months"), "changed": self.changed, "notes": self.notes,
-                    "error": self.error, "rigs": len(RIGS), "symbol": SYMBOL,
+                    "error": self.error, "valid": self.valid, "rigs": len(RIGS), "symbol": SYMBOL,
                     "elapsed": round((self.finished or now) - self.started) if self.started else None,
                     "running": bool(self.started and not self.finished),
                     "at": datetime.fromtimestamp(self.started).strftime("%H:%M:%S") if self.started else ""}
