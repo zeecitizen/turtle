@@ -1137,7 +1137,7 @@ monthRow(table t, int r, int k, int n, int w, int l, float gw, float gl) =>
     table.cell(t, 2, r, (net >= 0 ? "+$" : "-$") + str.tostring(math.abs(net), "#,##0.00"), text_color = net >= 0 ? color.lime : color.red, text_size = size.large, text_halign = text.align_right)
     table.cell(t, 3, r, str.tostring(n) + " tr · " + str.tostring(w) + "W/" + str.tostring(l) + "L · PF " + (na(pf) ? "-" : str.tostring(pf, "#.##")), text_color = color.silver, text_size = size.small, text_halign = text.align_left)
 if barstate.islast and iPanel
-    var table p = table.new(position.bottom_left, 4, 9, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    var table p = table.new(position.bottom_right, 4, 9, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
     table.clear(p, 0, 0, 3, 8)
     table.cell(p, 0, 0, "📊 Saad 15-min · " + str.tostring(iLots, "#.##") + " lots", text_color = color.yellow, text_size = size.small, text_halign = text.align_left)
     table.cell(p, 1, 0, "Win rate", text_color = color.silver, text_size = size.small, text_halign = text.align_right)
