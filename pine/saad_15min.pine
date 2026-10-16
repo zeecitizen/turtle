@@ -105,7 +105,7 @@ iEr      = input.float(0.11, 'InpChopEr — skip if the efficiency ratio is belo
 iErLen   = input.int(16, 'InpChopErLook — efficiency ratio length', minval = 2, group = G6, display = display.none)
 iGap     = input.bool(true, 'InpGapCancel — cancel a waiting setup across the daily close / weekend', group = G6, display = display.none)
 G7 = "EA · partial · money · display"
-iPartial = input.float(0.5, "Close this share at TP1 (0.5 = half · 0.95 = 95%), the rest keeps running", step = 0.05, group = GAT, tooltip = "EA: InpPartialPct.", display = display.none)
+iPartial = input.float(0.5, "Close this share at TP1 (0.5 = half · 0.95 = 95% · 1 = everything), the rest keeps running", step = 0.05, group = GAT, tooltip = "EA: InpPartialPct.", display = display.none)
 iTp1Be   = input.bool(true, "After TP1 the stop is never worse than the entry", group = GAT, tooltip = "EA: InpTp1Be.", display = display.none)
 iLots    = input.float(1.0, 'InpLots', step = 0.01, group = G7, display = display.none)
 iBuys    = input.bool(true, 'InpBuys', group = G7, display = display.none)
@@ -630,6 +630,12 @@ for k = 0 to nSteps - 1
             float thr = sFix ? sTp : math.max(ep - off / (1 - a), ep + (sEn + off - ep) / a + 0.001)
             if bH >= thr
                 float px = math.max(thr, bO)
+                // Zee 2026-10-16: share 1 = close EVERYTHING at TP1 (before, 1 closed nothing - the 0.01-lot remainder check failed)
+                if xPart >= 1
+                    nTp1 += 1
+                    exitPx := px
+                    why := "TP1 - all closed"
+                    break
                 float part = math.floor(iLots * xPart / 0.01 + 1e-9) * 0.01
                 if xPart > 0 and part >= 0.01 and iLots - part >= 0.01 - 1e-9
                     sReal += (px - sEn) * part * iCs
@@ -657,6 +663,11 @@ for k = 0 to nSteps - 1
         if sSide < 0 and not na(sTp) and bL <= sTp
             float px  = math.min(sTp, bO)
             float ask = px + iSpread
+            if xPart >= 1
+                nTp1 += 1
+                exitPx := ask
+                why := "TP1 - all closed"
+                break
             float part = math.floor(iLots * xPart / 0.01 + 1e-9) * 0.01
             if xPart > 0 and part >= 0.01 and iLots - part >= 0.01 - 1e-9
                 sReal += (sEn - ask) * part * iCs
