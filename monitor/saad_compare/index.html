@@ -57,7 +57,11 @@ code { font-size: 12px; }
       <label>From <input type="date" id="from"></label>
       <label>To <input type="date" id="to"></label>
       <label>Symbol
-        <select id="symbol"><option value="XAUUSD.pro">XAUUSD.pro (Axi, up to today)</option><option value="XAUUSD_TK">XAUUSD_TK (Axi real-tick copy, to 8 Oct)</option></select></label>
+        <select id="symbol">
+          <option value="bb|XAUUSD">Blueberry XAUUSD (demo server - same feed as BLUEBERRY:XAUUSD)</option>
+          <option value="bb|XAUUSD.pi">Blueberry XAUUSD.pi (SVG-Live, data to 9 Oct)</option>
+          <option value="axi|XAUUSD.pro">Axi XAUUSD.pro (up to today)</option>
+          <option value="axi|XAUUSD_TK">Axi XAUUSD_TK (real-tick copy, to 8 Oct)</option></select></label>
       <label>Server time
         <select id="offset"><option value="3">UTC+3 (Axi summer)</option><option value="2">UTC+2 (Axi winter)</option></select></label>
       <label>Execution delay
@@ -127,6 +131,7 @@ function render() {
     $('kTv').innerHTML = kpiHtml(kpis(tvT)) + `<div class="kpi"><div class="v" style="font-size:14px">${tv.symbol} · ${tv.res} min</div><div class="k">read ${tv.read_at}${first ? ' · ' + first + ' → ' + last : ''}</div></div>`;
     $('sets').innerHTML = '<code>' + Object.entries(tv.ea_sets).map(([k, v]) => `${k}=${v}`).join(' · ') + '</code>';
     $('notes').innerHTML = tv.notes.map(n => `<div class="warn">⚠ ${n}</div>`).join('');
+    if (!S._symPicked) { $('symbol').value = tv.symbol.startsWith('BLUEBERRY') ? 'bb|XAUUSD' : 'axi|XAUUSD.pro'; S._symPicked = true; }
     if (!$('from').value && first) { $('from').value = first; }
     if (!$('to').value && last) { const d = new Date(last + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); $('to').value = d.toISOString().slice(0, 10); }
   }

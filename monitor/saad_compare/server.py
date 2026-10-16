@@ -47,7 +47,8 @@ DIRECT = {"iFast": "InpEmaFast", "iSlow": "InpEmaSlow", "iWick": "InpWickMin", "
           "iTrAtr": "InpTrailAtr", "iEr": "InpChopEr", "iErLen": "InpChopErLook", "iGap": "InpGapCancel",
           "iPartial": "InpPartialPct", "iTp1Be": "InpTp1Be", "iLots": "InpLots", "iBuys": "InpBuys", "iSells": "InpSells",
           "pkLockAt": "InpLockAtUsd", "pkLockUsd": "InpLockUsd", "pkGap": "InpTrailGapUsd", "adRunN": "InpCutRunN",
-          "rpLook": "InpRangeLook", "rpMin": "InpRangeMin", "rpMax": "InpRangeMax"}
+          "rpLook": "InpRangeLook", "rpMin": "InpRangeMin", "rpMax": "InpRangeMax",
+          "rpLookS": "InpRangeLookS", "rpMinS": "InpRangeMinS", "rpMaxS": "InpRangeMaxS"}
 CHOICES = {"iLRule": ("InpLongRule", {"On 9 EMA, exit 50": 0, "On 50 EMA, exit 9": 1, "Both": 2}),
            "iSLine": ("InpShortLine", {"50 EMA": 0, "9 EMA": 1, "Either": 2}),
            "iTouchM": ("InpTouchMode", {"Candle touches": 0, "Wick touches, body on trade side": 1})}
@@ -182,7 +183,8 @@ def run_mt5(frm, to, symbol, offset_h, delay):
     tvd = STATE["tv"]
     if not tvd:
         raise RuntimeError("read TradingView first")
-    axi_rig.use("axi")
+    rig, _, symbol = symbol.partition("|") if "|" in symbol else ("axi", "", symbol)
+    axi_rig.use(rig)               # 'axi' = C:/mt5_rig_axi, 'bb' = C:/mt5_rig_bb (Blueberry)
     axi_rig.compile_ea(EA)
     tag = "compare_page"
     r = axi_rig.run(EA, symbol, tvd["period"], tvd["ea_sets"], frm=frm.replace("-", "."), to=to.replace("-", "."),
