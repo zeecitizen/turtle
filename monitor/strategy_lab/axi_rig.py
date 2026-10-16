@@ -114,6 +114,7 @@ def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=250
     prune_logs(rig=R)
     t0 = time.time()
     rep = R / "reports" / f"{tag}.htm"
+    auth0 = _auth_fails(R)
     proc = subprocess.Popen([str(R / "terminal64.exe"), "/portable", f"/config:{R / 'run.ini'}"], startupinfo=_quiet())
     last_size, stable = -1, 0
     while True:
@@ -138,10 +139,19 @@ def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=250
         kill_rig(R)
     if not rep.exists() or rep.stat().st_mtime < t0:
         return {"tag": tag, "error": "no report"}
+    if _auth_fails(R) > auth0:                     # the agent never ran: MT5 still writes an empty report that reads as $0
+        return {"tag": tag, "error": "authorization failed"}
     r = parse(rep, comm_per_lot=4.0 if symbol.endswith("_TK") else 0.0)
     r["comm_added"] = symbol.endswith("_TK")
     r.update(tag=tag, symbol=symbol, period=period, sets=sets, secs=round(time.time() - t0))
     return r
+
+
+def _auth_fails(R):
+    """Count of 'authorization failed' lines in the rig's newest tester log (2026-10-17: axi7 failed this way and the
+    pass was reported as a quiet $0 week)."""
+    logs = sorted((Path(R) / "Tester" / "logs").glob("*.log"), key=lambda f: f.stat().st_mtime)
+    return logs[-1].read_text(encoding="utf-16", errors="ignore").count("authorization failed") if logs else 0
 
 
 def parse(path, comm_per_lot=0.0):
