@@ -10,7 +10,15 @@ from pathlib import Path
 
 RIG = Path(r"C:\mt5_rig_axi")
 SRC = Path(r"C:\Users\zeesh\turtle\mt5")
-RIGS = {"axi": r"C:\mt5_rig_axi", "axi2": r"C:\mt5_rig_axi2", "axi3": r"C:\mt5_rig_axi3","bb": r"C:\mt5_rig_bb", "pxbt": r"C:\mt5_rig_pxbt"}
+RIGS = {"axi": r"C:\mt5_rig_axi", "axi2": r"C:\mt5_rig_axi2", "axi3": r"C:\mt5_rig_axi3", "axi4": r"C:\mt5_rig_axi4",
+        "axi5": r"C:\mt5_rig_axi5", "axi6": r"C:\mt5_rig_axi6", "axi7": r"C:\mt5_rig_axi7",
+        "bb": r"C:\mt5_rig_bb", "pxbt": r"C:\mt5_rig_pxbt"}
+
+
+def _R(rig=None):
+    """rig=None -> the rig chosen with use(); otherwise a name or path. Pass it explicitly from threads
+    (saad_compare/year_runner.py drives several rigs at once; use() is one global)."""
+    return Path(RIGS.get(rig, rig)) if rig else RIG
 
 
 def use(rig):
@@ -19,11 +27,12 @@ def use(rig):
     RIG = Path(RIGS.get(rig, rig))
 
 
-def compile_ea(ea):
-    shutil.copy(SRC / f"{ea}.mq5", RIG / "MQL5" / "Experts" / f"{ea}.mq5")
-    log = RIG / "compile.log"
-    subprocess.run([str(RIG / "MetaEditor64.exe"), "/portable",
-                    f"/compile:{RIG / 'MQL5' / 'Experts' / (ea + '.mq5')}", f"/log:{log}"])
+def compile_ea(ea, rig=None):
+    R = _R(rig)
+    shutil.copy(SRC / f"{ea}.mq5", R / "MQL5" / "Experts" / f"{ea}.mq5")
+    log = R / "compile.log"
+    subprocess.run([str(R / "MetaEditor64.exe"), "/portable",
+                    f"/compile:{R / 'MQL5' / 'Experts' / (ea + '.mq5')}", f"/log:{log}"])
     txt = log.read_text(encoding="utf-16", errors="ignore")
     if not re.search(r"Result: 0 errors", txt):
         sys.exit("compile failed:\n" + txt[-2000:])
@@ -43,18 +52,20 @@ def ea_defaults(ea):
     return out
 
 
-def kill_rig():
+def kill_rig(rig=None):
     """Kill ONLY the rig's own terminal / tester agents (never a live terminal)."""
+    R = _R(rig)
     subprocess.run(["powershell", "-NoProfile", "-Command",
                     f"Get-Process terminal64,metatester64 -ErrorAction SilentlyContinue | "
-                    f"Where-Object {{ $_.Path -like '{RIG}\*' }} | Stop-Process -Force"], capture_output=True)
+                    f"Where-Object {{ $_.Path -like '{R}\*' }} | Stop-Process -Force"], capture_output=True)
 
 
-def prune_logs(max_mb=50):
+def prune_logs(max_mb=50, rig=None):
     """Agent logs grew to 381-866 MB (the $2 trail modifies the stop on most ticks); drop the big ones."""
-    for f in list((RIG / "Tester").glob("Agent-*/logs/*.log")) + list((RIG / "Tester" / "logs").glob("*.log")):
+    R = _R(rig)
+    for f in list((R / "Tester").glob("Agent-*/logs/*.log")) + list((R / "Tester" / "logs").glob("*.log")):
         try:
-            if f.stat().st_size > max_mb * 1024 * 1024 and f.resolve().is_relative_to(RIG.resolve()):
+            if f.stat().st_size > max_mb * 1024 * 1024 and f.resolve().is_relative_to(R.resolve()):
                 f.unlink()
         except Exception:
             pass
@@ -73,7 +84,10 @@ def ini_input(k, v):
 
 
 def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=25000,
-        exec_mode=-1, tag=None, timeout=21600, model=4, leverage="1:400", watchdog=True):
+        exec_mode=-1, tag=None, timeout=21600, model=4, leverage="1:400", watchdog=True, rig=None, cancel=None):
+    """rig: run on this rig instead of the use() one. cancel: a callable; when it returns True the pass is
+    killed and {"error": "cancelled"} returned (the year view drops a run the moment a chart setting changes)."""
+    R = _R(rig)
     inputs = ea_defaults(ea)
     inputs.update(sets)
     tag = tag or f"{ea}_{symbol}_{period}".replace(".", "_")
@@ -83,12 +97,12 @@ def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=250
            f"Leverage={leverage}\r\nExecutionMode={exec_mode}\r\nOptimization=0\r\n"
            f"Report=reports\\{tag}\r\nReplaceReport=1\r\nShutdownTerminal=1\r\nVisual=0\r\n"
            f"[TesterInputs]\r\n{ti}")
-    (RIG / "reports").mkdir(exist_ok=True)
-    (RIG / "run.ini").write_text(ini, encoding="utf-16")
-    prune_logs()
+    (R / "reports").mkdir(exist_ok=True)
+    (R / "run.ini").write_text(ini, encoding="utf-16")
+    prune_logs(rig=R)
     t0 = time.time()
-    rep = RIG / "reports" / f"{tag}.htm"
-    proc = subprocess.Popen([str(RIG / "terminal64.exe"), "/portable", f"/config:{RIG / 'run.ini'}"])
+    rep = R / "reports" / f"{tag}.htm"
+    proc = subprocess.Popen([str(R / "terminal64.exe"), "/portable", f"/config:{R / 'run.ini'}"])
     last_size, stable = -1, 0
     while True:
         time.sleep(1)
@@ -101,12 +115,15 @@ def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=250
                 break
         if done:
             break
+        if cancel is not None and cancel():
+            kill_rig(R)
+            return {"tag": tag, "error": "cancelled"}
         if time.time() - t0 > timeout:
-            kill_rig()
+            kill_rig(R)
             return {"tag": tag, "error": f"timeout {timeout}s"}
     if proc.poll() is None:
         time.sleep(1)
-        kill_rig()
+        kill_rig(R)
     if not rep.exists() or rep.stat().st_mtime < t0:
         return {"tag": tag, "error": "no report"}
     r = parse(rep, comm_per_lot=4.0 if symbol.endswith("_TK") else 0.0)

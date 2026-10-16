@@ -90,6 +90,13 @@ To check it works after a restart: run `ensure_up.py --status`, or look at `serv
    | Live bridge | running or not | no |
    | Last MT5 run | settings changed since the run; unmatched trades, each with a reason; exits in a different minute; chart vs MT5 money | no |
 
+4. **10 months in MT5 with the chart's settings** (`year_runner.py`) is the panel after the trade table. It needs no button.
+   - **How it reacts:** change a setting on the chart, and within ~4 s Jan–Oct 2026 starts running in MT5 (Axi XAUUSD_TK real ticks). Each month fills in as it finishes: trades, win rate, net, "vs before" (the effect of the change), PF and green days.
+   - **Speed:** about 1.5 min for new settings. Settings run before show instantly from the cache.
+   - **Controls:** the checkbox turns auto-run off. The delay selector switches between random (realistic) and none (same numbers on every run, best for comparing two settings). "Run now" re-reads the chart.
+   - **Needs** the 6 rigs `C:\mt5_rig_axi2` … `C:\mt5_rig_axi7`. To rebuild one: `robocopy C:\mt5_rig_axi4 C:\mt5_rig_axiN /E /XD Tester logs reports`. Add new rigs to `RIGS` in `monitor\strategy_labxi_rig.py` and `year_runner.py`.
+   - **Cache:** `monitor\saad_compare\why_out\year_cache.json`; delete it to force fresh runs.
+
 Last result for 12–15 Oct 2026: **83 of 83** chart trades identical in MT5 (EA v1.04).
 
 ---
@@ -103,6 +110,7 @@ monitor\saad_compare\
   sync_check.py              the "3 · Check sync" checks
   tv_bars_bridge.py          chart candles -> Common\Files\tv_bars_XAUUSD.csv (--export / --live)
   ensure_up.py               start / watch / install the page server
+  year_runner.py             "10 months in MT5": watches the chart's settings, runs Jan-Oct on 6 rigs, caches by settings
   why_compare.py             trade-by-trade with exit reasons from the EA log (py why_compare.py 2026.10.11 2026.10.17)
   start_compare_page.bat     ensure_up.py --open
   start_tv_bars_bridge.bat   tv_bars_bridge.py --export --live (live trading only)
