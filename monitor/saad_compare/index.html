@@ -58,8 +58,8 @@ code { font-size: 12px; }
       <label>To <input type="date" id="to"></label>
       <label>Symbol
         <select id="symbol">
-          <option value="bb|XAUUSD">Blueberry XAUUSD (demo server - same feed as BLUEBERRY:XAUUSD)</option>
-          <option value="bb|XAUUSD.pi">Blueberry XAUUSD.pi (SVG-Live, data to 9 Oct)</option>
+          <option value="bblive|XAUUSD">Blueberry demo XAUUSD - your open terminal (closes it for the test, reopens it)</option>
+          <option value="bb|XAUUSD.pi">Blueberry XAUUSD.pi (test copy, SVG-Live, data to 9 Oct)</option>
           <option value="axi|XAUUSD.pro">Axi XAUUSD.pro (up to today)</option>
           <option value="axi|XAUUSD_TK">Axi XAUUSD_TK (real-tick copy, to 8 Oct)</option></select></label>
       <label>Server time
@@ -132,7 +132,7 @@ function render() {
     $('kTv').innerHTML = kpiHtml(kpis(tvT)) + `<div class="kpi"><div class="v" style="font-size:14px">${tv.symbol} · ${tv.res} min</div><div class="k">read ${tv.read_at}${first ? ' · ' + first + ' → ' + last : ''}</div></div>`;
     $('sets').innerHTML = '<code>' + Object.entries(tv.ea_sets).map(([k, v]) => `${k}=${v}`).join(' · ') + '</code>';
     $('notes').innerHTML = tv.notes.map(n => `<div class="warn">⚠ ${n}</div>`).join('');
-    if (!symPicked) { $('symbol').value = tv.symbol.startsWith('BLUEBERRY') ? 'bb|XAUUSD' : 'axi|XAUUSD.pro'; symPicked = true; }
+    if (!symPicked) { $('symbol').value = tv.symbol.startsWith('BLUEBERRY') ? 'bblive|XAUUSD' : 'axi|XAUUSD.pro'; symPicked = true; }
     if (!$('from').value && first) { $('from').value = first; }
     if (!$('to').value && last) { const d = new Date(last + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); $('to').value = d.toISOString().slice(0, 10); }
   }
