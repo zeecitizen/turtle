@@ -16,6 +16,18 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.06 (2026-10-16) — higher-timeframe trend table + filter
+
+Zee: *"below the top left panel Entry position in the range. add another panel which shows the effect of :: If we were to enable alignment with higher time frame. for example: Require 5 min trend alignment | winrate / net for the month ... Require 4 hour trend alignment"*
+
+- **Indicator:**
+  - New rows under the range table: "With the higher-timeframe trend". For 5m / 15m / 30m / 1h / 4h they show this month's trades, win rate, net and the change against now, if only the trades WITH that trend at their setup were kept. The rest are removed, as with unticking a range.
+  - The rule is the EA's `InpHtfMin` rule. On the last CLOSED candle of that timeframe, a BUY needs its close above its EMA (`InpHtfEma`, 50) and the EMA rising. A SELL needs the close below and the EMA falling. `request.security` with lookahead off = the candle the EA reads at the next 1-min open.
+  - New setting "Require trend alignment with" (Off / 5 min ... 4 hour) skips setups against that trend. The EA does the same with `InpHtfMin`, and the compare page maps it.
+- **EA:** `InpHtfMin` also accepts 5 (PERIOD_M5). The HTF EMA is MT5's own candles, even with `InpBarSource=1`.
+- **First reading (BLUEBERRY 1-min, October, 321 trades, 64%, +$31,901):** every trend filter cut the net to +$4-9k. 5m raised the win rate to 67% but halved the trades. Hypothesis only; the 10-month view decides.
+- **Also:** every indicator setting is `display = display.none`, so the chart's title line shows only "Saad15" instead of ~130 values (Zee: *"the indicator name on top left shows all setting values which makes it a long string covering the screen"*).
+
 ## Saad_strategy_1min v1.05 (2026-10-16) — TOP / BOTTOM range tick-boxes
 
 Zee: *"can you replace those settings with the following: give ranges given in the diagnostics table. show an enable/disable checkbox. if a range is checked off -> disable that range only in the diagnostics table. don't replace the whole diagnostics table with new winrates (rather if a range is disabled ONLY remove trades from that range and count the diagnostics).. currently the table shifts all ranges if one range is disabled"* and *"also make the ranges more granular in both the diagnostics table and settings 0-5% ... 95%-100%"*
