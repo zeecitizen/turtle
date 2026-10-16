@@ -16,6 +16,21 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.05 (2026-10-16) — TOP / BOTTOM range tick-boxes
+
+Zee: *"can you replace those settings with the following: give ranges given in the diagnostics table. show an enable/disable checkbox. if a range is checked off -> disable that range only in the diagnostics table. don't replace the whole diagnostics table with new winrates (rather if a range is disabled ONLY remove trades from that range and count the diagnostics).. currently the table shifts all ranges if one range is disabled"* and *"also make the ranges more granular in both the diagnostics table and settings 0-5% ... 95%-100%"*
+
+- **Indicator (`pine/saad_15min.pine`):**
+  - The four "skip above / below X%" numbers became 21 tick-boxes a side: 0-5% ... 95-100%, over 100%. BUY counts up from the range's low; SELL counts down from its high.
+  - The diagnostics table has the same 21 rows. An unticked row stays, greyed: "OFF · n", plus what those trades would have done.
+  - New "When a range is unticked" mode, default **Stand aside while it would have run**. The trade is not taken, and no other trade starts until it would have closed. It is invisible and counted nowhere except its own grey row, so every other row keeps exactly the same trades.
+  - Check on the chart: BUY 65-70% unticked changed only that row. October went +$31,900.82 → +$38,143.39 (= +$6,242.57, its 8 trades); 321 → 313 trades.
+  - The other mode, "Skip it and take the next setup", is the old behaviour.
+- **EA:** `InpBandsB` / `InpBandsS`, 21 digits each, using the same buckets as the indicator (`rpBucket`). The compare page maps the tick-boxes to them.
+  - Tester check: Axi TK Sep 1-3 with BUY 65-70% off skipped 7 setups at 66-69%.
+  - **Stand aside is chart-only.** The EA skips the trade and may take the next setup. With a range unticked in that mode, MT5 can differ after it, and the page says so.
+- Chart values were kept: inputs restored by name after the update. 87 old values are identical; 42 new boxes are ticked.
+
 ## Saad_strategy_1min v1.04 (2026-10-16) — the chart's own candles: 83 of 83 trades
 
 Zee: *"the only way we can succeed is to sync both mt5 with tradingview. so find a way. i can't miss out on entries i've spent entire day tuning on tradingview"*

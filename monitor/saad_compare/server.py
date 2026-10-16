@@ -50,8 +50,7 @@ DIRECT = {"iFast": "InpEmaFast", "iSlow": "InpEmaSlow", "iWick": "InpWickMin", "
           "iTrAtr": "InpTrailAtr", "iEr": "InpChopEr", "iErLen": "InpChopErLook", "iGap": "InpGapCancel",
           "iPartial": "InpPartialPct", "iTp1Be": "InpTp1Be", "iLots": "InpLots", "iBuys": "InpBuys", "iSells": "InpSells",
           "pkLockAt": "InpLockAtUsd", "pkLockUsd": "InpLockUsd", "pkGap": "InpTrailGapUsd", "adRunN": "InpCutRunN",
-          "rpLook": "InpRangeLook", "rpMin": "InpRangeMin", "rpMax": "InpRangeMax",
-          "rpLookS": "InpRangeLookS", "rpMinS": "InpRangeMinS", "rpMaxS": "InpRangeMaxS"}
+          "rpLook": "InpRangeLook", "rpLookS": "InpRangeLookS"}
 CHOICES = {"iLRule": ("InpLongRule", {"On 9 EMA, exit 50": 0, "On 50 EMA, exit 9": 1, "Both": 2}),
            "iSLine": ("InpShortLine", {"50 EMA": 0, "9 EMA": 1, "Either": 2}),
            "iTouchM": ("InpTouchMode", {"Candle touches": 0, "Wick touches, body on trade side": 1})}
@@ -132,6 +131,13 @@ def ea_sets_from(settings):
     for pv, off, what in NOT_IN_EA:
         if settings.get(pv, off) != off:
             notes.append(f"{what} is ON on the chart but the EA does not have it - MT5 runs without it")
+    # TOP / BOTTOM (Zee 2026-10-16): 21 tick-boxes a side (0-5% ... 95-100%, over 100%) -> one digit each
+    sets["InpRangeMin"] = sets["InpRangeMax"] = sets["InpRangeMinS"] = sets["InpRangeMaxS"] = "0"
+    for side, pre in (("B", "rpB"), ("S", "rpS")):
+        sets[f"InpBands{side}"] = "".join("1" if settings.get(f"{pre}{b:02d}", True) else "0" for b in range(21))
+    if "0" in sets["InpBandsB"] + sets["InpBandsS"] and settings.get("rpOff", "").startswith("Stand aside"):
+        notes.append("TOP / BOTTOM: a range is unticked with 'Stand aside while it would have run' - MT5 skips that trade and may take "
+                     "the next setup instead, so trades after it can differ from the chart (pick 'Skip it and take the next setup' for an exact match)")
     sets["InpLogCsv"] = "false"
     return sets, notes
 
