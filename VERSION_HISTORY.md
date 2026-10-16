@@ -16,6 +16,17 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.01 (2026-10-16) — REFUSED, do not attach
+
+Zee: *"compare each trade taken on tradingview chart to what's shown by strategy tester in MT5 and fix the bug where the alignment fails"*
+
+- **Fix:** when the ATR trail's new level is already beyond the price at the next open, the broker refuses that stop and v1.00 rode on to the old stop; the chart exits at the open. v1.01 closes at market there.
+- **Trade by trade, Oct 12-15** (chart = VANTAGE 1 min, UTC; Axi server = UTC+3):
+  Axi XAUUSD.pro (real ticks): **16 of 21 trades identical** to the chart (same minute, side, entry within cents), +$12,558, 88%, PF 5.3 vs the chart's +$15,447, 78%, PF 4.8. Trade #22 (BUY 01:30 UTC): Axi +$576, chart +$596.
+  PXBT XAUUSDp: 13 of 24 identical. #22 there: the 01:32 candle closed 4146.79 and the 0.2 x ATR level was 4146.82 - 3 cents above the close, so the stop correctly did not move (same rule in the EA and the indicator) and the trade lost -$1,274. The 1-min settings flip on cents of feed.
+  #1 (SELL 00:26): MT5 locks +$5.5 tick by tick (+$1,096); the chart checks once per 1-min candle and misses it (-$1,216).
+- **Not a bug: a tuning week.** Axi XAUUSD.pro by week, real ticks, random delay: Sep 14 -$10,126 · Sep 21 +$2,370 · Sep 28 -$7,355 · **Oct 5-9 -$6,212** · Oct 12-15 +$9,918 (the week the settings were tuned on). Sep 14 - Oct 15 total -$11,404, PF 0.88. Axi TK Jul 1 - Oct 8 -$64,692 (PF 0.83).
+
 ## Saad_strategy_1min v1.00 (2026-10-16) — REFUSED, do not attach
 
 Zee: *"can you take these settings from tradingview and saad_strategy_15 code and create a new EA from this called saad_strategy_1min. then test these settings on 1 min timeframe in mt5"*

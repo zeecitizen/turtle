@@ -158,6 +158,7 @@ lsFrom = input.time(0, "Top-right box: list the trades closed from this date (0 
 lsTo = input.time(0, "...up to this date (0 = now)", group = G14)
 rpMin = input.float(0, "TOP / BOTTOM: skip a BUY entering BELOW X% of the range / a SELL above (100 - X)% (0 = off; with the max = keep only a band, e.g. 75-100)", step = 5, minval = 0, group = G11)
 iDetMax = input.int(200, "Detail tags (setups, skips, BE/TP, exit X): keep at most N - the rest of TradingView's 500 labels stays for BUY / SELL / EXIT", minval = 0, group = G8)
+exOn = input.bool(false, "Trade export table (bottom centre): every trade with entry / exit times (UTC), for comparing with MT5 - uses the date range above, else the last 40", group = G14)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -370,6 +371,9 @@ var array<float> aEn   = array.new<float>()
 var array<float> aEx   = array.new<float>()
 var array<float> aPnl  = array.new<float>()
 var array<int>   aTime = array.new<int>()
+var array<int>   aEnT  = array.new<int>()      // entry minute (UTC ms) - for the export table
+var array<float> aSl0  = array.new<float>()    // the stop at entry
+var int sEnT = 0
 if ta.change(dayKey(time)) != 0
     pnlToday := 0.0
     nToday := 0
@@ -603,7 +607,7 @@ for k = 0 to nSteps - 1
                 sSide := side, sEn := en, sSl := sl, sSl0 := sl, sTp := tp, sExit := pExit, sNoTp := noTp
                 sRide := side > 0 and noTp
                 sUsd := false, pkBest := en, sPk := false, adRun := 0, adWhy := "", sChase := chase, sBest := en, sBar := bar_index, sNum := tN, sStage := 1, sNext := na, sRem := 1.0, sReal := 0.0
-                sCtc := false, sMoves := 0, sDesc := pDesc, sSlFrom := bar_index
+                sCtc := false, sMoves := 0, sDesc := pDesc, sSlFrom := bar_index, sEnT := tk
                 entryK := k
                 float risk = math.abs(en - sl) * iLots * iCs
                 string tpTxt = side > 0 ? (noTp ? "none - trailing from entry" : "touch of the " + str.tostring(pExit) + " EMA") : fp(tp) + " (last support)"
@@ -638,8 +642,10 @@ if not na(exitPx)
     // the AVERAGE exit over the whole position (TP1 part + the rest): Zee 2026-10-16, #274 showed only the last 5%'s exit
     float avgEx = math.round((sSide > 0 ? sEn + (pnl + iComm * iLots) / (iLots * iCs) : sEn - (pnl + iComm * iLots) / (iLots * iCs)) * 100) / 100
     array.push(aNum, sNum), array.push(aSide, sSide), array.push(aEn, sEn), array.push(aEx, avgEx), array.push(aPnl, pnl), array.push(aTime, time)
+    array.push(aEnT, sEnT), array.push(aSl0, sSl0)
     if array.size(aNum) > 500
         array.shift(aNum), array.shift(aSide), array.shift(aEn), array.shift(aEx), array.shift(aPnl), array.shift(aTime)
+        array.shift(aEnT), array.shift(aSl0)
     if pnl > 0
         nW += 1, gW += pnl
     else if pnl < 0
@@ -948,3 +954,29 @@ if barstate.islast and rpDiag
         table.cell(dg, 1, b + 2, str.tostring(n), text_color = color.white, text_size = size.normal)
         table.cell(dg, 2, b + 2, n > 0 ? str.tostring(100.0 * array.get(dgW, b) / n, "#") + "%" : "-", text_color = color.white, text_size = size.normal)
         table.cell(dg, 3, b + 2, fm(pn), text_color = pn >= 0 ? color.lime : color.red, text_size = size.normal)
+
+// ── TRADE EXPORT (bottom centre, off by default): one row per trade, UTC times, for a trade-by-trade check against MT5 ──
+if barstate.islast and exOn
+    var table ex = table.new(position.bottom_center, 8, 130, bgcolor = color.new(color.black, 10), border_color = color.new(color.gray, 70), border_width = 1)
+    table.clear(ex, 0, 0, 7, 129)
+    array<string> hd = array.from("#", "side", "entry UTC", "entry", "SL0", "exit UTC", "avg exit", "P/L")
+    for c = 0 to 7
+        table.cell(ex, c, 0, array.get(hd, c), text_color = color.yellow, text_size = size.small)
+    int sz = array.size(aNum)
+    int r = 1
+    if sz > 0
+        int hiT = lsTo > 0 ? lsTo : timenow
+        int i0 = lsFrom > 0 ? 0 : math.max(sz - 40, 0)
+        for i = i0 to sz - 1
+            int tt = array.get(aTime, i)
+            if (lsFrom == 0 or (tt >= lsFrom and tt <= hiT)) and r < 129
+                float pn = array.get(aPnl, i)
+                table.cell(ex, 0, r, str.tostring(array.get(aNum, i)), text_color = color.white, text_size = size.small)
+                table.cell(ex, 1, r, array.get(aSide, i) > 0 ? "BUY" : "SELL", text_color = color.white, text_size = size.small)
+                table.cell(ex, 2, r, str.format_time(array.get(aEnT, i), "MM-dd HH:mm", "UTC"), text_color = color.white, text_size = size.small)
+                table.cell(ex, 3, r, fp(array.get(aEn, i)), text_color = color.white, text_size = size.small)
+                table.cell(ex, 4, r, fp(array.get(aSl0, i)), text_color = color.white, text_size = size.small)
+                table.cell(ex, 5, r, str.format_time(tt, "MM-dd HH:mm", "UTC"), text_color = color.white, text_size = size.small)
+                table.cell(ex, 6, r, fp(array.get(aEx, i)), text_color = color.white, text_size = size.small)
+                table.cell(ex, 7, r, fm(pn), text_color = pn > 0 ? color.lime : pn < 0 ? color.red : color.silver, text_size = size.small)
+                r += 1
