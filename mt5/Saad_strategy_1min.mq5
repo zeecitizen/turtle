@@ -24,6 +24,7 @@
 //| v1.05: InpBandsB / InpBandsS - 21 range tick-boxes (5% each)     |
 //| v1.06: InpHtfMin also 5 (the chart's "Require trend alignment")  |
 //| v1.07: InpTpMode - TP1 method: normal / fixed $ / Fib / partial   |
+//| v1.08: a TP1 share of 1 closes the whole trade at TP1            |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -62,7 +63,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.07"
+#property version   "1.08"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -73,7 +74,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.07"
+#define EA_COMMENT "Saad1m v1.08"
 
 //--- the two lines
 input int    InpEmaFast     = 3;      // InpEmaFast
@@ -384,7 +385,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.07 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.08 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -721,6 +722,8 @@ bool TpReached(int i, double tpLv)
 void PartialAtTp1(int i)
 {
    if (PartPct() <= 0 || !PositionSelectByTicket(g_pos[i].ticket)) return;
+   // v1.08 (Zee 2026-10-16): share 1 = close EVERYTHING at TP1 (before, the remainder check refused it and nothing closed)
+   if (PartPct() >= 1.0 - 1e-9) { g_pos[i].why = "TP1 - all closed"; trade.PositionClose(g_pos[i].ticket); return; }
    double vol = PositionGetDouble(POSITION_VOLUME), step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP), mn = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
    double part = MathFloor(vol * PartPct() / step) * step;
    if (part >= mn && vol - part >= mn - 1e-9 && trade.PositionClosePartial(g_pos[i].ticket, NormalizeDouble(part, 2))) {

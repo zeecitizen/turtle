@@ -16,6 +16,23 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.08 (2026-10-17) — a TP1 share of 1 closes everything
+
+Zee: *"the fibonnaci extension in the Table EXIT LAB: shows 94% and 95% .. but if i select is as an option in the settings it shows in the bottom right panel the same winrate of around 75%.. can u check if the fibonnaci setting has been implemented correctly?"*
+
+- **Fibonacci TP1 was correct.** Measured on his chart (October), switching one rule at a time:
+  - Normal TP1: 74%, +$45,621, 189 trades.
+  - Fib 161.8: 75%, +$16,152, **320** trades.
+  - Fib 161.8 + CTC off: 83%.
+  - Then the lock and the 6-candle cut off: 83%, net lower.
+- **Why the EXIT LAB said 94%:** it re-runs the SAME entries with only the target and the first stop. The real engine:
+  - takes many more, weaker trades once exits are quicker (one trade at a time);
+  - moves the stop to the entry at 60% (CTC) before many targets;
+  - falls back to the normal TP1 when no 161.8% level exists. The EXIT LAB row counted only 104 of 141 BUYs.
+- **Bug found and fixed:** "close this share at TP1" = 1 closed NOTHING. Its 0.01-lot remainder check failed, so the whole position trailed: 56% in that step. The same gap was in the EA's `PartialAtTp1`.
+  - Now share 1 closes the trade at TP1: "TP1 - all closed".
+  - Fib + close all: 74%, +$13,824, 455 trades. With CTC off: 82%.
+
 ## Saad_strategy_1min v1.07 (2026-10-16) — TP1 METHOD: normal / fixed $ / Fibonacci / partial
 
 Zee: *"161.8 fibonnacci option in the Exit Lab table.. can u add it as a configurable setting in the settings of the indicator?"* · *"yes add Fixed Target TP for both sells and buys as a setting"* · *"partial half at +2 and trails at 2, add it as a configurable option as well in the settings"*
