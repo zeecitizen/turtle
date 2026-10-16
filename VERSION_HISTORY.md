@@ -16,6 +16,19 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.03 (2026-10-16) — REFUSED, do not attach
+
+Zee: *"i want you to find out the reason why the trades are not matching. check each trade. find out the reason. fix the mt5 ea to match the tradingview reality presented on webpage"*
+
+Every trade of Oct 12-15 checked: chart BLUEBERRY:XAUUSD 1 min (exit reasons from the export table) vs the EA in Zee's own Blueberry MT5 (verbose log: every setup, skip and exit with its reason), plus a minute-by-minute diff of both feeds' candles.
+
+- **Cause 1, code - the lock.** The chart sets STOP NEAR PEAK (lock at $2 -> +$5.5) once per closed candle and only when the whole candle stayed above entry + $5.5; the EA moved it tick by tick and the next small dip took it (#4, #6, #63, #76: EA "trailing stop" early). Fix `InpLockMode` 1 (default) - same rule as the chart; 0 = old tick lock. Those four now exit the same minute for the same money.
+- **Cause 2, code - the entry band.** The chart judges "25-50% of the last 7 candles" at the break level + 0.01; the EA used the live bid when it fired, a few cents further, so 50% read 51-52% and the trade was skipped (#16 #22 #32 #40 #56 #61 #62 #73 #75 #78). Fix `InpBandAtLevel` true (default).
+- **Cause 3, data - not fixable in the EA.** Same broker, two feeds: of 5,513 common minutes, ~6% differ by more than 5 cents on O/H/L/C. Every remaining mismatch traced to the setup candle: #2 (open 4205.18 chart vs 4205.05 MT5: a pin bar LONG on the chart, a shooting star SHORT in MT5), #8, #30, #36, #69, #80, #82; #43 (high 4 cents, close 8 cents: the 0.2 x ATR level landed 3 cents above MT5's close, so the stop correctly did not move); MT5-only 04:30, 06:31, 15:26, 02:27, 19:53 the same way; #38 cascades from #36. Blueberry tester has no Oct 16 ticks yet.
+- **Result:** 74 of 83 chart trades identical (was 63); matched pairs chart +$30,520 vs MT5 +$26,065 (#36 alone $2,276). MT5 Blueberry Oct 11-17: +$29,575, 87 trades, 84%, PF 3.48.
+- **Still REFUSED:** Axi XAUUSD_TK Sep 15 - Oct 15, real ticks, random delay, Zee's Blueberry settings: v1.03 **-$53,632** (465 tr, 57%, PF 0.76; Sep -$30,122, Oct -$23,510) vs v1.02 behaviour -$49,751 (PF 0.76). Matching the chart does not make the settings profitable outside the week they were tuned on.
+- Also `InpDumpBars` (debug, off): writes each closed candle + EMAs to Common\Files\saad1m_bars.csv for feed checks.
+
 ## Saad_strategy_1min v1.01 (2026-10-16) — REFUSED, do not attach
 
 Zee: *"compare each trade taken on tradingview chart to what's shown by strategy tester in MT5 and fix the bug where the alignment fails"*

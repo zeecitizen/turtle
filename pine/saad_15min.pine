@@ -379,6 +379,7 @@ var array<float> aPnl  = array.new<float>()
 var array<int>   aTime = array.new<int>()
 var array<int>   aEnT  = array.new<int>()      // entry minute (UTC ms) - for the export table
 var array<float> aSl0  = array.new<float>()    // the stop at entry
+var array<string> aWhy = array.new<string>()    // exit reason (export table)
 var int sEnT = 0
 if ta.change(dayKey(time)) != 0
     pnlToday := 0.0
@@ -652,10 +653,10 @@ if not na(exitPx)
     // the AVERAGE exit over the whole position (TP1 part + the rest): Zee 2026-10-16, #274 showed only the last 5%'s exit
     float avgEx = math.round((sSide > 0 ? sEn + (pnl + iComm * iLots) / (iLots * iCs) : sEn - (pnl + iComm * iLots) / (iLots * iCs)) * 100) / 100
     array.push(aNum, sNum), array.push(aSide, sSide), array.push(aEn, sEn), array.push(aEx, avgEx), array.push(aPnl, pnl), array.push(aTime, time)
-    array.push(aEnT, sEnT), array.push(aSl0, sSl0)
+    array.push(aEnT, sEnT), array.push(aSl0, sSl0), array.push(aWhy, why + (sNoTp ? " · noTP1" : ""))
     if array.size(aNum) > 500
         array.shift(aNum), array.shift(aSide), array.shift(aEn), array.shift(aEx), array.shift(aPnl), array.shift(aTime)
-        array.shift(aEnT), array.shift(aSl0)
+        array.shift(aEnT), array.shift(aSl0), array.shift(aWhy)
     if pnl > 0
         nW += 1, gW += pnl
     else if pnl < 0
@@ -975,10 +976,10 @@ if barstate.islast and rpDiag
 
 // ── TRADE EXPORT (bottom centre, off by default): one row per trade, UTC times, for a trade-by-trade check against MT5 ──
 if barstate.islast and exOn
-    var table ex = table.new(position.bottom_center, 8, 502, bgcolor = color.new(color.black, 10), border_color = color.new(color.gray, 70), border_width = 1)
-    table.clear(ex, 0, 0, 7, 501)
-    array<string> hd = array.from("#", "side", "entry UTC", "entry", "SL0", "exit UTC", "avg exit", "P/L")
-    for c = 0 to 7
+    var table ex = table.new(position.bottom_center, 9, 502, bgcolor = color.new(color.black, 10), border_color = color.new(color.gray, 70), border_width = 1)
+    table.clear(ex, 0, 0, 8, 501)
+    array<string> hd = array.from("#", "side", "entry UTC", "entry", "SL0", "exit UTC", "avg exit", "P/L", "why")
+    for c = 0 to 8
         table.cell(ex, c, 0, array.get(hd, c), text_color = color.yellow, text_size = size.small)
     int sz = array.size(aNum)
     int r = 1
@@ -997,4 +998,5 @@ if barstate.islast and exOn
                 table.cell(ex, 5, r, str.format_time(tt, "yyyy-MM-dd HH:mm", "UTC"), text_color = color.white, text_size = size.small)
                 table.cell(ex, 6, r, fp(array.get(aEx, i)), text_color = color.white, text_size = size.small)
                 table.cell(ex, 7, r, fm(pn), text_color = pn > 0 ? color.lime : pn < 0 ? color.red : color.silver, text_size = size.small)
+                table.cell(ex, 8, r, array.get(aWhy, i), text_color = color.silver, text_size = size.small, text_halign = text.align_left)
                 r += 1

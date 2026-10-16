@@ -16,6 +16,8 @@
 //|                   bottom, SELL mirrored)                         |
 //| v1.01: a trail level already passed at the open closes at market |
 //| v1.02: BUY and SELL entry bands are separate (InpRange*S)        |
+//| v1.03: InpLockMode 1 - the lock per candle close, like the chart |
+//|        InpBandAtLevel - entry band judged at the break level      |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -54,7 +56,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.02"
+#property version   "1.03"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -65,7 +67,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.02"
+#define EA_COMMENT "Saad1m v1.03"
 
 //--- the two lines
 input int    InpEmaFast     = 3;      // InpEmaFast
@@ -211,6 +213,9 @@ input double InpRangeMax    = 35;     // InpRangeMax - skip a BUY entering above
 input int    InpRangeLookS  = 7;      // InpRangeLookS - SELL: range of the last N closed candles (v1.02: BUY and SELL have their own band)
 input double InpRangeMinS   = 25;     // InpRangeMinS - SELL: skip entering higher than this % from the top of that range (0 = off)
 input double InpRangeMaxS   = 35;     // InpRangeMaxS - SELL: skip entering lower than this % from the top (0 = off; over 100 = a new low)
+input int    InpLockMode    = 1;      // InpLockMode - 0 the lock on every tick (v1.02) · 1 at each candle close like the TradingView chart: set only once a closed candle's low (BUY) / high + spread (SELL) is past the lock level
+input bool   InpBandAtLevel = true;   // InpBandAtLevel - judge the entry band at the break level + 0.01 (or the candle open past it), as the TradingView chart does; false = at the live bid (v1.02)
+input bool   InpDumpBars    = false;  // InpDumpBars - debug: write every closed candle with its EMAs to Common\Files\saad1m_bars.csv (chart vs MT5 feed check)
 
 CTrade   trade;
 int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE;
@@ -235,7 +240,7 @@ int      g_skipDip = 0, g_skipSweep = 0, g_skipMinLot = 0, g_dayLossStop = 0, g_
 // per-position state
 struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bool noTp; bool ride; datetime entryTime; double best; bool usdTrail; double tpNext; int tpStage; bool resTp1;
                   string setup; double sl0; double risk; string tp1; datetime tp1At; string tps; datetime ctcAt; int moves; double mfe;
-                  int num; double slNow; datetime slFrom; string why; int adRun; };
+                  int num; double slNow; datetime slFrom; string why; int adRun; double lbest; };
 PosState g_pos[];
 
 int g_ctc = 0, g_skipClose = 0, g_closeLoss = 0;
@@ -270,7 +275,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.02 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.03 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -556,7 +561,7 @@ void SyncPos()
       p.ticket = t; p.side = PositionGetInteger(POSITION_TYPE) == POSITION_TYPE_BUY ? 1 : -1;
       p.entry = PositionGetDouble(POSITION_PRICE_OPEN); p.tp = PositionGetDouble(POSITION_TP);
       p.exitE = 50; p.noTp = p.side > 0; p.ride = TrailOn(p.side); p.entryTime = (datetime)PositionGetInteger(POSITION_TIME); p.best = p.entry;
-      p.num = ++g_num; p.slNow = PositionGetDouble(POSITION_SL); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.resTp1 = false; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0; p.adRun = 0;
+      p.num = ++g_num; p.slNow = PositionGetDouble(POSITION_SL); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.resTp1 = false; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0; p.adRun = 0; p.lbest = p.entry;
       int n = ArraySize(g_pos); ArrayResize(g_pos, n + 1); g_pos[n] = p;
    }
 }
@@ -683,7 +688,7 @@ void ManageTick()
    double ask0 = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    for (int i = ArraySize(g_pos) - 1; i >= 0; i--) {
       g_pos[i].mfe = g_pos[i].side > 0 ? MathMax(g_pos[i].mfe, bid) : (g_pos[i].mfe == 0 ? ask0 : MathMin(g_pos[i].mfe, ask0));
-      if (InpLockAtUsd > 0 && PositionSelectByTicket(g_pos[i].ticket)) {
+      if (InpLockAtUsd > 0 && InpLockMode == 0 && PositionSelectByTicket(g_pos[i].ticket)) {
          double moved = g_pos[i].side > 0 ? bid - g_pos[i].entry : g_pos[i].entry - ask0;
          double want = g_pos[i].entry + g_pos[i].side * InpLockUsd, cur = PositionGetDouble(POSITION_SL);
          if (moved >= InpLockAtUsd && (g_pos[i].side > 0 ? want > cur + _Point : (cur == 0 || want < cur - _Point)) && ModifySl(g_pos[i].ticket, want)) SlMoved(i, want, "lock");
@@ -756,6 +761,20 @@ void ManageBar()
          g_pos[i].adRun = against ? g_pos[i].adRun + 1 : 0;
          bool loss = side > 0 ? c1 < g_pos[i].entry : c1 + spr > g_pos[i].entry;
          if (loss && g_pos[i].adRun >= InpCutRunN) { g_pos[i].why = StringFormat("%d candles against the trade", g_pos[i].adRun); trade.PositionClose(t); continue; }
+      }
+      // v1.03 InpLockMode 1 (Zee 2026-10-16, chart vs MT5 #76/#37/#33): the chart sets the lock once per candle and only
+      // when the whole candle stayed past it; the tick-by-tick lock was hit by the next small dip. Same rule here.
+      if (InpLockAtUsd > 0 && InpLockMode == 1 && g_pos[i].entryTime < t1) {
+         double spr2 = SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID);
+         g_pos[i].lbest = side > 0 ? MathMax(g_pos[i].lbest, h1) : MathMin(g_pos[i].lbest, l1 + spr2);
+         double pr = side > 0 ? g_pos[i].lbest - g_pos[i].entry : g_pos[i].entry - g_pos[i].lbest;
+         double want = NormalizeDouble(g_pos[i].entry + side * InpLockUsd, _Digits);
+         bool ok = side > 0 ? (want > sl + 0.01 && want < l1) : ((sl == 0 || want < sl - 0.01) && want > h1 + spr2);
+         if (pr >= InpLockAtUsd && ok) {
+            double bNow = SymbolInfoDouble(_Symbol, SYMBOL_BID), aNow = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+            if (side > 0 ? want >= bNow : want <= aNow) { g_pos[i].why = StringFormat("lock %.2f already passed at the open", want); trade.PositionClose(t); continue; }
+            if (ModifySl(t, want)) { SlMoved(i, want, "lock"); sl = want; }
+         }
       }
       if (g_pos[i].usdTrail) continue;              // LONG after the touch: trailed tick by tick
       if (side > 0 && !g_pos[i].ride && InpFixTpPips <= 0 && InpLongTouch == 0) {
@@ -852,7 +871,11 @@ void TryEntry()
    if (bMin > 0 || bMax > 0) {
       double hi = iHigh(_Symbol, PERIOD_CURRENT, iHighest(_Symbol, PERIOD_CURRENT, MODE_HIGH, bLook, 1));
       double lo = iLow(_Symbol, PERIOD_CURRENT, iLowest(_Symbol, PERIOD_CURRENT, MODE_LOW, bLook, 1));
-      double chase = hi > lo ? (side > 0 ? (bid - lo) / (hi - lo) : (hi - bid) / (hi - lo)) * 100 : 50;
+      // v1.03 (chart vs MT5 #16 #22 #32 #40 #56 #61 #62 #73 #75 #78): the chart judges the band at the break level, the EA judged
+      // it at the tick that fired, a few cents further - 50% became 51-52% and the trade was skipped.
+      double lvl = side > 0 ? g_pHigh + InpBreakPips * pip : g_pLow - InpBreakPips * pip, o0 = iOpen(_Symbol, PERIOD_CURRENT, 0);
+      double px = !InpBandAtLevel ? bid : side > 0 ? MathMax(lvl + 0.01, o0) : MathMin(lvl - 0.01, o0);
+      double chase = hi > lo ? (side > 0 ? (px - lo) / (hi - lo) : (hi - px) / (hi - lo)) * 100 : 50;
       if ((bMin > 0 && chase < bMin) || (bMax > 0 && chase > bMax)) {
          DSkip(side, StringFormat("entry at %.0f%% of the last %d candles' range (band %.0f-%.0f%%)", chase, bLook, bMin, bMax));
          return;
@@ -942,7 +965,7 @@ void DoEntry(int side, double sl)
    p.ticket = t; p.side = side; p.entry = trade.ResultPrice() > 0 ? trade.ResultPrice() : en; p.tp = tp;
    p.exitE = g_pExit; p.noTp = noTp; p.resTp1 = resTp1; p.ride = side > 0 && (noTp || (resTp1 && InpResTp1Ride)) && TrailOn(1) && InpFixTpPips <= 0;
    p.entryTime = TimeCurrent(); p.best = p.entry;
-   p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0; p.adRun = 0;
+   p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0; p.adRun = 0; p.lbest = p.entry;
    p.setup = g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry;
    p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    p.tp1 = side > 0 ? (noTp ? "none (exit EMA below entry, no resistance above) - trailing from entry"
@@ -1002,6 +1025,12 @@ void OnTick()
    datetime bar = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bar != g_lastBar) {
       g_lastBar = bar;
+      if (InpDumpBars) {
+         static int fh = INVALID_HANDLE;
+         if (fh == INVALID_HANDLE) fh = FileOpen("saad1m_bars.csv", FILE_WRITE | FILE_CSV | FILE_ANSI | FILE_COMMON, ',');
+         if (fh != INVALID_HANDLE) { FileWrite(fh, TimeToString(iTime(_Symbol, PERIOD_CURRENT, 1), TIME_DATE | TIME_MINUTES), Px(iOpen(_Symbol, PERIOD_CURRENT, 1)), Px(iHigh(_Symbol, PERIOD_CURRENT, 1)),
+                                               Px(iLow(_Symbol, PERIOD_CURRENT, 1)), Px(iClose(_Symbol, PERIOD_CURRENT, 1)), DoubleToString(Buf(hFast, 1), 3), DoubleToString(Buf(hSlow, 1), 3)); FileFlush(fh); }
+      }
       if (Bars(_Symbol, PERIOD_CURRENT) >= InpEmaSlow * 2 + 20) {
          ManageBar();
          SyncPos();
