@@ -14,6 +14,7 @@
 //|   InpRangeLook/Min/Max  enter only between Min% and Max% of the  |
 //|                   last N closed candles' range (BUY from the     |
 //|                   bottom, SELL mirrored)                         |
+//| v1.01: a trail level already passed at the open closes at market |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -52,7 +53,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.00"
+#property version   "1.01"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -63,7 +64,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.00"
+#define EA_COMMENT "Saad1m v1.01"
 
 //--- the two lines
 input int    InpEmaFast     = 3;      // InpEmaFast
@@ -265,7 +266,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.00 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.01 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -779,7 +780,13 @@ void ManageBar()
                lvl = side > 0 ? MathMin(lvl, c1 - InpTrailGapUsd) : MathMax(lvl, c1 + InpTrailGapUsd);
                better = side > 0 ? lvl > sl + _Point : (sl == 0 || lvl < sl - _Point);
             }
-            if (better && ModifySl(t, lvl)) { SlMoved(i, lvl, StringFormat("trail %.2f", lvl)); sl = lvl; }
+            // v1.01 (Zee 2026-10-16, TV #22 vs MT5): the new trail level is already beyond the price at this open, so the
+            // broker refuses the stop and the trade used to ride on to the old stop. The trail says "out": close at market.
+            if (better) {
+               double bNow = SymbolInfoDouble(_Symbol, SYMBOL_BID), aNow = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+               if (side > 0 ? lvl >= bNow : lvl <= aNow) { g_pos[i].why = StringFormat("trailing stop %.2f already passed at the open", lvl); trade.PositionClose(t); continue; }
+               if (ModifySl(t, lvl)) { SlMoved(i, lvl, StringFormat("trail %.2f", lvl)); sl = lvl; }
+            }
          }
       }
       if (InpBeUsd > 0 && afterEntryBar) {
