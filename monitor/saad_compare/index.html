@@ -44,6 +44,13 @@ tbody tr:nth-child(even) { background: var(--row); }
 h2 { font-size: 15px; margin: 0 0 10px; }
 details summary { cursor: pointer; color: var(--muted); }
 code { font-size: 12px; }
+.sync ul { list-style: none; padding: 0; margin: 6px 0 0; }
+.sync li { padding: 7px 0 7px 2px; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: baseline; }
+.sync li:last-child { border-bottom: 0; }
+.sync .st { flex: 0 0 auto; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; border: 1px solid currentColor; min-width: 44px; text-align: center; }
+.sync .st.issue { color: var(--loss); } .sync .st.fixed { color: var(--accent); } .sync .st.ok { color: var(--win); } .sync .st.info { color: var(--muted); }
+.sync .d { color: var(--muted); font-size: 12.5px; margin-top: 2px; overflow-wrap: anywhere; }
+.sync .sum { font-size: 13px; color: var(--muted); }
 .doc { line-height: 1.55; }
 .doc h3 { font-size: 14px; margin: 18px 0 6px; }
 .doc p, .doc li { max-width: 980px; }
@@ -74,9 +81,16 @@ code { font-size: 12px; }
       <label>Execution delay
         <select id="delay"><option value="-1">random (realistic)</option><option value="0">none</option><option value="163">163 ms (live median)</option></select></label>
       <button id="btnMt5">2 · Run MT5 with these settings</button>
+      <button id="btnSync" class="ghost">3 · Check sync</button>
       <label style="flex-direction:row;align-items:center;gap:6px;color:var(--ink)"><input type="checkbox" id="onlyChart"> only dates the chart covers</label>
     </div>
     <div id="status">Start TradingView with the Saad indicator on the chart, then press 1.</div>
+  </div>
+
+  <div class="card sync" id="syncCard" style="display:none">
+    <h2>Sync check <span class="sum" id="syncSum"></span></h2>
+    <ul id="syncList"></ul>
+    <details id="syncOkWrap" style="margin-top:8px"><summary id="syncOkSum"></summary><ul id="syncOk"></ul></details>
   </div>
 
   <div class="grid">
@@ -206,6 +220,12 @@ mt5/Saad_strategy_1min.mq5  InpBarSource=1  (FILE_COMMON, so the tester agents a
       <li><b>Data cut-off:</b> the Blueberry tester had no ticks for the current day (16 Oct) at test time.</li>
       <li><b>Not mirrored:</b> stop hits and fills inside a minute stay MT5's (real ticks), which is why 4 trades exit in a different minute and P&amp;L is ~$28 a trade lower. That is reality, not a bug.</li>
       <li><b>One rare edge:</b> a chart candle MT5 lacks (e.g. 20:59 UTC before the daily break) is folded into MT5's next candle step.</li>
+      <li><b>3 · Check sync</b> (<code>sync_check.py</code>, <code>POST /api/sync</code>) re-checks all of the above.
+        <ul>
+          <li>Fixes on its own: re-exports the candle file (merge, never shrink), recompiles the EA if Blueberry's .ex5 is older than the code, corrects the page's server time.</li>
+          <li>Reports the rest: wrong symbol or timeframe, chart-only settings, settings changed since the last MT5 run, unmatched trades (each with a reason), and exits in a different minute.</li>
+        </ul></li>
+      <li><b>After a restart:</b> <code>ensure_up.py --watch</code> starts at logon from <code>Startup\saad_compare_page.vbs</code> (pythonw, no window) and restarts <code>server.py</code> within 20 s if it dies. By hand: <code>py monitor\saad_compare\ensure_up.py --open</code> or <code>start_compare_page.bat</code>. A page served from 127.0.0.1 cannot start its own server, so this is the way. Full guide: <code>saad_strategy_1min_optimized\claude_read_me.md</code>.</li>
       <li><b>Records:</b> commits <code>9cd4eec8</code> (v1.03) and <code>39d238e4</code> (v1.04); VERSION.md and VERSION_HISTORY.md; memory <code>project_tv_bars_bridge.md</code>.</li>
     </ul>
   </div>
@@ -272,18 +292,36 @@ function render() {
                                     : '<tr><td class="l" colspan="11">-</td></tr>';
 }
 
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const LBL = { issue: 'ISSUE', fixed: 'FIXED', ok: 'OK', info: 'NOTE' };
+function renderSync() {
+  const sy = S.sync;
+  if (!sy) return;
+  $('syncCard').style.display = '';
+  const li = x => `<li><span class="st ${x.status}">${LBL[x.status]}</span><div><div>${esc(x.title)}</div>${x.detail ? `<div class="d">${esc(x.detail)}</div>` : ''}</div></li>`;
+  const order = { issue: 0, fixed: 1, info: 2 };
+  const main = sy.items.filter(x => x.status !== 'ok').sort((a, b) => order[a.status] - order[b.status]);
+  const ok = sy.items.filter(x => x.status === 'ok');
+  const n = s => sy.items.filter(x => x.status === s).length;
+  $('syncSum').textContent = `· ${sy.at} · ${n('issue')} issue(s), ${n('fixed')} fixed, ${ok.length} checks passed`;
+  $('syncList').innerHTML = main.length ? main.map(li).join('') : '<li><span class="st ok">OK</span><div>No sync issues found.</div></li>';
+  $('syncOkSum').textContent = `${ok.length} checks passed`;
+  $('syncOk').innerHTML = ok.map(li).join('');
+  if (sy.fix && sy.fix.offset) $('offset').value = sy.fix.offset;
+}
+
 async function call(path, body, msg) {
-  $('btnTv').disabled = $('btnMt5').disabled = true;
+  $('btnTv').disabled = $('btnMt5').disabled = $('btnSync').disabled = true;
   $('status').textContent = msg;
   const t0 = Date.now(), tick = setInterval(() => $('status').textContent = msg + ` (${Math.round((Date.now() - t0) / 1000)} s)`, 1000);
   try {
     const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
     const j = await r.json();
     if (j.error) throw new Error(j.error);
-    S = j; render();
+    S = j; render(); renderSync();
     $('status').textContent = 'Done.';
   } catch (e) { $('status').textContent = 'Error: ' + e.message; }
-  finally { clearInterval(tick); $('btnTv').disabled = $('btnMt5').disabled = false; }
+  finally { clearInterval(tick); $('btnTv').disabled = $('btnMt5').disabled = $('btnSync').disabled = false; }
 }
 $('btnTv').onclick = () => call('/api/tv', {}, 'Reading the indicator\'s settings and trades from TradingView…');
 $('btnMt5').onclick = () => {
@@ -291,8 +329,10 @@ $('btnMt5').onclick = () => {
   call('/api/mt5', { from: $('from').value, to: $('to').value, symbol: $('symbol').value, offset: $('offset').value, delay: $('delay').value },
        'Reading TradingView, then running the MT5 Strategy Tester on Axi… (a week of 1-minute ticks takes about 30 s – 3 min)');
 };
+$('btnSync').onclick = () => call('/api/sync', { offset: $('offset').value },
+  'Checking sync: the chart, its candles vs the file the EA reads, the EA build, server time, and the last MT5 run trade by trade…');
 $('onlyChart').onchange = render;
-fetch('/api/state').then(r => r.json()).then(j => { S = j; render(); }).catch(() => {});
+fetch('/api/state').then(r => r.json()).then(j => { S = j; render(); renderSync(); }).catch(() => {});
 </script>
 </body>
 </html>

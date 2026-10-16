@@ -34,7 +34,7 @@ PINE = ROOT / "pine" / "saad_15min.pine"
 EA = "Saad_strategy_1min"
 PORT = 8772
 LOCK = threading.Lock()
-STATE = {"tv": None, "mt5": None, "busy": ""}
+STATE = {"tv": None, "mt5": None, "sync": None, "busy": ""}
 
 # Pine variable -> EA input (direct copies)
 DIRECT = {"iFast": "InpEmaFast", "iSlow": "InpEmaSlow", "iWick": "InpWickMin", "iBodyMax": "InpBodyMax", "iNose": "InpNoseMax",
@@ -247,7 +247,7 @@ def run_mt5(frm, to, symbol, offset_h, delay):
         pos = parse_positions(rep, offset_h)
         r.pop("daily", None)
         return {"summary": r, "positions": pos, "symbol": "Blueberry demo XAUUSD (your terminal)", "frm": frm, "to": to,
-                "offset": offset_h, "delay": delay, "ran_at": datetime.now().strftime("%H:%M:%S")}
+                "offset": offset_h, "delay": delay, "ran_at": datetime.now().strftime("%H:%M:%S"), "sets_used": dict(tvd["ea_sets"])}
     axi_rig.use(rig)               # 'axi' = C:/mt5_rig_axi, 'bb' = C:/mt5_rig_bb (Blueberry)
     axi_rig.compile_ea(EA)
     r = axi_rig.run(EA, symbol, tvd["period"], tvd["ea_sets"], frm=frm.replace("-", "."), to=to.replace("-", "."),
@@ -257,7 +257,7 @@ def run_mt5(frm, to, symbol, offset_h, delay):
     pos = parse_positions(axi_rig.RIG / "reports" / f"{tag}.htm", offset_h)
     r.pop("daily", None)
     return {"summary": r, "positions": pos, "symbol": symbol, "frm": frm, "to": to, "offset": offset_h,
-            "delay": delay, "ran_at": datetime.now().strftime("%H:%M:%S")}
+            "delay": delay, "ran_at": datetime.now().strftime("%H:%M:%S"), "sets_used": dict(tvd["ea_sets"])}
 
 
 class H(BaseHTTPRequestHandler):
@@ -294,6 +294,12 @@ class H(BaseHTTPRequestHandler):
                 if q.get("refresh_tv", True):
                     STATE["tv"] = read_tv()
                 STATE["mt5"] = run_mt5(q["from"], q["to"], q.get("symbol", "XAUUSD.pro"), float(q.get("offset", 3)), q.get("delay", -1))
+                return self.send(200, json.dumps(STATE))
+            if self.path == "/api/sync":
+                STATE["busy"] = "checking sync"
+                import sync_check
+                items, fix = sync_check.check(STATE, q.get("offset"))
+                STATE["sync"] = {"items": items, "fix": fix, "at": datetime.now().strftime("%H:%M:%S")}
                 return self.send(200, json.dumps(STATE))
             self.send(404, "{}")
         except Exception as e:

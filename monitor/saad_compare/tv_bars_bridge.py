@@ -65,9 +65,20 @@ def export(out, more=15):
         time.sleep(2.5)
     sym, bars = read_bars(10 ** 6)
     bars = closed(bars)
-    out.write_text("".join(line(b) for b in bars), encoding="ascii")
-    print(f"{sym}: {len(bars)} closed candles {server_time(bars[0][0])} .. {server_time(bars[-1][0])} (server time) -> {out}")
-    return sym, len(bars)
+    # merge, never shrink: the chart only holds what it has loaded right now (it once left the file starting 13 Oct
+    # 16:52 after the chart's first trade). Older candles stay; candles the chart still has are replaced by its values.
+    rows = {}
+    if out.exists():
+        for ln in out.read_text(encoding="ascii", errors="ignore").splitlines():
+            if len(ln.split(",")) >= 5:
+                rows[ln[:16]] = ln + "\n"
+    for b in bars:
+        s = line(b)
+        rows[s[:16]] = s
+    out.write_text("".join(rows[k] for k in sorted(rows)), encoding="ascii")
+    ks = sorted(rows)
+    print(f"{sym}: {len(bars)} closed candles from the chart, file now {len(rows)} ({ks[0]} .. {ks[-1]} server time) -> {out}")
+    return sym, len(rows)
 
 
 def live(out, every=2.0):
