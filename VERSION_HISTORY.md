@@ -39,6 +39,21 @@ Traced one mismatch at a time with the new tools. The indicator's debug event ta
   - Oct 11-15: **264 of 264 chart trades are the same trade in MT5**, from 174 of 207 (stand aside) and 240 of 264 (first pause 3 run).
   - The 3 MT5-only trades are MT5 ticks crossing a level the chart's candle never crossed. The EA cannot know the chart's candle before its minute closes, so it enters and leaves at the next open (-$458).
   - 16 Oct: 67 of 69.
+- **v1.21:** TP1 reached on the chart's candle but not by MT5's bid -> TP1 at the next open (16 Oct #265 / #305: the chart +$456 / +$56, MT5 had been stopped -$1,088 / -$1,138). 16 Oct now 69 of 69.
+- **Per day, Oct 11-16, chart vs MT5** (Zee: *"run MT5 tests on October on the EA so we know the EA is giving same profit rates per day"*):
+
+| day | chart trades | chart WR | chart net | MT5 trades | MT5 WR | MT5 net |
+|---|---|---|---|---|---|---|
+| 11 Oct | 4 | 100% | +$1,137 | 4 | 100% | +$856 |
+| 12 Oct | 63 | 92% | +$8,057 | 63 | 92% | +$7,890 |
+| 13 Oct | 59 | 76% | -$2,244 | 59 | 73% | -$3,042 |
+| 14 Oct | 69 | 86% | +$14,662 | 70 | 83% | +$13,221 |
+| 15 Oct | 69 | 83% | +$10,030 | 71 | 80% | +$8,815 |
+| 16 Oct | 69 | 83% | +$8,501 | 71 | 82% | +$6,151 |
+| **total** | **333** | **84%** | **+$40,143** | **338** | **82%** | **+$33,890** |
+
+The ~$19-a-trade gap is real spread and fills, plus the 3-5 MT5-only one-minute trades.
+
 - Blueberry's spread, measured over 638 orders: mean $0.169, median $0.17 - the chart's setting is right.
 - Page: a live "Settings Valid for MT5 -> True / False" line. Every setting that changes a trade must reach the EA; the chart-only ones switched on are listed.
 - Chart: "Pause N candles" (v1.10) and the broker-closed window. EA tools: `diff_window.py`, `why_compare.py`.
