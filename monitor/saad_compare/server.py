@@ -56,6 +56,7 @@ CHOICES = {"iLRule": ("InpLongRule", {"On 9 EMA, exit 50": 0, "On 50 EMA, exit 9
            "iSLine": ("InpShortLine", {"50 EMA": 0, "9 EMA": 1, "Either": 2}),
            "iTouchM": ("InpTouchMode", {"Candle touches": 0, "Wick touches, body on trade side": 1}),
            "tpMode": ("InpTpMode", {"Normal: BUY = touch of the other EMA · SELL = last swing low": 0, "Fixed $ target": 1, "Fibonacci extension of the setup candle": 2, "Partial: close a share at a fixed $ target, trail the rest": 3}),
+           "tpNoFix": ("InpTpNoFixSkip", {"Use the normal TP1": "false", "Skip the trade": "true"}),
            "htReq": ("InpHtfMin", {"Off": 0, "5 min": 5, "15 min": 15, "30 min": 30, "1 hour": 60, "4 hour": 240})}
 # chart-only rules the EA does not have: (pine var, value that means "off", what it is)
 NOT_IN_EA = [("iTightTrail", False, "Tight trail"), ("iSkipBoth", False, "Skip a candle touching both EMAs"),
