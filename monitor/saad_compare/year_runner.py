@@ -134,6 +134,9 @@ class YearRunner:
                 self.finished = time.time()
 
     def _worker(self, rig):
+        # 16 Oct: a server restart left the old server's rig terminals running; a portable MT5 will not start twice in
+        # one folder, so every new pass ended "no report". These rigs belong to this runner: clear them first.
+        axi_rig.kill_rig(rig)
         while True:
             g, m, sets = self.q.get()
             if g != self.gen:
@@ -154,6 +157,10 @@ class YearRunner:
                                     cancel=lambda: g != self.gen)
                     # 16 Oct: with 6 rigs starting together a pass sometimes processes NO ticks (quality "100%" without
                     # "real ticks", 0 trades) - April once on axi6, once on axi2; the same pass again is fine
+                    if r.get("error") == "no report" and attempt < 2:
+                        axi_rig.kill_rig(rig)          # a leftover terminal in this rig: clear it and run again
+                        time.sleep(2)
+                        continue
                     if r.get("error") or "real ticks" in str(r.get("quality")) or r.get("trades"):
                         break
                     time.sleep(2)
