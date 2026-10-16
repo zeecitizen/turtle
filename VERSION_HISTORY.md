@@ -54,6 +54,13 @@ Traced one mismatch at a time with the new tools. The indicator's debug event ta
 
 The ~$19-a-trade gap is real spread and fills, plus the 3-5 MT5-only one-minute trades.
 
+- **v1.22 + the page's "almost same (feed diff)" tag** (Zee: *"if its a feed difference we can't circumvent -> you can say "almost same (feed diff)" on the comparison table on the webpage"*).
+  - The page now runs the EA with its log on and reads each trade's exit reason (`server.ea_reasons`).
+  - An MT5-only trade is tagged "almost same (feed diff)", with the reason on hover, when either:
+    - the EA closed it because the chart's candle never broke the level, or
+    - MT5's real broker stop closed the previous trade on MT5's price while the chart's candle had not reached it, so MT5 was free earlier.
+  - v1.22 fixes the last logic one: a trade the chart's candle stopped out was treated as still open at that candle's close (16 Oct 20:21).
+  - Page, Blueberry, Oct 11-16: **333 same trade on both, 4 almost same (feed diff), 0 chart only, 0 MT5 only.**
 - Blueberry's spread, measured over 638 orders: mean $0.169, median $0.17 - the chart's setting is right.
 - Page: a live "Settings Valid for MT5 -> True / False" line. Every setting that changes a trade must reach the EA; the chart-only ones switched on are listed.
 - Chart: "Pause N candles" (v1.10) and the broker-closed window. EA tools: `diff_window.py`, `why_compare.py`.

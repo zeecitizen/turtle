@@ -38,6 +38,7 @@
 //| v1.19: the stop after TP1 is set from the chart's TP1 candle      |
 //| v1.20: stop decisions use the chart's entry price (EnJ)          |
 //| v1.21: TP1 reached on the chart's candle -> TP1 at the next open  |
+//| v1.22: a chart-candle stop = closed during that candle (not busy) |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -76,7 +77,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.21"
+#property version   "1.22"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -87,7 +88,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.21"
+#define EA_COMMENT "Saad1m v1.22"
 
 //--- the two lines
 input int    InpEmaFast     = 3;      // InpEmaFast
@@ -415,7 +416,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.21 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.22 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -739,7 +740,8 @@ void TvVerdict()
       }
       // the chart's candle went through the stop that was in force during it (the chart checks from the minute after the entry)
       if (g_pos[i].entryTime < t1 && sl > 0 && (sd > 0 ? BLow(1) <= sl : BHigh(1) + spr >= sl)) {
-         g_pos[i].why = StringFormat("stop %.2f hit on the chart's candle", sl); trade.PositionClose(g_pos[i].ticket); continue;
+         // v1.22 (16 Oct 20:21): the chart closed DURING that candle, so it was free at its close - not "busy", and it may enter now
+         g_pos[i].why = StringFormat("stop %.2f hit on the chart's candle", sl); trade.PositionClose(g_pos[i].ticket); g_cancelBar = iTime(_Symbol, PERIOD_CURRENT, 0); continue;
       }
       // v1.21 (16 Oct #265 / #305): the chart's candle reached a fixed TP1 that MT5's bid missed by cents - the chart banked TP1 and
       // trailed (+$456 / +$56), MT5 waited and was stopped (-$1,088 / -$1,138). TP1 now, the stop from that candle (ApplyPendingSl)

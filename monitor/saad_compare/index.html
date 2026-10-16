@@ -40,6 +40,7 @@ tbody tr:nth-child(even) { background: var(--row); }
 .sep { border-left: 2px solid var(--line); }
 .tag { font-size: 11px; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); }
 .tag.ok { color: var(--win); border-color: var(--win); }
+.tag.feed { color: var(--warn); border-color: var(--warn); cursor: help; }
 .scroll { overflow-x: auto; max-height: 70vh; overflow-y: auto; }
 h2 { font-size: 15px; margin: 0 0 10px; }
 details summary { cursor: pointer; color: var(--muted); }
@@ -324,11 +325,21 @@ function render() {
   }
   mtP.forEach((p, i) => { if (!used.has(i)) rows.push({ k: mins(p.in), t: null, p }); });
   rows.sort((a, b) => a.k - b.k);
+  // Zee 2026-10-17: an MT5-only trade the EA closed because the chart's candle never broke = a feed difference, not a mismatch.
+  // Also one that MT5 took because its REAL broker stop fired on MT5's price while the chart was still in the twin trade.
+  const pairs = rows.filter(r => r.t && r.p);
+  rows.filter(r => !r.t && r.p && !r.p.feed).forEach(r => {
+    const tw = pairs.find(q => q.p.out && q.t.out && mins(q.p.out) <= mins(r.p.in) && mins(q.t.out) > mins(r.p.in) && mins(q.t.in) < mins(r.p.in));
+    if (tw) { r.p.feed = true; r.p.why = `MT5's broker stop closed the previous trade at ${tw.p.out} (MT5's price), the chart's candle reached it only at ${tw.t.out} - the chart was still in that trade`; }
+  });
+  const feedN = rows.filter(r => !r.t && r.p && r.p.feed).length;
   if (tv && mt) $('match').innerHTML = `<div class="kpis"><div class="kpi"><div class="v">${same}</div><div class="k">same trade on both</div></div>
-    <div class="kpi"><div class="v">${tvT.length - same}</div><div class="k">chart only</div></div><div class="kpi"><div class="v">${mtP.length - same}</div><div class="k">MT5 only</div></div></div>`;
+    <div class="kpi"><div class="v">${feedN}</div><div class="k">almost same (feed diff)</div></div>
+    <div class="kpi"><div class="v">${tvT.length - same}</div><div class="k">chart only</div></div><div class="kpi"><div class="v">${mtP.length - same - feedN}</div><div class="k">MT5 only</div></div></div>`;
+  const FEED_TIP = "MT5 only for one minute: MT5's price crossed a level the TradingView candle never crossed (the two feeds differ by cents). The EA closed it at the next open - ";
   const cell = (x, side) => x ? `<td class="l ${side ? 'sep' : ''}">${x.in}</td><td>${x.side}</td><td>${x.en.toFixed(2)}</td><td>${x.ex.toFixed(2)}</td><td class="${cls(x.pnl)}">${fmt(x.pnl)}</td>`
                                 : `<td class="l ${side ? 'sep' : ''}" colspan="5" style="color:var(--muted)">—</td>`;
-  $('rows').innerHTML = rows.length ? rows.map(r => `<tr>${cell(r.t, false)}<td class="sep l">${r.t && r.p ? '<span class="tag ok">same</span>' : ''}</td>${cell(r.p, true)}</tr>`).join('')
+  $('rows').innerHTML = rows.length ? rows.map(r => `<tr>${cell(r.t, false)}<td class="sep l">${r.t && r.p ? '<span class="tag ok">same</span>' : (!r.t && r.p && r.p.feed) ? `<span class="tag feed" title="${esc(r.p.why.startsWith("MT5's broker") ? r.p.why : FEED_TIP + r.p.why)}">almost same (feed diff)</span>` : ''}</td>${cell(r.p, true)}</tr>`).join('')
                                     : '<tr><td class="l" colspan="11">-</td></tr>';
 }
 

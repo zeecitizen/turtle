@@ -279,6 +279,38 @@ def bb_live_run(sets, period, frm, to, delay, tag):
     return r, rep
 
 
+BB_TESTER = Path(r"C:\Users\zeesh\AppData\Roaming\MetaQuotes\Tester\27280402C90F04230EE7E17540AE21E1")
+# Zee 2026-10-17: an MT5-only trade the EA closed because the chart's candle never made that break is a feed difference
+# (MT5's ticks crossed a level the TradingView candle did not) - shown as "almost same (feed diff)" on the page
+FEED_WHY = ("the chart's candle never broke",)
+RX_ENTRY = re.compile(r"(\d{4}\.\d\d\.\d\d \d\d:\d\d):\d\d\s+\[SAAD-1min\] ENTRY #(\d+) (BUY|SELL)")
+RX_EXIT = re.compile(r"\[SAAD-1min\] EXIT #(\d+) (?:BUY|SELL) .*? \| entry [\d.]+ \| (.*?) \| best")
+
+
+def ea_reasons(tester_dir, offset_h):
+    """(UTC entry minute, side) -> the EA's exit reason, from the last Strategy Tester run's agent log (needs InpLog + InpVerbose)."""
+    logs = sorted(Path(tester_dir).glob("Agent-*/logs/*.log"), key=lambda p: p.stat().st_mtime)
+    if not logs:
+        return {}
+    txt = logs[-1].read_text(encoding="utf-16", errors="ignore")
+    txt = txt[txt.rfind("testing of Experts\\" + EA):]
+    ent = {m.group(2): (m.group(1), m.group(3)) for m in RX_ENTRY.finditer(txt)}
+    out = {}
+    for m in RX_EXIT.finditer(txt):
+        if m.group(1) in ent:
+            t, side = ent[m.group(1)]
+            utc = (datetime.strptime(t, "%Y.%m.%d %H:%M") - timedelta(hours=offset_h)).strftime("%Y-%m-%d %H:%M")
+            out[(utc, side)] = m.group(2)
+    return out
+
+
+def tag_reasons(pos, reasons):
+    for p in pos:
+        p["why"] = reasons.get((p["in"], p["side"]), "")
+        p["feed"] = any(f in p["why"] for f in FEED_WHY)
+    return pos
+
+
 def run_mt5(frm, to, symbol, offset_h, delay):
     tvd = STATE["tv"]
     if not tvd:
@@ -289,19 +321,20 @@ def run_mt5(frm, to, symbol, offset_h, delay):
     if str(tvd["ea_sets"].get("InpBarSource", axi_rig.ea_defaults(EA).get("InpBarSource", "0"))) == "1":
         import tv_bars_bridge
         tv_bars_bridge.export(tv_bars_bridge.COMMON / "tv_bars_XAUUSD.csv", more=2)
+    sets = dict(tvd["ea_sets"]); sets.update({"InpLog": "true", "InpVerbose": "true"})   # the EA's reasons, for the feed-diff tag
     if rig == "bblive":
-        r, rep = bb_live_run(tvd["ea_sets"], tvd["period"], frm.replace("-", "."), to.replace("-", "."), int(delay), tag)
-        pos = parse_positions(rep, offset_h)
+        r, rep = bb_live_run(sets, tvd["period"], frm.replace("-", "."), to.replace("-", "."), int(delay), tag)
+        pos = tag_reasons(parse_positions(rep, offset_h), ea_reasons(BB_TESTER, offset_h))
         r.pop("daily", None)
         return {"summary": r, "positions": pos, "symbol": "Blueberry demo XAUUSD (your terminal)", "frm": frm, "to": to,
                 "offset": offset_h, "delay": delay, "ran_at": datetime.now().strftime("%H:%M:%S"), "sets_used": dict(tvd["ea_sets"])}
     axi_rig.use(rig)               # 'axi' = C:/mt5_rig_axi, 'bb' = C:/mt5_rig_bb (Blueberry)
     axi_rig.compile_ea(EA)
-    r = axi_rig.run(EA, symbol, tvd["period"], tvd["ea_sets"], frm=frm.replace("-", "."), to=to.replace("-", "."),
+    r = axi_rig.run(EA, symbol, tvd["period"], sets, frm=frm.replace("-", "."), to=to.replace("-", "."),
                     deposit=100000, exec_mode=int(delay), tag=tag)
     if r.get("error"):
         raise RuntimeError(f"MT5: {r['error']}")
-    pos = parse_positions(axi_rig.RIG / "reports" / f"{tag}.htm", offset_h)
+    pos = tag_reasons(parse_positions(axi_rig.RIG / "reports" / f"{tag}.htm", offset_h), ea_reasons(axi_rig.RIG / "Tester", offset_h))
     r.pop("daily", None)
     return {"summary": r, "positions": pos, "symbol": symbol, "frm": frm, "to": to, "offset": offset_h,
             "delay": delay, "ran_at": datetime.now().strftime("%H:%M:%S"), "sets_used": dict(tvd["ea_sets"])}
