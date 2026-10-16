@@ -1,5 +1,53 @@
 # Saad 5-min optimized settings
 
+## 🆕 16 Oct 2026 - 1-minute optimized settings (BLUEBERRY:XAUUSD, 1 min)
+
+The full set - all 91 settings, the indicator code, an MT5 `.set` file for `Saad_strategy_1min.mq5` and chart screenshots - is saved in [`saad_strategy_1min_optimized/`](saad_strategy_1min_optimized/README.md) (git branch `saad_strategy_1min_optimized`).
+
+Chart result with these settings: **83 trades · 83% win rate · +$34,591.20 · PF 4.87 (2 lots)**.
+
+Settings changed from the code's defaults:
+
+| # | Setting | Value | Default |
+|---|---|---|---|
+| in_0 | InpEmaFast | **3** | 9 |
+| in_1 | InpEmaSlow | **4** | 50 |
+| in_2 | InpWickMin — pin: long wick >= x range | **0.4** | 0.45 |
+| in_4 | InpNoseMax — pin: short wick <= x range | **0.21** | 0.20 |
+| in_12 | InpHamRatio — hammer: long wick >= x body | **2** | 2.5 |
+| in_14 | InpMinRangeAtr — candle range >= x ATR(14) (0 = off) | **0.4** | 0.55 |
+| in_21 | InpBreakPips — break must clear the high / low by | **5** | 2 |
+| in_22 | InpSlPips — stop beyond the candle | **37** | 35 |
+| in_23 | InpMaxRiskUsd — skip if the stop is more than $ away (0 = off) | **11** | 15 |
+| in_25 | InpSwingPivot — candles each side of a swing | **8** | 3 |
+| in_26 | InpSwingLook — candles back to search | **32** | 100 |
+| in_28 | InpMinTpPips — target at least this far | **1** | 5 |
+| in_30 | InpCloseLossMins — this many min before the close shut trades in loss (0 = off) | **1** | 3 |
+| in_31 | InpLongTrailUsd — after TP1 trail $ below the market | **0.5** | 2.0 |
+| in_32 | InpShortTrailUsd — after TP1 trail $ above the market | **2.5** | 2.0 |
+| in_33 | InpBeTpPct — CTC: stop to entry at this share of the way to TP1 (0 = off) | **0.6** | 0.75 |
+| in_34 | InpTrailAtr — no-TP1 LONG: trail x ATR behind the best price | **0.2** | 2.0 |
+| in_35 | InpChopEr — skip if the efficiency ratio is below (0 = off) | **0.01** | 0.11 |
+| in_38 | InpPartialPct — close this share at TP1 | **0.95** | 0.5 |
+| in_40 | InpLots | **2** | 1.0 |
+| in_43 | InpDrawSkips — also label skipped setups | **true** | false |
+| in_57 | Apply to | **All trades** | No-TP1 longs only |
+| in_61 | ② Lock: once $X in profit... (0 = off) | **2** | 0 |
+| in_62 |     ...lock the stop this many $ beyond the entry | **5.5** | 0 |
+| in_69 | ⑨ ATR-trail gap: when InpTrailAtr moves the stop, keep it at least $X under the candle close (0 = off) | **0.1** | 0 |
+| in_71 | Cut: N candles in a row against the trade while in loss -> close at the next open (0 = off) | **6** | 0 |
+| in_75 | BUY: range = the last N closed candles | **7** | 20 |
+| in_76 | BUY: skip entering ABOVE X% of that range (0 = off; over 100 = a new high) | **50** | 0 |
+| in_77 | Show the diagnostics table: this month's trades by how near the top (BUY) / bottom (SELL) they entered | **true** | false |
+| in_79 | ...blocks | **Both directions** | Same direction |
+| in_85 | BUY: skip entering BELOW X% of the range (0 = off; with the max = keep only a band, e.g. 25-55) | **25** | 0 |
+| in_88 | TOP / BOTTOM · SELL: range = the last N closed candles | **7** | 20 |
+| in_89 | TOP / BOTTOM · SELL: skip entering LOWER than X% from the top of that range (0 = off; over 100 = a new low) | **35** | 0 |
+| in_90 | TOP / BOTTOM · SELL: skip entering HIGHER than X% from the top (0 = off; with the max = keep only a band) | **30** | 0 |
+
+---
+
+
 The TradingView settings of the **Saad 15min v1.23 — mirror of the EA** indicator as Zee tuned them on 15-16 Oct 2026, 
 copied from the chart (VANTAGE:XAUUSD, **5-minute** candles), all 70 settings in the order the settings dialog shows them.
 
