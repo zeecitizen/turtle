@@ -133,7 +133,7 @@ code { font-size: 12px; }
   </div>
 
   <div class="card yr" id="yearCard">
-    <h2>10 months in MT5 with the chart's settings <span class="sum" id="yrSum" style="font-weight:400;color:var(--muted);font-size:13px"></span></h2>
+    <h2>10 months in MT5 (Blueberry) with the chart's settings <span class="sum" id="yrSum" style="font-weight:400;color:var(--muted);font-size:13px"></span></h2>
     <div class="controls" style="margin-bottom:8px">
       <label style="flex-direction:row;align-items:center;gap:6px;color:var(--ink)"><input type="checkbox" id="yrAuto" checked> re-run by itself when I change a setting on the chart</label>
       <label>Execution delay
@@ -147,7 +147,7 @@ code { font-size: 12px; }
         <tbody id="yrRows"><tr><td class="l" colspan="9">-</td></tr></tbody>
       </table>
     </div>
-    <div class="chg">Axi XAUUSD_TK real ticks, Jan – 8 Oct 2026, one MT5 pass per month on 6 rigs in parallel (~40 s); a pass already run with the same settings shows at once.
+    <div class="chg"><b>Blueberry</b> real ticks (XAUUSD_BB = your Blueberry terminal's own XAUUSD ticks, the feed of BLUEBERRY:XAUUSD), Jan 1 – Oct 17 2026, one MT5 pass per month on 6 rigs in parallel (~40 s); a pass already run with the same settings shows at once.
       The EA reads MT5's own candles here (the chart holds only ~5 days of 1-minute history). Settings that exist only on the chart do not change these numbers.</div>
   </div>
 
@@ -393,7 +393,7 @@ function renderYear() {
   const prev = Y.prev || {};
   let T = { n: 0, w: 0, net: 0, pn: 0, pc: 0, gd: 0, d: 0 };
   $('yrRows').innerHTML = rows.map(({ m, v }) => {
-    const name = MN[+m.slice(5) - 1] + ' ' + m.slice(0, 4) + (m === '2026.10' ? ' (1-8)' : '');
+    const name = MN[+m.slice(5) - 1] + ' ' + m.slice(0, 4) + (m === '2026.10' ? ' (1-17)' : '');
     if (v.status !== 'done') {
       const st = v.status === 'running' ? `<span class="run">running on ${v.rig} · ${Math.round(Date.now() / 1000 - v.since)} s</span>`
                : v.status === 'error' ? `<span class="loss">${esc((v.result || {}).error || 'error')}</span>` : `<span class="q">${v.status}</span>`;

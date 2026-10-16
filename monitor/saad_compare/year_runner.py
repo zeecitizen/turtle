@@ -8,7 +8,7 @@ enough for us"
 
 How it is fast:
   * one MT5 pass per MONTH (ToDate is exclusive: 1st -> next 1st), ~19 s each on real ticks
-  * the 10 months run in parallel on 6 portable rigs (C:/mt5_rig_axi2 .. axi7, XAUUSD_TK real ticks) -> ~40 s
+  * the 10 months run in parallel on 6 portable rigs (C:/mt5_rig_axi2 .. axi7, XAUUSD_BB = Blueberry real ticks) -> ~40 s
   * a watcher reads the chart's settings every 2 s; a change (stable for one more poll) cancels the passes still
     running and starts the new batch at once
   * results are cached by (settings, delay, EA build): going back to a setting shows its months instantly
@@ -26,8 +26,10 @@ import server                 # first: it puts monitor/strategy_lab on the path
 import axi_rig
 
 RIGS = ["axi2", "axi3", "axi4", "axi5", "axi6", "axi7"]      # "axi" stays free for the compare page's own runs
-SYMBOL = "XAUUSD_TK"
-MONTHS = [f"2026.{m:02d}" for m in range(1, 11)]             # XAUUSD_TK real ticks: Jan - Oct 8 2026
+# Zee 2026-10-17 "maybe we can run these on blueberry instead?": XAUUSD_BB = Blueberry's own real XAUUSD ticks (the chart is
+# BLUEBERRY:XAUUSD), cloned from his terminal by mt5/BbTickClone.mq5 and installed in the rigs by strategy_lab/bb_symbol_install.py
+SYMBOL = "XAUUSD_BB"
+MONTHS = [f"2026.{m:02d}" for m in range(1, 11)]             # XAUUSD_BB real ticks: Jan 1 - Oct 17 2026
 CACHE = server.HERE / "why_out" / "year_cache.json"
 EA_SRC = server.ROOT / "mt5" / f"{server.EA}.mq5"
 POLL = 2.0
@@ -66,7 +68,7 @@ class YearRunner:
 
     # ── keys / cache ───────────────────────────────────────────────────────
     def _key(self, sets, m):
-        blob = json.dumps({"s": sets, "d": self.delay, "ea": int(EA_SRC.stat().st_mtime), "m": m}, sort_keys=True)
+        blob = json.dumps({"s": sets, "d": self.delay, "ea": int(EA_SRC.stat().st_mtime), "m": m, "sym": SYMBOL}, sort_keys=True)
         return hashlib.sha1(blob.encode()).hexdigest()
 
     def _save(self):
