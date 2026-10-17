@@ -16,6 +16,18 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.31 (2026-10-18) — optimizer score 4: trade win rate, always (no trading change)
+
+- `InpOptScore` 4 returns the win rate of whole trades even for a losing setting, so an optimization shows win rate (Result) and money (Profit) side by side.
+- **1-min EMA grid** (fast 2-8 x slow 4-12, XAUUSD_BB M1, Jan 1 - Oct 16, no delay, Zee's 1-min chart settings) - all 35 lose:
+
+| Chart settings | WR | Net | PF |
+|---|---|---|---|
+| ATR stop, Fibonacci TP1 | 67-68% | -$349k to -$574k | 0.85-0.87 |
+| Fixed $0.50 TP1, 13-pip stop | 77-78% | -$627k to -$889k | 0.81-0.83 |
+
+  - The EMAs move the win rate by under 1 point. 8/8-8/12 lose least because they take fewer trades.
+
 ## Saad_strategy_1min v1.30 (2026-10-18) — no chart-candle file: MT5's own candles instead of refusing to start
 
 - Zee's Blueberry tester run of v1.29 (all defaults, `InpBarSource` 1) stopped at once with "OnInit returns non-zero code 1". `tv_bars_XAUUSD_M15.csv` had been deleted because a VANTAGE export was mixed into it.
