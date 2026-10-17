@@ -16,6 +16,21 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.27 (2026-10-17) — the day-close cut judged like the chart on M15
+
+Zee: *"alone spread can't make a diff of 1100 USD ... find it out. some settings might be amiss"*
+
+- **Cause:** "Day close: shut trades still in LOSS N minutes before the close" (`iCloseM` / `InpCloseLossMins` = 1).
+  - The indicator judges it at each candle's open time (`inCloseWin`: 4:57-4:59 PM New York). On 15-min candles the last one opens at 4:45 PM, so on the chart the rule never fires.
+  - The EA judged it on every tick and shut both trades at 4:57 PM:
+    - Oct 5 20:02 SELL: MT5 -$810, chart +$326.
+    - Oct 7 20:51 SELL: MT5 -$596, chart +$516.
+- **Fix:** in chart-candle mode on M5+, the EA judges the window at the chart candle's open, the way the chart does. M1 unchanged.
+- **Receipts** (BLUEBERRY 15 min, Aug 4 - Oct 16, MT5 on the chart's candles, no delay):
+  - Same trade 190 of 192, same win/loss 187 of 190.
+  - October: MT5 42 trades, WR 92.9%, +$34,275. Chart: 43 trades, WR 93.0%, +$35,507.
+- Note for Zee: on a 15-min chart this setting does nothing; it only acts on 1-min candles.
+
 ## Saad_strategy_1min v1.26 (2026-10-17) — the 15-min mirror: chart candles on any timeframe + Zee's 15-min settings as defaults
 
 Zee: *"Run the live EA on the chart's own 15-min candles, using the bridge that made the 1-min version match 333 of 333 trades"*
