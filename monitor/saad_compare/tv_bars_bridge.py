@@ -68,6 +68,10 @@ def read_bars(n, want=None):
     if want and res != str(want):
         raise RuntimeError(f"the chart switched to {res} minutes; this bridge writes {want}-minute candles")
     MINS = RES[res]
+    # 2026-10-18: the chart was switched to VANTAGE:XAUUSD and an export merged Vantage candles into the Blueberry file. The EA trades
+    # Blueberry (XAUUSD_BB / Zee's Blueberry account): only BLUEBERRY candles may go into these files.
+    if not str(d.get("sym", "")).upper().startswith("BLUEBERRY:"):
+        raise RuntimeError(f"the chart is on {d.get('sym')} - the bridge only writes BLUEBERRY:XAUUSD candles (switch the chart back)")
     return d["sym"], d["bars"]
 
 

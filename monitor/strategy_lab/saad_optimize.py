@@ -79,6 +79,20 @@ JOBS = {
     "tp_part": {"sets": "saad_opt_base_sets_now.json", "period": "M15", "algo": 1, "forward": False,
         "fixed": {"InpOptScore": "0", "InpOptMinTrades": "100", "InpTpMode": "3", "InpTpPartPct": "0.5"},
         "opt": {"InpTpFixUsdB": (1, 1, 5), "InpTpFixUsdS": (1, 1, 5), "InpTpPartTrailUsd": (1, 1, 4)}},
+    # Zee 2026-10-18: "what we want is a set of rules (a set of settings) that is robust enough to survive bad months and good
+    # months" - genetic over the core rules at once, score = the WORST month (EA v1.28 InpOptScore 3), random delay, learn Jan-Jun,
+    # MT5 tests every result on Jul-Oct. The range filter as a numeric band (all 42 boxes ticked), max risk capped at $20 (Zee).
+    "robust15": {
+        "sets": "saad_opt_base_sets_robust15.json", "period": "M15", "algo": 2, "forward": True, "delay": -1,
+        "fixed": {"InpOptScore": "3", "InpOptMinTrades": "200"},
+        "opt": {"InpEmaFast": (3, 1, 20), "InpEmaSlow": (20, 5, 100), "InpWickMin": (0.30, 0.05, 0.70), "InpBodyMax": (0.30, 0.05, 0.60),
+                "InpNoseMax": (0.10, 0.05, 0.50), "InpMinRangeAtr": (0, 0.1, 1.0), "InpBreakPips": (0, 1, 10), "InpSlPips": (20, 4, 60),
+                "InpMaxRiskUsd": (8, 2, 20), "InpTpMode": (0, 1, 3), "InpTpFibPct": (100, 20, 260), "InpTpFixUsdB": (1, 0.5, 6),
+                "InpTpFixUsdS": (1, 0.5, 6), "InpPartialPct": (0.5, 0.1, 1.0), "InpBeTpPct": (0, 0.25, 1.0),
+                "InpLongTrailUsd": (0.5, 0.5, 3), "InpShortTrailUsd": (0.5, 0.5, 3), "InpChopEr": (0, 0.02, 0.20),
+                "InpRangeLook": (5, 5, 20), "InpRangeMin": (0, 10, 40), "InpRangeMax": (50, 10, 110),
+                "InpRangeLookS": (5, 5, 20), "InpRangeMinS": (0, 10, 40), "InpRangeMaxS": (50, 10, 110), "InpCutRunN": (0, 2, 8)},
+    },
     "boxes": {
         "fixed": {"InpBoxInputs": "true", "InpOptScore": "1", "InpOptMinTrades": "3000"},
         "opt": {**{f"InpB{i:02d}": None for i in range(21)}, **{f"InpS{i:02d}": None for i in range(21)},
@@ -115,7 +129,7 @@ def start(name):
     fwd = f"ForwardMode=4\r\nForwardDate={FORWARD}\r\n" if job.get("forward", True) else "ForwardMode=0\r\n"
     ini = (f"[Tester]\r\nExpert={EA}\r\nSymbol=XAUUSD_BB\r\nPeriod={job.get('period', 'M1')}\r\nModel=4\r\n"
            f"FromDate={FROM}\r\nToDate={TO}\r\n{fwd}"
-           f"Deposit=10000000\r\nCurrency=USD\r\nLeverage=1:400\r\nExecutionMode=0\r\n"
+           f"Deposit=10000000\r\nCurrency=USD\r\nLeverage=1:400\r\nExecutionMode={job.get('delay', 0)}\r\n"
            f"Optimization={job.get('algo', 2)}\r\nOptimizationCriterion=6\r\n"
            f"Report=reports\\opt_{name}\r\nReplaceReport=1\r\nShutdownTerminal=1\r\nVisual=0\r\n"
            f"[TesterInputs]\r\n{tester_inputs(base, job)}")
