@@ -16,6 +16,22 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.33 (2026-10-18) — intraday range learning (off by default)
+
+Zee: *"as the day starts: we take trades -> as soon as we've taken trades on all ranges -> turn off the ranges that lost and turn on the ones that won.. on each 1 minute candle we optimize the range based on TODAY's data"*
+
+- `InpAdaptToday`: every day starts with all boxes ON. After every closed trade the boxes are rebuilt from today's trades only: a box losing today goes OFF; a box winning, or with fewer than `InpAdaptMinTrades` trades today, stays ON.
+- **Receipts** (XAUUSD_BB M1, Jan 1 - Oct 16, no delay, Zee's 1-min settings):
+
+| Judge a box after | Net | WR | PF |
+|---|---|---|---|
+| 1 trade | -$392,403 | 63.4% | 0.84 |
+| 2 trades | -$470,198 | 63.2% | 0.83 |
+| 3 trades | -$494,634 | 63.5% | 0.85 |
+| (fixed, all ON) | -$642,586 | 63.6% | 0.85 |
+
+  - A box losing this morning does no worse this afternoon than one that won.
+
 ## Saad_strategy_1min v1.32 (2026-10-18) — self-tuning range boxes, weekly or daily (off by default)
 
 Zee: *"calculate a new range every week and from that range execute the next week ... for each week we remove the failing ranges and keep the winning ranges"* · *"also include a test where we finetune the range everyday"*
