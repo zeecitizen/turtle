@@ -51,7 +51,7 @@ DIRECT = {"iFast": "InpEmaFast", "iSlow": "InpEmaSlow", "iWick": "InpWickMin", "
           "iPartial": "InpPartialPct", "iTp1Be": "InpTp1Be", "iLots": "InpLots", "iBuys": "InpBuys", "iSells": "InpSells",
           "pkLockAt": "InpLockAtUsd", "pkLockUsd": "InpLockUsd", "pkGap": "InpTrailGapUsd", "adRunN": "InpCutRunN",
           "rpLook": "InpRangeLook", "rpLookS": "InpRangeLookS", "htEma": "InpHtfEma",
-          "iSpread": "InpChartSpread", "tpFixB": "InpTpFixUsdB", "tpFixS": "InpTpFixUsdS", "tpFib": "InpTpFibPct", "tpPart": "InpTpPartPct", "tpPartTr": "InpTpPartTrailUsd", "iSlAtrM": "InpSlAtrMult"}
+          "iSpread": "InpChartSpread", "tpFixB": "InpTpFixUsdB", "tpFixS": "InpTpFixUsdS", "tpFib": "InpTpFibPct", "tpPart": "InpTpPartPct", "tpPartTr": "InpTpPartTrailUsd", "iSlAtrM": "InpSlAtrMult", "reOn": "InpReEntry", "reBars": "InpReEntryBars"}
 CHOICES = {"iLRule": ("InpLongRule", {"On 9 EMA, exit 50": 0, "On 50 EMA, exit 9": 1, "Both": 2}),
            "iSLine": ("InpShortLine", {"50 EMA": 0, "9 EMA": 1, "Either": 2}),
            "iTouchM": ("InpTouchMode", {"Candle touches": 0, "Wick touches, body on trade side": 1}),

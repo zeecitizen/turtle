@@ -235,6 +235,10 @@ bcTo = input.string("18:01", "...open again at (New York time)", group = G3, dis
 // candle won in BOTH halves (Jan-Jun 83.6%, Jul-Oct 80.1%, all 10 months green, drawdown 21% -> 8-11%). Added LAST so no setting moves.
 iSlMode = input.string("Pips beyond the setup candle", "Stop loss type", options = ["Pips beyond the setup candle", "ATR x from the entry"], group = GSL, tooltip = "EA: InpSlMode 0 / 1. ATR: the stop is X x ATR(14) of the last closed candle away from the entry, so it widens when gold moves fast and tightens when it is quiet.", display = display.none)
 iSlAtrM = input.float(2.5, "...ATR multiple (with 'ATR x from the entry')", step = 0.1, minval = 0.1, group = GSL, tooltip = "EA: InpSlAtrMult. MT5 15 min: 2.0-3.0 all work; 2.5 best balance.", display = display.none)
+// Zee 2026-10-18: "When the market again crosses our entry price reverting from the stop loss point to our original point -> we initiate our
+// original setup at X again". Added LAST so no setting moves.
+reOn = input.bool(false, "Re-entry after a stop loss: when the ORIGINAL stop is hit, re-arm the same setup and re-enter if price breaks back through its break level", group = GSL, tooltip = "EA: InpReEntry. Same side, same setup candle (so the same stop and TP1 rules). Skips the range-box, pause and cool-down filters, like the EA. A re-entry that is stopped out does not re-arm. MT5 15 min v1.30, full year: 45 stop-outs, price came back 8 (2 h) / 17 (6 h) times, those re-entries about broke even.", display = display.none)
+reBars = input.int(60, "...re-arm window: candles after the stop-out", minval = 1, group = GSL, tooltip = "EA: InpReEntryBars.", display = display.none)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -290,6 +294,16 @@ xPart = tpMode == "Partial: close a share at a fixed $ target, trail the rest" ?
 xTrL = tpMode == "Partial: close a share at a fixed $ target, trail the rest" ? tpPartTr : iLTrail
 xTrS = tpMode == "Partial: close a share at a fixed $ target, trail the rest" ? tpPartTr : iSTrail
 var int  rpUntil = -1            // Pause: no entry up to this bar (after a trade skipped in an unticked range)
+var int   reSide = 0          // re-entry armed after a stop-out (side), and the setup to re-arm
+var float reHi = na
+var float reLo = na
+var int   reExit = 50
+var string reDesc = ""
+var int   reUntil = 0
+var bool  reTry = false       // the waiting setup is a re-entry: no range / pause / cool-down filter
+var bool  sRe = false         // the open trade is a re-entry: a stop does not re-arm
+var float sHiE = na           // the open trade's setup candle
+var float sLoE = na
 var bool sGhost = false       // Zee 2026-10-16: a trade in an unticked range, "stand aside": runs unseen and uncounted
 // the range bucket of an entry = the rows of the diagnostics table: 0-5% ... 95-100% (0..19), over 100% (20)
 rpBucket(float chase) => na(chase) ? 10 : chase > 100 ? 20 : chase <= 0 ? 0 : math.min(int(math.floor(chase / 5)), 19)
@@ -566,6 +580,7 @@ if pSide != 0 and bar_index > pBar + 1 and iGap and time - time[1] > timeframe.i
     nGap += 1
     skipNote(pSide, "market closed in between")
     pSide := 0
+    reTry := false
 
 // ═ B) MINUTE BY MINUTE INSIDE THIS CANDLE: manage the open trade, or wait for the break ═
 float exitPx = na
@@ -744,11 +759,11 @@ for k = 0 to nSteps - 1
             int bandLook = side > 0 ? rpLook : rpLookS
             if brokerClosed(tk)
                 skipWhy := "the broker is closed (" + bcFrom + " - " + bcTo + " New York)"
-            else if coolN > 0 and bar_index - lxBar <= coolN and (coolDir == "Both directions" or side == lxSide) and (not coolWin or lxWin)
+            else if not reTry and coolN > 0 and bar_index - lxBar <= coolN and (coolDir == "Both directions" or side == lxSide) and (not coolWin or lxWin)
                 skipWhy := "cool-down: " + str.tostring(bar_index - lxBar) + " candle(s) after the last " + (lxSide > 0 ? "BUY" : "SELL") + " closed" + (lxWin ? " in profit" : "")
-            else if rpOff == "Pause N candles (MT5 can do this)" and bar_index <= rpUntil
+            else if not reTry and rpOff == "Pause N candles (MT5 can do this)" and bar_index <= rpUntil
                 skipWhy := "pausing " + str.tostring(rpPause) + " candles after a trade skipped in an unticked range"
-            else if rangeOff and (rpOff == "Skip it and take the next setup" or rpOff == "Pause N candles (MT5 can do this)")
+            else if not reTry and rangeOff and (rpOff == "Skip it and take the next setup" or rpOff == "Pause N candles (MT5 can do this)")
                 skipWhy := (side > 0 ? "BUY at " : "SELL at ") + str.tostring(chase, "#") + "% of the last " + str.tostring(bandLook) + " candles' range: the " + rpName(bkE) + " range is unticked"
                 if rpOff == "Pause N candles (MT5 can do this)"
                     rpUntil := bar_index + rpPause
@@ -805,9 +820,11 @@ for k = 0 to nSteps - 1
                     skipWhy := "the " + tpMode + " target is not far enough beyond the entry"
             if skipWhy != ""
                 skipNote(side, skipWhy)
+                reTry := false
             else
                 // an unticked range, "stand aside": the trade runs unseen and uncounted, and no other trade starts meanwhile
-                sGhost := rangeOff
+                sGhost := rangeOff and not reTry
+                sRe := reTry, reTry := false, sHiE := pHi, sLoE := pLo
                 if not sGhost
                     tN += 1
                 sSide := side, sEn := en, sSl := sl, sSl0 := sl, sTp := tp, sExit := pExit, sNoTp := noTp, sFix := fibTp
@@ -915,6 +932,9 @@ if not na(exitPx)
     sLTp := na
     if iLog and not sGhost
         log.info("EXIT|#{0}|{1}|{2}|px={3}|pnl={4}|entry={5}|sl0={6}|moves={7}", sNum, ts(time), why, fp(exitPx), fp(pnl), fp(sEn), fp(sSl0), sMoves)
+    // re-entry: the ORIGINAL stop took it (not a breakeven, trail or cut) and it was not a re-entry itself
+    if reOn and why == "stop loss" and not sRe and not sGhost
+        reSide := sSide, reHi := sHiE, reLo := sLoE, reExit := sExit, reDesc := sDesc, reUntil := bar_index + reBars
     sSide := 0
     sGhost := false
     sLSl := na
@@ -1024,6 +1044,14 @@ if sSide != 0 and vis
     if sSide > 0 and not sNoTp and not sRide and not sFix
         label.set_y(sXTp, sExit == 50 ? e50 : e9)
 
+// RE-ENTRY (Zee 2026-10-18): after a stop-out, the same setup waits again for its break, up to reBars candles
+if reSide != 0
+    if bar_index > reUntil
+        reSide := 0
+    else if sSide == 0 and pSide == 0
+        pSide := reSide, pHi := reHi, pLo := reLo, pExit := reExit, pDesc := "RE-ENTRY after stop: " + reDesc, pBar := bar_index, pLeft := reUntil - bar_index + 1, pConf := false, reTry := true
+        reSide := 0
+
 // ENTRY close mode: this candle CLOSED beyond the setup candle -> enter at the next open (the countdown stops)
 if pSide != 0 and bar_index > pBar and enMode != "Wick break (EA)" and not pConf
     float cl = pSide > 0 ? pHi + iBreakP * pip : pLo - iBreakP * pip
@@ -1035,6 +1063,7 @@ if pSide != 0 and bar_index > pBar and not pConf
         nNoBrk += 1
         skipNote(pSide, (pSide > 0 ? "high" : "low") + " not broken in " + str.tostring(iBreakB) + " candle" + (iBreakB > 1 ? "s" : ""))
         pSide := 0
+        reTry := false
 
 // DetectSetup on the candle that just closed
 if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
@@ -1068,7 +1097,7 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
         else
             int side = longOk ? 1 : -1
             nSetups += 1
-            pSide := side, pHi := high, pLo := low, pLeft := iBreakB, pBar := bar_index, pConf := false
+            pSide := side, pHi := high, pLo := low, pLeft := iBreakB, pBar := bar_index, pConf := false, reTry := false
             evPush("SETUP " + (side > 0 ? "LONG" : "SHORT") + " H " + fp(high) + " L " + fp(low))
             pExit := side > 0 ? (rulesOk ? 50 : 9) : 0
             string kindTxt = kindN == 1 ? "PIN BAR" : kindN == 2 ? (side > 0 ? "HAMMER" : "SHOOTING STAR") : "MARUBOZU"

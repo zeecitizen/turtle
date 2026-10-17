@@ -52,6 +52,9 @@
 //| v1.31: InpOptScore 4 = trade win rate, always (optimizer)        |
 //| v1.32: InpAdaptWeeks - weekly self-tuning range boxes (off)      |
 //| v1.33: InpAdaptToday - boxes re-judged after every trade (off)   |
+//| v1.34: InpTpFixUsd - one fixed $ target for both sides (opt.)    |
+//| v1.35: InpReEntry - re-enter the setup after a stop-out (off)    |
+//|        trigger = the setup's break level again, as the indicator |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -90,7 +93,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.33"
+#property version   "1.35"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -101,7 +104,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.33"
+#define EA_COMMENT "Saad1m v1.35"
 
 //--- the two lines
 input int    InpEmaFast     = 14;      // InpEmaFast
@@ -318,6 +321,9 @@ input double InpChartSpread = 0.17;     // InpChartSpread - the chart's fixed sp
 input int    InpTpMode      = 2;      // InpTpMode - TP1 method: 0 normal (BUY other-EMA touch, SELL last swing low) · 1 fixed $ · 2 Fibonacci extension of the setup candle · 3 partial (a share at the fixed $, the rest trails)
 input double InpTpFixUsdB   = 2.0;    // InpTpFixUsdB - modes 1 / 3: BUY TP1 = the entry + $X
 input double InpTpFixUsdS   = 2.0;    // InpTpFixUsdS - modes 1 / 3: SELL TP1 = the entry - $X
+input bool   InpReEntry     = false;  // InpReEntry - v1.35 (Zee): a trade closed by its ORIGINAL stop loss arms a re-entry: when price comes back through the original entry price X, take the same setup again (same side, stop rule and TP1 rule) - once per original trade
+input int    InpReEntryBars = 60;     // InpReEntryBars - v1.35: the re-entry stays armed this many candles after the stop-out
+input double InpTpFixUsd    = 0;      // InpTpFixUsd - v1.34: when > 0, the SAME fixed $ target for BUY and SELL (overrides InpTpFixUsdB / S) - one input the optimizer can sweep
 input double InpTpFibPct    = 161.8;  // InpTpFibPct - mode 2: BUY TP1 = setup low + X% of its range, SELL = setup high - X%
 input double InpTpPartPct   = 0.8;    // InpTpPartPct - mode 3: close this share at the target (instead of InpPartialPct)
 input double InpTpPartTrailUsd = 2.0; // InpTpPartTrailUsd - mode 3: the rest trails $X (instead of InpLongTrailUsd / InpShortTrailUsd)
@@ -331,6 +337,14 @@ datetime g_lastBar = 0;
 // the setup waiting for its break
 int      g_pSide = 0;
 double   g_pHigh = 0, g_pLow = 0;
+// v1.35 re-entry after a stop-out (Zee 2026-10-18: "When the market again crosses our entry price reverting from the stop loss point to our
+// original point -> we initiate our original setup at X again")
+int      g_reSide = 0, g_reExit = 50;
+double   g_reX = 0, g_reHi = 0, g_reLo = 0;
+string   g_reDesc = "";
+datetime g_reUntil = 0;
+bool     g_reTaking = false;
+int      g_reArmed = 0, g_reTaken = 0;
 int      g_pLeft = 0;
 int      g_pExit = 50;           // long: which EMA is its exit
 // v1.12: entry armed after the break (mode 1) / sweep tracking (mode 2)
@@ -346,7 +360,7 @@ int      g_skipDip = 0, g_skipSweep = 0, g_skipMinLot = 0, g_dayLossStop = 0, g_
 // per-position state
 struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bool noTp; bool ride; datetime entryTime; double best; bool usdTrail; double tpNext; int tpStage; bool resTp1;
                   string setup; double sl0; double risk; string tp1; datetime tp1At; string tps; datetime ctcAt; int moves; double mfe;
-                  int num; double slNow; datetime slFrom; string why; int adRun; double lbest; double pendSl; string pendWhy; datetime pendBar; double brk; bool tp1Pend; double tp1Lvl; datetime tp1Bar; double enJ; double chase; };
+                  int num; double slNow; datetime slFrom; string why; int adRun; double lbest; double pendSl; string pendWhy; datetime pendBar; double brk; bool tp1Pend; double tp1Lvl; datetime tp1Bar; double enJ; double chase; double sHi; double sLo; int sExit; bool isRe; };
 PosState g_pos[];
 double g_chase = -1;   // v1.24: where the last entry sat in the range (%), -1 = not measured - logged per trade for the box optimizer
 // v1.32 (Zee 2026-10-18: "calculate a new range every week and from that range execute the next week ... for each week we remove the
@@ -566,7 +580,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.33 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.35 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -650,6 +664,7 @@ double OnTester()
 
 void OnDeinit(const int reason)
 {
+   if (InpReEntry) PrintFormat("[SAAD] v1.35 re-entries: armed %d, taken %d", g_reArmed, g_reTaken);
    if (reason != REASON_CHARTCHANGE && reason != REASON_PARAMETERS) ChartIndicatorDelete(0, 0, "SaadEMAs");
    PrintFormat("[SAAD] v1.12: refused stop changes %d | no dip %d, no sweep %d, min-lot too risky %d, day loss stops %d, partial closes %d", g_modFails, g_skipDip, g_skipSweep, g_skipMinLot, g_dayLossStop, g_partials);
    PrintFormat("[SAAD] CTC breakevens %d | day close: setups dropped %d, losing trades shut %d", g_ctc, g_skipClose, g_closeLoss);
@@ -869,7 +884,7 @@ void SlMoved(int i, double newSl, string note)
 // the position is gone: label its exit from the closing deal
 void DrawExit(PosState &p)
 {
-   if (!(Drawing() || LogOn() || InpLogCsv || InpCsvName != "" || InpAdaptWeeks > 0 || InpAdaptDays > 0 || InpAdaptToday) || !HistorySelectByPosition(p.ticket)) return;   // v1.24: InpCsvName writes even with InpLogCsv off; v1.32 the weekly boxes need every result
+   if (!(Drawing() || LogOn() || InpLogCsv || InpCsvName != "" || InpAdaptWeeks > 0 || InpAdaptDays > 0 || InpAdaptToday || InpReEntry) || !HistorySelectByPosition(p.ticket)) return;   // v1.24: InpCsvName writes even with InpLogCsv off; v1.32 the weekly boxes need every result
    double px = 0, pnl = 0, prof = 0, comm = 0, swp = 0; datetime t = 0; long reason = -1;
    for (int k = HistoryDealsTotal() - 1; k >= 0; k--) {
       ulong d = HistoryDealGetTicket(k);
@@ -890,6 +905,12 @@ void DrawExit(PosState &p)
           : (p.ride || (p.side > 0 ? p.slNow > p.entry : p.slNow < p.entry)) ? "trailing stop" : "stop loss";
    else if (reason == DEAL_REASON_TP) why = p.side > 0 ? "TP (last resistance)" : "TP (last support)";
    else if (why == "") why = "closed";
+   // v1.35: the ORIGINAL stop took it (not breakeven, not a trail) and it was not itself a re-entry -> arm the re-entry at its entry price
+   if (InpReEntry && why == "stop loss" && !p.isRe) {
+      g_reSide = p.side; g_reX = p.entry; g_reHi = p.sHi; g_reLo = p.sLo; g_reExit = p.sExit; g_reDesc = p.setup;
+      g_reUntil = t + InpReEntryBars * PeriodSeconds(); g_reArmed++;
+      Log(StringFormat("#%d stopped out - re-entry armed: %s again if price comes back through %s within %d candles", p.num, p.side > 0 ? "BUY" : "SELL", Px(g_reX), InpReEntryBars));
+   }
    Log(StringFormat("EXIT #%d %s %s @ %s | entry %s | %s | best %s | SL moves %d | net %s%.2f (profit %.2f, commission %.2f, swap %.2f)",
                     p.num, p.side > 0 ? "BUY" : "SELL", Ts(t), Px(px), Px(p.entry), why, Px(p.mfe), p.moves,
                     pnl >= 0 ? "+" : "-", MathAbs(pnl), prof, comm, swp));
@@ -1450,7 +1471,7 @@ void DoEntry(int side, double sl)
    bool noTp = false, resTp1 = false;
    // v1.07 TP1 METHOD (Zee 2026-10-16, the chart's EXIT LAB): a fixed $ or Fibonacci TP1 replaces the normal one
    double fix = 0;
-   if (InpTpMode == 1 || InpTpMode == 3) fix = enJ + side * (side > 0 ? InpTpFixUsdB : InpTpFixUsdS);
+   if (InpTpMode == 1 || InpTpMode == 3) fix = enJ + side * (InpTpFixUsd > 0 ? InpTpFixUsd : side > 0 ? InpTpFixUsdB : InpTpFixUsdS);
    else if (InpTpMode == 2) fix = side > 0 ? g_pLow + InpTpFibPct / 100.0 * (g_pHigh - g_pLow) : g_pHigh - InpTpFibPct / 100.0 * (g_pHigh - g_pLow);
    if (fix != 0 && (fix - enJ) * side < InpMinTpPips * pip) {          // not far enough beyond the entry: the normal TP1, or skip (v1.09)
       if (InpTpNoFixSkip) { DSkip(side, "the TP1-method target is not far enough beyond the entry"); return; }
@@ -1491,6 +1512,7 @@ void DoEntry(int side, double sl)
    p.entryTime = TimeCurrent(); p.best = p.entry;
    p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0; p.adRun = 0; p.lbest = p.entry; p.pendSl = 0; p.pendWhy = ""; p.pendBar = 0; p.tp1Pend = false; p.tp1Lvl = 0; p.tp1Bar = 0;   // brk / enJ were set above (v1.20 fix: this line used to wipe them)
    p.setup = g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry; p.chase = g_chase;
+   p.sHi = g_pHigh; p.sLo = g_pLow; p.sExit = g_pExit; p.isRe = g_reTaking;   // v1.35: the setup, for a re-entry
    p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    p.tp1 = side > 0 ? (noTp ? "none (exit EMA below entry, no resistance above) - trailing from entry"
                             : fix != 0 ? StringFormat("%.2f (TP1 method %d)", tp, InpTpMode)
@@ -1552,6 +1574,26 @@ void DayCloseCheck()
    }
 }
 
+// v1.35: an armed re-entry fires when price is back through the original entry (BUY: bid at or above X; SELL: ask at or below X)
+void ReEntryCheck()
+{
+   if (g_reSide == 0) return;
+   if (TimeCurrent() > g_reUntil) { g_reSide = 0; return; }
+   if (ArraySize(g_pos) >= InpMaxPos || g_pSide != 0) return;       // the chart re-arms only when no other setup waits
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK), pip = Pip();
+   // the chart's rule: the setup candle's break level again (BUY high + InpBreakPips, SELL low - InpBreakPips), judged on the bid
+   if (g_reSide > 0 ? bid <= g_reHi + InpBreakPips * pip : bid >= g_reLo - InpBreakPips * pip) return;
+   int side = g_reSide; g_reSide = 0;
+   double sh = g_pHigh, sl0 = g_pLow; int se = g_pExit; string sd = g_pDesc; bool sLate = g_late;
+   g_pHigh = g_reHi; g_pLow = g_reLo; g_pExit = g_reExit; g_pDesc = "RE-ENTRY after stop: " + g_reDesc; g_late = false;
+   int n0 = ArraySize(g_pos);
+   g_reTaking = true;
+   DoEntry(side, StopFor(side, side > 0 ? ask : bid, g_reHi, g_reLo));
+   g_reTaking = false;
+   if (ArraySize(g_pos) > n0) g_reTaken++;
+   g_pHigh = sh; g_pLow = sl0; g_pExit = se; g_pDesc = sd; g_late = sLate;
+}
+
 void OnTick()
 {
    MqlDateTime dn; TimeToStruct(TimeCurrent(), dn);
@@ -1561,6 +1603,7 @@ void OnTick()
    SyncPos();
    ManageTick();
    SyncPos();
+   ReEntryCheck();                                          // v1.35
    datetime bar = CurBar();
    if (bar != g_lastBar && TvReady(bar)) {
       g_lastBar = bar;
