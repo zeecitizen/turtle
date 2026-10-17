@@ -48,6 +48,7 @@
 //| v1.27: day-close cut judged at the chart candle's open (M5+)     |
 //| v1.28: InpOptScore 3 = the worst month (robust optimizer score)  |
 //| v1.29: defaults ATR stop 2.5x + TP1 10 pips early (all months +) |
+//| v1.30: no chart-candle file -> MT5's own candles (no init fail)  |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -86,7 +87,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.29"
+#property version   "1.30"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -97,7 +98,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.29"
+#define EA_COMMENT "Saad1m v1.30"
 
 //--- the two lines
 input int    InpEmaFast     = 14;      // InpEmaFast
@@ -507,12 +508,16 @@ int OnInit()
    }
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    if (InpBarSource == 1) {
-      if (!TvLoad()) { PrintFormat("[SAAD-1min] InpBarSource 1: cannot read Common\\Files\\%s - run monitor/saad_compare/tv_bars_bridge.py first", TvFile()); return INIT_FAILED; }
-      PrintFormat("[SAAD-1min] TradingView candles: %d from %s to %s (%s)", g_tvN, TimeToString(tvT[0]), TimeToString(tvT[g_tvN - 1]), TvFile());
+      // v1.30 (Zee 2026-10-18: his Blueberry test stopped at once - the 15-min candle file was missing): no chart candles = MT5's own
+      // candles with a warning, instead of refusing to start (live: the bridge's file is read again once it appears)
+      if (!TvLoad() || g_tvN == 0)
+         PrintFormat("[SAAD-1min] WARNING: no TradingView candles in Common\\Files\\%s - trading on MT5's own candles (start monitor/saad_compare/start_tv_bars_bridge.bat for the chart's)", TvFile());
+      else
+         PrintFormat("[SAAD-1min] TradingView candles: %d from %s to %s (%s)", g_tvN, TimeToString(tvT[0]), TimeToString(tvT[g_tvN - 1]), TvFile());
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.29 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.30 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);

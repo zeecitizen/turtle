@@ -16,6 +16,14 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.30 (2026-10-18) — no chart-candle file: MT5's own candles instead of refusing to start
+
+- Zee's Blueberry tester run of v1.29 (all defaults, `InpBarSource` 1) stopped at once with "OnInit returns non-zero code 1". `tv_bars_XAUUSD_M15.csv` had been deleted because a VANTAGE export was mixed into it.
+- The EA now warns and trades on MT5's own candles. Live, it reads the bridge's file again once that file appears.
+- Check: pure defaults, XAUUSD_BB M15, Jan 1 - Oct 16, random delay, $100k:
+  - +$109,772, WR 83.5%, PF 1.72, DD $12.2k (7.3%), 334 trades.
+  - Apr -$0.4k, Jul +$0.1k, every other month green.
+
 ## Saad_strategy_1min v1.29 (2026-10-18) — ATR stop 2.5x + TP1 10 pips early: every month green in MT5 (15 min)
 
 Zee: *"what we want is a set of rules (a set of settings) that is robust enough to survive bad months and good months"* · *"THINK hard on what the fundamentals of the strategy are"*

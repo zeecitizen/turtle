@@ -26,7 +26,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | **saad_vsisa_diamond_hybrid** | `saad_vsisa_diamond_hybrid.mq5` (+ `svd_saad.mqh`, `svd_diamond.mqh`, 4 `Vsisa*.mqh`) | 88360 Saad · 88361 VSISA · 88362 Diamond | **v1.00** (2026-10-14) | XAUUSD **M5** | READY, demo first: bigger drawdown (15%) than saad_vsisa_hybrid |
 | **Trinity_1min** | `Trinity_1min.mq5` (+ `TriSaad.mqh`, `TriVsisa.mqh`, `TriDia.mqh`, 4 `Vsisa*.mqh`) | 88370 Saad · 88371 VSISA · 88372 Diamond | **v1.00** (2026-10-14) | XAUUSD **M1**, 0.01 lots | READY, demo first: ~$15/day at 0.01 lots on $500 |
 | **Saad raw** | `Saad_raw.mq5` | 88303 | **v1.00** (2026-10-14) | XAUUSD M15 | RESEARCH, do not attach: the core Saad rules with no filters (Zee) - MT5 full year +$76,834, DD $76,520 vs v1.23 +$211,032 / $13,119 |
-| Saad 1-min | `Saad_strategy_1min.mq5` (+ `monitor/saad_compare/tv_bars_bridge.py`) | 88305 | v1.29 (2026-10-18) | XAUUSD **M15** (M1 still works) | MIRROR of the TradingView chart: trades on the chart's own candles (bridge must run) - **83 of 83** chart trades on Blueberry Oct 12-15. Settings still REFUSED on long periods (Axi TK Sep 15 - Oct 15 -$53,632) - demo only |
+| Saad 1-min | `Saad_strategy_1min.mq5` (+ `monitor/saad_compare/tv_bars_bridge.py`) | 88305 | v1.30 (2026-10-18) | XAUUSD **M15** (M1 still works) | MIRROR of the TradingView chart: trades on the chart's own candles (bridge must run) - **83 of 83** chart trades on Blueberry Oct 12-15. Settings still REFUSED on long periods (Axi TK Sep 15 - Oct 15 -$53,632) - demo only |
 | **FractalBreakout** | `FractalBreakout.mq5` | 88410 | **v1.00** (2026-10-15) | XAUUSD **M5** | TEST, do not attach: Williams Fractals (25) breakout + trailing stop. Beats a no-rules control at every trail, but most of the profit was Jan–Mar |
 | **bread_winner** | `bread_winner.mq5` (+ `bread_saad/vsisa/dia/pb/vsisa2.mqh`, 4 `Vsisa*.mqh`) | 88390–88395 (shots 88393, Diamond 88392) | **v1.03** (2026-10-14) | XAUUSD, any chart | READY, demo first: ONE ~$11.5 shot per Pakistan day; ~92% of weekdays bread (88% random delay), ~1 in 15 red |
 | VSISA_Pullbacks | `VSISA_Pullbacks.mq5` | 88202 | v1.00 (2026-09-17) | XAUUSD | BUILT |
@@ -106,6 +106,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | Version | Date | What changed | Result / note |
 |---|---|---|---|
+| v1.30 | 2026-10-18 | No chart-candle file -> MT5's own candles (Zee's Blueberry test had stopped at OnInit) | Defaults, random delay: +$109,772, WR 83.5%, PF 1.72, DD 7.3% |
 | v1.29 | 2026-10-18 | Defaults: ATR stop 2.5x (`InpSlMode` 1) + TP1 10 pips early | M15 random delay: +$106,855, WR 81.9%, PF 1.71, DD 8%, 9/10 months green; Jan-Jun 83.6% / Jul-Oct 80.1% |
 | v1.28 | 2026-10-18 | `InpOptScore` 3 = worst month (optimizer). No trading change | - |
 | v1.27 | 2026-10-17 | Day-close loss cut judged at the chart candle's open on M5+ (the chart never fires it on 15-min candles; the EA cut 2 October winners at 4:57 PM) | 190 of 192 chart trades the same; October MT5 92.9% / +$34,275 vs chart 93.0% / +$35,507 |
