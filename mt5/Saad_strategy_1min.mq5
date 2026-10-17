@@ -50,6 +50,7 @@
 //| v1.29: defaults ATR stop 2.5x + TP1 10 pips early (all months +) |
 //| v1.30: no chart-candle file -> MT5's own candles (no init fail)  |
 //| v1.31: InpOptScore 4 = trade win rate, always (optimizer)        |
+//| v1.32: InpAdaptWeeks - weekly self-tuning range boxes (off)      |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -88,7 +89,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.31"
+#property version   "1.32"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -99,7 +100,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.31"
+#define EA_COMMENT "Saad1m v1.32"
 
 //--- the two lines
 input int    InpEmaFast     = 14;      // InpEmaFast
@@ -303,6 +304,9 @@ input bool   InpS17 = true;     // InpS17 - SELL 85-90% (InpBoxInputs)
 input bool   InpS18 = true;     // InpS18 - SELL 90-95% (InpBoxInputs)
 input bool   InpS19 = true;     // InpS19 - SELL 95-100% (InpBoxInputs)
 input bool   InpS20 = true;     // InpS20 - SELL over 100% (InpBoxInputs)
+input int    InpAdaptWeeks  = 0;      // InpAdaptWeeks - v1.32 weekly self-tuning range boxes: every Monday, look back this many weeks of closed trades and switch OFF each box (BUY / SELL apart) that lost money, the rest ON (0 = off: the fixed boxes)
+input int    InpAdaptDays   = 0;      // InpAdaptDays - v1.32 the same, rebuilt EVERY DAY from the last N days (Zee: "finetune the range everyday, getting ready for the next day"); 0 = off; overrides InpAdaptWeeks
+input int    InpAdaptMinTrades = 3;   // InpAdaptMinTrades - v1.32: a box needs at least this many trades in the look-back to be judged; fewer = stays ON (a switched-off box gets a fresh chance once its old trades age out)
 input int    InpBandPauseBars = 1;   // InpBandPauseBars - after a trade skipped in an unticked range, no new trade for N candles (0 = take the next setup; the chart's "Pause N candles")
 input bool   InpWaitEntryBar = true;  // InpWaitEntryBar - no TP1 / trail / lock / CTC inside the entry minute: the chart steps once per minute and starts managing a trade at the NEXT one (the broker stop is live from the first tick)
 input bool   InpSlNextBar   = true;   // InpSlNextBar - a stop moved during a minute (TP1, CTC) takes effect at the NEXT minute's open, as on the chart (an open already beyond it closes at market)
@@ -343,6 +347,36 @@ struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bo
                   int num; double slNow; datetime slFrom; string why; int adRun; double lbest; double pendSl; string pendWhy; datetime pendBar; double brk; bool tp1Pend; double tp1Lvl; datetime tp1Bar; double enJ; double chase; };
 PosState g_pos[];
 double g_chase = -1;   // v1.24: where the last entry sat in the range (%), -1 = not measured - logged per trade for the box optimizer
+// v1.32 (Zee 2026-10-18: "calculate a new range every week and from that range execute the next week ... for each week we remove the
+// failing ranges and keep the winning ranges"): every closed trade -> (close time, box 0-41, net); every Monday the boxes are rebuilt
+datetime g_adT[]; int g_adK[]; double g_adP[];
+datetime g_adWeek = 0;
+int AdBucket(int side, double chase) { int b = chase > 100 ? 20 : chase <= 0 ? 0 : MathMin((int)MathFloor(chase / 5), 19); return b + (side > 0 ? 0 : 21); }
+void AdRecord(int side, double chase, datetime t, double pnl)
+{
+   if ((InpAdaptWeeks <= 0 && InpAdaptDays <= 0) || chase < 0) return;
+   int n = ArraySize(g_adT); ArrayResize(g_adT, n + 1); ArrayResize(g_adK, n + 1); ArrayResize(g_adP, n + 1);
+   g_adT[n] = t; g_adK[n] = AdBucket(side, chase); g_adP[n] = pnl;
+}
+void AdRebuild(datetime now)
+{
+   if (InpAdaptWeeks <= 0 && InpAdaptDays <= 0) return;
+   MqlDateTime d; TimeToStruct(now, d);
+   datetime day0 = now - (now % 86400);
+   datetime monday = InpAdaptDays > 0 ? day0 : day0 - (datetime)(((d.day_of_week + 6) % 7) * 86400);   // daily: "monday" = today
+   if (monday == g_adWeek) return;
+   g_adWeek = monday;
+   double net[42]; int cnt[42]; ArrayInitialize(net, 0); ArrayInitialize(cnt, 0);
+   datetime from = monday - (InpAdaptDays > 0 ? InpAdaptDays : InpAdaptWeeks * 7) * 86400;
+   for (int i = 0; i < ArraySize(g_adT); i++) if (g_adT[i] >= from && g_adT[i] < monday) { net[g_adK[i]] += g_adP[i]; cnt[g_adK[i]]++; }
+   string b = "", s = ""; int offB = 0, offS = 0;
+   for (int k = 0; k < 21; k++) {
+      bool onB = cnt[k] < InpAdaptMinTrades || net[k] >= 0, onS = cnt[k + 21] < InpAdaptMinTrades || net[k + 21] >= 0;
+      b += onB ? "1" : "0"; s += onS ? "1" : "0"; offB += !onB; offS += !onS;
+   }
+   g_bandsB = b; g_bandsS = s;
+   PrintFormat("[SAAD-1min] week of %s: range boxes from the last %d week(s) - BUY %s (%d off) | SELL %s (%d off)", TimeToString(monday, TIME_DATE), InpAdaptWeeks, b, offB, s, offS);
+}
 double EnJ(int i) { return InpTvVerdict && g_pos[i].enJ > 0 ? g_pos[i].enJ : g_pos[i].entry; }
 datetime g_exitBar = 0;
 bool g_late = false;
@@ -518,7 +552,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.31 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.32 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -821,7 +855,7 @@ void SlMoved(int i, double newSl, string note)
 // the position is gone: label its exit from the closing deal
 void DrawExit(PosState &p)
 {
-   if (!(Drawing() || LogOn() || InpLogCsv || InpCsvName != "") || !HistorySelectByPosition(p.ticket)) return;   // v1.24: InpCsvName writes even with InpLogCsv off
+   if (!(Drawing() || LogOn() || InpLogCsv || InpCsvName != "" || InpAdaptWeeks > 0 || InpAdaptDays > 0) || !HistorySelectByPosition(p.ticket)) return;   // v1.24: InpCsvName writes even with InpLogCsv off; v1.32 the weekly boxes need every result
    double px = 0, pnl = 0, prof = 0, comm = 0, swp = 0; datetime t = 0; long reason = -1;
    for (int k = HistoryDealsTotal() - 1; k >= 0; k--) {
       ulong d = HistoryDealGetTicket(k);
@@ -835,6 +869,7 @@ void DrawExit(PosState &p)
    }
    if (t == 0) return;
    pnl = prof + comm + swp;
+   AdRecord(p.side, p.chase, t, pnl);                      // v1.32
    string why = p.why;
    if (reason == DEAL_REASON_SL)
       why = p.usdTrail ? StringFormat("trailing stop ($%.0f) after TP%d", p.side > 0 ? TrailL() : TrailS(), p.tpStage - 1) : MathAbs(p.slNow - p.entry) < _Point ? "breakeven (CTC)"
@@ -1297,7 +1332,7 @@ void TryEntry()
    // v1.10 (Zee 2026-10-17, "the stand aside is just a form of a cooldown"): pausing after a trade skipped in an unticked range
    if (InpBandPauseBars > 0 && BTime(0) <= g_pauseUntil) { DSkip(side, StringFormat("pausing %d candles after a trade skipped in an unticked range", InpBandPauseBars)); return; }
    g_chase = -1;
-   if (bMin > 0 || bMax > 0 || StringFind(bands, "0") >= 0) {
+   if (bMin > 0 || bMax > 0 || StringFind(bands, "0") >= 0 || InpAdaptWeeks > 0 || InpAdaptDays > 0) {
       double hi = 0, lo = DBL_MAX;
       int sh = g_late ? 1 : 0;
       for (int k = 1; k <= bLook; k++) { hi = MathMax(hi, BHigh(k + sh)); lo = MathMin(lo, BLow(k + sh)); }
@@ -1515,6 +1550,7 @@ void OnTick()
    datetime bar = CurBar();
    if (bar != g_lastBar && TvReady(bar)) {
       g_lastBar = bar;
+      AdRebuild(bar);                                       // v1.32 weekly range boxes
       if (InpDumpBars) {
          static int fh = INVALID_HANDLE;
          if (fh == INVALID_HANDLE) fh = FileOpen("saad1m_bars.csv", FILE_WRITE | FILE_CSV | FILE_ANSI | FILE_COMMON, ',');
