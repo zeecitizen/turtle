@@ -88,6 +88,10 @@ def main():
     ap.add_argument("--force", action="store_true",
                     help="skip the editor-holds-this-script and no-alerts checks")
     args = ap.parse_args()
+    # 2026-10-17: "--force" with no file pasted turtle.pine over the Saad script open in the editor (the chart's Saad study
+    # turned into Turtle Trader Desk and lost its 149 settings). Forcing needs the file named explicitly.
+    if args.force and not any(a == args.file for a in sys.argv[1:]):
+        fail("--force needs the .pine file named explicitly (it would otherwise paste turtle.pine over whatever the editor holds)")
 
     path = Path(args.file).resolve()
     if not path.exists():
