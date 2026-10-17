@@ -16,6 +16,23 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.25 (2026-10-17) — optimizer score 2: win rate of whole trades (no trading change)
+
+Zee: *"what we're trying to get is winrate. so that we're dead sure we're making something, even if small amount"*
+
+- `InpOptScore` 2: OnTester returns the win rate of whole positions (TP1 partial + rest = one trade, from the deal history by position id); a losing year scores below every profitable one.
+- Driver: `monitor/strategy_lab/saad_tune_all.py` (one chart setting at a time -> MT5 complete optimization -> pick -> set on the TradingView indicator). Logs: `saad_tune_log.md` (profit/drawdown pass), `saad_tune_tpwr_log.md` (Fixed $ TP/SL, win rate).
+- **Receipts, M15 XAUUSD_BB, Zee's chart settings, max risk 0 (his call):** whole-year win-rate pass reached 83.2% / +$47,287 with no delay (TP1 Fixed $1.50 both sides, close 100% at TP1, SL 36 -> 60 pips).
+- **The check, random delay, $100k:**
+
+| SL | Jan-Jun | Jul-Oct |
+|---|---|---|
+| 60 | +$55,185, WR 79.3%, DD 47% | **-$32,695**, WR ~80%, DD 51% |
+| 36 | +$29,819, WR 76.4%, DD 50% | **-$25,345**, WR ~78%, DD 47% |
+
+  - Average loss is about 4x the average win (SL 60 Jul-Oct: -$2,555 vs +$588). Break-even needs ~81% and the real result is ~80%.
+  - NOT PROMOTED.
+
 ## Saad_strategy_1min v1.24 (2026-10-17) — MT5 optimizer support (no trading change)
 
 Zee: *"we can use the MT5's own strategy optimizer to find the best settings"* · *"the first thing i need you to optimize for is the settings for Entry position in the range"* · *"optimize specifically for the highest win rate"*

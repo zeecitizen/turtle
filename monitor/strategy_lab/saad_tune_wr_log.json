@@ -1,0 +1,100 @@
+{
+ "steps": [
+  {
+   "pv": "rpB00",
+   "ea": "InpB00",
+   "was": true,
+   "now": true,
+   "why": "no clear win-rate gain (best false: 70.2% vs 70.2%) - kept",
+   "mins": 1.5,
+   "p_was": "+178,684",
+   "p_now": "+178,684",
+   "table": [
+    {
+     "InpB00": "false",
+     "Profit": "178684.49",
+     "Profit Factor": "1.098275",
+     "Equity DD %": "1.0423",
+     "Trades": "3024",
+     "Result": "70.22",
+     "smooth": 70.22
+    },
+    {
+     "InpB00": "true",
+     "Profit": "178684.49",
+     "Profit Factor": "1.098275",
+     "Equity DD %": "1.0423",
+     "Trades": "3024",
+     "Result": "70.22",
+     "smooth": 70.22
+    }
+   ],
+   "wr_was": "70.2%",
+   "wr_now": "70.2%"
+  },
+  {
+   "pv": "rpB01",
+   "ea": "InpB01",
+   "was": true,
+   "now": true,
+   "why": "no clear win-rate gain (best false: 70.2% vs 70.2%) - kept",
+   "mins": 1.5,
+   "p_was": "+178,684",
+   "p_now": "+178,684",
+   "table": [
+    {
+     "InpB01": "false",
+     "Profit": "178684.49",
+     "Profit Factor": "1.098275",
+     "Equity DD %": "1.0423",
+     "Trades": "3024",
+     "Result": "70.22",
+     "smooth": 70.22
+    },
+    {
+     "InpB01": "true",
+     "Profit": "178684.49",
+     "Profit Factor": "1.098275",
+     "Equity DD %": "1.0423",
+     "Trades": "3024",
+     "Result": "70.22",
+     "smooth": 70.22
+    }
+   ],
+   "wr_was": "70.2%",
+   "wr_now": "70.2%"
+  },
+  {
+   "pv": "rpB02",
+   "ea": "InpB02",
+   "was": true,
+   "now": true,
+   "why": "the chart's value is already the best",
+   "mins": 1.3,
+   "p_was": "+178,684",
+   "p_now": "+178,684",
+   "table": [
+    {
+     "InpB02": "false",
+     "Profit": "177996.75",
+     "Profit Factor": "1.097901",
+     "Equity DD %": "1.0423",
+     "Trades": "3020",
+     "Result": "70.19",
+     "smooth": 70.19
+    },
+    {
+     "InpB02": "true",
+     "Profit": "178684.49",
+     "Profit Factor": "1.098275",
+     "Equity DD %": "1.0423",
+     "Trades": "3024",
+     "Result": "70.22",
+     "smooth": 70.22
+    }
+   ],
+   "wr_was": "70.2%",
+   "wr_now": "70.2%"
+  }
+ ]
+}

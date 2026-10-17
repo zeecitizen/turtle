@@ -32,6 +32,53 @@ FROM, FORWARD, TO = "2026.01.01", "2026.07.01", "2026.10.18"
 
 # what each job optimises: input -> (start, step, stop); bools -> None (true/false)
 JOBS = {
+    # Zee 2026-10-17: "on whole year 2026 optimize for what is the best combination to use for EMAs. currently set at 9/50"
+    # every combination (Optimization 1 = complete), whole Jan 1 - Oct 17, his 15-min chart settings otherwise
+    "ema": {
+        "sets": "saad_opt_base_sets_m15.json", "period": "M15", "algo": 1, "forward": False,
+        "fixed": {"InpOptScore": "0", "InpOptMinTrades": "100"},
+        "opt": {"InpEmaFast": (3, 1, 20), "InpEmaSlow": (20, 5, 100)},
+    },
+    # Zee 2026-10-17: "InpWickMin. i want you to run the optimizer for this single setting." (chart settings with EMA 14/70)
+    "wick": {
+        "sets": "saad_opt_base_sets_now.json", "period": "M15", "algo": 1, "forward": False,
+        "fixed": {"InpOptScore": "0", "InpOptMinTrades": "100"},
+        "opt": {"InpWickMin": (0.10, 0.05, 0.90)},
+    },
+    # Zee 2026-10-17: "ok next inpbodymax"
+    "body": {
+        "sets": "saad_opt_base_sets_now.json", "period": "M15", "algo": 1, "forward": False,
+        "fixed": {"InpOptScore": "0", "InpOptMinTrades": "100"},
+        "opt": {"InpBodyMax": (0.20, 0.05, 1.00)},
+    },
+    # Zee 2026-10-17: "ok now inpnosemax"
+    "nose": {
+        "sets": "saad_opt_base_sets_now.json", "period": "M15", "algo": 1, "forward": False,
+        "fixed": {"InpOptScore": "0", "InpOptMinTrades": "100"},
+        "opt": {"InpNoseMax": (0.0, 0.025, 0.50)},
+    },
+    # Zee 2026-10-17: the BUY range lookback ("BUY · how many recent candles make the range")
+    "lookb": {
+        "sets": "saad_opt_base_sets_now.json", "period": "M15", "algo": 1, "forward": False,
+        "fixed": {"InpOptScore": "0", "InpOptMinTrades": "100"},
+        "opt": {"InpRangeLook": (3, 1, 30)},
+    },
+    # Zee 2026-10-17: the SELL range lookback ("SELL · how many recent candles make the range")
+    "looks": {
+        "sets": "saad_opt_base_sets_now.json", "period": "M15", "algo": 1, "forward": False,
+        "fixed": {"InpOptScore": "0", "InpOptMinTrades": "100"},
+        "opt": {"InpRangeLookS": (3, 1, 30)},
+    },
+    # Zee 2026-10-17: "next test diff take profits/methods" - each TP1 method over its own range
+    "tp_fib": {"sets": "saad_opt_base_sets_now.json", "period": "M15", "algo": 1, "forward": False,
+        "fixed": {"InpOptScore": "0", "InpOptMinTrades": "100", "InpTpMode": "2"},
+        "opt": {"InpTpFibPct": (100, 10, 300)}},
+    "tp_fix": {"sets": "saad_opt_base_sets_now.json", "period": "M15", "algo": 1, "forward": False,
+        "fixed": {"InpOptScore": "0", "InpOptMinTrades": "100", "InpTpMode": "1"},
+        "opt": {"InpTpFixUsdB": (1, 1, 10), "InpTpFixUsdS": (1, 1, 10)}},
+    "tp_part": {"sets": "saad_opt_base_sets_now.json", "period": "M15", "algo": 1, "forward": False,
+        "fixed": {"InpOptScore": "0", "InpOptMinTrades": "100", "InpTpMode": "3", "InpTpPartPct": "0.5"},
+        "opt": {"InpTpFixUsdB": (1, 1, 5), "InpTpFixUsdS": (1, 1, 5), "InpTpPartTrailUsd": (1, 1, 4)}},
     "boxes": {
         "fixed": {"InpBoxInputs": "true", "InpOptScore": "1", "InpOptMinTrades": "3000"},
         "opt": {**{f"InpB{i:02d}": None for i in range(21)}, **{f"InpS{i:02d}": None for i in range(21)},
@@ -57,7 +104,7 @@ def tester_inputs(base, job):
 def start(name):
     job = JOBS[name]
     base = axi_rig.ea_defaults(EA)
-    base.update(json.loads(SETS.read_text(encoding="utf-8")))
+    base.update(json.loads(Path(__file__).with_name(job.get("sets", SETS.name)).read_text(encoding="utf-8")))
     base.update(job["fixed"])
     for i in range(21):                     # the boxes start from Zee's own ticks (the genetic search starts random anyway)
         base[f"InpB{i:02d}"] = "true" if base["InpBandsB"][i] == "1" else "false"
@@ -65,10 +112,11 @@ def start(name):
     R = axi_rig._R(RIG)
     axi_rig.kill_rig(RIG)
     axi_rig.compile_ea(EA, rig=RIG)
-    ini = (f"[Tester]\r\nExpert={EA}\r\nSymbol=XAUUSD_BB\r\nPeriod=M1\r\nModel=4\r\n"
-           f"FromDate={FROM}\r\nToDate={TO}\r\nForwardMode=4\r\nForwardDate={FORWARD}\r\n"
+    fwd = f"ForwardMode=4\r\nForwardDate={FORWARD}\r\n" if job.get("forward", True) else "ForwardMode=0\r\n"
+    ini = (f"[Tester]\r\nExpert={EA}\r\nSymbol=XAUUSD_BB\r\nPeriod={job.get('period', 'M1')}\r\nModel=4\r\n"
+           f"FromDate={FROM}\r\nToDate={TO}\r\n{fwd}"
            f"Deposit=10000000\r\nCurrency=USD\r\nLeverage=1:400\r\nExecutionMode=0\r\n"
-           f"Optimization=2\r\nOptimizationCriterion=6\r\n"
+           f"Optimization={job.get('algo', 2)}\r\nOptimizationCriterion=6\r\n"
            f"Report=reports\\opt_{name}\r\nReplaceReport=1\r\nShutdownTerminal=1\r\nVisual=0\r\n"
            f"[TesterInputs]\r\n{tester_inputs(base, job)}")
     (R / "reports").mkdir(exist_ok=True)
@@ -95,7 +143,8 @@ def _rows(path):
 def read(name, top=25):
     R = axi_rig._R(RIG)
     back = {r["Pass"]: r for r in _rows(R / "reports" / f"opt_{name}.xml")}
-    fwd = _rows(R / "reports" / f"opt_{name}.forward.xml")
+    ff = R / "reports" / f"opt_{name}.forward.xml"
+    fwd = _rows(ff) if ff.exists() else list(back.values())
     print(f"[opt] {len(back)} passes optimised, {len(fwd)} forward")
     keys = list(JOBS[name]["opt"])
     out = []
