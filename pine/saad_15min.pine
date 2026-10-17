@@ -231,6 +231,10 @@ skTo = input.time(0, "...events up to (0 = now)", group = G14, display = display
 bcOn = input.bool(true, "No new trades while the broker is closed (Blueberry: 4:59 PM to 6:01 PM New York)", group = G3, tooltip = "Zee 2026-10-17: MT5 cannot trade then - Blueberry has no 4:59 PM candle and refuses orders until 6:01 PM (it quotes from 6:00). EA: no retry at the open.", display = display.none)
 bcFrom = input.string("16:59", "...closed from (New York time)", group = G3, display = display.none)
 bcTo = input.string("18:01", "...open again at (New York time)", group = G3, display = display.none)
+// Zee 2026-10-18 (MT5, 15 min, Blueberry, random delay): a stop of 2.5 x ATR from the entry instead of a fixed 36 pips beyond the setup
+// candle won in BOTH halves (Jan-Jun 83.6%, Jul-Oct 80.1%, all 10 months green, drawdown 21% -> 8-11%). Added LAST so no setting moves.
+iSlMode = input.string("Pips beyond the setup candle", "Stop loss type", options = ["Pips beyond the setup candle", "ATR x from the entry"], group = GSL, tooltip = "EA: InpSlMode 0 / 1. ATR: the stop is X x ATR(14) of the last closed candle away from the entry, so it widens when gold moves fast and tightens when it is quiet.", display = display.none)
+iSlAtrM = input.float(2.5, "...ATR multiple (with 'ATR x from the entry')", step = 0.1, minval = 0.1, group = GSL, tooltip = "EA: InpSlAtrMult. MT5 15 min: 2.0-3.0 all work; 2.5 best balance.", display = display.none)
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -724,7 +728,7 @@ for k = 0 to nSteps - 1
         if wick ? (pSide > 0 ? bH > lvl : bL < lvl) : (k == 0 and pConf)
             float bid = wick ? (pSide > 0 ? math.max(lvl + 0.01, bO) : math.min(lvl - 0.01, bO)) : bO
             float en  = pSide > 0 ? bid + iSpread : bid
-            float sl  = pSide > 0 ? pLo - iSlPips * pip : pHi + iSlPips * pip
+            float sl  = iSlMode == "ATR x from the entry" ? (pSide > 0 ? en - iSlAtrM * atr[1] : en + iSlAtrM * atr[1]) : pSide > 0 ? pLo - iSlPips * pip : pHi + iSlPips * pip
             if adMaxUsd > 0
                 sl := pSide > 0 ? math.max(sl, en - adMaxUsd) : math.min(sl, en + adMaxUsd)
             int side = pSide

@@ -16,6 +16,28 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.29 (2026-10-18) — ATR stop 2.5x + TP1 10 pips early: every month green in MT5 (15 min)
+
+Zee: *"what we want is a set of rules (a set of settings) that is robust enough to survive bad months and good months"* · *"THINK hard on what the fundamentals of the strategy are"*
+
+- **v1.28:** `InpOptScore` 3 = the worst month's net (+5% of the total), for a robust optimizer score.
+- **Fundamentals found:** on the same Blueberry ticks, a random entry with the same stop/target geometry wins the same share.
+  - 1 min: random 85.5% vs Saad 70.5%, both losing; break-even needs ~91% with a $0.77 target and $6.44 stop.
+  - 15 min: random 73.9% / +$0.40 a trade vs Saad 73.8% / **+$190 a trade**.
+  - Win rate is the geometry; the Saad 15-min ENTRY carries the edge. 1 min has none.
+- **v1.29 defaults:** `InpSlMode` 1, `InpSlAtrMult` 2.5 (the stop scales with volatility instead of a fixed 36 pips), `InpLongTpPips` / `InpShortTpPips` 10 (TP1 just before the EMA / support).
+- **Receipts** (XAUUSD_BB M15, Zee's 15-min settings, random delay, $100k):
+
+| Run | Net | WR | PF | Max DD | Months |
+|---|---|---|---|---|---|
+| Full year | +$106,855 | 81.9% | 1.71 | $12.4k (8%) | 9 of 10 green, Apr -$0.5k |
+| Jan-Jun | +$56,565 | 83.6% | 2.07 | | |
+| Jul-Oct (not used to choose) | +$51,301 | 80.1% | 1.52 | | |
+
+  - The 2.0x-3.0x stop range all works. Before (fixed 36-pip stop): +$131,025, WR 75.3%, DD $29.3k (21%), June +$0.6k.
+- The indicator got the same stop as its last two inputs (`iSlMode`, `iSlAtrM`).
+- The bridge now refuses non-BLUEBERRY charts: a VANTAGE export had been merged into the Blueberry candle file.
+
 ## Saad_strategy_1min v1.27 (2026-10-17) — the day-close cut judged like the chart on M15
 
 Zee: *"alone spread can't make a diff of 1100 USD ... find it out. some settings might be amiss"*

@@ -46,6 +46,8 @@
 //| v1.26: chart candles on any timeframe (InpTvFile auto) + Zee's   |
 //|        15-min settings of 17 Oct as defaults - attach to M15     |
 //| v1.27: day-close cut judged at the chart candle's open (M5+)     |
+//| v1.28: InpOptScore 3 = the worst month (robust optimizer score)  |
+//| v1.29: defaults ATR stop 2.5x + TP1 10 pips early (all months +) |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -84,7 +86,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.27"
+#property version   "1.29"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -95,7 +97,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.27"
+#define EA_COMMENT "Saad1m v1.29"
 
 //--- the two lines
 input int    InpEmaFast     = 14;      // InpEmaFast
@@ -133,10 +135,10 @@ input bool   InpTrigBid     = true;   // InpTrigBid — LONG break judged on the
 input double InpSlPips      = 36.0;     // InpSlPips — stop beyond the candle [v4.02: 34->30] [v1.13: 30->35, real-tick court + Jul-Oct holdout]
 input double InpMaxRiskUsd  = 20.0;    // InpMaxRiskUsd — skip if the stop is more than this $ of price away (0 = off) [M15: 9->15; 14-18 plateau, 9 skips 2/3 of M15 setups]
 input int    InpLongExit    = 1;      // InpLongExit — 0 a candle touches the exit EMA · 1 a candle CLOSES at / beyond it
-input double InpLongTpPips  = 0;      // InpLongTpPips — LONG: take profit this many pips before the EMA
+input double InpLongTpPips  = 10;      // InpLongTpPips — LONG: take profit this many pips before the EMA
 input int    InpSwingPivot  = 8;      // InpSwingPivot — SHORT "last support" = swing low with this many candles each side
 input int    InpSwingLook   = 32;    // InpSwingLook — candles back to search for the support [M15: 300->100 candles = 25 hours]
-input double InpShortTpPips = 0;      // InpShortTpPips — SHORT: take profit this many pips before the support
+input double InpShortTpPips = 10;      // InpShortTpPips — SHORT: take profit this many pips before the support
 input double InpMinTpPips   = 10.0;      // InpMinTpPips — TP at least this far from the entry
 input double InpMaxTpPips   = 0;      // InpMaxTpPips — skip a SHORT whose support is further than this (0 = off)
 
@@ -204,8 +206,8 @@ input double InpSweepPips   = 0;      // InpSweepPips — mode 2: price must tra
 input int    InpSweepBars   = 3;      // InpSweepBars — mode 2: candles allowed for the sweep and the entry
 input int    InpSweepEntry  = 0;      // InpSweepEntry — mode 2: 0 enter when price reclaims the candle's low/high · 1 enter on the break of the candle's far end after the sweep
 input double InpSweepSlPips = 10;     // InpSweepSlPips — mode 2: stop this many pips beyond the sweep's extreme
-input int    InpSlMode      = 0;      // InpSlMode — 0 InpSlPips beyond the setup candle · 1 InpSlAtrMult x ATR from the entry · 2 InpSlUsd from the entry
-input double InpSlAtrMult   = 1.0;    // InpSlAtrMult — stop mode 1
+input int    InpSlMode      = 1;      // InpSlMode — 0 InpSlPips beyond the setup candle · 1 InpSlAtrMult x ATR from the entry · 2 InpSlUsd from the entry
+input double InpSlAtrMult   = 2.5;    // InpSlAtrMult — stop mode 1
 input double InpSlUsd       = 5.0;    // InpSlUsd — stop mode 2, $ of price
 input double InpPartialPct  = 0.95;    // InpPartialPct — close this share of the position at TP1 (0 = off) [v1.16: 0 -> 0.5, Zee's rule]
 input bool   InpTp1Be       = true;   // InpTp1Be — at TP1 the rest of the position's stop is never worse than the entry (breakeven) [v1.16, Zee's rule]
@@ -225,7 +227,7 @@ input bool   InpVerbose     = false;  // InpVerbose — print every decision
 input bool   InpDraw        = true;   // InpDraw — labels on the chart (visual tester + live): setups, entries, stop moves, exits
 input bool   InpLog         = true;   // InpLog — print every trade event to the Experts tab (live + visual tester)
 input bool   InpLogCsv      = true;   // InpLogCsv — one CSV row per closed trade in Common\Files (live + visual tester)
-input int    InpOptScore    = 0;      // InpOptScore — v1.24 optimizer score: 0 = net / max drawdown, 1 = win rate of closes, 2 = win rate of whole trades (v1.25) - both only for a net profit; a loss scores below every winner
+input int    InpOptScore    = 0;      // InpOptScore — v1.24 optimizer score: 0 = net / max drawdown, 1 = win rate of closes, 2 = win rate of whole trades (v1.25), 3 = the worst month's net (v1.28) - both only for a net profit; a loss scores below every winner
 input int    InpOptMinTrades = 200;  // InpOptMinTrades — v1.24 optimizer score: fewer closed trades than this scores below every real result
 input string InpCsvName     = "";     // InpCsvName — v1.24: write the per-trade CSV under this name, also in a fast (non-visual) test (the compare page's 10-month chart)
 input color  InpLongColor   = clrGreen; // InpLongColor — chart text/marks for LONG setups and trades (Zee: dark green)
@@ -510,7 +512,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.27 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.29 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -546,9 +548,38 @@ void PositionStats()
    for (int j = 0; j < g_posN; j++) if (pn[j] > 0) g_posW++;
 }
 
+// v1.28 (Zee 2026-10-18: "what we want is a set of rules ... robust enough to survive bad months and good months" - June made +$0.6k
+// while May made +$27k): score 3 = the WORST month's net (every month from the first to the last of the test, a month without trades
+// = 0) + 5% of the total as a tie-break. The optimizer lifts the weakest month instead of the best year.
+double WorstMonth()
+{
+   if (!HistorySelect(0, TimeCurrent() + 86400)) return 0;
+   double m[]; int k0 = -1;
+   int nd = HistoryDealsTotal();
+   for (int d = 0; d < nd; d++) {
+      ulong tk = HistoryDealGetTicket(d);
+      if (HistoryDealGetInteger(tk, DEAL_MAGIC) != InpMagicNumber) continue;
+      MqlDateTime t; TimeToStruct((datetime)HistoryDealGetInteger(tk, DEAL_TIME), t);
+      int k = t.year * 12 + t.mon;
+      if (k0 < 0) k0 = k;
+      int i = k - k0;
+      if (i < 0) continue;
+      if (i >= ArraySize(m)) { int o = ArraySize(m); ArrayResize(m, i + 1); for (int j = o; j <= i; j++) m[j] = 0; }
+      m[i] += HistoryDealGetDouble(tk, DEAL_PROFIT) + HistoryDealGetDouble(tk, DEAL_COMMISSION) + HistoryDealGetDouble(tk, DEAL_SWAP);
+   }
+   if (ArraySize(m) == 0) return -1e9;
+   double w = m[0];
+   for (int i = 1; i < ArraySize(m); i++) w = MathMin(w, m[i]);
+   return w;
+}
+
 double OnTester()
 {
    double net = TesterStatistics(STAT_PROFIT), dd = TesterStatistics(STAT_EQUITY_DD), n = TesterStatistics(STAT_TRADES);
+   if (InpOptScore == 3) {
+      if (n < InpOptMinTrades) return -1e9 + n;
+      return WorstMonth() + 0.05 * net;
+   }
    if (InpOptScore == 2) {
       PositionStats();
       if (g_posN < InpOptMinTrades) return -1e9 + g_posN;
