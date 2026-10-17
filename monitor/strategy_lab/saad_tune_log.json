@@ -1,0 +1,5971 @@
+{
+ "steps": [
+  {
+   "pv": "tpMode",
+   "ea": "InpTpMode",
+   "was": "Partial: close a share at a fixed $ target, trail the rest",
+   "now": "Fibonacci extension of the setup candle",
+   "why": "better: score 4.55 vs 2.70 (with neighbours), profit +63,325 vs +45,607",
+   "mins": 1.1,
+   "p_was": "+45,607",
+   "p_now": "+63,325",
+   "table": [
+    {
+     "InpTpMode": "0",
+     "Profit": "34576.00",
+     "Profit Factor": "1.119693",
+     "Equity DD %": "0.3141",
+     "Trades": "357",
+     "Result": "1.10",
+     "smooth": 1.1
+    },
+    {
+     "InpTpMode": "1",
+     "Profit": "49167.28",
+     "Profit Factor": "1.400235",
+     "Equity DD %": "0.1579",
+     "Trades": "658",
+     "Result": "3.10",
+     "smooth": 3.1
+    },
+    {
+     "InpTpMode": "2",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpMode": "3",
+     "Profit": "45607.32",
+     "Profit Factor": "1.352791",
+     "Equity DD %": "0.1683",
+     "Trades": "658",
+     "Result": "2.70",
+     "smooth": 2.7
+    }
+   ]
+  },
+  {
+   "pv": "tpFixB",
+   "ea": "InpTpFixUsdB",
+   "was": 2,
+   "now": 2.0,
+   "why": "no clear gain (best 0.5: 4.55 vs 4.55) - kept",
+   "mins": 2.5,
+   "p_was": "+63,325",
+   "p_now": "?",
+   "table": [
+    {
+     "InpTpFixUsdB": "0.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "1.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "1.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "2.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "2.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "3.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "3.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "4.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "4.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "5.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "5.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "6.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "6.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "7.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "7.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "8.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "8.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "9.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "9.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdB": "10.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    }
+   ]
+  },
+  {
+   "pv": "tpFixS",
+   "ea": "InpTpFixUsdS",
+   "was": 2,
+   "now": 2.0,
+   "why": "no clear gain (best 0.5: 4.55 vs 4.55) - kept",
+   "mins": 2.6,
+   "p_was": "+63,325",
+   "p_now": "?",
+   "table": [
+    {
+     "InpTpFixUsdS": "0.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "1.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "1.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "2.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "2.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "3.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "3.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "4.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "4.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "5.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "5.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "6.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "6.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "7.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "7.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "8.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "8.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "9.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "9.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpFixUsdS": "10.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    }
+   ]
+  },
+  {
+   "pv": "tpFib",
+   "ea": "InpTpFibPct",
+   "was": 161.8,
+   "now": 161.8,
+   "why": "no clear gain (best 171.8: 4.33 vs 3.94) - kept",
+   "mins": 2.7,
+   "p_was": "+63,325",
+   "p_now": "+63,325",
+   "table": [
+    {
+     "InpTpFibPct": "101.8",
+     "Profit": "34576.00",
+     "Profit Factor": "1.119693",
+     "Equity DD %": "0.3141",
+     "Trades": "357",
+     "Result": "1.10",
+     "smooth": 1.485
+    },
+    {
+     "InpTpFibPct": "111.8",
+     "Profit": "55856.05",
+     "Profit Factor": "1.249900",
+     "Equity DD %": "0.2965",
+     "Trades": "501",
+     "Result": "1.87",
+     "smooth": 1.6366666666666667
+    },
+    {
+     "InpTpFibPct": "121.8",
+     "Profit": "29254.59",
+     "Profit Factor": "1.268165",
+     "Equity DD %": "0.1506",
+     "Trades": "677",
+     "Result": "1.94",
+     "smooth": 1.9233333333333331
+    },
+    {
+     "InpTpFibPct": "131.8",
+     "Profit": "28687.48",
+     "Profit Factor": "1.252572",
+     "Equity DD %": "0.1463",
+     "Trades": "674",
+     "Result": "1.96",
+     "smooth": 2.0166666666666666
+    },
+    {
+     "InpTpFibPct": "141.8",
+     "Profit": "38012.83",
+     "Profit Factor": "1.314873",
+     "Equity DD %": "0.1765",
+     "Trades": "667",
+     "Result": "2.15",
+     "smooth": 2.3333333333333335
+    },
+    {
+     "InpTpFibPct": "151.8",
+     "Profit": "48522.12",
+     "Profit Factor": "1.386842",
+     "Equity DD %": "0.1674",
+     "Trades": "657",
+     "Result": "2.89",
+     "smooth": 3.1966666666666668
+    },
+    {
+     "InpTpFibPct": "161.8",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 3.936666666666667
+    },
+    {
+     "InpTpFibPct": "171.8",
+     "Profit": "62313.34",
+     "Profit Factor": "1.422597",
+     "Equity DD %": "0.1420",
+     "Trades": "637",
+     "Result": "4.37",
+     "smooth": 4.326666666666667
+    },
+    {
+     "InpTpFibPct": "181.8",
+     "Profit": "64914.14",
+     "Profit Factor": "1.413617",
+     "Equity DD %": "0.1589",
+     "Trades": "620",
+     "Result": "4.06",
+     "smooth": 4.196666666666666
+    },
+    {
+     "InpTpFibPct": "191.8",
+     "Profit": "64348.44",
+     "Profit Factor": "1.377929",
+     "Equity DD %": "0.1538",
+     "Trades": "608",
+     "Result": "4.16",
+     "smooth": 3.4299999999999997
+    },
+    {
+     "InpTpFibPct": "201.8",
+     "Profit": "43819.65",
+     "Profit Factor": "1.226631",
+     "Equity DD %": "0.2113",
+     "Trades": "583",
+     "Result": "2.07",
+     "smooth": 2.7433333333333336
+    },
+    {
+     "InpTpFibPct": "211.8",
+     "Profit": "42065.85",
+     "Profit Factor": "1.203602",
+     "Equity DD %": "0.2090",
+     "Trades": "572",
+     "Result": "2.00",
+     "smooth": 2.03
+    },
+    {
+     "InpTpFibPct": "221.8",
+     "Profit": "49339.59",
+     "Profit Factor": "1.235478",
+     "Equity DD %": "0.2434",
+     "Trades": "558",
+     "Result": "2.02",
+     "smooth": 1.6633333333333333
+    },
+    {
+     "InpTpFibPct": "231.8",
+     "Profit": "33459.39",
+     "Profit Factor": "1.147718",
+     "Equity DD %": "0.3434",
+     "Trades": "537",
+     "Result": "0.97",
+     "smooth": 1.3066666666666666
+    },
+    {
+     "InpTpFibPct": "241.8",
+     "Profit": "30135.69",
+     "Profit Factor": "1.127290",
+     "Equity DD %": "0.3217",
+     "Trades": "526",
+     "Result": "0.93",
+     "smooth": 0.96
+    },
+    {
+     "InpTpFibPct": "251.8",
+     "Profit": "30748.99",
+     "Profit Factor": "1.125785",
+     "Equity DD %": "0.3117",
+     "Trades": "518",
+     "Result": "0.98",
+     "smooth": 1.0666666666666667
+    },
+    {
+     "InpTpFibPct": "261.8",
+     "Profit": "35615.99",
+     "Profit Factor": "1.142417",
+     "Equity DD %": "0.2748",
+     "Trades": "512",
+     "Result": "1.29",
+     "smooth": 1.1866666666666668
+    },
+    {
+     "InpTpFibPct": "271.8",
+     "Profit": "36490.95",
+     "Profit Factor": "1.143181",
+     "Equity DD %": "0.2812",
+     "Trades": "502",
+     "Result": "1.29",
+     "smooth": 1.21
+    },
+    {
+     "InpTpFibPct": "281.8",
+     "Profit": "30589.85",
+     "Profit Factor": "1.114701",
+     "Equity DD %": "0.2894",
+     "Trades": "492",
+     "Result": "1.05",
+     "smooth": 1.2266666666666668
+    },
+    {
+     "InpTpFibPct": "291.8",
+     "Profit": "35766.45",
+     "Profit Factor": "1.133186",
+     "Equity DD %": "0.2663",
+     "Trades": "483",
+     "Result": "1.34",
+     "smooth": 1.0066666666666666
+    },
+    {
+     "InpTpFibPct": "301.8",
+     "Profit": "16151.05",
+     "Profit Factor": "1.057155",
+     "Equity DD %": "0.2561",
+     "Trades": "468",
+     "Result": "0.63",
+     "smooth": 0.9850000000000001
+    }
+   ]
+  },
+  {
+   "pv": "tpPart",
+   "ea": "InpTpPartPct",
+   "was": 0.8,
+   "now": 0.8,
+   "why": "no clear gain (best 0.1: 4.55 vs 4.55) - kept",
+   "mins": 1.8,
+   "p_was": "+63,325",
+   "p_now": "+63,325",
+   "table": [
+    {
+     "InpTpPartPct": "0.1",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartPct": "0.2",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartPct": "0.3",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartPct": "0.4",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartPct": "0.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartPct": "0.6",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartPct": "0.7",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartPct": "0.8",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartPct": "0.9",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartPct": "1.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    }
+   ]
+  },
+  {
+   "pv": "tpPartTr",
+   "ea": "InpTpPartTrailUsd",
+   "was": 2,
+   "now": 2.0,
+   "why": "no clear gain (best 0.5: 4.55 vs 4.55) - kept",
+   "mins": 1.9,
+   "p_was": "+63,325",
+   "p_now": "?",
+   "table": [
+    {
+     "InpTpPartTrailUsd": "0.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartTrailUsd": "1.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartTrailUsd": "1.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartTrailUsd": "2.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartTrailUsd": "2.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartTrailUsd": "3.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartTrailUsd": "3.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartTrailUsd": "4.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartTrailUsd": "4.5",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpPartTrailUsd": "5.0",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    }
+   ]
+  },
+  {
+   "pv": "tpNoFix",
+   "ea": "InpTpNoFixSkip",
+   "was": "Use the normal TP1",
+   "now": "Use the normal TP1",
+   "why": "the chart's value is already the best",
+   "mins": 0.9,
+   "p_was": "+63,325",
+   "p_now": "+63,325",
+   "table": [
+    {
+     "InpTpNoFixSkip": "false",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    },
+    {
+     "InpTpNoFixSkip": "true",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.55
+    }
+   ]
+  },
+  {
+   "pv": "iSlPips",
+   "ea": "InpSlPips",
+   "was": 34,
+   "now": 36.0,
+   "why": "better: score 4.91 vs 4.65 (with neighbours), profit +67,665 vs +63,325",
+   "mins": 2.6,
+   "p_was": "+63,325",
+   "p_now": "+67,665",
+   "table": [
+    {
+     "InpSlPips": "20",
+     "Profit": "37629.53",
+     "Profit Factor": "1.146020",
+     "Equity DD %": "0.2443",
+     "Trades": "879",
+     "Result": "1.54",
+     "smooth": 1.875
+    },
+    {
+     "InpSlPips": "22",
+     "Profit": "52157.23",
+     "Profit Factor": "1.226103",
+     "Equity DD %": "0.2349",
+     "Trades": "844",
+     "Result": "2.21",
+     "smooth": 1.9666666666666668
+    },
+    {
+     "InpSlPips": "24",
+     "Profit": "49136.33",
+     "Profit Factor": "1.227459",
+     "Equity DD %": "0.2274",
+     "Trades": "808",
+     "Result": "2.15",
+     "smooth": 2.4633333333333334
+    },
+    {
+     "InpSlPips": "26",
+     "Profit": "63073.88",
+     "Profit Factor": "1.326659",
+     "Equity DD %": "0.2071",
+     "Trades": "788",
+     "Result": "3.03",
+     "smooth": 2.6833333333333336
+    },
+    {
+     "InpSlPips": "28",
+     "Profit": "70222.48",
+     "Profit Factor": "1.436928",
+     "Equity DD %": "0.2436",
+     "Trades": "745",
+     "Result": "2.87",
+     "smooth": 2.7733333333333334
+    },
+    {
+     "InpSlPips": "30",
+     "Profit": "65232.68",
+     "Profit Factor": "1.432690",
+     "Equity DD %": "0.2687",
+     "Trades": "705",
+     "Result": "2.42",
+     "smooth": 2.9333333333333336
+    },
+    {
+     "InpSlPips": "32",
+     "Profit": "63982.58",
+     "Profit Factor": "1.447330",
+     "Equity DD %": "0.1816",
+     "Trades": "681",
+     "Result": "3.51",
+     "smooth": 3.4933333333333336
+    },
+    {
+     "InpSlPips": "34",
+     "Profit": "63325.48",
+     "Profit Factor": "1.493260",
+     "Equity DD %": "0.1387",
+     "Trades": "649",
+     "Result": "4.55",
+     "smooth": 4.653333333333333
+    },
+    {
+     "InpSlPips": "36",
+     "Profit": "67665.18",
+     "Profit Factor": "1.580357",
+     "Equity DD %": "0.1142",
+     "Trades": "621",
+     "Result": "5.90",
+     "smooth": 4.906666666666666
+    },
+    {
+     "InpSlPips": "38",
+     "Profit": "54417.48",
+     "Profit Factor": "1.466891",
+     "Equity DD %": "0.1268",
+     "Trades": "590",
+     "Result": "4.27",
+     "smooth": 4.61
+    },
+    {
+     "InpSlPips": "40",
+     "Profit": "43685.68",
+     "Profit Factor": "1.396663",
+     "Equity DD %": "0.1190",
+     "Trades": "545",
+     "Result": "3.66",
+     "smooth": 4.1466666666666665
+    },
+    {
+     "InpSlPips": "42",
+     "Profit": "45740.13",
+     "Profit Factor": "1.462051",
+     "Equity DD %": "0.1011",
+     "Trades": "521",
+     "Result": "4.51",
+     "smooth": 3.9033333333333338
+    },
+    {
+     "InpSlPips": "44",
+     "Profit": "37451.93",
+     "Profit Factor": "1.409771",
+     "Equity DD %": "0.1056",
+     "Trades": "476",
+     "Result": "3.54",
+     "smooth": 3.69
+    },
+    {
+     "InpSlPips": "46",
+     "Profit": "33811.83",
+     "Profit Factor": "1.418869",
+     "Equity DD %": "0.1118",
+     "Trades": "429",
+     "Result": "3.02",
+     "smooth": 3.0966666666666662
+    },
+    {
+     "InpSlPips": "48",
+     "Profit": "31451.83",
+     "Profit Factor": "1.445178",
+     "Equity DD %": "0.1149",
+     "Trades": "394",
+     "Result": "2.73",
+     "smooth": 2.72
+    },
+    {
+     "InpSlPips": "50",
+     "Profit": "29817.73",
+     "Profit Factor": "1.458452",
+     "Equity DD %": "0.1235",
+     "Trades": "373",
+     "Result": "2.41",
+     "smooth": 2.34
+    },
+    {
+     "InpSlPips": "52",
+     "Profit": "25273.73",
+     "Profit Factor": "1.456052",
+     "Equity DD %": "0.1341",
+     "Trades": "332",
+     "Result": "1.88",
+     "smooth": 2.0166666666666666
+    },
+    {
+     "InpSlPips": "54",
+     "Profit": "21228.63",
+     "Profit Factor": "1.411782",
+     "Equity DD %": "0.1207",
+     "Trades": "302",
+     "Result": "1.76",
+     "smooth": 1.57
+    },
+    {
+     "InpSlPips": "56",
+     "Profit": "15925.43",
+     "Profit Factor": "1.351276",
+     "Equity DD %": "0.1491",
+     "Trades": "262",
+     "Result": "1.07",
+     "smooth": 1.3933333333333333
+    },
+    {
+     "InpSlPips": "58",
+     "Profit": "18866.63",
+     "Profit Factor": "1.505589",
+     "Equity DD %": "0.1391",
+     "Trades": "240",
+     "Result": "1.35",
+     "smooth": 1.2233333333333334
+    },
+    {
+     "InpSlPips": "60",
+     "Profit": "16068.03",
+     "Profit Factor": "1.478233",
+     "Equity DD %": "0.1288",
+     "Trades": "216",
+     "Result": "1.25",
+     "smooth": 1.3
+    }
+   ]
+  },
+  {
+   "pv": "iMaxRisk",
+   "ea": "InpMaxRiskUsd",
+   "was": 11,
+   "now": 20.0,
+   "why": "better: score 6.95 vs 4.10 (with neighbours), profit +177,318 vs +67,665",
+   "mins": 2.9,
+   "p_was": "+67,665",
+   "p_now": "+177,318",
+   "table": [
+    {
+     "InpMaxRiskUsd": "0",
+     "Profit": "219138.91",
+     "Profit Factor": "1.239685",
+     "Equity DD %": "0.8348",
+     "Trades": "1726",
+     "Result": "2.59",
+     "smooth": -499999998.705
+    },
+    {
+     "InpMaxRiskUsd": "1",
+     "Profit": "0.00",
+     "Profit Factor": "",
+     "Equity DD %": "0.0000",
+     "Trades": "0",
+     "Result": "-1000000000.00",
+     "smooth": -666666665.8033334
+    },
+    {
+     "InpMaxRiskUsd": "2",
+     "Profit": "0.00",
+     "Profit Factor": "",
+     "Equity DD %": "0.0000",
+     "Trades": "0",
+     "Result": "-1000000000.00",
+     "smooth": -1000000000.0
+    },
+    {
+     "InpMaxRiskUsd": "3",
+     "Profit": "0.00",
+     "Profit Factor": "",
+     "Equity DD %": "0.0000",
+     "Trades": "0",
+     "Result": "-1000000000.00",
+     "smooth": -1000000000.0
+    },
+    {
+     "InpMaxRiskUsd": "4",
+     "Profit": "0.00",
+     "Profit Factor": "",
+     "Equity DD %": "0.0000",
+     "Trades": "0",
+     "Result": "-1000000000.00",
+     "smooth": -1000000000.0
+    },
+    {
+     "InpMaxRiskUsd": "5",
+     "Profit": "0.00",
+     "Profit Factor": "",
+     "Equity DD %": "0.0000",
+     "Trades": "0",
+     "Result": "-1000000000.00",
+     "smooth": -999999998.3333334
+    },
+    {
+     "InpMaxRiskUsd": "6",
+     "Profit": "1399.40",
+     "Profit Factor": "9.919057",
+     "Equity DD %": "0.0093",
+     "Trades": "5",
+     "Result": "-999999995.00",
+     "smooth": -999999986.6666666
+    },
+    {
+     "InpMaxRiskUsd": "7",
+     "Profit": "3984.69",
+     "Profit Factor": "2.204762",
+     "Equity DD %": "0.0204",
+     "Trades": "35",
+     "Result": "-999999965.00",
+     "smooth": -666666653.1066667
+    },
+    {
+     "InpMaxRiskUsd": "8",
+     "Profit": "6168.53",
+     "Profit Factor": "1.305223",
+     "Equity DD %": "0.0906",
+     "Trades": "125",
+     "Result": "0.68",
+     "smooth": -333333320.87333333
+    },
+    {
+     "InpMaxRiskUsd": "9",
+     "Profit": "19306.23",
+     "Profit Factor": "1.465111",
+     "Equity DD %": "0.1133",
+     "Trades": "261",
+     "Result": "1.70",
+     "smooth": 1.8066666666666666
+    },
+    {
+     "InpMaxRiskUsd": "10",
+     "Profit": "34522.73",
+     "Profit Factor": "1.434563",
+     "Equity DD %": "0.1134",
+     "Trades": "429",
+     "Result": "3.04",
+     "smooth": 3.546666666666667
+    },
+    {
+     "InpMaxRiskUsd": "11",
+     "Profit": "67665.18",
+     "Profit Factor": "1.580357",
+     "Equity DD %": "0.1142",
+     "Trades": "621",
+     "Result": "5.90",
+     "smooth": 4.1033333333333335
+    },
+    {
+     "InpMaxRiskUsd": "12",
+     "Profit": "76223.03",
+     "Profit Factor": "1.412919",
+     "Equity DD %": "0.2248",
+     "Trades": "791",
+     "Result": "3.37",
+     "smooth": 4.333333333333333
+    },
+    {
+     "InpMaxRiskUsd": "13",
+     "Profit": "92798.27",
+     "Profit Factor": "1.382815",
+     "Equity DD %": "0.2474",
+     "Trades": "939",
+     "Result": "3.73",
+     "smooth": 4.16
+    },
+    {
+     "InpMaxRiskUsd": "14",
+     "Profit": "96252.37",
+     "Profit Factor": "1.296916",
+     "Equity DD %": "0.1779",
+     "Trades": "1103",
+     "Result": "5.38",
+     "smooth": 4.21
+    },
+    {
+     "InpMaxRiskUsd": "15",
+     "Profit": "79996.97",
+     "Profit Factor": "1.202241",
+     "Equity DD %": "0.2262",
+     "Trades": "1201",
+     "Result": "3.52",
+     "smooth": 4.056666666666667
+    },
+    {
+     "InpMaxRiskUsd": "16",
+     "Profit": "100396.07",
+     "Profit Factor": "1.228618",
+     "Equity DD %": "0.3048",
+     "Trades": "1290",
+     "Result": "3.27",
+     "smooth": 4.176666666666667
+    },
+    {
+     "InpMaxRiskUsd": "17",
+     "Profit": "128717.77",
+     "Profit Factor": "1.278982",
+     "Equity DD %": "0.2236",
+     "Trades": "1356",
+     "Result": "5.74",
+     "smooth": 5.046666666666667
+    },
+    {
+     "InpMaxRiskUsd": "18",
+     "Profit": "169292.51",
+     "Profit Factor": "1.347397",
+     "Equity DD %": "0.2757",
+     "Trades": "1432",
+     "Result": "6.13",
+     "smooth": 6.436666666666667
+    },
+    {
+     "InpMaxRiskUsd": "19",
+     "Profit": "181634.41",
+     "Profit Factor": "1.345189",
+     "Equity DD %": "0.2434",
+     "Trades": "1472",
+     "Result": "7.44",
+     "smooth": 6.676666666666667
+    },
+    {
+     "InpMaxRiskUsd": "20",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.95
+    }
+   ]
+  },
+  {
+   "pv": "iPartial",
+   "ea": "InpPartialPct",
+   "was": 0.95,
+   "now": 0.95,
+   "why": "no clear gain (best 1.00: 6.67 vs 6.57) - kept",
+   "mins": 3.2,
+   "p_was": "+177,318",
+   "p_now": "+177,318",
+   "table": [
+    {
+     "InpPartialPct": "0",
+     "Profit": "173141.60",
+     "Profit Factor": "1.277892",
+     "Equity DD %": "0.3808",
+     "Trades": "861",
+     "Result": "4.54",
+     "smooth": 4.575
+    },
+    {
+     "InpPartialPct": "0.05",
+     "Profit": "173361.39",
+     "Profit Factor": "1.279742",
+     "Equity DD %": "0.3749",
+     "Trades": "1499",
+     "Result": "4.61",
+     "smooth": 4.613333333333333
+    },
+    {
+     "InpPartialPct": "0.10",
+     "Profit": "173581.18",
+     "Profit Factor": "1.281613",
+     "Equity DD %": "0.3691",
+     "Trades": "1499",
+     "Result": "4.69",
+     "smooth": 4.69
+    },
+    {
+     "InpPartialPct": "0.15",
+     "Profit": "173800.97",
+     "Profit Factor": "1.283504",
+     "Equity DD %": "0.3632",
+     "Trades": "1499",
+     "Result": "4.77",
+     "smooth": 4.773333333333333
+    },
+    {
+     "InpPartialPct": "0.20",
+     "Profit": "174020.76",
+     "Profit Factor": "1.285416",
+     "Equity DD %": "0.3574",
+     "Trades": "1499",
+     "Result": "4.86",
+     "smooth": 4.8566666666666665
+    },
+    {
+     "InpPartialPct": "0.25",
+     "Profit": "174240.55",
+     "Profit Factor": "1.287348",
+     "Equity DD %": "0.3516",
+     "Trades": "1499",
+     "Result": "4.94",
+     "smooth": 4.943333333333334
+    },
+    {
+     "InpPartialPct": "0.30",
+     "Profit": "174460.34",
+     "Profit Factor": "1.289302",
+     "Equity DD %": "0.3457",
+     "Trades": "1499",
+     "Result": "5.03",
+     "smooth": 5.033333333333334
+    },
+    {
+     "InpPartialPct": "0.35",
+     "Profit": "174680.13",
+     "Profit Factor": "1.291278",
+     "Equity DD %": "0.3399",
+     "Trades": "1499",
+     "Result": "5.13",
+     "smooth": 5.126666666666666
+    },
+    {
+     "InpPartialPct": "0.40",
+     "Profit": "174899.92",
+     "Profit Factor": "1.293276",
+     "Equity DD %": "0.3341",
+     "Trades": "1499",
+     "Result": "5.22",
+     "smooth": 5.223333333333334
+    },
+    {
+     "InpPartialPct": "0.45",
+     "Profit": "175119.71",
+     "Profit Factor": "1.295297",
+     "Equity DD %": "0.3282",
+     "Trades": "1499",
+     "Result": "5.32",
+     "smooth": 5.323333333333333
+    },
+    {
+     "InpPartialPct": "0.50",
+     "Profit": "175339.50",
+     "Profit Factor": "1.297340",
+     "Equity DD %": "0.3224",
+     "Trades": "1499",
+     "Result": "5.43",
+     "smooth": 5.426666666666667
+    },
+    {
+     "InpPartialPct": "0.55",
+     "Profit": "175559.29",
+     "Profit Factor": "1.299407",
+     "Equity DD %": "0.3166",
+     "Trades": "1499",
+     "Result": "5.53",
+     "smooth": 5.533333333333334
+    },
+    {
+     "InpPartialPct": "0.60",
+     "Profit": "175779.08",
+     "Profit Factor": "1.301497",
+     "Equity DD %": "0.3107",
+     "Trades": "1499",
+     "Result": "5.64",
+     "smooth": 5.6433333333333335
+    },
+    {
+     "InpPartialPct": "0.65",
+     "Profit": "175998.87",
+     "Profit Factor": "1.303611",
+     "Equity DD %": "0.3049",
+     "Trades": "1499",
+     "Result": "5.76",
+     "smooth": 5.760000000000001
+    },
+    {
+     "InpPartialPct": "0.70",
+     "Profit": "176218.66",
+     "Profit Factor": "1.305750",
+     "Equity DD %": "0.2991",
+     "Trades": "1499",
+     "Result": "5.88",
+     "smooth": 5.88
+    },
+    {
+     "InpPartialPct": "0.75",
+     "Profit": "176438.45",
+     "Profit Factor": "1.307913",
+     "Equity DD %": "0.2932",
+     "Trades": "1499",
+     "Result": "6.00",
+     "smooth": 6.003333333333333
+    },
+    {
+     "InpPartialPct": "0.80",
+     "Profit": "176658.24",
+     "Profit Factor": "1.310102",
+     "Equity DD %": "0.2874",
+     "Trades": "1499",
+     "Result": "6.13",
+     "smooth": 6.13
+    },
+    {
+     "InpPartialPct": "0.85",
+     "Profit": "176878.03",
+     "Profit Factor": "1.312317",
+     "Equity DD %": "0.2816",
+     "Trades": "1499",
+     "Result": "6.26",
+     "smooth": 6.25
+    },
+    {
+     "InpPartialPct": "0.90",
+     "Profit": "177097.82",
+     "Profit Factor": "1.314558",
+     "Equity DD %": "0.2777",
+     "Trades": "1499",
+     "Result": "6.36",
+     "smooth": 6.359999999999999
+    },
+    {
+     "InpPartialPct": "0.95",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.566666666666666
+    },
+    {
+     "InpPartialPct": "1.00",
+     "Profit": "186072.20",
+     "Profit Factor": "1.324225",
+     "Equity DD %": "0.2697",
+     "Trades": "897",
+     "Result": "6.88",
+     "smooth": 6.67
+    }
+   ]
+  },
+  {
+   "pv": "iBePct",
+   "ea": "InpBeTpPct",
+   "was": 1,
+   "now": 1.0,
+   "why": "no clear gain (best 0.95: 6.40 vs 6.37) - kept",
+   "mins": 3.2,
+   "p_was": "+177,318",
+   "p_now": "?",
+   "table": [
+    {
+     "InpBeTpPct": "0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 5.8100000000000005
+    },
+    {
+     "InpBeTpPct": "0.05",
+     "Profit": "130794.68",
+     "Profit Factor": "1.279278",
+     "Equity DD %": "0.2497",
+     "Trades": "1462",
+     "Result": "5.16",
+     "smooth": 5.419999999999999
+    },
+    {
+     "InpBeTpPct": "0.10",
+     "Profit": "134215.58",
+     "Profit Factor": "1.287216",
+     "Equity DD %": "0.2846",
+     "Trades": "1458",
+     "Result": "4.64",
+     "smooth": 4.703333333333333
+    },
+    {
+     "InpBeTpPct": "0.15",
+     "Profit": "124513.78",
+     "Profit Factor": "1.261767",
+     "Equity DD %": "0.2845",
+     "Trades": "1452",
+     "Result": "4.31",
+     "smooth": 4.319999999999999
+    },
+    {
+     "InpBeTpPct": "0.20",
+     "Profit": "120450.98",
+     "Profit Factor": "1.248574",
+     "Equity DD %": "0.2962",
+     "Trades": "1454",
+     "Result": "4.01",
+     "smooth": 4.103333333333333
+    },
+    {
+     "InpBeTpPct": "0.25",
+     "Profit": "119848.28",
+     "Profit Factor": "1.244527",
+     "Equity DD %": "0.3005",
+     "Trades": "1458",
+     "Result": "3.99",
+     "smooth": 3.936666666666667
+    },
+    {
+     "InpBeTpPct": "0.30",
+     "Profit": "119585.88",
+     "Profit Factor": "1.241102",
+     "Equity DD %": "0.3134",
+     "Trades": "1460",
+     "Result": "3.81",
+     "smooth": 3.89
+    },
+    {
+     "InpBeTpPct": "0.35",
+     "Profit": "127030.28",
+     "Profit Factor": "1.257353",
+     "Equity DD %": "0.3227",
+     "Trades": "1455",
+     "Result": "3.87",
+     "smooth": 3.61
+    },
+    {
+     "InpBeTpPct": "0.40",
+     "Profit": "128080.48",
+     "Profit Factor": "1.255307",
+     "Equity DD %": "0.3995",
+     "Trades": "1451",
+     "Result": "3.15",
+     "smooth": 3.48
+    },
+    {
+     "InpBeTpPct": "0.45",
+     "Profit": "133848.98",
+     "Profit Factor": "1.266491",
+     "Equity DD %": "0.3848",
+     "Trades": "1457",
+     "Result": "3.42",
+     "smooth": 3.296666666666667
+    },
+    {
+     "InpBeTpPct": "0.50",
+     "Profit": "129826.98",
+     "Profit Factor": "1.254081",
+     "Equity DD %": "0.3840",
+     "Trades": "1456",
+     "Result": "3.32",
+     "smooth": 3.373333333333333
+    },
+    {
+     "InpBeTpPct": "0.55",
+     "Profit": "136433.72",
+     "Profit Factor": "1.265180",
+     "Equity DD %": "0.3966",
+     "Trades": "1458",
+     "Result": "3.38",
+     "smooth": 3.4766666666666666
+    },
+    {
+     "InpBeTpPct": "0.60",
+     "Profit": "142896.12",
+     "Profit Factor": "1.275922",
+     "Equity DD %": "0.3767",
+     "Trades": "1460",
+     "Result": "3.73",
+     "smooth": 3.716666666666667
+    },
+    {
+     "InpBeTpPct": "0.65",
+     "Profit": "154095.62",
+     "Profit Factor": "1.295076",
+     "Equity DD %": "0.3738",
+     "Trades": "1471",
+     "Result": "4.04",
+     "smooth": 3.9333333333333336
+    },
+    {
+     "InpBeTpPct": "0.70",
+     "Profit": "152258.21",
+     "Profit Factor": "1.287792",
+     "Equity DD %": "0.3710",
+     "Trades": "1474",
+     "Result": "4.03",
+     "smooth": 4.526666666666666
+    },
+    {
+     "InpBeTpPct": "0.75",
+     "Profit": "163889.26",
+     "Profit Factor": "1.310970",
+     "Equity DD %": "0.2969",
+     "Trades": "1479",
+     "Result": "5.51",
+     "smooth": 4.953333333333333
+    },
+    {
+     "InpBeTpPct": "0.80",
+     "Profit": "169511.01",
+     "Profit Factor": "1.317551",
+     "Equity DD %": "0.3180",
+     "Trades": "1480",
+     "Result": "5.32",
+     "smooth": 5.69
+    },
+    {
+     "InpBeTpPct": "0.85",
+     "Profit": "171232.71",
+     "Profit Factor": "1.316741",
+     "Equity DD %": "0.2738",
+     "Trades": "1482",
+     "Result": "6.24",
+     "smooth": 6.003333333333334
+    },
+    {
+     "InpBeTpPct": "0.90",
+     "Profit": "177054.31",
+     "Profit Factor": "1.324340",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.45",
+     "smooth": 6.323333333333333
+    },
+    {
+     "InpBeTpPct": "0.95",
+     "Profit": "172173.91",
+     "Profit Factor": "1.309294",
+     "Equity DD %": "0.2737",
+     "Trades": "1492",
+     "Result": "6.28",
+     "smooth": 6.396666666666667
+    },
+    {
+     "InpBeTpPct": "1.00",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.37
+    }
+   ]
+  },
+  {
+   "pv": "iTp1Be",
+   "ea": "InpTp1Be",
+   "was": true,
+   "now": true,
+   "why": "no clear gain (best false: 6.46 vs 6.46) - kept",
+   "mins": 1.1,
+   "p_was": "+177,318",
+   "p_now": "+177,318",
+   "table": [
+    {
+     "InpTp1Be": "false",
+     "Profit": "177275.51",
+     "Profit Factor": "1.316726",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTp1Be": "true",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    }
+   ]
+  },
+  {
+   "pv": "iLTrail",
+   "ea": "InpLongTrailUsd",
+   "was": 1,
+   "now": 1.0,
+   "why": "no clear gain (best 3.0: 6.52 vs 6.45) - kept",
+   "mins": 2.2,
+   "p_was": "+177,318",
+   "p_now": "?",
+   "table": [
+    {
+     "InpLongTrailUsd": "0.5",
+     "Profit": "177065.91",
+     "Profit Factor": "1.316379",
+     "Equity DD %": "0.2741",
+     "Trades": "1499",
+     "Result": "6.44",
+     "smooth": 6.45
+    },
+    {
+     "InpLongTrailUsd": "1.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.45
+    },
+    {
+     "InpLongTrailUsd": "1.5",
+     "Profit": "176974.81",
+     "Profit Factor": "1.316213",
+     "Equity DD %": "0.2739",
+     "Trades": "1499",
+     "Result": "6.45",
+     "smooth": 6.446666666666666
+    },
+    {
+     "InpLongTrailUsd": "2.0",
+     "Profit": "176732.81",
+     "Profit Factor": "1.315780",
+     "Equity DD %": "0.2741",
+     "Trades": "1499",
+     "Result": "6.43",
+     "smooth": 6.473333333333334
+    },
+    {
+     "InpLongTrailUsd": "2.5",
+     "Profit": "178485.41",
+     "Profit Factor": "1.318911",
+     "Equity DD %": "0.2722",
+     "Trades": "1499",
+     "Result": "6.54",
+     "smooth": 6.496666666666666
+    },
+    {
+     "InpLongTrailUsd": "3.0",
+     "Profit": "178072.41",
+     "Profit Factor": "1.318171",
+     "Equity DD %": "0.2723",
+     "Trades": "1499",
+     "Result": "6.52",
+     "smooth": 6.523333333333333
+    },
+    {
+     "InpLongTrailUsd": "3.5",
+     "Profit": "177941.05",
+     "Profit Factor": "1.317932",
+     "Equity DD %": "0.2725",
+     "Trades": "1499",
+     "Result": "6.51",
+     "smooth": 6.513333333333333
+    },
+    {
+     "InpLongTrailUsd": "4.0",
+     "Profit": "177792.95",
+     "Profit Factor": "1.317662",
+     "Equity DD %": "0.2726",
+     "Trades": "1499",
+     "Result": "6.51",
+     "smooth": 6.46
+    },
+    {
+     "InpLongTrailUsd": "4.5",
+     "Profit": "173831.05",
+     "Profit Factor": "1.310578",
+     "Equity DD %": "0.2728",
+     "Trades": "1495",
+     "Result": "6.36",
+     "smooth": 6.41
+    },
+    {
+     "InpLongTrailUsd": "5.0",
+     "Profit": "174144.35",
+     "Profit Factor": "1.311136",
+     "Equity DD %": "0.2730",
+     "Trades": "1495",
+     "Result": "6.36",
+     "smooth": 6.36
+    }
+   ]
+  },
+  {
+   "pv": "iSTrail",
+   "ea": "InpShortTrailUsd",
+   "was": 2,
+   "now": 2.0,
+   "why": "no clear gain (best 0.5: 6.49 vs 6.46) - kept",
+   "mins": 2.3,
+   "p_was": "+177,318",
+   "p_now": "?",
+   "table": [
+    {
+     "InpShortTrailUsd": "0.5",
+     "Profit": "177966.31",
+     "Profit Factor": "1.318028",
+     "Equity DD %": "0.2737",
+     "Trades": "1503",
+     "Result": "6.49",
+     "smooth": 6.49
+    },
+    {
+     "InpShortTrailUsd": "1.0",
+     "Profit": "178132.01",
+     "Profit Factor": "1.318324",
+     "Equity DD %": "0.2737",
+     "Trades": "1503",
+     "Result": "6.49",
+     "smooth": 6.483333333333333
+    },
+    {
+     "InpShortTrailUsd": "1.5",
+     "Profit": "177595.11",
+     "Profit Factor": "1.317322",
+     "Equity DD %": "0.2737",
+     "Trades": "1503",
+     "Result": "6.47",
+     "smooth": 6.473333333333334
+    },
+    {
+     "InpShortTrailUsd": "2.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.463333333333334
+    },
+    {
+     "InpShortTrailUsd": "2.5",
+     "Profit": "177124.46",
+     "Profit Factor": "1.316479",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.453333333333333
+    },
+    {
+     "InpShortTrailUsd": "3.0",
+     "Profit": "176831.11",
+     "Profit Factor": "1.315927",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.44",
+     "smooth": 6.44
+    },
+    {
+     "InpShortTrailUsd": "3.5",
+     "Profit": "176211.86",
+     "Profit Factor": "1.314790",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.42",
+     "smooth": 6.426666666666667
+    },
+    {
+     "InpShortTrailUsd": "4.0",
+     "Profit": "176228.76",
+     "Profit Factor": "1.314814",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.42",
+     "smooth": 6.376666666666666
+    },
+    {
+     "InpShortTrailUsd": "4.5",
+     "Profit": "172534.16",
+     "Profit Factor": "1.307995",
+     "Equity DD %": "0.2737",
+     "Trades": "1495",
+     "Result": "6.29",
+     "smooth": 6.330000000000001
+    },
+    {
+     "InpShortTrailUsd": "5.0",
+     "Profit": "172231.56",
+     "Profit Factor": "1.307449",
+     "Equity DD %": "0.2737",
+     "Trades": "1495",
+     "Result": "6.28",
+     "smooth": 6.285
+    }
+   ]
+  },
+  {
+   "pv": "iTrAtr",
+   "ea": "InpTrailAtr",
+   "was": 0.2,
+   "now": 0.2,
+   "why": "no clear gain (best 0.1: 6.46 vs 6.46) - kept",
+   "mins": 3.2,
+   "p_was": "+177,318",
+   "p_now": "+177,318",
+   "table": [
+    {
+     "InpTrailAtr": "0.1",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "0.2",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "0.3",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "0.4",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "0.5",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "0.6",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "0.7",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "0.8",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "0.9",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "1.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "1.1",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "1.2",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "1.3",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "1.4",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "1.5",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "1.6",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "1.7",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "1.8",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "1.9",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailAtr": "2.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    }
+   ]
+  },
+  {
+   "pv": "pkGap",
+   "ea": "InpTrailGapUsd",
+   "was": 0.1,
+   "now": 0.1,
+   "why": "the chart's value is already the best",
+   "mins": 2.3,
+   "p_was": "+177,318",
+   "p_now": "?",
+   "table": [
+    {
+     "InpTrailGapUsd": "0.10",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailGapUsd": "0.35",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailGapUsd": "0.60",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailGapUsd": "0.85",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailGapUsd": "1.10",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailGapUsd": "1.35",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailGapUsd": "1.60",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailGapUsd": "1.85",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpTrailGapUsd": "2.10",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    }
+   ]
+  },
+  {
+   "pv": "pkLockAt",
+   "ea": "InpLockAtUsd",
+   "was": 0,
+   "now": 0.0,
+   "why": "no clear gain (best 7.5: 6.46 vs 5.84) - kept",
+   "mins": 4.1,
+   "p_was": "+177,318",
+   "p_now": "+177,318",
+   "table": [
+    {
+     "InpLockAtUsd": "0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 5.84
+    },
+    {
+     "InpLockAtUsd": "0.5",
+     "Profit": "166027.07",
+     "Profit Factor": "1.296281",
+     "Equity DD %": "0.3175",
+     "Trades": "1496",
+     "Result": "5.22",
+     "smooth": 5.633333333333333
+    },
+    {
+     "InpLockAtUsd": "1.0",
+     "Profit": "166027.07",
+     "Profit Factor": "1.296281",
+     "Equity DD %": "0.3175",
+     "Trades": "1496",
+     "Result": "5.22",
+     "smooth": 5.22
+    },
+    {
+     "InpLockAtUsd": "1.5",
+     "Profit": "166027.07",
+     "Profit Factor": "1.296281",
+     "Equity DD %": "0.3175",
+     "Trades": "1496",
+     "Result": "5.22",
+     "smooth": 5.22
+    },
+    {
+     "InpLockAtUsd": "2.0",
+     "Profit": "166027.07",
+     "Profit Factor": "1.296281",
+     "Equity DD %": "0.3175",
+     "Trades": "1496",
+     "Result": "5.22",
+     "smooth": 5.226666666666667
+    },
+    {
+     "InpLockAtUsd": "2.5",
+     "Profit": "166874.51",
+     "Profit Factor": "1.297799",
+     "Equity DD %": "0.3175",
+     "Trades": "1497",
+     "Result": "5.24",
+     "smooth": 5.233333333333333
+    },
+    {
+     "InpLockAtUsd": "3.0",
+     "Profit": "166874.51",
+     "Profit Factor": "1.297799",
+     "Equity DD %": "0.3175",
+     "Trades": "1497",
+     "Result": "5.24",
+     "smooth": 5.24
+    },
+    {
+     "InpLockAtUsd": "3.5",
+     "Profit": "166874.51",
+     "Profit Factor": "1.297799",
+     "Equity DD %": "0.3175",
+     "Trades": "1497",
+     "Result": "5.24",
+     "smooth": 5.24
+    },
+    {
+     "InpLockAtUsd": "4.0",
+     "Profit": "166839.21",
+     "Profit Factor": "1.297717",
+     "Equity DD %": "0.3175",
+     "Trades": "1497",
+     "Result": "5.24",
+     "smooth": 5.253333333333334
+    },
+    {
+     "InpLockAtUsd": "4.5",
+     "Profit": "168041.01",
+     "Profit Factor": "1.299862",
+     "Equity DD %": "0.3174",
+     "Trades": "1498",
+     "Result": "5.28",
+     "smooth": 5.266666666666667
+    },
+    {
+     "InpLockAtUsd": "5.0",
+     "Profit": "168041.01",
+     "Profit Factor": "1.299862",
+     "Equity DD %": "0.3174",
+     "Trades": "1498",
+     "Result": "5.28",
+     "smooth": 5.28
+    },
+    {
+     "InpLockAtUsd": "5.5",
+     "Profit": "168041.01",
+     "Profit Factor": "1.299862",
+     "Equity DD %": "0.3174",
+     "Trades": "1498",
+     "Result": "5.28",
+     "smooth": 5.613333333333333
+    },
+    {
+     "InpLockAtUsd": "6.0",
+     "Profit": "172423.01",
+     "Profit Factor": "1.309350",
+     "Equity DD %": "0.2737",
+     "Trades": "1498",
+     "Result": "6.28",
+     "smooth": 6.0
+    },
+    {
+     "InpLockAtUsd": "6.5",
+     "Profit": "176643.21",
+     "Profit Factor": "1.316970",
+     "Equity DD %": "0.2737",
+     "Trades": "1501",
+     "Result": "6.44",
+     "smooth": 6.3933333333333335
+    },
+    {
+     "InpLockAtUsd": "7.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.453333333333333
+    },
+    {
+     "InpLockAtUsd": "7.5",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockAtUsd": "8.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockAtUsd": "8.5",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockAtUsd": "9.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockAtUsd": "9.5",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockAtUsd": "10.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    }
+   ]
+  },
+  {
+   "pv": "pkLockUsd",
+   "ea": "InpLockUsd",
+   "was": 0,
+   "now": 0.0,
+   "why": "the chart's value is already the best",
+   "mins": 2.8,
+   "p_was": "+177,318",
+   "p_now": "+177,318",
+   "table": [
+    {
+     "InpLockUsd": "0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockUsd": "0.5",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockUsd": "1.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockUsd": "1.5",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockUsd": "2.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockUsd": "2.5",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockUsd": "3.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockUsd": "3.5",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockUsd": "4.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockUsd": "4.5",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpLockUsd": "5.0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    }
+   ]
+  },
+  {
+   "pv": "iCloseM",
+   "ea": "InpCloseLossMins",
+   "was": 1,
+   "now": 1,
+   "why": "no clear gain (best 0: 6.68 vs 6.63) - kept",
+   "mins": 2.7,
+   "p_was": "+177,318",
+   "p_now": "+177,318",
+   "table": [
+    {
+     "InpCloseLossMins": "0",
+     "Profit": "189201.66",
+     "Profit Factor": "1.338185",
+     "Equity DD %": "0.2739",
+     "Trades": "1499",
+     "Result": "6.90",
+     "smooth": 6.68
+    },
+    {
+     "InpCloseLossMins": "1",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.633333333333333
+    },
+    {
+     "InpCloseLossMins": "2",
+     "Profit": "179467.82",
+     "Profit Factor": "1.321100",
+     "Equity DD %": "0.2737",
+     "Trades": "1498",
+     "Result": "6.54",
+     "smooth": 6.56
+    },
+    {
+     "InpCloseLossMins": "3",
+     "Profit": "183261.68",
+     "Profit Factor": "1.328004",
+     "Equity DD %": "0.2737",
+     "Trades": "1497",
+     "Result": "6.68",
+     "smooth": 6.6000000000000005
+    },
+    {
+     "InpCloseLossMins": "4",
+     "Profit": "180541.53",
+     "Profit Factor": "1.322844",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.58",
+     "smooth": 6.583333333333333
+    },
+    {
+     "InpCloseLossMins": "5",
+     "Profit": "178052.18",
+     "Profit Factor": "1.318227",
+     "Equity DD %": "0.2737",
+     "Trades": "1496",
+     "Result": "6.49",
+     "smooth": 6.493333333333333
+    },
+    {
+     "InpCloseLossMins": "6",
+     "Profit": "175852.08",
+     "Profit Factor": "1.313882",
+     "Equity DD %": "0.2737",
+     "Trades": "1494",
+     "Result": "6.41",
+     "smooth": 6.390000000000001
+    },
+    {
+     "InpCloseLossMins": "7",
+     "Profit": "172087.58",
+     "Profit Factor": "1.306388",
+     "Equity DD %": "0.2737",
+     "Trades": "1492",
+     "Result": "6.27",
+     "smooth": 6.329999999999999
+    },
+    {
+     "InpCloseLossMins": "8",
+     "Profit": "173031.58",
+     "Profit Factor": "1.308560",
+     "Equity DD %": "0.2737",
+     "Trades": "1492",
+     "Result": "6.31",
+     "smooth": 6.25
+    },
+    {
+     "InpCloseLossMins": "9",
+     "Profit": "169209.58",
+     "Profit Factor": "1.301086",
+     "Equity DD %": "0.2737",
+     "Trades": "1491",
+     "Result": "6.17",
+     "smooth": 6.213333333333334
+    },
+    {
+     "InpCloseLossMins": "10",
+     "Profit": "168894.28",
+     "Profit Factor": "1.299552",
+     "Equity DD %": "0.2737",
+     "Trades": "1493",
+     "Result": "6.16",
+     "smooth": 6.165
+    }
+   ]
+  },
+  {
+   "pv": "iMinTp",
+   "ea": "InpMinTpPips",
+   "was": 1,
+   "now": 10.0,
+   "why": "better: score 6.59 vs 6.46 (with neighbours), profit +181,012 vs +177,318",
+   "mins": 2.6,
+   "p_was": "+177,318",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpMinTpPips": "0",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpMinTpPips": "1",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpMinTpPips": "2",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpMinTpPips": "3",
+     "Profit": "177317.61",
+     "Profit Factor": "1.316826",
+     "Equity DD %": "0.2737",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.419999999999999
+    },
+    {
+     "InpMinTpPips": "4",
+     "Profit": "173861.61",
+     "Profit Factor": "1.309976",
+     "Equity DD %": "0.2737",
+     "Trades": "1496",
+     "Result": "6.34",
+     "smooth": 6.38
+    },
+    {
+     "InpMinTpPips": "5",
+     "Profit": "173861.61",
+     "Profit Factor": "1.309976",
+     "Equity DD %": "0.2737",
+     "Trades": "1496",
+     "Result": "6.34",
+     "smooth": 6.3500000000000005
+    },
+    {
+     "InpMinTpPips": "6",
+     "Profit": "174790.71",
+     "Profit Factor": "1.311652",
+     "Equity DD %": "0.2737",
+     "Trades": "1496",
+     "Result": "6.37",
+     "smooth": 6.376666666666666
+    },
+    {
+     "InpMinTpPips": "7",
+     "Profit": "176125.41",
+     "Profit Factor": "1.314033",
+     "Equity DD %": "0.2737",
+     "Trades": "1496",
+     "Result": "6.42",
+     "smooth": 6.37
+    },
+    {
+     "InpMinTpPips": "8",
+     "Profit": "173383.91",
+     "Profit Factor": "1.308358",
+     "Equity DD %": "0.2738",
+     "Trades": "1493",
+     "Result": "6.32",
+     "smooth": 6.44
+    },
+    {
+     "InpMinTpPips": "9",
+     "Profit": "180548.72",
+     "Profit Factor": "1.321604",
+     "Equity DD %": "0.2738",
+     "Trades": "1490",
+     "Result": "6.58",
+     "smooth": 6.5
+    },
+    {
+     "InpMinTpPips": "10",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.59
+    }
+   ]
+  },
+  {
+   "pv": "iLTpP",
+   "ea": "InpLongTpPips",
+   "was": 0,
+   "now": 0.0,
+   "why": "the chart's value is already the best",
+   "mins": 2.6,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpLongTpPips": "0",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    },
+    {
+     "InpLongTpPips": "1",
+     "Profit": "180976.32",
+     "Profit Factor": "1.322369",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.599999999999999
+    },
+    {
+     "InpLongTpPips": "2",
+     "Profit": "180976.32",
+     "Profit Factor": "1.322369",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.596666666666667
+    },
+    {
+     "InpLongTpPips": "3",
+     "Profit": "180932.62",
+     "Profit Factor": "1.322291",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.593333333333334
+    },
+    {
+     "InpLongTpPips": "4",
+     "Profit": "180921.22",
+     "Profit Factor": "1.322270",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.59
+    },
+    {
+     "InpLongTpPips": "5",
+     "Profit": "180887.02",
+     "Profit Factor": "1.322209",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.59
+    },
+    {
+     "InpLongTpPips": "6",
+     "Profit": "180887.02",
+     "Profit Factor": "1.322209",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.59
+    },
+    {
+     "InpLongTpPips": "7",
+     "Profit": "180854.72",
+     "Profit Factor": "1.322152",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.59
+    },
+    {
+     "InpLongTpPips": "8",
+     "Profit": "180854.72",
+     "Profit Factor": "1.322152",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.59
+    },
+    {
+     "InpLongTpPips": "9",
+     "Profit": "180883.32",
+     "Profit Factor": "1.322203",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.59
+    },
+    {
+     "InpLongTpPips": "10",
+     "Profit": "180873.82",
+     "Profit Factor": "1.322186",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.59
+    }
+   ]
+  },
+  {
+   "pv": "iSTpP",
+   "ea": "InpShortTpPips",
+   "was": 0,
+   "now": 0.0,
+   "why": "the chart's value is already the best",
+   "mins": 2.3,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpShortTpPips": "0",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    },
+    {
+     "InpShortTpPips": "1",
+     "Profit": "180975.52",
+     "Profit Factor": "1.322367",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.596666666666667
+    },
+    {
+     "InpShortTpPips": "2",
+     "Profit": "180879.42",
+     "Profit Factor": "1.322196",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.593333333333334
+    },
+    {
+     "InpShortTpPips": "3",
+     "Profit": "180856.62",
+     "Profit Factor": "1.322155",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.59
+    },
+    {
+     "InpShortTpPips": "4",
+     "Profit": "180765.72",
+     "Profit Factor": "1.321993",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.59
+    },
+    {
+     "InpShortTpPips": "5",
+     "Profit": "180712.02",
+     "Profit Factor": "1.321898",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.59",
+     "smooth": 6.586666666666666
+    },
+    {
+     "InpShortTpPips": "6",
+     "Profit": "180666.92",
+     "Profit Factor": "1.321817",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.58",
+     "smooth": 6.583333333333333
+    },
+    {
+     "InpShortTpPips": "7",
+     "Profit": "180666.92",
+     "Profit Factor": "1.321817",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.58",
+     "smooth": 6.580000000000001
+    },
+    {
+     "InpShortTpPips": "8",
+     "Profit": "180583.72",
+     "Profit Factor": "1.321669",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.58",
+     "smooth": 6.576666666666667
+    },
+    {
+     "InpShortTpPips": "9",
+     "Profit": "180370.92",
+     "Profit Factor": "1.321290",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.57",
+     "smooth": 6.573333333333333
+    },
+    {
+     "InpShortTpPips": "10",
+     "Profit": "180277.82",
+     "Profit Factor": "1.321124",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.57",
+     "smooth": 6.57
+    }
+   ]
+  },
+  {
+   "pv": "iPivot",
+   "ea": "InpSwingPivot",
+   "was": 8,
+   "now": 8,
+   "why": "no clear gain (best 7: 6.55 vs 6.53) - kept",
+   "mins": 2.4,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpSwingPivot": "1",
+     "Profit": "176026.92",
+     "Profit Factor": "1.313063",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.42",
+     "smooth": 6.42
+    },
+    {
+     "InpSwingPivot": "2",
+     "Profit": "176186.52",
+     "Profit Factor": "1.313347",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.42",
+     "smooth": 6.453333333333333
+    },
+    {
+     "InpSwingPivot": "3",
+     "Profit": "179020.42",
+     "Profit Factor": "1.319302",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.52",
+     "smooth": 6.489999999999999
+    },
+    {
+     "InpSwingPivot": "4",
+     "Profit": "179266.62",
+     "Profit Factor": "1.319742",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.53",
+     "smooth": 6.526666666666666
+    },
+    {
+     "InpSwingPivot": "5",
+     "Profit": "179266.62",
+     "Profit Factor": "1.319742",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.53",
+     "smooth": 6.53
+    },
+    {
+     "InpSwingPivot": "6",
+     "Profit": "179266.62",
+     "Profit Factor": "1.319742",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.53",
+     "smooth": 6.526666666666666
+    },
+    {
+     "InpSwingPivot": "7",
+     "Profit": "178908.72",
+     "Profit Factor": "1.318686",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.52",
+     "smooth": 6.55
+    },
+    {
+     "InpSwingPivot": "8",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.53
+    },
+    {
+     "InpSwingPivot": "9",
+     "Profit": "177614.52",
+     "Profit Factor": "1.315677",
+     "Equity DD %": "0.2738",
+     "Trades": "1488",
+     "Result": "6.47",
+     "smooth": 6.513333333333333
+    },
+    {
+     "InpSwingPivot": "10",
+     "Profit": "177614.52",
+     "Profit Factor": "1.315677",
+     "Equity DD %": "0.2738",
+     "Trades": "1488",
+     "Result": "6.47",
+     "smooth": 6.47
+    },
+    {
+     "InpSwingPivot": "11",
+     "Profit": "177614.52",
+     "Profit Factor": "1.315677",
+     "Equity DD %": "0.2738",
+     "Trades": "1488",
+     "Result": "6.47",
+     "smooth": 6.47
+    },
+    {
+     "InpSwingPivot": "12",
+     "Profit": "177614.52",
+     "Profit Factor": "1.315677",
+     "Equity DD %": "0.2738",
+     "Trades": "1488",
+     "Result": "6.47",
+     "smooth": 6.47
+    }
+   ]
+  },
+  {
+   "pv": "iLook",
+   "ea": "InpSwingLook",
+   "was": 32,
+   "now": 32,
+   "why": "no clear gain (best 57: 6.62 vs 6.60) - kept",
+   "mins": 3.4,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpSwingLook": "12",
+     "Profit": "176863.02",
+     "Profit Factor": "1.315110",
+     "Equity DD %": "0.2738",
+     "Trades": "1488",
+     "Result": "6.45",
+     "smooth": 6.525
+    },
+    {
+     "InpSwingLook": "17",
+     "Profit": "181134.42",
+     "Profit Factor": "1.322720",
+     "Equity DD %": "0.2738",
+     "Trades": "1488",
+     "Result": "6.60",
+     "smooth": 6.55
+    },
+    {
+     "InpSwingLook": "22",
+     "Profit": "181134.42",
+     "Profit Factor": "1.322720",
+     "Equity DD %": "0.2738",
+     "Trades": "1488",
+     "Result": "6.60",
+     "smooth": 6.599999999999999
+    },
+    {
+     "InpSwingLook": "27",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.599999999999999
+    },
+    {
+     "InpSwingLook": "32",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.599999999999999
+    },
+    {
+     "InpSwingLook": "37",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.599999999999999
+    },
+    {
+     "InpSwingLook": "42",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.599999999999999
+    },
+    {
+     "InpSwingLook": "47",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6066666666666665
+    },
+    {
+     "InpSwingLook": "52",
+     "Profit": "181748.42",
+     "Profit Factor": "1.324169",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.62",
+     "smooth": 6.613333333333333
+    },
+    {
+     "InpSwingLook": "57",
+     "Profit": "181748.42",
+     "Profit Factor": "1.324169",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.62",
+     "smooth": 6.62
+    },
+    {
+     "InpSwingLook": "62",
+     "Profit": "181748.42",
+     "Profit Factor": "1.324169",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.62",
+     "smooth": 6.62
+    },
+    {
+     "InpSwingLook": "67",
+     "Profit": "181748.42",
+     "Profit Factor": "1.324169",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.62",
+     "smooth": 6.62
+    },
+    {
+     "InpSwingLook": "72",
+     "Profit": "181748.42",
+     "Profit Factor": "1.324169",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.62",
+     "smooth": 6.62
+    },
+    {
+     "InpSwingLook": "77",
+     "Profit": "181748.42",
+     "Profit Factor": "1.324169",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.62",
+     "smooth": 6.62
+    },
+    {
+     "InpSwingLook": "82",
+     "Profit": "181748.42",
+     "Profit Factor": "1.324169",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.62",
+     "smooth": 6.62
+    },
+    {
+     "InpSwingLook": "87",
+     "Profit": "181748.42",
+     "Profit Factor": "1.324169",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.62",
+     "smooth": 6.62
+    },
+    {
+     "InpSwingLook": "92",
+     "Profit": "181748.42",
+     "Profit Factor": "1.324169",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.62",
+     "smooth": 6.62
+    },
+    {
+     "InpSwingLook": "97",
+     "Profit": "181748.42",
+     "Profit Factor": "1.324169",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.62",
+     "smooth": 6.62
+    }
+   ]
+  },
+  {
+   "pv": "iMaxTp",
+   "ea": "InpMaxTpPips",
+   "was": 0,
+   "now": 0.0,
+   "why": "the chart's value is already the best",
+   "mins": 3.5,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpMaxTpPips": "0",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.445
+    },
+    {
+     "InpMaxTpPips": "5",
+     "Profit": "172679.92",
+     "Profit Factor": "1.307656",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.29",
+     "smooth": 6.3933333333333335
+    },
+    {
+     "InpMaxTpPips": "10",
+     "Profit": "172679.92",
+     "Profit Factor": "1.307656",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.29",
+     "smooth": 6.29
+    },
+    {
+     "InpMaxTpPips": "15",
+     "Profit": "172679.92",
+     "Profit Factor": "1.307656",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.29",
+     "smooth": 6.29
+    },
+    {
+     "InpMaxTpPips": "20",
+     "Profit": "172679.92",
+     "Profit Factor": "1.307656",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.29",
+     "smooth": 6.29
+    },
+    {
+     "InpMaxTpPips": "25",
+     "Profit": "172679.92",
+     "Profit Factor": "1.307656",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.29",
+     "smooth": 6.29
+    },
+    {
+     "InpMaxTpPips": "30",
+     "Profit": "172679.92",
+     "Profit Factor": "1.307656",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.29",
+     "smooth": 6.29
+    },
+    {
+     "InpMaxTpPips": "35",
+     "Profit": "172679.92",
+     "Profit Factor": "1.307656",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.29",
+     "smooth": 6.29
+    },
+    {
+     "InpMaxTpPips": "40",
+     "Profit": "172679.92",
+     "Profit Factor": "1.307656",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.29",
+     "smooth": 6.29
+    },
+    {
+     "InpMaxTpPips": "45",
+     "Profit": "172679.92",
+     "Profit Factor": "1.307656",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.29",
+     "smooth": 6.29
+    },
+    {
+     "InpMaxTpPips": "50",
+     "Profit": "172679.92",
+     "Profit Factor": "1.307656",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.29",
+     "smooth": 6.3
+    },
+    {
+     "InpMaxTpPips": "55",
+     "Profit": "173302.02",
+     "Profit Factor": "1.308766",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.32",
+     "smooth": 6.31
+    },
+    {
+     "InpMaxTpPips": "60",
+     "Profit": "173302.02",
+     "Profit Factor": "1.308766",
+     "Equity DD %": "0.2738",
+     "Trades": "1483",
+     "Result": "6.32",
+     "smooth": 6.32
+    }
+   ]
+  },
+  {
+   "pv": "iBreakP",
+   "ea": "InpBreakPips",
+   "was": 5,
+   "now": 5.0,
+   "why": "no clear gain (best 0: 5.87 vs 5.52) - kept",
+   "mins": 3.6,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpBreakPips": "0",
+     "Profit": "177867.09",
+     "Profit Factor": "1.278109",
+     "Equity DD %": "0.2878",
+     "Trades": "1593",
+     "Result": "6.10",
+     "smooth": 5.869999999999999
+    },
+    {
+     "InpBreakPips": "1",
+     "Profit": "184559.83",
+     "Profit Factor": "1.301596",
+     "Equity DD %": "0.3262",
+     "Trades": "1567",
+     "Result": "5.64",
+     "smooth": 5.853333333333333
+    },
+    {
+     "InpBreakPips": "2",
+     "Profit": "200037.03",
+     "Profit Factor": "1.335382",
+     "Equity DD %": "0.3429",
+     "Trades": "1557",
+     "Result": "5.82",
+     "smooth": 5.153333333333333
+    },
+    {
+     "InpBreakPips": "3",
+     "Profit": "162217.58",
+     "Profit Factor": "1.270246",
+     "Equity DD %": "0.4046",
+     "Trades": "1526",
+     "Result": "4.00",
+     "smooth": 4.486666666666667
+    },
+    {
+     "InpBreakPips": "4",
+     "Profit": "149761.78",
+     "Profit Factor": "1.251084",
+     "Equity DD %": "0.4107",
+     "Trades": "1507",
+     "Result": "3.64",
+     "smooth": 4.746666666666667
+    },
+    {
+     "InpBreakPips": "5",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 5.523333333333333
+    },
+    {
+     "InpBreakPips": "6",
+     "Profit": "164045.01",
+     "Profit Factor": "1.284897",
+     "Equity DD %": "0.2584",
+     "Trades": "1484",
+     "Result": "6.33",
+     "smooth": 5.526666666666666
+    },
+    {
+     "InpBreakPips": "7",
+     "Profit": "113083.57",
+     "Profit Factor": "1.190259",
+     "Equity DD %": "0.3055",
+     "Trades": "1456",
+     "Result": "3.65",
+     "smooth": 4.31
+    },
+    {
+     "InpBreakPips": "8",
+     "Profit": "105545.37",
+     "Profit Factor": "1.179791",
+     "Equity DD %": "0.3530",
+     "Trades": "1459",
+     "Result": "2.95",
+     "smooth": 3.28
+    },
+    {
+     "InpBreakPips": "9",
+     "Profit": "107172.92",
+     "Profit Factor": "1.187546",
+     "Equity DD %": "0.3269",
+     "Trades": "1430",
+     "Result": "3.24",
+     "smooth": 2.9600000000000004
+    },
+    {
+     "InpBreakPips": "10",
+     "Profit": "106670.52",
+     "Profit Factor": "1.196495",
+     "Equity DD %": "0.3920",
+     "Trades": "1424",
+     "Result": "2.69",
+     "smooth": 3.1833333333333336
+    },
+    {
+     "InpBreakPips": "11",
+     "Profit": "119133.46",
+     "Profit Factor": "1.223161",
+     "Equity DD %": "0.3251",
+     "Trades": "1418",
+     "Result": "3.62",
+     "smooth": 3.22
+    },
+    {
+     "InpBreakPips": "12",
+     "Profit": "117898.46",
+     "Profit Factor": "1.221159",
+     "Equity DD %": "0.3474",
+     "Trades": "1418",
+     "Result": "3.35",
+     "smooth": 3.4850000000000003
+    }
+   ]
+  },
+  {
+   "pv": "iBreakB",
+   "ea": "InpBreakBars",
+   "was": 1,
+   "now": 1,
+   "why": "the chart's value is already the best",
+   "mins": 1.5,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpBreakBars": "1",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 4.82
+    },
+    {
+     "InpBreakBars": "2",
+     "Profit": "96867.48",
+     "Profit Factor": "1.170524",
+     "Equity DD %": "0.3164",
+     "Trades": "1365",
+     "Result": "3.04",
+     "smooth": 4.53
+    },
+    {
+     "InpBreakBars": "3",
+     "Profit": "120801.63",
+     "Profit Factor": "1.220192",
+     "Equity DD %": "0.3028",
+     "Trades": "1341",
+     "Result": "3.95",
+     "smooth": 3.6799999999999997
+    },
+    {
+     "InpBreakBars": "4",
+     "Profit": "104262.04",
+     "Profit Factor": "1.198672",
+     "Equity DD %": "0.2546",
+     "Trades": "1282",
+     "Result": "4.05",
+     "smooth": 3.26
+    },
+    {
+     "InpBreakBars": "5",
+     "Profit": "59358.74",
+     "Profit Factor": "1.114444",
+     "Equity DD %": "0.3331",
+     "Trades": "1242",
+     "Result": "1.78",
+     "smooth": 2.915
+    }
+   ]
+  },
+  {
+   "pv": "iTouchP",
+   "ea": "InpTouchPips",
+   "was": 1,
+   "now": 1.0,
+   "why": "no clear gain (best 5: 7.38 vs 6.49) - kept",
+   "mins": 1.9,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpTouchPips": "0",
+     "Profit": "176772.22",
+     "Profit Factor": "1.319760",
+     "Equity DD %": "0.2650",
+     "Trades": "1469",
+     "Result": "6.55",
+     "smooth": 6.574999999999999
+    },
+    {
+     "InpTouchPips": "1",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.486666666666667
+    },
+    {
+     "InpTouchPips": "2",
+     "Profit": "179258.72",
+     "Profit Factor": "1.315873",
+     "Equity DD %": "0.2788",
+     "Trades": "1501",
+     "Result": "6.31",
+     "smooth": 6.599999999999999
+    },
+    {
+     "InpTouchPips": "3",
+     "Profit": "193654.37",
+     "Profit Factor": "1.342236",
+     "Equity DD %": "0.2758",
+     "Trades": "1529",
+     "Result": "6.89",
+     "smooth": 6.989999999999999
+    },
+    {
+     "InpTouchPips": "4",
+     "Profit": "197573.37",
+     "Profit Factor": "1.347383",
+     "Equity DD %": "0.2495",
+     "Trades": "1551",
+     "Result": "7.77",
+     "smooth": 7.213333333333334
+    },
+    {
+     "InpTouchPips": "5",
+     "Profit": "179077.57",
+     "Profit Factor": "1.310986",
+     "Equity DD %": "0.2558",
+     "Trades": "1577",
+     "Result": "6.98",
+     "smooth": 7.375
+    }
+   ]
+  },
+  {
+   "pv": "iTouchM",
+   "ea": "InpTouchMode",
+   "was": "Candle touches",
+   "now": "Candle touches",
+   "why": "the chart's value is already the best",
+   "mins": 1.3,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpTouchMode": "0",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    },
+    {
+     "InpTouchMode": "1",
+     "Profit": "88095.23",
+     "Profit Factor": "1.242804",
+     "Equity DD %": "0.4292",
+     "Trades": "965",
+     "Result": "2.03",
+     "smooth": 2.03
+    }
+   ]
+  },
+  {
+   "pv": "iLRule",
+   "ea": "InpLongRule",
+   "was": "Both",
+   "now": "Both",
+   "why": "no clear gain (best 0: 7.39 vs 6.60) - kept",
+   "mins": 1.2,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpLongRule": "0",
+     "Profit": "164907.48",
+     "Profit Factor": "1.299748",
+     "Equity DD %": "0.2226",
+     "Trades": "1435",
+     "Result": "7.39",
+     "smooth": 7.39
+    },
+    {
+     "InpLongRule": "1",
+     "Profit": "148615.69",
+     "Profit Factor": "1.276955",
+     "Equity DD %": "0.2958",
+     "Trades": "1452",
+     "Result": "4.94",
+     "smooth": 4.94
+    },
+    {
+     "InpLongRule": "2",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    }
+   ]
+  },
+  {
+   "pv": "iSLine",
+   "ea": "InpShortLine",
+   "was": "Either",
+   "now": "Either",
+   "why": "the chart's value is already the best",
+   "mins": 1.3,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpShortLine": "0",
+     "Profit": "97246.38",
+     "Profit Factor": "1.225481",
+     "Equity DD %": "0.2725",
+     "Trades": "1046",
+     "Result": "3.54",
+     "smooth": 3.54
+    },
+    {
+     "InpShortLine": "1",
+     "Profit": "150171.62",
+     "Profit Factor": "1.265657",
+     "Equity DD %": "0.3047",
+     "Trades": "1445",
+     "Result": "4.85",
+     "smooth": 4.85
+    },
+    {
+     "InpShortLine": "2",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    }
+   ]
+  },
+  {
+   "pv": "iLExitAb",
+   "ea": "InpLongExitAbove",
+   "was": false,
+   "now": false,
+   "why": "the chart's value is already the best",
+   "mins": 1.2,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpLongExitAbove": "false",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    },
+    {
+     "InpLongExitAbove": "true",
+     "Profit": "134209.59",
+     "Profit Factor": "1.274397",
+     "Equity DD %": "0.2352",
+     "Trades": "1321",
+     "Result": "5.63",
+     "smooth": 5.63
+    }
+   ]
+  },
+  {
+   "pv": "iUsePin",
+   "ea": "InpUsePin",
+   "was": true,
+   "now": true,
+   "why": "the chart's value is already the best",
+   "mins": 1.1,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpUsePin": "false",
+     "Profit": "128392.44",
+     "Profit Factor": "1.273247",
+     "Equity DD %": "0.2328",
+     "Trades": "1161",
+     "Result": "5.43",
+     "smooth": 5.43
+    },
+    {
+     "InpUsePin": "true",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    }
+   ]
+  },
+  {
+   "pv": "iPinDir",
+   "ea": "InpPinDir",
+   "was": false,
+   "now": false,
+   "why": "the chart's value is already the best",
+   "mins": 1.2,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpPinDir": "false",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    },
+    {
+     "InpPinDir": "true",
+     "Profit": "153196.02",
+     "Profit Factor": "1.247065",
+     "Equity DD %": "0.2339",
+     "Trades": "1593",
+     "Result": "6.44",
+     "smooth": 6.44
+    }
+   ]
+  },
+  {
+   "pv": "iPinCol",
+   "ea": "InpPinColor",
+   "was": false,
+   "now": false,
+   "why": "the chart's value is already the best",
+   "mins": 1.1,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpPinColor": "false",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    },
+    {
+     "InpPinColor": "true",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    }
+   ]
+  },
+  {
+   "pv": "iMaru",
+   "ea": "InpMarubozu",
+   "was": true,
+   "now": true,
+   "why": "the chart's value is already the best",
+   "mins": 1.1,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpMarubozu": "false",
+     "Profit": "57903.43",
+     "Profit Factor": "1.200842",
+     "Equity DD %": "0.2560",
+     "Trades": "779",
+     "Result": "2.25",
+     "smooth": 2.25
+    },
+    {
+     "InpMarubozu": "true",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    }
+   ]
+  },
+  {
+   "pv": "iMaruB",
+   "ea": "InpMaruBody",
+   "was": 0.53,
+   "now": 0.53,
+   "why": "the chart's value is already the best",
+   "mins": 9.1,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpMaruBody": "0.29",
+     "Profit": "133086.42",
+     "Profit Factor": "1.196986",
+     "Equity DD %": "0.3195",
+     "Trades": "1694",
+     "Result": "4.10",
+     "smooth": 4.295
+    },
+    {
+     "InpMaruBody": "0.32",
+     "Profit": "134780.42",
+     "Profit Factor": "1.201457",
+     "Equity DD %": "0.2952",
+     "Trades": "1675",
+     "Result": "4.49",
+     "smooth": 4.636666666666667
+    },
+    {
+     "InpMaruBody": "0.35",
+     "Profit": "155014.02",
+     "Profit Factor": "1.238299",
+     "Equity DD %": "0.2865",
+     "Trades": "1663",
+     "Result": "5.32",
+     "smooth": 4.846666666666667
+    },
+    {
+     "InpMaruBody": "0.38",
+     "Profit": "146808.42",
+     "Profit Factor": "1.225961",
+     "Equity DD %": "0.3053",
+     "Trades": "1635",
+     "Result": "4.73",
+     "smooth": 4.78
+    },
+    {
+     "InpMaruBody": "0.41",
+     "Profit": "134324.82",
+     "Profit Factor": "1.208459",
+     "Equity DD %": "0.3081",
+     "Trades": "1607",
+     "Result": "4.29",
+     "smooth": 4.6433333333333335
+    },
+    {
+     "InpMaruBody": "0.44",
+     "Profit": "141112.62",
+     "Profit Factor": "1.228841",
+     "Equity DD %": "0.2830",
+     "Trades": "1564",
+     "Result": "4.91",
+     "smooth": 5.04
+    },
+    {
+     "InpMaruBody": "0.47",
+     "Profit": "156604.82",
+     "Profit Factor": "1.260073",
+     "Equity DD %": "0.2643",
+     "Trades": "1548",
+     "Result": "5.92",
+     "smooth": 5.796666666666667
+    },
+    {
+     "InpMaruBody": "0.50",
+     "Profit": "179993.82",
+     "Profit Factor": "1.311226",
+     "Equity DD %": "0.2737",
+     "Trades": "1520",
+     "Result": "6.56",
+     "smooth": 6.359999999999999
+    },
+    {
+     "InpMaruBody": "0.53",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.93
+    },
+    {
+     "InpMaruBody": "0.56",
+     "Profit": "202228.67",
+     "Profit Factor": "1.379556",
+     "Equity DD %": "0.2594",
+     "Trades": "1458",
+     "Result": "7.63",
+     "smooth": 6.583333333333333
+    },
+    {
+     "InpMaruBody": "0.59",
+     "Profit": "184972.12",
+     "Profit Factor": "1.356079",
+     "Equity DD %": "0.3284",
+     "Trades": "1406",
+     "Result": "5.52",
+     "smooth": 6.05
+    },
+    {
+     "InpMaruBody": "0.62",
+     "Profit": "155248.62",
+     "Profit Factor": "1.295300",
+     "Equity DD %": "0.3053",
+     "Trades": "1374",
+     "Result": "5.00",
+     "smooth": 4.766666666666667
+    },
+    {
+     "InpMaruBody": "0.65",
+     "Profit": "122220.37",
+     "Profit Factor": "1.229452",
+     "Equity DD %": "0.3189",
+     "Trades": "1329",
+     "Result": "3.78",
+     "smooth": 3.776666666666667
+    },
+    {
+     "InpMaruBody": "0.68",
+     "Profit": "99550.77",
+     "Profit Factor": "1.192158",
+     "Equity DD %": "0.3865",
+     "Trades": "1286",
+     "Result": "2.55",
+     "smooth": 3.276666666666667
+    },
+    {
+     "InpMaruBody": "0.71",
+     "Profit": "86703.87",
+     "Profit Factor": "1.174507",
+     "Equity DD %": "0.2455",
+     "Trades": "1256",
+     "Result": "3.50",
+     "smooth": 2.7899999999999996
+    },
+    {
+     "InpMaruBody": "0.74",
+     "Profit": "70818.77",
+     "Profit Factor": "1.145169",
+     "Equity DD %": "0.3031",
+     "Trades": "1206",
+     "Result": "2.32",
+     "smooth": 2.1733333333333333
+    },
+    {
+     "InpMaruBody": "0.77",
+     "Profit": "32052.52",
+     "Profit Factor": "1.065752",
+     "Equity DD %": "0.4575",
+     "Trades": "1135",
+     "Result": "0.70",
+     "smooth": 1.1866666666666665
+    },
+    {
+     "InpMaruBody": "0.80",
+     "Profit": "27752.62",
+     "Profit Factor": "1.059582",
+     "Equity DD %": "0.5109",
+     "Trades": "1086",
+     "Result": "0.54",
+     "smooth": 0.69
+    },
+    {
+     "InpMaruBody": "0.83",
+     "Profit": "36498.38",
+     "Profit Factor": "1.084868",
+     "Equity DD %": "0.4383",
+     "Trades": "1024",
+     "Result": "0.83",
+     "smooth": 1.0833333333333333
+    },
+    {
+     "InpMaruBody": "0.86",
+     "Profit": "47414.58",
+     "Profit Factor": "1.123144",
+     "Equity DD %": "0.2506",
+     "Trades": "958",
+     "Result": "1.88",
+     "smooth": 1.36
+    },
+    {
+     "InpMaruBody": "0.89",
+     "Profit": "35807.23",
+     "Profit Factor": "1.096780",
+     "Equity DD %": "0.2610",
+     "Trades": "902",
+     "Result": "1.37",
+     "smooth": 1.625
+    }
+   ]
+  },
+  {
+   "pv": "iHammer",
+   "ea": "InpHammer",
+   "was": true,
+   "now": true,
+   "why": "the chart's value is already the best",
+   "mins": 1.6,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpHammer": "false",
+     "Profit": "179107.72",
+     "Profit Factor": "1.318868",
+     "Equity DD %": "0.2737",
+     "Trades": "1485",
+     "Result": "6.53",
+     "smooth": 6.53
+    },
+    {
+     "InpHammer": "true",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    }
+   ]
+  },
+  {
+   "pv": "iStar",
+   "ea": "InpStar",
+   "was": true,
+   "now": true,
+   "why": "the chart's value is already the best",
+   "mins": 1.0,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpStar": "false",
+     "Profit": "176681.92",
+     "Profit Factor": "1.316977",
+     "Equity DD %": "0.2738",
+     "Trades": "1476",
+     "Result": "6.44",
+     "smooth": 6.44
+    },
+    {
+     "InpStar": "true",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.6
+    }
+   ]
+  },
+  {
+   "pv": "iHamR",
+   "ea": "InpHamRatio",
+   "was": 2,
+   "now": 2.0,
+   "why": "no clear gain (best 2.25: 6.54 vs 6.47) - kept",
+   "mins": 3.7,
+   "p_was": "+181,012",
+   "p_now": "?",
+   "table": [
+    {
+     "InpHamRatio": "1.00",
+     "Profit": "163544.62",
+     "Profit Factor": "1.271359",
+     "Equity DD %": "0.2937",
+     "Trades": "1578",
+     "Result": "5.46",
+     "smooth": 6.115
+    },
+    {
+     "InpHamRatio": "1.25",
+     "Profit": "177518.02",
+     "Profit Factor": "1.307934",
+     "Equity DD %": "0.2572",
+     "Trades": "1529",
+     "Result": "6.77",
+     "smooth": 6.236666666666667
+    },
+    {
+     "InpHamRatio": "1.50",
+     "Profit": "170114.92",
+     "Profit Factor": "1.296926",
+     "Equity DD %": "0.2574",
+     "Trades": "1505",
+     "Result": "6.48",
+     "smooth": 6.489999999999999
+    },
+    {
+     "InpHamRatio": "1.75",
+     "Profit": "170715.32",
+     "Profit Factor": "1.300608",
+     "Equity DD %": "0.2738",
+     "Trades": "1491",
+     "Result": "6.22",
+     "smooth": 6.433333333333334
+    },
+    {
+     "InpHamRatio": "2.00",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.473333333333333
+    },
+    {
+     "InpHamRatio": "2.25",
+     "Profit": "181036.72",
+     "Profit Factor": "1.324613",
+     "Equity DD %": "0.2737",
+     "Trades": "1480",
+     "Result": "6.60",
+     "smooth": 6.543333333333333
+    },
+    {
+     "InpHamRatio": "2.50",
+     "Profit": "176288.82",
+     "Profit Factor": "1.316100",
+     "Equity DD %": "0.2737",
+     "Trades": "1476",
+     "Result": "6.43",
+     "smooth": 6.486666666666667
+    },
+    {
+     "InpHamRatio": "2.75",
+     "Profit": "176288.82",
+     "Profit Factor": "1.316100",
+     "Equity DD %": "0.2737",
+     "Trades": "1476",
+     "Result": "6.43",
+     "smooth": 6.423333333333333
+    },
+    {
+     "InpHamRatio": "3.00",
+     "Profit": "175909.12",
+     "Profit Factor": "1.315419",
+     "Equity DD %": "0.2737",
+     "Trades": "1474",
+     "Result": "6.41",
+     "smooth": 6.403333333333333
+    },
+    {
+     "InpHamRatio": "3.25",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.383333333333333
+    },
+    {
+     "InpHamRatio": "3.50",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.37
+    },
+    {
+     "InpHamRatio": "3.75",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.37
+    },
+    {
+     "InpHamRatio": "4.00",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.37
+    },
+    {
+     "InpHamRatio": "4.25",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.37
+    },
+    {
+     "InpHamRatio": "4.50",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.37
+    },
+    {
+     "InpHamRatio": "4.75",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.37
+    },
+    {
+     "InpHamRatio": "5.00",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.37
+    }
+   ]
+  },
+  {
+   "pv": "iHamN",
+   "ea": "InpHamNose",
+   "was": 0.35,
+   "now": 0.35,
+   "why": "no clear gain (best 0.40: 6.51 vs 6.39) - kept",
+   "mins": 2.8,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpHamNose": "0.10",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.37
+    },
+    {
+     "InpHamNose": "0.15",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.37
+    },
+    {
+     "InpHamNose": "0.20",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.37
+    },
+    {
+     "InpHamNose": "0.25",
+     "Profit": "174777.22",
+     "Profit Factor": "1.313390",
+     "Equity DD %": "0.2737",
+     "Trades": "1472",
+     "Result": "6.37",
+     "smooth": 6.343333333333334
+    },
+    {
+     "InpHamNose": "0.30",
+     "Profit": "172686.12",
+     "Profit Factor": "1.307580",
+     "Equity DD %": "0.2737",
+     "Trades": "1477",
+     "Result": "6.29",
+     "smooth": 6.419999999999999
+    },
+    {
+     "InpHamNose": "0.35",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.3933333333333335
+    },
+    {
+     "InpHamNose": "0.40",
+     "Profit": "172510.82",
+     "Profit Factor": "1.303404",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.29",
+     "smooth": 6.510000000000001
+    },
+    {
+     "InpHamNose": "0.45",
+     "Profit": "182113.62",
+     "Profit Factor": "1.323562",
+     "Equity DD %": "0.2738",
+     "Trades": "1497",
+     "Result": "6.64",
+     "smooth": 5.923333333333333
+    },
+    {
+     "InpHamNose": "0.50",
+     "Profit": "149674.62",
+     "Profit Factor": "1.262315",
+     "Equity DD %": "0.3086",
+     "Trades": "1488",
+     "Result": "4.84",
+     "smooth": 5.403333333333333
+    },
+    {
+     "InpHamNose": "0.55",
+     "Profit": "146202.42",
+     "Profit Factor": "1.256240",
+     "Equity DD %": "0.3086",
+     "Trades": "1484",
+     "Result": "4.73",
+     "smooth": 4.766666666666667
+    },
+    {
+     "InpHamNose": "0.60",
+     "Profit": "146202.42",
+     "Profit Factor": "1.256240",
+     "Equity DD %": "0.3086",
+     "Trades": "1484",
+     "Result": "4.73",
+     "smooth": 4.73
+    }
+   ]
+  },
+  {
+   "pv": "iMinAtr",
+   "ea": "InpMinRangeAtr",
+   "was": 0.35,
+   "now": 0.35,
+   "why": "the chart's value is already the best",
+   "mins": 4.1,
+   "p_was": "+181,012",
+   "p_now": "+181,012",
+   "table": [
+    {
+     "InpMinRangeAtr": "0",
+     "Profit": "177244.62",
+     "Profit Factor": "1.312552",
+     "Equity DD %": "0.2738",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpMinRangeAtr": "0.05",
+     "Profit": "177244.62",
+     "Profit Factor": "1.312552",
+     "Equity DD %": "0.2738",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpMinRangeAtr": "0.10",
+     "Profit": "177244.62",
+     "Profit Factor": "1.312552",
+     "Equity DD %": "0.2738",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpMinRangeAtr": "0.15",
+     "Profit": "177244.62",
+     "Profit Factor": "1.312552",
+     "Equity DD %": "0.2738",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpMinRangeAtr": "0.20",
+     "Profit": "177244.62",
+     "Profit Factor": "1.312552",
+     "Equity DD %": "0.2738",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.46
+    },
+    {
+     "InpMinRangeAtr": "0.25",
+     "Profit": "177244.62",
+     "Profit Factor": "1.312552",
+     "Equity DD %": "0.2738",
+     "Trades": "1499",
+     "Result": "6.46",
+     "smooth": 6.473333333333334
+    },
+    {
+     "InpMinRangeAtr": "0.30",
+     "Profit": "178242.92",
+     "Profit Factor": "1.315254",
+     "Equity DD %": "0.2738",
+     "Trades": "1494",
+     "Result": "6.50",
+     "smooth": 6.52
+    },
+    {
+     "InpMinRangeAtr": "0.35",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.653333333333333
+    },
+    {
+     "InpMinRangeAtr": "0.40",
+     "Profit": "176270.92",
+     "Profit Factor": "1.310967",
+     "Equity DD %": "0.2565",
+     "Trades": "1487",
+     "Result": "6.86",
+     "smooth": 6.503333333333333
+    },
+    {
+     "InpMinRangeAtr": "0.45",
+     "Profit": "155417.27",
+     "Profit Factor": "1.274393",
+     "Equity DD %": "0.2565",
+     "Trades": "1449",
+     "Result": "6.05",
+     "smooth": 5.843333333333334
+    },
+    {
+     "InpMinRangeAtr": "0.50",
+     "Profit": "132203.13",
+     "Profit Factor": "1.228230",
+     "Equity DD %": "0.2831",
+     "Trades": "1422",
+     "Result": "4.62",
+     "smooth": 4.943333333333333
+    },
+    {
+     "InpMinRangeAtr": "0.55",
+     "Profit": "136879.63",
+     "Profit Factor": "1.242347",
+     "Equity DD %": "0.3252",
+     "Trades": "1395",
+     "Result": "4.16",
+     "smooth": 4.66
+    },
+    {
+     "InpMinRangeAtr": "0.60",
+     "Profit": "144192.43",
+     "Profit Factor": "1.264438",
+     "Equity DD %": "0.2744",
+     "Trades": "1341",
+     "Result": "5.20",
+     "smooth": 4.466666666666667
+    },
+    {
+     "InpMinRangeAtr": "0.65",
+     "Profit": "114037.58",
+     "Profit Factor": "1.209382",
+     "Equity DD %": "0.2800",
+     "Trades": "1286",
+     "Result": "4.04",
+     "smooth": 4.073333333333333
+    },
+    {
+     "InpMinRangeAtr": "0.70",
+     "Profit": "103419.28",
+     "Profit Factor": "1.193668",
+     "Equity DD %": "0.3441",
+     "Trades": "1237",
+     "Result": "2.98",
+     "smooth": 3.11
+    },
+    {
+     "InpMinRangeAtr": "0.75",
+     "Profit": "97272.58",
+     "Profit Factor": "1.187268",
+     "Equity DD %": "0.4177",
+     "Trades": "1171",
+     "Result": "2.31",
+     "smooth": 2.4033333333333333
+    },
+    {
+     "InpMinRangeAtr": "0.80",
+     "Profit": "79402.23",
+     "Profit Factor": "1.157874",
+     "Equity DD %": "0.4098",
+     "Trades": "1086",
+     "Result": "1.92",
+     "smooth": 2.0100000000000002
+    },
+    {
+     "InpMinRangeAtr": "0.85",
+     "Profit": "73815.03",
+     "Profit Factor": "1.150997",
+     "Equity DD %": "0.4074",
+     "Trades": "1021",
+     "Result": "1.80",
+     "smooth": 1.68
+    },
+    {
+     "InpMinRangeAtr": "0.90",
+     "Profit": "55771.23",
+     "Profit Factor": "1.121454",
+     "Equity DD %": "0.4183",
+     "Trades": "941",
+     "Result": "1.32",
+     "smooth": 1.3566666666666667
+    },
+    {
+     "InpMinRangeAtr": "0.95",
+     "Profit": "33525.23",
+     "Profit Factor": "1.074107",
+     "Equity DD %": "0.3521",
+     "Trades": "872",
+     "Result": "0.95",
+     "smooth": 1.2233333333333334
+    },
+    {
+     "InpMinRangeAtr": "1.00",
+     "Profit": "45221.53",
+     "Profit Factor": "1.109599",
+     "Equity DD %": "0.3215",
+     "Trades": "806",
+     "Result": "1.40",
+     "smooth": 1.1749999999999998
+    }
+   ]
+  },
+  {
+   "pv": "iEr",
+   "ea": "InpChopEr",
+   "was": 0.01,
+   "now": 0.0,
+   "why": "better: score 6.91 vs 6.63 (with neighbours), profit +188,638 vs +181,012",
+   "mins": 3.8,
+   "p_was": "+181,012",
+   "p_now": "+188,638",
+   "table": [
+    {
+     "InpChopEr": "0",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 6.91
+    },
+    {
+     "InpChopEr": "0.01",
+     "Profit": "181012.42",
+     "Profit Factor": "1.322433",
+     "Equity DD %": "0.2738",
+     "Trades": "1489",
+     "Result": "6.60",
+     "smooth": 6.633333333333333
+    },
+    {
+     "InpChopEr": "0.02",
+     "Profit": "167385.52",
+     "Profit Factor": "1.301552",
+     "Equity DD %": "0.2705",
+     "Trades": "1468",
+     "Result": "6.08",
+     "smooth": 6.906666666666666
+    },
+    {
+     "InpChopEr": "0.03",
+     "Profit": "183653.82",
+     "Profit Factor": "1.344298",
+     "Equity DD %": "0.2239",
+     "Trades": "1442",
+     "Result": "8.04",
+     "smooth": 6.1433333333333335
+    },
+    {
+     "InpChopEr": "0.04",
+     "Profit": "127248.22",
+     "Profit Factor": "1.237764",
+     "Equity DD %": "0.2909",
+     "Trades": "1377",
+     "Result": "4.31",
+     "smooth": 5.463333333333334
+    },
+    {
+     "InpChopEr": "0.05",
+     "Profit": "118813.22",
+     "Profit Factor": "1.223993",
+     "Equity DD %": "0.2900",
+     "Trades": "1345",
+     "Result": "4.04",
+     "smooth": 3.69
+    },
+    {
+     "InpChopEr": "0.06",
+     "Profit": "93691.82",
+     "Profit Factor": "1.176104",
+     "Equity DD %": "0.3403",
+     "Trades": "1308",
+     "Result": "2.72",
+     "smooth": 3.436666666666667
+    },
+    {
+     "InpChopEr": "0.07",
+     "Profit": "105243.72",
+     "Profit Factor": "1.208280",
+     "Equity DD %": "0.2924",
+     "Trades": "1273",
+     "Result": "3.55",
+     "smooth": 3.0533333333333332
+    },
+    {
+     "InpChopEr": "0.08",
+     "Profit": "89244.98",
+     "Profit Factor": "1.179683",
+     "Equity DD %": "0.3053",
+     "Trades": "1216",
+     "Result": "2.89",
+     "smooth": 3.1799999999999997
+    },
+    {
+     "InpChopEr": "0.09",
+     "Profit": "93543.18",
+     "Profit Factor": "1.196890",
+     "Equity DD %": "0.2992",
+     "Trades": "1182",
+     "Result": "3.10",
+     "smooth": 3.0766666666666667
+    },
+    {
+     "InpChopEr": "0.10",
+     "Profit": "93172.88",
+     "Profit Factor": "1.205507",
+     "Equity DD %": "0.2838",
+     "Trades": "1132",
+     "Result": "3.24",
+     "smooth": 3.283333333333333
+    },
+    {
+     "InpChopEr": "0.11",
+     "Profit": "93717.13",
+     "Profit Factor": "1.218920",
+     "Equity DD %": "0.2640",
+     "Trades": "1082",
+     "Result": "3.51",
+     "smooth": 3.35
+    },
+    {
+     "InpChopEr": "0.12",
+     "Profit": "93811.73",
+     "Profit Factor": "1.223097",
+     "Equity DD %": "0.2813",
+     "Trades": "1067",
+     "Result": "3.30",
+     "smooth": 3.383333333333333
+    },
+    {
+     "InpChopEr": "0.13",
+     "Profit": "99356.73",
+     "Profit Factor": "1.251031",
+     "Equity DD %": "0.2950",
+     "Trades": "1038",
+     "Result": "3.34",
+     "smooth": 2.7133333333333334
+    },
+    {
+     "InpChopEr": "0.14",
+     "Profit": "62615.23",
+     "Profit Factor": "1.163072",
+     "Equity DD %": "0.4165",
+     "Trades": "966",
+     "Result": "1.50",
+     "smooth": 2.1866666666666665
+    },
+    {
+     "InpChopEr": "0.15",
+     "Profit": "63566.08",
+     "Profit Factor": "1.177489",
+     "Equity DD %": "0.3671",
+     "Trades": "904",
+     "Result": "1.72",
+     "smooth": 1.8566666666666667
+    },
+    {
+     "InpChopEr": "0.16",
+     "Profit": "71512.98",
+     "Profit Factor": "1.213508",
+     "Equity DD %": "0.3034",
+     "Trades": "860",
+     "Result": "2.35",
+     "smooth": 2.31
+    },
+    {
+     "InpChopEr": "0.17",
+     "Profit": "75997.08",
+     "Profit Factor": "1.248694",
+     "Equity DD %": "0.2635",
+     "Trades": "803",
+     "Result": "2.86",
+     "smooth": 2.533333333333333
+    },
+    {
+     "InpChopEr": "0.18",
+     "Profit": "61538.78",
+     "Profit Factor": "1.212655",
+     "Equity DD %": "0.2563",
+     "Trades": "752",
+     "Result": "2.39",
+     "smooth": 2.1533333333333333
+    },
+    {
+     "InpChopEr": "0.19",
+     "Profit": "31094.08",
+     "Profit Factor": "1.107867",
+     "Equity DD %": "0.2565",
+     "Trades": "716",
+     "Result": "1.21",
+     "smooth": 1.3933333333333333
+    },
+    {
+     "InpChopEr": "0.20",
+     "Profit": "17185.93",
+     "Profit Factor": "1.061068",
+     "Equity DD %": "0.2945",
+     "Trades": "674",
+     "Result": "0.58",
+     "smooth": 0.895
+    }
+   ]
+  },
+  {
+   "pv": "iErLen",
+   "ea": "InpChopErLook",
+   "was": 16,
+   "now": 16,
+   "why": "no clear gain (best 4: 7.22 vs 7.22) - kept",
+   "mins": 3.7,
+   "p_was": "+188,638",
+   "p_now": "+188,638",
+   "table": [
+    {
+     "InpChopErLook": "4",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "6",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "8",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "10",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "12",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "14",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "16",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "18",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "20",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "22",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "24",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "26",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "28",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpChopErLook": "30",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    }
+   ]
+  },
+  {
+   "pv": "iGap",
+   "ea": "InpGapCancel",
+   "was": false,
+   "now": false,
+   "why": "the chart's value is already the best",
+   "mins": 1.2,
+   "p_was": "+188,638",
+   "p_now": "+188,638",
+   "table": [
+    {
+     "InpGapCancel": "false",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpGapCancel": "true",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    }
+   ]
+  },
+  {
+   "pv": "adRunN",
+   "ea": "InpCutRunN",
+   "was": 0,
+   "now": 5,
+   "why": "better: score 7.43 vs 5.79 (with neighbours), profit +192,276 vs +188,638",
+   "mins": 2.6,
+   "p_was": "+188,638",
+   "p_now": "+192,276",
+   "table": [
+    {
+     "InpCutRunN": "0",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 5.795
+    },
+    {
+     "InpCutRunN": "1",
+     "Profit": "134604.72",
+     "Profit Factor": "1.254044",
+     "Equity DD %": "0.3041",
+     "Trades": "1551",
+     "Result": "4.37",
+     "smooth": 5.993333333333333
+    },
+    {
+     "InpCutRunN": "2",
+     "Profit": "173427.61",
+     "Profit Factor": "1.311499",
+     "Equity DD %": "0.2680",
+     "Trades": "1550",
+     "Result": "6.39",
+     "smooth": 5.863333333333333
+    },
+    {
+     "InpCutRunN": "3",
+     "Profit": "170433.51",
+     "Profit Factor": "1.294717",
+     "Equity DD %": "0.2450",
+     "Trades": "1532",
+     "Result": "6.83",
+     "smooth": 6.896666666666666
+    },
+    {
+     "InpCutRunN": "4",
+     "Profit": "185297.16",
+     "Profit Factor": "1.322857",
+     "Equity DD %": "0.2431",
+     "Trades": "1527",
+     "Result": "7.47",
+     "smooth": 7.283333333333334
+    },
+    {
+     "InpCutRunN": "5",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.426666666666667
+    },
+    {
+     "InpCutRunN": "6",
+     "Profit": "189671.96",
+     "Profit Factor": "1.330725",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.26",
+     "smooth": 7.343333333333334
+    },
+    {
+     "InpCutRunN": "7",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.233333333333333
+    },
+    {
+     "InpCutRunN": "8",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpCutRunN": "9",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    },
+    {
+     "InpCutRunN": "10",
+     "Profit": "188637.96",
+     "Profit Factor": "1.328330",
+     "Equity DD %": "0.2560",
+     "Trades": "1525",
+     "Result": "7.22",
+     "smooth": 7.22
+    }
+   ]
+  },
+  {
+   "pv": "htReq",
+   "ea": "InpHtfMin",
+   "was": "Off",
+   "now": "Off",
+   "why": "the chart's value is already the best",
+   "mins": 5.1,
+   "p_was": "+192,276",
+   "p_now": "+192,276",
+   "table": [
+    {
+     "InpHtfMin": "0",
+     "Profit": 192276.46,
+     "Profit Factor": "1.34",
+     "Equity DD %": null,
+     "Trades": 1523,
+     "Result": 7.554978133853039,
+     "smooth": 7.554978133853039
+    },
+    {
+     "InpHtfMin": "15",
+     "Profit": 164543.67,
+     "Profit Factor": "1.30",
+     "Equity DD %": null,
+     "Trades": 1412,
+     "Result": 6.026445963169692,
+     "smooth": 6.026445963169692
+    },
+    {
+     "InpHtfMin": "240",
+     "Profit": 50574.16,
+     "Profit Factor": "1.12",
+     "Equity DD %": null,
+     "Trades": 986,
+     "Result": 1.888356775607589,
+     "smooth": 1.888356775607589
+    },
+    {
+     "InpHtfMin": "30",
+     "Profit": 112756.57,
+     "Profit Factor": "1.24",
+     "Equity DD %": null,
+     "Trades": 1148,
+     "Result": 3.129197667738812,
+     "smooth": 3.129197667738812
+    },
+    {
+     "InpHtfMin": "5",
+     "Profit": 159723.12,
+     "Profit Factor": "1.29",
+     "Equity DD %": null,
+     "Trades": 1402,
+     "Result": 5.348976741849601,
+     "smooth": 5.348976741849601
+    },
+    {
+     "InpHtfMin": "60",
+     "Profit": 103340.07,
+     "Profit Factor": "1.25",
+     "Equity DD %": null,
+     "Trades": 1031,
+     "Result": 3.9043694602498134,
+     "smooth": 3.9043694602498134
+    }
+   ]
+  },
+  {
+   "pv": "htEma",
+   "ea": "InpHtfEma",
+   "was": 9,
+   "now": 9,
+   "why": "no clear gain (best 4: 7.55 vs 7.55) - kept",
+   "mins": 4.6,
+   "p_was": "+192,276",
+   "p_now": "+192,276",
+   "table": [
+    {
+     "InpHtfEma": "4",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "9",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "14",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "19",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "24",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "29",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "34",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "39",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "44",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "49",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "54",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "59",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "64",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "69",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "74",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "79",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "84",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "89",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "94",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    },
+    {
+     "InpHtfEma": "99",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 7.55
+    }
+   ]
+  },
+  {
+   "pv": "rpPause",
+   "ea": "InpBandPauseBars",
+   "was": 3,
+   "now": 1,
+   "why": "better: score 7.91 vs 6.95 (with neighbours), profit +199,413 vs +192,276",
+   "mins": 3.4,
+   "p_was": "+192,276",
+   "p_now": "+199,413",
+   "table": [
+    {
+     "InpBandPauseBars": "1",
+     "Profit": "199413.36",
+     "Profit Factor": "1.291319",
+     "Equity DD %": "0.2647",
+     "Trades": "1753",
+     "Result": "7.43",
+     "smooth": 7.91
+    },
+    {
+     "InpBandPauseBars": "2",
+     "Profit": "206963.76",
+     "Profit Factor": "1.333205",
+     "Equity DD %": "0.2415",
+     "Trades": "1651",
+     "Result": "8.39",
+     "smooth": 7.79
+    },
+    {
+     "InpBandPauseBars": "3",
+     "Profit": "192276.46",
+     "Profit Factor": "1.337389",
+     "Equity DD %": "0.2494",
+     "Trades": "1523",
+     "Result": "7.55",
+     "smooth": 6.95
+    },
+    {
+     "InpBandPauseBars": "4",
+     "Profit": "176123.86",
+     "Profit Factor": "1.331907",
+     "Equity DD %": "0.3512",
+     "Trades": "1414",
+     "Result": "4.91",
+     "smooth": 6.859999999999999
+    },
+    {
+     "InpBandPauseBars": "5",
+     "Profit": "179248.21",
+     "Profit Factor": "1.357394",
+     "Equity DD %": "0.2168",
+     "Trades": "1353",
+     "Result": "8.12",
+     "smooth": 6.95
+    },
+    {
+     "InpBandPauseBars": "6",
+     "Profit": "171293.57",
+     "Profit Factor": "1.361980",
+     "Equity DD %": "0.2186",
+     "Trades": "1284",
+     "Result": "7.82",
+     "smooth": 7.826666666666667
+    },
+    {
+     "InpBandPauseBars": "7",
+     "Profit": "169697.71",
+     "Profit Factor": "1.399837",
+     "Equity DD %": "0.2245",
+     "Trades": "1214",
+     "Result": "7.54",
+     "smooth": 7.553333333333334
+    },
+    {
+     "InpBandPauseBars": "8",
+     "Profit": "167026.16",
+     "Profit Factor": "1.419799",
+     "Equity DD %": "0.2260",
+     "Trades": "1151",
+     "Result": "7.30",
+     "smooth": 6.736666666666667
+    },
+    {
+     "InpBandPauseBars": "9",
+     "Profit": "158101.01",
+     "Profit Factor": "1.415996",
+     "Equity DD %": "0.2911",
+     "Trades": "1099",
+     "Result": "5.37",
+     "smooth": 6.006666666666667
+    },
+    {
+     "InpBandPauseBars": "10",
+     "Profit": "137211.91",
+     "Profit Factor": "1.352455",
+     "Equity DD %": "0.2562",
+     "Trades": "1082",
+     "Result": "5.35",
+     "smooth": 5.359999999999999
+    }
+   ]
+  },
+  {
+   "pv": "rpB00",
+   "ea": "InpB00",
+   "was": true,
+   "now": true,
+   "why": "no clear gain (best false: 7.43 vs 7.43) - kept",
+   "mins": 1.1,
+   "p_was": "+199,413",
+   "p_now": "+199,413",
+   "table": [
+    {
+     "InpB00": "false",
+     "Profit": "199413.36",
+     "Profit Factor": "1.291319",
+     "Equity DD %": "0.2647",
+     "Trades": "1753",
+     "Result": "7.43",
+     "smooth": 7.43
+    },
+    {
+     "InpB00": "true",
+     "Profit": "199413.36",
+     "Profit Factor": "1.291319",
+     "Equity DD %": "0.2647",
+     "Trades": "1753",
+     "Result": "7.43",
+     "smooth": 7.43
+    }
+   ]
+  },
+  {
+   "pv": "rpB01",
+   "ea": "InpB01",
+   "was": true,
+   "now": true,
+   "why": "no clear gain (best false: 7.43 vs 7.43) - kept",
+   "mins": 1.0,
+   "p_was": "+199,413",
+   "p_now": "+199,413",
+   "table": [
+    {
+     "InpB01": "false",
+     "Profit": "199413.36",
+     "Profit Factor": "1.291319",
+     "Equity DD %": "0.2647",
+     "Trades": "1753",
+     "Result": "7.43",
+     "smooth": 7.43
+    },
+    {
+     "InpB01": "true",
+     "Profit": "199413.36",
+     "Profit Factor": "1.291319",
+     "Equity DD %": "0.2647",
+     "Trades": "1753",
+     "Result": "7.43",
+     "smooth": 7.43
+    }
+   ]
+  },
+  {
+   "pv": "rpB02",
+   "ea": "InpB02",
+   "was": true,
+   "now": true,
+   "why": "the chart's value is already the best",
+   "mins": 1.0,
+   "p_was": "+199,413",
+   "p_now": "+199,413",
+   "table": [
+    {
+     "InpB02": "false",
+     "Profit": "198725.62",
+     "Profit Factor": "1.290350",
+     "Equity DD %": "0.2699",
+     "Trades": "1749",
+     "Result": "7.26",
+     "smooth": 7.26
+    },
+    {
+     "InpB02": "true",
+     "Profit": "199413.36",
+     "Profit Factor": "1.291319",
+     "Equity DD %": "0.2647",
+     "Trades": "1753",
+     "Result": "7.43",
+     "smooth": 7.43
+    }
+   ]
+  },
+  {
+   "pv": "rpB03",
+   "ea": "InpB03",
+   "was": true,
+   "now": false,
+   "why": "better: score 7.82 vs 7.43 (with neighbours), profit +200,160 vs +199,413",
+   "mins": 1.1,
+   "p_was": "+199,413",
+   "p_now": "+200,160",
+   "table": [
+    {
+     "InpB03": "false",
+     "Profit": "200159.96",
+     "Profit Factor": "1.293164",
+     "Equity DD %": "0.2526",
+     "Trades": "1750",
+     "Result": "7.82",
+     "smooth": 7.82
+    },
+    {
+     "InpB03": "true",
+     "Profit": "199413.36",
+     "Profit Factor": "1.291319",
+     "Equity DD %": "0.2647",
+     "Trades": "1753",
+     "Result": "7.43",
+     "smooth": 7.43
+    }
+   ]
+  },
+  {
+   "pv": "rpB04",
+   "ea": "InpB04",
+   "was": true,
+   "now": true,
+   "why": "no clear gain (best false: 7.86 vs 7.82) - kept",
+   "mins": 1.0,
+   "p_was": "+200,160",
+   "p_now": "+200,160",
+   "table": [
+    {
+     "InpB04": "false",
+     "Profit": "201094.66",
+     "Profit Factor": "1.295611",
+     "Equity DD %": "0.2525",
+     "Trades": "1742",
+     "Result": "7.86",
+     "smooth": 7.86
+    },
+    {
+     "InpB04": "true",
+     "Profit": "200159.96",
+     "Profit Factor": "1.293164",
+     "Equity DD %": "0.2526",
+     "Trades": "1750",
+     "Result": "7.82",
+     "smooth": 7.82
+    }
+   ]
+  },
+  {
+   "pv": "rpB05",
+   "ea": "InpB05",
+   "was": false,
+   "now": false,
+   "why": "the chart's value is already the best",
+   "mins": 1.1,
+   "p_was": "+200,160",
+   "p_now": "+200,160",
+   "table": [
+    {
+     "InpB05": "false",
+     "Profit": "200159.96",
+     "Profit Factor": "1.293164",
+     "Equity DD %": "0.2526",
+     "Trades": "1750",
+     "Result": "7.82",
+     "smooth": 7.82
+    },
+    {
+     "InpB05": "true",
+     "Profit": "198295.30",
+     "Profit Factor": "1.287187",
+     "Equity DD %": "0.2526",
+     "Trades": "1766",
+     "Result": "7.75",
+     "smooth": 7.75
+    }
+   ]
+  },
+  {
+   "pv": "rpB06",
+   "ea": "InpB06",
+   "was": true,
+   "now": true,
+   "why": "the chart's value is already the best",
+   "mins": 1.0,
+   "p_was": "+200,160",
+   "p_now": "+200,160",
+   "table": [
+    {
+     "InpB06": "false",
+     "Profit": "197739.16",
+     "Profit Factor": "1.292915",
+     "Equity DD %": "0.2554",
+     "Trades": "1729",
+     "Result": "7.73",
+     "smooth": 7.73
+    },
+    {
+     "InpB06": "true",
+     "Profit": "200159.96",
+     "Profit Factor": "1.293164",
+     "Equity DD %": "0.2526",
+     "Trades": "1750",
+     "Result": "7.82",
+     "smooth": 7.82
+    }
+   ]
+  },
+  {
+   "pv": "rpB07",
+   "ea": "InpB07",
+   "was": true,
+   "now": true,
+   "why": "the chart's value is already the best",
+   "mins": 1.0,
+   "p_was": "+200,160",
+   "p_now": "+200,160",
+   "table": [
+    {
+     "InpB07": "false",
+     "Profit": "184125.36",
+     "Profit Factor": "1.276712",
+     "Equity DD %": "0.2553",
+     "Trades": "1702",
+     "Result": "7.20",
+     "smooth": 7.2
+    },
+    {
+     "InpB07": "true",
+     "Profit": "200159.96",
+     "Profit Factor": "1.293164",
+     "Equity DD %": "0.2526",
+     "Trades": "1750",
+     "Result": "7.82",
+     "smooth": 7.82
+    }
+   ]
+  },
+  {
+   "pv": "rpB08",
+   "ea": "InpB08",
+   "was": false,
+   "now": false,
+   "why": "the chart's value is already the best",
+   "mins": 1.0,
+   "p_was": "+200,160",
+   "p_now": "+200,160",
+   "table": [
+    {
+     "InpB08": "false",
+     "Profit": "200159.96",
+     "Profit Factor": "1.293164",
+     "Equity DD %": "0.2526",
+     "Trades": "1750",
+     "Result": "7.82",
+     "smooth": 7.82
+    },
+    {
+     "InpB08": "true",
+     "Profit": "178201.66",
+     "Profit Factor": "1.244720",
+     "Equity DD %": "0.2873",
+     "Trades": "1817",
+     "Result": "6.19",
+     "smooth": 6.19
+    }
+   ]
+  },
+  {
+   "pv": "rpB09",
+   "ea": "InpB09",
+   "was": false,
+   "now": false,
+   "why": "the chart's value is already the best",
+   "mins": 1.0,
+   "p_was": "+200,160",
+   "p_now": "+200,160",
+   "table": [
+    {
+     "InpB09": "false",
+     "Profit": "200159.96",
+     "Profit Factor": "1.293164",
+     "Equity DD %": "0.2526",
+     "Trades": "1750",
+     "Result": "7.82",
+     "smooth": 7.82
+    },
+    {
+     "InpB09": "true",
+     "Profit": "195420.46",
+     "Profit Factor": "1.272538",
+     "Equity DD %": "0.2821",
+     "Trades": "1815",
+     "Result": "6.90",
+     "smooth": 6.9
+    }
+   ]
+  },
+  {
+   "pv": "rpB10",
+   "ea": "InpB10",
+   "was": false,
+   "now": true,
+   "why": "better: score 8.01 vs 7.82 (with neighbours), profit +205,058 vs +200,160",
+   "mins": 1.0,
+   "p_was": "+200,160",
+   "p_now": "+205,058",
+   "table": [
+    {
+     "InpB10": "false",
+     "Profit": "200159.96",
+     "Profit Factor": "1.293164",
+     "Equity DD %": "0.2526",
+     "Trades": "1750",
+     "Result": "7.82",
+     "smooth": 7.82
+    },
+    {
+     "InpB10": "true",
+     "Profit": "205058.40",
+     "Profit Factor": "1.284958",
+     "Equity DD %": "0.2554",
+     "Trades": "1850",
+     "Result": "8.01",
+     "smooth": 8.01
+    }
+   ]
+  },
+  {
+   "pv": "rpB11",
+   "ea": "InpB11",
+   "was": false,
+   "now": false,
+   "why": "the chart's value is already the best",
+   "mins": 1.2,
+   "p_was": "+205,058",
+   "p_now": "+205,058",
+   "table": [
+    {
+     "InpB11": "false",
+     "Profit": "205058.40",
+     "Profit Factor": "1.284958",
+     "Equity DD %": "0.2554",
+     "Trades": "1850",
+     "Result": "8.01",
+     "smooth": 8.01
+    },
+    {
+     "InpB11": "true",
+     "Profit": "203370.91",
+     "Profit Factor": "1.261372",
+     "Equity DD %": "0.2645",
+     "Trades": "1971",
+     "Result": "7.59",
+     "smooth": 7.59
+    }
+   ]
+  },
+  {
+   "pv": "rpB12",
+   "ea": "InpB12",
+   "was": true,
+   "now": true,
+   "why": "the chart's value is already the best",
+   "mins": 1.2,
+   "p_was": "+205,058",
+   "p_now": "+205,058",
+   "table": [
+    {
+     "InpB12": "false",
+     "Profit": "159096.26",
+     "Profit Factor": "1.229526",
+     "Equity DD %": "0.2803",
+     "Trades": "1730",
+     "Result": "5.66",
+     "smooth": 5.66
+    },
+    {
+     "InpB12": "true",
+     "Profit": "205058.40",
+     "Profit Factor": "1.284958",
+     "Equity DD %": "0.2554",
+     "Trades": "1850",
+     "Result": "8.01",
+     "smooth": 8.01
+    }
+   ]
+  },
+  {
+   "pv": "rpB13",
+   "ea": "InpB13",
+   "was": false,
+   "now": true,
+   "why": "better: score 7.32 vs 7.17 (with neighbours), profit +184,944 vs +171,195",
+   "mins": 1.3,
+   "p_was": "+171,195",
+   "p_now": "+184,944",
+   "table": [
+    {
+     "InpB13": "false",
+     "Profit": "171195.21",
+     "Profit Factor": "1.327993",
+     "Equity DD %": "0.2358",
+     "Trades": "1435",
+     "Result": "7.17",
+     "smooth": 7.17
+    },
+    {
+     "InpB13": "true",
+     "Profit": "184943.85",
+     "Profit Factor": "1.321058",
+     "Equity DD %": "0.2522",
+     "Trades": "1578",
+     "Result": "7.32",
+     "smooth": 7.32
+    }
+   ]
+  },
+  {
+   "pv": "rpB14",
+   "ea": "InpB14",
+   "was": false,
+   "now": false,
+   "why": "the chart's value is already the best",
+   "mins": 1.2,
+   "p_was": "+140,515",
+   "p_now": "+140,515",
+   "table": [
+    {
+     "InpB14": "false",
+     "Profit": "140514.55",
+     "Profit Factor": "1.269507",
+     "Equity DD %": "0.2352",
+     "Trades": "1401",
+     "Result": "5.91",
+     "smooth": 5.91
+    },
+    {
+     "InpB14": "true",
+     "Profit": "110198.49",
+     "Profit Factor": "1.184422",
+     "Equity DD %": "0.2598",
+     "Trades": "1513",
+     "Result": "4.21",
+     "smooth": 4.21
+    }
+   ]
+  },
+  {
+   "pv": "rpB15",
+   "ea": "InpB15",
+   "was": false,
+   "now": false,
+   "why": "the chart's value is already the best",
+   "mins": 1.1,
+   "p_was": "+140,515",
+   "p_now": "+140,515",
+   "table": [
+    {
+     "InpB15": "false",
+     "Profit": "140514.55",
+     "Profit Factor": "1.269507",
+     "Equity DD %": "0.2352",
+     "Trades": "1401",
+     "Result": "5.91",
+     "smooth": 5.91
+    },
+    {
+     "InpB15": "true",
+     "Profit": "129141.25",
+     "Profit Factor": "1.224121",
+     "Equity DD %": "0.2709",
+     "Trades": "1502",
+     "Result": "4.72",
+     "smooth": 4.72
+    }
+   ]
+  },
+  {
+   "pv": "rpB16",
+   "ea": "InpB16",
+   "was": true,
+   "now": true,
+   "why": "the chart's value is already the best",
+   "mins": 1.2,
+   "p_was": "+140,515",
+   "p_now": "+140,515",
+   "table": [
+    {
+     "InpB16": "false",
+     "Profit": "142959.91",
+     "Profit Factor": "1.311548",
+     "Equity DD %": "0.2523",
+     "Trades": "1303",
+     "Result": "5.60",
+     "smooth": 5.6
+    },
+    {
+     "InpB16": "true",
+     "Profit": "140514.55",
+     "Profit Factor": "1.269507",
+     "Equity DD %": "0.2352",
+     "Trades": "1401",
+     "Result": "5.91",
+     "smooth": 5.91
+    }
+   ]
+  }
+ ]
+}
