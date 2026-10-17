@@ -16,6 +16,20 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.24 (2026-10-17) — MT5 optimizer support (no trading change)
+
+Zee: *"we can use the MT5's own strategy optimizer to find the best settings"* · *"the first thing i need you to optimize for is the settings for Entry position in the range"* · *"optimize specifically for the highest win rate"*
+
+- **`OnTester()`** for OptimizationCriterion 6 (Custom max). `InpOptScore` 0 = net / max equity drawdown, 1 = win rate. A losing setting scores its loss (below every winner); fewer than `InpOptMinTrades` closed trades scores lowest.
+- **`InpBoxInputs` + 42 bools `InpB00..InpB20` / `InpS00..InpS20`**: the range tick-boxes as inputs MT5 can optimise (it cannot search the `InpBandsB/S` strings). Check: Oct 11-17 identical both ways (+$26,120.40, 73.69%, 517).
+- **`InpCsvName`**: the per-trade CSV under that name, also in fast tests and with `InpLogCsv` off; it now ends with `range_pct` (where the entry sat in the range).
+- Runner: `monitor/strategy_lab/saad_optimize.py` (genetic, real ticks, optimise Jan-Jun, forward Jul-Oct, deposit $10M so no pass is cut short).
+- **Receipts (XAUUSD_BB, Zee's chart settings, MT5 candles):**
+  - "1 minute OHLC" is useless for this EA: -$2.14M / WR 51% where real ticks give -$437k / WR 71%.
+  - All 42 boxes ticked, Jan 1 - Oct 17, delay 0: 29,189 trades, WR 78.3%, avg win $311 vs avg loss $1,273, net -$787k. Break-even needs 80.4%.
+  - Every box has WR 75-83%. Only 6 of 42 boxes made money in both halves, fewer than chance would give.
+  - Those 6 boxes alone in MT5, random delay: Jan-Jun +$16,895 (PF 1.02), Jul-Oct **-$52,918** (PF 0.88). The range filter does not carry to unseen months.
+
 ## Saad_strategy_1min v1.23 (2026-10-17) — no chart candles for a date: MT5's own candles
 
 Zee: *"something is wrong with the 10 month run you do on the webpage. see photo. the graph for 10 months keeps going upwards! while the 10 months net says −$584,047.49"*

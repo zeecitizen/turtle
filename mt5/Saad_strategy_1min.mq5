@@ -40,6 +40,8 @@
 //| v1.21: TP1 reached on the chart's candle -> TP1 at the next open  |
 //| v1.22: a chart-candle stop = closed during that candle (not busy) |
 //| v1.23: no chart candles for a date -> MT5's own candles          |
+//| v1.24: InpCsvName - per-trade CSV in fast tests (page's chart)   |
+//|        + OnTester score for MT5's optimizer (net / max drawdown) |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -78,7 +80,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.23"
+#property version   "1.24"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -89,7 +91,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.23"
+#define EA_COMMENT "Saad1m v1.24"
 
 //--- the two lines
 input int    InpEmaFast     = 3;      // InpEmaFast
@@ -219,6 +221,9 @@ input bool   InpVerbose     = false;  // InpVerbose — print every decision
 input bool   InpDraw        = true;   // InpDraw — labels on the chart (visual tester + live): setups, entries, stop moves, exits
 input bool   InpLog         = true;   // InpLog — print every trade event to the Experts tab (live + visual tester)
 input bool   InpLogCsv      = true;   // InpLogCsv — one CSV row per closed trade in Common\Files (live + visual tester)
+input int    InpOptScore    = 0;      // InpOptScore — v1.24 optimizer score: 0 = net / max drawdown, 1 = win rate (only for a net profit; a loss scores below every winner)
+input int    InpOptMinTrades = 200;  // InpOptMinTrades — v1.24 optimizer score: fewer closed trades than this scores below every real result
+input string InpCsvName     = "";     // InpCsvName — v1.24: write the per-trade CSV under this name, also in a fast (non-visual) test (the compare page's 10-month chart)
 input color  InpLongColor   = clrGreen; // InpLongColor — chart text/marks for LONG setups and trades (Zee: dark green)
 input color  InpShortColor  = clrRed;   // InpShortColor — chart text/marks for SHORT setups and trades
 input color  InpSetupTextColor = clrBlack; // InpSetupTextColor — the "SETUP LONG/SHORT: ..." label text (Zee: black); its box and break line keep the side colour
@@ -245,6 +250,51 @@ input int    InpUsdTrailMode = 1;     // InpUsdTrailMode - the $ trail after TP1
 input bool   InpNoEntryExitBar = true; // InpNoEntryExitBar - no new trade in the candle where the last one closed (the chart's minute-by-minute engine)
 input string InpBandsB      = "111111111111111111111"; // InpBandsB - BUY ranges of the last InpRangeLook candles, one digit each: 0-5%, 5-10% ... 95-100%, over 100% (1 = trade, 0 = skip) - the chart's TOP / BOTTOM tick-boxes
 input string InpBandsS      = "111111111111111111111"; // InpBandsS - SELL ranges, measured down from the high, same 21 digits
+// v1.24 (Zee 2026-10-17: "the first thing i need you to optimize for is the settings for Entry position in the range"): MT5's
+// optimizer cannot search a text input, so the same 42 boxes as on/off inputs. InpBoxInputs true = these decide, the strings are ignored.
+input bool   InpBoxInputs   = false;  // InpBoxInputs - true: the 42 InpBxx / InpSxx inputs below replace InpBandsB / InpBandsS
+input bool   InpB00 = true;     // InpB00 - BUY 0-5% (InpBoxInputs)
+input bool   InpB01 = true;     // InpB01 - BUY 5-10% (InpBoxInputs)
+input bool   InpB02 = true;     // InpB02 - BUY 10-15% (InpBoxInputs)
+input bool   InpB03 = true;     // InpB03 - BUY 15-20% (InpBoxInputs)
+input bool   InpB04 = true;     // InpB04 - BUY 20-25% (InpBoxInputs)
+input bool   InpB05 = true;     // InpB05 - BUY 25-30% (InpBoxInputs)
+input bool   InpB06 = true;     // InpB06 - BUY 30-35% (InpBoxInputs)
+input bool   InpB07 = true;     // InpB07 - BUY 35-40% (InpBoxInputs)
+input bool   InpB08 = true;     // InpB08 - BUY 40-45% (InpBoxInputs)
+input bool   InpB09 = true;     // InpB09 - BUY 45-50% (InpBoxInputs)
+input bool   InpB10 = true;     // InpB10 - BUY 50-55% (InpBoxInputs)
+input bool   InpB11 = true;     // InpB11 - BUY 55-60% (InpBoxInputs)
+input bool   InpB12 = true;     // InpB12 - BUY 60-65% (InpBoxInputs)
+input bool   InpB13 = true;     // InpB13 - BUY 65-70% (InpBoxInputs)
+input bool   InpB14 = true;     // InpB14 - BUY 70-75% (InpBoxInputs)
+input bool   InpB15 = true;     // InpB15 - BUY 75-80% (InpBoxInputs)
+input bool   InpB16 = true;     // InpB16 - BUY 80-85% (InpBoxInputs)
+input bool   InpB17 = true;     // InpB17 - BUY 85-90% (InpBoxInputs)
+input bool   InpB18 = true;     // InpB18 - BUY 90-95% (InpBoxInputs)
+input bool   InpB19 = true;     // InpB19 - BUY 95-100% (InpBoxInputs)
+input bool   InpB20 = true;     // InpB20 - BUY over 100% (InpBoxInputs)
+input bool   InpS00 = true;     // InpS00 - SELL 0-5% (InpBoxInputs)
+input bool   InpS01 = true;     // InpS01 - SELL 5-10% (InpBoxInputs)
+input bool   InpS02 = true;     // InpS02 - SELL 10-15% (InpBoxInputs)
+input bool   InpS03 = true;     // InpS03 - SELL 15-20% (InpBoxInputs)
+input bool   InpS04 = true;     // InpS04 - SELL 20-25% (InpBoxInputs)
+input bool   InpS05 = true;     // InpS05 - SELL 25-30% (InpBoxInputs)
+input bool   InpS06 = true;     // InpS06 - SELL 30-35% (InpBoxInputs)
+input bool   InpS07 = true;     // InpS07 - SELL 35-40% (InpBoxInputs)
+input bool   InpS08 = true;     // InpS08 - SELL 40-45% (InpBoxInputs)
+input bool   InpS09 = true;     // InpS09 - SELL 45-50% (InpBoxInputs)
+input bool   InpS10 = true;     // InpS10 - SELL 50-55% (InpBoxInputs)
+input bool   InpS11 = true;     // InpS11 - SELL 55-60% (InpBoxInputs)
+input bool   InpS12 = true;     // InpS12 - SELL 60-65% (InpBoxInputs)
+input bool   InpS13 = true;     // InpS13 - SELL 65-70% (InpBoxInputs)
+input bool   InpS14 = true;     // InpS14 - SELL 70-75% (InpBoxInputs)
+input bool   InpS15 = true;     // InpS15 - SELL 75-80% (InpBoxInputs)
+input bool   InpS16 = true;     // InpS16 - SELL 80-85% (InpBoxInputs)
+input bool   InpS17 = true;     // InpS17 - SELL 85-90% (InpBoxInputs)
+input bool   InpS18 = true;     // InpS18 - SELL 90-95% (InpBoxInputs)
+input bool   InpS19 = true;     // InpS19 - SELL 95-100% (InpBoxInputs)
+input bool   InpS20 = true;     // InpS20 - SELL over 100% (InpBoxInputs)
 input int    InpBandPauseBars = 0;   // InpBandPauseBars - after a trade skipped in an unticked range, no new trade for N candles (0 = take the next setup; the chart's "Pause N candles")
 input bool   InpWaitEntryBar = true;  // InpWaitEntryBar - no TP1 / trail / lock / CTC inside the entry minute: the chart steps once per minute and starts managing a trade at the NEXT one (the broker stop is live from the first tick)
 input bool   InpSlNextBar   = true;   // InpSlNextBar - a stop moved during a minute (TP1, CTC) takes effect at the NEXT minute's open, as on the chart (an open already beyond it closes at market)
@@ -282,8 +332,9 @@ int      g_skipDip = 0, g_skipSweep = 0, g_skipMinLot = 0, g_dayLossStop = 0, g_
 // per-position state
 struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bool noTp; bool ride; datetime entryTime; double best; bool usdTrail; double tpNext; int tpStage; bool resTp1;
                   string setup; double sl0; double risk; string tp1; datetime tp1At; string tps; datetime ctcAt; int moves; double mfe;
-                  int num; double slNow; datetime slFrom; string why; int adRun; double lbest; double pendSl; string pendWhy; datetime pendBar; double brk; bool tp1Pend; double tp1Lvl; datetime tp1Bar; double enJ; };
+                  int num; double slNow; datetime slFrom; string why; int adRun; double lbest; double pendSl; string pendWhy; datetime pendBar; double brk; bool tp1Pend; double tp1Lvl; datetime tp1Bar; double enJ; double chase; };
 PosState g_pos[];
+double g_chase = -1;   // v1.24: where the last entry sat in the range (%), -1 = not measured - logged per trade for the box optimizer
 double EnJ(int i) { return InpTvVerdict && g_pos[i].enJ > 0 ? g_pos[i].enJ : g_pos[i].entry; }
 datetime g_exitBar = 0;
 bool g_late = false;
@@ -405,8 +456,20 @@ void EmasShow()   // v1.22: same candles and periods the EA trades on, so the li
    if (g_hEmas == INVALID_HANDLE || !ChartIndicatorAdd(0, 0, g_hEmas)) PrintFormat("[SAAD] could not draw the EMAs (error %d)", GetLastError());
 }
 
+string g_bandsB = "", g_bandsS = "";   // v1.24: the 21 BUY / SELL boxes in force (InpBandsB/S, or the 42 InpBxx/InpSxx inputs)
+string Boxes(bool a0, bool a1, bool a2, bool a3, bool a4, bool a5, bool a6, bool a7, bool a8, bool a9, bool a10, bool a11, bool a12, bool a13,
+             bool a14, bool a15, bool a16, bool a17, bool a18, bool a19, bool a20)
+{
+   bool b[21] = {a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16, a17, a18, a19, a20};
+   string s = "";
+   for (int i = 0; i < 21; i++) s += b[i] ? "1" : "0";
+   return s;
+}
+
 int OnInit()
 {
+   g_bandsB = InpBoxInputs ? Boxes(InpB00, InpB01, InpB02, InpB03, InpB04, InpB05, InpB06, InpB07, InpB08, InpB09, InpB10, InpB11, InpB12, InpB13, InpB14, InpB15, InpB16, InpB17, InpB18, InpB19, InpB20) : InpBandsB;
+   g_bandsS = InpBoxInputs ? Boxes(InpS00, InpS01, InpS02, InpS03, InpS04, InpS05, InpS06, InpS07, InpS08, InpS09, InpS10, InpS11, InpS12, InpS13, InpS14, InpS15, InpS16, InpS17, InpS18, InpS19, InpS20) : InpBandsS;
    EmasShow();
    hFast = iMA(_Symbol, PERIOD_CURRENT, InpEmaFast, 0, MODE_EMA, PRICE_CLOSE);
    hSlow = iMA(_Symbol, PERIOD_CURRENT, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
@@ -423,7 +486,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.23 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.24 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -431,6 +494,18 @@ int OnInit()
    PrintFormat("[SAAD] day close for %s: %s (no new trades %d min before; losers shut %d min before)", _Symbol,
                e == 0 ? "none found (no daily break)" : TimeToString(e), InpNoNewMins, InpCloseLossMins);
    return INIT_SUCCEEDED;
+}
+
+// v1.24 (Zee 2026-10-17: "we can use the MT5's own strategy optimizer to find the best settings"): the optimizer's score
+// (OptimizationCriterion 6 = "Custom max"). Profit over the worst equity drawdown, so a setting that makes money by risking the
+// account does not win; a losing setting scores its loss (negative, below every winner); too few trades scores lowest of all.
+double OnTester()
+{
+   double net = TesterStatistics(STAT_PROFIT), dd = TesterStatistics(STAT_EQUITY_DD), n = TesterStatistics(STAT_TRADES);
+   if (n < InpOptMinTrades) return -1e9 + n;
+   if (net <= 0) return net / 1000.0;
+   if (InpOptScore == 1) return 100.0 * TesterStatistics(STAT_PROFIT_TRADES) / n;   // Zee: "optimize specifically for the highest win rate"
+   return net / MathMax(dd, 1.0);
 }
 
 void OnDeinit(const int reason)
@@ -561,13 +636,14 @@ string Px(double v) { return v == 0 ? "" : DoubleToString(v, _Digits); }
 // one row per closed trade: Common\Files\Saad15_trades_<symbol>_<magic>[_tester].csv
 void CsvRow(string row)
 {
-   if (!InpLogCsv || (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE))) return;
-   string fn = StringFormat("Saad1m_trades_%s_%d%s.csv", _Symbol, InpMagicNumber, MQLInfoInteger(MQL_TESTER) ? "_tester" : "");
+   // v1.24: InpCsvName set -> always write, under that name (6 parallel test copies each need their own file)
+   if (InpCsvName == "" && (!InpLogCsv || (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)))) return;
+   string fn = InpCsvName != "" ? InpCsvName : StringFormat("Saad1m_trades_%s_%d%s.csv", _Symbol, InpMagicNumber, MQLInfoInteger(MQL_TESTER) ? "_tester" : "");
    int h = FileOpen(fn, FILE_READ | FILE_WRITE | FILE_TXT | FILE_ANSI | FILE_COMMON | FILE_SHARE_READ);
    if (h == INVALID_HANDLE) { Print("[SAAD-1min] cannot write ", fn, " error ", GetLastError()); return; }
    if (FileSize(h) == 0)
       FileWriteString(h, "num,symbol,side,setup,entry_time,entry,sl_initial,risk_usd,tp1_rule,tp1_time,tp_levels,ctc_time,"
-                         "sl_moves,best_price,sl_final,exit_time,exit,exit_reason,profit,commission,swap,net\r\n");
+                         "sl_moves,best_price,sl_final,exit_time,exit,exit_reason,profit,commission,swap,net,range_pct\r\n");
    FileSeek(h, 0, SEEK_END);
    FileWriteString(h, row + "\r\n");
    FileClose(h);
@@ -653,7 +729,7 @@ void SlMoved(int i, double newSl, string note)
 // the position is gone: label its exit from the closing deal
 void DrawExit(PosState &p)
 {
-   if (!(Drawing() || LogOn() || InpLogCsv) || !HistorySelectByPosition(p.ticket)) return;
+   if (!(Drawing() || LogOn() || InpLogCsv || InpCsvName != "") || !HistorySelectByPosition(p.ticket)) return;   // v1.24: InpCsvName writes even with InpLogCsv off
    double px = 0, pnl = 0, prof = 0, comm = 0, swp = 0; datetime t = 0; long reason = -1;
    for (int k = HistoryDealsTotal() - 1; k >= 0; k--) {
       ulong d = HistoryDealGetTicket(k);
@@ -678,10 +754,10 @@ void DrawExit(PosState &p)
                     pnl >= 0 ? "+" : "-", MathAbs(pnl), prof, comm, swp));
    string setupCsv = p.setup; StringReplace(setupCsv, ",", ";");
    string tp1Csv = p.tp1; StringReplace(tp1Csv, ",", ";");
-   CsvRow(StringFormat("%d,%s,%s,%s,%s,%s,%s,%.2f,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%.2f,%.2f,%.2f,%.2f",
+   CsvRow(StringFormat("%d,%s,%s,%s,%s,%s,%s,%.2f,%s,%s,%s,%s,%d,%s,%s,%s,%s,%s,%.2f,%.2f,%.2f,%.2f,%.1f",
                        p.num, _Symbol, p.side > 0 ? "BUY" : "SELL", setupCsv, Ts(p.entryTime), Px(p.entry), Px(p.sl0), p.risk,
                        tp1Csv, Ts(p.tp1At), p.tps, Ts(p.ctcAt), p.moves, Px(p.mfe), Px(p.slNow), Ts(t), Px(px), why,
-                       prof, comm, swp, pnl));
+                       prof, comm, swp, pnl, p.chase));
    DLine(p.slFrom, p.slNow, t, p.slNow, p.ride ? clrOrange : clrRed, STYLE_DASH, 2);
    DLine(p.entryTime, p.entry, t, px, pnl >= 0 ? clrLime : clrRed, STYLE_DOT, 1);
    color c = InpExitTextColor;
@@ -1125,9 +1201,10 @@ void TryEntry()
    // InpRangeMin/Max: where this entry sits in the last InpRangeLook closed candles (BUY 0 = bottom .. 100 = top; SELL mirrored)
    int    bLook = side > 0 ? InpRangeLook : InpRangeLookS;
    double bMin = side > 0 ? InpRangeMin : InpRangeMinS, bMax = side > 0 ? InpRangeMax : InpRangeMaxS;
-   string bands = side > 0 ? InpBandsB : InpBandsS;
+   string bands = side > 0 ? g_bandsB : g_bandsS;
    // v1.10 (Zee 2026-10-17, "the stand aside is just a form of a cooldown"): pausing after a trade skipped in an unticked range
    if (InpBandPauseBars > 0 && BTime(0) <= g_pauseUntil) { DSkip(side, StringFormat("pausing %d candles after a trade skipped in an unticked range", InpBandPauseBars)); return; }
+   g_chase = -1;
    if (bMin > 0 || bMax > 0 || StringFind(bands, "0") >= 0) {
       double hi = 0, lo = DBL_MAX;
       int sh = g_late ? 1 : 0;
@@ -1137,6 +1214,7 @@ void TryEntry()
       double lvl = side > 0 ? g_pHigh + InpBreakPips * pip : g_pLow - InpBreakPips * pip, o0 = g_late ? BOpen(1) : BOpen(0);
       double px = !InpBandAtLevel ? bid : side > 0 ? MathMax(lvl + 0.01, o0) : MathMin(lvl - 0.01, o0);
       double chase = hi > lo ? (side > 0 ? (px - lo) / (hi - lo) : (hi - px) / (hi - lo)) * 100 : 50;
+      g_chase = chase;
       if ((bMin > 0 && chase < bMin - 1e-6) || (bMax > 0 && chase > bMax + 1e-6)) {     // v1.04 #32: 50.000000000008% is 50%
          DSkip(side, StringFormat("entry at %.0f%% of the last %d candles' range (band %.0f-%.0f%%)", chase, bLook, bMin, bMax));
          return;
@@ -1271,7 +1349,7 @@ void DoEntry(int side, double sl)
    p.exitE = g_pExit; p.noTp = noTp; p.resTp1 = resTp1; p.ride = side > 0 && (noTp || (resTp1 && InpResTp1Ride && fix == 0)) && TrailOn(1) && InpFixTpPips <= 0;
    p.entryTime = TimeCurrent(); p.best = p.entry;
    p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0; p.adRun = 0; p.lbest = p.entry; p.pendSl = 0; p.pendWhy = ""; p.pendBar = 0; p.tp1Pend = false; p.tp1Lvl = 0; p.tp1Bar = 0;   // brk / enJ were set above (v1.20 fix: this line used to wipe them)
-   p.setup = g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry;
+   p.setup = g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry; p.chase = g_chase;
    p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    p.tp1 = side > 0 ? (noTp ? "none (exit EMA below entry, no resistance above) - trailing from entry"
                             : fix != 0 ? StringFormat("%.2f (TP1 method %d)", tp, InpTpMode)

@@ -371,6 +371,18 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, json.dumps(STATE))
         if self.path == "/api/year":
             return self.send(200, json.dumps(year().state()))
+        # Zee 2026-10-17: the Blueberry candles of any day Jan-Oct with the EA's trades from the 10-month view on them
+        if self.path in ("/chart", "/chart.html"):
+            return self.send(200, (HERE / "chart.html").read_text(encoding="utf-8"), "text/html")
+        if self.path.startswith("/api/bars?") or self.path.startswith("/api/trades?"):
+            from urllib.parse import parse_qs, urlparse
+            import bb_bars
+            q = {k: v[0] for k, v in parse_qs(urlparse(self.path).query).items()}
+            if self.path.startswith("/api/bars?"):
+                return self.send(200, json.dumps(bb_bars.bars(q["from"], q.get("to", q["from"]))))
+            st = year().state()
+            return self.send(200, json.dumps({"month": q["m"], "trades": year().trades(q["m"]),
+                                              "status": (st["months"].get(q["m"]) or {}).get("status"), "sets": year().sets}))
         self.send(404, "{}")
 
     def do_POST(self):

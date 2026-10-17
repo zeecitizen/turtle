@@ -17,6 +17,7 @@ The EA runs on its own MT5 candles here (InpBarSource=0): the chart only holds ~
 import hashlib
 import json
 import queue
+import random
 import threading
 import time
 from datetime import datetime
@@ -24,6 +25,7 @@ from pathlib import Path
 
 import server                 # first: it puts monitor/strategy_lab on the path
 import axi_rig
+import bb_bars
 
 RIGS = ["axi2", "axi3", "axi4", "axi5", "axi6", "axi7"]      # "axi" stays free for the compare page's own runs
 # Zee 2026-10-17 "maybe we can run these on blueberry instead?": XAUUSD_BB = Blueberry's own real XAUUSD ticks (the chart is
@@ -31,6 +33,9 @@ RIGS = ["axi2", "axi3", "axi4", "axi5", "axi6", "axi7"]      # "axi" stays free 
 SYMBOL = "XAUUSD_BB"
 MONTHS = [f"2026.{m:02d}" for m in range(1, 11)]             # XAUUSD_BB real ticks: Jan 1 - Oct 17 2026
 CACHE = server.HERE / "why_out" / "year_cache.json"
+# Zee 2026-10-17 "use the real ticks downloaded by blueberry to create a chart.. and then apply all settings to that chart":
+# every month's trades (EA v1.24 InpCsvName) are kept per cache key, for the page's chart (/chart)
+TRADES = server.HERE / "why_out" / "year_trades"
 EA_SRC = server.ROOT / "mt5" / f"{server.EA}.mq5"
 POLL = 2.0
 
@@ -130,7 +135,7 @@ class YearRunner:
             self.months = {}
             for m in MONTHS:
                 hit = self.cache.get(self._key(sets, m))
-                if hit:
+                if hit and (TRADES / f"{self._key(sets, m)}.json").exists():
                     self.months[m] = {"status": "done", "result": hit, "cached": True}
                 else:
                     self.months[m] = {"status": "queued"}
@@ -156,15 +161,19 @@ class YearRunner:
                         continue
                     self.months[m] = {"status": "running", "rig": rig, "since": time.time()}
                 t0 = time.time()
+                csv = bb_bars.COMMON / f"saad_year_{rig}.csv"
                 for attempt in range(3):
-                    r = axi_rig.run(server.EA, SYMBOL, "M1", sets, frm=f"{m}.01", to=_next(m), deposit=100000,
+                    csv.unlink(missing_ok=True)
+                    r = axi_rig.run(server.EA, SYMBOL, "M1", dict(sets, InpCsvName=csv.name), frm=f"{m}.01", to=_next(m), deposit=100000,
                                     exec_mode=int(self.delay), tag=f"year_{m.replace('.', '_')}", rig=rig,
                                     cancel=lambda: g != self.gen)
                     # 16 Oct: with 6 rigs starting together a pass sometimes processes NO ticks (quality "100%" without
                     # "real ticks", 0 trades) - April once on axi6, once on axi2; the same pass again is fine
-                    if r.get("error") == "no report" and attempt < 2:
+                    # 17 Oct: "authorization failed" = this rig's terminal reached ANOTHER rig's tester agent on the same local
+                    # port (127.0.0.1:300x) when several rigs start together; retry after a random pause so they don't collide again
+                    if r.get("error") in ("no report", "authorization failed") and attempt < 2:
                         axi_rig.kill_rig(rig)          # a leftover terminal in this rig: clear it and run again
-                        time.sleep(2)
+                        time.sleep(2 + random.random() * 4)
                         continue
                     if r.get("error") or "real ticks" in str(r.get("quality")) or r.get("trades"):
                         break
@@ -180,6 +189,9 @@ class YearRunner:
                     "avg_win": (r.get("trade_stats") or {}).get("avg_win"), "avg_loss": (r.get("trade_stats") or {}).get("avg_loss")}
                 with self.lock:
                     if not res.get("error") and "real ticks" in str(res.get("quality")):
+                        TRADES.mkdir(parents=True, exist_ok=True)
+                        trades = bb_bars.read_trades(csv) if csv.exists() else []
+                        (TRADES / f"{self._key(sets, m)}.json").write_text(json.dumps(trades), encoding="utf-8")
                         self.cache[self._key(sets, m)] = res
                         self._save()
                     if g == self.gen:
@@ -193,6 +205,15 @@ class YearRunner:
                         self.months[m] = {"status": "error", "result": {"error": str(e)[-300:]}, "rig": rig}
 
     # ── for the page ───────────────────────────────────────────────────────
+    def trades(self, m):
+        """The EA's trades of month m ('2026.03') in the batch on screen, times in UTC."""
+        with self.lock:
+            sets = self.sets
+        f = TRADES / f"{self._key(sets, m)}.json" if sets else None
+        if f is None or not f.exists():
+            return None
+        return json.loads(f.read_text(encoding="utf-8"))
+
     def state(self):
         with self.lock:
             now = time.time()
