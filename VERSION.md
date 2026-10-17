@@ -26,7 +26,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | **saad_vsisa_diamond_hybrid** | `saad_vsisa_diamond_hybrid.mq5` (+ `svd_saad.mqh`, `svd_diamond.mqh`, 4 `Vsisa*.mqh`) | 88360 Saad · 88361 VSISA · 88362 Diamond | **v1.00** (2026-10-14) | XAUUSD **M5** | READY, demo first: bigger drawdown (15%) than saad_vsisa_hybrid |
 | **Trinity_1min** | `Trinity_1min.mq5` (+ `TriSaad.mqh`, `TriVsisa.mqh`, `TriDia.mqh`, 4 `Vsisa*.mqh`) | 88370 Saad · 88371 VSISA · 88372 Diamond | **v1.00** (2026-10-14) | XAUUSD **M1**, 0.01 lots | READY, demo first: ~$15/day at 0.01 lots on $500 |
 | **Saad raw** | `Saad_raw.mq5` | 88303 | **v1.00** (2026-10-14) | XAUUSD M15 | RESEARCH, do not attach: the core Saad rules with no filters (Zee) - MT5 full year +$76,834, DD $76,520 vs v1.23 +$211,032 / $13,119 |
-| Saad 1-min | `Saad_strategy_1min.mq5` (+ `monitor/saad_compare/tv_bars_bridge.py`) | 88305 | v1.33 (2026-10-18) | XAUUSD **M15** (M1 still works) | MIRROR of the TradingView chart: trades on the chart's own candles (bridge must run) - **83 of 83** chart trades on Blueberry Oct 12-15. Settings still REFUSED on long periods (Axi TK Sep 15 - Oct 15 -$53,632) - demo only |
+| Saad 1-min | `Saad_strategy_1min.mq5` (+ `monitor/saad_compare/tv_bars_bridge.py`) | 88305 | v1.35 (2026-10-18) | XAUUSD **M15** (M1 still works) | MIRROR of the TradingView chart: trades on the chart's own candles (bridge must run) - **83 of 83** chart trades on Blueberry Oct 12-15. Settings still REFUSED on long periods (Axi TK Sep 15 - Oct 15 -$53,632) - demo only |
 | **FractalBreakout** | `FractalBreakout.mq5` | 88410 | **v1.00** (2026-10-15) | XAUUSD **M5** | TEST, do not attach: Williams Fractals (25) breakout + trailing stop. Beats a no-rules control at every trail, but most of the profit was Jan–Mar |
 | **bread_winner** | `bread_winner.mq5` (+ `bread_saad/vsisa/dia/pb/vsisa2.mqh`, 4 `Vsisa*.mqh`) | 88390–88395 (shots 88393, Diamond 88392) | **v1.03** (2026-10-14) | XAUUSD, any chart | READY, demo first: ONE ~$11.5 shot per Pakistan day; ~92% of weekdays bread (88% random delay), ~1 in 15 red |
 | VSISA_Pullbacks | `VSISA_Pullbacks.mq5` | 88202 | v1.00 (2026-09-17) | XAUUSD | BUILT |
@@ -106,6 +106,8 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | Version | Date | What changed | Result / note |
 |---|---|---|---|
+| v1.35 | 2026-10-18 | `InpReEntry`: re-enter the setup when price breaks back after an ORIGINAL stop-out (off); indicator has it too | M15: 45 stop-outs, 8-17 re-entries, about break-even (+$109-110k vs +$110.6k off) |
+| v1.34 | 2026-10-18 | `InpTpFixUsd`: one fixed $ target for both sides (optimizer) | - |
 | v1.33 | 2026-10-18 | `InpAdaptToday`: range boxes re-judged after every trade from today's trades (off by default) | 1-min year still loses (WR ~63%, PF 0.83-0.85) |
 | v1.32 | 2026-10-18 | `InpAdaptWeeks` / `InpAdaptDays`: self-tuning range boxes, rebuilt weekly / daily from recent trades (off by default) | 1-min year: every variant still loses (WR ~63%, PF 0.82-0.85); fewer trades = smaller loss only |
 | v1.31 | 2026-10-18 | `InpOptScore` 4 = trade win rate always (optimizer). No trading change | 1-min EMA grid: all 35 combos lose with Zee's 1-min settings (WR 67-78%, PF 0.81-0.87) |

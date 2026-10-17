@@ -16,6 +16,25 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.34 - v1.35 (2026-10-18) — one fixed target input; re-entry after a stop-out (off by default)
+
+- **v1.34:** `InpTpFixUsd` (> 0) sets the same fixed $ TP1 for BUY and SELL, one input the optimizer can sweep.
+- **v1.35:** `InpReEntry` / `InpReEntryBars`. Zee: *"When the market again crosses our entry price reverting from the stop loss point to our original point -> we initiate our original setup at X again"*.
+  - A trade closed by its ORIGINAL stop (not breakeven, trail or cut, and not itself a re-entry) re-arms the same setup (candle high/low, exit EMA).
+  - It re-enters when the bid breaks back through the setup's break level within N candles, skipping the range / pause / cool-down filters.
+  - It waits while another setup is pending, the same rule as the indicator.
+  - The indicator has the same feature as its last two inputs (`reOn`, `reBars`).
+- **Receipts** (v1.30 defaults, XAUUSD_BB M15, full year, no delay):
+
+| Run | Net | WR | PF | Re-entries |
+|---|---|---|---|---|
+| Off | +$110,551 | 82.2% | 1.74 | - |
+| 2 h window | +$108,968 | 82.0% | 1.68 | 45 stop-outs armed, 8 taken |
+| 6 h window | +$109,806 | 82.2% | 1.67 | 17 taken |
+
+  - Price rarely came back through the entry after a stop. Those re-entries about broke even.
+  - These runs used the first trigger (the fill price X); v1.35 now uses the break level, like the chart.
+
 ## Saad_strategy_1min v1.33 (2026-10-18) — intraday range learning (off by default)
 
 Zee: *"as the day starts: we take trades -> as soon as we've taken trades on all ranges -> turn off the ranges that lost and turn on the ones that won.. on each 1 minute candle we optimize the range based on TODAY's data"*
