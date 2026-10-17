@@ -10,7 +10,10 @@ candles the indicator sees (same setups, same entry band, same lock / trail cand
     py tv_bars_bridge.py --live        # keep appending each closed candle (run beside the EA on a live chart)
 
 Times are written in broker server time = UTC+3 while New York is on summer time, UTC+2 otherwise
-(Blueberry and Axi: the day closes at 5 pm New York). The chart must be on the 1-minute timeframe.
+(Blueberry and Axi: the day closes at 5 pm New York).
+
+Zee 2026-10-17 ("Run the live EA on the chart's own 15-min candles"): any timeframe now. The chart's timeframe picks the
+file - 1 min -> tv_bars_XAUUSD.csv (as before), others -> tv_bars_XAUUSD_M15.csv etc. (EA InpTvFile "auto" picks the same).
 """
 import argparse
 import json
@@ -47,16 +50,34 @@ def line(b):
     return f"{server_time(b[0]):%Y.%m.%d %H:%M},{b[1]:.2f},{b[2]:.2f},{b[3]:.2f},{b[4]:.2f}\n"
 
 
-def read_bars(n):
+RES = {"1": 1, "5": 5, "15": 15, "30": 30, "60": 60}
+MINS = 1                                               # the chart's timeframe in minutes (set by read_bars)
+
+
+def tf_file(res):
+    """The bridge file for a chart timeframe: 1 min keeps the old name; the EA's InpTvFile "auto" uses the same rule."""
+    return COMMON / ("tv_bars_XAUUSD.csv" if str(res) == "1" else f"tv_bars_XAUUSD_M{res}.csv")
+
+
+def read_bars(n, want=None):
+    global MINS
     d = server.tv_eval(JS_BARS % (CHART, n))
-    if str(d.get("res")) != "1":
-        raise RuntimeError(f"the chart is on {d.get('sym')} {d.get('res')} - switch it to 1 minute")
+    res = str(d.get("res"))
+    if res not in RES:
+        raise RuntimeError(f"the chart is on {d.get('sym')} {res} - use 1, 5, 15, 30 or 60 minutes")
+    if want and res != str(want):
+        raise RuntimeError(f"the chart switched to {res} minutes; this bridge writes {want}-minute candles")
+    MINS = RES[res]
     return d["sym"], d["bars"]
 
 
 def closed(bars):
     now = time.time()
-    return [b for b in bars if b[0] + 60 <= now]       # the forming candle is not written
+    return [b for b in bars if b[0] + 60 * MINS <= now]   # the forming candle is not written
+
+
+def chart_res():
+    return str(server.tv_eval(JS_BARS % (CHART, 1)).get("res"))
 
 
 def export(out, more=15):
@@ -82,6 +103,7 @@ def export(out, more=15):
 
 
 def live(out, every=2.0):
+    want = chart_res()
     last = 0
     if out.exists():
         tail = out.read_text(encoding="ascii").strip().splitlines()[-1:]
@@ -95,7 +117,7 @@ def live(out, every=2.0):
     print(f"live -> {out} (every {every}s, Ctrl+C to stop)")
     while True:
         try:
-            sym, bars = read_bars(30)
+            sym, bars = read_bars(30, want)
             new = [b for b in closed(bars) if b[0] > last]
             if new:
                 with open(out, "a", encoding="ascii") as f:
@@ -111,9 +133,9 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--export", action="store_true")
     ap.add_argument("--live", action="store_true")
-    ap.add_argument("--file", default=str(COMMON / "tv_bars_XAUUSD.csv"))
+    ap.add_argument("--file", help="default: the file for the chart's timeframe (tv_bars_XAUUSD.csv for 1 min, tv_bars_XAUUSD_M15.csv ...)")
     a = ap.parse_args()
-    out = Path(a.file)
+    out = Path(a.file) if a.file else tf_file(chart_res())
     if a.export or not a.live:
         export(out)
     if a.live:
