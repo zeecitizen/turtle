@@ -320,7 +320,7 @@ def run_mt5(frm, to, symbol, offset_h, delay):
     # Saad_strategy_1min v1.04 InpBarSource 1: the EA judges the chart's own candles - refresh them from TradingView first
     if str(tvd["ea_sets"].get("InpBarSource", axi_rig.ea_defaults(EA).get("InpBarSource", "0"))) == "1":
         import tv_bars_bridge
-        tv_bars_bridge.export(tv_bars_bridge.COMMON / "tv_bars_XAUUSD.csv", more=2)
+        tv_bars_bridge.export(tv_bars_bridge.tf_file(tvd["res"]), more=2)   # the file for the chart's timeframe (EA InpTvFile "auto")
     sets = dict(tvd["ea_sets"]); sets.update({"InpLog": "true", "InpVerbose": "true"})   # the EA's reasons, for the feed-diff tag
     if rig == "bblive":
         r, rep = bb_live_run(sets, tvd["period"], frm.replace("-", "."), to.replace("-", "."), int(delay), tag)

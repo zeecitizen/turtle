@@ -43,6 +43,8 @@
 //| v1.24: InpCsvName - per-trade CSV in fast tests (page's chart)   |
 //|        + OnTester score for MT5's optimizer (net / max drawdown) |
 //| v1.25: InpOptScore 2 = win rate of whole trades (TP1 + rest)     |
+//| v1.26: chart candles on any timeframe (InpTvFile auto) + Zee's   |
+//|        15-min settings of 17 Oct as defaults - attach to M15     |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -81,7 +83,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.25"
+#property version   "1.26"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -92,17 +94,17 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.25"
+#define EA_COMMENT "Saad1m v1.26"
 
 //--- the two lines
-input int    InpEmaFast     = 3;      // InpEmaFast
-input int    InpEmaSlow     = 4;     // InpEmaSlow
+input int    InpEmaFast     = 14;      // InpEmaFast
+input int    InpEmaSlow     = 70;     // InpEmaSlow
 input bool   InpShowEmas    = true;   // InpShowEmas — draw the two EMAs on the chart: EMA 9 thick blue, EMA 50 thick red
 
 //--- ① setup candle
-input double InpWickMin     = 0.40;   // InpWickMin — pin: long wick >= this x range [v1.13: 0.35->0.45]
-input double InpBodyMax     = 0.60;   // InpBodyMax — pin: body <= this x range
-input double InpNoseMax     = 0.20;   // InpNoseMax — pin: short wick <= this x range
+input double InpWickMin     = 0.5;   // InpWickMin — pin: long wick >= this x range [v1.13: 0.35->0.45]
+input double InpBodyMax     = 0.45;   // InpBodyMax — pin: body <= this x range
+input double InpNoseMax     = 0.45;   // InpNoseMax — pin: short wick <= this x range
 input bool   InpPinDir      = false;  // InpPinDir — pin must point the trade way (false = any pin, the EMA decides)
 input bool   InpPinColor    = false;  // InpPinColor — pin body must close the trade way too: LONG green, SHORT red (with InpPinDir)
 input bool   InpUsePin      = true;   // InpUsePin — accept pin bars
@@ -111,12 +113,12 @@ input double InpMaruBody    = 0.53;   // InpMaruBody — marubozu: body >= this 
 input bool   InpHammer      = true;   // InpHammer — accept hammers (LONG)
 input bool   InpStar        = true;   // InpStar — accept shooting stars (SHORT)
 input double InpHamRatio    = 2.0;    // InpHamRatio — hammer: long wick >= this x body [v1.13: 3->2.5]
-input double InpHamNose     = 0.50;   // InpHamNose — hammer: opposite wick <= this x range
-input double InpMinRangeAtr = 0.40;   // InpMinRangeAtr — candle range >= this x ATR(14) (0 = off) [v1.14: 0.50->0.55]
+input double InpHamNose     = 0.35;   // InpHamNose — hammer: opposite wick <= this x range
+input double InpMinRangeAtr = 0.35;   // InpMinRangeAtr — candle range >= this x ATR(14) (0 = off) [v1.14: 0.50->0.55]
 
 //--- ① on the EMA
 input int    InpLongRule    = 2;      // InpLongRule — 0 on 9 EMA exit 50 (rules) · 1 on 50 exit 9 (inverse) · 2 both
-input int    InpShortLine   = 1;      // InpShortLine — 0 the 50 EMA (rules) · 1 the 9 EMA · 2 either [M15: 2->1, SHORT setups on the 9 EMA]
+input int    InpShortLine   = 2;      // InpShortLine — 0 the 50 EMA (rules) · 1 the 9 EMA · 2 either [M15: 2->1, SHORT setups on the 9 EMA]
 input int    InpTouchMode   = 0;      // InpTouchMode — 0 candle touches the EMA · 1 wick touches, body on the trade side
 input double InpTouchPips   = 1;      // InpTouchPips — touch tolerance [v1.23: 0->1; 1-3 pips plateau, 4+ worse]
 input bool   InpLongExitAbove = false;// InpLongExitAbove — LONG only when its exit EMA is above the candle
@@ -127,14 +129,14 @@ input double InpBreakPips   = 5;      // InpBreakPips — break must clear the h
 input bool   InpTrigBid     = true;   // InpTrigBid — LONG break judged on the BID like the chart (false = the ASK, a real buy stop)
 
 //--- ④ stop · ⑤ target
-input double InpSlPips      = 43;     // InpSlPips — stop beyond the candle [v4.02: 34->30] [v1.13: 30->35, real-tick court + Jul-Oct holdout]
-input double InpMaxRiskUsd  = 10.5;    // InpMaxRiskUsd — skip if the stop is more than this $ of price away (0 = off) [M15: 9->15; 14-18 plateau, 9 skips 2/3 of M15 setups]
+input double InpSlPips      = 36.0;     // InpSlPips — stop beyond the candle [v4.02: 34->30] [v1.13: 30->35, real-tick court + Jul-Oct holdout]
+input double InpMaxRiskUsd  = 20.0;    // InpMaxRiskUsd — skip if the stop is more than this $ of price away (0 = off) [M15: 9->15; 14-18 plateau, 9 skips 2/3 of M15 setups]
 input int    InpLongExit    = 1;      // InpLongExit — 0 a candle touches the exit EMA · 1 a candle CLOSES at / beyond it
 input double InpLongTpPips  = 0;      // InpLongTpPips — LONG: take profit this many pips before the EMA
 input int    InpSwingPivot  = 8;      // InpSwingPivot — SHORT "last support" = swing low with this many candles each side
-input int    InpSwingLook   = 90;    // InpSwingLook — candles back to search for the support [M15: 300->100 candles = 25 hours]
+input int    InpSwingLook   = 32;    // InpSwingLook — candles back to search for the support [M15: 300->100 candles = 25 hours]
 input double InpShortTpPips = 0;      // InpShortTpPips — SHORT: take profit this many pips before the support
-input double InpMinTpPips   = 5;      // InpMinTpPips — TP at least this far from the entry
+input double InpMinTpPips   = 10.0;      // InpMinTpPips — TP at least this far from the entry
 input double InpMaxTpPips   = 0;      // InpMaxTpPips — skip a SHORT whose support is further than this (0 = off)
 
 //--- ⑥ breakeven
@@ -142,14 +144,14 @@ input double InpBeUsd       = 0.0;    // InpBeUsd — stop to entry once price m
 input int    InpNoNewMins   = 0;      // InpNoNewMins — no new setups / entries this many minutes before the day's close (0 = off) [v1.03 30; v1.05 OFF, Zee: costs ~$11k at 1 lot]
 input int    InpCloseLossMins = 1;    // InpCloseLossMins — this many minutes before the close: shut trades in loss, keep winners (0 = off) [v1.03, Zee]
 input int    InpLongTouch   = 1;      // InpLongTouch — LONG at the exit EMA: 1 on a TOUCH trail $X below the market + TP at the last resistance (Zee 2026-10-12) · 0 old exit
-input double InpLongTrailUsd = 0.5;   // InpLongTrailUsd — ...the trailing stop's distance below the market, $ of price [v1.07: 3->2, Zee]
+input double InpLongTrailUsd = 1.0;   // InpLongTrailUsd — ...the trailing stop's distance below the market, $ of price [v1.07: 3->2, Zee]
 input bool   InpLongResTp   = true;   // InpLongResTp — ...and aim for the next liquidity: TP2 = last resistance, then TP3 = the one beyond (watched by the EA; the exit is the trail)
 input bool   InpLongResTp1  = false;  // InpLongResTp1 — LONG whose exit EMA is below / too close to the entry: TP1 = the next resistance above the entry (false = no TP, trail from entry) [v1.11 Zee; v1.12 OFF: -$70k on real ticks (trailing from entry is better)]
 input bool   InpResTp1Ride  = true;   // InpResTp1Ride — with InpLongResTp1: also trail from the entry (2xATR) until that resistance is reached
 input int    InpShortTouch  = 1;      // InpShortTouch — SHORT at the support (TP1): 1 trail $X above the market + TP2/TP3 = the supports below (Zee 2026-10-12) · 0 old (lock + ATR trail)
 input double InpTrailStepUsd = 0;     // InpTrailStepUsd — widen the $ trail by this much at each TP reached after TP1 (TP2 +1x, TP3 +2x ...; 0 = fixed)
-input double InpShortTrailUsd = 2.5;  // InpShortTrailUsd — ...the trailing stop's distance above the market, $ of price [v1.07: 3->2, Zee]
-input double InpBeTpPct     = 0.60;   // InpBeTpPct — CTC: stop to entry once price covered this share of the way to the TP (0 = off) [v1.02, Zee]
+input double InpShortTrailUsd = 2.0;  // InpShortTrailUsd — ...the trailing stop's distance above the market, $ of price [v1.07: 3->2, Zee]
+input double InpBeTpPct     = 1.0;   // InpBeTpPct — CTC: stop to entry once price covered this share of the way to the TP (0 = off) [v1.02, Zee]
 
 //--- ⑦ trailing
 input bool   InpTrail       = true;   // InpTrail — use a trailing stop
@@ -164,13 +166,13 @@ input int    InpRideLock    = 0;      // InpRideLock — when the TP is reached 
 input double InpLockPips    = 0;      // InpLockPips — lock this many pips short of the TP [v4.02: 2->0]
 
 //--- ✖ filters
-input double InpChopEr      = 0.02;   // InpChopEr — skip if the efficiency ratio is below this (0 = off) [v1.14: 0.10->0.11]
+input double InpChopEr      = 0.0;   // InpChopEr — skip if the efficiency ratio is below this (0 = off) [v1.14: 0.10->0.11]
 input int    InpChopErLook  = 16;     // InpChopErLook — efficiency ratio length
 input int    InpSessFrom    = 0;      // InpSessFrom — broker hour, inclusive (Axi UTC+3; 0/24 = all day)
 input int    InpSessTo      = 24;     // InpSessTo — broker hour, exclusive
-input bool   InpGapCancel   = true;   // InpGapCancel — cancel a waiting setup across the daily close / weekend
+input bool   InpGapCancel   = false;   // InpGapCancel — cancel a waiting setup across the daily close / weekend
 input int    InpHtfMin      = 0;      // InpHtfMin — higher-timeframe trend filter: 0 off · 5 / 15 / 30 / 60 / 240 minutes (trade only with that timeframe's trend)
-input int    InpHtfEma      = 50;     // InpHtfEma — the HTF trend EMA (LONG: HTF close above it and it is rising; SHORT the opposite)
+input int    InpHtfEma      = 9;     // InpHtfEma — the HTF trend EMA (LONG: HTF close above it and it is rising; SHORT the opposite)
 input bool   InpTrendAlign  = false;  // InpTrendAlign — LONG only if EMA9 > EMA50, SHORT only if EMA9 < EMA50
 input bool   InpPriceSide   = false;  // InpPriceSide — LONG only if the close is above the 50 EMA, SHORT below
 input double InpSlopePips   = 0;      // InpSlopePips — the 50 EMA must move this many pips the trade's way...
@@ -180,8 +182,8 @@ input double InpMaxSpreadPts = 0;     // InpMaxSpreadPts — skip an entry while
 input int    InpSkipDow     = -1;     // InpSkipDow — no new setups on this weekday (0 Sun .. 6 Sat; -1 none)
 
 //--- v4.01 tuning: geometry
-input double InpLockAtUsd   = 2;      // InpLockAtUsd — once price moved this $ the trade's way... (0 = off; VSISA's one-lock ratchet)
-input double InpLockUsd     = 5.5;      // InpLockUsd — ...lock the stop this $ beyond the entry
+input double InpLockAtUsd   = 0.0;      // InpLockAtUsd — once price moved this $ the trade's way... (0 = off; VSISA's one-lock ratchet)
+input double InpLockUsd     = 0.0;      // InpLockUsd — ...lock the stop this $ beyond the entry
 input double InpFixTpPips   = 0;      // InpFixTpPips — fixed take profit for both sides, no ride (0 = the rules' targets)
 input int    InpMaxBars     = 0;      // InpMaxBars — close a trade still open after this many candles (0 = off)
 input int    InpCoolBars    = 0;      // InpCoolBars — after a losing trade, no new setups for this many candles (0 = off)
@@ -234,23 +236,23 @@ input color  InpSlTextColor = clrBlack; // InpSlTextColor — stop-loss TEXT (th
 input bool   InpDrawSkips   = true;   // InpDrawSkips — also label setups that were skipped (no break, risk, no support, choppy)
 input group "1-MIN ADDITIONS (from the TradingView indicator, 16 Oct 2026)"
 input double InpTrailGapUsd = 0.1;    // InpTrailGapUsd - the ATR trail stops at least this $ under (BUY) / over (SELL) the candle close (0 = off)
-input int    InpCutRunN     = 6;      // InpCutRunN - this many candles in a row against a trade that is in loss: close it (0 = off)
-input int    InpRangeLook   = 7;      // InpRangeLook - BUY: range of the last N closed candles for the entry band
-input double InpRangeMin    = 25;     // InpRangeMin - skip a BUY entering below this % of that range (SELL mirrored; 0 = off)
-input double InpRangeMax    = 35;     // InpRangeMax - skip a BUY entering above this % of that range (0 = off; over 100 = a new high)
-input int    InpRangeLookS  = 7;      // InpRangeLookS - SELL: range of the last N closed candles (v1.02: BUY and SELL have their own band)
-input double InpRangeMinS   = 25;     // InpRangeMinS - SELL: skip entering higher than this % from the top of that range (0 = off)
-input double InpRangeMaxS   = 35;     // InpRangeMaxS - SELL: skip entering lower than this % from the top (0 = off; over 100 = a new low)
+input int    InpCutRunN     = 5;      // InpCutRunN - this many candles in a row against a trade that is in loss: close it (0 = off)
+input int    InpRangeLook   = 16;      // InpRangeLook - BUY: range of the last N closed candles for the entry band
+input double InpRangeMin    = 0.0;     // InpRangeMin - skip a BUY entering below this % of that range (SELL mirrored; 0 = off)
+input double InpRangeMax    = 0.0;     // InpRangeMax - skip a BUY entering above this % of that range (0 = off; over 100 = a new high)
+input int    InpRangeLookS  = 9;      // InpRangeLookS - SELL: range of the last N closed candles (v1.02: BUY and SELL have their own band)
+input double InpRangeMinS   = 0.0;     // InpRangeMinS - SELL: skip entering higher than this % from the top of that range (0 = off)
+input double InpRangeMaxS   = 0.0;     // InpRangeMaxS - SELL: skip entering lower than this % from the top (0 = off; over 100 = a new low)
 input int    InpLockMode    = 1;      // InpLockMode - 0 the lock on every tick (v1.02) · 1 at each candle close like the TradingView chart: set only once a closed candle's low (BUY) / high + spread (SELL) is past the lock level
 input bool   InpBandAtLevel = true;   // InpBandAtLevel - judge the entry band at the break level + 0.01 (or the candle open past it), as the TradingView chart does; false = at the live bid (v1.02)
 input bool   InpDumpBars    = false;  // InpDumpBars - debug: write every closed candle with its EMAs to Common\Files\saad1m_bars.csv (chart vs MT5 feed check)
 input int    InpBarSource   = 1;      // InpBarSource - 0 the MT5 candles · 1 the TradingView chart's candles (Common\Files\InpTvFile, written by monitor/saad_compare/tv_bars_bridge.py) - same setups as the chart
-input string InpTvFile      = "tv_bars_XAUUSD.csv"; // InpTvFile - the chart's closed 1-min candles in broker server time: "YYYY.MM.DD HH:MM,open,high,low,close"
+input string InpTvFile      = "auto"; // InpTvFile - the chart's closed candles in broker server time: "YYYY.MM.DD HH:MM,open,high,low,close" · auto = tv_bars_XAUUSD.csv on M1, tv_bars_XAUUSD_M15.csv on M15 ... (the bridge's names)
 input int    InpTvWaitSec   = 20;     // InpTvWaitSec - live: wait up to N s after a new candle for the chart's closed candle to arrive
 input int    InpUsdTrailMode = 1;     // InpUsdTrailMode - the $ trail after TP1: 0 every tick (v1.03) · 1 once per candle from its high (BUY) / low + spread (SELL), like the chart
 input bool   InpNoEntryExitBar = true; // InpNoEntryExitBar - no new trade in the candle where the last one closed (the chart's minute-by-minute engine)
-input string InpBandsB      = "111111111111111111111"; // InpBandsB - BUY ranges of the last InpRangeLook candles, one digit each: 0-5%, 5-10% ... 95-100%, over 100% (1 = trade, 0 = skip) - the chart's TOP / BOTTOM tick-boxes
-input string InpBandsS      = "111111111111111111111"; // InpBandsS - SELL ranges, measured down from the high, same 21 digits
+input string InpBandsB      = "111011110010000010110"; // InpBandsB - BUY ranges of the last InpRangeLook candles, one digit each: 0-5%, 5-10% ... 95-100%, over 100% (1 = trade, 0 = skip) - the chart's TOP / BOTTOM tick-boxes
+input string InpBandsS      = "111111110100001011110"; // InpBandsS - SELL ranges, measured down from the high, same 21 digits
 // v1.24 (Zee 2026-10-17: "the first thing i need you to optimize for is the settings for Entry position in the range"): MT5's
 // optimizer cannot search a text input, so the same 42 boxes as on/off inputs. InpBoxInputs true = these decide, the strings are ignored.
 input bool   InpBoxInputs   = false;  // InpBoxInputs - true: the 42 InpBxx / InpSxx inputs below replace InpBandsB / InpBandsS
@@ -296,17 +298,17 @@ input bool   InpS17 = true;     // InpS17 - SELL 85-90% (InpBoxInputs)
 input bool   InpS18 = true;     // InpS18 - SELL 90-95% (InpBoxInputs)
 input bool   InpS19 = true;     // InpS19 - SELL 95-100% (InpBoxInputs)
 input bool   InpS20 = true;     // InpS20 - SELL over 100% (InpBoxInputs)
-input int    InpBandPauseBars = 0;   // InpBandPauseBars - after a trade skipped in an unticked range, no new trade for N candles (0 = take the next setup; the chart's "Pause N candles")
+input int    InpBandPauseBars = 1;   // InpBandPauseBars - after a trade skipped in an unticked range, no new trade for N candles (0 = take the next setup; the chart's "Pause N candles")
 input bool   InpWaitEntryBar = true;  // InpWaitEntryBar - no TP1 / trail / lock / CTC inside the entry minute: the chart steps once per minute and starts managing a trade at the NEXT one (the broker stop is live from the first tick)
 input bool   InpSlNextBar   = true;   // InpSlNextBar - a stop moved during a minute (TP1, CTC) takes effect at the NEXT minute's open, as on the chart (an open already beyond it closes at market)
 input bool   InpTvVerdict   = true;   // InpTvVerdict - with InpBarSource 1, when the two feeds disagree by cents the CHART's candle decides: it broke the level and MT5 did not -> enter at the next open; MT5 broke it and the chart did not -> out at the next open; the chart's candle went through the stop and MT5 did not -> out at the next open (the broker stop stays)
-input int    InpClosedRetryMins = 5;  // InpClosedRetryMins - the broker said "market closed" (Blueberry quotes from 01:00 but trades a little later): keep the setup and retry for N minutes (0 = drop it)
-input double InpChartSpread = 0;     // InpChartSpread - the chart's fixed spread ($ of price, e.g. 0.17): every DECISION that uses the spread uses this one, as the chart does (0 = the live spread). Fills always pay the real spread
-input int    InpTpMode      = 0;      // InpTpMode - TP1 method: 0 normal (BUY other-EMA touch, SELL last swing low) · 1 fixed $ · 2 Fibonacci extension of the setup candle · 3 partial (a share at the fixed $, the rest trails)
+input int    InpClosedRetryMins = 0;  // InpClosedRetryMins - the broker said "market closed" (Blueberry quotes from 01:00 but trades a little later): keep the setup and retry for N minutes (0 = drop it)
+input double InpChartSpread = 0.17;     // InpChartSpread - the chart's fixed spread ($ of price, e.g. 0.17): every DECISION that uses the spread uses this one, as the chart does (0 = the live spread). Fills always pay the real spread
+input int    InpTpMode      = 2;      // InpTpMode - TP1 method: 0 normal (BUY other-EMA touch, SELL last swing low) · 1 fixed $ · 2 Fibonacci extension of the setup candle · 3 partial (a share at the fixed $, the rest trails)
 input double InpTpFixUsdB   = 2.0;    // InpTpFixUsdB - modes 1 / 3: BUY TP1 = the entry + $X
 input double InpTpFixUsdS   = 2.0;    // InpTpFixUsdS - modes 1 / 3: SELL TP1 = the entry - $X
 input double InpTpFibPct    = 161.8;  // InpTpFibPct - mode 2: BUY TP1 = setup low + X% of its range, SELL = setup high - X%
-input double InpTpPartPct   = 0.5;    // InpTpPartPct - mode 3: close this share at the target (instead of InpPartialPct)
+input double InpTpPartPct   = 0.8;    // InpTpPartPct - mode 3: close this share at the target (instead of InpPartialPct)
 input double InpTpPartTrailUsd = 2.0; // InpTpPartTrailUsd - mode 3: the rest trails $X (instead of InpLongTrailUsd / InpShortTrailUsd)
 input bool   InpTpNoFixSkip = false;  // InpTpNoFixSkip - modes 1-3: a target not InpMinTpPips beyond the entry skips the trade (false = the normal TP1)
 
@@ -366,10 +368,12 @@ bool g_useTv = false;                // v1.23: this candle has chart candles beh
 bool g_tvStale = false;              // live: the chart's candle never came - no setups / candle stops on an old candle
 int g_tvN = 0, g_tvEnd = -1;          // g_tvEnd = index of the last CLOSED chart candle (shift 1)
 uint g_tvReadMs = 0;
+// v1.26 (Zee 2026-10-17: "Run the live EA on the chart's own 15-min candles"): the bridge writes one file per timeframe
+string TvFile() { if (InpTvFile != "auto") return InpTvFile; int m = PeriodSeconds() / 60; return m == 1 ? "tv_bars_XAUUSD.csv" : StringFormat("tv_bars_XAUUSD_M%d.csv", m); }
 bool TvLoad()
 {
    g_tvReadMs = GetTickCount();
-   int fh = FileOpen(InpTvFile, FILE_READ | FILE_CSV | FILE_ANSI | FILE_COMMON | FILE_SHARE_READ | FILE_SHARE_WRITE, ',');
+   int fh = FileOpen(TvFile(), FILE_READ | FILE_CSV | FILE_ANSI | FILE_COMMON | FILE_SHARE_READ | FILE_SHARE_WRITE, ',');
    if (fh == INVALID_HANDLE) return false;
    int n = 0, cap = MathMax(ArraySize(tvT), 1024);
    ArrayResize(tvT, cap); ArrayResize(tvO, cap); ArrayResize(tvH, cap); ArrayResize(tvL, cap); ArrayResize(tvC, cap);
@@ -396,6 +400,24 @@ bool TvLoad()
       tvA[i] = trs / MathMin(i + 1, 14);                                                                  // ta.sma(tr, 14) = MT5 iATR
    }
    return n > 0;
+}
+// v1.26 (Zee 2026-10-17, 15-min mirror): TradingView starts a week's first 15-min candles at the session open (Monday 01:01,
+// 01:16, 01:31 ...) while MT5's run 01:00, 01:15 ... - the EA saw each Monday chart candle ~14 minutes late (26 of 192 trades
+// differed, nearly all on Mondays). On M5+ with chart candles the EA's "current candle" now opens when the CHART's candle closes.
+// M1 keeps MT5's clock (its candles already line up: 333 of 333). No chart candle for too long (bridge stopped) -> MT5's clock.
+datetime CurBar()
+{
+   datetime mt = iTime(_Symbol, PERIOD_CURRENT, 0);
+   if (InpBarSource != 1 || g_tvN == 0 || PeriodSeconds() <= 60) return mt;
+   int P = PeriodSeconds(), warm = MathMin(InpEmaSlow * 2 + 19, g_tvN - 1);
+   datetime now = TimeCurrent();
+   if (!MQLInfoInteger(MQL_TESTER) && now >= tvT[g_tvN - 1] + 2 * P && GetTickCount() - g_tvReadMs >= 1000) TvLoad();   // live: the next candle is due
+   int lo = 0, hi = g_tvN - 1, r = -1;
+   while (lo <= hi) { int m = (lo + hi) / 2; if (tvT[m] + P <= now) { r = m; lo = m + 1; } else hi = m - 1; }
+   if (r < warm) return mt;
+   datetime tb = tvT[r] + P;
+   if (MQLInfoInteger(MQL_TESTER) ? now > tvT[g_tvN - 1] + 2 * P : now - tb > P + InpTvWaitSec && mt > tb) return mt;
+   return tb;
 }
 // the last chart candle that closed before the MT5 candle opening at `bar`
 void TvSync(datetime bar)
@@ -434,7 +456,7 @@ double BOpen(int s)  { if (!g_useTv || s <= 0) return iOpen(_Symbol, PERIOD_CURR
 double BHigh(int s)  { if (!g_useTv || s <= 0) return iHigh(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvH[i]; }
 double BLow(int s)   { if (!g_useTv || s <= 0) return iLow(_Symbol, PERIOD_CURRENT, s);   int i = TvI(s); return i < 0 ? 0 : tvL[i]; }
 double BClose(int s) { if (!g_useTv || s <= 0) return iClose(_Symbol, PERIOD_CURRENT, s); int i = TvI(s); return i < 0 ? 0 : tvC[i]; }
-datetime BTime(int s){ if (!g_useTv || s <= 0) return iTime(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvT[i]; }
+datetime BTime(int s){ if (s == 0) return CurBar(); if (!g_useTv || s < 0) return iTime(_Symbol, PERIOD_CURRENT, s);  int i = TvI(s); return i < 0 ? 0 : tvT[i]; }
 double Atr(int s)    { if (!g_useTv) return Buf(hAtr, s); int i = TvI(MathMax(s, 1)); return i < 0 ? 0 : tvA[i]; }
 double EmaX(int fast, int s)
 {
@@ -482,12 +504,12 @@ int OnInit()
    }
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    if (InpBarSource == 1) {
-      if (!TvLoad()) { PrintFormat("[SAAD-1min] InpBarSource 1: cannot read Common\\Files\\%s - run monitor/saad_compare/tv_bars_bridge.py first", InpTvFile); return INIT_FAILED; }
-      PrintFormat("[SAAD-1min] TradingView candles: %d from %s to %s (%s)", g_tvN, TimeToString(tvT[0]), TimeToString(tvT[g_tvN - 1]), InpTvFile);
+      if (!TvLoad()) { PrintFormat("[SAAD-1min] InpBarSource 1: cannot read Common\\Files\\%s - run monitor/saad_compare/tv_bars_bridge.py first", TvFile()); return INIT_FAILED; }
+      PrintFormat("[SAAD-1min] TradingView candles: %d from %s to %s (%s)", g_tvN, TimeToString(tvT[0]), TimeToString(tvT[g_tvN - 1]), TvFile());
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.25 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.26 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -805,7 +827,7 @@ void SyncPos()
    for (int i = ArraySize(g_pos) - 1; i >= 0; i--)
       if (!PositionSelectByTicket(g_pos[i].ticket)) {
          DrawExit(g_pos[i]);
-         g_exitBar = iTime(_Symbol, PERIOD_CURRENT, 0);
+         g_exitBar = CurBar();
          for (int j = i; j < ArraySize(g_pos) - 1; j++) g_pos[j] = g_pos[j + 1];
          ArrayResize(g_pos, ArraySize(g_pos) - 1);
       }
@@ -830,7 +852,7 @@ bool QueueSl(int i, double lvl, string why)
    if (!InpSlNextBar) { if (!ModifySl(g_pos[i].ticket, lvl)) return false; SlMoved(i, lvl, why); return true; }
    int sd = g_pos[i].side;
    if (g_pos[i].pendSl != 0 && (sd > 0 ? lvl <= g_pos[i].pendSl + _Point : lvl >= g_pos[i].pendSl - _Point)) return false;   // already queued
-   g_pos[i].pendSl = NormalizeDouble(lvl, _Digits); g_pos[i].pendWhy = why; g_pos[i].pendBar = iTime(_Symbol, PERIOD_CURRENT, 0);
+   g_pos[i].pendSl = NormalizeDouble(lvl, _Digits); g_pos[i].pendWhy = why; g_pos[i].pendBar = CurBar();
    return true;
 }
 // v1.14 (Zee 2026-10-17 "we want all trades to match, no questions"): the chart's candle that just closed decides when the two
@@ -849,12 +871,12 @@ void TvVerdict()
       // entered in that candle on an MT5 break the chart's candle never made: the chart has no trade
       if (g_pos[i].brk != 0 && g_pos[i].entryTime >= t1 && g_pos[i].entryTime < t1 + PeriodSeconds() &&
           !(sd > 0 ? BHigh(1) > g_pos[i].brk : BLow(1) < g_pos[i].brk)) {
-         g_pos[i].why = "the chart's candle never broke the level"; trade.PositionClose(g_pos[i].ticket); g_cancelBar = iTime(_Symbol, PERIOD_CURRENT, 0); continue;
+         g_pos[i].why = "the chart's candle never broke the level"; trade.PositionClose(g_pos[i].ticket); g_cancelBar = CurBar(); continue;
       }
       // the chart's candle went through the stop that was in force during it (the chart checks from the minute after the entry)
       if (g_pos[i].entryTime < t1 && sl > 0 && (sd > 0 ? BLow(1) <= sl : BHigh(1) + spr >= sl)) {
          // v1.22 (16 Oct 20:21): the chart closed DURING that candle, so it was free at its close - not "busy", and it may enter now
-         g_pos[i].why = StringFormat("stop %.2f hit on the chart's candle", sl); trade.PositionClose(g_pos[i].ticket); g_cancelBar = iTime(_Symbol, PERIOD_CURRENT, 0); continue;
+         g_pos[i].why = StringFormat("stop %.2f hit on the chart's candle", sl); trade.PositionClose(g_pos[i].ticket); g_cancelBar = CurBar(); continue;
       }
       // v1.21 (16 Oct #265 / #305): the chart's candle reached a fixed TP1 that MT5's bid missed by cents - the chart banked TP1 and
       // trailed (+$456 / +$56), MT5 waited and was stopped (-$1,088 / -$1,138). TP1 now, the stop from that candle (ApplyPendingSl)
@@ -875,7 +897,7 @@ void ApplyPendingSl()
    // far enough), then the TP1 stop from the touch price ($ trail), then never worse than the entry. Tick by tick the EA had missed the
    // CTC (the bid touched TP1 before the ask went far enough) and trailed $2 from the ask instead of sitting at the entry.
    for (int i = ArraySize(g_pos) - 1; i >= 0; i--) {
-      if (!g_pos[i].tp1Pend || iTime(_Symbol, PERIOD_CURRENT, 0) <= g_pos[i].tp1Bar || !PositionSelectByTicket(g_pos[i].ticket)) continue;
+      if (!g_pos[i].tp1Pend || CurBar() <= g_pos[i].tp1Bar || !PositionSelectByTicket(g_pos[i].ticket)) continue;
       g_pos[i].tp1Pend = false;
       int sd = g_pos[i].side; double en = EnJ(i), lv = g_pos[i].tp1Lvl, cur = PositionGetDouble(POSITION_SL), spr = ChartSpr();
       double base = cur, nsl;
@@ -897,7 +919,7 @@ void ApplyPendingSl()
       if (ModifySl(g_pos[i].ticket, nsl)) SlMoved(i, nsl, "TP1 (chart's candle)");
    }
    for (int i = ArraySize(g_pos) - 1; i >= 0; i--) {
-      if (g_pos[i].pendSl == 0 || iTime(_Symbol, PERIOD_CURRENT, 0) <= g_pos[i].pendBar || !PositionSelectByTicket(g_pos[i].ticket)) continue;   // not in the minute it was queued
+      if (g_pos[i].pendSl == 0 || CurBar() <= g_pos[i].pendBar || !PositionSelectByTicket(g_pos[i].ticket)) continue;   // not in the minute it was queued
       double lvl = g_pos[i].pendSl, cur = PositionGetDouble(POSITION_SL); int sd = g_pos[i].side;
       string why = g_pos[i].pendWhy;
       g_pos[i].pendSl = 0; g_pos[i].pendWhy = "";
@@ -969,7 +991,7 @@ void LongTouched(int i, double bid)
    double cur = PositionGetDouble(POSITION_SL);
    double sl = NormalizeDouble(MathMax(cur, bid - TrailL()), _Digits);
    if (InpTp1Be && g_pos[i].entry < bid) sl = NormalizeDouble(MathMax(sl, g_pos[i].entry), _Digits);
-   if (InpTvVerdict && g_useTv && InpSlNextBar) { g_pos[i].tp1Pend = true; g_pos[i].tp1Lvl = g_pos[i].resTp1 ? g_pos[i].tp : bid; g_pos[i].tp1Bar = iTime(_Symbol, PERIOD_CURRENT, 0); sl = cur; }   // v1.19: decided on the chart's TP1 candle
+   if (InpTvVerdict && g_useTv && InpSlNextBar) { g_pos[i].tp1Pend = true; g_pos[i].tp1Lvl = g_pos[i].resTp1 ? g_pos[i].tp : bid; g_pos[i].tp1Bar = CurBar(); sl = cur; }   // v1.19: decided on the chart's TP1 candle
    double res = InpLongResTp ? LastResistance(bid + InpMinTpPips * Pip()) : 0;
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
    if (sl >= bid - lvl) sl = cur;
@@ -995,7 +1017,7 @@ void ShortTouched(int i, double bid)
    double cur = PositionGetDouble(POSITION_SL);
    double sl = NormalizeDouble(cur > 0 ? MathMin(cur, ask + TrailS()) : ask + TrailS(), _Digits);
    if (InpTp1Be && g_pos[i].entry > ask) sl = NormalizeDouble(MathMin(sl, g_pos[i].entry), _Digits);
-   if (InpTvVerdict && g_useTv && InpSlNextBar) { g_pos[i].tp1Pend = true; g_pos[i].tp1Lvl = g_pos[i].tp; g_pos[i].tp1Bar = iTime(_Symbol, PERIOD_CURRENT, 0); sl = cur; }   // v1.19: decided on the chart's TP1 candle
+   if (InpTvVerdict && g_useTv && InpSlNextBar) { g_pos[i].tp1Pend = true; g_pos[i].tp1Lvl = g_pos[i].tp; g_pos[i].tp1Bar = CurBar(); sl = cur; }   // v1.19: decided on the chart's TP1 candle
    double lvl = MathMax((double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (double)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL)) * _Point;
    if (sl <= ask + lvl) sl = cur;
    if (sl != cur) QueueSl(i, sl, "");
@@ -1035,7 +1057,7 @@ void ManageTick()
       g_pos[i].mfe = g_pos[i].side > 0 ? MathMax(g_pos[i].mfe, bid) : (g_pos[i].mfe == 0 ? ask0 : MathMin(g_pos[i].mfe, ask0));
       // v1.11 (Zee 2026-10-17 "we want all trades to match"): chart #3 SELL 11 Oct 23:38 UTC - the EA took TP1 9 s after the entry and was
       // out a minute before the chart, which then saw a different setup; every later trade shifted. The chart never acts in the entry minute.
-      if (InpWaitEntryBar && g_pos[i].entryTime >= iTime(_Symbol, PERIOD_CURRENT, 0)) continue;
+      if (InpWaitEntryBar && g_pos[i].entryTime >= CurBar()) continue;
       if (InpLockAtUsd > 0 && InpLockMode == 0 && PositionSelectByTicket(g_pos[i].ticket)) {
          double moved = g_pos[i].side > 0 ? bid - g_pos[i].entry : g_pos[i].entry - ask0;
          double want = g_pos[i].entry + g_pos[i].side * InpLockUsd, cur = PositionGetDouble(POSITION_SL);
@@ -1198,7 +1220,7 @@ void TryEntry()
 {
    if (g_pSide == 0 || ArraySize(g_pos) >= InpMaxPos) return;
    // v1.04 (chart vs MT5 #38): the chart steps minute by minute and never opens a trade in the minute it closed one
-   if (InpNoEntryExitBar && g_exitBar == iTime(_Symbol, PERIOD_CURRENT, 0) && g_cancelBar != g_exitBar) return;
+   if (InpNoEntryExitBar && g_exitBar == CurBar() && g_cancelBar != g_exitBar) return;
    if (InpNoNewMins > 0 && MinsToClose() <= InpNoNewMins) { g_skipClose++; DSkip(g_pSide, "too close to the day's close"); g_pSide = 0; return; }
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double pip = Pip();
@@ -1418,7 +1440,7 @@ void DayCloseCheck()
    if (InpCloseLossMins <= 0 || ArraySize(g_pos) == 0 || MinsToClose() > InpCloseLossMins) return;
    // v1.20: the chart judges "in loss" once, at each minute's open, against its own entry price
    static datetime lastBar = 0;
-   if (InpTvVerdict) { if (iTime(_Symbol, PERIOD_CURRENT, 0) == lastBar) return; lastBar = iTime(_Symbol, PERIOD_CURRENT, 0); }
+   if (InpTvVerdict) { if (CurBar() == lastBar) return; lastBar = CurBar(); }
    double bidNow = SymbolInfoDouble(_Symbol, SYMBOL_BID);
    for (int i = ArraySize(g_pos) - 1; i >= 0; i--) {
       if (!PositionSelectByTicket(g_pos[i].ticket)) continue;
@@ -1441,7 +1463,7 @@ void OnTick()
    SyncPos();
    ManageTick();
    SyncPos();
-   datetime bar = iTime(_Symbol, PERIOD_CURRENT, 0);
+   datetime bar = CurBar();
    if (bar != g_lastBar && TvReady(bar)) {
       g_lastBar = bar;
       if (InpDumpBars) {
@@ -1458,12 +1480,12 @@ void OnTick()
          SyncPos();
          // the waiting setup: a gap in time cancels it, otherwise one fewer candle to break
          if (g_aSide != 0) {
-            if (InpGapCancel && iTime(_Symbol, PERIOD_CURRENT, 0) - BTime(1) > PeriodSeconds() * 3 / 2) { g_aSide = 0; g_skipDip++; }
+            if (InpGapCancel && CurBar() - BTime(1) > PeriodSeconds() * 3 / 2) { g_aSide = 0; g_skipDip++; }
             else if (--g_aLeft <= 0) { g_aSide = 0; g_skipDip++; Log("no dip within the window - skipped"); }
          }
          if (g_pSide != 0 && InpEntryMode == 2 && g_pLeft <= 1) { if (!g_swept) g_skipSweep++; }
          if (g_pSide != 0) {
-            if (InpGapCancel && iTime(_Symbol, PERIOD_CURRENT, 0) - BTime(1) > PeriodSeconds() * 3 / 2) { g_skipGap++; DSkip(g_pSide, "market closed in between"); g_pSide = 0; }
+            if (InpGapCancel && CurBar() - BTime(1) > PeriodSeconds() * 3 / 2) { g_skipGap++; DSkip(g_pSide, "market closed in between"); g_pSide = 0; }
             else if (g_retryUntil > TimeCurrent()) { /* waiting for the broker to open: keep the setup */ }
             else if (InpTvVerdict && g_useTv && InpEntryMode == 0 && ArraySize(g_pos) == 0 && BTime(1) > g_pTime &&
                      (g_pSide > 0 ? BHigh(1) > g_pHigh + InpBreakPips * Pip() : BLow(1) < g_pLow - InpBreakPips * Pip())) {
@@ -1502,7 +1524,7 @@ void DetectSetup()
 {
    // v1.15 (chart vs MT5 11 Oct 23:39): the chart ignores a setup candle while a trade is open at its close ("busy") - also a trade
    // that only closes at this open. A trade the chart never had (cancelled by its candle) does not count.
-   if (InpTvVerdict && (ArraySize(g_pos) > 0 || g_retryUntil > TimeCurrent() || (g_exitBar == iTime(_Symbol, PERIOD_CURRENT, 0) && g_cancelBar != g_exitBar))) { g_busy++; return; }
+   if (InpTvVerdict && (ArraySize(g_pos) > 0 || g_retryUntil > TimeCurrent() || (g_exitBar == CurBar() && g_cancelBar != g_exitBar))) { g_busy++; return; }
    if (InpNoNewMins > 0 && MinsToClose() <= InpNoNewMins) return;   // too close to the day's close
    CheckCooldown();
    if (TimeCurrent() < g_coolUntil) return;

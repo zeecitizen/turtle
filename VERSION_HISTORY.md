@@ -16,6 +16,22 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.26 (2026-10-17) — the 15-min mirror: chart candles on any timeframe + Zee's 15-min settings as defaults
+
+Zee: *"Run the live EA on the chart's own 15-min candles, using the bridge that made the 1-min version match 333 of 333 trades"*
+
+- **Defaults** = Zee's 15-min chart settings of 17 Oct (`monitor/strategy_lab/saad_snapshot_2026-10-17_zee_boxes.json`):
+  - EMA 14/70, TP1 Fibonacci 161.8, SL 36, max risk $20, 95% at TP1, min TP1 10 pips, cut after 5 candles, pause 1, lookbacks 16/9, his range boxes.
+  - **Attach to XAUUSD M15.** `InpBarSource` 1 = trade on the chart's candles.
+- **`InpTvFile` "auto"**: `tv_bars_XAUUSD.csv` on M1, `tv_bars_XAUUSD_M15.csv` on M15. `tv_bars_bridge.py` writes the file for the chart's own timeframe; `start_tv_bars_bridge.bat` is unchanged to run.
+- **Chart clock (M5 and up):** TradingView starts each week's 15-min candles at the session open (Monday 01:01, 01:16 ...) while MT5's run 01:00, 01:15. The EA saw every Monday chart candle ~14 minutes late. Its "current candle" now opens when the chart's candle closes; if the bridge goes silent live, MT5's clock takes over. M1 unchanged.
+- **Receipts:** BLUEBERRY:XAUUSD 15 min, Aug 4 - Oct 16, MT5 on XAUUSD_BB with the chart's candles, no delay.
+  - Chart: 192 trades, WR 78.1%, +$52,298. MT5: 198 trades, WR 76.3%, +$43,574.
+  - Same trade 189 of 192, before the chart clock 166 of 192. Same win/loss on 184 of 189.
+  - Most of the 5 that differ entered in the hour before the 5 pm New York close, where the real spread widens and the chart assumes $0.17.
+  - 4 of the 9 MT5-only trades are Aug 3-4, before the chart's first trade.
+- Same settings on MT5's own candles, random delay: Jan-Jun +$85,041 (WR 74.0%), Jul-Oct +$28,738 (WR 73.3%).
+
 ## Saad_strategy_1min v1.25 (2026-10-17) — optimizer score 2: win rate of whole trades (no trading change)
 
 Zee: *"what we're trying to get is winrate. so that we're dead sure we're making something, even if small amount"*
