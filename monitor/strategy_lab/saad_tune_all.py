@@ -41,9 +41,11 @@ TPSL = "--tpsl" in sys.argv
 # Zee 2026-10-17: "have u tested other numbers of fixed $2.. let's keep optimizing for winrate." --tpwr: TP1 = Fixed $, every
 # TP / SL setting that acts in that mode, pure win rate (the year must stay in profit)
 TPWR = "--tpwr" in sys.argv
-WR = WR or TPSL or TPWR
-LOG = HERE / ("saad_tune_tpwr_log.json" if TPWR else "saad_tune_tpsl_log.json" if TPSL else "saad_tune_wr_log.json" if WR else "saad_tune_log.json")
-MD = HERE / ("saad_tune_tpwr_log.md" if TPWR else "saad_tune_tpsl_log.md" if TPSL else "saad_tune_wr_log.md" if WR else "saad_tune_log.md")
+# --step NAME START STEP STOP: one setting on its own, win rate (Zee 2026-10-17: max risk under Fixed $1.50)
+ONE = sys.argv[sys.argv.index("--step") + 1:sys.argv.index("--step") + 5] if "--step" in sys.argv else None
+WR = WR or TPSL or TPWR or bool(ONE)
+LOG = HERE / ("saad_tune_step_log.json" if ONE else "saad_tune_tpwr_log.json" if TPWR else "saad_tune_tpsl_log.json" if TPSL else "saad_tune_wr_log.json" if WR else "saad_tune_log.json")
+MD = HERE / ("saad_tune_step_log.md" if ONE else "saad_tune_tpwr_log.md" if TPWR else "saad_tune_tpsl_log.md" if TPSL else "saad_tune_wr_log.md" if WR else "saad_tune_log.md")
 SRC = server.PINE.read_text(encoding="utf-8")
 PERIODS = {"1": "M1", "5": "M5", "15": "M15", "30": "M30", "60": "H1"}
 
@@ -247,7 +249,13 @@ def main():
     log = json.loads(LOG.read_text(encoding="utf-8")) if LOG.exists() else {"steps": []}
     done = len(log["steps"])
     start_at = sys.argv[sys.argv.index("--from") + 1] if "--from" in sys.argv else None
-    steps = STEPS_TPWR if TPWR else STEPS_TPSL if TPSL else STEPS_WR if WR else STEPS
+    if ONE:
+        log["steps"] = log["steps"]                                  # appended to, never skipped
+        steps = [(ONE[0], float(ONE[1]), float(ONE[2]), float(ONE[3]))]
+        start_at = ONE[0]
+    else:
+        steps = None
+    steps = steps or (STEPS_TPWR if TPWR else STEPS_TPSL if TPSL else STEPS_WR if WR else STEPS)
     todo = steps
     if start_at:
         todo = steps[[s[0] for s in steps].index(start_at):]
