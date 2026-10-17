@@ -16,6 +16,29 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.32 (2026-10-18) — self-tuning range boxes, weekly or daily (off by default)
+
+Zee: *"calculate a new range every week and from that range execute the next week ... for each week we remove the failing ranges and keep the winning ranges"* · *"also include a test where we finetune the range everyday"*
+
+- `InpAdaptWeeks` (rebuild every Monday from the last N weeks) / `InpAdaptDays` (rebuild every day from the last N days).
+  - Every closed trade is recorded with its range box (BUY / SELL apart) and its net.
+  - A box that lost money in the look-back is OFF for the next period.
+  - A box with fewer than `InpAdaptMinTrades` (3) trades stays ON, so a switched-off box gets a fresh chance once its trades age out.
+- **Receipts** (XAUUSD_BB M1, Jan 1 - Oct 16, no delay, Zee's 1-min chart settings, all boxes as the start):
+
+| Boxes | Net | WR | PF | Trades |
+|---|---|---|---|---|
+| fixed, all ON | -$642,586 | 63.6% | 0.85 | 24,138 |
+| weekly, 1 week | -$467,132 | 63.5% | 0.84 | 16,424 |
+| weekly, 2 weeks | -$419,646 | 63.2% | 0.82 | 13,230 |
+| weekly, 4 weeks | -$279,941 | 63.7% | 0.84 | 10,195 |
+| daily, 1 day | -$533,118 | 63.3% | 0.85 | 19,527 |
+| daily, 3 days | -$447,881 | 62.9% | 0.83 | 14,370 |
+| daily, 5 days | -$345,252 | 63.7% | 0.85 | 13,244 |
+
+  - Every version loses less only because it takes fewer trades. WR and PF stay the same and no month turns green.
+  - Last week's (or yesterday's) good ranges do not predict the next week's (or day's).
+
 ## Saad_strategy_1min v1.31 (2026-10-18) — optimizer score 4: trade win rate, always (no trading change)
 
 - `InpOptScore` 4 returns the win rate of whole trades even for a losing setting, so an optimization shows win rate (Result) and money (Profit) side by side.
