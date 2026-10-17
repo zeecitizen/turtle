@@ -56,6 +56,7 @@ code { font-size: 12px; }
 .yr .b { height: 10px; border-radius: 3px; display: inline-block; vertical-align: middle; }
 .yr .b.w { background: var(--win); } .yr .b.l { background: var(--loss); }
 .yr tr.tot td { font-weight: 700; border-top: 2px solid var(--line); }
+.yr tr.split td { background: var(--row); }
 .yr .chg { font-size: 12.5px; color: var(--muted); margin: 6px 0 2px; overflow-wrap: anywhere; }
 .yr .run { color: var(--accent); } .yr .q { color: var(--muted); }
 .doc { line-height: 1.55; }
@@ -138,6 +139,7 @@ code { font-size: 12px; }
       <label>Execution delay
         <select id="yrDelay"><option value="-1">random (realistic)</option><option value="0">none (same numbers every run)</option></select></label>
       <button id="yrRun" class="ghost">Run now</button>
+      <a href="/chart" target="_blank" style="align-self:center;font-weight:600">Open the Blueberry chart with these trades →</a>
     </div>
     <div class="chg" id="yrChg"></div>
     <div class="scroll" style="max-height:none">
@@ -146,6 +148,7 @@ code { font-size: 12px; }
         <tbody id="yrRows"><tr><td class="l" colspan="9">-</td></tr></tbody>
       </table>
     </div>
+    <div class="chg"><b>Tune / check split:</b> tune your settings while watching Jan–Jun only; Jul–Oct is the exam. If "Check on" still makes money, the setting holds on months it was never fitted to. If only "Tune on" improves, it was fitted to noise (that is what happened with the 6 chart days: +$26k that week, −$21.7k the week before).</div>
     <div class="chg"><b>Blueberry</b> real ticks (XAUUSD_BB = your Blueberry terminal's own XAUUSD ticks, the feed of BLUEBERRY:XAUUSD), Jan 1 – Oct 17 2026, one MT5 pass per month on 6 rigs in parallel (~40 s); a pass already run with the same settings shows at once.
       The EA reads MT5's own candles here (the chart holds only ~5 days of 1-minute history). Settings that exist only on the chart do not change these numbers.</div>
   </div>
@@ -393,7 +396,7 @@ function renderYear() {
   const prev = Y.prev || {};
   let T = { n: 0, w: 0, net: 0, pn: 0, pc: 0, gd: 0, d: 0 };
   $('yrRows').innerHTML = rows.map(({ m, v }) => {
-    const name = MN[+m.slice(5) - 1] + ' ' + m.slice(0, 4) + (m === '2026.10' ? ' (1-17)' : '');
+    const name = `<a href="/chart?m=${m}" target="_blank">${MN[+m.slice(5) - 1] + ' ' + m.slice(0, 4) + (m === '2026.10' ? ' (1-17)' : '')}</a>`;
     if (v.status !== 'done') {
       const st = v.status === 'running' ? `<span class="run">running on ${rigName(v.rig)} · ${Math.round(Date.now() / 1000 - v.since)} s</span>`
                : v.status === 'error' ? `<span class="loss">${esc((v.result || {}).error || 'error')}</span>` : `<span class="q">${v.status}</span>`;
@@ -410,13 +413,26 @@ function renderYear() {
   }).join('') + (done.length ? `<tr class="tot"><td class="l">${done.length} month${done.length > 1 ? 's' : ''}</td><td>${T.n}</td>
       <td>${T.n ? (T.w / T.n * 100).toFixed(1) : '0'}%</td><td class="${cls(T.net)}">${fmt(T.net)}</td>
       <td>${T.pc ? `<span class="${T.pn >= 0 ? 'win' : 'loss'}">${T.pn >= 0 ? '+' : ''}${fmt(T.pn).replace(/^\+/, '')}</span>` : ''}</td>
-      <td></td><td>${T.gd} / ${T.d}</td><td></td><td></td></tr>` : '');
+      <td></td><td>${T.gd} / ${T.d}</td><td></td><td></td></tr>` : '') + splitRows(done);
   const green = done.filter(r => r.v.result.net > 0).length;
   $('yrSum').textContent = Y.error ? '· ' + Y.error : Y.running ? `· running… ${Y.elapsed ?? 0} s (${done.length} of ${rows.length} months)`
     : Y.at ? `· ${done.length} months, ${green} green · settings of ${Y.at}, took ${Y.elapsed} s` : '· waiting for the chart';
   const ch = (Y.changed || []).map(c => `${c.k} ${c.was} → ${c.now}`).join(', ');
   $('yrChg').innerHTML = (ch ? `<b>Changed since the run before:</b> ${esc(ch)} - "vs before" shows its effect per month.` : '')
     + (Y.notes && Y.notes.length ? `<div class="warn" style="margin-top:6px">${Y.notes.map(esc).join('<br>')}</div>` : '');
+}
+// Zee 2026-10-17: tune on Jan-Jun only, then check Jul-Oct - a setting is real only if the months it was NOT tuned on agree
+const TUNE = ['2026.01', '2026.02', '2026.03', '2026.04', '2026.05', '2026.06'];
+function splitRows(done) {
+  const part = (lab, hint, rs) => {
+    if (!rs.length) return '';
+    let n = 0, w = 0, net = 0, gd = 0, d = 0;
+    rs.forEach(r => { const x = r.v.result, k = x.trades || 0; n += k; w += k * pct(x.wr) / 100; net += x.net; gd += x.green || 0; d += x.days || 0; });
+    return `<tr class="split"><td class="l"><b>${lab}</b> <span style="color:var(--muted)">${hint}</span></td><td>${n}</td><td>${n ? (w / n * 100).toFixed(1) : '0'}%</td>
+      <td class="${cls(net)}">${fmt(net)}</td><td></td><td></td><td>${gd} / ${d}</td><td class="l" colspan="2" style="color:var(--muted)">${rs.length} month${rs.length > 1 ? 's' : ''}, ${rs.filter(r => r.v.result.net > 0).length} green</td></tr>`;
+  };
+  return part('Tune on', 'Jan–Jun', done.filter(r => TUNE.includes(r.m)))
+       + part('Check on', 'Jul–Oct (do not look while tuning)', done.filter(r => !TUNE.includes(r.m)));
 }
 function renderValid() {
   const v = (Y && Y.valid) || { ok: null, why: [] };
