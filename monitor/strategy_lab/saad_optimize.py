@@ -117,17 +117,18 @@ def tester_inputs(base, job):
 
 def start(name):
     job = JOBS[name]
-    base = axi_rig.ea_defaults(EA)
-    base.update(json.loads(Path(__file__).with_name(job.get("sets", SETS.name)).read_text(encoding="utf-8")))
+    ea = job.get("ea", EA)                  # 2026-10-19: a job may optimize another EA (Saad_strategy_15min v1.24)
+    base = axi_rig.ea_defaults(ea)
+    base.update(json.loads(Path(__file__).with_name(job.get("sets", SETS.name)).read_text(encoding="utf-8")) if job.get("sets", SETS.name) else {})
     base.update(job["fixed"])
-    for i in range(21):                     # the boxes start from Zee's own ticks (the genetic search starts random anyway)
+    for i in range(21 if "InpBandsB" in base else 0):   # the boxes start from Zee's own ticks (the genetic search starts random anyway)
         base[f"InpB{i:02d}"] = "true" if base["InpBandsB"][i] == "1" else "false"
         base[f"InpS{i:02d}"] = "true" if base["InpBandsS"][i] == "1" else "false"
     R = axi_rig._R(RIG)
     axi_rig.kill_rig(RIG)
-    axi_rig.compile_ea(EA, rig=RIG)
+    axi_rig.compile_ea(ea, rig=RIG)
     fwd = f"ForwardMode=4\r\nForwardDate={FORWARD}\r\n" if job.get("forward", True) else "ForwardMode=0\r\n"
-    ini = (f"[Tester]\r\nExpert={EA}\r\nSymbol=XAUUSD_BB\r\nPeriod={job.get('period', 'M1')}\r\nModel=4\r\n"
+    ini = (f"[Tester]\r\nExpert={ea}\r\nSymbol=XAUUSD_BB\r\nPeriod={job.get('period', 'M1')}\r\nModel=4\r\n"
            f"FromDate={FROM}\r\nToDate={TO}\r\n{fwd}"
            f"Deposit=10000000\r\nCurrency=USD\r\nLeverage=1:400\r\nExecutionMode={job.get('delay', 0)}\r\n"
            f"Optimization={job.get('algo', 2)}\r\nOptimizationCriterion=6\r\n"
