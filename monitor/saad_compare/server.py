@@ -138,6 +138,8 @@ def ea_sets_from(settings):
         sets[ea] = ("true" if v else "false") if isinstance(v, bool) else str(v)
     for pv, (ea, m) in CHOICES.items():
         sets[ea] = str(m.get(settings.get(pv), 0))
+    if settings.get("tpMode") == "Next EMA beyond the entry (touch, close all)":      # 2026-10-19: chart-only TP1 method
+        notes.append("TP1 METHOD 'Next EMA beyond the entry' is chart-only - the EA does not have it yet, MT5 runs the normal TP1")
     if settings.get("pkLockAt", 0) and settings.get("pkApply") != "All trades":
         notes.append("Lock is set to 'No-TP1 longs only' on the chart; the EA's lock (InpLockAtUsd) applies to ALL trades")
     for pv, off, what in NOT_IN_EA:
