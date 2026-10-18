@@ -16,6 +16,20 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.24 (2026-10-19) — optimizer inputs from the 1-min EA (all OFF by default, trades identical to v1.23)
+
+Zee: *"i want you to run the optimizer for 15 min to saad_strategy_15min on all settings that u think made the most effect from the previous optimizer we ran on 1 min"*
+
+- The 1-min driver analysis ranked: session hours, entry mode (sweep), ATR band, chop filter, break pips, ADX, Fibonacci TP, cost gate, higher-timeframe EMA, ATR stop, EMAs.
+  - v1.23 already has: session hours, entry mode, chop filter, break pips, HTF trend, ATR stop, EMAs.
+- v1.24 adds the rest that fit this EA, copied from Saad_strategy_1min v1.39:
+  - `InpAtrMinUsd` / `InpAtrMaxUsd`: trade only when ATR(14) of the last closed candle is inside the band.
+  - `InpAdxMin` / `InpAdxPeriod`: trade only when ADX is at least X.
+  - `OnTester` with `InpOptScore` / `InpOptMinTrades` (score 5 = profit factor, 0 below the trade minimum), so the optimizer cannot crown a 5-trade pass.
+- **Not ported:** Fibonacci TP and the cost gate. This EA's TP1 (the other EMA for a BUY, the last swing low for a SELL) is what v1.23 earns on; a TP mode would be a rewrite.
+- **Receipt:** v1.23 and v1.24 with defaults, Blueberry XAUUSD_BB M15, Jan 1 – Oct 16, no delay, 1 lot: **+$127,425.40, 1,257 deals, PF 1.33, DD $14,667 on both**.
+- Not copied to any live terminal.
+
 ## Saad_strategy_1min v1.37 - v1.39 (2026-10-18) — optimizer scores, exit quick pick, spread / slippage defenses (all OFF by default)
 
 Zee: *"work and keep working on the goal until you have a working EA on 1 min timeframe"* · Task 8: *"start coding defenses against broker spread and execution slippage"*
