@@ -38,6 +38,19 @@ Zee: *"can you take the current settings from tradingview and test them in MT5 o
 
 - Chart months Jan-Jul (never on the chart, so out of sample for Zee's tuning): +$153.8k (Jan -$40.5k, Jun -$6.0k); Aug-Oct +$75.5k. v1.23: Jan-Jul +$187.4k, Aug-Oct +$63.0k.
 - **Verdict:** the first chart setup that holds up in MT5 - PF 1.92 vs 1.32 and 3.5x the profit per trade - but twice v1.23's drawdown and a -$40.5k January. Not promoted; next: why January.
+- **January = Jan 30 (gold crash):** two BUYs, $125.63 and $70.62 against them (the 1.6x ATR stop stretched with the candles, max risk was off), -$39,250 of January's -$40,524. Year: 9 losses with moves over $20 = -$80,500.
+- **Caps** (`s15_chart_janfix.py` / `janfix2.py`, same runs, random delay, 2 lots):
+
+| Cap | Net | PF | WR | Trades | Max DD | Red months |
+|---|---|---|---|---|---|---|
+| none (the chart) | +$228,316 | 1.92 | 51.4% | 247 | $52,950 (23%) | Jan -40.5k, Jun |
+| **max risk $20** (Zee's own rule, 2026-10-17) | **+$183,124 / +$183,674** (2 runs) | **2.28** | 49.7% | 195 | **$31,826 (14%)** | **Jun -11.1k only** |
+| max risk $15 | +$128,250 | 2.32 | 49.3% | 142 | $20,380 | Mar, Jul |
+| max risk $25 / $30 | +$192,758 / +$190,848 | 2.08 / 2.03 | | 218 / 229 | $33.5k / $30.8k | Jan, Jun |
+| ATR ceiling $10 / $15 / $20 | +$128,636 / +$183,686 / +$197,262 | 2.19 / 2.02 / 2.10 | | 153 / 216 / 228 | $22.3k / $32.8k / $29.1k | 2-3 each |
+| max risk $20 + ATR ceiling $20 | +$181,392 | 2.27 | 50.8% | 195 | $32,296 | Jun |
+
+  Max risk $20 = Zee's stated rule, not a data-mined value; it fixes January (+$2.2k), 9 of 10 months green, PF 2.28, drawdown about v1.23's ($31.3k).
 
 ## Saad_strategy_15min v1.25 (2026-10-19) — the indicator's chart-only exits as EA exit modes (OFF by default)
 
