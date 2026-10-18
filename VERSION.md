@@ -17,6 +17,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | EA | File (`mt5/`) | Magic | Latest | Chart | Status |
 |---|---|---|---|---|---|
 | **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.25** (2026-10-19) | XAUUSD M15 | **LIVE** on Axi / PXBT as v1.17 / v1.23 (v1.18–v1.22 display only; **v1.23 changes trades**: 1-pip EMA touch tolerance; v1.24-v1.25 add optimizer inputs and test-only exit modes, all off: trades identical to v1.23) |
+| Saad 15-min chart test | `Saad_strategy_15min_chart_test.mq5` | 88306 | v1.00 (2026-10-19) | XAUUSD M15 | **TEST, never attach**: v1.25 + the indicator's range boxes and "stand aside" ghost - to test Zee's TradingView settings in MT5 |
 | Saad 15-min + pyramiding | `Saad_strategy_15min_pyramiding_max_3.mq5` | 88330 | v1.01 (2026-10-13) | XAUUSD M15 | READY, demo first (bigger risk) |
 | Saad 5-min | `Saad_strategy_5min.mq5` | 88320 | v1.01 (2026-10-13) | XAUUSD M5 | READY, demo first: SELL ONLY, small edge |
 | Small-account tiers | `EA_20USD … EA_200USD.mq5` | 88310–88314 | v1.14 base (2026-10-12) | XAUUSD M15 | READY ($80+ only) |
@@ -73,6 +74,12 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | v1.02–v1.03 | 2026-10-12 | CTC breakeven at 75% of the TP; day-close rules; clearer labels | |
 | v1.01 | 2026-10-12 | Chart labels for the visual tester | |
 | v1.00 | 2026-10-11 | The 15-minute variant of Saad_strategy v4.03 | |
+
+## Saad_strategy_15min_chart_test (magic 88306, XAUUSD M15) — TEST
+
+| Version | Date | What changed | Result / note |
+|---|---|---|---|
+| **v1.00** | 2026-10-19 | Saad_strategy_15min v1.25 + the indicator's TOP / BOTTOM range boxes (`InpRangeLook/S`, `InpBandsB/S`) and `InpBandOff` 1 = "stand aside while it would have run" (a ghost trade with the same stop and exit, no order, no new trade until it ends); close-back exits wait for the candle after the entry candle (as the indicator) | All off = v1.25 (+$127,425.40 / 1,257 deals). Zee's chart settings (EMA 16/32, ATR stop 1.6x, ADX 30, next-EMA exit, boxes + stand aside, 2 lots), full year random delay: **+$228,316, PF 1.92, WR 51%, 247 trades, DD $52,950 (23%)**, Jan -$40.5k; plain v1.23 at 2 lots +$250,315, PF 1.32, DD 11% |
 
 ## Saad_strategy_15min_pyramiding_max_3 (magic 88330, XAUUSD M15)
 

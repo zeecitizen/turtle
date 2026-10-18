@@ -16,6 +16,29 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min_chart_test v1.00 (2026-10-19) — TEST copy: Zee's TradingView settings in MT5
+
+Zee: *"can you take the current settings from tradingview and test them in MT5 on saad_ea_15min (just test, if implementation needed make a test copy)"*
+
+- New file `mt5/Saad_strategy_15min_chart_test.mq5`, magic **88306**, TEST - never attach. = v1.25 plus what the chart used and the EA lacked:
+  - the indicator's range boxes: last N CLOSED candles, 5% buckets, judged at the break level (as `Saad_strategy_1min`);
+  - "stand aside while it would have run": the trade runs as a ghost (same stop, same exit, day-close-in-loss), no order, and no new setup until it ends.
+  - the close-back exits (modes 1 fallback / 2) skip the entry candle's own close, as the indicator does.
+- Chart settings used: EMA 16/32, break 3, ATR stop 1.6x, max risk off, chop off, ADX 30, all hours, TP1 "Next EMA beyond the entry" (InpExitMode 1), BUY boxes `111110011100001010111`, SELL `111100110010000001110`, look 7/7, stand aside, 2 lots.
+- **Receipts** (`monitor/strategy_lab/s15_chart_mt5.py` -> `s15_chart_mt5.json`; XAUUSD_BB M15, Jan 1 - Oct 16, random delay, $100k, 2 lots):
+
+| Run | Net | PF | WR | Trades | Max DD |
+|---|---|---|---|---|---|
+| Zee's chart (exit 1 + boxes + stand aside) | **+$228,316** | **1.92** | 51.4% | 247 | $52,950 (23%) |
+| ... boxes skip instead of stand aside | +$186,448 | 1.63 | 49.3% | 285 | $55,308 (52%) |
+| ... no boxes | +$148,157 | 1.28 | 46.3% | 493 | $74,884 (28%) |
+| ... normal TP1 | +$100,974 | 1.64 | 53.6% | 152 | $29,336 (17%) |
+| plain v1.23, 2 lots | +$250,315 | 1.32 | 45.1% | 935 | $31,338 (11%) |
+| sanity: test copy all off, no delay, 1 lot | +$127,425.40 (= v1.25) | 1.33 | | 937 | |
+
+- Chart months Jan-Jul (never on the chart, so out of sample for Zee's tuning): +$153.8k (Jan -$40.5k, Jun -$6.0k); Aug-Oct +$75.5k. v1.23: Jan-Jul +$187.4k, Aug-Oct +$63.0k.
+- **Verdict:** the first chart setup that holds up in MT5 - PF 1.92 vs 1.32 and 3.5x the profit per trade - but twice v1.23's drawdown and a -$40.5k January. Not promoted; next: why January.
+
 ## Saad_strategy_15min v1.25 (2026-10-19) — the indicator's chart-only exits as EA exit modes (OFF by default)
 
 Zee: *"ok test it"* - the TP1 METHOD "Next EMA beyond the entry" had lifted every month (Aug-Oct) on the TradingView chart.
