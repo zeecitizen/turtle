@@ -56,6 +56,9 @@
 //| v1.35: InpReEntry - re-enter the setup after a stop-out (off)    |
 //|        trigger = the setup's break level again, as the indicator |
 //| v1.36: InpCoolN/Dir/WinOnly - the chart's cool-down after exits  |
+//| v1.37: InpHtfIdx + InpOptScore 5 (profit factor) for optimizing  |
+//| v1.38: InpExitPreset - the chart's EXIT quick pick (off)         |
+//| v1.39: cost gate, hard TP, ADX, volatility band, bar-open entry  |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -94,7 +97,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.36"
+#property version   "1.39"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -105,7 +108,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.36"
+#define EA_COMMENT "Saad1m v1.39"
 
 //--- the two lines
 input int    InpEmaFast     = 14;      // InpEmaFast
@@ -182,6 +185,7 @@ input int    InpChopErLook  = 16;     // InpChopErLook — efficiency ratio leng
 input int    InpSessFrom    = 0;      // InpSessFrom — broker hour, inclusive (Axi UTC+3; 0/24 = all day)
 input int    InpSessTo      = 24;     // InpSessTo — broker hour, exclusive
 input bool   InpGapCancel   = false;   // InpGapCancel — cancel a waiting setup across the daily close / weekend
+input int    InpHtfIdx      = -1;     // InpHtfIdx — v1.37 the trend-alignment timeframe as one index for the optimizer: 0 off · 1 = 5 min · 2 = 15 · 3 = 30 · 4 = 1 h · 5 = 4 h (-1 = use InpHtfMin)
 input int    InpHtfMin      = 0;      // InpHtfMin — higher-timeframe trend filter: 0 off · 5 / 15 / 30 / 60 / 240 minutes (trade only with that timeframe's trend)
 input int    InpHtfEma      = 9;     // InpHtfEma — the HTF trend EMA (LONG: HTF close above it and it is rising; SHORT the opposite)
 input bool   InpTrendAlign  = false;  // InpTrendAlign — LONG only if EMA9 > EMA50, SHORT only if EMA9 < EMA50
@@ -207,7 +211,7 @@ input double InpDayLossUsd  = 0;      // InpDayLossUsd — no new trades today o
 input double InpDayTargetUsd = 0;     // InpDayTargetUsd — no new trades today once the day made this $ (0 = off) [v4.02: 0->150 at 0.10 lots] [M15: 150->0]
 
 //--- v1.12 variants (all off = v1.11 behaviour)
-input int    InpEntryMode   = 0;      // InpEntryMode — 0 market on the break · 1 after the break wait for a dip (retest) · 2 liquidity sweep of the candle's low/high, then enter
+input int    InpEntryMode   = 0;      // InpEntryMode — 0 market on the break · 1 after the break wait for a dip (retest) · 2 liquidity sweep of the candle's low/high, then enter · 3 (v1.39) bar-open: a candle must CLOSE beyond the break level, enter at the next open
 input double InpRetestFrac  = 0.5;    // InpRetestFrac — mode 1: dip to this share back into the setup candle (0 = retest of the broken high/low, 0.5 = its middle, 1 = its far end)
 input int    InpRetestBars  = 2;      // InpRetestBars — mode 1: candles to wait for the dip after the break
 input double InpSweepPips   = 0;      // InpSweepPips — mode 2: price must trade this far beyond the setup candle's low (LONG) / high (SHORT)
@@ -327,6 +331,14 @@ input int    InpCoolDir     = 1;      // InpCoolDir - v1.36: 0 blocks both direc
 input bool   InpCoolWinOnly = false;  // InpCoolWinOnly - v1.36: only after a WINNING exit
 input bool   InpReEntry     = false;  // InpReEntry - v1.35 (Zee): a trade closed by its ORIGINAL stop loss arms a re-entry: when price comes back through the original entry price X, take the same setup again (same side, stop rule and TP1 rule) - once per original trade
 input int    InpReEntryBars = 60;     // InpReEntryBars - v1.35: the re-entry stays armed this many candles after the stop-out
+// v1.39 (Zee 2026-10-18, Task 8 / 10: "start coding defenses against broker spread and execution slippage") - all OFF by default
+input double InpCostGateX   = 0;      // InpCostGateX - cost gate: skip when the TP1 target is less than X times the live spread away (0 = off; 3-4 = the report)
+input bool   InpHardTp      = false;  // InpHardTp - when the whole trade closes at TP1 (share 1.0), BUYs also send TP1 to the broker as a hard limit TP (SELLs always do)
+input int    InpAdxPeriod   = 14;     // InpAdxPeriod - ADX length for InpAdxMin
+input double InpAdxMin      = 0;      // InpAdxMin - trade only when ADX (last closed candle) is at least this (0 = off; 20-25 = trending)
+input double InpAtrMinUsd   = 0;      // InpAtrMinUsd - volatility gate: trade only when ATR(14) of the last closed candle is at least $X (0 = off)
+input double InpAtrMaxUsd   = 0;      // InpAtrMaxUsd - ...and at most $X (0 = off) - Task 4: the settings fit quiet October, not 2.5x bigger spring candles
+input int    InpExitPreset  = 0;      // InpExitPreset - v1.38 the chart's "EXIT · quick pick": 0 off (the TP settings below) · 1 normal (EMA touch / swing low) · 2 fixed +$1 · 3 +$2 · 4 +$3 · 5 +$5 (2-5 close all) · 6 Fib 161.8% · 7 Fib 200% (close all) · 8 partial: half at +$2, rest trails $2
 input double InpTpFixUsd    = 0;      // InpTpFixUsd - v1.34: when > 0, the SAME fixed $ target for BUY and SELL (overrides InpTpFixUsdB / S) - one input the optimizer can sweep
 input double InpTpFibPct    = 161.8;  // InpTpFibPct - mode 2: BUY TP1 = setup low + X% of its range, SELL = setup high - X%
 input double InpTpPartPct   = 0.8;    // InpTpPartPct - mode 3: close this share at the target (instead of InpPartialPct)
@@ -334,7 +346,8 @@ input double InpTpPartTrailUsd = 2.0; // InpTpPartTrailUsd - mode 3: the rest tr
 input bool   InpTpNoFixSkip = false;  // InpTpNoFixSkip - modes 1-3: a target not InpMinTpPips beyond the entry skips the trade (false = the normal TP1)
 
 CTrade   trade;
-int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE;
+int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE, hAdx = INVALID_HANDLE;
+int      g_skipCost = 0, g_skipAdx = 0, g_skipVol = 0;   // v1.39
 ENUM_TIMEFRAMES g_htf = PERIOD_CURRENT;
 datetime g_lastBar = 0;
 
@@ -432,9 +445,24 @@ double Pip() { return InpPipPts * _Point; }
 // v1.17: the spread the chart decides with (its fixed setting), else the live one
 double ChartSpr() { return InpChartSpread > 0 ? InpChartSpread : SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID); }
 // v1.07 TP1 METHOD 3 (partial) brings its own share and trail
-double PartPct() { return InpTpMode == 3 ? InpTpPartPct : InpPartialPct; }
-double TrailL()  { return InpTpMode == 3 ? InpTpPartTrailUsd : InpLongTrailUsd; }
-double TrailS()  { return InpTpMode == 3 ? InpTpPartTrailUsd : InpShortTrailUsd; }
+// v1.38: the TP settings in force = the inputs, or the "EXIT · quick pick" preset (Zee 2026-10-18 Task 6: "simplify exit settings ...
+// so one can easily try them one by one") - set once in OnInit by ExitPreset()
+int    g_tpMode = 0;
+double g_fixB = 2, g_fixS = 2, g_fib = 161.8, g_tpPart = 0.5, g_tpPartTr = 2, g_partial = 0.5;
+void ExitPreset()
+{
+   g_tpMode = InpTpMode; g_fixB = InpTpFixUsd > 0 ? InpTpFixUsd : InpTpFixUsdB; g_fixS = InpTpFixUsd > 0 ? InpTpFixUsd : InpTpFixUsdS;
+   g_fib = InpTpFibPct; g_tpPart = InpTpPartPct; g_tpPartTr = InpTpPartTrailUsd; g_partial = InpPartialPct;
+   switch (InpExitPreset) {
+      case 1: g_tpMode = 0; break;
+      case 2: case 3: case 4: case 5: { double f[4] = {1, 2, 3, 5}; g_tpMode = 1; g_fixB = g_fixS = f[InpExitPreset - 2]; g_partial = 1; break; }
+      case 6: case 7: g_tpMode = 2; g_fib = InpExitPreset == 6 ? 161.8 : 200; g_partial = 1; break;
+      case 8: g_tpMode = 3; g_fixB = g_fixS = 2; g_tpPart = 0.5; g_tpPartTr = 2; break;
+   }
+}
+double PartPct() { return g_tpMode == 3 ? g_tpPart : g_partial; }
+double TrailL()  { return g_tpMode == 3 ? g_tpPartTr : InpLongTrailUsd; }
+double TrailS()  { return g_tpMode == 3 ? g_tpPartTr : InpShortTrailUsd; }
 double Buf(int h, int s) { double v[1]; return CopyBuffer(h, 0, s, 1, v) == 1 ? v[0] : 0.0; }
 //--- v1.04 (Zee 2026-10-16: "the only way we can succeed is to sync both mt5 with tradingview"): every candle, EMA and ATR
 // the strategy judges comes from ONE place. InpBarSource 1 = the TradingView chart's own candles, so the EA sees the
@@ -567,14 +595,18 @@ string Boxes(bool a0, bool a1, bool a2, bool a3, bool a4, bool a5, bool a6, bool
 
 int OnInit()
 {
+   ExitPreset();                                            // v1.38
    g_bandsB = InpBoxInputs ? Boxes(InpB00, InpB01, InpB02, InpB03, InpB04, InpB05, InpB06, InpB07, InpB08, InpB09, InpB10, InpB11, InpB12, InpB13, InpB14, InpB15, InpB16, InpB17, InpB18, InpB19, InpB20) : InpBandsB;
    g_bandsS = InpBoxInputs ? Boxes(InpS00, InpS01, InpS02, InpS03, InpS04, InpS05, InpS06, InpS07, InpS08, InpS09, InpS10, InpS11, InpS12, InpS13, InpS14, InpS15, InpS16, InpS17, InpS18, InpS19, InpS20) : InpBandsS;
    EmasShow();
    hFast = iMA(_Symbol, PERIOD_CURRENT, InpEmaFast, 0, MODE_EMA, PRICE_CLOSE);
    hSlow = iMA(_Symbol, PERIOD_CURRENT, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
-   if (InpHtfMin > 0) {
-      g_htf = InpHtfMin == 5 ? PERIOD_M5 : InpHtfMin == 15 ? PERIOD_M15 : InpHtfMin == 30 ? PERIOD_M30 : InpHtfMin == 60 ? PERIOD_H1 : InpHtfMin == 240 ? PERIOD_H4 : PERIOD_M15;
+   if (InpAdxMin > 0) { hAdx = iADX(_Symbol, PERIOD_CURRENT, InpAdxPeriod); if (hAdx == INVALID_HANDLE) return INIT_FAILED; }   // v1.39
+   int htfMin = InpHtfMin;
+   if (InpHtfIdx >= 0) { int hm[6] = {0, 5, 15, 30, 60, 240}; htfMin = hm[MathMin(InpHtfIdx, 5)]; }   // v1.37
+   if (htfMin > 0) {
+      g_htf = htfMin == 5 ? PERIOD_M5 : htfMin == 15 ? PERIOD_M15 : htfMin == 30 ? PERIOD_M30 : htfMin == 60 ? PERIOD_H1 : htfMin == 240 ? PERIOD_H4 : PERIOD_M15;
       hHtf = iMA(_Symbol, g_htf, InpHtfEma, 0, MODE_EMA, PRICE_CLOSE);
       if (hHtf == INVALID_HANDLE) return INIT_FAILED;
    }
@@ -589,7 +621,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.36 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.39 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -655,6 +687,9 @@ double OnTester()
    double net = TesterStatistics(STAT_PROFIT), dd = TesterStatistics(STAT_EQUITY_DD), n = TesterStatistics(STAT_TRADES);
    // v1.31: score 4 = the win rate of whole trades, ALWAYS (also for a losing setting) - the report's Profit column carries the money
    if (InpOptScore == 4) { PositionStats(); return g_posN > 0 ? 100.0 * g_posW / g_posN : 0; }
+   // v1.37 (Zee 2026-10-18: "optimizing only for best profit factor.. cents earned per invested dollar"): score 5 = profit factor,
+   // 0 when fewer than InpOptMinTrades whole trades (a 20-trade PF of 3 is luck, not a setting)
+   if (InpOptScore == 5) { PositionStats(); return g_posN < InpOptMinTrades ? 0 : TesterStatistics(STAT_PROFIT_FACTOR); }
    if (InpOptScore == 3) {
       if (n < InpOptMinTrades) return -1e9 + n;
       return WorstMonth() + 0.05 * net;
@@ -675,6 +710,7 @@ void OnDeinit(const int reason)
 {
    if (InpReEntry) PrintFormat("[SAAD] v1.35 re-entries: armed %d, taken %d", g_reArmed, g_reTaken);
    if (InpCoolN > 0) PrintFormat("[SAAD] v1.36 cool-down skips: %d", g_coolSkips);
+   PrintFormat("[SAAD] v1.39 gates: cost %d, ADX %d, volatility %d", g_skipCost, g_skipAdx, g_skipVol);
    if (reason != REASON_CHARTCHANGE && reason != REASON_PARAMETERS) ChartIndicatorDelete(0, 0, "SaadEMAs");
    PrintFormat("[SAAD] v1.12: refused stop changes %d | no dip %d, no sweep %d, min-lot too risky %d, day loss stops %d, partial closes %d", g_modFails, g_skipDip, g_skipSweep, g_skipMinLot, g_dayLossStop, g_partials);
    PrintFormat("[SAAD] CTC breakevens %d | day close: setups dropped %d, losing trades shut %d", g_ctc, g_skipClose, g_closeLoss);
@@ -1361,6 +1397,8 @@ void TryEntry()
       return;
    }
    bool hit = g_late || (side > 0 ? (InpTrigBid ? bid : ask) > g_pHigh + InpBreakPips * pip : bid < g_pLow - InpBreakPips * pip);
+   // v1.39 bar-open entries: only a CLOSED candle beyond the break level counts, the entry is at the next candle's open (Task 8 #3)
+   if (InpEntryMode == 3) hit = BTime(1) > g_pTime && (side > 0 ? BClose(1) > g_pHigh + InpBreakPips * pip : BClose(1) < g_pLow - InpBreakPips * pip);
    if (!hit) return;
    if (InpMaxSpreadPts > 0 && (ask - bid) / _Point > InpMaxSpreadPts) return;    // wait for a normal spread
    g_pSide = 0;
@@ -1484,12 +1522,15 @@ void DoEntry(int side, double sl)
       enJ = side > 0 ? bidJ + ChartSpr() : bidJ;
    }
    if (InpMaxRiskUsd > 0 && MathAbs(enJ - sl) > InpMaxRiskUsd) { g_skipRisk++; DSkip(side, StringFormat("stop too far ($%.2f > $%.2f)", MathAbs(enJ - sl), InpMaxRiskUsd)); return; }
+   // v1.39 gates: trend strength (ADX) and the volatility band (ATR of the last closed candle)
+   if (hAdx != INVALID_HANDLE && Buf(hAdx, 1) < InpAdxMin) { g_skipAdx++; DSkip(side, StringFormat("ADX %.1f below %.1f (ranging)", Buf(hAdx, 1), InpAdxMin)); return; }
+   if ((InpAtrMinUsd > 0 && Atr(1) < InpAtrMinUsd) || (InpAtrMaxUsd > 0 && Atr(1) > InpAtrMaxUsd)) { g_skipVol++; DSkip(side, StringFormat("ATR $%.2f outside the band", Atr(1))); return; }
    double tp = 0;
    bool noTp = false, resTp1 = false;
    // v1.07 TP1 METHOD (Zee 2026-10-16, the chart's EXIT LAB): a fixed $ or Fibonacci TP1 replaces the normal one
    double fix = 0;
-   if (InpTpMode == 1 || InpTpMode == 3) fix = enJ + side * (InpTpFixUsd > 0 ? InpTpFixUsd : side > 0 ? InpTpFixUsdB : InpTpFixUsdS);
-   else if (InpTpMode == 2) fix = side > 0 ? g_pLow + InpTpFibPct / 100.0 * (g_pHigh - g_pLow) : g_pHigh - InpTpFibPct / 100.0 * (g_pHigh - g_pLow);
+   if (g_tpMode == 1 || g_tpMode == 3) fix = enJ + side * (side > 0 ? g_fixB : g_fixS);
+   else if (g_tpMode == 2) fix = side > 0 ? g_pLow + g_fib / 100.0 * (g_pHigh - g_pLow) : g_pHigh - g_fib / 100.0 * (g_pHigh - g_pLow);
    if (fix != 0 && (fix - enJ) * side < InpMinTpPips * pip) {          // not far enough beyond the entry: the normal TP1, or skip (v1.09)
       if (InpTpNoFixSkip) { DSkip(side, "the TP1-method target is not far enough beyond the entry"); return; }
       fix = 0;
@@ -1509,11 +1550,18 @@ void DoEntry(int side, double sl)
          if (res > 0) { tp = res; noTp = false; resTp1 = true; }
       }
    }
+   // v1.39 cost gate (Task 8 #1): the runway to TP1 must be at least X times the live spread
+   if (InpCostGateX > 0 && !noTp) {
+      double tgt = tp > 0 ? tp : side > 0 ? Ema(g_pExit, 0) - InpLongTpPips * pip : 0;
+      double run = tgt > 0 ? side * (tgt - enJ) : 0, spr = ask - bid;
+      if (tgt > 0 && run < InpCostGateX * spr) { g_skipCost++; DSkip(side, StringFormat("cost gate: $%.2f to TP1 < %.1f x spread $%.2f", run, InpCostGateX, spr)); return; }
+   }
    bool rideShort = side < 0 && TrailOn(-1) && InpRide && InpFixTpPips <= 0;
    if (InpFixTpPips > 0) { tp = side > 0 ? en + InpFixTpPips * pip : en - InpFixTpPips * pip; noTp = false; }
    double lots = LotsFor(side, en, sl);
    if (lots <= 0) { DSkip(side, "even the minimum lot risks too much of this account"); return; }
-   bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, EA_COMMENT + " BUY")
+   bool hardB = InpHardTp && tp > 0 && !noTp && PartPct() >= 0.999;                     // v1.39 (Task 8 #4)
+   bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 || hardB ? NormalizeDouble(tp, _Digits) : 0, EA_COMMENT + " BUY")
                       : trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), EA_COMMENT + " SELL");
    if (!ok) { if (trade.ResultRetcode() == TRADE_RETCODE_MARKET_CLOSED) g_closedSide = side; return; }
    g_retryUntil = 0;
@@ -1532,10 +1580,10 @@ void DoEntry(int side, double sl)
    p.sHi = g_pHigh; p.sLo = g_pLow; p.sExit = g_pExit; p.isRe = g_reTaking;   // v1.35: the setup, for a re-entry
    p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    p.tp1 = side > 0 ? (noTp ? "none (exit EMA below entry, no resistance above) - trailing from entry"
-                            : fix != 0 ? StringFormat("%.2f (TP1 method %d)", tp, InpTpMode)
+                            : fix != 0 ? StringFormat("%.2f (TP1 method %d)", tp, g_tpMode)
                             : resTp1 ? StringFormat("next resistance %.2f (the %d EMA is below the entry)", tp, g_pExit)
                             : StringFormat("touch of the %d EMA (now %.2f)", g_pExit, Ema(g_pExit, 0)))
-                    : fix != 0 ? StringFormat("%.2f (TP1 method %d)", tp, InpTpMode) : StringFormat("last support %.2f", tp);
+                    : fix != 0 ? StringFormat("%.2f (TP1 method %d)", tp, g_tpMode) : StringFormat("last support %.2f", tp);
    int n = ArraySize(g_pos); ArrayResize(g_pos, n + 1); g_pos[n] = p;
    g_entries++;
    Log(StringFormat("ENTRY #%d %s %.2f lots @ %s | SL %s (risk $%.2f) | TP1 %s | setup: %s",
