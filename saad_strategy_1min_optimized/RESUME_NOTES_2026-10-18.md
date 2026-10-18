@@ -67,3 +67,14 @@ No more reports for their own sake. Test -> fix -> test in MT5 until a 1-min set
   (a restart sets auto = True and starts 6 rigs).
 - Chart (15 min) now = EA v1.24 defaults + best-so-far pass PF 2.11 (pending/pass_211.json), lots kept 2. Zee's settings before:
   monitor/strategy_lab/saad_snapshot_2026-10-19_0111_before_pass.json. Chart shows Aug* +$52.3k PF 2.82 / Sep -$17.3k PF 0.70 / Oct +$4.5k PF 1.19.
+
+## 2026-10-19 ~3:45 AM PKT — 15-min optimizer verdict (after the PC restart killed it at 15%)
+- `s15_forward_check.py`: top 30 Jan-Jun passes (from the agents' logs, opt_peek.py) run on Jul 1-Oct 16 in MT5, random delay, 1 lot.
+  Plain v1.23: **+$35,059, PF 1.20, 425 trades** (Oct -1.2k). Optimizer passes: 12 of 30 profitable, **0 of 30 beat v1.23's net**.
+  Best Jan-Jun PF 2.40 -> Jul-Oct PF 0.97; 2.33 -> 1.08; 2.21 -> 0.79 (the afternoon + sweep + 1 h trend recipe fails out of sample, as on 1 min).
+  Best Jul-Oct PF: 1.40 (+$24.4k, 160 tr: EMA 5/40, ATR stop 1x, chop 0.28, ADX 35, ATR $1-12, server 2-18). All 4 months green: EMA 13/70,
+  break 3, SL 25 pips, chop 0.08, server 0-18, ATR $1-8, no ADX: +$20.5-23.5k, PF 1.17-1.19, ~318 tr.
+- => keep v1.23 settings in the EA. Next lever = the EXIT (indicator TP1 methods 'Next EMA beyond the entry' / 'close back across the slow EMA'
+  are chart-only; port to the EA as v1.25 and MT5-test) - Zee has not answered that offer yet.
+- Indicator since the last notes: weekday table (left of Last 30 days), range table + EXIT LAB = whole chart, Trading session dropdown,
+  the two chart-only TP1 methods. Page server restarted with the PC -> has the new session/ADX/ATR mapping.

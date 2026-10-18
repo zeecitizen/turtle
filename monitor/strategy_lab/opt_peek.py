@@ -51,7 +51,7 @@ ok = {ff: sum(1 for pid, (s, ini) in passes.items() if ini and (lambda d: (d["In
 ff = ok[True] >= ok[False]
 checked = sum(1 for p in passes.values() if p[1])
 print(f"{len(passes)} passes logged so far | decoding checked on {checked}: {ok[ff]} match ({'first input varies fastest' if ff else 'last input varies fastest'})")
-top = sorted(passes.items(), key=lambda x: -x[1][0])[:12]
+top = sorted(passes.items(), key=lambda x: -x[1][0])[:int(sys.argv[1]) if len(sys.argv) > 1 else 12]
 rows = []
 for pid, (s, _) in top:
     d = decode(pid, ff)
