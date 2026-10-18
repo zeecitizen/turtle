@@ -55,6 +55,7 @@
 //| v1.34: InpTpFixUsd - one fixed $ target for both sides (opt.)    |
 //| v1.35: InpReEntry - re-enter the setup after a stop-out (off)    |
 //|        trigger = the setup's break level again, as the indicator |
+//| v1.36: InpCoolN/Dir/WinOnly - the chart's cool-down after exits  |
 //| magic 88305. TEST - not promoted until MT5 says so.              |
 //+------------------------------------------------------------------+
 //+------------------------------------------------------------------+
@@ -93,7 +94,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.35"
+#property version   "1.36"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -104,7 +105,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad1m v1.35"
+#define EA_COMMENT "Saad1m v1.36"
 
 //--- the two lines
 input int    InpEmaFast     = 14;      // InpEmaFast
@@ -321,6 +322,9 @@ input double InpChartSpread = 0.17;     // InpChartSpread - the chart's fixed sp
 input int    InpTpMode      = 2;      // InpTpMode - TP1 method: 0 normal (BUY other-EMA touch, SELL last swing low) · 1 fixed $ · 2 Fibonacci extension of the setup candle · 3 partial (a share at the fixed $, the rest trails)
 input double InpTpFixUsdB   = 2.0;    // InpTpFixUsdB - modes 1 / 3: BUY TP1 = the entry + $X
 input double InpTpFixUsdS   = 2.0;    // InpTpFixUsdS - modes 1 / 3: SELL TP1 = the entry - $X
+input int    InpCoolN       = 0;      // InpCoolN - v1.36 the chart's cool-down: no new trade for N candles after a trade closes, counting the exit candle (0 = off)
+input int    InpCoolDir     = 1;      // InpCoolDir - v1.36: 0 blocks both directions · 1 only the same direction as the trade that closed (the chart's default)
+input bool   InpCoolWinOnly = false;  // InpCoolWinOnly - v1.36: only after a WINNING exit
 input bool   InpReEntry     = false;  // InpReEntry - v1.35 (Zee): a trade closed by its ORIGINAL stop loss arms a re-entry: when price comes back through the original entry price X, take the same setup again (same side, stop rule and TP1 rule) - once per original trade
 input int    InpReEntryBars = 60;     // InpReEntryBars - v1.35: the re-entry stays armed this many candles after the stop-out
 input double InpTpFixUsd    = 0;      // InpTpFixUsd - v1.34: when > 0, the SAME fixed $ target for BUY and SELL (overrides InpTpFixUsdB / S) - one input the optimizer can sweep
@@ -345,6 +349,11 @@ string   g_reDesc = "";
 datetime g_reUntil = 0;
 bool     g_reTaking = false;
 int      g_reArmed = 0, g_reTaken = 0;
+// v1.36 the chart's cool-down (Zee 2026-10-18: "can you add the cool down rule to the EA?"): the last exit's candle, side and result
+datetime g_lxBar = 0;
+int      g_lxSide = 0;
+bool     g_lxWin = false;
+int      g_coolSkips = 0;
 int      g_pLeft = 0;
 int      g_pExit = 50;           // long: which EMA is its exit
 // v1.12: entry armed after the break (mode 1) / sweep tracking (mode 2)
@@ -580,7 +589,7 @@ int OnInit()
    }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-1min] v1.35 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-1min] v1.36 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -665,6 +674,7 @@ double OnTester()
 void OnDeinit(const int reason)
 {
    if (InpReEntry) PrintFormat("[SAAD] v1.35 re-entries: armed %d, taken %d", g_reArmed, g_reTaken);
+   if (InpCoolN > 0) PrintFormat("[SAAD] v1.36 cool-down skips: %d", g_coolSkips);
    if (reason != REASON_CHARTCHANGE && reason != REASON_PARAMETERS) ChartIndicatorDelete(0, 0, "SaadEMAs");
    PrintFormat("[SAAD] v1.12: refused stop changes %d | no dip %d, no sweep %d, min-lot too risky %d, day loss stops %d, partial closes %d", g_modFails, g_skipDip, g_skipSweep, g_skipMinLot, g_dayLossStop, g_partials);
    PrintFormat("[SAAD] CTC breakevens %d | day close: setups dropped %d, losing trades shut %d", g_ctc, g_skipClose, g_closeLoss);
@@ -884,7 +894,7 @@ void SlMoved(int i, double newSl, string note)
 // the position is gone: label its exit from the closing deal
 void DrawExit(PosState &p)
 {
-   if (!(Drawing() || LogOn() || InpLogCsv || InpCsvName != "" || InpAdaptWeeks > 0 || InpAdaptDays > 0 || InpAdaptToday || InpReEntry) || !HistorySelectByPosition(p.ticket)) return;   // v1.24: InpCsvName writes even with InpLogCsv off; v1.32 the weekly boxes need every result
+   if (!(Drawing() || LogOn() || InpLogCsv || InpCsvName != "" || InpAdaptWeeks > 0 || InpAdaptDays > 0 || InpAdaptToday || InpReEntry || InpCoolN > 0) || !HistorySelectByPosition(p.ticket)) return;   // v1.24: InpCsvName writes even with InpLogCsv off; v1.32 the weekly boxes need every result
    double px = 0, pnl = 0, prof = 0, comm = 0, swp = 0; datetime t = 0; long reason = -1;
    for (int k = HistoryDealsTotal() - 1; k >= 0; k--) {
       ulong d = HistoryDealGetTicket(k);
@@ -899,6 +909,7 @@ void DrawExit(PosState &p)
    if (t == 0) return;
    pnl = prof + comm + swp;
    AdRecord(p.side, p.chase, t, pnl);                      // v1.32
+   g_lxBar = CurBar(); g_lxSide = p.side; g_lxWin = pnl > 0;   // v1.36 cool-down: the exit candle (the chart: lxBar := bar_index)
    string why = p.why;
    if (reason == DEAL_REASON_SL)
       why = p.usdTrail ? StringFormat("trailing stop ($%.0f) after TP%d", p.side > 0 ? TrailL() : TrailS(), p.tpStage - 1) : MathAbs(p.slNow - p.entry) < _Point ? "breakeven (CTC)"
@@ -1365,6 +1376,12 @@ void TryEntry()
    double bMin = side > 0 ? InpRangeMin : InpRangeMinS, bMax = side > 0 ? InpRangeMax : InpRangeMaxS;
    string bands = side > 0 ? g_bandsB : g_bandsS;
    // v1.10 (Zee 2026-10-17, "the stand aside is just a form of a cooldown"): pausing after a trade skipped in an unticked range
+   // v1.36: the chart's cool-down - it checks this before the range pause (the indicator's order)
+   if (InpCoolN > 0 && g_lxBar > 0 && (BTime(0) - g_lxBar) / PeriodSeconds() <= InpCoolN && (InpCoolDir == 0 || side == g_lxSide) && (!InpCoolWinOnly || g_lxWin)) {
+      g_coolSkips++;
+      DSkip(side, StringFormat("cool-down: %d candle(s) after the last %s closed%s", (int)((BTime(0) - g_lxBar) / PeriodSeconds()), g_lxSide > 0 ? "BUY" : "SELL", g_lxWin ? " in profit" : ""));
+      return;
+   }
    if (InpBandPauseBars > 0 && BTime(0) <= g_pauseUntil) { DSkip(side, StringFormat("pausing %d candles after a trade skipped in an unticked range", InpBandPauseBars)); return; }
    g_chase = -1;
    if (bMin > 0 || bMax > 0 || StringFind(bands, "0") >= 0 || InpAdaptWeeks > 0 || InpAdaptDays > 0 || InpAdaptToday) {
