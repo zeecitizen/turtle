@@ -246,11 +246,18 @@ xPick = input.string("Off - use the TP1 METHOD and AFTER TP1 settings below", "E
 // Zee 2026-10-19: "apply these settings 2.11 on tradingview" - the MT5 optimizer's 15-min drivers that the chart did not have.
 // The EA has them (Saad_strategy_15min v1.24 / Saad_strategy_1min v1.39); all OFF by default. Added LAST: inputs are stored by position.
 GFX = "EA FILTERS - trading hours, ADX, volatility band (EA: InpSessFrom / InpSessTo / InpAdxMin / InpAtrMinUsd / InpAtrMaxUsd)"
-fSessFrom = input.int(0, "Trade only from this BROKER-SERVER hour (Blueberry server = New York + 7: PKT - 2 in summer, PKT - 3 in winter; 0 = from midnight)", minval = 0, maxval = 23, group = GFX, tooltip = "EA: InpSessFrom. Judged on the setup candle's open time, like the EA: a setup candle outside the hours is ignored.", display = display.none)
-fSessTo = input.int(24, "...until this server hour (not included; 24 = to the end of the day)", minval = 1, maxval = 24, group = GFX, tooltip = "EA: InpSessTo.", display = display.none)
+fSessFrom = input.int(0, "Custom session only: from this broker-server hour (server = New York + 7 = PKT - 2 in summer, PKT - 3 in winter)", minval = 0, maxval = 23, group = GFX, tooltip = "EA: InpSessFrom. Judged on the setup candle's open time, like the EA: a setup candle outside the hours is ignored.", display = display.none)
+fSessTo = input.int(24, "Custom session only: ...until this server hour (not included; 24 = end of the day)", minval = 1, maxval = 24, group = GFX, tooltip = "EA: InpSessTo.", display = display.none)
 fAdxMin = input.float(0, "Trade only when ADX(14) of the last closed candle is at least (0 = off)", minval = 0, step = 1, group = GFX, tooltip = "EA: InpAdxMin. MT5's own ADX formula (EMA-smoothed), not TradingView's Wilder ADX - the numbers differ.", display = display.none)
 fAtrMin = input.float(0, "Trade only when ATR(14) of the last closed candle is at least $X (0 = off)", minval = 0, step = 0.5, group = GFX, tooltip = "EA: InpAtrMinUsd. ATR = MT5's simple average of the true range.", display = display.none)
 fAtrMax = input.float(0, "...and at most $X (0 = off)", minval = 0, step = 0.5, group = GFX, tooltip = "EA: InpAtrMaxUsd.", display = display.none)
+// Zee 2026-10-19: "its confusing what the values mean. maybe you can convert it to London Session only, Newyork only, Newyork+London, All
+// hours". Sessions in the broker's SERVER hours (New York + 7, the EA's clock): London 8 AM-5 PM London = server 10-19, New York 8 AM-5 PM
+// New York = 15-24, both = 10-24, the overlap (both open) = 15-19. PKT = server + 2 in summer, + 3 in winter.
+fSess = input.string("All hours", "Trading session", options = ["All hours", "London: 12 PM - 9 PM PKT (winter 1 PM - 10 PM)", "New York: 5 PM - 2 AM PKT (winter 6 PM - 3 AM)", "London + New York: 12 PM - 2 AM PKT (winter 1 PM - 3 AM)", "London-New York overlap: 5 PM - 9 PM PKT (winter 6 PM - 10 PM)", "Custom: the two server-hour boxes above"], group = GFX,
+     tooltip = "Judged on the setup candle's open time, like the EA (InpSessFrom / InpSessTo). London = 8 AM - 5 PM London time, New York = 8 AM - 5 PM New York time, overlap = 8 AM - 12 PM New York (both open). Server hours: London 10-19, New York 15-24, London + New York 10-24, overlap 15-19. In the two or three weeks a year when only one of London / New York has moved its clock, London is one hour off.", display = display.none)
+sessF = fSess == "London: 12 PM - 9 PM PKT (winter 1 PM - 10 PM)" or fSess == "London + New York: 12 PM - 2 AM PKT (winter 1 PM - 3 AM)" ? 10 : fSess == "New York: 5 PM - 2 AM PKT (winter 6 PM - 3 AM)" or fSess == "London-New York overlap: 5 PM - 9 PM PKT (winter 6 PM - 10 PM)" ? 15 : fSess == "Custom: the two server-hour boxes above" ? fSessFrom : 0
+sessT = fSess == "London: 12 PM - 9 PM PKT (winter 1 PM - 10 PM)" or fSess == "London-New York overlap: 5 PM - 9 PM PKT (winter 6 PM - 10 PM)" ? 19 : fSess == "Custom: the two server-hour boxes above" ? fSessTo : 24
 // the server clock decides "today" and "this month" (PXBT = UTC, the day MT5's history uses)
 dayKey(int t) => year(t, iDayTz) * 10000 + month(t, iDayTz) * 100 + dayofmonth(t, iDayTz)
 monthKey(int t) => year(t, iDayTz) * 100 + month(t, iDayTz)
@@ -1178,7 +1185,7 @@ if barstate.isconfirmed and bar_index >= iSlow * 2 + 19 and shape != 0
     bool shortOk = iSells and shortLine and (shape == -1 or shape == 2) and not longOk
     // Zee 2026-10-15: option - a setup candle whose range reaches both EMAs (within the touch tolerance) is skipped
     bool touchBoth = low - tol <= e9 and high + tol >= e9 and low - tol <= e50 and high + tol >= e50
-    if (longOk or shortOk) and srvHour >= fSessFrom and srvHour < fSessTo
+    if (longOk or shortOk) and srvHour >= sessF and srvHour < sessT
         if iSkipBoth and touchBoth
             if iSkips and det
                 dReg(label.new(bar_index, longOk ? low : high, "✖ skip", style = longOk ? label.style_label_up : label.style_label_down,

@@ -46,7 +46,11 @@ try:
     print(r.stdout[-1500:], r.stderr[-800:])
     time.sleep(6)
     names = server.pine_inputs()
-    st2 = server.tv_eval(server.JS_STUDY)
+    for _ in range(20):                  # the chart's copy takes a few seconds to load a version with new inputs
+        st2 = server.tv_eval(server.JS_STUDY)
+        if len(names) == len(st2["values"]):
+            break
+        time.sleep(3)
     assert len(names) == len(st2["values"]), ("chart has", len(st2["values"]), "file has", len(names))
     now = dict(zip(names, st2["values"]))
     moved = [k for k in old_names if now.get(k) != before[k]]
