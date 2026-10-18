@@ -16,6 +16,26 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.37 - v1.39 (2026-10-18) — optimizer scores, exit quick pick, spread / slippage defenses (all OFF by default)
+
+Zee: *"work and keep working on the goal until you have a working EA on 1 min timeframe"* · Task 8: *"start coding defenses against broker spread and execution slippage"*
+
+- **v1.37:** `InpHtfIdx` (trend-alignment timeframe as one index, for the optimizer); `InpOptScore` 5 = profit factor, 0 below `InpOptMinTrades`.
+- **v1.38:** `InpExitPreset` 0-8 = the indicator's new "EXIT · quick pick" (normal / fixed $1-$5 close-all / Fib 161.8-200 close-all / partial half +$2 trail $2).
+- **v1.39 defenses:**
+  - `InpCostGateX`: skip when the TP1 runway is under X x the live spread.
+  - `InpHardTp`: BUYs send TP1 to the broker when the share is 1.0.
+  - `InpAdxPeriod` / `InpAdxMin`: ADX gate.
+  - `InpAtrMinUsd` / `InpAtrMaxUsd`: volatility band.
+  - `InpEntryMode` 3: bar-open entry after a candle CLOSES beyond the break level. A fix in the same version: it had expired before its check.
+- **Indicator:**
+  - The EXIT LAB is its own panel (bottom left): sorted best first, with max drawdown, change vs the current exits, BUY / SELL net, and a star on one-click exits.
+  - New `xPick` quick pick, mapped to `InpExitPreset` on the compare page.
+- **Receipts** (XAUUSD_BB M1, random delay; all defenses, EMA 8/13, ATR 2.5 stop, Fib 200 close-all + hard TP, cost gate 3x, ADX 20, server hours 10-20):
+  - PF 0.92, WR 67.5%; the $100k account was gone by March.
+  - With bar-open entries, Jan-Mar: PF 0.85.
+  - A genetic search over all defenses at once (learn Jan-Jun, forward Jul-Oct) is running: `monitor/strategy_lab/saad_m1_defended_search.py`.
+
 ## Saad_strategy_1min v1.36 (2026-10-18) — the chart's cool-down after an exit
 
 Zee: *"can you add the cool down rule to the EA?"*
