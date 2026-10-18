@@ -16,6 +16,18 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_1min v1.36 (2026-10-18) — the chart's cool-down after an exit
+
+Zee: *"can you add the cool down rule to the EA?"*
+
+- `InpCoolN` / `InpCoolDir` / `InpCoolWinOnly` = the indicator's "No new trade for N candles after a trade closes", "...blocks" (Same / Both directions) and "...only after a WINNING exit".
+  - Judged on the candles since the exit candle, before the range pause, as the indicator does. A re-entry skips it, as on the chart.
+  - The compare page now passes `coolN` / `coolDir` / `coolWin` to the EA. It is no longer a chart-only rule.
+- **Receipts** (Zee's 1-min chart of 18 Oct, cool-down 1 candle, same direction; XAUUSD_BB M1, full year, random delay):
+  - 1,226 trades blocked.
+  - -$1,030,741 (WR 51.2%, PF 0.87) vs -$1,198,073 (WR 53.2%, PF 0.85) without it.
+  - Jan +$50.5k and Oct +$16.8k; the other 8 months red.
+
 ## Saad_strategy_1min v1.34 - v1.35 (2026-10-18) — one fixed target input; re-entry after a stop-out (off by default)
 
 - **v1.34:** `InpTpFixUsd` (> 0) sets the same fixed $ TP1 for BUY and SELL, one input the optimizer can sweep.

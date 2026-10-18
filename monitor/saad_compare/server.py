@@ -51,14 +51,15 @@ DIRECT = {"iFast": "InpEmaFast", "iSlow": "InpEmaSlow", "iWick": "InpWickMin", "
           "iPartial": "InpPartialPct", "iTp1Be": "InpTp1Be", "iLots": "InpLots", "iBuys": "InpBuys", "iSells": "InpSells",
           "pkLockAt": "InpLockAtUsd", "pkLockUsd": "InpLockUsd", "pkGap": "InpTrailGapUsd", "adRunN": "InpCutRunN",
           "rpLook": "InpRangeLook", "rpLookS": "InpRangeLookS", "htEma": "InpHtfEma",
-          "iSpread": "InpChartSpread", "tpFixB": "InpTpFixUsdB", "tpFixS": "InpTpFixUsdS", "tpFib": "InpTpFibPct", "tpPart": "InpTpPartPct", "tpPartTr": "InpTpPartTrailUsd", "iSlAtrM": "InpSlAtrMult", "reOn": "InpReEntry", "reBars": "InpReEntryBars"}
+          "iSpread": "InpChartSpread", "tpFixB": "InpTpFixUsdB", "tpFixS": "InpTpFixUsdS", "tpFib": "InpTpFibPct", "tpPart": "InpTpPartPct", "tpPartTr": "InpTpPartTrailUsd", "iSlAtrM": "InpSlAtrMult", "reOn": "InpReEntry", "reBars": "InpReEntryBars", "coolN": "InpCoolN", "coolWin": "InpCoolWinOnly"}
 CHOICES = {"iLRule": ("InpLongRule", {"On 9 EMA, exit 50": 0, "On 50 EMA, exit 9": 1, "Both": 2}),
            "iSLine": ("InpShortLine", {"50 EMA": 0, "9 EMA": 1, "Either": 2}),
            "iTouchM": ("InpTouchMode", {"Candle touches": 0, "Wick touches, body on trade side": 1}),
            "tpMode": ("InpTpMode", {"Normal: BUY = touch of the other EMA · SELL = last swing low": 0, "Fixed $ target": 1, "Fibonacci extension of the setup candle": 2, "Partial: close a share at a fixed $ target, trail the rest": 3}),
            "tpNoFix": ("InpTpNoFixSkip", {"Use the normal TP1": "false", "Skip the trade": "true"}),
            "htReq": ("InpHtfMin", {"Off": 0, "5 min": 5, "15 min": 15, "30 min": 30, "1 hour": 60, "4 hour": 240}),
-           "iSlMode": ("InpSlMode", {"Pips beyond the setup candle": 0, "ATR x from the entry": 1})}
+           "iSlMode": ("InpSlMode", {"Pips beyond the setup candle": 0, "ATR x from the entry": 1}),
+           "coolDir": ("InpCoolDir", {"Both directions": 0, "Same direction": 1})}
 # chart-only rules the EA does not have: (pine var, value that means "off", what it is)
 NOT_IN_EA = [("iTightTrail", False, "Tight trail"), ("iSkipBoth", False, "Skip a candle touching both EMAs"),
              ("pkBeUsd", 0, "STOP NEAR PEAK ① breakeven"), ("pkStep", 0, "STOP NEAR PEAK ③ ladder"),
@@ -66,7 +67,7 @@ NOT_IN_EA = [("iTightTrail", False, "Tight trail"), ("iSkipBoth", False, "Skip a
              ("pkAtr", 0, "STOP NEAR PEAK ⑥ ATR trail"), ("pkLowN", 0, "STOP NEAR PEAK ⑦ candle trail"),
              ("pkEma", 0, "STOP NEAR PEAK ⑧ EMA trail"), ("enMode", "Wick break (EA)", "Entry: candle close beyond"),
              ("adBars", 0, "Cut: still in loss after N candles"), ("adEmaX", False, "Cut: close beyond the slow EMA"),
-             ("adMaxUsd", 0, "Cut: max loss $"), ("coolN", 0, "Cool-down after an exit"), ("fxOn", False, "Failed entry exit")]
+             ("adMaxUsd", 0, "Cut: max loss $"), ("fxOn", False, "Failed entry exit")]
 PERIODS = {"1": "M1", "5": "M5", "15": "M15", "30": "M30", "60": "H1"}
 
 
