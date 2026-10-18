@@ -34,18 +34,20 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.23"
+#property version   "1.24"
 #property strict
 
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
+// v1.24 (Zee 2026-10-19: "run the optimizer for 15 min to saad_strategy_15min on all settings that u think made the most effect"):
+//       the 1-min EA's ATR band + ADX gate and its OnTester optimizer score - ALL OFF by default, trading identical to v1.23
 // v1.23 (Zee): EMA touch tolerance 1 pip ($0.10) - a candle within 10 cents of the EMA counts as on it (MT5: +$8.8k full year, both halves, random delay +$7.5k)
 // v1.22 (Zee): the two EMAs it trades on are drawn on the chart when attached - EMA 9 thick blue, EMA 50 thick red (InpShowEmas)
 // v1.21 (Zee): EXIT label and SETUP label text in black; the TP1 labels in blue (InpExitTextColor / InpSetupTextColor / InpTpTextColor)
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad15 v1.23"
+#define EA_COMMENT "Saad15 v1.24"
 
 //--- the two lines
 input int    InpEmaFast     = 9;      // InpEmaFast
@@ -182,9 +184,17 @@ input color  InpTpTextColor = clrBlue;   // InpTpTextColor — the TP1 labels ("
 input color  InpExitTextColor = clrBlack; // InpExitTextColor — the "EXIT #n ... $" label (Zee: black; was green/red by profit)
 input color  InpSlTextColor = clrBlack; // InpSlTextColor — stop-loss TEXT (the "SL price" label and stop-move notes; Zee: black). Lines stay red
 input bool   InpDrawSkips   = false;   // InpDrawSkips — also label setups that were skipped (no break, risk, no support, choppy)
+// v1.24 (from Saad_strategy_1min v1.39) - all OFF by default
+input int    InpAdxPeriod   = 14;     // InpAdxPeriod — ADX length for InpAdxMin
+input double InpAdxMin      = 0;      // InpAdxMin — trade only when ADX (last closed candle) is at least this (0 = off; 20-25 = trending)
+input double InpAtrMinUsd   = 0;      // InpAtrMinUsd — volatility gate: trade only when ATR(14) of the last closed candle is at least $X (0 = off)
+input double InpAtrMaxUsd   = 0;      // InpAtrMaxUsd — ...and at most $X (0 = off)
+input int    InpOptScore    = 0;      // InpOptScore — tester only, MT5 optimizer score (OptimizationCriterion 6): 0 net / max drawdown · 2 win rate of whole trades · 3 worst month · 4 win rate always · 5 profit factor
+input int    InpOptMinTrades = 100;   // InpOptMinTrades — tester only: fewer whole trades than this scores below every real result (score 5: 0)
 
 CTrade   trade;
-int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE;
+int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE, hAdx = INVALID_HANDLE;
+int      g_skipAdx = 0, g_skipVol = 0;   // v1.24
 ENUM_TIMEFRAMES g_htf = PERIOD_CURRENT;
 datetime g_lastBar = 0;
 
@@ -233,6 +243,7 @@ int OnInit()
    hFast = iMA(_Symbol, PERIOD_CURRENT, InpEmaFast, 0, MODE_EMA, PRICE_CLOSE);
    hSlow = iMA(_Symbol, PERIOD_CURRENT, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
+   if (InpAdxMin > 0) { hAdx = iADX(_Symbol, PERIOD_CURRENT, InpAdxPeriod); if (hAdx == INVALID_HANDLE) return INIT_FAILED; }   // v1.24
    if (InpHtfMin > 0) {
       g_htf = InpHtfMin == 15 ? PERIOD_M15 : InpHtfMin == 30 ? PERIOD_M30 : InpHtfMin == 60 ? PERIOD_H1 : InpHtfMin == 240 ? PERIOD_H4 : PERIOD_M15;
       hHtf = iMA(_Symbol, g_htf, InpHtfEma, 0, MODE_EMA, PRICE_CLOSE);
@@ -241,7 +252,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-15min] v1.23 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.24 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -251,9 +262,74 @@ int OnInit()
    return INIT_SUCCEEDED;
 }
 
+// v1.24: the optimizer's score (OptimizationCriterion 6 = "Custom max"), as in Saad_strategy_1min. Tester only - never runs live.
+int g_posN = 0, g_posW = 0;
+void PositionStats()                      // whole trades: a position's TP1 partial + its rest = one trade
+{
+   g_posN = 0; g_posW = 0;
+   if (!HistorySelect(0, TimeCurrent() + 86400)) return;
+   ulong ids[]; double pn[];
+   int nd = HistoryDealsTotal();
+   for (int d = 0; d < nd; d++) {
+      ulong tk = HistoryDealGetTicket(d);
+      if (HistoryDealGetInteger(tk, DEAL_MAGIC) != InpMagicNumber) continue;
+      ulong pid = (ulong)HistoryDealGetInteger(tk, DEAL_POSITION_ID);
+      double v = HistoryDealGetDouble(tk, DEAL_PROFIT) + HistoryDealGetDouble(tk, DEAL_COMMISSION) + HistoryDealGetDouble(tk, DEAL_SWAP);
+      int k = -1;
+      for (int j = ArraySize(ids) - 1; j >= 0; j--) if (ids[j] == pid) { k = j; break; }
+      if (k < 0) { k = ArraySize(ids); ArrayResize(ids, k + 1); ArrayResize(pn, k + 1); ids[k] = pid; pn[k] = 0; }
+      pn[k] += v;
+   }
+   g_posN = ArraySize(ids);
+   for (int j = 0; j < g_posN; j++) if (pn[j] > 0) g_posW++;
+}
+
+double WorstMonth()                       // the worst calendar month's net (a month without trades = 0)
+{
+   if (!HistorySelect(0, TimeCurrent() + 86400)) return 0;
+   double m[]; int k0 = -1;
+   int nd = HistoryDealsTotal();
+   for (int d = 0; d < nd; d++) {
+      ulong tk = HistoryDealGetTicket(d);
+      if (HistoryDealGetInteger(tk, DEAL_MAGIC) != InpMagicNumber) continue;
+      MqlDateTime t; TimeToStruct((datetime)HistoryDealGetInteger(tk, DEAL_TIME), t);
+      int k = t.year * 12 + t.mon;
+      if (k0 < 0) k0 = k;
+      int i = k - k0;
+      if (i < 0) continue;
+      if (i >= ArraySize(m)) { int o = ArraySize(m); ArrayResize(m, i + 1); for (int j = o; j <= i; j++) m[j] = 0; }
+      m[i] += HistoryDealGetDouble(tk, DEAL_PROFIT) + HistoryDealGetDouble(tk, DEAL_COMMISSION) + HistoryDealGetDouble(tk, DEAL_SWAP);
+   }
+   if (ArraySize(m) == 0) return -1e9;
+   double w = m[0];
+   for (int i = 1; i < ArraySize(m); i++) w = MathMin(w, m[i]);
+   return w;
+}
+
+double OnTester()
+{
+   double net = TesterStatistics(STAT_PROFIT), dd = TesterStatistics(STAT_EQUITY_DD), n = TesterStatistics(STAT_TRADES);
+   if (InpOptScore == 4) { PositionStats(); return g_posN > 0 ? 100.0 * g_posW / g_posN : 0; }
+   if (InpOptScore == 5) { PositionStats(); return g_posN < InpOptMinTrades ? 0 : TesterStatistics(STAT_PROFIT_FACTOR); }
+   if (InpOptScore == 3) {
+      if (n < InpOptMinTrades) return -1e9 + n;
+      return WorstMonth() + 0.05 * net;
+   }
+   if (InpOptScore == 2) {
+      PositionStats();
+      if (g_posN < InpOptMinTrades) return -1e9 + g_posN;
+      if (net <= 0) return net / 1000.0 - 100.0;
+      return 100.0 * g_posW / g_posN;
+   }
+   if (n < InpOptMinTrades) return -1e9 + n;
+   if (net <= 0) return net / 1000.0;
+   return net / MathMax(dd, 1.0);
+}
+
 void OnDeinit(const int reason)
 {
    if (reason != REASON_CHARTCHANGE && reason != REASON_PARAMETERS) ChartIndicatorDelete(0, 0, "SaadEMAs");
+   if (InpAdxMin > 0 || InpAtrMinUsd > 0 || InpAtrMaxUsd > 0) PrintFormat("[SAAD] v1.24 gates: ADX %d, volatility %d", g_skipAdx, g_skipVol);
    PrintFormat("[SAAD] v1.12: refused stop changes %d | no dip %d, no sweep %d, min-lot too risky %d, day loss stops %d, partial closes %d", g_modFails, g_skipDip, g_skipSweep, g_skipMinLot, g_dayLossStop, g_partials);
    PrintFormat("[SAAD] CTC breakevens %d | day close: setups dropped %d, losing trades shut %d", g_ctc, g_skipClose, g_closeLoss);
    PrintFormat("[SAAD] setups %d, entries %d | skipped: no break %d, gap %d, risk %d, no support %d, choppy %d, filters %d, busy %d, day guard %d | rides %d, lock refused %d",
@@ -854,6 +930,9 @@ void DoEntry(int side, double sl)
    double pip = Pip();
    double en = side > 0 ? ask : bid;
    if (InpMaxRiskUsd > 0 && MathAbs(en - sl) > InpMaxRiskUsd) { g_skipRisk++; DSkip(side, StringFormat("stop too far ($%.2f > $%.2f)", MathAbs(en - sl), InpMaxRiskUsd)); return; }
+   // v1.24 gates: trend strength (ADX) and the volatility band (ATR of the last closed candle)
+   if (hAdx != INVALID_HANDLE && Buf(hAdx, 1) < InpAdxMin) { g_skipAdx++; DSkip(side, StringFormat("ADX %.1f below %.1f (ranging)", Buf(hAdx, 1), InpAdxMin)); return; }
+   if ((InpAtrMinUsd > 0 && Buf(hAtr, 1) < InpAtrMinUsd) || (InpAtrMaxUsd > 0 && Buf(hAtr, 1) > InpAtrMaxUsd)) { g_skipVol++; DSkip(side, StringFormat("ATR $%.2f outside the band", Buf(hAtr, 1))); return; }
    double tp = 0;
    bool noTp = false, resTp1 = false;
    if (side < 0) {
