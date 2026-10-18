@@ -208,6 +208,7 @@ CTrade   trade;
 int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE, hAdx = INVALID_HANDLE;
 int      g_skipAdx = 0, g_skipVol = 0;   // v1.24
 // chart-test: the ghost trade of "stand aside"
+int      g_ck = -1;   // range bucket of this entry (0-20, BUY; +21 SELL) for the trade comment
 int      g_gSide = 0, g_gNxE = 0, g_gExitE = 50, g_ghosts = 0, g_bandSkips = 0;
 double   g_gEntry = 0, g_gSl = 0, g_gTp = 0;
 bool     g_gNoTp = false;
@@ -914,7 +915,8 @@ void TryEntry()
    // chart-test: the indicator's TOP / BOTTOM FILTER - where the entry sits in the last N CLOSED candles, judged at the break level
    string bands = side > 0 ? InpBandsB : InpBandsS;
    bool off = false;
-   if (StringFind(bands, "0") >= 0) {
+   g_ck = -1;
+   if (true) {
       int look = side > 0 ? InpRangeLook : InpRangeLookS;
       double hi = 0, lo = DBL_MAX;
       for (int k = 1; k <= look; k++) { hi = MathMax(hi, iHigh(_Symbol, PERIOD_CURRENT, k)); lo = MathMin(lo, iLow(_Symbol, PERIOD_CURRENT, k)); }
@@ -922,6 +924,7 @@ void TryEntry()
       double px = side > 0 ? MathMax(lvl + 0.01, o0) : MathMin(lvl - 0.01, o0);
       double chase = hi > lo ? (side > 0 ? (px - lo) / (hi - lo) : (hi - px) / (hi - lo)) * 100 : 50;
       int bk = chase > 100 ? 20 : chase <= 0 ? 0 : MathMin((int)MathFloor(chase / 5), 19);
+      g_ck = bk + (side > 0 ? 0 : 21);
       off = StringLen(bands) > bk && StringGetCharacter(bands, bk) == '0';
       if (off && InpBandOff == 0) { g_bandSkips++; DSkip(side, StringFormat("entry at %.0f%% of the range: unticked box", chase)); return; }
    }
@@ -1012,8 +1015,8 @@ void DoEntry(int side, double sl, bool ghost = false)
    }
    double lots = LotsFor(side, en, sl);
    if (lots <= 0) { DSkip(side, "even the minimum lot risks too much of this account"); return; }
-   bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, EA_COMMENT + " BUY")
-                      : trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), EA_COMMENT + " SELL");
+   bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, StringFormat("S15ct BUY ck%02d", g_ck))
+                      : trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), StringFormat("S15ct SELL ck%02d", g_ck));
    if (!ok) return;
    ulong t = trade.ResultOrder();
    ulong deal = trade.ResultDeal();
