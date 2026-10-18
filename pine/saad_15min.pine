@@ -279,7 +279,7 @@ xName(int m) => array.get(array.from("Now: your real exits", "Fixed target +$1",
      "Candle closes back across EMA " + str.tostring(iFast), "Candle closes back across EMA " + str.tostring(iSlow), "ATR trailing stop (1 x ATR)",
      "Step trailing stop ($2 behind the best price)", "Opposite pin bar / marubozu", "Fibonacci 161.8% of the setup candle", "Fibonacci 200% of the setup candle",
      "Time exit: 10 minutes", "Partial: half at +$2, rest trails $2", "Bollinger band touch (20, 2)", "RSI 14 reaches 70 / 30"), m)
-var array<int>   xN = array.new<int>(60, 0)     // this month: row m BUY = m, SELL = m + 20, both = m + 40 (Task 6)
+var array<int>   xN = array.new<int>(60, 0)     // the whole chart: row m BUY = m, SELL = m + 20, both = m + 40 (Task 6)
 var array<int>   xW = array.new<int>(60, 0)
 var array<float> xP = array.new<float>(60, 0.0)
 var array<float> xEq = array.new<float>(60, 0.0)  // Task 6: running net, its peak and the worst drop from a peak (max drawdown)
@@ -311,7 +311,7 @@ var array<int>   vX = array.new<int>()          // next-EMA type: 9 / 50 = its p
 // Zee 2026-10-17: "when i turn off a range ... can u make it dimmed lit showing the original values before turning off" - a setup
 // skipped in an unticked range (Skip / Pause) still runs as a shadow trade (m = 0) so the table can show what it would have done
 var array<int>   vK = array.new<int>()          // m 0: its diagnostics row (0-20 BUY, 21-41 SELL); -1 for the EXIT LAB rows
-var array<int>   rgN = array.new<int>(42, 0)     // this month: the unticked ranges' would-have trades
+var array<int>   rgN = array.new<int>(42, 0)     // the whole chart: the unticked ranges' would-have trades
 var array<int>   rgW = array.new<int>(42, 0)
 var array<float> rgP = array.new<float>(42, 0.0)
 xRsi = ta.rsi(close, 14)
@@ -533,7 +533,7 @@ var int    lxBar = -100000   // COOL-DOWN: the last exit candle, its side and wh
 var int    lxSide = 0
 var bool   lxWin = false
 var float  sChase = na        // TOP / BOTTOM: where in the last rpLook candles' range this trade entered (BUY: 0 bottom .. 100 top; SELL mirrored)
-var array<int>   dgN = array.new<int>(42, 0)      // diagnostics, this month: 0-20 BUY, 21-41 SELL; each 0-5% ... 95-100%, over 100%
+var array<int>   dgN = array.new<int>(42, 0)      // diagnostics, the whole chart: 0-20 BUY, 21-41 SELL; each 0-5% ... 95-100%, over 100%
 var array<int>   dgW = array.new<int>(42, 0)
 var array<float> dgP = array.new<float>(42, 0.0)
 var float  sBest = na
@@ -607,9 +607,10 @@ if ta.change(monthKey(time)) != 0
     array.push(pmKey, monthKey(time[1])), array.push(pmT, nT), array.push(pmW, nW), array.push(pmL, nL), array.push(pmGW, gW), array.push(pmGL, gL)
     nT := 0, nW := 0, nL := 0, nLong := 0, nShort := 0, nSetups := 0, nNoBrk := 0, nGap := 0, nRisk := 0, nNoSup := 0
     nChop := 0, nBusy := 0, nCtc := 0, nTp1 := 0, nDayClose := 0, gW := 0.0, gL := 0.0, netL := 0.0, netS := 0.0
-    array.fill(dgN, 0), array.fill(dgW, 0), array.fill(dgP, 0.0)
-    array.fill(rgN, 0), array.fill(rgW, 0), array.fill(rgP, 0.0)
-    array.fill(xN, 0), array.fill(xW, 0), array.fill(xP, 0.0), array.fill(xEq, 0.0), array.fill(xPk, 0.0), array.fill(xDD, 0.0)
+    // Zee 2026-10-19: "Entry position in the range ... shows only this month.. make it to show as many candles/months data as we have
+    // on the chart" - its counts (dgN/dgW/dgP, the dimmed rgN/rgW/rgP) are no longer reset here: the whole chart history
+    // Zee 2026-10-19: "same for the Exit Lab.. make it not only this month but all candles available" - xN/xW/xP and the equity /
+    // peak / drawdown per exit are no longer reset here either: the whole chart history
 
 // a small tag on this candle (TP reached, CTC ...): the long explanation is in the tooltip
 note(float y, bool above, string txt, color bg, string tip = "") =>
@@ -1424,7 +1425,7 @@ if barstate.islast and rpDiag
     color dgBg = color.new(color.black, 15)
     if rpDiag
         table.cell(dg, 0, 0, "", height = 12, bgcolor = color.new(color.black, 100))
-        table.cell(dg, 0, 1, "Entry position in the range (this month)", text_color = color.yellow, text_size = size.normal, bgcolor = dgBg)
+        table.cell(dg, 0, 1, "Entry position in the range (whole chart, since " + dayTxt(firstDay) + ")", text_color = color.yellow, text_size = size.normal, bgcolor = dgBg)
         table.merge_cells(dg, 0, 1, 6, 1)
         table.cell(dg, 0, 2, "", text_size = size.small, bgcolor = dgBg)
         table.cell(dg, 1, 2, "BUY · last " + str.tostring(rpLook) + " candles", text_color = color.aqua, text_size = size.small, bgcolor = dgBg)
@@ -1447,18 +1448,18 @@ if barstate.islast and rpDiag
                 int w = ghost ? array.get(rgW, k) : array.get(dgW, k)
                 float pn = ghost ? array.get(rgP, k) : array.get(dgP, k)
                 color tc = on ? color.white : color.new(color.gray, 45)
-                string tip = on ? "" : "Unticked - dimmed: what these setups would have done this month, not counted anywhere" + (ghost ? " (a sketch: entry, first stop and TP1 rule on the chart's candles, like the EXIT LAB)" : "")
+                string tip = on ? "" : "Unticked - dimmed: what these setups would have done on the whole chart, not counted anywhere" + (ghost ? " (a sketch: entry, first stop and TP1 rule on the chart's candles, like the EXIT LAB)" : "")
                 table.cell(dg, 1 + 3 * s, b + 4, str.tostring(n), text_color = tc, text_size = size.small, tooltip = tip, bgcolor = dgBg)
                 table.cell(dg, 2 + 3 * s, b + 4, n > 0 ? str.tostring(100.0 * w / n, "#") + "%" : "-", text_color = tc, text_size = size.small, tooltip = tip, bgcolor = dgBg)
                 table.cell(dg, 3 + 3 * s, b + 4, fm(pn), text_color = on ? (pn >= 0 ? color.lime : color.red) : pn > 0 ? color.new(color.lime, 65) : pn < 0 ? color.new(color.red, 65) : color.new(color.gray, 45), text_size = size.small, tooltip = tip, bgcolor = dgBg)
         r0 := 24
 
-// ── EXIT LAB (Task 6, bottom left): every exit on the SAME entries this month, best first, with drawdown and the change vs your exits ──
+// ── EXIT LAB (Task 6, bottom left): every exit on the SAME entries on the whole chart, best first, with drawdown and the change vs your exits ──
 if barstate.islast and xDiag
     var table xl = table.new(position.bottom_left, 8, XM + 4, bgcolor = color.new(color.black, 12), border_color = color.new(color.gray, 70), border_width = 1)
     table.clear(xl, 0, 0, 7, XM + 3)
-    table.cell(xl, 0, 0, "EXIT LAB · this month · the same entries, only the exit changes", text_color = color.yellow, text_size = size.normal,
-         tooltip = "Every real trade this month is also run with each exit below, from the same entry and with its first stop. A sketch on the chart's candles: when the stop and the target fall in the same 1-minute candle the STOP counts; no breakeven / day close; an exit that never fires closes after 4 hours. Prove a winner in MT5.")
+    table.cell(xl, 0, 0, "EXIT LAB · whole chart, since " + dayTxt(firstDay) + " · the same entries, only the exit changes", text_color = color.yellow, text_size = size.normal,
+         tooltip = "Every real trade on the chart is also run with each exit below, from the same entry and with its first stop. A sketch on the chart's candles: when the stop and the target fall in the same 1-minute candle the STOP counts; no breakeven / day close; an exit that never fires closes after 4 hours. Prove a winner in MT5.")
     table.merge_cells(xl, 0, 0, 7, 0)
     hdr = array.from("exit method (best first)", "trades", "win rate", "net", "vs now", "max DD", "BUY net", "SELL net")
     for c = 0 to 7
@@ -1484,7 +1485,7 @@ if barstate.islast and xDiag
         table.cell(xl, 5, i + 2, n > 0 ? "-$" + str.tostring(array.get(xDD, k), "#,##0") : "-", text_color = color.orange, text_size = size.small, bgcolor = bg)
         table.cell(xl, 6, i + 2, array.get(xN, m) > 0 ? fm(array.get(xP, m)) : "-", text_color = color.aqua, text_size = size.small, bgcolor = bg)
         table.cell(xl, 7, i + 2, array.get(xN, m + XM) > 0 ? fm(array.get(xP, m + XM)) : "-", text_color = color.fuchsia, text_size = size.small, bgcolor = bg)
-    table.cell(xl, 0, XM + 2, "★ = one click in TP1 › 'EXIT · quick pick' (the EA has it too: InpExitPreset). Green = best this month. Blue = the exit in use.",
+    table.cell(xl, 0, XM + 2, "★ = one click in TP1 › 'EXIT · quick pick' (the EA has it too: InpExitPreset). Green = best on the whole chart. Blue = the exit in use.",
          text_color = color.silver, text_size = size.tiny, text_halign = text.align_left)
     table.merge_cells(xl, 0, XM + 2, 7, XM + 2)
 
