@@ -1,0 +1,39 @@
+# RESUME NOTES - 2026-10-18 (read first after a context compaction)
+
+## Zee's GOAL (his words): "work and keep working on the goal until you have a working EA on 1 min timeframe" - high win rate on BAD days too.
+No more reports for their own sake. Test -> fix -> test in MT5 until a 1-min setup is profitable across the year (both halves, random delay).
+
+## State of the code
+- EA `mt5/Saad_strategy_1min.mq5` = **v1.39** (magic 88305). New since v1.36, all OFF by default:
+  - v1.37 `InpHtfIdx` (0 off, 1=5m, 2=15m, 3=30m, 4=1h, 5=4h) + `InpOptScore` 5 = profit factor (0 if < InpOptMinTrades trades)
+  - v1.38 `InpExitPreset` 0..8 (0 off, 1 normal, 2-5 fixed $1/2/3/5 close-all, 6/7 Fib 161.8/200 close-all, 8 partial half +$2 trail $2)
+  - v1.39 `InpCostGateX` (skip if TP1 runway < X x live spread), `InpHardTp` (BUY sends TP1 to broker when share 1.0),
+    `InpAdxPeriod`/`InpAdxMin`, `InpAtrMinUsd`/`InpAtrMaxUsd` (volatility band), `InpEntryMode` 3 = bar-open (candle CLOSE beyond break level).
+  - **BUG to fix first**: InpEntryMode 3 gave 0 trades (setup probably expires after InpBreakBars=1 before the close-beyond check runs).
+- Indicator `pine/saad_15min.pine`: Task 6 patch NOT yet applied: `monitor/strategy_lab/pending/pine_task6.py` (EXIT LAB panel bottom-left sorted
+  + drawdown + vs-now, and `xPick` "EXIT · quick pick" input mapping = EA InpExitPreset). Apply ONLY after Task 3 finished; snapshot settings by
+  POSITION first (server.tv_eval(server.JS_STUDY)), inject with `pine/inject_pine.py pine/saad_15min.pine --force` (open editor first:
+  server.tv('pine','open','Saad Strategy v3.20')), restore settings by name, add `"xPick": ("InpExitPreset", {...})` to server.py CHOICES.
+- Task 3 (`monitor/saad_compare/task3_chart_effects.py`) was running on the TV chart (do not touch chart while it runs); when done run
+  `task3_report.py` -> optimizer_results/TASK3_setting_effects.md.
+- Task 7 self-tuner built, not run: `monitor/strategy_lab/saad15_selftune.py` (beam search over setting tree, successive halving across 4 folds,
+  ensemble vote, hold-out Sep-Oct; uses rigs axi2-7).
+- Queue `saad_tasks_queue.py` (task1/task7/task5/task2) was STOPPED during Task 1 stage A (to prioritise the defended 1-min search).
+- Task 4 DONE: optimizer_results/TASK4_why_october_works.md (Oct quietest month: 1-min candle $1.62 vs $4.09 Mar; fixed-$ settings fit only October;
+  Feb/Mar 70% of losers stopped within 5 min).
+
+## Results so far (MT5, XAUUSD_BB M1, Jan 1-Oct 16, random delay, $100k, 2 lots)
+- Zee's current 1-min chart settings: PF 0.83-0.87, all months but Jan/Oct red.
+- 40-setup menu (stop x target x EMA): best PF 0.95 (4-pip stop + Fib 300 + EMA 8/8). Pre-heat / daily selection / adaptive ranges / re-entry: no edge.
+- Defenses smoke test: A = EMA 8/13, break 1, ATR stop 2.5, Fib 200 close-all + hard TP, cost gate 3x, ADX 20, session 10-20 server:
+  PF 0.92, WR 67.5%, account blown by March. ADX 20 skipped 8,061 setups. C (Fib 300): PF 0.86.
+- 15-min v1.30 (defaults) remains the only robust profitable setup: +$110k/yr, WR 82%, every half green.
+
+## NEXT STEPS
+1. Fix InpEntryMode 3; re-run smoke B.
+2. Launch ONE genetic optimizer (M1, learn Jan-Jun, forward Jul-Oct, InpOptScore 5, min 250 trades) over: EMAs, BreakPips 0-4, EntryMode 0-3,
+   SlMode/SlAtrMult/SlPips, MaxRisk, TpMode 1-2 + InpTpFixUsd + Fib, PartialPct, HardTp, BeTpPct, CostGateX 0-6, AdxMin 0-35, AtrMin/Max,
+   SessFrom/To, ChopEr, HtfIdx/HtfEma. Base = saad_tasks_base_m1.json with all range boxes ON, pause 0, cooldown 0, re-entry off.
+3. Validate winners: full year + halves, random delay, per-month and per-day green ratio; iterate.
+4. Then Task 5 sweeps on the winner, Task 7 self-tuner, Task 6 Pine apply. Commit each EA version with VERSION.md + VERSION_HISTORY.md rows.
+- One optimizer at a time (8 agents fill the 15.6 GB RAM). Compile tests on rig axi2.
