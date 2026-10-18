@@ -89,7 +89,7 @@ class YearRunner:
         while True:
             time.sleep(POLL)
             try:
-                _, settings, sets, notes = server.read_settings()
+                st, settings, sets, notes = server.read_settings()
             except Exception as e:
                 self.error = f"cannot read the chart: {e}"
                 self.valid = {"ok": None, "why": [f"cannot read the chart: {e}"], "at": time.strftime("%H:%M:%S")}
@@ -99,7 +99,7 @@ class YearRunner:
             if not self.auto:
                 pending = None
                 continue
-            sets = self._run_sets(sets)
+            sets = self._run_sets(sets, st.get("res"))
             if sets == self.sets:
                 pending = None
                 continue
@@ -110,17 +110,20 @@ class YearRunner:
             self.notes = notes
             self.start(sets)
 
-    def _run_sets(self, sets):
+    def _run_sets(self, sets, res=None):
         s = dict(sets)
         s["InpBarSource"] = "0"          # MT5's own candles: the chart has no 1-min history this far back
+        # Zee 2026-10-18 "let's shift our focus to 5 min time frame": test on the chart's own timeframe (was always M1).
+        # Kept in the batch (so a timeframe change re-runs and has its own cache key), stripped before MT5 sees the inputs.
+        s["__period"] = server.PERIODS.get(str(res), "M1")
         return s
 
     # ── a batch ────────────────────────────────────────────────────────────
     def start(self, sets=None):
         if sets is None:
-            _, _, sets, notes = server.read_settings()
+            st, _, sets, notes = server.read_settings()
             self.notes = notes
-            sets = self._run_sets(sets)
+            sets = self._run_sets(sets, st.get("res"))
         with self.lock:
             self.gen += 1
             g = self.gen
@@ -164,7 +167,8 @@ class YearRunner:
                 csv = bb_bars.COMMON / f"saad_year_{rig}.csv"
                 for attempt in range(3):
                     csv.unlink(missing_ok=True)
-                    r = axi_rig.run(server.EA, SYMBOL, "M1", dict(sets, InpCsvName=csv.name), frm=f"{m}.01", to=_next(m), deposit=100000,
+                    ea_in = {k: v for k, v in sets.items() if k != "__period"}
+                    r = axi_rig.run(server.EA, SYMBOL, sets.get("__period", "M1"), dict(ea_in, InpCsvName=csv.name), frm=f"{m}.01", to=_next(m), deposit=100000,
                                     exec_mode=int(self.delay), tag=f"year_{m.replace('.', '_')}", rig=rig,
                                     cancel=lambda: g != self.gen)
                     # 16 Oct: with 6 rigs starting together a pass sometimes processes NO ticks (quality "100%" without
@@ -219,7 +223,7 @@ class YearRunner:
             now = time.time()
             return {"auto": self.auto, "delay": self.delay, "months": self.months, "order": MONTHS,
                     "prev": (self.prev or {}).get("months"), "changed": self.changed, "notes": self.notes,
-                    "error": self.error, "valid": self.valid, "rigs": len(RIGS), "symbol": SYMBOL,
+                    "error": self.error, "valid": self.valid, "rigs": len(RIGS), "symbol": SYMBOL, "period": (self.sets or {}).get("__period", ""),
                     "elapsed": round((self.finished or now) - self.started) if self.started else None,
                     "running": bool(self.started and not self.finished),
                     "at": datetime.fromtimestamp(self.started).strftime("%H:%M:%S") if self.started else ""}

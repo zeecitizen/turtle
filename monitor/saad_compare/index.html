@@ -416,8 +416,8 @@ function renderYear() {
       <td></td><td>${T.gd} / ${T.d}</td><td></td><td></td></tr>` : '') + splitRows(done);
   const green = done.filter(r => r.v.result.net > 0).length;
   $('yrSum').textContent = Y.error ? '· ' + Y.error : Y.running ? `· running… ${Y.elapsed ?? 0} s (${done.length} of ${rows.length} months)`
-    : Y.at ? `· ${done.length} months, ${green} green · settings of ${Y.at}, took ${Y.elapsed} s` : '· waiting for the chart';
-  const ch = (Y.changed || []).map(c => `${c.k} ${c.was} → ${c.now}`).join(', ');
+    : Y.at ? `· ${Y.period ? Y.period + ' · ' : ''}${done.length} months, ${green} green · settings of ${Y.at}, took ${Y.elapsed} s` : '· waiting for the chart';
+  const ch = (Y.changed || []).map(c => c.k === '__period' ? `timeframe ${c.was || 'M1'} → ${c.now}` : `${c.k} ${c.was} → ${c.now}`).join(', ');
   $('yrChg').innerHTML = (ch ? `<b>Changed since the run before:</b> ${esc(ch)} - "vs before" shows its effect per month.` : '')
     + (Y.notes && Y.notes.length ? `<div class="warn" style="margin-top:6px">${Y.notes.map(esc).join('<br>')}</div>` : '');
 }
