@@ -56,3 +56,14 @@ No more reports for their own sake. Test -> fix -> test in MT5 until a 1-min set
 - RUNNING (started 11:11 PM PKT): `py monitor/strategy_lab/saad_m5_defended_search.py` (read with --read) = the M1 defended search on M5,
   base saad_opt_base_sets_m5def.json (= m1def base), min 120 trades Jan-Jun, wider $ ranges for M5. Forward results come from MT5 itself.
   NEXT: read top by FORWARD PF; validate the best on the full year + halves with random delay; if one holds, ship as EA defaults (new version).
+
+## 2026-10-19 ~1:15 AM PKT — 15-min optimizer running, chart on its best-so-far pass
+- Self-tuner (Task 7) DONE: v1.23 defaults beat every tuned set on the Sep 1-Oct 16 hold-out (+$8.8k vs -$18.6k / -$15.6k). Keep v1.23 settings.
+- Saad_strategy_15min v1.24 shipped (ATR band, ADX, OnTester; off by default; identical trades to v1.23).
+- RUNNING: `chain_after_selftune.py` -> `saad15_driver_search.py` (MT5 genetic, M15, Jan-Jun learn / Jul-Oct forward, PF score, min 80 trades,
+  rig axi, started 00:33:53), THEN `saad_m5_defended_search.py`, then the page's auto re-run back on. Peek: `py monitor/strategy_lab/opt_peek.py`.
+- Indicator: new EA FILTERS inputs fSessFrom/fSessTo (broker hours, NY+7), fAdxMin (MT5 ADX formula), fAtrMin/fAtrMax; server.py DIRECT maps them,
+  but the RUNNING page server still has the old map -> restart it (`taskkill` server.py; ensure_up restarts) only AFTER the chain is done
+  (a restart sets auto = True and starts 6 rigs).
+- Chart (15 min) now = EA v1.24 defaults + best-so-far pass PF 2.11 (pending/pass_211.json), lots kept 2. Zee's settings before:
+  monitor/strategy_lab/saad_snapshot_2026-10-19_0111_before_pass.json. Chart shows Aug* +$52.3k PF 2.82 / Sep -$17.3k PF 0.70 / Oct +$4.5k PF 1.19.
