@@ -1700,6 +1700,11 @@ void OnTick()
                g_late = true; TryEntry(); g_late = false;
                if (g_pSide != 0 && --g_pLeft <= 0) g_pSide = 0;
             }
+            // v1.39 bar-open entries: the candle that just CLOSED beyond the break level enters at this open - before the window runs out
+            else if (InpEntryMode == 3 && BTime(1) > g_pTime && (g_pSide > 0 ? BClose(1) > g_pHigh + InpBreakPips * Pip() : BClose(1) < g_pLow - InpBreakPips * Pip())) {
+               TryEntry();
+               if (g_pSide != 0 && --g_pLeft <= 0) g_pSide = 0;
+            }
             else if (--g_pLeft <= 0) { g_skipBreak++; DSkip(g_pSide, StringFormat("%s not broken in %d candle%s", g_pSide > 0 ? "high" : "low", InpBreakBars, InpBreakBars > 1 ? "s" : "")); g_pSide = 0; }
          }
          DetectSetup();
