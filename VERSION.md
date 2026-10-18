@@ -16,7 +16,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | EA | File (`mt5/`) | Magic | Latest | Chart | Status |
 |---|---|---|---|---|---|
-| **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.24** (2026-10-19) | XAUUSD M15 | **LIVE** on Axi / PXBT as v1.17 / v1.23 (v1.18–v1.22 display only; **v1.23 changes trades**: 1-pip EMA touch tolerance; v1.24 adds optimizer-only inputs, trades identical to v1.23) |
+| **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.25** (2026-10-19) | XAUUSD M15 | **LIVE** on Axi / PXBT as v1.17 / v1.23 (v1.18–v1.22 display only; **v1.23 changes trades**: 1-pip EMA touch tolerance; v1.24-v1.25 add optimizer inputs and test-only exit modes, all off: trades identical to v1.23) |
 | Saad 15-min + pyramiding | `Saad_strategy_15min_pyramiding_max_3.mq5` | 88330 | v1.01 (2026-10-13) | XAUUSD M15 | READY, demo first (bigger risk) |
 | Saad 5-min | `Saad_strategy_5min.mq5` | 88320 | v1.01 (2026-10-13) | XAUUSD M5 | READY, demo first: SELL ONLY, small edge |
 | Small-account tiers | `EA_20USD … EA_200USD.mq5` | 88310–88314 | v1.14 base (2026-10-12) | XAUUSD M15 | READY ($80+ only) |
@@ -50,6 +50,7 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 
 | Version | Date | What changed | Result / note |
 |---|---|---|---|
+| **v1.25** | 2026-10-19 | `InpExitMode` (Zee: "ok test it"): 1 = the indicator's TP1 METHOD "Next EMA beyond the entry" (close all on the touch of the nearer EMA beyond the entry), 2 = close after a candle closes back across the slow EMA; no partial / breakeven / trail. **Off by default** | Mode 0 identical to v1.24 (+$127,425.40 / 1,257 deals). Full year, random delay, 1 lot, v1.23 settings: v1.23 exits **+$121,496** PF 1.31 DD 7% · mode 1 +$65,670 PF 1.14 DD 23% · mode 2 +$127,774 PF 1.34 DD 15%, WR 26%, 5 red months. With Zee's chart settings (2 lots): normal TP1 +$78,124 PF 1.14 DD 58% · mode 1 +$158,275 PF 1.28 DD 24%. **Keep mode 0** |
 | **v1.24** | 2026-10-19 | For the MT5 optimizer (Zee): the 1-min EA's ATR band (`InpAtrMinUsd` / `InpAtrMaxUsd`), ADX gate (`InpAdxMin` / `InpAdxPeriod`) and `OnTester` score (`InpOptScore` / `InpOptMinTrades`). **All off by default** | Trades identical to v1.23: Blueberry XAUUSD_BB M15, Jan 1 – Oct 16, no delay, 1 lot: +$127,425.40, 1,257 deals, PF 1.33 on both |
 | **v1.23** | 2026-10-14 | `InpTouchPips` 0 → **1**: a candle within 1 pip ($0.10) of the EMA counts as touching it (Zee) | Full year **+$211,032** (v1.22 +$202,222), PF 1.63, DD $13,119; Jan–Jun +$3.8k, Jul–Oct +$5.0k; random delay +$210,737 vs +$203,260. Plateau 1–3 pips, 4 flat, 5+ worse |
 | **v1.22** | 2026-10-14 | The EMA 9 (thick blue) and EMA 50 (thick red) are drawn on the chart when the EA is attached (embedded `SaadEMAs` indicator, `InpShowEmas`); same timeframe and periods the EA trades on | Display only, skipped in the fast tester: trades identical to v1.21 |

@@ -34,11 +34,12 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.24"
+#property version   "1.25"
 #property strict
 
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
+// v1.25 (Zee 2026-10-19: "ok test it"): InpExitMode - the indicator's two chart-only TP1 METHODs as EA exits (OFF by default, = v1.24)
 // v1.24 (Zee 2026-10-19: "run the optimizer for 15 min to saad_strategy_15min on all settings that u think made the most effect"):
 //       the 1-min EA's ATR band + ADX gate and its OnTester optimizer score - ALL OFF by default, trading identical to v1.23
 // v1.23 (Zee): EMA touch tolerance 1 pip ($0.10) - a candle within 10 cents of the EMA counts as on it (MT5: +$8.8k full year, both halves, random delay +$7.5k)
@@ -47,7 +48,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad15 v1.24"
+#define EA_COMMENT "Saad15 v1.25"
 
 //--- the two lines
 input int    InpEmaFast     = 9;      // InpEmaFast
@@ -191,6 +192,8 @@ input double InpAtrMinUsd   = 0;      // InpAtrMinUsd — volatility gate: trade
 input double InpAtrMaxUsd   = 0;      // InpAtrMaxUsd — ...and at most $X (0 = off)
 input int    InpOptScore    = 0;      // InpOptScore — tester only, MT5 optimizer score (OptimizationCriterion 6): 0 net / max drawdown · 2 win rate of whole trades · 3 worst month · 4 win rate always · 5 profit factor
 input int    InpOptMinTrades = 100;   // InpOptMinTrades — tester only: fewer whole trades than this scores below every real result (score 5: 0)
+// v1.25 (Zee 2026-10-19: "ok test it" - the indicator's TP1 METHOD "Next EMA beyond the entry", which lifted every month on the chart)
+input int    InpExitMode    = 0;      // InpExitMode — 0 the v1.23 exits (TP1 = EMA / support, partial, trail) · 1 NEXT EMA BEYOND THE ENTRY: close ALL when price touches the nearer EMA beyond the entry (picked at entry from the live EMAs; none beyond -> out after a candle closes back across the fast EMA) · 2 no target: out after a candle CLOSES back across the slow EMA. Modes 1-2: no partial, no breakeven, no trailing - the first stop stays
 
 CTrade   trade;
 int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE, hAdx = INVALID_HANDLE;
@@ -216,7 +219,7 @@ int      g_skipDip = 0, g_skipSweep = 0, g_skipMinLot = 0, g_dayLossStop = 0, g_
 // per-position state
 struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bool noTp; bool ride; datetime entryTime; double best; bool usdTrail; double tpNext; int tpStage; bool resTp1;
                   string setup; double sl0; double risk; string tp1; datetime tp1At; string tps; datetime ctcAt; int moves; double mfe;
-                  int num; double slNow; datetime slFrom; string why; };
+                  int num; double slNow; datetime slFrom; string why; int nxE; };   // v1.25 nxE: 9 / 50 the EMA to touch, -1 none beyond (close back across the fast), -2 close back across the slow, 0 v1.23 exits
 PosState g_pos[];
 
 int g_ctc = 0, g_skipClose = 0, g_closeLoss = 0;
@@ -252,7 +255,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-15min] v1.24 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.25 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
@@ -604,6 +607,7 @@ void SyncPos()
       p.entry = PositionGetDouble(POSITION_PRICE_OPEN); p.tp = PositionGetDouble(POSITION_TP);
       p.exitE = 50; p.noTp = p.side > 0; p.ride = TrailOn(p.side); p.entryTime = (datetime)PositionGetInteger(POSITION_TIME); p.best = p.entry;
       p.num = ++g_num; p.slNow = PositionGetDouble(POSITION_SL); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.resTp1 = false; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0;
+      p.nxE = InpExitMode == 2 ? -2 : 0;
       int n = ArraySize(g_pos); ArrayResize(g_pos, n + 1); g_pos[n] = p;
    }
 }
@@ -730,6 +734,16 @@ void ManageTick()
    double ask0 = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    for (int i = ArraySize(g_pos) - 1; i >= 0; i--) {
       g_pos[i].mfe = g_pos[i].side > 0 ? MathMax(g_pos[i].mfe, bid) : (g_pos[i].mfe == 0 ? ask0 : MathMin(g_pos[i].mfe, ask0));
+      if (g_pos[i].nxE != 0) {             // v1.25 exit modes: no lock, breakeven, partial or trail
+         if (g_pos[i].nxE > 0) {
+            double e = Ema(g_pos[i].nxE, 0);
+            if (g_pos[i].side > 0 ? bid >= e : ask0 <= e) {
+               g_pos[i].why = StringFormat("%d EMA touched (next EMA beyond the entry)", g_pos[i].nxE == 9 ? InpEmaFast : InpEmaSlow);
+               trade.PositionClose(g_pos[i].ticket);
+            }
+         }
+         continue;
+      }
       if (InpLockAtUsd > 0 && PositionSelectByTicket(g_pos[i].ticket)) {
          double moved = g_pos[i].side > 0 ? bid - g_pos[i].entry : g_pos[i].entry - ask0;
          double want = g_pos[i].entry + g_pos[i].side * InpLockUsd, cur = PositionGetDouble(POSITION_SL);
@@ -796,6 +810,14 @@ void ManageBar()
       if (!PositionSelectByTicket(t)) continue;
       int side = g_pos[i].side;
       double sl = PositionGetDouble(POSITION_SL);
+      if (g_pos[i].nxE != 0) {                      // v1.25: -1 close back across the fast EMA, -2 across the slow
+         int ce = g_pos[i].nxE == -1 ? 9 : g_pos[i].nxE == -2 ? 50 : 0;
+         if (ce > 0 && (side > 0 ? c1 < Ema(ce, 1) : c1 > Ema(ce, 1))) {
+            g_pos[i].why = StringFormat("closed back across the %d EMA", ce == 9 ? InpEmaFast : InpEmaSlow);
+            trade.PositionClose(t);
+         }
+         continue;
+      }
       if (g_pos[i].usdTrail) continue;              // LONG after the touch: trailed tick by tick
       if (side > 0 && !g_pos[i].ride && InpFixTpPips <= 0 && InpLongTouch == 0) {
          double tgt = Ema(g_pos[i].exitE, 1) - InpLongTpPips * Pip();
@@ -935,7 +957,13 @@ void DoEntry(int side, double sl)
    if ((InpAtrMinUsd > 0 && Buf(hAtr, 1) < InpAtrMinUsd) || (InpAtrMaxUsd > 0 && Buf(hAtr, 1) > InpAtrMaxUsd)) { g_skipVol++; DSkip(side, StringFormat("ATR $%.2f outside the band", Buf(hAtr, 1))); return; }
    double tp = 0;
    bool noTp = false, resTp1 = false;
-   if (side < 0) {
+   int nxE = 0;
+   if (InpExitMode == 1) {                 // v1.25: the nearer EMA beyond the entry, from the LIVE EMAs (the forming candle)
+      double l9 = Ema(9, 0), l50 = Ema(50, 0);
+      bool b9 = side > 0 ? l9 > en : l9 < en, b50 = side > 0 ? l50 > en : l50 < en;
+      nxE = b9 && b50 ? (MathAbs(l9 - en) <= MathAbs(l50 - en) ? 9 : 50) : b9 ? 9 : b50 ? 50 : -1;
+   } else if (InpExitMode == 2) nxE = -2;
+   else if (side < 0) {
       double sup = LastSupport(bid - InpMinTpPips * pip);
       if (sup <= 0) { g_skipSup++; DSkip(side, "no support below to target"); return; }
       tp = sup + InpShortTpPips * pip;
@@ -959,12 +987,16 @@ void DoEntry(int side, double sl)
    if (deal > 0 && HistoryDealSelect(deal)) t = (ulong)HistoryDealGetInteger(deal, DEAL_POSITION_ID);
    PosState p;
    p.ticket = t; p.side = side; p.entry = trade.ResultPrice() > 0 ? trade.ResultPrice() : en; p.tp = tp;
+   p.nxE = nxE;
    p.exitE = g_pExit; p.noTp = noTp; p.resTp1 = resTp1; p.ride = side > 0 && (noTp || (resTp1 && InpResTp1Ride)) && TrailOn(1) && InpFixTpPips <= 0;
    p.entryTime = TimeCurrent(); p.best = p.entry;
    p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0;
    p.setup = g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry;
    p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
-   p.tp1 = side > 0 ? (noTp ? "none (exit EMA below entry, no resistance above) - trailing from entry"
+   p.tp1 = nxE > 0 ? StringFormat("touch of the %d EMA (now %.2f), all closed", nxE == 9 ? InpEmaFast : InpEmaSlow, Ema(nxE, 0))
+         : nxE == -1 ? StringFormat("no EMA beyond the entry: out after a close back across the %d EMA", InpEmaFast)
+         : nxE == -2 ? StringFormat("no target: out after a close back across the %d EMA", InpEmaSlow)
+         : side > 0 ? (noTp ? "none (exit EMA below entry, no resistance above) - trailing from entry"
                             : resTp1 ? StringFormat("next resistance %.2f (the %d EMA is below the entry)", tp, g_pExit)
                             : StringFormat("touch of the %d EMA (now %.2f)", g_pExit, Ema(g_pExit, 0)))
                     : StringFormat("last support %.2f", tp);

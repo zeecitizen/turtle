@@ -16,6 +16,27 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.25 (2026-10-19) — the indicator's chart-only exits as EA exit modes (OFF by default)
+
+Zee: *"ok test it"* - the TP1 METHOD "Next EMA beyond the entry" had lifted every month (Aug-Oct) on the TradingView chart.
+
+- `InpExitMode` (default 0 = the v1.23 exits):
+  - 1 = **next EMA beyond the entry**: at the entry, the nearer EMA beyond the entry price (live EMAs); close everything when the bid (BUY) / ask (SELL) touches it. No EMA beyond the entry -> close after a candle closes back across the fast EMA.
+  - 2 = **close back across the slow EMA**: no target; close after a candle closes on the wrong side of the slow EMA.
+  - Modes 1-2: no partial, no breakeven, no trail, no broker TP; the first stop stays (as on the chart).
+- **Receipts** (MT5, XAUUSD_BB M15, Jan 1 - Oct 16):
+
+| Run | Net | PF | WR (trades) | Max DD | Red months |
+|---|---|---|---|---|---|
+| Mode 0, no delay (= v1.24) | +$127,425.40 | 1.33 | 47.1% | $14,667 | Oct |
+| v1.23 settings, v1.23 exits, random delay, 1 lot | **+$121,496** | **1.31** | 45.0% | $15,305 (7%) | Oct -$1.2k |
+| v1.23 settings, mode 1, random delay | +$65,670 | 1.14 | 41.8% | $40,536 (23%) | Jan, Feb, May, Jun, Sep |
+| v1.23 settings, mode 2, random delay | +$127,774 | 1.34 | 26.4% | $38,430 (15%) | Feb, May, Jun, Sep, Oct |
+| Zee's chart settings (EMA 15/30, ADX 30, SL 44, 2 lots), normal TP1 | +$78,124 | 1.14 | 48.4% | $66,480 (58%) | Jan, Feb, Jul, Sep |
+| Zee's chart settings, mode 1 | +$158,275 | 1.28 | 44.8% | $59,936 (24%) | Jan, Jun, Jul, Sep, Oct |
+
+- **Verdict:** the exit doubles the chart settings' profit, but the chart settings are weaker than plain v1.23 either way, and the chart's all-green Aug-Oct did not hold in MT5 (Sep -$12k, Oct -$3.4k). The chart's range boxes are not in the 15-min EA (part of the gap). **v1.23 settings + v1.23 exits stay the best MT5 result.** Not copied to any live terminal.
+
 ## Saad_strategy_15min v1.24 (2026-10-19) — optimizer inputs from the 1-min EA (all OFF by default, trades identical to v1.23)
 
 Zee: *"i want you to run the optimizer for 15 min to saad_strategy_15min on all settings that u think made the most effect from the previous optimizer we ran on 1 min"*
