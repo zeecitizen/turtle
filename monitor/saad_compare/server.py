@@ -138,6 +138,11 @@ def ea_sets_from(settings):
         sets[ea] = ("true" if v else "false") if isinstance(v, bool) else str(v)
     for pv, (ea, m) in CHOICES.items():
         sets[ea] = str(m.get(settings.get(pv), 0))
+    # 2026-10-19: the indicator's "Trading session" dropdown -> the EA's server hours (New York + 7); "Custom" keeps fSessFrom / fSessTo
+    sess = {"All hours": (0, 24), "London: 12 PM - 9 PM PKT (winter 1 PM - 10 PM)": (10, 19), "New York: 5 PM - 2 AM PKT (winter 6 PM - 3 AM)": (15, 24),
+            "London + New York: 12 PM - 2 AM PKT (winter 1 PM - 3 AM)": (10, 24), "London-New York overlap: 5 PM - 9 PM PKT (winter 6 PM - 10 PM)": (15, 19)}
+    if settings.get("fSess") in sess:
+        sets["InpSessFrom"], sets["InpSessTo"] = (str(x) for x in sess[settings["fSess"]])
     if settings.get("tpMode") == "Next EMA beyond the entry (touch, close all)":      # 2026-10-19: chart-only TP1 method
         notes.append("TP1 METHOD 'Next EMA beyond the entry' is chart-only - the EA does not have it yet, MT5 runs the normal TP1")
     if settings.get("pkLockAt", 0) and settings.get("pkApply") != "All trades":
