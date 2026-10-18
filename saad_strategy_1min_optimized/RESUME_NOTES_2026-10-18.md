@@ -30,10 +30,29 @@ No more reports for their own sake. Test -> fix -> test in MT5 until a 1-min set
 - 15-min v1.30 (defaults) remains the only robust profitable setup: +$110k/yr, WR 82%, every half green.
 
 ## NEXT STEPS
-1. Fix InpEntryMode 3; re-run smoke B.
-2. Launch ONE genetic optimizer (M1, learn Jan-Jun, forward Jul-Oct, InpOptScore 5, min 250 trades) over: EMAs, BreakPips 0-4, EntryMode 0-3,
+1. DONE: InpEntryMode 3 fixed (commit). Smoke B Jan-Mar: PF 0.85, 2,222 trades.
+2. RUNNING (relaunched after the PC restart 2026-10-18; the first run was killed by Windows updates): `py monitor/strategy_lab/saad_m1_defended_search.py` (read results with --read). ONE genetic optimizer (M1, learn Jan-Jun, forward Jul-Oct, InpOptScore 5, min 250 trades) over: EMAs, BreakPips 0-4, EntryMode 0-3,
    SlMode/SlAtrMult/SlPips, MaxRisk, TpMode 1-2 + InpTpFixUsd + Fib, PartialPct, HardTp, BeTpPct, CostGateX 0-6, AdxMin 0-35, AtrMin/Max,
    SessFrom/To, ChopEr, HtfIdx/HtfEma. Base = saad_tasks_base_m1.json with all range boxes ON, pause 0, cooldown 0, re-entry off.
 3. Validate winners: full year + halves, random delay, per-month and per-day green ratio; iterate.
-4. Then Task 5 sweeps on the winner, Task 7 self-tuner, Task 6 Pine apply. Commit each EA version with VERSION.md + VERSION_HISTORY.md rows.
+4. DONE: Task 6 Pine applied + injected (Exit Lab panel + xPick), Task 3 md written. LEFT: Task 5 sweeps on the winner, Task 7 self-tuner. Commit each EA version with VERSION.md + VERSION_HISTORY.md rows.
 - One optimizer at a time (8 agents fill the 15.6 GB RAM). Compile tests on rig axi2.
+
+## 2026-10-18 late evening (11 PM PKT) — M1 search verdict, then the shift to 5 min
+- M1 defended search STOPPED for the forward check (`m1def_forward_check.py`): top 150 Jan-Jun passes run on Jul-Oct in MT5 ->
+  5 of 150 profitable, PF 1.01-1.05, WR ~20%. Jan-Jun winners do not hold on Jul-Oct on 1 min.
+- Driver test V1 (session 16-18 server, sweep entry, chop 0.3, ATR >= $2, break 3, ADX 30, Fib 200, cost gate 3, HTF 1 h / EMA 70,
+  ATR stop 2, EMA 10/20, BE 0.75, max risk 10, partial 0.75, hard TP) on M1: Jan-Jun +$30,096 PF 2.09 WR 33.6% | Jul-Oct -$4,956 PF 0.77.
+- Zee: "ok let's shift our focus to 5 min time frame". Chart = BLUEBERRY:XAUUSD 5 min, indicator set to the V1 values it HAS
+  (`monitor/strategy_lab/pending/pine_set_v1.py`; snapshot before = `monitor/strategy_lab/saad_snapshot_2026-10-18_m5_before_v1.json`).
+  NOT in the indicator / not passed by the page: session hours, sweep entry, cost gate, ADX, ATR band, hard TP (EA-only).
+- MT5 M5, full year, random delay, $100k (rig axi):
+  - V1 full (`saad_v1_m5.py`): +$498, PF 1.04, WR 19.5%, 41 trades; Jan-Jun +$2,826, Jul-Oct -$2,328. Trade count is limited by chop 0.3
+    (1,671 skips) + the 2-hour session, not the $10 risk cap (2 skips).
+  - V1 without the six EA-only gates (= the page's 10-month view): -$18,517, 1,016 trades; Jan-Jun +$8,201, Jul-Oct -$26,718.
+  - v1.30 defaults (Zee's 15-min setup, `saad_v130_m5.py`): -$57,902, PF 0.94, WR 75.4%, 3,220 trades, DD 85%; Jan-Jun +$13.5k, Jul-Oct -$71.4k.
+- Compare page fix: `year_runner.py` ran the 10-month view on M1 ALWAYS; it now uses the chart's timeframe (`__period` in the batch,
+  stripped before MT5; shown in the page's heading).
+- RUNNING (started 11:11 PM PKT): `py monitor/strategy_lab/saad_m5_defended_search.py` (read with --read) = the M1 defended search on M5,
+  base saad_opt_base_sets_m5def.json (= m1def base), min 120 trades Jan-Jun, wider $ ranges for M5. Forward results come from MT5 itself.
+  NEXT: read top by FORWARD PF; validate the best on the full year + halves with random delay; if one holds, ship as EA defaults (new version).
