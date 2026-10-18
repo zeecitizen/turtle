@@ -1320,27 +1320,32 @@ if barstate.islast and iPanel
         table.cell(p, 0, r, "⚠ Switch the chart to 15 min", text_color = color.orange, text_size = size.normal)
         table.merge_cells(p, 0, r, 3, r)
 
-// ── TOP / BOTTOM diagnostics (middle left, off by default): BUY and SELL side by side, each on its own window ──
+// ── TOP / BOTTOM diagnostics (top left, off by default): BUY and SELL side by side, each on its own window ──
 // (+ the higher-timeframe trend rows below them, Zee 2026-10-16)
+// Zee 2026-10-18: "its too low on the top left. move it a little bit upwards (just below the indicator settings)" -> top_left (was middle_left),
+// with a see-through gap row on top so it starts under the symbol / BUY-SELL / indicator lines instead of covering them
+// (the table itself is transparent; every cell carries the dark background)
 if barstate.islast and rpDiag
-    var table dg = table.new(position.middle_left, 7, 50, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
-    table.clear(dg, 0, 0, 6, 49)
+    var table dg = table.new(position.top_left, 7, 51, border_width = 0)
+    table.clear(dg, 0, 0, 6, 50)
     int r0 = 0
+    color dgBg = color.new(color.black, 15)
     if rpDiag
-        table.cell(dg, 0, 0, "Entry position in the range (this month)", text_color = color.yellow, text_size = size.normal)
-        table.merge_cells(dg, 0, 0, 6, 0)
-        table.cell(dg, 0, 1, "", text_size = size.small)
-        table.cell(dg, 1, 1, "BUY · last " + str.tostring(rpLook) + " candles", text_color = color.aqua, text_size = size.small)
-        table.merge_cells(dg, 1, 1, 3, 1)
-        table.cell(dg, 4, 1, "SELL · last " + str.tostring(rpLookS) + " candles", text_color = color.fuchsia, text_size = size.small)
-        table.merge_cells(dg, 4, 1, 6, 1)
-        table.cell(dg, 0, 2, "BUY near the top / SELL near the bottom", text_color = color.silver, text_size = size.small)
+        table.cell(dg, 0, 0, "", height = 12, bgcolor = color.new(color.black, 100))
+        table.cell(dg, 0, 1, "Entry position in the range (this month)", text_color = color.yellow, text_size = size.normal, bgcolor = dgBg)
+        table.merge_cells(dg, 0, 1, 6, 1)
+        table.cell(dg, 0, 2, "", text_size = size.small, bgcolor = dgBg)
+        table.cell(dg, 1, 2, "BUY · last " + str.tostring(rpLook) + " candles", text_color = color.aqua, text_size = size.small, bgcolor = dgBg)
+        table.merge_cells(dg, 1, 2, 3, 2)
+        table.cell(dg, 4, 2, "SELL · last " + str.tostring(rpLookS) + " candles", text_color = color.fuchsia, text_size = size.small, bgcolor = dgBg)
+        table.merge_cells(dg, 4, 2, 6, 2)
+        table.cell(dg, 0, 3, "BUY near the top / SELL near the bottom", text_color = color.silver, text_size = size.small, bgcolor = dgBg)
         for s = 0 to 1
-            table.cell(dg, 1 + 3 * s, 2, "trades", text_color = color.silver, text_size = size.small)
-            table.cell(dg, 2 + 3 * s, 2, "win rate", text_color = color.silver, text_size = size.small)
-            table.cell(dg, 3 + 3 * s, 2, "net", text_color = color.silver, text_size = size.small)
+            table.cell(dg, 1 + 3 * s, 3, "trades", text_color = color.silver, text_size = size.small, bgcolor = dgBg)
+            table.cell(dg, 2 + 3 * s, 3, "win rate", text_color = color.silver, text_size = size.small, bgcolor = dgBg)
+            table.cell(dg, 3 + 3 * s, 3, "net", text_color = color.silver, text_size = size.small, bgcolor = dgBg)
         for b = 0 to 20
-            table.cell(dg, 0, b + 3, rpName(b) + (b == 0 ? " (far from the extreme)" : b == 20 ? " (a new high / low)" : ""), text_color = color.white, text_size = size.small, text_halign = text.align_left)
+            table.cell(dg, 0, b + 4, rpName(b) + (b == 0 ? " (far from the extreme)" : b == 20 ? " (a new high / low)" : ""), text_color = color.white, text_size = size.small, text_halign = text.align_left, bgcolor = dgBg)
             for s = 0 to 1
                 int k = b + 21 * s
                 bool on = rpOn(s == 0 ? 1 : -1, b)
@@ -1351,9 +1356,9 @@ if barstate.islast and rpDiag
                 float pn = ghost ? array.get(rgP, k) : array.get(dgP, k)
                 color tc = on ? color.white : color.new(color.gray, 45)
                 string tip = on ? "" : "Unticked - dimmed: what these setups would have done this month, not counted anywhere" + (ghost ? " (a sketch: entry, first stop and TP1 rule on the chart's candles, like the EXIT LAB)" : "")
-                table.cell(dg, 1 + 3 * s, b + 3, str.tostring(n), text_color = tc, text_size = size.small, tooltip = tip)
-                table.cell(dg, 2 + 3 * s, b + 3, n > 0 ? str.tostring(100.0 * w / n, "#") + "%" : "-", text_color = tc, text_size = size.small, tooltip = tip)
-                table.cell(dg, 3 + 3 * s, b + 3, fm(pn), text_color = on ? (pn >= 0 ? color.lime : color.red) : pn > 0 ? color.new(color.lime, 65) : pn < 0 ? color.new(color.red, 65) : color.new(color.gray, 45), text_size = size.small, tooltip = tip)
+                table.cell(dg, 1 + 3 * s, b + 4, str.tostring(n), text_color = tc, text_size = size.small, tooltip = tip, bgcolor = dgBg)
+                table.cell(dg, 2 + 3 * s, b + 4, n > 0 ? str.tostring(100.0 * w / n, "#") + "%" : "-", text_color = tc, text_size = size.small, tooltip = tip, bgcolor = dgBg)
+                table.cell(dg, 3 + 3 * s, b + 4, fm(pn), text_color = on ? (pn >= 0 ? color.lime : color.red) : pn > 0 ? color.new(color.lime, 65) : pn < 0 ? color.new(color.red, 65) : color.new(color.gray, 45), text_size = size.small, tooltip = tip, bgcolor = dgBg)
         r0 := 24
 
 // ── EXIT LAB (Task 6, bottom left): every exit on the SAME entries this month, best first, with drawdown and the change vs your exits ──
