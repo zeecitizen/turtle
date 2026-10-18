@@ -1245,6 +1245,10 @@ int dk = dayKey(time)
 if dk != curDay
     prevDay := curDay
     curDay := dk
+// Zee 2026-10-19: "it skips some days from each month.. can you make it show all the days" - every day the chart has candles (server clock)
+var array<int> chartDays = array.new<int>()
+if (array.size(chartDays) == 0 ? 0 : array.get(chartDays, math.max(0, array.size(chartDays) - 1))) != dk   // Pine does not short-circuit 'or'
+    array.push(chartDays, dk)
 TSZ = size.normal
 // one day's block: header with the total, one row per closed trade, then winrate | profit | W:L. Returns the next free row.
 dayBlock(table t, int k, string name, int r0) =>
@@ -1281,9 +1285,9 @@ dayBlock(table t, int k, string name, int r0) =>
     r + 1
 if barstate.islast and iShowRules
     var table rb = table.new(position.top_right, 2, 400, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
-    var table gd = table.new(position.top_right, 10, 40, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
+    var table gd = table.new(position.top_right, 26, 34, bgcolor = color.new(color.black, 15), border_color = color.new(color.gray, 70), border_width = 1)
     table.clear(rb, 0, 0, 1, 399)
-    table.clear(gd, 0, 0, 9, 39)
+    table.clear(gd, 0, 0, 25, 33)
     // Zee 2026-10-16: "instead of listing all trades. it can be a list of 30 days .. with winrate corresponding to each day and
     // pnl for that day" - newest day first; the date range above limits it to those days. Single trades: "Trades of one month".
     int hiT = lsTo > 0 ? lsTo : timenow
@@ -1292,15 +1296,20 @@ if barstate.islast and iShowRules
     array<int> dW = array.new<int>()
     array<float> dP = array.new<float>()
     int sz = array.size(aNum)
+    // the indicator remembers the last 500 trades: when that is full, days before the oldest one are left out (their counts are gone)
+    int memFrom = sz >= 500 ? dayKey(array.get(aTime, 0)) : 0
+    int kFrom = lsFrom > 0 ? math.max(memFrom, dayKey(lsFrom)) : memFrom
+    int kTo = dayKey(hiT)
+    if array.size(chartDays) > 0
+        for i = array.size(chartDays) - 1 to 0
+            int k = array.get(chartDays, i)
+            if k >= kFrom and k <= kTo
+                array.push(days, k), array.push(dN, 0), array.push(dW, 0), array.push(dP, 0.0)
     if sz > 0
-        for i = sz - 1 to 0
+        for i = 0 to sz - 1
             int tt = array.get(aTime, i)
             if lsFrom == 0 or (tt >= lsFrom and tt <= hiT)
-                int k = dayKey(tt)
-                int j = array.indexof(days, k)
-                if j < 0 and (lsFrom > 0 or array.size(days) < 30)
-                    array.push(days, k), array.push(dN, 0), array.push(dW, 0), array.push(dP, 0.0)
-                    j := array.size(days) - 1
+                int j = array.indexof(days, dayKey(tt))
                 if j >= 0
                     float pn = array.get(aPnl, i)
                     array.set(dN, j, array.get(dN, j) + 1)
@@ -1350,35 +1359,48 @@ if barstate.islast and iShowRules
         table.cell(gd, 3, wdR, fm(wdTp), text_color = wdTp >= 0 ? color.lime : color.red, text_size = TSZ, text_halign = text.align_right)
         table.cell(gd, 4, wdR, wdTgl > 0 ? str.tostring(wdTgw / wdTgl, "#.##") : "-", text_color = color.aqua, text_size = TSZ)
         table.cell(gd, 5, wdR, " ", text_size = size.tiny, bgcolor = color.new(color.black, 100))
-    table.cell(gd, 6, 0, lsFrom > 0 ? "Days in the range" : "Last 30 days", text_color = color.yellow, text_size = TSZ, text_halign = text.align_left)
-    table.cell(gd, 7, 0, "trades", text_color = color.silver, text_size = size.small)
-    table.cell(gd, 8, 0, "win rate", text_color = color.silver, text_size = size.small)
-    table.cell(gd, 9, 0, "P&L", text_color = color.silver, text_size = size.small)
-    if array.size(days) == 0
-        table.cell(gd, 6, 1, "No closed trades with these settings - a filter may be skipping every entry (e.g. all TOP / BOTTOM ranges unticked)",
-             text_color = color.orange, text_size = TSZ, text_halign = text.align_left)
+    int nd = array.size(days)
+    int ROWSD = 30
+    int ng = math.max(1, math.min(4, int(math.ceil(nd / 30.0))))
+    for g = 0 to ng - 1
+        int c0 = 6 + g * 5
+        table.cell(gd, c0, 0, g == 0 ? (lsFrom > 0 ? "Days in the range" : "Every day on the chart") : "... earlier", text_color = color.yellow, text_size = TSZ, text_halign = text.align_left)
+        table.cell(gd, c0 + 1, 0, "trades", text_color = color.silver, text_size = size.small)
+        table.cell(gd, c0 + 2, 0, "win rate", text_color = color.silver, text_size = size.small)
+        table.cell(gd, c0 + 3, 0, "P&L", text_color = color.silver, text_size = size.small)
+        if g > 0
+            table.cell(gd, c0 - 1, 0, " ", text_size = size.tiny, bgcolor = color.new(color.black, 100))
+    if nd == 0
+        table.cell(gd, 6, 1, "No days in the range", text_color = color.orange, text_size = TSZ, text_halign = text.align_left)
         table.merge_cells(gd, 6, 1, 9, 1)
     else
         int tn = 0
         int tw = 0
+        int tdays = 0
         float tp = 0.0
-        for j = 0 to array.size(days) - 1
+        for j = 0 to math.min(nd, ng * ROWSD) - 1
             int k = array.get(days, j)
             int n = array.get(dN, j)
             int w = array.get(dW, j)
             float pn = array.get(dP, j)
             tn += n, tw += w, tp += pn
+            tdays += n > 0 ? 1 : 0
             float wr = n > 0 ? 100.0 * w / n : 0.0
+            int c0 = 6 + int(j / ROWSD) * 5
+            int r = j % ROWSD + 1
             string wd = array.get(array.from("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"), dayofweek(timestamp(iDayTz, int(k / 10000), int(k / 100) % 100, k % 100, 12, 0), iDayTz) - 1)
-            table.cell(gd, 6, j + 1, wd + " " + dayTxt(k), text_color = color.white, text_size = TSZ, text_halign = text.align_left)
-            table.cell(gd, 7, j + 1, str.tostring(n), text_color = color.silver, text_size = TSZ)
-            table.cell(gd, 8, j + 1, str.tostring(wr, "#") + "%", text_color = wr >= 50 ? color.lime : color.orange, text_size = TSZ)
-            table.cell(gd, 9, j + 1, fm(pn), text_color = pn >= 0 ? color.lime : color.red, text_size = TSZ, text_halign = text.align_right)
-        int r = array.size(days) + 1
-        table.cell(gd, 6, r, str.tostring(array.size(days)) + " days", text_color = color.aqua, text_size = TSZ, text_halign = text.align_left)
-        table.cell(gd, 7, r, str.tostring(tn), text_color = color.aqua, text_size = TSZ)
-        table.cell(gd, 8, r, str.tostring(tn > 0 ? 100.0 * tw / tn : 0, "#") + "%", text_color = color.aqua, text_size = TSZ)
-        table.cell(gd, 9, r, fm(tp), text_color = tp >= 0 ? color.lime : color.red, text_size = TSZ, text_halign = text.align_right)
+            color dim = color.new(color.gray, 30)
+            table.cell(gd, c0, r, wd + " " + dayTxt(k), text_color = n > 0 ? color.white : dim, text_size = TSZ, text_halign = text.align_left)
+            table.cell(gd, c0 + 1, r, str.tostring(n), text_color = n > 0 ? color.silver : dim, text_size = TSZ)
+            table.cell(gd, c0 + 2, r, n > 0 ? str.tostring(wr, "#") + "%" : "-", text_color = n == 0 ? dim : wr >= 50 ? color.lime : color.orange, text_size = TSZ)
+            table.cell(gd, c0 + 3, r, n > 0 ? fm(pn) : "-", text_color = n == 0 ? dim : pn >= 0 ? color.lime : color.red, text_size = TSZ, text_halign = text.align_right)
+            if c0 > 6
+                table.cell(gd, c0 - 1, r, " ", text_size = size.tiny, bgcolor = color.new(color.black, 100))
+        int rT = math.min(nd, ROWSD) + 1
+        table.cell(gd, 6, rT, str.tostring(math.min(nd, ng * ROWSD)) + " days (" + str.tostring(tdays) + " with trades)", text_color = color.aqua, text_size = TSZ, text_halign = text.align_left)
+        table.cell(gd, 7, rT, str.tostring(tn), text_color = color.aqua, text_size = TSZ)
+        table.cell(gd, 8, rT, str.tostring(tn > 0 ? 100.0 * tw / tn : 0, "#") + "%", text_color = color.aqua, text_size = TSZ)
+        table.cell(gd, 9, rT, fm(tp), text_color = tp >= 0 ? color.lime : color.red, text_size = TSZ, text_halign = text.align_right)
 
 // ── THE MONTH'S TRADES (centre, off by default): every trade of one month, in 8 columns ──
 // Zee 2026-10-16: "add to settings request individual trades table for month: October -> and it creates a new screen centered
