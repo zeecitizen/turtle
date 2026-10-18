@@ -217,7 +217,7 @@ xDiag = input.bool(true, "Show the EXIT LAB table: this month's SAME entries wit
 mtOn = input.bool(false, "Trades of one month: a centre panel listing every trade (off by default)", group = G14, display = display.none)
 mtMonth = input.string("This month", "...which month", options = ["This month", "Last month", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"], group = G14,
      tooltip = "A month name = its latest occurrence (this year, or last year if it has not come yet). The indicator remembers the last 500 trades, and a 1-minute chart only holds a few days of history.", display = display.none)
-tpMode = input.string("Normal: BUY = touch of the other EMA · SELL = last swing low", "TP1 METHOD", options = ["Normal: BUY = touch of the other EMA · SELL = last swing low", "Fixed $ target", "Fibonacci extension of the setup candle", "Partial: close a share at a fixed $ target, trail the rest", "Next EMA beyond the entry (touch, close all)"], group = GTP, tooltip = "Zee 2026-10-16, from the EXIT LAB. Normal = today's rules. Fixed $ target: TP1 = the entry +/- the $ below. Fibonacci: TP1 = the setup candle's low + X% of its range (BUY) / its high - X% (SELL). Partial: at the fixed $ target close the share below and trail the rest by the $ below (instead of the AFTER TP1 share and trails). A target that is not at least the minimum TP1 distance beyond the entry falls back to the normal TP1. Next EMA beyond the entry (Zee 2026-10-19, the EXIT LAB row): BUY and SELL close EVERYTHING when price touches the nearer EMA beyond the entry (picked at the entry from the live EMAs); no breakeven, the first stop stays; with no EMA beyond the entry the trade closes at the next open after a candle closes back across the fast EMA - chart-only, not in the EA yet. EA: InpTpMode.", display = display.none)
+tpMode = input.string("Normal: BUY = touch of the other EMA · SELL = last swing low", "TP1 METHOD", options = ["Normal: BUY = touch of the other EMA · SELL = last swing low", "Fixed $ target", "Fibonacci extension of the setup candle", "Partial: close a share at a fixed $ target, trail the rest", "Next EMA beyond the entry (touch, close all)", "Candle closes back across the slow EMA (close all)"], group = GTP, tooltip = "Zee 2026-10-16, from the EXIT LAB. Normal = today's rules. Fixed $ target: TP1 = the entry +/- the $ below. Fibonacci: TP1 = the setup candle's low + X% of its range (BUY) / its high - X% (SELL). Partial: at the fixed $ target close the share below and trail the rest by the $ below (instead of the AFTER TP1 share and trails). A target that is not at least the minimum TP1 distance beyond the entry falls back to the normal TP1. Next EMA beyond the entry (Zee 2026-10-19, the EXIT LAB row): BUY and SELL close EVERYTHING when price touches the nearer EMA beyond the entry (picked at the entry from the live EMAs); no breakeven, the first stop stays; with no EMA beyond the entry the trade closes at the next open after a candle closes back across the fast EMA - chart-only, not in the EA yet. Candle closes back across the slow EMA (Zee 2026-10-19, the EXIT LAB row): no target and no breakeven, the first stop stays; the trade closes at the next open after a candle CLOSES on the wrong side of the slow EMA (BUY below it, SELL above it) - chart-only, not in the EA yet. EA: InpTpMode.", display = display.none)
 tpFixB = input.float(2.0, "Fixed $ target / Partial · BUY: TP1 $X above the entry", step = 0.5, minval = 0.1, group = GTP, tooltip = "EA: InpTpFixUsdB. 1 lot x $1 = $100.", display = display.none)
 tpFixS = input.float(2.0, "Fixed $ target / Partial · SELL: TP1 $X below the entry", step = 0.5, minval = 0.1, group = GTP, tooltip = "EA: InpTpFixUsdS.", display = display.none)
 tpFib = input.float(161.8, "Fibonacci · TP1 at X% of the setup candle's range (161.8 = the EXIT LAB row)", step = 10, minval = 100, group = GTP, tooltip = "EA: InpTpFibPct. BUY: its low + X% of (high - low); SELL: its high - X%.", display = display.none)
@@ -336,7 +336,7 @@ ePartial = pickN >= 2 and pickN <= 7 ? 1.0 : iPartial
 pickRow = pickN >= 2 and pickN <= 5 ? pickN - 1 : pickN == 6 ? 14 : pickN == 7 ? 15 : pickN == 8 ? 17 : -1
 isPickable(int m) => m == 1 or m == 2 or m == 3 or m == 4 or m == 14 or m == 15 or m == 17
 // TP1 METHOD (Zee 2026-10-16): the Partial method brings its own share and trail
-xPart = eTpMode == "Partial: close a share at a fixed $ target, trail the rest" ? eTpPart : eTpMode == "Next EMA beyond the entry (touch, close all)" ? 1.0 : ePartial
+xPart = eTpMode == "Partial: close a share at a fixed $ target, trail the rest" ? eTpPart : eTpMode == "Next EMA beyond the entry (touch, close all)" or eTpMode == "Candle closes back across the slow EMA (close all)" ? 1.0 : ePartial
 xTrL = eTpMode == "Partial: close a share at a fixed $ target, trail the rest" ? eTpPartTr : iLTrail
 xTrS = eTpMode == "Partial: close a share at a fixed $ target, trail the rest" ? eTpPartTr : iSTrail
 var int  rpUntil = -1            // Pause: no entry up to this bar (after a trade skipped in an unticked range)
@@ -528,7 +528,7 @@ var float  sSl0 = na
 var float  sTp = na           // SHORT TP1 = last support; LONG: only a fixed / Fibonacci TP1
 var bool   sFix = false        // TP1 is a fixed price (TP1 METHOD): a LONG waits for that price, not the EMA
 var int    sExit = 50
-var int    sNxE = 0             // TP1 METHOD "Next EMA beyond the entry": 9 / 50 = the EMA to touch (fast / slow), -1 none beyond the entry, 0 method off
+var int    sNxE = 0             // TP1 METHOD "Next EMA beyond the entry": 9 / 50 = the EMA to touch (fast / slow), -1 none beyond the entry; -2 = "Candle closes back across the slow EMA"; 0 = neither
 var bool   sNoTp = false
 var bool   sRide = false
 var bool   sUsd = false       // after TP1: the $ trail
@@ -897,7 +897,7 @@ for k = 0 to nSteps - 1
             else
                 noTp := emaLive(pExit, bid) - iLTpP * pip < en + iMinTp * pip
             // TP1 METHOD (Zee 2026-10-16): a fixed $ or Fibonacci TP1 replaces the normal one when it lies far enough beyond the entry
-            if eTpMode != "Normal: BUY = touch of the other EMA · SELL = last swing low" and eTpMode != "Next EMA beyond the entry (touch, close all)" and (skipWhy == "" or skipWhy == "no support below to target" or skipWhy == "support too far")
+            if eTpMode != "Normal: BUY = touch of the other EMA · SELL = last swing low" and eTpMode != "Next EMA beyond the entry (touch, close all)" and eTpMode != "Candle closes back across the slow EMA (close all)" and (skipWhy == "" or skipWhy == "no support below to target" or skipWhy == "support too far")
                 float base = side > 0 ? en : bid
                 float fl = eTpMode == "Fibonacci extension of the setup candle" ? (side > 0 ? pLo + eTpFib / 100 * (pHi - pLo) : pHi - eTpFib / 100 * (pHi - pLo)) : base + side * (side > 0 ? eFixB : eFixS)
                 if (fl - base) * side >= iMinTp * pip
@@ -915,6 +915,13 @@ for k = 0 to nSteps - 1
                 bool nx9 = side > 0 ? l9 > en : l9 < en
                 bool nx50 = side > 0 ? l50 > en : l50 < en
                 nxE := nx9 and nx50 ? (math.abs(l9 - en) <= math.abs(l50 - en) ? 9 : 50) : nx9 ? 9 : nx50 ? 50 : -1
+                skipWhy := ""
+                tp := na
+                noTp := false
+                fibTp := false
+            // TP1 METHOD "Candle closes back across the slow EMA (close all)" (Zee 2026-10-19, the EXIT LAB row): no target, out after a close back across the slow EMA
+            if eTpMode == "Candle closes back across the slow EMA (close all)" and (skipWhy == "" or skipWhy == "no support below to target" or skipWhy == "support too far")
+                nxE := -2
                 skipWhy := ""
                 tp := na
                 noTp := false
@@ -965,7 +972,7 @@ for k = 0 to nSteps - 1
                             array.push(vTp, tp), array.push(vBest, en), array.push(vReal, 0.0), array.push(vRem, 1.0), array.push(vX, xe), array.push(vK, -1)
                 entryK := k
                 float risk = math.abs(en - sl) * iLots * iCs
-                string tpTxt = nxE > 0 ? "touch of the " + str.tostring(emaLen(nxE)) + " EMA (all closed)" : nxE < 0 ? "no EMA beyond the entry: out when a candle closes back across the " + str.tostring(iFast) + " EMA" : fibTp ? fp(tp) + " (" + eTpMode + ")" : side > 0 ? (noTp ? "none - trailing from entry" : "touch of the " + str.tostring(pExit) + " EMA") : fp(tp) + " (last support)"
+                string tpTxt = nxE == -2 ? "no target: out when a candle closes back across the " + str.tostring(iSlow) + " EMA" : nxE > 0 ? "touch of the " + str.tostring(emaLen(nxE)) + " EMA (all closed)" : nxE < 0 ? "no EMA beyond the entry: out when a candle closes back across the " + str.tostring(iFast) + " EMA" : fibTp ? fp(tp) + " (" + eTpMode + ")" : side > 0 ? (noTp ? "none - trailing from entry" : "touch of the " + str.tostring(pExit) + " EMA") : fp(tp) + " (last support)"
                 if vis and not sGhost
                     label.new(bar_index, side > 0 ? low : high, (side > 0 ? "▲ BUY #" : "▼ SELL #") + str.tostring(tN) + "\n" + fp(en),
                          style = side > 0 ? label.style_label_up : label.style_label_down, color = side > 0 ? cBuy : cSell, textcolor = color.white, size = size.normal,
@@ -973,7 +980,7 @@ for k = 0 to nSteps - 1
                          "\nLots:  " + str.tostring(iLots, "#.##") + "\n\nWhy: " + pDesc + (side > 0 ? " - its HIGH was broken" : " - its LOW was broken"))
                     sXSl := label.new(bar_index + 2, sl, "SL " + fp(sl) + "  -$" + fp(risk), style = label.style_label_left, color = color.new(color.red, 15), textcolor = color.white, size = size.small,
                          tooltip = "④ SL: " + str.tostring(iSlPips, "#") + " pips beyond the setup candle = " + fp(sl))
-                    sXTp := label.new(bar_index + 2, nxE != 0 ? (nxE > 0 ? emaLive(nxE, bid) : sl) : side < 0 or fibTp ? tp : emaLive(pExit, bid), nxE > 0 ? "TP1 " + str.tostring(emaLen(nxE)) + " EMA (all)" : nxE < 0 ? "no EMA beyond · close-back exit" : side < 0 or fibTp ? "TP " + fp(tp) + "  +$" + fp(math.abs(tp - en) * iLots * iCs) : noTp ? "no TP1 · 2xATR trail" : "TP1 " + str.tostring(pExit) + " EMA",
+                    sXTp := label.new(bar_index + 2, nxE != 0 ? (nxE > 0 ? emaLive(nxE, bid) : nxE == -2 ? emaLive(50, bid) : sl) : side < 0 or fibTp ? tp : emaLive(pExit, bid), nxE > 0 ? "TP1 " + str.tostring(emaLen(nxE)) + " EMA (all)" : nxE == -2 ? "exit: close back across the " + str.tostring(iSlow) + " EMA" : nxE < 0 ? "no EMA beyond · close-back exit" : side < 0 or fibTp ? "TP " + fp(tp) + "  +$" + fp(math.abs(tp - en) * iLots * iCs) : noTp ? "no TP1 · 2xATR trail" : "TP1 " + str.tostring(pExit) + " EMA",
                          style = label.style_label_left, color = color.new(color.green, 15), textcolor = color.white, size = size.small, tooltip = "⑤ TP1: " + tpTxt)
                     sLTp := (side < 0 and nxE == 0) or fibTp ? line.new(bar_index, tp, bar_index + 1, tp, color = color.new(color.lime, 0), width = 2, style = line.style_dashed) : na
                 sLSl := vis and not sGhost ? line.new(bar_index, sl, bar_index + 1, sl, color = sRide ? color.orange : color.red, style = line.style_dashed, width = 2) : na
@@ -1115,8 +1122,10 @@ if sSide != 0 and bar_index > sBar and adWhy == ""
     // FAILED ENTRY (Zee 2026-10-16): judged once, at the close of the candle right after the entry candle
     if fxOn and bar_index == sBar + 1 and (sSide > 0 or fxSellRef != "Never (BUY only)") and (sSide > 0 ? close < low[1] : close > (fxSellRef == "Entry candle's open" ? open[1] : high[1]))
         adWhy := "failed entry: the next candle closed " + (sSide > 0 ? "below the entry candle's low" : "above the entry candle's " + (fxSellRef == "Entry candle's open" ? "open" : "high"))
-    else if sNxE < 0 and (sSide > 0 ? close < e9 : close > e9)
+    else if sNxE == -1 and (sSide > 0 ? close < e9 : close > e9)
         adWhy := "no EMA beyond the entry: a candle closed back across the " + str.tostring(iFast) + " EMA"
+    else if sNxE == -2 and (sSide > 0 ? close < e50 : close > e50)
+        adWhy := "a candle closed back across the " + str.tostring(iSlow) + " EMA"
     else if loss
         if adRunN > 0 and adRun >= adRunN
             adWhy := str.tostring(adRun) + " candles against the trade"
