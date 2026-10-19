@@ -35,7 +35,10 @@ Zee: *"ok, make the EA read TradingView's own candles, and give me MT5 result fo
   - MT5 broke it and the chart didn't → out;
   - the chart hit the stop or reached the target and MT5 didn't → out.
   - A stand-aside ghost is judged on the chart's candles. A close refused at the daily break is retried every 5 s.
-- `InpBlindEntryBar` (diagnostic, off): before `InpTvStepFrom` (2026.10.12 01:01 server, the chart's first candle with 1-minute data inside), the EA sees the entry candle only at its close, as the chart does.
+- `InpBlindEntryBar` (diagnostic, off) mimics the chart before `InpTvStepFrom` (2026.10.12 01:01 server, the chart's first candle with 1-minute data inside):
+  - no broker stop and no exit until the entry candle has closed;
+  - no day-close loss check at all, because the chart's one step per candle never lands in the last 3 minutes.
+  - **Never trade with it.**
 - **Receipts:** XAUUSD_BB (Blueberry real ticks) M15, Aug 3 – Oct 16, **no delay** (the chart has none), $100k, 2 lots.
   - Made with `monitor/saad_compare/aug_oct_tvbars.py`; results in `why_out/aug_oct_tvbars.json` / `.out` and `aug_oct_tvbars_blind.*`.
   - Compared against the indicator's export: 57 trades, Aug 5 – Oct 16.
@@ -48,14 +51,18 @@ Zee: *"ok, make the EA read TradingView's own candles, and give me MT5 result fo
 | tvbars + `InpBlindEntryBar` (diagnostic) | 75% (16) +$73,687 | 76% (29) +$43,118 | 92% (12) +$23,039 | 55 of 57 |
 
   The real-stop run as a whole: +$125,428, PF 7.03, DD $9,268 (61 trades, including Aug 3–4).
-- **Every remaining difference is traced.** TradingView has 1-minute data inside its candles only from Oct 11 22:01 UTC (the indicator's event-table readout). Before that it judges a whole candle in one step, so it can't be stopped out, or exit, inside the entry candle:
-  - Sep 11: chart +$3,778, MT5 −$5,374.
-  - Sep 25: chart +$4,428, MT5 −$2,070.
-  - Oct 5: chart +$1,696, MT5 $0 (out 41 s after the entry).
-  - Oct 1: the day-close loss check at −1 cent, which the chart never reaches without 1-minute data.
+- **Every remaining difference is traced.** TradingView has 1-minute data inside its candles only from Oct 11 22:01 UTC (the indicator's event-table readout; still the same on Oct 20). Before that it judges a whole candle in one step, so it can't be stopped out, or exit, inside the entry candle, and it never reaches the day-close loss check:
+  - Sep 11: chart +$3,778, MT5 −$5,374 (stopped inside the entry candle).
+  - Sep 25: chart +$4,428, MT5 −$2,070 (stopped inside the entry candle).
+  - Oct 5: chart +$1,696, MT5 $0 (target touched 41 s after the entry, a scratch).
+  - Sep 4: chart +$5, MT5 −$854. The day-close loss check shut it at 23:55 server; the stop was 4466.95, not hit.
+  - Sep 30 / Oct 1 PKT, counted in September (UTC exit Sep 30): chart +$1,072, MT5 −$6. The day-close check at −1 cent against the chart's entry.
   - Knock-ons: MT5 was free earlier, so it took extra trades on Aug 24, Sep 11 and Sep 25.
-  - Sep 4: the feeds differ by cents at the stop (plus $123 swap).
   - **Oct 12–16: every trade is the same.**
+- **Second, permanent difference: swap.** The indicator charges no overnight financing. In the blind run the two leftovers are swap:
+  - Sep 4: +$4 on price, −$123 swap.
+  - Sep 30 (a Wednesday, triple swap): −$212 on price, −$370 swap. The price part comes from the chart's 23:45 candle reaching the target 44 cents above MT5's best bid, after which the close met the daily break.
+  - A small chart win held past the daily break can be an MT5 loss, also after Oct 12 and live.
 - Side test, the BUY-target rule alone on v1.27, full year, MT5's own candles, random delay (`monitor/strategy_lab/tvbars_long_rule.py` → `tvbars_long_rule.json`):
   - with the rule: +$248,355 / +$244,757, PF 2.79 / 2.75;
   - control: +$246,295 / +$246,285, PF 2.76;
