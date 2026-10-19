@@ -3,3 +3,5 @@ presets/
 server.log
 settings/tradingview_latest.json
 settings/turtletv_export_latest.json
+simdata/
+__pycache__/

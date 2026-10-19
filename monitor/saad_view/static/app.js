@@ -1,16 +1,19 @@
-// Turtle TV - the year of Blueberry 15-min candles with the MT5 Strategy Tester's own trades (monitor/saad_view/server.py).
-// Everything drawn here comes from the EA's export; this file only displays it.
+// Turtle TV - tune the EA's settings like on TradingView: the Turtle TV Tester (monitor/saad_view/sim.py, ~10 ms a year) redraws the chart and its
+// results instantly; the MT5 Strategy Tester below shows MT5's real result for the same settings ("Check in MT5"); "Ask Claude" sends the chart
+// picture and the data behind it to Claude. Nothing here decides a trade.
 'use strict';
 const LW = window.LightweightCharts;
 const $ = (s) => document.querySelector(s);
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const C = { up: '#26a69a', down: '#ef5350', win: '#00e676', loss: '#ff5252', fast: '#ff9800', slow: '#2962ff', adx: '#b39ddb', muted: '#787b86' };
-let TZ = 18000;                         // display shift: Pakistan time = UTC+5
-let RUN = null, INPUTS = null, RUNS = [], lastSeen = undefined, firstLoad = true;
-let chart, candles, emaF, emaS, adxS, adxLine = null, TVL = null, focusLines = [], eqChart = null;
-let TR = [], GH = [], EVB = new Map(), SEL = null, TAB = 'overview';
-const show = { trades: true, ghosts: true, setups: false, skips: false };
+const TRAIN_END = Date.UTC(2026, 6, 1) / 1000 - 3 * 3600;        // Jul 1 00:00 server time (the optimizer's train / test split)
+let TZ = 18000;
+let BARS = null, INPUTS = null, DFL = {}, CUR = {}, RUNS = [], lastSeen;
+let TT = null, MT = null;                                      // { kind, events, TR, GH, EVB, ... }
+let chart, candles, emaF, emaS, adxS, adxLine = null, TVL = null, focusLines = [], eq = {};
+let SEL = null, TAB = { tt: 'overview', mt: 'overview' }, firstView = true, simTimer = null, simSeq = 0, tvKey = null, ASK = [];
+const show = { trades: true, ghosts: true, setups: false, skips: false, mt5: false };
 
 // ---------- helpers ----------
 const money = (v, d = 0) => (v >= 0 ? '+$' : '−$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -19,7 +22,8 @@ const pct = (a, b) => (b ? ((100 * a) / b).toFixed(1) + '%' : '–');
 const f2 = (v) => (v == null ? '–' : (+v).toFixed(2));
 const f1 = (v) => (v == null ? '–' : (+v).toFixed(1));
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-const same = (a, b) => { const x = parseFloat(a), y = parseFloat(b); if (!isNaN(x) && !isNaN(y) && /^[-\d.]+$/.test(String(a).trim()) && /^[-\d.]+$/.test(String(b).trim())) return Math.abs(x - y) < 1e-9; return String(a).trim().toLowerCase() === String(b).trim().toLowerCase(); };
+const isNum = (s) => /^-?\d+(\.\d+)?$/.test(String(s).trim());
+const same = (a, b) => (isNum(a) && isNum(b) ? Math.abs(parseFloat(a) - parseFloat(b)) < 1e-9 : String(a).trim().toLowerCase() === String(b).trim().toLowerCase());
 function hm(d) { let h = d.getUTCHours(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${String(d.getUTCMinutes()).padStart(2, '0')} ${ap}`; }
 function fullFmt(t) { const d = new Date(t * 1000); return `${DOW[d.getUTCDay()]} ${d.getUTCDate()} ${MON[d.getUTCMonth()]} ${d.getUTCFullYear()}  ${hm(d)}`; }
 function dt(t) { const d = new Date((t + TZ) * 1000); return `${MON[d.getUTCMonth()]} ${d.getUTCDate()}, ${hm(d)}`; }
@@ -32,13 +36,13 @@ function tickFmt(t, type) {
   return `${h}:${String(d.getUTCMinutes()).padStart(2, '0')}${ap}`;
 }
 function api(path, body) {
-  return fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {})
-    .then((r) => r.json());
+  return fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}).then((r) => r.json());
 }
-function toast(html, ms = 8000) { const t = $('#toast'); t.innerHTML = html; t.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(() => (t.style.display = 'none'), ms); }
+function toast(html, ms = 9000) { const t = $('#toast'); t.innerHTML = html; t.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(() => (t.style.display = 'none'), ms); }
 function setStatus(txt, c = '') { const s = $('#status'); s.textContent = txt; s.className = c; }
 function box(k) { k = Math.round(k); if (!(k >= 0)) return '–'; const b = k % 21; return b === 20 ? '>100%' : `${b * 5}–${b * 5 + 5}%`; }
-function barIdx(t) { const a = RUN.bars.t; let lo = 0, hi = a.length - 1, r = 0; while (lo <= hi) { const m = (lo + hi) >> 1; if (a[m] <= t) { r = m; lo = m + 1; } else hi = m - 1; } return r; }
+function barIdx(t) { const a = BARS.t; let lo = 0, hi = a.length - 1, r = 0; while (lo <= hi) { const m = (lo + hi) >> 1; if (a[m] <= t) { r = m; lo = m + 1; } else hi = m - 1; } return r; }
+const diffDfl = (inp) => Object.fromEntries(Object.entries(inp).filter(([k, v]) => k in DFL && !same(v, DFL[k])));
 
 // ---------- the chart ----------
 const BASE = {
@@ -49,11 +53,8 @@ const BASE = {
   localization: { timeFormatter: fullFmt },
 };
 function makeChart() {
-  chart = LW.createChart($('#chart'), {
-    ...BASE,
-    crosshair: { mode: 0 },
-    timeScale: { borderColor: '#2a2e39', timeVisible: true, secondsVisible: false, rightOffset: 8, barSpacing: 7, tickMarkFormatter: tickFmt },
-  });
+  chart = LW.createChart($('#chart'), { ...BASE, crosshair: { mode: 0 },
+    timeScale: { borderColor: '#2a2e39', timeVisible: true, secondsVisible: false, rightOffset: 8, barSpacing: 7, tickMarkFormatter: tickFmt } });
   candles = chart.addSeries(LW.CandlestickSeries, { upColor: C.up, downColor: C.down, borderVisible: false, wickUpColor: C.up, wickDownColor: C.down, priceLineVisible: false });
   const quiet = { priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false };
   emaF = chart.addSeries(LW.LineSeries, { ...quiet, color: C.fast, lineWidth: 2 });
@@ -61,42 +62,44 @@ function makeChart() {
   adxS = chart.addSeries(LW.LineSeries, { ...quiet, color: C.adx, lineWidth: 1, lastValueVisible: true }, 1);
   TVL = new TvLabels();
   candles.attachPrimitive(TVL);
-  chart.subscribeCrosshairMove((p) => { if (RUN) legend(p && p.time != null ? barIdx(p.time - TZ) : RUN.bars.t.length - 1); });
-  chart.subscribeClick((p) => {                             // click a trade's entry or exit candle -> that trade
-    if (!RUN || !p || p.logical == null) return;
-    const i = Math.round(p.logical), t = TR.find((x) => x.biIn === i || x.biOut === i);
+  chart.subscribeCrosshairMove((p) => { if (BARS) legend(p && p.time != null ? barIdx(p.time - TZ) : BARS.t.length - 1); });
+  chart.subscribeClick((p) => {
+    if (!TT || !p || p.logical == null) return;
+    const i = Math.round(p.logical), t = TT.TR.find((x) => x.biIn === i || x.biOut === i);
     if (t) focusTrade(t);
   });
-  requestAnimationFrame(() => { const ps = chart.panes(); if (ps.length > 1) ps[1].setHeight(90); });
+  requestAnimationFrame(() => { const ps = chart.panes(); if (ps.length > 1) ps[1].setHeight(80); });
+}
+function drawBars() {
+  const B = BARS;
+  candles.setData(B.t.map((t, i) => ({ time: t + TZ, open: B.o[i], high: B.h[i], low: B.l[i], close: B.c[i] })));
+  adxS.setData(B.t.map((t, i) => ({ time: t + TZ, value: B.adx[i] })));
+}
+function drawEmas() {
+  if (!TT || !TT.ef) return;
+  emaF.setData(BARS.t.map((t, i) => ({ time: t + TZ, value: TT.ef[i] })));
+  emaS.setData(BARS.t.map((t, i) => ({ time: t + TZ, value: TT.es[i] })));
+  if (adxLine) adxS.removePriceLine(adxLine);
+  adxLine = adxS.createPriceLine({ price: parseFloat(CUR.InpAdxMin) || 0, color: C.muted, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'ADX min' });
 }
 
-function derive() {
-  TR = []; GH = []; EVB = new Map();
-  const ent = {}; let g = null; const lots = parseFloat(RUN.inputs.InpLots || '1');
-  for (const e of RUN.events) {
+// events (Turtle TV Tester or MT5) -> trades, stand-asides, events by candle
+function derive(kind, events, lots) {
+  const D = { kind, events, TR: [], GH: [], EVB: new Map() };
+  const ent = {}; let g = null;
+  for (const e of events) {
     e.bi = barIdx(e.t);
-    if (!EVB.has(e.bi)) EVB.set(e.bi, []);
-    EVB.get(e.bi).push(e);
+    if (!D.EVB.has(e.bi)) D.EVB.set(e.bi, []);
+    D.EVB.get(e.bi).push(e);
     if (e.type === 'entry') ent[e.num] = e;
     else if (e.type === 'exit' && ent[e.num]) {
       const n = ent[e.num];
-      TR.push({ num: e.num, side: n.side, tIn: n.t, tOut: e.t, biIn: n.bi, biOut: e.bi, en: n.price, sl: n.sl, ex: e.price, pnl: e.v1, swap: e.v2, why: e.text, info: n.text, bucket: n.v2 });
+      D.TR.push({ num: e.num, side: n.side, tIn: n.t, tOut: e.t, biIn: n.bi, biOut: e.bi, en: n.price, sl: n.sl, ex: e.price, pnl: e.v1, swap: e.v2, why: e.text, info: n.text, bucket: n.v2 });
     } else if (e.type === 'ghost') g = { side: e.side, tIn: e.t, biIn: e.bi, en: e.price, sl: e.sl, bucket: e.v2, info: e.text };
-    else if (e.type === 'ghost_end' && g) { Object.assign(g, { tOut: e.t, biOut: e.bi, ex: e.price, why: e.text, pnl: (e.price - g.en) * g.side * lots * 100 }); GH.push(g); g = null; }
+    else if (e.type === 'ghost_end' && g) { Object.assign(g, { tOut: e.t, biOut: e.bi, ex: e.price, why: e.text, pnl: (e.price - g.en) * g.side * lots * 100 }); D.GH.push(g); g = null; }
   }
-  if (g) GH.push(g);
-  TR.sort((a, b) => a.tIn - b.tIn);
-}
-
-function render() {
-  const B = RUN.bars, n = B.t.length, T = (i) => B.t[i] + TZ;
-  candles.setData(B.t.map((t, i) => ({ time: t + TZ, open: B.o[i], high: B.h[i], low: B.l[i], close: B.c[i] })));
-  const line = (arr) => B.t.map((t, i) => (arr[i] == null || arr[i] === 0 ? { time: t + TZ } : { time: t + TZ, value: arr[i] }));
-  emaF.setData(line(B.ef)); emaS.setData(line(B.es)); adxS.setData(line(B.adx));
-  if (adxLine) adxS.removePriceLine(adxLine);
-  adxLine = adxS.createPriceLine({ price: parseFloat(RUN.inputs.InpAdxMin) || 0, color: C.muted, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'ADX min' });
-  markers();
-  focusLines.forEach((l) => candles.removePriceLine(l)); focusLines = [];
+  D.TR.sort((a, b) => a.tIn - b.tIn);
+  return D;
 }
 
 // ---------- TradingView-style labels (pine/saad_15min.pine: label.new / line.new), drawn on the chart canvas ----------
@@ -130,14 +133,14 @@ function tri(ctx, x, y, up, color, s) {
   ctx.closePath(); ctx.fill();
 }
 function drawTv(ctx) {
-  if (!RUN) return;
+  if (!BARS || !TT) return;
   const ts = chart.timeScale(), vr = ts.getVisibleLogicalRange();
   if (!vr) return;
-  const B = RUN.bars, X = (i) => ts.logicalToCoordinate(i), Y = (p) => candles.priceToCoordinate(p);
+  const B = BARS, X = (i) => ts.logicalToCoordinate(i), Y = (p) => candles.priceToCoordinate(p);
   const sp = Math.abs((X(1) ?? 0) - (X(0) ?? 0)), full = sp >= 4.5, lo = Math.floor(vr.from) - 3, hi = Math.ceil(vr.to) + 3;
   const inView = (i) => i >= lo && i <= hi;
-  const bb = parseInt(RUN.inputs.InpBreakBars || '1', 10);
-  if (show.setups && sp >= 2.5) for (const e of RUN.events) {
+  const bb = parseInt(CUR.InpBreakBars || '1', 10);
+  if (show.setups && sp >= 2.5) for (const e of TT.events) {
     if (e.type !== 'setup' || !inView(e.bi)) continue;
     const x = X(e.bi), yh = Y(e.price), yl = Y(e.sl), yb = Y(e.v1);
     if (x == null || yh == null || yl == null) continue;
@@ -146,33 +149,38 @@ function drawTv(ctx) {
     seg(ctx, x, yb, X(e.bi + bb + 1), yb, TVC.yel, 1, [2, 2]);
     if (full) tvTag(ctx, x, e.side > 0 ? yh : yl, [`${e.side > 0 ? 'long' : 'short'} setup · ${KIND(Math.round(e.v2), e.side)}`], TVC.tag, TVC.yel, e.side < 0, 10);
   }
-  if (show.skips && full) for (const e of RUN.events) {
+  if (show.skips && full && MT && MT.matches) for (const e of MT.events) {
     if (e.type !== 'skip' || !inView(e.bi)) continue;
     const x = X(e.bi), y = e.side > 0 ? Y(B.h[e.bi]) : Y(B.l[e.bi]);
     if (x != null && y != null) tvTag(ctx, x, y, ['✖ skip'], 'rgba(120,123,134,0.6)', '#fff', e.side < 0, 9);
   }
-  if (show.ghosts) for (const g of GH) {
+  if (show.ghosts) for (const g of TT.GH) {
     if (g.biOut != null ? g.biOut < lo || g.biIn > hi : !inView(g.biIn)) continue;
-    const x1 = X(g.biIn), y1 = Y(g.en);
-    if (g.biOut != null) seg(ctx, x1, y1, X(g.biOut), Y(g.ex), TVC.grey, 1, [2, 3]);
+    const x1 = X(g.biIn);
+    if (g.biOut != null) seg(ctx, x1, Y(g.en), X(g.biOut), Y(g.ex), TVC.grey, 1, [2, 3]);
     const ya = g.side > 0 ? Y(B.l[g.biIn]) : Y(B.h[g.biIn]);
     if (x1 == null || ya == null) continue;
     if (full) tvTag(ctx, x1, ya, [`stand aside (${g.side > 0 ? 'BUY' : 'SELL'})`], 'rgba(54,58,69,0.8)', '#9598a1', g.side > 0, 10);
     else tri(ctx, x1, ya, g.side > 0, TVC.grey, 3);
   }
+  if (show.mt5 && MT) for (const t of MT.TR) {                  // MT5's own trades: small triangles at the fill price
+    if (!inView(t.biIn)) continue;
+    const x = X(t.biIn), y = Y(t.en);
+    if (x != null && y != null) tri(ctx, x, y + (t.side > 0 ? 6 : -6), t.side > 0, t.pnl > 0 ? '#00bfa5' : '#ff6d00', 4);
+  }
   if (!show.trades) return;
-  for (const t of TR) {
+  for (const t of TT.TR) {
     if (t.biOut < lo || t.biIn > hi) continue;
     const x1 = X(t.biIn), x2 = X(t.biOut), rc = t.pnl > 0 ? TVC.win : TVC.loss, sel = SEL === t.num;
-    seg(ctx, x1, Y(t.sl), x2 === x1 ? x1 + sp : x2, Y(t.sl), TVC.loss, 2, [6, 4]);                      // the stop: red dashed
-    seg(ctx, x1, Y(t.en), x2, Y(t.ex), rc, sel ? 3 : 2, [2, 3]);                                       // entry -> exit: dotted
+    seg(ctx, x1, Y(t.sl), x2 === x1 ? x1 + sp : x2, Y(t.sl), TVC.loss, 2, [6, 4]);
+    seg(ctx, x1, Y(t.en), x2, Y(t.ex), rc, sel ? 3 : 2, [2, 3]);
     const ye = Y(t.ex);
     if (x2 != null && ye != null) {
       ctx.strokeStyle = rc; ctx.lineWidth = 2; ctx.beginPath();
       ctx.moveTo(x2 - 3, ye - 3); ctx.lineTo(x2 + 3, ye + 3); ctx.moveTo(x2 + 3, ye - 3); ctx.lineTo(x2 - 3, ye + 3); ctx.stroke();
     }
   }
-  for (const t of TR) {                                       // labels on top of every line
+  for (const t of TT.TR) {
     if (t.biOut < lo || t.biIn > hi) continue;
     const x1 = X(t.biIn), x2 = X(t.biOut), rc = t.pnl > 0 ? TVC.win : TVC.loss;
     const yIn = t.side > 0 ? Y(B.l[t.biIn]) : Y(B.h[t.biIn]), yOut = t.side > 0 ? Y(B.h[t.biOut]) : Y(B.l[t.biOut]);
@@ -191,28 +199,29 @@ class TvLabels {
   paneViews() { return this._views; }
   update() { if (this._req) this._req(); }
 }
-function markers() { if (TVL) TVL.update(); }
+const redraw = () => { if (TVL) TVL.update(); };
 
-function evText(e) {
-  const S = e.side > 0 ? `<span style="color:${C.up}">BUY</span>` : `<span style="color:${C.down}">SELL</span>`;
+function evText(e, who) {
+  const S = e.side > 0 ? `<span style="color:${C.up}">BUY</span>` : `<span style="color:${C.down}">SELL</span>`, tag = who ? `<span class="k">${who}</span> ` : '';
   switch (e.type) {
-    case 'setup': return `◆ SETUP ${S}: ${esc(e.text)} · break at ${f2(e.v1)}`;
-    case 'skip': return `<span class="k">✕ ${e.side > 0 ? 'BUY' : 'SELL'} skipped: ${esc(e.text)}</span>`;
-    case 'entry': return `▶ ${S} #${e.num} at ${f2(e.price)} · stop ${f2(e.sl)} · range box ${box(e.v2)} · ${esc(e.text)}`;
-    case 'exit': return `■ EXIT #${e.num} at ${f2(e.price)} · ${esc(e.text)} · <b class="${cls(e.v1)}">${money(e.v1, 2)}</b>`;
-    case 'ghost': return `<span class="k">◇ stand aside (range box ${box(e.v2)} unticked): the ${e.side > 0 ? 'BUY' : 'SELL'} would have entered at ${f2(e.price)}</span>`;
-    case 'ghost_end': return `<span class="k">◇ stand-aside over: ${esc(e.text)} at ${f2(e.price)}</span>`;
+    case 'setup': return `${tag}◆ SETUP ${S} · ${KIND(Math.round(e.v2), e.side)} · break at ${f2(e.v1)}`;
+    case 'skip': return `${tag}<span class="k">✕ ${e.side > 0 ? 'BUY' : 'SELL'} skipped: ${esc(e.text)}</span>`;
+    case 'entry': return `${tag}▶ ${S} #${e.num} at ${f2(e.price)} · stop ${f2(e.sl)} · range box ${box(e.v2)} · ${esc(e.text)}`;
+    case 'exit': return `${tag}■ EXIT #${e.num} at ${f2(e.price)} · ${esc(e.text)} · <b class="${cls(e.v1)}">${money(e.v1, 2)}</b>`;
+    case 'ghost': return `${tag}<span class="k">◇ stand aside (range box ${box(e.v2)} unticked): the ${e.side > 0 ? 'BUY' : 'SELL'} would have entered at ${f2(e.price)}</span>`;
+    case 'ghost_end': return `${tag}<span class="k">◇ stand-aside over: ${esc(e.text)} at ${f2(e.price)}</span>`;
   }
   return '';
 }
 function legend(i) {
-  const B = RUN.bars, I = RUN.inputs, col = B.c[i] >= B.o[i] ? C.up : C.down, v = (x) => `<b style="color:${col}">${f2(x)}</b>`;
+  const B = BARS, col = B.c[i] >= B.o[i] ? C.up : C.down, v = (x) => `<b style="color:${col}">${f2(x)}</b>`;
   let h = `<div><span class="k">${fullFmt(B.t[i] + TZ)}</span> &nbsp;O ${v(B.o[i])} H ${v(B.h[i])} L ${v(B.l[i])} C ${v(B.c[i])}</div>`;
-  h += `<div><span style="color:${C.fast}">EMA ${I.InpEmaFast} ${f2(B.ef[i])}</span> &nbsp;<span style="color:#5b8def">EMA ${I.InpEmaSlow} ${f2(B.es[i])}</span> &nbsp;<span style="color:${C.adx}">ADX ${f1(B.adx[i])}</span> &nbsp;<span class="k">ATR ${f2(B.atr[i])}</span></div>`;
-  for (const e of EVB.get(i) || []) h += `<div class="ev">${evText(e)}</div>`;
+  if (TT && TT.ef) h += `<div><span style="color:${C.fast}">EMA ${CUR.InpEmaFast} ${f2(TT.ef[i])}</span> &nbsp;<span style="color:#5b8def">EMA ${CUR.InpEmaSlow} ${f2(TT.es[i])}</span> &nbsp;<span style="color:${C.adx}">ADX ${f1(B.adx[i])}</span> &nbsp;<span class="k">ATR ${f2(B.atr[i])}</span></div>`;
+  for (const e of (TT && TT.EVB.get(i)) || []) h += `<div class="ev">${evText(e, '')}</div>`;
+  if (MT && MT.matches) for (const e of MT.EVB.get(i) || []) if (e.type === 'skip') h += `<div class="ev">${evText(e, '')}</div>`;
+  if (show.mt5 && MT) for (const e of MT.EVB.get(i) || []) if (e.type === 'entry' || e.type === 'exit') h += `<div class="ev">${evText(e, 'MT5')}</div>`;
   $('#legend').innerHTML = h;
 }
-
 function focusTrade(t) {
   SEL = t.num;
   chart.timeScale().setVisibleLogicalRange({ from: t.biIn - 40, to: t.biOut + 40 });
@@ -222,95 +231,109 @@ function focusTrade(t) {
     candles.createPriceLine({ price: t.sl, color: C.down, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'stop' }),
     candles.createPriceLine({ price: t.ex, color: t.pnl > 0 ? C.win : C.loss, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'exit ' + money(t.pnl) }),
   ];
-  legend(t.biIn);
-  markers();
-  if (TAB === 'trades') renderPanel();
+  legend(t.biIn); redraw();
+  if (TAB.tt === 'trades') renderPanel('tt');
 }
 
-// ---------- the results under the chart ----------
+// ---------- results (both testers use the same tabs) ----------
 function stats(list) {
   const n = list.length, w = list.filter((t) => t.pnl > 0).length;
   const gw = list.filter((t) => t.pnl > 0).reduce((s, t) => s + t.pnl, 0), gl = list.filter((t) => t.pnl <= 0).reduce((s, t) => s + t.pnl, 0);
-  return { n, w, net: gw + gl, pf: gl < 0 ? (gw / -gl).toFixed(2) : n ? '∞' : '–', aw: w ? gw / w : 0, al: n - w ? gl / (n - w) : 0 };
+  let eqv = 0, peak = 0, dd = 0;
+  for (const t of [...list].sort((a, b) => a.tOut - b.tOut)) { eqv += t.pnl; peak = Math.max(peak, eqv); dd = Math.max(dd, peak - eqv); }
+  return { n, w, net: gw + gl, pf: gl < 0 ? (gw / -gl).toFixed(2) : n ? '∞' : '–', aw: w ? gw / w : 0, al: n - w ? gl / (n - w) : 0, dd };
 }
 function groupBy(list, key) { const m = new Map(); for (const t of list) { const k = key(t); if (!m.has(k)) m.set(k, []); m.get(k).push(t); } return m; }
 const ym = (t) => { const d = new Date((t + TZ) * 1000); return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`; };
-
-function pOverview() {
-  const R = RUN.report || {}, s = stats(TR), I = RUN.inputs;
-  const best = TR.reduce((a, t) => (t.pnl > (a?.pnl ?? -1e18) ? t : a), null), worst = TR.reduce((a, t) => (t.pnl < (a?.pnl ?? 1e18) ? t : a), null);
-  const card = (l, v, c = '') => `<div class="card"><div class="l">${l}</div><div class="v ${c}">${v}</div></div>`;
-  let h = '<div class="row"><div><div class="cards">';
-  h += card('Net profit (MT5 report)', money(R.net ?? s.net), cls(R.net ?? s.net)) + card('Profit factor', R.pf ?? s.pf) + card('Win rate', pct(s.w, s.n)) + card('Trades', `${s.n} <small class="k">(${s.w} won)</small>`);
-  h += card('Max drawdown', ddTxt(R.dd)) + card('Average win', money(s.aw), 'pos') + card('Average loss', money(s.al), 'neg') + card('Stood aside', GH.length);
-  h += '</div>';
-  h += `<p class="note">${esc(RUN.from)} – ${esc(RUN.to)} · ${esc(RUN.symbol)} (Blueberry real ticks) · ${RUN.delay === 'none' ? 'no delay' : 'random delay'} · $${(RUN.deposit || 0).toLocaleString()} deposit · ${esc(I.InpLots)} lots · history quality ${esc(R.quality ?? '?')}<br>`;
-  h += `Best trade ${best ? `#${best.num} ${money(best.pnl)}` : '–'} · worst ${worst ? `#${worst.num} ${money(worst.pnl)}` : '–'} · EA ${esc(RUN.ea)} (v${esc(RUN.version)}) · run ${esc(RUN.id)}</p>`;
-  const ch = Object.entries(RUN.changed || {});
-  h += `<h4>Settings different from the EA's defaults</h4><div class="chips">${ch.length ? ch.map(([k, v]) => `<span>${esc(k.replace(/^Inp/, ''))} = ${esc(v)}</span>`).join('') : '<span>none - the EA exactly as it is</span>'}</div>`;
-  if ((RUN.notes || []).length) h += `<h4>On the chart but not in the EA</h4>` + RUN.notes.map((n) => `<div class="warn">⚠ ${esc(n)}</div>`).join('');
-  h += '</div><div><h4>Equity (closed trades)</h4><div id="equity"></div></div></div>';
-  return h;
-}
+const table = (head, rows, foot) => `<table><tr>${head.map((x) => `<th>${x}</th>`).join('')}</tr>${rows.join('')}${foot || ''}</table>`;
+const card = (l, v, c = '') => `<div class="card"><div class="l">${l}</div><div class="v ${c}">${v}</div></div>`;
+const half = (list, a) => list.filter((t) => (a ? t.tIn < TRAIN_END : t.tIn >= TRAIN_END));
 function ddTxt(dd) {
   const m = String(dd ?? '').match(/^([\d\s.,]+)\s*\(([\d.]+)%\)/);
   return m ? `$${Math.round(parseFloat(m[1].replace(/[\s,]/g, ''))).toLocaleString('en-US')} <small class="k">(${m[2]}%)</small>` : esc(dd ?? '–');
 }
-function drawEquity() {
-  if (eqChart) { eqChart.remove(); eqChart = null; }
-  const el = $('#equity');
+function pOverview(D) {
+  const s = stats(D.TR), a = stats(half(D.TR, true)), b = stats(half(D.TR, false)), mt = D.kind === 'mt', R = mt ? D.run.report || {} : {};
+  let h = '<div class="row"><div><div class="cards">';
+  h += card(mt ? 'Net profit (MT5 report)' : 'Net profit', money(mt ? R.net ?? s.net : s.net), cls(s.net)) + card('Profit factor', mt ? R.pf ?? s.pf : s.pf) +
+       card('Win rate', pct(s.w, s.n)) + card('Trades', `${s.n} <small class="k">(${s.w} won)</small>`);
+  h += card('Max drawdown', mt ? ddTxt(R.dd) : '$' + Math.round(s.dd).toLocaleString('en-US') + ' <small class="k">(closed trades)</small>') +
+       card('Jan – Jun', `<span class="${cls(a.net)}">${money(a.net)}</span> <small class="k">${pct(a.w, a.n)}</small>`) +
+       card('Jul – Oct', `<span class="${cls(b.net)}">${money(b.net)}</span> <small class="k">${pct(b.w, b.n)}</small>`) + card('Stood aside', D.GH.length);
+  h += '</div>';
+  if (mt) {
+    const r = D.run;
+    h += `<p class="note">${esc(r.from)} – ${esc(r.to)} · ${esc(r.symbol)} real ticks · ${r.delay === 'none' ? 'no delay' : 'random delay'} · ${esc(r.inputs.InpLots)} lots · history quality ${esc(R.quality ?? '?')} · run "${esc(r.label)}" ${esc(r.created)}</p>`;
+    h += D.matches ? `<p class="note">✓ These are exactly the settings on screen.</p>`
+      : `<p class="warn">⚠ This MT5 run has different settings from the ones on screen: ${Object.entries(D.diff).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))} ${esc(v[1])} here vs ${esc(v[0])} on screen`).join(', ')}. Press "Check in MT5" to run the screen's settings.</p>`;
+  } else {
+    h += `<p class="note">The Turtle TV Tester: the EA's rules on every 1-minute candle of the year, ${TT.ms} ms. On v1.27 it takes 194 of MT5's 198 trades, 190 with the same result; MT5 below stays the judge.</p>`;
+    const ch = Object.entries(diffDfl(CUR));
+    h += `<h4>Settings different from v1.27</h4><div class="chips">${ch.length ? ch.map(([k, v]) => `<span>${esc(k.replace(/^Inp/, ''))} = ${esc(v)}</span>`).join('') : '<span>none - v1.27 exactly</span>'}</div>`;
+  }
+  h += `</div><div><h4>Equity (closed trades)</h4><div class="eq" id="eq_${D.kind}"></div></div></div>`;
+  return h;
+}
+function drawEquity(D) {
+  if (eq[D.kind]) { eq[D.kind].remove(); eq[D.kind] = null; }
+  const el = $('#eq_' + D.kind);
   if (!el) return;
-  eqChart = LW.createChart(el, { ...BASE, localization: { timeFormatter: fullFmt, priceFormatter: (v) => '$' + Math.round(v).toLocaleString('en-US') }, timeScale: { borderColor: '#2a2e39', tickMarkFormatter: tickFmt }, handleScroll: false, handleScale: false, crosshair: { mode: 0 } });
-  const s = eqChart.addSeries(LW.BaselineSeries, { baseValue: { type: 'price', price: 0 }, lineWidth: 2, priceLineVisible: false });
+  const c = LW.createChart(el, { ...BASE, localization: { timeFormatter: fullFmt, priceFormatter: (v) => '$' + Math.round(v).toLocaleString('en-US') },
+    timeScale: { borderColor: '#2a2e39', tickMarkFormatter: tickFmt }, handleScroll: false, handleScale: false, crosshair: { mode: 0 } });
+  const s = c.addSeries(LW.BaselineSeries, { baseValue: { type: 'price', price: 0 }, lineWidth: 2, priceLineVisible: false });
   const pts = []; let cum = 0;
-  for (const t of [...TR].sort((a, b) => a.tOut - b.tOut)) {
+  for (const t of [...D.TR].sort((a, b) => a.tOut - b.tOut)) {
     cum += t.pnl; const time = t.tOut + TZ;
     if (pts.length && pts[pts.length - 1].time >= time) pts[pts.length - 1].value = cum; else pts.push({ time, value: cum });
   }
-  s.setData(pts); eqChart.timeScale().fitContent();
+  s.setData(pts); c.timeScale().fitContent();
+  eq[D.kind] = c;
 }
-function table(head, rows, foot) {
-  return `<table><tr>${head.map((x) => `<th>${x}</th>`).join('')}</tr>${rows.join('')}${foot || ''}</table>`;
+function monthRows(D) {
+  const g = groupBy(D.TR, (t) => ym(t.tOut));
+  return [...g.keys()].sort().map((k) => ({ month: k, ...stats(g.get(k)) }));
 }
-function pMonths() {
-  const g = groupBy(TR, (t) => ym(t.tOut)), ga = groupBy(GH, (t) => ym(t.tIn));
-  const keys = [...g.keys()].sort();
-  const rows = keys.map((k) => {
-    const s = stats(g.get(k)), [y, m] = k.split('-');
-    return `<tr class="click" data-month="${k}"><td>${MON[+m - 1]} ${y}</td><td>${s.n}</td><td>${s.w}</td><td>${pct(s.w, s.n)}</td><td class="${cls(s.net)}">${money(s.net)}</td><td>${s.pf}</td><td>${(ga.get(k) || []).length}</td></tr>`;
+function pMonths(D) {
+  const g = groupBy(D.TR, (t) => ym(t.tOut)), ga = groupBy(D.GH, (t) => ym(t.tIn));
+  const o = D.kind === 'tt' ? MT : TT, go = o ? groupBy(o.TR, (t) => ym(t.tOut)) : new Map();
+  const rows = [...g.keys()].sort().map((k) => {
+    const s = stats(g.get(k)), [y, m] = k.split('-'), so = stats(go.get(k) || []);
+    return `<tr class="click" data-month="${k}"><td>${MON[+m - 1]} ${y}</td><td>${s.n}</td><td>${s.w}</td><td>${pct(s.w, s.n)}</td><td class="${cls(s.net)}">${money(s.net)}</td><td>${s.pf}</td><td>${(ga.get(k) || []).length}</td>` +
+      (o ? `<td class="k">${pct(so.w, so.n)}</td>` : '') + '</tr>';
   });
-  const s = stats(TR);
+  const s = stats(D.TR), so = o ? stats(o.TR) : null;
   return `<p class="note">By the month a trade closed (${TZ ? 'Pakistan time' : 'UTC'}). Click a month to see it on the chart.</p>` +
-    table(['Month', 'Trades', 'Wins', 'Win rate', 'Net', 'PF', 'Stood aside'], rows,
-      `<tr class="tot"><td>Total</td><td>${s.n}</td><td>${s.w}</td><td>${pct(s.w, s.n)}</td><td class="${cls(s.net)}">${money(s.net)}</td><td>${s.pf}</td><td>${GH.length}</td></tr>`);
+    table(['Month', 'Trades', 'Wins', 'Win rate', 'Net', 'PF', 'Stood aside'].concat(o ? [D.kind === 'tt' ? 'MT5 win rate' : 'Turtle TV win rate'] : []), rows,
+      `<tr class="tot"><td>Total</td><td>${s.n}</td><td>${s.w}</td><td>${pct(s.w, s.n)}</td><td class="${cls(s.net)}">${money(s.net)}</td><td>${s.pf}</td><td>${D.GH.length}</td>${o ? `<td>${pct(so.w, so.n)}</td>` : ''}</tr>`);
 }
-function pWeekdays() {
-  const g = groupBy(TR, (t) => new Date((t.tIn + TZ) * 1000).getUTCDay());
+function pWeekdays(D) {
+  const g = groupBy(D.TR, (t) => new Date((t.tIn + TZ) * 1000).getUTCDay());
   const rows = [1, 2, 3, 4, 5, 6, 0].filter((d) => g.has(d)).map((d) => {
     const s = stats(g.get(d));
     return `<tr><td>${DOW[d]}</td><td>${s.n}</td><td>${s.w}</td><td>${pct(s.w, s.n)}</td><td class="${cls(s.net)}">${money(s.net)}</td><td>${s.pf}</td><td>${money(s.net / s.n)}</td></tr>`;
   });
   return `<p class="note">By the weekday a trade opened (${TZ ? 'Pakistan time' : 'UTC'}).</p>` + table(['Day', 'Trades', 'Wins', 'Win rate', 'Net', 'PF', 'Per trade'], rows);
 }
-function pRange() {
+function pRange(D) {
+  const inp = D.kind === 'mt' ? D.run.inputs : CUR;
   const one = (side, bands, off) => {
     const rows = [];
     for (let b = 0; b <= 20; b++) {
-      const k = b + off, tr = TR.filter((t) => Math.round(t.bucket) === k), gh = GH.filter((t) => Math.round(t.bucket) === k), s = stats(tr);
+      const k = b + off, tr = D.TR.filter((t) => Math.round(t.bucket) === k), gh = D.GH.filter((t) => Math.round(t.bucket) === k), s = stats(tr);
       const on = (bands || '')[b] !== '0', gn = gh.reduce((a, t) => a + (t.pnl || 0), 0);
       rows.push(`<tr class="${on ? '' : 'dim'}"><td>${box(k)}</td><td>${on ? '✓' : '–'}</td><td>${s.n || ''}</td><td>${s.n ? pct(s.w, s.n) : ''}</td><td class="${cls(s.net)}">${s.n ? money(s.net) : ''}</td><td>${gh.length || ''}</td><td class="${cls(gn)}">${gh.length ? money(gn) : ''}</td></tr>`);
     }
-    return `<div><h4>${side} - where the entry sat in the last ${side === 'BUY' ? RUN.inputs.InpRangeLook : RUN.inputs.InpRangeLookS} candles' range</h4>` +
+    return `<div><h4>${side} - where the entry sat in the last ${side === 'BUY' ? inp.InpRangeLook : inp.InpRangeLookS} candles' range</h4>` +
       table(['Box', 'Ticked', 'Trades', 'Win rate', 'Net', 'Stood aside', 'Would have made'], rows) + '</div>';
   };
-  return `<p class="note">Unticked boxes are grey: there the EA stood aside. "Would have made" = the stand-aside trades' result (same stop and exit, no swap or spread cost).</p>` +
-    `<div class="row">${one('BUY', RUN.inputs.InpBandsB, 0)}${one('SELL', RUN.inputs.InpBandsS, 21)}</div>`;
+  return `<p class="note">Unticked boxes are grey: there the EA stood aside. "Would have made" = the stand-aside trades' result (same stop and exit, no swap).</p>` +
+    `<div class="row">${one('BUY', inp.InpBandsB, 0)}${one('SELL', inp.InpBandsS, 21)}</div>`;
 }
-function pTrades() {
-  const rows = TR.map((t) => `<tr class="click ${SEL === t.num ? 'sel' : ''}" data-num="${t.num}"><td>#${t.num}</td><td style="color:${t.side > 0 ? C.up : C.down}">${t.side > 0 ? 'BUY' : 'SELL'}</td>` +
+function pTrades(D) {
+  const rows = D.TR.map((t) => `<tr class="click ${D.kind === 'tt' && SEL === t.num ? 'sel' : ''}" data-num="${t.num}" data-kind="${D.kind}"><td>#${t.num}</td><td style="color:${t.side > 0 ? C.up : C.down}">${t.side > 0 ? 'BUY' : 'SELL'}</td>` +
     `<td>${dt(t.tIn)}</td><td>${f2(t.en)}</td><td>${f2(t.sl)}</td><td>${dt(t.tOut)}</td><td>${f2(t.ex)}</td><td style="text-align:left">${esc(t.why)}</td><td class="${cls(t.pnl)}">${money(t.pnl, 2)}</td></tr>`);
-  return `<p class="note">Click a trade to see it on the chart. Net includes swap and commission, exactly as MT5 booked it.</p>` +
-    table(['#', 'Side', 'Entry', 'Price', 'Stop', 'Exit', 'Price', 'Why it closed', 'Net'], rows);
+  return `<p class="note">Click a trade to see it on the chart.${D.kind === 'mt' ? ' Net includes swap, exactly as MT5 booked it.' : ' Net includes swap.'}</p><div class="scroll">` +
+    table(['#', 'Side', 'Entry', 'Price', 'Stop', 'Exit', 'Price', 'Why it closed', 'Net'], rows) + '</div>';
 }
 function reason(s) {
   if (/^ADX/.test(s)) return 'ADX below the minimum (ranging market)';
@@ -320,153 +343,285 @@ function reason(s) {
   if (/ATR/.test(s)) return 'ATR outside the volatility band';
   return s.replace(/\$?-?\d+(\.\d+)?%?/g, '#');
 }
-function pSkips() {
-  const sk = RUN.events.filter((e) => e.type === 'skip'), setups = RUN.events.filter((e) => e.type === 'setup').length;
+function pSkips(D) {
+  if (D.kind === 'tt') {
+    const s = TT.stats, n = s.setups || 1;
+    const rows = [['ADX below the minimum (ranging market)', s.adx], ['the high / low was not broken in time', s.no_break], ['stop too far (over the max risk)', s.risk],
+      ['ATR outside the volatility band', s.atr_band], ['entry in an unticked range box (skip mode)', s.band_skip], ['market closed in between', s.gap]]
+      .filter((r) => r[1]).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td>${k}</td><td>${v}</td><td>${pct(v, n)}</td></tr>`);
+    return `<p class="note">${(s.setups || 0).toLocaleString()} setups. <b>${TT.TR.length}</b> became trades, <b>${TT.GH.length}</b> stood aside, and these were skipped:</p>` +
+      table(['Why the setup was not traded', 'Setups', 'Share'], rows);
+  }
+  const sk = D.events.filter((e) => e.type === 'skip'), setups = D.events.filter((e) => e.type === 'setup').length;
   const g = groupBy(sk, (e) => reason(e.text));
   const rows = [...g.entries()].sort((a, b) => b[1].length - a[1].length).map(([k, v]) => `<tr><td>${esc(k)}</td><td>${v.length}</td><td>${pct(v.length, setups)}</td></tr>`);
-  return `<p class="note">${setups.toLocaleString()} setups were found. <b>${TR.length}</b> became trades, <b>${GH.length}</b> stood aside (unticked range box), and these were skipped. A setup that appeared while a trade was already open is not counted as a setup.</p>` +
+  return `<p class="note">${setups.toLocaleString()} setups. <b>${D.TR.length}</b> became trades, <b>${D.GH.length}</b> stood aside, and these were skipped:</p>` +
     table(['Why the setup was not traded', 'Setups', 'Share'], rows);
 }
-function renderPanel() {
-  document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.t === TAB));
-  if (!RUN) { $('#panel').innerHTML = '<p class="note">The first MT5 run is going - the year appears here when it is done (about a minute).</p>'; return; }
-  $('#runInfo').textContent = `${RUN.label} · ${RUN.created}`;
-  $('#panel').innerHTML = { overview: pOverview, months: pMonths, weekdays: pWeekdays, range: pRange, trades: pTrades, skips: pSkips }[TAB]();
-  if (TAB === 'overview') drawEquity();
+let OPTS = null;
+function pOpt() {
+  const o = OPTS;
+  const obj = (o && o.objective) || 'ret_dd';
+  let h = `<div class="row" style="align-items:center;gap:10px"><b>Step optimizer</b>
+    <label>Score <select id="oObj">${[['ret_dd', 'net ÷ max drawdown'], ['net', 'net profit'], ['pf', 'profit factor'], ['wr', 'win rate']].map(([v, l]) => `<option value="${v}" ${v === obj ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <label class="tog"><input type="checkbox" id="oBox" ${o && o.boxes ? 'checked' : ''}> include the range boxes</label>
+    <label class="tog"><input type="checkbox" id="oKeep" ${o && o.keep ? 'checked' : ''}> keep optimizing (restarts)</label>
+    <button id="oGo" class="primary">Optimize from the settings on screen</button><button id="oStop">Stop</button></div>
+    <p class="note">Each setting is moved one step up and down; a step that helps is repeated until it stops helping; all settings, pass after pass, until nothing improves.
+    The score is measured on <b>Jan – Jun</b> only. <b>Jul – Oct</b> is shown beside it but never used to choose: if it gets worse while Jan – Jun improves, the settings are memorising the past.</p>`;
+  if (!o || !o.baseline) return h;
+  const B = o.baseline, best = o.best, line = (x) => x ? `${money(x.net)} · WR ${x.wr}% · PF ${x.pf} · ${x.n} trades` : '–';
+  h += `<p class="note">${o.running ? '⏳ running' : o.error ? 'stopped: ' + esc(o.error) : '✓ done'} · ${o.evals.toLocaleString()} years tested in ${o.seconds} s · ${o.passes} passes${o.restarts ? ' · ' + o.restarts + ' restarts' : ''}</p>`;
+  h += table(['', 'Jan – Jun (optimized on)', 'Jul – Oct (unseen)', 'Whole year'], [
+    `<tr><td>Your settings</td><td>${line(B.train)}</td><td>${line(B.test)}</td><td>${line(B.year)}</td></tr>`,
+    best ? `<tr class="tot"><td>Best found</td><td>${line(best.train)}</td><td class="${best.test && B.test && best.test.net < B.test.net ? 'bad' : 'pos'}">${line(best.test)}</td><td>${line(best.year)}</td></tr>` : '']);
+  if (best && best.test && B.test && best.test.net < B.test.net) h += `<p class="warn">⚠ Better on Jan – Jun but WORSE on the unseen Jul – Oct (${money(best.test.net - B.test.net)}): these settings are fitting the past. Don't trust them without more evidence.</p>`;
+  if (best && Object.keys(best.changed).length) h += `<p><button id="oApply" class="go">Show the best on the chart</button> <span class="k">changes: ${Object.entries(best.changed).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))} ${esc(CUR[k] ?? '')} → ${esc(v)}`).join(', ')}</span></p>`;
+  const steps = o.log.map((l, i) => `<tr><td>${i + 1}</td><td style="text-align:left">${esc(l.run)}</td><td style="text-align:left">${esc(l.setting.replace(/^Inp/, ''))}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td>${(+l.score).toFixed(2)}</td>` +
+    `<td class="${cls(l.train.net)}">${money(l.train.net)} · ${l.train.wr}%</td><td class="${cls(l.test.net)}">${money(l.test.net)} · ${l.test.wr}%</td><td class="k">${l.t}s</td></tr>`);
+  h += `<h4>Steps that helped</h4><div class="scroll">${table(['#', 'Run', 'Setting', 'Change', 'Score', 'Jan – Jun', 'Jul – Oct', 'At'], steps)}</div>`;
+  if (o.board && o.board.length > 1) h += `<h4>Best of each restart</h4>` + table(['Score', 'Jan – Jun', 'Jul – Oct', 'Changes', ''],
+    o.board.map((x, i) => `<tr><td>${(+x.score).toFixed(2)}</td><td>${money(x.train.net)} · ${x.train.wr}%</td><td class="${cls(x.test.net - B.test.net)}">${money(x.test.net)} · ${x.test.wr}%</td>` +
+      `<td style="text-align:left" class="k">${Object.entries(x.changed).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ')}</td><td><button data-board="${i}">show</button></td></tr>`));
+  return h;
 }
+function renderPanel(sec) {
+  document.querySelectorAll(`nav[data-sec="${sec}"] button`).forEach((b) => b.classList.toggle('on', b.dataset.t === TAB[sec]));
+  const el = $(sec === 'tt' ? '#panelTT' : '#panelMT'), D = sec === 'tt' ? TT : MT;
+  if (sec === 'tt' && TAB.tt === 'opt') { el.innerHTML = pOpt(); return; }
+  if (!D) { el.innerHTML = `<p class="note">${sec === 'mt' ? 'No MT5 run yet. Press "Check in MT5" to run the settings on screen in the Strategy Tester (about a minute).' : 'Loading…'}</p>`; return; }
+  el.innerHTML = { overview: pOverview, months: pMonths, weekdays: pWeekdays, range: pRange, trades: pTrades, skips: pSkips }[TAB[sec]](D);
+  if (TAB[sec] === 'overview') drawEquity(D);
+}
+function renderAll() { renderPanel('tt'); renderPanel('mt'); }
 
-// ---------- runs, status, TradingView ----------
-async function loadRuns(selectId) {
-  RUNS = await api('/api/runs');
-  $('#runSel').innerHTML = RUNS.length ? RUNS.map((r) => `<option value="${r.id}">${esc(r.label)} · ${money(r.net || 0)} · PF ${r.pf} · ${r.trades} trades · ${esc((r.created || '').slice(5))}</option>`).join('')
-    : '<option>no MT5 runs yet</option>';
-  const id = selectId || (RUN && RUN.id) || (RUNS[0] && RUNS[0].id);
-  if (id) { $('#runSel').value = id; if (!RUN || RUN.id !== id) await loadRun(id); }
-}
-async function loadRun(id) {
-  setStatus('loading the run…');
-  const keep = firstLoad ? null : chart.timeScale().getVisibleLogicalRange();
-  RUN = await api('/api/run?id=' + encodeURIComponent(id));
-  derive(); render(); renderPanel();
-  const n = RUN.bars.t.length;
-  chart.timeScale().setVisibleLogicalRange(keep || { from: n - 1500, to: n + 5 });
-  firstLoad = false;
+// ---------- the Turtle TV Tester: instant ----------
+function scheduleSim(ms = 120) { clearTimeout(simTimer); simTimer = setTimeout(runSim, ms); }
+async function runSim() {
+  const seq = ++simSeq;
+  const r = await api('/api/sim', { inputs: CUR, ema: true });
+  if (seq !== simSeq) return;                                  // a newer change is already on its way
+  if (r.error) return toast('⚠ ' + esc(r.error));
+  TT = Object.assign(derive('tt', r.events, parseFloat(CUR.InpLots || '1')), { ms: r.ms, stats: r.stats, year: r.year, ef: r.ef, es: r.es });
+  drawEmas(); redraw(); await pickMt5(); renderAll();
+  $('#simMs').textContent = `· Turtle TV Tester ${r.ms} ms`;
+  $('#infoTT').textContent = `${r.year.n} trades · WR ${r.year.wr}% · ${money(r.year.net)} · PF ${r.year.pf} · ${r.ms} ms`;
+  const n = BARS.t.length;
+  if (firstView) { chart.timeScale().setVisibleLogicalRange({ from: n - 1500, to: n + 5 }); firstView = false; }
   legend(n - 1);
-  setStatus('');
-}
-async function poll() {
-  try {
-    const s = await api('/api/status'), f = s.follow || {};
-    $('#tvDot').className = 'dot ' + (f.on ? (f.connected ? 'ok' : 'bad') : '');
-    $('#tvDot').title = f.on ? (f.connected ? `TradingView ${f.symbol || ''} - read at ${f.at}` : 'TradingView not reachable: ' + (f.err || '')) : 'not following TradingView';
-    $('#tFollow').checked = !!f.on;
-    ['#btnRun', '#btnTake', '#btnExport'].forEach((b) => ($(b).disabled = !!s.busy));
-    if (s.busy) setStatus(`MT5 running "${s.label}" · ${s.phase} · ${s.elapsed ?? 0} s`, 'busy');
-    else if (s.error) setStatus('last run failed: ' + s.error, 'err');
-    else if (f.on && f.waiting) setStatus('TradingView changed - waiting for it to settle…', 'busy');
-    else if (f.on && f.err) setStatus('TradingView: ' + f.err, 'err');
-    else setStatus(f.msg || '');
-    if (!s.busy && s.last && s.last !== lastSeen) {
-      lastSeen = s.last;
-      if (!RUN || RUN.id !== s.last) { await loadRuns(s.last); toast(`New MT5 result: <b>${esc(RUN.label)}</b> · ${money(RUN.report.net || 0)} · PF ${RUN.report.pf}`); }
-    }
-  } catch (e) { setStatus('Turtle TV server not reachable', 'err'); }
-  setTimeout(poll, 2000);
+  markForm();
 }
 
-// ---------- settings ----------
-function openSettings() {
+// ---------- settings panel ----------
+function buildForm() {
   const groups = new Map();
   for (const i of INPUTS.inputs) { if (!groups.has(i.group)) groups.set(i.group, []); groups.get(i.group).push(i); }
   let h = '';
   for (const [g, list] of groups) {
     h += `<div class="igrp"><h5>${esc(g)}</h5>`;
     for (const i of list) {
-      const v = RUN ? RUN.inputs[i.name] ?? i.default : i.default, chg = !same(v, i.default);
+      const v = CUR[i.name] ?? i.default;
       const field = i.type === 'bool'
         ? `<select data-n="${i.name}"><option ${String(v) === 'true' ? 'selected' : ''}>true</option><option ${String(v) !== 'true' ? 'selected' : ''}>false</option></select>`
-        : `<input data-n="${i.name}" value="${esc(v)}">`;
-      h += `<div class="inp ${chg ? 'chg' : ''}" title="${esc(i.comment)}"><span class="n">${esc(i.name)}</span>${field}<span class="c">${esc(i.comment.slice(0, 170))} · default ${esc(i.default)}</span></div>`;
+        : `<input data-n="${i.name}" value="${esc(v)}" ${i.type !== 'string' ? 'type="number" step="any"' : ''}>`;
+      h += `<div class="inp ${i.sim ? '' : 'mt5'}" title="${esc(i.name)}: ${esc(i.comment)}${i.sim ? '' : ' · MT5 only: the Turtle TV Tester does not use it'}"><span class="n">${esc(i.name.replace(/^Inp/, ''))}${i.sim ? '' : ' (MT5)'}</span>${field}</div>`;
     }
     h += '</div>';
   }
-  $('#eaName').textContent = `${INPUTS.ea} (v${INPUTS.version}) - the values of the run on screen; changed ones are orange`;
   $('#form').innerHTML = h;
-  if (RUN) { $('#fFrom').value = RUN.from; $('#fTo').value = RUN.to; $('#fDelay').value = RUN.delay; }
-  $('#modal').classList.add('open');
+  markForm();
+}
+function markForm() {
+  document.querySelectorAll('#form [data-n]').forEach((el) => {
+    const n = el.dataset.n;
+    if (document.activeElement !== el && String(el.value) !== String(CUR[n])) el.value = CUR[n];
+    el.parentElement.classList.toggle('chg', !same(CUR[n], DFL[n]));
+  });
 }
 $('#form').addEventListener('input', (e) => {
-  const el = e.target, i = INPUTS.inputs.find((x) => x.name === el.dataset.n);
-  if (i) el.parentElement.classList.toggle('chg', !same(el.value, i.default));
+  const el = e.target, n = el.dataset.n;
+  if (!n || el.value === '') return;
+  CUR[n] = el.value.trim();
+  el.parentElement.classList.toggle('chg', !same(CUR[n], DFL[n]));
+  scheduleSim();
 });
-$('#btnSettings').onclick = openSettings;
-$('#btnCancel').onclick = () => $('#modal').classList.remove('open');
-$('#btnReset').onclick = () => document.querySelectorAll('#form [data-n]').forEach((el) => {
-  const i = INPUTS.inputs.find((x) => x.name === el.dataset.n); el.value = i.default; el.parentElement.classList.remove('chg');
-});
-$('#btnRun').onclick = async () => {
-  const sets = {};
-  document.querySelectorAll('#form [data-n]').forEach((el) => (sets[el.dataset.n] = el.value.trim()));
-  const r = await api('/api/run', { sets, from: $('#fFrom').value.trim(), to: $('#fTo').value.trim(), delay: $('#fDelay').value, label: $('#fLabel').value });
-  if (r.error) return toast('⚠ ' + esc(r.error));
-  $('#modal').classList.remove('open');
-  toast('MT5 run started - the chart and results update by themselves when it is done (about a minute).');
-};
+$('#btnReset').onclick = () => { CUR = { ...DFL }; markForm(); scheduleSim(0); };
+$('#btnSet').onclick = () => { document.body.classList.remove('ask-open'); document.body.classList.toggle('set-open'); };
 
-// ---------- header controls ----------
-$('#runSel').onchange = (e) => loadRun(e.target.value);
-$('#btnDel').onclick = async () => {
-  if (!RUN || RUNS.length < 2 || !confirm(`Delete the run "${RUN.label}"?`)) return;
-  await api('/api/delete', { id: RUN.id }); RUN = null; await loadRuns();
-};
-$('#tFollow').onchange = async (e) => {
-  await api('/api/follow', { on: e.target.checked, delay: 'none' });   // tuning: no delay = the same number for the same settings
-  toast(e.target.checked ? 'Following TradingView: change a setting on the Saad indicator and Turtle TV runs it in MT5 with no delay, so only your change moves the number (it waits 5 s for you to finish). Export to MT5 adds the realistic random-delay result.' : 'Stopped following TradingView.');
-};
-$('#btnTake').onclick = async () => {
-  setStatus('reading TradingView…', 'busy');
-  const r = await api('/api/tv_take', { delay: 'none' });
+// ---------- MT5 runs ----------
+async function loadRuns() {
+  RUNS = await api('/api/runs');
+  $('#runSel').innerHTML = RUNS.length ? RUNS.map((r) => `<option value="${r.id}">${esc(r.label)} · ${money(r.net || 0)} · PF ${r.pf} · ${r.trades} trades · ${r.delay === 'none' ? 'no delay' : 'random delay'} · ${esc((r.created || '').slice(5))}</option>`).join('')
+    : '<option>no MT5 runs yet</option>';
+}
+function runMatches(r) {
+  const a = r.changed || {}, b = diffDfl(CUR);
+  return Object.keys(a).length === Object.keys(b).length && Object.entries(b).every(([k, v]) => k in a && same(a[k], v));
+}
+async function pickMt5(forceId) {
+  if (!RUNS.length) { MT = null; renderPanel('mt'); return; }
+  const want = forceId || (RUNS.find(runMatches) || {}).id || (MT && MT.run.id) || RUNS[0].id;
+  if (!MT || MT.run.id !== want) {
+    const run = await api('/api/run?id=' + encodeURIComponent(want));
+    MT = Object.assign(derive('mt', run.events, parseFloat(run.inputs.InpLots || '1')), { run });
+  }
+  const diff = {};
+  for (const [k, v] of Object.entries(MT.run.inputs)) if (k in CUR && !same(v, CUR[k])) diff[k] = [CUR[k], v];
+  MT.diff = diff; MT.matches = !Object.keys(diff).length;
+  $('#runSel').value = MT.run.id;
+  const s = stats(MT.TR);
+  $('#infoMT').innerHTML = MT.matches ? `${s.n} trades · WR ${pct(s.w, s.n)} · ${money(MT.run.report.net ?? s.net)} · PF ${MT.run.report.pf}` : '<span class="warn">⚠ different settings from the screen</span>';
+  renderPanel('mt'); redraw();
+}
+async function poll() {
+  try {
+    const s = await api('/api/status');
+    ['#btnCheck', '#btnExport'].forEach((b) => ($(b).disabled = !!s.busy));
+    if (s.busy) setStatus(`MT5 running "${s.label}" · ${s.phase} · ${s.elapsed ?? 0} s`, 'busy');
+    else if (s.error) setStatus('last MT5 run failed: ' + s.error, 'err');
+    else setStatus('');
+    if (!s.busy && s.last && s.last !== lastSeen) {
+      const first = lastSeen === undefined; lastSeen = s.last;
+      if (!first) { await loadRuns(); MT = null; await pickMt5(s.last); toast(`MT5 result in: <b>${esc(MT.run.label)}</b> · ${money(MT.run.report.net || 0)} · PF ${MT.run.report.pf}`); }
+    }
+    if (TAB.tt === 'opt' && OPTS && OPTS.running) { OPTS = await api('/api/opt'); renderPanel('tt'); }
+  } catch (e) { setStatus('Turtle TV server not reachable', 'err'); }
+  setTimeout(poll, OPTS && OPTS.running ? 700 : 2000);
+}
+
+// ---------- TradingView ----------
+async function takeTv(quiet) {
+  const r = await api('/api/tv');
+  if (r.error) { $('#tvDot').className = 'dot bad'; if (!quiet) toast('⚠ TradingView: ' + esc(r.error)); return; }
+  $('#tvDot').className = 'dot ok'; $('#tvDot').title = `TradingView ${r.symbol} · read at ${r.at}`;
+  const key = JSON.stringify(r.sets);
+  if (quiet && key === tvKey) return;
+  tvKey = key;
+  CUR = { ...DFL, ...r.sets };
+  markForm(); scheduleSim(0);
+  if (!quiet || (r.notes || []).length) toast(`TradingView's settings are on the chart (${r.symbol}).` + (r.notes || []).map((n) => `<div class="warn">⚠ ${esc(n)}</div>`).join(''));
+}
+$('#btnTake').onclick = () => takeTv(false);
+(function follow() { setTimeout(async () => { if ($('#tFollow').checked) { try { await takeTv(true); } catch (e) { /* TradingView closed */ } } follow(); }, 4000); })();
+
+// ---------- Ask Claude: the chart picture + the data behind it ----------
+function askContext() {
+  const n = BARS.t.length, vr = chart.timeScale().getVisibleLogicalRange();
+  const a = Math.max(0, Math.floor(vr ? vr.from : n - 80)), b = Math.min(n - 1, Math.ceil(vr ? vr.to : n - 1));
+  const step = Math.max(1, Math.ceil((b - a + 1) / 150)), cs = [];
+  for (let i = a; i <= b; i += step) cs.push({ time: fullFmt(BARS.t[i] + TZ), o: BARS.o[i], h: BARS.h[i], l: BARS.l[i], c: BARS.c[i], ema_fast: +f2(TT.ef[i]), ema_slow: +f2(TT.es[i]), adx: BARS.adx[i] });
+  const tview = (D) => D.TR.filter((t) => t.biOut >= a && t.biIn <= b).map((t) => ({ num: t.num, side: t.side > 0 ? 'BUY' : 'SELL', entry: dt(t.tIn), entry_price: t.en, stop: t.sl,
+    exit: dt(t.tOut), exit_price: t.ex, net: Math.round(t.pnl), why_closed: t.why, range_box: box(t.bucket) }));
+  const sum = (D) => { const s = stats(D.TR), x = stats(half(D.TR, true)), y = stats(half(D.TR, false));
+    return { trades: s.n, win_rate: pct(s.w, s.n), net: Math.round(s.net), pf: s.pf, max_dd_closed: Math.round(s.dd), jan_jun: { net: Math.round(x.net), wr: pct(x.w, x.n), trades: x.n },
+      jul_oct: { net: Math.round(y.net), wr: pct(y.w, y.n), trades: y.n }, stood_aside: D.GH.length, months: monthRows(D).map((m) => ({ month: m.month, trades: m.n, wr: pct(m.w, m.n), net: Math.round(m.net) })) }; };
+  return {
+    time_zone: TZ ? 'Pakistan time (UTC+5)' : 'UTC', chart_view: `${fullFmt(BARS.t[a] + TZ)} to ${fullFmt(BARS.t[b] + TZ)}`,
+    settings_changed_from_v127: diffDfl(CUR), all_settings: CUR,
+    turtle_tv_tester: { ...sum(TT), skip_reasons: TT.stats }, trades_in_view: tview(TT),
+    mt5: MT ? { same_settings_as_screen: MT.matches, run: MT.run.label, delay: MT.run.delay, report_net: MT.run.report.net, report_pf: MT.run.report.pf, ...sum(MT) } : null,
+    optimizer: OPTS && OPTS.best ? { best_changes: OPTS.best.changed, best_train: OPTS.best.train, best_test: OPTS.best.test, baseline_train: OPTS.baseline.train, baseline_test: OPTS.baseline.test } : null,
+    candles_in_view: cs,
+  };
+}
+function md(s) {
+  const e = esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
+  return e.split(/\n{2,}/).map((p) => (/^\s*[-*] /m.test(p) ? '<ul>' + p.split(/\n/).map((l) => l.replace(/^\s*[-*] /, '')).filter(Boolean).map((l) => `<li>${l}</li>`).join('') + '</ul>'
+    : /^#{1,4} /.test(p) ? `<h4>${p.replace(/^#{1,4} /, '')}</h4>` : `<p>${p.replace(/\n/g, '<br>')}</p>`)).join('');
+}
+function drawAsk() {
+  $('#askLog').innerHTML = ASK.map((m) => `<div class="msg ${m.role}">${m.role === 'user' ? `<b>You:</b> ${esc(m.text)}` : m.pending ? '<span class="k">Claude is looking at the chart…</span>' : md(m.text)}</div>`).join('');
+  $('#askLog').scrollTop = 1e9;
+}
+async function ask() {
+  const q = $('#askQ').value.trim() || 'Look at the chart and the results. What do you see, and which setting changes would you test next to make the strategy better? Be specific.';
+  $('#askQ').value = '';
+  const img = chart.takeScreenshot().toDataURL('image/jpeg', 0.85).split(',')[1];
+  const history = ASK.filter((m) => !m.pending).slice(-6).map((m) => ({ role: m.role, text: m.text }));
+  ASK.push({ role: 'user', text: q }, { role: 'assistant', pending: true, text: '' });
+  drawAsk();
+  $('#btnAskGo').disabled = true;
+  try {
+    const r = await api('/api/ask', { question: q, image: img, context: askContext(), history });
+    ASK[ASK.length - 1] = { role: 'assistant', text: r.error ? '⚠ ' + r.error : r.text };
+  } catch (e) { ASK[ASK.length - 1] = { role: 'assistant', text: '⚠ ' + e }; }
+  $('#btnAskGo').disabled = false;
+  drawAsk();
+}
+$('#btnAsk').onclick = () => { document.body.classList.remove('set-open'); document.body.classList.toggle('ask-open'); if (document.body.classList.contains('ask-open')) $('#askQ').focus(); };
+$('#btnAskGo').onclick = ask;
+$('#askQ').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); } });
+
+// ---------- buttons ----------
+$('#btnCheck').onclick = async () => {
+  const r = await api('/api/run', { sets: CUR, delay: 'none', label: Object.keys(diffDfl(CUR)).length ? '' : 'v1.27 defaults (no delay)' });
   if (r.error) return toast('⚠ ' + esc(r.error));
-  const notes = (r.notes || []).map((n) => `<div class="warn">⚠ ${esc(n)}</div>`).join('');
-  if (r.existing) { await loadRuns(r.id); toast('TradingView\'s settings were already run in MT5 - showing that run.' + notes); }
-  else toast('TradingView\'s settings are running in MT5…' + notes);
+  toast('The settings on screen are running in the MT5 Strategy Tester (real ticks, no delay). The MT5 section updates when it is done, in about a minute.');
 };
 $('#btnExport').onclick = async () => {
-  if (!RUN) return;
-  const r = await api('/api/export', { id: RUN.id });
+  if (!MT || !MT.matches) return toast('First "Check in MT5": Export writes the settings together with their MT5 result.');
+  const r = await api('/api/export', { id: MT.run.id });
   if (r.error) return toast('⚠ ' + esc(r.error));
   const terms = r.written.filter((w) => /MQL5/.test(w)).length;
-  toast(`<b>Exported.</b> <code>${esc(r.json)}</code> (settings + this MT5 result) and the preset <code>${esc(r.preset)}</code>, in ${terms} MT5 terminal${terms === 1 ? '' : 's'}: EA inputs → Load.` +
-    (r.run ? (r.run === RUN.id ? '' : r.existing ? ' The random-delay result already exists - see the runs list.' : ' A random-delay MT5 run started; its result appears below the chart.') : ''), 14000);
+  toast(`<b>Exported.</b> <code>${esc(r.json)}</code> (settings + MT5 result) and the preset <code>${esc(r.preset)}</code> in ${terms} MT5 terminal${terms === 1 ? '' : 's'} (EA inputs → Load).` +
+    (r.run ? (r.existing ? ' A random-delay result already exists.' : ' A random-delay MT5 run started.') : ''), 14000);
 };
-['trades', 'ghosts', 'setups', 'skips'].forEach((k) => ($('#t' + k[0].toUpperCase() + k.slice(1)).onchange = (e) => { show[k] = e.target.checked; markers(); }));
-$('#tz').onchange = (e) => { TZ = +e.target.value; if (RUN) { const r = chart.timeScale().getVisibleLogicalRange(); render(); renderPanel(); if (r) chart.timeScale().setVisibleLogicalRange(r); } };
+$('#runSel').onchange = (e) => pickMt5(e.target.value);
+$('#btnDel').onclick = async () => {
+  if (!MT || !confirm(`Delete the MT5 run "${MT.run.label}"?`)) return;
+  await api('/api/delete', { id: MT.run.id }); MT = null; await loadRuns(); await pickMt5();
+};
+[['trades', 'tTrades'], ['ghosts', 'tGhosts'], ['setups', 'tSetups'], ['skips', 'tSkips'], ['mt5', 'tMt5']].forEach(([k, id]) => ($('#' + id).onchange = (e) => { show[k] = e.target.checked; redraw(); }));
+$('#tz').onchange = (e) => { TZ = +e.target.value; const r = chart.timeScale().getVisibleLogicalRange(); drawBars(); drawEmas(); renderAll(); if (r) chart.timeScale().setVisibleLogicalRange(r); };
 $('#jump').onkeydown = (e) => {
-  if (e.key !== 'Enter' || !RUN) return;
+  if (e.key !== 'Enter' || !BARS) return;
   const d = Date.parse(e.target.value.trim().replace(/\./g, '-') + 'T00:00:00Z');
   if (isNaN(d)) return toast('Type a date like 2026-03-31');
   const i = barIdx(d / 1000 - TZ);
   chart.timeScale().setVisibleLogicalRange({ from: i - 20, to: i + 120 });
 };
-$('#tabs').onclick = (e) => { if (e.target.dataset.t) { TAB = e.target.dataset.t; history.replaceState(null, '', '#tab=' + TAB); renderPanel(); } };
-$('#panel').onclick = (e) => {
+document.querySelectorAll('nav[data-sec]').forEach((nav) => (nav.onclick = async (e) => {
+  const t = e.target.dataset.t, sec = nav.dataset.sec;
+  if (!t) return;
+  TAB[sec] = t;
+  if (sec === 'tt' && t === 'opt') OPTS = await api('/api/opt');
+  renderPanel(sec);
+}));
+document.addEventListener('click', async (e) => {
   const tr = e.target.closest('tr');
-  if (!tr || !RUN) return;
-  if (tr.dataset.num) { const t = TR.find((x) => x.num === +tr.dataset.num); if (t) focusTrade(t); }
-  if (tr.dataset.month) {
-    const [y, m] = tr.dataset.month.split('-').map(Number);
-    const a = Date.UTC(y, m - 1, 1) / 1000 - TZ, b = Date.UTC(y, m, 1) / 1000 - TZ;
-    chart.timeScale().setVisibleLogicalRange({ from: barIdx(a), to: barIdx(b) });
+  if (tr && tr.dataset.num) {
+    const D = tr.dataset.kind === 'mt' ? MT : TT, t = D.TR.find((x) => x.num === +tr.dataset.num);
+    if (t) { if (D === TT) focusTrade(t); else chart.timeScale().setVisibleLogicalRange({ from: t.biIn - 40, to: t.biOut + 40 }); }
   }
-};
+  if (tr && tr.dataset.month) {
+    const [y, m] = tr.dataset.month.split('-').map(Number);
+    chart.timeScale().setVisibleLogicalRange({ from: barIdx(Date.UTC(y, m - 1, 1) / 1000 - TZ), to: barIdx(Date.UTC(y, m, 1) / 1000 - TZ) });
+  }
+  if (e.target.id === 'oGo') {
+    await api('/api/optimize', { start: CUR, objective: $('#oObj').value, boxes: $('#oBox').checked, keep: $('#oKeep').checked });
+    OPTS = await api('/api/opt'); renderPanel('tt');
+  }
+  if (e.target.id === 'oStop') { await api('/api/opt_stop', {}); OPTS = await api('/api/opt'); renderPanel('tt'); }
+  if (e.target.id === 'oApply' && OPTS && OPTS.best) { CUR = { ...OPTS.best.inputs }; markForm(); scheduleSim(0); toast('The optimizer\'s best is on the chart. Press "Check in MT5" to see MT5\'s real result for it.'); }
+  if (e.target.dataset && e.target.dataset.board != null && OPTS) { CUR = { ...OPTS.board[+e.target.dataset.board].inputs }; markForm(); scheduleSim(0); }
+});
 
 (async function init() {
   makeChart();
-  renderPanel();
-  INPUTS = await api('/api/inputs');
+  renderAll();
+  setStatus('loading the year…', 'busy');
+  const [bars, inputs] = await Promise.all([api('/api/bars'), api('/api/inputs')]);
+  BARS = bars; INPUTS = inputs;
+  for (const i of INPUTS.inputs) DFL[i.name] = i.default;
   await loadRuns();
   const h = new URLSearchParams(location.hash.slice(1));
-  if (h.get('tab')) { TAB = h.get('tab'); renderPanel(); }
-  if (h.get('trade') && RUN) { const t = TR.find((x) => x.num === +h.get('trade')); if (t) focusTrade(t); }
+  CUR = { ...DFL };
+  drawBars(); buildForm();
+  await runSim();
+  if (h.get('tab')) { TAB.tt = h.get('tab'); renderPanel('tt'); }
+  if (h.get('mt')) { TAB.mt = h.get('mt'); renderPanel('mt'); }
+  if (h.get('trade')) { const t = TT.TR.find((x) => x.num === +h.get('trade')); if (t) focusTrade(t); }
+  if (h.get('ask') === '1') document.body.classList.add('ask-open');
+  setStatus('');
   poll();
 })();

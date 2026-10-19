@@ -27,7 +27,8 @@ mt5 EA maker can read"*
   - Generated from v1.27 VERBATIM by `monitor/saad_view/make_view_ea.py`; re-run it after any change to Saad_strategy_15min.
   - Adds only `InpExport` / `InpExportTag`, which write every closed candle (OHLC, the EA's own EMAs, ADX, ATR) and every decision to
     `Common\Files`: setup, skip + reason, entry, exit + reason, stand-aside ghost start / end with its would-have price.
-- **Trading identical:** Blueberry Jan 1 – Oct 17, no delay, **+$242,911, PF 2.67, 198 trades, DD $28,320**. That's v1.27's own run on
+- **Trading identical:** Blueberry Jan 1 – Oct 17, no delay, **+$242,911, PF 2.67, 198 trades, DD $28,320**.
+- Later the same day: `InpExportM1` (off by default) also writes every 1-minute candle with its spread, the Turtle TV Tester's data. The run with it on traded identically (+$242,911, 198 trades). That's v1.27's own run on
   the same data to the dollar. Random delay: +$250,031, PF 2.81, 197 trades. A year takes 45–60 s.
 - **Turtle TV** (`monitor/saad_view/`, http://127.0.0.1:8773, start with `start_turtle_tv.bat`, see its README):
   - the whole year's candles with MT5's trades, drawn with TradingView's open-source Lightweight Charts 5.0.9;
@@ -38,9 +39,11 @@ mt5 EA maker can read"*
     terminal that has the EA;
   - EA maker: `make_ea_from_settings.py <json> --out <name>` writes an EA whose defaults are those settings.
 - **First finding: Zee's chart had drifted from v1.27.** The SELL boxes 35–40% and 80–85% were ticked: `111111110010001011110` vs
-  `111111100010001001110`. Random delay, full year:
-  - the chart's settings: +$234,987, PF 2.47, 215 trades;
-  - v1.27: +$250,031, PF 2.81, 197 trades.
+  `111111100010001001110`. Full year:
+  - **no delay (same fills, so the whole difference is the two boxes):** the chart's settings +$234,389, PF 2.46, 215 trades vs
+    v1.27 +$242,911, PF 2.67, 198 trades. That's **−$8.5k and −0.21 PF** for 17 more trades.
+  - random delay, one run each: +$234,987, PF 2.47 vs +$250,031, PF 2.81. v1.27 alone ranges +$239k to +$253k between random-delay
+    runs, so trust the no-delay pair.
 
 ## Saad_strategy_15min_tvbars v1.00 (2026-10-20) — TEST: v1.27 on the TradingView chart's own candles
 

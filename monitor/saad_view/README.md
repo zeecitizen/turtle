@@ -68,3 +68,30 @@ There is no strategy logic in Python or JavaScript (CLAUDE.md: a Python port is 
 
 **Rig:** Turtle TV uses `C:\mt5_rig_axi7`. The compare page's 10-month view (127.0.0.1:8772) also uses axi2–7 when it's switched on, so
 don't run both at once.
+
+## The Turtle TV Tester, the optimizer and Ask Claude (2026-10-20, later the same day)
+
+Zee: *"we want a faster few seconds running optimizer"* · *"its ok since we have our own chart we can rely on python to build an optimizer"* ·
+*"we toggle a setting in plus and minus 1 step. if it results in an improvement we further take steps until there's no effect of that setting"* ·
+*"in turtle tv i want to be able to tune the settings same way as in tradingview"* · *"connect claude to this web page"*
+
+- **Turtle TV Tester** (`sim.py`): v1.27's rules as a numba-compiled loop over every 1-minute candle of the year. It needs `NUMBA_CPU_NAME=generic`
+  on this ARM laptop, which sim.py sets itself.
+  - **Speed:** 7–14 ms a year.
+  - **Data:** the viewer EA's export with `InpExportM1` (278,805 one-minute candles with spreads) in `simdata/year.npz` (git-ignored).
+    Rebuild with `py sim.py --build` after a new MT5 export.
+  - **Checked against MT5** (`validate.py`, Blueberry Jan 1 – Oct 17, no delay):
+    - v1.27 takes **194 of MT5's 198 trades**, 190 with the same result; median gap 8 cents on the entry, $16 on the result;
+    - setups 5,000 vs 4,990; skip counts within 1%;
+    - **11 different settings ranked the same way as MT5 (Spearman 0.95)**;
+    - **optimistic for tight stops** (SL × 1.2: +$236k vs MT5 +$191k), because it can't see the order inside a 1-minute candle.
+- **Tuning like TradingView:** the settings panel next to the chart re-runs the Turtle TV Tester on every change. The MT5 Strategy Tester section
+  underneath shows MT5's result for the same settings ("Check in MT5", about a minute).
+- **Optimizer** (`optimizer.py`, the Turtle TV Tester's "Optimizer" tab), Zee's method:
+  - each setting ± one step; keep stepping while it helps (by at least 1%); passes until nothing changes;
+  - scored on **Jan – Jun only**; Jul – Oct is shown but never chooses;
+  - about 200 tries in 1.6 s; optional restarts; the range boxes only when ticked.
+  - **First run from v1.27:** Jan – Jun +$159k → +$205k, but Jul – Oct +$91k → +$76k. It fitted the past, and the page says so.
+- **Ask Claude:** sends the chart picture (`chart.takeScreenshot()`) and the data behind it (settings, both testers' results, the trades and candles in
+  view) from the server to the Claude API (`claude-opus-5-5`; key `monitor/.claude_api_key`, never sent to the page).
+  - 2026-10-20: the call reached the API, but the account had no credits ("credit balance is too low").
