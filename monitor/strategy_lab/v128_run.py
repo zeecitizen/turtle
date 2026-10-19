@@ -138,6 +138,25 @@ def effective(p):
     return json.dumps(p, sort_keys=True)
 
 
+def last_processing():
+    """time of MT5's latest 'processing N %' line (it writes one every ~5 min while a search runs)"""
+    best = None
+    yesterday = datetime.fromordinal(datetime.now().date().toordinal() - 1).strftime("%Y%m%d")
+    for f in glob.glob("C:/mt5_rig_axi/logs/2*.log"):
+        day = Path(f).stem
+        if day < yesterday:
+            continue
+        try:
+            txt = open(f, encoding="utf-16", errors="ignore").read()
+        except Exception:
+            continue
+        for m in re.finditer(r"\t(\d\d:\d\d:\d\d)\.\d+\tAutoTesting\tprocessing", txt):
+            ts = datetime.strptime(day + m.group(1), "%Y%m%d%H:%M:%S")
+            if best is None or ts > best:
+                best = ts
+    return best
+
+
 def progress():
     try:
         t = open(r"C:\mt5_rig_axi\logs\%s.log" % datetime.now().strftime("%Y%m%d"), encoding="utf-16", errors="ignore").read()
@@ -206,6 +225,8 @@ def main():
     now = datetime.now()
     t0 = datetime.strptime(now.strftime("%Y-%m-%d ") + SINCE, "%Y-%m-%d %H:%M").timestamp() if SINCE else time.time()
     deadline = datetime.strptime(now.strftime("%Y-%m-%d ") + DEADLINE, "%Y-%m-%d %H:%M").timestamp() if DEADLINE else time.time() + HOURS * 3600
+    if DEADLINE and deadline < time.time():
+        deadline += 86400
     log(f"logs read from {datetime.fromtimestamp(t0):%H:%M}, search until {datetime.fromtimestamp(deadline):%H:%M}")
     nxt = time.time() + 1800
     finished, attempt = False, 0
@@ -226,8 +247,10 @@ def main():
                 crashed = "crashlog generated" in open(r"C:\mt5_rig_axi\logs\%s.log" % datetime.now().strftime("%Y%m%d"), encoding="utf-16", errors="ignore").read().split("automatic testing started")[-1]
             except Exception:
                 crashed = False
-            if crashed or time.time() - last_change > 900:
-                log(f"WATCHDOG: {'MT5 crashed' if crashed else 'no new passes for 15 min'} -> restarting the search")
+            lp = last_processing()
+            stalled = time.time() - started > 1500 and (lp is None or (datetime.now() - lp).total_seconds() > 1500)
+            if crashed or stalled or time.time() - last_change > 3600:
+                log(f"WATCHDOG: {'MT5 crashed' if crashed else 'MT5 progress silent for 25 min' if stalled else 'no new passes for 60 min'} -> restarting the search")
                 axi_rig.kill_rig("axi")
                 time.sleep(20)
                 break
