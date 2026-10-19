@@ -208,7 +208,10 @@ input int    InpBandOff     = 1;      // InpBandOff - an entry in an unticked bo
 input double InpX1BeUsd     = 0;      // InpX1BeUsd - exit mode 1: stop to the entry once the trade is $X in profit (0 = off)
 input double InpX1BePct     = 0;      // InpX1BePct - exit mode 1: stop to the entry once price covered this share of the way to the target EMA (0 = off)
 input double InpX1PartPct   = 0;      // InpX1PartPct - exit mode 1: at the EMA touch close this share (0 = close all, as v1.26); the rest: stop to entry, trails $InpX1TrailUsd
-input double InpX1TrailUsd  = 2;      // InpX1TrailUsd - the rest's trail behind the best price
+input double InpX1TrailUsd  = 2;
+input double InpX1TpUsd     = 0;      // InpX1TpUsd - exit mode 1: close ALL once the trade is $X in profit (or at the EMA, whichever first; 0 = off)
+input double InpX1LockAt    = 0;      // InpX1LockAt - exit mode 1: once $X in profit...
+input double InpX1LockUsd   = 0;      // InpX1LockUsd - ...move the stop to the entry + $Y (a locked profit)      // InpX1TrailUsd - the rest's trail behind the best price
 input int    InpExitMode    = 1;      // InpExitMode — 0 the v1.23 exits (TP1 = EMA / support, partial, trail) · 1 NEXT EMA BEYOND THE ENTRY: close ALL when price touches the nearer EMA beyond the entry (picked at entry from the live EMAs; none beyond -> out after a candle closes back across the fast EMA) · 2 no target: out after a candle CLOSES back across the slow EMA. Modes 1-2: no partial, no breakeven, no trailing - the first stop stays
 
 CTrade   trade;
@@ -763,6 +766,12 @@ void ManageTick()
             double want = NormalizeDouble(sd > 0 ? bid - InpX1TrailUsd : ask0 + InpX1TrailUsd, _Digits), cur = PositionGetDouble(POSITION_SL);
             if ((sd > 0 ? want >= cur + 10 * _Point : (cur == 0 || want <= cur - 10 * _Point)) && ModifySl(g_pos[i].ticket, want)) g_pos[i].moves++;
             continue;
+         }
+         double mv = sd > 0 ? bid - g_pos[i].entry : g_pos[i].entry - ask0;
+         if (InpX1TpUsd > 0 && mv >= InpX1TpUsd) { g_pos[i].why = StringFormat("+$%.2f target", InpX1TpUsd); trade.PositionClose(g_pos[i].ticket); continue; }
+         if (InpX1LockAt > 0 && mv >= InpX1LockAt && g_pos[i].tp1At == 0) {
+            double lk = g_pos[i].entry + sd * InpX1LockUsd;
+            if (ModifySl(g_pos[i].ticket, lk)) g_pos[i].tp1At = TimeCurrent();
          }
          if ((InpX1BeUsd > 0 || InpX1BePct > 0) && g_pos[i].ctcAt == 0 && PositionSelectByTicket(g_pos[i].ticket)) {   // TEST: breakeven
             double moved = sd > 0 ? bid - g_pos[i].entry : g_pos[i].entry - ask0;
