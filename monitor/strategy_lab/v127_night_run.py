@@ -35,6 +35,10 @@ EA = "Saad_strategy_15min_betest"
 RIGS = ["axi", "axi2", "axi3", "axi4", "axi5", "axi6", "axi7"]
 API = "http://127.0.0.1:8772/api/year"
 HOURS = float(sys.argv[1]) if len(sys.argv) > 1 else 6.0
+# 2026-10-19 07:54: the MT5 terminal crashed after ~1,090 passes ("crashlog generated"). Restarts: an absolute deadline (HH:MM) and the
+# time the FIRST search started, so the passes of every attempt are read from the agents' logs together (pass number = the settings).
+DEADLINE = sys.argv[2] if len(sys.argv) > 2 else None
+SINCE = sys.argv[3] if len(sys.argv) > 3 else None
 STATUS = HERE / "v127_status.json"
 OUT = HERE / "v127_night.json"
 
@@ -214,18 +218,42 @@ def main():
         time.sleep(10)
     page(False)
     log(f"page auto re-run paused (was {was}); search: {len(OPT)} settings, {HOURS} h, order {ORDER}")
-    t0 = time.time()
-    th = threading.Thread(target=so.start, args=("v127",), daemon=True)
-    th.start()
-    deadline = t0 + HOURS * 3600
-    nxt = t0 + 1800
-    while th.is_alive() and time.time() < deadline:
-        time.sleep(30)
-        keep_awake()
-        if time.time() >= nxt:
-            status(t0, "searching")
-            nxt += 1800
-    finished = not th.is_alive()
+    now = datetime.now()
+    t0 = datetime.strptime(now.strftime("%Y-%m-%d ") + SINCE, "%Y-%m-%d %H:%M").timestamp() if SINCE else time.time()
+    deadline = datetime.strptime(now.strftime("%Y-%m-%d ") + DEADLINE, "%Y-%m-%d %H:%M").timestamp() if DEADLINE else time.time() + HOURS * 3600
+    log(f"logs read from {datetime.fromtimestamp(t0):%H:%M}, search until {datetime.fromtimestamp(deadline):%H:%M}")
+    nxt = time.time() + 1800
+    finished, attempt = False, 0
+    while time.time() < deadline - 600 and not finished:
+        attempt += 1
+        started = time.time()
+        log(f"search attempt {attempt}")
+        th = threading.Thread(target=so.start, args=("v127",), daemon=True)
+        th.start()
+        last_n, last_change = len(passes(t0)[0]), time.time()
+        while th.is_alive() and time.time() < deadline:
+            time.sleep(60)
+            keep_awake()
+            n = len(passes(t0)[0])
+            if n != last_n:
+                last_n, last_change = n, time.time()
+            try:
+                crashed = "crashlog generated" in open(r"C:\mt5_rig_axi\logs\%s.log" % datetime.now().strftime("%Y%m%d"), encoding="utf-16", errors="ignore").read().split("automatic testing started")[-1]
+            except Exception:
+                crashed = False
+            if crashed or time.time() - last_change > 900:
+                log(f"WATCHDOG: {'MT5 crashed' if crashed else 'no new passes for 15 min'} -> restarting the search")
+                axi_rig.kill_rig("axi")
+                time.sleep(20)
+                break
+            if time.time() >= nxt:
+                status(t0, f"searching (attempt {attempt})")
+                nxt += 1800
+        if th.is_alive() and time.time() >= deadline:
+            break
+        th.join(timeout=60)
+        # MT5 ending by itself within the time (not a crash, not killed): the genetic search converged
+        finished = not th.is_alive() and time.time() - started > 900 and time.time() < deadline and progress() >= 99
     time.sleep(20)
     got = status(t0, "search finished by MT5" if finished else "search stopped at the deadline")
     if th.is_alive():
