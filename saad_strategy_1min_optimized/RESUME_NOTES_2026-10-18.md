@@ -78,3 +78,10 @@ No more reports for their own sake. Test -> fix -> test in MT5 until a 1-min set
   are chart-only; port to the EA as v1.25 and MT5-test) - Zee has not answered that offer yet.
 - Indicator since the last notes: weekday table (left of Last 30 days), range table + EXIT LAB = whole chart, Trading session dropdown,
   the two chart-only TP1 methods. Page server restarted with the PC -> has the new session/ADX/ATR mapping.
+
+## 2026-10-19 evening — STATE: Saad_strategy_15min v1.26 is the version (no v1.27)
+- v1.26 = Zee's chart setup as EA defaults (range boxes + stand aside + next-EMA exit, EMA 16/32, ATR stop 1.6x, ADX 30, max risk $20, 2 lots):
+  MT5 full year +$213,915, PF 2.54, 191 trades, DD $35k, only June red. Folder `v1.26/` (README, EA source, indicator code + settings).
+- Overnight genetic search (26 settings, ~4,980 passes, learn Jan-Jun) + Jul-Oct / full-year checks + single-change tests: nothing beat v1.26
+  in both halves -> `v1.26/OPTIMIZER_NIGHT_2026-10-19.md`. Calmer alternative if wanted: max risk $15 (PF 2.73, DD $19.9k, -$56k/yr).
+- Test copies (never attach): Saad_strategy_15min_chart_test (88306), Saad_strategy_15min_betest (88307: BE / lock / partial / +$X inputs).

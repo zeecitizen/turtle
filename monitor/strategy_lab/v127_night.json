@@ -1,0 +1,5466 @@
+{
+ "started": "2026-10-19 06:45",
+ "search_finished_by_mt5": false,
+ "passes": 4976,
+ "opt": {
+  "InpEmaFast": [
+   10,
+   2,
+   22
+  ],
+  "InpEmaSlow": [
+   24,
+   4,
+   48
+  ],
+  "InpWickMin": [
+   0.35,
+   0.05,
+   0.55
+  ],
+  "InpBodyMax": [
+   0.5,
+   0.05,
+   0.7
+  ],
+  "InpMinRangeAtr": [
+   0.35,
+   0.1,
+   0.75
+  ],
+  "InpLongRule": [
+   0,
+   1,
+   2
+  ],
+  "InpShortLine": [
+   0,
+   1,
+   2
+  ],
+  "InpTouchPips": [
+   0,
+   1,
+   3
+  ],
+  "InpBreakBars": [
+   1,
+   1,
+   2
+  ],
+  "InpBreakPips": [
+   1,
+   1,
+   6
+  ],
+  "InpMaxRiskUsd": [
+   10,
+   2.5,
+   20
+  ],
+  "InpSlAtrMult": [
+   1.0,
+   0.2,
+   2.6
+  ],
+  "InpChopEr": [
+   0,
+   0.05,
+   0.2
+  ],
+  "InpHtfMin": [
+   0,
+   30,
+   60
+  ],
+  "InpAdxMin": [
+   15,
+   5,
+   40
+  ],
+  "InpAtrMinUsd": [
+   0,
+   1,
+   4
+  ],
+  "InpAtrMaxUsd": [
+   0,
+   5,
+   25
+  ],
+  "InpSessFrom": [
+   0,
+   2,
+   8
+  ],
+  "InpSessTo": [
+   18,
+   2,
+   24
+  ],
+  "InpRangeLook": [
+   5,
+   1,
+   10
+  ],
+  "InpRangeLookS": [
+   5,
+   1,
+   10
+  ],
+  "InpBandOff": [
+   0,
+   1,
+   1
+  ],
+  "InpX1BeUsd": [
+   0,
+   4,
+   12
+  ],
+  "InpX1PartPct": [
+   0,
+   0.25,
+   0.5
+  ],
+  "InpX1LockAt": [
+   0,
+   4,
+   12
+  ],
+  "InpX1LockUsd": [
+   2,
+   2,
+   6
+  ]
+ },
+ "v126_fwd": {
+  "net": 86253.6,
+  "pf": 2.62,
+  "wr": 56.38296246948598,
+  "n": 94,
+  "dd": 17174.0,
+  "net_dd": 5.022336089437522,
+  "months": {
+   "2026.07": 3189.0,
+   "2026.08": 64825.8,
+   "2026.09": 7134.8,
+   "2026.10": 11104.0
+  },
+  "err": null
+ },
+ "v126_year": [
+  {
+   "net": 213085.4,
+   "pf": 2.54,
+   "wr": 53.40308892385275,
+   "n": 191,
+   "dd": 34168.0,
+   "net_dd": 6.236402481854366,
+   "months": {
+    "2026.01": 4978.0,
+    "2026.02": 16190.0,
+    "2026.03": 50741.0,
+    "2026.04": 27720.0,
+    "2026.05": 37000.8,
+    "2026.06": -9856.0,
+    "2026.07": 3421.0,
+    "2026.08": 64557.8,
+    "2026.09": 7172.8,
+    "2026.10": 11160.0
+   },
+   "err": null
+  },
+  {
+   "net": 208795.4,
+   "pf": 2.5,
+   "wr": 52.879582201939385,
+   "n": 191,
+   "dd": 36488.0,
+   "net_dd": 5.722303222977417,
+   "months": {
+    "2026.01": 4362.0,
+    "2026.02": 15036.0,
+    "2026.03": 49393.0,
+    "2026.04": 28142.0,
+    "2026.05": 36676.8,
+    "2026.06": -11694.0,
+    "2026.07": 3921.0,
+    "2026.08": 64825.8,
+    "2026.09": 6854.8,
+    "2026.10": 11278.0
+   },
+   "err": null
+  }
+ ],
+ "candidates": [
+  {
+   "pass": 11281518445449372,
+   "score_jan_jun": 7.451289340101522,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 32,
+    "InpWickMin": 0.5,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.45,
+    "InpLongRule": 1,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 2,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 2,
+    "InpSessTo": 24,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.2,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 2,
+    "InpAtrMaxUsd": 15,
+    "InpRangeLook": 7,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 0,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 8,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": -12017.4,
+    "pf": 0.91,
+    "wr": 49.75844843712034,
+    "n": 207,
+    "dd": 39576.2,
+    "net_dd": -0.30365219500608953,
+    "months": {
+     "2026.07": 4855.8,
+     "2026.08": -941.0,
+     "2026.09": -19456.2,
+     "2026.10": 3524.0
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpWickMin": [
+     0.45,
+     0.5
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.45
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpBreakPips": [
+     3,
+     2
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     2
+    ],
+    "InpSlAtrMult": [
+     1.6,
+     1.2
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     2
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     15
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1LockAt": [
+     0,
+     8
+    ]
+   }
+  },
+  {
+   "pass": 11281518445448882,
+   "score_jan_jun": 7.451289340101522,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 32,
+    "InpWickMin": 0.5,
+    "InpBodyMax": 0.55,
+    "InpMinRangeAtr": 0.45,
+    "InpLongRule": 1,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 2,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 2,
+    "InpSessTo": 24,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.2,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 2,
+    "InpAtrMaxUsd": 15,
+    "InpRangeLook": 7,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 0,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 8,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": -14105.4,
+    "pf": 0.9,
+    "wr": 49.7584220655165,
+    "n": 207,
+    "dd": 39310.2,
+    "net_dd": -0.3588229009264771,
+    "months": {
+     "2026.07": 3059.8,
+     "2026.08": -2129.0,
+     "2026.09": -18980.2,
+     "2026.10": 3944.0
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpWickMin": [
+     0.45,
+     0.5
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.55
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.45
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpBreakPips": [
+     3,
+     2
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     2
+    ],
+    "InpSlAtrMult": [
+     1.6,
+     1.2
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     2
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     15
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1LockAt": [
+     0,
+     8
+    ]
+   }
+  },
+  {
+   "pass": 39992851275944589,
+   "score_jan_jun": 7.079100404629716,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 36,
+    "InpWickMin": 0.5,
+    "InpBodyMax": 0.55,
+    "InpMinRangeAtr": 0.65,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 4,
+    "InpMaxRiskUsd": 20.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 14465.8,
+    "pf": 1.1,
+    "wr": 45.99176070999215,
+    "n": 198,
+    "dd": 39674.0,
+    "net_dd": 0.3646166254978071,
+    "months": {
+     "2026.07": 33066.0,
+     "2026.08": 4495.0,
+     "2026.09": -15884.0,
+     "2026.10": -7211.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     36
+    ],
+    "InpWickMin": [
+     0.45,
+     0.5
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.55
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.65
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     4
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 17771531579759063,
+   "score_jan_jun": 7.010979228486646,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 40,
+    "InpWickMin": 0.4,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 1,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 3,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.05,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 24985.0,
+    "pf": 1.15,
+    "wr": 44.943899176897055,
+    "n": 239,
+    "dd": 32654.0,
+    "net_dd": 0.7651436271207203,
+    "months": {
+     "2026.07": 17704.0,
+     "2026.08": 14006.0,
+     "2026.09": 1297.0,
+     "2026.10": -8022.0
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     40
+    ],
+    "InpWickMin": [
+     0.45,
+     0.4
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.05
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 39985135524927608,
+   "score_jan_jun": 6.924199323652277,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 36,
+    "InpWickMin": 0.55,
+    "InpBodyMax": 0.6,
+    "InpMinRangeAtr": 0.75,
+    "InpLongRule": 2,
+    "InpShortLine": 2,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.05,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 2,
+    "InpAtrMaxUsd": 20,
+    "InpRangeLook": 7,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 46266.8,
+    "pf": 1.29,
+    "wr": 45.18699948745961,
+    "n": 219,
+    "dd": 45935.2,
+    "net_dd": 1.0072188648356817,
+    "months": {
+     "2026.07": 29786.0,
+     "2026.08": 46490.0,
+     "2026.09": -19366.0,
+     "2026.10": -10643.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     36
+    ],
+    "InpWickMin": [
+     0.45,
+     0.55
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.75
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.05
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     2
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     20
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 39992851536131334,
+   "score_jan_jun": 6.890050395968323,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": -2536.4,
+    "pf": 0.97,
+    "wr": 49.57167449919974,
+    "n": 114,
+    "dd": 27999.2,
+    "net_dd": -0.09058830252292922,
+    "months": {
+     "2026.07": -2934.0,
+     "2026.08": 14734.8,
+     "2026.09": -4948.0,
+     "2026.10": -9389.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 39992851536078904,
+   "score_jan_jun": 6.854773218142549,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": -3998.4,
+    "pf": 0.95,
+    "wr": 46.33362078344931,
+    "n": 111,
+    "dd": 28709.2,
+    "net_dd": -0.13927242835049392,
+    "months": {
+     "2026.07": -4930.0,
+     "2026.08": 13310.8,
+     "2026.09": -2806.0,
+     "2026.10": -9573.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 39992851271491126,
+   "score_jan_jun": 6.635622415125209,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 36,
+    "InpWickMin": 0.4,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 2,
+    "InpShortLine": 1,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 63612.8,
+    "pf": 1.52,
+    "wr": 46.04946598013453,
+    "n": 198,
+    "dd": 22482.0,
+    "net_dd": 2.8294991548794592,
+    "months": {
+     "2026.07": 49338.0,
+     "2026.08": 13210.0,
+     "2026.09": 3046.0,
+     "2026.10": -1981.2
+    },
+    "err": null
+   },
+   "year": [
+    {
+     "net": 168198.4,
+     "pf": 1.72,
+     "wr": 46.01105122505341,
+     "n": 376,
+     "dd": 23013.0,
+     "net_dd": 7.308842827966801,
+     "months": {
+      "2026.01": 3788.8,
+      "2026.02": 20434.0,
+      "2026.03": 18190.0,
+      "2026.04": 44190.0,
+      "2026.05": 15967.8,
+      "2026.06": 10085.0,
+      "2026.07": 42178.0,
+      "2026.08": 14460.0,
+      "2026.09": 908.0,
+      "2026.10": -2003.2
+     },
+     "err": null
+    },
+    {
+     "net": 202258.4,
+     "pf": 1.85,
+     "wr": 47.09908375369211,
+     "n": 375,
+     "dd": 23545.0,
+     "net_dd": 8.590290932257378,
+     "months": {
+      "2026.01": 2410.8,
+      "2026.02": 20796.0,
+      "2026.03": 17982.0,
+      "2026.04": 44082.0,
+      "2026.05": 32343.8,
+      "2026.06": 11915.0,
+      "2026.07": 52122.0,
+      "2026.08": 12964.0,
+      "2026.09": 10220.0,
+      "2026.10": -2577.2
+     },
+     "err": null
+    }
+   ],
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     36
+    ],
+    "InpWickMin": [
+     0.45,
+     0.4
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 39992851535252176,
+   "score_jan_jun": 6.625617308144548,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.35,
+    "InpBodyMax": 0.5,
+    "InpMinRangeAtr": 0.65,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 4,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": -17323.4,
+    "pf": 0.79,
+    "wr": 46.069069875368626,
+    "n": 114,
+    "dd": 29362.2,
+    "net_dd": -0.5899898508967312,
+    "months": {
+     "2026.07": -10224.0,
+     "2026.08": 4258.8,
+     "2026.09": -2241.0,
+     "2026.10": -9117.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpWickMin": [
+     0.45,
+     0.35
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.5
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.65
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     4
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 17771531856131334,
+   "score_jan_jun": 6.518890911637026,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 17561.6,
+    "pf": 1.23,
+    "wr": 50.80396217678798,
+    "n": 114,
+    "dd": 25499.2,
+    "net_dd": 0.6887118027232226,
+    "months": {
+     "2026.07": -3006.0,
+     "2026.08": 24242.8,
+     "2026.09": 450.0,
+     "2026.10": -4125.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 39992851271478904,
+   "score_jan_jun": 6.492686650720138,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 39093.6,
+    "pf": 1.36,
+    "wr": 47.76296297530474,
+    "n": 178,
+    "dd": 24094.0,
+    "net_dd": 1.6225450319581638,
+    "months": {
+     "2026.07": 29106.0,
+     "2026.08": 20702.8,
+     "2026.09": -8432.0,
+     "2026.10": -2283.2
+    },
+    "err": null
+   },
+   "year": [
+    {
+     "net": 140390.4,
+     "pf": 1.66,
+     "wr": 48.12270708974575,
+     "n": 333,
+     "dd": 23064.0,
+     "net_dd": 6.086992715920916,
+     "months": {
+      "2026.01": 5210.8,
+      "2026.02": 16396.0,
+      "2026.03": 22810.0,
+      "2026.04": 34108.0,
+      "2026.05": 10443.0,
+      "2026.06": 6291.0,
+      "2026.07": 28954.0,
+      "2026.08": 12202.8,
+      "2026.09": 1542.0,
+      "2026.10": 2432.8
+     },
+     "err": null
+    },
+    {
+     "net": 142856.4,
+     "pf": 1.67,
+     "wr": 47.70135529064605,
+     "n": 333,
+     "dd": 24331.2,
+     "net_dd": 5.871325705267311,
+     "months": {
+      "2026.01": 22746.8,
+      "2026.02": 17218.0,
+      "2026.03": 22886.0,
+      "2026.04": 21738.0,
+      "2026.05": 9801.0,
+      "2026.06": 5565.0,
+      "2026.07": 27688.0,
+      "2026.08": 19650.8,
+      "2026.09": -1388.0,
+      "2026.10": -3049.2
+     },
+     "err": null
+    }
+   ],
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 17771531778209063,
+   "score_jan_jun": 6.487886684599865,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 40,
+    "InpWickMin": 0.4,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 1,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 3,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.05,
+    "InpSessFrom": 6,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": -4631.0,
+    "pf": 0.96,
+    "wr": 45.680924867906704,
+    "n": 176,
+    "dd": 33866.0,
+    "net_dd": -0.13674481781137424,
+    "months": {
+     "2026.07": -2504.0,
+     "2026.08": 2790.0,
+     "2026.09": -1255.0,
+     "2026.10": -3662.0
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     40
+    ],
+    "InpWickMin": [
+     0.45,
+     0.4
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.05
+    ],
+    "InpSessFrom": [
+     0,
+     6
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 17771531856078904,
+   "score_jan_jun": 6.484581991317743,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 4999.6,
+    "pf": 1.07,
+    "wr": 47.178703512533616,
+    "n": 111,
+    "dd": 31145.2,
+    "net_dd": 0.1605255384457316,
+    "months": {
+     "2026.07": -3384.0,
+     "2026.08": 15060.8,
+     "2026.09": 3006.0,
+     "2026.10": -9683.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 56658841030658154,
+   "score_jan_jun": 6.480435314257765,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 1,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 4,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 8,
+    "InpX1LockUsd": 6
+   },
+   "fwd": {
+    "net": 63259.4,
+    "pf": 1.7,
+    "wr": 39.95669794449324,
+    "n": 153,
+    "dd": 17554.0,
+    "net_dd": 3.603702859747066,
+    "months": {
+     "2026.07": 35606.8,
+     "2026.08": 16434.8,
+     "2026.09": 13131.0,
+     "2026.10": -1913.2
+    },
+    "err": null
+   },
+   "year": [
+    {
+     "net": 170277.4,
+     "pf": 2.01,
+     "wr": 38.72669118801639,
+     "n": 280,
+     "dd": 17330.0,
+     "net_dd": 9.825585689555684,
+     "months": {
+      "2026.01": -2714.0,
+      "2026.02": 15024.0,
+      "2026.03": 16338.0,
+      "2026.04": 32316.0,
+      "2026.05": 27767.0,
+      "2026.06": 11493.0,
+      "2026.07": 36202.8,
+      "2026.08": 16474.8,
+      "2026.09": 13695.0,
+      "2026.10": 3680.8
+     },
+     "err": null
+    },
+    {
+     "net": 177249.4,
+     "pf": 2.07,
+     "wr": 37.7794071060079,
+     "n": 280,
+     "dd": 17712.0,
+     "net_dd": 10.007305781391146,
+     "months": {
+      "2026.01": -3068.0,
+      "2026.02": 22520.0,
+      "2026.03": 16422.0,
+      "2026.04": 33970.0,
+      "2026.05": 28379.0,
+      "2026.06": 10645.0,
+      "2026.07": 36286.8,
+      "2026.08": 18870.8,
+      "2026.09": 14225.0,
+      "2026.10": -1001.2
+     },
+     "err": null
+    }
+   ],
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpBreakPips": [
+     3,
+     4
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     8
+    ],
+    "InpX1LockUsd": [
+     2,
+     6
+    ]
+   }
+  },
+  {
+   "pass": 34437521350658154,
+   "score_jan_jun": 6.480435314257765,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 1,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 4,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 8,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 64079.4,
+    "pf": 1.72,
+    "wr": 41.43425250306329,
+    "n": 152,
+    "dd": 18288.0,
+    "net_dd": 3.5039041994750657,
+    "months": {
+     "2026.07": 34564.8,
+     "2026.08": 19010.8,
+     "2026.09": 12483.0,
+     "2026.10": -1979.2
+    },
+    "err": null
+   },
+   "year": [
+    {
+     "net": 169101.4,
+     "pf": 2.0,
+     "wr": 36.87042481518782,
+     "n": 280,
+     "dd": 18935.2,
+     "net_dd": 8.930531496894671,
+     "months": {
+      "2026.01": -2536.0,
+      "2026.02": 22768.0,
+      "2026.03": 16582.0,
+      "2026.04": 30872.0,
+      "2026.05": 28517.0,
+      "2026.06": 7437.0,
+      "2026.07": 36006.8,
+      "2026.08": 18920.8,
+      "2026.09": 12987.0,
+      "2026.10": -2453.2
+     },
+     "err": null
+    },
+    {
+     "net": 174519.4,
+     "pf": 2.03,
+     "wr": 37.336237347540894,
+     "n": 280,
+     "dd": 17628.0,
+     "net_dd": 9.900124801452234,
+     "months": {
+      "2026.01": -2724.0,
+      "2026.02": 22456.0,
+      "2026.03": 16262.0,
+      "2026.04": 34160.0,
+      "2026.05": 27353.0,
+      "2026.06": 10935.0,
+      "2026.07": 34990.8,
+      "2026.08": 19194.8,
+      "2026.09": 13589.0,
+      "2026.10": -1697.2
+     },
+     "err": null
+    }
+   ],
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpBreakPips": [
+     3,
+     4
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     8
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 39992851271491154,
+   "score_jan_jun": 6.457366787113847,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 2,
+    "InpShortLine": 1,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 51605.6,
+    "pf": 1.48,
+    "wr": 46.841408929318334,
+    "n": 186,
+    "dd": 24562.0,
+    "net_dd": 2.101034117742855,
+    "months": {
+     "2026.07": 32296.0,
+     "2026.08": 23786.8,
+     "2026.09": -1620.0,
+     "2026.10": -2857.2
+    },
+    "err": null
+   },
+   "year": [
+    {
+     "net": 153388.4,
+     "pf": 1.7,
+     "wr": 48.17408872199774,
+     "n": 352,
+     "dd": 28420.0,
+     "net_dd": 5.397199155524278,
+     "months": {
+      "2026.01": 2666.8,
+      "2026.02": 15690.0,
+      "2026.03": 19806.0,
+      "2026.04": 37408.0,
+      "2026.05": 11027.0,
+      "2026.06": 7115.0,
+      "2026.07": 32516.0,
+      "2026.08": 23012.8,
+      "2026.09": 6726.0,
+      "2026.10": -2579.2
+     },
+     "err": null
+    },
+    {
+     "net": 135924.4,
+     "pf": 1.62,
+     "wr": 47.14439703683616,
+     "n": 352,
+     "dd": 28380.0,
+     "net_dd": 4.789443269908386,
+     "months": {
+      "2026.01": 2696.8,
+      "2026.02": 14788.0,
+      "2026.03": 20554.0,
+      "2026.04": 23708.0,
+      "2026.05": 8751.0,
+      "2026.06": 5601.0,
+      "2026.07": 31064.0,
+      "2026.08": 25152.8,
+      "2026.09": 6464.0,
+      "2026.10": -2855.2
+     },
+     "err": null
+    }
+   ],
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 39992851271487724,
+   "score_jan_jun": 6.446781006667005,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.5,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 2,
+    "InpShortLine": 1,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 45885.6,
+    "pf": 1.39,
+    "wr": 47.412076930003415,
+    "n": 194,
+    "dd": 28388.0,
+    "net_dd": 1.6163731154008736,
+    "months": {
+     "2026.07": 33258.0,
+     "2026.08": 19354.8,
+     "2026.09": -3088.0,
+     "2026.10": -3639.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.5
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 39992851534400675,
+   "score_jan_jun": 6.419643972517177,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 36,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 2,
+    "InpShortLine": 2,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 2,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": -22405.2,
+    "pf": 0.79,
+    "wr": 41.710249214193816,
+    "n": 133,
+    "dd": 33469.2,
+    "net_dd": -0.6694274138611023,
+    "months": {
+     "2026.07": -7274.0,
+     "2026.08": 2448.0,
+     "2026.09": -3004.0,
+     "2026.10": -14575.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     36
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpBreakPips": [
+     3,
+     2
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 9901481140554200,
+   "score_jan_jun": 6.353765798297653,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 40,
+    "InpWickMin": 0.55,
+    "InpBodyMax": 0.5,
+    "InpMinRangeAtr": 0.45,
+    "InpLongRule": 2,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 4,
+    "InpMaxRiskUsd": 20.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 4,
+    "InpX1PartPct": 0.5,
+    "InpX1LockAt": 4,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": -22585.4,
+    "pf": 0.78,
+    "wr": 32.909934123592684,
+    "n": 151,
+    "dd": 38260.2,
+    "net_dd": -0.5903105577074872,
+    "months": {
+     "2026.07": -4059.2,
+     "2026.08": -2007.0,
+     "2026.09": -8829.0,
+     "2026.10": -7690.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     40
+    ],
+    "InpWickMin": [
+     0.45,
+     0.55
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.5
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.45
+    ],
+    "InpBreakPips": [
+     3,
+     4
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     4
+    ],
+    "InpX1PartPct": [
+     0,
+     0.5
+    ],
+    "InpX1LockAt": [
+     0,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 39992851536109529,
+   "score_jan_jun": 6.342894168466523,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 2,
+    "InpShortLine": 2,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": -4696.4,
+    "pf": 0.94,
+    "wr": 47.45392973132546,
+    "n": 119,
+    "dd": 27399.2,
+    "net_dd": -0.17140646442231888,
+    "months": {
+     "2026.07": -4796.0,
+     "2026.08": 15266.8,
+     "2026.09": -5360.0,
+     "2026.10": -9807.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 19623308495252176,
+   "score_jan_jun": 6.336159275740371,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.35,
+    "InpBodyMax": 0.5,
+    "InpMinRangeAtr": 0.65,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 4,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.25,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 3360.4,
+    "pf": 1.04,
+    "wr": 46.00914499890598,
+    "n": 114,
+    "dd": 31073.7,
+    "net_dd": 0.10814289897887924,
+    "months": {
+     "2026.07": -11643.2,
+     "2026.08": 14938.3,
+     "2026.09": 9059.0,
+     "2026.10": -8993.7
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpWickMin": [
+     0.45,
+     0.35
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.5
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.65
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     4
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1PartPct": [
+     0,
+     0.25
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 39992851536259959,
+   "score_jan_jun": 6.334398848092153,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 0,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": -18858.4,
+    "pf": 0.77,
+    "wr": 48.490834992846246,
+    "n": 120,
+    "dd": 27472.4,
+    "net_dd": -0.6864489451231054,
+    "months": {
+     "2026.07": -2584.0,
+     "2026.08": 7418.8,
+     "2026.09": -14152.0,
+     "2026.10": -9541.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 41806049220927615,
+   "score_jan_jun": 6.321994148847608,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 40,
+    "InpWickMin": 0.55,
+    "InpBodyMax": 0.6,
+    "InpMinRangeAtr": 0.75,
+    "InpLongRule": 2,
+    "InpShortLine": 2,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.05,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 8,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.25,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 994.8,
+    "pf": 1.01,
+    "wr": 42.78367353427565,
+    "n": 204,
+    "dd": 49354.2,
+    "net_dd": 0.020156339278116147,
+    "months": {
+     "2026.07": 26559.5,
+     "2026.08": 3118.5,
+     "2026.09": -16124.0,
+     "2026.10": -12559.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     40
+    ],
+    "InpWickMin": [
+     0.45,
+     0.55
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.75
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.05
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     8
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1PartPct": [
+     0,
+     0.25
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 17771531855252176,
+   "score_jan_jun": 6.316355318337781,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.35,
+    "InpBodyMax": 0.5,
+    "InpMinRangeAtr": 0.65,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 4,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": -2544.6,
+    "pf": 0.97,
+    "wr": 48.228216449689114,
+    "n": 114,
+    "dd": 24739.0,
+    "net_dd": -0.10285783580581268,
+    "months": {
+     "2026.07": -12343.2,
+     "2026.08": 16956.8,
+     "2026.09": -3721.0,
+     "2026.10": -3437.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpWickMin": [
+     0.45,
+     0.35
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.5
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.65
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     4
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 41844627910652176,
+   "score_jan_jun": 6.298560669007478,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.35,
+    "InpBodyMax": 0.5,
+    "InpMinRangeAtr": 0.65,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 4,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.25,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 15594.1,
+    "pf": 1.13,
+    "wr": 43.75581417113809,
+    "n": 182,
+    "dd": 30584.7,
+    "net_dd": 0.5098660441331777,
+    "months": {
+     "2026.07": 20446.5,
+     "2026.08": 13844.3,
+     "2026.09": -10633.5,
+     "2026.10": -8063.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpWickMin": [
+     0.45,
+     0.35
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.5
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.65
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     4
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1PartPct": [
+     0,
+     0.25
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 39992850598259063,
+   "score_jan_jun": 6.232576790440292,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 40,
+    "InpWickMin": 0.4,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 1,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 3,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.05,
+    "InpSessFrom": 0,
+    "InpSessTo": 18,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 26348.0,
+    "pf": 1.17,
+    "wr": 45.00516032284056,
+    "n": 212,
+    "dd": 26430.0,
+    "net_dd": 0.9968974650018918,
+    "months": {
+     "2026.07": 25012.0,
+     "2026.08": 18652.0,
+     "2026.09": -11658.0,
+     "2026.10": -5658.0
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     40
+    ],
+    "InpWickMin": [
+     0.45,
+     0.4
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.05
+    ],
+    "InpSessTo": [
+     24,
+     18
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 5731768545636651,
+   "score_jan_jun": 6.116282484216709,
+   "p": {
+    "InpEmaFast": 10,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.55,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.45,
+    "InpLongRule": 1,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 3,
+    "InpMaxRiskUsd": 20.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 10,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 0,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 4,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": -21127.2,
+    "pf": 0.79,
+    "wr": 65.59134852905078,
+    "n": 186,
+    "dd": 26129.2,
+    "net_dd": -0.808566661053534,
+    "months": {
+     "2026.07": -9246.0,
+     "2026.08": -4021.2,
+     "2026.09": -4678.0,
+     "2026.10": -3182.0
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     10
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpWickMin": [
+     0.45,
+     0.55
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.45
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     10
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1LockAt": [
+     0,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 14310595331601052,
+   "score_jan_jun": 6.08706865469045,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 48,
+    "InpWickMin": 0.4,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.45,
+    "InpLongRule": 2,
+    "InpShortLine": 2,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 3,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.05,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 0,
+    "InpAtrMaxUsd": 20,
+    "InpRangeLook": 10,
+    "InpRangeLookS": 9,
+    "InpBandOff": 1,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.25,
+    "InpX1LockAt": 8,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 33880.9,
+    "pf": 1.21,
+    "wr": 39.03453708312593,
+    "n": 224,
+    "dd": 29880.7,
+    "net_dd": 1.1338723657745635,
+    "months": {
+     "2026.07": 20444.6,
+     "2026.08": 15881.8,
+     "2026.09": -10721.0,
+     "2026.10": 8275.5
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     48
+    ],
+    "InpWickMin": [
+     0.45,
+     0.4
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.45
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.05
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     20
+    ],
+    "InpRangeLook": [
+     7,
+     10
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1PartPct": [
+     0,
+     0.25
+    ],
+    "InpX1LockAt": [
+     0,
+     8
+    ]
+   }
+  },
+  {
+   "pass": 17771532108959063,
+   "score_jan_jun": 6.08377065111759,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 40,
+    "InpWickMin": 0.4,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 1,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 3,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.05,
+    "InpSessFrom": 6,
+    "InpSessTo": 24,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": -1503.4,
+    "pf": 0.99,
+    "wr": 45.79666328363698,
+    "n": 195,
+    "dd": 38948.2,
+    "net_dd": -0.038599986648933715,
+    "months": {
+     "2026.07": -10322.2,
+     "2026.08": 4666.0,
+     "2026.09": 8228.8,
+     "2026.10": -4076.0
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     40
+    ],
+    "InpWickMin": [
+     0.45,
+     0.4
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.05
+    ],
+    "InpSessFrom": [
+     0,
+     6
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 12216201937432529,
+   "score_jan_jun": 6.078121151046915,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 2,
+    "InpShortLine": 2,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 3,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 8,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 9340.4,
+    "pf": 1.1,
+    "wr": 37.64317838998143,
+    "n": 133,
+    "dd": 29302.4,
+    "net_dd": 0.3187588729933384,
+    "months": {
+     "2026.07": 1196.8,
+     "2026.08": 10272.8,
+     "2026.09": 6626.0,
+     "2026.10": -8755.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     8
+    ]
+   }
+  },
+  {
+   "pass": 39992851268447274,
+   "score_jan_jun": 6.052087765149213,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.5,
+    "InpMinRangeAtr": 0.65,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 5,
+    "InpMaxRiskUsd": 12.5,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 36173.6,
+    "pf": 1.43,
+    "wr": 42.79442115733217,
+    "n": 134,
+    "dd": 22622.0,
+    "net_dd": 1.5990451772610732,
+    "months": {
+     "2026.07": 23732.0,
+     "2026.08": 19014.8,
+     "2026.09": 1174.0,
+     "2026.10": -7747.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.5
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.65
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     5
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     12.5
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 11280668950676882,
+   "score_jan_jun": 6.022967374417401,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 32,
+    "InpWickMin": 0.5,
+    "InpBodyMax": 0.55,
+    "InpMinRangeAtr": 0.45,
+    "InpLongRule": 1,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 4,
+    "InpMaxRiskUsd": 20.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 10,
+    "InpRangeLook": 7,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 0,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 8,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 18327.0,
+    "pf": 1.26,
+    "wr": 57.28153497499791,
+    "n": 103,
+    "dd": 21155.0,
+    "net_dd": 0.8663200189080595,
+    "months": {
+     "2026.07": 11652.0,
+     "2026.08": 2268.0,
+     "2026.09": -2625.0,
+     "2026.10": 7032.0
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpWickMin": [
+     0.45,
+     0.5
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.55
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.45
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpBreakPips": [
+     3,
+     4
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     10
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1LockAt": [
+     0,
+     8
+    ]
+   }
+  },
+  {
+   "pass": 17763823131991154,
+   "score_jan_jun": 5.9925877763329,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 2,
+    "InpShortLine": 1,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 18,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 2.0,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 2,
+    "InpAtrMaxUsd": 20,
+    "InpRangeLook": 7,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 73976.0,
+    "pf": 1.85,
+    "wr": 42.21538576641654,
+    "n": 134,
+    "dd": 30532.0,
+    "net_dd": 2.4229005633433776,
+    "months": {
+     "2026.07": 26296.0,
+     "2026.08": 59164.0,
+     "2026.09": -3552.0,
+     "2026.10": -7932.0
+    },
+    "err": null
+   },
+   "year": [
+    {
+     "net": 152398.0,
+     "pf": 2.27,
+     "wr": 49.239606029293824,
+     "n": 204,
+     "dd": 24092.0,
+     "net_dd": 6.325668271625436,
+     "months": {
+      "2026.01": 12446.0,
+      "2026.02": 8910.0,
+      "2026.03": 23666.0,
+      "2026.04": 21900.0,
+      "2026.05": 14264.0,
+      "2026.06": -1346.0,
+      "2026.07": 26602.0,
+      "2026.08": 58460.0,
+      "2026.09": -5690.0,
+      "2026.10": -6814.0
+     },
+     "err": null
+    },
+    {
+     "net": 134840.0,
+     "pf": 2.09,
+     "wr": 45.96076458256258,
+     "n": 204,
+     "dd": 26822.0,
+     "net_dd": 5.027216464096637,
+     "months": {
+      "2026.01": -5816.0,
+      "2026.02": 9002.0,
+      "2026.03": 23448.0,
+      "2026.04": 21260.0,
+      "2026.05": 13890.0,
+      "2026.06": -1652.0,
+      "2026.07": 25500.0,
+      "2026.08": 57194.0,
+      "2026.09": -5870.0,
+      "2026.10": -2116.0
+     },
+     "err": null
+    }
+   ],
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     18
+    ],
+    "InpSlAtrMult": [
+     1.6,
+     2.0
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     2
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     20
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 17765103132800654,
+   "score_jan_jun": 5.965495579339228,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 2,
+    "InpShortLine": 2,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 2,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 30,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 7,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 22488.8,
+    "pf": 1.27,
+    "wr": 39.63972686162175,
+    "n": 111,
+    "dd": 19990.0,
+    "net_dd": 1.1250025012506253,
+    "months": {
+     "2026.07": 12456.0,
+     "2026.08": 2628.0,
+     "2026.09": 9886.0,
+     "2026.10": -2481.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpBreakPips": [
+     3,
+     2
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpHtfMin": [
+     0,
+     30
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 17771531854400675,
+   "score_jan_jun": 5.96367895065584,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 36,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 2,
+    "InpShortLine": 2,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 2,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": -9806.4,
+    "pf": 0.9,
+    "wr": 46.19156348804202,
+    "n": 132,
+    "dd": 30745.2,
+    "net_dd": -0.318957105499395,
+    "months": {
+     "2026.07": -7147.2,
+     "2026.08": 3774.0,
+     "2026.09": 8484.0,
+     "2026.10": -14917.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     36
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpBreakPips": [
+     3,
+     2
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 17771531591491126,
+   "score_jan_jun": 5.951445384648425,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 36,
+    "InpWickMin": 0.4,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 2,
+    "InpShortLine": 1,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 72154.8,
+    "pf": 1.59,
+    "wr": 47.90298087608532,
+    "n": 198,
+    "dd": 25715.2,
+    "net_dd": 2.8059202339472376,
+    "months": {
+     "2026.07": 51344.0,
+     "2026.08": 23752.0,
+     "2026.09": -588.0,
+     "2026.10": -2353.2
+    },
+    "err": null
+   },
+   "year": [
+    {
+     "net": 166074.4,
+     "pf": 1.69,
+     "wr": 47.20491441640179,
+     "n": 376,
+     "dd": 26591.2,
+     "net_dd": 6.245464665001955,
+     "months": {
+      "2026.01": 112.8,
+      "2026.02": 19560.0,
+      "2026.03": 17604.0,
+      "2026.04": 40060.0,
+      "2026.05": 14085.8,
+      "2026.06": 8513.0,
+      "2026.07": 49558.0,
+      "2026.08": 20214.0,
+      "2026.09": -1086.0,
+      "2026.10": -2547.2
+     },
+     "err": null
+    },
+    {
+     "net": 193178.4,
+     "pf": 1.82,
+     "wr": 46.437584806686715,
+     "n": 376,
+     "dd": 27579.2,
+     "net_dd": 7.004496142020073,
+     "months": {
+      "2026.01": 18996.8,
+      "2026.02": 21138.0,
+      "2026.03": 17402.0,
+      "2026.04": 41182.0,
+      "2026.05": 16237.8,
+      "2026.06": 7781.0,
+      "2026.07": 49626.0,
+      "2026.08": 24836.0,
+      "2026.09": -1972.0,
+      "2026.10": -2049.2
+     },
+     "err": null
+    }
+   ],
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     36
+    ],
+    "InpWickMin": [
+     0.45,
+     0.4
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 17771531856259959,
+   "score_jan_jun": 5.949782943565327,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 0,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 8,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": -10150.4,
+    "pf": 0.88,
+    "wr": 46.66463708552147,
+    "n": 120,
+    "dd": 30599.2,
+    "net_dd": -0.3317210907474705,
+    "months": {
+     "2026.07": -5632.0,
+     "2026.08": 12136.8,
+     "2026.09": -7428.0,
+     "2026.10": -9227.2
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessFrom": [
+     0,
+     8
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  },
+  {
+   "pass": 39992851788959063,
+   "score_jan_jun": 5.880620343375445,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 40,
+    "InpWickMin": 0.4,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 1,
+    "InpShortLine": 2,
+    "InpTouchPips": 3,
+    "InpBreakBars": 1,
+    "InpBreakPips": 3,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.05,
+    "InpSessFrom": 6,
+    "InpSessTo": 24,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": -9928.2,
+    "pf": 0.93,
+    "wr": 44.82114663720275,
+    "n": 195,
+    "dd": 38520.2,
+    "net_dd": -0.2577400948073998,
+    "months": {
+     "2026.07": -9064.2,
+     "2026.08": 5996.0,
+     "2026.09": -1774.0,
+     "2026.10": -5086.0
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     40
+    ],
+    "InpWickMin": [
+     0.45,
+     0.4
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpLongRule": [
+     2,
+     1
+    ],
+    "InpShortLine": [
+     1,
+     2
+    ],
+    "InpTouchPips": [
+     1,
+     3
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.05
+    ],
+    "InpSessFrom": [
+     0,
+     6
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 41844627912854334,
+   "score_jan_jun": 5.832047397047397,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.65,
+    "InpMinRangeAtr": 0.35,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 1,
+    "InpBreakBars": 1,
+    "InpBreakPips": 3,
+    "InpMaxRiskUsd": 17.5,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.25,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 4
+   },
+   "fwd": {
+    "net": 29038.1,
+    "pf": 1.21,
+    "wr": 46.90517153662117,
+    "n": 215,
+    "dd": 27664.2,
+    "net_dd": 1.0496634639714866,
+    "months": {
+     "2026.07": 20825.0,
+     "2026.08": 18735.3,
+     "2026.09": 600.5,
+     "2026.10": -11122.7
+    },
+    "err": null
+   },
+   "year": null,
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.65
+    ],
+    "InpMinRangeAtr": [
+     0.55,
+     0.35
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     17.5
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1PartPct": [
+     0,
+     0.25
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ],
+    "InpX1LockUsd": [
+     2,
+     4
+    ]
+   }
+  },
+  {
+   "pass": 17771531591478904,
+   "score_jan_jun": 5.820974689057736,
+   "p": {
+    "InpEmaFast": 12,
+    "InpEmaSlow": 24,
+    "InpWickMin": 0.45,
+    "InpBodyMax": 0.7,
+    "InpMinRangeAtr": 0.55,
+    "InpLongRule": 0,
+    "InpShortLine": 1,
+    "InpTouchPips": 0,
+    "InpBreakBars": 1,
+    "InpBreakPips": 6,
+    "InpMaxRiskUsd": 15.0,
+    "InpChopEr": 0.1,
+    "InpSessFrom": 0,
+    "InpSessTo": 22,
+    "InpHtfMin": 0,
+    "InpSlAtrMult": 1.6,
+    "InpAdxMin": 20,
+    "InpAtrMinUsd": 3,
+    "InpAtrMaxUsd": 25,
+    "InpRangeLook": 8,
+    "InpRangeLookS": 9,
+    "InpBandOff": 0,
+    "InpX1BeUsd": 8,
+    "InpX1PartPct": 0.0,
+    "InpX1LockAt": 12,
+    "InpX1LockUsd": 2
+   },
+   "fwd": {
+    "net": 59323.6,
+    "pf": 1.57,
+    "wr": 45.77325223833157,
+    "n": 178,
+    "dd": 26891.2,
+    "net_dd": 2.206059975010412,
+    "months": {
+     "2026.07": 28598.0,
+     "2026.08": 24840.8,
+     "2026.09": 8758.0,
+     "2026.10": -2873.2
+    },
+    "err": null
+   },
+   "year": [
+    {
+     "net": 180736.4,
+     "pf": 1.85,
+     "wr": 47.527562372147756,
+     "n": 331,
+     "dd": 28553.2,
+     "net_dd": 6.329812420324166,
+     "months": {
+      "2026.01": 20232.8,
+      "2026.02": 16504.0,
+      "2026.03": 21770.0,
+      "2026.04": 31662.0,
+      "2026.05": 23073.0,
+      "2026.06": 7389.0,
+      "2026.07": 29682.0,
+      "2026.08": 26746.8,
+      "2026.09": 6344.0,
+      "2026.10": -2667.2
+     },
+     "err": null
+    },
+    {
+     "net": 172386.4,
+     "pf": 1.82,
+     "wr": 47.85307028853355,
+     "n": 331,
+     "dd": 24269.2,
+     "net_dd": 7.10309363308226,
+     "months": {
+      "2026.01": 20102.8,
+      "2026.02": 18134.0,
+      "2026.03": 21694.0,
+      "2026.04": 32316.0,
+      "2026.05": 21373.0,
+      "2026.06": 8399.0,
+      "2026.07": 27848.0,
+      "2026.08": 29434.8,
+      "2026.09": -4434.0,
+      "2026.10": -2481.2
+     },
+     "err": null
+    }
+   ],
+   "diff_vs_v126": {
+    "InpEmaFast": [
+     16,
+     12
+    ],
+    "InpEmaSlow": [
+     32,
+     24
+    ],
+    "InpBodyMax": [
+     0.6,
+     0.7
+    ],
+    "InpLongRule": [
+     2,
+     0
+    ],
+    "InpTouchPips": [
+     1,
+     0
+    ],
+    "InpBreakPips": [
+     3,
+     6
+    ],
+    "InpMaxRiskUsd": [
+     20,
+     15.0
+    ],
+    "InpChopEr": [
+     0,
+     0.1
+    ],
+    "InpSessTo": [
+     24,
+     22
+    ],
+    "InpAdxMin": [
+     30,
+     20
+    ],
+    "InpAtrMinUsd": [
+     0,
+     3
+    ],
+    "InpAtrMaxUsd": [
+     0,
+     25
+    ],
+    "InpRangeLook": [
+     7,
+     8
+    ],
+    "InpRangeLookS": [
+     7,
+     9
+    ],
+    "InpBandOff": [
+     1,
+     0
+    ],
+    "InpX1BeUsd": [
+     0,
+     8
+    ],
+    "InpX1LockAt": [
+     0,
+     12
+    ]
+   }
+  }
+ ]
+}
