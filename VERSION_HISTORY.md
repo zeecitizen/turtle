@@ -16,6 +16,32 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min_view (2026-10-20) — TOOL: v1.27 + an export, the engine of Turtle TV
+
+Zee: *"i want to build a tradingview's copy web app which can show the entire year's candles and my MT5 EA's code applied to the candles"* ·
+*"yes, do your best"* · *"i make a settings change on tradingview -> our tradingview call it "turtle tv" picks up the new settings ... export to
+MT5 button ... publishes the result below the chart on turtle tv"* · *"make TV generate a json turtle can read, and turtle export a json the
+mt5 EA maker can read"*
+
+- `mt5/Saad_strategy_15min_view.mq5`, magic **88316**. **TOOL, never attach** (Strategy Tester only).
+  - Generated from v1.27 VERBATIM by `monitor/saad_view/make_view_ea.py`; re-run it after any change to Saad_strategy_15min.
+  - Adds only `InpExport` / `InpExportTag`, which write every closed candle (OHLC, the EA's own EMAs, ADX, ATR) and every decision to
+    `Common\Files`: setup, skip + reason, entry, exit + reason, stand-aside ghost start / end with its would-have price.
+- **Trading identical:** Blueberry Jan 1 – Oct 17, no delay, **+$242,911, PF 2.67, 198 trades, DD $28,320**. That's v1.27's own run on
+  the same data to the dollar. Random delay: +$250,031, PF 2.81, 197 trades. A year takes 45–60 s.
+- **Turtle TV** (`monitor/saad_view/`, http://127.0.0.1:8773, start with `start_turtle_tv.bat`, see its README):
+  - the whole year's candles with MT5's trades, drawn with TradingView's open-source Lightweight Charts 5.0.9;
+  - the results below the chart: overview + equity, months, weekdays, range boxes, list of trades, why no trade;
+  - "EA settings → Run in MT5";
+  - TradingView link: "take settings" / "follow TradingView" read the Saad indicator through the compare page's reader;
+  - "Export to MT5": a `turtle-settings/1` JSON with MT5's result, plus the preset `Saad_strategy_15min_TurtleTV.set` in every MT5
+    terminal that has the EA;
+  - EA maker: `make_ea_from_settings.py <json> --out <name>` writes an EA whose defaults are those settings.
+- **First finding: Zee's chart had drifted from v1.27.** The SELL boxes 35–40% and 80–85% were ticked: `111111110010001011110` vs
+  `111111100010001001110`. Random delay, full year:
+  - the chart's settings: +$234,987, PF 2.47, 215 trades;
+  - v1.27: +$250,031, PF 2.81, 197 trades.
+
 ## Saad_strategy_15min_tvbars v1.00 (2026-10-20) — TEST: v1.27 on the TradingView chart's own candles
 
 Zee: *"ok, make the EA read TradingView's own candles, and give me MT5 result for Aug,Sept, Oct"* (after *"we dont want matching to the cent, we want matching winrates"*).
