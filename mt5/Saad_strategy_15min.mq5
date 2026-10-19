@@ -34,11 +34,13 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.26"
+#property version   "1.27"
 #property strict
 
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
+// v1.27 (Zee 2026-10-19: "keep nose 0.35"): InpNoseMax 0.20 -> 0.35 - every other v1.26 setting unchanged. MT5 full year: nose 0.30-0.45
+//       all +$244-248k, PF 2.74-2.79, DD $28.3k (v1.26 +$211k, PF 2.52, DD $35k); about $24k of the gain is one trade (Mar 31 BUY)
 // v1.26 (Zee 2026-10-19: "make our chart setup PF 2.53 be the next version of saad_ea_15min"): the chart setup as DEFAULTS -
 // EMA 16/32, break 3, ATR stop 1.6x, ADX 30, no chop / max risk, next-EMA exit, range boxes + stand aside, 2 lots.
 // Built from the TEST copy (Zee 2026-10-19: "take the current settings from tradingview and test them in MT5 on saad_ea_15min (just test, if
@@ -53,7 +55,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad15 v1.26"
+#define EA_COMMENT "Saad15 v1.27"
 
 //--- the two lines
 input int    InpEmaFast     = 16;      // InpEmaFast
@@ -63,7 +65,7 @@ input bool   InpShowEmas    = true;   // InpShowEmas — draw the two EMAs on th
 //--- ① setup candle
 input double InpWickMin     = 0.45;   // InpWickMin — pin: long wick >= this x range [v1.13: 0.35->0.45]
 input double InpBodyMax     = 0.6;   // InpBodyMax — pin: body <= this x range
-input double InpNoseMax     = 0.2;   // InpNoseMax — pin: short wick <= this x range
+input double InpNoseMax     = 0.35;   // InpNoseMax — pin: short wick <= this x range [v1.27: 0.20 -> 0.35]
 input bool   InpPinDir      = false;  // InpPinDir — pin must point the trade way (false = any pin, the EMA decides)
 input bool   InpPinColor    = false;  // InpPinColor — pin body must close the trade way too: LONG green, SHORT red (with InpPinDir)
 input bool   InpUsePin      = true;   // InpUsePin — accept pin bars
@@ -272,7 +274,7 @@ int OnInit()
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
-   PrintFormat("[SAAD-15min] v1.26 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
+   PrintFormat("[SAAD-15min] v1.27 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
                _Symbol, (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL), (int)SymbolInfoInteger(_Symbol, SYMBOL_TRADE_FREEZE_LEVEL),
                (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD), InpSlPips, InpMaxRiskUsd, InpChopEr, InpChopErLook, InpSessFrom, InpSessTo,
                InpTrail ? "on" : "off", InpTrailN, InpRide ? "on" : "off", InpMaxPos);
