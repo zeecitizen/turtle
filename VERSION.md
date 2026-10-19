@@ -18,6 +18,9 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 |---|---|---|---|---|---|
 | **Saad 15-min** | `Saad_strategy_15min.mq5` | 88302 | **v1.27** (2026-10-19) | XAUUSD M15, 2 lots | **READY** (compiled in the Blueberry terminal): v1.26 + nose 0.35 - MT5 full year +$250,919 / +$253,195, PF 2.80 / 2.85, DD $28.3k. Folder `v1.27/`. LIVE elsewhere is still v1.17 / v1.23 |
 | Saad 15-min chart test | `Saad_strategy_15min_chart_test.mq5` | 88306 | v1.00 (2026-10-19) | XAUUSD M15 | **TEST, never attach**: v1.25 + the indicator's range boxes and "stand aside" ghost - to test Zee's TradingView settings in MT5 |
+| Saad 15-min on the chart's candles | `Saad_strategy_15min_tvbars.mq5` (+ `monitor/saad_compare/tv_bars_bridge.py`; built by `monitor/strategy_lab/make_tvbars_ea.py`) | 88309 | v1.00 (2026-10-20) | XAUUSD M15 | **TEST, never attach**: v1.27 on the TradingView chart's own 15-min candles - Aug 3 - Oct 16: all 57 chart trades taken, 52 with the same result; WR Aug 71% / Sep 68% / Oct 83% (chart 75 / 83 / 92) |
+| Saad 15-min v128test | `Saad_strategy_15min_v128test.mq5` | 88308 | 2026-10-19 | XAUUSD M15 | **TEST, never attach**: v1.27 + no setup on the exit candle / minimum distance of the target EMA - neither beats v1.27 |
+| Saad 15-min betest | `Saad_strategy_15min_betest.mq5` | 88307 | 2026-10-19 | XAUUSD M15 | **TEST, never attach**: v1.26 + breakeven / partial / fixed-$ target / profit-lock options - all cut profit |
 | Saad 15-min + pyramiding | `Saad_strategy_15min_pyramiding_max_3.mq5` | 88330 | v1.01 (2026-10-13) | XAUUSD M15 | READY, demo first (bigger risk) |
 | Saad 5-min | `Saad_strategy_5min.mq5` | 88320 | v1.01 (2026-10-13) | XAUUSD M5 | READY, demo first: SELL ONLY, small edge |
 | Small-account tiers | `EA_20USD … EA_200USD.mq5` | 88310–88314 | v1.14 base (2026-10-12) | XAUUSD M15 | READY ($80+ only) |
@@ -82,6 +85,24 @@ safe to attach · **BUILT** = exists, not attached · **TEST** = test copy, neve
 | Version | Date | What changed | Result / note |
 |---|---|---|---|
 | **v1.00** | 2026-10-19 | Saad_strategy_15min v1.25 + the indicator's TOP / BOTTOM range boxes (`InpRangeLook/S`, `InpBandsB/S`) and `InpBandOff` 1 = "stand aside while it would have run" (a ghost trade with the same stop and exit, no order, no new trade until it ends); close-back exits wait for the candle after the entry candle (as the indicator) | All off = v1.25 (+$127,425.40 / 1,257 deals). Zee's chart settings (EMA 16/32, ATR stop 1.6x, ADX 30, next-EMA exit, boxes + stand aside, 2 lots), full year random delay: **+$228,316, PF 1.92, WR 51%, 247 trades, DD $52,950 (23%)**, Jan -$40.5k; plain v1.23 at 2 lots +$250,315, PF 1.32, DD 11% |
+
+## Saad_strategy_15min_tvbars (magic 88309, XAUUSD M15) — TEST
+
+| Version | Date | What changed | Result / note |
+|---|---|---|---|
+| **v1.00** | 2026-10-20 | v1.27 on the TradingView chart's own 15-min candles (`InpBarSource` 1, bridge file `tv_bars_XAUUSD_M15.csv`): the chart's candle clock (Monday 01:01), EMAs, ATR, ADX (the indicator's formula) and range boxes; the chart's rules (no setup on a candle that closed with a trade open, stop / risk / target EMA from the chart's entry price, a BUY banks its EMA only above the entry, day-close "in loss" on the chart's entry); `InpTvVerdict` = the chart's candle decides cents disagreements; `InpBlindEntryBar` diagnostic | Blueberry ticks Aug 3 - Oct 16, no delay: **all 57 chart trades taken, 52 same result; WR Aug 71% / Sep 68% / Oct 1-16 83%** (chart 75 / 83 / 92; v1.27 on MT5's candles 48 / 58 / 67). +$125,428, PF 7.03. Blind diagnostic = chart: 75 / 76 / 92%, 55 of 57. The rest = TradingView has no 1-minute data before Oct 12 |
+
+## Saad_strategy_15min_v128test (magic 88308, XAUUSD M15) — TEST
+
+| Version | Date | What changed | Result / note |
+|---|---|---|---|
+| - | 2026-10-19 | v1.27 + `InpNoEntryExitBar` (no setup on a candle that closed while a trade / ghost was open) + `InpNxMinPips` (the target EMA must be at least N pips beyond the entry) | Full year, random delay, 2 runs: v1.27 +$246,885 / +$239,177; no-exit-candle +$208,888 / +$204,096 (PF 2.70 / 2.64; March $42k lower); 5-pip target +$237,769 / +$238,151. Neither shipped |
+
+## Saad_strategy_15min_betest (magic 88307, XAUUSD M15) — TEST
+
+| Version | Date | What changed | Result / note |
+|---|---|---|---|
+| - | 2026-10-19 | v1.26 + breakeven at +$X / at a % of the way, partial close at TP1, $ trail, fixed +$X target, profit lock | Partials and %-breakeven ~no change; $8 breakeven PF 2.71 but -$22k; fixed +$X targets / locks all cut profit hard (close at +$8: +$53k). The EMA target stays |
 
 ## Saad_strategy_15min_pyramiding_max_3 (magic 88330, XAUUSD M15)
 

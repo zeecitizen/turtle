@@ -1,0 +1,5 @@
+v1.27 (rule off) #1: net +0 PF 0.00 WR 0.0% trades 0 days-with-trades 0 (green 0) DD 0 | Jan-Jun +0 Jul-Oct +0 | red []
+BUY banks the EMA only above the entry #1: net +248,355 PF 2.79 WR 52.3% trades 197 days-with-trades 126 (green 62) DD 28,320 | Jan-Jun +157,557 Jul-Oct +90,798 | red ['06']
+v1.27 (rule off) #2: net +246,285 PF 2.76 WR 54.0% trades 197 days-with-trades 126 (green 66) DD 28,320 | Jan-Jun +154,859 Jul-Oct +91,426 | red ['06']
+BUY banks the EMA only above the entry #2: net +244,757 PF 2.75 WR 52.9% trades 197 days-with-trades 126 (green 67) DD 30,420 | Jan-Jun +154,151 Jul-Oct +90,606 | red ['06']
+DONE
