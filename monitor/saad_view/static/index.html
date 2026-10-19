@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turtle TV</title>
+<style>
+  :root {
+    --bg: #131722; --panel: #1e222d; --line: #2a2e39; --text: #d1d4dc; --muted: #787b86; --up: #26a69a; --down: #ef5350;
+    --win: #00e676; --loss: #ff5252; --accent: #2962ff; --warn: #ffb74d;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.4 -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header { flex: none; min-height: 46px; display: flex; align-items: center; gap: 10px; padding: 6px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .brand { font-weight: 800; font-size: 16px; letter-spacing: .02em; }
+  .brand b { color: var(--up); }
+  .brand small { font-weight: 400; color: var(--muted); margin-left: 6px; font-size: 12px; }
+  select, input, button { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 4px 8px; }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.go { background: #089981; border-color: #089981; color: #fff; font-weight: 600; }
+  button:disabled { opacity: .5; cursor: default; }
+  .grp { display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; border: 1px solid var(--line); border-radius: 6px; }
+  label.tog { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+  label.tog input { margin: 0; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .dot.ok { background: var(--win); } .dot.bad { background: var(--loss); }
+  #status { color: var(--muted); font-size: 12px; }
+  #status.busy { color: var(--warn); } #status.err { color: var(--loss); }
+  #chartWrap { position: relative; flex: 1 1 60%; min-height: 300px; }
+  #chart { position: absolute; inset: 0; }
+  #legend { position: absolute; left: 10px; top: 6px; z-index: 5; pointer-events: none; font-size: 12px; max-width: 75%; text-shadow: 0 0 3px var(--bg), 0 0 3px var(--bg); }
+  #legend .ev { margin-top: 2px; }
+  #legend .k { color: var(--muted); }
+  #results { flex: 0 0 38%; min-height: 220px; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+  #resHead { display: flex; align-items: center; gap: 4px; border-bottom: 1px solid var(--line); flex-wrap: wrap; padding-right: 10px; }
+  #resHead .title { font-weight: 700; padding: 0 12px; }
+  #resHead .run { color: var(--muted); font-size: 12px; margin-left: auto; }
+  nav button { background: none; border: 0; border-radius: 0; padding: 9px 10px; color: var(--muted); }
+  nav button.on { color: var(--text); box-shadow: inset 0 -2px var(--accent); }
+  #panel { flex: 1; overflow: auto; padding: 10px 14px; }
+  table { border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+  th, td { padding: 4px 9px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 500; position: sticky; top: 0; background: var(--bg); }
+  tr.click { cursor: pointer; }
+  tr.click:hover td { background: var(--panel); }
+  tr.dim td { color: var(--muted); }
+  tr.sel td { background: #2a2e39; }
+  tr.tot td { font-weight: 700; }
+  .pos { color: var(--win); } .neg { color: var(--loss); }
+  .row { display: flex; gap: 22px; flex-wrap: wrap; align-items: flex-start; }
+  .cards { display: grid; grid-template-columns: repeat(4, minmax(110px, 1fr)); gap: 8px; }
+  .card { background: var(--panel); border-radius: 6px; padding: 8px 10px; }
+  .card .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .card .l { color: var(--muted); font-size: 11px; }
+  .note { color: var(--muted); font-size: 12px; margin: 6px 0; max-width: 900px; }
+  .warn { color: var(--warn); font-size: 12px; margin: 3px 0; }
+  h4 { margin: 4px 0 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  #equity { width: 520px; max-width: 100%; height: 170px; }
+  .chips span { display: inline-block; background: var(--panel); border-radius: 10px; padding: 1px 8px; margin: 2px 4px 2px 0; font-size: 11px; }
+  /* settings */
+  #modal { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: none; z-index: 50; align-items: center; justify-content: center; }
+  #modal.open { display: flex; }
+  .dlg { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; width: min(1000px, calc(100% - 32px)); max-height: calc(100% - 48px); display: flex; flex-direction: column; }
+  .dlg .hd { border-bottom: 1px solid var(--line); padding: 10px 14px; }
+  .dlg .body { overflow: auto; padding: 10px 14px; columns: 2 430px; column-gap: 24px; }
+  .igrp { break-inside: avoid; margin-bottom: 12px; }
+  .igrp h5 { margin: 6px 0; color: var(--accent); font-size: 12px; }
+  .inp { display: grid; grid-template-columns: 160px 1fr; gap: 6px; align-items: center; padding: 2px 0; }
+  .inp .n { font-family: Consolas, monospace; font-size: 12px; }
+  .inp.chg .n { color: var(--warn); }
+  .inp.chg .n::after { content: " •"; }
+  .inp input, .inp select { width: 100%; padding: 3px 6px; }
+  .inp .c { grid-column: 1 / -1; color: var(--muted); font-size: 11px; margin: -2px 0 4px; }
+  .dlg footer { border-top: 1px solid var(--line); padding: 10px 14px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #toast { position: fixed; right: 16px; bottom: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; max-width: 520px; display: none; z-index: 60; }
+  @media (max-width: 800px) { #results { flex-basis: auto; } .cards { grid-template-columns: repeat(2, 1fr); } }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Turtle <b>TV</b><small>XAUUSD · Blueberry real ticks · 15 min · every trade from the MT5 Strategy Tester</small></div>
+  <select id="runSel" title="MT5 runs - newest first"></select>
+  <button id="btnDel" title="Delete this run">✕</button>
+  <span class="grp" title="TradingView (the Saad indicator on your open chart)">
+    <span class="dot" id="tvDot"></span>
+    <label class="tog"><input type="checkbox" id="tFollow"> follow TradingView</label>
+    <button id="btnTake" title="Read the indicator's settings now and run them in MT5">take settings</button>
+  </span>
+  <button id="btnSettings">EA settings</button>
+  <button id="btnExport" class="go" title="Write these settings as a preset for Saad_strategy_15min in your MT5 terminals, with a random-delay result">Export to MT5</button>
+  <label class="tog"><input type="checkbox" id="tTrades" checked> trades</label>
+  <label class="tog"><input type="checkbox" id="tGhosts" checked> stand-aside</label>
+  <label class="tog"><input type="checkbox" id="tSetups"> setups</label>
+  <label class="tog"><input type="checkbox" id="tSkips"> skips</label>
+  <select id="tz" title="Time zone"><option value="18000">Pakistan time</option><option value="0">UTC</option></select>
+  <input id="jump" placeholder="go to 2026-03-31" size="13">
+  <span id="status"></span>
+</header>
+<section id="chartWrap"><div id="legend"></div><div id="chart"></div></section>
+<section id="results">
+  <div id="resHead">
+    <span class="title">MT5 Strategy Tester</span>
+    <nav id="tabs">
+      <button data-t="overview" class="on">Overview</button><button data-t="months">Months</button><button data-t="weekdays">Weekdays</button>
+      <button data-t="range">Range boxes</button><button data-t="trades">List of trades</button><button data-t="skips">Why no trade</button>
+    </nav>
+    <span class="run" id="runInfo"></span>
+  </div>
+  <div id="panel"></div>
+</section>
+<div id="modal">
+  <div class="dlg">
+    <div class="hd"><b>EA settings</b> <span class="note" id="eaName"></span></div>
+    <div class="body" id="form"></div>
+    <footer>
+      <label>From <input id="fFrom" value="2026.01.01" size="10"></label>
+      <label>To <input id="fTo" value="2026.10.17" size="10"></label>
+      <label>Delay <select id="fDelay"><option value="random">random (realistic)</option><option value="none">none (like the chart)</option></select></label>
+      <label>Name <input id="fLabel" placeholder="optional" size="18"></label>
+      <span style="flex:1"></span>
+      <button id="btnReset">Reset to the EA's defaults</button>
+      <button id="btnCancel">Cancel</button>
+      <button id="btnRun" class="primary">Run in MT5</button>
+    </footer>
+  </div>
+</div>
+<div id="toast"></div>
+<script src="/static/lightweight-charts.standalone.production.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
