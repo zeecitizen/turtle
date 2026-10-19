@@ -8,7 +8,7 @@ const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const C = { up: '#26a69a', down: '#ef5350', win: '#00e676', loss: '#ff5252', fast: '#ff9800', slow: '#2962ff', adx: '#b39ddb', muted: '#787b86' };
 let TZ = 18000;                         // display shift: Pakistan time = UTC+5
 let RUN = null, INPUTS = null, RUNS = [], lastSeen = undefined, firstLoad = true;
-let chart, candles, emaF, emaS, adxS, adxLine = null, mk, paths = [], focusLines = [], eqChart = null;
+let chart, candles, emaF, emaS, adxS, adxLine = null, TVL = null, focusLines = [], eqChart = null;
 let TR = [], GH = [], EVB = new Map(), SEL = null, TAB = 'overview';
 const show = { trades: true, ghosts: true, setups: false, skips: false };
 
@@ -59,11 +59,13 @@ function makeChart() {
   emaF = chart.addSeries(LW.LineSeries, { ...quiet, color: C.fast, lineWidth: 2 });
   emaS = chart.addSeries(LW.LineSeries, { ...quiet, color: C.slow, lineWidth: 2 });
   adxS = chart.addSeries(LW.LineSeries, { ...quiet, color: C.adx, lineWidth: 1, lastValueVisible: true }, 1);
-  mk = LW.createSeriesMarkers(candles, []);
+  TVL = new TvLabels();
+  candles.attachPrimitive(TVL);
   chart.subscribeCrosshairMove((p) => { if (RUN) legend(p && p.time != null ? barIdx(p.time - TZ) : RUN.bars.t.length - 1); });
-  chart.subscribeClick((p) => {
-    const id = p && p.hoveredObjectId;
-    if (id && /^[TX]\d+$/.test(id)) { const t = TR.find((x) => x.num === +id.slice(1)); if (t) focusTrade(t); }
+  chart.subscribeClick((p) => {                             // click a trade's entry or exit candle -> that trade
+    if (!RUN || !p || p.logical == null) return;
+    const i = Math.round(p.logical), t = TR.find((x) => x.biIn === i || x.biOut === i);
+    if (t) focusTrade(t);
   });
   requestAnimationFrame(() => { const ps = chart.panes(); if (ps.length > 1) ps[1].setHeight(90); });
 }
@@ -93,36 +95,103 @@ function render() {
   emaF.setData(line(B.ef)); emaS.setData(line(B.es)); adxS.setData(line(B.adx));
   if (adxLine) adxS.removePriceLine(adxLine);
   adxLine = adxS.createPriceLine({ price: parseFloat(RUN.inputs.InpAdxMin) || 0, color: C.muted, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'ADX min' });
-  paths.forEach((s) => chart.removeSeries(s)); paths = [];
-  if (show.trades) for (const t of TR) {                    // one dotted line per trade, entry -> exit
-    if (t.biOut <= t.biIn) continue;
-    const s = chart.addSeries(LW.LineSeries, { priceLineVisible: false, lastValueVisible: false, crosshairMarkerVisible: false, lineWidth: 1, lineStyle: 1,
-      color: t.pnl > 0 ? 'rgba(0,230,118,.9)' : 'rgba(255,82,82,.9)' });
-    s.setData([{ time: T(t.biIn), value: t.en }, { time: T(t.biOut), value: t.ex }]);
-    paths.push(s);
-  }
   markers();
   focusLines.forEach((l) => candles.removePriceLine(l)); focusLines = [];
 }
 
-function markers() {
+// ---------- TradingView-style labels (pine/saad_15min.pine: label.new / line.new), drawn on the chart canvas ----------
+const TVC = { buy: '#2196f3', sell: '#e040fb', tag: 'rgba(54,58,69,0.92)', yel: '#ffeb3b', win: '#00e676', loss: '#f23645', grey: 'rgba(120,123,134,0.8)' };
+const KIND = (k, side) => (k === 1 ? 'pin bar' : k === 2 ? (side > 0 ? 'hammer' : 'shooting star') : 'marubozu');
+function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+// up = TradingView's label_up: the box hangs BELOW (x, y) with its pointer touching y; otherwise label_down (box above)
+function tvTag(ctx, x, y, lines, bg, fg, up, px) {
+  ctx.font = `${px}px "Trebuchet MS", -apple-system, Roboto, Arial, sans-serif`;
+  const lh = Math.round(px * 1.3), pad = Math.round(px * 0.55), pt = Math.max(4, Math.round(px * 0.45));
+  const w = Math.max(...lines.map((l) => ctx.measureText(l).width)) + 2 * pad, h = lines.length * lh + Math.round(pad * 0.8);
+  const bx = Math.round(x - w / 2), by = up ? y + pt : y - pt - h;
+  ctx.fillStyle = bg; rrect(ctx, bx, by, w, h, 3); ctx.fill();
+  ctx.beginPath();
+  if (up) { ctx.moveTo(x - pt, by + 1); ctx.lineTo(x, y); ctx.lineTo(x + pt, by + 1); } else { ctx.moveTo(x - pt, by + h - 1); ctx.lineTo(x, y); ctx.lineTo(x + pt, by + h - 1); }
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  lines.forEach((l, i) => ctx.fillText(l, x, by + Math.round(pad * 0.4) + lh * (i + 0.5)));
+}
+function seg(ctx, x1, y1, x2, y2, color, width, dash) {
+  if ([x1, y1, x2, y2].some((v) => v == null)) return;
+  ctx.setLineDash(dash); ctx.strokeStyle = color; ctx.lineWidth = width;
+  ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.setLineDash([]);
+}
+function tri(ctx, x, y, up, color, s) {
+  ctx.fillStyle = color; ctx.beginPath();
+  if (up) { ctx.moveTo(x, y + 2); ctx.lineTo(x - s, y + 2 + 1.6 * s); ctx.lineTo(x + s, y + 2 + 1.6 * s); } else { ctx.moveTo(x, y - 2); ctx.lineTo(x - s, y - 2 - 1.6 * s); ctx.lineTo(x + s, y - 2 - 1.6 * s); }
+  ctx.closePath(); ctx.fill();
+}
+function drawTv(ctx) {
   if (!RUN) return;
-  const T = (i) => RUN.bars.t[i] + TZ, m = [];
-  if (show.trades) for (const t of TR) {
-    m.push({ time: T(t.biIn), position: 'atPriceMiddle', price: t.en, shape: t.side > 0 ? 'arrowUp' : 'arrowDown', color: t.side > 0 ? C.up : C.down, text: `${t.side > 0 ? 'BUY' : 'SELL'} #${t.num}`, id: 'T' + t.num });
-    m.push({ time: T(t.biOut), position: 'atPriceMiddle', price: t.ex, shape: 'circle', color: t.pnl > 0 ? C.win : C.loss, text: money(t.pnl), size: 0.8, id: 'X' + t.num });
+  const ts = chart.timeScale(), vr = ts.getVisibleLogicalRange();
+  if (!vr) return;
+  const B = RUN.bars, X = (i) => ts.logicalToCoordinate(i), Y = (p) => candles.priceToCoordinate(p);
+  const sp = Math.abs((X(1) ?? 0) - (X(0) ?? 0)), full = sp >= 4.5, lo = Math.floor(vr.from) - 3, hi = Math.ceil(vr.to) + 3;
+  const inView = (i) => i >= lo && i <= hi;
+  const bb = parseInt(RUN.inputs.InpBreakBars || '1', 10);
+  if (show.setups && sp >= 2.5) for (const e of RUN.events) {
+    if (e.type !== 'setup' || !inView(e.bi)) continue;
+    const x = X(e.bi), yh = Y(e.price), yl = Y(e.sl), yb = Y(e.v1);
+    if (x == null || yh == null || yl == null) continue;
+    ctx.fillStyle = 'rgba(255,235,59,0.07)'; ctx.fillRect(x - sp, yh, 2 * sp, yl - yh);
+    ctx.strokeStyle = 'rgba(255,235,59,0.6)'; ctx.lineWidth = 1; ctx.strokeRect(x - sp, yh, 2 * sp, yl - yh);
+    seg(ctx, x, yb, X(e.bi + bb + 1), yb, TVC.yel, 1, [2, 2]);
+    if (full) tvTag(ctx, x, e.side > 0 ? yh : yl, [`${e.side > 0 ? 'long' : 'short'} setup · ${KIND(Math.round(e.v2), e.side)}`], TVC.tag, TVC.yel, e.side < 0, 10);
+  }
+  if (show.skips && full) for (const e of RUN.events) {
+    if (e.type !== 'skip' || !inView(e.bi)) continue;
+    const x = X(e.bi), y = e.side > 0 ? Y(B.h[e.bi]) : Y(B.l[e.bi]);
+    if (x != null && y != null) tvTag(ctx, x, y, ['✖ skip'], 'rgba(120,123,134,0.6)', '#fff', e.side < 0, 9);
   }
   if (show.ghosts) for (const g of GH) {
-    m.push({ time: T(g.biIn), position: g.side > 0 ? 'belowBar' : 'aboveBar', shape: g.side > 0 ? 'arrowUp' : 'arrowDown', color: C.muted, text: 'aside', size: 0.8 });
-    if (g.biOut != null) m.push({ time: T(g.biOut), position: g.side > 0 ? 'aboveBar' : 'belowBar', shape: 'circle', color: '#5d606b', size: 0.5 });
+    if (g.biOut != null ? g.biOut < lo || g.biIn > hi : !inView(g.biIn)) continue;
+    const x1 = X(g.biIn), y1 = Y(g.en);
+    if (g.biOut != null) seg(ctx, x1, y1, X(g.biOut), Y(g.ex), TVC.grey, 1, [2, 3]);
+    const ya = g.side > 0 ? Y(B.l[g.biIn]) : Y(B.h[g.biIn]);
+    if (x1 == null || ya == null) continue;
+    if (full) tvTag(ctx, x1, ya, [`stand aside (${g.side > 0 ? 'BUY' : 'SELL'})`], 'rgba(54,58,69,0.8)', '#9598a1', g.side > 0, 10);
+    else tri(ctx, x1, ya, g.side > 0, TVC.grey, 3);
   }
-  if (show.setups || show.skips) for (const e of RUN.events) {
-    if (show.setups && e.type === 'setup') m.push({ time: T(e.bi), position: e.side > 0 ? 'belowBar' : 'aboveBar', shape: 'square', color: e.side > 0 ? 'rgba(38,166,154,.6)' : 'rgba(239,83,80,.6)', size: 0.5 });
-    if (show.skips && e.type === 'skip') m.push({ time: T(e.bi), position: e.side > 0 ? 'belowBar' : 'aboveBar', shape: 'circle', color: '#9598a1', size: 0.4 });
+  if (!show.trades) return;
+  for (const t of TR) {
+    if (t.biOut < lo || t.biIn > hi) continue;
+    const x1 = X(t.biIn), x2 = X(t.biOut), rc = t.pnl > 0 ? TVC.win : TVC.loss, sel = SEL === t.num;
+    seg(ctx, x1, Y(t.sl), x2 === x1 ? x1 + sp : x2, Y(t.sl), TVC.loss, 2, [6, 4]);                      // the stop: red dashed
+    seg(ctx, x1, Y(t.en), x2, Y(t.ex), rc, sel ? 3 : 2, [2, 3]);                                       // entry -> exit: dotted
+    const ye = Y(t.ex);
+    if (x2 != null && ye != null) {
+      ctx.strokeStyle = rc; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.moveTo(x2 - 3, ye - 3); ctx.lineTo(x2 + 3, ye + 3); ctx.moveTo(x2 + 3, ye - 3); ctx.lineTo(x2 - 3, ye + 3); ctx.stroke();
+    }
   }
-  m.sort((a, b) => a.time - b.time);
-  mk.setMarkers(m);
+  for (const t of TR) {                                       // labels on top of every line
+    if (t.biOut < lo || t.biIn > hi) continue;
+    const x1 = X(t.biIn), x2 = X(t.biOut), rc = t.pnl > 0 ? TVC.win : TVC.loss;
+    const yIn = t.side > 0 ? Y(B.l[t.biIn]) : Y(B.h[t.biIn]), yOut = t.side > 0 ? Y(B.h[t.biOut]) : Y(B.l[t.biOut]);
+    if (x1 != null && yIn != null) {
+      if (full) tvTag(ctx, x1, yIn, [`${t.side > 0 ? '▲ BUY' : '▼ SELL'} #${t.num}`, f2(t.en)], t.side > 0 ? TVC.buy : TVC.sell, '#fff', t.side > 0, 12);
+      else tri(ctx, x1, yIn, t.side > 0, t.side > 0 ? TVC.buy : TVC.sell, 4);
+    }
+    if (full && x2 != null && yOut != null) tvTag(ctx, x2, yOut, [`EXIT #${t.num}`, money(t.pnl)], TVC.tag, rc, t.side < 0, 11);
+  }
 }
+class TvLabels {
+  constructor() { this._views = [{ zOrder: () => 'top', renderer: () => ({ draw: (target) => target.useMediaCoordinateSpace(({ context }) => drawTv(context)) }) }]; }
+  attached({ requestUpdate }) { this._req = requestUpdate; }
+  detached() { this._req = null; }
+  updateAllViews() {}
+  paneViews() { return this._views; }
+  update() { if (this._req) this._req(); }
+}
+function markers() { if (TVL) TVL.update(); }
 
 function evText(e) {
   const S = e.side > 0 ? `<span style="color:${C.up}">BUY</span>` : `<span style="color:${C.down}">SELL</span>`;
@@ -154,6 +223,7 @@ function focusTrade(t) {
     candles.createPriceLine({ price: t.ex, color: t.pnl > 0 ? C.win : C.loss, lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: 'exit ' + money(t.pnl) }),
   ];
   legend(t.biIn);
+  markers();
   if (TAB === 'trades') renderPanel();
 }
 
@@ -350,12 +420,12 @@ $('#btnDel').onclick = async () => {
   await api('/api/delete', { id: RUN.id }); RUN = null; await loadRuns();
 };
 $('#tFollow').onchange = async (e) => {
-  await api('/api/follow', { on: e.target.checked, delay: $('#fDelay').value });
-  toast(e.target.checked ? 'Following TradingView: change a setting on the Saad indicator and Turtle TV runs it in MT5 (it waits 5 s for you to finish).' : 'Stopped following TradingView.');
+  await api('/api/follow', { on: e.target.checked, delay: 'none' });   // tuning: no delay = the same number for the same settings
+  toast(e.target.checked ? 'Following TradingView: change a setting on the Saad indicator and Turtle TV runs it in MT5 with no delay, so only your change moves the number (it waits 5 s for you to finish). Export to MT5 adds the realistic random-delay result.' : 'Stopped following TradingView.');
 };
 $('#btnTake').onclick = async () => {
   setStatus('reading TradingView…', 'busy');
-  const r = await api('/api/tv_take', { delay: $('#fDelay').value });
+  const r = await api('/api/tv_take', { delay: 'none' });
   if (r.error) return toast('⚠ ' + esc(r.error));
   const notes = (r.notes || []).map((n) => `<div class="warn">⚠ ${esc(n)}</div>`).join('');
   if (r.existing) { await loadRuns(r.id); toast('TradingView\'s settings were already run in MT5 - showing that run.' + notes); }
@@ -369,7 +439,7 @@ $('#btnExport').onclick = async () => {
   toast(`<b>Exported.</b> <code>${esc(r.json)}</code> (settings + this MT5 result) and the preset <code>${esc(r.preset)}</code>, in ${terms} MT5 terminal${terms === 1 ? '' : 's'}: EA inputs → Load.` +
     (r.run ? (r.run === RUN.id ? '' : r.existing ? ' The random-delay result already exists - see the runs list.' : ' A random-delay MT5 run started; its result appears below the chart.') : ''), 14000);
 };
-['trades', 'ghosts', 'setups', 'skips'].forEach((k) => ($('#t' + k[0].toUpperCase() + k.slice(1)).onchange = (e) => { show[k] = e.target.checked; if (RUN) { if (k === 'trades') render(); else markers(); } }));
+['trades', 'ghosts', 'setups', 'skips'].forEach((k) => ($('#t' + k[0].toUpperCase() + k.slice(1)).onchange = (e) => { show[k] = e.target.checked; markers(); }));
 $('#tz').onchange = (e) => { TZ = +e.target.value; if (RUN) { const r = chart.timeScale().getVisibleLogicalRange(); render(); renderPanel(); if (r) chart.timeScale().setVisibleLogicalRange(r); } };
 $('#jump').onkeydown = (e) => {
   if (e.key !== 'Enter' || !RUN) return;

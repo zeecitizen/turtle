@@ -54,13 +54,25 @@ HIDE = {"InpExport", "InpExportTag", "InpMagicNumber", "InpVerbose", "InpDraw", 
 RUNS.mkdir(exist_ok=True)
 SETTINGS.mkdir(exist_ok=True)
 STATE = {"busy": False, "id": None, "label": "", "started": None, "phase": "", "error": None, "last": None, "cancel": False, "source": ""}
-FOLLOW = {"on": False, "delay": "random", "connected": False, "err": None, "at": None, "tv": None, "key": None, "changed_at": 0,
+# follow TradingView: delay "none" while tuning, so the same settings always give the same number (Export adds the random-delay result)
+FOLLOW = {"on": False, "delay": "none", "connected": False, "err": None, "at": None, "tv": None, "key": None, "changed_at": 0,
           "pending": None, "msg": ""}
 LOCK = threading.Lock()
 
 
+LOG = HERE / "server.log"
+
+
 def log(msg):
-    print(f"{datetime.now():%H:%M:%S} {msg}", flush=True)
+    """pythonw has no console: everything goes to server.log as well."""
+    line = f"{datetime.now():%Y-%m-%d %H:%M:%S} {msg}"
+    try:
+        with LOG.open("a", encoding="utf-8") as f:
+            f.write(line + "\n")
+    except OSError:
+        pass
+    if sys.stdout:
+        print(line, flush=True)
 
 
 def same(a, b):
@@ -141,13 +153,15 @@ def settings_doc(inputs, notes=None, raw=None, chart=None, result=None):
 
 
 def run_matching(sets, delay):
-    """The newest run that already has exactly these settings (and delay) - no need to run MT5 again."""
+    """The newest run that already has exactly these settings (and delay) - no need to run MT5 again. Every input is compared: the ones
+    not in `sets` must be at the EA's defaults (a run with an extra change from the settings form is not a match)."""
+    dfl = axi_rig.ea_defaults(EA)
     for p in sorted(RUNS.glob("r*.json"), reverse=True):
         try:
             d = json.loads(p.read_text(encoding="utf-8"))
         except Exception:                                   # noqa: BLE001
             continue
-        if d.get("delay") == delay and all(same(d["inputs"].get(k, v), v) for k, v in sets.items()):
+        if d.get("delay") == delay and all(same(v, sets.get(k, dfl.get(k, v))) for k, v in d["inputs"].items()):
             return d["id"]
     return None
 
@@ -283,7 +297,7 @@ def run_job(rid, sets, frm, to, delay, label, notes):
         log(f"run {rid} done: net {rep.get('net')} PF {rep.get('pf')} trades {rep.get('trades')}")
     except Exception as e:                                  # noqa: BLE001
         if str(e) != "cancelled":
-            traceback.print_exc()
+            log("run " + rid + " failed:\n" + traceback.format_exc())
         STATE.update(error=None if str(e) == "cancelled" else str(e), phase="dropped (a newer TradingView change)" if str(e) == "cancelled" else "failed")
         for p in (COMMON / f"saadview_{rid}_bars.csv", COMMON / f"saadview_{rid}_events.csv"):
             p.unlink(missing_ok=True)
@@ -376,6 +390,13 @@ class H(BaseHTTPRequestHandler):
         self.wfile.write(b)
 
     def do_GET(self):
+        try:
+            return self._get()
+        except Exception:                                   # noqa: BLE001
+            log("GET " + self.path + " failed:\n" + traceback.format_exc())
+            return self.send(500, {"error": "server error - see monitor/saad_view/server.log"})
+
+    def _get(self):
         u = urlparse(self.path)
         q = parse_qs(u.query)
         if u.path in ("/", "/index.html"):
@@ -397,7 +418,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send(404, {"error": "no such run"})
             return self.send(200, p.read_bytes())
         if u.path == "/api/status":
-            s = {k: v for k, v in STATE.items()}
+            s = dict(STATE)
             s["elapsed"] = round(time.time() - s["started"]) if s.get("started") and s.get("busy") else None
             s["follow"] = {k: FOLLOW[k] for k in ("on", "delay", "connected", "err", "at", "msg")} | {
                 "notes": (FOLLOW["tv"] or {}).get("notes", []), "symbol": (FOLLOW["tv"] or {}).get("symbol"),
@@ -418,7 +439,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, {"ok": True})
             if u.path == "/api/tv_take":                     # one read of TradingView's settings -> run (or the run that already has them)
                 info = tv_settings()
-                delay = body.get("delay") or "random"
+                delay = body.get("delay") or "none"
                 have = run_matching(info["sets"], delay)
                 if have:
                     return self.send(200, {"id": have, "existing": True, "notes": info["notes"]})
@@ -436,6 +457,7 @@ class H(BaseHTTPRequestHandler):
                     (RUNS / f"{rid}.json").unlink(missing_ok=True)
                 return self.send(200, {"ok": True})
         except Exception as e:                              # noqa: BLE001
+            log("POST " + self.path + " failed:\n" + traceback.format_exc())
             return self.send(500, {"error": str(e)[:400]})
         return self.send(404, {"error": "not found"})
 
