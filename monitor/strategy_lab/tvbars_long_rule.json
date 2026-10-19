@@ -1,0 +1,155 @@
+{
+ "v1.27 (rule off) #1": {
+  "ea": "Saad_strategy_15min_tvbars",
+  "sets": {
+   "InpBarSource": "0",
+   "InpTvVerdict": "false",
+   "InpNoEntryExitBar": "false",
+   "InpBlindEntryBar": "false",
+   "InpLongEmaAbove": "false",
+   "InpLogCsv": "false"
+  },
+  "net": 246295.0,
+  "pf": 2.76,
+  "wr": 53.80706257881262,
+  "n": 197,
+  "dd": 28320.0,
+  "months": {
+   "2026.01": 2420.0,
+   "2026.02": 16070.0,
+   "2026.03": 51641.0,
+   "2026.04": 50296.8,
+   "2026.05": 37136.8,
+   "2026.06": -1640.0,
+   "2026.07": 3595.0,
+   "2026.08": 65237.8,
+   "2026.09": 8496.8,
+   "2026.10": 13040.8
+  },
+  "err": null,
+  "note": "rerun - the first pass returned an empty report"
+ },
+ "BUY banks the EMA only above the entry #1": {
+  "ea": "Saad_strategy_15min_tvbars",
+  "sets": {
+   "InpBarSource": "0",
+   "InpTvVerdict": "false",
+   "InpNoEntryExitBar": "false",
+   "InpBlindEntryBar": "false",
+   "InpLongEmaAbove": "true"
+  },
+  "net": 248355.0,
+  "pf": 2.79,
+  "wr": 52.28434058450354,
+  "n": 197,
+  "dd": 28320.0,
+  "months": {
+   "2026.01": 2982.0,
+   "2026.02": 16468.0,
+   "2026.03": 51955.0,
+   "2026.04": 50216.8,
+   "2026.05": 37024.8,
+   "2026.06": -1090.0,
+   "2026.07": 3413.0,
+   "2026.08": 64691.8,
+   "2026.09": 9098.8,
+   "2026.10": 13594.8
+  },
+  "days": {
+   "days": 126,
+   "green": 62,
+   "red": 60,
+   "worst": -7682.0,
+   "best": 49123.0,
+   "median": 0.0
+  },
+  "h1": 157557,
+  "h2": 90798,
+  "red": [
+   "06"
+  ],
+  "err": null
+ },
+ "v1.27 (rule off) #2": {
+  "ea": "Saad_strategy_15min_tvbars",
+  "sets": {
+   "InpBarSource": "0",
+   "InpTvVerdict": "false",
+   "InpNoEntryExitBar": "false",
+   "InpBlindEntryBar": "false",
+   "InpLongEmaAbove": "false"
+  },
+  "net": 246285.0,
+  "pf": 2.76,
+  "wr": 53.9589224900943,
+  "n": 197,
+  "dd": 28320.0,
+  "months": {
+   "2026.01": 2436.0,
+   "2026.02": 16036.0,
+   "2026.03": 51589.0,
+   "2026.04": 50780.8,
+   "2026.05": 36452.8,
+   "2026.06": -2436.0,
+   "2026.07": 4089.0,
+   "2026.08": 64543.8,
+   "2026.09": 9690.8,
+   "2026.10": 13102.8
+  },
+  "days": {
+   "days": 126,
+   "green": 66,
+   "red": 56,
+   "worst": -7672.0,
+   "best": 49115.0,
+   "median": 116.0
+  },
+  "h1": 154859,
+  "h2": 91426,
+  "red": [
+   "06"
+  ],
+  "err": null
+ },
+ "BUY banks the EMA only above the entry #2": {
+  "ea": "Saad_strategy_15min_tvbars",
+  "sets": {
+   "InpBarSource": "0",
+   "InpTvVerdict": "false",
+   "InpNoEntryExitBar": "false",
+   "InpBlindEntryBar": "false",
+   "InpLongEmaAbove": "true"
+  },
+  "net": 244757.0,
+  "pf": 2.75,
+  "wr": 52.939622116451275,
+  "n": 197,
+  "dd": 30420.0,
+  "months": {
+   "2026.01": 3368.0,
+   "2026.02": 16208.0,
+   "2026.03": 52519.0,
+   "2026.04": 50308.8,
+   "2026.05": 36818.8,
+   "2026.06": -5072.0,
+   "2026.07": 4005.0,
+   "2026.08": 64443.8,
+   "2026.09": 8894.8,
+   "2026.10": 13262.8
+  },
+  "days": {
+   "days": 126,
+   "green": 67,
+   "red": 55,
+   "worst": -7548.0,
+   "best": 49763.0,
+   "median": 84.0
+  },
+  "h1": 154151,
+  "h2": 90606,
+  "red": [
+   "06"
+  ],
+  "err": null
+ }
+}

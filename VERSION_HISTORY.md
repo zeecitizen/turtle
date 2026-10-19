@@ -16,6 +16,78 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min_tvbars v1.00 (2026-10-20) — TEST: v1.27 on the TradingView chart's own candles
+
+Zee: *"ok, make the EA read TradingView's own candles, and give me MT5 result for Aug,Sept, Oct"* (after *"we dont want matching to the cent, we want matching winrates"*).
+
+- New file `mt5/Saad_strategy_15min_tvbars.mq5`, magic **88309**, comment `Saad15 tvbars`. **TEST, never attach.** Generated from v1.27 by
+  `monitor/strategy_lab/make_tvbars_ea.py`, so it can be rebuilt after any v1.27 change. v1.27's trading rules are untouched.
+- `InpBarSource` 1: every decision comes from the chart's 15-min candles in `Common\Files\tv_bars_XAUUSD_M15.csv`.
+  - The file is written by `monitor/saad_compare/tv_bars_bridge.py --export`; the bridge code comes from Saad_strategy_1min v1.39.
+  - The EA follows the chart's candle clock (Monday 01:01, 01:16 …) and computes EMAs, ATR, range boxes and **ADX** from the chart's candles. ADX uses the indicator's `mtAdx()`, which is MT5's formula.
+- The chart's own rules, copied:
+  - no setup on a candle that closed while a trade or ghost was still open (`InpNoEntryExitBar`);
+  - the stop, the risk check and the target-EMA choice use the chart's entry price (break level + 1 cent);
+  - a BUY banks its EMA only while that EMA is still above the entry (`InpLongEmaAbove`);
+  - "in loss" at the day close is judged against the chart's entry price.
+- `InpTvVerdict`: when the two feeds disagree by cents, the chart's closed candle decides at the next open:
+  - the chart broke the level and MT5 didn't → enter late;
+  - MT5 broke it and the chart didn't → out;
+  - the chart hit the stop or reached the target and MT5 didn't → out.
+  - A stand-aside ghost is judged on the chart's candles. A close refused at the daily break is retried every 5 s.
+- `InpBlindEntryBar` (diagnostic, off): before `InpTvStepFrom` (2026.10.12 01:01 server, the chart's first candle with 1-minute data inside), the EA sees the entry candle only at its close, as the chart does.
+- **Receipts:** XAUUSD_BB (Blueberry real ticks) M15, Aug 3 – Oct 16, **no delay** (the chart has none), $100k, 2 lots.
+  - Made with `monitor/saad_compare/aug_oct_tvbars.py`; results in `why_out/aug_oct_tvbars.json` / `.out` and `aug_oct_tvbars_blind.*`.
+  - Compared against the indicator's export: 57 trades, Aug 5 – Oct 16.
+
+| Run | Aug | Sep | Oct 1–16 | Same win/loss as the chart |
+|---|---|---|---|---|
+| Chart (indicator) | 75% (16 trades) +$74,095 | 83% (29) +$45,726 | 92% (12) +$23,256 | – |
+| v1.27 on MT5's own candles (Oct 19) | 48% | 58% | 67% | 45 of 49 shared; 24 MT5-only, 8 chart-only |
+| **tvbars, real stops** | **71% (17) +$71,849** | **68% (31) +$31,805** | **83% (12) +$21,497** | **52 of 57; 0 chart-only, 3 MT5-only** |
+| tvbars + `InpBlindEntryBar` (diagnostic) | 75% (16) +$73,687 | 76% (29) +$43,118 | 92% (12) +$23,039 | 55 of 57 |
+
+  The real-stop run as a whole: +$125,428, PF 7.03, DD $9,268 (61 trades, including Aug 3–4).
+- **Every remaining difference is traced.** TradingView has 1-minute data inside its candles only from Oct 11 22:01 UTC (the indicator's event-table readout). Before that it judges a whole candle in one step, so it can't be stopped out, or exit, inside the entry candle:
+  - Sep 11: chart +$3,778, MT5 −$5,374.
+  - Sep 25: chart +$4,428, MT5 −$2,070.
+  - Oct 5: chart +$1,696, MT5 $0 (out 41 s after the entry).
+  - Oct 1: the day-close loss check at −1 cent, which the chart never reaches without 1-minute data.
+  - Knock-ons: MT5 was free earlier, so it took extra trades on Aug 24, Sep 11 and Sep 25.
+  - Sep 4: the feeds differ by cents at the stop (plus $123 swap).
+  - **Oct 12–16: every trade is the same.**
+- Side test, the BUY-target rule alone on v1.27, full year, MT5's own candles, random delay (`monitor/strategy_lab/tvbars_long_rule.py` → `tvbars_long_rule.json`):
+  - with the rule: +$248,355 / +$244,757, PF 2.79 / 2.75;
+  - control: +$246,295 / +$246,285, PF 2.76;
+  - no difference, so **v1.27 stays as it is**.
+
+## Saad_strategy_15min_v128test (2026-10-19) — TEST: two chart rules on v1.27 (ledger row added 2026-10-20)
+
+Zee: *"No new trade on the candle that just closed a trade. … This can be copied exactly. … Choosing the target EMA when one sits right at the entry price"*
+
+- `mt5/Saad_strategy_15min_v128test.mq5`, magic **88308**. TEST, never attach. Adds to v1.27:
+  - `InpNoEntryExitBar`: no setup on a candle that closed while a trade or ghost was open;
+  - `InpNxMinPips`: the target EMA must be at least N pips beyond the entry.
+- Full year, random delay, 2 runs each (`monitor/strategy_lab/v128_test_rules.json`):
+
+| Run | Net | PF |
+|---|---|---|
+| v1.27 | +$246,885 / +$239,177 | 2.77 / 2.66 |
+| no setup on the exit candle | +$208,888 / +$204,096 | 2.70 / 2.64 (March $42k lower) |
+| target EMA ≥ 5 pips | +$237,769 / +$238,151 | – |
+
+  Neither change was shipped. The same chart-vs-EA check found **0 setting mismatches** (160 settings).
+
+## Saad_strategy_15min_betest (2026-10-19) — TEST: breakeven / partial / fixed-target options on v1.26 (ledger row added 2026-10-20)
+
+Zee: *"can you test a few MT5 tests to see if a breakeven policy helps us? and if partial exit at TP1 helps us? on v1.26"* · *"could'nt we do it so that if we reach +8 into profit … we close the trade at +8 profit"*
+
+- `mt5/Saad_strategy_15min_betest.mq5`, magic **88307**. TEST, never attach. Results in `monitor/strategy_lab/s15_betest.json` and commits 03916b17 / 71240c50:
+  - partials and %-breakeven: about no change;
+  - breakeven at +$8: PF 2.71 but −$22k;
+  - fixed +$X targets and profit locks: all cut profit hard (closing at +$8 gave +$53k).
+  - The EMA target stays.
+
 ## Saad_strategy_15min v1.27 (2026-10-19) — v1.26 + nose 0.35
 
 Zee: *"yes.. impement 2. Keep nose 0.35. It could become v1.27 = v1.26 + nose 0.35"*
