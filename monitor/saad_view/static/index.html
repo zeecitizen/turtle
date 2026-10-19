@@ -37,13 +37,17 @@
   #settings { width: 350px; border-left: 1px solid var(--line); overflow: auto; padding: 0 12px 12px; display: none; }
   body.set-open #settings { display: block; }
   #settings .sh { position: sticky; top: 0; background: var(--bg); padding: 8px 0; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); }
-  .igrp h5 { margin: 12px 0 4px; color: var(--accent); font-size: 12px; }
-  .inp { display: grid; grid-template-columns: 1fr 118px; gap: 6px; align-items: center; padding: 2px 0; }
-  .inp .n { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .igrp h5 { margin: 14px 0 4px; color: var(--accent); font-size: 13px; }
+  .inp { padding: 5px 0 7px; border-bottom: 1px solid rgba(42,46,57,.6); }
+  .inp .n { display: block; font-size: 14px; margin-bottom: 3px; }
+  .inp .n small { font-size: 11px; }
   .inp.chg .n { color: var(--warn); }
   .inp.chg .n::after { content: " •"; }
   .inp.mt5 .n { color: var(--muted); font-style: italic; }
-  .inp input, .inp select { width: 100%; padding: 2px 6px; }
+  .inp select, .inp > input { width: 100%; padding: 3px 6px; }
+  .inp .sl { display: flex; gap: 8px; align-items: center; }
+  .inp .sl input[type=range] { flex: 1; accent-color: #2962ff; min-width: 0; }
+  .inp .sl input.num { width: 76px; padding: 2px 6px; }
   #askPanel { width: 400px; border-left: 1px solid var(--line); display: none; flex-direction: column; padding: 0 12px 10px; }
   body.ask-open #askPanel { display: flex; }
   body.ask-open #settings { display: none; }
@@ -115,7 +119,11 @@
   <section id="chartWrap"><div id="legend"></div><div id="chart"></div></section>
   <aside id="settings">
     <div class="sh"><b>EA settings</b> <span class="k" id="simMs"></span><span style="flex:1"></span>
-      <button id="btnReset" title="Back to the EA's defaults (v1.27)">v1.27</button></div>
+      <button id="btnReset" title="Back to the EA's defaults (v1.27)">v1.27</button>
+      <div style="display:flex;flex-direction:column;gap:6px;width:100%">
+        <select id="srcDs" title="The candles the Turtle TV Tester runs on"><option value="year">Blueberry MT5 candles · whole year</option><option value="tv">TradingView's candles · Aug 3 →</option></select>
+        <select id="srcMode" title="Whose rules"><option value="ea">v1.27 EA rules</option><option value="chart">the chart's rules</option><option value="chart_blind">TradingView's way (= its panel)</option></select>
+      </div></div>
     <div id="form"></div>
   </aside>
   <aside id="askPanel">

@@ -14,6 +14,8 @@ let TT = null, MT = null;                                      // { kind, events
 let chart, candles, emaF, emaS, adxS, adxLine = null, TVL = null, focusLines = [], eq = {};
 let SEL = null, TAB = { tt: 'overview', mt: 'overview' }, firstView = true, simTimer = null, simSeq = 0, tvKey = null, ASK = [];
 const show = { trades: true, ghosts: true, setups: false, skips: false, mt5: false };
+const SRC = { ds: 'year', mode: 'ea' }, BARSET = {};             // the Turtle TV Tester's candles and rules (Zee: "find out why ... october ... and fix it")
+async function getBars(ds) { if (!BARSET[ds]) BARSET[ds] = await api('/api/bars?ds=' + ds); return BARSET[ds]; }
 
 // ---------- helpers ----------
 const money = (v, d = 0) => (v >= 0 ? '+$' : '−$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -258,8 +260,8 @@ function pOverview(D) {
   h += card(mt ? 'Net profit (MT5 report)' : 'Net profit', money(mt ? R.net ?? s.net : s.net), cls(s.net)) + card('Profit factor', mt ? R.pf ?? s.pf : s.pf) +
        card('Win rate', pct(s.w, s.n)) + card('Trades', `${s.n} <small class="k">(${s.w} won)</small>`);
   h += card('Max drawdown', mt ? ddTxt(R.dd) : '$' + Math.round(s.dd).toLocaleString('en-US') + ' <small class="k">(closed trades)</small>') +
-       card('Jan – Jun', `<span class="${cls(a.net)}">${money(a.net)}</span> <small class="k">${pct(a.w, a.n)}</small>`) +
-       card('Jul – Oct', `<span class="${cls(b.net)}">${money(b.net)}</span> <small class="k">${pct(b.w, b.n)}</small>`) + card('Stood aside', D.GH.length);
+       card('Jan – Jun', a.n ? `<span class="${cls(a.net)}">${money(a.net)}</span> <small class="k">${pct(a.w, a.n)}</small>` : '<small class="k">no candles</small>') +
+       card('Jul – Oct', b.n ? `<span class="${cls(b.net)}">${money(b.net)}</span> <small class="k">${pct(b.w, b.n)}</small>` : '<small class="k">no trades</small>') + card('Stood aside', D.GH.length);
   h += '</div>';
   if (mt) {
     const r = D.run;
@@ -267,7 +269,16 @@ function pOverview(D) {
     h += D.matches ? `<p class="note">✓ These are exactly the settings on screen.</p>`
       : `<p class="warn">⚠ This MT5 run has different settings from the ones on screen: ${Object.entries(D.diff).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))} ${esc(v[1])} here vs ${esc(v[0])} on screen`).join(', ')}. Press "Check in MT5" to run the screen's settings.</p>`;
   } else {
-    h += `<p class="note">The Turtle TV Tester: the EA's rules on every 1-minute candle of the year, ${TT.ms} ms. On v1.27 it takes 194 of MT5's 198 trades, 190 with the same result; MT5 below stays the judge.</p>`;
+    h += `<p class="note">The Turtle TV Tester · ${SRC.ds === 'tv' ? "TradingView's candles" : 'Blueberry MT5 candles'} · ${{ ea: "v1.27's rules, real spread and swap", chart: "the chart's rules ($0.17 spread, no swap), 1-minute data everywhere", chart_blind: "TradingView's way: the chart's rules, and blind inside the entry candle before Oct 12 (it had no 1-minute data there) - this reproduces the chart's panel" }[SRC.mode]} · ${TT.ms} ms.
+      On Blueberry candles with v1.27's rules it takes 194 of MT5's 198 trades; on TradingView's candles, TradingView's way, 60 of the chart's 62. MT5 below stays the judge.</p>`;
+    if (TT.honest) {
+      const ms = Object.keys(TT.months);
+      h += `<h4>TradingView's way vs the same chart with 1-minute data everywhere</h4>` + table(['Month', "TradingView's way", 'With 1-minute data'],
+        ms.map((m) => { const a = TT.months[m], b = TT.honest.months[m] || { n: 0, w: 0, net: 0 }; const [y, mo] = m.split('-');
+          return `<tr><td>${MON[+mo - 1]} ${y}</td><td>${a.w}/${a.n} = ${pct(a.w, a.n)} · ${money(a.net)}</td><td class="${b.w / Math.max(1, b.n) < a.w / Math.max(1, a.n) - 0.005 ? 'bad' : ''}">${b.w}/${b.n} = ${pct(b.w, b.n)} · ${money(b.net)}</td></tr>`; }));
+      if (TT.honest.flips.length) h += `<p class="warn">TradingView scores ${TT.honest.flips.length} trade${TT.honest.flips.length > 1 ? 's' : ''} differently from what really happened inside the candle: ` +
+        TT.honest.flips.map((f) => `${dt(f.t)} ${f.side > 0 ? 'BUY' : 'SELL'} ${money(f.tv)} on the chart, really ${money(f.real)} (${esc(f.why)})`).join('; ') + '.</p>';
+    }
     const ch = Object.entries(diffDfl(CUR));
     h += `<h4>Settings different from v1.27</h4><div class="chips">${ch.length ? ch.map(([k, v]) => `<span>${esc(k.replace(/^Inp/, ''))} = ${esc(v)}</span>`).join('') : '<span>none - v1.27 exactly</span>'}</div>`;
   }
@@ -376,6 +387,11 @@ function pOpt() {
     `<tr><td>Your settings</td><td>${line(B.train)}</td><td>${line(B.test)}</td><td>${line(B.year)}</td></tr>`,
     best ? `<tr class="tot"><td>Best found</td><td>${line(best.train)}</td><td class="${best.test && B.test && best.test.net < B.test.net ? 'bad' : 'pos'}">${line(best.test)}</td><td>${line(best.year)}</td></tr>` : '']);
   if (best && best.test && B.test && best.test.net < B.test.net) h += `<p class="warn">⚠ Better on Jan – Jun but WORSE on the unseen Jul – Oct (${money(best.test.net - B.test.net)}): these settings are fitting the past. Don't trust them without more evidence.</p>`;
+  if (o.mt5 && o.mt5.run) {
+    const r = RUNS.find((x) => x.id === o.mt5.run);
+    h += r ? `<p class="note">✓ MT5 checked the best: <b>${money(r.net || 0)} · PF ${r.pf} · ${r.trades} trades</b> (no delay). Show it on the chart to compare both halves in the MT5 section.</p>`
+           : `<p class="note">⏳ The best is running in MT5 now (about a minute); its result appears in the MT5 section.</p>`;
+  } else if (best && Object.keys(best.changed).length && !o.running) h += `<p class="note">The best goes to MT5 automatically when the optimizer finishes.</p>`;
   if (best && Object.keys(best.changed).length) h += `<p><button id="oApply" class="go">Show the best on the chart</button> <span class="k">changes: ${Object.entries(best.changed).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))} ${esc(CUR[k] ?? '')} → ${esc(v)}`).join(', ')}</span></p>`;
   const steps = o.log.map((l, i) => `<tr><td>${i + 1}</td><td style="text-align:left">${esc(l.run)}</td><td style="text-align:left">${esc(l.setting.replace(/^Inp/, ''))}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td>${(+l.score).toFixed(2)}</td>` +
     `<td class="${cls(l.train.net)}">${money(l.train.net)} · ${l.train.wr}%</td><td class="${cls(l.test.net)}">${money(l.test.net)} · ${l.test.wr}%</td><td class="k">${l.t}s</td></tr>`);
@@ -399,20 +415,43 @@ function renderAll() { renderPanel('tt'); renderPanel('mt'); }
 function scheduleSim(ms = 120) { clearTimeout(simTimer); simTimer = setTimeout(runSim, ms); }
 async function runSim() {
   const seq = ++simSeq;
-  const r = await api('/api/sim', { inputs: CUR, ema: true });
+  const emaKey = `${SRC.ds}/${CUR.InpEmaFast}/${CUR.InpEmaSlow}`, needEma = !TT || TT.emaKey !== emaKey;
+  const r = await api('/api/sim', { inputs: CUR, ema: needEma, setups: show.setups, ds: SRC.ds, mode: SRC.mode });   // EMAs / setups only when they are needed (smooth sliding)
   if (seq !== simSeq) return;                                  // a newer change is already on its way
   if (r.error) return toast('⚠ ' + esc(r.error));
-  TT = Object.assign(derive('tt', r.events, parseFloat(CUR.InpLots || '1')), { ms: r.ms, stats: r.stats, year: r.year, ef: r.ef, es: r.es });
+  const keep = TT && !needEma ? { ef: TT.ef, es: TT.es } : { ef: r.ef, es: r.es };
+  TT = Object.assign(derive('tt', r.events, parseFloat(CUR.InpLots || '1')), { ms: r.ms, stats: r.stats, year: r.year, emaKey, honest: r.honest, months: r.months, ...keep });
   drawEmas(); redraw(); await pickMt5(); renderAll();
   $('#simMs').textContent = `· Turtle TV Tester ${r.ms} ms`;
-  $('#infoTT').textContent = `${r.year.n} trades · WR ${r.year.wr}% · ${money(r.year.net)} · PF ${r.year.pf} · ${r.ms} ms`;
+  $('#infoTT').textContent = `${SRC.ds === 'tv' ? "TradingView's candles" : 'Blueberry MT5 candles'} · ${{ ea: 'v1.27 rules', chart: "the chart's rules", chart_blind: "TradingView's way" }[SRC.mode]} · ` +
+    `${r.year.n} trades · WR ${r.year.wr}% · ${money(r.year.net)} · PF ${r.year.pf} · ${r.ms} ms`;
   const n = BARS.t.length;
   if (firstView) { chart.timeScale().setVisibleLogicalRange({ from: n - 1500, to: n + 5 }); firstView = false; }
   legend(n - 1);
   markForm();
 }
 
-// ---------- settings panel ----------
+// ---------- settings panel: sliders for numbers, words for choices (Zee: "make all settings with numbers to be like sliders") ----------
+const ENUMS = {
+  InpLongRule: [[0, 'on the fast EMA, exit at the slow'], [1, 'on the slow EMA, exit at the fast'], [2, 'both']],
+  InpShortLine: [[0, 'on the slow EMA'], [1, 'on the fast EMA'], [2, 'on either EMA']],
+  InpTouchMode: [[0, 'the candle touches the EMA'], [1, 'the wick touches, body on the trade side']],
+  InpExitMode: [[0, 'v1.23 exits (MT5 only)'], [1, 'next EMA beyond the entry'], [2, 'close back across the slow EMA']],
+  InpBandOff: [[0, 'skip the trade'], [1, 'stand aside while it would have run']],
+  InpSlMode: [[0, 'pips beyond the setup candle'], [1, 'ATR × from the entry'], [2, '$ from the entry']],
+  InpEntryMode: [[0, 'market order on the break'], [1, 'wait for a dip (MT5 only)'], [2, 'liquidity sweep (MT5 only)']],
+};
+function sliderRange(i, v) {
+  let [lo, hi, st] = i.range || (() => {
+    const d = Math.abs(parseFloat(i.default) || 0);
+    if (i.type === 'int') return [0, Math.max(10, Math.ceil(d * 2)), 1];
+    const h = Math.max(1, d * 2);
+    return [0, +h.toFixed(2), h <= 2 ? 0.01 : h <= 10 ? 0.05 : h <= 100 ? 0.5 : 1];
+  })();
+  const x = parseFloat(v);
+  if (!isNaN(x)) { lo = Math.min(lo, x); hi = Math.max(hi, x); }               // never clip the current value
+  return [lo, hi, st];
+}
 function buildForm() {
   const groups = new Map();
   for (const i of INPUTS.inputs) { if (!groups.has(i.group)) groups.set(i.group, []); groups.get(i.group).push(i); }
@@ -421,10 +460,16 @@ function buildForm() {
     h += `<div class="igrp"><h5>${esc(g)}</h5>`;
     for (const i of list) {
       const v = CUR[i.name] ?? i.default;
-      const field = i.type === 'bool'
-        ? `<select data-n="${i.name}"><option ${String(v) === 'true' ? 'selected' : ''}>true</option><option ${String(v) !== 'true' ? 'selected' : ''}>false</option></select>`
-        : `<input data-n="${i.name}" value="${esc(v)}" ${i.type !== 'string' ? 'type="number" step="any"' : ''}>`;
-      h += `<div class="inp ${i.sim ? '' : 'mt5'}" title="${esc(i.name)}: ${esc(i.comment)}${i.sim ? '' : ' · MT5 only: the Turtle TV Tester does not use it'}"><span class="n">${esc(i.name.replace(/^Inp/, ''))}${i.sim ? '' : ' (MT5)'}</span>${field}</div>`;
+      let field;
+      if (ENUMS[i.name]) field = `<select data-n="${i.name}">${ENUMS[i.name].map(([k, l]) => `<option value="${k}" ${same(v, k) ? 'selected' : ''}>${k} · ${esc(l)}</option>`).join('')}</select>`;
+      else if (i.type === 'bool') field = `<select data-n="${i.name}"><option ${String(v) === 'true' ? 'selected' : ''}>true</option><option ${String(v) !== 'true' ? 'selected' : ''}>false</option></select>`;
+      else if (i.type === 'string') field = `<input data-n="${i.name}" value="${esc(v)}" spellcheck="false">`;
+      else {
+        const [lo, hi, st] = sliderRange(i, v);
+        field = `<div class="sl"><input type="range" data-r="${i.name}" min="${lo}" max="${hi}" step="${st}" value="${esc(v)}"><input class="num" data-n="${i.name}" type="number" step="${st}" value="${esc(v)}"></div>`;
+      }
+      h += `<div class="inp ${i.sim ? '' : 'mt5'}" title="${esc(i.name)}: ${esc(i.comment)}${i.sim ? '' : ' · MT5 only: the Turtle TV Tester does not use it'}">` +
+           `<span class="n">${esc(i.name.replace(/^Inp/, ''))}${i.sim ? '' : ' <small>(MT5 only)</small>'}</span>${field}</div>`;
     }
     h += '</div>';
   }
@@ -432,19 +477,38 @@ function buildForm() {
   markForm();
 }
 function markForm() {
-  document.querySelectorAll('#form [data-n]').forEach((el) => {
-    const n = el.dataset.n;
-    if (document.activeElement !== el && String(el.value) !== String(CUR[n])) el.value = CUR[n];
-    el.parentElement.classList.toggle('chg', !same(CUR[n], DFL[n]));
+  document.querySelectorAll('#form [data-n], #form [data-r]').forEach((el) => {
+    const n = el.dataset.n || el.dataset.r;
+    if (document.activeElement !== el && String(el.value) !== String(CUR[n])) {
+      if (el.dataset.r && parseFloat(CUR[n]) > parseFloat(el.max)) el.max = CUR[n];
+      if (el.dataset.r && parseFloat(CUR[n]) < parseFloat(el.min)) el.min = CUR[n];
+      el.value = CUR[n];
+    }
+    el.closest('.inp').classList.toggle('chg', !same(CUR[n], DFL[n]));
   });
 }
 $('#form').addEventListener('input', (e) => {
-  const el = e.target, n = el.dataset.n;
+  const el = e.target, n = el.dataset.n || el.dataset.r;
   if (!n || el.value === '') return;
   CUR[n] = el.value.trim();
-  el.parentElement.classList.toggle('chg', !same(CUR[n], DFL[n]));
-  scheduleSim();
+  const twin = el.dataset.r ? el.parentElement.querySelector('[data-n]') : el.parentElement.querySelector('[data-r]');
+  if (twin) twin.value = CUR[n];
+  el.closest('.inp').classList.toggle('chg', !same(CUR[n], DFL[n]));
+  scheduleSim(el.dataset.r ? 60 : 120);
 });
+async function setSource() {
+  const ds = $('#srcDs').value, mode = $('#srcMode').value, keep = chart.timeScale().getVisibleRange();
+  SRC.mode = mode;
+  if (ds !== SRC.ds) {
+    SRC.ds = ds; BARS = await getBars(ds); drawBars(); TT = null; MT = null;
+  }
+  await runSim();
+  if (keep) try { chart.timeScale().setVisibleRange(keep); } catch (e) { /* outside the other candles */ }
+  if (ds === 'tv' && BARS.ticks_until) toast(`TradingView's candles: Aug 3 → Oct 19. Inside them the Blueberry 1-minute candles until ${fullFmt(BARS.ticks_until + TZ)}, ` +
+    'after that one step per candle. "TradingView\'s way" reproduces the chart\'s panel; "the chart\'s rules" shows what it would score with 1-minute data everywhere.', 12000);
+}
+$('#srcDs').onchange = setSource;
+$('#srcMode').onchange = setSource;
 $('#btnReset').onclick = () => { CUR = { ...DFL }; markForm(); scheduleSim(0); };
 $('#btnSet').onclick = () => { document.body.classList.remove('ask-open'); document.body.classList.toggle('set-open'); };
 
@@ -484,7 +548,7 @@ async function poll() {
       const first = lastSeen === undefined; lastSeen = s.last;
       if (!first) { await loadRuns(); MT = null; await pickMt5(s.last); toast(`MT5 result in: <b>${esc(MT.run.label)}</b> · ${money(MT.run.report.net || 0)} · PF ${MT.run.report.pf}`); }
     }
-    if (TAB.tt === 'opt' && OPTS && OPTS.running) { OPTS = await api('/api/opt'); renderPanel('tt'); }
+    if (TAB.tt === 'opt' && OPTS && (OPTS.running || (OPTS.mt5 && OPTS.mt5.run && !RUNS.find((x) => x.id === OPTS.mt5.run)))) { OPTS = await api('/api/opt'); renderPanel('tt'); }
   } catch (e) { setStatus('Turtle TV server not reachable', 'err'); }
   setTimeout(poll, OPTS && OPTS.running ? 700 : 2000);
 }
@@ -571,7 +635,10 @@ $('#btnDel').onclick = async () => {
   if (!MT || !confirm(`Delete the MT5 run "${MT.run.label}"?`)) return;
   await api('/api/delete', { id: MT.run.id }); MT = null; await loadRuns(); await pickMt5();
 };
-[['trades', 'tTrades'], ['ghosts', 'tGhosts'], ['setups', 'tSetups'], ['skips', 'tSkips'], ['mt5', 'tMt5']].forEach(([k, id]) => ($('#' + id).onchange = (e) => { show[k] = e.target.checked; redraw(); }));
+[['trades', 'tTrades'], ['ghosts', 'tGhosts'], ['setups', 'tSetups'], ['skips', 'tSkips'], ['mt5', 'tMt5']].forEach(([k, id]) => ($('#' + id).onchange = (e) => {
+  show[k] = e.target.checked;
+  if (k === 'setups' && show.setups) scheduleSim(0); else redraw();          // setups are fetched only when shown
+}));
 $('#tz').onchange = (e) => { TZ = +e.target.value; const r = chart.timeScale().getVisibleLogicalRange(); drawBars(); drawEmas(); renderAll(); if (r) chart.timeScale().setVisibleLogicalRange(r); };
 $('#jump').onkeydown = (e) => {
   if (e.key !== 'Enter' || !BARS) return;
@@ -602,7 +669,7 @@ document.addEventListener('click', async (e) => {
     OPTS = await api('/api/opt'); renderPanel('tt');
   }
   if (e.target.id === 'oStop') { await api('/api/opt_stop', {}); OPTS = await api('/api/opt'); renderPanel('tt'); }
-  if (e.target.id === 'oApply' && OPTS && OPTS.best) { CUR = { ...OPTS.best.inputs }; markForm(); scheduleSim(0); toast('The optimizer\'s best is on the chart. Press "Check in MT5" to see MT5\'s real result for it.'); }
+  if (e.target.id === 'oApply' && OPTS && OPTS.best) { CUR = { ...OPTS.best.inputs }; markForm(); scheduleSim(0); toast('The optimizer\'s best is on the chart; its MT5 check is in the MT5 section.'); }
   if (e.target.dataset && e.target.dataset.board != null && OPTS) { CUR = { ...OPTS.board[+e.target.dataset.board].inputs }; markForm(); scheduleSim(0); }
 });
 
@@ -610,13 +677,19 @@ document.addEventListener('click', async (e) => {
   makeChart();
   renderAll();
   setStatus('loading the year…', 'busy');
-  const [bars, inputs] = await Promise.all([api('/api/bars'), api('/api/inputs')]);
+  SRC.ds = 'tv'; SRC.mode = 'chart_blind';                    // start where Zee tunes: TradingView's candles, TradingView's way (= its panel)
+  $('#srcDs').value = SRC.ds; $('#srcMode').value = SRC.mode;
+  const [bars, inputs] = await Promise.all([getBars(SRC.ds), api('/api/inputs')]);
   BARS = bars; INPUTS = inputs;
   for (const i of INPUTS.inputs) DFL[i.name] = i.default;
   await loadRuns();
   const h = new URLSearchParams(location.hash.slice(1));
   CUR = { ...DFL };
   drawBars(); buildForm();
+  try {                                                        // TradingView open? start from its settings, like the chart
+    const tv = await Promise.race([api('/api/tv'), new Promise((_, rej) => setTimeout(() => rej(new Error('slow')), 15000))]);
+    if (tv && tv.sets) { CUR = { ...DFL, ...tv.sets }; tvKey = JSON.stringify(tv.sets); $('#tvDot').className = 'dot ok'; $('#tvDot').title = `TradingView ${tv.symbol} · read at ${tv.at}`; markForm(); }
+  } catch (e) { /* TradingView not open: v1.27's defaults */ }
   await runSim();
   if (h.get('tab')) { TAB.tt = h.get('tab'); renderPanel('tt'); }
   if (h.get('mt')) { TAB.mt = h.get('mt'); renderPanel('mt'); }
