@@ -23,6 +23,8 @@ import sys
 import threading
 import time
 import traceback
+import urllib.error
+import urllib.request
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -32,6 +34,10 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT / "monitor" / "strategy_lab"))
 import axi_rig  # noqa: E402
+import numpy as np  # noqa: E402
+sys.path.insert(0, str(HERE))
+import sim  # noqa: E402  (the Turtle TV Tester: numba, sets NUMBA_CPU_NAME itself)
+import optimizer  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location("saad_compare_server", ROOT / "monitor" / "saad_compare" / "server.py")
 CMP = importlib.util.module_from_spec(_spec)      # the compare page's TradingView reader (no server is started by importing it)
@@ -375,6 +381,134 @@ def export(rid):
     return res
 
 
+# ---------- the Turtle TV Tester (sim.py): instant results for any settings ----------
+def _utc(e):
+    return int((server_to_utc(datetime(1970, 1, 1) + timedelta(seconds=int(e))) - datetime(1970, 1, 1)).total_seconds())
+
+
+_BARS = None
+
+
+def bars_json():
+    """The year's M15 candles (the same MT5 candles the EA trades on), UTC, with the EA's ADX / ATR."""
+    global _BARS
+    if _BARS is None:
+        D = sim.data()
+        r2 = lambda a: [round(float(x), 2) for x in a]
+        _BARS = json.dumps({"t": [_utc(x) for x in D["t15"]], "o": r2(D["o15"]), "h": r2(D["h15"]), "l": r2(D["l15"]), "c": r2(D["c15"]),
+                            "adx": r2(D["adx"]), "atr": [round(float(x), 3) for x in D["atr"]]}, separators=(",", ":"))
+    return _BARS
+
+
+def full_inputs(sets):
+    dfl = axi_rig.ea_defaults(EA)
+    return {i["name"]: str(sets.get(i["name"], dfl.get(i["name"], i["default"]))) for i in ea_inputs()["inputs"]}
+
+
+def sim_result(sets, want_ema=True):
+    inp = full_inputs(sets)
+    t0 = time.time()
+    tr, su, st = sim.simulate(inp)
+    ms = round(1000 * (time.time() - t0), 1)
+    D = sim.data()
+    nf, ns = int(float(inp["InpEmaFast"])), int(float(inp["InpEmaSlow"]))
+    why = {1: "stop loss", 2: "the next EMA touched (target)", 3: "closed back across the EMA", 4: "day close, in loss"}
+    tgt = lambda n: (f"touch of the {nf if n == 9 else ns} EMA, all closed" if n > 0 else
+                     f"no EMA beyond the entry: out after a close back across the {nf} EMA" if n == -1 else
+                     f"no target: out after a close back across the {ns} EMA")
+    ev, num = [], 0
+    for x in tr[np.argsort(tr[:, 1], kind="stable")]:
+        side, nx, b = int(x[0]), int(x[9]), int(x[8])
+        if x[10] == 1:
+            ev.append({"type": "ghost", "t": _utc(x[1]), "side": side, "price": round(x[2], 2), "sl": round(x[3], 2), "v1": nx, "v2": b, "ref": None, "num": 0, "text": tgt(nx)})
+            ev.append({"type": "ghost_end", "t": _utc(x[4]), "side": side, "price": round(x[5], 2), "sl": round(x[2], 2), "v1": 0, "v2": 0, "ref": None, "num": 0,
+                       "text": why.get(int(x[13]), "")})
+            continue
+        num += 1
+        ev.append({"type": "entry", "t": _utc(x[1]), "side": side, "price": round(x[2], 2), "sl": round(x[3], 2), "v1": nx, "v2": b, "ref": None, "num": num, "text": tgt(nx)})
+        ev.append({"type": "exit", "t": _utc(x[4]), "side": side, "price": round(x[5], 2), "sl": round(x[3], 2), "v1": round(x[6], 2), "v2": round(x[7], 2),
+                   "ref": _utc(x[1]), "num": num, "text": why.get(int(x[13]), "")})
+    brk = float(inp["InpBreakPips"]) * 0.1
+    for k, side, kind in su:
+        k = int(k)
+        ev.append({"type": "setup", "t": _utc(D["t15"][k]), "side": int(side), "price": float(D["h15"][k]), "sl": float(D["l15"][k]),
+                   "v1": round(float(D["h15"][k] + brk if side > 0 else D["l15"][k] - brk), 2), "v2": int(kind), "ref": None, "num": 0, "text": ""})
+    ev.sort(key=lambda e: e["t"])
+    trn, tst = tr[tr[:, 1] < optimizer.TRAIN_END], tr[tr[:, 1] >= optimizer.TRAIN_END]
+    out = {"inputs": inp, "ms": ms, "events": ev, "stats": st, "year": sim.score(tr), "train": sim.score(trn, 1), "test": sim.score(tst, 1)}
+    if want_ema:
+        ef, es = sim.emas(nf, ns)
+        out["ef"] = [round(float(x), 3) for x in ef]
+        out["es"] = [round(float(x), 3) for x in es]
+    return out
+
+
+OPT = {"o": None}
+
+# ---------- Ask Claude (Zee 2026-10-20: "is there a way i can connect claude to this web page so it can read in realtime all charts and analyse etc
+# or suggest improvements in the strategy") - the chart picture + the data behind it go to Claude from here; the API key never reaches the page
+CLAUDE_MODEL = "claude-opus-5-5"
+ASK_SYSTEM = """You are Claude, built into Turtle TV: Zee's own TradingView-style chart for his Saad gold EA (Saad_strategy_15min, XAUUSD, 15-minute candles,
+Blueberry real ticks, 2 lots). You receive a picture of the chart as Zee sees it and the data behind it (JSON): the EA settings and how they differ from
+v1.27, the Turtle TV Tester's results (the EA's rules run on every 1-minute candle of the year; on v1.27 it takes 194 of MT5's 198 trades, 190 with the
+same result, and ranks different settings in the same order as MT5), the trades and candles in view, MT5 Strategy Tester results and the optimizer's.
+
+The strategy: a pin bar / hammer / shooting star / marubozu candle touching the fast or slow EMA is a setup; a break of its high (BUY) or low (SELL)
+by InpBreakPips within InpBreakBars candles enters; the stop is InpSlAtrMult x ATR(14); ADX(14) must be at least InpAdxMin; the target is the nearer
+EMA beyond the entry (InpExitMode 1) or a close back across an EMA; range boxes (InpBandsB / InpBandsS, 21 boxes of 5% of the last N candles' range)
+decide where an entry is allowed, an unticked box means stand aside.
+
+House rules (Zee's project): a suggestion is a hypothesis until MT5's Strategy Tester confirms it ("Check in MT5"). Guard against fitting the past:
+compare Jan - Jun with Jul - Oct; a change that helps only one half is suspect, and the range boxes are the most over-fitted part. Prefer fewer losing
+trades at a fixed stop / target over wider stops. The Turtle TV Tester is optimistic for tight stops (it cannot know the order inside a 1-minute candle).
+
+Answer Zee directly and concretely: what you see on the chart (name dates / trades), what the numbers say, and the 2-4 setting changes (exact input
+names and values) you would test next and why, with the risk of each. English, short paragraphs or bullets, times in Pakistan time (12-hour)."""
+
+
+def ask_claude(body):
+    key = (ROOT / "monitor" / ".claude_api_key").read_text(encoding="utf-8").strip()
+    hist = [m for m in (body.get("history") or []) if m.get("text") and m.get("role") in ("user", "assistant")]
+    while hist and hist[0]["role"] != "user":
+        hist.pop(0)
+    msgs, last = [], None
+    for m in hist:                                              # strictly alternating, as the API wants
+        if m["role"] == last:
+            msgs[-1]["content"] += "\n\n" + m["text"]
+        else:
+            msgs.append({"role": m["role"], "content": m["text"]})
+            last = m["role"]
+    if msgs and msgs[-1]["role"] == "user":
+        msgs.pop()
+    content = []
+    if body.get("image"):
+        content.append({"type": "image", "source": {"type": "base64", "media_type": "image/jpeg", "data": body["image"]}})
+    ctx = json.dumps(body.get("context") or {}, separators=(",", ":"), default=str)[:150000]
+    content.append({"type": "text", "text": f"{body.get('question', '').strip()}\n\nThe data behind the chart (JSON):\n{ctx}"})
+    msgs.append({"role": "user", "content": content})
+    req = urllib.request.Request("https://api.anthropic.com/v1/messages",
+                                 data=json.dumps({"model": CLAUDE_MODEL, "max_tokens": 3000, "system": ASK_SYSTEM, "messages": msgs}).encode("utf-8"),
+                                 headers={"x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json"})
+    try:
+        r = json.loads(urllib.request.urlopen(req, timeout=240).read())
+    except urllib.error.HTTPError as e:
+        return {"error": f"Claude API {e.code}: {e.read().decode('utf-8', 'ignore')[:400]}"}
+    text = "".join(b.get("text", "") for b in r.get("content", []) if b.get("type") == "text")
+    log(f"ask: {len(body.get('question', ''))} chars -> {len(text)} chars ({r.get('usage')})")
+    return {"text": text, "model": r.get("model"), "usage": r.get("usage")}
+
+
+def opt_start(body):
+    if OPT["o"] and OPT["o"].running:
+        OPT["o"].stop()
+        time.sleep(0.2)
+    o = optimizer.Optimizer(full_inputs(body.get("start") or {}), objective=body.get("objective") or "ret_dd", boxes=bool(body.get("boxes")),
+                            keep_going=bool(body.get("keep")))
+    OPT["o"] = o
+    threading.Thread(target=o.run, daemon=True).start()
+    return {"ok": True}
+
+
 # ---------- HTTP ----------
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
@@ -408,7 +542,17 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, p.read_bytes(), ct + "; charset=utf-8")
             return self.send(404, {"error": "not found"})
         if u.path == "/api/inputs":
-            return self.send(200, ea_inputs())
+            info = ea_inputs()
+            for i in info["inputs"]:
+                i["sim"] = i["name"] in sim.IX or i["name"] in ("InpBandsB", "InpBandsS")
+            return self.send(200, info)
+        if u.path == "/api/bars":
+            return self.send(200, bars_json())
+        if u.path == "/api/opt":
+            return self.send(200, OPT["o"].state() if OPT["o"] else {})
+        if u.path == "/api/tv":
+            info = tv_settings()
+            return self.send(200, {k: info[k] for k in ("symbol", "res", "sets", "notes", "at")})
         if u.path == "/api/runs":
             return self.send(200, list_runs())
         if u.path == "/api/run":
@@ -434,6 +578,16 @@ class H(BaseHTTPRequestHandler):
             if u.path == "/api/run":
                 rid, err = start_run(body)
                 return self.send(409 if err else 200, {"error": err} if err else {"id": rid})
+            if u.path == "/api/ask":
+                return self.send(200, ask_claude(body))
+            if u.path == "/api/sim":
+                return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True))))
+            if u.path == "/api/optimize":
+                return self.send(200, opt_start(body))
+            if u.path == "/api/opt_stop":
+                if OPT["o"]:
+                    OPT["o"].stop()
+                return self.send(200, {"ok": True})
             if u.path == "/api/follow":
                 FOLLOW.update(on=bool(body.get("on")), delay=body.get("delay") or FOLLOW["delay"], key=None, pending=None, msg="")
                 return self.send(200, {"ok": True})

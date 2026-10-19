@@ -31,6 +31,7 @@ j = t.index("\n", i) + 1
 t = t[:j] + '''//--- VIEWER: the export for the web chart (trading is untouched)
 input bool   InpExport      = true;    // InpExport - write every closed candle and every decision to Common\\Files\\saadview_<InpExportTag>_bars.csv / _events.csv
 input string InpExportTag   = "view";  // InpExportTag - the run's name in those file names
+input bool   InpExportM1    = false;   // InpExportM1 - also every closed 1-minute candle with its spread (the fast optimizer's data, ~350k lines a year)
 ''' + t[j:]
 rep("int      hFast = INVALID_HANDLE,", "int      hAdxX = INVALID_HANDLE;   // VIEWER: ADX for the export (the EA's own formula: MT5's iADX on its candles)\nint      hFast = INVALID_HANDLE,")
 rep("   hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);", "   hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);\n   if (InpExport) hAdxX = iADX(_Symbol, PERIOD_CURRENT, InpAdxPeriod);")
@@ -64,11 +65,33 @@ void EV(string type, datetime tm, int side, double price, double sl, double v1, 
    FileWriteString(g_exE, StringFormat("%s\t%s\t%d\t%s\t%s\t%.4f\t%.4f\t%s\t%d\t%s\r\n", type, TimeToString(tm, TIME_DATE | TIME_SECONDS), side, Px(price), Px(sl),
                    v1, v2, ref > 0 ? TimeToString(ref, TIME_DATE | TIME_MINUTES) : "", num, txt));
 }
+int g_exM = INVALID_HANDLE;
+datetime g_exMLast = 0;
+int g_exMSpr = 0;
+// every closed 1-minute candle (bid OHLC) + the spread at its first tick and the bar's own spread (points)
+void ExM1()
+{
+   if (!InpExport || !InpExportM1) return;
+   datetime m = iTime(_Symbol, PERIOD_M1, 0);
+   if (m == g_exMLast) return;
+   if (g_exM == INVALID_HANDLE) {
+      g_exM = FileOpen(StringFormat("saadview_%s_m1.csv", InpExportTag), FILE_WRITE | FILE_TXT | FILE_ANSI | FILE_COMMON);
+      if (g_exM != INVALID_HANDLE) FileWriteString(g_exM, "time\topen\thigh\tlow\tclose\tspread_open\tspread_bar\r\n");
+   }
+   if (g_exMLast > 0 && g_exM != INVALID_HANDLE)
+      FileWriteString(g_exM, StringFormat("%s\t%s\t%s\t%s\t%s\t%d\t%d\r\n", TimeToString(iTime(_Symbol, PERIOD_M1, 1), TIME_DATE | TIME_MINUTES),
+                      Px(iOpen(_Symbol, PERIOD_M1, 1)), Px(iHigh(_Symbol, PERIOD_M1, 1)), Px(iLow(_Symbol, PERIOD_M1, 1)), Px(iClose(_Symbol, PERIOD_M1, 1)),
+                      g_exMSpr, (int)iSpread(_Symbol, PERIOD_M1, 1)));
+   g_exMLast = m;
+   g_exMSpr = (int)MathRound((SymbolInfoDouble(_Symbol, SYMBOL_ASK) - SymbolInfoDouble(_Symbol, SYMBOL_BID)) / _Point);
+}
 void ExClose()
 {
    if (g_exB != INVALID_HANDLE) { FileClose(g_exB); g_exB = INVALID_HANDLE; }
    if (g_exE != INVALID_HANDLE) { FileClose(g_exE); g_exE = INVALID_HANDLE; }
+   if (g_exM != INVALID_HANDLE) { FileClose(g_exM); g_exM = INVALID_HANDLE; }
 }''')
+rep("void OnTick()\n{\n", "void OnTick()\n{\n   ExM1();\n")
 # hooks
 rep("void OnDeinit(const int reason)\n{\n", "void OnDeinit(const int reason)\n{\n   ExClose();\n")
 rep("      g_lastBar = bar;\n", "      g_lastBar = bar;\n      ExBar();\n")
