@@ -16,6 +16,21 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.27 (2026-10-19) — v1.26 + nose 0.35
+
+Zee: *"yes.. impement 2. Keep nose 0.35. It could become v1.27 = v1.26 + nose 0.35"*
+
+- One change: `InpNoseMax` 0.20 -> **0.35** (a pin bar's short wick may be up to 35% of its range). Everything else = v1.26. The overnight
+  genetic search had not searched this input; Zee found it by hand on the chart.
+- Compiled on the test rig and in Zee's Blueberry terminal: 0 errors, 0 warnings.
+- **Receipts** (XAUUSD_BB M15, Jan 1 - Oct 16, random delay, $100k, 2 lots; `monitor/strategy_lab/v127_release_test.json`):
+  - pure defaults: **+$250,919 / +$253,195, PF 2.80 / 2.85, WR 52.9% / 54.3%, 197 trades, max DD $28,320**; only June red (-$0.5k / -$0.4k).
+  - v1.26 same conditions: +$211,965 / +$210,445 / +$211,097, PF 2.51-2.54, DD $35-36k, June -$11k.
+  - nose 0.25 = v1.26; 0.30 / 0.35 (x3) / 0.40 / 0.45 = +$247.3k / +$245.7-248.2k / +$243.9k / +$245.4k, PF 2.74-2.79, DD $28.3-28.7k (a plateau).
+- Where the gain comes from (MT5 trade lists): ~+$24k one BUY on Mar 31 (4565 -> 4687) that only qualifies as a pin with nose > 0.25; ~+$8-9k
+  a better June 25 entry (also the lower drawdown); the rest a few small extra trades. Safe (no month worse), but partly one lucky trade.
+- Folder `v1.27/` (README, EA source, indicator code, the chart's v1.27 settings - applied to Zee's chart the same day).
+
 ## Saad_strategy_15min v1.26 (2026-10-19) — Zee's TradingView chart setup becomes the EA's defaults
 
 Zee: *"ok i want you to make our chart setup PF 2.53 be the next version of saad_ea_15min.. call it v1.24"* - v1.24 / v1.25 already existed in this ledger, so this is **v1.26**.
