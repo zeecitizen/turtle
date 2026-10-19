@@ -40,7 +40,7 @@ input bool   InpTvVerdict   = true;   // InpTvVerdict - when the two feeds disag
 input double InpChartSpread = 0.17;   // InpChartSpread - the chart's fixed spread ($ of price), for its SELL stop / target checks
 input datetime InpTvStepFrom = D'2026.10.12 01:01'; // InpTvStepFrom - the chart's first candle WITH 1-minute data inside (server time; the indicator's event table shows it). Before it the chart judges a candle in one step, so a ghost is not ended inside its entry candle
 input bool   InpNoEntryExitBar = true; // InpNoEntryExitBar - a setup candle that CLOSED while a trade (or a stand-aside ghost) was still open is ignored, like the chart (busy at that candle's close)
-input bool   InpBlindEntryBar = false; // InpBlindEntryBar - DIAGNOSTIC ONLY (never live): before InpTvStepFrom see the entry candle only at its close, like the chart without 1-minute data - no stop at the broker, no exit and no day-close check until the entry candle has closed
+input bool   InpBlindEntryBar = false; // InpBlindEntryBar - DIAGNOSTIC ONLY (never live): before InpTvStepFrom act like the chart without 1-minute data - no stop at the broker and no exit until the entry candle has closed, and no day-close loss check at all (one step per candle never lands in the last minutes)
 input bool   InpLongEmaAbove = true;  // InpLongEmaAbove - exit mode 1: a BUY banks the touch of its target EMA only while that EMA is still ABOVE the entry, like the chart (v1.27 also closed a BUY at the EMA after it had sunk below the entry, at a small loss)
 ''' + t[j:]
 
