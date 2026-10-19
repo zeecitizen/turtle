@@ -16,6 +16,18 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.26 (2026-10-19) — Zee's TradingView chart setup becomes the EA's defaults
+
+Zee: *"ok i want you to make our chart setup PF 2.53 be the next version of saad_ea_15min.. call it v1.24"* - v1.24 / v1.25 already existed in this ledger, so this is **v1.26**.
+
+- = Saad_strategy_15min_chart_test v1.00 (range boxes + stand-aside ghost + v1.25 exit modes) with magic 88302, the normal trade comment, and the chart's settings as defaults:
+  EMA 16/32, break 3 pips, SL mode 1 (ATR x 1.6), max risk $20, chop 0, ADX >= 30, all hours, `InpExitMode` 1 (close all on the touch of the nearer EMA beyond the entry), BUY boxes `111110010100001010111`, SELL boxes `111111100010001001110`, look 7/7, `InpBandOff` 1 (stand aside), 2 lots.
+- Compiled on the test rig and in Zee's Blueberry terminal (MQL5\Experts\Saad_strategy_15min.ex5): 0 errors, 0 warnings.
+- **Receipt** - pure defaults (only InpLogCsv off), XAUUSD_BB M15, Jan 1 - Oct 16, random delay, $100k:
+  **+$213,915, PF 2.54, WR 53.9%, 191 trades, max DD $35,172 (13.8%)**. Months: Jan +4.1k, Feb +15.7k, Mar +52.0k, Apr +28.3k, May +37.3k, **Jun -11.0k**, Jul +4.6k, Aug +63.9k, Sep +7.9k, Oct +11.0k.
+  Same setup through the test copy: +$211,757 / +$209,929 (two runs). Plain v1.23, 2 lots: +$238,448, PF 1.30, 932 trades, DD $30.7k.
+- Caveats: Zee tuned the chart on Aug-Oct and picked two SELL boxes from the full-year table (hindsight); Jan-Jul were never on the chart.
+
 ## Saad_strategy_15min_chart_test v1.00 (2026-10-19) — TEST copy: Zee's TradingView settings in MT5
 
 Zee: *"can you take the current settings from tradingview and test them in MT5 on saad_ea_15min (just test, if implementation needed make a test copy)"*
