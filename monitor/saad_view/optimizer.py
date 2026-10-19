@@ -184,7 +184,7 @@ class Optimizer:
             ch = lambda inp: {k: v for k, v in inp.items() if str(v) != str(self.start.get(k))}
             return {"running": self.running, "done": self.done, "error": self.error, "evals": self.evals, "passes": self.passes, "restarts": self.restarts,
                     "seconds": round(time.time() - self.t0, 1) if self.t0 else 0, "objective": self.objective, "boxes": self.boxes, "keep": self.keep,
-                    "baseline": getattr(self, "baseline", None), "log": self.log[-200:],
+                    "baseline": getattr(self, "baseline", None), "log": self.log[-200:], "mt5": getattr(self, "mt5", None),
                     "best": dict(self.best, changed=ch(self.best["inputs"])) if self.best else None,
                     "board": [dict(x, changed=ch(x["inputs"])) for x in self.board]}
 

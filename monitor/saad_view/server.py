@@ -386,18 +386,18 @@ def _utc(e):
     return int((server_to_utc(datetime(1970, 1, 1) + timedelta(seconds=int(e))) - datetime(1970, 1, 1)).total_seconds())
 
 
-_BARS = None
+_BARS = {}
 
 
-def bars_json():
-    """The year's M15 candles (the same MT5 candles the EA trades on), UTC, with the EA's ADX / ATR."""
-    global _BARS
-    if _BARS is None:
-        D = sim.data()
+def bars_json(ds="year"):
+    """The M15 candles of a dataset ('year' = the Blueberry MT5 candles the EA trades on, 'tv' = TradingView's own candles), UTC, with ADX / ATR."""
+    if ds not in _BARS:
+        D = sim.data(ds)
         r2 = lambda a: [round(float(x), 2) for x in a]
-        _BARS = json.dumps({"t": [_utc(x) for x in D["t15"]], "o": r2(D["o15"]), "h": r2(D["h15"]), "l": r2(D["l15"]), "c": r2(D["c15"]),
-                            "adx": r2(D["adx"]), "atr": [round(float(x), 3) for x in D["atr"]]}, separators=(",", ":"))
-    return _BARS
+        _BARS[ds] = json.dumps({"ds": ds, "t": [_utc(x) for x in D["t15"]], "o": r2(D["o15"]), "h": r2(D["h15"]), "l": r2(D["l15"]), "c": r2(D["c15"]),
+                                "adx": r2(D["adx"]), "atr": [round(float(x), 3) for x in D["atr"]],
+                                "ticks_until": _utc(int(D["ticks_until"][0])) if "ticks_until" in D else None}, separators=(",", ":"))
+    return _BARS[ds]
 
 
 def full_inputs(sets):
@@ -405,12 +405,29 @@ def full_inputs(sets):
     return {i["name"]: str(sets.get(i["name"], dfl.get(i["name"], i["default"]))) for i in ea_inputs()["inputs"]}
 
 
-def sim_result(sets, want_ema=True):
+MODES = {"ea": {}, "chart": {"chart": True}, "chart_blind": {"chart": True, "blind_until": sim.TV_M1_FROM}}
+
+
+def _months(tr):
+    """win rate per month of the trade's exit, UTC (as TradingView's panel)"""
+    m = {}
+    for x in tr:
+        if x[10] != 0:
+            continue
+        k = datetime.utcfromtimestamp(_utc(x[4])).strftime("%Y-%m")
+        d = m.setdefault(k, [0, 0, 0.0]); d[0] += 1; d[1] += int(x[6] > 0); d[2] += float(x[6])
+    return {k: {"n": v[0], "w": v[1], "net": round(v[2])} for k, v in sorted(m.items())}
+
+
+def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea"):
+    """ds 'year' (Blueberry MT5 candles) / 'tv' (TradingView's candles); mode 'ea' (v1.27's rules, real spread + swap), 'chart' (the indicator's
+    rules, $0.17 spread, no swap), 'chart_blind' (and blind inside the entry candle before Oct 12, like TradingView without 1-minute data)."""
+    ds = ds if ds in ("year", "tv") else "year"
     inp = full_inputs(sets)
     t0 = time.time()
-    tr, su, st = sim.simulate(inp)
+    tr, su, st = sim.simulate(inp, ds=ds, **MODES.get(mode, {}))
     ms = round(1000 * (time.time() - t0), 1)
-    D = sim.data()
+    D = sim.data(ds)
     nf, ns = int(float(inp["InpEmaFast"])), int(float(inp["InpEmaSlow"]))
     why = {1: "stop loss", 2: "the next EMA touched (target)", 3: "closed back across the EMA", 4: "day close, in loss"}
     tgt = lambda n: (f"touch of the {nf if n == 9 else ns} EMA, all closed" if n > 0 else
@@ -429,15 +446,27 @@ def sim_result(sets, want_ema=True):
         ev.append({"type": "exit", "t": _utc(x[4]), "side": side, "price": round(x[5], 2), "sl": round(x[3], 2), "v1": round(x[6], 2), "v2": round(x[7], 2),
                    "ref": _utc(x[1]), "num": num, "text": why.get(int(x[13]), "")})
     brk = float(inp["InpBreakPips"]) * 0.1
-    for k, side, kind in su:
+    for k, side, kind in (su if want_setups else []):
         k = int(k)
         ev.append({"type": "setup", "t": _utc(D["t15"][k]), "side": int(side), "price": float(D["h15"][k]), "sl": float(D["l15"][k]),
                    "v1": round(float(D["h15"][k] + brk if side > 0 else D["l15"][k] - brk), 2), "v2": int(kind), "ref": None, "num": 0, "text": ""})
     ev.sort(key=lambda e: e["t"])
     trn, tst = tr[tr[:, 1] < optimizer.TRAIN_END], tr[tr[:, 1] >= optimizer.TRAIN_END]
-    out = {"inputs": inp, "ms": ms, "events": ev, "stats": st, "year": sim.score(tr), "train": sim.score(trn, 1), "test": sim.score(tst, 1)}
+    out = {"inputs": inp, "ms": ms, "events": ev, "stats": st, "year": sim.score(tr), "train": sim.score(trn, 1), "test": sim.score(tst, 1), "ds": ds, "mode": mode}
+    if mode == "chart_blind":                    # the same settings with 1-minute data everywhere: which trades TradingView scores wrongly
+        tr2 = sim.simulate(inp, ds=ds, chart=True)[0]
+        real = {(int(x[0]), int(x[1]) // 900): x for x in tr2 if x[10] == 0}
+        flips = []
+        for x in tr:
+            if x[10] != 0:
+                continue
+            y = real.get((int(x[0]), int(x[1]) // 900))
+            if y is not None and (x[6] > 0) != (y[6] > 0):
+                flips.append({"t": _utc(x[1]), "side": int(x[0]), "tv": round(float(x[6])), "real": round(float(y[6])), "why": why.get(int(y[13]), "")})
+        out["honest"] = {"year": sim.score(tr2), "months": _months(tr2), "flips": flips}
+    out["months"] = _months(tr)
     if want_ema:
-        ef, es = sim.emas(nf, ns)
+        ef, es = sim.emas(nf, ns, ds)
         out["ef"] = [round(float(x), 3) for x in ef]
         out["es"] = [round(float(x), 3) for x in es]
     return out
@@ -505,8 +534,23 @@ def opt_start(body):
     o = optimizer.Optimizer(full_inputs(body.get("start") or {}), objective=body.get("objective") or "ret_dd", boxes=bool(body.get("boxes")),
                             keep_going=bool(body.get("keep")))
     OPT["o"] = o
-    threading.Thread(target=o.run, daemon=True).start()
+    threading.Thread(target=opt_run_and_check, args=(o,), daemon=True).start()
     return {"ok": True}
+
+
+def opt_run_and_check(o):
+    """The optimizer, then its best straight into one MT5 run (no delay) - the Turtle TV Tester proposes, MT5 decides."""
+    o.run()
+    o.mt5 = None
+    best = o.best
+    if not best or not {k: v for k, v in best["inputs"].items() if not same(v, o.start.get(k))}:
+        return
+    for _ in range(900):                                       # wait for a run that is already going
+        if not STATE["busy"]:
+            break
+        time.sleep(2)
+    rid, err = start_run({"sets": best["inputs"], "delay": "none", "label": f"optimizer best {datetime.now():%H:%M}"}, source="optimizer")
+    o.mt5 = {"run": rid, "error": err}
 
 
 # ---------- HTTP ----------
@@ -543,11 +587,15 @@ class H(BaseHTTPRequestHandler):
             return self.send(404, {"error": "not found"})
         if u.path == "/api/inputs":
             info = ea_inputs()
+            grid = {n: g for n, k, g in optimizer.SPACE if k in ("int", "num")}
             for i in info["inputs"]:
                 i["sim"] = i["name"] in sim.IX or i["name"] in ("InpBandsB", "InpBandsS")
+                if i["name"] in grid:                         # slider range = the optimizer's grid (ints slide by 1)
+                    lo, hi, st = grid[i["name"]]
+                    i["range"] = [lo, hi, 1 if i["type"] == "int" else st]
             return self.send(200, info)
         if u.path == "/api/bars":
-            return self.send(200, bars_json())
+            return self.send(200, bars_json((q.get("ds") or ["year"])[0]))
         if u.path == "/api/opt":
             return self.send(200, OPT["o"].state() if OPT["o"] else {})
         if u.path == "/api/tv":
@@ -581,7 +629,8 @@ class H(BaseHTTPRequestHandler):
             if u.path == "/api/ask":
                 return self.send(200, ask_claude(body))
             if u.path == "/api/sim":
-                return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True))))
+                return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
+                                                 body.get("ds") or "year", body.get("mode") or "ea"))
             if u.path == "/api/optimize":
                 return self.send(200, opt_start(body))
             if u.path == "/api/opt_stop":
