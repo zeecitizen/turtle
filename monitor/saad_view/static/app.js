@@ -276,7 +276,50 @@ function askHtml(t, busy) {
     <div class="k">${fullFmt(t.tIn + TZ)} · ${f2(t.en)} → ${f2(t.ex)} · <span class="${cls(t.pnl)}">${money(t.pnl)}</span> · ${esc(t.why || '')}</div>
     <textarea id="tAskQ" placeholder="e.g. Why did this lose? Was the setup clean? What should the EA have seen?" ${busy ? 'disabled' : ''}></textarea>
     <div class="row" style="gap:8px;align-items:center"><button id="tAskGo" class="primary" ${busy ? 'disabled' : ''}>${busy ? '⏳ Claude is inspecting this trade…' : 'Send to Claude'}</button><span class="k">Claude sees the trade, 60 candles before it, EMAs, ADX, ATR and the EA's decisions.</span></div>
-    ${n.slice().reverse().map((x) => `<div class="qa"><b>You:</b> ${esc(x.q)}\n<b>Claude</b> <span class="k">${esc(x.at)}</span>: ${esc(x.a)}</div>`).join('')}`;
+    ${n.map((x, i) => [x, i]).reverse().map(([x, i]) => `<div class="qa"><b>You:</b> ${esc(x.q)}\n<b>Claude</b> <span class="k">${esc(x.at)}</span>: ${esc(x.a)}</div>` + hypHtml(t, x, i)).join('')}`;
+}
+const HYPJ = {};                                               // running hypothesis jobs by `${key}|${idx}|${kind}`
+function hypHtml(t, x, i) {
+  if (!/hypothes/i.test(x.a)) return '';
+  const k = tKey(t), jt = HYPJ[`${k}|${i}|test`], jf = HYPJ[`${k}|${i}|feature`], T = x.test;
+  let h = `<div class="row" style="gap:6px;margin-top:6px"><button data-hyp="test" data-i="${i}" ${jt ? 'disabled' : ''}>${jt ? '⏳ ' + esc(jt.phase || 'testing') : (T ? '🧪 Test again' : '🧪 Test hypothesis')}</button></div>`;
+  if (T) {
+    const [LA, LB] = T.labels, B0 = T.base, tot0 = B0.train.net + B0.test.net, c = (s) => `${money(s.net)} · ${s.wr}% · ${s.n}`;
+    h += `<div class="k" style="margin-top:4px">Tested on ${T.ds === 'm15' ? '4 years' : '2026'} (${esc(T.at)}). Your settings: ${LA} ${money(B0.train.net)} · ${LB} ${money(B0.test.net)} · total ${money(tot0)}</div>`;
+    T.hyps.forEach((y, j) => {
+      const ch = Object.entries(y.changes || {}).map(([a, b]) => `${esc(a.replace(/^Inp/, ''))} ${esc(b)}`).join(', ');
+      h += `<div style="border-left:3px solid #2962ff;padding:4px 6px;margin-top:6px"><b>${esc(y.hypothesis || '')}</b><div class="k">${esc(y.note || '')}${y.exact === false ? ' (approximate)' : ''}</div>`;
+      if (y.train) {
+        const tot = y.train.net + y.test.net, both = y.train.net > B0.train.net && y.test.net > B0.test.net;
+        h += `<div>${ch}</div><div>${LA} <span class="${cls(y.train.net - B0.train.net)}">${c(y.train)}</span> · ${LB} <span class="${cls(y.test.net - B0.test.net)}">${c(y.test)}</span> · total <b class="${cls(tot - tot0)}">${money(tot)}</b> (${money(tot - tot0)} vs yours)${both ? ' <span class="good">✓ better in both halves</span>' : ''}</div>
+          <button data-happly="${i}|${j}">Apply to the chart</button> `;
+      } else h += `<div class="warn">No existing setting can express this: it needs a new feature.</div>`;
+      h += `<button data-hfeat="${i}|${j}" ${jf ? 'disabled' : ''}>${jf ? '⏳ ' + esc(jf.phase || '') : '🛠 Convert hypothesis to feature'}</button></div>`;
+    });
+  }
+  for (const f of x.features || []) h += `<div class="qa"><b>Feature added</b> <span class="k">${esc(f.at)}</span> (${esc(f.which)}):\n${esc(f.report)}</div>`;
+  return h;
+}
+async function hypRun(t, i, kind, which) {
+  const k = tKey(t), id = `${k}|${i}|${kind}`;
+  const r = await api('/api/hyp', { key: k, idx: i, kind, which, inputs: CUR, ds: SRC.ds === 'tv' ? 'year' : SRC.ds });
+  if (r.error) { toast(esc(r.error)); return; }
+  HYPJ[id] = { phase: 'starting' }; if (ASKT === t) $('#tAsk').innerHTML = askHtml(t, false);
+  for (;;) {
+    await new Promise((res) => setTimeout(res, 3000));
+    const j = await api('/api/hyp_job?id=' + r.id).catch(() => null);
+    if (!j) continue;
+    HYPJ[id] = j;
+    if (!j.running) break;
+    if (ASKT === t) { const q = $('#tAskQ') && $('#tAskQ').value; $('#tAsk').innerHTML = askHtml(t, false); if (q) $('#tAskQ').value = q; }
+  }
+  delete HYPJ[id];
+  if (HYPJ[id] === undefined) {
+    const j = await api('/api/hyp_job?id=' + r.id);
+    if (j.error) toast('Claude: ' + esc(j.error));
+    if (kind === 'feature' && !j.error) toast('Claude finished the feature. Its report is in the chat box. Restart Turtle TV (start_turtle_tv.bat) and reload to use the new setting.', 15000);
+  }
+  NOTESD = await api('/api/trade_notes'); if (ASKT === t) $('#tAsk').innerHTML = askHtml(t, false); redraw();
 }
 let ASKT = null;
 function openAsk(t, L) {
@@ -298,6 +341,17 @@ async function sendAsk() {
 document.addEventListener('click', (e) => {
   if (e.target.id === 'tAskX') { $('#tAsk').hidden = true; ASKT = null; }
   if (e.target.id === 'tAskGo') sendAsk();
+  const d = e.target.dataset || {};
+  if (d.hyp && ASKT) hypRun(ASKT, +d.i, 'test');
+  if (d.happly && ASKT) {
+    const [i, j] = d.happly.split('|').map(Number), y = NOTESD[tKey(ASKT)][i].test.hyps[j];
+    CUR = { ...DFL, ...y.inputs }; markForm(); scheduleSim(0);
+    toast(`On the chart: ${esc(Object.entries(y.changes).map(([a, b]) => a.replace(/^Inp/, '') + ' ' + b).join(', '))}. Check it in MT5 before trusting it.`);
+  }
+  if (d.hfeat && ASKT) {
+    const [i, j] = d.hfeat.split('|').map(Number), y = NOTESD[tKey(ASKT)][i].test.hyps[j];
+    if (confirm(`Claude will add "${y.hypothesis}" to the EA as a new setting (off by default), mirror it on the chart, test it in MT5, record the version and commit. It takes several minutes. Go?`)) hypRun(ASKT, i, 'feature', y.hypothesis + (y.note ? ' - ' + y.note : ''));
+  }
 });
 document.addEventListener('keydown', (e) => { if (e.target.id === 'tAskQ' && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) sendAsk(); });
 api('/api/trade_notes').then((n) => { NOTESD = n || {}; redraw(); }).catch(() => {});
