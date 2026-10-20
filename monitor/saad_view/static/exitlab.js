@@ -125,6 +125,7 @@ function pLab() {
   if (LABS.cat) h += labCatalogue(LABS.cat, LA, LB);
   if (LABS.search) h += labSearch(LABS.search, LA, LB);
   h += labHeat(LA, LB);
+  if (typeof labResearch === 'function') { if (RS.reports === null) { RS.reports = []; rsLoad(); } h += labResearch(); }
   return h + '</div>';
 }
 

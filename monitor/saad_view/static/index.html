@@ -126,6 +126,10 @@
   .dexsvg line.time { stroke: #90a4ae; stroke-dasharray: 3 3; } .dexsvg text.time { fill: #eceff1 !important; }
   .dexsvg .chip { fill: #1c313a; stroke: #4dd0e1; stroke-width: 1.5; } .dexsvg .chipt { fill: #e0f7fa !important; font-size: 9px !important; }
   .dexsvg .dx { cursor: help; } .dexsvg .dx:hover .lv, .dexsvg .dx:hover .chip { stroke-width: 5; filter: drop-shadow(0 0 5px #fff); } .dexsvg .dx:hover text { fill: #fff !important; }
+  .levers { flex: 1 1 300px; max-width: 420px; display: flex; flex-direction: column; gap: 8px; background: #0f2742; border: 3px solid #26c6da; border-radius: 14px; padding: 10px 12px; }
+  .lever { display: flex; flex-direction: column; font: bold 11px "Courier New", monospace; color: #e0f7fa; }
+  .lever input { accent-color: #ff9800; }
+  .dexres { margin: 6px 0; font-size: 13px; } .rsrep { margin: 8px 0; } .rsrep summary { cursor: pointer; }
   #dexTip { position: fixed; z-index: 80; display: none; max-width: 320px; background: #fffde7; color: #1a237e; border: 3px solid #1a237e; border-radius: 12px; padding: 8px 11px;
     font: 12px "Trebuchet MS", sans-serif; box-shadow: 5px 5px 0 #ff9800; pointer-events: none; }
   h4 { margin: 4px 0 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
@@ -199,5 +203,6 @@
 <script src="/static/app.js"></script>
 <script src="/static/exitlab.js"></script>
 <script src="/static/exitlab_draw.js"></script>
+<script src="/static/exitlab_research.js"></script>
 </body>
 </html>
