@@ -380,7 +380,7 @@ function pOpt() {
   const o = OPTS;
   const obj = OPTUI.obj;
   let h = `<div class="row" style="align-items:center;gap:10px"><b>Step optimizer</b>
-    <label>Score <select id="oObj">${[['ret_dd', 'net ÷ max drawdown'], ['net', 'net profit'], ['pf', 'profit factor'], ['wr', 'win rate']].map(([v, l]) => `<option value="${v}" ${v === obj ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <label>Score <select id="oObj">${[['ret_dd', 'net ÷ max drawdown'], ['net', 'net profit'], ['pf', 'profit factor'], ['wr', 'win rate'], ['entries', 'Entries: try every entry setting'], ['exits', 'Exits: try every exit setting']].map(([v, l]) => `<option value="${v}" ${v === obj ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     <label class="tog"><input type="checkbox" id="oBox" ${OPTUI.boxes ? 'checked' : ''}> include the range boxes</label>
     <label class="tog"><input type="checkbox" id="oKeep" ${OPTUI.keep ? 'checked' : ''}> keep optimizing (restarts)</label>
     <button id="oGo" class="primary">Optimize from the settings on screen</button><button id="oStop">Stop</button></div>
@@ -388,6 +388,18 @@ function pOpt() {
     The score is measured on <b>Jan – Jun</b> only. <b>Jul – Oct</b> is shown beside it but never used to choose: if it gets worse while Jan – Jun improves, the settings are memorising the past.</p>`;
   if (!o || !o.baseline) return h;
   const [LA, LB] = o.labels || ['Jan – Jun', 'Jul – Oct'];
+  if (o.kind === 'survey') {
+    const B0 = o.baseline, tot0 = B0.train.net + B0.test.net;
+    h += `<p class="note">${o.running ? '⏳ running' : o.error ? 'stopped: ' + esc(o.error) : '✓ done'} · ${o.group === 'entries' ? 'every entry setting' : 'every exit setting'}, one at a time from the settings on screen · ${o.evals} tried in ${o.seconds} s.
+      Your settings: ${LA} ${money(B0.train.net)} · ${LB} ${money(B0.test.net)} · total <b>${money(tot0)}</b>. Green rows beat yours on BOTH halves. Python's result is a hypothesis: MT5 decides.</p>`;
+    h += `<div class="scroll">` + table(['Setting', 'Value', 'Also set', LA, LB, 'Total', 'vs yours', ''], o.rows.map((r, i) => {
+      const both = r.train.net > B0.train.net && r.test.net > B0.test.net;
+      const w = Object.entries(r.with || {}).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ');
+      return `<tr${both ? ' style="background:rgba(0,230,118,.08)"' : ''}><td style="text-align:left">${esc(r.setting.replace(/^Inp/, ''))}</td><td>${esc(r.value.length > 12 ? 'all on' : r.value)}</td><td class="k">${w}${!r.test.n ? ' <span class="bad">⚠ no trades in ' + LB + ': a trade never closed (simulator, check in MT5)</span>' : ''}</td>` +
+        `<td class="${cls(r.train.net)}">${money(r.train.net)} · ${r.train.wr}% · ${r.train.n}</td><td class="${cls(r.test.net)}">${money(r.test.net)} · ${r.test.wr}% · ${r.test.n}</td>` +
+        `<td class="${cls(r.total)}"><b>${money(r.total)}</b></td><td class="${cls(r.total - tot0)}">${money(r.total - tot0)}</td><td><button data-surv="${i}">Apply this setting</button></td></tr>`; })) + '</div>';
+    return h;
+  }
   const B = o.baseline, best = o.best, line = (x) => x ? `${money(x.net)} · WR ${x.wr}% · PF ${x.pf} · ${x.n} trades` : '–';
   h += `<p class="note">${o.running ? '⏳ running' : o.error ? 'stopped: ' + esc(o.error) : '✓ done'} · ${o.evals.toLocaleString()} settings tried in ${o.seconds} s (each one a full run over ${o.ds === 'm15' ? 'all 4 years' : 'the year'}) · ${o.passes} passes${o.restarts ? ' · ' + o.restarts + ' restarts' : ''}</p>`;
   h += table(['', `${LA} (optimized on)`, `${LB} (unseen)`, 'All'], [
@@ -719,6 +731,11 @@ document.addEventListener('click', async (e) => {
   } else if (bs) setBands('InpBands' + bs[0], (bs[1] === '1' ? '1' : '0').repeat(21));
   if (e.target.id === 'oStop') { await api('/api/opt_stop', {}); OPTS = await api('/api/opt'); renderPanel('tt'); }
   if (e.target.id === 'oApply' && OPTS && OPTS.best) { CUR = { ...OPTS.best.inputs }; markForm(); scheduleSim(0); toast('The optimizer\'s best is on the chart; its MT5 check is in the MT5 section.'); }
+  if (e.target.dataset && e.target.dataset.surv != null && OPTS && OPTS.rows) {
+    const r = OPTS.rows[+e.target.dataset.surv]; CUR = { ...DFL, ...r.inputs }; markForm(); scheduleSim(0);
+    const w = Object.entries(r.with || {}).map(([k, v]) => k.replace(/^Inp/, '') + '=' + v).join(', ');
+    toast(`Applied: ${esc(r.setting.replace(/^Inp/, ''))} = ${esc(r.value)}${w ? ' (with ' + esc(w) + ')' : ''}.`);
+  }
   if (e.target.dataset && e.target.dataset.step != null && OPTS) {
     const l = OPTS.log[+e.target.dataset.step - Math.max(0, (OPTS.log_total || OPTS.log.length) - OPTS.log.length)] || OPTS.log[+e.target.dataset.step];
     if (l && l.inputs) { CUR = { ...DFL, ...l.inputs }; markForm(); scheduleSim(0); toast(`Applied step: ${esc(l.setting.replace(/^Inp/, ''))} ${esc(l.from)} → ${esc(l.to)} (with the steps before it in "${esc(l.run)}").`); }

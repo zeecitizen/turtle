@@ -532,6 +532,11 @@ def opt_start(body):
     if OPT["o"] and OPT["o"].running:
         OPT["o"].stop()
         time.sleep(0.2)
+    if body.get("objective") in ("entries", "exits"):            # survey: every entry / exit setting one at a time, all results listed
+        o = optimizer.Survey(full_inputs(body.get("start") or {}), body["objective"], ds=body.get("ds") if body.get("ds") in ("year", "m15") else "year")
+        OPT["o"] = o
+        threading.Thread(target=o.run, daemon=True).start()
+        return {"ok": True}
     o = optimizer.Optimizer(full_inputs(body.get("start") or {}), objective=body.get("objective") or "ret_dd", boxes=bool(body.get("boxes")),
                             keep_going=bool(body.get("keep")), ds=body.get("ds") if body.get("ds") in ("year", "m15") else "year")
     OPT["o"] = o

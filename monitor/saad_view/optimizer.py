@@ -212,3 +212,89 @@ if __name__ == "__main__":
         print(f"  {l['setting']}: {l['from']} -> {l['to']}  score {l['score']}  train {l['train']['net']:+,.0f} WR {l['train']['wr']}% | "
               f"test {l['test']['net']:+,.0f} WR {l['test']['wr']}%")
     print("baseline:", s["baseline"]["train"]["net"], s["baseline"]["test"]["net"], "| best changed:", s["best"]["changed"])
+
+
+# ---------------------------------------------------------------- survey: every entry / every exit setting, one at a time
+# Zee 2026-10-20: "give an option called entries and another called exits .. the results show diff exits and their results etc as well as diff entries"
+SURVEY = {
+    "entries": [("InpEmaFast", [8, 10, 12, 14, 16, 18, 20, 24]), ("InpEmaSlow", [24, 28, 32, 36, 40, 50, 60]),
+                ("InpWickMin", [0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6]), ("InpBodyMax", [0.3, 0.4, 0.5, 0.6, 0.7]),
+                ("InpNoseMax", [0.1, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5]), ("InpMaruBody", [0.4, 0.5, 0.53, 0.6, 0.7]),
+                ("InpHamRatio", [1.5, 2, 2.5, 3, 4]), ("InpHamNose", [0.3, 0.4, 0.5, 0.6]), ("InpMinRangeAtr", [0, 0.3, 0.45, 0.55, 0.7, 0.9]),
+                ("InpUsePin", ["true", "false"]), ("InpMarubozu", ["true", "false"]), ("InpHammer", ["true", "false"]), ("InpStar", ["true", "false"]),
+                ("InpTouchMode", [0, 1]), ("InpTouchPips", [0, 0.5, 1, 2, 3]), ("InpLongRule", [0, 1, 2]), ("InpShortLine", [0, 1, 2]),
+                ("InpBreakBars", [1, 2, 3]), ("InpBreakPips", [0, 1, 2, 3, 4, 6]), ("InpAdxMin", [0, 15, 20, 25, 28, 30, 32, 35, 40]),
+                ("InpSessFrom", [0, 3, 8, 10, 15]), ("InpSessTo", [17, 19, 22, 24]), ("InpRangeLook", [5, 7, 10, 14]), ("InpRangeLookS", [5, 7, 10, 14]),
+                ("InpBandOff", [0, 1]), ("InpBandsB", ["1" * 21]), ("InpBandsS", ["1" * 21]), ("InpEntryMode", [0, 1, 2]),
+                ("InpChopEr", [0, 0.05, 0.1, 0.15]), ("InpTrendAlign", ["true", "false"]), ("InpPriceSide", ["true", "false"]), ("InpHtfMin", [0, 60, 240]),
+                ("InpCoolBars", [0, 2, 4, 8]), ("InpSkipDow", [-1, 1, 5])],
+    "exits": [("InpExitMode", [0, 1, 2]), ("InpSlMode", [0, 1, 2]), ("InpSlAtrMult", [1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5]),
+              ("InpSlPips", [20, 31, 40, 60]), ("InpSlUsd", [3, 5, 8, 12]), ("InpMaxRiskUsd", [0, 10, 15, 20, 25, 30]),
+              ("InpCloseLossMins", [0, 3, 15]), ("InpBeUsd", [0, 3, 5, 8, 12]), ("InpLockAtUsd", [0, 5, 8, 12]), ("InpFixTpPips", [0, 20, 40, 60, 100]),
+              ("InpMaxBars", [0, 4, 8, 16, 32]),
+              ("InpLongTouch", [0, 1]), ("InpShortTouch", [0, 1]), ("InpPartialPct", [0, 0.25, 0.5, 0.75]), ("InpTp1Be", ["false", "true"]),
+              ("InpLongTrailUsd", [1, 2, 3, 5, 8]), ("InpShortTrailUsd", [1, 2, 3, 5, 8]), ("InpTrail", ["false", "true"]),
+              ("InpTrailMode", [0, 1, 2]), ("InpTrailAtr", [1, 1.5, 2, 3]), ("InpRide", ["false", "true"]), ("InpBeTpPct", [0, 0.5, 0.75, 0.9]),
+              ("InpMinTpPips", [5, 15, 30]), ("InpSwingPivot", [2, 3, 5])],
+}
+EXIT0 = {"InpLongTouch", "InpShortTouch", "InpPartialPct", "InpTp1Be", "InpLongTrailUsd", "InpShortTrailUsd", "InpTrail", "InpTrailMode", "InpTrailAtr",
+         "InpRide", "InpBeTpPct", "InpMinTpPips", "InpSwingPivot"}      # v1.23's exit options: only act with exit mode 0
+SLMODE = {"InpSlPips": "0", "InpSlUsd": "2"}                             # a stop size only acts in its own stop mode
+
+
+def _same(a, b):
+    try:
+        return abs(float(a) - float(b)) < 1e-9
+    except ValueError:
+        return str(a).lower() == str(b).lower()
+
+
+class Survey:
+    def __init__(self, start, group, ds="year"):
+        o = Optimizer(start, ds=ds)
+        self.start, self.group, self.ds, self.window, self.labels = o.start, group, ds, o.window, o.labels
+        self.rows, self.evals, self.running, self.done, self.error, self.t0, self._stop = [], 0, False, False, None, None, False
+        self.baseline = None
+
+    def _ev(self, inp):
+        self.evals += 1
+        _, a, b, _y = evaluate(inp, "net", 1, self.window, self.ds)
+        return a, b
+
+    def run(self):
+        self.running, self.t0 = True, time.time()
+        try:
+            a, b = self._ev(self.start)
+            self.baseline = {"train": a, "test": b}
+            for name, vals in SURVEY[self.group]:
+                if name not in self.start:
+                    continue
+                for v in vals:
+                    if self._stop:
+                        return
+                    extra = {}
+                    if name in EXIT0 and self.start.get("InpExitMode") != "0":
+                        extra["InpExitMode"] = "0"
+                    if name in SLMODE and self.start.get("InpSlMode") != SLMODE[name]:
+                        extra["InpSlMode"] = SLMODE[name]
+                    if _same(self.start[name], v) and not extra:
+                        continue
+                    inp = dict(self.start, **extra)
+                    inp[name] = str(v)
+                    a, b = self._ev(inp)
+                    if a is None:
+                        continue
+                    self.rows.append({"setting": name, "value": str(v), "with": extra, "train": a, "test": b,
+                                      "total": round(a["net"] + b["net"]), "inputs": inp})
+        except Exception as e:                                           # noqa: BLE001
+            self.error = str(e)
+        finally:
+            self.running, self.done = False, True
+
+    def stop(self):
+        self._stop = True
+
+    def state(self):
+        return {"kind": "survey", "group": self.group, "running": self.running, "done": self.done, "error": self.error, "evals": self.evals,
+                "seconds": round(time.time() - self.t0, 1) if self.t0 else 0, "ds": self.ds, "labels": self.labels, "baseline": self.baseline,
+                "rows": sorted(self.rows, key=lambda r: -r["total"]), "objective": self.group, "log": [], "best": None, "board": []}
