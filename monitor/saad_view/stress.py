@@ -40,21 +40,25 @@ def count_trials(kind, n):
 
 
 # ---------------------------------------------------------------- engine helpers
-_DS_EMA = {}
+
+
+_MEM = [0]
 
 
 def sim_on(D, inputs, **extra):
-    """sim.simulate on an in-memory dataset (perturbed / scrambled / synthetic prices on the real timeline)."""
-    P, bb, bs = sim.pvec(inputs)
-    key = (id(D), int(P[0]), int(P[1]))
-    if key not in _DS_EMA:
-        _DS_EMA[key] = (sim.ema(D["c15"], int(P[0]), D["c15"][0]), sim.ema(D["c15"], int(P[1]), D["c15"][0]))
-    ef, es = _DS_EMA[key]
-    X = sim.xvec(extra)
-    out = np.zeros((6000, 14)); setups = np.zeros((40000, 3)); stats = np.zeros(8)
-    nt, ns = sim.run(D["t15"], D["hr15"], D["o15"], D["h15"], D["l15"], D["c15"], ef, es, D["atr"], D["adx"], D["t1"], D["o1"], D["h1"], D["l1"],
-                     D["c1"], D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], P, X, bb, bs, out, setups, stats)
-    return out[:nt]
+    """the FULL engine (sim_full, every EA input - the one the rest of Turtle TV uses) on an in-memory dataset (perturbed / scrambled / synthetic
+    prices on the real timeline). Each dataset gets a private, one-off slot: its EMA / ADX caches can never be handed to another dataset (they were
+    keyed by id(D), which Python reuses once a dataset is freed - the look-ahead audit then saw another dataset's EMAs and cried wolf)."""
+    _MEM[0] += 1
+    key = f"_mem{_MEM[0]}"
+    sim._D[key] = D
+    try:
+        return sim.simulate(inputs, ds=key, **extra)[0]
+    finally:
+        sim._D.pop(key, None)
+        for c in (sim._EMA, sim._ADX, sim._HTF):
+            for k in [k for k in c if k[0] == key]:
+                c.pop(k, None)
 
 
 def real(tr):
