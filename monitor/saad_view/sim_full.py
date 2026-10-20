@@ -185,8 +185,12 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
         k = k1[j]
         spr = X[2] if X[2] > 0 else sp1[j] * X[10]
         o = o1[j]
+        flt = 0.0                                            # open trades at this minute's open: MT5's ACCOUNT_EQUITY counts them
+        for x in range(MAXP):
+            if ps[x, SD] != 0:
+                flt += ((o if ps[x, SD] > 0 else o + (X[2] if X[2] > 0 else sp1[j] * X[10])) - ps[x, EN]) * ps[x, SD] * ps[x, LOTS] * 100.0 + ps[x, REAL] + ps[x, SWP]
         if day1[j] != curDay:
-            curDay = day1[j]; dayStart = equity; dayPnl = 0.0
+            curDay = day1[j]; dayStart = equity + flt; dayPnl = 0.0
         if roll[j] > 0 and X[3] > 0.5:
             for x in range(MAXP):
                 if ps[x, SD] != 0:
@@ -200,8 +204,15 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                     sd0 = int(ps[x, SD])
         if sd0 == 0:
             sd0 = gh
+        sdt = 0                                               # a trade on a tight $ trail: MT5 moves its stop every tick, so a bounce
+        for x in range(MAXP):                                 # inside the minute stops it - favourable extreme first, then the adverse one
+            if ps[x, SD] != 0 and ps[x, USD] > 0.5 and sdt == 0:
+                sdt = int(ps[x, SD])
         pts[0] = o
-        if X[15] > 0.5 and sd0 != 0:
+        if sdt != 0:
+            pts[1] = h1[j] if sdt > 0 else l1[j]
+            pts[2] = l1[j] if sdt > 0 else h1[j]
+        elif X[15] > 0.5 and sd0 != 0:
             pts[1] = l1[j] if sd0 > 0 else h1[j]
             pts[2] = h1[j] if sd0 > 0 else l1[j]
         elif c1[j] >= o:
@@ -247,7 +258,13 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                     ask = cur + spr
                     en = ps[x, EN]
                     s_ = ps[x, SL]
-                    # broker stop
+                    # broker stop (a trade on the tight $ trail: the minute's whole adverse range counts - MT5 trails tick by tick and a bounce stops it)
+                    if ps[x, USD] > 0.5 and s_ != 0 and q > 0 and ((l1[j] <= s_) if sd > 0 else (h1[j] + spr >= s_)) and not (bid <= s_ if sd > 0 else ask >= s_):
+                        nt, pn = _close(out, nt, ps, x, s_ - sd * X[9] - sd * X[8], tq, k, 6, 1.0)
+                        equity += pn; dayPnl += pn
+                        if pn < 0:
+                            coolUntil = tq + int(P[85]) * 900
+                        continue
                     if s_ != 0 and (bid <= s_ if sd > 0 else ask >= s_):
                         xp = (s_ if (prv > s_ if sd > 0 else prv + spr < s_) else (bid if sd > 0 else ask)) - sd * X[9] - sd * X[8]
                         why = 1
@@ -344,13 +361,20 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                 ps[x, TPN] = _support(l15, k, tn - P[47] * pip, int(P[44]), int(P[45]))
                         continue
                     touched = False
+                    tlev = 0.0
                     if P[51] == 1 and sd > 0 and (ps[x, RIDE] < 0.5 or ps[x, RES1] > 0.5) and ps[x, NOTP] < 0.5:
                         tgt = ps[x, TP] if ps[x, RES1] > 0.5 else live_e - P[43] * pip
                         if tgt > en and bid >= tgt:
                             touched = True
+                            tlev = tgt
                     if not touched and sd < 0 and ps[x, RIDE] < 0.5 and ps[x, TP] > 0 and P[56] == 1 and bid <= ps[x, TP]:
                         touched = True
+                        tlev = ps[x, TP]
                     if touched:
+                        # TP1 is hit where the price CROSSED the target (not at the minute's extreme)
+                        if (prv < tlev) if sd > 0 else (prv > tlev):
+                            bid = tlev
+                            ask = tlev + spr
                         # TP1 touch: partial close, $ trail from the market, breakeven, aim for the next liquidity
                         pct = P[98]
                         if pct > 0:
@@ -568,7 +592,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                     good = False
                             if good and ((P[89] > 0 and dayPnl <= -P[89]) or (P[90] > 0 and dayPnl >= P[90])):
                                 good = False
-                            if good and P[103] > 0 and equity <= dayStart * (1 - P[103] / 100.0):
+                            if good and P[103] > 0 and equity + flt <= dayStart * (1 - P[103] / 100.0):
                                 good = False
                             npos = 0
                             first_side = 0
