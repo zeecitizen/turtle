@@ -57,6 +57,7 @@ DEPOSIT = 100000
 FROM, TO = "2026.01.01", "2026.10.17"
 RUNS = HERE / "runs"
 SETTINGS = HERE / "settings"
+PRIMARY = HERE / "settings" / "primary.txt"         # the save that loads on every page start (Zee 2026-10-21)
 SAVED = HERE / "settings" / "saved"                   # the page's saved chart settings, one JSON per save                  # the JSON hand-off files (format "turtle-settings/1"; see settings_doc)
 STATIC = HERE / "static"
 TERMINALS = Path.home() / "AppData" / "Roaming" / "MetaQuotes" / "Terminal"
@@ -1107,6 +1108,8 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, info)
         if u.path == "/api/bars":
             return self.send(200, bars_json((q.get("ds") or ["year"])[0]))
+        if u.path == "/api/primary":                     # the primary save's name, kept on the server so every browser starts from it
+            return self.send(200, {"name": PRIMARY.read_text(encoding="utf-8").strip() if PRIMARY.exists() else None})
         if u.path == "/api/saved":                       # Zee: "save current chart settings ... shows all saved settings at the bottom"
             SAVED.mkdir(parents=True, exist_ok=True)
             rows = []
@@ -1175,10 +1178,19 @@ class H(BaseHTTPRequestHandler):
                        "lab": exitlab.clean(body.get("lab") or {}) if body.get("lab") else {}, "lab_describe": exitlab.describe(body.get("lab")) if body.get("lab") else ""}
                 (SAVED / f"{name}.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
                 return self.send(200, {"name": name})
+            if u.path == "/api/primary":
+                n = body.get("name")
+                if n and re.fullmatch(r"[\d\- ]+", str(n)):
+                    PRIMARY.write_text(str(n), encoding="utf-8")
+                else:
+                    PRIMARY.unlink(missing_ok=True)
+                return self.send(200, {"ok": True})
             if u.path == "/api/saved_delete":
                 n = str(body.get("name", ""))
                 if re.fullmatch(r"[\d\- ]+", n):
                     (SAVED / f"{n}.json").unlink(missing_ok=True)
+                    if PRIMARY.exists() and PRIMARY.read_text(encoding="utf-8").strip() == n:
+                        PRIMARY.unlink()
                 return self.send(200, {"ok": True})
             if u.path == "/api/ask":
                 return self.send(200, ask_claude(body))
