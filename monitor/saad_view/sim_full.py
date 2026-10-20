@@ -32,6 +32,11 @@ NPS = 31
 (E_ON, E_TGT, E_TGTK, E_FB, E_FBB, E_FBN, E_CX, E_CXB, E_CXN, E_CXW, E_CXA, E_P1R, E_P1F, E_P1BE, E_P2R, E_P2F, E_BER, E_BEO, E_LOCK,
  E_TR, E_TRK, E_TRA, E_TRB, E_MAXB, E_STB, E_STR, E_ADX, E_FRI, E_PESS) = range(29)
 NE = 32
+# EA inputs that only act with InpExitMode 0 (the v1.23 exits): in exit modes 1-2 the EA's ManageTrade / ManageBar return before reading them
+MODE0_ONLY = {"InpLongExit", "InpLongTpPips", "InpSwingPivot", "InpSwingLook", "InpShortTpPips", "InpMinTpPips", "InpMaxTpPips", "InpBeUsd",
+              "InpLongTouch", "InpLongTrailUsd", "InpLongResTp", "InpLongResTp1", "InpResTp1Ride", "InpShortTouch", "InpTrailStepUsd",
+              "InpShortTrailUsd", "InpBeTpPct", "InpTrail", "InpTrailSide", "InpRide", "InpTrailMode", "InpTrailN", "InpTrailPips", "InpTrailAtr",
+              "InpTrailStart", "InpRideLock", "InpLockPips", "InpLockAtUsd", "InpLockUsd", "InpFixTpPips", "InpMaxBars", "InpPartialPct", "InpTp1Be"}
 EFIELDS = ["on", "tgt", "tgt_k", "fb", "fb_buf", "fb_n", "cx", "cx_buf", "cx_n", "cx_when", "cx_after", "p1_r", "p1_frac", "p1_be", "p2_r",
            "p2_frac", "be_r", "be_off", "lock_r", "tr", "tr_k", "tr_act", "tr_buf", "max_bars", "stale_bars", "stale_r", "adx_exit", "fri_hour",
            "pess"]
@@ -988,4 +993,10 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                             prv = be
                             continue
                 break
+    if stats.shape[0] >= 10:                                  # still open when the data ends: how many, and the oldest entry (Exit Lab warnings)
+        for x in range(MAXP):
+            if ps[x, SD] != 0:
+                stats[8] += 1
+                if stats[9] == 0 or ps[x, ET] < stats[9]:
+                    stats[9] = ps[x, ET]
     return nt, ns

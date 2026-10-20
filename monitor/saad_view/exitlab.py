@@ -210,13 +210,16 @@ def _part(r):
 
 
 def run(inputs, ds, lab=None, sets=None, worst=False):
-    """one exit over the data -> (trades array, real trades)"""
+    """one exit over the data -> (trades array, real trades, still open at the end: {n, days})"""
     inp = dict(inputs, **(sets or {}))
-    tr = sim.simulate(inp, ds=ds, lab=clean(lab) if lab else None, worst_case=1.0 if worst else 0.0)[0]
-    return tr, tr[tr[:, 10] == 0]
+    tr, _, st = sim.simulate(inp, ds=ds, lab=clean(lab) if lab else None, worst_case=1.0 if worst else 0.0)
+    end = float(sim.data(ds)["t1"][-1])
+    oe = {"n": int(st.get("open_at_end", 0)), "days": round((end - st.get("open_since", 0)) / 86400.0, 1) if st.get("open_at_end") else 0.0,
+          "since": int(st.get("open_since", 0))}
+    return tr, tr[tr[:, 10] == 0], oe
 
 
-def stats(real, window, base_keys=None, base_pnl=None):
+def stats(real, window, base_keys=None, base_pnl=None, open_end=None):
     a0, a1, b0, b1 = window
     tr_, te_ = real[(real[:, 1] >= a0) & (real[:, 1] < a1)], real[(real[:, 1] >= b0) & (real[:, 1] < b1)]
     s = {"train": _part(tr_), "test": _part(te_), "all": _part(real)}
@@ -228,6 +231,8 @@ def stats(real, window, base_keys=None, base_pnl=None):
     s["why"] = {k: {"n": v[0], "wins": v[1], "net": round(v[2])} for k, v in sorted(why.items(), key=lambda kv: -kv[1][0])}
     s["partials"] = int((real[:, 19] > 0).sum()) if real.shape[1] > 19 else 0
     s["longest_h"] = round(float((real[:, 4] - real[:, 1]).max()) / 3600.0, 1) if len(real) else 0.0
+    s["open_end"] = open_end or {"n": 0, "days": 0.0, "since": 0}
+    s["stuck"] = bool(s["open_end"]["n"] and s["open_end"]["days"] > 2)     # a trade nothing closes: it blocks every later setup
     s["sides"] = {}
     for sd, nm in ((1, "BUY"), (-1, "SELL")):
         r = real[real[:, 0] == sd]
@@ -256,7 +261,7 @@ def trade_list(real):
 # ---------------------------------------------------------------- where the exits leave money (the EA's own exit, before any test)
 def diagnose(inputs, ds):
     window, labels = window_of(ds, inputs)
-    tr, real = run(inputs, ds)
+    tr, real, oe = run(inputs, ds)
     D = sim.data(ds)
     lots = float(inputs.get("InpLots", 1) or 1)
     R = np.maximum(real[:, 17], 0.05)
@@ -310,7 +315,7 @@ def diagnose(inputs, ds):
     giveback = float(((mfe[win] * lot[win] * 100.0) - pnl[win]).sum()) if win.any() else 0.0
     q = lambda arr, p: round(float(np.percentile(arr, p)), 2) if len(arr) else 0  # noqa: E731
     out = {
-        "labels": labels, "ds": ds, "n": int(len(real)), "stats": stats(real, window),
+        "labels": labels, "ds": ds, "n": int(len(real)), "stats": stats(real, window, open_end=oe),
         "losers_were_1r": {"n": int(lost_after.sum()), "net": round(float(pnl[lost_after].sum()))},
         "losers_were_half_r": {"n": int(lost_after_half.sum()), "net": round(float(pnl[lost_after_half].sum()))},
         "winners": {"n": int(win.sum()), "capture_pct": round(100 * capture, 1), "giveback": round(giveback)},
@@ -352,6 +357,8 @@ def _ea_rows(inputs):
             rows.append({"fam": "Day-close loss cut (EA setting)", "name": "No day-close loss cut" if m == "0" else f"Close losing trades {m} min before the daily close",
                          "sets": {"InpCloseLossMins": m}})
     tr = ea_trust()
+    same = lambda a, b: abs(float(a) - float(b)) < 1e-9 if str(a).replace(".", "", 1).lstrip("-").isdigit() and str(b).replace(".", "", 1).lstrip("-").isdigit() else str(a) == str(b)  # noqa: E731
+    rows = [r for r in rows if not all(same(v, inputs.get(k, "")) for k, v in r["sets"].items())]
     for r in rows:
         r["kind"] = "ea"
         if r.get("trust") != "untrusted":
@@ -459,6 +466,7 @@ class Job:
         self.action, self.inputs, self.ds, self.kw = action, inputs, ("year" if ds == "tv" else ds), kw
         self.running, self.done, self.error, self.phase, self.progress, self.total = False, False, None, "starting", 0, 0
         self.result, self.t0, self._stop = None, None, False
+        self.jid = f"{action}-{time.time_ns()}"
         self.window, self.labels = window_of(self.ds, inputs)
         mode = str(inputs.get("InpExitMode", "1"))
         self.lab_sets = {} if mode in ("1", "2") else {"InpExitMode": "1"}       # the lab's exits work on top of exit modes 1-2
@@ -470,8 +478,8 @@ class Job:
     # the EA's own exit (the lab off) = the baseline every row is compared with
     def base(self):
         if self._base is None:
-            _, real = run(self.inputs, self.ds)
-            s = stats(real, self.window)
+            _, real, oe = run(self.inputs, self.ds)
+            s = stats(real, self.window, open_end=oe)
             self._base = (s, {(int(x[1]), int(x[0])) for x in real}, {(int(x[1]), int(x[0])): float(x[6]) for x in real},
                           {(int(x[1]), int(x[0])): x for x in real})
         return self._base
@@ -479,10 +487,12 @@ class Job:
     def eval(self, lab=None, sets=None, worst=False):
         b = self.base()
         sets2 = dict(self.lab_sets, **(sets or {})) if lab else (sets or {})
-        _, real = run(self.inputs, self.ds, lab=lab, sets=sets2, worst=worst)
-        return stats(real, self.window, b[1], b[2]), real
+        _, real, oe = run(self.inputs, self.ds, lab=lab, sets=sets2, worst=worst)
+        return stats(real, self.window, b[1], b[2], open_end=oe), real
 
     def score(self, s, objective):
+        if s.get("stuck"):
+            return -1e12                                              # a trade never closes: the numbers are not usable
         t = s["train"]
         if t["n"] < 20:
             return -1e12 + t["n"]
@@ -506,7 +516,7 @@ class Job:
             self.running, self.done = False, True
 
     def state(self):
-        return {"action": self.action, "req": getattr(self, "req", None), "running": self.running, "done": self.done, "error": self.error, "phase": self.phase,
+        return {"action": self.action, "jid": self.jid, "req": getattr(self, "req", None), "running": self.running, "done": self.done, "error": self.error, "phase": self.phase,
                 "progress": self.progress,
                 "total": self.total, "seconds": round(time.time() - self.t0, 1) if self.t0 else 0, "ds": self.ds, "labels": self.labels,
                 "lab_sets": self.lab_sets, "result": self.result}
@@ -562,7 +572,7 @@ class Job:
             self.phase = f"{r['fam']}: {r['name']}"
             s, _ = self.eval(lab=r.get("lab"), sets=r.get("sets"))
             row = {k: v for k, v in r.items()}
-            row["stats"] = {k: s[k] for k in ("train", "test", "all", "total", "new", "gone", "changed", "partials", "why", "longest_h")}
+            row["stats"] = {k: s[k] for k in ("train", "test", "all", "total", "new", "gone", "changed", "partials", "why", "longest_h", "open_end", "stuck")}
             row["describe"] = describe(r["lab"]) if r.get("lab") else ""
             out.append(row)
             self.progress += 1
@@ -589,7 +599,7 @@ class Job:
             sw, _ = self.eval(lab=r.get("lab"), sets=r.get("sets"), worst=True)
             r["worst"] = {"total": sw["total"], "base_total": bw}
             self.progress += 1
-        return {"base": b, "rows": out, "lab_sets": self.lab_sets}
+        return {"base": b, "rows": out, "lab_sets": self.lab_sets, "stopped": bool(self._stop), "of": len(rows)}
 
     # ---- the smart search: chosen on the first half only, judged on the unseen half
     def _neighbours(self, lab, f, d):
@@ -705,10 +715,22 @@ class Job:
                     break
                 self.phase = f"{fx} {xv} · {fy} {yv}"
                 s, _ = self.eval(lab=dict(lab, **{fx: xv, fy: yv}))
-                row.append({"train": s["train"]["net"], "test": s["test"]["net"], "total": s["total"], "wr": s["all"]["wr"], "n": s["all"]["n"]})
+                row.append({"train": s["train"]["net"], "test": s["test"]["net"], "total": s["total"], "wr": s["all"]["wr"], "n": s["all"]["n"], "stuck": s["stuck"]})
                 self.progress += 1
             grid.append(row)
         return {"base": b, "fx": fx, "fy": fy, "xs": xs, "ys": ys, "grid": grid, "lab": clean(lab), "describe": describe(lab)}
+
+
+def blocks_text():
+    """the building blocks for Claude: field, what it does, its options"""
+    out = []
+    for title, hint, fields in GROUPS:
+        for x in fields:
+            s = f"{x['f']} ({x['label']})"
+            if x["t"] == "sel":
+                s += ": " + "; ".join(f"{k} = {v}" for k, v in x["opts"])
+            out.append(f"[{title}] {s}")
+    return "\n".join(out)
 
 
 def ea_trust():
