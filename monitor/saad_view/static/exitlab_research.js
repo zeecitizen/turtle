@@ -54,7 +54,8 @@ function leverTips() {                                           // every settin
     sug.push(m);
   }
   if (!sug.length) return h + `<p class="note">🏁 Nothing left to gain: no single setting improves the bench any more (${W.n} moves tried in ${W.seconds} s). This is the top of this hill.</p>`;
-  sug.sort((a, b) => b.score - a.score);
+  const fav = rsFav();                                             // 2+ picks of one kind (win rate / PF / money): that kind goes to the top
+  sug.sort((a, b) => (fav ? (b.kind === fav) - (a.kind === fav) : 0) || b.score - a.score);
   const show = RS.all ? sug : sug.slice(0, 25), n = show.length;
   const anim = RS.animated !== W._id; RS.animated = W._id;          // slide in once per new scan, not on every refresh
   const gain = { net: (m) => `${money(m.r.net)} net`, wr: (m) => `${m.r.wr}% win rate`, pf: (m) => `PF ${m.r.pf}` };
@@ -70,6 +71,7 @@ function leverTips() {                                           // every settin
   const icon = { 'the lines': '📈', 'the candle': '🕯️', where: '📍', 'the trigger': '🎯', filters: '🧹', 'range boxes': '📦', 'the stop': '🛑', 'the exit': '🚪', 'Exit Lab': '⚗️', 'v1.23 exits': '⚠️' };
   if (W.stopped) h += '<p class="warn">This scan was stopped early: some moves are missing.</p>';
   h += `<div class="k" style="margin:6px 0 2px">${busy ? '(the previous scan, while the new one runs) · ' : ''}${sug.length} moves help something (of ${W.n} tried in ${W.seconds} s) · ranked best → worst for us: money only counts when BOTH halves gain, then win rate, PF, drawdown · green = good deal, red = it hurts</div>`;
+  if (fav) h += `<div class="k" style="margin:2px 0">🧠 You keep picking <b>${{ wr: 'win rate', pf: 'PF', net: 'money' }[fav]}</b> deals, so they come first · <a href="#" data-rs="untaste">rank normally again</a></div>`;
   h += show.map((m, i) => {
     const hue = n > 1 ? Math.round(120 * (1 - i / (n - 1))) : 120, [cv, ct] = cost(m), r = m.r;
     const warn = m.group === 'v1.23 exits' || (m.key === 'InpExitMode' && m.to === '0') || m.trust === 'opposite' ? ' <span class="tag unt" title="verify_settings.py: on this setting the tester and MT5 move the result in opposite directions">⚠ tester ≠ MT5</span>'
@@ -155,9 +157,15 @@ document.addEventListener('pointerdown', (e) => {
   const b = e.button === 0 && e.target.closest ? e.target.closest('[data-mv]') : null;
   if (b) { e.preventDefault(); pickMove(+b.dataset.mv); }
 });
+function rsTaste() { if (!RS.taste) { try { RS.taste = JSON.parse(localStorage.getItem('rsTaste') || 'null'); } catch (e) {} RS.taste = RS.taste || { wr: 0, pf: 0, net: 0 }; } return RS.taste; }
+function rsFav() {                                                 // the kind picked most, once it has been picked at least twice
+  const T = rsTaste(), k = Object.keys(T).sort((a, b) => T[b] - T[a])[0];
+  return T[k] >= 2 ? k : null;
+}
 function pickMove(i) {
   if (!(LABS.sweep && LABS.sweep.moves && LABS.sweep.moves[i])) return;
-  const m = LABS.sweep.moves[i];
+  const m = LABS.sweep.moves[i], T = rsTaste();
+  T[m.kind] = (T[m.kind] || 0) + 1; try { localStorage.setItem('rsTaste', JSON.stringify(T)); } catch (e) {}
   RS.sets = { ...RS.sets, ...m.sets }; LABS.form = { ...LABS.form, ...m.lab };
   toast(`On the bench: ${esc(m.label)} ${esc(m.from)} → ${esc(m.to)}.` + (RS.auto !== false ? ' Scanning again from here…' : ''));
   labStart('test', { lab: labForm(), sets: RS.sets });
@@ -168,6 +176,7 @@ document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   if (d.rs === 'save') saveExit();
   if (d.rs === 'scan') { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: 'warming up the beakers', progress: 0, total: 0, seconds: 0 }; renderPanel('tt'); labStart('sweep', { lab: labForm(), sets: RS.sets }); }
+  if (d.rs === 'untaste') { e.preventDefault(); RS.taste = { wr: 0, pf: 0, net: 0 }; try { localStorage.removeItem('rsTaste'); } catch (x) {} renderPanel('tt'); }
   if (d.rs === 'all') { RS.all = !RS.all; renderPanel('tt'); }
   if (d.rs === 'reset') { RS.sets = {}; const x = labFromX(CUR); LABS.form = { ...LABS.spec.default, ...(x || {}) }; labStart('test', { lab: labForm() }); }
   if (d.rs === 'go') {
