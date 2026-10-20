@@ -41,6 +41,7 @@ import optimizer  # noqa: E402
 import exitlab  # noqa: E402
 import ml  # noqa: E402
 import mission  # noqa: E402
+import stress  # noqa: E402
 import sim_full  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location("saad_compare_server", ROOT / "monitor" / "saad_compare" / "server.py")
@@ -1035,6 +1036,34 @@ def mission_state():
     return _jsonable(j.state())
 
 
+# ---------------------------------------------------------------- the Stress Lab (stress.py): 32 robustness tests on the settings on screen
+ST = {"running": False, "progress": 0, "total": 32, "phase": "", "result": None, "error": None, "t0": None, "req": None}
+
+
+def stress_start(body):
+    if ST["running"]:
+        return {"error": "the stress tests are already running"}
+    inp = full_inputs(body.get("inputs") or {})
+    ST.update(running=True, progress=0, phase="starting", result=None, error=None, t0=time.time(), req=body.get("inputs") or {})
+
+    def go():
+        try:
+            def prog(n, name):
+                ST["progress"], ST["phase"] = n, name
+            ST["result"] = stress.run_all(inp, prog)
+        except Exception as e:                                  # noqa: BLE001
+            ST["error"] = str(e)
+            log("stress: " + traceback.format_exc())
+        finally:
+            ST["running"] = False
+    threading.Thread(target=go, daemon=True).start()
+    return {"ok": True}
+
+
+def stress_state():
+    return _jsonable(dict({k: v for k, v in ST.items() if k != "t0"}, seconds=round(time.time() - ST["t0"], 1) if ST["t0"] else 0))
+
+
 # ---------- HTTP ----------
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
@@ -1108,6 +1137,8 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, ml_state())
         if u.path == "/api/mission":
             return self.send(200, mission_state())
+        if u.path == "/api/stress":
+            return self.send(200, stress_state())
         if u.path == "/api/ml_algos":
             return self.send(200, {"algos": ml.ALGOS})
         if u.path == "/api/exitlab_spec":
@@ -1171,6 +1202,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, lego_test(body))
             if u.path == "/api/mission":
                 return self.send(200, mission_start(body))
+            if u.path == "/api/stress":
+                return self.send(200, stress_start(body))
             if u.path == "/api/sim":
                 return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
                                                  body.get("ds") or "year", body.get("mode") or "ea", body.get("lab")))
