@@ -823,6 +823,14 @@ function labBanner() {                                          // the main test
   if (!b) { b = document.createElement('div'); b.id = 'labBanner'; $('#infoTT').parentNode.insertBefore(b, $('#infoTT')); }
   b.innerHTML = `⚗️ with the Exit Lab exit: <b>${esc(ACTIVE_LAB._d || 'lab exit')}</b> - not an EA setting yet (MT5 can't run it) <button id="labBannerOff" class="dexbtn sm">remove</button>`;
 }
+// the primary save: loads into the chart and everywhere on every page start (Zee 2026-10-21)
+function primName() { try { return (JSON.parse(localStorage.getItem('primarySave') || 'null') || {}).name || null; } catch (e) { return null; } }
+async function applySave(s) {
+  CUR = { ...DFL, ...s.inputs };
+  if (s.lab && Object.keys(s.lab).length) { if (typeof labOpen === 'function') await labOpen(); CUR = { ...CUR, ...labToX(s.lab) }; }   // an older save's lab exit: EA v1.30 settings now
+  ACTIVE_LAB = null; markForm();
+  if (s.lab && Object.keys(s.lab).length && typeof labOpen === 'function') { await labOpen(); LABS.form = { ...LABS.spec.default, ...s.lab }; }   // its Exit Lab exit back on the bench
+}
 async function loadSaved() {
   SAVEDS = await api('/api/saved');
   const dsName = { year: 'Blueberry 2026 (ticks)', tv: "TradingView's candles", m15: 'Blueberry 2023 → now' };
@@ -830,7 +838,9 @@ async function loadSaved() {
     SAVEDS.map((s, i) => { const r = s.result || {};
       return `<tr><td>${esc(s.name)}</td><td>${esc(dsName[s.ds] || s.ds || '')}</td><td>${r.n ?? ''}</td><td>${r.wr != null ? r.wr + '%' : ''}</td><td class="${cls(r.net || 0)}">${r.net != null ? money(r.net) : ''}</td><td>${r.pf ?? ''}</td>` +
         `<td style="text-align:left;white-space:normal" class="k">${Object.entries(s.changed || {}).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ') || 'none (v1.27)'}${s.lab_describe ? `<br><span style="color:#ffb74d">⚗️ Exit Lab exit: ${esc(s.lab_describe)}</span>` : ''}</td>` +
-        `<td><button data-load="${i}">Load</button> <button data-del="${i}">Delete</button></td></tr>`; }))
+        `<td><button data-load="${i}">Load</button> <button data-del="${i}">Delete</button> ` +
+        (primName() === s.name ? `<button data-unprim="1" class="dexbtn sm" title="loads on every startup - click to stop">⭐ Primary (default on startup)</button>`
+          : `<button data-prim="${i}">Make Primary: Set as Default on Startup</button>`) + `</td></tr>`; }))
     : '<p class="note">Nothing saved yet - press "💾 Save settings".</p>';
 }
 $('#btnSave').onclick = async () => {
@@ -840,13 +850,13 @@ $('#btnSave').onclick = async () => {
 document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   if (d.load != null) {
-    const s = SAVEDS[+d.load]; CUR = { ...DFL, ...s.inputs };
-    if (s.lab && Object.keys(s.lab).length) { if (typeof labOpen === 'function') await labOpen(); CUR = { ...CUR, ...labToX(s.lab) }; }   // an older save's lab exit: EA v1.30 settings now
-    ACTIVE_LAB = null; markForm(); scheduleSim(0);
-    if (s.lab && Object.keys(s.lab).length && typeof labOpen === 'function') { await labOpen(); LABS.form = { ...LABS.spec.default, ...s.lab }; }   // its Exit Lab exit back on the bench
+    const s = SAVEDS[+d.load]; await applySave(s); scheduleSim(0);
     toast(`Loaded <b>${esc(s.name)}</b>.` + (s.lab_describe ? ` Its Exit Lab exit is back on the bench: ${esc(s.lab_describe)}.` : ''));
   }
   if (e.target.id === 'labBannerOff') { ACTIVE_LAB = null; labBanner(); scheduleSim(0); toast('The main tester runs the EA’s own exit again.'); }
+  if (d.prim != null) { const s = SAVEDS[+d.prim]; try { localStorage.setItem('primarySave', JSON.stringify({ name: s.name })); } catch (x) {} loadSaved();
+    toast(`⭐ <b>${esc(s.name)}</b> is your primary: it loads into the chart and everywhere each time the page opens.`); }
+  if (d.unprim) { try { localStorage.removeItem('primarySave'); } catch (x) {} loadSaved(); toast('No primary any more: the page starts from TradingView / v1.27 again.'); }
   if (d.del != null) { const s = SAVEDS[+d.del]; if (confirm(`Delete the saved settings "${s.name}"?`)) { await api('/api/saved_delete', { name: s.name }); loadSaved(); } }
 });
 
@@ -945,6 +955,12 @@ document.addEventListener('click', async (e) => {
     const tv = await Promise.race([api('/api/tv'), new Promise((_, rej) => setTimeout(() => rej(new Error('slow')), 15000))]);
     if (tv && tv.sets) { CUR = { ...DFL, ...tv.sets }; tvKey = JSON.stringify(tv.sets); $('#tvDot').className = 'dot ok'; $('#tvDot').title = `TradingView ${tv.symbol} · read at ${tv.at}`; markForm(); }
   } catch (e) { /* TradingView not open: v1.27's defaults */ }
+  const pn = primName();                                       // a primary save wins over TradingView and the defaults
+  if (pn) {
+    const s = (await api('/api/saved').catch(() => [])).find((x) => x.name === pn);
+    if (s) { await applySave(s); setTimeout(() => toast(`⭐ Started from your primary settings <b>${esc(pn)}</b>.`), 500); }
+    else { try { localStorage.removeItem('primarySave'); } catch (x) {} }
+  }
   await runSim();
   if (h.get('tab')) { TAB.tt = h.get('tab'); renderPanel('tt'); }
   if (h.get('mt')) { TAB.mt = h.get('mt'); renderPanel('mt'); }
