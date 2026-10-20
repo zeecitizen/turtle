@@ -18,6 +18,11 @@ if (/(^|[#&])labshow=1/.test(location.hash)) LABS.showLab = true;           // a
 
 // ---------- plumbing ----------
 async function labOpen() {
+  if (LABS.opening) return LABS.opening;                        // renders call this until the spec is in: one load, not several
+  LABS.opening = labOpen1().finally(() => { LABS.opening = null; });
+  return LABS.opening;
+}
+async function labOpen1() {
   if (!LABS.spec) { LABS.spec = await api('/api/exitlab_spec'); LABS.form = { ...LABS.spec.default }; }
   const s = await api('/api/exitlab?full=1').catch(() => ({}));
   labTake(s);
@@ -30,7 +35,7 @@ async function labOpen() {
 function labTake(s) {
   const take = (j) => {
     if (!(j && j.done && j.result && !j.error)) return;
-    const slot = SLOT[j.action], prev = LABS[slot], id = j.action + j.seconds + JSON.stringify(j.req || {}) + (j.result.describe || '');
+    const slot = SLOT[j.action], prev = LABS[slot], id = j.jid || (j.action + j.seconds + JSON.stringify(j.req || {}) + JSON.stringify(j.result.sets || {}) + (j.result.describe || ''));
     if (prev && prev._id === id) return;
     LABS[slot] = Object.assign(j.result, { _id: id, _labels: j.labels, _ds: j.ds, _req: j.req });
     if (slot === 'test' && LABS.showLab) redraw();
@@ -38,7 +43,9 @@ function labTake(s) {
   for (const j of Object.values((s && s.done) || {})) take(j);
   for (const k of ['main', 'quick']) { const j = s && s[k]; if (j) { LABS[k] = j; take(j); } }
 }
-const labBusyUi = () => { const a = document.activeElement; return a && a.closest && a.closest('#panelTT') && /SELECT|INPUT|TEXTAREA/.test(a.tagName); };
+const labBusyUi = () => { const a = document.activeElement; return LABS.mouse || (a && a.closest && a.closest('#panelTT') && /SELECT|INPUT|TEXTAREA/.test(a.tagName)); };
+document.addEventListener('mousedown', () => { LABS.mouse = true; });      // a redraw between mouse-down and mouse-up would swallow the click
+document.addEventListener('mouseup', () => { setTimeout(() => { LABS.mouse = false; }, 0); });
 async function labPoll() {
   if (LABS.polling) return;
   LABS.polling = true;
@@ -102,7 +109,7 @@ function pLab() {
   const dsName = SRC.ds === 'm15' ? 'Blueberry 2023 → now (4 years)' : '2026 (Blueberry real ticks)';
   let h = `<div class="lab"><p class="note"><b>Exit Lab.</b> The entries stay your EA's (the settings on screen); only the exit changes. Every exit runs in the
     Turtle TV Tester's own engine, inside every minute, so a trade held longer still blocks the next setup. Data: <b>${dsName}</b>${SRC.ds === 'tv' ? ' (the lab uses Blueberry 2026 for TradingView\'s candles)' : ''}.
-    Choices are made on <b>${LA}</b>; <b>${LB}</b> is the test. <span class="tag ea">In the EA</span> = MT5 can check it now · <span class="tag lab">Lab only</span> = a hypothesis until it is built into the EA and MT5 confirms it.</p>`;
+    ${SRC.mode !== 'ea' ? '<span class="warn">The lab always uses the EA’s own rules (real spread and swap), not the chart’s.</span> ' : ''}Choices are made on <b>${LA}</b>; <b>${LB}</b> is the test. <span class="tag ea">In the EA</span> = MT5 can check it now · <span class="tag lab">Lab only</span> = a hypothesis until it is built into the EA and MT5 confirms it.</p>`;
   h += `<div class="bar"><button data-lab="diagnose">🩺 Where do my exits leave money?</button><button data-lab="catalogue" class="primary">🧪 Test every exit (${ncat})</button>
     <button data-lab="search">🧠 Find the best exit for me</button><label>choose by <select id="labObj">${[['net', `net on ${LA}`], ['ret_dd', 'net ÷ drawdown'], ['pf', 'profit factor'], ['wr', 'win rate']]
       .map(([v, l]) => `<option value="${v}" ${v === LABS.obj ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label><button data-lab="stop">Stop</button></div>`;
@@ -122,7 +129,9 @@ function pLab() {
 // ---------- 1. where the exits leave money ----------
 function labDiag(d, LA, LB) {
   const a = d.stats.all;
-  let h = `<section><h3>🩺 Where your exits leave money</h3>${stale(d)}<div class="cards">` +
+  let h = `<section><h3>🩺 Where your exits leave money</h3>${stale(d)}` +
+    (d.stats.stuck ? `<p class="bad">⚠ One of your trades never closed: open since ${esc(dt(d.stats.open_end.since))} until the end of the data (${d.stats.open_end.days} days) - it blocks every later setup.</p>` : '') +
+    (String(CUR.InpExitMode) === '0' ? '<p class="warn">Your exit is mode 0 (the v1.23 exits): the tester and MT5 disagree on those - read this diagnosis as approximate.</p>' : '') + `<div class="cards">` +
     card('Trades · win rate', `${a.n} · ${a.wr}%`) + card('Net', money(a.net), cls(a.net)) +
     card('Winners keep', `${d.winners.capture_pct}% <small class="k">of their best move</small>`) +
     card('Losers that were +1R first', `${d.losers_were_1r.n} <small class="k">${money(d.losers_were_1r.net)}</small>`) +
@@ -197,6 +206,8 @@ function labTestResult(T, LA, LB) {
   let h = `<h4>Result · ${esc(T.describe)}${Object.keys(T.sets || {}).length ? ' · ' + esc(Object.entries(T.sets).map(([k, v]) => `${k.replace(/^Inp/, '')} ${v}`).join(', ')) : ''}</h4>${stale(T)}` +
     table(['', LA, LB, 'Total', 'WR', 'PF', 'Max DD', 'Avg win / loss', 'Losing streak'], [labStatsRow("Your EA's exit", b), labStatsRow('This exit', s)]);
   const wv = T.worst, onlyOpt = s.total > b.total && wv.total < wv.base_total;
+  if (s.stuck) h += `<p class="bad">⚠ A trade never closed: open since ${esc(dt(s.open_end.since))} until the end of the data (${s.open_end.days} days). Nothing in this exit closes it
+    (no target and no rule for a winner), so it blocks every later setup - these numbers are not usable. Add a target, a trail or a time limit.</p>`;
   h += `<p class="note">${isEA && tie(s.total - b.total, b.total) && s.changed ? '<span class="warn">≈ A tie: the difference is within the lab’s error against MT5 (~4%).</span> ' : ''}${!isEA ? '<span class="tag lab">Lab only: no MT5 check yet</span> ' : ''}${both ? '<span class="good">✓ Better than yours in both halves.</span>' : s.total > b.total ? '<span class="warn">Better in total but not in both halves - the unseen half decides.</span>' : '<span class="bad">Not better than your exit.</span>'}
     ${s.changed} trades end differently · ${s.new} new and ${s.gone} missing entries (a trade held longer or shorter changes which setups can enter) · partial closes in ${s.partials} trades ·
     longest trade ${s.longest_h} h${s.longest_h > 48 ? ' <span class="bad">(a trade stayed open for days - this exit can hold a loser a long time)</span>' : ''}.
@@ -233,7 +244,7 @@ function labCatalogue(C, LA, LB) {
   const key = { total: (r) => r.stats.total, test: (r) => r.stats.test.net, train: (r) => r.stats.train.net, wr: (r) => r.stats.all.wr, pf: (r) => r.stats.all.pf, dd: (r) => -r.stats.all.dd }[LABS.sort];
   rows.sort((x, y) => key(y.r) - key(x.r));
   const nb = C.rows.filter((r) => r.stats.train.net > b.train.net && r.stats.test.net > b.test.net);
-  let h = `<section><h3>🧪 Every exit, ranked</h3>${stale(C)}<p class="note">${C.rows.length} exits on the same entries. Your EA's exit: ${LA} ${money(b.train.net)} · ${LB} ${money(b.test.net)} · total <b>${money(b.total)}</b> · WR ${b.all.wr}%.
+  let h = `<section><h3>🧪 Every exit, ranked</h3>${stale(C)}${C.stopped ? `<p class="warn">Stopped early: ${C.rows.length} of ${C.of} exits tested (the search will test them all again).</p>` : ''}<p class="note">${C.rows.length} exits on the same entries. Your EA's exit: ${LA} ${money(b.train.net)} · ${LB} ${money(b.test.net)} · total <b>${money(b.total)}</b> · WR ${b.all.wr}%.
     <b>${nb.length}</b> beat it in both halves (green rows, ${nb.filter((r) => r.kind === 'ea').length} of them in the EA already). <b>Robust</b> ✓ = the values either side in its family also beat yours.
     <b>Worst order</b> = the adverse move first inside every minute (the best 20 only). <b>Changed</b> = trades that end differently from yours.</p>${CALIB}${EVIDENCE}`;
   h += `<div class="bar">family <select id="labFam"><option value="all">all (${C.rows.length})</option>${fams.map((f) => `<option ${f === LABS.fam ? 'selected' : ''}>${esc(f)}</option>`).join('')}</select>
@@ -248,7 +259,7 @@ function labCatalogue(C, LA, LB) {
       `<td class="${cls(s.train.net - b.train.net)}">${money(s.train.net)}</td><td class="${cls(s.test.net - b.test.net)}">${money(s.test.net)}</td><td><b>${money(s.total)}</b></td>` +
       `<td class="${r.kind === 'ea' && tie(s.total - b.total, b.total) ? 'k' : cls(s.total - b.total)}" title="${r.kind === 'ea' && tie(s.total - b.total, b.total) ? 'within the lab’s error against MT5: a tie' : ''}">${r.kind === 'ea' && tie(s.total - b.total, b.total) ? '≈ ' : ''}${money(s.total - b.total)}</td><td>${s.all.wr}%</td><td>${s.all.pf}</td><td>${money(-s.all.dd)}</td><td>${s.all.n}</td>` +
       `<td>${!s.changed && !s.new && !s.gone ? '<span class="k" title="no rule of this exit fired on these trades">no effect</span>' : s.changed}</td>` +
-      `<td>${s.longest_h > 48 ? `<span class="bad">${s.longest_h} h</span>` : s.longest_h + ' h'}</td><td>${r.plateau ? '✓' : ''}</td><td>${w}</td>` +
+      `<td>${s.stuck ? `<span class="bad" title="open since ${esc(dt(s.open_end.since))} until the end of the data">never closed</span>` : s.longest_h > 48 ? `<span class="bad">${s.longest_h} h</span>` : s.longest_h + ' h'}</td><td>${r.plateau ? '✓' : ''}</td><td>${w}</td>` +
       `<td><button data-lrow="${i}">${r.kind === 'ea' ? 'Test it' : 'Load + test'}</button>${r.kind === 'ea' ? ` <button data-lmt5="${i}">Check in MT5</button>` : ''}</td></tr>`;
   })) + '</div></section>';
   return h;
@@ -283,6 +294,7 @@ function labHeat(LA, LB) {
     h += `<table class="heat"><tr><th>${esc(R.fy)} ↓ · ${esc(R.fx)} →</th>${R.xs.map((x) => `<th>${x}</th>`).join('')}</tr>` + R.grid.map((row, yi) => `<tr><th>${R.ys[yi]}</th>${row.map((c, xi) => {
       const d = (c.total - b.total) / mx, col = d >= 0 ? `rgba(0,230,118,${(0.06 + 0.5 * d).toFixed(2)})` : `rgba(255,82,82,${(0.06 + 0.5 * -d).toFixed(2)})`;
       const both = c.train > b.train.net && c.test > b.test.net;
+      if (c.stuck) return `<td class="k" data-lheat="${xi}|${yi}" title="a trade never closed with these values: not usable">never closed</td>`;
       return `<td style="background:${col}" data-lheat="${xi}|${yi}" title="${c.n} trades · WR ${c.wr}% - click to load">${money(c.total)}${both ? ' ✓' : ''}<br><span class="k">${money(c.train)} / ${money(c.test)}</span></td>`;
     }).join('')}</tr>`).join('') + '</table>';
   }
@@ -335,7 +347,10 @@ async function labMt5(name, sets) {
 }
 document.addEventListener('click', (e) => {
   const d = e.target.dataset || {}, row = e.target.closest && e.target.closest('tr[data-ltime]');
-  if (row && BARS) { const i = barIdx(+row.dataset.ltime); chart.timeScale().setVisibleLogicalRange({ from: i - 40, to: i + 60 }); LABS.showLab = true; redraw(); }
+  if (row && BARS) {
+    const i = barIdx(+row.dataset.ltime); chart.timeScale().setVisibleLogicalRange({ from: i - 40, to: i + 60 });
+    LABS.showLab = true; const cb = document.querySelector('#labShowChart'); if (cb) cb.checked = true; redraw();
+  }
   if (d.lab) {
     const a = d.lab;
     if (a === 'diagnose' || a === 'catalogue') labStart(a);
@@ -360,9 +375,22 @@ document.addEventListener('click', (e) => {
     labStart('test', { lab: labForm() });
   }
 });
+document.addEventListener('input', (e) => {
+  const t = e.target, f = t.dataset && t.dataset.lf;
+  if (f && t.type === 'number') {
+    LABS.form[f] = Number(t.value);
+    const x = LABS.spec && LABS.spec.groups.flatMap((g) => g[2]).find((y) => y.f === f), lab = t.closest('label');
+    if (x && lab) lab.classList.toggle('chg', Number(t.value) !== Number(x.d));
+  }
+});
 document.addEventListener('change', (e) => {
   const t = e.target, f = t.dataset && t.dataset.lf;
-  if (f) { LABS.form[f] = t.type === 'checkbox' ? (t.checked ? 1 : 0) : Number(t.value); renderPanel('tt'); return; }
+  if (f) {
+    LABS.form[f] = t.type === 'checkbox' ? (t.checked ? 1 : 0) : Number(t.value);
+    clearTimeout(LABS.redrawT);                                // redraw (fields that appear / disappear) once a click on a button has landed
+    LABS.redrawT = setTimeout(() => { if (TAB.tt === 'lab') renderPanel('tt'); }, t.type === 'number' ? 300 : 0);
+    return;
+  }
   if (t.id === 'labFam') { LABS.fam = t.value; renderPanel('tt'); }
   if (t.id === 'labSort') { LABS.sort = t.value; renderPanel('tt'); }
   if (t.id === 'labBoth') { LABS.both = t.checked; renderPanel('tt'); }

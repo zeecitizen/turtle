@@ -237,8 +237,7 @@ SURVEY = {
               ("InpTrailMode", [0, 1, 2]), ("InpTrailAtr", [1, 1.5, 2, 3]), ("InpRide", ["false", "true"]), ("InpBeTpPct", [0, 0.5, 0.75, 0.9]),
               ("InpMinTpPips", [5, 15, 30]), ("InpSwingPivot", [2, 3, 5])],
 }
-EXIT0 = {"InpLongTouch", "InpShortTouch", "InpPartialPct", "InpTp1Be", "InpLongTrailUsd", "InpShortTrailUsd", "InpTrail", "InpTrailMode", "InpTrailAtr",
-         "InpRide", "InpBeTpPct", "InpMinTpPips", "InpSwingPivot"}      # v1.23's exit options: only act with exit mode 0
+EXIT0 = set(__import__("sim_full").MODE0_ONLY)                         # v1.23's exit options (BeUsd, LockAtUsd, FixTpPips, MaxBars too): only act with exit mode 0
 SLMODE = {"InpSlPips": "0", "InpSlUsd": "2"}                             # a stop size only acts in its own stop mode
 
 
@@ -277,14 +276,15 @@ class Survey:
                         extra["InpExitMode"] = "0"
                     if name in SLMODE and self.start.get("InpSlMode") != SLMODE[name]:
                         extra["InpSlMode"] = SLMODE[name]
-                    if _same(self.start[name], v) and not extra:
-                        continue
+                    if _same(self.start[name], v):
+                        continue                                  # the value on screen (with exit mode 0 added it is just the InpExitMode 0 row again)
                     inp = dict(self.start, **extra)
                     inp[name] = str(v)
                     a, b = self._ev(inp)
                     if a is None:
                         continue
-                    self.rows.append({"setting": name, "value": str(v), "with": extra, "train": a, "test": b,
+                    noop = a["net"] == self.baseline["train"]["net"] and b["net"] == self.baseline["test"]["net"] and a["n"] == self.baseline["train"]["n"]
+                    self.rows.append({"setting": name, "value": str(v), "with": extra, "train": a, "test": b, "noop": noop,
                                       "total": round(a["net"] + b["net"]), "inputs": inp})
         except Exception as e:                                           # noqa: BLE001
             self.error = str(e)

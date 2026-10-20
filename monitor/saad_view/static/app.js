@@ -288,13 +288,18 @@ function hypHtml(t, x, i) {
     const [LA, LB] = T.labels, B0 = T.base, tot0 = B0.train.net + B0.test.net, c = (s) => `${money(s.net)} · ${s.wr}% · ${s.n}`;
     h += `<div class="k" style="margin-top:4px">Tested on ${T.ds === 'm15' ? '4 years' : '2026'} (${esc(T.at)}). Your settings: ${LA} ${money(B0.train.net)} · ${LB} ${money(B0.test.net)} · total ${money(tot0)}</div>`;
     T.hyps.forEach((y, j) => {
-      const ch = Object.entries(y.changes || {}).map(([a, b]) => `${esc(a.replace(/^Inp/, ''))} ${esc(b)}`).join(', ');
+      const ch = [Object.entries(y.changes || {}).map(([a, b]) => `${esc(a.replace(/^Inp/, ''))} ${esc(b)}`).join(', '), y.describe ? `Exit Lab: ${esc(y.describe)}` : ''].filter(Boolean).join(' · ');
       h += `<div style="border-left:3px solid #2962ff;padding:4px 6px;margin-top:6px"><b>${esc(y.hypothesis || '')}</b><div class="k">${esc(y.note || '')}${y.exact === false ? ' (approximate)' : ''}</div>`;
       if (y.train) {
         const tot = y.train.net + y.test.net, both = y.train.net > B0.train.net && y.test.net > B0.test.net;
-        h += `<div>${ch}</div><div>${LA} <span class="${cls(y.train.net - B0.train.net)}">${c(y.train)}</span> · ${LB} <span class="${cls(y.test.net - B0.test.net)}">${c(y.test)}</span> · total <b class="${cls(tot - tot0)}">${money(tot)}</b> (${money(tot - tot0)} vs yours)${both ? ' <span class="good">✓ better in both halves</span>' : ''}</div>
-          <button data-happly="${i}|${j}">Apply to the chart</button> `;
-      } else h += `<div class="warn">No existing setting can express this: it needs a new feature.</div>`;
+        h += `<div>${ch}${y.lab && Object.keys(y.lab).length ? ' <span class="tag" style="background:rgba(255,152,0,.2);border-radius:8px;padding:1px 6px;font-size:10px">Lab only</span>' : ''}</div>` +
+          `<div>${LA} <span class="${cls(y.train.net - B0.train.net)}">${c(y.train)}</span> · ${LB} <span class="${cls(y.test.net - B0.test.net)}">${c(y.test)}</span> · total <b class="${cls(tot - tot0)}">${money(tot)}</b> (${money(tot - tot0)} vs yours)${both ? ' <span class="good">✓ better in both halves</span>' : ''}</div>` +
+          (y.noop ? '<div class="warn">No effect: none of this acts on these trades (same result as yours).</div>' : '') +
+          (y.stuck ? `<div class="bad">⚠ A trade never closed (open for ${y.open_end.days} days until the end of the data): nothing in this exit closes it, so it blocks every later setup - the numbers are not usable.</div>` : '') +
+          (y.mode0 ? '<div class="warn">Tested with exit mode 0 (the v1.23 exits) - the only mode where these inputs act, and the one where the tester and MT5 disagree.</div>' : '') +
+          (y.lab && Object.keys(y.lab).length ? `<button data-hlab="${i}|${j}">Open in the Exit Lab</button> ` : `<button data-happly="${i}|${j}">Apply to the chart</button> `);
+      } else if (y.invalid) h += `<div class="warn">These settings are not valid together (e.g. the slow EMA not above the fast one).</div>`;
+      else h += `<div class="warn">Neither the EA's settings nor the Exit Lab can express this: it needs a new feature.</div>`;
       h += `<button data-hfeat="${i}|${j}" ${jf ? 'disabled' : ''}>${jf ? '⏳ ' + esc(jf.phase || '') : '🛠 Convert hypothesis to feature'}</button></div>`;
     });
   }
@@ -344,6 +349,11 @@ document.addEventListener('click', (e) => {
   if (e.target.id === 'tAskGo') sendAsk();
   const d = e.target.dataset || {};
   if (d.hyp && ASKT) hypRun(ASKT, +d.i, 'test');
+  if (d.hlab && ASKT) {                                       // a hypothesis that is an Exit Lab recipe: open it there and test it
+    const [i, j] = d.hlab.split('|').map(Number), y = NOTESD[tKey(ASKT)][i].test.hyps[j];
+    TAB.tt = 'lab'; labOpen().then(() => { LABS.form = { ...LABS.spec.default, ...y.lab }; renderPanel('tt'); labStart('test', { lab: labForm() }); });
+    document.querySelector('#panelTT').scrollIntoView({ behavior: 'smooth' });
+  }
   if (d.happly && ASKT) {
     const [i, j] = d.happly.split('|').map(Number), y = NOTESD[tKey(ASKT)][i].test.hyps[j];
     CUR = { ...DFL, ...y.inputs }; markForm(); scheduleSim(0);
@@ -545,7 +555,7 @@ function pOpt() {
     h += `<div class="scroll">` + table(['Setting', 'Value', 'Also set', LA, LB, 'Total', 'vs yours', ''], o.rows.map((r, i) => {
       const both = r.train.net > B0.train.net && r.test.net > B0.test.net;
       const w = Object.entries(r.with || {}).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ');
-      return `<tr${both ? ' style="background:rgba(0,230,118,.08)"' : ''}><td style="text-align:left">${esc(r.setting.replace(/^Inp/, ''))}</td><td>${esc(r.value.length > 12 ? 'all on' : r.value)}</td><td class="k">${w}${!r.test.n ? ' <span class="bad">⚠ no trades in ' + LB + ': a trade never closed (simulator, check in MT5)</span>' : ''}</td>` +
+      return `<tr${both ? ' style="background:rgba(0,230,118,.08)"' : ''}><td style="text-align:left">${esc(r.setting.replace(/^Inp/, ''))}</td><td>${esc(r.value.length > 12 ? 'all on' : r.value)}</td><td class="k">${w}${r.noop ? ' <span class="k">no effect</span>' : ''}${!r.test.n ? ' <span class="bad">⚠ no trades in ' + LB + '</span>' : ''}</td>` +
         `<td class="${cls(r.train.net)}">${money(r.train.net)} · ${r.train.wr}% · ${r.train.n}</td><td class="${cls(r.test.net)}">${money(r.test.net)} · ${r.test.wr}% · ${r.test.n}</td>` +
         `<td class="${cls(r.total)}"><b>${money(r.total)}</b></td><td class="${cls(r.total - tot0)}">${money(r.total - tot0)}</td><td><button data-surv="${i}">Apply this setting</button></td></tr>`; })) + '</div>';
     return h;

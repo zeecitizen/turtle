@@ -39,6 +39,7 @@ sys.path.insert(0, str(HERE))
 import sim  # noqa: E402  (the Turtle TV Tester: numba, sets NUMBA_CPU_NAME itself)
 import optimizer  # noqa: E402
 import exitlab  # noqa: E402
+import sim_full  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location("saad_compare_server", ROOT / "monitor" / "saad_compare" / "server.py")
 CMP = importlib.util.module_from_spec(_spec)      # the compare page's TradingView reader (no server is started by importing it)
@@ -490,17 +491,23 @@ def _note_set(key, idx, field, val):
 def _hyp_test(job, key, idx, cur, ds):
     note = _notes()[key][idx]
     inputs = [{k: i[k] for k in ("name", "type", "default", "comment")} for i in ea_inputs()["inputs"]]
-    prompt = f"""Below is your earlier answer to Zee about one trade, with hypotheses in it. Turn EACH hypothesis into concrete changes of the EA's
-EXISTING inputs (the list below, with what each does), as closely as they allow. If a hypothesis cannot be expressed with existing inputs, say so and
-describe the new setting it needs. Reply with ONLY a JSON array, no prose, no code fence:
-[{{"hypothesis": "<short>", "changes": {{"InpName": "value", ...}} or {{}}, "exact": true|false, "note": "<one line: how the changes approximate it, or the new setting needed>"}}]
+    mode0 = sorted(sim_full.MODE0_ONLY)
+    prompt = f"""Below is your earlier answer to Zee about one trade, with hypotheses in it. Turn EACH hypothesis into something Turtle TV can test now:
+either changes of the EA's EXISTING inputs ("changes"), or a recipe of the Exit Lab's building blocks ("lab") - the Exit Lab runs extra exits on
+top of exit modes 1-2 (targets in R / ATR / $, the no-EMA-beyond fallback's buffer and closes, close-based exits, partials, breakeven, lock ladder,
+trails, time / no-progress / ADX / Friday exits). Prefer the Exit Lab for exit ideas: these EA inputs ONLY act with InpExitMode 0 (the v1.23
+exits) and do NOTHING in exit modes 1-2 (the settings on screen use exit mode {cur.get('InpExitMode')}): {', '.join(mode0)}.
+If neither can express a hypothesis, say so and describe the new setting it needs. Reply with ONLY a JSON array, no prose, no code fence:
+[{{"hypothesis": "<short>", "changes": {{"InpName": "value"}} or {{}}, "lab": {{"field": number}} or {{}}, "exact": true|false, "note": "<one line: how it approximates the hypothesis, or the new setting needed>"}}]
 Give 1-3 variants per hypothesis when a value is a guess (e.g. two buffer sizes).
 
 Your answer:
 {note['a']}
 
 The settings on screen now (only those that differ from the EA's defaults): {json.dumps({k: v for k, v in cur.items() if not same(v, axi_rig.ea_defaults(EA).get(k))})}
-The EA's inputs: {json.dumps(inputs, ensure_ascii=False)}"""
+The EA's inputs: {json.dumps(inputs, ensure_ascii=False)}
+The Exit Lab's building blocks (field names for "lab"; R = the entry-to-first-stop distance):
+{exitlab.blocks_text()}"""
     job["phase"] = "Claude is turning the hypotheses into settings"
     txt = _claude(prompt, ["Read", "Grep", "Glob"])
     m = re.search(r"\[.*\]", txt, re.S)
@@ -510,13 +517,31 @@ The EA's inputs: {json.dumps(inputs, ensure_ascii=False)}"""
     job["phase"] = "testing on the chart"
     _, a, b, _y = optimizer.evaluate(cur, "net", 1, o.window, ds)
     base = {"train": a, "test": b}
+    win = exitlab.window_of(ds, cur)[0]
     for h in hyps:
         ch = {k: str(v) for k, v in (h.get("changes") or {}).items() if k in names}
-        h["changes"] = ch
-        if ch:
+        lab = exitlab.clean(h.get("lab") or {}) if h.get("lab") else {}
+        lab = lab if [f for f in lab if f != "pess"] else {}
+        if ch and any(k in sim_full.MODE0_ONLY for k in ch) and str(ch.get("InpExitMode", cur.get("InpExitMode"))) != "0":
+            ch["InpExitMode"] = "0"                       # they only act with the v1.23 exits - which the tester and MT5 disagree on
+            h["mode0"] = True
+        h["changes"], h["lab"] = ch, lab
+        if ch or lab:
             inp = dict(cur, **ch)
-            _, a, b, _y = optimizer.evaluate(inp, "net", 1, o.window, ds)
+            if lab:
+                sets = {} if str(inp.get("InpExitMode")) in ("1", "2") else {"InpExitMode": "1"}
+                _, real, oe = exitlab.run(inp, ds, lab=lab, sets=sets)
+                s = exitlab.stats(real, win, open_end=oe)
+                h["stuck"], h["open_end"] = s["stuck"], s["open_end"]
+                a, b = s["train"], s["test"]
+                h["describe"] = exitlab.describe(lab)
+            else:
+                _, a, b, _y = optimizer.evaluate(inp, "net", 1, o.window, ds)
+            if a is None:
+                h["invalid"] = True                       # e.g. the slow EMA not above the fast one
+                continue
             h["train"], h["test"], h["inputs"] = a, b, inp
+            h["noop"] = a["net"] == base["train"]["net"] and b["net"] == base["test"]["net"] and a["n"] == base["train"]["n"]
     res = {"labels": list(o.labels), "ds": ds, "base": base, "hyps": hyps, "at": datetime.now().strftime("%Y-%m-%d %I:%M %p")}
     _note_set(key, idx, "test", res)
     return res
@@ -762,10 +787,11 @@ def lab_start(body):
     key = json.dumps([inputs, "year" if ds == "tv" else ds], sort_keys=True)
     if action == "search" and LAB["cat"] and LAB["cat"][0] == key:
         kw["cat_rows"] = LAB["cat"][1]                    # the catalogue of the same settings: the search starts from it
-    j = exitlab.start(action, inputs, ds, **kw)
+    j = exitlab.Job(action, inputs, ds, **kw)
     j.key = key
     j.req = {"inputs": body.get("inputs") or {}, "ds": "year" if ds == "tv" else ds}     # what the page asked for: it warns when its settings moved on
     LAB[slot] = j
+    threading.Thread(target=j.run, daemon=True).start()
     return {"ok": True}
 
 
@@ -777,8 +803,8 @@ def lab_state(full=False):
             continue
         if j.done and j.result and not j.error:
             LAB["done"][j.action] = j                      # the latest result of each kind, for a page that opens later
-        if j.done and j.action == "catalogue" and j.result and not j.error:
-            LAB["cat"] = (j.key, j.result["rows"])
+        if j.done and j.action == "catalogue" and j.result and not j.error and not j.result.get("stopped"):
+            LAB["cat"] = (j.key, j.result["rows"])               # only a complete catalogue seeds the search
         if j.error and not getattr(j, "logged", False):
             j.logged = True
             log(f"exit lab {j.action}: {getattr(j, 'tb', j.error)}")

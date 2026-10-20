@@ -707,8 +707,9 @@ def simulate(inputs, ds="year", chart=False, lab=None, **extra):
     hc, h1_, h2_ = htf_for(ds, P[sim_full.F["InpHtfMin"]], P[sim_full.F["InpHtfEma"]])
     dow = ((D["t15"] // 86400 + 4) % 7).astype(np.int64)          # 0 Sunday .. 6 Saturday (MqlDateTime.day_of_week)
     day1 = (D["t1"] // 86400).astype(np.int64)
-    out = np.zeros((8000, 20)); setups = np.zeros((60000, 3)); stats = np.zeros(8)              # 15-19: the Exit Lab's columns (sim_full._close)
+    out = np.zeros((8000, 20)); setups = np.zeros((60000, 3)); stats = np.zeros(10)             # 15-19: the Exit Lab's columns (sim_full._close)
     nt, ns = sim_full.run_full(D["t15"], D["hr15"], dow, D["o15"], D["h15"], D["l15"], D["c15"], ef, es, D["atr"],
                                adx_for(ds, int(P[sim_full.F["InpAdxPeriod"]])), hc, h1_, h2_, D["t1"], D["o1"], D["h1"], D["l1"], D["c1"],
                                D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab), bb, bs, out, setups, stats)
-    return out[:nt], setups[:ns], dict(zip(["setups", "no_break", "risk", "adx", "atr_band", "band_skip", "gap", "spread_reject"], stats.astype(int).tolist()))
+    return out[:nt], setups[:ns], dict(zip(["setups", "no_break", "risk", "adx", "atr_band", "band_skip", "gap", "spread_reject", "open_at_end", "open_since"],
+                                           stats.astype(np.int64).tolist()))
