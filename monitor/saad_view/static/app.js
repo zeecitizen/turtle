@@ -384,7 +384,7 @@ function pOpt() {
   if (!o || !o.baseline) return h;
   const [LA, LB] = o.labels || ['Jan – Jun', 'Jul – Oct'];
   const B = o.baseline, best = o.best, line = (x) => x ? `${money(x.net)} · WR ${x.wr}% · PF ${x.pf} · ${x.n} trades` : '–';
-  h += `<p class="note">${o.running ? '⏳ running' : o.error ? 'stopped: ' + esc(o.error) : '✓ done'} · ${o.evals.toLocaleString()} years tested in ${o.seconds} s · ${o.passes} passes${o.restarts ? ' · ' + o.restarts + ' restarts' : ''}</p>`;
+  h += `<p class="note">${o.running ? '⏳ running' : o.error ? 'stopped: ' + esc(o.error) : '✓ done'} · ${o.evals.toLocaleString()} settings tried in ${o.seconds} s (each one a full run over ${o.ds === 'm15' ? 'all 4 years' : 'the year'}) · ${o.passes} passes${o.restarts ? ' · ' + o.restarts + ' restarts' : ''}</p>`;
   h += table(['', `${LA} (optimized on)`, `${LB} (unseen)`, 'All'], [
     `<tr><td>Your settings</td><td>${line(B.train)}</td><td>${line(B.test)}</td><td>${line(B.year)}</td></tr>`,
     best ? `<tr class="tot"><td>Best found</td><td>${line(best.train)}</td><td class="${best.test && B.test && best.test.net < B.test.net ? 'bad' : 'pos'}">${line(best.test)}</td><td>${line(best.year)}</td></tr>` : '']);
