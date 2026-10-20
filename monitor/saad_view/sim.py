@@ -617,3 +617,29 @@ def build_m15_dataset(path=r"C:\Users\zeesh\turtle\data_15min_2015_onwards_xauus
                         first1=first, m2c=m2c, roll=roll, events=np.array([], dtype=object))
     _D.pop("m15", None)
     return out
+
+
+def build_m15m1_dataset(m15=r"C:\Users\zeesh\turtle\data_15min_2015_onwards_xauusd\XAUUSD_M15_201502040000_202610200300.csv",
+                        m1=r"C:\Users\zeesh\turtle\data_15min_2015_onwards_xauusd\XAUUSD_M1_202212290100_202610200315.csv", frm="2022.12.29"):
+    """Zee 2026-10-20: Blueberry M15 + M1 exports (MT5 'Export bars'), Dec 29 2022 -> now: the 15-min candles with their real 1-minute candles
+    inside (spread per minute from the export, points x 0.01) -> simdata/m15.npz (replaces the one-step version)."""
+    def rd(path):
+        out = []
+        for line in Path(path).read_text().splitlines()[1:]:
+            f = line.split("\t")
+            if len(f) >= 9 and f[0] >= frm:
+                out.append((_ep(datetime.strptime(f[0] + " " + f[1][:5], "%Y.%m.%d %H:%M")), *[float(x) for x in f[2:6]], max(int(f[8]), 10) * 0.01))
+        return np.array(sorted(out), dtype=np.float64)
+    B, M = rd(m15), rd(m1)
+    t15, t1 = B[:, 0].astype(np.int64), M[:, 0].astype(np.int64)
+    kk = np.searchsorted(t15, t1, side="right") - 1
+    keep = (kk >= 0) & (t1 < t15[np.maximum(kk, 0)] + 900)
+    M, t1 = M[keep], t1[keep]
+    k1, first, m2c, roll = _timeline(t15, t1)
+    atr, adx = _atr_adx(B[:, 1], B[:, 2], B[:, 3], B[:, 4])
+    out = SIMDATA / "m15.npz"
+    np.savez_compressed(out, t15=t15, hr15=((t15 // 3600) % 24).astype(np.int64), o15=B[:, 1], h15=B[:, 2], l15=B[:, 3], c15=B[:, 4],
+                        ef=np.zeros(len(t15)), es=np.zeros(len(t15)), adx=adx, atr=atr, t1=t1, o1=M[:, 1], h1=M[:, 2], l1=M[:, 3], c1=M[:, 4],
+                        sp1=M[:, 5], k1=k1, first1=first, m2c=m2c, roll=roll, events=np.array([], dtype=object))
+    _D.pop("m15", None)
+    return out
