@@ -39,6 +39,7 @@ sys.path.insert(0, str(HERE))
 import sim  # noqa: E402  (the Turtle TV Tester: numba, sets NUMBA_CPU_NAME itself)
 import optimizer  # noqa: E402
 import exitlab  # noqa: E402
+import ml  # noqa: E402
 import sim_full  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location("saad_compare_server", ROOT / "monitor" / "saad_compare" / "server.py")
@@ -967,6 +968,28 @@ Method:
     return {"id": jid}
 
 
+# ---------------------------------------------------------------- the Machine Learning tab (ml.py)
+MLJ = {"job": None}
+
+
+def ml_start(body):
+    if MLJ["job"] and MLJ["job"].running:
+        MLJ["job"].stop()
+    ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv") else "year"
+    MLJ["job"] = ml.start(full_inputs(body.get("inputs") or {}), ds, [a for a in (body.get("algos") or []) if a in ml.ALGOS], body.get("thr") or 0.5)
+    return {"ok": True}
+
+
+def ml_state():
+    j = MLJ["job"]
+    if not j:
+        return {}
+    if j.error and not getattr(j, "logged", False):
+        j.logged = True
+        log("ml: " + getattr(j, "tb", j.error))
+    return _jsonable(j.state())
+
+
 # ---------- HTTP ----------
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
@@ -1036,6 +1059,10 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, lab_state(bool(q.get("full"))))
         if u.path == "/api/exitlab_research":
             return self.send(200, _research_list())
+        if u.path == "/api/ml":
+            return self.send(200, ml_state())
+        if u.path == "/api/ml_algos":
+            return self.send(200, {"algos": ml.ALGOS})
         if u.path == "/api/exitlab_spec":
             return self.send(200, _jsonable({"groups": exitlab.GROUPS, "default": exitlab.DEFAULT, "why": exitlab.WHY, "trust": exitlab.ea_trust()}))
         if u.path == "/api/hyp_job":
@@ -1090,6 +1117,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, lab_feature(body))
             if u.path == "/api/exitlab_research":
                 return self.send(200, lab_research(body))
+            if u.path == "/api/ml":
+                return self.send(200, ml_start(body))
             if u.path == "/api/sim":
                 return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
                                                  body.get("ds") or "year", body.get("mode") or "ea"))
