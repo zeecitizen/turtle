@@ -643,3 +643,72 @@ def build_m15m1_dataset(m15=r"C:\Users\zeesh\turtle\data_15min_2015_onwards_xauu
                         sp1=M[:, 5], k1=k1, first1=first, m2c=m2c, roll=roll, events=np.array([], dtype=object))
     _D.pop("m15", None)
     return out
+
+
+# ---------------------------------------------------------------- every EA input (sim_full.py)
+import sim_full  # noqa: E402
+
+NAMES_ALL = NAMES + sim_full.FULL
+_ADX, _HTF = {}, {}
+
+
+def pvec_all(inputs):
+    dfl = {"InpTrigBid": "true", "InpMaxPos": "1", "InpSkipDow": "-1", "InpAdxPeriod": "14", "InpMaxLots": "50"}
+    P = np.array([_b(inputs.get(n, dfl.get(n, "0"))) for n in NAMES_ALL], dtype=np.float64)
+    _, bb, bs = pvec(inputs)
+    return P, bb, bs
+
+
+def adx_for(ds, n):
+    D = data(ds)
+    if ds == "year" and n == 14:
+        return D["adx"]
+    if (ds, n) not in _ADX:
+        tr = np.empty(len(D["c15"])); h, l, c = D["h15"], D["l15"], D["c15"]
+        _ADX[(ds, n)] = _atr_adx(D["o15"], h, l, c, n)[1]
+    return _ADX[(ds, n)]
+
+
+def htf_for(ds, minutes, n):
+    """at each candle's close: the last CLOSED higher-timeframe candle's close and its EMA (and the one before), as iClose(htf,1) / iMA buffers 1, 2"""
+    key = (ds, int(minutes), int(n))
+    if key not in _HTF:
+        D = data(ds)
+        t, c = D["t15"], D["c15"]
+        if minutes <= 0:
+            z = np.zeros(len(t)); _HTF[key] = (z, z, z)
+        else:
+            H = int(minutes) * 60
+            hid = t // H
+            ids, last = np.unique(hid, return_index=False), None
+            ends = np.r_[np.where(np.diff(hid) != 0)[0], len(hid) - 1]
+            hc = c[ends]
+            he = ema(hc, int(n), hc[0])
+            pos = np.searchsorted(ids, (t + 900) // H) - 1          # the HTF bar before the one running when candle i closes
+            hcv = np.where(pos >= 0, hc[np.maximum(pos, 0)], 0.0)
+            e1 = np.where(pos >= 0, he[np.maximum(pos, 0)], 0.0)
+            e2 = np.where(pos >= 1, he[np.maximum(pos - 1, 0)], 0.0)
+            _HTF[key] = (hcv, e1, e2)
+    return _HTF[key]
+
+
+def simulate(inputs, ds="year", chart=False, **extra):
+    """Every EA input (sim_full.run_full). ds 'year' (Blueberry MT5 candles), 'tv' (TradingView's), 'm15' (Blueberry 2023 -> now)."""
+    D = data(ds)
+    P, bb, bs = pvec_all(inputs)
+    ef, es = emas(P[0], P[1], ds)
+    ex = dict(CHART_RULES) if chart else {}
+    if ds == "tv":
+        ex["warm_k"] = 2 * P[1] + 19
+    ex.update(extra)
+    X = np.zeros(17)
+    X[:16] = xvec(ex)
+    X[16] = float(ex.get("deposit", 100000))
+    hc, h1_, h2_ = htf_for(ds, P[sim_full.F["InpHtfMin"]], P[sim_full.F["InpHtfEma"]])
+    dow = ((D["t15"] // 86400 + 4) % 7).astype(np.int64)          # 0 Sunday .. 6 Saturday (MqlDateTime.day_of_week)
+    day1 = (D["t1"] // 86400).astype(np.int64)
+    out = np.zeros((8000, 15)); setups = np.zeros((60000, 3)); stats = np.zeros(8)
+    nt, ns = sim_full.run_full(D["t15"], D["hr15"], dow, D["o15"], D["h15"], D["l15"], D["c15"], ef, es, D["atr"],
+                               adx_for(ds, int(P[sim_full.F["InpAdxPeriod"]])), hc, h1_, h2_, D["t1"], D["o1"], D["h1"], D["l1"], D["c1"],
+                               D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, bb, bs, out, setups, stats)
+    return out[:nt], setups[:ns], dict(zip(["setups", "no_break", "risk", "adx", "atr_band", "band_skip", "gap", "spread_reject"], stats.astype(int).tolist()))
