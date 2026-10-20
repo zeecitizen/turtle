@@ -65,11 +65,11 @@ function legoPanel() {
 }
 function pLego() {
   const bricks = brickList(), R = LEGO.res, labUsed = bricks.some((b) => b.lab);
-  let h = `<div class="lab"><p class="note"><b>Strategy Lego.</b> The strategy taken apart into its pieces. Click a brick to see how it works and to change it or swap it for another piece.
+  let h = `<div class="lab dex"><h3 class="dexh">🧱 DEXTER'S STRATEGY LEGO WORKSHOP</h3><p class="note"><b>Strategy Lego.</b> The strategy taken apart into its pieces. Click a brick to see how it works and to change it or swap it for another piece.
     <span class="tag lab">LAB</span> pieces are not in the EA yet (the tester runs them, MT5 cannot). Everything else here is the EA's own inputs.</p>
     <div class="legorow">${bricks.map((b, i) => brickSvg(b, b.id === LEGO.sel) + (i < bricks.length - 1 ? '<span class="arrowr">➜</span>' : '')).join('')}</div>
-    <div class="legopanel">${legoPanel()}</div><div class="bar"><button id="legoGo" class="primary" ${LEGO.busy ? 'disabled' : ''}>${LEGO.busy ? '⏳ building…' : '🧱 Build &amp; test this strategy'}</button>
-    <button id="legoReset">Back to the EA</button>${!labUsed && Object.keys(LEGO.sets).length ? '<button id="legoApply">Apply to the chart</button>' : ''}</div>`;
+    <div class="dexpanel">${legoPanel()}</div><div class="bar"><button id="legoGo" class="dexbtn" ${LEGO.busy ? 'disabled' : ''}>${LEGO.busy ? '⏳ BUILDING…' : '🧱 BUILD &amp; TEST'}</button>
+    <button id="legoReset">Back to the EA</button><button id="legoFly" class="dexbtn">🚀 FLY IT IN MISSION CONTROL</button>${!labUsed && Object.keys(LEGO.sets).length ? '<button id="legoApply">Apply to the chart</button>' : ''}</div>`;
   if (R) {
     const [LA, LB] = R.labels, a = R.lego, y = R.yours, row = (n, s) => `<tr><td class="l">${n}</td><td class="${cls(s.train.net)}">${money(s.train.net)} · ${s.train.wr}%</td><td class="${cls(s.test.net)}">${money(s.test.net)} · ${s.test.wr}%</td><td><b>${money(s.total)}</b></td><td>${s.all.wr}%</td><td>${s.all.n}</td><td>${s.all.pf}</td><td>${money(-s.all.dd)}</td><td>${money(s.sides.BUY.net)} / ${money(s.sides.SELL.net)}</td></tr>`;
     h += table(['', LA, LB, 'Total', 'WR', 'Trades', 'PF', 'Max DD', 'BUY / SELL'], [row('The EA (yours)', y), row('<b>This build</b>', a)]) +
@@ -88,6 +88,7 @@ document.addEventListener('click', (e) => {
   const br = e.target.closest && e.target.closest('[data-brick]');
   if (br) { LEGO.sel = br.dataset.brick; renderPanel('tt'); return; }
   if (e.target.id === 'legoGo') legoRun();
+  if (e.target.id === 'legoFly') { CUR = { ...CUR, ...LEGO.sets }; LEGO.sets = {}; markForm(); scheduleSim(0); MIS.lego = { ...LEGO.lego }; TAB.tt = 'mission'; renderPanel('tt'); toast('The build is in Mission Control (its EA settings are on the chart): press LAUNCH.'); }
   if (e.target.id === 'legoReset') { LEGO.lego = { ma: 'ema', loc: 'ea', candle: 'ea', loc_k: 0.5, mom_body: 0.6, mom_atr: 1.0 }; LEGO.sets = {}; LEGO.res = null; renderPanel('tt'); }
   if (e.target.id === 'legoApply') { CUR = { ...CUR, ...LEGO.sets }; LEGO.sets = {}; markForm(); scheduleSim(0); toast('The EA settings from the bricks are on the chart.'); }
   if (e.target.dataset && e.target.dataset.legoexit) { TAB.tt = 'lab'; renderPanel('tt'); labOpen(); }
