@@ -29,44 +29,54 @@ function gauges(T) {                                              // the result 
     dial('NET', money(T.stats.total), T.stats.total, T.base.total, 'up', (x) => '$' + Math.round(x).toLocaleString()) + dial('MAX DRAWDOWN', money(-s.dd), s.dd, b.dd, 'down', (x) => '$' + Math.round(x).toLocaleString()) +
     dial('TRADES', s.n, s.n, b.n, 'up', (x) => String(Math.round(x))) + dial('AVG WIN / LOSS', `${money(s.avg_win)}<br>${money(s.avg_loss)}`, s.avg_win / Math.max(1, -s.avg_loss), b.avg_win / Math.max(1, -b.avg_loss), 'up', (x) => x.toFixed(2) + '× ratio') + '</div>';
 }
-function leverTips() {                                           // "Win 25% winrate by moving this slider to X": the best value of every lever, as lab buttons
+function leverTips() {                                           // every setting the EA has, a few steps either way: ranked trades of one thing for another
   const W = LABS.sweep, key = JSON.stringify([labForm(), RS.sets]), J = LABS.main;
   const busy = J && J.running && J.action === 'sweep', pct = busy && J.total ? Math.round((100 * J.progress) / J.total) : 3;
-  let h = `<div class="bar" style="margin-top:8px"><button data-rs="scan" class="dexbtn" ${busy ? 'disabled' : ''}>${busy ? '⏳ SCANNING…' : '🔬 SCAN THE LEVERS'}</button></div>`;
-  if (busy) h += `<div class="dexprog"><div class="dexprog-t">⚗️ THE LAB IS TESTING EVERY LEVER · ${pct}%</div><div class="dexprog-bar"><i style="width:${pct}%"></i></div>
+  let h = `<div class="bar" style="margin-top:8px"><button data-rs="scan" class="dexbtn" ${busy ? 'disabled' : ''}>${busy ? '⏳ SCANNING…' : '🔬 SCAN EVERY SETTING'}</button>
+    <label class="tog" style="font-size:12px"><input type="checkbox" id="rsAuto" ${RS.auto !== false ? 'checked' : ''}> scan again after every pick</label></div>`;
+  if (busy) h += `<div class="dexprog"><div class="dexprog-t">⚗️ THE LAB IS TESTING EVERY SETTING · ${pct}%</div><div class="dexprog-bar"><i style="width:${pct}%"></i></div>
     <div class="dexprog-s">${esc(J.phase || 'warming up the beakers')} · ${J.progress || 0} of ${J.total || '…'} runs · ${J.seconds || 0} s</div></div>`;
-  if (!W || !W.levers) return h + '<div class="k">tries every value of every lever on the data and offers the ones that raise the win rate, the profit factor or the net</div>';
-  if (RS.scanKey !== key) h += '<p class="warn">the levers moved since the scan - scan again for fresh suggestions</p>';
-  const now = W.now, names = { sl: 'Stop', tg: 'Target R:R', tr: 'Trail ATR', ta: 'Trail starts', be: 'Breakeven', p1: 'Half off' }, sug = [];
-  for (const [lv, rows] of Object.entries(W.levers)) {
-    const ok = rows.filter((r) => !r.stuck && r.n >= 20);
-    const bw = ok.slice().sort((a, b) => b.wr - a.wr)[0], bn = ok.slice().sort((a, b) => b.net - a.net)[0], bp = ok.slice().sort((a, b) => b.pf - a.pf)[0];
-    if (bw && bw.wr > now.wr + 0.4) sug.push({ kind: 'wr', lv, r: bw });
-    if (bn && bn.net > now.net + 1000) sug.push({ kind: 'net', lv, r: bn });
-    if (bp && bp.pf > now.pf + 0.02 && bp !== bn) sug.push({ kind: 'pf', lv, r: bp });
+  if (!W || !W.moves) return h + '<div class="k">moves every setting the EA has (lines, candle, location, trigger, filters, each range box, stop, exit, the 27 Exit Lab settings) a few steps either way and ranks what each move trades for what</div>';
+  if (RS.scanKey !== key && !busy) h += '<p class="warn">the bench changed since this scan - scan again for fresh suggestions</p>';
+  const now = W.now, rel = (a, b) => (a - b) / Math.max(1e-9, Math.abs(b));
+  const tot = Math.max(1, Math.abs(now.net));
+  const sug = [];
+  for (const m of W.moves) {
+    const r = m.r;
+    if (!r || r.stuck || r.n < 20) continue;
+    const dMoney = Math.min(r.train - now.train, r.test - now.test);   // money counts only when BOTH halves gain (no fitting the past)
+    const g = { net: dMoney / tot, wr: (r.wr - now.wr) / Math.max(1, now.wr), pf: (r.pf - now.pf) / Math.max(0.01, now.pf) };
+    if (!(dMoney > 500 || r.wr > now.wr + 0.4 || r.pf > now.pf + 0.02)) continue;
+    const kind = Object.entries(g).sort((a, b) => b[1] - a[1])[0][0];
+    m.score = g.net + 0.5 * g.wr + 0.5 * g.pf - 0.3 * rel(r.dd, now.dd);
+    m.kind = kind; m.both = r.train > now.train && r.test > now.test;
+    sug.push(m);
   }
-  if (!sug.length) return h + '<p class="note">No lever beats the exit on the bench on its own - it already sits on its best values.</p>';
-  // one score for "is this good for us": money first, then win rate, profit factor and drawdown, each against the exit on the bench
-  const rel = (a, b) => (a - b) / Math.max(1e-9, Math.abs(b));
-  for (const s of sug) { const r = s.r; s.score = rel(r.net, now.net) + 0.5 * rel(r.wr, now.wr) + 0.5 * rel(r.pf, now.pf) - 0.3 * rel(r.dd, now.dd); }
+  if (!sug.length) return h + `<p class="note">🏁 Nothing left to gain: no single setting improves the bench any more (${W.n} moves tried in ${W.seconds} s). This is the top of this hill.</p>`;
   sug.sort((a, b) => b.score - a.score);
-  const fmt = { wr: (r) => `${r.wr}% win rate`, net: (r) => `${money(r.net)} net`, pf: (r) => `PF ${r.pf}` };
-  const cost = (s) => {                                            // what this suggestion gives up: the worst of the other three
-    const r = s.r, c = [];
-    if (s.kind !== 'net') c.push([rel(r.net, now.net), r.net - now.net < 0 ? `${money(r.net - now.net)} in cash` : `+${money(r.net - now.net).slice(1)} cash too`]);
-    if (s.kind !== 'wr') c.push([rel(r.wr, now.wr), `${(r.wr - now.wr) >= 0 ? '+' : '−'}${Math.abs(r.wr - now.wr).toFixed(1)} pts win rate`]);
-    if (s.kind !== 'pf') c.push([rel(r.pf, now.pf), `${(r.pf - now.pf) >= 0 ? '+' : '−'}${Math.abs(r.pf - now.pf).toFixed(2)} PF`]);
+  const show = RS.all ? sug : sug.slice(0, 25), n = show.length;
+  const gain = { net: (m) => `${money(m.r.net)} net`, wr: (m) => `${m.r.wr}% win rate`, pf: (m) => `PF ${m.r.pf}` };
+  const cost = (m) => {
+    const r = m.r, c = [];
+    if (m.kind !== 'net') c.push([rel(r.net, now.net), r.net < now.net ? `${money(r.net - now.net)} in cash` : `+${money(r.net - now.net).slice(1)} cash too`]);
+    if (m.kind !== 'wr') c.push([rel(r.wr, now.wr), `${r.wr >= now.wr ? '+' : '−'}${Math.abs(r.wr - now.wr).toFixed(1)} pts win rate`]);
+    if (m.kind !== 'pf') c.push([rel(r.pf, now.pf), `${r.pf >= now.pf ? '+' : '−'}${Math.abs(r.pf - now.pf).toFixed(2)} PF`]);
+    c.push([-rel(r.dd, now.dd), r.dd > now.dd ? `${money(now.dd - r.dd)} more drawdown` : `${money(now.dd - r.dd).slice(1)} less drawdown`]);
     c.sort((a, b) => a[0] - b[0]);
     return c[0];
   };
-  const name = { wr: (s) => `🧪 Win rate <b>${s.r.wr}%</b> (now ${now.wr}%)`, net: (s) => `💰 Net <b>${money(s.r.net)}</b> (now ${money(now.net)})`, pf: (s) => `⚗️ Profit factor <b>${s.r.pf}</b> (now ${now.pf})` };
-  const n = sug.length;
-  return h + `<div class="k" style="margin:6px 0 2px">ranked best → worst for us (money first, then win rate, PF and drawdown) · green = good deal, red = it hurts</div>` + sug.map((s, i) => {
-    const hue = n > 1 ? Math.round(120 * (1 - i / (n - 1))) : 120, [cv, ct] = cost(s);
-    return `<div class="sugrow" style="--hue:${hue};animation-delay:${i * 90}ms"><span class="sugrank">#${i + 1}</span>` +
-      `<button class="labsug" data-sug="${s.lv}|${s.r.v}">${name[s.kind](s)}: ${names[s.lv]} → <b>${s.r.v}</b></button>` +
-      `<button class="sugdeal ${cv < 0 ? 'cost' : 'free'}" data-sug="${s.lv}|${s.r.v}">Trade for <b>${fmt[s.kind](s.r)}</b><br>${cv < 0 ? 'pay ' + ct : 'and ' + ct}</button></div>`;
+  const icon = { 'the lines': '📈', 'the candle': '🕯️', where: '📍', 'the trigger': '🎯', filters: '🧹', 'range boxes': '📦', 'the stop': '🛑', 'the exit': '🚪', 'Exit Lab': '⚗️', 'v1.23 exits': '⚠️' };
+  h += `<div class="k" style="margin:6px 0 2px">${sug.length} moves help something (of ${W.n} tried in ${W.seconds} s) · ranked best → worst for us: money only counts when BOTH halves gain, then win rate, PF, drawdown · green = good deal, red = it hurts</div>`;
+  h += show.map((m, i) => {
+    const hue = n > 1 ? Math.round(120 * (1 - i / (n - 1))) : 120, [cv, ct] = cost(m), r = m.r;
+    const warn = m.group === 'v1.23 exits' || (m.key === 'InpExitMode' && m.to === '0') ? ' <span class="tag unt">⚠ tester ≠ MT5</span>' : '';
+    return `<div class="sugrow" style="--hue:${hue};animation-delay:${Math.min(i, 20) * 70}ms"><span class="sugrank">#${i + 1}</span>` +
+      `<button class="labsug" data-mv="${W.moves.indexOf(m)}">${icon[m.group] || '•'} <b>${esc(m.label)}</b> ${esc(m.from)} → <b>${esc(m.to)}</b>${warn}<br>` +
+      `<span class="k">${money(r.net)} · WR ${r.wr}% · PF ${r.pf} · ${r.n} trades${m.both ? ' · ✓ both halves' : ''}</span></button>` +
+      `<button class="sugdeal ${cv < 0 ? 'cost' : 'free'}" data-mv="${W.moves.indexOf(m)}">Trade for <b>${gain[m.kind](m)}</b><br>${cv < 0 ? 'pay ' + ct : 'and ' + ct}</button></div>`;
   }).join('');
+  if (sug.length > 25) h += `<button data-rs="all" class="dexbtn sm" style="margin-top:6px">${RS.all ? 'show the best 25' : `show all ${sug.length}`}</button>`;
+  return h;
 }
 function labTips(ea) {                                           // lab suggestions: the bubbling flask lights up when a lever reaches where they apply
   const st = +(ea.InpSlAtrMult || 0), far = Math.max(+LABS.form.tgt === 2 ? +LABS.form.tgt_k : 0, +LABS.form.tr === 2 ? +LABS.form.tr_k : 0, +LABS.form.tr_act, +LABS.form.be_r, +LABS.form.p1_r);
@@ -130,6 +140,7 @@ document.addEventListener('input', (e) => {
   if (id) { const x = SLIDERS.find((s) => s.id === id); x.set(+e.target.value); const o = document.getElementById('lv_' + id); if (o) o.textContent = e.target.value; }
 });
 document.addEventListener('change', (e) => {
+  if (e.target.id === 'rsAuto') { RS.auto = e.target.checked; return; }
   if (!(e.target.dataset && e.target.dataset.lever)) return;
   LABS.goResult = false;
   labStart('test', { lab: labForm(), sets: RS.sets });               // the exit on the bench, with the levers
@@ -138,8 +149,16 @@ document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   if (d.rs === 'save') saveExit();
   if (d.rs === 'scan') { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: 'warming up the beakers', progress: 0, total: 0, seconds: 0 }; renderPanel('tt'); labStart('sweep', { lab: labForm(), sets: RS.sets }); }
-  if (d.sug) { const [lv, v] = d.sug.split('|'); SLIDERS.find((s) => s.id === lv).set(+v); RS.scanKey = JSON.stringify([labForm(), RS.sets]); labStart('test', { lab: labForm(), sets: RS.sets }); }
-  if (d.rs === 'reset') { RS.sets = {}; LABS.form = { ...LABS.spec.default }; labStart('test', { lab: labForm() }); }
+  if (d.mv != null && LABS.sweep && LABS.sweep.moves) {           // pick a move: it goes on the bench, the dials re-run, and (by default) the scan runs again from there
+    const m = LABS.sweep.moves[+d.mv];
+    RS.sets = { ...RS.sets, ...m.sets }; LABS.form = { ...LABS.form, ...m.lab };
+    toast(`On the bench: ${esc(m.label)} ${esc(m.from)} → ${esc(m.to)}.` + (RS.auto !== false ? ' Scanning again from here…' : ''));
+    labStart('test', { lab: labForm(), sets: RS.sets });
+    if (RS.auto !== false) { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: 'scanning from the new bench', progress: 0, total: 0, seconds: 0 }; labStart('sweep', { lab: labForm(), sets: RS.sets }); }
+    renderPanel('tt');
+  }
+  if (d.rs === 'all') { RS.all = !RS.all; renderPanel('tt'); }
+  if (d.rs === 'reset') { RS.sets = {}; const x = labFromX(CUR); LABS.form = { ...LABS.spec.default, ...(x || {}) }; labStart('test', { lab: labForm() }); }
   if (d.rs === 'go') {
     RS.q = ($('#rsQ').value || '').trim() || RS.q;
     const r = await api('/api/exitlab_research', { inputs: CUR, ds: SRC.ds === 'tv' ? 'year' : SRC.ds, question: RS.q });

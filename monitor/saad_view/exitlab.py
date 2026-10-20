@@ -706,43 +706,9 @@ class Job:
               "ta": [0, 0.5, 1, 1.5, 2, 3, 5, 8], "be": [0, 0.5, 1, 1.5, 2, 3, 5], "p1": [0, 0.5, 1, 1.5, 2, 3, 5, 8]}
 
     def _sweep(self):
-        lab, sets = dict(self.kw.get("lab") or {}), dict(self.kw.get("sets") or {})
-        levers = [l for l in self.LEVERS if l != "sl" or str(dict(self.inputs, **sets).get("InpSlMode")) == "1"]
-        self.total = sum(len(self.LEVERS[l]) for l in levers) + 1
-        s0, _ = self.eval(lab=lab or None, sets=sets)
-        self.progress = 1
-        out = {}
-        for lv in levers:
-            rows = []
-            for v in self.LEVERS[lv]:
-                if self._stop:
-                    break
-                L, S = dict(lab), dict(sets)
-                if lv == "sl":
-                    S["InpSlAtrMult"] = str(v)
-                elif lv == "tg":
-                    if v > 0:
-                        L.update(tgt=2, tgt_k=v)
-                    elif float(L.get("tgt", 0)) == 2:
-                        L["tgt"] = 0
-                elif lv == "tr":
-                    if v > 0:
-                        L.update(tr=2, tr_k=v)
-                    elif float(L.get("tr", 0)) == 2:
-                        L["tr"] = 0
-                elif lv == "ta":
-                    L["tr_act"] = v
-                elif lv == "be":
-                    L["be_r"] = v
-                elif lv == "p1":
-                    L.update(p1_r=v, p1_frac=0.5)
-                self.phase = f"lever {lv} = {v}"
-                s, _ = self.eval(lab=L, sets=S)
-                rows.append({"v": v, "wr": s["all"]["wr"], "pf": s["all"]["pf"], "net": s["total"], "dd": s["all"]["dd"], "n": s["all"]["n"],
-                             "train": s["train"]["net"], "test": s["test"]["net"], "stuck": s["stuck"]})
-                self.progress += 1
-            out[lv] = rows
-        return {"now": {"wr": s0["all"]["wr"], "pf": s0["all"]["pf"], "net": s0["total"], "dd": s0["all"]["dd"], "n": s0["all"]["n"]}, "levers": out}
+        """every setting the EA has, a few steps either way, from the bench (scan.py - the runs spread over the cores)"""
+        import scan
+        return scan.run_all(self, self.inputs, self.ds, self.kw.get("lab") or {}, self.kw.get("sets") or {}, self.window)
 
     # ---- two numbers against each other
     def _heatmap(self):
