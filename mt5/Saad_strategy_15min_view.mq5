@@ -34,11 +34,15 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.29"
+#property version   "1.30"
 #property strict
 
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
+// v1.30 (2026-10-21, Zee: "we don't need to treat Exit lab's exits differently -> they can be saved and applied like normal settings"): the Turtle TV
+//        Exit Lab as EA inputs (InpX*, all off = v1.29): targets in R / ATR / $, the fallback's buffer and closes, close-based exits, partials,
+//        breakeven, lock ladder, trails, time / no-progress / ADX / Friday exits - for exit modes 1-2. Also: a position adopted after a restart in
+//        exit mode 1 keeps the mode-1 exit (it was given the v1.23 exits).
 // v1.29 (2026-10-20, found building the Exit Lab): a stand-aside ghost under the v1.23 exits (InpExitMode 0) on a LONG with no
 //        target only ended at its stop - in a rally it lasted forever and the EA never traded again (seen in the Turtle TV Tester on
 //        Blueberry's 4 years: no trade after Oct 13 2023; MT5's rig only has 2026 ticks, the EA has the same code). GhostBar now also ends
@@ -64,7 +68,7 @@
 // VIEWER copy (Zee 2026-10-20: "a tradingview's copy web app which can show the entire year's candles and my MT5 EA's code applied to the
 //   candles"): Saad_strategy_15min VERBATIM + an export of every candle and decision for the web chart (monitor/saad_view). Built by
 //   monitor/saad_view/make_view_ea.py - do not edit by hand. TEST - run it in the Strategy Tester, never attach to an account.
-#define EA_COMMENT "Saad15 view v1.29"
+#define EA_COMMENT "Saad15 view v1.30"
 
 //--- the two lines
 input int    InpEmaFast     = 16;      // InpEmaFast
@@ -221,6 +225,34 @@ input int    InpExitMode    = 1;      // InpExitMode — 0 the v1.23 exits (TP1 
 input bool   InpExport      = true;    // InpExport - write every closed candle and every decision to Common\Files\saadview_<InpExportTag>_bars.csv / _events.csv
 input string InpExportTag   = "view";  // InpExportTag - the run's name in those file names
 input bool   InpExportM1    = false;   // InpExportM1 - also every closed 1-minute candle with its spread (the fast optimizer's data, ~350k lines a year)
+//--- Exit Lab (v1.30): extra exits on top of exit modes 1-2, all off by default. R = |entry - first stop|.
+input int    InpXTgt        = 0;      // InpXTgt — target: 0 the mode's own, 1 none, 2 R multiple, 3 ATR multiple, 4 $ distance
+input double InpXTgtK       = 2;      // InpXTgtK — the target's k (R / x ATR / $)
+input int    InpXFb         = 0;      // InpXFb — no EMA beyond the entry (mode 1): 0 close back across the fast EMA, 1 across the slow, 2 nothing
+input double InpXFbBuf      = 0;      // InpXFbBuf — that close must clear the EMA by this x ATR
+input int    InpXFbN        = 1;      // InpXFbN — closes in a row needed
+input int    InpXCx         = 0;      // InpXCx — close-based exit: 0 off, 1 across the fast EMA, 2 across the slow, 3 EMA cross, 4 opposite signal, 5 engulfing, 6 N candles against
+input double InpXCxBuf      = 0;      // InpXCxBuf — its buffer (x ATR)
+input int    InpXCxN        = 1;      // InpXCxN — candles in a row
+input int    InpXCxWhen     = 0;      // InpXCxWhen — 0 always, 1 only in profit, 2 only in loss
+input int    InpXCxAfter    = 0;      // InpXCxAfter — ignore the first N candles
+input double InpXP1R        = 0;      // InpXP1R — partial close at +R (0 = off)
+input double InpXP1Frac     = 0.5;    // InpXP1Frac — share of the trade closed there
+input bool   InpXP1Be       = false;  // InpXP1Be — then the stop to breakeven
+input double InpXP2R        = 0;      // InpXP2R — second partial at +R (0 = off)
+input double InpXP2Frac     = 0.25;   // InpXP2Frac — its share
+input double InpXBeR        = 0;      // InpXBeR — breakeven at +R (0 = off)
+input double InpXBeOff      = 0;      // InpXBeOff — the stop at entry + this R
+input double InpXLockR      = 0;      // InpXLockR — lock ladder every R (0 = off)
+input int    InpXTr         = 0;      // InpXTr — trail: 0 off, 1 $ from the best, 2 ATR from the best, 3 keep k% of the best profit, 4 fast EMA, 5 slow EMA, 6 previous candle, 7 N candles, 8 last swing
+input double InpXTrK        = 2;      // InpXTrK — the trail's k ($ / x ATR / % / N candles)
+input double InpXTrAct      = 0;      // InpXTrAct — the trail starts at +R
+input double InpXTrBuf      = 0;      // InpXTrBuf — $ buffer beyond the EMA / candle / swing
+input int    InpXMaxBars    = 0;      // InpXMaxBars — close after N candles (0 = off)
+input int    InpXStaleBars  = 0;      // InpXStaleBars — no progress after N candles: out (0 = off)
+input double InpXStaleR     = 0.5;    // InpXStaleR — ... meaning less than +R
+input double InpXAdxExit    = 0;      // InpXAdxExit — close when ADX falls below (0 = off)
+input int    InpXFriHour    = 0;      // InpXFriHour — Friday close at this server hour (0 = off)
 
 CTrade   trade;
 int      hAdxX = INVALID_HANDLE;   // VIEWER: ADX for the export (the EA's own formula: MT5's iADX on its candles)
@@ -253,7 +285,8 @@ int      g_skipDip = 0, g_skipSweep = 0, g_skipMinLot = 0, g_dayLossStop = 0, g_
 // per-position state
 struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bool noTp; bool ride; datetime entryTime; double best; bool usdTrail; double tpNext; int tpStage; bool resTp1;
                   string setup; double sl0; double risk; string tp1; datetime tp1At; string tps; datetime ctcAt; int moves; double mfe;
-                  int num; double slNow; datetime slFrom; string why; int nxE; };   // v1.25 nxE: 9 / 50 the EMA to touch, -1 none beyond (close back across the fast), -2 close back across the slow, 0 v1.23 exits
+                  int num; double slNow; datetime slFrom; string why; int nxE;
+                  double xr0; double xltp; double xorl; bool xp1; bool xp2; int xcxn; int xfbn; };   // v1.30 Exit Lab: risk R, lab target, original lots, partials, counters   // v1.25 nxE: 9 / 50 the EMA to touch, -1 none beyond (close back across the fast), -2 close back across the slow, 0 v1.23 exits
 PosState g_pos[];
 
 int g_ctc = 0, g_skipClose = 0, g_closeLoss = 0;
@@ -281,7 +314,7 @@ int OnInit()
    hSlow = iMA(_Symbol, PERIOD_CURRENT, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
    if (InpExport) hAdxX = iADX(_Symbol, PERIOD_CURRENT, InpAdxPeriod);
-   if (InpAdxMin > 0) { hAdx = iADX(_Symbol, PERIOD_CURRENT, InpAdxPeriod); if (hAdx == INVALID_HANDLE) return INIT_FAILED; }   // v1.24
+   if (InpAdxMin > 0 || InpXAdxExit > 0) { hAdx = iADX(_Symbol, PERIOD_CURRENT, InpAdxPeriod); if (hAdx == INVALID_HANDLE) return INIT_FAILED; }   // v1.24
    if (InpHtfMin > 0) {
       g_htf = InpHtfMin == 15 ? PERIOD_M15 : InpHtfMin == 30 ? PERIOD_M30 : InpHtfMin == 60 ? PERIOD_H1 : InpHtfMin == 240 ? PERIOD_H4 : PERIOD_M15;
       hHtf = iMA(_Symbol, g_htf, InpHtfEma, 0, MODE_EMA, PRICE_CLOSE);
@@ -702,8 +735,129 @@ void SyncPos()
       p.exitE = 50; p.noTp = p.side > 0; p.ride = TrailOn(p.side); p.entryTime = (datetime)PositionGetInteger(POSITION_TIME); p.best = p.entry;
       p.num = ++g_num; p.slNow = PositionGetDouble(POSITION_SL); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.resTp1 = false; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0;
       p.nxE = InpExitMode == 2 ? -2 : 0;
+      if (InpExitMode == 1) {                       // v1.30: adopted after a restart in exit mode 1 - the next EMA beyond the entry (it got the v1.23 exits)
+         double l9 = Ema(9, 0), l50 = Ema(50, 0);
+         bool b9 = p.side > 0 ? l9 > p.entry : l9 < p.entry, b50 = p.side > 0 ? l50 > p.entry : l50 < p.entry;
+         p.nxE = b9 && b50 ? (MathAbs(l9 - p.entry) <= MathAbs(l50 - p.entry) ? 9 : 50) : b9 ? 9 : b50 ? 50 : -1;
+      }
+      p.mfe = p.entry; p.xr0 = MathAbs(p.entry - p.slNow); p.xorl = PositionGetDouble(POSITION_VOLUME); p.xp1 = false; p.xp2 = false; p.xcxn = 0; p.xfbn = 0; p.xltp = 0;
       int n = ArraySize(g_pos); ArrayResize(g_pos, n + 1); g_pos[n] = p;
    }
+}
+
+// v1.30 Exit Lab
+bool XOn() { return InpXTgt != 0 || InpXFb != 0 || InpXFbBuf > 0 || InpXFbN > 1 || InpXCx != 0 || InpXP1R > 0 || InpXP2R > 0 || InpXBeR > 0 || InpXLockR > 0 || InpXTr != 0
+                   || InpXMaxBars > 0 || InpXStaleBars > 0 || InpXAdxExit > 0 || InpXFriHour > 0; }
+double XSwing(int side, double ref)                 // the last confirmed swing low below ref (BUY) / high above (SELL): pivot 2, 60 candles (as the tester)
+{
+   for (int s = 3; s < 63; s++) {
+      double v = side > 0 ? iLow(_Symbol, PERIOD_CURRENT, s) : iHigh(_Symbol, PERIOD_CURRENT, s);
+      if (side > 0 ? v >= ref : v <= ref) continue;
+      bool piv = true;
+      for (int k = 1; k <= 2 && piv; k++) {
+         double a = side > 0 ? iLow(_Symbol, PERIOD_CURRENT, s - k) : iHigh(_Symbol, PERIOD_CURRENT, s - k);
+         double b = side > 0 ? iLow(_Symbol, PERIOD_CURRENT, s + k) : iHigh(_Symbol, PERIOD_CURRENT, s + k);
+         if (side > 0 ? (a <= v || b < v) : (a >= v || b > v)) piv = false;
+      }
+      if (piv) return v;
+   }
+   return 0;
+}
+bool XBetter(int side, double lvl, double cur) { return side > 0 ? lvl > cur + 0.005 : (cur == 0 || lvl < cur - 0.005); }
+void XClose(int i, string why) { g_pos[i].why = why; trade.PositionClose(g_pos[i].ticket); }
+
+// the Exit Lab, tick by tick: partials, the lab target, breakeven / lock, $ / ATR / keep-% trails (returns true when the position is gone)
+bool XTick(int i, double bid, double ask)
+{
+   ulong tk = g_pos[i].ticket;
+   if (!PositionSelectByTicket(tk)) return true;
+   if (TimeCurrent() / 60 <= g_pos[i].entryTime / 60) return false;          // the entry minute: targets wait (as the tester)
+   int sd = g_pos[i].side;
+   double en = g_pos[i].entry, r0 = g_pos[i].xr0, s_ = PositionGetDouble(POSITION_SL);
+   double fav = sd > 0 ? bid - en : en - ask, best = sd > 0 ? g_pos[i].mfe - en : en - g_pos[i].mfe;
+   for (int pp = 0; pp < 2; pp++) {
+      double pr = pp == 0 ? InpXP1R : InpXP2R;
+      bool done = pp == 0 ? g_pos[i].xp1 : g_pos[i].xp2;
+      if (pr <= 0 || done || r0 <= 0 || fav < pr * r0) continue;
+      if (pp == 0) g_pos[i].xp1 = true; else g_pos[i].xp2 = true;
+      double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP), vmin = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+      double cl = MathFloor(g_pos[i].xorl * (pp == 0 ? InpXP1Frac : InpXP2Frac) / step + 0.5) * step;
+      double vol = PositionGetDouble(POSITION_VOLUME);
+      if (cl < vmin) continue;
+      if (cl >= vol - step / 2) { XClose(i, StringFormat("lab target (partial %d took the rest)", pp + 1)); return true; }
+      trade.PositionClosePartial(tk, NormalizeDouble(cl, 2));
+      g_partials++;
+      if (pp == 0 && InpXP1Be && (sd > 0 ? en > s_ + 0.005 && en < bid : (s_ == 0 || en < s_ - 0.005) && en > ask) && ModifySl(tk, en)) { SlMoved(i, en, "breakeven after the partial"); s_ = en; }
+      if (!PositionSelectByTicket(tk)) return true;
+   }
+   double lt = g_pos[i].xltp;
+   if (lt > 0 && (sd > 0 ? bid >= lt : ask <= lt)) { XClose(i, "lab target"); return true; }
+   if (r0 <= 0) return false;
+   double want = 0;
+   if (InpXBeR > 0 && best >= InpXBeR * r0) want = en + sd * InpXBeOff * r0;
+   if (InpXLockR > 0) {
+      double nst = MathFloor(best / (InpXLockR * r0));
+      if (nst >= 1) { double lk = en + sd * (nst - 1) * InpXLockR * r0; if (want == 0 || (sd > 0 ? lk > want : lk < want)) want = lk; }
+   }
+   if (want > 0 && XBetter(sd, want, s_) && (sd > 0 ? want < bid : want > ask) && ModifySl(tk, want)) { SlMoved(i, want, "lab breakeven / lock"); s_ = want; }
+   if (InpXTr >= 1 && InpXTr <= 3 && best > 0 && best >= InpXTrAct * r0) {
+      double lvl = InpXTr == 1 ? g_pos[i].mfe - sd * InpXTrK : InpXTr == 2 ? g_pos[i].mfe - sd * InpXTrK * Buf(hAtr, 1) : en + sd * best * InpXTrK / 100.0;
+      if (lvl > 0 && XBetter(sd, lvl, s_) && (sd > 0 ? lvl < bid : lvl > ask) && ModifySl(tk, lvl)) SlMoved(i, lvl, "lab trail");
+   }
+   return false;
+}
+
+// the Exit Lab at the candle close (never on the entry candle's own close). Returns true when it closed the position.
+bool XBar(int i, double c1)
+{
+   ulong tk = g_pos[i].ticket;
+   if (!PositionSelectByTicket(tk)) return true;
+   datetime t1 = iTime(_Symbol, PERIOD_CURRENT, 1);
+   if (g_pos[i].entryTime >= t1 + PeriodSeconds()) return false;
+   if (g_pos[i].entryTime >= t1) return false;
+   int sd = g_pos[i].side, nx = g_pos[i].nxE;
+   double en = g_pos[i].entry, r0 = g_pos[i].xr0, a1 = Buf(hAtr, 1), s_ = PositionGetDouble(POSITION_SL);
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   double best = sd > 0 ? g_pos[i].mfe - en : en - g_pos[i].mfe;
+   int held = iBarShift(_Symbol, PERIOD_CURRENT, g_pos[i].entryTime) - 1;
+   if (nx == -2) { if (sd > 0 ? c1 < Ema(50, 1) : c1 > Ema(50, 1)) { XClose(i, StringFormat("closed back across the %d EMA", InpEmaSlow)); return true; } }
+   else if (nx == -1 && InpXTgt == 0 && InpXFb < 2) {
+      double e = Ema(InpXFb == 0 ? 9 : 50, 1), b = InpXFbBuf * a1;
+      g_pos[i].xfbn = (sd > 0 ? c1 < e - b : c1 > e + b) ? g_pos[i].xfbn + 1 : 0;
+      if (g_pos[i].xfbn >= MathMax(1, InpXFbN)) { XClose(i, StringFormat("closed back across the %d EMA (lab fallback)", InpXFb == 0 ? InpEmaFast : InpEmaSlow)); return true; }
+   }
+   if (InpXCx > 0 && held > InpXCxAfter) {
+      bool hit = false;
+      double o1 = iOpen(_Symbol, PERIOD_CURRENT, 1), o2 = iOpen(_Symbol, PERIOD_CURRENT, 2), c2 = iClose(_Symbol, PERIOD_CURRENT, 2), cb = InpXCxBuf * a1;
+      if (InpXCx == 1 || InpXCx == 2) { double e = Ema(InpXCx == 1 ? 9 : 50, 1); hit = sd > 0 ? c1 < e - cb : c1 > e + cb; }
+      else if (InpXCx == 3) hit = sd > 0 ? Ema(9, 1) < Ema(50, 1) - cb : Ema(9, 1) > Ema(50, 1) + cb;
+      else if (InpXCx == 4) { int s = Shape(1); hit = sd > 0 ? (s == -1 || (s == 2 && c1 < o1)) : (s == 1 || (s == 2 && c1 > o1)); }
+      else if (InpXCx == 5) hit = sd > 0 ? (c1 < o1 && c2 > o2 && o1 >= c2 && c1 <= o2) : (c1 > o1 && c2 < o2 && o1 <= c2 && c1 >= o2);
+      else if (InpXCx == 6) hit = sd > 0 ? c1 < o1 : c1 > o1;
+      g_pos[i].xcxn = hit ? g_pos[i].xcxn + 1 : 0;
+      if (g_pos[i].xcxn >= MathMax(1, InpXCxN)) {
+         double pnow = sd > 0 ? bid - en : en - ask;
+         if (InpXCxWhen == 0 || (InpXCxWhen == 1 && pnow > 0) || (InpXCxWhen == 2 && pnow <= 0)) { XClose(i, "lab close-based exit"); return true; }
+      }
+   }
+   if (InpXTr >= 4 && r0 > 0 && best >= InpXTrAct * r0 && (InpXTrAct <= 0 || best > 0)) {
+      double lvl = 0, b = InpXTrBuf;
+      if (InpXTr == 4) lvl = Ema(9, 1) - sd * b;
+      else if (InpXTr == 5) lvl = Ema(50, 1) - sd * b;
+      else if (InpXTr == 6) lvl = sd > 0 ? iLow(_Symbol, PERIOD_CURRENT, 1) - b : iHigh(_Symbol, PERIOD_CURRENT, 1) + b;
+      else if (InpXTr == 7) { int nb = (int)MathMax(1, InpXTrK); lvl = sd > 0 ? iLow(_Symbol, PERIOD_CURRENT, iLowest(_Symbol, PERIOD_CURRENT, MODE_LOW, nb, 1)) - b
+                                                                                : iHigh(_Symbol, PERIOD_CURRENT, iHighest(_Symbol, PERIOD_CURRENT, MODE_HIGH, nb, 1)) + b; }
+      else if (InpXTr == 8) { double sw = XSwing(sd, sd > 0 ? bid : ask); if (sw > 0) lvl = sw - sd * b; }
+      if (lvl > 0 && XBetter(sd, lvl, s_)) {
+         if (sd > 0 ? lvl < bid : lvl > ask) { if (ModifySl(tk, lvl)) SlMoved(i, lvl, "lab trail"); }
+         else { XClose(i, "lab trail (the close is beyond it)"); return true; }
+      }
+   }
+   if (InpXMaxBars > 0 && held >= InpXMaxBars) { XClose(i, "lab time exit"); return true; }
+   if (InpXStaleBars > 0 && held >= InpXStaleBars && r0 > 0 && (c1 - en) * sd < InpXStaleR * r0) { XClose(i, "lab: no progress"); return true; }
+   if (InpXAdxExit > 0 && hAdx != INVALID_HANDLE && Buf(hAdx, 1) < InpXAdxExit) { XClose(i, "lab: ADX faded"); return true; }
+   if (InpXFriHour > 0) { MqlDateTime d; TimeToStruct(TimeCurrent(), d); if (d.day_of_week == 5 && d.hour >= InpXFriHour) { XClose(i, "lab Friday close"); return true; } }
+   return false;
 }
 
 bool ModifySl(ulong t, double sl)
@@ -828,8 +982,9 @@ void ManageTick()
    double ask0 = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    for (int i = ArraySize(g_pos) - 1; i >= 0; i--) {
       g_pos[i].mfe = g_pos[i].side > 0 ? MathMax(g_pos[i].mfe, bid) : (g_pos[i].mfe == 0 ? ask0 : MathMin(g_pos[i].mfe, ask0));
-      if (g_pos[i].nxE != 0) {             // v1.25 exit modes: no lock, breakeven, partial or trail
-         if (g_pos[i].nxE > 0) {
+      if (g_pos[i].nxE != 0) {             // v1.25 exit modes: no lock, breakeven, partial or trail (v1.30: unless the Exit Lab is on)
+         if (XOn() && XTick(i, bid, ask0)) continue;
+         if (g_pos[i].nxE > 0 && InpXTgt == 0) {
             double e = Ema(g_pos[i].nxE, 0);
             if (g_pos[i].side > 0 ? bid >= e : ask0 <= e) {
                g_pos[i].why = StringFormat("%d EMA touched (next EMA beyond the entry)", g_pos[i].nxE == 9 ? InpEmaFast : InpEmaSlow);
@@ -905,6 +1060,7 @@ void ManageBar()
       int side = g_pos[i].side;
       double sl = PositionGetDouble(POSITION_SL);
       if (g_pos[i].nxE != 0) {                      // v1.25: -1 close back across the fast EMA, -2 across the slow
+         if (XOn()) { XBar(i, c1); continue; }         // v1.30: the Exit Lab's candle-close rules (they include the close-back)
          int ce = g_pos[i].nxE == -1 ? 9 : g_pos[i].nxE == -2 ? 50 : 0;
          if (ce > 0 && g_pos[i].entryTime < t1 && (side > 0 ? c1 < Ema(ce, 1) : c1 > Ema(ce, 1))) {   // chart-test: not on the entry candle's own close (indicator)
             g_pos[i].why = StringFormat("closed back across the %d EMA", ce == 9 ? InpEmaFast : InpEmaSlow);
@@ -1107,6 +1263,8 @@ void DoEntry(int side, double sl, bool ghost = false)
    p.entryTime = TimeCurrent(); p.best = p.entry;
    p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0;
    p.setup = g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry;
+   p.xr0 = MathAbs(p.entry - sl); p.xorl = lots; p.xp1 = false; p.xp2 = false; p.xcxn = 0; p.xfbn = 0; p.xltp = 0;
+   if (InpXTgt >= 2 && nxE != 0) p.xltp = p.entry + side * (InpXTgt == 2 ? InpXTgtK * p.xr0 : InpXTgt == 3 ? InpXTgtK * Buf(hAtr, 1) : InpXTgtK);
    p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    p.tp1 = nxE > 0 ? StringFormat("touch of the %d EMA (now %.2f), all closed", nxE == 9 ? InpEmaFast : InpEmaSlow, Ema(nxE, 0))
          : nxE == -1 ? StringFormat("no EMA beyond the entry: out after a close back across the %d EMA", InpEmaFast)

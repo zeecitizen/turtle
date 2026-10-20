@@ -293,7 +293,7 @@ function hypHtml(t, x, i) {
       h += `<div style="border-left:3px solid #2962ff;padding:4px 6px;margin-top:6px"><b>${esc(y.hypothesis || '')}</b><div class="k">${esc(y.note || '')}${y.exact === false ? ' (approximate)' : ''}</div>`;
       if (y.train) {
         const tot = y.train.net + y.test.net, both = y.train.net > B0.train.net && y.test.net > B0.test.net;
-        h += `<div>${ch}${y.lab && Object.keys(y.lab).length ? ' <span class="tag" style="background:rgba(255,152,0,.2);border-radius:8px;padding:1px 6px;font-size:10px">Lab only</span>' : ''}</div>` +
+        h += `<div>${ch}${y.lab && Object.keys(y.lab).length ? ' <span class="tag" style="background:rgba(255,152,0,.2);border-radius:8px;padding:1px 6px;font-size:10px">EA v1.30 (InpX)</span>' : ''}</div>` +
           `<div>${LA} <span class="${cls(y.train.net - B0.train.net)}">${c(y.train)}</span> · ${LB} <span class="${cls(y.test.net - B0.test.net)}">${c(y.test)}</span> · total <b class="${cls(tot - tot0)}">${money(tot)}</b> (${money(tot - tot0)} vs yours)${both ? ' <span class="good">✓ better in both halves</span>' : ''}</div>` +
           (y.noop ? '<div class="warn">No effect: none of this acts on these trades (same result as yours).</div>' : '') +
           (y.stuck ? `<div class="bad">⚠ A trade never closed (open for ${y.open_end.days} days until the end of the data): nothing in this exit closes it, so it blocks every later setup - the numbers are not usable.</div>` : '') +
@@ -840,7 +840,8 @@ document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   if (d.load != null) {
     const s = SAVEDS[+d.load]; CUR = { ...DFL, ...s.inputs };
-    ACTIVE_LAB = s.lab && Object.keys(s.lab).length ? { ...s.lab, _d: s.lab_describe } : null; markForm(); scheduleSim(0);
+    if (s.lab && Object.keys(s.lab).length) { if (typeof labOpen === 'function') await labOpen(); CUR = { ...CUR, ...labToX(s.lab) }; }   // an older save's lab exit: EA v1.30 settings now
+    ACTIVE_LAB = null; markForm(); scheduleSim(0);
     if (s.lab && Object.keys(s.lab).length && typeof labOpen === 'function') { await labOpen(); LABS.form = { ...LABS.spec.default, ...s.lab }; }   // its Exit Lab exit back on the bench
     toast(`Loaded <b>${esc(s.name)}</b>.` + (s.lab_describe ? ` Its Exit Lab exit is back on the bench: ${esc(s.lab_describe)}.` : ''));
   }

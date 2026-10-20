@@ -126,9 +126,10 @@
   .dexsvg line.time { stroke: #90a4ae; stroke-dasharray: 3 3; } .dexsvg text.time { fill: #eceff1 !important; }
   .dexsvg .chip { fill: #1c313a; stroke: #4dd0e1; stroke-width: 1.5; } .dexsvg .chipt { fill: #e0f7fa !important; font-size: 9px !important; }
   .dexsvg .dx { cursor: help; } .dexsvg .dx:hover .lv, .dexsvg .dx:hover .chip { stroke-width: 5; filter: drop-shadow(0 0 5px #fff); } .dexsvg .dx:hover text { fill: #fff !important; }
-  .levers { flex: 1 1 300px; max-width: 420px; display: flex; flex-direction: column; gap: 8px; background: #0f2742; border: 3px solid #26c6da; border-radius: 14px; padding: 10px 12px; }
+  .levers { flex: 1 1 300px; max-width: 420px; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; background: #0f2742; border: 3px solid #26c6da; border-radius: 14px; padding: 10px 12px; }
   .lever { display: flex; flex-direction: column; font: bold 11px "Courier New", monospace; color: #e0f7fa; }
-  .lever input { accent-color: #ff9800; }
+  .lever input { accent-color: #ff9800; width: 100%; box-sizing: border-box; }
+  #saveBox { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); z-index: 90; }
   .dexres { margin: 6px 0; font-size: 13px; } .rsrep { margin: 8px 0; } .rsrep summary { cursor: pointer; }
   .legorow { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 8px 0; }
   .brick { width: 150px; cursor: pointer; transition: transform .12s; filter: drop-shadow(0 3px 0 rgba(0,0,0,.5)); }

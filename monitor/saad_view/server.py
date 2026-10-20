@@ -306,7 +306,7 @@ def run_job(rid, sets, frm, to, delay, label, notes):
         build(rid, meta, rep)
         STATE.update(last=rid, phase="done")
         log(f"run {rid} done: net {rep.get('net')} PF {rep.get('pf')} trades {rep.get('trades')}")
-    except Exception as e:                                  # noqa: BLE001
+    except (Exception, SystemExit) as e:                    # noqa: BLE001  (a failed compile raises SystemExit: show it, not a silent stop)
         if str(e) != "cancelled":
             log("run " + rid + " failed:\n" + traceback.format_exc())
         STATE.update(error=None if str(e) == "cancelled" else str(e), phase="dropped (a newer TradingView change)" if str(e) == "cancelled" else "failed")

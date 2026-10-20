@@ -73,9 +73,7 @@ function labDrawings() {
   const f = labForm(), lab = Object.fromEntries(Object.entries(f).filter(([k, v]) => k !== 'pess' && Number(v) !== Number(LABS.spec.default[k])));
   const same = !Object.keys(lab).length;
   return `<section class="dexlab"><h3 class="dexh">🧪 DEXTER'S EXIT LABORATORY</h3> <span class="k">hover any part of a specimen to see what it does · B follows the builder below</span>
-    <div class="row" style="gap:14px;margin-top:8px">${typeof ACTIVE_LAB !== 'undefined' && ACTIVE_LAB
-      ? labSvg(exitParts(CUR, { ...LABS.spec.default, ...ACTIVE_LAB }), 'SPECIMEN A: YOUR EXIT (THE EA + THE LOADED LAB EXIT)', '#26c6da')
-      : labSvg(exitParts(CUR, null), 'SPECIMEN A: YOUR EXIT (THE EA ON SCREEN)', '#26c6da')}` +
+    <div class="row" style="gap:14px;margin-top:8px">${labSvg(exitParts(CUR, labFromX(CUR) ? { ...LABS.spec.default, ...labFromX(CUR) } : null), 'SPECIMEN A: YOUR EXIT (THE EA ON SCREEN)', '#26c6da')}` +
     `${labSvg(exitParts(CUR, same ? null : { ...LABS.spec.default, ...f }), same ? 'SPECIMEN B: SAME AS A - PICK A TRY OR BUILD ONE' : 'SPECIMEN B: THE EXIT BEING TRIED', '#ff9800')}</div></section>`;
 }
 (function () {
