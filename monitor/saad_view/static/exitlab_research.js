@@ -37,16 +37,36 @@ function leverTips() {                                           // "Win 25% win
     <div class="dexprog-s">${esc(J.phase || 'warming up the beakers')} · ${J.progress || 0} of ${J.total || '…'} runs · ${J.seconds || 0} s</div></div>`;
   if (!W || !W.levers) return h + '<div class="k">tries every value of every lever on the data and offers the ones that raise the win rate, the profit factor or the net</div>';
   if (RS.scanKey !== key) h += '<p class="warn">the levers moved since the scan - scan again for fresh suggestions</p>';
-  const now = W.now, names = { sl: 'Stop', tg: 'Target R:R', tr: 'Trail ATR', ta: 'Trail starts', be: 'Breakeven', p1: 'Half off' }, btn = [];
+  const now = W.now, names = { sl: 'Stop', tg: 'Target R:R', tr: 'Trail ATR', ta: 'Trail starts', be: 'Breakeven', p1: 'Half off' }, sug = [];
   for (const [lv, rows] of Object.entries(W.levers)) {
     const ok = rows.filter((r) => !r.stuck && r.n >= 20);
     const bw = ok.slice().sort((a, b) => b.wr - a.wr)[0], bn = ok.slice().sort((a, b) => b.net - a.net)[0], bp = ok.slice().sort((a, b) => b.pf - a.pf)[0];
-    if (bw && bw.wr > now.wr + 0.4) btn.push([bw.wr - now.wr, `🧪 Win rate <b>${bw.wr}%</b> (now ${now.wr}%): ${names[lv]} → <b>${bw.v}</b> <span class="k">net ${money(bw.net)}</span>`, lv, bw.v]);
-    if (bn && bn.net > now.net + 1000) btn.push([(bn.net - now.net) / 1e4, `💰 Net <b>${money(bn.net)}</b> (now ${money(now.net)}): ${names[lv]} → <b>${bn.v}</b> <span class="k">WR ${bn.wr}%</span>`, lv, bn.v]);
-    if (bp && bp.pf > now.pf + 0.02 && bp !== bn) btn.push([(bp.pf - now.pf) * 10, `⚗️ Profit factor <b>${bp.pf}</b> (now ${now.pf}): ${names[lv]} → <b>${bp.v}</b> <span class="k">net ${money(bp.net)}</span>`, lv, bp.v]);
+    if (bw && bw.wr > now.wr + 0.4) sug.push({ kind: 'wr', lv, r: bw });
+    if (bn && bn.net > now.net + 1000) sug.push({ kind: 'net', lv, r: bn });
+    if (bp && bp.pf > now.pf + 0.02 && bp !== bn) sug.push({ kind: 'pf', lv, r: bp });
   }
-  if (!btn.length) return h + '<p class="note">No lever beats the exit on the bench on its own - it already sits on its best values.</p>';
-  return h + btn.sort((a, b) => b[0] - a[0]).map(([, txt, lv, v]) => `<button class="labsug" data-sug="${lv}|${v}">${txt}</button>`).join('');
+  if (!sug.length) return h + '<p class="note">No lever beats the exit on the bench on its own - it already sits on its best values.</p>';
+  // one score for "is this good for us": money first, then win rate, profit factor and drawdown, each against the exit on the bench
+  const rel = (a, b) => (a - b) / Math.max(1e-9, Math.abs(b));
+  for (const s of sug) { const r = s.r; s.score = rel(r.net, now.net) + 0.5 * rel(r.wr, now.wr) + 0.5 * rel(r.pf, now.pf) - 0.3 * rel(r.dd, now.dd); }
+  sug.sort((a, b) => b.score - a.score);
+  const fmt = { wr: (r) => `${r.wr}% win rate`, net: (r) => `${money(r.net)} net`, pf: (r) => `PF ${r.pf}` };
+  const cost = (s) => {                                            // what this suggestion gives up: the worst of the other three
+    const r = s.r, c = [];
+    if (s.kind !== 'net') c.push([rel(r.net, now.net), r.net - now.net < 0 ? `${money(r.net - now.net)} in cash` : `+${money(r.net - now.net).slice(1)} cash too`]);
+    if (s.kind !== 'wr') c.push([rel(r.wr, now.wr), `${(r.wr - now.wr) >= 0 ? '+' : '−'}${Math.abs(r.wr - now.wr).toFixed(1)} pts win rate`]);
+    if (s.kind !== 'pf') c.push([rel(r.pf, now.pf), `${(r.pf - now.pf) >= 0 ? '+' : '−'}${Math.abs(r.pf - now.pf).toFixed(2)} PF`]);
+    c.sort((a, b) => a[0] - b[0]);
+    return c[0];
+  };
+  const name = { wr: (s) => `🧪 Win rate <b>${s.r.wr}%</b> (now ${now.wr}%)`, net: (s) => `💰 Net <b>${money(s.r.net)}</b> (now ${money(now.net)})`, pf: (s) => `⚗️ Profit factor <b>${s.r.pf}</b> (now ${now.pf})` };
+  const n = sug.length;
+  return h + `<div class="k" style="margin:6px 0 2px">ranked best → worst for us (money first, then win rate, PF and drawdown) · green = good deal, red = it hurts</div>` + sug.map((s, i) => {
+    const hue = n > 1 ? Math.round(120 * (1 - i / (n - 1))) : 120, [cv, ct] = cost(s);
+    return `<div class="sugrow" style="--hue:${hue};animation-delay:${i * 90}ms"><span class="sugrank">#${i + 1}</span>` +
+      `<button class="labsug" data-sug="${s.lv}|${s.r.v}">${name[s.kind](s)}: ${names[s.lv]} → <b>${s.r.v}</b></button>` +
+      `<button class="sugdeal ${cv < 0 ? 'cost' : 'free'}" data-sug="${s.lv}|${s.r.v}">Trade for <b>${fmt[s.kind](s.r)}</b><br>${cv < 0 ? 'pay ' + ct : 'and ' + ct}</button></div>`;
+  }).join('');
 }
 function labTips(ea) {                                           // lab suggestions: the bubbling flask lights up when a lever reaches where they apply
   const st = +(ea.InpSlAtrMult || 0), far = Math.max(+LABS.form.tgt === 2 ? +LABS.form.tgt_k : 0, +LABS.form.tr === 2 ? +LABS.form.tr_k : 0, +LABS.form.tr_act, +LABS.form.be_r, +LABS.form.p1_r);
