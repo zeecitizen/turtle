@@ -67,6 +67,10 @@ function makeChart() {
   chart.subscribeCrosshairMove((p) => { if (BARS) legend(p && p.time != null ? barIdx(p.time - TZ) : BARS.t.length - 1); });
   chart.subscribeClick((p) => {
     if (!TT || !p || p.logical == null) return;
+    if (p.point) {
+      const V = VBTN.find((r) => p.point.x >= r.x && p.point.x <= r.x + r.w && p.point.y >= r.y && p.point.y <= r.y + r.h);
+      if (V) { if (V.act === 'close') { VHIDE.add(V.key); VEXP.delete(V.key); saveHide(); } else if (VEXP.has(V.key)) VEXP.delete(V.key); else VEXP.add(V.key); redraw(); return; }
+    }
     if (p.point) { const L = LBLS.find((r) => p.point.x >= r.x && p.point.x <= r.x + r.w && p.point.y >= r.y && p.point.y <= r.y + r.h); if (L) { focusTrade(L.t); openAsk(L.t, L); return; } }
     const i = Math.round(p.logical), t = TT.TR.find((x) => x.biIn === i || x.biOut === i);
     if (t) focusTrade(t);
@@ -126,7 +130,9 @@ function tvTag(ctx, x, y, lines, bg, fg, up, px) {
   lines.forEach((l, i) => ctx.fillText(l, x, by + Math.round(pad * 0.4) + lh * (i + 0.5)));
   return { x: bx, y: by, w, h };
 }
-let LBLS = [], NOTESD = {};
+let LBLS = [], NOTESD = {}, VBTN = [];
+const VEXP = new Set(), VHIDE = new Set((() => { try { return JSON.parse(localStorage.getItem('tvVerdictHidden') || '[]'); } catch (e) { return []; } })());
+const saveHide = () => { try { localStorage.setItem('tvVerdictHidden', JSON.stringify([...VHIDE])); } catch (e) { /* no storage */ } };
 const tKey = (t) => `${t.tIn}_${t.side}`;
 function wrap(s, n, max) {
   const out = []; let cur = '';
@@ -180,7 +186,7 @@ function drawTv(ctx) {
     const x = X(t.biIn), y = Y(t.en);
     if (x != null && y != null) tri(ctx, x, y + (t.side > 0 ? 6 : -6), t.side > 0, t.pnl > 0 ? '#00bfa5' : '#ff6d00', 4);
   }
-  LBLS = [];
+  LBLS = []; VBTN = [];
   if (!show.trades) return;
   for (const t of TT.TR) {
     if (t.biOut < lo || t.biIn > hi) continue;
@@ -202,9 +208,17 @@ function drawTv(ctx) {
         const r = tvTag(ctx, x1, yIn, [`${t.side > 0 ? '▲ BUY' : '▼ SELL'} #${t.num}`, f2(t.en), '💬 ask Claude'], t.side > 0 ? TVC.buy : TVC.sell, '#fff', t.side > 0, 12);
         LBLS.push({ t, ...r });
         const n = NOTESD[tKey(t)];
-        if (n && n.length) {                                  // Claude's verdict, beyond the label (below a BUY's, above a SELL's)
-          const lines = wrap(n[n.length - 1].a.split(/\n\s*\n/)[0].replace(/[*#`]/g, ''), 46, 4);
-          tvTag(ctx, x1, t.side > 0 ? r.y + r.h + 4 : r.y - 4, lines, 'rgba(41,98,255,0.92)', '#fff', t.side > 0, 11);
+        if (n && n.length && !VHIDE.has(tKey(t))) {          // Claude's verdict, beyond the label (below a BUY's, above a SELL's)
+          const a = n[n.length - 1].a.replace(/[*#`]/g, ''), ex = VEXP.has(tKey(t));
+          const lines = ex ? a.split(/\n/).flatMap((p) => (p.trim() ? wrap(p, 70, 60) : [''])).slice(0, 60) : wrap(a.split(/\n\s*\n/)[0], 46, 4);
+          const v = tvTag(ctx, x1, t.side > 0 ? r.y + r.h + 4 : r.y - 4, lines, 'rgba(41,98,255,0.95)', '#fff', t.side > 0, 11);
+          const bs = 15, by = v.y + 2;                         // two buttons on its top-right corner: expand / collapse, close
+          [['✕', 'close'], [ex ? '–' : '⤢', 'exp']].forEach(([s, act], k) => {
+            const bx = v.x + v.w - (k + 1) * (bs + 2) - 1;
+            ctx.fillStyle = 'rgba(19,23,34,0.85)'; rrect(ctx, bx, by, bs, bs, 3); ctx.fill();
+            ctx.fillStyle = '#fff'; ctx.font = '11px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(s, bx + bs / 2, by + bs / 2 + 1);
+            VBTN.push({ key: tKey(t), act, x: bx, y: by, w: bs, h: bs });
+          });
         }
       }
       else tri(ctx, x1, yIn, t.side > 0, t.side > 0 ? TVC.buy : TVC.sell, 4);
@@ -266,7 +280,8 @@ function askHtml(t, busy) {
 }
 let ASKT = null;
 function openAsk(t, L) {
-  ASKT = t; const el = $('#tAsk'), W = $('#chartWrap').clientWidth, H = $('#chartWrap').clientHeight;
+  ASKT = t; if (VHIDE.delete(tKey(t))) { saveHide(); redraw(); }
+  const el = $('#tAsk'), W = $('#chartWrap').clientWidth, H = $('#chartWrap').clientHeight;
   el.innerHTML = askHtml(t, false); el.hidden = false;
   el.style.left = Math.max(4, Math.min(W - 390, L.x + L.w + 8)) + 'px'; el.style.top = Math.max(4, Math.min(H - 240, L.y - 20)) + 'px';
   setTimeout(() => $('#tAskQ') && $('#tAskQ').focus(), 0);
@@ -276,7 +291,7 @@ async function sendAsk() {
   if (!t || !q) return;
   const el = $('#tAsk'); el.innerHTML = askHtml(t, true);
   const r = await api('/api/ask_trade', { key: tKey(t), question: q, context: tradeContext(t) }).catch((e) => ({ error: String(e) }));
-  if (r.error) toast('Claude: ' + esc(r.error)); else NOTESD[tKey(t)] = r.notes;
+  if (r.error) toast('Claude: ' + esc(r.error)); else { NOTESD[tKey(t)] = r.notes; VHIDE.delete(tKey(t)); saveHide(); }
   if (ASKT === t) el.innerHTML = askHtml(t, false);
   redraw();
 }
