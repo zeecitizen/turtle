@@ -20,7 +20,7 @@ FULL = ["InpTrigBid", "InpLongExit", "InpLongTpPips", "InpSwingPivot", "InpSwing
         "InpSlopePips", "InpSlopeLook", "InpEmaGapPips", "InpMaxSpreadPts", "InpSkipDow", "InpLockAtUsd", "InpLockUsd", "InpFixTpPips",
         "InpMaxBars", "InpCoolBars", "InpMaxPos", "InpReplace", "InpExtraDir", "InpDayLossUsd", "InpDayTargetUsd", "InpEntryMode",
         "InpRetestFrac", "InpRetestBars", "InpSweepPips", "InpSweepBars", "InpSweepEntry", "InpSweepSlPips", "InpPartialPct", "InpTp1Be",
-        "InpRiskPct", "InpMinLotRiskPct", "InpMaxLots", "InpDayLossPct", "InpAdxPeriod"]
+        "InpRiskPct", "InpMinLotRiskPct", "InpMaxLots", "InpDayLossPct", "InpAdxPeriod", "InpSkipBothEma"]
 F = {n: 41 + i for i, n in enumerate(FULL)}            # indices in the parameter vector after sim.NAMES (41 entries)
 MAXP = 8
 # position fields
@@ -136,6 +136,7 @@ def _trail_on(P, side):
 
 
 F_TRAIL = 41 + FULL.index("InpTrail")
+F_BOTH = 41 + FULL.index("InpSkipBothEma")
 F_TSIDE = 41 + FULL.index("InpTrailSide")
 
 
@@ -552,6 +553,8 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                     if shape != 0 and hr >= P[27] and hr < P[28] and i >= X[5] and not (P[80] >= 0 and dow15[i] == P[80]):
                         e9 = ef[i]
                         e50 = es[i]
+                        if P[F_BOTH] > 0.5 and min(e9, e50) >= l15[i] - P[18] * 0.1 and max(e9, e50) <= h15[i] + P[18] * 0.1:
+                            shape = 0                                     # v1.28 InpSkipBothEma: the candle touches both EMAs
                         on9 = _online(o15[i], h15[i], l15[i], c15[i], e9, 1, P)
                         on50 = _online(o15[i], h15[i], l15[i], c15[i], e50, 1, P)
                         rulesOk = P[15] != 1 and on9 and not (P[19] > 0.5 and e50 <= h15[i])
