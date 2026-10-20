@@ -39,6 +39,7 @@ function labTake(s) {
     if (prev && prev._id === id) return;
     LABS[slot] = Object.assign(j.result, { _id: id, _labels: j.labels, _ds: j.ds, _req: j.req });
     if (slot === 'test' && LABS.showLab) redraw();
+    if (slot === 'test' && LABS.goResult) { LABS.goResult = false; setTimeout(() => { const e = document.querySelector('#labResult'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150); }
   };
   for (const j of Object.values((s && s.done) || {})) take(j);
   for (const k of ['main', 'quick']) { const j = s && s[k]; if (j) { LABS[k] = j; take(j); } }
@@ -203,7 +204,7 @@ function labStatsRow(name, s) {
 }
 function labTestResult(T, LA, LB) {
   const s = T.stats, b = T.base, both = s.train.net > b.train.net && s.test.net > b.test.net, isEA = !Object.keys(T.lab || {}).filter((k) => k !== 'pess').length;
-  let h = `<h4>Result · ${esc(T.describe)}${Object.keys(T.sets || {}).length ? ' · ' + esc(Object.entries(T.sets).map(([k, v]) => `${k.replace(/^Inp/, '')} ${v}`).join(', ')) : ''}</h4>${stale(T)}` +
+  let h = `<h4 id="labResult">Result · ${esc(T.describe)}${Object.keys(T.sets || {}).length ? ' · ' + esc(Object.entries(T.sets).map(([k, v]) => `${k.replace(/^Inp/, '')} ${v}`).join(', ')) : ''}</h4>${stale(T)}` +
     table(['', LA, LB, 'Total', 'WR', 'PF', 'Max DD', 'Avg win / loss', 'Losing streak'], [labStatsRow("Your EA's exit", b), labStatsRow('This exit', s)]);
   const wv = T.worst, onlyOpt = s.total > b.total && wv.total < wv.base_total;
   if (s.stuck) h += `<p class="bad">⚠ A trade (or a stand-aside) never closed: open since ${esc(dt(s.open_end.since))} until the end of the data (${s.open_end.days} days). Nothing in this exit closes it
@@ -363,13 +364,13 @@ document.addEventListener('click', (e) => {
       labStart('heatmap', { lab: { ...labForm(), ...p.base }, fx: p.fx, fy: p.fy, xs: p.xs, ys: p.ys });
     } else if (a === 'feature') labFeature();
   }
-  if (d.lload) { LABS.form = { ...LABS.spec.default, ...JSON.parse(d.lload) }; labStart('test', { lab: labForm() }); }
-  if (d.lrow != null && LABS.cat) labRunRow(LABS.cat.rows[+d.lrow]);
+  if (d.lload) { LABS.form = { ...LABS.spec.default, ...JSON.parse(d.lload) }; LABS.goResult = true; toast('Testing it - the result opens under "Build an exit".'); labStart('test', { lab: labForm() }); }
+  if (d.lrow != null && LABS.cat) { LABS.goResult = true; labRunRow(LABS.cat.rows[+d.lrow]); }
   if (d.lmt5 != null && LABS.cat) { const r = LABS.cat.rows[+d.lmt5]; labMt5(r.name, r.sets); }
   if (d.lmt5t && LABS.test) labMt5(LABS.test.describe + ' ' + Object.entries(LABS.test.sets).map(([k, v]) => `${k.replace(/^Inp/, '')} ${v}`).join(', '), LABS.test.sets);
   if (d.lapply && LABS.test) { CUR = { ...CUR, ...LABS.test.sets }; markForm(); scheduleSim(0); toast('On the chart: ' + esc(Object.entries(LABS.test.sets).map(([k, v]) => `${k.replace(/^Inp/, '')} ${v}`).join(', '))); }
-  if (d.lfin != null && LABS.search) { LABS.form = { ...LABS.spec.default, ...LABS.search.finals[+d.lfin].lab }; labStart('test', { lab: labForm() }); }
-  if (d.lheat && LABS.heat) {
+  if (d.lfin != null && LABS.search) { LABS.goResult = true; LABS.form = { ...LABS.spec.default, ...LABS.search.finals[+d.lfin].lab }; labStart('test', { lab: labForm() }); }
+  if (d.lheat && LABS.heat) { LABS.goResult = true;
     const [xi, yi] = d.lheat.split('|').map(Number), R = LABS.heat;
     LABS.form = { ...LABS.spec.default, ...R.lab, [R.fx]: R.xs[xi], [R.fy]: R.ys[yi] };
     labStart('test', { lab: labForm() });
