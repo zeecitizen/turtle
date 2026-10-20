@@ -462,6 +462,124 @@ def ask_trade(body):
     return {"text": text, "notes": allr[key]}
 
 
+# ---------------------------------------------------------------- hypotheses from a trade answer: TEST them on the chart, CONVERT one into an EA feature
+# Zee 2026-10-20: "once we show a hypothesis, the chat window should show: Test hypothesis button ... it invokes claude to add the new setting/change
+# to the chart and then another button called, convert hypothesis to feature: this button allows us to request claude to add the tested hypothesis
+# as a setting/feature"
+HJOBS = {}
+
+
+def _claude(prompt, tools, timeout=900, extra=()):
+    if not CLAUDE_EXE:
+        raise RuntimeError("Claude Code (claude.exe) not found")
+    r = subprocess.run([str(CLAUDE_EXE[-1]), "-p", "--output-format", "text", "--model", "opus", *extra, "--allowedTools", *tools],
+                       input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=timeout, cwd=str(ROOT))
+    if r.returncode != 0 or not r.stdout.strip():
+        raise RuntimeError(f"Claude Code: {(r.stderr or r.stdout).strip()[:400]}")
+    return r.stdout.strip()
+
+
+def _note_set(key, idx, field, val):
+    allr = _notes()
+    if key in allr and 0 <= idx < len(allr[key]):
+        allr[key][idx][field] = val
+        NOTES.write_text(json.dumps(allr, indent=1, ensure_ascii=False), encoding="utf-8")
+
+
+def _hyp_test(job, key, idx, cur, ds):
+    note = _notes()[key][idx]
+    inputs = [{k: i[k] for k in ("name", "type", "default", "comment")} for i in ea_inputs()["inputs"]]
+    prompt = f"""Below is your earlier answer to Zee about one trade, with hypotheses in it. Turn EACH hypothesis into concrete changes of the EA's
+EXISTING inputs (the list below, with what each does), as closely as they allow. If a hypothesis cannot be expressed with existing inputs, say so and
+describe the new setting it needs. Reply with ONLY a JSON array, no prose, no code fence:
+[{{"hypothesis": "<short>", "changes": {{"InpName": "value", ...}} or {{}}, "exact": true|false, "note": "<one line: how the changes approximate it, or the new setting needed>"}}]
+Give 1-3 variants per hypothesis when a value is a guess (e.g. two buffer sizes).
+
+Your answer:
+{note['a']}
+
+The settings on screen now (only those that differ from the EA's defaults): {json.dumps({k: v for k, v in cur.items() if not same(v, axi_rig.ea_defaults(EA).get(k))})}
+The EA's inputs: {json.dumps(inputs, ensure_ascii=False)}"""
+    job["phase"] = "Claude is turning the hypotheses into settings"
+    txt = _claude(prompt, ["Read", "Grep", "Glob"])
+    m = re.search(r"\[.*\]", txt, re.S)
+    hyps = json.loads(m.group(0)) if m else []
+    names = {i["name"] for i in inputs}
+    o = optimizer.Optimizer(cur, ds=ds)
+    job["phase"] = "testing on the chart"
+    _, a, b, _y = optimizer.evaluate(cur, "net", 1, o.window, ds)
+    base = {"train": a, "test": b}
+    for h in hyps:
+        ch = {k: str(v) for k, v in (h.get("changes") or {}).items() if k in names}
+        h["changes"] = ch
+        if ch:
+            inp = dict(cur, **ch)
+            _, a, b, _y = optimizer.evaluate(inp, "net", 1, o.window, ds)
+            h["train"], h["test"], h["inputs"] = a, b, inp
+    res = {"labels": list(o.labels), "ds": ds, "base": base, "hyps": hyps, "at": datetime.now().strftime("%Y-%m-%d %I:%M %p")}
+    _note_set(key, idx, "test", res)
+    return res
+
+
+def _hyp_feature(job, key, idx, which):
+    note = _notes()[key][idx]
+    test = note.get("test") or {}
+    prompt = f"""Zee pressed "Convert hypothesis to feature" in Turtle TV. Add this hypothesis to the Saad 15-min EA as a NEW SETTING, the way v1.28's
+InpSkipBothEma was added (git show 8aee8953 is the template - read it first):
+
+Hypothesis: {which}
+(From your answer about one trade: {note['a'][:3000]})
+Turtle TV's earlier test with existing settings: {json.dumps(test.get('hyps', []), default=str)[:3000]}
+
+Do all of this, in order:
+1. mt5/Saad_strategy_15min.mq5: a new input, OFF by default (with it off, trading must be identical to now), with a clear comment; bump the version
+   (#property version, EA_COMMENT, a // vX.YY header line quoting Zee). Keep the EA's style.
+2. monitor/saad_view/sim_full.py: mirror it exactly (append the input name to the END of FULL; never reorder), and add it to SURVEY in
+   monitor/saad_view/optimizer.py (entries or exits). Run: py monitor/saad_view/make_view_ea.py
+3. Check in Python that OFF reproduces the current result (set NUMBA_CPU_NAME=generic; import server, sim; sim.simulate(server.full_inputs({{}}), ds="year")).
+   Then test ON (and 1-2 values) on ds "year" and "m15" (train 2023-24 vs unseen 2025-26).
+4. MT5: POST http://127.0.0.1:8773/api/run with {{"sets": {{"<name>": "<value>"}}, "label": "..."}} for off and on (one at a time; poll /api/status until
+   busy is false; results in monitor/saad_view/runs/<id>.json "report"). If the server is down, say so and skip.
+5. Add a row to VERSION.md (the Saad_strategy_15min table + "Which EA is which") and an entry to VERSION_HISTORY.md, then git add ONLY the files you
+   changed and commit (end the message with: Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>).
+Never edit LAWS.md. Never push. Python numbers are hypotheses; MT5 decides - say "keep it off" if MT5 does not beat the current version.
+Finish with a short report for Zee (plain English, under 15 lines): the setting's name, what it does, the MT5 numbers off vs on, and your verdict."""
+    job["phase"] = "Claude is adding the setting to the EA, the chart and MT5 (several minutes)"
+    txt = _claude(prompt, ["Read", "Grep", "Glob", "Edit", "Write", "Bash(py:*)", "Bash(python:*)", "Bash(git add:*)", "Bash(git commit:*)",
+                           "Bash(git show:*)", "Bash(git diff:*)", "Bash(git status:*)", "Bash(curl:*)", "Bash(sleep:*)"], timeout=3600)
+    res = {"which": which, "report": txt, "at": datetime.now().strftime("%Y-%m-%d %I:%M %p")}
+    allr = _notes()
+    allr[key][idx].setdefault("features", []).append(res)
+    NOTES.write_text(json.dumps(allr, indent=1, ensure_ascii=False), encoding="utf-8")
+    return res
+
+
+def hyp_start(body):
+    key, idx, kind = str(body.get("key", "")), int(body.get("idx", -1)), body.get("kind")
+    if key not in _notes() or not (0 <= idx < len(_notes()[key])) or kind not in ("test", "feature"):
+        return {"error": "no such answer"}
+    if any(j["running"] and j["kind"] == "feature" for j in HJOBS.values()) and kind == "feature":
+        return {"error": "Claude is already adding a feature; wait for it to finish"}
+    jid = f"h{int(time.time() * 1000)}"
+    job = HJOBS[jid] = {"id": jid, "kind": kind, "key": key, "idx": idx, "running": True, "phase": "starting", "result": None, "error": None}
+
+    def go():
+        try:
+            if kind == "test":
+                cur = full_inputs(body.get("inputs") or {})
+                ds = body.get("ds") if body.get("ds") in ("year", "m15") else "year"
+                job["result"] = _hyp_test(job, key, idx, cur, ds)
+            else:
+                job["result"] = _hyp_feature(job, key, idx, str(body.get("which") or "the hypothesis"))
+        except Exception as e:                                  # noqa: BLE001
+            job["error"] = str(e)
+            log(f"hyp {kind} {key}: {traceback.format_exc()}")
+        finally:
+            job["running"] = False
+    threading.Thread(target=go, daemon=True).start()
+    return {"id": jid}
+
+
 MODES = {"ea": {}, "chart": {"chart": True}, "chart_blind": {"chart": True, "blind_until": sim.TV_M1_FROM}}
 
 
@@ -685,6 +803,9 @@ class H(BaseHTTPRequestHandler):
             if not re.fullmatch(r"r\d{8}_\d{6}", rid) or not p.exists():
                 return self.send(404, {"error": "no such run"})
             return self.send(200, p.read_bytes())
+        if u.path == "/api/hyp_job":
+            j = HJOBS.get((q.get("id") or [""])[0])
+            return self.send(200 if j else 404, j or {"error": "no such job"})
         if u.path == "/api/trade_notes":
             return self.send(200, _notes())
         if u.path == "/api/status":
@@ -722,6 +843,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, ask_claude(body))
             if u.path == "/api/ask_trade":
                 return self.send(200, ask_trade(body))
+            if u.path == "/api/hyp":
+                return self.send(200, hyp_start(body))
             if u.path == "/api/sim":
                 return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
                                                  body.get("ds") or "year", body.get("mode") or "ea"))
