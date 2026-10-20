@@ -139,7 +139,7 @@ class Optimizer:
                             with self._lock:
                                 self.log.append({"run": label, "setting": key if kind != "box" else f"{'BUY' if name[3] == 'B' else 'SELL'} box {int(name[4:]) * 5}%",
                                                  "from": inp[key] if kind != "box" else str(inp[key])[int(name[4:])], "to": v if kind != "box" else v[int(name[4:])],
-                                                 "score": round(s2, 3), "train": a2, "test": b2, "t": round(time.time() - self.t0, 2)})
+                                                 "score": round(s2, 3), "train": a2, "test": b2, "t": round(time.time() - self.t0, 2), "inputs": dict(cand)})
                             inp, sc, a, b, y = cand, s2, a2, b2, y2
                             moved = changed = True
                             self._offer(inp, sc, a, b, y, label)
