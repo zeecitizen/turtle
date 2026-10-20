@@ -157,6 +157,19 @@
   .flasktip.on .flask i { animation-duration: 1.1s; }
   @keyframes bubble { 0% { transform: translateY(0) scale(.6); opacity: 0; } 20% { opacity: .9; } 100% { transform: translateY(-22px) scale(1.2); opacity: 0; } }
   #labBanner { color: #ffb74d; font-size: 12px; padding: 2px 10px; display: flex; gap: 8px; align-items: center; }
+  .gauges { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; }
+  .gauge { width: 112px; height: 112px; border-radius: 50%; border: 6px solid #37474f; background: radial-gradient(circle at 50% 35%, #163a5c, #0b1d33 70%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; box-shadow: 0 0 0 3px #111, 0 4px 0 #111; }
+  .gauge.g-up { border-color: #00e676; box-shadow: 0 0 0 3px #111, 0 0 14px rgba(0,230,118,.45); } .gauge.g-dn { border-color: #ff5252; box-shadow: 0 0 0 3px #111, 0 0 14px rgba(255,82,82,.4); }
+  .gauge .gv { font: bold 18px "Courier New", monospace; color: #e0f7fa; line-height: 1.1; } .gauge .gl { font: bold 9px "Courier New", monospace; color: #ffd740; letter-spacing: .06em; margin-top: 2px; }
+  .gauge .gd { font-size: 10px; color: #b0bec5; margin-top: 2px; } .gauge.g-up .gd { color: #69f0ae; } .gauge.g-dn .gd { color: #ff8a80; }
+  .labsug { display: block; width: 100%; text-align: left; margin: 5px 0; background: #13283f; color: #e0f7fa; border: 2px solid #4dd0e1; border-radius: 12px; padding: 6px 10px; font-size: 12px; cursor: pointer; box-shadow: 0 3px 0 #111; }
+  .labsug:hover { background: #1b3a5c; border-color: #ffd740; } .labsug:active { transform: translateY(2px); box-shadow: 0 1px 0 #111; }
+  .dexprog { margin: 8px 0; background: #03140b; border: 3px solid #ffd740; border-radius: 12px; padding: 8px 10px; }
+  .dexprog-t { font: bold 12px "Courier New", monospace; color: #ffd740; letter-spacing: .08em; } .dexprog-s { font: 11px "Courier New", monospace; color: #81c784; margin-top: 4px; }
+  .dexprog-bar { height: 16px; border: 2px solid #111; border-radius: 9px; background: #0b1d33; overflow: hidden; margin-top: 6px; }
+  .dexprog-bar i { display: block; height: 100%; transition: width .5s; background: repeating-linear-gradient(135deg, #00e676 0 10px, #00c853 10px 20px); background-size: 28px 28px; animation: dexstripes .6s linear infinite; }
+  @keyframes dexstripes { from { background-position: 0 0; } to { background-position: 28px 0; } }
   #dexTip { position: fixed; z-index: 80; display: none; max-width: 320px; background: #fffde7; color: #1a237e; border: 3px solid #1a237e; border-radius: 12px; padding: 8px 11px;
     font: 12px "Trebuchet MS", sans-serif; box-shadow: 5px 5px 0 #ff9800; pointer-events: none; }
   h4 { margin: 4px 0 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }

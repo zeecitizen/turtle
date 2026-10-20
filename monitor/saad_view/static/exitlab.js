@@ -13,7 +13,7 @@ const HEAT_PAIRS = [
   { name: 'Fallback buffer (ATR)  ×  closes in a row', base: {}, fx: 'fb_buf', xs: [0, 0.1, 0.25, 0.5, 0.75, 1], fy: 'fb_n', ys: [1, 2, 3] },
   { name: 'No progress after N candles  ×  ... less than R', base: {}, fx: 'stale_bars', xs: [4, 6, 8, 12, 16, 24], fy: 'stale_r', ys: [0, 0.25, 0.5, 1] },
 ];
-const SLOT = { diagnose: 'diag', test: 'test', catalogue: 'cat', search: 'search', heatmap: 'heat' };
+const SLOT = { diagnose: 'diag', test: 'test', catalogue: 'cat', search: 'search', heatmap: 'heat', sweep: 'sweep' };
 // EA v1.30: every Exit Lab building block is an EA input (InpX*) - an exit is just settings
 const XMAP = { tgt: 'InpXTgt', tgt_k: 'InpXTgtK', fb: 'InpXFb', fb_buf: 'InpXFbBuf', fb_n: 'InpXFbN', cx: 'InpXCx', cx_buf: 'InpXCxBuf', cx_n: 'InpXCxN', cx_when: 'InpXCxWhen',
   cx_after: 'InpXCxAfter', p1_r: 'InpXP1R', p1_frac: 'InpXP1Frac', p1_be: 'InpXP1Be', p2_r: 'InpXP2R', p2_frac: 'InpXP2Frac', be_r: 'InpXBeR', be_off: 'InpXBeOff',
