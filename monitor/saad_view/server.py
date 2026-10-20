@@ -422,7 +422,7 @@ def _months(tr):
 def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea"):
     """ds 'year' (Blueberry MT5 candles) / 'tv' (TradingView's candles); mode 'ea' (v1.27's rules, real spread + swap), 'chart' (the indicator's
     rules, $0.17 spread, no swap), 'chart_blind' (and blind inside the entry candle before Oct 12, like TradingView without 1-minute data)."""
-    ds = ds if ds in ("year", "tv") else "year"
+    ds = ds if ds in ("year", "tv", "m15") else "year"
     inp = full_inputs(sets)
     t0 = time.time()
     tr, su, st = sim.simulate(inp, ds=ds, **MODES.get(mode, {}))
