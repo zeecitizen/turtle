@@ -149,18 +149,25 @@ document.addEventListener('change', (e) => {
   LABS.goResult = false;
   labStart('test', { lab: labForm(), sets: RS.sets });               // the exit on the bench, with the levers
 });
+// a pick fires on pointerdown: a click needs the press and the release on the same button, and the scan's progress redraw can replace the button
+// in between (the "nothing happened, click again" bug); closest() so pressing the bold text inside the button counts too
+document.addEventListener('pointerdown', (e) => {
+  const b = e.button === 0 && e.target.closest ? e.target.closest('[data-mv]') : null;
+  if (b) { e.preventDefault(); pickMove(+b.dataset.mv); }
+});
+function pickMove(i) {
+  if (!(LABS.sweep && LABS.sweep.moves && LABS.sweep.moves[i])) return;
+  const m = LABS.sweep.moves[i];
+  RS.sets = { ...RS.sets, ...m.sets }; LABS.form = { ...LABS.form, ...m.lab };
+  toast(`On the bench: ${esc(m.label)} ${esc(m.from)} → ${esc(m.to)}.` + (RS.auto !== false ? ' Scanning again from here…' : ''));
+  labStart('test', { lab: labForm(), sets: RS.sets });
+  if (RS.auto !== false) { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: 'scanning from the new bench', progress: 0, total: 0, seconds: 0 }; labStart('sweep', { lab: labForm(), sets: RS.sets }); }
+  renderPanel('tt');
+}
 document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   if (d.rs === 'save') saveExit();
   if (d.rs === 'scan') { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: 'warming up the beakers', progress: 0, total: 0, seconds: 0 }; renderPanel('tt'); labStart('sweep', { lab: labForm(), sets: RS.sets }); }
-  if (d.mv != null && LABS.sweep && LABS.sweep.moves) {           // pick a move: it goes on the bench, the dials re-run, and (by default) the scan runs again from there
-    const m = LABS.sweep.moves[+d.mv];
-    RS.sets = { ...RS.sets, ...m.sets }; LABS.form = { ...LABS.form, ...m.lab };
-    toast(`On the bench: ${esc(m.label)} ${esc(m.from)} → ${esc(m.to)}.` + (RS.auto !== false ? ' Scanning again from here…' : ''));
-    labStart('test', { lab: labForm(), sets: RS.sets });
-    if (RS.auto !== false) { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: 'scanning from the new bench', progress: 0, total: 0, seconds: 0 }; labStart('sweep', { lab: labForm(), sets: RS.sets }); }
-    renderPanel('tt');
-  }
   if (d.rs === 'all') { RS.all = !RS.all; renderPanel('tt'); }
   if (d.rs === 'reset') { RS.sets = {}; const x = labFromX(CUR); LABS.form = { ...LABS.spec.default, ...(x || {}) }; labStart('test', { lab: labForm() }); }
   if (d.rs === 'go') {
