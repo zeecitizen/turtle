@@ -18,8 +18,8 @@ hostile one, or it doesn't ship.
 
 ## Saad_strategy_15min v1.29 (2026-10-20) — fix: a stand-aside that never ended under the v1.23 exits
 
-Found while building the Turtle TV Exit Lab: on Blueberry's 4 years, exit mode 0 with Zee's range boxes + stand-aside stopped trading on
-Oct 13 2023 for good. Cause (the EA and the tester alike): `GhostTick` ends a v1.23-exit ghost at its stop or at TP1, but a LONG ghost with no
+Found while building the Turtle TV Exit Lab: in the Turtle TV Tester on Blueberry's 4 years, exit mode 0 with Zee's range boxes + stand-aside
+stopped trading on Oct 13 2023 for good (MT5's rig only has 2026 ticks; the EA's share is from its code - the same rule - and the matching 2026 run). Cause (the EA and the tester alike): `GhostTick` ends a v1.23-exit ghost at its stop or at TP1, but a LONG ghost with no
 target (`g_gNoTp`: the exit EMA below the entry, no resistance) has no TP1 - in a rally it never hits its stop, never ends, and
 `g_gSide != 0` blocks every new setup.
 
