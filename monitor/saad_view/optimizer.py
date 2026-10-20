@@ -64,11 +64,11 @@ def neighbours(inputs, name, kind, grid, direction):
     return _fmt(kind, round(v / st) * st if kind == "num" else v)
 
 
-def evaluate(inputs, objective="ret_dd", min_trades=30, window=None):
+def evaluate(inputs, objective="ret_dd", min_trades=30, window=None, ds="year"):
     """One simulated year -> (train score, train stats, test stats, year stats)."""
     if int(float(inputs["InpEmaSlow"])) <= int(float(inputs["InpEmaFast"])) or int(float(inputs["InpSessTo"])) <= int(float(inputs["InpSessFrom"])):
         return -1e12, None, None, None
-    tr = sim.simulate(inputs)[0]
+    tr = sim.simulate(inputs, ds=ds)[0]
     if window:                                                   # (train from, train to, test from, test to), server time - walk-forward
         a0, a1, b0, b1 = window
         trn, tst = tr[(tr[:, 1] >= a0) & (tr[:, 1] < a1)], tr[(tr[:, 1] >= b0) & (tr[:, 1] < b1)]
@@ -82,7 +82,12 @@ def evaluate(inputs, objective="ret_dd", min_trades=30, window=None):
 
 
 class Optimizer:
-    def __init__(self, start, objective="ret_dd", boxes=False, keep_going=False, min_trades=30, window=None):
+    def __init__(self, start, objective="ret_dd", boxes=False, keep_going=False, min_trades=30, window=None, ds="year"):
+        self.ds = ds
+        if window is None and ds == "m15":                       # 4 years: tune on 2023 + 2024, judge on 2025 + 2026 (never seen while tuning)
+            s, m = sim._ep(sim.datetime(2023, 1, 1)), sim._ep(sim.datetime(2025, 1, 1))
+            window = (s, m, m, sim._ep(sim.datetime(2027, 1, 1)))
+        self.labels = ("2023 – 2024", "2025 – 2026") if ds == "m15" else ("Jan – Jun", "Jul – Oct")
         self.window = window
         self.start = {k: str(v) for k, v in start.items()}
         self.objective, self.boxes, self.keep, self.min_trades = objective, boxes, keep_going, min_trades
@@ -110,7 +115,7 @@ class Optimizer:
 
     def _eval(self, inp):
         self.evals += 1
-        return evaluate(inp, self.objective, self.min_trades, self.window)
+        return evaluate(inp, self.objective, self.min_trades, self.window, self.ds)
 
     def descend(self, inp, label):
         sc, a, b, y = self._eval(inp)
@@ -188,7 +193,7 @@ class Optimizer:
         with self._lock:
             ch = lambda inp: {k: v for k, v in inp.items() if str(v) != str(self.start.get(k))}
             return {"running": self.running, "done": self.done, "error": self.error, "evals": self.evals, "passes": self.passes, "restarts": self.restarts,
-                    "seconds": round(time.time() - self.t0, 1) if self.t0 else 0, "objective": self.objective, "boxes": self.boxes, "keep": self.keep,
+                    "seconds": round(time.time() - self.t0, 1) if self.t0 else 0, "objective": self.objective, "ds": self.ds, "labels": self.labels, "boxes": self.boxes, "keep": self.keep,
                     "baseline": getattr(self, "baseline", None), "log": self.log[-200:], "mt5": getattr(self, "mt5", None),
                     "best": dict(self.best, changed=ch(self.best["inputs"])) if self.best else None,
                     "board": [dict(x, changed=ch(x["inputs"])) for x in self.board]}

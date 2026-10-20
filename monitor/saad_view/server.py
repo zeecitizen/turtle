@@ -532,7 +532,7 @@ def opt_start(body):
         OPT["o"].stop()
         time.sleep(0.2)
     o = optimizer.Optimizer(full_inputs(body.get("start") or {}), objective=body.get("objective") or "ret_dd", boxes=bool(body.get("boxes")),
-                            keep_going=bool(body.get("keep")))
+                            keep_going=bool(body.get("keep")), ds=body.get("ds") if body.get("ds") in ("year", "m15") else "year")
     OPT["o"] = o
     threading.Thread(target=opt_run_and_check, args=(o,), daemon=True).start()
     return {"ok": True}
