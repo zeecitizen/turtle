@@ -21,6 +21,33 @@ function spark(trades) {                                           // the equity
     `<text x="10" y="16" class="lt chipt">EQUITY OF THIS EXIT · ${money(c)}</text></svg>`;
 }
 const T0describe = () => (LABS.test && LABS.test.describe) || 'lab exit';
+function gauges(T) {                                              // the result of the levers as lab dials: WR, PF, net, drawdown, trades, avg win / loss
+  const s = T.stats.all, b = T.base.all, dial = (lbl, val, now, base, good, fmt) => {
+    const d = now - base, up = good === 'up' ? d > 0 : d < 0, same = Math.abs(d) < 1e-9;
+    return `<div class="gauge ${same ? '' : up ? 'g-up' : 'g-dn'}"><div class="gv">${val}</div><div class="gl">${lbl}</div><div class="gd">${same ? 'same as yours' : (d > 0 ? '▲ ' : '▼ ') + fmt(Math.abs(d))}</div></div>`; };
+  return `<div class="gauges">` + dial('WIN RATE', s.wr + '%', s.wr, b.wr, 'up', (x) => x.toFixed(1) + ' pts') + dial('PROFIT FACTOR', s.pf, s.pf, b.pf, 'up', (x) => x.toFixed(2)) +
+    dial('NET', money(T.stats.total), T.stats.total, T.base.total, 'up', (x) => '$' + Math.round(x).toLocaleString()) + dial('MAX DRAWDOWN', money(-s.dd), s.dd, b.dd, 'down', (x) => '$' + Math.round(x).toLocaleString()) +
+    dial('TRADES', s.n, s.n, b.n, 'up', (x) => String(Math.round(x))) + dial('AVG WIN / LOSS', `${money(s.avg_win)}<br>${money(s.avg_loss)}`, s.avg_win / Math.max(1, -s.avg_loss), b.avg_win / Math.max(1, -b.avg_loss), 'up', (x) => x.toFixed(2) + '× ratio') + '</div>';
+}
+function leverTips() {                                           // "Win 25% winrate by moving this slider to X": the best value of every lever, as lab buttons
+  const W = LABS.sweep, key = JSON.stringify([labForm(), RS.sets]), J = LABS.main;
+  const busy = J && J.running && J.action === 'sweep', pct = busy && J.total ? Math.round((100 * J.progress) / J.total) : 3;
+  let h = `<div class="bar" style="margin-top:8px"><button data-rs="scan" class="dexbtn" ${busy ? 'disabled' : ''}>${busy ? '⏳ SCANNING…' : '🔬 SCAN THE LEVERS'}</button></div>`;
+  if (busy) h += `<div class="dexprog"><div class="dexprog-t">⚗️ THE LAB IS TESTING EVERY LEVER · ${pct}%</div><div class="dexprog-bar"><i style="width:${pct}%"></i></div>
+    <div class="dexprog-s">${esc(J.phase || 'warming up the beakers')} · ${J.progress || 0} of ${J.total || '…'} runs · ${J.seconds || 0} s</div></div>`;
+  if (!W || !W.levers) return h + '<div class="k">tries every value of every lever on the data and offers the ones that raise the win rate, the profit factor or the net</div>';
+  if (RS.scanKey !== key) h += '<p class="warn">the levers moved since the scan - scan again for fresh suggestions</p>';
+  const now = W.now, names = { sl: 'Stop', tg: 'Target R:R', tr: 'Trail ATR', ta: 'Trail starts', be: 'Breakeven', p1: 'Half off' }, btn = [];
+  for (const [lv, rows] of Object.entries(W.levers)) {
+    const ok = rows.filter((r) => !r.stuck && r.n >= 20);
+    const bw = ok.slice().sort((a, b) => b.wr - a.wr)[0], bn = ok.slice().sort((a, b) => b.net - a.net)[0], bp = ok.slice().sort((a, b) => b.pf - a.pf)[0];
+    if (bw && bw.wr > now.wr + 0.4) btn.push([bw.wr - now.wr, `🧪 Win rate <b>${bw.wr}%</b> (now ${now.wr}%): ${names[lv]} → <b>${bw.v}</b> <span class="k">net ${money(bw.net)}</span>`, lv, bw.v]);
+    if (bn && bn.net > now.net + 1000) btn.push([(bn.net - now.net) / 1e4, `💰 Net <b>${money(bn.net)}</b> (now ${money(now.net)}): ${names[lv]} → <b>${bn.v}</b> <span class="k">WR ${bn.wr}%</span>`, lv, bn.v]);
+    if (bp && bp.pf > now.pf + 0.02 && bp !== bn) btn.push([(bp.pf - now.pf) * 10, `⚗️ Profit factor <b>${bp.pf}</b> (now ${now.pf}): ${names[lv]} → <b>${bp.v}</b> <span class="k">net ${money(bp.net)}</span>`, lv, bp.v]);
+  }
+  if (!btn.length) return h + '<p class="note">No lever beats the exit on the bench on its own - it already sits on its best values.</p>';
+  return h + btn.sort((a, b) => b[0] - a[0]).map(([, txt, lv, v]) => `<button class="labsug" data-sug="${lv}|${v}">${txt}</button>`).join('');
+}
 function labTips(ea) {                                           // lab suggestions: the bubbling flask lights up when a lever reaches where they apply
   const st = +(ea.InpSlAtrMult || 0), far = Math.max(+LABS.form.tgt === 2 ? +LABS.form.tgt_k : 0, +LABS.form.tr === 2 ? +LABS.form.tr_k : 0, +LABS.form.tr_act, +LABS.form.be_r, +LABS.form.p1_r);
   const tip = (on, html) => `<div class="flasktip ${on ? 'on' : ''}"><span class="flask">⚗️<i></i><i></i><i></i></span><div>${html}</div></div>`;
@@ -39,11 +66,11 @@ function labResearch() {
   if (T) {
     const s = T.stats, b = T.base;
     h += `${stale(T) ? '<p class="warn">⏳ re-running on the settings on screen…</p>' : ''}<div class="dexres">${LABS.quick && LABS.quick.running ? '⏳ running…' : ''} <b class="${cls(s.total - b.total)}">${money(s.total)}</b> vs yours ${money(b.total)} ·
-      WR <b>${s.all.wr}%</b> (yours ${b.all.wr}%) · ${labLabels()[0]} ${money(s.train.net)} · ${labLabels()[1]} ${money(s.test.net)}${s.stuck ? ' · <span class="bad">a trade never closed</span>' : ''}</div>${spark(T.trades)}`;
+      WR <b>${s.all.wr}%</b> (yours ${b.all.wr}%) · ${labLabels()[0]} ${money(s.train.net)} · ${labLabels()[1]} ${money(s.test.net)}${s.stuck ? ' · <span class="bad">a trade never closed</span>' : ''}</div>${gauges(T)}${spark(T.trades)}`;
   }
   h += `</div><div class="levers dexpanel">${SLIDERS.filter((x) => !x.ea || String(CUR.InpSlMode) === '1').map((x) => { const v = x.get();
     return `<label class="lever"><span>${esc(x.label)} <b id="lv_${x.id}">${v}</b>${x.ea ? ' <span class="tag ea">EA</span>' : ''}</span><input type="range" data-lever="${x.id}" min="${x.min}" max="${x.max}" step="${x.step}" value="${v}"></label>`; }).join('')}
-    <div class="bar"><button data-rs="save" class="dexbtn">💾 SAVE &amp; APPLY THIS EXIT</button><button data-rs="reset">Back to your exit</button></div>${labTips(ea)}</div></div>`;
+    <div class="bar"><button data-rs="save" class="dexbtn">💾 SAVE &amp; APPLY THIS EXIT</button><button data-rs="reset">Back to your exit</button></div>${leverTips()}${labTips(ea)}</div></div>`;
   const J = RS.job;
   h += `<h4 style="margin-top:14px">Ask Claude to research your exit</h4><div class="askBox" style="max-width:980px"><textarea id="rsQ" rows="2">${esc(RS.q)}</textarea>
     <button data-rs="go" class="dexbtn" ${J && J.running ? 'disabled' : ''}>${J && J.running ? '⏳ ' + esc(J.phase || 'researching') : '🧠 Research it'}</button></div>
@@ -90,6 +117,8 @@ document.addEventListener('change', (e) => {
 document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   if (d.rs === 'save') saveExit();
+  if (d.rs === 'scan') { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: 'warming up the beakers', progress: 0, total: 0, seconds: 0 }; renderPanel('tt'); labStart('sweep', { lab: labForm(), sets: RS.sets }); }
+  if (d.sug) { const [lv, v] = d.sug.split('|'); SLIDERS.find((s) => s.id === lv).set(+v); RS.scanKey = JSON.stringify([labForm(), RS.sets]); labStart('test', { lab: labForm(), sets: RS.sets }); }
   if (d.rs === 'reset') { RS.sets = {}; LABS.form = { ...LABS.spec.default }; labStart('test', { lab: labForm() }); }
   if (d.rs === 'go') {
     RS.q = ($('#rsQ').value || '').trim() || RS.q;

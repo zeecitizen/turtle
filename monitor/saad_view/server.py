@@ -784,7 +784,7 @@ def _jsonable(x):
 
 def lab_start(body):
     action = body.get("action")
-    if action not in ("diagnose", "test", "catalogue", "search", "heatmap"):
+    if action not in ("diagnose", "test", "catalogue", "search", "heatmap", "sweep"):
         return {"error": "unknown action"}
     slot = "tjob" if action in ("test", "diagnose") else "job"
     if LAB[slot] and LAB[slot].running:
