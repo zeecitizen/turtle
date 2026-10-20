@@ -635,6 +635,28 @@ $('#btnAsk').onclick = () => { document.body.classList.remove('set-open'); docum
 $('#btnAskGo').onclick = ask;
 $('#askQ').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); } });
 
+// ---------- saved settings ----------
+let SAVEDS = [];
+async function loadSaved() {
+  SAVEDS = await api('/api/saved');
+  const dsName = { year: 'Blueberry 2026 (ticks)', tv: "TradingView's candles", m15: 'Blueberry 2023 → now' };
+  $('#panelSaved').innerHTML = SAVEDS.length ? table(['Saved', 'Candles', 'Trades', 'Win rate', 'Net', 'PF', 'Changes from v1.27', ''],
+    SAVEDS.map((s, i) => { const r = s.result || {};
+      return `<tr><td>${esc(s.name)}</td><td>${esc(dsName[s.ds] || s.ds || '')}</td><td>${r.n ?? ''}</td><td>${r.wr != null ? r.wr + '%' : ''}</td><td class="${cls(r.net || 0)}">${r.net != null ? money(r.net) : ''}</td><td>${r.pf ?? ''}</td>` +
+        `<td style="text-align:left;white-space:normal" class="k">${Object.entries(s.changed || {}).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ') || 'none (v1.27)'}</td>` +
+        `<td><button data-load="${i}">Load</button> <button data-del="${i}">Delete</button></td></tr>`; }))
+    : '<p class="note">Nothing saved yet - press "💾 Save settings".</p>';
+}
+$('#btnSave').onclick = async () => {
+  const r = await api('/api/save', { inputs: CUR, ds: SRC.ds, mode: SRC.mode, result: TT ? TT.year : null });
+  await loadSaved(); toast(`Saved as <b>${esc(r.name)}</b> (bottom of the page).`);
+};
+document.addEventListener('click', async (e) => {
+  const d = e.target.dataset || {};
+  if (d.load != null) { const s = SAVEDS[+d.load]; CUR = { ...DFL, ...s.inputs }; markForm(); scheduleSim(0); toast(`Loaded <b>${esc(s.name)}</b>.`); }
+  if (d.del != null) { const s = SAVEDS[+d.del]; if (confirm(`Delete the saved settings "${s.name}"?`)) { await api('/api/saved_delete', { name: s.name }); loadSaved(); } }
+});
+
 // ---------- buttons ----------
 $('#btnCheck').onclick = async () => {
   const r = await api('/api/run', { sets: CUR, delay: 'none', label: Object.keys(diffDfl(CUR)).length ? '' : 'v1.27 defaults (no delay)' });
@@ -722,5 +744,6 @@ document.addEventListener('click', async (e) => {
   if (h.get('trade')) { const t = TT.TR.find((x) => x.num === +h.get('trade')); if (t) focusTrade(t); }
   if (h.get('ask') === '1') document.body.classList.add('ask-open');
   setStatus('');
+  loadSaved();
   poll();
 })();

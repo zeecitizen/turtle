@@ -104,6 +104,7 @@
     <button id="btnTake" title="Read the indicator's settings now">take TradingView settings</button>
     <label class="tog"><input type="checkbox" id="tFollow"> follow</label>
   </span>
+  <button id="btnSave" title="Save the settings on the chart (named by date and time); listed at the bottom of the page">💾 Save settings</button>
   <button id="btnCheck" class="primary" title="Run these settings in the MT5 Strategy Tester (real ticks, about a minute)">Check in MT5</button>
   <button id="btnExport" class="go" title="These settings as a preset + JSON for the EA (needs an MT5 result for them)">Export to MT5</button>
   <label class="tog"><input type="checkbox" id="tTrades" checked> trades</label>
@@ -147,6 +148,10 @@
     <button id="btnDel" title="Delete this MT5 run">✕</button>
     <span class="info" id="infoMT"></span></div>
   <div class="panel" id="panelMT"></div>
+</section>
+<section class="res" id="secSaved">
+  <div class="rh"><span class="title">Saved settings</span><span class="info">newest first · the result is the Turtle TV Tester's when saved</span></div>
+  <div class="panel" id="panelSaved"><p class="note">Nothing saved yet - press "💾 Save settings".</p></div>
 </section>
 <div id="toast"></div>
 <script src="/static/lightweight-charts.standalone.production.js"></script>
