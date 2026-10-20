@@ -51,7 +51,8 @@ RIG = "axi7"                                  # one of the compare page's year-v
 DEPOSIT = 100000
 FROM, TO = "2026.01.01", "2026.10.17"
 RUNS = HERE / "runs"
-SETTINGS = HERE / "settings"                  # the JSON hand-off files (format "turtle-settings/1"; see settings_doc)
+SETTINGS = HERE / "settings"
+SAVED = HERE / "settings" / "saved"                   # the page's saved chart settings, one JSON per save                  # the JSON hand-off files (format "turtle-settings/1"; see settings_doc)
 STATIC = HERE / "static"
 TERMINALS = Path.home() / "AppData" / "Roaming" / "MetaQuotes" / "Terminal"
 COMMON = TERMINALS / "Common" / "Files"
@@ -596,6 +597,15 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, info)
         if u.path == "/api/bars":
             return self.send(200, bars_json((q.get("ds") or ["year"])[0]))
+        if u.path == "/api/saved":                       # Zee: "save current chart settings ... shows all saved settings at the bottom"
+            SAVED.mkdir(parents=True, exist_ok=True)
+            rows = []
+            for f in sorted(SAVED.glob("*.json"), reverse=True):
+                try:
+                    rows.append(json.loads(f.read_text(encoding="utf-8")))
+                except Exception:                                # noqa: BLE001
+                    pass
+            return self.send(200, rows)
         if u.path == "/api/opt":
             return self.send(200, OPT["o"].state() if OPT["o"] else {})
         if u.path == "/api/tv":
@@ -626,6 +636,20 @@ class H(BaseHTTPRequestHandler):
             if u.path == "/api/run":
                 rid, err = start_run(body)
                 return self.send(409 if err else 200, {"error": err} if err else {"id": rid})
+            if u.path == "/api/save":
+                SAVED.mkdir(parents=True, exist_ok=True)
+                name = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+                dfl = axi_rig.ea_defaults(EA)
+                inp = full_inputs(body.get("inputs") or {})
+                rec = {"name": name, "inputs": inp, "changed": {k: v for k, v in inp.items() if not same(v, dfl.get(k))}, "ds": body.get("ds"),
+                       "mode": body.get("mode"), "result": body.get("result")}
+                (SAVED / f"{name}.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
+                return self.send(200, {"name": name})
+            if u.path == "/api/saved_delete":
+                n = str(body.get("name", ""))
+                if re.fullmatch(r"[\d\- ]+", n):
+                    (SAVED / f"{n}.json").unlink(missing_ok=True)
+                return self.send(200, {"ok": True})
             if u.path == "/api/ask":
                 return self.send(200, ask_claude(body))
             if u.path == "/api/sim":
