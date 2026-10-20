@@ -692,11 +692,16 @@ def htf_for(ds, minutes, n):
     return _HTF[key]
 
 
-def simulate(inputs, ds="year", chart=False, lab=None, **extra):
-    """Every EA input (sim_full.run_full). lab = the Exit Lab's extra exits (exitlab.py; None = off). ds 'year' (Blueberry MT5 candles), 'tv' (TradingView's), 'm15' (Blueberry 2023 -> now)."""
+def simulate(inputs, ds="year", chart=False, lab=None, lego=None, **extra):
+    """Every EA input (sim_full.run_full). lab = the Exit Lab's extra exits (exitlab.py; None = off). lego = Strategy Lego pieces (lego.py; None = the EA's). ds 'year' (Blueberry MT5 candles), 'tv' (TradingView's), 'm15' (Blueberry 2023 -> now)."""
     D = data(ds)
     P, bb, bs = pvec_all(inputs)
     ef, es = emas(P[0], P[1], ds)
+    n15 = len(D["t15"])
+    OS, OL = np.full(n15, 9, dtype=np.int64), np.full(n15, 9, dtype=np.int64)
+    if lego:
+        import lego as _lego
+        ef, es, OS, OL = _lego.pieces(lego, inputs, ds, P, ef, es)
     ex = dict(CHART_RULES) if chart else {}
     if ds == "tv":
         ex["warm_k"] = 2 * P[1] + 19
@@ -710,6 +715,6 @@ def simulate(inputs, ds="year", chart=False, lab=None, **extra):
     out = np.zeros((8000, 20)); setups = np.zeros((60000, 3)); stats = np.zeros(10)             # 15-19: the Exit Lab's columns (sim_full._close)
     nt, ns = sim_full.run_full(D["t15"], D["hr15"], dow, D["o15"], D["h15"], D["l15"], D["c15"], ef, es, D["atr"],
                                adx_for(ds, int(P[sim_full.F["InpAdxPeriod"]])), hc, h1_, h2_, D["t1"], D["o1"], D["h1"], D["l1"], D["c1"],
-                               D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab), bb, bs, out, setups, stats)
+                               D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab), bb, bs, OS, OL, out, setups, stats)
     return out[:nt], setups[:ns], dict(zip(["setups", "no_break", "risk", "adx", "atr_band", "band_skip", "gap", "spread_reject", "open_at_end", "open_since"],
                                            stats.astype(np.int64).tolist()))

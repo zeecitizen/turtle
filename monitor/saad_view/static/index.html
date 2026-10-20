@@ -130,6 +130,14 @@
   .lever { display: flex; flex-direction: column; font: bold 11px "Courier New", monospace; color: #e0f7fa; }
   .lever input { accent-color: #ff9800; }
   .dexres { margin: 6px 0; font-size: 13px; } .rsrep { margin: 8px 0; } .rsrep summary { cursor: pointer; }
+  .legorow { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin: 8px 0; }
+  .brick { width: 150px; cursor: pointer; transition: transform .12s; filter: drop-shadow(0 3px 0 rgba(0,0,0,.5)); }
+  .brick:hover { transform: translateY(-3px); } .brick.on { transform: translateY(-6px) scale(1.04); filter: drop-shadow(0 0 8px #fff); }
+  .brick .bt { font: bold 11px "Trebuchet MS", sans-serif; fill: #111; text-anchor: middle; } .brick .btag { font: bold 9px sans-serif; fill: #ffeb3b; text-anchor: middle; }
+  .brick .bn { font: 11px "Trebuchet MS", sans-serif; color: #111; text-align: center; line-height: 1.2; }
+  .arrowr { color: #787b86; font-size: 18px; }
+  .legopanel { background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 6px 0 10px; max-width: 1100px; }
+  .lopt { display: inline-flex; gap: 5px; align-items: center; margin: 3px 14px 3px 0; font-size: 13px; } .lopt.on { color: #ffeb3b; }
   #dexTip { position: fixed; z-index: 80; display: none; max-width: 320px; background: #fffde7; color: #1a237e; border: 3px solid #1a237e; border-radius: 12px; padding: 8px 11px;
     font: 12px "Trebuchet MS", sans-serif; box-shadow: 5px 5px 0 #ff9800; pointer-events: none; }
   h4 { margin: 4px 0 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
@@ -181,7 +189,7 @@
 <section class="res" id="secTT">
   <div class="rh"><span class="title tt">Turtle TV Tester</span>
     <nav data-sec="tt"><button data-t="overview" class="on">Overview</button><button data-t="months">Months</button><button data-t="weekdays">Weekdays</button>
-      <button data-t="range">Range boxes</button><button data-t="trades">List of trades</button><button data-t="skips">Why no trade</button><button data-t="opt">Optimizer</button><button data-t="lab">Exit Lab</button><button data-t="ml">Machine learning</button></nav>
+      <button data-t="range">Range boxes</button><button data-t="trades">List of trades</button><button data-t="skips">Why no trade</button><button data-t="opt">Optimizer</button><button data-t="lab">Exit Lab</button><button data-t="ml">Machine learning</button><button data-t="lego">Strategy Lego</button></nav>
     <span class="info" id="infoTT"></span></div>
   <div class="panel" id="panelTT"></div>
 </section>
@@ -205,5 +213,6 @@
 <script src="/static/exitlab_draw.js"></script>
 <script src="/static/exitlab_research.js"></script>
 <script src="/static/ml.js"></script>
+<script src="/static/lego.js"></script>
 </body>
 </html>
