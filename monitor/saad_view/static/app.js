@@ -336,7 +336,7 @@ function pRange(D) {
       rows.push(`<tr class="${on ? '' : 'dim'}"><td>${box(k)}</td><td>${tick}</td><td>${s.n || ''}</td><td>${s.n ? pct(s.w, s.n) : ''}</td><td class="${cls(s.net)}">${s.n ? money(s.net) : ''}</td><td>${gh.length || ''}</td><td class="${cls(gn)}">${gh.length ? money(gn) : ''}</td></tr>`);
     }
     const sd = side === 'BUY' ? 'B' : 'S';
-    const btns = D.kind === 'tt' ? ` <button data-bands="${sd}1">Select all</button> <button data-bands="${sd}0">Deselect all</button>` : '';
+    const btns = D.kind === 'tt' ? ` <button data-bands="${sd}1">Select all</button> <button data-bands="${sd}0">Deselect all</button> <button data-bands="${sd}L">Deselect all losing ranges</button>` : '';
     return `<div><h4>${side} - where the entry sat in the last ${side === 'BUY' ? inp.InpRangeLook : inp.InpRangeLookS} candles' range${btns}</h4>` +
       table(['Box', 'Ticked', 'Trades', 'Win rate', 'Net', 'Stood aside', 'Would have made'], rows) + '</div>';
   };
@@ -689,7 +689,11 @@ document.addEventListener('click', async (e) => {
   }
   const bs = e.target.dataset && e.target.dataset.bands;
   if (bs === 'OFF') { CUR.InpBandsB = '1'.repeat(21); CUR.InpBandsS = '1'.repeat(21); markForm(); scheduleSim(0); }
-  else if (bs) setBands('InpBands' + bs[0], (bs[1] === '1' ? '1' : '0').repeat(21));
+  else if (bs && bs[1] === 'L') {                             // untick every box whose trades lost money; boxes without trades keep their tick
+    const key = 'InpBands' + bs[0], off = bs[0] === 'B' ? 0 : 21, cur = (CUR[key] || '').padEnd(21, '1').split('');
+    for (let b = 0; b <= 20; b++) { const n = TT.TR.filter((t) => Math.round(t.bucket) === b + off).reduce((a, t) => a + t.pnl, 0); if (n < 0) cur[b] = '0'; }
+    setBands(key, cur.join(''));
+  } else if (bs) setBands('InpBands' + bs[0], (bs[1] === '1' ? '1' : '0').repeat(21));
   if (e.target.id === 'oStop') { await api('/api/opt_stop', {}); OPTS = await api('/api/opt'); renderPanel('tt'); }
   if (e.target.id === 'oApply' && OPTS && OPTS.best) { CUR = { ...OPTS.best.inputs }; markForm(); scheduleSim(0); toast('The optimizer\'s best is on the chart; its MT5 check is in the MT5 section.'); }
   if (e.target.dataset && e.target.dataset.board != null && OPTS) { CUR = { ...OPTS.board[+e.target.dataset.board].inputs }; markForm(); scheduleSim(0); }
