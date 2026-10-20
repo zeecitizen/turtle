@@ -23,7 +23,7 @@
 input string   InpSrc  = "XAUUSD.pro";            // broker symbol (real ticks)
 input string   InpDst  = "XAUUSD_TK";             // custom symbol to build
 input datetime InpFrom = D'2025.12.01 00:00';     // first day (includes indicator warm-up)
-input datetime InpTo   = D'2026.10.10 00:00';     // last day (exclusive)
+input datetime InpTo   = D'2026.10.13 00:00';     // last day (exclusive)
 
 void OnStart()
 {

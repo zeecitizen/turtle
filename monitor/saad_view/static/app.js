@@ -677,7 +677,7 @@ document.addEventListener('click', async (e) => {
   makeChart();
   renderAll();
   setStatus('loading the year…', 'busy');
-  SRC.ds = 'tv'; SRC.mode = 'chart_blind';                    // start where Zee tunes: TradingView's candles, TradingView's way (= its panel)
+  SRC.ds = 'm15'; SRC.mode = 'ea';                    // start where Zee tunes: TradingView's candles, TradingView's way (= its panel)
   $('#srcDs').value = SRC.ds; $('#srcMode').value = SRC.mode;
   const [bars, inputs] = await Promise.all([getBars(SRC.ds), api('/api/inputs')]);
   BARS = bars; INPUTS = inputs;
