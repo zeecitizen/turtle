@@ -380,7 +380,7 @@ function pOpt() {
   const o = OPTS;
   const obj = OPTUI.obj;
   let h = `<div class="row" style="align-items:center;gap:10px"><b>Step optimizer</b>
-    <label>Score <select id="oObj">${[['ret_dd', 'net ÷ max drawdown'], ['net', 'net profit'], ['pf', 'profit factor'], ['wr', 'win rate'], ['entries', 'Entries: try every entry setting'], ['exits', 'Exits: try every exit setting']].map(([v, l]) => `<option value="${v}" ${v === obj ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <label>Score <select id="oObj">${[['ret_dd', 'net ÷ max drawdown'], ['net', 'net profit'], ['pf', 'profit factor'], ['wr', 'win rate'], ['entries', 'Entries: try every entry setting'], ['exits', 'Exits: try every exit setting'], ['ranges', 'Range boxes: most boxes at 100%']].map(([v, l]) => `<option value="${v}" ${v === obj ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     <label class="tog"><input type="checkbox" id="oBox" ${OPTUI.boxes ? 'checked' : ''}> include the range boxes</label>
     <label class="tog"><input type="checkbox" id="oKeep" ${OPTUI.keep ? 'checked' : ''}> keep optimizing (restarts)</label>
     <button id="oGo" class="primary">Optimize from the settings on screen</button><button id="oStop">Stop</button></div>
@@ -388,6 +388,23 @@ function pOpt() {
     The score is measured on <b>Jan – Jun</b> only. <b>Jul – Oct</b> is shown beside it but never used to choose: if it gets worse while Jan – Jun improves, the settings are memorising the past.</p>`;
   if (!o || !o.baseline) return h;
   const [LA, LB] = o.labels || ['Jan – Jun', 'Jul – Oct'];
+  if (o.kind === 'ranges') {
+    const B0 = o.baseline, F = o.final, line = (x) => `${money(x.net)} · WR ${x.wr}% · PF ${x.pf} · ${x.n} trades`;
+    h += `<p class="note">${o.running ? '⏳ running' : o.error ? 'stopped: ' + esc(o.error) : '✓ done'} · ${o.evals} settings tried in ${o.seconds} s · ${o.passes} passes ·
+      <b>${o.perfect}</b> range boxes at 100% in ${LA} (a box counts with ${o.min_box}+ trades, all winners). Every box starts ticked; a box that reaches 100% is <b>locked</b> - no later step may break it - and the search moves on to the next box.
+      At the end only the 100% boxes are ticked. ${LB} is never looked at: it shows whether those boxes stay 100%.</p>`;
+    if (B0) h += `<p class="note">Start (all boxes ticked): ${LA} ${line(B0.train)} · ${LB} ${line(B0.test)} · ${B0.perfect} boxes at 100%.</p>`;
+    if (F) {
+      h += `<h4>Result: only the 100% boxes ticked <button data-rfinal="1" class="primary">Apply this setting</button></h4>` +
+        table(['', LA + ' (optimized on)', LB + ' (unseen)', 'Total'], [`<tr><td>Trades</td><td class="${cls(F.train.net)}">${line(F.train)}</td><td class="${cls(F.test.net)}">${line(F.test)}</td><td class="${cls(F.train.net + F.test.net)}"><b>${money(F.train.net + F.test.net)}</b></td></tr>`]) +
+        `<p class="note">${F.kept} of ${F.boxes.length} boxes stayed 100% in ${LB}.</p>` +
+        table(['Side', 'Box', LA, LB + ' (unseen)'], F.boxes.map((x) => `<tr><td>${x.side === 'B' ? 'BUY' : 'SELL'}</td><td>${box(x.box + (x.side === 'S' ? 21 : 0))}</td><td class="good">${x.n}/${x.n} = 100% · ${money(x.net)}</td>` +
+          `<td class="${!x.tn ? 'k' : x.tw === x.tn ? 'good' : 'bad'}">${x.tn ? `${x.tw}/${x.tn} = ${pct(x.tw, x.tn)} · ${money(x.tnet)}` : 'no trades'}</td></tr>`));
+    }
+    if (o.steps.length) h += `<h4>Steps that added 100% boxes</h4><div class="scroll">` + table(['#', 'Setting', 'Step', 'Boxes at 100%', 'Trades in them', 'New boxes', ''], o.steps.map((s, i) =>
+      `<tr><td>${i + 1}</td><td style="text-align:left">${esc(s.setting.replace(/^Inp/, ''))}</td><td>${esc(s.from)} → ${esc(s.to)}</td><td>${s.perfect}</td><td>${s.trades}</td><td class="k">${esc(s.new.join(', '))}</td><td><button data-rstep="${i}">Apply this setting</button></td></tr>`)) + '</div>';
+    return h;
+  }
   if (o.kind === 'survey') {
     const B0 = o.baseline, tot0 = B0.train.net + B0.test.net;
     h += `<p class="note">${o.running ? '⏳ running' : o.error ? 'stopped: ' + esc(o.error) : '✓ done'} · ${o.group === 'entries' ? 'every entry setting' : 'every exit setting'}, one at a time from the settings on screen · ${o.evals} tried in ${o.seconds} s.
@@ -731,6 +748,8 @@ document.addEventListener('click', async (e) => {
   } else if (bs) setBands('InpBands' + bs[0], (bs[1] === '1' ? '1' : '0').repeat(21));
   if (e.target.id === 'oStop') { await api('/api/opt_stop', {}); OPTS = await api('/api/opt'); renderPanel('tt'); }
   if (e.target.id === 'oApply' && OPTS && OPTS.best) { CUR = { ...OPTS.best.inputs }; markForm(); scheduleSim(0); toast('The optimizer\'s best is on the chart; its MT5 check is in the MT5 section.'); }
+  if (e.target.dataset && e.target.dataset.rfinal && OPTS && OPTS.final) { CUR = { ...DFL, ...OPTS.final.inputs }; markForm(); scheduleSim(0); toast('Applied: only the 100% range boxes ticked.'); }
+  if (e.target.dataset && e.target.dataset.rstep != null && OPTS && OPTS.steps) { CUR = { ...DFL, ...OPTS.steps[+e.target.dataset.rstep].inputs }; markForm(); scheduleSim(0); toast('Applied this step, with its 100% boxes ticked.'); }
   if (e.target.dataset && e.target.dataset.surv != null && OPTS && OPTS.rows) {
     const r = OPTS.rows[+e.target.dataset.surv]; CUR = { ...DFL, ...r.inputs }; markForm(); scheduleSim(0);
     const w = Object.entries(r.with || {}).map(([k, v]) => k.replace(/^Inp/, '') + '=' + v).join(', ');
