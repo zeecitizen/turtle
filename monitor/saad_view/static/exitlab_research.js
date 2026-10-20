@@ -36,6 +36,7 @@ function leverTips() {                                           // every settin
     <label class="tog" style="font-size:12px"><input type="checkbox" id="rsAuto" ${RS.auto !== false ? 'checked' : ''}> scan again after every pick</label></div>`;
   if (busy) h += `<div class="dexprog"><div class="dexprog-t">⚗️ THE LAB IS TESTING EVERY SETTING · ${pct}%</div><div class="dexprog-bar"><i style="width:${pct}%"></i></div>
     <div class="dexprog-s">${esc(J.phase || 'warming up the beakers')} · ${J.progress || 0} of ${J.total || '…'} runs · ${J.seconds || 0} s</div></div>`;
+  if (W && W.moves && !W.now) return h + '<p class="warn">The scan was stopped before it measured the bench - scan again.</p>';
   if (!W || !W.moves) return h + '<div class="k">moves every setting the EA has (lines, candle, location, trigger, filters, each range box, stop, exit, the 27 Exit Lab settings) a few steps either way and ranks what each move trades for what</div>';
   if (RS.scanKey !== key && !busy) h += '<p class="warn">the bench changed since this scan - scan again for fresh suggestions</p>';
   const now = W.now, rel = (a, b) => (a - b) / Math.max(1e-9, Math.abs(b));
@@ -55,6 +56,7 @@ function leverTips() {                                           // every settin
   if (!sug.length) return h + `<p class="note">🏁 Nothing left to gain: no single setting improves the bench any more (${W.n} moves tried in ${W.seconds} s). This is the top of this hill.</p>`;
   sug.sort((a, b) => b.score - a.score);
   const show = RS.all ? sug : sug.slice(0, 25), n = show.length;
+  const anim = RS.animated !== W._id; RS.animated = W._id;          // slide in once per new scan, not on every refresh
   const gain = { net: (m) => `${money(m.r.net)} net`, wr: (m) => `${m.r.wr}% win rate`, pf: (m) => `PF ${m.r.pf}` };
   const cost = (m) => {
     const r = m.r, c = [];
@@ -66,11 +68,13 @@ function leverTips() {                                           // every settin
     return c[0];
   };
   const icon = { 'the lines': '📈', 'the candle': '🕯️', where: '📍', 'the trigger': '🎯', filters: '🧹', 'range boxes': '📦', 'the stop': '🛑', 'the exit': '🚪', 'Exit Lab': '⚗️', 'v1.23 exits': '⚠️' };
-  h += `<div class="k" style="margin:6px 0 2px">${sug.length} moves help something (of ${W.n} tried in ${W.seconds} s) · ranked best → worst for us: money only counts when BOTH halves gain, then win rate, PF, drawdown · green = good deal, red = it hurts</div>`;
+  if (W.stopped) h += '<p class="warn">This scan was stopped early: some moves are missing.</p>';
+  h += `<div class="k" style="margin:6px 0 2px">${busy ? '(the previous scan, while the new one runs) · ' : ''}${sug.length} moves help something (of ${W.n} tried in ${W.seconds} s) · ranked best → worst for us: money only counts when BOTH halves gain, then win rate, PF, drawdown · green = good deal, red = it hurts</div>`;
   h += show.map((m, i) => {
     const hue = n > 1 ? Math.round(120 * (1 - i / (n - 1))) : 120, [cv, ct] = cost(m), r = m.r;
-    const warn = m.group === 'v1.23 exits' || (m.key === 'InpExitMode' && m.to === '0') ? ' <span class="tag unt">⚠ tester ≠ MT5</span>' : '';
-    return `<div class="sugrow" style="--hue:${hue};animation-delay:${Math.min(i, 20) * 70}ms"><span class="sugrank">#${i + 1}</span>` +
+    const warn = m.group === 'v1.23 exits' || (m.key === 'InpExitMode' && m.to === '0') || m.trust === 'opposite' ? ' <span class="tag unt" title="verify_settings.py: on this setting the tester and MT5 move the result in opposite directions">⚠ tester ≠ MT5</span>'
+      : m.trust === 'differ' ? ' <span class="tag unt" title="verify_settings.py: on this setting the tester and MT5 differ in size">check in MT5</span>' : '';
+    return `<div class="sugrow ${anim ? 'anim' : ''} ${busy ? 'old' : ''}" style="--hue:${hue};animation-delay:${Math.min(i, 20) * 70}ms"><span class="sugrank">#${i + 1}</span>` +
       `<button class="labsug" data-mv="${W.moves.indexOf(m)}">${icon[m.group] || '•'} <b>${esc(m.label)}</b> ${esc(m.from)} → <b>${esc(m.to)}</b>${warn}<br>` +
       `<span class="k">${money(r.net)} · WR ${r.wr}% · PF ${r.pf} · ${r.n} trades${m.both ? ' · ✓ both halves' : ''}</span></button>` +
       `<button class="sugdeal ${cv < 0 ? 'cost' : 'free'}" data-mv="${W.moves.indexOf(m)}">Trade for <b>${gain[m.kind](m)}</b><br>${cv < 0 ? 'pay ' + ct : 'and ' + ct}</button></div>`;

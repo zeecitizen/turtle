@@ -1,19 +1,21 @@
-"""scan.py - "Scan the levers" over EVERY setting (Zee 2026-10-21: "can you include every single setting that we have in the Scan the levers. so i keep
-pressing trade this for that until we're done gaining everything we can from all the settings on earth we have").
+"""scan.py - "Scan every setting" (Zee 2026-10-21: "can you include every single setting that we have in the Scan the levers. so i keep pressing trade this
+for that until we're done gaining everything we can from all the settings on earth we have").
 
-From the exit on the research bench (the settings on screen + the bench's changes), every setting the EA has - the lines, the candle, the location,
-the trigger, the filters, the range boxes (each box), the stop, the exit and the 27 Exit Lab settings - is moved a few steps either way, one at a time,
-and each move is run on the data. Only settings that can act are tried (e.g. the sweep settings only with the sweep entry). Sizing (lots, risk %) is
-left to Mission Control. The runs are spread over the CPU's cores (a pool of worker processes kept alive).
+From the research bench (the settings on screen + the bench's changes + the bench's Exit Lab exit), every setting the EA has - the lines, the candle,
+the location, the trigger, the filters, each range box, the stop, the exit and the 27 Exit Lab settings (EA v1.30 InpX*) - is moved a few steps either
+way, one at a time, and each move runs on the data AS EA SETTINGS (the bench's Exit Lab exit too: InpX*, exactly what MT5 runs). Only settings that can
+act are tried (e.g. the sweep settings only with the sweep entry, the fallback only in exit mode 1 without a target). Sizing (lots, risk %) is left to
+Mission Control. The runs go to a few worker processes (kept while in use, shut after 10 idle minutes).
 Python tester numbers: hypotheses until MT5 confirms them ("Check in MT5" after applying)."""
 import concurrent.futures as cf
 import multiprocessing as mp
 import os
+import threading
 import time
 
 os.environ.setdefault("NUMBA_CPU_NAME", "generic")
 
-# (kind, lo, hi, step) | ("enum", [values]) | ("list", [values]) | "bool"; (group, ...)
+# (kind, lo, hi, step) | ("enum", [values]) | ("list", [values]) | "bool"
 G = {
     "the lines": {"InpEmaFast": ("int", 3, 60, 1), "InpEmaSlow": ("int", 10, 200, 2)},
     "the candle": {"InpWickMin": ("num", 0.1, 0.9, 0.05), "InpBodyMax": ("num", 0.1, 0.9, 0.05), "InpNoseMax": ("num", 0.0, 0.6, 0.05),
@@ -22,18 +24,18 @@ G = {
                    "InpPinDir": "bool", "InpPinColor": "bool"},
     "where": {"InpTouchPips": ("num", 0, 10, 0.5), "InpTouchMode": ("enum", [0, 1]), "InpLongRule": ("enum", [0, 1, 2]), "InpShortLine": ("enum", [0, 1, 2]),
               "InpLongExitAbove": "bool", "InpSkipBothEma": "bool"},
-    "the trigger": {"InpBreakBars": ("int", 1, 6, 1), "InpBreakPips": ("int", 0, 20, 1), "InpTrigBid": "bool", "InpEntryMode": ("enum", [0, 1, 2]),
-                    "InpRetestFrac": ("num", 0.1, 0.9, 0.1), "InpRetestBars": ("int", 1, 8, 1), "InpSweepPips": ("int", 0, 30, 2), "InpSweepBars": ("int", 1, 8, 1),
-                    "InpSweepEntry": ("enum", [0, 1]), "InpSweepSlPips": ("int", 0, 40, 5)},
-    "filters": {"InpAdxMin": ("int", 0, 50, 1), "InpAdxPeriod": ("int", 7, 28, 1), "InpAtrMinUsd": ("num", 0, 10, 0.5), "InpAtrMaxUsd": ("num", 0, 40, 2),
+    "the trigger": {"InpBreakBars": ("int", 1, 6, 1), "InpBreakPips": ("num", 0, 20, 1), "InpTrigBid": "bool", "InpEntryMode": ("enum", [0, 1, 2]),
+                    "InpRetestFrac": ("num", 0.1, 0.9, 0.1), "InpRetestBars": ("int", 1, 8, 1), "InpSweepPips": ("num", 0, 30, 2), "InpSweepBars": ("int", 1, 8, 1),
+                    "InpSweepEntry": ("enum", [0, 1]), "InpSweepSlPips": ("num", 0, 40, 5)},
+    "filters": {"InpAdxMin": ("num", 0, 50, 1), "InpAdxPeriod": ("int", 7, 28, 1), "InpAtrMinUsd": ("num", 0, 10, 0.5), "InpAtrMaxUsd": ("num", 0, 40, 2),
                 "InpSessFrom": ("int", 0, 23, 1), "InpSessTo": ("int", 1, 24, 1), "InpSkipDow": ("enum", [-1, 1, 2, 3, 4, 5]), "InpNoNewMins": ("int", 0, 240, 15),
-                "InpChopEr": ("num", 0, 0.5, 0.05), "InpChopErLook": ("int", 4, 40, 2), "InpHtfMin": ("enum", [0, 60, 240, 1440]), "InpHtfEma": ("int", 10, 100, 5),
+                "InpChopEr": ("num", 0, 0.5, 0.05), "InpChopErLook": ("int", 4, 40, 2), "InpHtfMin": ("enum", [0, 15, 30, 60, 240]), "InpHtfEma": ("int", 10, 100, 5),
                 "InpTrendAlign": "bool", "InpPriceSide": "bool", "InpSlopePips": ("num", 0, 40, 2.5), "InpSlopeLook": ("int", 2, 20, 1),
                 "InpEmaGapPips": ("num", 0, 40, 2.5), "InpMaxSpreadPts": ("int", 0, 100, 10), "InpGapCancel": "bool", "InpCoolBars": ("int", 0, 16, 1),
                 "InpBuys": "bool", "InpSells": "bool", "InpMaxPos": ("int", 1, 4, 1), "InpReplace": "bool", "InpExtraDir": ("enum", [0, 1, 2]),
-                "InpDayLossUsd": ("int", 0, 10000, 250), "InpDayTargetUsd": ("int", 0, 20000, 500), "InpDayLossPct": ("num", 0, 10, 0.5)},
+                "InpDayLossUsd": ("num", 0, 10000, 250), "InpDayTargetUsd": ("num", 0, 20000, 500), "InpDayLossPct": ("num", 0, 10, 0.5)},
     "range boxes": {"InpRangeLook": ("int", 3, 30, 1), "InpRangeLookS": ("int", 3, 30, 1), "InpBandOff": ("enum", [0, 1])},
-    "the stop": {"InpSlMode": ("enum", [0, 1, 2]), "InpSlAtrMult": ("num", 0.5, 5, 0.1), "InpSlPips": ("int", 0, 100, 5), "InpSlUsd": ("num", 1, 30, 1),
+    "the stop": {"InpSlMode": ("enum", [0, 1, 2]), "InpSlAtrMult": ("num", 0.5, 5, 0.1), "InpSlPips": ("num", 0, 100, 5), "InpSlUsd": ("num", 1, 30, 1),
                  "InpMaxRiskUsd": ("num", 0, 60, 1)},
     "the exit": {"InpExitMode": ("enum", [0, 1, 2]), "InpCloseLossMins": ("list", [0, 1, 3, 5, 10, 15, 30, 60]), "InpFixTpPips": ("list", [0, 20, 40, 60, 80, 100, 150, 200])},
     "v1.23 exits": {"InpLongExit": ("enum", [0, 1]), "InpLongTpPips": ("int", 0, 50, 5), "InpShortTpPips": ("int", 0, 50, 5), "InpMinTpPips": ("int", 0, 60, 5),
@@ -47,12 +49,22 @@ G = {
 }
 GROUP = {k: g for g, d in G.items() for k in d}
 SPEC = {k: v for d in G.values() for k, v in d.items()}
+# Exit Lab settings that are off (0): where switching them on starts
+STARTERS = {"p1_r": [0.5, 1, 1.5, 2], "p2_r": [1.5, 2, 3], "be_r": [0.5, 1, 1.5, 2], "lock_r": [0.5, 1, 2], "max_bars": [4, 8, 16, 32], "stale_bars": [4, 8, 16],
+            "adx_exit": [15, 20, 25], "fri_hour": [18, 20, 21], "fb_buf": [0.1, 0.25, 0.5], "cx_buf": [0.1, 0.25, 0.5], "tr_act": [0.5, 1, 2], "tr_buf": [0.5, 1, 2],
+            "cx_after": [1, 2, 4], "be_off": [0.05, 0.1, 0.25]}
+
+
+def _f(x, d=0.0):
+    try:
+        return float(x)
+    except (TypeError, ValueError):
+        return d
 
 
 def _relevant(k, cur):
-    """only settings that can act with the others as they are"""
-    g = lambda n: str(cur.get(n, ""))  # noqa: E731
-    f = lambda n: float(cur.get(n, 0) or 0)  # noqa: E731
+    """only settings that can act with the others as they are (the same conditions as the EA's code)"""
+    g = lambda n: str(cur.get(n, "")).strip()  # noqa: E731
     if k in ("InpRetestFrac", "InpRetestBars"):
         return g("InpEntryMode") == "1"
     if k in ("InpSweepPips", "InpSweepBars", "InpSweepEntry", "InpSweepSlPips"):
@@ -64,16 +76,21 @@ def _relevant(k, cur):
     if k == "InpSlUsd":
         return g("InpSlMode") == "2"
     if k == "InpChopErLook":
-        return f("InpChopEr") > 0
+        return _f(cur.get("InpChopEr")) > 0
     if k == "InpHtfEma":
-        return f("InpHtfMin") > 0
+        return _f(cur.get("InpHtfMin")) > 0
     if k == "InpSlopeLook":
-        return f("InpSlopePips") > 0
+        return _f(cur.get("InpSlopePips")) > 0
     if k in ("InpReplace", "InpExtraDir"):
-        return f("InpMaxPos") > 1
+        return _f(cur.get("InpMaxPos")) > 1
     if GROUP.get(k) == "v1.23 exits":
         return g("InpExitMode") == "0"
     return True
+
+
+def _valid(cur):
+    """combinations that cannot trade: the slow EMA not above the fast one, a session that ends before it starts"""
+    return _f(cur.get("InpEmaSlow")) > _f(cur.get("InpEmaFast")) and _f(cur.get("InpSessTo")) > _f(cur.get("InpSessFrom"))
 
 
 def _fmt(kind, v):
@@ -85,14 +102,14 @@ def _fmt(kind, v):
 def _values(spec, cur):
     """a few steps either side of the value on screen, plus 'off' (0) for the settings where 0 switches them off"""
     if spec == "bool":
-        return ["false" if str(cur).lower() == "true" else "true"]
+        return ["false" if str(cur).strip().lower() == "true" else "true"]
     kind = spec[0]
     if kind in ("enum", "list"):
-        return [str(v) for v in spec[1] if str(v) != str(cur).strip()]
+        return [str(v) for v in spec[1] if abs(_f(v, 1e9) - _f(cur, -1e9)) > 1e-9]
     lo, hi, st = spec[1], spec[2], spec[3]
     try:
         c = float(cur)
-    except ValueError:
+    except (TypeError, ValueError):
         return []
     out = []
     for d in (-4, -2, -1, 1, 2, 4):
@@ -104,33 +121,56 @@ def _values(spec, cur):
     return [v for v in dict.fromkeys(out) if abs(float(v) - c) > 1e-9]
 
 
-def moves(inputs, lab, labspec):
-    """every move: (group, setting, from, to, sets-delta, lab-delta, label)"""
+def lab_sets(labfull):
+    """the bench's Exit Lab exit as the EA's own settings (InpX*) - what MT5 runs"""
+    import sim_full
+    out = {}
+    for f, k in sim_full.XFIELDS.items():
+        if f in labfull:
+            v = _f(labfull[f])
+            out[k] = ("true" if v else "false") if f == "p1_be" else _fmt("num", v)
+    return out
+
+
+def moves(base_in, labfull, trust=None):
+    """every move from the bench: {group, key, label, from, to, sets (EA settings for the page), lab (the bench form for the page), xs (InpX for the run), trust}"""
+    import exitlab
+    trust = trust or {}
     out = []
     for k, spec in SPEC.items():
-        if k not in inputs or not _relevant(k, inputs):
+        if k not in base_in or not _relevant(k, base_in):
             continue
-        for v in _values(spec, inputs[k]):
-            out.append({"group": GROUP[k], "key": k, "label": k[3:], "from": str(inputs[k]), "to": v, "sets": {k: v}, "lab": {}})
+        for v in _values(spec, base_in[k]):
+            if not _valid(dict(base_in, **{k: v})):
+                continue
+            out.append({"group": GROUP[k], "key": k, "label": k[3:], "from": str(base_in[k]), "to": v, "sets": {k: v}, "lab": {}, "xs": {},
+                        "trust": trust.get(k, "")})
     for side, key in (("BUY", "InpBandsB"), ("SELL", "InpBandsS")):         # every range box, ticked / unticked
-        s = str(inputs.get(key, "1" * 21)).ljust(21, "1")[:21]
+        s = str(base_in.get(key, "1" * 21)).ljust(21, "1")[:21]
         for b in range(21):
             t = s[:b] + ("0" if s[b] == "1" else "1") + s[b + 1:]
             nm = f"{side} box {'>100%' if b == 20 else f'{b * 5}-{b * 5 + 5}%'}"
             out.append({"group": "range boxes", "key": key, "label": nm, "from": "on" if s[b] == "1" else "off", "to": "off" if s[b] == "1" else "on",
-                        "sets": {key: t}, "lab": {}})
-    if str(inputs.get("InpExitMode")) in ("1", "2"):                       # the Exit Lab settings (EA v1.30 InpX*), from the bench's exit
-        import exitlab
-        L = dict(labspec or {})
-        g = lambda f, d=0.0: float(L.get(f, exitlab.DEFAULT.get(f, d)))  # noqa: E731
+                        "sets": {key: t}, "lab": {}, "xs": {}, "trust": ""})
+    mode = str(base_in.get("InpExitMode", "")).strip()
+    if mode in ("1", "2"):                                                  # the Exit Lab settings (EA v1.30 InpX*) act in exit modes 1-2
+        L = dict(exitlab.DEFAULT, **(labfull or {}))
+        g = lambda f: _f(L.get(f, 0))  # noqa: E731
         for f, x in exitlab.FIELDS.items():
             if f == "pess" or (x.get("show") and not _show(x["show"], L)):
                 continue
+            if f in ("fb", "fb_buf", "fb_n") and (mode != "1" or g("tgt") != 0):
+                continue                                                    # the fallback exists only in exit mode 1 without a lab target
             cur = g(f)
+            names = {}
             if x["t"] == "sel":
-                vals = [o for o, _ in x["opts"] if o != int(cur)]
+                vals = [float(o) for o, _ in x["opts"] if o != int(cur)]
+                names = {float(o): nm for o, nm in x["opts"]}
             elif x["t"] == "bool":
-                vals = [0 if cur else 1]
+                vals = [0.0 if cur else 1.0]
+                names = {0.0: "off", 1.0: "on"}
+            elif cur == 0 and f in STARTERS:
+                vals = [float(v) for v in STARTERS[f]]
             else:
                 grid = exitlab.GRID.get(f)
                 if isinstance(grid, dict):
@@ -138,22 +178,16 @@ def moves(inputs, lab, labspec):
                 if not grid:
                     continue
                 vals = [float(v) for v in _values(("num",) + tuple(grid), cur)]
-                if f in ("p1_r", "p2_r", "be_r", "lock_r", "max_bars", "stale_bars", "adx_exit", "fri_hour", "fb_buf", "cx_buf", "tr_act", "tr_buf") and cur == 0:
-                    lo, hi, st = grid
-                    vals = [float(_fmt("num", v)) for v in (lo, lo + 2 * st, lo + 4 * st) if v <= hi]
             for v in vals:
                 d = {f: v}
-                if f == "tgt" and v >= 2 and "tgt_k" not in L:
-                    d["tgt_k"] = 2.0
-                if f == "tr" and v >= 1 and "tr_k" not in L:
-                    d["tr_k"] = 2.0
-                out.append({"group": "Exit Lab", "key": f, "label": "X: " + x["label"], "from": f"{cur:g}", "to": f"{v:g}", "sets": {}, "lab": d})
+                xs = lab_sets(dict(L, **d))
+                out.append({"group": "Exit Lab", "key": f, "label": "X: " + x["label"], "from": names.get(cur, f"{cur:g}"), "to": names.get(v, f"{v:g}"),
+                            "sets": {}, "lab": d, "xs": xs, "trust": ""})
     return out
 
 
 def _show(cond, L):
-    import exitlab
-    v = lambda f: float(L.get(f, exitlab.DEFAULT.get(f, 0)))  # noqa: E731
+    v = lambda f: _f(L.get(f, 0))  # noqa: E731
     for o in cond.split("||"):
         ok = True
         for a in o.split("&&"):
@@ -168,44 +202,92 @@ def _show(cond, L):
     return False
 
 
-# ---------------------------------------------------------------- the runs, spread over the cores
-_POOL = None
+# ---------------------------------------------------------------- the runs, on a few worker processes
+WORKERS = max(2, min(4, (os.cpu_count() or 4) - 2))
+_POOL, _LOCK, _USED = None, threading.Lock(), [0.0]
 
 
 def _winit():
     os.environ.setdefault("NUMBA_CPU_NAME", "generic")
+    threading.Thread(target=_watch_parent, args=(os.getppid(),), daemon=True).start()
+
+
+def _watch_parent(ppid):
+    """a worker leaves when its server is gone (a killed server would otherwise leave ~340 MB orphans behind on Windows)"""
+    if os.name != "nt":
+        while True:
+            time.sleep(3)
+            if os.getppid() != ppid:
+                os._exit(0)
+    import ctypes
+    k32 = ctypes.windll.kernel32
+    while True:
+        time.sleep(3)
+        h = k32.OpenProcess(0x00100000, False, ppid)               # SYNCHRONIZE
+        if not h:
+            os._exit(0)
+        gone = k32.WaitForSingleObject(h, 0) == 0                 # WAIT_OBJECT_0: the server has exited
+        k32.CloseHandle(h)
+        if gone:
+            os._exit(0)
 
 
 def _pool():
     global _POOL
-    if _POOL is None:
-        n = max(2, min(6, (os.cpu_count() or 4) - 2))
-        _POOL = cf.ProcessPoolExecutor(max_workers=n, mp_context=mp.get_context("spawn"), initializer=_winit)
-    return _POOL
+    with _LOCK:
+        if _POOL is None:
+            _POOL = cf.ProcessPoolExecutor(max_workers=WORKERS, mp_context=mp.get_context("spawn"), initializer=_winit)
+            threading.Thread(target=_reaper, daemon=True).start()
+        _USED[0] = time.time()
+        return _POOL
+
+
+def _drop_pool():
+    global _POOL
+    with _LOCK:
+        if _POOL is not None:
+            try:
+                _POOL.shutdown(wait=False, cancel_futures=True)
+            except Exception:                                    # noqa: BLE001
+                pass
+            _POOL = None
+
+
+def _reaper():
+    """the workers hold the data in memory (~340 MB each): let them go after 10 idle minutes"""
+    while True:
+        time.sleep(60)
+        with _LOCK:
+            if _POOL is None:
+                return
+            idle = time.time() - _USED[0] > 600
+        if idle:
+            _drop_pool()
+            return
 
 
 def evaluate(task):
-    """one run (in a worker): inputs, ds, lab, sets, window -> the numbers"""
+    """one run (in a worker): EA settings over the data -> the numbers"""
     import exitlab
-    inputs, ds, lab, sets, window = task
-    inp = dict(inputs, **sets)
-    if lab and str(inp.get("InpExitMode")) not in ("1", "2"):
-        inp["InpExitMode"] = "1"
-    _, real, oe = exitlab.run(inp, ds, lab=lab or None)
+    inputs, ds, sets, window = task
+    _, real, oe = exitlab.run(dict(inputs, **sets), ds)               # the Exit Lab exit comes in as InpX* settings, exactly as the EA reads it
     s = exitlab.stats(real, window, open_end=oe)
     return {"train": s["train"]["net"], "test": s["test"]["net"], "net": s["total"], "wr": s["all"]["wr"], "pf": s["all"]["pf"], "dd": s["all"]["dd"],
             "n": s["all"]["n"], "stuck": s["stuck"]}
 
 
 def run_all(job, inputs, ds, lab, sets, window):
-    base_in = dict(inputs, **(sets or {}))
-    labfull = dict(lab or {})
-    mv = moves(base_in, lab, labfull)
+    import exitlab
+    import sim_full
+    if not lab:                                                  # no bench form sent: the exit in the settings themselves (InpX*)
+        lab = {k: v for k, v in (sim_full.lab_from_inputs(dict(inputs, **(sets or {}))) or {}).items() if k != "pess"}
+    labfull = {k: v for k, v in dict(exitlab.DEFAULT, **lab).items() if k != "pess"}
+    base_sets = dict(sets or {}, **lab_sets(labfull))            # the bench as EA settings: the same numbers MT5 would run
+    base_in = dict(inputs, **base_sets)
+    mv = moves(base_in, labfull, exitlab.ea_trust())
     job.total = len(mv) + 1
-    job.phase = f"warming up {min(6, (os.cpu_count() or 4) - 2)} lab assistants (worker processes)"
-    tasks = [(inputs, ds, labfull or None, dict(sets or {}), window)]
-    for m in mv:
-        tasks.append((inputs, ds, dict(labfull, **m["lab"]) if (labfull or m["lab"]) else None, dict(sets or {}, **m["sets"]), window))
+    job.phase = f"warming up {WORKERS} lab assistants"
+    tasks = [(inputs, ds, base_sets, window)] + [(inputs, ds, dict(base_sets, **m["sets"], **m["xs"]), window) for m in mv]
     results = [None] * len(tasks)
     t0 = time.time()
     try:
@@ -216,12 +298,14 @@ def run_all(job, inputs, ds, lab, sets, window):
                 for g in futs:
                     g.cancel()
                 break
-            results[futs[f]] = f.result()
-            job.progress += 1
             i = futs[f]
+            results[i] = f.result()
+            job.progress += 1
             job.phase = f"{mv[i - 1]['group']}: {mv[i - 1]['label']} → {mv[i - 1]['to']}" if i else "the exit on the bench"
-    except Exception as e:                                       # noqa: BLE001  (no pool on this machine: one core)
-        job.phase = f"one core ({e})"
+        _USED[0] = time.time()
+    except Exception as e:                                       # noqa: BLE001  (a broken pool: drop it, finish on this core, a fresh pool next time)
+        _drop_pool()
+        job.phase = f"finishing on one core ({type(e).__name__})"
         for i, t in enumerate(tasks):
             if job._stop:
                 break
@@ -229,8 +313,5 @@ def run_all(job, inputs, ds, lab, sets, window):
                 results[i] = evaluate(t)
                 job.progress += 1
     now = results[0]
-    out = []
-    for m, r in zip(mv, results[1:]):
-        if r:
-            out.append(dict(m, r=r))
-    return {"now": now, "moves": out, "seconds": round(time.time() - t0, 1), "n": len(mv)}
+    out = [dict({k: v for k, v in m.items() if k != "xs"}, r=r) for m, r in zip(mv, results[1:]) if r]
+    return {"now": now, "moves": out, "seconds": round(time.time() - t0, 1), "n": len(mv), "stopped": now is None or len(out) < len(mv)}

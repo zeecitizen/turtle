@@ -187,7 +187,8 @@
   @keyframes acidwave { from { transform: translateX(0); } to { transform: translateX(20px); } }
   @keyframes acidbubble { 0% { transform: translateY(0) scale(.5); opacity: 0; } 15% { opacity: .95; } 85% { opacity: .8; } 100% { transform: translateY(-78px) scale(1.25); opacity: 0; } }
   @keyframes gaugeshake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
-  .sugrow { display: flex; gap: 6px; align-items: stretch; margin: 5px 0; opacity: 0; animation: sugin .45s ease-out forwards; }
+  .sugrow { display: flex; gap: 6px; align-items: stretch; margin: 5px 0; }
+  .sugrow.anim { opacity: 0; animation: sugin .45s ease-out forwards; } .sugrow.old { opacity: .45 !important; filter: grayscale(.5); pointer-events: none; }
   .sugrow .labsug { flex: 1; margin: 0; background: hsl(var(--hue), 55%, 18%); border-color: hsl(var(--hue), 75%, 50%); }
   .sugrank { flex: 0 0 34px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font: bold 12px "Courier New", monospace; color: #111;
     background: hsl(var(--hue), 80%, 55%); border: 2px solid #111; box-shadow: 0 3px 0 #111; height: 34px; align-self: center; }
