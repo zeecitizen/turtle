@@ -401,8 +401,9 @@ function pOpt() {
   } else if (best && Object.keys(best.changed).length && !o.running) h += `<p class="note">The best goes to MT5 automatically when the optimizer finishes.</p>`;
   if (best && Object.keys(best.changed).length) h += `<p><button id="oApply" class="go">Show the best on the chart</button> <span class="k">changes: ${Object.entries(best.changed).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))} ${esc(CUR[k] ?? '')} → ${esc(v)}`).join(', ')}</span></p>`;
   const steps = o.log.map((l, i) => `<tr><td>${i + 1}</td><td style="text-align:left">${esc(l.run)}</td><td style="text-align:left">${esc(l.setting.replace(/^Inp/, ''))}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td>${(+l.score).toFixed(2)}</td>` +
-    `<td class="${cls(l.train.net)}">${money(l.train.net)} · ${l.train.wr}%</td><td class="${cls(l.test.net)}">${money(l.test.net)} · ${l.test.wr}%</td><td class="k">${l.t}s</td></tr>`);
-  h += `<h4>Steps that helped</h4><div class="scroll">${table(['#', 'Run', 'Setting', 'Change', 'Score', LA, LB, 'At'], steps)}</div>`;
+    `<td class="${cls(l.train.net)}">${money(l.train.net)} · ${l.train.wr}%</td><td class="${cls(l.test.net)}">${money(l.test.net)} · ${l.test.wr}%</td><td class="k">${l.t}s</td>` +
+    `<td>${l.inputs ? `<button data-step="${o.log.length > 200 ? i + o.log.length - 200 : i}">Apply this setting</button>` : ''}</td></tr>`);
+  h += `<h4>Steps that helped</h4><div class="scroll">${table(['#', 'Run', 'Setting', 'Change', 'Score', LA, LB, 'At', ''], steps)}</div>`;
   if (o.board && o.board.length > 1) h += `<h4>Best of each restart</h4>` + table(['Score', 'Jan – Jun', 'Jul – Oct', 'Changes', ''],
     o.board.map((x, i) => `<tr><td>${(+x.score).toFixed(2)}</td><td>${money(x.train.net)} · ${x.train.wr}%</td><td class="${cls(x.test.net - B.test.net)}">${money(x.test.net)} · ${x.test.wr}%</td>` +
       `<td style="text-align:left" class="k">${Object.entries(x.changed).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ')}</td><td><button data-board="${i}">show</button></td></tr>`));
@@ -718,6 +719,10 @@ document.addEventListener('click', async (e) => {
   } else if (bs) setBands('InpBands' + bs[0], (bs[1] === '1' ? '1' : '0').repeat(21));
   if (e.target.id === 'oStop') { await api('/api/opt_stop', {}); OPTS = await api('/api/opt'); renderPanel('tt'); }
   if (e.target.id === 'oApply' && OPTS && OPTS.best) { CUR = { ...OPTS.best.inputs }; markForm(); scheduleSim(0); toast('The optimizer\'s best is on the chart; its MT5 check is in the MT5 section.'); }
+  if (e.target.dataset && e.target.dataset.step != null && OPTS) {
+    const l = OPTS.log[+e.target.dataset.step - Math.max(0, (OPTS.log_total || OPTS.log.length) - OPTS.log.length)] || OPTS.log[+e.target.dataset.step];
+    if (l && l.inputs) { CUR = { ...DFL, ...l.inputs }; markForm(); scheduleSim(0); toast(`Applied step: ${esc(l.setting.replace(/^Inp/, ''))} ${esc(l.from)} → ${esc(l.to)} (with the steps before it in "${esc(l.run)}").`); }
+  }
   if (e.target.dataset && e.target.dataset.board != null && OPTS) { CUR = { ...OPTS.board[+e.target.dataset.board].inputs }; markForm(); scheduleSim(0); }
 });
 
