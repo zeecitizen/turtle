@@ -332,12 +332,17 @@ function pRange(D) {
     for (let b = 0; b <= 20; b++) {
       const k = b + off, tr = D.TR.filter((t) => Math.round(t.bucket) === k), gh = D.GH.filter((t) => Math.round(t.bucket) === k), s = stats(tr);
       const on = (bands || '')[b] !== '0', gn = gh.reduce((a, t) => a + (t.pnl || 0), 0);
-      rows.push(`<tr class="${on ? '' : 'dim'}"><td>${box(k)}</td><td>${on ? '✓' : '–'}</td><td>${s.n || ''}</td><td>${s.n ? pct(s.w, s.n) : ''}</td><td class="${cls(s.net)}">${s.n ? money(s.net) : ''}</td><td>${gh.length || ''}</td><td class="${cls(gn)}">${gh.length ? money(gn) : ''}</td></tr>`);
+      const tick = D.kind === 'tt' ? `<input type="checkbox" data-band="${side === 'BUY' ? 'B' : 'S'}${b}" ${on ? 'checked' : ''}>` : (on ? '✓' : '–');
+      rows.push(`<tr class="${on ? '' : 'dim'}"><td>${box(k)}</td><td>${tick}</td><td>${s.n || ''}</td><td>${s.n ? pct(s.w, s.n) : ''}</td><td class="${cls(s.net)}">${s.n ? money(s.net) : ''}</td><td>${gh.length || ''}</td><td class="${cls(gn)}">${gh.length ? money(gn) : ''}</td></tr>`);
     }
-    return `<div><h4>${side} - where the entry sat in the last ${side === 'BUY' ? inp.InpRangeLook : inp.InpRangeLookS} candles' range</h4>` +
+    const sd = side === 'BUY' ? 'B' : 'S';
+    const btns = D.kind === 'tt' ? ` <button data-bands="${sd}1">Select all</button> <button data-bands="${sd}0">Deselect all</button>` : '';
+    return `<div><h4>${side} - where the entry sat in the last ${side === 'BUY' ? inp.InpRangeLook : inp.InpRangeLookS} candles' range${btns}</h4>` +
       table(['Box', 'Ticked', 'Trades', 'Win rate', 'Net', 'Stood aside', 'Would have made'], rows) + '</div>';
   };
-  return `<p class="note">Unticked boxes are grey: there the EA stood aside. "Would have made" = the stand-aside trades' result (same stop and exit, no swap).</p>` +
+  const allOn = (inp.InpBandsB + inp.InpBandsS).indexOf('0') < 0;
+  return (D.kind === 'tt' ? `<p><button class="go" data-bands="OFF" ${allOn ? 'disabled' : ''}>Turn ranges off</button> <span class="k">${allOn ? 'Ranges are off: every box trades.' : 'Ticks every box on both sides = no range filter.'}</span></p>` : '') +
+    `<p class="note">Unticked boxes are grey: there the EA ${(D.kind === 'tt' ? CUR : inp).InpBandOff === '0' ? 'skips the trade' : 'stood aside'}. "Would have made" = the stand-aside trades' result (same stop and exit, no swap).</p>` +
     `<div class="row">${one('BUY', inp.InpBandsB, 0)}${one('SELL', inp.InpBandsS, 21)}</div>`;
 }
 function pTrades(D) {
@@ -492,7 +497,10 @@ function markForm() {
     el.closest('.inp').classList.toggle('chg', !same(CUR[n], DFL[n]));
   });
 }
+function setBands(key, s) { CUR[key] = s; markForm(); scheduleSim(0); }
 document.addEventListener('change', (e) => {
+  const b = e.target.dataset && e.target.dataset.band;
+  if (b) { const key = 'InpBands' + b[0], i = +b.slice(1), s = (CUR[key] || '').padEnd(21, '1').split(''); s[i] = e.target.checked ? '1' : '0'; setBands(key, s.join('')); }
   if (e.target.id === 'oObj') OPTUI.obj = e.target.value;
   if (e.target.id === 'oBox') OPTUI.boxes = e.target.checked;
   if (e.target.id === 'oKeep') OPTUI.keep = e.target.checked;
@@ -679,6 +687,9 @@ document.addEventListener('click', async (e) => {
     await api('/api/optimize', { start: CUR, objective: $('#oObj').value, boxes: $('#oBox').checked, keep: $('#oKeep').checked, ds: SRC.ds === 'tv' ? 'year' : SRC.ds });
     OPTS = await api('/api/opt'); renderPanel('tt');
   }
+  const bs = e.target.dataset && e.target.dataset.bands;
+  if (bs === 'OFF') { CUR.InpBandsB = '1'.repeat(21); CUR.InpBandsS = '1'.repeat(21); markForm(); scheduleSim(0); }
+  else if (bs) setBands('InpBands' + bs[0], (bs[1] === '1' ? '1' : '0').repeat(21));
   if (e.target.id === 'oStop') { await api('/api/opt_stop', {}); OPTS = await api('/api/opt'); renderPanel('tt'); }
   if (e.target.id === 'oApply' && OPTS && OPTS.best) { CUR = { ...OPTS.best.inputs }; markForm(); scheduleSim(0); toast('The optimizer\'s best is on the chart; its MT5 check is in the MT5 section.'); }
   if (e.target.dataset && e.target.dataset.board != null && OPTS) { CUR = { ...OPTS.board[+e.target.dataset.board].inputs }; markForm(); scheduleSim(0); }
