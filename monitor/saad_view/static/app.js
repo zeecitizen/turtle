@@ -13,6 +13,7 @@ let BARS = null, INPUTS = null, DFL = {}, CUR = {}, RUNS = [], lastSeen;
 let TT = null, MT = null;                                      // { kind, events, TR, GH, EVB, ... }
 let chart, candles, emaF, emaS, adxS, adxLine = null, TVL = null, focusLines = [], eq = {};
 let ACTIVE_LAB = null;                                         // an Exit Lab exit running on the main tester too (a saved Exit Lab exit, loaded)
+let MTWAIT = null;                                           // a "Check in MT5" in flight: the MT5 section shows its progress, then the new run
 let SEL = null, TAB = { tt: 'overview', mt: 'overview' }, firstView = true, simTimer = null, simSeq = 0, tvKey = null, ASK = [];
 const show = { trades: true, ghosts: true, setups: false, skips: false, mt5: false };
 const SRC = { ds: 'year', mode: 'ea' }, BARSET = {};             // the Turtle TV Tester's candles and rules (Zee: "find out why ... october ... and fix it")
@@ -593,6 +594,8 @@ function renderPanel(sec) {
   if (sec === 'tt' && TAB.tt === 'lego') { el.innerHTML = pLego(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'mission') { el.innerHTML = pMission(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'stress') { el.innerHTML = pStress(); back(); return; }
+  if (sec === 'mt' && MTWAIT) { el.innerHTML = `<div class="dexprog"><div class="dexprog-t">⏳ MT5 IS RUNNING THE SETTINGS ON SCREEN</div><div class="dexprog-bar"><i style="width:${Math.min(95, 3 + (Date.now() - MTWAIT.t0) / 900)}%"></i></div>
+    <div class="dexprog-s">${esc(MTWAIT.phase || 'starting')} · the result replaces this when it lands (about a minute)</div></div>`; return; }
   if (!D) { el.innerHTML = `<p class="note">${sec === 'mt' ? 'No MT5 run yet. Press "Check in MT5" to run the settings on screen in the Strategy Tester (about a minute).' : 'Loading…'}</p>`; return; }
   el.innerHTML = { overview: pOverview, months: pMonths, weekdays: pWeekdays, range: pRange, trades: pTrades, skips: pSkips }[TAB[sec]](D);
   back();
@@ -742,9 +745,11 @@ async function poll() {
     if (s.busy) setStatus(`MT5 running "${s.label}" · ${s.phase} · ${s.elapsed ?? 0} s`, 'busy');
     else if (s.error) setStatus('last MT5 run failed: ' + s.error, 'err');
     else setStatus('');
-    if (!s.busy && s.last && s.last !== lastSeen) {
-      const first = lastSeen === undefined; lastSeen = s.last;
-      if (!first) { await loadRuns(); MT = null; await pickMt5(s.last); toast(`MT5 result in: <b>${esc(MT.run.label)}</b> · ${money(MT.run.report.net || 0)} · PF ${MT.run.report.pf}`); }
+    if (MTWAIT && s.busy) { MTWAIT.phase = `${s.phase} · ${s.elapsed ?? 0} s`; renderPanel('mt'); }
+    if (MTWAIT && !s.busy && s.error && Date.now() - MTWAIT.t0 > 4000) { MTWAIT = null; renderPanel('mt'); }
+    if (!s.busy && s.last && (s.last !== lastSeen || (MTWAIT && s.last !== MTWAIT.prev && (!MT || MT.run.id !== s.last)))) {
+      const first = lastSeen === undefined && !MTWAIT; lastSeen = s.last;
+      if (!first) { MTWAIT = null; await loadRuns(); MT = null; await pickMt5(s.last); toast(`MT5 result in: <b>${esc(MT.run.label)}</b> · ${money(MT.run.report.net || 0)} · PF ${MT.run.report.pf}`); }
     }
     const busyUi = document.activeElement && document.activeElement.closest && document.activeElement.closest('#panelTT') && /SELECT|INPUT/.test(document.activeElement.tagName);
     if (!busyUi && TAB.tt === 'opt' && OPTS && (OPTS.running || (OPTS.mt5 && OPTS.mt5.run && !RUNS.find((x) => x.id === OPTS.mt5.run)))) { OPTS = await api('/api/opt'); renderPanel('tt'); }
@@ -866,6 +871,7 @@ document.addEventListener('click', async (e) => {
 $('#btnCheck').onclick = async () => {
   const r = await api('/api/run', { sets: CUR, delay: 'none', label: Object.keys(diffDfl(CUR)).length ? '' : 'v1.27 defaults (no delay)' });
   if (r.error) return toast('⚠ ' + esc(r.error));
+  MTWAIT = { prev: MT && MT.run.id, t0: Date.now() }; renderPanel('mt');
   toast('The settings on screen are running in the MT5 Strategy Tester (real ticks, no delay). The MT5 section updates when it is done, in about a minute.');
 };
 $('#btnExport').onclick = async () => {
