@@ -298,3 +298,121 @@ class Survey:
         return {"kind": "survey", "group": self.group, "running": self.running, "done": self.done, "error": self.error, "evals": self.evals,
                 "seconds": round(time.time() - self.t0, 1) if self.t0 else 0, "ds": self.ds, "labels": self.labels, "baseline": self.baseline,
                 "rows": sorted(self.rows, key=lambda r: -r["total"]), "objective": self.group, "log": [], "best": None, "board": []}
+
+
+# ---------------------------------------------------------------- ranges: grow the number of 100%-win range boxes, lock each one once it is perfect
+# Zee 2026-10-20: "it optimizes for achieving the maximum number of ranges ticked to be 100%. so for example for 1 range it reaches 100% winrate,
+# it leaves that range alone and tries another range ... some settings gave alot of 100% winrate ranges.. those settings usually had great results"
+#  1. every box ticked (no range filter), so each box shows its own trades
+#  2. each setting one step up / down; a step is kept only if it does NOT break a locked (perfect) box and it raises
+#     (perfect boxes, trades inside them, their net) - a box counts only with >= MIN_BOX trades, so one lucky trade is not "100%"
+#  3. a box that turns perfect is locked: later steps must keep it perfect ("leave that range alone and try another")
+#  4. passes until nothing helps; then only the perfect boxes are ticked, and 2025 - 2026 (never looked at) shows if they stay perfect
+MIN_BOX = 3
+ALL_ON = "1" * 21
+
+
+def box_stats(tr):
+    """(side 'B'/'S', box 0..20) -> [trades, wins, net] of the real trades"""
+    out = {}
+    for x in tr[tr[:, 10] == 0]:
+        k = ("B" if x[0] > 0 else "S", int(round(x[8])))
+        d = out.setdefault(k, [0, 0, 0.0]); d[0] += 1; d[1] += int(x[6] > 0); d[2] += float(x[6])
+    return out
+
+
+def _wilson(w, n, z=1.2816):
+    if n == 0:
+        return 0.0
+    p = w / n
+    return (p + z * z / (2 * n) - z * ((p * (1 - p) + z * z / (4 * n)) / n) ** 0.5) / (1 + z * z / n)
+
+
+class RangeOpt:
+    def __init__(self, start, ds="year", min_box=MIN_BOX):
+        o = Optimizer(start, ds=ds)
+        self.ds, self.window, self.labels, self.min_box = ds, o.window, o.labels, min_box
+        self.start = dict(o.start, InpBandsB=ALL_ON, InpBandsS=ALL_ON, InpBandOff="0")
+        self.log, self.evals, self.passes, self.running, self.done, self.error, self.t0, self._stop = [], 0, 0, False, False, None, None, False
+        self.cur = self.cur_key = self.cur_boxes = self.baseline = self.final = None
+        self.locked = set()
+
+    def _split(self, tr):
+        if self.window:
+            a0, a1, b0, b1 = self.window
+            return tr[(tr[:, 1] >= a0) & (tr[:, 1] < a1)], tr[(tr[:, 1] >= b0) & (tr[:, 1] < b1)]
+        return tr[tr[:, 1] < TRAIN_END], tr[tr[:, 1] >= TRAIN_END]
+
+    def _ev(self, inp):
+        self.evals += 1
+        if int(float(inp["InpEmaSlow"])) <= int(float(inp["InpEmaFast"])) or int(float(inp["InpSessTo"])) <= int(float(inp["InpSessFrom"])):
+            return None
+        trn, tst = self._split(sim.simulate(inp, ds=self.ds)[0])
+        bx = box_stats(trn)
+        perfect = {k for k, d in bx.items() if d[0] >= self.min_box and d[1] == d[0]}
+        # the slope towards 100%: each box's win rate at 90% confidence (Wilson lower bound) - grows as a box loses fewer and gathers more trades
+        pure = sum(_wilson(d[1], d[0]) for d in bx.values() if d[0] >= self.min_box)
+        key = (len(perfect), round(pure, 3), sum(bx[k][0] for k in perfect), round(sum(bx[k][2] for k in perfect)))
+        return key, perfect, bx, trn, tst
+
+    def run(self):
+        self.running, self.t0 = True, time.time()
+        try:
+            r = self._ev(self.start)
+            self.cur, (self.cur_key, perfect, self.cur_boxes, trn, tst) = dict(self.start), r
+            self.locked = set(perfect)
+            self.baseline = {"train": sim.score(trn, 1), "test": sim.score(tst, 1), "perfect": len(perfect)}
+            improved = True
+            while improved and not self._stop:
+                improved, self.passes = False, self.passes + 1
+                for name, kind, grid in SPACE:
+                    for direction in (1, -1):
+                        while not self._stop:                       # a step that helps is repeated
+                            v = neighbours(self.cur, name, kind, grid, direction)
+                            if v is None:
+                                break
+                            inp = dict(self.cur, **{name: v})
+                            r = self._ev(inp)
+                            if r is None:
+                                break
+                            key, perfect, bx, trn, tst = r
+                            if not self.locked <= perfect or key <= self.cur_key:
+                                break
+                            new = sorted(perfect - self.locked)
+                            self.log.append({"setting": name, "from": self.cur[name], "to": v, "perfect": key[0], "pure": key[1], "trades": key[2], "net": key[3],
+                                             "new": [f"{s} {b}" for s, b in new], "inputs": self._ticked(inp, perfect)})
+                            self.cur, self.cur_key, self.cur_boxes = inp, key, bx
+                            self.locked |= perfect
+                            improved = True
+            self._finish()
+        except Exception as e:                                       # noqa: BLE001
+            self.error = str(e)
+        finally:
+            self.running, self.done = False, True
+
+    @staticmethod
+    def _ticked(inp, perfect):
+        b = "".join("1" if ("B", i) in perfect else "0" for i in range(21))
+        s = "".join("1" if ("S", i) in perfect else "0" for i in range(21))
+        return dict(inp, InpBandsB=b if "1" in b else "0" * 21, InpBandsS=s if "1" in s else "0" * 21, InpBandOff="0")
+
+    def _finish(self):
+        all_on = self._split(sim.simulate(self.cur, ds=self.ds)[0])
+        tb = box_stats(all_on[1])
+        fin = self._ticked(self.cur, self.locked)
+        trn, tst = self._split(sim.simulate(fin, ds=self.ds)[0])
+        boxes = []
+        for side, b in sorted(self.locked):
+            a, t = self.cur_boxes.get((side, b), [0, 0, 0.0]), tb.get((side, b), [0, 0, 0.0])
+            boxes.append({"side": side, "box": b, "n": a[0], "net": round(a[2]), "tn": t[0], "tw": t[1], "tnet": round(t[2])})
+        self.final = {"inputs": fin, "train": sim.score(trn, 1), "test": sim.score(tst, 1), "boxes": boxes,
+                      "kept": sum(1 for x in boxes if x["tn"] and x["tw"] == x["tn"])}
+
+    def stop(self):
+        self._stop = True
+
+    def state(self):
+        return {"kind": "ranges", "running": self.running, "done": self.done, "error": self.error, "evals": self.evals, "passes": self.passes,
+                "seconds": round(time.time() - self.t0, 1) if self.t0 else 0, "ds": self.ds, "labels": self.labels, "baseline": self.baseline,
+                "perfect": self.cur_key[0] if self.cur_key else 0, "locked": sorted(f"{s} {b}" for s, b in self.locked), "min_box": self.min_box,
+                "steps": self.log, "final": self.final, "objective": "ranges", "log": [], "best": None, "board": []}
