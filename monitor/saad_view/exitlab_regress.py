@@ -61,5 +61,14 @@ if __name__ == "__main__":
             bad += not same
             print(("SAME   " if same else "CHANGED"), c, f"{int((b[:, 10] == 0).sum())} trades, net {b[b[:, 10] == 0, 6].sum():,.2f}",
                   "" if same else f"(was {int((a[:, 10] == 0).sum())} trades, net {a[a[:, 10] == 0, 6].sum():,.2f})")
+        # the Exit Lab switched on with nothing changed must be the EA itself (exit modes 1-2: the lab's own copy of the close-back rules)
+        import exitlab
+        for i, (ds, mode, sets) in enumerate(CONFIGS):
+            if sets.get("InpExitMode", "1") == "0":
+                continue
+            tr = sim.simulate(server.full_inputs(sets), ds=ds, lab=exitlab.clean({}), **server.MODES[mode])[0][:, :15]
+            same = np.array_equal(tr, r[f"c{i}"])
+            bad += not same
+            print(("SAME   " if same else "CHANGED"), "lab on, nothing changed:", (ds, mode, sets))
         print("ALL IDENTICAL" if not bad else f"{bad} CONFIG(S) CHANGED")
         sys.exit(1 if bad else 0)
