@@ -333,11 +333,13 @@ def run_all(inputs, progress=lambda *a: None):
         nets = {}
         for i in range(-5, 6):
             v = float(inputs[name]) + i * grid[2]
-            if grid[0] - 1e-9 <= v <= grid[1] + 1e-9:
+            if i == 0 or grid[0] - 1e-9 <= v <= grid[1] + 1e-9:   # your own value always, even outside the optimizer's range
                 c = dict(inputs, **{name: optimizer._fmt(kind, v)})
                 if optimizer.evaluate(c)[1] is not None:
                     nets[i] = sc(sim.simulate(c)[0])["net"]
         count_trials("stress", len(nets))
+        if not nets:
+            continue
         cur = nets.get(0, base["net"])
         w = 0
         for d in (1, -1):
