@@ -1136,7 +1136,8 @@ class H(BaseHTTPRequestHandler):
                 dfl = axi_rig.ea_defaults(EA)
                 inp = full_inputs(body.get("inputs") or {})
                 rec = {"name": name, "inputs": inp, "changed": {k: v for k, v in inp.items() if not same(v, dfl.get(k))}, "ds": body.get("ds"),
-                       "mode": body.get("mode"), "result": body.get("result")}
+                       "mode": body.get("mode"), "result": body.get("result"),
+                       "lab": exitlab.clean(body.get("lab") or {}) if body.get("lab") else {}, "lab_describe": exitlab.describe(body.get("lab")) if body.get("lab") else ""}
                 (SAVED / f"{name}.json").write_text(json.dumps(rec, indent=1), encoding="utf-8")
                 return self.send(200, {"name": name})
             if u.path == "/api/saved_delete":

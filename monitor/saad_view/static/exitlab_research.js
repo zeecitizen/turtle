@@ -41,7 +41,7 @@ function labResearch() {
   }
   h += `</div><div class="levers dexpanel">${SLIDERS.filter((x) => !x.ea || String(CUR.InpSlMode) === '1').map((x) => { const v = x.get();
     return `<label class="lever"><span>${esc(x.label)} <b id="lv_${x.id}">${v}</b>${x.ea ? ' <span class="tag ea">EA</span>' : ''}</span><input type="range" data-lever="${x.id}" min="${x.min}" max="${x.max}" step="${x.step}" value="${v}"></label>`; }).join('')}
-    <button data-rs="reset">Back to your exit</button>${labTips(ea)}</div></div>`;
+    <div class="bar"><button data-rs="save" class="dexbtn">💾 SAVE &amp; APPLY THIS EXIT</button><button data-rs="reset">Back to your exit</button></div>${labTips(ea)}</div></div>`;
   const J = RS.job;
   h += `<h4 style="margin-top:14px">Ask Claude to research your exit</h4><div class="askBox" style="max-width:980px"><textarea id="rsQ" rows="2">${esc(RS.q)}</textarea>
     <button data-rs="go" class="dexbtn" ${J && J.running ? 'disabled' : ''}>${J && J.running ? '⏳ ' + esc(J.phase || 'researching') : '🧠 Research it'}</button></div>
@@ -73,6 +73,15 @@ document.addEventListener('change', (e) => {
 });
 document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
+  if (d.rs === 'save') {                                          // the levers' exit: its EA part on the chart, the whole exit saved with its result
+    const f = labForm(), lab = Object.fromEntries(Object.entries(f).filter(([k, v]) => k !== 'pess' && Number(v) !== Number(LABS.spec.default[k])));
+    CUR = { ...CUR, ...RS.sets }; markForm(); scheduleSim(0);
+    const T = LABS.test, s = T && !stale(T) ? T.stats.all : null;
+    const r = await api('/api/save', { inputs: CUR, ds: SRC.ds === 'tv' ? 'year' : SRC.ds, mode: 'ea', lab: Object.keys(lab).length ? { ...LABS.spec.default, ...f } : null,
+      result: s ? { n: s.n, wr: s.wr, net: T.stats.total, pf: s.pf } : null });
+    RS.sets = {}; await loadSaved();
+    toast(`Saved as <b>${esc(r.name)}</b> (Saved settings, bottom of the page).` + (Object.keys(lab).length ? ' The stop is on the chart; the lab parts (target, trail, breakeven, half-off) live in the Exit Lab - "Load" brings them back there. To run them in MT5 use "🛠 Make it an EA setting".' : ' It is on the chart.'), 14000);
+  }
   if (d.rs === 'reset') { RS.sets = {}; LABS.form = { ...LABS.spec.default }; labStart('test', { lab: labForm() }); }
   if (d.rs === 'go') {
     RS.q = ($('#rsQ').value || '').trim() || RS.q;
