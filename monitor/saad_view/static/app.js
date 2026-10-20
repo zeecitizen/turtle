@@ -820,7 +820,7 @@ async function loadSaved() {
   $('#panelSaved').innerHTML = SAVEDS.length ? table(['Saved', 'Candles', 'Trades', 'Win rate', 'Net', 'PF', 'Changes from v1.27', ''],
     SAVEDS.map((s, i) => { const r = s.result || {};
       return `<tr><td>${esc(s.name)}</td><td>${esc(dsName[s.ds] || s.ds || '')}</td><td>${r.n ?? ''}</td><td>${r.wr != null ? r.wr + '%' : ''}</td><td class="${cls(r.net || 0)}">${r.net != null ? money(r.net) : ''}</td><td>${r.pf ?? ''}</td>` +
-        `<td style="text-align:left;white-space:normal" class="k">${Object.entries(s.changed || {}).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ') || 'none (v1.27)'}</td>` +
+        `<td style="text-align:left;white-space:normal" class="k">${Object.entries(s.changed || {}).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ') || 'none (v1.27)'}${s.lab_describe ? `<br><span style="color:#ffb74d">⚗️ Exit Lab exit: ${esc(s.lab_describe)}</span>` : ''}</td>` +
         `<td><button data-load="${i}">Load</button> <button data-del="${i}">Delete</button></td></tr>`; }))
     : '<p class="note">Nothing saved yet - press "💾 Save settings".</p>';
 }
@@ -830,7 +830,11 @@ $('#btnSave').onclick = async () => {
 };
 document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
-  if (d.load != null) { const s = SAVEDS[+d.load]; CUR = { ...DFL, ...s.inputs }; markForm(); scheduleSim(0); toast(`Loaded <b>${esc(s.name)}</b>.`); }
+  if (d.load != null) {
+    const s = SAVEDS[+d.load]; CUR = { ...DFL, ...s.inputs }; markForm(); scheduleSim(0);
+    if (s.lab && Object.keys(s.lab).length && typeof labOpen === 'function') { await labOpen(); LABS.form = { ...LABS.spec.default, ...s.lab }; }   // its Exit Lab exit back on the bench
+    toast(`Loaded <b>${esc(s.name)}</b>.` + (s.lab_describe ? ` Its Exit Lab exit is back on the bench: ${esc(s.lab_describe)}.` : ''));
+  }
   if (d.del != null) { const s = SAVEDS[+d.del]; if (confirm(`Delete the saved settings "${s.name}"?`)) { await api('/api/saved_delete', { name: s.name }); loadSaved(); } }
 });
 
