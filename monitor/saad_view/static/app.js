@@ -588,6 +588,7 @@ function renderPanel(sec) {
   const back = () => el.querySelectorAll('.scroll').forEach((s, i) => { if (keep[i] != null) s.scrollTop = keep[i]; });
   if (sec === 'tt' && TAB.tt === 'opt') { el.innerHTML = pOpt(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'lab') { el.innerHTML = pLab(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'ml') { el.innerHTML = pML(); back(); return; }
   if (!D) { el.innerHTML = `<p class="note">${sec === 'mt' ? 'No MT5 run yet. Press "Check in MT5" to run the settings on screen in the Strategy Tester (about a minute).' : 'Loading…'}</p>`; return; }
   el.innerHTML = { overview: pOverview, months: pMonths, weekdays: pWeekdays, range: pRange, trades: pTrades, skips: pSkips }[TAB[sec]](D);
   back();
@@ -869,6 +870,7 @@ document.querySelectorAll('nav[data-sec]').forEach((nav) => (nav.onclick = async
   if (sec === 'tt' && t === 'opt') OPTS = await api('/api/opt');
   renderPanel(sec);
   if (sec === 'tt' && t === 'lab') labOpen();
+  if (sec === 'tt' && t === 'ml') mlOpen();
 }));
 document.addEventListener('click', async (e) => {
   const tr = e.target.closest('tr');
