@@ -25,6 +25,27 @@ F = {n: 41 + i for i, n in enumerate(FULL)}            # indices in the paramete
 MAXP = 8
 # position fields
 SD, EN, SL, TP, EXE, NOTP, RIDE, EK, ET, BEST, USD, TPN, STG, RES1, NX, LOTS, REAL, SWP, BKT, BTP, CTC = range(21)
+# Exit Lab fields (exitlab.py): initial risk, ATR at entry, best / worst price reached, partials done, lab target, original lots, close counters
+R0, ATE, MFP, MAP, P1D, P2D, LTP, ORL, CXN, FBN = range(21, 31)
+NPS = 31
+# the Exit Lab's parameter vector E (all zero = the engine exactly as before). Only for exit modes 1 and 2 (the v1.25 exits).
+(E_ON, E_TGT, E_TGTK, E_FB, E_FBB, E_FBN, E_CX, E_CXB, E_CXN, E_CXW, E_CXA, E_P1R, E_P1F, E_P1BE, E_P2R, E_P2F, E_BER, E_BEO, E_LOCK,
+ E_TR, E_TRK, E_TRA, E_TRB, E_MAXB, E_STB, E_STR, E_ADX, E_FRI, E_PESS) = range(29)
+NE = 32
+EFIELDS = ["on", "tgt", "tgt_k", "fb", "fb_buf", "fb_n", "cx", "cx_buf", "cx_n", "cx_when", "cx_after", "p1_r", "p1_frac", "p1_be", "p2_r",
+           "p2_frac", "be_r", "be_off", "lock_r", "tr", "tr_k", "tr_act", "tr_buf", "max_bars", "stale_bars", "stale_r", "adx_exit", "fri_hour",
+           "pess"]
+
+
+def evec(lab):
+    """{'tgt': 2, 'tgt_k': 1.5, ...} -> E. None / {} = the Exit Lab off."""
+    E = np.zeros(NE)
+    if lab:
+        for k, v in lab.items():
+            if k in EFIELDS:
+                E[EFIELDS.index(k)] = float(v)
+        E[E_ON] = 1.0
+    return E
 
 
 @njit(cache=True)
@@ -152,6 +173,9 @@ def _close(out, nt, ps, x, xp, tq, kout, why, lots_frac):
             out[nt, 0] = side; out[nt, 1] = ps[x, ET]; out[nt, 2] = ps[x, EN]; out[nt, 3] = ps[x, SL]; out[nt, 4] = tq; out[nt, 5] = xp
             out[nt, 6] = tot; out[nt, 7] = ps[x, SWP]; out[nt, 8] = ps[x, BKT]; out[nt, 9] = ps[x, NX]; out[nt, 10] = 0
             out[nt, 11] = ps[x, EK]; out[nt, 12] = kout; out[nt, 13] = why; out[nt, 14] = ps[x, LOTS]
+            if out.shape[1] >= 20:                     # Exit Lab: best / worst move ($ per ounce), initial risk, original lots, partials
+                out[nt, 15] = (ps[x, MFP] - ps[x, EN]) * side; out[nt, 16] = (ps[x, EN] - ps[x, MAP]) * side
+                out[nt, 17] = ps[x, R0]; out[nt, 18] = ps[x, ORL]; out[nt, 19] = ps[x, P1D] + ps[x, P2D]
         ps[x, SD] = 0
         return nt + 1, pn + ps[x, SWP]
     ps[x, REAL] += pn
@@ -161,7 +185,7 @@ def _close(out, nt, ps, x, xp, tq, kout, why, lots_frac):
 
 @njit(cache=True)
 def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1, htfe2, t1, o1, h1, l1, c1, sp1, k1, first1, m2c, roll, day1,
-             P, X, bandB, bandS, out, setups, stats):
+             P, X, E, bandB, bandS, out, setups, stats):
     """out rows: side, entry_t, entry, sl(final), exit_t, exit, pnl, swap, bucket, nxE, ghost, entry_k15, exit_k15, reason, lots
        reasons: 1 stop 2 next-EMA target 3 close-back 4 day close 5 TP 6 trailing stop 7 breakeven 8 time exit"""
     n1 = t1.shape[0]
@@ -170,7 +194,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
     pip = 0.1
     lat = int(X[11])
     dep = X[16] if X[16] > 0 else 100000.0
-    ps = np.zeros((MAXP, 21))
+    ps = np.zeros((MAXP, NPS))
     nt = 0
     ns = 0
     pSide = 0; pHigh = 0.0; pLow = 0.0; pLeft = 0; pK = -1; pExit = 50
@@ -259,6 +283,10 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                     ask = cur + spr
                     en = ps[x, EN]
                     s_ = ps[x, SL]
+                    if sd > 0:
+                        ps[x, MFP] = max(ps[x, MFP], bid); ps[x, MAP] = min(ps[x, MAP], bid)
+                    else:
+                        ps[x, MFP] = min(ps[x, MFP], ask); ps[x, MAP] = max(ps[x, MAP], ask)
                     # broker stop (a trade on the tight $ trail: the minute's whole adverse range counts - MT5 trails tick by tick and a bounce stops it)
                     if ps[x, USD] > 0.5 and s_ != 0 and q > 0 and ((l1[j] <= s_) if sd > 0 else (h1[j] + spr >= s_)) and not (bid <= s_ if sd > 0 else ask >= s_):
                         nt, pn = _close(out, nt, ps, x, s_ - sd * X[9] - sd * X[8], tq, k, 6, 1.0)
@@ -293,8 +321,75 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                         continue                                     # entered in this minute: targets wait for the next ticks
                     nx = int(ps[x, NX])
                     if nx != 0:
+                        if E[E_ON] > 0.5:
+                            # ---- Exit Lab, tick by tick: partial closes, the lab's target, breakeven, profit lock, tick trails
+                            r0 = ps[x, R0]
+                            fav = (bid - en) if sd > 0 else (en - ask)
+                            best = (ps[x, MFP] - en) if sd > 0 else (en - ps[x, MFP])
+                            gone = False
+                            for pp in range(2):
+                                pr = E[E_P1R] if pp == 0 else E[E_P2R]
+                                fl = P1D if pp == 0 else P2D
+                                if pr > 0 and ps[x, fl] < 0.5 and r0 > 0 and fav >= pr * r0:
+                                    lv = en + sd * pr * r0
+                                    if sd > 0:
+                                        xp = lv if prv < lv else bid
+                                    else:
+                                        xp = lv if prv + spr > lv else ask
+                                    want = ps[x, ORL] * (E[E_P1F] if pp == 0 else E[E_P2F])
+                                    cl = np.floor(want / 0.01 + 0.5) * 0.01
+                                    ps[x, fl] = 1.0
+                                    if cl >= 0.01:
+                                        fr = 1.0 if cl >= ps[x, LOTS] - 0.005 else cl / ps[x, LOTS]
+                                        nt, pn = _close(out, nt, ps, x, xp - sd * X[8], tq, k, 11 if fr < 0.999 else 9, fr)
+                                        equity += pn; dayPnl += pn
+                                        if fr >= 0.999:
+                                            if pn < 0:
+                                                coolUntil = tq + int(P[85]) * 900
+                                            gone = True
+                                            break
+                                        if pp == 0 and E[E_P1BE] > 0.5 and ((en > s_ + 0.005 and en < bid) if sd > 0 else ((s_ == 0 or en < s_ - 0.005) and en > ask)):
+                                            ps[x, SL] = en; s_ = en
+                            if gone:
+                                continue
+                            lt = ps[x, LTP]
+                            if lt > 0 and ((bid >= lt) if sd > 0 else (ask <= lt)):
+                                if sd > 0:
+                                    xp = lt if prv < lt else bid
+                                else:
+                                    xp = lt if prv + spr > lt else ask
+                                nt, pn = _close(out, nt, ps, x, xp - sd * X[8], tq, k, 9, 1.0)
+                                equity += pn; dayPnl += pn
+                                if pn < 0:
+                                    coolUntil = tq + int(P[85]) * 900
+                                continue
+                            if r0 > 0:
+                                want = 0.0
+                                if E[E_BER] > 0 and best >= E[E_BER] * r0:
+                                    want = en + sd * E[E_BEO] * r0
+                                if E[E_LOCK] > 0:
+                                    nst = np.floor(best / (E[E_LOCK] * r0))
+                                    if nst >= 1:
+                                        lk = en + sd * (nst - 1) * E[E_LOCK] * r0
+                                        if want == 0.0 or (lk > want if sd > 0 else lk < want):
+                                            want = lk
+                                if want > 0 and ((want > s_ + 0.005 and want < bid) if sd > 0 else ((s_ == 0 or want < s_ - 0.005) and want > ask)):
+                                    ps[x, SL] = want; s_ = want
+                                tm = int(E[E_TR])
+                                if tm >= 1 and tm <= 3 and best > 0 and best >= E[E_TRA] * r0:
+                                    lvl = 0.0
+                                    if tm == 1:
+                                        lvl = ps[x, MFP] - sd * E[E_TRK]
+                                    elif tm == 2 and k >= 1:
+                                        lvl = ps[x, MFP] - sd * E[E_TRK] * atr[k - 1]
+                                    elif tm == 3:
+                                        lvl = en + sd * best * E[E_TRK] / 100.0
+                                    if lvl > 0 and ((lvl > s_ + 0.005 and lvl < bid) if sd > 0 else ((s_ == 0 or lvl < s_ - 0.005) and lvl > ask)):
+                                        ps[x, SL] = lvl; s_ = lvl
+                                        if E[E_PESS] > 0.5:
+                                            ps[x, USD] = 1.0        # MT5 trails tick by tick: the minute's adverse range counts (as the tight $ trail)
                         # v1.25+ exit modes: the next EMA beyond the entry
-                        if nx > 0 and k >= 1:
+                        if nx > 0 and k >= 1 and not (E[E_ON] > 0.5 and E[E_TGT] > 0.5):
                             a_ = af if nx == 9 else asl
                             ep = ef[k - 1] if nx == 9 else es[k - 1]
                             hit = False
@@ -458,14 +553,98 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                         en = ps[x, EN]
                         s_ = ps[x, SL]
                         if nx != 0:
-                            if nx < 0 and ps[x, EK] < i:
-                                e_ce = ef[i] if nx == -1 else es[i]
-                                if (c15[i] < e_ce) if sd > 0 else (c15[i] > e_ce):
-                                    p_ = _pt(o1, h1, l1, c1, j, lat) if lat > 0 else cur
-                                    nt, pn = _close(out, nt, ps, x, (p_ if sd > 0 else p_ + spr) - sd * X[8], tq, k, 3, 1.0)
-                                    equity += pn; dayPnl += pn
-                                    if pn < 0:
-                                        coolUntil = tq + int(P[85]) * 900
+                            if E[E_ON] < 0.5:
+                                if nx < 0 and ps[x, EK] < i:
+                                    e_ce = ef[i] if nx == -1 else es[i]
+                                    if (c15[i] < e_ce) if sd > 0 else (c15[i] > e_ce):
+                                        p_ = _pt(o1, h1, l1, c1, j, lat) if lat > 0 else cur
+                                        nt, pn = _close(out, nt, ps, x, (p_ if sd > 0 else p_ + spr) - sd * X[8], tq, k, 3, 1.0)
+                                        equity += pn; dayPnl += pn
+                                        if pn < 0:
+                                            coolUntil = tq + int(P[85]) * 900
+                                continue
+                            # ---- Exit Lab at the candle close (never on the entry candle's own close, like the EA's close-back)
+                            if ps[x, EK] >= i:
+                                continue
+                            r0 = ps[x, R0]
+                            best = (ps[x, MFP] - en) if sd > 0 else (en - ps[x, MFP])
+                            why = 0
+                            if nx == -2:                                       # exit mode 2: a close back across the slow EMA
+                                if (c15[i] < es[i]) if sd > 0 else (c15[i] > es[i]):
+                                    why = 3
+                            elif nx == -1 and E[E_TGT] < 0.5 and E[E_FB] < 1.5:   # no EMA beyond the entry: the fallback, with the lab's buffer / closes
+                                e_ce = ef[i] if E[E_FB] < 0.5 else es[i]
+                                fb_ = E[E_FBB] * atr[i]
+                                beyond = (c15[i] < e_ce - fb_) if sd > 0 else (c15[i] > e_ce + fb_)
+                                ps[x, FBN] = ps[x, FBN] + 1.0 if beyond else 0.0
+                                if ps[x, FBN] >= max(1.0, E[E_FBN]):
+                                    why = 3
+                            if why == 0 and E[E_CX] > 0.5 and i > ps[x, EK] + E[E_CXA]:
+                                cm = int(E[E_CX])
+                                cb = E[E_CXB] * atr[i]
+                                hitc = False
+                                if cm == 1 or cm == 2:
+                                    e_c = ef[i] if cm == 1 else es[i]
+                                    hitc = (c15[i] < e_c - cb) if sd > 0 else (c15[i] > e_c + cb)
+                                elif cm == 3:
+                                    hitc = (ef[i] < es[i] - cb) if sd > 0 else (ef[i] > es[i] + cb)
+                                elif cm == 4:
+                                    shp, kd = _shape(o15[i], h15[i], l15[i], c15[i], atr[i], P)
+                                    hitc = (shp == -1 or (shp == 2 and c15[i] < o15[i])) if sd > 0 else (shp == 1 or (shp == 2 and c15[i] > o15[i]))
+                                elif cm == 5 and i >= 1:
+                                    if sd > 0:
+                                        hitc = c15[i] < o15[i] and c15[i - 1] > o15[i - 1] and o15[i] >= c15[i - 1] and c15[i] <= o15[i - 1]
+                                    else:
+                                        hitc = c15[i] > o15[i] and c15[i - 1] < o15[i - 1] and o15[i] <= c15[i - 1] and c15[i] >= o15[i - 1]
+                                elif cm == 6:
+                                    hitc = (c15[i] < o15[i]) if sd > 0 else (c15[i] > o15[i])
+                                ps[x, CXN] = ps[x, CXN] + 1.0 if hitc else 0.0
+                                if ps[x, CXN] >= max(1.0, E[E_CXN]):
+                                    pnow = (cur - en) if sd > 0 else (en - cur - spr)
+                                    wh = int(E[E_CXW])
+                                    if wh == 0 or (wh == 1 and pnow > 0) or (wh == 2 and pnow <= 0):
+                                        why = 12
+                            tm = int(E[E_TR])
+                            if why == 0 and tm >= 4 and r0 > 0 and best >= E[E_TRA] * r0 and (E[E_TRA] <= 0 or best > 0):
+                                tb = E[E_TRB]
+                                lvl = 0.0
+                                if tm == 4:
+                                    lvl = ef[i] - sd * tb
+                                elif tm == 5:
+                                    lvl = es[i] - sd * tb
+                                elif tm == 6:
+                                    lvl = (l15[i] - tb) if sd > 0 else (h15[i] + tb)
+                                elif tm == 7:
+                                    nb = max(1, int(E[E_TRK]))
+                                    lv2 = 1e18 if sd > 0 else -1e18
+                                    for s in range(nb):
+                                        if i - s >= 0:
+                                            lv2 = min(lv2, l15[i - s]) if sd > 0 else max(lv2, h15[i - s])
+                                    lvl = (lv2 - tb) if sd > 0 else (lv2 + tb)
+                                elif tm == 8:
+                                    sw = _support(l15, k, cur, 2, 60) if sd > 0 else _resist(h15, k, cur + spr, 2, 60)
+                                    if sw > 0:
+                                        lvl = sw - sd * tb
+                                if lvl > 0 and ((lvl > s_ + 0.005) if sd > 0 else (s_ == 0 or lvl < s_ - 0.005)):
+                                    if (lvl < cur) if sd > 0 else (lvl > cur + spr):
+                                        ps[x, SL] = lvl; s_ = lvl
+                                    else:
+                                        why = 6                                # the close is already beyond the trail
+                            held = i - ps[x, EK]
+                            if why == 0 and E[E_MAXB] > 0 and held >= E[E_MAXB]:
+                                why = 8
+                            if why == 0 and E[E_STB] > 0 and held >= E[E_STB] and r0 > 0 and (c15[i] - en) * sd < E[E_STR] * r0:
+                                why = 13
+                            if why == 0 and E[E_ADX] > 0 and adx[i] < E[E_ADX]:
+                                why = 14
+                            if why == 0 and E[E_FRI] > 0 and dow15[k] == 5 and hr15[k] >= E[E_FRI]:
+                                why = 15
+                            if why != 0:
+                                p_ = _pt(o1, h1, l1, c1, j, lat) if lat > 0 else cur
+                                nt, pn = _close(out, nt, ps, x, (p_ if sd > 0 else p_ + spr) - sd * X[8], tq, k, why, 1.0)
+                                equity += pn; dayPnl += pn
+                                if pn < 0:
+                                    coolUntil = tq + int(P[85]) * 900
                             continue
                         if ps[x, USD] > 0.5:
                             continue
@@ -518,6 +697,8 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                     # ghost close-back
                     if gh != 0 and gK < i:
                         ce = 9 if gNx == -1 else (50 if gNx == -2 else 0)
+                        if ce == 0 and gNx == 0 and gh > 0 and gNoTp:
+                            ce = 9 if gExitE == 9 else 50       # v1.29 (EA GhostBar): like the trade, a close below its exit EMA; before, it could last forever
                         if ce > 0:
                             e_ce = ef[i] if ce == 9 else es[i]
                             if (c15[i] < e_ce) if gh > 0 else (c15[i] > e_ce):
@@ -792,6 +973,10 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                                 ps[x, NOTP] = 1.0 if noTp else 0.0; ps[x, RES1] = 1.0 if res1 else 0.0; ps[x, NX] = n_
                                                 ps[x, EK] = k; ps[x, ET] = tq; ps[x, BEST] = e_; ps[x, LOTS] = lots; ps[x, BKT] = (bk + (0 if side > 0 else 21)) if bk >= 0 else -1
                                                 ps[x, STG] = 1
+                                                ps[x, R0] = abs(e_ - s_); ps[x, ATE] = a_; ps[x, MFP] = e_; ps[x, MAP] = e_; ps[x, ORL] = lots
+                                                if E[E_ON] > 0.5 and E[E_TGT] > 1.5 and n_ != 0:
+                                                    dist = E[E_TGTK] * abs(e_ - s_) if E[E_TGT] < 2.5 else (E[E_TGTK] * a_ if E[E_TGT] < 3.5 else E[E_TGTK])
+                                                    ps[x, LTP] = e_ + ts_ * dist
                                                 ride0 = ts_ > 0 and (noTp or (res1 and P[55] > 0.5)) and _trail_on(P, 1) and P[83] <= 0
                                                 ps[x, RIDE] = 1.0 if (ride0 and n_ == 0) else 0.0
                                                 if n_ == 0:

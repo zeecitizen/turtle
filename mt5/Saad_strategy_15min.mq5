@@ -34,11 +34,14 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.28"
+#property version   "1.29"
 #property strict
 
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
+// v1.29 (2026-10-20, found building the Exit Lab): a stand-aside ghost under the v1.23 exits (InpExitMode 0) on a LONG with no
+//        target only ended at its stop - in a rally it lasted forever and the EA never traded again (Blueberry 4 years: no trade after
+//        Oct 13 2023). GhostBar now also ends it on a close below its exit EMA, as the real trade closes. Exit modes 1-2 (the default): no change.
 // v1.28 (Zee 2026-10-20: "Skip setup if pinbar/maribuzu/setup candle touches both EMAs"): new InpSkipBothEma, OFF by default -
 //        with it off, trading is identical to v1.27.
 // v1.27 (Zee 2026-10-19: "keep nose 0.35"): InpNoseMax 0.20 -> 0.35 - every other v1.26 setting unchanged. MT5 full year: nose 0.30-0.45
@@ -57,7 +60,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad15 v1.28"
+#define EA_COMMENT "Saad15 v1.29"
 
 //--- the two lines
 input int    InpEmaFast     = 16;      // InpEmaFast
@@ -1104,6 +1107,7 @@ void GhostBar()
 {
    if (g_gSide == 0 || g_gTime >= iTime(_Symbol, PERIOD_CURRENT, 1)) return;     // like the indicator: not on the entry candle's own close
    int ce = g_gNxE == -1 ? 9 : g_gNxE == -2 ? 50 : 0;
+   if (ce == 0 && g_gNxE == 0 && g_gSide > 0 && g_gNoTp) ce = g_gExitE;     // v1.29: a no-target LONG ends like the trade (it could last forever)
    double c1 = iClose(_Symbol, PERIOD_CURRENT, 1);
    if (ce > 0 && (g_gSide > 0 ? c1 < Ema(ce, 1) : c1 > Ema(ce, 1))) g_gSide = 0;
 }

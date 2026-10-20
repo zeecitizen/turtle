@@ -16,6 +16,23 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.29 (2026-10-20) — fix: a stand-aside that never ended under the v1.23 exits
+
+Found while building the Turtle TV Exit Lab: on Blueberry's 4 years, exit mode 0 with Zee's range boxes + stand-aside stopped trading on
+Oct 13 2023 for good. Cause (the EA and the tester alike): `GhostTick` ends a v1.23-exit ghost at its stop or at TP1, but a LONG ghost with no
+target (`g_gNoTp`: the exit EMA below the entry, no resistance) has no TP1 - in a rally it never hits its stop, never ends, and
+`g_gSide != 0` blocks every new setup.
+
+- `GhostBar`: a no-target LONG ghost under the v1.23 exits also ends on a candle close below its exit EMA (`g_gExitE`), as the real trade
+  closes ("closed below %d EMA"). Mirrored in `monitor/saad_view/sim_full.py` (ghost close-back).
+- Exit modes 1-2 (the default) are untouched. `monitor/saad_view/exitlab_regress.py`: 14 of 15 tester configs identical trade for trade;
+  the 15th is exit mode 0 + stand-aside, the case fixed (2026: 169 -> 181 trades).
+- **MT5 receipts** (Blueberry XAUUSD_BB M15, Jan 1 - Oct 17 2026, no delay, $100k, 2 lots): defaults +$242,911 · PF 2.67 · 198 trades ·
+  DD $28,320 (= v1.27/v1.28 to the dollar, run r20261020_224158); exit mode 0 + stand-aside +$121,836 · PF 1.76 (r20261020_224303)
+  vs Turtle TV +$122,999.
+
+---
+
 ## Saad_strategy_15min v1.28 (2026-10-20) — v1.27 + "skip if the candle touches both EMAs" (off)
 
 Zee: *"is there a setting called: Skip setup if pinbar/maribuzu/setup candle touches both EMAs .."* then *"yes add it"*.
