@@ -228,6 +228,12 @@ def stats(real, window, base_keys=None, base_pnl=None):
     s["why"] = {k: {"n": v[0], "wins": v[1], "net": round(v[2])} for k, v in sorted(why.items(), key=lambda kv: -kv[1][0])}
     s["partials"] = int((real[:, 19] > 0).sum()) if real.shape[1] > 19 else 0
     s["longest_h"] = round(float((real[:, 4] - real[:, 1]).max()) / 3600.0, 1) if len(real) else 0.0
+    s["sides"] = {}
+    for sd, nm in ((1, "BUY"), (-1, "SELL")):
+        r = real[real[:, 0] == sd]
+        a, b = r[(r[:, 1] >= a0) & (r[:, 1] < a1)], r[(r[:, 1] >= b0) & (r[:, 1] < b1)]
+        s["sides"][nm] = {"n": int(len(r)), "net": round(float(r[:, 6].sum())), "train": round(float(a[:, 6].sum())), "test": round(float(b[:, 6].sum())),
+                          "wr": round(float(100 * (r[:, 6] > 0).mean()), 1) if len(r) else 0.0}
     if base_keys is not None:
         keys = {(int(x[1]), int(x[0])): float(x[6]) for x in real}
         s["new"] = len(set(keys) - base_keys)
@@ -259,22 +265,44 @@ def diagnose(inputs, ds):
     res_r = pnl / (R * lot * 100.0)
     mfe_r = mfe / R
     win = pnl > 0
-    # after the exit: how far did price go on in the trade's direction (and against it) within the next 16 candles (4 hours)?
-    kout = real[:, 12].astype(int)
+    # after the exit: how far did price go on in the trade's direction (and against it) in the next 4 hours of 1-minute candles,
+    # starting the minute AFTER the exit (the exit candle's own earlier high / low happened before the exit)
+    t1 = D["t1"]
     after_fav, after_adv = np.zeros(len(real)), np.zeros(len(real))
     for n, x in enumerate(real):
-        a, b = kout[n], min(len(D["h15"]), kout[n] + 17)
+        a = int(np.searchsorted(t1, int(x[4]) - int(x[4]) % 60, side="right"))
+        b = min(len(t1), a + 240)
         if a >= b:
             continue
-        hi, lo = D["h15"][a:b].max(), D["l15"][a:b].min()
+        hi, lo = D["h1"][a:b].max(), D["l1"][a:b].min()
         after_fav[n] = (hi - x[5]) if x[0] > 0 else (x[5] - lo)
         after_adv[n] = (x[5] - lo) if x[0] > 0 else (hi - x[5])
-    early = (after_fav >= R) & (pnl < (R * lot * 100.0))
+    is_stop = real[:, 13] == 1
+    # which came FIRST after the exit: 1R further the trade's way, or 1R against? (both in one minute counts as against: the cautious reading)
+    first = np.zeros(len(real), dtype=np.int64)                              # 1 = +1R first, -1 = -1R first, 0 = neither within 4 hours
+    for n, x in enumerate(real):
+        a = int(np.searchsorted(t1, int(x[4]) - int(x[4]) % 60, side="right"))
+        b = min(len(t1), a + 240)
+        if a >= b:
+            continue
+        hi, lo, ex, r_ = D["h1"][a:b], D["l1"][a:b], x[5], R[n]
+        fav = (hi >= ex + r_) if x[0] > 0 else (lo <= ex - r_)
+        adv = (lo <= ex - r_) if x[0] > 0 else (hi >= ex + r_)
+        fi = int(np.argmax(fav)) if fav.any() else 1 << 30
+        ai = int(np.argmax(adv)) if adv.any() else 1 << 30
+        if fi < ai:
+            first[n] = 1
+        elif ai < 1 << 30:
+            first[n] = -1
+    early = (first == 1) & ~is_stop                                          # closed by a RULE, then +1R came before -1R: the rule came early
+    stop_back = is_stop & (first == 1)                                       # stopped out, then price came back ~to the entry before 1R more against
     early_by = {}
     for n, x in enumerate(real):
         d = early_by.setdefault(WHY.get(int(x[13]), str(int(x[13]))), [0, 0])
         d[0] += 1
-        d[1] += int(early[n])
+        d[1] += int(first[n] == 1)
+        d.append(0) if len(d) < 3 else None
+        d[2] += int(first[n] == -1)
     reach = {f"{t:g}R": round(float(100 * (mfe_r >= t).mean()), 1) for t in (0.25, 0.5, 1, 1.5, 2, 3, 5)} if len(real) else {}
     lost_after = (~win) & (mfe_r >= 1)
     lost_after_half = (~win) & (mfe_r >= 0.5)
@@ -286,9 +314,10 @@ def diagnose(inputs, ds):
         "losers_were_1r": {"n": int(lost_after.sum()), "net": round(float(pnl[lost_after].sum()))},
         "losers_were_half_r": {"n": int(lost_after_half.sum()), "net": round(float(pnl[lost_after_half].sum()))},
         "winners": {"n": int(win.sum()), "capture_pct": round(100 * capture, 1), "giveback": round(giveback)},
-        "early": {"n": int(early.sum()), "of": int(len(real)), "missed": round(float(((after_fav[early] - R[early]).clip(0) * lot[early] * 100).sum()))},
+        "early": {"n": int(early.sum()), "of": int((~is_stop).sum()), "right": int(((first == -1) & ~is_stop).sum())},
+        "stop_back": {"n": int(stop_back.sum()), "of": int(is_stop.sum()), "right": int(((first == -1) & is_stop).sum())},
         "saved": {"n": int(((after_adv >= R) & ~win).sum())},
-        "early_by": {k: {"n": v[0], "early": v[1]} for k, v in early_by.items()},
+        "early_by": {k: {"n": v[0], "early": v[1], "right": v[2] if len(v) > 2 else 0} for k, v in early_by.items()},
         "reach": reach,
         "mae_winners_r": {"p50": q(mae[win] / R[win], 50), "p75": q(mae[win] / R[win], 75), "p90": q(mae[win] / R[win], 90)},
         "mfe_r": {"p50": q(mfe_r, 50), "p75": q(mfe_r, 75), "p90": q(mfe_r, 90)},

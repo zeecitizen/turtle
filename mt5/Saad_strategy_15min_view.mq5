@@ -40,8 +40,9 @@
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
 // v1.29 (2026-10-20, found building the Exit Lab): a stand-aside ghost under the v1.23 exits (InpExitMode 0) on a LONG with no
-//        target only ended at its stop - in a rally it lasted forever and the EA never traded again (Blueberry 4 years: no trade after
-//        Oct 13 2023). GhostBar now also ends it on a close below its exit EMA, as the real trade closes. Exit modes 1-2 (the default): no change.
+//        target only ended at its stop - in a rally it lasted forever and the EA never traded again (seen in the Turtle TV Tester on
+//        Blueberry's 4 years: no trade after Oct 13 2023; MT5's rig only has 2026 ticks, the EA has the same code). GhostBar now also ends
+//        it on a close below its exit EMA, as the real trade closes. Exit modes 1-2 (the default): no change.
 // v1.28 (Zee 2026-10-20: "Skip setup if pinbar/maribuzu/setup candle touches both EMAs"): new InpSkipBothEma, OFF by default -
 //        with it off, trading is identical to v1.27.
 // v1.27 (Zee 2026-10-19: "keep nose 0.35"): InpNoseMax 0.20 -> 0.35 - every other v1.26 setting unchanged. MT5 full year: nose 0.30-0.45

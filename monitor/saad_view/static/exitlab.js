@@ -88,9 +88,10 @@ const EVIDENCE = `<div class="hintbox">📜 <b>Evidence already on file (MT5, no
   every rule that closed a trade between them cost money (breakeven locks +$57.80 to +$127.30, the give-back ratchet +$12.90). 2026-10-19 (betest, v1.26, full year):
   partials and %-breakeven ~no change, a $8 breakeven -$22k, fixed +$X targets and locks cut profit hard (close at +$8: +$53k). The EMA target stayed.
   A lab row has to beat that history in MT5, not just here.</div>`;
-const CALIB = `<div class="hintbox">📏 <b>How far to trust the lab (MT5 check, 2026-10-20, 2026 data, no delay - the same trades in all four):</b>
+const CALIB = `<div class="hintbox">📏 <b>How far to trust the "In the EA" rows (MT5 check, 2026-10-20, 2026 data, no delay - the same trades in all four):</b>
   stop $12 MT5 +$260,289 (lab +$272,607) · your exit +$242,911 (lab +$253,432) · stop 1.4 x ATR +$241,710 (lab +$259,983) · exit mode 2 +$180,909 (lab +$189,223).
-  The lab reads 4-8% high and swapped the two closest (1.4 ATR vs yours: +$6.6k in the lab, -$1.2k in MT5). <b>A difference under ~4% of the total is a tie</b> (marked ≈).</div>`;
+  The lab reads 4-8% high and swapped the two closest (1.4 ATR vs yours: +$6.6k in the lab, -$1.2k in MT5). <b>For these rows a difference under ~4% of the total is a tie</b> (marked ≈).
+  <b>"Lab only" rows have no MT5 check yet</b> - their new code (targets, trails, time exits, long holds) is unproven until "Make it an EA setting" and MT5.</div>`;
 const tie = (d, base) => Math.abs(d) < Math.max(5000, 0.04 * Math.abs(base));
 const mm = (s) => `${money(s.net)} <span class="k">· ${s.wr}% · ${s.n}</span>`;
 
@@ -125,13 +126,13 @@ function labDiag(d, LA, LB) {
     card('Trades · win rate', `${a.n} · ${a.wr}%`) + card('Net', money(a.net), cls(a.net)) +
     card('Winners keep', `${d.winners.capture_pct}% <small class="k">of their best move</small>`) +
     card('Losers that were +1R first', `${d.losers_were_1r.n} <small class="k">${money(d.losers_were_1r.net)}</small>`) +
-    card('Price went on +1R after the exit', `${d.early.n} <small class="k">of ${d.early.of} (4 h)</small>`) +
-    card('Exits that dodged −1R more', `${d.saved.n}`) +
+    card('After a rule closed a trade (next 4 h)', `${d.early.n} <small class="k">went +1R on first ·</small> ${d.early.right} <small class="k">went −1R first</small>`) +
+    card('After a stop-out (next 4 h)', `${d.stop_back.n} <small class="k">came back +1R first ·</small> ${d.stop_back.right} <small class="k">fell 1R more first</small>`) +
     card("Winners' deepest dip (3 in 4)", `≤ ${d.mae_winners_r.p75}R`) + card('Stop distance', `$${d.risk.p50} <small class="k">typical, $${d.risk.p90} wide</small>`) + '</div>';
   h += labHints(d);
   const eb = d.early_by || {};
-  h += `<div class="row"><div><h4>How your trades end</h4>` + table(['Reason', 'Trades', 'Win rate', 'Net', 'Price went on +1R after'], Object.entries(d.stats.why).map(([k, v]) =>
-    `<tr><td>${esc(k)}</td><td>${v.n}</td><td>${pct(v.wins, v.n)}</td><td class="${cls(v.net)}">${money(v.net)}</td><td>${eb[k] ? `${eb[k].early} <span class="k">(${pct(eb[k].early, eb[k].n)})</span>` : ''}</td></tr>`)) + '</div>';
+  h += `<div class="row"><div><h4>How your trades end · price in the next 4 h</h4>` + table(['Reason', 'Trades', 'Win rate', 'Net', '+1R on first', '−1R against first'], Object.entries(d.stats.why).map(([k, v]) =>
+    `<tr><td>${esc(k)}</td><td>${v.n}</td><td>${pct(v.wins, v.n)}</td><td class="${cls(v.net)}">${money(v.net)}</td><td>${eb[k] ? `${eb[k].early} <span class="k">(${pct(eb[k].early, eb[k].n)})</span>` : ''}</td><td>${eb[k] ? `${eb[k].right} <span class="k">(${pct(eb[k].right, eb[k].n)})</span>` : ''}</td></tr>`)) + '</div>';
   h += `<div><h4>How far trades went your way first</h4>` + table(['Best move ≥', 'Trades'], Object.entries(d.reach).map(([k, v]) => `<tr><td>${k}</td><td>${v}%</td></tr>`)) +
     `<p class="note" style="max-width:220px">R = the distance from the entry to the first stop.</p></div>`;
   h += `<div><h4>Best move vs result, every trade (R)</h4>${labScatter(d.scatter)}<p class="note" style="max-width:360px">On the blue line = the exit took the whole move.
@@ -142,7 +143,11 @@ function labHints(d) {
   const H = [], s = d.stats.all, lose = Math.round(s.n * (1 - s.wr / 100));
   if (d.losers_were_1r.n >= Math.max(3, 0.1 * lose)) H.push([`${d.losers_were_1r.n} losing trades were at least +1R in profit first and still lost $${Math.abs(d.losers_were_1r.net).toLocaleString('en-US')}. A breakeven or a partial close at 1R would save some of them - but it also stops winners that dip back before running.`, { be_r: 1 }, 'breakeven at +1R']);
   if (d.winners.capture_pct < 55) H.push([`Winners keep only ${d.winners.capture_pct}% of their best move (${money(d.winners.giveback)} given back). A trail could keep more of it.`, { tr: 2, tr_k: 2, tr_act: 1 }, 'trail 2 ATR from +1R']);
-  if (d.early.n >= 0.1 * d.early.of) H.push([`${d.early.n} trades: after the exit, price went at least another 1R your way within 4 hours - the exit came early on those. The fallback (close back across the fast EMA) is the usual culprit.`, { fb_buf: 0.25 }, 'the fallback needs a 0.25 ATR clear close']);
+  const e = d.early, sb = d.stop_back;
+  if (e.n > 1.25 * e.right) H.push([`After the ${e.of} trades closed by a rule (not the stop), price went another +1R their way before −1R against in ${e.n}, and −1R first in ${e.right}: the rules close too early more often than not. The fallback (close back across the fast EMA) is the first suspect - see "Price after the exit" by reason below.`, { fb_n: 2 }, 'the fallback needs 2 closes']);
+  else if (e.right > 1.25 * e.n) H.push([`After the ${e.of} trades closed by a rule, price went −1R against before +1R on in ${e.right} and +1R first in only ${e.n}: the exit rules mostly get out at the right time.`, null, '']);
+  else H.push([`After the ${e.of} trades closed by a rule, +1R on came first in ${e.n} and −1R against first in ${e.right}: about a coin flip - exit timing alone is not where the money is.`, null, '']);
+  if (sb.n > 1.25 * sb.right) H.push([`After ${sb.of} stop-outs, price came back +1R (about to the entry) before falling 1R more in ${sb.n}, and fell 1R more first in ${sb.right}: the stop is often too tight. A wider stop also makes every loser bigger - test it (an EA setting: Stop x ATR, in the list below).`, null, '']);
   if (d.mae_winners_r.p75 < 0.5) H.push([`3 winners in 4 never went below −${d.mae_winners_r.p75}R before working: the stop gives winners more room than they use. A tighter stop is an EA setting (Stop x ATR) - test it in the list below.`, null, '']);
   if (!H.length) H.push(['Nothing stands out: your exit already keeps most of the move. Test every exit to be sure.', null, '']);
   return H.map(([t, lab, nm]) => `<div class="hintbox">💡 ${t} ${lab ? `<button data-lload="${esc(JSON.stringify(lab))}">Try: ${esc(nm)}</button>` : ''}</div>`).join('');
@@ -192,7 +197,7 @@ function labTestResult(T, LA, LB) {
   let h = `<h4>Result · ${esc(T.describe)}${Object.keys(T.sets || {}).length ? ' · ' + esc(Object.entries(T.sets).map(([k, v]) => `${k.replace(/^Inp/, '')} ${v}`).join(', ')) : ''}</h4>${stale(T)}` +
     table(['', LA, LB, 'Total', 'WR', 'PF', 'Max DD', 'Avg win / loss', 'Losing streak'], [labStatsRow("Your EA's exit", b), labStatsRow('This exit', s)]);
   const wv = T.worst, onlyOpt = s.total > b.total && wv.total < wv.base_total;
-  h += `<p class="note">${tie(s.total - b.total, b.total) && s.changed ? '<span class="warn">≈ A tie: the difference is within the lab’s error against MT5 (~4%).</span> ' : ''}${both ? '<span class="good">✓ Better than yours in both halves.</span>' : s.total > b.total ? '<span class="warn">Better in total but not in both halves - the unseen half decides.</span>' : '<span class="bad">Not better than your exit.</span>'}
+  h += `<p class="note">${isEA && tie(s.total - b.total, b.total) && s.changed ? '<span class="warn">≈ A tie: the difference is within the lab’s error against MT5 (~4%).</span> ' : ''}${!isEA ? '<span class="tag lab">Lab only: no MT5 check yet</span> ' : ''}${both ? '<span class="good">✓ Better than yours in both halves.</span>' : s.total > b.total ? '<span class="warn">Better in total but not in both halves - the unseen half decides.</span>' : '<span class="bad">Not better than your exit.</span>'}
     ${s.changed} trades end differently · ${s.new} new and ${s.gone} missing entries (a trade held longer or shorter changes which setups can enter) · partial closes in ${s.partials} trades ·
     longest trade ${s.longest_h} h${s.longest_h > 48 ? ' <span class="bad">(a trade stayed open for days - this exit can hold a loser a long time)</span>' : ''}.
     Adverse move first inside every minute: ${money(wv.total)} vs yours ${money(wv.base_total)}${onlyOpt ? ' <span class="bad">⚠ it only wins when the minute is read in the optimistic order</span>' : wv.total === s.total ? ' (same - no minute held both the stop and the exit)' : ''}.</p>`;
@@ -200,7 +205,10 @@ function labTestResult(T, LA, LB) {
   const ys = Object.keys(s.years);
   const yT = table(['Year', 'Trades', 'WR', 'This exit', 'Yours'], ys.map((y) => { const a = s.years[y], c = (b.years || {})[y] || { net: 0 };
     return `<tr><td>${y}</td><td>${a.n}</td><td>${a.wr}%</td><td class="${cls(a.net)}">${money(a.net)}</td><td class="k">${money(c.net)}</td></tr>`; }));
-  h += `<div class="row"><div><h4>How the trades ended</h4>${whyT}</div><div><h4>Year by year</h4>${yT}</div></div>`;
+  const sd = (x, nm) => (x.sides || {})[nm] || { n: 0, net: 0, train: 0, test: 0, wr: 0 };
+  const sT = table(['Side', 'Trades', 'WR', LA, LB, 'This exit', 'Yours'], ['BUY', 'SELL'].map((nm) => { const a = sd(s, nm), c = sd(b, nm);
+    return `<tr><td>${nm}</td><td>${a.n}</td><td>${a.wr}% <span class="k">(${c.wr}%)</span></td><td class="${cls(a.train - c.train)}">${money(a.train)}</td><td class="${cls(a.test - c.test)}">${money(a.test)}</td><td class="${cls(a.net)}"><b>${money(a.net)}</b></td><td class="k">${money(c.net)}</td></tr>`; }));
+  h += `<div class="row"><div><h4>How the trades ended</h4>${whyT}</div><div><h4>Year by year</h4>${yT}</div><div><h4>BUY and SELL (a bull market favours holding longs)</h4>${sT}</div></div>`;
   const D = T.diffs;
   if (D && D.n + D.new.n + D.gone.n === 0) h += '<p class="warn">This exit changed nothing: no rule of it fired on these trades.</p>';
   else if (D) {
@@ -238,7 +246,7 @@ function labCatalogue(C, LA, LB) {
     const w = r.worst ? `<span class="${r.worst.total >= r.worst.base_total ? '' : 'bad'}" title="yours in the same order: ${money(r.worst.base_total)}">${money(r.worst.total)}</span>` : '';
     return `<tr class="${both ? 'both' : ''}"><td class="l"><b>${esc(r.name)}</b><br><span class="k">${esc(r.fam)}</span></td><td>${tag}</td>` +
       `<td class="${cls(s.train.net - b.train.net)}">${money(s.train.net)}</td><td class="${cls(s.test.net - b.test.net)}">${money(s.test.net)}</td><td><b>${money(s.total)}</b></td>` +
-      `<td class="${tie(s.total - b.total, b.total) ? 'k' : cls(s.total - b.total)}" title="${tie(s.total - b.total, b.total) ? 'within the lab’s error against MT5: a tie' : ''}">${tie(s.total - b.total, b.total) ? '≈ ' : ''}${money(s.total - b.total)}</td><td>${s.all.wr}%</td><td>${s.all.pf}</td><td>${money(-s.all.dd)}</td><td>${s.all.n}</td>` +
+      `<td class="${r.kind === 'ea' && tie(s.total - b.total, b.total) ? 'k' : cls(s.total - b.total)}" title="${r.kind === 'ea' && tie(s.total - b.total, b.total) ? 'within the lab’s error against MT5: a tie' : ''}">${r.kind === 'ea' && tie(s.total - b.total, b.total) ? '≈ ' : ''}${money(s.total - b.total)}</td><td>${s.all.wr}%</td><td>${s.all.pf}</td><td>${money(-s.all.dd)}</td><td>${s.all.n}</td>` +
       `<td>${!s.changed && !s.new && !s.gone ? '<span class="k" title="no rule of this exit fired on these trades">no effect</span>' : s.changed}</td>` +
       `<td>${s.longest_h > 48 ? `<span class="bad">${s.longest_h} h</span>` : s.longest_h + ' h'}</td><td>${r.plateau ? '✓' : ''}</td><td>${w}</td>` +
       `<td><button data-lrow="${i}">${r.kind === 'ea' ? 'Test it' : 'Load + test'}</button>${r.kind === 'ea' ? ` <button data-lmt5="${i}">Check in MT5</button>` : ''}</td></tr>`;
@@ -251,11 +259,11 @@ function labSearch(S, LA, LB) {
   const b = S.base;
   let h = `<section><h3>🧠 The best exits found</h3>${stale(S)}<p class="note">Started from the 6 best exits on ${LA}; every number was moved one step at a time and every other kind of exit was tried on top,
     keeping a change only if ${LA} improved. ${LB} was never looked at - it is the test. <b>Robust</b> = of the one-step changes either side of every number, how many still beat yours in both halves.
-    <b>Worst order</b> = the adverse move first inside every minute (yours: ${money(S.base_worst)}). ≈ = within the lab's ~4% error against MT5.</p>`;
+    <b>Worst order</b> = the adverse move first inside every minute (yours: ${money(S.base_worst)}). All of these are <b>Lab only: no MT5 check yet</b>.</p>`;
   h += table(['Exit', LA, LB, 'Total', 'vs yours', 'WR', 'Robust', 'Worst order', ''], S.finals.map((f, i) => {
     const s = f.stats, both = s.train.net > b.train.net && s.test.net > b.test.net, pl = f.plateau || [0, 0];
     return `<tr class="${both ? 'both' : ''}"><td class="l"><b>${esc(f.describe)}</b><br><span class="k">from: ${esc(f.seed)}</span></td><td>${mm(s.train)}</td><td class="${cls(s.test.net - b.test.net)}">${mm(s.test)}</td>` +
-      `<td><b>${money(s.total)}</b></td><td class="${tie(s.total - b.total, b.total) ? 'k' : cls(s.total - b.total)}">${tie(s.total - b.total, b.total) ? '≈ ' : ''}${money(s.total - b.total)}</td><td>${s.all.wr}%</td><td class="${pl[1] && pl[0] / pl[1] >= 0.7 ? 'good' : 'bad'}">${pl[0]}/${pl[1]}</td>` +
+      `<td><b>${money(s.total)}</b></td><td class="${cls(s.total - b.total)}">${money(s.total - b.total)}</td><td>${s.all.wr}%</td><td class="${pl[1] && pl[0] / pl[1] >= 0.7 ? 'good' : 'bad'}">${pl[0]}/${pl[1]}</td>` +
       `<td class="${f.worst >= S.base_worst ? '' : 'bad'}">${money(f.worst)}</td><td><button data-lfin="${i}">Load + test</button></td></tr>`;
   }));
   if (S.log.length) h += `<details><summary class="k">The ${S.log.length} steps that helped (${LA} only)</summary>` + table(['Started from', 'Change', LA, LB, 'Total'],
