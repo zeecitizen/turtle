@@ -210,6 +210,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
             pts[1] = h1[j]; pts[2] = l1[j]
         pts[3] = c1[j]
         blind = t1[j] < X[4]
+        closed = j == 0 or day1[j] != day1[j - 1]          # the session's first minute: MT5 answers 'market closed'
         for q in range(4):
             cur = pts[q]
             prv = pts[q - 1] if q > 0 else cur
@@ -270,6 +271,8 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                         continue
                     if sd > 0:
                         ps[x, BEST + 0] = ps[x, BEST]
+                    if ps[x, ET] >= t1[j]:
+                        continue                                     # entered in this minute: targets wait for the next ticks
                     nx = int(ps[x, NX])
                     if nx != 0:
                         # v1.25+ exit modes: the next EMA beyond the entry
@@ -594,6 +597,8 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                 for x in range(MAXP):
                     if ps[x, SD] != 0:
                         npos += 1
+                if rep == 0 and closed and pSide != 0 and q == 0:
+                    pass
                 if rep == 0 and (pSide != 0 or aSide != 0) and npos < P[86] and gh == 0 and k > pK:
                     bid = cur
                     ask = cur + spr
@@ -667,6 +672,8 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                             aSide = 0
                             go = True
                             be = bid
+                    if go and side != 0 and closed:
+                        go = False                                   # refused at the open: the setup is gone (TryEntry cleared it)
                     if go and side != 0:
                         ts_ = -side if X[6] > 0.5 else side
                         if lat > 0:

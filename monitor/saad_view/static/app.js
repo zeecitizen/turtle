@@ -370,23 +370,25 @@ function pSkips(D) {
     table(['Why the setup was not traded', 'Setups', 'Share'], rows);
 }
 let OPTS = null;
+const OPTUI = { obj: 'ret_dd', boxes: false, keep: false };   // the optimizer's controls, kept across redraws
 function pOpt() {
   const o = OPTS;
-  const obj = (o && o.objective) || 'ret_dd';
+  const obj = OPTUI.obj;
   let h = `<div class="row" style="align-items:center;gap:10px"><b>Step optimizer</b>
     <label>Score <select id="oObj">${[['ret_dd', 'net ÷ max drawdown'], ['net', 'net profit'], ['pf', 'profit factor'], ['wr', 'win rate']].map(([v, l]) => `<option value="${v}" ${v === obj ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
-    <label class="tog"><input type="checkbox" id="oBox" ${o && o.boxes ? 'checked' : ''}> include the range boxes</label>
-    <label class="tog"><input type="checkbox" id="oKeep" ${o && o.keep ? 'checked' : ''}> keep optimizing (restarts)</label>
+    <label class="tog"><input type="checkbox" id="oBox" ${OPTUI.boxes ? 'checked' : ''}> include the range boxes</label>
+    <label class="tog"><input type="checkbox" id="oKeep" ${OPTUI.keep ? 'checked' : ''}> keep optimizing (restarts)</label>
     <button id="oGo" class="primary">Optimize from the settings on screen</button><button id="oStop">Stop</button></div>
     <p class="note">Each setting is moved one step up and down; a step that helps is repeated until it stops helping; all settings, pass after pass, until nothing improves.
     The score is measured on <b>Jan – Jun</b> only. <b>Jul – Oct</b> is shown beside it but never used to choose: if it gets worse while Jan – Jun improves, the settings are memorising the past.</p>`;
   if (!o || !o.baseline) return h;
+  const [LA, LB] = o.labels || ['Jan – Jun', 'Jul – Oct'];
   const B = o.baseline, best = o.best, line = (x) => x ? `${money(x.net)} · WR ${x.wr}% · PF ${x.pf} · ${x.n} trades` : '–';
   h += `<p class="note">${o.running ? '⏳ running' : o.error ? 'stopped: ' + esc(o.error) : '✓ done'} · ${o.evals.toLocaleString()} years tested in ${o.seconds} s · ${o.passes} passes${o.restarts ? ' · ' + o.restarts + ' restarts' : ''}</p>`;
-  h += table(['', 'Jan – Jun (optimized on)', 'Jul – Oct (unseen)', 'Whole year'], [
+  h += table(['', `${LA} (optimized on)`, `${LB} (unseen)`, 'All'], [
     `<tr><td>Your settings</td><td>${line(B.train)}</td><td>${line(B.test)}</td><td>${line(B.year)}</td></tr>`,
     best ? `<tr class="tot"><td>Best found</td><td>${line(best.train)}</td><td class="${best.test && B.test && best.test.net < B.test.net ? 'bad' : 'pos'}">${line(best.test)}</td><td>${line(best.year)}</td></tr>` : '']);
-  if (best && best.test && B.test && best.test.net < B.test.net) h += `<p class="warn">⚠ Better on Jan – Jun but WORSE on the unseen Jul – Oct (${money(best.test.net - B.test.net)}): these settings are fitting the past. Don't trust them without more evidence.</p>`;
+  if (best && best.test && B.test && best.test.net < B.test.net) h += `<p class="warn">⚠ Better on ${LA} but WORSE on the unseen ${LB} (${money(best.test.net - B.test.net)}): these settings are fitting the past. Don't trust them without more evidence.</p>`;
   if (o.mt5 && o.mt5.run) {
     const r = RUNS.find((x) => x.id === o.mt5.run);
     h += r ? `<p class="note">✓ MT5 checked the best: <b>${money(r.net || 0)} · PF ${r.pf} · ${r.trades} trades</b> (no delay). Show it on the chart to compare both halves in the MT5 section.</p>`
@@ -395,7 +397,7 @@ function pOpt() {
   if (best && Object.keys(best.changed).length) h += `<p><button id="oApply" class="go">Show the best on the chart</button> <span class="k">changes: ${Object.entries(best.changed).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))} ${esc(CUR[k] ?? '')} → ${esc(v)}`).join(', ')}</span></p>`;
   const steps = o.log.map((l, i) => `<tr><td>${i + 1}</td><td style="text-align:left">${esc(l.run)}</td><td style="text-align:left">${esc(l.setting.replace(/^Inp/, ''))}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td>${(+l.score).toFixed(2)}</td>` +
     `<td class="${cls(l.train.net)}">${money(l.train.net)} · ${l.train.wr}%</td><td class="${cls(l.test.net)}">${money(l.test.net)} · ${l.test.wr}%</td><td class="k">${l.t}s</td></tr>`);
-  h += `<h4>Steps that helped</h4><div class="scroll">${table(['#', 'Run', 'Setting', 'Change', 'Score', 'Jan – Jun', 'Jul – Oct', 'At'], steps)}</div>`;
+  h += `<h4>Steps that helped</h4><div class="scroll">${table(['#', 'Run', 'Setting', 'Change', 'Score', LA, LB, 'At'], steps)}</div>`;
   if (o.board && o.board.length > 1) h += `<h4>Best of each restart</h4>` + table(['Score', 'Jan – Jun', 'Jul – Oct', 'Changes', ''],
     o.board.map((x, i) => `<tr><td>${(+x.score).toFixed(2)}</td><td>${money(x.train.net)} · ${x.train.wr}%</td><td class="${cls(x.test.net - B.test.net)}">${money(x.test.net)} · ${x.test.wr}%</td>` +
       `<td style="text-align:left" class="k">${Object.entries(x.changed).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ')}</td><td><button data-board="${i}">show</button></td></tr>`));
@@ -487,6 +489,11 @@ function markForm() {
     el.closest('.inp').classList.toggle('chg', !same(CUR[n], DFL[n]));
   });
 }
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'oObj') OPTUI.obj = e.target.value;
+  if (e.target.id === 'oBox') OPTUI.boxes = e.target.checked;
+  if (e.target.id === 'oKeep') OPTUI.keep = e.target.checked;
+});
 $('#form').addEventListener('input', (e) => {
   const el = e.target, n = el.dataset.n || el.dataset.r;
   if (!n || el.value === '') return;
@@ -548,7 +555,8 @@ async function poll() {
       const first = lastSeen === undefined; lastSeen = s.last;
       if (!first) { await loadRuns(); MT = null; await pickMt5(s.last); toast(`MT5 result in: <b>${esc(MT.run.label)}</b> · ${money(MT.run.report.net || 0)} · PF ${MT.run.report.pf}`); }
     }
-    if (TAB.tt === 'opt' && OPTS && (OPTS.running || (OPTS.mt5 && OPTS.mt5.run && !RUNS.find((x) => x.id === OPTS.mt5.run)))) { OPTS = await api('/api/opt'); renderPanel('tt'); }
+    const busyUi = document.activeElement && document.activeElement.closest && document.activeElement.closest('#panelTT') && /SELECT|INPUT/.test(document.activeElement.tagName);
+    if (!busyUi && TAB.tt === 'opt' && OPTS && (OPTS.running || (OPTS.mt5 && OPTS.mt5.run && !RUNS.find((x) => x.id === OPTS.mt5.run)))) { OPTS = await api('/api/opt'); renderPanel('tt'); }
   } catch (e) { setStatus('Turtle TV server not reachable', 'err'); }
   setTimeout(poll, OPTS && OPTS.running ? 700 : 2000);
 }
@@ -665,7 +673,7 @@ document.addEventListener('click', async (e) => {
     chart.timeScale().setVisibleLogicalRange({ from: barIdx(Date.UTC(y, m - 1, 1) / 1000 - TZ), to: barIdx(Date.UTC(y, m, 1) / 1000 - TZ) });
   }
   if (e.target.id === 'oGo') {
-    await api('/api/optimize', { start: CUR, objective: $('#oObj').value, boxes: $('#oBox').checked, keep: $('#oKeep').checked });
+    await api('/api/optimize', { start: CUR, objective: $('#oObj').value, boxes: $('#oBox').checked, keep: $('#oKeep').checked, ds: SRC.ds === 'tv' ? 'year' : SRC.ds });
     OPTS = await api('/api/opt'); renderPanel('tt');
   }
   if (e.target.id === 'oStop') { await api('/api/opt_stop', {}); OPTS = await api('/api/opt'); renderPanel('tt'); }
