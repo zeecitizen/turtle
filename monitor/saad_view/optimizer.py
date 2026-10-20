@@ -64,12 +64,16 @@ def neighbours(inputs, name, kind, grid, direction):
     return _fmt(kind, round(v / st) * st if kind == "num" else v)
 
 
-def evaluate(inputs, objective="ret_dd", min_trades=30):
+def evaluate(inputs, objective="ret_dd", min_trades=30, window=None):
     """One simulated year -> (train score, train stats, test stats, year stats)."""
     if int(float(inputs["InpEmaSlow"])) <= int(float(inputs["InpEmaFast"])) or int(float(inputs["InpSessTo"])) <= int(float(inputs["InpSessFrom"])):
         return -1e12, None, None, None
     tr = sim.simulate(inputs)[0]
-    trn, tst = tr[tr[:, 1] < TRAIN_END], tr[tr[:, 1] >= TRAIN_END]
+    if window:                                                   # (train from, train to, test from, test to), server time - walk-forward
+        a0, a1, b0, b1 = window
+        trn, tst = tr[(tr[:, 1] >= a0) & (tr[:, 1] < a1)], tr[(tr[:, 1] >= b0) & (tr[:, 1] < b1)]
+    else:
+        trn, tst = tr[tr[:, 1] < TRAIN_END], tr[tr[:, 1] >= TRAIN_END]
     a, b, y = sim.score(trn, min_trades), sim.score(tst, 10), sim.score(tr, min_trades)
     s = a["ret_dd"] if objective == "ret_dd" else (a["net"] if objective == "net" else a["pf"] if objective == "pf" else a["wr"])
     if a["n"] < min_trades:
@@ -78,7 +82,8 @@ def evaluate(inputs, objective="ret_dd", min_trades=30):
 
 
 class Optimizer:
-    def __init__(self, start, objective="ret_dd", boxes=False, keep_going=False, min_trades=30):
+    def __init__(self, start, objective="ret_dd", boxes=False, keep_going=False, min_trades=30, window=None):
+        self.window = window
         self.start = {k: str(v) for k, v in start.items()}
         self.objective, self.boxes, self.keep, self.min_trades = objective, boxes, keep_going, min_trades
         self.space = list(SPACE) + ([(f"box{s}{b:02d}", "box", None) for s in "BS" for b in range(21)] if boxes else [])
@@ -105,7 +110,7 @@ class Optimizer:
 
     def _eval(self, inp):
         self.evals += 1
-        return evaluate(inp, self.objective, self.min_trades)
+        return evaluate(inp, self.objective, self.min_trades, self.window)
 
     def descend(self, inp, label):
         sc, a, b, y = self._eval(inp)

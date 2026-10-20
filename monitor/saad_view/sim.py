@@ -109,7 +109,8 @@ def build_dataset(tag="simdata"):
     M = M[np.argsort(M[:, 0], kind="stable")]
     t15 = B[:, 0].astype(np.int64)
     t1 = M[:, 0].astype(np.int64)
-    keep = np.searchsorted(t15, t1, side="right") - 1 >= 0
+    kk = np.searchsorted(t15, t1, side="right") - 1
+    keep = (kk >= 0) & (t1 < t15[np.maximum(kk, 0)] + 900)       # a minute after the last exported candle has no candle (the export writes a candle when the next opens)
     M, t1 = M[keep], t1[keep]
     k1, first, m2c, roll = _timeline(t15, t1)
     SIMDATA.mkdir(exist_ok=True)
@@ -594,3 +595,25 @@ if __name__ == "__main__":
     tr, su, st = simulate(dfl); t2 = time.time()
     print(f"first call {t1 - t0:.2f}s (compile), then {1000 * (t2 - t1):.1f} ms per year")
     print("v1.27 defaults:", score(tr), st)
+
+
+def build_m15_dataset(path=r"C:\Users\zeesh\turtle\data_15min_2015_onwards_xauusd\XAUUSD_M15_201502040000_202610200300.csv", frm="2022.12.29"):
+    """Zee 2026-10-20: the Blueberry M15 export (MT5 'Export bars', tab separated). Only real 15-minute candles (from Dec 29 2022; earlier rows are
+    one candle a day). No 1-minute data: each candle is one step walked open, low, high, close (MT5's OHLC order) -> simdata/m15.npz."""
+    rows = []
+    for line in Path(path).read_text().splitlines()[1:]:
+        f = line.split("\t")
+        if len(f) >= 9 and f[0] >= frm:
+            rows.append((_ep(datetime.strptime(f[0] + " " + f[1][:5], "%Y.%m.%d %H:%M")), *[float(x) for x in f[2:6]], int(f[8]) * 0.01))
+    B = np.array(sorted(rows), dtype=np.float64)
+    t15 = B[:, 0].astype(np.int64)
+    k1, first, m2c, roll = _timeline(t15, t15.copy())
+    m2c = np.maximum(m2c - 840, 0)                                  # the candle is one step: its time is its last minute
+    atr, adx = _atr_adx(B[:, 1], B[:, 2], B[:, 3], B[:, 4])
+    hr = ((t15 // 3600) % 24).astype(np.int64)
+    out = SIMDATA / "m15.npz"
+    np.savez_compressed(out, t15=t15, hr15=hr, o15=B[:, 1], h15=B[:, 2], l15=B[:, 3], c15=B[:, 4], ef=np.zeros(len(t15)), es=np.zeros(len(t15)),
+                        adx=adx, atr=atr, t1=t15.copy(), o1=B[:, 1], h1=B[:, 2], l1=B[:, 3], c1=B[:, 4], sp1=np.maximum(B[:, 5], 0.10), k1=k1,
+                        first1=first, m2c=m2c, roll=roll, events=np.array([], dtype=object))
+    _D.pop("m15", None)
+    return out
