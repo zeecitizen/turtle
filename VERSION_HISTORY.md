@@ -28,6 +28,11 @@ exit mode 1 the v1.23 exits; it now picks the next EMA beyond the entry like `Do
 fallback 3 closes +$186,409 / 187 (tester +$201,642 / 187); 2R target + BE at 1R +$74,095 / 174 (tester +$89,350 / 177); trail 2 ATR from +1R +$148,439 / 204
 (+$152,556 / 204); half at 1R + BE +$144,408, 265 deals = 198 trades + 67 partial closes (+$150,804); out after 16 candles +$194,401 / 202 (+$205,028 / 202).
 The tester reads 2-8% high, as before. On v1.27's defaults none of these beats the default exit on 2026 - the Exit Lab's gains were on other settings / 4 years.
+Second batch, the rest of the blocks (runs r20261021_021141 ... _021817, MT5 vs tester, trades): opposite-signal exit +$61,980 / 210 vs +$70,836 / 210;
+no target + 10-candle trail +$154,424 / 171 vs +$165,533 / 171; swing trail +$250,824 / 201 vs +$262,243 / 201; lock ladder 1R + $5 trail from 1R
++$76,028 / 208 vs +$67,356 / 208 (MT5 higher: the tester reads tick trails pessimistically); no progress 8 + ADX 20 +$203,680 / 201 vs +$214,388 / 201;
+2 ATR target + thirds +$71,772 (283 deals incl. partials) vs +$86,275 / 184 trades; fallback 0.25 ATR buffer +$201,666 / 190 vs +$210,974 / 190;
+3 candles against + keep 50% from 1R + Friday 21h +$80,517 / 208 vs +$82,245 / 208. Every block: the same trades in MT5 and the tester.
 
 ---
 
