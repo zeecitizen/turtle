@@ -444,7 +444,7 @@ def ask_trade(body):
     if CLAUDE_EXE:
         try:
             r = subprocess.run([str(CLAUDE_EXE[-1]), "-p", "--output-format", "text", "--model", "opus", "--allowedTools", "Read", "Grep", "Glob"],
-                               input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=900, cwd=str(ROOT))
+                               input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=900, cwd=str(ROOT), creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
             text = r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else None
             err = None if text else f"Claude Code: {(r.stderr or r.stdout).strip()[:400]}"
         except Exception as e:                                   # noqa: BLE001
@@ -473,7 +473,7 @@ def _claude(prompt, tools, timeout=900, extra=()):
     if not CLAUDE_EXE:
         raise RuntimeError("Claude Code (claude.exe) not found")
     r = subprocess.run([str(CLAUDE_EXE[-1]), "-p", "--output-format", "text", "--model", "opus", *extra, "--allowedTools", *tools],
-                       input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=timeout, cwd=str(ROOT))
+                       input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=timeout, cwd=str(ROOT), creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     if r.returncode != 0 or not r.stdout.strip():
         raise RuntimeError(f"Claude Code: {(r.stderr or r.stdout).strip()[:400]}")
     return r.stdout.strip()
