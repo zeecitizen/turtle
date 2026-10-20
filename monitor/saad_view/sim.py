@@ -715,6 +715,6 @@ def simulate(inputs, ds="year", chart=False, lab=None, lego=None, **extra):
     out = np.zeros((8000, 20)); setups = np.zeros((60000, 3)); stats = np.zeros(10)             # 15-19: the Exit Lab's columns (sim_full._close)
     nt, ns = sim_full.run_full(D["t15"], D["hr15"], dow, D["o15"], D["h15"], D["l15"], D["c15"], ef, es, D["atr"],
                                adx_for(ds, int(P[sim_full.F["InpAdxPeriod"]])), hc, h1_, h2_, D["t1"], D["o1"], D["h1"], D["l1"], D["c1"],
-                               D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab), bb, bs, OS, OL, out, setups, stats)
+                               D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab if lab is not None else sim_full.lab_from_inputs(inputs)), bb, bs, OS, OL, out, setups, stats)
     return out[:nt], setups[:ns], dict(zip(["setups", "no_break", "risk", "adx", "atr_band", "band_skip", "gap", "spread_reject", "open_at_end", "open_since"],
                                            stats.astype(np.int64).tolist()))

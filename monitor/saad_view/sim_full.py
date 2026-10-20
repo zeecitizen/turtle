@@ -43,6 +43,28 @@ EFIELDS = ["on", "tgt", "tgt_k", "fb", "fb_buf", "fb_n", "cx", "cx_buf", "cx_n",
            "pess"]
 
 
+# v1.30: the Exit Lab as EA inputs (InpX*) - the same building blocks, so an exit is just settings
+XMAP = {"InpXTgt": "tgt", "InpXTgtK": "tgt_k", "InpXFb": "fb", "InpXFbBuf": "fb_buf", "InpXFbN": "fb_n", "InpXCx": "cx", "InpXCxBuf": "cx_buf", "InpXCxN": "cx_n",
+        "InpXCxWhen": "cx_when", "InpXCxAfter": "cx_after", "InpXP1R": "p1_r", "InpXP1Frac": "p1_frac", "InpXP1Be": "p1_be", "InpXP2R": "p2_r", "InpXP2Frac": "p2_frac",
+        "InpXBeR": "be_r", "InpXBeOff": "be_off", "InpXLockR": "lock_r", "InpXTr": "tr", "InpXTrK": "tr_k", "InpXTrAct": "tr_act", "InpXTrBuf": "tr_buf",
+        "InpXMaxBars": "max_bars", "InpXStaleBars": "stale_bars", "InpXStaleR": "stale_r", "InpXAdxExit": "adx_exit", "InpXFriHour": "fri_hour"}
+XFIELDS = {v: k for k, v in XMAP.items()}
+
+
+def _xv(v):
+    s = str(v).strip().lower()
+    return 1.0 if s == "true" else 0.0 if s in ("false", "") else float(s)
+
+
+def lab_from_inputs(inputs):
+    """the InpX* inputs -> the Exit Lab recipe, or None when they are all off (the EA's XOn())"""
+    L = {f: _xv(inputs[k]) for k, f in XMAP.items() if k in inputs}
+    g = lambda f, d=0.0: L.get(f, d)  # noqa: E731
+    on = (g("tgt") != 0 or g("fb") != 0 or g("fb_buf") > 0 or g("fb_n", 1) > 1 or g("cx") != 0 or g("p1_r") > 0 or g("p2_r") > 0 or g("be_r") > 0 or g("lock_r") > 0
+          or g("tr") != 0 or g("max_bars") > 0 or g("stale_bars") > 0 or g("adx_exit") > 0 or g("fri_hour") > 0)
+    return dict(L, pess=1.0) if on else None
+
+
 def evec(lab):
     """{'tgt': 2, 'tgt_k': 1.5, ...} -> E. None / {} = the Exit Lab off."""
     E = np.zeros(NE)

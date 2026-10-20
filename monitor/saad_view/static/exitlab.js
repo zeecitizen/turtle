@@ -14,6 +14,26 @@ const HEAT_PAIRS = [
   { name: 'No progress after N candles  ×  ... less than R', base: {}, fx: 'stale_bars', xs: [4, 6, 8, 12, 16, 24], fy: 'stale_r', ys: [0, 0.25, 0.5, 1] },
 ];
 const SLOT = { diagnose: 'diag', test: 'test', catalogue: 'cat', search: 'search', heatmap: 'heat' };
+// EA v1.30: every Exit Lab building block is an EA input (InpX*) - an exit is just settings
+const XMAP = { tgt: 'InpXTgt', tgt_k: 'InpXTgtK', fb: 'InpXFb', fb_buf: 'InpXFbBuf', fb_n: 'InpXFbN', cx: 'InpXCx', cx_buf: 'InpXCxBuf', cx_n: 'InpXCxN', cx_when: 'InpXCxWhen',
+  cx_after: 'InpXCxAfter', p1_r: 'InpXP1R', p1_frac: 'InpXP1Frac', p1_be: 'InpXP1Be', p2_r: 'InpXP2R', p2_frac: 'InpXP2Frac', be_r: 'InpXBeR', be_off: 'InpXBeOff',
+  lock_r: 'InpXLockR', tr: 'InpXTr', tr_k: 'InpXTrK', tr_act: 'InpXTrAct', tr_buf: 'InpXTrBuf', max_bars: 'InpXMaxBars', stale_bars: 'InpXStaleBars', stale_r: 'InpXStaleR',
+  adx_exit: 'InpXAdxExit', fri_hour: 'InpXFriHour' };
+function labToX(lab) {                                            // a recipe -> the EA settings (every field, so an old exit is fully replaced)
+  const out = {};
+  for (const [f, k] of Object.entries(XMAP)) {
+    const v = Number(lab && lab[f] != null ? lab[f] : (LABS.spec ? LABS.spec.default[f] : 0));
+    out[k] = f === 'p1_be' ? (v ? 'true' : 'false') : String(+v.toFixed(4));
+  }
+  return out;
+}
+function labFromX(inp) {                                          // the EA settings -> the recipe (null when the Exit Lab is off, like the EA's XOn())
+  const L = {};
+  for (const [f, k] of Object.entries(XMAP)) if (k in inp) L[f] = String(inp[k]).toLowerCase() === 'true' ? 1 : String(inp[k]).toLowerCase() === 'false' ? 0 : Number(inp[k]);
+  const g = (f, d = 0) => (f in L ? L[f] : d);
+  const on = g('tgt') || g('fb') || g('fb_buf') > 0 || g('fb_n', 1) > 1 || g('cx') || g('p1_r') > 0 || g('p2_r') > 0 || g('be_r') > 0 || g('lock_r') > 0 || g('tr') || g('max_bars') > 0 || g('stale_bars') > 0 || g('adx_exit') > 0 || g('fri_hour') > 0;
+  return on ? L : null;
+}
 if (/(^|[#&])labshow=1/.test(location.hash)) LABS.showLab = true;           // a link straight to the lab's trades on the chart
 
 // ---------- plumbing ----------
@@ -99,7 +119,8 @@ const EVIDENCE = `<div class="hintbox">📜 <b>Evidence already on file (MT5, no
 const CALIB = `<div class="hintbox">📏 <b>How far to trust the "In the EA" rows (MT5 check, 2026-10-20, 2026 data, no delay - the same trades in all four):</b>
   stop $12 MT5 +$260,289 (lab +$272,607) · your exit +$242,911 (lab +$253,432) · stop 1.4 x ATR +$241,710 (lab +$259,983) · exit mode 2 +$180,909 (lab +$189,223).
   The lab reads 4-8% high and swapped the two closest (1.4 ATR vs yours: +$6.6k in the lab, -$1.2k in MT5). <b>For these rows a difference under ~4% of the total is a tie</b> (marked ≈).
-  <b>"Lab only" rows have no MT5 check yet</b> - their new code (targets, trails, time exits, long holds) is unproven until "Make it an EA setting" and MT5.</div>`;
+  <b>Since EA v1.30 every Exit Lab exit is an EA setting (InpX…)</b>, MT5-checked on 2026: fallback 3 closes MT5 +$186,409 vs tester +$201,642 (187 = 187 trades), 2R + breakeven +$74,095 vs +$89,350,
+  trail 2 ATR +$148,439 vs +$152,556 (204 = 204), half at 1R +$144,408 vs +$150,804, 16 candles +$194,401 vs +$205,028 (202 = 202): the same 2-8% optimism.</div>`;
 const tie = (d, base) => Math.abs(d) < Math.max(5000, 0.04 * Math.abs(base));
 const mm = (s) => `${money(s.net)} <span class="k">· ${s.wr}% · ${s.n}</span>`;
 
@@ -110,7 +131,7 @@ function pLab() {
   const dsName = SRC.ds === 'm15' ? 'Blueberry 2023 → now (4 years)' : '2026 (Blueberry real ticks)';
   let h = `<div class="lab"><p class="note"><b>Exit Lab.</b> The entries stay your EA's (the settings on screen); only the exit changes. Every exit runs in the
     Turtle TV Tester's own engine, inside every minute, so a trade held longer still blocks the next setup. Data: <b>${dsName}</b>${SRC.ds === 'tv' ? ' (the lab uses Blueberry 2026 for TradingView\'s candles)' : ''}.
-    ${SRC.mode !== 'ea' ? '<span class="warn">The lab always uses the EA’s own rules (real spread and swap), not the chart’s.</span> ' : ''}Choices are made on <b>${LA}</b>; <b>${LB}</b> is the test. <span class="tag ea">In the EA</span> = MT5 can check it now · <span class="tag lab">Lab only</span> = a hypothesis until it is built into the EA and MT5 confirms it.</p>`;
+    ${SRC.mode !== 'ea' ? '<span class="warn">The lab always uses the EA’s own rules (real spread and swap), not the chart’s.</span> ' : ''}Choices are made on <b>${LA}</b>; <b>${LB}</b> is the test. <span class="tag ea">In the EA</span> = MT5 can check it now · <span class="tag lab">EA v1.30 (InpX)</span> = an Exit Lab exit, also an EA setting since v1.30.</p>`;
   h += `<div class="bar"><button data-lab="diagnose">🩺 Where do my exits leave money?</button><button data-lab="catalogue" class="primary">🧪 Test every exit (${ncat})</button>
     <button data-lab="search">🧠 Find the best exit for me</button><label>choose by <select id="labObj">${[['net', `net on ${LA}`], ['ret_dd', 'net ÷ drawdown'], ['pf', 'profit factor'], ['wr', 'win rate']]
       .map(([v, l]) => `<option value="${v}" ${v === LABS.obj ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label><button data-lab="stop">Stop</button></div>`;
@@ -211,7 +232,7 @@ function labTestResult(T, LA, LB) {
   const wv = T.worst, onlyOpt = s.total > b.total && wv.total < wv.base_total;
   if (s.stuck) h += `<p class="bad">⚠ A trade (or a stand-aside) never closed: open since ${esc(dt(s.open_end.since))} until the end of the data (${s.open_end.days} days). Nothing in this exit closes it
     (no target and no rule for a winner), so it blocks every later setup - these numbers are not usable. Add a target, a trail or a time limit.</p>`;
-  h += `<p class="note">${isEA && tie(s.total - b.total, b.total) && s.changed ? '<span class="warn">≈ A tie: the difference is within the lab’s error against MT5 (~4%).</span> ' : ''}${!isEA ? '<span class="tag lab">Lab only: no MT5 check yet</span> ' : ''}${both ? '<span class="good">✓ Better than yours in both halves.</span>' : s.total > b.total ? '<span class="warn">Better in total but not in both halves - the unseen half decides.</span>' : '<span class="bad">Not better than your exit.</span>'}
+  h += `<p class="note">${isEA && tie(s.total - b.total, b.total) && s.changed ? '<span class="warn">≈ A tie: the difference is within the lab’s error against MT5 (~4%).</span> ' : ''}${!isEA ? '<span class="tag lab">EA v1.30 settings - Check in MT5 after applying</span> ' : ''}${both ? '<span class="good">✓ Better than yours in both halves.</span>' : s.total > b.total ? '<span class="warn">Better in total but not in both halves - the unseen half decides.</span>' : '<span class="bad">Not better than your exit.</span>'}
     ${s.changed} trades end differently · ${s.new} new and ${s.gone} missing entries (a trade held longer or shorter changes which setups can enter) · partial closes in ${s.partials} trades ·
     longest trade ${s.longest_h} h${s.longest_h > 48 ? ' <span class="bad">(a trade stayed open for days - this exit can hold a loser a long time)</span>' : ''}.
     Adverse move first inside every minute: ${money(wv.total)} vs yours ${money(wv.base_total)}${onlyOpt ? ' <span class="bad">⚠ it only wins when the minute is read in the optimistic order</span>' : wv.total === s.total ? ' (same - no minute held both the stop and the exit)' : ''}.</p>`;
@@ -233,7 +254,7 @@ function labTestResult(T, LA, LB) {
   }
   if (!isEA) {
     const F = LABS.feat;
-    h += `<div class="bar"><button data-lab="feature" ${F && F.running ? 'disabled' : ''}>🛠 Make it an EA setting</button><span class="k">Claude builds this exit into the EA (off by default), mirrors it in the tester, runs MT5 off vs on, records the version and commits.</span></div>`;
+    h += `<div class="bar"><button data-labx="1" class="dexbtn">✅ APPLY THIS EXIT TO THE CHART</button><span class="k">every building block is an EA v1.30 setting (InpX…): it goes on the chart like any setting, ready for Check in MT5 / Export to MT5.</span></div>`;
     if (F) h += F.running ? `<p class="note">⏳ ${esc(F.phase || 'working')}</p>` : F.error ? `<p class="warn">⚠ ${esc(F.error)}</p>` : F.result ? `<div class="hintbox" style="white-space:pre-wrap">${esc(F.result.report)}</div>` : '';
   } else if (Object.keys(T.sets || {}).length) h += `<div class="bar"><button data-lapply="1">Apply to the chart</button><button data-lmt5t="1">Check in MT5</button></div>`;
   return h;
@@ -256,7 +277,7 @@ function labCatalogue(C, LA, LB) {
     <label class="tog"><input type="checkbox" id="labBoth" ${LABS.both ? 'checked' : ''}> only the ones better in both halves</label></div>`;
   h += `<div class="scroll" style="max-height:560px">` + table(['Exit', '', LA, LB, 'Total', 'vs yours', 'WR', 'PF', 'Max DD', 'Trades', 'Changed', 'Longest', 'Robust', 'Worst order', ''], rows.map(({ r, i }) => {
     const s = r.stats, both = s.train.net > b.train.net && s.test.net > b.test.net;
-    const tag = r.kind === 'ea' ? `<span class="tag ea">In the EA</span>${r.trust === 'untrusted' ? '<span class="tag unt" title="verify_settings.py: the tester and MT5 move the result in opposite directions on this setting">⚠ tester ≠ MT5</span>' : r.trust === 'check' ? '<span class="tag unt" title="the tester and MT5 differ in size on this setting">check in MT5</span>' : ''}` : '<span class="tag lab">Lab only</span>';
+    const tag = r.kind === 'ea' ? `<span class="tag ea">In the EA</span>${r.trust === 'untrusted' ? '<span class="tag unt" title="verify_settings.py: the tester and MT5 move the result in opposite directions on this setting">⚠ tester ≠ MT5</span>' : r.trust === 'check' ? '<span class="tag unt" title="the tester and MT5 differ in size on this setting">check in MT5</span>' : ''}` : '<span class="tag lab">EA v1.30 (InpX)</span>';
     const w = r.worst ? `<span class="${r.worst.total >= r.worst.base_total ? '' : 'bad'}" title="yours in the same order: ${money(r.worst.base_total)}">${money(r.worst.total)}</span>` : '';
     return `<tr class="${both ? 'both' : ''}"><td class="l"><b>${esc(r.name)}</b><br><span class="k">${esc(r.fam)}</span></td><td>${tag}</td>` +
       `<td class="${cls(s.train.net - b.train.net)}">${money(s.train.net)}</td><td class="${cls(s.test.net - b.test.net)}">${money(s.test.net)}</td><td><b>${money(s.total)}</b></td>` +
@@ -273,7 +294,7 @@ function labSearch(S, LA, LB) {
   const b = S.base;
   let h = `<section><h3>🧠 The best exits found</h3>${stale(S)}<p class="note">Started from the 6 best exits on ${LA}; every number was moved one step at a time and every other kind of exit was tried on top,
     keeping a change only if ${LA} improved. ${LB} was never looked at - it is the test. <b>Robust</b> = of the one-step changes either side of every number, how many still beat yours in both halves.
-    <b>Worst order</b> = the adverse move first inside every minute (yours: ${money(S.base_worst)}). All of these are <b>Lab only: no MT5 check yet</b>.</p>`;
+    <b>Worst order</b> = the adverse move first inside every minute (yours: ${money(S.base_worst)}). All of these are EA v1.30 settings: apply one, then Check in MT5.</p>`;
   h += table(['Exit', LA, LB, 'Total', 'vs yours', 'WR', 'Robust', 'Worst order', ''], S.finals.map((f, i) => {
     const s = f.stats, both = s.train.net > b.train.net && s.test.net > b.test.net, pl = f.plateau || [0, 0];
     return `<tr class="${both ? 'both' : ''}"><td class="l"><b>${esc(f.describe)}</b><br><span class="k">from: ${esc(f.seed)}</span></td><td>${mm(s.train)}</td><td class="${cls(s.test.net - b.test.net)}">${mm(s.test)}</td>` +
@@ -366,6 +387,7 @@ document.addEventListener('click', (e) => {
       labStart('heatmap', { lab: { ...labForm(), ...p.base }, fx: p.fx, fy: p.fy, xs: p.xs, ys: p.ys });
     } else if (a === 'feature') labFeature();
   }
+  if (d.labx && LABS.test) { CUR = { ...CUR, ...labToX({ ...LABS.spec.default, ...LABS.test.lab }) }; ACTIVE_LAB = null; markForm(); scheduleSim(0); toast('This exit is on the chart as EA settings (InpX…).'); }
   if (d.lload) { LABS.form = { ...LABS.spec.default, ...JSON.parse(d.lload) }; LABS.goResult = true; toast('Testing it - the result opens under "Build an exit".'); labStart('test', { lab: labForm() }); }
   if (d.lrow != null && LABS.cat) { LABS.goResult = true; labRunRow(LABS.cat.rows[+d.lrow]); }
   if (d.lmt5 != null && LABS.cat) { const r = LABS.cat.rows[+d.lmt5]; labMt5(r.name, r.sets); }

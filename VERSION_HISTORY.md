@@ -16,6 +16,21 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.30 (2026-10-21) — the Exit Lab inside the EA
+
+Zee: *"we don't need to treat Exit lab's exits differently -> they can be saved and applied like normal settings"*. Every Turtle TV Exit Lab building block is now an
+EA input (`InpX*`, 27, all off): `XTick` (partials, the lab target, breakeven / lock ladder, $ / ATR / keep-% trails - after the entry minute) and `XBar` (the
+fallback with buffer / N closes, close-based exits, EMA / candle / N-candle / swing trails, time, no-progress, ADX, Friday), for exit modes 1-2, the same rules as
+`monitor/saad_view/sim_full.py` (the tester reads the same inputs: `sim_full.lab_from_inputs`). Also fixed: `SyncPos` gave a position adopted after a restart in
+exit mode 1 the v1.23 exits; it now picks the next EMA beyond the entry like `DoEntry`.
+
+**MT5 receipts** (Blueberry XAUUSD_BB, Jan 1 - Oct 17 2026, no delay, 2 lots; runs r20261021_020326 ... _020802): all off +$242,911 / 198 trades (= v1.29);
+fallback 3 closes +$186,409 / 187 (tester +$201,642 / 187); 2R target + BE at 1R +$74,095 / 174 (tester +$89,350 / 177); trail 2 ATR from +1R +$148,439 / 204
+(+$152,556 / 204); half at 1R + BE +$144,408, 265 deals = 198 trades + 67 partial closes (+$150,804); out after 16 candles +$194,401 / 202 (+$205,028 / 202).
+The tester reads 2-8% high, as before. On v1.27's defaults none of these beats the default exit on 2026 - the Exit Lab's gains were on other settings / 4 years.
+
+---
+
 ## Saad_strategy_15min v1.29 (2026-10-20) — fix: a stand-aside that never ended under the v1.23 exits
 
 Found while building the Turtle TV Exit Lab: in the Turtle TV Tester on Blueberry's 4 years, exit mode 0 with Zee's range boxes + stand-aside

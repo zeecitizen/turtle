@@ -31,6 +31,7 @@ function labTips(ea) {                                           // lab suggesti
 function labResearch() {
   const T = LABS.test, f = labForm(), lab = Object.fromEntries(Object.entries(f).filter(([k, v]) => k !== 'pess' && Number(v) !== Number(LABS.spec.default[k])));
   const ea = { ...CUR, ...RS.sets };
+  if (!RS.formFromX) { RS.formFromX = true; const x = labFromX(CUR); if (x) LABS.form = { ...LABS.spec.default, ...x }; }   // the bench starts from your exit
   const key = JSON.stringify([diffDfl(CUR), SRC.ds]);                // settings loaded / changed since the bench last ran: run it again on them
   if ((!T || stale(T)) && RS.ranFor !== key && !(LABS.quick && LABS.quick.running)) { RS.ranFor = key; setTimeout(() => labStart('test', { lab: labForm(), sets: RS.sets }), 0); }
   let h = `<section class="dexlab"><h3 class="dexh">🧠 CLAUDE'S EXIT RESEARCH LAB</h3> <span class="k">drag a lever: the exit re-runs on the data and the drawing shows what it made</span>
@@ -62,6 +63,20 @@ function labResearch() {
   }
   return h + '</section>';
 }
+async function saveExit() {                                     // the levers' exit becomes the EA's settings (v1.30 InpX*), on the chart, saved
+  const box = document.createElement('div'); box.id = 'saveBox';
+  const step = (pct, txt) => { box.innerHTML = `<div class="crt" style="min-width:360px"><div class="crth">💾 SAVING YOUR EXIT</div><div>${txt}</div><div class="prog" style="width:100%;margin-top:8px"><i style="width:${pct}%"></i></div></div>`; };
+  document.body.appendChild(box); step(10, 'turning the exit into EA settings…');
+  const f = labForm();
+  CUR = { ...CUR, ...RS.sets, ...labToX(f) }; RS.sets = {}; ACTIVE_LAB = null; markForm();
+  await new Promise((r) => setTimeout(r, 250)); step(40, 'running it on the chart…');
+  await runSim();
+  step(75, 'saving it with its result…');
+  const r = await api('/api/save', { inputs: CUR, ds: SRC.ds, mode: SRC.mode, result: TT ? TT.year : null });
+  await loadSaved();
+  step(100, `<b>Saved!</b> as ${esc(r.name)} - it is your exit now (EA v1.30 settings): Check in MT5 / Export to MT5 work as usual.`);
+  setTimeout(() => box.remove(), 2600);
+}
 async function rsLoad() { RS.reports = await api('/api/exitlab_research').catch(() => []); if (TAB.tt === 'lab') renderPanel('tt'); }
 document.addEventListener('input', (e) => {
   const id = e.target.dataset && e.target.dataset.lever;
@@ -74,16 +89,7 @@ document.addEventListener('change', (e) => {
 });
 document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
-  if (d.rs === 'save') {                                          // the levers' exit: its EA part on the chart, the whole exit saved with its result
-    const f = labForm(), lab = Object.fromEntries(Object.entries(f).filter(([k, v]) => k !== 'pess' && Number(v) !== Number(LABS.spec.default[k])));
-    CUR = { ...CUR, ...RS.sets };
-    ACTIVE_LAB = Object.keys(lab).length ? { ...LABS.spec.default, ...f, _d: T0describe() } : null; markForm(); scheduleSim(0);
-    const T = LABS.test, s = T && !stale(T) ? T.stats.all : null;
-    const r = await api('/api/save', { inputs: CUR, ds: SRC.ds === 'tv' ? 'year' : SRC.ds, mode: 'ea', lab: Object.keys(lab).length ? { ...LABS.spec.default, ...f } : null,
-      result: s ? { n: s.n, wr: s.wr, net: T.stats.total, pf: s.pf } : null });
-    RS.sets = {}; await loadSaved();
-    toast(`Saved as <b>${esc(r.name)}</b> (Saved settings, bottom of the page).` + (Object.keys(lab).length ? ' The stop is on the chart; the lab parts (target, trail, breakeven, half-off) live in the Exit Lab - "Load" brings them back there. To run them in MT5 use "🛠 Make it an EA setting".' : ' It is on the chart.'), 14000);
-  }
+  if (d.rs === 'save') saveExit();
   if (d.rs === 'reset') { RS.sets = {}; LABS.form = { ...LABS.spec.default }; labStart('test', { lab: labForm() }); }
   if (d.rs === 'go') {
     RS.q = ($('#rsQ').value || '').trim() || RS.q;
