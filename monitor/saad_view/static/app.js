@@ -574,12 +574,15 @@ function pOpt() {
            : `<p class="note">⏳ The best is running in MT5 now (about a minute); its result appears in the MT5 section.</p>`;
   } else if (best && Object.keys(best.changed).length && !o.running) h += `<p class="note">The best goes to MT5 automatically when the optimizer finishes.</p>`;
   if (best && Object.keys(best.changed).length) h += `<p><button id="oApply" class="go">Show the best on the chart</button> <span class="k">changes: ${Object.entries(best.changed).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))} ${esc(CUR[k] ?? '')} → ${esc(v)}`).join(', ')}</span></p>`;
+  const n0 = (B.train.n || 0) + (B.test.n || 0);                 // the trade count vs your settings': is the score bought by cutting trades?
+  const ntd = (a, b) => { const n = (a.n || 0) + (b.n || 0), f = n0 ? n / n0 : 1;
+    return `<td class="${f < 0.5 ? 'bad' : f < 0.8 ? 'warn' : ''}" title="${a.n} + ${b.n} trades; your settings: ${n0}">${n.toLocaleString()} <span class="k">(${Math.round(100 * f)}%)</span></td>`; };
   const steps = o.log.map((l, i) => `<tr><td>${i + 1}</td><td style="text-align:left">${esc(l.run)}</td><td style="text-align:left">${esc(l.setting.replace(/^Inp/, ''))}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td>${(+l.score).toFixed(2)}</td>` +
-    `<td class="${cls(l.train.net)}">${money(l.train.net)} · ${l.train.wr}%</td><td class="${cls(l.test.net)}">${money(l.test.net)} · ${l.test.wr}%</td><td class="${cls(l.train.net + l.test.net)}"><b>${money(l.train.net + l.test.net)}</b></td><td class="k">${l.t}s</td>` +
+    `<td class="${cls(l.train.net)}">${money(l.train.net)} · ${l.train.wr}%</td><td class="${cls(l.test.net)}">${money(l.test.net)} · ${l.test.wr}%</td><td class="${cls(l.train.net + l.test.net)}"><b>${money(l.train.net + l.test.net)}</b></td>${ntd(l.train, l.test)}<td class="k">${l.t}s</td>` +
     `<td>${l.inputs ? `<button data-step="${o.log.length > 200 ? i + o.log.length - 200 : i}">Apply this setting</button>` : ''}</td></tr>`);
-  h += `<h4>Steps that helped</h4><div class="scroll">${table(['#', 'Run', 'Setting', 'Change', 'Score', LA, LB, 'Total', 'At', ''], steps)}</div>`;
-  if (o.board && o.board.length > 1) h += `<h4>Best of each restart</h4>` + table(['Score', LA, LB, 'Total', 'Changes', ''],
-    o.board.map((x, i) => `<tr><td>${(+x.score).toFixed(2)}</td><td>${money(x.train.net)} · ${x.train.wr}%</td><td class="${cls(x.test.net - B.test.net)}">${money(x.test.net)} · ${x.test.wr}%</td><td><b>${money(x.train.net + x.test.net)}</b></td>` +
+  h += `<h4>Steps that helped</h4><div class="scroll">${table(['#', 'Run', 'Setting', 'Change', 'Score', LA, LB, 'Total', 'Trades (vs yours)', 'At', ''], steps)}</div>`;
+  if (o.board && o.board.length > 1) h += `<h4>Best of each restart</h4>` + table(['Score', LA, LB, 'Total', 'Trades (vs yours)', 'Changes', ''],
+    o.board.map((x, i) => `<tr><td>${(+x.score).toFixed(2)}</td><td>${money(x.train.net)} · ${x.train.wr}%</td><td class="${cls(x.test.net - B.test.net)}">${money(x.test.net)} · ${x.test.wr}%</td><td><b>${money(x.train.net + x.test.net)}</b></td>${ntd(x.train, x.test)}` +
       `<td style="text-align:left" class="k">${Object.entries(x.changed).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ')}</td><td><button data-board="${i}">show</button></td></tr>`));
   return h;
 }
