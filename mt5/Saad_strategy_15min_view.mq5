@@ -34,11 +34,13 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.27"
+#property version   "1.28"
 #property strict
 
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
+// v1.28 (Zee 2026-10-20: "Skip setup if pinbar/maribuzu/setup candle touches both EMAs"): new InpSkipBothEma, OFF by default -
+//        with it off, trading is identical to v1.27.
 // v1.27 (Zee 2026-10-19: "keep nose 0.35"): InpNoseMax 0.20 -> 0.35 - every other v1.26 setting unchanged. MT5 full year: nose 0.30-0.45
 //       all +$244-248k, PF 2.74-2.79, DD $28.3k (v1.26 +$211k, PF 2.52, DD $35k); about $24k of the gain is one trade (Mar 31 BUY)
 // v1.26 (Zee 2026-10-19: "make our chart setup PF 2.53 be the next version of saad_ea_15min"): the chart setup as DEFAULTS -
@@ -58,7 +60,7 @@
 // VIEWER copy (Zee 2026-10-20: "a tradingview's copy web app which can show the entire year's candles and my MT5 EA's code applied to the
 //   candles"): Saad_strategy_15min VERBATIM + an export of every candle and decision for the web chart (monitor/saad_view). Built by
 //   monitor/saad_view/make_view_ea.py - do not edit by hand. TEST - run it in the Strategy Tester, never attach to an account.
-#define EA_COMMENT "Saad15 view v1.27"
+#define EA_COMMENT "Saad15 view v1.28"
 
 //--- the two lines
 input int    InpEmaFast     = 16;      // InpEmaFast
@@ -86,6 +88,7 @@ input int    InpShortLine   = 1;      // InpShortLine — 0 the 50 EMA (rules) �
 input int    InpTouchMode   = 0;      // InpTouchMode — 0 candle touches the EMA · 1 wick touches, body on the trade side
 input double InpTouchPips   = 1;      // InpTouchPips — touch tolerance [v1.23: 0->1; 1-3 pips plateau, 4+ worse]
 input bool   InpLongExitAbove = false;// InpLongExitAbove — LONG only when its exit EMA is above the candle
+input bool   InpSkipBothEma = false;  // InpSkipBothEma — skip the setup when its candle touches BOTH EMAs (touch tolerance included) [v1.28, Zee]
 
 //--- ② break · ③ entry
 input int    InpBreakBars   = 1;      // InpBreakBars — the high/low must break within this many candles [M15: 2->1, one 15-min candle = three 5-min ones]
@@ -1248,6 +1251,7 @@ void DetectSetup()
    double h = iHigh(_Symbol, PERIOD_CURRENT, 1), l = iLow(_Symbol, PERIOD_CURRENT, 1);
    double o = iOpen(_Symbol, PERIOD_CURRENT, 1), c = iClose(_Symbol, PERIOD_CURRENT, 1);
 
+   if (InpSkipBothEma && MathMin(e9, e50) >= l - InpTouchPips * Pip() && MathMax(e9, e50) <= h + InpTouchPips * Pip()) return;   // the candle touches both EMAs
    bool on9L = OnLine(1, e9, 1), on50L = OnLine(1, e50, 1);
    bool rulesOk = InpLongRule != 1 && on9L  && !(InpLongExitAbove && e50 <= h);
    bool invOk   = InpLongRule != 0 && on50L && !(InpLongExitAbove && e9 <= h);

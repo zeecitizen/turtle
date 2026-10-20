@@ -227,7 +227,7 @@ SURVEY = {
                 ("InpSessFrom", [0, 3, 8, 10, 15]), ("InpSessTo", [17, 19, 22, 24]), ("InpRangeLook", [5, 7, 10, 14]), ("InpRangeLookS", [5, 7, 10, 14]),
                 ("InpBandOff", [0, 1]), ("InpBandsB", ["1" * 21]), ("InpBandsS", ["1" * 21]), ("InpEntryMode", [0, 1, 2]),
                 ("InpChopEr", [0, 0.05, 0.1, 0.15]), ("InpTrendAlign", ["true", "false"]), ("InpPriceSide", ["true", "false"]), ("InpHtfMin", [0, 60, 240]),
-                ("InpCoolBars", [0, 2, 4, 8]), ("InpSkipDow", [-1, 1, 5])],
+                ("InpCoolBars", [0, 2, 4, 8]), ("InpSkipDow", [-1, 1, 5]), ("InpSkipBothEma", ["true", "false"])],
     "exits": [("InpExitMode", [0, 1, 2]), ("InpSlMode", [0, 1, 2]), ("InpSlAtrMult", [1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.5]),
               ("InpSlPips", [20, 31, 40, 60]), ("InpSlUsd", [3, 5, 8, 12]), ("InpMaxRiskUsd", [0, 10, 15, 20, 25, 30]),
               ("InpCloseLossMins", [0, 3, 15]), ("InpBeUsd", [0, 3, 5, 8, 12]), ("InpLockAtUsd", [0, 5, 8, 12]), ("InpFixTpPips", [0, 20, 40, 60, 100]),

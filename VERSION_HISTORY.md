@@ -16,6 +16,19 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.28 (2026-10-20) — v1.27 + "skip if the candle touches both EMAs" (off)
+
+Zee: *"is there a setting called: Skip setup if pinbar/maribuzu/setup candle touches both EMAs .."* then *"yes add it"*.
+There was none (InpLongRule 2 / InpShortLine 2 mean EITHER EMA is fine; InpLongExitAbove is longs only).
+
+- New `InpSkipBothEma` (default **false**): in `DetectSetup`, after the EMAs are read, a candle whose range (± `InpTouchPips`) holds both EMAs is skipped.
+- Off = v1.27 trade for trade. Turtle TV (`sim_full.py`, `F_BOTH`) mirrors it; it is in the optimizer's Entries survey.
+- **MT5 receipts** (Blueberry XAUUSD_BB M15, Jan 1 - Oct 17 2026, random delay, $100k, 2 lots, runs r20261020_211212 / _211322):
+  off +$241,077 · PF 2.68 · 198 trades · DD $28,320 — on +$92,348 · PF 1.97 · 138 trades · DD $22,098 (losing streak 9 -> 4).
+  Turtle TV predicted 198 / 138 trades exactly (Python +$253k / +$100k). Higher win rate, much less money: **keep it off.**
+
+---
+
 ## Saad_strategy_15min_view (2026-10-20) — TOOL: v1.27 + an export, the engine of Turtle TV
 
 Zee: *"i want to build a tradingview's copy web app which can show the entire year's candles and my MT5 EA's code applied to the candles"* ·
