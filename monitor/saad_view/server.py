@@ -872,6 +872,101 @@ Finish with a short report for Zee (plain English, under 15 lines): the settings
     return {"id": jid}
 
 
+# ---------------------------------------------------------------- Claude's exit research (Zee 2026-10-21: "i want it to be a claude intelligence ai based
+# lab where the exit's philosophy is refined by claude by doing research and bringing in improvements which matter intelligently rather than just some
+# math values being tweaked"). Claude runs the Exit Lab itself (exitlab_cli.py), studies WHY, and proposes exits; every proposal is then re-tested here.
+RESEARCH = Path(__file__).parent / "asks" / "exitlab_research.json"
+
+
+def _research_list():
+    try:
+        return json.loads(RESEARCH.read_text(encoding="utf-8"))
+    except Exception:                                           # noqa: BLE001
+        return []
+
+
+def lab_research(body):
+    if any(j["running"] and j["kind"] == "research" for j in HJOBS.values()):
+        return {"error": "Claude is already researching; wait for it to finish"}
+    inputs = full_inputs(body.get("inputs") or {})
+    ds = body.get("ds") if body.get("ds") in ("year", "m15") else "year"
+    q = (body.get("question") or "").strip() or "Study my exit and make it better."
+    jid = f"r{int(time.time() * 1000)}"
+    base_file = RESEARCH.parent / f"research_{jid}_settings.json"
+    base_file.parent.mkdir(parents=True, exist_ok=True)
+    base_file.write_text(json.dumps(inputs), encoding="utf-8")
+    job = HJOBS[jid] = {"id": jid, "kind": "research", "running": True, "phase": "starting", "result": None, "error": None}
+    cli = f'py monitor/saad_view/exitlab_cli.py --base "{base_file}" --ds {ds}'
+    prompt = f"""You are the head of Turtle TV's Exit Lab, researching the EXIT of Zee's Saad gold EA (XAUUSD, 15-minute candles, 2 lots). The entries
+stay as they are; your job is the exit's PHILOSOPHY - understand WHY it leaves money, then design better exits from that understanding, not by
+tweaking numbers at random.
+
+Zee's question: {q}
+
+Your instrument (run it as often as you need; JSON out; Python tester numbers are hypotheses until MT5 confirms them):
+  {cli} diagnose                       where the exit leaves money (best move vs result, after-exit behaviour, reasons)
+  {cli} givebacks --n 30               the winners that gave back the most, with context (hour, ADX, ATR, bars held, how they ended)
+  {cli} slice --by mfe_r|bars|hour|weekday|side|year|adx|atr|why     where the giveback / losses sit
+  {cli} test --lab '{{...}}' [--sets '{{"InpSlAtrMult": "1.4"}}']     any exit (the fields: py monitor/saad_view/exitlab_cli.py blocks)
+The data: {'Blueberry 2023 - now (4 years); choose on 2023-2024, judge on 2025-2026' if ds == 'm15' else '2026; choose on Jan-Jun, judge on Jul-Oct'}.
+Settings on screen (differences from the defaults): {json.dumps({k: v for k, v in inputs.items() if not same(v, axi_rig.ea_defaults(EA).get(k))})}
+You may read the code (monitor/saad_view/sim_full.py Exit Lab blocks, mt5/Saad_strategy_15min.mq5) and LAWS.md (Zee's rules - never edit anything).
+
+Method:
+1. Diagnose. Then find the MECHANISM: which trades give back (by best move, bars, hour, ADX, side...), what the market did at their peak, and why
+   the current rules let it go (e.g. the EMA target sits far away while the move fades; the fallback waits for a close across the fast EMA...).
+2. Write 2-4 hypotheses about the mechanism, each with the evidence from your runs.
+3. Design 2-4 exits that follow from them (not a grid search), test each, and keep the honest result: both halves, the win rate (Zee cares about it),
+   BUY vs SELL (2023-2026 was a gold bull market), and "stuck" (an exit that never closes some trades is unusable). Prefer simple, robust ideas;
+   say plainly when an idea failed. MT5 evidence on file: rules that close trades between the stop and the target have cost money before.
+4. Answer in English, for Zee: the mechanism (short), the evidence, what you propose and why, what failed. Under 40 lines.
+5. END with exactly one line `PROPOSALS:` followed by a JSON array, no code fence:
+   [{{"name": "<short>", "lab": {{...exit lab fields...}}, "sets": {{...EA inputs, usually {{}}...}}, "philosophy": "<one sentence: the idea>"}}]"""
+
+    def go():
+        try:
+            job["phase"] = "Claude is studying the exit (runs experiments, several minutes)"
+            txt = _claude(prompt, ["Read", "Grep", "Glob", "Bash(py:*)", "Bash(python:*)"], timeout=2400)
+            props = []
+            if "PROPOSALS:" in txt:
+                tail = txt.rsplit("PROPOSALS:", 1)[1]
+                m = re.search(r"\[.*\]", tail, re.S)
+                if m:
+                    try:
+                        props = json.loads(m.group(0))
+                    except Exception:                       # noqa: BLE001
+                        props = []
+                txt = txt.rsplit("PROPOSALS:", 1)[0].strip()
+            job["phase"] = "re-testing every proposal independently"
+            win, labels = exitlab.window_of(ds, inputs)
+            _, b, boe = exitlab.run(inputs, ds)
+            bs = exitlab.stats(b, win, open_end=boe)
+            for pr in props[:6]:
+                lab = exitlab.clean(pr.get("lab") or {}) if pr.get("lab") else {}
+                lab = lab if [f for f in lab if f != "pess"] else {}
+                sets = {k: str(v) for k, v in (pr.get("sets") or {}).items()}
+                if lab and str(dict(inputs, **sets).get("InpExitMode")) not in ("1", "2"):
+                    sets["InpExitMode"] = "1"
+                _, r, oe = exitlab.run(inputs, ds, lab=lab or None, sets=sets)
+                s = exitlab.stats(r, win, open_end=oe)
+                pr["lab"], pr["sets"], pr["describe"] = lab, sets, exitlab.describe(lab) if lab else "the EA's own exit"
+                pr["verified"] = {"train": s["train"], "test": s["test"], "total": s["total"], "wr": s["all"]["wr"], "pf": s["all"]["pf"], "dd": s["all"]["dd"],
+                                  "sides": s["sides"], "stuck": s["stuck"]}
+            rep = {"id": jid, "at": datetime.now().strftime("%Y-%m-%d %I:%M %p"), "question": q, "ds": ds, "labels": labels, "report": txt, "proposals": props[:6],
+                   "base": {"train": bs["train"], "test": bs["test"], "total": bs["total"], "wr": bs["all"]["wr"]}, "inputs": inputs}
+            allr = _research_list()
+            allr.insert(0, rep)
+            RESEARCH.write_text(json.dumps(allr[:30], indent=1, ensure_ascii=False, default=str), encoding="utf-8")
+            job["result"] = {"id": jid}
+        except Exception as e:                                  # noqa: BLE001
+            job["error"] = str(e)
+            log("research: " + traceback.format_exc())
+        finally:
+            job["running"] = False
+    threading.Thread(target=go, daemon=True).start()
+    return {"id": jid}
+
+
 # ---------- HTTP ----------
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
@@ -939,6 +1034,8 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, p.read_bytes())
         if u.path == "/api/exitlab":
             return self.send(200, lab_state(bool(q.get("full"))))
+        if u.path == "/api/exitlab_research":
+            return self.send(200, _research_list())
         if u.path == "/api/exitlab_spec":
             return self.send(200, _jsonable({"groups": exitlab.GROUPS, "default": exitlab.DEFAULT, "why": exitlab.WHY, "trust": exitlab.ea_trust()}))
         if u.path == "/api/hyp_job":
@@ -991,6 +1088,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, {"ok": True})
             if u.path == "/api/exitlab_feature":
                 return self.send(200, lab_feature(body))
+            if u.path == "/api/exitlab_research":
+                return self.send(200, lab_research(body))
             if u.path == "/api/sim":
                 return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
                                                  body.get("ds") or "year", body.get("mode") or "ea"))
