@@ -406,9 +406,12 @@ function pOpt() {
 function renderPanel(sec) {
   document.querySelectorAll(`nav[data-sec="${sec}"] button`).forEach((b) => b.classList.toggle('on', b.dataset.t === TAB[sec]));
   const el = $(sec === 'tt' ? '#panelTT' : '#panelMT'), D = sec === 'tt' ? TT : MT;
-  if (sec === 'tt' && TAB.tt === 'opt') { el.innerHTML = pOpt(); return; }
+  const keep = [...el.querySelectorAll('.scroll')].map((s) => s.scrollTop);              // redraws keep the lists where Zee scrolled them
+  const back = () => el.querySelectorAll('.scroll').forEach((s, i) => { if (keep[i] != null) s.scrollTop = keep[i]; });
+  if (sec === 'tt' && TAB.tt === 'opt') { el.innerHTML = pOpt(); back(); return; }
   if (!D) { el.innerHTML = `<p class="note">${sec === 'mt' ? 'No MT5 run yet. Press "Check in MT5" to run the settings on screen in the Strategy Tester (about a minute).' : 'Loading…'}</p>`; return; }
   el.innerHTML = { overview: pOverview, months: pMonths, weekdays: pWeekdays, range: pRange, trades: pTrades, skips: pSkips }[TAB[sec]](D);
+  back();
   if (TAB[sec] === 'overview') drawEquity(D);
 }
 function renderAll() { renderPanel('tt'); renderPanel('mt'); }
