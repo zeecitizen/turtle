@@ -12,6 +12,7 @@ let TZ = 18000;
 let BARS = null, INPUTS = null, DFL = {}, CUR = {}, RUNS = [], lastSeen;
 let TT = null, MT = null;                                      // { kind, events, TR, GH, EVB, ... }
 let chart, candles, emaF, emaS, adxS, adxLine = null, TVL = null, focusLines = [], eq = {};
+let ACTIVE_LAB = null;                                         // an Exit Lab exit running on the main tester too (a saved Exit Lab exit, loaded)
 let SEL = null, TAB = { tt: 'overview', mt: 'overview' }, firstView = true, simTimer = null, simSeq = 0, tvKey = null, ASK = [];
 const show = { trades: true, ghosts: true, setups: false, skips: false, mt5: false };
 const SRC = { ds: 'year', mode: 'ea' }, BARSET = {};             // the Turtle TV Tester's candles and rules (Zee: "find out why ... october ... and fix it")
@@ -603,7 +604,7 @@ function scheduleSim(ms = 120) { clearTimeout(simTimer); simTimer = setTimeout(r
 async function runSim() {
   const seq = ++simSeq;
   const emaKey = `${SRC.ds}/${CUR.InpEmaFast}/${CUR.InpEmaSlow}`, needEma = !TT || TT.emaKey !== emaKey;
-  const r = await api('/api/sim', { inputs: CUR, ema: needEma, setups: show.setups, ds: SRC.ds, mode: SRC.mode });   // EMAs / setups only when they are needed (smooth sliding)
+  const r = await api('/api/sim', { inputs: CUR, ema: needEma, setups: show.setups, ds: SRC.ds, mode: SRC.mode, lab: ACTIVE_LAB });   // EMAs / setups only when they are needed (smooth sliding)
   if (seq !== simSeq) return;                                  // a newer change is already on its way
   if (r.error) return toast('⚠ ' + esc(r.error));
   const keep = TT && !needEma ? { ef: TT.ef, es: TT.es } : { ef: r.ef, es: r.es };
@@ -612,6 +613,7 @@ async function runSim() {
   $('#simMs').textContent = `· Turtle TV Tester ${r.ms} ms`;
   $('#infoTT').textContent = `${SRC.ds === 'tv' ? "TradingView's candles" : 'Blueberry MT5 candles'} · ${{ ea: 'v1.27 rules', chart: "the chart's rules", chart_blind: "TradingView's way" }[SRC.mode]} · ` +
     `${r.year.n} trades · WR ${r.year.wr}% · ${money(r.year.net)} · PF ${r.year.pf} · ${r.ms} ms`;
+  labBanner();
   const n = BARS.t.length;
   if (firstView) { chart.timeScale().setVisibleLogicalRange({ from: n - 1500, to: n + 5 }); firstView = false; }
   legend(n - 1);
@@ -814,6 +816,12 @@ $('#askQ').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shif
 
 // ---------- saved settings ----------
 let SAVEDS = [];
+function labBanner() {                                          // the main tester says when it runs an Exit Lab exit on top of the EA
+  let b = document.getElementById('labBanner');
+  if (!ACTIVE_LAB) { if (b) b.remove(); return; }
+  if (!b) { b = document.createElement('div'); b.id = 'labBanner'; $('#infoTT').parentNode.insertBefore(b, $('#infoTT')); }
+  b.innerHTML = `⚗️ with the Exit Lab exit: <b>${esc(ACTIVE_LAB._d || 'lab exit')}</b> - not an EA setting yet (MT5 can't run it) <button id="labBannerOff" class="dexbtn sm">remove</button>`;
+}
 async function loadSaved() {
   SAVEDS = await api('/api/saved');
   const dsName = { year: 'Blueberry 2026 (ticks)', tv: "TradingView's candles", m15: 'Blueberry 2023 → now' };
@@ -831,10 +839,12 @@ $('#btnSave').onclick = async () => {
 document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   if (d.load != null) {
-    const s = SAVEDS[+d.load]; CUR = { ...DFL, ...s.inputs }; markForm(); scheduleSim(0);
+    const s = SAVEDS[+d.load]; CUR = { ...DFL, ...s.inputs };
+    ACTIVE_LAB = s.lab && Object.keys(s.lab).length ? { ...s.lab, _d: s.lab_describe } : null; markForm(); scheduleSim(0);
     if (s.lab && Object.keys(s.lab).length && typeof labOpen === 'function') { await labOpen(); LABS.form = { ...LABS.spec.default, ...s.lab }; }   // its Exit Lab exit back on the bench
     toast(`Loaded <b>${esc(s.name)}</b>.` + (s.lab_describe ? ` Its Exit Lab exit is back on the bench: ${esc(s.lab_describe)}.` : ''));
   }
+  if (e.target.id === 'labBannerOff') { ACTIVE_LAB = null; labBanner(); scheduleSim(0); toast('The main tester runs the EA’s own exit again.'); }
   if (d.del != null) { const s = SAVEDS[+d.del]; if (confirm(`Delete the saved settings "${s.name}"?`)) { await api('/api/saved_delete', { name: s.name }); loadSaved(); } }
 });
 

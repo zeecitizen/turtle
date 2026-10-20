@@ -20,6 +20,7 @@ function spark(trades) {                                           // the equity
     `<line x1="6" x2="${W - 6}" y1="${Y(0)}" y2="${Y(0)}" stroke="#546e7a" stroke-dasharray="3 3"/><polyline points="${ys.map((v, i) => `${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="${c >= 0 ? '#00e676' : '#ff5252'}" stroke-width="2"/>` +
     `<text x="10" y="16" class="lt chipt">EQUITY OF THIS EXIT · ${money(c)}</text></svg>`;
 }
+const T0describe = () => (LABS.test && LABS.test.describe) || 'lab exit';
 function labTips(ea) {                                           // lab suggestions: the bubbling flask lights up when a lever reaches where they apply
   const st = +(ea.InpSlAtrMult || 0), far = Math.max(+LABS.form.tgt === 2 ? +LABS.form.tgt_k : 0, +LABS.form.tr === 2 ? +LABS.form.tr_k : 0, +LABS.form.tr_act, +LABS.form.be_r, +LABS.form.p1_r);
   const tip = (on, html) => `<div class="flasktip ${on ? 'on' : ''}"><span class="flask">⚗️<i></i><i></i><i></i></span><div>${html}</div></div>`;
@@ -75,7 +76,8 @@ document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   if (d.rs === 'save') {                                          // the levers' exit: its EA part on the chart, the whole exit saved with its result
     const f = labForm(), lab = Object.fromEntries(Object.entries(f).filter(([k, v]) => k !== 'pess' && Number(v) !== Number(LABS.spec.default[k])));
-    CUR = { ...CUR, ...RS.sets }; markForm(); scheduleSim(0);
+    CUR = { ...CUR, ...RS.sets };
+    ACTIVE_LAB = Object.keys(lab).length ? { ...LABS.spec.default, ...f, _d: T0describe() } : null; markForm(); scheduleSim(0);
     const T = LABS.test, s = T && !stale(T) ? T.stats.all : null;
     const r = await api('/api/save', { inputs: CUR, ds: SRC.ds === 'tv' ? 'year' : SRC.ds, mode: 'ea', lab: Object.keys(lab).length ? { ...LABS.spec.default, ...f } : null,
       result: s ? { n: s.n, wr: s.wr, net: T.stats.total, pf: s.pf } : null });
