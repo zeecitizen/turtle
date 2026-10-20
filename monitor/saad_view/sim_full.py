@@ -36,7 +36,8 @@ NE = 32
 MODE0_ONLY = {"InpLongExit", "InpLongTpPips", "InpSwingPivot", "InpSwingLook", "InpShortTpPips", "InpMinTpPips", "InpMaxTpPips", "InpBeUsd",
               "InpLongTouch", "InpLongTrailUsd", "InpLongResTp", "InpLongResTp1", "InpResTp1Ride", "InpShortTouch", "InpTrailStepUsd",
               "InpShortTrailUsd", "InpBeTpPct", "InpTrail", "InpTrailSide", "InpRide", "InpTrailMode", "InpTrailN", "InpTrailPips", "InpTrailAtr",
-              "InpTrailStart", "InpRideLock", "InpLockPips", "InpLockAtUsd", "InpLockUsd", "InpFixTpPips", "InpMaxBars", "InpPartialPct", "InpTp1Be"}
+              "InpTrailStart", "InpRideLock", "InpLockPips", "InpLockAtUsd", "InpLockUsd", "InpMaxBars", "InpPartialPct", "InpTp1Be"}
+# (InpFixTpPips is NOT here: the EA sends it as the order's broker TP in every exit mode)
 EFIELDS = ["on", "tgt", "tgt_k", "fb", "fb_buf", "fb_n", "cx", "cx_buf", "cx_n", "cx_when", "cx_after", "p1_r", "p1_frac", "p1_be", "p2_r",
            "p2_frac", "be_r", "be_off", "lock_r", "tr", "tr_k", "tr_act", "tr_buf", "max_bars", "stale_bars", "stale_r", "adx_exit", "fri_hour",
            "pess"]
@@ -984,11 +985,10 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                                     ps[x, LTP] = e_ + ts_ * dist
                                                 ride0 = ts_ > 0 and (noTp or (res1 and P[55] > 0.5)) and _trail_on(P, 1) and P[83] <= 0
                                                 ps[x, RIDE] = 1.0 if (ride0 and n_ == 0) else 0.0
-                                                if n_ == 0:
-                                                    if P[83] > 0:
-                                                        ps[x, BTP] = tp_
-                                                    elif ts_ < 0 and not rideShort:
-                                                        ps[x, BTP] = tp_
+                                                if P[83] > 0:                        # InpFixTpPips: the order carries this broker TP in EVERY exit mode
+                                                    ps[x, BTP] = tp_                 # (EA DoEntry: trade.Buy/Sell(..., tp)) - it was only set in mode 0
+                                                elif n_ == 0 and ts_ < 0 and not rideShort:
+                                                    ps[x, BTP] = tp_
                                                 break
                             prv = be
                             continue
@@ -999,4 +999,8 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                 stats[8] += 1
                 if stats[9] == 0 or ps[x, ET] < stats[9]:
                     stats[9] = ps[x, ET]
+        if gh != 0:                                           # a stand-aside still running blocks every setup the same way
+            stats[8] += 1
+            if stats[9] == 0 or gT < stats[9]:
+                stats[9] = gT
     return nt, ns

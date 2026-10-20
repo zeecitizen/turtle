@@ -130,7 +130,7 @@ function pLab() {
 function labDiag(d, LA, LB) {
   const a = d.stats.all;
   let h = `<section><h3>🩺 Where your exits leave money</h3>${stale(d)}` +
-    (d.stats.stuck ? `<p class="bad">⚠ One of your trades never closed: open since ${esc(dt(d.stats.open_end.since))} until the end of the data (${d.stats.open_end.days} days) - it blocks every later setup.</p>` : '') +
+    (d.stats.stuck ? `<p class="bad">⚠ One of your trades (or a stand-aside) never closed: open since ${esc(dt(d.stats.open_end.since))} until the end of the data (${d.stats.open_end.days} days) - it blocks every later setup.</p>` : '') +
     (String(CUR.InpExitMode) === '0' ? '<p class="warn">Your exit is mode 0 (the v1.23 exits): the tester and MT5 disagree on those - read this diagnosis as approximate.</p>' : '') + `<div class="cards">` +
     card('Trades · win rate', `${a.n} · ${a.wr}%`) + card('Net', money(a.net), cls(a.net)) +
     card('Winners keep', `${d.winners.capture_pct}% <small class="k">of their best move</small>`) +
@@ -206,7 +206,7 @@ function labTestResult(T, LA, LB) {
   let h = `<h4>Result · ${esc(T.describe)}${Object.keys(T.sets || {}).length ? ' · ' + esc(Object.entries(T.sets).map(([k, v]) => `${k.replace(/^Inp/, '')} ${v}`).join(', ')) : ''}</h4>${stale(T)}` +
     table(['', LA, LB, 'Total', 'WR', 'PF', 'Max DD', 'Avg win / loss', 'Losing streak'], [labStatsRow("Your EA's exit", b), labStatsRow('This exit', s)]);
   const wv = T.worst, onlyOpt = s.total > b.total && wv.total < wv.base_total;
-  if (s.stuck) h += `<p class="bad">⚠ A trade never closed: open since ${esc(dt(s.open_end.since))} until the end of the data (${s.open_end.days} days). Nothing in this exit closes it
+  if (s.stuck) h += `<p class="bad">⚠ A trade (or a stand-aside) never closed: open since ${esc(dt(s.open_end.since))} until the end of the data (${s.open_end.days} days). Nothing in this exit closes it
     (no target and no rule for a winner), so it blocks every later setup - these numbers are not usable. Add a target, a trail or a time limit.</p>`;
   h += `<p class="note">${isEA && tie(s.total - b.total, b.total) && s.changed ? '<span class="warn">≈ A tie: the difference is within the lab’s error against MT5 (~4%).</span> ' : ''}${!isEA ? '<span class="tag lab">Lab only: no MT5 check yet</span> ' : ''}${both ? '<span class="good">✓ Better than yours in both halves.</span>' : s.total > b.total ? '<span class="warn">Better in total but not in both halves - the unseen half decides.</span>' : '<span class="bad">Not better than your exit.</span>'}
     ${s.changed} trades end differently · ${s.new} new and ${s.gone} missing entries (a trade held longer or shorter changes which setups can enter) · partial closes in ${s.partials} trades ·

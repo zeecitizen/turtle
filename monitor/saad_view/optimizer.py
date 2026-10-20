@@ -283,8 +283,10 @@ class Survey:
                     a, b = self._ev(inp)
                     if a is None:
                         continue
-                    noop = a["net"] == self.baseline["train"]["net"] and b["net"] == self.baseline["test"]["net"] and a["n"] == self.baseline["train"]["n"]
-                    self.rows.append({"setting": name, "value": str(v), "with": extra, "train": a, "test": b, "noop": noop,
+                    B0 = self.baseline
+                    noop = abs(a["net"] - B0["train"]["net"]) < 1 and abs(b["net"] - B0["test"]["net"]) < 1 and a["n"] == B0["train"]["n"] and b["n"] == B0["test"]["n"]
+                    v123 = inp.get("InpExitMode") == "0"           # the v1.23 exits: where the tester and MT5 disagree (verify_settings.py)
+                    self.rows.append({"setting": name, "value": str(v), "with": extra, "train": a, "test": b, "noop": noop, "v123": v123,
                                       "total": round(a["net"] + b["net"]), "inputs": inp})
         except Exception as e:                                           # noqa: BLE001
             self.error = str(e)
