@@ -38,6 +38,7 @@ import numpy as np  # noqa: E402
 sys.path.insert(0, str(HERE))
 import sim  # noqa: E402  (the Turtle TV Tester: numba, sets NUMBA_CPU_NAME itself)
 import optimizer  # noqa: E402
+import exitlab  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location("saad_compare_server", ROOT / "monitor" / "saad_compare" / "server.py")
 CMP = importlib.util.module_from_spec(_spec)      # the compare page's TradingView reader (no server is started by importing it)
@@ -738,6 +739,111 @@ def opt_run_and_check(o):
     o.mt5 = {"run": rid, "error": err}
 
 
+# ---------------------------------------------------------------- the Exit Lab (exitlab.py) - Zee 2026-10-20: "create an Exit Lab tab where we can
+# test out all the different kinds of exits possible. including trailing, partial close etc."
+LAB = {"job": None, "tjob": None, "cat": None, "done": {}}            # job: the long ones (catalogue, search, heatmap) · tjob: one exit, the diagnosis
+LAB_FEATURES = Path(__file__).parent / "asks" / "exitlab_features.json"
+
+
+def _jsonable(x):
+    return json.loads(json.dumps(x, default=lambda o: o.item() if hasattr(o, "item") else str(o)))
+
+
+def lab_start(body):
+    action = body.get("action")
+    if action not in ("diagnose", "test", "catalogue", "search", "heatmap"):
+        return {"error": "unknown action"}
+    slot = "tjob" if action in ("test", "diagnose") else "job"
+    if LAB[slot] and LAB[slot].running:
+        LAB[slot].stop()
+    inputs = full_inputs(body.get("inputs") or {})
+    ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv") else "year"
+    kw = {k: body.get(k) for k in ("lab", "sets", "objective", "fx", "fy", "xs", "ys") if body.get(k) is not None}
+    key = json.dumps([inputs, "year" if ds == "tv" else ds], sort_keys=True)
+    if action == "search" and LAB["cat"] and LAB["cat"][0] == key:
+        kw["cat_rows"] = LAB["cat"][1]                    # the catalogue of the same settings: the search starts from it
+    j = exitlab.start(action, inputs, ds, **kw)
+    j.key = key
+    j.req = {"inputs": body.get("inputs") or {}, "ds": "year" if ds == "tv" else ds}     # what the page asked for: it warns when its settings moved on
+    LAB[slot] = j
+    return {"ok": True}
+
+
+def lab_state(full=False):
+    out = {}
+    for slot, name in (("job", "main"), ("tjob", "quick")):
+        j = LAB[slot]
+        if not j:
+            continue
+        if j.done and j.result and not j.error:
+            LAB["done"][j.action] = j                      # the latest result of each kind, for a page that opens later
+        if j.done and j.action == "catalogue" and j.result and not j.error:
+            LAB["cat"] = (j.key, j.result["rows"])
+        if j.error and not getattr(j, "logged", False):
+            j.logged = True
+            log(f"exit lab {j.action}: {getattr(j, 'tb', j.error)}")
+        out[name] = j.state()
+    if full:
+        out["done"] = {a: j.state() for a, j in LAB["done"].items()}
+    return _jsonable(out)
+
+
+def lab_feature(body):
+    """'Make it an EA setting': Claude Code builds the lab's exit into the EA (off by default), mirrors it in the tester, tests it in MT5"""
+    lab = exitlab.clean(body.get("lab") or {})
+    if not lab:
+        return {"error": "no exit"}
+    if any(j["running"] and j["kind"] == "feature" for j in HJOBS.values()):
+        return {"error": "Claude is already adding a feature; wait for it to finish"}
+    desc = exitlab.describe(lab)
+    jid = f"h{int(time.time() * 1000)}"
+    job = HJOBS[jid] = {"id": jid, "kind": "feature", "key": "exitlab", "idx": 0, "running": True, "phase": "starting", "result": None, "error": None}
+    prompt = f"""Zee pressed "Make it an EA setting" in Turtle TV's Exit Lab. Build this exit into the Saad 15-min EA as NEW SETTINGS, the way v1.28's
+InpSkipBothEma was added (git show 8aee8953 is the template - read it first):
+
+The exit: {desc}
+As the Exit Lab's recipe (monitor/saad_view/exitlab.py field names): {json.dumps(lab)}
+The Exit Lab's result on {body.get('ds', 'the data')} ({' / '.join(body.get('labels') or [])}): {json.dumps(body.get('stats') or {}, default=str)[:2500]}
+
+The Turtle TV Tester ALREADY runs this exit: monitor/saad_view/sim_full.py, the "Exit Lab" blocks (vector E, fields E_*, built by sim_full.evec
+from the recipe). Read those blocks: they are the exact rule to write in MQL5 (only for exit modes 1-2: the v1.25 exits; tick rules in
+ManageTick, candle-close rules at the new candle; R = |entry - first stop|).
+
+Do all of this, in order:
+1. mt5/Saad_strategy_15min.mq5: new inputs, OFF by default (with them off, trading must be identical to now), clear comments; the rules in the
+   same places as the tester runs them; bump the version (#property version, EA_COMMENT, a // vX.YY header line quoting Zee).
+2. The tester: append the new input names to the END of FULL in monitor/saad_view/sim_full.py (never reorder), and in sim.simulate build the
+   lab vector from them (sim_full.evec({{...}})) when no lab is passed, so the tester runs the same code. Run: py monitor/saad_view/make_view_ea.py
+3. py monitor/saad_view/exitlab_regress.py check must print ALL IDENTICAL (set NUMBA_CPU_NAME=generic). Then check in Python that the new inputs ON
+   reproduce the Exit Lab's numbers above (sim.simulate(server.full_inputs({{...}}), ds=...)).
+4. MT5: POST http://127.0.0.1:8773/api/run with {{"sets": {{...}}, "label": "...", "delay": "none"}} for off and on (one at a time; poll /api/status
+   until busy is false; results in monitor/saad_view/runs/<id>.json "report"). If the server is down, say so and skip.
+5. A row in VERSION.md (the Saad_strategy_15min table + "Which EA is which") and an entry in VERSION_HISTORY.md, then git add ONLY the files you
+   changed and commit (end the message with: Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>).
+Never edit LAWS.md. Never push. Python numbers are hypotheses; MT5 decides - say "keep it off" if MT5 does not beat the current version.
+Finish with a short report for Zee (plain English, under 15 lines): the settings' names, what they do, the MT5 numbers off vs on, your verdict."""
+
+    def go():
+        try:
+            job["phase"] = "Claude is building the exit into the EA, the tester and MT5 (several minutes)"
+            txt = _claude(prompt, ["Read", "Grep", "Glob", "Edit", "Write", "Bash(py:*)", "Bash(python:*)", "Bash(git add:*)", "Bash(git commit:*)",
+                                   "Bash(git show:*)", "Bash(git diff:*)", "Bash(git status:*)", "Bash(curl:*)", "Bash(sleep:*)"], timeout=3600)
+            job["result"] = {"which": desc, "report": txt, "at": datetime.now().strftime("%Y-%m-%d %I:%M %p")}
+            try:
+                prev = json.loads(LAB_FEATURES.read_text(encoding="utf-8"))
+            except Exception:                                   # noqa: BLE001
+                prev = []
+            prev.append(dict(job["result"], lab=lab))
+            LAB_FEATURES.parent.mkdir(parents=True, exist_ok=True)
+            LAB_FEATURES.write_text(json.dumps(prev, indent=1, ensure_ascii=False), encoding="utf-8")
+        except Exception as e:                                  # noqa: BLE001
+            job["error"] = str(e)
+        finally:
+            job["running"] = False
+    threading.Thread(target=go, daemon=True).start()
+    return {"id": jid}
+
+
 # ---------- HTTP ----------
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
@@ -803,6 +909,10 @@ class H(BaseHTTPRequestHandler):
             if not re.fullmatch(r"r\d{8}_\d{6}", rid) or not p.exists():
                 return self.send(404, {"error": "no such run"})
             return self.send(200, p.read_bytes())
+        if u.path == "/api/exitlab":
+            return self.send(200, lab_state(bool(q.get("full"))))
+        if u.path == "/api/exitlab_spec":
+            return self.send(200, _jsonable({"groups": exitlab.GROUPS, "default": exitlab.DEFAULT, "why": exitlab.WHY, "trust": exitlab.ea_trust()}))
         if u.path == "/api/hyp_job":
             j = HJOBS.get((q.get("id") or [""])[0])
             return self.send(200 if j else 404, j or {"error": "no such job"})
@@ -845,6 +955,14 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, ask_trade(body))
             if u.path == "/api/hyp":
                 return self.send(200, hyp_start(body))
+            if u.path == "/api/exitlab":
+                return self.send(200, lab_start(body))
+            if u.path == "/api/exitlab_stop":
+                if LAB["job"]:
+                    LAB["job"].stop()
+                return self.send(200, {"ok": True})
+            if u.path == "/api/exitlab_feature":
+                return self.send(200, lab_feature(body))
             if u.path == "/api/sim":
                 return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
                                                  body.get("ds") or "year", body.get("mode") or "ea"))

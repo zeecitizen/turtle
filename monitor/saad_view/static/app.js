@@ -158,6 +158,7 @@ function drawTv(ctx) {
   const sp = Math.abs((X(1) ?? 0) - (X(0) ?? 0)), full = sp >= 4.5, lo = Math.floor(vr.from) - 3, hi = Math.ceil(vr.to) + 3;
   const inView = (i) => i >= lo && i <= hi;
   const bb = parseInt(CUR.InpBreakBars || '1', 10);
+  if (typeof drawLab === 'function') drawLab(ctx, X, Y, lo, hi, full);          // the Exit Lab's trades (static/exitlab.js)
   if (show.setups && sp >= 2.5) for (const e of TT.events) {
     if (e.type !== 'setup' || !inView(e.bi)) continue;
     const x = X(e.bi), yh = Y(e.price), yl = Y(e.sl), yb = Y(e.v1);
@@ -576,6 +577,7 @@ function renderPanel(sec) {
   const keep = [...el.querySelectorAll('.scroll')].map((s) => s.scrollTop);              // redraws keep the lists where Zee scrolled them
   const back = () => el.querySelectorAll('.scroll').forEach((s, i) => { if (keep[i] != null) s.scrollTop = keep[i]; });
   if (sec === 'tt' && TAB.tt === 'opt') { el.innerHTML = pOpt(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'lab') { el.innerHTML = pLab(); back(); return; }
   if (!D) { el.innerHTML = `<p class="note">${sec === 'mt' ? 'No MT5 run yet. Press "Check in MT5" to run the settings on screen in the Strategy Tester (about a minute).' : 'Loading…'}</p>`; return; }
   el.innerHTML = { overview: pOverview, months: pMonths, weekdays: pWeekdays, range: pRange, trades: pTrades, skips: pSkips }[TAB[sec]](D);
   back();
@@ -856,6 +858,7 @@ document.querySelectorAll('nav[data-sec]').forEach((nav) => (nav.onclick = async
   TAB[sec] = t;
   if (sec === 'tt' && t === 'opt') OPTS = await api('/api/opt');
   renderPanel(sec);
+  if (sec === 'tt' && t === 'lab') labOpen();
 }));
 document.addEventListener('click', async (e) => {
   const tr = e.target.closest('tr');
