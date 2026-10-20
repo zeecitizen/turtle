@@ -119,6 +119,7 @@ function pLab() {
     if (J && J.running) h += `<p class="note">⏳ <span class="prog"><i style="width:${J.total ? Math.min(100, (100 * J.progress) / J.total) : 3}%"></i></span> ${esc(J.phase || '')} · ${J.progress || 0}${J.total ? '/' + J.total : ''} · ${J.seconds || 0} s</p>`;
     else if (J && J.error) h += `<p class="warn">⚠ ${esc(J.action)} stopped: ${esc(J.error)}</p>`;
   }
+  h += labDrawings();                                          // the two specimens first (static/exitlab_draw.js)
   if (LABS.diag) h += labDiag(LABS.diag, LA, LB);
   h += labBuilder(LA, LB);
   if (LABS.cat) h += labCatalogue(LABS.cat, LA, LB);
@@ -389,7 +390,7 @@ document.addEventListener('change', (e) => {
   if (f) {
     LABS.form[f] = t.type === 'checkbox' ? (t.checked ? 1 : 0) : Number(t.value);
     clearTimeout(LABS.redrawT);                                // redraw (fields that appear / disappear) once a click on a button has landed
-    LABS.redrawT = setTimeout(() => { if (TAB.tt === 'lab') renderPanel('tt'); }, t.type === 'number' ? 300 : 0);
+    LABS.redrawT = setTimeout(() => { if (TAB.tt === 'lab') renderPanel('tt'); }, t.type === 'number' ? 300 : 0);   // also redraws specimen B
     return;
   }
   if (t.id === 'labFam') { LABS.fam = t.value; renderPanel('tt'); }
