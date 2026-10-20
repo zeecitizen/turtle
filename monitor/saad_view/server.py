@@ -40,6 +40,7 @@ import sim  # noqa: E402  (the Turtle TV Tester: numba, sets NUMBA_CPU_NAME itse
 import optimizer  # noqa: E402
 import exitlab  # noqa: E402
 import ml  # noqa: E402
+import mission  # noqa: E402
 import sim_full  # noqa: E402
 
 _spec = importlib.util.spec_from_file_location("saad_compare_server", ROOT / "monitor" / "saad_compare" / "server.py")
@@ -1006,6 +1007,30 @@ def lego_test(body):
     return _jsonable(out)
 
 
+# ---------------------------------------------------------------- Mission Control (mission.py): the size, the days, the futures, the guardrails
+MIS = {"job": None}
+
+
+def mission_start(body):
+    lab = exitlab.clean(body.get("lab") or {}) if body.get("lab") else None
+    lab = lab if lab and [f for f in lab if f != "pess"] else None
+    ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv") else "year"
+    MIS["job"] = mission.start(full_inputs(body.get("inputs") or {}), ds, lab, body.get("capital") or 1000, body.get("mode") or "risk", body.get("lots") or 0.01,
+                               body.get("risk_pct") or 1, body.get("leverage") or 500, body.get("max_dd") or 20,
+                               {k: v for k, v in (body.get("lego") or {}).items() if k in ("ma", "loc", "candle", "loc_k", "mom_body", "mom_atr")} or None)
+    return {"ok": True}
+
+
+def mission_state():
+    j = MIS["job"]
+    if not j:
+        return {}
+    if j.error and not getattr(j, "logged", False):
+        j.logged = True
+        log("mission: " + getattr(j, "tb", j.error))
+    return _jsonable(j.state())
+
+
 # ---------- HTTP ----------
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
@@ -1077,6 +1102,8 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, _research_list())
         if u.path == "/api/ml":
             return self.send(200, ml_state())
+        if u.path == "/api/mission":
+            return self.send(200, mission_state())
         if u.path == "/api/ml_algos":
             return self.send(200, {"algos": ml.ALGOS})
         if u.path == "/api/exitlab_spec":
@@ -1137,6 +1164,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, ml_start(body))
             if u.path == "/api/lego_test":
                 return self.send(200, lego_test(body))
+            if u.path == "/api/mission":
+                return self.send(200, mission_start(body))
             if u.path == "/api/sim":
                 return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
                                                  body.get("ds") or "year", body.get("mode") or "ea"))

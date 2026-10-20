@@ -18,20 +18,27 @@ function mlCurve(c, base) {                                       // unseen-half
   return `<svg width="${W}" height="${H}" style="background:var(--panel);border-radius:4px"><line x1="3" x2="${W - 3}" y1="${Y(base)}" y2="${Y(base)}" stroke="#787b86" stroke-dasharray="3 3"/>` +
     `<polyline points="${vals.map((v, i) => `${X(i)},${Y(v)}`).join(' ')}" fill="none" stroke="#ffb74d" stroke-width="1.6"/><title>unseen-half net for thresholds 0.30 to 0.70 (dashed: all trades)</title></svg>`;
 }
+function mlVerdict(R) {                                          // what the robots found, in one breath
+  const B = R.base.test, rs = R.results;
+  if (!rs.length) return 'no algorithm trained';
+  const more = rs.filter((r) => r.at_thr.test.net > B.net), wr = rs.filter((r) => r.at_thr.test.wr > B.wr), best = rs.slice().sort((a, b) => b.at_thr.test.net - a.at_thr.test.net)[0];
+  return `<div>${wr.length} of ${rs.length} brains raise the win rate on the unseen trades (${B.wr}% when taking every trade); <b>${more.length}</b> of them also make more money than taking every trade (${money(B.net)}).</div>` +
+    `<div>${more.length ? `best: <b>${esc(best.algo)}</b> ${best.at_thr.test.wr}% · ${money(best.at_thr.test.net)} - worth an MT5 test as a filter` : 'so far the filter buys win rate with money: the skipped trades include big winners.'}</div>`;
+}
 function pML() {
   if (!MLS.algos) { mlOpen(); return '<p class="note">Loading…</p>'; }
   const J = MLS.job, R = J && J.result;
-  let h = `<div class="lab"><p class="note"><b>Machine learning on the EA's trades</b> (meta-labelling, like VSISA's ML filters). The EA keeps finding its setups; a model learns, from what
+  let h = `<div class="lab dex"><h3 class="dexh">🤖 DEXTER'S AI LAB · ${MLS.algos.length} ROBOT BRAINS</h3><p class="note"><b>Machine learning on the EA's trades</b> (meta-labelling, like VSISA's ML filters). The EA keeps finding its setups; a model learns, from what
     was known at each entry (the setup candle, EMAs, ADX, ATR, recent returns, the hour, the range box…), whether that trade will win - and only the trades it trusts are taken.
     Trained on the first half, judged on the <b>unseen</b> half. Data: ${SRC.ds === 'm15' ? 'Blueberry 2023 → now (4 years)' : '2026 only - too few trades to learn from; use the 4 years'}. Python: a hypothesis until it runs in MT5.</p>
-    <div class="bar">${MLS.algos.map((a) => `<label class="tog"><input type="checkbox" data-mla="${esc(a)}" ${MLS.picked.has(a) ? 'checked' : ''}> ${esc(a)}</label>`).join('')}</div>
+    <div class="dexpanel"><div class="bar">${MLS.algos.map((a) => `<label class="tog"><input type="checkbox" data-mla="${esc(a)}" ${MLS.picked.has(a) ? 'checked' : ''}> ${esc(a)}</label>`).join('')}</div>
     <div class="bar"><label>take a trade when the model's win chance ≥ <b id="mlThrV">${MLS.thr.toFixed(2)}</b> <input type="range" id="mlThr" min="0.3" max="0.7" step="0.025" value="${MLS.thr}"></label>
-    <button id="mlGo" class="primary" ${J && J.running ? 'disabled' : ''}>🤖 Train &amp; test ${MLS.picked.size} algorithm${MLS.picked.size === 1 ? '' : 's'}</button></div>`;
+    <button id="mlGo" class="dexbtn" ${J && J.running ? 'disabled' : ''}>🤖 TRAIN &amp; TEST ${MLS.picked.size} BRAIN${MLS.picked.size === 1 ? '' : 'S'}</button></div></div>`;
   if (J && J.running) h += `<p class="note">⏳ ${esc(J.phase)} · ${J.progress}/${J.total} · ${J.seconds} s</p>`;
   if (J && J.error) h += `<p class="warn">⚠ ${esc(J.error)}</p>`;
   if (!R) return h + '</div>';
   const [LA, LB] = R.labels, B = R.base;
-  h += `<p class="note">${R.n_train} trades to learn from (${LA}, ${R.wr_train}% winners) · ${R.n_test} unseen trades (${LB}, ${R.wr_test}% winners).
+  h += `<div class="crt" style="margin:10px 0"><div class="crth">▶ THE VERDICT</div>${mlVerdict(R)}</div><p class="note">${R.n_train} trades to learn from (${LA}, ${R.wr_train}% winners) · ${R.n_test} unseen trades (${LB}, ${R.wr_test}% winners).
     Taking every trade: ${LB} <b>${B.test.wr}% · ${money(B.test.net)}</b>. AUC 0.5 = a coin flip, 1.0 = perfect; a model whose ${LA} AUC is far above its ${LB} AUC has memorised the past.</p>`;
   const rows = R.results.slice().sort((a, b) => b.at_thr.test.net - a.at_thr.test.net).map((r) => {
     const t = r.at_thr.test, c = r.chosen, better = t.net > B.test.net, wrUp = t.wr > B.test.wr;

@@ -590,6 +590,7 @@ function renderPanel(sec) {
   if (sec === 'tt' && TAB.tt === 'lab') { el.innerHTML = pLab(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'ml') { el.innerHTML = pML(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'lego') { el.innerHTML = pLego(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'mission') { el.innerHTML = pMission(); back(); return; }
   if (!D) { el.innerHTML = `<p class="note">${sec === 'mt' ? 'No MT5 run yet. Press "Check in MT5" to run the settings on screen in the Strategy Tester (about a minute).' : 'Loading…'}</p>`; return; }
   el.innerHTML = { overview: pOverview, months: pMonths, weekdays: pWeekdays, range: pRange, trades: pTrades, skips: pSkips }[TAB[sec]](D);
   back();
@@ -872,6 +873,7 @@ document.querySelectorAll('nav[data-sec]').forEach((nav) => (nav.onclick = async
   renderPanel(sec);
   if (sec === 'tt' && t === 'lab') labOpen();
   if (sec === 'tt' && t === 'ml') mlOpen();
+  if (sec === 'tt' && t === 'mission') misOpen();
 }));
 document.addEventListener('click', async (e) => {
   const tr = e.target.closest('tr');

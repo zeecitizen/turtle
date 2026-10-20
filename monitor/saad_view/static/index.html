@@ -138,6 +138,16 @@
   .arrowr { color: #787b86; font-size: 18px; }
   .legopanel { background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 10px 14px; margin: 6px 0 10px; max-width: 1100px; }
   .lopt { display: inline-flex; gap: 5px; align-items: center; margin: 3px 14px 3px 0; font-size: 13px; } .lopt.on { color: #ffeb3b; }
+  .dex { background-image: linear-gradient(rgba(38,198,218,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(38,198,218,.05) 1px, transparent 1px); background-size: 24px 24px; border-radius: 12px; padding: 10px 12px; }
+  .dexpanel { background-color: #0f2742; border: 4px solid #26c6da; border-radius: 16px; padding: 12px 18px; margin: 8px 0;
+    background-image: radial-gradient(circle at 9px 9px, #b0bec5 3px, transparent 3.5px), radial-gradient(circle at calc(100% - 9px) 9px, #b0bec5 3px, transparent 3.5px),
+      radial-gradient(circle at 9px calc(100% - 9px), #b0bec5 3px, transparent 3.5px), radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #b0bec5 3px, transparent 3.5px); }
+  .crt { background: #03140b; border: 4px solid #37474f; border-radius: 14px; padding: 10px 14px; color: #b9f6ca; font: 13px "Courier New", monospace; box-shadow: inset 0 0 22px rgba(0,230,118,.16); line-height: 1.55; }
+  .crt b { color: #69f0ae; text-shadow: 0 0 6px rgba(105,240,174,.55); } .crth { color: #ffd740; font-weight: bold; letter-spacing: .12em; margin-bottom: 4px; }
+  .crtok { color: #69f0ae; } .crtwarn { color: #ffd740; } .crtbad { color: #ff8a80; } .crtsvg { width: 100%; } .crtsvg .crtt { fill: #81c784; font: 10px "Courier New", monospace; }
+  .dexbtn { background: #ff9800; color: #111; border: 3px solid #111; border-radius: 999px; padding: 6px 18px; font: bold 13px "Courier New", monospace; letter-spacing: .05em; box-shadow: 0 4px 0 #111; cursor: pointer; }
+  .dexbtn:hover { background: #ffb74d; } .dexbtn:active { transform: translateY(3px); box-shadow: 0 1px 0 #111; } .dexbtn:disabled { opacity: .6; } .dexbtn.sm { padding: 1px 9px; font-size: 11px; box-shadow: 0 2px 0 #111; }
+  .dex table th { font-family: "Courier New", monospace; color: #4dd0e1; } .dex h4 { color: #ffd740; font-family: "Courier New", monospace; letter-spacing: .06em; }
   #dexTip { position: fixed; z-index: 80; display: none; max-width: 320px; background: #fffde7; color: #1a237e; border: 3px solid #1a237e; border-radius: 12px; padding: 8px 11px;
     font: 12px "Trebuchet MS", sans-serif; box-shadow: 5px 5px 0 #ff9800; pointer-events: none; }
   h4 { margin: 4px 0 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
@@ -189,7 +199,7 @@
 <section class="res" id="secTT">
   <div class="rh"><span class="title tt">Turtle TV Tester</span>
     <nav data-sec="tt"><button data-t="overview" class="on">Overview</button><button data-t="months">Months</button><button data-t="weekdays">Weekdays</button>
-      <button data-t="range">Range boxes</button><button data-t="trades">List of trades</button><button data-t="skips">Why no trade</button><button data-t="opt">Optimizer</button><button data-t="lab">Exit Lab</button><button data-t="ml">Machine learning</button><button data-t="lego">Strategy Lego</button></nav>
+      <button data-t="range">Range boxes</button><button data-t="trades">List of trades</button><button data-t="skips">Why no trade</button><button data-t="opt">Optimizer</button><button data-t="lab">Exit Lab</button><button data-t="ml">Machine learning</button><button data-t="lego">Strategy Lego</button><button data-t="mission">🚀 Mission Control</button></nav>
     <span class="info" id="infoTT"></span></div>
   <div class="panel" id="panelTT"></div>
 </section>
@@ -214,5 +224,6 @@
 <script src="/static/exitlab_research.js"></script>
 <script src="/static/ml.js"></script>
 <script src="/static/lego.js"></script>
+<script src="/static/mission.js"></script>
 </body>
 </html>

@@ -209,10 +209,10 @@ def _part(r):
             "dd": round(dd), "avg_win": round(float(w.mean())) if len(w) else 0, "avg_loss": round(float(lo.mean())) if len(lo) else 0, "streak": best}
 
 
-def run(inputs, ds, lab=None, sets=None, worst=False):
-    """one exit over the data -> (trades array, real trades, still open at the end: {n, days})"""
+def run(inputs, ds, lab=None, sets=None, worst=False, lego=None):
+    """one exit over the data -> (trades array, real trades, still open at the end: {n, days}); lego = Strategy Lego pieces"""
     inp = dict(inputs, **(sets or {}))
-    tr, _, st = sim.simulate(inp, ds=ds, lab=clean(lab) if lab else None, worst_case=1.0 if worst else 0.0)
+    tr, _, st = sim.simulate(inp, ds=ds, lab=clean(lab) if lab else None, lego=lego or None, worst_case=1.0 if worst else 0.0)
     end = float(sim.data(ds)["t1"][-1])
     oe = {"n": int(st.get("open_at_end", 0)), "days": round((end - st.get("open_since", 0)) / 86400.0, 1) if st.get("open_at_end") else 0.0,
           "since": int(st.get("open_since", 0))}
