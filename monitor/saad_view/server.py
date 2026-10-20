@@ -624,17 +624,21 @@ def _months(tr):
     return {k: {"n": v[0], "w": v[1], "net": round(v[2])} for k, v in sorted(m.items())}
 
 
-def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea"):
+def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea", lab=None):
     """ds 'year' (Blueberry MT5 candles) / 'tv' (TradingView's candles); mode 'ea' (v1.27's rules, real spread + swap), 'chart' (the indicator's
     rules, $0.17 spread, no swap), 'chart_blind' (and blind inside the entry candle before Oct 12, like TradingView without 1-minute data)."""
     ds = ds if ds in ("year", "tv", "m15") else "year"
     inp = full_inputs(sets)
+    lab = exitlab.clean(lab) if lab else None
+    lab = lab if lab and [f for f in lab if f != "pess"] else None
+    if lab and str(inp.get("InpExitMode")) not in ("1", "2"):
+        inp["InpExitMode"] = "1"                          # the Exit Lab's exits sit on top of exit modes 1-2
     t0 = time.time()
-    tr, su, st = sim.simulate(inp, ds=ds, **MODES.get(mode, {}))
+    tr, su, st = sim.simulate(inp, ds=ds, lab=lab, **MODES.get(mode, {}))
     ms = round(1000 * (time.time() - t0), 1)
     D = sim.data(ds)
     nf, ns = int(float(inp["InpEmaFast"])), int(float(inp["InpEmaSlow"]))
-    why = {1: "stop loss", 2: "the next EMA touched (target)", 3: "closed back across the EMA", 4: "day close, in loss"}
+    why = {**exitlab.WHY, 1: "stop loss", 2: "the next EMA touched (target)", 3: "closed back across the EMA", 4: "day close, in loss"}
     tgt = lambda n: (f"touch of the {nf if n == 9 else ns} EMA, all closed" if n > 0 else
                      f"no EMA beyond the entry: out after a close back across the {nf} EMA" if n == -1 else
                      f"no target: out after a close back across the {ns} EMA")
@@ -1169,7 +1173,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, mission_start(body))
             if u.path == "/api/sim":
                 return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
-                                                 body.get("ds") or "year", body.get("mode") or "ea"))
+                                                 body.get("ds") or "year", body.get("mode") or "ea", body.get("lab")))
             if u.path == "/api/optimize":
                 return self.send(200, opt_start(body))
             if u.path == "/api/opt_stop":
