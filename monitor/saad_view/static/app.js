@@ -555,7 +555,7 @@ function pOpt() {
     h += `<div class="scroll">` + table(['Setting', 'Value', 'Also set', LA, LB, 'Total', 'vs yours', ''], o.rows.map((r, i) => {
       const both = r.train.net > B0.train.net && r.test.net > B0.test.net;
       const w = Object.entries(r.with || {}).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ');
-      return `<tr${both ? ' style="background:rgba(0,230,118,.08)"' : ''}><td style="text-align:left">${esc(r.setting.replace(/^Inp/, ''))}</td><td>${esc(r.value.length > 12 ? 'all on' : r.value)}</td><td class="k">${w}${r.noop ? ' <span class="k">no effect</span>' : ''}${!r.test.n ? ' <span class="bad">⚠ no trades in ' + LB + '</span>' : ''}</td>` +
+      return `<tr${both ? ' style="background:rgba(0,230,118,.08)"' : ''}><td style="text-align:left">${esc(r.setting.replace(/^Inp/, ''))}</td><td>${esc(r.value.length > 12 ? 'all on' : r.value)}</td><td class="k">${w}${r.noop ? ' <span class="k">no effect</span>' : ''}${r.v123 ? ' <span class="bad" title="verify_settings.py: on the v1.23 exits the tester and MT5 move the result in opposite directions - check in MT5">⚠ v1.23 exits: tester ≠ MT5</span>' : ''}${!r.test.n ? ' <span class="bad">⚠ no trades in ' + LB + '</span>' : ''}</td>` +
         `<td class="${cls(r.train.net)}">${money(r.train.net)} · ${r.train.wr}% · ${r.train.n}</td><td class="${cls(r.test.net)}">${money(r.test.net)} · ${r.test.wr}% · ${r.test.n}</td>` +
         `<td class="${cls(r.total)}"><b>${money(r.total)}</b></td><td class="${cls(r.total - tot0)}">${money(r.total - tot0)}</td><td><button data-surv="${i}">Apply this setting</button></td></tr>`; })) + '</div>';
     return h;

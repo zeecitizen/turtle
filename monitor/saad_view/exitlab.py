@@ -232,7 +232,8 @@ def stats(real, window, base_keys=None, base_pnl=None, open_end=None):
     s["partials"] = int((real[:, 19] > 0).sum()) if real.shape[1] > 19 else 0
     s["longest_h"] = round(float((real[:, 4] - real[:, 1]).max()) / 3600.0, 1) if len(real) else 0.0
     s["open_end"] = open_end or {"n": 0, "days": 0.0, "since": 0}
-    s["stuck"] = bool(s["open_end"]["n"] and s["open_end"]["days"] > 2)     # a trade nothing closes: it blocks every later setup
+    # a trade nothing closes (it blocks every later setup): open at the end for far longer than any trade that did close
+    s["stuck"] = bool(s["open_end"]["n"] and s["open_end"]["days"] > max(14.0, 3.0 * s["longest_h"] / 24.0))
     s["sides"] = {}
     for sd, nm in ((1, "BUY"), (-1, "SELL")):
         r = real[real[:, 0] == sd]

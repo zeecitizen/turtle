@@ -541,7 +541,9 @@ The Exit Lab's building blocks (field names for "lab"; R = the entry-to-first-st
                 h["invalid"] = True                       # e.g. the slow EMA not above the fast one
                 continue
             h["train"], h["test"], h["inputs"] = a, b, inp
-            h["noop"] = a["net"] == base["train"]["net"] and b["net"] == base["test"]["net"] and a["n"] == base["train"]["n"]
+            h["noop"] = (abs(a["net"] - base["train"]["net"]) < 1 and abs(b["net"] - base["test"]["net"]) < 1 and a["n"] == base["train"]["n"]
+                         and b["n"] == base["test"]["n"])
+            h["mode0"] = h.get("mode0") or (str(inp.get("InpExitMode")) == "0" and str(cur.get("InpExitMode")) != "0")
     res = {"labels": list(o.labels), "ds": ds, "base": base, "hyps": hyps, "at": datetime.now().strftime("%Y-%m-%d %I:%M %p")}
     _note_set(key, idx, "test", res)
     return res
