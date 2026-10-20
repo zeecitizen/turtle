@@ -170,6 +170,23 @@
   .dexprog-bar { height: 16px; border: 2px solid #111; border-radius: 9px; background: #0b1d33; overflow: hidden; margin-top: 6px; }
   .dexprog-bar i { display: block; height: 100%; transition: width .5s; background: repeating-linear-gradient(135deg, #00e676 0 10px, #00c853 10px 20px); background-size: 28px 28px; animation: dexstripes .6s linear infinite; }
   @keyframes dexstripes { from { background-position: 0 0; } to { background-position: 28px 0; } }
+  .gauge { position: relative; overflow: hidden; cursor: default; } .gauge > div:not(.acid) { position: relative; z-index: 2; }
+  .gauge .acid { position: absolute; left: 0; right: 0; bottom: 0; height: 0; z-index: 1; transition: height .6s cubic-bezier(.3,1.4,.5,1); --acid: #4dd0e1; }
+  .gauge.g-up .acid { --acid: #00e676; } .gauge.g-dn .acid { --acid: #ff5252; }
+  .gauge .acid b { position: absolute; left: -50%; top: -8px; width: 200%; height: 16px; background: radial-gradient(circle at 10px -2px, transparent 9px, var(--acid) 10px) 0 0 / 20px 16px repeat-x; opacity: .55; animation: acidwave 1.2s linear infinite; }
+  .gauge .acid::after { content: ""; position: absolute; inset: 0; top: 6px; background: linear-gradient(var(--acid), #0b1d33); opacity: .5; }
+  .gauge .acid i { position: absolute; bottom: 0; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--acid); background: rgba(255,255,255,.15); opacity: 0; z-index: 3; }
+  .gauge .acid i:nth-of-type(1) { left: 22%; } .gauge .acid i:nth-of-type(2) { left: 38%; width: 5px; height: 5px; } .gauge .acid i:nth-of-type(3) { left: 52%; width: 9px; height: 9px; }
+  .gauge .acid i:nth-of-type(4) { left: 64%; } .gauge .acid i:nth-of-type(5) { left: 76%; width: 5px; height: 5px; } .gauge .acid i:nth-of-type(6) { left: 46%; width: 6px; height: 6px; }
+  .gauge:hover .acid { height: 52%; }
+  .gauge:hover .acid i { animation: acidbubble 1.4s ease-in infinite; }
+  .gauge:hover .acid i:nth-of-type(2) { animation-delay: .25s; } .gauge:hover .acid i:nth-of-type(3) { animation-delay: .55s; } .gauge:hover .acid i:nth-of-type(4) { animation-delay: .8s; }
+  .gauge:hover .acid i:nth-of-type(5) { animation-delay: 1s; } .gauge:hover .acid i:nth-of-type(6) { animation-delay: .4s; animation-duration: 1.1s; }
+  .gauge:hover { animation: gaugeshake .35s ease-in-out 2; }
+  .gauge:hover .gv { text-shadow: 0 0 8px var(--glow, #fff); }
+  @keyframes acidwave { from { transform: translateX(0); } to { transform: translateX(20px); } }
+  @keyframes acidbubble { 0% { transform: translateY(0) scale(.5); opacity: 0; } 15% { opacity: .95; } 85% { opacity: .8; } 100% { transform: translateY(-78px) scale(1.25); opacity: 0; } }
+  @keyframes gaugeshake { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
   #dexTip { position: fixed; z-index: 80; display: none; max-width: 320px; background: #fffde7; color: #1a237e; border: 3px solid #1a237e; border-radius: 12px; padding: 8px 11px;
     font: 12px "Trebuchet MS", sans-serif; box-shadow: 5px 5px 0 #ff9800; pointer-events: none; }
   h4 { margin: 4px 0 6px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
