@@ -191,7 +191,7 @@ def _close(out, nt, ps, x, xp, tq, kout, why, lots_frac):
 
 @njit(cache=True)
 def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1, htfe2, t1, o1, h1, l1, c1, sp1, k1, first1, m2c, roll, day1,
-             P, X, E, bandB, bandS, out, setups, stats):
+             P, X, E, bandB, bandS, OS, OL, out, setups, stats):
     """out rows: side, entry_t, entry, sl(final), exit_t, exit, pnl, swap, bucket, nxE, ghost, entry_k15, exit_k15, reason, lots
        reasons: 1 stop 2 next-EMA target 3 close-back 4 day close 5 TP 6 trailing stop 7 breakeven 8 time exit"""
     n1 = t1.shape[0]
@@ -735,7 +735,10 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                         ok = False
                     shape, kind = 0, 0
                     if ok:
-                        shape, kind = _shape(o15[i], h15[i], l15[i], c15[i], atr[i], P)
+                        if OS[i] != 9:                                # Strategy Lego: another setup-candle piece (1 BUY, -1 SELL, 2 either, 0 none)
+                            shape = OS[i]; kind = 4 if OS[i] != 0 else 0
+                        else:
+                            shape, kind = _shape(o15[i], h15[i], l15[i], c15[i], atr[i], P)
                     hr = hr15[i]
                     if shape != 0 and hr >= P[27] and hr < P[28] and i >= X[5] and not (P[80] >= 0 and dow15[i] == P[80]):
                         e9 = ef[i]
@@ -752,6 +755,8 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                             shortLine = _online(o15[i], h15[i], l15[i], c15[i], e9, -1, P)
                         else:
                             shortLine = _online(o15[i], h15[i], l15[i], c15[i], e50, -1, P) or _online(o15[i], h15[i], l15[i], c15[i], e9, -1, P)
+                        if OL[i] != 9:                                # Strategy Lego: another location piece (bit 1 BUY allowed, bit 2 SELL allowed)
+                            rulesOk = (OL[i] & 1) != 0; invOk = False; shortLine = (OL[i] & 2) != 0
                         longOk = P[38] > 0.5 and (rulesOk or invOk) and (shape == 1 or (shape == 2 and ((not shortLine) or c15[i] >= o15[i])))
                         shortOk = P[39] > 0.5 and shortLine and (shape == -1 or shape == 2) and not longOk
                         if longOk or shortOk:

@@ -990,6 +990,22 @@ def ml_state():
     return _jsonable(j.state())
 
 
+# ---------------------------------------------------------------- Strategy Lego (lego.py): replace the core pieces of the strategy
+def lego_test(body):
+    inputs = full_inputs(dict(body.get("inputs") or {}, **(body.get("sets") or {})))
+    base_in = full_inputs(body.get("inputs") or {})
+    ds = body.get("ds") if body.get("ds") in ("year", "m15") else "year"
+    lego = {k: v for k, v in (body.get("lego") or {}).items() if k in ("ma", "loc", "candle", "loc_k", "mom_body", "mom_atr")}
+    win, labels = exitlab.window_of(ds, base_in)
+    out = {"labels": labels, "ds": ds}
+    for nm, inp, lg in (("lego", inputs, lego), ("yours", base_in, None)):
+        tr, _, oe = sim.simulate(inp, ds=ds, lego=lg or None)
+        real = tr[tr[:, 10] == 0]
+        s = exitlab.stats(real, win)
+        out[nm] = {"train": s["train"], "test": s["test"], "total": s["total"], "all": s["all"], "sides": s["sides"], "years": s["years"]}
+    return _jsonable(out)
+
+
 # ---------- HTTP ----------
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
@@ -1119,6 +1135,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, lab_research(body))
             if u.path == "/api/ml":
                 return self.send(200, ml_start(body))
+            if u.path == "/api/lego_test":
+                return self.send(200, lego_test(body))
             if u.path == "/api/sim":
                 return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
                                                  body.get("ds") or "year", body.get("mode") or "ea"))
