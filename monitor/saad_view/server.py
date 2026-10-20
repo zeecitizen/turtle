@@ -406,6 +406,62 @@ def full_inputs(sets):
     return {i["name"]: str(sets.get(i["name"], dfl.get(i["name"], i["default"]))) for i in ea_inputs()["inputs"]}
 
 
+# ---------------------------------------------------------------- ask Claude about ONE trade (Zee 2026-10-20: "on the buy sell label of each candle,
+# i want a button ask claude about this trade? ... claude answers that query about that particular setup ... we write it on/above the label")
+# Answered by the Claude Code CLI on Zee's own login (the API key has no credits); Claude may read the repo (EA source, LAWS.md, reports), never edit.
+NOTES = Path(__file__).parent / "asks" / "trade_notes.json"
+CLAUDE_EXE = sorted(Path.home().glob(".vscode/extensions/anthropic.claude-code-*/resources/native-binary/claude.exe"))
+TRADE_SYSTEM = """You are Claude, inside Turtle TV (Zee's TradingView-style chart for his Saad gold EA, Saad_strategy_15min v1.28, XAUUSD 15-minute
+candles, Blueberry real ticks, 2 lots). Zee clicked ONE trade's label on the chart and asks about THAT trade. Below: the trade (entry / stop / exit,
+result, why it closed, range box), its setup candle, every candle from 60 before the entry to 10 after the exit with the EA's own EMAs, ADX and ATR,
+the EA's decisions in that window, how the same kind of setup did over the whole data, and the settings on screen.
+
+How the EA trades: a pin bar / hammer / shooting star / marubozu touching the fast or slow EMA is a setup; a break of its high (BUY) / low (SELL) by
+InpBreakPips within InpBreakBars candles enters; stop = InpSlAtrMult x ATR(14), skipped if over InpMaxRiskUsd; ADX >= InpAdxMin; exit = the nearer EMA
+beyond the entry (InpExitMode 1). You may read files in the repo (mt5/Saad_strategy_15min.mq5 is the EA, LAWS.md is Zee's own rulebook - read it, never
+edit anything). Inspect the candles yourself: the trend, where price sat between the EMAs, the setup candle's shape, the volatility, what happened
+after the entry, and what a skilled discretionary trader would have seen. Be concrete: name candles by Pakistan time (12-hour), quote prices.
+House rule: an idea from one trade is a hypothesis; only MT5's Strategy Tester promotes it. Answer in English, short and direct: first a 1-2 sentence
+verdict (it is shown ON the chart above the label), then a blank line, then the detail."""
+
+
+def _notes():
+    try:
+        return json.loads(NOTES.read_text(encoding="utf-8"))
+    except Exception:                                            # noqa: BLE001
+        return {}
+
+
+def ask_trade(body):
+    key, q = str(body.get("key", "")), (body.get("question") or "").strip()
+    if not re.fullmatch(r"-?\d+_-?1", key) or not q:
+        return {"error": "no trade / no question"}
+    ctx = json.dumps(body.get("context") or {}, separators=(",", ":"), default=str)[:120000]
+    prev = _notes().get(key, [])
+    hist = "".join(f"\n\nEarlier, Zee asked: {n['q']}\nYou answered: {n['a']}" for n in prev[-4:])
+    prompt = f"{TRADE_SYSTEM}{hist}\n\nZee's question about this trade: {q}\n\nThe trade and the chart around it (JSON):\n{ctx}"
+    text, err = None, None
+    if CLAUDE_EXE:
+        try:
+            r = subprocess.run([str(CLAUDE_EXE[-1]), "-p", "--output-format", "text", "--model", "opus", "--allowedTools", "Read", "Grep", "Glob"],
+                               input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=900, cwd=str(ROOT))
+            text = r.stdout.strip() if r.returncode == 0 and r.stdout.strip() else None
+            err = None if text else f"Claude Code: {(r.stderr or r.stdout).strip()[:400]}"
+        except Exception as e:                                   # noqa: BLE001
+            err = f"Claude Code: {e}"
+    if text is None:                                             # the API, if it has credits again
+        a = ask_claude({"question": f"{TRADE_SYSTEM}{hist}\n\nZee's question about this trade: {q}", "context": body.get("context")})
+        text, err = a.get("text"), a.get("error") or err
+    if not text:
+        return {"error": err or "no answer"}
+    allr = _notes()
+    allr.setdefault(key, []).append({"q": q, "a": text, "at": datetime.now().strftime("%Y-%m-%d %I:%M %p")})
+    NOTES.parent.mkdir(parents=True, exist_ok=True)
+    NOTES.write_text(json.dumps(allr, indent=1, ensure_ascii=False), encoding="utf-8")
+    log(f"ask_trade {key}: {len(q)} chars -> {len(text)} chars")
+    return {"text": text, "notes": allr[key]}
+
+
 MODES = {"ea": {}, "chart": {"chart": True}, "chart_blind": {"chart": True, "blind_until": sim.TV_M1_FROM}}
 
 
@@ -629,6 +685,8 @@ class H(BaseHTTPRequestHandler):
             if not re.fullmatch(r"r\d{8}_\d{6}", rid) or not p.exists():
                 return self.send(404, {"error": "no such run"})
             return self.send(200, p.read_bytes())
+        if u.path == "/api/trade_notes":
+            return self.send(200, _notes())
         if u.path == "/api/status":
             s = dict(STATE)
             s["elapsed"] = round(time.time() - s["started"]) if s.get("started") and s.get("busy") else None
@@ -662,6 +720,8 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, {"ok": True})
             if u.path == "/api/ask":
                 return self.send(200, ask_claude(body))
+            if u.path == "/api/ask_trade":
+                return self.send(200, ask_trade(body))
             if u.path == "/api/sim":
                 return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
                                                  body.get("ds") or "year", body.get("mode") or "ea"))

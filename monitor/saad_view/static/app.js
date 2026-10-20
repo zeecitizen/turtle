@@ -67,6 +67,7 @@ function makeChart() {
   chart.subscribeCrosshairMove((p) => { if (BARS) legend(p && p.time != null ? barIdx(p.time - TZ) : BARS.t.length - 1); });
   chart.subscribeClick((p) => {
     if (!TT || !p || p.logical == null) return;
+    if (p.point) { const L = LBLS.find((r) => p.point.x >= r.x && p.point.x <= r.x + r.w && p.point.y >= r.y && p.point.y <= r.y + r.h); if (L) { focusTrade(L.t); openAsk(L.t, L); return; } }
     const i = Math.round(p.logical), t = TT.TR.find((x) => x.biIn === i || x.biOut === i);
     if (t) focusTrade(t);
   });
@@ -123,6 +124,15 @@ function tvTag(ctx, x, y, lines, bg, fg, up, px) {
   ctx.closePath(); ctx.fill();
   ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   lines.forEach((l, i) => ctx.fillText(l, x, by + Math.round(pad * 0.4) + lh * (i + 0.5)));
+  return { x: bx, y: by, w, h };
+}
+let LBLS = [], NOTESD = {};
+const tKey = (t) => `${t.tIn}_${t.side}`;
+function wrap(s, n, max) {
+  const out = []; let cur = '';
+  for (const w of s.split(/\s+/)) { if ((cur + ' ' + w).trim().length > n) { out.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); }
+  if (cur) out.push(cur);
+  return out.length > max ? [...out.slice(0, max - 1), out[max - 1] + ' …'] : out;
 }
 function seg(ctx, x1, y1, x2, y2, color, width, dash) {
   if ([x1, y1, x2, y2].some((v) => v == null)) return;
@@ -170,6 +180,7 @@ function drawTv(ctx) {
     const x = X(t.biIn), y = Y(t.en);
     if (x != null && y != null) tri(ctx, x, y + (t.side > 0 ? 6 : -6), t.side > 0, t.pnl > 0 ? '#00bfa5' : '#ff6d00', 4);
   }
+  LBLS = [];
   if (!show.trades) return;
   for (const t of TT.TR) {
     if (t.biOut < lo || t.biIn > hi) continue;
@@ -187,7 +198,15 @@ function drawTv(ctx) {
     const x1 = X(t.biIn), x2 = X(t.biOut), rc = t.pnl > 0 ? TVC.win : TVC.loss;
     const yIn = t.side > 0 ? Y(B.l[t.biIn]) : Y(B.h[t.biIn]), yOut = t.side > 0 ? Y(B.h[t.biOut]) : Y(B.l[t.biOut]);
     if (x1 != null && yIn != null) {
-      if (full) tvTag(ctx, x1, yIn, [`${t.side > 0 ? '▲ BUY' : '▼ SELL'} #${t.num}`, f2(t.en)], t.side > 0 ? TVC.buy : TVC.sell, '#fff', t.side > 0, 12);
+      if (full) {
+        const r = tvTag(ctx, x1, yIn, [`${t.side > 0 ? '▲ BUY' : '▼ SELL'} #${t.num}`, f2(t.en), '💬 ask Claude'], t.side > 0 ? TVC.buy : TVC.sell, '#fff', t.side > 0, 12);
+        LBLS.push({ t, ...r });
+        const n = NOTESD[tKey(t)];
+        if (n && n.length) {                                  // Claude's verdict, beyond the label (below a BUY's, above a SELL's)
+          const lines = wrap(n[n.length - 1].a.split(/\n\s*\n/)[0].replace(/[*#`]/g, ''), 46, 4);
+          tvTag(ctx, x1, t.side > 0 ? r.y + r.h + 4 : r.y - 4, lines, 'rgba(41,98,255,0.92)', '#fff', t.side > 0, 11);
+        }
+      }
       else tri(ctx, x1, yIn, t.side > 0, t.side > 0 ? TVC.buy : TVC.sell, 4);
     }
     if (full && x2 != null && yOut != null) tvTag(ctx, x2, yOut, [`EXIT #${t.num}`, money(t.pnl)], TVC.tag, rc, t.side < 0, 11);
@@ -224,6 +243,50 @@ function legend(i) {
   if (show.mt5 && MT) for (const e of MT.EVB.get(i) || []) if (e.type === 'entry' || e.type === 'exit') h += `<div class="ev">${evText(e, 'MT5')}</div>`;
   $('#legend').innerHTML = h;
 }
+// ---------- ask Claude about one trade ----------
+function tradeContext(t) {
+  const B = BARS, a = Math.max(0, t.biIn - 60), b = Math.min(B.t.length - 1, t.biOut + 10), P = (i) => fullFmt(B.t[i] + TZ);
+  const candles = []; for (let i = a; i <= b; i++) candles.push([P(i), +f2(B.o[i]), +f2(B.h[i]), +f2(B.l[i]), +f2(B.c[i]), TT.ef ? +f2(TT.ef[i]) : null, TT.es ? +f2(TT.es[i]) : null, +f1(B.adx[i]), +f2(B.atr[i]), i === t.biIn ? 'ENTRY' : i === t.biOut ? 'EXIT' : '']);
+  const evs = []; for (let i = a; i <= b; i++) for (const e of TT.EVB.get(i) || []) evs.push({ at: P(i), type: e.type, side: e.side, price: e.price, sl: e.sl, v1: e.v1, v2: e.v2, text: e.text, num: e.num });
+  let setup = null; for (let i = t.biIn; i >= Math.max(0, t.biIn - 8) && !setup; i--) for (const e of TT.EVB.get(i) || []) if (e.type === 'setup' && e.side === t.side) { setup = { at: P(i), kind: KIND(Math.round(e.v2), e.side), high: B.h[i], low: B.l[i], open: B.o[i], close: B.c[i], break_level: e.v1 }; break; }
+  const same = (f) => { const s = TT.TR.filter(f), w = s.filter((x) => x.pnl > 0).length; return { trades: s.length, win_rate: s.length ? Math.round(100 * w / s.length) + '%' : '-', net: Math.round(s.reduce((q, x) => q + x.pnl, 0)) }; };
+  const changed = {}; for (const k in CUR) if (DFL[k] !== undefined && String(CUR[k]) !== String(DFL[k])) changed[k] = CUR[k];
+  return { trade: { num: t.num, side: t.side > 0 ? 'BUY' : 'SELL', entry_time: P(t.biIn), entry: t.en, stop: t.sl, exit_time: P(t.biOut), exit: t.ex, result_usd: Math.round(t.pnl), why_closed: t.why, entry_note: t.info, range_box: box(t.bucket) },
+    setup_candle: setup, candles_columns: ['time PKT', 'open', 'high', 'low', 'close', `EMA ${CUR.InpEmaFast}`, `EMA ${CUR.InpEmaSlow}`, 'ADX', 'ATR', 'mark'], candles, decisions: evs,
+    same_side_whole_data: same((x) => x.side === t.side), same_side_same_box: same((x) => x.side === t.side && Math.round(x.bucket) === Math.round(t.bucket)),
+    data: SRC.ds, rules: SRC.mode, settings_changed_from_defaults: changed, key_settings: Object.fromEntries(['InpEmaFast', 'InpEmaSlow', 'InpAdxMin', 'InpSlAtrMult', 'InpMaxRiskUsd', 'InpBreakPips', 'InpBreakBars', 'InpExitMode', 'InpLots'].map((k) => [k, CUR[k]])) };
+}
+function askHtml(t, busy) {
+  const n = NOTESD[tKey(t)] || [];
+  return `<div class="row" style="justify-content:space-between;align-items:center"><b>💬 Ask Claude about ${t.side > 0 ? 'BUY' : 'SELL'} #${t.num}</b><button id="tAskX">✕</button></div>
+    <div class="k">${fullFmt(t.tIn + TZ)} · ${f2(t.en)} → ${f2(t.ex)} · <span class="${cls(t.pnl)}">${money(t.pnl)}</span> · ${esc(t.why || '')}</div>
+    <textarea id="tAskQ" placeholder="e.g. Why did this lose? Was the setup clean? What should the EA have seen?" ${busy ? 'disabled' : ''}></textarea>
+    <div class="row" style="gap:8px;align-items:center"><button id="tAskGo" class="primary" ${busy ? 'disabled' : ''}>${busy ? '⏳ Claude is inspecting this trade…' : 'Send to Claude'}</button><span class="k">Claude sees the trade, 60 candles before it, EMAs, ADX, ATR and the EA's decisions.</span></div>
+    ${n.slice().reverse().map((x) => `<div class="qa"><b>You:</b> ${esc(x.q)}\n<b>Claude</b> <span class="k">${esc(x.at)}</span>: ${esc(x.a)}</div>`).join('')}`;
+}
+let ASKT = null;
+function openAsk(t, L) {
+  ASKT = t; const el = $('#tAsk'), W = $('#chartWrap').clientWidth, H = $('#chartWrap').clientHeight;
+  el.innerHTML = askHtml(t, false); el.hidden = false;
+  el.style.left = Math.max(4, Math.min(W - 390, L.x + L.w + 8)) + 'px'; el.style.top = Math.max(4, Math.min(H - 240, L.y - 20)) + 'px';
+  setTimeout(() => $('#tAskQ') && $('#tAskQ').focus(), 0);
+}
+async function sendAsk() {
+  const t = ASKT, q = ($('#tAskQ').value || '').trim();
+  if (!t || !q) return;
+  const el = $('#tAsk'); el.innerHTML = askHtml(t, true);
+  const r = await api('/api/ask_trade', { key: tKey(t), question: q, context: tradeContext(t) }).catch((e) => ({ error: String(e) }));
+  if (r.error) toast('Claude: ' + esc(r.error)); else NOTESD[tKey(t)] = r.notes;
+  if (ASKT === t) el.innerHTML = askHtml(t, false);
+  redraw();
+}
+document.addEventListener('click', (e) => {
+  if (e.target.id === 'tAskX') { $('#tAsk').hidden = true; ASKT = null; }
+  if (e.target.id === 'tAskGo') sendAsk();
+});
+document.addEventListener('keydown', (e) => { if (e.target.id === 'tAskQ' && e.key === 'Enter' && (e.ctrlKey || e.metaKey)) sendAsk(); });
+api('/api/trade_notes').then((n) => { NOTESD = n || {}; redraw(); }).catch(() => {});
+
 function focusTrade(t) {
   SEL = t.num;
   chart.timeScale().setVisibleLogicalRange({ from: t.biIn - 40, to: t.biOut + 40 });
