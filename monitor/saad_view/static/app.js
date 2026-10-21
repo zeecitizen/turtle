@@ -97,9 +97,8 @@ function derive(kind, events, lots) {
   const D = { kind, events, TR: [], GH: [], EVB: new Map() };
   const ent = {}; let g = null;
   for (const e of events) {
-    e.bi = barIdx(e.t);
-    if (!D.EVB.has(e.bi)) D.EVB.set(e.bi, []);
-    D.EVB.get(e.bi).push(e);
+    e.bi = e.t < BARS.t[0] ? -1 : barIdx(e.t);                  // before the chart's first candle (the 4-year M1 data draws 2026 only): counted, not drawn
+    if (e.bi >= 0) { if (!D.EVB.has(e.bi)) D.EVB.set(e.bi, []); D.EVB.get(e.bi).push(e); }
     if (e.type === 'entry') ent[e.num] = e;
     else if (e.type === 'exit' && ent[e.num]) {
       const n = ent[e.num];
@@ -705,7 +704,7 @@ $('#form').addEventListener('input', (e) => {
 async function setSource() {
   const ds = $('#srcDs').value, mode = $('#srcMode').value, keep = chart.timeScale().getVisibleRange();
   SRC.mode = mode;
-  $('#brandTf').textContent = `XAUUSD · Blueberry real ticks · ${ds === 'year1' ? '1 min (the EA on M1)' : '15 min'}`;
+  $('#brandTf').textContent = `XAUUSD · Blueberry real ticks · ${ds === 'year1' || ds === 'm1x' ? '1 min (the EA on M1)' : '15 min'}`;
   if (ds !== SRC.ds) {
     SRC.ds = ds; BARS = await getBars(ds); drawBars(); TT = null; MT = null;
   }
@@ -896,7 +895,7 @@ document.addEventListener('click', async (e) => {
 
 // ---------- buttons ----------
 $('#btnCheck').onclick = async () => {
-  const r = await api('/api/run', { sets: CUR, delay: 'none', period: SRC.ds === 'year1' ? 'M1' : 'M15', label: Object.keys(diffDfl(CUR)).length ? '' : 'v1.27 defaults (no delay)' });
+  const r = await api('/api/run', { sets: CUR, delay: 'none', period: SRC.ds === 'year1' || SRC.ds === 'm1x' ? 'M1' : 'M15', label: Object.keys(diffDfl(CUR)).length ? '' : 'v1.27 defaults (no delay)' });
   if (r.error) return toast('⚠ ' + esc(r.error));
   MTWAIT = { prev: MT && MT.run.id, t0: Date.now() }; renderPanel('mt');
   toast('The settings on screen are running in the MT5 Strategy Tester (real ticks, no delay). The MT5 section updates when it is done, in about a minute.');

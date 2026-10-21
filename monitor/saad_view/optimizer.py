@@ -84,10 +84,10 @@ def evaluate(inputs, objective="ret_dd", min_trades=30, window=None, ds="year"):
 class Optimizer:
     def __init__(self, start, objective="ret_dd", boxes=False, keep_going=False, min_trades=30, window=None, ds="year"):
         self.ds = ds
-        if window is None and ds == "m15":                       # 4 years: tune on 2023 + 2024, judge on 2025 + 2026 (never seen while tuning)
+        if window is None and ds in ("m15", "m1x"):                       # 4 years: tune on 2023 + 2024, judge on 2025 + 2026 (never seen while tuning)
             s, m = sim._ep(sim.datetime(2023, 1, 1)), sim._ep(sim.datetime(2025, 1, 1))
             window = (s, m, m, sim._ep(sim.datetime(2027, 1, 1)))
-        self.labels = ("2023 – 2024", "2025 – 2026") if ds == "m15" else ("Jan – Jun", "Jul – Oct")
+        self.labels = ("2023 – 2024", "2025 – 2026") if ds in ("m15", "m1x") else ("Jan – Jun", "Jul – Oct")
         self.window = window
         self.start = {k: str(v) for k, v in start.items()}
         self.objective, self.boxes, self.keep, self.min_trades = objective, boxes, keep_going, min_trades

@@ -104,7 +104,7 @@ function labShow(cond) {                                         // "tgt>=2", "c
 function labLabels() {
   for (const k of ['cat', 'test', 'diag', 'search', 'heat']) if (LABS[k] && LABS[k]._labels) return LABS[k]._labels;
   for (const k of ['main', 'quick']) if (LABS[k] && LABS[k].labels) return LABS[k].labels;
-  return SRC.ds === 'm15' ? ['2023 – 2024', '2025 – 2026'] : ['Jan – Jun', 'Jul – Oct'];
+  return SRC.ds === 'm15' || SRC.ds === 'm1x' ? ['2023 – 2024', '2025 – 2026'] : ['Jan – Jun', 'Jul – Oct'];
 }
 const canon = (o) => JSON.stringify(Object.keys(o).sort().map((k) => [k, String(o[k])]));
 function stale(R) {                                              // results of other settings or other data must say so
