@@ -947,7 +947,12 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                             hiP = aHigh; loP = aLow; pExit = aExit
                             aSide = 0
                             go = True
-                            be = bid
+                            # filled where the price CROSSED the dip level (the minute's earlier point was on the other side), not at this
+                            # point's extreme - the EA's TryDip buys / sells on the tick that reaches the level (found on M1, Zee 2026-10-22)
+                            if aSide > 0:
+                                be = (aLevel - spr) if prv + spr > aLevel else bid
+                            else:
+                                be = aLevel if prv < aLevel else bid
                     if go and side != 0 and closed:
                         go = False                                   # refused at the open: the setup is gone (TryEntry cleared it)
                     if go and side != 0:

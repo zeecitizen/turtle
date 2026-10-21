@@ -16,6 +16,17 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.34 (2026-10-22) — InpXEntryWait: act like the tester in the entry minute
+
+Zee, checking his 1-minute Exit Lab exit: *"i think instead of changing the tester you can change the EA to fix the EA to respond just like the tester"*. New
+`InpXEntryWait` (default false = v1.31): in exit modes 1-2 the next-EMA touch also waits out the entry minute, as the Turtle TV Tester does (only the broker
+stop / TP act in that minute). MT5, Zee's M1 exit (2026, M1, no delay): off -$97,969, 2,297 trades, WR 42.7% (r20261022_024353); on -$90,593, 2,773 trades,
+WR 36.5% (r20261022_025401). The same day the TESTER got a real fix (sim_full.py): a dip entry (InpEntryMode 1) was filled at the minute's best price instead
+of at the dip level - entries now match MT5 to a median $0.01 (was $0.42); on M1 this exit's tester result fell from +$1.26M to +$0.53M. The rest of the gap:
+tick-by-tick trails / locks a few cents behind the price - MT5 sees every tick, the tester four prices a minute.
+
+---
+
 ## Saad_strategy_15min_v133 v1.33 (2026-10-21) — Zee's 94% save as an EA
 
 Zee: *"jaan can u make this the compiled EA please ... i've tried loss cutting its not helping right now.. let's use the setting above"*. v1.31 with the save

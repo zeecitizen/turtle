@@ -34,11 +34,13 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.31"
+#property version   "1.34"
 #property strict
 
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
+// v1.34 (2026-10-22, Zee: "fix the EA to respond just like the tester"): InpXEntryWait - the next-EMA target (exit modes 1-2) also waits out
+//        the entry minute, as the Turtle TV Tester does (only the broker stop / TP act in that minute). Off by default (= v1.31). Matters on M1.
 // v1.31 (2026-10-21, Zee: "i want you to add a mode which helps reduce loss ... make it the most intelligent loss cutter possible"): three
 //        loss cutters for the Exit Lab, all off by default (= v1.30): InpXLossCap - the stop never further than $X from the entry (the tighter
 //        of the setup's stop and this, before the stand-aside ghost and the sizing); InpXLpR / InpXLpFrac - close a share when the trade is
@@ -70,7 +72,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad15 v1.31"
+#define EA_COMMENT "Saad15 v1.34"
 
 //--- the two lines
 input int    InpEmaFast     = 16;      // InpEmaFast
@@ -255,6 +257,7 @@ input double InpXLossCap    = 0;      // InpXLossCap — v1.31: the stop never f
 input double InpXLpR        = 0;      // InpXLpR — v1.31: close part of the trade when it is this R in loss (0 = off)
 input double InpXLpFrac     = 0.5;    // InpXLpFrac — v1.31: ... the share of the trade closed there
 input int    InpXDecayBars  = 0;      // InpXDecayBars — v1.31: after this many candles the stop tightens (0 = off)
+input bool   InpXEntryWait  = false;  // InpXEntryWait — v1.34: the next-EMA target waits out the entry minute (as the Turtle TV Tester)
 input double InpXDecayR     = -0.5;   // InpXDecayR — v1.31: ... to the entry + this R (negative = still in loss, 0 = breakeven)
 
 CTrade   trade;
@@ -948,7 +951,7 @@ void ManageTick()
       g_pos[i].mfe = g_pos[i].side > 0 ? MathMax(g_pos[i].mfe, bid) : (g_pos[i].mfe == 0 ? ask0 : MathMin(g_pos[i].mfe, ask0));
       if (g_pos[i].nxE != 0) {             // v1.25 exit modes: no lock, breakeven, partial or trail (v1.30: unless the Exit Lab is on)
          if (XOn() && XTick(i, bid, ask0)) continue;
-         if (g_pos[i].nxE > 0 && InpXTgt == 0) {
+         if (g_pos[i].nxE > 0 && InpXTgt == 0 && !(InpXEntryWait && TimeCurrent() / 60 <= g_pos[i].entryTime / 60)) {
             double e = Ema(g_pos[i].nxE, 0);
             if (g_pos[i].side > 0 ? bid >= e : ask0 <= e) {
                g_pos[i].why = StringFormat("%d EMA touched (next EMA beyond the entry)", g_pos[i].nxE == 9 ? InpEmaFast : InpEmaSlow);
