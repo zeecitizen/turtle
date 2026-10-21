@@ -107,7 +107,7 @@ function lossTips(W, busy) {
       : m.trust === 'differ' ? ' <span class="tag unt" title="verify_settings.py: on this setting the tester and MT5 differ in size">check in MT5</span>' : '';
     const heads = [[c.avg, `average loss ${money(L0.avg_loss)} → ${money(L.avg_loss)}`], [c.tail, `worst 5% ${money(L0.tail)} → ${money(L.tail)}`],
       [c.lpt, `losses per trade ${usd(L0.lpt)} → ${usd(L.lpt)}`], [c.worst, `worst loss ${money(L0.worst)} → ${money(L.worst)}`]].sort((a, b) => b[0] - a[0]);
-    const head = m.dm >= 0.25 && m.dm / Math.max(1, Math.abs(L0.margin)) > heads[0][0] ? `margin ${L0.margin} → ${L.margin} pts` : heads[0][1] + ` (${pc(heads[0][0])})`;
+    const head = m.dm >= 0.25 && m.dm / Math.max(1, Math.abs(L0.margin)) > heads[0][0] ? `__M__safety margin ${L0.margin} → ${L.margin} pts` : heads[0][1] + ` (${pc(heads[0][0])})`;
     const costs = [[L.wr - L0.wr, `${(L.wr - L0.wr).toFixed(1).replace('-', '−')} pts win rate`], [(r.net - now.net) / Math.max(1, Math.abs(now.net)), `${money(r.net - now.net)} net`],
       [(r.n - now.n) / now.n, `${String(r.n - now.n).replace('-', '−')} trades`]].filter((x) => x[0] < -1e-9).sort((a, b) => a[0] - b[0]);
     const ev = lcReal(L, d);
@@ -117,7 +117,7 @@ function lossTips(W, busy) {
       `losses/trade ${chg(c.lpt, c.lpt > 0, usd(L.lpt))} · break-even ${chg(L.be - L0.be, L.be < L0.be, L.be + '%')} · margin ${chg(m.dm, m.dm > 0, L.margin + ' pts (' + (m.dm >= 0 ? '+' : '') + m.dm.toFixed(2) + ')')}<br>` +
       `WR ${chg(L.wr - L0.wr, L.wr > L0.wr, L.wr + '%')} · ${r.n} trades · net ${chg(r.net - now.net, r.net > now.net, money(r.net))} · at −${d} pts real-life ${chg(ev - ev0, ev > ev0, money(ev) + '/trade')}` +
       `${r.days ? ` · ${r.days.green}% green days` : ''}</span>${m.why ? `<br><span class="k lwhy">🔬 ${esc(m.why)}</span>` : ''}</button>` +
-      `<button class="sugdeal ${costs.length ? 'cost' : 'free'}" data-mv="${W.moves.indexOf(m)}">✂️ Cut <b>${head}</b><br>${costs.length ? 'pay ' + costs.slice(0, 2).map((x) => x[1]).join(', ') : 'and it costs nothing'}</button></div>`;
+      `<button class="sugdeal ${costs.length ? 'cost' : 'free'}" data-mv="${W.moves.indexOf(m)}">${head.startsWith('__M__') ? `🛡️ Grow <b>${head.slice(5)}</b>` : `✂️ Cut <b>${head}</b>`}<br>${costs.length ? 'pay ' + costs.slice(0, 2).map((x) => x[1]).join(', ') : 'and it costs nothing'}</button></div>`;
   }).join('');
   if (list.length > 25) h += `<button data-rs="all" class="dexbtn sm" style="margin-top:6px">${RS.all ? 'show the best 25' : `show all ${list.length}`}</button>`;
   return h;
