@@ -16,6 +16,15 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min_v132_night v1.32 (2026-10-21) — the 90% setting for an overnight Blueberry test
+
+Zee: *"make a compiled EA i can attach that in blueberry MT5 and sleep"*. A copy of v1.31 whose defaults are Zee's Exit Lab save with the stop $15 from the entry
+(make_ea_from_settings.py, magic 88318). MT5 receipt (run r20261021_051938, Blueberry 2026, no delay, 2 lots): 90.7% WR, 443 trades, +$50,033, PF 1.41, DD $9,350;
+avg win $431 vs avg loss -$3,010, break-even WR 87.5%. A 10-step search for a better 90%+ setting raised the 2023-24 margin 4.7 -> 6.8 pts but the 2025-26 margin
+fell 3.7 -> 2.1 (fitting): this save stays the pick. Compiled and copied to the Blueberry terminal's Experts.
+
+---
+
 ## Saad_strategy_15min v1.31 (2026-10-21) — three loss cutters
 
 Zee: *"i want you to add a mode which helps reduce loss ... make it the most intelligent loss cutter possible"*. New Exit Lab inputs (exit modes 1-2, all off = v1.30):
