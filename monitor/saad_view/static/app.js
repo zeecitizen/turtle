@@ -850,7 +850,7 @@ async function loadSaved() {
         `<td style="text-align:left;white-space:normal" class="k">${Object.entries(s.changed || {}).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ') || 'none (v1.27)'}${s.lab_describe ? `<br><span style="color:#ffb74d">⚗️ Exit Lab exit: ${esc(s.lab_describe)}</span>` : ''}</td>` +
         `<td><button data-load="${i}">Load</button> <button data-del="${i}">Delete</button> ` +
         (primName() === s.name ? `<button data-unprim="1" class="dexbtn sm" title="loads on every startup - click to stop">⭐ Primary (default on startup)</button>`
-          : `<button data-prim="${i}">Make Primary: Set as Default on Startup</button>`) + `</td></tr>`; }))
+          : `<button data-prim="${i}">Make Primary: Set as Default on Startup</button>`) + ` <button data-watch="${i}">Watch MT5 result</button></td></tr>`; }))
     : '<p class="note">Nothing saved yet - press "💾 Save settings".</p>';
 }
 $('#btnSave').onclick = async () => {
@@ -864,6 +864,14 @@ document.addEventListener('click', async (e) => {
     toast(`Loaded <b>${esc(s.name)}</b>.` + (s.lab_describe ? ` Its Exit Lab exit is back on the bench: ${esc(s.lab_describe)}.` : ''));
   }
   if (e.target.id === 'labBannerOff') { ACTIVE_LAB = null; labBanner(); scheduleSim(0); toast('The main tester runs the EA’s own exit again.'); }
+  if (d.watch != null) {                                       // the newest MT5 run of exactly this save's settings, into the MT5 Strategy Tester section
+    const s = SAVEDS[+d.watch], want = diffDfl({ ...DFL, ...s.inputs });
+    await loadRuns();
+    const run = RUNS.find((x) => { const a = x.changed || {}; return Object.keys(a).length === Object.keys(want).length && Object.entries(want).every(([k, v]) => k in a && same(a[k], v)); });
+    if (run) { MT = null; await pickMt5(run.id); document.querySelector('#panelMT').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      toast(`MT5 result for <b>${esc(s.name)}</b>: ${money(run.net || 0)} · PF ${run.pf} · ${run.trades} trades (${esc(run.created || '')}).` + (runMatches(run) ? '' : ' Its settings differ from the chart - Load the save to compare them side by side.')); }
+    else if (confirm(`MT5 has not run "${s.name}" yet. Load it and run it in MT5 now (about a minute)?`)) { await applySave(s); scheduleSim(0); $('#btnCheck').click(); }
+  }
   if (d.prim != null) { const s = SAVEDS[+d.prim]; await setPrim(s.name); loadSaved();
     toast(`⭐ <b>${esc(s.name)}</b> is your primary: it loads into the chart and everywhere each time the page opens.`); }
   if (d.unprim) { await setPrim(null); loadSaved(); toast('No primary any more: the page starts from TradingView / v1.27 again.'); }
