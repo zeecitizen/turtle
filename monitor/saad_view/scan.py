@@ -52,7 +52,7 @@ SPEC = {k: v for d in G.values() for k, v in d.items()}
 # Exit Lab settings that are off (0): where switching them on starts
 STARTERS = {"p1_r": [0.5, 1, 1.5, 2], "p2_r": [1.5, 2, 3], "be_r": [0.5, 1, 1.5, 2], "lock_r": [0.5, 1, 2], "max_bars": [4, 8, 16, 32], "stale_bars": [4, 8, 16],
             "adx_exit": [15, 20, 25], "fri_hour": [18, 20, 21], "fb_buf": [0.1, 0.25, 0.5], "cx_buf": [0.1, 0.25, 0.5], "tr_act": [0.5, 1, 2], "tr_buf": [0.5, 1, 2],
-            "cx_after": [1, 2, 4], "be_off": [0.05, 0.1, 0.25]}
+            "cx_after": [1, 2, 4], "be_off": [0.05, 0.1, 0.25], "lcap": [10, 15, 20, 30], "lp_r": [0.25, 0.5, 0.75], "dc_bars": [4, 8, 16]}
 
 
 def _f(x, d=0.0):

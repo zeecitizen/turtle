@@ -18,7 +18,7 @@ const SLOT = { diagnose: 'diag', test: 'test', catalogue: 'cat', search: 'search
 const XMAP = { tgt: 'InpXTgt', tgt_k: 'InpXTgtK', fb: 'InpXFb', fb_buf: 'InpXFbBuf', fb_n: 'InpXFbN', cx: 'InpXCx', cx_buf: 'InpXCxBuf', cx_n: 'InpXCxN', cx_when: 'InpXCxWhen',
   cx_after: 'InpXCxAfter', p1_r: 'InpXP1R', p1_frac: 'InpXP1Frac', p1_be: 'InpXP1Be', p2_r: 'InpXP2R', p2_frac: 'InpXP2Frac', be_r: 'InpXBeR', be_off: 'InpXBeOff',
   lock_r: 'InpXLockR', tr: 'InpXTr', tr_k: 'InpXTrK', tr_act: 'InpXTrAct', tr_buf: 'InpXTrBuf', max_bars: 'InpXMaxBars', stale_bars: 'InpXStaleBars', stale_r: 'InpXStaleR',
-  adx_exit: 'InpXAdxExit', fri_hour: 'InpXFriHour' };
+  adx_exit: 'InpXAdxExit', fri_hour: 'InpXFriHour', lcap: 'InpXLossCap', lp_r: 'InpXLpR', lp_frac: 'InpXLpFrac', dc_bars: 'InpXDecayBars', dc_r: 'InpXDecayR' };
 function labToX(lab) {                                            // a recipe -> the EA settings (every field, so an old exit is fully replaced)
   const out = {};
   for (const [f, k] of Object.entries(XMAP)) {
@@ -31,7 +31,8 @@ function labFromX(inp) {                                          // the EA sett
   const L = {};
   for (const [f, k] of Object.entries(XMAP)) if (k in inp) L[f] = String(inp[k]).toLowerCase() === 'true' ? 1 : String(inp[k]).toLowerCase() === 'false' ? 0 : Number(inp[k]);
   const g = (f, d = 0) => (f in L ? L[f] : d);
-  const on = g('tgt') || g('fb') || g('fb_buf') > 0 || g('fb_n', 1) > 1 || g('cx') || g('p1_r') > 0 || g('p2_r') > 0 || g('be_r') > 0 || g('lock_r') > 0 || g('tr') || g('max_bars') > 0 || g('stale_bars') > 0 || g('adx_exit') > 0 || g('fri_hour') > 0;
+  const on = g('tgt') || g('fb') || g('fb_buf') > 0 || g('fb_n', 1) > 1 || g('cx') || g('p1_r') > 0 || g('p2_r') > 0 || g('be_r') > 0 || g('lock_r') > 0 || g('tr') || g('max_bars') > 0 || g('stale_bars') > 0 || g('adx_exit') > 0 || g('fri_hour') > 0
+    || g('lcap') > 0 || g('lp_r') > 0 || g('dc_bars') > 0;
   return on ? L : null;
 }
 if (/(^|[#&])labshow=1/.test(location.hash)) LABS.showLab = true;           // a link straight to the lab's trades on the chart

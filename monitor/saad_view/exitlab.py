@@ -63,6 +63,12 @@ GROUPS = [
         {"f": "tr_k", "t": "num", "d": 2.0, "step": 0.25, "min": 0.25, "label": "k ($ / x ATR / % / N candles)", "show": "tr==1||tr==2||tr==3||tr==7"},
         {"f": "tr_act", "t": "num", "d": 0.0, "step": 0.25, "min": 0, "label": "starts at +R", "show": "tr>=1"},
         {"f": "tr_buf", "t": "num", "d": 0.0, "step": 0.25, "min": 0, "label": "buffer ($)", "show": "tr>=4"}]),
+    ("Loss cutters (v1.31)", "Cut what a losing trade can cost before it reaches the stop. R = the distance from the entry to the first stop.", [
+        {"f": "lcap", "t": "num", "d": 0.0, "step": 0.5, "min": 0, "label": "the stop never further than $ from the entry (0 = off)"},
+        {"f": "lp_r", "t": "num", "d": 0.0, "step": 0.05, "min": 0, "label": "cut part of the trade when it is R in loss (0 = off)"},
+        {"f": "lp_frac", "t": "num", "d": 0.5, "step": 0.05, "min": 0.05, "max": 1, "label": "share cut", "show": "lp_r>0"},
+        {"f": "dc_bars", "t": "int", "d": 0, "step": 1, "min": 0, "label": "tighten the stop after N candles (0 = off)"},
+        {"f": "dc_r", "t": "num", "d": -0.5, "step": 0.05, "min": -1, "label": "... to the entry + R (negative = in loss)", "show": "dc_bars>0"}]),
     ("Time and other", "", [
         {"f": "max_bars", "t": "int", "d": 0, "step": 1, "min": 0, "label": "close after N candles (0 = off)"},
         {"f": "stale_bars", "t": "int", "d": 0, "step": 1, "min": 0, "label": "no progress after N candles (0 = off)"},
@@ -75,13 +81,15 @@ GROUPS = [
 FIELDS = {x["f"]: x for g in GROUPS for x in g[2]}
 DEFAULT = {f: x["d"] for f, x in FIELDS.items()}
 WHY = {1: "stop", 2: "EMA target", 3: "close back across the EMA", 4: "day-close loss cut", 5: "take profit", 6: "trailing stop", 7: "breakeven stop",
-       8: "time exit", 9: "lab target", 11: "partial", 12: "close-based exit", 13: "no progress", 14: "ADX faded", 15: "Friday close"}
+       8: "time exit", 9: "lab target", 11: "partial", 12: "close-based exit", 13: "no progress", 14: "ADX faded", 15: "Friday close", 16: "decay stop",
+       17: "loss cut"}
 # the search's grids (lo, hi, step) - the numeric fields of each building block
 GRID = {"tgt_k": {2: (0.5, 6, 0.25), 3: (0.5, 6, 0.25), 4: (2, 40, 1)}, "fb_buf": (0, 1.5, 0.05), "fb_n": (1, 4, 1), "cx_buf": (0, 1, 0.05),
         "cx_n": (1, 5, 1), "cx_after": (0, 8, 1), "p1_r": (0.25, 3, 0.25), "p1_frac": (0.1, 0.9, 0.1), "p2_r": (0.5, 4, 0.25), "p2_frac": (0.1, 0.9, 0.1),
         "be_r": (0.25, 3, 0.25), "be_off": (-0.25, 0.5, 0.05), "lock_r": (0.25, 3, 0.25),
         "tr_k": {1: (1, 30, 1), 2: (0.5, 6, 0.25), 3: (10, 90, 5), 7: (2, 30, 1)}, "tr_act": (0, 3, 0.25), "tr_buf": (0, 3, 0.25),
-        "max_bars": (1, 96, 1), "stale_bars": (1, 32, 1), "stale_r": (-0.5, 1.5, 0.25), "adx_exit": (10, 40, 1), "fri_hour": (12, 23, 1)}
+        "max_bars": (1, 96, 1), "stale_bars": (1, 32, 1), "stale_r": (-0.5, 1.5, 0.25), "adx_exit": (10, 40, 1), "fri_hour": (12, 23, 1),
+        "lcap": (1, 60, 0.5), "lp_r": (0.1, 0.95, 0.05), "lp_frac": (0.1, 1, 0.1), "dc_bars": (1, 64, 1), "dc_r": (-0.95, 0.5, 0.05)}
 
 
 def clean(lab):
@@ -111,9 +119,13 @@ def clean(lab):
             continue
         if f == "stale_r" and float(lab.get("stale_bars", 0)) <= 0:
             continue
+        if f == "lp_frac" and float(lab.get("lp_r", 0)) <= 0:
+            continue
+        if f == "dc_r" and float(lab.get("dc_bars", 0)) <= 0:
+            continue
         if f in ("fb_n", "cx_n") and v <= 1:
             continue
-        if v != 0 or f in ("p1_frac", "p2_frac"):
+        if v != 0 or f in ("p1_frac", "p2_frac", "lp_frac", "dc_r"):        # (their parent is on: a 0 here is a real value, not 'off')
             out[f] = round(v, 4)
     if "p1_r" in out:
         out.setdefault("p1_frac", float(lab.get("p1_frac", 0.5)))
@@ -121,6 +133,10 @@ def clean(lab):
         out.setdefault("p2_frac", float(lab.get("p2_frac", 0.25)))
     if "tr" in out:
         out.setdefault("tr_k", float(lab.get("tr_k", 2.0)))
+    if "lp_r" in out:
+        out.setdefault("lp_frac", float(lab.get("lp_frac", 0.5)))
+    if "dc_bars" in out:
+        out.setdefault("dc_r", float(lab.get("dc_r", -0.5)))
     out["pess"] = out.get("pess", 1.0)
     return out
 
@@ -171,6 +187,12 @@ def describe(lab):
         if tm >= 4 and g("tr_buf"):
             s += f" (${g('tr_buf'):g} buffer)"
         parts.append(s)
+    if g("lcap"):
+        parts.append(f"stop never beyond ${g('lcap'):g} from the entry")
+    if g("lp_r"):
+        parts.append(f"cut {round(100 * g('lp_frac'))}% at -{g('lp_r'):g}R")
+    if g("dc_bars"):
+        parts.append(f"after {int(g('dc_bars'))} candles the stop to {g('dc_r'):+g}R")
     if g("max_bars"):
         parts.append(f"out after {int(g('max_bars'))} candles")
     if g("stale_bars"):

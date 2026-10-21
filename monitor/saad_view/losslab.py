@@ -181,6 +181,20 @@ def autopsy(real, setups, D, base_in, labfull):
             else:
                 props.append({"sets": {"InpSlMode": "2", "InpSlUsd": v}, "label": "Stop: a fixed $ from the entry", "from": now_stop, "to": f"${v:g} from the entry",
                               "why": why, "group": "the stop"})
+        if lab_ok and lf("lcap") == 0:                     # v1.31: cap the stop there, keep the setup's own stop when it is closer
+            for pc in (90, 95, 98):
+                v = c[pc]
+                wide = float((R > v + 0.25).mean())
+                if wide >= 0.02:
+                    props.append({"lab": {"lcap": v}, "label": "X: the stop never beyond $", "from": "off", "to": f"${v:g}", "group": "Exit Lab",
+                                  "why": f"{pc}% of your winners never went more than ${v:g} against you, and {100 * wide:.0f}% of your stops are wider than that"})
+        if lab_ok and lf("lp_r") == 0:                     # v1.31: cut half a trade that goes further against you than (nearly) every winner did
+            mr = (mae / R)[win]
+            for pc in (90, 95):
+                x = min(0.95, max(0.1, _up(_q(mr, pc), 0.05)))
+                if x < 0.95:
+                    props.append({"lab": {"lp_r": x, "lp_frac": 0.5}, "label": "X: cut half the trade at -R", "from": "off", "to": f"-{x:g}R", "group": "Exit Lab",
+                                  "why": f"{pc}% of your winners never went more than {x:g}R against you: a trade that does is mostly a loser"})
         if slm == "1":                                       # the same line in ATR (the stop the EA uses in mode 1)
             ma = (mae / np.maximum(a_in, 0.01))[win]
             for pc in (95, 98):
@@ -207,6 +221,13 @@ def autopsy(real, setups, D, base_in, labfull):
                     props.append({"lab": {"max_bars": nb}, "label": "X: close after N candles", "from": f"{lf('max_bars'):g}" if lf("max_bars") else "off", "to": str(nb),
                                   "why": f"{pc}% of your winners closed within {q[pc]} candles; {100 * float((hl > q[pc]).mean()):.0f}% of the losers lasted longer",
                                   "group": "Exit Lab"})
+            if lf("dc_bars") == 0:                         # v1.31: a softer version - after that, the stop tightens instead of closing the trade
+                for pc in (75, 90):
+                    nb = max(1, q[pc])
+                    for dr in (-0.5, 0.0):
+                        props.append({"lab": {"dc_bars": nb, "dc_r": dr}, "label": "X: tighten the stop after N candles", "from": "off",
+                                      "to": f"{nb} candles -> {'breakeven' if dr == 0 else f'{dr:g}R'}", "group": "Exit Lab",
+                                      "why": f"{pc}% of your winners closed within {q[pc]} candles: a trade still open after that gets a tighter stop"})
             if lf("stale_bars") == 0:
                 for pc in (75, 90):
                     nb = max(1, q[pc])

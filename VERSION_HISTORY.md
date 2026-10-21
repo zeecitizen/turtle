@@ -16,6 +16,22 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.31 (2026-10-21) — three loss cutters
+
+Zee: *"i want you to add a mode which helps reduce loss ... make it the most intelligent loss cutter possible"*. New Exit Lab inputs (exit modes 1-2, all off = v1.30):
+`InpXLossCap` - the stop never further than $X from the entry (the tighter of the setup's stop and this; applied before the stand-aside ghost and the sizing);
+`InpXLpR` / `InpXLpFrac` - close a share when the trade is InpXLpR R in loss (only where that level comes before the stop; not in the entry minute);
+`InpXDecayBars` / `InpXDecayR` - after N candles the stop tightens to entry + InpXDecayR R (out at once if the price is already beyond). Mirrored in
+`monitor/saad_view/sim_full.py`; `exitlab_regress.py` ALL IDENTICAL; `losslab_check.py` engine checks pass. The Turtle TV loss cutter (✂️ in the Exit Research Lab) proposes them from the trades.
+
+**MT5 receipts** (Blueberry XAUUSD_BB, Jan 1 - Oct 17 2026, no delay, 2 lots, v1.27 defaults; runs r20261021_071053 ... _071644), MT5 vs tester:
+all off +$242,911 / 198 (= v1.30); cap $1000 (never binds) identical; cap $10 +$224,981 / 202 vs +$238,493 / 201 (every stop exactly $10 away; the worst loss
+-$5,374 is the Sep 11 12:30 news spike that jumped $26.87 through the stop in one second - the tester fills inside-minute gaps at the stop);
+cut 50% at -0.5R +$171,731 / 198 vs +$187,352 / 198; decay 4 candles -> breakeven +$165,873 / 199 vs +$178,937 / 199; decay 8 -> -0.5R +$242,981 / 198 vs +$254,076.
+Same trades in both; tester 4-8% high. On v1.27's defaults every cutter lowers the average loss AND the win rate and none beats off - tools, not defaults.
+
+---
+
 ## Saad_strategy_15min v1.30 (2026-10-21) — the Exit Lab inside the EA
 
 Zee: *"we don't need to treat Exit lab's exits differently -> they can be saved and applied like normal settings"*. Every Turtle TV Exit Lab building block is now an
