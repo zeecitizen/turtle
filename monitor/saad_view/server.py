@@ -810,13 +810,15 @@ def lab_start(body):
         LAB[slot].stop()
     inputs = full_inputs(body.get("inputs") or {})
     ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv") else "year"
-    kw = {k: body.get(k) for k in ("lab", "sets", "objective", "fx", "fy", "xs", "ys") if body.get(k) is not None}
+    kw = {k: body.get(k) for k in ("lab", "sets", "objective", "fx", "fy", "xs", "ys", "focus") if body.get(k) is not None}
     key = json.dumps([inputs, "year" if ds == "tv" else ds], sort_keys=True)
     if action == "search" and LAB["cat"] and LAB["cat"][0] == key:
         kw["cat_rows"] = LAB["cat"][1]                    # the catalogue of the same settings: the search starts from it
     j = exitlab.Job(action, inputs, ds, **kw)
     j.key = key
     j.req = {"inputs": body.get("inputs") or {}, "ds": "year" if ds == "tv" else ds}     # what the page asked for: it warns when its settings moved on
+    if action == "sweep":                                     # a scan is of a bench (settings + the bench's changes + its Exit Lab form): a page opened later must know which
+        j.req.update(lab=body.get("lab") or {}, sets=body.get("sets") or {}, focus=body.get("focus") or "")
     LAB[slot] = j
     threading.Thread(target=j.run, daemon=True).start()
     return {"ok": True}

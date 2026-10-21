@@ -29,16 +29,121 @@ function gauges(T) {                                              // the result 
     dial('NET', money(T.stats.total), T.stats.total, T.base.total, 'up', (x) => '$' + Math.round(x).toLocaleString()) + dial('MAX DRAWDOWN', money(-s.dd), s.dd, b.dd, 'down', (x) => '$' + Math.round(x).toLocaleString()) +
     dial('TRADES', s.n, s.n, b.n, 'up', (x) => String(Math.round(x))) + dial('AVG WIN / LOSS', `${money(s.avg_win)}<br>${money(s.avg_loss)}`, s.avg_win / Math.max(1, -s.avg_loss), b.avg_win / Math.max(1, -b.avg_loss), 'up', (x) => x.toFixed(2) + '× ratio') + '</div>';
 }
+// ---- the loss cutter (Zee 2026-10-21: "suggestions which -> help cut down the lossy trades to a minimum -> ... keeps the winrate while reducing:
+// Loss per trade / Break-even win rate / Avg loss, Worst loss"). The scan's numbers carry the loss side of every move (scan.py L / Lh); the
+// loss scan also reads every trade on the bench (losslab.autopsy) and adds the moves the trades point to.
+const LC = (() => { try { return JSON.parse(localStorage.getItem('rsLossCfg') || 'null') || {}; } catch (e) { return {}; } })();
+RS.loss = !!LC.on; RS.lossTol = LC.tol ?? 1.5; RS.lossKeep = LC.keep ?? 85; RS.lossDrop = LC.drop ?? 13;
+function lcSave() { try { localStorage.setItem('rsLossCfg', JSON.stringify({ on: RS.loss, tol: RS.lossTol, keep: RS.lossKeep, drop: RS.lossDrop })); } catch (e) {} }
+const usd = (v) => '$' + Math.round(Math.abs(v)).toLocaleString('en-US');                      // an amount without a sign (losses per trade)
+const lcCut = (a, b) => (Math.abs(a) > 1e-9 ? (Math.abs(a) - Math.abs(b)) / Math.abs(a) : 0);   // the share of a loss number removed (+ = smaller loss)
+const lcReal = (L, d) => ((L.wr - d) / 100) * L.avg_win + (1 - (L.wr - d) / 100) * L.avg_loss;   // $ per trade if real trading costs d points of win rate
+function lossCuts(W) {
+  const now = W.now, L0 = now.L, tol = +RS.lossTol, keep = +RS.lossKeep / 100, list = [], over = { wr: 0, n: 0, half: 0 };
+  if (!L0 || L0.margin == null || !(L0.lpt > 0)) return { list, over };
+  for (const m of W.moves) {
+    const r = m.r;
+    if (!r || r.stuck || r.n < 20 || !r.L || r.L.margin == null) continue;
+    const L = r.L, c = { avg: lcCut(L0.avg_loss, L.avg_loss), tail: lcCut(L0.tail, L.tail), worst: lcCut(L0.worst, L.worst), lpt: lcCut(L0.lpt, L.lpt) };
+    const dm = L.margin - L0.margin;
+    if (!(c.avg >= 0.02 || c.tail >= 0.03 || c.lpt >= 0.02 || c.worst >= 0.05)) continue;   // it must cut a loss number...
+    if (c.avg <= -0.05 || c.tail <= -0.05 || dm < -0.3) continue;                        // ...without making the losses bigger or the margin thinner
+    if (L.wr < L0.wr - tol) { over.wr++; continue; }
+    if (r.n < keep * now.n) { over.n++; continue; }
+    if ((now.train > 0 && r.train <= 0) || (now.test > 0 && r.test <= 0)) { over.half++; continue; }   // a half that made money must still make money
+    const both = !!(r.Lh && now.Lh && r.Lh[0].margin != null && r.Lh[1].margin != null && now.Lh[0].margin != null && now.Lh[1].margin != null &&
+      r.Lh[0].margin > now.Lh[0].margin && r.Lh[1].margin > now.Lh[1].margin);
+    const dnet = (r.net - now.net) / Math.max(1, Math.abs(now.net));
+    m.lc = c; m.dm = dm; m.lboth = both;
+    m.lscore = dm + 1.5 * c.tail + c.avg + c.lpt + 0.5 * c.worst + (dnet < 0 ? 0.5 * dnet : 0.2 * dnet) - 0.15 * Math.max(0, L0.wr - L.wr) + (both ? 0.15 : -0.15);
+    list.push(m);
+  }
+  list.sort((a, b) => b.lscore - a.lscore);
+  const kept = [];
+  for (const m of list) {                                         // one setting, (nearly) the same result at another value: one card ("the same with 3, 5, 10")
+    const twin = kept.find((k) => k.key === m.key && k.group === m.group && Math.abs(k.r.n - m.r.n) <= Math.max(1, 0.002 * m.r.n) &&
+      Math.abs(k.r.net - m.r.net) <= 0.005 * Math.max(1, Math.abs(now.net)) && Math.abs(k.r.L.avg_loss - m.r.L.avg_loss) <= 0.01 * Math.max(1, Math.abs(L0.avg_loss)) &&
+      Math.abs(k.r.L.wr - m.r.L.wr) <= 0.1);
+    if (twin) { twin.alts.push(m.to); continue; }
+    m.alts = []; kept.push(m);
+  }
+  return { list: kept, over };
+}
+function lossTips(W, busy) {
+  const now = W.now, L0 = now.L, d = +RS.lossDrop;
+  let h = '';
+  if (W.focus !== 'loss' || !W.autopsy) return h + `<p class="note">✂️ The loss cutter reads every trade on the bench first: press <b>✂️ SCAN FOR LOSS CUTS</b>.</p>`;
+  if (!L0 || L0.margin == null) return h + '<p class="note">No trades on the bench to read.</p>';
+  const ev0 = lcReal(L0, d), pc = (v) => `${v > 0 ? '−' : '+'}${Math.abs(Math.round(100 * v))}%`;
+  h += `<div class="crt" style="margin:8px 0"><div class="crth">✂️ THE LOSS CUTTER · YOUR BENCH NOW (${now.n} trades)</div>
+    <div>average loss <b>${money(L0.avg_loss)}</b> (average win ${money(L0.avg_win)}) · worst <b>${money(L0.worst)}</b> · worst 5% average ${money(L0.tail)} · losses per trade ${usd(L0.lpt)}</div>
+    <div>win rate <b>${L0.wr}%</b> · break-even win rate <b>${L0.be}%</b> · margin <b class="${L0.margin > d ? 'pos' : 'neg'}">${L0.margin} pts</b> · ${now.days ? `${now.days.green}% of ${now.days.days} trading days green` : ''}</div>
+    <div class="k">margin = win rate − break-even: the win-rate points real trading can cost before this stops making money. If real trading costs ${d} pts (your setting below):
+      <b class="${ev0 >= 0 ? 'pos' : 'neg'}">${money(ev0)} per trade</b>${L0.margin <= d ? ` - it needs ${(d - L0.margin).toFixed(1)} more points of margin` : ''}.</div></div>`;
+  const A = W.autopsy;
+  h += `<details class="lossaut" ${RS.autOpen !== false ? 'open' : ''}><summary>🩺 LOSS AUTOPSY · what your ${A.n} trades say</summary>` +
+    (A.facts || []).map((f) => `<div class="lossfact"><span class="li">${f.icon}</span><div><b>${esc(f.title)}</b><br>${esc(f.text)}</div></div>`).join('');
+  const bad = (A.clusters || []).filter((c) => c.bad);
+  if (bad.length) h += `<div class="k" style="margin-top:6px">the groups of trades that lose (or sit far below the rest):</div>` +
+    table(['Where', 'Trades', 'Win rate', 'Net', 'Avg loss', 'Margin (rest)'], bad.slice(0, 10).map((c) => `<tr><td style="text-align:left">${esc(c.label)} <span class="k">${esc(c.dim)}</span></td><td>${c.n}</td><td>${c.wr}%</td>` +
+      `<td class="${cls(c.net)}">${money(c.net)}</td><td>${money(c.avg_loss)}</td><td>${c.margin ?? '–'} <span class="k">(${c.rest_margin ?? '–'})</span></td></tr>`));
+  h += '</details>';
+  const sel = (id, v, opts, fmt) => `<select id="${id}">${opts.map((o) => `<option value="${o}" ${+o === +v ? 'selected' : ''}>${fmt(o)}</option>`).join('')}</select>`;
+  h += `<div class="bar lossctl">keep the win rate within ${sel('lcTol', RS.lossTol, [0.5, 1, 1.5, 2, 3, 5, 10], (o) => o + ' pts')} · keep at least
+    ${sel('lcKeep', RS.lossKeep, [50, 70, 85, 95], (o) => o + '%')} of the trades · real trading costs ${sel('lcDrop', RS.lossDrop, [0, 5, 10, 13, 16], (o) => o + ' pts')} of win rate</div>`;
+  const { list, over } = lossCuts(W);
+  const more = [over.wr ? `${over.wr} cost more than ${RS.lossTol} pts of win rate` : '', over.n ? `${over.n} drop more than ${100 - RS.lossKeep}% of the trades` : '',
+    over.half ? `${over.half} turn a half of the data into a loss` : ''].filter(Boolean).join(', ');
+  if (!list.length) return h + `<p class="note">🏁 No move cuts your losses within these limits (${W.n} moves tried${more ? '; ' + more + ' - loosen the limits above to see them' : ''}).</p>`;
+  const show = RS.all ? list : list.slice(0, 25), n = show.length;
+  const anim = RS.animated !== W._id; RS.animated = W._id;
+  const icon = { 'the lines': '📈', 'the candle': '🕯️', where: '📍', 'the trigger': '🎯', filters: '🧹', 'range boxes': '📦', 'the stop': '🛑', 'the exit': '🚪', 'Exit Lab': '⚗️', 'v1.23 exits': '⚠️' };
+  const chg = (v, good, txt) => `<span class="${Math.abs(v) < 1e-9 ? '' : good ? 'pos' : 'neg'}">${txt}</span>`;
+  h += `<div class="k" style="margin:6px 0 2px">${busy ? '(the previous scan, while the new one runs) · ' : ''}${list.length} moves cut your losses (of ${W.n} tried in ${W.seconds} s)${more ? '; ' + more : ''} ·
+    ranked by margin first, then the worst 5%, the average loss and the losses per trade · ✓ = the margin grows in both halves of the data</div>`;
+  h += show.map((m, i) => {
+    const r = m.r, L = r.L, c = m.lc, hue = n > 1 ? Math.round(120 * (1 - i / (n - 1))) : 120;
+    const warn = m.group === 'v1.23 exits' || (m.key === 'InpExitMode' && m.to === '0') || m.trust === 'opposite' ? ' <span class="tag unt" title="verify_settings.py: on this setting the tester and MT5 move the result in opposite directions">⚠ tester ≠ MT5</span>'
+      : m.trust === 'differ' ? ' <span class="tag unt" title="verify_settings.py: on this setting the tester and MT5 differ in size">check in MT5</span>' : '';
+    const heads = [[c.avg, `average loss ${money(L0.avg_loss)} → ${money(L.avg_loss)}`], [c.tail, `worst 5% ${money(L0.tail)} → ${money(L.tail)}`],
+      [c.lpt, `losses per trade ${usd(L0.lpt)} → ${usd(L.lpt)}`], [c.worst, `worst loss ${money(L0.worst)} → ${money(L.worst)}`]].sort((a, b) => b[0] - a[0]);
+    const head = m.dm >= 0.25 && m.dm / Math.max(1, Math.abs(L0.margin)) > heads[0][0] ? `margin ${L0.margin} → ${L.margin} pts` : heads[0][1] + ` (${pc(heads[0][0])})`;
+    const costs = [[L.wr - L0.wr, `${(L.wr - L0.wr).toFixed(1).replace('-', '−')} pts win rate`], [(r.net - now.net) / Math.max(1, Math.abs(now.net)), `${money(r.net - now.net)} net`],
+      [(r.n - now.n) / now.n, `${String(r.n - now.n).replace('-', '−')} trades`]].filter((x) => x[0] < -1e-9).sort((a, b) => a[0] - b[0]);
+    const ev = lcReal(L, d);
+    return `<div class="sugrow ${anim ? 'anim' : ''} ${busy ? 'old' : ''}" style="--hue:${hue};animation-delay:${Math.min(i, 20) * 70}ms"><span class="sugrank">#${i + 1}</span>` +
+      `<button class="labsug" data-mv="${W.moves.indexOf(m)}">${icon[m.group] || '•'} <b>${esc(m.label)}</b> ${esc(m.from)} → <b>${esc(m.to)}</b>${m.alts && m.alts.length ? ` <span class="k">(the same with ${esc(m.alts.join(', '))})</span>` : ''}${warn}${m.lboth ? ' <span class="tag ea">✓ both halves</span>' : ''}<br>` +
+      `<span class="k">avg loss ${chg(c.avg, c.avg > 0, money(L.avg_loss) + ' (' + pc(c.avg) + ')')} · worst 5% ${chg(c.tail, c.tail > 0, money(L.tail))} · worst ${chg(c.worst, c.worst > 0, money(L.worst))} · ` +
+      `losses/trade ${chg(c.lpt, c.lpt > 0, usd(L.lpt))} · break-even ${chg(L.be - L0.be, L.be < L0.be, L.be + '%')} · margin ${chg(m.dm, m.dm > 0, L.margin + ' pts (' + (m.dm >= 0 ? '+' : '') + m.dm.toFixed(2) + ')')}<br>` +
+      `WR ${chg(L.wr - L0.wr, L.wr > L0.wr, L.wr + '%')} · ${r.n} trades · net ${chg(r.net - now.net, r.net > now.net, money(r.net))} · at −${d} pts real-life ${chg(ev - ev0, ev > ev0, money(ev) + '/trade')}` +
+      `${r.days ? ` · ${r.days.green}% green days` : ''}</span>${m.why ? `<br><span class="k lwhy">🔬 ${esc(m.why)}</span>` : ''}</button>` +
+      `<button class="sugdeal ${costs.length ? 'cost' : 'free'}" data-mv="${W.moves.indexOf(m)}">✂️ Cut <b>${head}</b><br>${costs.length ? 'pay ' + costs.slice(0, 2).map((x) => x[1]).join(', ') : 'and it costs nothing'}</button></div>`;
+  }).join('');
+  if (list.length > 25) h += `<button data-rs="all" class="dexbtn sm" style="margin-top:6px">${RS.all ? 'show the best 25' : `show all ${list.length}`}</button>`;
+  return h;
+}
+function scanFresh(W) {                                          // this scan is of the bench on screen (settings, data, the bench's changes, its Exit Lab form)
+  if (!W || !W._req) return false;
+  const q = W._req, ds = SRC.ds === 'tv' ? 'year' : SRC.ds;
+  if (q.lab === undefined) return RS.scanKey === JSON.stringify([labForm(), RS.sets]) && !stale(W);   // a scan from before the server recorded its bench
+  return !stale(W) && q.ds === ds && canon(q.lab || {}) === canon(labForm()) && canon(q.sets || {}) === canon(RS.sets);
+}
+function lcScan() { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: RS.loss ? 'the loss autopsy' : 'warming up the beakers', progress: 0, total: 0, seconds: 0 };
+  renderPanel('tt'); labStart('sweep', { lab: labForm(), sets: RS.sets, focus: RS.loss ? 'loss' : undefined }); }
 function leverTips() {                                           // every setting the EA has, a few steps either way: ranked trades of one thing for another
-  const W = LABS.sweep, key = JSON.stringify([labForm(), RS.sets]), J = LABS.main;
+  const W = LABS.sweep, J = LABS.main;
+  RS.lossBlock = '';
   const busy = J && J.running && J.action === 'sweep', pct = busy && J.total ? Math.round((100 * J.progress) / J.total) : 3;
-  let h = `<div class="bar" style="margin-top:8px"><button data-rs="scan" class="dexbtn" ${busy ? 'disabled' : ''}>${busy ? '⏳ SCANNING…' : '🔬 SCAN EVERY SETTING'}</button>
+  let h = `<div class="bar" style="margin-top:8px"><button data-rs="scan" class="dexbtn" ${busy ? 'disabled' : ''}>${busy ? '⏳ SCANNING…' : RS.loss ? '✂️ SCAN FOR LOSS CUTS' : '🔬 SCAN EVERY SETTING'}</button>
+    <label class="tog" style="font-size:12px" title="rank the scan's moves by how much they cut your losses while keeping the win rate"><input type="checkbox" id="rsLoss" ${RS.loss ? 'checked' : ''}> ✂️ loss cutter</label>
     <label class="tog" style="font-size:12px"><input type="checkbox" id="rsAuto" ${RS.auto !== false ? 'checked' : ''}> scan again after every pick</label></div>`;
-  if (busy) h += `<div class="dexprog"><div class="dexprog-t">⚗️ THE LAB IS TESTING EVERY SETTING · ${pct}%</div><div class="dexprog-bar"><i style="width:${pct}%"></i></div>
+  if (busy) h += `<div class="dexprog"><div class="dexprog-t">${RS.loss ? '✂️ THE LOSS CUTTER IS READING EVERY TRADE AND TESTING EVERY SETTING' : '⚗️ THE LAB IS TESTING EVERY SETTING'} · ${pct}%</div><div class="dexprog-bar"><i style="width:${pct}%"></i></div>
     <div class="dexprog-s">${esc(J.phase || 'warming up the beakers')} · ${J.progress || 0} of ${J.total || '…'} runs · ${J.seconds || 0} s</div></div>`;
   if (W && W.moves && !W.now) return h + '<p class="warn">The scan was stopped before it measured the bench - scan again.</p>';
-  if (!W || !W.moves) return h + '<div class="k">moves every setting the EA has (lines, candle, location, trigger, filters, each range box, stop, exit, the 27 Exit Lab settings) a few steps either way and ranks what each move trades for what</div>';
-  if (RS.scanKey !== key && !busy) h += '<p class="warn">the bench changed since this scan - scan again for fresh suggestions</p>';
+  if (!W || !W.moves) return h + `<div class="k">${RS.loss ? 'reads every trade on the bench (how far winners dip, how long losers last, where the losses cluster), then tests every setting and ranks what cuts your losses while keeping the win rate'
+    : 'moves every setting the EA has (lines, candle, location, trigger, filters, each range box, stop, exit, the 27 Exit Lab settings) a few steps either way and ranks what each move trades for what'}</div>`;
+  if (!scanFresh(W) && !busy) h += '<p class="warn">the bench changed since this scan (or it was made for other settings) - scan again for fresh suggestions</p>';
+  if (RS.loss) { RS.lossBlock = lossTips(W, busy); return h + '<div class="k">✂️ the loss autopsy and the cuts are below the bench, full width</div>'; }
   const now = W.now, rel = (a, b) => (a - b) / Math.max(1e-9, Math.abs(b));
   const tot = Math.max(1, Math.abs(now.net));
   const sug = [];
@@ -107,6 +212,7 @@ function labResearch() {
   h += `</div><div class="levers dexpanel">${SLIDERS.filter((x) => !x.ea || String(CUR.InpSlMode) === '1').map((x) => { const v = x.get();
     return `<label class="lever"><span>${esc(x.label)} <b id="lv_${x.id}">${v}</b>${x.ea ? ' <span class="tag ea">EA</span>' : ''}</span><input type="range" data-lever="${x.id}" min="${x.min}" max="${x.max}" step="${x.step}" value="${v}"></label>`; }).join('')}
     <div class="bar"><button data-rs="save" class="dexbtn">💾 SAVE &amp; APPLY THIS EXIT</button><button data-rs="reset">Back to your exit</button></div>${leverTips()}${labTips(ea)}</div></div>`;
+  if (RS.loss && RS.lossBlock) h += `<div class="lossblock">${RS.lossBlock}</div>`;   // the loss cutter: full width under the bench
   const J = RS.job;
   h += `<h4 style="margin-top:14px">Ask Claude to research your exit</h4><div class="askBox" style="max-width:980px"><textarea id="rsQ" rows="2">${esc(RS.q)}</textarea>
     <button data-rs="go" class="dexbtn" ${J && J.running ? 'disabled' : ''}>${J && J.running ? '⏳ ' + esc(J.phase || 'researching') : '🧠 Research it'}</button></div>
@@ -145,8 +251,19 @@ document.addEventListener('input', (e) => {
   const id = e.target.dataset && e.target.dataset.lever;
   if (id) { const x = SLIDERS.find((s) => s.id === id); x.set(+e.target.value); const o = document.getElementById('lv_' + id); if (o) o.textContent = e.target.value; }
 });
+document.addEventListener('toggle', (e) => { if (e.target.classList && e.target.classList.contains('lossaut')) RS.autOpen = e.target.open; }, true);
 document.addEventListener('change', (e) => {
   if (e.target.id === 'rsAuto') { RS.auto = e.target.checked; return; }
+  if (e.target.id === 'rsLoss') {                                 // the loss cutter on: its scan reads every trade first (a plain scan has no autopsy)
+    RS.loss = e.target.checked; lcSave();
+    const J = LABS.main, busy = J && J.running && J.action === 'sweep';
+    if (RS.loss && !busy && !(LABS.sweep && LABS.sweep.focus === 'loss' && scanFresh(LABS.sweep))) lcScan(); else renderPanel('tt');
+    return;
+  }
+  if (['lcTol', 'lcKeep', 'lcDrop'].includes(e.target.id)) {
+    RS[{ lcTol: 'lossTol', lcKeep: 'lossKeep', lcDrop: 'lossDrop' }[e.target.id]] = +e.target.value; lcSave(); RS.animated = null; renderPanel('tt');
+    return;
+  }
   if (!(e.target.dataset && e.target.dataset.lever)) return;
   LABS.goResult = false;
   labStart('test', { lab: labForm(), sets: RS.sets });               // the exit on the bench, with the levers
@@ -164,18 +281,18 @@ function rsFav() {                                                 // the kind p
 }
 function pickMove(i) {
   if (!(LABS.sweep && LABS.sweep.moves && LABS.sweep.moves[i])) return;
-  const m = LABS.sweep.moves[i], T = rsTaste();
-  T[m.kind] = (T[m.kind] || 0) + 1; try { localStorage.setItem('rsTaste', JSON.stringify(T)); } catch (e) {}
+  const m = LABS.sweep.moves[i];
+  if (!RS.loss && m.kind) { const T = rsTaste(); T[m.kind] = (T[m.kind] || 0) + 1; try { localStorage.setItem('rsTaste', JSON.stringify(T)); } catch (e) {} }   // loss cuts are not a win-rate / PF / money taste
   RS.sets = { ...RS.sets, ...m.sets }; LABS.form = { ...LABS.form, ...m.lab };
   toast(`On the bench: ${esc(m.label)} ${esc(m.from)} → ${esc(m.to)}.` + (RS.auto !== false ? ' Scanning again from here…' : ''));
   labStart('test', { lab: labForm(), sets: RS.sets });
-  if (RS.auto !== false) { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: 'scanning from the new bench', progress: 0, total: 0, seconds: 0 }; labStart('sweep', { lab: labForm(), sets: RS.sets }); }
+  if (RS.auto !== false) { lcScan(); return; }
   renderPanel('tt');
 }
 document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   if (d.rs === 'save') saveExit();
-  if (d.rs === 'scan') { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: 'warming up the beakers', progress: 0, total: 0, seconds: 0 }; renderPanel('tt'); labStart('sweep', { lab: labForm(), sets: RS.sets }); }
+  if (d.rs === 'scan') lcScan();
   if (d.rs === 'untaste') { e.preventDefault(); RS.taste = { wr: 0, pf: 0, net: 0 }; try { localStorage.removeItem('rsTaste'); } catch (x) {} renderPanel('tt'); }
   if (d.rs === 'all') { RS.all = !RS.all; renderPanel('tt'); }
   if (d.rs === 'reset') { RS.sets = {}; const x = labFromX(CUR); LABS.form = { ...LABS.spec.default, ...(x || {}) }; labStart('test', { lab: labForm() }); }

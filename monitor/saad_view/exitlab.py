@@ -708,7 +708,7 @@ class Job:
     def _sweep(self):
         """every setting the EA has, a few steps either way, from the bench (scan.py - the runs spread over the cores)"""
         import scan
-        return scan.run_all(self, self.inputs, self.ds, self.kw.get("lab") or {}, self.kw.get("sets") or {}, self.window)
+        return scan.run_all(self, self.inputs, self.ds, self.kw.get("lab") or {}, self.kw.get("sets") or {}, self.window, self.kw.get("focus"))
 
     # ---- two numbers against each other
     def _heatmap(self):
