@@ -752,7 +752,7 @@ async function poll() {
     if (MTWAIT && !s.busy && s.error && Date.now() - MTWAIT.t0 > 4000) { MTWAIT = null; renderPanel('mt'); }
     if (!s.busy && s.last && (s.last !== lastSeen || (MTWAIT && s.last !== MTWAIT.prev && (!MT || MT.run.id !== s.last)))) {
       const first = lastSeen === undefined && !MTWAIT; lastSeen = s.last;
-      if (!first) { MTWAIT = null; await loadRuns(); MT = null; await pickMt5(s.last); toast(`MT5 result in: <b>${esc(MT.run.label)}</b> · ${money(MT.run.report.net || 0)} · PF ${MT.run.report.pf}`); }
+      if (!first) { MTWAIT = null; await loadRuns(); MT = null; await pickMt5(s.last); loadSaved(); toast(`MT5 result in: <b>${esc(MT.run.label)}</b> · ${money(MT.run.report.net || 0)} · PF ${MT.run.report.pf}`); }
     }
     const busyUi = document.activeElement && document.activeElement.closest && document.activeElement.closest('#panelTT') && /SELECT|INPUT/.test(document.activeElement.tagName);
     if (!busyUi && TAB.tt === 'opt' && OPTS && (OPTS.running || (OPTS.mt5 && OPTS.mt5.run && !RUNS.find((x) => x.id === OPTS.mt5.run)))) { OPTS = await api('/api/opt'); renderPanel('tt'); }
@@ -841,12 +841,22 @@ async function applySave(s) {
   ACTIVE_LAB = null; markForm();
   if (s.lab && Object.keys(s.lab).length && typeof labOpen === 'function') { await labOpen(); LABS.form = { ...LABS.spec.default, ...s.lab }; }   // its Exit Lab exit back on the bench
 }
+function saveRun(s) {                                          // the newest MT5 run of exactly this save's settings
+  const want = diffDfl({ ...DFL, ...s.inputs });
+  return RUNS.find((x) => { const a = x.changed || {}; return Object.keys(a).length === Object.keys(want).length && Object.entries(want).every(([k, v]) => k in a && same(a[k], v)); });
+}
+function mtWrCell(s) {
+  const run = saveRun(s);
+  if (!run || run.wr == null) return '<td class="k" title="no MT5 run of these settings yet - Watch MT5 result runs it">–</td>';
+  const g = s.result && s.result.wr != null ? run.wr - s.result.wr : null;
+  return `<td title="MT5 ${esc(run.from)} - ${esc(run.to)} · ${run.trades} trades · ${money(run.net || 0)} · PF ${run.pf}${g != null ? ` · ${g >= 0 ? '+' : ''}${g.toFixed(1)} pts vs the portal` : ''}"><b>${run.wr}%</b></td>`;
+}
 async function loadSaved() {
-  SAVEDS = await api('/api/saved');
+  SAVEDS = await api('/api/saved'); RUNS = await api('/api/runs').catch(() => RUNS);
   const dsName = { year: 'Blueberry 2026 (ticks)', tv: "TradingView's candles", m15: 'Blueberry 2023 → now' };
-  $('#panelSaved').innerHTML = SAVEDS.length ? table(['Saved', 'Candles', 'Trades', 'Win rate', 'Net', 'PF', 'Changes from v1.27', ''],
+  $('#panelSaved').innerHTML = SAVEDS.length ? table(['Saved', 'Candles', 'Trades', 'Win rate', 'MT5 Winrate', 'Net', 'PF', 'Changes from v1.27', ''],
     SAVEDS.map((s, i) => { const r = s.result || {};
-      return `<tr><td>${esc(s.name)}</td><td>${esc(dsName[s.ds] || s.ds || '')}</td><td>${r.n ?? ''}</td><td>${r.wr != null ? r.wr + '%' : ''}</td><td class="${cls(r.net || 0)}">${r.net != null ? money(r.net) : ''}</td><td>${r.pf ?? ''}</td>` +
+      return `<tr><td>${esc(s.name)}</td><td>${esc(dsName[s.ds] || s.ds || '')}</td><td>${r.n ?? ''}</td><td>${r.wr != null ? r.wr + '%' : ''}</td>${mtWrCell(s)}<td class="${cls(r.net || 0)}">${r.net != null ? money(r.net) : ''}</td><td>${r.pf ?? ''}</td>` +
         `<td style="text-align:left;white-space:normal" class="k">${Object.entries(s.changed || {}).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ') || 'none (v1.27)'}${s.lab_describe ? `<br><span style="color:#ffb74d">⚗️ Exit Lab exit: ${esc(s.lab_describe)}</span>` : ''}</td>` +
         `<td><button data-load="${i}">Load</button> <button data-del="${i}">Delete</button> ` +
         (primName() === s.name ? `<button data-unprim="1" class="dexbtn sm" title="loads on every startup - click to stop">⭐ Primary (default on startup)</button>`
@@ -865,9 +875,9 @@ document.addEventListener('click', async (e) => {
   }
   if (e.target.id === 'labBannerOff') { ACTIVE_LAB = null; labBanner(); scheduleSim(0); toast('The main tester runs the EA’s own exit again.'); }
   if (d.watch != null) {                                       // the newest MT5 run of exactly this save's settings, into the MT5 Strategy Tester section
-    const s = SAVEDS[+d.watch], want = diffDfl({ ...DFL, ...s.inputs });
+    const s = SAVEDS[+d.watch];
     await loadRuns();
-    const run = RUNS.find((x) => { const a = x.changed || {}; return Object.keys(a).length === Object.keys(want).length && Object.entries(want).every(([k, v]) => k in a && same(a[k], v)); });
+    const run = saveRun(s);
     if (run) { MT = null; await pickMt5(run.id); document.querySelector('#panelMT').scrollIntoView({ behavior: 'smooth', block: 'start' });
       toast(`MT5 result for <b>${esc(s.name)}</b>: ${money(run.net || 0)} · PF ${run.pf} · ${run.trades} trades (${esc(run.created || '')}).` + (runMatches(run) ? '' : ' Its settings differ from the chart - Load the save to compare them side by side.')); }
     else if (confirm(`MT5 has not run "${s.name}" yet. Load it and run it in MT5 now (about a minute)?`)) { await applySave(s); scheduleSim(0); $('#btnCheck').click(); }
