@@ -128,6 +128,13 @@ function scanFresh(W) {                                          // this scan is
   if (q.lab === undefined) return RS.scanKey === JSON.stringify([labForm(), RS.sets]) && !stale(W);   // a scan from before the server recorded its bench
   return !stale(W) && q.ds === ds && canon(q.lab || {}) === canon(labForm()) && canon(q.sets || {}) === canon(RS.sets);
 }
+function lossLine(r, now) {                                       // the plain scan shows what a move does to the loss side too (Zee: "we have no way of knowing it then")
+  const L = r.L, L0 = now.L;
+  if (!L || !L0 || L.margin == null || L0.margin == null) return '';
+  const c = (v, good, txt) => `<span class="${Math.abs(v) < 1e-9 ? '' : good ? 'pos' : 'neg'}">${txt}</span>`;
+  return `<br><span class="k">avg win ${c(L.avg_win - L0.avg_win, L.avg_win > L0.avg_win, money(L.avg_win))} · avg loss ${c(L.avg_loss - L0.avg_loss, L.avg_loss > L0.avg_loss, money(L.avg_loss))}` +
+    ` · break-even ${c(L.be - L0.be, L.be < L0.be, L.be + '%')} · margin ${c(L.margin - L0.margin, L.margin > L0.margin, L.margin + ' pts (' + (L.margin >= L0.margin ? '+' : '') + (L.margin - L0.margin).toFixed(2) + ')')}</span>`;
+}
 function lcScan() { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: RS.loss ? 'the loss autopsy' : 'warming up the beakers', progress: 0, total: 0, seconds: 0 };
   renderPanel('tt'); labStart('sweep', { lab: labForm(), sets: RS.sets, focus: RS.loss ? 'loss' : undefined }); }
 function leverTips() {                                           // every setting the EA has, a few steps either way: ranked trades of one thing for another
@@ -183,7 +190,7 @@ function leverTips() {                                           // every settin
       : m.trust === 'differ' ? ' <span class="tag unt" title="verify_settings.py: on this setting the tester and MT5 differ in size">check in MT5</span>' : '';
     return `<div class="sugrow ${anim ? 'anim' : ''} ${busy ? 'old' : ''}" style="--hue:${hue};animation-delay:${Math.min(i, 20) * 70}ms"><span class="sugrank">#${i + 1}</span>` +
       `<button class="labsug" data-mv="${W.moves.indexOf(m)}">${icon[m.group] || '•'} <b>${esc(m.label)}</b> ${esc(m.from)} → <b>${esc(m.to)}</b>${warn}<br>` +
-      `<span class="k">${money(r.net)} · WR ${r.wr}% · PF ${r.pf} · ${r.n} trades${m.both ? ' · ✓ both halves' : ''}</span></button>` +
+      `<span class="k">${money(r.net)} · WR ${r.wr}% · PF ${r.pf} · ${r.n} trades${m.both ? ' · ✓ both halves' : ''}</span>${lossLine(r, now)}</button>` +
       `<button class="sugdeal ${cv < 0 ? 'cost' : 'free'}" data-mv="${W.moves.indexOf(m)}">Trade for <b>${gain[m.kind](m)}</b><br>${cv < 0 ? 'pay ' + ct : 'and ' + ct}</button></div>`;
   }).join('');
   if (sug.length > 25) h += `<button data-rs="all" class="dexbtn sm" style="margin-top:6px">${RS.all ? 'show the best 25' : `show all ${sug.length}`}</button>`;
