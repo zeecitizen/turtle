@@ -401,11 +401,13 @@ function ddTxt(dd) {
 }
 function pOverview(D) {
   const s = stats(D.TR), a = stats(half(D.TR, true)), b = stats(half(D.TR, false)), mt = D.kind === 'mt', R = mt ? D.run.report || {} : {};
+  const Y26 = Date.UTC(2026, 0, 1) / 1000 - 3 * 3600, longA = D.TR.length && D.TR[0].tIn < Y26, y26 = stats(D.TR.filter((x) => x.tIn >= Y26));   // a multi-year tester: the first half is years, not Jan – Jun
   let h = '<div class="row"><div><div class="cards">';
   h += card(mt ? 'Net profit (MT5 report)' : 'Net profit', money(mt ? R.net ?? s.net : s.net), cls(s.net)) + card('Profit factor', mt ? R.pf ?? s.pf : s.pf) +
        card('Win rate', pct(s.w, s.n)) + card('Trades', `${s.n} <small class="k">(${s.w} won)</small>`);
   h += card('Max drawdown', mt ? ddTxt(R.dd) : '$' + Math.round(s.dd).toLocaleString('en-US') + ' <small class="k">(closed trades)</small>') +
-       card('Jan – Jun', a.n ? `<span class="${cls(a.net)}">${money(a.net)}</span> <small class="k">${pct(a.w, a.n)}</small>` : '<small class="k">no candles</small>') +
+       card(longA ? `${new Date(D.TR[0].tIn * 1000).toLocaleString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })} – Jun 2026` : 'Jan – Jun', a.n ? `<span class="${cls(a.net)}">${money(a.net)}</span> <small class="k">${pct(a.w, a.n)}</small>` : '<small class="k">no candles</small>') +
+       (longA ? card('2026 only (= MT5 period)', y26.n ? `<span class="${cls(y26.net)}">${money(y26.net)}</span> <small class="k">${pct(y26.w, y26.n)} · ${y26.n} trades</small>` : '<small class="k">no trades</small>') : '') +
        card('Jul – Oct', b.n ? `<span class="${cls(b.net)}">${money(b.net)}</span> <small class="k">${pct(b.w, b.n)}</small>` : '<small class="k">no trades</small>') + card('Stood aside', D.GH.length);
   h += '</div>';
   if (mt) {
