@@ -849,7 +849,10 @@ function mtWrCell(s) {
   const run = saveRun(s);
   if (!run || run.wr == null) return '<td class="k" title="no MT5 run of these settings yet - Watch MT5 result runs it">–</td>';
   const g = s.result && s.result.wr != null ? run.wr - s.result.wr : null;
-  return `<td title="MT5 ${esc(run.from)} - ${esc(run.to)} · ${run.trades} trades · ${money(run.net || 0)} · PF ${run.pf}${g != null ? ` · ${g >= 0 ? '+' : ''}${g.toFixed(1)} pts vs the portal` : ''}"><b>${run.wr}%</b></td>`;
+  const dd = String(run.dd || '').split('(')[0].replace(/\s/g, '');
+  return `<td style="text-align:left;white-space:normal;min-width:190px" title="MT5 ${esc(run.from)} - ${esc(run.to)} · ${run.trades} trades · ${money(run.net || 0)} · PF ${run.pf}${g != null ? ` · ${g >= 0 ? '+' : ''}${g.toFixed(1)} pts vs the portal` : ''}">` +
+    `MT5 Win rate: <b>${run.wr}%</b>, Avg win: <span class="pos">${money(run.avg_win)}</span>, Avg loss: <span class="neg">${money(run.avg_loss)}</span>, Worst loss: <span class="neg">${money(run.worst)}</span>, ` +
+    `Max drawdown: ${dd ? money(-Number(dd)) : '–'}, Break-even win rate: <b class="${run.be_wr != null && run.wr - run.be_wr < 10 ? 'bad' : ''}">${run.be_wr ?? '–'}%</b></td>`;
 }
 async function loadSaved() {
   SAVEDS = await api('/api/saved'); RUNS = await api('/api/runs').catch(() => RUNS);

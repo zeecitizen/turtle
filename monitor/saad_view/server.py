@@ -343,7 +343,10 @@ def run_wr(p, d):                                           # MT5's win rate: pe
         for e in d.get("events") or []:
             if e.get("type") == "exit":
                 pnl[e.get("num")] = pnl.get(e.get("num"), 0) + float(e.get("v1") or 0)
-        _RUN_WR[k] = round(100 * sum(v > 0 for v in pnl.values()) / len(pnl), 1) if pnl else None
+        v = list(pnl.values()); w = [x for x in v if x > 0]; l = [x for x in v if x <= 0]
+        aw, al = (sum(w) / len(w) if w else 0), (sum(l) / len(l) if l else 0)
+        _RUN_WR[k] = {"wr": round(100 * len(w) / len(v), 1), "avg_win": round(aw), "avg_loss": round(al), "worst": round(min(v)),
+                      "be_wr": round(100 * -al / (aw - al), 1) if aw - al else None} if v else {"wr": None}
     return _RUN_WR[k]
 
 
@@ -353,7 +356,7 @@ def list_runs():
         try:
             d = json.loads(p.read_text(encoding="utf-8"))
             out.append({k: d.get(k) for k in ("id", "label", "created", "from", "to", "delay", "changed", "source")} |
-                       {"net": d["report"].get("net"), "pf": d["report"].get("pf"), "trades": d["report"].get("trades"), "wr": run_wr(p, d)})
+                       {"net": d["report"].get("net"), "pf": d["report"].get("pf"), "trades": d["report"].get("trades"), "dd": d["report"].get("dd")} | run_wr(p, d))
         except Exception:                                   # noqa: BLE001
             continue
     return out
