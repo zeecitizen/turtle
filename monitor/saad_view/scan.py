@@ -267,16 +267,67 @@ def _reaper():
 
 
 def evaluate(task):
-    """one run (in a worker): EA settings over the data -> the numbers"""
+    """one run (in a worker): EA settings over the data -> the numbers (L = the loss side for the loss cutter, Lh = the same per half, days = day by day)"""
     import exitlab
+    import losslab
     inputs, ds, sets, window = task
     _, real, oe = exitlab.run(dict(inputs, **sets), ds)               # the Exit Lab exit comes in as InpX* settings, exactly as the EA reads it
     s = exitlab.stats(real, window, open_end=oe)
+    a0, a1, b0, b1 = window
+    p, t = real[:, 6], real[:, 1]
     return {"train": s["train"]["net"], "test": s["test"]["net"], "net": s["total"], "wr": s["all"]["wr"], "pf": s["all"]["pf"], "dd": s["all"]["dd"],
-            "n": s["all"]["n"], "stuck": s["stuck"]}
+            "n": s["all"]["n"], "stuck": s["stuck"], "L": losslab.loss_stats(p),
+            "Lh": [losslab.loss_stats(p[(t >= a0) & (t < a1)]), losslab.loss_stats(p[(t >= b0) & (t < b1)])], "days": losslab.day_stats(real)}
 
 
-def run_all(job, inputs, ds, lab, sets, window):
+def _sig(sets, lab):
+    """what a move changes, comparable between moves: short numbers as numbers ("15" = "15.0"), everything else as text - the range-box
+    strings ("111110010100001010111") are 21-digit words, not numbers (as floats, different boxes would look the same)"""
+    def v(x):
+        s = str(x).strip().lower()
+        if len(s) <= 12:
+            try:
+                return round(float(s), 6)
+            except ValueError:
+                pass
+        return s
+    return (tuple(sorted((k, v(x)) for k, x in sets.items())), tuple(sorted((k, v(x)) for k, x in lab.items())))
+
+
+def data_moves(props, base_in, labfull, trust, have):
+    """the loss autopsy's proposals -> moves. One that the scan already makes gets the autopsy's reason instead of a twin;
+    one that changes nothing, cannot trade or cannot act is dropped."""
+    import exitlab
+    L = dict(exitlab.DEFAULT, **(labfull or {}))
+    index = {_sig(m["sets"], m["lab"]): m for m in have}
+    out = []
+    for pr in props:
+        sets = {k: (v if isinstance(v, str) else _fmt("int" if SPEC.get(k, ("num",))[0] == "int" else "num", float(v))) for k, v in (pr.get("sets") or {}).items()}
+        lab = {k: float(v) for k, v in (pr.get("lab") or {}).items()}
+        if sets and all(_sig({k: base_in.get(k)}, {}) == _sig({k: v}, {}) for k, v in sets.items()):
+            continue                                             # already the bench's values
+        if lab and all(abs(_f(L.get(k)) - v) < 1e-9 for k, v in lab.items()):
+            continue
+        if sets and not _valid(dict(base_in, **sets)):
+            continue
+        if any(k not in base_in for k in sets):
+            continue
+        if any(not _relevant(k, dict(base_in, **sets)) for k in sets):
+            continue
+        sig = _sig(sets, lab)
+        if sig in index:                                         # the scan's own move: give it the reason
+            index[sig]["why"] = pr.get("why", "")
+            index[sig]["data"] = True
+            continue
+        m = {"group": pr.get("group", "the stop"), "key": next(iter(sets or lab)), "label": pr.get("label", ""), "from": str(pr.get("from", "")),
+             "to": str(pr.get("to", "")), "sets": sets, "lab": lab, "xs": lab_sets(dict(L, **lab)) if lab else {},
+             "trust": trust.get(next(iter(sets)), "") if sets else "", "why": pr.get("why", ""), "data": True}
+        index[sig] = m
+        out.append(m)
+    return out
+
+
+def run_all(job, inputs, ds, lab, sets, window, focus=None):
     import exitlab
     import sim_full
     if not lab:                                                  # no bench form sent: the exit in the settings themselves (InpX*)
@@ -284,7 +335,16 @@ def run_all(job, inputs, ds, lab, sets, window):
     labfull = {k: v for k, v in dict(exitlab.DEFAULT, **lab).items() if k != "pess"}
     base_sets = dict(sets or {}, **lab_sets(labfull))            # the bench as EA settings: the same numbers MT5 would run
     base_in = dict(inputs, **base_sets)
-    mv = moves(base_in, labfull, exitlab.ea_trust())
+    trust = exitlab.ea_trust()
+    mv = moves(base_in, labfull, trust)
+    aut = None
+    if focus == "loss":                                          # the loss cutter: read the bench's own trades, add the moves they point to
+        import losslab
+        import sim
+        job.phase = "the loss autopsy: reading every trade on the bench"
+        tr, setups, _ = sim.simulate(base_in, ds=ds)
+        aut = losslab.autopsy(tr[tr[:, 10] == 0], setups, sim.data(ds), base_in, labfull)
+        mv += data_moves(aut.pop("proposals"), base_in, labfull, trust, mv)
     job.total = len(mv) + 1
     job.phase = f"warming up {WORKERS} lab assistants"
     tasks = [(inputs, ds, base_sets, window)] + [(inputs, ds, dict(base_sets, **m["sets"], **m["xs"]), window) for m in mv]
@@ -314,4 +374,5 @@ def run_all(job, inputs, ds, lab, sets, window):
                 job.progress += 1
     now = results[0]
     out = [dict({k: v for k, v in m.items() if k != "xs"}, r=r) for m, r in zip(mv, results[1:]) if r]
-    return {"now": now, "moves": out, "seconds": round(time.time() - t0, 1), "n": len(mv), "stopped": now is None or len(out) < len(mv)}
+    return {"now": now, "moves": out, "seconds": round(time.time() - t0, 1), "n": len(mv), "stopped": now is None or len(out) < len(mv),
+            "focus": focus or "", "autopsy": aut}
