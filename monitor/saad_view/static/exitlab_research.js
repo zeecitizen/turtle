@@ -33,7 +33,7 @@ function gauges(T) {                                              // the result 
 // Loss per trade / Break-even win rate / Avg loss, Worst loss"). The scan's numbers carry the loss side of every move (scan.py L / Lh); the
 // loss scan also reads every trade on the bench (losslab.autopsy) and adds the moves the trades point to.
 const LC = (() => { try { return JSON.parse(localStorage.getItem('rsLossCfg') || 'null') || {}; } catch (e) { return {}; } })();
-RS.loss = !!LC.on; RS.lossTol = LC.tol ?? 1.5; RS.lossKeep = LC.keep ?? 85; RS.lossDrop = LC.drop ?? 13;
+RS.loss = !!LC.on; try { RS.ratio = !!localStorage.getItem('rsRatio'); } catch (e) {} RS.lossTol = LC.tol ?? 1.5; RS.lossKeep = LC.keep ?? 85; RS.lossDrop = LC.drop ?? 13;
 function lcSave() { try { localStorage.setItem('rsLossCfg', JSON.stringify({ on: RS.loss, tol: RS.lossTol, keep: RS.lossKeep, drop: RS.lossDrop })); } catch (e) {} }
 const usd = (v) => '$' + Math.round(Math.abs(v)).toLocaleString('en-US');                      // an amount without a sign (losses per trade)
 const lcCut = (a, b) => (Math.abs(a) > 1e-9 ? (Math.abs(a) - Math.abs(b)) / Math.abs(a) : 0);   // the share of a loss number removed (+ = smaller loss)
@@ -132,7 +132,8 @@ function lossLine(r, now) {                                       // the plain s
   const L = r.L, L0 = now.L;
   if (!L || !L0 || L.margin == null || L0.margin == null) return '';
   const c = (v, good, txt) => `<span class="${Math.abs(v) < 1e-9 ? '' : good ? 'pos' : 'neg'}">${txt}</span>`;
-  return `<br><span class="k">avg win ${c(L.avg_win - L0.avg_win, L.avg_win > L0.avg_win, money(L.avg_win))} · avg loss ${c(L.avg_loss - L0.avg_loss, L.avg_loss > L0.avg_loss, money(L.avg_loss))}` +
+  const q = L.avg_loss < 0 ? L.avg_win / -L.avg_loss : 0, q0 = L0.avg_loss < 0 ? L0.avg_win / -L0.avg_loss : 0;
+  return `<br><span class="k">win/loss ratio ${c(q - q0, q > q0, q.toFixed(2) + '×')} · avg win ${c(L.avg_win - L0.avg_win, L.avg_win > L0.avg_win, money(L.avg_win))} · avg loss ${c(L.avg_loss - L0.avg_loss, L.avg_loss > L0.avg_loss, money(L.avg_loss))}` +
     ` · break-even ${c(L.be - L0.be, L.be < L0.be, L.be + '%')} · margin ${c(L.margin - L0.margin, L.margin > L0.margin, L.margin + ' pts (' + (L.margin >= L0.margin ? '+' : '') + (L.margin - L0.margin).toFixed(2) + ')')}</span>`;
 }
 function lcScan() { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: RS.loss ? 'the loss autopsy' : 'warming up the beakers', progress: 0, total: 0, seconds: 0 };
@@ -143,6 +144,7 @@ function leverTips() {                                           // every settin
   const busy = J && J.running && J.action === 'sweep', pct = busy && J.total ? Math.round((100 * J.progress) / J.total) : 3;
   let h = `<div class="bar" style="margin-top:8px"><button data-rs="scan" class="dexbtn" ${busy ? 'disabled' : ''}>${busy ? '⏳ SCANNING…' : RS.loss ? '✂️ SCAN FOR LOSS CUTS' : '🔬 SCAN EVERY SETTING'}</button>
     <label class="tog" style="font-size:12px" title="rank the scan's moves by how much they cut your losses while keeping the win rate"><input type="checkbox" id="rsLoss" ${RS.loss ? 'checked' : ''}> ✂️ loss cutter</label>
+    <br><label class="tog" style="font-size:12px" title="with the loss cutter off: suggestions that keep or grow avg win / avg loss rank higher, those that shrink it lower"><input type="checkbox" id="rsRatio" ${RS.ratio ? 'checked' : ''}> rank settings that keep a healthy avg win / avg loss ratio higher</label>
     <label class="tog" style="font-size:12px"><input type="checkbox" id="rsAuto" ${RS.auto !== false ? 'checked' : ''}> scan again after every pick</label></div>`;
   if (busy) h += `<div class="dexprog"><div class="dexprog-t">${RS.loss ? '✂️ THE LOSS CUTTER IS READING EVERY TRADE AND TESTING EVERY SETTING' : '⚗️ THE LAB IS TESTING EVERY SETTING'} · ${pct}%</div><div class="dexprog-bar"><i style="width:${pct}%"></i></div>
     <div class="dexprog-s">${esc(J.phase || 'warming up the beakers')} · ${J.progress || 0} of ${J.total || '…'} runs · ${J.seconds || 0} s</div></div>`;
@@ -166,6 +168,10 @@ function leverTips() {                                           // every settin
     sug.push(m);
   }
   if (!sug.length) return h + `<p class="note">🏁 Nothing left to gain: no single setting improves the bench any more (${W.n} moves tried in ${W.seconds} s). This is the top of this hill.</p>`;
+  if (RS.ratio && now.L && now.L.avg_loss < 0) {                 // keep a healthy avg win / avg loss: moves that grow it rise, moves that shrink it sink
+    const q0 = now.L.avg_win / -now.L.avg_loss;
+    for (const m of sug) { const L = m.r.L; m.rq = L && L.avg_loss < 0 ? (L.avg_win / -L.avg_loss - q0) / q0 : 0; m.score += 3 * m.rq; }
+  }
   const fav = rsFav();                                             // 2+ picks of one kind (win rate / PF / money): that kind goes to the top
   sug.sort((a, b) => (fav ? (b.kind === fav) - (a.kind === fav) : 0) || b.score - a.score);
   const show = RS.all ? sug : sug.slice(0, 25), n = show.length;
@@ -261,6 +267,7 @@ document.addEventListener('input', (e) => {
 document.addEventListener('toggle', (e) => { if (e.target.classList && e.target.classList.contains('lossaut')) RS.autOpen = e.target.open; }, true);
 document.addEventListener('change', (e) => {
   if (e.target.id === 'rsAuto') { RS.auto = e.target.checked; return; }
+  if (e.target.id === 'rsRatio') { RS.ratio = e.target.checked; try { localStorage.setItem('rsRatio', RS.ratio ? '1' : ''); } catch (x) {} RS.animated = null; renderPanel('tt'); return; }
   if (e.target.id === 'rsLoss') {                                 // the loss cutter on: its scan reads every trade first (a plain scan has no autopsy)
     RS.loss = e.target.checked; lcSave();
     const J = LABS.main, busy = J && J.running && J.action === 'sweep';
