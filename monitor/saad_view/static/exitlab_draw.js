@@ -43,9 +43,17 @@ function exitParts(ea, lab) {                                     // what closes
   return P;
 }
 function labSvg(parts, title, color) {
-  const W = 470, H = 270, x0 = 36, x1 = W - 14, top = 34, bot = H - 58;
-  const rmax = Math.max(2.8, ...parts.filter((p) => p.r != null).map((p) => p.r)) + 0.4, rmin = -1.4;
-  const Y = (r) => top + ((rmax - r) / (rmax - rmin)) * (bot - top), X = (c) => x0 + 14 + (c / 24) * (x1 - x0 - 28);
+  const nch = parts.filter((p) => p.t === 'chip' || p.t === 'none' || p.t === 'closeslow').length;
+  const W = 470, H = 300 + 17 * Math.max(0, Math.ceil(nch / 2) - 1), x0 = 36, x1 = W - 14, top = 44, bot = H - 58 - 17 * Math.max(0, Math.ceil(nch / 2) - 1);
+  // the levels (stop, entry, every target / partial / lock ...) sit EVENLY spaced, in their order - a far one (8R) no longer squeezes the rest
+  const lv = [...new Set([-1, 0, 2.6, ...parts.filter((p) => p.r != null).map((p) => +p.r)])].sort((a, b) => a - b);
+  const slot = (bot - top - 24) / Math.max(1, lv.length - 1), Ylv = (i) => bot - 12 - i * slot;
+  const Y = (r) => {                                                 // piecewise: between two levels, a straight line
+    if (r <= lv[0]) return Ylv(0) + (lv[0] - r) * slot * 0.6;
+    for (let i = 1; i < lv.length; i++) if (r <= lv[i]) return Ylv(i - 1) - ((r - lv[i - 1]) / (lv[i] - lv[i - 1])) * slot;
+    return Ylv(lv.length - 1) - Math.min(10, (r - lv[lv.length - 1]) * 4);
+  };
+  const rmax = lv[lv.length - 1], X = (c) => x0 + 14 + (c / 24) * (x1 - x0 - 28);
   const path = [0, 0.25, -0.45, 0.3, 0.95, 0.6, 1.35, 1.05, 1.85, 1.45, 2.35, 1.95, 2.6].map((r, i, a) => [X((i * 24) / (a.length - 1)), r]);
   const g = (p, inner) => `<g class="dx" data-tip="${esc(p.tip)}">${inner}</g>`, ln = (y, c) => `<line x1="${x0}" x2="${x1}" y1="${y}" y2="${y}" class="lv ${c}"/>`;
   let s = `<svg viewBox="0 0 ${W} ${H}" class="dexsvg"><rect x="3" y="3" width="${W - 6}" height="${H - 6}" rx="16" class="dexbox" style="stroke:${color}"/>` +
