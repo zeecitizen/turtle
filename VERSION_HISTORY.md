@@ -16,6 +16,15 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min_v133 v1.33 (2026-10-21) — Zee's 94% save as an EA
+
+Zee: *"jaan can u make this the compiled EA please ... i've tried loss cutting its not helping right now.. let's use the setting above"*. v1.31 with the save
+2026-10-21 07-53-45 as defaults (stop $25 from the entry, Exit Lab $17 target / EMA-cross exit in profit, day loss $250 / target $2,000), magic 88319.
+MT5 receipt (r20261021_072342, Blueberry 2026, no delay, 2 lots): 94.2% WR, 513 trades, +$60,654, PF 1.42, DD $17,979; avg win $426, avg loss -$4,837,
+worst -$5,600, break-even WR 91.9% (margin 2.3 pts). Turtle TV 4 years: 1,877 trades, 94.8%, +$255,632. Compiled and copied to the Blueberry terminal.
+
+---
+
 ## Saad_strategy_15min_v132_night v1.32 (2026-10-21) — the 90% setting for an overnight Blueberry test
 
 Zee: *"make a compiled EA i can attach that in blueberry MT5 and sleep"*. A copy of v1.31 whose defaults are Zee's Exit Lab save with the stop $15 from the entry
