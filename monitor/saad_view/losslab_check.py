@@ -10,7 +10,9 @@ implementation of this loss research lab").
 5. the autopsy: the groups add up to every trade, the percentiles are in order, the facts carry no NaN / None
 6. the page's ranking (lossCuts in static/exitlab_research.js, run by node on this scan): every suggestion keeps the limits it promises,
    the order is by score, and the page's HTML carries no "undefined" / "NaN"
-7. the plain scan (no loss focus) has no autopsy and no data moves; the loss scan is a superset of its moves"""
+7. the plain scan (no loss focus) has no autopsy and no data moves; the loss scan is a superset of its moves
+8. the v1.31 loss cutters in the engine: a cap that never binds = off, a $10 cap holds every loss, a 50% cut at -0.5R makes a stopped trade
+   lose ~0.75R, a 100% cut ~0.5R (bigger only inside the entry minute, where no Exit Lab rule acts - as in the EA), the decay stop sits at -0.5R"""
 import json
 import os
 import random
@@ -184,10 +186,49 @@ console.log(JSON.stringify(out));
         print(f"      {tag}: {r['n']} suggestions, left out {r['over']}")
 
 
+def engine():
+    """8. the v1.31 loss cutters in the engine (EA InpXLossCap / InpXLpR / InpXDecayBars), on v1.27's defaults, 2026"""
+    import numpy as np
+    import server
+    import sim
+    inp = server.full_inputs({})
+    lots = float(inp["InpLots"])
+
+    def run(**x):
+        tr, _, _ = sim.simulate(dict(inp, **{k: str(v) for k, v in x.items()}), ds="year")
+        return tr[tr[:, 10] == 0]
+    off = run()
+    a = run(InpXLossCap=1000)
+    ok("engine: a cap that never binds = off (every trade)", len(a) == len(off) and np.allclose(a[:, :15], off[:, :15]))
+    c = run(InpXLossCap=10)
+    ok("engine: cap $10 -> no initial risk above $10", float(c[:, 17].max()) <= 10.0 + 1e-6, f"max {c[:, 17].max():.3f}")
+    ok("engine: cap $10 -> no loss beyond $10 x lots x 100 (+5% for slippage and swap), except inside the entry minute",
+       all(x[6] >= -10 * x[18] * 100 * 1.05 or int(x[4]) // 60 == int(x[1]) // 60 for x in c), f"worst {c[:, 6].min():.0f}")
+    d = run(InpXLpR=0.5, InpXLpFrac=0.5)
+    st = d[(d[:, 19] >= 1) & (d[:, 13] == 1)]
+    ratio = -st[:, 6] / (st[:, 17] * st[:, 18] * 100.0) if len(st) else np.array([0.75])
+    ok("engine: cut 50% at -0.5R -> a cut trade that is stopped loses ~0.75R", 0.70 <= float(np.median(ratio)) <= 0.80, f"median {np.median(ratio):.3f}")
+    f = run(InpXLpR=0.5, InpXLpFrac=1.0)
+    cut = f[f[:, 13] == 17]
+    ok("engine: cut 100% at -0.5R -> 'loss cut' exits lose ~0.5R", len(cut) > 0 and float((-cut[:, 6] / (cut[:, 17] * cut[:, 18] * 100)).max()) <= 0.6,
+       f"{len(cut)} cuts")
+    big = f[-f[:, 6] / (f[:, 17] * f[:, 18] * 100) > 0.6]
+    ok("engine: a bigger loss than the cut only inside the entry minute (no Exit Lab rule acts there, as in the EA)",
+       all(int(x[4]) // 60 == int(x[1]) // 60 for x in big), f"{len(big)} trades")
+    e = run(InpXDecayBars=8, InpXDecayR=-0.5)
+    held = e[:, 12] - e[:, 11]
+    late = e[(held > 9) & (e[:, 13] == 1)]
+    ok("engine: decay 8 candles -> -0.5R: a trade stopped after it has its stop at 0.5R",
+       not len(late) or abs(float(np.median(np.abs(late[:, 2] - late[:, 3]) / late[:, 17])) - 0.5) < 0.01)
+    g = run(InpXDecayBars=4, InpXDecayR=0)
+    ok("engine: decay 4 candles -> breakeven acts (breakeven stops or 'decay stop' exits)", int((g[:, 13] == 16).sum()) + int((g[:, 13] == 7).sum()) > 0)
+
+
 def main():
     import server
     import scan
     unit()
+    engine()
     name = (HERE / "settings" / "primary.txt").read_text(encoding="utf-8").strip() if (HERE / "settings" / "primary.txt").exists() else ""
     saved = json.loads((HERE / "settings" / "saved" / f"{name}.json").read_text(encoding="utf-8"))["inputs"] if name else {}
     for label, sets in (("your primary save", saved), ("v1.27 defaults", {})):

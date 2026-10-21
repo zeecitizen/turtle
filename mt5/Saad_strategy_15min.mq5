@@ -34,11 +34,16 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.30"
+#property version   "1.31"
 #property strict
 
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
+// v1.31 (2026-10-21, Zee: "i want you to add a mode which helps reduce loss ... make it the most intelligent loss cutter possible"): three
+//        loss cutters for the Exit Lab, all off by default (= v1.30): InpXLossCap - the stop never further than $X from the entry (the tighter
+//        of the setup's stop and this, before the stand-aside ghost and the sizing); InpXLpR / InpXLpFrac - close a share when the trade is
+//        InpXLpR R in loss (only where that level comes before the stop); InpXDecayBars / InpXDecayR - after N candles the stop tightens to
+//        the entry + InpXDecayR R (negative = still in loss; out at once if the price is already beyond it). Exit modes 1-2, like every InpX.
 // v1.30 (2026-10-21, Zee: "we don't need to treat Exit lab's exits differently -> they can be saved and applied like normal settings"): the Turtle TV
 //        Exit Lab as EA inputs (InpX*, all off = v1.29): targets in R / ATR / $, the fallback's buffer and closes, close-based exits, partials,
 //        breakeven, lock ladder, trails, time / no-progress / ADX / Friday exits - for exit modes 1-2. Also: a position adopted after a restart in
@@ -65,7 +70,7 @@
 // v1.20 (Zee): stop-loss text in black (InpSlTextColor); the stop LINES stay red
 // v1.19 (Zee): chart text colour by side - everything about a LONG in dark green, about a SHORT in red
 // v1.18 (Zee): every trade's comment names the EA + version, so the account history shows where it came from
-#define EA_COMMENT "Saad15 v1.30"
+#define EA_COMMENT "Saad15 v1.31"
 
 //--- the two lines
 input int    InpEmaFast     = 16;      // InpEmaFast
@@ -246,6 +251,11 @@ input int    InpXStaleBars  = 0;      // InpXStaleBars — no progress after N c
 input double InpXStaleR     = 0.5;    // InpXStaleR — ... meaning less than +R
 input double InpXAdxExit    = 0;      // InpXAdxExit — close when ADX falls below (0 = off)
 input int    InpXFriHour    = 0;      // InpXFriHour — Friday close at this server hour (0 = off)
+input double InpXLossCap    = 0;      // InpXLossCap — v1.31: the stop never further than this $ of price from the entry (0 = off)
+input double InpXLpR        = 0;      // InpXLpR — v1.31: close part of the trade when it is this R in loss (0 = off)
+input double InpXLpFrac     = 0.5;    // InpXLpFrac — v1.31: ... the share of the trade closed there
+input int    InpXDecayBars  = 0;      // InpXDecayBars — v1.31: after this many candles the stop tightens (0 = off)
+input double InpXDecayR     = -0.5;   // InpXDecayR — v1.31: ... to the entry + this R (negative = still in loss, 0 = breakeven)
 
 CTrade   trade;
 int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE, hAdx = INVALID_HANDLE;
@@ -278,7 +288,7 @@ int      g_skipDip = 0, g_skipSweep = 0, g_skipMinLot = 0, g_dayLossStop = 0, g_
 struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bool noTp; bool ride; datetime entryTime; double best; bool usdTrail; double tpNext; int tpStage; bool resTp1;
                   string setup; double sl0; double risk; string tp1; datetime tp1At; string tps; datetime ctcAt; int moves; double mfe;
                   int num; double slNow; datetime slFrom; string why; int nxE;
-                  double xr0; double xltp; double xorl; bool xp1; bool xp2; int xcxn; int xfbn; };   // v1.30 Exit Lab: risk R, lab target, original lots, partials, counters   // v1.25 nxE: 9 / 50 the EMA to touch, -1 none beyond (close back across the fast), -2 close back across the slow, 0 v1.23 exits
+                  double xr0; double xltp; double xorl; bool xp1; bool xp2; int xcxn; int xfbn; bool xlp; };   // v1.30 Exit Lab: risk R, lab target, original lots, partials, counters (v1.31 xlp: the loss cut done)   // v1.25 nxE: 9 / 50 the EMA to touch, -1 none beyond (close back across the fast), -2 close back across the slow, 0 v1.23 exits
 PosState g_pos[];
 
 int g_ctc = 0, g_skipClose = 0, g_closeLoss = 0;
@@ -673,14 +683,14 @@ void SyncPos()
          bool b9 = p.side > 0 ? l9 > p.entry : l9 < p.entry, b50 = p.side > 0 ? l50 > p.entry : l50 < p.entry;
          p.nxE = b9 && b50 ? (MathAbs(l9 - p.entry) <= MathAbs(l50 - p.entry) ? 9 : 50) : b9 ? 9 : b50 ? 50 : -1;
       }
-      p.mfe = p.entry; p.xr0 = MathAbs(p.entry - p.slNow); p.xorl = PositionGetDouble(POSITION_VOLUME); p.xp1 = false; p.xp2 = false; p.xcxn = 0; p.xfbn = 0; p.xltp = 0;
+      p.mfe = p.entry; p.xr0 = MathAbs(p.entry - p.slNow); p.xorl = PositionGetDouble(POSITION_VOLUME); p.xp1 = false; p.xp2 = false; p.xcxn = 0; p.xfbn = 0; p.xltp = 0; p.xlp = false;
       int n = ArraySize(g_pos); ArrayResize(g_pos, n + 1); g_pos[n] = p;
    }
 }
 
 // v1.30 Exit Lab
 bool XOn() { return InpXTgt != 0 || InpXFb != 0 || InpXFbBuf > 0 || InpXFbN > 1 || InpXCx != 0 || InpXP1R > 0 || InpXP2R > 0 || InpXBeR > 0 || InpXLockR > 0 || InpXTr != 0
-                   || InpXMaxBars > 0 || InpXStaleBars > 0 || InpXAdxExit > 0 || InpXFriHour > 0; }
+                   || InpXMaxBars > 0 || InpXStaleBars > 0 || InpXAdxExit > 0 || InpXFriHour > 0 || InpXLossCap > 0 || InpXLpR > 0 || InpXDecayBars > 0; }
 double XSwing(int side, double ref)                 // the last confirmed swing low below ref (BUY) / high above (SELL): pivot 2, 60 candles (as the tester)
 {
    for (int s = 3; s < 63; s++) {
@@ -708,6 +718,20 @@ bool XTick(int i, double bid, double ask)
    int sd = g_pos[i].side;
    double en = g_pos[i].entry, r0 = g_pos[i].xr0, s_ = PositionGetDouble(POSITION_SL);
    double fav = sd > 0 ? bid - en : en - ask, best = sd > 0 ? g_pos[i].mfe - en : en - g_pos[i].mfe;
+   if (InpXLpR > 0 && !g_pos[i].xlp && r0 > 0 && fav <= -InpXLpR * r0) {          // v1.31 loss cut: a share closed at -InpXLpR R (where that comes before the stop)
+      double lv = en - sd * InpXLpR * r0;
+      if (sd > 0 ? lv > s_ + 0.005 : (s_ == 0 || lv < s_ - 0.005)) {
+         g_pos[i].xlp = true;
+         double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP), vmin = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+         double cl = MathFloor(g_pos[i].xorl * InpXLpFrac / step + 0.5) * step, vol = PositionGetDouble(POSITION_VOLUME);
+         if (cl >= vmin) {
+            if (cl >= vol - step / 2) { XClose(i, "lab loss cut (all)"); return true; }
+            trade.PositionClosePartial(tk, NormalizeDouble(cl, 2));
+            g_partials++;
+            if (!PositionSelectByTicket(tk)) return true;
+         }
+      }
+   }
    for (int pp = 0; pp < 2; pp++) {
       double pr = pp == 0 ? InpXP1R : InpXP2R;
       bool done = pp == 0 ? g_pos[i].xp1 : g_pos[i].xp2;
@@ -788,6 +812,13 @@ bool XBar(int i, double c1)
    }
    if (InpXMaxBars > 0 && held >= InpXMaxBars) { XClose(i, "lab time exit"); return true; }
    if (InpXStaleBars > 0 && held >= InpXStaleBars && r0 > 0 && (c1 - en) * sd < InpXStaleR * r0) { XClose(i, "lab: no progress"); return true; }
+   if (InpXDecayBars > 0 && held >= InpXDecayBars && r0 > 0) {                        // v1.31 decay stop: after N candles, the stop to entry + InpXDecayR R
+      double lvl = en + sd * InpXDecayR * r0;
+      if (XBetter(sd, lvl, s_)) {
+         if (sd > 0 ? lvl < bid : lvl > ask) { if (ModifySl(tk, lvl)) SlMoved(i, lvl, "lab decay stop"); }
+         else { XClose(i, "lab decay stop (the price is beyond it)"); return true; }
+      }
+   }
    if (InpXAdxExit > 0 && hAdx != INVALID_HANDLE && Buf(hAdx, 1) < InpXAdxExit) { XClose(i, "lab: ADX faded"); return true; }
    if (InpXFriHour > 0) { MqlDateTime d; TimeToStruct(TimeCurrent(), d); if (d.day_of_week == 5 && d.hour >= InpXFriHour) { XClose(i, "lab Friday close"); return true; } }
    return false;
@@ -1176,6 +1207,7 @@ void DoEntry(int side, double sl, bool ghost = false)
    }
    bool rideShort = side < 0 && TrailOn(-1) && InpRide && InpFixTpPips <= 0;
    if (InpFixTpPips > 0) { tp = side > 0 ? en + InpFixTpPips * pip : en - InpFixTpPips * pip; noTp = false; }
+   if (XOn() && InpXLossCap > 0 && nxE != 0 && MathAbs(en - sl) > InpXLossCap) sl = side > 0 ? en - InpXLossCap : en + InpXLossCap;   // v1.31: the stop never beyond $X
    if (ghost) {      // chart-test: stand aside - the trade runs unseen (same stop and exit), no new trade until it ends
       g_gSide = side; g_gEntry = en; g_gSl = sl; g_gNxE = nxE; g_gExitE = g_pExit; g_gTp = tp; g_gNoTp = noTp; g_gTime = TimeCurrent(); g_ghosts++;
       return;
@@ -1195,7 +1227,7 @@ void DoEntry(int side, double sl, bool ghost = false)
    p.entryTime = TimeCurrent(); p.best = p.entry;
    p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0;
    p.setup = g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry;
-   p.xr0 = MathAbs(p.entry - sl); p.xorl = lots; p.xp1 = false; p.xp2 = false; p.xcxn = 0; p.xfbn = 0; p.xltp = 0;
+   p.xr0 = MathAbs(p.entry - sl); p.xorl = lots; p.xp1 = false; p.xp2 = false; p.xcxn = 0; p.xfbn = 0; p.xltp = 0; p.xlp = false;
    if (InpXTgt >= 2 && nxE != 0) p.xltp = p.entry + side * (InpXTgt == 2 ? InpXTgtK * p.xr0 : InpXTgt == 3 ? InpXTgtK * Buf(hAtr, 1) : InpXTgtK);
    p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    p.tp1 = nxE > 0 ? StringFormat("touch of the %d EMA (now %.2f), all closed", nxE == 9 ? InpEmaFast : InpEmaSlow, Ema(nxE, 0))

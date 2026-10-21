@@ -26,12 +26,12 @@ MAXP = 8
 # position fields
 SD, EN, SL, TP, EXE, NOTP, RIDE, EK, ET, BEST, USD, TPN, STG, RES1, NX, LOTS, REAL, SWP, BKT, BTP, CTC = range(21)
 # Exit Lab fields (exitlab.py): initial risk, ATR at entry, best / worst price reached, partials done, lab target, original lots, close counters
-R0, ATE, MFP, MAP, P1D, P2D, LTP, ORL, CXN, FBN = range(21, 31)
-NPS = 31
+R0, ATE, MFP, MAP, P1D, P2D, LTP, ORL, CXN, FBN, LPD = range(21, 32)          # LPD (v1.31): the loss cut (partial at -R) done
+NPS = 32
 # the Exit Lab's parameter vector E (all zero = the engine exactly as before). Only for exit modes 1 and 2 (the v1.25 exits).
 (E_ON, E_TGT, E_TGTK, E_FB, E_FBB, E_FBN, E_CX, E_CXB, E_CXN, E_CXW, E_CXA, E_P1R, E_P1F, E_P1BE, E_P2R, E_P2F, E_BER, E_BEO, E_LOCK,
- E_TR, E_TRK, E_TRA, E_TRB, E_MAXB, E_STB, E_STR, E_ADX, E_FRI, E_PESS) = range(29)
-NE = 32
+ E_TR, E_TRK, E_TRA, E_TRB, E_MAXB, E_STB, E_STR, E_ADX, E_FRI, E_PESS, E_LCAP, E_LPR, E_LPF, E_DCB, E_DCR) = range(34)
+NE = 36
 # EA inputs that only act with InpExitMode 0 (the v1.23 exits): in exit modes 1-2 the EA's ManageTrade / ManageBar return before reading them
 MODE0_ONLY = {"InpLongExit", "InpLongTpPips", "InpSwingPivot", "InpSwingLook", "InpShortTpPips", "InpMinTpPips", "InpMaxTpPips", "InpBeUsd",
               "InpLongTouch", "InpLongTrailUsd", "InpLongResTp", "InpLongResTp1", "InpResTp1Ride", "InpShortTouch", "InpTrailStepUsd",
@@ -40,14 +40,18 @@ MODE0_ONLY = {"InpLongExit", "InpLongTpPips", "InpSwingPivot", "InpSwingLook", "
 # (InpFixTpPips is NOT here: the EA sends it as the order's broker TP in every exit mode)
 EFIELDS = ["on", "tgt", "tgt_k", "fb", "fb_buf", "fb_n", "cx", "cx_buf", "cx_n", "cx_when", "cx_after", "p1_r", "p1_frac", "p1_be", "p2_r",
            "p2_frac", "be_r", "be_off", "lock_r", "tr", "tr_k", "tr_act", "tr_buf", "max_bars", "stale_bars", "stale_r", "adx_exit", "fri_hour",
-           "pess"]
+           "pess", "lcap", "lp_r", "lp_frac", "dc_bars", "dc_r"]
+# v1.31 loss cutters (Zee 2026-10-21: "make it the most intelligent loss cutter possible"): lcap = the stop never further than $X from the entry
+# (the tighter of the setup's stop and this), lp_r / lp_frac = close a share when the trade is lp_r R in loss, dc_bars / dc_r = after N candles
+# the stop tightens to the entry + dc_r R (negative = still in loss)
 
 
 # v1.30: the Exit Lab as EA inputs (InpX*) - the same building blocks, so an exit is just settings
 XMAP = {"InpXTgt": "tgt", "InpXTgtK": "tgt_k", "InpXFb": "fb", "InpXFbBuf": "fb_buf", "InpXFbN": "fb_n", "InpXCx": "cx", "InpXCxBuf": "cx_buf", "InpXCxN": "cx_n",
         "InpXCxWhen": "cx_when", "InpXCxAfter": "cx_after", "InpXP1R": "p1_r", "InpXP1Frac": "p1_frac", "InpXP1Be": "p1_be", "InpXP2R": "p2_r", "InpXP2Frac": "p2_frac",
         "InpXBeR": "be_r", "InpXBeOff": "be_off", "InpXLockR": "lock_r", "InpXTr": "tr", "InpXTrK": "tr_k", "InpXTrAct": "tr_act", "InpXTrBuf": "tr_buf",
-        "InpXMaxBars": "max_bars", "InpXStaleBars": "stale_bars", "InpXStaleR": "stale_r", "InpXAdxExit": "adx_exit", "InpXFriHour": "fri_hour"}
+        "InpXMaxBars": "max_bars", "InpXStaleBars": "stale_bars", "InpXStaleR": "stale_r", "InpXAdxExit": "adx_exit", "InpXFriHour": "fri_hour",
+        "InpXLossCap": "lcap", "InpXLpR": "lp_r", "InpXLpFrac": "lp_frac", "InpXDecayBars": "dc_bars", "InpXDecayR": "dc_r"}
 XFIELDS = {v: k for k, v in XMAP.items()}
 
 
@@ -61,7 +65,8 @@ def lab_from_inputs(inputs):
     L = {f: _xv(inputs[k]) for k, f in XMAP.items() if k in inputs}
     g = lambda f, d=0.0: L.get(f, d)  # noqa: E731
     on = (g("tgt") != 0 or g("fb") != 0 or g("fb_buf") > 0 or g("fb_n", 1) > 1 or g("cx") != 0 or g("p1_r") > 0 or g("p2_r") > 0 or g("be_r") > 0 or g("lock_r") > 0
-          or g("tr") != 0 or g("max_bars") > 0 or g("stale_bars") > 0 or g("adx_exit") > 0 or g("fri_hour") > 0)
+          or g("tr") != 0 or g("max_bars") > 0 or g("stale_bars") > 0 or g("adx_exit") > 0 or g("fri_hour") > 0
+          or g("lcap") > 0 or g("lp_r") > 0 or g("dc_bars") > 0)
     return dict(L, pess=1.0) if on else None
 
 
@@ -203,7 +208,7 @@ def _close(out, nt, ps, x, xp, tq, kout, why, lots_frac):
             out[nt, 11] = ps[x, EK]; out[nt, 12] = kout; out[nt, 13] = why; out[nt, 14] = ps[x, LOTS]
             if out.shape[1] >= 20:                     # Exit Lab: best / worst move ($ per ounce), initial risk, original lots, partials
                 out[nt, 15] = (ps[x, MFP] - ps[x, EN]) * side; out[nt, 16] = (ps[x, EN] - ps[x, MAP]) * side
-                out[nt, 17] = ps[x, R0]; out[nt, 18] = ps[x, ORL]; out[nt, 19] = ps[x, P1D] + ps[x, P2D]
+                out[nt, 17] = ps[x, R0]; out[nt, 18] = ps[x, ORL]; out[nt, 19] = ps[x, P1D] + ps[x, P2D] + ps[x, LPD]
         ps[x, SD] = 0
         return nt + 1, pn + ps[x, SWP]
     ps[x, REAL] += pn
@@ -315,6 +320,26 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                         ps[x, MFP] = max(ps[x, MFP], bid); ps[x, MAP] = min(ps[x, MAP], bid)
                     else:
                         ps[x, MFP] = min(ps[x, MFP], ask); ps[x, MAP] = max(ps[x, MAP], ask)
+                    # v1.31 loss cut: a share closed when the trade is lp_r R in loss - only where that level comes before the stop, never in the
+                    # entry minute (the Exit Lab waits for the next minute, as the EA's XTick)
+                    if E[E_ON] > 0.5 and E[E_LPR] > 0 and ps[x, NX] != 0 and ps[x, LPD] < 0.5 and ps[x, R0] > 0 and ps[x, ET] < t1[j]:
+                        lv = en - sd * E[E_LPR] * ps[x, R0]
+                        before = (lv > s_ + 0.005) if sd > 0 else (s_ == 0 or lv < s_ - 0.005)
+                        if before and ((bid <= lv) if sd > 0 else (ask >= lv)):
+                            if sd > 0:
+                                xp = lv if prv > lv else bid
+                            else:
+                                xp = lv if prv + spr < lv else ask
+                            ps[x, LPD] = 1.0
+                            cl = np.floor(ps[x, ORL] * E[E_LPF] / 0.01 + 0.5) * 0.01
+                            if cl >= 0.01:
+                                fr = 1.0 if cl >= ps[x, LOTS] - 0.005 else cl / ps[x, LOTS]
+                                nt, pn = _close(out, nt, ps, x, xp - sd * X[8], tq, k, 17, fr)
+                                equity += pn; dayPnl += pn
+                                if fr >= 0.999:
+                                    if pn < 0:
+                                        coolUntil = tq + int(P[85]) * 900
+                                    continue
                     # broker stop (a trade on the tight $ trail: the minute's whole adverse range counts - MT5 trails tick by tick and a bounce stops it)
                     if ps[x, USD] > 0.5 and s_ != 0 and q > 0 and ((l1[j] <= s_) if sd > 0 else (h1[j] + spr >= s_)) and not (bid <= s_ if sd > 0 else ask >= s_):
                         nt, pn = _close(out, nt, ps, x, s_ - sd * X[9] - sd * X[8], tq, k, 6, 1.0)
@@ -663,6 +688,13 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                 why = 8
                             if why == 0 and E[E_STB] > 0 and held >= E[E_STB] and r0 > 0 and (c15[i] - en) * sd < E[E_STR] * r0:
                                 why = 13
+                            if why == 0 and E[E_DCB] > 0 and held >= E[E_DCB] and r0 > 0:   # v1.31 decay stop: after N candles, the stop to entry + dc_r R
+                                lvl = en + sd * E[E_DCR] * r0
+                                if (lvl > s_ + 0.005) if sd > 0 else (s_ == 0 or lvl < s_ - 0.005):
+                                    if (lvl < cur) if sd > 0 else (lvl > cur + spr):
+                                        ps[x, SL] = lvl; s_ = lvl
+                                    else:
+                                        why = 16                               # the price is already beyond it: out now
                             if why == 0 and E[E_ADX] > 0 and adx[i] < E[E_ADX]:
                                 why = 14
                             if why == 0 and E[E_FRI] > 0 and dow15[k] == 5 and hr15[k] >= E[E_FRI]:
@@ -978,6 +1010,8 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                     if res > 0:
                                         tp_ = res; noTp = False; res1 = True
                             if not skip:
+                                if E[E_ON] > 0.5 and E[E_LCAP] > 0 and n_ != 0 and abs(e_ - s_) > E[E_LCAP]:
+                                    s_ = e_ - ts_ * E[E_LCAP]                   # v1.31: the stop never further than $X from the entry
                                 rideShort = ts_ < 0 and _trail_on(P, -1) and P[62] > 0.5 and P[83] <= 0
                                 if P[83] > 0:
                                     tp_ = e_ + ts_ * P[83] * pip
