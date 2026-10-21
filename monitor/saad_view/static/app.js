@@ -705,6 +705,7 @@ $('#form').addEventListener('input', (e) => {
 async function setSource() {
   const ds = $('#srcDs').value, mode = $('#srcMode').value, keep = chart.timeScale().getVisibleRange();
   SRC.mode = mode;
+  $('#brandTf').textContent = `XAUUSD · Blueberry real ticks · ${ds === 'year1' ? '1 min (the EA on M1)' : '15 min'}`;
   if (ds !== SRC.ds) {
     SRC.ds = ds; BARS = await getBars(ds); drawBars(); TT = null; MT = null;
   }
@@ -895,7 +896,7 @@ document.addEventListener('click', async (e) => {
 
 // ---------- buttons ----------
 $('#btnCheck').onclick = async () => {
-  const r = await api('/api/run', { sets: CUR, delay: 'none', label: Object.keys(diffDfl(CUR)).length ? '' : 'v1.27 defaults (no delay)' });
+  const r = await api('/api/run', { sets: CUR, delay: 'none', period: SRC.ds === 'year1' ? 'M1' : 'M15', label: Object.keys(diffDfl(CUR)).length ? '' : 'v1.27 defaults (no delay)' });
   if (r.error) return toast('⚠ ' + esc(r.error));
   MTWAIT = { prev: MT && MT.run.id, t0: Date.now() }; renderPanel('mt');
   toast('The settings on screen are running in the MT5 Strategy Tester (real ticks, no delay). The MT5 section updates when it is done, in about a minute.');

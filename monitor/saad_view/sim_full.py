@@ -222,6 +222,9 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
     """out rows: side, entry_t, entry, sl(final), exit_t, exit, pnl, swap, bucket, nxE, ghost, entry_k15, exit_k15, reason, lots
        reasons: 1 stop 2 next-EMA target 3 close-back 4 day close 5 TP 6 trailing stop 7 breakeven 8 time exit"""
     n1 = t1.shape[0]
+    bar = 900                                                # the candle's length (s): 900 on M15, 60 on the 1-minute data (year1)
+    for z in range(1, min(200, t15.shape[0])):
+        bar = min(bar, t15[z] - t15[z - 1])
     af = 2.0 / (P[0] + 1.0)
     asl = 2.0 / (P[1] + 1.0)
     pip = 0.1
@@ -301,7 +304,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                             nt, pn = _close(out, nt, ps, x, bidask - sd * X[8], tq, k, 4, 1.0)
                             equity += pn; dayPnl += pn
                             if pn < 0:
-                                coolUntil = tq + int(P[85]) * 900
+                                coolUntil = tq + int(P[85]) * bar
                 if gh != 0 and ((cur < gEn) if gh > 0 else (cur + spr > gEn)):
                     gh = 0
             for rep in range(2):
@@ -338,14 +341,14 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                 equity += pn; dayPnl += pn
                                 if fr >= 0.999:
                                     if pn < 0:
-                                        coolUntil = tq + int(P[85]) * 900
+                                        coolUntil = tq + int(P[85]) * bar
                                     continue
                     # broker stop (a trade on the tight $ trail: the minute's whole adverse range counts - MT5 trails tick by tick and a bounce stops it)
                     if ps[x, USD] > 0.5 and s_ != 0 and q > 0 and ((l1[j] <= s_) if sd > 0 else (h1[j] + spr >= s_)) and not (bid <= s_ if sd > 0 else ask >= s_):
                         nt, pn = _close(out, nt, ps, x, s_ - sd * X[9] - sd * X[8], tq, k, 6, 1.0)
                         equity += pn; dayPnl += pn
                         if pn < 0:
-                            coolUntil = tq + int(P[85]) * 900
+                            coolUntil = tq + int(P[85]) * bar
                         continue
                     if s_ != 0 and (bid <= s_ if sd > 0 else ask >= s_):
                         xp = (s_ if (prv > s_ if sd > 0 else prv + spr < s_) else (bid if sd > 0 else ask)) - sd * X[9] - sd * X[8]
@@ -359,7 +362,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                         nt, pn = _close(out, nt, ps, x, xp, tq, k, why, 1.0)
                         equity += pn; dayPnl += pn
                         if pn < 0:
-                            coolUntil = tq + int(P[85]) * 900
+                            coolUntil = tq + int(P[85]) * bar
                         continue
                     # broker take profit
                     btp = ps[x, BTP]
@@ -398,7 +401,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                         equity += pn; dayPnl += pn
                                         if fr >= 0.999:
                                             if pn < 0:
-                                                coolUntil = tq + int(P[85]) * 900
+                                                coolUntil = tq + int(P[85]) * bar
                                             gone = True
                                             break
                                         if pp == 0 and E[E_P1BE] > 0.5 and ((en > s_ + 0.005 and en < bid) if sd > 0 else ((s_ == 0 or en < s_ - 0.005) and en > ask)):
@@ -414,7 +417,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                 nt, pn = _close(out, nt, ps, x, xp - sd * X[8], tq, k, 9, 1.0)
                                 equity += pn; dayPnl += pn
                                 if pn < 0:
-                                    coolUntil = tq + int(P[85]) * 900
+                                    coolUntil = tq + int(P[85]) * bar
                                 continue
                             if r0 > 0:
                                 want = 0.0
@@ -463,7 +466,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                 nt, pn = _close(out, nt, ps, x, xp - sd * X[8], tq, k, 2, 1.0)
                                 equity += pn; dayPnl += pn
                                 if pn < 0:
-                                    coolUntil = tq + int(P[85]) * 900
+                                    coolUntil = tq + int(P[85]) * bar
                         continue
                     # ---- exit mode 0: v1.23's exits
                     moved = bid - en if sd > 0 else en - ask
@@ -471,11 +474,11 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                         want = en + sd * P[82]
                         if moved >= P[81] and ((want > s_ + 0.01) if sd > 0 else (s_ == 0 or want < s_ - 0.01)) and ((want < bid) if sd > 0 else (want > ask)):
                             ps[x, SL] = want; s_ = want
-                    if P[84] > 0 and tq - ps[x, ET] >= P[84] * 900:
+                    if P[84] > 0 and tq - ps[x, ET] >= P[84] * bar:
                         nt, pn = _close(out, nt, ps, x, (bid if sd > 0 else ask) - sd * X[8], tq, k, 8, 1.0)
                         equity += pn; dayPnl += pn
                         if pn < 0:
-                            coolUntil = tq + int(P[85]) * 900
+                            coolUntil = tq + int(P[85]) * bar
                         continue
                     exe = int(ps[x, EXE])
                     a_e = af if exe == 9 else asl
@@ -614,7 +617,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                         nt, pn = _close(out, nt, ps, x, (p_ if sd > 0 else p_ + spr) - sd * X[8], tq, k, 3, 1.0)
                                         equity += pn; dayPnl += pn
                                         if pn < 0:
-                                            coolUntil = tq + int(P[85]) * 900
+                                            coolUntil = tq + int(P[85]) * bar
                                 continue
                             # ---- Exit Lab at the candle close (never on the entry candle's own close, like the EA's close-back)
                             if ps[x, EK] >= i:
@@ -704,7 +707,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                 nt, pn = _close(out, nt, ps, x, (p_ if sd > 0 else p_ + spr) - sd * X[8], tq, k, why, 1.0)
                                 equity += pn; dayPnl += pn
                                 if pn < 0:
-                                    coolUntil = tq + int(P[85]) * 900
+                                    coolUntil = tq + int(P[85]) * bar
                             continue
                         if ps[x, USD] > 0.5:
                             continue
@@ -727,7 +730,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                 nt, pn = _close(out, nt, ps, x, cur - X[8], tq, k, 3, 1.0)
                                 equity += pn; dayPnl += pn
                                 if pn < 0:
-                                    coolUntil = tq + int(P[85]) * 900
+                                    coolUntil = tq + int(P[85]) * bar
                                 continue
                         after = ps[x, EK] < i
                         if _trail_on(P, sd) and after:
@@ -764,7 +767,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                             if (c15[i] < e_ce) if gh > 0 else (c15[i] > e_ce):
                                 gh = 0
                     # countdowns
-                    gap = P[40] > 0.5 and t15[k] - t15[i] > 1350
+                    gap = P[40] > 0.5 and t15[k] - t15[i] > 1.5 * bar
                     if aSide != 0:
                         if gap:
                             aSide = 0

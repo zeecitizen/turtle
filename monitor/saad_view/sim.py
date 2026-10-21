@@ -659,6 +659,27 @@ def pvec_all(inputs):
     return P, bb, bs
 
 
+def build_m1_dataset(src="year", dst="year1"):
+    """Zee 2026-10-22: "test and run the turtle tv tools ... on the 1 minute chart". The 1-minute candles of a dataset as its candles: every
+    tool (tester, Exit Lab, scan, loss cutter, optimizer, Stress Lab) runs the EA's rules on M1 - setups, EMAs, ATR / ADX on 1-minute candles
+    (MT5's iATR / iADX on M1), each minute walked open, low / high, close as before. -> simdata/year1.npz"""
+    D = data(src)
+    t1 = D["t1"].astype(np.int64)
+    o, h, l, c = D["o1"], D["h1"], D["l1"], D["c1"]
+    atr, adx = _atr_adx(o, h, l, c, 14)
+    k1, first, m2c, roll = _timeline(t1, t1)
+    np.savez_compressed(SIMDATA / f"{dst}.npz", t15=t1, hr15=((t1 // 3600) % 24).astype(np.int64), o15=o, h15=h, l15=l, c15=c,
+                        ef=np.zeros(len(t1)), es=np.zeros(len(t1)), adx=adx, atr=atr, t1=t1, o1=o, h1=h, l1=l, c1=c, sp1=D["sp1"], k1=k1,
+                        first1=first, m2c=D["m2c"], roll=roll, events=np.array([], dtype=object))
+    _D.pop(dst, None)
+    return len(t1)
+
+
+def bar_seconds(ds):
+    t = data(ds)["t15"][:200]
+    return int(np.min(np.diff(t))) if len(t) > 1 else 900
+
+
 def adx_for(ds, n):
     D = data(ds)
     if ds == "year" and n == 14:
@@ -684,7 +705,7 @@ def htf_for(ds, minutes, n):
             ends = np.r_[np.where(np.diff(hid) != 0)[0], len(hid) - 1]
             hc = c[ends]
             he = ema(hc, int(n), hc[0])
-            pos = np.searchsorted(ids, (t + 900) // H) - 1          # the HTF bar before the one running when candle i closes
+            pos = np.searchsorted(ids, (t + bar_seconds(ds)) // H) - 1          # the HTF bar before the one running when candle i closes
             hcv = np.where(pos >= 0, hc[np.maximum(pos, 0)], 0.0)
             e1 = np.where(pos >= 0, he[np.maximum(pos, 0)], 0.0)
             e2 = np.where(pos >= 1, he[np.maximum(pos - 1, 0)], 0.0)
@@ -712,7 +733,8 @@ def simulate(inputs, ds="year", chart=False, lab=None, lego=None, **extra):
     hc, h1_, h2_ = htf_for(ds, P[sim_full.F["InpHtfMin"]], P[sim_full.F["InpHtfEma"]])
     dow = ((D["t15"] // 86400 + 4) % 7).astype(np.int64)          # 0 Sunday .. 6 Saturday (MqlDateTime.day_of_week)
     day1 = (D["t1"] // 86400).astype(np.int64)
-    out = np.zeros((8000, 20)); setups = np.zeros((60000, 3)); stats = np.zeros(10)             # 15-19: the Exit Lab's columns (sim_full._close)
+    big = len(D["t15"]) > 150000                                  # the 1-minute data: far more candles, setups and trades
+    out = np.zeros((40000 if big else 8000, 20)); setups = np.zeros((400000 if big else 60000, 3)); stats = np.zeros(10)             # 15-19: the Exit Lab's columns (sim_full._close)
     nt, ns = sim_full.run_full(D["t15"], D["hr15"], dow, D["o15"], D["h15"], D["l15"], D["c15"], ef, es, D["atr"],
                                adx_for(ds, int(P[sim_full.F["InpAdxPeriod"]])), hc, h1_, h2_, D["t1"], D["o1"], D["h1"], D["l1"], D["c1"],
                                D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab if lab is not None else sim_full.lab_from_inputs(inputs)), bb, bs, OS, OL, out, setups, stats)
