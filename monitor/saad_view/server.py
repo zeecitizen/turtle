@@ -421,6 +421,9 @@ def bars_json(ds="year"):
     """The M15 candles of a dataset ('year' = the Blueberry MT5 candles the EA trades on, 'tv' = TradingView's own candles), UTC, with ADX / ATR."""
     if ds not in _BARS:
         D = sim.data(ds)
+        if ds == "m1x":                                    # 4 years of 1-minute candles is too much to draw: the chart shows 2026 (the tools use all of it)
+            i0 = int(np.searchsorted(D["t15"], 1767225600))
+            D = {k: (v[i0:] if k in ("t15", "o15", "h15", "l15", "c15", "adx", "atr") else v) for k, v in D.items()}
         r2 = lambda a: [round(float(x), 2) for x in a]
         _BARS[ds] = json.dumps({"ds": ds, "t": [_utc(x) for x in D["t15"]], "o": r2(D["o15"]), "h": r2(D["h15"]), "l": r2(D["l15"]), "c": r2(D["c15"]),
                                 "adx": r2(D["adx"]), "atr": [round(float(x), 3) for x in D["atr"]],
@@ -620,7 +623,7 @@ def hyp_start(body):
         try:
             if kind == "test":
                 cur = full_inputs(body.get("inputs") or {})
-                ds = body.get("ds") if body.get("ds") in ("year", "m15", "year1") else "year"
+                ds = body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x") else "year"
                 job["result"] = _hyp_test(job, key, idx, cur, ds)
             else:
                 job["result"] = _hyp_feature(job, key, idx, str(body.get("which") or "the hypothesis"))
@@ -650,7 +653,7 @@ def _months(tr):
 def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea", lab=None):
     """ds 'year' (Blueberry MT5 candles) / 'tv' (TradingView's candles); mode 'ea' (v1.27's rules, real spread + swap), 'chart' (the indicator's
     rules, $0.17 spread, no swap), 'chart_blind' (and blind inside the entry candle before Oct 12, like TradingView without 1-minute data)."""
-    ds = ds if ds in ("year", "tv", "m15", "year1") else "year"
+    ds = ds if ds in ("year", "tv", "m15", "year1", "m1x") else "year"
     inp = full_inputs(sets)
     lab = exitlab.clean(lab) if lab else None
     lab = lab if lab and [f for f in lab if f != "pess"] else None
@@ -699,6 +702,9 @@ def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea", lab=
     out["months"] = _months(tr)
     if want_ema:
         ef, es = sim.emas(nf, ns, ds)
+        if ds == "m1x":                                    # the chart shows 2026 only (bars_json): the lines must start where its candles do
+            i0 = int(np.searchsorted(D["t15"], 1767225600))
+            ef, es = ef[i0:], es[i0:]
         out["ef"] = [round(float(x), 3) for x in ef]
         out["es"] = [round(float(x), 3) for x in es]
     return out
@@ -764,17 +770,17 @@ def opt_start(body):
         OPT["o"].stop()
         time.sleep(0.2)
     if body.get("objective") == "ranges":                         # grow the number of 100%-win range boxes
-        o = optimizer.RangeOpt(full_inputs(body.get("start") or {}), ds=body.get("ds") if body.get("ds") in ("year", "m15", "year1") else "year")
+        o = optimizer.RangeOpt(full_inputs(body.get("start") or {}), ds=body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x") else "year")
         OPT["o"] = o
         threading.Thread(target=o.run, daemon=True).start()
         return {"ok": True}
     if body.get("objective") in ("entries", "exits"):            # survey: every entry / exit setting one at a time, all results listed
-        o = optimizer.Survey(full_inputs(body.get("start") or {}), body["objective"], ds=body.get("ds") if body.get("ds") in ("year", "m15", "year1") else "year")
+        o = optimizer.Survey(full_inputs(body.get("start") or {}), body["objective"], ds=body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x") else "year")
         OPT["o"] = o
         threading.Thread(target=o.run, daemon=True).start()
         return {"ok": True}
     o = optimizer.Optimizer(full_inputs(body.get("start") or {}), objective=body.get("objective") or "ret_dd", boxes=bool(body.get("boxes")),
-                            keep_going=bool(body.get("keep")), ds=body.get("ds") if body.get("ds") in ("year", "m15", "year1") else "year")
+                            keep_going=bool(body.get("keep")), ds=body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x") else "year")
     OPT["o"] = o
     threading.Thread(target=opt_run_and_check, args=(o,), daemon=True).start()
     return {"ok": True}
@@ -813,7 +819,7 @@ def lab_start(body):
     if LAB[slot] and LAB[slot].running:
         LAB[slot].stop()
     inputs = full_inputs(body.get("inputs") or {})
-    ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv", "year1") else "year"
+    ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv", "year1", "m1x") else "year"
     kw = {k: body.get(k) for k in ("lab", "sets", "objective", "fx", "fy", "xs", "ys", "focus") if body.get(k) is not None}
     key = json.dumps([inputs, "year" if ds == "tv" else ds], sort_keys=True)
     if action == "search" and LAB["cat"] and LAB["cat"][0] == key:
@@ -920,7 +926,7 @@ def lab_research(body):
     if any(j["running"] and j["kind"] == "research" for j in HJOBS.values()):
         return {"error": "Claude is already researching; wait for it to finish"}
     inputs = full_inputs(body.get("inputs") or {})
-    ds = body.get("ds") if body.get("ds") in ("year", "m15", "year1") else "year"
+    ds = body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x") else "year"
     q = (body.get("question") or "").strip() or "Study my exit and make it better."
     jid = f"r{int(time.time() * 1000)}"
     base_file = RESEARCH.parent / f"research_{jid}_settings.json"
@@ -1005,7 +1011,7 @@ MLJ = {"job": None}
 def ml_start(body):
     if MLJ["job"] and MLJ["job"].running:
         MLJ["job"].stop()
-    ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv", "year1") else "year"
+    ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv", "year1", "m1x") else "year"
     MLJ["job"] = ml.start(full_inputs(body.get("inputs") or {}), ds, [a for a in (body.get("algos") or []) if a in ml.ALGOS], body.get("thr") or 0.5)
     return {"ok": True}
 
@@ -1024,7 +1030,7 @@ def ml_state():
 def lego_test(body):
     inputs = full_inputs(dict(body.get("inputs") or {}, **(body.get("sets") or {})))
     base_in = full_inputs(body.get("inputs") or {})
-    ds = body.get("ds") if body.get("ds") in ("year", "m15", "year1") else "year"
+    ds = body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x") else "year"
     lego = {k: v for k, v in (body.get("lego") or {}).items() if k in ("ma", "loc", "candle", "loc_k", "mom_body", "mom_atr")}
     win, labels = exitlab.window_of(ds, base_in)
     out = {"labels": labels, "ds": ds}
@@ -1043,7 +1049,7 @@ MIS = {"job": None}
 def mission_start(body):
     lab = exitlab.clean(body.get("lab") or {}) if body.get("lab") else None
     lab = lab if lab and [f for f in lab if f != "pess"] else None
-    ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv", "year1") else "year"
+    ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv", "year1", "m1x") else "year"
     MIS["job"] = mission.start(full_inputs(body.get("inputs") or {}), ds, lab, body.get("capital") or 1000, body.get("mode") or "risk", body.get("lots") or 0.01,
                                body.get("risk_pct") or 1, body.get("leverage") or 500, body.get("max_dd") or 20,
                                {k: v for k, v in (body.get("lego") or {}).items() if k in ("ma", "loc", "candle", "loc_k", "mom_body", "mom_atr")} or None)

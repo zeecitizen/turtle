@@ -675,6 +675,26 @@ def build_m1_dataset(src="year", dst="year1"):
     return len(t1)
 
 
+def build_m1x_dataset(m1="C:/Users/zeesh/turtle/data_15min_2015_onwards_xauusd/XAUUSD_M1_202212290100_202610212249.csv", frm="2023.01.01"):
+    """Zee 2026-10-22: "build a 4-year 1-minute option from this file" - Blueberry's M1 export, Jan 2023 -> Oct 21 2026, every 1-minute candle
+    as the EA's candle (the EA on M1; spread per minute from the export, points x 0.01) -> simdata/m1x.npz"""
+    out = []
+    for line in Path(m1).read_text().splitlines()[1:]:
+        f = line.split("\t")
+        if len(f) >= 9 and f[0] >= frm:
+            out.append((_ep(datetime.strptime(f[0] + " " + f[1][:5], "%Y.%m.%d %H:%M")), *[float(x) for x in f[2:6]], max(int(f[8]), 10) * 0.01))
+    M = np.array(sorted(out), dtype=np.float64)
+    t1 = M[:, 0].astype(np.int64)
+    o, h, l, c = M[:, 1], M[:, 2], M[:, 3], M[:, 4]
+    atr, adx = _atr_adx(o, h, l, c, 14)
+    k1, first, m2c, roll = _timeline(t1, t1)
+    np.savez_compressed(SIMDATA / "m1x.npz", t15=t1, hr15=((t1 // 3600) % 24).astype(np.int64), o15=o, h15=h, l15=l, c15=c,
+                        ef=np.zeros(len(t1)), es=np.zeros(len(t1)), adx=adx, atr=atr, t1=t1, o1=o, h1=h, l1=l, c1=c, sp1=M[:, 5], k1=k1,
+                        first1=first, m2c=m2c, roll=roll, events=np.array([], dtype=object))
+    _D.pop("m1x", None)
+    return len(t1)
+
+
 def bar_seconds(ds):
     t = data(ds)["t15"][:200]
     return int(np.min(np.diff(t))) if len(t) > 1 else 900
@@ -733,8 +753,9 @@ def simulate(inputs, ds="year", chart=False, lab=None, lego=None, **extra):
     hc, h1_, h2_ = htf_for(ds, P[sim_full.F["InpHtfMin"]], P[sim_full.F["InpHtfEma"]])
     dow = ((D["t15"] // 86400 + 4) % 7).astype(np.int64)          # 0 Sunday .. 6 Saturday (MqlDateTime.day_of_week)
     day1 = (D["t1"] // 86400).astype(np.int64)
-    big = len(D["t15"]) > 150000                                  # the 1-minute data: far more candles, setups and trades
-    out = np.zeros((40000 if big else 8000, 20)); setups = np.zeros((400000 if big else 60000, 3)); stats = np.zeros(10)             # 15-19: the Exit Lab's columns (sim_full._close)
+    big = len(D["t15"]) > 150000
+    huge = len(D["t15"]) > 600000                                 # 4 years of 1-minute candles                                  # the 1-minute data: far more candles, setups and trades
+    out = np.zeros((160000 if huge else 40000 if big else 8000, 20)); setups = np.zeros((1600000 if huge else 400000 if big else 60000, 3)); stats = np.zeros(10)             # 15-19: the Exit Lab's columns (sim_full._close)
     nt, ns = sim_full.run_full(D["t15"], D["hr15"], dow, D["o15"], D["h15"], D["l15"], D["c15"], ef, es, D["atr"],
                                adx_for(ds, int(P[sim_full.F["InpAdxPeriod"]])), hc, h1_, h2_, D["t1"], D["o1"], D["h1"], D["l1"], D["c1"],
                                D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab if lab is not None else sim_full.lab_from_inputs(inputs)), bb, bs, OS, OL, out, setups, stats)
