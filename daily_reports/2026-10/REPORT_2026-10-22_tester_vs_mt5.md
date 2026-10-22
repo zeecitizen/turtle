@@ -25,13 +25,13 @@ Stop overshoot calibration (MT5 stop-outs +$0.12 median, trailing +$0.05, sd 0.5
 Exact-tick fill at the second's extreme: makes it worse (-265k). Rejected.
 
 ## Open
-1. Entry fill price (the largest piece, -110k). Measurement in progress: MT5 entry vs the tester's aLevel and its second's range.
+1. Entry fill price: done. Calibrated with slip_entry -0.10 (see update below).
 2. Trailing stops: tester -63k against MT5 (on the 15-s version).
-3. Unmatched: 198 remaining.
-4. Turtle TV: to be replaced with the matched tester once the gap closes. Old results stay, marked superseded.
+3. Unmatched: 224 remaining (with the entry offset).
+4. Turtle TV: uses the matched tester by default now. Old results stay, marked superseded. Other saved settings not yet checked against MT5.
 
-## Not committed
-The per-second time base (sim_full.py, sim.py) and the year1_sec / year1_tHL datasets. Keep uncommitted until the entry fills match.
+## Committed (engine)
+`722e81df` the per-second tick time base and the MT5 entry-fill offset (sim_full.py, sim.py). Datasets (year1_sec.npz, year1_tHL.npz) are not in git.
 
 ## Update (later the same session)
 - Entry-price calibration: MT5 fills dip entries a median $0.054/oz (mean $0.118) better than the simulator's level fill (5,802 matched entries). Added `slip_entry = -0.10` as the default in `sim.py` (XDEFAULT). The TradingView chart keeps 0.
