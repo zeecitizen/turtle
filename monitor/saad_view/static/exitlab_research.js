@@ -145,7 +145,8 @@ function leverTips() {                                           // every settin
   let h = `<div class="bar" style="margin-top:8px"><button data-rs="scan" class="dexbtn" ${busy ? 'disabled' : ''}>${busy ? '⏳ SCANNING…' : RS.loss ? '✂️ SCAN FOR LOSS CUTS' : '🔬 SCAN EVERY SETTING'}</button>
     <label class="tog" style="font-size:12px" title="rank the scan's moves by how much they cut your losses while keeping the win rate"><input type="checkbox" id="rsLoss" ${RS.loss ? 'checked' : ''}> ✂️ loss cutter</label>
     <br><label class="tog" style="font-size:12px" title="with the loss cutter off: suggestions that keep or grow avg win / avg loss rank higher, those that shrink it lower"><input type="checkbox" id="rsRatio" ${RS.ratio ? 'checked' : ''}> rank settings that keep a healthy avg win / avg loss ratio higher</label>
-    <label class="tog" style="font-size:12px"><input type="checkbox" id="rsAuto" ${RS.auto !== false ? 'checked' : ''}> scan again after every pick</label></div>`;
+    <label class="tog" style="font-size:12px"><input type="checkbox" id="rsAuto" ${RS.auto !== false ? 'checked' : ''}> scan again after every pick</label></div>
+    <div class="bar" style="margin-top:2px"><label class="tog" style="font-size:12px" title="after each accepted pick, run the exit on the bench in MT5 and show its equity below the tester's"><input type="checkbox" id="rsMt5" ${MT5CFG() ? 'checked' : ''}> after every pick, run it in MT5 to validate the change</label></div>`;
   if (busy) h += `<div class="dexprog"><div class="dexprog-t">${RS.loss ? '✂️ THE LOSS CUTTER IS READING EVERY TRADE AND TESTING EVERY SETTING' : '⚗️ THE LAB IS TESTING EVERY SETTING'} · ${pct}%</div><div class="dexprog-bar"><i style="width:${pct}%"></i></div>
     <div class="dexprog-s">${esc(J.phase || 'warming up the beakers')} · ${J.progress || 0} of ${J.total || '…'} runs · ${J.seconds || 0} s</div></div>`;
   if (W && W.moves && !W.now) return h + '<p class="warn">The scan was stopped before it measured the bench - scan again.</p>';
@@ -220,7 +221,7 @@ function labResearch() {
   if (T) {
     const s = T.stats, b = T.base;
     h += `${stale(T) ? '<p class="warn">⏳ re-running on the settings on screen…</p>' : ''}<div class="dexres">${LABS.quick && LABS.quick.running ? '⏳ running…' : ''} <b class="${cls(s.total - b.total)}">${money(s.total)}</b> vs yours ${money(b.total)} ·
-      WR <b>${s.all.wr}%</b> (yours ${b.all.wr}%) · ${labLabels()[0]} ${money(s.train.net)} · ${labLabels()[1]} ${money(s.test.net)}${s.stuck ? ' · <span class="bad">a trade never closed</span>' : ''}</div>${gauges(T)}${spark(T.trades)}${picksHtml()}`;
+      WR <b>${s.all.wr}%</b> (yours ${b.all.wr}%) · ${labLabels()[0]} ${money(s.train.net)} · ${labLabels()[1]} ${money(s.test.net)}${s.stuck ? ' · <span class="bad">a trade never closed</span>' : ''}</div>${gauges(T)}${spark(T.trades)}${mt5Spark()}${picksHtml()}`;
   }
   h += `</div><div class="levers dexpanel">${SLIDERS.filter((x) => !x.ea || String(CUR.InpSlMode) === '1').map((x) => { const v = x.get();
     return `<label class="lever"><span>${esc(x.label)} <b id="lv_${x.id}">${v}</b>${x.ea ? ' <span class="tag ea">EA</span>' : ''}</span><input type="range" data-lever="${x.id}" min="${x.min}" max="${x.max}" step="${x.step}" value="${v}"></label>`; }).join('')}
@@ -267,6 +268,7 @@ document.addEventListener('input', (e) => {
 document.addEventListener('toggle', (e) => { if (e.target.classList && e.target.classList.contains('lossaut')) RS.autOpen = e.target.open; }, true);
 document.addEventListener('change', (e) => {
   if (e.target.id === 'rsAuto') { RS.auto = e.target.checked; return; }
+  if (e.target.id === 'rsMt5') { try { localStorage.setItem('rsMt5', e.target.checked ? '1' : '0'); } catch (x) {} return; }
   if (e.target.id === 'rsRatio') { RS.ratio = e.target.checked; try { localStorage.setItem('rsRatio', RS.ratio ? '1' : ''); } catch (x) {} RS.animated = null; renderPanel('tt'); return; }
   if (e.target.id === 'rsLoss') {                                 // the loss cutter on: its scan reads every trade first (a plain scan has no autopsy)
     RS.loss = e.target.checked; lcSave();
@@ -301,6 +303,33 @@ function logPick(m, now) {
            sets: m.sets, lab: m.lab, before: now ? { net: now.net, wr: now.wr, n: now.n } : null });
   try { localStorage.setItem('rsPicks', JSON.stringify(L)); } catch (e) {}
 }
+// MT5 check of the exit on the bench (Zee 2026-10-22: "after every pick run with MT5 to validate ... give a graph of MT5 below the graph")
+const MT5CFG = () => { try { return localStorage.getItem('rsMt5') === '1'; } catch (e) { return false; } };
+function mt5Period() { return SRC.ds === 'm5x' ? 'M5' : (SRC.ds === 'year1' || SRC.ds === 'm1x') ? 'M1' : 'M15'; }
+async function runMt5Bench(label) {                                 // the exit on the bench, as EA settings, in the Strategy Tester (real ticks, no delay)
+  const sets = { ...CUR, ...RS.sets, ...labToX({ ...LABS.spec.default, ...labForm() }) };
+  const r = await api('/api/run', { sets, delay: 'none', period: mt5Period(), label: 'Exit Lab: ' + label });
+  if (r.error) { toast('⚠ MT5: ' + esc(r.error)); return; }
+  RS.mt5 = { id: r.id, busy: true, label }; renderPanel('tt');
+  for (;;) {
+    await new Promise((res) => setTimeout(res, 3000));
+    const st = await api('/api/status');
+    if (!st.busy) { if (st.error) { RS.mt5.busy = false; RS.mt5.error = st.error; } else { RS.mt5.run = await api('/api/run?id=' + r.id); RS.mt5.busy = false; } break; }
+  }
+  if (RS.mt5 && RS.mt5.run && RS.picks && RS.picks.length) { const x = RS.picks[RS.picks.length - 1]; x.mt5 = { net: RS.mt5.run.report.net, n: RS.mt5.run.report.trades }; try { localStorage.setItem('rsPicks', JSON.stringify(RS.picks)); } catch (e) {} }
+  renderPanel('tt');
+}
+function mt5Spark() {                                              // MT5's equity curve (the same graph as the tester's)
+  const M = RS.mt5; if (!M) return '';
+  if (M.busy) return `<div class="k" style="margin-top:6px">⏳ MT5 is running "${esc(M.label)}" (about a minute)…</div>`;
+  if (M.error || !M.run) return `<div class="warn">⚠ MT5 check: ${esc(M.error || 'no result')}</div>`;
+  const P = {}; for (const e of M.run.events || []) if (e.type === 'exit') P[e.num] = (P[e.num] || 0) + e.v1;
+  const ex = (M.run.events || []).filter((e) => e.type === 'exit').sort((a, b) => a.t - b.t);
+  const seen = new Set(), trades = [];
+  for (const e of ex) if (!seen.has(e.num)) { seen.add(e.num); trades.push([0, 0, 0, 0, e.t, 0, P[e.num]]); }
+  const rep = M.run.report || {}, s = spark(trades).replace('EQUITY OF THIS EXIT', 'EQUITY IN MT5 (real ticks)');
+  return `<div class="k" style="margin-top:6px">MT5: ${money(rep.net || 0)} · PF ${rep.pf} · ${rep.trades} trades · max drawdown ${esc(rep.dd || '')} · ${esc(M.label)}</div>${s}`;
+}
 function clearPicks() { RS.picks = []; try { localStorage.removeItem('rsPicks'); } catch (e) {} }
 function picksHtml() {
   const L = picksLog();
@@ -317,6 +346,7 @@ function pickMove(i) {
   RS.sets = { ...RS.sets, ...m.sets }; LABS.form = { ...LABS.form, ...m.lab };
   toast(`On the bench: ${esc(m.label)} ${esc(m.from)} → ${esc(m.to)}.` + (RS.auto !== false ? ' Scanning again from here…' : ''));
   labStart('test', { lab: labForm(), sets: RS.sets });
+  if (MT5CFG()) runMt5Bench(`${m.label} ${m.from} → ${m.to}`);
   if (RS.auto !== false) { lcScan(); return; }
   renderPanel('tt');
 }
