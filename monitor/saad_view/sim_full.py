@@ -218,7 +218,7 @@ def _close(out, nt, ps, x, xp, tq, kout, why, lots_frac):
 
 @njit(cache=True)
 def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1, htfe2, t1, o1, h1, l1, c1, sp1, k1, first1, m2c, roll, day1,
-             P, X, E, bandB, bandS, OS, OL, out, setups, stats, hf):
+             P, X, E, bandB, bandS, OS, OL, out, setups, stats, hf, PBf, PAf, PTf, SA, SB):
     """out rows: side, entry_t, entry, sl(final), exit_t, exit, pnl, swap, bucket, nxE, ghost, entry_k15, exit_k15, reason, lots
        reasons: 1 stop 2 next-EMA target 3 close-back 4 day close 5 TP 6 trailing stop 7 breakeven 8 time exit"""
     n1 = t1.shape[0]
@@ -283,11 +283,16 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
         pts[3] = c1[j]
         blind = t1[j] < X[4]
         closed = j == 0 or day1[j] != day1[j - 1]          # the session's first minute: MT5 answers 'market closed'
-        for q in range(4):
-            cur = pts[q]
-            prv = pts[q - 1] if q > 0 else cur
-            tq = t1[j] + q * 15
-            mins_close = (m2c[j] - q * 15) // 60
+        base = 4 * SA[j]                                    # v1.37: the minute's REAL per-second points (4 per second: bid open, first extreme, second extreme, close)
+        nq = 4 * (SB[j] - SA[j])
+        if nq == 0:
+            continue
+        for q in range(nq):
+            cur = PBf[base + q]
+            prv = PBf[base + q - 1] if q > 0 else cur
+            spr = X[2] if X[2] > 0 else (PAf[base + q] - PBf[base + q]) * X[10]
+            tq = PTf[base + q]
+            mins_close = (m2c[j] - (tq - t1[j])) // 60
             if q == 0 and first1[j] == 1:
                 busy0 = gh != 0
                 for x in range(MAXP):
@@ -461,7 +466,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                     xp = (thr if prv > thr else bid) + spr
                             if hit:
                                 if lat > 0:
-                                    p_ = _pt(o1, h1, l1, c1, j, q + lat)
+                                    p_ = PBf[base + min(q + lat, nq - 1)]
                                     xp = p_ if sd > 0 else p_ + spr
                                 nt, pn = _close(out, nt, ps, x, xp - sd * X[8], tq, k, 2, 1.0)
                                 equity += pn; dayPnl += pn
@@ -613,7 +618,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                 if nx < 0 and ps[x, EK] < i:
                                     e_ce = ef[i] if nx == -1 else es[i]
                                     if (c15[i] < e_ce) if sd > 0 else (c15[i] > e_ce):
-                                        p_ = _pt(o1, h1, l1, c1, j, lat) if lat > 0 else cur
+                                        p_ = (PBf[base + min(lat, nq - 1)] if lat > 0 else cur)
                                         nt, pn = _close(out, nt, ps, x, (p_ if sd > 0 else p_ + spr) - sd * X[8], tq, k, 3, 1.0)
                                         equity += pn; dayPnl += pn
                                         if pn < 0:
@@ -703,7 +708,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                             if why == 0 and E[E_FRI] > 0 and dow15[k] == 5 and hr15[k] >= E[E_FRI]:
                                 why = 15
                             if why != 0:
-                                p_ = _pt(o1, h1, l1, c1, j, lat) if lat > 0 else cur
+                                p_ = (PBf[base + min(lat, nq - 1)] if lat > 0 else cur)
                                 nt, pn = _close(out, nt, ps, x, (p_ if sd > 0 else p_ + spr) - sd * X[8], tq, k, why, 1.0)
                                 equity += pn; dayPnl += pn
                                 if pn < 0:
@@ -958,7 +963,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                     if go and side != 0:
                         ts_ = -side if X[6] > 0.5 else side
                         if lat > 0:
-                            be = _pt(o1, h1, l1, c1, j, q + lat)
+                            be = PBf[base + min(q + lat, nq - 1)]
                         e_ = (be + spr if ts_ > 0 else be) + ts_ * X[7]
                         a_ = atr[k - 1]
                         if P[91] == 2 and sl_e != 0.0 and X[6] < 0.5:
