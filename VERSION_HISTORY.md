@@ -16,6 +16,24 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.35 (2026-10-22) — a refused order is never silent
+
+Ordered by Zee in the session, after the tester-vs-MT5 audit (approval to proceed with the EA update and version bump). The audit found
+that the MT5 run r20261022_091133 (2026, M1, 100,000 deposit, 2 lots, all daily limits off) took 19,360 setups but only 1,844 entries. Its journal: from 19 Mar
+2026 09:04 the account had no free margin (balance 2,050.10, FreeMargin -200.18 on 20 Mar) and every `market sell 2 XAUUSD_BB` failed "not enough money". The
+EA's `if (!ok) return;` after `trade.Buy`/`trade.Sell` dropped those orders without a word, so the setups kept logging while no trade was placed.
+
+**The change:** on a refused order, print `[ORDER REJECTED] symbol side lots | Retcode | Comment | Free margin` (always, not behind the log switch) and return.
+Trading is identical to v1.34: no entry rule, stop, target or size changed.
+
+**Why it matters:** a tester run that cannot place orders looks alive in the journal (setups, skips and busy counters keep counting). Without this line the
+failure reads as "the rules found nothing". The tester has no margin model and kept trading through the same period, so the two engines disagreed for a reason
+no counter showed.
+
+**Compiled** on rig `C:\mt5_rig_axi7` 2026-10-22 09:18, 0 errors, 0 warnings. Not attached to any account. Commit not yet made.
+
+---
+
 ## Saad_strategy_15min v1.34 (2026-10-22) — InpXEntryWait: act like the tester in the entry minute
 
 Zee, checking his 1-minute Exit Lab exit: *"i think instead of changing the tester you can change the EA to fix the EA to respond just like the tester"*. New

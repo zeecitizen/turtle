@@ -34,7 +34,7 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.34"
+#property version   "1.35"
 #property strict
 
 #include <Trade/Trade.mqh>
@@ -1219,7 +1219,11 @@ void DoEntry(int side, double sl, bool ghost = false)
    if (lots <= 0) { DSkip(side, "even the minimum lot risks too much of this account"); return; }
    bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, EA_COMMENT + " BUY")
                       : trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), EA_COMMENT + " SELL");
-   if (!ok) return;
+   if (!ok) {        // v1.35: a refused order is never silent (the account ran out of margin in the tester and nothing said so)
+      PrintFormat("[ORDER REJECTED] %s %s %.2f lots | Retcode: %d | Comment: %s | Free margin: %.2f",
+                  _Symbol, side > 0 ? "BUY" : "SELL", lots, trade.ResultRetcode(), trade.ResultComment(), AccountInfoDouble(ACCOUNT_MARGIN_FREE));
+      return;
+   }
    ulong t = trade.ResultOrder();
    ulong deal = trade.ResultDeal();
    if (deal > 0 && HistoryDealSelect(deal)) t = (ulong)HistoryDealGetInteger(deal, DEAL_POSITION_ID);
