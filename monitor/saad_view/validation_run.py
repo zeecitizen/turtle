@@ -35,8 +35,11 @@ def main():
     for m in mv:                                   # the first suggestion of each setting (the one the scan would offer)
         if m["key"] in seen: continue
         seen.add(m["key"]); picks.append(m)
-    res = []
+    import os
+    res = json.load(open(OUT))["rows"] if os.path.exists(OUT) else []     # resume: a stopped batch continues where it left off
+    done = {x["key"] for x in res}
     for i, m in enumerate(picks[:limit]):
+        if m["key"] in done: continue
         s = dict(base, **m["sets"], **m["xs"])
         tr, _, _ = sim.simulate(s, ds="year1"); r = tr[tr[:, 10] == 0]
         tn, tp = int(len(r)), round(float(r[:, 6].sum()))
