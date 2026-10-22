@@ -18,7 +18,16 @@ function pValidation() {
     <div class="gauges">${valDial('VALIDATED', ok, 'g-up')}${valDial('DIFFERS', bad, bad ? 'g-dn' : '')}${valDial('TESTED', rows.length, '')}${valDial('OF', D.of || 0, '')}</div>`;
   if (running) h += `<div class="dexprog"><div class="dexprog-t">⚗️ TESTING EVERY SUGGESTED SETTING IN MT5 · ${D.count} of ${D.of}</div><div class="dexprog-bar"><i style="width:${Math.round(100 * D.count / Math.max(1, D.of))}%"></i></div><div class="dexprog-s">invisible rig · this page refreshes as results arrive</div></div>`;
   h += `<div class="bar"><button id="valRefresh" class="dexbtn sm">refresh</button></div>`;
-  h += rows.map((x) => {
+  const L = D.loss || { rows: [], count: 0, of: 0 };
+  h += `<h3 style="margin-top:14px">✂️ THE LOSS CUTTER'S SUGGESTIONS · VALIDATED IN MT5</h3>
+    <p class="note">The loss cutter's own top suggestions for the primary save, run the same way (tester and MT5, 2026, 1-minute).
+    ${L.count} of ${L.of || 0} tested.</p>` + valRows(L.rows || [], C);
+  h += `<h3 style="margin-top:14px">🧠 EXIT RESEARCH LAB'S SCAN · EVERY SUGGESTED SETTING</h3>`;
+  h += valRows(rows, C);
+  return h + '</div>';
+}
+function valRows(rows, C) {
+  return rows.map((x) => {
     const col = x.match ? '#00e676' : '#ff5252', mt = x.mt5 || {}, te = x.tester || {};
     return `<div class="sltest" style="--lamp:${col}"><div class="slhead" style="cursor:default"><span class="lamp"></span><b>${esc(x.label)}</b>
       <span class="sltag">${x.match ? 'MT5 MATCHES' : 'MT5 DIFFERS'}</span></div>
@@ -27,8 +36,7 @@ function pValidation() {
       <div>tester: <b>${te.trades}</b> trades · <b class="${cls(te.net)}">${money(te.net)}</b></div>
       <div>MT5: <b>${mt.trades ?? '–'}</b> trades · <b class="${cls(mt.net || 0)}">${mt.net == null ? 'no result' : money(mt.net)}</b></div>
       <div class="k">last run ${esc(x.at || '')}${mt.run ? ' · MT5 report ' + esc(mt.run) : ''}</div></div></div>`;
-  }).join('') || '<p class="note">No validation yet: run validation_run.py.</p>';
-  return h + '</div>';
+  }).join('') || '<p class="note">No results yet.</p>';
 }
 function valDial(lbl, val, cls2) {
   return `<div class="gauge slg ${cls2}"><div class="acid"><b></b><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="gv">${val}</div><div class="gl">${lbl}</div></div>`;

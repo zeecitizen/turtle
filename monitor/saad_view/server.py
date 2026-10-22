@@ -1141,6 +1141,8 @@ class H(BaseHTTPRequestHandler):
             VF = HERE / "simdata" / "validation.json"
             data = json.loads(VF.read_text(encoding="utf-8")) if VF.exists() else {"rows": [], "count": 0, "of": 0}
             data["comments"] = {x["name"]: x["comment"] for x in ea_inputs()["inputs"]}
+            LF = HERE / "simdata" / "validation_loss.json"
+            data["loss"] = json.loads(LF.read_text(encoding="utf-8")) if LF.exists() else {"rows": [], "count": 0, "of": 0}
             return self.send(200, data)
         if u.path == "/api/primary":                     # the primary save's name, kept on the server so every browser starts from it
             return self.send(200, {"name": PRIMARY.read_text(encoding="utf-8").strip() if PRIMARY.exists() else None})
