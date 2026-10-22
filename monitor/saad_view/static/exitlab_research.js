@@ -311,7 +311,7 @@ async function runMt5Bench(label) {                                 // the exit 
   const r = await api('/api/run', { sets, delay: 'none', period: mt5Period(), label: 'Exit Lab: ' + label });
   if (r.error) { toast('⚠ MT5: ' + esc(r.error)); return; }
   const T = LABS.test && LABS.test.stats ? LABS.test : null;
-  RS.mt5 = { id: r.id, busy: true, label, t0: Date.now(), tester: T ? { net: T.stats.total, n: T.stats.all.n, wr: T.stats.all.wr, pf: T.stats.all.pf } : null };
+  RS.mt5 = { id: r.id, busy: true, label, t0: Date.now(), tester: T ? { net: T.stats.total, n: T.stats.all.n, wr: T.stats.all.wr, pf: T.stats.all.pf, dd: T.stats.all.dd, avg_win: T.stats.all.avg_win, avg_loss: T.stats.all.avg_loss } : null };
   renderPanel('tt');
   for (;;) {
     await new Promise((res) => setTimeout(res, 3000));
@@ -332,6 +332,28 @@ function mt5Verdict(M) {
     <div>MT5 <b>${money(mt)}</b> · ${rep.trades} trades · WR ${M.run.events ? '' : ''}${rep.pf ? 'PF ' + rep.pf : ''} · max drawdown ${esc(rep.dd || '')}</div>
     <div class="k">${close ? 'the change holds in MT5: the result shown in the circles above is what MT5 agrees with.' : 'the change does not hold in MT5 as the tester shows it - treat the circles above as a hypothesis.'}</div></div>`;
 }
+// the MT5 circles: the same graphics as the tester's, each MT5 number against the tester's
+function mt5Gauges(M) {
+  const rep = M.run.report || {}, te = M.tester;
+  const P = {}; for (const e of M.run.events || []) if (e.type === 'exit') P[e.num] = (P[e.num] || 0) + e.v1;
+  const v = Object.values(P), w = v.filter((x) => x > 0), lo = v.filter((x) => x <= 0);
+  const aw = w.length ? w.reduce((a, b) => a + b, 0) / w.length : 0, al = lo.length ? lo.reduce((a, b) => a + b, 0) / lo.length : 0;
+  const wr = v.length ? 100 * w.length / v.length : 0, net = Number(rep.net || 0), pf = Number(rep.pf || 0), n = Number(rep.trades || v.length);
+  const dd = parseFloat(String(rep.dd || '0').replace(/\s/g, '').split('(')[0]) || 0;
+  const dial = (lbl, val, now, base, good, fmt) => {
+    if (base == null) return `<div class="gauge"><div class="acid"><b></b><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="gv">${val}</div><div class="gl">${lbl}</div></div>`;
+    const d = now - base, up = good === 'up' ? d > 0 : d < 0, same = Math.abs(d) < 1e-9;
+    return `<div class="gauge ${same ? '' : up ? 'g-up' : 'g-dn'}"><div class="acid"><b></b><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="gv">${val}</div><div class="gl">${lbl}</div><div class="gd">${same ? 'same as the tester' : (d > 0 ? '▲ ' : '▼ ') + fmt(Math.abs(d))}</div></div>`;
+  };
+  const b = te || {};
+  return `<div class="crt" style="margin:8px 0 2px"><div class="crth">MT5 TESTED RESULTS</div><div class="k">each circle: MT5 against the tester's number for the same exit</div></div><div class="gauges">` +
+    dial('WIN RATE', wr.toFixed(1) + '%', wr, b.wr, 'up', (x) => x.toFixed(1) + ' pts') +
+    dial('PROFIT FACTOR', pf.toFixed(2), pf, b.pf, 'up', (x) => x.toFixed(2)) +
+    dial('NET', money(net), net, b.net, 'up', (x) => '$' + Math.round(x).toLocaleString()) +
+    dial('MAX DRAWDOWN', money(-dd), dd, b.dd, 'down', (x) => '$' + Math.round(x).toLocaleString()) +
+    dial('TRADES', n, n, b.n, 'up', (x) => String(Math.round(x))) +
+    dial('AVG WIN / LOSS', `${money(aw)}<br>${money(al)}`, aw / Math.max(1, -al), b.avg_win != null ? b.avg_win / Math.max(1, -b.avg_loss) : null, 'up', (x) => x.toFixed(2) + '× ratio') + '</div>';
+}
 function mt5Spark() {                                              // MT5's equity curve (the same graph as the tester's)
   const M = RS.mt5; if (!M) return '';
   if (M.busy) {
@@ -340,7 +362,7 @@ function mt5Spark() {                                              // MT5's equi
       <div class="dexprog-bar"><i></i></div><div class="dexprog-s">real ticks, no delay · ${s} s · the verdict appears here when MT5 is done</div></div>`;
   }
   if (M.error || !M.run) return `<div class="warn">⚠ MT5 check: ${esc(M.error || 'no result')}</div>`;
-  const verdict = mt5Verdict(M);
+  const verdict = mt5Verdict(M) + mt5Gauges(M);
   const P = {}; for (const e of M.run.events || []) if (e.type === 'exit') P[e.num] = (P[e.num] || 0) + e.v1;
   const ex = (M.run.events || []).filter((e) => e.type === 'exit').sort((a, b) => a.t - b.t);
   const seen = new Set(), trades = [];
