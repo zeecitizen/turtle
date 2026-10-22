@@ -201,6 +201,8 @@
   .lossfact .li { font-size: 20px; flex: 0 0 26px; text-align: center; } .lossfact b { color: #ffd740; }
   .lossctl { font-size: 12px; color: #b0bec5; flex-wrap: wrap; gap: 6px; } .lossctl select { font-size: 12px; }
   .lwhy { color: #ffcc80 !important; }
+  .mt5wait .dexprog-bar i { display: block; width: 30%; height: 100%; animation: mt5sweep 1.4s linear infinite; }
+  @keyframes mt5sweep { 0% { margin-left: -30%; } 100% { margin-left: 100%; } }
   .lossblock { margin: 12px 0 4px; max-width: 1240px; } .lossblock .sugdeal { flex-basis: 230px; }
   .lossblock .lossaut table { width: auto; max-width: 100%; }
   .sltest { border: 2px solid var(--lamp); border-radius: 12px; margin: 6px 0; background: #0f2742; box-shadow: 0 3px 0 #111; overflow: hidden; }
@@ -247,7 +249,7 @@
     <div class="sh"><b>EA settings</b> <span class="k" id="simMs"></span><span style="flex:1"></span>
       <button id="btnReset" title="Back to the EA's defaults (v1.27)">v1.27</button>
       <div style="display:flex;flex-direction:column;gap:6px;width:100%">
-        <select id="srcDs" title="The candles the Turtle TV Tester runs on"><option value="year">Blueberry MT5 candles · whole year</option><option value="tv">TradingView's candles · Aug 3 →</option><option value="m15">Blueberry 2023 → now · with 1-min candles</option><option value="year1">Blueberry 2026 · 1-MINUTE candles (EA on M1)</option><option value="m1x">Blueberry 2023 → now · 1-MINUTE candles (EA on M1, 4 years)</option></select>
+        <select id="srcDs" title="The candles the Turtle TV Tester runs on"><option value="year">2026 · 15-minute · Blueberry MT5 candles (whole year)</option><option value="tv">Aug–Oct 2026 · 15-minute · TradingView's candles</option><option value="m15">2023–2026 · 15-minute · Blueberry (1-min inside each candle)</option><option value="year1">2026 · 1-minute · Blueberry (EA on M1)</option><option value="m5x">2023–2026 · 5-minute · Blueberry (EA on M5, 4 years)</option><option value="m1x">2023–2026 · 1-minute · Blueberry (EA on M1, 4 years)</option></select>
         <select id="srcMode" title="Whose rules"><option value="ea">v1.27 EA rules</option><option value="chart">the chart's rules</option><option value="chart_blind">TradingView's way (= its panel)</option></select>
       </div></div>
     <div id="form"></div>

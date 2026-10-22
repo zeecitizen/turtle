@@ -310,7 +310,9 @@ async function runMt5Bench(label) {                                 // the exit 
   const sets = { ...CUR, ...RS.sets, ...labToX({ ...LABS.spec.default, ...labForm() }) };
   const r = await api('/api/run', { sets, delay: 'none', period: mt5Period(), label: 'Exit Lab: ' + label });
   if (r.error) { toast('⚠ MT5: ' + esc(r.error)); return; }
-  RS.mt5 = { id: r.id, busy: true, label }; renderPanel('tt');
+  const T = LABS.test && LABS.test.stats ? LABS.test : null;
+  RS.mt5 = { id: r.id, busy: true, label, t0: Date.now(), tester: T ? { net: T.stats.total, n: T.stats.all.n, wr: T.stats.all.wr, pf: T.stats.all.pf } : null };
+  renderPanel('tt');
   for (;;) {
     await new Promise((res) => setTimeout(res, 3000));
     const st = await api('/api/status');
@@ -319,16 +321,32 @@ async function runMt5Bench(label) {                                 // the exit 
   if (RS.mt5 && RS.mt5.run && RS.picks && RS.picks.length) { const x = RS.picks[RS.picks.length - 1]; x.mt5 = { net: RS.mt5.run.report.net, n: RS.mt5.run.report.trades }; try { localStorage.setItem('rsPicks', JSON.stringify(RS.picks)); } catch (e) {} }
   renderPanel('tt');
 }
+// the verdict: MT5 against the tester, on the same exit (within a quarter of the tester's net = validated)
+function mt5Verdict(M) {
+  const rep = M.run.report || {}, mt = Number(rep.net || 0), te = M.tester;
+  if (!te) return `<div class="crt" style="margin:6px 0"><div class="crth">✓ MT5 RESULT</div><div>MT5: ${money(mt)} · ${rep.trades} trades (no tester result to compare: press Test this exit first)</div></div>`;
+  const close = Math.abs(mt - te.net) <= 0.25 * Math.max(1, Math.abs(te.net)) && Math.sign(mt) === Math.sign(te.net);
+  const head = close ? '✅ SETTING VALIDATED IN MT5' : '⚠ MT5 DISAGREES WITH THE TESTER';
+  return `<div class="crt" style="margin:6px 0;border-color:${close ? '#00e676' : '#ff5252'}"><div class="crth">${head}</div>
+    <div>tester ${money(te.net)} · ${te.n} trades · WR ${te.wr}% · PF ${te.pf}</div>
+    <div>MT5 <b>${money(mt)}</b> · ${rep.trades} trades · WR ${M.run.events ? '' : ''}${rep.pf ? 'PF ' + rep.pf : ''} · max drawdown ${esc(rep.dd || '')}</div>
+    <div class="k">${close ? 'the change holds in MT5: the result shown in the circles above is what MT5 agrees with.' : 'the change does not hold in MT5 as the tester shows it - treat the circles above as a hypothesis.'}</div></div>`;
+}
 function mt5Spark() {                                              // MT5's equity curve (the same graph as the tester's)
   const M = RS.mt5; if (!M) return '';
-  if (M.busy) return `<div class="k" style="margin-top:6px">⏳ MT5 is running "${esc(M.label)}" (about a minute)…</div>`;
+  if (M.busy) {
+    const s = Math.round((Date.now() - (M.t0 || Date.now())) / 1000);
+    return `<div class="dexprog mt5wait" style="margin-top:6px"><div class="dexprog-t">⚗️ TESTING IN MT5 · ${esc(M.label)}</div>
+      <div class="dexprog-bar"><i></i></div><div class="dexprog-s">real ticks, no delay · ${s} s · the verdict appears here when MT5 is done</div></div>`;
+  }
   if (M.error || !M.run) return `<div class="warn">⚠ MT5 check: ${esc(M.error || 'no result')}</div>`;
+  const verdict = mt5Verdict(M);
   const P = {}; for (const e of M.run.events || []) if (e.type === 'exit') P[e.num] = (P[e.num] || 0) + e.v1;
   const ex = (M.run.events || []).filter((e) => e.type === 'exit').sort((a, b) => a.t - b.t);
   const seen = new Set(), trades = [];
   for (const e of ex) if (!seen.has(e.num)) { seen.add(e.num); trades.push([0, 0, 0, 0, e.t, 0, P[e.num]]); }
   const rep = M.run.report || {}, s = spark(trades).replace('EQUITY OF THIS EXIT', 'EQUITY IN MT5 (real ticks)');
-  return `<div class="k" style="margin-top:6px">MT5: ${money(rep.net || 0)} · PF ${rep.pf} · ${rep.trades} trades · max drawdown ${esc(rep.dd || '')} · ${esc(M.label)}</div>${s}`;
+  return `${verdict}${s}`;
 }
 function clearPicks() { RS.picks = []; try { localStorage.removeItem('rsPicks'); } catch (e) {} }
 function picksHtml() {
