@@ -148,8 +148,6 @@ def moves(base_in, labfull, trust=None):
         for v in _values(spec, base_in[k]):
             if k == "InpMaxSpreadPts" and 0 < _f(v) < SPREAD_FLOOR:
                 continue                                                # the broker never meets it: no trades live
-            if k == "InpWickMin" and 1 - _f(base_in.get("InpBodyMax")) - _f(base_in.get("InpNoseMax")) >= _f(v):
-                continue                                                # a pin's lower wick is already at least 1 - body - nose: this value changes nothing
             if not _valid(dict(base_in, **{k: v})):
                 continue
             out.append({"group": GROUP[k], "key": k, "label": k[3:], "from": str(base_in[k]), "to": v, "sets": {k: v}, "lab": {}, "xs": {},
