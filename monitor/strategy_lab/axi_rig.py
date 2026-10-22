@@ -23,7 +23,7 @@ def _quiet():
     """Start a rig's MetaEditor / terminal minimised and without taking the focus (the year view starts 6 at once)."""
     si = subprocess.STARTUPINFO()
     si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-    si.wShowWindow = 7            # SW_SHOWMINNOACTIVE
+    si.wShowWindow = 0            # SW_HIDE: the rig's terminal runs with no window at all (a separate install, never the live one)
     return si
 
 

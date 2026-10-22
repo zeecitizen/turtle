@@ -98,12 +98,20 @@ def write_ini(path, section, **kw):
     path.write_text("\n".join(lines) + "\n", encoding="utf-16")
 
 
+def hidden_si():
+    """SW_HIDE: the tester's terminal gets no window, no taskbar button, no focus."""
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    si.wShowWindow = 0
+    return si
+
+
 def run(ini, timeout=1800, label=""):
     t0 = time.time()
-    print(f"[headless] {label} starting…", flush=True)
+    print(f"[headless] {label} starting (invisible)…", flush=True)
     try:
         subprocess.run([str(TEST_EXE), "/portable", f"/config:{ini}"], timeout=timeout,
-                       capture_output=True)
+                       capture_output=True, startupinfo=hidden_si())
     except subprocess.TimeoutExpired:
         print(f"[headless] {label} exceeded {timeout}s — killing")
         subprocess.run(["powershell", "-NoProfile", "-Command",
