@@ -220,7 +220,7 @@ function labResearch() {
   if (T) {
     const s = T.stats, b = T.base;
     h += `${stale(T) ? '<p class="warn">⏳ re-running on the settings on screen…</p>' : ''}<div class="dexres">${LABS.quick && LABS.quick.running ? '⏳ running…' : ''} <b class="${cls(s.total - b.total)}">${money(s.total)}</b> vs yours ${money(b.total)} ·
-      WR <b>${s.all.wr}%</b> (yours ${b.all.wr}%) · ${labLabels()[0]} ${money(s.train.net)} · ${labLabels()[1]} ${money(s.test.net)}${s.stuck ? ' · <span class="bad">a trade never closed</span>' : ''}</div>${gauges(T)}${spark(T.trades)}`;
+      WR <b>${s.all.wr}%</b> (yours ${b.all.wr}%) · ${labLabels()[0]} ${money(s.train.net)} · ${labLabels()[1]} ${money(s.test.net)}${s.stuck ? ' · <span class="bad">a trade never closed</span>' : ''}</div>${gauges(T)}${spark(T.trades)}${picksHtml()}`;
   }
   h += `</div><div class="levers dexpanel">${SLIDERS.filter((x) => !x.ea || String(CUR.InpSlMode) === '1').map((x) => { const v = x.get();
     return `<label class="lever"><span>${esc(x.label)} <b id="lv_${x.id}">${v}</b>${x.ea ? ' <span class="tag ea">EA</span>' : ''}</span><input type="range" data-lever="${x.id}" min="${x.min}" max="${x.max}" step="${x.step}" value="${v}"></label>`; }).join('')}
@@ -293,9 +293,26 @@ function rsFav() {                                                 // the kind p
   const T = rsTaste(), k = Object.keys(T).sort((a, b) => T[b] - T[a])[0];
   return T[k] >= 2 ? k : null;
 }
+// the log of accepted changes (Zee 2026-10-22: "keep a log of those changes ... so we know which settings i applied to achieve the final result")
+function picksLog() { if (!RS.picks) { try { RS.picks = JSON.parse(localStorage.getItem('rsPicks') || '[]'); } catch (e) { RS.picks = []; } } return RS.picks; }
+function logPick(m, now) {
+  const L = picksLog();
+  L.push({ at: new Date().toISOString().slice(0, 16).replace('T', ' '), group: m.group, label: m.label, from: String(m.from), to: String(m.to),
+           sets: m.sets, lab: m.lab, before: now ? { net: now.net, wr: now.wr, n: now.n } : null });
+  try { localStorage.setItem('rsPicks', JSON.stringify(L)); } catch (e) {}
+}
+function clearPicks() { RS.picks = []; try { localStorage.removeItem('rsPicks'); } catch (e) {} }
+function picksHtml() {
+  const L = picksLog();
+  if (!L.length) return '';
+  return `<div class="picks" style="margin-top:6px;font-size:12px;background:#0b1d33;border:2px solid #37474f;border-radius:10px;padding:6px 10px">
+    <b>Changes applied to reach this exit</b> (${L.length}) <button data-rs="clearpicks" class="dexbtn sm" style="margin-left:8px">clear log</button>
+    <ol style="margin:4px 0 0 18px;padding:0">${L.map((x) => `<li>${esc(x.at)} · <b>${esc(x.label)}</b> ${esc(x.from)} → <b>${esc(x.to)}</b>${x.before ? ` <span class="k">(before: ${money(x.before.net)} · WR ${x.before.wr}% · ${x.before.n} trades)</span>` : ''}</li>`).join('')}</ol></div>`;
+}
 function pickMove(i) {
   if (!(LABS.sweep && LABS.sweep.moves && LABS.sweep.moves[i])) return;
   const m = LABS.sweep.moves[i];
+  logPick(m, LABS.sweep.now ? { net: LABS.sweep.now.net, wr: LABS.sweep.now.wr, n: LABS.sweep.now.n } : null);
   if (!RS.loss && m.kind) { const T = rsTaste(); T[m.kind] = (T[m.kind] || 0) + 1; try { localStorage.setItem('rsTaste', JSON.stringify(T)); } catch (e) {} }   // loss cuts are not a win-rate / PF / money taste
   RS.sets = { ...RS.sets, ...m.sets }; LABS.form = { ...LABS.form, ...m.lab };
   toast(`On the bench: ${esc(m.label)} ${esc(m.from)} → ${esc(m.to)}.` + (RS.auto !== false ? ' Scanning again from here…' : ''));
@@ -307,6 +324,7 @@ document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
   if (d.rs === 'save') saveExit();
   if (d.rs === 'scan') lcScan();
+  if (d.rs === 'clearpicks') { clearPicks(); renderPanel('tt'); }
   if (d.rs === 'untaste') { e.preventDefault(); RS.taste = { wr: 0, pf: 0, net: 0 }; try { localStorage.removeItem('rsTaste'); } catch (x) {} renderPanel('tt'); }
   if (d.rs === 'all') { RS.all = !RS.all; renderPanel('tt'); }
   if (d.rs === 'reset') { RS.sets = {}; const x = labFromX(CUR); LABS.form = { ...LABS.spec.default, ...(x || {}) }; labStart('test', { lab: labForm() }); }
