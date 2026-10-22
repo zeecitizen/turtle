@@ -132,6 +132,11 @@ def lab_sets(labfull):
     return out
 
 
+# the broker's real gold spread (Blueberry ticks, 2026): 10th percentile 14 points, median 19. A spread limit below this never lets an EA trade
+# live (the tester's clamped export spread did, which is how a limit of 10 looked great and took no trades in MT5)
+SPREAD_FLOOR = 15
+
+
 def moves(base_in, labfull, trust=None):
     """every move from the bench: {group, key, label, from, to, sets (EA settings for the page), lab (the bench form for the page), xs (InpX for the run), trust}"""
     import exitlab
@@ -141,6 +146,8 @@ def moves(base_in, labfull, trust=None):
         if k not in base_in or not _relevant(k, base_in):
             continue
         for v in _values(spec, base_in[k]):
+            if k == "InpMaxSpreadPts" and 0 < _f(v) < SPREAD_FLOOR:
+                continue                                                # the broker never meets it: no trades live
             if not _valid(dict(base_in, **{k: v})):
                 continue
             out.append({"group": GROUP[k], "key": k, "label": k[3:], "from": str(base_in[k]), "to": v, "sets": {k: v}, "lab": {}, "xs": {},
