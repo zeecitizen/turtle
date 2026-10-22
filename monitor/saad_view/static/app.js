@@ -598,6 +598,8 @@ function renderPanel(sec) {
   if (sec === 'tt' && TAB.tt === 'lego') { el.innerHTML = pLego(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'mission') { el.innerHTML = pMission(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'stress') { el.innerHTML = pStress(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'validation') { el.innerHTML = pValidation(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'validation') { el.innerHTML = pValidation(); back(); return; }
   if (sec === 'mt' && MTWAIT) { el.innerHTML = `<div class="dexprog"><div class="dexprog-t">⏳ MT5 IS RUNNING THE SETTINGS ON SCREEN</div><div class="dexprog-bar"><i style="width:${Math.min(95, 3 + (Date.now() - MTWAIT.t0) / 900)}%"></i></div>
     <div class="dexprog-s">${esc(MTWAIT.phase || 'starting')} · the result replaces this when it lands (about a minute)</div></div>`; return; }
   if (!D) { el.innerHTML = `<p class="note">${sec === 'mt' ? 'No MT5 run yet. Press "Check in MT5" to run the settings on screen in the Strategy Tester (about a minute).' : 'Loading…'}</p>`; return; }
