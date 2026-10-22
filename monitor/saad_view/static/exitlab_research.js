@@ -327,10 +327,14 @@ function mt5Verdict(M) {
   if (!te) return `<div class="crt" style="margin:6px 0"><div class="crth">✓ MT5 RESULT</div><div>MT5: ${money(mt)} · ${rep.trades} trades (no tester result to compare: press Test this exit first)</div></div>`;
   const close = Math.abs(mt - te.net) <= 0.25 * Math.max(1, Math.abs(te.net)) && Math.sign(mt) === Math.sign(te.net);
   const head = close ? '✅ SETTING VALIDATED IN MT5' : '⚠ MT5 DISAGREES WITH THE TESTER';
+  const P = {}; for (const e of M.run.events || []) if (e.type === 'exit') P[e.num] = (P[e.num] || 0) + e.v1;
+  const v = Object.values(P), wr = v.length ? (100 * v.filter((x) => x > 0).length / v.length).toFixed(1) : '–';
+  const pick = (RS.picks || [])[RS.picks.length - 1];
+  const report = close ? '' : `<div style="margin-top:6px">Setting didn't result in the expected change in MT5. <button data-rs="report" class="dexbtn sm">Report to Claude to find out why</button></div>`;
   return `<div class="crt" style="margin:6px 0;border-color:${close ? '#00e676' : '#ff5252'}"><div class="crth">${head}</div>
     <div>tester ${money(te.net)} · ${te.n} trades · WR ${te.wr}% · PF ${te.pf}</div>
-    <div>MT5 <b>${money(mt)}</b> · ${rep.trades} trades · WR ${M.run.events ? '' : ''}${rep.pf ? 'PF ' + rep.pf : ''} · max drawdown ${esc(rep.dd || '')}</div>
-    <div class="k">${close ? 'the change holds in MT5: the result shown in the circles above is what MT5 agrees with.' : 'the change does not hold in MT5 as the tester shows it - treat the circles above as a hypothesis.'}</div></div>`;
+    <div>MT5 <b>${money(mt)}</b> · ${rep.trades} trades · WR ${wr}% · PF ${rep.pf || '–'} · max drawdown ${esc(rep.dd || '')}</div>
+    <div class="k">${close ? 'the change holds in MT5: the result shown in the circles above is what MT5 agrees with.' : 'the change does not hold in MT5 as the tester shows it - treat the circles above as a hypothesis.'}</div>${report}</div>`;
 }
 // the MT5 circles: the same graphics as the tester's, each MT5 number against the tester's
 function mt5Gauges(M) {
@@ -395,6 +399,14 @@ document.addEventListener('click', async (e) => {
   if (d.rs === 'save') saveExit();
   if (d.rs === 'scan') lcScan();
   if (d.rs === 'clearpicks') { clearPicks(); renderPanel('tt'); }
+  if (d.rs === 'report' && RS.mt5 && RS.mt5.run) {                  // hand the disagreement to Claude's research (the same job as "Research it")
+    const M = RS.mt5, te = M.tester || {}, rep = M.run.report || {}, last = (RS.picks || []).slice(-1)[0] || {};
+    RS.q = `My Exit Lab pick "${last.label || M.label}" (${last.from || ''} -> ${last.to || ''}) was tested in the Turtle TV Tester and in MT5 on the same exit. ` +
+      `The tester said ${money(te.net || 0)} with ${te.n} trades, win rate ${te.wr}%, PF ${te.pf}. MT5 said ${money(Number(rep.net || 0))} with ${rep.trades} trades and PF ${rep.pf}, ` +
+      `so the change did not result in the expected change. Find out why: which trades or rules differ between the tester and MT5, and what to change in the tester or the EA so they agree.`;
+    renderPanel('tt');
+    document.querySelector('button[data-rs="go"]')?.click();
+  }
   if (d.rs === 'untaste') { e.preventDefault(); RS.taste = { wr: 0, pf: 0, net: 0 }; try { localStorage.removeItem('rsTaste'); } catch (x) {} renderPanel('tt'); }
   if (d.rs === 'all') { RS.all = !RS.all; renderPanel('tt'); }
   if (d.rs === 'reset') { RS.sets = {}; const x = labFromX(CUR); LABS.form = { ...LABS.spec.default, ...(x || {}) }; labStart('test', { lab: labForm() }); }
