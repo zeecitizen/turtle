@@ -218,7 +218,7 @@ def _close(out, nt, ps, x, xp, tq, kout, why, lots_frac):
 
 @njit(cache=True)
 def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1, htfe2, t1, o1, h1, l1, c1, sp1, k1, first1, m2c, roll, day1,
-             P, X, E, bandB, bandS, OS, OL, out, setups, stats):
+             P, X, E, bandB, bandS, OS, OL, out, setups, stats, hf):
     """out rows: side, entry_t, entry, sl(final), exit_t, exit, pnl, swap, bucket, nxE, ghost, entry_k15, exit_k15, reason, lots
        reasons: 1 stop 2 next-EMA target 3 close-back 4 day close 5 TP 6 trailing stop 7 breakeven 8 time exit"""
     n1 = t1.shape[0]
@@ -276,7 +276,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
         elif X[15] > 0.5 and sd0 != 0:
             pts[1] = l1[j] if sd0 > 0 else h1[j]
             pts[2] = h1[j] if sd0 > 0 else l1[j]
-        elif c1[j] >= o:
+        elif (hf[j] == 0) or (hf[j] < 0 and c1[j] >= o):      # the minute's order: the real ticks say which extreme came first (hf 1 high, 0 low; -1 = no ticks: guess)
             pts[1] = l1[j]; pts[2] = h1[j]
         else:
             pts[1] = h1[j]; pts[2] = l1[j]
@@ -949,7 +949,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                             go = True
                             # filled where the price CROSSED the dip level (the minute's earlier point was on the other side), not at this
                             # point's extreme - the EA's TryDip buys / sells on the tick that reaches the level (found on M1, Zee 2026-10-22)
-                            if aSide > 0:
+                            if side > 0:            # v1.36 fix: was aSide (cleared two lines up), so every LONG dip took the short branch and filled at the leg's bid (the minute's low)
                                 be = (aLevel - spr) if prv + spr > aLevel else bid
                             else:
                                 be = aLevel if prv < aLevel else bid
