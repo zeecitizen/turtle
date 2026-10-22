@@ -42,9 +42,11 @@ IX = {n: i for i, n in enumerate(NAMES)}
 # the extras vector
 XNAMES = ["no_entry_exit_bar", "long_ema_above", "fixed_spread", "swap", "blind_until", "warm_k", "reverse", "slip_entry", "slip_exit", "sl_overshoot",
           "spread_mult", "latency", "tp_through", "reject_mult", "median_spread", "worst_case"]
-XDEFAULT = {"swap": 1.0, "spread_mult": 1.0}
+# slip_entry: MT5 fills the dip a median $0.054 (mean $0.118) better per oz than the simulator's level fill (2026, 5,802 matched entries);
+# -0.10 closes the full-year P&L gap (Jan-Jun gap +5k, Jul-Oct +10k). Negative = favourable. The TradingView chart keeps 0 (CHART_RULES).
+XDEFAULT = {"swap": 1.0, "spread_mult": 1.0, "slip_entry": -0.10}
 # TradingView's way: the Saad indicator's own rules on its own candles
-CHART_RULES = {"no_entry_exit_bar": 1.0, "long_ema_above": 1.0, "fixed_spread": 0.17, "swap": 0.0}
+CHART_RULES = {"no_entry_exit_bar": 1.0, "long_ema_above": 1.0, "fixed_spread": 0.17, "swap": 0.0, "slip_entry": 0.0}
 
 
 def _b(v):
@@ -756,6 +758,42 @@ def htf_for(ds, minutes, n):
 _HF = {}
 
 
+_PTS = {}
+
+
+def _pts(ds, t1):
+    """v1.37: the 2026 ticks as 4 points per second (bid open, first extreme, second extreme, close) - flat arrays, cached.
+    Returns PBf (bid), PAf (ask), PTf (second), SA, SB (first / end second index of each minute)."""
+    if ds != "year1" or not (SIMDATA / "year1_sec.npz").exists():
+        raise RuntimeError("the per-second tick points exist for year1 only")
+    if "P" not in _PTS:
+        z = np.load(SIMDATA / "year1_sec.npz")
+        st = z["t"]
+        bo, bc, bh, bl = z["bo"], z["bc"], z["bh"], z["bl"]
+        ao, ac, ah, al = z["ao"], z["ac"], z["ah"], z["al"]
+        hfirst = z["bh_ms"] <= z["bl_ms"]                 # the bid high came first in that second (from the ticks)
+        e1b = np.where(hfirst, bh, bl); e2b = np.where(hfirst, bl, bh)
+        e1a = np.where(hfirst, ah, al); e2a = np.where(hfirst, al, ah)
+        n = len(st)
+        PBf = np.empty(4 * n); PAf = np.empty(4 * n); PTf = np.empty(4 * n, dtype=np.int64)
+        PBf[0::4] = bo; PBf[1::4] = e1b; PBf[2::4] = e2b; PBf[3::4] = bc
+        PAf[0::4] = ao; PAf[1::4] = e1a; PAf[2::4] = e2a; PAf[3::4] = ac
+        PTf[0::4] = st; PTf[1::4] = st; PTf[2::4] = st; PTf[3::4] = st
+        _PTS["P"] = (PBf, PAf, PTf, st)
+    PBf, PAf, PTf, st = _PTS["P"]
+    SA = np.searchsorted(st, t1).astype(np.int64)
+    SB = np.searchsorted(st, t1 + 60).astype(np.int64)
+    return PBf, PAf, PTf, SA, SB
+
+
+def _tHL(ds, n):
+    """the real second of each minute's bid high and low (year1: from the 2026 ticks; -1 = no ticks)"""
+    if ds == "year1" and (SIMDATA / "year1_tHL.npz").exists():
+        z = np.load(SIMDATA / "year1_tHL.npz")
+        return z["TH"], z["TL"]
+    return np.full(n, -1, dtype=np.int64), np.full(n, -1, dtype=np.int64)
+
+
 def _hford(ds, n):
     """the real tick order inside each minute (year1: from Blueberry's 2026 ticks; -1 = no ticks, the engine guesses)"""
     if ds not in _HF:
@@ -800,6 +838,6 @@ def simulate(inputs, ds="year", chart=False, lab=None, lego=None, **extra):
     hr_ea = ((clock // 3600) % 24).astype(np.int64) if ds == "year1" else D["hr15"]
     nt, ns = sim_full.run_full(D["t15"], hr_ea, dow, D["o15"], D["h15"], D["l15"], D["c15"], ef, es, D["atr"],
                                adx_for(ds, int(P[sim_full.F["InpAdxPeriod"]])), hc, h1_, h2_, D["t1"], D["o1"], D["h1"], D["l1"], D["c1"],
-                               D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab if lab is not None else sim_full.lab_from_inputs(inputs)), bb, bs, OS, OL, out, setups, stats, _hford(ds, len(D["t1"])))
+                               D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab if lab is not None else sim_full.lab_from_inputs(inputs)), bb, bs, OS, OL, out, setups, stats, _hford(ds, len(D["t1"])), *_pts(ds, D["t1"]))
     return out[:nt], setups[:ns], dict(zip(["setups", "no_break", "risk", "adx", "atr_band", "band_skip", "gap", "spread_reject", "open_at_end", "open_since"],
                                            stats.astype(np.int64).tolist()))
