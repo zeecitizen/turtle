@@ -1,0 +1,31 @@
+api_tight.report - Python tick replay = HYPOTHESIS, NOT PROMOTED
+rule_range_bound120            | tight: -0L/-160W WR 99.44->99.28 (tr 99.7->99.62, te 99.21->98.96) | zee100: -0L/-67W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -12L/-445W WR 98.66->98.99 (tr 97.92->98.48, te 99.32->99.46) | base: -41L/-1500W WR 97.74->97.85 (tr 96.64->96.97, te 98.6->98.53)
+    (direct call on secure: skips 457 of 2237)
+rule_extended_run120           | tight: -1L/-116W WR 99.44->99.5 (tr 99.7->100.0, te 99.21->99.13) | zee100: -0L/-44W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -5L/-347W WR 98.66->98.67 (tr 97.92->97.87, te 99.32->99.33) | base: -34L/-1114W WR 97.74->97.87 (tr 96.64->96.85, te 98.6->98.58)
+    (direct call on secure: skips 352 of 2237)
+rule_with_move60               | tight: -1L/-136W WR 99.44->99.48 (tr 99.7->99.6, te 99.21->99.39) | zee100: -0L/-51W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -8L/-416W WR 98.66->98.79 (tr 97.92->98.03, te 99.32->99.4) | base: -34L/-1193W WR 97.74->97.84 (tr 96.64->96.67, te 98.6->98.69)
+    (direct call on secure: skips 424 of 2237)
+rule_congested_level           | tight: -1L/-173W WR 99.44->99.44 (tr 99.7->99.63, te 99.21->99.26) | zee100: -0L/-74W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -9L/-571W WR 98.66->98.73 (tr 97.92->98.06, te 99.32->99.4) | base: -39L/-1899W WR 97.74->97.66 (tr 96.64->96.51, te 98.6->98.68)
+    (direct call on secure: skips 580 of 2237)
+rule_news_clock                | tight: -1L/-167W WR 99.44->99.45 (tr 99.7->100.0, te 99.21->99.02) | zee100: -0L/-67W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -14L/-535W WR 98.66->99.05 (tr 97.92->98.72, te 99.32->99.34) | base: -56L/-1882W WR 97.74->97.96 (tr 96.64->96.85, te 98.6->98.82)
+    (direct call on secure: skips 549 of 2237)
+rule_chop120                   | tight: -2L/-147W WR 99.44->99.65 (tr 99.7->100.0, te 99.21->99.35) | zee100: -0L/-63W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -10L/-474W WR 98.66->98.86 (tr 97.92->98.29, te 99.32->99.36) | base: -34L/-1533W WR 97.74->97.72 (tr 96.64->96.69, te 98.6->98.53)
+    (direct call on secure: skips 484 of 2237)
+rule_wide_spread_now           | tight: -2L/-101W WR 99.44->99.67 (tr 99.7->99.66, te 99.21->99.68) | zee100: -0L/-40W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-359W WR 98.66->98.61 (tr 97.92->97.9, te 99.32->99.35) | base: -40L/-1247W WR 97.74->97.92 (tr 96.64->96.99, te 98.6->98.73)
+    (direct call on secure: skips 363 of 2237)
+control_random20               | tight: -0L/-127W WR 99.44->99.32 (tr 99.7->99.63, te 99.21->99.05) | zee100: -0L/-55W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -9L/-422W WR 98.66->98.84 (tr 97.92->98.02, te 99.32->99.58) | base: -24L/-1500W WR 97.74->97.57 (tr 96.64->96.31, te 98.6->98.57)
+    (direct call on secure: skips 431 of 2237)
+
+DOCTRINE (monitor/doctrine.py) - avg win ~$1.5 / avg loss ~$-210 -> break-even ~99.3%:
+  secure zone as saved (engine, Mar-Nov, 2238 trades)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -17 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  zee100 = 2026-11-06 07-33-17 (engine, 308 trades, 0 losses)
+     python 100%  ->  expect ~84% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -15 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  secure + rule_range_bound120 (engine, 1798 trades)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.

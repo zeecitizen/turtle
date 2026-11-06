@@ -1,0 +1,50 @@
+BATCH 1 = 21 losses, 6-18 Mar 2026 (all in the train half). Everything below is a Python tick-replay HYPOTHESIS - NOT PROMOTED. Nothing ships until MT5's Strategy Tester (or live fills) confirms it.
+
+1. The selective signal is the CLOCK and LIQUIDITY, not the chart pattern. CLEAN KEEPER = rule_time_windows: skip NY 16:00-18:00 (the hour either side of the 17:00 NY rollover) and Friday after 13:00 NY (the last 4 h before the forced weekly close at 16:58 NY). It removes 33 losers / 454 winners, lift x3.00 (train x3.05, test x3.04), with 0 crashes and 0 look-ahead diffs (every rule was re-run on arrays cut at bar k). Five window variants were tried (rollover from 16:00 or 16:30 NY; Friday 3, 4 or 6 h) and all stay GOOD on both halves, so the result is not knife-edge. Of Zee's 22 commented losses it removes 3.
+
+2. How honest are the thresholds? The window edges are round hours with a market reason, but I saw all-data bin tables, test half included, before fixing them, so the test lift is not a clean holdout. I scanned about 560 feature tails. The 2%-tail hits (brk_ratio, k_rng, room30, uhv_v) were treated as likely chance and re-scored at round thresholds. All came out NOT SELECTIVE or redundant with the clock: thin_hour outside the windows x1.42/x2.01, dead_last_bar outside the windows x1.12/x1.91, small_uhv test x1.99, brk_ratio x1.79/x2.04.
+
+3. Rules that read the fill. t['fill'] is the ask (buy) or bid (sell) of the first tick 0.3 s AFTER the trigger (InpUhvLatency 0.3), so these rules see something that happens after the order is sent.
+   - rule_buy_spread_1p5: 7 losers / 36 winners, x5.32/x9.54. Only 2 of those losers are in the test half.
+   - rule_slip_1p5: 11 losers / 68 winners, x4.25/x9.54.
+   - Both mostly catch latency spikes: 41 of slip_1p5's 79 catches had a normal 0.5-pip spread at the trigger.
+   - Live they can only be an eject on a bad fill, which costs the spread. They are not a free skip, so the harness net for them is optimistic.
+   - rule_time_or_spread (36 losers / 468 winners, x3.13/x3.26) has the best numbers but carries this caveat.
+
+4. New finding, outside the harness (trigger_spread.py). It reads the engine's tick file at the trigger tick, which is the moment the entry is decided, so there is no future information.
+   - Skipping when ask minus bid at the breakout tick is >= 1.5 pips, on BOTH sides, removes 12 losers / 51 winners, lift x6.95 train / x10.84 test.
+   - Sells alone: 8 losers / 29 winners, x8.27/x11.29.
+   - A sell's spread is invisible in the harness fields. Next step: add the trigger-tick spread to t, and test an EA guard "skip if ask - bid at the breakout tick >= 1.5 pips" in MT5.
+   - The engine's existing InpMaxSpreadPts reads the last closed bar's spread, not the trigger tick's, and it is off (0) in this setting.
+   - This guard catches none of batch 1's losses.
+
+5. Batch 1 itself:
+   - 4 of 21 losses are avoidable before entry, all by the clock:
+     - 0306-212806-B and 0313-195816-B: Friday forced closes, only -12$ and -72$ (lift counts them like full stop-outs).
+     - 0316-200548-B: 55 minutes before the rollover.
+     - 0318-205350-S: 6 minutes before the rollover, and also a fill 1.3 pips past the breakout bid.
+   - 0306-102926-B is removed by the fill-based rules (the bid spiked 1.5 pips during the 0.34-s latency, while the trigger spread was a normal 0.5), but not before the entry.
+   - The other 16 each tell a story on the chart:
+     - a range ceiling or floor, support or resistance (8; one also hit by a 10:00 NY data spike)
+     - fading an impulse bar (2)
+     - a camel micro-flip against an older trend (4)
+     - an exhausted run or V-bounce (2)
+   - Their twins show the same stories, and the full sample agrees: every structure rule scored about x0.8-1.2 or failed one half.
+     - sr_at_fill x0.95; fresh_flip_after_opp x0.79; structure_against x1.08; trend_against_120 x1.24
+     - extended_at_extreme train x2.44 / test x0.00; impulse_bar_against test x0.00; exhausted_streak test x1.05
+     - old_uhv x1.04; uhv_last_bar x1.03; deep_retracement x0.95; top_of_hour train x0.97; us_news_windows train x0.86
+
+6. Why the chart cannot tell: every loss had best_R <= 0.004. The fill was the exact extreme, with zero follow-through, then a 20-pip move. With a 0.1-pip target the result is decided in the first ticks after the fill, which the 1-minute bars before the entry cannot see. The levers left are:
+   - when to trade (clock and liquidity)
+   - entry microstructure (trigger-tick spread, fill quality)
+   - loss size (stop geometry)
+
+7. Files, all in agents/batch_1:
+   - rules.py (33 self-contained rules) and run.py
+   - results_all.txt (literal api.report lines) and results_all.json
+   - hits_all.json (rules x batch losses and twins)
+   - loss_comments_batch1.json
+   - trigger_spread.py / .txt / .csv
+   - features.py, scan.py, chartfeat.py (analysis only)
+   - export_code.py -> codes.json (each code string verified standalone and identical on all 7,626 trades)
+   - assemble.py -> final_output.json

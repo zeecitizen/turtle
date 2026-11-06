@@ -1,0 +1,122 @@
+{
+ "skip_p": {
+  "train": 0.88616,
+  "test": 0.93361
+ },
+ "seeds": 200,
+ "stack": {
+  "train": {
+   "n": 601,
+   "L": 13,
+   "zero": 0,
+   "loss_rate": 2.1631,
+   "wr": 97.8369,
+   "net": -1828.8225,
+   "npt": -3.043,
+   "days": 83,
+   "clean": 72,
+   "clean_pct": 86.747,
+   "avg_win": 1.832,
+   "avg_loss": -223.5394
+  },
+  "test": {
+   "n": 405,
+   "L": 7,
+   "zero": 0,
+   "loss_rate": 1.7284,
+   "wr": 98.2716,
+   "net": -924.8616,
+   "npt": -2.2836,
+   "days": 86,
+   "clean": 79,
+   "clean_pct": 91.8605,
+   "avg_win": 1.4753,
+   "avg_loss": -216.0021
+  }
+ },
+ "base": {
+  "train": {
+   "n": 3336,
+   "L": 112,
+   "zero": 0,
+   "loss_rate": 3.3573,
+   "wr": 96.6427,
+   "net": -20127.3508,
+   "npt": -6.0334,
+   "days": 83,
+   "clean": 18,
+   "clean_pct": 21.6867,
+   "avg_win": 1.6842,
+   "avg_loss": -228.1882
+  },
+  "test": {
+   "n": 4295,
+   "L": 60,
+   "zero": 0,
+   "loss_rate": 1.397,
+   "wr": 98.603,
+   "net": -5398.6215,
+   "npt": -1.257,
+   "days": 92,
+   "clean": 46,
+   "clean_pct": 50.0,
+   "avg_win": 1.4717,
+   "avg_loss": -193.851
+  }
+ },
+ "train": {
+  "null_trades_mean": 607.7,
+  "null_trades_p5_p95": [
+   573.8,
+   645.0
+  ],
+  "null_losses_mean": 21.34,
+  "null_loss_rate_mean": 3.516,
+  "null_loss_rate_p5_p95": [
+   2.381,
+   4.804
+  ],
+  "p_null_loss_rate_le_stack": 0.02,
+  "null_npt_mean": -6.102,
+  "p_null_npt_ge_stack": 0.02,
+  "null_net_mean": -3702.3,
+  "p_null_net_ge_stack": 0.02,
+  "null_clean_pct_mean": 76.83,
+  "null_clean_pct_p5_p95": [
+   68.67,
+   83.38
+  ],
+  "p_null_clean_pct_ge_stack": 0.015,
+  "near_count_draws": 154,
+  "near_p_null_clean_pct_ge_stack": 0.013,
+  "near_p_null_loss_rate_le_stack": 0.019
+ },
+ "test": {
+  "null_trades_mean": 404.1,
+  "null_trades_p5_p95": [
+   373.95,
+   439.04999999999995
+  ],
+  "null_losses_mean": 5.61,
+  "null_loss_rate_mean": 1.391,
+  "null_loss_rate_p5_p95": [
+   0.503,
+   2.366
+  ],
+  "p_null_loss_rate_le_stack": 0.76,
+  "null_npt_mean": -1.233,
+  "p_null_npt_ge_stack": 0.845,
+  "null_net_mean": -496.2,
+  "p_null_net_ge_stack": 0.85,
+  "null_clean_pct_mean": 93.97,
+  "null_clean_pct_p5_p95": [
+   89.77,
+   97.78
+  ],
+  "p_null_clean_pct_ge_stack": 0.84,
+  "near_count_draws": 143,
+  "near_p_null_clean_pct_ge_stack": 0.846,
+  "near_p_null_loss_rate_le_stack": 0.783
+ },
+ "minutes": 0.53
+}

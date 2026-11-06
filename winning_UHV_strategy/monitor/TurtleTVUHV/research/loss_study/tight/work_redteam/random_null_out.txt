@@ -1,0 +1,3 @@
+  (a) random tick + random side: n 39782 (timeouts 50, counted as losses) | all WR 97.95% (timeouts dropped instead: 98.07%) | Mar-Jun WR 97.12% (timeouts dropped instead: 97.26%) | Jul-Nov WR 98.78% (timeouts dropped instead: 98.89%)
+  (b) zee100's side, 5-90 min from its own 308 entries (60 correlated offsets each): n 18138 (timeouts 24, counted as losses) | all WR 98.57% (timeouts dropped instead: 98.70%) | Mar-Jun WR 97.72% (timeouts dropped instead: 97.86%) | Jul-Nov WR 99.14% (timeouts dropped instead: 99.26%)
+  for comparison (engine, as saved): tight Jul-Nov 99.21%, secure Jul-Nov 99.32%, base Jul-Nov 98.60%; Mar-Jun 99.70 / 97.92 / 96.64%

@@ -1,0 +1,182 @@
+{
+ "rules": [
+  {
+   "name": "rule_range_bound120",
+   "idea": "RANGE: skip when the last 120 closed candles span < 9.2 ATR (base-train 20th pct; engine twin InpUhvSafeRangeAtr=9.2 + InpUhvSafeRangeBars=120). Best on secure (engine 98.66->99.00%, train 97.92->98.50, test 99.32->99.46) and significant on secure train (lift 2.10, p=0.029) and base train (1.40, p=0.041), BUT base test lift 0.81 (0.66 beyond the existing guards, WR 98.60->98.53), tight 99.44->99.28, secure-test lift 1.76 (p=0.24) is below the random control's 2.55, and its O/E trend is noise against both random-entry nulls (perm p 0.21 / 0.96). FAILS: does not travel to the base test half.",
+   "code": "def rule_range_bound120(t, A):\n    \"\"\"RANGE: the last 120 closed candles span fewer than 9.2 ATRs (base-train 20th pct) - a sideways box where the break is a poke at\n    its edge. Engine twin: InpUhvSafeRangeAtr=9.2 + InpUhvSafeRangeBars=120 (uhv_filters.secure).\"\"\"\n    k = t[\"k\"]\n    a = float(A.atr[k])\n    return a > 0 and float(A.h[k - 119:k + 1].max() - A.l[k - 119:k + 1].min()) < 9.2 * a\n",
+   "report_line": "rule_range_bound120            | tight: -0L/-160W WR 99.44->99.28 (tr 99.7->99.62, te 99.21->98.96) | zee100: -0L/-67W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -12L/-445W WR 98.66->98.99 (tr 97.92->98.48, te 99.32->99.46) | base: -41L/-1500W WR 97.74->97.85 (tr 96.64->96.97, te 98.6->98.53)",
+   "generalises": false
+  },
+  {
+   "name": "rule_extended_run120",
+   "idea": "EXTENSION: skip when the level is > 19.2 pips beyond the 2-hour opposite extreme (base-train 80th pct). Its family (run120 / mv60 / pos120) had the only significant O/E dose-response against the +-90-min null (run120 p=0.003 after 141 features) - and it VANISHED against the path-free other-days null (best feature p=0.14): random entries placed inside the same run-up won because of it. Raw lifts: secure 0.90 / 1.07, base 1.25 / 0.89 (0.96 / 0.90 beyond guards). FAILS.",
+   "code": "def rule_extended_run120(t, A):\n    \"\"\"EXTENSION: the level already sits more than 19.2 pips beyond the 2-hour opposite extreme (base-train 80th pct) - buying the top of\n    a 2-hour climb / selling the bottom of a slide.\"\"\"\n    PIP = 1e-4\n    k, s, lv = t[\"k\"], t[\"side\"], t[\"level\"]\n    run = (lv - float(A.l[k - 119:k + 1].min())) if s > 0 else (float(A.h[k - 119:k + 1].max()) - lv)\n    return run / PIP > 19.2\n",
+   "report_line": "rule_extended_run120           | tight: -1L/-116W WR 99.44->99.5 (tr 99.7->100.0, te 99.21->99.13) | zee100: -0L/-44W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -5L/-347W WR 98.66->98.67 (tr 97.92->97.87, te 99.32->99.33) | base: -34L/-1114W WR 97.74->97.87 (tr 96.64->96.85, te 98.6->98.58)",
+   "generalises": false
+  },
+  {
+   "name": "rule_with_move60",
+   "idea": "MOMENTUM EXTENSION: skip when the last 60 closes moved > 8.1 pips with the trade (base-train 80th pct). Nudges the win rate up in all four cells (secure +0.13, base +0.10) but no cell is significant (p 0.17-0.48), the secure gain is below the random-20% control (+0.18), and beyond the existing guards base train lift drops to 0.82 (WR 96.64->96.49). FAILS.",
+   "code": "def rule_with_move60(t, A):\n    \"\"\"EXTENSION (momentum form): the last 60 closes moved more than 8.1 pips in the trade's direction (base-train 80th pct).\"\"\"\n    PIP = 1e-4\n    k = t[\"k\"]\n    return float(A.c[k] - A.c[k - 60]) * t[\"side\"] / PIP > 8.1\n",
+   "report_line": "rule_with_move60               | tight: -1L/-136W WR 99.44->99.48 (tr 99.7->99.6, te 99.21->99.39) | zee100: -0L/-51W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -8L/-416W WR 98.66->98.79 (tr 97.92->98.03, te 99.32->99.4) | base: -34L/-1193W WR 97.74->97.84 (tr 96.64->96.67, te 98.6->98.69)",
+   "generalises": false
+  },
+  {
+   "name": "rule_congested_level",
+   "idea": "DOUBLE / TRIPLE TOP: skip when >= 6 confirmed 3-bar swing extremes (older than the UHV, last 240 bars) sit within 1 pip of the level (base-train 80th pct). The charts' commonest story (0309, 0414, 0526, 1019, 1023 ...), but the winning twins show the same picture (0309-075007-B, 1023-141514-B bought the very same tops and won). Lifts secure 1.23 / 1.28, base 0.84 / 1.13 (0.87 / 0.88 beyond guards). FAILS.",
+   "code": "def rule_congested_level(t, A):\n    \"\"\"DOUBLE / TRIPLE TOP: 6 or more confirmed 3-bar swing highs (buy) / lows (sell) from before the UHV, in the last 240 candles, sit\n    within 1 pip of the break level (6 = base-train 80th pct) - the price has been turned back there again and again.\"\"\"\n    PIP = 1e-4\n    k, ku, s, lv = t[\"k\"], t[\"ku\"], t[\"side\"], t[\"level\"]\n    h, l = A.h, A.l\n    n = 0\n    for j in range(max(3, k - 240), min(k - 3, ku - 1) + 1):          # pivot j is confirmed by bars j+1..j+3 <= k, and is older than the UHV\n        if s > 0:\n            if h[j] >= h[j - 3:j].max() and h[j] >= h[j + 1:j + 4].max() and abs(h[j] - lv) <= 1.0 * PIP:\n                n += 1\n        elif l[j] <= l[j - 3:j].min() and l[j] <= l[j + 1:j + 4].min() and abs(l[j] - lv) <= 1.0 * PIP:\n            n += 1\n    return n >= 6\n",
+   "report_line": "rule_congested_level           | tight: -1L/-173W WR 99.44->99.44 (tr 99.7->99.63, te 99.21->99.26) | zee100: -0L/-74W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -9L/-571W WR 98.66->98.73 (tr 97.92->98.06, te 99.32->99.4) | base: -39L/-1899W WR 97.74->97.66 (tr 96.64->96.51, te 98.6->98.68)",
+   "generalises": false
+  },
+  {
+   "name": "rule_news_clock",
+   "idea": "NEWS CLOCK (no calendar): skip breakout ticks at minute :56-:03 or :25-:30. Lifts all four cells (secure 98.66->99.05, base 97.74->97.96) BUT the windows were picked from the 30 losses' own timestamps (data-snooped); different sub-windows carry different cells (:25-:30 only in train - secure 4.3%, base 5.4%; :56-:03 only in base test 2.4% vs 1.2%, flat in base train); secure test gains +0.02 (lift 1.09); beyond the existing guards the base lifts are 1.13 / 1.16 (p=0.26 / 0.31). Its only significant cell (secure train, p=0.015) is the one it was read from. FAILS as a rule; a real economic calendar (MQL5 CalendarValueHistory) is the proper test of 0831-140012-S / 1002-121909-S / 0527-123600-B.",
+   "code": "def rule_news_clock(t, A):\n    \"\"\"NEWS CLOCK (no calendar): the breakout tick lands in minute :56-:03 or :25-:30 of the hour (scheduled data, hourly flow).\"\"\"\n    import datetime as dt\n    m = dt.datetime.fromtimestamp(t[\"t_dec\"], dt.timezone.utc).minute\n    return m >= 56 or m <= 3 or 25 <= m <= 30\n",
+   "report_line": "rule_news_clock                | tight: -1L/-167W WR 99.44->99.45 (tr 99.7->100.0, te 99.21->99.02) | zee100: -0L/-67W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -14L/-535W WR 98.66->99.05 (tr 97.92->98.72, te 99.32->99.34) | base: -56L/-1882W WR 97.74->97.96 (tr 96.64->96.85, te 98.6->98.82)",
+   "generalises": false
+  },
+  {
+   "name": "rule_chop120",
+   "idea": "CHOP: skip when the efficiency ratio of the last 120 closes < 0.031 (base-train 20th pct). Secure lifts 1.60 / 1.21 (n.s.), base 1.06 / 0.80 (1.03 / 0.74 beyond guards; base test WR 98.60->98.53). FAILS.",
+   "code": "def rule_chop120(t, A):\n    \"\"\"CHOP: the efficiency ratio of the last 120 closes is below 0.031 (base-train 20th pct) - two hours that went nowhere.\"\"\"\n    import numpy as np\n    k = t[\"k\"]\n    cc = A.c[k - 120:k + 1]\n    path = float(np.abs(np.diff(cc)).sum())\n    return path > 0 and abs(float(cc[-1] - cc[0])) / path < 0.031\n",
+   "report_line": "rule_chop120                   | tight: -2L/-147W WR 99.44->99.65 (tr 99.7->100.0, te 99.21->99.35) | zee100: -0L/-63W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -10L/-474W WR 98.66->98.86 (tr 97.92->98.29, te 99.32->99.36) | base: -34L/-1533W WR 97.74->97.72 (tr 96.64->96.69, te 98.6->98.53)",
+   "generalises": false
+  },
+  {
+   "name": "rule_wide_spread_now",
+   "idea": "SPREAD vs ITS OWN HOUR: skip when the breakout spread is > 0.05 pip above the 60-candle median per-minute spread (sim sp1; regime-free across the June spread cut 0.55 -> 0.14 pip). Mechanically sound (the bid must climb spread + 0.1 pip to win) and base lifts 1.81 (p=0.005) / 1.34 - but that lift is entirely the rollover hour and >= 1-pip spreads the secure setting already blocks (beyond them 1.22 / 0.74), and on secure it does nothing (0.92 / 1.14; secure train WR 97.92->97.90). FAILS.",
+   "code": "def rule_wide_spread_now(t, A):\n    \"\"\"SPREAD vs ITS OWN HOUR: the breakout tick's spread is more than 0.05 pip above the median per-minute spread (sim 'sp1') of the last\n    60 candles - regime-free (Mar-May ~0.55 pip, Jun-Nov ~0.14). Mechanical: the bid must climb spread + 0.1 pip to reach the target.\"\"\"\n    import numpy as np\n    PIP = 1e-4\n    if not hasattr(rule_wide_spread_now, \"sp1\"):\n        import os\n        import sys\n        os.environ.setdefault(\"NUMBA_CPU_NAME\", \"generic\")\n        root = r\"C:/Users/zeesh/turtle/monitor/TurtleTVUHV\"\n        if root not in sys.path:\n            sys.path.insert(0, root)\n        import sim\n        rule_wide_spread_now.sp1 = np.asarray(sim.data(\"year1\")[\"sp1\"], dtype=float)\n    k = t[\"k\"]\n    return t[\"trig_spread_pips\"] > float(np.median(rule_wide_spread_now.sp1[k - 59:k + 1])) / PIP + 0.05\n",
+   "report_line": "rule_wide_spread_now           | tight: -2L/-101W WR 99.44->99.67 (tr 99.7->99.66, te 99.21->99.68) | zee100: -0L/-40W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-359W WR 98.66->98.61 (tr 97.92->97.9, te 99.32->99.35) | base: -40L/-1247W WR 97.74->97.92 (tr 96.64->96.99, te 98.6->98.73)",
+   "generalises": false
+  },
+  {
+   "name": "control_random20",
+   "idea": "CONTROL, not a rule: a pseudo-random 20% skip (crc32 of the id). Secure 98.66->98.84 and secure-test lift 2.55 (p=0.074) by luck alone - the noise floor any rule must beat with 30 losses; base 97.74->97.57.",
+   "code": "def control_random20(t, A):\n    \"\"\"CONTROL: skips a pseudo-random 20% of trades (crc32 of the id) - the noise floor any rule must beat.\"\"\"\n    import zlib\n    return zlib.crc32(t[\"id\"].encode()) % 5 == 0\n",
+   "report_line": "control_random20               | tight: -0L/-127W WR 99.44->99.32 (tr 99.7->99.63, te 99.21->99.05) | zee100: -0L/-55W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -9L/-422W WR 98.66->98.84 (tr 97.92->98.02, te 99.32->99.58) | base: -24L/-1500W WR 97.74->97.57 (tr 96.64->96.31, te 98.6->98.57)",
+   "generalises": false
+  }
+ ],
+ "per_loss": [
+  {
+   "id": "0306-084824-B",
+   "comment": "Fri 08:48 UTC, London morning. Buy at 1.16113, about 2.5 pips under the 13:42 PKT lower high, inside a 2-hour box (the last 120 candles span only 8.2 ATR). It never ticked up: -23 pips in 27 min, stop-out, best_R -0.01. Caught by range_bound120 and chop120; neither holds on the base test half."
+  },
+  {
+   "id": "0309-080003-B",
+   "comment": "Mon 08:00:03 UTC, three seconds into the London 08:00 candle. Buy into a triple top (1.1564-1.15645) after a 29-pip two-hour climb (run120 29, mv60 +18). Its twin 0309-075007-B bought the same top 10 min earlier and got its 0.1 pip before the same collapse: same chart, only the first ticks differed. Caught by extended_run120, with_move60, news_clock, chop120 (and the random control)."
+  },
+  {
+   "id": "0318-120215-B",
+   "comment": "Wed 12:02 UTC, NY pre-open. Buy at 1.15472, a lower high 2.3 pips under the 16:20 PKT top, after a volume-spike sell-off from that top; the 2-hour box was tight (9.1 ATR). Stop-out in 23 min without one uptick. Caught by range_bound120 and news_clock."
+  },
+  {
+   "id": "0319-022714-B",
+   "comment": "Thu 02:27 UTC, Asia. Buy at the top of a 15-pip spike (07:07 PKT, 550-tick bar) after 20 min of sideways drift, 1.5 pips under the spike high (pos120 0.95, run120 24). Drifted 2 h, then stopped out. Caught by extended_run120, with_move60, news_clock - the extension family whose O/E effect vanishes against the path-free null."
+  },
+  {
+   "id": "0319-184909-S",
+   "comment": "Thu 18:49 UTC (14:49 NY). Sell at the floor of a flat 90-min box (1.1555-1.1560); within minutes a 20-pip NY-afternoon rally took the stop (8.5 min). Nothing at decision time stands out (120-bar range 25 ATR, normal spread, quiet volume). No rule catches it."
+  },
+  {
+   "id": "0327-200119-B",
+   "comment": "Fri 20:01 UTC (16:01 NY, thin post-close tape). The breakout tick printed 1.2 pips past the level (a jump), the buy filled at that spike top, and the engine flattened it at the weekly close for -$136 (why=8, not a stop-out). A Friday-close artefact: its MT5 value depends on whether the EA flattens like the sim. Caught by news_clock and chop120."
+  },
+  {
+   "id": "0408-075606-B",
+   "comment": "Wed 07:56 UTC, London open. Buy at 1.1699 = the 12:51 PKT high (a double top) after a 20-pip climb from the 12:11 low (run120 20). Stopped in 46 min, never ticked up. Caught by extended_run120, news_clock, chop120."
+  },
+  {
+   "id": "0409-062811-S",
+   "comment": "Thu 06:28 UTC. Sell one bar after a fresh two-hour low (1.16541): the UHV was the green bounce candle off that low and the level sat 1.3 pips above it (pos120 0.92) - selling into stopping volume. Its twin 0409-062132-S sold the same slide 7 min earlier with the same picture and won. Caught only by news_clock."
+  },
+  {
+   "id": "0409-110304-S",
+   "comment": "Thu 11:03 UTC. Same picture as 0409-062811-S: a capitulation red bar to a new low (1.16695), a green UHV bounce, the sell level 2 pips above the low in a tight box (7.7 ATR); price climbed 13 pips over 2 h. Caught by range_bound120 and news_clock."
+  },
+  {
+   "id": "0413-120919-S",
+   "comment": "Mon 12:09 UTC, NY pre-open. Sell at the bottom of a 15-pip slide (mv60 +15) one bar after a V-bounce off 1.16803, at a congested price (7 swing lows within 1 pip), spread 0.7 pip - the widest in the zone. The most-flagged loss: range_bound120, with_move60, congested_level, chop120, wide_spread_now."
+  },
+  {
+   "id": "0414-062521-S",
+   "comment": "Tue 06:25 UTC. Sell into a double bottom (1.17595 at 10:33 PKT, 1.1758 at 11:22 PKT; pos120 0.95, 10 swing lows within 1 pip): the green UHV was the second bounce; rallied 15 pips. Its ER16 0.349 sits INSIDE Zee's 0.30-0.35 band - only its 4 humps keep it out of zee100. Caught by congested_level and news_clock."
+  },
+  {
+   "id": "0415-082514-B",
+   "comment": "Wed 08:25 UTC, London. Buy 2 bars after a fresh spike high (1.17952 at 13:21 PKT), the level 1.2 pips under it (pos120 0.90) - buying the top of the spike. Stopped over 2 h. Caught by news_clock and chop120."
+  },
+  {
+   "id": "0417-191611-B",
+   "comment": "Fri 19:16 UTC (15:16 NY, Friday afternoon). A 3-hump bounce inside a 23-pip sell-off (mv60 -8): the buy level was the bounce high, spread 0.7 pip; the slide resumed. Counter to the 2-hour move, but the earlier study's counter-trend rule failed on base. Caught by wide_spread_now (and the random control)."
+  },
+  {
+   "id": "0428-111314-B",
+   "comment": "Tue 11:13 UTC. Buy about 1.5 pips under a 5-pip spike candle's high (16:05 PKT), which was also the 14:50 PKT high (a double top), in a tight 2-hour box (8.1 ATR). Fell 20 pips in an hour. Caught by range_bound120."
+  },
+  {
+   "id": "0428-145739-S",
+   "comment": "Tue 14:57:39 UTC (10:57 NY), 2 min before the hour: a mid-range sell in a 90-min box (1.1691-1.1703; 5.3 ATR, the tightest of the 30). A 15-pip rally started at 15:00 UTC; stopped after 7 h. Caught by range_bound120, congested_level, news_clock, chop120 (and the random control)."
+  },
+  {
+   "id": "0526-111755-B",
+   "comment": "Tue 11:17 UTC. Buy at the top of a 2.5-hour box: the level 1.16436 is the 15:28 PKT high zone, turned back 11 times (congested), box only 8.0 ATR, ATR 1.0 pip. Fell 10 pips in 2.5 h. Caught by range_bound120 and congested_level."
+  },
+  {
+   "id": "0527-123600-B",
+   "comment": "Wed 12:36 UTC, six minutes after the 12:30 UTC US data spike (+25 pips in 15 min; ATR 4.3 pips, the highest of the 30): a buy at the spike's double top. Stopped over 2 h. Caught by range_bound120, extended_run120, with_move60."
+  },
+  {
+   "id": "0528-011527-B",
+   "comment": "Thu 01:15 UTC, quiet Asia (ATR 0.9). Buy inside a sleepy range, 3 pips under its high; nothing at decision time stands out (pos120 0.32, normal spread). The market drifted down 8 pips over 2 h - 30% of random same-side entries in that window lost too. No rule catches it."
+  },
+  {
+   "id": "0602-030333-S",
+   "comment": "Tue 03:03 UTC, dead Asia (ATR 0.54, the quietest of the 30). Sell after a 2-pip poke at a congested price (10 swing lows within 1 pip); a slow grind up took 3.5 h to reach the stop. Caught by congested_level, news_clock, chop120."
+  },
+  {
+   "id": "0604-074634-S",
+   "comment": "Thu 07:46 UTC, London open. Sell at the bottom of an exhausted slide - humps 5 and ER16 0.45, both on the secure zone's upper edges - one bar after a capitulation low (1.1598), the UHV being the green bounce. Caught by with_move60; the tight zone (humps <= 3, ER < 0.45) already excludes it."
+  },
+  {
+   "id": "0605-013041-S",
+   "comment": "Fri 01:30:41 UTC, the 01:30 Asian data minute. Sell on a V-reversal off a fresh low in a choppy Asian box (5.2 ATR), at an extremely congested price (42 swing lows within 1 pip). Caught by range_bound120, congested_level, news_clock."
+  },
+  {
+   "id": "0622-014803-B",
+   "comment": "Mon 01:48 UTC, Asia. Buy at an old pivot (1.1468) off a UHV 17 bars old, above the 7-bar range (box 20), after a 10-pip climb (mv60 +9.7). A slow 6-hour bleed to the stop. Caught by with_move60 (and the random control)."
+  },
+  {
+   "id": "0702-003702-S",
+   "comment": "Thu 00:37 UTC, Asia (ATR 0.77). Sell one bar after a fresh low at the end of a spike-and-fall, humps 5 (exhausted), at a congested price (29 swing lows within 1 pip). Ground up for 6 h. Caught by congested_level (and the random control); the tight zone (humps <= 3) excludes it."
+  },
+  {
+   "id": "0706-144939-S",
+   "comment": "Mon 14:49 UTC (10:49 NY). Sell at the floor of a 2-hour box (the 18:58 PKT low 1.14085 sits 3 pips below), spread 0.0. Rallied 8 pips. Caught by chop120 only (and the random control)."
+  },
+  {
+   "id": "0715-132937-S",
+   "comment": "Wed 13:29:37 UTC, 23 s before the 09:30 New York stock open. A 2-hump red pullback inside a strong 2-hour up-move (mv60 -12): the sell level 1.1424 is the old 17:32 PKT breakout pivot (resistance turned support). Caught by news_clock (and the random control)."
+  },
+  {
+   "id": "0831-140012-S",
+   "comment": "Mon 14:00:12 UTC = 10:00:12 New York, the US data minute: the sell tick came 12 s into a 520-tick bar (double the average) and the release rallied it to the stop. Caught by range_bound120, congested_level, news_clock, wide_spread_now - the clearest news-clock loss, yet the clock windows do not hold as a rule."
+  },
+  {
+   "id": "1002-121909-S",
+   "comment": "Fri 12:19 UTC, eleven minutes before the 12:30 UTC US data (first Friday of October, likely payrolls). Sold the bottom of a 20-pip slide (humps 5, run120 20); the 12:30 spike jumped through the stop (-1.51R, -$323, the biggest loss). A calendar would have blocked it; the bars cannot. Caught by range_bound120, extended_run120, with_move60 (and the random control)."
+  },
+  {
+   "id": "1013-051140-S",
+   "comment": "Tue 05:11 UTC (ATR 0.81). Sell at the base of a 4-pip spike (10:01 PKT): the level 1.1172 is the old range ceiling (21 swing lows within 1 pip), the UHV 9 bars old, below the 7-bar range (box 20). Caught by range_bound120 and congested_level."
+  },
+  {
+   "id": "1019-171329-S",
+   "comment": "Mon 17:13 UTC (13:13 NY). Sell exactly into a double bottom: the level 1.12071 is the 21:49 PKT low (1.12070). Took 9.7 h to stop out. This is the ER16 0.352 tight loss sitting just above Zee's 0.35 cut - the zee100 edge was drawn right under it. No rule catches it."
+  },
+  {
+   "id": "1023-145031-B",
+   "comment": "Fri 14:50 UTC (10:50 NY). Buy into a triple top (1.12057-1.12077, 19:07-19:23 PKT); ER16 0.44 at the zone's top edge. Its twin 1023-141514-B bought the same level 35 min earlier and got its 0.1 pip at once. Flattened at the Friday close for -$40 (why=8). Caught by with_move60, chop120, wide_spread_now."
+  }
+ ]
+}

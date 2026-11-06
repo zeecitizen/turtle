@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Golden Gravity - Sound Gallery</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<style>
+  :root { --ink:#1a1410; --gold:#ffcc33; --goldHot:#fff2b0; --goldDeep:#b8860b; --brass:#c9a24a; --brassDark:#8a6a24; --brassLight:#f0d68a;
+          --iron:#3b3f47; --ironDark:#23262c; --ironLight:#6b717c; --rivet:#a7adb7; --paper:#f6efdc; --crimson:#e0303a; --cyan:#3fe6ff; --emerald:#1f9e6e; }
+  * { box-sizing: border-box; }
+  body { margin:0; color:var(--paper); font-family: Georgia, "Times New Roman", serif;
+         background: radial-gradient(ellipse at 50% -10%, #4a3a20 0%, #23262c 45%, #15171b 100%) fixed; }
+  header { padding: 18px 28px 10px; display:flex; align-items:center; gap:22px; border-bottom: 3px double var(--brass);
+           background: linear-gradient(#2b2f37, #1d2026); box-shadow: 0 4px 0 #0c0d10; }
+  header h1 { margin:0; font-size:30px; letter-spacing:3px; color:var(--gold); text-shadow: 0 2px 0 var(--ink), 0 0 18px rgba(255,204,51,.35); font-variant: small-caps; }
+  header .sub { color:var(--brassLight); font-style:italic; font-size:14px; }
+  .rv { width:9px; height:9px; border-radius:50%; background: radial-gradient(circle at 35% 35%, #fff 0 18%, var(--rivet) 22%, #555 100%); display:inline-block; }
+  main { padding: 14px 22px 40px; }
+  .panel { position:relative; border:2px solid var(--ink); border-radius:10px; padding:12px 16px 14px; margin-bottom:14px;
+           background: linear-gradient(160deg, #474c56 0%, #30343b 55%, #262a30 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 3px rgba(201,162,74,.55), 0 3px 0 #0c0d10; }
+  .panel > h2 { margin:0 0 8px; font-size:17px; color:var(--brassLight); letter-spacing:2px; font-variant: small-caps; }
+  .panel .rv { position:absolute; } .panel .rv.a{top:6px;left:6px} .panel .rv.b{top:6px;right:6px} .panel .rv.c{bottom:6px;left:6px} .panel .rv.d{bottom:6px;right:6px}
+  .row { display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px; }
+  label { font-size:13px; color:var(--paper); }
+  button { font-family: Georgia, serif; font-size:13px; color:var(--ink); cursor:pointer; padding:5px 11px; border:2px solid var(--ink); border-radius:14px 14px 9px 9px;
+           background: linear-gradient(#ffe9a6 0%, #e2bd5c 40%, #a87d22 100%); box-shadow: 0 2px 0 #3a2a08, inset 0 1px 0 rgba(255,255,255,.7); }
+  button:active { transform: translateY(2px); box-shadow: 0 0 0 #3a2a08; }
+  button.big { font-size:15px; padding:8px 18px; }
+  button.iron { color:var(--paper); background: linear-gradient(#7d838f, #4a4f58 60%, #30343b); box-shadow: 0 2px 0 #0c0d10, inset 0 1px 0 rgba(255,255,255,.35); }
+  input[type=range] { accent-color: var(--brass); width:160px; vertical-align:middle; }
+  select { font-family: Georgia, serif; background:var(--paper); color:var(--ink); border:2px solid var(--ink); border-radius:6px; padding:2px 6px; }
+  .val { display:inline-block; min-width:38px; font-family:"Courier New",monospace; color:var(--gold); }
+  #status { font-family:"Courier New",monospace; font-size:13px; color:var(--brassLight); }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:12px; }
+  .card { position:relative; border:2px solid var(--ink); border-radius:9px; padding:8px 10px 8px; overflow:hidden;
+          background: linear-gradient(170deg, #f3dc95 0%, #d9b45c 38%, #a8812f 100%); color:var(--ink); box-shadow: 0 3px 0 #0c0d10, inset 0 0 0 2px rgba(255,242,176,.55); }
+  .card.extra { background: linear-gradient(170deg, #d8dde4 0%, #a9b0ba 40%, #747b86 100%); }
+  .card .top { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .card .nm { font-weight:bold; font-size:16px; letter-spacing:1px; margin-right:auto; font-variant: small-caps; }
+  .card button { font-size:12px; padding:2px 8px; }
+  .card canvas { display:block; width:100%; height:86px; margin-top:6px; border:2px solid var(--ink); border-radius:4px; background:#100c09; }
+  .card .m { font-family:"Courier New",monospace; font-size:11.5px; margin-top:4px; white-space:pre; line-height:1.25; }
+  .card .badge { position:absolute; top:7px; right:8px; font-family:"Courier New",monospace; font-weight:bold; font-size:11px; padding:1px 6px; border:2px solid var(--ink); border-radius:6px; }
+  .ok { background:#7dff9b; } .bad { background:#ff7b7b; } .warn { background:#ffd86b; }
+  .card .what { font-size:11.5px; font-style:italic; opacity:.85; margin-top:2px; }
+  #summary { font-size:18px; font-weight:bold; font-family:"Courier New",monospace; padding:8px 12px; border:2px solid var(--ink); border-radius:8px; display:inline-block; }
+  #summary.ok, #summary.bad { color: var(--ink); }
+  table { border-collapse: collapse; font-family:"Courier New",monospace; font-size:12px; }
+  td, th { border:1px solid #55504a; padding:2px 7px; text-align:right; } th { color:var(--gold); } td:first-child, th:first-child { text-align:left; }
+  .mono { font-family:"Courier New",monospace; font-size:12.5px; white-space:pre-wrap; color:var(--paper); }
+</style>
+</head>
+<body>
+<header>
+  <span class="rv"></span>
+  <div>
+    <h1>Golden Gravity &middot; Sound Gallery</h1>
+    <div class="sub">Ledger Street, by ear: every sound synthesised in WebAudio. No files, no samples. Click once to wake the street.</div>
+  </div>
+  <span class="rv"></span>
+</header>
+<main>
+  <section class="panel"><span class="rv a"></span><span class="rv b"></span><span class="rv c"></span><span class="rv d"></span>
+    <h2>Master</h2>
+    <div class="row">
+      <button class="big" id="wake">Wake the street (init)</button>
+      <button class="iron" id="mute">Mute</button>
+      <label>Volume <input type="range" id="vol" min="0" max="1" step="0.01" value="0.8"> <span class="val" id="volv">0.80</span></label>
+      <label>Tether tension <input type="range" id="teth" min="0" max="1" step="0.01" value="0"> <span class="val" id="tethv">0.00</span></label>
+      <label>Footsteps / s <input type="range" id="steps" min="0" max="200" step="1" value="0"> <span class="val" id="stepsv">0</span></label>
+      <button id="selftest">Run self-test</button>
+      <span id="status">not initialised</span>
+    </div>
+  </section>
+  <section class="panel"><span class="rv a"></span><span class="rv b"></span><span class="rv c"></span><span class="rv d"></span>
+    <h2>Ambience (weather beds, crossfaded)</h2>
+    <div class="row">
+      <label>Weather <select id="wx"><option value="">(none)</option><option>dead</option><option selected>calm</option><option>active</option><option>storm</option></select></label>
+      <label>Session <select id="sess"><option>asia</option><option selected>london</option><option>newyork</option><option>dead</option><option>closed</option></select></label>
+      <label>Volatility <input type="range" id="wvol" min="0" max="1" step="0.05" value="0.3"> <span class="val" id="wvolv">0.30</span></label>
+      <label><input type="checkbox" id="night"> night</label>
+      <label><input type="checkbox" id="freeze"> Time Freeze</label>
+      <label><input type="checkbox" id="golden"> golden hour</label>
+      <label><input type="checkbox" id="wooden"> wooden (Alley)</label>
+      <label><input type="checkbox" id="replay"> replay</label>
+    </div>
+  </section>
+  <section class="panel"><span class="rv a"></span><span class="rv b"></span><span class="rv c"></span><span class="rv d"></span>
+    <h2>Server events (Audio.event)</h2>
+    <div class="row" id="events"></div>
+  </section>
+  <section class="panel"><span class="rv a"></span><span class="rv b"></span><span class="rv c"></span><span class="rv d"></span>
+    <h2>Self-test (OfflineAudioContext, the same synthesis code)</h2>
+    <div class="row"><span id="summary">not run</span></div>
+    <div class="row" style="margin-top:10px; align-items:flex-start; gap:18px">
+      <div class="mono" id="checks"></div>
+    </div>
+  </section>
+  <section class="panel"><span class="rv a"></span><span class="rv b"></span><span class="rv c"></span><span class="rv d"></span>
+    <h2>The sound bible - contract names (CONTRACT &sect;8.5)</h2>
+    <div class="grid" id="grid"></div>
+  </section>
+  <section class="panel"><span class="rv a"></span><span class="rv b"></span><span class="rv c"></span><span class="rv d"></span>
+    <h2>Extras (street ambience events, helpers)</h2>
+    <div class="grid" id="grid2"></div>
+  </section>
+</main>
+<script type="module">
+// The contract list is hard-coded HERE (not read from audio.js), so a missing recipe shows up as a failure.
+const CONTRACT = ['footstep', 'pistons', 'bell', 'anvil', 'refused', 'rat', 'ping', 'machete', 'chime', 'balloon', 'fold', 'thud', 'chain', 'needle',
+  'gunshot', 'cash', 'coin', 'cough', 'creak', 'whoosh', 'thunder', 'molasses', 'haggle', 'wall', 'stake', 'page', 'cards', 'collector', 'tick'];
+const EXTRA = ['flap', 'click', 'confirm', 'clunk', 'whistle', 'tackle', 'stamp', 'barrel', 'crane', 'duck', 'needle_drop', 'klaxon', 'trolley', 'pigeons', 'ticker'];
+const WHAT = {
+  footstep: 'ticks = footsteps (heel, toe, body; alternating feet)', pistons: 'tilt change: iron groan + steam hiss', bell: 'London / New York open: bronze partials + sub-bass bloom',
+  anvil: 'cathedral clang (stop moved to a stake)', refused: 'clang + bounce (the broker said no)', rat: 'razor snips (a real cent bitten)', ping: 'glass ping (shavings into the jar)',
+  machete: 'bullet-time whoosh + one bright chime', chime: 'one warm tubular chime', balloon: 'eject: balloon hiss and lift-off', fold: 'fold-up: paper', thud: 'a coin thuds onto the stack',
+  chain: 'the Collector: one chain link', needle: 'Time Freeze: the record needle lifts', gunshot: 'cartoon pistol pop + smoke puff', cash: 'blunderbuss boom + a shower of coins',
+  coin: 'a chime per profit step (climbs the pentatonic)', cough: 'the Banker coughs black smoke', creak: 'wood / iron creak', whoosh: 'something fast goes by', thunder: 'crack + rolling rumble',
+  molasses: 'the Spread Pit bubbles', haggle: 'the Buyer laughs (horn): ho-ho-HO / wah-wah', wall: 'bricks laid, the last one thunks', stake: 'a stake lights: glowing tink',
+  page: 'page turn (the mirror world)', cards: 'riffle shuffle (door jammed)', collector: 'chain links one at a time + padlock', tick: 'clockwork tick-tock',
+  flap: 'split-flap riffle', click: 'soft cancel click', confirm: 'hold ring complete: ka-chunk', clunk: 'the bell rope: a dull clunk', whistle: 'whistle for the Merchant',
+  tackle: 'tackle the Merchant', stamp: 'STOPPED / LIQUIDATED stamp', barrel: 'the pickle barrel slams', crane: "the Banker's crane arm", duck: 'the Banker ducks',
+  needle_drop: 'reconnect: the needle drops back', klaxon: 'street: distant motor horn', trolley: 'street: distant trolley bell', pigeons: 'street: pigeons take off', ticker: 'street: ticker machine upstairs',
+};
+const VARIANTS = {
+  footstep: [['soft', { intensity: 0.2 }], ['hard', { intensity: 1 }], ['wood', { wooden: true }]],
+  pistons: [['up', { dir: 1, amount: 0.9 }], ['down', { dir: -1, amount: 0.9 }], ['small', { amount: 0.2 }]],
+  bell: [['London', { session: 'london' }], ['New York', { session: 'newyork' }]],
+  anvil: [['refused', { ok: false }]], haggle: [['ho-ho', { ok: true }], ['wah-wah', { ok: false }]],
+  coin: [['0', { step: 0 }], ['2', { step: 2 }], ['4', { step: 4 }], ['7', { step: 7 }], ['10', { step: 10 }]],
+  thunder: [['near', { near: true }], ['far', { dist: 1 }]], stake: [['golden', { golden: true }]], creak: [['iron', { iron: true }]],
+  rat: [['1 snip', { n: 1 }], ['5 snips', { n: 5 }]], whoosh: [['left', { dir: -1 }], ['fast', { speed: 2 }]], tick: [['tock', { tock: true }]],
+  wall: [['refused', { ok: false }]], molasses: [['3', { n: 3 }]],
+};
+const $ = (id) => document.getElementById(id);
+let A = null, lib = null;
+const results = { done: false, pass: false, started: new Date().toISOString(), preInit: {}, sounds: [], extras: [], stress: {}, stack: {}, tether: {}, ambience: {}, realtime: {}, failures: [], importError: null };
+window.__audioSelfTest = results;
+
+// ------------------------------------------------------------------ analysis (FFT, peak, RMS, centroid)
+function fft(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) { let bit = n >> 1; for (; j & bit; bit >>= 1) j ^= bit; j ^= bit; if (i < j) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len, wr = Math.cos(ang), wi = Math.sin(ang), h = len >> 1;
+    for (let i = 0; i < n; i += len) {
+      let cr = 1, ci = 0;
+      for (let k = 0; k < h; k++) {
+        const a = i + k, b = a + h, vr = re[b] * cr - im[b] * ci, vi = re[b] * ci + im[b] * cr;
+        re[b] = re[a] - vr; im[b] = im[a] - vi; re[a] += vr; im[a] += vi;
+        const nr = cr * wr - ci * wi; ci = cr * wi + ci * wr; cr = nr;
+      }
+    }
+  }
+}
+const HANN = {};
+function hann(n) { if (!HANN[n]) { const w = new Float32Array(n); for (let i = 0; i < n; i++) w[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1)); HANN[n] = w; } return HANN[n]; }
+function mono(buf) { const L = buf.getChannelData(0), R = buf.numberOfChannels > 1 ? buf.getChannelData(1) : L, m = new Float32Array(L.length); for (let i = 0; i < L.length; i++) m[i] = 0.5 * (L[i] + R[i]); return m; }
+const db = (x) => (x > 0 ? 20 * Math.log10(x) : -200);
+function spectrumStats(m, sr, from = 0, to = m.length) {
+  const N = 2048, w = hann(N), acc = new Float64Array(N / 2); let frames = 0;
+  for (let s = from; s + N <= to; s += N / 2) {
+    let e = 0; for (let i = 0; i < N; i++) e += m[s + i] * m[s + i];
+    if (e / N < 1e-9) continue;
+    const re = new Float32Array(N), im = new Float32Array(N); for (let i = 0; i < N; i++) re[i] = m[s + i] * w[i];
+    fft(re, im); for (let k = 0; k < N / 2; k++) acc[k] += re[k] * re[k] + im[k] * im[k]; frames++;
+  }
+  let tot = 0, cen = 0, hf = 0; const bw = sr / N;
+  for (let k = 1; k < N / 2; k++) { tot += acc[k]; cen += acc[k] * k * bw; if (k * bw > 6000) hf += acc[k]; }
+  return { centroid: tot > 0 ? cen / tot : 0, hf: tot > 0 ? hf / tot : 0, frames };
+}
+function analyse(buf, { declaredEnd = null, from = 0, to = null } = {}) {
+  const sr = buf.sampleRate, L = buf.getChannelData(0), R = buf.numberOfChannels > 1 ? buf.getChannelData(1) : L;
+  const i0 = Math.floor(from * sr), i1 = to == null ? L.length : Math.min(L.length, Math.floor(to * sr));
+  let peak = 0, sum = 0, nan = 0, over = 0, cnt = 0;
+  for (let i = i0; i < i1; i++) {
+    const a = L[i], b = R[i];
+    if (!Number.isFinite(a) || !Number.isFinite(b)) { nan++; continue; }
+    const m = Math.max(Math.abs(a), Math.abs(b)); if (m > peak) peak = m; if (m > 0.9) over++;
+    sum += 0.5 * (a * a + b * b); cnt++;
+  }
+  const m = mono(buf), W = Math.floor(0.05 * sr), H = Math.floor(0.025 * sr);
+  let st = 0, firstOn = -1, lastOn = -1;
+  for (let s = i0; s + W <= i1; s += H) {
+    let e = 0; for (let i = s; i < s + W; i++) e += m[i] * m[i]; const r = Math.sqrt(e / W);
+    if (r > st) st = r;
+  }
+  for (let s = i0; s + W <= i1; s += H) { let e = 0; for (let i = s; i < s + W; i++) e += m[i] * m[i]; if (Math.sqrt(e / W) > peak * 0.01) { if (firstOn < 0) firstOn = s; lastOn = s + W; } }
+  const sp = spectrumStats(m, sr, i0, i1);
+  const out = { peak, rms: Math.sqrt(sum / Math.max(1, cnt)), stRms: st, nan, over09: over / Math.max(1, cnt), centroid: sp.centroid, hf: sp.hf,
+                activeS: firstOn >= 0 ? (lastOn - firstOn) / sr : 0 };
+  if (declaredEnd != null) {
+    const e = Math.floor(declaredEnd * sr), w = Math.floor(0.01 * sr);
+    let a = 0, b = 0, na = 0, nb = 0;
+    for (let i = Math.max(0, e - w); i < Math.min(m.length, e); i++) { a += m[i] * m[i]; na++; }
+    for (let i = e + Math.floor(0.1 * sr); i < m.length; i++) { const v = Math.abs(m[i]); if (v > b) b = v; nb++; }
+    out.tailDb = na ? db(Math.sqrt(a / na) / Math.max(1e-9, peak)) : null;           // level just before the declared end (re peak)
+    out.afterDb = nb ? db(b / Math.max(1e-9, peak)) : null;                           // anything still sounding after end + 0.1 s (re peak)
+  }
+  return out;
+}
+function fundamental(buf, from, to) {
+  const m = mono(buf), sr = buf.sampleRate, N = 16384, s = Math.floor(from * sr);
+  const re = new Float32Array(N), im = new Float32Array(N), w = hann(N);
+  for (let i = 0; i < N && s + i < m.length; i++) re[i] = m[s + i] * w[i];
+  fft(re, im); let best = 0, bk = 0; const bw = sr / N;
+  for (let k = Math.floor(30 / bw); k < Math.floor(200 / bw); k++) { const p = re[k] * re[k] + im[k] * im[k]; if (p > best) { best = p; bk = k; } }
+  return bk * bw;
+}
+
+function sliceBuf(buf, from) {
+  const i0 = Math.max(0, Math.floor(from * buf.sampleRate)), n = buf.length - i0;
+  const out = new AudioBuffer({ length: Math.max(1, n), numberOfChannels: buf.numberOfChannels, sampleRate: buf.sampleRate });
+  for (let c = 0; c < buf.numberOfChannels; c++) out.getChannelData(c).set(buf.getChannelData(c).subarray(i0));
+  return out;
+}
+// ------------------------------------------------------------------ spectrogram + envelope picture
+const RAMP = [[0, [16, 12, 9]], [0.35, [90, 40, 30]], [0.6, [201, 120, 40]], [0.82, [255, 204, 51]], [1, [255, 248, 220]]];
+function rampColor(t) { t = Math.max(0, Math.min(1, t)); for (let i = 1; i < RAMP.length; i++) if (t <= RAMP[i][0]) { const [a, ca] = RAMP[i - 1], [b, cb] = RAMP[i], u = (t - a) / (b - a); return ca.map((v, j) => Math.round(v + (cb[j] - v) * u)); } return RAMP[RAMP.length - 1][1]; }
+function drawSpec(canvas, buf) {
+  const W = canvas.width = canvas.clientWidth || 300, Hh = canvas.height = 86, specH = 64, ctx = canvas.getContext('2d');
+  const m = mono(buf), sr = buf.sampleRate, N = 1024, w = hann(N), img = ctx.createImageData(W, Hh);
+  const fLo = 40, fHi = 16000, rows = [];
+  for (let y = 0; y < specH; y++) rows.push((fLo * Math.pow(fHi / fLo, 1 - y / (specH - 1))) / (sr / N));
+  let gmax = 1e-12; const cols = [];
+  for (let x = 0; x < W; x++) {
+    const s = Math.floor(x / W * Math.max(1, m.length - N)), re = new Float32Array(N), im = new Float32Array(N);
+    for (let i = 0; i < N; i++) re[i] = (m[s + i] || 0) * w[i];
+    fft(re, im); const mag = new Float32Array(N / 2); for (let k = 0; k < N / 2; k++) { mag[k] = re[k] * re[k] + im[k] * im[k]; if (mag[k] > gmax) gmax = mag[k]; }
+    cols.push(mag);
+  }
+  const ref = 10 * Math.log10(gmax);
+  for (let x = 0; x < W; x++) for (let y = 0; y < specH; y++) {
+    const bk = rows[y], k0 = Math.floor(bk), u = bk - k0, mag = cols[x], p = (mag[k0] || 0) * (1 - u) + (mag[k0 + 1] || 0) * u;
+    const t = (10 * Math.log10(p + 1e-20) - ref + 80) / 80, c = rampColor(t), o = (y * W + x) * 4;
+    img.data[o] = c[0]; img.data[o + 1] = c[1]; img.data[o + 2] = c[2]; img.data[o + 3] = 255;
+  }
+  // amplitude envelope strip (peak per column, dB scale)
+  let pk = 1e-9; for (let i = 0; i < m.length; i++) pk = Math.max(pk, Math.abs(m[i]));
+  for (let x = 0; x < W; x++) {
+    const a = Math.floor(x / W * m.length), b = Math.floor((x + 1) / W * m.length); let v = 0; for (let i = a; i < b; i++) v = Math.max(v, Math.abs(m[i]));
+    const h = Math.max(0, (db(v / pk) + 60) / 60) * (Hh - specH - 3);
+    for (let y = specH + 2; y < Hh; y++) { const o = (y * W + x) * 4, on = Hh - y <= h; img.data[o] = on ? 240 : 26; img.data[o + 1] = on ? 214 : 20; img.data[o + 2] = on ? 138 : 16; img.data[o + 3] = 255; }
+  }
+  ctx.putImageData(img, 0, 0);
+  ctx.fillStyle = 'rgba(246,239,220,.55)'; ctx.font = '9px monospace';
+  for (const f of [100, 1000, 5000]) { const y = (1 - Math.log(f / fLo) / Math.log(fHi / fLo)) * (specH - 1); ctx.fillRect(0, y, 4, 1); ctx.fillText(f >= 1000 ? f / 1000 + 'k' : String(f), 6, y + 3); }
+  ctx.fillText(buf.duration.toFixed(1) + ' s', W - 30, 10);
+}
+
+// ------------------------------------------------------------------ cards
+const cards = {};
+function makeCard(name, extra) {
+  const el = document.createElement('div'); el.className = 'card' + (extra ? ' extra' : '');
+  el.innerHTML = `<div class="top"><span class="nm">${name}</span><button data-k="play">play</button></div><div class="what">${WHAT[name] || ''}</div>
+    <canvas></canvas><div class="m">-</div><span class="badge" style="display:none"></span>`;
+  const top = el.querySelector('.top');
+  for (const [lbl, o] of VARIANTS[name] || []) { const b = document.createElement('button'); b.textContent = lbl; b.onclick = () => audition(name, o); top.appendChild(b); }
+  el.querySelector('[data-k=play]').onclick = () => audition(name, {});
+  (extra ? $('grid2') : $('grid')).appendChild(el);
+  cards[name] = el;
+}
+function audition(name, o) { if (!A) return; A.init(); const ok = A.play(name, o); status(ok ? `played ${name}` : `${name}: not played (${A.state().ctxState}${A.muted ? ', muted' : ''})`); }
+function status(s) { $('status').textContent = s; }
+CONTRACT.forEach((n) => makeCard(n, false)); EXTRA.forEach((n) => makeCard(n, true));
+
+// ------------------------------------------------------------------ controls
+function envFromUI() {
+  const wx = $('wx').value; if (!wx) return null;
+  return { weather: wx, session: $('sess').value, vol: +$('wvol').value, night: $('night').checked, freeze: $('freeze').checked,
+           golden_hour: $('golden').checked, wooden: $('wooden').checked, replay: $('replay').checked };
+}
+function applyEnv() { $('wvolv').textContent = (+$('wvol').value).toFixed(2); if (!A) return; A.setAmbience(envFromUI()); }
+let stepTimer = 0, stepAcc = 0;
+function wire() {
+  $('wake').onclick = () => { const ok = A.init(); applyEnv(); A.setTether(+$('teth').value); status(ok ? 'street awake: ' + A.state().ctxState : 'no WebAudio in this browser'); };
+  $('mute').onclick = () => { A.init(); A.setMuted(!A.muted); $('mute').textContent = A.muted ? 'Unmute' : 'Mute'; };
+  $('vol').oninput = () => { $('volv').textContent = (+$('vol').value).toFixed(2); A.setVolume(+$('vol').value); };
+  $('teth').oninput = () => { $('tethv').textContent = (+$('teth').value).toFixed(2); A.init(); A.setTether(+$('teth').value); };
+  $('steps').oninput = () => {
+    const rate = +$('steps').value; $('stepsv').textContent = rate; clearInterval(stepTimer);
+    if (rate > 0) { A.init(); let last = performance.now(); stepTimer = setInterval(() => { const now = performance.now(); stepAcc += rate * (now - last) / 1000; last = now; while (stepAcc >= 1) { A.play('footstep'); stepAcc--; } }, 16); }
+  };
+  for (const id of ['wx', 'sess', 'wvol', 'night', 'freeze', 'golden', 'wooden', 'replay']) $(id).oninput = $(id).onchange = () => { A.init(); applyEnv(); };
+  $('selftest').onclick = () => runSelfTest();
+  const evs = [['bell london', { type: 'bell', session: 'london' }], ['bell NY', { type: 'bell', session: 'newyork' }], ['fill', { type: 'fill', side: 1, price: 3926.6, qty: 0.01 }],
+    ['rat', { type: 'rat', usd: 0.0033, why: 'spread' }], ['stake', { type: 'stake', x: 0.4 }], ['anvil ok', { type: 'anvil', ok: true }], ['anvil refused', { type: 'anvil', ok: false }],
+    ['wall', { type: 'wall', ok: true }], ['haggle ok', { type: 'haggle', ok: true }], ['haggle no', { type: 'haggle', ok: false }], ['machete', { type: 'machete', ok: true, usd: 0.005 }],
+    ['lightning', { type: 'lightning' }], ['freeze on', { type: 'freeze', on: true }], ['freeze off', { type: 'freeze', on: false }], ['refused', { type: 'refused', action: 'shoot', why: 'stale' }],
+    ['settled buyer', { type: 'settled', outcome: 'buyer' }], ['settled anvil', { type: 'settled', outcome: 'anvil' }], ['settled barrel', { type: 'settled', outcome: 'barrel' }],
+    ['settled merchant', { type: 'settled', outcome: 'merchant' }], ['settled eject', { type: 'settled', outcome: 'eject' }], ['settled session', { type: 'settled', outcome: 'session' }]];
+  for (const [lbl, ev] of evs) { const b = document.createElement('button'); b.textContent = lbl; b.onclick = () => { A.init(); A.event(ev); }; $('events').appendChild(b); }
+}
+
+// ------------------------------------------------------------------ the self-test
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function fmt(x, d = 3) { return x == null ? '-' : Number(x).toFixed(d); }
+function judgeSound(r) {
+  const why = [];
+  if (!r.exists) why.push('missing recipe');
+  if (!r.played) why.push('did not play');
+  if (r.errors && r.errors.length) why.push('error: ' + r.errors[0]);
+  if (r.nan) why.push('NaN samples');
+  if (r.prePeak > 0.9) why.push('hot pre-master ' + fmt(r.prePeak));
+  if (r.peak > 0.98) why.push('peak ' + fmt(r.peak));
+  if (r.over09 > 0) why.push('samples > 0.9 after master');
+  if (r.stRmsDb < -45) why.push('silent (' + r.stRmsDb.toFixed(1) + ' dB)');
+  if (r.tailDb != null && r.tailDb > -40) why.push('cut at end (' + r.tailDb.toFixed(0) + ' dB)');
+  if (r.afterDb != null && r.afterDb > -50) why.push('sounds past its end (' + r.afterDb.toFixed(0) + ' dB)');
+  const warn = [];
+  if (r.centroid > 5000) warn.push('bright (centroid ' + Math.round(r.centroid) + ' Hz)');
+  if (r.hf > 0.35) warn.push('HF ' + (r.hf * 100).toFixed(0) + '%');
+  return { pass: why.length === 0, why, warn };
+}
+async function testSound(name) {
+  const r = { name, exists: lib.hasSound(name), played: false, errors: [] };
+  if (!r.exists) return r;
+  const dur = lib.soundDur(name), T0 = lib.OFFLINE_T0;
+  // 1) dry: no master, no reverb -> pre-master peak, end/tail checks
+  const dry = await lib.renderOffline((E) => E.play(name, {}, T0), { master: false, verb: false, seconds: T0 + dur + 0.4 });
+  const v = dry.engine.voices[0];
+  const ad = analyse(dry.buffer, { declaredEnd: v ? v.end - 0.05 : null });
+  r.played = !!dry.info; r.errors = dry.engine.errors.slice(); r.prePeak = ad.peak; r.tailDb = ad.tailDb; r.afterDb = ad.afterDb; r.declared = v ? +(v.end - 0.07).toFixed(3) : null;
+  for (const seed of [2, 3]) {   // the recipes are randomised: the gate uses the hottest of three seeds
+    const d2 = await lib.renderOffline((E) => E.play(name, {}, T0), { master: false, verb: false, seconds: T0 + dur + 0.4, seed });
+    r.prePeak = Math.max(r.prePeak, analyse(d2.buffer).peak);
+  }
+  // 2) wet: the full master (reverb, glue, limiter, soft clip) -> what the player hears
+  const wet = await lib.renderOffline((E) => E.play(name, {}, T0), { master: true, verb: true, seconds: T0 + dur + 1.6 });
+  const aw = analyse(wet.buffer, { from: T0 - 0.05 });
+  Object.assign(r, { peak: aw.peak, rms: aw.rms, rmsDb: db(aw.rms), stRmsDb: db(aw.stRms), nan: aw.nan + ad.nan, over09: aw.over09, centroid: aw.centroid, hf: aw.hf, activeS: aw.activeS });
+  r.buffer = sliceBuf(wet.buffer, T0 - 0.03);
+  return r;
+}
+function showCard(r) {
+  const el = cards[r.name]; if (!el) return;
+  const j = judgeSound(r); r.pass = j.pass; r.why = j.why; r.warn = j.warn;
+  const b = el.querySelector('.badge'); b.style.display = ''; b.className = 'badge ' + (j.pass ? (j.warn.length ? 'warn' : 'ok') : 'bad'); b.textContent = j.pass ? (j.warn.length ? 'PASS*' : 'PASS') : 'FAIL';
+  el.querySelector('.m').textContent = r.exists
+    ? `peak ${fmt(r.peak)}  pre ${fmt(r.prePeak)}  rms ${r.rmsDb.toFixed(1)}dB\nshort ${r.stRmsDb.toFixed(1)}dB  centroid ${Math.round(r.centroid)}Hz  hf ${(r.hf * 100).toFixed(0)}%\nlen ${fmt(r.activeS, 2)}s  tail ${r.tailDb == null ? '-' : r.tailDb.toFixed(0)}dB  after ${r.afterDb == null ? '-' : r.afterDb.toFixed(0)}dB` + (j.why.length ? '\n' + j.why.join('; ') : j.warn.length ? '\n' + j.warn.join('; ') : '')
+    : 'MISSING RECIPE';
+  if (r.buffer) drawSpec(el.querySelector('canvas'), r.buffer);
+}
+async function runSelfTest() {
+  const t0 = performance.now();
+  results.done = false; results.sounds = []; results.extras = []; results.failures = [];
+  $('summary').textContent = 'running...'; $('summary').className = '';
+  const lines = [];
+  const note = (s) => { lines.push(s); $('checks').textContent = lines.join('\n'); console.log('[audio self-test] ' + s); };
+  const fail = (s) => { results.failures.push(s); note('FAIL ' + s); };
+  // pre-init (recorded at import time, before anything could call init)
+  const pi = results.preInit;
+  note(`pre-init: ready=${pi.ready} play()->${pi.play} threw=${pi.threw} setters ok=${pi.setters} muted getter=${pi.mutedGetter} names=${pi.names}`);
+  if (pi.ready !== false || pi.play !== false || pi.threw || !pi.setters) fail('pre-init behaviour');
+  // every sound, contract then extras
+  for (const [list, key] of [[CONTRACT, 'sounds'], [EXTRA, 'extras']]) {
+    for (const name of list) {
+      let r;
+      try { r = await testSound(name); } catch (e) { r = { name, exists: true, played: false, errors: [String(e && e.message || e)] }; }
+      showCard(r);
+      const { buffer, ...keep } = r; results[key].push(keep);
+      if (!r.pass) fail(`${name}: ${r.why.join('; ')}`);
+      console.log(`[audio self-test] ${name.padEnd(12)} peak ${fmt(r.peak)} pre ${fmt(r.prePeak)} rms ${fmt(r.rmsDb, 1)}dB short ${fmt(r.stRmsDb, 1)}dB centroid ${Math.round(r.centroid || 0)}Hz ${r.pass ? 'PASS' : 'FAIL ' + r.why.join('; ')}`);
+    }
+  }
+  note(`sounds: ${results.sounds.filter((r) => r.pass).length}/${CONTRACT.length} contract pass, ${results.extras.filter((r) => r.pass).length}/${EXTRA.length} extras pass`);
+  // every opts variant offered to the caller (bell newyork, thunder near, pistons amount 1, coin step 10, ...)
+  {
+    const T0 = lib.OFFLINE_T0; results.variants = [];
+    for (const [name, list] of Object.entries(VARIANTS)) for (const [lbl, o] of list) {
+      const dur = lib.soundDur(name);
+      const d = await lib.renderOffline((E) => E.play(name, o, T0), { master: false, verb: false, seconds: T0 + dur + 0.4 });
+      const w = await lib.renderOffline((E) => E.play(name, o, T0), { seconds: T0 + dur + 1.6 });
+      const ad = analyse(d.buffer), aw = analyse(w.buffer, { from: T0 - 0.05 });
+      const v = { name, lbl, played: !!d.info, prePeak: +ad.peak.toFixed(3), peak: +aw.peak.toFixed(3), stRmsDb: +db(aw.stRms).toFixed(1), nan: ad.nan + aw.nan, errors: d.engine.errors.length };
+      results.variants.push(v);
+      if (!v.played || v.prePeak > 0.9 || v.peak > 0.98 || v.stRmsDb < -45 || v.nan || v.errors) fail(`variant ${name} ${lbl}: ${JSON.stringify(v)}`);
+    }
+    note('variants: ' + results.variants.map((v) => `${v.name}/${v.lbl} ${v.prePeak}/${v.stRmsDb}dB`).join('  '));
+  }
+  // rate limiting must respect voices scheduled ahead (Audio.event schedules pings 2.9 s ahead)
+  {
+    const T0 = lib.OFFLINE_T0;
+    const r = await lib.renderOffline((E) => [E.play('ping', {}, T0 + 2.9), E.play('ping', {}, T0 + 0.1), E.play('ping', {}, T0 + 0.12), E.play('ping', {}, T0 + 2.91), E.play('ping', {}, T0 + 1.0)], { seconds: T0 + 4 });
+    results.schedAhead = r.info;
+    note('scheduled-ahead rate limit (expect true,true,false,false,true): ' + r.info.join(','));
+    if (r.info.join(',') !== 'true,true,false,false,true') fail('rate limit vs scheduled-ahead voices');
+  }
+  // setAmbience('off') fades to silence; null is the same
+  {
+    const r = await lib.renderOffline((E) => { E.setAmbience('storm', 0); E.tickAmbience(0, 1.5); E.setAmbience('off', 2); }, { seconds: 8 });
+    const on = db(analyse(r.buffer, { from: 1, to: 2 }).rms), off = db(analyse(r.buffer, { from: 7, to: 8 }).rms);
+    results.ambienceOff = { onDb: +on.toFixed(1), offDb: +off.toFixed(1) };
+    note(`ambience storm -> off: ${on.toFixed(1)} dB -> ${off.toFixed(1)} dB`);
+    if (!(off < -60)) fail('ambience off is not silent');
+  }
+  // stress: 200 footsteps in one second, and 200 in one instant
+  {
+    const a = await lib.renderOffline((E) => { const t = performance.now(); for (let i = 0; i < 200; i++) E.play('footstep', {}, lib.OFFLINE_T0 + i / 200); return { jsMs: performance.now() - t, started: E.started, dropped: E.dropped, maxLive: E.maxLive }; }, { seconds: lib.OFFLINE_T0 + 1.4 });
+    const sa = analyse(a.buffer);
+    const b = await lib.renderOffline((E) => { for (let i = 0; i < 200; i++) E.play('footstep', {}, lib.OFFLINE_T0); return { started: E.started, dropped: E.dropped }; }, { seconds: lib.OFFLINE_T0 + 0.5 });
+    results.stress = { perSecond: a.info, perSecondPeak: sa.peak, perSecondOver09: sa.over09, sameInstant: b.info };
+    note(`stress 200 footsteps/s: started ${a.info.started}, dropped ${a.info.dropped}, max live voices ${a.info.maxLive}, JS ${a.info.jsMs.toFixed(2)} ms, peak ${fmt(sa.peak)}; 200 at one instant: started ${b.info.started}`);
+    if (a.info.started > 40 || a.info.started < 10 || sa.peak > 0.98 || b.info.started !== 1) fail('footstep voice limiting');
+  }
+  // stack: every contract sound at once
+  {
+    const pre = await lib.renderOffline((E) => { for (const n of CONTRACT) E.play(n, {}, lib.OFFLINE_T0); return E.started; }, { seconds: lib.OFFLINE_T0 + 4, master: false });
+    const post = await lib.renderOffline((E) => { for (const n of CONTRACT) E.play(n, {}, lib.OFFLINE_T0); return E.started; }, { seconds: lib.OFFLINE_T0 + 4 });
+    const ap = analyse(pre.buffer), aq = analyse(post.buffer);
+    results.stack = { started: post.info, prePeak: ap.peak, peak: aq.peak, over09: aq.over09, nan: aq.nan };
+    note(`stack (all ${CONTRACT.length} at once): started ${post.info}, pre-master peak ${fmt(ap.peak)} -> after limiter ${fmt(aq.peak)}, samples > 0.9: ${(aq.over09 * 100).toFixed(2)}%`);
+    if (aq.peak > 0.98 || aq.nan) fail('stack clipped');
+  }
+  // start-up: tone pips every 50 ms from t=0 through the master, with and without the warm-up bypass
+  {
+    const train = async (warmup) => {
+      const r = await lib.renderOffline((E) => { for (let t = 0.01; t < 1.5; t += 0.05) { const o = E.ctx.createOscillator(); o.frequency.value = 1000; const g = E.g(0, E.sfx); o.connect(g); g.gain.setValueAtTime(0.3, t); g.gain.setValueAtTime(0, t + 0.01); o.start(t); o.stop(t + 0.012); } }, { seconds: 1.6, verb: false, warmup });
+      const pk = []; for (let t = 0.0; t < 1.5; t += 0.05) pk.push(+analyse(r.buffer, { from: t, to: t + 0.05 }).peak.toFixed(3)); return pk;
+    };
+    const w = await train(true), nw = await train(false);
+    results.startup = { warmup: w, noWarmup: nw };
+    const minW = Math.min(...w), maxW = Math.max(...w);
+    note(`start-up pips (0.3 in): with warm-up min ${minW} max ${maxW}; without: first ${nw.slice(0, 6).join(',')} ... last ${nw[nw.length - 1]}`);
+    if (minW < 0.25) fail('start-up dip with warm-up');
+  }
+  // master transfer: a sine at several levels through the master
+  {
+    const levels = [0.05, 0.2, 0.4, 0.6, 0.9, 1.5]; const tr = [];
+    for (const lv of levels) {
+      const r = await lib.renderOffline((E) => { const o = E.ctx.createOscillator(); o.frequency.value = 440; const g = E.g(lv, E.sfx); o.connect(g); o.start(0.7); o.stop(1.5); }, { seconds: 1.6, verb: false });
+      tr.push([lv, +analyse(r.buffer, { from: 1.1, to: 1.45 }).peak.toFixed(3)]);
+    }
+    results.master = tr; note('master transfer (in -> out peak, 440 Hz): ' + tr.map(([a, b]) => `${a}->${b}`).join('  '));
+  }
+  // tether
+  {
+    const zero = await lib.renderOffline((E) => { E.setTether(0, 0); }, { seconds: 0.8 });
+    const off = await lib.renderOffline((E) => { E.setTether(0.8, 0.02); E.setTether(0, 0.5); }, { seconds: 1.5 });
+    const lv = {};
+    for (const x of [0.25, 0.5, 0.75, 1]) {
+      const r = await lib.renderOffline((E) => { E.setTether(x, 0.02); }, { seconds: 1.0 });
+      const a = analyse(r.buffer, { from: 0.4, to: 1.0 });
+      lv[x] = { rmsDb: +db(a.rms).toFixed(1), peak: +a.peak.toFixed(3), centroid: Math.round(a.centroid), f0: +fundamental(r.buffer, 0.5, 1.0).toFixed(1) };
+    }
+    const z = analyse(zero.buffer).peak, o = analyse(off.buffer, { from: 0.8, to: 1.5 }).peak, on = analyse(off.buffer, { from: 0.2, to: 0.45 }).peak;
+    results.tether = { zeroPeak: z, releasedPeak: o, onPeak: on, levels: lv };
+    note(`tether: at 0 peak ${z.toExponential(1)}; 0.8 then 0: during ${fmt(on)}, after ${o.toExponential(1)}; ` + Object.entries(lv).map(([k, v]) => `${k}: ${v.rmsDb}dB f0 ${v.f0}Hz c ${v.centroid}Hz`).join(' | '));
+    if (z > 1e-5 || o > 1e-5) fail('tether not silent at 0');
+    if (!(lv[1].f0 > lv[0.5].f0 && lv[0.5].f0 > lv[0.25].f0 && lv[1].rmsDb > lv[0.5].rmsDb && lv[0.5].rmsDb > lv[0.25].rmsDb)) fail('tether does not rise with tension');
+  }
+  // ambience beds (events scheduled for the whole render)
+  {
+    const envs = [['dead', 'dead'], ['calm', { weather: 'calm', session: 'london' }], ['active', { weather: 'active', session: 'newyork', vol: 0.6 }], ['storm', { weather: 'storm', vol: 0.95 }],
+      ['night', { weather: 'calm', session: 'dead', night: true }], ['freeze', { weather: 'active', freeze: true }], ['golden', { weather: 'active', golden_hour: true }]];
+    for (const [k, env] of envs) {
+      const r = await lib.renderOffline((E) => { E.setAmbience(env, 0); E.tickAmbience(0, 8); }, { seconds: 8 });
+      const a = analyse(r.buffer, { from: 2.5, to: 8 });
+      results.ambience[k] = { rmsDb: +db(a.rms).toFixed(1), stRmsDb: +db(a.stRms).toFixed(1), peak: +a.peak.toFixed(3), centroid: Math.round(a.centroid), events: r.engine.started, nan: a.nan };
+      if (a.rms < 1e-4 || a.peak > 0.98 || a.nan) fail('ambience ' + k);
+    }
+    const x = await lib.renderOffline((E) => { E.setAmbience('calm', 0); E.setAmbience('storm', 3); }, { seconds: 7 });
+    const win = []; for (let s = 0; s < 7; s += 1) win.push(+db(analyse(x.buffer, { from: s, to: s + 1 }).rms).toFixed(1));
+    results.ambience.crossfade_calm_to_storm = win;
+    note('ambience rms dB: ' + envs.map(([k]) => `${k} ${results.ambience[k].rmsDb} (peak ${results.ambience[k].peak}, ${results.ambience[k].events} events)`).join(' | '));
+    note('crossfade calm -> storm at 3 s, rms per second: ' + win.join(', '));
+  }
+  // realtime path (same engine on a live AudioContext)
+  {
+    const rt = results.realtime;
+    try {
+      A.init(); A.setVolume(0.2);
+      for (let i = 0; i < 40 && A.state().ctxState !== 'running'; i++) await sleep(50);
+      rt.ctxState = A.state().ctxState;
+      if (rt.ctxState === 'running') {
+        await sleep(150); let t = performance.now(); let started = 0; for (let i = 0; i < 200; i++) started += A.play('footstep') ? 1 : 0; rt.footsteps200 = { started, jsMs: +(performance.now() - t).toFixed(3) };
+        await sleep(150); t = performance.now(); started = 0; for (let i = 0; i < 200; i++) started += A.play('footstep') ? 1 : 0; rt.footsteps200b = { started, jsMs: +(performance.now() - t).toFixed(3) }; await sleep(150);
+        const okNames = []; for (const n of CONTRACT) if (A.play(n, { vol: 0.3 })) okNames.push(n); rt.played = okNames.length;
+        A.setAmbience({ weather: 'storm', vol: 0.9 }); A.setTether(0.6); for (let i = 0; i < 60; i++) { A.setAmbience({ weather: 'storm', vol: 0.9 }); A.setTether(0.6 + i * 0.0001); }
+        await sleep(600);
+        A.setTether(0); A.setAmbience('calm'); A.stopAll();
+        A.setMuted(true); rt.mutedPlay = A.play('bell'); rt.mutedFlag = A.muted; await sleep(700); rt.ctxWhileMuted = A.state().ctxState;
+        A.setMuted(false); rt.unmutePlay = A.play('chime'); await sleep(200);   // unmute + a sound in the same tick must not be dropped
+        if (rt.mutedPlay !== false || rt.mutedFlag !== true) fail('mute: play while muted returned ' + rt.mutedPlay);
+        if (rt.unmutePlay !== true) fail('unmute + play in the same tick was dropped (context ' + rt.ctxWhileMuted + ')');
+        note(`mute: play while muted -> ${rt.mutedPlay}, context while muted -> ${rt.ctxWhileMuted}, unmute + play same tick -> ${rt.unmutePlay}`);
+        rt.state = A.state();
+        note(`realtime: ${rt.ctxState}; ${rt.played}/${CONTRACT.length} played; 200 play('footstep') in one frame -> ${rt.footsteps200.started} started in ${rt.footsteps200.jsMs} ms (again: ${rt.footsteps200b.jsMs} ms); errors: ${rt.state.errors.length}`);
+        if (rt.played !== CONTRACT.length || rt.state.errors.length) fail('realtime play');
+      } else note('realtime: context ' + rt.ctxState + ' (needs a user gesture; offline checks still valid)');
+    } catch (e) { fail('realtime threw ' + e.message); }
+  }
+  results.pass = results.failures.length === 0; results.done = true; results.ms = Math.round(performance.now() - t0);
+  $('summary').textContent = (results.pass ? 'PASS' : 'FAIL') + ` - ${results.failures.length} failure(s), ${results.ms} ms`; $('summary').className = results.pass ? 'ok' : 'bad';
+  console.log('[audio self-test] ' + (results.pass ? 'PASS' : 'FAIL ' + results.failures.join(' | ')));
+}
+
+// ------------------------------------------------------------------ boot: import, pre-init checks, then wire and (optionally) self-test
+(async () => {
+  try { lib = await import('./js/audio.js'); A = lib.Audio; }
+  catch (e) { results.importError = String(e && e.message || e); results.done = true; $('summary').textContent = 'IMPORT FAILED: ' + results.importError; $('summary').className = 'bad'; return; }
+  const pi = results.preInit; pi.threw = false;
+  try {
+    pi.ready = A.ready; pi.play = A.play('bell'); pi.playUnknown = A.play('no-such-sound');
+    A.setTether(0.3); A.setAmbience('storm'); A.setVolume(0.8); A.setMuted(false); pi.setters = true; A.setTether(0);
+    pi.mutedGetter = A.muted === false; pi.names = lib.NAMES.length + '/' + CONTRACT.filter((n) => lib.hasSound(n)).length;
+    pi.defaultSame = lib.default === A; pi.event = A.event({ type: 'bell', session: 'london' });
+  } catch (e) { pi.threw = String(e && e.message || e); }
+  wire();
+  if (new URLSearchParams(location.search).has('selftest')) runSelfTest();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1635 @@
+[
+ {
+  "rule_id": "B2-R1-rollover",
+  "idea": "Skip 20:30-22:00 UTC, the half hour before and the hour after the 17:00 New York rollover: spreads widen and liquidity vanishes, and a 0.1-pip target must first pay the spread. Covers the Friday weekly close and the Sunday open too.",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    return 73800 <= tod < 79200\n",
+  "score": {
+   "tagged_out": 3,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 188,
+    "losers_removed": 19,
+    "winners_removed": 169,
+    "loss_rate_removed": 10.11,
+    "lift": 4.48,
+    "net_change_usd_1lot": 4401.0,
+    "wr_after": 97.94
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 79,
+    "losers_removed": 11,
+    "winners_removed": 68,
+    "loss_rate_removed": 13.92,
+    "lift": 4.15,
+    "net_change_usd_1lot": 3850.0,
+    "wr_after": 96.9
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 109,
+    "losers_removed": 8,
+    "winners_removed": 101,
+    "loss_rate_removed": 7.34,
+    "lift": 5.25,
+    "net_change_usd_1lot": 551.0,
+    "wr_after": 98.76
+   }
+  },
+  "batch_losses_caught": [
+   "0322-214022-S",
+   "0324-205001-S",
+   "0403-204101-S",
+   "0403-204417-S",
+   "0403-205318-S",
+   "0403-205500-B"
+  ]
+ },
+ {
+  "rule_id": "B2-R1b-rollover-beyond-known",
+  "idea": "What R1 adds beyond the already known 20:45-21:15 UTC window (harness example / engine InpUhvNoClose): 20:30-20:45 and 21:15-22:00 UTC only.",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    return 73800 <= tod < 79200 and not (74700 <= tod <= 76500)\n",
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 109,
+    "losers_removed": 8,
+    "winners_removed": 101,
+    "loss_rate_removed": 7.34,
+    "lift": 3.25,
+    "net_change_usd_1lot": 2380.0,
+    "wr_after": 97.82
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 47,
+    "losers_removed": 5,
+    "winners_removed": 42,
+    "loss_rate_removed": 10.64,
+    "lift": 3.17,
+    "net_change_usd_1lot": 1814.0,
+    "wr_after": 96.75
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 62,
+    "losers_removed": 3,
+    "winners_removed": 59,
+    "loss_rate_removed": 4.84,
+    "lift": 3.46,
+    "net_change_usd_1lot": 566.0,
+    "wr_after": 98.65
+   }
+  },
+  "batch_losses_caught": [
+   "0322-214022-S",
+   "0403-204101-S",
+   "0403-204417-S"
+  ]
+ },
+ {
+  "rule_id": "B2-R1c-rollover-ny-time",
+  "idea": "R1 in New York time (DST-aware): 16:30-18:00 NY = 20:30-22:00 UTC in summer, 21:30-23:00 UTC in winter (before 8 Mar / from 1 Nov 2026).",
+  "code": "def rule(t, A):\n    off = 4 * 3600 if 1772953200 <= t[\"t_in\"] < 1793512800 else 5 * 3600\n    tod = (t[\"t_in\"] - off) % 86400\n    return 59400 <= tod < 64800\n",
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 178,
+    "losers_removed": 18,
+    "winners_removed": 160,
+    "loss_rate_removed": 10.11,
+    "lift": 4.48,
+    "net_change_usd_1lot": 4401.0,
+    "wr_after": 97.93
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 78,
+    "losers_removed": 10,
+    "winners_removed": 68,
+    "loss_rate_removed": 12.82,
+    "lift": 3.82,
+    "net_change_usd_1lot": 3838.0,
+    "wr_after": 96.87
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 100,
+    "losers_removed": 8,
+    "winners_removed": 92,
+    "loss_rate_removed": 8.0,
+    "lift": 5.72,
+    "net_change_usd_1lot": 563.0,
+    "wr_after": 98.76
+   }
+  },
+  "batch_losses_caught": [
+   "0322-214022-S",
+   "0324-205001-S",
+   "0403-204101-S",
+   "0403-204417-S",
+   "0403-205318-S",
+   "0403-205500-B"
+  ]
+ },
+ {
+  "rule_id": "B2-R2-buy-spread-2p",
+  "idea": "Skip a BUY when the ask fill is 2+ pips above the bid level: the spread alone is 20x the 0.1-pip target. Buys only (a sell fills at the bid, so its spread is invisible in the trade fields). The fill lands 0.3 s after the break, so it mixes spread with post-break movement; live, use ask-bid at the breakout tick.",
+  "code": "def rule(t, A):\n    return t[\"side\"] > 0 and (t[\"fill\"] - t[\"level\"]) / 0.0001 >= 2.0\n",
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 39,
+    "losers_removed": 7,
+    "winners_removed": 32,
+    "loss_rate_removed": 17.95,
+    "lift": 7.96,
+    "net_change_usd_1lot": 1687.0,
+    "wr_after": 97.83
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 23,
+    "losers_removed": 5,
+    "winners_removed": 18,
+    "loss_rate_removed": 21.74,
+    "lift": 6.47,
+    "net_change_usd_1lot": 1298.0,
+    "wr_after": 96.77
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 16,
+    "losers_removed": 2,
+    "winners_removed": 14,
+    "loss_rate_removed": 12.5,
+    "lift": 8.94,
+    "net_change_usd_1lot": 389.0,
+    "wr_after": 98.64
+   }
+  },
+  "batch_losses_caught": [
+   "0403-205500-B"
+  ]
+ },
+ {
+  "rule_id": "B2-R2b-buy-spread-1.2p",
+  "idea": "R2 with a 1.2-pip threshold (0406-143818-B paid 1.3 pips on Easter Monday).",
+  "code": "def rule(t, A):\n    return t[\"side\"] > 0 and (t[\"fill\"] - t[\"level\"]) / 0.0001 >= 1.2\n",
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 93,
+    "losers_removed": 11,
+    "winners_removed": 82,
+    "loss_rate_removed": 11.83,
+    "lift": 5.24,
+    "net_change_usd_1lot": 1919.0,
+    "wr_after": 97.86
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 65,
+    "losers_removed": 6,
+    "winners_removed": 59,
+    "loss_rate_removed": 9.23,
+    "lift": 2.75,
+    "net_change_usd_1lot": 1451.0,
+    "wr_after": 96.76
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 28,
+    "losers_removed": 5,
+    "winners_removed": 23,
+    "loss_rate_removed": 17.86,
+    "lift": 12.77,
+    "net_change_usd_1lot": 468.0,
+    "wr_after": 98.71
+   }
+  },
+  "batch_losses_caught": [
+   "0403-205500-B",
+   "0406-143818-B"
+  ]
+ },
+ {
+  "rule_id": "B2-R2c-buy-spread-1.2p-beyond-session",
+  "idea": "R2b outside the rollover window and Friday after 19:00 UTC.",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    dow = int(((t[\"t_in\"] // 86400) + 4) % 7)\n    if 73800 <= tod < 79200 or (dow == 5 and tod >= 68400):\n        return False\n    return t[\"side\"] > 0 and (t[\"fill\"] - t[\"level\"]) / 0.0001 >= 1.2\n",
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 65,
+    "losers_removed": 5,
+    "winners_removed": 60,
+    "loss_rate_removed": 7.69,
+    "lift": 3.41,
+    "net_change_usd_1lot": 883.0,
+    "wr_after": 97.79
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 51,
+    "losers_removed": 3,
+    "winners_removed": 48,
+    "loss_rate_removed": 5.88,
+    "lift": 1.75,
+    "net_change_usd_1lot": 672.0,
+    "wr_after": 96.68
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 14,
+    "losers_removed": 2,
+    "winners_removed": 12,
+    "loss_rate_removed": 14.29,
+    "lift": 10.22,
+    "net_change_usd_1lot": 211.0,
+    "wr_after": 98.64
+   }
+  },
+  "batch_losses_caught": [
+   "0406-143818-B"
+  ]
+ },
+ {
+  "rule_id": "B2-R3b-camel-old-7",
+  "idea": "R3 with a 7-hump threshold (is the exhaustion effect knife-edge at 8?).",
+  "code": "def rule(t, A):\n    return abs(t[\"camStk\"]) >= 7\n",
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 72,
+    "losers_removed": 6,
+    "winners_removed": 66,
+    "loss_rate_removed": 8.33,
+    "lift": 3.69,
+    "net_change_usd_1lot": 1814.0,
+    "wr_after": 97.8
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 38,
+    "losers_removed": 5,
+    "winners_removed": 33,
+    "loss_rate_removed": 13.16,
+    "lift": 3.92,
+    "net_change_usd_1lot": 1647.0,
+    "wr_after": 96.75
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 34,
+    "losers_removed": 1,
+    "winners_removed": 33,
+    "loss_rate_removed": 2.94,
+    "lift": 2.1,
+    "net_change_usd_1lot": 167.0,
+    "wr_after": 98.61
+   }
+  },
+  "batch_losses_caught": [
+   "0320-143152-S",
+   "0322-233112-B",
+   "0326-120509-S",
+   "0403-205318-S"
+  ]
+ },
+ {
+  "rule_id": "B2-R3c-camel-old-8-beyond-rollover",
+  "idea": "R3 outside the rollover window.",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    return abs(t[\"camStk\"]) >= 8 and not (73800 <= tod < 79200)\n",
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 33,
+    "losers_removed": 4,
+    "winners_removed": 29,
+    "loss_rate_removed": 12.12,
+    "lift": 5.37,
+    "net_change_usd_1lot": 826.0,
+    "wr_after": 97.79
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 18,
+    "losers_removed": 3,
+    "winners_removed": 15,
+    "loss_rate_removed": 16.67,
+    "lift": 4.96,
+    "net_change_usd_1lot": 636.0,
+    "wr_after": 96.71
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 15,
+    "losers_removed": 1,
+    "winners_removed": 14,
+    "loss_rate_removed": 6.67,
+    "lift": 4.77,
+    "net_change_usd_1lot": 190.0,
+    "wr_after": 98.62
+   }
+  },
+  "batch_losses_caught": [
+   "0320-143152-S",
+   "0326-120509-S"
+  ]
+ },
+ {
+  "rule_id": "B2-R3-camel-old-8",
+  "idea": "Skip when the camel streak is 8+ humps of the same colour (abs(camStk) >= 8): a trend this mature tends to end in a climax, and the last UHV is often the stopping volume (0320-143152-S RED x8, 0326-120509-S RED x9).",
+  "code": "def rule(t, A):\n    return abs(t[\"camStk\"]) >= 8\n",
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 34,
+    "losers_removed": 5,
+    "winners_removed": 29,
+    "loss_rate_removed": 14.71,
+    "lift": 6.52,
+    "net_change_usd_1lot": 1634.0,
+    "wr_after": 97.8
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 19,
+    "losers_removed": 4,
+    "winners_removed": 15,
+    "loss_rate_removed": 21.05,
+    "lift": 6.27,
+    "net_change_usd_1lot": 1444.0,
+    "wr_after": 96.74
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 15,
+    "losers_removed": 1,
+    "winners_removed": 14,
+    "loss_rate_removed": 6.67,
+    "lift": 4.77,
+    "net_change_usd_1lot": 190.0,
+    "wr_after": 98.62
+   }
+  },
+  "batch_losses_caught": [
+   "0320-143152-S",
+   "0326-120509-S",
+   "0403-205318-S"
+  ]
+ },
+ {
+  "rule_id": "B2-R4-combined",
+  "idea": "R1 OR R2 OR R3: the rollover window, a 2-pip+ buy spread, or an 8+ hump camel streak.",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    if 73800 <= tod < 79200:\n        return True\n    if t[\"side\"] > 0 and (t[\"fill\"] - t[\"level\"]) / 0.0001 >= 2.0:\n        return True\n    return abs(t[\"camStk\"]) >= 8\n",
+  "score": {
+   "tagged_out": 4,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 236,
+    "losers_removed": 26,
+    "winners_removed": 210,
+    "loss_rate_removed": 11.02,
+    "lift": 4.88,
+    "net_change_usd_1lot": 5912.0,
+    "wr_after": 98.02
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 107,
+    "losers_removed": 16,
+    "winners_removed": 91,
+    "loss_rate_removed": 14.95,
+    "lift": 4.45,
+    "net_change_usd_1lot": 5003.0,
+    "wr_after": 97.03
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 129,
+    "losers_removed": 10,
+    "winners_removed": 119,
+    "loss_rate_removed": 7.75,
+    "lift": 5.54,
+    "net_change_usd_1lot": 909.0,
+    "wr_after": 98.8
+   }
+  },
+  "batch_losses_caught": [
+   "0320-143152-S",
+   "0322-214022-S",
+   "0324-205001-S",
+   "0326-120509-S",
+   "0403-204101-S",
+   "0403-204417-S",
+   "0403-205318-S",
+   "0403-205500-B"
+  ]
+ },
+ {
+  "rule_id": "B2-R4b-spread-or-old-beyond-rollover",
+  "idea": "What R2 + R3 add outside the rollover window (each alone has too few losers there: R2 3, R3 4).",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    if 73800 <= tod < 79200:\n        return False\n    return (t[\"side\"] > 0 and (t[\"fill\"] - t[\"level\"]) / 0.0001 >= 2.0) or abs(t[\"camStk\"]) >= 8\n",
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 48,
+    "losers_removed": 7,
+    "winners_removed": 41,
+    "loss_rate_removed": 14.58,
+    "lift": 6.47,
+    "net_change_usd_1lot": 1511.0,
+    "wr_after": 97.82
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 28,
+    "losers_removed": 5,
+    "winners_removed": 23,
+    "loss_rate_removed": 17.86,
+    "lift": 5.32,
+    "net_change_usd_1lot": 1153.0,
+    "wr_after": 96.76
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 20,
+    "losers_removed": 2,
+    "winners_removed": 18,
+    "loss_rate_removed": 10.0,
+    "lift": 7.15,
+    "net_change_usd_1lot": 358.0,
+    "wr_after": 98.64
+   }
+  },
+  "batch_losses_caught": [
+   "0320-143152-S",
+   "0326-120509-S"
+  ]
+ },
+ {
+  "rule_id": "B2-R5-news-spike-8x",
+  "idea": "Skip when the biggest 1-minute candle of the last hour is 8x+ the hour median candle: the market is still digesting a spike (0331-222340-S: one 6-pip candle = 12x the median in a dead post-rollover hour; 0324-205001-S is NOT caught, ratio 5.4, because its whole hour stayed volatile). Mostly overlaps the rollover window.",
+  "code": "def rule(t, A):\n    k = t[\"k\"]\n    rr = A.h[k - 59:k + 1] - A.l[k - 59:k + 1]\n    return float(rr.max()) / max(float(np.median(rr)), 0.00001) >= 8\n",
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 215,
+    "losers_removed": 14,
+    "winners_removed": 201,
+    "loss_rate_removed": 6.51,
+    "lift": 2.89,
+    "net_change_usd_1lot": 4668.0,
+    "wr_after": 97.87
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 103,
+    "losers_removed": 9,
+    "winners_removed": 94,
+    "loss_rate_removed": 8.74,
+    "lift": 2.6,
+    "net_change_usd_1lot": 3766.0,
+    "wr_after": 96.81
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 112,
+    "losers_removed": 5,
+    "winners_removed": 107,
+    "loss_rate_removed": 4.46,
+    "lift": 3.19,
+    "net_change_usd_1lot": 902.0,
+    "wr_after": 98.68
+   }
+  },
+  "batch_losses_caught": [
+   "0331-222340-S",
+   "0403-204101-S",
+   "0403-204417-S",
+   "0403-205318-S",
+   "0403-205500-B"
+  ]
+ },
+ {
+  "rule_id": "B2-R5b-news-spike-beyond-rollover",
+  "idea": "R5 outside the rollover window.",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    if 73800 <= tod < 79200:\n        return False\n    k = t[\"k\"]\n    rr = A.h[k - 59:k + 1] - A.l[k - 59:k + 1]\n    return float(rr.max()) / max(float(np.median(rr)), 0.00001) >= 8\n",
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 188,
+    "losers_removed": 8,
+    "winners_removed": 180,
+    "loss_rate_removed": 4.26,
+    "lift": 1.89,
+    "net_change_usd_1lot": 1464.0,
+    "wr_after": 97.8
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 90,
+    "losers_removed": 5,
+    "winners_removed": 85,
+    "loss_rate_removed": 5.56,
+    "lift": 1.65,
+    "net_change_usd_1lot": 1005.0,
+    "wr_after": 96.7
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 98,
+    "losers_removed": 3,
+    "winners_removed": 95,
+    "loss_rate_removed": 3.06,
+    "lift": 2.19,
+    "net_change_usd_1lot": 459.0,
+    "wr_after": 98.64
+   }
+  },
+  "batch_losses_caught": [
+   "0331-222340-S"
+  ]
+ },
+ {
+  "rule_id": "B2-R6-dead-market",
+  "idea": "Skip when the 60-candle average tick volume is under 30 a minute: no market (0331-222340-S post-rollover, the four 0403 Good Friday close trades; 0322-214022-S at the Sunday open had 57 and is caught by R1 / R7 instead).",
+  "code": "def rule(t, A):\n    k = t[\"k\"]\n    return float(A.v[k - 59:k + 1].mean()) < 30\n",
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 198,
+    "losers_removed": 12,
+    "winners_removed": 186,
+    "loss_rate_removed": 6.06,
+    "lift": 2.69,
+    "net_change_usd_1lot": 4214.0,
+    "wr_after": 97.85
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 79,
+    "losers_removed": 8,
+    "winners_removed": 71,
+    "loss_rate_removed": 10.13,
+    "lift": 3.02,
+    "net_change_usd_1lot": 3510.0,
+    "wr_after": 96.81
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 119,
+    "losers_removed": 4,
+    "winners_removed": 115,
+    "loss_rate_removed": 3.36,
+    "lift": 2.4,
+    "net_change_usd_1lot": 704.0,
+    "wr_after": 98.66
+   }
+  },
+  "batch_losses_caught": [
+   "0331-222340-S",
+   "0403-204101-S",
+   "0403-204417-S",
+   "0403-205318-S",
+   "0403-205500-B"
+  ]
+ },
+ {
+  "rule_id": "B2-R6b-dead-market-beyond-session",
+  "idea": "R6 outside the rollover window and Friday after 19:00 UTC.",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    dow = int(((t[\"t_in\"] // 86400) + 4) % 7)\n    if 73800 <= tod < 79200 or (dow == 5 and tod >= 68400):\n        return False\n    k = t[\"k\"]\n    return float(A.v[k - 59:k + 1].mean()) < 30\n",
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 155,
+    "losers_removed": 4,
+    "winners_removed": 151,
+    "loss_rate_removed": 2.58,
+    "lift": 1.14,
+    "net_change_usd_1lot": 566.0,
+    "wr_after": 97.75
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 62,
+    "losers_removed": 3,
+    "winners_removed": 59,
+    "loss_rate_removed": 4.84,
+    "lift": 1.44,
+    "net_change_usd_1lot": 498.0,
+    "wr_after": 96.67
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 93,
+    "losers_removed": 1,
+    "winners_removed": 92,
+    "loss_rate_removed": 1.08,
+    "lift": 0.77,
+    "net_change_usd_1lot": 68.0,
+    "wr_after": 98.59
+   }
+  },
+  "batch_losses_caught": [
+   "0331-222340-S"
+  ]
+ },
+ {
+  "rule_id": "B2-R7-volume-dryup",
+  "idea": "Skip when the last 3 closed candles carry under 40% of the 60-candle average volume: the calm before the storm (0324-201018-S: 38, 36, 15 ticks after 100-170, then a 45-pip spike).",
+  "code": "def rule(t, A):\n    k = t[\"k\"]\n    return float(A.v[k - 2:k + 1].mean()) < 0.4 * float(A.v[k - 59:k + 1].mean())\n",
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 93,
+    "losers_removed": 5,
+    "winners_removed": 88,
+    "loss_rate_removed": 5.38,
+    "lift": 2.38,
+    "net_change_usd_1lot": 921.0,
+    "wr_after": 97.78
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 34,
+    "losers_removed": 3,
+    "winners_removed": 31,
+    "loss_rate_removed": 8.82,
+    "lift": 2.63,
+    "net_change_usd_1lot": 596.0,
+    "wr_after": 96.7
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 59,
+    "losers_removed": 2,
+    "winners_removed": 57,
+    "loss_rate_removed": 3.39,
+    "lift": 2.42,
+    "net_change_usd_1lot": 325.0,
+    "wr_after": 98.63
+   }
+  },
+  "batch_losses_caught": [
+   "0322-214022-S",
+   "0324-201018-S"
+  ]
+ },
+ {
+  "rule_id": "B2-R7b-volume-dryup-beyond-session",
+  "idea": "R7 outside the rollover window and Friday after 19:00 UTC.",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    dow = int(((t[\"t_in\"] // 86400) + 4) % 7)\n    if 73800 <= tod < 79200 or (dow == 5 and tod >= 68400):\n        return False\n    k = t[\"k\"]\n    return float(A.v[k - 2:k + 1].mean()) < 0.4 * float(A.v[k - 59:k + 1].mean())\n",
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 60,
+    "losers_removed": 1,
+    "winners_removed": 59,
+    "loss_rate_removed": 1.67,
+    "lift": 0.74,
+    "net_change_usd_1lot": 85.0,
+    "wr_after": 97.74
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 22,
+    "losers_removed": 1,
+    "winners_removed": 21,
+    "loss_rate_removed": 4.55,
+    "lift": 1.35,
+    "net_change_usd_1lot": 165.0,
+    "wr_after": 96.65
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 38,
+    "losers_removed": 0,
+    "winners_removed": 38,
+    "loss_rate_removed": 0.0,
+    "lift": 0.0,
+    "net_change_usd_1lot": -80.0,
+    "wr_after": 98.59
+   }
+  },
+  "batch_losses_caught": [
+   "0324-201018-S"
+  ]
+ },
+ {
+  "rule_id": "B2-R8-friday-after-20",
+  "idea": "Skip Friday after 20:00 UTC (the weekly close).",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    dow = int(((t[\"t_in\"] // 86400) + 4) % 7)\n    return dow == 5 and tod >= 72000\n",
+  "score": {
+   "tagged_out": 3,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 58,
+    "losers_removed": 11,
+    "winners_removed": 47,
+    "loss_rate_removed": 18.97,
+    "lift": 8.41,
+    "net_change_usd_1lot": 2834.0,
+    "wr_after": 97.87
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 20,
+    "losers_removed": 6,
+    "winners_removed": 14,
+    "loss_rate_removed": 30.0,
+    "lift": 8.93,
+    "net_change_usd_1lot": 2789.0,
+    "wr_after": 96.8
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 38,
+    "losers_removed": 5,
+    "winners_removed": 33,
+    "loss_rate_removed": 13.16,
+    "lift": 9.41,
+    "net_change_usd_1lot": 45.0,
+    "wr_after": 98.71
+   }
+  },
+  "batch_losses_caught": [
+   "0403-204101-S",
+   "0403-204417-S",
+   "0403-205318-S",
+   "0403-205500-B"
+  ]
+ },
+ {
+  "rule_id": "B2-R8b-friday-after-19-beyond-rollover",
+  "idea": "Friday 19:00-20:30 UTC only (what a Friday rule adds beyond R1).",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    dow = int(((t[\"t_in\"] // 86400) + 4) % 7)\n    return dow == 5 and tod >= 68400 and not (73800 <= tod < 79200)\n",
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 85,
+    "losers_removed": 3,
+    "winners_removed": 82,
+    "loss_rate_removed": 3.53,
+    "lift": 1.56,
+    "net_change_usd_1lot": 211.0,
+    "wr_after": 97.76
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 37,
+    "losers_removed": 3,
+    "winners_removed": 34,
+    "loss_rate_removed": 8.11,
+    "lift": 2.41,
+    "net_change_usd_1lot": 283.0,
+    "wr_after": 96.69
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 48,
+    "losers_removed": 0,
+    "winners_removed": 48,
+    "loss_rate_removed": 0.0,
+    "lift": 0.0,
+    "net_change_usd_1lot": -72.0,
+    "wr_after": 98.59
+   }
+  },
+  "batch_losses_caught": [
+   "0320-194940-S"
+  ]
+ },
+ {
+  "rule_id": "B2-R9-rollover-2200-2230",
+  "idea": "Extending R1 to 22:30 UTC: the 22:00-22:30 slice alone.",
+  "code": "def rule(t, A):\n    tod = t[\"t_in\"] % 86400\n    return 79200 <= tod < 81000\n",
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 75,
+    "losers_removed": 3,
+    "winners_removed": 72,
+    "loss_rate_removed": 4.0,
+    "lift": 1.77,
+    "net_change_usd_1lot": 532.0,
+    "wr_after": 97.76
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 41,
+    "losers_removed": 3,
+    "winners_removed": 38,
+    "loss_rate_removed": 7.32,
+    "lift": 2.18,
+    "net_change_usd_1lot": 591.0,
+    "wr_after": 96.69
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 34,
+    "losers_removed": 0,
+    "winners_removed": 34,
+    "loss_rate_removed": 0.0,
+    "lift": 0.0,
+    "net_change_usd_1lot": -59.0,
+    "wr_after": 98.59
+   }
+  },
+  "batch_losses_caught": [
+   "0331-222340-S"
+  ]
+ },
+ {
+  "rule_id": "B2-X1-zee-camel-hh",
+  "idea": "Zee camel fix as a filter: the latest hump must also make a higher high (green) / lower high (red); skip if it did not.",
+  "code": "def rule(t, A):\n    H = A.humps_known(t[\"k\"])\n    if len(H) < 2:\n        return False\n    return (H[-1][3] - H[-2][3]) * t[\"side\"] < 0\n",
+  "score": {
+   "tagged_out": 10,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 2619,
+    "losers_removed": 62,
+    "winners_removed": 2557,
+    "loss_rate_removed": 2.37,
+    "lift": 1.05,
+    "net_change_usd_1lot": 9725.0,
+    "wr_after": 97.8
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 1133,
+    "losers_removed": 42,
+    "winners_removed": 1091,
+    "loss_rate_removed": 3.71,
+    "lift": 1.1,
+    "net_change_usd_1lot": 7767.0,
+    "wr_after": 96.82
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 1486,
+    "losers_removed": 20,
+    "winners_removed": 1466,
+    "loss_rate_removed": 1.35,
+    "lift": 0.96,
+    "net_change_usd_1lot": 1959.0,
+    "wr_after": 98.57
+   }
+  },
+  "batch_losses_caught": [
+   "0322-233112-B",
+   "0324-165033-B",
+   "0324-201018-S",
+   "0325-011150-B",
+   "0325-132000-B",
+   "0402-040451-B",
+   "0403-204417-S",
+   "0406-183009-B"
+  ]
+ },
+ {
+  "rule_id": "B2-X2-camel-thin-margin",
+  "idea": "The latest hump colour was decided by under 0.3 pip - a double bottom / top read as a trend (0325-132000-B: GREEN from a 0.2-pip higher low; 0406-183009-B: 0.1 pip).",
+  "code": "def rule(t, A):\n    H = A.humps_known(t[\"k\"])\n    if not len(H):\n        return False\n    return abs(H[-1][5] - H[-1][1]) / 0.0001 < 0.3\n",
+  "score": {
+   "tagged_out": 6,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 1446,
+    "losers_removed": 31,
+    "winners_removed": 1415,
+    "loss_rate_removed": 2.14,
+    "lift": 0.95,
+    "net_change_usd_1lot": 4845.0,
+    "wr_after": 97.72
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 539,
+    "losers_removed": 17,
+    "winners_removed": 522,
+    "loss_rate_removed": 3.15,
+    "lift": 0.94,
+    "net_change_usd_1lot": 3234.0,
+    "wr_after": 96.6
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 907,
+    "losers_removed": 14,
+    "winners_removed": 893,
+    "loss_rate_removed": 1.54,
+    "lift": 1.1,
+    "net_change_usd_1lot": 1611.0,
+    "wr_after": 98.64
+   }
+  },
+  "batch_losses_caught": [
+   "0325-132000-B",
+   "0403-204417-S",
+   "0406-183009-B"
+  ]
+ },
+ {
+  "rule_id": "B2-X3-under-prior-high",
+  "idea": "Buy 0.3-1.5 pips under the 40-candle high (sell 0.3-1.5 pips above the 40-candle low): buying into fresh resistance (0319-022714-B, 0406-183009-B).",
+  "code": "def rule(t, A):\n    k = t[\"k\"]\n    if t[\"side\"] > 0:\n        room = (float(A.h[k - 39:k + 1].max()) - t[\"level\"]) / 0.0001\n    else:\n        room = (t[\"level\"] - float(A.l[k - 39:k + 1].min())) / 0.0001\n    return 0.3 <= room <= 1.5\n",
+  "score": {
+   "tagged_out": 11,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 2109,
+    "losers_removed": 48,
+    "winners_removed": 2061,
+    "loss_rate_removed": 2.28,
+    "lift": 1.01,
+    "net_change_usd_1lot": 7003.0,
+    "wr_after": 97.75
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 811,
+    "losers_removed": 30,
+    "winners_removed": 781,
+    "loss_rate_removed": 3.7,
+    "lift": 1.1,
+    "net_change_usd_1lot": 5625.0,
+    "wr_after": 96.75
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 1298,
+    "losers_removed": 18,
+    "winners_removed": 1280,
+    "loss_rate_removed": 1.39,
+    "lift": 0.99,
+    "net_change_usd_1lot": 1379.0,
+    "wr_after": 98.6
+   }
+  },
+  "batch_losses_caught": [
+   "0319-022714-B",
+   "0320-143152-S",
+   "0322-214022-S",
+   "0324-201018-S",
+   "0403-205318-S",
+   "0406-183009-B"
+  ]
+ },
+ {
+  "rule_id": "B2-X4-rejection-wick",
+  "idea": "A candle of the last 10 poked 0-3 pips beyond the level and was rejected with a wick >= 60% of its range (0406-143818-B upthrust at 19:35 PKT).",
+  "code": "def rule(t, A):\n    k, lvl, side = t[\"k\"], t[\"level\"], t[\"side\"]\n    for j in range(k - 9, k + 1):\n        rng = A.h[j] - A.l[j]\n        if rng <= 0:\n            continue\n        if side > 0:\n            beyond, wick = (A.h[j] - lvl) / 0.0001, (A.h[j] - max(A.o[j], A.c[j])) / rng\n        else:\n            beyond, wick = (lvl - A.l[j]) / 0.0001, (min(A.o[j], A.c[j]) - A.l[j]) / rng\n        if 0 <= beyond <= 3 and wick >= 0.6:\n            return True\n    return False\n",
+  "score": {
+   "tagged_out": 10,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 2671,
+    "losers_removed": 56,
+    "winners_removed": 2615,
+    "loss_rate_removed": 2.1,
+    "lift": 0.93,
+    "net_change_usd_1lot": 7502.0,
+    "wr_after": 97.66
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 1171,
+    "losers_removed": 36,
+    "winners_removed": 1135,
+    "loss_rate_removed": 3.07,
+    "lift": 0.92,
+    "net_change_usd_1lot": 6080.0,
+    "wr_after": 96.49
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 1500,
+    "losers_removed": 20,
+    "winners_removed": 1480,
+    "loss_rate_removed": 1.33,
+    "lift": 0.95,
+    "net_change_usd_1lot": 1422.0,
+    "wr_after": 98.57
+   }
+  },
+  "batch_losses_caught": [
+   "0319-022714-B",
+   "0320-194940-S",
+   "0324-165033-B",
+   "0326-120509-S",
+   "0403-205318-S",
+   "0406-143818-B"
+  ]
+ },
+ {
+  "rule_id": "B2-X5-stale-uhv",
+  "idea": "The UHV is 10+ candles old at the breakout (0324-165033-B 15, 0325-011150-B 12).",
+  "code": "def rule(t, A):\n    return t[\"k\"] + 1 - t[\"ku\"] >= 10\n",
+  "score": {
+   "tagged_out": 4,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 1026,
+    "losers_removed": 24,
+    "winners_removed": 1002,
+    "loss_rate_removed": 2.34,
+    "lift": 1.04,
+    "net_change_usd_1lot": 4172.0,
+    "wr_after": 97.76
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 474,
+    "losers_removed": 18,
+    "winners_removed": 456,
+    "loss_rate_removed": 3.8,
+    "lift": 1.13,
+    "net_change_usd_1lot": 3574.0,
+    "wr_after": 96.71
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 552,
+    "losers_removed": 6,
+    "winners_removed": 546,
+    "loss_rate_removed": 1.09,
+    "lift": 0.78,
+    "net_change_usd_1lot": 598.0,
+    "wr_after": 98.56
+   }
+  },
+  "batch_losses_caught": [
+   "0324-165033-B",
+   "0325-011150-B"
+  ]
+ },
+ {
+  "rule_id": "B2-X6-level-retested",
+  "idea": "2+ candles between the UHV and the entry already reached the level: a second / third attempt (0325-132000-B, 0406-183009-B; 0324-165033-B had only one such candle).",
+  "code": "def rule(t, A):\n    k, ku, lvl = t[\"k\"], t[\"ku\"], t[\"level\"]\n    if t[\"side\"] > 0:\n        return int((A.h[ku + 1:k + 1] >= lvl).sum()) >= 2\n    return int((A.l[ku + 1:k + 1] <= lvl).sum()) >= 2\n",
+  "score": {
+   "tagged_out": 4,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 571,
+    "losers_removed": 18,
+    "winners_removed": 553,
+    "loss_rate_removed": 3.15,
+    "lift": 1.4,
+    "net_change_usd_1lot": 2579.0,
+    "wr_after": 97.82
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 233,
+    "losers_removed": 11,
+    "winners_removed": 222,
+    "loss_rate_removed": 4.72,
+    "lift": 1.41,
+    "net_change_usd_1lot": 1717.0,
+    "wr_after": 96.74
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 338,
+    "losers_removed": 7,
+    "winners_removed": 331,
+    "loss_rate_removed": 2.07,
+    "lift": 1.48,
+    "net_change_usd_1lot": 862.0,
+    "wr_after": 98.66
+   }
+  },
+  "batch_losses_caught": [
+   "0325-132000-B",
+   "0406-183009-B"
+  ]
+ },
+ {
+  "rule_id": "B2-X7-loud-breakout",
+  "idea": "The breakout minute is already >= 90% as loud as the UHV, so it is not the quiet breakout of the method (0320-143152-S 94%; 0319-155047-S was 87%, just under).",
+  "code": "def rule(t, A):\n    return t[\"brk_ticks_so_far\"] >= 0.9 * t[\"uhv_v\"]\n",
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 188,
+    "losers_removed": 8,
+    "winners_removed": 180,
+    "loss_rate_removed": 4.26,
+    "lift": 1.89,
+    "net_change_usd_1lot": 1411.0,
+    "wr_after": 97.8
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 83,
+    "losers_removed": 5,
+    "winners_removed": 78,
+    "loss_rate_removed": 6.02,
+    "lift": 1.79,
+    "net_change_usd_1lot": 1014.0,
+    "wr_after": 96.71
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 105,
+    "losers_removed": 3,
+    "winners_removed": 102,
+    "loss_rate_removed": 2.86,
+    "lift": 2.04,
+    "net_change_usd_1lot": 397.0,
+    "wr_after": 98.64
+   }
+  },
+  "batch_losses_caught": [
+   "0320-143152-S"
+  ]
+ },
+ {
+  "rule_id": "B2-X7b-loud-breakout-0.91",
+  "idea": "X7 with the 0.91 cut that the residual scan picked (threshold chosen from the data).",
+  "code": "def rule(t, A):\n    return t[\"brk_ticks_so_far\"] >= 0.91 * t[\"uhv_v\"]\n",
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 158,
+    "losers_removed": 8,
+    "winners_removed": 150,
+    "loss_rate_removed": 5.06,
+    "lift": 2.24,
+    "net_change_usd_1lot": 1451.0,
+    "wr_after": 97.8
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 67,
+    "losers_removed": 5,
+    "winners_removed": 62,
+    "loss_rate_removed": 7.46,
+    "lift": 2.22,
+    "net_change_usd_1lot": 1036.0,
+    "wr_after": 96.73
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 91,
+    "losers_removed": 3,
+    "winners_removed": 88,
+    "loss_rate_removed": 3.3,
+    "lift": 2.36,
+    "net_change_usd_1lot": 415.0,
+    "wr_after": 98.64
+   }
+  },
+  "batch_losses_caught": [
+   "0320-143152-S"
+  ]
+ },
+ {
+  "rule_id": "B2-X8-climax-counter-uhv",
+  "idea": "Sell in the bottom 30% of the 40-candle range (buy in the top 30%; pos = 1 at the trade-direction extreme) after a strong counter UHV (body > 60%, closed at its far end): selling into support after a bullish climax (0319-155047-S; 0320-143152-S misses, its UHV closed at 80% of its range).",
+  "code": "def rule(t, A):\n    k, ku, side = t[\"k\"], t[\"ku\"], t[\"side\"]\n    hi, lo = float(A.h[k - 39:k + 1].max()), float(A.l[k - 39:k + 1].min())\n    if hi <= lo:\n        return False\n    pos = (t[\"level\"] - lo) / (hi - lo) if side > 0 else (hi - t[\"level\"]) / (hi - lo)\n    rng = A.h[ku] - A.l[ku]\n    if rng <= 0:\n        return False\n    body = abs(A.c[ku] - A.o[ku]) / rng\n    against = (A.h[ku] - A.c[ku]) / rng if side > 0 else (A.c[ku] - A.l[ku]) / rng\n    return pos > 0.7 and body > 0.6 and against > 0.85\n",
+  "score": {
+   "tagged_out": 10,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 1382,
+    "losers_removed": 32,
+    "winners_removed": 1350,
+    "loss_rate_removed": 2.32,
+    "lift": 1.03,
+    "net_change_usd_1lot": 4958.0,
+    "wr_after": 97.76
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 622,
+    "losers_removed": 22,
+    "winners_removed": 600,
+    "loss_rate_removed": 3.54,
+    "lift": 1.05,
+    "net_change_usd_1lot": 4104.0,
+    "wr_after": 96.68
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 760,
+    "losers_removed": 10,
+    "winners_removed": 750,
+    "loss_rate_removed": 1.32,
+    "lift": 0.94,
+    "net_change_usd_1lot": 854.0,
+    "wr_after": 98.58
+   }
+  },
+  "batch_losses_caught": [
+   "0319-155047-S",
+   "0322-214022-S",
+   "0324-201018-S",
+   "0331-222340-S",
+   "0403-204417-S"
+  ]
+ },
+ {
+  "rule_id": "B2-X9-extended-move",
+  "idea": "The last 30 candles already moved 8+ pips in the trade direction: late in the leg (0319-022714-B 9.3, 0406-183009-B 9.0).",
+  "code": "def rule(t, A):\n    k = t[\"k\"]\n    return (A.c[k] - A.c[k - 30]) * t[\"side\"] / 0.0001 >= 8\n",
+  "score": {
+   "tagged_out": 8,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 769,
+    "losers_removed": 28,
+    "winners_removed": 741,
+    "loss_rate_removed": 3.64,
+    "lift": 1.61,
+    "net_change_usd_1lot": 6516.0,
+    "wr_after": 97.9
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 428,
+    "losers_removed": 23,
+    "winners_removed": 405,
+    "loss_rate_removed": 5.37,
+    "lift": 1.6,
+    "net_change_usd_1lot": 5827.0,
+    "wr_after": 96.94
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 341,
+    "losers_removed": 5,
+    "winners_removed": 336,
+    "loss_rate_removed": 1.47,
+    "lift": 1.05,
+    "net_change_usd_1lot": 689.0,
+    "wr_after": 98.61
+   }
+  },
+  "batch_losses_caught": [
+   "0319-022714-B",
+   "0319-155047-S",
+   "0320-143152-S",
+   "0326-120509-S",
+   "0403-204101-S",
+   "0403-204417-S",
+   "0403-205318-S",
+   "0406-143818-B",
+   "0406-183009-B"
+  ]
+ },
+ {
+  "rule_id": "B2-X10-against-2h-drift",
+  "idea": "The trade is 10+ pips against the 2-hour drift (0325-132000-B buy inside a downtrend, 0319-184909-S sell inside an uptrend).",
+  "code": "def rule(t, A):\n    k = t[\"k\"]\n    return (A.c[k] - A.c[k - 120]) * t[\"side\"] / 0.0001 <= -10\n",
+  "score": {
+   "tagged_out": 5,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 1097,
+    "losers_removed": 25,
+    "winners_removed": 1072,
+    "loss_rate_removed": 2.28,
+    "lift": 1.01,
+    "net_change_usd_1lot": 3704.0,
+    "wr_after": 97.75
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 610,
+    "losers_removed": 18,
+    "winners_removed": 592,
+    "loss_rate_removed": 2.95,
+    "lift": 0.88,
+    "net_change_usd_1lot": 2909.0,
+    "wr_after": 96.55
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 487,
+    "losers_removed": 7,
+    "winners_removed": 480,
+    "loss_rate_removed": 1.44,
+    "lift": 1.03,
+    "net_change_usd_1lot": 795.0,
+    "wr_after": 98.61
+   }
+  },
+  "batch_losses_caught": [
+   "0319-155047-S",
+   "0319-184909-S",
+   "0324-201018-S",
+   "0324-205001-S",
+   "0325-132000-B",
+   "0402-040451-B",
+   "0403-205500-B"
+  ]
+ },
+ {
+  "rule_id": "B2-X11-round-number-ahead",
+  "idea": "A 10-pip round number less than 1 pip ahead of the level (0319-022714-B 0.2 pip under 1.1490, 0325-132000-B 0.1 pip under 1.1590; 0319-155047-S sold 3.5 pips above 1.1500, outside the 1-pip reach).",
+  "code": "def rule(t, A):\n    lvl, side = t[\"level\"], t[\"side\"]\n    x = lvl / 0.001\n    nxt = (math.ceil(x + 1e-9) if side > 0 else math.floor(x - 1e-9)) * 0.001\n    return (nxt - lvl) * side / 0.0001 < 1.0\n",
+  "score": {
+   "tagged_out": 7,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 788,
+    "losers_removed": 28,
+    "winners_removed": 760,
+    "loss_rate_removed": 3.55,
+    "lift": 1.58,
+    "net_change_usd_1lot": 4184.0,
+    "wr_after": 97.89
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 337,
+    "losers_removed": 15,
+    "winners_removed": 322,
+    "loss_rate_removed": 4.45,
+    "lift": 1.33,
+    "net_change_usd_1lot": 2753.0,
+    "wr_after": 96.76
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 451,
+    "losers_removed": 13,
+    "winners_removed": 438,
+    "loss_rate_removed": 2.88,
+    "lift": 2.06,
+    "net_change_usd_1lot": 1431.0,
+    "wr_after": 98.78
+   }
+  },
+  "batch_losses_caught": [
+   "0319-022714-B",
+   "0319-072453-B",
+   "0325-132000-B"
+  ]
+ },
+ {
+  "rule_id": "B2-X12-hump-lower-high",
+  "idea": "The latest hump high is 2.7+ pips below the previous hump high (buy) / above it (sell): a weak camel.",
+  "code": "def rule(t, A):\n    H = A.humps_known(t[\"k\"])\n    if len(H) < 2:\n        return False\n    return (H[-1][3] - H[-2][3]) / 0.0001 * t[\"side\"] < -2.7\n",
+  "score": {
+   "tagged_out": 3,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 366,
+    "losers_removed": 14,
+    "winners_removed": 352,
+    "loss_rate_removed": 3.83,
+    "lift": 1.7,
+    "net_change_usd_1lot": 3173.0,
+    "wr_after": 97.82
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 201,
+    "losers_removed": 11,
+    "winners_removed": 190,
+    "loss_rate_removed": 5.47,
+    "lift": 1.63,
+    "net_change_usd_1lot": 2676.0,
+    "wr_after": 96.78
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 165,
+    "losers_removed": 3,
+    "winners_removed": 162,
+    "loss_rate_removed": 1.82,
+    "lift": 1.3,
+    "net_change_usd_1lot": 497.0,
+    "wr_after": 98.62
+   }
+  },
+  "batch_losses_caught": [
+   "0324-165033-B",
+   "0402-040451-B",
+   "0403-204417-S"
+  ]
+ }
+]

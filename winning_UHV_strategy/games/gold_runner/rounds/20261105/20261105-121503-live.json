@@ -1,0 +1,201 @@
+{
+ "v": 1,
+ "id": "20261105-121503-live",
+ "mode": "live",
+ "kind": "live",
+ "side": 1,
+ "qty0": 10000.0,
+ "coin_oz": 10000.0,
+ "stop_dist": 0.0024800000000000247,
+ "target": 1e-05,
+ "risk_usd": 24.8,
+ "shot_t": 1793880903.5561013,
+ "opened_t": 1793880905.189937,
+ "closed_t": 1793880906.149593,
+ "patience_s": 0.01,
+ "quick": true,
+ "session": "london",
+ "weather": "active",
+ "storm_seen": false,
+ "night": false,
+ "position_id": 15607172,
+ "order_id": 2196332129,
+ "quote_at_send": {
+  "bid": 1.12239,
+  "ask": 1.1224,
+  "ts": 1793880903.2382295
+ },
+ "entry_ref": 1.1224,
+ "spread_entry": 0.0,
+ "fill": 1.1224,
+ "sl0": 1.11992,
+ "tp0": 1.12241,
+ "sl_final": 1.11992,
+ "tp_final": 1.12241,
+ "exit": 1.12241,
+ "walls": [],
+ "haggles": 0,
+ "machete_done": false,
+ "banked_usd": 0.0,
+ "golden": null,
+ "anvil_moves": 0,
+ "anvil_before_haggle": false,
+ "outcome": "buyer",
+ "result_usd": 0.1,
+ "costs": {
+  "spread_usd": 0.0,
+  "slippage_usd": 0.0,
+  "fee_usd": 0.0,
+  "financing_usd": 0.0
+ },
+ "estimated": false,
+ "instructions": [
+  {
+   "nonce": "bot-46dc0e1744f24965bde6d6e0800f259c",
+   "action": "fund",
+   "args": {
+    "kind": "live",
+    "side": 1,
+    "target": 0.0002,
+    "coins": 1
+   },
+   "sent_at": 1793880903.5435853,
+   "recv_t": 1793880903.5455909,
+   "accepted": true,
+   "why": null
+  },
+  {
+   "nonce": "bot-bd82194b421245a0a328bb970b33ad66",
+   "action": "shoot",
+   "args": {},
+   "sent_at": 1793880903.5505908,
+   "recv_t": 1793880903.5561013,
+   "accepted": true,
+   "why": null,
+   "broker": {
+    "sent": {
+     "side": 1,
+     "qty": 10000.0,
+     "sl": 1.11992,
+     "tp": 1.12241,
+     "quote": {
+      "bid": 1.12239,
+      "ask": 1.1224,
+      "ts": 1793880903.2382295
+     }
+    },
+    "ok": true,
+    "error": null,
+    "rtt_ms": 1629.4,
+    "order_id": 2196332129,
+    "position_id": 15607172,
+    "fill_price": 1.1224,
+    "definite": true,
+    "uncertain": null
+   }
+  }
+ ],
+ "fills": [
+  {
+   "t": 1793880905.189937,
+   "what": "open",
+   "side": 1,
+   "qty": 10000.0,
+   "price": 1.1224,
+   "quote": {
+    "bid": 1.12239,
+    "ask": 1.1224,
+    "ts": 1793880903.2382295
+   },
+   "rtt_ms": 1629.4
+  }
+ ],
+ "report_rows": [
+  {
+   "id": 2196332131,
+   "accountId": "L1869984",
+   "type": "TAKE_PROFIT",
+   "status": "EXECUTED",
+   "side": "SELL",
+   "placedAt": "2026-11-05T12:15:06.363Z",
+   "executedAt": "2026-11-05T12:15:06.363Z",
+   "protective": true,
+   "qty": 10000.0,
+   "symbol": "EUR/USD",
+   "symbolDisplayName": "EUR/USD",
+   "triggerPrice": 1.12241,
+   "executedPrice": 1.12241,
+   "executedQty": 10000.0,
+   "rpl": 0.1,
+   "fee": 0,
+   "accountCurrency": "USD",
+   "positionId": 15607172,
+   "roiPct": 0.89,
+   "shareable": true,
+   "userAgent": null,
+   "originId": 2196332131,
+   "releasedMargin": 11.22,
+   "openReason": "CLIENT",
+   "closeReason": "EXECUTION",
+   "closeResolution": "EXECUTED",
+   "clientOrderId": null,
+   "executed_ts": 1793880906.363
+  }
+ ],
+ "rat": [],
+ "quotes": {
+  "n": 4,
+  "first": {
+   "bid": 1.12241,
+   "ask": 1.12242,
+   "ts": 1793880905.2796996
+  },
+  "last": {
+   "bid": 1.1224,
+   "ask": 1.12241,
+   "ts": 1793880906.0591733
+  },
+  "high_bid": 1.12241,
+  "low_bid": 1.12239,
+  "spread_min": 0.0,
+  "spread_max": 0.0,
+  "spread_avg": 0.0
+ },
+ "path": [
+  [
+   0.1,
+   0.98394
+  ]
+ ],
+ "twin_invited": false,
+ "twin": null,
+ "twin_result_usd": null,
+ "would_have_usd": null,
+ "settlement": {
+  "id": "20261105-121503-live",
+  "kind": "live",
+  "side": 1,
+  "outcome": "buyer",
+  "result_usd": 0.1,
+  "result_text": "+$0.10",
+  "value_usd": 24.9,
+  "value_text": "$24.90",
+  "costs": {
+   "spread_usd": 0.0,
+   "slippage_usd": 0.0,
+   "fee_usd": 0.0,
+   "financing_usd": 0.0
+  },
+  "fill": 1.1224,
+  "exit": 1.12241,
+  "qty0": 10000.0,
+  "age_s": 1.0,
+  "chasm": null,
+  "balance_after": 22.42,
+  "twin_result_usd": null,
+  "would_have_usd": null,
+  "plain": "Bought 10000.00 oz of gold at 1.12; the take profit sold it at 1.12: +$0.10 after a $0.00 spread.",
+  "t": 1793880906.15
+ },
+ "notes": []
+}

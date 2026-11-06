@@ -1,0 +1,9 @@
+latency 0.0: LOSS 2026-04-17 16:27:53 UTC side +1 fill 1.18022 stop 1.17806 (21.6 p) exit 1.17805 after 8569 s  $-217.00  best 0.000 R  worst -1.00 R
+latency 0.0: LOSS 2026-08-20 16:43:08 UTC side -1 fill 1.16699 stop 1.16911 (21.2 p) exit 1.16912 after 31603 s  $-212.99  best -0.000 R  worst -1.00 R
+latency 0.0: LOSS 2026-10-15 02:30:18 UTC side -1 fill 1.12168 stop 1.12377 (20.9 p) exit 1.12378 after 1605 s  $-210.00  best -0.000 R  worst -1.00 R
+latency 0.1: LOSS 2026-04-28 00:55:42 UTC side +1 fill 1.17195 stop 1.16979 (21.6 p) exit 1.16977 after 21086 s  $-218.00  best 0.000 R  worst -1.01 R
+latency 0.2: LOSS 2026-08-20 16:43:08 UTC side -1 fill 1.16699 stop 1.16911 (21.2 p) exit 1.16912 after 31602 s  $-212.99  best -0.000 R  worst -1.00 R
+latency 0.6: LOSS 2026-04-28 00:55:42 UTC side +1 fill 1.17195 stop 1.16979 (21.6 p) exit 1.16977 after 21086 s  $-218.00  best 0.000 R  worst -1.01 R
+latency 1.0: LOSS 2026-04-28 00:55:43 UTC side +1 fill 1.17195 stop 1.16979 (21.6 p) exit 1.16977 after 21085 s  $-218.00  best 0.000 R  worst -1.01 R
+default 0.3 s: smallest results 07-16 03:34:02 $+1.00 (held 9623 s, worst -0.33 R), 08-07 16:11:37 $+1.00 (held 4 s, worst -0.01 R), 08-07 19:49:21 $+1.00 (held 1 s, worst -0.01 R), 08-10 05:48:23 $+1.00 (held 18 s, worst -0.01 R), 08-11 05:26:07 $+1.00 (held 237 s, worst -0.06 R)
+default 0.3 s: holding time median 27.7 s, 90th pct 751 s, max 9623 s; deepest dip before the target: median -0.029 R, worst -0.87 R; trades that dipped below -0.25 R: 16

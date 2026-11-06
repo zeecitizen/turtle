@@ -1,0 +1,54 @@
+zee100: rows 311, ghost rows (col10=1): 3
+tight: rows 720, ghost rows (col10=1): 6
+secure: rows 2259, ghost rows (col10=1): 21
+base: rows 7696, ghost rows (col10=1): 65
+
+== 1. exits
+zee100 exit reason codes (5 = target): {5: 308} | hold s: median 27.7 max 9623
+tight losses: best move after fill (pips): +0.0, -0.0, -0.1, +0.0 | exit codes [1, 8]
+secure losses: best move after fill (pips): -0.3, +0.0, -0.3, +0.0, -0.5, +0.0, +0.0, -0.3, -0.5, -0.6, -0.3, -0.4, -0.4, -0.5, -0.4, +0.0, -0.2, -0.2, -0.3, -0.5, -0.5, +0.0, -0.1, -0.0, -0.0, -0.1, -0.0, -0.1, -0.1, +0.0 | exit codes [1, 8]
+
+== 2. near misses (deepest dip before the result, R = stop distance)
+  zee100  dipped to -0.25R:    16 of 308 (5.2%), went on to lose 0 (0%)  [train 0/9, test 0/7]
+  zee100  dipped to -0.50R:     4 of 308 (1.3%), went on to lose 0 (0%)  [train 0/4, test 0/0]
+  tight   dipped to -0.25R:    38 of 714 (5.3%), went on to lose 4 (11%)  [train 1/22, test 3/16]
+  tight   dipped to -0.50R:    15 of 714 (2.1%), went on to lose 4 (27%)  [train 1/11, test 3/4]
+  secure  dipped to -0.25R:   163 of 2238 (7.3%), went on to lose 30 (18%)  [train 22/110, test 8/53]
+  secure  dipped to -0.50R:    73 of 2238 (3.3%), went on to lose 30 (41%)  [train 22/53, test 8/20]
+  base    dipped to -0.25R:   588 of 7631 (7.7%), went on to lose 166 (28%)  [train 111/370, test 55/218]
+  base    dipped to -0.50R:   309 of 7631 (4.0%), went on to lose 163 (53%)  [train 110/203, test 53/106]
+  if zee100's dippers went on to lose at 15% like the stacks: expected 2.8 losses in 308 -> 0.92% loss rate; P(0 of 16 | 0.15) = 0.0743
+  if zee100's dippers went on to lose at 25% like the stacks: expected 5.3 losses in 308 -> 1.73% loss rate; P(0 of 16 | 0.25) = 0.0100
+  if zee100's dippers went on to lose at 35% like the stacks: expected 8.6 losses in 308 -> 2.80% loss rate; P(0 of 16 | 0.35) = 0.0010
+
+== 3. random-entry null (same ticks, same geometry)
+  (a) random tick + random side, n 39732: WR 98.07%  (train 97.26%, test 98.89%)
+  (b) zee100's side, 5-90 min from its own entries, n 18114: WR 98.70%  (train 97.86%, test 99.26%)
+
+== 4. the three logged steps per half (harness secure stack, post hoc)
+  ER min 0.15 -> 0.30        train: dropped 18/665 = 2.71%  kept 4/394 = 1.02%  (one-sided Fisher p 0.05)
+  ER min 0.15 -> 0.30        test: dropped 5/701 = 0.71%  kept 3/477 = 0.63%  (one-sided Fisher p 0.58)
+  then humps max 5 -> 3      train: dropped 3/89 = 3.37%  kept 1/305 = 0.33%  (one-sided Fisher p 0.04)
+  then humps max 5 -> 3      test: dropped 1/114 = 0.88%  kept 2/363 = 0.55%  (one-sided Fisher p 0.56)
+  then ER max 0.45 -> 0.35   train: dropped 1/185 = 0.54%  kept 0/120 = 0.00%  (one-sided Fisher p 0.61)
+  then ER max 0.45 -> 0.35   test: dropped 2/196 = 1.02%  kept 0/167 = 0.00%  (one-sided Fisher p 0.29)
+
+== 5. the other saved setting from today (not in the verdict)
+  2026-11-06 13-00-00 all: 6658 trades / 126 losses / WR 98.11% / net -17812.14
+  2026-11-06 13-00-00 train: 2889 trades / 84 losses / WR 97.09% / net -14051.54
+  2026-11-06 13-00-00 test: 3769 trades / 42 losses / WR 98.89% / net -3760.60
+
+== 6. doctrine
+  zee100 = 2026-11-06 07-33-17, engine 308 trades / 0 losses (break-even 99.3% at the engine's $1.44 average win)
+     python 100%  ->  expect ~84% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -15 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  zee100, break-even if every win is exactly +0.1 pip ($1.00)
+     python 100%  ->  expect ~84% in MT5 (python overstates by ~16)
+     needs 100% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  zee100 out-of-sample estimate (neighbourhood / walk-forward), about 99%
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+

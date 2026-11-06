@@ -1,0 +1,71 @@
+== the four stacks as saved
+base 05-45-38                                              all 7631/172L 97.75% -25525.97  train 3336/112L 96.64% -20127.35  test 4295/60L 98.6% -5398.62
+secure 09-10-00                                            all 2238/30L 98.66% -2975.57  train 1059/22L 97.92% -2974.80  test 1179/8L 99.32% -0.76
+tight 09-00-00                                             all 714/4L 99.44% +376.15  train 332/1L 99.7% +285.13  test 382/3L 99.21% +91.02
+zee100 07-33-17                                            all 308/0L 100.0% +444.06  train 125/0L 100.0% +193.03  test 183/0L 100.0% +251.04
+== Zee's three logged steps, from secure
+step0 secure                                               all 2238/30L 98.66% -2975.57  train 1059/22L 97.92% -2974.80  test 1179/8L 99.32% -0.76
+step1 secure + ErMin 0.30                                  all 925/8L 99.14% -173.80  train 428/4L 99.07% -223.89  test 497/4L 99.2% +50.08
+step2 + HumpsMax 3                                         all 714/4L 99.44% +376.15  train 332/1L 99.7% +285.13  test 382/3L 99.21% +91.02
+step3 + ErMax 0.35                                         all 308/0L 100.0% +444.06  train 125/0L 100.0% +193.03  test 183/0L 100.0% +251.04
+== verdict's variants
+zee100 + MaxTrigSpread 0.5                                 all 241/0L 100.0% +338.06  train 58/0L 100.0% +87.02  test 183/0L 100.0% +251.04
+tight + MaxTrigSpread 0.5                                  all 528/3L 99.43% +315.10  train 146/0L 100.0% +224.08  test 382/3L 99.21% +91.02
+secure + MaxTrigSpread 0.5                                 all 1700/12L 99.29% -0.50  train 521/4L 99.23% +0.26  test 1179/8L 99.32% -0.76
+zee100 + SafeRange 9.2/120                                 all 238/0L 100.0% +344.03  train 102/0L 100.0% +158.05  test 136/0L 100.0% +185.98
+tight + SafeRange 9.2/120                                  all 556/4L 99.28% +140.08  train 267/1L 99.63% +178.12  test 289/3L 98.96% -38.04
+secure + SafeRange 9.2/120                                 all 1798/18L 99.0% -827.69  train 866/13L 98.5% -1274.81  test 932/5L 99.46% +447.12
+secure + MaxTrig 0.5 + SafeRange 9.2/120                   all 1365/8L 99.41% +511.36  train 433/3L 99.31% +64.24  test 932/5L 99.46% +447.12
+secure + ErMax 0.35                                        all 1778/24L 98.65% -2527.64  train 841/19L 97.74% -2629.88  test 937/5L 99.47% +102.24
+zee100 + RunPips 8.1/60 (inert?)                           all 308/0L 100.0% +444.06  train 125/0L 100.0% +193.03  test 183/0L 100.0% +251.04
+zee100 + NewsNY 1 (inert?)                                 all 308/0L 100.0% +444.06  train 125/0L 100.0% +193.03  test 183/0L 100.0% +251.04
+== knife-edge claims (work_wf)
+zee100 ErMax 0.36                                          all 353/1L 99.72% +298.07  train 151/0L 100.0% +225.04  test 202/1L 99.5% +73.03
+zee100 ErMin 0.28                                          all 445/2L 99.55% +273.12  train 192/2L 98.96% -82.92  test 253/0L 100.0% +356.04
+zee100 ErMin 0.29                                          all 378/0L 100.0% +627.08  train 161/0L 100.0% +325.03  test 217/0L 100.0% +302.05
+zee100 humps 1-3                                           all 690/5L 99.28% -65.99  train 314/3L 99.04% -192.92  test 376/2L 99.47% +126.93
+zee100 humps 2-4                                           all 379/1L 99.74% +355.10  train 155/1L 99.35% +45.02  test 224/0L 100.0% +310.08
+zee100 ErBars 12                                           all 324/4L 98.77% -397.83  train 164/4L 97.56% -612.87  test 160/0L 100.0% +215.05
+zee100 ErBars 15                                           all 338/1L 99.7% +282.12  train 148/1L 99.32% -12.89  test 190/0L 100.0% +295.01
+zee100 ErBars 17                                           all 301/7L 97.67% -1008.06  train 133/6L 95.49% -1044.03  test 168/1L 99.4% +35.97
+zee100 ErBars 20                                           all 255/5L 98.04% -541.01  train 131/3L 97.71% -471.03  test 124/2L 98.39% -69.98
+zee100 latency 0.0                                         all 308/3L 99.03% -200.84  train 124/1L 99.19% -25.91  test 184/2L 98.91% -174.92
+zee100 latency 0.1                                         all 307/1L 99.67% +232.09  train 124/1L 99.19% -23.96  test 183/0L 100.0% +256.04
+zee100 latency 0.5                                         all 308/0L 100.0% +449.02  train 125/0L 100.0% +201.01  test 183/0L 100.0% +248.01
+zee100 latency 1.0                                         all 307/1L 99.67% +213.11  train 124/1L 99.19% -31.94  test 183/0L 100.0% +245.05
+zee100 FixTp 0.15 (~0.05 pip worse fill)                   all 306/2L 99.35% +268.06  train 124/1L 99.19% +79.02  test 182/1L 99.45% +189.04
+zee100 FixTp 0.2 (~0.1 pip worse fill)                     all 306/2L 99.35% +336.16  train 124/1L 99.19% +107.06  test 182/1L 99.45% +229.10
+zee100 FixTp 0.3 (~0.2 pip worse fill)                     all 305/5L 98.36% +39.20  train 123/2L 98.37% +31.08  test 182/3L 98.35% +8.12
+== neighbour bands of the box (humps 2-3), each as its own zone
+h2-3 ER[0.20,0.25)                                         all 399/7L 98.25% -941.90  train 191/4L 97.91% -557.89  test 208/3L 98.56% -384.00
+h2-3 ER[0.25,0.30)                                         all 372/5L 98.66% -427.90  train 182/4L 97.8% -506.94  test 190/1L 99.47% +79.04
+h2-3 ER[0.30,0.35)                                         all 308/0L 100.0% +444.06  train 125/0L 100.0% +193.03  test 183/0L 100.0% +251.04
+h2-3 ER[0.35,0.40)                                         all 232/3L 98.71% -293.96  train 119/1L 99.16% -47.95  test 113/2L 98.23% -246.01
+h2-3 ER[0.40,0.45)                                         all 183/1L 99.45% +235.06  train 91/0L 100.0% +143.07  test 92/1L 98.91% +92.00
+h1-1 ER[0.30,0.35)                                         all 385/5L 98.7% -507.05  train 190/3L 98.42% -384.95  test 195/2L 98.97% -122.10
+h4-5 ER[0.30,0.35)                                         all 90/1L 98.89% -60.96  train 41/1L 97.56% -134.00  test 49/0L 100.0% +73.04
+
+== PAYOFF (engine credits the crossing tick's full move on a target hit: _play 'pnl += left * m')
+zee100: wins 308: mean $1.442 (pips mean 0.144, median 0.10, share exactly 0.1p 67.9%) | 0.1p x209, 0.2p x32, 0.2p x38, 0.3p x10, 0.3p x12, 0.4p x3, 0.4p x3, 0.5p x1
+     net as engine +444.06; net if every win = +0.1 pip ($1.00/lot) +308.00; losses 0 mean $0.00; risk$ (stop if hit) median 209.0 mean 212.5 p10 199.7 p90 230.6
+     break-even WR with engine avg win $1.44 vs median risk $209: 99.31%
+     break-even WR with engine avg win $1.44 vs mean actual loss $209: 99.31%
+     break-even WR with TP exactly +0.1 pip $1.00 vs median risk $209: 99.52%
+     break-even WR with TP exactly +0.1 pip $1.00 vs mean actual loss $209: 99.52%
+tight: wins 710: mean $1.464 (pips mean 0.146, median 0.10, share exactly 0.1p 68.2%) | 0.1p x484, 0.2p x68, 0.2p x85, 0.3p x26, 0.3p x25, 0.4p x11, 0.4p x6, 0.5p x2
+     net as engine +376.15; net if every win = +0.1 pip ($1.00/lot) +47.02; losses 4 mean $-165.75; risk$ (stop if hit) median 209.0 mean 214.4 p10 200.0 p90 235.0
+     break-even WR with engine avg win $1.46 vs median risk $209: 99.30%
+     break-even WR with engine avg win $1.46 vs mean actual loss $166: 99.12%
+     break-even WR with TP exactly +0.1 pip $1.00 vs median risk $209: 99.52%
+     break-even WR with TP exactly +0.1 pip $1.00 vs mean actual loss $166: 99.40%
+secure: wins 2208: mean $1.544 (pips mean 0.154, median 0.10, share exactly 0.1p 67.8%) | 0.1p x1496, 0.2p x218, 0.2p x254, 0.3p x73, 0.3p x78, 0.4p x28, 0.4p x24, 0.5p x15
+     net as engine -2975.57; net if every win = +0.1 pip ($1.00/lot) -4177.00; losses 30 mean $-212.83; risk$ (stop if hit) median 209.0 mean 213.5 p10 199.0 p90 233.0
+     break-even WR with engine avg win $1.54 vs median risk $209: 99.27%
+     break-even WR with engine avg win $1.54 vs mean actual loss $213: 99.28%
+     break-even WR with TP exactly +0.1 pip $1.00 vs median risk $209: 99.52%
+     break-even WR with TP exactly +0.1 pip $1.00 vs mean actual loss $213: 99.53%
+zee100 trades/month: 39.0 over 7.90 months
+harness zee100: 300 trades (0 losses); matched in engine zee100: 289; engine zee100 trades 308
+engine zee100 trades not in harness zee100: 17; their results: [1.0, 2.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.99, 1.0, 1.0, 1.0, 1.0]
+split-sensitivity: engine zee100 fills within 10 s after the split: 0
+done in 68s

@@ -1,0 +1,1016 @@
+{
+ "rules": {
+  "rule_rollover_ny": {
+   "status": "ACCEPTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_rollover_ny             removes   102 (losers  16 / winners    86)  loss rate among removed 15.69% vs base 2.26%  lift x6.95  | train x5.29 (8L/37W)  test x10.04 (8L/49W)  | WR 97.93%  net +3,124$  | Zee's 22: 2",
+   "lift_all": 6.95,
+   "lift_train": 5.29,
+   "lift_test": 10.04,
+   "losers_removed": 16,
+   "winners_removed": 86,
+   "wr_after": 97.93,
+   "net_change_usd_1lot": 3124.0,
+   "zee_tagged_removed": 2,
+   "train_L": 8,
+   "test_L": 8,
+   "days": 15,
+   "passes_strict": true,
+   "stop_only": {
+    "L": 9,
+    "train_lift": 4.59,
+    "test_lift": 4.94,
+    "train_L": 6,
+    "test_L": 3
+   }
+  },
+  "rule_combined": {
+   "status": "COMBINED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_combined                removes   102 (losers  16 / winners    86)  loss rate among removed 15.69% vs base 2.26%  lift x6.95  | train x5.29 (8L/37W)  test x10.04 (8L/49W)  | WR 97.93%  net +3,124$  | Zee's 22: 2",
+   "lift_all": 6.95,
+   "lift_train": 5.29,
+   "lift_test": 10.04,
+   "losers_removed": 16,
+   "winners_removed": 86,
+   "wr_after": 97.93,
+   "net_change_usd_1lot": 3124.0,
+   "zee_tagged_removed": 2,
+   "train_L": 8,
+   "test_L": 8,
+   "days": 15,
+   "passes_strict": true,
+   "stop_only": {
+    "L": 9,
+    "train_lift": 4.59,
+    "test_lift": 4.94,
+    "train_L": 6,
+    "test_L": 3
+   }
+  },
+  "rule_trigger_spread": {
+   "status": "CANDIDATE",
+   "kind": "extended-field",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_trigger_spread          removes    89 (losers  16 / winners    73)  loss rate among removed 17.98% vs base 2.26%  lift x7.97  | train x5.67 (8L/34W)  test x12.17 (8L/39W)  | WR 97.93%  net +4,093$  | Zee's 22: 2",
+   "lift_all": 7.97,
+   "lift_train": 5.67,
+   "lift_test": 12.17,
+   "losers_removed": 16,
+   "winners_removed": 73,
+   "wr_after": 97.93,
+   "net_change_usd_1lot": 4093.0,
+   "zee_tagged_removed": 2,
+   "train_L": 8,
+   "test_L": 8,
+   "days": 13,
+   "passes_strict": true,
+   "stop_only": {
+    "L": 9,
+    "train_lift": 4.22,
+    "test_lift": 7.96,
+    "train_L": 5,
+    "test_L": 4
+   },
+   "beyond_combined": {
+    "L": 5,
+    "W": 49,
+    "train_lift": 3.44,
+    "test_lift": 5.11,
+    "train_L": 3,
+    "test_L": 2,
+    "days": 4,
+    "passes": true
+   }
+  },
+  "rule_friday_close_ny": {
+   "status": "CANDIDATE",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_friday_close_ny         removes    57 (losers  11 / winners    46)  loss rate among removed 19.3% vs base 2.26%  lift x8.56  | train x9.4 (6L/13W)  test x9.41 (5L/33W)  | WR 97.87%  net +2,840$  | Zee's 22: 3",
+   "lift_all": 8.56,
+   "lift_train": 9.4,
+   "lift_test": 9.41,
+   "losers_removed": 11,
+   "winners_removed": 46,
+   "wr_after": 97.87,
+   "net_change_usd_1lot": 2840.0,
+   "zee_tagged_removed": 3,
+   "train_L": 6,
+   "test_L": 5,
+   "days": 8,
+   "passes_strict": true,
+   "stop_only": {
+    "L": 3,
+    "train_lift": 6.17,
+    "test_lift": 0.0,
+    "train_L": 3,
+    "test_L": 0
+   },
+   "beyond_combined": {
+    "L": 3,
+    "W": 32,
+    "train_lift": 7.44,
+    "test_lift": 0.0,
+    "train_L": 3,
+    "test_L": 0,
+    "days": 2,
+    "passes": false
+   }
+  },
+  "rule_empty_book": {
+   "status": "CANDIDATE",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_empty_book              removes   106 (losers  11 / winners    95)  loss rate among removed 10.38% vs base 2.26%  lift x4.6  | train x5.1 (6L/29W)  test x5.04 (5L/66W)  | WR 97.86%  net +4,182$  | Zee's 22: 0",
+   "lift_all": 4.6,
+   "lift_train": 5.1,
+   "lift_test": 5.04,
+   "losers_removed": 11,
+   "winners_removed": 95,
+   "wr_after": 97.86,
+   "net_change_usd_1lot": 4182.0,
+   "zee_tagged_removed": 0,
+   "train_L": 6,
+   "test_L": 5,
+   "days": 8,
+   "passes_strict": true,
+   "stop_only": {
+    "L": 10,
+    "train_lift": 4.84,
+    "test_lift": 6.03,
+    "train_L": 5,
+    "test_L": 5
+   },
+   "beyond_combined": {
+    "L": 4,
+    "W": 76,
+    "train_lift": 2.48,
+    "test_lift": 2.55,
+    "train_L": 2,
+    "test_L": 2,
+    "days": 3,
+    "passes": false
+   }
+  },
+  "rule_friday_afternoon_ny": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_friday_afternoon_ny     removes   246 (losers  22 / winners   224)  loss rate among removed 8.94% vs base 2.26%  lift x3.97  | train x4.25 (14L/84W)  test x3.87 (8L/140W)  | WR 97.97%  net +3,756$  | Zee's 22: 3",
+   "lift_all": 3.97,
+   "lift_train": 4.25,
+   "lift_test": 3.87,
+   "losers_removed": 22,
+   "winners_removed": 224,
+   "wr_after": 97.97,
+   "net_change_usd_1lot": 3756.0,
+   "zee_tagged_removed": 3,
+   "train_L": 14,
+   "test_L": 8,
+   "days": 18,
+   "passes_strict": true,
+   "stop_only": {
+    "L": 5,
+    "train_lift": 1.5,
+    "test_lift": 0.61,
+    "train_L": 4,
+    "test_L": 1
+   },
+   "beyond_combined": {
+    "L": 14,
+    "W": 210,
+    "train_lift": 3.6,
+    "test_lift": 1.61,
+    "train_L": 11,
+    "test_L": 3,
+    "days": 13,
+    "passes": "False"
+   }
+  },
+  "rule_trigger_gap": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_trigger_gap             removes    64 (losers   5 / winners    59)  loss rate among removed 7.81% vs base 2.26%  lift x3.46  | train x2.48 (3L/33W)  test x5.11 (2L/26W)  | WR 97.79%  net +1,828$  | Zee's 22: 1",
+   "lift_all": 3.46,
+   "lift_train": 2.48,
+   "lift_test": 5.11,
+   "losers_removed": 5,
+   "winners_removed": 59,
+   "wr_after": 97.79,
+   "net_change_usd_1lot": 1828.0,
+   "zee_tagged_removed": 1,
+   "train_L": 3,
+   "test_L": 2,
+   "days": 4,
+   "passes_strict": true,
+   "stop_only": {
+    "L": 4,
+    "train_lift": 1.88,
+    "test_lift": 6.12,
+    "train_L": 2,
+    "test_L": 2
+   },
+   "beyond_combined": {
+    "L": 2,
+    "W": 55,
+    "train_lift": 1.86,
+    "test_lift": 0.0,
+    "train_L": 2,
+    "test_L": 0,
+    "days": 2,
+    "passes": false
+   }
+  },
+  "rule_fill_slip": {
+   "status": "REJECTED",
+   "kind": "fill-time",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_fill_slip               removes    79 (losers  11 / winners    68)  loss rate among removed 13.92% vs base 2.26%  lift x6.17  | train x4.25 (7L/42W)  test x9.54 (4L/26W)  | WR 97.87%  net +2,658$  | Zee's 22: 2",
+   "lift_all": 6.17,
+   "lift_train": 4.25,
+   "lift_test": 9.54,
+   "losers_removed": 11,
+   "winners_removed": 68,
+   "wr_after": 97.87,
+   "net_change_usd_1lot": 2658.0,
+   "zee_tagged_removed": 2,
+   "train_L": 7,
+   "test_L": 4,
+   "days": 10,
+   "passes_strict": true,
+   "stop_only": {
+    "L": 7,
+    "train_lift": 3.5,
+    "test_lift": 6.12,
+    "train_L": 5,
+    "test_L": 2
+   },
+   "beyond_combined": {
+    "L": 4,
+    "W": 57,
+    "train_lift": 2.29,
+    "test_lift": 3.25,
+    "train_L": 3,
+    "test_L": 1,
+    "days": 4,
+    "passes": false
+   }
+  },
+  "rule_buy_fill_spread": {
+   "status": "REJECTED",
+   "kind": "fill-time",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_buy_fill_spread         removes    43 (losers   7 / winners    36)  loss rate among removed 16.28% vs base 2.26%  lift x7.22  | train x5.32 (5L/23W)  test x9.54 (2L/13W)  | WR 97.82%  net +1,742$  | Zee's 22: 1",
+   "lift_all": 7.22,
+   "lift_train": 5.32,
+   "lift_test": 9.54,
+   "losers_removed": 7,
+   "winners_removed": 36,
+   "wr_after": 97.82,
+   "net_change_usd_1lot": 1742.0,
+   "zee_tagged_removed": 1,
+   "train_L": 5,
+   "test_L": 2,
+   "days": 7,
+   "passes_strict": true,
+   "stop_only": {
+    "L": 5,
+    "train_lift": 3.8,
+    "test_lift": 11.42,
+    "train_L": 3,
+    "test_L": 2
+   },
+   "beyond_combined": {
+    "L": 3,
+    "W": 25,
+    "train_lift": 3.13,
+    "test_lift": 7.95,
+    "train_L": 2,
+    "test_L": 1,
+    "days": 3,
+    "passes": false
+   }
+  },
+  "rule_big_figure_ahead": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_big_figure_ahead        removes    90 (losers   7 / winners    83)  loss rate among removed 7.78% vs base 2.26%  lift x3.45  | train x2.53 (4L/43W)  test x4.99 (3L/40W)  | WR 97.81%  net +1,030$  | Zee's 22: 2",
+   "lift_all": 3.45,
+   "lift_train": 2.53,
+   "lift_test": 4.99,
+   "losers_removed": 7,
+   "winners_removed": 83,
+   "wr_after": 97.81,
+   "net_change_usd_1lot": 1030.0,
+   "zee_tagged_removed": 2,
+   "train_L": 4,
+   "test_L": 3,
+   "days": 7,
+   "passes_strict": true,
+   "stop_only": {
+    "L": 5,
+    "train_lift": 2.8,
+    "test_lift": 2.09,
+    "train_L": 4,
+    "test_L": 1
+   },
+   "beyond_combined": {
+    "L": 5,
+    "W": 83,
+    "train_lift": 1.94,
+    "test_lift": 3.41,
+    "train_L": 3,
+    "test_L": 2,
+    "days": 5,
+    "passes": "False"
+   }
+  },
+  "rule_camel_old": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_camel_old               removes    34 (losers   5 / winners    29)  loss rate among removed 14.71% vs base 2.26%  lift x6.52  | train x6.27 (4L/15W)  test x4.77 (1L/14W)  | WR 97.8%  net +1,634$  | Zee's 22: 1",
+   "lift_all": 6.52,
+   "lift_train": 6.27,
+   "lift_test": 4.77,
+   "losers_removed": 5,
+   "winners_removed": 29,
+   "wr_after": 97.8,
+   "net_change_usd_1lot": 1634.0,
+   "zee_tagged_removed": 1,
+   "train_L": 4,
+   "test_L": 1,
+   "days": 5,
+   "passes_strict": false,
+   "stop_only": {
+    "L": 5,
+    "train_lift": 6.93,
+    "test_lift": 5.71,
+    "train_L": 4,
+    "test_L": 1
+   },
+   "beyond_combined": {
+    "L": 4,
+    "W": 29,
+    "train_lift": 4.96,
+    "test_lift": 4.77,
+    "train_L": 3,
+    "test_L": 1,
+    "days": 4,
+    "passes": false
+   }
+  },
+  "rule_loud_breakout": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_loud_breakout           removes   188 (losers   8 / winners   180)  loss rate among removed 4.26% vs base 2.26%  lift x1.89  | train x1.79 (5L/78W)  test x2.04 (3L/102W)  | WR 97.8%  net +1,411$  | Zee's 22: 2",
+   "lift_all": 1.89,
+   "lift_train": 1.79,
+   "lift_test": 2.04,
+   "losers_removed": 8,
+   "winners_removed": 180,
+   "wr_after": 97.8,
+   "net_change_usd_1lot": 1411.0,
+   "zee_tagged_removed": 2,
+   "train_L": 5,
+   "test_L": 3,
+   "days": 8,
+   "passes_strict": "False",
+   "stop_only": {
+    "L": 7,
+    "train_lift": 1.98,
+    "test_lift": 1.65,
+    "train_L": 5,
+    "test_L": 2
+   },
+   "beyond_combined": {
+    "L": 7,
+    "W": 178,
+    "train_lift": 1.45,
+    "test_lift": 2.08,
+    "train_L": 4,
+    "test_L": 3,
+    "days": 7,
+    "passes": "False"
+   }
+  },
+  "rule_holiday": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_holiday                 removes   311 (losers  12 / winners   299)  loss rate among removed 3.86% vs base 2.26%  lift x1.71  | train x1.75 (9L/144W)  test x1.36 (3L/155W)  | WR 97.81%  net +3,863$  | Zee's 22: 0",
+   "lift_all": 1.71,
+   "lift_train": 1.75,
+   "lift_test": 1.36,
+   "losers_removed": 12,
+   "winners_removed": 299,
+   "wr_after": 97.81,
+   "net_change_usd_1lot": 3863.0,
+   "zee_tagged_removed": 0,
+   "train_L": 9,
+   "test_L": 3,
+   "days": 6,
+   "passes_strict": "False",
+   "stop_only": {
+    "L": 10,
+    "train_lift": 1.73,
+    "test_lift": 1.09,
+    "train_L": 8,
+    "test_L": 2
+   },
+   "beyond_combined": {
+    "L": 10,
+    "W": 298,
+    "train_lift": 1.38,
+    "test_lift": 1.37,
+    "train_L": 7,
+    "test_L": 3,
+    "days": 6,
+    "passes": "False"
+   }
+  },
+  "rule_us_data_minutes": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_us_data_minutes         removes    66 (losers   5 / winners    61)  loss rate among removed 7.58% vs base 2.26%  lift x3.36  | train x0.88 (1L/33W)  test x8.94 (4L/28W)  | WR 97.79%  net +866$  | Zee's 22: 0",
+   "lift_all": 3.36,
+   "lift_train": 0.88,
+   "lift_test": 8.94,
+   "losers_removed": 5,
+   "winners_removed": 61,
+   "wr_after": 97.79,
+   "net_change_usd_1lot": 866.0,
+   "zee_tagged_removed": 0,
+   "train_L": 1,
+   "test_L": 4,
+   "days": 5,
+   "passes_strict": false,
+   "stop_only": {
+    "L": 5,
+    "train_lift": 0.97,
+    "test_lift": 10.7,
+    "train_L": 1,
+    "test_L": 4
+   },
+   "beyond_combined": {
+    "L": 5,
+    "W": 61,
+    "train_lift": 0.88,
+    "test_lift": 8.94,
+    "train_L": 1,
+    "test_L": 4,
+    "days": 5,
+    "passes": false
+   }
+  },
+  "rule_zee_camel_hh": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_zee_camel_hh            removes  2619 (losers  62 / winners  2557)  loss rate among removed 2.37% vs base 2.26%  lift x1.05  | train x1.1 (42L/1091W)  test x0.96 (20L/1466W)  | WR 97.8%  net +9,725$  | Zee's 22: 10",
+   "lift_all": 1.05,
+   "lift_train": 1.1,
+   "lift_test": 0.96,
+   "losers_removed": 62,
+   "winners_removed": 2557,
+   "wr_after": 97.8,
+   "net_change_usd_1lot": 9725.0,
+   "zee_tagged_removed": 10,
+   "train_L": 42,
+   "test_L": 20,
+   "days": 56,
+   "passes_strict": "False",
+   "stop_only": {
+    "L": 57,
+    "train_lift": 1.14,
+    "test_lift": 1.04,
+    "train_L": 39,
+    "test_L": 18
+   },
+   "beyond_combined": {
+    "L": 59,
+    "W": 2524,
+    "train_lift": 1.09,
+    "test_lift": 0.88,
+    "train_L": 41,
+    "test_L": 18,
+    "days": 54,
+    "passes": "False"
+   }
+  },
+  "rule_structure_hh_hl": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_structure_hh_hl         removes  4550 (losers 100 / winners  4450)  loss rate among removed 2.2% vs base 2.26%  lift x0.97  | train x0.97 (63L/1863W)  test x1.01 (37L/2587W)  | WR 97.66%  net +15,462$  | Zee's 22: 24",
+   "lift_all": 0.97,
+   "lift_train": 0.97,
+   "lift_test": 1.01,
+   "losers_removed": 100,
+   "winners_removed": 4450,
+   "wr_after": 97.66,
+   "net_change_usd_1lot": 15462.0,
+   "zee_tagged_removed": 24,
+   "train_L": 63,
+   "test_L": 37,
+   "days": 80,
+   "passes_strict": "False",
+   "stop_only": {
+    "L": 89,
+    "train_lift": 0.99,
+    "test_lift": 1.01,
+    "train_L": 58,
+    "test_L": 31
+   },
+   "beyond_combined": {
+    "L": 88,
+    "W": 4387,
+    "train_lift": 0.93,
+    "test_lift": 0.8,
+    "train_L": 59,
+    "test_L": 29,
+    "days": 72,
+    "passes": "False"
+   }
+  },
+  "rule_near_sr": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_near_sr                 removes  5489 (losers 116 / winners  5373)  loss rate among removed 2.11% vs base 2.26%  lift x0.94  | train x0.88 (66L/2178W)  test x1.1 (50L/3195W)  | WR 97.38%  net +16,345$  | Zee's 22: 25",
+   "lift_all": 0.94,
+   "lift_train": 0.88,
+   "lift_test": 1.1,
+   "losers_removed": 116,
+   "winners_removed": 5373,
+   "wr_after": 97.38,
+   "net_change_usd_1lot": 16345.0,
+   "zee_tagged_removed": 25,
+   "train_L": 66,
+   "test_L": 50,
+   "days": 94,
+   "passes_strict": "False",
+   "stop_only": {
+    "L": 102,
+    "train_lift": 0.9,
+    "test_lift": 1.08,
+    "train_L": 61,
+    "test_L": 41
+   },
+   "beyond_combined": {
+    "L": 103,
+    "W": 5301,
+    "train_lift": 0.82,
+    "test_lift": 0.94,
+    "train_L": 61,
+    "test_L": 42,
+    "days": 87,
+    "passes": "False"
+   }
+  },
+  "rule_counter_trend": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_counter_trend           removes  1216 (losers  25 / winners  1191)  loss rate among removed 2.06% vs base 2.26%  lift x0.91  | train x0.89 (16L/521W)  test x0.95 (9L/670W)  | WR 97.71%  net +3,031$  | Zee's 22: 7",
+   "lift_all": 0.91,
+   "lift_train": 0.89,
+   "lift_test": 0.95,
+   "losers_removed": 25,
+   "winners_removed": 1191,
+   "wr_after": 97.71,
+   "net_change_usd_1lot": 3031.0,
+   "zee_tagged_removed": 7,
+   "train_L": 16,
+   "test_L": 9,
+   "days": 23,
+   "passes_strict": "False",
+   "stop_only": {
+    "L": 21,
+    "train_lift": 0.74,
+    "test_lift": 1.13,
+    "train_L": 12,
+    "test_L": 9
+   },
+   "beyond_combined": {
+    "L": 24,
+    "W": 1165,
+    "train_lift": 0.85,
+    "test_lift": 0.97,
+    "train_L": 15,
+    "test_L": 9,
+    "days": 23,
+    "passes": "False"
+   }
+  },
+  "rule_exhausted_run": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "exceptions": 0,
+   "lookahead_diffs": 0,
+   "api_report": "rule_exhausted_run           removes   769 (losers  28 / winners   741)  loss rate among removed 3.64% vs base 2.26%  lift x1.61  | train x1.6 (23L/405W)  test x1.05 (5L/336W)  | WR 97.9%  net +6,516$  | Zee's 22: 9",
+   "lift_all": 1.61,
+   "lift_train": 1.6,
+   "lift_test": 1.05,
+   "losers_removed": 28,
+   "winners_removed": 741,
+   "wr_after": 97.9,
+   "net_change_usd_1lot": 6516.0,
+   "zee_tagged_removed": 9,
+   "train_L": 23,
+   "test_L": 5,
+   "days": 22,
+   "passes_strict": "False",
+   "stop_only": {
+    "L": 26,
+    "train_lift": 1.7,
+    "test_lift": 1.01,
+    "train_L": 22,
+    "test_L": 4
+   },
+   "beyond_combined": {
+    "L": 27,
+    "W": 736,
+    "train_lift": 1.55,
+    "test_lift": 1.05,
+    "train_L": 22,
+    "test_L": 5,
+    "days": 22,
+    "passes": "False"
+   }
+  }
+ },
+ "greedy_log": [
+  {
+   "step": 1,
+   "add": "rule_friday_afternoon_ny",
+   "increment": {
+    "train": {
+     "L": 14,
+     "W": 84,
+     "lift": 4.25
+    },
+    "test": {
+     "L": 8,
+     "W": 140,
+     "lift": 3.87
+    },
+    "all": {
+     "L": 22,
+     "W": 224,
+     "lift": 3.97
+    },
+    "days": 18
+   }
+  },
+  {
+   "step": 2,
+   "add": "rule_rollover_ny",
+   "increment": {
+    "train": {
+     "L": 5,
+     "W": 33,
+     "lift": 3.92
+    },
+    "test": {
+     "L": 3,
+     "W": 39,
+     "lift": 5.11
+    },
+    "all": {
+     "L": 8,
+     "W": 72,
+     "lift": 4.43
+    },
+    "days": 8
+   }
+  },
+  {
+   "step": 2,
+   "drop": "rule_friday_afternoon_ny"
+  }
+ ],
+ "accepted": [
+  "rule_rollover_ny"
+ ],
+ "geometry": {
+  "all": {
+   "trades": 7626,
+   "expected_random_walk": 137.9,
+   "stop_outs": 151,
+   "all_losses": 172,
+   "median_spread": 0.1991,
+   "median_stop": 21.3
+  },
+  "train": {
+   "trades": 3335,
+   "expected_random_walk": 92.6,
+   "stop_outs": 101,
+   "all_losses": 112,
+   "median_spread": 0.5007,
+   "median_stop": 21.7
+  },
+  "test": {
+   "trades": 4291,
+   "expected_random_walk": 45.3,
+   "stop_outs": 50,
+   "all_losses": 60,
+   "median_spread": 0.1001,
+   "median_stop": 21.0
+  },
+  "outside rule_combined": {
+   "trades": 7524,
+   "expected_random_walk": 128.2,
+   "stop_outs": 142,
+   "all_losses": 156,
+   "median_spread": 0.1991,
+   "median_stop": 21.3
+  },
+  "inside rule_combined": {
+   "trades": 102,
+   "expected_random_walk": 9.7,
+   "stop_outs": 9,
+   "all_losses": 16,
+   "median_spread": 0.5001,
+   "median_stop": 20.85
+  }
+ },
+ "sensitivity_literal_bar": {
+  "harness fields only": {
+   "rules": [
+    "rule_rollover_ny",
+    "rule_camel_old",
+    "rule_empty_book"
+   ],
+   "stats": {
+    "train": {
+     "L": 13,
+     "W": 74,
+     "lift": 4.45
+    },
+    "test": {
+     "L": 11,
+     "W": 117,
+     "lift": 6.15
+    },
+    "all": {
+     "L": 24,
+     "W": 191,
+     "lift": 4.95
+    },
+    "days": 21
+   }
+  },
+  "+ extended breakout-tick spread >= 1.0": {
+   "rules": [
+    "rule_rollover_ny",
+    "rule_trigger_spread",
+    "rule_camel_old"
+   ],
+   "stats": {
+    "train": {
+     "L": 14,
+     "W": 75,
+     "lift": 4.68
+    },
+    "test": {
+     "L": 11,
+     "W": 89,
+     "lift": 7.87
+    },
+    "all": {
+     "L": 25,
+     "W": 164,
+     "lift": 5.86
+    },
+    "days": 22
+   }
+  }
+ },
+ "extended_increment": {
+  "0.7": {
+   "train": {
+    "L": 3,
+    "W": 68,
+    "lift": 1.26
+   },
+   "test": {
+    "L": 2,
+    "W": 28,
+    "lift": 4.77
+   },
+   "all": {
+    "L": 5,
+    "W": 96,
+    "lift": 2.19
+   },
+   "days": 4
+  },
+  "0.8": {
+   "train": {
+    "L": 3,
+    "W": 36,
+    "lift": 2.29
+   },
+   "test": {
+    "L": 2,
+    "W": 27,
+    "lift": 4.93
+   },
+   "all": {
+    "L": 5,
+    "W": 63,
+    "lift": 3.26
+   },
+   "days": 4
+  },
+  "0.9": {
+   "train": {
+    "L": 3,
+    "W": 33,
+    "lift": 2.48
+   },
+   "test": {
+    "L": 2,
+    "W": 26,
+    "lift": 5.11
+   },
+   "all": {
+    "L": 5,
+    "W": 59,
+    "lift": 3.46
+   },
+   "days": 4
+  },
+  "1.0": {
+   "train": {
+    "L": 3,
+    "W": 23,
+    "lift": 3.44
+   },
+   "test": {
+    "L": 2,
+    "W": 26,
+    "lift": 5.11
+   },
+   "all": {
+    "L": 5,
+    "W": 49,
+    "lift": 4.11
+   },
+   "days": 4
+  },
+  "1.1": {
+   "train": {
+    "L": 3,
+    "W": 22,
+    "lift": 3.57
+   },
+   "test": {
+    "L": 1,
+    "W": 26,
+    "lift": 2.65
+   },
+   "all": {
+    "L": 4,
+    "W": 48,
+    "lift": 3.41
+   },
+   "days": 3
+  },
+  "1.2": {
+   "train": {
+    "L": 3,
+    "W": 18,
+    "lift": 4.25
+   },
+   "test": {
+    "L": 1,
+    "W": 24,
+    "lift": 2.86
+   },
+   "all": {
+    "L": 4,
+    "W": 42,
+    "lift": 3.86
+   },
+   "days": 3
+  },
+  "1.3": {
+   "train": {
+    "L": 3,
+    "W": 16,
+    "lift": 4.7
+   },
+   "test": {
+    "L": 0,
+    "W": 17,
+    "lift": 0.0
+   },
+   "all": {
+    "L": 3,
+    "W": 33,
+    "lift": 3.69
+   },
+   "days": 2
+  },
+  "1.5": {
+   "train": {
+    "L": 3,
+    "W": 15,
+    "lift": 4.96
+   },
+   "test": {
+    "L": 0,
+    "W": 16,
+    "lift": 0.0
+   },
+   "all": {
+    "L": 3,
+    "W": 31,
+    "lift": 3.91
+   },
+   "days": 2
+  },
+  "2.0": {
+   "train": {
+    "L": 3,
+    "W": 14,
+    "lift": 5.25
+   },
+   "test": {
+    "L": 0,
+    "W": 13,
+    "lift": 0.0
+   },
+   "all": {
+    "L": 3,
+    "W": 27,
+    "lift": 4.43
+   },
+   "days": 2
+  },
+  "3.0": {
+   "train": {
+    "L": 2,
+    "W": 7,
+    "lift": 6.62
+   },
+   "test": {
+    "L": 0,
+    "W": 8,
+    "lift": 0.0
+   },
+   "all": {
+    "L": 2,
+    "W": 15,
+    "lift": 5.22
+   },
+   "days": 1
+  }
+ },
+ "extended_union": {
+  "train": {
+   "L": 11,
+   "W": 60,
+   "lift": 4.61
+  },
+  "test": {
+   "L": 10,
+   "W": 75,
+   "lift": 8.41
+  },
+  "all": {
+   "L": 21,
+   "W": 135,
+   "lift": 5.97
+  },
+  "days": 18
+ },
+ "break_even_wr": 99.28
+}

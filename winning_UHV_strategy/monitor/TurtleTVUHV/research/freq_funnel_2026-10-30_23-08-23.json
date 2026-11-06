@@ -1,0 +1,587 @@
+{
+ "setting": "2026-10-30 23-08-23",
+ "base": {
+  "n": 399,
+  "wr": 99.75,
+  "losses": 1,
+  "net": 164148,
+  "worst": -998,
+  "wr1": 99.28,
+  "wr2": 100.0,
+  "days": 286
+ },
+ "stats": {
+  "setups": 2636,
+  "no_break": 581,
+  "risk": 0,
+  "adx": 0,
+  "atr_band": 142,
+  "band_skip": 0,
+  "gap": 0,
+  "spread_reject": 0,
+  "open_at_end": 0,
+  "open_since": 0
+ },
+ "rows": [
+  {
+   "switch": "EMA gap >= 22.5 pips (InpEmaGapPips -> 0)",
+   "sets": {
+    "InpEmaGapPips": 0
+   },
+   "n": 571,
+   "wr": 98.25,
+   "losses": 10,
+   "net": 186509,
+   "worst": -5650,
+   "wr1": 97.79,
+   "wr2": 98.55,
+   "days": 395,
+   "added": "190 ( 94.7% WR)",
+   "removed": "18 ( 94.4% WR)"
+  },
+  {
+   "switch": "chop ER 0.05 (InpChopEr -> 0)",
+   "sets": {
+    "InpChopEr": 0
+   },
+   "n": 459,
+   "wr": 98.47,
+   "losses": 7,
+   "net": 156413,
+   "worst": -5414,
+   "wr1": 99.34,
+   "wr2": 98.05,
+   "days": 313,
+   "added": "107 ( 93.5% WR)",
+   "removed": "47 ( 97.9% WR)"
+  },
+  {
+   "switch": "session 3-19 (InpSessFrom/To -> 0/24)",
+   "sets": {
+    "InpSessFrom": 0,
+    "InpSessTo": 24
+   },
+   "n": 502,
+   "wr": 95.22,
+   "losses": 24,
+   "net": 122860,
+   "worst": -5572,
+   "wr1": 93.49,
+   "wr2": 96.1,
+   "days": 342,
+   "added": "134 ( 82.8% WR)",
+   "removed": "31 (100.0% WR)"
+  },
+  {
+   "switch": "weekday skip Tue (InpSkipDow -> -1)",
+   "sets": {
+    "InpSkipDow": -1
+   },
+   "n": 511,
+   "wr": 99.02,
+   "losses": 5,
+   "net": 187660,
+   "worst": -5226,
+   "wr1": 98.25,
+   "wr2": 99.41,
+   "days": 371,
+   "added": "114 ( 96.5% WR)",
+   "removed": "2 (100.0% WR)"
+  },
+  {
+   "switch": "ATR >= $1.5 (InpAtrMinUsd -> 0)",
+   "sets": {
+    "InpAtrMinUsd": 0
+   },
+   "n": 422,
+   "wr": 99.05,
+   "losses": 4,
+   "net": 158731,
+   "worst": -5202,
+   "wr1": 97.5,
+   "wr2": 100.0,
+   "days": 306,
+   "added": "31 ( 90.3% WR)",
+   "removed": "8 (100.0% WR)"
+  },
+  {
+   "switch": "candle >= 0.8 ATR (InpMinRangeAtr -> 0)",
+   "sets": {
+    "InpMinRangeAtr": 0
+   },
+   "n": 453,
+   "wr": 97.79,
+   "losses": 10,
+   "net": 139945,
+   "worst": -5278,
+   "wr1": 97.37,
+   "wr2": 98.01,
+   "days": 308,
+   "added": "83 ( 89.2% WR)",
+   "removed": "29 (100.0% WR)"
+  },
+  {
+   "switch": "max spread 20 pts (InpMaxSpreadPts -> 0)",
+   "sets": {
+    "InpMaxSpreadPts": 0
+   },
+   "n": 398,
+   "wr": 99.25,
+   "losses": 3,
+   "net": 152424,
+   "worst": -5398,
+   "wr1": 99.29,
+   "wr2": 99.22,
+   "days": 288,
+   "added": "85 ( 97.6% WR)",
+   "removed": "86 (100.0% WR)"
+  },
+  {
+   "switch": "BUY entry boxes (InpBandsB all on)",
+   "sets": {
+    "InpBandsB": "111111111111111111111"
+   },
+   "n": 737,
+   "wr": 96.88,
+   "losses": 23,
+   "net": 198010,
+   "worst": -5570,
+   "wr1": 97.17,
+   "wr2": 96.73,
+   "days": 406,
+   "added": "358 ( 93.9% WR)",
+   "removed": "20 (100.0% WR)"
+  },
+  {
+   "switch": "SELL entry boxes (InpBandsS all on)",
+   "sets": {
+    "InpBandsS": "111111111111111111111"
+   },
+   "n": 577,
+   "wr": 94.11,
+   "losses": 34,
+   "net": 67336,
+   "worst": -5588,
+   "wr1": 94.44,
+   "wr2": 93.93,
+   "days": 382,
+   "added": "189 ( 82.5% WR)",
+   "removed": "11 (100.0% WR)"
+  },
+  {
+   "switch": "both entry boxes all on",
+   "sets": {
+    "InpBandsB": "111111111111111111111",
+    "InpBandsS": "111111111111111111111"
+   },
+   "n": 903,
+   "wr": 94.57,
+   "losses": 49,
+   "net": 128256,
+   "worst": -5588,
+   "wr1": 94.79,
+   "wr2": 94.46,
+   "days": 481,
+   "added": "533 ( 91.0% WR)",
+   "removed": "29 (100.0% WR)"
+  },
+  {
+   "switch": "ghost stand-aside off (InpBandOff 1 -> 0)",
+   "sets": {
+    "InpBandOff": 0
+   },
+   "n": 463,
+   "wr": 98.7,
+   "losses": 6,
+   "net": 165121,
+   "worst": -5208,
+   "wr1": 98.77,
+   "wr2": 98.67,
+   "days": 320,
+   "added": "70 ( 92.9% WR)",
+   "removed": "6 (100.0% WR)"
+  },
+  {
+   "switch": "entry hours (InpHours all on)",
+   "sets": {
+    "InpHours": "111111111111111111111111"
+   },
+   "n": 416,
+   "wr": 99.52,
+   "losses": 2,
+   "net": 165518,
+   "worst": -5200,
+   "wr1": 98.58,
+   "wr2": 100.0,
+   "days": 295,
+   "added": "20 ( 95.0% WR)",
+   "removed": "3 (100.0% WR)"
+  },
+  {
+   "switch": "range box vwap (TvBox_vwap all on)",
+   "sets": {
+    "TvBox_vwap_B": "11111111",
+    "TvBox_vwap_S": "11111111"
+   },
+   "n": 440,
+   "wr": 98.41,
+   "losses": 7,
+   "net": 147434,
+   "worst": -5228,
+   "wr1": 98.04,
+   "wr2": 98.61,
+   "days": 313,
+   "added": "42 ( 85.7% WR)",
+   "removed": "1 (100.0% WR)"
+  },
+  {
+   "switch": "range box ib (TvBox_ib all on)",
+   "sets": {
+    "TvBox_ib_B": "111111111",
+    "TvBox_ib_S": "111111111"
+   },
+   "n": 417,
+   "wr": 98.56,
+   "losses": 6,
+   "net": 143885,
+   "worst": -5210,
+   "wr1": 97.97,
+   "wr2": 98.88,
+   "days": 296,
+   "added": "26 ( 80.8% WR)",
+   "removed": "8 (100.0% WR)"
+  },
+  {
+   "switch": "range box kelt (TvBox_kelt all on)",
+   "sets": {
+    "TvBox_kelt_B": "111111111111",
+    "TvBox_kelt_S": "111111111111"
+   },
+   "n": 492,
+   "wr": 96.54,
+   "losses": 17,
+   "net": 122893,
+   "worst": -5246,
+   "wr1": 96.84,
+   "wr2": 96.41,
+   "days": 331,
+   "added": "110 ( 85.5% WR)",
+   "removed": "17 (100.0% WR)"
+  },
+  {
+   "switch": "range box va (TvBox_va all on)",
+   "sets": {
+    "TvBox_va_B": "1111111",
+    "TvBox_va_S": "1111111"
+   },
+   "n": 489,
+   "wr": 97.55,
+   "losses": 12,
+   "net": 154438,
+   "worst": -5400,
+   "wr1": 97.02,
+   "wr2": 97.82,
+   "days": 332,
+   "added": "96 ( 88.5% WR)",
+   "removed": "6 (100.0% WR)"
+  },
+  {
+   "switch": "range box asia (TvBox_asia all on)",
+   "sets": {
+    "TvBox_asia_B": "11111111",
+    "TvBox_asia_S": "11111111"
+   },
+   "n": 437,
+   "wr": 98.86,
+   "losses": 5,
+   "net": 158712,
+   "worst": -5210,
+   "wr1": 98.64,
+   "wr2": 98.97,
+   "days": 307,
+   "added": "45 ( 91.1% WR)",
+   "removed": "7 (100.0% WR)"
+  },
+  {
+   "switch": "all range boxes on",
+   "sets": {
+    "TvBox_kelt_B": "111111111111",
+    "TvBox_kelt_S": "111111111111",
+    "TvBox_va_B": "1111111",
+    "TvBox_va_S": "1111111",
+    "TvBox_vwap_B": "11111111",
+    "TvBox_vwap_S": "11111111",
+    "TvBox_asia_B": "11111111",
+    "TvBox_asia_S": "11111111",
+    "TvBox_ib_B": "111111111",
+    "TvBox_ib_S": "111111111"
+   },
+   "n": 754,
+   "wr": 93.9,
+   "losses": 46,
+   "net": 84896,
+   "worst": -5400,
+   "wr1": 94.26,
+   "wr2": 93.73,
+   "days": 440,
+   "added": "400 ( 88.8% WR)",
+   "removed": "45 (100.0% WR)"
+  },
+  {
+   "switch": "day target $2000 (InpDayTargetUsd -> 0)",
+   "sets": {
+    "InpDayTargetUsd": 0
+   },
+   "n": 399,
+   "wr": 99.75,
+   "losses": 1,
+   "net": 164148,
+   "worst": -998,
+   "wr1": 99.28,
+   "wr2": 100.0,
+   "days": 286,
+   "added": "0",
+   "removed": "0"
+  },
+  {
+   "switch": "day loss 2% (InpDayLossPct -> 0)",
+   "sets": {
+    "InpDayLossPct": 0
+   },
+   "n": 399,
+   "wr": 99.75,
+   "losses": 1,
+   "net": 164148,
+   "worst": -998,
+   "wr1": 99.28,
+   "wr2": 100.0,
+   "days": 286,
+   "added": "0",
+   "removed": "0"
+  },
+  {
+   "switch": "one position (InpMaxPos 1 -> 2)",
+   "sets": {
+    "InpMaxPos": 2
+   },
+   "n": 426,
+   "wr": 99.06,
+   "losses": 4,
+   "net": 161789,
+   "worst": -5204,
+   "wr1": 98.67,
+   "wr2": 99.28,
+   "days": 286,
+   "added": "29 ( 89.7% WR)",
+   "removed": "2 (100.0% WR)"
+  },
+  {
+   "switch": "gap cancel (InpGapCancel -> false)",
+   "sets": {
+    "InpGapCancel": "false"
+   },
+   "n": 399,
+   "wr": 99.75,
+   "losses": 1,
+   "net": 164148,
+   "worst": -998,
+   "wr1": 99.28,
+   "wr2": 100.0,
+   "days": 286,
+   "added": "0",
+   "removed": "0"
+  },
+  {
+   "switch": "break within 5 bars (InpBreakBars -> 8)",
+   "sets": {
+    "InpBreakBars": 8
+   },
+   "n": 390,
+   "wr": 99.49,
+   "losses": 2,
+   "net": 154709,
+   "worst": -5123,
+   "wr1": 98.52,
+   "wr2": 100.0,
+   "days": 278,
+   "added": "19 ( 94.7% WR)",
+   "removed": "28 (100.0% WR)"
+  },
+  {
+   "switch": "break 4 pips (InpBreakPips -> 2)",
+   "sets": {
+    "InpBreakPips": 2
+   },
+   "n": 412,
+   "wr": 98.3,
+   "losses": 7,
+   "net": 143107,
+   "worst": -5214,
+   "wr1": 97.9,
+   "wr2": 98.51,
+   "days": 300,
+   "added": "308 ( 97.7% WR)",
+   "removed": "295 ( 99.7% WR)"
+  },
+  {
+   "switch": "touch 3.5 pips (InpTouchPips -> 6)",
+   "sets": {
+    "InpTouchPips": 6
+   },
+   "n": 423,
+   "wr": 97.64,
+   "losses": 10,
+   "net": 136153,
+   "worst": -5220,
+   "wr1": 95.04,
+   "wr2": 98.94,
+   "days": 295,
+   "added": "47 ( 80.9% WR)",
+   "removed": "23 (100.0% WR)"
+  },
+  {
+   "switch": "long rule fast EMA only (InpLongRule 0 -> 2 both)",
+   "sets": {
+    "InpLongRule": 2
+   },
+   "n": 432,
+   "wr": 98.84,
+   "losses": 5,
+   "net": 159085,
+   "worst": -5218,
+   "wr1": 97.95,
+   "wr2": 99.3,
+   "days": 293,
+   "added": "46 ( 91.3% WR)",
+   "removed": "13 (100.0% WR)"
+  },
+  {
+   "switch": "short line fast EMA (InpShortLine 1 -> 2 both)",
+   "sets": {
+    "InpShortLine": 2
+   },
+   "n": 430,
+   "wr": 98.84,
+   "losses": 5,
+   "net": 158099,
+   "worst": -5220,
+   "wr1": 98.64,
+   "wr2": 98.94,
+   "days": 305,
+   "added": "33 ( 87.9% WR)",
+   "removed": "2 (100.0% WR)"
+  },
+  {
+   "switch": "star off (InpStar -> true)",
+   "sets": {
+    "InpStar": "true"
+   },
+   "n": 412,
+   "wr": 99.51,
+   "losses": 2,
+   "net": 165984,
+   "worst": -3122,
+   "wr1": 99.28,
+   "wr2": 99.63,
+   "days": 295,
+   "added": "20 ( 95.0% WR)",
+   "removed": "7 (100.0% WR)"
+  },
+  {
+   "switch": "pin body <= 0.45 (InpBodyMax -> 0.6)",
+   "sets": {
+    "InpBodyMax": 0.6
+   },
+   "n": 410,
+   "wr": 99.51,
+   "losses": 2,
+   "net": 163094,
+   "worst": -5208,
+   "wr1": 98.58,
+   "wr2": 100.0,
+   "days": 295,
+   "added": "20 ( 95.0% WR)",
+   "removed": "9 (100.0% WR)"
+  },
+  {
+   "switch": "pin wick >= 0.3 (InpWickMin -> 0.2)",
+   "sets": {
+    "InpWickMin": 0.2
+   },
+   "n": 399,
+   "wr": 99.75,
+   "losses": 1,
+   "net": 164148,
+   "worst": -998,
+   "wr1": 99.28,
+   "wr2": 100.0,
+   "days": 286,
+   "added": "0",
+   "removed": "0"
+  },
+  {
+   "switch": "pin nose <= 0.05 (InpNoseMax -> 0.15)",
+   "sets": {
+    "InpNoseMax": 0.15
+   },
+   "n": 418,
+   "wr": 99.28,
+   "losses": 3,
+   "net": 160278,
+   "worst": -5327,
+   "wr1": 99.28,
+   "wr2": 99.29,
+   "days": 294,
+   "added": "45 ( 95.6% WR)",
+   "removed": "26 (100.0% WR)"
+  },
+  {
+   "switch": "marubozu body >= 0.55 (InpMaruBody -> 0.45)",
+   "sets": {
+    "InpMaruBody": 0.45
+   },
+   "n": 425,
+   "wr": 97.41,
+   "losses": 11,
+   "net": 119935,
+   "worst": -5270,
+   "wr1": 95.21,
+   "wr2": 98.57,
+   "days": 300,
+   "added": "70 ( 85.7% WR)",
+   "removed": "44 (100.0% WR)"
+  },
+  {
+   "switch": "hammer ratio 2.25 (InpHamRatio -> 1.75)",
+   "sets": {
+    "InpHamRatio": 1.75
+   },
+   "n": 403,
+   "wr": 99.26,
+   "losses": 3,
+   "net": 153854,
+   "worst": -5327,
+   "wr1": 99.29,
+   "wr2": 99.24,
+   "days": 288,
+   "added": "19 ( 89.5% WR)",
+   "removed": "15 (100.0% WR)"
+  },
+  {
+   "switch": "hammer nose 0.8 (InpHamNose -> 1.0)",
+   "sets": {
+    "InpHamNose": 1.0
+   },
+   "n": 399,
+   "wr": 99.75,
+   "losses": 1,
+   "net": 164148,
+   "worst": -998,
+   "wr1": 99.28,
+   "wr2": 100.0,
+   "days": 286,
+   "added": "0",
+   "removed": "0"
+  }
+ ]
+}

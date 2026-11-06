@@ -1,0 +1,2 @@
+{"gate": "vpin", "year": 2025, "delay": "none", "net": null, "trades": null, "pf": null, "dd": null, "error": "authorization failed", "secs": null}
+{"gate": "vpin2", "year": 2025, "delay": "none", "net": -14318.6, "trades": 699, "pf": "0.94", "dd": "41 197.00 (35.89%)", "error": null, "secs": 163}

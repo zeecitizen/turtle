@@ -1,0 +1,39 @@
+{
+ "cuts": 43,
+ "trunc": {
+  "stk_bad": 0,
+  "end5_bad": 0,
+  "lastH_bad": 0,
+  "lastL_bad": 0,
+  "lastH_lag_at_m-1": 11,
+  "lastL_lag_at_m-1": 18
+ },
+ "perturb": {
+  "stk_bad": 0,
+  "end5_bad": 0,
+  "lastH_bad": 0,
+  "lastL_bad": 0,
+  "lastH_lag_at_m-1": 11,
+  "lastL_lag_at_m-1": 15
+ },
+ "camel_side_vs_sign_stk": {
+  "k-2": 0.7041,
+  "k-1": 0.8243,
+  "k+0": 1.0,
+  "k+1": 0.891,
+  "k+2": 0.7268
+ },
+ "camel_mismatch_at_k": 0,
+ "camel_mismatch_first_ts": [],
+ "end5_misaligned_share": {
+  "Htf5N=12,mode1": 0.0141,
+  "Htf5N=12,mode2": 0.0804,
+  "Htf5N=50,mode2": 0.4863
+ },
+ "end5_misaligned_calls": {
+  "Htf5N=12,mode1": 172,
+  "Htf5N=12,mode2": 981,
+  "Htf5N=50,mode2": 5922
+ },
+ "secs": 40.3
+}

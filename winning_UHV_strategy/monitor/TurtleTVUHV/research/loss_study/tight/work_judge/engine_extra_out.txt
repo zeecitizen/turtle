@@ -1,0 +1,11 @@
+secure | AS SAVED (baseline)                          | all 2238/30L 98.66% -2975.57  train 1059/22L 97.92% -2974.80  test 1179/8L 99.32% -0.76   (7.1s)
+secure | + InpUhvSafeErMax 0.35 (Zee's last cut)      | all 1778/24L 98.65% -2527.64  train 841/19L 97.74% -2629.88  test 937/5L 99.47% +102.24   (0.4s)
+secure | + InpUhvSafeErMax 0.35 + MaxTrigSpread 0.5   | all 1347/9L 99.33% -69.54  train 410/4L 99.02% -171.78  test 937/5L 99.47% +102.24   (0.3s)
+
+SAVE GATE: zee100 TEST = 183 trades / 0 losses / 100.0% / +251.04; a new setting must have 0 test losses AND more than 183 test trades
+  tight | + InpUhvMaxTrigSpread 0.5 (wide_spread)                test 382/3L 99.21% +91.02 -> fails the gate
+  tight | + SafeRangeAtr 9.2 / SafeRangeBars 120 (range120)      test 289/3L 98.96% -38.04 -> fails the gate
+  tight | + both                                                 test 289/3L 98.96% -38.04 -> fails the gate
+  zee100 | + InpUhvMaxTrigSpread 0.5 (wide_spread)               test 183/0L 100.0% +251.04 -> fails the gate
+  zee100 | + SafeRangeAtr 9.2 / SafeRangeBars 120 (range120)     test 136/0L 100.0% +185.98 -> fails the gate
+  zee100 | + both                                                test 136/0L 100.0% +185.98 -> fails the gate

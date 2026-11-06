@@ -1,0 +1,50 @@
+{
+ "trades": 7626,
+ "matched_to_engine_call": 7626,
+ "unmatched": 0,
+ "harness_k_differs_from_engine_k": 92,
+ "of_which_losers": 1,
+ "losers_total": 172,
+ "examples": [
+  {
+   "id": "0306-071700-B",
+   "harness_k": 436,
+   "engine_k": 435,
+   "breakout_tick_s": 59.4,
+   "fill_s": 0.058,
+   "win": true
+  },
+  {
+   "id": "0306-124000-B",
+   "harness_k": 759,
+   "engine_k": 758,
+   "breakout_tick_s": 59.728,
+   "fill_s": 0.051,
+   "win": true
+  },
+  {
+   "id": "0309-115400-B",
+   "harness_k": 2206,
+   "engine_k": 2205,
+   "breakout_tick_s": 59.881,
+   "fill_s": 0.438,
+   "win": true
+  },
+  {
+   "id": "0311-223201-S",
+   "harness_k": 5703,
+   "engine_k": 5702,
+   "breakout_tick_s": 55.229,
+   "fill_s": 1.052,
+   "win": true
+  },
+  {
+   "id": "0312-135200-S",
+   "harness_k": 6623,
+   "engine_k": 6622,
+   "breakout_tick_s": 59.77,
+   "fill_s": 0.168,
+   "win": true
+  }
+ ]
+}

@@ -1,0 +1,146 @@
+{
+ "rule_env_best": {
+  "score": {
+   "tagged_out": 3,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 306,
+    "losers_removed": 26,
+    "winners_removed": 280,
+    "loss_rate_removed": 8.5,
+    "lift": 3.77,
+    "net_change_usd_1lot": 4938.0,
+    "wr_after": 98.01
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 115,
+    "losers_removed": 14,
+    "winners_removed": 101,
+    "loss_rate_removed": 12.17,
+    "lift": 3.63,
+    "net_change_usd_1lot": 3944.0,
+    "wr_after": 96.96
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 191,
+    "losers_removed": 12,
+    "winners_removed": 179,
+    "loss_rate_removed": 6.28,
+    "lift": 4.49,
+    "net_change_usd_1lot": 994.0,
+    "wr_after": 98.83
+   }
+  },
+  "batch_losses": [
+   "0629-221042-B",
+   "0703-183524-B",
+   "0708-213443-S",
+   "0709-202905-S"
+  ],
+  "batch_twins": []
+ },
+ "rule_env_best_plus_gap": {
+  "score": {
+   "tagged_out": 4,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 352,
+    "losers_removed": 30,
+    "winners_removed": 322,
+    "loss_rate_removed": 8.52,
+    "lift": 3.78,
+    "net_change_usd_1lot": 5737.0,
+    "wr_after": 98.05
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 146,
+    "losers_removed": 17,
+    "winners_removed": 129,
+    "loss_rate_removed": 11.64,
+    "lift": 3.47,
+    "net_change_usd_1lot": 4658.0,
+    "wr_after": 97.02
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 206,
+    "losers_removed": 13,
+    "winners_removed": 193,
+    "loss_rate_removed": 6.31,
+    "lift": 4.51,
+    "net_change_usd_1lot": 1079.0,
+    "wr_after": 98.85
+   }
+  },
+  "batch_losses": [
+   "0629-221042-B",
+   "0703-183524-B",
+   "0708-213443-S",
+   "0709-202905-S"
+  ],
+  "batch_twins": []
+ },
+ "rule_env_best_minus_known": {
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 278,
+    "losers_removed": 18,
+    "winners_removed": 260,
+    "loss_rate_removed": 6.47,
+    "lift": 2.87,
+    "net_change_usd_1lot": 3512.0,
+    "wr_after": 97.9
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 107,
+    "losers_removed": 11,
+    "winners_removed": 96,
+    "loss_rate_removed": 10.28,
+    "lift": 3.06,
+    "net_change_usd_1lot": 2595.0,
+    "wr_after": 96.87
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 171,
+    "losers_removed": 7,
+    "winners_removed": 164,
+    "loss_rate_removed": 4.09,
+    "lift": 2.93,
+    "net_change_usd_1lot": 917.0,
+    "wr_after": 98.71
+   }
+  },
+  "batch_losses": [
+   "0629-221042-B",
+   "0703-183524-B",
+   "0708-213443-S",
+   "0709-202905-S"
+  ],
+  "batch_twins": []
+ }
+}

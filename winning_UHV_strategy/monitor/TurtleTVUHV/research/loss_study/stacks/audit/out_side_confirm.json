@@ -1,0 +1,14 @@
+{
+ "setups_1_2_0_3_3_20_20_0.5_0.7_3.json": {
+  "InpDetCamConfirm": 2.0,
+  "roughs": 124587,
+  "side_equals_sign_stk": 0.5095,
+  "stk_opposite_to_side": 0.4136
+ },
+ "setups_1_3_0_3_3_20_20_0.5_0.7_3.json": {
+  "InpDetCamConfirm": 3.0,
+  "roughs": 134363,
+  "side_equals_sign_stk": 0.4178,
+  "stk_opposite_to_side": 0.5053
+ }
+}

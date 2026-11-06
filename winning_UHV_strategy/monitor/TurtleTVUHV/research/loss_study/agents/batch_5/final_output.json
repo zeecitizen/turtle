@@ -1,0 +1,447 @@
+{
+ "losses": [
+  {
+   "id": "0521-184100-B",
+   "comment": "BUY 23:41 PKT (18:41 UTC). A ~35-pip rally 22:11-22:58 PKT on 400-560-tick candles topped near 1.1630, then 40 minutes of range 1.1619-1.1628 with volume fading to 70-130 ticks; the camel went green x2 on tiny swings inside that range. The UHV (23:39, 126 ticks) was a 1.3-pip red candle and the retracement only 2.7 pips (level 1.16262, extreme 1.16235). Filled 1.16271, just under the 23:25/23:29 highs 1.16276 and the 1.1630 top; the bid never came back to the fill (best -0.1 pip) and the price drifted 20 pips down overnight (stopped after 12 h). Nothing before the white line separates it: both twins (23:19 fill 1.16250, 23:23 fill 1.16267) were the same buy into the same 1.1626-1.1628 ceiling in the same fading tape and won in seconds. It was the third try at that ceiling, but the 'third test / chop' idea is not selective (rule_chop x1.02 train / x1.64 test; repeat entries at the same zone lift ~1.0).",
+   "cause": "chop/range top - indistinguishable from twins",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0522-142204-S",
+   "comment": "SELL 19:22 PKT (14:22 UTC, NY morning). A 30-pip fall from 1.1618 (18:09) to 1.15880 (19:17): the first flush at 19:00 on 447 ticks, the second push to the 19:17 low on only 160-240 ticks (weaker selling). Two green candles came off the low (UHV 19:20, 143 ticks) and the sell broke the UHV low 1.15897 only 5 ticks into the minute - 1.7 pips above the low the weak second push had just made. The bid never went lower (best -0.5); price rebounded through 1.1600 to the stop in 2 h. Visible: a late sell (22 pips run in 60 bars) right above a fresh low printed on fading volume (VSA no-supply low). Measured versions are not selective: rule_extended x1.40/x0.66, rule_exhaustion_push x1.53/x1.38, rule_early_tick_break x1.61/x0.89; twin 0522-140012-S also sold into a support (1.1600) and won.",
+   "cause": "exhausted trend - sold just above a fresh low",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0522-192405-B",
+   "comment": "BUY 00:24 PKT Saturday = Friday 19:24 UTC. A dead 90-minute range 1.1607-1.1615 (24-90 ticks a minute in the last 12 candles, ATR 0.7 pip); the 'UHV' was a 41-tick red candle at 0.55x the 30-candle average and the buy at 1.16102 sat mid-range. The bid never reached the fill (best -0.4); the price sagged and the engine closed it at the weekly close (20:58:58 UTC) for -98. Visible: the clock (96 minutes before the weekly close) and the dead tape. But the Friday 15:00-16:45 NY window fails out of sample (rule_friday_afternoon train x4.96, test x0.00 - 0 losers in 55 test trades), rule_dead_tape's threshold (<=25 ticks) does not reach this tape (30-bar mean 74), and the twins (22:54 and 23:08 PKT, same Friday, same thin range) won. Not removable by a selective rule.",
+   "cause": "market close - Friday evening thin tape",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0526-111253-B",
+   "comment": "BUY 16:12 PKT (11:12 UTC). A 90-minute range 1.1637-1.1645 (top tested 14:57 at 1.16437 and a 15:28 spike to ~1.1645). A slow 10-minute grind from 1.16401 (16:01) to 1.16444 (16:11) on falling volume (131 -> 34-107). The UHV (16:11, 48 ticks, a 1-pip candle) made the level the range top itself, and the breakout minute had already printed 46 ticks = 96% of the UHV - not the quiet breakout the method wants. Filled 1.16451 at the range top; never a tick in favour (best -0.5) and it fell back through the range. Closest fix is the loud-breakout test (breakout ticks >= 90% of the UHV), but it is x1.79 train / x2.04 test (NOT SELECTIVE); twin 0525-180016-B also bought a range top (box 18) in a quiet tape and won.",
+   "cause": "range top + breakout not quiet",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0526-155742-S",
+   "comment": "SELL 20:57 PKT (15:57 UTC). A slow 13-pip drift from 1.1629 (19:35) to the 20:37 low 1.16161 - the low candle carried the most volume of the 40 bars (174 ticks, stopping volume) - then 20 minutes sideways 1.1619-1.1622 with a higher low. The UHV (20:45, 143 ticks) was 12 minutes old; the sell broke its low 1.16188 with 108 breakout ticks (0.76 of the UHV), 2.7 pips above the 20:37 low. The bid never went lower (best -0.6) and price rose to 1.1628 within 30 minutes. Both twins sold the same ~1.1619-1.1620 level in the same range (20:31, 20:44) and won; this was the third sell there. The loud low and higher low were visible, but stopping-volume and repeat-entry tests are not selective (rule_climax_at_extreme x1.15/x0.00, repeat entries lift ~1.0).",
+   "cause": "range bottom, third test - indistinguishable from twins",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0527-123601-B",
+   "comment": "BUY 17:36 PKT (12:36 UTC). A news spike: from 1.1633 (16:56) the euro ripped 27 pips in 15 minutes (17:18 candle 625 ticks), then chopped 1.1647-1.1660 at the top (ATR 4.3 pips). The level was the 17:35 UHV high 1.16573 but the order FILLED at 1.16612 - 3.9 pips past the level and above the 17:31 spike high 1.16604. Only 0.6 pip of that was visible on the trigger tick; 3.3 pips came in the 0.3 s fill delay (spread + spike). The bid never reached the fill (best -0.2) and the spike unwound 15 pips. The fill separates it from twin 0527-123022-B, which bought the same spike top but filled 0.4 pip past its level and won. rule_overshoot (fill >= 1.2 pips past the level) removes it at x3.13 train / x10.73 test - but it reads the fill, i.e. it acts at the fill, not before the order: the EA form is a max-spread / max-slippage guard (close at once if filled > 1.2 pips past the level), which must be proven in MT5.",
+   "cause": "news spike - chased fill",
+   "avoidable_before_entry": false,
+   "rule_ids": [
+    "rule_union_daily_break_overshoot",
+    "rule_overshoot",
+    "rule_overshoot_buy"
+   ]
+  },
+  {
+   "id": "0528-060001-S",
+   "comment": "SELL 11:00:01 PKT (06:00:01 UTC, early London). A steady 11-pip climb from 1.15908 (10:20) to 1.16018 (10:51) - 90 minutes of green humps - then an 8-minute, 3-pip drift produced one red hump (red x1). The sell broke the low of a green UHV printed 18 minutes earlier (10:42, 106 ticks) in the first second of 06:00 UTC, 6 ticks into the minute, 1.2 pips under the 1.1600 figure. Never a tick in favour (best -0.3); the uptrend resumed to 1.1609. Visible: a counter-trend flip, a stale UHV, top of the hour, under a figure - but each measured version is not selective: rule_counter_first_hump x1.23/x1.08, rule_news_minute x2.13/x1.46, rule_round_figure x1.48/x2.72, rule_early_tick_break x1.61/x0.89. Its own twins (0528-041246-S, 0528-020118-S) sold pullbacks in clear downtrends and won, so by eye it is the odd one out - but counter-trend sells win often too (e.g. 0605-075939-S sold after a 20-pip rally and won).",
+   "cause": "counter-structure - first red hump in an uptrend",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0529-012744-B",
+   "comment": "BUY 06:27 PKT (01:27 UTC, Tokyo). A 9-pip rally 05:57-06:15 (06:00 candle 219 ticks) into the top of the 90-minute range (05:20 high ~1.1656), then 14 minutes of flat top 1.16541-1.16563. A 0.7-pip retracement (level 1.16552), a UHV of 86 ticks (0.79x the 30-bar mean), and 70 breakout ticks (0.81 of the UHV). Filled 1.16558, 0.5 pip under the 06:21 high 1.16563; never a tick in favour (best -0.3) and it slid 10 pips in 30 minutes. Twin 0529-002623-B bought 1.16544 under the same 1.1655 ceiling an hour earlier and won; support/resistance and chop tests are not selective (rule_sr_ahead x0.95/x1.04, rule_chop x1.02/x1.64).",
+   "cause": "range top after a stall - indistinguishable from twins",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0529-094113-S",
+   "comment": "SELL 14:41 PKT (09:41 UTC). A 13-pip selloff 13:40-14:01 to 1.16264, then a V-recovery to 1.16384 by 14:19; a 4-pip pullback to 1.16329 (14:36) made one red hump (red x1). The sell broke a 0.8-pip retracement (level 1.16341) in the middle of the 40-bar range (position 0.53) - a bull flag after a V, i.e. against the latest impulse. Never a tick in favour (best -0.6); price rallied to 1.1645. The 90-bar trend test did not see it as counter-trend (flat over 90 bars) and the twins also sold small pullbacks (0529-083815-S in a real downtrend, 0529-045159-S in a range) and won. No tested rule separates it.",
+   "cause": "counter-structure - sold a bull flag after a V-recovery",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0602-024909-S",
+   "comment": "SELL 07:49 PKT (02:49 UTC, Tokyo afternoon). Near-dead tape: 18-52 ticks a minute, ATR 0.5 pip. Price drifted from the 07:30 high 1.16344 to the 07:44 low 1.16301, inside a 1.1628-1.1630 floor built 06:48-07:10. The UHV was a 35-tick green candle (0.71x the 30-bar mean); the sell broke its low 1.16311 (a 0.4-pip retracement) after 6 ticks, 1 pip above the 07:44 low. Never a tick in favour (best -0.1); it drifted up 20 pips over 3.5 h. The twins sold after London opened (11:44, 12:00 PKT, 100+ ticks a minute) and won. rule_dead_tape (<=25 ticks; this tape averaged 49) misses it and a looser threshold fails on train (<=40 ticks: x1.63); rule_weak_uhv x1.38/x1.40.",
+   "cause": "dead Asian tape - sold into a floor",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0602-144644-B",
+   "comment": "BUY 19:46 PKT (14:46 UTC, NY morning). A 14-pip downtrend 18:20-19:24 to 1.16362, then a straight 13.5-pip V-rally to 1.16497 (19:42) that left upper wicks at the 18:20-18:40 lower-high zone 1.1647-1.1650 (an upthrust into old supply). Two red candles came off it (UHV 19:45, 104 ticks); the buy re-broke 1.16464 with 78 breakout ticks (0.75 of the UHV). Never a tick in favour (best -0.3); it rolled over to 1.1638. The upthrust into old lower highs was visible, but twin 0602-122438-B bought a fresh top after a rally (17:24) and won, and extension / chop tests are not selective (rule_extended x1.40/x0.66, rule_chop x1.02/x1.64).",
+   "cause": "into resistance after a V-rally (upthrust)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0603-051526-B",
+   "comment": "BUY 10:15 PKT (05:15 UTC, pre-London). Dead tape (26-52 ticks a minute, ATR 0.44 pip). A slow creep from 1.16242 (09:51) to 1.16268 (10:10), back to the 08:58-09:00 highs ~1.1627-1.1628 (top of the 90-minute range). UHV 10:14 with 48 ticks, a 0.6-pip retracement; filled 1.16270 just over the 40-bar high. Never a tick in favour (best 0.0); the London pre-open (05:20-05:30 UTC) pushed it 5 pips down and on to the stop. Twins 0603-041721-B and 0603-033903-B bought the same 1.1626-1.1628 zone in the same dead tape an hour earlier and won; rule_dead_tape (<=25 ticks; this tape 53) misses it. Nothing before the entry separates it.",
+   "cause": "dead tape at range top before London - indistinguishable from twins",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0604-074634-S",
+   "comment": "SELL 12:46 PKT (07:46 UTC, London). An old downtrend (red x5) from 1.1615 (11:38); the last leg fell 13 pips from 1.16116 (12:13) to 1.15983 (12:42), onto the 1.1600 figure. Two green candles bounced (UHV 12:44, 132 ticks, the loudest since 12:20) and the sell broke the UHV low 1.15998 - 1.5 pips above the 12:42 low, 0.2 pip under 1.1600. Never a tick in favour (best -0.5); +10 pips in 20 minutes and on to the stop. Visible: an old trend, a fresh low on a 100-pip figure, a loud bounce candle. Measured: rule_old_red_trend x2.21/x1.70, rule_round_figure x1.48/x2.72 - both NOT SELECTIVE. Twins 0604-073651-S and 0604-072611-S sold the same leg higher (1.16037, 1.16054) and won.",
+   "cause": "exhausted trend at the 1.1600 figure",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0605-061830-S",
+   "comment": "SELL 11:18 PKT (06:18 UTC, early London, NFP day). A drift from the 10:38 high 1.16184 to a double bottom at 1.16127 (11:09 and 11:10): the first push 11:00-11:03 ran on 131 ticks, the retest at 11:10 on only 18 ticks (no supply). A 3-pip bounce made the green UHV (11:13, 70 ticks); the sell broke its low 1.16132 - 0.5 pip above the double bottom. Never a tick in favour (best -0.4); price lifted 8 pips in 30 minutes and on to the stop. Visible to a VSA reader (a quiet retest of the low), but rule_sr_ahead x0.95/x1.04 and rule_exhaustion_push x1.53/x1.38 are not selective, and twin 0605-054324-S also sold right above a range floor and won.",
+   "cause": "sold into a double bottom",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0605-132528-B",
+   "comment": "BUY 18:25 PKT (13:25 UTC, NFP day). The 17:30 PKT payrolls release sent the euro 56 pips down from 1.1640 (17:28) to 1.15837 (18:00; a 635-tick climax at 18:02). A 15-pip bounce to 1.15988 made the first green hump (green x1), but three highs 1.15975-1.15988 (18:13-18:21) failed and the 18:22-18:23 red candles (UHV 212 ticks) dropped it to 1.15905. The buy re-broke 1.15926 with 107 breakout ticks - buying a failing bounce in a post-news downtrend (60-bar trend -49 pips). Never a tick in favour (best -0.5); the selloff resumed and stopped it in 35 minutes. Twin 0605-131602-B was the same counter-trend buy in the same bounce 9 minutes earlier (fill 1.15971) and won; twin 0605-144511-B bought lower in the same selloff and won. rule_counter_first_hump x1.23/x1.08. Indistinguishable at entry.",
+   "cause": "counter-trend after NFP - indistinguishable from twins",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0608-094151-S",
+   "comment": "SELL 14:41 PKT (09:41 UTC, London). An 80-minute, 20-pip downtrend (red x4) into the 1.1500 figure (lows 1.14996-1.14999, 14:32-14:36). Then the two loudest candles of the session lifted it off 1.1500: 14:36 (368 ticks) and the UHV 14:37 (517 ticks, 3.0x the 30-bar mean). The sell broke the UHV low 1.15041 - 4 pips above a figure that had just absorbed the selling. Never a tick in favour (best -0.4); price climbed 13 pips. A VSA trader would call it stopping volume at a round number. The climax test catches it but is x1.46 train / x2.41 test (rule_climax_uhv, NOT SELECTIVE) and the at-the-extreme version is x1.15/x0.00: loud UHVs win too. Twins 0608-084655-S and 0608-115833-S had ordinary UHVs (1.08x, 1.37x) and won.",
+   "cause": "stopping volume at the 1.1500 figure",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0610-231702-S",
+   "comment": "SELL 04:17 PKT (23:17 UTC, the Asian open). A 10-pip fall from 1.15367 (03:47) to a floor at 1.15257-1.15266 (04:08 and 04:13 lows, with the 03:02-03:20 lows near 1.1528). A small bounce made the green UHV (04:15, 78 ticks, 0.73x); the sell broke 1.15266 after 9 ticks, 0.9 pip above the 04:13 low. Never a tick in favour (best 0.0); in the next minute a 500-700-tick burst lifted price 6 pips and on to the stop. Twin 0610-230455-S sold the same floor 13 minutes earlier (1.15286) and won. The burst came after the white line; nothing before the entry separates it.",
+   "cause": "sold into a floor, burst after entry - indistinguishable from twins",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0612-153531-B",
+   "comment": "BUY 20:35 PKT (15:35 UTC, Friday). A 17-pip rally from 1.1566 (19:21) to 1.15836 (20:29-20:30), then a stall; the 20:34 red candle (UHV 226 ticks, the loudest of the last 15) knocked it to 1.15804. Twin 0612-153353-B bought the same 1.1582 level at 20:33:53 and won; 98 seconds later this trade bought it again (134 breakout ticks, 0.59 of the UHV). Never a tick in favour (best 0.0); it faded 8 pips and the weekly close took it at -163. Only the repeat touch and a loud red candle at the top are visible, and neither is selective (repeat entries lift ~1.0, rule_climax_uhv x1.46/x2.41). Same setup, same price as a winning twin.",
+   "cause": "second buy at a stalled top - indistinguishable from twins",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0615-152117-B",
+   "comment": "BUY 20:21 PKT (15:21 UTC). A 90-minute downtrend of lower highs from 1.1618 (19:08) to 1.16042 (20:04, after a 404-tick red candle at 20:00), then a 16-minute flat base 1.16042-1.16071 on drying volume (last 10 candles 0.53x the 50 before). A 1-pip higher low inside the base made a green hump (green x1); the UHV (20:20, 142 ticks) put the level 1.16056 mid-base. Never a tick in favour (best 0.0); the downtrend resumed. Twin 0615-145518-B was the same counter-trend green-x1 buy in the same decline 26 minutes earlier and won. rule_counter_first_hump x1.23/x1.08 and rule_drying_volume x1.99/x3.14 (train just short of 2) are not selective.",
+   "cause": "counter-trend pause in a downtrend - indistinguishable from twins",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0617-205108-S",
+   "comment": "SELL 01:51 PKT (20:51 UTC). A high-volume evening (19:20-19:50 UTC, 250-480 ticks a minute; likely the FOMC): the euro fell to 1.1478 and recovered to 1.15054 (01:42). The sell broke the UHV low 1.15007 at 1.15003 - on the 1.1500 figure and 9 minutes before the 17:00 NY daily break. The tape then died (0-10 ticks a minute through the break), the bid never got 0.1 pip below the fill (best -0.2), the trade sat open through the dead hour and the Asian session lifted it 24 pips to the stop at 03:32 UTC. Separated by the clock: entries in the last 15 minutes before the break cannot get their 0.1-pip fill while the spread widens and volume vanishes. rule_daily_break (NY 16:45-18:00) removes it at x4.49 train / x8.06 test. Twin 0617-204845-S sold the same level 2 minutes earlier and won - inside the same window, so the rule also gives up winners like that one.",
+   "cause": "market close - daily 17:00 New York break",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "rule_daily_break",
+    "rule_union_daily_break_overshoot"
+   ]
+  },
+  {
+   "id": "0618-132315-S",
+   "comment": "SELL 18:23 PKT (13:23 UTC). A ~28-pip spike from 1.1453 (17:00) to 1.1482 (17:22), then an hour of range 1.1463-1.1472 whose floor was tested at 17:36, 17:44 and 18:12-18:21 (lows 1.14630-1.14644). The green UHV (18:22, 164 ticks, 0.82x) bounced and the sell broke its low 1.14633 - the fourth test of the floor. Never a tick in favour (best 0.0); price ripped 20 pips to the stop in 16 minutes. Twin 0618-124436-S sold the first test of the same floor (17:44) and won. Support/resistance and chop tests are not selective (rule_sr_ahead x0.95/x1.04, rule_chop x1.02/x1.64).",
+   "cause": "range floor, fourth test",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  }
+ ],
+ "rules": [
+  {
+   "rule_id": "rule_daily_break",
+   "idea": "New York 16:45-18:00 every day (2026 US DST boundaries hardcoded = all the data): the last 15 min before the 17:00 NY break (Friday = weekly close, open trades force-closed 20:58:58 UTC) and the dead hour after it",
+   "code": "def rule(t, A):\n    ts = float(t['t_in'])\n    loc = ts + (-14400 if 1772953200 <= ts < 1793512800 else -18000)\n    sod = loc % 86400\n    return 16 * 3600 + 45 * 60 <= sod < 18 * 3600",
+   "lift_all": 5.72,
+   "lift_train": 4.49,
+   "lift_test": 8.06,
+   "losers_removed": 16,
+   "winners_removed": 108,
+   "verdict": "EXCELLENT"
+  },
+  {
+   "rule_id": "rule_weekly_close",
+   "idea": "Friday from 16:45 New York - the weekly-close subset of rule_daily_break (small: 8L/14W)",
+   "code": "def rule(t, A):\n    ts = float(t['t_in'])\n    loc = ts + (-14400 if 1772953200 <= ts < 1793512800 else -18000)\n    return (int(loc // 86400) + 3) % 7 == 4 and loc % 86400 >= 16 * 3600 + 45 * 60",
+   "lift_all": 16.12,
+   "lift_train": 12.76,
+   "lift_test": 23.84,
+   "losers_removed": 8,
+   "winners_removed": 14,
+   "verdict": "EXCELLENT"
+  },
+  {
+   "rule_id": "rule_post_break_hour",
+   "idea": "New York 17:00-18:00, the hour after the daily break - subset of rule_daily_break",
+   "code": "def rule(t, A):\n    ts = float(t['t_in'])\n    loc = ts + (-14400 if 1772953200 <= ts < 1793512800 else -18000)\n    return 17 * 3600 <= loc % 86400 < 18 * 3600",
+   "lift_all": 4.72,
+   "lift_train": 2.84,
+   "lift_test": 8.25,
+   "losers_removed": 5,
+   "winners_removed": 42,
+   "verdict": "GOOD"
+  },
+  {
+   "rule_id": "rule_daily_break_beyond_example",
+   "idea": "what rule_daily_break adds beyond the api.py example window 20:45-21:15 UTC (the existing market-close rule)",
+   "code": "def rule(t, A):\n    ts = float(t['t_in'])\n    u = ts % 86400\n    if 74700 <= u <= 76500:\n        return False\n    loc = ts + (-14400 if 1772953200 <= ts < 1793512800 else -18000)\n    return 16 * 3600 + 45 * 60 <= loc % 86400 < 18 * 3600",
+   "lift_all": 4.43,
+   "lift_train": 2.84,
+   "lift_test": 7.4,
+   "losers_removed": 5,
+   "winners_removed": 45,
+   "verdict": "GOOD"
+  },
+  {
+   "rule_id": "rule_overshoot",
+   "idea": "filled 1.2+ pips past the UHV level (threshold picked on train only). CAVEAT: the fill is the first tick 0.3 s AFTER the trigger (buy at ask), so this acts at the fill, not before the order; EA form = max-spread / max-slippage guard; the spread is what Python models worst - MT5 first",
+   "code": "def rule(t, A):\n    return (t['fill'] - t['level']) * t['side'] / 0.0001 >= 1.2",
+   "lift_all": 5.35,
+   "lift_train": 3.13,
+   "lift_test": 10.73,
+   "losers_removed": 14,
+   "winners_removed": 102,
+   "verdict": "GOOD"
+  },
+  {
+   "rule_id": "rule_overshoot_buy",
+   "idea": "rule_overshoot on buys only (ask fill: mostly the spread); same fill-time caveat",
+   "code": "def rule(t, A):\n    return t['side'] > 0 and (t['fill'] - t['level']) / 0.0001 >= 1.2",
+   "lift_all": 5.24,
+   "lift_train": 2.75,
+   "lift_test": 12.77,
+   "losers_removed": 11,
+   "winners_removed": 82,
+   "verdict": "GOOD"
+  },
+  {
+   "rule_id": "rule_union_daily_break_overshoot",
+   "idea": "recommended pair: rule_daily_break OR rule_overshoot (the overshoot half acts at the fill and needs MT5)",
+   "code": "def rule(t, A):\n    if (t['fill'] - t['level']) * t['side'] / 0.0001 >= 1.2:\n        return True\n    ts = float(t['t_in'])\n    loc = ts + (-14400 if 1772953200 <= ts < 1793512800 else -18000)\n    return 16 * 3600 + 45 * 60 <= loc % 86400 < 18 * 3600",
+   "lift_all": 4.67,
+   "lift_train": 3.16,
+   "lift_test": 7.45,
+   "losers_removed": 22,
+   "winners_removed": 187,
+   "verdict": "GOOD"
+  },
+  {
+   "rule_id": "rule_trigger_gap",
+   "idea": "the breakout tick itself (known at the decision) printed 0.8+ pips past the level - tiny (4L/26W) and adds 0 losers beyond the recommended pair",
+   "code": "def rule(t, A):\n    px = t['brk_hi_so_far'] if t['side'] > 0 else t['brk_lo_so_far']\n    return (px - t['level']) * t['side'] / 0.0001 >= 0.8",
+   "lift_all": 5.91,
+   "lift_train": 4.25,
+   "lift_test": 8.94,
+   "losers_removed": 4,
+   "winners_removed": 26,
+   "verdict": "EXCELLENT"
+  },
+  {
+   "rule_id": "rule_dead_tape",
+   "idea": "mean tick volume of the last 30 closed candles <= 25 (train-only pick = 26) - redundant with rule_daily_break: outside that window it is not selective (rule_dead_tape_outside_break)",
+   "code": "def rule(t, A):\n    k = int(t['k'])\n    return float(A.v[k - 29:k + 1].mean()) <= 25",
+   "lift_all": 3.11,
+   "lift_train": 3.66,
+   "lift_test": 2.86,
+   "losers_removed": 11,
+   "winners_removed": 146,
+   "verdict": "GOOD"
+  },
+  {
+   "rule_id": "rule_overshoot_sell",
+   "idea": "rule_overshoot on sells only (bid fill: gap + 0.3 s drift) - high lift but only 3 losers, fewer than the 4 required",
+   "code": "def rule(t, A):\n    return t['side'] < 0 and (t['level'] - t['fill']) / 0.0001 >= 1.2",
+   "lift_all": 5.78,
+   "lift_train": 5.41,
+   "lift_test": 5.96,
+   "losers_removed": 3,
+   "winners_removed": 20,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_dead_tape_outside_break",
+   "idea": "rule_dead_tape outside NY 16:45-18:00",
+   "code": "def rule(t, A):\n    ts = float(t['t_in'])\n    loc = ts + (-14400 if 1772953200 <= ts < 1793512800 else -18000)\n    sod = loc % 86400\n    if 16 * 3600 + 45 * 60 <= sod < 18 * 3600:\n        return False\n    k = int(t['k'])\n    return float(A.v[k - 29:k + 1].mean()) <= 25",
+   "lift_all": 1.74,
+   "lift_train": 2.55,
+   "lift_test": 1.07,
+   "losers_removed": 4,
+   "winners_removed": 98,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_friday_afternoon",
+   "idea": "Friday New York 15:00-16:45 (thin Friday afternoon) - train x4.96 but test x0.00 (0 losers in 55)",
+   "code": "def rule(t, A):\n    ts = float(t['t_in'])\n    loc = ts + (-14400 if 1772953200 <= ts < 1793512800 else -18000)\n    sod = loc % 86400\n    return (int(loc // 86400) + 3) % 7 == 4 and 15 * 3600 <= sod < 16 * 3600 + 45 * 60",
+   "lift_all": 2.92,
+   "lift_train": 4.96,
+   "lift_test": 0.0,
+   "losers_removed": 6,
+   "winners_removed": 85,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_drying_volume",
+   "idea": "last 10 candles at <= half the pace of the 50 before (train x1.99, just short)",
+   "code": "def rule(t, A):\n    k = int(t['k'])\n    return float(A.v[k - 9:k + 1].mean()) <= 0.5 * float(A.v[k - 59:k - 9].mean())",
+   "lift_all": 2.35,
+   "lift_train": 1.99,
+   "lift_test": 3.14,
+   "losers_removed": 8,
+   "winners_removed": 143,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_old_red_trend",
+   "idea": "camStk <= -5 (old downtrend, sells)",
+   "code": "def rule(t, A):\n    return t['camStk'] <= -5",
+   "lift_all": 2.15,
+   "lift_train": 2.21,
+   "lift_test": 1.7,
+   "losers_removed": 8,
+   "winners_removed": 157,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_round_figure",
+   "idea": "level within 1.5 pips of a 100-pip figure, either side",
+   "code": "def rule(t, A):\n    x = t['level'] / 0.01\n    return abs(x - round(x)) * 100 <= 1.5",
+   "lift_all": 1.96,
+   "lift_train": 1.48,
+   "lift_test": 2.72,
+   "losers_removed": 10,
+   "winners_removed": 216,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_news_minute",
+   "idea": "breakout in the first 10 s of a :00 minute",
+   "code": "def rule(t, A):\n    ts = float(t['t_in'])\n    return int(ts % 3600 // 60) == 0 and ts % 60 < 10",
+   "lift_all": 1.95,
+   "lift_train": 2.13,
+   "lift_test": 1.46,
+   "losers_removed": 4,
+   "winners_removed": 87,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_loud_breakout",
+   "idea": "breakout minute already >= 90% of the UHV's ticks at the break",
+   "code": "def rule(t, A):\n    return t['brk_ticks_so_far'] >= 0.9 * t['uhv_v']",
+   "lift_all": 1.89,
+   "lift_train": 1.79,
+   "lift_test": 2.04,
+   "losers_removed": 8,
+   "winners_removed": 180,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_climax_uhv",
+   "idea": "UHV >= 2.2x the 30-candle mean (climax / stopping volume)",
+   "code": "def rule(t, A):\n    k = int(t['k'])\n    return t['uhv_v'] >= 2.2 * float(A.v[k - 29:k + 1].mean())",
+   "lift_all": 1.79,
+   "lift_train": 1.46,
+   "lift_test": 2.41,
+   "losers_removed": 15,
+   "winners_removed": 356,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_weak_uhv",
+   "idea": "UHV <= 0.8x the 30-candle median (not a real volume peak) - a batch-5 coincidence: 14/21 losses vs 8/42 twins, x1.4 on all trades",
+   "code": "def rule(t, A):\n    k = int(t['k'])\n    x = sorted((float(q) for q in A.v[k - 29:k + 1]))\n    return t['uhv_v'] <= 0.8 * (x[14] + x[15]) / 2",
+   "lift_all": 1.34,
+   "lift_train": 1.38,
+   "lift_test": 1.4,
+   "losers_removed": 18,
+   "winners_removed": 576,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_early_tick_break",
+   "idea": "level broke within the first 6 ticks of the minute",
+   "code": "def rule(t, A):\n    return t['brk_ticks_so_far'] <= 6",
+   "lift_all": 1.3,
+   "lift_train": 1.61,
+   "lift_test": 0.89,
+   "losers_removed": 20,
+   "winners_removed": 661,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_counter_first_hump",
+   "idea": "first hump of the new colour while the 90-bar trend is 10+ pips against the trade",
+   "code": "def rule(t, A):\n    k, side = (int(t['k']), t['side'])\n    return abs(t['camStk']) == 1 and (A.c[k] - A.c[k - 90]) * side / 0.0001 <= -10",
+   "lift_all": 1.3,
+   "lift_train": 1.23,
+   "lift_test": 1.08,
+   "losers_removed": 17,
+   "winners_removed": 562,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_exhaustion_push",
+   "idea": "level within 2 pips of the 60-bar extreme ahead AND last 10 candles 30% quieter",
+   "code": "def rule(t, A):\n    k, side, lvl = (int(t['k']), t['side'], t['level'])\n    room = A.h[k - 59:k + 1].max() - lvl if side > 0 else lvl - A.l[k - 59:k + 1].min()\n    return room / 0.0001 <= 2 and float(A.v[k - 9:k + 1].mean()) <= 0.7 * float(A.v[k - 59:k - 9].mean())",
+   "lift_all": 1.31,
+   "lift_train": 1.53,
+   "lift_test": 1.38,
+   "losers_removed": 9,
+   "winners_removed": 296,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_extended",
+   "idea": "price ran 25+ pips from the opposite 60-bar extreme to the level",
+   "code": "def rule(t, A):\n    k, side, lvl = (int(t['k']), t['side'], t['level'])\n    run = lvl - A.l[k - 59:k + 1].min() if side > 0 else A.h[k - 59:k + 1].max() - lvl\n    return run / 0.0001 >= 25",
+   "lift_all": 1.44,
+   "lift_train": 1.4,
+   "lift_test": 0.66,
+   "losers_removed": 9,
+   "winners_removed": 269,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_chop",
+   "idea": "10+ of the last 20 candles straddle the level",
+   "code": "def rule(t, A):\n    k, lvl = (int(t['k']), t['level'])\n    return int(((A.h[k - 19:k + 1] >= lvl) & (A.l[k - 19:k + 1] <= lvl)).sum()) >= 10",
+   "lift_all": 1.23,
+   "lift_train": 1.02,
+   "lift_test": 1.64,
+   "losers_removed": 25,
+   "winners_removed": 875,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_climax_at_extreme",
+   "idea": "loud UHV (>= 1.8x) whose far end is the 60-bar extreme behind the trade",
+   "code": "def rule(t, A):\n    k, ku, side = (int(t['k']), int(t['ku']), t['side'])\n    if t['uhv_v'] < 1.8 * float(A.v[k - 29:k + 1].mean()):\n        return False\n    if side < 0:\n        return A.l[ku] <= A.l[k - 59:k + 1].min() + 5e-05\n    return A.h[ku] >= A.h[k - 59:k + 1].max() - 5e-05",
+   "lift_all": 0.5,
+   "lift_train": 1.15,
+   "lift_test": 0.0,
+   "losers_removed": 1,
+   "winners_removed": 88,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_sr_ahead",
+   "idea": ">= 2 swing points (60 bars, before the UHV) within 1 pip of the level",
+   "code": "def rule(t, A):\n    k, ku, side, lvl = (int(t['k']), int(t['ku']), t['side'], t['level'])\n    hs, ls = A.pivots(k, 1, 60)\n    pts = hs if side > 0 else ls\n    return sum((1 for j, x in pts if j < ku and abs(x - lvl) <= 0.0001)) >= 2",
+   "lift_all": 0.96,
+   "lift_train": 0.95,
+   "lift_test": 1.04,
+   "losers_removed": 118,
+   "winners_removed": 5344,
+   "verdict": "NOT SELECTIVE"
+  }
+ ],
+ "batch_notes": "All numbers are a Python tick-replay HYPOTHESIS (CLAUDE.md: only MT5 / live fills can promote). Each rule's source was exec'd in a fresh namespace and scored by api.report; the code strings are exactly what was scored. rule_ids list only rules that pass the bar (GOOD / EXCELLENT); non-selective rules that also touch a loss are named in its comment. WHAT THE CHARTS SHOW: in all 21 losses the bid never came back to the fill (best excursion 0.0 to -0.6 pip) - every loss is a breakout tick that was the exact turning point, after which price drifted 20 pips over 16 min to 12 h. The twins are usually the same setup in the same zone minutes earlier, so bar structure (S/R touches, range tops, exhaustion, counter-trend humps, climax UHVs, chop, round figures, repeat entries) does NOT separate losers from winners: every structural rule scored lift 0.5-2.2 (NOT SELECTIVE). WHAT DOES SEPARATE: liquidity and execution. (1) rule_daily_break, NY 16:45-18:00 (DST-correct: the dead zone is 21:00-21:59 UTC in summer, 22:00-22:59 UTC in winter): 16L/108W, x4.49 train / x8.06 test. Its core is Friday's last 15 minutes (8 of 22 trades lose, mostly small forced closes at 20:58:58 UTC, plus Good Friday 2026-04-03's four -$525..-$819 gap losses) and the dead hour after the break (Mon-Thu 21:30-21:45 UTC: 4 of 18 lost). It adds 5L/45W beyond the api.py example window. Window choice disclosed: I compared windows with train and test printed together; on train alone NY 16:45-17:30 ranks first (x5.58 train / x7.95 test); I shipped 16:45-18:00 (x4.49 / x8.06) because the minute-volume table shows the whole 17:00-18:00 NY hour is dead (median 5-9 ticks); both pass on both halves. Extending Friday back to 15:00 NY fails out of sample (0 losers in 55 test trades). (2) rule_overshoot, fill >= 1.2 pips past the level (train-only pick = 1.2): 14L/102W, x3.13 / x10.73 - but the fill is the first tick 0.3 s after the trigger (buy at ask), and the signal is mostly post-trigger (spread + drift: post-trigger part >= 1.0 pip = 11% losers, trigger-tick gap alone only 4L/26W). It is a fill-time guard, not a pre-entry filter, and the spread is exactly what Python models worst. The two overlap (wide spreads at the break); union 22L/187W, x3.16 / x7.45, WR 97.74 -> 97.98%. rule_dead_tape (<=25 ticks/min, GOOD alone) adds only 3L/90W beyond the pair. In batch 5, 1 loss (0617-205108-S) is removable before entry and 1 more (0527-123601-B) at the fill; the other 19 are indistinguishable from their twins with anything measured. Not tested as harness rules (need other trades, not t/A): repeat entries at the same zone (same side, within 1-3 pips, last 10-60 min) - lift 0.6-1.5, NOT SELECTIVE. Files: agents/batch_5/rules.py (all rules), run.py (exec + score), results.log / results.json (scores), features.py + scan.py (feature scan), final.py -> final_output.json."
+}

@@ -1,0 +1,7 @@
+tight   all: n 714 actual L 4 (stop-outs 3) expected 12.0  ratio 0.33  P(0 L) 0.000 | train: n 332 actual L 1 (stop-outs 1) expected 8.5  ratio 0.12  P(0 L) 0.000 | test: n 382 actual L 3 (stop-outs 2) expected 3.5  ratio 0.85  P(0 L) 0.029
+zee100  all: n 300 actual L 0 (stop-outs 0) expected 4.8  ratio 0.00  P(0 L) 0.007 | train: n 123 actual L 0 (stop-outs 0) expected 3.2  ratio 0.00  P(0 L) 0.040 | test: n 177 actual L 0 (stop-outs 0) expected 1.7  ratio 0.00  P(0 L) 0.185
+secure  all: n 2237 actual L 30 (stop-outs 29) expected 38.1  ratio 0.79  P(0 L) 0.000 | train: n 1059 actual L 22 (stop-outs 22) expected 26.8  ratio 0.82  P(0 L) 0.000 | test: n 1178 actual L 8 (stop-outs 7) expected 11.2  ratio 0.71  P(0 L) 0.000
+base    all: n 7626 actual L 172 (stop-outs 157) expected 133.7  ratio 1.29  P(0 L) 0.000 | train: n 3335 actual L 112 (stop-outs 105) expected 88.3  ratio 1.27  P(0 L) 0.000 | test: n 4291 actual L 60 (stop-outs 52) expected 45.3  ratio 1.32  P(0 L) 0.000
+tight losses' ER16: [np.float64(0.352), np.float64(0.37), np.float64(0.389), np.float64(0.442)]  zee100 n = 300
+share of tight trades with ER16 >= 0.35: 0.580  -> P(all 4 losses there by chance) = 0.113
+random slice of 300 of 714 trades with 4 losses: P(0 losses) = 0.112

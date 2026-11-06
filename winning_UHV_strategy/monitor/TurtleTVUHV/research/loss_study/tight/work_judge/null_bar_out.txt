@@ -1,0 +1,7 @@
+Random-skip null for the two bars (Python replay = HYPOTHESIS). Columns: skip fraction | P(literal pass) | P(strict pass)
+  f = 0.05 | literal  31.4% | strict  0.07%
+  f = 0.10 | literal  40.1% | strict  0.30%
+  f = 0.20 | literal  40.0% | strict  0.30%
+  f = 0.30 | literal  39.7% | strict  0.17%
+  f = 0.50 | literal  41.9% | strict  0.25%
+  f = 0.70 | literal  44.1% | strict  0.12%

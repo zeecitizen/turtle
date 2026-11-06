@@ -1,0 +1,12 @@
+{
+ "sim": {
+  "awards": {
+   "waited_storm": 1793692474.36872
+  },
+  "lock": null,
+  "storm": {
+   "start": 1793690674.483901,
+   "attempts": 0
+  }
+ }
+}

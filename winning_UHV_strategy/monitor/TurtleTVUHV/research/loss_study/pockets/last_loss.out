@@ -1,0 +1,20 @@
+=== 1. Friday cut-off (engine)
+Friday from  0 NY | angel zone:   648 tr   1 L WR  99.85% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +896 | no angel:  7631 tr 172 L WR  97.75% (Mar-Jun  96.64 / Jul-Nov  98.60) net   -25526
+Friday from  8 NY | angel zone:   648 tr   1 L WR  99.85% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +896 | no angel:  6963 tr 136 L WR  98.05% (Mar-Jun  97.00 / Jul-Nov  98.87) net   -19536
+Friday from  9 NY | angel zone:   648 tr   1 L WR  99.85% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +896 | no angel:  7046 tr 139 L WR  98.03% (Mar-Jun  97.00 / Jul-Nov  98.83) net   -20120
+Friday from 10 NY | angel zone:   648 tr   1 L WR  99.85% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +896 | no angel:  7131 tr 143 L WR  97.99% (Mar-Jun  97.01 / Jul-Nov  98.77) net   -20914
+Friday from 12 NY | angel zone:   648 tr   1 L WR  99.85% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +896 | no angel:  7311 tr 148 L WR  97.98% (Mar-Jun  96.98 / Jul-Nov  98.76) net   -21445
+Friday from 13 NY | angel zone:   648 tr   1 L WR  99.85% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +896 | no angel:  7385 tr 150 L WR  97.97% (Mar-Jun  96.97 / Jul-Nov  98.75) net   -21770
+=== 2. Zee's fake breakout (a wick through the last swing, close back inside) - post-hoc
+swing p=1 wick-fake in last 1 candles | base: 242/7626 in, 5/172 L, x0.92 (tr x1.11 te x0.53) | secure: 42/2237 in, 0/30 L, x0.00 (tr x0.00 te x0.00) | tight: 15/714 in, 0/4 L, x0.00 (tr x0.00 te x0.00) catches [] costs 15W
+swing p=1 wick-fake in last 2 candles | base: 768/7626 in, 15/172 L, x0.87 (tr x1.00 te x0.65) | secure: 171/2237 in, 2/30 L, x0.87 (tr x0.52 te x1.89) | tight: 58/714 in, 1/4 L, x3.08 (tr x9.22 te x0.00) catches ['0408-075606-B'] costs 57W
+swing p=1 wick-fake in last 3 candles | base: 1305/7626 in, 34/172 L, x1.16 (tr x1.31 te x0.87) | secure: 312/2237 in, 5/30 L, x1.19 (tr x1.12 te x1.05) | tight: 100/714 in, 1/4 L, x1.78 (tr x5.93 te x0.00) catches ['0408-075606-B'] costs 99W
+swing p=1 wick-fake in last 5 candles | base: 2228/7626 in, 58/172 L, x1.15 (tr x1.23 te x1.02) | secure: 613/2237 in, 13/30 L, x1.58 (tr x1.57 te x1.44) | tight: 183/714 in, 1/4 L, x0.98 (tr x3.53 te x0.00) catches ['0408-075606-B'] costs 182W
+swing p=3 wick-fake in last 1 candles | base: 338/7626 in, 7/172 L, x0.92 (tr x0.37 te x2.03) | secure: 101/2237 in, 0/30 L, x0.00 (tr x0.00 te x0.00) | tight: 28/714 in, 0/4 L, x0.00 (tr x0.00 te x0.00) catches [] costs 28W
+swing p=3 wick-fake in last 2 candles | base: 921/7626 in, 24/172 L, x1.16 (tr x1.12 te x1.15) | secure: 304/2237 in, 3/30 L, x0.74 (tr x0.93 te x0.00) | tight: 77/714 in, 1/4 L, x2.32 (tr x7.72 te x0.00) catches ['0408-075606-B'] costs 76W
+swing p=3 wick-fake in last 3 candles | base: 1488/7626 in, 39/172 L, x1.16 (tr x1.17 te x1.07) | secure: 483/2237 in, 5/30 L, x0.77 (tr x0.95 te x0.00) | tight: 123/714 in, 1/4 L, x1.45 (tr x4.74 te x0.00) catches ['0408-075606-B'] costs 122W
+swing p=3 wick-fake in last 5 candles | base: 2225/7626 in, 56/172 L, x1.12 (tr x1.10 te x1.08) | secure: 725/2237 in, 13/30 L, x1.34 (tr x1.45 te x0.82) | tight: 176/714 in, 1/4 L, x1.01 (tr x3.65 te x0.00) catches ['0408-075606-B'] costs 175W
+swing p=5 wick-fake in last 1 candles | base: 309/7626 in, 4/172 L, x0.57 (tr x0.00 te x1.64) | secure: 111/2237 in, 0/30 L, x0.00 (tr x0.00 te x0.00) | tight: 33/714 in, 0/4 L, x0.00 (tr x0.00 te x0.00) catches [] costs 33W
+swing p=5 wick-fake in last 2 candles | base: 798/7626 in, 19/172 L, x1.06 (tr x1.05 te x1.10) | secure: 278/2237 in, 5/30 L, x1.34 (tr x1.90 te x0.00) | tight: 71/714 in, 1/4 L, x2.51 (tr x11.45 te x0.00) catches ['0408-075606-B'] costs 70W
+swing p=5 wick-fake in last 3 candles | base: 1192/7626 in, 32/172 L, x1.19 (tr x1.24 te x1.08) | secure: 393/2237 in, 7/30 L, x1.33 (tr x1.73 te x0.00) | tight: 102/714 in, 1/4 L, x1.75 (tr x7.22 te x0.00) catches ['0408-075606-B'] costs 101W
+swing p=5 wick-fake in last 5 candles | base: 1762/7626 in, 47/172 L, x1.18 (tr x1.12 te x1.26) | secure: 563/2237 in, 12/30 L, x1.59 (tr x1.62 te x1.50) | tight: 142/714 in, 2/4 L, x2.51 (tr x5.53 te x1.55) catches ['0408-075606-B', '1019-171329-S'] costs 140W

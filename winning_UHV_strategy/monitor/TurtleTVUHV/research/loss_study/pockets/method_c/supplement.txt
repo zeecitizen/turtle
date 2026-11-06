@@ -1,0 +1,10 @@
+(a) session-edge core = weekly_close OR rollover_dead_book
+   Friday from 14:30 NY (to the 17:00 NY weekly close)  OR  NY clock 16:45-17:15 any day, OR breakout-tick spread >= 1.6 pip
+   train:  3.0% of trades (100), 17/112 losses = 15.2%, loss rate 17.00% (lift x5.06), untouched WR 97.06% (base 96.64%)
+   test :  3.5% of trades (150), 9/60 losses = 15.0%, loss rate  6.00% (lift x4.29), untouched WR 98.77% (base 98.60%)
+
+(b) CEILING check: gradient boosting on all 32 features (fit on train; train = day-blocked 5-fold CV, test = untouched)
+   AUC train (out-of-fold) 0.557   AUC test 0.627   (0.5 = no skill)
+   train: top 5%: 5/112 losses (4%), untouched WR 96.62% | top 10%: 18/112 losses (16%), untouched WR 96.87% | top 15%: 26/112 losses (23%), untouched WR 96.97% | top 20%: 31/112 losses (28%), untouched WR 96.96%
+   test : top 5%: 9/60 losses (15%), untouched WR 98.75% | top 10%: 12/60 losses (20%), untouched WR 98.76% | top 15%: 18/60 losses (30%), untouched WR 98.85% | top 20%: 21/60 losses (35%), untouched WR 98.86%
+   (the 99.3% bar on test needs ~33-35 of 60 test losses inside a 10-20% pocket)

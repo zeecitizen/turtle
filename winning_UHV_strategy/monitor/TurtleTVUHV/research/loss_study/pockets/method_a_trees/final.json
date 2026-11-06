@@ -1,0 +1,2115 @@
+{
+ "note": "Python replay = HYPOTHESIS, NOT PROMOTED",
+ "blind": {
+  "raw tree d4 0.03 entropy w10 (LOMO lift 1.504)": {
+   "train": {
+    "n": 512,
+    "n_half": 3335,
+    "share": 0.1535,
+    "L": 41,
+    "L_half": 112,
+    "L_share": 0.3661,
+    "loss_rate": 0.0801,
+    "lift": 2.38,
+    "lift_month_adj": 2.36,
+    "p_binom": 0.0,
+    "loss_days": 35,
+    "wr_base": 96.64,
+    "wr_untouched": 97.48,
+    "wr_angel_inside": 97.51,
+    "angel_kept_in_pocket": 34,
+    "months": {
+     "03": [
+      133,
+      13,
+      2.42
+     ],
+     "04": [
+      134,
+      13,
+      2.49
+     ],
+     "05": [
+      105,
+      10,
+      2.35
+     ],
+     "06": [
+      140,
+      5,
+      2.02
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 633,
+    "n_half": 4291,
+    "share": 0.1475,
+    "L": 4,
+    "L_half": 60,
+    "L_share": 0.0667,
+    "loss_rate": 0.0063,
+    "lift": 0.45,
+    "lift_month_adj": 0.44,
+    "p_binom": 0.9771,
+    "loss_days": 4,
+    "wr_base": 98.6,
+    "wr_untouched": 98.47,
+    "wr_angel_inside": 98.49,
+    "angel_kept_in_pocket": 46,
+    "months": {
+     "07": [
+      196,
+      1,
+      0.32
+     ],
+     "08": [
+      102,
+      0,
+      0.0
+     ],
+     "09": [
+      124,
+      1,
+      0.83
+     ],
+     "10": [
+      177,
+      2,
+      0.65
+     ],
+     "11": [
+      34,
+      0,
+      0.0
+     ]
+    },
+    "months_up": 0
+   }
+  },
+  "raw tree d3 0.03 gini balanced (LOMO lift 1.389)": {
+   "train": {
+    "n": 604,
+    "n_half": 3335,
+    "share": 0.1811,
+    "L": 43,
+    "L_half": 112,
+    "L_share": 0.3839,
+    "loss_rate": 0.0712,
+    "lift": 2.12,
+    "lift_month_adj": 2.13,
+    "p_binom": 0.0,
+    "loss_days": 31,
+    "wr_base": 96.64,
+    "wr_untouched": 97.47,
+    "wr_angel_inside": 97.47,
+    "angel_kept_in_pocket": 0,
+    "months": {
+     "03": [
+      140,
+      12,
+      2.12
+     ],
+     "04": [
+      153,
+      9,
+      1.51
+     ],
+     "05": [
+      134,
+      14,
+      2.57
+     ],
+     "06": [
+      177,
+      8,
+      2.55
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 930,
+    "n_half": 4291,
+    "share": 0.2167,
+    "L": 9,
+    "L_half": 60,
+    "L_share": 0.15,
+    "loss_rate": 0.0097,
+    "lift": 0.69,
+    "lift_month_adj": 0.7,
+    "p_binom": 0.90203,
+    "loss_days": 9,
+    "wr_base": 98.6,
+    "wr_untouched": 98.48,
+    "wr_angel_inside": 98.48,
+    "angel_kept_in_pocket": 0,
+    "months": {
+     "07": [
+      216,
+      2,
+      0.58
+     ],
+     "08": [
+      215,
+      0,
+      0.0
+     ],
+     "09": [
+      232,
+      2,
+      0.89
+     ],
+     "10": [
+      232,
+      4,
+      0.99
+     ],
+     "11": [
+      35,
+      1,
+      2.43
+     ]
+    },
+    "months_up": 1
+   }
+  },
+  "raw tree d4 0.02 gini w10 (LOMO lift 1.281)": {
+   "train": {
+    "n": 609,
+    "n_half": 3335,
+    "share": 0.1826,
+    "L": 54,
+    "L_half": 112,
+    "L_share": 0.4821,
+    "loss_rate": 0.0887,
+    "lift": 2.64,
+    "lift_month_adj": 2.6,
+    "p_binom": 0.0,
+    "loss_days": 38,
+    "wr_base": 96.64,
+    "wr_untouched": 97.87,
+    "wr_angel_inside": 97.85,
+    "angel_kept_in_pocket": 22,
+    "months": {
+     "03": [
+      160,
+      17,
+      2.63
+     ],
+     "04": [
+      161,
+      22,
+      3.5
+     ],
+     "05": [
+      126,
+      7,
+      1.37
+     ],
+     "06": [
+      162,
+      8,
+      2.79
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 801,
+    "n_half": 4291,
+    "share": 0.1867,
+    "L": 21,
+    "L_half": 60,
+    "L_share": 0.35,
+    "loss_rate": 0.0262,
+    "lift": 1.87,
+    "lift_month_adj": 1.88,
+    "p_binom": 0.00535,
+    "loss_days": 21,
+    "wr_base": 98.6,
+    "wr_untouched": 98.88,
+    "wr_angel_inside": 98.89,
+    "angel_kept_in_pocket": 39,
+    "months": {
+     "07": [
+      195,
+      5,
+      1.62
+     ],
+     "08": [
+      165,
+      3,
+      1.43
+     ],
+     "09": [
+      191,
+      4,
+      2.16
+     ],
+     "10": [
+      215,
+      8,
+      2.15
+     ],
+     "11": [
+      35,
+      1,
+      2.43
+     ]
+    },
+    "months_up": 5
+   }
+  },
+  "scale-free tree d2 0.01 gini balanced (LOMO lift 1.483)": {
+   "train": {
+    "n": 521,
+    "n_half": 3335,
+    "share": 0.1562,
+    "L": 37,
+    "L_half": 112,
+    "L_share": 0.3304,
+    "loss_rate": 0.071,
+    "lift": 2.11,
+    "lift_month_adj": 2.13,
+    "p_binom": 2e-05,
+    "loss_days": 30,
+    "wr_base": 96.64,
+    "wr_untouched": 97.33,
+    "wr_angel_inside": 97.37,
+    "angel_kept_in_pocket": 33,
+    "months": {
+     "03": [
+      145,
+      14,
+      2.39
+     ],
+     "04": [
+      108,
+      11,
+      2.61
+     ],
+     "05": [
+      112,
+      9,
+      1.98
+     ],
+     "06": [
+      156,
+      3,
+      1.09
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 551,
+    "n_half": 4291,
+    "share": 0.1284,
+    "L": 7,
+    "L_half": 60,
+    "L_share": 0.1167,
+    "loss_rate": 0.0127,
+    "lift": 0.91,
+    "lift_month_adj": 0.92,
+    "p_binom": 0.65079,
+    "loss_days": 7,
+    "wr_base": 98.6,
+    "wr_untouched": 98.58,
+    "wr_angel_inside": 98.59,
+    "angel_kept_in_pocket": 18,
+    "months": {
+     "07": [
+      146,
+      1,
+      0.43
+     ],
+     "08": [
+      124,
+      2,
+      1.27
+     ],
+     "09": [
+      141,
+      1,
+      0.73
+     ],
+     "10": [
+      128,
+      3,
+      1.35
+     ],
+     "11": [
+      12,
+      0,
+      0.0
+     ]
+    },
+    "months_up": 2
+   }
+  },
+  "scale-free tree d4 0.03 gini balanced (LOMO lift 1.303)": {
+   "train": {
+    "n": 567,
+    "n_half": 3335,
+    "share": 0.17,
+    "L": 49,
+    "L_half": 112,
+    "L_share": 0.4375,
+    "loss_rate": 0.0864,
+    "lift": 2.57,
+    "lift_month_adj": 2.48,
+    "p_binom": 0.0,
+    "loss_days": 36,
+    "wr_base": 96.64,
+    "wr_untouched": 97.72,
+    "wr_angel_inside": 97.73,
+    "angel_kept_in_pocket": 13,
+    "months": {
+     "03": [
+      177,
+      17,
+      2.37
+     ],
+     "04": [
+      143,
+      17,
+      3.05
+     ],
+     "05": [
+      116,
+      10,
+      2.12
+     ],
+     "06": [
+      131,
+      5,
+      2.16
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 647,
+    "n_half": 4291,
+    "share": 0.1508,
+    "L": 11,
+    "L_half": 60,
+    "L_share": 0.1833,
+    "loss_rate": 0.017,
+    "lift": 1.22,
+    "lift_month_adj": 1.21,
+    "p_binom": 0.29878,
+    "loss_days": 10,
+    "wr_base": 98.6,
+    "wr_untouched": 98.66,
+    "wr_angel_inside": 98.66,
+    "angel_kept_in_pocket": 10,
+    "months": {
+     "07": [
+      145,
+      1,
+      0.44
+     ],
+     "08": [
+      134,
+      3,
+      1.76
+     ],
+     "09": [
+      154,
+      2,
+      1.34
+     ],
+     "10": [
+      191,
+      4,
+      1.21
+     ],
+     "11": [
+      23,
+      1,
+      3.7
+     ]
+    },
+    "months_up": 4
+   }
+  },
+  "scale-free tree d3 0.01 entropy balanced (LOMO lift 1.268)": {
+   "train": {
+    "n": 360,
+    "n_half": 3335,
+    "share": 0.1079,
+    "L": 30,
+    "L_half": 112,
+    "L_share": 0.2679,
+    "loss_rate": 0.0833,
+    "lift": 2.48,
+    "lift_month_adj": 2.52,
+    "p_binom": 1e-05,
+    "loss_days": 24,
+    "wr_base": 96.64,
+    "wr_untouched": 97.24,
+    "wr_angel_inside": 97.24,
+    "angel_kept_in_pocket": 27,
+    "months": {
+     "03": [
+      95,
+      8,
+      2.08
+     ],
+     "04": [
+      79,
+      11,
+      3.57
+     ],
+     "05": [
+      74,
+      6,
+      2.0
+     ],
+     "06": [
+      112,
+      5,
+      2.52
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 413,
+    "n_half": 4291,
+    "share": 0.0962,
+    "L": 14,
+    "L_half": 60,
+    "L_share": 0.2333,
+    "loss_rate": 0.0339,
+    "lift": 2.42,
+    "lift_month_adj": 2.39,
+    "p_binom": 0.00241,
+    "loss_days": 14,
+    "wr_base": 98.6,
+    "wr_untouched": 98.81,
+    "wr_angel_inside": 98.83,
+    "angel_kept_in_pocket": 38,
+    "months": {
+     "07": [
+      97,
+      5,
+      3.26
+     ],
+     "08": [
+      100,
+      3,
+      2.36
+     ],
+     "09": [
+      76,
+      1,
+      1.36
+     ],
+     "10": [
+      120,
+      4,
+      1.92
+     ],
+     "11": [
+      20,
+      1,
+      4.25
+     ]
+    },
+    "months_up": 5
+   }
+  },
+  "covering SF d3 2% entropy mbal (4 pockets)": {
+   "train": {
+    "n": 534,
+    "n_half": 3335,
+    "share": 0.1601,
+    "L": 54,
+    "L_half": 112,
+    "L_share": 0.4821,
+    "loss_rate": 0.1011,
+    "lift": 3.01,
+    "lift_month_adj": 3.07,
+    "p_binom": 0.0,
+    "loss_days": 43,
+    "wr_base": 96.64,
+    "wr_untouched": 97.93,
+    "wr_angel_inside": 97.94,
+    "angel_kept_in_pocket": 13,
+    "months": {
+     "03": [
+      132,
+      14,
+      2.62
+     ],
+     "04": [
+      127,
+      12,
+      2.42
+     ],
+     "05": [
+      105,
+      12,
+      2.81
+     ],
+     "06": [
+      170,
+      16,
+      5.31
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 713,
+    "n_half": 4291,
+    "share": 0.1662,
+    "L": 19,
+    "L_half": 60,
+    "L_share": 0.3167,
+    "loss_rate": 0.0266,
+    "lift": 1.91,
+    "lift_month_adj": 1.9,
+    "p_binom": 0.00659,
+    "loss_days": 18,
+    "wr_base": 98.6,
+    "wr_untouched": 98.85,
+    "wr_angel_inside": 98.86,
+    "angel_kept_in_pocket": 21,
+    "months": {
+     "07": [
+      171,
+      7,
+      2.59
+     ],
+     "08": [
+      151,
+      4,
+      2.08
+     ],
+     "09": [
+      163,
+      2,
+      1.26
+     ],
+     "10": [
+      199,
+      5,
+      1.45
+     ],
+     "11": [
+      29,
+      1,
+      2.93
+     ]
+    },
+    "months_up": 5
+   }
+  },
+  "covering SF d3 3% entropy mbal (5 pockets)": {
+   "train": {
+    "n": 654,
+    "n_half": 3335,
+    "share": 0.1961,
+    "L": 61,
+    "L_half": 112,
+    "L_share": 0.5446,
+    "loss_rate": 0.0933,
+    "lift": 2.78,
+    "lift_month_adj": 2.82,
+    "p_binom": 0.0,
+    "loss_days": 45,
+    "wr_base": 96.64,
+    "wr_untouched": 98.1,
+    "wr_angel_inside": 98.08,
+    "angel_kept_in_pocket": 34,
+    "months": {
+     "03": [
+      161,
+      17,
+      2.61
+     ],
+     "04": [
+      165,
+      16,
+      2.48
+     ],
+     "05": [
+      127,
+      13,
+      2.52
+     ],
+     "06": [
+      201,
+      15,
+      4.21
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 843,
+    "n_half": 4291,
+    "share": 0.1965,
+    "L": 13,
+    "L_half": 60,
+    "L_share": 0.2167,
+    "loss_rate": 0.0154,
+    "lift": 1.1,
+    "lift_month_adj": 1.12,
+    "p_binom": 0.39957,
+    "loss_days": 13,
+    "wr_base": 98.6,
+    "wr_untouched": 98.64,
+    "wr_angel_inside": 98.66,
+    "angel_kept_in_pocket": 49,
+    "months": {
+     "07": [
+      201,
+      4,
+      1.26
+     ],
+     "08": [
+      188,
+      2,
+      0.84
+     ],
+     "09": [
+      208,
+      3,
+      1.49
+     ],
+     "10": [
+      204,
+      2,
+      0.57
+     ],
+     "11": [
+      42,
+      2,
+      4.05
+     ]
+    },
+    "months_up": 3
+   }
+  },
+  "covering SF d3 2% gini balanced (1 pockets)": {
+   "train": {
+    "n": 114,
+    "n_half": 3335,
+    "share": 0.0342,
+    "L": 15,
+    "L_half": 112,
+    "L_share": 0.1339,
+    "loss_rate": 0.1316,
+    "lift": 3.92,
+    "lift_month_adj": 3.8,
+    "p_binom": 1e-05,
+    "loss_days": 11,
+    "wr_base": 96.64,
+    "wr_untouched": 96.99,
+    "wr_angel_inside": 96.99,
+    "angel_kept_in_pocket": 6,
+    "months": {
+     "03": [
+      39,
+      6,
+      3.8
+     ],
+     "04": [
+      22,
+      6,
+      6.99
+     ],
+     "05": [
+      25,
+      2,
+      1.97
+     ],
+     "06": [
+      28,
+      1,
+      2.02
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 128,
+    "n_half": 4291,
+    "share": 0.0298,
+    "L": 5,
+    "L_half": 60,
+    "L_share": 0.0833,
+    "loss_rate": 0.0391,
+    "lift": 2.79,
+    "lift_month_adj": 2.79,
+    "p_binom": 0.03456,
+    "loss_days": 5,
+    "wr_base": 98.6,
+    "wr_untouched": 98.68,
+    "wr_angel_inside": 98.68,
+    "angel_kept_in_pocket": 7,
+    "months": {
+     "07": [
+      21,
+      0,
+      0.0
+     ],
+     "08": [
+      17,
+      1,
+      4.62
+     ],
+     "09": [
+      39,
+      1,
+      2.64
+     ],
+     "10": [
+      47,
+      3,
+      3.68
+     ],
+     "11": [
+      4,
+      0,
+      0.0
+     ]
+    },
+    "months_up": 3
+   }
+  },
+  "themed tree 'calendar'": {
+   "train": {
+    "n": 519,
+    "n_half": 3335,
+    "share": 0.1556,
+    "L": 25,
+    "L_half": 112,
+    "L_share": 0.2232,
+    "loss_rate": 0.0482,
+    "lift": 1.43,
+    "lift_month_adj": 1.48,
+    "p_binom": 0.04829,
+    "loss_days": 24,
+    "wr_base": 96.64,
+    "wr_untouched": 96.91,
+    "wr_angel_inside": 96.92,
+    "angel_kept_in_pocket": 38,
+    "months": {
+     "03": [
+      140,
+      8,
+      1.41
+     ],
+     "04": [
+      108,
+      6,
+      1.42
+     ],
+     "05": [
+      95,
+      6,
+      1.56
+     ],
+     "06": [
+      176,
+      5,
+      1.6
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 747,
+    "n_half": 4291,
+    "share": 0.1741,
+    "L": 7,
+    "L_half": 60,
+    "L_share": 0.1167,
+    "loss_rate": 0.0094,
+    "lift": 0.67,
+    "lift_month_adj": 0.68,
+    "p_binom": 0.89716,
+    "loss_days": 7,
+    "wr_base": 98.6,
+    "wr_untouched": 98.5,
+    "wr_angel_inside": 98.52,
+    "angel_kept_in_pocket": 45,
+    "months": {
+     "07": [
+      175,
+      3,
+      1.08
+     ],
+     "08": [
+      153,
+      0,
+      0.0
+     ],
+     "09": [
+      182,
+      0,
+      0.0
+     ],
+     "10": [
+      194,
+      3,
+      0.89
+     ],
+     "11": [
+      43,
+      1,
+      1.98
+     ]
+    },
+    "months_up": 2
+   }
+  },
+  "themed tree 'liquidity'": {
+   "train": {
+    "n": 77,
+    "n_half": 3335,
+    "share": 0.0231,
+    "L": 10,
+    "L_half": 112,
+    "L_share": 0.0893,
+    "loss_rate": 0.1299,
+    "lift": 3.87,
+    "lift_month_adj": 3.8,
+    "p_binom": 0.00026,
+    "loss_days": 7,
+    "wr_base": 96.64,
+    "wr_untouched": 96.87,
+    "wr_angel_inside": 96.87,
+    "angel_kept_in_pocket": 1,
+    "months": {
+     "03": [
+      29,
+      2,
+      1.7
+     ],
+     "04": [
+      20,
+      5,
+      6.41
+     ],
+     "05": [
+      8,
+      1,
+      3.08
+     ],
+     "06": [
+      20,
+      2,
+      5.65
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 74,
+    "n_half": 4291,
+    "share": 0.0172,
+    "L": 9,
+    "L_half": 60,
+    "L_share": 0.15,
+    "loss_rate": 0.1216,
+    "lift": 8.7,
+    "lift_month_adj": 8.54,
+    "p_binom": 0.0,
+    "loss_days": 9,
+    "wr_base": 98.6,
+    "wr_untouched": 98.79,
+    "wr_angel_inside": 98.79,
+    "angel_kept_in_pocket": 0,
+    "months": {
+     "07": [
+      18,
+      4,
+      14.04
+     ],
+     "08": [
+      15,
+      2,
+      10.47
+     ],
+     "09": [
+      16,
+      1,
+      6.44
+     ],
+     "10": [
+      23,
+      2,
+      5.01
+     ],
+     "11": [
+      2,
+      0,
+      0.0
+     ]
+    },
+    "months_up": 4
+   }
+  },
+  "themed tree 'trend'": {
+   "train": {
+    "n": 479,
+    "n_half": 3335,
+    "share": 0.1436,
+    "L": 20,
+    "L_half": 112,
+    "L_share": 0.1786,
+    "loss_rate": 0.0418,
+    "lift": 1.24,
+    "lift_month_adj": 1.25,
+    "p_binom": 0.19028,
+    "loss_days": 17,
+    "wr_base": 96.64,
+    "wr_untouched": 96.78,
+    "wr_angel_inside": 96.83,
+    "angel_kept_in_pocket": 81,
+    "months": {
+     "03": [
+      139,
+      6,
+      1.07
+     ],
+     "04": [
+      102,
+      9,
+      2.26
+     ],
+     "05": [
+      93,
+      2,
+      0.53
+     ],
+     "06": [
+      145,
+      3,
+      1.17
+     ]
+    },
+    "months_up": 3
+   },
+   "test": {
+    "n": 683,
+    "n_half": 4291,
+    "share": 0.1592,
+    "L": 14,
+    "L_half": 60,
+    "L_share": 0.2333,
+    "loss_rate": 0.0205,
+    "lift": 1.47,
+    "lift_month_adj": 1.45,
+    "p_binom": 0.10346,
+    "loss_days": 12,
+    "wr_base": 98.6,
+    "wr_untouched": 98.73,
+    "wr_angel_inside": 98.73,
+    "angel_kept_in_pocket": 97,
+    "months": {
+     "07": [
+      185,
+      5,
+      1.71
+     ],
+     "08": [
+      136,
+      2,
+      1.16
+     ],
+     "09": [
+      140,
+      2,
+      1.47
+     ],
+     "10": [
+      188,
+      5,
+      1.53
+     ],
+     "11": [
+      34,
+      0,
+      0.0
+     ]
+    },
+    "months_up": 4
+   }
+  },
+  "themed tree 'setup'": {
+   "train": {
+    "n": 322,
+    "n_half": 3335,
+    "share": 0.0966,
+    "L": 21,
+    "L_half": 112,
+    "L_share": 0.1875,
+    "loss_rate": 0.0652,
+    "lift": 1.94,
+    "lift_month_adj": 1.97,
+    "p_binom": 0.00329,
+    "loss_days": 19,
+    "wr_base": 96.64,
+    "wr_untouched": 96.98,
+    "wr_angel_inside": 96.97,
+    "angel_kept_in_pocket": 28,
+    "months": {
+     "03": [
+      85,
+      7,
+      2.04
+     ],
+     "04": [
+      67,
+      6,
+      2.29
+     ],
+     "05": [
+      70,
+      5,
+      1.76
+     ],
+     "06": [
+      100,
+      3,
+      1.69
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 374,
+    "n_half": 4291,
+    "share": 0.0872,
+    "L": 7,
+    "L_half": 60,
+    "L_share": 0.1167,
+    "loss_rate": 0.0187,
+    "lift": 1.34,
+    "lift_month_adj": 1.32,
+    "p_binom": 0.27126,
+    "loss_days": 7,
+    "wr_base": 98.6,
+    "wr_untouched": 98.65,
+    "wr_angel_inside": 98.66,
+    "angel_kept_in_pocket": 39,
+    "months": {
+     "07": [
+      85,
+      3,
+      2.23
+     ],
+     "08": [
+      93,
+      1,
+      0.84
+     ],
+     "09": [
+      66,
+      0,
+      0.0
+     ],
+     "10": [
+      108,
+      2,
+      1.07
+     ],
+     "11": [
+      22,
+      1,
+      3.86
+     ]
+    },
+    "months_up": 3
+   }
+  },
+  "xgb raw top 10% (test AUC 0.581)": {
+   "train": {
+    "n": 334,
+    "n_half": 3335,
+    "share": 0.1001,
+    "L": 15,
+    "L_half": 112,
+    "L_share": 0.1339,
+    "loss_rate": 0.0449,
+    "lift": 1.34,
+    "lift_month_adj": 1.34,
+    "p_binom": 0.15851,
+    "loss_days": 13,
+    "wr_base": 96.64,
+    "wr_untouched": 96.77,
+    "wr_angel_inside": 96.78,
+    "angel_kept_in_pocket": 9,
+    "months": {
+     "03": [
+      89,
+      6,
+      1.67
+     ],
+     "04": [
+      82,
+      3,
+      0.94
+     ],
+     "05": [
+      67,
+      4,
+      1.47
+     ],
+     "06": [
+      96,
+      2,
+      1.18
+     ]
+    },
+    "months_up": 3
+   },
+   "test": {
+    "n": 430,
+    "n_half": 4291,
+    "share": 0.1002,
+    "L": 12,
+    "L_half": 60,
+    "L_share": 0.2,
+    "loss_rate": 0.0279,
+    "lift": 2.0,
+    "lift_month_adj": 2.0,
+    "p_binom": 0.01958,
+    "loss_days": 12,
+    "wr_base": 98.6,
+    "wr_untouched": 98.76,
+    "wr_angel_inside": 98.76,
+    "angel_kept_in_pocket": 10,
+    "months": {
+     "07": [
+      104,
+      5,
+      3.04
+     ],
+     "08": [
+      101,
+      2,
+      1.56
+     ],
+     "09": [
+      93,
+      1,
+      1.11
+     ],
+     "10": [
+      111,
+      4,
+      2.08
+     ],
+     "11": [
+      21,
+      0,
+      0.0
+     ]
+    },
+    "months_up": 4
+   }
+  },
+  "xgb raw top 20% (test AUC 0.581)": {
+   "train": {
+    "n": 667,
+    "n_half": 3335,
+    "share": 0.2,
+    "L": 32,
+    "L_half": 112,
+    "L_share": 0.2857,
+    "loss_rate": 0.048,
+    "lift": 1.43,
+    "lift_month_adj": 1.43,
+    "p_binom": 0.03023,
+    "loss_days": 23,
+    "wr_base": 96.64,
+    "wr_untouched": 97.0,
+    "wr_angel_inside": 96.99,
+    "angel_kept_in_pocket": 26,
+    "months": {
+     "03": [
+      178,
+      12,
+      1.67
+     ],
+     "04": [
+      164,
+      9,
+      1.41
+     ],
+     "05": [
+      133,
+      8,
+      1.48
+     ],
+     "06": [
+      192,
+      3,
+      0.88
+     ]
+    },
+    "months_up": 3
+   },
+   "test": {
+    "n": 859,
+    "n_half": 4291,
+    "share": 0.2002,
+    "L": 17,
+    "L_half": 60,
+    "L_share": 0.2833,
+    "loss_rate": 0.0198,
+    "lift": 1.42,
+    "lift_month_adj": 1.41,
+    "p_binom": 0.10037,
+    "loss_days": 17,
+    "wr_base": 98.6,
+    "wr_untouched": 98.75,
+    "wr_angel_inside": 98.76,
+    "angel_kept_in_pocket": 27,
+    "months": {
+     "07": [
+      201,
+      7,
+      2.2
+     ],
+     "08": [
+      186,
+      3,
+      1.27
+     ],
+     "09": [
+      193,
+      1,
+      0.53
+     ],
+     "10": [
+      241,
+      6,
+      1.44
+     ],
+     "11": [
+      38,
+      0,
+      0.0
+     ]
+    },
+    "months_up": 3
+   }
+  },
+  "xgb scale-free month-balanced top 10% (test AUC 0.6282; train = out-of-fold by month)": {
+   "train": {
+    "n": 334,
+    "n_half": 3335,
+    "share": 0.1001,
+    "L": 19,
+    "L_half": 112,
+    "L_share": 0.1696,
+    "loss_rate": 0.0569,
+    "lift": 1.69,
+    "lift_month_adj": 1.69,
+    "p_binom": 0.01918,
+    "loss_days": 14,
+    "wr_base": 96.64,
+    "wr_untouched": 96.9,
+    "wr_angel_inside": 96.88,
+    "angel_kept_in_pocket": 10,
+    "months": {
+     "03": [
+      89,
+      6,
+      1.67
+     ],
+     "04": [
+      82,
+      5,
+      1.56
+     ],
+     "05": [
+      67,
+      6,
+      2.21
+     ],
+     "06": [
+      96,
+      2,
+      1.18
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 430,
+    "n_half": 4291,
+    "share": 0.1002,
+    "L": 18,
+    "L_half": 60,
+    "L_share": 0.3,
+    "loss_rate": 0.0419,
+    "lift": 2.99,
+    "lift_month_adj": 3.01,
+    "p_binom": 5e-05,
+    "loss_days": 18,
+    "wr_base": 98.6,
+    "wr_untouched": 98.91,
+    "wr_angel_inside": 98.92,
+    "angel_kept_in_pocket": 14,
+    "months": {
+     "07": [
+      105,
+      5,
+      3.01
+     ],
+     "08": [
+      91,
+      2,
+      1.73
+     ],
+     "09": [
+      103,
+      3,
+      3.0
+     ],
+     "10": [
+      111,
+      7,
+      3.64
+     ],
+     "11": [
+      20,
+      1,
+      4.25
+     ]
+    },
+    "months_up": 5
+   }
+  },
+  "xgb scale-free month-balanced top 20% (test AUC 0.6282; train = out-of-fold by month)": {
+   "train": {
+    "n": 667,
+    "n_half": 3335,
+    "share": 0.2,
+    "L": 30,
+    "L_half": 112,
+    "L_share": 0.2679,
+    "loss_rate": 0.045,
+    "lift": 1.34,
+    "lift_month_adj": 1.34,
+    "p_binom": 0.06826,
+    "loss_days": 22,
+    "wr_base": 96.64,
+    "wr_untouched": 96.93,
+    "wr_angel_inside": 96.92,
+    "angel_kept_in_pocket": 26,
+    "months": {
+     "03": [
+      178,
+      10,
+      1.39
+     ],
+     "04": [
+      164,
+      8,
+      1.25
+     ],
+     "05": [
+      133,
+      8,
+      1.48
+     ],
+     "06": [
+      192,
+      4,
+      1.18
+     ]
+    },
+    "months_up": 4
+   },
+   "test": {
+    "n": 859,
+    "n_half": 4291,
+    "share": 0.2002,
+    "L": 22,
+    "L_half": 60,
+    "L_share": 0.3667,
+    "loss_rate": 0.0256,
+    "lift": 1.83,
+    "lift_month_adj": 1.84,
+    "p_binom": 0.00578,
+    "loss_days": 22,
+    "wr_base": 98.6,
+    "wr_untouched": 98.89,
+    "wr_angel_inside": 98.9,
+    "angel_kept_in_pocket": 27,
+    "months": {
+     "07": [
+      202,
+      6,
+      1.88
+     ],
+     "08": [
+      183,
+      4,
+      1.72
+     ],
+     "09": [
+      203,
+      4,
+      2.03
+     ],
+     "10": [
+      231,
+      7,
+      1.75
+     ],
+     "11": [
+      40,
+      1,
+      2.12
+     ]
+    },
+    "months_up": 5
+   }
+  }
+ },
+ "candidates": {
+  "abnormal_spread": {
+   "cond": "spread_excess > 0.275  (breakout spread > 0.275 pip above the median of the previous 50 trades)",
+   "origin": "tree-found (liquidity theme root; raw depth-4 tree root)",
+   "stats": {
+    "train": {
+     "n": 77,
+     "n_half": 3335,
+     "share": 0.0231,
+     "L": 10,
+     "L_half": 112,
+     "L_share": 0.0893,
+     "loss_rate": 0.1299,
+     "lift": 3.87,
+     "lift_month_adj": 3.8,
+     "p_binom": 0.00026,
+     "loss_days": 7,
+     "wr_base": 96.64,
+     "wr_untouched": 96.87,
+     "wr_angel_inside": 96.87,
+     "angel_kept_in_pocket": 1,
+     "months": {
+      "03": [
+       29,
+       2,
+       1.7
+      ],
+      "04": [
+       20,
+       5,
+       6.41
+      ],
+      "05": [
+       8,
+       1,
+       3.08
+      ],
+      "06": [
+       20,
+       2,
+       5.65
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 74,
+     "n_half": 4291,
+     "share": 0.0172,
+     "L": 9,
+     "L_half": 60,
+     "L_share": 0.15,
+     "loss_rate": 0.1216,
+     "lift": 8.7,
+     "lift_month_adj": 8.54,
+     "p_binom": 0.0,
+     "loss_days": 9,
+     "wr_base": 98.6,
+     "wr_untouched": 98.79,
+     "wr_angel_inside": 98.79,
+     "angel_kept_in_pocket": 0,
+     "months": {
+      "07": [
+       18,
+       4,
+       14.04
+      ],
+      "08": [
+       15,
+       2,
+       10.47
+      ],
+      "09": [
+       16,
+       1,
+       6.44
+      ],
+      "10": [
+       23,
+       2,
+       5.01
+      ],
+      "11": [
+       2,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 4
+    }
+   }
+  },
+  "ny_close_hour": {
+   "cond": "16:00 <= New York time < 18:00  (ny_min_of_day 960-1079)",
+   "origin": "reference, market prior (the tight setting already guards 16:45-17:45)",
+   "stats": {
+    "train": {
+     "n": 126,
+     "n_half": 3335,
+     "share": 0.0378,
+     "L": 13,
+     "L_half": 112,
+     "L_share": 0.1161,
+     "loss_rate": 0.1032,
+     "lift": 3.07,
+     "lift_month_adj": 2.99,
+     "p_binom": 0.00034,
+     "loss_days": 9,
+     "wr_base": 96.64,
+     "wr_untouched": 96.91,
+     "wr_angel_inside": 96.92,
+     "angel_kept_in_pocket": 4,
+     "months": {
+      "03": [
+       41,
+       6,
+       3.62
+      ],
+      "04": [
+       31,
+       5,
+       4.13
+      ],
+      "05": [
+       23,
+       1,
+       1.07
+      ],
+      "06": [
+       31,
+       1,
+       1.82
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 172,
+     "n_half": 4291,
+     "share": 0.0401,
+     "L": 9,
+     "L_half": 60,
+     "L_share": 0.15,
+     "loss_rate": 0.0523,
+     "lift": 3.74,
+     "lift_month_adj": 3.7,
+     "p_binom": 0.00078,
+     "loss_days": 9,
+     "wr_base": 98.6,
+     "wr_untouched": 98.76,
+     "wr_angel_inside": 98.76,
+     "angel_kept_in_pocket": 3,
+     "months": {
+      "07": [
+       36,
+       2,
+       3.51
+      ],
+      "08": [
+       35,
+       3,
+       6.73
+      ],
+      "09": [
+       39,
+       2,
+       5.28
+      ],
+      "10": [
+       55,
+       2,
+       2.1
+      ],
+      "11": [
+       7,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 4
+    }
+   }
+  },
+  "friday_pm": {
+   "cond": "weekday == 4 and New York time >= 12:00",
+   "origin": "reference, market prior (Friday lift 1.7x on train alone)",
+   "stats": {
+    "train": {
+     "n": 124,
+     "n_half": 3335,
+     "share": 0.0372,
+     "L": 15,
+     "L_half": 112,
+     "L_share": 0.1339,
+     "loss_rate": 0.121,
+     "lift": 3.6,
+     "lift_month_adj": 3.32,
+     "p_binom": 2e-05,
+     "loss_days": 11,
+     "wr_base": 96.64,
+     "wr_untouched": 96.98,
+     "wr_angel_inside": 96.99,
+     "angel_kept_in_pocket": 9,
+     "months": {
+      "03": [
+       41,
+       3,
+       1.81
+      ],
+      "04": [
+       34,
+       7,
+       5.28
+      ],
+      "05": [
+       29,
+       4,
+       3.4
+      ],
+      "06": [
+       20,
+       1,
+       2.82
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 196,
+     "n_half": 4291,
+     "share": 0.0457,
+     "L": 9,
+     "L_half": 60,
+     "L_share": 0.15,
+     "loss_rate": 0.0459,
+     "lift": 3.28,
+     "lift_month_adj": 3.2,
+     "p_binom": 0.00193,
+     "loss_days": 8,
+     "wr_base": 98.6,
+     "wr_untouched": 98.75,
+     "wr_angel_inside": 98.76,
+     "angel_kept_in_pocket": 9,
+     "months": {
+      "07": [
+       48,
+       2,
+       2.63
+      ],
+      "08": [
+       41,
+       2,
+       3.83
+      ],
+      "09": [
+       43,
+       3,
+       7.19
+      ],
+      "10": [
+       64,
+       2,
+       1.8
+      ],
+      "11": [
+       0,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 4
+    }
+   }
+  },
+  "countertrend_chop_weak_break": {
+   "cond": "trend30_atr <= -1.905 and er30 <= 0.2065 and brk_ratio <= 0.5055",
+   "origin": "tree-found (sequential covering, scale-free, month-balanced)",
+   "stats": {
+    "train": {
+     "n": 235,
+     "n_half": 3335,
+     "share": 0.0705,
+     "L": 20,
+     "L_half": 112,
+     "L_share": 0.1786,
+     "loss_rate": 0.0851,
+     "lift": 2.53,
+     "lift_month_adj": 2.53,
+     "p_binom": 0.00016,
+     "loss_days": 18,
+     "wr_base": 96.64,
+     "wr_untouched": 97.03,
+     "wr_angel_inside": 97.04,
+     "angel_kept_in_pocket": 3,
+     "months": {
+      "03": [
+       74,
+       10,
+       3.34
+      ],
+      "04": [
+       49,
+       3,
+       1.57
+      ],
+      "05": [
+       45,
+       1,
+       0.55
+      ],
+      "06": [
+       67,
+       6,
+       5.06
+      ]
+     },
+     "months_up": 3
+    },
+    "test": {
+     "n": 345,
+     "n_half": 4291,
+     "share": 0.0804,
+     "L": 10,
+     "L_half": 60,
+     "L_share": 0.1667,
+     "loss_rate": 0.029,
+     "lift": 2.07,
+     "lift_month_adj": 2.06,
+     "p_binom": 0.02497,
+     "loss_days": 10,
+     "wr_base": 98.6,
+     "wr_untouched": 98.73,
+     "wr_angel_inside": 98.73,
+     "angel_kept_in_pocket": 5,
+     "months": {
+      "07": [
+       82,
+       4,
+       3.08
+      ],
+      "08": [
+       71,
+       3,
+       3.32
+      ],
+      "09": [
+       80,
+       1,
+       1.29
+      ],
+      "10": [
+       99,
+       2,
+       1.16
+      ],
+      "11": [
+       13,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 4
+    }
+   }
+  },
+  "ny_afternoon_thin_volume": {
+   "cond": "ny_min_of_day >= 870 and vol10_rel <= 0.8805 and atr_rel > 0.7715  (after 14:30 NY, 10-bar volume < 0.88x its 300-trade median, ATR not unusually low)",
+   "origin": "tree-found (scale-free depth-4 gini tree leaf + gini covering)",
+   "stats": {
+    "train": {
+     "n": 114,
+     "n_half": 3335,
+     "share": 0.0342,
+     "L": 15,
+     "L_half": 112,
+     "L_share": 0.1339,
+     "loss_rate": 0.1316,
+     "lift": 3.92,
+     "lift_month_adj": 3.8,
+     "p_binom": 1e-05,
+     "loss_days": 11,
+     "wr_base": 96.64,
+     "wr_untouched": 96.99,
+     "wr_angel_inside": 96.99,
+     "angel_kept_in_pocket": 6,
+     "months": {
+      "03": [
+       39,
+       6,
+       3.8
+      ],
+      "04": [
+       22,
+       6,
+       6.99
+      ],
+      "05": [
+       25,
+       2,
+       1.97
+      ],
+      "06": [
+       28,
+       1,
+       2.02
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 128,
+     "n_half": 4291,
+     "share": 0.0298,
+     "L": 5,
+     "L_half": 60,
+     "L_share": 0.0833,
+     "loss_rate": 0.0391,
+     "lift": 2.79,
+     "lift_month_adj": 2.79,
+     "p_binom": 0.03456,
+     "loss_days": 5,
+     "wr_base": 98.6,
+     "wr_untouched": 98.68,
+     "wr_angel_inside": 98.68,
+     "angel_kept_in_pocket": 7,
+     "months": {
+      "07": [
+       21,
+       0,
+       0.0
+      ],
+      "08": [
+       17,
+       1,
+       4.62
+      ],
+      "09": [
+       39,
+       1,
+       2.64
+      ],
+      "10": [
+       47,
+       3,
+       3.68
+      ],
+      "11": [
+       4,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 3
+    }
+   }
+  }
+ },
+ "candidates_union": {
+  "train": {
+   "n": 546,
+   "n_half": 3335,
+   "share": 0.1637,
+   "L": 42,
+   "L_half": 112,
+   "L_share": 0.375,
+   "loss_rate": 0.0769,
+   "lift": 2.29,
+   "lift_month_adj": 2.22,
+   "p_binom": 0.0,
+   "loss_days": 30,
+   "wr_base": 96.64,
+   "wr_untouched": 97.49,
+   "wr_angel_inside": 97.51,
+   "angel_kept_in_pocket": 21,
+   "months": {
+    "03": [
+     188,
+     18,
+     2.37
+    ],
+    "04": [
+     119,
+     9,
+     1.94
+    ],
+    "05": [
+     107,
+     8,
+     1.84
+    ],
+    "06": [
+     132,
+     7,
+     2.99
+    ]
+   },
+   "months_up": 4
+  },
+  "test": {
+   "n": 758,
+   "n_half": 4291,
+   "share": 0.1766,
+   "L": 23,
+   "L_half": 60,
+   "L_share": 0.3833,
+   "loss_rate": 0.0303,
+   "lift": 2.17,
+   "lift_month_adj": 2.16,
+   "p_binom": 0.00058,
+   "loss_days": 22,
+   "wr_base": 98.6,
+   "wr_untouched": 98.95,
+   "wr_angel_inside": 98.96,
+   "angel_kept_in_pocket": 23,
+   "months": {
+    "07": [
+     163,
+     6,
+     2.33
+    ],
+    "08": [
+     146,
+     6,
+     3.23
+    ],
+    "09": [
+     187,
+     5,
+     2.75
+    ],
+    "10": [
+     236,
+     6,
+     1.47
+    ],
+    "11": [
+     26,
+     0,
+     0.0
+    ]
+   },
+   "months_up": 4
+  }
+ },
+ "tree_found_union": {
+  "train": {
+   "n": 389,
+   "n_half": 3335,
+   "share": 0.1166,
+   "L": 34,
+   "L_half": 112,
+   "L_share": 0.3036,
+   "loss_rate": 0.0874,
+   "lift": 2.6,
+   "lift_month_adj": 2.55,
+   "p_binom": 0.0,
+   "loss_days": 24,
+   "wr_base": 96.64,
+   "wr_untouched": 97.35,
+   "wr_angel_inside": 97.36,
+   "angel_kept_in_pocket": 10,
+   "months": {
+    "03": [
+     131,
+     15,
+     2.83
+    ],
+    "04": [
+     82,
+     8,
+     2.5
+    ],
+    "05": [
+     74,
+     4,
+     1.33
+    ],
+    "06": [
+     102,
+     7,
+     3.88
+    ]
+   },
+   "months_up": 4
+  },
+  "test": {
+   "n": 514,
+   "n_half": 4291,
+   "share": 0.1198,
+   "L": 19,
+   "L_half": 60,
+   "L_share": 0.3167,
+   "loss_rate": 0.037,
+   "lift": 2.64,
+   "lift_month_adj": 2.62,
+   "p_binom": 0.00016,
+   "loss_days": 19,
+   "wr_base": 98.6,
+   "wr_untouched": 98.91,
+   "wr_angel_inside": 98.92,
+   "angel_kept_in_pocket": 12,
+   "months": {
+    "07": [
+     113,
+     6,
+     3.35
+    ],
+    "08": [
+     95,
+     5,
+     4.13
+    ],
+    "09": [
+     125,
+     2,
+     1.65
+    ],
+    "10": [
+     162,
+     6,
+     2.14
+    ],
+    "11": [
+     19,
+     0,
+     0.0
+    ]
+   },
+   "months_up": 4
+  }
+ }
+}

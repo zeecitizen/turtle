@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Golden Gravity Admin</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rye&display=swap">
+<style>
+  :root { --bg: #1b1410; --panel: #2a1f18; --line: #4a3626; --ink: #f4e9d4; --soft: #b9a888; --gold: #e2b34a; --green: #5dd38a; --red: #ff7a7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 Georgia, "Times New Roman", serif; }
+  header { padding: 22px 24px 10px; border-bottom: 1px solid var(--line); }
+  h1 { margin: 0; font: 30px "Rye", Georgia, serif; color: var(--gold); letter-spacing: 1px; }
+  .sub { color: var(--soft); margin-top: 4px; }
+  main { max-width: 980px; margin: 0 auto; padding: 18px 16px 60px; }
+  .running { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin-bottom: 16px; }
+  .running b { color: var(--gold); }
+  .cards { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .card { flex: 1 1 220px; background: var(--panel); border: 2px solid var(--line); border-radius: 12px; padding: 14px 16px; cursor: pointer; }
+  .card.active { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(226,179,74,0.18); }
+  .card h2 { margin: 0 0 4px; font: 20px "Rye", Georgia, serif; }
+  .card .pill { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--gold); color: #2a1608; margin-left: 6px; vertical-align: middle; }
+  .card small { color: var(--soft); }
+  .tabs { display: flex; gap: 6px; margin: 6px 0 0; }
+  .tab { padding: 8px 14px; border: 1px solid var(--line); border-bottom: none; border-radius: 8px 8px 0 0; background: #221913; color: var(--soft); cursor: pointer; }
+  .tab.on { background: var(--panel); color: var(--ink); }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border: 1px solid var(--line); }
+  td { padding: 8px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+  td.k { width: 34%; }
+  td.k b { display: block; }
+  td.k small { color: var(--soft); }
+  input { width: 100%; background: #140e0b; color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; font: 14px ui-monospace, Consolas, monospace; }
+  input:focus { outline: 2px solid var(--gold); }
+  .bar { position: sticky; bottom: 0; display: flex; gap: 10px; align-items: center; padding: 14px 0; background: linear-gradient(transparent, var(--bg) 30%); }
+  button { font: 16px "Rye", Georgia, serif; padding: 10px 18px; border-radius: 10px; border: 0; cursor: pointer; }
+  .save { background: #6b4a2a; color: var(--ink); }
+  .apply { background: var(--gold); color: #2a1608; }
+  #msg { color: var(--soft); }
+  #msg.ok { color: var(--green); } #msg.bad { color: var(--red); }
+  @media (max-width: 600px) { td.k { width: 45%; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Golden Gravity &middot; Admin</h1>
+  <div class="sub">Pick the symbol the game trades and tune each one. The game uses whatever is saved here; Apply rebuilds it (only between rounds).</div>
+</header>
+<main>
+  <div class="running" id="running">Loading...</div>
+  <div class="cards" id="cards"></div>
+  <div class="tabs" id="tabs"></div>
+  <table id="table"></table>
+  <div class="bar">
+    <button class="save" id="save">Save</button>
+    <button class="apply" id="apply">Save &amp; Apply</button>
+    <span id="msg"></span>
+  </div>
+</main>
+<script>
+let DATA = null, FIELDS = [], EDIT = null;
+const $ = (id) => document.getElementById(id);
+function msg(t, kind) { const m = $('msg'); m.textContent = t; m.className = kind || ''; }
+async function load() {
+  const r = await fetch('/api/admin', { cache: 'no-store' });
+  const j = await r.json();
+  DATA = j.admin; FIELDS = j.fields; EDIT = EDIT || DATA.active;
+  const run = j.running;
+  $('running').innerHTML = `The game is running <b>${run.symbol}</b> (${run.mode}, ${run.phase}) &middot; price grid ${run.price_dp} decimals &middot; one coin = ${run.coin}`;
+  render();
+}
+function render() {
+  const names = Object.keys(DATA.profiles);
+  $('cards').innerHTML = names.map((n) => {
+    const p = DATA.profiles[n];
+    const risk = (p.coin_oz * p.stop_dist);
+    return `<div class="card ${DATA.active === n ? 'active' : ''}" data-n="${n}"><h2>${p.symbol}${DATA.active === n ? '<span class="pill">ACTIVE</span>' : ''}</h2>
+      <small>${p.label} &middot; one coin risks $${risk < 0.01 ? risk.toFixed(4) : risk.toFixed(2)} &middot; stop ${p.stop_dist} &middot; target ${p.target_default}</small></div>`;
+  }).join('');
+  document.querySelectorAll('.card').forEach((el) => el.onclick = () => { DATA.active = el.dataset.n; EDIT = el.dataset.n; render(); msg('Selected ' + DATA.profiles[EDIT].symbol + ' - Save & Apply to switch the game.'); });
+  $('tabs').innerHTML = names.map((n) => `<div class="tab ${EDIT === n ? 'on' : ''}" data-n="${n}">${DATA.profiles[n].symbol} settings</div>`).join('');
+  document.querySelectorAll('.tab').forEach((el) => el.onclick = () => { EDIT = el.dataset.n; render(); });
+  const p = DATA.profiles[EDIT];
+  $('table').innerHTML = FIELDS.filter(([k]) => k in p).map(([k, label, help, kind]) => {
+    const v = Array.isArray(p[k]) ? p[k].join(', ') : p[k];
+    return `<tr><td class="k"><b>${label}</b><small>${help || ''}</small></td><td><input data-k="${k}" data-kind="${kind}" value="${v}"></td></tr>`;
+  }).join('');
+  document.querySelectorAll('#table input').forEach((el) => el.oninput = () => {
+    const k = el.dataset.k, kind = el.dataset.kind, raw = el.value;
+    DATA.profiles[EDIT][k] = kind === 'list' ? raw.split(',').map((x) => x.trim()).filter(Boolean).map(Number) : kind === 'text' ? raw : Number(raw);
+  });
+}
+async function post(path, body) {
+  const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+  return r.json();
+}
+async function save() {
+  const j = await post('/api/admin', DATA);
+  if (!j.ok) { msg('Not saved: ' + j.why, 'bad'); return false; }
+  msg('Saved.', 'ok'); return true;
+}
+$('save').onclick = save;
+$('apply').onclick = async () => {
+  if (!(await save())) return;
+  msg('Rebuilding the game...');
+  const j = await post('/api/admin/apply');
+  if (!j.ok) { msg('Saved, but not applied: ' + j.why, 'bad'); return; }
+  msg('Applied: the game now runs ' + j.admin.running.symbol + '. Reload the game tab.', 'ok');
+  load();
+};
+load().catch((e) => msg('Could not load: ' + e, 'bad'));
+</script>
+</body>
+</html>

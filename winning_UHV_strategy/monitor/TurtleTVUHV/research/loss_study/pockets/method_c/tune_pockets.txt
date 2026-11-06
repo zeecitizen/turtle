@@ -1,0 +1,85 @@
+TRAIN ONLY: 3335 trades, 112 losses, base loss rate 3.36%  -> score = L_in - 0.1175 x N_in (marginal lift >= 3.5x)
+
+=== weekly_close: 14 train losses of this cause ===
+   VIABLE  score   5.00  N   51 ( 1.5%)  L  11 (own cause 10/14)  rate  21.6%  lift x6.42  days  7  Friday from 14:30 NY (to the 17:00 NY weekly close)
+   VIABLE  score   4.83  N   27 ( 0.8%)  L   8 (own cause  7/14)  rate  29.6%  lift x8.82  days  5  Friday from 15:45 NY (to the 17:00 NY weekly close)
+   VIABLE  score   4.30  N   40 ( 1.2%)  L   9 (own cause  8/14)  rate  22.5%  lift x6.70  days  6  Friday from 15:15 NY (to the 17:00 NY weekly close)
+   VIABLE  score   4.12  N   33 ( 1.0%)  L   8 (own cause  7/14)  rate  24.2%  lift x7.22  days  5  Friday from 15:30 NY (to the 17:00 NY weekly close)
+   VIABLE  score   4.07  N   59 ( 1.8%)  L  11 (own cause 10/14)  rate  18.6%  lift x5.55  days  7  Friday from 14:15 NY (to the 17:00 NY weekly close)
+   VIABLE  score   3.95  N   43 ( 1.3%)  L   9 (own cause  8/14)  rate  20.9%  lift x6.23  days  6  Friday from 15:00 NY (to the 17:00 NY weekly close)
+   VIABLE  score   3.59  N   46 ( 1.4%)  L   9 (own cause  8/14)  rate  19.6%  lift x5.83  days  6  Friday from 14:45 NY (to the 17:00 NY weekly close)
+   VIABLE  score   2.89  N   69 ( 2.1%)  L  11 (own cause 10/14)  rate  15.9%  lift x4.75  days  7  Friday from 14:00 NY (to the 17:00 NY weekly close)
+   best per family: fri_from 5.00 (N 51, L 11)
+   -> chosen: Friday from 14:30 NY (to the 17:00 NY weekly close)  [VIABLE]  plateau: 5 same-family configs within 80% of the best score
+
+=== rollover_dead_book: 9 train losses of this cause ===
+   VIABLE  score   4.18  N   58 ( 1.7%)  L  11 (own cause  5/9)  rate  19.0%  lift x5.65  days  8  NY clock 16:45-17:15 any day, OR breakout-tick spread >= 1.6 pip
+   VIABLE  score   4.18  N   58 ( 1.7%)  L  11 (own cause  5/9)  rate  19.0%  lift x5.65  days  8  NY clock 16:45-17:30 any day, OR breakout-tick spread >= 1.6 pip
+   VIABLE  score   3.83  N   61 ( 1.8%)  L  11 (own cause  5/9)  rate  18.0%  lift x5.37  days  8  NY clock 16:45-17:15 any day, OR breakout-tick spread >= 1.4 pip
+   VIABLE  score   3.83  N   61 ( 1.8%)  L  11 (own cause  5/9)  rate  18.0%  lift x5.37  days  8  NY clock 16:45-17:30 any day, OR breakout-tick spread >= 1.4 pip
+   VIABLE  score   3.71  N   62 ( 1.9%)  L  11 (own cause  5/9)  rate  17.7%  lift x5.28  days  8  NY clock 16:45-17:45 any day, OR breakout-tick spread >= 1.6 pip
+   VIABLE  score   3.71  N   62 ( 1.9%)  L  11 (own cause  5/9)  rate  17.7%  lift x5.28  days  8  NY clock 16:45-17:45 any day, OR breakout-tick spread >= 2.0 pip
+   VIABLE  score   3.60  N   63 ( 1.9%)  L  11 (own cause  5/9)  rate  17.5%  lift x5.20  days  8  NY clock 16:45-18:00 any day, OR breakout-tick spread >= 1.6 pip
+   VIABLE  score   3.60  N   63 ( 1.9%)  L  11 (own cause  5/9)  rate  17.5%  lift x5.20  days  8  NY clock 16:45-18:00 any day, OR breakout-tick spread >= 2.0 pip
+   best per family: clock_or_spread 4.18 (N 58, L 11) | clock_or_deadbook 3.30 (N 57, L 10) | clock_window 2.71 (N 45, L 8)
+   -> chosen: NY clock 16:45-17:15 any day, OR breakout-tick spread >= 1.6 pip  [VIABLE]  plateau: 10 same-family configs within 80% of the best score
+
+=== news_spike: 7 train losses of this cause ===
+   no      score  -2.23  N   70 ( 2.1%)  L   6 (own cause  2/7)  rate   8.6%  lift x2.55  days  6  Mon-Fri within +-30 min of the 08:30 NY US-data slot AND vol10/vol60 >= 1.2
+   no      score  -7.75  N  117 ( 3.5%)  L   6 (own cause  2/7)  rate   5.1%  lift x1.53  days  6  Mon-Fri within +-30 min of the 08:30 / 10:00 NY US-data slot AND vol10/vol60 >= 1.2
+   no      score  -9.87  N  135 ( 4.0%)  L   6 (own cause  2/7)  rate   4.4%  lift x1.32  days  6  Mon-Fri within +-30 min of the 08:30 NY US-data slot AND vol10/vol60 >= 1.0
+   no      score -15.39  N  199 ( 6.0%)  L   8 (own cause  2/7)  rate   4.0%  lift x1.20  days  8  Mon-Fri within +-30 min of the 08:30 NY US-data slot AND vol10/vol60 >= 0.8
+   no      score -16.10  N  205 ( 6.1%)  L   8 (own cause  2/7)  rate   3.9%  lift x1.16  days  8  Mon-Fri within +-30 min of the 08:30 NY US-data slot
+   no      score -18.33  N  207 ( 6.2%)  L   6 (own cause  4/7)  rate   2.9%  lift x0.86  days  6  Mon-Fri within +-15 min of the 08:30 / 10:00 NY US-data slot AND vol10/vol60 >= 0.8
+   no      score -19.04  N  213 ( 6.4%)  L   6 (own cause  4/7)  rate   2.8%  lift x0.84  days  6  Mon-Fri within +-15 min of the 08:30 / 10:00 NY US-data slot
+   no      score -22.27  N  266 ( 8.0%)  L   9 (own cause  3/7)  rate   3.4%  lift x1.01  days  9  Mon-Fri within +-30 min of the 08:30 / 10:00 NY US-data slot AND vol10/vol60 >= 1.0
+   best per family: data_slots_volup -2.23 (N 70, L 6) | data_slots -16.10 (N 205, L 8)
+   -> chosen: Mon-Fri within +-30 min of the 08:30 NY US-data slot AND vol10/vol60 >= 1.2  [NOT VIABLE (score <= 0)]  plateau: 0 same-family configs within 80% of the best score
+
+=== no_separator_chop: 9 train losses of this cause ===
+   VIABLE  score   0.65  N   54 ( 1.6%)  L   7 (own cause  5/9)  rate  13.0%  lift x3.86  days  7  ATR <= 0.6 pip AND er30 <= 0.10
+   no      score  -1.93  N   76 ( 2.3%)  L   7 (own cause  5/9)  rate   9.2%  lift x2.74  days  7  ATR <= 0.6 pip AND er30 <= 0.15
+   no      score  -3.58  N   90 ( 2.7%)  L   7 (own cause  5/9)  rate   7.8%  lift x2.32  days  7  ATR <= 0.6 pip AND er30 <= 0.20
+   no      score  -4.75  N  100 ( 3.0%)  L   7 (own cause  5/9)  rate   7.0%  lift x2.08  days  7  ATR <= 0.7 pip AND er30 <= 0.10
+   no      score  -5.34  N   88 ( 2.6%)  L   5 (own cause  4/9)  rate   5.7%  lift x1.69  days  5  ATR <= 0.6 pip AND NY 19:00-01:00 (night / Asian tape)
+   no      score  -5.40  N   97 ( 2.9%)  L   6 (own cause  5/9)  rate   6.2%  lift x1.84  days  6  ATR <= 0.6 pip AND NY 19:00-02:00 (night / Asian tape)
+   no      score  -5.40  N   97 ( 2.9%)  L   6 (own cause  5/9)  rate   6.2%  lift x1.84  days  6  ATR <= 0.6 pip AND NY 19:00-03:00 (night / Asian tape)
+   no      score  -8.22  N  138 ( 4.1%)  L   8 (own cause  5/9)  rate   5.8%  lift x1.73  days  8  ATR <= 0.7 pip AND er30 <= 0.15
+   best per family: low_atr_chop 0.65 (N 54, L 7) | low_atr_night -5.34 (N 88, L 5) | low_atr -10.63 (N 150, L 7)
+   -> chosen: ATR <= 0.6 pip AND er30 <= 0.10  [VIABLE]  plateau: 1 same-family configs within 80% of the best score
+
+=== exhausted_move: 14 train losses of this cause ===
+   VIABLE  score   1.59  N   29 ( 0.9%)  L   5 (own cause  4/14)  rate  17.2%  lift x5.13  days  5  camel humps >= 7 AND 30-bar move with the trade >= 3 ATR
+   VIABLE  score   1.00  N   34 ( 1.0%)  L   5 (own cause  4/14)  rate  14.7%  lift x4.38  days  5  camel humps >= 7 AND 30-bar move with the trade >= 2 ATR
+   VIABLE  score   0.77  N   36 ( 1.1%)  L   5 (own cause  4/14)  rate  13.9%  lift x4.14  days  5  camel humps >= 7 AND 30-bar move with the trade >= 1 ATR
+   no      score  -2.05  N   60 ( 1.8%)  L   5 (own cause  4/14)  rate   8.3%  lift x2.48  days  5  camel humps >= 6 AND 30-bar move with the trade >= 3 ATR
+   no      score  -2.99  N   68 ( 2.0%)  L   5 (own cause  4/14)  rate   7.4%  lift x2.19  days  5  camel humps >= 6 AND 30-bar move with the trade >= 2 ATR
+   no      score  -3.58  N   73 ( 2.2%)  L   5 (own cause  4/14)  rate   6.8%  lift x2.04  days  5  camel humps >= 6 AND 30-bar move with the trade >= 1 ATR
+   no      score  -6.17  N   95 ( 2.8%)  L   5 (own cause  2/14)  rate   5.3%  lift x1.57  days  5  level at >= 0.85 of its 60-bar range AND 30-bar move with the trade >= 7 ATR
+   no      score  -6.52  N   98 ( 2.9%)  L   5 (own cause  2/14)  rate   5.1%  lift x1.52  days  5  er30 >= 0.35 AND 30-bar move with the trade >= 7 ATR
+   best per family: humps_trend 1.59 (N 29, L 5) | extreme_trend -6.17 (N 95, L 5) | er_trend -6.52 (N 98, L 5)
+   -> chosen: camel humps >= 7 AND 30-bar move with the trade >= 3 ATR  [VIABLE]  plateau: 1 same-family configs within 80% of the best score
+
+=== counter_structure: 23 train losses of this cause ===
+   no      score  -5.23  N   87 ( 2.6%)  L   5 (own cause  4/23)  rate   5.7%  lift x1.71  days  5  90-bar move AGAINST the trade >= 8 ATR AND level in the bottom 0.2 of its 60-bar range
+   no      score  -6.87  N  101 ( 3.0%)  L   5 (own cause  4/23)  rate   5.0%  lift x1.47  days  5  90-bar move AGAINST the trade >= 6 ATR AND level in the bottom 0.2 of its 60-bar range
+   no      score  -7.93  N  110 ( 3.3%)  L   5 (own cause  4/23)  rate   4.5%  lift x1.35  days  5  no HH+HL structure with the trade AND 90-bar move against >= 10 ATR AND pos60 <= 1.0
+   no      score  -7.93  N  110 ( 3.3%)  L   5 (own cause  2/23)  rate   4.5%  lift x1.35  days  5  30-bar move AGAINST the trade >= 5 ATR AND level in the bottom 0.3 of its 60-bar range
+   no      score  -8.57  N  124 ( 3.7%)  L   6 (own cause  5/23)  rate   4.8%  lift x1.44  days  6  90-bar move AGAINST the trade >= 10 ATR AND level in the bottom 0.3 of its 60-bar range
+   no      score  -9.81  N  126 ( 3.8%)  L   5 (own cause  4/23)  rate   4.0%  lift x1.18  days  5  90-bar move AGAINST the trade >= 4 ATR AND level in the bottom 0.2 of its 60-bar range
+   no      score -10.87  N  135 ( 4.0%)  L   5 (own cause  3/23)  rate   3.7%  lift x1.10  days  5  30-bar move AGAINST the trade >= 2 ATR AND level in the bottom 0.2 of its 60-bar range
+   no      score -11.04  N  145 ( 4.3%)  L   6 (own cause  4/23)  rate   4.1%  lift x1.23  days  6  90-bar move AGAINST the trade >= 2 ATR AND level in the bottom 0.2 of its 60-bar range
+   best per family: downtrend_low -5.23 (N 87, L 5) | against_structure -7.93 (N 110, L 5) | against_impulse -7.93 (N 110, L 5)
+   -> chosen: 90-bar move AGAINST the trade >= 8 ATR AND level in the bottom 0.2 of its 60-bar range  [NOT VIABLE (score <= 0)]  plateau: 0 same-family configs within 80% of the best score
+
+=== support_resistance: 35 train losses of this cause ===
+   no      score -11.16  N  146 ( 4.4%)  L   6 (own cause  4/35)  rate   4.1%  lift x1.22  days  6  a 100-pip figure within 4 pip ahead
+   no      score -13.92  N  178 ( 5.3%)  L   7 (own cause  4/35)  rate   3.9%  lift x1.17  days  7  a 100-pip figure within 5 pip ahead
+   no      score -14.63  N  167 ( 5.0%)  L   5 (own cause  3/35)  rate   3.0%  lift x0.89  days  5  a 00/50 figure within 2 pip ahead
+   no      score -16.45  N  225 ( 6.7%)  L  10 (own cause  4/35)  rate   4.4%  lift x1.32  days  9  an older 60-bar extreme 0-0.5 pip beyond the level (wall ahead)
+   no      score -16.86  N  220 ( 6.6%)  L   9 (own cause  5/35)  rate   4.1%  lift x1.22  days  9  a 100-pip figure within 6 pip ahead
+   no      score -18.39  N  233 ( 7.0%)  L   9 (own cause  5/35)  rate   3.9%  lift x1.15  days  9  an older 240-bar extreme 0-1.0 pip beyond the level (wall ahead)
+   no      score -20.33  N  258 ( 7.7%)  L  10 (own cause  4/35)  rate   3.9%  lift x1.15  days 10  level at >= 0.95 of its 60-bar range AND the 60-bar extreme 0-1.0 pip beyond it
+   no      score -20.50  N  285 ( 8.5%)  L  13 (own cause  4/35)  rate   4.6%  lift x1.36  days 11  level at >= 0.95 of its 60-bar range AND the 60-bar extreme 0-2.0 pip beyond it
+   best per family: figure_ahead -11.16 (N 146, L 6) | half_figure_ahead -14.63 (N 167, L 5) | wall_ahead60 -16.45 (N 225, L 10) | wall_ahead240 -18.39 (N 233, L 9) | near_top_wall -20.33 (N 258, L 10)
+   -> chosen: a 100-pip figure within 4 pip ahead  [NOT VIABLE (score <= 0)]  plateau: 0 same-family configs within 80% of the best score

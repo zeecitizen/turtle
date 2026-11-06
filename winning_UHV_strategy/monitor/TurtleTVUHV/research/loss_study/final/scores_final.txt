@@ -1,0 +1,183 @@
+======================================================================================================================================================
+score_final.py - every rule of rules_final.py re-scored with api.report. Python tick replay = HYPOTHESIS, NOT PROMOTED.
+7626 trades, 172 losses; base loss rate all 2.26% train 3.36% test 1.40%; api.TAGGED (Zee's commented losses) = 37 entries (the report column still says 'Zee's 22')
+======================================================================================================================================================
+[ACCEPTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_rollover_ny             removes   102 (losers  16 / winners    86)  loss rate among removed 15.69% vs base 2.26%  lift x6.95  | train x5.29 (8L/37W)  test x10.04 (8L/49W)  | WR 97.93%  net +3,124$  | Zee's 22: 2
+                             distinct loser days 15 | strict bar PASS | stop-outs only (why=1): 9L train x4.59 (6L) test x4.94 (3L)
+[COMBINED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_combined                removes   102 (losers  16 / winners    86)  loss rate among removed 15.69% vs base 2.26%  lift x6.95  | train x5.29 (8L/37W)  test x10.04 (8L/49W)  | WR 97.93%  net +3,124$  | Zee's 22: 2
+                             distinct loser days 15 | strict bar PASS | stop-outs only (why=1): 9L train x4.59 (6L) test x4.94 (3L)
+[CANDIDATE|extended-field] exc 0 look-ahead diffs 0 | rule_trigger_spread          removes    89 (losers  16 / winners    73)  loss rate among removed 17.98% vs base 2.26%  lift x7.97  | train x5.67 (8L/34W)  test x12.17 (8L/39W)  | WR 97.93%  net +4,093$  | Zee's 22: 2
+                             distinct loser days 13 | strict bar PASS | stop-outs only (why=1): 9L train x4.22 (5L) test x7.96 (4L)
+[CANDIDATE|pre-entry     ] exc 0 look-ahead diffs 0 | rule_friday_close_ny         removes    57 (losers  11 / winners    46)  loss rate among removed 19.3% vs base 2.26%  lift x8.56  | train x9.4 (6L/13W)  test x9.41 (5L/33W)  | WR 97.87%  net +2,840$  | Zee's 22: 3
+                             distinct loser days 8 | strict bar PASS | stop-outs only (why=1): 3L train x6.17 (3L) test x0.0 (0L)
+[CANDIDATE|pre-entry     ] exc 0 look-ahead diffs 0 | rule_empty_book              removes   106 (losers  11 / winners    95)  loss rate among removed 10.38% vs base 2.26%  lift x4.6  | train x5.1 (6L/29W)  test x5.04 (5L/66W)  | WR 97.86%  net +4,182$  | Zee's 22: 0
+                             distinct loser days 8 | strict bar PASS | stop-outs only (why=1): 10L train x4.84 (5L) test x6.03 (5L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_friday_afternoon_ny     removes   246 (losers  22 / winners   224)  loss rate among removed 8.94% vs base 2.26%  lift x3.97  | train x4.25 (14L/84W)  test x3.87 (8L/140W)  | WR 97.97%  net +3,756$  | Zee's 22: 3
+                             distinct loser days 18 | strict bar PASS | stop-outs only (why=1): 5L train x1.5 (4L) test x0.61 (1L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_trigger_gap             removes    64 (losers   5 / winners    59)  loss rate among removed 7.81% vs base 2.26%  lift x3.46  | train x2.48 (3L/33W)  test x5.11 (2L/26W)  | WR 97.79%  net +1,828$  | Zee's 22: 1
+                             distinct loser days 4 | strict bar PASS | stop-outs only (why=1): 4L train x1.88 (2L) test x6.12 (2L)
+[REJECTED |fill-time     ] exc 0 look-ahead diffs 0 | rule_fill_slip               removes    79 (losers  11 / winners    68)  loss rate among removed 13.92% vs base 2.26%  lift x6.17  | train x4.25 (7L/42W)  test x9.54 (4L/26W)  | WR 97.87%  net +2,658$  | Zee's 22: 2
+                             distinct loser days 10 | strict bar PASS | stop-outs only (why=1): 7L train x3.5 (5L) test x6.12 (2L)
+[REJECTED |fill-time     ] exc 0 look-ahead diffs 0 | rule_buy_fill_spread         removes    43 (losers   7 / winners    36)  loss rate among removed 16.28% vs base 2.26%  lift x7.22  | train x5.32 (5L/23W)  test x9.54 (2L/13W)  | WR 97.82%  net +1,742$  | Zee's 22: 1
+                             distinct loser days 7 | strict bar PASS | stop-outs only (why=1): 5L train x3.8 (3L) test x11.42 (2L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_big_figure_ahead        removes    90 (losers   7 / winners    83)  loss rate among removed 7.78% vs base 2.26%  lift x3.45  | train x2.53 (4L/43W)  test x4.99 (3L/40W)  | WR 97.81%  net +1,030$  | Zee's 22: 2
+                             distinct loser days 7 | strict bar PASS | stop-outs only (why=1): 5L train x2.8 (4L) test x2.09 (1L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_camel_old               removes    34 (losers   5 / winners    29)  loss rate among removed 14.71% vs base 2.26%  lift x6.52  | train x6.27 (4L/15W)  test x4.77 (1L/14W)  | WR 97.8%  net +1,634$  | Zee's 22: 1
+                             distinct loser days 5 | strict bar fail | stop-outs only (why=1): 5L train x6.93 (4L) test x5.71 (1L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_loud_breakout           removes   188 (losers   8 / winners   180)  loss rate among removed 4.26% vs base 2.26%  lift x1.89  | train x1.79 (5L/78W)  test x2.04 (3L/102W)  | WR 97.8%  net +1,411$  | Zee's 22: 2
+                             distinct loser days 8 | strict bar fail | stop-outs only (why=1): 7L train x1.98 (5L) test x1.65 (2L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_holiday                 removes   311 (losers  12 / winners   299)  loss rate among removed 3.86% vs base 2.26%  lift x1.71  | train x1.75 (9L/144W)  test x1.36 (3L/155W)  | WR 97.81%  net +3,863$  | Zee's 22: 0
+                             distinct loser days 6 | strict bar fail | stop-outs only (why=1): 10L train x1.73 (8L) test x1.09 (2L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_us_data_minutes         removes    66 (losers   5 / winners    61)  loss rate among removed 7.58% vs base 2.26%  lift x3.36  | train x0.88 (1L/33W)  test x8.94 (4L/28W)  | WR 97.79%  net +866$  | Zee's 22: 0
+                             distinct loser days 5 | strict bar fail | stop-outs only (why=1): 5L train x0.97 (1L) test x10.7 (4L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_zee_camel_hh            removes  2619 (losers  62 / winners  2557)  loss rate among removed 2.37% vs base 2.26%  lift x1.05  | train x1.1 (42L/1091W)  test x0.96 (20L/1466W)  | WR 97.8%  net +9,725$  | Zee's 22: 10
+                             distinct loser days 56 | strict bar fail | stop-outs only (why=1): 57L train x1.14 (39L) test x1.04 (18L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_structure_hh_hl         removes  4550 (losers 100 / winners  4450)  loss rate among removed 2.2% vs base 2.26%  lift x0.97  | train x0.97 (63L/1863W)  test x1.01 (37L/2587W)  | WR 97.66%  net +15,462$  | Zee's 22: 24
+                             distinct loser days 80 | strict bar fail | stop-outs only (why=1): 89L train x0.99 (58L) test x1.01 (31L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_near_sr                 removes  5489 (losers 116 / winners  5373)  loss rate among removed 2.11% vs base 2.26%  lift x0.94  | train x0.88 (66L/2178W)  test x1.1 (50L/3195W)  | WR 97.38%  net +16,345$  | Zee's 22: 25
+                             distinct loser days 94 | strict bar fail | stop-outs only (why=1): 102L train x0.9 (61L) test x1.08 (41L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_counter_trend           removes  1216 (losers  25 / winners  1191)  loss rate among removed 2.06% vs base 2.26%  lift x0.91  | train x0.89 (16L/521W)  test x0.95 (9L/670W)  | WR 97.71%  net +3,031$  | Zee's 22: 7
+                             distinct loser days 23 | strict bar fail | stop-outs only (why=1): 21L train x0.74 (12L) test x1.13 (9L)
+[REJECTED |pre-entry     ] exc 0 look-ahead diffs 0 | rule_exhausted_run           removes   769 (losers  28 / winners   741)  loss rate among removed 3.64% vs base 2.26%  lift x1.61  | train x1.6 (23L/405W)  test x1.05 (5L/336W)  | WR 97.9%  net +6,516$  | Zee's 22: 9
+                             distinct loser days 22 | strict bar fail | stop-outs only (why=1): 26L train x1.7 (22L) test x1.01 (4L)
+
+AUDIT: rules with exceptions or look-ahead diffs: none
+
+======================================================================================================================================================
+GREEDY UNION - pool = harness-native pre-entry rules (fill-time and extended-field rules excluded); strict bar on increments
+======================================================================================================================================================
+
+-- step 1: increments beyond nothing
+   rule_near_sr                               116L/5373W x0.94 | train 66L/2178W x0.88 | test 50L/3195W x1.1 | 94 days | fail
+   rule_structure_hh_hl                       100L/4450W x0.97 | train 63L/1863W x0.97 | test 37L/2587W x1.01 | 80 days | fail
+   rule_zee_camel_hh                           62L/2557W x1.05 | train 42L/1091W x1.1 | test 20L/1466W x0.96 | 56 days | fail
+   rule_exhausted_run                          28L/ 741W x1.61 | train 23L/405W x1.6 | test 5L/336W x1.05 | 22 days | fail
+   rule_counter_trend                          25L/1191W x0.91 | train 16L/521W x0.89 | test 9L/670W x0.95 | 23 days | fail
+   rule_friday_afternoon_ny                    22L/ 224W x3.97 | train 14L/84W x4.25 | test 8L/140W x3.87 | 18 days | PASS
+   rule_rollover_ny                            16L/  86W x6.95 | train 8L/37W x5.29 | test 8L/49W x10.04 | 15 days | PASS
+   rule_holiday                                12L/ 299W x1.71 | train 9L/144W x1.75 | test 3L/155W x1.36 | 6 days | fail
+   rule_friday_close_ny                        11L/  46W x8.56 | train 6L/13W x9.4 | test 5L/33W x9.41 | 8 days | PASS
+   rule_empty_book                             11L/  95W x4.6 | train 6L/29W x5.1 | test 5L/66W x5.04 | 8 days | PASS
+   rule_loud_breakout                           8L/ 180W x1.89 | train 5L/78W x1.79 | test 3L/102W x2.04 | 8 days | fail
+   rule_big_figure_ahead                        7L/  83W x3.45 | train 4L/43W x2.53 | test 3L/40W x4.99 | 7 days | PASS
+   rule_camel_old                               5L/  29W x6.52 | train 4L/15W x6.27 | test 1L/14W x4.77 | 5 days | fail
+   rule_trigger_gap                             5L/  59W x3.46 | train 3L/33W x2.48 | test 2L/26W x5.11 | 4 days | PASS
+   rule_us_data_minutes                         5L/  61W x3.36 | train 1L/33W x0.88 | test 4L/28W x8.94 | 5 days | fail
+   -> ADD rule_friday_afternoon_ny
+      unique rule_friday_afternoon_ny                    22L/ 224W x3.97 | train 14L/84W x4.25 | test 8L/140W x3.87 | 18 days | PASS
+
+-- step 2: increments beyond ['rule_friday_afternoon_ny']
+   rule_near_sr                               103L/5189W x0.86 | train 60L/2117W x0.82 | test 43L/3072W x0.99 | 87 days | fail
+   rule_structure_hh_hl                        88L/4301W x0.89 | train 56L/1808W x0.89 | test 32L/2493W x0.91 | 72 days | fail
+   rule_zee_camel_hh                           54L/2485W x0.94 | train 37L/1066W x1.0 | test 17L/1419W x0.85 | 49 days | fail
+   rule_exhausted_run                          24L/ 733W x1.41 | train 19L/400W x1.35 | test 5L/333W x1.06 | 20 days | fail
+   rule_counter_trend                          20L/1161W x0.75 | train 12L/513W x0.68 | test 8L/648W x0.87 | 19 days | fail
+   rule_rollover_ny                             8L/  72W x4.43 | train 5L/33W x3.92 | test 3L/39W x5.11 | 8 days | PASS
+   rule_loud_breakout                           8L/ 177W x1.92 | train 5L/76W x1.84 | test 3L/101W x2.06 | 8 days | fail
+   rule_empty_book                              7L/  91W x3.17 | train 2L/28W x1.99 | test 5L/63W x5.26 | 7 days | fail
+   rule_holiday                                 7L/ 286W x1.06 | train 5L/134W x1.07 | test 2L/152W x0.93 | 5 days | fail
+   rule_us_data_minutes                         5L/  61W x3.36 | train 1L/33W x0.88 | test 4L/28W x8.94 | 5 days | fail
+   rule_big_figure_ahead                        5L/  79W x2.64 | train 4L/42W x2.59 | test 1L/37W x1.88 | 5 days | fail
+   rule_camel_old                               4L/  29W x5.37 | train 3L/15W x4.96 | test 1L/14W x4.77 | 4 days | fail
+   rule_trigger_gap                             3L/  56W x2.25 | train 1L/32W x0.9 | test 2L/24W x5.5 | 3 days | fail
+   rule_friday_close_ny                         0L/   0W xNone | train 0L/0W xNone | test 0L/0W xNone | 0 days | fail
+   -> ADD rule_rollover_ny
+      unique rule_friday_afternoon_ny                    14L/ 210W x2.77 | train 11L/80W x3.6 | test 3L/130W x1.61 | 13 days | fail
+      unique rule_rollover_ny                             8L/  72W x4.43 | train 5L/33W x3.92 | test 3L/39W x5.11 | 8 days | PASS
+   <- DROP rule_friday_afternoon_ny (its unique contribution fails the strict bar)
+      unique rule_rollover_ny                            16L/  86W x6.95 | train 8L/37W x5.29 | test 8L/49W x10.04 | 15 days | PASS
+
+-- step 3: increments beyond ['rule_rollover_ny']
+   rule_near_sr                               103L/5301W x0.85 | train 61L/2151W x0.82 | test 42L/3150W x0.94 | 87 days | fail
+   rule_structure_hh_hl                        88L/4387W x0.87 | train 59L/1839W x0.93 | test 29L/2548W x0.8 | 72 days | fail
+   rule_zee_camel_hh                           59L/2524W x1.01 | train 41L/1079W x1.09 | test 18L/1445W x0.88 | 54 days | fail
+   rule_exhausted_run                          27L/ 736W x1.57 | train 22L/400W x1.55 | test 5L/336W x1.05 | 22 days | fail
+   rule_counter_trend                          24L/1165W x0.89 | train 15L/511W x0.85 | test 9L/654W x0.97 | 23 days | fail
+   rule_holiday                                10L/ 298W x1.44 | train 7L/144W x1.38 | test 3L/154W x1.37 | 6 days | fail
+   rule_loud_breakout                           7L/ 178W x1.68 | train 4L/78W x1.45 | test 3L/100W x2.08 | 7 days | fail
+   rule_us_data_minutes                         5L/  61W x3.36 | train 1L/33W x0.88 | test 4L/28W x8.94 | 5 days | fail
+   rule_big_figure_ahead                        5L/  83W x2.52 | train 3L/43W x1.94 | test 2L/40W x3.41 | 5 days | fail
+   rule_camel_old                               4L/  29W x5.37 | train 3L/15W x4.96 | test 1L/14W x4.77 | 4 days | fail
+   rule_empty_book                              4L/  76W x2.22 | train 2L/22W x2.48 | test 2L/54W x2.55 | 3 days | fail
+   rule_friday_close_ny                         3L/  32W x3.8 | train 3L/9W x7.44 | test 0L/23W x0.0 | 2 days | fail
+   rule_trigger_gap                             2L/  55W x1.56 | train 2L/30W x1.86 | test 0L/25W x0.0 | 2 days | fail
+   -> no candidate passes: stop
+
+GREEDY RESULT: ['rule_rollover_ny']   rules_final.ACCEPTED: ['rule_rollover_ny']
+
+-- extended field (breakout-tick spread, pre-entry but not a harness field): increment beyond rule_combined by threshold
+   trigger spread >= 0.7 beyond combined        5L/  96W x2.19 | train 3L/68W x1.26 | test 2L/28W x4.77 | 4 days | fail
+   trigger spread >= 0.8 beyond combined        5L/  63W x3.26 | train 3L/36W x2.29 | test 2L/27W x4.93 | 4 days | PASS
+   trigger spread >= 0.9 beyond combined        5L/  59W x3.46 | train 3L/33W x2.48 | test 2L/26W x5.11 | 4 days | PASS
+   trigger spread >= 1.0 beyond combined        5L/  49W x4.11 | train 3L/23W x3.44 | test 2L/26W x5.11 | 4 days | PASS
+   trigger spread >= 1.1 beyond combined        4L/  48W x3.41 | train 3L/22W x3.57 | test 1L/26W x2.65 | 3 days | fail
+   trigger spread >= 1.2 beyond combined        4L/  42W x3.86 | train 3L/18W x4.25 | test 1L/24W x2.86 | 3 days | fail
+   trigger spread >= 1.3 beyond combined        3L/  33W x3.69 | train 3L/16W x4.7 | test 0L/17W x0.0 | 2 days | fail
+   trigger spread >= 1.5 beyond combined        3L/  31W x3.91 | train 3L/15W x4.96 | test 0L/16W x0.0 | 2 days | fail
+   trigger spread >= 2.0 beyond combined        3L/  27W x4.43 | train 3L/14W x5.25 | test 0L/13W x0.0 | 2 days | fail
+   trigger spread >= 3.0 beyond combined        2L/  15W x5.22 | train 2L/7W x6.62 | test 0L/8W x0.0 | 1 days | fail
+   -> rule_trigger_spread (1.0) does NOT enter rule_combined: increment at 1.0 passes, at the next stricter 1.2 fails
+   for reference: rule_combined OR spread >= 1.0  21L/ 135W x5.97 | train 11L/60W x4.61 | test 10L/75W x8.41 | 18 days | PASS
+   losers the spread guard adds beyond rule_combined (spread >= 1.0):
+      0403-204101-S  NY Fri 16:41  spread 65.4 pip  pnl -632$  exit stop
+      0403-204417-S  NY Fri 16:44  spread 76.4 pip  pnl -819$  exit stop
+      0619-172628-S  NY Fri 13:26  spread 2.0 pip  pnl -65$  exit weekly-close flatten
+      0702-122937-S  NY Thu 08:29  spread 1.0 pip  pnl -233$  exit stop
+      0703-183524-B  NY Fri 14:35  spread 1.2 pip  pnl -60$  exit weekly-close flatten
+
+-- fill-time guards (execution side, read t['fill']): increment beyond rule_combined
+   rule_fill_slip beyond combined               4L/  57W x2.91 | train 3L/36W x2.29 | test 1L/21W x3.25 | 4 days | fail
+   rule_buy_fill_spread beyond combined         3L/  25W x4.75 | train 2L/17W x3.13 | test 1L/8W x7.95 | 3 days | fail
+
+-- candidates and rejected rules: increment beyond rule_combined
+   rule_trigger_spread                          5L/  49W x4.11 | train 3L/23W x3.44 | test 2L/26W x5.11 | 4 days | PASS
+   rule_friday_close_ny                         3L/  32W x3.8 | train 3L/9W x7.44 | test 0L/23W x0.0 | 2 days | fail
+   rule_empty_book                              4L/  76W x2.22 | train 2L/22W x2.48 | test 2L/54W x2.55 | 3 days | fail
+   rule_friday_afternoon_ny                    14L/ 210W x2.77 | train 11L/80W x3.6 | test 3L/130W x1.61 | 13 days | fail
+   rule_trigger_gap                             2L/  55W x1.56 | train 2L/30W x1.86 | test 0L/25W x0.0 | 2 days | fail
+   rule_fill_slip                               4L/  57W x2.91 | train 3L/36W x2.29 | test 1L/21W x3.25 | 4 days | fail
+   rule_buy_fill_spread                         3L/  25W x4.75 | train 2L/17W x3.13 | test 1L/8W x7.95 | 3 days | fail
+   rule_big_figure_ahead                        5L/  83W x2.52 | train 3L/43W x1.94 | test 2L/40W x3.41 | 5 days | fail
+   rule_camel_old                               4L/  29W x5.37 | train 3L/15W x4.96 | test 1L/14W x4.77 | 4 days | fail
+   rule_loud_breakout                           7L/ 178W x1.68 | train 4L/78W x1.45 | test 3L/100W x2.08 | 7 days | fail
+   rule_holiday                                10L/ 298W x1.44 | train 7L/144W x1.38 | test 3L/154W x1.37 | 6 days | fail
+   rule_us_data_minutes                         5L/  61W x3.36 | train 1L/33W x0.88 | test 4L/28W x8.94 | 5 days | fail
+   rule_zee_camel_hh                           59L/2524W x1.01 | train 41L/1079W x1.09 | test 18L/1445W x0.88 | 54 days | fail
+   rule_structure_hh_hl                        88L/4387W x0.87 | train 59L/1839W x0.93 | test 29L/2548W x0.8 | 72 days | fail
+   rule_near_sr                               103L/5301W x0.85 | train 61L/2151W x0.82 | test 42L/3150W x0.94 | 87 days | fail
+   rule_counter_trend                          24L/1165W x0.89 | train 15L/511W x0.85 | test 9L/654W x0.97 | 23 days | fail
+   rule_exhausted_run                          27L/ 736W x1.57 | train 22L/400W x1.55 | test 5L/336W x1.05 | 22 days | fail
+
+======================================================================================================================================================
+RULE_COMBINED
+======================================================================================================================================================
+rule_combined                removes   102 (losers  16 / winners    86)  loss rate among removed 15.69% vs base 2.26%  lift x6.95  | train x5.29 (8L/37W)  test x10.04 (8L/49W)  | WR 97.93%  net +3,124$  | Zee's 22: 2
+stop-outs only (why=1): 9L/86W train x4.59 (6L) test x4.94 (3L), 9 days; weekly-close flattens among its losers: 7 of 21
+beyond the engine's InpUhvNoClose band       5L/  23W x7.92 | train 2L/11W x4.58 | test 3L/12W x14.3 | 5 days | PASS
+the InpUhvNoClose band itself (UTC 20:45-21:15)  11L/  68W x6.17 | train 6L/26W x5.58 | test 5L/42W x7.61 | 10 days | PASS
+$ of the removed losers (Python replay, hypothesis): -3,350; of all 172 losses: -37,188
+geometry: average win +1.56$, average loss -216.2$ -> break-even win rate 99.28%
+  97.7% setting, all trades (python replay)
+     python 98%  ->  expect ~82% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -18 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  after rule_combined (rollover guard)
+     python 98%  ->  expect ~82% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -17 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+
+-- sensitivity: the same greedy under the task's LITERAL bar (lift >= 2 both halves, >= 4 losers; no per-half / distinct-day minimum)
+   harness fields only                      -> ['rule_rollover_ny', 'rule_camel_old', 'rule_empty_book']
+         union                                 24L/ 191W x4.95 | train 13L/74W x4.45 | test 11L/117W x6.15 | 21 days | PASS
+         union, stop-outs only (why=1)         17L/ 191W x3.62 | train 11L/74W x4.26 | test 6L/117W x4.18 | 15 days | PASS
+   + extended breakout-tick spread >= 1.0   -> ['rule_rollover_ny', 'rule_trigger_spread', 'rule_camel_old']
+         union                                 25L/ 164W x5.86 | train 14L/75W x4.68 | test 11L/89W x7.87 | 22 days | PASS
+         union, stop-outs only (why=1)         16L/ 164W x3.94 | train 11L/75W x4.21 | test 5L/89W x4.55 | 14 days | PASS
+
+-- geometry: a driftless random walk loses with p = (spread + 0.1) / (stop + 0.1) (target 0.1 pip past the fill on the far side;
+   stop measured from the fill), spread = the breakout tick's. If the entry had an edge, actual stop-outs would sit BELOW this.
+   all                    trades  7626  random-walk expected losses  137.9  actual stop-outs 151  all losses 172  (median spread 0.20 pip, stop 21.3 pip)
+   train                  trades  3335  random-walk expected losses   92.6  actual stop-outs 101  all losses 112  (median spread 0.50 pip, stop 21.7 pip)
+   test                   trades  4291  random-walk expected losses   45.3  actual stop-outs  50  all losses  60  (median spread 0.10 pip, stop 21.0 pip)
+   outside rule_combined  trades  7524  random-walk expected losses  128.2  actual stop-outs 142  all losses 156  (median spread 0.20 pip, stop 21.3 pip)
+   inside rule_combined   trades   102  random-walk expected losses    9.7  actual stop-outs   9  all losses  16  (median spread 0.50 pip, stop 20.9 pip)

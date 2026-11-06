@@ -1,0 +1,171 @@
+[
+ {
+  "id": "0428-085748-B",
+  "comment": "London morning, ATR 1.24 pip. After the 12:57-13:15 PKT rally the market topped at 1.17075 (13:18) and kept making lower highs: about 1.1706 (13:27), 1.17036 (13:50), 1.17031-1.17032 (13:52-13:53), with a low of 1.1699 at 13:42. The UHV (13:55, red) had only 85 ticks, below the window's ~100-tick average, and sits in a 1-pip pullback (extreme 1.1701 vs level 1.1702). At 13:57:48 the breakout minute already had 84 ticks, 99% of the UHV, so the 'quieter breakout' test passed by one tick. Fill 1.17027; the target needed bid 1.17028, a push into the 13:50-13:53 highs that had capped price three times. It never got there: down 6 pips in 30 minutes, stop after 2.9 h. Visible before entry: a rolling-over structure and a breakout as loud as its UHV. But the twins (13:00, 13:15) also bought just under nearby highs and won. r_brk_nearly_as_loud catches this one at only x1.79 train / x2.04 test, and the lower-high hump rule scores x1.05. Not reliably avoidable.",
+  "cause": "rolling-over structure, breakout as loud as the UHV",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0428-132716-S",
+  "comment": "US session. The 90-minute picture is an up-leg from 1.1678 (17:10 PKT) to 1.16998 (17:50). The RED x4 camel comes only from the 12-pip pullback 17:50-18:21 (low 1.16883). By the entry that pullback was over: 18:22-18:26 printed higher lows (1.16888, 1.16890, 1.16910, 1.16911) on green bodies, and the UHV (18:25 green, 124 ticks) was part of the bounce. The sell broke 1.16911 at 18:27:16, 2.7 pips above the 18:21 low. That is selling a higher low near the 50% retracement of the bigger up-leg, against its 90-minute trend (ext90 -3.9 ATR). A 9-pip green spike followed at 18:28; stop after 2.0 h. The twins sold the same down-move 13-21 minutes earlier at 1.16943-1.16944, before the low was in. A trader would see 'late in a 4-hump counter-move, after a higher low'. But camStk>=4 scores x1.24 and counter-trend-90 x0.91 over all 7,626 trades.",
+  "cause": "late entry in an exhausted counter-trend pullback",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0429-032518-B",
+  "comment": "Asian session (03:25 UTC), dead market: ATR 0.55 pip, 5-60 ticks/min (median 45). Price had drifted down from 1.1717 (07:05 PKT) and spent 45 minutes in a 3.3-pip box, 1.17073-1.17106. The level 1.17099 is the box top (07:51 high 1.17106, 08:17 high 1.17099). Fill 1.17107 needed bid 1.17108, i.e. a new box high. The poke failed, price bled 5 pips over 30 minutes, and the stop came 10.1 h later. Twin 06:24 PKT bought after a high-volume flush and twin 05:38 bought an equally dead box, and both won. Visible: buying the ceiling of a dead Asian box inside a slow decline. Not separable by any rule I tested: 'prior swing within 1 pip' scores x0.94, and the ATR / volume deciles are flat (ATR < 0.76 pip lost 2.7% on train vs a 3.4% base).",
+  "cause": "dead Asian range, buying the box top",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0429-162638-B",
+  "comment": "NY afternoon. At 20:51-20:54 PKT price crashed from 1.17039 to 1.16874 (16.5 pips in 3 minutes on ~330-tick bars). The rebound peaked near 1.1698 (21:03) and made lower highs (about 1.1696 at 21:08, 1.16933 at 21:15), with lows of 1.16890 at 21:19-21:20. The green camel is a 2-pip higher low inside that post-crash structure (ext90 -4.2 ATR). The 21:25 green bar ran to 1.16932. The entry broke the 21:12 UHV high (1.16942) at 21:26:38 with 67 ticks (54% of the UHV), straight into the lower half of the crash candle where the 21:03-21:15 highs had been rejected. Best excursion +0.004R, 7 pips lower within 30 minutes, stop after 2.2 h. Twin 20:55 bought the crash bar itself and won; twin 20:29 bought before the crash. Visible: a counter-trend buy into overhead supply after a high-volume bearish displacement. No tested rule separates it (lower-high hump x1.05, counter-trend-90 x0.91).",
+  "cause": "buying into supply after a bearish crash candle",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0501-063713-S",
+  "comment": "06:37 UTC on 1 May, a European holiday, so the market was thin. A slow 5-pip grind down from 1.17242 (11:02 PKT) to 1.17186 (11:33) on 40-100 ticks/min, ADX 41.8, ext90 +5.3 ATR in the sell direction: an old move. The last six bars had a flat floor at 1.1719 (lows 1.17191, 1.17192, 1.17186, 1.17187, 1.17187), and the level 1.17192 is that floor. The sell (fill 1.17192) needed bid near 1.1718, below a floor that had absorbed six minutes of selling. Instead a 25-pip vertical rally came at 11:42-11:52 PKT (a news-type spike in a holiday market): stopped in 14 minutes. The twins sold the same trend 27-32 minutes earlier at 1.17221 and won. Visible: selling a floor late in a slow grind. The spike itself could not be foreseen. No tested rule separates it.",
+  "cause": "news spike after selling a floor late in a grind",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0501-161803-B",
+  "comment": "Friday 16:18 UTC (also the 1 May holiday), after the London close. A clean downtrend: lower highs 1.17683 (20:50 PKT), about 1.1764 (20:57), 1.17566 (21:06), 1.17561 (21:17); low 1.17506 at 21:10; ext90 -9.4 ATR. The green camel is a 2.3-pip higher low (21:12-21:14 lows 1.17529-1.17531). The breakout came 4 s into the 21:18 minute with 7 ticks, at 1.17558, just under the 21:06 and 21:17 highs. Price went straight to the stop (75 minutes, a real stop-out). The twins (20:25, 20:44) were counter-trend buys too and won, so the trend does not separate. r_friday_pm_16 removes this trade (harness x3.54 / x3.27). But on real stop-outs only, that rule is NOT selective (x1.42 / x0.9): its harness lift comes from the engine's weekend-close exits. So I do not count this loss as reliably avoidable.",
+  "cause": "Friday-afternoon thin market, counter-trend buy",
+  "avoidable_before_entry": false,
+  "rule_ids": [
+   "r_friday_pm_16",
+   "r_thin_market_plus_friday"
+  ]
+ },
+ {
+  "id": "0504-035759-B",
+  "comment": "Monday 03:57 UTC, before London. After an hour of range at 1.1722-1.1728 on 50-100 ticks/min, price went vertical: 1.17243 (08:41 PKT) to 1.17387 (08:54), 14 pips in 13 minutes, every bar 320-593 ticks (5-8x normal). The UHV is the 08:56 red bar (334 ticks) at the top. The entry broke 1.17376 at second 59 of 08:57 (175 ticks), filled at 1.17381 just under the 08:54 and 08:55 highs (1.17387 / 1.17385). That is buying the top of a climax. Price never ticked higher, drifted 9 pips down in 30 minutes, stop after 3.9 h. The twins bought the quiet box top an hour earlier and won. A trader would call this a blow-off. The only rule that catches it, r_volume_burst_2x, scores x1.79 train / x0.66 test: not selective.",
+  "cause": "climax / vertical-spike top",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0504-193208-B",
+  "comment": "19:32 UTC (15:32 New York), late NY session and thinning. Price rallied from 1.16883 (23:52 PKT) to the 1.1700 big figure, where two pushes failed: an 00:24-00:25 high of 1.17020 followed by a dump to 1.16970 (00:26, 184 ticks), and an 00:28 high of 1.17010. The level 1.16996 is right under 1.1700. Fill 1.17006 (spread about 0.8 pip) needed bid 1.17007, inside the zone sellers had defended twice. Price rolled over 13 pips within 30 minutes; stop after 9.4 h. The twins bought the same range at 1.1691-1.1692, under a weaker ceiling, and won. Visible: the third test of a round figure after two rejections. But r_round_figure_ahead scores x1.18 train / x2.65 test, and r_jump_1p0 (which catches it) only x1.99 train. Not selective.",
+  "cause": "round-number resistance after two rejections",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0505-051831-S",
+  "comment": "05:18 UTC, before London. A 10-pip decline 09:38-10:00 PKT (1.1686 to 1.16763), then an 18-minute base: lows 1.16763 (10:00), about 1.1677-1.1678 (10:05-10:15), 1.16772 (10:16). The UHV (10:04 green, 145 ticks) was 14 minutes old. The level 1.16778 is 1.5 pips above the 10:00 low and 0.6 pip above the 10:16 low. The target (bid near 1.1677 once the spread is paid) needed that base to break. It held a fourth time; price rose 7 pips and the stop came after 7.8 h. The twins sold mid-range or at fresh breakdowns and won. Visible: selling the top of a fresh base right above support. But a prior swing low 0-1 pip beyond the level is also true for 33 of the 44 winning twins (lift x0.94). It is the normal geometry of this setup, not a loss marker.",
+  "cause": "selling just above a holding base",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0506-114136-B",
+  "comment": "London midday. After a 30-pip rally (1.1767 to 1.1797, 15:26-15:54 PKT) the market built a descending triangle: highs 1.17915 (16:06), about 1.1788 (16:17), 1.17863 (16:29), 1.17863 (16:37); lows 1.17819 at 16:23 and 16:31. The twin bought the 16:37 poke at 1.17852 and won. This trade bought the next poke 4 minutes later at 1.17866, above the 16:37 high, so it needed a new high in the sequence. It was also a loud breakout: 143 ticks by second 36 against a 196-tick UHV (about 236 projected over the minute). The triangle broke down and price fell 25 pips; stopped in 22 minutes. Visible: lower highs over a flat floor, and a second poke at the same ceiling. No tested rule separates it (second-attempt x1.08, projected-louder x1.35, lower-high hump x1.05).",
+  "cause": "second poke at a descending-triangle ceiling",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0508-170307-S",
+  "comment": "Friday 17:03 UTC, after the London close. A 90-minute range 1.1770-1.1778 with its floor at 1.17705-1.17711 (21:56 PKT 1.17709, 21:57 1.17706, 22:00 1.17705, 22:01 1.17706). The level 1.17711 is the floor itself. The sell needed it to break and it never did: best excursion -0.015R, never in profit. It never hit the stop either (worst -0.87R). It was still open at the week's last tick (20:58:59 UTC) and the engine closed it there for -150 (exit reason 8). MT5 or live would carry the position over the weekend, so its real outcome is unknown. The twins sold the same floor earlier (21:03, 21:39 PKT) and won. Removed before entry by r_friday_pm_16: no new 0.1-pip scalps on Friday after 16:00 UTC.",
+  "cause": "engine weekend-close exit (exit reason 8), not a stop",
+  "avoidable_before_entry": true,
+  "rule_ids": [
+   "r_friday_pm_16",
+   "r_thin_market_plus_friday"
+  ]
+ },
+ {
+  "id": "0511-120949-S",
+  "comment": "Monday 12:09 UTC, before NY. A sharp drop at 16:54-16:56 PKT took price from about 1.1774 to 1.17632, and the UHV is the first bounce candle (16:57 green, 160 ticks). Then 12 minutes of sideways trade at 1.17655-1.17685 with higher lows (17:05-17:08 lows 1.17655-1.17657, above the 1.17632 spike low). The level 1.17647 is 1.5 pips above the spike low. The sell broke at 17:09:49 with 76 ticks. Price instead rose 10 pips to 1.1775; stop after 1.6 h. The twins sold a range 4-5 pips above support and won. Only in hindsight is it clear that the sideways base absorbed the selling after the spike. Nothing measurable before the entry separates it, and no rule I tested removes it.",
+  "cause": "selling after a capitulation spike; the base absorbed it",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0512-195506-B",
+  "comment": "19:55 UTC, five minutes before the New York close. Uptrend from 1.1733 to 1.17467 (23:25-00:36 PKT), then a pullback to a base at 1.17413-1.17418 (00:45-00:49). The twin bought the 00:50 breakout at 1.17429; that breakout reached only 1.17434 (00:51) and fell back to 1.17421 (00:52). This trade re-broke the same level at 00:55:06 and needed bid 1.17437, above the 00:51 high the first breakout could not clear. Then volume collapsed after 20:00 UTC to about 20 ticks/min; price slid 5 pips and the stop came after 10.7 h. Visible: a second attempt at a level whose first breakout had stalled 0.5 pip higher, going into the NY close. My close window starts at 20:30 UTC, so it does not catch this. r_second_attempt (x1.08) and the prior-swing rule (x0.94) are not selective.",
+  "cause": "second attempt at a stalled level into the NY close",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0513-071801-B",
+  "comment": "London morning in a strong downtrend: 1.1735 (10:45 PKT) to 1.17172 (12:11), lower highs at 1.17254 (11:44) and about 1.1723 (12:05). ext90 -11.7 ATR, the most counter-trend entry in the batch. The green camel is a micro hump off a triple low at 1.17172 (12:11-12:13). The level 1.17193 equals the 12:14/12:15 highs. The break came on the first ticks of 12:18 (1.7 s, 5 ticks) and price resumed the decline: -9 pips in 30 minutes, stop after 2.0 h. The twins bought after a base and a real higher low (14:45 PKT) and in a recovering GREEN x6 uptrend, so to the eye they look healthier. But across all trades, buys and sells against the 90-minute move lose no more often than others (r_counter_trend_90 x0.89 train / x0.95 test). Not avoidable by rule.",
+  "cause": "counter-trend buy inside a strong decline",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0514-070500-B",
+  "comment": "London morning. A rally from 1.17112 to 1.17212 (11:25-11:54 PKT), then the top: 11:55-12:01 printed red and flat bars on the loudest volume of the window (127, 145, 189, 212, 194, 235, 194 ticks). That is distribution. The twin bought at 11:58 (1.17186) and just reached its target (high 1.17188). This trade broke the 12:00 UHV high (1.17180) on the very first tick of 12:05:00 (0.7 s, 2 ticks). It needed bid 1.17188, exactly the 11:58 high: a second attempt at a ceiling after heavy selling volume. Price fell 9 pips; stop after 5.5 h. My order-flow proxy (r_counter_volume_dominates, x1.02 / x1.52) and r_second_attempt (x1.08) do not separate it.",
+  "cause": "second attempt at a ceiling after distribution volume",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0514-125507-B",
+  "comment": "12:55 UTC, 25 minutes after the 12:30 US data and before the NY open. The 16:25-17:30 PKT range had its floor near 1.1700. It broke at 17:33-17:44, down to 1.16960. The bounce came back to 1.1700 and stalled: highs 1.17002 (17:48-17:50) and 1.17010 (17:52), then a rejection bar at 17:53. The level 1.16992 sits right under the big figure and the old floor, now resistance. Fill 1.17003 with a wide spread of about 0.9 pip; the target needed bid 1.17004, inside the rejection zone. Price fell 10 pips; stop after 2.1 h. A textbook short spot: a retest of broken support from below. Only r_jump_1p0 (train x1.99) and r_spread_buy_0p8 (train x1.79) catch it, both just short of selective.",
+  "cause": "retest of broken support at a round figure",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0514-213120-B",
+  "comment": "21:31 UTC, the daily rollover. From 02:19 to 02:30 PKT volume was 1-12 ticks per minute (median 5); the UHV (02:21) had 40 ticks. At the break the ask was 3.6 pips above the breaking bid (fill 1.16745 vs level 1.16707): a rollover spread. The target needed the bid to climb 3.9 pips above the level in a market with no participants. It peaked near 1.1674, and the 26-pip stop was hit 4.0 h later (a real stop-out). Clearly avoidable before entry. It is removed by r_close_2030_2200 (EXCELLENT in the harness; on stop-outs only still x3.46 / x2.47), r_thin_market (stop-outs only x2.69 / x2.98) and r_spread_buy_1p0 / 1p5.",
+  "cause": "rollover hour, spread blow-out",
+  "avoidable_before_entry": true,
+  "rule_ids": [
+   "r_close_2030_2200",
+   "r_spread_buy_1p0",
+   "r_spread_buy_1p5",
+   "r_thin_market",
+   "r_thin_market_plus_friday"
+  ]
+ },
+ {
+  "id": "0515-041219-B",
+  "comment": "Asian session (04:12 UTC), ATR 0.59 pip. After a spike to 1.1657 (07:52-07:55 PKT) price leaked down into a 3.6-pip box, 1.16498-1.16534. The last 12 bars had a flat ceiling at 1.16517-1.16519 (7+ touches), and the level 1.16519 is that ceiling. Fill 1.16526 needed bid 1.16527. The poke failed, price bled 4 pips over 30 minutes, stop after 4.1 h. Same picture as 0429-032518-B. The twins were London trend buys with ATR about 1.8 pip. But low ATR and dead-market volume are flat across the whole sample, so no rule.",
+  "cause": "dead Asian range, buying the box ceiling",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0515-173859-B",
+  "comment": "Friday 17:38 UTC, after the London close. A blow-off high at 1.16354 (22:26 PKT), then a sell-off 22:29-22:37 to 1.16292. The UHV is the biggest red bar (22:37, 115 ticks, closing on its low). The entry broke its high (1.16305) at second 59 of 22:38 with 78 ticks and was never in profit (best -0.0096R). It never hit the stop (worst -0.7R). It was still open at the week's last tick (20:58:58 UTC) and the engine closed it there for -68 (exit reason 8). MT5 would carry it over the weekend, so its real outcome is unknown. Removed before entry by r_friday_pm_16.",
+  "cause": "engine weekend-close exit (exit reason 8), not a stop",
+  "avoidable_before_entry": true,
+  "rule_ids": [
+   "r_friday_pm_16",
+   "r_thin_market_plus_friday"
+  ]
+ },
+ {
+  "id": "0518-010308-S",
+  "comment": "Monday 01:03 UTC, the Asian open. RED x4: a 9-pip decline 05:05-05:54 PKT to a double low (05:54 1.16082, 05:55 1.16083). The bounce to 1.16125 (06:00) carried the loudest bar of the hour (329 ticks). The level 1.16087 (the UHV's low) is 0.5 pip above the double low, so the target (bid near 1.1608 once the spread is paid) required breaking it. It held; price rose 5 pips within 30 minutes and the stop came after 5.3 h. Twin 05:51 sold below the earlier 1.1612 lows (04:40 and 04:53), a real breakdown, and won. Visible: selling into a double bottom late in a 4-hump trend. But r_prior_swing_within_1pip (x0.94) and r_camstk_ge4 (x1.24) are not selective.",
+  "cause": "selling into a double bottom late in an old trend",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0519-124205-B",
+  "comment": "12:42 UTC, 12 minutes after the 12:30 US data. The 40-bar range was 1.16167-1.16237, with its top at 17:29-17:30 PKT (1.16237 and 1.16232, the UHV bar). Price fell to 1.16171 (17:40), then the 17:41 bar jumped 5.7 pips on 333 ticks (2.5-3x normal). The entry broke 1.16232 at 17:42:05 with fill 1.16237, the exact range high, so the target needed a new high. The impulse died at the ceiling (a double top) and price fell 12 pips; stop after 1.7 h. The twins bought the same range lower down (1.1621-1.1622) and won. Visible: buying a range top right after a one-bar news impulse. No tested rule separates it.",
+  "cause": "range-top double top after a news impulse bar",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ },
+ {
+  "id": "0519-151057-S",
+  "comment": "NY session. A 25-pip decline 19:00-20:08 PKT (1.1617 to 1.15919), RED x3, ext90 +5.7 ATR. The 20:07 bar broke the 19:30-20:05 range floor, and the twin sold that break at 20:07:39 (1.15932) and won by 0.1 pip. The 20:08 low of 1.15919 was then defended, and the UHV (20:09 green, 154 ticks) closed on its high. This trade re-sold the same breakdown at 20:10:57 with 149 ticks already in the minute: 97% of the UHV, about 157 projected against 154, so not a quiet breakout pro rata. It needed a new low beyond 1.15919, reversed 8 pips, and was stopped after 2.9 h. Visible: a second sell at an exhausted low with a loud breakout. r_brk_nearly_as_loud catches it but scores x1.79 / x2.04 on 8 losers, just short.",
+  "cause": "second attempt at an exhausted low, loud breakout",
+  "avoidable_before_entry": false,
+  "rule_ids": []
+ }
+]

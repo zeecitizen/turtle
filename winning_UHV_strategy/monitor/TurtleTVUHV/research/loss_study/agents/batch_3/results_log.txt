@@ -1,0 +1,86 @@
+counter_trend60              removes  1898 (losers  37 / winners  1861)  loss rate among removed 1.95% vs base 2.26%  lift x0.86  | train x0.8 (22L/799W)  test x1.0 (15L/1062W)  | WR 97.64%  net +5,000$  | Zee's 22: 5
+exhaustion                   removes   629 (losers  19 / winners   610)  loss rate among removed 3.02% vs base 2.26%  lift x1.34  | train x1.72 (15L/245W)  test x0.78 (4L/365W)  | WR 97.81%  net +2,795$  | Zee's 22: 5
+fri_late14                   removes   504 (losers  29 / winners   475)  loss rate among removed 5.75% vs base 2.26%  lift x2.55  | train x2.67 (18L/183W)  test x2.6 (11L/292W)  | WR 97.99%  net +4,604$  | Zee's 22: 4
+fri_late16                   removes   323 (losers  24 / winners   299)  loss rate among removed 7.43% vs base 2.26%  lift x3.29  | train x3.54 (15L/111W)  test x3.27 (9L/188W)  | WR 97.97%  net +4,074$  | Zee's 22: 3
+fri_late17                   removes   251 (losers  22 / winners   229)  loss rate among removed 8.76% vs base 2.26%  lift x3.89  | train x4.05 (14L/89W)  test x3.87 (8L/140W)  | WR 97.97%  net +3,745$  | Zee's 22: 3
+fri_late18                   removes   183 (losers  18 / winners   165)  loss rate among removed 9.84% vs base 2.26%  lift x4.36  | train x4.68 (11L/59W)  test x4.43 (7L/106W)  | WR 97.93%  net +3,356$  | Zee's 22: 3
+fri_late19                   removes   119 (losers  14 / winners   105)  loss rate among removed 11.76% vs base 2.26%  lift x5.22  | train x5.47 (9L/40W)  test x5.11 (5L/65W)  | WR 97.9%  net +3,097$  | Zee's 22: 3
+fri_late20                   removes    58 (losers  11 / winners    47)  loss rate among removed 18.97% vs base 2.26%  lift x8.41  | train x8.93 (6L/14W)  test x9.41 (5L/33W)  | WR 97.87%  net +2,834$  | Zee's 22: 3
+late_ny                      removes   755 (losers  31 / winners   724)  loss rate among removed 4.11% vs base 2.26%  lift x1.82  | train x1.87 (21L/314W)  test x1.7 (10L/410W)  | WR 97.95%  net +5,753$  | Zee's 22: 3
+low_atr_asia                 removes   638 (losers  13 / winners   625)  loss rate among removed 2.04% vs base 2.26%  lift x0.9  | train x1.32 (8L/173W)  test x0.78 (5L/452W)  | WR 97.72%  net +1,860$  | Zee's 22: 2
+low_vol60_30                 removes   198 (losers  12 / winners   186)  loss rate among removed 6.06% vs base 2.26%  lift x2.69  | train x3.02 (8L/71W)  test x2.4 (4L/115W)  | WR 97.85%  net +4,214$  | Zee's 22: 0
+low_vol60_40                 removes   325 (losers  16 / winners   309)  loss rate among removed 4.92% vs base 2.26%  lift x2.18  | train x2.06 (9L/121W)  test x2.57 (7L/188W)  | WR 97.86%  net +4,681$  | Zee's 22: 1
+near_fresh_extreme           removes  4765 (losers  98 / winners  4667)  loss rate among removed 2.06% vs base 2.26%  lift x0.91  | train x0.92 (58L/1815W)  test x0.99 (40L/2852W)  | WR 97.41%  net +13,715$  | Zee's 22: 20
+retest_floor                 removes  2526 (losers  54 / winners  2472)  loss rate among removed 2.14% vs base 2.26%  lift x0.95  | train x1.06 (31L/840W)  test x0.99 (23L/1632W)  | WR 97.69%  net +6,622$  | Zee's 22: 7
+rollover_2045_2200           removes   132 (losers  17 / winners   115)  loss rate among removed 12.88% vs base 2.26%  lift x5.71  | train x4.96 (9L/45W)  test x7.34 (8L/70W)  | WR 97.93%  net +3,055$  | Zee's 22: 3
+rollover_2100_2200           removes    55 (losers   6 / winners    49)  loss rate among removed 10.91% vs base 2.26%  lift x4.84  | train x4.06 (3L/19W)  test x6.5 (3L/30W)  | WR 97.81%  net +1,032$  | Zee's 22: 1
+slip_08                      removes   502 (losers  29 / winners   473)  loss rate among removed 5.78% vs base 2.26%  lift x2.56  | train x1.55 (22L/401W)  test x6.34 (7L/72W)  | WR 97.99%  net +5,708$  | Zee's 22: 5
+slip_10                      removes   218 (losers  17 / winners   201)  loss rate among removed 7.8% vs base 2.26%  lift x3.46  | train x1.99 (11L/154W)  test x8.1 (6L/47W)  | WR 97.91%  net +3,547$  | Zee's 22: 2
+slip_12                      removes   116 (losers  14 / winners   102)  loss rate among removed 12.07% vs base 2.26%  lift x5.35  | train x3.13 (8L/68W)  test x10.73 (6L/34W)  | WR 97.9%  net +3,115$  | Zee's 22: 2
+slip_15                      removes    79 (losers  11 / winners    68)  loss rate among removed 13.92% vs base 2.26%  lift x6.17  | train x4.25 (7L/42W)  test x9.54 (4L/26W)  | WR 97.87%  net +2,658$  | Zee's 22: 2
+slip_20                      removes    49 (losers   8 / winners    41)  loss rate among removed 16.33% vs base 2.26%  lift x7.24  | train x6.38 (6L/22W)  test x6.81 (2L/19W)  | WR 97.84%  net +2,420$  | Zee's 22: 1
+stale_uhv                    removes   884 (losers  21 / winners   863)  loss rate among removed 2.38% vs base 2.26%  lift x1.05  | train x1.16 (16L/395W)  test x0.76 (5L/468W)  | WR 97.76%  net +3,688$  | Zee's 22: 2
+struct_broken                removes  3745 (losers  88 / winners  3657)  loss rate among removed 2.35% vs base 2.26%  lift x1.04  | train x1.06 (58L/1572W)  test x1.01 (30L/2085W)  | WR 97.84%  net +13,597$  | Zee's 22: 12
+struct_broken_2p             removes   685 (losers  16 / winners   669)  loss rate among removed 2.34% vs base 2.26%  lift x1.04  | train x0.9 (12L/386W)  test x1.0 (4L/283W)  | WR 97.75%  net +3,169$  | Zee's 22: 3
+sunday_open                  removes   135 (losers   4 / winners   131)  loss rate among removed 2.96% vs base 2.26%  lift x1.31  | train x1.18 (3L/73W)  test x1.21 (1L/58W)  | WR 97.76%  net +612$  | Zee's 22: 1
+tiny_last_bar                removes   770 (losers  20 / winners   750)  loss rate among removed 2.6% vs base 2.26%  lift x1.15  | train x1.34 (10L/212W)  test x1.31 (10L/538W)  | WR 97.78%  net +2,779$  | Zee's 22: 2
+bigfig_ahead08               removes    79 (losers   5 / winners    74)  loss rate among removed 6.33% vs base 2.26%  lift x2.81  | train x2.18 (3L/38W)  test x3.76 (2L/36W)  | WR 97.79%  net +807$  | Zee's 22: 2
+bigfig_ahead10               removes    97 (losers   7 / winners    90)  loss rate among removed 7.22% vs base 2.26%  lift x3.2  | train x2.34 (4L/47W)  test x4.66 (3L/43W)  | WR 97.81%  net +1,020$  | Zee's 22: 2
+bigfig_ahead15               removes   137 (losers   8 / winners   129)  loss rate among removed 5.84% vs base 2.26%  lift x2.59  | train x1.65 (4L/68W)  test x4.4 (4L/61W)  | WR 97.81%  net +1,176$  | Zee's 22: 3
+bigfig_ahead20               removes   179 (losers   8 / winners   171)  loss rate among removed 4.47% vs base 2.26%  lift x1.98  | train x1.27 (4L/90W)  test x3.37 (4L/81W)  | WR 97.8%  net +1,110$  | Zee's 22: 3
+fig50_ahead10                removes   170 (losers   8 / winners   162)  loss rate among removed 4.71% vs base 2.26%  lift x2.09  | train x1.35 (4L/84W)  test x3.49 (4L/78W)  | WR 97.8%  net +1,167$  | Zee's 22: 2
+fig20_ahead10                removes   421 (losers  17 / winners   404)  loss rate among removed 4.04% vs base 2.26%  lift x1.79  | train x1.18 (7L/170W)  test x2.93 (10L/234W)  | WR 97.85%  net +2,307$  | Zee's 22: 4
+session_close                removes   360 (losers  30 / winners   330)  loss rate among removed 8.33% vs base 2.26%  lift x3.69  | train x3.8 (19L/130W)  test x3.73 (11L/200W)  | WR 98.05%  net +5,352$  | Zee's 22: 3
+session_close19              removes   228 (losers  22 / winners   206)  loss rate among removed 9.65% vs base 2.26%  lift x4.28  | train x4.39 (14L/81W)  test x4.3 (8L/125W)  | WR 97.97%  net +4,704$  | Zee's 22: 3
+liquidity_guard              removes   553 (losers  37 / winners   516)  loss rate among removed 6.69% vs base 2.26%  lift x2.97  | train x3.03 (24L/212W)  test x2.93 (13L/304W)  | WR 98.09%  net +6,486$  | Zee's 22: 4
+liquidity_guard_bigfig       removes   639 (losers  41 / winners   598)  loss rate among removed 6.42% vs base 2.26%  lift x2.84  | train x2.84 (27L/256W)  test x2.81 (14L/342W)  | WR 98.13%  net +7,233$  | Zee's 22: 5
+liquidity_guard_strict       removes   399 (losers  29 / winners   370)  loss rate among removed 7.27% vs base 2.26%  lift x3.22  | train x3.41 (19L/147W)  test x3.07 (10L/223W)  | WR 98.02%  net +5,890$  | Zee's 22: 4
+struct_broken_colour         removes   845 (losers  21 / winners   824)  loss rate among removed 2.49% vs base 2.26%  lift x1.1  | train x1.05 (17L/465W)  test x0.79 (4L/359W)  | WR 97.77%  net +4,008$  | Zee's 22: 6
+micro_hump_flip              removes  1125 (losers  31 / winners  1094)  loss rate among removed 2.76% vs base 2.26%  lift x1.22  | train x1.11 (14L/363W)  test x1.63 (17L/731W)  | WR 97.83%  net +4,217$  | Zee's 22: 3
+session_slip20               removes   383 (losers  33 / winners   350)  loss rate among removed 8.62% vs base 2.26%  lift x3.82  | train x3.84 (21L/142W)  test x3.9 (12L/208W)  | WR 98.08%  net +5,959$  | Zee's 22: 4
+fri_17_19                    removes   132 (losers   8 / winners   124)  loss rate among removed 6.06% vs base 2.26%  lift x2.69  | train x2.76 (5L/49W)  test x2.75 (3L/75W)  | WR 97.81%  net +648$  | Zee's 22: 0
+rollover_2115_2200           removes    53 (losers   6 / winners    47)  loss rate among removed 11.32% vs base 2.26%  lift x5.02  | train x4.06 (3L/19W)  test x6.92 (3L/28W)  | WR 97.81%  net +1,034$  | Zee's 22: 1
+
+===== FINAL export.py (all rules re-scored standalone; tagged list = 35 entries at this run) =====
+fri_late20               EXCELLENT      all x8.41  tr x8.93 (6, 14)  te x9.41 (5, 33)  L11 W47  WR 97.87  net +2,834  Zee22 3
+slip_20                  EXCELLENT      all x7.24  tr x6.38 (6, 22)  te x6.81 (2, 19)  L8 W41  WR 97.84  net +2,420  Zee22 1
+slip_15                  EXCELLENT      all x6.17  tr x4.25 (7, 42)  te x9.54 (4, 26)  L11 W68  WR 97.87  net +2,658  Zee22 2
+rollover_2045_2200       EXCELLENT      all x5.71  tr x4.96 (9, 45)  te x7.34 (8, 70)  L17 W115  WR 97.93  net +3,055  Zee22 3
+slip_12                  GOOD           all x5.35  tr x3.13 (8, 68)  te x10.73 (6, 34)  L14 W102  WR 97.9  net +3,115  Zee22 2
+fri_late19               EXCELLENT      all x5.22  tr x5.47 (9, 40)  te x5.11 (5, 65)  L14 W105  WR 97.9  net +3,097  Zee22 3
+rollover_2115_2200       EXCELLENT      all x5.02  tr x4.06 (3, 19)  te x6.92 (3, 28)  L6 W47  WR 97.81  net +1,034  Zee22 1
+rollover_2100_2200       EXCELLENT      all x4.84  tr x4.06 (3, 19)  te x6.5 (3, 30)  L6 W49  WR 97.81  net +1,032  Zee22 1
+fri_late18               EXCELLENT      all x4.36  tr x4.68 (11, 59)  te x4.43 (7, 106)  L18 W165  WR 97.93  net +3,356  Zee22 3
+session_close19          EXCELLENT      all x4.28  tr x4.39 (14, 81)  te x4.3 (8, 125)  L22 W206  WR 97.97  net +4,704  Zee22 3
+fri_late17               GOOD           all x3.89  tr x4.05 (14, 89)  te x3.87 (8, 140)  L22 W229  WR 97.97  net +3,745  Zee22 3
+session_slip20           GOOD           all x3.82  tr x3.84 (21, 142)  te x3.9 (12, 208)  L33 W350  WR 98.08  net +5,959  Zee22 4
+session_close            GOOD           all x3.69  tr x3.8 (19, 130)  te x3.73 (11, 200)  L30 W330  WR 98.05  net +5,352  Zee22 3
+slip_10                  NOT SELECTIVE  all x3.46  tr x1.99 (11, 154)  te x8.1 (6, 47)  L17 W201  WR 97.91  net +3,547  Zee22 2
+fri_late16               GOOD           all x3.29  tr x3.54 (15, 111)  te x3.27 (9, 188)  L24 W299  WR 97.97  net +4,074  Zee22 3
+liquidity_guard_strict   GOOD           all x3.22  tr x3.41 (19, 147)  te x3.07 (10, 223)  L29 W370  WR 98.02  net +5,890  Zee22 4
+bigfig_ahead10           GOOD           all x3.2  tr x2.34 (4, 47)  te x4.66 (3, 43)  L7 W90  WR 97.81  net +1,020  Zee22 2
+liquidity_guard          GOOD           all x2.97  tr x3.03 (24, 212)  te x2.93 (13, 304)  L37 W516  WR 98.09  net +6,486  Zee22 4
+liquidity_guard_bigfig   GOOD           all x2.84  tr x2.84 (27, 256)  te x2.81 (14, 342)  L41 W598  WR 98.13  net +7,233  Zee22 5
+bigfig_ahead08           GOOD           all x2.81  tr x2.18 (3, 38)  te x3.76 (2, 36)  L5 W74  WR 97.79  net +807  Zee22 2
+fri_17_19                GOOD           all x2.69  tr x2.76 (5, 49)  te x2.75 (3, 75)  L8 W124  WR 97.81  net +648  Zee22 0
+low_vol60_30             GOOD           all x2.69  tr x3.02 (8, 71)  te x2.4 (4, 115)  L12 W186  WR 97.85  net +4,214  Zee22 0
+bigfig_ahead15           NOT SELECTIVE  all x2.59  tr x1.65 (4, 68)  te x4.4 (4, 61)  L8 W129  WR 97.81  net +1,176  Zee22 3
+slip_08                  NOT SELECTIVE  all x2.56  tr x1.55 (22, 401)  te x6.34 (7, 72)  L29 W473  WR 97.99  net +5,708  Zee22 5
+fri_late14               GOOD           all x2.55  tr x2.67 (18, 183)  te x2.6 (11, 292)  L29 W475  WR 97.99  net +4,604  Zee22 4
+low_vol60_40             GOOD           all x2.18  tr x2.06 (9, 121)  te x2.57 (7, 188)  L16 W309  WR 97.86  net +4,681  Zee22 1
+fig50_ahead10            NOT SELECTIVE  all x2.09  tr x1.35 (4, 84)  te x3.49 (4, 78)  L8 W162  WR 97.8  net +1,167  Zee22 2
+bigfig_ahead20           NOT SELECTIVE  all x1.98  tr x1.27 (4, 90)  te x3.37 (4, 81)  L8 W171  WR 97.8  net +1,110  Zee22 3
+late_ny                  NOT SELECTIVE  all x1.82  tr x1.87 (21, 314)  te x1.7 (10, 410)  L31 W724  WR 97.95  net +5,753  Zee22 3
+fig20_ahead10            NOT SELECTIVE  all x1.79  tr x1.18 (7, 170)  te x2.93 (10, 234)  L17 W404  WR 97.85  net +2,307  Zee22 5
+exhaustion               NOT SELECTIVE  all x1.34  tr x1.72 (15, 245)  te x0.78 (4, 365)  L19 W610  WR 97.81  net +2,795  Zee22 5
+sunday_open              NOT SELECTIVE  all x1.31  tr x1.18 (3, 73)  te x1.21 (1, 58)  L4 W131  WR 97.76  net +612  Zee22 1
+micro_hump_flip          NOT SELECTIVE  all x1.22  tr x1.11 (14, 363)  te x1.63 (17, 731)  L31 W1094  WR 97.83  net +4,217  Zee22 3
+tiny_last_bar            NOT SELECTIVE  all x1.15  tr x1.34 (10, 212)  te x1.31 (10, 538)  L20 W750  WR 97.78  net +2,779  Zee22 2
+struct_broken_colour     NOT SELECTIVE  all x1.1  tr x1.05 (17, 465)  te x0.79 (4, 359)  L21 W824  WR 97.77  net +4,008  Zee22 6
+stale_uhv                NOT SELECTIVE  all x1.05  tr x1.16 (16, 395)  te x0.76 (5, 468)  L21 W863  WR 97.76  net +3,688  Zee22 3
+struct_broken            NOT SELECTIVE  all x1.04  tr x1.06 (58, 1572)  te x1.01 (30, 2085)  L88 W3657  WR 97.84  net +13,597  Zee22 15
+struct_broken_2p         NOT SELECTIVE  all x1.04  tr x0.9 (12, 386)  te x1.0 (4, 283)  L16 W669  WR 97.75  net +3,169  Zee22 5
+retest_floor             NOT SELECTIVE  all x0.95  tr x1.06 (31, 840)  te x0.99 (23, 1632)  L54 W2472  WR 97.69  net +6,622  Zee22 7
+near_fresh_extreme       NOT SELECTIVE  all x0.91  tr x0.92 (58, 1815)  te x0.99 (40, 2852)  L98 W4667  WR 97.41  net +13,715  Zee22 20
+low_atr_asia             NOT SELECTIVE  all x0.9  tr x1.32 (8, 173)  te x0.78 (5, 452)  L13 W625  WR 97.72  net +1,860  Zee22 2
+counter_trend60          NOT SELECTIVE  all x0.86  tr x0.8 (22, 799)  te x1.0 (15, 1062)  L37 W1861  WR 97.64  net +5,000  Zee22 6

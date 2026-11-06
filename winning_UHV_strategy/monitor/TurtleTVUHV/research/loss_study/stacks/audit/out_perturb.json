@@ -1,0 +1,76 @@
+{
+ "sample": 200,
+ "main": {
+  "sample": 200,
+  "configs": 293,
+  "evaluations_per_mode": 58600,
+  "changed": {
+   "perturb": {},
+   "trunc": {}
+  },
+  "fired_on_original": {
+   "InpUhvStruct": 202,
+   "InpUhvSRPips": 3105,
+   "InpUhvRangeAtr": 603,
+   "InpUhvFreshBreak": 843,
+   "InpUhvBrokeHighs": 1531,
+   "InpUhvMaxHumps": 160,
+   "InpUhvDeepRet": 357,
+   "InpUhvHtf5": 787,
+   "InpUhvSRAhead": 2609,
+   "InpUhvBigFig": 40,
+   "InpUhvMinHumps": 465,
+   "InpUhvCounterAtr": 441,
+   "InpUhvFriCutNY": 20,
+   "InpUhvRunPips": 389,
+   "InpUhvLoudBrk": 57,
+   "InpUhvMinTicks": 16,
+   "InpUhvSunOpenMins": 3,
+   "InpUhvNewsNY": 17,
+   "InpUhvSpikeAtr": 535,
+   "InpUhvHoliday": 3,
+   "InpUhvMinAtrPips": 418,
+   "InpUhvMaxGapPips": 15,
+   "RiskMgr secure()": 6880
+  }
+ },
+ "positive_control_leaky_swings": {
+  "sample": 120,
+  "configs": 293,
+  "evaluations_per_mode": 35160,
+  "changed": {
+   "perturb": {
+    "InpUhvStruct": 19
+   },
+   "trunc": {
+    "InpUhvStruct": 20
+   }
+  },
+  "fired_on_original": {
+   "InpUhvStruct": 132,
+   "InpUhvSRPips": 1767,
+   "InpUhvRangeAtr": 357,
+   "InpUhvFreshBreak": 543,
+   "InpUhvBrokeHighs": 907,
+   "InpUhvMaxHumps": 96,
+   "InpUhvDeepRet": 212,
+   "InpUhvHtf5": 434,
+   "InpUhvSRAhead": 1504,
+   "InpUhvBigFig": 18,
+   "InpUhvMinHumps": 280,
+   "InpUhvCounterAtr": 241,
+   "InpUhvFriCutNY": 6,
+   "InpUhvRunPips": 264,
+   "InpUhvLoudBrk": 37,
+   "InpUhvMinTicks": 11,
+   "InpUhvSunOpenMins": 3,
+   "InpUhvNewsNY": 12,
+   "InpUhvSpikeAtr": 344,
+   "InpUhvHoliday": 3,
+   "InpUhvMinAtrPips": 230,
+   "InpUhvMaxGapPips": 12,
+   "RiskMgr secure()": 4134
+  }
+ },
+ "secs": 270.0
+}

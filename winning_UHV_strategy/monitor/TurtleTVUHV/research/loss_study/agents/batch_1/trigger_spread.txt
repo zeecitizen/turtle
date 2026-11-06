@@ -1,0 +1,6 @@
+BUY  trigger spread >= 1.5   removes  26 (losers 4 / winners 22) lift x6.82 | train x4.96 (2L/10W)  test x10.22 (2L/12W)
+SELL trigger spread >= 1.5   removes  37 (losers 8 / winners 29) lift x9.59 | train x8.27 (5L/13W)  test x11.29 (3L/16W)
+ANY  trigger spread >= 1.5   removes  63 (losers 12 / winners 51) lift x8.45 | train x6.95 (7L/23W)  test x10.84 (5L/28W)
+ANY  trigger spread >= 1.0   removes  89 (losers 16 / winners 73) lift x7.97 | train x5.67 (8L/34W)  test x12.17 (8L/39W)
+ANY  trigger spread >= 2.0   removes  55 (losers 10 / winners 45) lift x8.06 | train x6.38 (6L/22W)  test x10.60 (4L/23W)
+batch_1 losses with trigger spread >= 1.0: []

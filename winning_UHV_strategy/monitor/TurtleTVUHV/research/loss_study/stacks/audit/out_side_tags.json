@@ -1,0 +1,22 @@
+{
+ "{}": {
+  "trades": 7631,
+  "losses": 172
+ },
+ "{\"InpUhvMode\": \"1\"}": {
+  "trades": 0,
+  "losses": 0
+ },
+ "{\"InpUhvMode\": \"2\"}": {
+  "trades": 0,
+  "losses": 0
+ },
+ "{\"InpUhvMinLaws\": \"1\"}": {
+  "trades": 0,
+  "losses": 0
+ },
+ "{\"InpUhvMinEr\": \"0.1\"}": {
+  "trades": 0,
+  "losses": 0
+ }
+}

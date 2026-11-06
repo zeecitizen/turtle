@@ -1,0 +1,50 @@
+ENGINE runs (uhv_engine.simulate). Python tick replay = HYPOTHESIS, NOT PROMOTED. Format: trades/losses WR net at 1 lot.
+tight  | AS SAVED (baseline)                          | all 714/4L 99.44% +376.15  train 332/1L 99.7% +285.13  test 382/3L 99.21% +91.02   (4.5s)
+zee100 | AS SAVED (baseline)                          | all 308/0L 100.0% +444.06  train 125/0L 100.0% +193.03  test 183/0L 100.0% +251.04   (0.2s)
+secure | AS SAVED (baseline)                          | all 2238/30L 98.66% -2975.57  train 1059/22L 97.92% -2974.80  test 1179/8L 99.32% -0.76   (0.2s)
+-- receipt: loss filters under InpUhvRiskMgr 2 (expected IDENTICAL to the baseline)
+zee100 | + InpUhvRunPips 8.1 / RunBars 60 (with_move60) | all 308/0L 100.0% +444.06  train 125/0L 100.0% +193.03  test 183/0L 100.0% +251.04   (0.1s)
+         identical rows to baseline: True
+zee100 | + InpUhvNewsNY 1                             | all 308/0L 100.0% +444.06  train 125/0L 100.0% +193.03  test 183/0L 100.0% +251.04   (0.1s)
+         identical rows to baseline: True
+tight  | + InpUhvRunPips 8.1 / RunBars 60 (with_move60) | all 714/4L 99.44% +376.15  train 332/1L 99.7% +285.13  test 382/3L 99.21% +91.02   (0.2s)
+         identical rows to baseline: True
+tight  | + InpUhvNewsNY 1                             | all 714/4L 99.44% +376.15  train 332/1L 99.7% +285.13  test 382/3L 99.21% +91.02   (0.2s)
+         identical rows to baseline: True
+-- the cures an existing input implements
+tight  | + InpUhvMaxTrigSpread 0.5 (wide_spread)      | all 528/3L 99.43% +315.10  train 146/0L 100.0% +224.08  test 382/3L 99.21% +91.02   (0.1s)
+tight  | + SafeRangeAtr 9.2 / SafeRangeBars 120 (range120) | all 556/4L 99.28% +140.08  train 267/1L 99.63% +178.12  test 289/3L 98.96% -38.04   (0.2s)
+tight  | + both                                       | all 412/3L 99.27% +148.02  train 123/0L 100.0% +186.07  test 289/3L 98.96% -38.04   (0.2s)
+zee100 | + InpUhvMaxTrigSpread 0.5 (wide_spread)      | all 241/0L 100.0% +338.06  train 58/0L 100.0% +87.02  test 183/0L 100.0% +251.04   (0.1s)
+zee100 | + SafeRangeAtr 9.2 / SafeRangeBars 120 (range120) | all 238/0L 100.0% +344.03  train 102/0L 100.0% +158.05  test 136/0L 100.0% +185.98   (0.2s)
+zee100 | + both                                       | all 185/0L 100.0% +260.01  train 49/0L 100.0% +74.03  test 136/0L 100.0% +185.98   (0.1s)
+secure | + InpUhvMaxTrigSpread 0.5 (wide_spread)      | all 1700/12L 99.29% -0.50  train 521/4L 99.23% +0.26  test 1179/8L 99.32% -0.76   (0.2s)
+secure | + SafeRangeAtr 9.2 / SafeRangeBars 120 (range120) | all 1798/18L 99.0% -827.69  train 866/13L 98.5% -1274.81  test 932/5L 99.46% +447.12   (0.2s)
+secure | + both                                       | all 1365/8L 99.41% +511.36  train 433/3L 99.31% +64.24  test 932/5L 99.46% +447.12   (0.2s)
+
+DOCTRINE (monitor/doctrine.py), break-even ~99.3% (avg win ~$1.44, typical stop ~-$213):
+  zee100 | AS SAVED (baseline)
+     python 100%  ->  expect ~84% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -15 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  tight | AS SAVED (baseline)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  secure | AS SAVED (baseline)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -17 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  tight | + InpUhvMaxTrigSpread 0.5 (wide_spread)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  secure | + InpUhvMaxTrigSpread 0.5 (wide_spread)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  secure | + SafeRangeAtr 9.2 / SafeRangeBars 120 (range120)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+

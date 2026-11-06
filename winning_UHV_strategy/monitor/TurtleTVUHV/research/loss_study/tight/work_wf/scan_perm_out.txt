@@ -1,0 +1,12 @@
+
+=== secure: 2236 trades, 29 losses in humps 2-5, ER [0.15, 0.45) ===
+observed largest 0-loss box: 378 trades = humps 2-5, ER [0.29, 0.34); Zee's box here: 287 trades, 0 losses
+null (1000 shuffles within humps): largest 0-loss box median 274, 90th pct 383, 95th 425; P(null >= observed 378) = 0.109;  P(null >= Zee's 287) = 0.415
+
+=== base: 4061 trades, 73 losses in humps 1-6, ER [0.15, 0.6) ===
+observed largest 0-loss box: 336 trades = humps 2-6, ER [0.29, 0.35); Zee's box here: 210 trades, 0 losses
+null (300 shuffles within humps): largest 0-loss box median 296, 90th pct 403, 95th 444; P(null >= observed 336) = 0.307;  P(null >= Zee's 210) = 0.957
+
+=== tight: 714 trades, 4 losses in humps 2-3, ER [0.3, 0.45) ===
+observed largest 0-loss box: 300 trades = humps 2-3, ER [0.30, 0.35); Zee's box here: 300 trades, 0 losses
+null (2000 shuffles within humps): largest 0-loss box median 277, 90th pct 392, 95th 446; P(null >= observed 300) = 0.415;  P(null >= Zee's 300) = 0.415

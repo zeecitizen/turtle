@@ -1,0 +1,108 @@
+{
+ "base": {
+  "wr1": 93.38,
+  "wr2": 94.14,
+  "n1": 725,
+  "n": 1852,
+  "wr": 93.84,
+  "net": 264191,
+  "worst": -5158,
+  "dd": 17534,
+  "pf": 1.605,
+  "avg_loss": -3830,
+  "h1": 107846,
+  "h2": 156345
+ },
+ "keep": 0.7,
+ "steps": [
+  {
+   "add": {
+    "TvBox_asia_B": "untick box 3"
+   },
+   "sets": {
+    "InpSessTo": "18",
+    "InpDexRiskSizing": "false",
+    "InpDexRiskPct": "0.5",
+    "InpDexStopMethod": "0",
+    "InpDexPinBuffer": "0.5",
+    "InpDexAtrMult": "1.7",
+    "InpProbeMode": "0",
+    "InpProbeLots": "0.01",
+    "InpProbeUsd": "0.5",
+    "InpProbeDipUsd": "2",
+    "InpErSize": "false",
+    "InpErSizeLook": "16",
+    "InpErLo": "0.12",
+    "InpErLotsLo": "3",
+    "InpErHi": "0.21",
+    "InpErLotsHi": "0.5",
+    "InpHours": "111111111111111111111111",
+    "TvBox_kelt_B": "111111101111",
+    "TvBox_va_S": "0111111",
+    "TvBox_vwap_B": "11101111",
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_ib_S": "111011101",
+    "TvBox_asia_B": "11101111"
+   },
+   "stats": {
+    "wr1": 95.89,
+    "wr2": 96.84,
+    "n1": 389,
+    "n": 958,
+    "wr": 96.45,
+    "net": 233048,
+    "worst": -5129,
+    "dd": 15230,
+    "pf": 2.666,
+    "avg_loss": -4114,
+    "h1": 81381,
+    "h2": 151667
+   }
+  },
+  {
+   "add": {
+    "InpBandsB": "untick box 17"
+   },
+   "sets": {
+    "InpSessTo": "18",
+    "InpDexRiskSizing": "false",
+    "InpDexRiskPct": "0.5",
+    "InpDexStopMethod": "0",
+    "InpDexPinBuffer": "0.5",
+    "InpDexAtrMult": "1.7",
+    "InpProbeMode": "0",
+    "InpProbeLots": "0.01",
+    "InpProbeUsd": "0.5",
+    "InpProbeDipUsd": "2",
+    "InpErSize": "false",
+    "InpErSizeLook": "16",
+    "InpErLo": "0.12",
+    "InpErLotsLo": "3",
+    "InpErHi": "0.21",
+    "InpErLotsHi": "0.5",
+    "InpHours": "111111111111111111111111",
+    "TvBox_kelt_B": "111111101111",
+    "TvBox_va_S": "0111111",
+    "TvBox_vwap_B": "11101111",
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_ib_S": "111011101",
+    "TvBox_asia_B": "11101111",
+    "InpBandsB": "111111101111001110111"
+   },
+   "stats": {
+    "wr1": 96.02,
+    "wr2": 96.94,
+    "n1": 377,
+    "n": 933,
+    "wr": 96.57,
+    "net": 234156,
+    "worst": -5129,
+    "dd": 12598,
+    "pf": 2.804,
+    "avg_loss": -4056,
+    "h1": 82553,
+    "h2": 151603
+   }
+  }
+ ]
+}

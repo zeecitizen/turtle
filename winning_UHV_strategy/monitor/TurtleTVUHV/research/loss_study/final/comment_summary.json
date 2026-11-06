@@ -1,0 +1,18 @@
+{
+ "cause_counts": {
+  "into support / resistance": 50,
+  "bad fill (latency spike / stop-run tick)": 2,
+  "market close (Friday / weekly close)": 22,
+  "counter-structure / camel misread": 39,
+  "exhausted move / climax": 18,
+  "news / spike": 14,
+  "chop / dead range / no separator": 11,
+  "daily rollover / dead book (incl. the Sunday open)": 16
+ },
+ "cause_counts_avoidable": {
+  "daily rollover / dead book (incl. the Sunday open)": 8,
+  "market close (Friday / weekly close)": 8
+ },
+ "avoidable": 16,
+ "unavoidable": 156
+}

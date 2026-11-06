@@ -1,0 +1,28 @@
+BATCH 7 (21 losses 4 Aug-29 Sep, 42 twins). PYTHON HYPOTHESIS ONLY - NOT PROMOTED (CLAUDE.md). With a 0.1-pip target, fill and spread modelling decides almost every trade, so this setting is the one most exposed to the Python/MT5 gap; no net $ or 'WR after' below is evidence. Next step: MT5 Strategy Tester on the custom symbol.
+
+1) WHAT THE CHARTS SHOW. I read all 63 charts, plus my own zoomed 1-min + 10-hour 5-min-context versions (agents/batch_7/zoom/). Every stopped loser has best_R <= 0.005: the breakout tick was the exact turning point and price never came back 0.1 pip. In most normal-hours losses a twin entered the same context (often the same price) minutes apart and won.
+
+2) MAIN FINDING FOR NORMAL HOURS = NULL. Outside the rollover hour and the Friday last hour, a gradient-boosted model on ~100 causal features (trend, range position, swing structure, humps, volume, volatility, time) gives train->test AUC 0.563 and test->train 0.542, against a permutation-null 95th percentile of 0.580 (logistic regression: 0.548). Normal-hours losses do not separate from winners. Geometry explains why. TP = 0.1 pip beyond the fill, and buys fill at the ask over bid-based levels (0925: fill 1.14109 sat above the entry bar's bid high 1.14107). A random walk therefore loses with probability ~(spread + 0.1)/(stop + spread + 0.1) ~ 0.35/20.35 ~ 2%, which is the observed 2.26%. Only what widens the effective spread moves the loss rate: rollover, the weekend close, thin tape, spike ticks. Inside those windows it is 15-36%.
+
+3) SELECTIVE RULES (official api.report).
+- B7_ROLLOVER_HOUR (New York 16:45-17:45, any day) = PRIMARY: 16L/86W, train x5.29 / test x10.04. Without Fridays it is still 8L/72W (x3.92/x5.11).
+- B7_FRIDAY_LAST_HOUR: 11L/46W, x9.40/x9.41. Beyond the rollover hour it adds only Friday NY 16:00-16:45 = 3L/32W, test 0L (train-only evidence), so it is an optional add.
+- B7_SLIP_1P2: 14L/102W, x3.13/x10.73. Outside the two time windows it keeps 5L/89W, x1.40/x4.77, failing train.
+- B7_THIN_VM30: 11L/90W, x5.49/x4.54. Outside the windows only 2L/71W remain; vm30<15 outside them is 0L/31W. Redundant: it is a time-zone-free proxy for rollover.
+- Unions: TIME_UNION 19L/118W (x5.75/x7.15); ALL4_UNION 26L/262W (x3.28/x5.18).
+- Beyond the api.py example window (20:45-21:15 UTC) the time union adds 8L/55W (x5.96/x5.65). Of that, the NY 17:30-17:45 reopen is 5L/23W (x4.58/x14.3), resting on only 5 losers, and the Friday part is train-only.
+
+4) CAVEATS.
+- The base loss rate differs by half: train 3.36% vs test 1.40%.
+- Thresholds were chosen with both halves visible. The time rules sit on plateaus: Friday NY>=15:30..16:45 is x6.5-x23.8 everywhere; rollover windows 16:40-17:30 .. 16:45-17:45 are >= x5.3 train. Slip 1.2 sits near the train edge (1.0 = x1.99). vm30 <15/<20/<25 = x6.0/x5.5/x3.7 train.
+- Time rules are coded in New York time (DST-aware). The data's weekend gap starts 20:58 UTC in summer and 21:58 UTC before DST, so an EA should key on the broker's 17:00 NY rollover.
+- Variants scored but not listed: rollover NY 16:40-18:30 = 21L/199W (x3.76/x4.89); Friday NY>=16:30 = 10L/23W (x13.53/x16.25).
+- EA note for slip: test (ask - level) for buys and (level - bid) for sells at the trigger tick.
+
+5) FAILED IDEAS (all NOT SELECTIVE; numbers in the rules list): HTF trend against, counter-HTF bounce, exhausted run, climax chase, 60-min range edge, flat-box edge, old camel (camStk>=4), stale UHV, retested level, news minute (2 losers only), post-spike (x1.69/x1.97), loud breakout (x1.79/x2.04), opposite candle, higher-high structure break. I saw 'third attempt at the same level' on 6 charts. Tested directly with the engine's own earlier entries (same side, within 30-120 min and 0.5-2 pips, no outcomes), it scores x0.6-x1.6. It was an artifact of twins being picked nearest in time.
+
+6) BATCH EFFECT. B7_ROLLOVER_HOUR removes 5 of 21 losses ($523 of the batch's $3,657) and 3 of 42 twins. Only 0820 (-214) and 0914 (-256) are real stops; 0807-2056, 0828 and 0918-2049 are -18/-21/-14 Friday flattens. THIN would add 0813 and SLIP would add 0925, but neither rule is proven outside the windows, so both are marked not avoidable. The other 14 losses are visually explainable: counter-HTF bounces (0812, 0821, 0923), range floors and ceilings (0807-0836, 0814, 0908, 0911), news spikes (0831 at 10:00 NY, 0902, 0904 after a release), a climax chase (0827), a camel lag (0918-1623) and the 0.1-pip coin flip (0804, 0929). Each has a winning twin with the same picture, and no tested rule separates them.
+
+7) INTEGRITY. Per-loss rule_ids list only the selective PRIMARY rules, computed by code on the blind trade. All 26 rules passed a look-ahead audit: re-run on all 7,626 trades with every array truncated at bar k, 0 decisions changed. Each code string was exec'd in a fresh namespace and reproduced the pasted numbers. I never read loss_comments.json.
+
+FILES (agents/batch_7/): rules.py, final_rules.py (standalone code), final_scores.json, final_rules_output.json, loss_comments_b7.json, audit.py, overlap.py, features.py, feats2.py, scan.py, zoom/*.png

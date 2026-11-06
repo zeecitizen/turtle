@@ -1,0 +1,57 @@
+[
+ {
+  "name": "rule_target_on_rejection_high",
+  "code": "def rule(t, A):\n    \"\"\"0408: the decision-time target (breakout bid + spread + 0.1 pip) sits 0-0.2 pip UNDER the extreme of the last 10 closed bars - the\n    0.1-pip win needs price to retake a high (low) it just rejected (loss 0.0 pip, loss 2 0.1; twins 0.3-2.9).\"\"\"\n    import numpy as np\n    k, s = t[\"k\"], t[\"side\"]\n    tgt = t[\"brk_bid\"] + s * (t[\"trig_spread_pips\"] + 0.1) * 1e-4\n    ext = float(np.max(A.h[k - 9:k + 1])) if s > 0 else float(np.min(A.l[k - 9:k + 1]))\n    room = s * (ext - tgt) / 1e-4\n    return 0.0 <= room < 0.2\n",
+  "report_line": "rule_target_on_rejection_high  | tight: -3L/-80W WR 99.44->99.84 (tr 99.7->100.0, te 99.21->99.69) | zee100: -0L/-34W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-224W WR 98.66->98.71 (tr 97.92->97.93, te 99.32->99.43) | base: -12L/-583W WR 97.74->97.72 (tr 96.64->96.65, te 98.6->98.57)"
+ },
+ {
+  "name": "rule_triple_test",
+  "code": "def rule(t, A):\n    \"\"\"0408: the TARGET zone was tested and rejected 3+ times in the last 12 bars - bar highs (buy) / lows (sell) inside [target - 0.4,\n    target + 0.2] pip with no close beyond the target (k-9 +0.6, k-3 +0.7, k-1 +1.0 vs a +1.0 target: the 1.1700 triple top).\"\"\"\n    import numpy as np\n    k, s = t[\"k\"], t[\"side\"]\n    tgt = t[\"brk_bid\"] + s * (t[\"trig_spread_pips\"] + 0.1) * 1e-4\n    ext = A.h[k - 11:k + 1] if s > 0 else A.l[k - 11:k + 1]\n    cl = A.c[k - 11:k + 1]\n    d = s * (ext - tgt) / 1e-4\n    hit = (d >= -0.4 - 1e-9) & (d <= 0.2 + 1e-9)\n    return int(np.sum(hit)) >= 3 and bool(np.all(s * (cl - tgt) <= 0))\n",
+  "report_line": "rule_triple_test               | tight: -3L/-138W WR 99.44->99.83 (tr 99.7->100.0, te 99.21->99.63) | zee100: -0L/-69W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-397W WR 98.66->98.58 (tr 97.92->97.76, te 99.32->99.44) | base: -21L/-1182W WR 97.74->97.65 (tr 96.64->96.69, te 98.6->98.5)"
+ },
+ {
+  "name": "rule_vsa_weak_leg",
+  "code": "def rule(t, A):\n    \"\"\"0408 (and 0723): the leg in the trade direction carries less volume than the opposite leg before it (a quiet rally after a loud\n    sell-off / a quiet pullback after a loud spike). Legs from the 60-bar extreme against the trade and the extreme before it; skip when\n    the current leg's mean volume < 0.85 x the prior leg's.\"\"\"\n    import numpy as np\n    k, s, N = t[\"k\"], t[\"side\"], 60\n    if s > 0:\n        jL = k - N + 1 + int(np.argmin(A.l[k - N + 1:k + 1])); a = max(jL - N, 0); jH = a + int(np.argmax(A.h[a:jL + 1]))\n    else:\n        jL = k - N + 1 + int(np.argmax(A.h[k - N + 1:k + 1])); a = max(jL - N, 0); jH = a + int(np.argmin(A.l[a:jL + 1]))\n    if jL >= k - 1 or jH >= jL:\n        return False\n    return float(np.mean(A.v[jL:k + 1])) < 0.85 * float(np.mean(A.v[jH:jL + 1]))\n",
+  "report_line": "rule_vsa_weak_leg              | tight: -2L/-204W WR 99.44->99.61 (tr 99.7->100.0, te 99.21->99.29) | zee100: -0L/-78W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -10L/-599W WR 98.66->98.77 (tr 97.92->98.03, te 99.32->99.42) | base: -54L/-2096W WR 97.74->97.85 (tr 96.64->96.91, te 98.6->98.57)"
+ },
+ {
+  "name": "rule_counter_last_big_move",
+  "code": "def rule(t, A):\n    \"\"\"0408 / 0723: the later of the 90-bar high and low is AGAINST the trade (a buy bouncing inside a sell-off, a sell pulling back inside\n    a rally) and the trade's leg has retraced at least 30% of that move.\"\"\"\n    import numpy as np\n    k, s, N = t[\"k\"], t[\"side\"], 90\n    hh, ll = A.h[k - N + 1:k + 1], A.l[k - N + 1:k + 1]\n    jh, jl = int(np.argmax(hh)), int(np.argmin(ll))\n    H, L = float(hh[jh]), float(ll[jl])\n    if H <= L:\n        return False\n    if s > 0 and jl > jh:\n        return (t[\"level\"] - L) / (H - L) >= 0.3\n    if s < 0 and jh > jl:\n        return (H - t[\"level\"]) / (H - L) >= 0.3\n    return False\n",
+  "report_line": "rule_counter_last_big_move     | tight: -2L/-265W WR 99.44->99.55 (tr 99.7->100.0, te 99.21->99.16) | zee100: -0L/-122W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -10L/-780W WR 98.66->98.62 (tr 97.92->98.01, te 99.32->99.19) | base: -43L/-2280W WR 97.74->97.57 (tr 96.64->96.37, te 98.6->98.49)"
+ },
+ {
+  "name": "rule_quiet_breakout_share",
+  "code": "def rule(t, A):\n    \"\"\"0723 (and 0408): the breakout minute had under 10% of the UHV's ticks at the break - price drifted across the level (0723 3/86,\n    0408 15/161; twins 0.17-0.80). The opposite end of the existing LoudBrk filter.\"\"\"\n    return t[\"brk_ticks\"] < 0.10 * max(t[\"uhv_v\"], 1.0)\n",
+  "report_line": "rule_quiet_breakout_share      | tight: -2L/-81W WR 99.44->99.68 (tr 99.7->100.0, te 99.21->99.39) | zee100: -0L/-32W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-304W WR 98.66->98.65 (tr 97.92->98.06, te 99.32->99.2) | base: -31L/-1188W WR 97.74->97.8 (tr 96.64->96.85, te 98.6->98.55)"
+ },
+ {
+  "name": "rule_early_thin_break",
+  "code": "def rule(t, A):\n    \"\"\"0723 / 0408: the break came in the first 8 seconds of the minute with fewer than 16 ticks (0723 3 ticks at 5.4 s, 0408 15 at 6.2 s).\"\"\"\n    return (t[\"t_dec\"] % 60) < 8.0 and t[\"brk_ticks\"] < 16\n",
+  "report_line": "rule_early_thin_break          | tight: -2L/-95W WR 99.44->99.68 (tr 99.7->100.0, te 99.21->99.4) | zee100: -0L/-40W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -5L/-328W WR 98.66->98.69 (tr 97.92->98.01, te 99.32->99.3) | base: -32L/-1120W WR 97.74->97.84 (tr 96.64->96.81, te 98.6->98.65)"
+ },
+ {
+  "name": "rule_fade_counter_spike",
+  "code": "def rule(t, A):\n    \"\"\"0723: the loudest bar of the last 30 closed bars (UHV excluded) is AGAINST the trade, >= 2.5x the 30-bar median volume, and closed\n    BEHIND the level (the trade sells back into a bullish spike / buys back into a bearish one) - 0723's 265-tick spike at k-17.\"\"\"\n    import numpy as np\n    k, s, ku = t[\"k\"], t[\"side\"], t[\"ku\"]\n    idx = np.arange(k - 29, k + 1)\n    idx = idx[idx != ku]\n    j = int(idx[int(np.argmax(A.v[idx]))])\n    against = (A.c[j] - A.o[j]) * s < 0\n    loud = A.v[j] >= 2.5 * float(np.median(A.v[k - 29:k + 1]))\n    return bool(against and loud and s * (A.c[j] - t[\"level\"]) < 0)\n",
+  "report_line": "rule_fade_counter_spike        | tight: -1L/-31W WR 99.44->99.56 (tr 99.7->99.69, te 99.21->99.44) | zee100: -0L/-17W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -0L/-110W WR 98.66->98.59 (tr 97.92->97.83, te 99.32->99.28) | base: -12L/-284W WR 97.74->97.82 (tr 96.64->96.83, te 98.6->98.59)"
+ },
+ {
+  "name": "rule_rebreak_same_level",
+  "code": "def rule(t, A):\n    \"\"\"0723: the same level was already broken the same way within the last 60 minutes (+-0.5 pip; 0722-235911-S sold 1.14113 at 23:59,\n    0723 sold 1.1411 at 00:19) - the first break failed back through the level. Earlier breakouts from setups.npz (stack-independent).\"\"\"\n    import numpy as np\n    if \"Z\" not in rule.__dict__:\n        rule.__dict__[\"Z\"] = np.load(\"C:/Users/zeesh/turtle/monitor/TurtleTVUHV/research/loss_study/tight/work_loss4a/setups.npz\")\n    Z = rule.__dict__[\"Z\"]\n    St, Ss, Sl = Z[\"t\"], Z[\"side\"], Z[\"level\"]\n    a, b = int(np.searchsorted(St, t[\"t_dec\"] - 3600)), int(np.searchsorted(St, t[\"t_dec\"] - 0.5))\n    return bool(np.any((Ss[a:b] == t[\"side\"]) & (np.abs(Sl[a:b] - t[\"level\"]) <= 0.5e-4 + 1e-9)))\n",
+  "report_line": "rule_rebreak_same_level        | tight: -3L/-81W WR 99.44->99.84 (tr 99.7->99.66, te 99.21->100.0) | zee100: -0L/-34W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -8L/-346W WR 98.66->98.83 (tr 97.92->97.99, te 99.32->99.6) | base: -31L/-1199W WR 97.74->97.8 (tr 96.64->96.67, te 98.6->98.72)"
+ },
+ {
+  "name": "rule_spread_wide",
+  "code": "def rule(t, A):\n    \"\"\"0723 (0.2 vs a 0.1 median): the breakout-tick spread is WIDER than the median spread of the last 120 closed minutes (+0.05 pip).\"\"\"\n    import numpy as np\n    if \"M\" not in rule.__dict__:\n        rule.__dict__[\"M\"] = np.load(\"C:/Users/zeesh/turtle/monitor/TurtleTVUHV/research/loss_study/tight/work_loss4a/spread_m1.npz\")[\"med\"]\n    M, k = rule.__dict__[\"M\"], t[\"k\"]\n    return t[\"trig_spread_pips\"] > float(np.median(M[k - 119:k + 1])) + 0.05\n",
+  "report_line": "rule_spread_wide               | tight: -2L/-143W WR 99.44->99.65 (tr 99.7->99.64, te 99.21->99.66) | zee100: -0L/-62W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -9L/-485W WR 98.66->98.8 (tr 97.92->98.2, te 99.32->99.41) | base: -46L/-1711W WR 97.74->97.85 (tr 96.64->96.85, te 98.6->98.74)"
+ },
+ {
+  "name": "rule_spread_not_narrow",
+  "code": "def rule(t, A):\n    \"\"\"Both losses: trade ONLY when the breakout-tick spread is NARROWER than the median of the last 60 closed minutes (by > 0.05 pip);\n    skip 'usual' and 'wide' (0408 0.6 = median, 0723 0.2 vs 0.1; 4 of 6 twins were narrow).\"\"\"\n    import numpy as np\n    if \"M\" not in rule.__dict__:\n        rule.__dict__[\"M\"] = np.load(\"C:/Users/zeesh/turtle/monitor/TurtleTVUHV/research/loss_study/tight/work_loss4a/spread_m1.npz\")[\"med\"]\n    M, k = rule.__dict__[\"M\"], t[\"k\"]\n    return t[\"trig_spread_pips\"] >= float(np.median(M[k - 59:k + 1])) - 0.05\n",
+  "report_line": "rule_spread_not_narrow         | tight: -4L/-503W WR 99.44->100.0 (tr 99.7->100.0, te 99.21->100.0) | zee100: -0L/-213W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -26L/-1605W WR 98.66->99.34 (tr 97.92->99.02, te 99.32->99.67) | base: -134L/-5433W WR 97.74->98.15 (tr 96.64->97.43, te 98.6->98.8)"
+ },
+ {
+  "name": "rule_spread_upper_mode",
+  "code": "def rule(t, A):\n    \"\"\"Both losses sat at their regime's UPPER spread mode (0408: 0.6 in the 0.5/0.6 train regime; 0723: 0.2 in the 0.1/0.2 test regime).\n    Skip >= 0.6 pip when the last 240 closed minutes' median spread is >= 0.35 pip (wide regime), else skip >= 0.2 pip.\"\"\"\n    import numpy as np\n    if \"M\" not in rule.__dict__:\n        rule.__dict__[\"M\"] = np.load(\"C:/Users/zeesh/turtle/monitor/TurtleTVUHV/research/loss_study/tight/work_loss4a/spread_m1.npz\")[\"med\"]\n    M, k = rule.__dict__[\"M\"], t[\"k\"]\n    m = float(np.median(M[k - 239:k + 1]))\n    return t[\"trig_spread_pips\"] >= (0.55 if m >= 0.35 else 0.15)\n",
+  "report_line": "rule_spread_upper_mode         | tight: -3L/-230W WR 99.44->99.79 (tr 99.7->100.0, te 99.21->99.64) | zee100: -0L/-95W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -15L/-735W WR 98.66->98.99 (tr 97.92->98.49, te 99.32->99.39) | base: -81L/-2487W WR 97.74->98.2 (tr 96.64->97.27, te 98.6->98.83)"
+ }
+]

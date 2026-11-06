@@ -1,0 +1,59 @@
+
+=== Direction A: choose on Mar-Jun (>= 120 Mar-Jun trades; 538 of 588 combos eligible), test on Jul-Nov ===
+CHOSEN h3-3_er0.30-0.45:  Mar-Jun  139 tr  0 L WR 100.00% net   +212.03  ->  Jul-Nov  166 tr  1 L WR  99.40% net    +44.97   (whole period  305 tr  1 L WR  99.67% net   +257.00)
+top 15 by Mar-Jun WR (tie: trades, net):
+   h3-3_er0.30-0.45     Mar-Jun  139 tr  0 L WR 100.00% net   +212.03  |  Jul-Nov  166 tr  1 L WR  99.40% net    +44.97
+   h2-3_er0.30-0.35     Mar-Jun  125 tr  0 L WR 100.00% net   +193.03  |  Jul-Nov  183 tr  0 L WR 100.00% net   +251.04
+   h2-3_er0.30-0.45     Mar-Jun  332 tr  1 L WR  99.70% net   +285.13  |  Jul-Nov  382 tr  3 L WR  99.21% net    +91.02
+   h2-3_er0.32-0.45     Mar-Jun  274 tr  1 L WR  99.64% net   +203.13  |  Jul-Nov  297 tr  3 L WR  98.99% net    -23.05
+   h2-3_er0.30-0.40     Mar-Jun  242 tr  1 L WR  99.59% net   +143.07  |  Jul-Nov  292 tr  2 L WR  99.32% net     +1.02
+   h2-3_er0.35-0.45     Mar-Jun  209 tr  1 L WR  99.52% net    +94.11  |  Jul-Nov  203 tr  3 L WR  98.52% net   -156.02
+   h2-2_er0.30-0.45     Mar-Jun  196 tr  1 L WR  99.49% net    +76.11  |  Jul-Nov  220 tr  2 L WR  99.09% net    +50.05
+   h2-2_er0.25-0.35     Mar-Jun  192 tr  1 L WR  99.48% net   +161.10  |  Jul-Nov  218 tr  1 L WR  99.54% net   +101.08
+   h2-3_er0.32-0.40     Mar-Jun  184 tr  1 L WR  99.46% net    +61.06  |  Jul-Nov  207 tr  2 L WR  99.03% net   -113.04
+   h2-6_er0.30-0.35     Mar-Jun  171 tr  1 L WR  99.42% net    +65.03  |  Jul-Nov  235 tr  0 L WR 100.00% net   +328.08
+   h2-5_er0.30-0.35     Mar-Jun  166 tr  1 L WR  99.40% net    +59.02  |  Jul-Nov  230 tr  0 L WR 100.00% net   +321.07
+   h3-3_er0.30-0.50     Mar-Jun  166 tr  1 L WR  99.40% net    +42.05  |  Jul-Nov  201 tr  2 L WR  99.00% net   -117.02
+   h2-2_er0.32-0.45     Mar-Jun  164 tr  1 L WR  99.39% net    +35.08  |  Jul-Nov  166 tr  2 L WR  98.80% net    -17.98
+   h2-2_er0.25-0.45     Mar-Jun  308 tr  2 L WR  99.35% net   +117.17  |  Jul-Nov  329 tr  3 L WR  99.09% net    +12.11
+   h2-4_er0.30-0.35     Mar-Jun  155 tr  1 L WR  99.35% net    +45.02  |  Jul-Nov  224 tr  0 L WR 100.00% net   +310.08
+family of 2 combos with 0 Mar-Jun losses (>= 120 tr): Jul-Nov pooled 349 tr 1 L = WR 99.71%  (per combo Jul-Nov WR min 99.40 / median 99.70 / max 100.00; 1 of 2 stay at 0 losses)
+all 538 eligible combos: Jul-Nov pooled 402656 tr 3308 L = WR 99.18%  (mean of combo WRs 99.20)
+Spearman(in-sample WR, out-of-sample WR) over the 538 eligible combos = -0.066 (descriptive: nested zones share trades)
+   in-sample WR quintile Q1 worst (108 combos, IS WR 95.31-97.06): OOS pooled WR 99.10%  mean OOS WR 99.19
+   in-sample WR quintile Q2       (107 combos, IS WR 97.07-97.47): OOS pooled WR 99.18%  mean OOS WR 99.26
+   in-sample WR quintile Q3       (108 combos, IS WR 97.49-97.96): OOS pooled WR 99.30%  mean OOS WR 99.32
+   in-sample WR quintile Q4       (112 combos, IS WR 97.97-98.49): OOS pooled WR 99.15%  mean OOS WR 99.11
+   in-sample WR quintile Q5 best  (103 combos, IS WR 98.50-100.00): OOS pooled WR 99.13%  mean OOS WR 99.10
+Zee's zone h2-3_er0.30-0.35: Mar-Jun  125 tr  0 L WR 100.00% net   +193.03 rank 2/538 ; Jul-Nov  183 tr  0 L WR 100.00% net   +251.04 rank 22/552
+
+=== Direction B: choose on Jul-Nov (>= 120 Jul-Nov trades; 552 of 588 combos eligible), test on Mar-Jun ===
+CHOSEN h3-4_er0.15-0.45:  Jul-Nov  530 tr  0 L WR 100.00% net   +743.01  ->  Mar-Jun  485 tr 14 L WR  97.11% net  -2214.97   (whole period 1015 tr 14 L WR  98.62% net  -1471.96)
+top 15 by Jul-Nov WR (tie: trades, net):
+   h3-4_er0.15-0.45     Jul-Nov  530 tr  0 L WR 100.00% net   +743.01  |  Mar-Jun  485 tr 14 L WR  97.11% net  -2214.97
+   h3-4_er0.15-0.40     Jul-Nov  468 tr  0 L WR 100.00% net   +655.02  |  Mar-Jun  438 tr 14 L WR  96.80% net  -2288.00
+   h3-4_er0.20-0.45     Jul-Nov  442 tr  0 L WR 100.00% net   +623.00  |  Mar-Jun  389 tr  9 L WR  97.69% net  -1372.97
+   h3-4_er0.15-0.35     Jul-Nov  396 tr  0 L WR 100.00% net   +550.06  |  Mar-Jun  370 tr 13 L WR  96.49% net  -2138.01
+   h3-4_er0.20-0.40     Jul-Nov  379 tr  0 L WR 100.00% net   +534.01  |  Mar-Jun  340 tr  9 L WR  97.35% net  -1448.00
+   h3-3_er0.15-0.45     Jul-Nov  365 tr  0 L WR 100.00% net   +516.96  |  Mar-Jun  343 tr 10 L WR  97.08% net  -1532.93
+   h3-3_er0.15-0.40     Jul-Nov  325 tr  0 L WR 100.00% net   +459.98  |  Mar-Jun  304 tr 10 L WR  96.71% net  -1590.96
+   h3-4_er0.20-0.35     Jul-Nov  306 tr  0 L WR 100.00% net   +429.04  |  Mar-Jun  268 tr  8 L WR  97.01% net  -1303.02
+   h3-3_er0.20-0.45     Jul-Nov  305 tr  0 L WR 100.00% net   +435.96  |  Mar-Jun  265 tr  5 L WR  98.11% net   -666.91
+   h3-4_er0.15-0.30     Jul-Nov  282 tr  0 L WR 100.00% net   +382.99  |  Mar-Jun  296 tr 12 L WR  95.95% net  -2061.97
+   h3-3_er0.15-0.35     Jul-Nov  275 tr  0 L WR 100.00% net   +385.01  |  Mar-Jun  258 tr 10 L WR  96.12% net  -1661.97
+   h3-3_er0.20-0.40     Jul-Nov  265 tr  0 L WR 100.00% net   +378.97  |  Mar-Jun  224 tr  5 L WR  97.77% net   -726.94
+   h3-6_er0.25-0.35     Jul-Nov  241 tr  0 L WR 100.00% net   +351.07  |  Mar-Jun  207 tr  6 L WR  97.10% net   -976.08
+   h2-6_er0.30-0.35     Jul-Nov  235 tr  0 L WR 100.00% net   +328.08  |  Mar-Jun  171 tr  1 L WR  99.42% net    +65.03
+   h3-5_er0.25-0.35     Jul-Nov  231 tr  0 L WR 100.00% net   +334.06  |  Mar-Jun  198 tr  6 L WR  96.97% net   -989.07
+family of 29 combos with 0 Jul-Nov losses (>= 120 tr): Mar-Jun pooled 6453 tr 175 L = WR 97.29%  (per combo Mar-Jun WR min 95.31 / median 97.18 / max 100.00; 1 of 29 stay at 0 losses)
+all 552 eligible combos: Mar-Jun pooled 347362 tr 8460 L = WR 97.56%  (mean of combo WRs 97.80)
+Spearman(in-sample WR, out-of-sample WR) over the 552 eligible combos = -0.039 (descriptive: nested zones share trades)
+   in-sample WR quintile Q1 worst (112 combos, IS WR 98.01-99.00): OOS pooled WR 97.58%  mean OOS WR 97.96
+   in-sample WR quintile Q2       (117 combos, IS WR 99.01-99.13): OOS pooled WR 97.41%  mean OOS WR 97.64
+   in-sample WR quintile Q3       (109 combos, IS WR 99.14-99.22): OOS pooled WR 97.49%  mean OOS WR 97.72
+   in-sample WR quintile Q4       (105 combos, IS WR 99.23-99.40): OOS pooled WR 97.85%  mean OOS WR 98.00
+   in-sample WR quintile Q5 best  (109 combos, IS WR 99.41-100.00): OOS pooled WR 97.60%  mean OOS WR 97.69
+Zee's zone h2-3_er0.30-0.35: Jul-Nov  183 tr  0 L WR 100.00% net   +251.04 rank 22/552 ; Mar-Jun  125 tr  0 L WR 100.00% net   +193.03 rank 2/538
+
+combos with 0 losses in BOTH halves (>= 120 each): 1: h2-3_er0.30-0.35(308)
+combos with 0 losses over the whole period: 8; largest: h2-3_er0.30-0.35(308 tr, +444), h2-2_er0.30-0.35(186 tr, +255), h2-3_er0.32-0.35(161 tr, +244), h3-3_er0.30-0.35(124 tr, +191), h3-4_er0.40-0.45(116 tr, +169), h2-2_er0.32-0.35(99 tr, +145), h3-3_er0.40-0.45(81 tr, +117), h3-3_er0.32-0.35(63 tr, +100)

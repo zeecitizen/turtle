@@ -1,0 +1,244 @@
+{
+ "red_team_of": "research/loss_study/stacks/winrate (results.json final stack), objective: max TRAIN win rate with >= 600 TRAIN trades",
+ "stack": {
+  "InpUhvFriCutNY": "10",
+  "InpUhvDeepRet": "0.5",
+  "InpUhvMaxHumps": "3",
+  "InpUhvRunPips": "8",
+  "InpUhvSpikeAtr": "2",
+  "InpUhvHtf5": "1",
+  "InpUhvMaxGapPips": "0.3",
+  "InpUhvBrokeHighs": "5"
+ },
+ "doctrine": "Python tick replay = HYPOTHESIS. Nothing promoted. Only MT5 Strategy Tester or live fills promote.",
+ "engine_unchanged_during_run": true,
+ "engine_hashes": {
+  "uhv_engine.py": "6fe3fbbc27891c9ea3822ab54c8c6036df4a2fc8",
+  "uhv_filters.py": "556ce0399d24d8434a1cc39c2adae7943ceba1ee",
+  "uhv_diamond.py": "5dc2a92731ccc50e668957d7624616da5c621b49",
+  "uhv_ticks.py": "91d9a85fcab3569e0020acfad32e90892147da28",
+  "sim.py": "32e76630205a66f1ba1bc6a3c41238161e1167a3",
+  "scan.py": "7ca912843eeeca6102dc8a31f4ce689fc6051d68"
+ },
+ "survives": false,
+ "a_reproduced_exactly": true,
+ "b": {
+  "test_loss_rate_base_pct": 1.397,
+  "test_loss_rate_stack_pct": 0.9162,
+  "ratio": 0.656,
+  "expected_losses_at_base_rate": 10.67,
+  "got": 7,
+  "random_thinning_P_le_7": 0.1384,
+  "note_on_search_null": "stacks/winrate/null_thinning.py reported p 0.073 because it compared against the win rate rounded to 4 dp (99.0838 > 99.08377) and so counted P(L <= 6) = 0.071; the exact P(L <= 7) is 0.138",
+  "perday_matched_P_le_7": 0.0841,
+  "day_bootstrap_ratio_90ci": [
+   0.29,
+   1.09
+  ],
+  "day_bootstrap_P_ratio_ge_1": 0.091,
+  "freed_slot_losses": "3 of the 7 TEST losses are trades the base never took",
+  "step1_FriCut10_alone_test_ratio": 0.879,
+  "step1_alone_P": 0.0027,
+  "steps2to8_on_top_of_step1_ratio": 0.746,
+  "steps2to8_P": 0.253,
+  "train_in_sample_ratio": 0.244,
+  "loss_free_days_test": {
+   "observed": 85,
+   "perday_thinning_expected": 81.04,
+   "P_ge": 0.101
+  },
+  "break_even_wr_test_pct": 99.33
+ },
+ "c": {
+  "grid_neighbours_train_wr_range": [
+   98.49,
+   99.25
+  ],
+  "grid_neighbours_train_wr_median": 98.81,
+  "grid_neighbours_train_below_99": "11 of 16",
+  "grid_neighbours_test_wr_range": [
+   98.84,
+   99.12
+  ],
+  "grid_neighbours_test_ratio_range": [
+   0.63,
+   0.83
+  ],
+  "at_lowest_nonzero_grid_value": [
+   "InpUhvFriCutNY=10",
+   "InpUhvDeepRet=0.5",
+   "InpUhvSpikeAtr=2",
+   "InpUhvMaxGapPips=0.3"
+  ]
+ },
+ "d_test_months": {
+  "2026-07": {
+   "base": [
+    1074,
+    17
+   ],
+   "stack": [
+    198,
+    2
+   ]
+  },
+  "2026-08": {
+   "base": [
+    863,
+    11
+   ],
+   "stack": [
+    157,
+    0
+   ]
+  },
+  "2026-09": {
+   "base": [
+    1029,
+    10
+   ],
+   "stack": [
+    191,
+    2
+   ]
+  },
+  "2026-10": {
+   "base": [
+    1157,
+    20
+   ],
+   "stack": [
+    189,
+    3
+   ]
+  },
+  "2026-11": {
+   "base": [
+    172,
+    2
+   ],
+   "stack": [
+    29,
+    0
+   ]
+  }
+ },
+ "e_loo_test_marginal": [
+  {
+   "half": "test",
+   "setting": "InpUhvFriCutNY",
+   "removed_net": 59,
+   "losers_removed_net": 2,
+   "removed_loss_rate_pct": 3.39,
+   "loo_rate_pct": 1.094,
+   "base_rate_pct": 1.397,
+   "hyper_P_ge": 0.13139798374435052
+  },
+  {
+   "half": "test",
+   "setting": "InpUhvDeepRet",
+   "removed_net": 268,
+   "losers_removed_net": 4,
+   "removed_loss_rate_pct": 1.493,
+   "loo_rate_pct": 1.066,
+   "base_rate_pct": 1.397,
+   "hyper_P_ge": 0.31313952409096324
+  },
+  {
+   "half": "test",
+   "setting": "InpUhvMaxHumps",
+   "removed_net": 312,
+   "losers_removed_net": 3,
+   "removed_loss_rate_pct": 0.962,
+   "loo_rate_pct": 0.929,
+   "base_rate_pct": 1.397,
+   "hyper_P_ge": 0.5907835517470675
+  },
+  {
+   "half": "test",
+   "setting": "InpUhvRunPips",
+   "removed_net": 83,
+   "losers_removed_net": 0,
+   "removed_loss_rate_pct": 0.0,
+   "loo_rate_pct": 0.826,
+   "base_rate_pct": 1.397,
+   "hyper_P_ge": 1.0
+  },
+  {
+   "half": "test",
+   "setting": "InpUhvSpikeAtr",
+   "removed_net": 329,
+   "losers_removed_net": 4,
+   "removed_loss_rate_pct": 1.216,
+   "loo_rate_pct": 1.006,
+   "base_rate_pct": 1.397,
+   "hyper_P_ge": 0.4334043337444721
+  },
+  {
+   "half": "test",
+   "setting": "InpUhvHtf5",
+   "removed_net": 90,
+   "losers_removed_net": 2,
+   "removed_loss_rate_pct": 2.222,
+   "loo_rate_pct": 1.054,
+   "base_rate_pct": 1.397,
+   "hyper_P_ge": 0.24348518491389765
+  },
+  {
+   "half": "test",
+   "setting": "InpUhvMaxGapPips",
+   "removed_net": 25,
+   "losers_removed_net": 2,
+   "removed_loss_rate_pct": 8.0,
+   "loo_rate_pct": 1.141,
+   "base_rate_pct": 1.397,
+   "hyper_P_ge": 0.030291465697563056
+  },
+  {
+   "half": "test",
+   "setting": "InpUhvBrokeHighs",
+   "removed_net": 65,
+   "losers_removed_net": 1,
+   "removed_loss_rate_pct": 1.538,
+   "loo_rate_pct": 0.965,
+   "base_rate_pct": 1.397,
+   "hyper_P_ge": 0.48113456468680404
+  }
+ ],
+ "random_stack_null": {
+  "n_draws": 300,
+  "band_rule": "random stacks with 500 <= TEST trades <= 1100 and TRAIN trades >= 300",
+  "band_n": 64,
+  "band_test_loss_rate_median": 1.0713447241424285,
+  "band_test_loss_rate_p10_p90": [
+   0.725951834591888,
+   1.346503535750365
+  ],
+  "band_share_with_test_loss_rate_le_stack": 0.25,
+  "spearman_train_vs_test_loss_rate_all": -0.06347861609949018,
+  "spearman_train_vs_test_loss_rate_after_thinning": -0.05032641719155588,
+  "spearman_train_vs_test_loss_rate_band": 0.008722627320023397
+ },
+ "random_stack_quartiles_band": {
+  "train_best_quarter": {
+   "train_rate": 2.56,
+   "test_rate": 1.07
+  },
+  "train_worst_quarter": {
+   "train_rate": 3.9,
+   "test_rate": 1.13
+  }
+ },
+ "files": [
+  "redteam.py",
+  "redteam.log",
+  "redteam_results.json",
+  "losses_and_daynull.py",
+  "losses_and_daynull.json",
+  "random_stacks.py",
+  "random_stacks.json",
+  "random_stacks.log",
+  "loo_marginal.json",
+  "runs_cache.npz"
+ ]
+}

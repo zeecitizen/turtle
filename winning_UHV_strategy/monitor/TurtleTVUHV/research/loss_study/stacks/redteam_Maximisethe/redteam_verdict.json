@@ -1,0 +1,298 @@
+{
+ "note": "Python tick replay = HYPOTHESIS. NOT PROMOTED. Only MT5 or live fills decide.",
+ "stack": {
+  "InpUhvMinHumps": "4",
+  "InpUhvMinTicks": "40",
+  "InpUhvFreshBreak": "8",
+  "InpUhvMaxGapPips": "0.5"
+ },
+ "survives": false,
+ "a_rerun_all_match": true,
+ "freed_slots": {
+  "stack_trades": 828,
+  "also_in_base": 627,
+  "freed_slot_trades": 201,
+  "freed_slot_losses": 1,
+  "base_losses_removed": 159,
+  "base_losses_kept": 13
+ },
+ "b_test_loss_rate": {
+  "base": "60/4295 = 1.397%",
+  "stack": "5/423 = 1.182%",
+  "expected_at_base_rate": 5.91,
+  "binom_p_le": 0.4593,
+  "hypergeom_p_le": 0.4517,
+  "clopper_pearson_95_pct": [
+   0.385,
+   2.737
+  ],
+  "base_inside_ci": true,
+  "kept_base_trades": {
+   "n": 343,
+   "L": 5,
+   "rate_pct": 1.458
+  },
+  "removed_base_trades": {
+   "n": 3952,
+   "L": 55,
+   "rate_pct": 1.392
+  },
+  "freed_slot_test": {
+   "n": 80,
+   "L": 0,
+   "p_zero_or_fewer_at_base_rate": 0.3245
+  }
+ },
+ "b_train_in_sample": {
+  "stack": "9/405 = 2.22%",
+  "base": "112/3336 = 3.36%",
+  "binom_p_le": 0.1256,
+  "kept_base_trades": {
+   "n": 284,
+   "L": 8,
+   "rate_pct": 2.817
+  },
+  "removed_base_trades": {
+   "n": 3052,
+   "L": 104,
+   "rate_pct": 3.408
+  }
+ },
+ "b_loss_free_vs_thinning": {
+  "train": {
+   "observed": 89.157,
+   "uniform_mean": 84.36,
+   "uniform_95": [
+    76.54,
+    91.36
+   ],
+   "uniform_p_ge": 0.0792,
+   "perday_exact_expect": 82.849,
+   "excess_over_perday": 6.308,
+   "base_clean_pct": 21.687
+  },
+  "test": {
+   "observed": 94.382,
+   "uniform_mean": 93.57,
+   "uniform_95": [
+    88.64,
+    97.8
+   ],
+   "uniform_p_ge": 0.4502,
+   "perday_exact_expect": 93.377,
+   "excess_over_perday": 1.005,
+   "base_clean_pct": 50.0
+  }
+ },
+ "f_random_skip_null_test": {
+  "loss_free_P_random_ge_stack": 0.47,
+  "rate_P_random_le_stack": 0.38,
+  "random_loss_free_mean": 93.848,
+  "random_rate_mean": 1.368
+ },
+ "f_random_skip_null_train": {
+  "loss_free_P_random_ge_stack": 0.165,
+  "rate_P_random_le_stack": 0.085
+ },
+ "c_perturbation": {
+  "one_step_moves": {
+   "runs": 10,
+   "feasible": 5,
+   "test_rate_median": 1.204,
+   "test_rate_range": [
+    0.99,
+    1.724
+   ],
+   "test_rate_below_base_share": 0.8,
+   "test_pooled_rate_pct": 1.241,
+   "train_rate_median": 2.398,
+   "train_rate_below_base_share": 1.0,
+   "train_excess_median": 5.43,
+   "test_excess_median": 0.86,
+   "test_excess_range": [
+    -0.74,
+    3.57
+   ],
+   "test_clean_median": 94.38
+  },
+  "feasible_neighbours": {
+   "runs": 112,
+   "feasible": 112,
+   "test_rate_median": 1.242,
+   "test_rate_range": [
+    0.962,
+    1.485
+   ],
+   "test_rate_below_base_share": 0.964,
+   "test_pooled_rate_pct": 1.23,
+   "train_rate_median": 2.899,
+   "train_rate_below_base_share": 1.0,
+   "train_excess_median": 6.2,
+   "test_excess_median": 2.41,
+   "test_excess_range": [
+    -0.33,
+    5.3
+   ],
+   "test_clean_median": 90.11
+  },
+  "chosen_rank": {
+   "feasible": 112,
+   "by_train_objective": 1,
+   "by_test_clean_share": 14,
+   "by_test_loss_rate": 43,
+   "by_test_excess": 95
+  },
+  "corr_train_test_excess_all": 0.827,
+  "corr_train_test_excess_within_MinHumps4": 0.13,
+  "corr_train_test_rate_all": -0.258,
+  "three_of_four_values_at_grid_top": [
+   "InpUhvMinHumps=4 of [0,2,3,4]",
+   "InpUhvMinTicks=40 of [..40]",
+   "InpUhvFreshBreak=8 of [..8]"
+  ],
+  "train_trades_405_vs_floor_400": true
+ },
+ "d_months_test": {
+  "2026-07": {
+   "stack": "1/109",
+   "expected_at_base_month_rate": 1.73,
+   "loss_free_excess_pt": 3.458
+  },
+  "2026-08": {
+   "stack": "1/80",
+   "expected_at_base_month_rate": 1.02,
+   "loss_free_excess_pt": -0.394
+  },
+  "2026-09": {
+   "stack": "1/98",
+   "expected_at_base_month_rate": 0.95,
+   "loss_free_excess_pt": -0.928
+  },
+  "2026-10": {
+   "stack": "2/115",
+   "expected_at_base_month_rate": 1.99,
+   "loss_free_excess_pt": 0.178
+  },
+  "2026-11 (1-4 Nov only)": {
+   "stack": "0/21",
+   "expected_at_base_month_rate": 0.24,
+   "loss_free_excess_pt": 12.9
+  },
+  "2026-10+11": {
+   "stack": "2/136",
+   "expected_at_base_month_rate": 2.26,
+   "loss_free_excess_pt": 1.769
+  },
+  "TRAIN 2026-03": {
+   "stack": "4/111",
+   "expected_at_base_month_rate": 4.49,
+   "loss_free_excess_pt": 0.157
+  },
+  "TRAIN 2026-04": {
+   "stack": "3/88",
+   "expected_at_base_month_rate": 3.43,
+   "loss_free_excess_pt": -0.129
+  },
+  "TRAIN 2026-05": {
+   "stack": "1/102",
+   "expected_at_base_month_rate": 4.14,
+   "loss_free_excess_pt": 20.236
+  },
+  "TRAIN 2026-06": {
+   "stack": "1/104",
+   "expected_at_base_month_rate": 1.84,
+   "loss_free_excess_pt": 4.166
+  }
+ },
+ "e_path_losses": [
+  {
+   "added": "InpUhvMinHumps",
+   "train": {
+    "trades_cut": 2861,
+    "losses_cut": 93,
+    "excess_gain": 0.01
+   },
+   "test": {
+    "trades_cut": 3810,
+    "losses_cut": 54,
+    "excess_gain": 0.94
+   }
+  },
+  {
+   "added": "InpUhvMinTicks",
+   "train": {
+    "trades_cut": 14,
+    "losses_cut": 6,
+    "excess_gain": 3.71
+   },
+   "test": {
+    "trades_cut": 18,
+    "losses_cut": 0,
+    "excess_gain": -0.24
+   }
+  },
+  {
+   "added": "InpUhvFreshBreak",
+   "train": {
+    "trades_cut": 53,
+    "losses_cut": 3,
+    "excess_gain": 1.48
+   },
+   "test": {
+    "trades_cut": 40,
+    "losses_cut": 1,
+    "excess_gain": 0.37
+   }
+  },
+  {
+   "added": "InpUhvMaxGapPips",
+   "train": {
+    "trades_cut": 3,
+    "losses_cut": 1,
+    "excess_gain": 1.11
+   },
+   "test": {
+    "trades_cut": 4,
+    "losses_cut": 0,
+    "excess_gain": -0.07
+   }
+  }
+ ],
+ "e_loo": {
+  "InpUhvMinHumps": {
+   "train": "2496/75 clean 34.94% excess 1.813",
+   "test": "2965/32 clean 68.132% excess 7.005"
+  },
+  "InpUhvMinTicks": {
+   "train": "415/13 clean 85.542% excess 3.551",
+   "test": "440/5 clean 94.382% excess 1.224"
+  },
+  "InpUhvFreshBreak": {
+   "train": "456/12 clean 85.542% excess 4.748",
+   "test": "462/6 clean 93.333% excess 0.618"
+  },
+  "InpUhvMaxGapPips": {
+   "train": "408/10 clean 87.952% excess 5.201",
+   "test": "427/5 clean 94.382% excess 1.071"
+  }
+ },
+ "e_alone": {
+  "InpUhvMinHumps": {
+   "train": "475/19 rate 4.0% excess 0.011",
+   "test": "485/6 rate 1.2371% excess 0.939"
+  },
+  "InpUhvMinTicks": {
+   "train": "3255/105 rate 3.2258% excess 1.879",
+   "test": "4194/53 rate 1.2637% excess 2.554"
+  },
+  "InpUhvFreshBreak": {
+   "train": "2564/81 rate 3.1591% excess 0.934",
+   "test": "3116/35 rate 1.1232% excess 7.436"
+  },
+  "InpUhvMaxGapPips": {
+   "train": "3300/109 rate 3.303% excess -0.386",
+   "test": "4292/59 rate 1.3747% excess -0.615"
+  }
+ },
+ "search_burden": "506 candidate configs evaluated over 5 greedy steps (cleandays/results.json); step 4 gained exactly 1 TRAIN day (1.2 pt vs a 1.0 pt margin)"
+}

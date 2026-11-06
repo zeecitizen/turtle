@@ -1,0 +1,729 @@
+{
+ "C": {
+  "n": 1615,
+  "losers": 46,
+  "full_stops": 43,
+  "net": 402831
+ },
+ "filters": [
+  {
+   "filter": "EMA gap >= 22.5 pips (C: 2.5)",
+   "changes": {
+    "InpEmaGapPips": "22.5"
+   },
+   "n": 1119,
+   "net": 288874,
+   "wr": 97.32,
+   "removed_losers": 18,
+   "removed_full_stops": 16,
+   "removed_winners": 509,
+   "kept_losers": 28,
+   "added_trades": 31,
+   "added_net": 6152,
+   "loser_block_rate": 39.1,
+   "winner_block_rate": 32.4,
+   "per_year_removed_losers": {
+    "2024": 5,
+    "2025": 5,
+    "2023": 5,
+    "2026": 3
+   }
+  },
+  {
+   "filter": "session ends 19:00 + hour 11 off (C: 24h)",
+   "changes": {
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111"
+   },
+   "n": 1365,
+   "net": 353345,
+   "wr": 97.29,
+   "removed_losers": 11,
+   "removed_full_stops": 10,
+   "removed_winners": 268,
+   "kept_losers": 35,
+   "added_trades": 29,
+   "added_net": 1442,
+   "loser_block_rate": 23.9,
+   "winner_block_rate": 17.1,
+   "per_year_removed_losers": {
+    "2024": 5,
+    "2023": 1,
+    "2025": 3,
+    "2026": 2
+   }
+  },
+  {
+   "filter": "price bands B/S + BandOff",
+   "changes": {
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1"
+   },
+   "n": 769,
+   "net": 212435,
+   "wr": 97.53,
+   "removed_losers": 32,
+   "removed_full_stops": 31,
+   "removed_winners": 900,
+   "kept_losers": 14,
+   "added_trades": 86,
+   "added_net": 6749,
+   "loser_block_rate": 69.6,
+   "winner_block_rate": 57.4,
+   "per_year_removed_losers": {
+    "2024": 8,
+    "2026": 5,
+    "2025": 13,
+    "2023": 6
+   }
+  },
+  {
+   "filter": "stricter shape (HamRatio 2.25, Nose 0.8, NoseMax 0.05, no stars)",
+   "changes": {
+    "InpHamRatio": "2.25",
+    "InpHamNose": "0.8",
+    "InpNoseMax": "0.05",
+    "InpStar": "false"
+   },
+   "n": 1495,
+   "net": 320752,
+   "wr": 96.59,
+   "removed_losers": 12,
+   "removed_full_stops": 11,
+   "removed_winners": 338,
+   "kept_losers": 34,
+   "added_trades": 230,
+   "added_net": -4191,
+   "loser_block_rate": 26.1,
+   "winner_block_rate": 21.5,
+   "per_year_removed_losers": {
+    "2024": 3,
+    "2025": 4,
+    "2023": 2,
+    "2026": 3
+   }
+  },
+  {
+   "filter": "touch 3.5 pips + MinRangeAtr 0.8",
+   "changes": {
+    "InpTouchPips": "3.5",
+    "InpMinRangeAtr": "0.8"
+   },
+   "n": 1458,
+   "net": 350150,
+   "wr": 97.05,
+   "removed_losers": 6,
+   "removed_full_stops": 5,
+   "removed_winners": 249,
+   "kept_losers": 40,
+   "added_trades": 98,
+   "added_net": 20810,
+   "loser_block_rate": 13.0,
+   "winner_block_rate": 15.9,
+   "per_year_removed_losers": {
+    "2024": 2,
+    "2025": 2,
+    "2023": 1,
+    "2026": 1
+   }
+  },
+  {
+   "filter": "day caps $2000 target / 2% loss (C: 2500 / 1%)",
+   "changes": {
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2"
+   },
+   "n": 1596,
+   "net": 395053,
+   "wr": 97.12,
+   "removed_losers": 2,
+   "removed_full_stops": 2,
+   "removed_winners": 36,
+   "kept_losers": 44,
+   "added_trades": 19,
+   "added_net": -3988,
+   "loser_block_rate": 4.3,
+   "winner_block_rate": 2.3,
+   "per_year_removed_losers": {
+    "2024": 1,
+    "2025": 1
+   }
+  },
+  {
+   "filter": "TvBox kelt_S / vwap_B masks",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111"
+   },
+   "n": 1627,
+   "net": 400881,
+   "wr": 96.99,
+   "removed_losers": 1,
+   "removed_full_stops": 1,
+   "removed_winners": 9,
+   "kept_losers": 45,
+   "added_trades": 22,
+   "added_net": -3842,
+   "loser_block_rate": 2.2,
+   "winner_block_rate": 0.6,
+   "per_year_removed_losers": {
+    "2026": 1
+   }
+  },
+  {
+   "filter": "B's exits (Friday 22h exit, no candle exit)",
+   "changes": {
+    "InpXFriHour": "22",
+    "InpXCx": "0",
+    "InpXCxN": "2"
+   },
+   "n": 1600,
+   "net": 369066,
+   "wr": 95.0,
+   "removed_losers": 0,
+   "removed_full_stops": 0,
+   "removed_winners": 33,
+   "kept_losers": 46,
+   "added_trades": 18,
+   "added_net": 1223,
+   "loser_block_rate": 0.0,
+   "winner_block_rate": 2.1,
+   "per_year_removed_losers": {}
+  },
+  {
+   "filter": "EMA 19/58 (C: 20/62) - changes the setups",
+   "changes": {
+    "InpEmaFast": "19",
+    "InpEmaSlow": "58"
+   },
+   "n": 1659,
+   "net": 364764,
+   "wr": 96.62,
+   "removed_losers": 2,
+   "removed_full_stops": 2,
+   "removed_winners": 110,
+   "kept_losers": 44,
+   "added_trades": 156,
+   "added_net": -6138,
+   "loser_block_rate": 4.3,
+   "winner_block_rate": 7.0,
+   "per_year_removed_losers": {
+    "2026": 1,
+    "2023": 1
+   }
+  },
+  {
+   "filter": "ALL of B's entry filters together",
+   "changes": {
+    "InpEmaGapPips": "22.5",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111",
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1",
+    "InpHamRatio": "2.25",
+    "InpHamNose": "0.8",
+    "InpNoseMax": "0.05",
+    "InpStar": "false",
+    "InpTouchPips": "3.5",
+    "InpMinRangeAtr": "0.8",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111"
+   },
+   "n": 399,
+   "net": 132241,
+   "wr": 98.75,
+   "removed_losers": 44,
+   "removed_full_stops": 41,
+   "removed_winners": 1274,
+   "kept_losers": 2,
+   "added_trades": 102,
+   "added_net": 23228,
+   "loser_block_rate": 95.7,
+   "winner_block_rate": 81.2,
+   "per_year_removed_losers": {
+    "2024": 12,
+    "2026": 8,
+    "2025": 17,
+    "2023": 7
+   }
+  },
+  {
+   "filter": "B itself (every B input on C's frame)",
+   "changes": {
+    "InpEmaFast": "19",
+    "InpEmaSlow": "58",
+    "InpNoseMax": "0.05",
+    "InpStar": "false",
+    "InpHamRatio": "2.25",
+    "InpHamNose": "0.8",
+    "InpMinRangeAtr": "0.8",
+    "InpTouchPips": "3.5",
+    "InpSessTo": "19",
+    "InpEmaGapPips": "22.5",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1",
+    "InpXCx": "0",
+    "InpXCxN": "2",
+    "InpXFriHour": "22",
+    "InpHours": "111111111110111111111111",
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111"
+   },
+   "n": 399,
+   "net": 164148,
+   "wr": 99.75,
+   "removed_losers": 46,
+   "removed_full_stops": 43,
+   "removed_winners": 1269,
+   "kept_losers": 0,
+   "added_trades": 99,
+   "added_net": 39099,
+   "loser_block_rate": 100.0,
+   "winner_block_rate": 80.9,
+   "per_year_removed_losers": {
+    "2024": 12,
+    "2026": 9,
+    "2025": 18,
+    "2023": 7
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111"
+   },
+   "n": 1627,
+   "net": 400881,
+   "wr": 96.99,
+   "removed_losers": 1,
+   "removed_full_stops": 1,
+   "removed_winners": 9,
+   "kept_losers": 45,
+   "added_trades": 22,
+   "added_net": -3842,
+   "loser_block_rate": 2.2,
+   "winner_block_rate": 0.6,
+   "per_year_removed_losers": {
+    "2026": 1
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2"
+   },
+   "n": 1608,
+   "net": 393089,
+   "wr": 96.95,
+   "removed_losers": 3,
+   "removed_full_stops": 3,
+   "removed_winners": 45,
+   "kept_losers": 43,
+   "added_trades": 41,
+   "added_net": -7830,
+   "loser_block_rate": 6.5,
+   "winner_block_rate": 2.9,
+   "per_year_removed_losers": {
+    "2026": 1,
+    "2024": 1,
+    "2025": 1
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss + session ends 19:00 + hour 11 off",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111"
+   },
+   "n": 1364,
+   "net": 347808,
+   "wr": 97.21,
+   "removed_losers": 13,
+   "removed_full_stops": 12,
+   "removed_winners": 293,
+   "kept_losers": 33,
+   "added_trades": 55,
+   "added_net": -4656,
+   "loser_block_rate": 28.3,
+   "winner_block_rate": 18.7,
+   "per_year_removed_losers": {
+    "2024": 5,
+    "2026": 3,
+    "2023": 1,
+    "2025": 4
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss + session ends 19:00 + hour 11 off + price bands B/S + BandOff",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111",
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1"
+   },
+   "n": 655,
+   "net": 197754,
+   "wr": 98.02,
+   "removed_losers": 38,
+   "removed_full_stops": 36,
+   "removed_winners": 1012,
+   "kept_losers": 8,
+   "added_trades": 90,
+   "added_net": 8591,
+   "loser_block_rate": 82.6,
+   "winner_block_rate": 64.5,
+   "per_year_removed_losers": {
+    "2024": 10,
+    "2026": 7,
+    "2025": 14,
+    "2023": 7
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss + session ends 19:00 + hour 11 off + price bands B/S + BandOff + stricter shape",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111",
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1",
+    "InpHamRatio": "2.25",
+    "InpHamNose": "0.8",
+    "InpNoseMax": "0.05",
+    "InpStar": "false"
+   },
+   "n": 591,
+   "net": 175126,
+   "wr": 97.97,
+   "removed_losers": 41,
+   "removed_full_stops": 39,
+   "removed_winners": 1134,
+   "kept_losers": 5,
+   "added_trades": 151,
+   "added_net": 20035,
+   "loser_block_rate": 89.1,
+   "winner_block_rate": 72.3,
+   "per_year_removed_losers": {
+    "2024": 12,
+    "2026": 8,
+    "2025": 15,
+    "2023": 6
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss + session ends 19:00 + hour 11 off + price bands B/S + BandOff + stricter shape + EMA gap >= 22.5 pips",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111",
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1",
+    "InpHamRatio": "2.25",
+    "InpHamNose": "0.8",
+    "InpNoseMax": "0.05",
+    "InpStar": "false",
+    "InpEmaGapPips": "22.5"
+   },
+   "n": 428,
+   "net": 138346,
+   "wr": 98.6,
+   "removed_losers": 44,
+   "removed_full_stops": 41,
+   "removed_winners": 1244,
+   "kept_losers": 2,
+   "added_trades": 101,
+   "added_net": 17244,
+   "loser_block_rate": 95.7,
+   "winner_block_rate": 79.3,
+   "per_year_removed_losers": {
+    "2024": 12,
+    "2026": 8,
+    "2025": 17,
+    "2023": 7
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss + session ends 19:00 + hour 11 off + price bands B/S + BandOff + stricter shape + EMA gap >= 22.5 pips + touch 3.5 pips + MinRangeAtr 0.8",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111",
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1",
+    "InpHamRatio": "2.25",
+    "InpHamNose": "0.8",
+    "InpNoseMax": "0.05",
+    "InpStar": "false",
+    "InpEmaGapPips": "22.5",
+    "InpTouchPips": "3.5",
+    "InpMinRangeAtr": "0.8"
+   },
+   "n": 399,
+   "net": 132241,
+   "wr": 98.75,
+   "removed_losers": 44,
+   "removed_full_stops": 41,
+   "removed_winners": 1274,
+   "kept_losers": 2,
+   "added_trades": 102,
+   "added_net": 23228,
+   "loser_block_rate": 95.7,
+   "winner_block_rate": 81.2,
+   "per_year_removed_losers": {
+    "2024": 12,
+    "2026": 8,
+    "2025": 17,
+    "2023": 7
+   }
+  }
+ ],
+ "greedy": [
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111"
+   },
+   "n": 1627,
+   "net": 400881,
+   "wr": 96.99,
+   "removed_losers": 1,
+   "removed_full_stops": 1,
+   "removed_winners": 9,
+   "kept_losers": 45,
+   "added_trades": 22,
+   "added_net": -3842,
+   "loser_block_rate": 2.2,
+   "winner_block_rate": 0.6,
+   "per_year_removed_losers": {
+    "2026": 1
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2"
+   },
+   "n": 1608,
+   "net": 393089,
+   "wr": 96.95,
+   "removed_losers": 3,
+   "removed_full_stops": 3,
+   "removed_winners": 45,
+   "kept_losers": 43,
+   "added_trades": 41,
+   "added_net": -7830,
+   "loser_block_rate": 6.5,
+   "winner_block_rate": 2.9,
+   "per_year_removed_losers": {
+    "2026": 1,
+    "2024": 1,
+    "2025": 1
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss + session ends 19:00 + hour 11 off",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111"
+   },
+   "n": 1364,
+   "net": 347808,
+   "wr": 97.21,
+   "removed_losers": 13,
+   "removed_full_stops": 12,
+   "removed_winners": 293,
+   "kept_losers": 33,
+   "added_trades": 55,
+   "added_net": -4656,
+   "loser_block_rate": 28.3,
+   "winner_block_rate": 18.7,
+   "per_year_removed_losers": {
+    "2024": 5,
+    "2026": 3,
+    "2023": 1,
+    "2025": 4
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss + session ends 19:00 + hour 11 off + price bands B/S + BandOff",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111",
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1"
+   },
+   "n": 655,
+   "net": 197754,
+   "wr": 98.02,
+   "removed_losers": 38,
+   "removed_full_stops": 36,
+   "removed_winners": 1012,
+   "kept_losers": 8,
+   "added_trades": 90,
+   "added_net": 8591,
+   "loser_block_rate": 82.6,
+   "winner_block_rate": 64.5,
+   "per_year_removed_losers": {
+    "2024": 10,
+    "2026": 7,
+    "2025": 14,
+    "2023": 7
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss + session ends 19:00 + hour 11 off + price bands B/S + BandOff + stricter shape",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111",
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1",
+    "InpHamRatio": "2.25",
+    "InpHamNose": "0.8",
+    "InpNoseMax": "0.05",
+    "InpStar": "false"
+   },
+   "n": 591,
+   "net": 175126,
+   "wr": 97.97,
+   "removed_losers": 41,
+   "removed_full_stops": 39,
+   "removed_winners": 1134,
+   "kept_losers": 5,
+   "added_trades": 151,
+   "added_net": 20035,
+   "loser_block_rate": 89.1,
+   "winner_block_rate": 72.3,
+   "per_year_removed_losers": {
+    "2024": 12,
+    "2026": 8,
+    "2025": 15,
+    "2023": 6
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss + session ends 19:00 + hour 11 off + price bands B/S + BandOff + stricter shape + EMA gap >= 22.5 pips",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111",
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1",
+    "InpHamRatio": "2.25",
+    "InpHamNose": "0.8",
+    "InpNoseMax": "0.05",
+    "InpStar": "false",
+    "InpEmaGapPips": "22.5"
+   },
+   "n": 428,
+   "net": 138346,
+   "wr": 98.6,
+   "removed_losers": 44,
+   "removed_full_stops": 41,
+   "removed_winners": 1244,
+   "kept_losers": 2,
+   "added_trades": 101,
+   "added_net": 17244,
+   "loser_block_rate": 95.7,
+   "winner_block_rate": 79.3,
+   "per_year_removed_losers": {
+    "2024": 12,
+    "2026": 8,
+    "2025": 17,
+    "2023": 7
+   }
+  },
+  {
+   "filter": "GREEDY: TvBox kelt_S / vwap_B masks + day caps $2000 target / 2% loss + session ends 19:00 + hour 11 off + price bands B/S + BandOff + stricter shape + EMA gap >= 22.5 pips + touch 3.5 pips + MinRangeAtr 0.8",
+   "changes": {
+    "TvBox_kelt_S": "110111111111",
+    "TvBox_vwap_B": "11101111",
+    "InpDayTargetUsd": "2000",
+    "InpDayLossPct": "2",
+    "InpSessTo": "19",
+    "InpHours": "111111111110111111111111",
+    "InpBandsB": "111111101111001111110",
+    "InpBandsS": "111110100000101001101",
+    "InpBandOff": "1",
+    "InpHamRatio": "2.25",
+    "InpHamNose": "0.8",
+    "InpNoseMax": "0.05",
+    "InpStar": "false",
+    "InpEmaGapPips": "22.5",
+    "InpTouchPips": "3.5",
+    "InpMinRangeAtr": "0.8"
+   },
+   "n": 399,
+   "net": 132241,
+   "wr": 98.75,
+   "removed_losers": 44,
+   "removed_full_stops": 41,
+   "removed_winners": 1274,
+   "kept_losers": 2,
+   "added_trades": 102,
+   "added_net": 23228,
+   "loser_block_rate": 95.7,
+   "winner_block_rate": 81.2,
+   "per_year_removed_losers": {
+    "2024": 12,
+    "2026": 8,
+    "2025": 17,
+    "2023": 7
+   }
+  }
+ ],
+ "secs": 67
+}
