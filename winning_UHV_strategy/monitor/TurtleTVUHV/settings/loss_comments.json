@@ -1,0 +1,520 @@
+{
+ "S|1793780942|1.12403": {
+  "comment": "we sold in an uptrend -> i mean the lines drawn are green above this candle and last 3 candles.. also we just came out of a range. we broke the range upwards so i'm not sure why we're taking a sell not a buy here..",
+  "trade": {
+   "side": -1,
+   "entry_time": 1793780942,
+   "entry": 1.12403,
+   "stop": 1.12607,
+   "exit_time": 1793785151,
+   "exit": 1.12607,
+   "net": -204,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 03:43:06"
+ },
+ "S|1793579416|1.11605": {
+  "comment": "we were in a retracement within an uptrend, because retracement continued afterwards as uptrend.. so in this retracement i human would have taken a buy instead of this lossy sell.. a buy based on breakout of UHV of this retracement. the ret. is wrongly classified here as downtrend.",
+  "trade": {
+   "side": -1,
+   "entry_time": 1793579416,
+   "entry": 1.11605,
+   "stop": 1.1183,
+   "exit_time": 1793596539,
+   "exit": 1.11834,
+   "net": -229,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 03:47:19"
+ },
+ "B|1793363061|1.11937": {
+  "comment": "we bought in a downtrend (line above this candle and the candle before is red.. again the series of 4 candles is ranging, then the range is broken downwards so we could have taken a sell here.  hmm this was a tough one i guess.. but buys are done when we have a retracement in an uptrend. this is a case where after a retracement the price fails to break upwards and continues as downtrend dowards..",
+  "trade": {
+   "side": 1,
+   "entry_time": 1793363061,
+   "entry": 1.11937,
+   "stop": 1.11723,
+   "exit_time": 1793364635,
+   "exit": 1.11722,
+   "net": -214.99,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 03:49:56"
+ },
+ "B|1793118922|1.11447": {
+  "comment": "a retracement begins when the last green candle's low is broken by the body of a red candle in an uptrend. here this same candle is the one beginning the retracement (breaks below with wick not body tho) and this same candle we consider as the breakout candle.. hmm.. basically we're buying at the very top of this candle, not sure which UHV this one's breaking..",
+  "trade": {
+   "side": 1,
+   "entry_time": 1793118922,
+   "entry": 1.11447,
+   "stop": 1.11239,
+   "exit_time": 1793134211,
+   "exit": 1.11238,
+   "net": -209,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 03:52:49"
+ },
+ "B|1793035561|1.11954": {
+  "comment": "this was a genuine failed breakout of last resistance of 10:19 pm candle's top.. one thing i noticed that right before this entry price made a green baby hump which failed to break the high of last hump.. so the hump rule about when to stop buying.. that we must stop buying if we fail to break last high .. that rule couldve saved this..",
+  "trade": {
+   "side": 1,
+   "entry_time": 1793035561,
+   "entry": 1.11954,
+   "stop": 1.1174,
+   "exit_time": 1793046413,
+   "exit": 1.11739,
+   "net": -214.99,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 03:56:41"
+ },
+ "B|1793012340|1.11999": {
+  "comment": "clear downtrend before and after this buy.. the buy was done in a ranging ondition market.. and the ranging was just a few candles but yeah.. the price failed to break its last high .. that could've given us a hint.. maybe the uptrend wasn't sure yet (it made a single green hump.. which could've been a retracement of a down trend..",
+  "trade": {
+   "side": 1,
+   "entry_time": 1793012340,
+   "entry": 1.11999,
+   "stop": 1.11777,
+   "exit_time": 1793023075,
+   "exit": 1.11777,
+   "net": -222,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 03:58:54"
+ },
+ "B|1792982936|1.12263": {
+  "comment": "buying at the top of an uptrend where price has failed to make a higher high.. actually this candle itself was expected to make the higher high but it couldnt'..",
+  "trade": {
+   "side": 1,
+   "entry_time": 1792982936,
+   "entry": 1.12263,
+   "stop": 1.12058,
+   "exit_time": 1792999492,
+   "exit": 1.12058,
+   "net": -205,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 03:59:54"
+ },
+ "B|1792767031|1.12059": {
+  "comment": "this candle is the same one that's expected to make a higher high (break the last high), so it kinda is the flag bearer to be breaking the last higher high. it broke the last higher high of the last hump but closed below it.. so it broke with a wick. a fake breakout of the high of the last hump's high.. maybe this could be converted into a check?",
+  "trade": {
+   "side": 1,
+   "entry_time": 1792767031,
+   "entry": 1.12059,
+   "stop": 1.1183,
+   "exit_time": 1792789139,
+   "exit": 1.12019,
+   "net": -39.99,
+   "why": "time exit"
+  },
+  "saved": "2026-11-06 04:03:07"
+ },
+ "S|1792430009|1.12071": {
+  "comment": "this candle didnot break the last low.. so its under a green line.. we cannot sell under a green line.. a green line marks upwards direction. although its only the first green hump.. this is a red candle a part of a possible retracement in an uptrend.. hmm.. this is a case where price touches the last support .. whenever we're touching the last support.. its a hard situation. we should never sell when we touch a last support because it might reverse upwards from there even when its showing signs of going down.. by checking the last support line we could've avoided this.",
+  "trade": {
+   "side": -1,
+   "entry_time": 1792430009,
+   "entry": 1.12071,
+   "stop": 1.12273,
+   "exit_time": 1792464938,
+   "exit": 1.12274,
+   "net": -203,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:06:18"
+ },
+ "B|1792184247|1.12406": {
+  "comment": "i think this one is in the last few minutes of the market.. in saad strategy earlier we used to have a check to not take new trades new market close.. maybe this couldve been one.. not sure.. it was taken at 157am.. is that near market close?",
+  "trade": {
+   "side": 1,
+   "entry_time": 1792184247,
+   "entry": 1.12406,
+   "stop": 1.12191,
+   "exit_time": 1792184338,
+   "exit": 1.12383,
+   "net": -23.01,
+   "why": "time exit"
+  },
+  "saved": "2026-11-06 04:14:20"
+ },
+ "B|1792036686|1.12297": {
+  "comment": "this is a buy  taken during a very twisted kind of downtrend market.. downtrend before and after the buy.. only a green 1 hump came in between the both red lines of downtrend.. that green i think .. umm not sure why the line is green tho.. because for greens we need price to make a higher low.. ah i see the price here makes a mini higher low but it hasnot made yet a higher high.. and so its not a confirmed uptrend yet.. that's why the small green line between the two reds.. but it shouldn't have been a green line here.. its a bug in our camel humps",
+  "trade": {
+   "side": 1,
+   "entry_time": 1792036686,
+   "entry": 1.12297,
+   "stop": 1.12086,
+   "exit_time": 1792044824,
+   "exit": 1.12086,
+   "net": -211,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:16:48"
+ },
+ "S|1791866190|1.11711": {
+  "comment": "the line from 912am till 917 am is drawn green whereas the 917 am price was lower than the 912am.. so i think that line should still have been red. if it were red. this would be our 8th red camel hump.. so an exhausted downtrend here. also i think the sell is done on a candle on which the line of camel hups is green.. i think we sell only under red lines right? this is also the start of a ranging market which ranges from 9:35am till 10:00 am.. so maybe a ranging filter could help here? but that's a start of the ranging market, hard to detect. but the ranging starts from 9:35am which is 1 minute before this sell",
+  "trade": {
+   "side": -1,
+   "entry_time": 1791866190,
+   "entry": 1.11711,
+   "stop": 1.1191,
+   "exit_time": 1791876651,
+   "exit": 1.11912,
+   "net": -201,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:21:13"
+ },
+ "B|1791772667|1.12131": {
+  "comment": "in an uptrend.. if we consider a retracement as reds.. the highest red volume was on 733am candle. this one doesnot break its high.. infact i think it breaks the high of 735am candle.. so its kinda not a valid breakout candle .. we must see which candle was considered as a uhv here.",
+  "trade": {
+   "side": 1,
+   "entry_time": 1791772667,
+   "entry": 1.12131,
+   "stop": 1.11933,
+   "exit_time": 1791792679,
+   "exit": 1.11932,
+   "net": -199,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:23:15"
+ },
+ "S|1791579489|1.12002": {
+  "comment": "hmm it seems we took this trade right at time of market close..",
+  "trade": {
+   "side": -1,
+   "entry_time": 1791579489,
+   "entry": 1.12002,
+   "stop": 1.1221,
+   "exit_time": 1791579534,
+   "exit": 1.12026,
+   "net": -24,
+   "why": "time exit"
+  },
+  "saved": "2026-11-06 04:24:50"
+ },
+ "B|1791441964|1.12033": {
+  "comment": "this buy is taken where the price has yet failed to break above the high of the last green hump.. so its kinda like we're making a lower high and then the next candle after this lower high we take a buy.. the line became red at 1145.. so 1 candle after it the line is still red.. and under a red line we shouldn't normally buy",
+  "trade": {
+   "side": 1,
+   "entry_time": 1791441964,
+   "entry": 1.12033,
+   "stop": 1.11833,
+   "exit_time": 1791443196,
+   "exit": 1.11832,
+   "net": -201,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:26:24"
+ },
+ "B|1791364204|1.11989": {
+  "comment": "a buy under a clear red hump..",
+  "trade": {
+   "side": 1,
+   "entry_time": 1791364204,
+   "entry": 1.11989,
+   "stop": 1.11777,
+   "exit_time": 1791373427,
+   "exit": 1.11775,
+   "net": -213.99,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:27:09"
+ },
+ "B|1791336670|1.12449": {
+  "comment": "a buy in a place where before and after it is a clear downtrend.. hmm this one is a tough one to debug.. i dont know..",
+  "trade": {
+   "side": 1,
+   "entry_time": 1791336670,
+   "entry": 1.12449,
+   "stop": 1.12236,
+   "exit_time": 1791353932,
+   "exit": 1.12235,
+   "net": -214,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:29:08"
+ },
+ "S|1791281710|1.12412": {
+  "comment": "this is a sell taken at the touch of a prior support line.. we must not sell at support line as price might reverse from here.",
+  "trade": {
+   "side": -1,
+   "entry_time": 1791281710,
+   "entry": 1.12412,
+   "stop": 1.12675,
+   "exit_time": 1791286935,
+   "exit": 1.12677,
+   "net": -265,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:31:09"
+ },
+ "B|1791154986|1.12583": {
+  "comment": "this is a buy on a candle which makes a lower high.. so we did a buy under a red line (downtrend), secondly i think we've seen such cases before.. the same candle makes a lower high and same is the one we're taking a buy in.. i think we must wait or something while it confirms the creation of the lower high..",
+  "trade": {
+   "side": 1,
+   "entry_time": 1791154986,
+   "entry": 1.12583,
+   "stop": 1.1238,
+   "exit_time": 1791162587,
+   "exit": 1.12379,
+   "net": -204,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:33:51"
+ },
+ "S|1790948186|1.12461": {
+  "comment": "selling under a green line at the start of an uptrend. and on the same candle which makes the higher low.. i think we must wait until after a higher low is created to be able to buy",
+  "trade": {
+   "side": -1,
+   "entry_time": 1790948186,
+   "entry": 1.12461,
+   "stop": 1.12732,
+   "exit_time": 1790949481,
+   "exit": 1.12732,
+   "net": -271.01,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:35:12"
+ },
+ "S|1790943550|1.12232": {
+  "comment": "the candle at 518 broke the last high of the last hump from 5:15pm.. so it means a higher high was created .. right after this 5:18 candle we're having a green line on top of our head and selling.. selling in an uptrend that has begun..",
+  "trade": {
+   "side": -1,
+   "entry_time": 1790943550,
+   "entry": 1.12232,
+   "stop": 1.12446,
+   "exit_time": 1790944202,
+   "exit": 1.12555,
+   "net": -323,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:37:21"
+ },
+ "B|1790835485|1.13248": {
+  "comment": "this is a buy in a ranging market.. and also since this candle within itself created a lower high.. i think we must wait before the lower high is created.. we've seen this case before..",
+  "trade": {
+   "side": 1,
+   "entry_time": 1790835485,
+   "entry": 1.13248,
+   "stop": 1.13039,
+   "exit_time": 1790839865,
+   "exit": 1.13035,
+   "net": -213,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 04:38:34"
+ },
+ "B|1772786906|1.16122": {
+  "comment": "bought where price nearly retraced to its last low.. means the price doesnot have enough momentum to keep going upwards.",
+  "trade": {
+   "side": 1,
+   "entry_time": 1772786906,
+   "entry": 1.16122,
+   "stop": 1.15894,
+   "exit_time": 1772788550,
+   "exit": 1.15892,
+   "net": -229.99,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:00:11"
+ },
+ "B|1772792966|1.15843": {
+  "comment": "bought at last support and no clear uptrend.",
+  "trade": {
+   "side": 1,
+   "entry_time": 1772792966,
+   "entry": 1.15843,
+   "stop": 1.15562,
+   "exit_time": 1772798971,
+   "exit": 1.15562,
+   "net": -281,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:00:54"
+ },
+ "B|1772832486|1.16185": {
+  "comment": "bought at market close time i think",
+  "trade": {
+   "side": 1,
+   "entry_time": 1772832486,
+   "entry": 1.16185,
+   "stop": 1.15967,
+   "exit_time": 1772834338,
+   "exit": 1.16173,
+   "net": -11.99,
+   "why": "time exit"
+  },
+  "saved": "2026-11-06 05:01:17"
+ },
+ "S|1773030615|1.15210": {
+  "comment": "sold in an overall uptrend, maybe the 5 min timeframe could've confirmed the uptrend..",
+  "trade": {
+   "side": -1,
+   "entry_time": 1773030615,
+   "entry": 1.1521,
+   "stop": 1.1544,
+   "exit_time": 1773033707,
+   "exit": 1.15441,
+   "net": -231,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:01:52"
+ },
+ "B|1773043204|1.15650": {
+  "comment": "bought after almost 6 upwards humps .. uptrend exhausted",
+  "trade": {
+   "side": 1,
+   "entry_time": 1773043204,
+   "entry": 1.1565,
+   "stop": 1.15416,
+   "exit_time": 1773044246,
+   "exit": 1.15415,
+   "net": -235,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:02:40"
+ },
+ "B|1773103391|1.16347": {
+  "comment": "the high of highest volume red uhv was not broken, maybe an issue with marking uhvs correclty",
+  "trade": {
+   "side": 1,
+   "entry_time": 1773103391,
+   "entry": 1.16347,
+   "stop": 1.1611,
+   "exit_time": 1773112027,
+   "exit": 1.16109,
+   "net": -238,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:03:42"
+ },
+ "S|1773121801|1.16167": {
+  "comment": "sold in uptrend confirmed by the last candle forming a high which broke atleast 5 previous highs",
+  "trade": {
+   "side": -1,
+   "entry_time": 1773121801,
+   "entry": 1.16167,
+   "stop": 1.16386,
+   "exit_time": 1773126522,
+   "exit": 1.16387,
+   "net": -220,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:04:38"
+ },
+ "S|1773151992|1.16281": {
+  "comment": "sold at bottom of a downtrend while touching last support line",
+  "trade": {
+   "side": -1,
+   "entry_time": 1773151992,
+   "entry": 1.16281,
+   "stop": 1.16497,
+   "exit_time": 1773153820,
+   "exit": 1.16497,
+   "net": -216.01,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:05:29"
+ },
+ "S|1773187910|1.16117": {
+  "comment": "sold in an uptrend confirmed by the breaking of last higher high",
+  "trade": {
+   "side": -1,
+   "entry_time": 1773187910,
+   "entry": 1.16117,
+   "stop": 1.16332,
+   "exit_time": 1773203810,
+   "exit": 1.16333,
+   "net": -216,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:06:10"
+ },
+ "S|1773296535|1.15419": {
+  "comment": "sold after price made a higher low at 11:21am",
+  "trade": {
+   "side": -1,
+   "entry_time": 1773296535,
+   "entry": 1.15419,
+   "stop": 1.15655,
+   "exit_time": 1773315430,
+   "exit": 1.15656,
+   "net": -237,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:08:33"
+ },
+ "B|1773336186|1.15306": {
+  "comment": "bought while touching last resistance line from two prior highs.. price failed to break resistance and reversed.",
+  "trade": {
+   "side": 1,
+   "entry_time": 1773336186,
+   "entry": 1.15306,
+   "stop": 1.15005,
+   "exit_time": 1773376599,
+   "exit": 1.15001,
+   "net": -305,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:09:39"
+ },
+ "B|1773638408|1.14421": {
+  "comment": "bought in a downtrend. last two humps didnot break the last high",
+  "trade": {
+   "side": 1,
+   "entry_time": 1773638408,
+   "entry": 1.14421,
+   "stop": 1.14213,
+   "exit_time": 1773646498,
+   "exit": 1.14211,
+   "net": -210,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:12:52"
+ },
+ "S|1773667444|1.14802": {
+  "comment": "previous candle had broken last 2 humps high.. so we're in a now begun uptrend.. so we shouldn't sell when an uptrend has started.. or wait for confirmation of the uptrend.",
+  "trade": {
+   "side": -1,
+   "entry_time": 1773667444,
+   "entry": 1.14802,
+   "stop": 1.15012,
+   "exit_time": 1773669515,
+   "exit": 1.15012,
+   "net": -210,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:14:21"
+ },
+ "S|1773678787|1.14783": {
+  "comment": "ranging market right before the sell",
+  "trade": {
+   "side": -1,
+   "entry_time": 1773678787,
+   "entry": 1.14783,
+   "stop": 1.14996,
+   "exit_time": 1773679927,
+   "exit": 1.14996,
+   "net": -213,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:29:42"
+ },
+ "S|1773728754|1.14718": {
+  "comment": "selling in an uptrend confirmed by first uptrend hum .. hmm maybe the first hump didnt form yet.. but price broke previous high.. so yeah..",
+  "trade": {
+   "side": -1,
+   "entry_time": 1773728754,
+   "entry": 1.14718,
+   "stop": 1.14934,
+   "exit_time": 1773732409,
+   "exit": 1.14935,
+   "net": -217.01,
+   "why": "stop loss"
+  },
+  "saved": "2026-11-06 05:40:05"
+ }
+}

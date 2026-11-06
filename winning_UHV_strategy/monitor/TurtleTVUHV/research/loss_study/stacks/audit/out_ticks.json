@@ -1,0 +1,20 @@
+{
+ "setups": 12224,
+ "first_crossings": 12855,
+ "after_crossing": {
+  "ticks_perturbed": 921655,
+  "differences": {}
+ },
+ "control_before_crossing": {
+  "ticks_perturbed": 229140,
+  "differences": {
+   "count": [
+    12224,
+    12412
+   ]
+  }
+ },
+ "sp_equals_spread_at_trigger_tick": 12135,
+ "trigger_after_bar_close": 12224,
+ "secs": 9.3
+}

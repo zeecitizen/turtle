@@ -1,0 +1,536 @@
+{
+ "files_sha1": {
+  "uhv_filters.py": "556ce0399d24d8434a1cc39c2adae7943ceba1ee",
+  "uhv_engine.py": "6fe3fbbc27891c9ea3822ab54c8c6036df4a2fc8"
+ },
+ "paths": {
+  "instant (InpUhvEntry=1, the base)": {
+   "calls": 12202,
+   "min_k": 402,
+   "violations": 0,
+   "per_setting": {
+    "InpUhvStruct": {
+     "configs": 2,
+     "calls": 24404,
+     "skips": 11984,
+     "max_off": {
+      "lastH": -1,
+      "lastL": -1,
+      "h": -1,
+      "l": -1
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvSRPips": {
+     "configs": 35,
+     "calls": 427070,
+     "skips": 182393,
+     "max_off": {
+      "l": 0,
+      "h": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvRangeAtr": {
+     "configs": 25,
+     "calls": 305050,
+     "skips": 37557,
+     "max_off": {
+      "h": 0,
+      "l": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvFreshBreak": {
+     "configs": 20,
+     "calls": 244040,
+     "skips": 53907,
+     "max_off": {
+      "lastH": -2,
+      "h": 0,
+      "lastL": -2,
+      "l": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvBrokeHighs": {
+     "configs": 30,
+     "calls": 366060,
+     "skips": 95353,
+     "max_off": {
+      "lastH": -3,
+      "h": 0,
+      "lastL": -3,
+      "l": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvMaxHumps": {
+     "configs": 6,
+     "calls": 73212,
+     "skips": 9036,
+     "max_off": {
+      "stk": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvDeepRet": {
+     "configs": 5,
+     "calls": 61010,
+     "skips": 24156,
+     "max_off": {
+      "lastH": -1,
+      "lastL": -1,
+      "h": -1,
+      "l": -2
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvHtf5": {
+     "configs": 10,
+     "calls": 122020,
+     "skips": 52169,
+     "max_off": {
+      "end5": 0,
+      "c": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvSRAhead": {
+     "configs": 20,
+     "calls": 244040,
+     "skips": 167644,
+     "max_off": {
+      "lastL": -1,
+      "l": -1,
+      "lastH": -1,
+      "h": -1
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvBigFig": {
+     "configs": 10,
+     "calls": 122020,
+     "skips": 1968,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvMinHumps": {
+     "configs": 3,
+     "calls": 36606,
+     "skips": 28230,
+     "max_off": {
+      "stk": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvCounterAtr": {
+     "configs": 16,
+     "calls": 195232,
+     "skips": 31307,
+     "max_off": {
+      "c": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvFriCutNY": {
+     "configs": 6,
+     "calls": 73212,
+     "skips": 2378,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvRunPips": {
+     "configs": 20,
+     "calls": 244040,
+     "skips": 19686,
+     "max_off": {
+      "c": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvLoudBrk": {
+     "configs": 4,
+     "calls": 48808,
+     "skips": 2639,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvMinTicks": {
+     "configs": 5,
+     "calls": 61010,
+     "skips": 1898,
+     "max_off": {
+      "v": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvSunOpenMins": {
+     "configs": 3,
+     "calls": 36606,
+     "skips": 136,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvNewsNY": {
+     "configs": 4,
+     "calls": 48808,
+     "skips": 721,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvSpikeAtr": {
+     "configs": 16,
+     "calls": 195232,
+     "skips": 35138,
+     "max_off": {
+      "h": 0,
+      "l": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvHoliday": {
+     "configs": 1,
+     "calls": 12202,
+     "skips": 482,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvMinAtrPips": {
+     "configs": 5,
+     "calls": 61010,
+     "skips": 27341,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvMaxGapPips": {
+     "configs": 5,
+     "calls": 61010,
+     "skips": 1154,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "RiskMgr secure()": {
+     "configs": 42,
+     "calls": 512484,
+     "skips": 415433,
+     "max_off": {
+      "stk": 0,
+      "c": 0,
+      "atr": 0,
+      "h": 0,
+      "l": 0
+     },
+     "violations": 0,
+     "flags": {}
+    }
+   }
+  },
+  "candle close (InpUhvEntry=0)": {
+   "calls": 3600,
+   "min_k": 436,
+   "violations": 0,
+   "per_setting": {
+    "InpUhvStruct": {
+     "configs": 2,
+     "calls": 7200,
+     "skips": 3511,
+     "max_off": {
+      "lastH": -1,
+      "lastL": -1,
+      "h": -1,
+      "l": -1
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvSRPips": {
+     "configs": 35,
+     "calls": 126000,
+     "skips": 60964,
+     "max_off": {
+      "l": 0,
+      "h": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvRangeAtr": {
+     "configs": 25,
+     "calls": 90000,
+     "skips": 9756,
+     "max_off": {
+      "h": 0,
+      "l": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvFreshBreak": {
+     "configs": 20,
+     "calls": 72000,
+     "skips": 12618,
+     "max_off": {
+      "lastL": -2,
+      "l": 0,
+      "lastH": -2,
+      "h": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvBrokeHighs": {
+     "configs": 30,
+     "calls": 108000,
+     "skips": 29338,
+     "max_off": {
+      "lastL": -3,
+      "l": 0,
+      "lastH": -3,
+      "h": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvMaxHumps": {
+     "configs": 6,
+     "calls": 21600,
+     "skips": 2325,
+     "max_off": {
+      "stk": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvDeepRet": {
+     "configs": 5,
+     "calls": 18000,
+     "skips": 8384,
+     "max_off": {
+      "lastH": -1,
+      "lastL": -1,
+      "h": -1,
+      "l": -2
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvHtf5": {
+     "configs": 10,
+     "calls": 36000,
+     "skips": 16137,
+     "max_off": {
+      "end5": 0,
+      "c": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvSRAhead": {
+     "configs": 20,
+     "calls": 72000,
+     "skips": 48345,
+     "max_off": {
+      "lastH": -1,
+      "h": -2,
+      "lastL": -1,
+      "l": -2
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvBigFig": {
+     "configs": 10,
+     "calls": 36000,
+     "skips": 581,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvMinHumps": {
+     "configs": 3,
+     "calls": 10800,
+     "skips": 8614,
+     "max_off": {
+      "stk": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvCounterAtr": {
+     "configs": 16,
+     "calls": 57600,
+     "skips": 7353,
+     "max_off": {
+      "c": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvFriCutNY": {
+     "configs": 6,
+     "calls": 21600,
+     "skips": 692,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvRunPips": {
+     "configs": 20,
+     "calls": 72000,
+     "skips": 7325,
+     "max_off": {
+      "c": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvLoudBrk": {
+     "configs": 4,
+     "calls": 14400,
+     "skips": 0,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvMinTicks": {
+     "configs": 5,
+     "calls": 18000,
+     "skips": 616,
+     "max_off": {
+      "v": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvSunOpenMins": {
+     "configs": 3,
+     "calls": 10800,
+     "skips": 39,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvNewsNY": {
+     "configs": 4,
+     "calls": 14400,
+     "skips": 196,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvSpikeAtr": {
+     "configs": 16,
+     "calls": 57600,
+     "skips": 10083,
+     "max_off": {
+      "h": 0,
+      "l": 0
+     },
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvHoliday": {
+     "configs": 1,
+     "calls": 3600,
+     "skips": 157,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvMinAtrPips": {
+     "configs": 5,
+     "calls": 18000,
+     "skips": 8031,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "InpUhvMaxGapPips": {
+     "configs": 5,
+     "calls": 18000,
+     "skips": 0,
+     "max_off": {},
+     "violations": 0,
+     "flags": {}
+    },
+    "RiskMgr secure()": {
+     "configs": 42,
+     "calls": 151200,
+     "skips": 122690,
+     "max_off": {
+      "stk": 0,
+      "c": 0,
+      "atr": 0,
+      "h": 0,
+      "l": 0
+     },
+     "violations": 0,
+     "flags": {}
+    }
+   }
+  }
+ },
+ "positive_control_leaky_swings": {
+  "violations": 24000,
+  "per_setting": {
+   "InpUhvStruct": {
+    "configs": 2,
+    "calls": 6000,
+    "skips": 2965,
+    "max_off": {
+     "lastH": 0,
+     "lastL": 0,
+     "h": 0,
+     "l": 0
+    },
+    "violations": 12000,
+    "flags": {}
+   },
+   "InpUhvSRAhead": {
+    "configs": 4,
+    "calls": 12000,
+    "skips": 4387,
+    "max_off": {
+     "lastL": 0,
+     "l": -1,
+     "lastH": 0,
+     "h": -1
+    },
+    "violations": 12000,
+    "flags": {}
+   },
+   "RiskMgr secure()": {
+    "configs": 0,
+    "calls": 0,
+    "skips": 0,
+    "max_off": {},
+    "violations": 0,
+    "flags": {}
+   }
+  }
+ },
+ "secs": 109.2
+}

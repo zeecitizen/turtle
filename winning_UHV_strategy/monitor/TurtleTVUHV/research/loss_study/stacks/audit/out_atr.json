@@ -1,0 +1,8 @@
+{
+ "max|stored - sim._atr_adx(14)|": 0.0,
+ "max|stored - sma14 window ending i-1|": 0.0006450000000000067,
+ "max|stored - sma14 window ending i+1|": 0.0006450000000000067,
+ "max|stored - sma14 window ending i+7|": 0.0016814285714285481,
+ "max|stored - Wilder RMA14|": 0.001027417577034808,
+ "truncation mismatches (30 cut points)": 0
+}

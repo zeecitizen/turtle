@@ -1,0 +1,85 @@
+/* style.css - Golden Gravity (F-CORE). The game is one canvas; the only DOM is the boot coin, the live frame and the safety ledger. */
+:root {
+  --ink: #1a1410; --paper: #f6efdc; --ledger: #efe6c8; --rule: #9fb6c9; --margin: #e0303a;
+  --gold: #ffcc33; --gold-deep: #b8860b; --brass: #c9a24a; --brass-dark: #8a6a24; --iron: #3b3f47; --crimson: #e0303a;
+  --emerald: #1f9e6e;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #120d09; color: var(--paper);
+  -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+#stage { position: fixed; inset: 0; }
+#game { position: absolute; inset: 0; width: 100%; height: 100%; display: block; outline: none; touch-action: none; cursor: default; }
+#game.grab { cursor: grab; } #game.grabbing { cursor: grabbing; } #game.point { cursor: pointer; }
+
+/* the live frame: a red frame on every screen while real money can move (REQUIREMENTS 5.5) */
+#liveframe { position: absolute; inset: 0; pointer-events: none; border: 7px solid #e0303a;
+  box-shadow: inset 0 0 0 2px #ffd0c8, inset 0 0 38px rgba(224, 48, 58, 0.55); animation: livepulse 2.4s ease-in-out infinite; }
+#liveframe[hidden] { display: none; }
+@keyframes livepulse { 50% { box-shadow: inset 0 0 0 2px #ffd0c8, inset 0 0 64px rgba(224, 48, 58, 0.8); } }
+
+/* boot: shown only until main.js draws its own loading coin */
+#boot { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  background: radial-gradient(ellipse at 50% 40%, #3a2a1a 0%, #120d09 70%); font-family: Georgia, "Times New Roman", serif; }
+#boot.gone { display: none; }
+.boot-coin { width: 96px; height: 96px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle at 35% 30%, #fff2b0, #ffcc33 45%, #b8860b 100%); border: 4px solid #7a5a12;
+  box-shadow: 0 0 40px rgba(255, 204, 51, 0.45); animation: spin 1.6s linear infinite; }
+.boot-coin span { font: bold 48px Georgia, serif; color: #7a5a12; }
+@keyframes spin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
+.boot-words { color: #f0d68a; letter-spacing: 0.08em; font-style: italic; }
+
+/* ------------------------------------------------------------------ the safety ledger (DOM overlay, screens.js builds it) */
+#safety { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 5;
+  background: rgba(18, 13, 9, 0.62); backdrop-filter: blur(2px); }
+#safety[hidden] { display: none; }
+.ledger { position: relative; width: min(780px, 94vw); max-height: 92vh; overflow: auto; padding: 30px 44px 26px 96px;
+  color: var(--ink); font-family: Georgia, "Times New Roman", serif; font-size: 16px; line-height: 28px;
+  background:
+    linear-gradient(90deg, transparent 72px, rgba(224, 48, 58, 0.75) 72px, rgba(224, 48, 58, 0.75) 74px, transparent 74px,
+                    transparent 78px, rgba(224, 48, 58, 0.45) 78px, rgba(224, 48, 58, 0.45) 79px, transparent 79px),
+    repeating-linear-gradient(180deg, transparent 0, transparent 27px, rgba(159, 182, 201, 0.7) 27px, rgba(159, 182, 201, 0.7) 28px),
+    linear-gradient(180deg, #f8f1dc 0%, #efe4c2 100%);
+  background-attachment: local;
+  border: 2px solid #7a5a12; border-radius: 4px 10px 10px 4px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6), inset 0 0 60px rgba(122, 90, 18, 0.18),
+              8px 0 0 -2px #d9cba0, 9px 0 0 -2px #7a5a12, 16px 0 0 -4px #cdbd8e, 17px 0 0 -4px #7a5a12; }
+.ledger .holes { position: absolute; left: 24px; top: 36px; bottom: 36px; width: 18px;
+  background: radial-gradient(circle, #23262c 5px, rgba(0,0,0,0.25) 6px, transparent 7px) 0 0 / 18px 56px repeat-y; opacity: 0.85; }
+.ledger h1 { margin: 0 0 0; font: italic bold 30px/42px Georgia, serif; color: #5e241b; letter-spacing: 0.02em; }
+.ledger h1 small { font: italic 15px Georgia, serif; color: #8a6a24; margin-left: 10px; }
+.ledger .stamp { position: absolute; right: 34px; top: 24px; transform: rotate(8deg); border: 3px double #b8860b; color: #b8860b;
+  padding: 0 10px; font: bold 14px/24px "Courier New", monospace; letter-spacing: 0.2em; border-radius: 6px; opacity: 0.9; }
+.ledger .stamp.live { color: #e0303a; border-color: #e0303a; }
+.ledger h2 { margin: 0; font: bold 13px/28px "Courier New", monospace; letter-spacing: 0.18em; text-transform: uppercase; color: #8a6a24; }
+.ledger .row { display: flex; align-items: center; gap: 14px; min-height: 28px; flex-wrap: wrap; }
+.ledger .row label { flex: 0 0 200px; font-style: italic; }
+.ledger .hint { font-size: 13px; color: #6b5a40; font-style: italic; line-height: 28px; }
+.ledger .choice { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+.ledger button, .ledger .chip { font: bold 14px/20px Georgia, serif; color: var(--ink); cursor: pointer; padding: 1px 12px; height: 24px;
+  border: 1.5px solid #7a5a12; border-radius: 12px; background: linear-gradient(180deg, #fff2b0, #e6c06a); box-shadow: 0 2px 0 #7a5a12; }
+.ledger button:active, .ledger .chip:active { transform: translateY(2px); box-shadow: 0 0 0 #7a5a12; }
+.ledger .chip.on { background: linear-gradient(180deg, #ffcc33, #b8860b); color: #1a1410; box-shadow: inset 0 2px 3px rgba(0,0,0,0.35); }
+.ledger input[type=text] { font: italic 17px Georgia, serif; color: #1f3f8a; background: transparent; border: none;
+  border-bottom: 1.5px dashed #7a5a12; outline: none; width: 260px; height: 26px; padding: 0 4px; }
+.ledger input[type=text]:focus { border-bottom-style: solid; background: rgba(255, 242, 176, 0.35); }
+.ledger .limits { font: 14px/28px "Courier New", monospace; color: #23262c; }
+.ledger .limits b { color: #5e241b; }
+.ledger .danger { margin-top: 0; border-top: 2px double #b8860b; }
+.ledger .kill { position: relative; overflow: hidden; height: 40px; padding: 0 22px; border-radius: 8px; color: #fff;
+  font: bold 15px Georgia, serif; letter-spacing: 0.08em; border: 2px solid #5e241b; background: linear-gradient(180deg, #ff5a5f, #a4232b);
+  box-shadow: 0 3px 0 #5e241b; }
+.ledger .kill i { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: rgba(26, 20, 16, 0.45); pointer-events: none; }
+.ledger .kill span { position: relative; }
+.ledger .kill.armed { animation: armed 0.8s ease-in-out infinite; }
+@keyframes armed { 50% { box-shadow: 0 3px 0 #5e241b, 0 0 22px rgba(255, 90, 95, 0.9); } }
+.ledger .close { position: absolute; right: 22px; bottom: 18px; }
+.ledger .msg { min-height: 28px; font-style: italic; color: #a4232b; padding-right: 190px; }   /* wraps before the close button */
+.ledger .msg.ok { color: #0f5c40; }
+.ledger .switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+.ledger .switch .knob { width: 46px; height: 22px; border-radius: 11px; background: #3b3f47; border: 1.5px solid #1a1410; position: relative; }
+.ledger .switch .knob::after { content: ""; position: absolute; top: 1px; left: 2px; width: 17px; height: 17px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff2b0, #c9a24a); transition: left 0.15s; }
+.ledger .switch.on .knob { background: #1f9e6e; }
+.ledger .switch.on .knob::after { left: 25px; }
+.ledger .switch.live.on .knob { background: #e0303a; }
+.ledger .switch.disabled { opacity: 0.45; cursor: not-allowed; }

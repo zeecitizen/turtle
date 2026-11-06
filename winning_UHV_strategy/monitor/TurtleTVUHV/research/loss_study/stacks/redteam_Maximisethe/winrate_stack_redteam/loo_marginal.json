@@ -1,0 +1,162 @@
+[
+ {
+  "half": "train",
+  "setting": "InpUhvFriCutNY",
+  "removed_net": 36,
+  "losers_removed_net": 2,
+  "removed_loss_rate_pct": 5.556,
+  "loo_rate_pct": 1.084,
+  "base_rate_pct": 3.357,
+  "hyper_P_ge": 0.05315463620810261
+ },
+ {
+  "half": "train",
+  "setting": "InpUhvDeepRet",
+  "removed_net": 204,
+  "losers_removed_net": 6,
+  "removed_loss_rate_pct": 2.941,
+  "loo_rate_pct": 1.351,
+  "base_rate_pct": 3.357,
+  "hyper_P_ge": 0.03373062852483708
+ },
+ {
+  "half": "train",
+  "setting": "InpUhvMaxHumps",
+  "removed_net": 211,
+  "losers_removed_net": 10,
+  "removed_loss_rate_pct": 4.739,
+  "loo_rate_pct": 1.827,
+  "base_rate_pct": 3.357,
+  "hyper_P_ge": 0.000900019222732922
+ },
+ {
+  "half": "train",
+  "setting": "InpUhvRunPips",
+  "removed_net": 90,
+  "losers_removed_net": 6,
+  "removed_loss_rate_pct": 6.667,
+  "loo_rate_pct": 1.571,
+  "base_rate_pct": 3.357,
+  "hyper_P_ge": 0.0010416300961144048
+ },
+ {
+  "half": "train",
+  "setting": "InpUhvSpikeAtr",
+  "removed_net": 288,
+  "losers_removed_net": 8,
+  "removed_loss_rate_pct": 2.778,
+  "loo_rate_pct": 1.448,
+  "base_rate_pct": 3.357,
+  "hyper_P_ge": 0.02656386470460914
+ },
+ {
+  "half": "train",
+  "setting": "InpUhvHtf5",
+  "removed_net": 76,
+  "losers_removed_net": 4,
+  "removed_loss_rate_pct": 5.263,
+  "loo_rate_pct": 1.312,
+  "base_rate_pct": 3.357,
+  "hyper_P_ge": 0.011397255586430127
+ },
+ {
+  "half": "train",
+  "setting": "InpUhvMaxGapPips",
+  "removed_net": 43,
+  "losers_removed_net": 2,
+  "removed_loss_rate_pct": 4.651,
+  "loo_rate_pct": 1.072,
+  "base_rate_pct": 3.357,
+  "hyper_P_ge": 0.07202373047514912
+ },
+ {
+  "half": "train",
+  "setting": "InpUhvBrokeHighs",
+  "removed_net": 52,
+  "losers_removed_net": 2,
+  "removed_loss_rate_pct": 3.846,
+  "loo_rate_pct": 1.057,
+  "base_rate_pct": 3.357,
+  "hyper_P_ge": 0.09851427824714318
+ },
+ {
+  "half": "test",
+  "setting": "InpUhvFriCutNY",
+  "removed_net": 59,
+  "losers_removed_net": 2,
+  "removed_loss_rate_pct": 3.39,
+  "loo_rate_pct": 1.094,
+  "base_rate_pct": 1.397,
+  "hyper_P_ge": 0.13139798374435052
+ },
+ {
+  "half": "test",
+  "setting": "InpUhvDeepRet",
+  "removed_net": 268,
+  "losers_removed_net": 4,
+  "removed_loss_rate_pct": 1.493,
+  "loo_rate_pct": 1.066,
+  "base_rate_pct": 1.397,
+  "hyper_P_ge": 0.31313952409096324
+ },
+ {
+  "half": "test",
+  "setting": "InpUhvMaxHumps",
+  "removed_net": 312,
+  "losers_removed_net": 3,
+  "removed_loss_rate_pct": 0.962,
+  "loo_rate_pct": 0.929,
+  "base_rate_pct": 1.397,
+  "hyper_P_ge": 0.5907835517470675
+ },
+ {
+  "half": "test",
+  "setting": "InpUhvRunPips",
+  "removed_net": 83,
+  "losers_removed_net": 0,
+  "removed_loss_rate_pct": 0.0,
+  "loo_rate_pct": 0.826,
+  "base_rate_pct": 1.397,
+  "hyper_P_ge": 1.0
+ },
+ {
+  "half": "test",
+  "setting": "InpUhvSpikeAtr",
+  "removed_net": 329,
+  "losers_removed_net": 4,
+  "removed_loss_rate_pct": 1.216,
+  "loo_rate_pct": 1.006,
+  "base_rate_pct": 1.397,
+  "hyper_P_ge": 0.4334043337444721
+ },
+ {
+  "half": "test",
+  "setting": "InpUhvHtf5",
+  "removed_net": 90,
+  "losers_removed_net": 2,
+  "removed_loss_rate_pct": 2.222,
+  "loo_rate_pct": 1.054,
+  "base_rate_pct": 1.397,
+  "hyper_P_ge": 0.24348518491389765
+ },
+ {
+  "half": "test",
+  "setting": "InpUhvMaxGapPips",
+  "removed_net": 25,
+  "losers_removed_net": 2,
+  "removed_loss_rate_pct": 8.0,
+  "loo_rate_pct": 1.141,
+  "base_rate_pct": 1.397,
+  "hyper_P_ge": 0.030291465697563056
+ },
+ {
+  "half": "test",
+  "setting": "InpUhvBrokeHighs",
+  "removed_net": 65,
+  "losers_removed_net": 1,
+  "removed_loss_rate_pct": 1.538,
+  "loo_rate_pct": 0.965,
+  "base_rate_pct": 1.397,
+  "hyper_P_ge": 0.48113456468680404
+ }
+]

@@ -1,0 +1,6 @@
+tight   MaxTrigSpread 1.0: all 714 tr 4 L WR 99.44% net $+376 | tr 332 tr 1 L WR 99.70% net $+285 | te 382 tr 3 L WR 99.21% net $+91
+tight   MaxTrigSpread 0.5: all 528 tr 3 L WR 99.43% net $+315 | tr 146 tr 0 L WR 100.00% net $+224 | te 382 tr 3 L WR 99.21% net $+91
+zee100  MaxTrigSpread 1.0: all 308 tr 0 L WR 100.00% net $+444 | tr 125 tr 0 L WR 100.00% net $+193 | te 183 tr 0 L WR 100.00% net $+251
+zee100  MaxTrigSpread 0.5: all 241 tr 0 L WR 100.00% net $+338 | tr 58 tr 0 L WR 100.00% net $+87 | te 183 tr 0 L WR 100.00% net $+251
+secure  MaxTrigSpread 1.0: all 2238 tr 30 L WR 98.66% net $-2,976 | tr 1059 tr 22 L WR 97.92% net $-2,975 | te 1179 tr 8 L WR 99.32% net $-1
+secure  MaxTrigSpread 0.5: all 1700 tr 12 L WR 99.29% net $-0 | tr 521 tr 4 L WR 99.23% net $+0 | te 1179 tr 8 L WR 99.32% net $-1

@@ -1,0 +1,6082 @@
+{
+ "note": "Python replay = HYPOTHESIS, NOT PROMOTED",
+ "scale_free_features": [
+  "side",
+  "humps",
+  "er8",
+  "er16",
+  "er30",
+  "er60",
+  "adx",
+  "trend30_atr",
+  "trend90_atr",
+  "trend240_atr",
+  "ny_hour",
+  "ny_min_of_day",
+  "weekday",
+  "spread_excess",
+  "brk_ratio",
+  "uhv_rel",
+  "stop_atr",
+  "bars_since_uhv",
+  "box",
+  "room60_atr",
+  "room240_atr",
+  "pos60",
+  "range20_atr",
+  "range60_atr",
+  "struct_with",
+  "uhv_body",
+  "last_body_dir",
+  "fig_ahead_atr",
+  "vol_ratio10_60",
+  "gap_atr",
+  "atr_rel",
+  "vol10_rel"
+ ],
+ "themes": {
+  "calendar": [
+   "ny_min_of_day",
+   "weekday"
+  ],
+  "liquidity": [
+   "spread_excess",
+   "gap_atr",
+   "vol10_rel",
+   "vol_ratio10_60",
+   "brk_ratio",
+   "uhv_rel"
+  ],
+  "trend": [
+   "er8",
+   "er16",
+   "er30",
+   "er60",
+   "adx",
+   "trend30_atr",
+   "trend90_atr",
+   "trend240_atr",
+   "struct_with",
+   "humps",
+   "range20_atr",
+   "range60_atr",
+   "pos60",
+   "box",
+   "room60_atr",
+   "room240_atr",
+   "atr_rel"
+  ],
+  "setup": [
+   "side",
+   "uhv_body",
+   "last_body_dir",
+   "bars_since_uhv",
+   "stop_atr",
+   "fig_ahead_atr"
+  ]
+ },
+ "sf_grid": [
+  {
+   "depth": 2,
+   "min_leaf": 0.01,
+   "crit": "gini",
+   "w": "balanced",
+   "ho_share": 0.0714,
+   "ho_capture": 0.0804,
+   "ho_lift": 1.483
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.03,
+   "crit": "gini",
+   "w": "balanced",
+   "ho_share": 0.1298,
+   "ho_capture": 0.1696,
+   "ho_lift": 1.303
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.01,
+   "crit": "entropy",
+   "w": "balanced",
+   "ho_share": 0.101,
+   "ho_capture": 0.125,
+   "ho_lift": 1.268
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.02,
+   "crit": "entropy",
+   "w": "mbal",
+   "ho_share": 0.0903,
+   "ho_capture": 0.0982,
+   "ho_lift": 1.264
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.02,
+   "crit": "gini",
+   "w": "balanced",
+   "ho_share": 0.0753,
+   "ho_capture": 0.0714,
+   "ho_lift": 1.214
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.03,
+   "crit": "entropy",
+   "w": "mbal",
+   "ho_share": 0.0558,
+   "ho_capture": 0.0804,
+   "ho_lift": 1.195
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.01,
+   "crit": "gini",
+   "w": "balanced",
+   "ho_share": 0.1043,
+   "ho_capture": 0.1071,
+   "ho_lift": 1.123
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.02,
+   "crit": "entropy",
+   "w": "mbal",
+   "ho_share": 0.0771,
+   "ho_capture": 0.0893,
+   "ho_lift": 1.121
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.01,
+   "crit": "entropy",
+   "w": "balanced",
+   "ho_share": 0.1019,
+   "ho_capture": 0.1161,
+   "ho_lift": 1.12
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.02,
+   "crit": "gini",
+   "w": "balanced",
+   "ho_share": 0.1145,
+   "ho_capture": 0.125,
+   "ho_lift": 1.115
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.02,
+   "crit": "gini",
+   "w": "balanced",
+   "ho_share": 0.1091,
+   "ho_capture": 0.1071,
+   "ho_lift": 1.075
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.03,
+   "crit": "gini",
+   "w": "balanced",
+   "ho_share": 0.0819,
+   "ho_capture": 0.0714,
+   "ho_lift": 1.069
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.02,
+   "crit": "gini",
+   "w": "mbal",
+   "ho_share": 0.0561,
+   "ho_capture": 0.0536,
+   "ho_lift": 1.047
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.03,
+   "crit": "gini",
+   "w": "mbal",
+   "ho_share": 0.0561,
+   "ho_capture": 0.0536,
+   "ho_lift": 1.047
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.03,
+   "crit": "gini",
+   "w": "mbal",
+   "ho_share": 0.1349,
+   "ho_capture": 0.1339,
+   "ho_lift": 1.038
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.02,
+   "crit": "gini",
+   "w": "mbal",
+   "ho_share": 0.1022,
+   "ho_capture": 0.1161,
+   "ho_lift": 1.037
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.03,
+   "crit": "entropy",
+   "w": "mbal",
+   "ho_share": 0.0753,
+   "ho_capture": 0.0804,
+   "ho_lift": 1.036
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.02,
+   "crit": "entropy",
+   "w": "balanced",
+   "ho_share": 0.1268,
+   "ho_capture": 0.125,
+   "ho_lift": 1.029
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.02,
+   "crit": "gini",
+   "w": "mbal",
+   "ho_share": 0.107,
+   "ho_capture": 0.0982,
+   "ho_lift": 1.019
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.01,
+   "crit": "entropy",
+   "w": "mbal",
+   "ho_share": 0.0672,
+   "ho_capture": 0.0625,
+   "ho_lift": 1.009
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.01,
+   "crit": "gini",
+   "w": "mbal",
+   "ho_share": 0.1412,
+   "ho_capture": 0.1339,
+   "ho_lift": 0.982
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.03,
+   "crit": "gini",
+   "w": "balanced",
+   "ho_share": 0.0885,
+   "ho_capture": 0.0714,
+   "ho_lift": 0.956
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.01,
+   "crit": "gini",
+   "w": "balanced",
+   "ho_share": 0.1082,
+   "ho_capture": 0.1071,
+   "ho_lift": 0.946
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.01,
+   "crit": "entropy",
+   "w": "mbal",
+   "ho_share": 0.1283,
+   "ho_capture": 0.1161,
+   "ho_lift": 0.883
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.03,
+   "crit": "entropy",
+   "w": "mbal",
+   "ho_share": 0.1235,
+   "ho_capture": 0.0982,
+   "ho_lift": 0.879
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.02,
+   "crit": "entropy",
+   "w": "balanced",
+   "ho_share": 0.0711,
+   "ho_capture": 0.0625,
+   "ho_lift": 0.863
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.01,
+   "crit": "gini",
+   "w": "mbal",
+   "ho_share": 0.1538,
+   "ho_capture": 0.1429,
+   "ho_lift": 0.821
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.03,
+   "crit": "gini",
+   "w": "mbal",
+   "ho_share": 0.1193,
+   "ho_capture": 0.1071,
+   "ho_lift": 0.805
+  },
+  {
+   "depth": 4,
+   "min_leaf": 0.03,
+   "crit": "entropy",
+   "w": "balanced",
+   "ho_share": 0.1166,
+   "ho_capture": 0.0804,
+   "ho_lift": 0.779
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.01,
+   "crit": "entropy",
+   "w": "balanced",
+   "ho_share": 0.009,
+   "ho_capture": 0.0268,
+   "ho_lift": 3.186
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.01,
+   "crit": "entropy",
+   "w": "mbal",
+   "ho_share": 0.009,
+   "ho_capture": 0.0268,
+   "ho_lift": 3.186
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.02,
+   "crit": "entropy",
+   "w": "balanced",
+   "ho_share": 0.0111,
+   "ho_capture": 0.0268,
+   "ho_lift": 2.003
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.02,
+   "crit": "entropy",
+   "w": "mbal",
+   "ho_share": 0.0111,
+   "ho_capture": 0.0268,
+   "ho_lift": 2.003
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.03,
+   "crit": "entropy",
+   "w": "balanced",
+   "ho_share": 0.006,
+   "ho_capture": 0.0089,
+   "ho_lift": 1.231
+  },
+  {
+   "depth": 2,
+   "min_leaf": 0.01,
+   "crit": "gini",
+   "w": "mbal",
+   "ho_share": 0.0297,
+   "ho_capture": 0.0179,
+   "ho_lift": 0.924
+  },
+  {
+   "depth": 3,
+   "min_leaf": 0.03,
+   "crit": "entropy",
+   "w": "balanced",
+   "ho_share": 0.0255,
+   "ho_capture": 0.0089,
+   "ho_lift": 0.509
+  }
+ ],
+ "sf_trees": [
+  {
+   "cfg": {
+    "depth": 2,
+    "min_leaf": 0.01,
+    "crit": "gini",
+    "w": "balanced",
+    "ho_share": 0.0714,
+    "ho_capture": 0.0804,
+    "ho_lift": 1.483
+   },
+   "leaves": [
+    {
+     "cond": "vol10_rel <= 0.8805 and atr_rel > 0.7715",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 521,
+       "n_half": 3335,
+       "share": 0.1562,
+       "L": 37,
+       "L_half": 112,
+       "L_share": 0.3304,
+       "loss_rate": 0.071,
+       "lift": 2.11,
+       "lift_month_adj": 2.13,
+       "p_binom": 2e-05,
+       "loss_days": 30,
+       "wr_base": 96.64,
+       "wr_untouched": 97.33,
+       "wr_angel_inside": 97.37,
+       "angel_kept_in_pocket": 33,
+       "months": {
+        "03": [
+         145,
+         14,
+         2.39
+        ],
+        "04": [
+         108,
+         11,
+         2.61
+        ],
+        "05": [
+         112,
+         9,
+         1.98
+        ],
+        "06": [
+         156,
+         3,
+         1.09
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 551,
+       "n_half": 4291,
+       "share": 0.1284,
+       "L": 7,
+       "L_half": 60,
+       "L_share": 0.1167,
+       "loss_rate": 0.0127,
+       "lift": 0.91,
+       "lift_month_adj": 0.92,
+       "p_binom": 0.65079,
+       "loss_days": 7,
+       "wr_base": 98.6,
+       "wr_untouched": 98.58,
+       "wr_angel_inside": 98.59,
+       "angel_kept_in_pocket": 18,
+       "months": {
+        "07": [
+         146,
+         1,
+         0.43
+        ],
+        "08": [
+         124,
+         2,
+         1.27
+        ],
+        "09": [
+         141,
+         1,
+         0.73
+        ],
+        "10": [
+         128,
+         3,
+         1.35
+        ],
+        "11": [
+         12,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel <= 0.8805 and atr_rel <= 0.7715",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 907,
+       "n_half": 3335,
+       "share": 0.272,
+       "L": 29,
+       "L_half": 112,
+       "L_share": 0.2589,
+       "loss_rate": 0.032,
+       "lift": 0.95,
+       "lift_month_adj": 0.92,
+       "p_binom": 0.63155,
+       "loss_days": 27,
+       "wr_base": 96.64,
+       "wr_untouched": 96.58,
+       "wr_angel_inside": 96.64,
+       "angel_kept_in_pocket": 44,
+       "months": {
+        "03": [
+         288,
+         9,
+         0.77
+        ],
+        "04": [
+         231,
+         7,
+         0.78
+        ],
+        "05": [
+         173,
+         8,
+         1.14
+        ],
+        "06": [
+         215,
+         5,
+         1.31
+        ]
+       },
+       "months_up": 2
+      },
+      "test": {
+       "n": 1091,
+       "n_half": 4291,
+       "share": 0.2543,
+       "L": 18,
+       "L_half": 60,
+       "L_share": 0.3,
+       "loss_rate": 0.0165,
+       "lift": 1.18,
+       "lift_month_adj": 1.17,
+       "p_binom": 0.27204,
+       "loss_days": 16,
+       "wr_base": 98.6,
+       "wr_untouched": 98.69,
+       "wr_angel_inside": 98.68,
+       "angel_kept_in_pocket": 50,
+       "months": {
+        "07": [
+         239,
+         5,
+         1.32
+        ],
+        "08": [
+         222,
+         4,
+         1.42
+        ],
+        "09": [
+         247,
+         3,
+         1.25
+        ],
+        "10": [
+         347,
+         5,
+         0.83
+        ],
+        "11": [
+         36,
+         1,
+         2.36
+        ]
+       },
+       "months_up": 4
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel > 0.8805 and er8 <= 0.558",
+     "picked": false,
+     "mismatch": 2,
+     "stats": {
+      "train": {
+       "n": 1695,
+       "n_half": 3335,
+       "share": 0.5082,
+       "L": 46,
+       "L_half": 112,
+       "L_share": 0.4107,
+       "loss_rate": 0.0271,
+       "lift": 0.81,
+       "lift_month_adj": 0.82,
+       "p_binom": 0.94212,
+       "loss_days": 38,
+       "wr_base": 96.64,
+       "wr_untouched": 95.98,
+       "wr_angel_inside": 96.23,
+       "angel_kept_in_pocket": 137,
+       "months": {
+        "03": [
+         402,
+         13,
+         0.8
+        ],
+        "04": [
+         430,
+         14,
+         0.83
+        ],
+        "05": [
+         342,
+         10,
+         0.72
+        ],
+        "06": [
+         521,
+         9,
+         0.98
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 2361,
+       "n_half": 4291,
+       "share": 0.5502,
+       "L": 30,
+       "L_half": 60,
+       "L_share": 0.5,
+       "loss_rate": 0.0127,
+       "lift": 0.91,
+       "lift_month_adj": 0.91,
+       "p_binom": 0.72508,
+       "loss_days": 27,
+       "wr_base": 98.6,
+       "wr_untouched": 98.45,
+       "wr_angel_inside": 98.53,
+       "angel_kept_in_pocket": 184,
+       "months": {
+        "07": [
+         604,
+         9,
+         0.94
+        ],
+        "08": [
+         458,
+         4,
+         0.69
+        ],
+        "09": [
+         587,
+         6,
+         1.05
+        ],
+        "10": [
+         603,
+         10,
+         0.96
+        ],
+        "11": [
+         109,
+         1,
+         0.78
+        ]
+       },
+       "months_up": 1
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel > 0.8805 and er8 > 0.558",
+     "picked": false,
+     "mismatch": 2,
+     "stats": {
+      "train": {
+       "n": 212,
+       "n_half": 3335,
+       "share": 0.0636,
+       "L": 0,
+       "L_half": 112,
+       "L_share": 0.0,
+       "loss_rate": 0.0,
+       "lift": 0.0,
+       "lift_month_adj": 0.0,
+       "p_binom": 1.0,
+       "loss_days": 0,
+       "wr_base": 96.64,
+       "wr_untouched": 96.41,
+       "wr_angel_inside": 96.43,
+       "angel_kept_in_pocket": 10,
+       "months": {
+        "03": [
+         55,
+         0,
+         0.0
+        ],
+        "04": [
+         51,
+         0,
+         0.0
+        ],
+        "05": [
+         38,
+         0,
+         0.0
+        ],
+        "06": [
+         68,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 288,
+       "n_half": 4291,
+       "share": 0.0671,
+       "L": 5,
+       "L_half": 60,
+       "L_share": 0.0833,
+       "loss_rate": 0.0174,
+       "lift": 1.24,
+       "lift_month_adj": 1.22,
+       "p_binom": 0.37648,
+       "loss_days": 5,
+       "wr_base": 98.6,
+       "wr_untouched": 98.63,
+       "wr_angel_inside": 98.63,
+       "angel_kept_in_pocket": 19,
+       "months": {
+        "07": [
+         85,
+         2,
+         1.49
+        ],
+        "08": [
+         60,
+         1,
+         1.31
+        ],
+        "09": [
+         55,
+         0,
+         0.0
+        ],
+        "10": [
+         75,
+         2,
+         1.54
+        ],
+        "11": [
+         13,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    }
+   ],
+   "union": {
+    "train": {
+     "n": 521,
+     "n_half": 3335,
+     "share": 0.1562,
+     "L": 37,
+     "L_half": 112,
+     "L_share": 0.3304,
+     "loss_rate": 0.071,
+     "lift": 2.11,
+     "lift_month_adj": 2.13,
+     "p_binom": 2e-05,
+     "loss_days": 30,
+     "wr_base": 96.64,
+     "wr_untouched": 97.33,
+     "wr_angel_inside": 97.37,
+     "angel_kept_in_pocket": 33,
+     "months": {
+      "03": [
+       145,
+       14,
+       2.39
+      ],
+      "04": [
+       108,
+       11,
+       2.61
+      ],
+      "05": [
+       112,
+       9,
+       1.98
+      ],
+      "06": [
+       156,
+       3,
+       1.09
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 551,
+     "n_half": 4291,
+     "share": 0.1284,
+     "L": 7,
+     "L_half": 60,
+     "L_share": 0.1167,
+     "loss_rate": 0.0127,
+     "lift": 0.91,
+     "lift_month_adj": 0.92,
+     "p_binom": 0.65079,
+     "loss_days": 7,
+     "wr_base": 98.6,
+     "wr_untouched": 98.58,
+     "wr_angel_inside": 98.59,
+     "angel_kept_in_pocket": 18,
+     "months": {
+      "07": [
+       146,
+       1,
+       0.43
+      ],
+      "08": [
+       124,
+       2,
+       1.27
+      ],
+      "09": [
+       141,
+       1,
+       0.73
+      ],
+      "10": [
+       128,
+       3,
+       1.35
+      ],
+      "11": [
+       12,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 2
+    }
+   }
+  },
+  {
+   "cfg": {
+    "depth": 4,
+    "min_leaf": 0.03,
+    "crit": "gini",
+    "w": "balanced",
+    "ho_share": 0.1298,
+    "ho_capture": 0.1696,
+    "ho_lift": 1.303
+   },
+   "leaves": [
+    {
+     "cond": "vol10_rel <= 0.8805 and atr_rel > 0.7715 and ny_min_of_day >= 870",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 114,
+       "n_half": 3335,
+       "share": 0.0342,
+       "L": 15,
+       "L_half": 112,
+       "L_share": 0.1339,
+       "loss_rate": 0.1316,
+       "lift": 3.92,
+       "lift_month_adj": 3.8,
+       "p_binom": 1e-05,
+       "loss_days": 11,
+       "wr_base": 96.64,
+       "wr_untouched": 96.99,
+       "wr_angel_inside": 96.99,
+       "angel_kept_in_pocket": 6,
+       "months": {
+        "03": [
+         39,
+         6,
+         3.8
+        ],
+        "04": [
+         22,
+         6,
+         6.99
+        ],
+        "05": [
+         25,
+         2,
+         1.97
+        ],
+        "06": [
+         28,
+         1,
+         2.02
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 128,
+       "n_half": 4291,
+       "share": 0.0298,
+       "L": 5,
+       "L_half": 60,
+       "L_share": 0.0833,
+       "loss_rate": 0.0391,
+       "lift": 2.79,
+       "lift_month_adj": 2.79,
+       "p_binom": 0.03456,
+       "loss_days": 5,
+       "wr_base": 98.6,
+       "wr_untouched": 98.68,
+       "wr_angel_inside": 98.68,
+       "angel_kept_in_pocket": 7,
+       "months": {
+        "07": [
+         21,
+         0,
+         0.0
+        ],
+        "08": [
+         17,
+         1,
+         4.62
+        ],
+        "09": [
+         39,
+         1,
+         2.64
+        ],
+        "10": [
+         47,
+         3,
+         3.68
+        ],
+        "11": [
+         4,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    },
+    {
+     "cond": "0.8045 < vol10_rel <= 0.8805 and atr_rel > 0.7715 and ny_min_of_day <= 869",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 149,
+       "n_half": 3335,
+       "share": 0.0447,
+       "L": 15,
+       "L_half": 112,
+       "L_share": 0.1339,
+       "loss_rate": 0.1007,
+       "lift": 3.0,
+       "lift_month_adj": 2.86,
+       "p_binom": 0.00016,
+       "loss_days": 14,
+       "wr_base": 96.64,
+       "wr_untouched": 96.96,
+       "wr_angel_inside": 96.96,
+       "angel_kept_in_pocket": 7,
+       "months": {
+        "03": [
+         40,
+         5,
+         3.09
+        ],
+        "04": [
+         38,
+         5,
+         3.37
+        ],
+        "05": [
+         39,
+         4,
+         2.53
+        ],
+        "06": [
+         32,
+         1,
+         1.76
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 156,
+       "n_half": 4291,
+       "share": 0.0364,
+       "L": 0,
+       "L_half": 60,
+       "L_share": 0.0,
+       "loss_rate": 0.0,
+       "lift": 0.0,
+       "lift_month_adj": 0.0,
+       "p_binom": 1.0,
+       "loss_days": 0,
+       "wr_base": 98.6,
+       "wr_untouched": 98.55,
+       "wr_angel_inside": 98.55,
+       "angel_kept_in_pocket": 3,
+       "months": {
+        "07": [
+         43,
+         0,
+         0.0
+        ],
+        "08": [
+         44,
+         0,
+         0.0
+        ],
+        "09": [
+         39,
+         0,
+         0.0
+        ],
+        "10": [
+         28,
+         0,
+         0.0
+        ],
+        "11": [
+         2,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel <= 0.8805 and atr_rel <= 0.7715 and er16 <= 0.1385 and stop_atr > 1.225",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 304,
+       "n_half": 3335,
+       "share": 0.0912,
+       "L": 19,
+       "L_half": 112,
+       "L_share": 0.1696,
+       "loss_rate": 0.0625,
+       "lift": 1.86,
+       "lift_month_adj": 1.8,
+       "p_binom": 0.00773,
+       "loss_days": 18,
+       "wr_base": 96.64,
+       "wr_untouched": 96.93,
+       "wr_angel_inside": 96.93,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "03": [
+         98,
+         6,
+         1.51
+        ],
+        "04": [
+         83,
+         6,
+         1.85
+        ],
+        "05": [
+         52,
+         4,
+         1.89
+        ],
+        "06": [
+         71,
+         3,
+         2.39
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 363,
+       "n_half": 4291,
+       "share": 0.0846,
+       "L": 6,
+       "L_half": 60,
+       "L_share": 0.1,
+       "loss_rate": 0.0165,
+       "lift": 1.18,
+       "lift_month_adj": 1.16,
+       "p_binom": 0.39742,
+       "loss_days": 5,
+       "wr_base": 98.6,
+       "wr_untouched": 98.63,
+       "wr_angel_inside": 98.63,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "07": [
+         81,
+         1,
+         0.78
+        ],
+        "08": [
+         73,
+         2,
+         2.15
+        ],
+        "09": [
+         76,
+         1,
+         1.36
+        ],
+        "10": [
+         116,
+         1,
+         0.5
+        ],
+        "11": [
+         17,
+         1,
+         5.0
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel > 0.8805 and er8 <= 0.558 and range60_atr <= 11.47 and brk_ratio <= 0.2405",
+     "picked": false,
+     "mismatch": 1,
+     "stats": {
+      "train": {
+       "n": 477,
+       "n_half": 3335,
+       "share": 0.143,
+       "L": 25,
+       "L_half": 112,
+       "L_share": 0.2232,
+       "loss_rate": 0.0524,
+       "lift": 1.56,
+       "lift_month_adj": 1.54,
+       "p_binom": 0.02066,
+       "loss_days": 23,
+       "wr_base": 96.64,
+       "wr_untouched": 96.96,
+       "wr_angel_inside": 96.95,
+       "angel_kept_in_pocket": 24,
+       "months": {
+        "03": [
+         119,
+         8,
+         1.66
+        ],
+        "04": [
+         148,
+         6,
+         1.04
+        ],
+        "05": [
+         86,
+         6,
+         1.72
+        ],
+        "06": [
+         124,
+         5,
+         2.28
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 725,
+       "n_half": 4291,
+       "share": 0.169,
+       "L": 11,
+       "L_half": 60,
+       "L_share": 0.1833,
+       "loss_rate": 0.0152,
+       "lift": 1.09,
+       "lift_month_adj": 1.09,
+       "p_binom": 0.43428,
+       "loss_days": 10,
+       "wr_base": 98.6,
+       "wr_untouched": 98.63,
+       "wr_angel_inside": 98.65,
+       "angel_kept_in_pocket": 57,
+       "months": {
+        "07": [
+         168,
+         3,
+         1.13
+        ],
+        "08": [
+         158,
+         2,
+         0.99
+        ],
+        "09": [
+         180,
+         1,
+         0.57
+        ],
+        "10": [
+         191,
+         4,
+         1.21
+        ],
+        "11": [
+         28,
+         1,
+         3.04
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel <= 0.8805 and atr_rel <= 0.7715 and er16 > 0.1385 and range20_atr > 5.105",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 253,
+       "n_half": 3335,
+       "share": 0.0759,
+       "L": 9,
+       "L_half": 112,
+       "L_share": 0.0804,
+       "loss_rate": 0.0356,
+       "lift": 1.06,
+       "lift_month_adj": 1.01,
+       "p_binom": 0.47758,
+       "loss_days": 9,
+       "wr_base": 96.64,
+       "wr_untouched": 96.66,
+       "wr_angel_inside": 96.69,
+       "angel_kept_in_pocket": 30,
+       "months": {
+        "03": [
+         87,
+         3,
+         0.85
+        ],
+        "04": [
+         60,
+         1,
+         0.43
+        ],
+        "05": [
+         53,
+         3,
+         1.39
+        ],
+        "06": [
+         53,
+         2,
+         2.13
+        ]
+       },
+       "months_up": 2
+      },
+      "test": {
+       "n": 348,
+       "n_half": 4291,
+       "share": 0.0811,
+       "L": 7,
+       "L_half": 60,
+       "L_share": 0.1167,
+       "loss_rate": 0.0201,
+       "lift": 1.44,
+       "lift_month_adj": 1.44,
+       "p_binom": 0.21736,
+       "loss_days": 7,
+       "wr_base": 98.6,
+       "wr_untouched": 98.66,
+       "wr_angel_inside": 98.64,
+       "angel_kept_in_pocket": 30,
+       "months": {
+        "07": [
+         81,
+         1,
+         0.78
+        ],
+        "08": [
+         71,
+         2,
+         2.21
+        ],
+        "09": [
+         88,
+         1,
+         1.17
+        ],
+        "10": [
+         98,
+         3,
+         1.76
+        ],
+        "11": [
+         10,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel <= 0.8045 and atr_rel > 0.7715 and ny_min_of_day <= 869",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 258,
+       "n_half": 3335,
+       "share": 0.0774,
+       "L": 7,
+       "L_half": 112,
+       "L_share": 0.0625,
+       "loss_rate": 0.0271,
+       "lift": 0.81,
+       "lift_month_adj": 0.85,
+       "p_binom": 0.76554,
+       "loss_days": 7,
+       "wr_base": 96.64,
+       "wr_untouched": 96.59,
+       "wr_angel_inside": 96.61,
+       "angel_kept_in_pocket": 20,
+       "months": {
+        "03": [
+         66,
+         3,
+         1.12
+        ],
+        "04": [
+         48,
+         0,
+         0.0
+        ],
+        "05": [
+         48,
+         3,
+         1.54
+        ],
+        "06": [
+         96,
+         1,
+         0.59
+        ]
+       },
+       "months_up": 2
+      },
+      "test": {
+       "n": 267,
+       "n_half": 4291,
+       "share": 0.0622,
+       "L": 2,
+       "L_half": 60,
+       "L_share": 0.0333,
+       "loss_rate": 0.0075,
+       "lift": 0.54,
+       "lift_month_adj": 0.54,
+       "p_binom": 0.88853,
+       "loss_days": 2,
+       "wr_base": 98.6,
+       "wr_untouched": 98.56,
+       "wr_angel_inside": 98.56,
+       "angel_kept_in_pocket": 8,
+       "months": {
+        "07": [
+         82,
+         1,
+         0.77
+        ],
+        "08": [
+         63,
+         1,
+         1.25
+        ],
+        "09": [
+         63,
+         0,
+         0.0
+        ],
+        "10": [
+         53,
+         0,
+         0.0
+        ],
+        "11": [
+         6,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 1
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel > 0.8805 and er8 <= 0.558 and range60_atr <= 11.47 and brk_ratio > 0.2405",
+     "picked": false,
+     "mismatch": 3,
+     "stats": {
+      "train": {
+       "n": 899,
+       "n_half": 3335,
+       "share": 0.2696,
+       "L": 19,
+       "L_half": 112,
+       "L_share": 0.1696,
+       "loss_rate": 0.0211,
+       "lift": 0.63,
+       "lift_month_adj": 0.64,
+       "p_binom": 0.98916,
+       "loss_days": 17,
+       "wr_base": 96.64,
+       "wr_untouched": 96.18,
+       "wr_angel_inside": 96.32,
+       "angel_kept_in_pocket": 91,
+       "months": {
+        "03": [
+         224,
+         5,
+         0.55
+        ],
+        "04": [
+         212,
+         7,
+         0.85
+        ],
+        "05": [
+         175,
+         4,
+         0.56
+        ],
+        "06": [
+         288,
+         3,
+         0.59
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 1212,
+       "n_half": 4291,
+       "share": 0.2825,
+       "L": 13,
+       "L_half": 60,
+       "L_share": 0.2167,
+       "loss_rate": 0.0107,
+       "lift": 0.77,
+       "lift_month_adj": 0.77,
+       "p_binom": 0.86407,
+       "loss_days": 13,
+       "wr_base": 98.6,
+       "wr_untouched": 98.47,
+       "wr_angel_inside": 98.49,
+       "angel_kept_in_pocket": 101,
+       "months": {
+        "07": [
+         321,
+         4,
+         0.79
+        ],
+        "08": [
+         239,
+         1,
+         0.33
+        ],
+        "09": [
+         285,
+         3,
+         1.08
+        ],
+        "10": [
+         310,
+         5,
+         0.93
+        ],
+        "11": [
+         57,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 1
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel > 0.8805 and er8 <= 0.558 and range60_atr > 11.47 and trend30_atr <= -0.715",
+     "picked": false,
+     "mismatch": 1,
+     "stats": {
+      "train": {
+       "n": 100,
+       "n_half": 3335,
+       "share": 0.03,
+       "L": 2,
+       "L_half": 112,
+       "L_share": 0.0179,
+       "loss_rate": 0.02,
+       "lift": 0.6,
+       "lift_month_adj": 0.62,
+       "p_binom": 0.85303,
+       "loss_days": 2,
+       "wr_base": 96.64,
+       "wr_untouched": 96.6,
+       "wr_angel_inside": 96.6,
+       "angel_kept_in_pocket": 4,
+       "months": {
+        "03": [
+         19,
+         0,
+         0.0
+        ],
+        "04": [
+         23,
+         1,
+         1.11
+        ],
+        "05": [
+         24,
+         0,
+         0.0
+        ],
+        "06": [
+         34,
+         1,
+         1.66
+        ]
+       },
+       "months_up": 2
+      },
+      "test": {
+       "n": 152,
+       "n_half": 4291,
+       "share": 0.0354,
+       "L": 2,
+       "L_half": 60,
+       "L_share": 0.0333,
+       "loss_rate": 0.0132,
+       "lift": 0.94,
+       "lift_month_adj": 0.98,
+       "p_binom": 0.62888,
+       "loss_days": 2,
+       "wr_base": 98.6,
+       "wr_untouched": 98.6,
+       "wr_angel_inside": 98.6,
+       "angel_kept_in_pocket": 6,
+       "months": {
+        "07": [
+         41,
+         0,
+         0.0
+        ],
+        "08": [
+         25,
+         1,
+         3.14
+        ],
+        "09": [
+         48,
+         1,
+         2.15
+        ],
+        "10": [
+         30,
+         0,
+         0.0
+        ],
+        "11": [
+         8,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel <= 0.8805 and atr_rel <= 0.7715 and er16 <= 0.1385 and stop_atr <= 1.225",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 101,
+       "n_half": 3335,
+       "share": 0.0303,
+       "L": 1,
+       "L_half": 112,
+       "L_share": 0.0089,
+       "loss_rate": 0.0099,
+       "lift": 0.29,
+       "lift_month_adj": 0.29,
+       "p_binom": 0.96826,
+       "loss_days": 1,
+       "wr_base": 96.64,
+       "wr_untouched": 96.57,
+       "wr_angel_inside": 96.57,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "03": [
+         36,
+         0,
+         0.0
+        ],
+        "04": [
+         19,
+         0,
+         0.0
+        ],
+        "05": [
+         20,
+         1,
+         1.23
+        ],
+        "06": [
+         26,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 1
+      },
+      "test": {
+       "n": 96,
+       "n_half": 4291,
+       "share": 0.0224,
+       "L": 2,
+       "L_half": 60,
+       "L_share": 0.0333,
+       "loss_rate": 0.0208,
+       "lift": 1.49,
+       "lift_month_adj": 1.41,
+       "p_binom": 0.38895,
+       "loss_days": 2,
+       "wr_base": 98.6,
+       "wr_untouched": 98.62,
+       "wr_angel_inside": 98.62,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "07": [
+         15,
+         1,
+         4.21
+        ],
+        "08": [
+         20,
+         0,
+         0.0
+        ],
+        "09": [
+         16,
+         0,
+         0.0
+        ],
+        "10": [
+         44,
+         1,
+         1.31
+        ],
+        "11": [
+         1,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel <= 0.8805 and atr_rel <= 0.7715 and er16 > 0.1385 and range20_atr <= 5.105",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 249,
+       "n_half": 3335,
+       "share": 0.0747,
+       "L": 0,
+       "L_half": 112,
+       "L_share": 0.0,
+       "loss_rate": 0.0,
+       "lift": 0.0,
+       "lift_month_adj": 0.0,
+       "p_binom": 1.0,
+       "loss_days": 0,
+       "wr_base": 96.64,
+       "wr_untouched": 96.37,
+       "wr_angel_inside": 96.39,
+       "angel_kept_in_pocket": 14,
+       "months": {
+        "03": [
+         67,
+         0,
+         0.0
+        ],
+        "04": [
+         69,
+         0,
+         0.0
+        ],
+        "05": [
+         48,
+         0,
+         0.0
+        ],
+        "06": [
+         65,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 284,
+       "n_half": 4291,
+       "share": 0.0662,
+       "L": 3,
+       "L_half": 60,
+       "L_share": 0.05,
+       "loss_rate": 0.0106,
+       "lift": 0.76,
+       "lift_month_adj": 0.75,
+       "p_binom": 0.75969,
+       "loss_days": 3,
+       "wr_base": 98.6,
+       "wr_untouched": 98.58,
+       "wr_angel_inside": 98.58,
+       "angel_kept_in_pocket": 20,
+       "months": {
+        "07": [
+         62,
+         2,
+         2.04
+        ],
+        "08": [
+         58,
+         0,
+         0.0
+        ],
+        "09": [
+         67,
+         1,
+         1.54
+        ],
+        "10": [
+         89,
+         0,
+         0.0
+        ],
+        "11": [
+         8,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel > 0.8805 and er8 <= 0.558 and range60_atr > 11.47 and trend30_atr > -0.715",
+     "picked": false,
+     "mismatch": 1,
+     "stats": {
+      "train": {
+       "n": 219,
+       "n_half": 3335,
+       "share": 0.0657,
+       "L": 0,
+       "L_half": 112,
+       "L_share": 0.0,
+       "loss_rate": 0.0,
+       "lift": 0.0,
+       "lift_month_adj": 0.0,
+       "p_binom": 1.0,
+       "loss_days": 0,
+       "wr_base": 96.64,
+       "wr_untouched": 96.41,
+       "wr_angel_inside": 96.43,
+       "angel_kept_in_pocket": 18,
+       "months": {
+        "03": [
+         40,
+         0,
+         0.0
+        ],
+        "04": [
+         47,
+         0,
+         0.0
+        ],
+        "05": [
+         57,
+         0,
+         0.0
+        ],
+        "06": [
+         75,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 272,
+       "n_half": 4291,
+       "share": 0.0634,
+       "L": 4,
+       "L_half": 60,
+       "L_share": 0.0667,
+       "loss_rate": 0.0147,
+       "lift": 1.05,
+       "lift_month_adj": 1.06,
+       "p_binom": 0.52835,
+       "loss_days": 4,
+       "wr_base": 98.6,
+       "wr_untouched": 98.61,
+       "wr_angel_inside": 98.61,
+       "angel_kept_in_pocket": 20,
+       "months": {
+        "07": [
+         74,
+         2,
+         1.71
+        ],
+        "08": [
+         36,
+         0,
+         0.0
+        ],
+        "09": [
+         74,
+         1,
+         1.39
+        ],
+        "10": [
+         72,
+         1,
+         0.8
+        ],
+        "11": [
+         16,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel > 0.8805 and er8 > 0.558 and atr_rel <= 1.253",
+     "picked": false,
+     "mismatch": 1,
+     "stats": {
+      "train": {
+       "n": 100,
+       "n_half": 3335,
+       "share": 0.03,
+       "L": 0,
+       "L_half": 112,
+       "L_share": 0.0,
+       "loss_rate": 0.0,
+       "lift": 0.0,
+       "lift_month_adj": 0.0,
+       "p_binom": 1.0,
+       "loss_days": 0,
+       "wr_base": 96.64,
+       "wr_untouched": 96.54,
+       "wr_angel_inside": 96.54,
+       "angel_kept_in_pocket": 5,
+       "months": {
+        "03": [
+         27,
+         0,
+         0.0
+        ],
+        "04": [
+         22,
+         0,
+         0.0
+        ],
+        "05": [
+         19,
+         0,
+         0.0
+        ],
+        "06": [
+         32,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 141,
+       "n_half": 4291,
+       "share": 0.0329,
+       "L": 2,
+       "L_half": 60,
+       "L_share": 0.0333,
+       "loss_rate": 0.0142,
+       "lift": 1.01,
+       "lift_month_adj": 0.99,
+       "p_binom": 0.58812,
+       "loss_days": 2,
+       "wr_base": 98.6,
+       "wr_untouched": 98.6,
+       "wr_angel_inside": 98.61,
+       "angel_kept_in_pocket": 14,
+       "months": {
+        "07": [
+         49,
+         0,
+         0.0
+        ],
+        "08": [
+         35,
+         0,
+         0.0
+        ],
+        "09": [
+         19,
+         0,
+         0.0
+        ],
+        "10": [
+         31,
+         2,
+         3.72
+        ],
+        "11": [
+         7,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 1
+      }
+     }
+    },
+    {
+     "cond": "vol10_rel > 0.8805 and er8 > 0.558 and atr_rel > 1.253",
+     "picked": false,
+     "mismatch": 1,
+     "stats": {
+      "train": {
+       "n": 112,
+       "n_half": 3335,
+       "share": 0.0336,
+       "L": 0,
+       "L_half": 112,
+       "L_share": 0.0,
+       "loss_rate": 0.0,
+       "lift": 0.0,
+       "lift_month_adj": 0.0,
+       "p_binom": 1.0,
+       "loss_days": 0,
+       "wr_base": 96.64,
+       "wr_untouched": 96.52,
+       "wr_angel_inside": 96.53,
+       "angel_kept_in_pocket": 5,
+       "months": {
+        "03": [
+         28,
+         0,
+         0.0
+        ],
+        "04": [
+         29,
+         0,
+         0.0
+        ],
+        "05": [
+         19,
+         0,
+         0.0
+        ],
+        "06": [
+         36,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 147,
+       "n_half": 4291,
+       "share": 0.0343,
+       "L": 3,
+       "L_half": 60,
+       "L_share": 0.05,
+       "loss_rate": 0.0204,
+       "lift": 1.46,
+       "lift_month_adj": 1.45,
+       "p_binom": 0.33843,
+       "loss_days": 3,
+       "wr_base": 98.6,
+       "wr_untouched": 98.62,
+       "wr_angel_inside": 98.63,
+       "angel_kept_in_pocket": 5,
+       "months": {
+        "07": [
+         36,
+         2,
+         3.51
+        ],
+        "08": [
+         25,
+         1,
+         3.14
+        ],
+        "09": [
+         36,
+         0,
+         0.0
+        ],
+        "10": [
+         44,
+         0,
+         0.0
+        ],
+        "11": [
+         6,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    }
+   ],
+   "union": {
+    "train": {
+     "n": 567,
+     "n_half": 3335,
+     "share": 0.17,
+     "L": 49,
+     "L_half": 112,
+     "L_share": 0.4375,
+     "loss_rate": 0.0864,
+     "lift": 2.57,
+     "lift_month_adj": 2.48,
+     "p_binom": 0.0,
+     "loss_days": 36,
+     "wr_base": 96.64,
+     "wr_untouched": 97.72,
+     "wr_angel_inside": 97.73,
+     "angel_kept_in_pocket": 13,
+     "months": {
+      "03": [
+       177,
+       17,
+       2.37
+      ],
+      "04": [
+       143,
+       17,
+       3.05
+      ],
+      "05": [
+       116,
+       10,
+       2.12
+      ],
+      "06": [
+       131,
+       5,
+       2.16
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 647,
+     "n_half": 4291,
+     "share": 0.1508,
+     "L": 11,
+     "L_half": 60,
+     "L_share": 0.1833,
+     "loss_rate": 0.017,
+     "lift": 1.22,
+     "lift_month_adj": 1.21,
+     "p_binom": 0.29878,
+     "loss_days": 10,
+     "wr_base": 98.6,
+     "wr_untouched": 98.66,
+     "wr_angel_inside": 98.66,
+     "angel_kept_in_pocket": 10,
+     "months": {
+      "07": [
+       145,
+       1,
+       0.44
+      ],
+      "08": [
+       134,
+       3,
+       1.76
+      ],
+      "09": [
+       154,
+       2,
+       1.34
+      ],
+      "10": [
+       191,
+       4,
+       1.21
+      ],
+      "11": [
+       23,
+       1,
+       3.7
+      ]
+     },
+     "months_up": 4
+    }
+   }
+  },
+  {
+   "cfg": {
+    "depth": 3,
+    "min_leaf": 0.01,
+    "crit": "entropy",
+    "w": "balanced",
+    "ho_share": 0.101,
+    "ho_capture": 0.125,
+    "ho_lift": 1.268
+   },
+   "leaves": [
+    {
+     "cond": "spread_excess > 0.475",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 46,
+       "n_half": 3335,
+       "share": 0.0138,
+       "L": 9,
+       "L_half": 112,
+       "L_share": 0.0804,
+       "loss_rate": 0.1957,
+       "lift": 5.83,
+       "lift_month_adj": 6.08,
+       "p_binom": 2e-05,
+       "loss_days": 6,
+       "wr_base": 96.64,
+       "wr_untouched": 96.87,
+       "wr_angel_inside": 96.87,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "03": [
+         12,
+         1,
+         2.06
+        ],
+        "04": [
+         12,
+         5,
+         10.68
+        ],
+        "05": [
+         6,
+         1,
+         4.1
+        ],
+        "06": [
+         16,
+         2,
+         7.06
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 54,
+       "n_half": 4291,
+       "share": 0.0126,
+       "L": 8,
+       "L_half": 60,
+       "L_share": 0.1333,
+       "loss_rate": 0.1481,
+       "lift": 10.6,
+       "lift_month_adj": 10.27,
+       "p_binom": 0.0,
+       "loss_days": 8,
+       "wr_base": 98.6,
+       "wr_untouched": 98.77,
+       "wr_angel_inside": 98.77,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "07": [
+         15,
+         3,
+         12.64
+        ],
+        "08": [
+         11,
+         2,
+         14.28
+        ],
+        "09": [
+         11,
+         1,
+         9.36
+        ],
+        "10": [
+         17,
+         2,
+         6.78
+        ],
+        "11": [
+         0,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 4
+      }
+     }
+    },
+    {
+     "cond": "spread_excess <= 0.475 and pos60 <= 0.9835 and stop_atr <= 0.8145",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 314,
+       "n_half": 3335,
+       "share": 0.0942,
+       "L": 21,
+       "L_half": 112,
+       "L_share": 0.1875,
+       "loss_rate": 0.0669,
+       "lift": 1.99,
+       "lift_month_adj": 2.01,
+       "p_binom": 0.00245,
+       "loss_days": 19,
+       "wr_base": 96.64,
+       "wr_untouched": 96.99,
+       "wr_angel_inside": 96.98,
+       "angel_kept_in_pocket": 27,
+       "months": {
+        "03": [
+         83,
+         7,
+         2.09
+        ],
+        "04": [
+         67,
+         6,
+         2.29
+        ],
+        "05": [
+         68,
+         5,
+         1.81
+        ],
+        "06": [
+         96,
+         3,
+         1.76
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 359,
+       "n_half": 4291,
+       "share": 0.0837,
+       "L": 6,
+       "L_half": 60,
+       "L_share": 0.1,
+       "loss_rate": 0.0167,
+       "lift": 1.2,
+       "lift_month_adj": 1.18,
+       "p_binom": 0.38754,
+       "loss_days": 6,
+       "wr_base": 98.6,
+       "wr_untouched": 98.63,
+       "wr_angel_inside": 98.64,
+       "angel_kept_in_pocket": 38,
+       "months": {
+        "07": [
+         82,
+         2,
+         1.54
+        ],
+        "08": [
+         89,
+         1,
+         0.88
+        ],
+        "09": [
+         65,
+         0,
+         0.0
+        ],
+        "10": [
+         103,
+         2,
+         1.12
+        ],
+        "11": [
+         20,
+         1,
+         4.25
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    },
+    {
+     "cond": "spread_excess <= 0.475 and pos60 <= 0.9835 and stop_atr > 0.8145",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 2820,
+       "n_half": 3335,
+       "share": 0.8456,
+       "L": 82,
+       "L_half": 112,
+       "L_share": 0.7321,
+       "loss_rate": 0.0291,
+       "lift": 0.87,
+       "lift_month_adj": 0.86,
+       "p_binom": 0.91871,
+       "loss_days": 55,
+       "wr_base": 96.64,
+       "wr_untouched": 94.17,
+       "wr_angel_inside": 95.63,
+       "angel_kept_in_pocket": 172,
+       "months": {
+        "03": [
+         755,
+         28,
+         0.92
+        ],
+        "04": [
+         713,
+         21,
+         0.75
+        ],
+        "05": [
+         560,
+         21,
+         0.92
+        ],
+        "06": [
+         792,
+         12,
+         0.86
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 3654,
+       "n_half": 4291,
+       "share": 0.8515,
+       "L": 44,
+       "L_half": 60,
+       "L_share": 0.7333,
+       "loss_rate": 0.012,
+       "lift": 0.86,
+       "lift_month_adj": 0.86,
+       "p_binom": 0.85862,
+       "loss_days": 39,
+       "wr_base": 98.6,
+       "wr_untouched": 97.49,
+       "wr_angel_inside": 97.86,
+       "angel_kept_in_pocket": 203,
+       "months": {
+        "07": [
+         914,
+         11,
+         0.76
+        ],
+        "08": [
+         726,
+         8,
+         0.87
+        ],
+        "09": [
+         896,
+         9,
+         1.03
+        ],
+        "10": [
+         975,
+         15,
+         0.89
+        ],
+        "11": [
+         143,
+         1,
+         0.59
+        ]
+       },
+       "months_up": 1
+      }
+     }
+    },
+    {
+     "cond": "spread_excess <= 0.475 and pos60 > 0.9835",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 155,
+       "n_half": 3335,
+       "share": 0.0465,
+       "L": 0,
+       "L_half": 112,
+       "L_share": 0.0,
+       "loss_rate": 0.0,
+       "lift": 0.0,
+       "lift_month_adj": 0.0,
+       "p_binom": 1.0,
+       "loss_days": 0,
+       "wr_base": 96.64,
+       "wr_untouched": 96.48,
+       "wr_angel_inside": 96.51,
+       "angel_kept_in_pocket": 25,
+       "months": {
+        "03": [
+         40,
+         0,
+         0.0
+        ],
+        "04": [
+         28,
+         0,
+         0.0
+        ],
+        "05": [
+         31,
+         0,
+         0.0
+        ],
+        "06": [
+         56,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 224,
+       "n_half": 4291,
+       "share": 0.0522,
+       "L": 2,
+       "L_half": 60,
+       "L_share": 0.0333,
+       "loss_rate": 0.0089,
+       "lift": 0.64,
+       "lift_month_adj": 0.64,
+       "p_binom": 0.82178,
+       "loss_days": 2,
+       "wr_base": 98.6,
+       "wr_untouched": 98.57,
+       "wr_angel_inside": 98.58,
+       "angel_kept_in_pocket": 30,
+       "months": {
+        "07": [
+         63,
+         1,
+         1.0
+        ],
+        "08": [
+         38,
+         0,
+         0.0
+        ],
+        "09": [
+         58,
+         0,
+         0.0
+        ],
+        "10": [
+         58,
+         1,
+         0.99
+        ],
+        "11": [
+         7,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      }
+     }
+    }
+   ],
+   "union": {
+    "train": {
+     "n": 360,
+     "n_half": 3335,
+     "share": 0.1079,
+     "L": 30,
+     "L_half": 112,
+     "L_share": 0.2679,
+     "loss_rate": 0.0833,
+     "lift": 2.48,
+     "lift_month_adj": 2.52,
+     "p_binom": 1e-05,
+     "loss_days": 24,
+     "wr_base": 96.64,
+     "wr_untouched": 97.24,
+     "wr_angel_inside": 97.24,
+     "angel_kept_in_pocket": 27,
+     "months": {
+      "03": [
+       95,
+       8,
+       2.08
+      ],
+      "04": [
+       79,
+       11,
+       3.57
+      ],
+      "05": [
+       74,
+       6,
+       2.0
+      ],
+      "06": [
+       112,
+       5,
+       2.52
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 413,
+     "n_half": 4291,
+     "share": 0.0962,
+     "L": 14,
+     "L_half": 60,
+     "L_share": 0.2333,
+     "loss_rate": 0.0339,
+     "lift": 2.42,
+     "lift_month_adj": 2.39,
+     "p_binom": 0.00241,
+     "loss_days": 14,
+     "wr_base": 98.6,
+     "wr_untouched": 98.81,
+     "wr_angel_inside": 98.83,
+     "angel_kept_in_pocket": 38,
+     "months": {
+      "07": [
+       97,
+       5,
+       3.26
+      ],
+      "08": [
+       100,
+       3,
+       2.36
+      ],
+      "09": [
+       76,
+       1,
+       1.36
+      ],
+      "10": [
+       120,
+       4,
+       1.92
+      ],
+      "11": [
+       20,
+       1,
+       4.25
+      ]
+     },
+     "months_up": 5
+    }
+   }
+  }
+ ],
+ "cover": {
+  "SF d3 2% entropy mbal": {
+   "pockets": [
+    {
+     "cond": "er16 <= 0.1785 and gap_atr > 0.2035 and room60_atr <= 2.38",
+     "stats": {
+      "train": {
+       "n": 77,
+       "n_half": 3335,
+       "share": 0.0231,
+       "L": 10,
+       "L_half": 112,
+       "L_share": 0.0893,
+       "loss_rate": 0.1299,
+       "lift": 3.87,
+       "lift_month_adj": 4.05,
+       "p_binom": 0.00026,
+       "loss_days": 9,
+       "wr_base": 96.64,
+       "wr_untouched": 96.87,
+       "wr_angel_inside": 96.87,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "03": [
+         8,
+         0,
+         0.0
+        ],
+        "04": [
+         23,
+         2,
+         2.23
+        ],
+        "05": [
+         19,
+         3,
+         3.89
+        ],
+        "06": [
+         27,
+         5,
+         10.46
+        ]
+       },
+       "months_up": 3
+      },
+      "test": {
+       "n": 116,
+       "n_half": 4291,
+       "share": 0.027,
+       "L": 2,
+       "L_half": 60,
+       "L_share": 0.0333,
+       "loss_rate": 0.0172,
+       "lift": 1.23,
+       "lift_month_adj": 1.28,
+       "p_binom": 0.48355,
+       "loss_days": 2,
+       "wr_base": 98.6,
+       "wr_untouched": 98.61,
+       "wr_angel_inside": 98.61,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "07": [
+         28,
+         0,
+         0.0
+        ],
+        "08": [
+         25,
+         0,
+         0.0
+        ],
+        "09": [
+         35,
+         1,
+         2.94
+        ],
+        "10": [
+         24,
+         1,
+         2.4
+        ],
+        "11": [
+         4,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    },
+    {
+     "cond": "stop_atr <= 0.8145 and room240_atr <= 12.49 and trend240_atr <= 6.535",
+     "stats": {
+      "train": {
+       "n": 153,
+       "n_half": 3335,
+       "share": 0.0459,
+       "L": 18,
+       "L_half": 112,
+       "L_share": 0.1607,
+       "loss_rate": 0.1176,
+       "lift": 3.5,
+       "lift_month_adj": 3.61,
+       "p_binom": 0.0,
+       "loss_days": 17,
+       "wr_base": 96.64,
+       "wr_untouched": 97.05,
+       "wr_angel_inside": 97.06,
+       "angel_kept_in_pocket": 11,
+       "months": {
+        "03": [
+         35,
+         5,
+         3.53
+        ],
+        "04": [
+         35,
+         5,
+         3.66
+        ],
+        "05": [
+         32,
+         5,
+         3.85
+        ],
+        "06": [
+         51,
+         3,
+         3.32
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 163,
+       "n_half": 4291,
+       "share": 0.038,
+       "L": 4,
+       "L_half": 60,
+       "L_share": 0.0667,
+       "loss_rate": 0.0245,
+       "lift": 1.76,
+       "lift_month_adj": 1.72,
+       "p_binom": 0.1954,
+       "loss_days": 4,
+       "wr_base": 98.6,
+       "wr_untouched": 98.64,
+       "wr_angel_inside": 98.65,
+       "angel_kept_in_pocket": 17,
+       "months": {
+        "07": [
+         35,
+         2,
+         3.61
+        ],
+        "08": [
+         43,
+         0,
+         0.0
+        ],
+        "09": [
+         25,
+         0,
+         0.0
+        ],
+        "10": [
+         49,
+         1,
+         1.18
+        ],
+        "11": [
+         11,
+         1,
+         7.73
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    },
+    {
+     "cond": "trend30_atr <= -1.905 and er30 <= 0.2065 and brk_ratio <= 0.5055",
+     "stats": {
+      "train": {
+       "n": 235,
+       "n_half": 3335,
+       "share": 0.0705,
+       "L": 20,
+       "L_half": 112,
+       "L_share": 0.1786,
+       "loss_rate": 0.0851,
+       "lift": 2.53,
+       "lift_month_adj": 2.53,
+       "p_binom": 0.00016,
+       "loss_days": 18,
+       "wr_base": 96.64,
+       "wr_untouched": 97.03,
+       "wr_angel_inside": 97.04,
+       "angel_kept_in_pocket": 3,
+       "months": {
+        "03": [
+         74,
+         10,
+         3.34
+        ],
+        "04": [
+         49,
+         3,
+         1.57
+        ],
+        "05": [
+         45,
+         1,
+         0.55
+        ],
+        "06": [
+         67,
+         6,
+         5.06
+        ]
+       },
+       "months_up": 3
+      },
+      "test": {
+       "n": 345,
+       "n_half": 4291,
+       "share": 0.0804,
+       "L": 10,
+       "L_half": 60,
+       "L_share": 0.1667,
+       "loss_rate": 0.029,
+       "lift": 2.07,
+       "lift_month_adj": 2.06,
+       "p_binom": 0.02497,
+       "loss_days": 10,
+       "wr_base": 98.6,
+       "wr_untouched": 98.73,
+       "wr_angel_inside": 98.73,
+       "angel_kept_in_pocket": 5,
+       "months": {
+        "07": [
+         82,
+         4,
+         3.08
+        ],
+        "08": [
+         71,
+         3,
+         3.32
+        ],
+        "09": [
+         80,
+         1,
+         1.29
+        ],
+        "10": [
+         99,
+         2,
+         1.16
+        ],
+        "11": [
+         13,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 4
+      }
+     }
+    },
+    {
+     "cond": "last_body_dir > 0.908 and er16 <= 0.153",
+     "stats": {
+      "train": {
+       "n": 97,
+       "n_half": 3335,
+       "share": 0.0291,
+       "L": 8,
+       "L_half": 112,
+       "L_share": 0.0714,
+       "loss_rate": 0.0825,
+       "lift": 2.46,
+       "lift_month_adj": 2.53,
+       "p_binom": 0.01663,
+       "loss_days": 8,
+       "wr_base": 96.64,
+       "wr_untouched": 96.79,
+       "wr_angel_inside": 96.79,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "03": [
+         25,
+         1,
+         0.99
+        ],
+        "04": [
+         26,
+         2,
+         1.97
+        ],
+        "05": [
+         14,
+         3,
+         5.28
+        ],
+        "06": [
+         32,
+         2,
+         3.53
+        ]
+       },
+       "months_up": 3
+      },
+      "test": {
+       "n": 117,
+       "n_half": 4291,
+       "share": 0.0273,
+       "L": 3,
+       "L_half": 60,
+       "L_share": 0.05,
+       "loss_rate": 0.0256,
+       "lift": 1.83,
+       "lift_month_adj": 1.81,
+       "p_binom": 0.22531,
+       "loss_days": 3,
+       "wr_base": 98.6,
+       "wr_untouched": 98.63,
+       "wr_angel_inside": 98.63,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "07": [
+         32,
+         1,
+         1.97
+        ],
+        "08": [
+         22,
+         1,
+         3.57
+        ],
+        "09": [
+         28,
+         0,
+         0.0
+        ],
+        "10": [
+         33,
+         1,
+         1.75
+        ],
+        "11": [
+         2,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    }
+   ],
+   "union": {
+    "train": {
+     "n": 534,
+     "n_half": 3335,
+     "share": 0.1601,
+     "L": 54,
+     "L_half": 112,
+     "L_share": 0.4821,
+     "loss_rate": 0.1011,
+     "lift": 3.01,
+     "lift_month_adj": 3.07,
+     "p_binom": 0.0,
+     "loss_days": 43,
+     "wr_base": 96.64,
+     "wr_untouched": 97.93,
+     "wr_angel_inside": 97.94,
+     "angel_kept_in_pocket": 13,
+     "months": {
+      "03": [
+       132,
+       14,
+       2.62
+      ],
+      "04": [
+       127,
+       12,
+       2.42
+      ],
+      "05": [
+       105,
+       12,
+       2.81
+      ],
+      "06": [
+       170,
+       16,
+       5.31
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 713,
+     "n_half": 4291,
+     "share": 0.1662,
+     "L": 19,
+     "L_half": 60,
+     "L_share": 0.3167,
+     "loss_rate": 0.0266,
+     "lift": 1.91,
+     "lift_month_adj": 1.9,
+     "p_binom": 0.00659,
+     "loss_days": 18,
+     "wr_base": 98.6,
+     "wr_untouched": 98.85,
+     "wr_angel_inside": 98.86,
+     "angel_kept_in_pocket": 21,
+     "months": {
+      "07": [
+       171,
+       7,
+       2.59
+      ],
+      "08": [
+       151,
+       4,
+       2.08
+      ],
+      "09": [
+       163,
+       2,
+       1.26
+      ],
+      "10": [
+       199,
+       5,
+       1.45
+      ],
+      "11": [
+       29,
+       1,
+       2.93
+      ]
+     },
+     "months_up": 5
+    }
+   }
+  },
+  "SF d3 3% entropy mbal": {
+   "pockets": [
+    {
+     "cond": "er16 <= 0.1785 and gap_atr > 0.2035 and room60_atr <= 3.16",
+     "stats": {
+      "train": {
+       "n": 103,
+       "n_half": 3335,
+       "share": 0.0309,
+       "L": 12,
+       "L_half": 112,
+       "L_share": 0.1071,
+       "loss_rate": 0.1165,
+       "lift": 3.47,
+       "lift_month_adj": 3.55,
+       "p_binom": 0.00018,
+       "loss_days": 11,
+       "wr_base": 96.64,
+       "wr_untouched": 96.91,
+       "wr_angel_inside": 96.91,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "03": [
+         12,
+         0,
+         0.0
+        ],
+        "04": [
+         31,
+         4,
+         3.31
+        ],
+        "05": [
+         27,
+         3,
+         2.74
+        ],
+        "06": [
+         33,
+         5,
+         8.56
+        ]
+       },
+       "months_up": 3
+      },
+      "test": {
+       "n": 142,
+       "n_half": 4291,
+       "share": 0.0331,
+       "L": 3,
+       "L_half": 60,
+       "L_share": 0.05,
+       "loss_rate": 0.0211,
+       "lift": 1.51,
+       "lift_month_adj": 1.57,
+       "p_binom": 0.31938,
+       "loss_days": 3,
+       "wr_base": 98.6,
+       "wr_untouched": 98.63,
+       "wr_angel_inside": 98.63,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "07": [
+         32,
+         0,
+         0.0
+        ],
+        "08": [
+         30,
+         0,
+         0.0
+        ],
+        "09": [
+         43,
+         2,
+         4.79
+        ],
+        "10": [
+         31,
+         1,
+         1.86
+        ],
+        "11": [
+         6,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    },
+    {
+     "cond": "stop_atr <= 0.8145 and er60 <= 0.158 and er30 > 0.1575",
+     "stats": {
+      "train": {
+       "n": 96,
+       "n_half": 3335,
+       "share": 0.0288,
+       "L": 13,
+       "L_half": 112,
+       "L_share": 0.1161,
+       "loss_rate": 0.1354,
+       "lift": 4.03,
+       "lift_month_adj": 4.04,
+       "p_binom": 2e-05,
+       "loss_days": 12,
+       "wr_base": 96.64,
+       "wr_untouched": 96.94,
+       "wr_angel_inside": 96.96,
+       "angel_kept_in_pocket": 13,
+       "months": {
+        "03": [
+         24,
+         6,
+         6.18
+        ],
+        "04": [
+         24,
+         3,
+         3.2
+        ],
+        "05": [
+         20,
+         2,
+         2.46
+        ],
+        "06": [
+         28,
+         2,
+         4.03
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 100,
+       "n_half": 4291,
+       "share": 0.0233,
+       "L": 0,
+       "L_half": 60,
+       "L_share": 0.0,
+       "loss_rate": 0.0,
+       "lift": 0.0,
+       "lift_month_adj": 0.0,
+       "p_binom": 1.0,
+       "loss_days": 0,
+       "wr_base": 98.6,
+       "wr_untouched": 98.57,
+       "wr_angel_inside": 98.57,
+       "angel_kept_in_pocket": 17,
+       "months": {
+        "07": [
+         22,
+         0,
+         0.0
+        ],
+        "08": [
+         29,
+         0,
+         0.0
+        ],
+        "09": [
+         14,
+         0,
+         0.0
+        ],
+        "10": [
+         28,
+         0,
+         0.0
+        ],
+        "11": [
+         7,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      }
+     }
+    },
+    {
+     "cond": "vol_ratio10_60 <= 0.7075 and er30 <= 0.14",
+     "stats": {
+      "train": {
+       "n": 132,
+       "n_half": 3335,
+       "share": 0.0396,
+       "L": 14,
+       "L_half": 112,
+       "L_share": 0.125,
+       "loss_rate": 0.1061,
+       "lift": 3.16,
+       "lift_month_adj": 3.08,
+       "p_binom": 0.00015,
+       "loss_days": 12,
+       "wr_base": 96.64,
+       "wr_untouched": 96.94,
+       "wr_angel_inside": 96.95,
+       "angel_kept_in_pocket": 5,
+       "months": {
+        "03": [
+         38,
+         4,
+         2.6
+        ],
+        "04": [
+         34,
+         4,
+         3.01
+        ],
+        "05": [
+         27,
+         3,
+         2.74
+        ],
+        "06": [
+         33,
+         3,
+         5.13
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 186,
+       "n_half": 4291,
+       "share": 0.0433,
+       "L": 3,
+       "L_half": 60,
+       "L_share": 0.05,
+       "loss_rate": 0.0161,
+       "lift": 1.15,
+       "lift_month_adj": 1.19,
+       "p_binom": 0.48283,
+       "loss_days": 3,
+       "wr_base": 98.6,
+       "wr_untouched": 98.61,
+       "wr_angel_inside": 98.61,
+       "angel_kept_in_pocket": 7,
+       "months": {
+        "07": [
+         41,
+         1,
+         1.54
+        ],
+        "08": [
+         42,
+         1,
+         1.87
+        ],
+        "09": [
+         54,
+         1,
+         1.91
+        ],
+        "10": [
+         42,
+         0,
+         0.0
+        ],
+        "11": [
+         7,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    },
+    {
+     "cond": "brk_ratio <= 0.413 and er8 <= 0.3495 and ny_min_of_day <= 240",
+     "stats": {
+      "train": {
+       "n": 215,
+       "n_half": 3335,
+       "share": 0.0645,
+       "L": 17,
+       "L_half": 112,
+       "L_share": 0.1518,
+       "loss_rate": 0.0791,
+       "lift": 2.35,
+       "lift_month_adj": 2.44,
+       "p_binom": 0.00106,
+       "loss_days": 16,
+       "wr_base": 96.64,
+       "wr_untouched": 96.96,
+       "wr_angel_inside": 96.94,
+       "angel_kept_in_pocket": 15,
+       "months": {
+        "03": [
+         61,
+         6,
+         2.43
+        ],
+        "04": [
+         46,
+         2,
+         1.11
+        ],
+        "05": [
+         35,
+         5,
+         3.52
+        ],
+        "06": [
+         73,
+         4,
+         3.09
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 315,
+       "n_half": 4291,
+       "share": 0.0734,
+       "L": 4,
+       "L_half": 60,
+       "L_share": 0.0667,
+       "loss_rate": 0.0127,
+       "lift": 0.91,
+       "lift_month_adj": 0.92,
+       "p_binom": 0.64307,
+       "loss_days": 4,
+       "wr_base": 98.6,
+       "wr_untouched": 98.59,
+       "wr_angel_inside": 98.6,
+       "angel_kept_in_pocket": 25,
+       "months": {
+        "07": [
+         72,
+         2,
+         1.75
+        ],
+        "08": [
+         61,
+         0,
+         0.0
+        ],
+        "09": [
+         77,
+         0,
+         0.0
+        ],
+        "10": [
+         82,
+         1,
+         0.7
+        ],
+        "11": [
+         23,
+         1,
+         3.7
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    },
+    {
+     "cond": "atr_rel <= 2.419 and er60 <= 0.0335 and pos60 <= 0.4895",
+     "stats": {
+      "train": {
+       "n": 151,
+       "n_half": 3335,
+       "share": 0.0453,
+       "L": 11,
+       "L_half": 112,
+       "L_share": 0.0982,
+       "loss_rate": 0.0728,
+       "lift": 2.17,
+       "lift_month_adj": 2.23,
+       "p_binom": 0.01344,
+       "loss_days": 11,
+       "wr_base": 96.64,
+       "wr_untouched": 96.83,
+       "wr_angel_inside": 96.83,
+       "angel_kept_in_pocket": 2,
+       "months": {
+        "03": [
+         40,
+         2,
+         1.24
+        ],
+        "04": [
+         38,
+         5,
+         3.37
+        ],
+        "05": [
+         24,
+         2,
+         2.05
+        ],
+        "06": [
+         49,
+         2,
+         2.3
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 164,
+       "n_half": 4291,
+       "share": 0.0382,
+       "L": 4,
+       "L_half": 60,
+       "L_share": 0.0667,
+       "loss_rate": 0.0244,
+       "lift": 1.74,
+       "lift_month_adj": 1.75,
+       "p_binom": 0.19825,
+       "loss_days": 4,
+       "wr_base": 98.6,
+       "wr_untouched": 98.64,
+       "wr_angel_inside": 98.64,
+       "angel_kept_in_pocket": 3,
+       "months": {
+        "07": [
+         48,
+         1,
+         1.32
+        ],
+        "08": [
+         38,
+         1,
+         2.07
+        ],
+        "09": [
+         37,
+         1,
+         2.78
+        ],
+        "10": [
+         35,
+         0,
+         0.0
+        ],
+        "11": [
+         6,
+         1,
+         14.17
+        ]
+       },
+       "months_up": 4
+      }
+     }
+    }
+   ],
+   "union": {
+    "train": {
+     "n": 654,
+     "n_half": 3335,
+     "share": 0.1961,
+     "L": 61,
+     "L_half": 112,
+     "L_share": 0.5446,
+     "loss_rate": 0.0933,
+     "lift": 2.78,
+     "lift_month_adj": 2.82,
+     "p_binom": 0.0,
+     "loss_days": 45,
+     "wr_base": 96.64,
+     "wr_untouched": 98.1,
+     "wr_angel_inside": 98.08,
+     "angel_kept_in_pocket": 34,
+     "months": {
+      "03": [
+       161,
+       17,
+       2.61
+      ],
+      "04": [
+       165,
+       16,
+       2.48
+      ],
+      "05": [
+       127,
+       13,
+       2.52
+      ],
+      "06": [
+       201,
+       15,
+       4.21
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 843,
+     "n_half": 4291,
+     "share": 0.1965,
+     "L": 13,
+     "L_half": 60,
+     "L_share": 0.2167,
+     "loss_rate": 0.0154,
+     "lift": 1.1,
+     "lift_month_adj": 1.12,
+     "p_binom": 0.39957,
+     "loss_days": 13,
+     "wr_base": 98.6,
+     "wr_untouched": 98.64,
+     "wr_angel_inside": 98.66,
+     "angel_kept_in_pocket": 49,
+     "months": {
+      "07": [
+       201,
+       4,
+       1.26
+      ],
+      "08": [
+       188,
+       2,
+       0.84
+      ],
+      "09": [
+       208,
+       3,
+       1.49
+      ],
+      "10": [
+       204,
+       2,
+       0.57
+      ],
+      "11": [
+       42,
+       2,
+       4.05
+      ]
+     },
+     "months_up": 3
+    }
+   }
+  },
+  "SF d3 2% gini balanced": {
+   "pockets": [
+    {
+     "cond": "vol10_rel <= 0.8805 and atr_rel > 0.7715 and ny_min_of_day >= 870",
+     "stats": {
+      "train": {
+       "n": 114,
+       "n_half": 3335,
+       "share": 0.0342,
+       "L": 15,
+       "L_half": 112,
+       "L_share": 0.1339,
+       "loss_rate": 0.1316,
+       "lift": 3.92,
+       "lift_month_adj": 3.8,
+       "p_binom": 1e-05,
+       "loss_days": 11,
+       "wr_base": 96.64,
+       "wr_untouched": 96.99,
+       "wr_angel_inside": 96.99,
+       "angel_kept_in_pocket": 6,
+       "months": {
+        "03": [
+         39,
+         6,
+         3.8
+        ],
+        "04": [
+         22,
+         6,
+         6.99
+        ],
+        "05": [
+         25,
+         2,
+         1.97
+        ],
+        "06": [
+         28,
+         1,
+         2.02
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 128,
+       "n_half": 4291,
+       "share": 0.0298,
+       "L": 5,
+       "L_half": 60,
+       "L_share": 0.0833,
+       "loss_rate": 0.0391,
+       "lift": 2.79,
+       "lift_month_adj": 2.79,
+       "p_binom": 0.03456,
+       "loss_days": 5,
+       "wr_base": 98.6,
+       "wr_untouched": 98.68,
+       "wr_angel_inside": 98.68,
+       "angel_kept_in_pocket": 7,
+       "months": {
+        "07": [
+         21,
+         0,
+         0.0
+        ],
+        "08": [
+         17,
+         1,
+         4.62
+        ],
+        "09": [
+         39,
+         1,
+         2.64
+        ],
+        "10": [
+         47,
+         3,
+         3.68
+        ],
+        "11": [
+         4,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    }
+   ],
+   "union": {
+    "train": {
+     "n": 114,
+     "n_half": 3335,
+     "share": 0.0342,
+     "L": 15,
+     "L_half": 112,
+     "L_share": 0.1339,
+     "loss_rate": 0.1316,
+     "lift": 3.92,
+     "lift_month_adj": 3.8,
+     "p_binom": 1e-05,
+     "loss_days": 11,
+     "wr_base": 96.64,
+     "wr_untouched": 96.99,
+     "wr_angel_inside": 96.99,
+     "angel_kept_in_pocket": 6,
+     "months": {
+      "03": [
+       39,
+       6,
+       3.8
+      ],
+      "04": [
+       22,
+       6,
+       6.99
+      ],
+      "05": [
+       25,
+       2,
+       1.97
+      ],
+      "06": [
+       28,
+       1,
+       2.02
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 128,
+     "n_half": 4291,
+     "share": 0.0298,
+     "L": 5,
+     "L_half": 60,
+     "L_share": 0.0833,
+     "loss_rate": 0.0391,
+     "lift": 2.79,
+     "lift_month_adj": 2.79,
+     "p_binom": 0.03456,
+     "loss_days": 5,
+     "wr_base": 98.6,
+     "wr_untouched": 98.68,
+     "wr_angel_inside": 98.68,
+     "angel_kept_in_pocket": 7,
+     "months": {
+      "07": [
+       21,
+       0,
+       0.0
+      ],
+      "08": [
+       17,
+       1,
+       4.62
+      ],
+      "09": [
+       39,
+       1,
+       2.64
+      ],
+      "10": [
+       47,
+       3,
+       3.68
+      ],
+      "11": [
+       4,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 3
+    }
+   }
+  },
+  "RAW d3 2% entropy mbal": {
+   "pockets": [],
+   "union": {
+    "train": {
+     "n": 0,
+     "n_half": 3335,
+     "share": 0.0,
+     "L": 0,
+     "L_half": 112,
+     "L_share": 0.0,
+     "loss_rate": 0.0,
+     "lift": 0.0,
+     "lift_month_adj": 0.0,
+     "p_binom": 1.0,
+     "loss_days": 0,
+     "wr_base": 96.64,
+     "wr_untouched": 96.64,
+     "wr_angel_inside": 96.64,
+     "angel_kept_in_pocket": 0,
+     "months": {
+      "03": [
+       0,
+       0,
+       0.0
+      ],
+      "04": [
+       0,
+       0,
+       0.0
+      ],
+      "05": [
+       0,
+       0,
+       0.0
+      ],
+      "06": [
+       0,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 0
+    },
+    "test": {
+     "n": 0,
+     "n_half": 4291,
+     "share": 0.0,
+     "L": 0,
+     "L_half": 60,
+     "L_share": 0.0,
+     "loss_rate": 0.0,
+     "lift": 0.0,
+     "lift_month_adj": 0.0,
+     "p_binom": 1.0,
+     "loss_days": 0,
+     "wr_base": 98.6,
+     "wr_untouched": 98.6,
+     "wr_angel_inside": 98.6,
+     "angel_kept_in_pocket": 0,
+     "months": {
+      "07": [
+       0,
+       0,
+       0.0
+      ],
+      "08": [
+       0,
+       0,
+       0.0
+      ],
+      "09": [
+       0,
+       0,
+       0.0
+      ],
+      "10": [
+       0,
+       0,
+       0.0
+      ],
+      "11": [
+       0,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 0
+    }
+   }
+  }
+ },
+ "themes_res": {
+  "calendar": {
+   "cfg": {
+    "depth": 3,
+    "min_leaf": 0.05,
+    "crit": "entropy",
+    "w": "mbal",
+    "ho_share": 0.1367,
+    "ho_capture": 0.1875,
+    "ho_lift": 1.468
+   },
+   "leaves": [
+    {
+     "cond": "ny_min_of_day <= 158",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 300,
+       "n_half": 3335,
+       "share": 0.09,
+       "L": 16,
+       "L_half": 112,
+       "L_share": 0.1429,
+       "loss_rate": 0.0533,
+       "lift": 1.59,
+       "lift_month_adj": 1.63,
+       "p_binom": 0.04839,
+       "loss_days": 16,
+       "wr_base": 96.64,
+       "wr_untouched": 96.84,
+       "wr_angel_inside": 96.86,
+       "angel_kept_in_pocket": 21,
+       "months": {
+        "03": [
+         95,
+         5,
+         1.3
+        ],
+        "04": [
+         54,
+         3,
+         1.42
+        ],
+        "05": [
+         52,
+         4,
+         1.89
+        ],
+        "06": [
+         99,
+         4,
+         2.28
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 445,
+       "n_half": 4291,
+       "share": 0.1037,
+       "L": 4,
+       "L_half": 60,
+       "L_share": 0.0667,
+       "loss_rate": 0.009,
+       "lift": 0.64,
+       "lift_month_adj": 0.65,
+       "p_binom": 0.86936,
+       "loss_days": 4,
+       "wr_base": 98.6,
+       "wr_untouched": 98.54,
+       "wr_angel_inside": 98.55,
+       "angel_kept_in_pocket": 26,
+       "months": {
+        "07": [
+         105,
+         2,
+         1.2
+        ],
+        "08": [
+         82,
+         0,
+         0.0
+        ],
+        "09": [
+         110,
+         0,
+         0.0
+        ],
+        "10": [
+         121,
+         2,
+         0.95
+        ],
+        "11": [
+         27,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 1
+      }
+     }
+    },
+    {
+     "cond": "159 <= ny_min_of_day <= 240",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 219,
+       "n_half": 3335,
+       "share": 0.0657,
+       "L": 9,
+       "L_half": 112,
+       "L_share": 0.0804,
+       "loss_rate": 0.0411,
+       "lift": 1.22,
+       "lift_month_adj": 1.28,
+       "p_binom": 0.31666,
+       "loss_days": 9,
+       "wr_base": 96.64,
+       "wr_untouched": 96.69,
+       "wr_angel_inside": 96.68,
+       "angel_kept_in_pocket": 17,
+       "months": {
+        "03": [
+         45,
+         3,
+         1.65
+        ],
+        "04": [
+         54,
+         3,
+         1.42
+        ],
+        "05": [
+         43,
+         2,
+         1.15
+        ],
+        "06": [
+         77,
+         1,
+         0.73
+        ]
+       },
+       "months_up": 3
+      },
+      "test": {
+       "n": 302,
+       "n_half": 4291,
+       "share": 0.0704,
+       "L": 3,
+       "L_half": 60,
+       "L_share": 0.05,
+       "loss_rate": 0.0099,
+       "lift": 0.71,
+       "lift_month_adj": 0.72,
+       "p_binom": 0.7948,
+       "loss_days": 3,
+       "wr_base": 98.6,
+       "wr_untouched": 98.57,
+       "wr_angel_inside": 98.58,
+       "angel_kept_in_pocket": 19,
+       "months": {
+        "07": [
+         70,
+         1,
+         0.9
+        ],
+        "08": [
+         71,
+         0,
+         0.0
+        ],
+        "09": [
+         72,
+         0,
+         0.0
+        ],
+        "10": [
+         73,
+         1,
+         0.79
+        ],
+        "11": [
+         16,
+         1,
+         5.31
+        ]
+       },
+       "months_up": 1
+      }
+     }
+    },
+    {
+     "cond": "560 <= ny_min_of_day <= 1173",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 1394,
+       "n_half": 3335,
+       "share": 0.418,
+       "L": 59,
+       "L_half": 112,
+       "L_share": 0.5268,
+       "loss_rate": 0.0423,
+       "lift": 1.26,
+       "lift_month_adj": 1.24,
+       "p_binom": 0.04493,
+       "loss_days": 43,
+       "wr_base": 96.64,
+       "wr_untouched": 97.27,
+       "wr_angel_inside": 97.4,
+       "angel_kept_in_pocket": 95,
+       "months": {
+        "03": [
+         373,
+         21,
+         1.39
+        ],
+        "04": [
+         357,
+         17,
+         1.22
+        ],
+        "05": [
+         305,
+         11,
+         0.89
+        ],
+        "06": [
+         359,
+         10,
+         1.57
+        ]
+       },
+       "months_up": 3
+      },
+      "test": {
+       "n": 1723,
+       "n_half": 4291,
+       "share": 0.4015,
+       "L": 31,
+       "L_half": 60,
+       "L_share": 0.5167,
+       "loss_rate": 0.018,
+       "lift": 1.29,
+       "lift_month_adj": 1.29,
+       "p_binom": 0.09769,
+       "loss_days": 30,
+       "wr_base": 98.6,
+       "wr_untouched": 98.87,
+       "wr_angel_inside": 98.84,
+       "angel_kept_in_pocket": 99,
+       "months": {
+        "07": [
+         417,
+         8,
+         1.21
+        ],
+        "08": [
+         347,
+         9,
+         2.04
+        ],
+        "09": [
+         433,
+         5,
+         1.19
+        ],
+        "10": [
+         465,
+         8,
+         0.99
+        ],
+        "11": [
+         61,
+         1,
+         1.39
+        ]
+       },
+       "months_up": 4
+      }
+     }
+    },
+    {
+     "cond": "ny_min_of_day >= 1174",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 491,
+       "n_half": 3335,
+       "share": 0.1472,
+       "L": 10,
+       "L_half": 112,
+       "L_share": 0.0893,
+       "loss_rate": 0.0204,
+       "lift": 0.61,
+       "lift_month_adj": 0.6,
+       "p_binom": 0.96822,
+       "loss_days": 10,
+       "wr_base": 96.64,
+       "wr_untouched": 96.41,
+       "wr_angel_inside": 96.44,
+       "angel_kept_in_pocket": 25,
+       "months": {
+        "03": [
+         131,
+         4,
+         0.75
+        ],
+        "04": [
+         135,
+         2,
+         0.38
+        ],
+        "05": [
+         92,
+         3,
+         0.8
+        ],
+        "06": [
+         133,
+         1,
+         0.42
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 619,
+       "n_half": 4291,
+       "share": 0.1443,
+       "L": 7,
+       "L_half": 60,
+       "L_share": 0.1167,
+       "loss_rate": 0.0113,
+       "lift": 0.81,
+       "lift_month_adj": 0.81,
+       "p_binom": 0.7619,
+       "loss_days": 7,
+       "wr_base": 98.6,
+       "wr_untouched": 98.56,
+       "wr_angel_inside": 98.58,
+       "angel_kept_in_pocket": 54,
+       "months": {
+        "07": [
+         162,
+         2,
+         0.78
+        ],
+        "08": [
+         121,
+         0,
+         0.0
+        ],
+        "09": [
+         145,
+         1,
+         0.71
+        ],
+        "10": [
+         165,
+         4,
+         1.4
+        ],
+        "11": [
+         26,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 1
+      }
+     }
+    },
+    {
+     "cond": "241 <= ny_min_of_day <= 559",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 931,
+       "n_half": 3335,
+       "share": 0.2792,
+       "L": 18,
+       "L_half": 112,
+       "L_share": 0.1607,
+       "loss_rate": 0.0193,
+       "lift": 0.58,
+       "lift_month_adj": 0.59,
+       "p_binom": 0.99648,
+       "loss_days": 18,
+       "wr_base": 96.64,
+       "wr_untouched": 96.09,
+       "wr_angel_inside": 96.19,
+       "angel_kept_in_pocket": 66,
+       "months": {
+        "03": [
+         246,
+         3,
+         0.3
+        ],
+        "04": [
+         220,
+         7,
+         0.82
+        ],
+        "05": [
+         173,
+         7,
+         1.0
+        ],
+        "06": [
+         292,
+         1,
+         0.19
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 1202,
+       "n_half": 4291,
+       "share": 0.2801,
+       "L": 15,
+       "L_half": 60,
+       "L_share": 0.25,
+       "loss_rate": 0.0125,
+       "lift": 0.89,
+       "lift_month_adj": 0.88,
+       "p_binom": 0.70513,
+       "loss_days": 15,
+       "wr_base": 98.6,
+       "wr_untouched": 98.54,
+       "wr_angel_inside": 98.58,
+       "angel_kept_in_pocket": 73,
+       "months": {
+        "07": [
+         320,
+         4,
+         0.79
+        ],
+        "08": [
+         243,
+         2,
+         0.65
+        ],
+        "09": [
+         270,
+         4,
+         1.53
+        ],
+        "10": [
+         329,
+         5,
+         0.88
+        ],
+        "11": [
+         40,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 1
+      }
+     }
+    }
+   ],
+   "union": {
+    "train": {
+     "n": 519,
+     "n_half": 3335,
+     "share": 0.1556,
+     "L": 25,
+     "L_half": 112,
+     "L_share": 0.2232,
+     "loss_rate": 0.0482,
+     "lift": 1.43,
+     "lift_month_adj": 1.48,
+     "p_binom": 0.04829,
+     "loss_days": 24,
+     "wr_base": 96.64,
+     "wr_untouched": 96.91,
+     "wr_angel_inside": 96.92,
+     "angel_kept_in_pocket": 38,
+     "months": {
+      "03": [
+       140,
+       8,
+       1.41
+      ],
+      "04": [
+       108,
+       6,
+       1.42
+      ],
+      "05": [
+       95,
+       6,
+       1.56
+      ],
+      "06": [
+       176,
+       5,
+       1.6
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 747,
+     "n_half": 4291,
+     "share": 0.1741,
+     "L": 7,
+     "L_half": 60,
+     "L_share": 0.1167,
+     "loss_rate": 0.0094,
+     "lift": 0.67,
+     "lift_month_adj": 0.68,
+     "p_binom": 0.89716,
+     "loss_days": 7,
+     "wr_base": 98.6,
+     "wr_untouched": 98.5,
+     "wr_angel_inside": 98.52,
+     "angel_kept_in_pocket": 45,
+     "months": {
+      "07": [
+       175,
+       3,
+       1.08
+      ],
+      "08": [
+       153,
+       0,
+       0.0
+      ],
+      "09": [
+       182,
+       0,
+       0.0
+      ],
+      "10": [
+       194,
+       3,
+       0.89
+      ],
+      "11": [
+       43,
+       1,
+       1.98
+      ]
+     },
+     "months_up": 2
+    }
+   },
+   "grid_top": [
+    {
+     "depth": 3,
+     "min_leaf": 0.05,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.1367,
+     "ho_capture": 0.1875,
+     "ho_lift": 1.468
+    },
+    {
+     "depth": 3,
+     "min_leaf": 0.02,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0969,
+     "ho_capture": 0.0893,
+     "ho_lift": 1.135
+    },
+    {
+     "depth": 3,
+     "min_leaf": 0.03,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.1235,
+     "ho_capture": 0.1161,
+     "ho_lift": 1.071
+    },
+    {
+     "depth": 2,
+     "min_leaf": 0.05,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0954,
+     "ho_capture": 0.0714,
+     "ho_lift": 0.909
+    },
+    {
+     "depth": 2,
+     "min_leaf": 0.02,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.1067,
+     "ho_capture": 0.0804,
+     "ho_lift": 0.871
+    }
+   ]
+  },
+  "liquidity": {
+   "cfg": {
+    "depth": 3,
+    "min_leaf": 0.02,
+    "crit": "entropy",
+    "w": "mbal",
+    "ho_share": 0.0837,
+    "ho_capture": 0.1161,
+    "ho_lift": 1.285
+   },
+   "leaves": [
+    {
+     "cond": "spread_excess > 0.275",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 77,
+       "n_half": 3335,
+       "share": 0.0231,
+       "L": 10,
+       "L_half": 112,
+       "L_share": 0.0893,
+       "loss_rate": 0.1299,
+       "lift": 3.87,
+       "lift_month_adj": 3.8,
+       "p_binom": 0.00026,
+       "loss_days": 7,
+       "wr_base": 96.64,
+       "wr_untouched": 96.87,
+       "wr_angel_inside": 96.87,
+       "angel_kept_in_pocket": 1,
+       "months": {
+        "03": [
+         29,
+         2,
+         1.7
+        ],
+        "04": [
+         20,
+         5,
+         6.41
+        ],
+        "05": [
+         8,
+         1,
+         3.08
+        ],
+        "06": [
+         20,
+         2,
+         5.65
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 74,
+       "n_half": 4291,
+       "share": 0.0172,
+       "L": 9,
+       "L_half": 60,
+       "L_share": 0.15,
+       "loss_rate": 0.1216,
+       "lift": 8.7,
+       "lift_month_adj": 8.54,
+       "p_binom": 0.0,
+       "loss_days": 9,
+       "wr_base": 98.6,
+       "wr_untouched": 98.79,
+       "wr_angel_inside": 98.79,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "07": [
+         18,
+         4,
+         14.04
+        ],
+        "08": [
+         15,
+         2,
+         10.47
+        ],
+        "09": [
+         16,
+         1,
+         6.44
+        ],
+        "10": [
+         23,
+         2,
+         5.01
+        ],
+        "11": [
+         2,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 4
+      }
+     }
+    },
+    {
+     "cond": "spread_excess <= 0.275 and brk_ratio <= 0.3665 and gap_atr > 0.0325",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 1668,
+       "n_half": 3335,
+       "share": 0.5001,
+       "L": 69,
+       "L_half": 112,
+       "L_share": 0.6161,
+       "loss_rate": 0.0414,
+       "lift": 1.23,
+       "lift_month_adj": 1.23,
+       "p_binom": 0.04833,
+       "loss_days": 49,
+       "wr_base": 96.64,
+       "wr_untouched": 97.42,
+       "wr_angel_inside": 97.51,
+       "angel_kept_in_pocket": 98,
+       "months": {
+        "03": [
+         406,
+         24,
+         1.46
+        ],
+        "04": [
+         432,
+         17,
+         1.01
+        ],
+        "05": [
+         345,
+         17,
+         1.21
+        ],
+        "06": [
+         485,
+         11,
+         1.28
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 2338,
+       "n_half": 4291,
+       "share": 0.5449,
+       "L": 33,
+       "L_half": 60,
+       "L_share": 0.55,
+       "loss_rate": 0.0141,
+       "lift": 1.01,
+       "lift_month_adj": 1.01,
+       "p_binom": 0.50204,
+       "loss_days": 30,
+       "wr_base": 98.6,
+       "wr_untouched": 98.62,
+       "wr_angel_inside": 98.67,
+       "angel_kept_in_pocket": 148,
+       "months": {
+        "07": [
+         572,
+         8,
+         0.88
+        ],
+        "08": [
+         487,
+         4,
+         0.65
+        ],
+        "09": [
+         553,
+         6,
+         1.12
+        ],
+        "10": [
+         635,
+         13,
+         1.18
+        ],
+        "11": [
+         91,
+         2,
+         1.87
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    },
+    {
+     "cond": "spread_excess <= 0.275 and brk_ratio > 0.3665 and uhv_rel <= 1.391",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 1179,
+       "n_half": 3335,
+       "share": 0.3535,
+       "L": 31,
+       "L_half": 112,
+       "L_share": 0.2768,
+       "loss_rate": 0.0263,
+       "lift": 0.78,
+       "lift_month_adj": 0.79,
+       "p_binom": 0.93373,
+       "loss_days": 28,
+       "wr_base": 96.64,
+       "wr_untouched": 96.24,
+       "wr_angel_inside": 96.41,
+       "angel_kept_in_pocket": 102,
+       "months": {
+        "03": [
+         319,
+         9,
+         0.7
+        ],
+        "04": [
+         263,
+         9,
+         0.88
+        ],
+        "05": [
+         247,
+         9,
+         0.9
+        ],
+        "06": [
+         350,
+         4,
+         0.65
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 1418,
+       "n_half": 4291,
+       "share": 0.3305,
+       "L": 12,
+       "L_half": 60,
+       "L_share": 0.2,
+       "loss_rate": 0.0085,
+       "lift": 0.61,
+       "lift_month_adj": 0.61,
+       "p_binom": 0.97742,
+       "loss_days": 11,
+       "wr_base": 98.6,
+       "wr_untouched": 98.33,
+       "wr_angel_inside": 98.36,
+       "angel_kept_in_pocket": 108,
+       "months": {
+        "07": [
+         382,
+         4,
+         0.66
+        ],
+        "08": [
+         268,
+         2,
+         0.59
+        ],
+        "09": [
+         353,
+         2,
+         0.58
+        ],
+        "10": [
+         356,
+         4,
+         0.65
+        ],
+        "11": [
+         59,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      }
+     }
+    },
+    {
+     "cond": "spread_excess <= 0.275 and brk_ratio > 0.3665 and uhv_rel > 1.391",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 335,
+       "n_half": 3335,
+       "share": 0.1004,
+       "L": 2,
+       "L_half": 112,
+       "L_share": 0.0179,
+       "loss_rate": 0.006,
+       "lift": 0.18,
+       "lift_month_adj": 0.18,
+       "p_binom": 0.99986,
+       "loss_days": 2,
+       "wr_base": 96.64,
+       "wr_untouched": 96.33,
+       "wr_angel_inside": 96.35,
+       "angel_kept_in_pocket": 17,
+       "months": {
+        "03": [
+         82,
+         1,
+         0.3
+        ],
+        "04": [
+         92,
+         1,
+         0.28
+        ],
+        "05": [
+         60,
+         0,
+         0.0
+        ],
+        "06": [
+         101,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 430,
+       "n_half": 4291,
+       "share": 0.1002,
+       "L": 6,
+       "L_half": 60,
+       "L_share": 0.1,
+       "loss_rate": 0.014,
+       "lift": 1.0,
+       "lift_month_adj": 1.0,
+       "p_binom": 0.55748,
+       "loss_days": 6,
+       "wr_base": 98.6,
+       "wr_untouched": 98.6,
+       "wr_angel_inside": 98.61,
+       "angel_kept_in_pocket": 12,
+       "months": {
+        "07": [
+         96,
+         1,
+         0.66
+        ],
+        "08": [
+         91,
+         3,
+         2.59
+        ],
+        "09": [
+         104,
+         1,
+         0.99
+        ],
+        "10": [
+         125,
+         1,
+         0.46
+        ],
+        "11": [
+         14,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 1
+      }
+     }
+    },
+    {
+     "cond": "spread_excess <= 0.275 and brk_ratio <= 0.3665 and gap_atr <= 0.0325",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 76,
+       "n_half": 3335,
+       "share": 0.0228,
+       "L": 0,
+       "L_half": 112,
+       "L_share": 0.0,
+       "loss_rate": 0.0,
+       "lift": 0.0,
+       "lift_month_adj": 0.0,
+       "p_binom": 1.0,
+       "loss_days": 0,
+       "wr_base": 96.64,
+       "wr_untouched": 96.56,
+       "wr_angel_inside": 96.57,
+       "angel_kept_in_pocket": 6,
+       "months": {
+        "03": [
+         54,
+         0,
+         0.0
+        ],
+        "04": [
+         13,
+         0,
+         0.0
+        ],
+        "05": [
+         5,
+         0,
+         0.0
+        ],
+        "06": [
+         4,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 31,
+       "n_half": 4291,
+       "share": 0.0072,
+       "L": 0,
+       "L_half": 60,
+       "L_share": 0.0,
+       "loss_rate": 0.0,
+       "lift": 0.0,
+       "lift_month_adj": 0.0,
+       "p_binom": 1.0,
+       "loss_days": 0,
+       "wr_base": 98.6,
+       "wr_untouched": 98.59,
+       "wr_angel_inside": 98.59,
+       "angel_kept_in_pocket": 3,
+       "months": {
+        "07": [
+         6,
+         0,
+         0.0
+        ],
+        "08": [
+         3,
+         0,
+         0.0
+        ],
+        "09": [
+         4,
+         0,
+         0.0
+        ],
+        "10": [
+         14,
+         0,
+         0.0
+        ],
+        "11": [
+         4,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      }
+     }
+    }
+   ],
+   "union": {
+    "train": {
+     "n": 77,
+     "n_half": 3335,
+     "share": 0.0231,
+     "L": 10,
+     "L_half": 112,
+     "L_share": 0.0893,
+     "loss_rate": 0.1299,
+     "lift": 3.87,
+     "lift_month_adj": 3.8,
+     "p_binom": 0.00026,
+     "loss_days": 7,
+     "wr_base": 96.64,
+     "wr_untouched": 96.87,
+     "wr_angel_inside": 96.87,
+     "angel_kept_in_pocket": 1,
+     "months": {
+      "03": [
+       29,
+       2,
+       1.7
+      ],
+      "04": [
+       20,
+       5,
+       6.41
+      ],
+      "05": [
+       8,
+       1,
+       3.08
+      ],
+      "06": [
+       20,
+       2,
+       5.65
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 74,
+     "n_half": 4291,
+     "share": 0.0172,
+     "L": 9,
+     "L_half": 60,
+     "L_share": 0.15,
+     "loss_rate": 0.1216,
+     "lift": 8.7,
+     "lift_month_adj": 8.54,
+     "p_binom": 0.0,
+     "loss_days": 9,
+     "wr_base": 98.6,
+     "wr_untouched": 98.79,
+     "wr_angel_inside": 98.79,
+     "angel_kept_in_pocket": 0,
+     "months": {
+      "07": [
+       18,
+       4,
+       14.04
+      ],
+      "08": [
+       15,
+       2,
+       10.47
+      ],
+      "09": [
+       16,
+       1,
+       6.44
+      ],
+      "10": [
+       23,
+       2,
+       5.01
+      ],
+      "11": [
+       2,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 4
+    }
+   },
+   "grid_top": [
+    {
+     "depth": 3,
+     "min_leaf": 0.02,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0837,
+     "ho_capture": 0.1161,
+     "ho_lift": 1.285
+    },
+    {
+     "depth": 2,
+     "min_leaf": 0.02,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0306,
+     "ho_capture": 0.0357,
+     "ho_lift": 1.279
+    },
+    {
+     "depth": 3,
+     "min_leaf": 0.05,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.1166,
+     "ho_capture": 0.125,
+     "ho_lift": 1.165
+    },
+    {
+     "depth": 2,
+     "min_leaf": 0.05,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0969,
+     "ho_capture": 0.1071,
+     "ho_lift": 1.037
+    },
+    {
+     "depth": 2,
+     "min_leaf": 0.03,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0762,
+     "ho_capture": 0.0804,
+     "ho_lift": 0.979
+    }
+   ]
+  },
+  "trend": {
+   "cfg": {
+    "depth": 2,
+    "min_leaf": 0.05,
+    "crit": "entropy",
+    "w": "mbal",
+    "ho_share": 0.0588,
+    "ho_capture": 0.0446,
+    "ho_lift": 0.953
+   },
+   "leaves": [
+    {
+     "cond": "er16 <= 0.1785 and room240_atr <= 19.33",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 1525,
+       "n_half": 3335,
+       "share": 0.4573,
+       "L": 71,
+       "L_half": 112,
+       "L_share": 0.6339,
+       "loss_rate": 0.0466,
+       "lift": 1.39,
+       "lift_month_adj": 1.38,
+       "p_binom": 0.00442,
+       "loss_days": 47,
+       "wr_base": 96.64,
+       "wr_untouched": 97.73,
+       "wr_angel_inside": 97.73,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "03": [
+         417,
+         22,
+         1.3
+        ],
+        "04": [
+         356,
+         16,
+         1.15
+        ],
+        "05": [
+         319,
+         20,
+         1.54
+        ],
+        "06": [
+         433,
+         13,
+         1.7
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 1963,
+       "n_half": 4291,
+       "share": 0.4575,
+       "L": 29,
+       "L_half": 60,
+       "L_share": 0.4833,
+       "loss_rate": 0.0148,
+       "lift": 1.06,
+       "lift_month_adj": 1.06,
+       "p_binom": 0.40827,
+       "loss_days": 27,
+       "wr_base": 98.6,
+       "wr_untouched": 98.67,
+       "wr_angel_inside": 98.67,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "07": [
+         469,
+         7,
+         0.94
+        ],
+        "08": [
+         411,
+         6,
+         1.15
+        ],
+        "09": [
+         481,
+         5,
+         1.07
+        ],
+        "10": [
+         518,
+         9,
+         1.0
+        ],
+        "11": [
+         84,
+         2,
+         2.02
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    },
+    {
+     "cond": "er16 > 0.1785 and adx > 38.45",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 479,
+       "n_half": 3335,
+       "share": 0.1436,
+       "L": 20,
+       "L_half": 112,
+       "L_share": 0.1786,
+       "loss_rate": 0.0418,
+       "lift": 1.24,
+       "lift_month_adj": 1.25,
+       "p_binom": 0.19028,
+       "loss_days": 17,
+       "wr_base": 96.64,
+       "wr_untouched": 96.78,
+       "wr_angel_inside": 96.83,
+       "angel_kept_in_pocket": 81,
+       "months": {
+        "03": [
+         139,
+         6,
+         1.07
+        ],
+        "04": [
+         102,
+         9,
+         2.26
+        ],
+        "05": [
+         93,
+         2,
+         0.53
+        ],
+        "06": [
+         145,
+         3,
+         1.17
+        ]
+       },
+       "months_up": 3
+      },
+      "test": {
+       "n": 683,
+       "n_half": 4291,
+       "share": 0.1592,
+       "L": 14,
+       "L_half": 60,
+       "L_share": 0.2333,
+       "loss_rate": 0.0205,
+       "lift": 1.47,
+       "lift_month_adj": 1.45,
+       "p_binom": 0.10346,
+       "loss_days": 12,
+       "wr_base": 98.6,
+       "wr_untouched": 98.73,
+       "wr_angel_inside": 98.73,
+       "angel_kept_in_pocket": 97,
+       "months": {
+        "07": [
+         185,
+         5,
+         1.71
+        ],
+        "08": [
+         136,
+         2,
+         1.16
+        ],
+        "09": [
+         140,
+         2,
+         1.47
+        ],
+        "10": [
+         188,
+         5,
+         1.53
+        ],
+        "11": [
+         34,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 4
+      }
+     }
+    },
+    {
+     "cond": "er16 > 0.1785 and adx <= 38.45",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 1126,
+       "n_half": 3335,
+       "share": 0.3376,
+       "L": 18,
+       "L_half": 112,
+       "L_share": 0.1607,
+       "loss_rate": 0.016,
+       "lift": 0.48,
+       "lift_month_adj": 0.48,
+       "p_binom": 0.9999,
+       "loss_days": 15,
+       "wr_base": 96.64,
+       "wr_untouched": 95.74,
+       "wr_angel_inside": 96.0,
+       "angel_kept_in_pocket": 143,
+       "months": {
+        "03": [
+         276,
+         7,
+         0.63
+        ],
+        "04": [
+         306,
+         5,
+         0.42
+        ],
+        "05": [
+         222,
+         5,
+         0.55
+        ],
+        "06": [
+         322,
+         1,
+         0.18
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 1420,
+       "n_half": 4291,
+       "share": 0.3309,
+       "L": 13,
+       "L_half": 60,
+       "L_share": 0.2167,
+       "loss_rate": 0.0092,
+       "lift": 0.65,
+       "lift_month_adj": 0.66,
+       "p_binom": 0.95939,
+       "loss_days": 13,
+       "wr_base": 98.6,
+       "wr_untouched": 98.36,
+       "wr_angel_inside": 98.42,
+       "angel_kept_in_pocket": 174,
+       "months": {
+        "07": [
+         364,
+         3,
+         0.52
+        ],
+        "08": [
+         282,
+         3,
+         0.84
+        ],
+        "09": [
+         357,
+         2,
+         0.58
+        ],
+        "10": [
+         370,
+         5,
+         0.78
+        ],
+        "11": [
+         47,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      }
+     }
+    },
+    {
+     "cond": "er16 <= 0.1785 and room240_atr > 19.33",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 205,
+       "n_half": 3335,
+       "share": 0.0615,
+       "L": 3,
+       "L_half": 112,
+       "L_share": 0.0268,
+       "loss_rate": 0.0146,
+       "lift": 0.44,
+       "lift_month_adj": 0.44,
+       "p_binom": 0.96965,
+       "loss_days": 3,
+       "wr_base": 96.64,
+       "wr_untouched": 96.52,
+       "wr_angel_inside": 96.52,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "03": [
+         58,
+         1,
+         0.43
+        ],
+        "04": [
+         56,
+         2,
+         0.92
+        ],
+        "05": [
+         31,
+         0,
+         0.0
+        ],
+        "06": [
+         60,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 225,
+       "n_half": 4291,
+       "share": 0.0524,
+       "L": 4,
+       "L_half": 60,
+       "L_share": 0.0667,
+       "loss_rate": 0.0178,
+       "lift": 1.27,
+       "lift_month_adj": 1.24,
+       "p_binom": 0.38569,
+       "loss_days": 4,
+       "wr_base": 98.6,
+       "wr_untouched": 98.62,
+       "wr_angel_inside": 98.62,
+       "angel_kept_in_pocket": 0,
+       "months": {
+        "07": [
+         56,
+         2,
+         2.26
+        ],
+        "08": [
+         35,
+         0,
+         0.0
+        ],
+        "09": [
+         52,
+         1,
+         1.98
+        ],
+        "10": [
+         77,
+         1,
+         0.75
+        ],
+        "11": [
+         5,
+         0,
+         0.0
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    }
+   ],
+   "union": {
+    "train": {
+     "n": 479,
+     "n_half": 3335,
+     "share": 0.1436,
+     "L": 20,
+     "L_half": 112,
+     "L_share": 0.1786,
+     "loss_rate": 0.0418,
+     "lift": 1.24,
+     "lift_month_adj": 1.25,
+     "p_binom": 0.19028,
+     "loss_days": 17,
+     "wr_base": 96.64,
+     "wr_untouched": 96.78,
+     "wr_angel_inside": 96.83,
+     "angel_kept_in_pocket": 81,
+     "months": {
+      "03": [
+       139,
+       6,
+       1.07
+      ],
+      "04": [
+       102,
+       9,
+       2.26
+      ],
+      "05": [
+       93,
+       2,
+       0.53
+      ],
+      "06": [
+       145,
+       3,
+       1.17
+      ]
+     },
+     "months_up": 3
+    },
+    "test": {
+     "n": 683,
+     "n_half": 4291,
+     "share": 0.1592,
+     "L": 14,
+     "L_half": 60,
+     "L_share": 0.2333,
+     "loss_rate": 0.0205,
+     "lift": 1.47,
+     "lift_month_adj": 1.45,
+     "p_binom": 0.10346,
+     "loss_days": 12,
+     "wr_base": 98.6,
+     "wr_untouched": 98.73,
+     "wr_angel_inside": 98.73,
+     "angel_kept_in_pocket": 97,
+     "months": {
+      "07": [
+       185,
+       5,
+       1.71
+      ],
+      "08": [
+       136,
+       2,
+       1.16
+      ],
+      "09": [
+       140,
+       2,
+       1.47
+      ],
+      "10": [
+       188,
+       5,
+       1.53
+      ],
+      "11": [
+       34,
+       0,
+       0.0
+      ]
+     },
+     "months_up": 4
+    }
+   },
+   "grid_top": [
+    {
+     "depth": 2,
+     "min_leaf": 0.05,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0588,
+     "ho_capture": 0.0446,
+     "ho_lift": 0.953
+    },
+    {
+     "depth": 3,
+     "min_leaf": 0.02,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0555,
+     "ho_capture": 0.0357,
+     "ho_lift": 0.535
+    },
+    {
+     "depth": 3,
+     "min_leaf": 0.05,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.1319,
+     "ho_capture": 0.0625,
+     "ho_lift": 0.513
+    },
+    {
+     "depth": 3,
+     "min_leaf": 0.03,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0522,
+     "ho_capture": 0.0268,
+     "ho_lift": 0.426
+    },
+    {
+     "depth": 2,
+     "min_leaf": 0.02,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0582,
+     "ho_capture": 0.0089,
+     "ho_lift": 0.127
+    }
+   ]
+  },
+  "setup": {
+   "cfg": {
+    "depth": 1,
+    "min_leaf": 0.02,
+    "crit": "entropy",
+    "w": "mbal",
+    "ho_share": 0.0306,
+    "ho_capture": 0.0268,
+    "ho_lift": 1.661
+   },
+   "leaves": [
+    {
+     "cond": "stop_atr <= 0.8145",
+     "picked": true,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 322,
+       "n_half": 3335,
+       "share": 0.0966,
+       "L": 21,
+       "L_half": 112,
+       "L_share": 0.1875,
+       "loss_rate": 0.0652,
+       "lift": 1.94,
+       "lift_month_adj": 1.97,
+       "p_binom": 0.00329,
+       "loss_days": 19,
+       "wr_base": 96.64,
+       "wr_untouched": 96.98,
+       "wr_angel_inside": 96.97,
+       "angel_kept_in_pocket": 28,
+       "months": {
+        "03": [
+         85,
+         7,
+         2.04
+        ],
+        "04": [
+         67,
+         6,
+         2.29
+        ],
+        "05": [
+         70,
+         5,
+         1.76
+        ],
+        "06": [
+         100,
+         3,
+         1.69
+        ]
+       },
+       "months_up": 4
+      },
+      "test": {
+       "n": 374,
+       "n_half": 4291,
+       "share": 0.0872,
+       "L": 7,
+       "L_half": 60,
+       "L_share": 0.1167,
+       "loss_rate": 0.0187,
+       "lift": 1.34,
+       "lift_month_adj": 1.32,
+       "p_binom": 0.27126,
+       "loss_days": 7,
+       "wr_base": 98.6,
+       "wr_untouched": 98.65,
+       "wr_angel_inside": 98.66,
+       "angel_kept_in_pocket": 39,
+       "months": {
+        "07": [
+         85,
+         3,
+         2.23
+        ],
+        "08": [
+         93,
+         1,
+         0.84
+        ],
+        "09": [
+         66,
+         0,
+         0.0
+        ],
+        "10": [
+         108,
+         2,
+         1.07
+        ],
+        "11": [
+         22,
+         1,
+         3.86
+        ]
+       },
+       "months_up": 3
+      }
+     }
+    },
+    {
+     "cond": "stop_atr > 0.8145",
+     "picked": false,
+     "mismatch": 0,
+     "stats": {
+      "train": {
+       "n": 3013,
+       "n_half": 3335,
+       "share": 0.9034,
+       "L": 91,
+       "L_half": 112,
+       "L_share": 0.8125,
+       "loss_rate": 0.0302,
+       "lift": 0.9,
+       "lift_month_adj": 0.9,
+       "p_binom": 0.86078,
+       "loss_days": 58,
+       "wr_base": 96.64,
+       "wr_untouched": 93.48,
+       "wr_angel_inside": 95.95,
+       "angel_kept_in_pocket": 196,
+       "months": {
+        "03": [
+         805,
+         29,
+         0.89
+        ],
+        "04": [
+         753,
+         26,
+         0.88
+        ],
+        "05": [
+         595,
+         22,
+         0.91
+        ],
+        "06": [
+         860,
+         14,
+         0.92
+        ]
+       },
+       "months_up": 0
+      },
+      "test": {
+       "n": 3917,
+       "n_half": 4291,
+       "share": 0.9128,
+       "L": 53,
+       "L_half": 60,
+       "L_share": 0.8833,
+       "loss_rate": 0.0135,
+       "lift": 0.97,
+       "lift_month_adj": 0.97,
+       "p_binom": 0.61365,
+       "loss_days": 46,
+       "wr_base": 98.6,
+       "wr_untouched": 98.13,
+       "wr_angel_inside": 98.51,
+       "angel_kept_in_pocket": 232,
+       "months": {
+        "07": [
+         989,
+         14,
+         0.89
+        ],
+        "08": [
+         771,
+         10,
+         1.02
+        ],
+        "09": [
+         964,
+         10,
+         1.07
+        ],
+        "10": [
+         1045,
+         18,
+         0.99
+        ],
+        "11": [
+         148,
+         1,
+         0.57
+        ]
+       },
+       "months_up": 2
+      }
+     }
+    }
+   ],
+   "union": {
+    "train": {
+     "n": 322,
+     "n_half": 3335,
+     "share": 0.0966,
+     "L": 21,
+     "L_half": 112,
+     "L_share": 0.1875,
+     "loss_rate": 0.0652,
+     "lift": 1.94,
+     "lift_month_adj": 1.97,
+     "p_binom": 0.00329,
+     "loss_days": 19,
+     "wr_base": 96.64,
+     "wr_untouched": 96.98,
+     "wr_angel_inside": 96.97,
+     "angel_kept_in_pocket": 28,
+     "months": {
+      "03": [
+       85,
+       7,
+       2.04
+      ],
+      "04": [
+       67,
+       6,
+       2.29
+      ],
+      "05": [
+       70,
+       5,
+       1.76
+      ],
+      "06": [
+       100,
+       3,
+       1.69
+      ]
+     },
+     "months_up": 4
+    },
+    "test": {
+     "n": 374,
+     "n_half": 4291,
+     "share": 0.0872,
+     "L": 7,
+     "L_half": 60,
+     "L_share": 0.1167,
+     "loss_rate": 0.0187,
+     "lift": 1.34,
+     "lift_month_adj": 1.32,
+     "p_binom": 0.27126,
+     "loss_days": 7,
+     "wr_base": 98.6,
+     "wr_untouched": 98.65,
+     "wr_angel_inside": 98.66,
+     "angel_kept_in_pocket": 39,
+     "months": {
+      "07": [
+       85,
+       3,
+       2.23
+      ],
+      "08": [
+       93,
+       1,
+       0.84
+      ],
+      "09": [
+       66,
+       0,
+       0.0
+      ],
+      "10": [
+       108,
+       2,
+       1.07
+      ],
+      "11": [
+       22,
+       1,
+       3.86
+      ]
+     },
+     "months_up": 3
+    }
+   },
+   "grid_top": [
+    {
+     "depth": 1,
+     "min_leaf": 0.02,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0306,
+     "ho_capture": 0.0268,
+     "ho_lift": 1.661
+    },
+    {
+     "depth": 1,
+     "min_leaf": 0.03,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0306,
+     "ho_capture": 0.0268,
+     "ho_lift": 1.661
+    },
+    {
+     "depth": 1,
+     "min_leaf": 0.05,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0306,
+     "ho_capture": 0.0268,
+     "ho_lift": 1.661
+    },
+    {
+     "depth": 2,
+     "min_leaf": 0.05,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0573,
+     "ho_capture": 0.0625,
+     "ho_lift": 1.295
+    },
+    {
+     "depth": 2,
+     "min_leaf": 0.03,
+     "crit": "entropy",
+     "w": "mbal",
+     "ho_share": 0.0462,
+     "ho_capture": 0.0536,
+     "ho_lift": 1.263
+    }
+   ]
+  }
+ },
+ "xgb_sf_mbal": {
+  "depth": 2,
+  "n": 25,
+  "lomo": {
+   "2": {
+    "25": 0.5707,
+    "50": 0.5509,
+    "100": 0.5335,
+    "200": 0.5211,
+    "300": 0.5129
+   },
+   "3": {
+    "25": 0.5535,
+    "50": 0.5315,
+    "100": 0.5182,
+    "200": 0.5137,
+    "300": 0.5045
+   }
+  },
+  "test_auc": 0.6282,
+  "ci95": [
+   0.5507,
+   0.702
+  ],
+  "null_mean": 0.4867,
+  "null_p95": 0.5433,
+  "gain": [
+   [
+    "room60_atr",
+    9.5
+   ],
+   [
+    "room240_atr",
+    7.0
+   ],
+   [
+    "brk_ratio",
+    6.3
+   ],
+   [
+    "stop_atr",
+    5.2
+   ],
+   [
+    "adx",
+    5.2
+   ],
+   [
+    "er16",
+    5.2
+   ],
+   [
+    "uhv_rel",
+    5.2
+   ],
+   [
+    "er8",
+    5.1
+   ],
+   [
+    "trend240_atr",
+    5.1
+   ],
+   [
+    "spread_excess",
+    5.1
+   ],
+   [
+    "gap_atr",
+    4.9
+   ],
+   [
+    "range20_atr",
+    4.8
+   ],
+   [
+    "last_body_dir",
+    4.6
+   ],
+   [
+    "vol_ratio10_60",
+    4.5
+   ],
+   [
+    "vol10_rel",
+    4.4
+   ],
+   [
+    "er30",
+    3.8
+   ],
+   [
+    "atr_rel",
+    3.8
+   ],
+   [
+    "box",
+    3.1
+   ],
+   [
+    "ny_min_of_day",
+    3.1
+   ],
+   [
+    "pos60",
+    2.3
+   ],
+   [
+    "weekday",
+    1.1
+   ],
+   [
+    "ny_hour",
+    0.7
+   ]
+  ]
+ }
+}

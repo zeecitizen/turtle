@@ -1,0 +1,170 @@
+[
+ {
+  "id": "0804-172345-S",
+  "cause": "counter-structure",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Tue 22:23 PKT (NY 13:23), stop hit 13 h later (-218). On 5-min the whole day was an uptrend (1.1505 at 14:22 PKT -> 1.1530 at 19:22); the 1-min RED x4 camel only described the pullback 1.15265 -> 1.15165 (20:58-21:53). That pullback ended in a double bottom (1.15167 at 21:38, 1.15165 at 21:53) and a loud V-rally 22:00-22:03 (103-108 ticks) to 1.15222, then a 20-min shelf 1.15197-1.15225. The UHV was a green 115-tick candle at 22:19; the sell filled 1.15197, 0.1-0.2 pip under the shelf's lows (22:16/22:18) - the very bottom of the box, after buyers had already shown up. It never printed lower, lifted 6 pips in 30 min and much later took the stop. What I saw before the white line: selling the floor of a shelf, counter to the 5-min uptrend, right after a V-recovery. But both twins (22:16 sold 1.15202 in the same shelf; 21:50 sold the double-bottom 1.15168) had the identical picture and won by one tick. Nothing measurable separates it (HTF-against and range-edge rules both tested NOT SELECTIVE)."
+ },
+ {
+  "id": "0807-083652-S",
+  "cause": "chop/range + news",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Fri 13:36 PKT (NY 04:36), first Friday of August. EUR/USD had crawled inside an 8-pip box (1.1518-1.1525) for 10 hours. A 2-candle green pop 13:32-13:33 (UHV 104 ticks) lifted price 3 pips off the box floor; the sell came when price fell back to the UHV low (fill 1.15205) - i.e. selling 2.5 pips above the box floor (1.1518 at 13:13, 1.15176 at 12:06) on a loud breakout minute (82 ticks, 0.79 of the UHV). The fill was the lowest price of the next 4 hours: it never ticked 0.1 pip lower, drifted up inside the box, and the first-Friday 12:30 UTC release spike, likely payrolls (exit 12:30:03) took the stop (-245). Before entry a trader would note: dead range, selling its floor, tier-1 release later that day. The twins (11:35 and 11:57 PKT) sold the TOP of the same box and won - range position is the visible difference, but 'flat box edge' and 'range edge' rules tested NOT SELECTIVE over all trades."
+ },
+ {
+  "id": "0807-205630-S",
+  "cause": "market close",
+  "avoidable_before_entry": true,
+  "rule_ids": [
+   "B7_ROLLOVER_HOUR",
+   "B7_FRIDAY_LAST_HOUR"
+  ],
+  "comment": "Sat 01:56 PKT = Friday 16:56 New York, 2.5 minutes before the weekend flatten. Sold 1.15576 into the last ticks of the week; the final minutes printed a jump (the close spread) and the engine flattened it at 20:58:59 UTC for -18. This was not a stop-out and cost a handful of wins, not 100. Visible before entry: only the clock - Friday after New York 16:00. Removed by the recommended rollover-hour rule (and the Friday-last-hour rule)."
+ },
+ {
+  "id": "0812-151608-B",
+  "cause": "counter-structure",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Wed 20:16 PKT (NY 11:16), stop after 148 min (-197). The 12:30 UTC release candle (30.9 pips, 570 ticks) had spiked price to 1.1563; since then 2.5 hours of 5-min lower highs (1.1560, 1.1555, 1.1550, 1.1545) down to 1.1538. On 1-min a small double bottom (1.1538 at 19:51/20:06) flipped the camel GREEN x1; the UHV was a red 120-tick candle at 20:15 and the buy filled 1.15425 - right inside the 19:45-19:50 breakdown shelf (1.1542-1.1545), now resistance. It never printed higher and fell 20 pips. A skilled reader sees a bounce into broken support inside a fresh 5-min downtrend. But the two twins (20:13 bought 1.15437, 19:59 bought 1.15433) were the same bounce at the same level and won by a tick; HTF-against and counter-HTF-bounce rules tested NOT SELECTIVE (lift 0.6-0.9)."
+ },
+ {
+  "id": "0813-223116-S",
+  "cause": "thin market (after rollover)",
+  "avoidable_before_entry": false,
+  "rule_ids": [
+   "B7_THIN_VM30"
+  ],
+  "comment": "Fri 03:31 PKT = Thu 18:31 New York, ninety minutes after the rollover: candles of 5-40 ticks (30-min average 15.5), UHV only 37 ticks, breakout 9 ticks. The 1-min structure was rising (higher lows 1.15238 -> 1.15256 -> 1.1529) while the camel still read RED x1; sold 1.15305 one pip under the 03:25 high. In a book this thin the spread is several times the 0.1-pip target, so the trade needed a real move to win; price ground up all night and the stop hit at 07:45 UTC (-199). Visible before: the dead tape. B7_THIN_VM30 removes it, but outside the rollover hour that rule keeps only 2 losers / 71 winners, so for a trade at NY 18:31 the evidence is not there - not in the recommended set, not provably avoidable."
+ },
+ {
+  "id": "0814-155646-B",
+  "cause": "into resistance",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Fri 20:56 PKT (NY 11:56, four minutes before the London 4pm fix). A day-long rally 1.1540 -> 1.1585 had stalled into a 2-hour box 1.1577-1.1585 with a triple top at 1.1584-1.15852 (19:28, 20:31, 20:50 PKT). The buy at 1.15833 was a fourth push into that ceiling on a loud breakout minute (76 ticks vs UHV 80 = 0.95, against the 'quieter breakout' premise). It never printed higher, rolled over 5 pips and was flattened at the weekend close after 302 min (-138, cheaper than a full stop). Before entry: ceiling tested three times, trend 6 hours old, loud breakout. Twin 20:08 bought the exact same 1.15833 and won by a tick. The loud-breakout rule (>= 0.9 x UHV) scored x1.79 train / x2.04 test - close but NOT SELECTIVE."
+ },
+ {
+  "id": "0820-213103-S",
+  "cause": "rollover/spread",
+  "avoidable_before_entry": true,
+  "rule_ids": [
+   "B7_ROLLOVER_HOUR",
+   "B7_THIN_VM30"
+  ],
+  "comment": "Fri 02:31 PKT = Thu 17:31 New York, the first minutes after the daily break. Candles of 0-10 ticks with 3-4-pip gaps between them (the spread blown out); UHV = 10 ticks, breakout 4 ticks, and the sell filled 0.7 pip below the level. With no book, the 0.1-pip target was really a several-pip target; price hovered and a 02:45 UTC spike took the stop (-214). Visible before: the clock and the empty tape. Removed by the rollover-hour rule (NY 16:45-17:45) and the thin-volume rule; note it is one minute outside a 16:40-17:30 window, which is why the window had to extend to 17:45."
+ },
+ {
+  "id": "0821-130310-B",
+  "cause": "counter-structure",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Fri 18:03 PKT (NY 09:03), stop after 94 min (-207). 5-min: a double top at 1.1710 (14:10-16:40 PKT), a breakdown at 16:40 and a second leg down at 17:35 to 1.1685. The buy came at the top of a 20-minute bear flag (1.1687-1.1691) where two tiny higher lows had turned the camel GREEN x2; the candle before entry was a 1.3-pip red body. Price fell 20+ pips in 90 min. A skilled reader calls it a bear flag in a fresh downtrend. Twins: 16:24 bought the double top itself and won by 3$ before the crash; 19:42 bought the end of the 2-hour decline and won. Opposite-candle, HTF-against and counter-HTF-bounce rules all tested NOT SELECTIVE."
+ },
+ {
+  "id": "0827-133401-B",
+  "cause": "exhausted trend",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Thu 18:34 PKT (NY 09:34). A vertical rally from 1.1640 (18:00) to 1.1660 (18:30), +13.6 pips in the last 30 candles, into the morning range top (1.1655-1.1660), peaking on a 323-tick candle (2.3x the hour's average); ADX 71, camel GREEN x4. The buy at 1.16595 sat 0.7 pip under the spike high - the top of the move. It never printed higher, sagged 5-8 pips and was closed by the 24-hour time-out (-158), not a stop. Twins at 18:14 and 18:16 bought the START of the same breakout (1.1649) and won. Visually a climax chase; but exhausted-run (x1.60/x1.05) and climax-chase (x0.9/x1.04) rules were NOT SELECTIVE over all trades."
+ },
+ {
+  "id": "0828-205744-B",
+  "cause": "market close",
+  "avoidable_before_entry": true,
+  "rule_ids": [
+   "B7_ROLLOVER_HOUR",
+   "B7_FRIDAY_LAST_HOUR",
+   "B7_SLIP_1P2"
+  ],
+  "comment": "Sat 01:57 PKT = Friday 16:57 New York, 74 seconds before the weekend flatten. The buy filled 1.15836, 1.5 pips above the level 1.15821 - the close spread already showing. Flattened at 20:58:58 UTC for -21; a forced exit costing a few wins, not a stop-out. Visible before: the clock and the slipped breakout tick. Removed by the Friday-last-hour, rollover-hour and slip rules."
+ },
+ {
+  "id": "0831-140013-S",
+  "cause": "news/spike",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Mon 19:00:13 PKT = New York 10:00:13, the data-release minute. Before it: a 45-min range 1.1594-1.1601 inside a 5-min uptrend since 12:00 PKT, and two strong green candles 18:58-18:59 pushing into the release. The sell broke the low of the 18:57 green UHV (267 ticks) 13 seconds into the minute; that minute printed 527 ticks (3.6x the hour's average) and the release drove price 25 pips up (-236 after 91 min). A trader with a calendar would not sell into a 10:00 release. But a 'first 2 minutes of 08:30/10:00 NY' rule removes only 2 losers (0 in train) - too few to prove; twin 17:30 PKT also entered at a release minute (12:30 UTC) and won."
+ },
+ {
+  "id": "0902-131622-S",
+  "cause": "news/spike",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Wed 18:16 PKT (NY 09:16). The UHV was 16 minutes old (18:00 PKT, 373 ticks). The sell broke the floor of a 50-minute box 1.1577-1.1583 while the 5-min had been making higher lows since 15:42 PKT; 10 minutes later a 12-pip candle at 13:26 UTC (694 then 984 ticks) blew through the stop (exit 13:26:48, -227). Before entry: selling a range floor against a 5-min uptrend with a stale UHV; the spike itself was not visible in advance. Twins sold the spike's breakdown afterwards (18:31, 18:45) and won. Old-UHV (>= 10 min) tested NOT SELECTIVE (x1.13/x0.78)."
+ },
+ {
+  "id": "0904-131422-S",
+  "cause": "news/spike (post-release recovery)",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Fri 18:14 PKT (NY 09:14), first Friday of September. The 12:30 UTC release candle (likely payrolls) was 40 pips (1.1627 -> 1.1589, 554 ticks). 44 minutes later the market was retracing it with higher lows (1.15885 -> 1.1590 -> 1.1597) while the camel still read RED x3 from the crash. The sell at 1.15985 was the floor of a 20-min shelf 1.1597-1.1604, i.e. against the recovery; it continued +20 pips (-217 after 32 min). A trader knows post-release whipsaw and would stand aside for an hour. The bar-based proxy ('6-ATR candle in the last 60 min') was x1.69/x1.97 - NOT SELECTIVE; a real calendar blackout is the untested candidate. Twin 17:30 PKT (the release candle) won +28 on a 9.8-pip gap fill."
+ },
+ {
+  "id": "0908-165924-S",
+  "cause": "into support",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Tue 21:59 PKT (NY 12:59), stop 13 h later (-213). A 1-min decline 1.1631 -> 1.1621, then a 35-min base with a triple bottom at 1.16205 (21:22, 21:45/47, 21:57); the 5-min trend had been up since 15:41 PKT, this was a pullback from 1.1634. UHV 9 minutes old; the sell filled 1.16218, 1.3 pips above the triple-bottom floor. Price lifted 4 pips at once. Before entry: selling a tested floor in an HTF uptrend. Twins 21:42 (sold 1.16221 in the same base) and 21:19 won by a tick - same picture, different coin flip."
+ },
+ {
+  "id": "0911-180812-B",
+  "cause": "into resistance",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Fri 23:08 PKT (NY 14:08). 5-min lower highs since 19:30 PKT (1.1615); a 1-hour base 1.1596-1.1600; the buy at 1.15991 was the third push at the 1.1599-1.1600 ceiling (22:24, 22:44, 23:05) on only 7 breakout ticks. It never printed higher and drifted down; the weekend flatten closed it at -18 after 171 min (the close saved it from a full stop). Twin 22:44 bought the same 1.1599 and won by a tick. A 'third attempt at the same level' test - using earlier entries - came out NOT SELECTIVE (x0.6-x1.6); the friday rule starts 16:00 NY, two hours later."
+ },
+ {
+  "id": "0914-213535-B",
+  "cause": "rollover/spread",
+  "avoidable_before_entry": true,
+  "rule_ids": [
+   "B7_ROLLOVER_HOUR",
+   "B7_SLIP_1P2",
+   "B7_THIN_VM30"
+  ],
+  "comment": "Tue 02:35 PKT = Mon 17:35 New York, right after the daily break. Bars of 0-20 ticks with 6-7-pip wicks (spread blow-outs); UHV 25 ticks. The buy filled 1.15529 - 3.6 pips ABOVE the level 1.15493, a spread-spike tick - and price never traded back up there (-256 after 553 min). Visible before: the clock, the dead tape and the absurd breakout tick. Removed by the rollover-hour, slip and thin-volume rules."
+ },
+ {
+  "id": "0918-162342-S",
+  "cause": "camel misread",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Fri 21:23 PKT (NY 12:23). After a 30-pip drop at 15:30 PKT the market based for 5 hours (1.1456-1.1470). From 21:00 it rallied 1.1461 -> 1.14704 with higher highs and higher lows, through the 20:28 swing high (1.1469) - the down-structure was already broken, but the camel still read RED x1. The sell at 1.14688 broke a 3-minute shelf at the top of the base; price broke out +5 pips and kept going (stop after 177 min, -207). A skilled reader sees that the 'retracement' had exceeded the last swing high, so it was a reversal. But a structure rule (retracement extreme beyond the last hump) removed 2,548 winners for 63 losers (x1.03/x1.16) - NOT SELECTIVE. Twins 21:02 and 20:50 sold the same zone before the rally and won by a tick."
+ },
+ {
+  "id": "0918-204909-B",
+  "cause": "market close",
+  "avoidable_before_entry": true,
+  "rule_ids": [
+   "B7_ROLLOVER_HOUR",
+   "B7_FRIDAY_LAST_HOUR"
+  ],
+  "comment": "Sat 01:49 PKT = Friday 16:49 New York, 11 minutes before the weekend flatten, in a fading 90-minute range (1.1485-1.1490) on 7 breakout ticks. Bought 1.14865, never ticked up, flattened at 20:58:58 UTC for -14 - a forced exit costing a few wins. Visible before: the clock. Removed by the recommended rollover-hour rule (and the Friday-last-hour rule)."
+ },
+ {
+  "id": "0923-111835-B",
+  "cause": "counter-structure (late bounce)",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Wed 16:18 PKT (NY 07:18), stop after 151 min (-208). 10 hours of 5-min lower highs (1.1440 -> 1.1407). A 13-pip 1-min bounce (15:46-16:12) built a mature GREEN x8 camel and ran into the 13:30-13:45 PKT swing-high zone (1.1420-1.1423); a triple top at 1.1420 (16:09-16:15); the buy at 1.14185 sat right under it. The HTF downtrend resumed for 20 pips. Before entry: eighth green hump of a counter-trend bounce, at old resistance. Twins 16:04 (camel x4) and 15:46 (start of the bounce) won. Old-trend (camStk >= 4: x1.27/x1.11) and counter-HTF-bounce (x0.59/x0.67) rules were NOT SELECTIVE."
+ },
+ {
+  "id": "0925-113553-B",
+  "cause": "spike fill (stop-run tick)",
+  "avoidable_before_entry": false,
+  "rule_ids": [
+   "B7_SLIP_1P2"
+  ],
+  "comment": "Fri 16:35 PKT (NY 07:35). An all-day uptrend (1.1369 -> 1.1410) with a vertical leg 16:00-16:10, then a 25-minute flat top 1.1406-1.14095; UHV 11 minutes old. The breakout tick printed 1.14109, 2.5 pips above the level 1.14084: a stop-run above the box high (1.14096) that reversed at once: the entry minute's bid peaked at 1.14107 and fell to 1.14065 inside the same minute, then 1.1403. It never traded higher (-244 after 256 min). Visible at the trigger: the breakout tick was already far beyond the level. B7_SLIP_1P2 removes it (GOOD standalone, x3.1/x10.7), but outside the time windows slip keeps 5L/89W and fails train (x1.4), so for a normal-hours trade like this it is plausible, not proven - not in the recommended set. Twins (16:20 bought the box top at 1.14083; 16:02 the start of the leg) filled at the level and won."
+ },
+ {
+  "id": "0929-030326-B",
+  "cause": "counter-structure (micro lower highs)",
+  "avoidable_before_entry": false,
+  "rule_ids": [],
+  "comment": "Tue 08:03 PKT (NY 23:03 Mon), Asian session, stop after 268 min (-202). Inside the night range 1.1363-1.1374 the 1-min made lower highs (1.13716 at 07:23, 1.13706 at 07:38, 1.1369 at 07:47) down to 1.13672; a 1-pip higher low turned the camel GREEN x1 and the buy filled 1.13683 on only 3 breakout ticks. It never printed higher and slid 20 pips. Before entry: a weak one-hump green inside a micro downtrend. The twins (07:07 and 06:46) bought the SAME 1.1368 level and won - this is the 0.1-pip coin flip, not something visible."
+ }
+]

@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Golden Gravity - art gallery (F-ART)</title>
+<link rel="icon" href="data:,">
+<style>
+  html, body { margin: 0; height: 100%; background: #1d1a22; overflow: hidden; }
+  canvas { display: block; }
+  #nav { position: fixed; top: 4px; right: 8px; font: 12px system-ui, sans-serif; color: #e8dcc0; background: rgba(20,16,12,.7);
+         padding: 3px 8px; border-radius: 6px; }
+  #nav a { color: #ffcc33; margin: 0 2px; text-decoration: none; }
+  #nav a.on { color: #fff; text-decoration: underline; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="nav"></div>
+<script type="module">
+// gallery_art.html - renders every art.js / fx.js function in every state (visual proof for F-ART).
+//   ?page=N          which page (see the nav, top right)
+//   ?t=SECONDS       freeze the clock (repeatable screenshots); otherwise it animates
+//   ?s=PX            px per unit (default 95 = the game at 1600x900)
+//   ?only=TEXT       draw only the cells whose label contains TEXT (close-ups: ?page=1&s=260&only=suit)
+import * as ART from './js/art.js';
+import FX from './js/fx.js';
+import { P, SKY, rgba } from './js/palette.js';
+
+const q = new URLSearchParams(location.search);
+const PAGE = Math.max(1, parseInt(q.get('page') || '1', 10));
+const FROZEN = q.has('t') ? parseFloat(q.get('t')) : null;
+const SCALE = parseFloat(q.get('s') || '0') || 0;
+const ONLY = (q.get('only') || '').toLowerCase();
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0;
+function resize() { W = cv.width = innerWidth; H = cv.height = innerHeight; }
+addEventListener('resize', resize); resize();
+
+const OUTFITS = ['suit', 'tux', 'undershirt', 'boxers', 'dusty', 'barrel', 'staked'];
+const POSES = ['idle', 'run', 'slide', 'lean', 'kneel', 'ride', 'aim', 'cheer', 'hold', 'tackle', 'fly'];
+const COIN = { visible: true, glow: 0.6, tarnish: 0, half: false, spin: 0 };
+
+function coinFor(outfit, pose) {
+  if (outfit === 'tux' || pose === 'ride') return { visible: true, glow: 1, tarnish: 0, half: false, spin: 0 };
+  if (outfit === 'staked') return { visible: true, glow: 0.5, tarnish: 0, half: true, spin: 0 };
+  if (outfit === 'barrel' || pose === 'aim' || pose === 'fly') return { visible: false };
+  if (outfit === 'dusty') return { visible: pose !== 'kneel', glow: 0.1, tarnish: 0.6 };
+  return COIN;
+}
+function runnerCells(outfits, extra = {}) {
+  const cells = [];
+  for (const o of outfits) for (const p of POSES) {
+    if (p === 'fly' && !extra.fly) continue;
+    cells.push({ label: (extra.wooden ? 'wooden ' : '') + o + ' / ' + p, w: 1.35, h: p === 'fly' ? 2.75 : 1.6,
+      draw: (c, x, y, s, t) => {
+        const st = { outfit: o, pose: p, lean: p === 'lean' ? 0.6 : p === 'slide' ? -0.4 : 0, facing: 1, t, coin: coinFor(o, p), pistol: p === 'aim', ...extra }; delete st.fly;
+        if (p === 'fly') ART.drawBalloon(c, x, y - 1.08 * s, s, { words: 'the street said no', inflate: 1, t });
+        ART.drawRunner(c, x, y, s, st);
+      } });
+  }
+  return cells;
+}
+function signCycle(t, list, period = 1.4) { return list[Math.floor(t / period) % list.length]; }
+function flapSeq() {           // the regression replay: [time in a 7 s loop, text]
+  if (flapSeq.s) return flapSeq.s;
+  const q = [[0, '1.01¢'], [0.8, '0.99¢']];
+  for (let k = 0; k <= 30; k++) q.push([1.6 + k * 0.1, (1.5 + k * 0.01).toFixed(2) + '¢']);
+  q.push([5.0, 'STOPPED'], [6.0, '0.97¢']);
+  return (flapSeq.s = q);
+}
+
+// ------------------------------------------------------------------------------------------- pages
+const PAGES = [];
+PAGES.push({ title: 'Runner: suit / tux / undershirt / boxers x every pose', bg: 'noon', cells: runnerCells(['suit', 'tux', 'undershirt', 'boxers']) });
+PAGES.push({ title: 'Runner: dusty / barrel / staked / wooden Apprentice x every pose', bg: 'afternoon',
+  cells: [...runnerCells(['dusty', 'barrel', 'staked']), ...runnerCells(['suit'], { wooden: true })] });
+PAGES.push({ title: 'Runner variants, the Twin, the Ghosts', bg: 'dawn', cells: [
+  ...['idle', 'run', 'lean', 'slide', 'ride', 'cheer', 'aim', 'kneel', 'hold', 'tackle', 'fly'].map((p) => ({ label: 'twin / ' + p, w: 1.35, h: 1.6,
+    draw: (c, x, y, s, t) => ART.drawTwin(c, x, y, s, { pose: p, lean: p === 'lean' ? 0.6 : 0, facing: 1, t, alpha: 0.9 }) })),
+  ...['idle', 'run', 'lean', 'slide', 'ride', 'cheer', 'aim', 'kneel', 'hold', 'tackle', 'fly'].map((p) => ({ label: 'ghost / ' + p, w: 1.35, h: 1.6,
+    draw: (c, x, y, s, t) => ART.drawGhost(c, x, y, s, { pose: p, facing: 1, t, alpha: 0.45 }) })),
+  { label: 'facing -1 run', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawRunner(c, x, y, s, { outfit: 'suit', pose: 'run', facing: -1, t, coin: COIN }) },
+  { label: 'lean -1', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawRunner(c, x, y, s, { outfit: 'suit', pose: 'lean', lean: -1, t, coin: COIN }) },
+  { label: 'lean +1', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawRunner(c, x, y, s, { outfit: 'suit', pose: 'lean', lean: 1, t, coin: COIN }) },
+  { label: 'coin tarnish .8', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawRunner(c, x, y, s, { outfit: 'suit', pose: 'hold', t, coin: { visible: true, glow: 0, tarnish: 0.8 } }) },
+  { label: 'coin spin', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawRunner(c, x, y, s, { outfit: 'suit', pose: 'idle', t, coin: { visible: true, glow: 0.5, spin: (t * 0.7) % 1 } }) },
+  { label: 'suit + hat + cane', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawRunner(c, x, y, s, { outfit: 'suit', pose: 'idle', hat: true, cane: true, t, coin: COIN }) },
+  { label: 'alpha .5', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawRunner(c, x, y, s, { outfit: 'tux', pose: 'run', alpha: 0.5, t, coin: COIN }) },
+  { label: 'tint #3fe6ff', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawRunner(c, x, y, s, { outfit: 'suit', pose: 'run', tint: '#3fe6ff', t, coin: COIN }) },
+  { label: 'wooden tux ride', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawRunner(c, x, y, s, { outfit: 'tux', pose: 'ride', wooden: true, t, coin: { visible: true, glow: 1 } }) },
+  ...OUTFITS.map((o) => ({ label: 'wooden ' + o, w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawRunner(c, x, y, s, { outfit: o, pose: o === 'dusty' ? 'kneel' : o === 'tux' ? 'ride' : 'run', wooden: true, t, coin: coinFor(o, 'run') }) })),
+  { label: 'twin facing -1', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawTwin(c, x, y, s, { pose: 'run', facing: -1, t, alpha: 0.9 }) },
+  { label: 'ghost facing -1', w: 1.35, h: 1.6, draw: (c, x, y, s, t) => ART.drawGhost(c, x, y, s, { pose: 'run', facing: -1, t, alpha: 0.45 }) },
+] });
+PAGES.push({ title: 'Runner: fly under the eject balloon (every outfit) + Twin/Ghost fly', bg: 'noon', cells: [
+  ...['suit', 'tux', 'undershirt', 'boxers', 'dusty', 'barrel', 'staked'].map((o) => runnerCells([o], { fly: true }).find((c) => c.label.endsWith('fly'))),
+  ...runnerCells(['suit'], { fly: true, wooden: true }).filter((c) => c.label.endsWith('fly')),
+  { label: 'twin / fly', w: 1.35, h: 2.75, draw: (c, x, y, s, t) => { ART.drawBalloon(c, x, y - 1.08 * s, s, { words: 'discipline', inflate: 1, t }); ART.drawTwin(c, x, y, s, { pose: 'fly', t, alpha: 0.9 }); } },
+] });
+const MOODS = ['smug', 'shot', 'eager', 'gloat', 'sulk', 'cards', 'crane'];
+function bankCell(label, bst, signText, signColor) {
+  return { label, w: 3.75, h: 6.8, draw: (c, x, y, s, t) => {
+    const g = ART.drawBank(c, x, y, s, { t, facing: 1, ...bst });
+    if (g && g.sign) {
+      ART.drawRoofSign(c, g.sign.cx, g.sign.cy, g.sign.w, g.sign.h, { id: 'bank-' + label, text: signText(t), color: signColor, hourglass: false, t });
+      ART.drawBell(c, g.bell.x, g.bell.y, s, { swing: label.includes('shot') ? 1 : 0.1, shock: label.includes('shot') ? (t * 0.6) % 1 : 0, t });
+    }
+  } };
+}
+PAGES.push({ title: 'Bank + Banker moods (1/3)', bg: 'afternoon', cells: [
+  bankCell('smug', { banker: { mood: 'smug' } }, () => '1.00¢', 'gold'),
+  bankCell('shot', { banker: { mood: 'shot' } }, (t) => signCycle(t, ['· · ·', '1.00¢']), 'gold'),
+  bankCell('eager', { banker: { mood: 'eager' } }, (t) => signCycle(t, ['0.31¢', '0.29¢', '0.24¢', '0.27¢']), 'crimson'),
+  bankCell('gloat', { banker: { mood: 'gloat' } }, () => 'STOPPED', 'crimson'),
+] });
+PAGES.push({ title: 'Bank + Banker moods (2/3)', bg: 'noon', cells: [
+  bankCell('sulk', { banker: { mood: 'sulk' } }, (t) => signCycle(t, ['2.20¢', '2.21¢', '2.24¢']), 'cyan'),
+  bankCell('cards (jammed)', { jammed: true, banker: { mood: 'cards' } }, (t) => signCycle(t, ['09:59', '09:58', '09:57'], 1), 'gold'),
+  bankCell('crane .5', { banker: { mood: 'crane', crane: 0.5 } }, () => 'STOPPED', 'crimson'),
+  bankCell('crane 1', { banker: { mood: 'crane', crane: (0.5 + 0.5 * Math.sin(performance.now() / 700)) * 0 + 1 } }, () => 'STOPPED', 'crimson'),
+] });
+PAGES.push({ title: 'Bank states (3/3): shutters, night, wooden, mirrored', bg: 'night', cells: [
+  bankCell('shutters .5', { shutters: 0.5, banker: { mood: 'sulk' } }, () => '- - -', 'gold'),
+  bankCell('shutters 1 + night', { shutters: 1, night: true, banker: { mood: 'smug' } }, () => 'CLOSED', 'gold'),
+  bankCell('night', { night: true, banker: { mood: 'smug' } }, (t) => signCycle(t, ['0.67¢', '0.71¢']), 'crimson'),
+  bankCell('wooden (Alley)', { wooden: true, banker: { mood: 'smug' } }, () => '1.00¢', 'gold'),
+] });
+PAGES.push({ title: 'Bank mirrored (short world: facing -1), cards + crane', bg: 'afternoon', cells: [
+  bankCell('mirror cards', { facing: -1, jammed: true, banker: { mood: 'cards' } }, () => '09:41', 'gold'),
+  bankCell('mirror crane 1', { facing: -1, banker: { mood: 'crane', crane: 1 } }, () => 'STOPPED', 'crimson'),
+  bankCell('mirror gloat', { facing: -1, banker: { mood: 'gloat' } }, () => '0.12¢', 'crimson'),
+  bankCell('mirror wooden', { facing: -1, wooden: true, banker: { mood: 'eager' } }, () => '1.00¢', 'gold'),
+] });
+PAGES.push({ title: 'Roof signs + the Golden Bell', bg: 'dusk', cells: [
+  ...[['crimson', ['0.67¢', '0.66¢', '0.61¢', '0.58¢', '0.63¢']], ['cyan', ['1.31¢', '1.37¢', '1.42¢', '1.48¢']], ['gold', ['1.00¢', '· · ·']],
+     ['crimson', ['STOPPED']], ['crimson', ['LIQUIDATED']], ['gold', ['09:59', '09:58', '09:57']]].map(([col, list], i) => ({
+    label: 'sign ' + col + ' ' + list[0], w: 2.6, h: 1.3, draw: (c, x, y, s, t) => ART.drawRoofSign(c, x, y - 0.6 * s, 2.2 * s, 0.9 * s,
+      { id: 'g' + i, text: signCycle(t, list, 1.1 + i * 0.13), color: col, hourglass: false, t }) })),
+  // REGRESSION (the Golden Rule): the board may only ever read the previous value or the current one. The cell replays a 1.01 -> 0.99
+  // step, a 10 Hz ramp and a re-tile through a word, and chalks under the sign what the board reads and whether it was ever false.
+  { label: 'REGRESSION flap: 1.01->0.99, 10 Hz ramp, re-tile', w: 2.6, h: 1.7, draw: (c, x, y, s, t) => {
+    const u = t % 7, seq = flapSeq();
+    let i = 0; while (i + 1 < seq.length && seq[i + 1][0] <= u) i++;
+    ART.drawRoofSign(c, x, y - 1.0 * s, 2.2 * s, 0.9 * s, { id: 'regress', text: seq[i][1], color: 'cyan', hourglass: false, t });
+    const d = ART.roofSignDebug && ART.roofSignDebug('regress', t), R = flapSeq.r || (flapSeq.r = { prev: null, cur: null, bad: 0 });
+    if (d) {
+      if (d.target !== R.cur) { R.prev = R.cur; R.cur = d.target; }
+      if (!(d.shown === R.cur || d.shown === R.prev || d.shown.trim() === '')) R.bad++;
+      c.save(); c.font = 'bold ' + Math.round(0.16 * s) + 'px monospace'; c.textAlign = 'center'; c.fillStyle = R.bad ? '#ff5a6a' : '#a9f0b9';
+      c.fillText('reads "' + d.shown.trim() + '"  ' + (R.bad ? R.bad + ' FALSE frames' : 'never false'), x, y - 0.25 * s); c.restore();
+    }
+  } },
+  { label: 'sign + hourglass (stale quote)', w: 2.6, h: 1.3, draw: (c, x, y, s, t) => ART.drawRoofSign(c, x, y - 0.6 * s, 2.2 * s, 0.9 * s, { id: 'hg', text: '0.67¢', color: 'crimson', hourglass: true, t }) },
+  { label: 'sign hourglass toggling', w: 2.6, h: 1.3, draw: (c, x, y, s, t) => ART.drawRoofSign(c, x, y - 0.6 * s, 2.2 * s, 0.9 * s, { id: 'hg2', text: '1.12¢', color: 'cyan', hourglass: Math.floor(t / 2) % 2 === 0, t }) },
+  { label: 'bell rest', w: 1.6, h: 1.5, draw: (c, x, y, s, t) => ART.drawBell(c, x, y, s, { swing: 0, shock: 0, t }) },
+  { label: 'bell swing .5', w: 1.6, h: 1.5, draw: (c, x, y, s, t) => ART.drawBell(c, x, y, s, { swing: 0.5, shock: 0, t }) },
+  { label: 'bell swing 1 + shock', w: 2.6, h: 1.5, draw: (c, x, y, s, t) => ART.drawBell(c, x, y, s, { swing: 1, shock: (t * 0.5) % 1, t }) },
+  { label: 'bell shock .3', w: 2.6, h: 1.5, draw: (c, x, y, s, t) => ART.drawBell(c, x, y, s, { swing: 0.7, shock: 0.3, t }) },
+] });
+const BMOODS = ['wait', 'tap', 'inspect', 'pay', 'laugh', 'wave_off', 'shake_head'];
+PAGES.push({ title: 'The Buyer in his steam zeppelin (every mood; s x0.8)', bg: 'noon', sMul: 0.8, cells: [
+  ...BMOODS.map((m) => ({ label: 'buyer ' + m, w: 2.65, h: 5.25, draw: (c, x, y, s, t) => {
+    const pts = ART.drawBuyer(c, x, y, s, { mood: m, champagne: m === 'wave_off' ? 0 : 0.8, tag: '2.20¢', t, facing: -1 });
+    if (pts && m === 'pay' && FROZEN == null && Math.random() < 0.02) FX.burst('cash', pts.gunX, pts.gunY, { dir: 2.2, s });
+  } })),
+  ...[1, 0.66, 0.33, 0].map((ch) => ({ label: 'champagne ' + ch, w: 2.65, h: 5.25,
+    draw: (c, x, y, s, t) => ART.drawBuyer(c, x, y, s, { mood: 'wait', champagne: ch, tag: ['2.20¢', '2.30¢', '2.40¢', '2.50¢'][Math.round((1 - ch) * 3)], t, facing: -1 }) })),
+  { label: 'buyer facing +1 (mirror world)', w: 2.65, h: 5.25, draw: (c, x, y, s, t) => ART.drawBuyer(c, x, y, s, { mood: 'tap', champagne: 0.7, tag: '1.20¢', t, facing: 1 }) },
+  { label: 'buyer long tag', w: 2.65, h: 5.25, draw: (c, x, y, s, t) => ART.drawBuyer(c, x, y, s, { mood: 'inspect', champagne: 0.5, tag: '$12.40', t, facing: -1 }) },
+] });
+PAGES.push({ title: 'Street: Merchant, Rat, Anvil, Tether, Stakes, Walls', bg: 'afternoon', cells: [
+  { label: 'merchant rolling', w: 1.4, h: 1.9, draw: (c, x, y, s, t) => ART.drawMerchant(c, x, y, s, { sign: '1.04¢', roll: t * 5, t, facing: -1, tackled: 0 }) },
+  { label: 'merchant facing +1', w: 1.4, h: 1.9, draw: (c, x, y, s, t) => ART.drawMerchant(c, x, y, s, { sign: '0.87¢', roll: t * 5, t, facing: 1, tackled: 0 }) },
+  { label: 'merchant tackled .5', w: 1.6, h: 1.9, draw: (c, x, y, s, t) => ART.drawMerchant(c, x, y, s, { sign: '1.04¢', roll: 0, t, facing: -1, tackled: 0.5 }) },
+  { label: 'merchant tackled 1', w: 2.0, h: 1.9, draw: (c, x, y, s, t) => ART.drawMerchant(c, x, y, s, { sign: '1.04¢', roll: 0, t, facing: -1, tackled: 1 }) },
+  { label: 'merchant tackle loop', w: 2.0, h: 1.9, draw: (c, x, y, s, t) => ART.drawMerchant(c, x, y, s, { sign: '$1.21', roll: t * 3, t, facing: -1, tackled: Math.min(1, (t % 3) / 1.2) }) },
+  ...['peek', 'bite', 'run'].map((ph) => ({ label: 'rat ' + ph, w: 0.75, h: 0.6, draw: (c, x, y, s, t) => ART.drawRat(c, x, y, s, { phase: ph, t, facing: 1 }) })),
+  { label: 'rat run -1', w: 0.75, h: 0.6, draw: (c, x, y, s, t) => ART.drawRat(c, x, y, s, { phase: 'run', t, facing: -1 }) },
+  ...[0, 0.5, 1].map((g) => ({ label: 'anvil glow ' + g, w: 0.8, h: 0.8, draw: (c, x, y, s, t) => ART.drawAnvil(c, x, y, s, { glow: g, t, bounce: 0 }) })),
+  { label: 'anvil bounce (refused)', w: 0.8, h: 1.0, draw: (c, x, y, s, t) => ART.drawAnvil(c, x, y, s, { glow: 0, t, bounce: (t % 1.5) / 1.5 }) },
+  ...[0, 0.5, 0.85, 1].map((k) => ({ label: 'tether ' + k, w: 1.7, h: 0.9, draw: (c, x, y, s, t) => {
+    const a = ART.drawAnvil(c, x - 0.6 * s, y, s, { glow: k > 0.9 ? 0.6 : 0, t });
+    const ax = a ? a.ringX : x - 0.6 * s, ay = a ? a.ringY : y - 0.2 * s;
+    ART.drawTether(c, x + 0.7 * s, y - 0.5 * s, ax, ay, s, { tension: k, t });
+  } })),
+  { label: 'stake unlit', w: 0.6, h: 0.9, draw: (c, x, y, s, t) => ART.drawStake(c, x, y, s, { lit: false, t }) },
+  { label: 'stake lit', w: 0.6, h: 0.9, draw: (c, x, y, s, t) => ART.drawStake(c, x, y, s, { lit: true, t }) },
+  { label: 'stake golden ZZ', w: 0.6, h: 0.9, draw: (c, x, y, s, t) => ART.drawStake(c, x, y, s, { golden: true, initials: 'ZZ', t }) },
+  { label: 'stake rusty', w: 0.6, h: 0.9, draw: (c, x, y, s, t) => ART.drawStake(c, x, y, s, { rusty: true, t }) },
+  { label: 'stake lit + label', w: 0.8, h: 0.9, draw: (c, x, y, s, t) => ART.drawStake(c, x, y, s, { lit: true, label: '0.42¢', t }) },
+  ...[0.25, 0.6, 1].map((b) => ({ label: 'wall build ' + b, w: 0.6, h: 1.1, draw: (c, x, y, s, t) => ART.drawWall(c, x, y, s, { build: b, t }) })),
+  { label: 'wall building loop', w: 0.6, h: 1.1, draw: (c, x, y, s, t) => ART.drawWall(c, x, y, s, { build: Math.min(1, (t % 3) / 2), t }) },
+  { label: 'wall + rat', w: 0.7, h: 1.1, draw: (c, x, y, s, t) => ART.drawWall(c, x, y, s, { build: 1, t, rat: true }) },
+] });
+PAGES.push({ title: 'Props: coins, note, pistol, machete, balloon, barrel, Debt Collector', bg: 'dawn', cells: [
+  { label: 'coin', w: 0.6, h: 0.6, draw: (c, x, y, s, t) => ART.drawCoin(c, x, y - 0.3 * s, 0.17 * s, { glow: 0, t }) },
+  { label: 'coin glow 1', w: 0.6, h: 0.6, draw: (c, x, y, s, t) => ART.drawCoin(c, x, y - 0.3 * s, 0.17 * s, { glow: 1, t }) },
+  { label: 'coin tarnish .7', w: 0.6, h: 0.6, draw: (c, x, y, s, t) => ART.drawCoin(c, x, y - 0.3 * s, 0.17 * s, { tarnish: 0.7, t }) },
+  { label: 'coin half', w: 0.6, h: 0.6, draw: (c, x, y, s, t) => ART.drawCoin(c, x, y - 0.3 * s, 0.17 * s, { half: true, glow: 0.4, t }) },
+  { label: 'coin spin', w: 0.6, h: 0.6, draw: (c, x, y, s, t) => ART.drawCoin(c, x, y - 0.3 * s, 0.17 * s, { spin: (t * 0.6) % 1, glow: 0.3, t }) },
+  { label: 'wooden token', w: 0.6, h: 0.6, draw: (c, x, y, s, t) => ART.drawCoin(c, x, y - 0.3 * s, 0.17 * s, { wooden: true, t }) },
+  { label: 'coin big', w: 1.0, h: 0.9, draw: (c, x, y, s, t) => ART.drawCoin(c, x, y - 0.42 * s, 0.38 * s, { glow: 0.5, tarnish: 0.2, t }) },
+  { label: 'note 1¢', w: 0.8, h: 0.6, draw: (c, x, y, s, t) => ART.drawNote(c, x, y - 0.3 * s, s, { label: '1¢', t, angle: -0.1 }) },
+  { label: 'note $1', w: 0.8, h: 0.6, draw: (c, x, y, s, t) => ART.drawNote(c, x, y - 0.3 * s, s, { label: '$1', t, angle: 0.15 }) },
+  { label: 'pistol', w: 0.6, h: 0.5, draw: (c, x, y, s, t) => ART.drawPistol(c, x - 0.1 * s, y - 0.2 * s, s, { glow: 0, recoil: 0, t, facing: 1 }) },
+  { label: 'pistol patience glow', w: 0.6, h: 0.5, draw: (c, x, y, s, t) => ART.drawPistol(c, x - 0.1 * s, y - 0.2 * s, s, { glow: 1, recoil: 0, t, facing: 1 }) },
+  { label: 'pistol recoil loop', w: 0.6, h: 0.5, draw: (c, x, y, s, t) => ART.drawPistol(c, x - 0.1 * s, y - 0.2 * s, s, { glow: 0, recoil: Math.max(0, 1 - (t % 1.2) * 3), t, facing: 1 }) },
+  { label: 'machete', w: 0.8, h: 0.8, draw: (c, x, y, s, t) => ART.drawMachete(c, x - 0.15 * s, y - 0.3 * s, s, { swing: 0, t }) },
+  { label: 'machete swing loop', w: 0.9, h: 0.9, draw: (c, x, y, s, t) => ART.drawMachete(c, x - 0.15 * s, y - 0.35 * s, s, { swing: (t % 1.4) / 1.4, t }) },
+  ...[0.15, 0.5, 1].map((k) => ({ label: 'balloon inflate ' + k, w: 1.2, h: 1.5, draw: (c, x, y, s, t) => ART.drawBalloon(c, x, y - 0.1 * s, s, { words: 'the street said no', inflate: k, t }) })),
+  { label: 'balloon no words', w: 1.2, h: 1.5, draw: (c, x, y, s, t) => ART.drawBalloon(c, x, y - 0.1 * s, s, { words: '', inflate: 1, t }) },
+  { label: 'barrel', w: 0.9, h: 1.0, draw: (c, x, y, s, t) => ART.drawBarrel(c, x, y, s, { t, blink: false }) },
+  { label: 'barrel blink', w: 0.9, h: 1.0, draw: (c, x, y, s, t) => ART.drawBarrel(c, x, y, s, { t, blink: true }) },
+  ...[0, 0.5, 1].map((k) => ({ label: 'collector chain ' + k, w: k ? 2.6 : 1.1, h: 1.8, draw: (c, x, y, s, t) => ART.drawCollector(c, x - (k ? 0.7 * s : 0), y, s, { t, chain: k }) })),
+] });
+PAGES.push({ title: 'Lobby desk: jar, radio, cabinet, trophies, coin stack, page corner, hold rings', bg: 'lobby', cells: [
+  ...[0, 0.35, 0.9].map((k) => ({ label: 'jar fill ' + k, w: 0.7, h: 0.75, draw: (c, x, y, s, t) => ART.drawJar(c, x, y, s, { fill: k, t }) })),
+  { label: 'radio off', w: 0.8, h: 0.8, draw: (c, x, y, s, t) => ART.drawRadio(c, x, y, s, { on: false, crackle: 0, t }) },
+  { label: 'radio on', w: 0.8, h: 0.8, draw: (c, x, y, s, t) => ART.drawRadio(c, x, y, s, { on: true, crackle: 0, t }) },
+  { label: 'radio crackle + news', w: 1.4, h: 1.1, draw: (c, x, y, s, t) => ART.drawRadio(c, x, y, s, { on: true, crackle: 0.8, t, text: 'US CPI 13:30' }) },
+  ...[0, 4, 23].map((n) => ({ label: 'cabinet ' + n + ' coins', w: 1.0, h: 1.3, draw: (c, x, y, s, t) => ART.drawCabinet(c, x, y, s, { coins: n, t }) })),
+  { label: 'trophy shelf (empty)', w: 1.6, h: 0.7, draw: (c, x, y, s, t) => ART.drawTrophyShelf(c, x, y - 0.1 * s, s, { trophies: [], t }) },
+  { label: 'trophy shelf 4', w: 1.6, h: 0.7, draw: (c, x, y, s, t) => ART.drawTrophyShelf(c, x, y - 0.1 * s, s, { trophies: [
+    { key: 'first_wooden', title: 'First wooden coin' }, { key: 'walked_away', title: 'Walked away' }, { key: 'storm', title: 'Waited out a storm' }, { key: 'twin', title: 'Let the Twin play' }], t }) },
+  ...[0.61, 25, 1240].map((u) => ({ label: 'coin stack $' + u, w: 0.8, h: 1.0, draw: (c, x, y, s, t) => ART.drawCoinStack(c, x, y, s, { usd: u, t }) })),
+  { label: 'page corner', w: 0.9, h: 0.9, draw: (c, x, y, s, t) => ART.drawPageCorner(c, x + 0.4 * s, y, s, { t, hover: false }) },
+  { label: 'page corner hover', w: 0.9, h: 0.9, draw: (c, x, y, s, t) => ART.drawPageCorner(c, x + 0.4 * s, y, s, { t, hover: true }) },
+  ...[[0.25, P.gold, 'SHOOT'], [0.6, P.crimson, 'EJECT'], [1, P.cyan, 'HAGGLE'], [(performance.now() / 1000) % 1, P.neonGreen, 'WALL']].map(([fr, col, lab], i) => ({
+    label: 'hold ring ' + lab, w: 0.8, h: 0.8, draw: (c, x, y, s, t) => ART.drawHoldRing(c, x, y - 0.4 * s, 0.28 * s, i === 3 ? (t % 2) / 2 : fr, { color: col, label: lab }) })),
+] });
+const FXK = ['dust', 'smoke', 'sparks', 'shavings', 'cash', 'bubbles', 'ticker', 'confetti', 'chips'];
+PAGES.push({ title: 'fx.js: every burst kind (re-fires every 1.6 s) + shake', bg: 'afternoon', fx: true, cells: [
+  ...FXK.map((k, i) => ({ label: 'FX ' + k, w: 1.7, h: 1.9, fxKind: k, draw: (c, x, y, s, t) => {
+    if (k === 'shavings') ART.drawJar(c, x + 0.55 * s, y, s, { fill: 0.4, t });
+    if (k === 'bubbles') { c.fillStyle = P.molasses; c.fillRect(x - 0.6 * s, y - 0.05 * s, 1.2 * s, 0.1 * s); }
+  } })),
+  { label: 'FX.shake', w: 1.7, h: 1.9, draw: (c, x, y, s, t) => {
+    const o = FX.offset(); c.fillStyle = P.gold; c.fillRect(x - 0.3 * s + o[0], y - 1.0 * s + o[1], 0.6 * s, 0.6 * s);
+    c.strokeStyle = P.ink; c.lineWidth = 3; c.strokeRect(x - 0.3 * s + o[0], y - 1.0 * s + o[1], 0.6 * s, 0.6 * s);
+  } },
+] });
+PAGES.push({ title: 'Composed street (long world): consistency check at game scale', bg: 'afternoon', scene: true, cells: [] });
+PAGES.push({ title: 'Bench: 40 mixed draws per frame', bg: 'noon', bench: true, cells: [] });
+
+// ------------------------------------------------------------------------------------------- render
+const page = PAGES[Math.min(PAGES.length, PAGE) - 1];
+const nav = document.getElementById('nav');
+nav.innerHTML = 'page ' + PAGES.map((p, i) => `<a href="?page=${i + 1}${FROZEN != null ? '&t=' + FROZEN : ''}" class="${i + 1 === PAGE ? 'on' : ''}" title="${p.title}">${i + 1}</a>`).join('');
+
+function sky(kind) {
+  const m = { noon: SKY.noon, afternoon: SKY.afternoon, dawn: SKY.dawn, night: SKY.night, dusk: SKY.golden, lobby: ['#2a1f18', '#3b2b20', '#4a3626', '#5a4330'] }[kind] || SKY.noon;
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  m.forEach((c, i) => g.addColorStop(i / (m.length - 1), c));
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function layout(cells, s) {
+  const out = []; let x = 10, y = 34, rowH = 0;
+  for (const c of cells) {
+    if (ONLY && !c.label.toLowerCase().includes(ONLY)) continue;
+    const cw = c.w * s, ch = c.h * s + 16;
+    if (x + cw > W - 6 && x > 10) { x = 10; y += rowH + 6; rowH = 0; }
+    out.push({ c, x, y, cw, ch }); x += cw + 6; rowH = Math.max(rowH, ch);
+  }
+  return out;
+}
+let lastFx = -10, lastT = null;
+function frame(now) {
+  const t = FROZEN != null ? FROZEN : now / 1000;
+  const dt = lastT == null ? 0.016 : Math.min(0.1, t - lastT); lastT = t;
+  const s = (SCALE || 95) * (page.sMul || 1);
+  sky(page.bg);
+  ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.font = 'bold 14px system-ui'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText(page.title + '   (s=' + s.toFixed(0) + (FROZEN != null ? ', t=' + FROZEN : '') + ')', 10, 8);
+  if (page.scene) drawScene(t, s);
+  else if (page.bench) drawBench(t, s);
+  else {
+    const L = layout(page.cells, s);
+    for (const it of L) {
+      const ax = it.x + it.cw / 2, ay = it.y + it.ch - 18;
+      ctx.fillStyle = 'rgba(0,0,0,0.13)'; ctx.fillRect(it.x, it.y, it.cw, it.ch);
+      ctx.fillStyle = page.bg === 'night' ? '#2c3150' : page.bg === 'lobby' ? '#6b4a2e' : P.marbleShade;
+      ctx.fillRect(it.x, ay, it.cw, 4);
+      try { it.c.draw(ctx, ax, ay, s, t); } catch (e) { ctx.fillStyle = 'rgba(255,0,0,.6)'; ctx.fillRect(it.x, it.y, it.cw, it.ch); console.error('cell ' + it.c.label, e); }
+      ctx.fillStyle = page.bg === 'night' || page.bg === 'lobby' || page.bg === 'dawn' ? '#f3e7c8' : '#1a1410';
+      ctx.font = '11px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      ctx.fillText(it.c.label, ax, it.y + it.ch - 3);
+      if (page.fx && it.c.fxKind && (t - lastFx > 1.6 || FROZEN != null && lastFx < 0)) {
+        const k = it.c.fxKind, o = { s };
+        if (k === 'shavings') o.to = [ax + 0.55 * s, ay - 0.3 * s];
+        if (k === 'cash') { o.dir = -0.6; o.floor = ay; }
+        if (k === 'chips') o.floor = ay;
+        if (k === 'bubbles') o.w = 1.0;
+        FX.burst(k, k === 'shavings' ? ax - 0.4 * s : ax, k === 'ticker' || k === 'confetti' ? ay - 1.2 * s : ay - 0.1 * s, o);
+      }
+    }
+    if (page.fx && (t - lastFx > 1.6 || lastFx < 0)) { lastFx = t; FX.shake(10, 0.8); }
+  }
+  FX.update(FROZEN != null ? 0.016 : dt); FX.draw(ctx);
+  if (FROZEN == null || !window.__once) { window.__once = true; requestAnimationFrame(frame); }
+}
+
+// a composed street to judge consistency (positions follow CONTRACT 8.1: screenX = (xn + 0.42) / 1.62 * W)
+function drawScene(t, s) {
+  const gy = H * 0.72, X = (xn) => (xn + 0.42) / 1.62 * W;
+  ctx.fillStyle = P.marble; ctx.fillRect(0, gy, W, H - gy);
+  ctx.fillStyle = P.marbleShade; ctx.fillRect(0, gy, W, 6);
+  const g = ART.drawBank(ctx, X(-0.22), gy, s * 0.62, { t, facing: 1, banker: { mood: 'smug' } });
+  if (g) { ART.drawRoofSign(ctx, g.sign.cx, g.sign.cy, g.sign.w, g.sign.h, { id: 'scene', text: signCycle(t, ['0.82¢', '0.84¢', '0.79¢']), color: 'crimson', t });
+           ART.drawBell(ctx, g.bell.x, g.bell.y, s * 0.62, { swing: 0.1, t }); }
+  ART.drawStake(ctx, X(0.25), gy, s, { lit: true, t });
+  ART.drawStake(ctx, X(0.62), gy, s, { lit: true, t });
+  ART.drawStake(ctx, X(0.12), gy, s, { rusty: true, t });
+  ART.drawWall(ctx, X(0.33), gy, s, { build: 1, t, rat: true });
+  const a = ART.drawAnvil(ctx, X(0.0), gy, s, { glow: 0.2, t });
+  const r = ART.drawRunner(ctx, X(0.47), gy, s, { outfit: 'suit', pose: 'lean', lean: 0.5, t, coin: COIN });
+  if (a && r) ART.drawTether(ctx, r.beltX, r.beltY, a.ringX, a.ringY, s, { tension: 0.3, t });
+  ART.drawTwin(ctx, X(0.38), gy, s, { pose: 'run', t, alpha: 0.75 });
+  ART.drawGhost(ctx, X(0.55), gy, s, { pose: 'run', t, alpha: 0.4 });
+  ART.drawMerchant(ctx, X(0.8), gy, s, { sign: '0.82¢', roll: t * 4, t, facing: -1 });
+  ART.drawRat(ctx, X(0.31), gy, s, { phase: 'bite', t, facing: 1 });
+  ART.drawBuyer(ctx, X(1.07), gy, s * 0.85, { mood: 'wait', champagne: 0.8, tag: '2.20¢', t, facing: -1 });
+}
+// bench: 40 mixed draws per frame, timed over many frames
+const bench = { frames: 0, total: 0, max: 0 };
+function drawBench(t, s) {
+  const gy = H * 0.7;
+  if (q.has('vary')) s = s * (0.8 + 0.4 * (0.5 + 0.5 * Math.sin(t * 7.3)));
+  const t0 = performance.now();
+  for (let i = 0; i < 4; i++) {
+    const bx = 120 + i * 380;
+    ART.drawRunner(ctx, bx, gy, s, { outfit: ['suit', 'tux', 'undershirt', 'boxers'][i], pose: ['run', 'ride', 'lean', 'slide'][i], t, coin: COIN });
+    ART.drawStake(ctx, bx + 60, gy, s, { lit: true, t }); ART.drawStake(ctx, bx + 90, gy, s, { golden: true, initials: 'ZZ', t });
+    ART.drawAnvil(ctx, bx - 60, gy, s, { glow: 0.3, t }); ART.drawTether(ctx, bx, gy - 0.45 * s, bx - 70, gy - 0.15 * s, s, { tension: 0.7, t });
+    ART.drawRat(ctx, bx + 120, gy, s, { phase: 'run', t }); ART.drawWall(ctx, bx + 150, gy, s, { build: 1, t });
+    ART.drawCoin(ctx, bx, gy - 1.3 * s, 0.17 * s, { glow: 0.7, t }); ART.drawGhost(ctx, bx + 30, gy, s, { pose: 'run', t, alpha: 0.4 });
+  }
+  ART.drawBank(ctx, 200, gy - 30, s * 0.5, { t, banker: { mood: 'smug' } });
+  ART.drawRoofSign(ctx, 800, 120, 2.2 * s, 0.9 * s, { id: 'bench', text: (t % 10).toFixed(2) + '¢', color: 'cyan', t });
+  ART.drawBuyer(ctx, 1300, gy, s * 0.7, { mood: 'wait', champagne: 0.5, tag: '2.20¢', t });
+  ART.drawMerchant(ctx, 1000, gy, s, { sign: '1.04¢', roll: t * 4, t, facing: -1 });
+  ART.drawTwin(ctx, 700, gy, s, { pose: 'run', t, alpha: 0.8 });
+  ART.drawBell(ctx, 800, 300, s, { swing: 0.3, t });
+  const dtms = performance.now() - t0;
+  bench.frames++; if (bench.frames > 10) { bench.total += dtms; bench.max = Math.max(bench.max, dtms); }
+  window.GG_BENCH = { frames: bench.frames, avg_ms: bench.frames > 10 ? +(bench.total / (bench.frames - 10)).toFixed(3) : null, max_ms: +bench.max.toFixed(3), draws: 46 };
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 16px system-ui'; ctx.textAlign = 'left';
+  ctx.fillText('avg ' + (window.GG_BENCH.avg_ms ?? '-') + ' ms / frame for 46 draws (max ' + window.GG_BENCH.max_ms + ')', 10, 40);
+}
+requestAnimationFrame(frame);
+window.GG_GALLERY = { pages: PAGES.length, page: PAGE };
+</script>
+</body>
+</html>

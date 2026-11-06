@@ -1,0 +1,122 @@
+======================================================================================================================================================
+BASE  train 3335 trades 112 L (WR 96.64%) | test 4291 trades 60 L (WR 98.60%)
+BAR   untouched zone at 99.3% WR: a 20% pocket must hold 94/112 train L, 36/60 test L; a 10% pocket 91 / 33
+ANGEL approx keeps 495 trades / 3 L of the base rows (engine: 714 / 4)
+======================================================================================================================================================
+0. REFERENCE pockets with a prior market reason (rollover / abnormal spread are the tight setting's own guards; Friday pm = weekend risk)
+  rollover 16:45-17:45 NY
+     train   1.4% trades (  45) |   8/112 L (   7%) | LR 17.78% lift 5.29x (m-adj 5.16) p=0.00011 |  7 loss-days | months up 4/4 | untouched WR 96.84% (base 96.64) angel-inside 96.84%
+     test    1.3% trades (  57) |   8/60 L (  13%) | LR 14.04% lift 10.04x (m-adj 10.17) p=0 |  8 loss-days | months up 4/5 | untouched WR 98.77% (base 98.60) angel-inside 98.77%
+  abnormal spread (spread_excess >= 0.45)
+     train   1.4% trades (  47) |   9/112 L (   8%) | LR 19.15% lift 5.70x (m-adj 5.92) p=2e-05 |  6 loss-days | months up 4/4 | untouched WR 96.87% (base 96.64) angel-inside 96.87%
+     test    1.3% trades (  54) |   8/60 L (  13%) | LR 14.81% lift 10.60x (m-adj 10.27) p=0 |  8 loss-days | months up 4/5 | untouched WR 98.77% (base 98.60) angel-inside 98.77%
+  NY 16:00-17:59
+     train   3.8% trades ( 126) |  13/112 L (  12%) | LR 10.32% lift 3.07x (m-adj 2.99) p=0.00034 |  9 loss-days | months up 4/4 | untouched WR 96.91% (base 96.64) angel-inside 96.92%
+     test    4.0% trades ( 172) |   9/60 L (  15%) | LR  5.23% lift 3.74x (m-adj 3.70) p=0.00078 |  9 loss-days | months up 4/5 | untouched WR 98.76% (base 98.60) angel-inside 98.76%
+  Friday NY afternoon (weekday 4, NY >= 12:00)
+     train   3.7% trades ( 124) |  15/112 L (  13%) | LR 12.10% lift 3.60x (m-adj 3.32) p=2e-05 | 11 loss-days | months up 4/4 | untouched WR 96.98% (base 96.64) angel-inside 96.99%
+     test    4.6% trades ( 196) |   9/60 L (  15%) | LR  4.59% lift 3.28x (m-adj 3.20) p=0.00193 |  8 loss-days | months up 4/5 | untouched WR 98.75% (base 98.60) angel-inside 98.76%
+  Friday all day
+     train  15.0% trades ( 500) |  28/112 L (  25%) | LR  5.60% lift 1.67x (m-adj 1.65) p=0.00666 | 15 loss-days | months up 3/4 | untouched WR 97.04% (base 96.64) angel-inside 97.08%
+     test   16.6% trades ( 710) |  19/60 L (  32%) | LR  2.68% lift 1.91x (m-adj 1.88) p=0.00632 | 15 loss-days | months up 3/5 | untouched WR 98.86% (base 98.60) angel-inside 98.84%
+  UNION  NY 16:00-17:59 | abnormal spread | Friday pm
+     train   7.5% trades ( 249) |  23/112 L (  21%) | LR  9.24% lift 2.75x (m-adj 2.64) p=1e-05 | 18 loss-days | months up 4/4 | untouched WR 97.12% (base 96.64) angel-inside 97.13%
+     test    8.1% trades ( 348) |  14/60 L (  23%) | LR  4.02% lift 2.88x (m-adj 2.85) p=0.00048 | 13 loss-days | months up 4/5 | untouched WR 98.83% (base 98.60) angel-inside 98.84%
+======================================================================================================================================================
+1. TREE GRID - leave-one-month-out inside train; leaves picked on the fit months (desc loss rate, lift >= 1.2, union <= 20%)
+   depth 4 min_leaf 0.03 entropy w10      | held-out share   9.0% capture  13.4% lift 1.50 | folds (in/n, Lin/L) 03:89/890,7/36 04:87/820,5/32 05:35/665,1/27 06:88/960,2/17
+   depth 3 min_leaf 0.03 gini    balanced | held-out share   6.2% capture   8.0% lift 1.39 | folds (in/n, Lin/L) 03:83/890,6/36 04:0/820,0/32 05:42/665,1/27 06:80/960,2/17
+   depth 3 min_leaf 0.03 entropy balanced | held-out share   6.5% capture   8.0% lift 1.37 | folds (in/n, Lin/L) 03:83/890,6/36 04:0/820,0/32 05:35/665,1/27 06:100/960,2/17
+   depth 3 min_leaf 0.03 entropy w10      | held-out share   9.9% capture  12.5% lift 1.30 | folds (in/n, Lin/L) 03:83/890,6/36 04:104/820,5/32 05:35/665,1/27 06:108/960,2/17
+   depth 4 min_leaf 0.02 gini    w10      | held-out share  13.2% capture  18.8% lift 1.28 | folds (in/n, Lin/L) 03:155/890,6/36 04:160/820,6/32 05:73/665,6/27 06:52/960,3/17
+   depth 4 min_leaf 0.02 entropy balanced | held-out share   6.0% capture   6.2% lift 1.25 | folds (in/n, Lin/L) 03:29/890,2/36 04:0/820,0/32 05:62/665,3/27 06:108/960,2/17
+   depth 4 min_leaf 0.03 gini    w10      | held-out share  14.3% capture  19.6% lift 1.24 | folds (in/n, Lin/L) 03:142/890,7/36 04:184/820,7/32 05:97/665,5/27 06:54/960,3/17
+   depth 4 min_leaf 0.03 gini    balanced | held-out share   8.6% capture  10.7% lift 1.16 | folds (in/n, Lin/L) 03:45/890,4/36 04:98/820,2/32 05:94/665,5/27 06:50/960,1/17
+   depth 3 min_leaf 0.03 gini    w10      | held-out share  10.9% capture  12.5% lift 1.14 | folds (in/n, Lin/L) 03:148/890,7/36 04:56/820,1/32 05:54/665,2/27 06:107/960,4/17
+   depth 4 min_leaf 0.01 entropy w10      | held-out share  10.5% capture   9.8% lift 0.97 | folds (in/n, Lin/L) 03:114/890,1/36 04:74/820,3/32 05:39/665,3/27 06:124/960,4/17
+   depth 3 min_leaf 0.02 gini    w10      | held-out share  12.0% capture  11.6% lift 0.95 | folds (in/n, Lin/L) 03:178/890,3/36 04:75/820,3/32 05:43/665,3/27 06:105/960,4/17
+   depth 4 min_leaf 0.01 gini    w10      | held-out share  10.5% capture   9.8% lift 0.93 | folds (in/n, Lin/L) 03:105/890,1/36 04:121/820,4/32 05:32/665,3/27 06:91/960,3/17
+   ... worst 3:
+   depth 2 min_leaf 0.02 entropy w10      | held-out share   1.9% capture   2.7% lift 1.19
+   depth 2 min_leaf 0.01 gini    w10      | held-out share   3.4% capture   4.5% lift 1.17
+   depth 2 min_leaf 0.03 entropy w10      | held-out share   2.3% capture   2.7% lift 0.97
+   all 36 configs: held-out lift median 1.25, IQR 0.94-1.46
+======================================================================================================================================================
+2. REFIT on all train - every leaf as an explicit condition, train vs test (pocket leaves = picked on train)
+ TREE depth 4 min_leaf 0.03 entropy w10 (LOMO held-out lift 1.504)
+   * train   3.6%  18L lift 4.50 up 4/4 | test   5.1%   2L lift 0.65 p=0.814 up 1/5 | brk_ratio <= 0.3665 and fig_ahead_pips > 76.35 and er30 > 0.1205 and stop_pips <= 2.35
+   * train   8.7%  18L lift 1.84 up 4/4 | test   6.7%   2L lift 0.50 p=0.910 up 1/5 | brk_ratio > 0.3665 and last_body_dir <= -0.399 and atr_pips > 1.045 and room60_pips <= 6.5
+   * train   3.1%   5L lift 1.46 up 3/4 | test   3.0%   0L lift 0.00 p=1.000 up 0/5 | brk_ratio <= 0.3665 and fig_ahead_pips > 76.35 and er30 > 0.1205 and stop_pips > 2.35
+     train  30.7%  46L lift 1.34 up 4/4 | test  32.1%  29L lift 1.51 p=0.022 up 5/5 | brk_ratio <= 0.3665 and fig_ahead_pips <= 76.35 and er8 <= 0.5095 and adx > 17.95
+     train  10.0%  13L lift 1.16 up 2/4 | test  12.1%   5L lift 0.69 p=0.853 up 2/5 | brk_ratio > 0.3665 and last_body_dir > -0.0265 and vol10 <= 123.2
+     train   5.5%   5L lift 0.80 up 2/4 | test   5.3%   2L lift 0.63 p=0.829 up 1/5 | brk_ratio <= 0.3665 and fig_ahead_pips > 76.35 and er30 <= 0.1205
+     train   3.0%   2L lift 0.60 up 1/4 | test   3.2%   1L lift 0.52 p=0.855 up 1/5 | brk_ratio <= 0.3665 and fig_ahead_pips <= 76.35 and er8 > 0.5095 and box >= 18
+     train   3.0%   2L lift 0.60 up 2/4 | test   2.4%   2L lift 1.40 p=0.418 up 2/5 | brk_ratio > 0.3665 and last_body_dir > -0.399 and vol10 > 123.2 and er30 > 0.2875
+     train   4.2%   2L lift 0.42 up 1/4 | test   2.2%   2L lift 1.51 p=0.384 up 2/5 | brk_ratio > 0.3665 and last_body_dir <= -0.399 and atr_pips > 1.045 and room60_pips > 6.5
+     train   4.7%   1L lift 0.19 up 1/4 | test   4.8%   3L lift 1.05 p=0.544 up 2/5 | brk_ratio <= 0.3665 and fig_ahead_pips <= 76.35 and er8 <= 0.5095 and adx <= 17.95
+     train   3.6%   0L lift 0.00 up 0/4 | test   2.8%   0L lift 0.00 p=1.000 up 0/5 | brk_ratio <= 0.3665 and fig_ahead_pips <= 76.35 and er8 > 0.5095 and box <= 17
+     train   3.6%   0L lift 0.00 up 0/4 | test   7.8%   7L lift 1.50 p=0.190 up 2/5 | brk_ratio > 0.3665 and last_body_dir <= -0.399 and atr_pips <= 1.045
+     train   4.4%   0L lift 0.00 up 0/4 | test   3.8%   2L lift 0.88 p=0.666 up 2/5 | brk_ratio > 0.3665 and -0.399 < last_body_dir <= -0.0265 and vol10 <= 123.2
+     train  12.0%   0L lift 0.00 up 0/4 | test   8.7%   3L lift 0.57 p=0.896 up 1/5 | brk_ratio > 0.3665 and last_body_dir > -0.399 and vol10 > 123.2 and er30 <= 0.2875
+     UNION of picked (*) leaves
+     train  15.3% trades ( 512) |  41/112 L (  37%) | LR  8.01% lift 2.38x (m-adj 2.36) p=0 | 35 loss-days | months up 4/4 | untouched WR 97.48% (base 96.64) angel-inside 97.51%
+     test   14.8% trades ( 633) |   4/60 L (   7%) | LR  0.63% lift 0.45x (m-adj 0.44) p=0.977 |  4 loss-days | months up 0/5 | untouched WR 98.47% (base 98.60) angel-inside 98.49%
+ TREE depth 3 min_leaf 0.03 gini balanced (LOMO held-out lift 1.389)
+   * train  18.1%  43L lift 2.12 up 4/4 | test  21.7%   9L lift 0.69 p=0.902 up 1/5 | brk_ratio <= 0.3665 and er16 <= 0.1675 and room240_pips <= 15.75
+     train  13.0%  20L lift 1.38 up 4/4 | test   8.9%   4L lift 0.75 p=0.780 up 2/5 | brk_ratio > 0.3665 and last_body_dir <= -0.399 and atr_pips > 1.045
+     train  18.6%  25L lift 1.20 up 2/4 | test  19.8%  14L lift 1.18 p=0.307 up 2/5 | brk_ratio <= 0.2445 and er16 > 0.1675
+     train  14.4%  13L lift 0.81 up 1/4 | test  15.9%   7L lift 0.73 p=0.842 up 1/5 | brk_ratio > 0.3665 and last_body_dir > -0.399 and vol10 <= 123.2
+     train   8.8%   7L lift 0.71 up 0/4 | test   5.8%   7L lift 2.01 p=0.063 up 4/5 | brk_ratio <= 0.3665 and er16 <= 0.1675 and room240_pips > 15.75
+     train   8.6%   2L lift 0.21 up 0/4 | test   9.0%   7L lift 1.30 p=0.295 up 3/5 | 0.2445 < brk_ratio <= 0.3665 and er16 > 0.1675
+     train  15.0%   2L lift 0.12 up 0/4 | test  11.1%   5L lift 0.75 p=0.797 up 2/5 | brk_ratio > 0.3665 and last_body_dir > -0.399 and vol10 > 123.2
+     train   3.6%   0L lift 0.00 up 0/4 | test   7.8%   7L lift 1.50 p=0.190 up 2/5 | brk_ratio > 0.3665 and last_body_dir <= -0.399 and atr_pips <= 1.045
+     UNION of picked (*) leaves
+     train  18.1% trades ( 604) |  43/112 L (  38%) | LR  7.12% lift 2.12x (m-adj 2.13) p=0 | 31 loss-days | months up 4/4 | untouched WR 97.47% (base 96.64) angel-inside 97.47%
+     test   21.7% trades ( 930) |   9/60 L (  15%) | LR  0.97% lift 0.69x (m-adj 0.70) p=0.902 |  9 loss-days | months up 1/5 | untouched WR 98.48% (base 98.60) angel-inside 98.48%
+ TREE depth 4 min_leaf 0.02 gini w10 (LOMO held-out lift 1.281)
+   * train   2.3%  10L lift 3.87 up 4/4 | test   1.7%   9L lift 8.70 p=0.000 up 4/5 | spread_excess > 0.275
+   * train  10.7%  31L lift 2.59 up 4/4 | test  10.5%   5L lift 0.79 p=0.756 up 2/5 | spread_excess <= 0.275 and er16 <= 0.1715 and 9.05 < room240_pips <= 15.75
+   * train   5.2%  13L lift 2.21 up 3/4 | test   6.4%   7L lift 1.81 p=0.095 up 3/5 | spread_excess <= 0.275 and er16 > 0.1715 and brk_ratio <= 0.2445 and adx > 37.25
+     train   2.4%   5L lift 1.84 up 3/4 | test   1.8%   3L lift 2.75 p=0.096 up 3/5 | spread_excess <= 0.275 and er16 <= 0.1715 and room240_pips > 15.75 and fig_ahead_pips <= 11.65
+     train   3.2%   4L lift 1.11 up 2/4 | test   3.5%   3L lift 1.41 p=0.357 up 3/5 | spread_excess <= 0.275 and er16 > 0.1715 and brk_ratio > 0.2445 and er30 <= 0.0405
+     train  22.1%  26L lift 1.05 up 3/4 | test  27.8%  15L lift 0.90 p=0.696 up 2/5 | spread_excess <= 0.275 and er16 <= 0.1715 and room240_pips <= 9.05
+     train  12.4%   9L lift 0.65 up 1/4 | test  12.3%   3L lift 0.41 p=0.978 up 0/5 | spread_excess <= 0.275 and er16 > 0.1715 and brk_ratio <= 0.2445 and adx <= 37.25
+     train  13.9%   5L lift 0.32 up 0/4 | test   8.6%   7L lift 1.36 p=0.261 up 4/5 | spread_excess <= 0.275 and er16 <= 0.1715 and room240_pips > 15.75 and fig_ahead_pips > 11.65
+     train  27.7%   9L lift 0.29 up 0/4 | test  27.2%   8L lift 0.49 p=0.992 up 0/5 | spread_excess <= 0.275 and er16 > 0.1715 and brk_ratio > 0.2445 and er30 > 0.0405
+     UNION of picked (*) leaves
+     train  18.3% trades ( 609) |  54/112 L (  48%) | LR  8.87% lift 2.64x (m-adj 2.60) p=0 | 38 loss-days | months up 4/4 | untouched WR 97.87% (base 96.64) angel-inside 97.85%
+     test   18.7% trades ( 801) |  21/60 L (  35%) | LR  2.62% lift 1.87x (m-adj 1.88) p=0.00535 | 21 loss-days | months up 5/5 | untouched WR 98.88% (base 98.60) angel-inside 98.89%
+======================================================================================================================================================
+3. SEQUENTIAL COVERING - depth-3 tree on the trades not yet covered; best leaf by Wilson lower bound with lift >= 1.5, losses in
+   >= 3 of 4 train months, <= 10% of train trades; remove it; repeat to a 20% union.
+ COVER depth 3 min_leaf 0.02 entropy: 0 pockets
+  UNION
+     train   0.0% trades (   0) |   0/112 L (   0%) | LR  0.00% lift 0.00x (m-adj 0.00) p=1 |  0 loss-days | months up 0/4 | untouched WR 96.64% (base 96.64) angel-inside 96.64%
+     test    0.0% trades (   0) |   0/60 L (   0%) | LR  0.00% lift 0.00x (m-adj 0.00) p=1 |  0 loss-days | months up 0/5 | untouched WR 98.60% (base 98.60) angel-inside 98.60%
+ COVER depth 3 min_leaf 0.03 entropy: 0 pockets
+  UNION
+     train   0.0% trades (   0) |   0/112 L (   0%) | LR  0.00% lift 0.00x (m-adj 0.00) p=1 |  0 loss-days | months up 0/4 | untouched WR 96.64% (base 96.64) angel-inside 96.64%
+     test    0.0% trades (   0) |   0/60 L (   0%) | LR  0.00% lift 0.00x (m-adj 0.00) p=1 |  0 loss-days | months up 0/5 | untouched WR 98.60% (base 98.60) angel-inside 98.60%
+ COVER depth 2 min_leaf 0.02 entropy: 0 pockets
+  UNION
+     train   0.0% trades (   0) |   0/112 L (   0%) | LR  0.00% lift 0.00x (m-adj 0.00) p=1 |  0 loss-days | months up 0/4 | untouched WR 96.64% (base 96.64) angel-inside 96.64%
+     test    0.0% trades (   0) |   0/60 L (   0%) | LR  0.00% lift 0.00x (m-adj 0.00) p=1 |  0 loss-days | months up 0/5 | untouched WR 98.60% (base 98.60) angel-inside 98.60%
+ COVER depth 3 min_leaf 0.02 gini: 0 pockets
+  UNION
+     train   0.0% trades (   0) |   0/112 L (   0%) | LR  0.00% lift 0.00x (m-adj 0.00) p=1 |  0 loss-days | months up 0/4 | untouched WR 96.64% (base 96.64) angel-inside 96.64%
+     test    0.0% trades (   0) |   0/60 L (   0%) | LR  0.00% lift 0.00x (m-adj 0.00) p=1 |  0 loss-days | months up 0/5 | untouched WR 98.60% (base 98.60) angel-inside 98.60%
+======================================================================================================================================================
+4. XGBOOST - LOMO AUC picks depth / trees; test AUC + bootstrap CI + permutation null; top-q score pockets
+   depth 2: n25: 0.533 (0.56/0.56/0.56/0.46)  n50: 0.528 (0.54/0.53/0.58/0.47)  n100: 0.506 (0.50/0.52/0.53/0.47)  n150: 0.501 (0.49/0.52/0.51/0.49)  n200: 0.502 (0.49/0.51/0.49/0.52)  n300: 0.510 (0.49/0.54/0.49/0.52)  n400: 0.503 (0.48/0.53/0.48/0.52)
+   depth 3: n25: 0.514 (0.52/0.56/0.51/0.46)  n50: 0.510 (0.48/0.54/0.55/0.48)  n100: 0.507 (0.48/0.54/0.53/0.49)  n150: 0.512 (0.49/0.53/0.52/0.51)  n200: 0.512 (0.51/0.52/0.51/0.52)  n300: 0.509 (0.50/0.52/0.51/0.51)  n400: 0.508 (0.50/0.52/0.50/0.52)
+   chosen: depth 2, 25 trees (LOMO mean AUC 0.533)
+   TEST AUC 0.581  (bootstrap 95% CI 0.505-0.659) | permutation null mean 0.488, 95th pct 0.548, p = 0.010 | train in-sample AUC 0.825
+   gain importance: fig_ahead_pips 7%, vol10 6%, atr_pips 6%, room60_pips 5%, er8 5%, spread_excess 5%, uhv_body 5%, trend90_atr 5%, brk_ratio 5%, room240_pips 5%
+  top 10% boosted score (train = out-of-fold by month, test = label-free top-q of the final model)
+     train  10.0% trades ( 334) |  15/112 L (  13%) | LR  4.49% lift 1.34x (m-adj 1.34) p=0.159 | 13 loss-days | months up 3/4 | untouched WR 96.77% (base 96.64) angel-inside 96.78%
+     test   10.0% trades ( 430) |  12/60 L (  20%) | LR  2.79% lift 2.00x (m-adj 2.00) p=0.0196 | 12 loss-days | months up 4/5 | untouched WR 98.76% (base 98.60) angel-inside 98.76%
+  top 20% boosted score (train = out-of-fold by month, test = label-free top-q of the final model)
+     train  20.0% trades ( 667) |  32/112 L (  29%) | LR  4.80% lift 1.43x (m-adj 1.43) p=0.0302 | 23 loss-days | months up 3/4 | untouched WR 97.00% (base 96.64) angel-inside 96.99%
+     test   20.0% trades ( 859) |  17/60 L (  28%) | LR  1.98% lift 1.42x (m-adj 1.41) p=0.1 | 17 loss-days | months up 3/5 | untouched WR 98.75% (base 98.60) angel-inside 98.76%
+5. LOGISTIC (L2, C=0.05) LOMO AUC 0.555 (0.50/0.55/0.56/0.61) | TEST AUC 0.557
+wrote C:\Users\zeesh\turtle\monitor\TurtleTVUHV\research\loss_study\pockets\method_a_trees\results.json

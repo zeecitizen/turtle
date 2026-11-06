@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" href="data:,">
+<meta charset="utf-8">
+<title>Golden Gravity - world.js gallery (F-WORLD visual proof)</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #0d0b09; color: #f6efdc; font: 12px Georgia, serif; overflow: hidden; }
+  #grid { display: grid; grid-template-columns: repeat(4, 400px); grid-auto-rows: 225px; width: 1600px; }
+  .cell { position: relative; width: 400px; height: 225px; overflow: hidden; }
+  .cell canvas { display: block; width: 400px; height: 225px; }
+  .cap { position: absolute; left: 4px; bottom: 4px; padding: 1px 6px; background: rgba(13,11,9,0.72); border: 1px solid #b8860b; border-radius: 3px;
+         color: #ffcc33; font: 11px "Courier New", monospace; pointer-events: none; white-space: nowrap; }
+  #single { display: block; }
+  #hud { position: fixed; right: 8px; top: 40px; padding: 4px 8px; background: rgba(13,11,9,0.75); border: 1px solid #b8860b; color: #ffcc33;
+         font: 12px "Courier New", monospace; white-space: pre; }
+  #bench { position: fixed; left: 20px; top: 50px; padding: 12px 16px; background: rgba(13,11,9,0.9); border: 1px solid #b8860b; color: #ffcc33;
+           font: 14px "Courier New", monospace; white-space: pre; }
+  #nav { position: fixed; left: 8px; top: 40px; color: #ffcc33; font: 11px "Courier New", monospace; background: rgba(13,11,9,0.6); padding: 2px 6px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="module">
+import { makeWorld } from './js/world.js';
+
+const Q = new URLSearchParams(location.search);
+const PAGE = +(Q.get('page') || 0), VIEW = Q.get('view'), BENCH = Q.get('bench'), ANIM = Q.get('anim') !== '0', CHARS = Q.get('chars') !== '0';
+const T0 = +(Q.get('t') || 12.5), DOTS = Q.get('dots') !== '0';
+const DEG = Math.PI / 180;
+let ART = null;
+if (CHARS) { try { ART = await import('./js/art.js'); } catch (e) { ART = null; } }
+
+// ------------------------------------------------------------------------------------------------ fixtures
+const FIXN = ['aiming', 'open_profit', 'open_loss', 'open_storm', 'open_short', 'open_night', 'freeze', 'alley_wooden', 'replay',
+  'settled_barrel', 'settled_buyer', 'open_machete', 'shutters_dead', 'open_haggle', 'open_wall'];
+const FIX = {};
+await Promise.all(FIXN.map(async (n) => { try { FIX[n] = (await (await fetch('fixtures/' + n + '.json')).json()).snap; } catch (e) { console.warn('fixture', n, e); } }));
+const srcOf = (n) => { const s = FIX[n]; return s ? (s.round || s.preview) : null; };
+const terrOf = (n) => { const s = srcOf(n); return s ? JSON.parse(JSON.stringify(s.terrain)) : null; };
+const pitOf = (n) => { const s = srcOf(n); return s ? { ...s.pit } : null; };
+const xOf = (n) => { const s = srcOf(n); return s ? (s.x != null ? s.x : s.x_mark) : 0.4; };
+const xeOf = (n) => { const s = srcOf(n); return s ? s.x_entry : 0.4545; };
+function envOf(n) {
+  const s = FIX[n] || {}, m = s.market || {}, r = s.round;
+  return { session: m.session, day_frac: m.day_frac, weather: m.weather, vol: m.vol, lightning: !!m.lightning, season: m.season,
+    night: !!(r && r.night) || m.session === 'dead' || m.session === 'closed', golden_hour: !!(r && r.golden_hour), freeze: !!s.freeze,
+    wooden: !!(r && r.kind === 'wooden') && n === 'alley_wooden', replay: s.mode === 'replay', mirror: !!(r ? r.side < 0 : false), tilt: r ? r.tilt : 0 };
+}
+const flat = () => ({ x0: -0.3, x1: 1.3, h: new Array(96).fill(0), chasms: [], scorch: [], weathered: [] });
+const hills = () => { const t = flat(); for (let i = 0; i < 96; i++) { const xn = -0.3 + 1.6 * (i + 0.5) / 96; t.h[i] = Math.round(20 * Math.min(1, 0.85 * Math.exp(-((xn - 0.2) ** 2) / 0.006) + 0.55 * Math.exp(-((xn - 0.72) ** 2) / 0.012) + 0.25 * Math.exp(-((xn - 1.05) ** 2) / 0.004))) / 20; } return t; };
+const decals = () => { const t = terrOf('aiming') || flat(); t.chasms = [[0.56, 0.63], [0.9, 0.93]]; t.scorch = [0.2, 0.76, 1.1]; t.weathered = [[-0.3, 0.12], [1.02, 1.3]]; return t; };
+
+// ------------------------------------------------------------------------------------------------ the cells
+const SESS = [['asia', 0.10], ['london', 0.42], ['newyork', 0.74], ['dead', 0.90]];
+const WX = [['calm', 0.25], ['active', 0.55], ['storm', 0.95], ['dead', 0.05]];
+const P0 = [];
+for (const [ss, df] of SESS) for (const [wx, vol] of WX) P0.push({ id: ss + '-' + wx, cap: `${ss} ${df} · ${wx}`, fix: 'aiming', env: { session: ss, day_frac: df, weather: wx, vol, lightning: false, night: ss === 'dead' }, tilt: 0 });
+const P1 = [
+  { id: 'golden', cap: 'golden hour (NY 0.84)', fix: 'open_profit', env: { session: 'newyork', day_frac: 0.84, weather: 'active', golden_hour: true }, tilt: 8 },
+  { id: 'night', cap: 'night: round > 10 min', fix: 'open_night', tilt: 3 },
+  { id: 'freeze', cap: 'Time Freeze', fix: 'freeze', tilt: 0 },
+  { id: 'wooden', cap: 'wooden Alley (asia calm)', fix: 'alley_wooden', tilt: 6 },
+  { id: 'replay', cap: 'REPLAY', fix: 'replay', tilt: 7 },
+  { id: 'mirror', cap: 'mirror world (short)', fix: 'open_short', tilt: -10 },
+  { id: 'lightning', cap: 'storm + lightning + chasm', fix: 'open_storm', env: { lightning: true }, tilt: -18 },
+  { id: 'barrel', cap: 'barrel: gap through the stop', fix: 'settled_barrel', terrain: (t) => { t.chasms = [[-0.29, -0.02]]; return t; }, tilt: -22 },
+  { id: 'leaves', cap: 'season +1: leaves to buyer', fix: 'aiming', env: { session: 'london', day_frac: 0.45, weather: 'calm', season: 1 }, tilt: 0 },
+  { id: 'snow', cap: 'season -1: snow to bank', fix: 'aiming', env: { session: 'london', day_frac: 0.45, weather: 'calm', season: -1 }, tilt: 0 },
+  { id: 'closed', cap: 'weekend: market closed', fix: 'aiming', env: { session: 'closed', day_frac: 0.5, weather: 'calm', night: true }, tilt: 0 },
+  { id: 'dead-hours', cap: 'dead hours (shutters)', fix: 'shutters_dead', tilt: 0 },
+  { id: 'tilt-p25', cap: 'tilt +25 (pivot runner)', fix: 'open_profit', tilt: 25 },
+  { id: 'tilt-m25', cap: 'tilt -25 (pivot runner)', fix: 'open_loss', tilt: -25 },
+  { id: 'pit-deep', cap: 'pit deep (depth 1.0)', fix: 'aiming', pit: { depth: 1.0 }, env: { weather: 'storm', vol: 0.9 }, tilt: 0 },
+  { id: 'pit-shallow', cap: 'pit shallow (depth 0.15)', fix: 'aiming', pit: { depth: 0.15 }, env: { weather: 'calm', vol: 0.2 }, tilt: 0 },
+];
+const P2 = [
+  { id: 'flat', cap: 'terrain: flat', fix: 'aiming', terrain: flat, env: { session: 'london', weather: 'calm' }, tilt: 0 },
+  { id: 'hills', cap: 'terrain: big dwell hills', fix: 'aiming', terrain: hills, env: { session: 'london', weather: 'calm' }, tilt: 0 },
+  { id: 'decals', cap: 'chasms + scorch + weathered', fix: 'aiming', terrain: decals, env: { session: 'london', weather: 'calm' }, tilt: 0 },
+  { id: 'storm-day', cap: 'open_storm terrain, calm', fix: 'open_storm', env: { weather: 'calm', lightning: false }, tilt: 0 },
+  { id: 'pivL-p25', cap: '+25 pivot left', fix: 'aiming', terrain: hills, env: { session: 'london', weather: 'active' }, tilt: 25, rx: 0.02 },
+  { id: 'pivR-p25', cap: '+25 pivot right', fix: 'aiming', terrain: hills, env: { session: 'london', weather: 'active' }, tilt: 25, rx: 1.0 },
+  { id: 'pivL-m25', cap: '-25 pivot left', fix: 'aiming', terrain: hills, env: { session: 'newyork', weather: 'active' }, tilt: -25, rx: 0.02 },
+  { id: 'pivR-m25', cap: '-25 pivot right', fix: 'aiming', terrain: hills, env: { session: 'newyork', weather: 'active' }, tilt: -25, rx: 1.0 },
+  { id: 'mirror-tilt', cap: 'mirror + tilt 18', fix: 'open_short', tilt: 18 },
+  { id: 'pan', cap: 'camera pan + haggled fog', fix: 'open_haggle', pan: 0.18, fog: 1.42, tilt: 10 },
+  { id: 'buyer', cap: 'settled_buyer terrain', fix: 'settled_buyer', tilt: 12 },
+  { id: 'machete', cap: 'open_machete terrain', fix: 'open_machete', tilt: 6 },
+  { id: 'golden-mirror', cap: 'golden hour + mirror', fix: 'open_short', env: { session: 'newyork', day_frac: 0.84, weather: 'active', golden_hour: true }, tilt: -6 },
+  { id: 'night-storm', cap: 'night + storm', fix: 'open_storm', env: { night: true, session: 'dead', day_frac: 0.9, lightning: false }, tilt: -8 },
+  { id: 'dead-tilt', cap: 'dead weather + tilt 15', fix: 'open_wall', env: { session: 'asia', day_frac: 0.2, weather: 'dead', vol: 0.05 }, tilt: 15 },
+  { id: 'replay-wood-mirror', cap: 'replay + wooden + mirror', fix: 'open_short', env: { replay: true, wooden: true }, tilt: -5 },
+];
+const PAGES = [P0, P1, P2];
+const ALL = [...P0, ...P1, ...P2];
+
+// ------------------------------------------------------------------------------------------------ view (CONTRACT 8.1 layout)
+function makeView(w, h, side, tiltDeg, rx, pan = 0) {
+  const s = Math.min(w * 95 / 1600, h * 95 / 900), mirror = side < 0, lo = -0.42 + pan, span = 1.62;
+  const xToScreen = (xn) => { const u = (xn - lo) / span; return mirror ? w * (1 - u) : w * u; };
+  const groundY = h * 0.725, pivotX = xToScreen(rx);
+  return { xToScreen, groundY, tiltRad: tiltDeg * DEG, pivotX, w, h, s, mirror };
+}
+function cellSetup(c) {
+  const fixEnv = c.fix ? envOf(c.fix) : {};
+  const env = { ...fixEnv, ...(c.env || {}) };
+  const src = c.fix ? srcOf(c.fix) : null;
+  const side = src ? src.side : 1;
+  env.mirror = side < 0;
+  let terrain = c.terrain ? c.terrain(terrOf(c.fix) || flat()) : (terrOf(c.fix) || flat());
+  let pit = pitOf(c.fix); if (c.pit && pit) pit = { ...pit, ...c.pit };
+  const rx = c.rx != null ? c.rx : xOf(c.fix);
+  return { env, terrain, pit, side, rx, xe: xeOf(c.fix), world: makeWorld(), tilt: c.tilt || 0 };
+}
+function drawStandIns(ctx, world, view, terrain, setup, t) {
+  const s = view.s, f = view.mirror ? -1 : 1, gy = (xn) => world.groundYAt(view, terrain, xn);
+  if (ART && ART.drawBank) {
+    try { ART.drawBank(ctx, view.xToScreen(-0.22), gy(-0.22), s, { t, facing: f, shutters: 0, jammed: false, night: !!setup.env.night, wooden: !!setup.env.wooden, banker: { mood: 'smug' } }); } catch (e) { /* art.js in progress */ }
+  } else {
+    const x = view.xToScreen(-0.22), y = gy(-0.22);
+    ctx.fillStyle = '#3b3f47'; ctx.fillRect(x - 1.7 * s, y - 4.6 * s, 3.4 * s, 4.6 * s); ctx.strokeStyle = '#1a1410'; ctx.lineWidth = 2; ctx.strokeRect(x - 1.7 * s, y - 4.6 * s, 3.4 * s, 4.6 * s);
+  }
+  const rx = setup.rx, x = view.xToScreen(rx), y = gy(rx);
+  if (ART && ART.drawRunner) {
+    try { ART.drawRunner(ctx, x, y, s, { outfit: 'suit', pose: 'idle', lean: 0, facing: f, t, coin: { visible: true, glow: 0.6, tarnish: 0, half: false, spin: 0 }, hat: false, cane: false, alpha: 1, wooden: !!setup.env.wooden }); } catch (e) { /* */ }
+  } else {
+    ctx.fillStyle = '#7a6a55'; ctx.fillRect(x - 0.13 * s, y - 0.7 * s, 0.26 * s, 0.7 * s);
+    ctx.fillStyle = '#f1c27d'; ctx.beginPath(); ctx.arc(x, y - 0.85 * s, 0.15 * s, 0, Math.PI * 2); ctx.fill();
+  }
+  if (ART && ART.drawBuyer) {
+    try { ART.drawBuyer(ctx, view.xToScreen(1.07), gy(1.07), s, { mood: 'wait', champagne: 1, tag: '2.20¢', t, facing: -f }); } catch (e) { /* */ }
+  } else {
+    const bx = view.xToScreen(1.07), by = gy(1.07) - 2.6 * s;
+    ctx.fillStyle = '#1f9e6e'; ctx.beginPath(); ctx.ellipse(bx, by - 0.6 * s, 1.2 * s, 0.5 * s, 0, 0, Math.PI * 2); ctx.fill();
+  }
+  if (DOTS) {        // exactness check: the feet line at every tenth of the ladder
+    for (let i = -4; i <= 12; i++) {
+      const xn = i / 10, px = view.xToScreen(xn), py = gy(xn);
+      ctx.fillStyle = i === 0 || i === 10 ? '#3fe6ff' : '#e0303a'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(px, py, Math.max(1.6, s * 0.03), 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+  }
+}
+// the full background stack in the recommended order
+function renderStack(ctx, w, h, setup, c, t, dt) {
+  const { world, env, terrain, pit } = setup;
+  const view = makeView(w, h, setup.side, setup.tilt, setup.rx, c.pan || 0);
+  const camX = c.camX != null ? c.camX : (view.mirror ? -1 : 1) * (setup.rx * w * 0.35 + (c.pan || 0) * w);
+  env.tilt = setup.tilt / 25;
+  world.drawSky(ctx, w, h, env, t);
+  world.drawSkyline(ctx, w, h, camX, env, t);
+  world.drawSeasonBand(ctx, w, env, t);
+  world.drawTerrain(ctx, view, terrain, env, t);
+  if (pit) world.drawPit(ctx, view, pit, env, t);
+  if (CHARS) drawStandIns(ctx, world, view, terrain, setup, t);
+  world.drawFog(ctx, view, c.fog || 1.12, env, t);
+  world.drawWeather(ctx, w, h, env, dt, t);
+  world.drawGrade(ctx, w, h, env, t);
+  return view;
+}
+
+// ------------------------------------------------------------------------------------------------ modes
+const root = document.getElementById('root');
+window.GG_ERRORS = [];
+window.addEventListener('error', (e) => window.GG_ERRORS.push(String(e.message)));
+if (BENCH === 'slab') {
+  // the terrain cache rebuild on its own: what a preview tick costs (the ladder re-anchors with price, so h changes)
+  const c = ALL.find((q) => q.id === (Q.get('cell') || 'aiming')) || P0[5];
+  const W = 1600, H = 900, cv = document.createElement('canvas'); cv.width = W; cv.height = H; root.appendChild(cv);
+  const ctx = cv.getContext('2d'), setup = cellSetup(c), view = makeView(W, H, setup.side, 0, setup.rx), acc = {}, tot = [];
+  for (let i = 0; i < 40; i++) {
+    setup.terrain = JSON.parse(JSON.stringify(setup.terrain)); setup.terrain.h[i % 96] = Math.random() * 0.4;
+    setup.world.drawTerrain(ctx, view, setup.terrain, setup.env, T0 + i / 60);
+    const st = setup.world.stats();
+    if (i >= 5) { tot.push(st.lastSlabMs); for (const k in (st.parts || {})) acc[k] = (acc[k] || 0) + st.parts[k] / 35; }
+  }
+  tot.sort((a, b) => a - b);
+  for (const k in acc) acc[k] = +acc[k].toFixed(2);
+  // raster cost (flushed): terrain with and without a cache rebuild
+  const flushed = {};
+  for (const churn of [false, true]) {
+    const ts = [];
+    for (let i = 0; i < 24; i++) {
+      if (churn) { setup.terrain = JSON.parse(JSON.stringify(setup.terrain)); setup.terrain.h[(i * 7) % 96] = Math.random() * 0.4; }
+      const a = performance.now();
+      setup.world.drawTerrain(ctx, view, setup.terrain, setup.env, T0 + i / 60);
+      ctx.getImageData(0, 0, 1, 1);
+      if (i >= 4) ts.push(performance.now() - a);
+    }
+    flushed[churn ? 'rebuild' : 'cached'] = +(ts.reduce((x, y) => x + y, 0) / ts.length).toFixed(2);
+  }
+  window.GG_BENCH = { slab_record_avg: +(tot.reduce((a, b) => a + b, 0) / tot.length).toFixed(2), slab_record_p95: tot[Math.floor(tot.length * 0.95)], parts: acc, terrain_flushed_ms: flushed };
+} else if (BENCH) {
+  const id = Q.get('cell') || 'lightning';
+  const c = ALL.find((q) => q.id === id) || P1[6];
+  const W = 1600, H = 900, cv = document.createElement('canvas'); cv.width = W; cv.height = H; root.appendChild(cv);
+  const ctx = cv.getContext('2d');
+  const res = {};
+  for (const mode of ['steady', 'tilting', 'terrain-churn', 'flushed']) {
+    const setup = cellSetup(c);
+    const times = [];
+    let t = T0;
+    for (let i = 0, N = mode === "flushed" ? 80 : 240; i < N; i++) {
+      if (mode === 'tilting' || mode === 'flushed') setup.tilt = 20 * Math.sin(i * 0.05);
+      if (mode === 'terrain-churn' && i % 4 === 0) { setup.terrain = JSON.parse(JSON.stringify(setup.terrain)); setup.terrain.h[(i / 4) % 96 | 0] = Math.random() * 0.4; }
+      const t0 = performance.now();
+      renderStack(ctx, W, H, setup, c, t, 1 / 60);
+      if (mode === 'flushed') ctx.getImageData(0, 0, 1, 1);
+      const dtm = performance.now() - t0;
+      if (i >= 20) times.push(dtm);
+      t += 1 / 60;
+    }
+    times.sort((a, b) => a - b);
+    const avg = times.reduce((a, b) => a + b, 0) / times.length;
+    res[mode] = { avg: +avg.toFixed(2), p50: +times[times.length >> 1].toFixed(2), p95: +times[Math.floor(times.length * 0.95)].toFixed(2), max: +times[times.length - 1].toFixed(2) };
+  }
+  window.GG_BENCH = { cell: c.id, w: W, h: H, ...res };
+  const pre = document.createElement('div'); pre.id = 'bench'; pre.textContent = 'world.js full stack @1600x900, cell ' + c.id + ' (ms per frame)\n' + JSON.stringify(res, null, 1); document.body.appendChild(pre);
+} else if (VIEW) {
+  const c = ALL.find((q) => q.id === VIEW) || ALL[0];
+  const W = +(Q.get('w') || window.innerWidth || 1600), H = +(Q.get('h') || window.innerHeight || 900);
+  const cv = document.createElement('canvas'); cv.id = 'single'; cv.width = W; cv.height = H; root.appendChild(cv);
+  const hud = document.createElement('div'); hud.id = 'hud'; document.body.appendChild(hud);
+  const ctx = cv.getContext('2d'), setup = cellSetup(c);
+  window.GG_WORLD = setup.world; window.GG_SETUP = setup;
+  let t = T0, last = performance.now(), acc = 0, frames = 0, msSum = 0;
+  if (Q.get('tilt') != null) setup.tilt = +Q.get('tilt');
+  const WOBBLE = Q.get('wobble') === '1', baseTilt = setup.tilt;
+  const tick = () => {
+    const now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
+    t += ANIM ? dt : 0;
+    const a = performance.now();
+    if (WOBBLE) setup.tilt = baseTilt + 18 * Math.sin(t * 1.6);
+    renderStack(ctx, W, H, setup, c, t, ANIM ? dt : 0);
+    msSum += performance.now() - a; frames++; acc += dt;
+    if (acc > 0.5) { hud.textContent = `${c.id}  ${c.cap}\n${(frames / acc).toFixed(0)} fps · ${(msSum / frames).toFixed(1)} ms/frame`; acc = 0; frames = 0; msSum = 0; }
+    requestAnimationFrame(tick);
+  };
+  // pre-roll a second of simulated time so particles and caches settle before the screenshot
+  for (let i = 0; i < 40; i++) { if (WOBBLE) setup.tilt = baseTilt + 18 * Math.sin(t * 1.6); renderStack(ctx, W, H, setup, c, t, 1 / 40); t += 1 / 40; }
+  if (setup.env.lightning && setup.world.debugStrike) { setup.world.debugStrike(W, H); for (let i = 0; i < 2; i++) { renderStack(ctx, W, H, setup, c, t, 1 / 40); t += 1 / 40; } }
+  tick();
+} else {
+  const cells = PAGES[PAGE] || P0;
+  const grid = document.createElement('div'); grid.id = 'grid'; root.appendChild(grid);
+  const nav = document.createElement('div'); nav.id = 'nav'; nav.textContent = `page ${PAGE} / ${PAGES.length - 1}  (?page=N, ?view=ID, ?bench=1)`; document.body.appendChild(nav);
+  const items = cells.map((c) => {
+    const d = document.createElement('div'); d.className = 'cell';
+    const cv = document.createElement('canvas'); cv.width = 400; cv.height = 225; d.appendChild(cv);
+    const cap = document.createElement('div'); cap.className = 'cap'; cap.textContent = c.id + ' · ' + c.cap; d.appendChild(cap);
+    grid.appendChild(d);
+    return { c, ctx: cv.getContext('2d'), setup: cellSetup(c) };
+  });
+  let t = T0;
+  for (let i = 0; i < 30; i++) { for (const it of items) renderStack(it.ctx, 400, 225, it.setup, it.c, t, 1 / 30); t += 1 / 30; }
+  let last = performance.now();
+  const tick = () => {
+    const now = performance.now(), dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (ANIM) { t += dt; for (const it of items) renderStack(it.ctx, 400, 225, it.setup, it.c, t, dt); }
+    requestAnimationFrame(tick);
+  };
+  tick();
+}
+window.GG_READY = true;
+</script>
+</body>
+</html>

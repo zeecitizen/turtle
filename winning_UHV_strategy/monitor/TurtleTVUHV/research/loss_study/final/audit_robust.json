@@ -1,0 +1,6829 @@
+{
+ "results": {
+  "rule_rollover_ny": {
+   "status": "ACCEPTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 45,
+     "L": 8,
+     "W": 37,
+     "lift": 5.29
+    },
+    "test": {
+     "n": 57,
+     "L": 8,
+     "W": 49,
+     "lift": 10.04
+    },
+    "all": {
+     "n": 102,
+     "L": 16,
+     "W": 86,
+     "lift": 6.95
+    }
+   },
+   "task_bar": "True",
+   "variants": [
+    {
+     "params": "start=16:30, end=17:45",
+     "stats": {
+      "train": {
+       "n": 70,
+       "L": 10,
+       "W": 60,
+       "lift": 4.25
+      },
+      "test": {
+       "n": 86,
+       "L": 8,
+       "W": 78,
+       "lift": 6.65
+      },
+      "all": {
+       "n": 156,
+       "L": 18,
+       "W": 138,
+       "lift": 5.12
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "start=17:00, end=17:45",
+     "stats": {
+      "train": {
+       "n": 13,
+       "L": 2,
+       "W": 11,
+       "lift": 4.58
+      },
+      "test": {
+       "n": 12,
+       "L": 3,
+       "W": 9,
+       "lift": 17.88
+      },
+      "all": {
+       "n": 25,
+       "L": 5,
+       "W": 20,
+       "lift": 8.87
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "start=16:45, end=17:30",
+     "stats": {
+      "train": {
+       "n": 32,
+       "L": 6,
+       "W": 26,
+       "lift": 5.58
+      },
+      "test": {
+       "n": 45,
+       "L": 5,
+       "W": 40,
+       "lift": 7.95
+      },
+      "all": {
+       "n": 77,
+       "L": 11,
+       "W": 66,
+       "lift": 6.33
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "start=16:45, end=18:00",
+     "stats": {
+      "train": {
+       "n": 53,
+       "L": 8,
+       "W": 45,
+       "lift": 4.49
+      },
+      "test": {
+       "n": 71,
+       "L": 8,
+       "W": 63,
+       "lift": 8.06
+      },
+      "all": {
+       "n": 124,
+       "L": 16,
+       "W": 108,
+       "lift": 5.72
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [
+    {
+     "params": "start=16:30, end=17:30",
+     "status": "PASS",
+     "train_lift": 4.18,
+     "test_lift": 4.83,
+     "L": 13
+    },
+    {
+     "params": "start=16:30, end=17:45",
+     "status": "PASS",
+     "train_lift": 4.25,
+     "test_lift": 6.65,
+     "L": 18
+    },
+    {
+     "params": "start=16:30, end=18:00",
+     "status": "PASS",
+     "train_lift": 3.82,
+     "test_lift": 5.72,
+     "L": 18
+    },
+    {
+     "params": "start=16:45, end=17:30",
+     "status": "PASS",
+     "train_lift": 5.58,
+     "test_lift": 7.95,
+     "L": 11
+    },
+    {
+     "params": "start=16:45, end=17:45",
+     "status": "PASS",
+     "train_lift": 5.29,
+     "test_lift": 10.04,
+     "L": 16
+    },
+    {
+     "params": "start=16:45, end=18:00",
+     "status": "PASS",
+     "train_lift": 4.49,
+     "test_lift": 8.06,
+     "L": 16
+    },
+    {
+     "params": "start=17:00, end=17:30",
+     "status": "THIN",
+     "train_lift": null,
+     "test_lift": null,
+     "L": 0
+    },
+    {
+     "params": "start=17:00, end=17:45",
+     "status": "PASS",
+     "train_lift": 4.58,
+     "test_lift": 17.88,
+     "L": 5
+    },
+    {
+     "params": "start=17:00, end=18:00",
+     "status": "PASS",
+     "train_lift": 2.84,
+     "test_lift": 8.25,
+     "L": 5
+    }
+   ],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 13,
+     "L": 3,
+     "E": 0.53,
+     "base_pct": 4.04,
+     "oe": 5.71
+    },
+    {
+     "month": "2026-04",
+     "n": 15,
+     "L": 3,
+     "E": 0.59,
+     "base_pct": 3.9,
+     "oe": 5.12
+    },
+    {
+     "month": "2026-05",
+     "n": 6,
+     "L": 1,
+     "E": 0.24,
+     "base_pct": 4.06,
+     "oe": 4.1
+    },
+    {
+     "month": "2026-06",
+     "n": 11,
+     "L": 1,
+     "E": 0.19,
+     "base_pct": 1.77,
+     "oe": 5.13
+    },
+    {
+     "month": "2026-07",
+     "n": 10,
+     "L": 1,
+     "E": 0.16,
+     "base_pct": 1.58,
+     "oe": 6.32
+    },
+    {
+     "month": "2026-08",
+     "n": 12,
+     "L": 3,
+     "E": 0.15,
+     "base_pct": 1.27,
+     "oe": 19.64
+    },
+    {
+     "month": "2026-09",
+     "n": 15,
+     "L": 2,
+     "E": 0.15,
+     "base_pct": 0.97,
+     "oe": 13.73
+    },
+    {
+     "month": "2026-10",
+     "n": 20,
+     "L": 2,
+     "E": 0.33,
+     "base_pct": 1.66,
+     "oe": 6.01
+    }
+   ],
+   "oe_all": {
+    "O": 16,
+    "E": 2.34,
+    "oe": 6.84
+   },
+   "top2_months": [
+    "2026-08",
+    "2026-03"
+   ],
+   "oe_without_top2": {
+    "O": 10,
+    "E": 1.66,
+    "oe": 6.02
+   },
+   "worst_single_month_drop": [
+    "2026-08",
+    {
+     "O": 13,
+     "E": 2.19,
+     "oe": 5.95
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-08",
+     "2026-09"
+    ],
+    {
+     "O": 11,
+     "E": 2.04,
+     "oe": 5.39
+    }
+   ],
+   "months_with_loser": 8,
+   "losers_by_batch": {
+    "1": 1,
+    "2": 4,
+    "3": 1,
+    "4": 1,
+    "5": 1,
+    "6": 1,
+    "7": 5,
+    "8": 2
+   },
+   "top_batch": 7,
+   "top_batch_share": 0.312,
+   "oe_without_top_batch": {
+    "O": 11,
+    "E": 2.04,
+    "oe": 5.38
+   },
+   "distinct_days": 15,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 2,
+   "oe_without_busiest_day": {
+    "O": 14,
+    "E": 2.21,
+    "oe": 6.33
+   },
+   "binom_train": 0.00011459571746694027,
+   "binom_test": 1.3114428533355641e-06,
+   "stop_only": {
+    "L": 9,
+    "train_lift": 4.59,
+    "test_lift": 4.94,
+    "train_L": 6,
+    "test_L": 3
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 0,
+     "L": 0,
+     "W": 0,
+     "lift": null
+    },
+    "test": {
+     "n": 0,
+     "L": 0,
+     "W": 0,
+     "lift": null
+    },
+    "all": {
+     "n": 0,
+     "L": 0,
+     "W": 0,
+     "lift": null
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "True",
+    "ii": true,
+    "iii": true,
+    "iv": true
+   },
+   "survives": true,
+   "reasons": []
+  },
+  "rule_combined": {
+   "status": "COMBINED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 45,
+     "L": 8,
+     "W": 37,
+     "lift": 5.29
+    },
+    "test": {
+     "n": 57,
+     "L": 8,
+     "W": 49,
+     "lift": 10.04
+    },
+    "all": {
+     "n": 102,
+     "L": 16,
+     "W": 86,
+     "lift": 6.95
+    }
+   },
+   "task_bar": "True",
+   "variants": [
+    {
+     "params": "start=16:30, end=17:45",
+     "stats": {
+      "train": {
+       "n": 70,
+       "L": 10,
+       "W": 60,
+       "lift": 4.25
+      },
+      "test": {
+       "n": 86,
+       "L": 8,
+       "W": 78,
+       "lift": 6.65
+      },
+      "all": {
+       "n": 156,
+       "L": 18,
+       "W": 138,
+       "lift": 5.12
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "start=17:00, end=17:45",
+     "stats": {
+      "train": {
+       "n": 13,
+       "L": 2,
+       "W": 11,
+       "lift": 4.58
+      },
+      "test": {
+       "n": 12,
+       "L": 3,
+       "W": 9,
+       "lift": 17.88
+      },
+      "all": {
+       "n": 25,
+       "L": 5,
+       "W": 20,
+       "lift": 8.87
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "start=16:45, end=17:30",
+     "stats": {
+      "train": {
+       "n": 32,
+       "L": 6,
+       "W": 26,
+       "lift": 5.58
+      },
+      "test": {
+       "n": 45,
+       "L": 5,
+       "W": 40,
+       "lift": 7.95
+      },
+      "all": {
+       "n": 77,
+       "L": 11,
+       "W": 66,
+       "lift": 6.33
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "start=16:45, end=18:00",
+     "stats": {
+      "train": {
+       "n": 53,
+       "L": 8,
+       "W": 45,
+       "lift": 4.49
+      },
+      "test": {
+       "n": 71,
+       "L": 8,
+       "W": 63,
+       "lift": 8.06
+      },
+      "all": {
+       "n": 124,
+       "L": 16,
+       "W": 108,
+       "lift": 5.72
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [
+    {
+     "params": "start=16:30, end=17:30",
+     "status": "PASS",
+     "train_lift": 4.18,
+     "test_lift": 4.83,
+     "L": 13
+    },
+    {
+     "params": "start=16:30, end=17:45",
+     "status": "PASS",
+     "train_lift": 4.25,
+     "test_lift": 6.65,
+     "L": 18
+    },
+    {
+     "params": "start=16:30, end=18:00",
+     "status": "PASS",
+     "train_lift": 3.82,
+     "test_lift": 5.72,
+     "L": 18
+    },
+    {
+     "params": "start=16:45, end=17:30",
+     "status": "PASS",
+     "train_lift": 5.58,
+     "test_lift": 7.95,
+     "L": 11
+    },
+    {
+     "params": "start=16:45, end=17:45",
+     "status": "PASS",
+     "train_lift": 5.29,
+     "test_lift": 10.04,
+     "L": 16
+    },
+    {
+     "params": "start=16:45, end=18:00",
+     "status": "PASS",
+     "train_lift": 4.49,
+     "test_lift": 8.06,
+     "L": 16
+    },
+    {
+     "params": "start=17:00, end=17:30",
+     "status": "THIN",
+     "train_lift": null,
+     "test_lift": null,
+     "L": 0
+    },
+    {
+     "params": "start=17:00, end=17:45",
+     "status": "PASS",
+     "train_lift": 4.58,
+     "test_lift": 17.88,
+     "L": 5
+    },
+    {
+     "params": "start=17:00, end=18:00",
+     "status": "PASS",
+     "train_lift": 2.84,
+     "test_lift": 8.25,
+     "L": 5
+    }
+   ],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 13,
+     "L": 3,
+     "E": 0.53,
+     "base_pct": 4.04,
+     "oe": 5.71
+    },
+    {
+     "month": "2026-04",
+     "n": 15,
+     "L": 3,
+     "E": 0.59,
+     "base_pct": 3.9,
+     "oe": 5.12
+    },
+    {
+     "month": "2026-05",
+     "n": 6,
+     "L": 1,
+     "E": 0.24,
+     "base_pct": 4.06,
+     "oe": 4.1
+    },
+    {
+     "month": "2026-06",
+     "n": 11,
+     "L": 1,
+     "E": 0.19,
+     "base_pct": 1.77,
+     "oe": 5.13
+    },
+    {
+     "month": "2026-07",
+     "n": 10,
+     "L": 1,
+     "E": 0.16,
+     "base_pct": 1.58,
+     "oe": 6.32
+    },
+    {
+     "month": "2026-08",
+     "n": 12,
+     "L": 3,
+     "E": 0.15,
+     "base_pct": 1.27,
+     "oe": 19.64
+    },
+    {
+     "month": "2026-09",
+     "n": 15,
+     "L": 2,
+     "E": 0.15,
+     "base_pct": 0.97,
+     "oe": 13.73
+    },
+    {
+     "month": "2026-10",
+     "n": 20,
+     "L": 2,
+     "E": 0.33,
+     "base_pct": 1.66,
+     "oe": 6.01
+    }
+   ],
+   "oe_all": {
+    "O": 16,
+    "E": 2.34,
+    "oe": 6.84
+   },
+   "top2_months": [
+    "2026-08",
+    "2026-03"
+   ],
+   "oe_without_top2": {
+    "O": 10,
+    "E": 1.66,
+    "oe": 6.02
+   },
+   "worst_single_month_drop": [
+    "2026-08",
+    {
+     "O": 13,
+     "E": 2.19,
+     "oe": 5.95
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-08",
+     "2026-09"
+    ],
+    {
+     "O": 11,
+     "E": 2.04,
+     "oe": 5.39
+    }
+   ],
+   "months_with_loser": 8,
+   "losers_by_batch": {
+    "1": 1,
+    "2": 4,
+    "3": 1,
+    "4": 1,
+    "5": 1,
+    "6": 1,
+    "7": 5,
+    "8": 2
+   },
+   "top_batch": 7,
+   "top_batch_share": 0.312,
+   "oe_without_top_batch": {
+    "O": 11,
+    "E": 2.04,
+    "oe": 5.38
+   },
+   "distinct_days": 15,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 2,
+   "oe_without_busiest_day": {
+    "O": 14,
+    "E": 2.21,
+    "oe": 6.33
+   },
+   "binom_train": 0.00011459571746694027,
+   "binom_test": 1.3114428533355641e-06,
+   "stop_only": {
+    "L": 9,
+    "train_lift": 4.59,
+    "test_lift": 4.94,
+    "train_L": 6,
+    "test_L": 3
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 0,
+     "L": 0,
+     "W": 0,
+     "lift": null
+    },
+    "test": {
+     "n": 0,
+     "L": 0,
+     "W": 0,
+     "lift": null
+    },
+    "all": {
+     "n": 0,
+     "L": 0,
+     "W": 0,
+     "lift": null
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "True",
+    "ii": true,
+    "iii": true,
+    "iv": true
+   },
+   "survives": true,
+   "reasons": []
+  },
+  "rule_trigger_spread": {
+   "status": "CANDIDATE",
+   "kind": "extended-field",
+   "default": {
+    "train": {
+     "n": 42,
+     "L": 8,
+     "W": 34,
+     "lift": 5.67
+    },
+    "test": {
+     "n": 47,
+     "L": 8,
+     "W": 39,
+     "lift": 12.17
+    },
+    "all": {
+     "n": 89,
+     "L": 16,
+     "W": 73,
+     "lift": 7.97
+    }
+   },
+   "task_bar": "True",
+   "variants": [
+    {
+     "params": "q=0.75",
+     "stats": {
+      "train": {
+       "n": 79,
+       "L": 9,
+       "W": 70,
+       "lift": 3.39
+      },
+      "test": {
+       "n": 48,
+       "L": 8,
+       "W": 40,
+       "lift": 11.92
+      },
+      "all": {
+       "n": 127,
+       "L": 17,
+       "W": 110,
+       "lift": 5.93
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "q=1.25",
+     "stats": {
+      "train": {
+       "n": 34,
+       "L": 8,
+       "W": 26,
+       "lift": 7.01
+      },
+      "test": {
+       "n": 36,
+       "L": 5,
+       "W": 31,
+       "lift": 9.93
+      },
+      "all": {
+       "n": 70,
+       "L": 13,
+       "W": 57,
+       "lift": 8.23
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 12,
+     "L": 1,
+     "E": 0.49,
+     "base_pct": 4.04,
+     "oe": 2.06
+    },
+    {
+     "month": "2026-04",
+     "n": 13,
+     "L": 5,
+     "E": 0.51,
+     "base_pct": 3.9,
+     "oe": 9.86
+    },
+    {
+     "month": "2026-05",
+     "n": 6,
+     "L": 1,
+     "E": 0.24,
+     "base_pct": 4.06,
+     "oe": 4.1
+    },
+    {
+     "month": "2026-06",
+     "n": 11,
+     "L": 1,
+     "E": 0.19,
+     "base_pct": 1.77,
+     "oe": 5.13
+    },
+    {
+     "month": "2026-07",
+     "n": 12,
+     "L": 3,
+     "E": 0.19,
+     "base_pct": 1.58,
+     "oe": 15.79
+    },
+    {
+     "month": "2026-08",
+     "n": 9,
+     "L": 2,
+     "E": 0.11,
+     "base_pct": 1.27,
+     "oe": 17.45
+    },
+    {
+     "month": "2026-09",
+     "n": 11,
+     "L": 1,
+     "E": 0.11,
+     "base_pct": 0.97,
+     "oe": 9.36
+    },
+    {
+     "month": "2026-10",
+     "n": 15,
+     "L": 2,
+     "E": 0.25,
+     "base_pct": 1.66,
+     "oe": 8.02
+    }
+   ],
+   "oe_all": {
+    "O": 16,
+    "E": 2.09,
+    "oe": 7.65
+   },
+   "top2_months": [
+    "2026-04",
+    "2026-07"
+   ],
+   "oe_without_top2": {
+    "O": 8,
+    "E": 1.39,
+    "oe": 5.74
+   },
+   "worst_single_month_drop": [
+    "2026-07",
+    {
+     "O": 13,
+     "E": 1.9,
+     "oe": 6.84
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-04",
+     "2026-07"
+    ],
+    {
+     "O": 8,
+     "E": 1.39,
+     "oe": 5.74
+    }
+   ],
+   "months_with_loser": 8,
+   "losers_by_batch": {
+    "1": 0,
+    "2": 5,
+    "3": 1,
+    "4": 1,
+    "5": 0,
+    "6": 4,
+    "7": 3,
+    "8": 2
+   },
+   "top_batch": 2,
+   "top_batch_share": 0.312,
+   "oe_without_top_batch": {
+    "O": 11,
+    "E": 1.58,
+    "oe": 6.95
+   },
+   "distinct_days": 13,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 4,
+   "oe_without_busiest_day": {
+    "O": 12,
+    "E": 1.83,
+    "oe": 6.56
+   },
+   "binom_train": 6.862867896931447e-05,
+   "binom_test": 2.8256596373356917e-07,
+   "stop_only": {
+    "L": 9,
+    "train_lift": 4.22,
+    "test_lift": 7.96,
+    "train_L": 5,
+    "test_L": 4
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 26,
+     "L": 3,
+     "W": 23,
+     "lift": 3.44
+    },
+    "test": {
+     "n": 28,
+     "L": 2,
+     "W": 26,
+     "lift": 5.11
+    },
+    "all": {
+     "n": 54,
+     "L": 5,
+     "W": 49,
+     "lift": 4.11
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "True",
+    "ii": true,
+    "iii": true,
+    "iv": true
+   },
+   "survives": true,
+   "reasons": []
+  },
+  "rule_friday_close_ny": {
+   "status": "CANDIDATE",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 19,
+     "L": 6,
+     "W": 13,
+     "lift": 9.4
+    },
+    "test": {
+     "n": 38,
+     "L": 5,
+     "W": 33,
+     "lift": 9.41
+    },
+    "all": {
+     "n": 57,
+     "L": 11,
+     "W": 46,
+     "lift": 8.56
+    }
+   },
+   "task_bar": "True",
+   "variants": [
+    {
+     "params": "start=15:45",
+     "stats": {
+      "train": {
+       "n": 27,
+       "L": 8,
+       "W": 19,
+       "lift": 8.82
+      },
+      "test": {
+       "n": 44,
+       "L": 5,
+       "W": 39,
+       "lift": 8.13
+      },
+      "all": {
+       "n": 71,
+       "L": 13,
+       "W": 58,
+       "lift": 8.12
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "start=16:15",
+     "stats": {
+      "train": {
+       "n": 12,
+       "L": 6,
+       "W": 6,
+       "lift": 14.89
+      },
+      "test": {
+       "n": 31,
+       "L": 5,
+       "W": 26,
+       "lift": 11.53
+      },
+      "all": {
+       "n": 43,
+       "L": 11,
+       "W": 32,
+       "lift": 11.34
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 1,
+     "L": 1,
+     "E": 0.04,
+     "base_pct": 4.04,
+     "oe": 24.72
+    },
+    {
+     "month": "2026-04",
+     "n": 7,
+     "L": 5,
+     "E": 0.27,
+     "base_pct": 3.9,
+     "oe": 18.3
+    },
+    {
+     "month": "2026-05",
+     "n": 6,
+     "L": 0,
+     "E": 0.24,
+     "base_pct": 4.06,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-06",
+     "n": 5,
+     "L": 0,
+     "E": 0.09,
+     "base_pct": 1.77,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-07",
+     "n": 6,
+     "L": 0,
+     "E": 0.09,
+     "base_pct": 1.58,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-08",
+     "n": 8,
+     "L": 2,
+     "E": 0.1,
+     "base_pct": 1.27,
+     "oe": 19.64
+    },
+    {
+     "month": "2026-09",
+     "n": 5,
+     "L": 1,
+     "E": 0.05,
+     "base_pct": 0.97,
+     "oe": 20.6
+    },
+    {
+     "month": "2026-10",
+     "n": 19,
+     "L": 2,
+     "E": 0.32,
+     "base_pct": 1.66,
+     "oe": 6.33
+    }
+   ],
+   "oe_all": {
+    "O": 11,
+    "E": 1.21,
+    "oe": 9.11
+   },
+   "top2_months": [
+    "2026-04",
+    "2026-08"
+   ],
+   "oe_without_top2": {
+    "O": 4,
+    "E": 0.83,
+    "oe": 4.81
+   },
+   "worst_single_month_drop": [
+    "2026-04",
+    {
+     "O": 6,
+     "E": 0.93,
+     "oe": 6.42
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-04",
+     "2026-08"
+    ],
+    {
+     "O": 4,
+     "E": 0.83,
+     "oe": 4.81
+    }
+   ],
+   "months_with_loser": 5,
+   "losers_by_batch": {
+    "1": 1,
+    "2": 4,
+    "3": 1,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 3,
+    "8": 2
+   },
+   "top_batch": 2,
+   "top_batch_share": 0.364,
+   "oe_without_top_batch": {
+    "O": 7,
+    "E": 1.06,
+    "oe": 6.62
+   },
+   "distinct_days": 8,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 4,
+   "oe_without_busiest_day": {
+    "O": 7,
+    "E": 1.04,
+    "oe": 6.74
+   },
+   "binom_train": 2.6665135908846253e-05,
+   "binom_test": 0.00018263006865238172,
+   "stop_only": {
+    "L": 3,
+    "train_lift": 6.17,
+    "test_lift": 0.0,
+    "train_L": 3,
+    "test_L": 0
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 12,
+     "L": 3,
+     "W": 9,
+     "lift": 7.44
+    },
+    "test": {
+     "n": 23,
+     "L": 0,
+     "W": 23,
+     "lift": 0.0
+    },
+    "all": {
+     "n": 35,
+     "L": 3,
+     "W": 32,
+     "lift": 3.8
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "True",
+    "ii": true,
+    "iii": true,
+    "iv": true
+   },
+   "survives": true,
+   "reasons": []
+  },
+  "rule_empty_book": {
+   "status": "CANDIDATE",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 35,
+     "L": 6,
+     "W": 29,
+     "lift": 5.1
+    },
+    "test": {
+     "n": 71,
+     "L": 5,
+     "W": 66,
+     "lift": 5.04
+    },
+    "all": {
+     "n": 106,
+     "L": 11,
+     "W": 95,
+     "lift": 4.6
+    }
+   },
+   "task_bar": "True",
+   "variants": [
+    {
+     "params": "w=8, thr=20.0",
+     "stats": {
+      "train": {
+       "n": 38,
+       "L": 6,
+       "W": 32,
+       "lift": 4.7
+      },
+      "test": {
+       "n": 68,
+       "L": 5,
+       "W": 63,
+       "lift": 5.26
+      },
+      "all": {
+       "n": 106,
+       "L": 11,
+       "W": 95,
+       "lift": 4.6
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "w=12, thr=20.0",
+     "stats": {
+      "train": {
+       "n": 31,
+       "L": 6,
+       "W": 25,
+       "lift": 5.76
+      },
+      "test": {
+       "n": 66,
+       "L": 5,
+       "W": 61,
+       "lift": 5.42
+      },
+      "all": {
+       "n": 97,
+       "L": 11,
+       "W": 86,
+       "lift": 5.03
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "w=10, thr=15.0",
+     "stats": {
+      "train": {
+       "n": 26,
+       "L": 6,
+       "W": 20,
+       "lift": 6.87
+      },
+      "test": {
+       "n": 37,
+       "L": 4,
+       "W": 33,
+       "lift": 7.73
+      },
+      "all": {
+       "n": 63,
+       "L": 10,
+       "W": 53,
+       "lift": 7.04
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "w=10, thr=25.0",
+     "stats": {
+      "train": {
+       "n": 51,
+       "L": 6,
+       "W": 45,
+       "lift": 3.5
+      },
+      "test": {
+       "n": 100,
+       "L": 5,
+       "W": 95,
+       "lift": 3.58
+      },
+      "all": {
+       "n": 151,
+       "L": 11,
+       "W": 140,
+       "lift": 3.23
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [
+    {
+     "params": "w=8, thr=15.0",
+     "status": "PASS",
+     "train_lift": 6.62,
+     "test_lift": 5.8,
+     "L": 9
+    },
+    {
+     "params": "w=8, thr=20.0",
+     "status": "PASS",
+     "train_lift": 4.7,
+     "test_lift": 5.26,
+     "L": 11
+    },
+    {
+     "params": "w=8, thr=25.0",
+     "status": "PASS",
+     "train_lift": 3.19,
+     "test_lift": 3.47,
+     "L": 11
+    },
+    {
+     "params": "w=10, thr=15.0",
+     "status": "PASS",
+     "train_lift": 6.87,
+     "test_lift": 7.73,
+     "L": 10
+    },
+    {
+     "params": "w=10, thr=20.0",
+     "status": "PASS",
+     "train_lift": 5.1,
+     "test_lift": 5.04,
+     "L": 11
+    },
+    {
+     "params": "w=10, thr=25.0",
+     "status": "PASS",
+     "train_lift": 3.5,
+     "test_lift": 3.58,
+     "L": 11
+    },
+    {
+     "params": "w=12, thr=15.0",
+     "status": "PASS",
+     "train_lift": 7.77,
+     "test_lift": 7.34,
+     "L": 10
+    },
+    {
+     "params": "w=12, thr=20.0",
+     "status": "PASS",
+     "train_lift": 5.76,
+     "test_lift": 5.42,
+     "L": 11
+    },
+    {
+     "params": "w=12, thr=25.0",
+     "status": "PASS",
+     "train_lift": 3.31,
+     "test_lift": 3.51,
+     "L": 11
+    }
+   ],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 7,
+     "L": 1,
+     "E": 0.28,
+     "base_pct": 4.04,
+     "oe": 3.53
+    },
+    {
+     "month": "2026-04",
+     "n": 16,
+     "L": 4,
+     "E": 0.62,
+     "base_pct": 3.9,
+     "oe": 6.41
+    },
+    {
+     "month": "2026-05",
+     "n": 7,
+     "L": 1,
+     "E": 0.28,
+     "base_pct": 4.06,
+     "oe": 3.52
+    },
+    {
+     "month": "2026-06",
+     "n": 5,
+     "L": 0,
+     "E": 0.09,
+     "base_pct": 1.77,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-07",
+     "n": 14,
+     "L": 2,
+     "E": 0.22,
+     "base_pct": 1.58,
+     "oe": 9.03
+    },
+    {
+     "month": "2026-08",
+     "n": 14,
+     "L": 2,
+     "E": 0.18,
+     "base_pct": 1.27,
+     "oe": 11.22
+    },
+    {
+     "month": "2026-09",
+     "n": 26,
+     "L": 1,
+     "E": 0.25,
+     "base_pct": 0.97,
+     "oe": 3.96
+    },
+    {
+     "month": "2026-10",
+     "n": 17,
+     "L": 0,
+     "E": 0.28,
+     "base_pct": 1.66,
+     "oe": 0.0
+    }
+   ],
+   "oe_all": {
+    "O": 11,
+    "E": 2.22,
+    "oe": 4.97
+   },
+   "top2_months": [
+    "2026-04",
+    "2026-08"
+   ],
+   "oe_without_top2": {
+    "O": 5,
+    "E": 1.41,
+    "oe": 3.54
+   },
+   "worst_single_month_drop": [
+    "2026-04",
+    {
+     "O": 7,
+     "E": 1.59,
+     "oe": 4.4
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-04",
+     "2026-08"
+    ],
+    {
+     "O": 5,
+     "E": 1.41,
+     "oe": 3.54
+    }
+   ],
+   "months_with_loser": 6,
+   "losers_by_batch": {
+    "1": 0,
+    "2": 5,
+    "3": 0,
+    "4": 1,
+    "5": 0,
+    "6": 2,
+    "7": 3,
+    "8": 0
+   },
+   "top_batch": 2,
+   "top_batch_share": 0.455,
+   "oe_without_top_batch": {
+    "O": 6,
+    "E": 1.61,
+    "oe": 3.73
+   },
+   "distinct_days": 8,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 4,
+   "oe_without_busiest_day": {
+    "O": 7,
+    "E": 1.84,
+    "oe": 3.81
+   },
+   "binom_train": 0.0010060572973058634,
+   "binom_test": 0.0032397090628362977,
+   "stop_only": {
+    "L": 10,
+    "train_lift": 4.84,
+    "test_lift": 6.03,
+    "train_L": 5,
+    "test_L": 5
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 24,
+     "L": 2,
+     "W": 22,
+     "lift": 2.48
+    },
+    "test": {
+     "n": 56,
+     "L": 2,
+     "W": 54,
+     "lift": 2.55
+    },
+    "all": {
+     "n": 80,
+     "L": 4,
+     "W": 76,
+     "lift": 2.22
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "True",
+    "ii": true,
+    "iii": true,
+    "iv": true
+   },
+   "survives": true,
+   "reasons": []
+  },
+  "rule_friday_afternoon_ny": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 98,
+     "L": 14,
+     "W": 84,
+     "lift": 4.25
+    },
+    "test": {
+     "n": 148,
+     "L": 8,
+     "W": 140,
+     "lift": 3.87
+    },
+    "all": {
+     "n": 246,
+     "L": 22,
+     "W": 224,
+     "lift": 3.97
+    }
+   },
+   "task_bar": "True",
+   "variants": [
+    {
+     "params": "start=12:00",
+     "stats": {
+      "train": {
+       "n": 124,
+       "L": 15,
+       "W": 109,
+       "lift": 3.6
+      },
+      "test": {
+       "n": 197,
+       "L": 9,
+       "W": 188,
+       "lift": 3.27
+      },
+      "all": {
+       "n": 321,
+       "L": 24,
+       "W": 297,
+       "lift": 3.31
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "start=14:00",
+     "stats": {
+      "train": {
+       "n": 69,
+       "L": 11,
+       "W": 58,
+       "lift": 4.75
+      },
+      "test": {
+       "n": 113,
+       "L": 7,
+       "W": 106,
+       "lift": 4.43
+      },
+      "all": {
+       "n": 182,
+       "L": 18,
+       "W": 164,
+       "lift": 4.38
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 31,
+     "L": 3,
+     "E": 1.25,
+     "base_pct": 4.04,
+     "oe": 2.39
+    },
+    {
+     "month": "2026-04",
+     "n": 28,
+     "L": 7,
+     "E": 1.09,
+     "base_pct": 3.9,
+     "oe": 6.41
+    },
+    {
+     "month": "2026-05",
+     "n": 23,
+     "L": 3,
+     "E": 0.93,
+     "base_pct": 4.06,
+     "oe": 3.21
+    },
+    {
+     "month": "2026-06",
+     "n": 16,
+     "L": 1,
+     "E": 0.28,
+     "base_pct": 1.77,
+     "oe": 3.53
+    },
+    {
+     "month": "2026-07",
+     "n": 31,
+     "L": 2,
+     "E": 0.49,
+     "base_pct": 1.58,
+     "oe": 4.08
+    },
+    {
+     "month": "2026-08",
+     "n": 32,
+     "L": 2,
+     "E": 0.41,
+     "base_pct": 1.27,
+     "oe": 4.91
+    },
+    {
+     "month": "2026-09",
+     "n": 32,
+     "L": 2,
+     "E": 0.31,
+     "base_pct": 0.97,
+     "oe": 6.44
+    },
+    {
+     "month": "2026-10",
+     "n": 53,
+     "L": 2,
+     "E": 0.88,
+     "base_pct": 1.66,
+     "oe": 2.27
+    }
+   ],
+   "oe_all": {
+    "O": 22,
+    "E": 5.65,
+    "oe": 3.89
+   },
+   "top2_months": [
+    "2026-04",
+    "2026-05"
+   ],
+   "oe_without_top2": {
+    "O": 12,
+    "E": 3.63,
+    "oe": 3.31
+   },
+   "worst_single_month_drop": [
+    "2026-04",
+    {
+     "O": 15,
+     "E": 4.56,
+     "oe": 3.29
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-04",
+     "2026-09"
+    ],
+    {
+     "O": 13,
+     "E": 4.25,
+     "oe": 3.06
+    }
+   ],
+   "months_with_loser": 8,
+   "losers_by_batch": {
+    "1": 2,
+    "2": 5,
+    "3": 3,
+    "4": 2,
+    "5": 1,
+    "6": 3,
+    "7": 4,
+    "8": 2
+   },
+   "top_batch": 2,
+   "top_batch_share": 0.227,
+   "oe_without_top_batch": {
+    "O": 17,
+    "E": 4.93,
+    "oe": 3.45
+   },
+   "distinct_days": 18,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 4,
+   "oe_without_busiest_day": {
+    "O": 18,
+    "E": 5.33,
+    "oe": 3.37
+   },
+   "binom_train": 5.313052735795359e-06,
+   "binom_test": 0.001220345145216444,
+   "stop_only": {
+    "L": 5,
+    "train_lift": 1.5,
+    "test_lift": 0.61,
+    "train_L": 4,
+    "test_L": 1
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 91,
+     "L": 11,
+     "W": 80,
+     "lift": 3.6
+    },
+    "test": {
+     "n": 133,
+     "L": 3,
+     "W": 130,
+     "lift": 1.61
+    },
+    "all": {
+     "n": 224,
+     "L": 14,
+     "W": 210,
+     "lift": 2.77
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "True",
+    "ii": true,
+    "iii": true,
+    "iv": true
+   },
+   "survives": true,
+   "reasons": []
+  },
+  "rule_trigger_gap": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 36,
+     "L": 3,
+     "W": 33,
+     "lift": 2.48
+    },
+    "test": {
+     "n": 28,
+     "L": 2,
+     "W": 26,
+     "lift": 5.11
+    },
+    "all": {
+     "n": 64,
+     "L": 5,
+     "W": 59,
+     "lift": 3.46
+    }
+   },
+   "task_bar": "True",
+   "variants": [
+    {
+     "params": "q=0.45",
+     "stats": {
+      "train": {
+       "n": 66,
+       "L": 4,
+       "W": 62,
+       "lift": 1.8
+      },
+      "test": {
+       "n": 75,
+       "L": 2,
+       "W": 73,
+       "lift": 1.91
+      },
+      "all": {
+       "n": 141,
+       "L": 6,
+       "W": 135,
+       "lift": 1.89
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x1.8 where 5.5L were expected at the default rate",
+      "test x1.91 where 5.4L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "q=0.75",
+     "stats": {
+      "train": {
+       "n": 15,
+       "L": 2,
+       "W": 13,
+       "lift": 3.97
+      },
+      "test": {
+       "n": 16,
+       "L": 2,
+       "W": 14,
+       "lift": 8.94
+      },
+      "all": {
+       "n": 31,
+       "L": 4,
+       "W": 27,
+       "lift": 5.72
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [],
+   "collapse": [
+    "q=0.45"
+   ],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 11,
+     "L": 1,
+     "E": 0.44,
+     "base_pct": 4.04,
+     "oe": 2.25
+    },
+    {
+     "month": "2026-04",
+     "n": 11,
+     "L": 2,
+     "E": 0.43,
+     "base_pct": 3.9,
+     "oe": 4.66
+    },
+    {
+     "month": "2026-05",
+     "n": 7,
+     "L": 0,
+     "E": 0.28,
+     "base_pct": 4.06,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-06",
+     "n": 7,
+     "L": 0,
+     "E": 0.12,
+     "base_pct": 1.77,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-07",
+     "n": 9,
+     "L": 1,
+     "E": 0.14,
+     "base_pct": 1.58,
+     "oe": 7.02
+    },
+    {
+     "month": "2026-08",
+     "n": 5,
+     "L": 1,
+     "E": 0.06,
+     "base_pct": 1.27,
+     "oe": 15.71
+    },
+    {
+     "month": "2026-09",
+     "n": 3,
+     "L": 0,
+     "E": 0.03,
+     "base_pct": 0.97,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-10",
+     "n": 11,
+     "L": 0,
+     "E": 0.18,
+     "base_pct": 1.66,
+     "oe": 0.0
+    }
+   ],
+   "oe_all": {
+    "O": 5,
+    "E": 1.7,
+    "oe": 2.94
+   },
+   "top2_months": [
+    "2026-04",
+    "2026-08"
+   ],
+   "oe_without_top2": {
+    "O": 2,
+    "E": 1.21,
+    "oe": 1.66
+   },
+   "worst_single_month_drop": [
+    "2026-04",
+    {
+     "O": 3,
+     "E": 1.27,
+     "oe": 2.36
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-04",
+     "2026-08"
+    ],
+    {
+     "O": 2,
+     "E": 1.21,
+     "oe": 1.66
+    }
+   ],
+   "months_with_loser": 4,
+   "losers_by_batch": {
+    "1": 1,
+    "2": 2,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 1,
+    "7": 1,
+    "8": 0
+   },
+   "top_batch": 2,
+   "top_batch_share": 0.4,
+   "oe_without_top_batch": {
+    "O": 3,
+    "E": 1.29,
+    "oe": 2.33
+   },
+   "distinct_days": 4,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 2,
+   "oe_without_busiest_day": {
+    "O": 3,
+    "E": 1.55,
+    "oe": 1.93
+   },
+   "binom_train": 0.11946932418619095,
+   "binom_test": 0.05814459069747536,
+   "stop_only": {
+    "L": 4,
+    "train_lift": 1.88,
+    "test_lift": 6.12,
+    "train_L": 2,
+    "test_L": 2
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 32,
+     "L": 2,
+     "W": 30,
+     "lift": 1.86
+    },
+    "test": {
+     "n": 25,
+     "L": 0,
+     "W": 25,
+     "lift": 0.0
+    },
+    "all": {
+     "n": 57,
+     "L": 2,
+     "W": 55,
+     "lift": 1.56
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "True",
+    "ii": false,
+    "iii": false,
+    "iv": false
+   },
+   "survives": false,
+   "reasons": [
+    "(ii) collapses at q=0.45",
+    "(iii) top-2 months ['2026-04', '2026-08'] dropped -> x1.66 with 2L",
+    "(iv) top batch B2 40% (O/E without x2.33), busiest day 2026-04-03 (O/E without x1.93)"
+   ]
+  },
+  "rule_fill_slip": {
+   "status": "REJECTED",
+   "kind": "fill-time",
+   "default": {
+    "train": {
+     "n": 49,
+     "L": 7,
+     "W": 42,
+     "lift": 4.25
+    },
+    "test": {
+     "n": 30,
+     "L": 4,
+     "W": 26,
+     "lift": 9.54
+    },
+    "all": {
+     "n": 79,
+     "L": 11,
+     "W": 68,
+     "lift": 6.17
+    }
+   },
+   "task_bar": "True",
+   "variants": [
+    {
+     "params": "q=1.125",
+     "stats": {
+      "train": {
+       "n": 91,
+       "L": 9,
+       "W": 82,
+       "lift": 2.94
+      },
+      "test": {
+       "n": 42,
+       "L": 6,
+       "W": 36,
+       "lift": 10.22
+      },
+      "all": {
+       "n": 133,
+       "L": 15,
+       "W": 118,
+       "lift": 5.0
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "q=1.875",
+     "stats": {
+      "train": {
+       "n": 30,
+       "L": 6,
+       "W": 24,
+       "lift": 5.96
+      },
+      "test": {
+       "n": 22,
+       "L": 2,
+       "W": 20,
+       "lift": 6.5
+      },
+      "all": {
+       "n": 52,
+       "L": 8,
+       "W": 44,
+       "lift": 6.82
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 13,
+     "L": 2,
+     "E": 0.53,
+     "base_pct": 4.04,
+     "oe": 3.8
+    },
+    {
+     "month": "2026-04",
+     "n": 22,
+     "L": 3,
+     "E": 0.86,
+     "base_pct": 3.9,
+     "oe": 3.49
+    },
+    {
+     "month": "2026-05",
+     "n": 5,
+     "L": 2,
+     "E": 0.2,
+     "base_pct": 4.06,
+     "oe": 9.85
+    },
+    {
+     "month": "2026-06",
+     "n": 9,
+     "L": 0,
+     "E": 0.16,
+     "base_pct": 1.77,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-07",
+     "n": 4,
+     "L": 0,
+     "E": 0.06,
+     "base_pct": 1.58,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-08",
+     "n": 8,
+     "L": 1,
+     "E": 0.1,
+     "base_pct": 1.27,
+     "oe": 9.82
+    },
+    {
+     "month": "2026-09",
+     "n": 7,
+     "L": 2,
+     "E": 0.07,
+     "base_pct": 0.97,
+     "oe": 29.43
+    },
+    {
+     "month": "2026-10",
+     "n": 11,
+     "L": 1,
+     "E": 0.18,
+     "base_pct": 1.66,
+     "oe": 5.47
+    }
+   ],
+   "oe_all": {
+    "O": 11,
+    "E": 2.16,
+    "oe": 5.09
+   },
+   "top2_months": [
+    "2026-04",
+    "2026-09"
+   ],
+   "oe_without_top2": {
+    "O": 6,
+    "E": 1.24,
+    "oe": 4.85
+   },
+   "worst_single_month_drop": [
+    "2026-09",
+    {
+     "O": 9,
+     "E": 2.09,
+     "oe": 4.3
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-05",
+     "2026-09"
+    ],
+    {
+     "O": 7,
+     "E": 1.89,
+     "oe": 3.7
+    }
+   ],
+   "months_with_loser": 6,
+   "losers_by_batch": {
+    "1": 2,
+    "2": 2,
+    "3": 1,
+    "4": 1,
+    "5": 1,
+    "6": 0,
+    "7": 3,
+    "8": 1
+   },
+   "top_batch": 7,
+   "top_batch_share": 0.273,
+   "oe_without_top_batch": {
+    "O": 8,
+    "E": 1.99,
+    "oe": 4.01
+   },
+   "distinct_days": 10,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 2,
+   "oe_without_busiest_day": {
+    "O": 9,
+    "E": 1.94,
+    "oe": 4.65
+   },
+   "binom_train": 0.0011985416224529054,
+   "binom_test": 0.0007833312727380888,
+   "stop_only": {
+    "L": 7,
+    "train_lift": 3.5,
+    "test_lift": 6.12,
+    "train_L": 5,
+    "test_L": 2
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 39,
+     "L": 3,
+     "W": 36,
+     "lift": 2.29
+    },
+    "test": {
+     "n": 22,
+     "L": 1,
+     "W": 21,
+     "lift": 3.25
+    },
+    "all": {
+     "n": 61,
+     "L": 4,
+     "W": 57,
+     "lift": 2.91
+    }
+   },
+   "checks": {
+    "pre_entry": false,
+    "i": "True",
+    "ii": true,
+    "iii": true,
+    "iv": true
+   },
+   "survives": false,
+   "reasons": [
+    "(0) reads t['fill'] - not a pre-entry skip"
+   ]
+  },
+  "rule_buy_fill_spread": {
+   "status": "REJECTED",
+   "kind": "fill-time",
+   "default": {
+    "train": {
+     "n": 28,
+     "L": 5,
+     "W": 23,
+     "lift": 5.32
+    },
+    "test": {
+     "n": 15,
+     "L": 2,
+     "W": 13,
+     "lift": 9.54
+    },
+    "all": {
+     "n": 43,
+     "L": 7,
+     "W": 36,
+     "lift": 7.22
+    }
+   },
+   "task_bar": "True",
+   "variants": [
+    {
+     "params": "q=1.125",
+     "stats": {
+      "train": {
+       "n": 47,
+       "L": 6,
+       "W": 41,
+       "lift": 3.8
+      },
+      "test": {
+       "n": 22,
+       "L": 5,
+       "W": 17,
+       "lift": 16.25
+      },
+      "all": {
+       "n": 69,
+       "L": 11,
+       "W": 58,
+       "lift": 7.07
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    },
+    {
+     "params": "q=1.875",
+     "stats": {
+      "train": {
+       "n": 22,
+       "L": 5,
+       "W": 17,
+       "lift": 6.77
+      },
+      "test": {
+       "n": 13,
+       "L": 2,
+       "W": 11,
+       "lift": 11.0
+      },
+      "all": {
+       "n": 35,
+       "L": 7,
+       "W": 28,
+       "lift": 8.87
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 6,
+     "L": 1,
+     "E": 0.24,
+     "base_pct": 4.04,
+     "oe": 4.12
+    },
+    {
+     "month": "2026-04",
+     "n": 13,
+     "L": 2,
+     "E": 0.51,
+     "base_pct": 3.9,
+     "oe": 3.94
+    },
+    {
+     "month": "2026-05",
+     "n": 2,
+     "L": 2,
+     "E": 0.08,
+     "base_pct": 4.06,
+     "oe": 24.63
+    },
+    {
+     "month": "2026-06",
+     "n": 7,
+     "L": 0,
+     "E": 0.12,
+     "base_pct": 1.77,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-07",
+     "n": 3,
+     "L": 0,
+     "E": 0.05,
+     "base_pct": 1.58,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-08",
+     "n": 3,
+     "L": 0,
+     "E": 0.04,
+     "base_pct": 1.27,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-09",
+     "n": 4,
+     "L": 2,
+     "E": 0.04,
+     "base_pct": 0.97,
+     "oe": 51.5
+    },
+    {
+     "month": "2026-10",
+     "n": 5,
+     "L": 0,
+     "E": 0.08,
+     "base_pct": 1.66,
+     "oe": 0.0
+    }
+   ],
+   "oe_all": {
+    "O": 7,
+    "E": 1.16,
+    "oe": 6.02
+   },
+   "top2_months": [
+    "2026-09",
+    "2026-05"
+   ],
+   "oe_without_top2": {
+    "O": 3,
+    "E": 1.04,
+    "oe": 2.88
+   },
+   "worst_single_month_drop": [
+    "2026-09",
+    {
+     "O": 5,
+     "E": 1.12,
+     "oe": 4.45
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-05",
+     "2026-09"
+    ],
+    {
+     "O": 3,
+     "E": 1.04,
+     "oe": 2.88
+    }
+   ],
+   "months_with_loser": 4,
+   "losers_by_batch": {
+    "1": 1,
+    "2": 1,
+    "3": 1,
+    "4": 1,
+    "5": 1,
+    "6": 0,
+    "7": 2,
+    "8": 0
+   },
+   "top_batch": 7,
+   "top_batch_share": 0.286,
+   "oe_without_top_batch": {
+    "O": 5,
+    "E": 1.09,
+    "oe": 4.6
+   },
+   "distinct_days": 7,
+   "busiest_day": "2026-09-14",
+   "busiest_day_L": 1,
+   "oe_without_busiest_day": {
+    "O": 6,
+    "E": 1.15,
+    "oe": 5.21
+   },
+   "binom_train": 0.002199137214788126,
+   "binom_test": 0.018191808309452228,
+   "stop_only": {
+    "L": 5,
+    "train_lift": 3.8,
+    "test_lift": 11.42,
+    "train_L": 3,
+    "test_L": 2
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 19,
+     "L": 2,
+     "W": 17,
+     "lift": 3.13
+    },
+    "test": {
+     "n": 9,
+     "L": 1,
+     "W": 8,
+     "lift": 7.95
+    },
+    "all": {
+     "n": 28,
+     "L": 3,
+     "W": 25,
+     "lift": 4.75
+    }
+   },
+   "checks": {
+    "pre_entry": false,
+    "i": "True",
+    "ii": true,
+    "iii": false,
+    "iv": true
+   },
+   "survives": false,
+   "reasons": [
+    "(0) reads t['fill'] - not a pre-entry skip",
+    "(iii) top-2 months ['2026-09', '2026-05'] dropped -> x2.88 with 3L"
+   ]
+  },
+  "rule_big_figure_ahead": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 47,
+     "L": 4,
+     "W": 43,
+     "lift": 2.53
+    },
+    "test": {
+     "n": 43,
+     "L": 3,
+     "W": 40,
+     "lift": 4.99
+    },
+    "all": {
+     "n": 90,
+     "L": 7,
+     "W": 83,
+     "lift": 3.45
+    }
+   },
+   "task_bar": "True",
+   "variants": [
+    {
+     "params": "dmax=0.75",
+     "stats": {
+      "train": {
+       "n": 32,
+       "L": 2,
+       "W": 30,
+       "lift": 1.86
+      },
+      "test": {
+       "n": 28,
+       "L": 2,
+       "W": 26,
+       "lift": 5.11
+      },
+      "all": {
+       "n": 60,
+       "L": 4,
+       "W": 56,
+       "lift": 2.96
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x1.86 where 2.7L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "dmax=1.25",
+     "stats": {
+      "train": {
+       "n": 58,
+       "L": 4,
+       "W": 54,
+       "lift": 2.05
+      },
+      "test": {
+       "n": 52,
+       "L": 3,
+       "W": 49,
+       "lift": 4.13
+      },
+      "all": {
+       "n": 110,
+       "L": 7,
+       "W": 103,
+       "lift": 2.82
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [],
+   "collapse": [
+    "dmax=0.75"
+   ],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 5,
+     "L": 0,
+     "E": 0.2,
+     "base_pct": 4.04,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-04",
+     "n": 14,
+     "L": 1,
+     "E": 0.55,
+     "base_pct": 3.9,
+     "oe": 1.83
+    },
+    {
+     "month": "2026-05",
+     "n": 10,
+     "L": 2,
+     "E": 0.41,
+     "base_pct": 4.06,
+     "oe": 4.93
+    },
+    {
+     "month": "2026-06",
+     "n": 18,
+     "L": 1,
+     "E": 0.32,
+     "base_pct": 1.77,
+     "oe": 3.14
+    },
+    {
+     "month": "2026-07",
+     "n": 12,
+     "L": 0,
+     "E": 0.19,
+     "base_pct": 1.58,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-08",
+     "n": 3,
+     "L": 0,
+     "E": 0.04,
+     "base_pct": 1.27,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-09",
+     "n": 14,
+     "L": 1,
+     "E": 0.14,
+     "base_pct": 0.97,
+     "oe": 7.36
+    },
+    {
+     "month": "2026-10",
+     "n": 14,
+     "L": 2,
+     "E": 0.23,
+     "base_pct": 1.66,
+     "oe": 8.59
+    }
+   ],
+   "oe_all": {
+    "O": 7,
+    "E": 2.07,
+    "oe": 3.38
+   },
+   "top2_months": [
+    "2026-10",
+    "2026-05"
+   ],
+   "oe_without_top2": {
+    "O": 3,
+    "E": 1.43,
+    "oe": 2.1
+   },
+   "worst_single_month_drop": [
+    "2026-10",
+    {
+     "O": 5,
+     "E": 1.84,
+     "oe": 2.72
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-05",
+     "2026-10"
+    ],
+    {
+     "O": 3,
+     "E": 1.43,
+     "oe": 2.1
+    }
+   ],
+   "months_with_loser": 5,
+   "losers_by_batch": {
+    "1": 0,
+    "2": 0,
+    "3": 1,
+    "4": 2,
+    "5": 1,
+    "6": 0,
+    "7": 1,
+    "8": 2
+   },
+   "top_batch": 8,
+   "top_batch_share": 0.286,
+   "oe_without_top_batch": {
+    "O": 5,
+    "E": 1.84,
+    "oe": 2.72
+   },
+   "distinct_days": 7,
+   "busiest_day": "2026-10-26",
+   "busiest_day_L": 1,
+   "oe_without_busiest_day": {
+    "O": 6,
+    "E": 2.04,
+    "oe": 2.94
+   },
+   "binom_train": 0.07255801479698022,
+   "binom_test": 0.022263792752492954,
+   "stop_only": {
+    "L": 5,
+    "train_lift": 2.8,
+    "test_lift": 2.09,
+    "train_L": 4,
+    "test_L": 1
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 46,
+     "L": 3,
+     "W": 43,
+     "lift": 1.94
+    },
+    "test": {
+     "n": 42,
+     "L": 2,
+     "W": 40,
+     "lift": 3.41
+    },
+    "all": {
+     "n": 88,
+     "L": 5,
+     "W": 83,
+     "lift": 2.52
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "True",
+    "ii": false,
+    "iii": false,
+    "iv": true
+   },
+   "survives": false,
+   "reasons": [
+    "(ii) collapses at dmax=0.75",
+    "(iii) top-2 months ['2026-10', '2026-05'] dropped -> x2.1 with 3L"
+   ]
+  },
+  "rule_camel_old": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 19,
+     "L": 4,
+     "W": 15,
+     "lift": 6.27
+    },
+    "test": {
+     "n": 15,
+     "L": 1,
+     "W": 14,
+     "lift": 4.77
+    },
+    "all": {
+     "n": 34,
+     "L": 5,
+     "W": 29,
+     "lift": 6.52
+    }
+   },
+   "task_bar": false,
+   "variants": [
+    {
+     "params": "n=6",
+     "stats": {
+      "train": {
+       "n": 77,
+       "L": 5,
+       "W": 72,
+       "lift": 1.93
+      },
+      "test": {
+       "n": 68,
+       "L": 1,
+       "W": 67,
+       "lift": 1.05
+      },
+      "all": {
+       "n": 145,
+       "L": 6,
+       "W": 139,
+       "lift": 1.83
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x1.93 where 16.2L were expected at the default rate",
+      "test x1.05 where 4.5L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "n=10",
+     "stats": {
+      "train": {
+       "n": 6,
+       "L": 0,
+       "W": 6,
+       "lift": 0.0
+      },
+      "test": {
+       "n": 2,
+       "L": 0,
+       "W": 2,
+       "lift": 0.0
+      },
+      "all": {
+       "n": 8,
+       "L": 0,
+       "W": 8,
+       "lift": 0.0
+      }
+     },
+     "status": "THIN",
+     "why": [
+      "train x0.0 on 6 trades (1.3L expected at the default rate)",
+      "test x0.0 on 2 trades (0.1L expected at the default rate)"
+     ],
+     "exceptions": 0
+    }
+   ],
+   "grid": [],
+   "collapse": [
+    "n=6"
+   ],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 6,
+     "L": 3,
+     "E": 0.24,
+     "base_pct": 4.04,
+     "oe": 12.36
+    },
+    {
+     "month": "2026-04",
+     "n": 3,
+     "L": 1,
+     "E": 0.12,
+     "base_pct": 3.9,
+     "oe": 8.54
+    },
+    {
+     "month": "2026-05",
+     "n": 5,
+     "L": 0,
+     "E": 0.2,
+     "base_pct": 4.06,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-06",
+     "n": 5,
+     "L": 0,
+     "E": 0.09,
+     "base_pct": 1.77,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-07",
+     "n": 6,
+     "L": 0,
+     "E": 0.09,
+     "base_pct": 1.58,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-08",
+     "n": 2,
+     "L": 0,
+     "E": 0.03,
+     "base_pct": 1.27,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-09",
+     "n": 2,
+     "L": 1,
+     "E": 0.02,
+     "base_pct": 0.97,
+     "oe": 51.5
+    },
+    {
+     "month": "2026-10",
+     "n": 5,
+     "L": 0,
+     "E": 0.08,
+     "base_pct": 1.66,
+     "oe": 0.0
+    }
+   ],
+   "oe_all": {
+    "O": 5,
+    "E": 0.87,
+    "oe": 5.72
+   },
+   "top2_months": [
+    "2026-03",
+    "2026-09"
+   ],
+   "oe_without_top2": {
+    "O": 1,
+    "E": 0.61,
+    "oe": 1.63
+   },
+   "worst_single_month_drop": [
+    "2026-03",
+    {
+     "O": 2,
+     "E": 0.63,
+     "oe": 3.17
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-03",
+     "2026-09"
+    ],
+    {
+     "O": 1,
+     "E": 0.61,
+     "oe": 1.63
+    }
+   ],
+   "months_with_loser": 3,
+   "losers_by_batch": {
+    "1": 1,
+    "2": 3,
+    "3": 0,
+    "4": 0,
+    "5": 0,
+    "6": 0,
+    "7": 1,
+    "8": 0
+   },
+   "top_batch": 2,
+   "top_batch_share": 0.6,
+   "oe_without_top_batch": {
+    "O": 2,
+    "E": 0.79,
+    "oe": 2.55
+   },
+   "distinct_days": 5,
+   "busiest_day": "2026-09-23",
+   "busiest_day_L": 1,
+   "oe_without_busiest_day": {
+    "O": 4,
+    "E": 0.86,
+    "oe": 4.63
+   },
+   "binom_train": 0.0032880886455009797,
+   "binom_test": 0.19040528960383743,
+   "stop_only": {
+    "L": 5,
+    "train_lift": 6.93,
+    "test_lift": 5.71,
+    "train_L": 4,
+    "test_L": 1
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 18,
+     "L": 3,
+     "W": 15,
+     "lift": 4.96
+    },
+    "test": {
+     "n": 15,
+     "L": 1,
+     "W": 14,
+     "lift": 4.77
+    },
+    "all": {
+     "n": 33,
+     "L": 4,
+     "W": 29,
+     "lift": 5.37
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": false,
+    "ii": false,
+    "iii": false,
+    "iv": false
+   },
+   "survives": false,
+   "reasons": [
+    "(i) default fails the task bar",
+    "(ii) collapses at n=6",
+    "(iii) top-2 months ['2026-03', '2026-09'] dropped -> x1.63 with 1L",
+    "(iv) top batch B2 60% (O/E without x2.55), busiest day 2026-09-23 (O/E without x4.63)"
+   ]
+  },
+  "rule_loud_breakout": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 83,
+     "L": 5,
+     "W": 78,
+     "lift": 1.79
+    },
+    "test": {
+     "n": 105,
+     "L": 3,
+     "W": 102,
+     "lift": 2.04
+    },
+    "all": {
+     "n": 188,
+     "L": 8,
+     "W": 180,
+     "lift": 1.89
+    }
+   },
+   "task_bar": "False",
+   "variants": [
+    {
+     "params": "r=0.875",
+     "stats": {
+      "train": {
+       "n": 102,
+       "L": 5,
+       "W": 97,
+       "lift": 1.46
+      },
+      "test": {
+       "n": 139,
+       "L": 3,
+       "W": 136,
+       "lift": 1.54
+      },
+      "all": {
+       "n": 241,
+       "L": 8,
+       "W": 233,
+       "lift": 1.47
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x1.46 where 6.1L were expected at the default rate",
+      "test x1.54 where 4.0L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "r=0.925",
+     "stats": {
+      "train": {
+       "n": 51,
+       "L": 5,
+       "W": 46,
+       "lift": 2.92
+      },
+      "test": {
+       "n": 68,
+       "L": 2,
+       "W": 66,
+       "lift": 2.1
+      },
+      "all": {
+       "n": 119,
+       "L": 7,
+       "W": 112,
+       "lift": 2.61
+      }
+     },
+     "status": "PASS",
+     "why": [],
+     "exceptions": 0
+    }
+   ],
+   "grid": [],
+   "collapse": [
+    "r=0.875"
+   ],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 19,
+     "L": 2,
+     "E": 0.77,
+     "base_pct": 4.04,
+     "oe": 2.6
+    },
+    {
+     "month": "2026-04",
+     "n": 25,
+     "L": 1,
+     "E": 0.98,
+     "base_pct": 3.9,
+     "oe": 1.03
+    },
+    {
+     "month": "2026-05",
+     "n": 18,
+     "L": 2,
+     "E": 0.73,
+     "base_pct": 4.06,
+     "oe": 2.74
+    },
+    {
+     "month": "2026-06",
+     "n": 21,
+     "L": 0,
+     "E": 0.37,
+     "base_pct": 1.77,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-07",
+     "n": 28,
+     "L": 0,
+     "E": 0.44,
+     "base_pct": 1.58,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-08",
+     "n": 23,
+     "L": 1,
+     "E": 0.29,
+     "base_pct": 1.27,
+     "oe": 3.42
+    },
+    {
+     "month": "2026-09",
+     "n": 30,
+     "L": 0,
+     "E": 0.29,
+     "base_pct": 0.97,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-10",
+     "n": 24,
+     "L": 2,
+     "E": 0.4,
+     "base_pct": 1.66,
+     "oe": 5.01
+    }
+   ],
+   "oe_all": {
+    "O": 8,
+    "E": 4.27,
+    "oe": 1.87
+   },
+   "top2_months": [
+    "2026-10",
+    "2026-05"
+   ],
+   "oe_without_top2": {
+    "O": 4,
+    "E": 3.14,
+    "oe": 1.27
+   },
+   "worst_single_month_drop": [
+    "2026-10",
+    {
+     "O": 6,
+     "E": 3.87,
+     "oe": 1.55
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-05",
+     "2026-10"
+    ],
+    {
+     "O": 4,
+     "E": 3.14,
+     "oe": 1.27
+    }
+   ],
+   "months_with_loser": 5,
+   "losers_by_batch": {
+    "1": 1,
+    "2": 1,
+    "3": 0,
+    "4": 2,
+    "5": 1,
+    "6": 0,
+    "7": 1,
+    "8": 2
+   },
+   "top_batch": 8,
+   "top_batch_share": 0.25,
+   "oe_without_top_batch": {
+    "O": 6,
+    "E": 3.87,
+    "oe": 1.55
+   },
+   "distinct_days": 8,
+   "busiest_day": "2026-08-14",
+   "busiest_day_L": 1,
+   "oe_without_busiest_day": {
+    "O": 7,
+    "E": 4.24,
+    "oe": 1.65
+   },
+   "binom_train": 0.1471214340026914,
+   "binom_test": 0.18227316352420317,
+   "stop_only": {
+    "L": 7,
+    "train_lift": 1.98,
+    "test_lift": 1.65,
+    "train_L": 5,
+    "test_L": 2
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 82,
+     "L": 4,
+     "W": 78,
+     "lift": 1.45
+    },
+    "test": {
+     "n": 103,
+     "L": 3,
+     "W": 100,
+     "lift": 2.08
+    },
+    "all": {
+     "n": 185,
+     "L": 7,
+     "W": 178,
+     "lift": 1.68
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "False",
+    "ii": false,
+    "iii": false,
+    "iv": false
+   },
+   "survives": false,
+   "reasons": [
+    "(i) default fails the task bar",
+    "(ii) collapses at r=0.875",
+    "(iii) top-2 months ['2026-10', '2026-05'] dropped -> x1.27 with 4L",
+    "(iv) top batch B8 25% (O/E without x1.55), busiest day 2026-08-14 (O/E without x1.65)"
+   ]
+  },
+  "rule_holiday": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 153,
+     "L": 9,
+     "W": 144,
+     "lift": 1.75
+    },
+    "test": {
+     "n": 158,
+     "L": 3,
+     "W": 155,
+     "lift": 1.36
+    },
+    "all": {
+     "n": 311,
+     "L": 12,
+     "W": 299,
+     "lift": 1.71
+    }
+   },
+   "task_bar": "False",
+   "variants": [],
+   "grid": [],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 0,
+     "L": 0,
+     "E": 0.0,
+     "base_pct": 4.04,
+     "oe": null
+    },
+    {
+     "month": "2026-04",
+     "n": 55,
+     "L": 6,
+     "E": 2.15,
+     "base_pct": 3.9,
+     "oe": 2.8
+    },
+    {
+     "month": "2026-05",
+     "n": 98,
+     "L": 3,
+     "E": 3.98,
+     "base_pct": 4.06,
+     "oe": 0.75
+    },
+    {
+     "month": "2026-06",
+     "n": 0,
+     "L": 0,
+     "E": 0.0,
+     "base_pct": 1.77,
+     "oe": null
+    },
+    {
+     "month": "2026-07",
+     "n": 32,
+     "L": 2,
+     "E": 0.51,
+     "base_pct": 1.58,
+     "oe": 3.95
+    },
+    {
+     "month": "2026-08",
+     "n": 45,
+     "L": 1,
+     "E": 0.57,
+     "base_pct": 1.27,
+     "oe": 1.75
+    },
+    {
+     "month": "2026-09",
+     "n": 81,
+     "L": 0,
+     "E": 0.79,
+     "base_pct": 0.97,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-10",
+     "n": 0,
+     "L": 0,
+     "E": 0.0,
+     "base_pct": 1.66,
+     "oe": null
+    }
+   ],
+   "oe_all": {
+    "O": 12,
+    "E": 7.99,
+    "oe": 1.5
+   },
+   "top2_months": [
+    "2026-04",
+    "2026-07"
+   ],
+   "oe_without_top2": {
+    "O": 4,
+    "E": 5.34,
+    "oe": 0.75
+   },
+   "worst_single_month_drop": [
+    "2026-04",
+    {
+     "O": 6,
+     "E": 5.84,
+     "oe": 1.03
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-04",
+     "2026-07"
+    ],
+    {
+     "O": 4,
+     "E": 5.34,
+     "oe": 0.75
+    }
+   ],
+   "months_with_loser": 4,
+   "losers_by_batch": {
+    "1": 0,
+    "2": 6,
+    "3": 0,
+    "4": 3,
+    "5": 0,
+    "6": 2,
+    "7": 1,
+    "8": 0
+   },
+   "top_batch": 2,
+   "top_batch_share": 0.5,
+   "oe_without_top_batch": {
+    "O": 6,
+    "E": 5.84,
+    "oe": 1.03
+   },
+   "distinct_days": 6,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 4,
+   "oe_without_busiest_day": {
+    "O": 8,
+    "E": 6.97,
+    "oe": 1.15
+   },
+   "binom_train": 0.07403800537288673,
+   "binom_test": 0.3801643521955359,
+   "stop_only": {
+    "L": 10,
+    "train_lift": 1.73,
+    "test_lift": 1.09,
+    "train_L": 8,
+    "test_L": 2
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 151,
+     "L": 7,
+     "W": 144,
+     "lift": 1.38
+    },
+    "test": {
+     "n": 157,
+     "L": 3,
+     "W": 154,
+     "lift": 1.37
+    },
+    "all": {
+     "n": 308,
+     "L": 10,
+     "W": 298,
+     "lift": 1.44
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "False",
+    "ii": "n/a",
+    "iii": false,
+    "iv": false
+   },
+   "survives": false,
+   "reasons": [
+    "(i) default fails the task bar",
+    "(iii) top-2 months ['2026-04', '2026-07'] dropped -> x0.75 with 4L",
+    "(iv) top batch B2 50% (O/E without x1.03), busiest day 2026-04-03 (O/E without x1.15)"
+   ]
+  },
+  "rule_us_data_minutes": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 34,
+     "L": 1,
+     "W": 33,
+     "lift": 0.88
+    },
+    "test": {
+     "n": 32,
+     "L": 4,
+     "W": 28,
+     "lift": 8.94
+    },
+    "all": {
+     "n": 66,
+     "L": 5,
+     "W": 61,
+     "lift": 3.36
+    }
+   },
+   "task_bar": false,
+   "variants": [
+    {
+     "params": "pre=120, post=30",
+     "stats": {
+      "train": {
+       "n": 38,
+       "L": 1,
+       "W": 37,
+       "lift": 0.78
+      },
+      "test": {
+       "n": 38,
+       "L": 4,
+       "W": 34,
+       "lift": 7.53
+      },
+      "all": {
+       "n": 76,
+       "L": 5,
+       "W": 71,
+       "lift": 2.92
+      }
+     },
+     "status": "THIN",
+     "why": [
+      "train x0.78 on 38 trades (1.1L expected at the default rate)"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "pre=60, post=30",
+     "stats": {
+      "train": {
+       "n": 30,
+       "L": 0,
+       "W": 30,
+       "lift": 0.0
+      },
+      "test": {
+       "n": 29,
+       "L": 4,
+       "W": 25,
+       "lift": 9.86
+      },
+      "all": {
+       "n": 59,
+       "L": 4,
+       "W": 55,
+       "lift": 3.01
+      }
+     },
+     "status": "THIN",
+     "why": [
+      "train x0.0 on 30 trades (0.9L expected at the default rate)"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "pre=90, post=0",
+     "stats": {
+      "train": {
+       "n": 15,
+       "L": 1,
+       "W": 14,
+       "lift": 1.99
+      },
+      "test": {
+       "n": 15,
+       "L": 2,
+       "W": 13,
+       "lift": 9.54
+      },
+      "all": {
+       "n": 30,
+       "L": 3,
+       "W": 27,
+       "lift": 4.43
+      }
+     },
+     "status": "THIN",
+     "why": [
+      "train x1.99 on 15 trades (0.4L expected at the default rate)"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "pre=90, post=60",
+     "stats": {
+      "train": {
+       "n": 36,
+       "L": 1,
+       "W": 35,
+       "lift": 0.83
+      },
+      "test": {
+       "n": 35,
+       "L": 4,
+       "W": 31,
+       "lift": 8.17
+      },
+      "all": {
+       "n": 71,
+       "L": 5,
+       "W": 66,
+       "lift": 3.12
+      }
+     },
+     "status": "THIN",
+     "why": [
+      "train x0.83 on 36 trades (1.1L expected at the default rate)"
+     ],
+     "exceptions": 0
+    }
+   ],
+   "grid": [
+    {
+     "params": "pre=120, post=0",
+     "status": "THIN",
+     "train_lift": 1.57,
+     "test_lift": 6.81,
+     "L": 3
+    },
+    {
+     "params": "pre=120, post=30",
+     "status": "THIN",
+     "train_lift": 0.78,
+     "test_lift": 7.53,
+     "L": 5
+    },
+    {
+     "params": "pre=120, post=60",
+     "status": "THIN",
+     "train_lift": 0.74,
+     "test_lift": 6.98,
+     "L": 5
+    },
+    {
+     "params": "pre=90, post=0",
+     "status": "THIN",
+     "train_lift": 1.99,
+     "test_lift": 9.54,
+     "L": 3
+    },
+    {
+     "params": "pre=90, post=30",
+     "status": "THIN",
+     "train_lift": 0.88,
+     "test_lift": 8.94,
+     "L": 5
+    },
+    {
+     "params": "pre=90, post=60",
+     "status": "THIN",
+     "train_lift": 0.83,
+     "test_lift": 8.17,
+     "L": 5
+    },
+    {
+     "params": "pre=60, post=0",
+     "status": "THIN",
+     "train_lift": 0.0,
+     "test_lift": 11.92,
+     "L": 2
+    },
+    {
+     "params": "pre=60, post=30",
+     "status": "THIN",
+     "train_lift": 0.0,
+     "test_lift": 9.86,
+     "L": 4
+    },
+    {
+     "params": "pre=60, post=60",
+     "status": "THIN",
+     "train_lift": 0.0,
+     "test_lift": 8.94,
+     "L": 4
+    }
+   ],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 4,
+     "L": 0,
+     "E": 0.16,
+     "base_pct": 4.04,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-04",
+     "n": 11,
+     "L": 1,
+     "E": 0.43,
+     "base_pct": 3.9,
+     "oe": 2.33
+    },
+    {
+     "month": "2026-05",
+     "n": 9,
+     "L": 0,
+     "E": 0.37,
+     "base_pct": 4.06,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-06",
+     "n": 10,
+     "L": 0,
+     "E": 0.18,
+     "base_pct": 1.77,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-07",
+     "n": 12,
+     "L": 3,
+     "E": 0.19,
+     "base_pct": 1.58,
+     "oe": 15.79
+    },
+    {
+     "month": "2026-08",
+     "n": 6,
+     "L": 1,
+     "E": 0.08,
+     "base_pct": 1.27,
+     "oe": 13.09
+    },
+    {
+     "month": "2026-09",
+     "n": 6,
+     "L": 0,
+     "E": 0.06,
+     "base_pct": 0.97,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-10",
+     "n": 8,
+     "L": 0,
+     "E": 0.13,
+     "base_pct": 1.66,
+     "oe": 0.0
+    }
+   ],
+   "oe_all": {
+    "O": 5,
+    "E": 1.59,
+    "oe": 3.14
+   },
+   "top2_months": [
+    "2026-07",
+    "2026-08"
+   ],
+   "oe_without_top2": {
+    "O": 1,
+    "E": 1.32,
+    "oe": 0.75
+   },
+   "worst_single_month_drop": [
+    "2026-07",
+    {
+     "O": 2,
+     "E": 1.4,
+     "oe": 1.43
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-07",
+     "2026-08"
+    ],
+    {
+     "O": 1,
+     "E": 1.32,
+     "oe": 0.75
+    }
+   ],
+   "months_with_loser": 3,
+   "losers_by_batch": {
+    "1": 0,
+    "2": 0,
+    "3": 1,
+    "4": 0,
+    "5": 0,
+    "6": 3,
+    "7": 1,
+    "8": 0
+   },
+   "top_batch": 6,
+   "top_batch_share": 0.6,
+   "oe_without_top_batch": {
+    "O": 2,
+    "E": 1.29,
+    "oe": 1.55
+   },
+   "distinct_days": 5,
+   "busiest_day": "2026-07-15",
+   "busiest_day_L": 1,
+   "oe_without_busiest_day": {
+    "O": 4,
+    "E": 1.57,
+    "oe": 2.55
+   },
+   "binom_train": 0.6869657289194651,
+   "binom_test": 0.001005288997701335,
+   "stop_only": {
+    "L": 5,
+    "train_lift": 0.97,
+    "test_lift": 10.7,
+    "train_L": 1,
+    "test_L": 4
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 34,
+     "L": 1,
+     "W": 33,
+     "lift": 0.88
+    },
+    "test": {
+     "n": 32,
+     "L": 4,
+     "W": 28,
+     "lift": 8.94
+    },
+    "all": {
+     "n": 66,
+     "L": 5,
+     "W": 61,
+     "lift": 3.36
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": false,
+    "ii": true,
+    "iii": false,
+    "iv": false
+   },
+   "survives": false,
+   "reasons": [
+    "(i) default fails the task bar",
+    "(iii) top-2 months ['2026-07', '2026-08'] dropped -> x0.75 with 1L",
+    "(iv) top batch B6 60% (O/E without x1.55), busiest day 2026-07-15 (O/E without x2.55)"
+   ]
+  },
+  "rule_zee_camel_hh": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 1133,
+     "L": 42,
+     "W": 1091,
+     "lift": 1.1
+    },
+    "test": {
+     "n": 1486,
+     "L": 20,
+     "W": 1466,
+     "lift": 0.96
+    },
+    "all": {
+     "n": 2619,
+     "L": 62,
+     "W": 2557,
+     "lift": 1.05
+    }
+   },
+   "task_bar": "False",
+   "variants": [],
+   "grid": [],
+   "collapse": [],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 324,
+     "L": 12,
+     "E": 13.11,
+     "base_pct": 4.04,
+     "oe": 0.92
+    },
+    {
+     "month": "2026-04",
+     "n": 262,
+     "L": 11,
+     "E": 10.22,
+     "base_pct": 3.9,
+     "oe": 1.08
+    },
+    {
+     "month": "2026-05",
+     "n": 219,
+     "L": 12,
+     "E": 8.89,
+     "base_pct": 4.06,
+     "oe": 1.35
+    },
+    {
+     "month": "2026-06",
+     "n": 328,
+     "L": 7,
+     "E": 5.81,
+     "base_pct": 1.77,
+     "oe": 1.21
+    },
+    {
+     "month": "2026-07",
+     "n": 369,
+     "L": 6,
+     "E": 5.84,
+     "base_pct": 1.58,
+     "oe": 1.03
+    },
+    {
+     "month": "2026-08",
+     "n": 306,
+     "L": 4,
+     "E": 3.9,
+     "base_pct": 1.27,
+     "oe": 1.03
+    },
+    {
+     "month": "2026-09",
+     "n": 344,
+     "L": 4,
+     "E": 3.34,
+     "base_pct": 0.97,
+     "oe": 1.2
+    },
+    {
+     "month": "2026-10",
+     "n": 467,
+     "L": 6,
+     "E": 7.77,
+     "base_pct": 1.66,
+     "oe": 0.77
+    }
+   ],
+   "oe_all": {
+    "O": 62,
+    "E": 58.87,
+    "oe": 1.05
+   },
+   "top2_months": [
+    "2026-05",
+    "2026-06"
+   ],
+   "oe_without_top2": {
+    "O": 43,
+    "E": 44.17,
+    "oe": 0.97
+   },
+   "worst_single_month_drop": [
+    "2026-05",
+    {
+     "O": 50,
+     "E": 49.98,
+     "oe": 1.0
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-05",
+     "2026-06"
+    ],
+    {
+     "O": 43,
+     "E": 44.17,
+     "oe": 0.97
+    }
+   ],
+   "months_with_loser": 8,
+   "losers_by_batch": {
+    "1": 7,
+    "2": 8,
+    "3": 7,
+    "4": 9,
+    "5": 7,
+    "6": 10,
+    "7": 8,
+    "8": 6
+   },
+   "top_batch": 6,
+   "top_batch_share": 0.161,
+   "oe_without_top_batch": {
+    "O": 52,
+    "E": 51.15,
+    "oe": 1.02
+   },
+   "distinct_days": 56,
+   "busiest_day": "2026-03-24",
+   "busiest_day_L": 3,
+   "oe_without_busiest_day": {
+    "O": 59,
+    "E": 57.35,
+    "oe": 1.03
+   },
+   "binom_train": 0.2788428694345939,
+   "binom_test": 0.5983035416801764,
+   "stop_only": {
+    "L": 57,
+    "train_lift": 1.14,
+    "test_lift": 1.04,
+    "train_L": 39,
+    "test_L": 18
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 1120,
+     "L": 41,
+     "W": 1079,
+     "lift": 1.09
+    },
+    "test": {
+     "n": 1463,
+     "L": 18,
+     "W": 1445,
+     "lift": 0.88
+    },
+    "all": {
+     "n": 2583,
+     "L": 59,
+     "W": 2524,
+     "lift": 1.01
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "False",
+    "ii": "n/a",
+    "iii": false,
+    "iv": false
+   },
+   "survives": false,
+   "reasons": [
+    "(i) default fails the task bar",
+    "(iii) top-2 months ['2026-05', '2026-06'] dropped -> x0.97 with 43L",
+    "(iv) top batch B6 16% (O/E without x1.02), busiest day 2026-03-24 (O/E without x1.03)"
+   ]
+  },
+  "rule_structure_hh_hl": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 1926,
+     "L": 63,
+     "W": 1863,
+     "lift": 0.97
+    },
+    "test": {
+     "n": 2624,
+     "L": 37,
+     "W": 2587,
+     "lift": 1.01
+    },
+    "all": {
+     "n": 4550,
+     "L": 100,
+     "W": 4450,
+     "lift": 0.97
+    }
+   },
+   "task_bar": "False",
+   "variants": [
+    {
+     "params": "look=90",
+     "stats": {
+      "train": {
+       "n": 1926,
+       "L": 63,
+       "W": 1863,
+       "lift": 0.97
+      },
+      "test": {
+       "n": 2624,
+       "L": 37,
+       "W": 2587,
+       "lift": 1.01
+      },
+      "all": {
+       "n": 4550,
+       "L": 100,
+       "W": 4450,
+       "lift": 0.97
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x0.97 where 63.0L were expected at the default rate",
+      "test x1.01 where 37.0L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "look=150",
+     "stats": {
+      "train": {
+       "n": 1926,
+       "L": 63,
+       "W": 1863,
+       "lift": 0.97
+      },
+      "test": {
+       "n": 2624,
+       "L": 37,
+       "W": 2587,
+       "lift": 1.01
+      },
+      "all": {
+       "n": 4550,
+       "L": 100,
+       "W": 4450,
+       "lift": 0.97
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x0.97 where 63.0L were expected at the default rate",
+      "test x1.01 where 37.0L were expected at the default rate"
+     ],
+     "exceptions": 0
+    }
+   ],
+   "grid": [],
+   "collapse": [
+    "look=90",
+    "look=150"
+   ],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 496,
+     "L": 19,
+     "E": 20.06,
+     "base_pct": 4.04,
+     "oe": 0.95
+    },
+    {
+     "month": "2026-04",
+     "n": 484,
+     "L": 19,
+     "E": 18.89,
+     "base_pct": 3.9,
+     "oe": 1.01
+    },
+    {
+     "month": "2026-05",
+     "n": 391,
+     "L": 17,
+     "E": 15.88,
+     "base_pct": 4.06,
+     "oe": 1.07
+    },
+    {
+     "month": "2026-06",
+     "n": 555,
+     "L": 8,
+     "E": 9.83,
+     "base_pct": 1.77,
+     "oe": 0.81
+    },
+    {
+     "month": "2026-07",
+     "n": 635,
+     "L": 6,
+     "E": 10.05,
+     "base_pct": 1.58,
+     "oe": 0.6
+    },
+    {
+     "month": "2026-08",
+     "n": 565,
+     "L": 10,
+     "E": 7.19,
+     "base_pct": 1.27,
+     "oe": 1.39
+    },
+    {
+     "month": "2026-09",
+     "n": 660,
+     "L": 6,
+     "E": 6.41,
+     "base_pct": 0.97,
+     "oe": 0.94
+    },
+    {
+     "month": "2026-10",
+     "n": 764,
+     "L": 15,
+     "E": 12.7,
+     "base_pct": 1.66,
+     "oe": 1.18
+    }
+   ],
+   "oe_all": {
+    "O": 100,
+    "E": 101.01,
+    "oe": 0.99
+   },
+   "top2_months": [
+    "2026-08",
+    "2026-10"
+   ],
+   "oe_without_top2": {
+    "O": 75,
+    "E": 81.11,
+    "oe": 0.92
+   },
+   "worst_single_month_drop": [
+    "2026-08",
+    {
+     "O": 90,
+     "E": 93.82,
+     "oe": 0.96
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-08",
+     "2026-10"
+    ],
+    {
+     "O": 75,
+     "E": 81.11,
+     "oe": 0.92
+    }
+   ],
+   "months_with_loser": 8,
+   "losers_by_batch": {
+    "1": 10,
+    "2": 15,
+    "3": 9,
+    "4": 14,
+    "5": 11,
+    "6": 10,
+    "7": 16,
+    "8": 15
+   },
+   "top_batch": 7,
+   "top_batch_share": 0.16,
+   "oe_without_top_batch": {
+    "O": 84,
+    "E": 87.37,
+    "oe": 0.96
+   },
+   "distinct_days": 80,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 3,
+   "oe_without_busiest_day": {
+    "O": 97,
+    "E": 98.53,
+    "oe": 0.98
+   },
+   "binom_train": 0.6016363525182913,
+   "binom_test": 0.501872425316059,
+   "stop_only": {
+    "L": 89,
+    "train_lift": 0.99,
+    "test_lift": 1.01,
+    "train_L": 58,
+    "test_L": 31
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 1898,
+     "L": 59,
+     "W": 1839,
+     "lift": 0.93
+    },
+    "test": {
+     "n": 2577,
+     "L": 29,
+     "W": 2548,
+     "lift": 0.8
+    },
+    "all": {
+     "n": 4475,
+     "L": 88,
+     "W": 4387,
+     "lift": 0.87
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "False",
+    "ii": false,
+    "iii": false,
+    "iv": false
+   },
+   "survives": false,
+   "reasons": [
+    "(i) default fails the task bar",
+    "(ii) collapses at look=90; look=150",
+    "(iii) top-2 months ['2026-08', '2026-10'] dropped -> x0.92 with 75L",
+    "(iv) top batch B7 16% (O/E without x0.96), busiest day 2026-04-03 (O/E without x0.98)"
+   ]
+  },
+  "rule_near_sr": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 2244,
+     "L": 66,
+     "W": 2178,
+     "lift": 0.88
+    },
+    "test": {
+     "n": 3245,
+     "L": 50,
+     "W": 3195,
+     "lift": 1.1
+    },
+    "all": {
+     "n": 5489,
+     "L": 116,
+     "W": 5373,
+     "lift": 0.94
+    }
+   },
+   "task_bar": "False",
+   "variants": [
+    {
+     "params": "look=22, dist=1.0",
+     "stats": {
+      "train": {
+       "n": 2131,
+       "L": 63,
+       "W": 2068,
+       "lift": 0.88
+      },
+      "test": {
+       "n": 3100,
+       "L": 47,
+       "W": 3053,
+       "lift": 1.08
+      },
+      "all": {
+       "n": 5231,
+       "L": 110,
+       "W": 5121,
+       "lift": 0.93
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x0.88 where 62.7L were expected at the default rate",
+      "test x1.08 where 47.8L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "look=38, dist=1.0",
+     "stats": {
+      "train": {
+       "n": 2337,
+       "L": 69,
+       "W": 2268,
+       "lift": 0.88
+      },
+      "test": {
+       "n": 3332,
+       "L": 50,
+       "W": 3282,
+       "lift": 1.07
+      },
+      "all": {
+       "n": 5669,
+       "L": 119,
+       "W": 5550,
+       "lift": 0.93
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x0.88 where 68.7L were expected at the default rate",
+      "test x1.07 where 51.3L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "look=30, dist=0.75",
+     "stats": {
+      "train": {
+       "n": 1925,
+       "L": 57,
+       "W": 1868,
+       "lift": 0.88
+      },
+      "test": {
+       "n": 2883,
+       "L": 43,
+       "W": 2840,
+       "lift": 1.07
+      },
+      "all": {
+       "n": 4808,
+       "L": 100,
+       "W": 4708,
+       "lift": 0.92
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x0.88 where 56.6L were expected at the default rate",
+      "test x1.07 where 44.4L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "look=30, dist=1.25",
+     "stats": {
+      "train": {
+       "n": 2428,
+       "L": 72,
+       "W": 2356,
+       "lift": 0.88
+      },
+      "test": {
+       "n": 3422,
+       "L": 55,
+       "W": 3367,
+       "lift": 1.15
+      },
+      "all": {
+       "n": 5850,
+       "L": 127,
+       "W": 5723,
+       "lift": 0.96
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x0.88 where 71.4L were expected at the default rate",
+      "test x1.15 where 52.7L were expected at the default rate"
+     ],
+     "exceptions": 0
+    }
+   ],
+   "grid": [
+    {
+     "params": "look=22, dist=0.75",
+     "status": "COLLAPSE",
+     "train_lift": 0.91,
+     "test_lift": 1.11,
+     "L": 97
+    },
+    {
+     "params": "look=22, dist=1.0",
+     "status": "COLLAPSE",
+     "train_lift": 0.88,
+     "test_lift": 1.08,
+     "L": 110
+    },
+    {
+     "params": "look=22, dist=1.25",
+     "status": "COLLAPSE",
+     "train_lift": 0.87,
+     "test_lift": 1.13,
+     "L": 120
+    },
+    {
+     "params": "look=30, dist=0.75",
+     "status": "COLLAPSE",
+     "train_lift": 0.88,
+     "test_lift": 1.07,
+     "L": 100
+    },
+    {
+     "params": "look=30, dist=1.0",
+     "status": "COLLAPSE",
+     "train_lift": 0.88,
+     "test_lift": 1.1,
+     "L": 116
+    },
+    {
+     "params": "look=30, dist=1.25",
+     "status": "COLLAPSE",
+     "train_lift": 0.88,
+     "test_lift": 1.15,
+     "L": 127
+    },
+    {
+     "params": "look=38, dist=0.75",
+     "status": "COLLAPSE",
+     "train_lift": 0.9,
+     "test_lift": 1.05,
+     "L": 105
+    },
+    {
+     "params": "look=38, dist=1.0",
+     "status": "COLLAPSE",
+     "train_lift": 0.88,
+     "test_lift": 1.07,
+     "L": 119
+    },
+    {
+     "params": "look=38, dist=1.25",
+     "status": "COLLAPSE",
+     "train_lift": 0.89,
+     "test_lift": 1.12,
+     "L": 130
+    }
+   ],
+   "collapse": [
+    "look=22, dist=1.0",
+    "look=38, dist=1.0",
+    "look=30, dist=0.75",
+    "look=30, dist=1.25"
+   ],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 520,
+     "L": 17,
+     "E": 21.03,
+     "base_pct": 4.04,
+     "oe": 0.81
+    },
+    {
+     "month": "2026-04",
+     "n": 556,
+     "L": 17,
+     "E": 21.7,
+     "base_pct": 3.9,
+     "oe": 0.78
+    },
+    {
+     "month": "2026-05",
+     "n": 468,
+     "L": 17,
+     "E": 19.0,
+     "base_pct": 4.06,
+     "oe": 0.89
+    },
+    {
+     "month": "2026-06",
+     "n": 700,
+     "L": 15,
+     "E": 12.4,
+     "base_pct": 1.77,
+     "oe": 1.21
+    },
+    {
+     "month": "2026-07",
+     "n": 810,
+     "L": 12,
+     "E": 12.82,
+     "base_pct": 1.58,
+     "oe": 0.94
+    },
+    {
+     "month": "2026-08",
+     "n": 661,
+     "L": 10,
+     "E": 8.42,
+     "base_pct": 1.27,
+     "oe": 1.19
+    },
+    {
+     "month": "2026-09",
+     "n": 829,
+     "L": 10,
+     "E": 8.05,
+     "base_pct": 0.97,
+     "oe": 1.24
+    },
+    {
+     "month": "2026-10",
+     "n": 945,
+     "L": 18,
+     "E": 15.71,
+     "base_pct": 1.66,
+     "oe": 1.15
+    }
+   ],
+   "oe_all": {
+    "O": 116,
+    "E": 119.13,
+    "oe": 0.97
+   },
+   "top2_months": [
+    "2026-06",
+    "2026-10"
+   ],
+   "oe_without_top2": {
+    "O": 83,
+    "E": 91.02,
+    "oe": 0.91
+   },
+   "worst_single_month_drop": [
+    "2026-06",
+    {
+     "O": 101,
+     "E": 106.73,
+     "oe": 0.95
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-06",
+     "2026-10"
+    ],
+    {
+     "O": 83,
+     "E": 91.02,
+     "oe": 0.91
+    }
+   ],
+   "months_with_loser": 8,
+   "losers_by_batch": {
+    "1": 10,
+    "2": 11,
+    "3": 11,
+    "4": 14,
+    "5": 16,
+    "6": 16,
+    "7": 20,
+    "8": 18
+   },
+   "top_batch": 7,
+   "top_batch_share": 0.172,
+   "oe_without_top_batch": {
+    "O": 96,
+    "E": 102.65,
+    "oe": 0.94
+   },
+   "distinct_days": 94,
+   "busiest_day": "2026-03-18",
+   "busiest_day_L": 3,
+   "oe_without_busiest_day": {
+    "O": 113,
+    "E": 116.62,
+    "oe": 0.97
+   },
+   "binom_train": 0.8774872620989441,
+   "binom_test": 0.26373223972227616,
+   "stop_only": {
+    "L": 102,
+    "train_lift": 0.9,
+    "test_lift": 1.08,
+    "train_L": 61,
+    "test_L": 41
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 2212,
+     "L": 61,
+     "W": 2151,
+     "lift": 0.82
+    },
+    "test": {
+     "n": 3192,
+     "L": 42,
+     "W": 3150,
+     "lift": 0.94
+    },
+    "all": {
+     "n": 5404,
+     "L": 103,
+     "W": 5301,
+     "lift": 0.85
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "False",
+    "ii": false,
+    "iii": false,
+    "iv": false
+   },
+   "survives": false,
+   "reasons": [
+    "(i) default fails the task bar",
+    "(ii) collapses at look=22, dist=1.0; look=38, dist=1.0; look=30, dist=0.75; look=30, dist=1.25",
+    "(iii) top-2 months ['2026-06', '2026-10'] dropped -> x0.91 with 83L",
+    "(iv) top batch B7 17% (O/E without x0.94), busiest day 2026-03-18 (O/E without x0.97)"
+   ]
+  },
+  "rule_counter_trend": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 537,
+     "L": 16,
+     "W": 521,
+     "lift": 0.89
+    },
+    "test": {
+     "n": 679,
+     "L": 9,
+     "W": 670,
+     "lift": 0.95
+    },
+    "all": {
+     "n": 1216,
+     "L": 25,
+     "W": 1191,
+     "lift": 0.91
+    }
+   },
+   "task_bar": "False",
+   "variants": [
+    {
+     "params": "look=68, mult=6.0",
+     "stats": {
+      "train": {
+       "n": 433,
+       "L": 15,
+       "W": 418,
+       "lift": 1.03
+      },
+      "test": {
+       "n": 542,
+       "L": 7,
+       "W": 535,
+       "lift": 0.92
+      },
+      "all": {
+       "n": 975,
+       "L": 22,
+       "W": 953,
+       "lift": 1.0
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x1.03 where 12.9L were expected at the default rate",
+      "test x0.92 where 7.2L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "look=112, mult=6.0",
+     "stats": {
+      "train": {
+       "n": 645,
+       "L": 19,
+       "W": 626,
+       "lift": 0.88
+      },
+      "test": {
+       "n": 832,
+       "L": 11,
+       "W": 821,
+       "lift": 0.95
+      },
+      "all": {
+       "n": 1477,
+       "L": 30,
+       "W": 1447,
+       "lift": 0.9
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x0.88 where 19.2L were expected at the default rate",
+      "test x0.95 where 11.0L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "look=90, mult=4.5",
+     "stats": {
+      "train": {
+       "n": 756,
+       "L": 23,
+       "W": 733,
+       "lift": 0.91
+      },
+      "test": {
+       "n": 909,
+       "L": 14,
+       "W": 895,
+       "lift": 1.1
+      },
+      "all": {
+       "n": 1665,
+       "L": 37,
+       "W": 1628,
+       "lift": 0.99
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x0.91 where 22.5L were expected at the default rate",
+      "test x1.1 where 12.0L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "look=90, mult=7.5",
+     "stats": {
+      "train": {
+       "n": 386,
+       "L": 11,
+       "W": 375,
+       "lift": 0.85
+      },
+      "test": {
+       "n": 507,
+       "L": 7,
+       "W": 500,
+       "lift": 0.99
+      },
+      "all": {
+       "n": 893,
+       "L": 18,
+       "W": 875,
+       "lift": 0.89
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x0.85 where 11.5L were expected at the default rate",
+      "test x0.99 where 6.7L were expected at the default rate"
+     ],
+     "exceptions": 0
+    }
+   ],
+   "grid": [
+    {
+     "params": "look=68, mult=4.5",
+     "status": "COLLAPSE",
+     "train_lift": 1.05,
+     "test_lift": 0.99,
+     "L": 33
+    },
+    {
+     "params": "look=68, mult=6.0",
+     "status": "COLLAPSE",
+     "train_lift": 1.03,
+     "test_lift": 0.92,
+     "L": 22
+    },
+    {
+     "params": "look=68, mult=7.5",
+     "status": "COLLAPSE",
+     "train_lift": 1.44,
+     "test_lift": 0.82,
+     "L": 18
+    },
+    {
+     "params": "look=90, mult=4.5",
+     "status": "COLLAPSE",
+     "train_lift": 0.91,
+     "test_lift": 1.1,
+     "L": 37
+    },
+    {
+     "params": "look=90, mult=6.0",
+     "status": "COLLAPSE",
+     "train_lift": 0.89,
+     "test_lift": 0.95,
+     "L": 25
+    },
+    {
+     "params": "look=90, mult=7.5",
+     "status": "COLLAPSE",
+     "train_lift": 0.85,
+     "test_lift": 0.99,
+     "L": 18
+    },
+    {
+     "params": "look=112, mult=4.5",
+     "status": "COLLAPSE",
+     "train_lift": 0.91,
+     "test_lift": 0.86,
+     "L": 39
+    },
+    {
+     "params": "look=112, mult=6.0",
+     "status": "COLLAPSE",
+     "train_lift": 0.88,
+     "test_lift": 0.95,
+     "L": 30
+    },
+    {
+     "params": "look=112, mult=7.5",
+     "status": "COLLAPSE",
+     "train_lift": 1.16,
+     "test_lift": 1.03,
+     "L": 28
+    }
+   ],
+   "collapse": [
+    "look=68, mult=6.0",
+    "look=112, mult=6.0",
+    "look=90, mult=4.5",
+    "look=90, mult=7.5"
+   ],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 142,
+     "L": 4,
+     "E": 5.74,
+     "base_pct": 4.04,
+     "oe": 0.7
+    },
+    {
+     "month": "2026-04",
+     "n": 132,
+     "L": 4,
+     "E": 5.15,
+     "base_pct": 3.9,
+     "oe": 0.78
+    },
+    {
+     "month": "2026-05",
+     "n": 105,
+     "L": 4,
+     "E": 4.26,
+     "base_pct": 4.06,
+     "oe": 0.94
+    },
+    {
+     "month": "2026-06",
+     "n": 158,
+     "L": 4,
+     "E": 2.8,
+     "base_pct": 1.77,
+     "oe": 1.43
+    },
+    {
+     "month": "2026-07",
+     "n": 178,
+     "L": 3,
+     "E": 2.82,
+     "base_pct": 1.58,
+     "oe": 1.06
+    },
+    {
+     "month": "2026-08",
+     "n": 132,
+     "L": 1,
+     "E": 1.68,
+     "base_pct": 1.27,
+     "oe": 0.6
+    },
+    {
+     "month": "2026-09",
+     "n": 164,
+     "L": 0,
+     "E": 1.59,
+     "base_pct": 0.97,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-10",
+     "n": 205,
+     "L": 5,
+     "E": 3.41,
+     "base_pct": 1.66,
+     "oe": 1.47
+    }
+   ],
+   "oe_all": {
+    "O": 25,
+    "E": 27.46,
+    "oe": 0.91
+   },
+   "top2_months": [
+    "2026-10",
+    "2026-06"
+   ],
+   "oe_without_top2": {
+    "O": 16,
+    "E": 21.25,
+    "oe": 0.75
+   },
+   "worst_single_month_drop": [
+    "2026-10",
+    {
+     "O": 20,
+     "E": 24.05,
+     "oe": 0.83
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-06",
+     "2026-10"
+    ],
+    {
+     "O": 16,
+     "E": 21.25,
+     "oe": 0.75
+    }
+   ],
+   "months_with_loser": 7,
+   "losers_by_batch": {
+    "1": 4,
+    "2": 0,
+    "3": 4,
+    "4": 2,
+    "5": 4,
+    "6": 5,
+    "7": 1,
+    "8": 5
+   },
+   "top_batch": 8,
+   "top_batch_share": 0.2,
+   "oe_without_top_batch": {
+    "O": 20,
+    "E": 24.05,
+    "oe": 0.83
+   },
+   "distinct_days": 23,
+   "busiest_day": "2026-04-17",
+   "busiest_day_L": 2,
+   "oe_without_busiest_day": {
+    "O": 23,
+    "E": 26.94,
+    "oe": 0.85
+   },
+   "binom_train": 0.7200828020170073,
+   "binom_test": 0.6087714622916616,
+   "stop_only": {
+    "L": 21,
+    "train_lift": 0.74,
+    "test_lift": 1.13,
+    "train_L": 12,
+    "test_L": 9
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 526,
+     "L": 15,
+     "W": 511,
+     "lift": 0.85
+    },
+    "test": {
+     "n": 663,
+     "L": 9,
+     "W": 654,
+     "lift": 0.97
+    },
+    "all": {
+     "n": 1189,
+     "L": 24,
+     "W": 1165,
+     "lift": 0.89
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "False",
+    "ii": false,
+    "iii": false,
+    "iv": false
+   },
+   "survives": false,
+   "reasons": [
+    "(i) default fails the task bar",
+    "(ii) collapses at look=68, mult=6.0; look=112, mult=6.0; look=90, mult=4.5; look=90, mult=7.5",
+    "(iii) top-2 months ['2026-10', '2026-06'] dropped -> x0.75 with 16L",
+    "(iv) top batch B8 20% (O/E without x0.83), busiest day 2026-04-17 (O/E without x0.85)"
+   ]
+  },
+  "rule_exhausted_run": {
+   "status": "REJECTED",
+   "kind": "pre-entry",
+   "default": {
+    "train": {
+     "n": 428,
+     "L": 23,
+     "W": 405,
+     "lift": 1.6
+    },
+    "test": {
+     "n": 341,
+     "L": 5,
+     "W": 336,
+     "lift": 1.05
+    },
+    "all": {
+     "n": 769,
+     "L": 28,
+     "W": 741,
+     "lift": 1.61
+    }
+   },
+   "task_bar": "False",
+   "variants": [
+    {
+     "params": "look=22, pips=8.0",
+     "stats": {
+      "train": {
+       "n": 296,
+       "L": 14,
+       "W": 282,
+       "lift": 1.41
+      },
+      "test": {
+       "n": 220,
+       "L": 3,
+       "W": 217,
+       "lift": 0.98
+      },
+      "all": {
+       "n": 516,
+       "L": 17,
+       "W": 499,
+       "lift": 1.46
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x1.41 where 15.9L were expected at the default rate",
+      "test x0.98 where 3.2L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "look=38, pips=8.0",
+     "stats": {
+      "train": {
+       "n": 516,
+       "L": 24,
+       "W": 492,
+       "lift": 1.38
+      },
+      "test": {
+       "n": 402,
+       "L": 10,
+       "W": 392,
+       "lift": 1.78
+      },
+      "all": {
+       "n": 918,
+       "L": 34,
+       "W": 884,
+       "lift": 1.64
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x1.38 where 27.7L were expected at the default rate",
+      "test x1.78 where 5.9L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "look=30, pips=6.0",
+     "stats": {
+      "train": {
+       "n": 633,
+       "L": 30,
+       "W": 603,
+       "lift": 1.41
+      },
+      "test": {
+       "n": 549,
+       "L": 8,
+       "W": 541,
+       "lift": 1.04
+      },
+      "all": {
+       "n": 1182,
+       "L": 38,
+       "W": 1144,
+       "lift": 1.43
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x1.41 where 34.0L were expected at the default rate",
+      "test x1.04 where 8.0L were expected at the default rate"
+     ],
+     "exceptions": 0
+    },
+    {
+     "params": "look=30, pips=10.0",
+     "stats": {
+      "train": {
+       "n": 281,
+       "L": 13,
+       "W": 268,
+       "lift": 1.38
+      },
+      "test": {
+       "n": 209,
+       "L": 2,
+       "W": 207,
+       "lift": 0.68
+      },
+      "all": {
+       "n": 490,
+       "L": 15,
+       "W": 475,
+       "lift": 1.36
+      }
+     },
+     "status": "COLLAPSE",
+     "why": [
+      "train x1.38 where 15.1L were expected at the default rate",
+      "test x0.68 where 3.1L were expected at the default rate"
+     ],
+     "exceptions": 0
+    }
+   ],
+   "grid": [
+    {
+     "params": "look=22, pips=6.0",
+     "status": "COLLAPSE",
+     "train_lift": 1.32,
+     "test_lift": 0.84,
+     "L": 27
+    },
+    {
+     "params": "look=22, pips=8.0",
+     "status": "COLLAPSE",
+     "train_lift": 1.41,
+     "test_lift": 0.98,
+     "L": 17
+    },
+    {
+     "params": "look=22, pips=10.0",
+     "status": "COLLAPSE",
+     "train_lift": 1.79,
+     "test_lift": 1.24,
+     "L": 13
+    },
+    {
+     "params": "look=30, pips=6.0",
+     "status": "COLLAPSE",
+     "train_lift": 1.41,
+     "test_lift": 1.04,
+     "L": 38
+    },
+    {
+     "params": "look=30, pips=8.0",
+     "status": "COLLAPSE",
+     "train_lift": 1.6,
+     "test_lift": 1.05,
+     "L": 28
+    },
+    {
+     "params": "look=30, pips=10.0",
+     "status": "COLLAPSE",
+     "train_lift": 1.38,
+     "test_lift": 0.68,
+     "L": 15
+    },
+    {
+     "params": "look=38, pips=6.0",
+     "status": "COLLAPSE",
+     "train_lift": 1.2,
+     "test_lift": 1.22,
+     "L": 40
+    },
+    {
+     "params": "look=38, pips=8.0",
+     "status": "COLLAPSE",
+     "train_lift": 1.38,
+     "test_lift": 1.78,
+     "L": 34
+    },
+    {
+     "params": "look=38, pips=10.0",
+     "status": "COLLAPSE",
+     "train_lift": 1.72,
+     "test_lift": 1.13,
+     "L": 24
+    }
+   ],
+   "collapse": [
+    "look=22, pips=8.0",
+    "look=38, pips=8.0",
+    "look=30, pips=6.0",
+    "look=30, pips=10.0"
+   ],
+   "months": [
+    {
+     "month": "2026-03",
+     "n": 179,
+     "L": 10,
+     "E": 7.24,
+     "base_pct": 4.04,
+     "oe": 1.38
+    },
+    {
+     "month": "2026-04",
+     "n": 104,
+     "L": 8,
+     "E": 4.06,
+     "base_pct": 3.9,
+     "oe": 1.97
+    },
+    {
+     "month": "2026-05",
+     "n": 57,
+     "L": 3,
+     "E": 2.31,
+     "base_pct": 4.06,
+     "oe": 1.3
+    },
+    {
+     "month": "2026-06",
+     "n": 88,
+     "L": 2,
+     "E": 1.56,
+     "base_pct": 1.77,
+     "oe": 1.28
+    },
+    {
+     "month": "2026-07",
+     "n": 70,
+     "L": 0,
+     "E": 1.11,
+     "base_pct": 1.58,
+     "oe": 0.0
+    },
+    {
+     "month": "2026-08",
+     "n": 47,
+     "L": 1,
+     "E": 0.6,
+     "base_pct": 1.27,
+     "oe": 1.67
+    },
+    {
+     "month": "2026-09",
+     "n": 58,
+     "L": 1,
+     "E": 0.56,
+     "base_pct": 0.97,
+     "oe": 1.78
+    },
+    {
+     "month": "2026-10",
+     "n": 166,
+     "L": 3,
+     "E": 2.76,
+     "base_pct": 1.66,
+     "oe": 1.09
+    }
+   ],
+   "oe_all": {
+    "O": 28,
+    "E": 20.2,
+    "oe": 1.39
+   },
+   "top2_months": [
+    "2026-04",
+    "2026-03"
+   ],
+   "oe_without_top2": {
+    "O": 10,
+    "E": 8.9,
+    "oe": 1.12
+   },
+   "worst_single_month_drop": [
+    "2026-04",
+    {
+     "O": 20,
+     "E": 16.14,
+     "oe": 1.24
+    }
+   ],
+   "worst_pair_drop": [
+    [
+     "2026-03",
+     "2026-04"
+    ],
+    {
+     "O": 10,
+     "E": 8.9,
+     "oe": 1.12
+    }
+   ],
+   "months_with_loser": 7,
+   "losers_by_batch": {
+    "1": 6,
+    "2": 9,
+    "3": 3,
+    "4": 1,
+    "5": 4,
+    "6": 0,
+    "7": 2,
+    "8": 3
+   },
+   "top_batch": 2,
+   "top_batch_share": 0.321,
+   "oe_without_top_batch": {
+    "O": 19,
+    "E": 16.81,
+    "oe": 1.13
+   },
+   "distinct_days": 22,
+   "busiest_day": "2026-04-03",
+   "busiest_day_L": 3,
+   "oe_without_busiest_day": {
+    "O": 25,
+    "E": 19.69,
+    "oe": 1.27
+   },
+   "binom_train": 0.019855586480640404,
+   "binom_test": 0.5189126956290948,
+   "stop_only": {
+    "L": 26,
+    "train_lift": 1.7,
+    "test_lift": 1.01,
+    "train_L": 22,
+    "test_L": 4
+   },
+   "beyond_combined": {
+    "train": {
+     "n": 422,
+     "L": 22,
+     "W": 400,
+     "lift": 1.55
+    },
+    "test": {
+     "n": 341,
+     "L": 5,
+     "W": 336,
+     "lift": 1.05
+    },
+    "all": {
+     "n": 763,
+     "L": 27,
+     "W": 736,
+     "lift": 1.57
+    }
+   },
+   "checks": {
+    "pre_entry": true,
+    "i": "False",
+    "ii": false,
+    "iii": false,
+    "iv": false
+   },
+   "survives": false,
+   "reasons": [
+    "(i) default fails the task bar",
+    "(ii) collapses at look=22, pips=8.0; look=38, pips=8.0; look=30, pips=6.0; look=30, pips=10.0",
+    "(iii) top-2 months ['2026-04', '2026-03'] dropped -> x1.12 with 10L",
+    "(iv) top batch B2 32% (O/E without x1.13), busiest day 2026-04-03 (O/E without x1.27)"
+   ]
+  }
+ },
+ "plateau": [
+  [
+   "16:00",
+   "17:30",
+   "True"
+  ],
+  [
+   "16:00",
+   "17:45",
+   "True"
+  ],
+  [
+   "16:00",
+   "18:00",
+   "True"
+  ],
+  [
+   "16:00",
+   "18:15",
+   "True"
+  ],
+  [
+   "16:00",
+   "18:30",
+   "True"
+  ],
+  [
+   "16:15",
+   "17:30",
+   "True"
+  ],
+  [
+   "16:15",
+   "17:45",
+   "True"
+  ],
+  [
+   "16:15",
+   "18:00",
+   "True"
+  ],
+  [
+   "16:15",
+   "18:15",
+   "True"
+  ],
+  [
+   "16:15",
+   "18:30",
+   "True"
+  ],
+  [
+   "16:30",
+   "17:30",
+   "True"
+  ],
+  [
+   "16:30",
+   "17:45",
+   "True"
+  ],
+  [
+   "16:30",
+   "18:00",
+   "True"
+  ],
+  [
+   "16:30",
+   "18:15",
+   "True"
+  ],
+  [
+   "16:30",
+   "18:30",
+   "True"
+  ],
+  [
+   "16:45",
+   "17:30",
+   "True"
+  ],
+  [
+   "16:45",
+   "17:45",
+   "True"
+  ],
+  [
+   "16:45",
+   "18:00",
+   "True"
+  ],
+  [
+   "16:45",
+   "18:15",
+   "True"
+  ],
+  [
+   "16:45",
+   "18:30",
+   "True"
+  ]
+ ],
+ "null_scan_all_days": [
+  "16:00-17:00 (17L x3.12/x2.94)",
+  "16:15-17:15 (15L x3.62/x3.97)",
+  "16:30-17:30 (13L x4.18/x4.83)",
+  "16:45-17:45 (16L x5.29/x10.04)",
+  "17:00-18:00 (5L x2.84/x8.25)",
+  "17:15-18:15 (6L x2.13/x4.77)",
+  "17:30-18:30 (8L x2.4/x3.41)"
+ ],
+ "null_scan_fridays": [
+  "12:15-13:15 (4L x2.84/x3.67)",
+  "14:00-15:00 (4L x2.29/x3.33)",
+  "16:00-17:00 (11L x9.4/x9.41)",
+  "16:15-17:15 (11L x14.89/x11.53)",
+  "16:30-17:30 (10L x13.53/x16.25)",
+  "16:45-17:45 (8L x12.76/x23.84)"
+ ],
+ "supplementary_survivors": {
+  "rule_rollover_ny": {
+   "stop_only": {
+    "train": {
+     "n": 43,
+     "L": 6,
+     "W": 37,
+     "lift": 4.59
+    },
+    "test": {
+     "n": 52,
+     "L": 3,
+     "W": 49,
+     "lift": 4.94
+    },
+    "all": {
+     "n": 95,
+     "L": 9,
+     "W": 86,
+     "lift": 4.77
+    }
+   },
+   "stop_only_pass": true,
+   "stop_only_top2_out": {
+    "O": 5,
+    "E": 1.37,
+    "oe": 3.65
+   },
+   "stop_only_days": 9,
+   "stop_only_batches": {
+    "1": 1,
+    "2": 3,
+    "4": 1,
+    "5": 1,
+    "6": 1,
+    "7": 2
+   },
+   "buys": {
+    "all": {
+     "train": {
+      "n": 24,
+      "L": 3,
+      "W": 21,
+      "lift": 3.73
+     },
+     "test": {
+      "n": 26,
+      "L": 4,
+      "W": 22,
+      "lift": 11.25
+     },
+     "all": {
+      "n": 50,
+      "L": 7,
+      "W": 43,
+      "lift": 6.27
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 22,
+      "L": 1,
+      "W": 21,
+      "lift": 1.55
+     },
+     "test": {
+      "n": 23,
+      "L": 1,
+      "W": 22,
+      "lift": 4.37
+     },
+     "all": {
+      "n": 45,
+      "L": 2,
+      "W": 43,
+      "lift": 2.41
+     }
+    }
+   },
+   "sells": {
+    "all": {
+     "train": {
+      "n": 21,
+      "L": 5,
+      "W": 16,
+      "lift": 7.07
+     },
+     "test": {
+      "n": 31,
+      "L": 4,
+      "W": 27,
+      "lift": 9.03
+     },
+     "all": {
+      "n": 52,
+      "L": 9,
+      "W": 43,
+      "lift": 7.6
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 21,
+      "L": 5,
+      "W": 16,
+      "lift": 7.59
+     },
+     "test": {
+      "n": 29,
+      "L": 2,
+      "W": 27,
+      "lift": 5.16
+     },
+     "all": {
+      "n": 50,
+      "L": 7,
+      "W": 43,
+      "lift": 6.59
+     }
+    }
+   },
+   "not Friday": {
+    "all": {
+     "train": {
+      "n": 38,
+      "L": 5,
+      "W": 33,
+      "lift": 4.44
+     },
+     "test": {
+      "n": 42,
+      "L": 3,
+      "W": 39,
+      "lift": 6.24
+     },
+     "all": {
+      "n": 80,
+      "L": 8,
+      "W": 72,
+      "lift": 5.13
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 38,
+      "L": 5,
+      "W": 33,
+      "lift": 4.44
+     },
+     "test": {
+      "n": 42,
+      "L": 3,
+      "W": 39,
+      "lift": 6.39
+     },
+     "all": {
+      "n": 80,
+      "L": 8,
+      "W": 72,
+      "lift": 5.17
+     }
+    }
+   },
+   "Friday": {
+    "all": {
+     "train": {
+      "n": 7,
+      "L": 3,
+      "W": 4,
+      "lift": 7.65
+     },
+     "test": {
+      "n": 15,
+      "L": 5,
+      "W": 10,
+      "lift": 12.46
+     },
+     "all": {
+      "n": 22,
+      "L": 8,
+      "W": 14,
+      "lift": 9.36
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 5,
+      "L": 1,
+      "W": 4,
+      "lift": 5.75
+     },
+     "test": {
+      "n": 10,
+      "L": 0,
+      "W": 10,
+      "lift": 0.0
+     },
+     "all": {
+      "n": 15,
+      "L": 1,
+      "W": 14,
+      "lift": 2.94
+     }
+    }
+   }
+  },
+  "rule_combined": {
+   "stop_only": {
+    "train": {
+     "n": 43,
+     "L": 6,
+     "W": 37,
+     "lift": 4.59
+    },
+    "test": {
+     "n": 52,
+     "L": 3,
+     "W": 49,
+     "lift": 4.94
+    },
+    "all": {
+     "n": 95,
+     "L": 9,
+     "W": 86,
+     "lift": 4.77
+    }
+   },
+   "stop_only_pass": true,
+   "stop_only_top2_out": {
+    "O": 5,
+    "E": 1.37,
+    "oe": 3.65
+   },
+   "stop_only_days": 9,
+   "stop_only_batches": {
+    "1": 1,
+    "2": 3,
+    "4": 1,
+    "5": 1,
+    "6": 1,
+    "7": 2
+   },
+   "buys": {
+    "all": {
+     "train": {
+      "n": 24,
+      "L": 3,
+      "W": 21,
+      "lift": 3.73
+     },
+     "test": {
+      "n": 26,
+      "L": 4,
+      "W": 22,
+      "lift": 11.25
+     },
+     "all": {
+      "n": 50,
+      "L": 7,
+      "W": 43,
+      "lift": 6.27
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 22,
+      "L": 1,
+      "W": 21,
+      "lift": 1.55
+     },
+     "test": {
+      "n": 23,
+      "L": 1,
+      "W": 22,
+      "lift": 4.37
+     },
+     "all": {
+      "n": 45,
+      "L": 2,
+      "W": 43,
+      "lift": 2.41
+     }
+    }
+   },
+   "sells": {
+    "all": {
+     "train": {
+      "n": 21,
+      "L": 5,
+      "W": 16,
+      "lift": 7.07
+     },
+     "test": {
+      "n": 31,
+      "L": 4,
+      "W": 27,
+      "lift": 9.03
+     },
+     "all": {
+      "n": 52,
+      "L": 9,
+      "W": 43,
+      "lift": 7.6
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 21,
+      "L": 5,
+      "W": 16,
+      "lift": 7.59
+     },
+     "test": {
+      "n": 29,
+      "L": 2,
+      "W": 27,
+      "lift": 5.16
+     },
+     "all": {
+      "n": 50,
+      "L": 7,
+      "W": 43,
+      "lift": 6.59
+     }
+    }
+   },
+   "not Friday": {
+    "all": {
+     "train": {
+      "n": 38,
+      "L": 5,
+      "W": 33,
+      "lift": 4.44
+     },
+     "test": {
+      "n": 42,
+      "L": 3,
+      "W": 39,
+      "lift": 6.24
+     },
+     "all": {
+      "n": 80,
+      "L": 8,
+      "W": 72,
+      "lift": 5.13
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 38,
+      "L": 5,
+      "W": 33,
+      "lift": 4.44
+     },
+     "test": {
+      "n": 42,
+      "L": 3,
+      "W": 39,
+      "lift": 6.39
+     },
+     "all": {
+      "n": 80,
+      "L": 8,
+      "W": 72,
+      "lift": 5.17
+     }
+    }
+   },
+   "Friday": {
+    "all": {
+     "train": {
+      "n": 7,
+      "L": 3,
+      "W": 4,
+      "lift": 7.65
+     },
+     "test": {
+      "n": 15,
+      "L": 5,
+      "W": 10,
+      "lift": 12.46
+     },
+     "all": {
+      "n": 22,
+      "L": 8,
+      "W": 14,
+      "lift": 9.36
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 5,
+      "L": 1,
+      "W": 4,
+      "lift": 5.75
+     },
+     "test": {
+      "n": 10,
+      "L": 0,
+      "W": 10,
+      "lift": 0.0
+     },
+     "all": {
+      "n": 15,
+      "L": 1,
+      "W": 14,
+      "lift": 2.94
+     }
+    }
+   }
+  },
+  "rule_trigger_spread": {
+   "stop_only": {
+    "train": {
+     "n": 39,
+     "L": 5,
+     "W": 34,
+     "lift": 4.22
+    },
+    "test": {
+     "n": 43,
+     "L": 4,
+     "W": 39,
+     "lift": 7.96
+    },
+    "all": {
+     "n": 82,
+     "L": 9,
+     "W": 73,
+     "lift": 5.53
+    }
+   },
+   "stop_only_pass": true,
+   "stop_only_top2_out": {
+    "O": 4,
+    "E": 1.16,
+    "oe": 3.45
+   },
+   "stop_only_days": 7,
+   "stop_only_batches": {
+    "2": 4,
+    "4": 1,
+    "6": 2,
+    "7": 2
+   },
+   "buys": {
+    "all": {
+     "train": {
+      "n": 18,
+      "L": 3,
+      "W": 15,
+      "lift": 4.98
+     },
+     "test": {
+      "n": 20,
+      "L": 4,
+      "W": 16,
+      "lift": 14.63
+     },
+     "all": {
+      "n": 38,
+      "L": 7,
+      "W": 31,
+      "lift": 8.25
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 16,
+      "L": 1,
+      "W": 15,
+      "lift": 2.13
+     },
+     "test": {
+      "n": 17,
+      "L": 1,
+      "W": 16,
+      "lift": 5.92
+     },
+     "all": {
+      "n": 33,
+      "L": 2,
+      "W": 31,
+      "lift": 3.29
+     }
+    }
+   },
+   "sells": {
+    "all": {
+     "train": {
+      "n": 24,
+      "L": 5,
+      "W": 19,
+      "lift": 6.19
+     },
+     "test": {
+      "n": 27,
+      "L": 4,
+      "W": 23,
+      "lift": 10.37
+     },
+     "all": {
+      "n": 51,
+      "L": 9,
+      "W": 42,
+      "lift": 7.75
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 23,
+      "L": 4,
+      "W": 19,
+      "lift": 5.54
+     },
+     "test": {
+      "n": 26,
+      "L": 3,
+      "W": 23,
+      "lift": 8.63
+     },
+     "all": {
+      "n": 49,
+      "L": 7,
+      "W": 42,
+      "lift": 6.72
+     }
+    }
+   },
+   "not Friday": {
+    "all": {
+     "train": {
+      "n": 34,
+      "L": 2,
+      "W": 32,
+      "lift": 1.99
+     },
+     "test": {
+      "n": 43,
+      "L": 4,
+      "W": 39,
+      "lift": 8.12
+     },
+     "all": {
+      "n": 77,
+      "L": 6,
+      "W": 71,
+      "lift": 4.0
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 34,
+      "L": 2,
+      "W": 32,
+      "lift": 1.99
+     },
+     "test": {
+      "n": 43,
+      "L": 4,
+      "W": 39,
+      "lift": 8.33
+     },
+     "all": {
+      "n": 77,
+      "L": 6,
+      "W": 71,
+      "lift": 4.03
+     }
+    }
+   },
+   "Friday": {
+    "all": {
+     "train": {
+      "n": 8,
+      "L": 6,
+      "W": 2,
+      "lift": 13.39
+     },
+     "test": {
+      "n": 4,
+      "L": 4,
+      "W": 0,
+      "lift": 37.37
+     },
+     "all": {
+      "n": 12,
+      "L": 10,
+      "W": 2,
+      "lift": 21.45
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 5,
+      "L": 3,
+      "W": 2,
+      "lift": 17.26
+     },
+     "test": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     },
+     "all": {
+      "n": 5,
+      "L": 3,
+      "W": 2,
+      "lift": 26.44
+     }
+    }
+   }
+  },
+  "rule_friday_close_ny": {
+   "stop_only": {
+    "train": {
+     "n": 16,
+     "L": 3,
+     "W": 13,
+     "lift": 6.17
+    },
+    "test": {
+     "n": 33,
+     "L": 0,
+     "W": 33,
+     "lift": 0.0
+    },
+    "all": {
+     "n": 49,
+     "L": 3,
+     "W": 46,
+     "lift": 3.08
+    }
+   },
+   "stop_only_pass": false,
+   "stop_only_top2_out": {
+    "O": 0,
+    "E": 0.71,
+    "oe": 0.0
+   },
+   "stop_only_days": 1,
+   "stop_only_batches": {
+    "2": 3
+   },
+   "buys": {
+    "all": {
+     "train": {
+      "n": 7,
+      "L": 3,
+      "W": 4,
+      "lift": 12.79
+     },
+     "test": {
+      "n": 20,
+      "L": 3,
+      "W": 17,
+      "lift": 10.97
+     },
+     "all": {
+      "n": 27,
+      "L": 6,
+      "W": 21,
+      "lift": 9.96
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 4,
+      "L": 0,
+      "W": 4,
+      "lift": 0.0
+     },
+     "test": {
+      "n": 17,
+      "L": 0,
+      "W": 17,
+      "lift": 0.0
+     },
+     "all": {
+      "n": 21,
+      "L": 0,
+      "W": 21,
+      "lift": 0.0
+     }
+    }
+   },
+   "sells": {
+    "all": {
+     "train": {
+      "n": 12,
+      "L": 3,
+      "W": 9,
+      "lift": 7.43
+     },
+     "test": {
+      "n": 18,
+      "L": 2,
+      "W": 16,
+      "lift": 7.78
+     },
+     "all": {
+      "n": 30,
+      "L": 5,
+      "W": 25,
+      "lift": 7.32
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 12,
+      "L": 3,
+      "W": 9,
+      "lift": 7.97
+     },
+     "test": {
+      "n": 16,
+      "L": 0,
+      "W": 16,
+      "lift": 0.0
+     },
+     "all": {
+      "n": 28,
+      "L": 3,
+      "W": 25,
+      "lift": 5.04
+     }
+    }
+   },
+   "not Friday": {
+    "all": {
+     "train": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     },
+     "test": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     },
+     "all": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     },
+     "test": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     },
+     "all": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     }
+    }
+   },
+   "Friday": {
+    "all": {
+     "train": {
+      "n": 19,
+      "L": 6,
+      "W": 13,
+      "lift": 5.64
+     },
+     "test": {
+      "n": 38,
+      "L": 5,
+      "W": 33,
+      "lift": 4.92
+     },
+     "all": {
+      "n": 57,
+      "L": 11,
+      "W": 46,
+      "lift": 4.97
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 16,
+      "L": 3,
+      "W": 13,
+      "lift": 5.39
+     },
+     "test": {
+      "n": 33,
+      "L": 0,
+      "W": 33,
+      "lift": 0.0
+     },
+     "all": {
+      "n": 49,
+      "L": 3,
+      "W": 46,
+      "lift": 2.7
+     }
+    }
+   }
+  },
+  "rule_empty_book": {
+   "stop_only": {
+    "train": {
+     "n": 34,
+     "L": 5,
+     "W": 29,
+     "lift": 4.84
+    },
+    "test": {
+     "n": 71,
+     "L": 5,
+     "W": 66,
+     "lift": 6.03
+    },
+    "all": {
+     "n": 105,
+     "L": 10,
+     "W": 95,
+     "lift": 4.8
+    }
+   },
+   "stop_only_pass": true,
+   "stop_only_top2_out": {
+    "O": 5,
+    "E": 1.25,
+    "oe": 4.01
+   },
+   "stop_only_days": 8,
+   "stop_only_batches": {
+    "2": 4,
+    "4": 1,
+    "6": 2,
+    "7": 3
+   },
+   "buys": {
+    "all": {
+     "train": {
+      "n": 21,
+      "L": 2,
+      "W": 19,
+      "lift": 2.84
+     },
+     "test": {
+      "n": 40,
+      "L": 1,
+      "W": 39,
+      "lift": 1.83
+     },
+     "all": {
+      "n": 61,
+      "L": 3,
+      "W": 58,
+      "lift": 2.2
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 20,
+      "L": 1,
+      "W": 19,
+      "lift": 1.7
+     },
+     "test": {
+      "n": 40,
+      "L": 1,
+      "W": 39,
+      "lift": 2.52
+     },
+     "all": {
+      "n": 60,
+      "L": 2,
+      "W": 58,
+      "lift": 1.81
+     }
+    }
+   },
+   "sells": {
+    "all": {
+     "train": {
+      "n": 14,
+      "L": 4,
+      "W": 10,
+      "lift": 8.49
+     },
+     "test": {
+      "n": 31,
+      "L": 4,
+      "W": 27,
+      "lift": 9.03
+     },
+     "all": {
+      "n": 45,
+      "L": 8,
+      "W": 37,
+      "lift": 7.8
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 14,
+      "L": 4,
+      "W": 10,
+      "lift": 9.11
+     },
+     "test": {
+      "n": 31,
+      "L": 4,
+      "W": 27,
+      "lift": 9.65
+     },
+     "all": {
+      "n": 45,
+      "L": 8,
+      "W": 37,
+      "lift": 8.36
+     }
+    }
+   },
+   "not Friday": {
+    "all": {
+     "train": {
+      "n": 26,
+      "L": 2,
+      "W": 24,
+      "lift": 2.6
+     },
+     "test": {
+      "n": 68,
+      "L": 5,
+      "W": 63,
+      "lift": 6.42
+     },
+     "all": {
+      "n": 94,
+      "L": 7,
+      "W": 87,
+      "lift": 3.82
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 26,
+      "L": 2,
+      "W": 24,
+      "lift": 2.6
+     },
+     "test": {
+      "n": 68,
+      "L": 5,
+      "W": 63,
+      "lift": 6.58
+     },
+     "all": {
+      "n": 94,
+      "L": 7,
+      "W": 87,
+      "lift": 3.85
+     }
+    }
+   },
+   "Friday": {
+    "all": {
+     "train": {
+      "n": 9,
+      "L": 4,
+      "W": 5,
+      "lift": 7.94
+     },
+     "test": {
+      "n": 3,
+      "L": 0,
+      "W": 3,
+      "lift": 0.0
+     },
+     "all": {
+      "n": 12,
+      "L": 4,
+      "W": 8,
+      "lift": 8.58
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 8,
+      "L": 3,
+      "W": 5,
+      "lift": 10.79
+     },
+     "test": {
+      "n": 3,
+      "L": 0,
+      "W": 3,
+      "lift": 0.0
+     },
+     "all": {
+      "n": 11,
+      "L": 3,
+      "W": 8,
+      "lift": 12.02
+     }
+    }
+   }
+  },
+  "rule_friday_afternoon_ny": {
+   "stop_only": {
+    "train": {
+     "n": 88,
+     "L": 4,
+     "W": 84,
+     "lift": 1.5
+    },
+    "test": {
+     "n": 141,
+     "L": 1,
+     "W": 140,
+     "lift": 0.61
+    },
+    "all": {
+     "n": 229,
+     "L": 5,
+     "W": 224,
+     "lift": 1.1
+    }
+   },
+   "stop_only_pass": false,
+   "stop_only_top2_out": {
+    "O": 0,
+    "E": 3.21,
+    "oe": 0.0
+   },
+   "stop_only_days": 3,
+   "stop_only_batches": {
+    "2": 3,
+    "3": 1,
+    "6": 1
+   },
+   "buys": {
+    "all": {
+     "train": {
+      "n": 44,
+      "L": 7,
+      "W": 37,
+      "lift": 4.75
+     },
+     "test": {
+      "n": 78,
+      "L": 5,
+      "W": 73,
+      "lift": 4.69
+     },
+     "all": {
+      "n": 122,
+      "L": 12,
+      "W": 110,
+      "lift": 4.41
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 38,
+      "L": 1,
+      "W": 37,
+      "lift": 0.9
+     },
+     "test": {
+      "n": 73,
+      "L": 0,
+      "W": 73,
+      "lift": 0.0
+     },
+     "all": {
+      "n": 111,
+      "L": 1,
+      "W": 110,
+      "lift": 0.49
+     }
+    }
+   },
+   "sells": {
+    "all": {
+     "train": {
+      "n": 54,
+      "L": 7,
+      "W": 47,
+      "lift": 3.85
+     },
+     "test": {
+      "n": 70,
+      "L": 3,
+      "W": 67,
+      "lift": 3.0
+     },
+     "all": {
+      "n": 124,
+      "L": 10,
+      "W": 114,
+      "lift": 3.54
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 50,
+      "L": 3,
+      "W": 47,
+      "lift": 1.91
+     },
+     "test": {
+      "n": 68,
+      "L": 1,
+      "W": 67,
+      "lift": 1.1
+     },
+     "all": {
+      "n": 118,
+      "L": 4,
+      "W": 114,
+      "lift": 1.59
+     }
+    }
+   },
+   "not Friday": {
+    "all": {
+     "train": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     },
+     "test": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     },
+     "all": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     },
+     "test": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     },
+     "all": {
+      "n": 0,
+      "L": 0,
+      "W": 0,
+      "lift": null
+     }
+    }
+   },
+   "Friday": {
+    "all": {
+     "train": {
+      "n": 98,
+      "L": 14,
+      "W": 84,
+      "lift": 2.55
+     },
+     "test": {
+      "n": 148,
+      "L": 8,
+      "W": 140,
+      "lift": 2.02
+     },
+     "all": {
+      "n": 246,
+      "L": 22,
+      "W": 224,
+      "lift": 2.3
+     }
+    },
+    "stop_only": {
+     "train": {
+      "n": 88,
+      "L": 4,
+      "W": 84,
+      "lift": 1.31
+     },
+     "test": {
+      "n": 141,
+      "L": 1,
+      "W": 140,
+      "lift": 0.5
+     },
+     "all": {
+      "n": 229,
+      "L": 5,
+      "W": 224,
+      "lift": 0.96
+     }
+    }
+   }
+  }
+ }
+}

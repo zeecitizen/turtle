@@ -1,0 +1,35 @@
+ANGEL now (wall 1 pip, 3 touches, 00, 60)      648 tr   1 L WR  99.85% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +896
+ANGEL without the wall                         663 tr   2 L WR  99.70% (Mar-Jun  99.68 / Jul-Nov  99.72) net     +698 | removes 0 W 0 L  adds 15 (1 L)
+ANGEL wall 2p, 3 touch, fig 100, 60 bars       648 tr   1 L WR  99.85% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +896 | removes 0 W 0 L  adds 0 (0 L)
+ANGEL wall 1p, 3 touch, fig 100, 120 bars      648 tr   1 L WR  99.85% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +896 | removes 0 W 0 L  adds 0 (0 L)
+ANGEL wall 2p, 3 touch, fig 100, 120 bars      648 tr   1 L WR  99.85% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +896 | removes 0 W 0 L  adds 0 (0 L)
+ANGEL wall 1p, 3 touch, fig 50, 60 bars        636 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +878 | removes 12 W 0 L  adds 0 (0 L)
+ANGEL wall 2p, 3 touch, fig 50, 60 bars        634 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +874 | removes 14 W 0 L  adds 0 (0 L)
+ANGEL wall 1p, 3 touch, fig 50, 120 bars       633 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +871 | removes 15 W 0 L  adds 0 (0 L)
+ANGEL wall 2p, 3 touch, fig 50, 120 bars       630 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +865 | removes 18 W 0 L  adds 0 (0 L)
+ANGEL wall 1p, 2 touch, fig 100, 60 bars       645 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +893 | removes 3 W 0 L  adds 0 (0 L) winners cut: ['0623-134526-B', '0821-055828-B', '0901-094618-B']
+ANGEL wall 2p, 2 touch, fig 100, 60 bars       645 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +893 | removes 3 W 0 L  adds 0 (0 L) winners cut: ['0623-134526-B', '0821-055828-B', '0901-094618-B']
+ANGEL wall 1p, 2 touch, fig 100, 120 bars      645 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +893 | removes 3 W 0 L  adds 0 (0 L) winners cut: ['0623-134526-B', '0821-055828-B', '0901-094618-B']
+ANGEL wall 2p, 2 touch, fig 100, 120 bars      645 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +893 | removes 3 W 0 L  adds 0 (0 L) winners cut: ['0623-134526-B', '0821-055828-B', '0901-094618-B']
+ANGEL wall 1p, 2 touch, fig 50, 60 bars        632 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +872 | removes 16 W 0 L  adds 0 (0 L)
+ANGEL wall 2p, 2 touch, fig 50, 60 bars        630 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +870 | removes 18 W 0 L  adds 0 (0 L)
+ANGEL wall 1p, 2 touch, fig 50, 120 bars       630 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +868 | removes 18 W 0 L  adds 0 (0 L)
+ANGEL wall 2p, 2 touch, fig 50, 120 bars       627 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +862 | removes 21 W 0 L  adds 0 (0 L)
+ANGEL wall 1p, 1 touch, fig 100, 60 bars       645 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +893 | removes 3 W 0 L  adds 0 (0 L) winners cut: ['0623-134526-B', '0821-055828-B', '0901-094618-B']
+ANGEL wall 2p, 1 touch, fig 100, 60 bars       645 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +893 | removes 3 W 0 L  adds 0 (0 L) winners cut: ['0623-134526-B', '0821-055828-B', '0901-094618-B']
+ANGEL wall 1p, 1 touch, fig 100, 120 bars      645 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +893 | removes 3 W 0 L  adds 0 (0 L) winners cut: ['0623-134526-B', '0821-055828-B', '0901-094618-B']
+ANGEL wall 2p, 1 touch, fig 100, 120 bars      645 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +893 | removes 3 W 0 L  adds 0 (0 L) winners cut: ['0623-134526-B', '0821-055828-B', '0901-094618-B']
+ANGEL wall 1p, 1 touch, fig 50, 60 bars        631 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.71) net     +871 | removes 17 W 0 L  adds 0 (0 L)
+ANGEL wall 2p, 1 touch, fig 50, 60 bars        628 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.70) net     +865 | removes 20 W 0 L  adds 0 (0 L)
+ANGEL wall 1p, 1 touch, fig 50, 120 bars       629 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.70) net     +867 | removes 19 W 0 L  adds 0 (0 L)
+ANGEL wall 2p, 1 touch, fig 50, 120 bars       626 tr   1 L WR  99.84% (Mar-Jun 100.00 / Jul-Nov  99.70) net     +861 | removes 22 W 0 L  adds 0 (0 L)
+--- the same family with NO round figure (any level, fig step 1 pip)
+ANGEL wall 1p, 3 touch, ANY level, 60 bars     119 tr   0 L WR 100.00% (Mar-Jun 100.00 / Jul-Nov 100.00) net     +183 | removes 528 W 1 L ['1023-145031-B'] adds 0 (0 L)
+ANGEL wall 1p, 3 touch, ANY level, 120 bars     86 tr   0 L WR 100.00% (Mar-Jun 100.00 / Jul-Nov 100.00) net     +133 | removes 561 W 1 L ['1023-145031-B'] adds 0 (0 L)
+ANGEL wall 1p, 2 touch, ANY level, 60 bars      54 tr   0 L WR 100.00% (Mar-Jun 100.00 / Jul-Nov 100.00) net      +85 | removes 593 W 1 L ['1023-145031-B'] adds 0 (0 L)
+ANGEL wall 1p, 2 touch, ANY level, 120 bars     44 tr   0 L WR 100.00% (Mar-Jun 100.00 / Jul-Nov 100.00) net      +69 | removes 603 W 1 L ['1023-145031-B'] adds 0 (0 L)
+--- on the base 97.7% setting (no angel)
+BASE                                          7631 tr 172 L WR  97.75% (Mar-Jun  96.64 / Jul-Nov  98.60) net   -25526
+BASE + wall 1p, 3 touch, fig 100, 60 bars     7505 tr 164 L WR  97.81% (Mar-Jun  96.71 / Jul-Nov  98.67) net   -24361 | removes 198 W 10 L ['0408-075606-B', '0428-085748-B', '0504-193208-B', '0514-125507-B', '0604-074634-S', '0617-205108-S', '0911-180812-B', '1007-091004-B', '1009-205809-S', '1026-105900-B'] adds 82 (2 L)
+BASE + wall 1p, 2 touch, fig 100, 60 bars     7533 tr 164 L WR  97.82% (Mar-Jun  96.70 / Jul-Nov  98.69) net   -24327 | removes 210 W 10 L ['0408-075606-B', '0428-085748-B', '0504-193208-B', '0514-125507-B', '0604-074634-S', '0617-205108-S', '0911-180812-B', '1007-091004-B', '1009-205809-S', '1026-105900-B'] adds 122 (2 L)
+BASE + wall 1p, 1 touch, fig 100, 60 bars     7523 tr 164 L WR  97.82% (Mar-Jun  96.70 / Jul-Nov  98.68) net   -24337 | removes 220 W 10 L ['0408-075606-B', '0428-085748-B', '0504-193208-B', '0514-125507-B', '0604-074634-S', '0617-205108-S', '0911-180812-B', '1007-091004-B', '1009-205809-S', '1026-105900-B'] adds 122 (2 L)

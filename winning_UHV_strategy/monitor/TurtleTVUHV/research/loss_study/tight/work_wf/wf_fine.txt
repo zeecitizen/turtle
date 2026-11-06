@@ -1,0 +1,15 @@
+740 humps-2-3 combos at 0.01 ER resolution
+choose on Mar-Jun: h2-3_er0.29-0.38 Mar-Jun 233 tr 0 L WR 100.0% net +433.02 -> Jul-Nov 282 tr 2 L WR 99.29% net -8.97
+     next: h2-3_er0.29-0.37 Mar-Jun 206/0L -> Jul-Nov 254/1L WR 99.61% net +148.05
+     next: h2-3_er0.30-0.38 Mar-Jun 198/0L -> Jul-Nov 248/2L WR 99.19% net -59.98
+     next: h2-3_er0.29-0.36 Mar-Jun 186/0L -> Jul-Nov 236/1L WR 99.58% net +124.04
+     next: h2-3_er0.30-0.37 Mar-Jun 171/0L -> Jul-Nov 220/1L WR 99.55% net +97.04
+     next: h2-3_er0.31-0.38 Mar-Jun 168/0L -> Jul-Nov 201/2L WR 99.0% net -120.04
+   13 combos lossless on Mar-Jun (>= 120 tr); their Jul-Nov losses: min 0, max 2; lossless on both halves: 3
+choose on Jul-Nov: h2-3_er0.26-0.35 Jul-Nov 326 tr 0 L WR 100.0% net +489.01 -> Mar-Jun 267 tr 3 L WR 98.88% net -168.96
+     next: h2-3_er0.26-0.34 Jul-Nov 300/0L -> Mar-Jun 243/3L WR 98.77% net -215.95
+     next: h2-3_er0.27-0.35 Jul-Nov 283/0L -> Mar-Jun 230/3L WR 98.7% net -229.94
+     next: h2-3_er0.26-0.33 Jul-Nov 269/0L -> Mar-Jun 223/3L WR 98.65% net -246.96
+     next: h2-3_er0.27-0.34 Jul-Nov 257/0L -> Mar-Jun 206/3L WR 98.54% net -276.93
+     next: h2-3_er0.28-0.35 Jul-Nov 253/0L -> Mar-Jun 192/2L WR 98.96% net -82.92
+   25 combos lossless on Jul-Nov (>= 120 tr); their Mar-Jun losses: min 0, max 3; lossless on both halves: 8

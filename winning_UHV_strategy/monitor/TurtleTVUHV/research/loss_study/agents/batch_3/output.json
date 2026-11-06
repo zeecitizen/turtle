@@ -1,0 +1,663 @@
+{
+ "losses": [
+  {
+   "id": "0407-071138-S",
+   "comment": "From 10:41 to 11:44 PKT the market climbed from 1.1530 to 1.1545 in clean higher lows. The camel turned RED x1 only on the two-candle drop at 12:05-12:06 (1.15424 to 1.15365, 176 and 143 ticks). The 12:07-12:10 bounce printed the green UHV (12:09, 110 ticks, H 1.15406 / L 1.15381). The sell fired on its low at 1.15380, only 1.6 pips above the fresh 12:06/12:07 double low (1.15365/1.15368), with 60 ticks already traded in the breakout minute. The 1-pip target needed the bid near 1.1537, right into that double low. Buyers defended it and the 90-minute uptrend resumed. Twin 0407-070500-S sold the same first red hump 6 minutes earlier, from the top of the drop (box 18), and won. Twin 0407-100924-S sold inside a mature RED x4 trend. What I can see (first red hump against a 90-minute uptrend, sell 1.6 pips above a fresh double low) is common among winners: near_fresh_extreme x0.91, counter_trend60 x0.86. Not avoidable with anything measurable.",
+   "cause": "counter-structure / into fresh low",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0408-075606-B",
+   "comment": "After the 11:44 top (1.1708) price fell to 1.1679 (12:13), then recovered in higher lows. At 12:46, 12:52 and 12:54 PKT it printed highs of 1.16996, 1.16997 and 1.17000: a triple top sitting on the 1.1700 big figure. The red UHV (12:55, 161 ticks, high 1.16990) triggered the buy at ask 1.16999, so the take-profit (bid 1.17000) was exactly that triple-top high and round number. The bid never printed 1.17000 and price slid 20 pips. Twin 0408-075005-B bought 3 pips below the ceiling (level 1.16970) and had room. Twin 0408-064551-B bought 2 pips under the 1.1708 double top and only just won. Visible before entry: the 100-pip figure sat 1.0 pip beyond the level. bigfig_ahead10 removes it (x2.34 train / x4.66 test, 7 losers), but that rule is fragile. It is selective only at the 1.0-pip threshold, this level sits exactly on that edge (float32 level), and beyond the session rules it drops to x1.90/x1.83.",
+   "cause": "into support/resistance (triple top at the 1.1700 big figure)",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "bigfig_ahead10",
+    "liquidity_guard_bigfig"
+   ]
+  },
+  {
+   "id": "0409-062811-S",
+   "comment": "A 90-minute grind lower (1.1667 to 1.1654, four red humps, ADX 52) ended with a steep 9-pip leg from 11:13 to 11:26 to 1.16541. The first bounce candle (11:27, green, 86 ticks) became the UHV, and the sell broke its low at 1.16553, 1.2 pips above the fresh low. That is selling the fourth leg of an old trend at its extreme, and price reversed 13 pips within 30 minutes. The twins were quiet Asian-range sells (box 16 and box 20) and won. Across all trades this exhaustion profile wins at the base rate: the exhaustion rule (ADX >= 40, 60-bar move >= 3 ATR with the trade, level in the bottom quarter of the 60-bar range) is x1.72 on train and x0.78 on test. Not avoidable with what I measured.",
+   "cause": "exhausted trend",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0409-110305-S",
+   "comment": "Price ranged at 1.1673-1.1679 for 90 minutes. Then one red candle at 16:00 PKT (160 ticks, the loudest of the session) stabbed to 1.16695, below the range floor. The 16:01 green candle answered with 139 ticks (the UHV), and the sell broke its low at 1.16714, 2 pips above the stab. That is a spring or stop-run: the loudest selling candle could not hold new lows and met almost equal buying (ADX 70 from the spike). Price rallied 13 pips to 1.1683. Both twins sold the first lower high after an 18:38 top, not a fresh low. On the chart a skilled reader distrusts this sell, but the data does not confirm selling the fresh low after a spike: exhaustion x1.72/x0.78, near_fresh_extreme x0.91.",
+   "cause": "into support/resistance (spring below a range)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0410-122837-S",
+   "comment": "A 90-minute range at 1.1710-1.1718. Its floor near 1.1710 held at 16:40, 17:04, 17:11 and 17:24 PKT (low 1.17093). Two green candles off the 17:24 low formed the UHV (17:27, 93 ticks), and the sell broke it at 1.17108 with 80 ticks already in the breakout minute. That was the fourth test of the floor, and 90 seconds before the 12:30 UTC US data slot (Friday 10 April). From 17:29 to 17:35 price spiked up 15 pips. Twin 0410-122231-S sold the first break of the same floor 6 minutes earlier (box 20) and won before the spike. An economic calendar would have flagged this; the bars cannot. 12:25-12:35 UTC windows are not selective over all days (x0.84 train / x1.91 test, because most days have no release), and repeated floor tests are flat (retest_floor x1.06/x0.99).",
+   "cause": "news/spike (12:30 UTC release) into a range floor",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0413-064826-S",
+   "comment": "Price slid from the 11:08 high (1.1695), then broke hard from 11:35 to 11:45: 12 pips down on rising volume (180 ticks at 11:44) to 1.16775. Two tiny candles at the low and the 11:46-11:47 green candles (UHV 122 ticks) came before the sell at 1.16782, under 1 pip above the capitulation low. Price V-reversed to 1.1692. Twin 0413-060302-S sold a quiet range; twin 0413-074313-S sold the first pullback from a top. Same verdict as 0409-062811-S: the climax-low profile (ADX 53, 60-bar move 4.3 ATR, level at the 60-bar low) is not selective (exhaustion x0.78 on test).",
+   "cause": "exhausted trend (climactic sell-off)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0413-120919-S",
+   "comment": "An 18-pip decline from the 16:38 top (1.1699) reached 1.1681 at 17:00 on swelling volume (220 ticks). A 17:02 spike back to 1.1687 was sold down to 1.16803 at 17:06, a marginal new low. The green 17:07-17:08 candles (UHV 150 ticks) then gave this sell at 1.16825, 2.2 pips above the double bottom (1.1681/1.1680). Twin 0413-120523-S sold the same decline at 17:05 (1.16819) and won, because the 17:06 marginal new low paid its pip. The second sell into the same floor had no new low left, and price rose to 1.1690. A second attempt into a fresh double bottom does not measure as selective: retest_floor x1.06/x0.99, near_fresh_extreme x0.91.",
+   "cause": "into support/resistance (double-bottom retest)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0413-182648-S",
+   "comment": "A 13-pip rally from 21:56 to 22:20 PKT (1.1724 to 1.1737) was followed by an hour-long flat flag at 1.1733-1.1738 (ADX 13.6, ATR 0.95 pip). The RED x2 camel came from 1-3-pip noise humps inside the flag. The sell broke the UHV (23:24, 133 ticks) at 1.17353, mid-flag. At 23:28-23:30 the flag broke up to the 1.1756 stop. Twins 0413-174446-S and 0413-174205-S sold the same flag 40 minutes earlier and won. The visible warning (a sell against the hour's trend in a no-trend flag) is not selective: ADX bins are flat (ADX < 17.7 is x0.73/x0.65), counter_trend60 x0.86.",
+   "cause": "chop/range (sell inside a bull flag)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0414-025520-S",
+   "comment": "Dead Asian tape at 02:55 UTC: ATR 0.51 pip, bars of 10-30 ticks. The UHV (07:40 PKT, green, 120 ticks) was the bounce off the 07:36 low (1.1756). The retracement then drifted sideways for 15 minutes, and the sell broke the UHV low at 1.17580 only at 07:55, 14 candles after the UHV (box 20). No follow-through came; price drifted up and later ran to the stop. Twin 0413-223802-S (03:38 PKT) had the same thin Asian tape and won. Stale UHVs and low-ATR Asian trades are not selective (stale_uhv x1.16/x0.76, low_atr_asia x1.32/x0.78), and the 60-bar mean volume (55 ticks) is above the dead-tape threshold.",
+   "cause": "chop/range (dead Asian tape, stale UHV)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0414-082354-S",
+   "comment": "From the 12:08 spike top (1.1796) and a 12:40 lower high (1.1792), price bled 17 pips over 50 minutes back to 1.1775, where the 11:55 rally had started. Volume faded on the way down (70-110 ticks). The UHV (13:21, 83 ticks) gave a sell at 1.17757, 0.9 pip above the 13:20 low. That is selling a tired drift into the base of the previous impulse; price bounced 9 pips to 1.1784. Twin 0414-120951-S sold the low of a collapse at 17:09 and won. Selling into old support or a fresh low is not selective (near_fresh_extreme x0.92/x0.99).",
+   "cause": "into support/resistance (origin of the prior impulse)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0416-045923-B",
+   "comment": "A 90-minute downtrend (1.1817 to 1.1808, lower highs) on a dying pre-London tape at 04:59 UTC: 40-60 ticks a bar, ATR 0.61 pip. The GREEN x1 camel came from a sub-1-pip micro hump at 09:50-09:55 PKT. The UHV was 14 candles old (09:45, 66 ticks). The buy broke above the 7-candle high (box 20) at 1.18107, against the hour's trend; price never paid the pip and slid to 1.1803. Twin 0416-041424-B was the same pattern 45 minutes earlier and won by a hair. The visible difference is volume: a 60-bar mean of 38 ticks against the twin's 56. low_vol60_40 removes this loss but not the twin (x2.06 train / x2.57 test stand-alone). Weak case, though: once the session rules are applied, low volume adds only x1.24/x1.44.",
+   "cause": "counter-structure (dead pre-London tape, micro-hump camel)",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "low_vol60_40"
+   ]
+  },
+  {
+   "id": "0417-084606-S",
+   "comment": "A steady uptrend from 12:16 PKT (1.1775) accelerated into a vertical 8-pip run from 13:39 to 13:45 (137-159 ticks). The camel was RED only because of a 2.4-pip micro hump at 13:34-13:38 (high 1.17847, low 1.17823). The retracement, which was the rally itself, went 6.5 pips above that hump's high, so the down-structure was already broken. The sell broke the 13:45 green UHV's low at 1.17900, near the top of the 7-candle range (box 3), into higher highs; price climbed to 1.1796. Twin 0417-040531-S sold a rally only after it had topped and rolled over. The chart says skip; the data says no. Even the corrected structure test (struct_broken_colour: retracement 2+ pips beyond the colour-setting hump, read from the camel state at that hump's redraw) is x1.05/x0.79, and micro_hump_flip is x1.11/x1.63.",
+   "cause": "camel misread (stale red camel in a vertical rally)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0417-183109-B",
+   "comment": "Friday evening chop at 1.1785-1.1797. Price spiked to the range top (1.1797) at 23:26 PKT for the second time (after 22:52) and was rejected by a sharp red candle at 23:28. The buy came off the red UHV (23:29, 139 ticks) at 1.17936, 4 pips under the rejected top, at 18:31 UTC on Friday. Price fell 20 pips into the weekly close. Twins 0417-180551-B and 0417-171505-B bought the same range earlier and won. Visible before entry: Friday after 17:00 UTC, the window where an unpaid trade has hours of thin tape and the forced 20:58 close ahead. fri_late17 x4.05/x3.87, session_close x3.80/x3.73, fri_17_19 x2.76/x2.75.",
+   "cause": "market close (late Friday)",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "fri_17_19",
+    "fri_late14",
+    "fri_late16",
+    "fri_late17",
+    "fri_late18",
+    "liquidity_guard",
+    "liquidity_guard_bigfig",
+    "session_close",
+    "session_slip20"
+   ]
+  },
+  {
+   "id": "0417-205800-B",
+   "comment": "Entered at Friday 20:58 UTC, two minutes before the weekly close. The fill was 2.6 pips above the level (the closing spread was blown out), and the position was force-closed at 20:58 for -2.6 pips (-$26). The market reopened 25 pips lower (1.1738). This is not a setup failure but a close-window execution. Every close and spread rule removes it: fri_late20 x8.93/x9.41, rollover_2045_2200 x4.96/x7.34, slip_20 x6.38/x6.81.",
+   "cause": "market close",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "fri_late14",
+    "fri_late16",
+    "fri_late17",
+    "fri_late18",
+    "fri_late19",
+    "fri_late20",
+    "liquidity_guard",
+    "liquidity_guard_bigfig",
+    "liquidity_guard_strict",
+    "rollover_2045_2200",
+    "session_close",
+    "session_close19",
+    "session_slip20",
+    "slip_12",
+    "slip_15",
+    "slip_20"
+   ]
+  },
+  {
+   "id": "0421-151800-B",
+   "comment": "A failed 19:43 PKT spike to 1.1776 turned into a 27-pip collapse from 19:45 to 20:03 (1.1773 to 1.1748) on the session's heaviest volume (300+ ticks). The 20:03-20:16 dead-cat bounce built two small green humps (GREEN x2). The buy broke the red UHV (20:16, 254 ticks) at 1.17597, into the 19:49-19:55 shelf (1.1758-1.1761) where the collapse had paused, now resistance. The bounce died there and price fell to 1.1741. Twin 0421-150927-B bought the same bounce 3 pips lower at 20:09 and won. A bounce camel against a big opposite leg is not selective (counter_trend60 x0.80/x1.00).",
+   "cause": "counter-structure (dead-cat bounce into resistance)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0423-140702-S",
+   "comment": "Seven minutes after the 14:00 UTC data slot, in a wide, choppy range (1.1683-1.1697, ATR 2.95 pips). The red humps came from whipsaws, while the bigger lows were rising (18:12 PKT 1.1683, 19:03 1.1687). The sell broke the green UHV (19:05, 223 ticks) at 1.16912, mid-range (box 9), and price ripped 16 pips up to 1.1707. Both twins sold the same afternoon's range and won. Neither the time slot (13:55-14:05 UTC: x0.85 train / x1.70 test) nor range position or touches are selective.",
+   "cause": "news/spike (after the 14:00 UTC data slot, choppy range)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0423-164516-B",
+   "comment": "After the 20:28 PKT high (1.1715) the market made lower highs (1.1708, 1.1705) and a 21:12 low at 1.1698. A slow, low-volume recovery from 21:12 to 21:44 (80-110 ticks) printed two micro green humps (smaller leg 0.7 pip). The buy broke above the 7-candle high (box 20) at 1.17053, straight into the 20:45-20:55 breakdown shelf (1.1704-1.1707). Price collapsed 22 pips at 22:00. Twin 0423-162143-B bought the 21:12 low itself and won. Same family as 0421-151800-B; not selective (counter_trend60 x0.86; GREEN x2 so micro_hump_flip does not apply, and it is x1.11/x1.63 anyway).",
+   "cause": "counter-structure (slow bounce into resistance)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0424-095824-S",
+   "comment": "The 1.1684-1.1686 floor held at 14:30, 14:36 and 14:50 PKT with rising lows while volume faded. The sell broke the UHV (14:56, 93 ticks) at 1.16859 on the third test of the floor; price rallied 10 pips. Twin 0424-092540-S sold the identical level 33 minutes earlier, on the first test, and won. The third test of a floor does not measure as selective (retest_floor x1.06/x0.99).",
+   "cause": "into support/resistance (third test of a floor)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0424-183049-S",
+   "comment": "Late Friday (18:30 UTC), a thin range at 1.1711-1.1721 with rising lows (23:03 PKT 1.1711, 23:12 1.1712, 23:24 1.1712). The sell broke a 9-candle-old UHV (23:21, 93 ticks) at 1.17136. The pip never came, price drifted up to 1.1719, and the trade was force-closed at the 20:58 UTC weekly close for -5.6 pips (-$56). Twins 0424-175730-S and 0424-173838-S sold the same range at 17:38-17:57 UTC and won, and they also fall inside fri_late17. The rule removes the window, not the pattern. Visible before entry: Friday after 17:00 UTC. fri_late17 x4.05/x3.87, session_close x3.80/x3.73.",
+   "cause": "market close (late Friday)",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "fri_17_19",
+    "fri_late14",
+    "fri_late16",
+    "fri_late17",
+    "fri_late18",
+    "liquidity_guard",
+    "liquidity_guard_bigfig",
+    "session_close",
+    "session_slip20"
+   ]
+  },
+  {
+   "id": "0426-222526-S",
+   "comment": "85 minutes after the Sunday open, which gapped 25 pips down from Friday's 1.1722 to 1.1697. The first 30 minutes traded under 20 ticks a bar; the gap half-filled to 1.1710 by 02:55 PKT, then went flat. The sell broke a 48-tick UHV (03:24) at 1.17055, against the unfinished gap fill, on a 60-bar mean of 29 ticks. The tape kept lifting toward the gap and later reached the stop. Both twins (03:03 and 03:18) sold the same tape and won, so nothing separates this loss from its twins. The rule skips the whole dead session instead: low_vol60_30 x3.02/x2.40 stand-alone, inside liquidity_guard; sunday_open alone is only x1.18/x1.21.",
+   "cause": "chop/range (Sunday-open thin tape, unfinished gap fill)",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "liquidity_guard",
+    "liquidity_guard_bigfig",
+    "liquidity_guard_strict",
+    "low_vol60_30",
+    "low_vol60_40"
+   ]
+  },
+  {
+   "id": "0427-150215-B",
+   "comment": "A 19:52 PKT spike to 1.1748 collapsed 15 pips in four minutes (19:53-19:57) on 270-290 ticks a bar. The UHV is the collapse candle itself (19:56, 288 ticks, high 1.17366). The camel turned GREEN x1 on a micro higher low three minutes later (19:56 1.17329, 19:59 1.17349: a 4.8-pip hump right after a 15-pip red hump). The buy broke the collapse candle's high at 1.17372, a reversal bet against a fresh liquidation; price stayed heavy and ran to the stop. Twins 0427-142021-B and 0427-140548-B bought slow pullbacks in a quieter tape. The colour-hump structure break is exactly 2.0 pips, on the edge of struct_broken_colour (not flagged), and that rule is x1.05/x0.79 anyway. Not avoidable with anything measurable.",
+   "cause": "camel misread (micro-hump flip right after a collapse)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  }
+ ],
+ "rules": [
+  {
+   "rule_id": "fri_late20",
+   "idea": "EXCELLENT (mostly the existing close window).",
+   "code": "def rule(t, A):\n    return int((t[\"t_in\"] // 86400 + 4) % 7) == 5 and (t[\"t_in\"] % 86400) >= 20 * 3600\n",
+   "lift_all": 8.41,
+   "lift_train": 8.93,
+   "lift_test": 9.41,
+   "losers_removed": 11,
+   "winners_removed": 47,
+   "verdict": "EXCELLENT (mostly the existing close window). | api.report: train 6L/14W, test 5L/33W, WR after 97.87%, net +2,834$ at 1 lot"
+  },
+  {
+   "rule_id": "slip_20",
+   "idea": "EXCELLENT stand-alone; 3L/20W outside session_close (x4.25 / x7.95).",
+   "code": "def rule(t, A):\n    return (t[\"fill\"] - t[\"level\"]) * t[\"side\"] >= 2.0 * A.PIP\n",
+   "lift_all": 7.24,
+   "lift_train": 6.38,
+   "lift_test": 6.81,
+   "losers_removed": 8,
+   "winners_removed": 41,
+   "verdict": "EXCELLENT stand-alone; 3L/20W outside session_close (x4.25 / x7.95). | api.report: train 6L/22W, test 2L/19W, WR after 97.84%, net +2,420$ at 1 lot"
+  },
+  {
+   "rule_id": "slip_15",
+   "idea": "EXCELLENT stand-alone, but only 3 losers outside session_close (x1.86 / x4.77). Live: a max-deviation price limit (ask <= level + 1.5 pips buy, bid >= level - 1.5 pips sell).",
+   "code": "def rule(t, A):\n    return (t[\"fill\"] - t[\"level\"]) * t[\"side\"] >= 1.5 * A.PIP\n",
+   "lift_all": 6.17,
+   "lift_train": 4.25,
+   "lift_test": 9.54,
+   "losers_removed": 11,
+   "winners_removed": 68,
+   "verdict": "EXCELLENT stand-alone, but only 3 losers outside session_close (x1.86 / x4.77). Live: a max-deviation price limit (ask <= level + 1.5 pips buy, bid >= level - 1.5 pips sell). | api.report: train 7L/42W, test 4L/26W, WR after 97.87%, net +2,658$ at 1 lot"
+  },
+  {
+   "rule_id": "rollover_2045_2200",
+   "idea": "EXCELLENT. Daily rollover; outside the old 20:45-21:15 example window: x4.06 / x6.92 (6L).",
+   "code": "def rule(t, A):\n    s = t[\"t_in\"] % 86400\n    return 20 * 3600 + 45 * 60 <= s < 22 * 3600\n",
+   "lift_all": 5.71,
+   "lift_train": 4.96,
+   "lift_test": 7.34,
+   "losers_removed": 17,
+   "winners_removed": 115,
+   "verdict": "EXCELLENT. Daily rollover; outside the old 20:45-21:15 example window: x4.06 / x6.92 (6L). | api.report: train 9L/45W, test 8L/70W, WR after 97.93%, net +3,055$ at 1 lot"
+  },
+  {
+   "rule_id": "fri_late19",
+   "idea": "EXCELLENT. Outside 20:45-21:15: x4.25 / x0.00 (6L, all train).",
+   "code": "def rule(t, A):\n    return int((t[\"t_in\"] // 86400 + 4) % 7) == 5 and (t[\"t_in\"] % 86400) >= 19 * 3600\n",
+   "lift_all": 5.22,
+   "lift_train": 5.47,
+   "lift_test": 5.11,
+   "losers_removed": 14,
+   "winners_removed": 105,
+   "verdict": "EXCELLENT. Outside 20:45-21:15: x4.25 / x0.00 (6L, all train). | api.report: train 9L/40W, test 5L/65W, WR after 97.9%, net +3,097$ at 1 lot"
+  },
+  {
+   "rule_id": "rollover_2115_2200",
+   "idea": "Only the part of the rollover hour that the existing 20:45-21:15 example window does not cover.",
+   "code": "def rule(t, A):\n    \"\"\"Only the part of the rollover hour that the existing 20:45-21:15 example window does not cover.\"\"\"\n    s = t[\"t_in\"] % 86400\n    return 21 * 3600 + 15 * 60 < s < 22 * 3600\n",
+   "lift_all": 5.02,
+   "lift_train": 4.06,
+   "lift_test": 6.92,
+   "losers_removed": 6,
+   "winners_removed": 47,
+   "verdict": "EXCELLENT. Only the part of the rollover hour the old window misses (6L). | api.report: train 3L/19W, test 3L/28W, WR after 97.81%, net +1,034$ at 1 lot"
+  },
+  {
+   "rule_id": "rollover_2100_2200",
+   "idea": "EXCELLENT (6L).",
+   "code": "def rule(t, A):\n    s = t[\"t_in\"] % 86400\n    return 21 * 3600 <= s < 22 * 3600\n",
+   "lift_all": 4.84,
+   "lift_train": 4.06,
+   "lift_test": 6.5,
+   "losers_removed": 6,
+   "winners_removed": 49,
+   "verdict": "EXCELLENT (6L). | api.report: train 3L/19W, test 3L/30W, WR after 97.81%, net +1,032$ at 1 lot"
+  },
+  {
+   "rule_id": "fri_late18",
+   "idea": "EXCELLENT. Lift climbs monotonically from 14h to 20h on both halves; mostly the close window on test.",
+   "code": "def rule(t, A):\n    return int((t[\"t_in\"] // 86400 + 4) % 7) == 5 and (t[\"t_in\"] % 86400) >= 18 * 3600\n",
+   "lift_all": 4.36,
+   "lift_train": 4.68,
+   "lift_test": 4.43,
+   "losers_removed": 18,
+   "winners_removed": 165,
+   "verdict": "EXCELLENT. Lift climbs monotonically from 14h to 20h on both halves; mostly the close window on test. | api.report: train 11L/59W, test 7L/106W, WR after 97.93%, net +3,356$ at 1 lot"
+  },
+  {
+   "rule_id": "session_close19",
+   "idea": "EXCELLENT. The tighter Friday start.",
+   "code": "def rule(t, A):\n    s = t[\"t_in\"] % 86400\n    fri = int((t[\"t_in\"] // 86400 + 4) % 7) == 5\n    return (fri and s >= 19 * 3600) or (20 * 3600 + 45 * 60 <= s < 22 * 3600)\n",
+   "lift_all": 4.28,
+   "lift_train": 4.39,
+   "lift_test": 4.3,
+   "losers_removed": 22,
+   "winners_removed": 206,
+   "verdict": "EXCELLENT. The tighter Friday start. | api.report: train 14L/81W, test 8L/125W, WR after 97.97%, net +4,704$ at 1 lot"
+  },
+  {
+   "rule_id": "slip_12",
+   "idea": "The fill is 1.2+ pips beyond the UHV level (buy: ask above the high = spread + jump; sell: bid below the low = jump). The 0.1-pip target then needs the price to run that much further before it pays; a wide spread is the thin-market signature (rollover, news).",
+   "code": "def rule(t, A):\n    \"\"\"The fill is 1.2+ pips beyond the UHV level (buy: ask above the high = spread + jump; sell: bid below the low = jump). The 0.1-pip\n    target then needs the price to run that much further before it pays; a wide spread is the thin-market signature (rollover, news).\"\"\"\n    return (t[\"fill\"] - t[\"level\"]) * t[\"side\"] >= 1.2 * A.PIP\n",
+   "lift_all": 5.35,
+   "lift_train": 3.13,
+   "lift_test": 10.73,
+   "losers_removed": 14,
+   "winners_removed": 102,
+   "verdict": "GOOD. Overlaps the close windows: outside session_close only 4L/77W. | api.report: train 8L/68W, test 6L/34W, WR after 97.9%, net +3,115$ at 1 lot"
+  },
+  {
+   "rule_id": "fri_late17",
+   "idea": "Friday from 17:00 UTC: a trade that does not reach its 1-pip target fast is held into the thin close and force-closed at 20:58.",
+   "code": "def rule(t, A):\n    \"\"\"Friday from 17:00 UTC: a trade that does not reach its 1-pip target fast is held into the thin close and force-closed at 20:58.\"\"\"\n    return int((t[\"t_in\"] // 86400 + 4) % 7) == 5 and (t[\"t_in\"] % 86400) >= 17 * 3600\n",
+   "lift_all": 3.89,
+   "lift_train": 4.05,
+   "lift_test": 3.87,
+   "losers_removed": 22,
+   "winners_removed": 229,
+   "verdict": "GOOD. Outside the existing 20:45-21:15 window: x3.41 train / x1.61 test (14L). | api.report: train 14L/89W, test 8L/140W, WR after 97.97%, net +3,745$ at 1 lot"
+  },
+  {
+   "rule_id": "session_slip20",
+   "idea": "session_close + the fill already 2+ pips past the level (a spike / blown spread outside the close windows).",
+   "code": "def rule(t, A):\n    \"\"\"session_close + the fill already 2+ pips past the level (a spike / blown spread outside the close windows).\"\"\"\n    s = t[\"t_in\"] % 86400\n    fri = int((t[\"t_in\"] // 86400 + 4) % 7) == 5\n    if (fri and s >= 17 * 3600) or (20 * 3600 + 45 * 60 <= s < 22 * 3600):\n        return True\n    return (t[\"fill\"] - t[\"level\"]) * t[\"side\"] >= 2.0 * A.PIP\n",
+   "lift_all": 3.82,
+   "lift_train": 3.84,
+   "lift_test": 3.9,
+   "losers_removed": 33,
+   "winners_removed": 350,
+   "verdict": "GOOD. session_close plus a fill 2+ pips past the level; the best simple combination (33L for 350W, WR 98.08%). | api.report: train 21L/142W, test 12L/208W, WR after 98.08%, net +5,959$ at 1 lot"
+  },
+  {
+   "rule_id": "session_close",
+   "idea": "Skip Friday from 17:00 UTC (held into the weekly close) and every day 20:45-22:00 UTC (rollover: spread blow-out, dead tape).",
+   "code": "def rule(t, A):\n    \"\"\"Skip Friday from 17:00 UTC (held into the weekly close) and every day 20:45-22:00 UTC (rollover: spread blow-out, dead tape).\"\"\"\n    s = t[\"t_in\"] % 86400\n    fri = int((t[\"t_in\"] // 86400 + 4) % 7) == 5\n    return (fri and s >= 17 * 3600) or (20 * 3600 + 45 * 60 <= s < 22 * 3600)\n",
+   "lift_all": 3.69,
+   "lift_train": 3.8,
+   "lift_test": 3.73,
+   "losers_removed": 30,
+   "winners_removed": 330,
+   "verdict": "GOOD, the core recommendation. Friday from 17:00 UTC or daily 20:45-22:00 UTC. Outside the old window: x3.31 / x2.62 (19L). | api.report: train 19L/130W, test 11L/200W, WR after 98.05%, net +5,352$ at 1 lot"
+  },
+  {
+   "rule_id": "fri_late16",
+   "idea": "GOOD.",
+   "code": "def rule(t, A):\n    return int((t[\"t_in\"] // 86400 + 4) % 7) == 5 and (t[\"t_in\"] % 86400) >= 16 * 3600\n",
+   "lift_all": 3.29,
+   "lift_train": 3.54,
+   "lift_test": 3.27,
+   "losers_removed": 24,
+   "winners_removed": 299,
+   "verdict": "GOOD. | api.report: train 15L/111W, test 9L/188W, WR after 97.97%, net +4,074$ at 1 lot"
+  },
+  {
+   "rule_id": "liquidity_guard_strict",
+   "idea": "The tighter variant: Friday from 19:00, rollover 20:45-22:00, fill 2+ pips past the level, 60-candle mean < 30 ticks.",
+   "code": "def rule(t, A):\n    \"\"\"The tighter variant: Friday from 19:00, rollover 20:45-22:00, fill 2+ pips past the level, 60-candle mean < 30 ticks.\"\"\"\n    s = t[\"t_in\"] % 86400\n    fri = int((t[\"t_in\"] // 86400 + 4) % 7) == 5\n    if (fri and s >= 19 * 3600) or (20 * 3600 + 45 * 60 <= s < 22 * 3600):\n        return True\n    if (t[\"fill\"] - t[\"level\"]) * t[\"side\"] >= 2.0 * A.PIP:\n        return True\n    k = t[\"k\"]\n    return float(np.mean(A.v[k - 59:k + 1])) < 30\n",
+   "lift_all": 3.22,
+   "lift_train": 3.41,
+   "lift_test": 3.07,
+   "losers_removed": 29,
+   "winners_removed": 370,
+   "verdict": "GOOD. | api.report: train 19L/147W, test 10L/223W, WR after 98.02%, net +5,890$ at 1 lot"
+  },
+  {
+   "rule_id": "bigfig_ahead10",
+   "idea": "A 100-pip round number (1.1700, 1.1800 ...) lies 0-1.0 pip beyond the UHV level in the trade direction: the take-profit (spread + 0.1 pip past the level) must pierce the big figure, where resting orders sit (loss 0408-075606-B: target exactly 1.17000).",
+   "code": "def rule(t, A):\n    \"\"\"A 100-pip round number (1.1700, 1.1800 ...) lies 0-1.0 pip beyond the UHV level in the trade direction: the take-profit (spread + 0.1\n    pip past the level) must pierce the big figure, where resting orders sit (loss 0408-075606-B: target exactly 1.17000).\"\"\"\n    lv, s = t[\"level\"], t[\"side\"]\n    near = round(lv / 0.01) * 0.01\n    d = round((near - lv) * s / A.PIP, 1)\n    return 0.0 <= d <= 1.0\n",
+   "lift_all": 3.2,
+   "lift_train": 2.34,
+   "lift_test": 4.66,
+   "losers_removed": 7,
+   "winners_removed": 90,
+   "verdict": "GOOD on paper, FRAGILE: 7 losers; train lift >= 2 only at the 1.0-pip cutoff (0.8 gives x2.18 with 5L, 1.5 gives x1.65); outside liquidity_guard x1.90 / x1.83. | api.report: train 4L/47W, test 3L/43W, WR after 97.81%, net +1,020$ at 1 lot"
+  },
+  {
+   "rule_id": "liquidity_guard",
+   "idea": "Stand aside when the 1-pip follow-through cannot be trusted: (a) Friday from 17:00 UTC (held into the weekly close), (b) every day 20:45-22:00 UTC (rollover spread blow-out), (c) the fill is already 1.5+ pips past the UHV level (wide spread / spike fill), (d) the last 60 closed candles averaged < 30 ticks (dead tape).",
+   "code": "def rule(t, A):\n    \"\"\"Stand aside when the 1-pip follow-through cannot be trusted: (a) Friday from 17:00 UTC (held into the weekly close), (b) every day\n    20:45-22:00 UTC (rollover spread blow-out), (c) the fill is already 1.5+ pips past the UHV level (wide spread / spike fill),\n    (d) the last 60 closed candles averaged < 30 ticks (dead tape).\"\"\"\n    s = t[\"t_in\"] % 86400\n    fri = int((t[\"t_in\"] // 86400 + 4) % 7) == 5\n    if (fri and s >= 17 * 3600) or (20 * 3600 + 45 * 60 <= s < 22 * 3600):\n        return True\n    if (t[\"fill\"] - t[\"level\"]) * t[\"side\"] >= 1.5 * A.PIP:\n        return True\n    k = t[\"k\"]\n    return float(np.mean(A.v[k - 59:k + 1])) < 30\n",
+   "lift_all": 2.97,
+   "lift_train": 3.03,
+   "lift_test": 2.93,
+   "losers_removed": 37,
+   "winners_removed": 516,
+   "verdict": "GOOD. session_close + slip_15 + low_vol60_30. Most of its lift is session_close; prefer session_slip20. | api.report: train 24L/212W, test 13L/304W, WR after 98.09%, net +6,486$ at 1 lot"
+  },
+  {
+   "rule_id": "liquidity_guard_bigfig",
+   "idea": "liquidity_guard + a 100-pip big figure 0-1 pip beyond the level.",
+   "code": "def rule(t, A):\n    \"\"\"liquidity_guard + a 100-pip big figure 0-1 pip beyond the level.\"\"\"\n    s = t[\"t_in\"] % 86400\n    fri = int((t[\"t_in\"] // 86400 + 4) % 7) == 5\n    if (fri and s >= 17 * 3600) or (20 * 3600 + 45 * 60 <= s < 22 * 3600):\n        return True\n    if (t[\"fill\"] - t[\"level\"]) * t[\"side\"] >= 1.5 * A.PIP:\n        return True\n    k = t[\"k\"]\n    if float(np.mean(A.v[k - 59:k + 1])) < 30:\n        return True\n    near = round(t[\"level\"] / 0.01) * 0.01\n    d = round((near - t[\"level\"]) * t[\"side\"] / A.PIP, 1)\n    return 0.0 <= d <= 1.0\n",
+   "lift_all": 2.84,
+   "lift_train": 2.84,
+   "lift_test": 2.81,
+   "losers_removed": 41,
+   "winners_removed": 598,
+   "verdict": "GOOD (adds the fragile big-figure piece). | api.report: train 27L/256W, test 14L/342W, WR after 98.13%, net +7,233$ at 1 lot"
+  },
+  {
+   "rule_id": "bigfig_ahead08",
+   "idea": "GOOD on paper (5L), same fragility.",
+   "code": "def rule(t, A):\n    lv, s = t[\"level\"], t[\"side\"]\n    near = round(lv / 0.01) * 0.01\n    d = round((near - lv) * s / A.PIP, 1)\n    return 0.0 <= d <= 0.8\n",
+   "lift_all": 2.81,
+   "lift_train": 2.18,
+   "lift_test": 3.76,
+   "losers_removed": 5,
+   "winners_removed": 74,
+   "verdict": "GOOD on paper (5L), same fragility. | api.report: train 3L/38W, test 2L/36W, WR after 97.79%, net +807$ at 1 lot"
+  },
+  {
+   "rule_id": "fri_17_19",
+   "idea": "Only the Friday 17:00-19:00 UTC slice (to show the 17:00 start is not riding on the close itself).",
+   "code": "def rule(t, A):\n    \"\"\"Only the Friday 17:00-19:00 UTC slice (to show the 17:00 start is not riding on the close itself).\"\"\"\n    s = t[\"t_in\"] % 86400\n    return int((t[\"t_in\"] // 86400 + 4) % 7) == 5 and 17 * 3600 <= s < 19 * 3600\n",
+   "lift_all": 2.69,
+   "lift_train": 2.76,
+   "lift_test": 2.75,
+   "losers_removed": 8,
+   "winners_removed": 124,
+   "verdict": "GOOD. The 17:00-19:00 slice alone holds (x2.76/x2.75), so the 17:00 start is not riding on the close. | api.report: train 5L/49W, test 3L/75W, WR after 97.81%, net +648$ at 1 lot"
+  },
+  {
+   "rule_id": "low_vol60_30",
+   "idea": "Mean tick volume of the last 60 closed candles < 30: a dead market where the 1-pip follow-through does not come.",
+   "code": "def rule(t, A):\n    \"\"\"Mean tick volume of the last 60 closed candles < 30: a dead market where the 1-pip follow-through does not come.\"\"\"\n    k = t[\"k\"]\n    return float(np.mean(A.v[k - 59:k + 1])) < 30\n",
+   "lift_all": 2.69,
+   "lift_train": 3.02,
+   "lift_test": 2.4,
+   "losers_removed": 12,
+   "winners_removed": 186,
+   "verdict": "GOOD stand-alone, but NOT SELECTIVE beyond session_close + slip_15 (4L/142W, x1.62 / x0.79): its lift came from the close windows. | api.report: train 8L/71W, test 4L/115W, WR after 97.85%, net +4,214$ at 1 lot"
+  },
+  {
+   "rule_id": "fri_late14",
+   "idea": "GOOD. Friday from 14:00 UTC; the 14:00-17:00 slice alone is about x1.2 to x1.4, so start at 17:00.",
+   "code": "def rule(t, A):\n    return int((t[\"t_in\"] // 86400 + 4) % 7) == 5 and (t[\"t_in\"] % 86400) >= 14 * 3600\n",
+   "lift_all": 2.55,
+   "lift_train": 2.67,
+   "lift_test": 2.6,
+   "losers_removed": 29,
+   "winners_removed": 475,
+   "verdict": "GOOD. Friday from 14:00 UTC; the 14:00-17:00 slice alone is about x1.2 to x1.4, so start at 17:00. | api.report: train 18L/183W, test 11L/292W, WR after 97.99%, net +4,604$ at 1 lot"
+  },
+  {
+   "rule_id": "low_vol60_40",
+   "idea": "GOOD stand-alone (barely); beyond session + slip x1.24 / x1.44.",
+   "code": "def rule(t, A):\n    k = t[\"k\"]\n    return float(np.mean(A.v[k - 59:k + 1])) < 40\n",
+   "lift_all": 2.18,
+   "lift_train": 2.06,
+   "lift_test": 2.57,
+   "losers_removed": 16,
+   "winners_removed": 309,
+   "verdict": "GOOD stand-alone (barely); beyond session + slip x1.24 / x1.44. | api.report: train 9L/121W, test 7L/188W, WR after 97.86%, net +4,681$ at 1 lot"
+  },
+  {
+   "rule_id": "slip_10",
+   "idea": "NOT SELECTIVE on train (x1.99): borderline.",
+   "code": "def rule(t, A):\n    return (t[\"fill\"] - t[\"level\"]) * t[\"side\"] >= 1.0 * A.PIP\n",
+   "lift_all": 3.46,
+   "lift_train": 1.99,
+   "lift_test": 8.1,
+   "losers_removed": 17,
+   "winners_removed": 201,
+   "verdict": "NOT SELECTIVE on train (x1.99): borderline. | api.report: train 11L/154W, test 6L/47W, WR after 97.91%, net +3,547$ at 1 lot"
+  },
+  {
+   "rule_id": "bigfig_ahead15",
+   "idea": "NOT SELECTIVE (train x1.65).",
+   "code": "def rule(t, A):\n    lv, s = t[\"level\"], t[\"side\"]\n    near = round(lv / 0.01) * 0.01\n    d = round((near - lv) * s / A.PIP, 1)\n    return 0.0 <= d <= 1.5\n",
+   "lift_all": 2.59,
+   "lift_train": 1.65,
+   "lift_test": 4.4,
+   "losers_removed": 8,
+   "winners_removed": 129,
+   "verdict": "NOT SELECTIVE (train x1.65). | api.report: train 4L/68W, test 4L/61W, WR after 97.81%, net +1,176$ at 1 lot"
+  },
+  {
+   "rule_id": "slip_08",
+   "idea": "NOT SELECTIVE on train (x1.55).",
+   "code": "def rule(t, A):\n    return (t[\"fill\"] - t[\"level\"]) * t[\"side\"] >= 0.8 * A.PIP\n",
+   "lift_all": 2.56,
+   "lift_train": 1.55,
+   "lift_test": 6.34,
+   "losers_removed": 29,
+   "winners_removed": 473,
+   "verdict": "NOT SELECTIVE on train (x1.55). | api.report: train 22L/401W, test 7L/72W, WR after 97.99%, net +5,708$ at 1 lot"
+  },
+  {
+   "rule_id": "fig50_ahead10",
+   "idea": "Same with every 50-pip number (1.1750 too).",
+   "code": "def rule(t, A):\n    \"\"\"Same with every 50-pip number (1.1750 too).\"\"\"\n    lv, s = t[\"level\"], t[\"side\"]\n    near = round(lv / 0.005) * 0.005\n    d = round((near - lv) * s / A.PIP, 1)\n    return 0.0 <= d <= 1.0\n",
+   "lift_all": 2.09,
+   "lift_train": 1.35,
+   "lift_test": 3.49,
+   "losers_removed": 8,
+   "winners_removed": 162,
+   "verdict": "NOT SELECTIVE: 50-pip numbers add nothing; the effect is only at 100-pip figures. | api.report: train 4L/84W, test 4L/78W, WR after 97.8%, net +1,167$ at 1 lot"
+  },
+  {
+   "rule_id": "bigfig_ahead20",
+   "idea": "NOT SELECTIVE.",
+   "code": "def rule(t, A):\n    lv, s = t[\"level\"], t[\"side\"]\n    near = round(lv / 0.01) * 0.01\n    d = round((near - lv) * s / A.PIP, 1)\n    return 0.0 <= d <= 2.0\n",
+   "lift_all": 1.98,
+   "lift_train": 1.27,
+   "lift_test": 3.37,
+   "losers_removed": 8,
+   "winners_removed": 171,
+   "verdict": "NOT SELECTIVE. | api.report: train 4L/90W, test 4L/81W, WR after 97.8%, net +1,110$ at 1 lot"
+  },
+  {
+   "rule_id": "late_ny",
+   "idea": "19:00-23:00 UTC any day (late New York / pre-rollover).",
+   "code": "def rule(t, A):\n    \"\"\"19:00-23:00 UTC any day (late New York / pre-rollover).\"\"\"\n    h = (t[\"t_in\"] % 86400) // 3600\n    return 19 <= h < 23\n",
+   "lift_all": 1.82,
+   "lift_train": 1.87,
+   "lift_test": 1.7,
+   "losers_removed": 31,
+   "winners_removed": 724,
+   "verdict": "NOT SELECTIVE (x1.87 / x1.70). Only its 20:45-22:00 part is hot. | api.report: train 21L/314W, test 10L/410W, WR after 97.95%, net +5,753$ at 1 lot"
+  },
+  {
+   "rule_id": "fig20_ahead10",
+   "idea": "NOT SELECTIVE.",
+   "code": "def rule(t, A):\n    lv, s = t[\"level\"], t[\"side\"]\n    near = round(lv / 0.002) * 0.002\n    d = round((near - lv) * s / A.PIP, 1)\n    return 0.0 <= d <= 1.0\n",
+   "lift_all": 1.79,
+   "lift_train": 1.18,
+   "lift_test": 2.93,
+   "losers_removed": 17,
+   "winners_removed": 404,
+   "verdict": "NOT SELECTIVE. | api.report: train 7L/170W, test 10L/234W, WR after 97.85%, net +2,307$ at 1 lot"
+  },
+  {
+   "rule_id": "exhaustion",
+   "idea": "Selling the fresh low / buying the fresh high after a strong trend leg: ADX >= 40, the last 60 candles moved >= 3 ATR in the trade direction and the level sits in the bottom (sell) / top (buy) quarter of the 60-candle range (losses 0409-062811-S, 0409-110305-S, 0413-064826-S, 0413-120919-S).",
+   "code": "def rule(t, A):\n    \"\"\"Selling the fresh low / buying the fresh high after a strong trend leg: ADX >= 40, the last 60 candles moved >= 3 ATR in the trade\n    direction and the level sits in the bottom (sell) / top (buy) quarter of the 60-candle range (losses 0409-062811-S, 0409-110305-S,\n    0413-064826-S, 0413-120919-S).\"\"\"\n    k, s, lv = t[\"k\"], t[\"side\"], t[\"level\"]\n    atr = max(float(A.atr[k]), 1e-6)\n    hi, lo = float(A.h[k - 59:k + 1].max()), float(A.l[k - 59:k + 1].min())\n    pos = ((lv - lo) if s < 0 else (hi - lv)) / (hi - lo) if hi > lo else 0.5\n    tr = (A.c[k] - A.c[k - 60]) * s / atr\n    return A.adx[k] >= 40 and tr >= 3 and pos <= 0.25\n",
+   "lift_all": 1.34,
+   "lift_train": 1.72,
+   "lift_test": 0.78,
+   "losers_removed": 19,
+   "winners_removed": 610,
+   "verdict": "NOT SELECTIVE. Hot on train only (x1.72); x0.78 on test. 48 ADX / trend / position combos tried, none hold on test. | api.report: train 15L/245W, test 4L/365W, WR after 97.81%, net +2,795$ at 1 lot"
+  },
+  {
+   "rule_id": "sunday_open",
+   "idea": "The first 3 hours after the Sunday open (thin, gap-fill tape: loss 0426-222526-S).",
+   "code": "def rule(t, A):\n    \"\"\"The first 3 hours after the Sunday open (thin, gap-fill tape: loss 0426-222526-S).\"\"\"\n    return int((t[\"t_in\"] // 86400 + 4) % 7) == 0\n",
+   "lift_all": 1.31,
+   "lift_train": 1.18,
+   "lift_test": 1.21,
+   "losers_removed": 4,
+   "winners_removed": 131,
+   "verdict": "NOT SELECTIVE (x1.18 / x1.21): the Sunday session alone is not hot; the dead-tape volume is what matters. | api.report: train 3L/73W, test 1L/58W, WR after 97.76%, net +612$ at 1 lot"
+  },
+  {
+   "rule_id": "micro_hump_flip",
+   "idea": "The camel's colour comes from ONE hump (camStk +-1) whose smaller leg is under 1 pip: a noise flip, not a trend (losses 0416-045923-B, 0423-164516-B, 0414-025520-S, 0426-222526-S).",
+   "code": "def rule(t, A):\n    \"\"\"The camel's colour comes from ONE hump (camStk +-1) whose smaller leg is under 1 pip: a noise flip, not a trend (losses\n    0416-045923-B, 0423-164516-B, 0414-025520-S, 0426-222526-S).\"\"\"\n    k = t[\"k\"]\n    if abs(t[\"camStk\"]) != 1:\n        return False\n    LV, ST = A.camLV, A.camStk\n    j = k\n    while j > k - 400 and LV[j] == LV[k] and ST[j] == ST[k]:\n        j -= 1\n    j += 1\n    hv, lv, l0 = float(A.camHV[j]), float(A.camLV[j]), float(A.camL0V[j])\n    return min(hv - lv, hv - l0) < 1.0 * A.PIP\n",
+   "lift_all": 1.22,
+   "lift_train": 1.11,
+   "lift_test": 1.63,
+   "losers_removed": 31,
+   "winners_removed": 1094,
+   "verdict": "NOT SELECTIVE. | api.report: train 14L/363W, test 17L/731W, WR after 97.83%, net +4,217$ at 1 lot"
+  },
+  {
+   "rule_id": "tiny_last_bar",
+   "idea": "The last closed candle's range < 0.5 pip (no activity right before the break).",
+   "code": "def rule(t, A):\n    \"\"\"The last closed candle's range < 0.5 pip (no activity right before the break).\"\"\"\n    k = t[\"k\"]\n    return (A.h[k] - A.l[k]) < 0.5 * A.PIP\n",
+   "lift_all": 1.15,
+   "lift_train": 1.34,
+   "lift_test": 1.31,
+   "losers_removed": 20,
+   "winners_removed": 750,
+   "verdict": "NOT SELECTIVE (x1.34 / x1.31). | api.report: train 10L/212W, test 10L/538W, WR after 97.78%, net +2,779$ at 1 lot"
+  },
+  {
+   "rule_id": "struct_broken_colour",
+   "idea": "The retracement went beyond the hump that SET the camel colour (as the per-bar camel state showed it at that hump's last redraw, bar j <= k): sell - above that red hump's high; buy - below that green hump's end low. Losses 0417-084606-S (+6.5 pips) and 0427-150215-B (+2.0). (camHV[k] itself can already be the retracement's own high, so struct_broken mis-measured the sells.)",
+   "code": "def rule(t, A):\n    \"\"\"The retracement went beyond the hump that SET the camel colour (as the per-bar camel state showed it at that hump's last redraw,\n    bar j <= k): sell - above that red hump's high; buy - below that green hump's end low. Losses 0417-084606-S (+6.5 pips) and\n    0427-150215-B (+2.0). (camHV[k] itself can already be the retracement's own high, so struct_broken mis-measured the sells.)\"\"\"\n    k = t[\"k\"]\n    LV, ST = A.camLV, A.camStk\n    j = k\n    while j > k - 400 and LV[j] == LV[k] and ST[j] == ST[k]:\n        j -= 1\n    j += 1\n    if t[\"side\"] < 0:\n        return t[\"extreme\"] - float(A.camHV[j]) >= 2.0 * A.PIP\n    return float(A.camLV[j]) - t[\"extreme\"] >= 2.0 * A.PIP\n",
+   "lift_all": 1.1,
+   "lift_train": 1.05,
+   "lift_test": 0.79,
+   "losers_removed": 21,
+   "winners_removed": 824,
+   "verdict": "NOT SELECTIVE. Corrected version (colour hump as known at its redraw bar): still x1.05 / x0.79. | api.report: train 17L/465W, test 4L/359W, WR after 97.77%, net +4,008$ at 1 lot"
+  },
+  {
+   "rule_id": "stale_uhv",
+   "idea": "The UHV candle is 10+ candles old at the break (losses 0414-025520-S, 0416-045923-B).",
+   "code": "def rule(t, A):\n    \"\"\"The UHV candle is 10+ candles old at the break (losses 0414-025520-S, 0416-045923-B).\"\"\"\n    return t[\"k\"] - t[\"ku\"] >= 10\n",
+   "lift_all": 1.05,
+   "lift_train": 1.16,
+   "lift_test": 0.76,
+   "losers_removed": 21,
+   "winners_removed": 863,
+   "verdict": "NOT SELECTIVE. | api.report: train 16L/395W, test 5L/468W, WR after 97.76%, net +3,688$ at 1 lot"
+  },
+  {
+   "rule_id": "struct_broken",
+   "idea": "The retracement already went beyond the camel's opposite swing (sell: above the hump's high; buy: below its last low) - the camel colour is stale (losses 0417-084606-S, 0427-150215-B).",
+   "code": "def rule(t, A):\n    \"\"\"The retracement already went beyond the camel's opposite swing (sell: above the hump's high; buy: below its last low) - the\n    camel colour is stale (losses 0417-084606-S, 0427-150215-B).\"\"\"\n    k = t[\"k\"]\n    return (t[\"extreme\"] > A.camHV[k]) if t[\"side\"] < 0 else (t[\"extreme\"] < A.camLV[k])\n",
+   "lift_all": 1.04,
+   "lift_train": 1.06,
+   "lift_test": 1.01,
+   "losers_removed": 88,
+   "winners_removed": 3657,
+   "verdict": "NOT SELECTIVE. Also mis-measures sells: camHV[k] is often the retracement's own high (see struct_broken_colour). | api.report: train 58L/1572W, test 30L/2085W, WR after 97.84%, net +13,597$ at 1 lot"
+  },
+  {
+   "rule_id": "struct_broken_2p",
+   "idea": "NOT SELECTIVE.",
+   "code": "def rule(t, A):\n    k = t[\"k\"]\n    d = (t[\"extreme\"] - A.camHV[k]) if t[\"side\"] < 0 else (A.camLV[k] - t[\"extreme\"])\n    return d >= 2.0 * A.PIP\n",
+   "lift_all": 1.04,
+   "lift_train": 0.9,
+   "lift_test": 1.0,
+   "losers_removed": 16,
+   "winners_removed": 669,
+   "verdict": "NOT SELECTIVE. | api.report: train 12L/386W, test 4L/283W, WR after 97.75%, net +3,169$ at 1 lot"
+  },
+  {
+   "rule_id": "retest_floor",
+   "idea": "The level was touched (within 1 pip) by 15+ of the last 30 candles' lows (sell) / highs (buy): selling a floor that keeps holding.",
+   "code": "def rule(t, A):\n    \"\"\"The level was touched (within 1 pip) by 15+ of the last 30 candles' lows (sell) / highs (buy): selling a floor that keeps holding.\"\"\"\n    k, s, lv = t[\"k\"], t[\"side\"], t[\"level\"]\n    seg = A.l[k - 29:k + 1] if s < 0 else A.h[k - 29:k + 1]\n    d = ((seg - lv) if s < 0 else (lv - seg)) / A.PIP\n    return int(np.sum((d <= 1.0) & (d >= -1.0))) >= 15\n",
+   "lift_all": 0.95,
+   "lift_train": 1.06,
+   "lift_test": 0.99,
+   "losers_removed": 54,
+   "winners_removed": 2472,
+   "verdict": "NOT SELECTIVE. | api.report: train 31L/840W, test 23L/1632W, WR after 97.69%, net +6,622$ at 1 lot"
+  },
+  {
+   "rule_id": "near_fresh_extreme",
+   "idea": "The level is within 1.5 pips of the 10-candle extreme in the trade direction (selling right above the fresh low).",
+   "code": "def rule(t, A):\n    \"\"\"The level is within 1.5 pips of the 10-candle extreme in the trade direction (selling right above the fresh low).\"\"\"\n    k, s, lv = t[\"k\"], t[\"side\"], t[\"level\"]\n    if s < 0:\n        d = lv - float(A.l[k - 9:k + 1].min())\n    else:\n        d = float(A.h[k - 9:k + 1].max()) - lv\n    return 0 <= d <= 1.5 * A.PIP\n",
+   "lift_all": 0.91,
+   "lift_train": 0.92,
+   "lift_test": 0.99,
+   "losers_removed": 98,
+   "winners_removed": 4667,
+   "verdict": "NOT SELECTIVE. Selling right above the fresh low is what winners do too (removes 20 of the tagged). | api.report: train 58L/1815W, test 40L/2852W, WR after 97.41%, net +13,715$ at 1 lot"
+  },
+  {
+   "rule_id": "low_atr_asia",
+   "idea": "ATR < 0.7 pip between 22:00 and 06:00 UTC (dead Asian tape: losses 0414-025520-S, 0416-045923-B).",
+   "code": "def rule(t, A):\n    \"\"\"ATR < 0.7 pip between 22:00 and 06:00 UTC (dead Asian tape: losses 0414-025520-S, 0416-045923-B).\"\"\"\n    h = (t[\"t_in\"] % 86400) // 3600\n    return A.atr[t[\"k\"]] < 0.7 * A.PIP and (h >= 22 or h < 6)\n",
+   "lift_all": 0.9,
+   "lift_train": 1.32,
+   "lift_test": 0.78,
+   "losers_removed": 13,
+   "winners_removed": 625,
+   "verdict": "NOT SELECTIVE. | api.report: train 8L/173W, test 5L/452W, WR after 97.72%, net +1,860$ at 1 lot"
+  },
+  {
+   "rule_id": "counter_trend60",
+   "idea": "The last 60 candles moved >= 3 ATR AGAINST the trade (a bounce camel inside a bigger opposite leg: losses 0416-045923-B, 0421-151800-B, 0423-164516-B).",
+   "code": "def rule(t, A):\n    \"\"\"The last 60 candles moved >= 3 ATR AGAINST the trade (a bounce camel inside a bigger opposite leg: losses 0416-045923-B,\n    0421-151800-B, 0423-164516-B).\"\"\"\n    k, s = t[\"k\"], t[\"side\"]\n    return (A.c[k] - A.c[k - 60]) * s / max(float(A.atr[k]), 1e-6) <= -3\n",
+   "lift_all": 0.86,
+   "lift_train": 0.8,
+   "lift_test": 1.0,
+   "losers_removed": 37,
+   "winners_removed": 1861,
+   "verdict": "NOT SELECTIVE. | api.report: train 22L/799W, test 15L/1062W, WR after 97.64%, net +5,000$ at 1 lot"
+  }
+ ]
+}

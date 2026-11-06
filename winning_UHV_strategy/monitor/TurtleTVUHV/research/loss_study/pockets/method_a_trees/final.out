@@ -1,0 +1,59 @@
+======================================================================================================================================================
+BASE train WR 96.64% (112 L / 3335) | test WR 98.60% (60 L / 4291)
+BAR  99.3% untouched: a 20% pocket set must hold 94/112 train L (84%) and 36/60 test L (60%)
+======================================================================================================================================================
+1. BLIND - every train-chosen Method A protocol, test scored once
+   raw tree d4 0.03 entropy w10 (LOMO lift 1.504)                                             train  15.3% trades   37% L (lift 2.38) | test  14.8% trades    7% L (lift 0.45, p=0.977) untouched WR 98.47%
+   raw tree d3 0.03 gini balanced (LOMO lift 1.389)                                           train  18.1% trades   38% L (lift 2.12) | test  21.7% trades   15% L (lift 0.69, p=0.902) untouched WR 98.48%
+   raw tree d4 0.02 gini w10 (LOMO lift 1.281)                                                train  18.3% trades   48% L (lift 2.64) | test  18.7% trades   35% L (lift 1.87, p=0.005) untouched WR 98.88%
+   scale-free tree d2 0.01 gini balanced (LOMO lift 1.483)                                    train  15.6% trades   33% L (lift 2.11) | test  12.8% trades   12% L (lift 0.91, p=0.651) untouched WR 98.58%
+   scale-free tree d4 0.03 gini balanced (LOMO lift 1.303)                                    train  17.0% trades   44% L (lift 2.57) | test  15.1% trades   18% L (lift 1.22, p=0.299) untouched WR 98.66%
+   scale-free tree d3 0.01 entropy balanced (LOMO lift 1.268)                                 train  10.8% trades   27% L (lift 2.48) | test   9.6% trades   23% L (lift 2.42, p=0.002) untouched WR 98.81%
+   covering SF d3 2% entropy mbal (4 pockets)                                                 train  16.0% trades   48% L (lift 3.01) | test  16.6% trades   32% L (lift 1.91, p=0.007) untouched WR 98.85%
+   covering SF d3 3% entropy mbal (5 pockets)                                                 train  19.6% trades   54% L (lift 2.78) | test  19.7% trades   22% L (lift 1.10, p=0.400) untouched WR 98.64%
+   covering SF d3 2% gini balanced (1 pockets)                                                train   3.4% trades   13% L (lift 3.92) | test   3.0% trades    8% L (lift 2.79, p=0.035) untouched WR 98.68%
+   themed tree 'calendar'                                                                     train  15.6% trades   22% L (lift 1.43) | test  17.4% trades   12% L (lift 0.67, p=0.897) untouched WR 98.50%
+   themed tree 'liquidity'                                                                    train   2.3% trades    9% L (lift 3.87) | test   1.7% trades   15% L (lift 8.70, p=0.000) untouched WR 98.79%
+   themed tree 'trend'                                                                        train  14.4% trades   18% L (lift 1.24) | test  15.9% trades   23% L (lift 1.47, p=0.103) untouched WR 98.73%
+   themed tree 'setup'                                                                        train   9.7% trades   19% L (lift 1.94) | test   8.7% trades   12% L (lift 1.34, p=0.271) untouched WR 98.65%
+   xgb raw top 10% (test AUC 0.581)                                                           train  10.0% trades   13% L (lift 1.34) | test  10.0% trades   20% L (lift 2.00, p=0.020) untouched WR 98.76%
+   xgb raw top 20% (test AUC 0.581)                                                           train  20.0% trades   29% L (lift 1.43) | test  20.0% trades   28% L (lift 1.42, p=0.100) untouched WR 98.75%
+   xgb scale-free month-balanced top 10% (test AUC 0.6282; train = out-of-fold by month)      train  10.0% trades   17% L (lift 1.69) | test  10.0% trades   30% L (lift 2.99, p=0.000) untouched WR 98.91%
+   xgb scale-free month-balanced top 20% (test AUC 0.6282; train = out-of-fold by month)      train  20.0% trades   27% L (lift 1.34) | test  20.0% trades   37% L (lift 1.83, p=0.006) untouched WR 98.89%
+   -> at 8-22% of test trades the blind protocols hold 7-37% of test losses (median 22%); the bar needs ~60%
+======================================================================================================================================================
+2. CANDIDATE pocket set (tree-found ones that held + market-prior references). Test is optimistic: 'held' was read off test.
+  abnormal_spread: spread_excess > 0.275  (breakout spread > 0.275 pip above the median of the previous 50 trades)   [tree-found (liquidity theme root; raw depth-4 tree root)]  angel keeps inside: train 1, test 0
+     train   2.3% trades (  77) |  10/112 L (   9%) | LR 12.99% lift 3.87x (m-adj 3.80) p=0.00026 |  7 loss-days | months up 4/4 | untouched WR 96.87% (base 96.64) angel-inside 96.87%
+     test    1.7% trades (  74) |   9/60 L (  15%) | LR 12.16% lift 8.70x (m-adj 8.54) p=0 |  9 loss-days | months up 4/5 | untouched WR 98.79% (base 98.60) angel-inside 98.79%
+  ny_close_hour: 16:00 <= New York time < 18:00  (ny_min_of_day 960-1079)   [reference, market prior (the tight setting already guards 16:45-17:45)]  angel keeps inside: train 4, test 3
+     train   3.8% trades ( 126) |  13/112 L (  12%) | LR 10.32% lift 3.07x (m-adj 2.99) p=0.00034 |  9 loss-days | months up 4/4 | untouched WR 96.91% (base 96.64) angel-inside 96.92%
+     test    4.0% trades ( 172) |   9/60 L (  15%) | LR  5.23% lift 3.74x (m-adj 3.70) p=0.00078 |  9 loss-days | months up 4/5 | untouched WR 98.76% (base 98.60) angel-inside 98.76%
+  friday_pm: weekday == 4 and New York time >= 12:00   [reference, market prior (Friday lift 1.7x on train alone)]  angel keeps inside: train 9, test 9
+     train   3.7% trades ( 124) |  15/112 L (  13%) | LR 12.10% lift 3.60x (m-adj 3.32) p=2e-05 | 11 loss-days | months up 4/4 | untouched WR 96.98% (base 96.64) angel-inside 96.99%
+     test    4.6% trades ( 196) |   9/60 L (  15%) | LR  4.59% lift 3.28x (m-adj 3.20) p=0.00193 |  8 loss-days | months up 4/5 | untouched WR 98.75% (base 98.60) angel-inside 98.76%
+  countertrend_chop_weak_break: trend30_atr <= -1.905 and er30 <= 0.2065 and brk_ratio <= 0.5055   [tree-found (sequential covering, scale-free, month-balanced)]  angel keeps inside: train 3, test 5
+     train   7.0% trades ( 235) |  20/112 L (  18%) | LR  8.51% lift 2.53x (m-adj 2.53) p=0.00016 | 18 loss-days | months up 3/4 | untouched WR 97.03% (base 96.64) angel-inside 97.04%
+     test    8.0% trades ( 345) |  10/60 L (  17%) | LR  2.90% lift 2.07x (m-adj 2.06) p=0.025 | 10 loss-days | months up 4/5 | untouched WR 98.73% (base 98.60) angel-inside 98.73%
+  ny_afternoon_thin_volume: ny_min_of_day >= 870 and vol10_rel <= 0.8805 and atr_rel > 0.7715  (after 14:30 NY, 10-bar volume < 0.88x its 300-trade median, ATR not unusually low)   [tree-found (scale-free depth-4 gini tree leaf + gini covering)]  angel keeps inside: train 6, test 7
+     train   3.4% trades ( 114) |  15/112 L (  13%) | LR 13.16% lift 3.92x (m-adj 3.80) p=1e-05 | 11 loss-days | months up 4/4 | untouched WR 96.99% (base 96.64) angel-inside 96.99%
+     test    3.0% trades ( 128) |   5/60 L (   8%) | LR  3.91% lift 2.79x (m-adj 2.79) p=0.0346 |  5 loss-days | months up 3/5 | untouched WR 98.68% (base 98.60) angel-inside 98.68%
+  UNION of the 5
+     train  16.4% trades ( 546) |  42/112 L (  38%) | LR  7.69% lift 2.29x (m-adj 2.22) p=0 | 30 loss-days | months up 4/4 | untouched WR 97.49% (base 96.64) angel-inside 97.51%
+     test   17.7% trades ( 758) |  23/60 L (  38%) | LR  3.03% lift 2.17x (m-adj 2.16) p=0.00058 | 22 loss-days | months up 4/5 | untouched WR 98.95% (base 98.60) angel-inside 98.96%
+  UNION of the 3 tree-found pockets only
+     train  11.7% trades ( 389) |  34/112 L (  30%) | LR  8.74% lift 2.60x (m-adj 2.55) p=0 | 24 loss-days | months up 4/4 | untouched WR 97.35% (base 96.64) angel-inside 97.36%
+     test   12.0% trades ( 514) |  19/60 L (  32%) | LR  3.70% lift 2.64x (m-adj 2.62) p=0.00016 | 19 loss-days | months up 4/5 | untouched WR 98.91% (base 98.60) angel-inside 98.92%
+  loss overlap (test losses shared by two pockets):
+     abnormal_spread & ny_close_hour: 6 test L, 8 train L
+     abnormal_spread & friday_pm: 4 test L, 6 train L
+     abnormal_spread & countertrend_chop_weak_break: 2 test L, 4 train L
+     abnormal_spread & ny_afternoon_thin_volume: 3 test L, 5 train L
+     ny_close_hour & friday_pm: 5 test L, 6 train L
+     ny_close_hour & countertrend_chop_weak_break: 2 test L, 4 train L
+     ny_close_hour & ny_afternoon_thin_volume: 3 test L, 8 train L
+     friday_pm & countertrend_chop_weak_break: 2 test L, 3 train L
+     friday_pm & ny_afternoon_thin_volume: 2 test L, 6 train L
+  train: untouched zone 2789 trades / 70 L = loss rate 2.51%; 99.3% would allow 19 L -> 51 losses too many
+  test: untouched zone 3533 trades / 37 L = loss rate 1.05%; 99.3% would allow 24 L -> 13 losses too many
+wrote C:\Users\zeesh\turtle\monitor\TurtleTVUHV\research\loss_study\pockets\method_a_trees\final.json

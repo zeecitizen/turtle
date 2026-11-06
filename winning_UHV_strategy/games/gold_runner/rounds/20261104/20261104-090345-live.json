@@ -1,0 +1,296 @@
+{
+ "v": 1,
+ "id": "20261104-090345-live",
+ "mode": "live",
+ "kind": "wooden",
+ "side": -1,
+ "qty0": 1000.0,
+ "coin_oz": 1000.0,
+ "stop_dist": 0.0002,
+ "target": 0.0002,
+ "risk_usd": 0.2,
+ "shot_t": 1793783025.2670443,
+ "opened_t": 1793783025.270296,
+ "closed_t": 1793783041.3993526,
+ "patience_s": 0.04,
+ "quick": true,
+ "session": "london",
+ "weather": "storm",
+ "storm_seen": true,
+ "night": false,
+ "position_id": 15500005,
+ "order_id": 2190000016,
+ "quote_at_send": {
+  "bid": 1.12463,
+  "ask": 1.12464,
+  "ts": 1793783024.5857902
+ },
+ "entry_ref": 1.12463,
+ "spread_entry": 0.0,
+ "fill": 1.12463,
+ "sl0": 1.12483,
+ "tp0": 1.12443,
+ "sl_final": 1.12482,
+ "tp_final": 1.12443,
+ "exit": 1.12482,
+ "walls": [
+  1.12482
+ ],
+ "haggles": 0,
+ "machete_done": false,
+ "banked_usd": 0.0,
+ "golden": null,
+ "anvil_moves": 0,
+ "anvil_before_haggle": false,
+ "outcome": "anvil",
+ "result_usd": -0.19,
+ "costs": {
+  "spread_usd": 0.0,
+  "slippage_usd": 0.0,
+  "fee_usd": 0.0,
+  "financing_usd": 0.0
+ },
+ "estimated": false,
+ "instructions": [
+  {
+   "nonce": "mw1w3itb-85s2mov",
+   "action": "ack",
+   "args": {},
+   "sent_at": 1793783023.102,
+   "recv_t": 1793783023.1055727,
+   "accepted": true,
+   "why": null
+  },
+  {
+   "nonce": "mw1w3kgd-3cksinf",
+   "action": "fund",
+   "args": {
+    "kind": "wooden",
+    "side": -1,
+    "target": 0.0002,
+    "twin": false,
+    "coins": 1
+   },
+   "sent_at": 1793783025.2280002,
+   "recv_t": 1793783025.230112,
+   "accepted": true,
+   "why": null
+  },
+  {
+   "nonce": "mw1w3khe-dhyqik6",
+   "action": "shoot",
+   "args": {},
+   "sent_at": 1793783025.265,
+   "recv_t": 1793783025.2670443,
+   "accepted": true,
+   "why": null,
+   "broker": {
+    "sent": {
+     "side": -1,
+     "qty": 1000.0,
+     "sl": 1.12483,
+     "tp": 1.12443,
+     "quote": {
+      "bid": 1.12463,
+      "ask": 1.12464,
+      "mid": 1.124635,
+      "spread": 1e-05,
+      "ts": 1793783024.5857902
+     }
+    },
+    "ok": true,
+    "error": null,
+    "rtt_ms": 0.088,
+    "order_id": 2190000016,
+    "position_id": 15500005,
+    "fill_price": 1.12463,
+    "definite": null,
+    "uncertain": null
+   }
+  },
+  {
+   "nonce": "mw1w3sip-chko91x",
+   "action": "wall",
+   "args": {},
+   "sent_at": 1793783035.6790001,
+   "recv_t": 1793783035.6825264,
+   "accepted": true,
+   "why": null,
+   "broker": {
+    "ok": true,
+    "error": null,
+    "rtt_ms": 0.1,
+    "sent": {
+     "sl": 1.12482
+    }
+   }
+  }
+ ],
+ "fills": [
+  {
+   "t": 1793783025.270296,
+   "what": "open",
+   "side": -1,
+   "qty": 1000.0,
+   "price": 1.12463,
+   "quote": {
+    "bid": 1.12463,
+    "ask": 1.12464,
+    "ts": 1793783024.5857902
+   },
+   "rtt_ms": 0.088
+  }
+ ],
+ "report_rows": [
+  {
+   "id": 2190000016,
+   "type": "MARKET",
+   "status": "EXECUTED",
+   "side": "SELL",
+   "qty": 1000.0,
+   "executedPrice": 1.12463,
+   "executedQty": 1000.0,
+   "rpl": 0.0,
+   "fee": 0.0,
+   "positionId": 15500005,
+   "closeReason": "EXECUTION",
+   "executedAt": "2026-11-04T09:03:45.270Z",
+   "executed_ts": 1793783025.270296,
+   "symbol": "XAU/USD",
+   "triggerPrice": null
+  },
+  {
+   "id": 2190000019,
+   "type": "STOP_LOSS",
+   "status": "EXECUTED",
+   "side": "BUY",
+   "qty": 1000.0,
+   "executedPrice": 1.12482,
+   "executedQty": 1000.0,
+   "rpl": -0.19,
+   "fee": 0.0,
+   "positionId": 15500005,
+   "closeReason": "EXECUTION",
+   "executedAt": "2026-11-04T09:04:01.398Z",
+   "executed_ts": 1793783041.3983524,
+   "symbol": "XAU/USD",
+   "triggerPrice": 1.12482
+  }
+ ],
+ "rat": [],
+ "quotes": {
+  "n": 32,
+  "first": {
+   "bid": 1.12463,
+   "ask": 1.12464,
+   "ts": 1793783025.347968
+  },
+  "last": {
+   "bid": 1.12481,
+   "ask": 1.12482,
+   "ts": 1793783041.3983524
+  },
+  "high_bid": 1.12481,
+  "low_bid": 1.12462,
+  "spread_min": 0.0,
+  "spread_max": 0.0,
+  "spread_avg": 0.0
+ },
+ "path": [
+  [
+   0.1,
+   0.475
+  ],
+  [
+   1.1,
+   0.425
+  ],
+  [
+   2.2,
+   0.475
+  ],
+  [
+   3.2,
+   0.45
+  ],
+  [
+   4.3,
+   0.475
+  ],
+  [
+   5.4,
+   0.45
+  ],
+  [
+   6.4,
+   0.475
+  ],
+  [
+   7.4,
+   0.225
+  ],
+  [
+   8.4,
+   0.225
+  ],
+  [
+   9.4,
+   0.175
+  ],
+  [
+   10.5,
+   0.175
+  ],
+  [
+   11.5,
+   0.075
+  ],
+  [
+   12.6,
+   0.075
+  ],
+  [
+   13.7,
+   0.1
+  ],
+  [
+   14.7,
+   0.075
+  ],
+  [
+   15.7,
+   0.075
+  ]
+ ],
+ "twin_invited": false,
+ "twin": null,
+ "twin_result_usd": null,
+ "would_have_usd": null,
+ "settlement": {
+  "id": "20261104-090345-live",
+  "kind": "wooden",
+  "side": -1,
+  "outcome": "anvil",
+  "result_usd": -0.19,
+  "result_text": "-$0.19",
+  "value_usd": 0.01,
+  "value_text": "$0.01",
+  "costs": {
+   "spread_usd": 0.0,
+   "slippage_usd": 0.0,
+   "fee_usd": 0.0,
+   "financing_usd": 0.0
+  },
+  "fill": 1.12463,
+  "exit": 1.12482,
+  "qty0": 1000.0,
+  "age_s": 16.1,
+  "chasm": null,
+  "balance_after": 22.48,
+  "twin_result_usd": null,
+  "would_have_usd": null,
+  "plain": "Wooden round, no order sent: Sold 1000.00 oz of gold at 1.12; the stop loss bought it back at 1.12: -$0.19 after a $0.00 spread.",
+  "t": 1793783041.399
+ },
+ "notes": []
+}

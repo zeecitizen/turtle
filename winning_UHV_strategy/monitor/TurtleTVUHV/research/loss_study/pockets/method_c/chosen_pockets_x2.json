@@ -1,0 +1,119 @@
+{
+ "base_train": 0.033583208395802096,
+ "lift_bar": 2.0,
+ "lambda": 0.06716641679160419,
+ "pockets": {
+  "weekly_close": {
+   "family": "fri_from",
+   "params": {
+    "T": 870
+   },
+   "n": 51,
+   "l": 11,
+   "lc": 10,
+   "days": 7,
+   "score": 7.575,
+   "viable": true,
+   "nconds": 2,
+   "plateau": 13,
+   "own_cause_train": 14
+  },
+  "rollover_dead_book": {
+   "family": "clock_or_spread",
+   "params": {
+    "A": 1005,
+    "B": 1110,
+    "S": 1.6
+   },
+   "n": 98,
+   "l": 14,
+   "lc": 8,
+   "days": 11,
+   "score": 7.418,
+   "viable": true,
+   "nconds": 2,
+   "plateau": 41,
+   "own_cause_train": 9
+  },
+  "news_spike": {
+   "family": "data_slots_volup",
+   "params": {
+    "slots": "0830",
+    "w": 30,
+    "r": 1.2
+   },
+   "n": 70,
+   "l": 6,
+   "lc": 2,
+   "days": 6,
+   "score": 1.298,
+   "viable": true,
+   "nconds": 2,
+   "plateau": 1,
+   "own_cause_train": 7
+  },
+  "no_separator_chop": {
+   "family": "low_atr_chop",
+   "params": {
+    "a": 0.6,
+    "e": 0.1
+   },
+   "n": 54,
+   "l": 7,
+   "lc": 5,
+   "days": 7,
+   "score": 3.373,
+   "viable": true,
+   "nconds": 2,
+   "plateau": 1,
+   "own_cause_train": 9
+  },
+  "exhausted_move": {
+   "family": "humps_trend",
+   "params": {
+    "h": 7,
+    "t": 3
+   },
+   "n": 29,
+   "l": 5,
+   "lc": 4,
+   "days": 5,
+   "score": 3.052,
+   "viable": true,
+   "nconds": 2,
+   "plateau": 3,
+   "own_cause_train": 14
+  },
+  "counter_structure": {
+   "family": "downtrend_low",
+   "params": {
+    "t": 8,
+    "p": 0.2
+   },
+   "n": 87,
+   "l": 5,
+   "lc": 4,
+   "days": 5,
+   "score": -0.843,
+   "viable": false,
+   "nconds": 2,
+   "plateau": 0,
+   "own_cause_train": 23
+  },
+  "support_resistance": {
+   "family": "figure_ahead",
+   "params": {
+    "f": 4
+   },
+   "n": 146,
+   "l": 6,
+   "lc": 4,
+   "days": 6,
+   "score": -3.806,
+   "viable": false,
+   "nconds": 1,
+   "plateau": 0,
+   "own_cause_train": 35
+  }
+ }
+}

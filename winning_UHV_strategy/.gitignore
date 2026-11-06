@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.log
+games/gold_runner/chrome_profile/
+games/gold_runner/recordings/
+games/gold_runner/state/live_signed.json
+games/gold_runner/state/feeds_live_owned.json
+monitor/TurtleTVUHV/simdata/det_cache/
+monitor/TurtleTVUHV/simdata/sim_cache/
+monitor/.claude_api_key
+bot/u97_bot.log
+bot/STOP_BOT

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Golden Gravity: The $1 Heist</title>
+<link rel="icon" href="data:,">
+<!-- server.py serves index.html at / and the files under /static/*; the onerror fallbacks keep a plain static server working too -->
+<!-- Zee 2026-11-04: cowboy-theme lettering for the receipt scroll (falls back to Playfair / Georgia offline) -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rye&family=Sancreek&display=swap">
+<link rel="stylesheet" href="/static/css/style.css" onerror="this.onerror=null;this.href='css/style.css'">
+</head>
+<body>
+<div id="stage">
+  <canvas id="game" tabindex="0" aria-label="Golden Gravity: the street"></canvas>
+  <div id="liveframe" hidden></div>
+  <div id="safety" hidden></div>
+  <div id="boot" aria-live="polite">
+    <div class="boot-coin"><span>$</span></div>
+    <div class="boot-words">Ledger Street is waking up&hellip;</div>
+  </div>
+</div>
+<script type="module" src="/static/js/main.js"
+        onerror="var s=document.createElement('script');s.type='module';s.src='js/main.js';document.body.appendChild(s);"></script>
+</body>
+</html>

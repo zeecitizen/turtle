@@ -1,0 +1,137 @@
+======================================================================================================================================================
+[STRICT x3.5] pockets from chosen_pockets.json (tuned on TRAIN only, marginal-lift bar x3.5); base loss rate train 3.36%  test 1.40%  all 2.26%
+======================================================================================================================================================
+
+-- weekly_close: Friday from 14:30 NY (to the 17:00 NY weekly close)   [VIABLE on train; same-family plateau 5]
+   train:  1.5% of trades (51/3335), 11/112 losses =  9.8% of losses, loss rate 21.57% (lift x6.42 vs half base, x9.56 vs 2.26%), untouched WR 96.92% (base 96.64%), loss days 7 | own cause 10/14
+   test :  2.1% of trades (92/4291), 6/60 losses = 10.0% of losses, loss rate  6.52% (lift x4.66 vs half base, x2.89 vs 2.26%), untouched WR 98.71% (base 98.60%), loss days 6 | own cause 6/8
+   test observed 6 vs expected-if-no-skill 1.3; share drift test/train 1.40
+
+-- rollover_dead_book: NY clock 16:45-17:15 any day, OR breakout-tick spread >= 1.6 pip   [VIABLE on train; same-family plateau 10]
+   train:  1.7% of trades (58/3335), 11/112 losses =  9.8% of losses, loss rate 18.97% (lift x5.65 vs half base, x8.41 vs 2.26%), untouched WR 96.92% (base 96.64%), loss days 8 | own cause 5/9
+   test :  1.7% of trades (73/4291), 8/60 losses = 13.3% of losses, loss rate 10.96% (lift x7.84 vs half base, x4.86 vs 2.26%), untouched WR 98.77% (base 98.60%), loss days 8 | own cause 3/7
+   test observed 8 vs expected-if-no-skill 1.0; share drift test/train 0.98
+
+-- news_spike: Mon-Fri within +-30 min of the 08:30 NY US-data slot AND vol10/vol60 >= 1.2   [NOT VIABLE on train (kept for the record); same-family plateau 0]
+   train:  2.1% of trades (70/3335), 6/112 losses =  5.4% of losses, loss rate  8.57% (lift x2.55 vs half base, x3.80 vs 2.26%), untouched WR 96.75% (base 96.64%), loss days 6 | own cause 2/7
+   test :  1.9% of trades (81/4291), 1/60 losses =  1.7% of losses, loss rate  1.23% (lift x0.88 vs half base, x0.55 vs 2.26%), untouched WR 98.60% (base 98.60%), loss days 1 | own cause 1/7
+   test observed 1 vs expected-if-no-skill 1.1; share drift test/train 0.90
+
+-- no_separator_chop: ATR <= 0.6 pip AND er30 <= 0.10   [VIABLE on train; same-family plateau 1]
+   train:  1.6% of trades (54/3335), 7/112 losses =  6.2% of losses, loss rate 12.96% (lift x3.86 vs half base, x5.75 vs 2.26%), untouched WR 96.80% (base 96.64%), loss days 7 | own cause 5/9
+   test :  3.3% of trades (141/4291), 5/60 losses =  8.3% of losses, loss rate  3.55% (lift x2.54 vs half base, x1.57 vs 2.26%), untouched WR 98.67% (base 98.60%), loss days 5 | own cause 0/2
+   test observed 5 vs expected-if-no-skill 2.0; share drift test/train 2.03
+
+-- exhausted_move: camel humps >= 7 AND 30-bar move with the trade >= 3 ATR   [VIABLE on train; same-family plateau 1]
+   train:  0.9% of trades (29/3335), 5/112 losses =  4.5% of losses, loss rate 17.24% (lift x5.13 vs half base, x7.64 vs 2.26%), untouched WR 96.76% (base 96.64%), loss days 5 | own cause 4/14
+   test :  0.8% of trades (33/4291), 1/60 losses =  1.7% of losses, loss rate  3.03% (lift x2.17 vs half base, x1.34 vs 2.26%), untouched WR 98.61% (base 98.60%), loss days 1 | own cause 0/4
+   test observed 1 vs expected-if-no-skill 0.5; share drift test/train 0.88
+
+-- counter_structure: 90-bar move AGAINST the trade >= 8 ATR AND level in the bottom 0.2 of its 60-bar range   [NOT VIABLE on train (kept for the record); same-family plateau 0]
+   train:  2.6% of trades (87/3335), 5/112 losses =  4.5% of losses, loss rate  5.75% (lift x1.71 vs half base, x2.55 vs 2.26%), untouched WR 96.71% (base 96.64%), loss days 5 | own cause 4/23
+   test :  2.6% of trades (113/4291), 1/60 losses =  1.7% of losses, loss rate  0.88% (lift x0.63 vs half base, x0.39 vs 2.26%), untouched WR 98.59% (base 98.60%), loss days 1 | own cause 1/16
+   test observed 1 vs expected-if-no-skill 1.6; share drift test/train 1.01
+
+-- support_resistance: a 100-pip figure within 4 pip ahead   [NOT VIABLE on train (kept for the record); same-family plateau 0]
+   train:  4.4% of trades (146/3335), 6/112 losses =  5.4% of losses, loss rate  4.11% (lift x1.22 vs half base, x1.82 vs 2.26%), untouched WR 96.68% (base 96.64%), loss days 6 | own cause 4/35
+   test :  3.9% of trades (166/4291), 4/60 losses =  6.7% of losses, loss rate  2.41% (lift x1.72 vs half base, x1.07 vs 2.26%), untouched WR 98.64% (base 98.60%), loss days 4 | own cause 2/15
+   test observed 4 vs expected-if-no-skill 2.3; share drift test/train 0.88
+
+-- leave-one-out on TRAIN (pocket kept if what it adds beyond the other kept pockets has marginal lift >= x3.5)
+   weekly_close         adds N   42, L   6 (marginal rate  14.3%, x4.25) score   1.06
+   rollover_dead_book   adds N   46, L   6 (marginal rate  13.0%, x3.88) score   0.59
+   no_separator_chop    adds N   51, L   7 (marginal rate  13.7%, x4.09) score   1.01
+   exhausted_move       adds N   28, L   4 (marginal rate  14.3%, x4.25) score   0.71
+
+-- UNION of kept pockets (weekly_close, rollover_dead_book, no_separator_chop, exhausted_move)
+   train:  5.4% of trades (179/3335), 28/112 losses = 25.0% of losses, loss rate 15.64% (lift x4.66 vs half base, x6.94 vs 2.26%), untouched WR 97.34% (base 96.64%), loss days 22
+          bar: at 5.4% share the untouched zone may keep 22.1 losses -> pockets must hold 89.9 of 112 (80%, lift x15.0); they hold 28
+   test :  7.2% of trades (311/4291), 13/60 losses = 21.7% of losses, loss rate  4.18% (lift x2.99 vs half base, x1.85 vs 2.26%), untouched WR 98.82% (base 98.60%), loss days 13
+          bar: at 7.2% share the untouched zone may keep 27.9 losses -> pockets must hold 32.1 of 60 (54%, lift x7.4); they hold 13
+   test observed 13 vs expected-if-no-skill 4.3
+
+-- UNION of ALL chosen pockets incl. non-viable
+   train: 13.7% of trades (457/3335), 41/112 losses = 36.6% of losses, loss rate  8.97% (lift x2.67 vs half base, x3.98 vs 2.26%), untouched WR 97.53% (base 96.64%), loss days 32
+          bar: at 13.7% share the untouched zone may keep 20.1 losses -> pockets must hold 91.9 of 112 (82%, lift x6.0); they hold 41
+   test : 14.9% of trades (639/4291), 18/60 losses = 30.0% of losses, loss rate  2.82% (lift x2.01 vs half base, x1.25 vs 2.26%), untouched WR 98.85% (base 98.60%), loss days 18
+          bar: at 14.9% share the untouched zone may keep 25.6 losses -> pockets must hold 34.4 of 60 (57%, lift x3.9); they hold 18
+   test observed 18 vs expected-if-no-skill 8.9
+======================================================================================================================================================
+[RELAXED x2 (sensitivity)] pockets from chosen_pockets_x2.json (tuned on TRAIN only, marginal-lift bar x2); base loss rate train 3.36%  test 1.40%  all 2.26%
+======================================================================================================================================================
+
+-- weekly_close: Friday from 14:30 NY (to the 17:00 NY weekly close)   [VIABLE on train; same-family plateau 13]
+   train:  1.5% of trades (51/3335), 11/112 losses =  9.8% of losses, loss rate 21.57% (lift x6.42 vs half base, x9.56 vs 2.26%), untouched WR 96.92% (base 96.64%), loss days 7 | own cause 10/14
+   test :  2.1% of trades (92/4291), 6/60 losses = 10.0% of losses, loss rate  6.52% (lift x4.66 vs half base, x2.89 vs 2.26%), untouched WR 98.71% (base 98.60%), loss days 6 | own cause 6/8
+   test observed 6 vs expected-if-no-skill 1.3; share drift test/train 1.40
+
+-- rollover_dead_book: NY clock 16:45-18:30 any day, OR breakout-tick spread >= 1.6 pip   [VIABLE on train; same-family plateau 41]
+   train:  2.9% of trades (98/3335), 14/112 losses = 12.5% of losses, loss rate 14.29% (lift x4.25 vs half base, x6.33 vs 2.26%), untouched WR 96.97% (base 96.64%), loss days 11 | own cause 8/9
+   test :  2.6% of trades (110/4291), 8/60 losses = 13.3% of losses, loss rate  7.27% (lift x5.20 vs half base, x3.22 vs 2.26%), untouched WR 98.76% (base 98.60%), loss days 8 | own cause 3/7
+   test observed 8 vs expected-if-no-skill 1.5; share drift test/train 0.87
+
+-- news_spike: Mon-Fri within +-30 min of the 08:30 NY US-data slot AND vol10/vol60 >= 1.2   [VIABLE on train; same-family plateau 1]
+   train:  2.1% of trades (70/3335), 6/112 losses =  5.4% of losses, loss rate  8.57% (lift x2.55 vs half base, x3.80 vs 2.26%), untouched WR 96.75% (base 96.64%), loss days 6 | own cause 2/7
+   test :  1.9% of trades (81/4291), 1/60 losses =  1.7% of losses, loss rate  1.23% (lift x0.88 vs half base, x0.55 vs 2.26%), untouched WR 98.60% (base 98.60%), loss days 1 | own cause 1/7
+   test observed 1 vs expected-if-no-skill 1.1; share drift test/train 0.90
+
+-- no_separator_chop: ATR <= 0.6 pip AND er30 <= 0.10   [VIABLE on train; same-family plateau 1]
+   train:  1.6% of trades (54/3335), 7/112 losses =  6.2% of losses, loss rate 12.96% (lift x3.86 vs half base, x5.75 vs 2.26%), untouched WR 96.80% (base 96.64%), loss days 7 | own cause 5/9
+   test :  3.3% of trades (141/4291), 5/60 losses =  8.3% of losses, loss rate  3.55% (lift x2.54 vs half base, x1.57 vs 2.26%), untouched WR 98.67% (base 98.60%), loss days 5 | own cause 0/2
+   test observed 5 vs expected-if-no-skill 2.0; share drift test/train 2.03
+
+-- exhausted_move: camel humps >= 7 AND 30-bar move with the trade >= 3 ATR   [VIABLE on train; same-family plateau 3]
+   train:  0.9% of trades (29/3335), 5/112 losses =  4.5% of losses, loss rate 17.24% (lift x5.13 vs half base, x7.64 vs 2.26%), untouched WR 96.76% (base 96.64%), loss days 5 | own cause 4/14
+   test :  0.8% of trades (33/4291), 1/60 losses =  1.7% of losses, loss rate  3.03% (lift x2.17 vs half base, x1.34 vs 2.26%), untouched WR 98.61% (base 98.60%), loss days 1 | own cause 0/4
+   test observed 1 vs expected-if-no-skill 0.5; share drift test/train 0.88
+
+-- counter_structure: 90-bar move AGAINST the trade >= 8 ATR AND level in the bottom 0.2 of its 60-bar range   [NOT VIABLE on train (kept for the record); same-family plateau 0]
+   train:  2.6% of trades (87/3335), 5/112 losses =  4.5% of losses, loss rate  5.75% (lift x1.71 vs half base, x2.55 vs 2.26%), untouched WR 96.71% (base 96.64%), loss days 5 | own cause 4/23
+   test :  2.6% of trades (113/4291), 1/60 losses =  1.7% of losses, loss rate  0.88% (lift x0.63 vs half base, x0.39 vs 2.26%), untouched WR 98.59% (base 98.60%), loss days 1 | own cause 1/16
+   test observed 1 vs expected-if-no-skill 1.6; share drift test/train 1.01
+
+-- support_resistance: a 100-pip figure within 4 pip ahead   [NOT VIABLE on train (kept for the record); same-family plateau 0]
+   train:  4.4% of trades (146/3335), 6/112 losses =  5.4% of losses, loss rate  4.11% (lift x1.22 vs half base, x1.82 vs 2.26%), untouched WR 96.68% (base 96.64%), loss days 6 | own cause 4/35
+   test :  3.9% of trades (166/4291), 4/60 losses =  6.7% of losses, loss rate  2.41% (lift x1.72 vs half base, x1.07 vs 2.26%), untouched WR 98.64% (base 98.60%), loss days 4 | own cause 2/15
+   test observed 4 vs expected-if-no-skill 2.3; share drift test/train 0.88
+
+-- leave-one-out on TRAIN (pocket kept if what it adds beyond the other kept pockets has marginal lift >= x2)
+   weekly_close         adds N   42, L   6 (marginal rate  14.3%, x4.25) score   3.18
+   rollover_dead_book   adds N   83, L   8 (marginal rate   9.6%, x2.87) score   2.43
+   news_spike           adds N   69, L   5 (marginal rate   7.2%, x2.16) score   0.37
+   no_separator_chop    adds N   48, L   6 (marginal rate  12.5%, x3.72) score   2.78
+   exhausted_move       adds N   27, L   3 (marginal rate  11.1%, x3.31) score   1.19
+
+-- UNION of kept pockets (weekly_close, rollover_dead_book, news_spike, no_separator_chop, exhausted_move)
+   train:  8.5% of trades (285/3335), 35/112 losses = 31.2% of losses, loss rate 12.28% (lift x3.66 vs half base, x5.44 vs 2.26%), untouched WR 97.48% (base 96.64%), loss days 28
+          bar: at 8.5% share the untouched zone may keep 21.4 losses -> pockets must hold 90.7 of 112 (81%, lift x9.5); they hold 35
+   test :  9.9% of trades (425/4291), 14/60 losses = 23.3% of losses, loss rate  3.29% (lift x2.36 vs half base, x1.46 vs 2.26%), untouched WR 98.81% (base 98.60%), loss days 14
+          bar: at 9.9% share the untouched zone may keep 27.1 losses -> pockets must hold 32.9 of 60 (55%, lift x5.5); they hold 14
+   test observed 14 vs expected-if-no-skill 5.9
+
+-- UNION of ALL chosen pockets incl. non-viable
+   train: 14.7% of trades (490/3335), 43/112 losses = 38.4% of losses, loss rate  8.78% (lift x2.61 vs half base, x3.89 vs 2.26%), untouched WR 97.57% (base 96.64%), loss days 34
+          bar: at 14.7% share the untouched zone may keep 19.9 losses -> pockets must hold 92.1 of 112 (82%, lift x5.6); they hold 43
+   test : 15.7% of trades (673/4291), 18/60 losses = 30.0% of losses, loss rate  2.67% (lift x1.91 vs half base, x1.19 vs 2.26%), untouched WR 98.84% (base 98.60%), loss days 18
+          bar: at 15.7% share the untouched zone may keep 25.3 losses -> pockets must hold 34.7 of 60 (58%, lift x3.7); they hold 18
+   test observed 18 vs expected-if-no-skill 9.4
+
+-- causes of the losses LEFT in the untouched zone (strict union), train / test
+   weekly_close         train   3 of  14 left   test   2 of   8 left
+   rollover_dead_book   train   3 of   9 left   test   2 of   7 left
+   news_spike           train   7 of   7 left   test   7 of   7 left
+   no_separator_chop    train   4 of   9 left   test   2 of   2 left
+   exhausted_move       train  10 of  14 left   test   4 of   4 left
+   counter_structure    train  22 of  23 left   test  14 of  16 left
+   support_resistance   train  34 of  35 left   test  15 of  15 left
+   bad_fill             train   1 of   1 left   test   1 of   1 left
+
+-- doctrine.python_says (CLAUDE.md: the only sanctioned way to quote a Python win rate)
+  untouched zone outside the strict Method-C pockets (train)
+     python 97%  ->  expect ~81% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -18 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  untouched zone outside the strict Method-C pockets (test)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.

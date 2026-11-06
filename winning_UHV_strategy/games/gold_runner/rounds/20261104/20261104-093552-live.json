@@ -1,0 +1,549 @@
+{
+ "v": 1,
+ "id": "20261104-093552-live",
+ "mode": "live",
+ "kind": "live",
+ "side": 1,
+ "qty0": 1000.0,
+ "coin_oz": 1000.0,
+ "stop_dist": 0.0002,
+ "target": 0.0002,
+ "risk_usd": 0.2,
+ "shot_t": 1793784952.028896,
+ "opened_t": 1793784953.6175327,
+ "closed_t": 1793785036.8497894,
+ "patience_s": 0.1,
+ "quick": true,
+ "session": "london",
+ "weather": "storm",
+ "storm_seen": true,
+ "night": false,
+ "position_id": 15503968,
+ "order_id": 2192529288,
+ "quote_at_send": {
+  "bid": 1.12595,
+  "ask": 1.12596,
+  "ts": 1793784951.8766305
+ },
+ "entry_ref": 1.12596,
+ "spread_entry": 0.0,
+ "fill": 1.12595,
+ "sl0": 1.12576,
+ "tp0": 1.12616,
+ "sl_final": 1.12576,
+ "tp_final": 1.12616,
+ "exit": 1.12578,
+ "walls": [],
+ "haggles": 0,
+ "machete_done": false,
+ "banked_usd": 0.0,
+ "golden": null,
+ "anvil_moves": 0,
+ "anvil_before_haggle": false,
+ "outcome": "eject",
+ "result_usd": -0.17,
+ "costs": {
+  "spread_usd": 0.0,
+  "slippage_usd": 0.0,
+  "fee_usd": 0.0,
+  "financing_usd": 0.0
+ },
+ "estimated": false,
+ "instructions": [
+  {
+   "nonce": "mw1x8tf7-5fchosq",
+   "action": "ack",
+   "args": {},
+   "sent_at": 1793784949.746,
+   "recv_t": 1793784949.7488449,
+   "accepted": true,
+   "why": null
+  },
+  {
+   "nonce": "mw1x8v3s-yhxbdp0",
+   "action": "fund",
+   "args": {
+    "kind": "live",
+    "side": 1,
+    "target": 0.0002,
+    "twin": false,
+    "coins": 1
+   },
+   "sent_at": 1793784951.927,
+   "recv_t": 1793784951.9294882,
+   "accepted": true,
+   "why": null
+  },
+  {
+   "nonce": "mw1x8v6j-lo9k9cv",
+   "action": "shoot",
+   "args": {},
+   "sent_at": 1793784952.026,
+   "recv_t": 1793784952.028896,
+   "accepted": true,
+   "why": null,
+   "broker": {
+    "sent": {
+     "side": 1,
+     "qty": 1000.0,
+     "sl": 1.12576,
+     "tp": 1.12616,
+     "quote": {
+      "bid": 1.12595,
+      "ask": 1.12596,
+      "ts": 1793784951.8766305
+     }
+    },
+    "ok": true,
+    "error": null,
+    "rtt_ms": 1587.9,
+    "order_id": 2192529288,
+    "position_id": 15503968,
+    "fill_price": 1.12595,
+    "definite": true,
+    "uncertain": null
+   }
+  },
+  {
+   "nonce": "mw1xanj6-nodx63z",
+   "action": "eject",
+   "args": {},
+   "sent_at": 1793785035.4240003,
+   "recv_t": 1793785035.4276893,
+   "accepted": true,
+   "why": null,
+   "broker": {
+    "ok": true,
+    "error": null,
+    "rtt_ms": 1063.7,
+    "fill_price": null,
+    "sent": {
+     "qty": 1000.0
+    }
+   }
+  }
+ ],
+ "fills": [
+  {
+   "t": 1793784953.6175327,
+   "what": "open",
+   "side": 1,
+   "qty": 1000.0,
+   "price": 1.12595,
+   "quote": {
+    "bid": 1.12595,
+    "ask": 1.12596,
+    "ts": 1793784951.8766305
+   },
+   "rtt_ms": 1587.9
+  },
+  {
+   "t": 1793785036.4918487,
+   "what": "eject",
+   "qty": 1000.0,
+   "price": null,
+   "quote_ref": 1.12578,
+   "rtt_ms": 1063.7
+  }
+ ],
+ "report_rows": [
+  {
+   "id": 2192531898,
+   "accountId": "L1869984",
+   "type": "MARKET",
+   "status": "EXECUTED",
+   "side": "SELL",
+   "placedAt": "2026-11-04T09:37:15.684Z",
+   "executedAt": "2026-11-04T09:37:15.702Z",
+   "protective": false,
+   "qty": 1000.0,
+   "symbol": "EUR/USD",
+   "symbolDisplayName": "EUR/USD",
+   "triggerPrice": null,
+   "executedPrice": 1.12578,
+   "executedQty": 1000.0,
+   "rpl": -0.17,
+   "fee": 0,
+   "accountCurrency": "USD",
+   "positionId": 15503968,
+   "roiPct": -15.18,
+   "shareable": true,
+   "userAgent": null,
+   "originId": 2192531898,
+   "releasedMargin": 1.12,
+   "openReason": "CLOSE_POSITION",
+   "closeReason": "EXECUTION",
+   "closeResolution": "EXECUTED",
+   "clientOrderId": null,
+   "executed_ts": 1793785035.702
+  }
+ ],
+ "rat": [],
+ "quotes": {
+  "n": 170,
+  "first": {
+   "bid": 1.12594,
+   "ask": 1.12595,
+   "ts": 1793784953.6640377
+  },
+  "last": {
+   "bid": 1.12584,
+   "ask": 1.12585,
+   "ts": 1793785036.4918487
+  },
+  "high_bid": 1.12594,
+  "low_bid": 1.12578,
+  "spread_min": 0.0,
+  "spread_max": 0.0,
+  "spread_avg": 0.0
+ },
+ "path": [
+  [
+   0.0,
+   0.45
+  ],
+  [
+   1.1,
+   0.45
+  ],
+  [
+   2.1,
+   0.45
+  ],
+  [
+   3.1,
+   0.45
+  ],
+  [
+   4.1,
+   0.3
+  ],
+  [
+   5.1,
+   0.325
+  ],
+  [
+   6.1,
+   0.425
+  ],
+  [
+   7.2,
+   0.425
+  ],
+  [
+   8.2,
+   0.425
+  ],
+  [
+   9.3,
+   0.375
+  ],
+  [
+   10.3,
+   0.3
+  ],
+  [
+   11.4,
+   0.325
+  ],
+  [
+   12.4,
+   0.325
+  ],
+  [
+   13.4,
+   0.325
+  ],
+  [
+   14.5,
+   0.3
+  ],
+  [
+   15.5,
+   0.3
+  ],
+  [
+   16.5,
+   0.3
+  ],
+  [
+   17.5,
+   0.3
+  ],
+  [
+   18.5,
+   0.125
+  ],
+  [
+   19.6,
+   0.15
+  ],
+  [
+   20.6,
+   0.175
+  ],
+  [
+   21.6,
+   0.175
+  ],
+  [
+   22.7,
+   0.2
+  ],
+  [
+   23.7,
+   0.225
+  ],
+  [
+   24.7,
+   0.2
+  ],
+  [
+   25.7,
+   0.15
+  ],
+  [
+   26.7,
+   0.2
+  ],
+  [
+   27.7,
+   0.2
+  ],
+  [
+   28.7,
+   0.175
+  ],
+  [
+   29.8,
+   0.4
+  ],
+  [
+   30.8,
+   0.375
+  ],
+  [
+   31.8,
+   0.4
+  ],
+  [
+   32.8,
+   0.375
+  ],
+  [
+   33.9,
+   0.35
+  ],
+  [
+   34.9,
+   0.375
+  ],
+  [
+   36.0,
+   0.35
+  ],
+  [
+   37.1,
+   0.4
+  ],
+  [
+   38.1,
+   0.425
+  ],
+  [
+   39.2,
+   0.45
+  ],
+  [
+   40.2,
+   0.45
+  ],
+  [
+   41.2,
+   0.35
+  ],
+  [
+   42.3,
+   0.35
+  ],
+  [
+   43.3,
+   0.4
+  ],
+  [
+   44.4,
+   0.35
+  ],
+  [
+   45.4,
+   0.325
+  ],
+  [
+   46.4,
+   0.325
+  ],
+  [
+   47.4,
+   0.325
+  ],
+  [
+   48.5,
+   0.325
+  ],
+  [
+   49.6,
+   0.45
+  ],
+  [
+   50.7,
+   0.45
+  ],
+  [
+   51.7,
+   0.45
+  ],
+  [
+   52.7,
+   0.45
+  ],
+  [
+   53.7,
+   0.425
+  ],
+  [
+   54.8,
+   0.45
+  ],
+  [
+   55.8,
+   0.425
+  ],
+  [
+   56.9,
+   0.45
+  ],
+  [
+   57.9,
+   0.425
+  ],
+  [
+   59.0,
+   0.425
+  ],
+  [
+   60.1,
+   0.4
+  ],
+  [
+   61.2,
+   0.425
+  ],
+  [
+   62.2,
+   0.425
+  ],
+  [
+   63.3,
+   0.425
+  ],
+  [
+   64.3,
+   0.45
+  ],
+  [
+   65.4,
+   0.425
+  ],
+  [
+   66.4,
+   0.45
+  ],
+  [
+   67.4,
+   0.425
+  ],
+  [
+   68.4,
+   0.325
+  ],
+  [
+   69.4,
+   0.325
+  ],
+  [
+   70.5,
+   0.35
+  ],
+  [
+   71.5,
+   0.35
+  ],
+  [
+   72.6,
+   0.325
+  ],
+  [
+   73.7,
+   0.325
+  ],
+  [
+   74.7,
+   0.325
+  ],
+  [
+   75.7,
+   0.3
+  ],
+  [
+   76.8,
+   0.3
+  ],
+  [
+   77.8,
+   0.3
+  ],
+  [
+   78.9,
+   0.3
+  ],
+  [
+   79.9,
+   0.3
+  ],
+  [
+   80.9,
+   0.05
+  ]
+ ],
+ "twin_invited": false,
+ "twin": null,
+ "twin_result_usd": null,
+ "would_have_usd": 0.24,
+ "settlement": {
+  "id": "20261104-093552-live",
+  "kind": "live",
+  "side": 1,
+  "outcome": "eject",
+  "result_usd": -0.17,
+  "result_text": "-$0.17",
+  "value_usd": 0.03,
+  "value_text": "$0.03",
+  "costs": {
+   "spread_usd": 0.0,
+   "slippage_usd": 0.0,
+   "fee_usd": 0.0,
+   "financing_usd": 0.0
+  },
+  "fill": 1.12595,
+  "exit": 1.12578,
+  "qty0": 1000.0,
+  "age_s": 83.2,
+  "chasm": null,
+  "balance_after": 22.36,
+  "twin_result_usd": null,
+  "would_have_usd": 0.24,
+  "plain": "Bought 1000.00 oz of gold at 1.13; you ejected at market at 1.13: -$0.17 after a $0.00 spread.",
+  "t": 1793785036.85
+ },
+ "notes": []
+}

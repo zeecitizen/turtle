@@ -1,0 +1,1 @@
+rule_us_news_windows         removes   297 (losers   8 / winners   289)  loss rate among removed 2.69% vs base 2.26%  lift x1.19  | train x0.86 (4L/135W)  test x1.81 (4L/154W)  | WR 97.76%  net +1,207$  | Zee's 22: 1  | crashes 0  look-ahead diffs 0

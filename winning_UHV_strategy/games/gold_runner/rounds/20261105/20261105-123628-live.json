@@ -1,0 +1,246 @@
+{
+ "v": 1,
+ "id": "20261105-123628-live",
+ "mode": "live",
+ "kind": "live",
+ "side": -1,
+ "qty0": 10000.0,
+ "coin_oz": 10000.0,
+ "stop_dist": 0.0021100000000000433,
+ "target": 1e-05,
+ "risk_usd": 21.1,
+ "shot_t": 1793882188.7818108,
+ "opened_t": 1793882190.5387995,
+ "closed_t": 1793882200.8119872,
+ "patience_s": 0.01,
+ "quick": true,
+ "session": "london",
+ "weather": "active",
+ "storm_seen": false,
+ "night": false,
+ "position_id": 15608940,
+ "order_id": 2196388104,
+ "quote_at_send": {
+  "bid": 1.12185,
+  "ask": 1.12186,
+  "ts": 1793882188.5604844
+ },
+ "entry_ref": 1.12185,
+ "spread_entry": 0.0,
+ "fill": 1.12185,
+ "sl0": 1.12396,
+ "tp0": 1.12184,
+ "sl_final": 1.12396,
+ "tp_final": 1.12184,
+ "exit": 1.12184,
+ "walls": [],
+ "haggles": 0,
+ "machete_done": false,
+ "banked_usd": 0.0,
+ "golden": null,
+ "anvil_moves": 0,
+ "anvil_before_haggle": false,
+ "outcome": "buyer",
+ "result_usd": 0.1,
+ "costs": {
+  "spread_usd": 0.0,
+  "slippage_usd": 0.0,
+  "fee_usd": 0.0,
+  "financing_usd": 0.0
+ },
+ "estimated": false,
+ "instructions": [
+  {
+   "nonce": "bot-1d51e45e1f694346a01016eb9fbeaf7f",
+   "action": "ack",
+   "args": {},
+   "sent_at": 1793880907.8774815,
+   "recv_t": 1793880907.8834884,
+   "accepted": true,
+   "why": null
+  },
+  {
+   "nonce": "bot-c8b61a3490ab46bb8c9196bc4082f460",
+   "action": "fund",
+   "args": {
+    "kind": "live",
+    "side": -1,
+    "target": 0.0002,
+    "coins": 1
+   },
+   "sent_at": 1793882188.7761595,
+   "recv_t": 1793882188.7761595,
+   "accepted": true,
+   "why": null
+  },
+  {
+   "nonce": "bot-ae81d8a803f548f09713692b830331f8",
+   "action": "shoot",
+   "args": {},
+   "sent_at": 1793882188.780811,
+   "recv_t": 1793882188.7818108,
+   "accepted": true,
+   "why": null,
+   "broker": {
+    "sent": {
+     "side": -1,
+     "qty": 10000.0,
+     "sl": 1.12396,
+     "tp": 1.12184,
+     "quote": {
+      "bid": 1.12185,
+      "ask": 1.12186,
+      "ts": 1793882188.5604844
+     }
+    },
+    "ok": true,
+    "error": null,
+    "rtt_ms": 1755.0,
+    "order_id": 2196388104,
+    "position_id": 15608940,
+    "fill_price": 1.12185,
+    "definite": true,
+    "uncertain": null
+   }
+  }
+ ],
+ "fills": [
+  {
+   "t": 1793882190.5387995,
+   "what": "open",
+   "side": -1,
+   "qty": 10000.0,
+   "price": 1.12185,
+   "quote": {
+    "bid": 1.12185,
+    "ask": 1.12186,
+    "ts": 1793882188.5604844
+   },
+   "rtt_ms": 1755.0
+  }
+ ],
+ "report_rows": [
+  {
+   "id": 2196388106,
+   "accountId": "L1869984",
+   "type": "TAKE_PROFIT",
+   "status": "EXECUTED",
+   "side": "BUY",
+   "placedAt": "2026-11-05T12:36:40.307Z",
+   "executedAt": "2026-11-05T12:36:40.307Z",
+   "protective": true,
+   "qty": 10000.0,
+   "symbol": "EUR/USD",
+   "symbolDisplayName": "EUR/USD",
+   "triggerPrice": 1.12184,
+   "executedPrice": 1.12184,
+   "executedQty": 10000.0,
+   "rpl": 0.1,
+   "fee": 0,
+   "accountCurrency": "USD",
+   "positionId": 15608940,
+   "roiPct": 0.89,
+   "shareable": true,
+   "userAgent": null,
+   "originId": 2196388106,
+   "releasedMargin": 11.21,
+   "openReason": "CLIENT",
+   "closeReason": "EXECUTION",
+   "closeResolution": "EXECUTED",
+   "clientOrderId": null,
+   "executed_ts": 1793882200.307
+  }
+ ],
+ "rat": [],
+ "quotes": {
+  "n": 19,
+  "first": {
+   "bid": 1.12185,
+   "ask": 1.12186,
+   "ts": 1793882190.6046796
+  },
+  "last": {
+   "bid": 1.12175,
+   "ask": 1.12176,
+   "ts": 1793882200.5418077
+  },
+  "high_bid": 1.12187,
+  "low_bid": 1.12175,
+  "spread_min": 0.0,
+  "spread_max": 0.0,
+  "spread_avg": 0.0
+ },
+ "path": [
+  [
+   0.1,
+   0.99057
+  ],
+  [
+   1.1,
+   0.98585
+  ],
+  [
+   2.1,
+   0.98585
+  ],
+  [
+   3.1,
+   0.99057
+  ],
+  [
+   4.2,
+   0.98585
+  ],
+  [
+   5.3,
+   0.98113
+  ],
+  [
+   6.4,
+   0.98585
+  ],
+  [
+   7.5,
+   0.98585
+  ],
+  [
+   8.5,
+   0.98585
+  ],
+  [
+   9.5,
+   1.03302
+  ]
+ ],
+ "twin_invited": false,
+ "twin": null,
+ "twin_result_usd": null,
+ "would_have_usd": null,
+ "settlement": {
+  "id": "20261105-123628-live",
+  "kind": "live",
+  "side": -1,
+  "outcome": "buyer",
+  "result_usd": 0.1,
+  "result_text": "+$0.10",
+  "value_usd": 21.2,
+  "value_text": "$21.20",
+  "costs": {
+   "spread_usd": 0.0,
+   "slippage_usd": 0.0,
+   "fee_usd": 0.0,
+   "financing_usd": 0.0
+  },
+  "fill": 1.12185,
+  "exit": 1.12184,
+  "qty0": 10000.0,
+  "age_s": 10.3,
+  "chasm": null,
+  "balance_after": 22.52,
+  "twin_result_usd": null,
+  "would_have_usd": null,
+  "plain": "Sold 10000.00 oz of gold at 1.12; the take profit bought it back at 1.12: +$0.10 after a $0.00 spread.",
+  "t": 1793882200.812
+ },
+ "notes": []
+}

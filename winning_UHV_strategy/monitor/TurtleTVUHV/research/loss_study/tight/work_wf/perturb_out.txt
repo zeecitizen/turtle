@@ -1,0 +1,95 @@
+=== Zee's file, one input at a time (engine) ===
+ZEE (h2-3, ER 0.30-0.35, bars 16, lat 0.3)  308 tr  0 L  loss rate  0.00%  WR 100.00%  net   +444.06  | Mar-Jun 125/0L  Jul-Nov 183/0L
+ER max 0.33                         205 tr  0 L  loss rate  0.00%  WR 100.00%  net   +286.06  | Mar-Jun  80/0L  Jul-Nov 125/0L
+ER max 0.34                         257 tr  0 L  loss rate  0.00%  WR 100.00%  net   +362.05  | Mar-Jun 100/0L  Jul-Nov 157/0L
+ER max 0.36                         353 tr  1 L  loss rate  0.28%  WR  99.72%  net   +298.07  | Mar-Jun 151/0L  Jul-Nov 202/1L  avg loss -203
+ER max 0.37                         391 tr  1 L  loss rate  0.26%  WR  99.74%  net   +347.09  | Mar-Jun 171/0L  Jul-Nov 220/1L  avg loss -203
+ER max 0.40                         534 tr  3 L  loss rate  0.56%  WR  99.44%  net   +144.09  | Mar-Jun 242/1L  Jul-Nov 292/2L  avg loss -208
+ER min 0.27                         513 tr  3 L  loss rate  0.58%  WR  99.42%  net   +194.11  | Mar-Jun 230/3L  Jul-Nov 283/0L  avg loss -220
+ER min 0.28                         445 tr  2 L  loss rate  0.45%  WR  99.55%  net   +273.12  | Mar-Jun 192/2L  Jul-Nov 253/0L  avg loss -223
+ER min 0.32                         161 tr  0 L  loss rate  0.00%  WR 100.00%  net   +243.99  | Mar-Jun  66/0L  Jul-Nov  95/0L
+humps 2-2                           186 tr  0 L  loss rate  0.00%  WR 100.00%  net   +255.08  | Mar-Jun  77/0L  Jul-Nov 109/0L
+humps 2-4                           379 tr  1 L  loss rate  0.26%  WR  99.74%  net   +355.10  | Mar-Jun 155/1L  Jul-Nov 224/0L  avg loss -201
+humps 1-3                           690 tr  5 L  loss rate  0.72%  WR  99.28%  net    -65.99  | Mar-Jun 314/3L  Jul-Nov 376/2L  avg loss -219
+ER bars 12                          324 tr  4 L  loss rate  1.23%  WR  98.77%  net   -397.83  | Mar-Jun 164/4L  Jul-Nov 160/0L  avg loss -218
+ER bars 20                          255 tr  5 L  loss rate  1.96%  WR  98.04%  net   -541.01  | Mar-Jun 131/3L  Jul-Nov 124/2L  avg loss -183
+latency 0.5 s                       308 tr  0 L  loss rate  0.00%  WR 100.00%  net   +449.02  | Mar-Jun 125/0L  Jul-Nov 183/0L
+
+--- extras (same file, one input at a time) ---
+ER max 0.351                        313 tr  0 L  loss rate  0.00%  WR 100.00%  net   +450.06  | Mar-Jun 129/0L  Jul-Nov 184/0L
+ER max 0.353                        325 tr  1 L  loss rate  0.31%  WR  99.69%  net   +263.07  | Mar-Jun 132/0L  Jul-Nov 193/1L  avg loss -203
+ER max 0.38                         446 tr  2 L  loss rate  0.45%  WR  99.55%  net   +242.04  | Mar-Jun 198/0L  Jul-Nov 248/2L  avg loss -201
+ER max 0.45 (= tight)               714 tr  4 L  loss rate  0.56%  WR  99.44%  net   +376.15  | Mar-Jun 332/1L  Jul-Nov 382/3L  avg loss -166
+ER min 0.25                         671 tr  5 L  loss rate  0.75%  WR  99.25%  net     +5.14  | Mar-Jun 303/4L  Jul-Nov 368/1L  avg loss -219
+ER min 0.29                         378 tr  0 L  loss rate  0.00%  WR 100.00%  net   +627.08  | Mar-Jun 161/0L  Jul-Nov 217/0L
+ER min 0.31                         229 tr  0 L  loss rate  0.00%  WR 100.00%  net   +339.98  | Mar-Jun  95/0L  Jul-Nov 134/0L
+humps 3-3                           124 tr  0 L  loss rate  0.00%  WR 100.00%  net   +190.99  | Mar-Jun  48/0L  Jul-Nov  76/0L
+humps 2-5                           396 tr  1 L  loss rate  0.25%  WR  99.75%  net   +380.10  | Mar-Jun 166/1L  Jul-Nov 230/0L  avg loss -201
+humps 1-2                           570 tr  5 L  loss rate  0.88%  WR  99.12%  net   -252.97  | Mar-Jun 267/3L  Jul-Nov 303/2L  avg loss -219
+ER bars 10                          303 tr  2 L  loss rate  0.66%  WR  99.34%  net    -49.94  | Mar-Jun 147/2L  Jul-Nov 156/0L  avg loss -245
+ER bars 14                          314 tr  3 L  loss rate  0.96%  WR  99.04%  net   -120.82  | Mar-Jun 151/3L  Jul-Nov 163/0L  avg loss -215
+ER bars 15                          338 tr  1 L  loss rate  0.30%  WR  99.70%  net   +282.12  | Mar-Jun 148/1L  Jul-Nov 190/0L  avg loss -230
+ER bars 17                          301 tr  7 L  loss rate  2.33%  WR  97.67%  net  -1008.06  | Mar-Jun 133/6L  Jul-Nov 168/1L  avg loss -217
+ER bars 18                          262 tr  4 L  loss rate  1.53%  WR  98.47%  net   -461.96  | Mar-Jun 122/2L  Jul-Nov 140/2L  avg loss -213
+ER bars 24                          219 tr  3 L  loss rate  1.37%  WR  98.63%  net   -330.06  | Mar-Jun 102/3L  Jul-Nov 117/0L  avg loss -213
+latency 0.0 s                       308 tr  3 L  loss rate  0.97%  WR  99.03%  net   -200.84  | Mar-Jun 124/1L  Jul-Nov 184/2L  avg loss -213
+latency 0.1 s                       307 tr  1 L  loss rate  0.33%  WR  99.67%  net   +232.09  | Mar-Jun 124/1L  Jul-Nov 183/0L  avg loss -218
+latency 0.2 s                       307 tr  1 L  loss rate  0.33%  WR  99.67%  net   +242.09  | Mar-Jun 125/0L  Jul-Nov 182/1L  avg loss -213
+latency 0.4 s                       308 tr  0 L  loss rate  0.00%  WR 100.00%  net   +456.99  | Mar-Jun 125/0L  Jul-Nov 183/0L
+latency 0.6 s                       307 tr  1 L  loss rate  0.33%  WR  99.67%  net   +230.03  | Mar-Jun 124/1L  Jul-Nov 183/0L  avg loss -218
+latency 0.8 s                       308 tr  0 L  loss rate  0.00%  WR 100.00%  net   +440.11  | Mar-Jun 125/0L  Jul-Nov 183/0L
+latency 1.0 s                       307 tr  1 L  loss rate  0.33%  WR  99.67%  net   +213.11  | Mar-Jun 124/1L  Jul-Nov 183/0L  avg loss -218
+latency 1.5 s                       308 tr  0 L  loss rate  0.00%  WR 100.00%  net   +438.08  | Mar-Jun 125/0L  Jul-Nov 183/0L
+latency 2.0 s                       310 tr  0 L  loss rate  0.00%  WR 100.00%  net   +449.17  | Mar-Jun 125/0L  Jul-Nov 185/0L
+latency 3.0 s                       308 tr  0 L  loss rate  0.00%  WR 100.00%  net   +434.24  | Mar-Jun 125/0L  Jul-Nov 183/0L
+spread guard off                    309 tr  0 L  loss rate  0.00%  WR 100.00%  net   +447.07  | Mar-Jun 125/0L  Jul-Nov 184/0L
+spread guard 0.8                    308 tr  0 L  loss rate  0.00%  WR 100.00%  net   +444.06  | Mar-Jun 125/0L  Jul-Nov 183/0L
+spread guard 1.2                    309 tr  0 L  loss rate  0.00%  WR 100.00%  net   +447.07  | Mar-Jun 125/0L  Jul-Nov 184/0L
+NY rollover guard off               309 tr  1 L  loss rate  0.32%  WR  99.68%  net   +383.06  | Mar-Jun 126/1L  Jul-Nov 183/0L  avg loss -61
+
+=== neighbour bands, each run as its own zone (engine) - the local loss RATE ===
+h2-3 ER[.20,.25)                    399 tr  7 L  loss rate  1.75%  WR  98.25%  net   -941.90  | Mar-Jun 191/4L  Jul-Nov 208/3L  avg loss -219
+h2-3 ER[.25,.30)                    372 tr  5 L  loss rate  1.34%  WR  98.66%  net   -427.90  | Mar-Jun 182/4L  Jul-Nov 190/1L  avg loss -219
+h2-3 ER[.30,.35) = ZEE              308 tr  0 L  loss rate  0.00%  WR 100.00%  net   +444.06  | Mar-Jun 125/0L  Jul-Nov 183/0L
+h2-3 ER[.35,.40)                    232 tr  3 L  loss rate  1.29%  WR  98.71%  net   -293.96  | Mar-Jun 119/1L  Jul-Nov 113/2L  avg loss -208
+h2-3 ER[.40,.45)                    183 tr  1 L  loss rate  0.55%  WR  99.45%  net   +235.06  | Mar-Jun  91/0L  Jul-Nov  92/1L  avg loss -40
+h2-3 ER[.45,.50)                    139 tr  4 L  loss rate  2.88%  WR  97.12%  net   -628.96  | Mar-Jun  59/3L  Jul-Nov  80/1L  avg loss -209
+h2-3 ER[.35,.45)                    412 tr  4 L  loss rate  0.97%  WR  99.03%  net    -61.91  | Mar-Jun 209/1L  Jul-Nov 203/3L  avg loss -166
+h1 ER[.30,.35)                      385 tr  5 L  loss rate  1.30%  WR  98.70%  net   -507.05  | Mar-Jun 190/3L  Jul-Nov 195/2L  avg loss -219
+h4 ER[.30,.35)                       71 tr  1 L  loss rate  1.41%  WR  98.59%  net    -88.96  | Mar-Jun  30/1L  Jul-Nov  41/0L  avg loss -201
+h4-6 ER[.30,.35)                    100 tr  1 L  loss rate  1.00%  WR  99.00%  net    -47.94  | Mar-Jun  46/1L  Jul-Nov  54/0L  avg loss -201
+h1 ER[.25,.40)                     1134 tr 26 L  loss rate  2.29%  WR  97.71%  net  -3562.04  | Mar-Jun 541/19L  Jul-Nov 593/7L  avg loss -202
+h4 ER[.25,.40)                      176 tr  4 L  loss rate  2.27%  WR  97.73%  net   -644.99  | Mar-Jun  91/4L  Jul-Nov  85/0L  avg loss -223
+RING around Zee's box (h2-3 ER[.25,.30) + h2-3 ER[.35,.40) + h1 ER[.30,.35) + h4 ER[.30,.35)): 14/1060 = loss rate 1.32%
+
+=== fine ER heat map at humps 2-3 (engine): losses / trades; rows ER min, cols ER max ===
+min\max     0.31    0.32    0.33    0.34    0.35    0.36    0.37    0.38    0.39    0.40    0.41    0.42    0.43    0.44    0.45    0.46    0.47    0.48    0.49    0.50
+0.20      12/834  12/900  12/952 12/1000 12/1049 13/1091 13/1124 13/1177 14/1227 14/1260 14/1306 14/1337 14/1378 14/1406 15/1431 17/1458 19/1488 19/1509 19/1532 19/1552
+0.21      10/748  10/814  10/866  10/914  10/963 11/1005 11/1039 11/1093 12/1143 12/1176 12/1222 12/1254 12/1295 12/1323 13/1348 15/1375 17/1405 17/1426 17/1449 17/1469
+0.22       9/674   9/741   9/793   9/841   9/891  10/933  10/967 10/1021 11/1072 11/1106 11/1152 11/1184 11/1225 11/1253 12/1279 14/1306 16/1336 16/1357 16/1381 16/1401
+0.23       8/595   8/663   8/715   8/763   8/813   9/855   9/891   9/945  10/996 10/1030 10/1076 10/1109 10/1151 10/1179 11/1205 13/1234 15/1264 15/1285 15/1309 15/1329
+0.24       6/520   6/588   6/640   6/689   6/739   7/782   7/819   7/873   8/924   8/958  8/1005  8/1039  8/1081  8/1109  9/1135 11/1165 13/1196 13/1217 13/1241 13/1261
+0.25       5/449   5/517   5/571   5/621   5/671   6/714   6/751   7/806   8/857   8/891   8/938   8/972  8/1015  8/1043  9/1069 11/1099 13/1130 13/1151 13/1175 13/1197
+0.26       3/369   3/438   3/492   3/543   3/593   4/636   4/674   5/729   6/781   6/815   6/862   6/896   6/939   6/967   7/993  9/1023 11/1054 11/1075 11/1099 11/1121
+0.27       3/287   3/356   3/411   3/463   3/513   4/556   4/594   5/649   6/701   6/735   6/782   6/816   6/859   6/887   7/913   9/944  11/975  11/996 11/1021 11/1043
+0.28       2/219   2/288   2/343   2/395   2/445   3/489   3/527   4/582   5/634   5/668   5/715   5/749   5/792   5/821   6/847   8/878  10/909  10/931  10/956  10/978
+0.29       0/151   0/220   0/275   0/327   0/378   1/422   1/460   2/515   3/568   3/602   3/649   3/684   3/727   3/756   4/782   6/813   8/844   8/866   8/891   8/913
+0.30        0/79   0/148   0/205   0/257   0/308   1/353   1/391   2/446   3/499   3/534   3/581   3/616   3/659   3/688   4/714   6/746   8/777   8/799   8/824   8/846
+0.31                0/69   0/126   0/178   0/229   1/276   1/314   2/369   3/423   3/458   3/505   3/540   3/583   3/612   4/638   6/671   8/702   8/724   8/749   8/771
+0.32                        0/57   0/109   0/161   1/208   1/246   2/302   3/356   3/391   3/438   3/473   3/516   3/545   4/571   6/604   8/635   8/657   8/683   8/705
+0.33                                0/52   0/104   1/151   1/189   2/245   3/299   3/334   3/381   3/416   3/459   3/488   4/514   6/547   8/578   8/600   8/626   8/648
+0.34                                        0/53   1/100   1/138   2/194   3/248   3/283   3/330   3/365   3/408   3/437   4/463   6/496   8/527   8/549   8/575   8/597
+zero-loss cells: 20 of 290; with >= 250 trades: 0.29-0.35(378), 0.29-0.34(327), 0.30-0.35(308), 0.29-0.33(275), 0.30-0.34(257)
+
+=== Zee's setting month by month (engine; fill time UTC) ===
+   2026-03:  30 trades  0 losses  net   +44.04  smallest result +1.00   (from Mar 6)
+   2026-04:  38 trades  0 losses  net   +60.99  smallest result +1.00
+   2026-05:  25 trades  0 losses  net   +38.99  smallest result +1.00
+   2026-06:  32 trades  0 losses  net   +49.01  smallest result +1.00
+   2026-07:  45 trades  0 losses  net   +70.05  smallest result +1.00
+   2026-08:  50 trades  0 losses  net   +57.01  smallest result +1.00
+   2026-09:  42 trades  0 losses  net   +58.95  smallest result +1.00
+   2026-10:  43 trades  0 losses  net   +61.02  smallest result +1.00
+   2026-11:   3 trades  0 losses  net    +4.01  smallest result +1.00   (Nov 1-4 only)
+   tight h2-3 ER .30-.45: 03 0/90  04 1/89  05 0/64  06 0/89  07 1/100  08 0/94  09 0/90  10 2/89  11 0/9
+   secure h2-5 ER .15-.45: 03 6/249  04 9/268  05 3/249  06 4/293  07 3/291  08 1/262  09 0/293  10 4/291  11 0/42

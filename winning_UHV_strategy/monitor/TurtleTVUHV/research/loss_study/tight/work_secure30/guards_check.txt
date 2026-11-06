@@ -1,0 +1,26 @@
+lift = loss rate among removed / the stack-half's loss rate; p = binomial P(>= that many losses among removed). HYPOTHESIS ONLY.
+rule_range_bound120    SECURE tr 9L/206 lift 2.10 p=0.029 WR 97.92->98.48 | te 3L/251 lift 1.76 p=0.244 WR 99.32->99.46
+                       BASE   tr 31L/660 lift 1.40 p=0.041 WR 96.64->96.97 | te 10L/881 lift 0.81 p=0.786 WR 98.6->98.53
+                       BASE beyond the rollover + spread-1.0 guards: tr 26L/644 lift 1.20 p=0.196 WR 96.64->96.8 | te 8L/867 lift 0.66 p=0.917 WR 98.6->98.48
+rule_extended_run120   SECURE tr 4L/214 lift 0.90 p=0.651 WR 97.92->97.87 | te 1L/138 lift 1.07 p=0.610 WR 99.32->99.33
+                       BASE   tr 28L/668 lift 1.25 p=0.139 WR 96.64->96.85 | te 6L/480 lift 0.89 p=0.663 WR 98.6->98.58
+                       BASE beyond the rollover + spread-1.0 guards: tr 21L/648 lift 0.96 p=0.596 WR 96.64->96.61 | te 6L/478 lift 0.90 p=0.659 WR 98.6->98.58
+rule_with_move60       SECURE tr 6L/248 lift 1.16 p=0.411 WR 97.92->98.03 | te 2L/176 lift 1.67 p=0.336 WR 99.32->99.4
+                       BASE   tr 23L/666 lift 1.03 p=0.475 WR 96.64->96.67 | te 11L/561 lift 1.40 p=0.168 WR 98.6->98.69
+                       BASE beyond the rollover + spread-1.0 guards: tr 18L/654 lift 0.82 p=0.834 WR 96.64->96.49 | te 10L/557 lift 1.28 p=0.256 WR 98.6->98.66
+rule_congested_level   SECURE tr 6L/235 lift 1.23 p=0.363 WR 97.92->98.06 | te 3L/345 lift 1.28 p=0.416 WR 99.32->99.4
+                       BASE   tr 19L/670 lift 0.84 p=0.802 WR 96.64->96.51 | te 20L/1268 lift 1.13 p=0.325 WR 98.6->98.68
+                       BASE beyond the rollover + spread-1.0 guards: tr 19L/651 lift 0.87 p=0.763 WR 96.64->96.54 | te 15L/1220 lift 0.88 p=0.726 WR 98.6->98.53
+rule_news_clock        SECURE tr 12L/280 lift 2.06 p=0.015 WR 97.92->98.72 | te 2L/269 lift 1.09 p=0.546 WR 99.32->99.34
+                       BASE   tr 34L/859 lift 1.18 p=0.187 WR 96.64->96.85 | te 22L/1079 lift 1.46 p=0.054 WR 98.6->98.82
+                       BASE beyond the rollover + spread-1.0 guards: tr 32L/840 lift 1.13 p=0.258 WR 96.64->96.79 | te 17L/1050 lift 1.16 p=0.305 WR 98.6->98.67
+rule_chop120           SECURE tr 8L/241 lift 1.60 p=0.132 WR 97.92->98.29 | te 2L/243 lift 1.21 p=0.492 WR 99.32->99.36
+                       BASE   tr 24L/676 lift 1.06 p=0.420 WR 96.64->96.69 | te 10L/891 lift 0.80 p=0.797 WR 98.6->98.53
+                       BASE beyond the rollover + spread-1.0 guards: tr 23L/663 lift 1.03 p=0.467 WR 96.64->96.67 | te 9L/871 lift 0.74 p=0.858 WR 98.6->98.51
+rule_wide_spread_now   SECURE tr 2L/105 lift 0.92 p=0.644 WR 97.92->97.9 | te 2L/258 lift 1.14 p=0.524 WR 99.32->99.35
+                       BASE   tr 23L/378 lift 1.81 p=0.005 WR 96.64->96.99 | te 17L/909 lift 1.34 p=0.143 WR 98.6->98.73
+                       BASE beyond the rollover + spread-1.0 guards: tr 14L/341 lift 1.22 p=0.259 WR 96.64->96.73 | te 9L/871 lift 0.74 p=0.858 WR 98.6->98.51
+control_random20       SECURE tr 5L/200 lift 1.20 p=0.402 WR 97.92->98.02 | te 4L/231 lift 2.55 p=0.074 WR 99.32->99.58
+                       BASE   tr 13L/653 lift 0.59 p=0.986 WR 96.64->96.31 | te 11L/871 lift 0.90 p=0.673 WR 98.6->98.57
+                       BASE beyond the rollover + spread-1.0 guards: tr 13L/635 lift 0.61 p=0.981 WR 96.64->96.33 | te 11L/850 lift 0.93 p=0.642 WR 98.6->98.58
+the guards themselves  BASE   tr 11L/73 lift 4.49 p=0.000 WR 96.64->96.9 | te 10L/85 lift 8.41 p=0.000 WR 98.6->98.81

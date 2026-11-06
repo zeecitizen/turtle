@@ -1,0 +1,396 @@
+======================================================================================================================================================
+audit_robust.py - ADVERSARIAL robustness audit of rules_final.py. Python tick replay = HYPOTHESIS, NOT PROMOTED (an audit can only FAIL a rule).
+7626 trades, 172 losses; base loss rate all 2.26% train 3.36% test 1.40%
+months (Nov folded into Oct): 2026-03 890tr 36L 4.04%  2026-04 820tr 32L 3.9%  2026-05 665tr 27L 4.06%  2026-06 960tr 17L 1.77%  2026-07 1074tr 17L 1.58%  2026-08 864tr 11L 1.27%  2026-09 1030tr 10L 0.97%  2026-10 1323tr 22L 1.66%
+analyst batches (chronological stretches of the losses): B1 03-06..03-18  B2 03-19..04-06  B3 04-07..04-27  B4 04-28..05-19  B5 05-21..06-18  B6 06-18..07-31  B7 08-04..09-29  B8 10-01..11-04
+======================================================================================================================================================
+
+#### rule_rollover_ny  [ACCEPTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: start=16:45, end=17:45
+ (i)   default   16L/  86W x6.95 | train 8L/37W x5.29 | test 8L/49W x10.04  -> task bar PASS
+ (ii)  start=16:30, end=17:45                  18L/ 138W x5.12 | train 10L/60W x4.25 | test 8L/78W x6.65  PASS
+ (ii)  start=17:00, end=17:45                   5L/  20W x8.87 | train 2L/11W x4.58 | test 3L/9W x17.88  PASS
+ (ii)  start=16:45, end=17:30                  11L/  66W x6.33 | train 6L/26W x5.58 | test 5L/40W x7.95  PASS
+ (ii)  start=16:45, end=18:00                  16L/ 108W x5.72 | train 8L/45W x4.49 | test 8L/63W x8.06  PASS
+   info [offset +-25% (start -15 -> -11.25/-18.75 min, end +45 -> +33.75/+56.25 min)] start=16:48.75, end=17:45       16L/  72W x8.06 | train 8L/31W x6.11 | test 8L/41W x11.68  PASS
+   info [offset +-25% (start -15 -> -11.25/-18.75 min, end +45 -> +33.75/+56.25 min)] start=16:41.25, end=17:45       17L/  96W x6.67 | train 9L/42W x5.25 | test 8L/54W x9.23  PASS
+   info [offset +-25% (start -15 -> -11.25/-18.75 min, end +45 -> +33.75/+56.25 min)] start=16:45, end=17:33.75       13L/  68W x7.12 | train 7L/28W x5.96 | test 6L/40W x9.33  PASS
+   info [offset +-25% (start -15 -> -11.25/-18.75 min, end +45 -> +33.75/+56.25 min)] start=16:45, end=17:56.25       16L/ 101W x6.06 | train 8L/42W x4.76 | test 8L/59W x8.54  PASS
+   info [full 3x3 grid] start=16:30, end=17:30: 13L x4.18/x4.83 PASS | start=16:30, end=17:45: 18L x4.25/x6.65 PASS | start=16:30, end=18:00: 18L x3.82/x5.72 PASS | start=16:45, end=17:30: 11L x5.58/x7.95 PASS | start=16:45, end=17:45: 16L x5.29/x10.04 PASS | start=16:45, end=18:00: 16L x4.49/x8.06 PASS | start=17:00, end=17:30: 0L xNone/xNone THIN | start=17:00, end=17:45: 5L x4.58/x17.88 PASS | start=17:00, end=18:00: 5L x2.84/x8.25 PASS
+       -> (ii) no collapse
+ (iii) months  26-03: 3L/13tr E0.53  26-04: 3L/15tr E0.59  26-05: 1L/6tr E0.24  26-06: 1L/11tr E0.19  26-07: 1L/10tr E0.16  26-08: 3L/12tr E0.15  26-09: 2L/15tr E0.15  26-10: 2L/20tr E0.33   | stratified O/E 16/2.34 = x6.84
+       top-2 excess months ['2026-08', '2026-03'] dropped -> O/E 10/1.66 = x6.02 (10L left)  | worst single drop 2026-08 -> x5.95 | worst pair ('2026-08', '2026-09') -> x5.39 (11L left) | months with a loser removed: 8 of 8  -> (iii) PASS
+ (iv)  losers by batch {1: 1, 2: 4, 3: 1, 4: 1, 5: 1, 6: 1, 7: 5, 8: 2} | top batch B7 08-04..09-29 holds 5/16 = 31% -> O/E without it 11/2.04 = x5.38 | 15 distinct NY days, busiest 2026-04-03 (2L) -> O/E without it x6.33  -> (iv) PASS
+   ctx binomial P(>=L | n, half base): train 0.00011  test 1.3e-06 | stop-outs only (scores_final.json): 9L train x4.59 (6L) test x4.94 (3L) | beyond rule_combined:   0L/   0W xNone | train 0L/0W xNone | test 0L/0W xNone fail
+   losers removed: 0318-205350-S(NY 03-18 Wed 16:53 B1 stop -259$), 0322-214022-S(NY 03-22 Sun 17:40 B2 stop -205$), 0324-205001-S(NY 03-24 Tue 16:50 B2 stop -227$), 0403-205318-S(NY 04-03 Fri 16:53 B2 stop -808$), 0403-205500-B(NY 04-03 Fri 16:55 B2 wk-close -525$), 0417-205800-B(NY 04-17 Fri 16:58 B3 wk-close -26$), 0514-213120-B(NY 05-14 Thu 17:31 B4 stop -262$), 0617-205108-S(NY 06-17 Wed 16:51 B5 stop -242$), 0708-213443-S(NY 07-08 Wed 17:34 B6 stop -226$), 0807-205630-S(NY 08-07 Fri 16:56 B7 wk-close -18$), 0820-213103-S(NY 08-20 Thu 17:31 B7 stop -214$), 0828-205744-B(NY 08-28 Fri 16:57 B7 wk-close -21$), 0914-213535-B(NY 09-14 Mon 17:35 B7 stop -256$), 0918-204909-B(NY 09-18 Fri 16:49 B7 wk-close -14$), 1009-205809-S(NY 10-09 Fri 16:58 B8 wk-close -24$), 1016-205727-B(NY 10-16 Fri 16:57 B8 wk-close -23$)
+ VERDICT rule_rollover_ny: SURVIVES the audit (MT5 candidate, NOT PROMOTED)
+
+#### rule_combined  [COMBINED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: start=16:45, end=17:45
+ (i)   default   16L/  86W x6.95 | train 8L/37W x5.29 | test 8L/49W x10.04  -> task bar PASS
+ (ii)  start=16:30, end=17:45                  18L/ 138W x5.12 | train 10L/60W x4.25 | test 8L/78W x6.65  PASS
+ (ii)  start=17:00, end=17:45                   5L/  20W x8.87 | train 2L/11W x4.58 | test 3L/9W x17.88  PASS
+ (ii)  start=16:45, end=17:30                  11L/  66W x6.33 | train 6L/26W x5.58 | test 5L/40W x7.95  PASS
+ (ii)  start=16:45, end=18:00                  16L/ 108W x5.72 | train 8L/45W x4.49 | test 8L/63W x8.06  PASS
+   info [offset +-25% (start -15 -> -11.25/-18.75 min, end +45 -> +33.75/+56.25 min)] start=16:48.75, end=17:45       16L/  72W x8.06 | train 8L/31W x6.11 | test 8L/41W x11.68  PASS
+   info [offset +-25% (start -15 -> -11.25/-18.75 min, end +45 -> +33.75/+56.25 min)] start=16:41.25, end=17:45       17L/  96W x6.67 | train 9L/42W x5.25 | test 8L/54W x9.23  PASS
+   info [offset +-25% (start -15 -> -11.25/-18.75 min, end +45 -> +33.75/+56.25 min)] start=16:45, end=17:33.75       13L/  68W x7.12 | train 7L/28W x5.96 | test 6L/40W x9.33  PASS
+   info [offset +-25% (start -15 -> -11.25/-18.75 min, end +45 -> +33.75/+56.25 min)] start=16:45, end=17:56.25       16L/ 101W x6.06 | train 8L/42W x4.76 | test 8L/59W x8.54  PASS
+   info [full 3x3 grid] start=16:30, end=17:30: 13L x4.18/x4.83 PASS | start=16:30, end=17:45: 18L x4.25/x6.65 PASS | start=16:30, end=18:00: 18L x3.82/x5.72 PASS | start=16:45, end=17:30: 11L x5.58/x7.95 PASS | start=16:45, end=17:45: 16L x5.29/x10.04 PASS | start=16:45, end=18:00: 16L x4.49/x8.06 PASS | start=17:00, end=17:30: 0L xNone/xNone THIN | start=17:00, end=17:45: 5L x4.58/x17.88 PASS | start=17:00, end=18:00: 5L x2.84/x8.25 PASS
+       -> (ii) no collapse
+ (iii) months  26-03: 3L/13tr E0.53  26-04: 3L/15tr E0.59  26-05: 1L/6tr E0.24  26-06: 1L/11tr E0.19  26-07: 1L/10tr E0.16  26-08: 3L/12tr E0.15  26-09: 2L/15tr E0.15  26-10: 2L/20tr E0.33   | stratified O/E 16/2.34 = x6.84
+       top-2 excess months ['2026-08', '2026-03'] dropped -> O/E 10/1.66 = x6.02 (10L left)  | worst single drop 2026-08 -> x5.95 | worst pair ('2026-08', '2026-09') -> x5.39 (11L left) | months with a loser removed: 8 of 8  -> (iii) PASS
+ (iv)  losers by batch {1: 1, 2: 4, 3: 1, 4: 1, 5: 1, 6: 1, 7: 5, 8: 2} | top batch B7 08-04..09-29 holds 5/16 = 31% -> O/E without it 11/2.04 = x5.38 | 15 distinct NY days, busiest 2026-04-03 (2L) -> O/E without it x6.33  -> (iv) PASS
+   ctx binomial P(>=L | n, half base): train 0.00011  test 1.3e-06 | stop-outs only (scores_final.json): 9L train x4.59 (6L) test x4.94 (3L) | beyond rule_combined:   0L/   0W xNone | train 0L/0W xNone | test 0L/0W xNone fail
+   losers removed: 0318-205350-S(NY 03-18 Wed 16:53 B1 stop -259$), 0322-214022-S(NY 03-22 Sun 17:40 B2 stop -205$), 0324-205001-S(NY 03-24 Tue 16:50 B2 stop -227$), 0403-205318-S(NY 04-03 Fri 16:53 B2 stop -808$), 0403-205500-B(NY 04-03 Fri 16:55 B2 wk-close -525$), 0417-205800-B(NY 04-17 Fri 16:58 B3 wk-close -26$), 0514-213120-B(NY 05-14 Thu 17:31 B4 stop -262$), 0617-205108-S(NY 06-17 Wed 16:51 B5 stop -242$), 0708-213443-S(NY 07-08 Wed 17:34 B6 stop -226$), 0807-205630-S(NY 08-07 Fri 16:56 B7 wk-close -18$), 0820-213103-S(NY 08-20 Thu 17:31 B7 stop -214$), 0828-205744-B(NY 08-28 Fri 16:57 B7 wk-close -21$), 0914-213535-B(NY 09-14 Mon 17:35 B7 stop -256$), 0918-204909-B(NY 09-18 Fri 16:49 B7 wk-close -14$), 1009-205809-S(NY 10-09 Fri 16:58 B8 wk-close -24$), 1016-205727-B(NY 10-16 Fri 16:57 B8 wk-close -23$)
+ VERDICT rule_combined: SURVIVES the audit (MT5 candidate, NOT PROMOTED)
+
+#### rule_trigger_spread  [CANDIDATE | extended-field]   parameterised copy == rules_final at default: yes (0 exceptions)   default: q=1.0
+ (i)   default   16L/  73W x7.97 | train 8L/34W x5.67 | test 8L/39W x12.17  -> task bar PASS
+ (ii)  q=0.75                                  17L/ 110W x5.93 | train 9L/70W x3.39 | test 8L/40W x11.92  PASS
+ (ii)  q=1.25                                  13L/  57W x8.23 | train 8L/26W x7.01 | test 5L/31W x9.93  PASS
+       -> (ii) no collapse
+ (iii) months  26-03: 1L/12tr E0.49  26-04: 5L/13tr E0.51  26-05: 1L/6tr E0.24  26-06: 1L/11tr E0.19  26-07: 3L/12tr E0.19  26-08: 2L/9tr E0.11  26-09: 1L/11tr E0.11  26-10: 2L/15tr E0.25   | stratified O/E 16/2.09 = x7.65
+       top-2 excess months ['2026-04', '2026-07'] dropped -> O/E 8/1.39 = x5.74 (8L left)  | worst single drop 2026-07 -> x6.84 | worst pair ('2026-04', '2026-07') -> x5.74 (8L left) | months with a loser removed: 8 of 8  -> (iii) PASS
+ (iv)  losers by batch {1: 0, 2: 5, 3: 1, 4: 1, 5: 0, 6: 4, 7: 3, 8: 2} | top batch B2 03-19..04-06 holds 5/16 = 31% -> O/E without it 11/1.58 = x6.95 | 13 distinct NY days, busiest 2026-04-03 (4L) -> O/E without it x6.56  -> (iv) PASS
+   ctx binomial P(>=L | n, half base): train 6.9e-05  test 2.8e-07 | stop-outs only (scores_final.json): 9L train x4.22 (5L) test x7.96 (4L) | beyond rule_combined:   5L/  49W x4.11 | train 3L/23W x3.44 | test 2L/26W x5.11 PASS
+   losers removed: 0322-214022-S(NY 03-22 Sun 17:40 B2 stop -205$), 0403-204101-S(NY 04-03 Fri 16:41 B2 stop -632$), 0403-204417-S(NY 04-03 Fri 16:44 B2 stop -819$), 0403-205318-S(NY 04-03 Fri 16:53 B2 stop -808$), 0403-205500-B(NY 04-03 Fri 16:55 B2 wk-close -525$), 0417-205800-B(NY 04-17 Fri 16:58 B3 wk-close -26$), 0514-213120-B(NY 05-14 Thu 17:31 B4 stop -262$), 0619-172628-S(NY 06-19 Fri 13:26 B6 wk-close -65$), 0702-122937-S(NY 07-02 Thu 08:29 B6 stop -233$), 0703-183524-B(NY 07-03 Fri 14:35 B6 wk-close -60$), 0708-213443-S(NY 07-08 Wed 17:34 B6 stop -226$), 0820-213103-S(NY 08-20 Thu 17:31 B7 stop -214$), 0828-205744-B(NY 08-28 Fri 16:57 B7 wk-close -21$), 0914-213535-B(NY 09-14 Mon 17:35 B7 stop -256$), 1009-205809-S(NY 10-09 Fri 16:58 B8 wk-close -24$), 1016-205727-B(NY 10-16 Fri 16:57 B8 wk-close -23$)
+ VERDICT rule_trigger_spread: SURVIVES the audit (MT5 candidate, NOT PROMOTED)
+
+#### rule_friday_close_ny  [CANDIDATE | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: start=16:00
+ (i)   default   11L/  46W x8.56 | train 6L/13W x9.4 | test 5L/33W x9.41  -> task bar PASS
+ (ii)  start=15:45                             13L/  58W x8.12 | train 8L/19W x8.82 | test 5L/39W x8.13  PASS
+ (ii)  start=16:15                             11L/  32W x11.34 | train 6L/6W x14.89 | test 5L/26W x11.53  PASS
+       -> (ii) no collapse
+ (iii) months  26-03: 1L/1tr E0.04  26-04: 5L/7tr E0.27  26-05: 0L/6tr E0.24  26-06: 0L/5tr E0.09  26-07: 0L/6tr E0.09  26-08: 2L/8tr E0.1  26-09: 1L/5tr E0.05  26-10: 2L/19tr E0.32   | stratified O/E 11/1.21 = x9.11
+       top-2 excess months ['2026-04', '2026-08'] dropped -> O/E 4/0.83 = x4.81 (4L left)  | worst single drop 2026-04 -> x6.42 | worst pair ('2026-04', '2026-08') -> x4.81 (4L left) | months with a loser removed: 5 of 8  -> (iii) PASS
+ (iv)  losers by batch {1: 1, 2: 4, 3: 1, 4: 0, 5: 0, 6: 0, 7: 3, 8: 2} | top batch B2 03-19..04-06 holds 4/11 = 36% -> O/E without it 7/1.06 = x6.62 | 8 distinct NY days, busiest 2026-04-03 (4L) -> O/E without it x6.74  -> (iv) PASS
+   ctx binomial P(>=L | n, half base): train 2.7e-05  test 0.00018 | stop-outs only (scores_final.json): 3L train x6.17 (3L) test x0.0 (0L) | beyond rule_combined:   3L/  32W x3.8 | train 3L/9W x7.44 | test 0L/23W x0.0 fail
+   losers removed: 0306-212806-B(NY 03-06 Fri 16:28 B1 wk-close -12$), 0403-204101-S(NY 04-03 Fri 16:41 B2 stop -632$), 0403-204417-S(NY 04-03 Fri 16:44 B2 stop -819$), 0403-205318-S(NY 04-03 Fri 16:53 B2 stop -808$), 0403-205500-B(NY 04-03 Fri 16:55 B2 wk-close -525$), 0417-205800-B(NY 04-17 Fri 16:58 B3 wk-close -26$), 0807-205630-S(NY 08-07 Fri 16:56 B7 wk-close -18$), 0828-205744-B(NY 08-28 Fri 16:57 B7 wk-close -21$), 0918-204909-B(NY 09-18 Fri 16:49 B7 wk-close -14$), 1009-205809-S(NY 10-09 Fri 16:58 B8 wk-close -24$), 1016-205727-B(NY 10-16 Fri 16:57 B8 wk-close -23$)
+ VERDICT rule_friday_close_ny: SURVIVES the audit (MT5 candidate, NOT PROMOTED)
+
+#### rule_empty_book  [CANDIDATE | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: w=10, thr=20.0
+ (i)   default   11L/  95W x4.6 | train 6L/29W x5.1 | test 5L/66W x5.04  -> task bar PASS
+ (ii)  w=8, thr=20.0                           11L/  95W x4.6 | train 6L/32W x4.7 | test 5L/63W x5.26  PASS
+ (ii)  w=12, thr=20.0                          11L/  86W x5.03 | train 6L/25W x5.76 | test 5L/61W x5.42  PASS
+ (ii)  w=10, thr=15.0                          10L/  53W x7.04 | train 6L/20W x6.87 | test 4L/33W x7.73  PASS
+ (ii)  w=10, thr=25.0                          11L/ 140W x3.23 | train 6L/45W x3.5 | test 5L/95W x3.58  PASS
+   info [full 3x3 grid] w=8, thr=15.0: 9L x6.62/x5.8 PASS | w=8, thr=20.0: 11L x4.7/x5.26 PASS | w=8, thr=25.0: 11L x3.19/x3.47 PASS | w=10, thr=15.0: 10L x6.87/x7.73 PASS | w=10, thr=20.0: 11L x5.1/x5.04 PASS | w=10, thr=25.0: 11L x3.5/x3.58 PASS | w=12, thr=15.0: 10L x7.77/x7.34 PASS | w=12, thr=20.0: 11L x5.76/x5.42 PASS | w=12, thr=25.0: 11L x3.31/x3.51 PASS
+       -> (ii) no collapse
+ (iii) months  26-03: 1L/7tr E0.28  26-04: 4L/16tr E0.62  26-05: 1L/7tr E0.28  26-06: 0L/5tr E0.09  26-07: 2L/14tr E0.22  26-08: 2L/14tr E0.18  26-09: 1L/26tr E0.25  26-10: 0L/17tr E0.28   | stratified O/E 11/2.22 = x4.97
+       top-2 excess months ['2026-04', '2026-08'] dropped -> O/E 5/1.41 = x3.54 (5L left)  | worst single drop 2026-04 -> x4.4 | worst pair ('2026-04', '2026-08') -> x3.54 (5L left) | months with a loser removed: 6 of 8  -> (iii) PASS
+ (iv)  losers by batch {1: 0, 2: 5, 3: 0, 4: 1, 5: 0, 6: 2, 7: 3, 8: 0} | top batch B2 03-19..04-06 holds 5/11 = 45% -> O/E without it 6/1.61 = x3.73 | 8 distinct NY days, busiest 2026-04-03 (4L) -> O/E without it x3.81  -> (iv) PASS
+   ctx binomial P(>=L | n, half base): train 0.001  test 0.0032 | stop-outs only (scores_final.json): 10L train x4.84 (5L) test x6.03 (5L) | beyond rule_combined:   4L/  76W x2.22 | train 2L/22W x2.48 | test 2L/54W x2.55 PASS
+   losers removed: 0322-214022-S(NY 03-22 Sun 17:40 B2 stop -205$), 0403-204101-S(NY 04-03 Fri 16:41 B2 stop -632$), 0403-204417-S(NY 04-03 Fri 16:44 B2 stop -819$), 0403-205318-S(NY 04-03 Fri 16:53 B2 stop -808$), 0403-205500-B(NY 04-03 Fri 16:55 B2 wk-close -525$), 0514-213120-B(NY 05-14 Thu 17:31 B4 stop -262$), 0708-213443-S(NY 07-08 Wed 17:34 B6 stop -226$), 0709-202905-S(NY 07-09 Thu 16:29 B6 stop -208$), 0813-223116-S(NY 08-13 Thu 18:31 B7 stop -199$), 0820-213103-S(NY 08-20 Thu 17:31 B7 stop -214$), 0914-213535-B(NY 09-14 Mon 17:35 B7 stop -256$)
+ VERDICT rule_empty_book: SURVIVES the audit (MT5 candidate, NOT PROMOTED)
+
+#### rule_friday_afternoon_ny  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: start=13:00
+ (i)   default   22L/ 224W x3.97 | train 14L/84W x4.25 | test 8L/140W x3.87  -> task bar PASS
+ (ii)  start=12:00                             24L/ 297W x3.31 | train 15L/109W x3.6 | test 9L/188W x3.27  PASS
+ (ii)  start=14:00                             18L/ 164W x4.38 | train 11L/58W x4.75 | test 7L/106W x4.43  PASS
+       -> (ii) no collapse
+ (iii) months  26-03: 3L/31tr E1.25  26-04: 7L/28tr E1.09  26-05: 3L/23tr E0.93  26-06: 1L/16tr E0.28  26-07: 2L/31tr E0.49  26-08: 2L/32tr E0.41  26-09: 2L/32tr E0.31  26-10: 2L/53tr E0.88   | stratified O/E 22/5.65 = x3.89
+       top-2 excess months ['2026-04', '2026-05'] dropped -> O/E 12/3.63 = x3.31 (12L left)  | worst single drop 2026-04 -> x3.29 | worst pair ('2026-04', '2026-09') -> x3.06 (13L left) | months with a loser removed: 8 of 8  -> (iii) PASS
+ (iv)  losers by batch {1: 2, 2: 5, 3: 3, 4: 2, 5: 1, 6: 3, 7: 4, 8: 2} | top batch B2 03-19..04-06 holds 5/22 = 23% -> O/E without it 17/4.93 = x3.45 | 18 distinct NY days, busiest 2026-04-03 (4L) -> O/E without it x3.37  -> (iv) PASS
+   ctx binomial P(>=L | n, half base): train 5.3e-06  test 0.0012 | stop-outs only (scores_final.json): 5L train x1.5 (4L) test x0.61 (1L) | beyond rule_combined:  14L/ 210W x2.77 | train 11L/80W x3.6 | test 3L/130W x1.61 fail
+   losers removed: 0306-212806-B(NY 03-06 Fri 16:28 B1 wk-close -12$), 0313-195816-B(NY 03-13 Fri 15:58 B1 wk-close -72$), 0320-194940-S(NY 03-20 Fri 15:49 B2 wk-close -175$), 0403-204101-S(NY 04-03 Fri 16:41 B2 stop -632$), 0403-204417-S(NY 04-03 Fri 16:44 B2 stop -819$), 0403-205318-S(NY 04-03 Fri 16:53 B2 stop -808$), 0403-205500-B(NY 04-03 Fri 16:55 B2 wk-close -525$), 0417-183109-B(NY 04-17 Fri 14:31 B3 stop -218$), 0417-205800-B(NY 04-17 Fri 16:58 B3 wk-close -26$), 0424-183049-S(NY 04-24 Fri 14:30 B3 wk-close -56$), 0508-170307-S(NY 05-08 Fri 13:03 B4 wk-close -150$), 0515-173859-B(NY 05-15 Fri 13:38 B4 wk-close -68$), 0522-192405-B(NY 05-22 Fri 15:24 B5 wk-close -98$), 0619-172628-S(NY 06-19 Fri 13:26 B6 wk-close -65$), 0703-183524-B(NY 07-03 Fri 14:35 B6 wk-close -60$), 0731-170115-S(NY 07-31 Fri 13:01 B6 stop -204$), 0807-205630-S(NY 08-07 Fri 16:56 B7 wk-close -18$), 0828-205744-B(NY 08-28 Fri 16:57 B7 wk-close -21$), 0911-180812-B(NY 09-11 Fri 14:08 B7 wk-close -18$), 0918-204909-B(NY 09-18 Fri 16:49 B7 wk-close -14$), 1009-205809-S(NY 10-09 Fri 16:58 B8 wk-close -24$), 1016-205727-B(NY 10-16 Fri 16:57 B8 wk-close -23$)
+ VERDICT rule_friday_afternoon_ny: SURVIVES the audit (MT5 candidate, NOT PROMOTED)
+
+#### rule_trigger_gap  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: q=0.6
+ (i)   default    5L/  59W x3.46 | train 3L/33W x2.48 | test 2L/26W x5.11  -> task bar PASS
+ (ii)  q=0.45                                   6L/ 135W x1.89 | train 4L/62W x1.8 | test 2L/73W x1.91  COLLAPSE  (train x1.8 where 5.5L were expected at the default rate; test x1.91 where 5.4L were expected at the default rate)
+ (ii)  q=0.75                                   4L/  27W x5.72 | train 2L/13W x3.97 | test 2L/14W x8.94  PASS
+       -> (ii) COLLAPSE at q=0.45
+ (iii) months  26-03: 1L/11tr E0.44  26-04: 2L/11tr E0.43  26-05: 0L/7tr E0.28  26-06: 0L/7tr E0.12  26-07: 1L/9tr E0.14  26-08: 1L/5tr E0.06  26-09: 0L/3tr E0.03  26-10: 0L/11tr E0.18   | stratified O/E 5/1.7 = x2.94
+       top-2 excess months ['2026-04', '2026-08'] dropped -> O/E 2/1.21 = x1.66 (2L left)  | worst single drop 2026-04 -> x2.36 | worst pair ('2026-04', '2026-08') -> x1.66 (2L left) | months with a loser removed: 4 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 1, 2: 2, 3: 0, 4: 0, 5: 0, 6: 1, 7: 1, 8: 0} | top batch B2 03-19..04-06 holds 2/5 = 40% -> O/E without it 3/1.29 = x2.33 | 4 distinct NY days, busiest 2026-04-03 (2L) -> O/E without it x1.93  -> (iv) FAIL
+   ctx binomial P(>=L | n, half base): train 0.12  test 0.058 | stop-outs only (scores_final.json): 4L train x1.88 (2L) test x6.12 (2L) | beyond rule_combined:   2L/  55W x1.56 | train 2L/30W x1.86 | test 0L/25W x0.0 fail
+   losers removed: 0306-102926-B(NY 03-06 Fri 05:29 B1 stop -281$), 0403-204417-S(NY 04-03 Fri 16:44 B2 stop -819$), 0403-205500-B(NY 04-03 Fri 16:55 B2 wk-close -525$), 0708-213443-S(NY 07-08 Wed 17:34 B6 stop -226$), 0820-213103-S(NY 08-20 Thu 17:31 B7 stop -214$)
+ VERDICT rule_trigger_gap: FAILS: (ii) collapses at q=0.45 | (iii) top-2 months ['2026-04', '2026-08'] dropped -> x1.66 with 2L | (iv) top batch B2 40% (O/E without x2.33), busiest day 2026-04-03 (O/E without x1.93)
+
+#### rule_fill_slip  [REJECTED | fill-time]   parameterised copy == rules_final at default: yes (0 exceptions)   default: q=1.5
+ (i)   default   11L/  68W x6.17 | train 7L/42W x4.25 | test 4L/26W x9.54  -> task bar PASS
+ (ii)  q=1.125                                 15L/ 118W x5.0 | train 9L/82W x2.94 | test 6L/36W x10.22  PASS
+ (ii)  q=1.875                                  8L/  44W x6.82 | train 6L/24W x5.96 | test 2L/20W x6.5  PASS
+       -> (ii) no collapse
+ (iii) months  26-03: 2L/13tr E0.53  26-04: 3L/22tr E0.86  26-05: 2L/5tr E0.2  26-06: 0L/9tr E0.16  26-07: 0L/4tr E0.06  26-08: 1L/8tr E0.1  26-09: 2L/7tr E0.07  26-10: 1L/11tr E0.18   | stratified O/E 11/2.16 = x5.09
+       top-2 excess months ['2026-04', '2026-09'] dropped -> O/E 6/1.24 = x4.85 (6L left)  | worst single drop 2026-09 -> x4.3 | worst pair ('2026-05', '2026-09') -> x3.7 (7L left) | months with a loser removed: 6 of 8  -> (iii) PASS
+ (iv)  losers by batch {1: 2, 2: 2, 3: 1, 4: 1, 5: 1, 6: 0, 7: 3, 8: 1} | top batch B7 08-04..09-29 holds 3/11 = 27% -> O/E without it 8/1.99 = x4.01 | 10 distinct NY days, busiest 2026-04-03 (2L) -> O/E without it x4.65  -> (iv) PASS
+   ctx binomial P(>=L | n, half base): train 0.0012  test 0.00078 | stop-outs only (scores_final.json): 7L train x3.5 (5L) test x6.12 (2L) | beyond rule_combined:   4L/  57W x2.91 | train 3L/36W x2.29 | test 1L/21W x3.25 fail
+   losers removed: 0306-102926-B(NY 03-06 Fri 05:29 B1 stop -281$), 0318-205350-S(NY 03-18 Wed 16:53 B1 stop -259$), 0403-204417-S(NY 04-03 Fri 16:44 B2 stop -819$), 0403-205500-B(NY 04-03 Fri 16:55 B2 wk-close -525$), 0417-205800-B(NY 04-17 Fri 16:58 B3 wk-close -26$), 0514-213120-B(NY 05-14 Thu 17:31 B4 stop -262$), 0527-123601-B(NY 05-27 Wed 08:36 B5 stop -251$), 0828-205744-B(NY 08-28 Fri 16:57 B7 wk-close -21$), 0914-213535-B(NY 09-14 Mon 17:35 B7 stop -256$), 0925-113553-B(NY 09-25 Fri 07:35 B7 stop -244$), 1016-205727-B(NY 10-16 Fri 16:57 B8 wk-close -23$)
+ VERDICT rule_fill_slip: FAILS: (0) reads t['fill'] - not a pre-entry skip
+
+#### rule_buy_fill_spread  [REJECTED | fill-time]   parameterised copy == rules_final at default: yes (0 exceptions)   default: q=1.5
+ (i)   default    7L/  36W x7.22 | train 5L/23W x5.32 | test 2L/13W x9.54  -> task bar PASS
+ (ii)  q=1.125                                 11L/  58W x7.07 | train 6L/41W x3.8 | test 5L/17W x16.25  PASS
+ (ii)  q=1.875                                  7L/  28W x8.87 | train 5L/17W x6.77 | test 2L/11W x11.0  PASS
+       -> (ii) no collapse
+ (iii) months  26-03: 1L/6tr E0.24  26-04: 2L/13tr E0.51  26-05: 2L/2tr E0.08  26-06: 0L/7tr E0.12  26-07: 0L/3tr E0.05  26-08: 0L/3tr E0.04  26-09: 2L/4tr E0.04  26-10: 0L/5tr E0.08   | stratified O/E 7/1.16 = x6.02
+       top-2 excess months ['2026-09', '2026-05'] dropped -> O/E 3/1.04 = x2.88 (3L left)  | worst single drop 2026-09 -> x4.45 | worst pair ('2026-05', '2026-09') -> x2.88 (3L left) | months with a loser removed: 4 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 0, 7: 2, 8: 0} | top batch B7 08-04..09-29 holds 2/7 = 29% -> O/E without it 5/1.09 = x4.6 | 7 distinct NY days, busiest 2026-09-14 (1L) -> O/E without it x5.21  -> (iv) PASS
+   ctx binomial P(>=L | n, half base): train 0.0022  test 0.018 | stop-outs only (scores_final.json): 5L train x3.8 (3L) test x11.42 (2L) | beyond rule_combined:   3L/  25W x4.75 | train 2L/17W x3.13 | test 1L/8W x7.95 fail
+   losers removed: 0306-102926-B(NY 03-06 Fri 05:29 B1 stop -281$), 0403-205500-B(NY 04-03 Fri 16:55 B2 wk-close -525$), 0417-205800-B(NY 04-17 Fri 16:58 B3 wk-close -26$), 0514-213120-B(NY 05-14 Thu 17:31 B4 stop -262$), 0527-123601-B(NY 05-27 Wed 08:36 B5 stop -251$), 0914-213535-B(NY 09-14 Mon 17:35 B7 stop -256$), 0925-113553-B(NY 09-25 Fri 07:35 B7 stop -244$)
+ VERDICT rule_buy_fill_spread: FAILS: (0) reads t['fill'] - not a pre-entry skip | (iii) top-2 months ['2026-09', '2026-05'] dropped -> x2.88 with 3L
+
+#### rule_big_figure_ahead  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: dmax=1.0
+ (i)   default    7L/  83W x3.45 | train 4L/43W x2.53 | test 3L/40W x4.99  -> task bar PASS
+ (ii)  dmax=0.75                                4L/  56W x2.96 | train 2L/30W x1.86 | test 2L/26W x5.11  COLLAPSE  (train x1.86 where 2.7L were expected at the default rate)
+ (ii)  dmax=1.25                                7L/ 103W x2.82 | train 4L/54W x2.05 | test 3L/49W x4.13  PASS
+       -> (ii) COLLAPSE at dmax=0.75
+ (iii) months  26-03: 0L/5tr E0.2  26-04: 1L/14tr E0.55  26-05: 2L/10tr E0.41  26-06: 1L/18tr E0.32  26-07: 0L/12tr E0.19  26-08: 0L/3tr E0.04  26-09: 1L/14tr E0.14  26-10: 2L/14tr E0.23   | stratified O/E 7/2.07 = x3.38
+       top-2 excess months ['2026-10', '2026-05'] dropped -> O/E 3/1.43 = x2.1 (3L left)  | worst single drop 2026-10 -> x2.72 | worst pair ('2026-05', '2026-10') -> x2.1 (3L left) | months with a loser removed: 5 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 0, 2: 0, 3: 1, 4: 2, 5: 1, 6: 0, 7: 1, 8: 2} | top batch B8 10-01..11-04 holds 2/7 = 29% -> O/E without it 5/1.84 = x2.72 | 7 distinct NY days, busiest 2026-10-26 (1L) -> O/E without it x2.94  -> (iv) PASS
+   ctx binomial P(>=L | n, half base): train 0.073  test 0.022 | stop-outs only (scores_final.json): 5L train x2.8 (4L) test x2.09 (1L) | beyond rule_combined:   5L/  83W x2.52 | train 3L/43W x1.94 | test 2L/40W x3.41 fail
+   losers removed: 0408-075606-B(NY 04-08 Wed 03:56 B3 stop -220$), 0504-193208-B(NY 05-04 Mon 15:32 B4 stop -212$), 0514-125507-B(NY 05-14 Thu 08:55 B4 stop -210$), 0617-205108-S(NY 06-17 Wed 16:51 B5 stop -242$), 0911-180812-B(NY 09-11 Fri 14:08 B7 wk-close -18$), 1009-205809-S(NY 10-09 Fri 16:58 B8 wk-close -24$), 1026-105900-B(NY 10-26 Mon 06:59 B8 stop -222$)
+ VERDICT rule_big_figure_ahead: FAILS: (ii) collapses at dmax=0.75 | (iii) top-2 months ['2026-10', '2026-05'] dropped -> x2.1 with 3L
+
+#### rule_camel_old  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: n=8
+ (i)   default    5L/  29W x6.52 | train 4L/15W x6.27 | test 1L/14W x4.77  -> task bar FAIL
+ (ii)  n=6                                      6L/ 139W x1.83 | train 5L/72W x1.93 | test 1L/67W x1.05  COLLAPSE  (train x1.93 where 16.2L were expected at the default rate; test x1.05 where 4.5L were expected at the default rate)
+ (ii)  n=10                                     0L/   8W x0.0 | train 0L/6W x0.0 | test 0L/2W x0.0  THIN  (train x0.0 on 6 trades (1.3L expected at the default rate); test x0.0 on 2 trades (0.1L expected at the default rate))
+       -> (ii) COLLAPSE at n=6
+ (iii) months  26-03: 3L/6tr E0.24  26-04: 1L/3tr E0.12  26-05: 0L/5tr E0.2  26-06: 0L/5tr E0.09  26-07: 0L/6tr E0.09  26-08: 0L/2tr E0.03  26-09: 1L/2tr E0.02  26-10: 0L/5tr E0.08   | stratified O/E 5/0.87 = x5.72
+       top-2 excess months ['2026-03', '2026-09'] dropped -> O/E 1/0.61 = x1.63 (1L left)  | worst single drop 2026-03 -> x3.17 | worst pair ('2026-03', '2026-09') -> x1.63 (1L left) | months with a loser removed: 3 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 1, 2: 3, 3: 0, 4: 0, 5: 0, 6: 0, 7: 1, 8: 0} | top batch B2 03-19..04-06 holds 3/5 = 60% -> O/E without it 2/0.79 = x2.55 | 5 distinct NY days, busiest 2026-09-23 (1L) -> O/E without it x4.63  -> (iv) FAIL
+   ctx binomial P(>=L | n, half base): train 0.0033  test 0.19 | stop-outs only (scores_final.json): 5L train x6.93 (4L) test x5.71 (1L) | beyond rule_combined:   4L/  29W x5.37 | train 3L/15W x4.96 | test 1L/14W x4.77 fail
+   losers removed: 0317-062554-S(NY 03-17 Tue 02:25 B1 stop -217$), 0320-143152-S(NY 03-20 Fri 10:31 B2 stop -240$), 0326-120509-S(NY 03-26 Thu 08:05 B2 stop -200$), 0403-205318-S(NY 04-03 Fri 16:53 B2 stop -808$), 0923-111835-B(NY 09-23 Wed 07:18 B7 stop -208$)
+ VERDICT rule_camel_old: FAILS: (i) default fails the task bar | (ii) collapses at n=6 | (iii) top-2 months ['2026-03', '2026-09'] dropped -> x1.63 with 1L | (iv) top batch B2 60% (O/E without x2.55), busiest day 2026-09-23 (O/E without x4.63)
+
+#### rule_loud_breakout  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: r=0.9
+ (i)   default    8L/ 180W x1.89 | train 5L/78W x1.79 | test 3L/102W x2.04  -> task bar FAIL
+ (ii)  r=0.875                                  8L/ 233W x1.47 | train 5L/97W x1.46 | test 3L/136W x1.54  COLLAPSE  (train x1.46 where 6.1L were expected at the default rate; test x1.54 where 4.0L were expected at the default rate)
+ (ii)  r=0.925                                  7L/ 112W x2.61 | train 5L/46W x2.92 | test 2L/66W x2.1  PASS
+   info [literal x0.75 / x1.25] r=0.675                         23L/1019W x0.98 | train 14L/458W x0.88 | test 9L/561W x1.13  COLLAPSE
+   info [literal x0.75 / x1.25] r=1.125                          0L/   0W xNone | train 0L/0W xNone | test 0L/0W xNone  THIN
+       -> (ii) COLLAPSE at r=0.875
+ (iii) months  26-03: 2L/19tr E0.77  26-04: 1L/25tr E0.98  26-05: 2L/18tr E0.73  26-06: 0L/21tr E0.37  26-07: 0L/28tr E0.44  26-08: 1L/23tr E0.29  26-09: 0L/30tr E0.29  26-10: 2L/24tr E0.4   | stratified O/E 8/4.27 = x1.87
+       top-2 excess months ['2026-10', '2026-05'] dropped -> O/E 4/3.14 = x1.27 (4L left)  | worst single drop 2026-10 -> x1.55 | worst pair ('2026-05', '2026-10') -> x1.27 (4L left) | months with a loser removed: 5 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 1, 2: 1, 3: 0, 4: 2, 5: 1, 6: 0, 7: 1, 8: 2} | top batch B8 10-01..11-04 holds 2/8 = 25% -> O/E without it 6/3.87 = x1.55 | 8 distinct NY days, busiest 2026-08-14 (1L) -> O/E without it x1.65  -> (iv) FAIL
+   ctx binomial P(>=L | n, half base): train 0.15  test 0.18 | stop-outs only (scores_final.json): 7L train x1.98 (5L) test x1.65 (2L) | beyond rule_combined:   7L/ 178W x1.68 | train 4L/78W x1.45 | test 3L/100W x2.08 fail
+   losers removed: 0318-205350-S(NY 03-18 Wed 16:53 B1 stop -259$), 0320-143152-S(NY 03-20 Fri 10:31 B2 stop -240$), 0428-085748-B(NY 04-28 Tue 04:57 B4 stop -208$), 0519-151057-S(NY 05-19 Tue 11:10 B4 stop -213$), 0526-111253-B(NY 05-26 Tue 07:12 B5 stop -209$), 0814-155646-B(NY 08-14 Fri 11:56 B7 wk-close -138$), 1013-043630-S(NY 10-13 Tue 00:36 B8 stop -201$), 1026-024856-B(NY 10-25 Sun 22:48 B8 stop -205$)
+ VERDICT rule_loud_breakout: FAILS: (i) default fails the task bar | (ii) collapses at r=0.875 | (iii) top-2 months ['2026-10', '2026-05'] dropped -> x1.27 with 4L | (iv) top batch B8 25% (O/E without x1.55), busiest day 2026-08-14 (O/E without x1.65)
+
+#### rule_holiday  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: no threshold
+ (i)   default   12L/ 299W x1.71 | train 9L/144W x1.75 | test 3L/155W x1.36  -> task bar FAIL
+ (ii)  n/a - no numeric threshold; the date checks of (iv) stand in
+       -> (ii) no collapse
+ (iii) months  26-03: 0L/0tr E0.0  26-04: 6L/55tr E2.15  26-05: 3L/98tr E3.98  26-06: 0L/0tr E0.0  26-07: 2L/32tr E0.51  26-08: 1L/45tr E0.57  26-09: 0L/81tr E0.79  26-10: 0L/0tr E0.0   | stratified O/E 12/7.99 = x1.5
+       top-2 excess months ['2026-04', '2026-07'] dropped -> O/E 4/5.34 = x0.75 (4L left)  | worst single drop 2026-04 -> x1.03 | worst pair ('2026-04', '2026-07') -> x0.75 (4L left) | months with a loser removed: 4 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 0, 2: 6, 3: 0, 4: 3, 5: 0, 6: 2, 7: 1, 8: 0} | top batch B2 03-19..04-06 holds 6/12 = 50% -> O/E without it 6/5.84 = x1.03 | 6 distinct NY days, busiest 2026-04-03 (4L) -> O/E without it x1.15  -> (iv) FAIL
+   ctx binomial P(>=L | n, half base): train 0.074  test 0.38 | stop-outs only (scores_final.json): 10L train x1.73 (8L) test x1.09 (2L) | beyond rule_combined:  10L/ 298W x1.44 | train 7L/144W x1.38 | test 3L/154W x1.37 fail
+   losers removed: 0403-204101-S(NY 04-03 Fri 16:41 B2 stop -632$), 0403-204417-S(NY 04-03 Fri 16:44 B2 stop -819$), 0403-205318-S(NY 04-03 Fri 16:53 B2 stop -808$), 0403-205500-B(NY 04-03 Fri 16:55 B2 wk-close -525$), 0406-143818-B(NY 04-06 Mon 10:38 B2 stop -231$), 0406-183009-B(NY 04-06 Mon 14:30 B2 stop -225$), 0501-063713-S(NY 05-01 Fri 02:37 B4 stop -208$), 0501-161803-B(NY 05-01 Fri 12:18 B4 stop -243$), 0504-193208-B(NY 05-04 Mon 15:32 B4 stop -212$), 0703-040928-S(NY 07-03 Fri 00:09 B6 stop -200$), 0703-183524-B(NY 07-03 Fri 14:35 B6 wk-close -60$), 0831-140013-S(NY 08-31 Mon 10:00 B7 stop -236$)
+ VERDICT rule_holiday: FAILS: (i) default fails the task bar | (iii) top-2 months ['2026-04', '2026-07'] dropped -> x0.75 with 4L | (iv) top batch B2 50% (O/E without x1.03), busiest day 2026-04-03 (O/E without x1.15)
+
+#### rule_us_data_minutes  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: pre=90, post=30
+ (i)   default    5L/  61W x3.36 | train 1L/33W x0.88 | test 4L/28W x8.94  -> task bar FAIL
+ (ii)  pre=120, post=30                         5L/  71W x2.92 | train 1L/37W x0.78 | test 4L/34W x7.53  THIN  (train x0.78 on 38 trades (1.1L expected at the default rate))
+ (ii)  pre=60, post=30                          4L/  55W x3.01 | train 0L/30W x0.0 | test 4L/25W x9.86  THIN  (train x0.0 on 30 trades (0.9L expected at the default rate))
+ (ii)  pre=90, post=0                           3L/  27W x4.43 | train 1L/14W x1.99 | test 2L/13W x9.54  THIN  (train x1.99 on 15 trades (0.4L expected at the default rate))
+ (ii)  pre=90, post=60                          5L/  66W x3.12 | train 1L/35W x0.83 | test 4L/31W x8.17  THIN  (train x0.83 on 36 trades (1.1L expected at the default rate))
+   info [full 3x3 grid] pre=120, post=0: 3L x1.57/x6.81 THIN | pre=120, post=30: 5L x0.78/x7.53 THIN | pre=120, post=60: 5L x0.74/x6.98 THIN | pre=90, post=0: 3L x1.99/x9.54 THIN | pre=90, post=30: 5L x0.88/x8.94 THIN | pre=90, post=60: 5L x0.83/x8.17 THIN | pre=60, post=0: 2L x0.0/x11.92 THIN | pre=60, post=30: 4L x0.0/x9.86 THIN | pre=60, post=60: 4L x0.0/x8.94 THIN
+       -> (ii) no collapse
+ (iii) months  26-03: 0L/4tr E0.16  26-04: 1L/11tr E0.43  26-05: 0L/9tr E0.37  26-06: 0L/10tr E0.18  26-07: 3L/12tr E0.19  26-08: 1L/6tr E0.08  26-09: 0L/6tr E0.06  26-10: 0L/8tr E0.13   | stratified O/E 5/1.59 = x3.14
+       top-2 excess months ['2026-07', '2026-08'] dropped -> O/E 1/1.32 = x0.75 (1L left)  | worst single drop 2026-07 -> x1.43 | worst pair ('2026-07', '2026-08') -> x0.75 (1L left) | months with a loser removed: 3 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 0, 2: 0, 3: 1, 4: 0, 5: 0, 6: 3, 7: 1, 8: 0} | top batch B6 06-18..07-31 holds 3/5 = 60% -> O/E without it 2/1.29 = x1.55 | 5 distinct NY days, busiest 2026-07-15 (1L) -> O/E without it x2.55  -> (iv) FAIL
+   ctx binomial P(>=L | n, half base): train 0.69  test 0.001 | stop-outs only (scores_final.json): 5L train x0.97 (1L) test x10.7 (4L) | beyond rule_combined:   5L/  61W x3.36 | train 1L/33W x0.88 | test 4L/28W x8.94 fail
+   losers removed: 0410-122837-S(NY 04-10 Fri 08:28 B3 stop -222$), 0702-122937-S(NY 07-02 Thu 08:29 B6 stop -233$), 0706-140003-S(NY 07-06 Mon 10:00 B6 stop -220$), 0715-132937-S(NY 07-15 Wed 09:29 B6 stop -208$), 0831-140013-S(NY 08-31 Mon 10:00 B7 stop -236$)
+ VERDICT rule_us_data_minutes: FAILS: (i) default fails the task bar | (iii) top-2 months ['2026-07', '2026-08'] dropped -> x0.75 with 1L | (iv) top batch B6 60% (O/E without x1.55), busiest day 2026-07-15 (O/E without x2.55)
+
+#### rule_zee_camel_hh  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: no threshold
+ (i)   default   62L/2557W x1.05 | train 42L/1091W x1.1 | test 20L/1466W x0.96  -> task bar FAIL
+ (ii)  n/a - no numeric threshold; the date checks of (iv) stand in
+       -> (ii) no collapse
+ (iii) months  26-03: 12L/324tr E13.11  26-04: 11L/262tr E10.22  26-05: 12L/219tr E8.89  26-06: 7L/328tr E5.81  26-07: 6L/369tr E5.84  26-08: 4L/306tr E3.9  26-09: 4L/344tr E3.34  26-10: 6L/467tr E7.77   | stratified O/E 62/58.87 = x1.05
+       top-2 excess months ['2026-05', '2026-06'] dropped -> O/E 43/44.17 = x0.97 (43L left)  | worst single drop 2026-05 -> x1.0 | worst pair ('2026-05', '2026-06') -> x0.97 (43L left) | months with a loser removed: 8 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 7, 2: 8, 3: 7, 4: 9, 5: 7, 6: 10, 7: 8, 8: 6} | top batch B6 06-18..07-31 holds 10/62 = 16% -> O/E without it 52/51.15 = x1.02 | 56 distinct NY days, busiest 2026-03-24 (3L) -> O/E without it x1.03  -> (iv) FAIL
+   ctx binomial P(>=L | n, half base): train 0.28  test 0.6 | stop-outs only (scores_final.json): 57L train x1.14 (39L) test x1.04 (18L) | beyond rule_combined:  59L/2524W x1.01 | train 41L/1079W x1.09 | test 18L/1445W x0.88 fail
+   losers removed: 62 (list omitted)
+ VERDICT rule_zee_camel_hh: FAILS: (i) default fails the task bar | (iii) top-2 months ['2026-05', '2026-06'] dropped -> x0.97 with 43L | (iv) top batch B6 16% (O/E without x1.02), busiest day 2026-03-24 (O/E without x1.03)
+
+#### rule_structure_hh_hl  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: look=120
+ (i)   default  100L/4450W x0.97 | train 63L/1863W x0.97 | test 37L/2587W x1.01  -> task bar FAIL
+ (ii)  look=90                                100L/4450W x0.97 | train 63L/1863W x0.97 | test 37L/2587W x1.01  COLLAPSE  (train x0.97 where 63.0L were expected at the default rate; test x1.01 where 37.0L were expected at the default rate)
+ (ii)  look=150                               100L/4450W x0.97 | train 63L/1863W x0.97 | test 37L/2587W x1.01  COLLAPSE  (train x0.97 where 63.0L were expected at the default rate; test x1.01 where 37.0L were expected at the default rate)
+       -> (ii) COLLAPSE at look=90; look=150
+ (iii) months  26-03: 19L/496tr E20.06  26-04: 19L/484tr E18.89  26-05: 17L/391tr E15.88  26-06: 8L/555tr E9.83  26-07: 6L/635tr E10.05  26-08: 10L/565tr E7.19  26-09: 6L/660tr E6.41  26-10: 15L/764tr E12.7   | stratified O/E 100/101.01 = x0.99
+       top-2 excess months ['2026-08', '2026-10'] dropped -> O/E 75/81.11 = x0.92 (75L left)  | worst single drop 2026-08 -> x0.96 | worst pair ('2026-08', '2026-10') -> x0.92 (75L left) | months with a loser removed: 8 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 10, 2: 15, 3: 9, 4: 14, 5: 11, 6: 10, 7: 16, 8: 15} | top batch B7 08-04..09-29 holds 16/100 = 16% -> O/E without it 84/87.37 = x0.96 | 80 distinct NY days, busiest 2026-04-03 (3L) -> O/E without it x0.98  -> (iv) FAIL
+   ctx binomial P(>=L | n, half base): train 0.6  test 0.5 | stop-outs only (scores_final.json): 89L train x0.99 (58L) test x1.01 (31L) | beyond rule_combined:  88L/4387W x0.87 | train 59L/1839W x0.93 | test 29L/2548W x0.8 fail
+   losers removed: 100 (list omitted)
+ VERDICT rule_structure_hh_hl: FAILS: (i) default fails the task bar | (ii) collapses at look=90; look=150 | (iii) top-2 months ['2026-08', '2026-10'] dropped -> x0.92 with 75L | (iv) top batch B7 16% (O/E without x0.96), busiest day 2026-04-03 (O/E without x0.98)
+
+#### rule_near_sr  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: look=30, dist=1.0
+ (i)   default  116L/5373W x0.94 | train 66L/2178W x0.88 | test 50L/3195W x1.1  -> task bar FAIL
+ (ii)  look=22, dist=1.0                      110L/5121W x0.93 | train 63L/2068W x0.88 | test 47L/3053W x1.08  COLLAPSE  (train x0.88 where 62.7L were expected at the default rate; test x1.08 where 47.8L were expected at the default rate)
+ (ii)  look=38, dist=1.0                      119L/5550W x0.93 | train 69L/2268W x0.88 | test 50L/3282W x1.07  COLLAPSE  (train x0.88 where 68.7L were expected at the default rate; test x1.07 where 51.3L were expected at the default rate)
+ (ii)  look=30, dist=0.75                     100L/4708W x0.92 | train 57L/1868W x0.88 | test 43L/2840W x1.07  COLLAPSE  (train x0.88 where 56.6L were expected at the default rate; test x1.07 where 44.4L were expected at the default rate)
+ (ii)  look=30, dist=1.25                     127L/5723W x0.96 | train 72L/2356W x0.88 | test 55L/3367W x1.15  COLLAPSE  (train x0.88 where 71.4L were expected at the default rate; test x1.15 where 52.7L were expected at the default rate)
+   info [full 3x3 grid] look=22, dist=0.75: 97L x0.91/x1.11 COLLAPSE | look=22, dist=1.0: 110L x0.88/x1.08 COLLAPSE | look=22, dist=1.25: 120L x0.87/x1.13 COLLAPSE | look=30, dist=0.75: 100L x0.88/x1.07 COLLAPSE | look=30, dist=1.0: 116L x0.88/x1.1 COLLAPSE | look=30, dist=1.25: 127L x0.88/x1.15 COLLAPSE | look=38, dist=0.75: 105L x0.9/x1.05 COLLAPSE | look=38, dist=1.0: 119L x0.88/x1.07 COLLAPSE | look=38, dist=1.25: 130L x0.89/x1.12 COLLAPSE
+       -> (ii) COLLAPSE at look=22, dist=1.0; look=38, dist=1.0; look=30, dist=0.75; look=30, dist=1.25
+ (iii) months  26-03: 17L/520tr E21.03  26-04: 17L/556tr E21.7  26-05: 17L/468tr E19.0  26-06: 15L/700tr E12.4  26-07: 12L/810tr E12.82  26-08: 10L/661tr E8.42  26-09: 10L/829tr E8.05  26-10: 18L/945tr E15.71   | stratified O/E 116/119.13 = x0.97
+       top-2 excess months ['2026-06', '2026-10'] dropped -> O/E 83/91.02 = x0.91 (83L left)  | worst single drop 2026-06 -> x0.95 | worst pair ('2026-06', '2026-10') -> x0.91 (83L left) | months with a loser removed: 8 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 10, 2: 11, 3: 11, 4: 14, 5: 16, 6: 16, 7: 20, 8: 18} | top batch B7 08-04..09-29 holds 20/116 = 17% -> O/E without it 96/102.65 = x0.94 | 94 distinct NY days, busiest 2026-03-18 (3L) -> O/E without it x0.97  -> (iv) FAIL
+   ctx binomial P(>=L | n, half base): train 0.88  test 0.26 | stop-outs only (scores_final.json): 102L train x0.9 (61L) test x1.08 (41L) | beyond rule_combined: 103L/5301W x0.85 | train 61L/2151W x0.82 | test 42L/3150W x0.94 fail
+   losers removed: 116 (list omitted)
+ VERDICT rule_near_sr: FAILS: (i) default fails the task bar | (ii) collapses at look=22, dist=1.0; look=38, dist=1.0; look=30, dist=0.75; look=30, dist=1.25 | (iii) top-2 months ['2026-06', '2026-10'] dropped -> x0.91 with 83L | (iv) top batch B7 17% (O/E without x0.94), busiest day 2026-03-18 (O/E without x0.97)
+
+#### rule_counter_trend  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: look=90, mult=6.0
+ (i)   default   25L/1191W x0.91 | train 16L/521W x0.89 | test 9L/670W x0.95  -> task bar FAIL
+ (ii)  look=68, mult=6.0                       22L/ 953W x1.0 | train 15L/418W x1.03 | test 7L/535W x0.92  COLLAPSE  (train x1.03 where 12.9L were expected at the default rate; test x0.92 where 7.2L were expected at the default rate)
+ (ii)  look=112, mult=6.0                      30L/1447W x0.9 | train 19L/626W x0.88 | test 11L/821W x0.95  COLLAPSE  (train x0.88 where 19.2L were expected at the default rate; test x0.95 where 11.0L were expected at the default rate)
+ (ii)  look=90, mult=4.5                       37L/1628W x0.99 | train 23L/733W x0.91 | test 14L/895W x1.1  COLLAPSE  (train x0.91 where 22.5L were expected at the default rate; test x1.1 where 12.0L were expected at the default rate)
+ (ii)  look=90, mult=7.5                       18L/ 875W x0.89 | train 11L/375W x0.85 | test 7L/500W x0.99  COLLAPSE  (train x0.85 where 11.5L were expected at the default rate; test x0.99 where 6.7L were expected at the default rate)
+   info [full 3x3 grid] look=68, mult=4.5: 33L x1.05/x0.99 COLLAPSE | look=68, mult=6.0: 22L x1.03/x0.92 COLLAPSE | look=68, mult=7.5: 18L x1.44/x0.82 COLLAPSE | look=90, mult=4.5: 37L x0.91/x1.1 COLLAPSE | look=90, mult=6.0: 25L x0.89/x0.95 COLLAPSE | look=90, mult=7.5: 18L x0.85/x0.99 COLLAPSE | look=112, mult=4.5: 39L x0.91/x0.86 COLLAPSE | look=112, mult=6.0: 30L x0.88/x0.95 COLLAPSE | look=112, mult=7.5: 28L x1.16/x1.03 COLLAPSE
+       -> (ii) COLLAPSE at look=68, mult=6.0; look=112, mult=6.0; look=90, mult=4.5; look=90, mult=7.5
+ (iii) months  26-03: 4L/142tr E5.74  26-04: 4L/132tr E5.15  26-05: 4L/105tr E4.26  26-06: 4L/158tr E2.8  26-07: 3L/178tr E2.82  26-08: 1L/132tr E1.68  26-09: 0L/164tr E1.59  26-10: 5L/205tr E3.41   | stratified O/E 25/27.46 = x0.91
+       top-2 excess months ['2026-10', '2026-06'] dropped -> O/E 16/21.25 = x0.75 (16L left)  | worst single drop 2026-10 -> x0.83 | worst pair ('2026-06', '2026-10') -> x0.75 (16L left) | months with a loser removed: 7 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 4, 2: 0, 3: 4, 4: 2, 5: 4, 6: 5, 7: 1, 8: 5} | top batch B8 10-01..11-04 holds 5/25 = 20% -> O/E without it 20/24.05 = x0.83 | 23 distinct NY days, busiest 2026-04-17 (2L) -> O/E without it x0.85  -> (iv) FAIL
+   ctx binomial P(>=L | n, half base): train 0.72  test 0.61 | stop-outs only (scores_final.json): 21L train x0.74 (12L) test x1.13 (9L) | beyond rule_combined:  24L/1165W x0.89 | train 15L/511W x0.85 | test 9L/654W x0.97 fail
+   losers removed: 0306-102926-B(NY 03-06 Fri 05:29 B1 stop -281$), 0313-195816-B(NY 03-13 Fri 15:58 B1 wk-close -72$), 0316-052008-B(NY 03-16 Mon 01:20 B1 stop -210$), 0316-200548-B(NY 03-16 Mon 16:05 B1 stop -236$), 0413-182648-S(NY 04-13 Mon 14:26 B3 stop -211$), 0416-045923-B(NY 04-16 Thu 00:59 B3 stop -220$), 0417-084606-S(NY 04-17 Fri 04:46 B3 stop -204$), 0417-205800-B(NY 04-17 Fri 16:58 B3 wk-close -26$), 0501-161803-B(NY 05-01 Fri 12:18 B4 stop -243$), 0513-071801-B(NY 05-13 Wed 03:18 B4 stop -218$), 0522-192405-B(NY 05-22 Fri 15:24 B5 wk-close -98$), 0528-060001-S(NY 05-28 Thu 02:00 B5 stop -225$), 0605-132528-B(NY 06-05 Fri 09:25 B5 stop -227$), 0615-152117-B(NY 06-15 Mon 11:21 B5 stop -207$), 0619-172628-S(NY 06-19 Fri 13:26 B6 wk-close -65$), 0629-060500-S(NY 06-29 Mon 02:05 B6 stop -214$), 0715-132937-S(NY 07-15 Wed 09:29 B6 stop -208$), 0728-145636-S(NY 07-28 Tue 10:56 B6 stop -220$), 0731-170115-S(NY 07-31 Fri 13:01 B6 stop -204$), 0821-130310-B(NY 08-21 Fri 09:03 B7 stop -207$), 1002-133626-S(NY 10-02 Fri 09:36 B8 stop -271$), 1007-013110-B(NY 10-06 Tue 21:31 B8 stop -214$), 1012-023747-B(NY 10-11 Sun 22:37 B8 stop -199$), 1026-105900-B(NY 10-26 Mon 06:59 B8 stop -222$), 1102-003016-S(NY 11-01 Sun 19:30 B8 stop -229$)
+ VERDICT rule_counter_trend: FAILS: (i) default fails the task bar | (ii) collapses at look=68, mult=6.0; look=112, mult=6.0; look=90, mult=4.5; look=90, mult=7.5 | (iii) top-2 months ['2026-10', '2026-06'] dropped -> x0.75 with 16L | (iv) top batch B8 20% (O/E without x0.83), busiest day 2026-04-17 (O/E without x0.85)
+
+#### rule_exhausted_run  [REJECTED | pre-entry]   parameterised copy == rules_final at default: yes (0 exceptions)   default: look=30, pips=8.0
+ (i)   default   28L/ 741W x1.61 | train 23L/405W x1.6 | test 5L/336W x1.05  -> task bar FAIL
+ (ii)  look=22, pips=8.0                       17L/ 499W x1.46 | train 14L/282W x1.41 | test 3L/217W x0.98  COLLAPSE  (train x1.41 where 15.9L were expected at the default rate; test x0.98 where 3.2L were expected at the default rate)
+ (ii)  look=38, pips=8.0                       34L/ 884W x1.64 | train 24L/492W x1.38 | test 10L/392W x1.78  COLLAPSE  (train x1.38 where 27.7L were expected at the default rate; test x1.78 where 5.9L were expected at the default rate)
+ (ii)  look=30, pips=6.0                       38L/1144W x1.43 | train 30L/603W x1.41 | test 8L/541W x1.04  COLLAPSE  (train x1.41 where 34.0L were expected at the default rate; test x1.04 where 8.0L were expected at the default rate)
+ (ii)  look=30, pips=10.0                      15L/ 475W x1.36 | train 13L/268W x1.38 | test 2L/207W x0.68  COLLAPSE  (train x1.38 where 15.1L were expected at the default rate; test x0.68 where 3.1L were expected at the default rate)
+   info [full 3x3 grid] look=22, pips=6.0: 27L x1.32/x0.84 COLLAPSE | look=22, pips=8.0: 17L x1.41/x0.98 COLLAPSE | look=22, pips=10.0: 13L x1.79/x1.24 COLLAPSE | look=30, pips=6.0: 38L x1.41/x1.04 COLLAPSE | look=30, pips=8.0: 28L x1.6/x1.05 COLLAPSE | look=30, pips=10.0: 15L x1.38/x0.68 COLLAPSE | look=38, pips=6.0: 40L x1.2/x1.22 COLLAPSE | look=38, pips=8.0: 34L x1.38/x1.78 COLLAPSE | look=38, pips=10.0: 24L x1.72/x1.13 COLLAPSE
+       -> (ii) COLLAPSE at look=22, pips=8.0; look=38, pips=8.0; look=30, pips=6.0; look=30, pips=10.0
+ (iii) months  26-03: 10L/179tr E7.24  26-04: 8L/104tr E4.06  26-05: 3L/57tr E2.31  26-06: 2L/88tr E1.56  26-07: 0L/70tr E1.11  26-08: 1L/47tr E0.6  26-09: 1L/58tr E0.56  26-10: 3L/166tr E2.76   | stratified O/E 28/20.2 = x1.39
+       top-2 excess months ['2026-04', '2026-03'] dropped -> O/E 10/8.9 = x1.12 (10L left)  | worst single drop 2026-04 -> x1.24 | worst pair ('2026-03', '2026-04') -> x1.12 (10L left) | months with a loser removed: 7 of 8  -> (iii) FAIL
+ (iv)  losers by batch {1: 6, 2: 9, 3: 3, 4: 1, 5: 4, 6: 0, 7: 2, 8: 3} | top batch B2 03-19..04-06 holds 9/28 = 32% -> O/E without it 19/16.81 = x1.13 | 22 distinct NY days, busiest 2026-04-03 (3L) -> O/E without it x1.27  -> (iv) FAIL
+   ctx binomial P(>=L | n, half base): train 0.02  test 0.52 | stop-outs only (scores_final.json): 26L train x1.7 (22L) test x1.01 (4L) | beyond rule_combined:  27L/ 736W x1.57 | train 22L/400W x1.55 | test 5L/336W x1.05 fail
+   losers removed: 0306-212806-B(NY 03-06 Fri 16:28 B1 wk-close -12$), 0309-080004-B(NY 03-09 Mon 04:00 B1 stop -235$), 0310-004311-B(NY 03-09 Mon 20:43 B1 stop -238$), 0310-141312-S(NY 03-10 Tue 10:13 B1 stop -216$), 0312-172306-B(NY 03-12 Thu 13:23 B1 stop -305$), 0316-163307-S(NY 03-16 Mon 12:33 B1 stop -213$), 0319-022714-B(NY 03-18 Wed 22:27 B2 stop -227$), 0319-155047-S(NY 03-19 Thu 11:50 B2 stop -216$), 0320-143152-S(NY 03-20 Fri 10:31 B2 stop -240$), 0326-120509-S(NY 03-26 Thu 08:05 B2 stop -200$), 0403-204101-S(NY 04-03 Fri 16:41 B2 stop -632$), 0403-204417-S(NY 04-03 Fri 16:44 B2 stop -819$), 0403-205318-S(NY 04-03 Fri 16:53 B2 stop -808$), 0406-143818-B(NY 04-06 Mon 10:38 B2 stop -231$), 0406-183009-B(NY 04-06 Mon 14:30 B2 stop -225$), 0413-064826-S(NY 04-13 Mon 02:48 B3 stop -208$), 0413-120919-S(NY 04-13 Mon 08:09 B3 stop -212$), 0414-082354-S(NY 04-14 Tue 04:23 B3 stop -203$), 0504-035759-B(NY 05-03 Sun 23:57 B4 stop -223$), 0522-142204-S(NY 05-22 Fri 10:22 B5 stop -209$), 0527-123601-B(NY 05-27 Wed 08:36 B5 stop -251$), 0604-074634-S(NY 06-04 Thu 03:46 B5 stop -206$), 0610-231702-S(NY 06-10 Wed 19:17 B5 stop -204$), 0827-133401-B(NY 08-27 Thu 09:34 B7 wk-close -158$), 0923-111835-B(NY 09-23 Wed 07:18 B7 stop -208$), 1002-121910-S(NY 10-02 Fri 08:19 B8 stop -323$), 1002-133626-S(NY 10-02 Fri 09:36 B8 stop -271$), 1026-172601-B(NY 10-26 Mon 13:26 B8 stop -215$)
+ VERDICT rule_exhausted_run: FAILS: (i) default fails the task bar | (ii) collapses at look=22, pips=8.0; look=38, pips=8.0; look=30, pips=6.0; look=30, pips=10.0 | (iii) top-2 months ['2026-04', '2026-03'] dropped -> x1.12 with 10L | (iv) top batch B2 32% (O/E without x1.13), busiest day 2026-04-03 (O/E without x1.27)
+
+======================================================================================================================================================
+CONTEXT (never gates)
+======================================================================================================================================================
+rollover plateau claimed in rules_final (start 16:00-16:45 x end 17:30-18:30, 15-min steps), re-derived:
+   16:00-17:30   17L/ 234W x3.0 | train 11L/94W x3.12 | test 6L/140W x2.94  PASS
+   16:00-17:45   22L/ 254W x3.53 | train 13L/105W x3.28 | test 9L/149W x4.07  PASS
+   16:00-18:00   22L/ 276W x3.27 | train 13L/113W x3.07 | test 9L/163W x3.74  PASS
+   16:00-18:15   23L/ 315W x3.02 | train 14L/133W x2.84 | test 9L/182W x3.37  PASS
+   16:00-18:30   25L/ 351W x2.95 | train 16L/151W x2.85 | test 9L/200W x3.08  PASS
+   16:15-17:30   15L/ 167W x3.65 | train 9L/65W x3.62 | test 6L/102W x3.97  PASS
+   16:15-17:45   20L/ 187W x4.28 | train 11L/76W x3.76 | test 9L/111W x5.36  PASS
+   16:15-18:00   20L/ 209W x3.87 | train 11L/84W x3.45 | test 9L/125W x4.8  PASS
+   16:15-18:15   21L/ 248W x3.46 | train 12L/104W x3.08 | test 9L/144W x4.21  PASS
+   16:15-18:30   23L/ 284W x3.32 | train 14L/122W x3.07 | test 9L/162W x3.76  PASS
+   16:30-17:30   13L/ 118W x4.4 | train 8L/49W x4.18 | test 5L/69W x4.83  PASS
+   16:30-17:45   18L/ 138W x5.12 | train 10L/60W x4.25 | test 8L/78W x6.65  PASS
+   16:30-18:00   18L/ 160W x4.48 | train 10L/68W x3.82 | test 8L/92W x5.72  PASS
+   16:30-18:15   19L/ 199W x3.86 | train 11L/88W x3.31 | test 8L/111W x4.81  PASS
+   16:30-18:30   21L/ 235W x3.64 | train 13L/106W x3.25 | test 8L/129W x4.18  PASS
+   16:45-17:30   11L/  66W x6.33 | train 6L/26W x5.58 | test 5L/40W x7.95  PASS
+   16:45-17:45   16L/  86W x6.95 | train 8L/37W x5.29 | test 8L/49W x10.04  PASS
+   16:45-18:00   16L/ 108W x5.72 | train 8L/45W x4.49 | test 8L/63W x8.06  PASS
+   16:45-18:15   17L/ 147W x4.6 | train 9L/65W x3.62 | test 8L/82W x6.36  PASS
+   16:45-18:30   19L/ 183W x4.17 | train 11L/83W x3.48 | test 8L/100W x5.3  PASS
+   -> 20 of 20 pass the task bar
+slices of the rollover window:
+   16:30-16:45    2L/  52W x1.64 | train 2L/23W x2.38 | test 0L/29W x0.0
+   16:45-17:00   11L/  66W x6.33 | train 6L/26W x5.58 | test 5L/40W x7.95
+   17:00-17:30    0L/   0W xNone | train 0L/0W xNone | test 0L/0W xNone
+   17:30-17:45    5L/  20W x8.87 | train 2L/11W x4.58 | test 3L/9W x17.88
+   17:45-18:00    0L/  22W x0.0 | train 0L/8W x0.0 | test 0L/14W x0.0
+null scan - every 60-minute New-York window at 15-minute steps, all weekdays (96 windows): which pass the task bar?
+   7 of 96 pass: 16:00-17:00 (17L x3.12/x2.94), 16:15-17:15 (15L x3.62/x3.97), 16:30-17:30 (13L x4.18/x4.83), 16:45-17:45 (16L x5.29/x10.04), 17:00-18:00 (5L x2.84/x8.25), 17:15-18:15 (6L x2.13/x4.77), 17:30-18:30 (8L x2.4/x3.41)
+null scan - every 60-minute window on FRIDAYS only, 15-minute steps (96 windows):
+   6 of 96 pass: 12:15-13:15 (4L x2.84/x3.67), 14:00-15:00 (4L x2.29/x3.33), 16:00-17:00 (11L x9.4/x9.41), 16:15-17:15 (11L x14.89/x11.53), 16:30-17:30 (10L x13.53/x16.25), 16:45-17:45 (8L x12.76/x23.84)
+rollover window by weekday (Mon..Fri):
+   Mon    1L/  12W x3.41 | train 0L/5W x0.0 | test 1L/7W x8.94
+   Tue    1L/  10W x4.03 | train 1L/3W x7.44 | test 0L/7W x0.0
+   Wed    3L/  17W x6.65 | train 2L/9W x5.41 | test 1L/8W x7.95
+   Thu    2L/  26W x3.17 | train 1L/11W x2.48 | test 1L/15W x4.47
+   Fri    8L/  14W x16.12 | train 3L/4W x12.76 | test 5L/10W x23.84
+trigger spread sweep (information):
+   >= 0.5    81L/1747W x1.96 | train 73L/1701W x1.23 | test 8L/46W x10.6  fail
+   >= 0.6    33L/ 482W x2.84 | train 25L/437W x1.61 | test 8L/45W x10.79  fail
+   >= 0.7    17L/ 122W x5.42 | train 9L/81W x2.98 | test 8L/41W x11.68  PASS
+   >= 0.75   17L/ 110W x5.93 | train 9L/70W x3.39 | test 8L/40W x11.92  PASS
+   >= 0.8    16L/  88W x6.82 | train 8L/48W x4.25 | test 8L/40W x11.92  PASS
+   >= 0.9    16L/  84W x7.09 | train 8L/45W x4.49 | test 8L/39W x12.17  PASS
+   >= 1.0    16L/  73W x7.97 | train 8L/34W x5.67 | test 8L/39W x12.17  PASS
+   >= 1.1    15L/  70W x7.82 | train 8L/31W x6.11 | test 7L/39W x10.88  PASS
+   >= 1.2    15L/  64W x8.42 | train 8L/27W x6.81 | test 7L/37W x11.38  PASS
+   >= 1.25   13L/  57W x8.23 | train 8L/26W x7.01 | test 5L/31W x9.93  PASS
+   >= 1.5    12L/  51W x8.45 | train 7L/23W x6.95 | test 5L/28W x10.84  PASS
+   >= 2.0    10L/  45W x8.06 | train 6L/22W x6.38 | test 4L/23W x10.6  PASS
+   >= 3.0     8L/  27W x10.13 | train 5L/14W x7.84 | test 3L/13W x13.41  PASS
+Friday-close start sweep (information):
+   Fri from 14:00   18L/ 164W x4.38 | train 11L/58W x4.75 | test 7L/106W x4.43  PASS
+   Fri from 14:15   17L/ 143W x4.71 | train 11L/48W x5.55 | test 6L/95W x4.25  PASS
+   Fri from 14:30   17L/ 126W x5.27 | train 11L/40W x6.42 | test 6L/86W x4.66  PASS
+   Fri from 14:45   14L/ 109W x5.05 | train 9L/37W x5.83 | test 5L/72W x4.64  PASS
+   Fri from 15:00   14L/  99W x5.49 | train 9L/34W x6.23 | test 5L/65W x5.11  PASS
+   Fri from 15:15   14L/  85W x6.27 | train 9L/31W x6.7 | test 5L/54W x6.06  PASS
+   Fri from 15:30   13L/  75W x6.55 | train 8L/25W x7.22 | test 5L/50W x6.5  PASS
+   Fri from 15:45   13L/  58W x8.12 | train 8L/19W x8.82 | test 5L/39W x8.13  PASS
+   Fri from 16:00   11L/  46W x8.56 | train 6L/13W x9.4 | test 5L/33W x9.41  PASS
+   Fri from 16:15   11L/  32W x11.34 | train 6L/6W x14.89 | test 5L/26W x11.53  PASS
+   Fri from 16:30   10L/  23W x13.44 | train 5L/6W x13.53 | test 5L/17W x16.25  PASS
+   Fri from 16:45    8L/  14W x16.12 | train 3L/4W x12.76 | test 5L/10W x23.84  PASS
+empty-book sweep (information): window x threshold -> L, train lift / test lift, P(ass)/f(ail)
+   w=5  <10: 4L x9.93/x6.5 P | <15: 9L x6.87/x5.36 P | <20: 10L x4.25/x3.97 P | <25: 11L x2.93/x3.44 P | <30: 14L x2.53/x2.92 P
+   w=8  <10: 3L x4.96/x8.94 f | <15: 9L x6.62/x5.8 P | <20: 11L x4.7/x5.26 P | <25: 11L x3.19/x3.47 P | <30: 13L x2.4/x2.94 P
+   w=10 <10: 3L x4.96/x8.41 f | <15: 10L x6.87/x7.73 P | <20: 11L x5.1/x5.04 P | <25: 11L x3.5/x3.58 P | <30: 13L x2.37/x2.94 P
+   w=12 <10: 3L x4.25/x10.22 f | <15: 10L x7.77/x7.34 P | <20: 11L x5.76/x5.42 P | <25: 11L x3.31/x3.51 P | <30: 15L x3.19/x2.86 P
+   w=15 <10: 2L x3.72/x5.96 f | <15: 10L x7.77/x7.73 P | <20: 11L x5.41/x5.34 P | <25: 12L x3.79/x3.58 P | <30: 13L x2.57/x2.82 P
+   w=20 <10: 2L x3.31/x7.15 f | <15: 8L x8.27/x5.96 P | <20: 11L x5.25/x5.77 P | <25: 12L x3.79/x3.72 P | <30: 13L x2.48/x2.9 P
+
+======================================================================================================================================================
+SUPPLEMENTARY (context, never gates): each survivor on STOP-OUTS ONLY (the 21 weekly-close flattens, why=8, dropped from the base and the removed), by side, and not-Friday vs Friday - each against that group's own base rate
+======================================================================================================================================================
+rule_rollover_ny           stop-outs only   9L/  86W x4.77 | train 6L/37W x4.59 | test 3L/49W x4.94 PASS | O/E 4.66 | top-2 months ['2026-03', '2026-08'] out -> x3.65 (5L) | 9 days | batches {1: 1, 2: 3, 4: 1, 5: 1, 6: 1, 7: 2}
+   buys       all losses   7L/  43W x6.27 | train 3L/21W x3.73 | test 4L/22W x11.25 PASS   || stop-outs only   2L/  43W x2.41 | train 1L/21W x1.55 | test 1L/22W x4.37 fail
+   sells      all losses   9L/  43W x7.6 | train 5L/16W x7.07 | test 4L/27W x9.03 PASS   || stop-outs only   7L/  43W x6.59 | train 5L/16W x7.59 | test 2L/27W x5.16 PASS
+   not Friday all losses   8L/  72W x5.13 | train 5L/33W x4.44 | test 3L/39W x6.24 PASS   || stop-outs only   8L/  72W x5.17 | train 5L/33W x4.44 | test 3L/39W x6.39 PASS
+   Friday     all losses   8L/  14W x9.36 | train 3L/4W x7.65 | test 5L/10W x12.46 PASS   || stop-outs only   1L/  14W x2.94 | train 1L/4W x5.75 | test 0L/10W x0.0 fail
+rule_combined              stop-outs only   9L/  86W x4.77 | train 6L/37W x4.59 | test 3L/49W x4.94 PASS | O/E 4.66 | top-2 months ['2026-03', '2026-08'] out -> x3.65 (5L) | 9 days | batches {1: 1, 2: 3, 4: 1, 5: 1, 6: 1, 7: 2}
+   buys       all losses   7L/  43W x6.27 | train 3L/21W x3.73 | test 4L/22W x11.25 PASS   || stop-outs only   2L/  43W x2.41 | train 1L/21W x1.55 | test 1L/22W x4.37 fail
+   sells      all losses   9L/  43W x7.6 | train 5L/16W x7.07 | test 4L/27W x9.03 PASS   || stop-outs only   7L/  43W x6.59 | train 5L/16W x7.59 | test 2L/27W x5.16 PASS
+   not Friday all losses   8L/  72W x5.13 | train 5L/33W x4.44 | test 3L/39W x6.24 PASS   || stop-outs only   8L/  72W x5.17 | train 5L/33W x4.44 | test 3L/39W x6.39 PASS
+   Friday     all losses   8L/  14W x9.36 | train 3L/4W x7.65 | test 5L/10W x12.46 PASS   || stop-outs only   1L/  14W x2.94 | train 1L/4W x5.75 | test 0L/10W x0.0 fail
+rule_trigger_spread        stop-outs only   9L/  73W x5.53 | train 5L/34W x4.22 | test 4L/39W x7.96 PASS | O/E 5.25 | top-2 months ['2026-04', '2026-07'] out -> x3.45 (4L) | 7 days | batches {2: 4, 4: 1, 6: 2, 7: 2}
+   buys       all losses   7L/  31W x8.25 | train 3L/15W x4.98 | test 4L/16W x14.63 PASS   || stop-outs only   2L/  31W x3.29 | train 1L/15W x2.13 | test 1L/16W x5.92 fail
+   sells      all losses   9L/  42W x7.75 | train 5L/19W x6.19 | test 4L/23W x10.37 PASS   || stop-outs only   7L/  42W x6.72 | train 4L/19W x5.54 | test 3L/23W x8.63 PASS
+   not Friday all losses   6L/  71W x4.0 | train 2L/32W x1.99 | test 4L/39W x8.12 fail   || stop-outs only   6L/  71W x4.03 | train 2L/32W x1.99 | test 4L/39W x8.33 fail
+   Friday     all losses  10L/   2W x21.45 | train 6L/2W x13.39 | test 4L/0W x37.37 PASS   || stop-outs only   3L/   2W x26.44 | train 3L/2W x17.26 | test 0L/0W xNone fail
+rule_friday_close_ny       stop-outs only   3L/  46W x3.08 | train 3L/13W x6.17 | test 0L/33W x0.0 fail | O/E 3.38 | top-2 months ['2026-04', '2026-03'] out -> x0.0 (0L) | 1 days | batches {2: 3}
+   buys       all losses   6L/  21W x9.96 | train 3L/4W x12.79 | test 3L/17W x10.97 PASS   || stop-outs only   0L/  21W x0.0 | train 0L/4W x0.0 | test 0L/17W x0.0 fail
+   sells      all losses   5L/  25W x7.32 | train 3L/9W x7.43 | test 2L/16W x7.78 PASS   || stop-outs only   3L/  25W x5.04 | train 3L/9W x7.97 | test 0L/16W x0.0 fail
+   not Friday all losses   0L/   0W xNone | train 0L/0W xNone | test 0L/0W xNone fail   || stop-outs only   0L/   0W xNone | train 0L/0W xNone | test 0L/0W xNone fail
+   Friday     all losses  11L/  46W x4.97 | train 6L/13W x5.64 | test 5L/33W x4.92 PASS   || stop-outs only   3L/  46W x2.7 | train 3L/13W x5.39 | test 0L/33W x0.0 fail
+rule_empty_book            stop-outs only  10L/  95W x4.8 | train 5L/29W x4.84 | test 5L/66W x6.03 PASS | O/E 5.28 | top-2 months ['2026-04', '2026-08'] out -> x4.01 (5L) | 8 days | batches {2: 4, 4: 1, 6: 2, 7: 3}
+   buys       all losses   3L/  58W x2.2 | train 2L/19W x2.84 | test 1L/39W x1.83 fail   || stop-outs only   2L/  58W x1.81 | train 1L/19W x1.7 | test 1L/39W x2.52 fail
+   sells      all losses   8L/  37W x7.8 | train 4L/10W x8.49 | test 4L/27W x9.03 PASS   || stop-outs only   8L/  37W x8.36 | train 4L/10W x9.11 | test 4L/27W x9.65 PASS
+   not Friday all losses   7L/  87W x3.82 | train 2L/24W x2.6 | test 5L/63W x6.42 PASS   || stop-outs only   7L/  87W x3.85 | train 2L/24W x2.6 | test 5L/63W x6.58 PASS
+   Friday     all losses   4L/   8W x8.58 | train 4L/5W x7.94 | test 0L/3W x0.0 fail   || stop-outs only   3L/   8W x12.02 | train 3L/5W x10.79 | test 0L/3W x0.0 fail
+rule_friday_afternoon_ny   stop-outs only   5L/ 224W x1.1 | train 4L/84W x1.5 | test 1L/140W x0.61 fail | O/E 1.1 | top-2 months ['2026-04', '2026-07'] out -> x0.0 (0L) | 3 days | batches {2: 3, 3: 1, 6: 1}
+   buys       all losses  12L/ 110W x4.41 | train 7L/37W x4.75 | test 5L/73W x4.69 PASS   || stop-outs only   1L/ 110W x0.49 | train 1L/37W x0.9 | test 0L/73W x0.0 fail
+   sells      all losses  10L/ 114W x3.54 | train 7L/47W x3.85 | test 3L/67W x3.0 PASS   || stop-outs only   4L/ 114W x1.59 | train 3L/47W x1.91 | test 1L/67W x1.1 fail
+   not Friday all losses   0L/   0W xNone | train 0L/0W xNone | test 0L/0W xNone fail   || stop-outs only   0L/   0W xNone | train 0L/0W xNone | test 0L/0W xNone fail
+   Friday     all losses  22L/ 224W x2.3 | train 14L/84W x2.55 | test 8L/140W x2.02 PASS   || stop-outs only   5L/ 224W x0.96 | train 4L/84W x1.31 | test 1L/140W x0.5 fail
+
+======================================================================================================================================================
+VERDICTS  (survivor = MT5 candidate, NOT PROMOTED; Python can only fail a rule)
+======================================================================================================================================================
+rule_rollover_ny             SURVIVES  pre-entry Y (i) Y (ii) Y   (iii) Y (iv) Y  | default x5.29/x10.04 16L | top-2-months-out x6.02 (10L) | top batch 31%
+rule_combined                SURVIVES  pre-entry Y (i) Y (ii) Y   (iii) Y (iv) Y  | default x5.29/x10.04 16L | top-2-months-out x6.02 (10L) | top batch 31%
+rule_trigger_spread          SURVIVES  pre-entry Y (i) Y (ii) Y   (iii) Y (iv) Y  | default x5.67/x12.17 16L | top-2-months-out x5.74 (8L) | top batch 31%
+rule_friday_close_ny         SURVIVES  pre-entry Y (i) Y (ii) Y   (iii) Y (iv) Y  | default x9.4/x9.41 11L | top-2-months-out x4.81 (4L) | top batch 36%
+rule_empty_book              SURVIVES  pre-entry Y (i) Y (ii) Y   (iii) Y (iv) Y  | default x5.1/x5.04 11L | top-2-months-out x3.54 (5L) | top batch 46%
+rule_friday_afternoon_ny     SURVIVES  pre-entry Y (i) Y (ii) Y   (iii) Y (iv) Y  | default x4.25/x3.87 22L | top-2-months-out x3.31 (12L) | top batch 23%
+rule_trigger_gap             fails     pre-entry Y (i) Y (ii) N   (iii) N (iv) N  | default x2.48/x5.11 5L | top-2-months-out x1.66 (2L) | top batch 40%
+rule_fill_slip               fails     pre-entry N (i) Y (ii) Y   (iii) Y (iv) Y  | default x4.25/x9.54 11L | top-2-months-out x4.85 (6L) | top batch 27%
+rule_buy_fill_spread         fails     pre-entry N (i) Y (ii) Y   (iii) N (iv) Y  | default x5.32/x9.54 7L | top-2-months-out x2.88 (3L) | top batch 29%
+rule_big_figure_ahead        fails     pre-entry Y (i) Y (ii) N   (iii) N (iv) Y  | default x2.53/x4.99 7L | top-2-months-out x2.1 (3L) | top batch 29%
+rule_camel_old               fails     pre-entry Y (i) N (ii) N   (iii) N (iv) N  | default x6.27/x4.77 5L | top-2-months-out x1.63 (1L) | top batch 60%
+rule_loud_breakout           fails     pre-entry Y (i) N (ii) N   (iii) N (iv) N  | default x1.79/x2.04 8L | top-2-months-out x1.27 (4L) | top batch 25%
+rule_holiday                 fails     pre-entry Y (i) N (ii) n/a (iii) N (iv) N  | default x1.75/x1.36 12L | top-2-months-out x0.75 (4L) | top batch 50%
+rule_us_data_minutes         fails     pre-entry Y (i) N (ii) Y   (iii) N (iv) N  | default x0.88/x8.94 5L | top-2-months-out x0.75 (1L) | top batch 60%
+rule_zee_camel_hh            fails     pre-entry Y (i) N (ii) n/a (iii) N (iv) N  | default x1.1/x0.96 62L | top-2-months-out x0.97 (43L) | top batch 16%
+rule_structure_hh_hl         fails     pre-entry Y (i) N (ii) N   (iii) N (iv) N  | default x0.97/x1.01 100L | top-2-months-out x0.92 (75L) | top batch 16%
+rule_near_sr                 fails     pre-entry Y (i) N (ii) N   (iii) N (iv) N  | default x0.88/x1.1 116L | top-2-months-out x0.91 (83L) | top batch 17%
+rule_counter_trend           fails     pre-entry Y (i) N (ii) N   (iii) N (iv) N  | default x0.89/x0.95 25L | top-2-months-out x0.75 (16L) | top batch 20%
+rule_exhausted_run           fails     pre-entry Y (i) N (ii) N   (iii) N (iv) N  | default x1.6/x1.05 28L | top-2-months-out x1.12 (10L) | top batch 32%

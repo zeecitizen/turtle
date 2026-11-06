@@ -1,0 +1,301 @@
+RE-SCORE of every proposed cure (work_judge). Python tick replay = HYPOTHESIS, NOT PROMOTED.
+  stack tight  : 714 trades, 4 losses (train 332/1, test 382/3)
+  stack zee100 : 300 trades, 0 losses (train 123/0, test 177/0)
+  stack secure : 2237 trades, 30 losses (train 1059/22, test 1178/8)
+  stack base   : 7626 trades, 172 losses (train 3335/112, test 4291/60)
+  stack base_g : 7468 trades, 151 losses (train 3262/101, test 4206/50)
+  STRICT bar fixed in advance: lift > 1 and hypergeometric p < 0.05 on BOTH halves of secure or base_g, design losses removed
+
+loss4a:rule_target_on_rejection_high | tight: -3L/-80W WR 99.44->99.84 (tr 99.7->100.0, te 99.21->99.69) | zee100: -0L/-34W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-224W WR 98.66->98.71 (tr 97.92->97.93, te 99.32->99.43) | base: -12L/-583W WR 97.74->97.72 (tr 96.64->96.65, te 98.6->98.57)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-25W 99.7->100.0 lift 12.77 p 0.0783  test -2L/-55W 99.21->99.69 lift 4.47 p 0.0594
+    zee100  train -0L/-11W 100.0->100.0 lift None p 1.0  test -0L/-23W 100.0->100.0 lift None p 1.0
+    secure  train -2L/-92W 97.92->97.93 lift 1.02 p 0.596  test -2L/-132W 99.32->99.43 lift 2.2 p 0.2284
+    base    train -8L/-218W 96.64->96.65 lift 1.05 p 0.4928  test -4L/-365W 98.6->98.57 lift 0.78 p 0.7713
+    base_g  train -7L/-216W 96.9->96.91 lift 1.01 p 0.5429  test -4L/-358W 98.81->98.8 lift 0.93 p 0.6354
+    STRICT secure  (design losses out) train 1L/93 of 21L/1058 lift 0.54 p 0.8579  test 2L/134 of 8L/1178 lift 2.2 p 0.2284
+    STRICT base_g  (design losses out) train 6L/222 of 100L/3261 lift 0.88 p 0.6864  test 4L/362 of 50L/4206 lift 0.93 p 0.6354
+    LITERAL PASS on secure | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4a:rule_triple_test        | tight: -3L/-138W WR 99.44->99.83 (tr 99.7->100.0, te 99.21->99.63) | zee100: -0L/-69W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-397W WR 98.66->98.58 (tr 97.92->97.76, te 99.32->99.44) | base: -21L/-1182W WR 97.74->97.65 (tr 96.64->96.69, te 98.6->98.5)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-29W 99.7->100.0 lift 11.07 p 0.0904  test -2L/-109W 99.21->99.63 lift 2.29 p 0.2036
+    zee100  train -0L/-10W 100.0->100.0 lift None p 1.0  test -0L/-59W 100.0->100.0 lift None p 1.0
+    secure  train -1L/-119W 97.92->97.76 lift 0.4 p 0.931  test -3L/-278W 99.32->99.44 lift 1.57 p 0.2928
+    base    train -12L/-301W 96.64->96.69 lift 1.14 p 0.3584  test -9L/-881W 98.6->98.5 lift 0.72 p 0.9012
+    base_g  train -12L/-297W 96.9->96.99 lift 1.25 p 0.2446  test -9L/-868W 98.81->98.77 lift 0.86 p 0.7438
+    STRICT secure  (design losses out) train 0L/119 of 21L/1058 lift 0.0 p 1.0  test 3L/281 of 8L/1178 lift 1.57 p 0.2928
+    STRICT base_g  (design losses out) train 11L/308 of 100L/3261 lift 1.16 p 0.343  test 9L/877 of 50L/4206 lift 0.86 p 0.7438
+    LITERAL fail | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4a:rule_vsa_weak_leg       | tight: -2L/-204W WR 99.44->99.61 (tr 99.7->100.0, te 99.21->99.29) | zee100: -0L/-78W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -10L/-599W WR 98.66->98.77 (tr 97.92->98.03, te 99.32->99.42) | base: -54L/-2096W WR 97.74->97.85 (tr 96.64->96.91, te 98.6->98.57)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-106W 99.7->100.0 lift 3.1 p 0.3223  test -1L/-98W 99.21->99.29 lift 1.29 p 0.5945
+    zee100  train -0L/-38W 100.0->100.0 lift None p 1.0  test -0L/-40W 100.0->100.0 lift None p 1.0
+    secure  train -7L/-292W 97.92->98.03 lift 1.13 p 0.4322  test -3L/-307W 99.32->99.42 lift 1.43 p 0.3543
+    base    train -38L/-899W 96.64->96.91 lift 1.21 p 0.1  test -16L/-1197W 98.6->98.57 lift 0.94 p 0.657
+    base_g  train -34L/-857W 96.9->97.17 lift 1.23 p 0.0917  test -15L/-1150W 98.81->98.85 lift 1.08 p 0.4095
+    STRICT secure  (design losses out) train 6L/298 of 21L/1058 lift 1.01 p 0.5669  test 3L/310 of 8L/1178 lift 1.43 p 0.3543
+    STRICT base_g  (design losses out) train 33L/890 of 100L/3261 lift 1.21 p 0.1186  test 15L/1165 of 50L/4206 lift 1.08 p 0.4095
+    LITERAL PASS on secure | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4a:rule_counter_last_big_move | tight: -2L/-265W WR 99.44->99.55 (tr 99.7->100.0, te 99.21->99.16) | zee100: -0L/-122W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -10L/-780W WR 98.66->98.62 (tr 97.92->98.01, te 99.32->99.19) | base: -43L/-2280W WR 97.74->97.57 (tr 96.64->96.37, te 98.6->98.49)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-123W 99.7->100.0 lift 2.68 p 0.3735  test -1L/-142W 99.21->99.16 lift 0.89 p 0.7562
+    zee100  train -0L/-48W 100.0->100.0 lift None p 1.0  test -0L/-74W 100.0->100.0 lift None p 1.0
+    secure  train -8L/-346W 97.92->98.01 lift 1.09 p 0.4638  test -2L/-434W 99.32->99.19 lift 0.68 p 0.8596
+    base    train -28L/-993W 96.64->96.37 lift 0.82 p 0.9237  test -15L/-1287W 98.6->98.49 lift 0.82 p 0.8532
+    base_g  train -25L/-971W 96.9->96.65 lift 0.81 p 0.9201  test -12L/-1263W 98.81->98.7 lift 0.79 p 0.8727
+    STRICT secure  (design losses out) train 7L/353 of 21L/1058 lift 1.0 p 0.5838  test 2L/436 of 8L/1178 lift 0.68 p 0.8596
+    STRICT base_g  (design losses out) train 24L/995 of 100L/3261 lift 0.79 p 0.9417  test 12L/1275 of 50L/4206 lift 0.79 p 0.8727
+    LITERAL fail | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4a:rule_quiet_breakout_share | tight: -2L/-81W WR 99.44->99.68 (tr 99.7->100.0, te 99.21->99.39) | zee100: -0L/-32W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-304W WR 98.66->98.65 (tr 97.92->98.06, te 99.32->99.2) | base: -31L/-1188W WR 97.74->97.8 (tr 96.64->96.85, te 98.6->98.55)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-30W 99.7->100.0 lift 10.71 p 0.0934  test -1L/-51W 99.21->99.39 lift 2.45 p 0.3561
+    zee100  train -0L/-10W 100.0->100.0 lift None p 1.0  test -0L/-22W 100.0->100.0 lift None p 1.0
+    secure  train -4L/-128W 97.92->98.06 lift 1.46 p 0.29  test -0L/-176W 99.32->99.2 lift 0.0 p 1.0
+    base    train -23L/-491W 96.64->96.85 lift 1.33 p 0.085  test -8L/-697W 98.6->98.55 lift 0.81 p 0.7925
+    base_g  train -19L/-473W 96.9->97.04 lift 1.25 p 0.1767  test -7L/-683W 98.81->98.78 lift 0.85 p 0.7352
+    STRICT secure  (design losses out) train 3L/131 of 21L/1058 lift 1.15 p 0.4928  test 0L/176 of 8L/1178 lift 0.0 p 1.0
+    STRICT base_g  (design losses out) train 18L/491 of 100L/3261 lift 1.2 p 0.2388  test 7L/690 of 50L/4206 lift 0.85 p 0.7352
+    LITERAL fail | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4a:rule_early_thin_break   | tight: -2L/-95W WR 99.44->99.68 (tr 99.7->100.0, te 99.21->99.4) | zee100: -0L/-40W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -5L/-328W WR 98.66->98.69 (tr 97.92->98.01, te 99.32->99.3) | base: -32L/-1120W WR 97.74->97.84 (tr 96.64->96.81, te 98.6->98.65)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-47W 99.7->100.0 lift 6.92 p 0.1446  test -1L/-48W 99.21->99.4 lift 2.6 p 0.3383
+    zee100  train -0L/-16W 100.0->100.0 lift None p 1.0  test -0L/-24W 100.0->100.0 lift None p 1.0
+    secure  train -4L/-152W 97.92->98.01 lift 1.23 p 0.4108  test -1L/-176W 99.32->99.3 lift 0.83 p 0.7293
+    base    train -21L/-458W 96.64->96.81 lift 1.31 p 0.1153  test -11L/-662W 98.6->98.65 lift 1.17 p 0.3362
+    base_g  train -18L/-437W 96.9->97.04 lift 1.28 p 0.1593  test -10L/-640W 98.81->98.88 lift 1.29 p 0.2355
+    STRICT secure  (design losses out) train 3L/155 of 21L/1058 lift 0.98 p 0.6146  test 1L/177 of 8L/1178 lift 0.83 p 0.7293
+    STRICT base_g  (design losses out) train 17L/454 of 100L/3261 lift 1.22 p 0.2204  test 10L/650 of 50L/4206 lift 1.29 p 0.2355
+    LITERAL PASS on base | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4a:rule_fade_counter_spike | tight: -1L/-31W WR 99.44->99.56 (tr 99.7->99.69, te 99.21->99.44) | zee100: -0L/-17W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -0L/-110W WR 98.66->98.59 (tr 97.92->97.83, te 99.32->99.28) | base: -12L/-284W WR 97.74->97.82 (tr 96.64->96.83, te 98.6->98.59)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-10W 99.7->99.69 lift 0.0 p 1.0  test -1L/-21W 99.21->99.44 lift 5.79 p 0.1634
+    zee100  train -0L/-6W 100.0->100.0 lift None p 1.0  test -0L/-11W 100.0->100.0 lift None p 1.0
+    secure  train -0L/-44W 97.92->97.83 lift 0.0 p 1.0  test -0L/-66W 99.32->99.28 lift 0.0 p 1.0
+    base    train -10L/-103W 96.64->96.83 lift 2.64 p 0.0041  test -2L/-181W 98.6->98.59 lift 0.78 p 0.7334
+    base_g  train -6L/-97W 96.9->96.99 lift 1.88 p 0.0976  test -1L/-169W 98.81->98.79 lift 0.49 p 0.8745
+    STRICT secure  (design losses out) train 0L/44 of 21L/1058 lift 0.0 p 1.0  test 0L/66 of 8L/1178 lift 0.0 p 1.0
+    STRICT base_g  (design losses out) train 6L/103 of 100L/3261 lift 1.9 p 0.0942  test 1L/170 of 50L/4206 lift 0.49 p 0.8745
+    LITERAL fail | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4a:rule_rebreak_same_level | tight: -3L/-81W WR 99.44->99.84 (tr 99.7->99.66, te 99.21->100.0) | zee100: -0L/-34W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -8L/-346W WR 98.66->98.83 (tr 97.92->97.99, te 99.32->99.6) | base: -31L/-1199W WR 97.74->97.8 (tr 96.64->96.67, te 98.6->98.72)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-39W 99.7->99.66 lift 0.0 p 1.0  test -3L/-42W 99.21->100.0 lift 8.49 p 0.0015
+    zee100  train -0L/-15W 100.0->100.0 lift None p 1.0  test -0L/-19W 100.0->100.0 lift None p 1.0
+    secure  train -4L/-160W 97.92->97.99 lift 1.17 p 0.4511  test -4L/-186W 99.32->99.6 lift 3.1 p 0.027
+    base    train -16L/-440W 96.64->96.67 lift 1.04 p 0.4666  test -15L/-759W 98.6->98.72 lift 1.39 p 0.1095
+    base_g  train -15L/-435W 96.9->96.94 lift 1.08 p 0.4214  test -11L/-751W 98.81->98.87 lift 1.21 p 0.2879
+    STRICT secure  (design losses out) train 4L/164 of 21L/1058 lift 1.23 p 0.4145  test 4L/190 of 8L/1178 lift 3.1 p 0.027
+    STRICT base_g  (design losses out) train 15L/450 of 100L/3261 lift 1.09 p 0.4059  test 11L/762 of 50L/4206 lift 1.21 p 0.2879
+    LITERAL PASS on secure+base | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4a:rule_spread_wide        | tight: -2L/-143W WR 99.44->99.65 (tr 99.7->99.64, te 99.21->99.66) | zee100: -0L/-62W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -9L/-485W WR 98.66->98.8 (tr 97.92->98.2, te 99.32->99.41) | base: -46L/-1711W WR 97.74->97.85 (tr 96.64->96.85, te 98.6->98.74)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-58W 99.7->99.64 lift 0.0 p 1.0  test -2L/-85W 99.21->99.66 lift 2.93 p 0.1312
+    zee100  train -0L/-18W 100.0->100.0 lift None p 1.0  test -0L/-44W 100.0->100.0 lift None p 1.0
+    secure  train -6L/-164W 97.92->98.2 lift 1.7 p 0.1263  test -3L/-321W 99.32->99.41 lift 1.36 p 0.3846
+    base    train -25L/-544W 96.64->96.85 lift 1.31 p 0.0872  test -21L/-1167W 98.6->98.74 lift 1.26 p 0.1302
+    base_g  train -16L/-507W 96.9->96.9 lift 0.99 p 0.5645  test -13L/-1115W 98.81->98.8 lift 0.97 p 0.606
+    STRICT secure  (design losses out) train 6L/170 of 21L/1058 lift 1.78 p 0.1056  test 3L/324 of 8L/1178 lift 1.36 p 0.3846
+    STRICT base_g  (design losses out) train 16L/523 of 100L/3261 lift 1.0 p 0.5476  test 13L/1128 of 50L/4206 lift 0.97 p 0.606
+    LITERAL PASS on secure+base | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4a:rule_spread_not_narrow  | tight: -4L/-503W WR 99.44->100.0 (tr 99.7->100.0, te 99.21->100.0) | zee100: -0L/-213W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -26L/-1605W WR 98.66->99.34 (tr 97.92->99.02, te 99.32->99.67) | base: -134L/-5433W WR 97.74->98.15 (tr 96.64->97.43, te 98.6->98.8)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-233W 99.7->100.0 lift 1.42 p 0.7048  test -3L/-270W 99.21->100.0 lift 1.4 p 0.3639
+    zee100  train -0L/-82W 100.0->100.0 lift None p 1.0  test -0L/-131W 100.0->100.0 lift None p 1.0
+    secure  train -19L/-735W 97.92->99.02 lift 1.21 p 0.0828  test -7L/-870W 99.32->99.67 lift 1.18 p 0.3527
+    base    train -87L/-2274W 96.64->97.43 lift 1.1 p 0.0611  test -47L/-3159W 98.6->98.8 lift 1.05 p 0.3153
+    base_g  train -76L/-2231W 96.9->97.38 lift 1.06 p 0.1837  test -38L/-3108W 98.81->98.87 lift 1.02 p 0.4975
+    STRICT secure  (design losses out) train 18L/753 of 21L/1058 lift 1.2 p 0.1024  test 7L/877 of 8L/1178 lift 1.18 p 0.3527
+    STRICT base_g  (design losses out) train 75L/2306 of 100L/3261 lift 1.06 p 0.2003  test 38L/3146 of 50L/4206 lift 1.02 p 0.4975
+    LITERAL PASS on secure+base | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4a:rule_spread_upper_mode  | tight: -3L/-230W WR 99.44->99.79 (tr 99.7->100.0, te 99.21->99.64) | zee100: -0L/-95W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -15L/-735W WR 98.66->98.99 (tr 97.92->98.49, te 99.32->99.39) | base: -81L/-2487W WR 97.74->98.2 (tr 96.64->97.27, te 98.6->98.83)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-129W 99.7->100.0 lift 2.55 p 0.3916  test -2L/-101W 99.21->99.64 lift 2.47 p 0.1782
+    zee100  train -0L/-47W 100.0->100.0 lift None p 1.0  test -0L/-48W 100.0->100.0 lift None p 1.0
+    secure  train -12L/-385W 97.92->98.49 lift 1.46 p 0.0757  test -3L/-350W 99.32->99.39 lift 1.25 p 0.4475
+    base    train -56L/-1224W 96.64->97.27 lift 1.3 p 0.0072  test -25L/-1263W 98.6->98.83 lift 1.39 p 0.0354
+    base_g  train -46L/-1174W 96.9->97.31 lift 1.22 p 0.0545  test -16L/-1207W 98.81->98.86 lift 1.1 p 0.3744
+    STRICT secure  (design losses out) train 11L/396 of 21L/1058 lift 1.4 p 0.1157  test 3L/353 of 8L/1178 lift 1.25 p 0.4475
+    STRICT base_g  (design losses out) train 45L/1219 of 100L/3261 lift 1.2 p 0.0686  test 16L/1223 of 50L/4206 lift 1.1 p 0.3744
+    LITERAL PASS on secure+base | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4b:rule_tested_level       | tight: -2L/-67W WR 99.44->99.69 (tr 99.7->99.66, te 99.21->99.71) | zee100: -0L/-36W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -5L/-207W WR 98.66->98.77 (tr 97.92->97.92, te 99.32->99.53) | base: -23L/-726W WR 97.74->97.83 (tr 96.64->96.84, te 98.6->98.61)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-34W 99.7->99.66 lift 0.0 p 1.0  test -2L/-33W 99.21->99.71 lift 7.28 p 0.0231
+    zee100  train -0L/-15W 100.0->100.0 lift None p 1.0  test -0L/-21W 100.0->100.0 lift None p 1.0
+    secure  train -2L/-97W 97.92->97.92 lift 0.97 p 0.6255  test -3L/-110W 99.32->99.53 lift 3.91 p 0.0336
+    base    train -17L/-316W 96.64->96.84 lift 1.52 p 0.05  test -6L/-410W 98.6->98.61 lift 1.03 p 0.5323
+    base_g  train -16L/-310W 96.9->97.1 lift 1.59 p 0.0404  test -6L/-403W 98.81->98.84 lift 1.23 p 0.3582
+    STRICT secure  (design losses out) train 2L/99 of 22L/1059 lift 0.97 p 0.6255  test 1L/111 of 6L/1176 lift 1.77 p 0.4491
+    STRICT base_g  (design losses out) train 16L/326 of 101L/3262 lift 1.59 p 0.0404  test 4L/407 of 48L/4204 lift 0.86 p 0.6968
+    LITERAL PASS on base | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4b:rule_pinned_bid         | tight: -2L/-40W WR 99.44->99.7 (tr 99.7->99.69, te 99.21->99.72) | zee100: -0L/-11W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-134W WR 98.66->98.76 (tr 97.92->97.93, te 99.32->99.54) | base: -15L/-530W WR 97.74->97.78 (tr 96.64->96.65, te 98.6->98.68)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-12W 99.7->99.69 lift 0.0 p 1.0  test -2L/-28W 99.21->99.72 lift 8.49 p 0.0171
+    zee100  train -0L/-1W 100.0->100.0 lift None p 1.0  test -0L/-10W 100.0->100.0 lift None p 1.0
+    secure  train -1L/-44W 97.92->97.93 lift 1.07 p 0.6191  test -3L/-90W 99.32->99.54 lift 4.75 p 0.0199
+    base    train -7L/-195W 96.64->96.65 lift 1.03 p 0.5233  test -8L/-335W 98.6->98.68 lift 1.67 p 0.1026
+    base_g  train -7L/-195W 96.9->96.93 lift 1.12 p 0.4363  test -7L/-330W 98.81->98.89 lift 1.75 p 0.1012
+    STRICT secure  (design losses out) train 1L/45 of 22L/1059 lift 1.07 p 0.6191  test 1L/91 of 6L/1176 lift 2.15 p 0.3839
+    STRICT base_g  (design losses out) train 7L/202 of 101L/3262 lift 1.12 p 0.4363  test 5L/335 of 48L/4204 lift 1.31 p 0.3351
+    LITERAL PASS on secure+base | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4b:rule_creep_in           | tight: -3L/-325W WR 99.44->99.74 (tr 99.7->99.47, te 99.21->100.0) | zee100: -0L/-142W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -13L/-1049W WR 98.66->98.55 (tr 97.92->97.65, te 99.32->99.48) | base: -78L/-3506W WR 97.74->97.67 (tr 96.64->96.57, te 98.6->98.71)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-145W 99.7->99.47 lift 0.0 p 1.0  test -3L/-180W 99.21->100.0 lift 2.09 p 0.109
+    zee100  train -0L/-55W 100.0->100.0 lift None p 1.0  test -0L/-87W 100.0->100.0 lift None p 1.0
+    secure  train -8L/-454W 97.92->97.65 lift 0.83 p 0.8183  test -5L/-595W 99.32->99.48 lift 1.23 p 0.3835
+    base    train -45L/-1336W 96.64->96.57 lift 0.97 p 0.6412  test -33L/-2170W 98.6->98.71 lift 1.07 p 0.3301
+    base_g  train -41L/-1304W 96.9->96.87 lift 0.98 p 0.5908  test -25L/-2128W 98.81->98.78 lift 0.98 p 0.6225
+    STRICT secure  (design losses out) train 8L/462 of 22L/1059 lift 0.83 p 0.8183  test 3L/598 of 6L/1176 lift 0.98 p 0.6725
+    STRICT base_g  (design losses out) train 41L/1345 of 101L/3262 lift 0.98 p 0.5908  test 23L/2151 of 48L/4204 lift 0.94 p 0.7251
+    LITERAL fail | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4b:rule_grind              | tight: -2L/-48W WR 99.44->99.7 (tr 99.7->99.67, te 99.21->99.72) | zee100: -0L/-25W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-138W WR 98.66->98.76 (tr 97.92->97.9, te 99.32->99.54) | base: -14L/-482W WR 97.74->97.78 (tr 96.64->96.74, te 98.6->98.6)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-25W 99.7->99.67 lift 0.0 p 1.0  test -2L/-23W 99.21->99.72 lift 10.19 p 0.0119
+    zee100  train -0L/-10W 100.0->100.0 lift None p 1.0  test -0L/-15W 100.0->100.0 lift None p 1.0
+    secure  train -1L/-57W 97.92->97.9 lift 0.83 p 0.7141  test -3L/-81W 99.32->99.54 lift 5.26 p 0.0151
+    base    train -10L/-198W 96.64->96.74 lift 1.43 p 0.1578  test -4L/-284W 98.6->98.6 lift 0.99 p 0.5801
+    base_g  train -9L/-193W 96.9->96.99 lift 1.44 p 0.1706  test -4L/-281W 98.81->98.83 lift 1.18 p 0.4424
+    STRICT secure  (design losses out) train 1L/58 of 22L/1059 lift 0.83 p 0.7141  test 1L/82 of 6L/1176 lift 2.39 p 0.3525
+    STRICT base_g  (design losses out) train 9L/202 of 101L/3262 lift 1.44 p 0.1706  test 2L/283 of 48L/4204 lift 0.62 p 0.8442
+    LITERAL fail | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4b:rule_choppy30           | tight: -4L/-365W WR 99.44->100.0 (tr 99.7->100.0, te 99.21->100.0) | zee100: -0L/-167W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -21L/-1268W WR 98.66->99.05 (tr 97.92->98.66, te 99.32->99.4) | base: -113L/-4820W WR 97.74->97.81 (tr 96.64->96.28, te 98.6->99.01)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-168W 99.7->100.0 lift 1.96 p 0.509  test -3L/-197W 99.21->100.0 lift 1.91 p 0.1425
+    zee100  train -0L/-67W 100.0->100.0 lift None p 1.0  test -0L/-100W 100.0->100.0 lift None p 1.0
+    secure  train -16L/-595W 97.92->98.66 lift 1.26 p 0.109  test -5L/-673W 99.32->99.4 lift 1.09 p 0.5369
+    base    train -68L/-2083W 96.64->96.28 lift 0.94 p 0.8296  test -45L/-2737W 98.6->99.01 lift 1.16 p 0.061
+    base_g  train -62L/-2048W 96.9->96.61 lift 0.95 p 0.792  test -36L/-2697W 98.81->99.05 lift 1.11 p 0.1854
+    STRICT secure  (design losses out) train 16L/611 of 22L/1059 lift 1.26 p 0.109  test 3L/676 of 6L/1176 lift 0.87 p 0.7848
+    STRICT base_g  (design losses out) train 62L/2110 of 101L/3262 lift 0.95 p 0.792  test 34L/2731 of 48L/4204 lift 1.09 p 0.2428
+    LITERAL PASS on secure | STRICT fail | (weak p<0.10 both halves: none)
+
+loss4b:rule_wide_spread        | tight: -1L/-267W WR 99.44->99.33 (tr 99.7->100.0, te 99.21->99.21) | zee100: -0L/-101W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -21L/-820W WR 98.66->99.36 (tr 97.92->99.54, te 99.32->99.32) | base: -112L/-2530W WR 97.74->98.8 (tr 96.64->98.93, te 98.6->98.77)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-267W 99.7->100.0 lift 1.24 p 0.8072  test -0L/-0W 99.21->99.21 lift None p 1.0
+    zee100  train -0L/-101W 100.0->100.0 lift None p 1.0  test -0L/-0W 100.0->100.0 lift None p 1.0
+    secure  train -21L/-820W 97.92->99.54 lift 1.2 p 0.0406  test -0L/-0W 99.32->99.32 lift None p 1.0
+    base    train -104L/-2480W 96.64->98.93 lift 1.2 p 0.0  test -8L/-50W 98.6->98.77 lift 9.86 p 0.0
+    base_g  train -94L/-2424W 96.9->99.06 lift 1.21 p 0.0  test -0L/-11W 98.81->98.81 lift 0.0 p 1.0
+    STRICT secure  (design losses out) train 21L/841 of 22L/1059 lift 1.2 p 0.0406  test 0L/0 of 6L/1176 lift None p 1.0
+    STRICT base_g  (design losses out) train 94L/2518 of 101L/3262 lift 1.21 p 0.0  test 0L/11 of 48L/4204 lift 0.0 p 1.0
+    LITERAL PASS on base | STRICT fail | (weak p<0.10 both halves: none)
+
+secure30:rule_range_bound120   | tight: -0L/-160W WR 99.44->99.28 (tr 99.7->99.62, te 99.21->98.96) | zee100: -0L/-67W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -12L/-445W WR 98.66->98.99 (tr 97.92->98.48, te 99.32->99.46) | base: -41L/-1500W WR 97.74->97.85 (tr 96.64->96.97, te 98.6->98.53)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-66W 99.7->99.62 lift 0.0 p 1.0  test -0L/-94W 99.21->98.96 lift 0.0 p 1.0
+    zee100  train -0L/-23W 100.0->100.0 lift None p 1.0  test -0L/-44W 100.0->100.0 lift None p 1.0
+    secure  train -9L/-197W 97.92->98.48 lift 2.1 p 0.0159  test -3L/-248W 99.32->99.46 lift 1.76 p 0.232
+    base    train -31L/-629W 96.64->96.97 lift 1.4 p 0.0254  test -10L/-871W 98.6->98.53 lift 0.81 p 0.8165
+    base_g  train -26L/-618W 96.9->97.14 lift 1.3 p 0.082  test -8L/-859W 98.81->98.74 lift 0.78 p 0.8383
+    STRICT base_g  (design losses out) train 21L/639 of 90L/3251 lift 1.19 p 0.2215  test 6L/865 of 44L/4200 lift 0.66 p 0.915
+    LITERAL PASS on secure | STRICT fail | (weak p<0.10 both halves: none)
+
+secure30:rule_extended_run120  | tight: -1L/-116W WR 99.44->99.5 (tr 99.7->100.0, te 99.21->99.13) | zee100: -0L/-44W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -5L/-347W WR 98.66->98.67 (tr 97.92->97.87, te 99.32->99.33) | base: -34L/-1114W WR 97.74->97.87 (tr 96.64->96.85, te 98.6->98.58)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-77W 99.7->100.0 lift 4.26 p 0.2349  test -0L/-39W 99.21->99.13 lift 0.0 p 1.0
+    zee100  train -0L/-25W 100.0->100.0 lift None p 1.0  test -0L/-19W 100.0->100.0 lift None p 1.0
+    secure  train -4L/-210W 97.92->97.87 lift 0.9 p 0.6791  test -1L/-137W 99.32->99.33 lift 1.07 p 0.6321
+    base    train -28L/-640W 96.64->96.85 lift 1.25 p 0.1135  test -6L/-474W 98.6->98.58 lift 0.89 p 0.6767
+    base_g  train -21L/-627W 96.9->96.94 lift 1.05 p 0.4467  test -6L/-472W 98.81->98.82 lift 1.06 p 0.5096
+    STRICT base_g  (design losses out) train 17L/644 of 90L/3251 lift 0.95 p 0.6306  test 5L/477 of 44L/4200 lift 1.0 p 0.5705
+    LITERAL fail | STRICT fail | (weak p<0.10 both halves: none)
+
+secure30:rule_with_move60      | tight: -1L/-136W WR 99.44->99.48 (tr 99.7->99.6, te 99.21->99.39) | zee100: -0L/-51W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -8L/-416W WR 98.66->98.79 (tr 97.92->98.03, te 99.32->99.4) | base: -34L/-1193W WR 97.74->97.84 (tr 96.64->96.67, te 98.6->98.69)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-84W 99.7->99.6 lift 0.0 p 1.0  test -1L/-52W 99.21->99.39 lift 2.4 p 0.362
+    zee100  train -0L/-29W 100.0->100.0 lift None p 1.0  test -0L/-22W 100.0->100.0 lift None p 1.0
+    secure  train -6L/-242W 97.92->98.03 lift 1.16 p 0.4133  test -2L/-174W 99.32->99.4 lift 1.67 p 0.341
+    base    train -23L/-643W 96.64->96.67 lift 1.03 p 0.4782  test -11L/-550W 98.6->98.69 lift 1.4 p 0.1526
+    base_g  train -18L/-636W 96.9->96.82 lift 0.89 p 0.7522  test -10L/-547W 98.81->98.9 lift 1.51 p 0.1165
+    STRICT base_g  (design losses out) train 13L/649 of 90L/3251 lift 0.72 p 0.9328  test 8L/555 of 44L/4200 lift 1.38 p 0.2181
+    LITERAL PASS on secure+base | STRICT fail | (weak p<0.10 both halves: none)
+
+secure30:rule_congested_level  | tight: -1L/-173W WR 99.44->99.44 (tr 99.7->99.63, te 99.21->99.26) | zee100: -0L/-74W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -9L/-571W WR 98.66->98.73 (tr 97.92->98.06, te 99.32->99.4) | base: -39L/-1899W WR 97.74->97.66 (tr 96.64->96.51, te 98.6->98.68)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-61W 99.7->99.63 lift 0.0 p 1.0  test -1L/-112W 99.21->99.26 lift 1.13 p 0.652
+    zee100  train -0L/-22W 100.0->100.0 lift None p 1.0  test -0L/-52W 100.0->100.0 lift None p 1.0
+    secure  train -6L/-229W 97.92->98.06 lift 1.23 p 0.3589  test -3L/-342W 99.32->99.4 lift 1.28 p 0.4301
+    base    train -19L/-651W 96.64->96.51 lift 0.84 p 0.8311  test -20L/-1248W 98.6->98.68 lift 1.13 p 0.3022
+    base_g  train -19L/-632W 96.9->96.86 lift 0.94 p 0.655  test -15L/-1205W 98.81->98.83 lift 1.03 p 0.4917
+    STRICT base_g  (design losses out) train 18L/650 of 90L/3251 lift 1.0 p 0.5426  test 13L/1218 of 44L/4200 lift 1.02 p 0.5254
+    LITERAL PASS on secure | STRICT fail | (weak p<0.10 both halves: none)
+
+secure30:rule_news_clock       | tight: -1L/-167W WR 99.44->99.45 (tr 99.7->100.0, te 99.21->99.02) | zee100: -0L/-67W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -14L/-535W WR 98.66->99.05 (tr 97.92->98.72, te 99.32->99.34) | base: -56L/-1882W WR 97.74->97.96 (tr 96.64->96.85, te 98.6->98.82)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-91W 99.7->100.0 lift 3.61 p 0.2771  test -0L/-76W 99.21->99.02 lift 0.0 p 1.0
+    zee100  train -0L/-35W 100.0->100.0 lift None p 1.0  test -0L/-32W 100.0->100.0 lift None p 1.0
+    secure  train -12L/-268W 97.92->98.72 lift 2.06 p 0.0043  test -2L/-267W 99.32->99.34 lift 1.09 p 0.5774
+    base    train -34L/-825W 96.64->96.85 lift 1.18 p 0.1533  test -22L/-1057W 98.6->98.82 lift 1.46 p 0.0307
+    base_g  train -32L/-808W 96.9->97.15 lift 1.23 p 0.1038  test -17L/-1033W 98.81->98.95 lift 1.36 p 0.096
+    STRICT base_g  (design losses out) train 26L/834 of 90L/3251 lift 1.13 p 0.2735  test 15L/1048 of 44L/4200 lift 1.37 p 0.1109
+    LITERAL PASS on secure+base | STRICT fail | (weak p<0.10 both halves: none)
+
+secure30:rule_chop120          | tight: -2L/-147W WR 99.44->99.65 (tr 99.7->100.0, te 99.21->99.35) | zee100: -0L/-63W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -10L/-474W WR 98.66->98.86 (tr 97.92->98.29, te 99.32->99.36) | base: -34L/-1533W WR 97.74->97.72 (tr 96.64->96.69, te 98.6->98.53)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -1L/-76W 99.7->100.0 lift 4.31 p 0.2319  test -1L/-71W 99.21->99.35 lift 1.77 p 0.4665
+    zee100  train -0L/-28W 100.0->100.0 lift None p 1.0  test -0L/-35W 100.0->100.0 lift None p 1.0
+    secure  train -8L/-233W 97.92->98.29 lift 1.6 p 0.1036  test -2L/-241W 99.32->99.36 lift 1.21 p 0.5155
+    base    train -24L/-652W 96.64->96.69 lift 1.06 p 0.4161  test -10L/-881W 98.6->98.53 lift 0.8 p 0.8279
+    base_g  train -23L/-640W 96.9->97.0 lift 1.12 p 0.3041  test -9L/-862W 98.81->98.77 lift 0.87 p 0.7358
+    STRICT base_g  (design losses out) train 19L/659 of 90L/3251 lift 1.04 p 0.4629  test 8L/870 of 44L/4200 lift 0.88 p 0.7188
+    LITERAL PASS on secure | STRICT fail | (weak p<0.10 both halves: none)
+
+secure30:rule_wide_spread_now  | tight: -2L/-101W WR 99.44->99.67 (tr 99.7->99.66, te 99.21->99.68) | zee100: -0L/-40W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -4L/-359W WR 98.66->98.61 (tr 97.92->97.9, te 99.32->99.35) | base: -40L/-1247W WR 97.74->97.92 (tr 96.64->96.99, te 98.6->98.73)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-37W 99.7->99.66 lift 0.0 p 1.0  test -2L/-64W 99.21->99.68 lift 3.86 p 0.0785
+    zee100  train -0L/-8W 100.0->100.0 lift None p 1.0  test -0L/-32W 100.0->100.0 lift None p 1.0
+    secure  train -2L/-103W 97.92->97.9 lift 0.92 p 0.6589  test -2L/-256W 99.32->99.35 lift 1.14 p 0.5517
+    base    train -23L/-355W 96.64->96.99 lift 1.81 p 0.0029  test -17L/-892W 98.6->98.73 lift 1.34 p 0.1159
+    base_g  train -14L/-327W 96.9->97.02 lift 1.33 p 0.1645  test -9L/-862W 98.81->98.77 lift 0.87 p 0.7358
+    STRICT base_g  (design losses out) train 13L/340 of 90L/3251 lift 1.38 p 0.1411  test 7L/869 of 44L/4200 lift 0.77 p 0.8349
+    LITERAL PASS on base | STRICT fail | (weak p<0.10 both halves: none)
+
+secure30:control_random20      | tight: -0L/-127W WR 99.44->99.32 (tr 99.7->99.63, te 99.21->99.05) | zee100: -0L/-55W WR 100.0->100.0 (tr 100.0->100.0, te 100.0->100.0) | secure: -9L/-422W WR 98.66->98.84 (tr 97.92->98.02, te 99.32->99.58) | base: -24L/-1500W WR 97.74->97.57 (tr 96.64->96.31, te 98.6->98.57)
+    exceptions: {'tight': 0, 'secure': 0, 'base': 0, 'disagree': 0}
+    tight   train -0L/-60W 99.7->99.63 lift 0.0 p 1.0  test -0L/-67W 99.21->99.05 lift 0.0 p 1.0
+    zee100  train -0L/-23W 100.0->100.0 lift None p 1.0  test -0L/-32W 100.0->100.0 lift None p 1.0
+    secure  train -5L/-195W 97.92->98.02 lift 1.2 p 0.4039  test -4L/-227W 99.32->99.58 lift 2.55 p 0.0522
+    base    train -13L/-640W 96.64->96.31 lift 0.59 p 0.992  test -11L/-860W 98.6->98.57 lift 0.9 p 0.6983
+    base_g  train -13L/-622W 96.9->96.65 lift 0.66 p 0.9713  test -11L/-839W 98.81->98.84 lift 1.09 p 0.431
+    STRICT base_g  (design losses out) train 12L/634 of 90L/3251 lift 0.68 p 0.9542  test 8L/847 of 44L/4200 lift 0.9 p 0.688
+    LITERAL PASS on secure | STRICT fail | (weak p<0.10 both halves: none)
+
+SUMMARY
+  loss4a:rule_target_on_rejection_high          literal PASS secure            strict fail           weak -
+  loss4a:rule_triple_test                       literal fail                   strict fail           weak -
+  loss4a:rule_vsa_weak_leg                      literal PASS secure            strict fail           weak -
+  loss4a:rule_counter_last_big_move             literal fail                   strict fail           weak -
+  loss4a:rule_quiet_breakout_share              literal fail                   strict fail           weak -
+  loss4a:rule_early_thin_break                  literal PASS base              strict fail           weak -
+  loss4a:rule_fade_counter_spike                literal fail                   strict fail           weak -
+  loss4a:rule_rebreak_same_level                literal PASS secure+base       strict fail           weak -
+  loss4a:rule_spread_wide                       literal PASS secure+base       strict fail           weak -
+  loss4a:rule_spread_not_narrow                 literal PASS secure+base       strict fail           weak -
+  loss4a:rule_spread_upper_mode                 literal PASS secure+base       strict fail           weak -
+  loss4b:rule_tested_level                      literal PASS base              strict fail           weak -
+  loss4b:rule_pinned_bid                        literal PASS secure+base       strict fail           weak -
+  loss4b:rule_creep_in                          literal fail                   strict fail           weak -
+  loss4b:rule_grind                             literal fail                   strict fail           weak -
+  loss4b:rule_choppy30                          literal PASS secure            strict fail           weak -
+  loss4b:rule_wide_spread                       literal PASS base              strict fail           weak -
+  secure30:rule_range_bound120                  literal PASS secure            strict fail           weak -
+  secure30:rule_extended_run120                 literal fail                   strict fail           weak -
+  secure30:rule_with_move60                     literal PASS secure+base       strict fail           weak -
+  secure30:rule_congested_level                 literal PASS secure            strict fail           weak -
+  secure30:rule_news_clock                      literal PASS secure+base       strict fail           weak -
+  secure30:rule_chop120                         literal PASS secure            strict fail           weak -
+  secure30:rule_wide_spread_now                 literal PASS base              strict fail           weak -
+  secure30:control_random20                     literal PASS secure            strict fail           weak -

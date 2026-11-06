@@ -1,0 +1,107 @@
+{
+ "0306-084826-B": {
+  "cause": "into resistance (range ceiling), unavoidable with tested rules",
+  "avoidable": false,
+  "comment": "BUY 1.16122, Fri 13:48 PKT (08:48 UTC), -230$. A 15-pip range (1.1603-1.1618) for 90 minutes with a falling ceiling: highs 12:20 PKT 1.1618, 12:50 1.1616, 13:00 1.1615, 13:43 1.1614. The last rally (1.16025 at 13:28 -> 1.1614 at 13:43) came on shrinking volume (95-135 ticks vs 200-290 in the 13:00-13:20 sell-off) and turned the camel GREEN x2; the UHV (13:46 red, 166 ticks) was a small pullback candle and the breakout fired 2.8 pips under the 13:43 high, under three lower highs. The breakout tick was the top (best_R -0.013): price never printed 0.1 pip above the fill and slid 25 pips in 30 minutes. Twin 0306-083824-B bought the SAME range 10 minutes earlier (1.16102, same falling ceiling, same weak-volume rally, camel GREEN x1) and won by 0.1 pip before the same collapse; twin 0306-073354-B bought a fresh high in the 11:00-12:20 up-leg and won. Nothing measurable before the white line separates the loss from the 13:38 twin (trigger-tick spread 0.5 pip on both; fill 0.9 vs 0.5 pip past the level). The range ceiling is visible, but 'fill at an older swing' scored lift 0.95 over all trades - not a fix."
+ },
+ "0306-102926-B": {
+  "cause": "spike fill during the 0.3-s order latency (filled at a micro-top)",
+  "avoidable": false,
+  "comment": "BUY 1.15843, Fri 15:29 PKT (10:29 UTC), -281$. A 32-pip slide (1.1604 at 13:59 -> 1.1572 at 14:53) then a 70-minute base 1.1572-1.1583 with two green humps (camel GREEN x1). The UHV level was 1.15816; the trigger tick (bid 1.15823 / ask 1.15828) had a normal 0.5-pip spread, but in the 0.34 s before the simulated fill (InpUhvLatency 0.3) the bid spiked 1.5 pips and the buy filled at the ask 1.15843 - the top of that micro-spike, 2.7 pips above the level (the twins filled 0.5-0.6 pip above theirs). The 0.1-pip target needed the bid at 1.15844 and it never got there (best_R -0.014); the base broke and the 28-pip stop (deep 6.4-pip retracement + 19) went at 12:09 UTC. Twins 0306-101504-B (15:15) and 0306-100357-B (15:03) bought the same base with normal fills and won. At the trigger moment nothing separated it from the twins (trigger-tick spread 0.5-0.6 pip on all three); the tell is the bad fill itself, which exists only after the order is sent. rule_buy_spread_1p5 / rule_slip_1p5 remove it in the harness because they read the fill, so live they could only be an 'eject on a fill >= 1.5 pips past the level' (which costs the spread), not a skip. Not avoidable before the entry."
+ },
+ "0306-212806-B": {
+  "cause": "market close (32 min before the weekly close)",
+  "avoidable": true,
+  "comment": "BUY 1.16185, Sat 02:28 PKT = Fri 21:28 UTC = 16:28 New York, -12$ (forced close). The last half hour of the trading week (before US DST the week closes 22:00 UTC; the engine flattens at 21:58). Price had ground 19 pips higher in the hour (1.1597 -> 1.1618) on thin volume (last hour 0.61x the 10-hour average) and the buy fired at a fresh 90-bar high. The breakout tick was the top (best_R -0.005); price dribbled 1.2 pips lower and the engine closed the trade at 21:58:58 UTC for -12$ (the faded drop to 1.1547 is Monday's gap). Twins (00:16 / 00:32 PKT Sat = 14:16 / 14:32 NY) were ordinary range buys two hours earlier. A clock problem, not a setup problem: a 0.1-pip scalp entered 30 minutes before the weekly close has no time to wait out a dip. Fixed by rule_friday_last4h, rule_rollover_2h, rule_time_windows, rule_time_or_spread. Small in dollars - lift counts it like a full stop."
+ },
+ "0309-043015-S": {
+  "cause": "counter-structure (sold a bull flag after a V-recovery)",
+  "avoidable": false,
+  "comment": "SELL 1.15210, Mon 09:30 PKT (04:30 UTC), -231$. Range day (16-pip 90-bar range). Price fell 1.1528 (08:00) -> 1.1513 (08:45), then rallied in one impulsive leg back to 1.1525 (09:00-09:07, three big green candles) and stalled in a 4-pip flag 1.1521-1.1525 for 20 minutes. The camel still said RED x2 (older lower lows), so the engine sold the break of the flag floor (UHV 09:25, level 1.15214) - selling a bull flag after a V-recovery that erased 80% of the drop. The sell tick was the low (best_R -0.022); price popped to 1.1528 and later ran to the stop. Twin 0309-031016-S (08:10) sold a similar post-rally pullback at 1.15245 and won; twin 0309-060558-S sold after a news spike and won. The V-recovery is visible, but none of my structure rules even fire on it (structure_against, fresh_flip_after_opp), and they are not selective anyway (x1.08, x0.79). Not avoidable with what was tested."
+ },
+ "0309-080004-B": {
+  "cause": "into resistance at the London open (session open)",
+  "avoidable": false,
+  "comment": "BUY 1.15650, Mon 13:00:04 PKT = 08:00:04 UTC, -235$. A 30-pip range with a ceiling at 1.1564-1.1566 tested at 11:35, 12:42 and 12:55 PKT; price had climbed 18 pips in the hour into it (fill at the 90-bar high, 0.0 pip of room). The buy fired 4 seconds into 08:00 UTC - the London open in March (UK still on GMT) - breaking the triple top by 0.8 pip. The open brought heavy selling (400-550 ticks/min): the breakout tick was the exact top (best_R 0.000) and price fell 25 pips in 18 minutes. Twin 0309-075007-B bought the same ceiling 10 minutes earlier (1.15621) and won by 0.7 pip before the drop; twin 0309-085702-B bought the low after the drop and won. Visible before entry: triple top + the first seconds of the London session. Neither generalises over all trades: extended_at_extreme train x2.44 / test x0.00, top_of_hour train x0.97 / test x2.17. Not avoidable with the tested rules."
+ },
+ "0310-004311-B": {
+  "cause": "exhausted trend (bought the top of a vertical 23-pip leg)",
+  "avoidable": false,
+  "comment": "BUY 1.16347, Tue 05:43 PKT (00:43 UTC), -238$. A 23-pip impulse 1.1612 (05:08) -> 1.1635 (05:38) on rising volume (300-450 ticks), a 4-pip dip, then the breakout at the top (fill 0.7 pip under the 90-bar high). Buying the top of a vertical leg: the tick was the high (best_R -0.017), the leg reversed to 1.1622 within 15 minutes and later to the stop. Twin 0309-205521-B (01:55 PKT) did exactly the same - bought a fresh high after an 11-pip run - and won with a 6-pip spike; twin 0310-040737-B bought a slow drift low and won. The extended leg is visible but appears in winners just as often (extended_at_extreme: test lift x0.00). Not avoidable with the tested rules."
+ },
+ "0310-055001-S": {
+  "cause": "into support (sold the shelf floor against higher lows)",
+  "avoidable": false,
+  "comment": "SELL 1.16167, Tue 10:50:01 PKT (05:50 UTC), -220$. An up-staircase: 1.1610 -> 1.1619 (10:02-10:15), then a 5-pip shelf. Price dipped to the shelf floor 1.16145 (10:44) and bounced 5 pips in three green candles (10:46-10:48); the 10:48 green (123 ticks) was the UHV, the 10:49 red (136 ticks, louder than the UHV) closed right on the UHV low, and the sell fired 1 second into 10:50 with 3 ticks in the minute - selling into a floor that had just held, on a fresh RED x1 camel against the higher lows. The tick was the low (best_R -0.014); price climbed 13 pips in 30 minutes, then to the stop. Twin 0310-053212-S sold the same shelf 18 minutes earlier at 1.16164 and won by 0.1 pip before the same rally. No measure separates them. Not avoidable."
+ },
+ "0310-141312-S": {
+  "cause": "into support (origin of the prior rally after a 21-pip slide)",
+  "avoidable": false,
+  "comment": "SELL 1.16281, Tue 19:13 PKT (14:13 UTC), -216$. Price rallied 21 pips 1.1628 (17:43) -> 1.1649 (18:26) and gave it all back by 19:10; the sell fired exactly at the origin of that rally (the 17:43-17:45 breakout candles, 1.1627-1.1630), 1.3 pips above the 90-bar low. The last 8 candles before the entry (19:05-19:12) printed long lower wicks - buyers defending the origin. The tick was the low (best_R -0.005); price rallied 22 pips to the stop. Twin 0310-135202-S sold the same slide 20 minutes earlier at 1.16319, 4 pips above the support, and won; twin 0310-151511-S sold a later top. Visible: demand zone + rejection wicks. The old swing low sits 1.3 pips under the fill, outside the 0.3-pip S/R tolerance and the 1-pip 'at the extreme' test, so neither S/R rule fires - and both are not selective anyway (sr_at_fill x0.95, extended_at_extreme test x0.00). Not avoidable with the tested rules."
+ },
+ "0311-001150-S": {
+  "cause": "counter-impulse (faded an 8-pip bullish bar in a volume burst)",
+  "avoidable": false,
+  "comment": "SELL 1.16117, Wed 05:11 PKT (00:11 UTC), -216$. An hour of dead Asian drift (20-80 ticks/min, 1.1603 -> 1.1612), then from 05:00 PKT volume exploded: a 6-pip drop to 1.16055 (05:08), one 8-pip green bar at 05:09 (307 ticks, ~3.5 ATR) and the UHV at 05:10 (344 ticks). The sell broke the UHV low with 202 ticks already in the minute - fading a wide-range bullish impulse inside a volatility burst. Price ran 12 pips up within 3 minutes. Both twins (05:01, 05:07) were sells in the same burst and won by a hair, so even here the burst alone is not the tell; the impulse bar right before the UHV is. Tested as rule_impulse_bar_against: it fires here but removes 2 losers / 80 winners over all trades, test lift x0.00 - not selective (the thin hour before the burst, thin_hour outside the time windows, is x1.42 / x2.01 - also not selective). Not avoidable."
+ },
+ "0311-135106-S": {
+  "cause": "news/spike (10:00 NY data slot) at a triple-bottom floor",
+  "avoidable": false,
+  "comment": "SELL 1.15808, Wed 18:51 PKT (13:51 UTC = 09:51 New York), -211$. After a fall from 1.1605 (17:33) price ranged 1.1578-1.1590 for an hour; the floor 1.1578-1.1580 held at 17:53, 18:02 and 18:47. The sell fired on that floor (UHV 18:49), 9 minutes before the 10:00 New York data slot; at about 19:00 PKT a spike ran 30 pips (1.1581 -> 1.1611) and took the stop. Twins 0311-142225-S (19:22) and 0311-143113-S (19:31) sold after the spike and won. Visible: a triple-bottom floor and the clock. A US-data-window rule (NY 08:20-08:40 / 09:50-10:10) scored train x0.86 / test x1.81 - not selective. Not avoidable with the tested rules."
+ },
+ "0312-062215-S": {
+  "cause": "counter-structure (camel micro-flip against a higher-low staircase)",
+  "avoidable": false,
+  "comment": "SELL 1.15419, Thu 11:22 PKT (06:22 UTC), -237$. A clean up-leg 1.1532 -> 1.1549 (09:55-11:13) with higher lows at 10:07, 10:55 and 11:17; the camel flipped RED x1 on a micro-wiggle (11:09 -> 11:13 -> 11:17, ending a fraction lower) right after three green humps. The sell fired at the pullback low 1.15419 - selling the first dip of an uptrend. It went 0.004R in favour (a fraction of a pip, not enough to clear the spread), then climbed 9 pips and later to the stop. Twin 0312-052504-S sold a spike-and-fade and won; twin 0312-045611-S sold a real downtrend and won. Visible: the higher-low staircase. rule_fresh_flip_after_opp catches it but removes winners faster than losers (x0.79). Not avoidable."
+ },
+ "0312-172306-B": {
+  "cause": "chop/range (bought the range ceiling with a stale UHV)",
+  "avoidable": false,
+  "comment": "BUY 1.15306, Thu 22:23 PKT (17:23 UTC = 13:23 New York), -305$. A choppy 19-pip range (1.1513-1.1532) with alternating humps. The UHV was 15 minutes old (22:08), the retracement 10.4 pips deep (stop 30.1 pips) and the level 1.15299 sat at the range ceiling (21:22 and 22:06 highs at 1.1532; 1.9 pips of room). Buying the top of a range: the tick was the high (best_R -0.017), price slid back into the range and eventually to the stop - the biggest loss in the batch because of the deep retracement. Twins 0312-163854-B and 0312-153903-B bought mid-range (1.15236 / 1.1520) and won. Visible: range ceiling, stale UHV, deep retracement - both rules fire on it but neither is selective over all trades (old_uhv x1.04, deep_retracement x0.95). Not avoidable."
+ },
+ "0313-195816-B": {
+  "cause": "market close (62 min before the weekly close) + counter-trend flip",
+  "avoidable": true,
+  "comment": "BUY 1.14229, Sat 00:58 PKT = Fri 19:58 UTC = 15:58 New York, -72$ (forced close). A steady 75-minute downtrend (1.1440 -> 1.1420, seven red humps in a row); the camel flipped GREEN x1 on a 1-pip double bottom (00:52-00:57) and the buy fired 62 minutes before the weekly close. The tick was the high (best_R -0.018); price slid 7 pips and the engine flattened the trade at 20:58:58 UTC for -72$. Twins (22:36 / 22:43 PKT) bought a flat range two hours earlier. Two tells, both visible: the counter-trend micro flip (not selective on its own: x0.79) and the last hour of the week (selective). Fixed by rule_friday_last4h, rule_time_windows, rule_time_or_spread. Small in dollars."
+ },
+ "0316-052008-B": {
+  "cause": "counter-structure (bought a 1-pip base inside a down-channel)",
+  "avoidable": false,
+  "comment": "BUY 1.14421, Mon 10:20 PKT (05:20 UTC), -210$. An orderly 90-minute grind lower 1.1453 (08:50) -> 1.1440 (10:08), red humps all the way, and a 1-pip double bottom (10:08 / 10:18) flipped the camel GREEN x1. The buy (6 ticks into the minute) fired at the top of that micro-base; the tick was the high (best_R -0.019) and the grind resumed (stop after a further 20 pips). Twins 0316-032914-B and 0316-030310-B bought a flat range two hours earlier and won. Visible: a micro-base inside a 13-pip down-channel. structure_against fires on it but is not selective (x1.08); the 120-candle move was under the 12-ATR trend test. Not avoidable."
+ },
+ "0316-132404-S": {
+  "cause": "counter-impulse (sold 1 pip under a fresh bullish thrust)",
+  "avoidable": false,
+  "comment": "SELL 1.14802, Mon 18:24 PKT (13:24 UTC = 09:24 New York), -210$. A 15-pip range; price made a low at 17:58 (1.1472) with higher lows since; at 18:22 a 4.8-pip green bar (166 ticks) ripped from 1.14762 to 1.1481 and the UHV (18:23, 243 ticks) was the small green follow-through bar. The sell broke the UHV low 4 seconds into 18:24 - selling 1 pip under a fresh bullish thrust. The tick was the low (best_R -0.024): price rallied 20 pips in 30 minutes. Twins 0316-125510-S and 0316-124431-S sold range tops in a calmer tape and won. Visible: the thrust bar right before the UHV (same picture as 0311-001150-S). rule_impulse_bar_against (bar >= 2.5 ATR) does not fire here (4.8 pips = 2.3 ATR) and is not selective anyway (test x0.00); sr_at_fill and uhv_last_bar fire but are not selective (x0.95, x1.03). Not avoidable."
+ },
+ "0316-163307-S": {
+  "cause": "into support (double bottom after a 14-pip leg)",
+  "avoidable": false,
+  "comment": "SELL 1.14783, Mon 21:33 PKT (16:33 UTC = 12:33 New York), -213$. Price fell 20 pips (1.1500 -> 1.1480) at 20:45-20:52, bounced to 1.1492, then fell again 14 pips into 21:31; the sell fired at 1.14783, 0.8 pip under the 20:52 low - selling into a double bottom. The tick was the low (best_R -0.014); the double bottom held and price rallied 21 pips to the stop. Twin 0316-173319-S sold a range top an hour later and won; twin 0316-152810-S sold a pullback and won. Visible: the double bottom. Over all trades the S/R measures do not separate (sr_at_fill x0.95, extended_at_extreme test x0.00). Not avoidable."
+ },
+ "0316-200548-B": {
+  "cause": "market close (55 min before the daily rollover, US session emptying)",
+  "avoidable": true,
+  "comment": "BUY 1.15104, Tue 01:05 PKT (Mon 20:05 UTC = 16:05 New York), -236$. A 15-pip drop out of the 1.1515-1.1525 range (00:37-00:50), a small base 1.1506-1.1510 with camel GREEN x2 on tiny humps, and the buy fired 55 minutes before the 17:00 NY rollover as the US session emptied (volume after the entry fell to 30-80 ticks). The tick was the high (best_R -0.004); the drift lower continued through the rollover to the stop. Twins 0316-193650-B and 0316-192926-B (15:29-15:36 NY) bought the range top 30 minutes earlier and won by a hair before the same drop. Visible: the clock. Fixed by rule_rollover_2h, rule_time_windows, rule_time_or_spread."
+ },
+ "0317-062554-S": {
+  "cause": "exhausted trend (sold the first dip of a V-bounce after RED x8)",
+  "avoidable": false,
+  "comment": "SELL 1.14718, Tue 11:25 PKT (06:25 UTC), -217$. A 33-pip waterfall 1.1497 (10:40) -> 1.1466 (11:14, a hammer low with a long wick), camel RED x8. Then a V-bounce to 1.1474 by 11:23 that took out the last two lower highs; the sell fired on the first dip of that bounce, 5 pips above the low. The tick was the low (best_R -0.019) and price climbed 10 pips, later to the stop. Twin 0317-061221-S sold the very bottom 13 minutes earlier (1.14697) and won by 0.1 pip; twin 0317-060057-S sold mid-waterfall and won. Visible: a climactic low and a bounce that broke the last lower high, while the camel (it reads lows only) still said RED x8. exhausted_streak (camStk >= 6) scored train x1.93 / test x1.05 - not selective. Not avoidable."
+ },
+ "0318-120215-B": {
+  "cause": "into resistance (lower-high retest of a crash origin, volatile tape)",
+  "avoidable": false,
+  "comment": "BUY 1.15482, Wed 17:02 PKT (12:02 UTC = 08:02 New York), -230$. A spike to 1.1555 (16:20) then a 25-pip crash to 1.1530 in 7 minutes (16:22-16:27, 530 ticks), then a volatile 19-pip recovery to 1.1549 - and the buy fired at 1.15482, inside the zone where the crash started (16:22 breakdown bar 1.1548-1.1550). The last hour's volume was 2.2x the 10-hour average. The tick was the high (best_R -0.013); price fell 23 pips to the stop. Twin 0318-114914-B bought the same recovery lower (1.15406) and won; twin 0318-111452-B bought the pre-spike high and won. Visible: a lower-high retest of the crash origin. sr_at_fill fires on it but is not selective (x0.95). Not avoidable."
+ },
+ "0318-205350-S": {
+  "cause": "market close (6 min before the daily rollover) + slipped fill",
+  "avoidable": true,
+  "comment": "SELL 1.14500, Thu 01:53 PKT (Wed 20:53 UTC = 16:53 New York), -259$. A 30-pip downtrend (1.1480 -> 1.1451) and a small bounce to 1.1456 with a 13-minute-old UHV (01:40). The sell fired 6 minutes before the 17:00 NY rollover; the breakout bid was 1.14513 but the fill came at 1.14500 - 1.3 pips worse, 1.5 pips beyond the level - as liquidity thinned. After the rollover volume vanished (0-60 ticks/min) and price drifted up 25 pips to the stop at 21:45 UTC. Twins 0318-202204-S (16:22 NY) and 0318-201126-S (16:11 NY) sold the same trend 30-40 minutes earlier and won. Visible: the clock and the slipped fill. Fixed by rule_rollover_2h, rule_time_windows, rule_time_or_spread, rule_slip_1p5 (and the api.py example window)."
+ },
+ "0318-230007-S": {
+  "cause": "counter-structure in a thin post-rollover tape (stale UHV)",
+  "avoidable": false,
+  "comment": "SELL 1.14553, Thu 04:00:07 PKT (23:00:07 UTC = 19:00 New York), -223$. A quiet post-rollover tape (last hour 0.37x the 10-hour volume). Price fell 1.1465 -> 1.1451 (03:00-03:20), then climbed steadily with higher lows (03:22, 03:32, 03:41, 03:48); the UHV was 16 minutes old (03:44). The sell fired 7 seconds into 04:00 PKT against that staircase; the tick was the low (best_R -0.014) and price climbed 6 pips, later to the stop. Twins 0318-221912-S and 0318-220000-S sold the earlier 03:00-03:20 drop and won. Visible: a sell against 40 minutes of higher lows, a thin tape, a stale UHV - thin_hour outside the time windows (x1.42 / x2.01), dead_last_bar outside the windows (x1.12 / x1.91), old_uhv (x1.04) and top_of_hour (x0.97 / x2.17) all fire on it and none is selective. Not avoidable."
+ }
+}

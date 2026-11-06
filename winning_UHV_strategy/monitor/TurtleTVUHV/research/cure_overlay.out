@@ -1,0 +1,31 @@
+baseline (engine)                                    n  1852 WR  93.8% net   +264,191 worst  -5,158 DD  17,534 halves  +144,215  +119,976 
+replay check (TP $2 + stop only)                     n  1852 WR  93.8% net   +269,030 worst  -5,158 DD  17,534 halves  +149,459  +119,571 replay vs engine
+KM {'p25_min_win_vs_loss': [2.3, 47.7], 'p50_min_win_vs_loss': [10.6, 131.2], 'p75_min_win_vs_loss': [49.4, 299.8], 'p90_min_win_vs_loss': [180.0, 735.0], 'p95_min_win_vs_loss': [361.7, 1407.4], 'big_losers': 83, 'big_losers_median_min': 148.1, 'big_losers_reach_minus10_median_min': 35.7, 'winners_dip_beyond_10_pct': 8.9}
+kinetic stop: 60s ticks < 0.25x normal               n  1852 WR  84.2% net   +141,992 worst  -5,158 DD  16,682 halves   +41,928  +100,064 
+kinetic stop: 60s ticks < 0.25x normal (in loss)     n  1852 WR  83.4% net   +139,648 worst  -5,158 DD  17,480 halves   +40,694   +98,954 
+kinetic stop: 60s ticks < 0.4x normal                n  1852 WR  78.1% net   +112,568 worst  -5,158 DD  16,532 halves   +28,370   +84,198 
+kinetic stop: 60s ticks < 0.4x normal (in loss)      n  1852 WR  76.0% net   +109,446 worst  -5,158 DD  16,718 halves   +26,996   +82,450 
+kinetic stop: 60s ticks < 0.6x normal                n  1852 WR  70.6% net    +81,374 worst  -5,060 DD  22,308 halves      +122   +81,252 
+kinetic stop: 60s ticks < 0.6x normal (in loss)      n  1852 WR  66.6% net    +91,904 worst  -5,060 DD  21,630 halves    +8,128   +83,776 
+exponential stop: $25 x e^(-t/15min)                 n  1852 WR  69.0% net    +61,388 worst  -3,584 DD  15,584 halves    +2,086   +59,302 
+exponential stop: $25 x e^(-t/30min)                 n  1852 WR  75.1% net    +65,274 worst  -4,172 DD  21,330 halves    -6,858   +72,132 
+exponential stop: $25 x e^(-t/60min)                 n  1852 WR  81.1% net    +93,844 worst  -4,492 DD  21,022 halves   +19,110   +74,734 
+exponential stop: $25 x e^(-t/120min)                n  1852 WR  85.0% net   +108,429 worst  -4,500 DD  16,888 halves   +15,505   +92,924 
+exponential stop: $25 x e^(-t/240min)                n  1852 WR  88.4% net   +159,305 worst  -4,746 DD  19,493 halves   +52,745  +106,560 
+exponential stop: $25 x e^(-t/480min)                n  1852 WR  90.4% net   +181,751 worst  -4,870 DD  21,354 halves   +76,057  +105,694 
+ghost stop on MID price                              n  1852 WR  93.8% net   +257,724 worst  -5,158 DD  17,592 halves  +138,374  +119,350 0 big losers became wins
+ghost stop on MID + 10 s confirmation                n  1852 WR  94.0% net   +258,676 worst  -6,178 DD  18,074 halves  +134,742  +123,934 3 big losers became wins
+TP 40 pips, no add (replay)                          n  1852 WR  88.6% net   +297,094 worst -10,728 DD  30,892 halves  +171,230  +125,864 
+ATR pyramid: +0.5 lot after +1 ATR (TP 40)           n  1852 WR  88.6% net   +293,207 worst -10,728 DD  30,892 halves  +167,643  +125,564 
+momentum pyramid: +1 lot at +$2 if H1 MACD + ATR rising (TP 40) n  1852 WR  88.6% net   +294,261 worst -10,963 DD  31,809 halves  +170,168  +124,093 
+ER sizing: clean (high ER) 3 lots, messy 0.5         n  1852 WR  93.8% net   +198,388 worst  -7,694 DD  27,924 halves  +112,326   +86,061 
+ER sizing reversed: high ER 0.5, low ER 3            n  1852 WR  93.8% net   +289,380 worst  -7,737 DD  15,802 halves  +149,842  +139,538 
+exit agent (fit on half 1; close p>0.6, half p>0.6)  n  1852 WR  91.8% net   +290,554 worst  -5,127 DD  21,654 halves  +192,466   +98,088 judge on half 2
+reversal 3x lots after a stop-out (TP $2 / SL $25)   n  1852 WR  93.8% net   +288,215 worst -20,242 DD  23,988 halves  +173,069  +115,146 83 reversals
+reversal 3x lots after a stop-out (TP $5 / SL $5)    n  1852 WR  93.8% net   +297,677 worst  -8,728 DD  34,856 halves  +180,527  +117,150 83 reversals
+reversal 3x lots after a stop-out (TP $10 / SL $10)  n  1852 WR  96.3% net   +320,963 worst -11,320 DD  28,146 halves  +169,043  +151,920 83 reversals
+reversal 3x lots after a stop-out (TP $25 / SL $25)  n  1852 WR  96.3% net   +427,589 worst -20,300 DD  60,002 halves  +195,671  +231,918 83 reversals
+reversal 4x lots after a stop-out (TP $2 / SL $25)   n  1852 WR  93.8% net   +296,223 worst -25,270 DD  27,586 halves  +182,687  +113,536 83 reversals
+reversal 4x lots after a stop-out (TP $5 / SL $5)    n  1852 WR  94.0% net   +308,839 worst  -9,918 DD  41,286 halves  +192,631  +116,208 83 reversals
+reversal 4x lots after a stop-out (TP $10 / SL $10)  n  1852 WR  96.3% net   +339,887 worst -13,374 DD  34,140 halves  +177,319  +162,568 83 reversals
+reversal 4x lots after a stop-out (TP $25 / SL $25)  n  1852 WR  96.3% net   +482,055 worst -25,400 DD  80,018 halves  +212,823  +269,232 83 reversals

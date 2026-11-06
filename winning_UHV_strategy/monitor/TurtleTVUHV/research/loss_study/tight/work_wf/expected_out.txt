@@ -1,0 +1,28 @@
+break-even with typical full-stop loss (median of neighbour runs) -213$ and avg win +1.442$: loss rate 0.67% -> WR 99.33%
+break-even with mean of tight's 4 losses -166$ and avg win +1.442$: loss rate 0.86% -> WR 99.14%
+
+binomial on 0 losses / 308: one-sided 95% upper bound on the loss rate 0.97% (WR >= 99.03%); two-sided 95% CI WR [98.81%, 100%]
+   P(0 losses in 308 | true loss rate 0.67% = break-even) = 0.125
+   P(0 losses in 308 | true loss rate 0.56% = tight overall 4/714) = 0.177
+   P(0 losses in 308 | true loss rate 1.32% = ring around the box 14/1060) = 0.017
+   P(0 losses in 308 | true loss rate 1.34% = secure 30/2237) = 0.016
+
+empirical-Bayes posterior mean loss rate for the box (Beta prior from a neighbourhood, then 0/308):
+   prior ring 14/1060, full weight               : loss rate 1.02% -> WR 98.98%
+   prior ring rate, weight = 308 trades          : loss rate 0.66% -> WR 99.34%
+   prior tight minus the box 4/406, full weight  : loss rate 0.56% -> WR 99.44%
+   prior secure 30/2237, full weight             : loss rate 1.18% -> WR 98.82%
+
+walk-forward out-of-sample: A (pick on Mar-Jun) h3-3_er0.30-0.45 Jul-Nov {'n': 166, 'L': 1, 'wr': 99.4, 'net': 44.97}; B (pick on Jul-Nov) h3-4_er0.15-0.45 Mar-Jun {'n': 485, 'L': 14, 'wr': 97.11, 'net': -2214.97}
+   A: in-sample-100% family OOS 1/349 = WR 99.71%  vs every eligible combo OOS WR 99.18%  (Spearman IS vs OOS -0.066)
+   B: in-sample-100% family OOS 175/6453 = WR 97.29%  vs every eligible combo OOS WR 97.56%  (Spearman IS vs OOS -0.039)
+at loss rate 0.6%: 0.23 losses / month (39 trades / month) = one -213$ loss every 4.3 months; net +6.0$/month at 1 lot; P(>= 1 loss in the next 100 trades) 0.45
+at loss rate 0.8%: 0.31 losses / month (39 trades / month) = one -213$ loss every 3.2 months; net -10.6$/month at 1 lot; P(>= 1 loss in the next 100 trades) 0.55
+at loss rate 1.0%: 0.39 losses / month (39 trades / month) = one -213$ loss every 2.6 months; net -27.2$/month at 1 lot; P(>= 1 loss in the next 100 trades) 0.63
+at loss rate 1.3%: 0.50 losses / month (39 trades / month) = one -213$ loss every 2.0 months; net -52.1$/month at 1 lot; P(>= 1 loss in the next 100 trades) 0.73
+
+doctrine (monitor/doctrine.py, mandatory for any Python win rate):
+  Zee's 100% zone (Python replay, PrimeXBT EUR/USD ticks)
+     python 100%  ->  expect ~84% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -15 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.

@@ -1,0 +1,5 @@
+BASE {'n': 1852, 'wr': 93.84, 'net': 264191, 'worst': -5158, 'dd': 17534, 'pf': np.float64(1.605), 'avg_loss': -3830, 'h1': 107846, 'h2': 156345}
+step 1: {'InpSessTo': 18} -> {'n': 1691, 'wr': 94.32, 'net': 230163, 'worst': -5158, 'dd': 19496, 'pf': np.float64(1.556), 'avg_loss': -4310, 'h1': 92214, 'h2': 137949}
+step 2: {'InpBandsB': 'untick box 11'} -> {'n': 1668, 'wr': 94.42, 'net': 232440, 'worst': -5158, 'dd': 17534, 'pf': np.float64(1.577), 'avg_loss': -4334, 'h1': 96170, 'h2': 136270}
+step 3: {'InpMinRangeAtr': 1.0} -> {'n': 1521, 'wr': 94.61, 'net': 218788, 'worst': -5211, 'dd': 12686, 'pf': np.float64(1.603), 'avg_loss': -4427, 'h1': 81598, 'h2': 137190}
+no further improvement

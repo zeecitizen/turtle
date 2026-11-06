@@ -1,0 +1,86 @@
+engine hash 3a81c704b4 (stack_net.py ran on 3a81c704b4)
+
+(a) RE-RUN
+  BASE  TRAIN  3336 tr  112 L  loss rate  3.36%  WR  96.64%  clean  18/ 83 ( 21.7%)  net    -20,127 (-6.03/tr)
+  BASE  TEST   4295 tr   60 L  loss rate  1.40%  WR  98.60%  clean  46/ 92 ( 50.0%)  net     -5,399 (-1.26/tr)
+  BASE  ALL    7631 tr  172 L  loss rate  2.25%  WR  97.75%  clean  64/175 ( 36.6%)  net    -25,526 (-3.35/tr)
+  STACK TRAIN   601 tr   13 L  loss rate  2.16%  WR  97.84%  clean  72/ 83 ( 86.7%)  net     -1,829 (-3.04/tr)
+  STACK TEST    405 tr    7 L  loss rate  1.73%  WR  98.27%  clean  79/ 86 ( 91.9%)  net       -925 (-2.28/tr)
+  STACK ALL    1006 tr   20 L  loss rate  1.99%  WR  98.01%  clean 151/169 ( 89.3%)  net     -2,754 (-2.74/tr)
+  base result block {'n': 7631, 'net': -25525.97, 'pf': 0.314, 'wr': 97.75, 'avg_loss': -216.21, 'worst_loss': -819.0, 'dd': 25588.96}   (saved file: {'n': 7631, 'net': -25525.97, 'pf': 0.314, 'wr': 97.7, 'avg_loss': -216.21, 'worst_loss': -819, 'dd': 25588.96, 'ret_dd': -0.9975383255063852})
+  stack result block {'n': 1006, 'net': -2753.68, 'pf': 0.377, 'wr': 98.01, 'avg_loss': -220.9, 'worst_loss': -271.01, 'dd': 2908.69}
+  every reported number reproduced: True; zero-$ trades base 0, stack 0; break-even WR 99.24% (avg win +1.69, avg loss -220.90)
+
+(b) LOSS RATE, stack vs base
+  TRAIN base 112/3336 = 3.357% (Wilson95 2.80-4.02)  stack 13/601 = 2.163% (Wilson95 1.27-3.67)  ratio x0.64
+        expected losses at the base rate 20.18, observed 13; P(X <= 13) binomial 0.058; p < 0.05 would need <= 12 losses; Fisher (stack vs the 2874 removed base trades, one-sided) p = 0.054
+        kept base trades 462 (11 L = 2.38%), new from freed slots 139 (2 L = 1.44%), removed base trades 2874 (101 L = 3.51%); P(kept losses <= 11 | random keep) = 0.130; matched pnl identical: True
+        net -20,127 -> -1,829; $/trade -6.03 -> -3.04; beyond a random cut of the same size: +1,797; loss-free days 18/83 -> 72/83
+  TEST  base 60/4295 = 1.397% (Wilson95 1.09-1.79)  stack 7/405 = 1.728% (Wilson95 0.84-3.52)  ratio x1.24
+        expected losses at the base rate 5.66, observed 7; P(X <= 7) binomial 0.791; p < 0.05 would need <= 1 losses; Fisher (stack vs the 3966 removed base trades, one-sided) p = 0.813
+        kept base trades 329 (7 L = 2.13%), new from freed slots 76 (0 L = 0.00%), removed base trades 3966 (53 L = 1.34%); P(kept losses <= 7 | random keep) = 0.915; matched pnl identical: True
+        net -5,399 -> -925; $/trade -1.26 -> -2.28; beyond a random cut of the same size: -416; loss-free days 46/92 -> 79/86
+
+PATH - the greedy steps re-run (loss rate of the trades each step REMOVED vs the stack before it)
+  step 1 + InpUhvSRPips=5     TRAIN 3336/112 (3.36%) -> 1669/55 (3.29%), removed 2080 with 72 L (3.46%), added 413/15 L, beyond random +647
+                         TEST  4295/60 (1.40%) -> 1408/19 (1.35%), removed 3137 with 42 L (1.34%), added 250/1 L, beyond random -345
+  step 2 + InpUhvDeepRet=0.8   TRAIN 1669/55 (3.29%) -> 728/20 (2.75%), removed 985 with 37 L (3.76%), added 44/2 L, beyond random +948
+                         TEST  1408/19 (1.35%) -> 479/8 (1.67%), removed 939 with 11 L (1.17%), added 10/0 L, beyond random -318
+  step 3 + InpUhvFreshBreak=1     TRAIN 728/20 (2.75%) -> 613/16 (2.61%), removed 123 with 4 L (3.25%), added 8/0 L, beyond random +180
+                         TEST  479/8 (1.67%) -> 410/7 (1.71%), removed 73 with 1 L (1.37%), added 4/0 L, beyond random -29
+  step 4 + InpUhvNoClose=true  TRAIN 613/16 (2.61%) -> 612/15 (2.45%), removed 4 with 1 L (25.00%), added 3/0 L, beyond random +228
+                         TEST  410/7 (1.71%) -> 409/7 (1.71%), removed 1 with 0 L (0.00%), added 0/0 L, beyond random -3
+  step 5 + InpUhvFriCutNY=15    TRAIN 612/15 (2.45%) -> 605/14 (2.31%), removed 7 with 1 L (14.29%), added 0/0 L, beyond random +194
+                         TEST  409/7 (1.71%) -> 408/7 (1.72%), removed 1 with 0 L (0.00%), added 0/0 L, beyond random -3
+  step 6 + InpUhvLoudBrk=0.95  TRAIN 605/14 (2.31%) -> 601/13 (2.16%), removed 7 with 1 L (14.29%), added 3/0 L, beyond random +189
+                         TEST  408/7 (1.72%) -> 405/7 (1.73%), removed 4 with 0 L (0.00%), added 1/0 L, beyond random -13
+
+(c) PERTURBATION - one scan.py grid step either way (on top of the full stack)
+  grids: SRPips ('list', [0, 0.5, 1, 1.5, 2, 3, 4, 5]), SRLook ('list', [20, 30, 60, 120, 240]), DeepRet ('list', [0, 0.5, 0.6, 0.7, 0.8, 0.9]), FreshBreak ('list', [0, 1, 2, 3, 5, 8]), FreshSwings ('list', [1, 2, 3, 4]), FriCutNY ('list', [0, 10, 12, 13, 14, 15, 16]), LoudBrk ('list', [0, 0.7, 0.8, 0.9, 0.95])
+  the stack's TRAIN gain over base: WR +1.194 pts, net +18,299, beyond a random cut +1,797; TEST beyond a random cut -416
+        SRPips     5->4      TRAIN  771/ 22 L  2.85% WR  97.15% net   -3,405 (WR gain kept  42.2%, beyond rnd  +1,247) | TEST  597/ 8 L  1.34% net    -828 (-1.39/tr, beyond rnd    -78)  [grid]
+        SRPips     5->6      TRAIN  477/  7 L  1.47% WR  98.53% net     -694 (WR gain kept 158.2%, beyond rnd  +2,184) | TEST  294/ 6 L  2.04% net    -871 (-2.96/tr, beyond rnd   -501)  [OFF-GRID (5 is the grid top)]
+        SRLook    60->30     TRAIN  216/  5 L  2.31% WR  97.69% net     -773 (WR gain kept  87.3%, beyond rnd    +530) | TEST  101/ 1 L  0.99% net     -66 (-0.65/tr, beyond rnd    +61)  [grid (hidden knob, default 60)]
+        SRLook    60->120    TRAIN 1124/ 28 L  2.49% WR  97.51% net   -4,088 (WR gain kept  72.5%, beyond rnd  +2,694) | TEST 1005/13 L  1.29% net    -993 (-0.99/tr, beyond rnd   +270)  [grid (hidden knob, default 60)]
+       DeepRet   0.8->0.7    TRAIN  406/  9 L  2.22% WR  97.78% net   -1,272 (WR gain kept  95.5%, beyond rnd  +1,178) | TEST  254/ 4 L  1.57% net    -546 (-2.15/tr, beyond rnd   -227)  [grid]
+       DeepRet   0.8->0.9    TRAIN  773/ 17 L  2.20% WR  97.80% net   -2,454 (WR gain kept  97.0%, beyond rnd  +2,210) | TEST  542/ 8 L  1.48% net    -948 (-1.75/tr, beyond rnd   -267)  [grid]
+    FreshBreak     1->2      TRAIN  592/ 13 L  2.20% WR  97.80% net   -1,843 (WR gain kept  97.2%, beyond rnd  +1,729) | TEST  399/ 7 L  1.75% net    -938 (-2.35/tr, beyond rnd   -436)  [grid (1 -> 0 = off = leave-one-out)]
+   FreshSwings     2->1      TRAIN  486/ 10 L  2.06% WR  97.94% net   -1,404 (WR gain kept 108.8%, beyond rnd  +1,528) | TEST  322/ 5 L  1.55% net    -612 (-1.90/tr, beyond rnd   -207)  [grid (hidden knob, default 2)]
+   FreshSwings     2->3      TRAIN  641/ 14 L  2.18% WR  97.82% net   -1,978 (WR gain kept  98.2%, beyond rnd  +1,890) | TEST  430/ 8 L  1.86% net  -1,106 (-2.57/tr, beyond rnd   -565)  [grid (hidden knob, default 2)]
+      FriCutNY    15->14     TRAIN  597/ 13 L  2.18% WR  97.82% net   -1,833 (WR gain kept  98.8%, beyond rnd  +1,769) | TEST  405/ 7 L  1.73% net    -925 (-2.28/tr, beyond rnd   -416)  [grid]
+      FriCutNY    15->16     TRAIN  608/ 14 L  2.30% WR  97.70% net   -2,049 (WR gain kept  88.3%, beyond rnd  +1,620) | TEST  406/ 7 L  1.72% net    -924 (-2.28/tr, beyond rnd   -414)  [grid]
+       LoudBrk  0.95->0.9    TRAIN  587/ 13 L  2.21% WR  97.79% net   -1,848 (WR gain kept  95.7%, beyond rnd  +1,694) | TEST  399/ 7 L  1.75% net    -935 (-2.34/tr, beyond rnd   -433)  [grid]
+       LoudBrk  0.95->0.975  TRAIN  606/ 13 L  2.15% WR  97.85% net   -1,820 (WR gain kept 101.5%, beyond rnd  +1,836) | TEST  407/ 7 L  1.72% net    -920 (-2.26/tr, beyond rnd   -408)  [OFF-GRID (0.95 is the grid top)]
+
+(d) MONTH BY MONTH (UTC calendar month of the entry; Nov = Nov 1-4 only, partial)
+  2026-03 TRAIN base  890/ 36 L ( 4.04%) net   -6,455 | stack  196/ 5 L ( 2.55%) net    -791 | expected L at base rate  7.93 -> saved +2.93 | beyond rnd    +630 | loss-free days 15/18 (base 3/19)
+  2026-04 TRAIN base  820/ 32 L ( 3.90%) net   -7,074 | stack  154/ 3 L ( 1.95%) net    -358 | expected L at base rate  6.01 -> saved +3.01 | beyond rnd    +971 | loss-free days 19/22 (base 5/22)
+  2026-05 TRAIN base  665/ 27 L ( 4.06%) net   -4,608 | stack  130/ 4 L ( 3.08%) net    -667 | expected L at base rate  5.28 -> saved +1.28 | beyond rnd    +234 | loss-free days 18/22 (base 4/22)
+  2026-06 TRAIN base  961/ 17 L ( 1.77%) net   -1,991 | stack  121/ 1 L ( 0.83%) net     -13 | expected L at base rate  2.14 -> saved +1.14 | beyond rnd    +238 | loss-free days 21/22 (base 8/22)
+  2026-07 TEST  base 1074/ 17 L ( 1.58%) net   -1,992 | stack   92/ 1 L ( 1.09%) net     -64 | expected L at base rate  1.46 -> saved +0.46 | beyond rnd    +107 | loss-free days 21/22 (base 12/23)
+  2026-08 TEST  base  864/ 11 L ( 1.27%) net     -622 | stack   61/ 2 L ( 3.28%) net    -311 | expected L at base rate  0.78 -> saved -1.22 | beyond rnd    -267 | loss-free days 17/19 (base 14/22)
+  2026-09 TEST  base 1031/ 10 L ( 0.97%) net     -377 | stack   86/ 0 L ( 0.00%) net     120 | expected L at base rate  0.83 -> saved +0.83 | beyond rnd    +152 | loss-free days 20/20 (base 14/23)
+  2026-10 TEST  base 1154/ 20 L ( 1.73%) net   -2,223 | stack  148/ 3 L ( 2.03%) net    -497 | expected L at base rate  2.56 -> saved -0.44 | beyond rnd    -212 | loss-free days 19/22 (base 6/22)
+  2026-11 TEST  base  172/  2 L ( 1.16%) net     -185 | stack   18/ 1 L ( 5.56%) net    -173 | expected L at base rate  0.21 -> saved -0.79 | beyond rnd    -154 | loss-free days 2/3 (base 2/4)  PARTIAL
+
+(e) LEAVE-ONE-OUT (stack minus one) and ALONE (base plus one)
+       SRPips=5     LOO TRAIN 2386/ 70 L ( 2.93%) net  -11,004 | TEST 2919/36 L ( 1.23%) net  -3,096
+                    it removes TRAIN 1785 tr /  57 L (3.193%), net  +9,175 | TEST 2514 tr / 29 L (1.154%), net +2,171
+                    ALONE TRAIN 1669/ 55 L ( 3.30%) beyond rnd    +647 | TEST 1408/19 L ( 1.35%) beyond rnd   -345
+      DeepRet=0.8   LOO TRAIN 1340/ 39 L ( 2.91%) net   -6,571 | TEST 1122/16 L ( 1.43%) net  -2,187
+                    it removes TRAIN  739 tr /  26 L (3.518%), net  +4,742 | TEST  717 tr /  9 L (1.255%), net +1,262
+                    ALONE TRAIN 2723/ 90 L ( 3.31%) beyond rnd    +593 | TEST 3288/43 L ( 1.31%) beyond rnd   +968
+   FreshBreak=1     LOO TRAIN  711/ 17 L ( 2.39%) net   -2,513 | TEST  474/ 8 L ( 1.69%) net  -1,045
+                    it removes TRAIN  110 tr /   4 L (3.636%), net    +684 | TEST   69 tr /  1 L (1.449%), net   +120
+                    ALONE TRAIN 2956/105 L ( 3.55%) beyond rnd    -750 | TEST 3792/54 L ( 1.42%) beyond rnd   -370
+      NoClose=true  LOO TRAIN  602/ 14 L ( 2.33%) net   -2,061 | TEST  406/ 7 L ( 1.72%) net    -924
+                    it removes TRAIN    1 tr /   1 L (100.0%), net    +232 | TEST    1 tr /  0 L (0.0%), net     -1
+                    ALONE TRAIN 3346/107 L ( 3.20%) beyond rnd  +1,951 | TEST 4319/53 L ( 1.23%) beyond rnd   +525
+     FriCutNY=15    LOO TRAIN  608/ 14 L ( 2.30%) net   -2,049 | TEST  406/ 7 L ( 1.72%) net    -924
+                    it removes TRAIN    7 tr /   1 L (14.286%), net    +220 | TEST    1 tr /  0 L (0.0%), net     -1
+                    ALONE TRAIN 3293/103 L ( 3.13%) beyond rnd  +2,842 | TEST 4225/55 L ( 1.30%) beyond rnd    -85
+      LoudBrk=0.95  LOO TRAIN  605/ 14 L ( 2.31%) net   -2,031 | TEST  408/ 7 L ( 1.72%) net    -919
+                    it removes TRAIN    4 tr /   1 L (25.0%), net    +202 | TEST    3 tr /  0 L (0.0%), net     -6
+                    ALONE TRAIN 3320/109 L ( 3.28%) beyond rnd    +504 | TEST 4284/59 L ( 1.38%) beyond rnd   +104
+
+wrote results.json in 0.22 min. Python tick replay = hypothesis, NOT PROMOTED.

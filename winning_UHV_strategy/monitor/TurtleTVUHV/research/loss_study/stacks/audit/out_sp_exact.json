@@ -1,0 +1,5 @@
+{
+ "setups": 12224,
+ "sp_or_t_or_bv_mismatch_at_exact_tick": 0,
+ "trigger_tick_shares_its_millisecond_with_an_earlier_tick": 150
+}

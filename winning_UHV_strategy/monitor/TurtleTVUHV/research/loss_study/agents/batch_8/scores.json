@@ -1,0 +1,1235 @@
+{
+ "fri_after_13ny": {
+  "score": {
+   "tagged_out": 3,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 246,
+    "losers_removed": 22,
+    "winners_removed": 224,
+    "loss_rate_removed": 8.94,
+    "lift": 3.97,
+    "net_change_usd_1lot": 3756.0,
+    "wr_after": 97.97
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 98,
+    "losers_removed": 14,
+    "winners_removed": 84,
+    "loss_rate_removed": 14.29,
+    "lift": 4.25,
+    "net_change_usd_1lot": 3580.0,
+    "wr_after": 96.97
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 148,
+    "losers_removed": 8,
+    "winners_removed": 140,
+    "loss_rate_removed": 5.41,
+    "lift": 3.87,
+    "net_change_usd_1lot": 176.0,
+    "wr_after": 98.74
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1016-205727-B"
+  ]
+ },
+ "fri_after_14ny": {
+  "score": {
+   "tagged_out": 3,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 182,
+    "losers_removed": 18,
+    "winners_removed": 164,
+    "loss_rate_removed": 9.89,
+    "lift": 4.38,
+    "net_change_usd_1lot": 3357.0,
+    "wr_after": 97.93
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 69,
+    "losers_removed": 11,
+    "winners_removed": 58,
+    "loss_rate_removed": 15.94,
+    "lift": 4.75,
+    "net_change_usd_1lot": 3338.0,
+    "wr_after": 96.91
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 113,
+    "losers_removed": 7,
+    "winners_removed": 106,
+    "loss_rate_removed": 6.19,
+    "lift": 4.43,
+    "net_change_usd_1lot": 19.0,
+    "wr_after": 98.73
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1016-205727-B"
+  ]
+ },
+ "fri_after_12ny": {
+  "score": {
+   "tagged_out": 3,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 321,
+    "losers_removed": 24,
+    "winners_removed": 297,
+    "loss_rate_removed": 7.48,
+    "lift": 3.31,
+    "net_change_usd_1lot": 4078.0,
+    "wr_after": 97.97
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 124,
+    "losers_removed": 15,
+    "winners_removed": 109,
+    "loss_rate_removed": 12.1,
+    "lift": 3.6,
+    "net_change_usd_1lot": 3773.0,
+    "wr_after": 96.98
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 197,
+    "losers_removed": 9,
+    "winners_removed": 188,
+    "loss_rate_removed": 4.57,
+    "lift": 3.27,
+    "net_change_usd_1lot": 305.0,
+    "wr_after": 98.75
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1016-205727-B"
+  ]
+ },
+ "fri_after_08ny": {
+  "score": {
+   "tagged_out": 7,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 668,
+    "losers_removed": 36,
+    "winners_removed": 632,
+    "loss_rate_removed": 5.39,
+    "lift": 2.39,
+    "net_change_usd_1lot": 5990.0,
+    "wr_after": 98.05
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 270,
+    "losers_removed": 20,
+    "winners_removed": 250,
+    "loss_rate_removed": 7.41,
+    "lift": 2.21,
+    "net_change_usd_1lot": 4572.0,
+    "wr_after": 97.0
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 398,
+    "losers_removed": 16,
+    "winners_removed": 382,
+    "loss_rate_removed": 4.02,
+    "lift": 2.88,
+    "net_change_usd_1lot": 1418.0,
+    "wr_after": 98.87
+   }
+  },
+  "batch8": [
+   "1002-121910-S",
+   "1002-133626-S",
+   "1009-205809-S",
+   "1016-205727-B",
+   "1023-145031-B",
+   "1030-122421-B"
+  ]
+ },
+ "last_15min_of_week": {
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 22,
+    "losers_removed": 8,
+    "winners_removed": 14,
+    "loss_rate_removed": 36.36,
+    "lift": 16.12,
+    "net_change_usd_1lot": 1436.0,
+    "wr_after": 97.84
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 7,
+    "losers_removed": 3,
+    "winners_removed": 4,
+    "loss_rate_removed": 42.86,
+    "lift": 12.76,
+    "net_change_usd_1lot": 1351.0,
+    "wr_after": 96.72
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 15,
+    "losers_removed": 5,
+    "winners_removed": 10,
+    "loss_rate_removed": 33.33,
+    "lift": 23.84,
+    "net_change_usd_1lot": 85.0,
+    "wr_after": 98.71
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1016-205727-B"
+  ]
+ },
+ "rollover_mon_thu": {
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 102,
+    "losers_removed": 8,
+    "winners_removed": 94,
+    "loss_rate_removed": 7.84,
+    "lift": 3.48,
+    "net_change_usd_1lot": 1614.0,
+    "wr_after": 97.82
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 46,
+    "losers_removed": 5,
+    "winners_removed": 41,
+    "loss_rate_removed": 10.87,
+    "lift": 3.24,
+    "net_change_usd_1lot": 1089.0,
+    "wr_after": 96.75
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 56,
+    "losers_removed": 3,
+    "winners_removed": 53,
+    "loss_rate_removed": 5.36,
+    "lift": 3.83,
+    "net_change_usd_1lot": 525.0,
+    "wr_after": 98.65
+   }
+  },
+  "batch8": []
+ },
+ "close_and_rollover": {
+  "score": {
+   "tagged_out": 3,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 284,
+    "losers_removed": 26,
+    "winners_removed": 258,
+    "loss_rate_removed": 9.15,
+    "lift": 4.06,
+    "net_change_usd_1lot": 4971.0,
+    "wr_after": 98.01
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 115,
+    "losers_removed": 16,
+    "winners_removed": 99,
+    "loss_rate_removed": 13.91,
+    "lift": 4.14,
+    "net_change_usd_1lot": 4427.0,
+    "wr_after": 97.02
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 169,
+    "losers_removed": 10,
+    "winners_removed": 159,
+    "loss_rate_removed": 5.92,
+    "lift": 4.23,
+    "net_change_usd_1lot": 544.0,
+    "wr_after": 98.79
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1016-205727-B"
+  ]
+ },
+ "close13_and_rollover": {
+  "score": {
+   "tagged_out": 3,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 348,
+    "losers_removed": 30,
+    "winners_removed": 318,
+    "loss_rate_removed": 8.62,
+    "lift": 3.82,
+    "net_change_usd_1lot": 5370.0,
+    "wr_after": 98.05
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 144,
+    "losers_removed": 19,
+    "winners_removed": 125,
+    "loss_rate_removed": 13.19,
+    "lift": 3.93,
+    "net_change_usd_1lot": 4669.0,
+    "wr_after": 97.09
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 204,
+    "losers_removed": 11,
+    "winners_removed": 193,
+    "loss_rate_removed": 5.39,
+    "lift": 3.86,
+    "net_change_usd_1lot": 701.0,
+    "wr_after": 98.8
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1016-205727-B"
+  ]
+ },
+ "sunday_open": {
+  "score": {
+   "tagged_out": 4,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 390,
+    "losers_removed": 10,
+    "winners_removed": 380,
+    "loss_rate_removed": 2.56,
+    "lift": 1.14,
+    "net_change_usd_1lot": 1574.0,
+    "wr_after": 97.76
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 190,
+    "losers_removed": 5,
+    "winners_removed": 185,
+    "loss_rate_removed": 2.63,
+    "lift": 0.78,
+    "net_change_usd_1lot": 813.0,
+    "wr_after": 96.6
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 200,
+    "losers_removed": 5,
+    "winners_removed": 195,
+    "loss_rate_removed": 2.5,
+    "lift": 1.79,
+    "net_change_usd_1lot": 761.0,
+    "wr_after": 98.66
+   }
+  },
+  "batch8": [
+   "1004-230306-B",
+   "1012-023747-B",
+   "1026-024856-B",
+   "1102-003016-S"
+  ]
+ },
+ "pre_us_data": {
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 203,
+    "losers_removed": 8,
+    "winners_removed": 195,
+    "loss_rate_removed": 3.94,
+    "lift": 1.75,
+    "net_change_usd_1lot": 1538.0,
+    "wr_after": 97.79
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 95,
+    "losers_removed": 5,
+    "winners_removed": 90,
+    "loss_rate_removed": 5.26,
+    "lift": 1.57,
+    "net_change_usd_1lot": 914.0,
+    "wr_after": 96.7
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 108,
+    "losers_removed": 3,
+    "winners_removed": 105,
+    "loss_rate_removed": 2.78,
+    "lift": 1.99,
+    "net_change_usd_1lot": 624.0,
+    "wr_after": 98.64
+   }
+  },
+  "batch8": [
+   "1002-121910-S",
+   "1030-122421-B"
+  ]
+ },
+ "pre_us_data_10": {
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 79,
+    "losers_removed": 3,
+    "winners_removed": 76,
+    "loss_rate_removed": 3.8,
+    "lift": 1.68,
+    "net_change_usd_1lot": 525.0,
+    "wr_after": 97.76
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 33,
+    "losers_removed": 1,
+    "winners_removed": 32,
+    "loss_rate_removed": 3.03,
+    "lift": 0.9,
+    "net_change_usd_1lot": 143.0,
+    "wr_after": 96.64
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 46,
+    "losers_removed": 2,
+    "winners_removed": 44,
+    "loss_rate_removed": 4.35,
+    "lift": 3.11,
+    "net_change_usd_1lot": 382.0,
+    "wr_after": 98.63
+   }
+  },
+  "batch8": [
+   "1030-122421-B"
+  ]
+ },
+ "big_figure_ahead": {
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 90,
+    "losers_removed": 7,
+    "winners_removed": 83,
+    "loss_rate_removed": 7.78,
+    "lift": 3.45,
+    "net_change_usd_1lot": 1030.0,
+    "wr_after": 97.81
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 47,
+    "losers_removed": 4,
+    "winners_removed": 43,
+    "loss_rate_removed": 8.51,
+    "lift": 2.53,
+    "net_change_usd_1lot": 818.0,
+    "wr_after": 96.72
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 43,
+    "losers_removed": 3,
+    "winners_removed": 40,
+    "loss_rate_removed": 6.98,
+    "lift": 4.99,
+    "net_change_usd_1lot": 212.0,
+    "wr_after": 98.66
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1026-105900-B"
+  ]
+ },
+ "big_figure_ahead_15": {
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 129,
+    "losers_removed": 7,
+    "winners_removed": 122,
+    "loss_rate_removed": 5.43,
+    "lift": 2.41,
+    "net_change_usd_1lot": 970.0,
+    "wr_after": 97.8
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 69,
+    "losers_removed": 4,
+    "winners_removed": 65,
+    "loss_rate_removed": 5.8,
+    "lift": 1.73,
+    "net_change_usd_1lot": 782.0,
+    "wr_after": 96.69
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 60,
+    "losers_removed": 3,
+    "winners_removed": 57,
+    "loss_rate_removed": 5.0,
+    "lift": 3.58,
+    "net_change_usd_1lot": 188.0,
+    "wr_after": 98.65
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1026-105900-B"
+  ]
+ },
+ "big_figure_ahead_fill05": {
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 42,
+    "losers_removed": 4,
+    "winners_removed": 38,
+    "loss_rate_removed": 9.52,
+    "lift": 4.22,
+    "net_change_usd_1lot": 650.0,
+    "wr_after": 97.78
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 22,
+    "losers_removed": 2,
+    "winners_removed": 20,
+    "loss_rate_removed": 9.09,
+    "lift": 2.71,
+    "net_change_usd_1lot": 427.0,
+    "wr_after": 96.68
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 20,
+    "losers_removed": 2,
+    "winners_removed": 18,
+    "loss_rate_removed": 10.0,
+    "lift": 7.15,
+    "net_change_usd_1lot": 223.0,
+    "wr_after": 98.64
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1026-105900-B"
+  ]
+ },
+ "ten_pip_line_ahead": {
+  "score": {
+   "tagged_out": 4,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 238,
+    "losers_removed": 11,
+    "winners_removed": 227,
+    "loss_rate_removed": 4.62,
+    "lift": 2.05,
+    "net_change_usd_1lot": 1803.0,
+    "wr_after": 97.82
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 116,
+    "losers_removed": 7,
+    "winners_removed": 109,
+    "loss_rate_removed": 6.03,
+    "lift": 1.8,
+    "net_change_usd_1lot": 1338.0,
+    "wr_after": 96.74
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 122,
+    "losers_removed": 4,
+    "winners_removed": 118,
+    "loss_rate_removed": 3.28,
+    "lift": 2.34,
+    "net_change_usd_1lot": 465.0,
+    "wr_after": 98.66
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1104-082902-S"
+  ]
+ },
+ "half_figure_ahead": {
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 70,
+    "losers_removed": 1,
+    "winners_removed": 69,
+    "loss_rate_removed": 1.43,
+    "lift": 0.63,
+    "net_change_usd_1lot": 152.0,
+    "wr_after": 97.74
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 35,
+    "losers_removed": 0,
+    "winners_removed": 35,
+    "loss_rate_removed": 0.0,
+    "lift": 0.0,
+    "net_change_usd_1lot": -57.0,
+    "wr_after": 96.61
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 35,
+    "losers_removed": 1,
+    "winners_removed": 34,
+    "loss_rate_removed": 2.86,
+    "lift": 2.04,
+    "net_change_usd_1lot": 209.0,
+    "wr_after": 98.61
+   }
+  },
+  "batch8": []
+ },
+ "fill_overshoot_15": {
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 79,
+    "losers_removed": 11,
+    "winners_removed": 68,
+    "loss_rate_removed": 13.92,
+    "lift": 6.17,
+    "net_change_usd_1lot": 2658.0,
+    "wr_after": 97.87
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 49,
+    "losers_removed": 7,
+    "winners_removed": 42,
+    "loss_rate_removed": 14.29,
+    "lift": 4.25,
+    "net_change_usd_1lot": 2311.0,
+    "wr_after": 96.8
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 30,
+    "losers_removed": 4,
+    "winners_removed": 26,
+    "loss_rate_removed": 13.33,
+    "lift": 9.54,
+    "net_change_usd_1lot": 347.0,
+    "wr_after": 98.69
+   }
+  },
+  "batch8": [
+   "1016-205727-B"
+  ]
+ },
+ "fill_overshoot_10": {
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 218,
+    "losers_removed": 17,
+    "winners_removed": 201,
+    "loss_rate_removed": 7.8,
+    "lift": 3.46,
+    "net_change_usd_1lot": 3547.0,
+    "wr_after": 97.91
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 165,
+    "losers_removed": 11,
+    "winners_removed": 154,
+    "loss_rate_removed": 6.67,
+    "lift": 1.99,
+    "net_change_usd_1lot": 2949.0,
+    "wr_after": 96.81
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 53,
+    "losers_removed": 6,
+    "winners_removed": 47,
+    "loss_rate_removed": 11.32,
+    "lift": 8.1,
+    "net_change_usd_1lot": 598.0,
+    "wr_after": 98.73
+   }
+  },
+  "batch8": [
+   "1016-205727-B"
+  ]
+ },
+ "fill_overshoot_20": {
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 49,
+    "losers_removed": 8,
+    "winners_removed": 41,
+    "loss_rate_removed": 16.33,
+    "lift": 7.24,
+    "net_change_usd_1lot": 2420.0,
+    "wr_after": 97.84
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 28,
+    "losers_removed": 6,
+    "winners_removed": 22,
+    "loss_rate_removed": 21.43,
+    "lift": 6.38,
+    "net_change_usd_1lot": 2093.0,
+    "wr_after": 96.79
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 21,
+    "losers_removed": 2,
+    "winners_removed": 19,
+    "loss_rate_removed": 9.52,
+    "lift": 6.81,
+    "net_change_usd_1lot": 327.0,
+    "wr_after": 98.64
+   }
+  },
+  "batch8": []
+ },
+ "ceiling_just_ahead": {
+  "score": {
+   "tagged_out": 19,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 4530,
+    "losers_removed": 96,
+    "winners_removed": 4434,
+    "loss_rate_removed": 2.12,
+    "lift": 0.94,
+    "net_change_usd_1lot": 13140.0,
+    "wr_after": 97.55
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 1849,
+    "losers_removed": 59,
+    "winners_removed": 1790,
+    "loss_rate_removed": 3.19,
+    "lift": 0.95,
+    "net_change_usd_1lot": 10341.0,
+    "wr_after": 96.43
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 2681,
+    "losers_removed": 37,
+    "winners_removed": 2644,
+    "loss_rate_removed": 1.38,
+    "lift": 0.99,
+    "net_change_usd_1lot": 2800.0,
+    "wr_after": 98.57
+   }
+  },
+  "batch8": [
+   "1001-061805-B",
+   "1006-101510-S",
+   "1009-205809-S",
+   "1012-023747-B",
+   "1013-043630-S",
+   "1016-205727-B",
+   "1019-171329-S",
+   "1026-024856-B",
+   "1026-105900-B",
+   "1026-172601-B",
+   "1027-163522-B",
+   "1104-082902-S"
+  ]
+ },
+ "hump_needs_hh": {
+  "score": {
+   "tagged_out": 23,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 4550,
+    "losers_removed": 100,
+    "winners_removed": 4450,
+    "loss_rate_removed": 2.2,
+    "lift": 0.97,
+    "net_change_usd_1lot": 15462.0,
+    "wr_after": 97.66
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 1926,
+    "losers_removed": 63,
+    "winners_removed": 1863,
+    "loss_rate_removed": 3.27,
+    "lift": 0.97,
+    "net_change_usd_1lot": 12269.0,
+    "wr_after": 96.52
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 2624,
+    "losers_removed": 37,
+    "winners_removed": 2587,
+    "loss_rate_removed": 1.41,
+    "lift": 1.01,
+    "net_change_usd_1lot": 3193.0,
+    "wr_after": 98.62
+   }
+  },
+  "batch8": [
+   "1001-061805-B",
+   "1002-133626-S",
+   "1007-013110-B",
+   "1007-091004-B",
+   "1008-064604-B",
+   "1009-205809-S",
+   "1012-023747-B",
+   "1015-035806-B",
+   "1016-205727-B",
+   "1019-171329-S",
+   "1026-024856-B",
+   "1026-105900-B",
+   "1026-172601-B",
+   "1027-163522-B",
+   "1104-082902-S"
+  ]
+ },
+ "counter_trend_60": {
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 403,
+    "losers_removed": 6,
+    "winners_removed": 397,
+    "loss_rate_removed": 1.49,
+    "lift": 0.66,
+    "net_change_usd_1lot": 785.0,
+    "wr_after": 97.7
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 241,
+    "losers_removed": 4,
+    "winners_removed": 237,
+    "loss_rate_removed": 1.66,
+    "lift": 0.49,
+    "net_change_usd_1lot": 648.0,
+    "wr_after": 96.51
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 162,
+    "losers_removed": 2,
+    "winners_removed": 160,
+    "loss_rate_removed": 1.23,
+    "lift": 0.88,
+    "net_change_usd_1lot": 137.0,
+    "wr_after": 98.6
+   }
+  },
+  "batch8": [
+   "1015-035806-B"
+  ]
+ },
+ "mature_trend": {
+  "score": {
+   "tagged_out": 0,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 145,
+    "losers_removed": 6,
+    "winners_removed": 139,
+    "loss_rate_removed": 4.14,
+    "lift": 1.83,
+    "net_change_usd_1lot": 1700.0,
+    "wr_after": 97.78
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 77,
+    "losers_removed": 5,
+    "winners_removed": 72,
+    "loss_rate_removed": 6.49,
+    "lift": 1.93,
+    "net_change_usd_1lot": 1591.0,
+    "wr_after": 96.72
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 68,
+    "losers_removed": 1,
+    "winners_removed": 67,
+    "loss_rate_removed": 1.47,
+    "lift": 1.05,
+    "net_change_usd_1lot": 109.0,
+    "wr_after": 98.6
+   }
+  },
+  "batch8": []
+ },
+ "quiet_hour": {
+  "score": {
+   "tagged_out": 2,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 430,
+    "losers_removed": 20,
+    "winners_removed": 410,
+    "loss_rate_removed": 4.65,
+    "lift": 2.06,
+    "net_change_usd_1lot": 4793.0,
+    "wr_after": 97.89
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 172,
+    "losers_removed": 10,
+    "winners_removed": 162,
+    "loss_rate_removed": 5.81,
+    "lift": 1.73,
+    "net_change_usd_1lot": 3759.0,
+    "wr_after": 96.78
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 258,
+    "losers_removed": 10,
+    "winners_removed": 248,
+    "loss_rate_removed": 3.88,
+    "lift": 2.77,
+    "net_change_usd_1lot": 1034.0,
+    "wr_after": 98.76
+   }
+  },
+  "batch8": [
+   "1004-230306-B",
+   "1016-205727-B"
+  ]
+ },
+ "uhv_is_last_candle": {
+  "score": {
+   "tagged_out": 11,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 2487,
+    "losers_removed": 58,
+    "winners_removed": 2429,
+    "loss_rate_removed": 2.33,
+    "lift": 1.03,
+    "net_change_usd_1lot": 7938.0,
+    "wr_after": 97.78
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 1083,
+    "losers_removed": 35,
+    "winners_removed": 1048,
+    "loss_rate_removed": 3.23,
+    "lift": 0.96,
+    "net_change_usd_1lot": 5420.0,
+    "wr_after": 96.58
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 1404,
+    "losers_removed": 23,
+    "winners_removed": 1381,
+    "loss_rate_removed": 1.64,
+    "lift": 1.17,
+    "net_change_usd_1lot": 2518.0,
+    "wr_after": 98.72
+   }
+  },
+  "batch8": [
+   "1002-121910-S",
+   "1002-133626-S",
+   "1004-230306-B",
+   "1009-205809-S",
+   "1013-043630-S",
+   "1015-035806-B",
+   "1104-082902-S"
+  ]
+ },
+ "shallow_retracement": {
+  "score": {
+   "tagged_out": 1,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 673,
+    "losers_removed": 10,
+    "winners_removed": 663,
+    "loss_rate_removed": 1.49,
+    "lift": 0.66,
+    "net_change_usd_1lot": 1033.0,
+    "wr_after": 97.67
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 203,
+    "losers_removed": 5,
+    "winners_removed": 198,
+    "loss_rate_removed": 2.46,
+    "lift": 0.73,
+    "net_change_usd_1lot": 710.0,
+    "wr_after": 96.58
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 470,
+    "losers_removed": 5,
+    "winners_removed": 465,
+    "loss_rate_removed": 1.06,
+    "lift": 0.76,
+    "net_change_usd_1lot": 323.0,
+    "wr_after": 98.56
+   }
+  },
+  "batch8": [
+   "1012-023747-B"
+  ]
+ },
+ "batch8_combo": {
+  "score": {
+   "tagged_out": 4,
+   "all": {
+    "trades": 7626,
+    "losses": 172,
+    "base_loss_rate": 2.26,
+    "removed": 431,
+    "losers_removed": 34,
+    "winners_removed": 397,
+    "loss_rate_removed": 7.89,
+    "lift": 3.5,
+    "net_change_usd_1lot": 6123.0,
+    "wr_after": 98.08
+   },
+   "train": {
+    "trades": 3335,
+    "losses": 112,
+    "base_loss_rate": 3.36,
+    "removed": 189,
+    "losers_removed": 22,
+    "winners_removed": 167,
+    "loss_rate_removed": 11.64,
+    "lift": 3.47,
+    "net_change_usd_1lot": 5247.0,
+    "wr_after": 97.14
+   },
+   "test": {
+    "trades": 4291,
+    "losses": 60,
+    "base_loss_rate": 1.4,
+    "removed": 242,
+    "losers_removed": 12,
+    "winners_removed": 230,
+    "loss_rate_removed": 4.96,
+    "lift": 3.55,
+    "net_change_usd_1lot": 876.0,
+    "wr_after": 98.81
+   }
+  },
+  "batch8": [
+   "1009-205809-S",
+   "1016-205727-B",
+   "1026-105900-B"
+  ]
+ }
+}

@@ -1,0 +1,5 @@
+C:\Users\zeesh\turtle\monitor\saad_view\research\micro_loyo.py:12: DeprecationWarning: datetime.datetime.utcfromtimestamp() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.fromtimestamp(timestamp, datetime.UTC).
+  yr = lambda t: np.array([dt.datetime.utcfromtimestamp(x).year for x in t])
+2023: DTW paths 1567, HMM4 toxic 2 loss rates [np.float64(5.1), np.float64(5.3), np.float64(7.4), np.float64(5.5)]
+2024: DTW paths 1414, HMM4 toxic 1 loss rates [np.float64(6.0), np.float64(6.7), np.float64(6.1), np.float64(6.1)]
+2025: DTW paths 1287, HMM4 toxic 2 loss rates [np.float64(6.7), np.float64(4.5), np.float64(8.3), np.float64(5.3)]

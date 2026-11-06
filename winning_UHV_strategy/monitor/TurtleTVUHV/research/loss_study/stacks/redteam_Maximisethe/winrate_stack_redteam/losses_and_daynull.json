@@ -1,0 +1,106 @@
+{
+ "stack_losses": [
+  {
+   "half": "TRAIN",
+   "entry_utc": "2026-04-01 04:22:23",
+   "entry_ny": "Wed 2026-04-01 00:22",
+   "usd": -209.0,
+   "same_trade_in_base": false
+  },
+  {
+   "half": "TRAIN",
+   "entry_utc": "2026-04-08 07:56:06",
+   "entry_ny": "Wed 2026-04-08 03:56",
+   "usd": -219.99,
+   "same_trade_in_base": true
+  },
+  {
+   "half": "TRAIN",
+   "entry_utc": "2026-05-18 05:22:21",
+   "entry_ny": "Mon 2026-05-18 01:22",
+   "usd": -209.0,
+   "same_trade_in_base": false
+  },
+  {
+   "half": "TRAIN",
+   "entry_utc": "2026-05-26 11:12:53",
+   "entry_ny": "Tue 2026-05-26 07:12",
+   "usd": -209.0,
+   "same_trade_in_base": true
+  },
+  {
+   "half": "TRAIN",
+   "entry_utc": "2026-06-02 14:46:44",
+   "entry_ny": "Tue 2026-06-02 10:46",
+   "usd": -204.0,
+   "same_trade_in_base": true
+  },
+  {
+   "half": "TEST",
+   "entry_utc": "2026-07-06 00:46:22",
+   "entry_ny": "Sun 2026-07-05 20:46",
+   "usd": -197.99,
+   "same_trade_in_base": true
+  },
+  {
+   "half": "TEST",
+   "entry_utc": "2026-07-30 11:44:30",
+   "entry_ny": "Thu 2026-07-30 07:44",
+   "usd": -201.0,
+   "same_trade_in_base": true
+  },
+  {
+   "half": "TEST",
+   "entry_utc": "2026-09-14 23:13:16",
+   "entry_ny": "Mon 2026-09-14 19:13",
+   "usd": -197.01,
+   "same_trade_in_base": false
+  },
+  {
+   "half": "TEST",
+   "entry_utc": "2026-09-17 05:48:44",
+   "entry_ny": "Thu 2026-09-17 01:48",
+   "usd": -201.0,
+   "same_trade_in_base": false
+  },
+  {
+   "half": "TEST",
+   "entry_utc": "2026-10-01 06:18:05",
+   "entry_ny": "Thu 2026-10-01 02:18",
+   "usd": -213.0,
+   "same_trade_in_base": true
+  },
+  {
+   "half": "TEST",
+   "entry_utc": "2026-10-08 06:46:04",
+   "entry_ny": "Thu 2026-10-08 02:46",
+   "usd": -201.0,
+   "same_trade_in_base": true
+  },
+  {
+   "half": "TEST",
+   "entry_utc": "2026-10-13 04:55:43",
+   "entry_ny": "Tue 2026-10-13 00:55",
+   "usd": -207.0,
+   "same_trade_in_base": false
+  }
+ ],
+ "TRAIN": {
+  "stack_days": 82,
+  "observed_clean_days": 77,
+  "expected_clean_days_perday_thinning": 61.47,
+  "P_clean_ge_observed": 4.532770150339598e-07,
+  "observed_losses": 5,
+  "expected_losses_perday_thinning": 23.17,
+  "P_losses_le_observed_perday_thinning": 1.833693405695146e-07
+ },
+ "TEST": {
+  "stack_days": 92,
+  "observed_clean_days": 85,
+  "expected_clean_days_perday_thinning": 81.04,
+  "P_clean_ge_observed": 0.10110561617735413,
+  "observed_losses": 7,
+  "expected_losses_perday_thinning": 11.45,
+  "P_losses_le_observed_perday_thinning": 0.08412305990415954
+ }
+}

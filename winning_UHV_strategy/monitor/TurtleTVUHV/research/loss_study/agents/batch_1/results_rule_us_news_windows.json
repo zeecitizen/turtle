@@ -1,0 +1,44 @@
+{
+ "rule_us_news_windows": {
+  "tagged_out": 1,
+  "all": {
+   "trades": 7626,
+   "losses": 172,
+   "base_loss_rate": 2.26,
+   "removed": 297,
+   "losers_removed": 8,
+   "winners_removed": 289,
+   "loss_rate_removed": 2.69,
+   "lift": 1.19,
+   "net_change_usd_1lot": 1207.0,
+   "wr_after": 97.76
+  },
+  "train": {
+   "trades": 3335,
+   "losses": 112,
+   "base_loss_rate": 3.36,
+   "removed": 139,
+   "losers_removed": 4,
+   "winners_removed": 135,
+   "loss_rate_removed": 2.88,
+   "lift": 0.86,
+   "net_change_usd_1lot": 656.0,
+   "wr_after": 96.62
+  },
+  "test": {
+   "trades": 4291,
+   "losses": 60,
+   "base_loss_rate": 1.4,
+   "removed": 158,
+   "losers_removed": 4,
+   "winners_removed": 154,
+   "loss_rate_removed": 2.53,
+   "lift": 1.81,
+   "net_change_usd_1lot": 551.0,
+   "wr_after": 98.65
+  },
+  "crashes": 0,
+  "lookahead_diffs": 0,
+  "first_err": ""
+ }
+}

@@ -1,0 +1,494 @@
+{
+ "0804-172345-S": {
+  "sel": [],
+  "fail": [
+   "B7x_OLD_TREND",
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0807-083652-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0807-205630-S": {
+  "sel": [
+   "B7_ROLLOVER_HOUR",
+   "B7_FRIDAY_LAST_HOUR",
+   "B7v_ROLLOVER_1640_1730",
+   "B7v_FRIDAY_1615"
+  ],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0812-151608-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0813-223116-S": {
+  "sel": [
+   "B7_THIN_VM30",
+   "B7v_THIN_VMIN10"
+  ],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_POST_SPIKE"
+  ]
+ },
+ "0814-155646-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_LOUD_BREAKOUT"
+  ]
+ },
+ "0820-213103-S": {
+  "sel": [
+   "B7_ROLLOVER_HOUR",
+   "B7_THIN_VM30",
+   "B7v_REOPEN_ONLY",
+   "B7v_THIN_VMIN10"
+  ],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0821-130310-B": {
+  "sel": [],
+  "fail": [
+   "B7x_HTF_AGAINST",
+   "B7x_COUNTER_HTF_BOUNCE",
+   "B7x_RETESTED_LEVEL",
+   "B7x_OPPOSITE_CANDLE"
+  ]
+ },
+ "0827-133401-B": {
+  "sel": [],
+  "fail": [
+   "B7x_EXHAUSTED_RUN",
+   "B7x_CLIMAX_CHASE",
+   "B7x_RANGE_EDGE60",
+   "B7x_OLD_TREND",
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0828-205744-B": {
+  "sel": [
+   "B7_ROLLOVER_HOUR",
+   "B7_FRIDAY_LAST_HOUR",
+   "B7_SLIP_1P2",
+   "B7v_ROLLOVER_1640_1730",
+   "B7v_FRIDAY_1615"
+  ],
+  "fail": [
+   "B7x_COUNTER_HTF_BOUNCE",
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0831-140013-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_NEWS_MINUTE",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0902-131622-S": {
+  "sel": [],
+  "fail": [
+   "B7x_OLD_UHV",
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0904-131422-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_POST_SPIKE",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0908-165924-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0911-180812-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0914-213535-B": {
+  "sel": [
+   "B7_ROLLOVER_HOUR",
+   "B7_SLIP_1P2",
+   "B7_THIN_VM30",
+   "B7v_REOPEN_ONLY",
+   "B7v_SLIP_2P0",
+   "B7v_THIN_VMIN10"
+  ],
+  "fail": [
+   "B7x_RANGE_EDGE60",
+   "B7x_POST_SPIKE",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0918-162342-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0918-204909-B": {
+  "sel": [
+   "B7_ROLLOVER_HOUR",
+   "B7_FRIDAY_LAST_HOUR",
+   "B7v_ROLLOVER_1640_1730",
+   "B7v_FRIDAY_1615"
+  ],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0923-111835-B": {
+  "sel": [],
+  "fail": [
+   "B7x_EXHAUSTED_RUN",
+   "B7x_OLD_TREND",
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0925-113553-B": {
+  "sel": [
+   "B7_SLIP_1P2",
+   "B7v_SLIP_2P0"
+  ],
+  "fail": [
+   "B7x_RANGE_EDGE60",
+   "B7x_OLD_UHV"
+  ]
+ },
+ "0929-030326-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0804-171632-S": {
+  "sel": [],
+  "fail": [
+   "B7x_OLD_UHV",
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0804-165040-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RANGE_EDGE60",
+   "B7x_RETESTED_LEVEL",
+   "B7x_LOUD_BREAKOUT"
+  ]
+ },
+ "0807-065703-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0807-063510-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0807-194921-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0807-190349-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0812-151335-B": {
+  "sel": [],
+  "fail": [
+   "B7x_OLD_UHV",
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0812-145954-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0813-190208-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0813-173310-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0814-150822-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0814-141401-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0820-205209-S": {
+  "sel": [
+   "B7_ROLLOVER_HOUR",
+   "B7v_ROLLOVER_1640_1730"
+  ],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0821-030455-S": {
+  "sel": [],
+  "fail": [
+   "B7x_HTF_AGAINST",
+   "B7x_COUNTER_HTF_BOUNCE",
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0821-112415-B": {
+  "sel": [],
+  "fail": [
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0821-144243-B": {
+  "sel": [],
+  "fail": [
+   "B7x_HTF_AGAINST",
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0827-131617-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RANGE_EDGE60"
+  ]
+ },
+ "0827-131449-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RANGE_EDGE60"
+  ]
+ },
+ "0828-205001-B": {
+  "sel": [
+   "B7_ROLLOVER_HOUR",
+   "B7_FRIDAY_LAST_HOUR",
+   "B7v_ROLLOVER_1640_1730",
+   "B7v_FRIDAY_1615"
+  ],
+  "fail": [
+   "B7x_COUNTER_HTF_BOUNCE",
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0828-193306-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RANGE_EDGE60",
+   "B7x_FLAT_BOX_EDGE"
+  ]
+ },
+ "0831-124444-S": {
+  "sel": [],
+  "fail": [
+   "B7x_OLD_TREND",
+   "B7x_RETESTED_LEVEL",
+   "B7x_LOUD_BREAKOUT"
+  ]
+ },
+ "0831-123007-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_NEWS_MINUTE"
+  ]
+ },
+ "0902-133129-S": {
+  "sel": [],
+  "fail": [
+   "B7x_HTF_AGAINST",
+   "B7x_COUNTER_HTF_BOUNCE",
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0902-134514-S": {
+  "sel": [],
+  "fail": [
+   "B7x_HTF_AGAINST",
+   "B7x_COUNTER_HTF_BOUNCE",
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0904-123001-S": {
+  "sel": [
+   "B7_SLIP_1P2",
+   "B7v_SLIP_2P0"
+  ],
+  "fail": [
+   "B7x_RANGE_EDGE60",
+   "B7x_FLAT_BOX_EDGE",
+   "B7x_NEWS_MINUTE",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0904-120608-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0908-164218-S": {
+  "sel": [],
+  "fail": [
+   "B7x_OLD_UHV",
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0908-161905-S": {
+  "sel": [],
+  "fail": [
+   "B7x_OLD_TREND",
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0911-174420-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0911-171638-B": {
+  "sel": [],
+  "fail": [
+   "B7x_HTF_AGAINST",
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0914-205000-B": {
+  "sel": [
+   "B7_ROLLOVER_HOUR",
+   "B7v_ROLLOVER_1640_1730"
+  ],
+  "fail": []
+ },
+ "0914-190910-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0918-160258-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0918-155010-S": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0918-192857-B": {
+  "sel": [],
+  "fail": [
+   "B7x_OLD_TREND",
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0918-153606-B": {
+  "sel": [],
+  "fail": [
+   "B7x_EXHAUSTED_RUN",
+   "B7x_RANGE_EDGE60",
+   "B7x_OLD_TREND"
+  ]
+ },
+ "0923-110409-B": {
+  "sel": [],
+  "fail": [
+   "B7x_OLD_TREND"
+  ]
+ },
+ "0923-104631-B": {
+  "sel": [],
+  "fail": [
+   "B7x_HTF_AGAINST",
+   "B7x_OLD_UHV",
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0925-112023-B": {
+  "sel": [],
+  "fail": [
+   "B7x_EXHAUSTED_RUN",
+   "B7x_OLD_TREND",
+   "B7x_RETESTED_LEVEL"
+  ]
+ },
+ "0925-110225-B": {
+  "sel": [],
+  "fail": []
+ },
+ "0929-020734-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL",
+   "B7x_HH_AGAINST"
+  ]
+ },
+ "0929-014601-B": {
+  "sel": [],
+  "fail": [
+   "B7x_RETESTED_LEVEL"
+  ]
+ }
+}

@@ -1,0 +1,137 @@
+{
+ "within_minhumps": {
+  "3": {
+   "runs": 81,
+   "corr_train_test_excess": 0.431,
+   "corr_train_test_rate": 0.303,
+   "train_excess_median": 6.85,
+   "test_excess_median": 2.96,
+   "test_trades_median": 910,
+   "test_pooled_rate_pct": 1.225,
+   "test_losses_range": [
+    9,
+    13
+   ]
+  },
+  "4": {
+   "runs": 81,
+   "corr_train_test_excess": 0.13,
+   "corr_train_test_rate": 0.128,
+   "train_excess_median": 3.76,
+   "test_excess_median": 0.48,
+   "test_trades_median": 406,
+   "test_pooled_rate_pct": 1.309,
+   "test_losses_range": [
+    4,
+    6
+   ]
+  },
+  "5": {
+   "runs": 81,
+   "corr_train_test_excess": -0.012,
+   "corr_train_test_rate": -0.131,
+   "train_excess_median": 2.38,
+   "test_excess_median": -0.82,
+   "test_trades_median": 169,
+   "test_pooled_rate_pct": 1.796,
+   "test_losses_range": [
+    3,
+    3
+   ]
+  },
+  "corr_test_excess_vs_test_trades_all": 0.912,
+  "corr_train_excess_vs_test_trades_all": 0.878
+ },
+ "path_losses": [
+  {
+   "added": "InpUhvMinHumps",
+   "train": {
+    "trades_cut": 2861,
+    "losses_cut": 93,
+    "excess_gain": 0.01
+   },
+   "test": {
+    "trades_cut": 3810,
+    "losses_cut": 54,
+    "excess_gain": 0.94
+   }
+  },
+  {
+   "added": "InpUhvMinTicks",
+   "train": {
+    "trades_cut": 14,
+    "losses_cut": 6,
+    "excess_gain": 3.71
+   },
+   "test": {
+    "trades_cut": 18,
+    "losses_cut": 0,
+    "excess_gain": -0.24
+   }
+  },
+  {
+   "added": "InpUhvFreshBreak",
+   "train": {
+    "trades_cut": 53,
+    "losses_cut": 3,
+    "excess_gain": 1.48
+   },
+   "test": {
+    "trades_cut": 40,
+    "losses_cut": 1,
+    "excess_gain": 0.37
+   }
+  },
+  {
+   "added": "InpUhvMaxGapPips",
+   "train": {
+    "trades_cut": 3,
+    "losses_cut": 1,
+    "excess_gain": 1.11
+   },
+   "test": {
+    "trades_cut": 4,
+    "losses_cut": 0,
+    "excess_gain": -0.07
+   }
+  }
+ ],
+ "freed_slots_by_half": {
+  "train": {
+   "stack_trades": 405,
+   "in_base": {
+    "n": 284,
+    "L": 8
+   },
+   "freed_slot": {
+    "n": 121,
+    "L": 1,
+    "p_zero_or_fewer_at_base_rate": 0.0835
+   }
+  },
+  "test": {
+   "stack_trades": 423,
+   "in_base": {
+    "n": 343,
+    "L": 5
+   },
+   "freed_slot": {
+    "n": 80,
+    "L": 0,
+    "p_zero_or_fewer_at_base_rate": 0.3245
+   }
+  },
+  "all": {
+   "stack_trades": 828,
+   "in_base": {
+    "n": 627,
+    "L": 13
+   },
+   "freed_slot": {
+    "n": 201,
+    "L": 1,
+    "p_zero_or_fewer_at_base_rate": 0.0577
+   }
+  }
+ }
+}

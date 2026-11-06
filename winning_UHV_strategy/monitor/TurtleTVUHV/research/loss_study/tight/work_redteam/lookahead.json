@@ -1,0 +1,152 @@
+{
+ "loss4a:rule_target_on_rejection_high": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4a:rule_triple_test": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4a:rule_vsa_weak_leg": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4a:rule_counter_last_big_move": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4a:rule_quiet_breakout_share": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4a:rule_early_thin_break": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4a:rule_fade_counter_spike": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4a:rule_rebreak_same_level": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4a:rule_spread_wide": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4a:rule_spread_not_narrow": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4a:rule_spread_upper_mode": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4b:rule_tested_level": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4b:rule_pinned_bid": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4b:rule_creep_in": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4b:rule_grind": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4b:rule_choppy30": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "loss4b:rule_wide_spread": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "secure30:rule_range_bound120": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "secure30:rule_extended_run120": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "secure30:rule_with_move60": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "secure30:rule_congested_level": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "secure30:rule_news_clock": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "secure30:rule_chop120": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "secure30:rule_wide_spread_now": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ },
+ "secure30:control_random20": {
+  "diff": 0,
+  "exc_full": 0,
+  "exc_trunc": 0,
+  "examples": []
+ }
+}

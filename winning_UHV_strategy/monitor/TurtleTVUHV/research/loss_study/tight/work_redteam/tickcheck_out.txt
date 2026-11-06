@@ -1,0 +1,1 @@
+tick features recomputed on ticks cut at the breakout tick: 80 trades, 4080 values compared, 0 differ

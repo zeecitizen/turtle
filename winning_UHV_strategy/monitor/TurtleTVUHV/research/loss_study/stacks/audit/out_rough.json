@@ -1,0 +1,9 @@
+{
+ "steps": 39600,
+ "rough_differs_real_vs_fake_forming_bar": 0,
+ "cut_differs": 0,
+ "roughs_replicated": 17110,
+ "roughs_in_file_for_segment": 17110,
+ "identical_rows": 17110,
+ "secs": 73.3
+}

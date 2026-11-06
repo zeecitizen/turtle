@@ -1,0 +1,38 @@
+Python tick replay = HYPOTHESIS. NOT PROMOTED. Only MT5 or live fills decide.
+
+final stack: {'InpUhvMinHumps': '4', 'InpUhvMinTicks': '40', 'InpUhvFreshBreak': '8', 'InpUhvMaxGapPips': '0.5'}
+
+       base: trades / losses / WR / loss-free days / net            final stack                                                 
+TRAIN  3336 / 112 / 96.64% / 21.7% (18/83) / -20,127                405 / 9 / 97.78% / 89.2% (74/83) / -1,350                   
+TEST   4295 / 60 / 98.60% / 50.0% (46/92) / -5,399                  423 / 5 / 98.82% / 94.4% (84/89) / -512                     
+ALL    7631 / 172 / 97.75% / 36.6% (64/175) / -25,526               828 / 14 / 98.31% / 91.9% (158/172) / -1,862                
+
+losses: base 172, final 14; base losses removed 159, new losses (freed slots) 1
+
+NULLS - does the stack pick better trades, or only fewer? (2000 random draws from the base's own trades)
+  TRAIN stack loss-free 89.2% of 83 days with 405 trades | uniform-thinning null 84.4% [76.5, 91.2] p=0.086 | per-day null 82.7% [74.7, 90.4] p=0.057
+        WR stack 97.78% vs base 96.64% (random thinning keeps WR in [95.06, 98.03], p=0.112)
+  TEST  stack loss-free 94.4% of 89 days with 423 trades | uniform-thinning null 93.7% [88.8, 97.8] p=0.458 | per-day null 93.3% [88.8, 97.8] p=0.432
+        WR stack 98.82% vs base 98.60% (random thinning keeps WR in [97.40, 99.53], p=0.461)
+
+PER STEP - observed loss-free share vs the share random per-day thinning would give at the same trade counts:
+  step 0 base                          TRAIN  21.7% vs thinning  21.7% ( +0.0 pt, WR 96.64%, 3336 trades)  TEST  50.0% vs thinning  50.0% ( +0.0 pt, WR 98.60%, 4295 trades)
+  step 1 InpUhvMinHumps=4              TRAIN  79.5% vs thinning  79.5% ( +0.0 pt, WR 96.00%, 475 trades)  TEST  93.3% vs thinning  92.4% ( +0.9 pt, WR 98.76%, 485 trades)
+  step 2 InpUhvMinTicks=40             TRAIN  84.3% vs thinning  80.6% ( +3.7 pt, WR 97.18%, 461 trades)  TEST  93.3% vs thinning  92.6% ( +0.7 pt, WR 98.72%, 467 trades)
+  step 3 InpUhvFreshBreak=8            TRAIN  88.0% vs thinning  82.8% ( +5.2 pt, WR 97.55%, 408 trades)  TEST  94.4% vs thinning  93.3% ( +1.1 pt, WR 98.83%, 427 trades)
+  step 4 InpUhvMaxGapPips=0.5          TRAIN  89.2% vs thinning  82.8% ( +6.3 pt, WR 97.78%, 405 trades)  TEST  94.4% vs thinning  93.4% ( +1.0 pt, WR 98.82%, 423 trades)
+
+LEAVE-ONE-OUT (the final stack without one setting; knobs leave with their filter):
+  without InpUhvMinHumps                     TRAIN 2496 / 75 / 97.00% / 34.9% (29/83) / -11,294 (-54.2 pt)   TEST 2965 / 32 / 98.92% / 68.1% (62/91) / -1,351 (-26.2 pt)
+  without InpUhvMinTicks                     TRAIN 415 / 13 / 96.87% / 85.5% (71/83) / -3,138 (-3.6 pt)   TEST 440 / 5 / 98.86% / 94.4% (84/89) / -491 (+0.0 pt)
+  without InpUhvFreshBreak                   TRAIN 456 / 12 / 97.37% / 85.5% (71/83) / -1,944 (-3.6 pt)   TEST 462 / 6 / 98.70% / 93.3% (84/90) / -674 (-1.0 pt)
+  without InpUhvMaxGapPips                   TRAIN 408 / 10 / 97.55% / 88.0% (73/83) / -1,594 (-1.2 pt)   TEST 427 / 5 / 98.83% / 94.4% (84/89) / -503 (+0.0 pt)
+
+DOCTRINE (monitor/doctrine.py):
+  clean-days stack, ALL Mar-Nov (828 trades)
+     python 98%  ->  expect ~82% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -17 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  avg win $1.47, avg loss $-218.28 -> break-even WR 99.33%
+
+saved C:\Users\zeesh\turtle\monitor\TurtleTVUHV\research\loss_study\stacks\cleandays\final_setting.json and final_report.json

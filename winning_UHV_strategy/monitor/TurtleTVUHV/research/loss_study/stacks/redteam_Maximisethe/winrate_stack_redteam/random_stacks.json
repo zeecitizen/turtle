@@ -1,0 +1,10491 @@
+{
+"draws": [
+{
+"stack": {
+"InpUhvSunOpenMins": "120",
+"InpUhvFriCutNY": "16",
+"InpUhvHtf5": "2",
+"InpUhvFreshBreak": "8",
+"InpUhvSRPips": "4",
+"InpUhvSRAhead": "1.5",
+"InpUhvLoudBrk": "0.95",
+"InpUhvMinTicks": "10"
+},
+"train": {
+"n": 139,
+"L": 5,
+"wr": 96.4029,
+"loss_rate": 3.5971,
+"net": -847.94,
+"days": 58,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 70,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 106.03,
+"days": 40,
+"lfd": 40,
+"den": 92,
+"lfd_pct": 43.48
+}
+},
+{
+"stack": {
+"InpUhvFreshBreak": "5",
+"InpUhvSunOpenMins": "120",
+"InpUhvMaxHumps": "5",
+"InpUhvHtf5": "2",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvDeepRet": "0.5",
+"InpUhvMinHumps": "3",
+"InpUhvLoudBrk": "0.95"
+},
+"train": {
+"n": 495,
+"L": 16,
+"wr": 96.7677,
+"loss_rate": 3.2323,
+"net": -3105.98,
+"days": 82,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 563,
+"L": 5,
+"wr": 99.1119,
+"loss_rate": 0.8881,
+"net": -228.92,
+"days": 92,
+"lfd": 88,
+"den": 92,
+"lfd_pct": 95.65
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "2",
+"InpUhvRangeAtr": "2",
+"InpUhvLoudBrk": "0.9",
+"InpUhvMinTicks": "30",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvStruct": "1",
+"InpUhvDeepRet": "0.7",
+"InpUhvMinHumps": "2"
+},
+"train": {
+"n": 196,
+"L": 4,
+"wr": 97.9592,
+"loss_rate": 2.0408,
+"net": -576.92,
+"days": 57,
+"lfd": 53,
+"den": 83,
+"lfd_pct": 63.86
+},
+"test": {
+"n": 107,
+"L": 3,
+"wr": 97.1963,
+"loss_rate": 2.8037,
+"net": -643.94,
+"days": 45,
+"lfd": 42,
+"den": 92,
+"lfd_pct": 45.65
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "4",
+"InpUhvRunPips": "8",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvBigFig": "1.5",
+"InpUhvNoClose": "1",
+"InpUhvSunOpenMins": "120",
+"InpUhvFriCutNY": "15",
+"InpUhvRangeAtr": "2"
+},
+"train": {
+"n": 2841,
+"L": 77,
+"wr": 97.2897,
+"loss_rate": 2.7103,
+"net": -12224.42,
+"days": 83,
+"lfd": 29,
+"den": 83,
+"lfd_pct": 34.94
+},
+"test": {
+"n": 3855,
+"L": 43,
+"wr": 98.8846,
+"loss_rate": 1.1154,
+"net": -3691.71,
+"days": 92,
+"lfd": 55,
+"den": 92,
+"lfd_pct": 59.78
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "3",
+"InpUhvSRAhead": "1",
+"InpUhvMinHumps": "4",
+"InpUhvHtf5": "2",
+"InpUhvMinTicks": "30",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvCounterAtr": "4",
+"InpUhvBrokeHighs": "6"
+},
+"train": {
+"n": 115,
+"L": 7,
+"wr": 93.913,
+"loss_rate": 6.087,
+"net": -1351.0,
+"days": 58,
+"lfd": 51,
+"den": 83,
+"lfd_pct": 61.45
+},
+"test": {
+"n": 94,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 136.07,
+"days": 58,
+"lfd": 58,
+"den": 92,
+"lfd_pct": 63.04
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvBrokeHighs": "8",
+"InpUhvDeepRet": "0.7",
+"InpUhvStruct": "1",
+"InpUhvHtf5": "2",
+"InpUhvFriCutNY": "16",
+"InpUhvSunOpenMins": "120",
+"InpUhvSRPips": "2"
+},
+"train": {
+"n": 451,
+"L": 20,
+"wr": 95.5654,
+"loss_rate": 4.4346,
+"net": -3448.09,
+"days": 82,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 386,
+"L": 6,
+"wr": 98.4456,
+"loss_rate": 1.5544,
+"net": -720.92,
+"days": 88,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "2",
+"InpUhvMinTicks": "30",
+"InpUhvSpikeAtr": "2",
+"InpUhvMaxHumps": "6",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvStruct": "2",
+"InpUhvHoliday": "1",
+"InpUhvSRAhead": "1"
+},
+"train": {
+"n": 581,
+"L": 17,
+"wr": 97.074,
+"loss_rate": 2.926,
+"net": -2447.75,
+"days": 81,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 498,
+"L": 7,
+"wr": 98.5944,
+"loss_rate": 1.4056,
+"net": -750.91,
+"days": 89,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "1",
+"InpUhvCounterAtr": "8",
+"InpUhvNoClose": "1",
+"InpUhvRunPips": "10",
+"InpUhvMinAtrPips": "2",
+"InpUhvSunOpenMins": "120",
+"InpUhvStruct": "2",
+"InpUhvFreshBreak": "5"
+},
+"train": {
+"n": 416,
+"L": 12,
+"wr": 97.1154,
+"loss_rate": 2.8846,
+"net": -1966.0,
+"days": 70,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 164,
+"L": 5,
+"wr": 96.9512,
+"loss_rate": 3.0488,
+"net": -977.96,
+"days": 54,
+"lfd": 49,
+"den": 92,
+"lfd_pct": 53.26
+}
+},
+{
+"stack": {
+"InpUhvMaxGapPips": "0.8",
+"InpUhvSRPips": "4",
+"InpUhvFriCutNY": "15",
+"InpUhvSRAhead": "0.3",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvMaxHumps": "6",
+"InpUhvHoliday": "1",
+"InpUhvRunPips": "10"
+},
+"train": {
+"n": 1276,
+"L": 37,
+"wr": 97.1003,
+"loss_rate": 2.8997,
+"net": -6161.42,
+"days": 83,
+"lfd": 53,
+"den": 83,
+"lfd_pct": 63.86
+},
+"test": {
+"n": 1114,
+"L": 18,
+"wr": 98.3842,
+"loss_rate": 1.6158,
+"net": -2330.66,
+"days": 91,
+"lfd": 75,
+"den": 92,
+"lfd_pct": 81.52
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "2",
+"InpUhvDeepRet": "0.6",
+"InpUhvFriCutNY": "12",
+"InpUhvMaxHumps": "2",
+"InpUhvMinTicks": "20",
+"InpUhvBigFig": "1",
+"InpUhvBrokeHighs": "5",
+"InpUhvFreshBreak": "5"
+},
+"train": {
+"n": 111,
+"L": 4,
+"wr": 96.3964,
+"loss_rate": 3.6036,
+"net": -680.03,
+"days": 58,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 86,
+"L": 1,
+"wr": 98.8372,
+"loss_rate": 1.1628,
+"net": -92.1,
+"days": 53,
+"lfd": 52,
+"den": 92,
+"lfd_pct": 56.52
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "3",
+"InpUhvSRPips": "0.5",
+"InpUhvMinTicks": "10",
+"InpUhvStruct": "1",
+"InpUhvMaxHumps": "5",
+"InpUhvDeepRet": "0.9",
+"InpUhvFriCutNY": "16",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 294,
+"L": 9,
+"wr": 96.9388,
+"loss_rate": 3.0612,
+"net": -1456.91,
+"days": 80,
+"lfd": 72,
+"den": 83,
+"lfd_pct": 86.75
+},
+"test": {
+"n": 301,
+"L": 3,
+"wr": 99.0033,
+"loss_rate": 0.9967,
+"net": -207.94,
+"days": 87,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "2",
+"InpUhvSunOpenMins": "60",
+"InpUhvDeepRet": "0.9",
+"InpUhvSpikeAtr": "4",
+"InpUhvNewsNY": "1",
+"InpUhvLoudBrk": "0.8",
+"InpUhvMaxHumps": "2",
+"InpUhvRunPips": "4"
+},
+"train": {
+"n": 822,
+"L": 27,
+"wr": 96.7153,
+"loss_rate": 3.2847,
+"net": -4289.93,
+"days": 84,
+"lfd": 60,
+"den": 83,
+"lfd_pct": 72.29
+},
+"test": {
+"n": 1105,
+"L": 18,
+"wr": 98.371,
+"loss_rate": 1.629,
+"net": -1600.89,
+"days": 92,
+"lfd": 77,
+"den": 92,
+"lfd_pct": 83.7
+}
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvMaxHumps": "6",
+"InpUhvSRAhead": "1",
+"InpUhvNoClose": "1",
+"InpUhvBigFig": "1.5",
+"InpUhvLoudBrk": "0.7",
+"InpUhvSRPips": "2"
+},
+"train": {
+"n": 674,
+"L": 17,
+"wr": 97.4777,
+"loss_rate": 2.5223,
+"net": -2380.81,
+"days": 82,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 517,
+"L": 6,
+"wr": 98.8395,
+"loss_rate": 1.1605,
+"net": -521.92,
+"days": 91,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "8",
+"InpUhvMinTicks": "40",
+"InpUhvCounterAtr": "4",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvBrokeHighs": "5",
+"InpUhvStruct": "2",
+"InpUhvMinAtrPips": "1",
+"InpUhvNoClose": "1"
+},
+"train": {
+"n": 1174,
+"L": 33,
+"wr": 97.1891,
+"loss_rate": 2.8109,
+"net": -5033.79,
+"days": 83,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 1116,
+"L": 9,
+"wr": 99.1935,
+"loss_rate": 0.8065,
+"net": -109.82,
+"days": 91,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "2.5",
+"InpUhvMaxTrigSpread": "0.7",
+"InpUhvNewsNY": "1",
+"InpUhvFriCutNY": "12",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvCounterAtr": "8",
+"InpUhvNoClose": "1",
+"InpUhvBrokeHighs": "4"
+},
+"train": {
+"n": 1025,
+"L": 30,
+"wr": 97.0732,
+"loss_rate": 2.9268,
+"net": -5024.66,
+"days": 82,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 709,
+"L": 8,
+"wr": 98.8717,
+"loss_rate": 1.1283,
+"net": -613.8,
+"days": 88,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "2",
+"InpUhvMaxHumps": "8",
+"InpUhvDeepRet": "0.7",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvSRPips": "0.5",
+"InpUhvNoClose": "1",
+"InpUhvNewsNY": "1",
+"InpUhvMaxTrigSpread": "0.8"
+},
+"train": {
+"n": 1875,
+"L": 59,
+"wr": 96.8533,
+"loss_rate": 3.1467,
+"net": -9526.67,
+"days": 83,
+"lfd": 44,
+"den": 83,
+"lfd_pct": 53.01
+},
+"test": {
+"n": 1929,
+"L": 21,
+"wr": 98.9114,
+"loss_rate": 1.0886,
+"net": -1684.68,
+"days": 91,
+"lfd": 72,
+"den": 92,
+"lfd_pct": 78.26
+}
+},
+{
+"stack": {
+"InpUhvFriCutNY": "12",
+"InpUhvLoudBrk": "0.9",
+"InpUhvFreshBreak": "5",
+"InpUhvBigFig": "0.8",
+"InpUhvNewsNY": "1",
+"InpUhvMaxHumps": "2",
+"InpUhvSpikeAtr": "5",
+"InpUhvMinAtrPips": "1.5"
+},
+"train": {
+"n": 723,
+"L": 27,
+"wr": 96.2656,
+"loss_rate": 3.7344,
+"net": -4964.83,
+"days": 82,
+"lfd": 58,
+"den": 83,
+"lfd_pct": 69.88
+},
+"test": {
+"n": 479,
+"L": 6,
+"wr": 98.7474,
+"loss_rate": 1.2526,
+"net": -644.96,
+"days": 85,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "4",
+"InpUhvRangeAtr": "3",
+"InpUhvFreshBreak": "5",
+"InpUhvDeepRet": "0.8",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvMinHumps": "3",
+"InpUhvCounterAtr": "3",
+"InpUhvSpikeAtr": "4"
+},
+"train": {
+"n": 412,
+"L": 16,
+"wr": 96.1165,
+"loss_rate": 3.8835,
+"net": -2696.98,
+"days": 81,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 460,
+"L": 4,
+"wr": 99.1304,
+"loss_rate": 0.8696,
+"net": -163.96,
+"days": 89,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvLoudBrk": "0.95",
+"InpUhvStruct": "1",
+"InpUhvMinTicks": "10",
+"InpUhvSpikeAtr": "3",
+"InpUhvMinHumps": "4",
+"InpUhvHtf5": "1",
+"InpUhvNoClose": "1",
+"InpUhvMaxTrigSpread": "0.8"
+},
+"train": {
+"n": 157,
+"L": 4,
+"wr": 97.4522,
+"loss_rate": 2.5478,
+"net": -624.97,
+"days": 63,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 155,
+"L": 2,
+"wr": 98.7097,
+"loss_rate": 1.2903,
+"net": -309.95,
+"days": 66,
+"lfd": 64,
+"den": 92,
+"lfd_pct": 69.57
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.9",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvFreshBreak": "3",
+"InpUhvSpikeAtr": "2",
+"InpUhvMinTicks": "20",
+"InpUhvNewsNY": "1",
+"InpUhvBrokeHighs": "6",
+"InpUhvLoudBrk": "0.7"
+},
+"train": {
+"n": 1522,
+"L": 47,
+"wr": 96.912,
+"loss_rate": 3.088,
+"net": -7537.85,
+"days": 83,
+"lfd": 45,
+"den": 83,
+"lfd_pct": 54.22
+},
+"test": {
+"n": 1846,
+"L": 20,
+"wr": 98.9166,
+"loss_rate": 1.0834,
+"net": -1616.89,
+"days": 92,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvFriCutNY": "15",
+"InpUhvSpikeAtr": "4",
+"InpUhvDeepRet": "0.5",
+"InpUhvBrokeHighs": "4",
+"InpUhvSRAhead": "0.3",
+"InpUhvRangeAtr": "2",
+"InpUhvBigFig": "0.8",
+"InpUhvMinTicks": "10"
+},
+"train": {
+"n": 1117,
+"L": 37,
+"wr": 96.6876,
+"loss_rate": 3.3124,
+"net": -5864.94,
+"days": 83,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 1143,
+"L": 14,
+"wr": 98.7752,
+"loss_rate": 1.2248,
+"net": -1132.74,
+"days": 92,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "5",
+"InpUhvSunOpenMins": "60",
+"InpUhvNewsNY": "1",
+"InpUhvCounterAtr": "4",
+"InpUhvStruct": "2",
+"InpUhvLoudBrk": "0.8",
+"InpUhvSRPips": "4",
+"InpUhvHtf5": "2"
+},
+"train": {
+"n": 338,
+"L": 13,
+"wr": 96.1538,
+"loss_rate": 3.8462,
+"net": -2381.91,
+"days": 79,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 216,
+"L": 1,
+"wr": 99.537,
+"loss_rate": 0.463,
+"net": 94.1,
+"days": 79,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvLoudBrk": "0.7",
+"InpUhvMinTicks": "15",
+"InpUhvHoliday": "1",
+"InpUhvBrokeHighs": "6",
+"InpUhvNoClose": "1",
+"InpUhvSRPips": "2",
+"InpUhvHtf5": "2",
+"InpUhvMaxTrigSpread": "0.8"
+},
+"train": {
+"n": 926,
+"L": 29,
+"wr": 96.8683,
+"loss_rate": 3.1317,
+"net": -4669.97,
+"days": 83,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 886,
+"L": 11,
+"wr": 98.7585,
+"loss_rate": 1.2415,
+"net": -1084.96,
+"days": 91,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "30",
+"InpUhvCounterAtr": "4",
+"InpUhvFreshBreak": "3",
+"InpUhvStruct": "2",
+"InpUhvLoudBrk": "0.7",
+"InpUhvNewsNY": "1",
+"InpUhvHoliday": "1",
+"InpUhvMinHumps": "4"
+},
+"train": {
+"n": 195,
+"L": 6,
+"wr": 96.9231,
+"loss_rate": 3.0769,
+"net": -970.02,
+"days": 72,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 195,
+"L": 2,
+"wr": 98.9744,
+"loss_rate": 1.0256,
+"net": -245.88,
+"days": 73,
+"lfd": 71,
+"den": 92,
+"lfd_pct": 77.17
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "5",
+"InpUhvMinTicks": "40",
+"InpUhvRunPips": "4",
+"InpUhvDeepRet": "0.6",
+"InpUhvHtf5": "2",
+"InpUhvCounterAtr": "6",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvLoudBrk": "0.8"
+},
+"train": {
+"n": 1065,
+"L": 27,
+"wr": 97.4648,
+"loss_rate": 2.5352,
+"net": -3494.79,
+"days": 83,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 1402,
+"L": 15,
+"wr": 98.9301,
+"loss_rate": 1.0699,
+"net": -511.89,
+"days": 91,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.6",
+"InpUhvBigFig": "1.5",
+"InpUhvSunOpenMins": "120",
+"InpUhvHtf5": "2",
+"InpUhvNewsNY": "1",
+"InpUhvSpikeAtr": "4",
+"InpUhvMinAtrPips": "1",
+"InpUhvFreshBreak": "3"
+},
+"train": {
+"n": 1461,
+"L": 53,
+"wr": 96.3723,
+"loss_rate": 3.6277,
+"net": -9890.8,
+"days": 83,
+"lfd": 46,
+"den": 83,
+"lfd_pct": 55.42
+},
+"test": {
+"n": 1351,
+"L": 15,
+"wr": 98.8897,
+"loss_rate": 1.1103,
+"net": -962.9,
+"days": 91,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvBigFig": "0.5",
+"InpUhvFriCutNY": "15",
+"InpUhvRangeAtr": "2",
+"InpUhvSunOpenMins": "120",
+"InpUhvMinHumps": "3",
+"InpUhvMaxGapPips": "1",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 906,
+"L": 25,
+"wr": 97.2406,
+"loss_rate": 2.7594,
+"net": -3970.88,
+"days": 83,
+"lfd": 61,
+"den": 83,
+"lfd_pct": 73.49
+},
+"test": {
+"n": 1005,
+"L": 12,
+"wr": 98.806,
+"loss_rate": 1.194,
+"net": -1179.9,
+"days": 92,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "10",
+"InpUhvHtf5": "1",
+"InpUhvMaxHumps": "6",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvFreshBreak": "2",
+"InpUhvMinTicks": "20",
+"InpUhvBrokeHighs": "5",
+"InpUhvSRPips": "4"
+},
+"train": {
+"n": 220,
+"L": 6,
+"wr": 97.2727,
+"loss_rate": 2.7273,
+"net": -954.94,
+"days": 76,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 124,
+"L": 1,
+"wr": 99.1935,
+"loss_rate": 0.8065,
+"net": -20.01,
+"days": 58,
+"lfd": 57,
+"den": 92,
+"lfd_pct": 61.96
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "0.8",
+"InpUhvFreshBreak": "5",
+"InpUhvFriCutNY": "12",
+"InpUhvHoliday": "1",
+"InpUhvNoClose": "1",
+"InpUhvRangeAtr": "1.5",
+"InpUhvDeepRet": "0.7",
+"InpUhvBrokeHighs": "8"
+},
+"train": {
+"n": 1975,
+"L": 62,
+"wr": 96.8608,
+"loss_rate": 3.1392,
+"net": -10294.69,
+"days": 83,
+"lfd": 39,
+"den": 83,
+"lfd_pct": 46.99
+},
+"test": {
+"n": 2301,
+"L": 28,
+"wr": 98.7831,
+"loss_rate": 1.2169,
+"net": -2455.74,
+"days": 92,
+"lfd": 69,
+"den": 92,
+"lfd_pct": 75.0
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "4",
+"InpUhvRangeAtr": "2.5",
+"InpUhvDeepRet": "0.8",
+"InpUhvRunPips": "10",
+"InpUhvNoClose": "1",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvNewsNY": "1",
+"InpUhvMaxHumps": "3"
+},
+"train": {
+"n": 1452,
+"L": 46,
+"wr": 96.832,
+"loss_rate": 3.168,
+"net": -7210.86,
+"days": 83,
+"lfd": 48,
+"den": 83,
+"lfd_pct": 57.83
+},
+"test": {
+"n": 1797,
+"L": 18,
+"wr": 98.9983,
+"loss_rate": 1.0017,
+"net": -1118.55,
+"days": 92,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.8",
+"InpUhvNewsNY": "1",
+"InpUhvRangeAtr": "1",
+"InpUhvBigFig": "0.5",
+"InpUhvHtf5": "1",
+"InpUhvHoliday": "1",
+"InpUhvCounterAtr": "3",
+"InpUhvMaxHumps": "3"
+},
+"train": {
+"n": 1440,
+"L": 48,
+"wr": 96.6667,
+"loss_rate": 3.3333,
+"net": -7094.94,
+"days": 84,
+"lfd": 49,
+"den": 83,
+"lfd_pct": 59.04
+},
+"test": {
+"n": 1725,
+"L": 21,
+"wr": 98.7826,
+"loss_rate": 1.2174,
+"net": -1496.75,
+"days": 92,
+"lfd": 73,
+"den": 92,
+"lfd_pct": 79.35
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "8",
+"InpUhvNoClose": "1",
+"InpUhvNewsNY": "1",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvRangeAtr": "1.5",
+"InpUhvHtf5": "1",
+"InpUhvMinTicks": "40",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 1844,
+"L": 58,
+"wr": 96.8547,
+"loss_rate": 3.1453,
+"net": -9216.94,
+"days": 83,
+"lfd": 41,
+"den": 83,
+"lfd_pct": 49.4
+},
+"test": {
+"n": 2007,
+"L": 21,
+"wr": 98.9537,
+"loss_rate": 1.0463,
+"net": -1577.79,
+"days": 91,
+"lfd": 73,
+"den": 92,
+"lfd_pct": 79.35
+}
+},
+{
+"stack": {
+"InpUhvHoliday": "1",
+"InpUhvMaxTrigSpread": "0.7",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvLoudBrk": "0.9",
+"InpUhvFriCutNY": "16",
+"InpUhvBrokeHighs": "2",
+"InpUhvMinHumps": "2",
+"InpUhvMinTicks": "15"
+},
+"train": {
+"n": 1496,
+"L": 41,
+"wr": 97.2594,
+"loss_rate": 2.7406,
+"net": -6477.67,
+"days": 83,
+"lfd": 49,
+"den": 83,
+"lfd_pct": 59.04
+},
+"test": {
+"n": 1764,
+"L": 17,
+"wr": 99.0363,
+"loss_rate": 0.9637,
+"net": -1013.73,
+"days": 92,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvSpikeAtr": "4",
+"InpUhvSRAhead": "0.3",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvCounterAtr": "8",
+"InpUhvRunPips": "4",
+"InpUhvNoClose": "1",
+"InpUhvRangeAtr": "1.5"
+},
+"train": {
+"n": 1231,
+"L": 31,
+"wr": 97.4817,
+"loss_rate": 2.5183,
+"net": -4638.53,
+"days": 83,
+"lfd": 56,
+"den": 83,
+"lfd_pct": 67.47
+},
+"test": {
+"n": 1234,
+"L": 10,
+"wr": 99.1896,
+"loss_rate": 0.8104,
+"net": -276.8,
+"days": 91,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "2",
+"InpUhvMaxGapPips": "1",
+"InpUhvFriCutNY": "16",
+"InpUhvDeepRet": "0.6",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvHtf5": "1",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvBigFig": "1"
+},
+"train": {
+"n": 528,
+"L": 17,
+"wr": 96.7803,
+"loss_rate": 3.2197,
+"net": -2908.89,
+"days": 80,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 381,
+"L": 6,
+"wr": 98.4252,
+"loss_rate": 1.5748,
+"net": -700.9,
+"days": 80,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvStruct": "1",
+"InpUhvSunOpenMins": "120",
+"InpUhvBigFig": "2",
+"InpUhvMaxHumps": "6",
+"InpUhvBrokeHighs": "8",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvLoudBrk": "0.9",
+"InpUhvFreshBreak": "5"
+},
+"train": {
+"n": 1374,
+"L": 52,
+"wr": 96.2154,
+"loss_rate": 3.7846,
+"net": -8091.97,
+"days": 83,
+"lfd": 42,
+"den": 83,
+"lfd_pct": 50.6
+},
+"test": {
+"n": 1571,
+"L": 16,
+"wr": 98.9815,
+"loss_rate": 1.0185,
+"net": -753.62,
+"days": 92,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvHoliday": "1",
+"InpUhvSRPips": "1",
+"InpUhvNoClose": "1",
+"InpUhvMinTicks": "20",
+"InpUhvMaxHumps": "5",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvFreshBreak": "8",
+"InpUhvLoudBrk": "0.7"
+},
+"train": {
+"n": 1692,
+"L": 55,
+"wr": 96.7494,
+"loss_rate": 3.2506,
+"net": -8860.65,
+"days": 83,
+"lfd": 41,
+"den": 83,
+"lfd_pct": 49.4
+},
+"test": {
+"n": 1867,
+"L": 18,
+"wr": 99.0359,
+"loss_rate": 0.9641,
+"net": -865.99,
+"days": 91,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "60",
+"InpUhvSRPips": "4",
+"InpUhvBrokeHighs": "5",
+"InpUhvCounterAtr": "6",
+"InpUhvBigFig": "2",
+"InpUhvRangeAtr": "2.5",
+"InpUhvNewsNY": "1",
+"InpUhvMaxTrigSpread": "0.7"
+},
+"train": {
+"n": 722,
+"L": 23,
+"wr": 96.8144,
+"loss_rate": 3.1856,
+"net": -3792.77,
+"days": 83,
+"lfd": 62,
+"den": 83,
+"lfd_pct": 74.7
+},
+"test": {
+"n": 596,
+"L": 6,
+"wr": 98.9933,
+"loss_rate": 1.0067,
+"net": -391.83,
+"days": 91,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "10",
+"InpUhvMinHumps": "3",
+"InpUhvStruct": "1",
+"InpUhvMinTicks": "20",
+"InpUhvBigFig": "1.5",
+"InpUhvRangeAtr": "3",
+"InpUhvCounterAtr": "8",
+"InpUhvMaxGapPips": "0.8"
+},
+"train": {
+"n": 207,
+"L": 7,
+"wr": 96.6184,
+"loss_rate": 3.3816,
+"net": -1132.98,
+"days": 77,
+"lfd": 71,
+"den": 83,
+"lfd_pct": 85.54
+},
+"test": {
+"n": 255,
+"L": 3,
+"wr": 98.8235,
+"loss_rate": 1.1765,
+"net": -257.91,
+"days": 88,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvSRPips": "2",
+"InpUhvNewsNY": "1",
+"InpUhvMinTicks": "40",
+"InpUhvMaxGapPips": "1",
+"InpUhvSpikeAtr": "5",
+"InpUhvHoliday": "1",
+"InpUhvMaxHumps": "6"
+},
+"train": {
+"n": 2351,
+"L": 70,
+"wr": 97.0225,
+"loss_rate": 2.9775,
+"net": -11165.41,
+"days": 83,
+"lfd": 35,
+"den": 83,
+"lfd_pct": 42.17
+},
+"test": {
+"n": 2660,
+"L": 31,
+"wr": 98.8346,
+"loss_rate": 1.1654,
+"net": -2781.94,
+"days": 91,
+"lfd": 65,
+"den": 92,
+"lfd_pct": 70.65
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "0.5",
+"InpUhvMaxHumps": "6",
+"InpUhvDeepRet": "0.7",
+"InpUhvCounterAtr": "6",
+"InpUhvSpikeAtr": "5",
+"InpUhvHoliday": "1",
+"InpUhvMinHumps": "4",
+"InpUhvMaxTrigSpread": "0.8"
+},
+"train": {
+"n": 317,
+"L": 9,
+"wr": 97.1609,
+"loss_rate": 2.8391,
+"net": -1510.97,
+"days": 80,
+"lfd": 71,
+"den": 83,
+"lfd_pct": 85.54
+},
+"test": {
+"n": 353,
+"L": 4,
+"wr": 98.8669,
+"loss_rate": 1.1331,
+"net": -391.91,
+"days": 84,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "2.5",
+"InpUhvCounterAtr": "8",
+"InpUhvSRPips": "4",
+"InpUhvStruct": "1",
+"InpUhvMinAtrPips": "2",
+"InpUhvSRAhead": "0.3",
+"InpUhvBrokeHighs": "8",
+"InpUhvDeepRet": "0.7"
+},
+"train": {
+"n": 81,
+"L": 1,
+"wr": 98.7654,
+"loss_rate": 1.2346,
+"net": -80.02,
+"days": 43,
+"lfd": 42,
+"den": 83,
+"lfd_pct": 50.6
+},
+"test": {
+"n": 34,
+"L": 1,
+"wr": 97.0588,
+"loss_rate": 2.9412,
+"net": -167.96,
+"days": 22,
+"lfd": 21,
+"den": 92,
+"lfd_pct": 22.83
+}
+},
+{
+"stack": {
+"InpUhvFreshBreak": "1",
+"InpUhvStruct": "2",
+"InpUhvBrokeHighs": "5",
+"InpUhvNoClose": "1",
+"InpUhvHoliday": "1",
+"InpUhvSunOpenMins": "30",
+"InpUhvDeepRet": "0.6",
+"InpUhvMaxTrigSpread": "0.7"
+},
+"train": {
+"n": 1321,
+"L": 44,
+"wr": 96.6692,
+"loss_rate": 3.3308,
+"net": -6834.77,
+"days": 83,
+"lfd": 48,
+"den": 83,
+"lfd_pct": 57.83
+},
+"test": {
+"n": 1525,
+"L": 14,
+"wr": 99.082,
+"loss_rate": 0.918,
+"net": -661.77,
+"days": 92,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "2",
+"InpUhvBrokeHighs": "4",
+"InpUhvFriCutNY": "10",
+"InpUhvNewsNY": "1",
+"InpUhvMinTicks": "40",
+"InpUhvMaxHumps": "4",
+"InpUhvHtf5": "1",
+"InpUhvMinHumps": "4"
+},
+"train": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 83,
+"lfd_pct": 0.0
+},
+"test": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 92,
+"lfd_pct": 0.0
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "2",
+"InpUhvCounterAtr": "4",
+"InpUhvSunOpenMins": "60",
+"InpUhvSRPips": "0.5",
+"InpUhvLoudBrk": "0.9",
+"InpUhvMinTicks": "40",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvMinHumps": "3"
+},
+"train": {
+"n": 603,
+"L": 19,
+"wr": 96.8491,
+"loss_rate": 3.1509,
+"net": -3155.88,
+"days": 83,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 603,
+"L": 7,
+"wr": 98.8391,
+"loss_rate": 1.1609,
+"net": -708.88,
+"days": 90,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvStruct": "1",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvBigFig": "2",
+"InpUhvLoudBrk": "0.7",
+"InpUhvSunOpenMins": "60",
+"InpUhvSRPips": "1"
+},
+"train": {
+"n": 1166,
+"L": 41,
+"wr": 96.4837,
+"loss_rate": 3.5163,
+"net": -6574.77,
+"days": 83,
+"lfd": 52,
+"den": 83,
+"lfd_pct": 62.65
+},
+"test": {
+"n": 1061,
+"L": 15,
+"wr": 98.5862,
+"loss_rate": 1.4138,
+"net": -2027.87,
+"days": 91,
+"lfd": 77,
+"den": 92,
+"lfd_pct": 83.7
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "4",
+"InpUhvMinHumps": "3",
+"InpUhvHoliday": "1",
+"InpUhvStruct": "2",
+"InpUhvMinTicks": "30",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvSRAhead": "1",
+"InpUhvSRPips": "0.5"
+},
+"train": {
+"n": 160,
+"L": 9,
+"wr": 94.375,
+"loss_rate": 5.625,
+"net": -1692.97,
+"days": 65,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 143,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 213.1,
+"days": 67,
+"lfd": 67,
+"den": 92,
+"lfd_pct": 72.83
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "2",
+"InpUhvRangeAtr": "3",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvBrokeHighs": "8",
+"InpUhvMinTicks": "10",
+"InpUhvBigFig": "2",
+"InpUhvHtf5": "2"
+},
+"train": {
+"n": 651,
+"L": 15,
+"wr": 97.6959,
+"loss_rate": 2.3041,
+"net": -2064.01,
+"days": 83,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 566,
+"L": 7,
+"wr": 98.7633,
+"loss_rate": 1.2367,
+"net": -617.89,
+"days": 91,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "5",
+"InpUhvNewsNY": "1",
+"InpUhvNoClose": "1",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvSunOpenMins": "30",
+"InpUhvMinHumps": "2",
+"InpUhvMinTicks": "10",
+"InpUhvBrokeHighs": "6"
+},
+"train": {
+"n": 1721,
+"L": 48,
+"wr": 97.2109,
+"loss_rate": 2.7891,
+"net": -8043.65,
+"days": 83,
+"lfd": 43,
+"den": 83,
+"lfd_pct": 51.81
+},
+"test": {
+"n": 2002,
+"L": 19,
+"wr": 99.0509,
+"loss_rate": 0.9491,
+"net": -1099.73,
+"days": 92,
+"lfd": 75,
+"den": 92,
+"lfd_pct": 81.52
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "2",
+"InpUhvCounterAtr": "3",
+"InpUhvFreshBreak": "1",
+"InpUhvMaxHumps": "6",
+"InpUhvRangeAtr": "1.5",
+"InpUhvBigFig": "1.5",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvSRAhead": "2"
+},
+"train": {
+"n": 282,
+"L": 12,
+"wr": 95.7447,
+"loss_rate": 4.2553,
+"net": -2268.93,
+"days": 78,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 215,
+"L": 1,
+"wr": 99.5349,
+"loss_rate": 0.4651,
+"net": 64.12,
+"days": 75,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "15",
+"InpUhvNewsNY": "1",
+"InpUhvFreshBreak": "3",
+"InpUhvMaxHumps": "2",
+"InpUhvFriCutNY": "13",
+"InpUhvSunOpenMins": "120",
+"InpUhvSpikeAtr": "3",
+"InpUhvLoudBrk": "0.8"
+},
+"train": {
+"n": 1689,
+"L": 58,
+"wr": 96.566,
+"loss_rate": 3.434,
+"net": -10144.48,
+"days": 83,
+"lfd": 38,
+"den": 83,
+"lfd_pct": 45.78
+},
+"test": {
+"n": 2146,
+"L": 25,
+"wr": 98.835,
+"loss_rate": 1.165,
+"net": -2693.85,
+"days": 92,
+"lfd": 69,
+"den": 92,
+"lfd_pct": 75.0
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "4",
+"InpUhvMinHumps": "4",
+"InpUhvNoClose": "1",
+"InpUhvRangeAtr": "2.5",
+"InpUhvMinTicks": "30",
+"InpUhvMinAtrPips": "1",
+"InpUhvHtf5": "2",
+"InpUhvDeepRet": "0.8"
+},
+"train": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 83,
+"lfd_pct": 0.0
+},
+"test": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 92,
+"lfd_pct": 0.0
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvHoliday": "1",
+"InpUhvFriCutNY": "15",
+"InpUhvMinHumps": "4",
+"InpUhvLoudBrk": "0.8",
+"InpUhvRangeAtr": "3",
+"InpUhvMaxGapPips": "0.3",
+"InpUhvRunPips": "10"
+},
+"train": {
+"n": 174,
+"L": 7,
+"wr": 95.977,
+"loss_rate": 4.023,
+"net": -1248.02,
+"days": 74,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 195,
+"L": 1,
+"wr": 99.4872,
+"loss_rate": 0.5128,
+"net": 65.01,
+"days": 82,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "2",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvMaxHumps": "6",
+"InpUhvMinHumps": "2",
+"InpUhvSRPips": "1.5",
+"InpUhvStruct": "1",
+"InpUhvNoClose": "1",
+"InpUhvFreshBreak": "3"
+},
+"train": {
+"n": 320,
+"L": 9,
+"wr": 97.1875,
+"loss_rate": 2.8125,
+"net": -1382.94,
+"days": 81,
+"lfd": 72,
+"den": 83,
+"lfd_pct": 86.75
+},
+"test": {
+"n": 300,
+"L": 2,
+"wr": 99.3333,
+"loss_rate": 0.6667,
+"net": 39.15,
+"days": 85,
+"lfd": 83,
+"den": 92,
+"lfd_pct": 90.22
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "3",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvHtf5": "1",
+"InpUhvStruct": "2",
+"InpUhvBigFig": "0.5",
+"InpUhvHoliday": "1",
+"InpUhvMinTicks": "30",
+"InpUhvFriCutNY": "13"
+},
+"train": {
+"n": 447,
+"L": 16,
+"wr": 96.4206,
+"loss_rate": 3.5794,
+"net": -2707.97,
+"days": 80,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 474,
+"L": 5,
+"wr": 98.9451,
+"loss_rate": 1.0549,
+"net": -482.9,
+"days": 87,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.7",
+"InpUhvFreshBreak": "1",
+"InpUhvSpikeAtr": "3",
+"InpUhvNoClose": "1",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvMaxHumps": "5",
+"InpUhvCounterAtr": "4",
+"InpUhvMaxTrigSpread": "1.5"
+},
+"train": {
+"n": 1843,
+"L": 63,
+"wr": 96.5817,
+"loss_rate": 3.4183,
+"net": -10100.75,
+"days": 83,
+"lfd": 40,
+"den": 83,
+"lfd_pct": 48.19
+},
+"test": {
+"n": 2292,
+"L": 22,
+"wr": 99.0401,
+"loss_rate": 0.9599,
+"net": -1209.83,
+"days": 92,
+"lfd": 72,
+"den": 92,
+"lfd_pct": 78.26
+}
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvCounterAtr": "4",
+"InpUhvNoClose": "1",
+"InpUhvNewsNY": "1",
+"InpUhvSRAhead": "0.5",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvSpikeAtr": "3",
+"InpUhvMaxGapPips": "0.8"
+},
+"train": {
+"n": 1153,
+"L": 36,
+"wr": 96.8777,
+"loss_rate": 3.1223,
+"net": -5611.68,
+"days": 83,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 1167,
+"L": 11,
+"wr": 99.0574,
+"loss_rate": 0.9426,
+"net": -620.77,
+"days": 91,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "0.3",
+"InpUhvDeepRet": "0.6",
+"InpUhvNoClose": "1",
+"InpUhvBrokeHighs": "5",
+"InpUhvBigFig": "2",
+"InpUhvMaxHumps": "6",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvSRPips": "4"
+},
+"train": {
+"n": 265,
+"L": 9,
+"wr": 96.6038,
+"loss_rate": 3.3962,
+"net": -1509.78,
+"days": 75,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 155,
+"L": 2,
+"wr": 98.7097,
+"loss_rate": 1.2903,
+"net": -206.88,
+"days": 63,
+"lfd": 61,
+"den": 92,
+"lfd_pct": 66.3
+}
+},
+{
+"stack": {
+"InpUhvMaxTrigSpread": "1",
+"InpUhvHoliday": "1",
+"InpUhvSRAhead": "1",
+"InpUhvMinAtrPips": "1",
+"InpUhvHtf5": "1",
+"InpUhvStruct": "1",
+"InpUhvMinHumps": "3",
+"InpUhvBigFig": "1"
+},
+"train": {
+"n": 81,
+"L": 5,
+"wr": 93.8272,
+"loss_rate": 6.1728,
+"net": -935.0,
+"days": 43,
+"lfd": 39,
+"den": 83,
+"lfd_pct": 46.99
+},
+"test": {
+"n": 88,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 122.08,
+"days": 48,
+"lfd": 48,
+"den": 92,
+"lfd_pct": 52.17
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvCounterAtr": "6",
+"InpUhvSpikeAtr": "4",
+"InpUhvSRAhead": "1",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvFriCutNY": "12",
+"InpUhvMinHumps": "4"
+},
+"train": {
+"n": 81,
+"L": 5,
+"wr": 93.8272,
+"loss_rate": 6.1728,
+"net": -987.99,
+"days": 45,
+"lfd": 40,
+"den": 83,
+"lfd_pct": 48.19
+},
+"test": {
+"n": 53,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 79.01,
+"days": 32,
+"lfd": 32,
+"den": 92,
+"lfd_pct": 34.78
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvBigFig": "0.5",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvSunOpenMins": "30",
+"InpUhvSpikeAtr": "3",
+"InpUhvMinTicks": "10",
+"InpUhvSRAhead": "1.5",
+"InpUhvRangeAtr": "2.5"
+},
+"train": {
+"n": 301,
+"L": 10,
+"wr": 96.6777,
+"loss_rate": 3.3223,
+"net": -1799.06,
+"days": 77,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 197,
+"L": 1,
+"wr": 99.4924,
+"loss_rate": 0.5076,
+"net": 44.01,
+"days": 67,
+"lfd": 66,
+"den": 92,
+"lfd_pct": 71.74
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.9",
+"InpUhvMaxHumps": "5",
+"InpUhvMinHumps": "3",
+"InpUhvFriCutNY": "14",
+"InpUhvBigFig": "1",
+"InpUhvMinTicks": "15",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvNoClose": "1"
+},
+"train": {
+"n": 345,
+"L": 10,
+"wr": 97.1014,
+"loss_rate": 2.8986,
+"net": -1681.94,
+"days": 73,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 240,
+"L": 4,
+"wr": 98.3333,
+"loss_rate": 1.6667,
+"net": -478.9,
+"days": 75,
+"lfd": 71,
+"den": 92,
+"lfd_pct": 77.17
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "3",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvSunOpenMins": "30",
+"InpUhvMaxHumps": "5",
+"InpUhvRangeAtr": "2",
+"InpUhvSRPips": "0.5",
+"InpUhvCounterAtr": "3",
+"InpUhvMinTicks": "15"
+},
+"train": {
+"n": 528,
+"L": 16,
+"wr": 96.9697,
+"loss_rate": 3.0303,
+"net": -2578.91,
+"days": 83,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 569,
+"L": 6,
+"wr": 98.9455,
+"loss_rate": 1.0545,
+"net": -453.87,
+"days": 89,
+"lfd": 83,
+"den": 92,
+"lfd_pct": 90.22
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvNewsNY": "1",
+"InpUhvSRAhead": "1",
+"InpUhvSpikeAtr": "2",
+"InpUhvStruct": "1",
+"InpUhvMinAtrPips": "2",
+"InpUhvNoClose": "1",
+"InpUhvFriCutNY": "13"
+},
+"train": {
+"n": 90,
+"L": 5,
+"wr": 94.4444,
+"loss_rate": 5.5556,
+"net": -1015.03,
+"days": 42,
+"lfd": 37,
+"den": 83,
+"lfd_pct": 44.58
+},
+"test": {
+"n": 56,
+"L": 1,
+"wr": 98.2143,
+"loss_rate": 1.7857,
+"net": -180.99,
+"days": 27,
+"lfd": 26,
+"den": 92,
+"lfd_pct": 28.26
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvNewsNY": "1",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvSRAhead": "2",
+"InpUhvSunOpenMins": "60",
+"InpUhvBigFig": "1",
+"InpUhvMinHumps": "2",
+"InpUhvStruct": "2"
+},
+"train": {
+"n": 142,
+"L": 4,
+"wr": 97.1831,
+"loss_rate": 2.8169,
+"net": -1191.97,
+"days": 60,
+"lfd": 56,
+"den": 83,
+"lfd_pct": 67.47
+},
+"test": {
+"n": 89,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 121.07,
+"days": 45,
+"lfd": 45,
+"den": 92,
+"lfd_pct": 48.91
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "3",
+"InpUhvNoClose": "1",
+"InpUhvNewsNY": "1",
+"InpUhvDeepRet": "0.6",
+"InpUhvBigFig": "1",
+"InpUhvMaxHumps": "5",
+"InpUhvLoudBrk": "0.7",
+"InpUhvMaxTrigSpread": "0.8"
+},
+"train": {
+"n": 1112,
+"L": 31,
+"wr": 97.2122,
+"loss_rate": 2.7878,
+"net": -4497.77,
+"days": 84,
+"lfd": 56,
+"den": 83,
+"lfd_pct": 67.47
+},
+"test": {
+"n": 1281,
+"L": 11,
+"wr": 99.1413,
+"loss_rate": 0.8587,
+"net": -318.58,
+"days": 92,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "3",
+"InpUhvHoliday": "1",
+"InpUhvDeepRet": "0.8",
+"InpUhvHtf5": "2",
+"InpUhvSunOpenMins": "120",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvStruct": "1",
+"InpUhvBrokeHighs": "6"
+},
+"train": {
+"n": 725,
+"L": 29,
+"wr": 96.0,
+"loss_rate": 4.0,
+"net": -4237.04,
+"days": 82,
+"lfd": 56,
+"den": 83,
+"lfd_pct": 67.47
+},
+"test": {
+"n": 847,
+"L": 6,
+"wr": 99.2916,
+"loss_rate": 0.7084,
+"net": 179.28,
+"days": 90,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "2",
+"InpUhvMinHumps": "2",
+"InpUhvSRAhead": "0.5",
+"InpUhvBrokeHighs": "3",
+"InpUhvCounterAtr": "6",
+"InpUhvFriCutNY": "14",
+"InpUhvHoliday": "1",
+"InpUhvMaxTrigSpread": "1.5"
+},
+"train": {
+"n": 748,
+"L": 21,
+"wr": 97.1925,
+"loss_rate": 2.8075,
+"net": -3425.84,
+"days": 80,
+"lfd": 61,
+"den": 83,
+"lfd_pct": 73.49
+},
+"test": {
+"n": 763,
+"L": 9,
+"wr": 98.8204,
+"loss_rate": 1.1796,
+"net": -764.82,
+"days": 90,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvHoliday": "1",
+"InpUhvMinTicks": "40",
+"InpUhvBrokeHighs": "6",
+"InpUhvRangeAtr": "1",
+"InpUhvNewsNY": "1",
+"InpUhvMinHumps": "3",
+"InpUhvMaxGapPips": "0.6"
+},
+"train": {
+"n": 621,
+"L": 18,
+"wr": 97.1014,
+"loss_rate": 2.8986,
+"net": -2933.89,
+"days": 82,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 644,
+"L": 5,
+"wr": 99.2236,
+"loss_rate": 0.7764,
+"net": -231.91,
+"days": 90,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "1",
+"InpUhvBrokeHighs": "6",
+"InpUhvSpikeAtr": "2",
+"InpUhvStruct": "1",
+"InpUhvMaxHumps": "2",
+"InpUhvBigFig": "1.5",
+"InpUhvSRPips": "0.5",
+"InpUhvFreshBreak": "1"
+},
+"train": {
+"n": 345,
+"L": 19,
+"wr": 94.4928,
+"loss_rate": 5.5072,
+"net": -3609.03,
+"days": 81,
+"lfd": 63,
+"den": 83,
+"lfd_pct": 75.9
+},
+"test": {
+"n": 309,
+"L": 4,
+"wr": 98.7055,
+"loss_rate": 1.2945,
+"net": -302.96,
+"days": 82,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvMaxHumps": "4",
+"InpUhvBrokeHighs": "2",
+"InpUhvFreshBreak": "8",
+"InpUhvMinHumps": "4",
+"InpUhvBigFig": "1.5",
+"InpUhvMinAtrPips": "1",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 83,
+"lfd_pct": 0.0
+},
+"test": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 92,
+"lfd_pct": 0.0
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "3",
+"InpUhvSRAhead": "0.5",
+"InpUhvHtf5": "1",
+"InpUhvFriCutNY": "13",
+"InpUhvHoliday": "1",
+"InpUhvMaxHumps": "4",
+"InpUhvMinAtrPips": "1",
+"InpUhvDeepRet": "0.5"
+},
+"train": {
+"n": 175,
+"L": 5,
+"wr": 97.1429,
+"loss_rate": 2.8571,
+"net": -796.97,
+"days": 67,
+"lfd": 63,
+"den": 83,
+"lfd_pct": 75.9
+},
+"test": {
+"n": 101,
+"L": 3,
+"wr": 97.0297,
+"loss_rate": 2.9703,
+"net": -529.98,
+"days": 51,
+"lfd": 48,
+"den": 92,
+"lfd_pct": 52.17
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "6",
+"InpUhvStruct": "2",
+"InpUhvBigFig": "1.5",
+"InpUhvHtf5": "2",
+"InpUhvSpikeAtr": "4",
+"InpUhvRangeAtr": "3",
+"InpUhvDeepRet": "0.7",
+"InpUhvFriCutNY": "10"
+},
+"train": {
+"n": 953,
+"L": 27,
+"wr": 97.1668,
+"loss_rate": 2.8332,
+"net": -4069.91,
+"days": 84,
+"lfd": 60,
+"den": 83,
+"lfd_pct": 72.29
+},
+"test": {
+"n": 1071,
+"L": 9,
+"wr": 99.1597,
+"loss_rate": 0.8403,
+"net": -310.73,
+"days": 91,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvFriCutNY": "13",
+"InpUhvCounterAtr": "8",
+"InpUhvNewsNY": "1",
+"InpUhvFreshBreak": "5",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvBigFig": "1.5",
+"InpUhvBrokeHighs": "2"
+},
+"train": {
+"n": 1408,
+"L": 42,
+"wr": 97.017,
+"loss_rate": 2.983,
+"net": -6853.88,
+"days": 83,
+"lfd": 50,
+"den": 83,
+"lfd_pct": 60.24
+},
+"test": {
+"n": 1414,
+"L": 15,
+"wr": 98.9392,
+"loss_rate": 1.0608,
+"net": -992.86,
+"days": 91,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "2",
+"InpUhvSpikeAtr": "4",
+"InpUhvLoudBrk": "0.95",
+"InpUhvNewsNY": "1",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvBigFig": "2",
+"InpUhvCounterAtr": "6",
+"InpUhvDeepRet": "0.5"
+},
+"train": {
+"n": 435,
+"L": 16,
+"wr": 96.3218,
+"loss_rate": 3.6782,
+"net": -2885.01,
+"days": 69,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 251,
+"L": 3,
+"wr": 98.8048,
+"loss_rate": 1.1952,
+"net": -332.84,
+"days": 59,
+"lfd": 56,
+"den": 92,
+"lfd_pct": 60.87
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "5",
+"InpUhvSunOpenMins": "60",
+"InpUhvMinTicks": "20",
+"InpUhvHoliday": "1",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvSRAhead": "0.3",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvMinAtrPips": "1.5"
+},
+"train": {
+"n": 1269,
+"L": 47,
+"wr": 96.2963,
+"loss_rate": 3.7037,
+"net": -8413.62,
+"days": 81,
+"lfd": 49,
+"den": 83,
+"lfd_pct": 59.04
+},
+"test": {
+"n": 863,
+"L": 15,
+"wr": 98.2619,
+"loss_rate": 1.7381,
+"net": -1803.74,
+"days": 86,
+"lfd": 71,
+"den": 92,
+"lfd_pct": 77.17
+}
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvCounterAtr": "6",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvHtf5": "1",
+"InpUhvMaxHumps": "6",
+"InpUhvBigFig": "0.8",
+"InpUhvSpikeAtr": "4",
+"InpUhvBrokeHighs": "4"
+},
+"train": {
+"n": 1297,
+"L": 45,
+"wr": 96.5305,
+"loss_rate": 3.4695,
+"net": -7208.96,
+"days": 83,
+"lfd": 48,
+"den": 83,
+"lfd_pct": 57.83
+},
+"test": {
+"n": 1437,
+"L": 14,
+"wr": 99.0257,
+"loss_rate": 0.9743,
+"net": -349.7,
+"days": 91,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "6",
+"InpUhvHtf5": "1",
+"InpUhvFriCutNY": "12",
+"InpUhvLoudBrk": "0.8",
+"InpUhvRangeAtr": "2.5",
+"InpUhvSpikeAtr": "4",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvSunOpenMins": "120"
+},
+"train": {
+"n": 1501,
+"L": 39,
+"wr": 97.4017,
+"loss_rate": 2.5983,
+"net": -6025.83,
+"days": 84,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 1775,
+"L": 14,
+"wr": 99.2113,
+"loss_rate": 0.7887,
+"net": -469.73,
+"days": 92,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvSpikeAtr": "2",
+"InpUhvCounterAtr": "6",
+"InpUhvMinHumps": "2",
+"InpUhvMaxHumps": "4",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvFreshBreak": "1",
+"InpUhvRunPips": "8"
+},
+"train": {
+"n": 668,
+"L": 21,
+"wr": 96.8563,
+"loss_rate": 3.1437,
+"net": -3341.81,
+"days": 83,
+"lfd": 62,
+"den": 83,
+"lfd_pct": 74.7
+},
+"test": {
+"n": 852,
+"L": 8,
+"wr": 99.061,
+"loss_rate": 0.939,
+"net": -382.95,
+"days": 92,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "10",
+"InpUhvMinHumps": "3",
+"InpUhvSRAhead": "0.3",
+"InpUhvNewsNY": "1",
+"InpUhvHtf5": "2",
+"InpUhvStruct": "1",
+"InpUhvLoudBrk": "0.8",
+"InpUhvMaxGapPips": "0.6"
+},
+"train": {
+"n": 220,
+"L": 6,
+"wr": 97.2727,
+"loss_rate": 2.7273,
+"net": -895.01,
+"days": 73,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 239,
+"L": 3,
+"wr": 98.7448,
+"loss_rate": 1.2552,
+"net": -411.9,
+"days": 81,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "2",
+"InpUhvMinTicks": "40",
+"InpUhvLoudBrk": "0.95",
+"InpUhvBrokeHighs": "4",
+"InpUhvRangeAtr": "3",
+"InpUhvDeepRet": "0.8",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvSunOpenMins": "60"
+},
+"train": {
+"n": 685,
+"L": 26,
+"wr": 96.2044,
+"loss_rate": 3.7956,
+"net": -4095.87,
+"days": 83,
+"lfd": 60,
+"den": 83,
+"lfd_pct": 72.29
+},
+"test": {
+"n": 750,
+"L": 11,
+"wr": 98.5333,
+"loss_rate": 1.4667,
+"net": -899.77,
+"days": 91,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvFreshBreak": "3",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvSRPips": "3",
+"InpUhvHtf5": "1",
+"InpUhvRangeAtr": "3",
+"InpUhvSRAhead": "1.5",
+"InpUhvRunPips": "15"
+},
+"train": {
+"n": 85,
+"L": 3,
+"wr": 96.4706,
+"loss_rate": 3.5294,
+"net": -584.02,
+"days": 49,
+"lfd": 46,
+"den": 83,
+"lfd_pct": 55.42
+},
+"test": {
+"n": 45,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 54.0,
+"days": 32,
+"lfd": 32,
+"den": 92,
+"lfd_pct": 34.78
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "30",
+"InpUhvRunPips": "4",
+"InpUhvRangeAtr": "1.5",
+"InpUhvHoliday": "1",
+"InpUhvCounterAtr": "8",
+"InpUhvBrokeHighs": "8",
+"InpUhvNoClose": "1",
+"InpUhvDeepRet": "0.6"
+},
+"train": {
+"n": 1173,
+"L": 32,
+"wr": 97.272,
+"loss_rate": 2.728,
+"net": -4770.8,
+"days": 83,
+"lfd": 56,
+"den": 83,
+"lfd_pct": 67.47
+},
+"test": {
+"n": 1574,
+"L": 18,
+"wr": 98.8564,
+"loss_rate": 1.1436,
+"net": -1403.9,
+"days": 91,
+"lfd": 75,
+"den": 92,
+"lfd_pct": 81.52
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "1.5",
+"InpUhvSunOpenMins": "30",
+"InpUhvRunPips": "15",
+"InpUhvMinHumps": "3",
+"InpUhvRangeAtr": "2",
+"InpUhvSRAhead": "0.3",
+"InpUhvMaxHumps": "4",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 174,
+"L": 6,
+"wr": 96.5517,
+"loss_rate": 3.4483,
+"net": -993.95,
+"days": 69,
+"lfd": 64,
+"den": 83,
+"lfd_pct": 77.11
+},
+"test": {
+"n": 97,
+"L": 2,
+"wr": 97.9381,
+"loss_rate": 2.0619,
+"net": -288.92,
+"days": 56,
+"lfd": 54,
+"den": 92,
+"lfd_pct": 58.7
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "8",
+"InpUhvStruct": "1",
+"InpUhvBigFig": "1.5",
+"InpUhvMinHumps": "4",
+"InpUhvSpikeAtr": "4",
+"InpUhvRunPips": "6",
+"InpUhvFriCutNY": "10",
+"InpUhvMinAtrPips": "1.5"
+},
+"train": {
+"n": 13,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 16.0,
+"days": 13,
+"lfd": 13,
+"den": 83,
+"lfd_pct": 15.66
+},
+"test": {
+"n": 15,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 19.01,
+"days": 14,
+"lfd": 14,
+"den": 92,
+"lfd_pct": 15.22
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "1",
+"InpUhvDeepRet": "0.9",
+"InpUhvRunPips": "4",
+"InpUhvStruct": "1",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvSunOpenMins": "30",
+"InpUhvBigFig": "1",
+"InpUhvRangeAtr": "1.5"
+},
+"train": {
+"n": 271,
+"L": 8,
+"wr": 97.048,
+"loss_rate": 2.952,
+"net": -959.99,
+"days": 79,
+"lfd": 71,
+"den": 83,
+"lfd_pct": 85.54
+},
+"test": {
+"n": 201,
+"L": 1,
+"wr": 99.5025,
+"loss_rate": 0.4975,
+"net": 69.98,
+"days": 80,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "0.8",
+"InpUhvSRAhead": "0.5",
+"InpUhvMinHumps": "2",
+"InpUhvNoClose": "1",
+"InpUhvHoliday": "1",
+"InpUhvFriCutNY": "16",
+"InpUhvCounterAtr": "3",
+"InpUhvHtf5": "1"
+},
+"train": {
+"n": 608,
+"L": 15,
+"wr": 97.5329,
+"loss_rate": 2.4671,
+"net": -2151.88,
+"days": 82,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 590,
+"L": 8,
+"wr": 98.6441,
+"loss_rate": 1.3559,
+"net": -816.83,
+"days": 89,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "5",
+"InpUhvMaxHumps": "6",
+"InpUhvNewsNY": "1",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvRunPips": "10",
+"InpUhvHoliday": "1",
+"InpUhvMinHumps": "3",
+"InpUhvDeepRet": "0.5"
+},
+"train": {
+"n": 23,
+"L": 2,
+"wr": 91.3043,
+"loss_rate": 8.6957,
+"net": -403.99,
+"days": 18,
+"lfd": 16,
+"den": 83,
+"lfd_pct": 19.28
+},
+"test": {
+"n": 20,
+"L": 1,
+"wr": 95.0,
+"loss_rate": 5.0,
+"net": -192.99,
+"days": 17,
+"lfd": 16,
+"den": 92,
+"lfd_pct": 17.39
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "1.5",
+"InpUhvNoClose": "1",
+"InpUhvCounterAtr": "3",
+"InpUhvRangeAtr": "2",
+"InpUhvLoudBrk": "0.7",
+"InpUhvStruct": "2",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvHtf5": "2"
+},
+"train": {
+"n": 310,
+"L": 12,
+"wr": 96.129,
+"loss_rate": 3.871,
+"net": -1829.02,
+"days": 78,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 280,
+"L": 1,
+"wr": 99.6429,
+"loss_rate": 0.3571,
+"net": 160.12,
+"days": 83,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.8",
+"InpUhvFriCutNY": "14",
+"InpUhvHoliday": "1",
+"InpUhvBrokeHighs": "3",
+"InpUhvSRPips": "5",
+"InpUhvStruct": "2",
+"InpUhvRangeAtr": "2.5",
+"InpUhvHtf5": "2"
+},
+"train": {
+"n": 167,
+"L": 3,
+"wr": 98.2036,
+"loss_rate": 1.7964,
+"net": -360.99,
+"days": 68,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 98,
+"L": 1,
+"wr": 98.9796,
+"loss_rate": 1.0204,
+"net": -72.91,
+"days": 52,
+"lfd": 51,
+"den": 92,
+"lfd_pct": 55.43
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "60",
+"InpUhvDeepRet": "0.9",
+"InpUhvMaxHumps": "2",
+"InpUhvRunPips": "6",
+"InpUhvBrokeHighs": "6",
+"InpUhvFreshBreak": "3",
+"InpUhvHoliday": "1",
+"InpUhvNoClose": "1"
+},
+"train": {
+"n": 1069,
+"L": 39,
+"wr": 96.3517,
+"loss_rate": 3.6483,
+"net": -6684.7,
+"days": 84,
+"lfd": 53,
+"den": 83,
+"lfd_pct": 63.86
+},
+"test": {
+"n": 1398,
+"L": 20,
+"wr": 98.5694,
+"loss_rate": 1.4306,
+"net": -2053.8,
+"days": 92,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "4",
+"InpUhvRunPips": "4",
+"InpUhvFriCutNY": "12",
+"InpUhvSRPips": "0.5",
+"InpUhvLoudBrk": "0.7",
+"InpUhvSpikeAtr": "5",
+"InpUhvDeepRet": "0.7",
+"InpUhvSunOpenMins": "30"
+},
+"train": {
+"n": 125,
+"L": 4,
+"wr": 96.8,
+"loss_rate": 3.2,
+"net": -726.03,
+"days": 67,
+"lfd": 63,
+"den": 83,
+"lfd_pct": 75.9
+},
+"test": {
+"n": 127,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 183.98,
+"days": 68,
+"lfd": 68,
+"den": 92,
+"lfd_pct": 73.91
+}
+},
+{
+"stack": {
+"InpUhvFriCutNY": "10",
+"InpUhvMinTicks": "20",
+"InpUhvBigFig": "0.8",
+"InpUhvMaxHumps": "4",
+"InpUhvHoliday": "1",
+"InpUhvMinHumps": "2",
+"InpUhvDeepRet": "0.5",
+"InpUhvSpikeAtr": "3"
+},
+"train": {
+"n": 781,
+"L": 14,
+"wr": 98.2074,
+"loss_rate": 1.7926,
+"net": -1722.88,
+"days": 82,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 888,
+"L": 6,
+"wr": 99.3243,
+"loss_rate": 0.6757,
+"net": -5.86,
+"days": 92,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvCounterAtr": "3",
+"InpUhvBigFig": "0.5",
+"InpUhvDeepRet": "0.7",
+"InpUhvSRPips": "4",
+"InpUhvLoudBrk": "0.9",
+"InpUhvFriCutNY": "14",
+"InpUhvSRAhead": "0.3"
+},
+"train": {
+"n": 305,
+"L": 12,
+"wr": 96.0656,
+"loss_rate": 3.9344,
+"net": -2142.84,
+"days": 75,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 199,
+"L": 1,
+"wr": 99.4975,
+"loss_rate": 0.5025,
+"net": 74.09,
+"days": 72,
+"lfd": 71,
+"den": 92,
+"lfd_pct": 77.17
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "3",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvRunPips": "10",
+"InpUhvMinHumps": "3",
+"InpUhvLoudBrk": "0.7",
+"InpUhvNoClose": "1",
+"InpUhvFreshBreak": "2",
+"InpUhvMinTicks": "30"
+},
+"train": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 83,
+"lfd_pct": 0.0
+},
+"test": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 92,
+"lfd_pct": 0.0
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "4",
+"InpUhvStruct": "2",
+"InpUhvNewsNY": "1",
+"InpUhvDeepRet": "0.9",
+"InpUhvSRPips": "3",
+"InpUhvHtf5": "1",
+"InpUhvMaxTrigSpread": "0.7",
+"InpUhvBigFig": "2"
+},
+"train": {
+"n": 378,
+"L": 15,
+"wr": 96.0317,
+"loss_rate": 3.9683,
+"net": -2655.03,
+"days": 82,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 265,
+"L": 2,
+"wr": 99.2453,
+"loss_rate": 0.7547,
+"net": -109.07,
+"days": 81,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "4",
+"InpUhvNoClose": "1",
+"InpUhvSpikeAtr": "3",
+"InpUhvHtf5": "1",
+"InpUhvMinHumps": "4",
+"InpUhvMinTicks": "40",
+"InpUhvFriCutNY": "15",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 331,
+"L": 12,
+"wr": 96.3746,
+"loss_rate": 3.6254,
+"net": -2127.03,
+"days": 79,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 348,
+"L": 5,
+"wr": 98.5632,
+"loss_rate": 1.4368,
+"net": -597.99,
+"days": 84,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "10",
+"InpUhvMaxGapPips": "1",
+"InpUhvHoliday": "1",
+"InpUhvBigFig": "2",
+"InpUhvNoClose": "1",
+"InpUhvNewsNY": "1",
+"InpUhvFreshBreak": "8",
+"InpUhvHtf5": "1"
+},
+"train": {
+"n": 1677,
+"L": 45,
+"wr": 97.3166,
+"loss_rate": 2.6834,
+"net": -6618.9,
+"days": 83,
+"lfd": 47,
+"den": 83,
+"lfd_pct": 56.63
+},
+"test": {
+"n": 1887,
+"L": 21,
+"wr": 98.8871,
+"loss_rate": 1.1129,
+"net": -1522.79,
+"days": 92,
+"lfd": 73,
+"den": 92,
+"lfd_pct": 79.35
+}
+},
+{
+"stack": {
+"InpUhvLoudBrk": "0.7",
+"InpUhvStruct": "2",
+"InpUhvNoClose": "1",
+"InpUhvMaxTrigSpread": "0.7",
+"InpUhvFriCutNY": "10",
+"InpUhvSRAhead": "1",
+"InpUhvSRPips": "1.5",
+"InpUhvSunOpenMins": "60"
+},
+"train": {
+"n": 704,
+"L": 20,
+"wr": 97.1591,
+"loss_rate": 2.8409,
+"net": -3139.82,
+"days": 82,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 570,
+"L": 5,
+"wr": 99.1228,
+"loss_rate": 0.8772,
+"net": -243.86,
+"days": 91,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvMaxGapPips": "0.8",
+"InpUhvSRPips": "5",
+"InpUhvFriCutNY": "15",
+"InpUhvMinHumps": "3",
+"InpUhvNewsNY": "1",
+"InpUhvSunOpenMins": "30",
+"InpUhvNoClose": "1",
+"InpUhvBrokeHighs": "5"
+},
+"train": {
+"n": 192,
+"L": 5,
+"wr": 97.3958,
+"loss_rate": 2.6042,
+"net": -775.89,
+"days": 74,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 134,
+"L": 2,
+"wr": 98.5075,
+"loss_rate": 1.4925,
+"net": -237.94,
+"days": 61,
+"lfd": 59,
+"den": 92,
+"lfd_pct": 64.13
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "1.5",
+"InpUhvRangeAtr": "2",
+"InpUhvSunOpenMins": "120",
+"InpUhvMaxHumps": "6",
+"InpUhvDeepRet": "0.9",
+"InpUhvSRAhead": "0.3",
+"InpUhvFriCutNY": "10",
+"InpUhvLoudBrk": "0.9"
+},
+"train": {
+"n": 909,
+"L": 30,
+"wr": 96.6997,
+"loss_rate": 3.3003,
+"net": -5314.69,
+"days": 81,
+"lfd": 60,
+"den": 83,
+"lfd_pct": 72.29
+},
+"test": {
+"n": 585,
+"L": 12,
+"wr": 97.9487,
+"loss_rate": 2.0513,
+"net": -1750.8,
+"days": 85,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.7",
+"InpUhvFreshBreak": "5",
+"InpUhvSunOpenMins": "60",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvHtf5": "1",
+"InpUhvRangeAtr": "2",
+"InpUhvCounterAtr": "6",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 1630,
+"L": 57,
+"wr": 96.5031,
+"loss_rate": 3.4969,
+"net": -9613.02,
+"days": 83,
+"lfd": 42,
+"den": 83,
+"lfd_pct": 50.6
+},
+"test": {
+"n": 1930,
+"L": 22,
+"wr": 98.8601,
+"loss_rate": 1.1399,
+"net": -1547.64,
+"days": 92,
+"lfd": 72,
+"den": 92,
+"lfd_pct": 78.26
+}
+},
+{
+"stack": {
+"InpUhvMaxGapPips": "1",
+"InpUhvRunPips": "10",
+"InpUhvHtf5": "2",
+"InpUhvSRPips": "1.5",
+"InpUhvBrokeHighs": "4",
+"InpUhvSRAhead": "1",
+"InpUhvMinTicks": "10",
+"InpUhvMaxTrigSpread": "0.8"
+},
+"train": {
+"n": 443,
+"L": 18,
+"wr": 95.9368,
+"loss_rate": 4.0632,
+"net": -3195.0,
+"days": 82,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 341,
+"L": 2,
+"wr": 99.4135,
+"loss_rate": 0.5865,
+"net": 33.04,
+"days": 88,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvLoudBrk": "0.9",
+"InpUhvRangeAtr": "2",
+"InpUhvFreshBreak": "1",
+"InpUhvRunPips": "8",
+"InpUhvDeepRet": "0.9",
+"InpUhvNoClose": "1",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvMinHumps": "4"
+},
+"train": {
+"n": 241,
+"L": 7,
+"wr": 97.0954,
+"loss_rate": 2.9046,
+"net": -1130.01,
+"days": 78,
+"lfd": 71,
+"den": 83,
+"lfd_pct": 85.54
+},
+"test": {
+"n": 268,
+"L": 1,
+"wr": 99.6269,
+"loss_rate": 0.3731,
+"net": 166.07,
+"days": 86,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "30",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvCounterAtr": "8",
+"InpUhvFriCutNY": "10",
+"InpUhvSRAhead": "0.5",
+"InpUhvMaxHumps": "4",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 1588,
+"L": 51,
+"wr": 96.7884,
+"loss_rate": 3.2116,
+"net": -9019.52,
+"days": 83,
+"lfd": 46,
+"den": 83,
+"lfd_pct": 55.42
+},
+"test": {
+"n": 1625,
+"L": 17,
+"wr": 98.9538,
+"loss_rate": 1.0462,
+"net": -1456.76,
+"days": 91,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvStruct": "1",
+"InpUhvBigFig": "0.8",
+"InpUhvMinHumps": "3",
+"InpUhvNewsNY": "1",
+"InpUhvHoliday": "1",
+"InpUhvBrokeHighs": "3",
+"InpUhvSpikeAtr": "5"
+},
+"train": {
+"n": 417,
+"L": 14,
+"wr": 96.6427,
+"loss_rate": 3.3573,
+"net": -2290.88,
+"days": 82,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 433,
+"L": 5,
+"wr": 98.8453,
+"loss_rate": 1.1547,
+"net": -539.89,
+"days": 88,
+"lfd": 83,
+"den": 92,
+"lfd_pct": 90.22
+}
+},
+{
+"stack": {
+"InpUhvFriCutNY": "13",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvBrokeHighs": "4",
+"InpUhvDeepRet": "0.6",
+"InpUhvBigFig": "0.8",
+"InpUhvSpikeAtr": "5",
+"InpUhvLoudBrk": "0.95",
+"InpUhvFreshBreak": "8"
+},
+"train": {
+"n": 1838,
+"L": 52,
+"wr": 97.1708,
+"loss_rate": 2.8292,
+"net": -8238.71,
+"days": 83,
+"lfd": 44,
+"den": 83,
+"lfd_pct": 53.01
+},
+"test": {
+"n": 2050,
+"L": 25,
+"wr": 98.7805,
+"loss_rate": 1.2195,
+"net": -2191.65,
+"days": 92,
+"lfd": 72,
+"den": 92,
+"lfd_pct": 78.26
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "120",
+"InpUhvSRAhead": "1.5",
+"InpUhvCounterAtr": "8",
+"InpUhvHoliday": "1",
+"InpUhvFreshBreak": "5",
+"InpUhvMinTicks": "40",
+"InpUhvLoudBrk": "0.95",
+"InpUhvSpikeAtr": "3"
+},
+"train": {
+"n": 579,
+"L": 23,
+"wr": 96.0276,
+"loss_rate": 3.9724,
+"net": -4145.92,
+"days": 81,
+"lfd": 61,
+"den": 83,
+"lfd_pct": 73.49
+},
+"test": {
+"n": 506,
+"L": 1,
+"wr": 99.8024,
+"loss_rate": 0.1976,
+"net": 500.04,
+"days": 89,
+"lfd": 88,
+"den": 92,
+"lfd_pct": 95.65
+}
+},
+{
+"stack": {
+"InpUhvFriCutNY": "12",
+"InpUhvBrokeHighs": "6",
+"InpUhvStruct": "1",
+"InpUhvHoliday": "1",
+"InpUhvBigFig": "0.8",
+"InpUhvDeepRet": "0.5",
+"InpUhvMinTicks": "10",
+"InpUhvRunPips": "8"
+},
+"train": {
+"n": 695,
+"L": 19,
+"wr": 97.2662,
+"loss_rate": 2.7338,
+"net": -2853.82,
+"days": 82,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 815,
+"L": 10,
+"wr": 98.773,
+"loss_rate": 1.227,
+"net": -647.84,
+"days": 92,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.8",
+"InpUhvMinTicks": "30",
+"InpUhvRunPips": "15",
+"InpUhvHoliday": "1",
+"InpUhvLoudBrk": "0.9",
+"InpUhvSunOpenMins": "120",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvMaxHumps": "2"
+},
+"train": {
+"n": 1365,
+"L": 48,
+"wr": 96.4835,
+"loss_rate": 3.5165,
+"net": -7572.7,
+"days": 83,
+"lfd": 47,
+"den": 83,
+"lfd_pct": 56.63
+},
+"test": {
+"n": 1682,
+"L": 24,
+"wr": 98.5731,
+"loss_rate": 1.4269,
+"net": -2161.83,
+"days": 91,
+"lfd": 70,
+"den": 92,
+"lfd_pct": 76.09
+}
+},
+{
+"stack": {
+"InpUhvLoudBrk": "0.8",
+"InpUhvFriCutNY": "10",
+"InpUhvNoClose": "1",
+"InpUhvSRPips": "5",
+"InpUhvMinTicks": "30",
+"InpUhvSRAhead": "0.3",
+"InpUhvMinAtrPips": "1",
+"InpUhvMaxTrigSpread": "0.7"
+},
+"train": {
+"n": 939,
+"L": 31,
+"wr": 96.6986,
+"loss_rate": 3.3014,
+"net": -5412.58,
+"days": 83,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 675,
+"L": 12,
+"wr": 98.2222,
+"loss_rate": 1.7778,
+"net": -1713.73,
+"days": 90,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvBigFig": "1.5",
+"InpUhvCounterAtr": "8",
+"InpUhvDeepRet": "0.6",
+"InpUhvSpikeAtr": "4",
+"InpUhvHoliday": "1",
+"InpUhvMinTicks": "30",
+"InpUhvMaxTrigSpread": "0.7"
+},
+"train": {
+"n": 1985,
+"L": 61,
+"wr": 96.927,
+"loss_rate": 3.073,
+"net": -9084.8,
+"days": 83,
+"lfd": 42,
+"den": 83,
+"lfd_pct": 50.6
+},
+"test": {
+"n": 2438,
+"L": 28,
+"wr": 98.8515,
+"loss_rate": 1.1485,
+"net": -1906.67,
+"days": 91,
+"lfd": 66,
+"den": 92,
+"lfd_pct": 71.74
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "1",
+"InpUhvHoliday": "1",
+"InpUhvSpikeAtr": "5",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvBrokeHighs": "6",
+"InpUhvCounterAtr": "6",
+"InpUhvRunPips": "15",
+"InpUhvMinTicks": "30"
+},
+"train": {
+"n": 2373,
+"L": 77,
+"wr": 96.7552,
+"loss_rate": 3.2448,
+"net": -12145.75,
+"days": 83,
+"lfd": 30,
+"den": 83,
+"lfd_pct": 36.14
+},
+"test": {
+"n": 2973,
+"L": 35,
+"wr": 98.8227,
+"loss_rate": 1.1773,
+"net": -2198.75,
+"days": 91,
+"lfd": 61,
+"den": 92,
+"lfd_pct": 66.3
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvSpikeAtr": "3",
+"InpUhvSunOpenMins": "30",
+"InpUhvBigFig": "0.8",
+"InpUhvLoudBrk": "0.7",
+"InpUhvMinAtrPips": "2",
+"InpUhvCounterAtr": "3",
+"InpUhvDeepRet": "0.9"
+},
+"train": {
+"n": 434,
+"L": 19,
+"wr": 95.6221,
+"loss_rate": 4.3779,
+"net": -4680.03,
+"days": 71,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 228,
+"L": 5,
+"wr": 97.807,
+"loss_rate": 2.193,
+"net": -772.93,
+"days": 59,
+"lfd": 54,
+"den": 92,
+"lfd_pct": 58.7
+}
+},
+{
+"stack": {
+"InpUhvFreshBreak": "8",
+"InpUhvLoudBrk": "0.95",
+"InpUhvHtf5": "2",
+"InpUhvSRAhead": "1",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvMaxGapPips": "0.3",
+"InpUhvMinTicks": "40",
+"InpUhvRangeAtr": "1"
+},
+"train": {
+"n": 594,
+"L": 24,
+"wr": 95.9596,
+"loss_rate": 4.0404,
+"net": -3865.93,
+"days": 82,
+"lfd": 62,
+"den": 83,
+"lfd_pct": 74.7
+},
+"test": {
+"n": 529,
+"L": 4,
+"wr": 99.2439,
+"loss_rate": 0.7561,
+"net": -167.91,
+"days": 90,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "0.5",
+"InpUhvSunOpenMins": "30",
+"InpUhvNoClose": "1",
+"InpUhvStruct": "2",
+"InpUhvFreshBreak": "5",
+"InpUhvSpikeAtr": "5",
+"InpUhvHtf5": "1",
+"InpUhvRangeAtr": "1.5"
+},
+"train": {
+"n": 717,
+"L": 27,
+"wr": 96.2343,
+"loss_rate": 3.7657,
+"net": -4313.9,
+"days": 83,
+"lfd": 63,
+"den": 83,
+"lfd_pct": 75.9
+},
+"test": {
+"n": 726,
+"L": 9,
+"wr": 98.7603,
+"loss_rate": 1.2397,
+"net": -778.88,
+"days": 91,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "4",
+"InpUhvHoliday": "1",
+"InpUhvSRPips": "3",
+"InpUhvBrokeHighs": "2",
+"InpUhvCounterAtr": "6",
+"InpUhvRunPips": "8",
+"InpUhvRangeAtr": "2.5",
+"InpUhvMinAtrPips": "0.5"
+},
+"train": {
+"n": 685,
+"L": 23,
+"wr": 96.6423,
+"loss_rate": 3.3577,
+"net": -3961.88,
+"days": 81,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 608,
+"L": 6,
+"wr": 99.0132,
+"loss_rate": 0.9868,
+"net": -385.9,
+"days": 88,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvCounterAtr": "6",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvBigFig": "2",
+"InpUhvRangeAtr": "3",
+"InpUhvLoudBrk": "0.8",
+"InpUhvStruct": "2",
+"InpUhvHtf5": "2"
+},
+"train": {
+"n": 1030,
+"L": 31,
+"wr": 96.9903,
+"loss_rate": 3.0097,
+"net": -4590.92,
+"days": 84,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 1145,
+"L": 8,
+"wr": 99.3013,
+"loss_rate": 0.6987,
+"net": 138.32,
+"days": 91,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvBigFig": "0.8",
+"InpUhvDeepRet": "0.7",
+"InpUhvFreshBreak": "1",
+"InpUhvRangeAtr": "2.5",
+"InpUhvCounterAtr": "8",
+"InpUhvMinHumps": "2",
+"InpUhvBrokeHighs": "5"
+},
+"train": {
+"n": 1063,
+"L": 30,
+"wr": 97.1778,
+"loss_rate": 2.8222,
+"net": -4831.68,
+"days": 83,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 1220,
+"L": 12,
+"wr": 99.0164,
+"loss_rate": 0.9836,
+"net": -705.74,
+"days": 92,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "4",
+"InpUhvBigFig": "0.5",
+"InpUhvHtf5": "1",
+"InpUhvMinHumps": "4",
+"InpUhvSpikeAtr": "2",
+"InpUhvFreshBreak": "2",
+"InpUhvSRAhead": "1",
+"InpUhvFriCutNY": "12"
+},
+"train": {
+"n": 8,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 18.99,
+"days": 8,
+"lfd": 8,
+"den": 83,
+"lfd_pct": 9.64
+},
+"test": {
+"n": 10,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 14.02,
+"days": 9,
+"lfd": 9,
+"den": 92,
+"lfd_pct": 9.78
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvSpikeAtr": "5",
+"InpUhvStruct": "2",
+"InpUhvBrokeHighs": "8",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvMinTicks": "30",
+"InpUhvFreshBreak": "8"
+},
+"train": {
+"n": 1770,
+"L": 55,
+"wr": 96.8927,
+"loss_rate": 3.1073,
+"net": -8597.69,
+"days": 83,
+"lfd": 40,
+"den": 83,
+"lfd_pct": 48.19
+},
+"test": {
+"n": 1741,
+"L": 12,
+"wr": 99.3107,
+"loss_rate": 0.6893,
+"net": 140.17,
+"days": 91,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvLoudBrk": "0.95",
+"InpUhvNoClose": "1",
+"InpUhvSRPips": "0.5",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvSunOpenMins": "30",
+"InpUhvBigFig": "0.8",
+"InpUhvHtf5": "1",
+"InpUhvDeepRet": "0.6"
+},
+"train": {
+"n": 1613,
+"L": 48,
+"wr": 97.0242,
+"loss_rate": 2.9758,
+"net": -7591.74,
+"days": 84,
+"lfd": 46,
+"den": 83,
+"lfd_pct": 55.42
+},
+"test": {
+"n": 1757,
+"L": 20,
+"wr": 98.8617,
+"loss_rate": 1.1383,
+"net": -1699.62,
+"days": 92,
+"lfd": 73,
+"den": 92,
+"lfd_pct": 79.35
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvMaxGapPips": "1",
+"InpUhvSRAhead": "1",
+"InpUhvRunPips": "15",
+"InpUhvBrokeHighs": "2",
+"InpUhvFreshBreak": "1",
+"InpUhvRangeAtr": "1.5",
+"InpUhvMaxHumps": "8"
+},
+"train": {
+"n": 729,
+"L": 31,
+"wr": 95.7476,
+"loss_rate": 4.2524,
+"net": -5131.93,
+"days": 83,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 678,
+"L": 7,
+"wr": 98.9676,
+"loss_rate": 1.0324,
+"net": -433.02,
+"days": 91,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "0.8",
+"InpUhvCounterAtr": "4",
+"InpUhvSpikeAtr": "3",
+"InpUhvHtf5": "2",
+"InpUhvSunOpenMins": "60",
+"InpUhvMinHumps": "2",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvSRPips": "1.5"
+},
+"train": {
+"n": 674,
+"L": 17,
+"wr": 97.4777,
+"loss_rate": 2.5223,
+"net": -2576.94,
+"days": 83,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 609,
+"L": 6,
+"wr": 99.0148,
+"loss_rate": 0.9852,
+"net": -408.87,
+"days": 91,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvLoudBrk": "0.95",
+"InpUhvCounterAtr": "8",
+"InpUhvFreshBreak": "1",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvFriCutNY": "16",
+"InpUhvSpikeAtr": "4",
+"InpUhvMinTicks": "10",
+"InpUhvHtf5": "1"
+},
+"train": {
+"n": 928,
+"L": 33,
+"wr": 96.444,
+"loss_rate": 3.556,
+"net": -5941.82,
+"days": 82,
+"lfd": 56,
+"den": 83,
+"lfd_pct": 67.47
+},
+"test": {
+"n": 640,
+"L": 8,
+"wr": 98.75,
+"loss_rate": 1.25,
+"net": -683.91,
+"days": 88,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvFriCutNY": "10",
+"InpUhvSpikeAtr": "5",
+"InpUhvMinTicks": "40",
+"InpUhvFreshBreak": "1",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvStruct": "2",
+"InpUhvRangeAtr": "1.5",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 2007,
+"L": 60,
+"wr": 97.0105,
+"loss_rate": 2.9895,
+"net": -9781.5,
+"days": 83,
+"lfd": 38,
+"den": 83,
+"lfd_pct": 45.78
+},
+"test": {
+"n": 2370,
+"L": 19,
+"wr": 99.1983,
+"loss_rate": 0.8017,
+"net": -1187.66,
+"days": 91,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "3",
+"InpUhvFriCutNY": "15",
+"InpUhvMinHumps": "3",
+"InpUhvStruct": "2",
+"InpUhvFreshBreak": "8",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvDeepRet": "0.9",
+"InpUhvSunOpenMins": "60"
+},
+"train": {
+"n": 185,
+"L": 7,
+"wr": 96.2162,
+"loss_rate": 3.7838,
+"net": -1289.97,
+"days": 77,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 145,
+"L": 1,
+"wr": 99.3103,
+"loss_rate": 0.6897,
+"net": -12.01,
+"days": 65,
+"lfd": 64,
+"den": 92,
+"lfd_pct": 69.57
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvMaxGapPips": "0.3",
+"InpUhvMinTicks": "30",
+"InpUhvCounterAtr": "6",
+"InpUhvSRPips": "3",
+"InpUhvFreshBreak": "5",
+"InpUhvSunOpenMins": "30",
+"InpUhvRunPips": "8"
+},
+"train": {
+"n": 1049,
+"L": 37,
+"wr": 96.4728,
+"loss_rate": 3.5272,
+"net": -6509.84,
+"days": 83,
+"lfd": 51,
+"den": 83,
+"lfd_pct": 61.45
+},
+"test": {
+"n": 1025,
+"L": 11,
+"wr": 98.9268,
+"loss_rate": 1.0732,
+"net": -917.93,
+"days": 91,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "6",
+"InpUhvRunPips": "4",
+"InpUhvStruct": "2",
+"InpUhvSRAhead": "1.5",
+"InpUhvLoudBrk": "0.95",
+"InpUhvNoClose": "1",
+"InpUhvSunOpenMins": "30",
+"InpUhvFreshBreak": "8"
+},
+"train": {
+"n": 257,
+"L": 5,
+"wr": 98.0545,
+"loss_rate": 1.9455,
+"net": -638.99,
+"days": 79,
+"lfd": 74,
+"den": 83,
+"lfd_pct": 89.16
+},
+"test": {
+"n": 195,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 274.0,
+"days": 78,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "4",
+"InpUhvRangeAtr": "2.5",
+"InpUhvMinTicks": "10",
+"InpUhvSunOpenMins": "30",
+"InpUhvHoliday": "1",
+"InpUhvRunPips": "6",
+"InpUhvFreshBreak": "2",
+"InpUhvBrokeHighs": "6"
+},
+"train": {
+"n": 143,
+"L": 5,
+"wr": 96.5035,
+"loss_rate": 3.4965,
+"net": -887.0,
+"days": 62,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 189,
+"L": 2,
+"wr": 98.9418,
+"loss_rate": 1.0582,
+"net": -140.01,
+"days": 79,
+"lfd": 77,
+"den": 92,
+"lfd_pct": 83.7
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "0.5",
+"InpUhvMaxHumps": "3",
+"InpUhvSunOpenMins": "60",
+"InpUhvBrokeHighs": "2",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvSRAhead": "1.5",
+"InpUhvHtf5": "2",
+"InpUhvNoClose": "1"
+},
+"train": {
+"n": 318,
+"L": 12,
+"wr": 96.2264,
+"loss_rate": 3.7736,
+"net": -1926.01,
+"days": 79,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 249,
+"L": 1,
+"wr": 99.5984,
+"loss_rate": 0.4016,
+"net": 137.96,
+"days": 82,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvFriCutNY": "12",
+"InpUhvSRPips": "4",
+"InpUhvHoliday": "1",
+"InpUhvRunPips": "10",
+"InpUhvMinTicks": "20",
+"InpUhvSRAhead": "2",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvStruct": "2"
+},
+"train": {
+"n": 282,
+"L": 7,
+"wr": 97.5177,
+"loss_rate": 2.4823,
+"net": -1016.76,
+"days": 75,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 163,
+"L": 1,
+"wr": 99.3865,
+"loss_rate": 0.6135,
+"net": 12.02,
+"days": 77,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "120",
+"InpUhvMinHumps": "4",
+"InpUhvNewsNY": "1",
+"InpUhvDeepRet": "0.6",
+"InpUhvCounterAtr": "8",
+"InpUhvBigFig": "1.5",
+"InpUhvSRAhead": "1",
+"InpUhvFreshBreak": "5"
+},
+"train": {
+"n": 104,
+"L": 6,
+"wr": 94.2308,
+"loss_rate": 5.7692,
+"net": -1148.01,
+"days": 56,
+"lfd": 50,
+"den": 83,
+"lfd_pct": 60.24
+},
+"test": {
+"n": 89,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 128.05,
+"days": 58,
+"lfd": 58,
+"den": 92,
+"lfd_pct": 63.04
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.9",
+"InpUhvMinTicks": "30",
+"InpUhvStruct": "1",
+"InpUhvBrokeHighs": "4",
+"InpUhvMinHumps": "3",
+"InpUhvMaxHumps": "5",
+"InpUhvHtf5": "2",
+"InpUhvFriCutNY": "10"
+},
+"train": {
+"n": 286,
+"L": 10,
+"wr": 96.5035,
+"loss_rate": 3.4965,
+"net": -1685.98,
+"days": 76,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 297,
+"L": 3,
+"wr": 98.9899,
+"loss_rate": 1.0101,
+"net": -216.89,
+"days": 85,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "15",
+"InpUhvSunOpenMins": "60",
+"InpUhvBigFig": "2",
+"InpUhvCounterAtr": "6",
+"InpUhvMinTicks": "10",
+"InpUhvMaxTrigSpread": "0.7",
+"InpUhvStruct": "1",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 1452,
+"L": 56,
+"wr": 96.1433,
+"loss_rate": 3.8567,
+"net": -8944.88,
+"days": 83,
+"lfd": 41,
+"den": 83,
+"lfd_pct": 49.4
+},
+"test": {
+"n": 1705,
+"L": 19,
+"wr": 98.8856,
+"loss_rate": 1.1144,
+"net": -1576.69,
+"days": 92,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "8",
+"InpUhvSpikeAtr": "5",
+"InpUhvDeepRet": "0.8",
+"InpUhvLoudBrk": "0.95",
+"InpUhvFreshBreak": "8",
+"InpUhvNewsNY": "1",
+"InpUhvSRAhead": "2",
+"InpUhvMaxHumps": "4"
+},
+"train": {
+"n": 201,
+"L": 8,
+"wr": 96.0199,
+"loss_rate": 3.9801,
+"net": -1353.99,
+"days": 76,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 195,
+"L": 1,
+"wr": 99.4872,
+"loss_rate": 0.5128,
+"net": 57.92,
+"days": 79,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvHoliday": "1",
+"InpUhvFriCutNY": "12",
+"InpUhvNoClose": "1",
+"InpUhvLoudBrk": "0.8",
+"InpUhvHtf5": "2"
+},
+"train": {
+"n": 1504,
+"L": 44,
+"wr": 97.0745,
+"loss_rate": 2.9255,
+"net": -7125.98,
+"days": 83,
+"lfd": 48,
+"den": 83,
+"lfd_pct": 57.83
+},
+"test": {
+"n": 1701,
+"L": 14,
+"wr": 99.177,
+"loss_rate": 0.823,
+"net": -468.85,
+"days": 91,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "6",
+"InpUhvMinTicks": "20",
+"InpUhvStruct": "2",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvRunPips": "10",
+"InpUhvHoliday": "1",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvSRPips": "4"
+},
+"train": {
+"n": 1169,
+"L": 39,
+"wr": 96.6638,
+"loss_rate": 3.3362,
+"net": -6162.51,
+"days": 82,
+"lfd": 48,
+"den": 83,
+"lfd_pct": 57.83
+},
+"test": {
+"n": 937,
+"L": 12,
+"wr": 98.7193,
+"loss_rate": 1.2807,
+"net": -1560.9,
+"days": 91,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvMinHumps": "3",
+"InpUhvFreshBreak": "5",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvHoliday": "1",
+"InpUhvRunPips": "6",
+"InpUhvDeepRet": "0.6",
+"InpUhvSRAhead": "0.5"
+},
+"train": {
+"n": 183,
+"L": 8,
+"wr": 95.6284,
+"loss_rate": 4.3716,
+"net": -1453.99,
+"days": 70,
+"lfd": 63,
+"den": 83,
+"lfd_pct": 75.9
+},
+"test": {
+"n": 193,
+"L": 3,
+"wr": 98.4456,
+"loss_rate": 1.5544,
+"net": -352.96,
+"days": 76,
+"lfd": 73,
+"den": 92,
+"lfd_pct": 79.35
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "5",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvFriCutNY": "14",
+"InpUhvSpikeAtr": "2",
+"InpUhvMinHumps": "2",
+"InpUhvRangeAtr": "1",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvMaxTrigSpread": "0.8"
+},
+"train": {
+"n": 370,
+"L": 11,
+"wr": 97.027,
+"loss_rate": 2.973,
+"net": -1837.78,
+"days": 82,
+"lfd": 72,
+"den": 83,
+"lfd_pct": 86.75
+},
+"test": {
+"n": 292,
+"L": 4,
+"wr": 98.6301,
+"loss_rate": 1.3699,
+"net": -423.9,
+"days": 82,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "1",
+"InpUhvSunOpenMins": "30",
+"InpUhvHtf5": "2",
+"InpUhvRunPips": "6",
+"InpUhvMinHumps": "4",
+"InpUhvMinTicks": "20",
+"InpUhvNewsNY": "1",
+"InpUhvRangeAtr": "3"
+},
+"train": {
+"n": 67,
+"L": 2,
+"wr": 97.0149,
+"loss_rate": 2.9851,
+"net": -340.98,
+"days": 45,
+"lfd": 43,
+"den": 83,
+"lfd_pct": 51.81
+},
+"test": {
+"n": 63,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 90.04,
+"days": 48,
+"lfd": 48,
+"den": 92,
+"lfd_pct": 52.17
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "1",
+"InpUhvFriCutNY": "10",
+"InpUhvMinTicks": "10",
+"InpUhvFreshBreak": "3",
+"InpUhvNewsNY": "1",
+"InpUhvRangeAtr": "2",
+"InpUhvMinAtrPips": "2",
+"InpUhvSRPips": "5"
+},
+"train": {
+"n": 218,
+"L": 7,
+"wr": 96.789,
+"loss_rate": 3.211,
+"net": -1271.93,
+"days": 58,
+"lfd": 53,
+"den": 83,
+"lfd_pct": 63.86
+},
+"test": {
+"n": 88,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 138.03,
+"days": 39,
+"lfd": 39,
+"den": 92,
+"lfd_pct": 42.39
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "10",
+"InpUhvSRPips": "2",
+"InpUhvNewsNY": "1",
+"InpUhvBigFig": "0.8",
+"InpUhvRangeAtr": "3",
+"InpUhvStruct": "2",
+"InpUhvBrokeHighs": "2",
+"InpUhvSRAhead": "2"
+},
+"train": {
+"n": 133,
+"L": 4,
+"wr": 96.9925,
+"loss_rate": 3.0075,
+"net": -585.03,
+"days": 67,
+"lfd": 63,
+"den": 83,
+"lfd_pct": 75.9
+},
+"test": {
+"n": 99,
+"L": 1,
+"wr": 98.9899,
+"loss_rate": 1.0101,
+"net": -79.0,
+"days": 60,
+"lfd": 59,
+"den": 92,
+"lfd_pct": 64.13
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.6",
+"InpUhvFreshBreak": "8",
+"InpUhvNewsNY": "1",
+"InpUhvHtf5": "2",
+"InpUhvSunOpenMins": "120",
+"InpUhvSRAhead": "1",
+"InpUhvFriCutNY": "13",
+"InpUhvLoudBrk": "0.8"
+},
+"train": {
+"n": 505,
+"L": 16,
+"wr": 96.8317,
+"loss_rate": 3.1683,
+"net": -2637.97,
+"days": 83,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 455,
+"L": 3,
+"wr": 99.3407,
+"loss_rate": 0.6593,
+"net": -45.95,
+"days": 91,
+"lfd": 88,
+"den": 92,
+"lfd_pct": 95.65
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "8",
+"InpUhvMaxHumps": "8",
+"InpUhvSunOpenMins": "30",
+"InpUhvMinHumps": "2",
+"InpUhvBigFig": "1",
+"InpUhvCounterAtr": "4",
+"InpUhvStruct": "1",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 714,
+"L": 23,
+"wr": 96.7787,
+"loss_rate": 3.2213,
+"net": -2942.77,
+"days": 83,
+"lfd": 61,
+"den": 83,
+"lfd_pct": 73.49
+},
+"test": {
+"n": 784,
+"L": 8,
+"wr": 98.9796,
+"loss_rate": 1.0204,
+"net": -561.81,
+"days": 91,
+"lfd": 83,
+"den": 92,
+"lfd_pct": 90.22
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "4",
+"InpUhvHtf5": "1",
+"InpUhvRangeAtr": "3",
+"InpUhvSunOpenMins": "60",
+"InpUhvStruct": "1",
+"InpUhvCounterAtr": "3",
+"InpUhvSpikeAtr": "2",
+"InpUhvBigFig": "2"
+},
+"train": {
+"n": 213,
+"L": 9,
+"wr": 95.7746,
+"loss_rate": 4.2254,
+"net": -1289.06,
+"days": 72,
+"lfd": 64,
+"den": 83,
+"lfd_pct": 77.11
+},
+"test": {
+"n": 254,
+"L": 4,
+"wr": 98.4252,
+"loss_rate": 1.5748,
+"net": -301.89,
+"days": 83,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "4",
+"InpUhvSRAhead": "0.5",
+"InpUhvDeepRet": "0.7",
+"InpUhvMaxHumps": "3",
+"InpUhvSunOpenMins": "120",
+"InpUhvHtf5": "2",
+"InpUhvMinTicks": "15",
+"InpUhvMinHumps": "3"
+},
+"train": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 83,
+"lfd_pct": 0.0
+},
+"test": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 92,
+"lfd_pct": 0.0
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "4",
+"InpUhvMaxGapPips": "1",
+"InpUhvSunOpenMins": "120",
+"InpUhvHtf5": "2",
+"InpUhvSpikeAtr": "4",
+"InpUhvDeepRet": "0.5",
+"InpUhvFreshBreak": "1",
+"InpUhvFriCutNY": "13"
+},
+"train": {
+"n": 1605,
+"L": 47,
+"wr": 97.0717,
+"loss_rate": 2.9283,
+"net": -7483.76,
+"days": 84,
+"lfd": 49,
+"den": 83,
+"lfd_pct": 59.04
+},
+"test": {
+"n": 1817,
+"L": 22,
+"wr": 98.7892,
+"loss_rate": 1.2108,
+"net": -1977.71,
+"days": 92,
+"lfd": 73,
+"den": 92,
+"lfd_pct": 79.35
+}
+},
+{
+"stack": {
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvNewsNY": "1",
+"InpUhvSRPips": "5",
+"InpUhvFriCutNY": "14",
+"InpUhvBigFig": "0.5",
+"InpUhvNoClose": "1",
+"InpUhvCounterAtr": "4",
+"InpUhvBrokeHighs": "6"
+},
+"train": {
+"n": 610,
+"L": 20,
+"wr": 96.7213,
+"loss_rate": 3.2787,
+"net": -3466.82,
+"days": 82,
+"lfd": 64,
+"den": 83,
+"lfd_pct": 77.11
+},
+"test": {
+"n": 424,
+"L": 3,
+"wr": 99.2925,
+"loss_rate": 0.7075,
+"net": -37.86,
+"days": 88,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "2",
+"InpUhvSpikeAtr": "5",
+"InpUhvCounterAtr": "8",
+"InpUhvFreshBreak": "5",
+"InpUhvSRAhead": "0.3",
+"InpUhvHoliday": "1",
+"InpUhvBigFig": "0.8",
+"InpUhvSunOpenMins": "60"
+},
+"train": {
+"n": 1665,
+"L": 61,
+"wr": 96.3363,
+"loss_rate": 3.6637,
+"net": -10295.68,
+"days": 84,
+"lfd": 41,
+"den": 83,
+"lfd_pct": 49.4
+},
+"test": {
+"n": 1765,
+"L": 21,
+"wr": 98.8102,
+"loss_rate": 1.1898,
+"net": -1510.57,
+"days": 92,
+"lfd": 72,
+"den": 92,
+"lfd_pct": 78.26
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "2",
+"InpUhvNoClose": "1",
+"InpUhvLoudBrk": "0.9",
+"InpUhvCounterAtr": "4",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvSRPips": "4",
+"InpUhvHtf5": "1",
+"InpUhvSRAhead": "0.5"
+},
+"train": {
+"n": 283,
+"L": 11,
+"wr": 96.1131,
+"loss_rate": 3.8869,
+"net": -1802.87,
+"days": 81,
+"lfd": 71,
+"den": 83,
+"lfd_pct": 85.54
+},
+"test": {
+"n": 183,
+"L": 1,
+"wr": 99.4536,
+"loss_rate": 0.5464,
+"net": 38.07,
+"days": 77,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "2",
+"InpUhvSRAhead": "1",
+"InpUhvHtf5": "2",
+"InpUhvMaxHumps": "6",
+"InpUhvLoudBrk": "0.95",
+"InpUhvDeepRet": "0.6",
+"InpUhvFreshBreak": "1",
+"InpUhvMinTicks": "40"
+},
+"train": {
+"n": 303,
+"L": 9,
+"wr": 97.0297,
+"loss_rate": 2.9703,
+"net": -1494.02,
+"days": 78,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 211,
+"L": 2,
+"wr": 99.0521,
+"loss_rate": 0.9479,
+"net": -149.92,
+"days": 77,
+"lfd": 75,
+"den": 92,
+"lfd_pct": 81.52
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvBigFig": "0.5",
+"InpUhvMinHumps": "2",
+"InpUhvSRAhead": "0.5",
+"InpUhvMinAtrPips": "1",
+"InpUhvHoliday": "1",
+"InpUhvMaxGapPips": "1",
+"InpUhvFriCutNY": "14"
+},
+"train": {
+"n": 827,
+"L": 24,
+"wr": 97.0979,
+"loss_rate": 2.9021,
+"net": -3951.74,
+"days": 81,
+"lfd": 60,
+"den": 83,
+"lfd_pct": 72.29
+},
+"test": {
+"n": 718,
+"L": 7,
+"wr": 99.0251,
+"loss_rate": 0.9749,
+"net": -416.75,
+"days": 90,
+"lfd": 83,
+"den": 92,
+"lfd_pct": 90.22
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "5",
+"InpUhvHtf5": "2",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvLoudBrk": "0.95",
+"InpUhvFreshBreak": "3",
+"InpUhvSpikeAtr": "4",
+"InpUhvSunOpenMins": "60",
+"InpUhvRangeAtr": "1"
+},
+"train": {
+"n": 1949,
+"L": 63,
+"wr": 96.7676,
+"loss_rate": 3.2324,
+"net": -10237.77,
+"days": 84,
+"lfd": 41,
+"den": 83,
+"lfd_pct": 49.4
+},
+"test": {
+"n": 2464,
+"L": 29,
+"wr": 98.8231,
+"loss_rate": 1.1769,
+"net": -1946.79,
+"days": 92,
+"lfd": 67,
+"den": 92,
+"lfd_pct": 72.83
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "0.8",
+"InpUhvSRPips": "3",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvRangeAtr": "2.5",
+"InpUhvSpikeAtr": "4",
+"InpUhvFreshBreak": "2",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 776,
+"L": 24,
+"wr": 96.9072,
+"loss_rate": 3.0928,
+"net": -3952.89,
+"days": 82,
+"lfd": 61,
+"den": 83,
+"lfd_pct": 73.49
+},
+"test": {
+"n": 465,
+"L": 6,
+"wr": 98.7097,
+"loss_rate": 1.2903,
+"net": -672.83,
+"days": 85,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvMaxGapPips": "1",
+"InpUhvFreshBreak": "8",
+"InpUhvNewsNY": "1",
+"InpUhvFriCutNY": "10",
+"InpUhvDeepRet": "0.9",
+"InpUhvBigFig": "0.5",
+"InpUhvRangeAtr": "1"
+},
+"train": {
+"n": 1660,
+"L": 41,
+"wr": 97.5301,
+"loss_rate": 2.4699,
+"net": -6242.92,
+"days": 83,
+"lfd": 52,
+"den": 83,
+"lfd_pct": 62.65
+},
+"test": {
+"n": 1841,
+"L": 19,
+"wr": 98.968,
+"loss_rate": 1.032,
+"net": -1403.79,
+"days": 92,
+"lfd": 75,
+"den": 92,
+"lfd_pct": 81.52
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "30",
+"InpUhvCounterAtr": "8",
+"InpUhvSRAhead": "1.5",
+"InpUhvMinTicks": "20",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvBrokeHighs": "8",
+"InpUhvLoudBrk": "0.8",
+"InpUhvFriCutNY": "10"
+},
+"train": {
+"n": 606,
+"L": 22,
+"wr": 96.3696,
+"loss_rate": 3.6304,
+"net": -4029.06,
+"days": 83,
+"lfd": 64,
+"den": 83,
+"lfd_pct": 77.11
+},
+"test": {
+"n": 479,
+"L": 1,
+"wr": 99.7912,
+"loss_rate": 0.2088,
+"net": 453.07,
+"days": 90,
+"lfd": 89,
+"den": 92,
+"lfd_pct": 96.74
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvDeepRet": "0.7",
+"InpUhvRunPips": "8",
+"InpUhvLoudBrk": "0.8",
+"InpUhvSRAhead": "0.5",
+"InpUhvBrokeHighs": "6",
+"InpUhvStruct": "2",
+"InpUhvHtf5": "2"
+},
+"train": {
+"n": 622,
+"L": 22,
+"wr": 96.463,
+"loss_rate": 3.537,
+"net": -3120.95,
+"days": 83,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 653,
+"L": 5,
+"wr": 99.2343,
+"loss_rate": 0.7657,
+"net": -22.93,
+"days": 91,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvBigFig": "1.5",
+"InpUhvHoliday": "1",
+"InpUhvBrokeHighs": "3",
+"InpUhvSRAhead": "0.3",
+"InpUhvFriCutNY": "10",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvCounterAtr": "3"
+},
+"train": {
+"n": 904,
+"L": 31,
+"wr": 96.5708,
+"loss_rate": 3.4292,
+"net": -5256.85,
+"days": 81,
+"lfd": 56,
+"den": 83,
+"lfd_pct": 67.47
+},
+"test": {
+"n": 873,
+"L": 6,
+"wr": 99.3127,
+"loss_rate": 0.6873,
+"net": -143.8,
+"days": 90,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "8",
+"InpUhvMinHumps": "4",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvHoliday": "1",
+"InpUhvFreshBreak": "5",
+"InpUhvBigFig": "1",
+"InpUhvMaxGapPips": "0.3",
+"InpUhvDeepRet": "0.7"
+},
+"train": {
+"n": 336,
+"L": 10,
+"wr": 97.0238,
+"loss_rate": 2.9762,
+"net": -1666.98,
+"days": 80,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 369,
+"L": 5,
+"wr": 98.645,
+"loss_rate": 1.355,
+"net": -599.9,
+"days": 86,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvMaxTrigSpread": "0.7",
+"InpUhvSRPips": "5",
+"InpUhvMaxGapPips": "0.3",
+"InpUhvNoClose": "1",
+"InpUhvSRAhead": "0.5",
+"InpUhvMinHumps": "2",
+"InpUhvMinAtrPips": "1",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 264,
+"L": 10,
+"wr": 96.2121,
+"loss_rate": 3.7879,
+"net": -1800.86,
+"days": 71,
+"lfd": 62,
+"den": 83,
+"lfd_pct": 74.7
+},
+"test": {
+"n": 181,
+"L": 1,
+"wr": 99.4475,
+"loss_rate": 0.5525,
+"net": 23.11,
+"days": 77,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "8",
+"InpUhvFriCutNY": "13",
+"InpUhvHoliday": "1",
+"InpUhvCounterAtr": "6",
+"InpUhvDeepRet": "0.9",
+"InpUhvMinHumps": "2",
+"InpUhvHtf5": "1",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 1101,
+"L": 30,
+"wr": 97.2752,
+"loss_rate": 2.7248,
+"net": -4761.89,
+"days": 83,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 1264,
+"L": 12,
+"wr": 99.0506,
+"loss_rate": 0.9494,
+"net": -663.9,
+"days": 92,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvRangeAtr": "2.5",
+"InpUhvMinHumps": "3",
+"InpUhvHoliday": "1",
+"InpUhvMinAtrPips": "2",
+"InpUhvFreshBreak": "3",
+"InpUhvSpikeAtr": "4",
+"InpUhvBrokeHighs": "3"
+},
+"train": {
+"n": 151,
+"L": 3,
+"wr": 98.0132,
+"loss_rate": 1.9868,
+"net": -412.03,
+"days": 47,
+"lfd": 44,
+"den": 83,
+"lfd_pct": 53.01
+},
+"test": {
+"n": 95,
+"L": 2,
+"wr": 97.8947,
+"loss_rate": 2.1053,
+"net": -387.94,
+"days": 37,
+"lfd": 35,
+"den": 92,
+"lfd_pct": 38.04
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "2",
+"InpUhvHoliday": "1",
+"InpUhvSpikeAtr": "2",
+"InpUhvLoudBrk": "0.8",
+"InpUhvFriCutNY": "12",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvNewsNY": "1",
+"InpUhvRangeAtr": "1"
+},
+"train": {
+"n": 1587,
+"L": 50,
+"wr": 96.8494,
+"loss_rate": 3.1506,
+"net": -8434.79,
+"days": 83,
+"lfd": 43,
+"den": 83,
+"lfd_pct": 51.81
+},
+"test": {
+"n": 1923,
+"L": 17,
+"wr": 99.116,
+"loss_rate": 0.884,
+"net": -760.01,
+"days": 92,
+"lfd": 75,
+"den": 92,
+"lfd_pct": 81.52
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "3",
+"InpUhvNoClose": "1",
+"InpUhvMinHumps": "2",
+"InpUhvSRAhead": "0.5",
+"InpUhvCounterAtr": "3",
+"InpUhvLoudBrk": "0.8",
+"InpUhvSunOpenMins": "30",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 707,
+"L": 17,
+"wr": 97.5955,
+"loss_rate": 2.4045,
+"net": -2539.8,
+"days": 82,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 714,
+"L": 9,
+"wr": 98.7395,
+"loss_rate": 1.2605,
+"net": -846.84,
+"days": 90,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvDeepRet": "0.8",
+"InpUhvNoClose": "1",
+"InpUhvSunOpenMins": "60",
+"InpUhvMinHumps": "4",
+"InpUhvMaxHumps": "3",
+"InpUhvFreshBreak": "8",
+"InpUhvBigFig": "1.5"
+},
+"train": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 83,
+"lfd_pct": 0.0
+},
+"test": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 92,
+"lfd_pct": 0.0
+}
+},
+{
+"stack": {
+"InpUhvHoliday": "1",
+"InpUhvDeepRet": "0.5",
+"InpUhvBigFig": "1",
+"InpUhvNewsNY": "1",
+"InpUhvFriCutNY": "15",
+"InpUhvSRAhead": "1",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvBrokeHighs": "2"
+},
+"train": {
+"n": 474,
+"L": 19,
+"wr": 95.9916,
+"loss_rate": 4.0084,
+"net": -3207.98,
+"days": 82,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 445,
+"L": 3,
+"wr": 99.3258,
+"loss_rate": 0.6742,
+"net": 53.06,
+"days": 85,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.5",
+"InpUhvMinAtrPips": "1",
+"InpUhvBrokeHighs": "3",
+"InpUhvRunPips": "8",
+"InpUhvMinHumps": "2",
+"InpUhvMinTicks": "30",
+"InpUhvMaxTrigSpread": "0.7",
+"InpUhvLoudBrk": "0.7"
+},
+"train": {
+"n": 524,
+"L": 15,
+"wr": 97.1374,
+"loss_rate": 2.8626,
+"net": -2258.85,
+"days": 83,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 494,
+"L": 3,
+"wr": 99.3927,
+"loss_rate": 0.6073,
+"net": 240.97,
+"days": 91,
+"lfd": 88,
+"den": 92,
+"lfd_pct": 95.65
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "5",
+"InpUhvNoClose": "1",
+"InpUhvSpikeAtr": "3",
+"InpUhvHoliday": "1",
+"InpUhvStruct": "1",
+"InpUhvNewsNY": "1",
+"InpUhvMinTicks": "40",
+"InpUhvHtf5": "1"
+},
+"train": {
+"n": 110,
+"L": 4,
+"wr": 96.3636,
+"loss_rate": 3.6364,
+"net": -719.99,
+"days": 55,
+"lfd": 51,
+"den": 83,
+"lfd_pct": 61.45
+},
+"test": {
+"n": 64,
+"L": 1,
+"wr": 98.4375,
+"loss_rate": 1.5625,
+"net": -134.99,
+"days": 37,
+"lfd": 36,
+"den": 92,
+"lfd_pct": 39.13
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "1",
+"InpUhvMaxGapPips": "0.3",
+"InpUhvHtf5": "1",
+"InpUhvMaxHumps": "6",
+"InpUhvNewsNY": "1",
+"InpUhvFreshBreak": "1",
+"InpUhvSpikeAtr": "4",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 1675,
+"L": 52,
+"wr": 96.8955,
+"loss_rate": 3.1045,
+"net": -8081.78,
+"days": 84,
+"lfd": 44,
+"den": 83,
+"lfd_pct": 53.01
+},
+"test": {
+"n": 2139,
+"L": 27,
+"wr": 98.7377,
+"loss_rate": 1.2623,
+"net": -2232.69,
+"days": 92,
+"lfd": 68,
+"den": 92,
+"lfd_pct": 73.91
+}
+},
+{
+"stack": {
+"InpUhvFreshBreak": "3",
+"InpUhvFriCutNY": "15",
+"InpUhvBrokeHighs": "6",
+"InpUhvMinAtrPips": "2",
+"InpUhvDeepRet": "0.8",
+"InpUhvLoudBrk": "0.95",
+"InpUhvNoClose": "1",
+"InpUhvMaxGapPips": "0.6"
+},
+"train": {
+"n": 595,
+"L": 15,
+"wr": 97.479,
+"loss_rate": 2.521,
+"net": -2328.93,
+"days": 72,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 317,
+"L": 6,
+"wr": 98.1073,
+"loss_rate": 1.8927,
+"net": -966.92,
+"days": 62,
+"lfd": 57,
+"den": 92,
+"lfd_pct": 61.96
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "1.5",
+"InpUhvHoliday": "1",
+"InpUhvLoudBrk": "0.9",
+"InpUhvCounterAtr": "8",
+"InpUhvSpikeAtr": "3",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvFreshBreak": "2",
+"InpUhvRangeAtr": "1"
+},
+"train": {
+"n": 2449,
+"L": 80,
+"wr": 96.7334,
+"loss_rate": 3.2666,
+"net": -12720.44,
+"days": 83,
+"lfd": 30,
+"den": 83,
+"lfd_pct": 36.14
+},
+"test": {
+"n": 3183,
+"L": 40,
+"wr": 98.7433,
+"loss_rate": 1.2567,
+"net": -3743.69,
+"days": 92,
+"lfd": 58,
+"den": 92,
+"lfd_pct": 63.04
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "1.5",
+"InpUhvLoudBrk": "0.95",
+"InpUhvMinTicks": "10",
+"InpUhvHoliday": "1",
+"InpUhvCounterAtr": "6",
+"InpUhvSunOpenMins": "30",
+"InpUhvMaxHumps": "5",
+"InpUhvStruct": "2"
+},
+"train": {
+"n": 2064,
+"L": 75,
+"wr": 96.3663,
+"loss_rate": 3.6337,
+"net": -12046.64,
+"days": 84,
+"lfd": 31,
+"den": 83,
+"lfd_pct": 37.35
+},
+"test": {
+"n": 2444,
+"L": 23,
+"wr": 99.0589,
+"loss_rate": 0.9411,
+"net": -920.72,
+"days": 92,
+"lfd": 73,
+"den": 92,
+"lfd_pct": 79.35
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvCounterAtr": "3",
+"InpUhvFreshBreak": "2",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvMinTicks": "10",
+"InpUhvSRAhead": "0.3",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvSunOpenMins": "60"
+},
+"train": {
+"n": 1564,
+"L": 59,
+"wr": 96.2276,
+"loss_rate": 3.7724,
+"net": -10155.55,
+"days": 84,
+"lfd": 40,
+"den": 83,
+"lfd_pct": 48.19
+},
+"test": {
+"n": 1675,
+"L": 17,
+"wr": 98.9851,
+"loss_rate": 1.0149,
+"net": -1106.7,
+"days": 92,
+"lfd": 75,
+"den": 92,
+"lfd_pct": 81.52
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "20",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvHtf5": "2",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvHoliday": "1",
+"InpUhvBigFig": "0.5",
+"InpUhvCounterAtr": "8"
+},
+"train": {
+"n": 2029,
+"L": 63,
+"wr": 96.895,
+"loss_rate": 3.105,
+"net": -9850.88,
+"days": 83,
+"lfd": 38,
+"den": 83,
+"lfd_pct": 45.78
+},
+"test": {
+"n": 2185,
+"L": 23,
+"wr": 98.9474,
+"loss_rate": 1.0526,
+"net": -1717.86,
+"days": 91,
+"lfd": 71,
+"den": 92,
+"lfd_pct": 77.17
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "4",
+"InpUhvHoliday": "1",
+"InpUhvLoudBrk": "0.9",
+"InpUhvFreshBreak": "5",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvSpikeAtr": "2",
+"InpUhvHtf5": "1",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 700,
+"L": 18,
+"wr": 97.4286,
+"loss_rate": 2.5714,
+"net": -2762.0,
+"days": 82,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 927,
+"L": 11,
+"wr": 98.8134,
+"loss_rate": 1.1866,
+"net": -819.08,
+"days": 92,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvHoliday": "1",
+"InpUhvRangeAtr": "3",
+"InpUhvLoudBrk": "0.8",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvFriCutNY": "12",
+"InpUhvSRPips": "3",
+"InpUhvDeepRet": "0.5",
+"InpUhvBrokeHighs": "4"
+},
+"train": {
+"n": 165,
+"L": 3,
+"wr": 98.1818,
+"loss_rate": 1.8182,
+"net": -375.96,
+"days": 62,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 87,
+"L": 2,
+"wr": 97.7011,
+"loss_rate": 2.2989,
+"net": -334.95,
+"days": 48,
+"lfd": 46,
+"den": 92,
+"lfd_pct": 50.0
+}
+},
+{
+"stack": {
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvSpikeAtr": "2",
+"InpUhvRunPips": "4",
+"InpUhvSunOpenMins": "120",
+"InpUhvHtf5": "1",
+"InpUhvFreshBreak": "8",
+"InpUhvSRAhead": "1",
+"InpUhvSRPips": "5"
+},
+"train": {
+"n": 35,
+"L": 1,
+"wr": 97.1429,
+"loss_rate": 2.8571,
+"net": -155.03,
+"days": 23,
+"lfd": 22,
+"den": 83,
+"lfd_pct": 26.51
+},
+"test": {
+"n": 11,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 19.0,
+"days": 9,
+"lfd": 9,
+"den": 92,
+"lfd_pct": 9.78
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvSunOpenMins": "120",
+"InpUhvFriCutNY": "15",
+"InpUhvLoudBrk": "0.8",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvSRAhead": "1",
+"InpUhvMinTicks": "10",
+"InpUhvMinHumps": "4"
+},
+"train": {
+"n": 121,
+"L": 6,
+"wr": 95.0413,
+"loss_rate": 4.9587,
+"net": -1092.01,
+"days": 63,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 95,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 137.06,
+"days": 54,
+"lfd": 54,
+"den": 92,
+"lfd_pct": 58.7
+}
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvBrokeHighs": "3",
+"InpUhvMinHumps": "2",
+"InpUhvNewsNY": "1",
+"InpUhvSpikeAtr": "3",
+"InpUhvRunPips": "4",
+"InpUhvHoliday": "1",
+"InpUhvRangeAtr": "1"
+},
+"train": {
+"n": 701,
+"L": 24,
+"wr": 96.5763,
+"loss_rate": 3.4237,
+"net": -3951.82,
+"days": 81,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 837,
+"L": 9,
+"wr": 98.9247,
+"loss_rate": 1.0753,
+"net": -535.92,
+"days": 90,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "0.5",
+"InpUhvMinTicks": "20",
+"InpUhvStruct": "1",
+"InpUhvRangeAtr": "2",
+"InpUhvNoClose": "1",
+"InpUhvFreshBreak": "5",
+"InpUhvMaxHumps": "4",
+"InpUhvSRPips": "4"
+},
+"train": {
+"n": 383,
+"L": 9,
+"wr": 97.6501,
+"loss_rate": 2.3499,
+"net": -1340.9,
+"days": 83,
+"lfd": 75,
+"den": 83,
+"lfd_pct": 90.36
+},
+"test": {
+"n": 275,
+"L": 3,
+"wr": 98.9091,
+"loss_rate": 1.0909,
+"net": -252.89,
+"days": 85,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "10",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvNoClose": "1",
+"InpUhvLoudBrk": "0.95",
+"InpUhvFriCutNY": "15",
+"InpUhvMinHumps": "4",
+"InpUhvBrokeHighs": "6",
+"InpUhvHtf5": "1"
+},
+"train": {
+"n": 323,
+"L": 12,
+"wr": 96.2848,
+"loss_rate": 3.7152,
+"net": -2136.01,
+"days": 78,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 299,
+"L": 3,
+"wr": 98.9967,
+"loss_rate": 1.0033,
+"net": -260.93,
+"days": 83,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvSRAhead": "1",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvHoliday": "1",
+"InpUhvSpikeAtr": "3",
+"InpUhvDeepRet": "0.8",
+"InpUhvLoudBrk": "0.7",
+"InpUhvBrokeHighs": "4"
+},
+"train": {
+"n": 646,
+"L": 23,
+"wr": 96.4396,
+"loss_rate": 3.5604,
+"net": -3437.03,
+"days": 82,
+"lfd": 61,
+"den": 83,
+"lfd_pct": 73.49
+},
+"test": {
+"n": 569,
+"L": 4,
+"wr": 99.297,
+"loss_rate": 0.703,
+"net": -82.95,
+"days": 88,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "2",
+"InpUhvFreshBreak": "2",
+"InpUhvBrokeHighs": "6",
+"InpUhvSRAhead": "2",
+"InpUhvRunPips": "6",
+"InpUhvLoudBrk": "0.8",
+"InpUhvStruct": "1",
+"InpUhvMaxTrigSpread": "0.7"
+},
+"train": {
+"n": 131,
+"L": 2,
+"wr": 98.4733,
+"loss_rate": 1.5267,
+"net": -193.97,
+"days": 65,
+"lfd": 63,
+"den": 83,
+"lfd_pct": 75.9
+},
+"test": {
+"n": 112,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 160.01,
+"days": 61,
+"lfd": 61,
+"den": 92,
+"lfd_pct": 66.3
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "30",
+"InpUhvHoliday": "1",
+"InpUhvMinHumps": "2",
+"InpUhvMaxHumps": "3",
+"InpUhvHtf5": "1",
+"InpUhvDeepRet": "0.8",
+"InpUhvMaxTrigSpread": "0.7",
+"InpUhvFreshBreak": "8"
+},
+"train": {
+"n": 495,
+"L": 10,
+"wr": 97.9798,
+"loss_rate": 2.0202,
+"net": -1089.83,
+"days": 82,
+"lfd": 72,
+"den": 83,
+"lfd_pct": 86.75
+},
+"test": {
+"n": 561,
+"L": 4,
+"wr": 99.287,
+"loss_rate": 0.713,
+"net": 99.07,
+"days": 91,
+"lfd": 87,
+"den": 92,
+"lfd_pct": 94.57
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "4",
+"InpUhvRunPips": "6",
+"InpUhvHtf5": "2",
+"InpUhvRangeAtr": "3",
+"InpUhvMinTicks": "20",
+"InpUhvDeepRet": "0.5",
+"InpUhvFreshBreak": "5",
+"InpUhvLoudBrk": "0.9"
+},
+"train": {
+"n": 664,
+"L": 21,
+"wr": 96.8373,
+"loss_rate": 3.1627,
+"net": -2932.89,
+"days": 83,
+"lfd": 64,
+"den": 83,
+"lfd_pct": 77.11
+},
+"test": {
+"n": 838,
+"L": 9,
+"wr": 98.926,
+"loss_rate": 1.074,
+"net": -426.79,
+"days": 92,
+"lfd": 83,
+"den": 92,
+"lfd_pct": 90.22
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "1",
+"InpUhvHtf5": "2",
+"InpUhvFreshBreak": "5",
+"InpUhvRunPips": "15",
+"InpUhvDeepRet": "0.8",
+"InpUhvBigFig": "1.5",
+"InpUhvNewsNY": "1",
+"InpUhvSRPips": "3"
+},
+"train": {
+"n": 240,
+"L": 10,
+"wr": 95.8333,
+"loss_rate": 4.1667,
+"net": -1852.08,
+"days": 70,
+"lfd": 62,
+"den": 83,
+"lfd_pct": 74.7
+},
+"test": {
+"n": 123,
+"L": 1,
+"wr": 99.187,
+"loss_rate": 0.813,
+"net": -41.0,
+"days": 62,
+"lfd": 61,
+"den": 92,
+"lfd_pct": 66.3
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "3",
+"InpUhvDeepRet": "0.7",
+"InpUhvBrokeHighs": "2",
+"InpUhvBigFig": "1.5",
+"InpUhvFreshBreak": "1",
+"InpUhvStruct": "2",
+"InpUhvCounterAtr": "6",
+"InpUhvNoClose": "1"
+},
+"train": {
+"n": 471,
+"L": 16,
+"wr": 96.603,
+"loss_rate": 3.397,
+"net": -2705.89,
+"days": 83,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 475,
+"L": 4,
+"wr": 99.1579,
+"loss_rate": 0.8421,
+"net": -266.81,
+"days": 89,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvFreshBreak": "5",
+"InpUhvBigFig": "2",
+"InpUhvRunPips": "4",
+"InpUhvLoudBrk": "0.7",
+"InpUhvSpikeAtr": "4",
+"InpUhvCounterAtr": "4",
+"InpUhvSunOpenMins": "120",
+"InpUhvDeepRet": "0.6"
+},
+"train": {
+"n": 881,
+"L": 29,
+"wr": 96.7083,
+"loss_rate": 3.2917,
+"net": -4386.91,
+"days": 83,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 1167,
+"L": 15,
+"wr": 98.7147,
+"loss_rate": 1.2853,
+"net": -921.92,
+"days": 92,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvFreshBreak": "3",
+"InpUhvBigFig": "0.8",
+"InpUhvSRPips": "3",
+"InpUhvStruct": "1",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvHtf5": "2",
+"InpUhvRunPips": "10",
+"InpUhvMaxHumps": "6"
+},
+"train": {
+"n": 322,
+"L": 17,
+"wr": 94.7205,
+"loss_rate": 5.2795,
+"net": -3039.04,
+"days": 80,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 242,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 343.01,
+"days": 80,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "3",
+"InpUhvNewsNY": "1",
+"InpUhvMinTicks": "20",
+"InpUhvSRAhead": "2",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvCounterAtr": "6",
+"InpUhvMaxGapPips": "1",
+"InpUhvHtf5": "1"
+},
+"train": {
+"n": 312,
+"L": 12,
+"wr": 96.1538,
+"loss_rate": 3.8462,
+"net": -1748.1,
+"days": 80,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 271,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 364.06,
+"days": 86,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "1",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvFreshBreak": "1",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvFriCutNY": "10",
+"InpUhvDeepRet": "0.5",
+"InpUhvNoClose": "1",
+"InpUhvSpikeAtr": "3"
+},
+"train": {
+"n": 1593,
+"L": 40,
+"wr": 97.489,
+"loss_rate": 2.511,
+"net": -6016.68,
+"days": 83,
+"lfd": 53,
+"den": 83,
+"lfd_pct": 63.86
+},
+"test": {
+"n": 1765,
+"L": 21,
+"wr": 98.8102,
+"loss_rate": 1.1898,
+"net": -1960.78,
+"days": 90,
+"lfd": 72,
+"den": 92,
+"lfd_pct": 78.26
+}
+},
+{
+"stack": {
+"InpUhvFriCutNY": "16",
+"InpUhvCounterAtr": "6",
+"InpUhvSunOpenMins": "30",
+"InpUhvStruct": "2",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvNewsNY": "1",
+"InpUhvDeepRet": "0.5"
+},
+"train": {
+"n": 1349,
+"L": 41,
+"wr": 96.9607,
+"loss_rate": 3.0393,
+"net": -6335.91,
+"days": 84,
+"lfd": 52,
+"den": 83,
+"lfd_pct": 62.65
+},
+"test": {
+"n": 1497,
+"L": 13,
+"wr": 99.1316,
+"loss_rate": 0.8684,
+"net": -484.74,
+"days": 92,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvHoliday": "1",
+"InpUhvDeepRet": "0.5",
+"InpUhvNewsNY": "1",
+"InpUhvHtf5": "1",
+"InpUhvCounterAtr": "6",
+"InpUhvMinTicks": "15",
+"InpUhvStruct": "1",
+"InpUhvSunOpenMins": "60"
+},
+"train": {
+"n": 814,
+"L": 34,
+"wr": 95.8231,
+"loss_rate": 4.1769,
+"net": -5114.94,
+"days": 81,
+"lfd": 52,
+"den": 83,
+"lfd_pct": 62.65
+},
+"test": {
+"n": 908,
+"L": 12,
+"wr": 98.6784,
+"loss_rate": 1.3216,
+"net": -929.79,
+"days": 92,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvStruct": "1",
+"InpUhvHoliday": "1",
+"InpUhvSpikeAtr": "2",
+"InpUhvMaxGapPips": "0.3",
+"InpUhvBigFig": "1.5",
+"InpUhvMaxHumps": "3",
+"InpUhvFriCutNY": "12"
+},
+"train": {
+"n": 464,
+"L": 12,
+"wr": 97.4138,
+"loss_rate": 2.5862,
+"net": -1875.05,
+"days": 79,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 564,
+"L": 7,
+"wr": 98.7589,
+"loss_rate": 1.2411,
+"net": -509.92,
+"days": 92,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "30",
+"InpUhvRangeAtr": "2.5",
+"InpUhvNoClose": "1",
+"InpUhvSRAhead": "1",
+"InpUhvRunPips": "4",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvFreshBreak": "8",
+"InpUhvMinTicks": "15"
+},
+"train": {
+"n": 439,
+"L": 14,
+"wr": 96.8109,
+"loss_rate": 3.1891,
+"net": -2362.0,
+"days": 81,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 349,
+"L": 2,
+"wr": 99.4269,
+"loss_rate": 0.5731,
+"net": 112.0,
+"days": 89,
+"lfd": 87,
+"den": 92,
+"lfd_pct": 94.57
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "8",
+"InpUhvRangeAtr": "2",
+"InpUhvNoClose": "1",
+"InpUhvLoudBrk": "0.9",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvBigFig": "2",
+"InpUhvNewsNY": "1",
+"InpUhvSRAhead": "2"
+},
+"train": {
+"n": 520,
+"L": 23,
+"wr": 95.5769,
+"loss_rate": 4.4231,
+"net": -3965.83,
+"days": 82,
+"lfd": 63,
+"den": 83,
+"lfd_pct": 75.9
+},
+"test": {
+"n": 437,
+"L": 3,
+"wr": 99.3135,
+"loss_rate": 0.6865,
+"net": -27.94,
+"days": 89,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "10",
+"InpUhvRangeAtr": "1",
+"InpUhvNewsNY": "1",
+"InpUhvStruct": "1",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvSRPips": "2",
+"InpUhvBrokeHighs": "3",
+"InpUhvBigFig": "1"
+},
+"train": {
+"n": 844,
+"L": 28,
+"wr": 96.6825,
+"loss_rate": 3.3175,
+"net": -4575.04,
+"days": 83,
+"lfd": 60,
+"den": 83,
+"lfd_pct": 72.29
+},
+"test": {
+"n": 771,
+"L": 9,
+"wr": 98.8327,
+"loss_rate": 1.1673,
+"net": -612.77,
+"days": 91,
+"lfd": 83,
+"den": 92,
+"lfd_pct": 90.22
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvBrokeHighs": "6",
+"InpUhvLoudBrk": "0.7",
+"InpUhvMinHumps": "4",
+"InpUhvFriCutNY": "13",
+"InpUhvHoliday": "1",
+"InpUhvSpikeAtr": "3",
+"InpUhvMinAtrPips": "1"
+},
+"train": {
+"n": 238,
+"L": 12,
+"wr": 94.958,
+"loss_rate": 5.042,
+"net": -2263.0,
+"days": 72,
+"lfd": 60,
+"den": 83,
+"lfd_pct": 72.29
+},
+"test": {
+"n": 211,
+"L": 3,
+"wr": 98.5782,
+"loss_rate": 1.4218,
+"net": -393.0,
+"days": 75,
+"lfd": 72,
+"den": 92,
+"lfd_pct": 78.26
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "4",
+"InpUhvMinTicks": "20",
+"InpUhvFreshBreak": "1",
+"InpUhvNoClose": "1",
+"InpUhvHtf5": "2",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvLoudBrk": "0.9"
+},
+"train": {
+"n": 351,
+"L": 9,
+"wr": 97.4359,
+"loss_rate": 2.5641,
+"net": -1439.0,
+"days": 83,
+"lfd": 74,
+"den": 83,
+"lfd_pct": 89.16
+},
+"test": {
+"n": 352,
+"L": 4,
+"wr": 98.8636,
+"loss_rate": 1.1364,
+"net": -403.88,
+"days": 88,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "2",
+"InpUhvSRAhead": "1",
+"InpUhvLoudBrk": "0.95",
+"InpUhvMinHumps": "4",
+"InpUhvMaxHumps": "4",
+"InpUhvMinTicks": "15",
+"InpUhvNoClose": "1",
+"InpUhvBrokeHighs": "3"
+},
+"train": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 83,
+"lfd_pct": 0.0
+},
+"test": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 92,
+"lfd_pct": 0.0
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvSunOpenMins": "120",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvStruct": "2",
+"InpUhvMaxHumps": "2",
+"InpUhvRunPips": "6",
+"InpUhvBrokeHighs": "8",
+"InpUhvBigFig": "1.5"
+},
+"train": {
+"n": 1129,
+"L": 39,
+"wr": 96.5456,
+"loss_rate": 3.4544,
+"net": -5993.86,
+"days": 84,
+"lfd": 51,
+"den": 83,
+"lfd_pct": 61.45
+},
+"test": {
+"n": 1339,
+"L": 8,
+"wr": 99.4025,
+"loss_rate": 0.5975,
+"net": 441.14,
+"days": 92,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvSRAhead": "0.3",
+"InpUhvStruct": "1",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvNewsNY": "1",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvRunPips": "6",
+"InpUhvMaxHumps": "3"
+},
+"train": {
+"n": 385,
+"L": 16,
+"wr": 95.8442,
+"loss_rate": 4.1558,
+"net": -2321.99,
+"days": 83,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 371,
+"L": 4,
+"wr": 98.9218,
+"loss_rate": 1.0782,
+"net": -99.02,
+"days": 90,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "0.3",
+"InpUhvBrokeHighs": "6",
+"InpUhvRunPips": "8",
+"InpUhvStruct": "1",
+"InpUhvSRPips": "2",
+"InpUhvMinAtrPips": "2",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvBigFig": "0.5"
+},
+"train": {
+"n": 175,
+"L": 5,
+"wr": 97.1429,
+"loss_rate": 2.8571,
+"net": -824.05,
+"days": 60,
+"lfd": 56,
+"den": 83,
+"lfd_pct": 67.47
+},
+"test": {
+"n": 67,
+"L": 2,
+"wr": 97.0149,
+"loss_rate": 2.9851,
+"net": -331.04,
+"days": 35,
+"lfd": 33,
+"den": 92,
+"lfd_pct": 35.87
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.6",
+"InpUhvNewsNY": "1",
+"InpUhvSpikeAtr": "5",
+"InpUhvRangeAtr": "2",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvCounterAtr": "8",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvMaxTrigSpread": "1.5"
+},
+"train": {
+"n": 1857,
+"L": 61,
+"wr": 96.7151,
+"loss_rate": 3.2849,
+"net": -9636.76,
+"days": 83,
+"lfd": 43,
+"den": 83,
+"lfd_pct": 51.81
+},
+"test": {
+"n": 1925,
+"L": 21,
+"wr": 98.9091,
+"loss_rate": 1.0909,
+"net": -1563.72,
+"days": 91,
+"lfd": 73,
+"den": 92,
+"lfd_pct": 79.35
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "1.5",
+"InpUhvHtf5": "2",
+"InpUhvFriCutNY": "12",
+"InpUhvSpikeAtr": "3",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvMinTicks": "15",
+"InpUhvSRAhead": "0.5",
+"InpUhvMaxTrigSpread": "1"
+},
+"train": {
+"n": 1242,
+"L": 39,
+"wr": 96.8599,
+"loss_rate": 3.1401,
+"net": -6571.94,
+"days": 83,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 1241,
+"L": 14,
+"wr": 98.8719,
+"loss_rate": 1.1281,
+"net": -1203.93,
+"days": 91,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvSunOpenMins": "30",
+"InpUhvCounterAtr": "6",
+"InpUhvFreshBreak": "5",
+"InpUhvBigFig": "1",
+"InpUhvStruct": "1",
+"InpUhvSRPips": "2",
+"InpUhvDeepRet": "0.6"
+},
+"train": {
+"n": 359,
+"L": 15,
+"wr": 95.8217,
+"loss_rate": 4.1783,
+"net": -2628.11,
+"days": 82,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 284,
+"L": 5,
+"wr": 98.2394,
+"loss_rate": 1.7606,
+"net": -631.92,
+"days": 86,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvBigFig": "2",
+"InpUhvSunOpenMins": "60",
+"InpUhvCounterAtr": "4",
+"InpUhvRunPips": "6",
+"InpUhvMaxHumps": "6",
+"InpUhvBrokeHighs": "4",
+"InpUhvHtf5": "2"
+},
+"train": {
+"n": 1473,
+"L": 44,
+"wr": 97.0129,
+"loss_rate": 2.9871,
+"net": -6775.96,
+"days": 83,
+"lfd": 50,
+"den": 83,
+"lfd_pct": 60.24
+},
+"test": {
+"n": 2022,
+"L": 20,
+"wr": 99.0109,
+"loss_rate": 0.9891,
+"net": -1210.93,
+"days": 92,
+"lfd": 75,
+"den": 92,
+"lfd_pct": 81.52
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "0.3",
+"InpUhvRangeAtr": "2",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvNoClose": "1",
+"InpUhvBigFig": "2",
+"InpUhvHtf5": "1",
+"InpUhvHoliday": "1",
+"InpUhvLoudBrk": "0.95"
+},
+"train": {
+"n": 1363,
+"L": 44,
+"wr": 96.7718,
+"loss_rate": 3.2282,
+"net": -6953.96,
+"days": 83,
+"lfd": 49,
+"den": 83,
+"lfd_pct": 59.04
+},
+"test": {
+"n": 1434,
+"L": 17,
+"wr": 98.8145,
+"loss_rate": 1.1855,
+"net": -1522.8,
+"days": 92,
+"lfd": 77,
+"den": 92,
+"lfd_pct": 83.7
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "0.8",
+"InpUhvMinHumps": "3",
+"InpUhvSRAhead": "0.3",
+"InpUhvSunOpenMins": "30",
+"InpUhvRangeAtr": "1.5",
+"InpUhvLoudBrk": "0.8",
+"InpUhvMinTicks": "10",
+"InpUhvBrokeHighs": "5"
+},
+"train": {
+"n": 519,
+"L": 17,
+"wr": 96.7245,
+"loss_rate": 3.2755,
+"net": -3389.95,
+"days": 83,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 477,
+"L": 7,
+"wr": 98.5325,
+"loss_rate": 1.4675,
+"net": -690.86,
+"days": 91,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "0.5",
+"InpUhvStruct": "2",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvSRPips": "4",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvCounterAtr": "8",
+"InpUhvBrokeHighs": "2",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 651,
+"L": 26,
+"wr": 96.0061,
+"loss_rate": 3.9939,
+"net": -4465.79,
+"days": 82,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 480,
+"L": 3,
+"wr": 99.375,
+"loss_rate": 0.625,
+"net": 40.16,
+"days": 90,
+"lfd": 87,
+"den": 92,
+"lfd_pct": 94.57
+}
+},
+{
+"stack": {
+"InpUhvMaxGapPips": "0.3",
+"InpUhvNoClose": "1",
+"InpUhvSpikeAtr": "4",
+"InpUhvMaxHumps": "3",
+"InpUhvSunOpenMins": "60",
+"InpUhvCounterAtr": "3",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 1912,
+"L": 59,
+"wr": 96.9142,
+"loss_rate": 3.0858,
+"net": -9632.58,
+"days": 83,
+"lfd": 40,
+"den": 83,
+"lfd_pct": 48.19
+},
+"test": {
+"n": 2532,
+"L": 25,
+"wr": 99.0126,
+"loss_rate": 0.9874,
+"net": -1767.72,
+"days": 92,
+"lfd": 70,
+"den": 92,
+"lfd_pct": 76.09
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "1.5",
+"InpUhvNewsNY": "1",
+"InpUhvSpikeAtr": "5",
+"InpUhvRunPips": "10",
+"InpUhvCounterAtr": "8",
+"InpUhvBigFig": "0.5",
+"InpUhvFriCutNY": "12",
+"InpUhvStruct": "1"
+},
+"train": {
+"n": 709,
+"L": 23,
+"wr": 96.756,
+"loss_rate": 3.244,
+"net": -3937.78,
+"days": 81,
+"lfd": 61,
+"den": 83,
+"lfd_pct": 73.49
+},
+"test": {
+"n": 403,
+"L": 5,
+"wr": 98.7593,
+"loss_rate": 1.2407,
+"net": -499.87,
+"days": 81,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "4",
+"InpUhvSpikeAtr": "4",
+"InpUhvLoudBrk": "0.9",
+"InpUhvStruct": "1",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvHoliday": "1",
+"InpUhvMaxGapPips": "0.3",
+"InpUhvSunOpenMins": "120"
+},
+"train": {
+"n": 628,
+"L": 20,
+"wr": 96.8153,
+"loss_rate": 3.1847,
+"net": -3350.85,
+"days": 80,
+"lfd": 61,
+"den": 83,
+"lfd_pct": 73.49
+},
+"test": {
+"n": 407,
+"L": 5,
+"wr": 98.7715,
+"loss_rate": 1.2285,
+"net": -530.89,
+"days": 76,
+"lfd": 71,
+"den": 92,
+"lfd_pct": 77.17
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.7",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvStruct": "1",
+"InpUhvSRAhead": "0.3",
+"InpUhvCounterAtr": "6",
+"InpUhvRangeAtr": "2.5",
+"InpUhvSRPips": "5",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 106,
+"L": 3,
+"wr": 97.1698,
+"loss_rate": 2.8302,
+"net": -473.0,
+"days": 57,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 67,
+"L": 1,
+"wr": 98.5075,
+"loss_rate": 1.4925,
+"net": -127.95,
+"days": 40,
+"lfd": 39,
+"den": 92,
+"lfd_pct": 42.39
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "2",
+"InpUhvBrokeHighs": "6",
+"InpUhvNewsNY": "1",
+"InpUhvStruct": "2",
+"InpUhvRangeAtr": "2.5",
+"InpUhvSpikeAtr": "5",
+"InpUhvHoliday": "1",
+"InpUhvFriCutNY": "13"
+},
+"train": {
+"n": 932,
+"L": 30,
+"wr": 96.7811,
+"loss_rate": 3.2189,
+"net": -4952.86,
+"days": 84,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 1049,
+"L": 6,
+"wr": 99.428,
+"loss_rate": 0.572,
+"net": 236.21,
+"days": 91,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "2",
+"InpUhvSunOpenMins": "120",
+"InpUhvSpikeAtr": "3",
+"InpUhvBigFig": "1.5",
+"InpUhvMaxGapPips": "1",
+"InpUhvLoudBrk": "0.7",
+"InpUhvMinAtrPips": "2",
+"InpUhvRunPips": "4"
+},
+"train": {
+"n": 258,
+"L": 6,
+"wr": 97.6744,
+"loss_rate": 2.3256,
+"net": -997.98,
+"days": 63,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 116,
+"L": 2,
+"wr": 98.2759,
+"loss_rate": 1.7241,
+"net": -247.98,
+"days": 46,
+"lfd": 44,
+"den": 92,
+"lfd_pct": 47.83
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "6",
+"InpUhvRunPips": "8",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvHtf5": "2",
+"InpUhvHoliday": "1",
+"InpUhvSRPips": "1",
+"InpUhvSunOpenMins": "60",
+"InpUhvNoClose": "1"
+},
+"train": {
+"n": 1341,
+"L": 44,
+"wr": 96.7189,
+"loss_rate": 3.2811,
+"net": -7195.91,
+"days": 83,
+"lfd": 50,
+"den": 83,
+"lfd_pct": 60.24
+},
+"test": {
+"n": 1525,
+"L": 18,
+"wr": 98.8197,
+"loss_rate": 1.1803,
+"net": -1394.06,
+"days": 91,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvStruct": "1",
+"InpUhvNoClose": "1",
+"InpUhvLoudBrk": "0.95",
+"InpUhvSpikeAtr": "5",
+"InpUhvCounterAtr": "6",
+"InpUhvRunPips": "8",
+"InpUhvMaxTrigSpread": "0.8"
+},
+"train": {
+"n": 1346,
+"L": 45,
+"wr": 96.6568,
+"loss_rate": 3.3432,
+"net": -7066.74,
+"days": 83,
+"lfd": 48,
+"den": 83,
+"lfd_pct": 57.83
+},
+"test": {
+"n": 1590,
+"L": 17,
+"wr": 98.9308,
+"loss_rate": 1.0692,
+"net": -1287.78,
+"days": 92,
+"lfd": 77,
+"den": 92,
+"lfd_pct": 83.7
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "4",
+"InpUhvRangeAtr": "1",
+"InpUhvSRPips": "4",
+"InpUhvStruct": "1",
+"InpUhvRunPips": "10",
+"InpUhvNewsNY": "1",
+"InpUhvSpikeAtr": "4",
+"InpUhvBrokeHighs": "8"
+},
+"train": {
+"n": 344,
+"L": 12,
+"wr": 96.5116,
+"loss_rate": 3.4884,
+"net": -2096.91,
+"days": 82,
+"lfd": 71,
+"den": 83,
+"lfd_pct": 85.54
+},
+"test": {
+"n": 258,
+"L": 2,
+"wr": 99.2248,
+"loss_rate": 0.7752,
+"net": -70.93,
+"days": 81,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "40",
+"InpUhvRunPips": "4",
+"InpUhvNewsNY": "1",
+"InpUhvMaxHumps": "4",
+"InpUhvSunOpenMins": "30",
+"InpUhvBigFig": "0.5",
+"InpUhvSpikeAtr": "5",
+"InpUhvBrokeHighs": "6"
+},
+"train": {
+"n": 1981,
+"L": 63,
+"wr": 96.8198,
+"loss_rate": 3.1802,
+"net": -9897.48,
+"days": 83,
+"lfd": 36,
+"den": 83,
+"lfd_pct": 43.37
+},
+"test": {
+"n": 2549,
+"L": 29,
+"wr": 98.8623,
+"loss_rate": 1.1377,
+"net": -1391.77,
+"days": 91,
+"lfd": 65,
+"den": 92,
+"lfd_pct": 70.65
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "1",
+"InpUhvSRPips": "4",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvHoliday": "1",
+"InpUhvMaxGapPips": "1",
+"InpUhvStruct": "1",
+"InpUhvBrokeHighs": "8",
+"InpUhvHtf5": "1"
+},
+"train": {
+"n": 119,
+"L": 4,
+"wr": 96.6387,
+"loss_rate": 3.3613,
+"net": -684.99,
+"days": 55,
+"lfd": 51,
+"den": 83,
+"lfd_pct": 61.45
+},
+"test": {
+"n": 68,
+"L": 1,
+"wr": 98.5294,
+"loss_rate": 1.4706,
+"net": -124.01,
+"days": 34,
+"lfd": 33,
+"den": 92,
+"lfd_pct": 35.87
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "4",
+"InpUhvLoudBrk": "0.95",
+"InpUhvMinTicks": "15",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvMaxHumps": "8",
+"InpUhvHtf5": "1",
+"InpUhvNewsNY": "1",
+"InpUhvBrokeHighs": "6"
+},
+"train": {
+"n": 1857,
+"L": 55,
+"wr": 97.0382,
+"loss_rate": 2.9618,
+"net": -8197.9,
+"days": 84,
+"lfd": 46,
+"den": 83,
+"lfd_pct": 55.42
+},
+"test": {
+"n": 2268,
+"L": 23,
+"wr": 98.9859,
+"loss_rate": 1.0141,
+"net": -1212.73,
+"days": 92,
+"lfd": 71,
+"den": 92,
+"lfd_pct": 77.17
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "2",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvHoliday": "1",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvSRPips": "0.5",
+"InpUhvStruct": "2",
+"InpUhvBrokeHighs": "6",
+"InpUhvCounterAtr": "6"
+},
+"train": {
+"n": 236,
+"L": 7,
+"wr": 97.0339,
+"loss_rate": 2.9661,
+"net": -1065.01,
+"days": 74,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 161,
+"L": 1,
+"wr": 99.3789,
+"loss_rate": 0.6211,
+"net": 4.02,
+"days": 69,
+"lfd": 68,
+"den": 92,
+"lfd_pct": 73.91
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "4",
+"InpUhvMinHumps": "2",
+"InpUhvRunPips": "10",
+"InpUhvCounterAtr": "6",
+"InpUhvRangeAtr": "3",
+"InpUhvStruct": "2",
+"InpUhvMinTicks": "20",
+"InpUhvBigFig": "2"
+},
+"train": {
+"n": 200,
+"L": 3,
+"wr": 98.5,
+"loss_rate": 1.5,
+"net": -360.88,
+"days": 72,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 156,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 221.05,
+"days": 75,
+"lfd": 75,
+"den": 92,
+"lfd_pct": 81.52
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvHoliday": "1",
+"InpUhvRunPips": "8",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvHtf5": "2",
+"InpUhvStruct": "2",
+"InpUhvRangeAtr": "2.5"
+},
+"train": {
+"n": 1187,
+"L": 35,
+"wr": 97.0514,
+"loss_rate": 2.9486,
+"net": -4884.87,
+"days": 82,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 1427,
+"L": 13,
+"wr": 99.089,
+"loss_rate": 0.911,
+"net": -361.78,
+"days": 91,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "4",
+"InpUhvDeepRet": "0.5",
+"InpUhvFreshBreak": "2",
+"InpUhvMaxHumps": "6",
+"InpUhvRunPips": "6",
+"InpUhvNewsNY": "1",
+"InpUhvSpikeAtr": "2",
+"InpUhvRangeAtr": "1.5"
+},
+"train": {
+"n": 81,
+"L": 3,
+"wr": 96.2963,
+"loss_rate": 3.7037,
+"net": -521.03,
+"days": 53,
+"lfd": 50,
+"den": 83,
+"lfd_pct": 60.24
+},
+"test": {
+"n": 123,
+"L": 2,
+"wr": 98.374,
+"loss_rate": 1.626,
+"net": -219.01,
+"days": 65,
+"lfd": 63,
+"den": 92,
+"lfd_pct": 68.48
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "4",
+"InpUhvMaxHumps": "8",
+"InpUhvStruct": "2",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvSRAhead": "0.3",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvFreshBreak": "5",
+"InpUhvCounterAtr": "8"
+},
+"train": {
+"n": 547,
+"L": 19,
+"wr": 96.5265,
+"loss_rate": 3.4735,
+"net": -3300.78,
+"days": 82,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 349,
+"L": 4,
+"wr": 98.8539,
+"loss_rate": 1.1461,
+"net": -425.86,
+"days": 86,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvLoudBrk": "0.8",
+"InpUhvMinAtrPips": "2",
+"InpUhvDeepRet": "0.9",
+"InpUhvHtf5": "1",
+"InpUhvCounterAtr": "6",
+"InpUhvStruct": "2",
+"InpUhvBigFig": "0.5",
+"InpUhvFreshBreak": "5"
+},
+"train": {
+"n": 308,
+"L": 12,
+"wr": 96.1039,
+"loss_rate": 3.8961,
+"net": -2782.06,
+"days": 69,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 168,
+"L": 4,
+"wr": 97.619,
+"loss_rate": 2.381,
+"net": -701.95,
+"days": 55,
+"lfd": 51,
+"den": 92,
+"lfd_pct": 55.43
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "1",
+"InpUhvRangeAtr": "1.5",
+"InpUhvMaxHumps": "3",
+"InpUhvFreshBreak": "3",
+"InpUhvBrokeHighs": "3",
+"InpUhvSpikeAtr": "2",
+"InpUhvNoClose": "1",
+"InpUhvBigFig": "1.5"
+},
+"train": {
+"n": 1077,
+"L": 41,
+"wr": 96.1931,
+"loss_rate": 3.8069,
+"net": -6909.83,
+"days": 83,
+"lfd": 49,
+"den": 83,
+"lfd_pct": 59.04
+},
+"test": {
+"n": 1192,
+"L": 13,
+"wr": 98.9094,
+"loss_rate": 1.0906,
+"net": -809.93,
+"days": 91,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvMaxTrigSpread": "2",
+"InpUhvStruct": "1",
+"InpUhvHtf5": "2",
+"InpUhvBrokeHighs": "3",
+"InpUhvRunPips": "8",
+"InpUhvSunOpenMins": "30",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvRangeAtr": "1.5"
+},
+"train": {
+"n": 385,
+"L": 12,
+"wr": 96.8831,
+"loss_rate": 3.1169,
+"net": -1961.83,
+"days": 78,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 225,
+"L": 3,
+"wr": 98.6667,
+"loss_rate": 1.3333,
+"net": -94.92,
+"days": 74,
+"lfd": 71,
+"den": 92,
+"lfd_pct": 77.17
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "120",
+"InpUhvSRAhead": "1",
+"InpUhvLoudBrk": "0.8",
+"InpUhvMinHumps": "4",
+"InpUhvRunPips": "4",
+"InpUhvHtf5": "1",
+"InpUhvBigFig": "2",
+"InpUhvFriCutNY": "12"
+},
+"train": {
+"n": 33,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 51.01,
+"days": 29,
+"lfd": 29,
+"den": 83,
+"lfd_pct": 34.94
+},
+"test": {
+"n": 17,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 21.03,
+"days": 16,
+"lfd": 16,
+"den": 92,
+"lfd_pct": 17.39
+}
+},
+{
+"stack": {
+"InpUhvLoudBrk": "0.8",
+"InpUhvHtf5": "1",
+"InpUhvSpikeAtr": "2",
+"InpUhvRangeAtr": "2.5",
+"InpUhvBigFig": "1",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvBrokeHighs": "6",
+"InpUhvCounterAtr": "4"
+},
+"train": {
+"n": 993,
+"L": 28,
+"wr": 97.1803,
+"loss_rate": 2.8197,
+"net": -3937.96,
+"days": 83,
+"lfd": 58,
+"den": 83,
+"lfd_pct": 69.88
+},
+"test": {
+"n": 1231,
+"L": 8,
+"wr": 99.3501,
+"loss_rate": 0.6499,
+"net": 167.17,
+"days": 91,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "40",
+"InpUhvBrokeHighs": "3",
+"InpUhvStruct": "1",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvCounterAtr": "8",
+"InpUhvFriCutNY": "16",
+"InpUhvDeepRet": "0.6",
+"InpUhvSRPips": "1.5"
+},
+"train": {
+"n": 503,
+"L": 19,
+"wr": 96.2227,
+"loss_rate": 3.7773,
+"net": -3240.99,
+"days": 82,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 437,
+"L": 7,
+"wr": 98.3982,
+"loss_rate": 1.6018,
+"net": -748.94,
+"days": 91,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvStruct": "1",
+"InpUhvBigFig": "0.5",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvSRPips": "1.5",
+"InpUhvBrokeHighs": "8",
+"InpUhvRangeAtr": "2.5",
+"InpUhvSpikeAtr": "5",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 873,
+"L": 32,
+"wr": 96.3345,
+"loss_rate": 3.6655,
+"net": -5165.02,
+"days": 82,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 893,
+"L": 10,
+"wr": 98.8802,
+"loss_rate": 1.1198,
+"net": -741.76,
+"days": 91,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvLoudBrk": "0.95",
+"InpUhvFriCutNY": "14",
+"InpUhvSRPips": "5",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvRangeAtr": "1.5",
+"InpUhvNoClose": "1",
+"InpUhvStruct": "2",
+"InpUhvMinTicks": "30"
+},
+"train": {
+"n": 1115,
+"L": 31,
+"wr": 97.2197,
+"loss_rate": 2.7803,
+"net": -5084.57,
+"days": 83,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 838,
+"L": 10,
+"wr": 98.8067,
+"loss_rate": 1.1933,
+"net": -1278.73,
+"days": 91,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvFriCutNY": "10",
+"InpUhvNewsNY": "1",
+"InpUhvMaxHumps": "4",
+"InpUhvHtf5": "2",
+"InpUhvRunPips": "4",
+"InpUhvMinHumps": "3",
+"InpUhvStruct": "2",
+"InpUhvSRPips": "5"
+},
+"train": {
+"n": 27,
+"L": 2,
+"wr": 92.5926,
+"loss_rate": 7.4074,
+"net": -394.98,
+"days": 21,
+"lfd": 19,
+"den": 83,
+"lfd_pct": 22.89
+},
+"test": {
+"n": 13,
+"L": 1,
+"wr": 92.3077,
+"loss_rate": 7.6923,
+"net": -202.0,
+"days": 12,
+"lfd": 11,
+"den": 92,
+"lfd_pct": 11.96
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "0.8",
+"InpUhvRangeAtr": "2",
+"InpUhvDeepRet": "0.5",
+"InpUhvCounterAtr": "6",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvFreshBreak": "3",
+"InpUhvStruct": "1",
+"InpUhvSpikeAtr": "4"
+},
+"train": {
+"n": 883,
+"L": 35,
+"wr": 96.0362,
+"loss_rate": 3.9638,
+"net": -5370.94,
+"days": 83,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 976,
+"L": 10,
+"wr": 98.9754,
+"loss_rate": 1.0246,
+"net": -534.79,
+"days": 92,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "6",
+"InpUhvDeepRet": "0.7",
+"InpUhvRunPips": "4",
+"InpUhvSRPips": "2",
+"InpUhvHoliday": "1",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvBrokeHighs": "3",
+"InpUhvLoudBrk": "0.7"
+},
+"train": {
+"n": 540,
+"L": 18,
+"wr": 96.6667,
+"loss_rate": 3.3333,
+"net": -2961.92,
+"days": 83,
+"lfd": 66,
+"den": 83,
+"lfd_pct": 79.52
+},
+"test": {
+"n": 539,
+"L": 6,
+"wr": 98.8868,
+"loss_rate": 1.1132,
+"net": -342.93,
+"days": 90,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "2",
+"InpUhvRangeAtr": "2",
+"InpUhvMaxHumps": "5",
+"InpUhvBigFig": "1.5",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvBrokeHighs": "3",
+"InpUhvDeepRet": "0.8"
+},
+"train": {
+"n": 1843,
+"L": 54,
+"wr": 97.07,
+"loss_rate": 2.93,
+"net": -7621.9,
+"days": 83,
+"lfd": 45,
+"den": 83,
+"lfd_pct": 54.22
+},
+"test": {
+"n": 2274,
+"L": 20,
+"wr": 99.1205,
+"loss_rate": 0.8795,
+"net": -569.74,
+"days": 92,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvLoudBrk": "0.9",
+"InpUhvNewsNY": "1",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvMaxHumps": "5",
+"InpUhvHtf5": "1",
+"InpUhvFriCutNY": "15"
+},
+"train": {
+"n": 673,
+"L": 20,
+"wr": 97.0282,
+"loss_rate": 2.9718,
+"net": -3261.9,
+"days": 80,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 455,
+"L": 3,
+"wr": 99.3407,
+"loss_rate": 0.6593,
+"net": 116.1,
+"days": 81,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvHoliday": "1",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvMinTicks": "15",
+"InpUhvMinHumps": "3",
+"InpUhvDeepRet": "0.8",
+"InpUhvFreshBreak": "5",
+"InpUhvNoClose": "1",
+"InpUhvLoudBrk": "0.9"
+},
+"train": {
+"n": 761,
+"L": 23,
+"wr": 96.9777,
+"loss_rate": 3.0223,
+"net": -3801.92,
+"days": 83,
+"lfd": 63,
+"den": 83,
+"lfd_pct": 75.9
+},
+"test": {
+"n": 841,
+"L": 8,
+"wr": 99.0488,
+"loss_rate": 0.9512,
+"net": -579.81,
+"days": 92,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvMinHumps": "4",
+"InpUhvBigFig": "0.5",
+"InpUhvStruct": "2",
+"InpUhvSunOpenMins": "30",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvDeepRet": "0.5",
+"InpUhvMinAtrPips": "1.5"
+},
+"train": {
+"n": 106,
+"L": 4,
+"wr": 96.2264,
+"loss_rate": 3.7736,
+"net": -1333.01,
+"days": 52,
+"lfd": 48,
+"den": 83,
+"lfd_pct": 57.83
+},
+"test": {
+"n": 90,
+"L": 1,
+"wr": 98.8889,
+"loss_rate": 1.1111,
+"net": -200.94,
+"days": 44,
+"lfd": 43,
+"den": 92,
+"lfd_pct": 46.74
+}
+},
+{
+"stack": {
+"InpUhvDeepRet": "0.8",
+"InpUhvMaxHumps": "3",
+"InpUhvSRAhead": "2",
+"InpUhvNoClose": "1",
+"InpUhvNewsNY": "1",
+"InpUhvRunPips": "15",
+"InpUhvLoudBrk": "0.95",
+"InpUhvMinHumps": "3"
+},
+"train": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 83,
+"lfd_pct": 0.0
+},
+"test": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 92,
+"lfd_pct": 0.0
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "4",
+"InpUhvBigFig": "1.5",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvSRPips": "0.5",
+"InpUhvFriCutNY": "13",
+"InpUhvMaxHumps": "3",
+"InpUhvSRAhead": "1.5",
+"InpUhvNoClose": "1"
+},
+"train": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 83,
+"lfd_pct": 0.0
+},
+"test": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 92,
+"lfd_pct": 0.0
+}
+},
+{
+"stack": {
+"InpUhvMaxTrigSpread": "2",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvRangeAtr": "3",
+"InpUhvFriCutNY": "15",
+"InpUhvNoClose": "1",
+"InpUhvHtf5": "1",
+"InpUhvBrokeHighs": "6",
+"InpUhvDeepRet": "0.8"
+},
+"train": {
+"n": 551,
+"L": 17,
+"wr": 96.9147,
+"loss_rate": 3.0853,
+"net": -2804.94,
+"days": 81,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 367,
+"L": 6,
+"wr": 98.3651,
+"loss_rate": 1.6349,
+"net": -597.94,
+"days": 82,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvHoliday": "1",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvBrokeHighs": "2",
+"InpUhvFriCutNY": "12",
+"InpUhvMinTicks": "10",
+"InpUhvFreshBreak": "8",
+"InpUhvHtf5": "1",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 1664,
+"L": 42,
+"wr": 97.476,
+"loss_rate": 2.524,
+"net": -6375.9,
+"days": 83,
+"lfd": 50,
+"den": 83,
+"lfd_pct": 60.24
+},
+"test": {
+"n": 1844,
+"L": 22,
+"wr": 98.8069,
+"loss_rate": 1.1931,
+"net": -1806.82,
+"days": 92,
+"lfd": 72,
+"den": 92,
+"lfd_pct": 78.26
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "2",
+"InpUhvRangeAtr": "3",
+"InpUhvHoliday": "1",
+"InpUhvMaxHumps": "5",
+"InpUhvSRPips": "5",
+"InpUhvFreshBreak": "2",
+"InpUhvSRAhead": "0.5",
+"InpUhvMaxTrigSpread": "0.8"
+},
+"train": {
+"n": 171,
+"L": 3,
+"wr": 98.2456,
+"loss_rate": 1.7544,
+"net": -343.96,
+"days": 60,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 70,
+"L": 1,
+"wr": 98.5714,
+"loss_rate": 1.4286,
+"net": -161.96,
+"days": 34,
+"lfd": 33,
+"den": 92,
+"lfd_pct": 35.87
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "2",
+"InpUhvSunOpenMins": "60",
+"InpUhvHoliday": "1",
+"InpUhvSRAhead": "0.5",
+"InpUhvMinHumps": "4",
+"InpUhvFriCutNY": "13",
+"InpUhvNewsNY": "1",
+"InpUhvHtf5": "2"
+},
+"train": {
+"n": 205,
+"L": 7,
+"wr": 96.5854,
+"loss_rate": 3.4146,
+"net": -1195.02,
+"days": 71,
+"lfd": 64,
+"den": 83,
+"lfd_pct": 77.11
+},
+"test": {
+"n": 187,
+"L": 4,
+"wr": 97.861,
+"loss_rate": 2.139,
+"net": -616.92,
+"days": 80,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "2",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvSRAhead": "0.3",
+"InpUhvSunOpenMins": "120",
+"InpUhvCounterAtr": "4",
+"InpUhvHoliday": "1",
+"InpUhvStruct": "1",
+"InpUhvBrokeHighs": "2"
+},
+"train": {
+"n": 620,
+"L": 28,
+"wr": 95.4839,
+"loss_rate": 4.5161,
+"net": -4528.85,
+"days": 80,
+"lfd": 56,
+"den": 83,
+"lfd_pct": 67.47
+},
+"test": {
+"n": 561,
+"L": 6,
+"wr": 98.9305,
+"loss_rate": 1.0695,
+"net": -406.87,
+"days": 90,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "1",
+"InpUhvStruct": "1",
+"InpUhvNewsNY": "1",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvDeepRet": "0.8",
+"InpUhvHtf5": "1",
+"InpUhvSpikeAtr": "4",
+"InpUhvFriCutNY": "10"
+},
+"train": {
+"n": 971,
+"L": 34,
+"wr": 96.4985,
+"loss_rate": 3.5015,
+"net": -5654.98,
+"days": 83,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 1090,
+"L": 10,
+"wr": 99.0826,
+"loss_rate": 0.9174,
+"net": -696.84,
+"days": 92,
+"lfd": 83,
+"den": 92,
+"lfd_pct": 90.22
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "6",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvNewsNY": "1",
+"InpUhvNoClose": "1",
+"InpUhvSpikeAtr": "2",
+"InpUhvFriCutNY": "12",
+"InpUhvBrokeHighs": "8",
+"InpUhvLoudBrk": "0.8"
+},
+"train": {
+"n": 1914,
+"L": 58,
+"wr": 96.9697,
+"loss_rate": 3.0303,
+"net": -9768.76,
+"days": 83,
+"lfd": 39,
+"den": 83,
+"lfd_pct": 46.99
+},
+"test": {
+"n": 2349,
+"L": 25,
+"wr": 98.9357,
+"loss_rate": 1.0643,
+"net": -2064.01,
+"days": 92,
+"lfd": 70,
+"den": 92,
+"lfd_pct": 76.09
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "1.5",
+"InpUhvHtf5": "2",
+"InpUhvLoudBrk": "0.8",
+"InpUhvRangeAtr": "1.5",
+"InpUhvMaxHumps": "6",
+"InpUhvMinTicks": "30",
+"InpUhvFriCutNY": "13",
+"InpUhvFreshBreak": "2"
+},
+"train": {
+"n": 411,
+"L": 14,
+"wr": 96.5937,
+"loss_rate": 3.4063,
+"net": -2503.0,
+"days": 82,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 363,
+"L": 1,
+"wr": 99.7245,
+"loss_rate": 0.2755,
+"net": 283.06,
+"days": 89,
+"lfd": 88,
+"den": 92,
+"lfd_pct": 95.65
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "1.5",
+"InpUhvSunOpenMins": "120",
+"InpUhvNoClose": "1",
+"InpUhvMaxHumps": "3",
+"InpUhvRunPips": "8",
+"InpUhvStruct": "1",
+"InpUhvDeepRet": "0.8",
+"InpUhvMaxTrigSpread": "1.5"
+},
+"train": {
+"n": 207,
+"L": 7,
+"wr": 96.6184,
+"loss_rate": 3.3816,
+"net": -1045.01,
+"days": 72,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 140,
+"L": 1,
+"wr": 99.2857,
+"loss_rate": 0.7143,
+"net": -25.02,
+"days": 69,
+"lfd": 68,
+"den": 92,
+"lfd_pct": 73.91
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "2",
+"InpUhvHoliday": "1",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvHtf5": "1",
+"InpUhvSpikeAtr": "3",
+"InpUhvFreshBreak": "2",
+"InpUhvSRPips": "1.5",
+"InpUhvCounterAtr": "3"
+},
+"train": {
+"n": 823,
+"L": 34,
+"wr": 95.8688,
+"loss_rate": 4.1312,
+"net": -6155.97,
+"days": 83,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 789,
+"L": 9,
+"wr": 98.8593,
+"loss_rate": 1.1407,
+"net": -508.86,
+"days": 89,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "4",
+"InpUhvBigFig": "0.5",
+"InpUhvFreshBreak": "1",
+"InpUhvSRAhead": "2",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvMaxHumps": "3",
+"InpUhvCounterAtr": "3",
+"InpUhvMaxTrigSpread": "0.8"
+},
+"train": {
+"n": 306,
+"L": 12,
+"wr": 96.0784,
+"loss_rate": 3.9216,
+"net": -2055.95,
+"days": 79,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 254,
+"L": 1,
+"wr": 99.6063,
+"loss_rate": 0.3937,
+"net": 122.04,
+"days": 81,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvLoudBrk": "0.8",
+"InpUhvMinTicks": "10",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvBigFig": "0.8",
+"InpUhvMinHumps": "4",
+"InpUhvDeepRet": "0.9",
+"InpUhvBrokeHighs": "3"
+},
+"train": {
+"n": 394,
+"L": 11,
+"wr": 97.2081,
+"loss_rate": 2.7919,
+"net": -1791.03,
+"days": 83,
+"lfd": 72,
+"den": 83,
+"lfd_pct": 86.75
+},
+"test": {
+"n": 429,
+"L": 4,
+"wr": 99.0676,
+"loss_rate": 0.9324,
+"net": -287.9,
+"days": 90,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvMaxTrigSpread": "0.7",
+"InpUhvSRPips": "3",
+"InpUhvHoliday": "1",
+"InpUhvSunOpenMins": "60",
+"InpUhvFriCutNY": "10",
+"InpUhvStruct": "2",
+"InpUhvNoClose": "1",
+"InpUhvMinAtrPips": "0.5"
+},
+"train": {
+"n": 1384,
+"L": 41,
+"wr": 97.0376,
+"loss_rate": 2.9624,
+"net": -6834.46,
+"days": 82,
+"lfd": 46,
+"den": 83,
+"lfd_pct": 55.42
+},
+"test": {
+"n": 1295,
+"L": 12,
+"wr": 99.0734,
+"loss_rate": 0.9266,
+"net": -1040.97,
+"days": 91,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvRunPips": "15",
+"InpUhvLoudBrk": "0.7",
+"InpUhvMinHumps": "3",
+"InpUhvSRAhead": "2",
+"InpUhvMaxHumps": "4",
+"InpUhvNoClose": "1",
+"InpUhvBigFig": "0.8",
+"InpUhvNewsNY": "1"
+},
+"train": {
+"n": 46,
+"L": 3,
+"wr": 93.4783,
+"loss_rate": 6.5217,
+"net": -562.0,
+"days": 32,
+"lfd": 29,
+"den": 83,
+"lfd_pct": 34.94
+},
+"test": {
+"n": 39,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 61.99,
+"days": 31,
+"lfd": 31,
+"den": 92,
+"lfd_pct": 33.7
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "0.3",
+"InpUhvRunPips": "10",
+"InpUhvNoClose": "1",
+"InpUhvMaxHumps": "8",
+"InpUhvHoliday": "1",
+"InpUhvHtf5": "1",
+"InpUhvFriCutNY": "12",
+"InpUhvMaxTrigSpread": "1.5"
+},
+"train": {
+"n": 1200,
+"L": 38,
+"wr": 96.8333,
+"loss_rate": 3.1667,
+"net": -6555.98,
+"days": 83,
+"lfd": 52,
+"den": 83,
+"lfd_pct": 62.65
+},
+"test": {
+"n": 1314,
+"L": 17,
+"wr": 98.7062,
+"loss_rate": 1.2938,
+"net": -1667.91,
+"days": 92,
+"lfd": 77,
+"den": 92,
+"lfd_pct": 83.7
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "8",
+"InpUhvDeepRet": "0.6",
+"InpUhvSRPips": "4",
+"InpUhvNoClose": "1",
+"InpUhvCounterAtr": "3",
+"InpUhvRangeAtr": "1.5",
+"InpUhvHoliday": "1",
+"InpUhvMinAtrPips": "1"
+},
+"train": {
+"n": 281,
+"L": 11,
+"wr": 96.0854,
+"loss_rate": 3.9146,
+"net": -1996.84,
+"days": 74,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 176,
+"L": 1,
+"wr": 99.4318,
+"loss_rate": 0.5682,
+"net": 37.09,
+"days": 63,
+"lfd": 62,
+"den": 92,
+"lfd_pct": 67.39
+}
+},
+{
+"stack": {
+"InpUhvFreshBreak": "2",
+"InpUhvMinTicks": "10",
+"InpUhvMaxGapPips": "1",
+"InpUhvBrokeHighs": "2",
+"InpUhvNewsNY": "1",
+"InpUhvSRPips": "3",
+"InpUhvFriCutNY": "13",
+"InpUhvRunPips": "15"
+},
+"train": {
+"n": 1146,
+"L": 36,
+"wr": 96.8586,
+"loss_rate": 3.1414,
+"net": -6237.67,
+"days": 83,
+"lfd": 53,
+"den": 83,
+"lfd_pct": 63.86
+},
+"test": {
+"n": 1059,
+"L": 9,
+"wr": 99.1501,
+"loss_rate": 0.8499,
+"net": -333.84,
+"days": 91,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "2",
+"InpUhvStruct": "1",
+"InpUhvSpikeAtr": "4",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvRangeAtr": "3",
+"InpUhvLoudBrk": "0.8",
+"InpUhvSRAhead": "2",
+"InpUhvMinHumps": "4"
+},
+"train": {
+"n": 16,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 26.99,
+"days": 13,
+"lfd": 13,
+"den": 83,
+"lfd_pct": 15.66
+},
+"test": {
+"n": 15,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 20.0,
+"days": 14,
+"lfd": 14,
+"den": 92,
+"lfd_pct": 15.22
+}
+},
+{
+"stack": {
+"InpUhvNewsNY": "1",
+"InpUhvFreshBreak": "3",
+"InpUhvRunPips": "8",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvFriCutNY": "14",
+"InpUhvSunOpenMins": "120",
+"InpUhvSpikeAtr": "3",
+"InpUhvStruct": "2"
+},
+"train": {
+"n": 1843,
+"L": 53,
+"wr": 97.1243,
+"loss_rate": 2.8757,
+"net": -8426.52,
+"days": 83,
+"lfd": 42,
+"den": 83,
+"lfd_pct": 50.6
+},
+"test": {
+"n": 2276,
+"L": 19,
+"wr": 99.1652,
+"loss_rate": 0.8348,
+"net": -881.75,
+"days": 92,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvStruct": "2",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvDeepRet": "0.9",
+"InpUhvBrokeHighs": "6",
+"InpUhvHtf5": "2",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvBigFig": "1"
+},
+"train": {
+"n": 1588,
+"L": 53,
+"wr": 96.6625,
+"loss_rate": 3.3375,
+"net": -8197.9,
+"days": 84,
+"lfd": 45,
+"den": 83,
+"lfd_pct": 54.22
+},
+"test": {
+"n": 1896,
+"L": 14,
+"wr": 99.2616,
+"loss_rate": 0.7384,
+"net": -302.73,
+"days": 92,
+"lfd": 82,
+"den": 92,
+"lfd_pct": 89.13
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "0.8",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvCounterAtr": "8",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvStruct": "2",
+"InpUhvFreshBreak": "5",
+"InpUhvMinTicks": "40",
+"InpUhvRangeAtr": "1"
+},
+"train": {
+"n": 1931,
+"L": 63,
+"wr": 96.7374,
+"loss_rate": 3.2626,
+"net": -9833.8,
+"days": 83,
+"lfd": 39,
+"den": 83,
+"lfd_pct": 46.99
+},
+"test": {
+"n": 2160,
+"L": 20,
+"wr": 99.0741,
+"loss_rate": 0.9259,
+"net": -646.73,
+"days": 91,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvMaxGapPips": "0.8",
+"InpUhvHtf5": "1",
+"InpUhvBigFig": "0.8",
+"InpUhvCounterAtr": "3",
+"InpUhvMinTicks": "10",
+"InpUhvNewsNY": "1",
+"InpUhvNoClose": "1",
+"InpUhvRunPips": "15"
+},
+"train": {
+"n": 1911,
+"L": 58,
+"wr": 96.9649,
+"loss_rate": 3.0351,
+"net": -9148.01,
+"days": 84,
+"lfd": 43,
+"den": 83,
+"lfd_pct": 51.81
+},
+"test": {
+"n": 2370,
+"L": 27,
+"wr": 98.8608,
+"loss_rate": 1.1392,
+"net": -2227.72,
+"days": 92,
+"lfd": 68,
+"den": 92,
+"lfd_pct": 73.91
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "1",
+"InpUhvBigFig": "0.5",
+"InpUhvNewsNY": "1",
+"InpUhvMaxGapPips": "0.3",
+"InpUhvNoClose": "1",
+"InpUhvRunPips": "6",
+"InpUhvStruct": "2",
+"InpUhvCounterAtr": "8"
+},
+"train": {
+"n": 1859,
+"L": 59,
+"wr": 96.8263,
+"loss_rate": 3.1737,
+"net": -9434.57,
+"days": 84,
+"lfd": 37,
+"den": 83,
+"lfd_pct": 44.58
+},
+"test": {
+"n": 2273,
+"L": 24,
+"wr": 98.9441,
+"loss_rate": 1.0559,
+"net": -1574.6,
+"days": 92,
+"lfd": 70,
+"den": 92,
+"lfd_pct": 76.09
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "3",
+"InpUhvStruct": "2",
+"InpUhvMinTicks": "10",
+"InpUhvCounterAtr": "8",
+"InpUhvFreshBreak": "8",
+"InpUhvBrokeHighs": "3",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvMaxHumps": "5"
+},
+"train": {
+"n": 222,
+"L": 7,
+"wr": 96.8468,
+"loss_rate": 3.1532,
+"net": -1193.93,
+"days": 68,
+"lfd": 62,
+"den": 83,
+"lfd_pct": 74.7
+},
+"test": {
+"n": 155,
+"L": 1,
+"wr": 99.3548,
+"loss_rate": 0.6452,
+"net": -3.88,
+"days": 65,
+"lfd": 64,
+"den": 92,
+"lfd_pct": 69.57
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "6",
+"InpUhvRangeAtr": "1",
+"InpUhvLoudBrk": "0.8",
+"InpUhvRunPips": "6",
+"InpUhvBigFig": "2",
+"InpUhvNewsNY": "1",
+"InpUhvMinAtrPips": "2",
+"InpUhvMinTicks": "10"
+},
+"train": {
+"n": 599,
+"L": 20,
+"wr": 96.6611,
+"loss_rate": 3.3389,
+"net": -4055.79,
+"days": 75,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 280,
+"L": 4,
+"wr": 98.5714,
+"loss_rate": 1.4286,
+"net": -525.92,
+"days": 63,
+"lfd": 59,
+"den": 92,
+"lfd_pct": 64.13
+}
+},
+{
+"stack": {
+"InpUhvMaxHumps": "2",
+"InpUhvSunOpenMins": "120",
+"InpUhvNewsNY": "1",
+"InpUhvSpikeAtr": "4",
+"InpUhvBigFig": "0.5",
+"InpUhvStruct": "1",
+"InpUhvLoudBrk": "0.7",
+"InpUhvRunPips": "8"
+},
+"train": {
+"n": 942,
+"L": 36,
+"wr": 96.1783,
+"loss_rate": 3.8217,
+"net": -5949.8,
+"days": 83,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 1031,
+"L": 15,
+"wr": 98.5451,
+"loss_rate": 1.4549,
+"net": -1390.9,
+"days": 91,
+"lfd": 76,
+"den": 92,
+"lfd_pct": 82.61
+}
+},
+{
+"stack": {
+"InpUhvMaxGapPips": "1",
+"InpUhvFreshBreak": "1",
+"InpUhvMinHumps": "3",
+"InpUhvNoClose": "1",
+"InpUhvSRPips": "4",
+"InpUhvSunOpenMins": "60",
+"InpUhvDeepRet": "0.6",
+"InpUhvCounterAtr": "4"
+},
+"train": {
+"n": 71,
+"L": 3,
+"wr": 95.7746,
+"loss_rate": 4.2254,
+"net": -576.97,
+"days": 46,
+"lfd": 43,
+"den": 83,
+"lfd_pct": 51.81
+},
+"test": {
+"n": 52,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 78.0,
+"days": 33,
+"lfd": 33,
+"den": 92,
+"lfd_pct": 35.87
+}
+},
+{
+"stack": {
+"InpUhvMinHumps": "4",
+"InpUhvHtf5": "2",
+"InpUhvBigFig": "1",
+"InpUhvLoudBrk": "0.95",
+"InpUhvMinAtrPips": "2",
+"InpUhvStruct": "2",
+"InpUhvSunOpenMins": "120",
+"InpUhvMinTicks": "30"
+},
+"train": {
+"n": 68,
+"L": 2,
+"wr": 97.0588,
+"loss_rate": 2.9412,
+"net": -377.02,
+"days": 35,
+"lfd": 33,
+"den": 83,
+"lfd_pct": 39.76
+},
+"test": {
+"n": 48,
+"L": 1,
+"wr": 97.9167,
+"loss_rate": 2.0833,
+"net": -252.95,
+"days": 29,
+"lfd": 28,
+"den": 92,
+"lfd_pct": 30.43
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "120",
+"InpUhvMaxHumps": "2",
+"InpUhvRunPips": "10",
+"InpUhvDeepRet": "0.6",
+"InpUhvFreshBreak": "5",
+"InpUhvNoClose": "1",
+"InpUhvMinTicks": "40",
+"InpUhvHoliday": "1"
+},
+"train": {
+"n": 766,
+"L": 29,
+"wr": 96.2141,
+"loss_rate": 3.7859,
+"net": -4946.93,
+"days": 81,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 943,
+"L": 11,
+"wr": 98.8335,
+"loss_rate": 1.1665,
+"net": -881.88,
+"days": 91,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "2",
+"InpUhvNoClose": "1",
+"InpUhvNewsNY": "1",
+"InpUhvFriCutNY": "12",
+"InpUhvHoliday": "1",
+"InpUhvSunOpenMins": "60",
+"InpUhvSpikeAtr": "5",
+"InpUhvSRAhead": "0.5"
+},
+"train": {
+"n": 1265,
+"L": 41,
+"wr": 96.7589,
+"loss_rate": 3.2411,
+"net": -6991.89,
+"days": 83,
+"lfd": 53,
+"den": 83,
+"lfd_pct": 63.86
+},
+"test": {
+"n": 1230,
+"L": 14,
+"wr": 98.8618,
+"loss_rate": 1.1382,
+"net": -1201.94,
+"days": 90,
+"lfd": 77,
+"den": 92,
+"lfd_pct": 83.7
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "0.3",
+"InpUhvMinAtrPips": "1",
+"InpUhvBigFig": "2",
+"InpUhvRunPips": "4",
+"InpUhvMinTicks": "15",
+"InpUhvNewsNY": "1",
+"InpUhvRangeAtr": "1.5",
+"InpUhvFreshBreak": "5"
+},
+"train": {
+"n": 1078,
+"L": 31,
+"wr": 97.1243,
+"loss_rate": 2.8757,
+"net": -5224.73,
+"days": 83,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 921,
+"L": 7,
+"wr": 99.24,
+"loss_rate": 0.76,
+"net": 16.14,
+"days": 91,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "30",
+"InpUhvSRAhead": "2",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvSpikeAtr": "4",
+"InpUhvCounterAtr": "4",
+"InpUhvRunPips": "4",
+"InpUhvNoClose": "1",
+"InpUhvBrokeHighs": "4"
+},
+"train": {
+"n": 180,
+"L": 5,
+"wr": 97.2222,
+"loss_rate": 2.7778,
+"net": -878.97,
+"days": 77,
+"lfd": 72,
+"den": 83,
+"lfd_pct": 86.75
+},
+"test": {
+"n": 158,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 210.0,
+"days": 74,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvSunOpenMins": "30",
+"InpUhvRunPips": "4",
+"InpUhvSRPips": "1",
+"InpUhvMinTicks": "30",
+"InpUhvNewsNY": "1",
+"InpUhvStruct": "2",
+"InpUhvNoClose": "1"
+},
+"train": {
+"n": 721,
+"L": 22,
+"wr": 96.9487,
+"loss_rate": 3.0513,
+"net": -3487.12,
+"days": 83,
+"lfd": 64,
+"den": 83,
+"lfd_pct": 77.11
+},
+"test": {
+"n": 755,
+"L": 10,
+"wr": 98.6755,
+"loss_rate": 1.3245,
+"net": -753.93,
+"days": 91,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "1",
+"InpUhvSRAhead": "1",
+"InpUhvMinTicks": "15",
+"InpUhvStruct": "2",
+"InpUhvBrokeHighs": "2",
+"InpUhvNewsNY": "1",
+"InpUhvLoudBrk": "0.8",
+"InpUhvMaxHumps": "8"
+},
+"train": {
+"n": 559,
+"L": 17,
+"wr": 96.9589,
+"loss_rate": 3.0411,
+"net": -2430.97,
+"days": 83,
+"lfd": 68,
+"den": 83,
+"lfd_pct": 81.93
+},
+"test": {
+"n": 430,
+"L": 2,
+"wr": 99.5349,
+"loss_rate": 0.4651,
+"net": 140.08,
+"days": 88,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "2",
+"InpUhvLoudBrk": "0.9",
+"InpUhvMaxHumps": "5",
+"InpUhvSRPips": "3",
+"InpUhvRangeAtr": "2",
+"InpUhvSRAhead": "0.3",
+"InpUhvNoClose": "1",
+"InpUhvStruct": "1"
+},
+"train": {
+"n": 412,
+"L": 14,
+"wr": 96.6019,
+"loss_rate": 3.3981,
+"net": -2281.86,
+"days": 82,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 351,
+"L": 7,
+"wr": 98.0057,
+"loss_rate": 1.9943,
+"net": -1060.92,
+"days": 88,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "3",
+"InpUhvMinHumps": "2",
+"InpUhvMaxGapPips": "0.5",
+"InpUhvMaxHumps": "2",
+"InpUhvNewsNY": "1",
+"InpUhvMinTicks": "30",
+"InpUhvCounterAtr": "4",
+"InpUhvBigFig": "2"
+},
+"train": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 83,
+"lfd_pct": 0.0
+},
+"test": {
+"n": 0,
+"L": 0,
+"wr": null,
+"loss_rate": null,
+"net": 0.0,
+"days": 0,
+"lfd": 0,
+"den": 92,
+"lfd_pct": 0.0
+}
+},
+{
+"stack": {
+"InpUhvBigFig": "1",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvHtf5": "2",
+"InpUhvMinAtrPips": "1",
+"InpUhvFreshBreak": "2",
+"InpUhvRunPips": "10",
+"InpUhvDeepRet": "0.8",
+"InpUhvStruct": "1"
+},
+"train": {
+"n": 775,
+"L": 28,
+"wr": 96.3871,
+"loss_rate": 3.6129,
+"net": -4601.94,
+"days": 82,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 709,
+"L": 7,
+"wr": 99.0127,
+"loss_rate": 0.9873,
+"net": -446.8,
+"days": 91,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvCounterAtr": "8",
+"InpUhvRangeAtr": "1.5",
+"InpUhvMinTicks": "10",
+"InpUhvRunPips": "10",
+"InpUhvNewsNY": "1",
+"InpUhvSRAhead": "1.5",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvHtf5": "1"
+},
+"train": {
+"n": 409,
+"L": 21,
+"wr": 94.8655,
+"loss_rate": 5.1345,
+"net": -3609.08,
+"days": 81,
+"lfd": 63,
+"den": 83,
+"lfd_pct": 75.9
+},
+"test": {
+"n": 363,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 492.11,
+"days": 90,
+"lfd": 90,
+"den": 92,
+"lfd_pct": 97.83
+}
+},
+{
+"stack": {
+"InpUhvRangeAtr": "1",
+"InpUhvFriCutNY": "15",
+"InpUhvMaxHumps": "2",
+"InpUhvFreshBreak": "1",
+"InpUhvSRPips": "1",
+"InpUhvCounterAtr": "3",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvSRAhead": "1.5"
+},
+"train": {
+"n": 282,
+"L": 14,
+"wr": 95.0355,
+"loss_rate": 4.9645,
+"net": -2814.97,
+"days": 77,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 212,
+"L": 1,
+"wr": 99.5283,
+"loss_rate": 0.4717,
+"net": 88.95,
+"days": 79,
+"lfd": 78,
+"den": 92,
+"lfd_pct": 84.78
+}
+},
+{
+"stack": {
+"InpUhvSunOpenMins": "60",
+"InpUhvSRPips": "4",
+"InpUhvSpikeAtr": "3",
+"InpUhvMaxGapPips": "0.3",
+"InpUhvDeepRet": "0.7",
+"InpUhvFreshBreak": "5",
+"InpUhvMinTicks": "10",
+"InpUhvRunPips": "15"
+},
+"train": {
+"n": 441,
+"L": 17,
+"wr": 96.1451,
+"loss_rate": 3.8549,
+"net": -2991.9,
+"days": 81,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 313,
+"L": 4,
+"wr": 98.722,
+"loss_rate": 1.278,
+"net": -383.95,
+"days": 85,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "0.5",
+"InpUhvNoClose": "1",
+"InpUhvMinHumps": "3",
+"InpUhvNewsNY": "1",
+"InpUhvFreshBreak": "3",
+"InpUhvMinTicks": "40",
+"InpUhvRunPips": "15",
+"InpUhvDeepRet": "0.5"
+},
+"train": {
+"n": 448,
+"L": 16,
+"wr": 96.4286,
+"loss_rate": 3.5714,
+"net": -2756.93,
+"days": 82,
+"lfd": 69,
+"den": 83,
+"lfd_pct": 83.13
+},
+"test": {
+"n": 451,
+"L": 6,
+"wr": 98.6696,
+"loss_rate": 1.3304,
+"net": -679.9,
+"days": 90,
+"lfd": 84,
+"den": 92,
+"lfd_pct": 91.3
+}
+},
+{
+"stack": {
+"InpUhvMaxGapPips": "0.5",
+"InpUhvLoudBrk": "0.8",
+"InpUhvBrokeHighs": "6",
+"InpUhvHoliday": "1",
+"InpUhvRangeAtr": "1.5",
+"InpUhvDeepRet": "0.6",
+"InpUhvStruct": "2",
+"InpUhvSpikeAtr": "5"
+},
+"train": {
+"n": 1384,
+"L": 48,
+"wr": 96.5318,
+"loss_rate": 3.4682,
+"net": -6912.83,
+"days": 84,
+"lfd": 50,
+"den": 83,
+"lfd_pct": 60.24
+},
+"test": {
+"n": 1585,
+"L": 14,
+"wr": 99.1167,
+"loss_rate": 0.8833,
+"net": -301.65,
+"days": 91,
+"lfd": 79,
+"den": 92,
+"lfd_pct": 85.87
+}
+},
+{
+"stack": {
+"InpUhvSRAhead": "0.5",
+"InpUhvRangeAtr": "1",
+"InpUhvHoliday": "1",
+"InpUhvHtf5": "2",
+"InpUhvRunPips": "15",
+"InpUhvFriCutNY": "14",
+"InpUhvMaxTrigSpread": "1",
+"InpUhvMaxHumps": "4"
+},
+"train": {
+"n": 1084,
+"L": 37,
+"wr": 96.5867,
+"loss_rate": 3.4133,
+"net": -6355.88,
+"days": 83,
+"lfd": 54,
+"den": 83,
+"lfd_pct": 65.06
+},
+"test": {
+"n": 1063,
+"L": 10,
+"wr": 99.0593,
+"loss_rate": 0.9407,
+"net": -568.01,
+"days": 90,
+"lfd": 80,
+"den": 92,
+"lfd_pct": 86.96
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "5",
+"InpUhvFreshBreak": "8",
+"InpUhvCounterAtr": "8",
+"InpUhvSRAhead": "0.5",
+"InpUhvDeepRet": "0.9",
+"InpUhvRangeAtr": "3",
+"InpUhvNewsNY": "1",
+"InpUhvMinTicks": "15"
+},
+"train": {
+"n": 210,
+"L": 4,
+"wr": 98.0952,
+"loss_rate": 1.9048,
+"net": -523.87,
+"days": 74,
+"lfd": 70,
+"den": 83,
+"lfd_pct": 84.34
+},
+"test": {
+"n": 114,
+"L": 1,
+"wr": 99.1228,
+"loss_rate": 0.8772,
+"net": -55.94,
+"days": 58,
+"lfd": 57,
+"den": 92,
+"lfd_pct": 61.96
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "30",
+"InpUhvBigFig": "1",
+"InpUhvBrokeHighs": "3",
+"InpUhvHoliday": "1",
+"InpUhvDeepRet": "0.5",
+"InpUhvNewsNY": "1",
+"InpUhvFreshBreak": "5",
+"InpUhvNoClose": "1"
+},
+"train": {
+"n": 1544,
+"L": 47,
+"wr": 96.956,
+"loss_rate": 3.044,
+"net": -7200.77,
+"days": 83,
+"lfd": 44,
+"den": 83,
+"lfd_pct": 53.01
+},
+"test": {
+"n": 1761,
+"L": 21,
+"wr": 98.8075,
+"loss_rate": 1.1925,
+"net": -1730.79,
+"days": 91,
+"lfd": 72,
+"den": 92,
+"lfd_pct": 78.26
+}
+},
+{
+"stack": {
+"InpUhvHoliday": "1",
+"InpUhvBigFig": "2",
+"InpUhvHtf5": "1",
+"InpUhvSRAhead": "0.5",
+"InpUhvDeepRet": "0.6",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvRangeAtr": "2.5",
+"InpUhvMaxHumps": "2"
+},
+"train": {
+"n": 387,
+"L": 13,
+"wr": 96.6408,
+"loss_rate": 3.3592,
+"net": -1830.0,
+"days": 80,
+"lfd": 67,
+"den": 83,
+"lfd_pct": 80.72
+},
+"test": {
+"n": 373,
+"L": 5,
+"wr": 98.6595,
+"loss_rate": 1.3405,
+"net": -472.92,
+"days": 90,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+}
+},
+{
+"stack": {
+"InpUhvHtf5": "2",
+"InpUhvDeepRet": "0.7",
+"InpUhvMinTicks": "15",
+"InpUhvSunOpenMins": "30",
+"InpUhvHoliday": "1",
+"InpUhvRunPips": "8",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvSRAhead": "0.3"
+},
+"train": {
+"n": 1147,
+"L": 41,
+"wr": 96.4255,
+"loss_rate": 3.5745,
+"net": -6523.84,
+"days": 83,
+"lfd": 52,
+"den": 83,
+"lfd_pct": 62.65
+},
+"test": {
+"n": 1295,
+"L": 12,
+"wr": 99.0734,
+"loss_rate": 0.9266,
+"net": -510.98,
+"days": 92,
+"lfd": 81,
+"den": 92,
+"lfd_pct": 88.04
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "30",
+"InpUhvMaxGapPips": "1",
+"InpUhvCounterAtr": "6",
+"InpUhvMinHumps": "4",
+"InpUhvNoClose": "1",
+"InpUhvNewsNY": "1",
+"InpUhvSRAhead": "1",
+"InpUhvFreshBreak": "1"
+},
+"train": {
+"n": 111,
+"L": 5,
+"wr": 95.4955,
+"loss_rate": 4.5045,
+"net": -925.0,
+"days": 60,
+"lfd": 55,
+"den": 83,
+"lfd_pct": 66.27
+},
+"test": {
+"n": 90,
+"L": 0,
+"wr": 100.0,
+"loss_rate": 0.0,
+"net": 132.07,
+"days": 57,
+"lfd": 57,
+"den": 92,
+"lfd_pct": 61.96
+}
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvRangeAtr": "3",
+"InpUhvSRPips": "0.5",
+"InpUhvNoClose": "1",
+"InpUhvMaxTrigSpread": "0.8",
+"InpUhvFriCutNY": "16",
+"InpUhvCounterAtr": "3",
+"InpUhvMinAtrPips": "1"
+},
+"train": {
+"n": 924,
+"L": 24,
+"wr": 97.4026,
+"loss_rate": 2.5974,
+"net": -3629.89,
+"days": 81,
+"lfd": 60,
+"den": 83,
+"lfd_pct": 72.29
+},
+"test": {
+"n": 768,
+"L": 7,
+"wr": 99.0885,
+"loss_rate": 0.9115,
+"net": -174.7,
+"days": 91,
+"lfd": 86,
+"den": 92,
+"lfd_pct": 93.48
+}
+},
+{
+"stack": {
+"InpUhvFreshBreak": "5",
+"InpUhvDeepRet": "0.5",
+"InpUhvHtf5": "1",
+"InpUhvBigFig": "0.8",
+"InpUhvMinAtrPips": "1.5",
+"InpUhvSpikeAtr": "5",
+"InpUhvMinHumps": "2",
+"InpUhvCounterAtr": "3"
+},
+"train": {
+"n": 438,
+"L": 16,
+"wr": 96.347,
+"loss_rate": 3.653,
+"net": -3850.91,
+"days": 79,
+"lfd": 65,
+"den": 83,
+"lfd_pct": 78.31
+},
+"test": {
+"n": 311,
+"L": 4,
+"wr": 98.7138,
+"loss_rate": 1.2862,
+"net": -306.89,
+"days": 78,
+"lfd": 74,
+"den": 92,
+"lfd_pct": 80.43
+}
+},
+{
+"stack": {
+"InpUhvMaxGapPips": "0.6",
+"InpUhvCounterAtr": "3",
+"InpUhvBrokeHighs": "5",
+"InpUhvMinTicks": "10",
+"InpUhvStruct": "1",
+"InpUhvSRAhead": "0.5",
+"InpUhvFriCutNY": "15",
+"InpUhvMinHumps": "4"
+},
+"train": {
+"n": 98,
+"L": 4,
+"wr": 95.9184,
+"loss_rate": 4.0816,
+"net": -710.0,
+"days": 51,
+"lfd": 47,
+"den": 83,
+"lfd_pct": 56.63
+},
+"test": {
+"n": 100,
+"L": 3,
+"wr": 97.0,
+"loss_rate": 3.0,
+"net": -588.95,
+"days": 55,
+"lfd": 52,
+"den": 92,
+"lfd_pct": 56.52
+}
+},
+{
+"stack": {
+"InpUhvNoClose": "1",
+"InpUhvMinAtrPips": "2",
+"InpUhvHoliday": "1",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvDeepRet": "0.7",
+"InpUhvBrokeHighs": "6",
+"InpUhvLoudBrk": "0.95",
+"InpUhvMaxHumps": "6"
+},
+"train": {
+"n": 572,
+"L": 14,
+"wr": 97.5524,
+"loss_rate": 2.4476,
+"net": -2122.79,
+"days": 69,
+"lfd": 57,
+"den": 83,
+"lfd_pct": 68.67
+},
+"test": {
+"n": 305,
+"L": 7,
+"wr": 97.7049,
+"loss_rate": 2.2951,
+"net": -1142.89,
+"days": 60,
+"lfd": 54,
+"den": 92,
+"lfd_pct": 58.7
+}
+},
+{
+"stack": {
+"InpUhvMinTicks": "15",
+"InpUhvFriCutNY": "12",
+"InpUhvSRPips": "0.5",
+"InpUhvNoClose": "1",
+"InpUhvMaxHumps": "6",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvNewsNY": "1",
+"InpUhvRangeAtr": "3"
+},
+"train": {
+"n": 1724,
+"L": 46,
+"wr": 97.3318,
+"loss_rate": 2.6682,
+"net": -7466.65,
+"days": 83,
+"lfd": 47,
+"den": 83,
+"lfd_pct": 56.63
+},
+"test": {
+"n": 1701,
+"L": 22,
+"wr": 98.7066,
+"loss_rate": 1.2934,
+"net": -2090.63,
+"days": 91,
+"lfd": 71,
+"den": 92,
+"lfd_pct": 77.17
+}
+},
+{
+"stack": {
+"InpUhvBrokeHighs": "5",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvSRPips": "1.5",
+"InpUhvHtf5": "2",
+"InpUhvCounterAtr": "3",
+"InpUhvSRAhead": "0.3",
+"InpUhvHoliday": "1",
+"InpUhvFriCutNY": "16"
+},
+"train": {
+"n": 802,
+"L": 28,
+"wr": 96.5087,
+"loss_rate": 3.4913,
+"net": -4655.0,
+"days": 83,
+"lfd": 58,
+"den": 83,
+"lfd_pct": 69.88
+},
+"test": {
+"n": 739,
+"L": 7,
+"wr": 99.0528,
+"loss_rate": 0.9472,
+"net": -449.85,
+"days": 90,
+"lfd": 83,
+"den": 92,
+"lfd_pct": 90.22
+}
+},
+{
+"stack": {
+"InpUhvSRPips": "2",
+"InpUhvFriCutNY": "12",
+"InpUhvRunPips": "4",
+"InpUhvBigFig": "2",
+"InpUhvNewsNY": "1",
+"InpUhvDeepRet": "0.8",
+"InpUhvBrokeHighs": "8",
+"InpUhvCounterAtr": "4"
+},
+"train": {
+"n": 812,
+"L": 29,
+"wr": 96.4286,
+"loss_rate": 3.5714,
+"net": -5170.88,
+"days": 83,
+"lfd": 59,
+"den": 83,
+"lfd_pct": 71.08
+},
+"test": {
+"n": 869,
+"L": 9,
+"wr": 98.9643,
+"loss_rate": 1.0357,
+"net": -514.96,
+"days": 91,
+"lfd": 83,
+"den": 92,
+"lfd_pct": 90.22
+}
+}
+],
+"summary": {
+"n_draws": 300,
+"primary_settings": [
+"InpUhvNoClose",
+"InpUhvMaxTrigSpread",
+"InpUhvStruct",
+"InpUhvSRPips",
+"InpUhvRangeAtr",
+"InpUhvFreshBreak",
+"InpUhvBrokeHighs",
+"InpUhvMaxHumps",
+"InpUhvDeepRet",
+"InpUhvHtf5",
+"InpUhvSRAhead",
+"InpUhvBigFig",
+"InpUhvMinHumps",
+"InpUhvCounterAtr",
+"InpUhvFriCutNY",
+"InpUhvRunPips",
+"InpUhvLoudBrk",
+"InpUhvMinTicks",
+"InpUhvSunOpenMins",
+"InpUhvNewsNY",
+"InpUhvSpikeAtr",
+"InpUhvHoliday",
+"InpUhvMinAtrPips",
+"InpUhvMaxGapPips"
+],
+"stack_test": {
+"n": 764,
+"L": 7,
+"wr": 99.0838,
+"loss_rate": 0.9162,
+"net": -384.82,
+"days": 92,
+"lfd": 85,
+"den": 92,
+"lfd_pct": 92.39
+},
+"base_test": {
+"n": 4295,
+"L": 60,
+"wr": 98.603,
+"loss_rate": 1.397,
+"net": -5398.62,
+"days": 92,
+"lfd": 46,
+"den": 92,
+"lfd_pct": 50.0
+},
+"band_rule": "random stacks with 500 <= TEST trades <= 1100 and TRAIN trades >= 300",
+"band_n": 64,
+"band_test_loss_rate_median": 1.0713447241424285,
+"band_test_loss_rate_p10_p90": [
+0.725951834591888,
+1.346503535750365
+],
+"band_share_with_test_loss_rate_le_stack": 0.25,
+"band_test_rate_ratio_vs_base_median": 0.7668895663152674,
+"spearman_train_vs_test_loss_rate_all": -0.06347861609949018,
+"n_allok": 253,
+"spearman_train_vs_test_loss_rate_after_thinning": -0.05032641719155588,
+"spearman_test_n_vs_test_loss_rate": 0.09994753460666714,
+"top10_train_feasible": [
+{
+"stack": {
+"InpUhvFriCutNY": "10",
+"InpUhvMinTicks": "20",
+"InpUhvBigFig": "0.8",
+"InpUhvMaxHumps": "4",
+"InpUhvHoliday": "1",
+"InpUhvMinHumps": "2",
+"InpUhvDeepRet": "0.5",
+"InpUhvSpikeAtr": "3"
+},
+"train": [
+781,
+14,
+98.2074
+],
+"test": [
+888,
+6,
+99.3243
+]
+},
+{
+"stack": {
+"InpUhvSRPips": "2",
+"InpUhvRangeAtr": "3",
+"InpUhvMaxTrigSpread": "2",
+"InpUhvMinAtrPips": "0.8",
+"InpUhvBrokeHighs": "8",
+"InpUhvMinTicks": "10",
+"InpUhvBigFig": "2",
+"InpUhvHtf5": "2"
+},
+"train": [
+651,
+15,
+97.6959
+],
+"test": [
+566,
+7,
+98.7633
+]
+},
+{
+"stack": {
+"InpUhvSpikeAtr": "3",
+"InpUhvNoClose": "1",
+"InpUhvMinHumps": "2",
+"InpUhvSRAhead": "0.5",
+"InpUhvCounterAtr": "3",
+"InpUhvLoudBrk": "0.8",
+"InpUhvSunOpenMins": "30",
+"InpUhvHoliday": "1"
+},
+"train": [
+707,
+17,
+97.5955
+],
+"test": [
+714,
+9,
+98.7395
+]
+},
+{
+"stack": {
+"InpUhvBigFig": "0.8",
+"InpUhvSRAhead": "0.5",
+"InpUhvMinHumps": "2",
+"InpUhvNoClose": "1",
+"InpUhvHoliday": "1",
+"InpUhvFriCutNY": "16",
+"InpUhvCounterAtr": "3",
+"InpUhvHtf5": "1"
+},
+"train": [
+608,
+15,
+97.5329
+],
+"test": [
+590,
+8,
+98.6441
+]
+},
+{
+"stack": {
+"InpUhvHtf5": "1",
+"InpUhvMaxGapPips": "1",
+"InpUhvFreshBreak": "8",
+"InpUhvNewsNY": "1",
+"InpUhvFriCutNY": "10",
+"InpUhvDeepRet": "0.9",
+"InpUhvBigFig": "0.5",
+"InpUhvRangeAtr": "1"
+},
+"train": [
+1660,
+41,
+97.5301
+],
+"test": [
+1841,
+19,
+98.968
+]
+},
+{
+"stack": {
+"InpUhvBigFig": "1",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvFreshBreak": "1",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvFriCutNY": "10",
+"InpUhvDeepRet": "0.5",
+"InpUhvNoClose": "1",
+"InpUhvSpikeAtr": "3"
+},
+"train": [
+1593,
+40,
+97.489
+],
+"test": [
+1765,
+21,
+98.8102
+]
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvSpikeAtr": "4",
+"InpUhvSRAhead": "0.3",
+"InpUhvMaxTrigSpread": "1.5",
+"InpUhvCounterAtr": "8",
+"InpUhvRunPips": "4",
+"InpUhvNoClose": "1",
+"InpUhvRangeAtr": "1.5"
+},
+"train": [
+1231,
+31,
+97.4817
+],
+"test": [
+1234,
+10,
+99.1896
+]
+},
+{
+"stack": {
+"InpUhvStruct": "2",
+"InpUhvMinAtrPips": "0.5",
+"InpUhvMaxHumps": "6",
+"InpUhvSRAhead": "1",
+"InpUhvNoClose": "1",
+"InpUhvBigFig": "1.5",
+"InpUhvLoudBrk": "0.7",
+"InpUhvSRPips": "2"
+},
+"train": [
+674,
+17,
+97.4777
+],
+"test": [
+517,
+6,
+98.8395
+]
+},
+{
+"stack": {
+"InpUhvMinAtrPips": "0.8",
+"InpUhvCounterAtr": "4",
+"InpUhvSpikeAtr": "3",
+"InpUhvHtf5": "2",
+"InpUhvSunOpenMins": "60",
+"InpUhvMinHumps": "2",
+"InpUhvMaxGapPips": "0.6",
+"InpUhvSRPips": "1.5"
+},
+"train": [
+674,
+17,
+97.4777
+],
+"test": [
+609,
+6,
+99.0148
+]
+},
+{
+"stack": {
+"InpUhvHoliday": "1",
+"InpUhvMaxGapPips": "0.8",
+"InpUhvBrokeHighs": "2",
+"InpUhvFriCutNY": "12",
+"InpUhvMinTicks": "10",
+"InpUhvFreshBreak": "8",
+"InpUhvHtf5": "1",
+"InpUhvNewsNY": "1"
+},
+"train": [
+1664,
+42,
+97.476
+],
+"test": [
+1844,
+22,
+98.8069
+]
+}
+],
+"spearman_train_vs_test_loss_rate_band": 0.008722627320023397
+}
+}

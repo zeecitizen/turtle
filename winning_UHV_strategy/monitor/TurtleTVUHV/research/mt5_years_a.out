@@ -1,0 +1,10 @@
+{"gate": "base", "year": 2023, "delay": "none", "net": 9581.0, "trades": 89, "pf": "1.57", "dd": "8 460.80 (7.56%)", "error": null, "secs": 33}
+{"gate": "vpin", "year": 2023, "delay": "none", "net": 9581.0, "trades": 89, "pf": "1.57", "dd": "8 460.80 (7.56%)", "error": null, "secs": 28}
+{"gate": "vpin2", "year": 2023, "delay": "none", "net": 9581.0, "trades": 89, "pf": "1.57", "dd": "8 460.80 (7.56%)", "error": null, "secs": 30}
+{"gate": "hmm4", "year": 2023, "delay": "none", "net": 3948.6, "trades": 55, "pf": "1.32", "dd": "8 883.20 (8.30%)", "error": null, "secs": 32}
+{"gate": "dtw20", "year": 2023, "delay": "none", "net": 9133.0, "trades": 88, "pf": "1.54", "dd": "8 460.80 (7.59%)", "error": null, "secs": 28}
+{"gate": "base", "year": 2024, "delay": "none", "net": -39414.4, "trades": 269, "pf": "0.67", "dd": "59 290.40 (55.21%)", "error": null, "secs": 87}
+{"gate": "vpin", "year": 2024, "delay": "none", "net": -40224.4, "trades": 267, "pf": "0.66", "dd": "59 698.40 (55.79%)", "error": null, "secs": 85}
+{"gate": "vpin2", "year": 2024, "delay": "none", "net": -38800.4, "trades": 261, "pf": "0.67", "dd": "57 792.40 (54.26%)", "error": null, "secs": 90}
+{"gate": "hmm4", "year": 2024, "delay": "none", "net": -49818.8, "trades": 219, "pf": "0.56", "dd": "66 210.80 (63.58%)", "error": null, "secs": 124}
+{"gate": "dtw20", "year": 2024, "delay": "none", "net": -38260.4, "trades": 263, "pf": "0.67", "dd": "58 454.40 (54.27%)", "error": null, "secs": 107}

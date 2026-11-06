@@ -1,0 +1,13 @@
+# the debug Chrome profile holds the PrimeXBT session cookies - never commit it
+chrome_profile/
+__pycache__/
+*.pyc
+shot_*.png
+recordings/
+state/
+# sim / replay round logs are practice: only live-mode logs are receipts worth keeping
+rounds/*/*-sim.json
+rounds/*/*-replay.json
+
+# Claude test rounds archived out of rounds/ (sim ones are junk; the live ones are receipts)
+rounds_archive/**/*-sim.json

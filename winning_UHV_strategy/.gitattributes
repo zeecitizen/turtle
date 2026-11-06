@@ -1,0 +1,1 @@
+monitor/TurtleTVUHV/simdata/uhv_ticks_all.npz filter=lfs diff=lfs merge=lfs -text

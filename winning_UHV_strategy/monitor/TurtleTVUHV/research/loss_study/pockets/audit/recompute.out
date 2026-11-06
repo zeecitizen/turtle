@@ -1,0 +1,498 @@
+========================================================================================================================================================================
+BASE  all 7626 trades / 172 L = 2.255%  | TRAIN 3335 / 112 L = 3.36% (WR 96.64%) | TEST 4291 / 60 L = 1.40% (WR 98.60%)
+STRICT survival: TEST loss rate >= 4.51% (2 x 2.255%) and >= 5 TEST losses.  LOOSER: TEST loss rate >= 2.80% (2 x test base) and >= 5.  X1 refit: test AUC 0.6282 (reported 0.6282) - reproduced.
+========================================================================================================================================================================
+1. EVERY POCKET RE-COMPUTED (claimed counts asserted)   [* = official pocket of a hunt; supplementary ones are from Method B's notes]
+* A-P1 abnormal breakout spread          [MATCH]  spread_excess > 0.275
+     train   2.3% (  77) |  10/112 L ( 8.9%) | LR 12.99% | lift 5.76x vs 2.26% / 3.87x vs half | p=0.00026 |  7 loss-days (max 4 on 2026-04-03) | untouched WR 96.87%
+     test    1.7% (  74) |   9/60 L (15.0%) | LR 12.16% | lift 5.39x vs 2.26% / 8.70x vs half | p=1e-06 |  9 loss-days (max 1 on 2026-07-02) | untouched WR 98.79%   -> strict PASS / looser PASS
+* A-P2 NY close/rollover 16-18           [MATCH]  960 <= ny_min_of_day < 1080 (16:00-17:59 NY)
+     train   3.8% ( 126) |  13/112 L (11.6%) | LR 10.32% | lift 4.57x vs 2.26% / 3.07x vs half | p=0.00034 |  9 loss-days (max 4 on 2026-04-03) | untouched WR 96.91%
+     test    4.0% ( 172) |   9/60 L (15.0%) | LR  5.23% | lift 2.32x vs 2.26% / 3.74x vs half | p=0.00078 |  9 loss-days (max 1 on 2026-07-08) | untouched WR 98.76%   -> strict PASS / looser PASS
+* A-P3 Friday afternoon                  [MATCH]  weekday == 4 and ny_min_of_day >= 720 (Fri from 12:00 NY)
+     train   3.7% ( 124) |  15/112 L (13.4%) | LR 12.10% | lift 5.36x vs 2.26% / 3.60x vs half | p=2e-05 | 11 loss-days (max 4 on 2026-04-03) | untouched WR 96.98%
+     test    4.6% ( 196) |   9/60 L (15.0%) | LR  4.59% | lift 2.04x vs 2.26% / 3.28x vs half | p=0.0019 |  8 loss-days (max 2 on 2026-09-18) | untouched WR 98.75%   -> strict PASS / looser PASS
+* A-P4 counter-trend chop weak break     [MATCH]  trend30_atr <= -1.905 and er30 <= 0.2065 and brk_ratio <= 0.5055
+     train   7.0% ( 235) |  20/112 L (17.9%) | LR  8.51% | lift 3.77x vs 2.26% / 2.53x vs half | p=0.00016 | 18 loss-days (max 2 on 2026-03-16) | untouched WR 97.03%
+     test    8.0% ( 345) |  10/60 L (16.7%) | LR  2.90% | lift 1.29x vs 2.26% / 2.07x vs half | p=0.025 | 10 loss-days (max 1 on 2026-07-03) | untouched WR 98.73%   -> strict fail / looser PASS
+* A-P5 NY afternoon thin volume          [MATCH]  ny_min_of_day >= 870 and vol10_rel <= 0.8805 and atr_rel > 0.7715
+     train   3.4% ( 114) |  15/112 L (13.4%) | LR 13.16% | lift 5.83x vs 2.26% / 3.92x vs half | p=7e-06 | 11 loss-days (max 4 on 2026-04-03) | untouched WR 96.99%
+     test    3.0% ( 128) |   5/60 L ( 8.3%) | LR  3.91% | lift 1.73x vs 2.26% / 2.79x vs half | p=0.035 |  5 loss-days (max 1 on 2026-08-28) | untouched WR 98.68%   -> strict fail / looser PASS
+* A-X1 xgb top-10% risk score            [MATCH]  xgboost d2/25 trees/eta .05, scale-free + month-balanced; top 10% (train OOF by month, test top decile)
+     train  10.0% ( 334) |  19/112 L (17.0%) | LR  5.69% | lift 2.52x vs 2.26% / 1.69x vs half | p=0.019 | 14 loss-days (max 3 on 2026-05-14) | untouched WR 96.90%
+     test   10.0% ( 430) |  18/60 L (30.0%) | LR  4.19% | lift 1.86x vs 2.26% / 2.99x vs half | p=5e-05 | 18 loss-days (max 1 on 2026-07-02) | untouched WR 98.91%   -> strict fail / looser PASS
+* A-F1 shallow stop in chop              [MATCH]  stop_atr <= 0.8145 and er60 <= 0.158 and er30 > 0.1575
+     train   2.9% (  96) |  13/112 L (11.6%) | LR 13.54% | lift 6.00x vs 2.26% / 4.03x vs half | p=2.1e-05 | 12 loss-days (max 2 on 2026-03-19) | untouched WR 96.94%
+     test    2.3% ( 100) |   0/60 L ( 0.0%) | LR  0.00% | lift 0.00x vs 2.26% / 0.00x vs half | p=1 |  0 loss-days (max 0 on -) | untouched WR 98.57%   -> strict fail / looser fail
+* A-F2 chop + gap + little room          [MATCH]  er16 <= 0.1785 and gap_atr > 0.2035 and room60_atr <= 2.38
+     train   2.3% (  77) |  10/112 L ( 8.9%) | LR 12.99% | lift 5.76x vs 2.26% / 3.87x vs half | p=0.00026 |  9 loss-days (max 2 on 2026-05-14) | untouched WR 96.87%
+     test    2.7% ( 116) |   2/60 L ( 3.3%) | LR  1.72% | lift 0.76x vs 2.26% / 1.23x vs half | p=0.48 |  2 loss-days (max 1 on 2026-09-25) | untouched WR 98.61%   -> strict fail / looser fail
+* A-F3 first protocol top leaf           [MATCH]  brk_ratio <= 0.3665 and fig_ahead_pips > 76.35 and er30 > 0.1205 and stop_pips <= 2.35
+     train   3.6% ( 119) |  18/112 L (16.1%) | LR 15.13% | lift 6.71x vs 2.26% / 4.50x vs half | p=1.1e-07 | 16 loss-days (max 2 on 2026-03-16) | untouched WR 97.08%
+     test    5.1% ( 220) |   2/60 L ( 3.3%) | LR  0.91% | lift 0.40x vs 2.26% / 0.65x vs half | p=0.81 |  2 loss-days (max 1 on 2026-07-14) | untouched WR 98.58%   -> strict fail / looser fail
+* B-P1 late NY wide stop                 [MATCH]  16 <= ny_hour <= 18 and stop_pips > 1.95 and trend240_atr > -9.19
+     train   1.9% (  64) |  14/112 L (12.5%) | LR 21.88% | lift 9.70x vs 2.26% / 6.51x vs half | p=2.3e-08 | 11 loss-days (max 4 on 2026-04-03) | untouched WR 97.00%
+     test    1.2% (  53) |   1/60 L ( 1.7%) | LR  1.89% | lift 0.84x vs 2.26% / 1.35x vs half | p=0.53 |  1 loss-days (max 1 on 2026-07-08) | untouched WR 98.61%   -> strict fail / looser fail
+* B-P2 narrow chop band                  [MATCH]  0.1015 < er16 <= 0.1335 and range20_atr > 4.935 and 0.4555 < pos60 <= 0.9095
+     train   1.3% (  44) |  11/112 L ( 9.8%) | LR 25.00% | lift 11.08x vs 2.26% / 7.44x vs half | p=1.7e-07 | 10 loss-days (max 2 on 2026-04-06) | untouched WR 96.93%
+     test    1.5% (  65) |   1/60 L ( 1.7%) | LR  1.54% | lift 0.68x vs 2.26% / 1.10x vs half | p=0.6 |  1 loss-days (max 1 on 2026-07-14) | untouched WR 98.60%   -> strict fail / looser fail
+* B-P3 fading volume mid trend           [MATCH]  vol_ratio10_60 <= 0.7275 and 76.75 < vol10 <= 119.55 and 17.75 < adx <= 30.15
+     train   1.3% (  45) |  10/112 L ( 8.9%) | LR 22.22% | lift 9.85x vs 2.26% / 6.62x vs half | p=2e-06 |  9 loss-days (max 2 on 2026-03-06) | untouched WR 96.90%
+     test    1.3% (  56) |   0/60 L ( 0.0%) | LR  0.00% | lift 0.00x vs 2.26% / 0.00x vs half | p=1 |  0 loss-days (max 0 on -) | untouched WR 98.58%   -> strict fail / looser fail
+* B-P4 weak breakout minute              [MATCH]  0.1855 < er8 <= 0.2395 and brk_ratio <= 0.1285 and 110.5 < uhv_v <= 304.5
+     train   1.2% (  39) |  10/112 L ( 8.9%) | LR 25.64% | lift 11.37x vs 2.26% / 7.64x vs half | p=4.7e-07 | 10 loss-days (max 1 on 2026-03-09) | untouched WR 96.91%
+     test    1.2% (  51) |   1/60 L ( 1.7%) | LR  1.96% | lift 0.87x vs 2.26% / 1.40x vs half | p=0.51 |  1 loss-days (max 1 on 2026-10-26) | untouched WR 98.61%   -> strict fail / looser fail
+* B-P5 strong ADX modest 4h move         [MATCH]  adx > 43.95 and 0.995 < trend240_atr <= 6.635 and 0.0205 < er8 <= 0.3635
+     train   1.2% (  40) |   9/112 L ( 8.0%) | LR 22.50% | lift 9.98x vs 2.26% / 6.70x vs half | p=5.8e-06 |  9 loss-days (max 1 on 2026-03-16) | untouched WR 96.87%
+     test    1.2% (  53) |   0/60 L ( 0.0%) | LR  0.00% | lift 0.00x vs 2.26% / 0.00x vs half | p=1 |  0 loss-days (max 0 on -) | untouched WR 98.58%   -> strict fail / looser fail
+* B-P6 near extreme in tight chop        [MATCH]  0.25 < room60_pips <= 0.65 and range20_atr <= 3.975 and er16 <= 0.1705
+     train   1.1% (  36) |   9/112 L ( 8.0%) | LR 25.00% | lift 11.08x vs 2.26% / 7.44x vs half | p=2.2e-06 |  8 loss-days (max 2 on 2026-05-19) | untouched WR 96.88%
+     test    1.4% (  61) |   0/60 L ( 0.0%) | LR  0.00% | lift 0.00x vs 2.26% / 0.00x vs half | p=1 |  0 loss-days (max 0 on -) | untouched WR 98.58%   -> strict fail / looser fail
+* C-P1 weekly close (Fri pm)             [MATCH]  weekday == 4 and ny_min_of_day >= 870 (Fri from 14:30 NY)
+     train   1.5% (  51) |  11/112 L ( 9.8%) | LR 21.57% | lift 9.56x vs 2.26% / 6.42x vs half | p=8.4e-07 |  7 loss-days (max 4 on 2026-04-03) | untouched WR 96.92%
+     test    2.1% (  92) |   6/60 L (10.0%) | LR  6.52% | lift 2.89x vs 2.26% / 4.66x vs half | p=0.0019 |  6 loss-days (max 1 on 2026-07-03) | untouched WR 98.71%   -> strict PASS / looser PASS
+* C-P2 rollover or spread blow-out       [MATCH]  1005 <= ny_min_of_day < 1035 (16:45-17:14 NY) OR spread_pips >= 1.6
+     train   1.7% (  58) |  11/112 L ( 9.8%) | LR 18.97% | lift 8.41x vs 2.26% / 5.65x vs half | p=3.2e-06 |  8 loss-days (max 4 on 2026-04-03) | untouched WR 96.92%
+     test    1.7% (  73) |   8/60 L (13.3%) | LR 10.96% | lift 4.86x vs 2.26% / 7.84x vs half | p=8.8e-06 |  8 loss-days (max 1 on 2026-07-08) | untouched WR 98.77%   -> strict PASS / looser PASS
+* C-P3 dead chop                         [MATCH]  atr_pips <= 0.6 and er30 <= 0.10
+     train   1.6% (  54) |   7/112 L ( 6.2%) | LR 12.96% | lift 5.75x vs 2.26% / 3.86x vs half | p=0.0021 |  7 loss-days (max 1 on 2026-04-13) | untouched WR 96.80%
+     test    3.3% ( 141) |   5/60 L ( 8.3%) | LR  3.55% | lift 1.57x vs 2.26% / 2.54x vs half | p=0.049 |  5 loss-days (max 1 on 2026-07-14) | untouched WR 98.67%   -> strict fail / looser PASS
+* C-P4 exhausted move                    [MATCH]  humps >= 7 and trend30_atr >= 3
+     train   0.9% (  29) |   5/112 L ( 4.5%) | LR 17.24% | lift 7.64x vs 2.26% / 5.13x vs half | p=0.0026 |  5 loss-days (max 1 on 2026-03-17) | untouched WR 96.76%
+     test    0.8% (  33) |   1/60 L ( 1.7%) | LR  3.03% | lift 1.34x vs 2.26% / 2.17x vs half | p=0.37 |  1 loss-days (max 1 on 2026-09-23) | untouched WR 98.61%   -> strict fail / looser fail
+* C-P5 news slot vol up                  [MATCH]  |ny_min_of_day - 510| <= 30 (08:00-09:00 NY, Mon-Fri) and vol_ratio10_60 >= 1.2
+     train   2.1% (  70) |   6/112 L ( 5.4%) | LR  8.57% | lift 3.80x vs 2.26% / 2.55x vs half | p=0.03 |  6 loss-days (max 1 on 2026-03-18) | untouched WR 96.75%
+     test    1.9% (  81) |   1/60 L ( 1.7%) | LR  1.23% | lift 0.55x vs 2.26% / 0.88x vs half | p=0.68 |  1 loss-days (max 1 on 2026-07-02) | untouched WR 98.60%   -> strict fail / looser fail
+* C-P6 counter-structure                 [MATCH]  trend90_atr <= -8 and pos60 <= 0.2
+     train   2.6% (  87) |   5/112 L ( 4.5%) | LR  5.75% | lift 2.55x vs 2.26% / 1.71x vs half | p=0.17 |  5 loss-days (max 1 on 2026-03-13) | untouched WR 96.71%
+     test    2.6% ( 113) |   1/60 L ( 1.7%) | LR  0.88% | lift 0.39x vs 2.26% / 0.63x vs half | p=0.8 |  1 loss-days (max 1 on 2026-07-28) | untouched WR 98.59%   -> strict fail / looser fail
+* C-P7 figure ahead                      [MATCH]  fig_ahead_pips <= 4
+     train   4.4% ( 146) |   6/112 L ( 5.4%) | LR  4.11% | lift 1.82x vs 2.26% / 1.22x vs half | p=0.37 |  6 loss-days (max 1 on 2026-03-19) | untouched WR 96.68%
+     test    3.9% ( 166) |   4/60 L ( 6.7%) | LR  2.41% | lift 1.07x vs 2.26% / 1.72x vs half | p=0.2 |  4 loss-days (max 1 on 2026-09-11) | untouched WR 98.64%   -> strict fail / looser fail
+  B-S1 Fri from 12 (variant)             [MATCH]  weekday == 4 and ny_hour >= 12
+     train   3.7% ( 124) |  15/112 L (13.4%) | LR 12.10% | lift 5.36x vs 2.26% / 3.60x vs half | p=2e-05 | 11 loss-days (max 4 on 2026-04-03) | untouched WR 96.98%
+     test    4.6% ( 196) |   9/60 L (15.0%) | LR  4.59% | lift 2.04x vs 2.26% / 3.28x vs half | p=0.0019 |  8 loss-days (max 2 on 2026-09-18) | untouched WR 98.75%   -> strict PASS / looser PASS
+  B-S2 fading vol low ADX (variant)      [MISMATCH claimed (172, 16, 258, 5) got (180, 16, 258, 5)]  vol_ratio10_60 <= 0.7275 and adx <= 27.25
+     train   5.4% ( 180) |  16/112 L (14.3%) | LR  8.89% | lift 3.94x vs 2.26% / 2.65x vs half | p=0.00042 | 14 loss-days (max 2 on 2026-03-22) | untouched WR 96.96%
+     test    6.0% ( 258) |   5/60 L ( 8.3%) | LR  1.94% | lift 0.86x vs 2.26% / 1.39x vs half | p=0.29 |  5 loss-days (max 1 on 2026-07-05) | untouched WR 98.64%   -> strict fail / looser fail
+  B-S3 Asia chop (variant)               [MISMATCH claimed (168, 14, 267, 4) got (177, 14, 267, 4)]  ny_hour <= 2 and er16 <= 0.1705
+     train   5.3% ( 177) |  14/112 L (12.5%) | LR  7.91% | lift 3.51x vs 2.26% / 2.36x vs half | p=0.0028 | 14 loss-days (max 1 on 2026-03-09) | untouched WR 96.90%
+     test    6.2% ( 267) |   4/60 L ( 6.7%) | LR  1.50% | lift 0.66x vs 2.26% / 1.07x vs half | p=0.51 |  4 loss-days (max 1 on 2026-07-03) | untouched WR 98.61%   -> strict fail / looser fail
+  B-S4 high ATR short stop (variant)     [MISMATCH claimed (105, 10, 59, 0) got (110, 10, 59, 0)]  atr_pips > 2.805 and stop_pips <= 4.25
+     train   3.3% ( 110) |  10/112 L ( 8.9%) | LR  9.09% | lift 4.03x vs 2.26% / 2.71x vs half | p=0.004 |  9 loss-days (max 2 on 2026-03-19) | untouched WR 96.84%
+     test    1.4% (  59) |   0/60 L ( 0.0%) | LR  0.00% | lift 0.00x vs 2.26% / 0.00x vs half | p=1 |  0 loss-days (max 0 on -) | untouched WR 98.58%   -> strict fail / looser fail
+  B-S5 dead er60 low ADX (variant)       [MISMATCH claimed (123, 9, 205, 4) got (162, 11, 205, 4)]  er60 <= 0.0215 and adx <= 24.85
+     train   4.9% ( 162) |  11/112 L ( 9.8%) | LR  6.79% | lift 3.01x vs 2.26% / 2.02x vs half | p=0.022 | 11 loss-days (max 1 on 2026-03-11) | untouched WR 96.82%
+     test    4.8% ( 205) |   4/60 L ( 6.7%) | LR  1.95% | lift 0.87x vs 2.26% / 1.40x vs half | p=0.32 |  4 loss-days (max 1 on 2026-07-09) | untouched WR 98.63%   -> strict fail / looser fail
+  B-D1 spread >= 1.0 (diagnostic)        [MATCH]  spread_pips >= 1.0
+     train   1.3% (  44) |   8/112 L ( 7.1%) | LR 18.18% | lift 8.06x vs 2.26% / 5.41x vs half | p=9.7e-05 |  5 loss-days (max 4 on 2026-04-03) | untouched WR 96.84%
+     test    1.1% (  47) |   8/60 L (13.3%) | LR 17.02% | lift 7.55x vs 2.26% / 12.17x vs half | p=2.8e-07 |  8 loss-days (max 1 on 2026-07-02) | untouched WR 98.77%   -> strict PASS / looser PASS
+  B-D2 NY 16:45-17:44 (diagnostic)       [MATCH]  1005 <= ny_min_of_day < 1065
+     train   1.3% (  45) |   8/112 L ( 7.1%) | LR 17.78% | lift 7.88x vs 2.26% / 5.29x vs half | p=0.00011 |  7 loss-days (max 2 on 2026-04-03) | untouched WR 96.84%
+     test    1.3% (  57) |   8/60 L (13.3%) | LR 14.04% | lift 6.22x vs 2.26% / 10.04x vs half | p=1.3e-06 |  8 loss-days (max 1 on 2026-07-08) | untouched WR 98.77%   -> strict PASS / looser PASS
+  B-D5 vol10 <= 40.15 (diagnostic)       [MATCH]  vol10 <= 40.15
+     train   5.0% ( 167) |  12/112 L (10.7%) | LR  7.19% | lift 3.19x vs 2.26% / 2.14x vs half | p=0.011 |  9 loss-days (max 4 on 2026-04-03) | untouched WR 96.84%
+     test    5.8% ( 247) |   9/60 L (15.0%) | LR  3.64% | lift 1.62x vs 2.26% / 2.61x vs half | p=0.0086 |  9 loss-days (max 1 on 2026-07-03) | untouched WR 98.74%   -> strict fail / looser PASS
+  B-D6 uhv_v <= 54.5 (diagnostic)        [MATCH]  uhv_v <= 54.5
+     train   5.1% ( 171) |  13/112 L (11.6%) | LR  7.60% | lift 3.37x vs 2.26% / 2.26x vs half | p=0.0054 | 10 loss-days (max 4 on 2026-04-03) | untouched WR 96.87%
+     test    8.1% ( 347) |   8/60 L (13.3%) | LR  2.31% | lift 1.02x vs 2.26% / 1.65x vs half | p=0.12 |  8 loss-days (max 1 on 2026-07-08) | untouched WR 98.68%   -> strict fail / looser fail
+   claimed-count check: 27/31 pockets reproduce exactly; MISMATCHES: [('B-S2 fading vol low ADX (variant)', (172, 16, 258, 5), (180, 16, 258, 5)), ('B-S3 Asia chop (variant)', (168, 14, 267, 4), (177, 14, 267, 4)), ('B-S4 high ATR short stop (variant)', (105, 10, 59, 0), (110, 10, 59, 0)), ('B-S5 dead er60 low ADX (variant)', (123, 9, 205, 4), (162, 11, 205, 4))]
+   B-S2: incremental train count after removing the earlier S-pockets = (172, 16) vs claimed (172, 16) -> EXPLAINED (greedy-list counting, not an error)
+   B-S3: incremental train count after removing the earlier S-pockets = (168, 14) vs claimed (168, 14) -> EXPLAINED (greedy-list counting, not an error)
+   B-S4: incremental train count after removing the earlier S-pockets = (105, 10) vs claimed (105, 10) -> EXPLAINED (greedy-list counting, not an error)
+   B-S5: incremental train count after removing the earlier S-pockets = (123, 9) vs claimed (123, 9) -> EXPLAINED (greedy-list counting, not an error)
+   X1 FRAGILITY - the same model refitted with other xgboost thread counts (4 = Method A's run):
+     n_jobs 1: test AUC 0.6168 | top-10% test 16/60 L in 430 trades | train OOF top-10% 14/112 L | Jaccard with the n_jobs=4 pocket 0.44
+     n_jobs 2: test AUC 0.6177 | top-10% test 13/60 L in 430 trades | train OOF top-10% 17/112 L | Jaccard with the n_jobs=4 pocket 0.53
+     n_jobs 8: test AUC 0.6376 | top-10% test 15/60 L in 430 trades | train OOF top-10% 17/112 L | Jaccard with the n_jobs=4 pocket 0.50
+========================================================================================================================================================================
+2. SURVIVAL
+   STRICT survivors (official pool of 22): ['A-P1', 'A-P2', 'A-P3', 'C-P1', 'C-P2']
+   LOOSER survivors (official pool):        ['A-P1', 'A-P2', 'A-P3', 'A-P4', 'A-P5', 'A-X1', 'C-P1', 'C-P2', 'C-P3']
+   extended pool (+ Method B note pockets): strict ['A-P1', 'A-P2', 'A-P3', 'C-P1', 'C-P2', 'B-S1', 'B-D1', 'B-D2'] | looser ['A-P1', 'A-P2', 'A-P3', 'A-P4', 'A-P5', 'A-X1', 'C-P1', 'C-P2', 'C-P3', 'B-S1', 'B-D1', 'B-D2', 'B-D5']
+   pockets between 2 x 2.2554% and 4.52% (rounding-sensitive): none
+   near miss A-P4: test 10/345 = 2.90% needs >= 4.51% -> 16 losses (has 10)
+   near miss A-P5: test 5/128 = 3.91% needs >= 4.51% -> 6 losses (has 5)
+   near miss A-X1: test 18/430 = 4.19% needs >= 4.51% -> 20 losses (has 18)
+   near miss C-P3: test 5/141 = 3.55% needs >= 4.51% -> 7 losses (has 5)
+   near miss B-S2: test 5/258 = 1.94% needs >= 4.51% -> 12 losses (has 5)
+   near miss B-D5: test 9/247 = 3.64% needs >= 4.51% -> 12 losses (has 9)
+   near miss B-D6: test 8/347 = 2.31% needs >= 4.51% -> 16 losses (has 8)
+   BLIND screen on TRAIN (lift >= 2 vs train base, >= 5 L, >= 4 loss-days, no day > 1/3): ['A-P2', 'A-P3', 'A-P4', 'A-P5', 'A-F1', 'A-F2', 'A-F3', 'B-P1', 'B-P2', 'B-P3', 'B-P4', 'B-P5', 'B-P6', 'C-P3', 'C-P4', 'C-P5']
+   A-P1   test losses/trades by month  07:4/18  08:2/15  09:1/16  10:2/23  11:0/2
+   A-P2   test losses/trades by month  07:2/36  08:3/35  09:2/39  10:2/55  11:0/7
+   A-P3   test losses/trades by month  07:2/48  08:2/41  09:3/43  10:2/64  11:0/0
+   C-P1   test losses/trades by month  07:1/16  08:2/22  09:1/18  10:2/36  11:0/0
+   C-P2   test losses/trades by month  07:1/12  08:3/17  09:2/19  10:2/22  11:0/3
+   A-P4   test losses/trades by month  07:4/82  08:3/71  09:1/80  10:2/99  11:0/13
+   A-P5   test losses/trades by month  07:0/21  08:1/17  09:1/39  10:3/47  11:0/4
+   A-X1   test losses/trades by month  07:5/105  08:2/91  09:3/103  10:7/111  11:1/20
+   C-P3   test losses/trades by month  07:1/30  08:3/34  09:1/47  10:0/28  11:0/2
+========================================================================================================================================================================
+3. NEAR-DUPLICATES  (near-dup = trade Jaccard >= 0.5 OR containment >= 0.8 OR shared TEST losses >= 2/3 of the smaller pocket's)
+   A-P1  nearest B-D1  containment 1.00 Jaccard 0.60 shared test L 8 -> NEAR-DUPLICATE
+   A-P2  nearest B-D2  containment 1.00 Jaccard 0.34 shared test L 8 -> NEAR-DUPLICATE
+   A-P3  nearest B-S1  containment 1.00 Jaccard 1.00 shared test L 9 -> NEAR-DUPLICATE
+   A-P4  nearest C-P6  containment 0.20 Jaccard 0.05 shared test L 0 -> distinct
+   A-P5  nearest B-P1  containment 0.40 Jaccard 0.15 shared test L 0 -> distinct
+   A-X1  nearest B-D1  containment 0.52 Jaccard 0.06 shared test L 7 -> NEAR-DUPLICATE
+   A-F1  nearest A-X1  containment 0.22 Jaccard 0.05 shared test L 0 -> distinct
+   A-F2  nearest A-X1  containment 0.25 Jaccard 0.05 shared test L 1 -> distinct
+   A-F3  nearest A-X1  containment 0.19 Jaccard 0.06 shared test L 0 -> distinct
+   B-P1  nearest A-P2  containment 0.69 Jaccard 0.24 shared test L 1 -> NEAR-DUPLICATE
+   B-P2  nearest A-X1  containment 0.21 Jaccard 0.03 shared test L 0 -> distinct
+   B-P3  nearest B-S2  containment 0.85 Jaccard 0.19 shared test L 0 -> NEAR-DUPLICATE
+   B-P4  nearest A-X1  containment 0.14 Jaccard 0.02 shared test L 0 -> distinct
+   B-P5  nearest A-X1  containment 0.11 Jaccard 0.01 shared test L 0 -> distinct
+   B-P6  nearest B-S3  containment 0.19 Jaccard 0.03 shared test L 0 -> distinct
+   C-P1  nearest A-P3  containment 1.00 Jaccard 0.45 shared test L 6 -> NEAR-DUPLICATE
+   C-P2  nearest B-D2  containment 0.96 Jaccard 0.73 shared test L 8 -> NEAR-DUPLICATE
+   C-P3  nearest B-D5  containment 0.47 Jaccard 0.18 shared test L 3 -> distinct
+   C-P4  nearest A-X1  containment 0.10 Jaccard 0.01 shared test L 0 -> distinct
+   C-P5  nearest B-S4  containment 0.09 Jaccard 0.05 shared test L 0 -> distinct
+   C-P6  nearest A-P4  containment 0.20 Jaccard 0.05 shared test L 0 -> distinct
+   C-P7  nearest A-X1  containment 0.10 Jaccard 0.03 shared test L 2 -> distinct
+   B-S1  nearest A-P3  containment 1.00 Jaccard 1.00 shared test L 9 -> NEAR-DUPLICATE
+   B-S2  nearest B-P3  containment 0.85 Jaccard 0.19 shared test L 0 -> NEAR-DUPLICATE
+   B-S3  nearest A-X1  containment 0.24 Jaccard 0.10 shared test L 0 -> distinct
+   B-S4  nearest A-X1  containment 0.11 Jaccard 0.02 shared test L 0 -> distinct
+   B-S5  nearest A-X1  containment 0.15 Jaccard 0.05 shared test L 1 -> distinct
+   B-D1  nearest A-P1  containment 1.00 Jaccard 0.60 shared test L 8 -> NEAR-DUPLICATE
+   B-D2  nearest A-P2  containment 1.00 Jaccard 0.34 shared test L 8 -> NEAR-DUPLICATE
+   B-D5  nearest B-D6  containment 0.69 Jaccard 0.44 shared test L 6 -> NEAR-DUPLICATE
+   B-D6  nearest B-D5  containment 0.69 Jaccard 0.44 shared test L 6 -> NEAR-DUPLICATE
+   pairwise among looser/extended survivors (Jaccard / containment / shared test L of min):
+     A-P1  ~ A-P2   J 0.17  C 0.42  shared test L 6 (67% of min) NEAR-DUP
+     A-P1  ~ A-P3   J 0.04  C 0.11  shared test L 4 (44% of min) 
+     A-P1  ~ A-P4   J 0.02  C 0.11  shared test L 2 (22% of min) 
+     A-P1  ~ A-P5   J 0.12  C 0.27  shared test L 3 (60% of min) 
+     A-P1  ~ A-X1   J 0.07  C 0.40  shared test L 7 (78% of min) NEAR-DUP
+     A-P1  ~ B-D1   J 0.60  C 1.00  shared test L 8 (100% of min) NEAR-DUP
+     A-P1  ~ B-D2   J 0.18  C 0.38  shared test L 6 (75% of min) NEAR-DUP
+     A-P1  ~ B-D5   J 0.13  C 0.43  shared test L 4 (44% of min) 
+     A-P1  ~ B-S1   J 0.04  C 0.11  shared test L 4 (44% of min) 
+     A-P1  ~ C-P1   J 0.04  C 0.07  shared test L 4 (67% of min) NEAR-DUP
+     A-P1  ~ C-P2   J 0.33  C 0.53  shared test L 6 (75% of min) NEAR-DUP
+     A-P2  ~ A-P3   J 0.10  C 0.19  shared test L 5 (56% of min) 
+     A-P2  ~ A-P4   J 0.05  C 0.14  shared test L 2 (22% of min) 
+     A-P2  ~ A-P5   J 0.11  C 0.23  shared test L 3 (60% of min) 
+     A-P2  ~ A-X1   J 0.08  C 0.25  shared test L 7 (78% of min) NEAR-DUP
+     A-P2  ~ B-D1   J 0.18  C 0.64  shared test L 6 (75% of min) NEAR-DUP
+     A-P2  ~ B-D2   J 0.34  C 1.00  shared test L 8 (100% of min) NEAR-DUP
+     A-P2  ~ B-D5   J 0.26  C 0.49  shared test L 4 (44% of min) 
+     A-P2  ~ B-S1   J 0.10  C 0.19  shared test L 5 (56% of min) 
+     A-P2  ~ C-P1   J 0.15  C 0.40  shared test L 5 (83% of min) NEAR-DUP
+     A-P2  ~ C-P2   J 0.39  C 0.92  shared test L 8 (100% of min) NEAR-DUP
+     A-P2  ~ C-P3   J 0.06  C 0.15  shared test L 2 (40% of min) 
+     A-P3  ~ A-P4   J 0.03  C 0.07  shared test L 2 (22% of min) 
+     A-P3  ~ A-P5   J 0.05  C 0.11  shared test L 2 (40% of min) 
+     A-P3  ~ A-X1   J 0.05  C 0.17  shared test L 5 (56% of min) 
+     A-P3  ~ B-D1   J 0.03  C 0.13  shared test L 4 (50% of min) 
+     A-P3  ~ B-D2   J 0.06  C 0.22  shared test L 5 (62% of min) 
+     A-P3  ~ B-S1   J 1.00  C 1.00  shared test L 9 (100% of min) NEAR-DUP
+     A-P3  ~ C-P1   J 0.45  C 1.00  shared test L 6 (100% of min) NEAR-DUP
+     A-P3  ~ C-P2   J 0.06  C 0.19  shared test L 5 (62% of min) 
+     A-P4  ~ A-X1   J 0.05  C 0.12  shared test L 5 (50% of min) 
+     A-P4  ~ B-D1   J 0.02  C 0.11  shared test L 2 (25% of min) 
+     A-P4  ~ B-D5   J 0.06  C 0.13  shared test L 3 (33% of min) 
+     A-P4  ~ B-S1   J 0.03  C 0.07  shared test L 2 (22% of min) 
+     A-P5  ~ A-X1   J 0.05  C 0.20  shared test L 5 (100% of min) NEAR-DUP
+     A-P5  ~ B-D1   J 0.10  C 0.34  shared test L 3 (60% of min) 
+     A-P5  ~ B-D2   J 0.08  C 0.25  shared test L 3 (60% of min) 
+     A-P5  ~ B-D5   J 0.06  C 0.14  shared test L 2 (40% of min) 
+     A-P5  ~ B-S1   J 0.05  C 0.11  shared test L 2 (40% of min) 
+     A-P5  ~ C-P1   J 0.07  C 0.18  shared test L 2 (40% of min) 
+     A-P5  ~ C-P2   J 0.10  C 0.25  shared test L 3 (60% of min) 
+     A-X1  ~ B-D1   J 0.06  C 0.52  shared test L 7 (88% of min) NEAR-DUP
+     A-X1  ~ B-D2   J 0.04  C 0.31  shared test L 6 (75% of min) NEAR-DUP
+     A-X1  ~ B-D5   J 0.08  C 0.22  shared test L 6 (67% of min) NEAR-DUP
+     A-X1  ~ B-S1   J 0.05  C 0.17  shared test L 5 (56% of min) 
+     A-X1  ~ C-P1   J 0.04  C 0.23  shared test L 5 (83% of min) NEAR-DUP
+     A-X1  ~ C-P2   J 0.06  C 0.36  shared test L 6 (75% of min) NEAR-DUP
+     B-D1  ~ B-D2   J 0.22  C 0.38  shared test L 6 (75% of min) NEAR-DUP
+     B-D1  ~ B-D5   J 0.13  C 0.64  shared test L 4 (50% of min) 
+     B-D1  ~ B-S1   J 0.03  C 0.13  shared test L 4 (50% of min) 
+     B-D1  ~ C-P1   J 0.04  C 0.10  shared test L 4 (67% of min) NEAR-DUP
+     B-D1  ~ C-P2   J 0.43  C 0.74  shared test L 6 (75% of min) NEAR-DUP
+     B-D2  ~ B-D5   J 0.13  C 0.58  shared test L 3 (38% of min) 
+     B-D2  ~ B-S1   J 0.06  C 0.22  shared test L 5 (62% of min) 
+     B-D2  ~ C-P1   J 0.10  C 0.22  shared test L 5 (83% of min) NEAR-DUP
+     B-D2  ~ C-P2   J 0.73  C 0.96  shared test L 8 (100% of min) NEAR-DUP
+     B-D2  ~ C-P3   J 0.04  C 0.11  shared test L 2 (40% of min) 
+     B-D5  ~ C-P2   J 0.18  C 0.63  shared test L 3 (38% of min) 
+     B-D5  ~ C-P3   J 0.18  C 0.47  shared test L 3 (60% of min) 
+     B-S1  ~ C-P1   J 0.45  C 1.00  shared test L 6 (100% of min) NEAR-DUP
+     B-S1  ~ C-P2   J 0.06  C 0.19  shared test L 5 (62% of min) 
+     C-P1  ~ C-P2   J 0.10  C 0.18  shared test L 5 (83% of min) NEAR-DUP
+     C-P2  ~ C-P3   J 0.04  C 0.10  shared test L 2 (40% of min) 
+   RESIDUAL tests on TEST (pocket A with pocket B's trades removed; strict rule = >= 5 L and LR >= 4.51%):
+     A-P1  minus A-P2 : test 3/40 =  7.50% (lift 3.33x) FAILS alone | train 2/47 = 4.26%
+     A-P2  minus A-P1 : test 3/138 =  2.17% (lift 0.96x) FAILS alone | train 5/96 = 5.21%
+     A-P1  minus A-P3 : test 5/66 =  7.58% (lift 3.36x) still PASSES | train 4/68 = 5.88%
+     A-P3  minus A-P1 : test 5/188 =  2.66% (lift 1.18x) FAILS alone | train 9/115 = 7.83%
+     A-P1  minus A-P4 : test 7/66 = 10.61% (lift 4.70x) still PASSES | train 6/69 = 8.70%
+     A-P4  minus A-P1 : test 8/337 =  2.37% (lift 1.05x) FAILS alone | train 16/227 = 7.05%
+     A-P1  minus A-P5 : test 6/56 = 10.71% (lift 4.75x) still PASSES | train 5/54 = 9.26%
+     A-P5  minus A-P1 : test 2/110 =  1.82% (lift 0.81x) FAILS alone | train 10/91 = 10.99%
+     A-P1  minus A-X1 : test 2/36 =  5.56% (lift 2.46x) FAILS alone | train 6/55 = 10.91%
+     A-X1  minus A-P1 : test 11/392 =  2.81% (lift 1.24x) FAILS alone | train 15/312 = 4.81%
+     A-P1  minus B-D1 : test 1/27 =  3.70% (lift 1.64x) FAILS alone | train 2/33 = 6.06%
+     B-D1  minus A-P1 : test 0/0 =  0.00% (lift 0.00x) FAILS alone | train 0/0 = 0.00%
+     A-P1  minus B-D2 : test 3/54 =  5.56% (lift 2.46x) FAILS alone | train 4/58 = 6.90%
+     B-D2  minus A-P1 : test 2/37 =  5.41% (lift 2.40x) FAILS alone | train 2/26 = 7.69%
+     A-P1  minus B-D5 : test 5/42 = 11.90% (lift 5.28x) still PASSES | train 4/44 = 9.09%
+     B-D5  minus A-P1 : test 5/215 =  2.33% (lift 1.03x) FAILS alone | train 6/134 = 4.48%
+     A-P1  minus B-S1 : test 5/66 =  7.58% (lift 3.36x) still PASSES | train 4/68 = 5.88%
+     B-S1  minus A-P1 : test 5/188 =  2.66% (lift 1.18x) FAILS alone | train 9/115 = 7.83%
+     A-P1  minus C-P1 : test 5/69 =  7.25% (lift 3.21x) still PASSES | train 5/72 = 6.94%
+     C-P1  minus A-P1 : test 2/87 =  2.30% (lift 1.02x) FAILS alone | train 6/46 = 13.04%
+     A-P1  minus C-P2 : test 3/38 =  7.89% (lift 3.50x) FAILS alone | train 1/43 = 2.33%
+     C-P2  minus A-P1 : test 2/37 =  5.41% (lift 2.40x) FAILS alone | train 2/24 = 8.33%
+     A-P2  minus A-P3 : test 4/134 =  2.99% (lift 1.32x) FAILS alone | train 7/107 = 6.54%
+     A-P3  minus A-P2 : test 4/158 =  2.53% (lift 1.12x) FAILS alone | train 9/105 = 8.57%
+     A-P2  minus A-P4 : test 7/148 =  4.73% (lift 2.10x) still PASSES | train 9/108 = 8.33%
+     A-P4  minus A-P2 : test 8/321 =  2.49% (lift 1.10x) FAILS alone | train 16/217 = 7.37%
+     A-P2  minus A-P5 : test 6/148 =  4.05% (lift 1.80x) FAILS alone | train 5/95 = 5.26%
+     A-P5  minus A-P2 : test 2/104 =  1.92% (lift 0.85x) FAILS alone | train 7/83 = 8.43%
+     A-P2  minus A-X1 : test 2/126 =  1.59% (lift 0.70x) FAILS alone | train 9/97 = 9.28%
+     A-X1  minus A-P2 : test 11/384 =  2.86% (lift 1.27x) FAILS alone | train 15/305 = 4.92%
+     A-P2  minus B-D1 : test 3/140 =  2.14% (lift 0.95x) FAILS alone | train 6/100 = 6.00%
+     B-D1  minus A-P2 : test 2/15 = 13.33% (lift 5.91x) FAILS alone | train 1/18 = 5.56%
+     A-P2  minus B-D2 : test 1/115 =  0.87% (lift 0.39x) FAILS alone | train 5/81 = 6.17%
+     B-D2  minus A-P2 : test 0/0 =  0.00% (lift 0.00x) FAILS alone | train 0/0 = 0.00%
+     A-P2  minus B-D5 : test 5/78 =  6.41% (lift 2.84x) still PASSES | train 7/75 = 9.33%
+     B-D5  minus A-P2 : test 5/153 =  3.27% (lift 1.45x) FAILS alone | train 6/116 = 5.17%
+     A-P2  minus B-S1 : test 4/134 =  2.99% (lift 1.32x) FAILS alone | train 7/107 = 6.54%
+     B-S1  minus A-P2 : test 4/158 =  2.53% (lift 1.12x) FAILS alone | train 9/105 = 8.57%
+     A-P2  minus C-P1 : test 4/134 =  2.99% (lift 1.32x) FAILS alone | train 7/107 = 6.54%
+     C-P1  minus A-P2 : test 1/54 =  1.85% (lift 0.82x) FAILS alone | train 5/32 = 15.62%
+     A-P2  minus C-P2 : test 1/102 =  0.98% (lift 0.43x) FAILS alone | train 3/76 = 3.95%
+     C-P2  minus A-P2 : test 0/3 =  0.00% (lift 0.00x) FAILS alone | train 1/8 = 12.50%
+     A-P2  minus C-P3 : test 7/152 =  4.61% (lift 2.04x) still PASSES | train 13/117 = 11.11%
+     C-P3  minus A-P2 : test 3/121 =  2.48% (lift 1.10x) FAILS alone | train 7/45 = 15.56%
+     A-P3  minus A-P4 : test 7/183 =  3.83% (lift 1.70x) FAILS alone | train 12/114 = 10.53%
+     A-P4  minus A-P3 : test 8/332 =  2.41% (lift 1.07x) FAILS alone | train 17/225 = 7.56%
+     A-P3  minus A-P5 : test 7/185 =  3.78% (lift 1.68x) FAILS alone | train 9/109 = 8.26%
+     A-P5  minus A-P3 : test 3/117 =  2.56% (lift 1.14x) FAILS alone | train 9/99 = 9.09%
+     A-P3  minus A-X1 : test 4/161 =  2.48% (lift 1.10x) FAILS alone | train 12/103 = 11.65%
+     A-X1  minus A-P3 : test 13/395 =  3.29% (lift 1.46x) FAILS alone | train 16/313 = 5.11%
+     A-P3  minus B-D1 : test 5/192 =  2.60% (lift 1.15x) FAILS alone | train 9/116 = 7.76%
+     B-D1  minus A-P3 : test 4/43 =  9.30% (lift 4.12x) FAILS alone | train 2/36 = 5.56%
+     A-P3  minus B-D2 : test 4/181 =  2.21% (lift 0.98x) FAILS alone | train 12/117 = 10.26%
+     B-D2  minus A-P3 : test 3/42 =  7.14% (lift 3.17x) FAILS alone | train 5/38 = 13.16%
+     A-P3  minus B-S1 : test 0/0 =  0.00% (lift 0.00x) FAILS alone | train 0/0 = 0.00%
+     B-S1  minus A-P3 : test 0/0 =  0.00% (lift 0.00x) FAILS alone | train 0/0 = 0.00%
+     A-P3  minus C-P1 : test 3/104 =  2.88% (lift 1.28x) FAILS alone | train 4/73 = 5.48%
+     C-P1  minus A-P3 : test 0/0 =  0.00% (lift 0.00x) FAILS alone | train 0/0 = 0.00%
+     A-P3  minus C-P2 : test 4/181 =  2.21% (lift 0.98x) FAILS alone | train 9/114 = 7.89%
+     C-P2  minus A-P3 : test 3/58 =  5.17% (lift 2.29x) FAILS alone | train 5/48 = 10.42%
+     A-P4  minus A-X1 : test 5/308 =  1.62% (lift 0.72x) FAILS alone | train 17/203 = 8.37%
+     A-X1  minus A-P4 : test 13/393 =  3.31% (lift 1.47x) FAILS alone | train 16/302 = 5.30%
+     A-P4  minus B-D1 : test 8/340 =  2.35% (lift 1.04x) FAILS alone | train 17/230 = 7.39%
+     B-D1  minus A-P4 : test 6/42 = 14.29% (lift 6.33x) still PASSES | train 5/39 = 12.82%
+     A-P4  minus B-D5 : test 7/314 =  2.23% (lift 0.99x) FAILS alone | train 19/214 = 8.88%
+     B-D5  minus A-P4 : test 6/216 =  2.78% (lift 1.23x) FAILS alone | train 11/146 = 7.53%
+     A-P4  minus B-S1 : test 8/332 =  2.41% (lift 1.07x) FAILS alone | train 17/225 = 7.56%
+     B-S1  minus A-P4 : test 7/183 =  3.83% (lift 1.70x) FAILS alone | train 12/114 = 10.53%
+     A-P5  minus A-X1 : test 0/102 =  0.00% (lift 0.00x) FAILS alone | train 13/92 = 14.13%
+     A-X1  minus A-P5 : test 13/404 =  3.22% (lift 1.43x) FAILS alone | train 17/312 = 5.45%
+     A-P5  minus B-D1 : test 2/114 =  1.75% (lift 0.78x) FAILS alone | train 10/97 = 10.31%
+     B-D1  minus A-P5 : test 5/33 = 15.15% (lift 6.72x) still PASSES | train 3/27 = 11.11%
+     A-P5  minus B-D2 : test 2/119 =  1.68% (lift 0.75x) FAILS alone | train 10/97 = 10.31%
+     B-D2  minus A-P5 : test 5/48 = 10.42% (lift 4.62x) still PASSES | train 3/28 = 10.71%
+     A-P5  minus B-D5 : test 3/115 =  2.61% (lift 1.16x) FAILS alone | train 11/92 = 11.96%
+     B-D5  minus A-P5 : test 7/234 =  2.99% (lift 1.33x) FAILS alone | train 8/145 = 5.52%
+     A-P5  minus B-S1 : test 3/117 =  2.56% (lift 1.14x) FAILS alone | train 9/99 = 9.09%
+     B-S1  minus A-P5 : test 7/185 =  3.78% (lift 1.68x) FAILS alone | train 9/109 = 8.26%
+     A-P5  minus C-P1 : test 3/117 =  2.56% (lift 1.14x) FAILS alone | train 9/99 = 9.09%
+     C-P1  minus A-P5 : test 4/81 =  4.94% (lift 2.19x) FAILS alone | train 5/36 = 13.89%
+     A-P5  minus C-P2 : test 2/117 =  1.71% (lift 0.76x) FAILS alone | train 8/92 = 8.70%
+     C-P2  minus A-P5 : test 5/62 =  8.06% (lift 3.58x) still PASSES | train 4/36 = 11.11%
+     A-X1  minus B-D1 : test 11/401 =  2.74% (lift 1.22x) FAILS alone | train 16/316 = 5.06%
+     B-D1  minus A-X1 : test 1/18 =  5.56% (lift 2.46x) FAILS alone | train 5/26 = 19.23%
+     A-X1  minus B-D2 : test 12/413 =  2.91% (lift 1.29x) FAILS alone | train 16/319 = 5.02%
+     B-D2  minus A-X1 : test 2/40 =  5.00% (lift 2.22x) FAILS alone | train 5/30 = 16.67%
+     A-X1  minus B-D5 : test 12/378 =  3.17% (lift 1.41x) FAILS alone | train 15/295 = 5.08%
+     B-D5  minus A-X1 : test 3/195 =  1.54% (lift 0.68x) FAILS alone | train 8/128 = 6.25%
+     A-X1  minus B-S1 : test 13/395 =  3.29% (lift 1.46x) FAILS alone | train 16/313 = 5.11%
+     B-S1  minus A-X1 : test 4/161 =  2.48% (lift 1.10x) FAILS alone | train 12/103 = 11.65%
+     A-X1  minus C-P1 : test 13/407 =  3.19% (lift 1.42x) FAILS alone | train 17/324 = 5.25%
+     C-P1  minus A-X1 : test 1/69 =  1.45% (lift 0.64x) FAILS alone | train 9/41 = 21.95%
+     A-X1  minus C-P2 : test 12/405 =  2.96% (lift 1.31x) FAILS alone | train 15/312 = 4.81%
+     C-P2  minus A-X1 : test 2/48 =  4.17% (lift 1.85x) FAILS alone | train 7/36 = 19.44%
+     B-D1  minus B-D2 : test 2/28 =  7.14% (lift 3.17x) FAILS alone | train 3/28 = 10.71%
+     B-D2  minus B-D1 : test 2/38 =  5.26% (lift 2.33x) FAILS alone | train 3/29 = 10.34%
+     B-D1  minus B-D5 : test 4/19 = 21.05% (lift 9.33x) FAILS alone | train 2/14 = 14.29%
+     B-D5  minus B-D1 : test 5/219 =  2.28% (lift 1.01x) FAILS alone | train 6/137 = 4.38%
+     B-D1  minus B-S1 : test 4/43 =  9.30% (lift 4.12x) FAILS alone | train 2/36 = 5.56%
+     B-S1  minus B-D1 : test 5/192 =  2.60% (lift 1.15x) FAILS alone | train 9/116 = 7.76%
+     B-D1  minus C-P1 : test 4/43 =  9.30% (lift 4.12x) FAILS alone | train 3/39 = 7.69%
+     C-P1  minus B-D1 : test 2/88 =  2.27% (lift 1.01x) FAILS alone | train 6/46 = 13.04%
+     B-D1  minus C-P2 : test 2/12 = 16.67% (lift 7.39x) FAILS alone | train 0/12 = 0.00%
+     C-P2  minus B-D1 : test 2/38 =  5.26% (lift 2.33x) FAILS alone | train 3/26 = 11.54%
+     B-D2  minus B-D5 : test 5/21 = 23.81% (lift 10.56x) still PASSES | train 4/22 = 18.18%
+     B-D5  minus B-D2 : test 6/211 =  2.84% (lift 1.26x) FAILS alone | train 8/144 = 5.56%
+     B-D2  minus B-S1 : test 3/42 =  7.14% (lift 3.17x) FAILS alone | train 5/38 = 13.16%
+     B-S1  minus B-D2 : test 4/181 =  2.21% (lift 0.98x) FAILS alone | train 12/117 = 10.26%
+     B-D2  minus C-P1 : test 3/42 =  7.14% (lift 3.17x) FAILS alone | train 5/38 = 13.16%
+     C-P1  minus B-D2 : test 1/77 =  1.30% (lift 0.58x) FAILS alone | train 8/44 = 18.18%
+     B-D2  minus C-P2 : test 0/0 =  0.00% (lift 0.00x) FAILS alone | train 0/4 = 0.00%
+     C-P2  minus B-D2 : test 0/16 =  0.00% (lift 0.00x) FAILS alone | train 3/17 = 17.65%
+     B-D2  minus C-P3 : test 6/48 = 12.50% (lift 5.54x) still PASSES | train 8/43 = 18.60%
+     C-P3  minus B-D2 : test 3/132 =  2.27% (lift 1.01x) FAILS alone | train 7/52 = 13.46%
+     B-D5  minus C-P2 : test 6/198 =  3.03% (lift 1.34x) FAILS alone | train 6/134 = 4.48%
+     C-P2  minus B-D5 : test 5/24 = 20.83% (lift 9.24x) still PASSES | train 5/25 = 20.00%
+     B-D5  minus C-P3 : test 6/185 =  3.24% (lift 1.44x) FAILS alone | train 9/137 = 6.57%
+     C-P3  minus B-D5 : test 2/79 =  2.53% (lift 1.12x) FAILS alone | train 4/24 = 16.67%
+     B-S1  minus C-P1 : test 3/104 =  2.88% (lift 1.28x) FAILS alone | train 4/73 = 5.48%
+     C-P1  minus B-S1 : test 0/0 =  0.00% (lift 0.00x) FAILS alone | train 0/0 = 0.00%
+     B-S1  minus C-P2 : test 4/181 =  2.21% (lift 0.98x) FAILS alone | train 9/114 = 7.89%
+     C-P2  minus B-S1 : test 3/58 =  5.17% (lift 2.29x) FAILS alone | train 5/48 = 10.42%
+     C-P1  minus C-P2 : test 1/77 =  1.30% (lift 0.58x) FAILS alone | train 6/42 = 14.29%
+     C-P2  minus C-P1 : test 3/58 =  5.17% (lift 2.29x) FAILS alone | train 6/49 = 12.24%
+     C-P2  minus C-P3 : test 6/63 =  9.52% (lift 4.22x) still PASSES | train 11/55 = 20.00%
+     C-P3  minus C-P2 : test 3/131 =  2.29% (lift 1.02x) FAILS alone | train 7/51 = 13.73%
+========================================================================================================================================================================
+4. GREEDY UNION on TRAIN (cap = share of TRAIN trades); TEST scored once.  'need' = losses the union must hold for the untouched zone to reach 99.3%
+ STRICT survivors: pool ['A-P1', 'A-P2', 'A-P3', 'C-P1', 'C-P2'] | ALL of them together: train 8.2% / test 8.5% of trades, test 15/60 L (random 5.1), test untouched WR 98.85% (99.3% needs 33 L inside) | train 23/112 L, untouched 97.09%
+   cap 10%: picked ['C-P1', 'C-P2', 'A-P3', 'A-P2'] (pool saturated below the cap)
+      train   7.1% trades,  22/112 L (19.6%), untouched WR 97.09% (need 91 L)
+      TEST    7.8% trades (333),  13/60 L captured (21.7%; a random set this size holds 4.7), untouched WR 98.81% | 99.3% needs 33 L inside -> short by 20
+   cap 15%: picked ['C-P1', 'C-P2', 'A-P3', 'A-P2'] (pool saturated below the cap)
+      train   7.1% trades,  22/112 L (19.6%), untouched WR 97.09% (need 91 L)
+      TEST    7.8% trades (333),  13/60 L captured (21.7%; a random set this size holds 4.7), untouched WR 98.81% | 99.3% needs 33 L inside -> short by 20
+   cap 20%: picked ['C-P1', 'C-P2', 'A-P3', 'A-P2'] (pool saturated below the cap)
+      train   7.1% trades,  22/112 L (19.6%), untouched WR 97.09% (need 91 L)
+      TEST    7.8% trades (333),  13/60 L captured (21.7%; a random set this size holds 4.7), untouched WR 98.81% | 99.3% needs 33 L inside -> short by 20
+   cap 25%: picked ['C-P1', 'C-P2', 'A-P3', 'A-P2'] (pool saturated below the cap)
+      train   7.1% trades,  22/112 L (19.6%), untouched WR 97.09% (need 91 L)
+      TEST    7.8% trades (333),  13/60 L captured (21.7%; a random set this size holds 4.7), untouched WR 98.81% | 99.3% needs 33 L inside -> short by 20
+ LOOSER survivors (lift>=2 vs test base): pool ['A-P1', 'A-P2', 'A-P3', 'A-P4', 'A-P5', 'A-X1', 'C-P1', 'C-P2', 'C-P3'] | ALL of them together: train 24.8% / test 27.1% of trades, test 31/60 L (random 16.3), test untouched WR 99.07% (99.3% needs 39 L inside) | train 61/112 L, untouched 97.97%
+   cap 10%: picked ['C-P1', 'C-P3', 'C-P2', 'A-P5', 'A-P3']
+      train   9.2% trades,  34/112 L (30.4%), untouched WR 97.42% (need 91 L)
+      TEST   11.4% trades (489),  17/60 L captured (28.3%; a random set this size holds 6.8), untouched WR 98.87% | 99.3% needs 34 L inside -> short by 17
+   cap 15%: picked ['C-P1', 'C-P3', 'C-P2', 'A-P5', 'A-P4', 'A-P1']
+      train  14.6% trades,  45/112 L (40.2%), untouched WR 97.65% (need 93 L)
+      TEST   17.2% trades (736),  24/60 L captured (40.0%; a random set this size holds 10.3), untouched WR 98.99% | 99.3% needs 36 L inside -> short by 12
+   cap 20%: picked ['C-P1', 'C-P3', 'C-P2', 'A-P5', 'A-P4', 'A-P3', 'A-P1', 'A-P2'] (pool saturated below the cap)
+      train  17.7% trades,  49/112 L (43.8%), untouched WR 97.70% (need 93 L)
+      TEST   20.4% trades (875),  26/60 L captured (43.3%; a random set this size holds 12.2), untouched WR 99.00% | 99.3% needs 37 L inside -> short by 11
+   cap 25%: picked ['C-P1', 'C-P3', 'C-P2', 'A-P5', 'A-P4', 'A-X1', 'A-P3', 'A-P1', 'A-P2']
+      train  24.8% trades,  61/112 L (54.5%), untouched WR 97.97% (need 95 L)
+      TEST   27.1% trades (1163),  31/60 L captured (51.7%; a random set this size holds 16.3), untouched WR 99.07% | 99.3% needs 39 L inside -> short by 8
+ EXTENDED strict (+B notes): pool ['A-P1', 'A-P2', 'A-P3', 'C-P1', 'C-P2', 'B-S1', 'B-D1', 'B-D2'] | ALL of them together: train 8.2% / test 8.5% of trades, test 15/60 L (random 5.1), test untouched WR 98.85% (99.3% needs 33 L inside) | train 23/112 L, untouched 97.09%
+   cap 10%: picked ['C-P1', 'B-D2', 'C-P2', 'A-P3', 'A-P2'] (pool saturated below the cap)
+      train   7.1% trades,  22/112 L (19.6%), untouched WR 97.09% (need 91 L)
+      TEST    7.8% trades (333),  13/60 L captured (21.7%; a random set this size holds 4.7), untouched WR 98.81% | 99.3% needs 33 L inside -> short by 20
+   cap 15%: picked ['C-P1', 'B-D2', 'C-P2', 'A-P3', 'A-P2'] (pool saturated below the cap)
+      train   7.1% trades,  22/112 L (19.6%), untouched WR 97.09% (need 91 L)
+      TEST    7.8% trades (333),  13/60 L captured (21.7%; a random set this size holds 4.7), untouched WR 98.81% | 99.3% needs 33 L inside -> short by 20
+   cap 20%: picked ['C-P1', 'B-D2', 'C-P2', 'A-P3', 'A-P2'] (pool saturated below the cap)
+      train   7.1% trades,  22/112 L (19.6%), untouched WR 97.09% (need 91 L)
+      TEST    7.8% trades (333),  13/60 L captured (21.7%; a random set this size holds 4.7), untouched WR 98.81% | 99.3% needs 33 L inside -> short by 20
+   cap 25%: picked ['C-P1', 'B-D2', 'C-P2', 'A-P3', 'A-P2'] (pool saturated below the cap)
+      train   7.1% trades,  22/112 L (19.6%), untouched WR 97.09% (need 91 L)
+      TEST    7.8% trades (333),  13/60 L captured (21.7%; a random set this size holds 4.7), untouched WR 98.81% | 99.3% needs 33 L inside -> short by 20
+ EXTENDED looser (+B notes): pool ['A-P1', 'A-P2', 'A-P3', 'A-P4', 'A-P5', 'A-X1', 'C-P1', 'C-P2', 'C-P3', 'B-S1', 'B-D1', 'B-D2', 'B-D5'] | ALL of them together: train 26.5% / test 28.7% of trades, test 31/60 L (random 17.2), test untouched WR 99.05% (99.3% needs 39 L inside) | train 63/112 L, untouched 98.00%
+   cap 10%: picked ['C-P1', 'B-D2', 'C-P3', 'A-P5', 'C-P2', 'A-P3']
+      train   9.3% trades,  34/112 L (30.4%), untouched WR 97.42% (need 91 L)
+      TEST   11.4% trades (489),  17/60 L captured (28.3%; a random set this size holds 6.8), untouched WR 98.87% | 99.3% needs 34 L inside -> short by 17
+   cap 15%: picked ['C-P1', 'B-D2', 'C-P3', 'A-P5', 'C-P2', 'A-P4', 'A-P1']
+      train  14.6% trades,  45/112 L (40.2%), untouched WR 97.65% (need 93 L)
+      TEST   17.2% trades (736),  24/60 L captured (40.0%; a random set this size holds 10.3), untouched WR 98.99% | 99.3% needs 36 L inside -> short by 12
+   cap 20%: picked ['C-P1', 'B-D2', 'C-P3', 'A-P5', 'C-P2', 'A-P4', 'A-P3', 'B-D5', 'A-P1', 'A-P2']
+      train  19.8% trades,  52/112 L (46.4%), untouched WR 97.76% (need 94 L)
+      TEST   22.2% trades (953),  27/60 L captured (45.0%; a random set this size holds 13.3), untouched WR 99.01% | 99.3% needs 37 L inside -> short by 10
+   cap 25%: picked ['C-P1', 'B-D2', 'C-P3', 'A-P5', 'C-P2', 'A-P4', 'A-X1', 'A-P3', 'A-P1', 'A-P2']
+      train  24.8% trades,  61/112 L (54.5%), untouched WR 97.97% (need 95 L)
+      TEST   27.1% trades (1163),  31/60 L captured (51.7%; a random set this size holds 16.3), untouched WR 99.07% | 99.3% needs 39 L inside -> short by 8
+ BLIND train-screened (fully out-of-sample): pool ['A-P2', 'A-P3', 'A-P4', 'A-P5', 'A-F1', 'A-F2', 'A-F3', 'B-P1', 'B-P2', 'B-P3', 'B-P4', 'B-P5', 'B-P6', 'C-P3', 'C-P4', 'C-P5'] | ALL of them together: train 30.1% / test 34.5% of trades, test 29/60 L (random 20.7), test untouched WR 98.90% (99.3% needs 41 L inside) | train 98/112 L, untouched 99.40%
+   cap 10%: picked ['B-P4', 'B-P2', 'B-P6', 'B-P5', 'B-P3', 'B-P1', 'C-P3', 'C-P4']
+      train   9.9% trades,  64/112 L (57.1%), untouched WR 98.40% (need 91 L)
+      TEST   11.4% trades (490),   8/60 L captured (13.3%; a random set this size holds 6.9), untouched WR 98.63% | 99.3% needs 34 L inside -> short by 26
+   cap 15%: picked ['B-P4', 'B-P2', 'B-P6', 'B-P5', 'B-P3', 'B-P1', 'A-P3', 'A-F1', 'C-P3']
+      train  15.0% trades,  77/112 L (68.8%), untouched WR 98.77% (need 93 L)
+      TEST   16.6% trades (714),  15/60 L captured (25.0%; a random set this size holds 10.0), untouched WR 98.74% | 99.3% needs 35 L inside -> short by 20
+   cap 20%: picked ['B-P4', 'B-P2', 'B-P6', 'B-P5', 'B-P3', 'B-P1', 'A-P3', 'A-F1', 'C-P5', 'C-P3', 'A-F3', 'C-P4']
+      train  20.0% trades,  87/112 L (77.7%), untouched WR 99.06% (need 94 L)
+      TEST   23.3% trades (1001),  19/60 L captured (31.7%; a random set this size holds 14.0), untouched WR 98.75% | 99.3% needs 37 L inside -> short by 18
+   cap 25%: picked ['B-P4', 'B-P2', 'B-P6', 'B-P5', 'B-P3', 'B-P1', 'A-P3', 'A-F1', 'C-P5', 'C-P3', 'A-F3', 'C-P4', 'A-P5', 'A-P2', 'A-F2']
+      train  24.9% trades,  91/112 L (81.2%), untouched WR 99.16% (need 95 L)
+      TEST   28.2% trades (1212),  24/60 L captured (40.0%; a random set this size holds 16.9), untouched WR 98.83% | 99.3% needs 39 L inside -> short by 15
+========================================================================================================================================================================
+5. PERMUTATION NULLS (200 draws; wins shuffled within each half; p = (1 + #null >= real) / 201)
+ (a) LITERAL, strict survivors fixed [CIRCULAR - survivors were screened on real TEST]
+   cap 10%: REAL test 13/60 L (excess  +8.3, test share  7.8%) | NULL captured mean  2.4 p95  6.0 max 10; excess mean +0.02 p95 +2.97 max  +5.3; null pool size 5.0 (empty in 0%), null test share 4.0% | p_raw 0.005  p_excess 0.005
+   cap 15%: REAL test 13/60 L (excess  +8.3, test share  7.8%) | NULL captured mean  2.4 p95  6.0 max 10; excess mean +0.02 p95 +2.97 max  +5.3; null pool size 5.0 (empty in 0%), null test share 4.0% | p_raw 0.005  p_excess 0.005
+   cap 20%: REAL test 13/60 L (excess  +8.3, test share  7.8%) | NULL captured mean  2.4 p95  6.0 max 10; excess mean +0.02 p95 +2.97 max  +5.3; null pool size 5.0 (empty in 0%), null test share 4.0% | p_raw 0.005  p_excess 0.005
+   cap 25%: REAL test 13/60 L (excess  +8.3, test share  7.8%) | NULL captured mean  2.4 p95  6.0 max 10; excess mean +0.02 p95 +2.97 max  +5.3; null pool size 5.0 (empty in 0%), null test share 4.0% | p_raw 0.005  p_excess 0.005
+ (b) SELECTION-AWARE strict: screen re-run on shuffled TEST, then greedy on shuffled TRAIN [HEADLINE]
+   cap 10%: REAL test 13/60 L (excess  +8.3, test share  7.8%) | NULL captured mean  0.2 p95  0.0 max  7; excess mean +0.16 p95 +0.00 max  +5.0; null pool size 0.1 (empty in 94%), null test share 0.1% | p_raw 0.005  p_excess 0.005
+   cap 15%: REAL test 13/60 L (excess  +8.3, test share  7.8%) | NULL captured mean  0.2 p95  0.0 max  7; excess mean +0.16 p95 +0.00 max  +5.0; null pool size 0.1 (empty in 94%), null test share 0.1% | p_raw 0.005  p_excess 0.005
+   cap 20%: REAL test 13/60 L (excess  +8.3, test share  7.8%) | NULL captured mean  0.2 p95  0.0 max  7; excess mean +0.16 p95 +0.00 max  +5.0; null pool size 0.1 (empty in 94%), null test share 0.1% | p_raw 0.005  p_excess 0.005
+   cap 25%: REAL test 13/60 L (excess  +8.3, test share  7.8%) | NULL captured mean  0.2 p95  0.0 max  7; excess mean +0.16 p95 +0.00 max  +5.0; null pool size 0.1 (empty in 94%), null test share 0.1% | p_raw 0.005  p_excess 0.005
+ (a') LITERAL, looser survivors fixed [CIRCULAR]
+   cap 10%: REAL test 17/60 L (excess +10.2, test share 11.4%) | NULL captured mean  4.7 p95  9.0 max 14; excess mean +0.23 p95 +3.96 max  +8.0; null pool size 9.0 (empty in 0%), null test share 7.4% | p_raw 0.005  p_excess 0.005
+   cap 15%: REAL test 24/60 L (excess +13.7, test share 17.2%) | NULL captured mean  6.9 p95 12.0 max 17; excess mean +0.10 p95 +4.21 max  +8.0; null pool size 9.0 (empty in 0%), null test share 11.4% | p_raw 0.005  p_excess 0.005
+   cap 20%: REAL test 26/60 L (excess +13.8, test share 20.4%) | NULL captured mean  8.3 p95 15.0 max 18; excess mean +0.14 p95 +4.29 max  +8.0; null pool size 9.0 (empty in 0%), null test share 13.7% | p_raw 0.005  p_excess 0.005
+   cap 25%: REAL test 31/60 L (excess +14.7, test share 27.1%) | NULL captured mean  8.8 p95 16.0 max 21; excess mean +0.15 p95 +4.44 max  +8.0; null pool size 9.0 (empty in 0%), null test share 14.4% | p_raw 0.005  p_excess 0.005
+ (b') SELECTION-AWARE looser
+   cap 10%: REAL test 17/60 L (excess +10.2, test share 11.4%) | NULL captured mean  1.3 p95  6.0 max  9; excess mean +0.77 p95 +3.92 max  +5.1; null pool size 0.4 (empty in 66%), null test share 0.8% | p_raw 0.005  p_excess 0.005
+   cap 15%: REAL test 24/60 L (excess +13.7, test share 17.2%) | NULL captured mean  1.3 p95  6.0 max 17; excess mean +0.80 p95 +3.93 max  +9.4; null pool size 0.4 (empty in 66%), null test share 0.9% | p_raw 0.005  p_excess 0.005
+   cap 20%: REAL test 26/60 L (excess +13.8, test share 20.4%) | NULL captured mean  1.3 p95  6.0 max 17; excess mean +0.80 p95 +3.93 max  +9.4; null pool size 0.4 (empty in 66%), null test share 0.9% | p_raw 0.005  p_excess 0.005
+   cap 25%: REAL test 31/60 L (excess +14.7, test share 27.1%) | NULL captured mean  1.3 p95  6.0 max 17; excess mean +0.80 p95 +3.93 max  +9.4; null pool size 0.4 (empty in 66%), null test share 0.9% | p_raw 0.005  p_excess 0.005
+ (c) FULLY BLIND: pool screened on TRAIN only (test never seen) -> literal recipe is VALID here
+   cap 10%: REAL test  8/60 L (excess  +1.1, test share 11.4%) | NULL captured mean  6.0 p95 11.0 max 13; excess mean +0.31 p95 +4.45 max  +6.8; null pool size 16.0 (empty in 0%), null test share 9.5% | p_raw 0.259  p_excess 0.313
+   cap 15%: REAL test 15/60 L (excess  +5.0, test share 16.6%) | NULL captured mean  8.6 p95 14.0 max 19; excess mean +0.27 p95 +4.58 max  +9.0; null pool size 16.0 (empty in 0%), null test share 13.9% | p_raw 0.045  p_excess 0.040
+   cap 20%: REAL test 19/60 L (excess  +5.0, test share 23.3%) | NULL captured mean 10.3 p95 16.0 max 21; excess mean +0.23 p95 +4.49 max  +9.0; null pool size 16.0 (empty in 0%), null test share 16.8% | p_raw 0.020  p_excess 0.035
+   cap 25%: REAL test 24/60 L (excess  +7.0, test share 28.2%) | NULL captured mean 10.9 p95 19.0 max 22; excess mean +0.27 p95 +5.18 max  +9.0; null pool size 16.0 (empty in 0%), null test share 17.7% | p_raw 0.005  p_excess 0.010
+ (c2) cross-check for the blind unions: union FIXED as chosen on real TRAIN, exact hypergeometric p of its TEST capture (TEST labels exchangeable)
+   cap 10%: 8/60 L in 490 test trades (random 6.9) -> p = 0.377
+   cap 15%: 15/60 L in 714 test trades (random 10.0) -> p = 0.063
+   cap 20%: 19/60 L in 1001 test trades (random 14.0) -> p = 0.086
+   cap 25%: 24/60 L in 1212 test trades (random 16.9) -> p = 0.032
+========================================================================================================================================================================
+5b. How much of each survivor the angel ALREADY blocks by its session/spread guards (not 16:45-17:44 NY; breakout spread < 1.0 pip)
+   A-P1  test trades inside the guards 48/74 ( 65%) | test losses inside the guards 8/9
+   A-P2  test trades inside the guards 70/172 ( 41%) | test losses inside the guards 8/9
+   A-P3  test trades inside the guards 16/196 (  8%) | test losses inside the guards 6/9
+   A-P4  test trades inside the guards 10/345 (  3%) | test losses inside the guards 2/10
+   A-P5  test trades inside the guards 15/128 ( 12%) | test losses inside the guards 3/5
+   A-X1  test trades inside the guards 35/430 (  8%) | test losses inside the guards 8/18
+   C-P1  test trades inside the guards 16/92 ( 17%) | test losses inside the guards 6/6
+   C-P2  test trades inside the guards 73/73 (100%) | test losses inside the guards 8/8
+   C-P3  test trades inside the guards 10/141 (  7%) | test losses inside the guards 2/5
+   B-S1  test trades inside the guards 16/196 (  8%) | test losses inside the guards 6/9
+   B-D1  test trades inside the guards 47/47 (100%) | test losses inside the guards 8/8
+   B-D2  test trades inside the guards 57/57 (100%) | test losses inside the guards 8/8
+   B-D5  test trades inside the guards 52/247 ( 21%) | test losses inside the guards 4/9
+   STRICT survivors: union holds 15/60 test L; OUTSIDE the existing guards it holds 5 L in 281 test trades (6.5%)
+   LOOSER survivors (lift>=2 vs test base): union holds 31/60 test L; OUTSIDE the existing guards it holds 21 L in 1078 test trades (25.1%)
+   REFERENCE - skip ONLY the angel's existing session/spread guards: train 2.2% trades 11/112 L, untouched 96.90% | test 2.0% trades 10/60 L, untouched 98.81%
+========================================================================================================================================================================
+6. doctrine.python_says (CLAUDE.md: the only sanctioned way to quote a Python win rate; its 16-point haircut was measured on a different payoff geometry, but it is mandatory)
+  TEST untouched zone, STRICT survivors, cap 10% (pockets skipped)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  TEST untouched zone, STRICT survivors, cap 25% (pockets skipped)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  TEST untouched zone, LOOSER survivors (lift>=2 vs test base), cap 10% (pockets skipped)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  TEST untouched zone, LOOSER survivors (lift>=2 vs test base), cap 25% (pockets skipped)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  TEST untouched zone, BLIND train-screened (fully out-of-sample), cap 10% (pockets skipped)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -17 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  TEST untouched zone, BLIND train-screened (fully out-of-sample), cap 25% (pockets skipped)
+     python 99%  ->  expect ~83% in MT5 (python overstates by ~16)
+     needs 99% -> expected margin -16 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+wrote C:\Users\zeesh\turtle\monitor\TurtleTVUHV\research\loss_study\pockets\audit\recompute.json

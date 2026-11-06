@@ -1,0 +1,1705 @@
+{
+ "doctrine": "PYTHON TICK REPLAY = HYPOTHESIS, NOT PROMOTED. MT5 or live fills promote.",
+ "hashes_start": {
+  "uhv_engine.py": "e580153de3",
+  "uhv_filters.py": "77350cc8de",
+  "uhv_diamond.py": "5dc2a92731",
+  "scan.py": "eeba8028da",
+  "sim.py": "32e7663020"
+ },
+ "base": {
+  "file": "C:/Users/zeesh/turtle/monitor/TurtleTVUHV/settings/saved/2026-11-05 05-45-38.json",
+  "score": {
+   "train": {
+    "n": 3336,
+    "L": 112,
+    "wr": 96.64,
+    "net": -20127.35,
+    "traded_days": 83,
+    "loss_days": 65,
+    "loss_free_days": 18,
+    "loss_rate_pct": 3.357
+   },
+   "test": {
+    "n": 4295,
+    "L": 60,
+    "wr": 98.6,
+    "net": -5398.62,
+    "traded_days": 92,
+    "loss_days": 46,
+    "loss_free_days": 46,
+    "loss_rate_pct": 1.397
+   },
+   "all": {
+    "n": 7631,
+    "L": 172,
+    "wr": 97.75,
+    "net": -25525.97,
+    "traded_days": 175,
+    "loss_days": 111,
+    "loss_free_days": 64,
+    "loss_rate_pct": 2.254
+   }
+  }
+ },
+ "cause_totals": {
+  "support_resistance": 50,
+  "bad_fill": 2,
+  "weekly_close": 22,
+  "counter_structure": 39,
+  "exhausted_move": 18,
+  "news_spike": 14,
+  "no_separator_chop": 11,
+  "rollover_dead_book": 16
+ },
+ "stacks": [
+  {
+   "key": "winrate",
+   "final_inputs": {
+    "InpUhvFriCutNY": "10",
+    "InpUhvDeepRet": "0.5",
+    "InpUhvMaxHumps": "3",
+    "InpUhvRunPips": "8",
+    "InpUhvSpikeAtr": "2",
+    "InpUhvHtf5": "1",
+    "InpUhvMaxGapPips": "0.3",
+    "InpUhvBrokeHighs": "5"
+   },
+   "score": {
+    "train": {
+     "n": 610,
+     "L": 5,
+     "wr": 99.18,
+     "net": -63.08,
+     "traded_days": 82,
+     "loss_days": 5,
+     "loss_free_days": 77,
+     "loss_rate_pct": 0.82
+    },
+    "test": {
+     "n": 764,
+     "L": 7,
+     "wr": 99.08,
+     "net": -384.82,
+     "traded_days": 92,
+     "loss_days": 7,
+     "loss_free_days": 85,
+     "loss_rate_pct": 0.916
+    },
+    "all": {
+     "n": 1374,
+     "L": 12,
+     "wr": 99.13,
+     "net": -447.9,
+     "traded_days": 174,
+     "loss_days": 12,
+     "loss_free_days": 162,
+     "loss_rate_pct": 0.873
+    }
+   },
+   "base_trades_removed": {
+    "all": 6715,
+    "of": 7631,
+    "share_pct": 88.0,
+    "train_share_pct": 89.0,
+    "test_share_pct": 87.2
+   },
+   "base_winners_removed": 6550,
+   "base_losses_removed": 165,
+   "base_losses_still_lost": 7,
+   "base_losses_turned_winner": 0,
+   "expected_removed_if_random": 152.0,
+   "new_losses_freed_slots": [
+    {
+     "entry_utc": "2026-04-01 04:22:23",
+     "side": "SELL",
+     "usd": -209.0,
+     "half": "train"
+    },
+    {
+     "entry_utc": "2026-05-18 05:22:21",
+     "side": "SELL",
+     "usd": -209.0,
+     "half": "train"
+    },
+    {
+     "entry_utc": "2026-09-14 23:13:16",
+     "side": "BUY",
+     "usd": -197.01,
+     "half": "test"
+    },
+    {
+     "entry_utc": "2026-09-17 05:48:44",
+     "side": "SELL",
+     "usd": -201.0,
+     "half": "test"
+    },
+    {
+     "entry_utc": "2026-10-13 04:55:43",
+     "side": "SELL",
+     "usd": -207.0,
+     "half": "test"
+    }
+   ],
+   "new_losses_from_base_winners": [],
+   "stack_trades_not_in_base": 458,
+   "match_exact": 916,
+   "match_within_3s_not_exact": 0,
+   "by_cause": {
+    "support_resistance": {
+     "losses": 50,
+     "removed": 43,
+     "still_lost": 7,
+     "turned_winner": 0,
+     "expected_if_random": 44.2
+    },
+    "counter_structure": {
+     "losses": 39,
+     "removed": 39,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 34.4
+    },
+    "weekly_close": {
+     "losses": 22,
+     "removed": 22,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 19.4
+    },
+    "exhausted_move": {
+     "losses": 18,
+     "removed": 18,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 15.9
+    },
+    "rollover_dead_book": {
+     "losses": 16,
+     "removed": 16,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 14.1
+    },
+    "news_spike": {
+     "losses": 14,
+     "removed": 14,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 12.3
+    },
+    "no_separator_chop": {
+     "losses": 11,
+     "removed": 11,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 9.8
+    },
+    "bad_fill": {
+     "losses": 2,
+     "removed": 2,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 1.8
+    }
+   },
+   "remaining_base_losses": [
+    "0408-075606-B",
+    "0526-111253-B",
+    "0602-144644-B",
+    "0706-004622-B",
+    "0730-114430-S",
+    "1001-061805-B",
+    "1008-064604-B"
+   ],
+   "removed_base_losses": [
+    "0306-084826-B",
+    "0306-102926-B",
+    "0306-212806-B",
+    "0309-043015-S",
+    "0309-080004-B",
+    "0310-004311-B",
+    "0310-055001-S",
+    "0310-141312-S",
+    "0311-001150-S",
+    "0311-135106-S",
+    "0312-062215-S",
+    "0312-172306-B",
+    "0313-195816-B",
+    "0316-052008-B",
+    "0316-132404-S",
+    "0316-163307-S",
+    "0316-200548-B",
+    "0317-062554-S",
+    "0318-120215-B",
+    "0318-205350-S",
+    "0318-230007-S",
+    "0319-022714-B",
+    "0319-072453-B",
+    "0319-155047-S",
+    "0319-184909-S",
+    "0320-143152-S",
+    "0320-194940-S",
+    "0322-214022-S",
+    "0322-233112-B",
+    "0324-165033-B",
+    "0324-201018-S",
+    "0324-205001-S",
+    "0325-011150-B",
+    "0325-132000-B",
+    "0326-120509-S",
+    "0331-222340-S",
+    "0402-040451-B",
+    "0403-204101-S",
+    "0403-204417-S",
+    "0403-205318-S",
+    "0403-205500-B",
+    "0406-143818-B",
+    "0406-183009-B",
+    "0407-071138-S",
+    "0409-062811-S",
+    "0409-110305-S",
+    "0410-122837-S",
+    "0413-064826-S",
+    "0413-120919-S",
+    "0413-182648-S",
+    "0414-025520-S",
+    "0414-082354-S",
+    "0416-045923-B",
+    "0417-084606-S",
+    "0417-183109-B",
+    "0417-205800-B",
+    "0421-151800-B",
+    "0423-140702-S",
+    "0423-164516-B",
+    "0424-095824-S",
+    "0424-183049-S",
+    "0426-222526-S",
+    "0427-150215-B",
+    "0428-085748-B",
+    "0428-132716-S",
+    "0429-032518-B",
+    "0429-162638-B",
+    "0501-063713-S",
+    "0501-161803-B",
+    "0504-035759-B",
+    "0504-193208-B",
+    "0505-051831-S",
+    "0506-114136-B",
+    "0508-170307-S",
+    "0511-120949-S",
+    "0512-195506-B",
+    "0513-071801-B",
+    "0514-070500-B",
+    "0514-125507-B",
+    "0514-213120-B",
+    "0515-041219-B",
+    "0515-173859-B",
+    "0518-010308-S",
+    "0519-124205-B",
+    "0519-151057-S",
+    "0521-184100-B",
+    "0522-142204-S",
+    "0522-192405-B",
+    "0526-155742-S",
+    "0527-123601-B",
+    "0528-060001-S",
+    "0529-012744-B",
+    "0529-094113-S",
+    "0602-024909-S",
+    "0603-051526-B",
+    "0604-074634-S",
+    "0605-061830-S",
+    "0605-132528-B",
+    "0608-094151-S",
+    "0610-231702-S",
+    "0612-153531-B",
+    "0615-152117-B",
+    "0617-205108-S",
+    "0618-132315-S",
+    "0618-155020-B",
+    "0619-172628-S",
+    "0625-042616-B",
+    "0629-060500-S",
+    "0629-221042-B",
+    "0701-115428-B",
+    "0702-003706-S",
+    "0702-122937-S",
+    "0703-040928-S",
+    "0703-183524-B",
+    "0706-140003-S",
+    "0708-213443-S",
+    "0709-202905-S",
+    "0714-113128-S",
+    "0714-230041-S",
+    "0715-132937-S",
+    "0723-050736-B",
+    "0728-145636-S",
+    "0730-074758-S",
+    "0731-170115-S",
+    "0804-172345-S",
+    "0807-083652-S",
+    "0807-205630-S",
+    "0812-151608-B",
+    "0813-223116-S",
+    "0814-155646-B",
+    "0820-213103-S",
+    "0821-130310-B",
+    "0827-133401-B",
+    "0828-205744-B",
+    "0831-140013-S",
+    "0902-131622-S",
+    "0904-131422-S",
+    "0908-165924-S",
+    "0911-180812-B",
+    "0914-213535-B",
+    "0918-162342-S",
+    "0918-204909-B",
+    "0923-111835-B",
+    "0925-113553-B",
+    "0929-030326-B",
+    "1002-121910-S",
+    "1002-133626-S",
+    "1004-230306-B",
+    "1006-101510-S",
+    "1007-013110-B",
+    "1007-091004-B",
+    "1009-205809-S",
+    "1012-023747-B",
+    "1013-043630-S",
+    "1015-035806-B",
+    "1016-205727-B",
+    "1019-171329-S",
+    "1023-145031-B",
+    "1026-024856-B",
+    "1026-105900-B",
+    "1026-172601-B",
+    "1027-163522-B",
+    "1030-122421-B",
+    "1102-003016-S",
+    "1104-082902-S"
+   ],
+   "turned_winner_ids": [],
+   "by_half": {
+    "train": {
+     "base_losses": 112,
+     "removed": 109,
+     "expected_if_random": 99.7,
+     "new_losses": 2,
+     "by_cause": {
+      "support_resistance": {
+       "losses": 35,
+       "removed": 32,
+       "expected_if_random": 31.1
+      },
+      "bad_fill": {
+       "losses": 1,
+       "removed": 1,
+       "expected_if_random": 0.9
+      },
+      "weekly_close": {
+       "losses": 14,
+       "removed": 14,
+       "expected_if_random": 12.5
+      },
+      "counter_structure": {
+       "losses": 23,
+       "removed": 23,
+       "expected_if_random": 20.5
+      },
+      "exhausted_move": {
+       "losses": 14,
+       "removed": 14,
+       "expected_if_random": 12.5
+      },
+      "news_spike": {
+       "losses": 7,
+       "removed": 7,
+       "expected_if_random": 6.2
+      },
+      "no_separator_chop": {
+       "losses": 9,
+       "removed": 9,
+       "expected_if_random": 8.0
+      },
+      "rollover_dead_book": {
+       "losses": 9,
+       "removed": 9,
+       "expected_if_random": 8.0
+      }
+     }
+    },
+    "test": {
+     "base_losses": 60,
+     "removed": 56,
+     "expected_if_random": 52.3,
+     "new_losses": 3,
+     "by_cause": {
+      "support_resistance": {
+       "losses": 15,
+       "removed": 11,
+       "expected_if_random": 13.1
+      },
+      "exhausted_move": {
+       "losses": 4,
+       "removed": 4,
+       "expected_if_random": 3.5
+      },
+      "news_spike": {
+       "losses": 7,
+       "removed": 7,
+       "expected_if_random": 6.1
+      },
+      "counter_structure": {
+       "losses": 16,
+       "removed": 16,
+       "expected_if_random": 14.0
+      },
+      "weekly_close": {
+       "losses": 8,
+       "removed": 8,
+       "expected_if_random": 7.0
+      },
+      "rollover_dead_book": {
+       "losses": 7,
+       "removed": 7,
+       "expected_if_random": 6.1
+      },
+      "no_separator_chop": {
+       "losses": 2,
+       "removed": 2,
+       "expected_if_random": 1.7
+      },
+      "bad_fill": {
+       "losses": 1,
+       "removed": 1,
+       "expected_if_random": 0.9
+      }
+     }
+    }
+   },
+   "file": "2026-11-06 10-00-01",
+   "objective": "max TRAIN win rate, >= 600 TRAIN trades (greedy, 8 steps)",
+   "name": "97.7% + WIN-RATE stack, 8 loss filters (TRAIN-chosen) - ALL 99.13% TEST 99.08% (base TEST 98.60%) - red team OVERFIT, Python only",
+   "redteam": "survives=false: overfit. TEST loss rate 0.92% vs base 1.40% is not clearly lower (random thinning P 0.14, per-day P 0.08, FX-day bootstrap CI 0.29-1.09); one-grid-step neighbours collapse TRAIN; only step 1 (FriCutNY 10) holds on TEST (P 0.003).",
+   "saved_file": "C:/Users/zeesh/turtle/monitor/TurtleTVUHV/settings/saved/2026-11-06 10-00-01.json"
+  },
+  {
+   "key": "cleandays",
+   "final_inputs": {
+    "InpUhvMinHumps": "4",
+    "InpUhvMinTicks": "40",
+    "InpUhvFreshBreak": "8",
+    "InpUhvMaxGapPips": "0.5"
+   },
+   "score": {
+    "train": {
+     "n": 405,
+     "L": 9,
+     "wr": 97.78,
+     "net": -1350.01,
+     "traded_days": 83,
+     "loss_days": 9,
+     "loss_free_days": 74,
+     "loss_rate_pct": 2.222
+    },
+    "test": {
+     "n": 423,
+     "L": 5,
+     "wr": 98.82,
+     "net": -511.92,
+     "traded_days": 89,
+     "loss_days": 5,
+     "loss_free_days": 84,
+     "loss_rate_pct": 1.182
+    },
+    "all": {
+     "n": 828,
+     "L": 14,
+     "wr": 98.31,
+     "net": -1861.93,
+     "traded_days": 172,
+     "loss_days": 14,
+     "loss_free_days": 158,
+     "loss_rate_pct": 1.691
+    }
+   },
+   "base_trades_removed": {
+    "all": 7004,
+    "of": 7631,
+    "share_pct": 91.8,
+    "train_share_pct": 91.5,
+    "test_share_pct": 92.0
+   },
+   "base_winners_removed": 6845,
+   "base_losses_removed": 159,
+   "base_losses_still_lost": 13,
+   "base_losses_turned_winner": 0,
+   "expected_removed_if_random": 157.7,
+   "new_losses_freed_slots": [
+    {
+     "entry_utc": "2026-04-14 06:25:21",
+     "side": "SELL",
+     "usd": -201.0,
+     "half": "train"
+    }
+   ],
+   "new_losses_from_base_winners": [],
+   "stack_trades_not_in_base": 201,
+   "match_exact": 627,
+   "match_within_3s_not_exact": 0,
+   "by_cause": {
+    "support_resistance": {
+     "losses": 50,
+     "removed": 47,
+     "still_lost": 3,
+     "turned_winner": 0,
+     "expected_if_random": 45.8
+    },
+    "counter_structure": {
+     "losses": 39,
+     "removed": 37,
+     "still_lost": 2,
+     "turned_winner": 0,
+     "expected_if_random": 35.8
+    },
+    "weekly_close": {
+     "losses": 22,
+     "removed": 22,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 20.2
+    },
+    "exhausted_move": {
+     "losses": 18,
+     "removed": 11,
+     "still_lost": 7,
+     "turned_winner": 0,
+     "expected_if_random": 16.5
+    },
+    "rollover_dead_book": {
+     "losses": 16,
+     "removed": 16,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 14.7
+    },
+    "news_spike": {
+     "losses": 14,
+     "removed": 13,
+     "still_lost": 1,
+     "turned_winner": 0,
+     "expected_if_random": 12.8
+    },
+    "no_separator_chop": {
+     "losses": 11,
+     "removed": 11,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 10.1
+    },
+    "bad_fill": {
+     "losses": 2,
+     "removed": 2,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 1.8
+    }
+   },
+   "remaining_base_losses": [
+    "0309-080004-B",
+    "0320-143152-S",
+    "0322-233112-B",
+    "0326-120509-S",
+    "0409-062811-S",
+    "0428-132716-S",
+    "0518-010308-S",
+    "0604-074634-S",
+    "0702-003706-S",
+    "0827-133401-B",
+    "0923-111835-B",
+    "1002-121910-S",
+    "1013-043630-S"
+   ],
+   "removed_base_losses": [
+    "0306-084826-B",
+    "0306-102926-B",
+    "0306-212806-B",
+    "0309-043015-S",
+    "0310-004311-B",
+    "0310-055001-S",
+    "0310-141312-S",
+    "0311-001150-S",
+    "0311-135106-S",
+    "0312-062215-S",
+    "0312-172306-B",
+    "0313-195816-B",
+    "0316-052008-B",
+    "0316-132404-S",
+    "0316-163307-S",
+    "0316-200548-B",
+    "0317-062554-S",
+    "0318-120215-B",
+    "0318-205350-S",
+    "0318-230007-S",
+    "0319-022714-B",
+    "0319-072453-B",
+    "0319-155047-S",
+    "0319-184909-S",
+    "0320-194940-S",
+    "0322-214022-S",
+    "0324-165033-B",
+    "0324-201018-S",
+    "0324-205001-S",
+    "0325-011150-B",
+    "0325-132000-B",
+    "0331-222340-S",
+    "0402-040451-B",
+    "0403-204101-S",
+    "0403-204417-S",
+    "0403-205318-S",
+    "0403-205500-B",
+    "0406-143818-B",
+    "0406-183009-B",
+    "0407-071138-S",
+    "0408-075606-B",
+    "0409-110305-S",
+    "0410-122837-S",
+    "0413-064826-S",
+    "0413-120919-S",
+    "0413-182648-S",
+    "0414-025520-S",
+    "0414-082354-S",
+    "0416-045923-B",
+    "0417-084606-S",
+    "0417-183109-B",
+    "0417-205800-B",
+    "0421-151800-B",
+    "0423-140702-S",
+    "0423-164516-B",
+    "0424-095824-S",
+    "0424-183049-S",
+    "0426-222526-S",
+    "0427-150215-B",
+    "0428-085748-B",
+    "0429-032518-B",
+    "0429-162638-B",
+    "0501-063713-S",
+    "0501-161803-B",
+    "0504-035759-B",
+    "0504-193208-B",
+    "0505-051831-S",
+    "0506-114136-B",
+    "0508-170307-S",
+    "0511-120949-S",
+    "0512-195506-B",
+    "0513-071801-B",
+    "0514-070500-B",
+    "0514-125507-B",
+    "0514-213120-B",
+    "0515-041219-B",
+    "0515-173859-B",
+    "0519-124205-B",
+    "0519-151057-S",
+    "0521-184100-B",
+    "0522-142204-S",
+    "0522-192405-B",
+    "0526-111253-B",
+    "0526-155742-S",
+    "0527-123601-B",
+    "0528-060001-S",
+    "0529-012744-B",
+    "0529-094113-S",
+    "0602-024909-S",
+    "0602-144644-B",
+    "0603-051526-B",
+    "0605-061830-S",
+    "0605-132528-B",
+    "0608-094151-S",
+    "0610-231702-S",
+    "0612-153531-B",
+    "0615-152117-B",
+    "0617-205108-S",
+    "0618-132315-S",
+    "0618-155020-B",
+    "0619-172628-S",
+    "0625-042616-B",
+    "0629-060500-S",
+    "0629-221042-B",
+    "0701-115428-B",
+    "0702-122937-S",
+    "0703-040928-S",
+    "0703-183524-B",
+    "0706-004622-B",
+    "0706-140003-S",
+    "0708-213443-S",
+    "0709-202905-S",
+    "0714-113128-S",
+    "0714-230041-S",
+    "0715-132937-S",
+    "0723-050736-B",
+    "0728-145636-S",
+    "0730-074758-S",
+    "0730-114430-S",
+    "0731-170115-S",
+    "0804-172345-S",
+    "0807-083652-S",
+    "0807-205630-S",
+    "0812-151608-B",
+    "0813-223116-S",
+    "0814-155646-B",
+    "0820-213103-S",
+    "0821-130310-B",
+    "0828-205744-B",
+    "0831-140013-S",
+    "0902-131622-S",
+    "0904-131422-S",
+    "0908-165924-S",
+    "0911-180812-B",
+    "0914-213535-B",
+    "0918-162342-S",
+    "0918-204909-B",
+    "0925-113553-B",
+    "0929-030326-B",
+    "1001-061805-B",
+    "1002-133626-S",
+    "1004-230306-B",
+    "1006-101510-S",
+    "1007-013110-B",
+    "1007-091004-B",
+    "1008-064604-B",
+    "1009-205809-S",
+    "1012-023747-B",
+    "1015-035806-B",
+    "1016-205727-B",
+    "1019-171329-S",
+    "1023-145031-B",
+    "1026-024856-B",
+    "1026-105900-B",
+    "1026-172601-B",
+    "1027-163522-B",
+    "1030-122421-B",
+    "1102-003016-S",
+    "1104-082902-S"
+   ],
+   "turned_winner_ids": [],
+   "by_half": {
+    "train": {
+     "base_losses": 112,
+     "removed": 104,
+     "expected_if_random": 102.5,
+     "new_losses": 1,
+     "by_cause": {
+      "support_resistance": {
+       "losses": 35,
+       "removed": 33,
+       "expected_if_random": 32.0
+      },
+      "bad_fill": {
+       "losses": 1,
+       "removed": 1,
+       "expected_if_random": 0.9
+      },
+      "weekly_close": {
+       "losses": 14,
+       "removed": 14,
+       "expected_if_random": 12.8
+      },
+      "counter_structure": {
+       "losses": 23,
+       "removed": 22,
+       "expected_if_random": 21.0
+      },
+      "exhausted_move": {
+       "losses": 14,
+       "removed": 9,
+       "expected_if_random": 12.8
+      },
+      "news_spike": {
+       "losses": 7,
+       "removed": 7,
+       "expected_if_random": 6.4
+      },
+      "no_separator_chop": {
+       "losses": 9,
+       "removed": 9,
+       "expected_if_random": 8.2
+      },
+      "rollover_dead_book": {
+       "losses": 9,
+       "removed": 9,
+       "expected_if_random": 8.2
+      }
+     }
+    },
+    "test": {
+     "base_losses": 60,
+     "removed": 55,
+     "expected_if_random": 55.2,
+     "new_losses": 0,
+     "by_cause": {
+      "support_resistance": {
+       "losses": 15,
+       "removed": 14,
+       "expected_if_random": 13.8
+      },
+      "exhausted_move": {
+       "losses": 4,
+       "removed": 2,
+       "expected_if_random": 3.7
+      },
+      "news_spike": {
+       "losses": 7,
+       "removed": 6,
+       "expected_if_random": 6.4
+      },
+      "counter_structure": {
+       "losses": 16,
+       "removed": 15,
+       "expected_if_random": 14.7
+      },
+      "weekly_close": {
+       "losses": 8,
+       "removed": 8,
+       "expected_if_random": 7.4
+      },
+      "rollover_dead_book": {
+       "losses": 7,
+       "removed": 7,
+       "expected_if_random": 6.4
+      },
+      "no_separator_chop": {
+       "losses": 2,
+       "removed": 2,
+       "expected_if_random": 1.8
+      },
+      "bad_fill": {
+       "losses": 1,
+       "removed": 1,
+       "expected_if_random": 0.9
+      }
+     }
+    }
+   },
+   "file": "2026-11-06 10-00-02",
+   "objective": "max TRAIN share of loss-free FX days, >= 400 TRAIN trades and >= 59 TRAIN days (greedy)",
+   "name": "97.7% + CLEAN-DAYS stack, 4 loss filters (TRAIN-chosen) - ALL 98.31% TEST 98.82% (base TEST 98.60%) - red team OVERFIT, Python only",
+   "redteam": "survives=false: overfit. TEST loss rate 1.18% vs base 1.40% (P 0.46); base trades it kept lost at 1.46%, the ones it removed at 1.39% - no skill at picking trades; a random skip inside the engine matches its loss-free share 47% of the time.",
+   "saved_file": "C:/Users/zeesh/turtle/monitor/TurtleTVUHV/settings/saved/2026-11-06 10-00-02.json"
+  },
+  {
+   "key": "net",
+   "final_inputs": {
+    "InpUhvSRPips": "5",
+    "InpUhvDeepRet": "0.8",
+    "InpUhvFreshBreak": "1",
+    "InpUhvNoClose": "true",
+    "InpUhvFriCutNY": "15",
+    "InpUhvLoudBrk": "0.95"
+   },
+   "score": {
+    "train": {
+     "n": 601,
+     "L": 13,
+     "wr": 97.84,
+     "net": -1828.82,
+     "traded_days": 83,
+     "loss_days": 11,
+     "loss_free_days": 72,
+     "loss_rate_pct": 2.163
+    },
+    "test": {
+     "n": 405,
+     "L": 7,
+     "wr": 98.27,
+     "net": -924.86,
+     "traded_days": 86,
+     "loss_days": 7,
+     "loss_free_days": 79,
+     "loss_rate_pct": 1.728
+    },
+    "all": {
+     "n": 1006,
+     "L": 20,
+     "wr": 98.01,
+     "net": -2753.68,
+     "traded_days": 169,
+     "loss_days": 18,
+     "loss_free_days": 151,
+     "loss_rate_pct": 1.988
+    }
+   },
+   "base_trades_removed": {
+    "all": 6840,
+    "of": 7631,
+    "share_pct": 89.6,
+    "train_share_pct": 86.2,
+    "test_share_pct": 92.3
+   },
+   "base_winners_removed": 6686,
+   "base_losses_removed": 154,
+   "base_losses_still_lost": 18,
+   "base_losses_turned_winner": 0,
+   "expected_removed_if_random": 151.9,
+   "new_losses_freed_slots": [
+    {
+     "entry_utc": "2026-05-05 12:50:00",
+     "side": "SELL",
+     "usd": -217.01,
+     "half": "train"
+    },
+    {
+     "entry_utc": "2026-06-22 01:48:05",
+     "side": "BUY",
+     "usd": -234.0,
+     "half": "train"
+    }
+   ],
+   "new_losses_from_base_winners": [],
+   "stack_trades_not_in_base": 215,
+   "match_exact": 791,
+   "match_within_3s_not_exact": 0,
+   "by_cause": {
+    "support_resistance": {
+     "losses": 50,
+     "removed": 45,
+     "still_lost": 5,
+     "turned_winner": 0,
+     "expected_if_random": 44.0
+    },
+    "counter_structure": {
+     "losses": 39,
+     "removed": 29,
+     "still_lost": 10,
+     "turned_winner": 0,
+     "expected_if_random": 34.6
+    },
+    "weekly_close": {
+     "losses": 22,
+     "removed": 22,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 19.4
+    },
+    "exhausted_move": {
+     "losses": 18,
+     "removed": 18,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 15.8
+    },
+    "rollover_dead_book": {
+     "losses": 16,
+     "removed": 15,
+     "still_lost": 1,
+     "turned_winner": 0,
+     "expected_if_random": 14.2
+    },
+    "news_spike": {
+     "losses": 14,
+     "removed": 13,
+     "still_lost": 1,
+     "turned_winner": 0,
+     "expected_if_random": 12.5
+    },
+    "no_separator_chop": {
+     "losses": 11,
+     "removed": 10,
+     "still_lost": 1,
+     "turned_winner": 0,
+     "expected_if_random": 9.6
+    },
+    "bad_fill": {
+     "losses": 2,
+     "removed": 2,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 1.8
+    }
+   },
+   "remaining_base_losses": [
+    "0318-120215-B",
+    "0319-072453-B",
+    "0319-155047-S",
+    "0319-184909-S",
+    "0325-011150-B",
+    "0407-071138-S",
+    "0421-151800-B",
+    "0426-222526-S",
+    "0506-114136-B",
+    "0514-125507-B",
+    "0529-094113-S",
+    "0715-132937-S",
+    "0812-151608-B",
+    "0821-130310-B",
+    "1002-133626-S",
+    "1007-091004-B",
+    "1015-035806-B",
+    "1104-082902-S"
+   ],
+   "removed_base_losses": [
+    "0306-084826-B",
+    "0306-102926-B",
+    "0306-212806-B",
+    "0309-043015-S",
+    "0309-080004-B",
+    "0310-004311-B",
+    "0310-055001-S",
+    "0310-141312-S",
+    "0311-001150-S",
+    "0311-135106-S",
+    "0312-062215-S",
+    "0312-172306-B",
+    "0313-195816-B",
+    "0316-052008-B",
+    "0316-132404-S",
+    "0316-163307-S",
+    "0316-200548-B",
+    "0317-062554-S",
+    "0318-205350-S",
+    "0318-230007-S",
+    "0319-022714-B",
+    "0320-143152-S",
+    "0320-194940-S",
+    "0322-214022-S",
+    "0322-233112-B",
+    "0324-165033-B",
+    "0324-201018-S",
+    "0324-205001-S",
+    "0325-132000-B",
+    "0326-120509-S",
+    "0331-222340-S",
+    "0402-040451-B",
+    "0403-204101-S",
+    "0403-204417-S",
+    "0403-205318-S",
+    "0403-205500-B",
+    "0406-143818-B",
+    "0406-183009-B",
+    "0408-075606-B",
+    "0409-062811-S",
+    "0409-110305-S",
+    "0410-122837-S",
+    "0413-064826-S",
+    "0413-120919-S",
+    "0413-182648-S",
+    "0414-025520-S",
+    "0414-082354-S",
+    "0416-045923-B",
+    "0417-084606-S",
+    "0417-183109-B",
+    "0417-205800-B",
+    "0423-140702-S",
+    "0423-164516-B",
+    "0424-095824-S",
+    "0424-183049-S",
+    "0427-150215-B",
+    "0428-085748-B",
+    "0428-132716-S",
+    "0429-032518-B",
+    "0429-162638-B",
+    "0501-063713-S",
+    "0501-161803-B",
+    "0504-035759-B",
+    "0504-193208-B",
+    "0505-051831-S",
+    "0508-170307-S",
+    "0511-120949-S",
+    "0512-195506-B",
+    "0513-071801-B",
+    "0514-070500-B",
+    "0514-213120-B",
+    "0515-041219-B",
+    "0515-173859-B",
+    "0518-010308-S",
+    "0519-124205-B",
+    "0519-151057-S",
+    "0521-184100-B",
+    "0522-142204-S",
+    "0522-192405-B",
+    "0526-111253-B",
+    "0526-155742-S",
+    "0527-123601-B",
+    "0528-060001-S",
+    "0529-012744-B",
+    "0602-024909-S",
+    "0602-144644-B",
+    "0603-051526-B",
+    "0604-074634-S",
+    "0605-061830-S",
+    "0605-132528-B",
+    "0608-094151-S",
+    "0610-231702-S",
+    "0612-153531-B",
+    "0615-152117-B",
+    "0617-205108-S",
+    "0618-132315-S",
+    "0618-155020-B",
+    "0619-172628-S",
+    "0625-042616-B",
+    "0629-060500-S",
+    "0629-221042-B",
+    "0701-115428-B",
+    "0702-003706-S",
+    "0702-122937-S",
+    "0703-040928-S",
+    "0703-183524-B",
+    "0706-004622-B",
+    "0706-140003-S",
+    "0708-213443-S",
+    "0709-202905-S",
+    "0714-113128-S",
+    "0714-230041-S",
+    "0723-050736-B",
+    "0728-145636-S",
+    "0730-074758-S",
+    "0730-114430-S",
+    "0731-170115-S",
+    "0804-172345-S",
+    "0807-083652-S",
+    "0807-205630-S",
+    "0813-223116-S",
+    "0814-155646-B",
+    "0820-213103-S",
+    "0827-133401-B",
+    "0828-205744-B",
+    "0831-140013-S",
+    "0902-131622-S",
+    "0904-131422-S",
+    "0908-165924-S",
+    "0911-180812-B",
+    "0914-213535-B",
+    "0918-162342-S",
+    "0918-204909-B",
+    "0923-111835-B",
+    "0925-113553-B",
+    "0929-030326-B",
+    "1001-061805-B",
+    "1002-121910-S",
+    "1004-230306-B",
+    "1006-101510-S",
+    "1007-013110-B",
+    "1008-064604-B",
+    "1009-205809-S",
+    "1012-023747-B",
+    "1013-043630-S",
+    "1016-205727-B",
+    "1019-171329-S",
+    "1023-145031-B",
+    "1026-024856-B",
+    "1026-105900-B",
+    "1026-172601-B",
+    "1027-163522-B",
+    "1030-122421-B",
+    "1102-003016-S"
+   ],
+   "turned_winner_ids": [],
+   "by_half": {
+    "train": {
+     "base_losses": 112,
+     "removed": 101,
+     "expected_if_random": 96.5,
+     "new_losses": 2,
+     "by_cause": {
+      "support_resistance": {
+       "losses": 35,
+       "removed": 30,
+       "expected_if_random": 30.2
+      },
+      "bad_fill": {
+       "losses": 1,
+       "removed": 1,
+       "expected_if_random": 0.9
+      },
+      "weekly_close": {
+       "losses": 14,
+       "removed": 14,
+       "expected_if_random": 12.1
+      },
+      "counter_structure": {
+       "losses": 23,
+       "removed": 20,
+       "expected_if_random": 19.8
+      },
+      "exhausted_move": {
+       "losses": 14,
+       "removed": 14,
+       "expected_if_random": 12.1
+      },
+      "news_spike": {
+       "losses": 7,
+       "removed": 6,
+       "expected_if_random": 6.0
+      },
+      "no_separator_chop": {
+       "losses": 9,
+       "removed": 8,
+       "expected_if_random": 7.8
+      },
+      "rollover_dead_book": {
+       "losses": 9,
+       "removed": 8,
+       "expected_if_random": 7.8
+      }
+     }
+    },
+    "test": {
+     "base_losses": 60,
+     "removed": 53,
+     "expected_if_random": 55.4,
+     "new_losses": 0,
+     "by_cause": {
+      "support_resistance": {
+       "losses": 15,
+       "removed": 15,
+       "expected_if_random": 13.9
+      },
+      "exhausted_move": {
+       "losses": 4,
+       "removed": 4,
+       "expected_if_random": 3.7
+      },
+      "news_spike": {
+       "losses": 7,
+       "removed": 7,
+       "expected_if_random": 6.5
+      },
+      "counter_structure": {
+       "losses": 16,
+       "removed": 9,
+       "expected_if_random": 14.8
+      },
+      "weekly_close": {
+       "losses": 8,
+       "removed": 8,
+       "expected_if_random": 7.4
+      },
+      "rollover_dead_book": {
+       "losses": 7,
+       "removed": 7,
+       "expected_if_random": 6.5
+      },
+      "no_separator_chop": {
+       "losses": 2,
+       "removed": 2,
+       "expected_if_random": 1.8
+      },
+      "bad_fill": {
+       "losses": 1,
+       "removed": 1,
+       "expected_if_random": 0.9
+      }
+     }
+    }
+   },
+   "file": "2026-11-06 10-00-03",
+   "objective": "max TRAIN net $, each step +0.05 WR pt and +$200, >= 600 TRAIN trades (greedy)",
+   "name": "97.7% + NET stack, 6 loss filters (TRAIN-chosen) - ALL 98.01% TEST 98.27% (WORSE than base TEST 98.60%) - red team OVERFIT, Python only",
+   "redteam": "survives=false: overfit. TEST loss rate went UP, 1.73% vs base 1.40% (P 0.79); $ per trade worse (-2.28 vs -1.26); worse than skipping setups at random on loss rate, $ per trade and loss-free days.",
+   "saved_file": "C:/Users/zeesh/turtle/monitor/TurtleTVUHV/settings/saved/2026-11-06 10-00-03.json"
+  }
+ ],
+ "references": [
+  {
+   "key": "fricut10_only",
+   "final_inputs": {
+    "InpUhvFriCutNY": "10"
+   },
+   "score": {
+    "train": {
+     "n": 3139,
+     "L": 94,
+     "wr": 97.01,
+     "net": -15848.34,
+     "traded_days": 83,
+     "loss_days": 58,
+     "loss_free_days": 25,
+     "loss_rate_pct": 2.995
+    },
+    "test": {
+     "n": 3992,
+     "L": 49,
+     "wr": 98.77,
+     "net": -5065.7,
+     "traded_days": 92,
+     "loss_days": 39,
+     "loss_free_days": 53,
+     "loss_rate_pct": 1.227
+    },
+    "all": {
+     "n": 7131,
+     "L": 143,
+     "wr": 97.99,
+     "net": -20914.04,
+     "traded_days": 175,
+     "loss_days": 97,
+     "loss_free_days": 78,
+     "loss_rate_pct": 2.005
+    }
+   },
+   "base_trades_removed": {
+    "all": 500,
+    "of": 7631,
+    "share_pct": 6.6,
+    "train_share_pct": 5.9,
+    "test_share_pct": 7.1
+   },
+   "base_winners_removed": 471,
+   "base_losses_removed": 29,
+   "base_losses_still_lost": 143,
+   "base_losses_turned_winner": 0,
+   "expected_removed_if_random": 10.8,
+   "new_losses_freed_slots": [],
+   "new_losses_from_base_winners": [],
+   "stack_trades_not_in_base": 0,
+   "match_exact": 7131,
+   "match_within_3s_not_exact": 0,
+   "by_cause": {
+    "support_resistance": {
+     "losses": 50,
+     "removed": 3,
+     "still_lost": 47,
+     "turned_winner": 0,
+     "expected_if_random": 3.1
+    },
+    "counter_structure": {
+     "losses": 39,
+     "removed": 2,
+     "still_lost": 37,
+     "turned_winner": 0,
+     "expected_if_random": 2.5
+    },
+    "weekly_close": {
+     "losses": 22,
+     "removed": 22,
+     "still_lost": 0,
+     "turned_winner": 0,
+     "expected_if_random": 1.4
+    },
+    "exhausted_move": {
+     "losses": 18,
+     "removed": 2,
+     "still_lost": 16,
+     "turned_winner": 0,
+     "expected_if_random": 1.1
+    },
+    "rollover_dead_book": {
+     "losses": 16,
+     "removed": 0,
+     "still_lost": 16,
+     "turned_winner": 0,
+     "expected_if_random": 1.0
+    },
+    "news_spike": {
+     "losses": 14,
+     "removed": 0,
+     "still_lost": 14,
+     "turned_winner": 0,
+     "expected_if_random": 0.9
+    },
+    "no_separator_chop": {
+     "losses": 11,
+     "removed": 0,
+     "still_lost": 11,
+     "turned_winner": 0,
+     "expected_if_random": 0.7
+    },
+    "bad_fill": {
+     "losses": 2,
+     "removed": 0,
+     "still_lost": 2,
+     "turned_winner": 0,
+     "expected_if_random": 0.1
+    }
+   },
+   "remaining_base_losses": [
+    "0306-084826-B",
+    "0306-102926-B",
+    "0309-043015-S",
+    "0309-080004-B",
+    "0310-004311-B",
+    "0310-055001-S",
+    "0310-141312-S",
+    "0311-001150-S",
+    "0311-135106-S",
+    "0312-062215-S",
+    "0312-172306-B",
+    "0316-052008-B",
+    "0316-132404-S",
+    "0316-163307-S",
+    "0316-200548-B",
+    "0317-062554-S",
+    "0318-120215-B",
+    "0318-205350-S",
+    "0318-230007-S",
+    "0319-022714-B",
+    "0319-072453-B",
+    "0319-155047-S",
+    "0319-184909-S",
+    "0322-214022-S",
+    "0322-233112-B",
+    "0324-165033-B",
+    "0324-201018-S",
+    "0324-205001-S",
+    "0325-011150-B",
+    "0325-132000-B",
+    "0326-120509-S",
+    "0331-222340-S",
+    "0402-040451-B",
+    "0406-143818-B",
+    "0406-183009-B",
+    "0407-071138-S",
+    "0408-075606-B",
+    "0409-062811-S",
+    "0409-110305-S",
+    "0410-122837-S",
+    "0413-064826-S",
+    "0413-120919-S",
+    "0413-182648-S",
+    "0414-025520-S",
+    "0414-082354-S",
+    "0416-045923-B",
+    "0417-084606-S",
+    "0421-151800-B",
+    "0423-140702-S",
+    "0423-164516-B",
+    "0424-095824-S",
+    "0426-222526-S",
+    "0427-150215-B",
+    "0428-085748-B",
+    "0428-132716-S",
+    "0429-032518-B",
+    "0429-162638-B",
+    "0501-063713-S",
+    "0504-035759-B",
+    "0504-193208-B",
+    "0505-051831-S",
+    "0506-114136-B",
+    "0511-120949-S",
+    "0512-195506-B",
+    "0513-071801-B",
+    "0514-070500-B",
+    "0514-125507-B",
+    "0514-213120-B",
+    "0515-041219-B",
+    "0518-010308-S",
+    "0519-124205-B",
+    "0519-151057-S",
+    "0521-184100-B",
+    "0526-111253-B",
+    "0526-155742-S",
+    "0527-123601-B",
+    "0528-060001-S",
+    "0529-012744-B",
+    "0529-094113-S",
+    "0602-024909-S",
+    "0602-144644-B",
+    "0603-051526-B",
+    "0604-074634-S",
+    "0605-061830-S",
+    "0605-132528-B",
+    "0608-094151-S",
+    "0610-231702-S",
+    "0615-152117-B",
+    "0617-205108-S",
+    "0618-132315-S",
+    "0618-155020-B",
+    "0625-042616-B",
+    "0629-060500-S",
+    "0629-221042-B",
+    "0701-115428-B",
+    "0702-003706-S",
+    "0702-122937-S",
+    "0703-040928-S",
+    "0706-004622-B",
+    "0706-140003-S",
+    "0708-213443-S",
+    "0709-202905-S",
+    "0714-113128-S",
+    "0714-230041-S",
+    "0715-132937-S",
+    "0723-050736-B",
+    "0728-145636-S",
+    "0730-074758-S",
+    "0730-114430-S",
+    "0804-172345-S",
+    "0807-083652-S",
+    "0812-151608-B",
+    "0813-223116-S",
+    "0820-213103-S",
+    "0821-130310-B",
+    "0827-133401-B",
+    "0831-140013-S",
+    "0902-131622-S",
+    "0904-131422-S",
+    "0908-165924-S",
+    "0914-213535-B",
+    "0923-111835-B",
+    "0925-113553-B",
+    "0929-030326-B",
+    "1001-061805-B",
+    "1002-121910-S",
+    "1002-133626-S",
+    "1004-230306-B",
+    "1006-101510-S",
+    "1007-013110-B",
+    "1007-091004-B",
+    "1008-064604-B",
+    "1012-023747-B",
+    "1013-043630-S",
+    "1015-035806-B",
+    "1019-171329-S",
+    "1026-024856-B",
+    "1026-105900-B",
+    "1026-172601-B",
+    "1027-163522-B",
+    "1030-122421-B",
+    "1102-003016-S",
+    "1104-082902-S"
+   ],
+   "removed_base_losses": [
+    "0306-212806-B",
+    "0313-195816-B",
+    "0320-143152-S",
+    "0320-194940-S",
+    "0403-204101-S",
+    "0403-204417-S",
+    "0403-205318-S",
+    "0403-205500-B",
+    "0417-183109-B",
+    "0417-205800-B",
+    "0424-183049-S",
+    "0501-161803-B",
+    "0508-170307-S",
+    "0515-173859-B",
+    "0522-142204-S",
+    "0522-192405-B",
+    "0612-153531-B",
+    "0619-172628-S",
+    "0703-183524-B",
+    "0731-170115-S",
+    "0807-205630-S",
+    "0814-155646-B",
+    "0828-205744-B",
+    "0911-180812-B",
+    "0918-162342-S",
+    "0918-204909-B",
+    "1009-205809-S",
+    "1016-205727-B",
+    "1023-145031-B"
+   ],
+   "turned_winner_ids": [],
+   "by_half": {
+    "train": {
+     "base_losses": 112,
+     "removed": 18,
+     "expected_if_random": 6.6,
+     "new_losses": 0,
+     "by_cause": {
+      "support_resistance": {
+       "losses": 35,
+       "removed": 1,
+       "expected_if_random": 2.1
+      },
+      "bad_fill": {
+       "losses": 1,
+       "removed": 0,
+       "expected_if_random": 0.1
+      },
+      "weekly_close": {
+       "losses": 14,
+       "removed": 14,
+       "expected_if_random": 0.8
+      },
+      "counter_structure": {
+       "losses": 23,
+       "removed": 1,
+       "expected_if_random": 1.4
+      },
+      "exhausted_move": {
+       "losses": 14,
+       "removed": 2,
+       "expected_if_random": 0.8
+      },
+      "news_spike": {
+       "losses": 7,
+       "removed": 0,
+       "expected_if_random": 0.4
+      },
+      "no_separator_chop": {
+       "losses": 9,
+       "removed": 0,
+       "expected_if_random": 0.5
+      },
+      "rollover_dead_book": {
+       "losses": 9,
+       "removed": 0,
+       "expected_if_random": 0.5
+      }
+     }
+    },
+    "test": {
+     "base_losses": 60,
+     "removed": 11,
+     "expected_if_random": 4.2,
+     "new_losses": 0,
+     "by_cause": {
+      "support_resistance": {
+       "losses": 15,
+       "removed": 2,
+       "expected_if_random": 1.1
+      },
+      "exhausted_move": {
+       "losses": 4,
+       "removed": 0,
+       "expected_if_random": 0.3
+      },
+      "news_spike": {
+       "losses": 7,
+       "removed": 0,
+       "expected_if_random": 0.5
+      },
+      "counter_structure": {
+       "losses": 16,
+       "removed": 1,
+       "expected_if_random": 1.1
+      },
+      "weekly_close": {
+       "losses": 8,
+       "removed": 8,
+       "expected_if_random": 0.6
+      },
+      "rollover_dead_book": {
+       "losses": 7,
+       "removed": 0,
+       "expected_if_random": 0.5
+      },
+      "no_separator_chop": {
+       "losses": 2,
+       "removed": 0,
+       "expected_if_random": 0.1
+      },
+      "bad_fill": {
+       "losses": 1,
+       "removed": 0,
+       "expected_if_random": 0.1
+      }
+     }
+    }
+   },
+   "why": "step 1 of the win-rate stack alone: the only cure TEST supports (lift ~2.6-2.7 on both halves, TEST P 0.003)"
+  }
+ ],
+ "hashes_end": {
+  "uhv_engine.py": "e580153de3",
+  "uhv_filters.py": "77350cc8de",
+  "uhv_diamond.py": "5dc2a92731",
+  "scan.py": "eeba8028da",
+  "sim.py": "32e7663020"
+ },
+ "written": [
+  "C:/Users/zeesh/turtle/monitor/TurtleTVUHV/settings/saved/2026-11-06 10-00-01.json",
+  "C:/Users/zeesh/turtle/monitor/TurtleTVUHV/settings/saved/2026-11-06 10-00-02.json",
+  "C:/Users/zeesh/turtle/monitor/TurtleTVUHV/settings/saved/2026-11-06 10-00-03.json"
+ ]
+}

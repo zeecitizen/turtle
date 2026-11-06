@@ -1,0 +1,395 @@
+
+==== GAME GEOMETRY: target 2 pips / stop 2 pips ====
+coin-flip baseline (every tradable minute): long wins 45.8%  short wins 47.7%
+700 combinations (timeframe x EMA pair x skip). Top 12 chosen on Jan-Jun, then the same ones on Jul-Nov:
+ tf   pair             skip |  IS n  with%   vs%  edge     t ||  OOS n  with%   vs%  edge     t
+ M15  TV 19/64           3 |   177  56.5  37.3 +19.2  +2.7 ||   133  53.4  41.4 +12.0  +1.5
+ M15  TV 20/62          30 |   117  57.3  38.5 +18.8  +2.1 ||    80  51.2  43.8  +7.5  +0.8
+ M15  TV 19/66          30 |   113  56.6  38.1 +18.6  +2.3 ||    80  50.0  43.8  +6.2  +0.6
+ M15  TV 20/62           3 |   177  55.9  37.9 +18.1  +2.7 ||   132  54.5  39.4 +15.2  +1.8
+ M15  grid 5/200         3 |   159  56.6  39.6 +17.0  +2.5 ||   136  52.2  44.9  +7.4  +1.0
+ M15  TV 19/66           3 |   178  53.4  37.1 +16.3  +2.3 ||   132  54.5  40.2 +14.4  +1.7
+ M5   1min-saved 3/4    20 |   117  54.7  39.3 +15.4  +1.6 ||    84  45.2  51.2  -6.0  -0.5
+ M15  TV 19/64          30 |   113  54.9  39.8 +15.0  +1.7 ||    81  50.6  43.2  +7.4  +0.7
+ M15  grid 13/55        10 |   175  53.7  39.4 +14.3  +1.7 ||   140  52.1  40.7 +11.4  +1.6
+ M15  TV 21/50           3 |   196  51.5  37.2 +14.3  +2.3 ||   148  53.4  41.9 +11.5  +1.5
+ M15  grid 13/200        0 |   117  55.6  41.9 +13.7  +1.4 ||   114  46.5  49.1  -2.6  -0.3
+ M5   grid 34/200       10 |   217  51.6  38.2 +13.4  +2.1 ||   159  52.8  40.3 +12.6  +1.7
+ Zee's 9/50, the 1-minute saves and the Turtle TV pairs (OOS Jul-Nov):
+   M1   1min-EA 14/70    skip  0: n  2541  with  45.3%  against  47.1%  edge  -1.8  t  -0.9
+   M1   1min-EA 14/70    skip  5: n  2139  with  46.0%  against  47.3%  edge  -1.3  t  -0.6
+   M1   1min-EA 14/70    skip 10: n  1858  with  46.3%  against  47.4%  edge  -1.0  t  -0.4
+   M1   1min-EA 14/70    skip 20: n  1522  with  46.8%  against  45.9%  edge  +0.9  t  +0.3
+   M5   1min-EA 14/70    skip  0: n   493  with  47.5%  against  46.2%  edge  +1.2  t  +0.3
+   M5   1min-EA 14/70    skip  5: n   428  with  45.8%  against  48.4%  edge  -2.6  t  -0.5
+   M5   1min-EA 14/70    skip 10: n   370  with  45.7%  against  50.0%  edge  -4.3  t  -0.9
+   M5   1min-EA 14/70    skip 20: n   311  with  45.0%  against  46.9%  edge  -1.9  t  -0.4
+   M15  1min-EA 14/70    skip  0: n   150  with  51.3%  against  42.7%  edge  +8.7  t  +1.1
+   M15  1min-EA 14/70    skip  5: n   139  with  51.1%  against  42.4%  edge  +8.6  t  +1.0
+   M15  1min-EA 14/70    skip 10: n   122  with  48.4%  against  47.5%  edge  +0.8  t  +0.1
+   M15  1min-EA 14/70    skip 20: n   101  with  39.6%  against  52.5%  edge -12.9  t  -1.5
+   M1   1min-saved 3/4   skip  0: n 22011  with  46.6%  against  47.0%  edge  -0.4  t  -0.7
+   M1   1min-saved 3/4   skip  5: n  8272  with  47.1%  against  46.8%  edge  +0.3  t  +0.3
+   M1   1min-saved 3/4   skip 10: n  3187  with  45.6%  against  47.3%  edge  -1.8  t  -0.9
+   M1   1min-saved 3/4   skip 20: n   482  with  45.6%  against  47.5%  edge  -1.9  t  -0.5
+   M5   1min-saved 3/4   skip  0: n  4496  with  45.5%  against  48.2%  edge  -2.7  t  -1.7
+   M5   1min-saved 3/4   skip  5: n  1672  with  45.7%  against  48.3%  edge  -2.6  t  -1.2
+   M5   1min-saved 3/4   skip 10: n   628  with  46.2%  against  48.2%  edge  -2.1  t  -0.5
+   M5   1min-saved 3/4   skip 20: n    84  with  45.2%  against  51.2%  edge  -6.0  t  -0.5
+   M15  1min-saved 3/4   skip  0: n  1498  with  45.1%  against  48.1%  edge  -3.1  t  -1.2
+   M15  1min-saved 3/4   skip  5: n   544  with  48.0%  against  46.3%  edge  +1.7  t  +0.4
+   M15  1min-saved 3/4   skip 10: n   214  with  46.3%  against  47.7%  edge  -1.4  t  -0.2
+   M1   TV 10/34         skip  0: n  4311  with  45.3%  against  47.7%  edge  -2.4  t  -1.6
+   M1   TV 10/34         skip  5: n  3411  with  46.2%  against  46.1%  edge  +0.1  t  +0.1
+   M1   TV 10/34         skip 10: n  2814  with  46.5%  against  47.1%  edge  -0.6  t  -0.3
+   M1   TV 10/34         skip 20: n  2026  with  45.5%  against  48.0%  edge  -2.6  t  -1.2
+   M5   TV 10/34         skip  0: n   883  with  47.3%  against  47.2%  edge  +0.1  t  +0.0
+   M5   TV 10/34         skip  5: n   706  with  42.4%  against  51.6%  edge  -9.2  t  -2.4
+   M5   TV 10/34         skip 10: n   559  with  46.0%  against  46.0%  edge  +0.0  t  +0.0
+   M5   TV 10/34         skip 20: n   392  with  45.4%  against  49.2%  edge  -3.8  t  -0.7
+   M15  TV 10/34         skip  0: n   305  with  42.0%  against  52.1%  edge -10.2  t  -2.0
+   M15  TV 10/34         skip  5: n   232  with  44.4%  against  47.4%  edge  -3.0  t  -0.5
+   M15  TV 10/34         skip 10: n   193  with  51.3%  against  45.1%  edge  +6.2  t  +0.9
+   M15  TV 10/34         skip 20: n   141  with  50.4%  against  44.0%  edge  +6.4  t  +0.8
+   M1   TV 16/32         skip  0: n  3504  with  46.1%  against  47.3%  edge  -1.2  t  -0.7
+   M1   TV 16/32         skip  5: n  2971  with  46.6%  against  46.3%  edge  +0.2  t  +0.1
+   M1   TV 16/32         skip 10: n  2544  with  45.8%  against  48.0%  edge  -2.2  t  -1.3
+   M1   TV 16/32         skip 20: n  1946  with  46.9%  against  46.9%  edge  +0.1  t  +0.0
+   M5   TV 16/32         skip  0: n   716  with  45.4%  against  46.8%  edge  -1.4  t  -0.4
+   M5   TV 16/32         skip  5: n   586  with  42.8%  against  50.0%  edge  -7.2  t  -1.9
+   M5   TV 16/32         skip 10: n   496  with  44.4%  against  50.0%  edge  -5.6  t  -1.3
+   M5   TV 16/32         skip 20: n   378  with  45.5%  against  49.2%  edge  -3.7  t  -0.7
+   M15  TV 16/32         skip  0: n   234  with  38.0%  against  53.8%  edge -15.8  t  -2.4
+   M15  TV 16/32         skip  5: n   197  with  46.7%  against  52.3%  edge  -5.6  t  -0.8
+   M15  TV 16/32         skip 10: n   172  with  47.1%  against  46.5%  edge  +0.6  t  +0.1
+   M15  TV 16/32         skip 20: n   134  with  50.7%  against  46.3%  edge  +4.5  t  +0.6
+   M1   TV 16/64         skip  0: n  2469  with  45.8%  against  46.4%  edge  -0.6  t  -0.3
+   M1   TV 16/64         skip  5: n  2110  with  47.0%  against  46.4%  edge  +0.6  t  +0.3
+   M1   TV 16/64         skip 10: n  1860  with  46.1%  against  47.7%  edge  -1.6  t  -0.7
+   M1   TV 16/64         skip 20: n  1534  with  46.9%  against  46.1%  edge  +0.8  t  +0.3
+   M5   TV 16/64         skip  0: n   467  with  48.4%  against  45.6%  edge  +2.8  t  +0.7
+   M5   TV 16/64         skip  5: n   416  with  46.9%  against  48.3%  edge  -1.4  t  -0.3
+   M5   TV 16/64         skip 10: n   365  with  46.8%  against  47.4%  edge  -0.5  t  -0.1
+   M5   TV 16/64         skip 20: n   311  with  47.6%  against  44.1%  edge  +3.5  t  +0.6
+   M15  TV 16/64         skip  0: n   146  with  47.3%  against  47.9%  edge  -0.7  t  -0.1
+   M15  TV 16/64         skip  5: n   137  with  48.2%  against  46.7%  edge  +1.5  t  +0.2
+   M15  TV 16/64         skip 10: n   121  with  47.9%  against  48.8%  edge  -0.8  t  -0.1
+   M15  TV 16/64         skip 20: n   101  with  34.7%  against  57.4%  edge -22.8  t  -2.7
+   M1   TV 17/60         skip  0: n  2455  with  45.3%  against  47.1%  edge  -1.8  t  -0.8
+   M1   TV 17/60         skip  5: n  2123  with  46.4%  against  46.8%  edge  -0.4  t  -0.2
+   M1   TV 17/60         skip 10: n  1875  with  46.8%  against  47.1%  edge  -0.4  t  -0.2
+   M1   TV 17/60         skip 20: n  1535  with  47.0%  against  45.7%  edge  +1.3  t  +0.5
+   M5   TV 17/60         skip  0: n   469  with  50.1%  against  43.7%  edge  +6.4  t  +1.5
+   M5   TV 17/60         skip  5: n   421  with  45.4%  against  49.6%  edge  -4.3  t  -0.9
+   M5   TV 17/60         skip 10: n   371  with  48.8%  against  45.8%  edge  +3.0  t  +0.6
+   M5   TV 17/60         skip 20: n   311  with  49.5%  against  43.4%  edge  +6.1  t  +1.0
+   M15  TV 17/60         skip  0: n   149  with  53.7%  against  41.6%  edge +12.1  t  +1.7
+   M15  TV 17/60         skip  5: n   138  with  51.4%  against  42.8%  edge  +8.7  t  +1.2
+   M15  TV 17/60         skip 10: n   122  with  53.3%  against  44.3%  edge  +9.0  t  +1.1
+   M15  TV 17/60         skip 20: n   104  with  39.4%  against  55.8%  edge -16.3  t  -2.2
+   M1   TV 19/58         skip  0: n  2362  with  45.9%  against  47.2%  edge  -1.4  t  -0.6
+   M1   TV 19/58         skip  5: n  2056  with  46.0%  against  47.8%  edge  -1.8  t  -0.8
+   M1   TV 19/58         skip 10: n  1836  with  45.8%  against  47.9%  edge  -2.1  t  -1.0
+   M1   TV 19/58         skip 20: n  1526  with  46.3%  against  46.9%  edge  -0.5  t  -0.2
+   M5   TV 19/58         skip  0: n   452  with  48.0%  against  46.2%  edge  +1.8  t  +0.4
+   M5   TV 19/58         skip  5: n   409  with  46.5%  against  46.9%  edge  -0.5  t  -0.1
+   M5   TV 19/58         skip 10: n   363  with  47.7%  against  46.0%  edge  +1.7  t  +0.3
+   M5   TV 19/58         skip 20: n   308  with  47.7%  against  44.8%  edge  +2.9  t  +0.5
+   M15  TV 19/58         skip  0: n   142  with  57.7%  against  35.9%  edge +21.8  t  +3.3
+   M15  TV 19/58         skip  5: n   134  with  50.7%  against  47.0%  edge  +3.7  t  +0.5
+   M15  TV 19/58         skip 10: n   118  with  49.2%  against  47.5%  edge  +1.7  t  +0.2
+   M15  TV 19/58         skip 20: n   103  with  36.9%  against  58.3%  edge -21.4  t  -2.5
+   M1   TV 19/64         skip  0: n  2243  with  46.2%  against  46.5%  edge  -0.4  t  -0.2
+   M1   TV 19/64         skip  5: n  1966  with  45.8%  against  47.5%  edge  -1.7  t  -0.7
+   M1   TV 19/64         skip 10: n  1756  with  45.6%  against  48.6%  edge  -3.0  t  -1.4
+   M1   TV 19/64         skip 20: n  1480  with  46.4%  against  47.0%  edge  -0.5  t  -0.2
+   M5   TV 19/64         skip  0: n   450  with  48.2%  against  46.0%  edge  +2.2  t  +0.5
+   M5   TV 19/64         skip  5: n   400  with  43.8%  against  49.5%  edge  -5.8  t  -1.4
+   M5   TV 19/64         skip 10: n   350  with  47.4%  against  47.4%  edge  +0.0  t  +0.0
+   M5   TV 19/64         skip 20: n   305  with  43.6%  against  50.2%  edge  -6.6  t  -1.2
+   M15  TV 19/64         skip  0: n   137  with  46.7%  against  45.3%  edge  +1.5  t  +0.2
+   M15  TV 19/64         skip  5: n   128  with  49.2%  against  48.4%  edge  +0.8  t  +0.1
+   M15  TV 19/64         skip 10: n   117  with  47.9%  against  47.9%  edge  +0.0  t  +0.0
+   M15  TV 19/64         skip 20: n    99  with  44.4%  against  47.5%  edge  -3.0  t  -0.4
+   M1   TV 19/66         skip  0: n  2212  with  45.8%  against  46.8%  edge  -1.0  t  -0.4
+   M1   TV 19/66         skip  5: n  1940  with  46.3%  against  46.9%  edge  -0.5  t  -0.2
+   M1   TV 19/66         skip 10: n  1742  with  45.5%  against  48.6%  edge  -3.1  t  -1.3
+   M1   TV 19/66         skip 20: n  1461  with  46.3%  against  46.7%  edge  -0.3  t  -0.1
+   M5   TV 19/66         skip  0: n   444  with  49.5%  against  45.0%  edge  +4.5  t  +1.1
+   M5   TV 19/66         skip  5: n   395  with  44.3%  against  49.1%  edge  -4.8  t  -1.0
+   M5   TV 19/66         skip 10: n   343  with  46.1%  against  48.4%  edge  -2.3  t  -0.4
+   M5   TV 19/66         skip 20: n   300  with  45.7%  against  48.3%  edge  -2.7  t  -0.5
+   M15  TV 19/66         skip  0: n   140  with  48.6%  against  41.4%  edge  +7.1  t  +1.0
+   M15  TV 19/66         skip  5: n   128  with  50.8%  against  46.9%  edge  +3.9  t  +0.5
+   M15  TV 19/66         skip 10: n   116  with  50.9%  against  44.8%  edge  +6.0  t  +0.7
+   M15  TV 19/66         skip 20: n    99  with  39.4%  against  51.5%  edge -12.1  t  -1.5
+   M1   TV 20/62         skip  0: n  2252  with  46.5%  against  46.5%  edge  +0.0  t  +0.0
+   M1   TV 20/62         skip  5: n  1960  with  46.3%  against  47.1%  edge  -0.8  t  -0.3
+   M1   TV 20/62         skip 10: n  1764  with  45.5%  against  48.8%  edge  -3.2  t  -1.5
+   M1   TV 20/62         skip 20: n  1485  with  46.6%  against  46.4%  edge  +0.2  t  +0.1
+   M5   TV 20/62         skip  0: n   447  with  49.9%  against  43.8%  edge  +6.0  t  +1.3
+   M5   TV 20/62         skip  5: n   398  with  42.5%  against  50.0%  edge  -7.5  t  -1.7
+   M5   TV 20/62         skip 10: n   350  with  46.3%  against  47.7%  edge  -1.4  t  -0.3
+   M5   TV 20/62         skip 20: n   305  with  44.6%  against  48.9%  edge  -4.3  t  -0.7
+   M15  TV 20/62         skip  0: n   135  with  43.7%  against  48.1%  edge  -4.4  t  -0.5
+   M15  TV 20/62         skip  5: n   127  with  46.5%  against  52.0%  edge  -5.5  t  -0.6
+   M15  TV 20/62         skip 10: n   116  with  45.7%  against  47.4%  edge  -1.7  t  -0.2
+   M15  TV 20/62         skip 20: n   100  with  45.0%  against  47.0%  edge  -2.0  t  -0.2
+   M1   TV 21/50         skip  0: n  2427  with  45.7%  against  46.8%  edge  -1.1  t  -0.5
+   M1   TV 21/50         skip  5: n  2120  with  46.9%  against  46.6%  edge  +0.3  t  +0.2
+   M1   TV 21/50         skip 10: n  1911  with  47.3%  against  46.5%  edge  +0.7  t  +0.3
+   M1   TV 21/50         skip 20: n  1585  with  46.5%  against  46.4%  edge  +0.1  t  +0.1
+   M5   TV 21/50         skip  0: n   467  with  48.8%  against  44.3%  edge  +4.5  t  +1.1
+   M5   TV 21/50         skip  5: n   415  with  47.5%  against  46.5%  edge  +1.0  t  +0.2
+   M5   TV 21/50         skip 10: n   370  with  48.4%  against  44.9%  edge  +3.5  t  +0.7
+   M5   TV 21/50         skip 20: n   320  with  49.4%  against  44.1%  edge  +5.3  t  +0.9
+   M15  TV 21/50         skip  0: n   156  with  50.6%  against  44.9%  edge  +5.8  t  +0.6
+   M15  TV 21/50         skip  5: n   138  with  48.6%  against  45.7%  edge  +2.9  t  +0.3
+   M15  TV 21/50         skip 10: n   123  with  52.8%  against  43.9%  edge  +8.9  t  +1.2
+   M15  TV 21/50         skip 20: n   109  with  43.1%  against  51.4%  edge  -8.3  t  -0.9
+   M1   TV 21/56         skip  0: n  2275  with  46.3%  against  46.7%  edge  -0.4  t  -0.2
+   M1   TV 21/56         skip  5: n  2014  with  46.6%  against  46.8%  edge  -0.2  t  -0.1
+   M1   TV 21/56         skip 10: n  1815  with  46.3%  against  47.6%  edge  -1.3  t  -0.6
+   M1   TV 21/56         skip 20: n  1516  with  46.6%  against  47.1%  edge  -0.5  t  -0.2
+   M5   TV 21/56         skip  0: n   445  with  48.8%  against  45.6%  edge  +3.1  t  +0.8
+   M5   TV 21/56         skip  5: n   397  with  46.6%  against  47.6%  edge  -1.0  t  -0.2
+   M5   TV 21/56         skip 10: n   356  with  47.5%  against  47.5%  edge  +0.0  t  +0.0
+   M5   TV 21/56         skip 20: n   307  with  50.5%  against  42.7%  edge  +7.8  t  +1.5
+   M15  TV 21/56         skip  0: n   142  with  54.2%  against  38.7%  edge +15.5  t  +2.2
+   M15  TV 21/56         skip  5: n   131  with  46.6%  against  49.6%  edge  -3.1  t  -0.4
+   M15  TV 21/56         skip 10: n   120  with  47.5%  against  45.8%  edge  +1.7  t  +0.2
+   M15  TV 21/56         skip 20: n   104  with  43.3%  against  50.0%  edge  -6.7  t  -0.8
+   M1   TV 23/42         skip  0: n  2575  with  45.4%  against  47.2%  edge  -1.7  t  -0.9
+   M1   TV 23/42         skip  5: n  2239  with  46.1%  against  47.6%  edge  -1.5  t  -0.7
+   M1   TV 23/42         skip 10: n  2015  with  46.7%  against  47.3%  edge  -0.6  t  -0.3
+   M1   TV 23/42         skip 20: n  1652  with  47.3%  against  46.2%  edge  +1.2  t  +0.5
+   M5   TV 23/42         skip  0: n   494  with  47.8%  against  44.9%  edge  +2.8  t  +0.6
+   M5   TV 23/42         skip  5: n   434  with  50.7%  against  43.3%  edge  +7.4  t  +1.6
+   M5   TV 23/42         skip 10: n   385  with  45.2%  against  47.5%  edge  -2.3  t  -0.6
+   M5   TV 23/42         skip 20: n   330  with  47.3%  against  47.0%  edge  +0.3  t  +0.1
+   M15  TV 23/42         skip  0: n   157  with  47.8%  against  47.1%  edge  +0.6  t  +0.1
+   M15  TV 23/42         skip  5: n   142  with  51.4%  against  44.4%  edge  +7.0  t  +1.0
+   M15  TV 23/42         skip 10: n   130  with  53.1%  against  44.6%  edge  +8.5  t  +1.0
+   M15  TV 23/42         skip 20: n   116  with  40.5%  against  53.4%  edge -12.9  t  -1.5
+   M1   Zee 9/50         skip  0: n  3758  with  45.6%  against  48.0%  edge  -2.4  t  -1.6
+   M1   Zee 9/50         skip  5: n  2991  with  46.7%  against  46.2%  edge  +0.5  t  +0.3
+   M1   Zee 9/50         skip 10: n  2461  with  46.0%  against  47.6%  edge  -1.5  t  -0.8
+   M1   Zee 9/50         skip 20: n  1841  with  47.0%  against  47.0%  edge  +0.1  t  +0.0
+   M5   Zee 9/50         skip  0: n   723  with  45.9%  against  46.7%  edge  -0.8  t  -0.2
+   M5   Zee 9/50         skip  5: n   579  with  43.0%  against  50.8%  edge  -7.8  t  -1.8
+   M5   Zee 9/50         skip 10: n   484  with  44.8%  against  48.6%  edge  -3.7  t  -0.8
+   M5   Zee 9/50         skip 20: n   361  with  47.1%  against  48.5%  edge  -1.4  t  -0.2
+   M15  Zee 9/50         skip  0: n   236  with  41.1%  against  52.1%  edge -11.0  t  -1.8
+   M15  Zee 9/50         skip  5: n   191  with  47.6%  against  47.1%  edge  +0.5  t  +0.1
+   M15  Zee 9/50         skip 10: n   163  with  54.0%  against  39.3%  edge +14.7  t  +2.2
+   M15  Zee 9/50         skip 20: n   123  with  46.3%  against  51.2%  edge  -4.9  t  -0.6
+ M1: mean edge IS -1.51  OOS -1.11  | OOS edge > 0 in 64/245
+ M5: mean edge IS -1.37  OOS -1.20  | OOS edge > 0 in 85/245
+ M15: mean edge IS -0.83  OOS +0.48  | OOS edge > 0 in 119/210
+ all: corr(IS edge, OOS edge) across combos +0.19
+
+==== WIDER CHECK: target 5 pips / stop 5 pips ====
+coin-flip baseline (every tradable minute): long wins 41.1%  short wins 44.7%
+700 combinations (timeframe x EMA pair x skip). Top 12 chosen on Jan-Jun, then the same ones on Jul-Nov:
+ tf   pair             skip |  IS n  with%   vs%  edge     t ||  OOS n  with%   vs%  edge     t
+ M15  TV 20/62          30 |   117  53.8  35.0 +18.8  +2.1 ||    80  38.8  36.2  +2.5  +0.3
+ M15  grid 13/144        3 |   134  53.7  35.1 +18.7  +2.3 ||   114  46.5  36.8  +9.6  +1.0
+ M15  TV 10/34          30 |   143  51.7  35.7 +16.1  +2.1 ||    90  32.2  51.1 -18.9  -2.0
+ M15  grid 21/55         0 |   204  54.4  39.2 +15.2  +2.2 ||   143  51.7  30.8 +21.0  +3.1
+ M15  grid 8/55          5 |   246  53.3  38.6 +14.6  +2.6 ||   189  41.3  45.0  -3.7  -0.6
+ M15  TV 21/56           0 |   202  53.5  40.1 +13.4  +2.1 ||   142  48.6  34.5 +14.1  +2.0
+ M15  grid 13/144        0 |   153  51.6  38.6 +13.1  +1.7 ||   134  38.1  45.5  -7.5  -1.0
+ M15  TV 19/66           3 |   178  51.7  38.8 +12.9  +1.7 ||   132  46.2  35.6 +10.6  +1.4
+ M15  TV 19/64           0 |   192  53.1  40.6 +12.5  +1.9 ||   137  48.9  35.8 +13.1  +1.8
+ M15  TV 19/66          30 |   113  51.3  38.9 +12.4  +1.4 ||    80  43.8  35.0  +8.8  +0.9
+ M15  TV 19/64          30 |   113  50.4  38.1 +12.4  +1.4 ||    81  42.0  32.1  +9.9  +1.1
+ M15  TV 20/62           0 |   187  52.4  40.1 +12.3  +1.8 ||   135  49.6  37.0 +12.6  +1.6
+ Zee's 9/50, the 1-minute saves and the Turtle TV pairs (OOS Jul-Nov):
+   M1   1min-EA 14/70    skip  0: n  2541  with  38.9%  against  41.1%  edge  -2.2  t  -1.3
+   M1   1min-EA 14/70    skip  5: n  2139  with  39.6%  against  40.0%  edge  -0.3  t  -0.2
+   M1   1min-EA 14/70    skip 10: n  1858  with  41.0%  against  40.5%  edge  +0.4  t  +0.2
+   M1   1min-EA 14/70    skip 20: n  1522  with  39.4%  against  40.2%  edge  -0.8  t  -0.3
+   M5   1min-EA 14/70    skip  0: n   493  with  38.7%  against  40.6%  edge  -1.8  t  -0.5
+   M5   1min-EA 14/70    skip  5: n   428  with  39.7%  against  40.2%  edge  -0.5  t  -0.1
+   M5   1min-EA 14/70    skip 10: n   370  with  39.5%  against  40.3%  edge  -0.8  t  -0.2
+   M5   1min-EA 14/70    skip 20: n   311  with  39.2%  against  40.5%  edge  -1.3  t  -0.3
+   M15  1min-EA 14/70    skip  0: n   150  with  46.7%  against  35.3%  edge +11.3  t  +1.5
+   M15  1min-EA 14/70    skip  5: n   139  with  38.1%  against  40.3%  edge  -2.2  t  -0.3
+   M15  1min-EA 14/70    skip 10: n   122  with  41.0%  against  36.1%  edge  +4.9  t  +0.7
+   M15  1min-EA 14/70    skip 20: n   101  with  32.7%  against  48.5%  edge -15.8  t  -1.8
+   M1   1min-saved 3/4   skip  0: n 22011  with  40.4%  against  40.7%  edge  -0.3  t  -1.0
+   M1   1min-saved 3/4   skip  5: n  8272  with  40.5%  against  39.9%  edge  +0.6  t  +0.7
+   M1   1min-saved 3/4   skip 10: n  3187  with  40.1%  against  40.7%  edge  -0.5  t  -0.3
+   M1   1min-saved 3/4   skip 20: n   482  with  41.3%  against  40.7%  edge  +0.6  t  +0.2
+   M5   1min-saved 3/4   skip  0: n  4496  with  39.3%  against  40.1%  edge  -0.8  t  -0.7
+   M5   1min-saved 3/4   skip  5: n  1672  with  39.7%  against  41.3%  edge  -1.6  t  -0.7
+   M5   1min-saved 3/4   skip 10: n   628  with  40.9%  against  41.9%  edge  -1.0  t  -0.3
+   M5   1min-saved 3/4   skip 20: n    84  with  34.5%  against  50.0%  edge -15.5  t  -1.8
+   M15  1min-saved 3/4   skip  0: n  1498  with  39.4%  against  41.2%  edge  -1.8  t  -0.9
+   M15  1min-saved 3/4   skip  5: n   544  with  43.0%  against  39.7%  edge  +3.3  t  +0.8
+   M15  1min-saved 3/4   skip 10: n   214  with  37.9%  against  40.7%  edge  -2.8  t  -0.6
+   M1   TV 10/34         skip  0: n  4311  with  39.5%  against  39.7%  edge  -0.2  t  -0.2
+   M1   TV 10/34         skip  5: n  3411  with  39.9%  against  39.2%  edge  +0.7  t  +0.6
+   M1   TV 10/34         skip 10: n  2814  with  40.9%  against  39.3%  edge  +1.6  t  +1.1
+   M1   TV 10/34         skip 20: n  2026  with  39.1%  against  40.9%  edge  -1.8  t  -0.9
+   M5   TV 10/34         skip  0: n   883  with  39.1%  against  41.9%  edge  -2.8  t  -1.0
+   M5   TV 10/34         skip  5: n   706  with  38.8%  against  41.9%  edge  -3.1  t  -1.1
+   M5   TV 10/34         skip 10: n   559  with  43.1%  against  39.2%  edge  +3.9  t  +1.0
+   M5   TV 10/34         skip 20: n   392  with  40.3%  against  38.5%  edge  +1.8  t  +0.4
+   M15  TV 10/34         skip  0: n   305  with  38.4%  against  42.6%  edge  -4.3  t  -0.8
+   M15  TV 10/34         skip  5: n   232  with  40.1%  against  43.1%  edge  -3.0  t  -0.5
+   M15  TV 10/34         skip 10: n   193  with  37.8%  against  42.5%  edge  -4.7  t  -0.7
+   M15  TV 10/34         skip 20: n   141  with  41.8%  against  40.4%  edge  +1.4  t  +0.2
+   M1   TV 16/32         skip  0: n  3504  with  40.0%  against  40.2%  edge  -0.2  t  -0.1
+   M1   TV 16/32         skip  5: n  2971  with  40.5%  against  39.3%  edge  +1.1  t  +0.9
+   M1   TV 16/32         skip 10: n  2544  with  40.4%  against  39.5%  edge  +0.9  t  +0.5
+   M1   TV 16/32         skip 20: n  1946  with  39.5%  against  40.5%  edge  -1.0  t  -0.6
+   M5   TV 16/32         skip  0: n   716  with  39.9%  against  40.2%  edge  -0.3  t  -0.1
+   M5   TV 16/32         skip  5: n   586  with  39.9%  against  42.0%  edge  -2.0  t  -0.5
+   M5   TV 16/32         skip 10: n   496  with  40.9%  against  42.3%  edge  -1.4  t  -0.4
+   M5   TV 16/32         skip 20: n   378  with  41.0%  against  39.4%  edge  +1.6  t  +0.3
+   M15  TV 16/32         skip  0: n   234  with  44.0%  against  38.9%  edge  +5.1  t  +0.9
+   M15  TV 16/32         skip  5: n   197  with  39.6%  against  44.2%  edge  -4.6  t  -0.7
+   M15  TV 16/32         skip 10: n   172  with  43.0%  against  39.0%  edge  +4.1  t  +0.6
+   M15  TV 16/32         skip 20: n   134  with  42.5%  against  42.5%  edge  +0.0  t  +0.0
+   M1   TV 16/64         skip  0: n  2469  with  39.1%  against  40.8%  edge  -1.7  t  -1.0
+   M1   TV 16/64         skip  5: n  2110  with  40.0%  against  40.0%  edge  +0.1  t  +0.1
+   M1   TV 16/64         skip 10: n  1860  with  40.8%  against  40.8%  edge  -0.1  t  -0.0
+   M1   TV 16/64         skip 20: n  1534  with  39.4%  against  39.8%  edge  -0.4  t  -0.2
+   M5   TV 16/64         skip  0: n   467  with  41.3%  against  38.3%  edge  +3.0  t  +0.7
+   M5   TV 16/64         skip  5: n   416  with  38.9%  against  40.6%  edge  -1.7  t  -0.4
+   M5   TV 16/64         skip 10: n   365  with  40.0%  against  39.7%  edge  +0.3  t  +0.1
+   M5   TV 16/64         skip 20: n   311  with  37.9%  against  40.2%  edge  -2.3  t  -0.5
+   M15  TV 16/64         skip  0: n   146  with  43.2%  against  38.4%  edge  +4.8  t  +0.7
+   M15  TV 16/64         skip  5: n   137  with  38.0%  against  41.6%  edge  -3.6  t  -0.5
+   M15  TV 16/64         skip 10: n   121  with  42.1%  against  36.4%  edge  +5.8  t  +0.7
+   M15  TV 16/64         skip 20: n   101  with  27.7%  against  50.5%  edge -22.8  t  -2.5
+   M1   TV 17/60         skip  0: n  2455  with  39.0%  against  41.0%  edge  -2.0  t  -1.1
+   M1   TV 17/60         skip  5: n  2123  with  40.0%  against  39.7%  edge  +0.4  t  +0.2
+   M1   TV 17/60         skip 10: n  1875  with  41.5%  against  40.3%  edge  +1.3  t  +0.7
+   M1   TV 17/60         skip 20: n  1535  with  39.1%  against  40.1%  edge  -1.0  t  -0.4
+   M5   TV 17/60         skip  0: n   469  with  42.4%  against  37.3%  edge  +5.1  t  +1.3
+   M5   TV 17/60         skip  5: n   421  with  38.2%  against  41.1%  edge  -2.9  t  -0.7
+   M5   TV 17/60         skip 10: n   371  with  39.9%  against  40.4%  edge  -0.5  t  -0.1
+   M5   TV 17/60         skip 20: n   311  with  39.5%  against  40.2%  edge  -0.6  t  -0.1
+   M15  TV 17/60         skip  0: n   149  with  48.3%  against  32.9%  edge +15.4  t  +2.3
+   M15  TV 17/60         skip  5: n   138  with  39.9%  against  42.0%  edge  -2.2  t  -0.3
+   M15  TV 17/60         skip 10: n   122  with  42.6%  against  34.4%  edge  +8.2  t  +1.1
+   M15  TV 17/60         skip 20: n   104  with  29.8%  against  51.0%  edge -21.2  t  -2.5
+   M1   TV 19/58         skip  0: n  2362  with  39.3%  against  41.0%  edge  -1.7  t  -1.0
+   M1   TV 19/58         skip  5: n  2056  with  40.2%  against  39.8%  edge  +0.4  t  +0.2
+   M1   TV 19/58         skip 10: n  1836  with  40.9%  against  40.3%  edge  +0.7  t  +0.4
+   M1   TV 19/58         skip 20: n  1526  with  39.3%  against  39.2%  edge  +0.1  t  +0.1
+   M5   TV 19/58         skip  0: n   452  with  42.9%  against  38.7%  edge  +4.2  t  +1.2
+   M5   TV 19/58         skip  5: n   409  with  39.1%  against  41.1%  edge  -2.0  t  -0.4
+   M5   TV 19/58         skip 10: n   363  with  40.8%  against  40.2%  edge  +0.6  t  +0.1
+   M5   TV 19/58         skip 20: n   308  with  37.7%  against  41.2%  edge  -3.6  t  -0.8
+   M15  TV 19/58         skip  0: n   142  with  52.8%  against  30.3%  edge +22.5  t  +3.3
+   M15  TV 19/58         skip  5: n   134  with  39.6%  against  43.3%  edge  -3.7  t  -0.5
+   M15  TV 19/58         skip 10: n   118  with  38.1%  against  38.1%  edge  +0.0  t  +0.0
+   M15  TV 19/58         skip 20: n   103  with  32.0%  against  47.6%  edge -15.5  t  -1.7
+   M1   TV 19/64         skip  0: n  2243  with  39.6%  against  39.9%  edge  -0.3  t  -0.1
+   M1   TV 19/64         skip  5: n  1966  with  39.7%  against  40.9%  edge  -1.2  t  -0.7
+   M1   TV 19/64         skip 10: n  1756  with  40.5%  against  40.4%  edge  +0.1  t  +0.1
+   M1   TV 19/64         skip 20: n  1480  with  38.9%  against  39.9%  edge  -1.0  t  -0.5
+   M5   TV 19/64         skip  0: n   450  with  41.1%  against  40.2%  edge  +0.9  t  +0.2
+   M5   TV 19/64         skip  5: n   400  with  40.2%  against  40.2%  edge  +0.0  t  +0.0
+   M5   TV 19/64         skip 10: n   350  with  42.0%  against  40.6%  edge  +1.4  t  +0.3
+   M5   TV 19/64         skip 20: n   305  with  37.4%  against  43.3%  edge  -5.9  t  -1.3
+   M15  TV 19/64         skip  0: n   137  with  48.9%  against  35.8%  edge +13.1  t  +1.8
+   M15  TV 19/64         skip  5: n   128  with  41.4%  against  42.2%  edge  -0.8  t  -0.1
+   M15  TV 19/64         skip 10: n   117  with  39.3%  against  41.0%  edge  -1.7  t  -0.2
+   M15  TV 19/64         skip 20: n    99  with  33.3%  against  42.4%  edge  -9.1  t  -1.1
+   M1   TV 19/66         skip  0: n  2212  with  39.6%  against  40.1%  edge  -0.5  t  -0.3
+   M1   TV 19/66         skip  5: n  1940  with  39.9%  against  41.0%  edge  -1.0  t  -0.6
+   M1   TV 19/66         skip 10: n  1742  with  40.7%  against  40.2%  edge  +0.5  t  +0.2
+   M1   TV 19/66         skip 20: n  1461  with  39.0%  against  39.8%  edge  -0.8  t  -0.4
+   M5   TV 19/66         skip  0: n   444  with  41.4%  against  39.6%  edge  +1.8  t  +0.5
+   M5   TV 19/66         skip  5: n   395  with  40.8%  against  39.5%  edge  +1.3  t  +0.3
+   M5   TV 19/66         skip 10: n   343  with  44.0%  against  39.9%  edge  +4.1  t  +0.8
+   M5   TV 19/66         skip 20: n   300  with  38.3%  against  43.3%  edge  -5.0  t  -1.0
+   M15  TV 19/66         skip  0: n   140  with  45.0%  against  40.7%  edge  +4.3  t  +0.5
+   M15  TV 19/66         skip  5: n   128  with  40.6%  against  43.0%  edge  -2.3  t  -0.3
+   M15  TV 19/66         skip 10: n   116  with  38.8%  against  39.7%  edge  -0.9  t  -0.1
+   M15  TV 19/66         skip 20: n    99  with  29.3%  against  46.5%  edge -17.2  t  -2.2
+   M1   TV 20/62         skip  0: n  2252  with  39.7%  against  39.8%  edge  -0.0  t  -0.0
+   M1   TV 20/62         skip  5: n  1960  with  39.8%  against  40.8%  edge  -1.0  t  -0.6
+   M1   TV 20/62         skip 10: n  1764  with  40.8%  against  40.4%  edge  +0.4  t  +0.2
+   M1   TV 20/62         skip 20: n  1485  with  38.9%  against  39.2%  edge  -0.3  t  -0.1
+   M5   TV 20/62         skip  0: n   447  with  41.4%  against  40.9%  edge  +0.4  t  +0.1
+   M5   TV 20/62         skip  5: n   398  with  40.7%  against  39.4%  edge  +1.3  t  +0.3
+   M5   TV 20/62         skip 10: n   350  with  42.9%  against  39.4%  edge  +3.4  t  +0.7
+   M5   TV 20/62         skip 20: n   305  with  38.0%  against  43.6%  edge  -5.6  t  -1.2
+   M15  TV 20/62         skip  0: n   135  with  49.6%  against  37.0%  edge +12.6  t  +1.6
+   M15  TV 20/62         skip  5: n   127  with  40.9%  against  43.3%  edge  -2.4  t  -0.3
+   M15  TV 20/62         skip 10: n   116  with  37.9%  against  42.2%  edge  -4.3  t  -0.6
+   M15  TV 20/62         skip 20: n   100  with  36.0%  against  39.0%  edge  -3.0  t  -0.3
+   M1   TV 21/50         skip  0: n  2427  with  39.7%  against  40.2%  edge  -0.5  t  -0.3
+   M1   TV 21/50         skip  5: n  2120  with  39.8%  against  39.7%  edge  +0.1  t  +0.1
+   M1   TV 21/50         skip 10: n  1911  with  41.3%  against  39.4%  edge  +1.9  t  +1.2
+   M1   TV 21/50         skip 20: n  1585  with  39.2%  against  39.6%  edge  -0.4  t  -0.2
+   M5   TV 21/50         skip  0: n   467  with  43.3%  against  36.6%  edge  +6.6  t  +1.8
+   M5   TV 21/50         skip  5: n   415  with  36.4%  against  42.7%  edge  -6.3  t  -1.5
+   M5   TV 21/50         skip 10: n   370  with  41.4%  against  39.2%  edge  +2.2  t  +0.5
+   M5   TV 21/50         skip 20: n   320  with  39.1%  against  40.9%  edge  -1.9  t  -0.4
+   M15  TV 21/50         skip  0: n   156  with  47.4%  against  34.6%  edge +12.8  t  +1.8
+   M15  TV 21/50         skip  5: n   138  with  42.0%  against  42.8%  edge  -0.7  t  -0.1
+   M15  TV 21/50         skip 10: n   123  with  43.9%  against  32.5%  edge +11.4  t  +1.4
+   M15  TV 21/50         skip 20: n   109  with  30.3%  against  48.6%  edge -18.3  t  -2.1
+   M1   TV 21/56         skip  0: n  2275  with  39.6%  against  40.0%  edge  -0.4  t  -0.3
+   M1   TV 21/56         skip  5: n  2014  with  39.7%  against  40.1%  edge  -0.4  t  -0.2
+   M1   TV 21/56         skip 10: n  1815  with  41.0%  against  39.9%  edge  +1.0  t  +0.6
+   M1   TV 21/56         skip 20: n  1516  with  38.6%  against  39.4%  edge  -0.9  t  -0.4
+   M5   TV 21/56         skip  0: n   445  with  42.9%  against  39.3%  edge  +3.6  t  +1.0
+   M5   TV 21/56         skip  5: n   397  with  37.8%  against  41.1%  edge  -3.3  t  -0.7
+   M5   TV 21/56         skip 10: n   356  with  41.6%  against  41.0%  edge  +0.6  t  +0.1
+   M5   TV 21/56         skip 20: n   307  with  38.8%  against  39.7%  edge  -1.0  t  -0.2
+   M15  TV 21/56         skip  0: n   142  with  48.6%  against  34.5%  edge +14.1  t  +2.0
+   M15  TV 21/56         skip  5: n   131  with  38.9%  against  42.7%  edge  -3.8  t  -0.5
+   M15  TV 21/56         skip 10: n   120  with  33.3%  against  42.5%  edge  -9.2  t  -1.4
+   M15  TV 21/56         skip 20: n   104  with  33.7%  against  43.3%  edge  -9.6  t  -1.1
+   M1   TV 23/42         skip  0: n  2575  with  39.7%  against  40.2%  edge  -0.5  t  -0.3
+   M1   TV 23/42         skip  5: n  2239  with  38.8%  against  40.7%  edge  -1.9  t  -1.2
+   M1   TV 23/42         skip 10: n  2015  with  40.9%  against  39.7%  edge  +1.2  t  +0.7
+   M1   TV 23/42         skip 20: n  1652  with  39.4%  against  40.0%  edge  -0.5  t  -0.3
+   M5   TV 23/42         skip  0: n   494  with  40.3%  against  38.5%  edge  +1.8  t  +0.5
+   M5   TV 23/42         skip  5: n   434  with  36.9%  against  41.2%  edge  -4.4  t  -1.0
+   M5   TV 23/42         skip 10: n   385  with  42.1%  against  38.2%  edge  +3.9  t  +0.9
+   M5   TV 23/42         skip 20: n   330  with  41.8%  against  39.4%  edge  +2.4  t  +0.5
+   M15  TV 23/42         skip  0: n   157  with  46.5%  against  32.5%  edge +14.0  t  +1.8
+   M15  TV 23/42         skip  5: n   142  with  43.0%  against  39.4%  edge  +3.5  t  +0.5
+   M15  TV 23/42         skip 10: n   130  with  46.2%  against  34.6%  edge +11.5  t  +1.3
+   M15  TV 23/42         skip 20: n   116  with  29.3%  against  50.9%  edge -21.6  t  -2.6
+   M1   Zee 9/50         skip  0: n  3758  with  40.0%  against  40.6%  edge  -0.6  t  -0.5
+   M1   Zee 9/50         skip  5: n  2991  with  40.7%  against  39.9%  edge  +0.8  t  +0.5
+   M1   Zee 9/50         skip 10: n  2461  with  41.0%  against  39.7%  edge  +1.3  t  +0.7
+   M1   Zee 9/50         skip 20: n  1841  with  39.9%  against  40.5%  edge  -0.6  t  -0.3
+   M5   Zee 9/50         skip  0: n   723  with  40.8%  against  40.9%  edge  -0.1  t  -0.0
+   M5   Zee 9/50         skip  5: n   579  with  39.7%  against  41.6%  edge  -1.9  t  -0.5
+   M5   Zee 9/50         skip 10: n   484  with  41.3%  against  40.7%  edge  +0.6  t  +0.1
+   M5   Zee 9/50         skip 20: n   361  with  42.4%  against  39.1%  edge  +3.3  t  +0.7
+   M15  Zee 9/50         skip  0: n   236  with  42.4%  against  42.8%  edge  -0.4  t  -0.1
+   M15  Zee 9/50         skip  5: n   191  with  40.3%  against  45.0%  edge  -4.7  t  -0.8
+   M15  Zee 9/50         skip 10: n   163  with  42.9%  against  38.7%  edge  +4.3  t  +0.6
+   M15  Zee 9/50         skip 20: n   123  with  36.6%  against  46.3%  edge  -9.8  t  -1.2
+ M1: mean edge IS +0.34  OOS -0.17  | OOS edge > 0 in 116/245
+ M5: mean edge IS -1.33  OOS +0.21  | OOS edge > 0 in 110/245
+ M15: mean edge IS -0.62  OOS -0.00  | OOS edge > 0 in 103/210
+ all: corr(IS edge, OOS edge) across combos +0.32
+
+  2-pip: best Jan-Jun combo M15 TV 19/64 skip 3 judged on Jul-Nov (n 133), WITH the EMA order
+     python 53%  ->  expect ~37% in MT5 (python overstates by ~16)
+     needs 50% -> expected margin -13 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  2-pip: same moments, AGAINST the EMA order
+     python 41%  ->  expect ~25% in MT5 (python overstates by ~16)
+     needs 50% -> expected margin -25 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  5-pip: best Jan-Jun combo M15 TV 20/62 skip 30 judged on Jul-Nov (n 80), WITH the EMA order
+     python 39%  ->  expect ~23% in MT5 (python overstates by ~16)
+     needs 50% -> expected margin -27 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.
+  5-pip: same moments, AGAINST the EMA order
+     python 36%  ->  expect ~20% in MT5 (python overstates by ~16)
+     needs 50% -> expected margin -30 — would LOSE
+     NOT PROMOTED. Only MT5 or live fills decide.

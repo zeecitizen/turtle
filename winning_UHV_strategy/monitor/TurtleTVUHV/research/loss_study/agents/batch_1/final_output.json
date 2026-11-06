@@ -1,0 +1,550 @@
+{
+ "losses": [
+  {
+   "id": "0306-084826-B",
+   "comment": "BUY 1.16122, Fri 13:48 PKT (08:48 UTC), -230$. A 15-pip range (1.1603-1.1618) for 90 minutes with a falling ceiling: highs 12:20 PKT 1.1618, 12:50 1.1616, 13:00 1.1615, 13:43 1.1614. The last rally (1.16025 at 13:28 -> 1.1614 at 13:43) came on shrinking volume (95-135 ticks vs 200-290 in the 13:00-13:20 sell-off) and turned the camel GREEN x2; the UHV (13:46 red, 166 ticks) was a small pullback candle and the breakout fired 2.8 pips under the 13:43 high, under three lower highs. The breakout tick was the top (best_R -0.013): price never printed 0.1 pip above the fill and slid 25 pips in 30 minutes. Twin 0306-083824-B bought the SAME range 10 minutes earlier (1.16102, same falling ceiling, same weak-volume rally, camel GREEN x1) and won by 0.1 pip before the same collapse; twin 0306-073354-B bought a fresh high in the 11:00-12:20 up-leg and won. Nothing measurable before the white line separates the loss from the 13:38 twin (trigger-tick spread 0.5 pip on both; fill 0.9 vs 0.5 pip past the level). The range ceiling is visible, but 'fill at an older swing' scored lift 0.95 over all trades - not a fix.",
+   "cause": "into resistance (range ceiling), unavoidable with tested rules",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0306-102926-B",
+   "comment": "BUY 1.15843, Fri 15:29 PKT (10:29 UTC), -281$. A 32-pip slide (1.1604 at 13:59 -> 1.1572 at 14:53) then a 70-minute base 1.1572-1.1583 with two green humps (camel GREEN x1). The UHV level was 1.15816; the trigger tick (bid 1.15823 / ask 1.15828) had a normal 0.5-pip spread, but in the 0.34 s before the simulated fill (InpUhvLatency 0.3) the bid spiked 1.5 pips and the buy filled at the ask 1.15843 - the top of that micro-spike, 2.7 pips above the level (the twins filled 0.5-0.6 pip above theirs). The 0.1-pip target needed the bid at 1.15844 and it never got there (best_R -0.014); the base broke and the 28-pip stop (deep 6.4-pip retracement + 19) went at 12:09 UTC. Twins 0306-101504-B (15:15) and 0306-100357-B (15:03) bought the same base with normal fills and won. At the trigger moment nothing separated it from the twins (trigger-tick spread 0.5-0.6 pip on all three); the tell is the bad fill itself, which exists only after the order is sent. rule_buy_spread_1p5 / rule_slip_1p5 remove it in the harness because they read the fill, so live they could only be an 'eject on a fill >= 1.5 pips past the level' (which costs the spread), not a skip. Not avoidable before the entry.",
+   "cause": "spike fill during the 0.3-s order latency (filled at a micro-top)",
+   "avoidable_before_entry": false,
+   "rule_ids": [
+    "rule_buy_spread_1p5",
+    "rule_slip_1p5",
+    "rule_time_or_spread",
+    "rule_buy_spread_2p0",
+    "rule_time_or_slip"
+   ]
+  },
+  {
+   "id": "0306-212806-B",
+   "comment": "BUY 1.16185, Sat 02:28 PKT = Fri 21:28 UTC = 16:28 New York, -12$ (forced close). The last half hour of the trading week (before US DST the week closes 22:00 UTC; the engine flattens at 21:58). Price had ground 19 pips higher in the hour (1.1597 -> 1.1618) on thin volume (last hour 0.61x the 10-hour average) and the buy fired at a fresh 90-bar high. The breakout tick was the top (best_R -0.005); price dribbled 1.2 pips lower and the engine closed the trade at 21:58:58 UTC for -12$ (the faded drop to 1.1547 is Monday's gap). Twins (00:16 / 00:32 PKT Sat = 14:16 / 14:32 NY) were ordinary range buys two hours earlier. A clock problem, not a setup problem: a 0.1-pip scalp entered 30 minutes before the weekly close has no time to wait out a dip. Fixed by rule_friday_last4h, rule_rollover_2h, rule_time_windows, rule_time_or_spread. Small in dollars - lift counts it like a full stop.",
+   "cause": "market close (32 min before the weekly close)",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "rule_rollover_2h",
+    "rule_friday_last4h",
+    "rule_time_windows",
+    "rule_time_or_spread",
+    "rule_friday_last3h",
+    "rule_friday_last6h",
+    "rule_time_or_slip"
+   ]
+  },
+  {
+   "id": "0309-043015-S",
+   "comment": "SELL 1.15210, Mon 09:30 PKT (04:30 UTC), -231$. Range day (16-pip 90-bar range). Price fell 1.1528 (08:00) -> 1.1513 (08:45), then rallied in one impulsive leg back to 1.1525 (09:00-09:07, three big green candles) and stalled in a 4-pip flag 1.1521-1.1525 for 20 minutes. The camel still said RED x2 (older lower lows), so the engine sold the break of the flag floor (UHV 09:25, level 1.15214) - selling a bull flag after a V-recovery that erased 80% of the drop. The sell tick was the low (best_R -0.022); price popped to 1.1528 and later ran to the stop. Twin 0309-031016-S (08:10) sold a similar post-rally pullback at 1.15245 and won; twin 0309-060558-S sold after a news spike and won. The V-recovery is visible, but none of my structure rules even fire on it (structure_against, fresh_flip_after_opp), and they are not selective anyway (x1.08, x0.79). Not avoidable with what was tested.",
+   "cause": "counter-structure (sold a bull flag after a V-recovery)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0309-080004-B",
+   "comment": "BUY 1.15650, Mon 13:00:04 PKT = 08:00:04 UTC, -235$. A 30-pip range with a ceiling at 1.1564-1.1566 tested at 11:35, 12:42 and 12:55 PKT; price had climbed 18 pips in the hour into it (fill at the 90-bar high, 0.0 pip of room). The buy fired 4 seconds into 08:00 UTC - the London open in March (UK still on GMT) - breaking the triple top by 0.8 pip. The open brought heavy selling (400-550 ticks/min): the breakout tick was the exact top (best_R 0.000) and price fell 25 pips in 18 minutes. Twin 0309-075007-B bought the same ceiling 10 minutes earlier (1.15621) and won by 0.7 pip before the drop; twin 0309-085702-B bought the low after the drop and won. Visible before entry: triple top + the first seconds of the London session. Neither generalises over all trades: extended_at_extreme train x2.44 / test x0.00, top_of_hour train x0.97 / test x2.17. Not avoidable with the tested rules.",
+   "cause": "into resistance at the London open (session open)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0310-004311-B",
+   "comment": "BUY 1.16347, Tue 05:43 PKT (00:43 UTC), -238$. A 23-pip impulse 1.1612 (05:08) -> 1.1635 (05:38) on rising volume (300-450 ticks), a 4-pip dip, then the breakout at the top (fill 0.7 pip under the 90-bar high). Buying the top of a vertical leg: the tick was the high (best_R -0.017), the leg reversed to 1.1622 within 15 minutes and later to the stop. Twin 0309-205521-B (01:55 PKT) did exactly the same - bought a fresh high after an 11-pip run - and won with a 6-pip spike; twin 0310-040737-B bought a slow drift low and won. The extended leg is visible but appears in winners just as often (extended_at_extreme: test lift x0.00). Not avoidable with the tested rules.",
+   "cause": "exhausted trend (bought the top of a vertical 23-pip leg)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0310-055001-S",
+   "comment": "SELL 1.16167, Tue 10:50:01 PKT (05:50 UTC), -220$. An up-staircase: 1.1610 -> 1.1619 (10:02-10:15), then a 5-pip shelf. Price dipped to the shelf floor 1.16145 (10:44) and bounced 5 pips in three green candles (10:46-10:48); the 10:48 green (123 ticks) was the UHV, the 10:49 red (136 ticks, louder than the UHV) closed right on the UHV low, and the sell fired 1 second into 10:50 with 3 ticks in the minute - selling into a floor that had just held, on a fresh RED x1 camel against the higher lows. The tick was the low (best_R -0.014); price climbed 13 pips in 30 minutes, then to the stop. Twin 0310-053212-S sold the same shelf 18 minutes earlier at 1.16164 and won by 0.1 pip before the same rally. No measure separates them. Not avoidable.",
+   "cause": "into support (sold the shelf floor against higher lows)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0310-141312-S",
+   "comment": "SELL 1.16281, Tue 19:13 PKT (14:13 UTC), -216$. Price rallied 21 pips 1.1628 (17:43) -> 1.1649 (18:26) and gave it all back by 19:10; the sell fired exactly at the origin of that rally (the 17:43-17:45 breakout candles, 1.1627-1.1630), 1.3 pips above the 90-bar low. The last 8 candles before the entry (19:05-19:12) printed long lower wicks - buyers defending the origin. The tick was the low (best_R -0.005); price rallied 22 pips to the stop. Twin 0310-135202-S sold the same slide 20 minutes earlier at 1.16319, 4 pips above the support, and won; twin 0310-151511-S sold a later top. Visible: demand zone + rejection wicks. The old swing low sits 1.3 pips under the fill, outside the 0.3-pip S/R tolerance and the 1-pip 'at the extreme' test, so neither S/R rule fires - and both are not selective anyway (sr_at_fill x0.95, extended_at_extreme test x0.00). Not avoidable with the tested rules.",
+   "cause": "into support (origin of the prior rally after a 21-pip slide)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0311-001150-S",
+   "comment": "SELL 1.16117, Wed 05:11 PKT (00:11 UTC), -216$. An hour of dead Asian drift (20-80 ticks/min, 1.1603 -> 1.1612), then from 05:00 PKT volume exploded: a 6-pip drop to 1.16055 (05:08), one 8-pip green bar at 05:09 (307 ticks, ~3.5 ATR) and the UHV at 05:10 (344 ticks). The sell broke the UHV low with 202 ticks already in the minute - fading a wide-range bullish impulse inside a volatility burst. Price ran 12 pips up within 3 minutes. Both twins (05:01, 05:07) were sells in the same burst and won by a hair, so even here the burst alone is not the tell; the impulse bar right before the UHV is. Tested as rule_impulse_bar_against: it fires here but removes 2 losers / 80 winners over all trades, test lift x0.00 - not selective (the thin hour before the burst, thin_hour outside the time windows, is x1.42 / x2.01 - also not selective). Not avoidable.",
+   "cause": "counter-impulse (faded an 8-pip bullish bar in a volume burst)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0311-135106-S",
+   "comment": "SELL 1.15808, Wed 18:51 PKT (13:51 UTC = 09:51 New York), -211$. After a fall from 1.1605 (17:33) price ranged 1.1578-1.1590 for an hour; the floor 1.1578-1.1580 held at 17:53, 18:02 and 18:47. The sell fired on that floor (UHV 18:49), 9 minutes before the 10:00 New York data slot; at about 19:00 PKT a spike ran 30 pips (1.1581 -> 1.1611) and took the stop. Twins 0311-142225-S (19:22) and 0311-143113-S (19:31) sold after the spike and won. Visible: a triple-bottom floor and the clock. A US-data-window rule (NY 08:20-08:40 / 09:50-10:10) scored train x0.86 / test x1.81 - not selective. Not avoidable with the tested rules.",
+   "cause": "news/spike (10:00 NY data slot) at a triple-bottom floor",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0312-062215-S",
+   "comment": "SELL 1.15419, Thu 11:22 PKT (06:22 UTC), -237$. A clean up-leg 1.1532 -> 1.1549 (09:55-11:13) with higher lows at 10:07, 10:55 and 11:17; the camel flipped RED x1 on a micro-wiggle (11:09 -> 11:13 -> 11:17, ending a fraction lower) right after three green humps. The sell fired at the pullback low 1.15419 - selling the first dip of an uptrend. It went 0.004R in favour (a fraction of a pip, not enough to clear the spread), then climbed 9 pips and later to the stop. Twin 0312-052504-S sold a spike-and-fade and won; twin 0312-045611-S sold a real downtrend and won. Visible: the higher-low staircase. rule_fresh_flip_after_opp catches it but removes winners faster than losers (x0.79). Not avoidable.",
+   "cause": "counter-structure (camel micro-flip against a higher-low staircase)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0312-172306-B",
+   "comment": "BUY 1.15306, Thu 22:23 PKT (17:23 UTC = 13:23 New York), -305$. A choppy 19-pip range (1.1513-1.1532) with alternating humps. The UHV was 15 minutes old (22:08), the retracement 10.4 pips deep (stop 30.1 pips) and the level 1.15299 sat at the range ceiling (21:22 and 22:06 highs at 1.1532; 1.9 pips of room). Buying the top of a range: the tick was the high (best_R -0.017), price slid back into the range and eventually to the stop - the biggest loss in the batch because of the deep retracement. Twins 0312-163854-B and 0312-153903-B bought mid-range (1.15236 / 1.1520) and won. Visible: range ceiling, stale UHV, deep retracement - both rules fire on it but neither is selective over all trades (old_uhv x1.04, deep_retracement x0.95). Not avoidable.",
+   "cause": "chop/range (bought the range ceiling with a stale UHV)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0313-195816-B",
+   "comment": "BUY 1.14229, Sat 00:58 PKT = Fri 19:58 UTC = 15:58 New York, -72$ (forced close). A steady 75-minute downtrend (1.1440 -> 1.1420, seven red humps in a row); the camel flipped GREEN x1 on a 1-pip double bottom (00:52-00:57) and the buy fired 62 minutes before the weekly close. The tick was the high (best_R -0.018); price slid 7 pips and the engine flattened the trade at 20:58:58 UTC for -72$. Twins (22:36 / 22:43 PKT) bought a flat range two hours earlier. Two tells, both visible: the counter-trend micro flip (not selective on its own: x0.79) and the last hour of the week (selective). Fixed by rule_friday_last4h, rule_time_windows, rule_time_or_spread. Small in dollars.",
+   "cause": "market close (62 min before the weekly close) + counter-trend flip",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "rule_friday_last4h",
+    "rule_time_windows",
+    "rule_time_or_spread",
+    "rule_friday_last3h",
+    "rule_friday_last6h",
+    "rule_time_or_slip"
+   ]
+  },
+  {
+   "id": "0316-052008-B",
+   "comment": "BUY 1.14421, Mon 10:20 PKT (05:20 UTC), -210$. An orderly 90-minute grind lower 1.1453 (08:50) -> 1.1440 (10:08), red humps all the way, and a 1-pip double bottom (10:08 / 10:18) flipped the camel GREEN x1. The buy (6 ticks into the minute) fired at the top of that micro-base; the tick was the high (best_R -0.019) and the grind resumed (stop after a further 20 pips). Twins 0316-032914-B and 0316-030310-B bought a flat range two hours earlier and won. Visible: a micro-base inside a 13-pip down-channel. structure_against fires on it but is not selective (x1.08); the 120-candle move was under the 12-ATR trend test. Not avoidable.",
+   "cause": "counter-structure (bought a 1-pip base inside a down-channel)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0316-132404-S",
+   "comment": "SELL 1.14802, Mon 18:24 PKT (13:24 UTC = 09:24 New York), -210$. A 15-pip range; price made a low at 17:58 (1.1472) with higher lows since; at 18:22 a 4.8-pip green bar (166 ticks) ripped from 1.14762 to 1.1481 and the UHV (18:23, 243 ticks) was the small green follow-through bar. The sell broke the UHV low 4 seconds into 18:24 - selling 1 pip under a fresh bullish thrust. The tick was the low (best_R -0.024): price rallied 20 pips in 30 minutes. Twins 0316-125510-S and 0316-124431-S sold range tops in a calmer tape and won. Visible: the thrust bar right before the UHV (same picture as 0311-001150-S). rule_impulse_bar_against (bar >= 2.5 ATR) does not fire here (4.8 pips = 2.3 ATR) and is not selective anyway (test x0.00); sr_at_fill and uhv_last_bar fire but are not selective (x0.95, x1.03). Not avoidable.",
+   "cause": "counter-impulse (sold 1 pip under a fresh bullish thrust)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0316-163307-S",
+   "comment": "SELL 1.14783, Mon 21:33 PKT (16:33 UTC = 12:33 New York), -213$. Price fell 20 pips (1.1500 -> 1.1480) at 20:45-20:52, bounced to 1.1492, then fell again 14 pips into 21:31; the sell fired at 1.14783, 0.8 pip under the 20:52 low - selling into a double bottom. The tick was the low (best_R -0.014); the double bottom held and price rallied 21 pips to the stop. Twin 0316-173319-S sold a range top an hour later and won; twin 0316-152810-S sold a pullback and won. Visible: the double bottom. Over all trades the S/R measures do not separate (sr_at_fill x0.95, extended_at_extreme test x0.00). Not avoidable.",
+   "cause": "into support (double bottom after a 14-pip leg)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0316-200548-B",
+   "comment": "BUY 1.15104, Tue 01:05 PKT (Mon 20:05 UTC = 16:05 New York), -236$. A 15-pip drop out of the 1.1515-1.1525 range (00:37-00:50), a small base 1.1506-1.1510 with camel GREEN x2 on tiny humps, and the buy fired 55 minutes before the 17:00 NY rollover as the US session emptied (volume after the entry fell to 30-80 ticks). The tick was the high (best_R -0.004); the drift lower continued through the rollover to the stop. Twins 0316-193650-B and 0316-192926-B (15:29-15:36 NY) bought the range top 30 minutes earlier and won by a hair before the same drop. Visible: the clock. Fixed by rule_rollover_2h, rule_time_windows, rule_time_or_spread.",
+   "cause": "market close (55 min before the daily rollover, US session emptying)",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "rule_rollover_2h",
+    "rule_time_windows",
+    "rule_time_or_spread",
+    "rule_time_or_slip"
+   ]
+  },
+  {
+   "id": "0317-062554-S",
+   "comment": "SELL 1.14718, Tue 11:25 PKT (06:25 UTC), -217$. A 33-pip waterfall 1.1497 (10:40) -> 1.1466 (11:14, a hammer low with a long wick), camel RED x8. Then a V-bounce to 1.1474 by 11:23 that took out the last two lower highs; the sell fired on the first dip of that bounce, 5 pips above the low. The tick was the low (best_R -0.019) and price climbed 10 pips, later to the stop. Twin 0317-061221-S sold the very bottom 13 minutes earlier (1.14697) and won by 0.1 pip; twin 0317-060057-S sold mid-waterfall and won. Visible: a climactic low and a bounce that broke the last lower high, while the camel (it reads lows only) still said RED x8. exhausted_streak (camStk >= 6) scored train x1.93 / test x1.05 - not selective. Not avoidable.",
+   "cause": "exhausted trend (sold the first dip of a V-bounce after RED x8)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0318-120215-B",
+   "comment": "BUY 1.15482, Wed 17:02 PKT (12:02 UTC = 08:02 New York), -230$. A spike to 1.1555 (16:20) then a 25-pip crash to 1.1530 in 7 minutes (16:22-16:27, 530 ticks), then a volatile 19-pip recovery to 1.1549 - and the buy fired at 1.15482, inside the zone where the crash started (16:22 breakdown bar 1.1548-1.1550). The last hour's volume was 2.2x the 10-hour average. The tick was the high (best_R -0.013); price fell 23 pips to the stop. Twin 0318-114914-B bought the same recovery lower (1.15406) and won; twin 0318-111452-B bought the pre-spike high and won. Visible: a lower-high retest of the crash origin. sr_at_fill fires on it but is not selective (x0.95). Not avoidable.",
+   "cause": "into resistance (lower-high retest of a crash origin, volatile tape)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  },
+  {
+   "id": "0318-205350-S",
+   "comment": "SELL 1.14500, Thu 01:53 PKT (Wed 20:53 UTC = 16:53 New York), -259$. A 30-pip downtrend (1.1480 -> 1.1451) and a small bounce to 1.1456 with a 13-minute-old UHV (01:40). The sell fired 6 minutes before the 17:00 NY rollover; the breakout bid was 1.14513 but the fill came at 1.14500 - 1.3 pips worse, 1.5 pips beyond the level - as liquidity thinned. After the rollover volume vanished (0-60 ticks/min) and price drifted up 25 pips to the stop at 21:45 UTC. Twins 0318-202204-S (16:22 NY) and 0318-201126-S (16:11 NY) sold the same trend 30-40 minutes earlier and won. Visible: the clock and the slipped fill. Fixed by rule_rollover_2h, rule_time_windows, rule_time_or_spread, rule_slip_1p5 (and the api.py example window).",
+   "cause": "market close (6 min before the daily rollover) + slipped fill",
+   "avoidable_before_entry": true,
+   "rule_ids": [
+    "rule_rollover_2h",
+    "rule_time_windows",
+    "rule_slip_1p5",
+    "rule_time_or_spread",
+    "rule_rollover_tight",
+    "rule_time_or_slip"
+   ]
+  },
+  {
+   "id": "0318-230007-S",
+   "comment": "SELL 1.14553, Thu 04:00:07 PKT (23:00:07 UTC = 19:00 New York), -223$. A quiet post-rollover tape (last hour 0.37x the 10-hour volume). Price fell 1.1465 -> 1.1451 (03:00-03:20), then climbed steadily with higher lows (03:22, 03:32, 03:41, 03:48); the UHV was 16 minutes old (03:44). The sell fired 7 seconds into 04:00 PKT against that staircase; the tick was the low (best_R -0.014) and price climbed 6 pips, later to the stop. Twins 0318-221912-S and 0318-220000-S sold the earlier 03:00-03:20 drop and won. Visible: a sell against 40 minutes of higher lows, a thin tape, a stale UHV - thin_hour outside the time windows (x1.42 / x2.01), dead_last_bar outside the windows (x1.12 / x1.91), old_uhv (x1.04) and top_of_hour (x0.97 / x2.17) all fire on it and none is selective. Not avoidable.",
+   "cause": "counter-structure in a thin post-rollover tape (stale UHV)",
+   "avoidable_before_entry": false,
+   "rule_ids": []
+  }
+ ],
+ "rules": [
+  {
+   "rule_id": "rule_time_windows",
+   "idea": "OR of rule_rollover_2h and rule_friday_last4h.  [api.report printed: rule_time_windows removes 487 (losers 33 / winners 454) loss rate among removed 6.78% vs base 2.26% lift x3.0 | train x3.05 (21L/184W) test x3.04 (12L/270W) | WR 98.05% net +5,723$ | Zee's 22: 3 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    wd = (math.floor(ny / 86400) + 3) % 7\n    m = ny % 86400 / 60.0\n    return 960.0 <= m < 1080.0 or (wd == 4 and 780.0 <= m < 1020.0)",
+   "lift_all": 3.0,
+   "lift_train": 3.05,
+   "lift_test": 3.04,
+   "losers_removed": 33,
+   "winners_removed": 454,
+   "verdict": "GOOD - THE CLEAN KEEPER: pre-entry, clock only (rollover hours + Friday's last 4 h); stable across all window variants tried"
+  },
+  {
+   "rule_id": "rule_rollover_2h",
+   "idea": "Skip the hour before and the hour after the 17:00 New York rollover (spreads blow out, liquidity vanishes; on Fridays it is the forced weekly close).  [api.report printed: rule_rollover_2h removes 298 (losers 22 / winners 276) loss rate among removed 7.38% vs base 2.26% lift x3.27 | train x3.07 (13L/113W) test x3.74 (9L/163W) | WR 97.95% net +4,807$ | Zee's 22: 3 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    m = ny % 86400 / 60.0\n    return 960.0 <= m < 1080.0",
+   "lift_all": 3.27,
+   "lift_train": 3.07,
+   "lift_test": 3.74,
+   "losers_removed": 22,
+   "winners_removed": 276,
+   "verdict": "GOOD - half of the clean keeper"
+  },
+  {
+   "rule_id": "rule_friday_last4h",
+   "idea": "Skip Friday entries after 13:00 New York: London has gone home and any trade not at its 0.1-pip target is flattened at 16:58 NY - it cannot wait out a dip.  [api.report printed: rule_friday_last4h removes 246 (losers 22 / winners 224) loss rate among removed 8.94% vs base 2.26% lift x3.97 | train x4.25 (14L/84W) test x3.87 (8L/140W) | WR 97.97% net +3,756$ | Zee's 22: 3 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    wd = (math.floor(ny / 86400) + 3) % 7\n    m = ny % 86400 / 60.0\n    return wd == 4 and 780.0 <= m < 1020.0",
+   "lift_all": 3.97,
+   "lift_train": 4.25,
+   "lift_test": 3.87,
+   "losers_removed": 22,
+   "winners_removed": 224,
+   "verdict": "GOOD - half of the clean keeper (4 h chosen a priori; test x3.87 just under EXCELLENT)"
+  },
+  {
+   "rule_id": "rule_time_or_spread",
+   "idea": "Time windows + a fill-based buy-spread guard: skip NY 16:00-18:00 (rollover hours) OR Friday after 13:00 NY (last 4 h of the week) OR a BUY whose fill (ask) is >= 1.5 pips above the breakout bid (blown-out spread).  [api.report printed: rule_time_or_spread removes 504 (losers 36 / winners 468) loss rate among removed 7.14% vs base 2.26% lift x3.17 | train x3.13 (23L/196W) test x3.26 (13L/272W) | WR 98.09% net +6,472$ | Zee's 22: 4 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    wd = (math.floor(ny / 86400) + 3) % 7\n    m = ny % 86400 / 60.0\n    if 960.0 <= m < 1080.0 or (wd == 4 and 780.0 <= m < 1020.0):\n        return True\n    return t['side'] > 0 and t['fill'] - t['brk_hi_so_far'] >= 0.00015",
+   "lift_all": 3.17,
+   "lift_train": 3.13,
+   "lift_test": 3.26,
+   "losers_removed": 36,
+   "winners_removed": 468,
+   "verdict": "GOOD - best numbers, but its spread part - reads t['fill'], which the engine takes 0.3 s AFTER the trigger tick (InpUhvLatency): live it can only be an eject on a bad fill (costs the spread), not a skip; 41 of slip_1p5's 79 catches had a normal trigger-tick spread (latency spikes). Clean pre-entry version = trigger-tick spread, see trigger_spread.txt"
+  },
+  {
+   "rule_id": "rule_buy_spread_1p5",
+   "idea": "BUY with a blown-out spread: fill (ask) - breakout bid (brk_hi_so_far) >= 1.5 pips; the 0.1-pip target needs the bid to climb over the whole spread. Buys only (a sell fills at the bid, its spread is not in the setup fields).  [api.report printed: rule_buy_spread_1p5 removes 43 (losers 7 / winners 36) loss rate among removed 16.28% vs base 2.26% lift x7.22 | train x5.32 (5L/23W) test x9.54 (2L/13W) | WR 97.82% net +1,742$ | Zee's 22: 1 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return t['side'] > 0 and t['fill'] - t['brk_hi_so_far'] >= 0.00015",
+   "lift_all": 7.22,
+   "lift_train": 5.32,
+   "lift_test": 9.54,
+   "losers_removed": 7,
+   "winners_removed": 36,
+   "verdict": "EXCELLENT by the numbers but only 7 losers (2 in the test half) - reads t['fill'], which the engine takes 0.3 s AFTER the trigger tick (InpUhvLatency): live it can only be an eject on a bad fill (costs the spread), not a skip; 41 of slip_1p5's 79 catches had a normal trigger-tick spread (latency spikes). Clean pre-entry version = trigger-tick spread, see trigger_spread.txt"
+  },
+  {
+   "rule_id": "rule_slip_1p5",
+   "idea": "Symmetric: fill >= 1.5 pips beyond the UHV level in the trade direction (spread for buys, jump through the level for sells).  [api.report printed: rule_slip_1p5 removes 79 (losers 11 / winners 68) loss rate among removed 13.92% vs base 2.26% lift x6.17 | train x4.25 (7L/42W) test x9.54 (4L/26W) | WR 97.87% net +2,658$ | Zee's 22: 2 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return (t['fill'] - t['level']) * t['side'] >= 0.00015",
+   "lift_all": 6.17,
+   "lift_train": 4.25,
+   "lift_test": 9.54,
+   "losers_removed": 11,
+   "winners_removed": 68,
+   "verdict": "EXCELLENT by the numbers (11 losers, 4 in test) - reads t['fill'], which the engine takes 0.3 s AFTER the trigger tick (InpUhvLatency): live it can only be an eject on a bad fill (costs the spread), not a skip; 41 of slip_1p5's 79 catches had a normal trigger-tick spread (latency spikes). Clean pre-entry version = trigger-tick spread, see trigger_spread.txt"
+  },
+  {
+   "rule_id": "rule_buy_spread_2p0",
+   "idea": "Sensitivity variant: buy spread >= 2.0 pips.  [api.report printed: rule_buy_spread_2p0 removes 34 (losers 7 / winners 27) loss rate among removed 20.59% vs base 2.26% lift x9.13 | train x7.09 (5L/16W) test x11.0 (2L/11W) | WR 97.83% net +1,767$ | Zee's 22: 1 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return t['side'] > 0 and t['fill'] - t['brk_hi_so_far'] >= 0.0002",
+   "lift_all": 9.13,
+   "lift_train": 7.09,
+   "lift_test": 11.0,
+   "losers_removed": 7,
+   "winners_removed": 27,
+   "verdict": "EXCELLENT by the numbers (7 losers, 2 in test) - sensitivity variant - reads t['fill'], which the engine takes 0.3 s AFTER the trigger tick (InpUhvLatency): live it can only be an eject on a bad fill (costs the spread), not a skip; 41 of slip_1p5's 79 catches had a normal trigger-tick spread (latency spikes). Clean pre-entry version = trigger-tick spread, see trigger_spread.txt"
+  },
+  {
+   "rule_id": "rule_buy_spread_1p0",
+   "idea": "Sensitivity variant: buy spread >= 1.0 pip.  [api.report printed: rule_buy_spread_1p0 removes 112 (losers 12 / winners 100) loss rate among removed 10.71% vs base 2.26% lift x4.75 | train x2.42 (7L/79W) test x13.75 (5L/21W) | WR 97.87% net +2,186$ | Zee's 22: 2 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return t['side'] > 0 and t['fill'] - t['brk_hi_so_far'] >= 0.0001",
+   "lift_all": 4.75,
+   "lift_train": 2.42,
+   "lift_test": 13.75,
+   "losers_removed": 12,
+   "winners_removed": 100,
+   "verdict": "GOOD by the numbers but regime-dependent (buy fill-spread fell from ~0.5 to ~0.1 pip in June: train x2.42 vs test x13.75) - reads t['fill'], which the engine takes 0.3 s AFTER the trigger tick (InpUhvLatency): live it can only be an eject on a bad fill (costs the spread), not a skip; 41 of slip_1p5's 79 catches had a normal trigger-tick spread (latency spikes). Clean pre-entry version = trigger-tick spread, see trigger_spread.txt"
+  },
+  {
+   "rule_id": "rule_rollover_tight",
+   "idea": "Sensitivity variant of the rollover window: NY 16:30-18:00.  [api.report printed: rule_rollover_tight removes 178 (losers 18 / winners 160) loss rate among removed 10.11% vs base 2.26% lift x4.48 | train x3.82 (10L/68W) test x5.72 (8L/92W) | WR 97.93% net +4,401$ | Zee's 22: 2 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    m = ny % 86400 / 60.0\n    return 990.0 <= m < 1080.0",
+   "lift_all": 4.48,
+   "lift_train": 3.82,
+   "lift_test": 5.72,
+   "losers_removed": 18,
+   "winners_removed": 160,
+   "verdict": "GOOD - sensitivity variant of the rollover window (train x3.82 just under EXCELLENT)"
+  },
+  {
+   "rule_id": "rule_friday_last3h",
+   "idea": "Sensitivity variant of the Friday window: after 14:00 NY (4 h was chosen a priori; reported, not cherry-picked).  [api.report printed: rule_friday_last3h removes 182 (losers 18 / winners 164) loss rate among removed 9.89% vs base 2.26% lift x4.38 | train x4.75 (11L/58W) test x4.43 (7L/106W) | WR 97.93% net +3,357$ | Zee's 22: 3 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    wd = (math.floor(ny / 86400) + 3) % 7\n    m = ny % 86400 / 60.0\n    return wd == 4 and 840.0 <= m < 1020.0",
+   "lift_all": 4.38,
+   "lift_train": 4.75,
+   "lift_test": 4.43,
+   "losers_removed": 18,
+   "winners_removed": 164,
+   "verdict": "EXCELLENT - sensitivity variant; the 4 h window was chosen a priori (not cherry-picked)"
+  },
+  {
+   "rule_id": "rule_friday_last6h",
+   "idea": "Sensitivity variant of the Friday window: after 11:00 NY (London close).  [api.report printed: rule_friday_last6h removes 405 (losers 26 / winners 379) loss rate among removed 6.42% vs base 2.26% lift x2.85 | train x2.96 (16L/145W) test x2.93 (10L/234W) | WR 97.98% net +4,264$ | Zee's 22: 3 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    wd = (math.floor(ny / 86400) + 3) % 7\n    m = ny % 86400 / 60.0\n    return wd == 4 and 660.0 <= m < 1020.0",
+   "lift_all": 2.85,
+   "lift_train": 2.96,
+   "lift_test": 2.93,
+   "losers_removed": 26,
+   "winners_removed": 379,
+   "verdict": "GOOD - sensitivity variant (London-close start)"
+  },
+  {
+   "rule_id": "rule_time_or_slip",
+   "idea": "Keeper variant using the symmetric slip instead of the buy spread (adds sells that jumped through the level).  [api.report printed: rule_time_or_slip removes 534 (losers 36 / winners 498) loss rate among removed 6.74% vs base 2.26% lift x2.99 | train x2.89 (23L/214W) test x3.13 (13L/284W) | WR 98.08% net +6,275$ | Zee's 22: 4 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    wd = (math.floor(ny / 86400) + 3) % 7\n    m = ny % 86400 / 60.0\n    if 960.0 <= m < 1080.0 or (wd == 4 and 780.0 <= m < 1020.0):\n        return True\n    return (t['fill'] - t['level']) * t['side'] >= 0.00015",
+   "lift_all": 2.99,
+   "lift_train": 2.89,
+   "lift_test": 3.13,
+   "losers_removed": 36,
+   "winners_removed": 498,
+   "verdict": "GOOD - weaker than rule_time_or_spread (the sell-slip part adds 30 winners, 0 losers); its slip part - reads t['fill'], which the engine takes 0.3 s AFTER the trigger tick (InpUhvLatency): live it can only be an eject on a bad fill (costs the spread), not a skip; 41 of slip_1p5's 79 catches had a normal trigger-tick spread (latency spikes). Clean pre-entry version = trigger-tick spread, see trigger_spread.txt"
+  },
+  {
+   "rule_id": "rule_example_utc_close",
+   "idea": "Comparison only: the api.py docstring example, 20:45-21:15 UTC (not mine).  [api.report printed: rule_example_utc_close removes 79 (losers 11 / winners 68) loss rate among removed 13.92% vs base 2.26% lift x6.17 | train x5.58 (6L/26W) test x7.61 (5L/42W) | WR 97.87% net +2,021$ | Zee's 22: 2 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    x = t['t_in'] % 86400\n    return 74700 <= x <= 76500",
+   "lift_all": 6.17,
+   "lift_train": 5.58,
+   "lift_test": 7.61,
+   "losers_removed": 11,
+   "winners_removed": 68,
+   "verdict": "EXCELLENT - the api.py harness example (20:45-21:15 UTC), NOT a batch_1 finding; listed for comparison (during US DST it sits inside the rollover window)"
+  },
+  {
+   "rule_id": "rule_thin_hour",
+   "idea": "Dead market: last hour's tick volume < 40% of the last 10 hours' average.  [api.report printed: rule_thin_hour removes 373 (losers 21 / winners 352) loss rate among removed 5.63% vs base 2.26% lift x2.5 | train x2.43 (12L/135W) test x2.85 (9L/217W) | WR 97.92% net +5,345$ | Zee's 22: 4 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    k = t['k']\n    v = A.v\n    a = float(np.mean(v[max(k - 59, 0):k + 1]))\n    b = float(np.mean(v[max(k - 599, 0):k + 1]))\n    return b > 0 and a / b < 0.4",
+   "lift_all": 2.5,
+   "lift_train": 2.43,
+   "lift_test": 2.85,
+   "losers_removed": 21,
+   "winners_removed": 352,
+   "verdict": "NOT SELECTIVE - redundant with the time windows: raw x2.43/x2.85 passes the bar, but outside the windows only x1.42/x2.01 (rule_thin_hour_resid); do not ship separately"
+  },
+  {
+   "rule_id": "rule_thin_hour_resid",
+   "idea": "rule_thin_hour on trades outside the time windows (is it more than the clock?).  [api.report printed: rule_thin_hour_resid removes 247 (losers 9 / winners 238) loss rate among removed 3.64% vs base 2.26% lift x1.62 | train x1.42 (5L/100W) test x2.01 (4L/138W) | WR 97.79% net +1,585$ | Zee's 22: 3 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    wd = (math.floor(ny / 86400) + 3) % 7\n    m = ny % 86400 / 60.0\n    if 960.0 <= m < 1080.0 or (wd == 4 and 780.0 <= m < 1020.0):\n        return False\n    k = t['k']\n    v = A.v\n    a = float(np.mean(v[max(k - 59, 0):k + 1]))\n    b = float(np.mean(v[max(k - 599, 0):k + 1]))\n    return b > 0 and a / b < 0.4",
+   "lift_all": 1.62,
+   "lift_train": 1.42,
+   "lift_test": 2.01,
+   "losers_removed": 9,
+   "winners_removed": 238,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_dead_last_bar",
+   "idea": "The last closed candle's range < 0.35 ATR (dead candle before the breakout).  [api.report printed: rule_dead_last_bar removes 157 (losers 10 / winners 147) loss rate among removed 6.37% vs base 2.26% lift x2.82 | train x2.4 (5L/57W) test x3.76 (5L/90W) | WR 97.83% net +2,225$ | Zee's 22: 1 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    k = t['k']\n    a = A.atr[k]\n    return a > 0 and A.h[k] - A.l[k] < 0.35 * a",
+   "lift_all": 2.82,
+   "lift_train": 2.4,
+   "lift_test": 3.76,
+   "losers_removed": 10,
+   "winners_removed": 147,
+   "verdict": "NOT SELECTIVE - redundant with the time windows: raw x2.40/x3.76 passes, but outside the windows only x1.12/x1.91 (rule_dead_last_bar_resid); threshold came from a tail scan; do not ship separately"
+  },
+  {
+   "rule_id": "rule_dead_last_bar_resid",
+   "idea": "rule_dead_last_bar outside the time windows.  [api.report printed: rule_dead_last_bar_resid removes 128 (losers 4 / winners 124) loss rate among removed 3.12% vs base 2.26% lift x1.39 | train x1.12 (2L/51W) test x1.91 (2L/73W) | WR 97.76% net +590$ | Zee's 22: 1 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    wd = (math.floor(ny / 86400) + 3) % 7\n    m = ny % 86400 / 60.0\n    if 960.0 <= m < 1080.0 or (wd == 4 and 780.0 <= m < 1020.0):\n        return False\n    k = t['k']\n    a = A.atr[k]\n    return a > 0 and A.h[k] - A.l[k] < 0.35 * a",
+   "lift_all": 1.39,
+   "lift_train": 1.12,
+   "lift_test": 1.91,
+   "losers_removed": 4,
+   "winners_removed": 124,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_small_uhv",
+   "idea": "The UHV candle has < 50 ticks (thin market).  [api.report printed: rule_small_uhv removes 420 (losers 20 / winners 400) loss rate among removed 4.76% vs base 2.26% lift x2.11 | train x2.71 (12L/120W) test x1.99 (8L/280W) | WR 97.89% net +5,192$ | Zee's 22: 2 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return t['uhv_v'] < 50",
+   "lift_all": 2.11,
+   "lift_train": 2.71,
+   "lift_test": 1.99,
+   "losers_removed": 20,
+   "winners_removed": 400,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_small_uhv_resid",
+   "idea": "rule_small_uhv outside the time windows.  [api.report printed: rule_small_uhv_resid removes 298 (losers 8 / winners 290) loss rate among removed 2.68% vs base 2.26% lift x1.19 | train x1.58 (5L/89W) test x1.05 (3L/201W) | WR 97.76% net +1,174$ | Zee's 22: 1 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    wd = (math.floor(ny / 86400) + 3) % 7\n    m = ny % 86400 / 60.0\n    if 960.0 <= m < 1080.0 or (wd == 4 and 780.0 <= m < 1020.0):\n        return False\n    return t['uhv_v'] < 50",
+   "lift_all": 1.19,
+   "lift_train": 1.58,
+   "lift_test": 1.05,
+   "losers_removed": 8,
+   "winners_removed": 290,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_brk_ratio_0p9",
+   "idea": "The breakout minute already has >= 90% of the UHV's ticks (the 'quieter breakout' is barely quieter).  [api.report printed: rule_brk_ratio_0p9 removes 188 (losers 8 / winners 180) loss rate among removed 4.26% vs base 2.26% lift x1.89 | train x1.79 (5L/78W) test x2.04 (3L/102W) | WR 97.8% net +1,411$ | Zee's 22: 2 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return t['brk_ticks_so_far'] >= 0.9 * max(t['uhv_v'], 1.0)",
+   "lift_all": 1.89,
+   "lift_train": 1.79,
+   "lift_test": 2.04,
+   "losers_removed": 8,
+   "winners_removed": 180,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_sell_slip_1p5",
+   "idea": "Sells only: breakout bid >= 1.5 pips through the level.  [api.report printed: rule_sell_slip_1p5 removes 16 (losers 2 / winners 14) loss rate among removed 12.5% vs base 2.26% lift x5.54 | train x7.44 (2L/6W) test x0.0 (0L/8W) | WR 97.77% net +977$ | Zee's 22: 0 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return t['side'] < 0 and t['level'] - t['fill'] >= 0.00015",
+   "lift_all": 5.54,
+   "lift_train": 7.44,
+   "lift_test": 0.0,
+   "losers_removed": 2,
+   "winners_removed": 14,
+   "verdict": "NOT SELECTIVE - 2 losers, test x0.00"
+  },
+  {
+   "rule_id": "rule_us_news_windows",
+   "idea": "Scheduled US data: NY 08:20-08:40 or 09:50-10:10 (0311-135106-S was hit by a 10:00 NY spike).  [api.report printed: rule_us_news_windows removes 297 (losers 8 / winners 289) loss rate among removed 2.69% vs base 2.26% lift x1.19 | train x0.86 (4L/135W) test x1.81 (4L/154W) | WR 97.76% net +1,207$ | Zee's 22: 1 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    ts = t['t_in']\n    ny = ts - (4 if 1772953200 <= ts < 1793512800 else 5) * 3600\n    m = ny % 86400 / 60.0\n    return 500.0 <= m < 520.0 or 590.0 <= m < 610.0",
+   "lift_all": 1.19,
+   "lift_train": 0.86,
+   "lift_test": 1.81,
+   "losers_removed": 8,
+   "winners_removed": 289,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_sr_at_fill",
+   "idea": "Chart idea: sell into an older swing low / buy into an older swing high (p=2 pivot, 180 bars, before the UHV) within 0.3 pip of the fill.  [api.report printed: rule_sr_at_fill removes 4107 (losers 88 / winners 4019) loss rate among removed 2.14% vs base 2.26% lift x0.95 | train x1.03 (57L/1591W) test x0.9 (31L/2428W) | WR 97.61% net +11,647$ | Zee's 22: 15 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    k, s, f = (t['k'], t['side'], t['fill'])\n    h, l = (A.h, A.l)\n    lim = t['ku'] - 1\n    for j in range(max(2, k - 180), min(k - 2, lim)):\n        if s < 0:\n            if l[j] <= l[j - 1] and l[j] <= l[j - 2] and (l[j] <= l[j + 1]) and (l[j] <= l[j + 2]) and (abs(f - l[j]) <= 3e-05):\n                return True\n        elif h[j] >= h[j - 1] and h[j] >= h[j - 2] and (h[j] >= h[j + 1]) and (h[j] >= h[j + 2]) and (abs(f - h[j]) <= 3e-05):\n            return True\n    return False",
+   "lift_all": 0.95,
+   "lift_train": 1.03,
+   "lift_test": 0.9,
+   "losers_removed": 88,
+   "winners_removed": 4019,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_impulse_bar_against",
+   "idea": "Chart idea: fading an impulse - a bar among the last 3 closed with range >= 2.5 ATR and body against the trade.  [api.report printed: rule_impulse_bar_against removes 82 (losers 2 / winners 80) loss rate among removed 2.44% vs base 2.26% lift x1.08 | train x1.49 (2L/38W) test x0.0 (0L/42W) | WR 97.75% net +889$ | Zee's 22: 1 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    k, s = (t['k'], t['side'])\n    a = A.atr[k]\n    if not a > 0:\n        return False\n    for j in range(k - 2, k + 1):\n        if (A.c[j] - A.o[j]) * -s > 0 and A.h[j] - A.l[j] >= 2.5 * a:\n            return True\n    return False",
+   "lift_all": 1.08,
+   "lift_train": 1.49,
+   "lift_test": 0.0,
+   "losers_removed": 2,
+   "winners_removed": 80,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_fresh_flip_after_opp",
+   "idea": "Chart idea: first hump of a new colour after >= 3 opposite humps (camel micro-flip inside an older trend).  [api.report printed: rule_fresh_flip_after_opp removes 783 (losers 14 / winners 769) loss rate among removed 1.79% vs base 2.26% lift x0.79 | train x0.79 (9L/330W) test x0.81 (5L/439W) | WR 97.69% net +2,068$ | Zee's 22: 2 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    s = t['side']\n    if abs(t['camStk']) != 1:\n        return False\n    H = A.humps\n    H = H[H[:, 7] <= t['k']]\n    tr = H[:, 6][::-1]\n    i = 0\n    while i < len(tr) and tr[i] == s:\n        i += 1\n    j = i\n    while j < len(tr) and tr[j] == -s:\n        j += 1\n    return j - i >= 3",
+   "lift_all": 0.79,
+   "lift_train": 0.79,
+   "lift_test": 0.81,
+   "losers_removed": 14,
+   "winners_removed": 769,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_structure_against",
+   "idea": "Chart idea: last two p=2 swing highs AND lows both against the trade.  [api.report printed: rule_structure_against removes 860 (losers 21 / winners 839) loss rate among removed 2.44% vs base 2.26% lift x1.08 | train x1.02 (13L/367W) test x1.19 (8L/472W) | WR 97.77% net +3,346$ | Zee's 22: 3 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    k, s = (t['k'], t['side'])\n    h, l = (A.h, A.l)\n    hs, ls = ([], [])\n    for j in range(max(2, k - 120), k - 1):\n        if h[j] >= h[j - 1] and h[j] >= h[j - 2] and (h[j] >= h[j + 1]) and (h[j] >= h[j + 2]):\n            hs.append(h[j])\n        if l[j] <= l[j - 1] and l[j] <= l[j - 2] and (l[j] <= l[j + 1]) and (l[j] <= l[j + 2]):\n            ls.append(l[j])\n    if len(hs) < 2 or len(ls) < 2:\n        return False\n    if s > 0:\n        return hs[-1] < hs[-2] and ls[-1] < ls[-2]\n    return hs[-1] > hs[-2] and ls[-1] > ls[-2]",
+   "lift_all": 1.08,
+   "lift_train": 1.02,
+   "lift_test": 1.19,
+   "losers_removed": 21,
+   "winners_removed": 839,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_exhausted_streak",
+   "idea": "Chart idea: mature trend, >= 6 same-colour humps in a row.  [api.report printed: rule_exhausted_streak removes 145 (losers 6 / winners 139) loss rate among removed 4.14% vs base 2.26% lift x1.83 | train x1.93 (5L/72W) test x1.05 (1L/67W) | WR 97.78% net +1,700$ | Zee's 22: 0 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return abs(t['camStk']) >= 6",
+   "lift_all": 1.83,
+   "lift_train": 1.93,
+   "lift_test": 1.05,
+   "losers_removed": 6,
+   "winners_removed": 139,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_trend_against_120",
+   "idea": "Chart idea: price moved >= 12 ATR against the trade over the last 120 candles.  [api.report printed: rule_trend_against_120 removes 465 (losers 13 / winners 452) loss rate among removed 2.8% vs base 2.26% lift x1.24 | train x1.35 (10L/210W) test x0.88 (3L/242W) | WR 97.78% net +1,954$ | Zee's 22: 3 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    k, s = (t['k'], t['side'])\n    a = A.atr[k]\n    return a > 0 and (A.c[k] - A.c[max(k - 120, 0)]) * s <= -12 * a",
+   "lift_all": 1.24,
+   "lift_train": 1.35,
+   "lift_test": 0.88,
+   "losers_removed": 13,
+   "winners_removed": 452,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_extended_at_extreme",
+   "idea": "Chart idea: entering at the 60-candle extreme after a >= 20-pip run (buy the top of a run / sell the bottom of a slide).  [api.report printed: rule_extended_at_extreme removes 179 (losers 9 / winners 170) loss rate among removed 5.03% vs base 2.26% lift x2.23 | train x2.44 (9L/101W) test x0.0 (0L/69W) | WR 97.81% net +2,434$ | Zee's 22: 3 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    k, s, f = (t['k'], t['side'], t['fill'])\n    hi = float(np.max(A.h[max(k - 59, 0):k + 1]))\n    lo = float(np.min(A.l[max(k - 59, 0):k + 1]))\n    if s > 0:\n        return f - lo >= 0.002 and hi - f <= 0.0001\n    return hi - f >= 0.002 and f - lo <= 0.0001",
+   "lift_all": 2.23,
+   "lift_train": 2.44,
+   "lift_test": 0.0,
+   "losers_removed": 9,
+   "winners_removed": 170,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_uhv_last_bar",
+   "idea": "Chart idea: the UHV is the last closed candle (breakout in the very next minute).  [api.report printed: rule_uhv_last_bar removes 2487 (losers 58 / winners 2429) loss rate among removed 2.33% vs base 2.26% lift x1.03 | train x0.96 (35L/1048W) test x1.17 (23L/1381W) | WR 97.78% net +7,938$ | Zee's 22: 10 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return t['ku'] == t['k']",
+   "lift_all": 1.03,
+   "lift_train": 0.96,
+   "lift_test": 1.17,
+   "losers_removed": 58,
+   "winners_removed": 2429,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_old_uhv",
+   "idea": "Chart idea: the UHV candle is >= 10 minutes old at the breakout.  [api.report printed: rule_old_uhv removes 1026 (losers 24 / winners 1002) loss rate among removed 2.34% vs base 2.26% lift x1.04 | train x1.13 (18L/456W) test x0.78 (6L/546W) | WR 97.76% net +4,172$ | Zee's 22: 4 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return t['kb'] - t['ku'] >= 10",
+   "lift_all": 1.04,
+   "lift_train": 1.13,
+   "lift_test": 0.78,
+   "losers_removed": 24,
+   "winners_removed": 1002,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_top_of_hour",
+   "idea": "Chart idea: breakout in minute :00 of an hour (session opens / scheduled releases).  [api.report printed: rule_top_of_hour removes 191 (losers 6 / winners 185) loss rate among removed 3.14% vs base 2.26% lift x1.39 | train x0.97 (3L/89W) test x2.17 (3L/96W) | WR 97.77% net +1,048$ | Zee's 22: 1 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return int(t['t_in'] % 3600 // 60) == 0",
+   "lift_all": 1.39,
+   "lift_train": 0.97,
+   "lift_test": 2.17,
+   "losers_removed": 6,
+   "winners_removed": 185,
+   "verdict": "NOT SELECTIVE"
+  },
+  {
+   "rule_id": "rule_deep_retracement",
+   "idea": "Chart idea: retracement extreme >= 5 pips beyond the level (stop >= 24 pips).  [api.report printed: rule_deep_retracement removes 698 (losers 15 / winners 683) loss rate among removed 2.15% vs base 2.26% lift x0.95 | train x0.84 (13L/448W) test x0.6 (2L/235W) | WR 97.73% net +4,427$ | Zee's 22: 4 | crashes 0 look-ahead diffs 0  (net = Python tick replay, NOT PROMOTED)]",
+   "code": "def rule(t, A):\n    return abs(t['level'] - t['extreme']) >= 0.0005",
+   "lift_all": 0.95,
+   "lift_train": 0.84,
+   "lift_test": 0.6,
+   "losers_removed": 15,
+   "winners_removed": 683,
+   "verdict": "NOT SELECTIVE"
+  }
+ ],
+ "batch_notes": "BATCH 1 = 21 losses, 6-18 Mar 2026 (all in the train half). Everything below is a Python tick-replay HYPOTHESIS - NOT PROMOTED. Nothing ships until MT5's Strategy Tester (or live fills) confirms it.\n\n1. The selective signal is the CLOCK and LIQUIDITY, not the chart pattern. CLEAN KEEPER = rule_time_windows: skip NY 16:00-18:00 (the hour either side of the 17:00 NY rollover) and Friday after 13:00 NY (the last 4 h before the forced weekly close at 16:58 NY). It removes 33 losers / 454 winners, lift x3.00 (train x3.05, test x3.04), with 0 crashes and 0 look-ahead diffs (every rule was re-run on arrays cut at bar k). Five window variants were tried (rollover from 16:00 or 16:30 NY; Friday 3, 4 or 6 h) and all stay GOOD on both halves, so the result is not knife-edge. Of Zee's 22 commented losses it removes 3.\n\n2. How honest are the thresholds? The window edges are round hours with a market reason, but I saw all-data bin tables, test half included, before fixing them, so the test lift is not a clean holdout. I scanned about 560 feature tails. The 2%-tail hits (brk_ratio, k_rng, room30, uhv_v) were treated as likely chance and re-scored at round thresholds. All came out NOT SELECTIVE or redundant with the clock: thin_hour outside the windows x1.42/x2.01, dead_last_bar outside the windows x1.12/x1.91, small_uhv test x1.99, brk_ratio x1.79/x2.04.\n\n3. Rules that read the fill. t['fill'] is the ask (buy) or bid (sell) of the first tick 0.3 s AFTER the trigger (InpUhvLatency 0.3), so these rules see something that happens after the order is sent.\n   - rule_buy_spread_1p5: 7 losers / 36 winners, x5.32/x9.54. Only 2 of those losers are in the test half.\n   - rule_slip_1p5: 11 losers / 68 winners, x4.25/x9.54.\n   - Both mostly catch latency spikes: 41 of slip_1p5's 79 catches had a normal 0.5-pip spread at the trigger.\n   - Live they can only be an eject on a bad fill, which costs the spread. They are not a free skip, so the harness net for them is optimistic.\n   - rule_time_or_spread (36 losers / 468 winners, x3.13/x3.26) has the best numbers but carries this caveat.\n\n4. New finding, outside the harness (trigger_spread.py). It reads the engine's tick file at the trigger tick, which is the moment the entry is decided, so there is no future information.\n   - Skipping when ask minus bid at the breakout tick is >= 1.5 pips, on BOTH sides, removes 12 losers / 51 winners, lift x6.95 train / x10.84 test.\n   - Sells alone: 8 losers / 29 winners, x8.27/x11.29.\n   - A sell's spread is invisible in the harness fields. Next step: add the trigger-tick spread to t, and test an EA guard \"skip if ask - bid at the breakout tick >= 1.5 pips\" in MT5.\n   - The engine's existing InpMaxSpreadPts reads the last closed bar's spread, not the trigger tick's, and it is off (0) in this setting.\n   - This guard catches none of batch 1's losses.\n\n5. Batch 1 itself:\n   - 4 of 21 losses are avoidable before entry, all by the clock:\n     - 0306-212806-B and 0313-195816-B: Friday forced closes, only -12$ and -72$ (lift counts them like full stop-outs).\n     - 0316-200548-B: 55 minutes before the rollover.\n     - 0318-205350-S: 6 minutes before the rollover, and also a fill 1.3 pips past the breakout bid.\n   - 0306-102926-B is removed by the fill-based rules (the bid spiked 1.5 pips during the 0.34-s latency, while the trigger spread was a normal 0.5), but not before the entry.\n   - The other 16 each tell a story on the chart:\n     - a range ceiling or floor, support or resistance (8; one also hit by a 10:00 NY data spike)\n     - fading an impulse bar (2)\n     - a camel micro-flip against an older trend (4)\n     - an exhausted run or V-bounce (2)\n   - Their twins show the same stories, and the full sample agrees: every structure rule scored about x0.8-1.2 or failed one half.\n     - sr_at_fill x0.95; fresh_flip_after_opp x0.79; structure_against x1.08; trend_against_120 x1.24\n     - extended_at_extreme train x2.44 / test x0.00; impulse_bar_against test x0.00; exhausted_streak test x1.05\n     - old_uhv x1.04; uhv_last_bar x1.03; deep_retracement x0.95; top_of_hour train x0.97; us_news_windows train x0.86\n\n6. Why the chart cannot tell: every loss had best_R <= 0.004. The fill was the exact extreme, with zero follow-through, then a 20-pip move. With a 0.1-pip target the result is decided in the first ticks after the fill, which the 1-minute bars before the entry cannot see. The levers left are:\n   - when to trade (clock and liquidity)\n   - entry microstructure (trigger-tick spread, fill quality)\n   - loss size (stop geometry)\n\n7. Files, all in agents/batch_1:\n   - rules.py (33 self-contained rules) and run.py\n   - results_all.txt (literal api.report lines) and results_all.json\n   - hits_all.json (rules x batch losses and twins)\n   - loss_comments_batch1.json\n   - trigger_spread.py / .txt / .csv\n   - features.py, scan.py, chartfeat.py (analysis only)\n   - export_code.py -> codes.json (each code string verified standalone and identical on all 7,626 trades)\n   - assemble.py -> final_output.json"
+}

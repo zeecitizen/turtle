@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saad Chart vs MT5</title>
+<style>
+:root {
+  --bg: #f6f7f9; --card: #ffffff; --ink: #1b1f24; --muted: #667085; --line: #e4e7ec;
+  --win: #11845b; --loss: #c8372d; --accent: #2f6fde; --warn-bg: #fff6e5; --warn: #9a5b00; --row: #fafbfc;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0f1216; --card: #171b21; --ink: #e8ebef; --muted: #98a2b3; --line: #2a3039;
+          --win: #3fcf8e; --loss: #ff6b5e; --accent: #6ea0ff; --warn-bg: #2b2210; --warn: #f5b84a; --row: #1b2027; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 60px; }
+h1 { font-size: 22px; margin: 0 0 4px; }
+.sub { color: var(--muted); margin: 0 0 18px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+.controls label { display: flex; flex-direction: column; font-size: 12px; color: var(--muted); gap: 4px; }
+input, select { background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: inherit; }
+button { background: var(--accent); color: #fff; border: 0; border-radius: 7px; padding: 8px 14px; font: inherit; font-weight: 600; cursor: pointer; }
+button.ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+button:disabled { opacity: .5; cursor: wait; }
+#status { color: var(--muted); font-size: 13px; min-height: 18px; margin-top: 10px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.kpis { display: flex; flex-wrap: wrap; gap: 18px; }
+.kpi .v { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi .k { font-size: 12px; color: var(--muted); }
+.win { color: var(--win); } .loss { color: var(--loss); }
+.warn { background: var(--warn-bg); color: var(--warn); border-radius: 8px; padding: 8px 12px; margin: 4px 0; font-size: 13px; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 13px; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th { color: var(--muted); font-weight: 600; font-size: 12px; position: sticky; top: 0; background: var(--card); }
+td.l, th.l { text-align: left; }
+tbody tr:nth-child(even) { background: var(--row); }
+.sep { border-left: 2px solid var(--line); }
+.tag { font-size: 11px; padding: 1px 6px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); }
+.tag.ok { color: var(--win); border-color: var(--win); }
+.tag.feed { color: var(--warn); border-color: var(--warn); cursor: help; }
+.scroll { overflow-x: auto; max-height: 70vh; overflow-y: auto; }
+h2 { font-size: 15px; margin: 0 0 10px; }
+details summary { cursor: pointer; color: var(--muted); }
+code { font-size: 12px; }
+.sync ul { list-style: none; padding: 0; margin: 6px 0 0; }
+.sync li { padding: 7px 0 7px 2px; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: baseline; }
+.sync li:last-child { border-bottom: 0; }
+.sync .st { flex: 0 0 auto; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 10px; border: 1px solid currentColor; min-width: 44px; text-align: center; }
+.sync .st.issue { color: var(--loss); } .sync .st.fixed { color: var(--accent); } .sync .st.ok { color: var(--win); } .sync .st.info { color: var(--muted); }
+.sync .d { color: var(--muted); font-size: 12.5px; margin-top: 2px; overflow-wrap: anywhere; }
+.sync .sum { font-size: 13px; color: var(--muted); }
+.yr td.bar { width: 28%; min-width: 120px; }
+.yr .b { height: 10px; border-radius: 3px; display: inline-block; vertical-align: middle; }
+.yr .b.w { background: var(--win); } .yr .b.l { background: var(--loss); }
+.yr tr.tot td { font-weight: 700; border-top: 2px solid var(--line); }
+.yr tr.split td { background: var(--row); }
+.yr .chg { font-size: 12.5px; color: var(--muted); margin: 6px 0 2px; overflow-wrap: anywhere; }
+.yr .run { color: var(--accent); } .yr .q { color: var(--muted); }
+.doc { line-height: 1.55; }
+.doc h3 { font-size: 14px; margin: 18px 0 6px; }
+.doc p, .doc li { max-width: 980px; }
+.doc ol, .doc ul { padding-left: 22px; margin: 6px 0; }
+.doc pre { background: var(--row); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; overflow-x: auto; font-size: 12px; margin: 6px 0; }
+.doc table { margin: 6px 0 10px; }
+.doc td, .doc th { white-space: normal; text-align: left; vertical-align: top; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Saad: TradingView chart vs the real EA in MT5</h1>
+  <p class="sub">Tune the indicator on TradingView, then run the same settings through <b>Saad_strategy_1min</b> on Blueberry's MT5 Strategy Tester (real ticks). Trades are matched by entry minute (UTC) and side.</p>
+
+  <div class="card">
+    <div class="controls">
+      <button id="btnTv">1 · Read TradingView</button>
+      <label>From <input type="date" id="from"></label>
+      <label>To <input type="date" id="to"></label>
+      <label>Symbol
+        <select id="symbol">
+          <option value="bblive|XAUUSD">Blueberry demo XAUUSD - your open terminal (closes it for the test, reopens it)</option>
+          <option value="bb|XAUUSD.pi">Blueberry XAUUSD.pi (test copy, SVG-Live, data to 9 Oct)</option>
+          <option value="rig1|XAUUSD_BB">Blueberry XAUUSD_BB (real-tick copy of your terminal's ticks, Jan 1 - Oct 17; your terminal stays open)</option></select></label>
+      <label>Server time
+        <select id="offset"><option value="3">UTC+3 (Blueberry, US summer time)</option><option value="2">UTC+2 (Blueberry, US winter time)</option></select></label>
+      <label>Execution delay
+        <select id="delay"><option value="-1">random (realistic)</option><option value="0">none</option><option value="163">163 ms (live median)</option></select></label>
+      <button id="btnMt5">2 · Run MT5 with these settings</button>
+      <button id="btnSync" class="ghost">3 · Check sync</button>
+      <label style="flex-direction:row;align-items:center;gap:6px;color:var(--ink)"><input type="checkbox" id="onlyChart"> only dates the chart covers</label>
+    </div>
+    <div id="status">Start TradingView with the Saad indicator on the chart, then press 1.</div>
+  </div>
+
+  <div class="card" id="validCard">
+    <div style="font-size:13.5px">All settings on TradingView are matching MT5 EA and are implementable in MT5 (no settings use future candles, or stuff that MT5 cannot calculate in realtime)</div>
+    <div style="margin-top:6px;font-size:16px;font-weight:700">Status: Settings Valid for MT5 &rarr; <span id="validVal" class="q">checking…</span> <span id="validAt" class="sum" style="font-weight:400;color:var(--muted);font-size:12px"></span></div>
+    <ul id="validWhy" style="margin:6px 0 0;padding-left:20px;font-size:13px;color:var(--muted)"></ul>
+  </div>
+
+  <div class="card sync" id="syncCard" style="display:none">
+    <h2>Sync check <span class="sum" id="syncSum"></span></h2>
+    <ul id="syncList"></ul>
+    <details id="syncOkWrap" style="margin-top:8px"><summary id="syncOkSum"></summary><ul id="syncOk"></ul></details>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h2>TradingView chart</h2><div class="kpis" id="kTv"><span class="k">not read yet</span></div></div>
+    <div class="card"><h2>MT5 Strategy Tester (Blueberry)</h2><div class="kpis" id="kMt"><span class="k">not run yet</span></div></div>
+  </div>
+
+  <div id="notes"></div>
+
+  <div class="grid">
+    <div class="card"><h2>MT5 by month</h2><div id="months" class="k">-</div></div>
+    <div class="card"><h2>Match</h2><div id="match" class="k">-</div></div>
+  </div>
+
+  <div class="card">
+    <h2>Trades</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr>
+          <th class="l">TradingView entry (UTC)</th><th>side</th><th>entry</th><th>exit</th><th>P/L</th>
+          <th class="sep l">match</th>
+          <th class="sep l">MT5 entry (UTC)</th><th>side</th><th>entry</th><th>avg exit</th><th>P/L</th>
+        </tr></thead>
+        <tbody id="rows"><tr><td class="l" colspan="11">-</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card yr" id="yearCard">
+    <h2>10 months in MT5 (Blueberry) with the chart's settings <span class="sum" id="yrSum" style="font-weight:400;color:var(--muted);font-size:13px"></span></h2>
+    <div class="controls" style="margin-bottom:8px">
+      <label style="flex-direction:row;align-items:center;gap:6px;color:var(--ink)"><input type="checkbox" id="yrAuto" checked> re-run by itself when I change a setting on the chart</label>
+      <label>Execution delay
+        <select id="yrDelay"><option value="-1">random (realistic)</option><option value="0">none (same numbers every run)</option></select></label>
+      <button id="yrRun" class="ghost">Run now</button>
+      <a href="/chart" target="_blank" style="align-self:center;font-weight:600">Open the Blueberry chart with these trades →</a>
+    </div>
+    <div class="chg" id="yrChg"></div>
+    <div class="scroll" style="max-height:none">
+      <table>
+        <thead><tr><th class="l">Month</th><th>Trades</th><th>Win rate</th><th>Net</th><th>vs before</th><th>PF</th><th>Green days</th><th class="l bar">Net</th><th class="l">MT5</th></tr></thead>
+        <tbody id="yrRows"><tr><td class="l" colspan="9">-</td></tr></tbody>
+      </table>
+    </div>
+    <div class="chg"><b>Tune / check split:</b> tune your settings while watching Jan–Jun only; Jul–Oct is the exam. If "Check on" still makes money, the setting holds on months it was never fitted to. If only "Tune on" improves, it was fitted to noise (that is what happened with the 6 chart days: +$26k that week, −$21.7k the week before).</div>
+    <div class="chg"><b>Blueberry</b> real ticks (XAUUSD_BB = your Blueberry terminal's own XAUUSD ticks, the feed of BLUEBERRY:XAUUSD), Jan 1 – Oct 17 2026, one MT5 pass per month on 6 rigs in parallel (~40 s); a pass already run with the same settings shows at once.
+      The EA reads MT5's own candles here (the chart holds only ~5 days of 1-minute history). Settings that exist only on the chart do not change these numbers.</div>
+  </div>
+
+  <div class="card"><details><summary>Settings sent to the EA</summary><div id="sets" style="margin-top:10px"></div></details></div>
+
+  <div class="card doc" id="how-synced">
+    <h2>How MT5 is synced with TradingView (16 Oct 2026, Saad_strategy_1min v1.03 → v1.04)</h2>
+    <p>Zee: <i>"the only way we can succeed is to sync both mt5 with tradingview. so find a way. i can't miss out on entries i've spent entire day tuning on tradingview"</i></p>
+    <p><b>Result:</b> on BLUEBERRY:XAUUSD 1 min, 12–15 Oct 2026, <b>83 of 83 chart trades</b> are the same trade in the MT5 Strategy Tester of Zee's own Blueberry terminal (side and entry minute; 79 also exit in the same minute). Chart +$34,588 vs MT5 +$32,219: the ~$28 a trade gap is real spread and slippage the chart does not charge. Before this work: 63 of 75.</p>
+    <p><b>Read this first:</b> matching the chart is not the same as being profitable. The same settings lost money in MT5 over the months around the tuning week (see the 10-month view). The mirror shows the chart's trades faithfully; only MT5 over many weeks, or live fills, can promote a setting (CLAUDE.md).</p>
+
+    <h3>1. Why the trades did not match: the causes, in the order found</h3>
+    <table>
+      <thead><tr><th>Cause</th><th>Trades</th><th>Fix</th></tr></thead>
+      <tbody>
+        <tr><td><b>STOP NEAR PEAK lock.</b> The EA moved the stop to entry + $5.5 tick by tick, once profit reached $2. The chart sets it once per closed candle, only if the whole candle stayed beyond it (BUY: <code>entry+5.5 &lt; candle low</code>; SELL: <code>&gt; candle high + spread</code>), and it applies from the next minute.</td><td>#4 #6 #63 #76 exited early in MT5</td><td>v1.03 <code>InpLockMode=1</code>: done in <code>ManageBar</code> on the closed candle. If the level was already passed at the open, close at market.</td></tr>
+        <tr><td><b>Entry band (TOP/BOTTOM 25–50%).</b> The chart measures the entry at <code>max(break level + 0.01, candle open)</code>. The EA measured it at the live bid when it fired, a few cents further, so 50% became 51–52% and the trade was skipped.</td><td>#16 #22 #32 #40 #56 #61 #62 #73 #75 #78</td><td>v1.03 <code>InpBandAtLevel=true</code></td></tr>
+        <tr><td><b>Two feeds, one broker.</b> Blueberry's TradingView candles and its MT5 candles differ by 1–27 cents. Of 5,513 common minutes, ~6% differ by more than 5 cents on O/H/L/C. On 1-minute settings that flips a pin bar (BUY) into a shooting star (SELL), or moves a band by 1%. Example: #2's 00:53 UTC candle opens 4205.18 on TradingView and 4205.05 in MT5.</td><td>#2 #8 #30 #36 #43 #69 #80 #82, plus 5 MT5-only trades</td><td>No rule can fix a different candle. v1.04 <b>reads the chart's candles</b> (section 2).</td></tr>
+        <tr><td><b>$ trail after TP1</b> (BUY $0.5 / SELL $2.5). The EA moved it every tick. The chart moves it once per candle from that candle's high (BUY) or low + spread (SELL), not from the TP1 candle itself, effective next minute.</td><td>#37 exited 2 min early, so #38 started on another candle</td><td>v1.04 <code>InpUsdTrailMode=1</code></td></tr>
+        <tr><td><b>No entry in an exit minute.</b> The Pine engine steps minute by minute; its entry branch is the <code>else</code> of the manage branch, so it never opens a trade in the minute it closed one.</td><td>#38</td><td>v1.04 <code>InpNoEntryExitBar=true</code></td></tr>
+        <tr><td><b>Float noise.</b> #32's band position was 50.000000000008% (above the 50% max in the EA, not on the chart).</td><td>#32</td><td>v1.04: band compared with ±1e-6</td></tr>
+        <tr><td><b>Report bug.</b> The EA's EXIT line took the first closing deal (the TP1 partial), not the last.</td><td>display only</td><td>v1.04 <code>DrawExit</code></td></tr>
+      </tbody>
+    </table>
+    <p>Checked and <b>not</b> a cause: ATR. Pine uses <code>ta.sma(ta.tr(true), 14)</code>, the same simple average as MT5 <code>iATR</code>. #43 was feed: MT5's high was 4 cents higher and its close 8 cents lower, so the 0.2×ATR trail level fell 3 cents above the close and was correctly refused.</p>
+
+    <h3>2. The architecture (v1.04)</h3>
+<pre>TradingView Desktop (CDP, BLUEBERRY:XAUUSD, 1 min, Saad indicator)
+   │  mainSeries().bars()  via tradingview-mcp CLI  (server.tv_eval)
+   ▼
+monitor/saad_compare/tv_bars_bridge.py   --export (all history) | --live (append each closed candle, poll 2 s)
+   │  writes  %APPDATA%\MetaQuotes\Terminal\Common\Files\tv_bars_XAUUSD.csv
+   │          "YYYY.MM.DD HH:MM,open,high,low,close"   (broker SERVER time, closed candles only)
+   ▼
+mt5/Saad_strategy_1min.mq5  InpBarSource=1  (FILE_COMMON, so the tester agents and the live terminal read the same file)
+   candles / EMA / ATR of shift ≥ 1  ← the chart's candles      orders, SL/TP, fills, ticks ← MT5</pre>
+    <ul>
+      <li><b>Time:</b> TradingView bar times are UTC epochs. The broker's server time is New York + 7 h: UTC+3 while the US is on summer time (2nd Sunday of March 07:00 UTC to 1st Sunday of November 06:00 UTC), otherwise UTC+2. <code>server_time()</code> does this; no tzdata is needed. PXBT's server is UTC, so this file is for Blueberry only.</li>
+      <li><b>Candle layer in the EA:</b> every strategy read goes through <code>BOpen/BHigh/BLow/BClose/BTime(s)</code>, <code>Atr(s)</code> and <code>EmaX(fast, s)</code>. <code>InpBarSource=1</code> answers shift ≥ 1 from the arrays <code>tvT/tvO/tvH/tvL/tvC</code>. <code>TvI(s) = g_tvEnd − s + 1</code>, where <code>g_tvEnd</code> is the last chart candle with <code>time ≤ MT5 bar open − 60 s</code> (binary search in <code>TvSync</code>; no look-ahead in the tester, even though the file holds the future). Shift 0 (the forming candle) stays MT5's.</li>
+      <li><b>Indicators on the chart's candles</b> (<code>TvLoad</code>):
+        <ul>
+          <li>EMA: <code>e[i] = e[i−1] + 2/(n+1)·(c − e[i−1])</code>, seeded with the first close; EMA 3/4 converge within minutes.</li>
+          <li>ATR: SMA-14 of the true range, with <code>ta.tr(true)</code> semantics.</li>
+          <li>Live EMA of the forming candle = the chart's <code>emaLive</code>, taken at the MT5 bid.</li>
+        </ul></li>
+      <li><b>Pacing:</b> <code>OnTick</code> runs the new-candle step (<code>ManageBar</code>, the setup countdown, <code>DetectSetup</code>) only when <code>TvReady(bar)</code> says so:
+        <ul>
+          <li>In the tester it is ready at once.</li>
+          <li>Live, it waits up to <code>InpTvWaitSec</code> (20 s) for the chart's candle, re-reading the file at most once a second.</li>
+          <li>If no new chart candle arrives (a minute with no ticks on the chart, or the bridge is down), <code>g_tvStale</code> skips the step: the chart takes no step either, and the EA never re-trades an old candle. The Experts log gets a WARNING when the bridge is down.</li>
+          <li>Warm-up: no setups until the chart has <code>InpEmaSlow·2+19</code> candles, as in Pine.</li>
+        </ul></li>
+      <li><b>Robust reads:</b> half-written, repeated or out-of-order lines are skipped. The file is opened <code>FILE_SHARE_READ|FILE_SHARE_WRITE</code> while the bridge appends.</li>
+    </ul>
+
+    <h3>3. Inputs added (all default to the chart's behaviour)</h3>
+    <table>
+      <thead><tr><th>Input</th><th>Default</th><th>Meaning</th><th>Old behaviour</th></tr></thead>
+      <tbody>
+        <tr><td><code>InpBarSource</code></td><td>1</td><td>judge the TradingView chart's candles</td><td>0 = MT5 candles</td></tr>
+        <tr><td><code>InpTvFile</code></td><td>tv_bars_XAUUSD.csv</td><td>file in Common\Files</td><td></td></tr>
+        <tr><td><code>InpTvWaitSec</code></td><td>20</td><td>live wait for the chart's closed candle</td><td></td></tr>
+        <tr><td><code>InpLockMode</code></td><td>1</td><td>lock once per candle close, whole candle beyond the level</td><td>0 = tick lock (v1.02)</td></tr>
+        <tr><td><code>InpBandAtLevel</code></td><td>true</td><td>band measured at break level + 0.01</td><td>false = live bid</td></tr>
+        <tr><td><code>InpUsdTrailMode</code></td><td>1</td><td>$ trail after TP1 per candle, not from the TP1 candle</td><td>0 = every tick</td></tr>
+        <tr><td><code>InpNoEntryExitBar</code></td><td>true</td><td>no entry in the candle of an exit</td><td>false</td></tr>
+        <tr><td><code>InpDumpBars</code></td><td>false</td><td>debug: write MT5's own candles + EMAs to Common\Files\saad1m_bars.csv (feed checks)</td><td></td></tr>
+      </tbody>
+    </table>
+
+    <h3>4. How this page runs a test</h3>
+    <ol>
+      <li><b>1 · Read TradingView</b> (<code>server.read_tv</code>) reads:
+        <ul>
+          <li>the indicator's inputs by position (<code>in_N</code>, names from <code>pine/saad_15min.pine</code>), mapped to EA inputs (<code>DIRECT</code>/<code>CHOICES</code>);</li>
+          <li>the trade export table, by switching <code>exOn</code> on, with the exit reason in the "why" column.</li>
+        </ul></li>
+      <li><b>2 · Run MT5</b> (<code>server.run_mt5</code>):
+        <ul>
+          <li>If <code>InpBarSource</code> is 1, it first calls <code>tv_bars_bridge.export(more=2)</code> to refresh the candle file.</li>
+          <li>"Blueberry demo XAUUSD – your open terminal" (<code>bb_live_run</code>):
+            <ul>
+              <li>compiles <code>SaadEMAs.mq5</code> and the EA into <code>…\Terminal\27280402C90F04230EE7E17540AE21E1</code>;</li>
+              <li>closes <code>C:\Program Files\Blueberry Markets MetaTrader 5 Terminal\terminal64.exe</code> gracefully;</li>
+              <li>runs <code>/config:compare_run.ini</code> (model 4 real ticks, <code>ShutdownTerminal=1</code>, <code>reports\</code> must exist);</li>
+              <li>reopens the terminal. Zee authorised this on 16 Oct; never copy or read its <code>accounts.dat</code>/<code>servers.dat</code>.</li>
+            </ul></li>
+        </ul></li>
+      <li><b>Tester INI:</b> numbers and bools are written <code>k=v||v||0||v||N</code>; <b>strings must be plain <code>k=v</code></b> (<code>ini_input()</code> in the rig runner), or the range text becomes the string's value (the first v1.04 run read "tv_bars_XAUUSD.csv||tv_bars…||N" and traded nothing).</li>
+      <li>Trades are matched by side and entry minute (±2 min, UTC). Server time = UTC+3 until the US clocks change in November, then UTC+2 (pick it in "Server time").</li>
+    </ol>
+
+    <h3>5. Re-checking it, trade by trade</h3>
+<pre>py monitor\saad_compare\why_compare.py 2026.10.11 2026.10.17</pre>
+    <p>This reads the chart (trades + exit reasons), runs the EA with <code>InpLog</code>/<code>InpVerbose</code> in the Blueberry terminal, and parses the agent log at <code>%APPDATA%\MetaQuotes\Tester\27280402…\Agent-*\logs\*.log</code> (UTF-16; take the text after the last "testing of Experts\Saad_strategy_1min"). It prints one row per trade: <code>TV#n … | MT …</code>, with the empty side meaning unmatched. Output goes to <code>why_out/</code>.</p>
+    <p>For each unmatched trade, grep the log at entry minute + 3 h (server time). The EA logs every <code>SETUP</code>, <code>SKIP: &lt;reason&gt;</code>, <code>ENTRY</code>, SL move and <code>EXIT … | reason</code>. To compare feeds, run with <code>InpDumpBars=true</code> and diff <code>saad1m_bars.csv</code> against <code>tv_bars_XAUUSD.csv</code>.</p>
+
+    <h3>6. Live use and limits</h3>
+    <ul>
+      <li><b>To run live:</b> TradingView open on BLUEBERRY:XAUUSD, 1 minute, with the CDP bridge. Run <code>monitor\saad_compare\start_tv_bars_bridge.bat</code> (<code>--export --live</code>) and keep it open; then attach the EA. Measured: each candle lands ~2 s after its close.</li>
+      <li><b>Limited history:</b> the chart holds only ~5 days of 1-minute history (6,618 candles on 16 Oct). <b>Long-period courts must pass <code>InpBarSource=0</code></b>, otherwise there are no candles before the file starts.</li>
+      <li><b>Data cut-off:</b> the Blueberry tester had no ticks for the current day (16 Oct) at test time.</li>
+      <li><b>Not mirrored:</b> stop hits and fills inside a minute stay MT5's (real ticks), which is why 4 trades exit in a different minute and P&amp;L is ~$28 a trade lower. That is reality, not a bug.</li>
+      <li><b>One rare edge:</b> a chart candle MT5 lacks (e.g. 20:59 UTC before the daily break) is folded into MT5's next candle step.</li>
+      <li><b>3 · Check sync</b> (<code>sync_check.py</code>, <code>POST /api/sync</code>) re-checks all of the above.
+        <ul>
+          <li>Fixes on its own: re-exports the candle file (merge, never shrink), recompiles the EA if Blueberry's .ex5 is older than the code, corrects the page's server time.</li>
+          <li>Reports the rest: wrong symbol or timeframe, chart-only settings, settings changed since the last MT5 run, unmatched trades (each with a reason), and exits in a different minute.</li>
+        </ul></li>
+      <li><b>10 months in MT5</b> (<code>year_runner.py</code>, <code>GET/POST /api/year</code>), started with the server:
+        <ul>
+          <li><b>Watching:</b> a thread reads the chart's settings every 2 s (<code>server.read_settings</code>, one CDP call). Only the mapped EA inputs count, so chart-only and display settings never trigger a run.</li>
+          <li><b>On a change:</b> once the change has held for one more poll, the run in progress is cancelled (the rig runner's <code>run(cancel=…)</code> kills that test's terminal) and Jan–Oct 2026 is queued as 10 one-month passes (<code>ToDate</code> is exclusive: 1st → next 1st).</li>
+          <li><b>Running:</b> the passes spread over 6 portable MT5 test copies (one more stays free for the compare runs). XAUUSD_BB = Blueberry real ticks, 100,000 deposit, <code>InpBarSource=0</code> (MT5's own candles).</li>
+          <li><b>Speed:</b> one pass takes ~19 s alone and 50–90 s with 6 in parallel, so an uncached batch is ~1.5 min.</li>
+          <li><b>Cache:</b> results are kept in <code>why_out\year_cache.json</code>, keyed by settings + delay + the EA source's mtime, so going back to a setting is instant.</li>
+          <li><b>Empty passes:</b> a pass that processes no ticks (quality without "real ticks", 0 trades) is a tester hiccup seen with parallel starts. It is retried up to 3 times and never cached.</li>
+        </ul></li>
+      <li><b>After a restart:</b> <code>ensure_up.py --watch</code> starts at logon from <code>Startup\saad_compare_page.vbs</code> (pythonw, no window) and restarts <code>server.py</code> within 20 s if it dies. By hand: <code>py monitor\saad_compare\ensure_up.py --open</code> or <code>start_compare_page.bat</code>. A page served from 127.0.0.1 cannot start its own server, so this is the way. Full guide: <code>saad_strategy_1min_optimized\claude_read_me.md</code>.</li>
+      <li><b>Records:</b> commits <code>9cd4eec8</code> (v1.03) and <code>39d238e4</code> (v1.04); VERSION.md and VERSION_HISTORY.md; memory <code>project_tv_bars_bridge.md</code>.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+let S = { tv: null, mt5: null };
+let symPicked = false;
+const fmt = v => (v >= 0 ? '+$' : '−$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const cls = v => v > 0 ? 'win' : v < 0 ? 'loss' : '';
+const mins = s => new Date(s.replace(' ', 'T') + ':00Z').getTime() / 60000;
+
+function kpis(list) {
+  const n = list.length, w = list.filter(t => t.pnl > 0).length, net = list.reduce((a, t) => a + t.pnl, 0);
+  const gw = list.filter(t => t.pnl > 0).reduce((a, t) => a + t.pnl, 0), gl = -list.filter(t => t.pnl < 0).reduce((a, t) => a + t.pnl, 0);
+  return { n, w, wr: n ? 100 * w / n : 0, net, pf: gl > 0 ? gw / gl : null };
+}
+function kpiHtml(k, extra = '') {
+  return `<div class="kpi"><div class="v">${k.n}</div><div class="k">trades</div></div>
+    <div class="kpi"><div class="v">${k.wr.toFixed(0)}%</div><div class="k">win rate</div></div>
+    <div class="kpi"><div class="v ${cls(k.net)}">${fmt(k.net)}</div><div class="k">net</div></div>
+    <div class="kpi"><div class="v">${k.pf == null ? '-' : k.pf.toFixed(2)}</div><div class="k">profit factor</div></div>${extra}`;
+}
+
+function render() {
+  const tv = S.tv, mt = S.mt5;
+  const tvT = tv ? tv.trades : [];
+  let mtP = mt ? mt.positions : [];
+  const first = tvT.length ? tvT[0].in.slice(0, 10) : null, last = tvT.length ? tvT[tvT.length - 1].out.slice(0, 10) : null;
+  if ($('onlyChart').checked && first) mtP = mtP.filter(p => p.in.slice(0, 10) >= first && p.in.slice(0, 10) <= last);
+
+  if (tv) {
+    $('kTv').innerHTML = kpiHtml(kpis(tvT)) + `<div class="kpi"><div class="v" style="font-size:14px">${tv.symbol} · ${tv.res} min</div><div class="k">read ${tv.read_at}${first ? ' · ' + first + ' → ' + last : ''}</div></div>`;
+    $('sets').innerHTML = '<code>' + Object.entries(tv.ea_sets).map(([k, v]) => `${k}=${v}`).join(' · ') + '</code>';
+    $('notes').innerHTML = tv.notes.map(n => `<div class="warn">⚠ ${n}</div>`).join('');
+    if (!symPicked) { $('symbol').value = tv.symbol.startsWith('BLUEBERRY') ? 'bblive|XAUUSD' : 'rig1|XAUUSD_BB'; symPicked = true; }
+    if (!$('from').value && first) { $('from').value = first; }
+    if (!$('to').value && last) { const d = new Date(last + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + 1); $('to').value = d.toISOString().slice(0, 10); }
+  }
+  if (mt) {
+    const s = mt.summary;
+    $('kMt').innerHTML = kpiHtml(kpis(mtP), `<div class="kpi"><div class="v" style="font-size:14px">${s.dd || '-'}</div><div class="k">max drawdown</div></div>
+      <div class="kpi"><div class="v" style="font-size:14px">${s.quality || '-'}</div><div class="k">${mt.symbol} · ${mt.frm} → ${mt.to} · ran ${mt.ran_at}</div></div>`);
+    const m = s.months || {};
+    $('months').innerHTML = Object.keys(m).length ? '<table><tbody>' + Object.entries(m).map(([k, v]) => `<tr><td class="l">${k}</td><td class="${cls(v)}">${fmt(v)}</td></tr>`).join('') + '</tbody></table>' : '-';
+  }
+
+  // match: same side, entry within 2 minutes
+  const used = new Set(), rows = [];
+  let same = 0;
+  for (const t of tvT) {
+    let best = -1, bd = 1e9;
+    mtP.forEach((p, i) => { if (used.has(i) || p.side !== t.side) return; const d = Math.abs(mins(p.in) - mins(t.in)); if (d <= 2 && d < bd) { bd = d; best = i; } });
+    if (best >= 0) { used.add(best); same++; rows.push({ k: mins(t.in), t, p: mtP[best] }); } else rows.push({ k: mins(t.in), t, p: null });
+  }
+  mtP.forEach((p, i) => { if (!used.has(i)) rows.push({ k: mins(p.in), t: null, p }); });
+  rows.sort((a, b) => a.k - b.k);
+  // Zee 2026-10-17: an MT5-only trade the EA closed because the chart's candle never broke = a feed difference, not a mismatch.
+  // Also one that MT5 took because its REAL broker stop fired on MT5's price while the chart was still in the twin trade.
+  const pairs = rows.filter(r => r.t && r.p);
+  rows.filter(r => !r.t && r.p && !r.p.feed).forEach(r => {
+    const tw = pairs.find(q => q.p.out && q.t.out && mins(q.p.out) <= mins(r.p.in) && mins(q.t.out) > mins(r.p.in) && mins(q.t.in) < mins(r.p.in));
+    if (tw) { r.p.feed = true; r.p.why = `MT5's broker stop closed the previous trade at ${tw.p.out} (MT5's price), the chart's candle reached it only at ${tw.t.out} - the chart was still in that trade`; }
+  });
+  const feedN = rows.filter(r => !r.t && r.p && r.p.feed).length;
+  if (tv && mt) $('match').innerHTML = `<div class="kpis"><div class="kpi"><div class="v">${same}</div><div class="k">same trade on both</div></div>
+    <div class="kpi"><div class="v">${feedN}</div><div class="k">almost same (feed diff)</div></div>
+    <div class="kpi"><div class="v">${tvT.length - same}</div><div class="k">chart only</div></div><div class="kpi"><div class="v">${mtP.length - same - feedN}</div><div class="k">MT5 only</div></div></div>`;
+  const FEED_TIP = "MT5 only for one minute: MT5's price crossed a level the TradingView candle never crossed (the two feeds differ by cents). The EA closed it at the next open - ";
+  const cell = (x, side) => x ? `<td class="l ${side ? 'sep' : ''}">${x.in}</td><td>${x.side}</td><td>${x.en.toFixed(2)}</td><td>${x.ex.toFixed(2)}</td><td class="${cls(x.pnl)}">${fmt(x.pnl)}</td>`
+                                : `<td class="l ${side ? 'sep' : ''}" colspan="5" style="color:var(--muted)">—</td>`;
+  $('rows').innerHTML = rows.length ? rows.map(r => `<tr>${cell(r.t, false)}<td class="sep l">${r.t && r.p ? '<span class="tag ok">same</span>' : (!r.t && r.p && r.p.feed) ? `<span class="tag feed" title="${esc(r.p.why.startsWith("MT5's broker") ? r.p.why : FEED_TIP + r.p.why)}">almost same (feed diff)</span>` : ''}</td>${cell(r.p, true)}</tr>`).join('')
+                                    : '<tr><td class="l" colspan="11">-</td></tr>';
+}
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const LBL = { issue: 'ISSUE', fixed: 'FIXED', ok: 'OK', info: 'NOTE' };
+function renderSync() {
+  const sy = S.sync;
+  if (!sy) return;
+  $('syncCard').style.display = '';
+  const li = x => `<li><span class="st ${x.status}">${LBL[x.status]}</span><div><div>${esc(x.title)}</div>${x.detail ? `<div class="d">${esc(x.detail)}</div>` : ''}</div></li>`;
+  const order = { issue: 0, fixed: 1, info: 2 };
+  const main = sy.items.filter(x => x.status !== 'ok').sort((a, b) => order[a.status] - order[b.status]);
+  const ok = sy.items.filter(x => x.status === 'ok');
+  const n = s => sy.items.filter(x => x.status === s).length;
+  $('syncSum').textContent = `· ${sy.at} · ${n('issue')} issue(s), ${n('fixed')} fixed, ${ok.length} checks passed`;
+  $('syncList').innerHTML = main.length ? main.map(li).join('') : '<li><span class="st ok">OK</span><div>No sync issues found.</div></li>';
+  $('syncOkSum').textContent = `${ok.length} checks passed`;
+  $('syncOk').innerHTML = ok.map(li).join('');
+  if (sy.fix && sy.fix.offset) $('offset').value = sy.fix.offset;
+}
+
+async function call(path, body, msg) {
+  $('btnTv').disabled = $('btnMt5').disabled = $('btnSync').disabled = true;
+  $('status').textContent = msg;
+  const t0 = Date.now(), tick = setInterval(() => $('status').textContent = msg + ` (${Math.round((Date.now() - t0) / 1000)} s)`, 1000);
+  try {
+    const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) });
+    const j = await r.json();
+    if (j.error) throw new Error(j.error);
+    S = j; render(); renderSync();
+    $('status').textContent = 'Done.';
+  } catch (e) { $('status').textContent = 'Error: ' + e.message; }
+  finally { clearInterval(tick); $('btnTv').disabled = $('btnMt5').disabled = $('btnSync').disabled = false; }
+}
+$('btnTv').onclick = () => call('/api/tv', {}, 'Reading the indicator\'s settings and trades from TradingView…');
+$('btnMt5').onclick = () => {
+  if (!$('from').value || !$('to').value) { $('status').textContent = 'Pick the dates first.'; return; }
+  call('/api/mt5', { from: $('from').value, to: $('to').value, symbol: $('symbol').value, offset: $('offset').value, delay: $('delay').value },
+       'Reading TradingView, then running the MT5 Strategy Tester on Blueberry… (a week of 1-minute ticks takes about 30 s – 3 min)');
+};
+// ── 10 months in MT5 ──────────────────────────────────────────────────────
+const rigName = r => r ? 'MT5 copy ' + ((String(r).match(/\d+$/) || ['1'])[0]) : '';
+const MN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+let Y = null, yrBusy = false;
+const pct = s => parseFloat(String(s || '0').replace('%', '')) || 0;
+function renderYear() {
+  if (!Y) return;
+  $('yrAuto').checked = Y.auto; $('yrDelay').value = Y.delay;
+  const rows = Y.order.map(m => ({ m, v: Y.months[m] || { status: 'idle' } }));
+  const done = rows.filter(r => r.v.status === 'done' && r.v.result && r.v.result.net != null);
+  const mx = Math.max(1, ...done.map(r => Math.abs(r.v.result.net)));
+  const prev = Y.prev || {};
+  let T = { n: 0, w: 0, net: 0, pn: 0, pc: 0, gd: 0, d: 0 };
+  $('yrRows').innerHTML = rows.map(({ m, v }) => {
+    const name = `<a href="/chart?m=${m}" target="_blank">${MN[+m.slice(5) - 1] + ' ' + m.slice(0, 4) + (m === '2026.10' ? ' (1-17)' : '')}</a>`;
+    if (v.status !== 'done') {
+      const st = v.status === 'running' ? `<span class="run">running on ${rigName(v.rig)} · ${Math.round(Date.now() / 1000 - v.since)} s</span>`
+               : v.status === 'error' ? `<span class="loss">${esc((v.result || {}).error || 'error')}</span>` : `<span class="q">${v.status}</span>`;
+      return `<tr><td class="l">${name}</td><td colspan="7" class="l">${st}</td><td class="l"></td></tr>`;
+    }
+    const r = v.result, n = r.trades || 0, wr = pct(r.wr);
+    T.n += n; T.w += n * wr / 100; T.net += r.net; T.gd += r.green || 0; T.d += r.days || 0;
+    const p = prev[m]; let dlt = '';
+    if (p && p.net != null) { const d = r.net - p.net; T.pn += d; T.pc++; dlt = `<span class="${d >= 0 ? 'win' : 'loss'}">${d >= 0 ? '+' : ''}${fmt(d).replace(/^\+/, '')}</span>`; }
+    const w = Math.round(Math.abs(r.net) / mx * 100);
+    return `<tr><td class="l">${name}</td><td>${n}</td><td>${wr.toFixed(1)}%</td><td class="${cls(r.net)}">${fmt(r.net)}</td><td>${dlt}</td>
+      <td>${esc(r.pf)}</td><td>${r.green ?? '-'} / ${r.days ?? '-'}</td><td class="l bar"><span class="b ${r.net >= 0 ? 'w' : 'l'}" style="width:${w}%"></span></td>
+      <td class="l" style="color:var(--muted)">${v.cached ? 'cached' : rigName(v.rig || '') + (v.secs ? ' · ' + v.secs + ' s' : '')}</td></tr>`;
+  }).join('') + (done.length ? `<tr class="tot"><td class="l">${done.length} month${done.length > 1 ? 's' : ''}</td><td>${T.n}</td>
+      <td>${T.n ? (T.w / T.n * 100).toFixed(1) : '0'}%</td><td class="${cls(T.net)}">${fmt(T.net)}</td>
+      <td>${T.pc ? `<span class="${T.pn >= 0 ? 'win' : 'loss'}">${T.pn >= 0 ? '+' : ''}${fmt(T.pn).replace(/^\+/, '')}</span>` : ''}</td>
+      <td></td><td>${T.gd} / ${T.d}</td><td></td><td></td></tr>` : '') + splitRows(done);
+  const green = done.filter(r => r.v.result.net > 0).length;
+  $('yrSum').textContent = Y.error ? '· ' + Y.error : Y.running ? `· running… ${Y.elapsed ?? 0} s (${done.length} of ${rows.length} months)`
+    : Y.at ? `· ${Y.period ? Y.period + ' · ' : ''}${done.length} months, ${green} green · settings of ${Y.at}, took ${Y.elapsed} s` : '· waiting for the chart';
+  const ch = (Y.changed || []).map(c => c.k === '__period' ? `timeframe ${c.was || 'M1'} → ${c.now}` : `${c.k} ${c.was} → ${c.now}`).join(', ');
+  $('yrChg').innerHTML = (ch ? `<b>Changed since the run before:</b> ${esc(ch)} - "vs before" shows its effect per month.` : '')
+    + (Y.notes && Y.notes.length ? `<div class="warn" style="margin-top:6px">${Y.notes.map(esc).join('<br>')}</div>` : '');
+}
+// Zee 2026-10-17: tune on Jan-Jun only, then check Jul-Oct - a setting is real only if the months it was NOT tuned on agree
+const TUNE = ['2026.01', '2026.02', '2026.03', '2026.04', '2026.05', '2026.06'];
+function splitRows(done) {
+  const part = (lab, hint, rs) => {
+    if (!rs.length) return '';
+    let n = 0, w = 0, net = 0, gd = 0, d = 0;
+    rs.forEach(r => { const x = r.v.result, k = x.trades || 0; n += k; w += k * pct(x.wr) / 100; net += x.net; gd += x.green || 0; d += x.days || 0; });
+    return `<tr class="split"><td class="l"><b>${lab}</b> <span style="color:var(--muted)">${hint}</span></td><td>${n}</td><td>${n ? (w / n * 100).toFixed(1) : '0'}%</td>
+      <td class="${cls(net)}">${fmt(net)}</td><td></td><td></td><td>${gd} / ${d}</td><td class="l" colspan="2" style="color:var(--muted)">${rs.length} month${rs.length > 1 ? 's' : ''}, ${rs.filter(r => r.v.result.net > 0).length} green</td></tr>`;
+  };
+  return part('Tune on', 'Jan–Jun', done.filter(r => TUNE.includes(r.m)))
+       + part('Check on', 'Jul–Oct (do not look while tuning)', done.filter(r => !TUNE.includes(r.m)));
+}
+function renderValid() {
+  const v = (Y && Y.valid) || { ok: null, why: [] };
+  const el = $('validVal');
+  el.textContent = v.ok === true ? 'True' : v.ok === false ? 'False' : 'unknown';
+  el.className = v.ok === true ? 'win' : v.ok === false ? 'loss' : 'q';
+  $('validAt').textContent = v.at ? '· checked ' + v.at + ' (every 2 s)' : '';
+  $('validWhy').innerHTML = v.ok === true ? '' : (v.why || []).map(w => `<li>${esc(w)}</li>`).join('');
+}
+async function pollYear() {
+  try { Y = await (await fetch('/api/year')).json(); renderYear(); renderValid(); } catch (e) { $('yrSum').textContent = '· page server not answering'; }
+  setTimeout(pollYear, Y && Y.running ? 1000 : 2500);
+}
+async function setYear(body) {
+  try { Y = await (await fetch('/api/year', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })).json(); renderYear(); } catch (e) {}
+}
+$('yrAuto').onchange = () => setYear({ auto: $('yrAuto').checked });
+$('yrDelay').onchange = () => setYear({ delay: $('yrDelay').value });
+$('yrRun').onclick = () => setYear({ run: true });
+pollYear();
+
+$('btnSync').onclick = () => call('/api/sync', { offset: $('offset').value },
+  'Checking sync: the chart, its candles vs the file the EA reads, the EA build, server time, and the last MT5 run trade by trade…');
+$('onlyChart').onchange = render;
+fetch('/api/state').then(r => r.json()).then(j => { S = j; render(); renderSync(); }).catch(() => {});
+</script>
+</body>
+</html>

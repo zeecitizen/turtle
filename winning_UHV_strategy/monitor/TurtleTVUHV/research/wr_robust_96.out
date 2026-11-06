@@ -1,0 +1,5 @@
+BASE {'wr1': np.float64(93.38), 'wr2': np.float64(94.14), 'n1': 725, 'n': 1852, 'wr': 93.84, 'net': 264191, 'worst': -5158, 'dd': 17534, 'pf': np.float64(1.605), 'avg_loss': -3830, 'h1': 107846, 'h2': 156345}
+START 2026-10-28 13-00-03 WR 96.1 boxes {'wr1': np.float64(95.65), 'wr2': np.float64(96.34), 'n1': 460, 'n': 1115, 'wr': 96.05, 'net': 237551, 'worst': -5129, 'dd': 14826, 'pf': np.float64(2.234), 'avg_loss': -4374, 'h1': 83808, 'h2': 153743}
+step 1: {'TvBox_asia_B': 'untick box 3'} -> {'wr1': np.float64(95.89), 'wr2': np.float64(96.84), 'n1': 389, 'n': 958, 'wr': 96.45, 'net': 233048, 'worst': -5129, 'dd': 15230, 'pf': np.float64(2.666), 'avg_loss': -4114, 'h1': 81381, 'h2': 151667}
+step 2: {'InpBandsB': 'untick box 17'} -> {'wr1': np.float64(96.02), 'wr2': np.float64(96.94), 'n1': 377, 'n': 933, 'wr': 96.57, 'net': 234156, 'worst': -5129, 'dd': 12598, 'pf': np.float64(2.804), 'avg_loss': -4056, 'h1': 82553, 'h2': 151603}
+no further improvement

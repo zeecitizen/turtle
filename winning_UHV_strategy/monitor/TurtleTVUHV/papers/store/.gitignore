@@ -1,0 +1,5 @@
+*.pdf
+*.jsonl
+paper.txt
+!.gitkeep
+!.gitignore
