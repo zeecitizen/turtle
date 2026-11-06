@@ -205,3 +205,77 @@ Settings dict `U97` (each can be overridden in `config.json` / `state/admin.json
 - **Expected about 99.0% on new trades** (98.3–99.4%), at or below break-even. Two months in three will still look
   like 100%.
 - **Proof needs live:** about 450 new trades with zero losses.
+
+---
+
+## 10. The pocket-map study (6 Nov 2026): can the angel act only in small risky pockets?
+
+**Question (Zee):** *"10% risky ... 80% non-risky ... 10% risky ... isolate the risky zones further"*. Can we find small
+pockets (10–20% of trades) that hold most of the losses? The angel would act only there, and the other ~80% would
+trade untouched.
+
+**Protocol:** base setting 7,626 trades / 172 losses.
+- Pockets were found on **TRAIN** (Mar–Jun: 3,335 trades, 112 losses) and proven on **TEST** (Jul–Nov: 4,291 trades,
+  60 losses) one time only.
+- **Bar:** lift > ~2 on both halves.
+- Three independent hunts, then an adversarial audit. Files: `research/loss_study/pockets/` (`method_a_trees/`, the
+  method B and C folders, `POCKET_MAP.md`).
+
+### Method A: decision trees + gradient boosting (scale-free features, month-balanced)
+| Pocket | Condition | Train | Test | Verdict |
+|---|---|---|---|---|
+| P1 abnormal breakout spread | breakout spread − median of previous 50 trades > 0.275 pip | 2.3%, 10/112 L, lift 3.9× | 1.7%, 9/60 L, **lift 8.7×** | **held** |
+| P2 NY close / rollover hour | 16:00–18:00 NY | 3.8%, 13 L, 3.1× | 4.0%, 9 L, **3.7×** | **held** |
+| P3 Friday afternoon | Friday from 12:00 NY | 3.7%, 15 L, 3.6× | 4.6%, 9 L, **3.3×** | **held** (one loss from failing) |
+| P4 counter-trend breakout in chop, weak participation | 30-bar move ≤ −1.9 ATR, ER30 ≤ 0.21, breakout ticks ≤ 0.51 × UHV | 7.0%, 20 L, 2.5× | 8.0%, 10 L, 2.1× | held weakly |
+| P5 NY afternoon on thin volume | after 14:30 NY, volume ≤ 0.88 × normal, ATR > 0.77 × normal | 3.4%, 15 L, 3.9× | 3.0%, 5 L, 2.8× | held weakly |
+| X1 top 10% of the boosted risk score | xgboost, test AUC 0.628 (p ≤ 0.01: real but weak) | 10%, 19 L, 1.7× | 10%, 18 L, 3.0× | a model score, not a rule |
+| F1 shallow stop in a choppy hour | stop ≤ 0.81 ATR, chop | 4.0× in all 4 months | **0 losses** | FAILED |
+| F2 chop + gapped breakout + little room | — | 3.9× | 1.2× | FAILED |
+| F3 best raw tree leaf | — | 4.5× | 0.65× | FAILED: it learned the old 0.5-pip-spread feed |
+
+Note: the feed's spread stepped from about 0.5 to about 0.1 pip on 9 June 2026. The raw spread only marks that
+regime, so the hunt used the spread *relative to recent trades*.
+
+### Method B: greedy rule-list beam search (2,135 conditions)
+Its six best train pockets ran at 6.5–7.6× on train, and **all collapsed on test** (0–1.4×):
+- late NY with a wide stop;
+- a narrow chop band in a wide range;
+- fading volume;
+- a weak breakout minute;
+- strong ADX;
+- breaking into a nearby extreme.
+
+It is a textbook case of data-mining.
+
+### Method C: loss-cluster profiling (from the 172 chart-read loss causes)
+| Pocket | Train | Test | Verdict |
+|---|---|---|---|
+| Weekly close (Friday from 14:30 NY) | 1.5%, 11 L, 6.4× | 2.1%, 6 L, **4.7×** | **held** |
+| Rollover / dead book (17:00 NY break OR spread blow-out) | 1.7%, 11 L, 5.65× | 1.7%, 8 L, **7.8×** | **held** |
+| Dead chop / no separator | 3.9× | 2.5× (weak) | train only |
+| Exhausted move (mature camel after a run) | 5.1× | 2.2× (1 loss) | did not hold |
+| News / US data slot | 2.55× | 0.88× | not viable |
+| Counter-structure | 1.7× | 0.63× | not viable |
+| Into support / resistance | 1.2× | 1.7× | not viable |
+
+### The audit and the map: what it means
+- **Five of 22 candidate pockets survived, and they are really ONE zone: the session edge.** That covers a spread
+  blow-out at the breakout, the NY close / rollover, and Friday afternoon / the weekly close.
+- **The angel already guards it:** `InpUhvMaxTrigSpread 1.0` (spread ≥ 1.0 alone holds 8 of P1's 9 test losses),
+  `InpUhvNoClose` (16:45–17:45 NY), and `InpUhvFriCutAllNY 10`. 8 of 9 test losses of the spread and close pockets are
+  inside those guards already.
+- **The union of all five on test:** the angel would watch 7.8% of trades, holding 13–15 of the 60 losses. Everything
+  else trades untouched, about 40 trades a day at **98.8%**. Reaching the 99.3% break-even would need 33 of 60 losses
+  inside the pockets, which is about 20 short. Even the best set picked *with test visible* reached only 99.0–99.1%.
+- **Comparison:**
+  - base with no angel: ~44 trades/day at 97.7%;
+  - the pocket map: ~40/day at 98.8%;
+  - **the current angel (secure zone): ~3–4/day at 99.4–100%.**
+
+  Nothing in between reaches break-even.
+
+**Conclusion:** most losses can't be isolated into small pockets. Apart from the session edge, losers look like
+winners. So the winning design stays: **trade only the narrow secure zone** (mode 2) and keep the session-edge guards
+on everything. Possible small extras, not adopted: P4/P5 need new inputs and run at only 2–3×; a minute-precise Friday
+14:30 cut would need a new minute input.
