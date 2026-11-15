@@ -4,7 +4,7 @@ from pathlib import Path
 
 URL_FILE = Path(r"C:\Users\zeesh\Documents\GitHub\turtle\monitor\cloudflared_url.txt")
 base = URL_FILE.read_text(encoding="utf-8").strip().rstrip("/")
-auth = base64.b64encode(b"hammad:[redacted]").decode("ascii")
+auth = base64.b64encode(("hammad:" + open(__import__("os").path.join(__import__("os").path.dirname(__import__("os").path.abspath(__file__)), ".dashboard_password_hammad")).read().strip()).encode()).decode("ascii")
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140.0"
 
 text = sys.argv[1] if len(sys.argv) > 1 else "ping"
