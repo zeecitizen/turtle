@@ -6,6 +6,7 @@ Usage:
 
 Config: .whatsapp_config.json (instance_id, api_token, chat_id)
 """
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import argparse
 import json
 import sys
@@ -26,7 +27,7 @@ def _send(msg: str):
         return sent > 0
     except ImportError:
         # Fallback: send to Shano only (legacy)
-        return _send_single(msg, "[shano-number]@c.us")
+        return _send_single(msg, CONTACTS["shano"])
 
 
 def _send_single(msg: str, chat_id: str):

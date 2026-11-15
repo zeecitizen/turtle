@@ -358,15 +358,18 @@ function buildState() {
 // Password gates — per-user. Zee (/me + /api/cc-chat*) and Hammad (/hammad + /api/hammad-chat*)
 // are separate; each user can only access their own gated routes.
 const PASSWORD_FILE = 'C:\\Users\\zeesh\\turtle\\monitor\\.dashboard_password';
-let DASHBOARD_PASSWORD = '[code word]';
-try {
-  const stored = fs.readFileSync(PASSWORD_FILE, 'utf8').trim();
-  if (stored) DASHBOARD_PASSWORD = stored;
-} catch {
-  try { fs.writeFileSync(PASSWORD_FILE, DASHBOARD_PASSWORD, 'utf8'); } catch {}
+// 2026-11-15: no password is written in this file (the repository is public). Each one is read from a private, git-ignored file
+// beside PASSWORD_FILE; a missing file gets a random password, written there for the owner to read.
+function readSecret(file) {
+  try { const s = fs.readFileSync(file, 'utf8').trim(); if (s) return s; } catch {}
+  const s = require('crypto').randomBytes(6).toString('hex');
+  try { fs.writeFileSync(file, s, 'utf8'); } catch {}
+  return s;
 }
-const HAMMAD_PASSWORD = '[redacted]';
-const SHANO_PASSWORD  = '[redacted]';
+const DASHBOARD_PASSWORD = readSecret(PASSWORD_FILE);
+const HAMMAD_PASSWORD = readSecret(PASSWORD_FILE + '_hammad');
+const SHANO_PASSWORD  = readSecret(PASSWORD_FILE + '_shano');
+const CODE_WORD_RE = new RegExp('\\b' + DASHBOARD_PASSWORD.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b');   // the /home code word, inside a message
 const AUTH_GATES = [
   {
     test: (u) => u === '/me' || u === '/chat'
@@ -1014,7 +1017,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
         } catch { msg = body; }
 
         // Path A — code word
-        if (/\b[code word]\b/.test(msg)) {
+        if (CODE_WORD_RE.test(msg)) {
           const token = homeSignRole('admin_zeeshan');
           res.writeHead(200, {
             'Content-Type': 'application/json',
@@ -1896,7 +1899,7 @@ hr { border: none; border-top: 1px solid #25304a; margin: 32px 0; }
     return;
   }
   // ── Zee's chat API: gated by ?key=[code word] ──
-  const ZEE_CHAT_KEY = '[code word]';
+  const ZEE_CHAT_KEY = DASHBOARD_PASSWORD;
   const ZEE_CHAT_LOG = 'C:\\Users\\zeesh\\turtle\\monitor\\zee_chat.jsonl';
   if (url.startsWith('/api/zee-chat/send') && req.method === 'POST') {
     const u = new URL(req.url, 'http://x');

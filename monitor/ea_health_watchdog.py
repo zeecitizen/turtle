@@ -12,6 +12,7 @@ Alerts on:
   - 3 consecutive SL hits today
   - EA not running (no terminal64 process)
 """
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import json, re, time, sys
 from pathlib import Path
 from datetime import datetime, timezone, timedelta
@@ -24,7 +25,7 @@ COMMON_FILES = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/Common/
 TERMINAL_DIR = Path(r"C:/Users/zeesh/AppData/Roaming/MetaQuotes/Terminal/DBE9B8B347D025DD139E103EE3B63FD8")
 WHATSAPP_CFG = Path(r"C:/Users/zeesh/Documents/GitHub/turtle/monitor/.whatsapp_config.json")
 STATUS_LOG   = Path(r"C:/Users/zeesh/Documents/GitHub/turtle/monitor/.watchdog_status.jsonl")
-ALERT_NUMBER = "[mehboob-number]@c.us"   # 2026-06-23: Mehboob bhai (Zee's brother + EA manager). Zee does NOT monitor WhatsApp.
+ALERT_NUMBER = CONTACTS["mehboob"]   # 2026-06-23: Mehboob bhai (Zee's brother + EA manager). Zee does NOT monitor WhatsApp.
 
 # ── Thresholds ──
 HEARTBEAT_STALE_SEC      = 300   # 5 min stale = alert (during market hours)

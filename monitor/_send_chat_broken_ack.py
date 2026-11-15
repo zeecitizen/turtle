@@ -1,4 +1,5 @@
 """One-off WhatsApp to Zee: ack chat broken + summarize Feb 11 finding."""
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import json, urllib.request
 
 cfg = json.load(open(r"C:\Users\zeesh\Documents\GitHub\turtle\monitor\.whatsapp_config.json"))
@@ -17,7 +18,7 @@ msg = (
 )
 
 url = f"{host}/waInstance{iid}/sendMessage/{tok}"
-body = json.dumps({"chatId": "[zee-number]@c.us", "message": msg},
+body = json.dumps({"chatId": CONTACTS["zee"], "message": msg},
                   ensure_ascii=False).encode("utf-8")
 req = urllib.request.Request(url, data=body,
     headers={"Content-Type": "application/json; charset=utf-8"})

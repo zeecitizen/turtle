@@ -14,6 +14,7 @@ Launch: python sexy_hawk.py              (one-shot report)
         python sexy_hawk.py --vibe       (send a random check-in)
 """
 
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import json
 import sys
 import time
@@ -48,7 +49,7 @@ API_KEY_FILE = SCRIPT_DIR / ".claude_api_key"
 WA_CONFIG = SCRIPT_DIR / ".whatsapp_config.json"
 SEXY_LOG = SCRIPT_DIR / "sexy_hawk.log"
 
-ZEESHAN_PHONE = "[zee-number]@c.us"
+ZEESHAN_PHONE = CONTACTS["zee"]
 REPORT_INTERVAL = 7200  # 2 hours
 
 

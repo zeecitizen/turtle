@@ -21,6 +21,7 @@ Log: monitor/uhv_autotrade_watchdog.log
 """
 
 from __future__ import annotations
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import os
 import sys
 import time
@@ -40,7 +41,7 @@ POLL_SECONDS       = 30
 STALE_THRESHOLD    = 90      # mtime gap before declaring stale (EA writes every ~5s)
 CONSECUTIVE_STALE  = 2       # require N consecutive stale polls before alerting
 REALERT_INTERVAL   = 600     # re-send alert every 10min while stale
-ZEE_CHAT           = "[zee-number]@c.us"
+ZEE_CHAT           = CONTACTS["zee"]
 
 
 def log(msg: str):

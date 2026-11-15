@@ -16,6 +16,7 @@ dies, sleeps 5s and respawns. URL change → notify.
 
 Sheriff Hawk will see this via the heartbeat freshness, same as other hawks.
 """
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import json, os, re, signal, socket, subprocess, sys, threading, time, urllib.request, base64
 import urllib.error
 from datetime import datetime, timezone
@@ -35,7 +36,7 @@ CHAT_STATE    = HERE / ".cloudflared_chat_watchdog.json"  # tracks last-nudge to
 
 CLOUDFLARED   = r"C:\Program Files (x86)\cloudflared\cloudflared.exe"
 LOCAL_TARGET  = "http://localhost:3457"
-ZEE_CHAT_ID   = "[zee-number]@c.us"
+ZEE_CHAT_ID   = CONTACTS["zee"]
 CHROME_PATHS  = [
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
     r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
@@ -208,7 +209,7 @@ def whatsapp_url(url: str, is_change: bool) -> None:
     msg = (
         f"{prefix} /me tunnel URL:\n"
         f"{url}/me\n\n"
-        f"Username: zee\nPassword: [code word]\n\n"
+        f"Username: zee\nPassword: {DASH_PW}\n\n"
         f"Bookmark this — quick tunnels rotate when daemon restarts. "
         f"Daemon auto-WhatsApps you the new URL each time."
     )

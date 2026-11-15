@@ -1,4 +1,5 @@
 """One-off: send the Cloudflare quick-tunnel chat URL to Zee via WhatsApp."""
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import json, urllib.request
 
 cfg = json.load(open(r"C:\Users\zeesh\Documents\GitHub\turtle\monitor\.whatsapp_config.json"))
@@ -15,7 +16,7 @@ msg = (
 )
 
 url = f"{host}/waInstance{iid}/sendMessage/{tok}"
-body = json.dumps({"chatId": "[zee-number]@c.us", "message": msg}).encode("utf-8")
+body = json.dumps({"chatId": CONTACTS["zee"], "message": msg}).encode("utf-8")
 req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"})
 try:
     with urllib.request.urlopen(req, timeout=15) as r:

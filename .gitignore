@@ -3,6 +3,10 @@ monitor/.claude_api_key
 monitor/.openai_api_key
 monitor/.whatsapp_config.json
 monitor/.dashboard_password
+monitor/.dashboard_password_*
+# 2026-11-15: the repository is public - phone numbers live only in these two private files (read through monitor/contacts.py)
+monitor/.contacts.json
+monitor/broadcast_list.json
 monitor/.tv_credentials.json
 
 # ─── Claude brain (PLAINTEXT must never enter git; encrypted bundle in brain_vault/ IS pushed)

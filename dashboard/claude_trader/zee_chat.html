@@ -84,15 +84,18 @@
 </div>
 
 <script>
-const KEY = '[code word]';
+let KEY = sessionStorage.getItem('zee_chat_key') || '';   // typed at the gate and checked by the server, never written in this page
 const STORAGE = 'zee_chat_unlocked';
 const fmt = ts => { const d = new Date(ts); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); };
 
-function unlock(pw) {
-  if (pw !== KEY) {
+async function unlock(pw) {
+  let ok = false;
+  try { ok = !!pw && (await fetch('/api/zee-chat?key=' + encodeURIComponent(pw) + '&since=' + Date.now(), { cache: 'no-store' })).ok; } catch (_) {}
+  if (!ok) {
     document.getElementById('gate-err').textContent = 'wrong passcode';
     return false;
   }
+  KEY = pw; sessionStorage.setItem('zee_chat_key', pw);
   sessionStorage.setItem(STORAGE, '1');
   document.getElementById('gate').style.display = 'none';
   document.getElementById('chat-header').style.display = 'flex';

@@ -14,6 +14,7 @@ Launch: python sheriff_hawk.py          (one-shot check)
         python sheriff_hawk.py --loop   (run every hour)
 """
 
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import json
 import sys
 import os
@@ -53,7 +54,7 @@ API_KEY_FILE = SCRIPT_DIR / ".claude_api_key"
 WA_CONFIG = SCRIPT_DIR / ".whatsapp_config.json"
 
 CHECK_INTERVAL = 300  # 5 minutes (was 1 hour - too slow for live trading)
-ZEESHAN_PHONE = "[zee-number]@c.us"
+ZEESHAN_PHONE = CONTACTS["zee"]
 SHERIFF_STATE = SCRIPT_DIR / "sheriff_state.json"
 
 

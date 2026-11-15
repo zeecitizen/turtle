@@ -10,6 +10,7 @@ Usage:
 Add/remove numbers by editing broadcast_list.json.
 """
 
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import json
 from pathlib import Path
 
@@ -28,8 +29,8 @@ def _ensure_list():
     if not BROADCAST_LIST.exists():
         default = {
             "contacts": [
-                {"name": "shano", "phone": "[shano-number]", "chat_id": "[shano-number]@c.us", "active": True},
-                {"name": "zeeshan", "phone": "[zee-number]", "chat_id": "[zee-number]@c.us", "active": True},
+                {"name": "shano", "phone": CONTACTS["shano"].split("@")[0], "chat_id": CONTACTS["shano"], "active": True},
+                {"name": "zeeshan", "phone": CONTACTS["zee"].split("@")[0], "chat_id": CONTACTS["zee"], "active": True},
             ]
         }
         BROADCAST_LIST.write_text(json.dumps(default, indent=2), encoding="utf-8")

@@ -7,6 +7,7 @@ Also pings on close so she knows when to exit.
 
 Run as a daemon via ensure_daemon.py shano_trade_notifier.py.
 """
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import json
 import time
 import sys
@@ -23,8 +24,8 @@ LOG_PATH = ROOT / "monitor" / "shano_trade_notifier.log"
 # WhatsApp credentials — loaded from monitor/.whatsapp_config.json (gitignored).
 # Do NOT hardcode secrets here.
 WA_CONFIG = ROOT / "monitor" / ".whatsapp_config.json"
-SHANO_CHAT = "[shano-number]@c.us"
-ZEE_CHAT   = "[zee-number]@c.us"
+SHANO_CHAT = CONTACTS["shano"]
+ZEE_CHAT   = CONTACTS["zee"]
 
 
 def _load_whatsapp() -> tuple[str, str]:

@@ -1,10 +1,11 @@
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import sys, json
 from pathlib import Path
 sys.path.insert(0, r"C:/Users/zeesh/Documents/GitHub/turtle/monitor")
 from whatsapp_alert import _send_single
 
-ZEE   = "[zee-number]@c.us"
-SHANO = "[shano-number]@c.us"
+ZEE   = CONTACTS["zee"]
+SHANO = CONTACTS["shano"]
 
 ZEE_MSG = (
     "Jaan, setup labelling page is LIVE:\n\n"

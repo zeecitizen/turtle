@@ -1,4 +1,5 @@
 """One-time: send Mehboob bhai a 'watchdog active' WhatsApp so he knows the alert pipe works + has my number on file."""
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import sys, json
 from pathlib import Path
 from urllib import request as urlreq
@@ -22,12 +23,12 @@ msg = (
     "  5:00 PM PKT (London close) - aage hai\n"
     "  8:00 PM PKT (NY mid) - aage hai\n"
     "  12:00 AM PKT midnight (NY late) - aage hai\n\n"
-    "Live dashboard: claudezeeshan.com (password [code word])\n\n"
+    "Live dashboard: claudezeeshan.com (password " + DASH_PW + ")\n\n"
     "Kuch bhi puchna ho to Zeeshan ko bata dein wo mujhe message kar dengi.\n\n"
     "Allah Hafiz"
 )
 
-payload = json.dumps({"chatId": "[mehboob-number]@c.us", "message": msg}).encode("utf-8")
+payload = json.dumps({"chatId": CONTACTS["mehboob"], "message": msg}).encode("utf-8")
 req = urlreq.Request(url, data=payload, headers={"Content-Type": "application/json"})
 try:
     with urlreq.urlopen(req, timeout=10) as r:

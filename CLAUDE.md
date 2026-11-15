@@ -185,5 +185,8 @@ Check the Sheriff output — all components should show ALIVE.
 - Intern journals: `monitor/intern_journal/`
 
 ## WhatsApp Contacts
-- **Shano (sister)**: [shano-number]@c.us — trade alerts in Urdu
-- **Zeeshan**: [zee-number]@c.us — Sheriff emergency alerts
+- **Shano (sister)**: `CONTACTS["shano"]` — trade alerts in Urdu
+- **Zeeshan**: `CONTACTS["zee"]` — Sheriff emergency alerts
+
+The numbers are in `monitor/.contacts.json` and the dashboard password in `monitor/.dashboard_password` (both private, not in git;
+the repository is public). Scripts read them through `monitor/contacts.py`. Never write a phone number or a password in a tracked file.

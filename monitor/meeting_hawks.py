@@ -13,6 +13,7 @@ Launch: python meeting_hawks.py --morning    (force morning meeting)
         python meeting_hawks.py --loop       (auto-schedule both daily)
 """
 
+import os as _os, sys as _sys; _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__))); from contacts import CONTACTS, DASH_PW  # private, not in git
 import json
 import sys
 import time
@@ -49,7 +50,7 @@ WA_CONFIG = SCRIPT_DIR / ".whatsapp_config.json"
 MEETING_LOG = SCRIPT_DIR / "meeting_hawks.log"
 MEETING_HISTORY = SCRIPT_DIR / "meeting_history.json"
 
-ZEESHAN_PHONE = "[zee-number]@c.us"
+ZEESHAN_PHONE = CONTACTS["zee"]
 
 # PKT = UTC+5
 MORNING_HOUR_UTC = 4   # 9am PKT
@@ -386,7 +387,7 @@ You just sat through this meeting:
 
 {transcript}
 
-Now write a WhatsApp message to Zee ({'[zee-number]'}) summarizing what happened.
+Now write a WhatsApp message to Zee (+{ZEESHAN_PHONE.split('@')[0]}) summarizing what happened.
 Be yourself — sassy, honest, mix of English and casual Urdu/Hinglish.
 Keep it SHORT — max 6-8 sentences. Hit the key points.
 {'This is the morning standup — tell him what everyone plans to do today.' if meeting_type == 'morning' else 'This is the evening review — tell him how the day went and what everyone thinks.'}
