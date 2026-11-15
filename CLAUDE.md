@@ -93,6 +93,19 @@ changes and dates, EA names etc as we increment versions"*). Every shipped versi
 there (EA, version, date, magic, what changed, result), and the "Which EA is which" table at its top
 is updated, in the same commit as the VERSION_HISTORY.md entry.
 
+# 📤 COMMIT AND PUSH AT THE END OF EVERY SESSION
+
+Zee, 2026-11-15: *"yes commit and push at the end of every session [make this a rule]"*.
+
+At the end of every session, commit the session's work and push it, without asking. Push the
+working branch **and** fast-forward `main` to it (`git push origin <branch> <branch>:main`):
+GitHub's contribution graph only counts commits on `main`, and Sep-Nov 2026 showed empty because
+the work sat on other branches or was never committed. Never backdate a commit to fill a day.
+
+The repository is public. Keep out: `games/` (Chrome profile, recordings, `live_signed.json`),
+`.claude_api_key`, `aws instance/`, tick and candle data folders, `backups/`, `research/`, PDFs,
+wheels, `.pkl` / `.npz` / `.npy` files and `testing/` CSVs. Scan what is staged for tokens first.
+
 # Claude Go Hawking
 
 When Zeeshan says **"Claude go hawking"**, run the full startup sequence below. No questions, no confirmations. Just do it.
