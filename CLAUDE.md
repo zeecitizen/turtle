@@ -19,6 +19,33 @@ fills — may PROMOTE one.** Never quote a Python P&L to Zee as evidence. Say
 MT5 custom symbol, so the Strategy Tester replays our own data with real spread and
 real execution. Full instructions in `BTCUSD/README.md`.
 
+## ✅ ONE EXCEPTION (2026-11-14): the Turtle TV UHV internal tester may promote
+
+Zee, 2026-11-14: *"change that rule to "the internal tester may promote, as long as
+the parity check passes""*.
+
+The Turtle TV UHV tester (`monitor/TurtleTVUHV/uhv_engine.py` with `InpUhvExec` 1, the
+page at http://127.0.0.1:8774/) executes trades as MT5's Strategy Tester does with
+random delay and the target held at the broker. It was checked against 16 MT5 runs
+(52,782 trades): no outcome it calls impossible, and MT5 within its own run-to-run
+variation on all 15 settings. **Its results may promote a UHV setting without an MT5
+run, on these conditions:**
+
+- **The parity check passes:** `py monitor/TurtleTVUHV/mt5_parity.py 3` ends with the
+  line `PASS` (no outcome the tester calls impossible, and at most one MT5 run in
+  twenty further than 2 run-to-run spreads from the tester's average). Run it after
+  ANY change to `uhv_engine.py`, `uhv_filters.py`, `uhv_diamond.py` or the ZeeUHV EAs,
+  and before promoting anything that depends on that change. If it has not been run
+  since the last such change, or it fails, the old rule applies: MT5 promotes.
+- **Quote the "Average MT5 run (every delay)" figure**, not the single shown run.
+- **Only this tester, only with `InpUhvExec` 1.** `InpUhvExec` 0, the Saad view, and
+  every other Python script, replay or notebook stay under the rule above:
+  hypothesis only.
+- **Settings with a position limit (`InpMaxPos` 1 or more)** agree with MT5 on win
+  rate and count but not trade by trade; say so when quoting them.
+
+Everything below about the haircut describes those other Python tools, not this tester.
+
 ---
 
 

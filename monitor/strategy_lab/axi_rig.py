@@ -19,6 +19,33 @@ RIGS = {"axi": r"C:\mt5_rig_axi", "axi2": r"C:\mt5_rig_axi2", "axi3": r"C:\mt5_r
 NO_WINDOW = 0x08000000        # CREATE_NO_WINDOW: no console flashing up when called from a windowless server (pythonw)
 
 
+def hide_windows_of(pid, seconds=60):
+    """MT5 draws its own window and ignores the launcher's SW_HIDE: find the windows of this process and hide them (Windows API, polled
+    for a while because the window appears a moment after launch). Only the rig's own process id is touched."""
+    import ctypes
+    from ctypes import wintypes
+    user32 = ctypes.windll.user32
+    SW_HIDE = 0
+    EnumProc = ctypes.WINFUNCTYPE(wintypes.BOOL, wintypes.HWND, wintypes.LPARAM)
+    end = time.time() + seconds
+    hidden = set()
+    while time.time() < end:
+        found = []
+        def cb(hwnd, _):
+            pid_out = wintypes.DWORD()
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid_out))
+            if pid_out.value == pid and user32.IsWindowVisible(hwnd):
+                found.append(hwnd)
+            return True
+        user32.EnumWindows(EnumProc(cb), 0)
+        for h in found:
+            if h not in hidden:
+                user32.ShowWindow(h, SW_HIDE)
+                hidden.add(h)
+        time.sleep(0.5)
+    return len(hidden)
+
+
 def _quiet():
     """Start a rig's MetaEditor / terminal minimised and without taking the focus (the year view starts 6 at once)."""
     si = subprocess.STARTUPINFO()
@@ -41,13 +68,35 @@ def use(rig):
 
 def compile_ea(ea, rig=None):
     R = _R(rig)
-    shutil.copy(SRC / f"{ea}.mq5", R / "MQL5" / "Experts" / f"{ea}.mq5")
+    source = SRC / f"{ea}.mq5"
+    expert_dir = R / "MQL5" / "Experts"
+    rig_source = expert_dir / source.name
+    output = expert_dir / f"{ea}.ex5"
     log = R / "compile.log"
-    subprocess.run([str(R / "MetaEditor64.exe"), "/portable",
-                    f"/compile:{R / 'MQL5' / 'Experts' / (ea + '.mq5')}", f"/log:{log}"], creationflags=NO_WINDOW, startupinfo=_quiet())
+    shutil.copy2(source, rig_source)
+    for inc in re.findall(r'#include\s+"([^"]+)"', source.read_text(encoding="utf-8", errors="ignore")):   # the EA's own .mqh files (MlxFeatures.mqh) travel with it
+        if (SRC / inc).is_file():
+            shutil.copy2(SRC / inc, expert_dir / inc)
+    output.unlink(missing_ok=True)
+    log.unlink(missing_ok=True)
+    try:
+        result = subprocess.run([str(R / "MetaEditor64.exe"), "/portable",
+                                 f"/compile:{rig_source}", f"/log:{log}"], creationflags=NO_WINDOW, startupinfo=_quiet(),
+                                timeout=180)
+    except subprocess.TimeoutExpired as error:
+        raise RuntimeError(f"MetaEditor timed out compiling {ea}") from error
+    if not log.is_file():
+        raise RuntimeError(f"MetaEditor did not create a fresh compile log for {ea}")
     txt = log.read_text(encoding="utf-16", errors="ignore")
-    if not re.search(r"Result: 0 errors", txt):
-        sys.exit("compile failed:\n" + txt[-2000:])
+    summary = re.search(r"Result:\s*(\d+) errors,\s*(\d+) warnings", txt)
+    if not summary or int(summary.group(1)) != 0:
+        raise RuntimeError(f"MetaEditor exited with code {result.returncode} or did not report a successful compile for {ea}:\n{txt[-2000:]}")
+    if not output.is_file() or not output.stat().st_size:
+        raise RuntimeError(f"MetaEditor reported success but did not create {output}")
+    if rig_source.read_bytes() != source.read_bytes():
+        raise RuntimeError(f"the source copied to the MT5 rig does not match {source}")
+    return {"errors": int(summary.group(1)), "warnings": int(summary.group(2)), "process_exit_code": result.returncode,
+            "log": str(log), "output": str(output)}
 
 
 def ea_defaults(ea):
@@ -101,7 +150,8 @@ def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=250
     killed and {"error": "cancelled"} returned (the year view drops a run the moment a chart setting changes)."""
     R = _R(rig)
     inputs = ea_defaults(ea)
-    inputs.update(sets)
+    # an EMPTY value makes MT5's tester reuse the previous run's value for that input (2026-10-28: box masks leaked between runs) - keep the default
+    inputs.update({k: v for k, v in sets.items() if not (str(v) == "" and str(inputs.get(k, "")) != "")})
     tag = tag or f"{ea}_{symbol}_{period}".replace(".", "_")
     ti = "".join(ini_input(k, v) for k, v in inputs.items())
     ini = (f"[Tester]\r\nExpert={ea}\r\nSymbol={symbol}\r\nPeriod={period}\r\nModel={model}\r\n"
@@ -116,6 +166,8 @@ def run(ea, symbol, period, sets, frm="2026.01.01", to="2026.10.08", deposit=250
     rep = R / "reports" / f"{tag}.htm"
     auth0 = _auth_fails(R)
     proc = subprocess.Popen([str(R / "terminal64.exe"), "/portable", f"/config:{R / 'run.ini'}"], startupinfo=_quiet())
+    import threading
+    threading.Thread(target=hide_windows_of, args=(proc.pid, 90), daemon=True).start()     # the rig's window is hidden as soon as it appears
     last_size, stable = -1, 0
     while True:
         time.sleep(1)

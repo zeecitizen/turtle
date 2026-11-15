@@ -38,18 +38,26 @@ def main():
     import os
     res = json.load(open(OUT))["rows"] if os.path.exists(OUT) else []     # resume: a stopped batch continues where it left off
     done = {x["key"] for x in res}
+    # MT5 vs MT5: the primary save as it is, once; each suggestion is then judged on how MT5 moves against that baseline
+    if os.path.exists(OUT + ".base"):
+        bl = json.load(open(OUT + ".base"))
+    else:
+        b0 = dict(base); rid0, n0, p0 = mt5(b0, "validation baseline (primary save, MT5)")
+        bl = {"run": rid0, "trades": n0, "net": p0}; json.dump(bl, open(OUT + ".base", "w"))
+        print("baseline MT5", bl, flush=True)
     for i, m in enumerate(picks[:limit]):
         if m["key"] in done: continue
         s = dict(base, **m["sets"], **m["xs"])
         tr, _, _ = sim.simulate(s, ds="year1"); r = tr[tr[:, 10] == 0]
         tn, tp = int(len(r)), round(float(r[:, 6].sum()))
         rid, mn, mp = mt5(s, f"validation {m['key']} {m['to']}")
-        ok = mn is not None and abs(tn - mn) <= 0.10 * max(tn, 1) and (tp > 0) == (mp > 0)
+        d_mt5 = None if mp is None else mp - bl["net"]
         rec = {"key": m["key"], "label": m["label"], "group": m["group"], "from": m["from"], "to": m["to"], "tester": {"trades": tn, "net": tp},
-               "mt5": {"trades": mn, "net": mp, "run": rid}, "match": bool(ok), "at": dt.datetime.now().strftime("%Y-%m-%d %H:%M")}
+               "mt5": {"trades": mn, "net": mp, "run": rid}, "baseline": {"trades": bl["trades"], "net": bl["net"], "run": bl["run"]},
+               "delta_mt5": d_mt5, "match": bool(d_mt5 is not None and d_mt5 > 0), "at": dt.datetime.now().strftime("%Y-%m-%d %H:%M")}
         res.append(rec)
         json.dump({"base": "2026-10-21 05-55-20", "count": len(res), "of": len(picks), "rows": res}, open(OUT, "w"), indent=1)
-        print(i + 1, len(picks), m["key"], tn, tp, mn, mp, "MATCH" if ok else "differs", flush=True)
+        print(i + 1, len(picks), m["key"], "MT5", mp, "vs baseline", bl["net"], "=", d_mt5, "IMPROVED" if rec["match"] else "NOT IMPROVED", flush=True)
 
 if __name__ == "__main__":
     main()

@@ -16,6 +16,90 @@ hostile one, or it doesn't ship.
 
 ---
 
+## Saad_strategy_15min v1.40 (2026-11-03) — the skip log: every skipped entry followed as a virtual trade (off by default)
+
+Zee (2026-11-03): *"pull the logs of history of trades taken on this EA on MT5 and bring the history including any skipped setups (and write if they
+would've been beneficial, we wanna know whether we're skipping any genuinely profitable setups)"*.
+
+- `InpSkipLog` (default **false**): whenever `DSkip()` refuses an entry inside `DoEntry` (ADX / ATR band / range box / hour / DTW / VPIN / HMM / ML gate /
+  lot size …) the EA opens a **virtual** trade with the entry price, stop and TP that the real order would have had, follows it on live ticks (long exits on
+  the bid, short on the ask; best / worst excursion tracked) until the TP, the stop or 72 h, and appends one row to `Common\Files\Saad15_skips_<symbol>_<magic>.csv`
+  (`skip_time, side, reason, setup, entry, sl, tp, outcome, exit_time, exit, pnl_usd, hold_min, best_usd, worst_usd, lots`). Setup-level skips without an
+  entry price (not broken in time, too close to the close, market closed) are written at once with outcome `setup never triggered`.
+- Trading is byte-identical with the input off (no file is touched). Turtle TV's **Deploy** tab turns `InpLogCsv` + `InpSkipLog` on in every deployed EA
+  and its **Fetch History** button pulls both CSVs from the server and sums, per skip reason, what the skipped trades would have made.
+- Compiled axi4: EA 0 / 0, view EA 0 / 0 (`make_view_ea.py`). Not yet run live; first deployment to the PXBT terminal on the AWS VM 2026-11-03.
+
+## Saad_strategy_15min v1.39 (2026-11-01) — the ML gate: a triple-barrier stacked model as an ONNX entry filter (off by default)
+
+Zee asked for the whole blueprint, shown first on Turtle TV's "Machine Learning" tab: triple-barrier labels (1.5 ATR up / 1.5 ATR down / 24 bars),
+purged K-fold with a 24-bar embargo, SHAP feature pruning, LightGBM + CatBoost stacked into a LogisticRegression, ONNX export, and the EA loading the
+model with OnnxCreate / OnnxRun at every M15 bar close - entering only when P(upper barrier) > 0.75 (SELL: P(lower) > 0.75). This entry is the MQL5 side;
+the Python side (features, labels, CV, training, export, the page) lives in `monitor/saad_view/mlx/`.
+
+- **`mt5/MlxFeatures.mqh` (new):** the 85 per-bar features of `mlx/FEATURE_SPEC.md` from the chart's M15 candles - `iATR(14)` (MT5's ATR is an SMA of the
+  true range = the tester's `D["atr"]`), `iADX(14)` main / +DI / -DI (MT5's EMA form = `D["adx"]`), `iMA` EMAs 8-256 and 20 - one code path for the EA and
+  the exporter: `MlxFeatures(sym, shift, f[])`, `MlxNames[]`, `MlxIndex(name)`, `MlxLoad` / `MlxCompute` for whole series. The spec's table has 85 columns
+  (its text says 86); both sides align BY NAME and `MLX_N` is the width. Where the spec left room, the conventions are the ones `mlx/features.py`
+  documents: since_hi20 / since_lo20 ties to the most recent bar, pivots with ties (the most recent, age <= 100), IB = the first 4 bars of hour 10-14 /
+  15+ (completed = 4 closed), "previous date" = the last trading day, Asia = today's hours 0-7 so far (0.5 before), ranges floored at 1e-6.
+- **`mt5/MlxExport.mq5` (new, trades nothing):** `InpMode` 0 = at start dump the chart's history (time = unix server seconds of the bar's open, the 85
+  features, then h1,l1,c1 .. h48,l48,c48 of the next 48 bars; bars 600 .. the last one with 48 closed bars after it; retries each second until the
+  indicators answer), 1 = stream every closed bar (features file + a bars file with time,O,H,L,C), 2 = the dump at the end of a tester pass (OnTester /
+  OnDeinit - the tester has little history before its start date). Files `mlx_features_<symbol><tag>.csv` / `mlx_bars_<symbol><tag>.csv` in MQL5\Files;
+  `InpCommon` = Common Files instead (found today: the tester wipes its agent's MQL5\Files when the next pass starts - the mode-1 file was gone).
+  Tester: `Expert=MlxExport Symbol=XAUUSD_BB Period=M15 InpMode=1 InpCommon=true` - 1,923 rows for Sep 2026 in 24 s.
+- **EA v1.39:** `InpMlFilter` (false), `InpMlThresh` (0.75), `InpMlDir` ("MLX": MQL5\Files\MLX first, then Common Files\MLX - the tester's agent sees only
+  Common Files), `InpMlLog` (false: one row per M15 candle with P(down) / P(none) / P(up) + the base probabilities to Common Files `mlx_probs_<symbol>.csv`).
+  `MlInit()` at OnInit: meta.json (kept names -> columns, the scaler, meta_coef 3 x 3n, meta_intercept 3, classes [-1, 0, 1], base_names), `base_<k>.onnx`
+  via `OnnxCreateFromBuffer`, `OnnxSetInputShape` [1, n], then a zero-vector probe picks the output form (label + [1,3] - skl2onnx / onnxmltools with
+  zipmap off - or label + [3], [1,3], [3]); anything missing or refused = `INIT_FAILED` with the reason printed. `MlBar()` at every new bar: the features
+  of the last closed M15 candle -> keep + scale -> OnnxRun each base -> stacked in base order -> softmax(meta_coef * p + meta_intercept), cached per candle.
+  The gate sits in `DoEntry` after the range-box and microstructure gates and before the stand-aside ghost: `SKIP: ML: P(up) 0.312 not above 0.75`
+  (`g_skipMl`; a candle without a probability is skipped too, `g_mlNoP`; both in the OnDeinit summary). Off, nothing on the trading path runs - v1.38
+  byte for byte. The trade comment stays "Saad15 v1.34" (it has not moved since v1.34).
+- `Saad_strategy_15min_view.mq5` regenerated by `make_view_ea.py` (v1.39 + the export). `#include "MlxFeatures.mqh"`: the .mqh must sit beside the EA in a
+  rig's `MQL5\Experts` (copied to axi4; the other rigs need it before they compile v1.39 or the view EA).
+- **Compiled** rig axi4 (MT5 build 6249) 2026-11-01: MlxExport, Saad_strategy_15min, Saad_strategy_15min_view - 0 errors, 0 warnings each.
+- **Self-test (rig axi4, XAUUSD_BB M15, Sep 2026, a throw-away HistGradientBoosting + XGBoost -> LogisticRegression on 21 features in Common
+  Files\MLX_test):** both ONNX models load (form 2 = label + probabilities [1,3]), the gate is active (36 entries skipped at a 0.40 test threshold, 0
+  candles without a probability). Parity EA vs Python (onnxruntime and sklearn on the exporter's own features, all 1,923 candles): max |P difference| 1.3e-6 (the log prints 6 decimals), no candle off by more than 1e-4; the exporter's c0_* / hour / minute / dow re-derived from its bars file agree to 5e-9.
+- Python packaging note for the training side: skl2onnx 1.20 + onnx 1.23 fail on tree models ("False has type bool, but expected int":
+  TreeEnsembleClassifier's nodes_missing_value_tracks_true) - casting bools to ints in `onnx.helper.make_attribute` fixes it; onnxmltools' XGBoost
+  converter wants its own FloatTensorType and an int target_opset.
+- Not done here: the real model (the Python side trains it), the MT5 test of the gate on 2023-2026 (LOYO models), the per-feature parity of the exporter
+  against `mlx/features.py` (the parity agent). Every Python number is a hypothesis - only MT5's Strategy Tester promotes.
+
+## Saad_strategy_15min v1.38 (2026-10-28) — microstructure gates: DTW, synthetic VPIN, Gaussian HMM (all off by default)
+
+Zee: *"do the following, while these are hard things to implement, maybe takes hours. i still want you to implement this fully and test it in the MT5 strategy tester on whether it can improve our strategy"*
+
+- `InpMicroDtw` / `InpDtwThresh` / `InpDtwK` / `InpDtwFile`: the mid-price path of the 15 minutes before the entry (32 steps, turned the trade's way, scaled 0-1) vs 1,290 training paths (DTW, band 4); skip when at least X of the K nearest lost.
+- `InpMicroVpin` / `InpVpinMin` / `InpVpinFlow`: tick test on the last 25,000 ticks, 50 buckets of 500; skip when VPIN >= min AND the last 10 buckets' flow runs against the trade.
+- `InpMicroHmm` / `InpHmmThresh` / `InpHmmFile`: Gaussian HMM (diagonal) on M15 candles (log return, log tick-volatility, EMA dispersion / ATR), forward filter only, always on M15 whatever the chart; skip when P(toxic) > threshold.
+- `InpMicroLog`: every entry's scores to Common Files `saad_micro_log.csv`. Models trained on 2023-2025 only by `monitor/saad_view/research/micro.py` + `micro_export.py`.
+- Parity EA vs Python (300 entries): VPIN 0.998, flow 0.999, HMM 1.000, DTW 0.89.
+- `TvBox_kelt_B/S`, `TvBox_va_B/S`, `TvBox_vwap_B/S`, `TvBox_asia_B/S`, `TvBox_ib_B/S`: the Turtle TV range-box families (Keltner, value area, daily VWAP, Asian range, Initial Balance) as entry masks, same definitions as `monitor/saad_view/rbox.py` (parity: same box for 100% of 604 entries). Defaults are all-ticked strings - never empty: an empty input makes MT5's tester reuse the previous run's value (found today: box masks leaked between runs). `axi_rig.run` now never sends an empty value.
+- **CLEAN RECEIPTS (MT5, M15 chart, Blueberry ticks 2023 - Oct 17 2026; 2023-25 on the new custom symbol XAUUSD_BB3, `mt5/BbTickLoad.mq5` + `monitor/strategy_lab/bb3_install.py`; `research/mt5_years.py`):** the 93.8% save **+$254,763, 93.89%** (tester +$264,191, 93.8%). Save 15-00-01 WR 96.6 robust **+$229,568, 96.53%** (random delay +$216,540, 95.95%); 15-00-02 WR 96.4 robust from base **+$229,253, 96.32%** (random +$220,231, 95.84%); 13-00-03 +$233,301, 96.02%; 13-00-02 +$222,254, 95.80%; 13-00-01 +$215,742, 94.63%. Gates on M15 do NOT help: VPIN +$245,353 (−$9k), DTW +$239,727, HMM4 +$156,610.
+- Older receipts, **M1 chart** (the Dexter's Lab MT5 button paired MT5 with the 1-minute data - a different strategy for these M15-tuned settings): no gate −$4,101 (none) / −$18,331 (random delay). **VPIN 0.081 / 0.05: +$14,978 (none) / +$15,420 (random)**, WR +0.5 / +1.6 pts, DD 28.8% / 30.2%. HMM4 0.75: +$17,049, 523 trades, DD 19.7%. HMM3 0.75: +$9,207. DTW 20%: +$6,121; 15%: −$1,313. One year only - small enough to be luck; the Python screen of the VPIN gate said −$5.8k for 2026.
+
+## Saad_strategy_15min v1.37 (2026-10-28) — ER sizing and session hours (off by default)
+
+- `InpErSize` / `InpErSizeLook` / `InpErLo` / `InpErLotsLo` / `InpErHi` / `InpErLotsHi`: lots by the efficiency ratio of the last 16 closed candles (ER <= 0.12 → 3 lots, >= 0.21 → 0.5; thresholds from 2023-24 trades). From the Dexter's Lab cure hunt.
+- `InpHours`: 24 broker hours of the ENTRY, 1 = trade (Turtle TV range-boxes page "Session hours"; the tester has the same filter).
+- **Receipts (MT5 2026, same save):** ER sizing +$1,200 (none) / −$12,560 (random) vs −$4,101 / −$18,331 - the tester's gain did not survive, worst loss −$8k. Barbell 20/40 without breakeven (existing inputs) +$33,097 / +$3,867.
+
+## Saad_strategy_15min v1.36 (2026-10-27) — probe entry (off by default)
+
+Zee: *"what if we could take a small 0.01 probe trade ->  if the trade fails we loose little -> if the trade is going in our direction (crosses above the entry from below OR goes in our direction from start) -> we increase the lotsize only then to 2 lots"*
+
+- New inputs `InpProbeMode` (0 off · 1 add when price moves `InpProbeUsd` our way · 2 add after a dip of `InpProbeDipUsd` and a return to `InpProbeUsd`), `InpProbeLots` (0.01), `InpProbeUsd` (0.5), `InpProbeDipUsd` (2). Defaults: off, so the EA trades as v1.35.
+- `ProbeTick()` runs each tick before `ManageTick()`. Netting: one more order on the same position. Hedging: the probe is swapped for one position of the full size with the same stop / TP, so every exit still manages one ticket (MT5's trade count includes the swapped probes).
+- Turtle TV: engine `sim_full` step 0 of the tick loop (weighted entry), Risk Manager card "01 · Probe entry" (sliders, auto-tune, Apply to the loaded setting, Verify in MT5), `probe.py`, `/api/probe_eval`, `/api/probe_tune`.
+- **Receipt (MT5, Jan–Oct 2026, M1, no delay, r20261027_235528)** on save 2026-10-25 05-58-25, mode 1, 0.01 lot, +$0.50: **+$21,471** (PF 1.08) vs −$4,101 without; worst −$5,293 (unchanged); DD $48.9k (31.7%). Tester said +$482 vs −$1,749: same direction, smaller. Not yet tested with random delay.
+
+---
+
 ## Saad_strategy_15min v1.35 (2026-10-22) — a refused order is never silent
 
 Ordered by Zee in the session, after the tester-vs-MT5 audit (approval to proceed with the EA update and version bump). The audit found
@@ -4019,3 +4103,213 @@ support/resistance block       forming candle must agree with the click
 **The measurement apparatus is correct and there is no validated edge yet.** Instrument,
 horizon and geometry are settled; the entry is not. `RiskGuardButtons` makes being wrong
 survivable while that question is answered.
+
+
+## ZeeUHV_TurtleTV v1.00 - 2026-11-05 (magic 88420) - BUILT, not tested
+
+Zee: "write an EA that follows -> Write a UHV EA that follows the Turtle TV UHV engine and its settings -> I'll TEST IT MYSELF in the MT5
+strategy tester once the EA is compiled and ready to attach" + "you can reuse the diamond EA we already have the code for".
+
+- `mt5/ZeeUHV_TurtleTV.mq5`: the Diamond detection (retracement origin, UHV, breakout, camel_trend, laws - from ZeeUHV_Diamond v1.27 via
+  monitor/TurtleTVUHV/uhv_diamond.py) + Zee's Pine camel humps for the side + LAWS.md momentum (0.70) and quieter breakout, on tick volume.
+- Settings = Turtle TV UHV's names: InpUhv* (entry instant/close, pre-break, stop modes, SlBeyond, RR, FixTp, BeR, MaxSecs, LossSecs, lots),
+  InpDet* (camel, detection, UHV/breakout shape), range boxes InpBands*/InpRangeLook*/InpBandOff (ghosts block), trail InpXTr/K/Act.
+- Exits managed by the EA on each tick (as uhv_engine._play) + a broker safety stop 0.5 pip beyond.
+- Left out: InpUhvSaad (Saad filters), InpTtdOn (Turtle Trader Desk group), the 0.3 s latency (the tester's delay setting stands in).
+- Compiled clean in the PXBT terminal (0 errors, 0 warnings). Preset `ZeeUHV_TurtleTV_97.7.set` = Zee's save 2026-11-05 05-45-38
+  (Turtle TV Python: 97.7% WR, 7,631 trades, -$25,526 at 1 lot - a hypothesis). No MT5 result yet; not checked trade by trade (Zee's call).
+
+### ZeeUHV_TurtleTV v1.01 - 2026-11-05
+Zee's first tester runs went in on the v1.00 defaults (2R target, 5 pips beyond), not his 97.7% setting - the preset was not loaded,
+so targets sat 13-20 pips away ("it went into +20, +80 even and we didn't close the trade"). v1.01 makes his save 2026-11-05 05-45-38
+the defaults: SlBeyond 19, RR 1, FixTp 0.1, BeR 0, TpPips 4, his range boxes. Trading logic unchanged.
+
+### ZeeUHV_TurtleTV v1.02 - 2026-11-05
+MT5 on v1.01 (the 97.7% save), PrimeXBT EURUSDp real ticks, 1 Jan - 15 Jul (account empty at $4 on 15 Jul): from the DEAL prices
+5,172 trades, 66.0% WR (3,414 won / 556 at $0 / 1,202 lost), -2,502 pips = -$25,018 at 1 lot. The EA's own "target" prints said 97.3% -
+the 0.1 pip target fills a tick late and slips to $0 / a loss. Net matched Turtle TV (-$25,526); the win rate did not.
+Zee: "let's test the 95.1% setting as it has i think higher tp setting than 0.1". v1.02 defaults = save 2026-11-05 04-18-08:
+stop mode 2 (beyond the breakout candle) + 20 pips, fixed TP 0.6 pip, BE off, every range box ticked. Trading logic unchanged.
+
+### ZeeUHV_TurtleTV v1.03 - 2026-11-09 - the TWICE AN HOUR save's loss filters, MT5-tested
+Zee: "saved winner is TWICE AN HOUR - 2+ trades every weekday hour, 98.46 pct (11656 trades) in Saved settings -> can you run mt5 tester on it".
+No EA had the save's filters (v1.02 stopped at geometry + detection + range boxes), so v1.03 ports them from monitor/TurtleTVUHV/uhv_filters.py /
+uhv_engine.py one to one: InpUhvNoClose (16:45-17:45 New York by the tick time, US DST rule, InpSrvUtcOff 0 = the engine's "server time is UTC"),
+InpUhvMaxTrigSpread (ask-bid at the breakout tick), InpUhvMinTicks (mean tick volume of the last 10 closed candles), InpUhvSpikeAtr/SpikeBars and
+InpUhvMinSpanAtr/MinSpanBars on a 14-candle true-range mean (sim._atr_adx), InpUhvMaxFlips60/FlipsBars (share of close-direction flips),
+InpUhvWickFake/WickBars (1-candle pivots, >=, known one candle later), InpUhvWall/WallTouches/WallBars/WallFig (tested 00-figure walls 0..x pips
+ahead), and InpMaxPos (rounds open at once; the single round became an array of 64). Defaults = the save (stop mode 1 beyond 22.5, RR 1,
+FixTp 0.1, PreBreak 1, TpPips 4, BandOff 0, every box ticked, InpMaxPos 2).
+- Rig: C:\mt5_rig_pxbt with the live PXBT terminal's EURUSDp ticks copied in (Bases\PXBTTrading-1\ticks, 122 MB; the 2026 .hcc was locked, the
+  rig downloaded the bars itself). axi_rig.compile_ea / run, model 4 "100% real ticks", random delay, 6 Mar-5 Nov 2026, $100k, 1 lot, 44-55 s a run.
+- Run 1 found two EA bugs: a rejected close (Friday 21:00 "market closed", 65 of them) dropped the round and left the position open - 6 positions
+  rode to the end of the test (+$17.8k on 4 Nov, an artifact); and with the random delay the position can appear after the order, which the old
+  "not found = closed by the safety stop" read as a finished round. Fixed: a rejected close keeps the round on and retries; a round waits up to
+  10 s for its position; a sweeper closes any position of ours no round tracks (fired on 32 positions in run 2, 0 in run 3).
+- **Run 3 (clean): 11,244 trades, net -$21,556, PF 0.56, DD $22,046 (22%), 1 end-of-test close.** Breakdown of the exits: 179 full stops
+  (1.6%, -$42,571) - the tester's 179 losses exactly (1.54%); 26 mid losses; 1,875 small losses (16.7%, -$5,180); 1,458 at $0 (13.0%); 4,238 wins
+  of $0-2 and 3,467 wins above $2 (+$27.3k). **WR 81.5% with $0 exits counted as wins, 68.5% strictly positive, vs 98.46% in the Turtle TV tester.**
+  Net matches the tester (-$22,120) within 3%, trade count within 4%, and the structural loss rate is the same: the entries and filters are faithful.
+  The gap is the 0.1-pip target: in MT5 the close at "target" fills a tick late, so a third of the trades end at $0 or a few dollars down (the v1.01
+  lesson of 5 Nov, again). This is the setting's geometry, not the filters.
+- Report kept at monitor/TurtleTVUHV/runs/ZeeUHV_TurtleTV_TWICE_AN_HOUR_mt5.htm; the saved setting carries the result in its row.
+- **MT5 target sweep (same evening):** FixTp 0.2-3.0 at 2 positions, 0.8-1.5 at 4 and unlimited positions (14 runs, ~50 s each). WR peaks 93.2-93.4% at 0.8-1.0 pip; wider loses more stops than it saves. Chosen: **FixTp 1.0 + InpMaxPos 4 = 9,963 trades (2.4/h), 527 stops (5.3%), WR 93.2%, -$15,065, PF 0.88, DD 17%** (saved setting 'TWICE AN HOUR - MT5 tuned ...', report runs/ZeeUHV_TurtleTV_TWICE_tp1_mp4_mt5.htm). Every target is net negative (22.5-pip stop vs 1-pip target needs 95.7% to break even).
+
+### ZeeUHV v1.08 + InpDetDojiUhv - 2026-11-14 - a doji inside the retracement can be the UHV
+
+Zee, on B3 PURE's 26 Oct 3:28 PM sell: "the uhv selected is 326 pm .. but the 325pm candle has higher volume than the 326 so that one should be the uhv".
+The 3:25 candle closed exactly where it opened (1.12015, 87 ticks against 74): the detector only counted counter-COLOURED candles, so a doji was skipped.
+- `InpDetDojiUhv` (uhv_diamond DOJI_UHV, uhv_engine DET, scan.py, EA v1.08): 1 = a doji inside the retracement can be the UHV. Off by default (B3 / B4
+  unchanged); ON in the saved B3 PURE and in ZeeUHV_B3_Pure. With it the 3:28 PM sell is not taken (the red candle did not close below the doji's low).
+- B3 PURE now: 870 trades whole data, shown run 99.77% +$382, average MT5 run 99.48% -$173 (was 827 / 99.34% / -$476). MT5 (random delay, to 5 Nov):
+  843 trades, 842 on the tester's ticks, 4 not won = 99.53%, -$120 (tester average 3.7 not won, 99.56%, -$49).
+
+### ZeeUHV v1.07 + ZeeUHV_B3_Pure + chart setup marks + engine InpUhvRetEnd - 2026-11-14
+
+Zee, inspecting B4's trades on the chart (trade #1441): "we're not waiting for the retracement to end .. and so we pick up uhvs which are lesser than
+upcoming uhvs in the same retracement" -> "let's do a purify of the strategy ... make a B3 version of saved setting which has it fixed".
+- **Chart (static/app.js + uhv_engine.trade_setups):** every trade shows `ret.` on the candle where the retracement starts, `uhv` on the UHV candle, a thin
+  dotted line along the level being broken to 4 candles past the entry, and "$X earned / $X lost" on its label. The info line starts with the name of
+  the setting on screen (and how many settings differ from the save last loaded).
+- **Measured first (tester average, engine only): waiting for the retracement to end with the instant entry** (`InpUhvRetEnd` 1 / 2 / 3) is worse:
+  B3 99.21% -> 98.86-98.98%, B4 99.65% -> 98.69-98.95%; at 1:1 / 1:2 targets 46-47% / 30-32%. 85% of B3's entries fire before any trend-coloured candle
+  has closed since the UHV; in 15% the entry candle itself becomes a louder counter candle (98.13% vs 99.40%).
+- **Saved setting "MT5-LABEL B3 PURE - candle closes beyond the UHV of the whole retracement"** = B3 + InpUhvEntry 0 (LAWS.md breakout: a momentum,
+  quieter, trend-coloured candle closes its body beyond the UHV level; entry on the next tick) + InpUhvPreBreak 0 + InpDetRetStart 1 (the retracement
+  counts from its first counter-coloured candle, so the UHV is the loudest counter candle of the whole retracement). Whole data: 827 trades, shown run
+  99.64% +$79, average MT5 run 99.34% -$476.
+- **EA v1.07** (all files): `InpDetRetStart`. New copy `ZeeUHV_B3_Pure.mq5` (magic 88428). MT5 (rig pxbt, random delay, to 5 Nov): 803 trades, the
+  same 803 ticks as the tester, 4 not won = 99.50%, -$180 (tester average 4.7 not won, 99.42%, -$347). Parity check rerun after the engine changes:
+  17 runs, 47,052 trades, no impossible outcome, all within 2 spreads. Compiled in Zee's PXBT terminal (8 EAs).
+
+### ZeeUHV v1.06 + engine InpUhvCamExit - 2026-11-14 - the hump-line exit, measured: worse
+
+Zee (trade #1441, held through many humps to a -$249 stop): "once we buy and the next candle's start going down .. we can kinda predict ok the trend is
+now downwards let's exit the trade" -> "yes measure it".
+- `InpUhvCamExit` in uhv_engine.py and the EA (v1.06, all 8 files): 1 = close at market when the camel hump line turns against the round (checked at each
+  candle open, from the second candle after the entry), 2 = when it is no longer with it. Off by default. Exit reason 18 in the trade list.
+- B4, whole data, average MT5 run: as saved 99.65% +$278 -> hump exit 91.02% -$1,614 (132 hump exits, none in profit, -$3,026; no full stops left).
+  B3: 99.21% -$6,370 -> 90.68% -$9,875. MT5 (random delay, to 5 Nov): B4 + hump exit 1,420 trades, 115 not won = 91.90%, -$1,356 (engine 129.6, -$1,590;
+  MT5 is a little better because its market close is delayed and some rounds reach the target meanwhile - not modelled).
+- Also measured in the tester on B4: every tighter stop (15 ... 1 pip beyond) and every "close a loser after N seconds" is worse than the saved stop;
+  98 trades went 3+ pips against and 93 of them still won.
+
+### Turtle TV UHV tester = MT5 (InpUhvExec 1) + ZeeUHV v1.05 - 2026-11-14
+
+Zee: "fix our internal python tester so it has no or near zero differences with MT5 tester ... the remaining few differences -> fix them -> so then
+instead of going to MT5 for each run we can rely on the internal python tester we currently use on turtle tv uhv".
+
+**What MT5's random delay is (measured on 29,565 replay fills):** a whole number of seconds, 0-8 at 10% each and 9-18 at 1% each (a digit 0-9; a 9 adds
+one more digit). The order fills that many seconds after it is sent, at the price of that moment (the last tick at or before it). Given MT5's own fill,
+a Python walk over the ticks reproduced the outcome of every position: 29,561 of 29,561 (target = a touch in whole points from the fill, inside a
+trade session; stop = the order's price, first). Predicting without MT5's fill: expected stops 553.9 vs MT5's 552.5 a run (6 runs), 509.7 vs 508.6 (20 runs).
+
+**Engine (monitor/TurtleTVUHV/uhv_engine.py):**
+- New setting `InpUhvExec` (default 1): trades execute as MT5's Strategy Tester does with random delay and the target held at the broker
+  (`_play_mt5`: delayed fill, the order's absolute stop, whole-point target inside a trade session paying exactly the target, a 24 h close that waits
+  for the next trade session, a market close that holds its InpMaxPos place until its own delay has passed). 0 = the old tester.
+- `InpUhvDelaySeed`: every trade's delay is fixed by its entry time and this number, so a setting always shows the same run; another number = another run.
+- Every run also gives the average over all delays (stats mt5_n / mt5_exp_wins / mt5_exp_net / mt5_sd_wins; Overview card "Average MT5 run").
+- Whole points where float32 ticks meet a level: the breakout tick against the level, the trigger price, the spread and the fill price are rounded to
+  0.1 pip (a bid exactly on the level used to read as beyond it at random). B3 is now 8,469 entries to 5 Nov (was 8,416).
+- hungry.py ignores the new mt5_ stats; app.js shows the card.
+
+**EA v1.05 (ZeeUHV_TurtleTV + the 7 named copies, recompiled in the rig and in Zee's PXBT terminal):** the breakout tick is compared with the level in
+whole points; a setup that arrives while InpMaxPos rounds are open is skipped for good (it used to wait for a later tick in the minute).
+
+**Check: `py monitor/TurtleTVUHV/mt5_parity.py 3`** (16 MT5 random-delay runs, 52,782 trades, 321 s; rig pxbt, EURUSDp real ticks, 6 Mar-5 Nov 2026):
+- Without a position limit: entries on the same tick and side 99.8% (B4 1,420 of 1,420; B3 8,455-8,463 of 8,467-8,470; the rest change from one MT5 run
+  to the next, because an executing order hides ticks from the EA).
+- Not one outcome the engine calls impossible (MT5 losing a trade that wins under every delay, or the reverse).
+- MT5 trades not won against the engine's average (run-to-run spread): B3 71 / 65 / 68 vs 64.4 (+-4.5); B4 6 vs 4.5 (+-1.4); B3 no pre-break 26 vs 27.9;
+  B3 candle close 7 vs 6.2; without the momentum rule 13 vs 14.2; B4 candle close 3 vs 2.8; candle close without the spread filter 28 vs 31.6 and 5 vs 4.7;
+  stop 3 pips beyond the candle at 1:1 / 1:2: B4 738 vs 734.0 and 970 vs 966.0, B3 candle close 467 vs 469.5 and 635 vs 635.4. All within 2 spreads.
+- With a position limit (InpMaxPos 1 / 2) the win rate and count agree (39 vs 40.4 not won of ~5,390; 61 vs 56.7 of ~7,400) but 300-600 entries differ:
+  which setups find a free place depends on the random delays, and two MT5 runs differ from each other by as much (251 / 389 and 566 / 715).
+- Not modelled: the swap on positions held overnight; the EA being blind while its own order executes.
+
+### ZeeUHV_TurtleTV v1.04 + ZeeUHV_B3 / ZeeUHV_B4 - 2026-11-14 - B3 and the half rule as native EAs, MT5-tested
+
+Zee: "create an EA of B3 and B4 = B3 + half rule 0.5 .. and compile and place in data folder of pxbt MT5 broker ... then i can run the
+strategy tester on this EA".
+- `mt5/ZeeUHV_TurtleTV.mq5` v1.04 (defaults = the saved setting MT5-LABEL B3) and two named copies that differ only in defaults:
+  `ZeeUHV_B3.mq5` (magic 88421) and `ZeeUHV_B4.mq5` (magic 88422, InpUhvMaxEntryPos 0.5). Built by scratchpad ea/build.py from v1.03.
+- New inputs: InpUhvLateUtcFrom, InpUhvFriCutAllNY, InpUhvMaxFromSwing (B3), InpUhvMaxEntryPos (the half rule), InpWriteCsv. MAXR 64 -> 512.
+- The stop is the order's own stop loss at the engine's stop price (was a software stop measured from the slipped fill).
+- The target: EURUSDp's stops level refuses a 0.1-pip take profit, so the EA closes at market at the touch (the tester report shows that:
+  about 63% strictly positive) and counts every touch as UhvEntryReplay v1.06 does (whole points, inside a trade session, ticks hidden by an
+  executing order read back). The Journal ends with "TARGET HELD AT THE BROKER: ..." and OnTester returns that win rate.
+- **Bug found and fixed: candle volume.** The broker's M1 tick_volume counts fewer ticks than Turtle TV's bars (82 vs 103 a minute on
+  9-11 Jun; prices identical), so the "loudest candle" differed and 11% of the entries were other setups (v1.03 had this too). v1.04 counts
+  every tick of the minute itself. Entries identical to the engine at the millisecond: 7,516 -> 8,406-8,409 of 8,416.
+- **Engine fix (uhv_filters.py InpUhvMaxEntryPos):** tick prices are float32, so an entry exactly at the half read as 0.5003 and was
+  skipped (147 of B3's 275 exact-half entries). Now compared in whole points, as the EA: B3 + half 0.5 = 1,410 trades (was 1,263);
+  on the MT5 labels (pb2c3, 6 runs) 99.67% / 4.7 stops (was 99.63% / 4.7).
+- MT5 (rig pxbt, EURUSDp real ticks, 6 Mar-5 Nov 2026 - all trades fall on 9 Jun-4 Nov, the spread filter - random delay, 1 lot, ~20 s a run),
+  target held at the broker: **ZeeUHV_B3 8,468 trades 99.29% 60 stops -$4,577, and a second run 8,471 / 99.14% / 73 stops / -$7,798**
+  (replay: 8,397-8,416, 99.27-99.31%). **ZeeUHV_B4 1,420 trades 99.58% 6 stops +$34** (all 1,410 engine entries present).
+  Reports monitor/TurtleTVUHV/runs/ZeeUHV_B3_v104_mt5.htm, ZeeUHV_B4_v104_mt5.htm (the reports show the market-close figures).
+- **ZeeUHV_B3_NoPreBreak** (magic 88423, same day; Zee: "another version which is B3 -> but with pre-break turned off"): B3 with InpUhvPreBreak 0.
+  MT5 same window, random delay, target held at the broker, two runs: 3,315 trades 99.06% 31 stops -$4,044; 3,312 / 99.15% / 28 / -$3,359.
+  3,272 of the engine's 3,278 entries at the millisecond. Report runs/ZeeUHV_B3_NoPreBreak_v104_mt5.htm. Compiled in Zee's PXBT terminal.
+- **ZeeUHV_B3_CandleClose** (magic 88424, same day; Zee: "we wait for candle close above the uhv high for a buy trade ... 1. its a momentum candle
+  2. its a low volume candle (volume lower than UHV)"): B3 with InpUhvEntry 0 - the engine's LAWS.md entry (the first trade-coloured candle whose body
+  closes beyond the UHV level; body >= 70% of its range; fewer ticks than the UHV), entered on the first tick after the close. InpUhvMaxTrigSpread now
+  also applies to this entry (the spread at the entry tick) in the EA and in uhv_engine.py; no saved setting was affected.
+  MT5 same window, random delay, target held at the broker, one run: 920 trades 99.35% 6 stops -$544 (920 of the engine's 922 entries).
+  Without the momentum rule (InpDetMomBody 0): 1,519 trades 98.95% 16 stops -$2,274. Report runs/ZeeUHV_B3_CandleClose_v104_mt5.htm.
+- **Three more candle-close copies** (same day; Zee: "1. b4 with candle close 2. b3 and b4 with candle close and spread filter turned off"). The half rule
+  (InpUhvMaxEntryPos) cannot act on a candle-close entry (the close is already beyond the level: 922 trades with or without it), so the candle-close B4
+  uses the UHV candle's own close instead: new input InpUhvMaxUhvClosePos 0.5 (the engine's filter of that name, in whole points).
+  MT5 same window, random delay, target held at the broker, one run each:
+  ZeeUHV_B4_CandleClose (88425): 157 trades 98.09% 3 stops -$577. ZeeUHV_B3_CandleClose_NoSpread (88426): 2,145 / 98.41% / 34 / -$6,396
+  (old feed 6 Mar-9 Jun 720 / 97.64% / -$3,825; current feed 1,425 / 98.81% / -$2,571). ZeeUHV_B4_CandleClose_NoSpread (88427): 380 / 98.68% / 5 / -$863
+  (old feed 134 / 99.25%; current feed 246 / 98.37%). Entries = the engine's (157/157, 2,138/2,144, 378/378).
+- Compiled 0 errors / 0 warnings in the rig and in Zee's PXBT terminal (MQL5\Experts\ZeeUHV_B3 / ZeeUHV_B4, .mq5 + .ex5).
+
+### UhvEntryReplay v1.04 - 2026-11-13 - speed: a 26,861-trade run in 33 s (was ~93 min)
+
+Zee: "it sholdnot take 90 minutes each -> rather 90 seconds each ... if its taking more tell me". The EA walked every position ever
+opened on every tick, and searched that list again per open position (cost grew with trades squared). v1.04 walks only the open
+positions, looks for new ones only when PositionsTotal grows, grows arrays in blocks, logs CTrade errors only, and reads the deal
+history once at the end. Same answer: the 976 save 99.49% / 5 stops (v1.03 99.49% / 5). Test tool only, never attach.
+
+MT5 results added the same day (one random-delay run each, target held at the broker at each save's own target, 6 Mar - 5 Nov
+2026, 16-34 s a run) for the 16 saves with 1+ trades per hour and tester WR > 94%: MT5 WR 94.95-98.41%, every one net negative
+(-$12.5k to -$102.8k at 1 lot). The three "losers closed at N min" saves were not run (the replay has no time exit) and were deleted
+at Zee's request (moved to settings/saved_deleted/).
+
+### UhvEntryReplay v1.03 - 2026-11-13 - the 3-pip eject, and "net if each loss was ejected timely"
+
+Zee: "net: if each loss was ejected timely +xxx.00" (a new line in the Saved table's MT5 Winrate column). Zee's testing rule
+the same day: "we always go for -> MT5, random delay, target held at broker -> and nothing else. no delay is out of question so
+it must not be tested. we don't need an average of 2 runs. just 1." The column now shows only that figure.
+
+- v1.03 adds `InpEjectPips` (0 = off): closes a position at market once it is N pips against its own fill (bid for a buy, ask for a
+  sell), the live game player's harvest eject (3 pips). The per-position log gains an "ejected" column. Test tool only, never attach.
+- One random-delay run per save, target held at the broker, at each save's own 0.1/0.2-pip target, 6 Mar - 5 Nov 2026, 1 lot.
+- **A 3-pip eject on every trade is worse on all 15 saves** (976 save: -$228 -> -$3,062, 128 ejects vs 5 stops): most trades that
+  dip 3 pips recover to touch the 0.1-pip target.
+- **Hindsight - only the losing trades closed at 3 pips** (that entry's MT5 fill in the eject run): 13 of 15 saves turn positive,
+  976 save -$228 -> +$414, ONION 29 -$8,560 -> +$605. Not achievable by a rule; it is the value of telling a loser early.
+  A loser that touched the target in the eject run (different random fill) keeps its full loss (conservative).
+- Saves: `mt5_replay.broker_tp` = this one run (old 3-run median kept as `broker_tp_median3`), `ejected_timely`, `broker_tp_eject`.
+
+### UhvEntryReplay v1.00-v1.02 - 2026-11-12 - MT5 execution of the tester's entries for every >99% save
+Zee: "the best two onion entries you found, can u check their MT5 winrate? and also test all settings with winrate above 99% in the list of saved settings on MT5 and populate the MT5 winrate column in saved settings".
+ZeeUHV_TurtleTV v1.03 has 52 inputs; the 15 saves above 99% use up to 40 UHV filters it lacks (SaadShape, SafeEr, MinErN, BuyRes, HourFrom, News, Box*, HarvestWins, ...),
+so running them through it would test a looser setting under their names. New tool EA `mt5/UhvEntryReplay.mq5` reads the tester's entries (scratchpad mt5rp/export.py
+writes Common\Files\uhv_rp_NN.csv: entry ms, side, stop price, target pips) and sends a market order at the first tick at or after each entry with the tester's stop.
+- v1.00 put the 0.1-pip target on the order: EURUSDp's stops level rejected 386 of 976 ("invalid stops").
+- v1.01 closes at the touch in software, measured from MT5's own fill (as ZeeUHV_TurtleTV v1.03).
+- v1.02 registers targets from the position list every tick (the v1.03 random-delay race; counter "registered late" = 0 on all 60 runs) and writes
+  <csv>.out.csv per position (touched the target, closed P/L) = the broker-held-target figure.
+Tester exits for these saves are only stop or target (no lab exits active), so the replay's exits are the tester's. Rig C:\mt5_rig_pxbt, EURUSDp real ticks,
+6 Mar-5 Nov 2026, model 4, $100k, 1 lot, ~15 s a run; 3 random-delay runs (median stored; run-to-run stops vary, e.g. 4 / 5 / 8) + 1 no-delay run per save.
+- **No delay reproduces the tester** (976 save: tester 976 / 0 losses, MT5 975 / 1 stop / 99.9%). That shows the replay is faithful; it does not validate the settings.
+- **Random delay, software target: 65.2-79.7% strictly positive, 78.5-87.4% counting $0 exits**, on all 15; full stops roughly 2-6x the tester's.
+- **Random delay, broker-held target: 98.5-99.7%**; net positive on only 2 of 15 (the angel 610 save +$169, 03-40-14 +$340); a delayed entry alone roughly doubles the full stops.
+- ONION 31: tester 2,160 / 15 losses / 99.31% -> MT5 delay 67.5% (24 stops, -$1,378), broker-target 98.94% (-$3,309), no delay 99.26% (+$213).
+  ONION 29: 4,381 / 40 / 99.09% -> 68.0% (54 stops, -$3,849), broker-target 98.77% (-$8,382), no delay 99.04% (-$2,259).
+- Each save carries `mt5_replay` (median, per run, broker_tp, nodelay, tester on the same window); the Saved table's MT5 Winrate column falls back to it
+  (static/app.js mtWrCell). Median-run reports copied to monitor/TurtleTVUHV/runs/UhvRP2_NN_dK_mt5.htm.

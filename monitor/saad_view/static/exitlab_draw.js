@@ -4,7 +4,8 @@
 function exitParts(ea, lab) {                                     // what closes a trade, as drawable parts (R = entry-to-stop distance)
   const P = [], L = lab || {}, n = (k) => Number(L[k] || 0), m = String(ea.InpExitMode), mode = lab && m === '0' ? '1' : m;
   const sl = String(ea.InpSlMode) === '1' ? `${ea.InpSlAtrMult} x ATR from the entry` : String(ea.InpSlMode) === '2' ? `$${ea.InpSlUsd} from the entry` : `beyond the setup candle + $${(+ea.InpSlPips / 10)}`;
-  P.push({ t: 'stop', r: -1, label: 'STOP -1R', tip: `The first stop: ${sl}. This distance is "1R".${+ea.InpMaxRiskUsd ? ` A setup whose stop would be more than $${ea.InpMaxRiskUsd} away is not traded.` : ''}` });
+  const slTxt = String(ea.InpSlMode) === '1' ? `${ea.InpSlAtrMult}xATR` : String(ea.InpSlMode) === '2' ? `$${ea.InpSlUsd}` : `candle+$${(+ea.InpSlPips / 10)}`;
+  P.push({ t: 'stop', r: -1, label: `STOP -1R · ${slTxt}`, tip: `The first stop: ${sl}. This distance is "1R".${+ea.InpMaxRiskUsd ? ` A setup whose stop would be more than $${ea.InpMaxRiskUsd} away is not traded.` : ''}` });
   P.push({ t: 'entry', r: 0, label: 'ENTRY', tip: "The break of the setup candle's high (BUY) or low (SELL). Drawn for a BUY; a SELL is the mirror image." });
   const tgt = n('tgt');
   if (tgt >= 2) P.push({ t: 'target', r: tgt === 2 ? n('tgt_k') : 2, label: tgt === 2 ? `TARGET ${n('tgt_k')}R` : tgt === 3 ? `TARGET ${n('tgt_k')} ATR` : `TARGET $${n('tgt_k')}`, tip: 'A fixed take-profit: the whole trade closes when price gets there.' });
@@ -40,6 +41,18 @@ function exitParts(ea, lab) {                                     // what closes
   if (n('adx_exit')) P.push({ t: 'chip', label: `OUT WHEN ADX < ${n('adx_exit')}`, tip: 'The trend fades: out when ADX falls below this.' });
   if (n('fri_hour')) P.push({ t: 'chip', label: `FRIDAY ${n('fri_hour')}:00: OUT`, tip: 'Nothing is held into the weekend after this hour (server time).' });
   if (+ea.InpCloseLossMins > 0) P.push({ t: 'chip', label: `LOSERS OUT ${ea.InpCloseLossMins} MIN BEFORE CLOSE`, tip: `InpCloseLossMins: ${ea.InpCloseLossMins} minutes before the daily close, a trade in loss is closed.` });
+  // a part beyond the broker's fixed take-profit never acts: the fixed TP closes the whole trade first
+  const fix = +ea.InpFixTpPips > 0 ? +ea.InpFixTpPips / 10 : 0, rUsd = String(ea.InpSlMode) === '2' ? +ea.InpSlUsd : 0;
+  if (fix && rUsd) {
+    for (const p of P) {
+      let usd = null;
+      if (p.t === 'target' && /TARGET \$/.test(p.label)) usd = n('tgt_k');
+      else if (p.t === 'target' && /TARGET [\d.]+R/.test(p.label)) usd = n('tgt_k') * rUsd;
+      else if (p.t === 'partial' || p.t === 'be' || p.t === 'lock') usd = p.r * rUsd;
+      else if (p.t === 'trail' && p.act) usd = p.act * rUsd;
+      if (usd != null && usd > fix) { p.label += ' · NEVER REACHED'; p.dead = true; p.tip += ` Never reached: it is $${usd.toFixed(2)} from the entry, but the fixed take-profit closes the whole trade at $${fix}.`; }
+    }
+  }
   return P;
 }
 function labSvg(parts, title, color) {

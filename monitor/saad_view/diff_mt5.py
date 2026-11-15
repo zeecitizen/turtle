@@ -16,7 +16,7 @@ ev = [l.split("\t") for l in (sim.COMMON / f"saadview_{TAG}_events.csv").read_te
 ep = lambda s: int((datetime.strptime(s, "%Y.%m.%d %H:%M:%S") - datetime(1970, 1, 1)).total_seconds())
 ent = {e[8]: e for e in ev if e[0] == "entry"}
 M = [(int(ent[e[8]][2]), ep(ent[e[8]][1]), float(ent[e[8]][3]), ep(e[1]), float(e[3]), float(e[5]), e[9]) for e in ev if e[0] == "exit" and e[8] in ent]
-tr = sim.simulate(dict(dfl, **sets))[0]
+tr = sim.simulate(dict(dfl, **sets), ds="year1")[0]
 S = [(int(x[0]), int(x[1]), x[2], int(x[4]), x[5], x[6], int(x[13])) for x in tr if x[10] == 0]
 print(f"MT5 {len(M)} trades {sum(m[5] for m in M):+,.0f} | sim {len(S)} trades {sum(s[5] for s in S):+,.0f}")
 f = lambda t: datetime.utcfromtimestamp(t).strftime("%m-%d %H:%M")

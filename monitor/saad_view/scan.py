@@ -352,23 +352,69 @@ def run_all(job, inputs, ds, lab, sets, window, focus=None):
         tr, setups, _ = sim.simulate(base_in, ds=ds)
         aut = losslab.autopsy(tr[tr[:, 10] == 0], setups, sim.data(ds), base_in, labfull)
         mv += data_moves(aut.pop("proposals"), base_in, labfull, trust, mv)
+    requested = job.kw.get("priority") or []
+    by_sig = {_sig(m["sets"], m["lab"]): m for m in mv}
+    priority = []
+    for item in requested[:9]:
+        if not isinstance(item, dict):
+            continue
+        m = by_sig.get(_sig(item.get("sets") or {}, item.get("lab") or {}))
+        if m is not None and m not in priority:
+            priority.append(m)
+    if not priority:
+        seen = set()
+        for m in mv:
+            if m["key"] not in seen:
+                seen.add(m["key"])
+                priority.append(m)
+                if len(priority) == 10:
+                    break
+    priority_ids = {id(m) for m in priority}
+    mv = priority + [m for m in mv if id(m) not in priority_ids]
+    priority_count = len(priority)
     job.total = len(mv) + 1
-    job.phase = f"warming up {WORKERS} lab assistants"
+    job.phase = f"rechecking {priority_count} previous suggestions first"
     tasks = [(inputs, ds, base_sets, window)] + [(inputs, ds, dict(base_sets, **m["sets"], **m["xs"]), window) for m in mv]
     results = [None] * len(tasks)
+    completed_order = []
     t0 = time.time()
+
+    def publish_partial():
+        if results[0] is None:
+            return
+        completed = [i for i in completed_order if i > 0 and results[i] is not None]
+        moves_done = [dict({k: v for k, v in mv[i - 1].items() if k != "xs"}, r=results[i]) for i in completed]
+        job.partial_result = {"now": results[0], "moves": moves_done, "seconds": round(time.time() - t0, 1), "n": len(mv),
+                              "completed": len(completed), "priority_count": priority_count, "partial": True,
+                              "stopped": False, "focus": focus or "", "autopsy": aut}
+
     try:
         pool = _pool()
-        futs = {pool.submit(evaluate, t): i for i, t in enumerate(tasks)}
-        for f in cf.as_completed(futs):
+        initial = list(range(priority_count + 1))
+        remaining = list(range(priority_count + 1, len(tasks)))
+        for batch, is_initial in ((initial, True), (remaining, False)):
+            if not batch:
+                continue
+            futs = {pool.submit(evaluate, tasks[i]): i for i in batch}
+            since_publish = 0
+            for f in cf.as_completed(futs):
+                if job._stop:
+                    for g in futs:
+                        g.cancel()
+                    break
+                i = futs[f]
+                results[i] = f.result()
+                completed_order.append(i)
+                job.progress += 1
+                since_publish += 1
+                job.phase = f"{mv[i - 1]['group']}: {mv[i - 1]['label']} → {mv[i - 1]['to']}" if i else "the exit on the bench"
+                if is_initial and all(results[n] is not None for n in initial):
+                    publish_partial()
+                elif not is_initial and since_publish >= 5:
+                    publish_partial()
+                    since_publish = 0
             if job._stop:
-                for g in futs:
-                    g.cancel()
                 break
-            i = futs[f]
-            results[i] = f.result()
-            job.progress += 1
-            job.phase = f"{mv[i - 1]['group']}: {mv[i - 1]['label']} → {mv[i - 1]['to']}" if i else "the exit on the bench"
         _USED[0] = time.time()
     except Exception as e:                                       # noqa: BLE001  (a broken pool: drop it, finish on this core, a fresh pool next time)
         _drop_pool()
@@ -378,7 +424,10 @@ def run_all(job, inputs, ds, lab, sets, window, focus=None):
                 break
             if results[i] is None:
                 results[i] = evaluate(t)
+                completed_order.append(i)
                 job.progress += 1
+                if results[0] is not None and job.progress % 5 == 0:
+                    publish_partial()
     now = results[0]
     out = [dict({k: v for k, v in m.items() if k != "xs"}, r=r) for m, r in zip(mv, results[1:]) if r]
     return {"now": now, "moves": out, "seconds": round(time.time() - t0, 1), "n": len(mv), "stopped": now is None or len(out) < len(mv),

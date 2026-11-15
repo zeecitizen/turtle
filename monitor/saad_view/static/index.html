@@ -127,6 +127,8 @@
   .dexsvg .chip { fill: #1c313a; stroke: #4dd0e1; stroke-width: 1.5; } .dexsvg .chipt { fill: #e0f7fa !important; font-size: 9px !important; }
   .dexsvg .dx { cursor: help; } .dexsvg .dx:hover .lv, .dexsvg .dx:hover .chip { stroke-width: 5; filter: drop-shadow(0 0 5px #fff); } .dexsvg .dx:hover text { fill: #fff !important; }
   .levers { flex: 1 1 300px; max-width: 420px; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 8px; background: #0f2742; border: 3px solid #26c6da; border-radius: 14px; padding: 10px 12px; }
+  .dexlab .levers { flex: 1 1 440px; max-width: none; }
+  .dexlab .dexsvg { max-width: 100%; }
   .lever { display: flex; flex-direction: column; font: bold 11px "Courier New", monospace; color: #e0f7fa; }
   .lever input { accent-color: #ff9800; width: 100%; box-sizing: border-box; }
   #saveBox { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.55); z-index: 90; }
@@ -218,14 +220,100 @@
   .eq { width: 520px; max-width: 100%; height: 170px; }
   .chips span { display: inline-block; background: var(--panel); border-radius: 10px; padding: 1px 8px; margin: 2px 4px 2px 0; font-size: 11px; }
   #toast { position: fixed; right: 16px; bottom: 16px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px; max-width: 560px; display: none; z-index: 60; }
+  #toast.tp-applied, #toast.tp-failed { left: 50%; right: auto; bottom: 24px; transform: translateX(-50%); width: max-content; max-width: min(760px, calc(100vw - 32px)); padding: 16px 22px; border: 3px solid #00e676; border-radius: 12px; background: linear-gradient(135deg, #0b1d33, #102b1e); box-shadow: 0 8px 32px rgba(0,0,0,.65), 0 0 18px rgba(0,230,118,.3); font-size: 14px; line-height: 1.5; }
+  #toast.tp-failed { border-color: #ff5252; background: linear-gradient(135deg, #0b1d33, #301416); box-shadow: 0 8px 32px rgba(0,0,0,.65), 0 0 18px rgba(255,82,82,.3); }
+  #toast .tp-notice-title { display: block; margin-bottom: 5px; font: bold 16px "Courier New", monospace; letter-spacing: .04em; color: #00e676; }
+  #toast.tp-failed .tp-notice-title { color: #ff5252; }
   @media (max-width: 900px) { #top { flex-direction: column; height: auto; } #chartWrap { height: 60vh; } #settings, #askPanel { width: 100%; } .cards { grid-template-columns: repeat(2, 1fr); } }
+  /* EA settings: Dexter sections */
+  .dexsearch { display:flex; gap:6px; align-items:center; margin:6px 0 10px; }
+  .dexsearch input { flex:1; background:#03140b; color:#b9f6ca; border:2px solid #37474f; border-radius:10px; padding:5px 9px; font:12px "Courier New",monospace; }
+  .dexsec { background:#0f2742; border:3px solid #26c6da; border-radius:14px; margin:8px 0; padding:0 10px 6px; }
+  .dexsec > summary { cursor:pointer; list-style:none; display:flex; justify-content:space-between; align-items:center; padding:8px 2px; font:bold 12px "Courier New",monospace; color:#ffd740; letter-spacing:.08em; }
+  .dexsec > summary::-webkit-details-marker { display:none; }
+  .dexsec > summary::before { content:"▸ "; color:#26c6da; } .dexsec[open] > summary::before { content:"▾ "; }
+  .dexcount { font:11px "Courier New",monospace; color:#81c784; } .dexcount .chgn { color:#ff9800; }
+  .dexsec .inp { border-top:1px solid #1d3a5c; padding:5px 0; }
+  .dexsec .inp .n { font:bold 11px "Courier New",monospace; color:#e0f7fa; }
+  .risk-hero { display:flex; justify-content:space-between; align-items:center; gap:16px; border-color:#ff9800; background-image:radial-gradient(circle at 9px 9px,#b0bec5 3px,transparent 3.5px),radial-gradient(circle at calc(100% - 9px) 9px,#b0bec5 3px,transparent 3.5px),radial-gradient(circle at 9px calc(100% - 9px),#b0bec5 3px,transparent 3.5px),radial-gradient(circle at calc(100% - 9px) calc(100% - 9px),#b0bec5 3px,transparent 3.5px),linear-gradient(135deg,rgba(255,152,0,.12),transparent 55%); }
+  .risk-hero h3 { color:#ffcc80; margin:5px 0; font: bold 22px "Courier New",monospace; letter-spacing:.03em; }
+  .risk-hero p { margin:4px 0; color:#cfd8dc; max-width:850px; }
+  .risk-stamp { flex:0 0 auto; display:grid; gap:5px; padding:10px 14px; border:2px solid #ff9800; border-radius:12px; color:#ffcc80; background:#1b1205; font:12px "Courier New",monospace; }
+  .risk-stamp b { color:#ffe0b2; font-size:14px; } .risk-stamp span { color:#b0bec5; }
+  .risk-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(155px,1fr)); gap:8px; margin:10px 0; }
+  .risk-stat { padding:9px 11px; border:2px solid #263b52; border-radius:12px; background:#0b1d33; display:grid; gap:5px; }
+  .risk-stat > span { color:#90a4ae; font:10px "Courier New",monospace; letter-spacing:.08em; text-transform:uppercase; }
+  .risk-stat > b { color:#e0f7fa; font: bold 14px "Courier New",monospace; } .risk-stat i { color:#607d8b; font-style:normal; }
+  .risk-alert { margin:10px 0; padding:11px 14px; border:2px solid #ff5252; border-radius:12px; color:#ffebee; background:linear-gradient(110deg,rgba(183,28,28,.28),rgba(3,20,11,.85)); line-height:1.55; }
+  .risk-alert b { color:#ff8a80; } .risk-alert code,.risk-card code { color:#80d8ff; }
+  .risk-pair { display:grid; grid-template-columns:minmax(0,1.25fr) minmax(300px,.75fr); gap:10px; align-items:start; }
+  .risk-card { min-width:0; margin:9px 0; padding:12px 14px; border:3px solid #26c6da; border-radius:15px; background:#0b1d33; box-shadow:inset 0 0 18px rgba(38,198,218,.05); }
+  .risk-card h4 { margin:2px 0 9px; color:#ffd740; font:bold 13px "Courier New",monospace; letter-spacing:.08em; }
+  .risk-card .note { line-height:1.5; }
+  .risk-lever { padding:9px 0; border-top:1px solid #1d3a5c; display:grid; gap:5px; }
+  .risk-lever b { color:#80deea; font: bold 12px "Courier New",monospace; } .risk-lever span { color:#cfd8dc; font-size:12px; line-height:1.45; }
+  .risk-size { display:flex; align-items:center; gap:8px; flex-wrap:wrap; color:#b0bec5; font-size:12px; }
+  .risk-size select { color:#e0f7fa; background:#03140b; border:1px solid #546e7a; border-radius:6px; padding:4px; }
+  .risk-sliders { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:8px; }
+  .risk-slider-group { min-width:0; margin:5px 0; }
+  .risk-slider-group h5 { margin:8px 0 3px; color:#ffcc80; font:bold 11px "Courier New",monospace; letter-spacing:.06em; }
+  .probe-card { border-color:#3fa7ff; box-shadow:0 0 18px #1f7ad044; }
+  .probe-cols { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; }
+  .probe-col { border:1px solid #284561; border-radius:9px; padding:8px 10px; background:#07182a; }
+  .probe-col h5 { margin:0 0 6px; }
+  .probe-col p { display:flex; gap:8px; align-items:baseline; margin:3px 0; }
+  .probe-col p span { flex:1; color:#8fb0cc; } .probe-col p i { font-style:normal; font-size:11px; color:#8fb0cc; } .probe-col p i.pos { color:#3ddc97; } .probe-col p i.neg { color:#ff6b6b; }
+  .risk-slider { display:grid; gap:4px; padding:8px 9px; margin:4px 0; border:1px solid #284561; border-radius:9px; background:#07182a; }
+  .risk-slider.inactive { opacity:.65; border-style:dashed; }
+  .risk-slider-title { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+  .risk-slider-title b { color:#80deea; font: bold 11px "Courier New",monospace; }
+  .risk-slider-title strong { color:#ffe082; font: bold 12px "Courier New",monospace; }
+  .risk-slider input[type=range] { width:100%; accent-color:#ff9800; padding:0; }
+  .risk-slider-help { color:#b0bec5; font-size:11px; line-height:1.4; }
+  .risk-slider-help em { color:#ffd740; font-style:normal; font-weight:700; }
+  .risk-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .risk-head p { margin:4px 0; color:#b0bec5; font-size:12px; line-height:1.5; }
+  .risk-actions { display:flex; gap:8px; flex:0 0 auto; }
+  .risk-groups { display:flex; gap:8px 14px; flex-wrap:wrap; margin:10px 0; padding:8px 10px; border:1px solid #29455e; border-radius:10px; background:#071528; }
+  .risk-groups label { color:#cfd8dc; font-size:11px; white-space:nowrap; } .risk-groups input { accent-color:#ff9800; vertical-align:middle; }
+  .risk-auto { display:inline-flex; align-items:center; gap:6px; color:#b0bec5; font-size:12px; margin:0 0 8px; }
+  .risk-auto input { accent-color:#ff9800; }
+  .risk-good { color:#69f0ae; } .risk-warn { color:#ffd740; }
+  .risk-results { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:8px; }
+  .risk-result { padding:8px 11px; border:1px solid #35516a; border-radius:10px; background:#061322; }
+  .risk-result h4 { margin:2px 0 7px; } .risk-result p { margin:5px 0; color:#cfd8dc; font-size:12px; }
+  .risk-scan { border-color:#ff9800; } .risk-scan table { min-width:620px; }
+  .risk-progress { margin:10px 0; padding:10px 12px; border:2px solid #ffd740; border-radius:12px; background:#03140b; color:#ffd740; display:grid; gap:5px; font:11px "Courier New",monospace; }
+  .risk-progress > div { height:13px; overflow:hidden; border-radius:10px; background:#13273a; }
+  .risk-progress i { display:block; height:100%; background:repeating-linear-gradient(135deg,#00e676 0 8px,#00c853 8px 16px); transition:width .3s; }
+  .risk-progress span { color:#b0bec5; }
+  .risk-suggestions { display:grid; gap:8px; }
+  .risk-suggestion { display:grid; grid-template-columns:38px minmax(0,1fr) minmax(190px,24%); align-items:center; gap:9px; padding:9px; border:2px solid hsl(calc(120 - var(--rank) * 9),80%,45%); border-radius:12px; background:#102b20; box-shadow:3px 3px 0 #02070b; }
+  .risk-suggestion:nth-child(1) { border-color:#00e676; background:#123a25; }
+  .risk-suggestion:nth-child(2) { border-color:#69f0ae; }
+  .risk-rank { display:grid; place-items:center; width:34px; height:34px; border:2px solid #07120b; border-radius:50%; background:#39e75f; color:#03140b; font-weight:800; box-shadow:1px 2px 0 #02070b; }
+  .risk-suggestion-main { min-width:0; padding:6px 9px; border:1px solid #237d37; border-radius:10px; background:rgba(5,24,13,.52); }
+  .risk-suggestion-main > b { color:#f1f8e9; font: bold 12px "Courier New",monospace; }
+  .risk-suggestion p { margin:3px 0; color:#cfd8dc; font-size:11px; line-height:1.45; }
+  .risk-suggestion p.risk-total { color:#a5d6a7; }
+  .risk-suggestion p.risk-total strong { color:#69f0ae; font-size:12px; }
+  .risk-suggestion p.risk-delta { color:#dcedc8; }
+  .risk-suggestion p.risk-halves { color:#9aaca0; font-size:10px; }
+  .risk-suggestion p.risk-halves b { color:#b8d6bd; }
+  .risk-pick { display:grid; gap:3px; height:100%; min-height:82px; align-content:center; padding:8px 10px; border:2px solid #39e75f; border-radius:11px; background:#4be84d; color:#04150a; text-align:left; box-shadow:2px 3px 0 #02070b; }
+  .risk-pick:hover:not(:disabled) { background:#75f45d; transform:translateY(-1px); }
+  .risk-pick span { font:bold 10px "Courier New",monospace; letter-spacing:.08em; }
+  .risk-pick b { font:bold 12px "Courier New",monospace; }
+  .risk-pick small { color:#12351b; font-size:10px; line-height:1.35; }
+  .risk-pick strong { margin-top:2px; font-size:11px; }
+  .risk-foot { margin:10px 2px; padding:9px 12px; color:#b0bec5; border-left:3px solid #ff9800; background:rgba(255,152,0,.06); font-size:12px; }
+  @media (max-width:850px) { .risk-pair { grid-template-columns:1fr; } .risk-hero,.risk-head { align-items:flex-start; flex-direction:column; } .risk-stamp { width:100%; } .risk-suggestion { grid-template-columns:34px minmax(0,1fr); } .risk-suggestion button { grid-column:2; justify-self:stretch; } }
 </style>
 </head>
 <body class="set-open">
 <header>
   <div class="brand">Turtle <b>TV</b><small id="brandTf">XAUUSD · Blueberry real ticks · 15 min</small></div>
   <button id="btnSet" title="Show / hide the settings">⚙ Settings</button>
-  <button id="btnAsk" title="Send the chart picture and the data behind it to Claude">✦ Ask Claude</button>
   <span class="grp" title="TradingView (the Saad indicator on your open chart)">
     <span class="dot" id="tvDot"></span>
     <button id="btnTake" title="Read the indicator's settings now">take TradingView settings</button>
@@ -233,7 +321,8 @@
   </span>
   <button id="btnSave" title="Save the settings on the chart (named by date and time); listed at the bottom of the page">💾 Save settings</button>
   <button id="btnCheck" class="primary" title="Run these settings in the MT5 Strategy Tester (real ticks, about a minute)">Check in MT5</button>
-  <button id="btnExport" class="go" title="These settings as a preset + JSON for the EA (needs an MT5 result for them)">Export to MT5</button>
+  <button id="btnExport" class="go" title="Run the current settings in MT5 if needed, then generate, compile, test and install a separate candidate EA">Export to MT5</button>
+  <button id="btnReport" class="go" disabled title="First select settings with a completed MT5 Strategy Tester run">Download MT5 Report</button>
   <label class="tog"><input type="checkbox" id="tTrades" checked> trades</label>
   <label class="tog"><input type="checkbox" id="tGhosts" checked> stand-aside</label>
   <label class="tog"><input type="checkbox" id="tSetups"> setups</label>
@@ -247,9 +336,10 @@
   <section id="chartWrap"><div id="legend"></div><div id="chart"></div><div id="tAsk" hidden></div></section>
   <aside id="settings">
     <div class="sh"><b>EA settings</b> <span class="k" id="simMs"></span><span style="flex:1"></span>
+      <button id="btnAsk" title="Send the chart picture and the data behind it to Claude">✦ Ask Claude</button>
       <button id="btnReset" title="Back to the EA's defaults (v1.27)">v1.27</button>
       <div style="display:flex;flex-direction:column;gap:6px;width:100%">
-        <select id="srcDs" title="The candles the Turtle TV Tester runs on"><option value="year">2026 · 15-minute · Blueberry MT5 candles (whole year)</option><option value="tv">Aug–Oct 2026 · 15-minute · TradingView's candles</option><option value="m15">2023–2026 · 15-minute · Blueberry (1-min inside each candle)</option><option value="year1">2026 · 1-minute · Blueberry (EA on M1)</option><option value="m5x">2023–2026 · 5-minute · Blueberry (EA on M5, 4 years)</option><option value="m1x">2023–2026 · 1-minute · Blueberry (EA on M1, 4 years)</option></select>
+        <select id="srcDs" title="The candles the Turtle TV Tester runs on"><option value="year">2026 · 15-minute · Blueberry MT5 candles (whole year)</option><option value="tv">Aug–Oct 2026 · 15-minute · TradingView's candles</option><option value="m15" selected>2023–2026 · 15-minute · Blueberry (1-min inside each candle)</option><option value="year1">2026 · 1-minute · Blueberry (EA on M1)</option><option value="m5x">2023–2026 · 5-minute · Blueberry (EA on M5, 4 years)</option><option value="m1x">2023–2026 · 1-minute · Blueberry (EA on M1, 4 years)</option></select>
         <select id="srcMode" title="Whose rules"><option value="ea">v1.27 EA rules</option><option value="chart">the chart's rules</option><option value="chart_blind">TradingView's way (= its panel)</option></select>
       </div></div>
     <div id="form"></div>
@@ -263,7 +353,7 @@
 <section class="res" id="secTT">
   <div class="rh"><span class="title tt">Turtle TV Tester</span>
     <nav data-sec="tt"><button data-t="overview" class="on">Overview</button><button data-t="months">Months</button><button data-t="weekdays">Weekdays</button>
-      <button data-t="range">Range boxes</button><button data-t="trades">List of trades</button><button data-t="skips">Why no trade</button><button data-t="opt">Optimizer</button><button data-t="lab">Exit Lab</button><button data-t="ml">Machine learning</button><button data-t="lego">Strategy Lego</button><button data-t="mission">🚀 Mission Control</button><button data-t="stress">🧯 Stress Lab</button><button data-t="validation">✅ Exit Lab's Validation</button></nav>
+      <button data-t="range">Range boxes</button><button data-t="trades">List of trades</button><button data-t="skips">Why no trade</button><button data-t="opt">Optimizer</button><button data-t="risk">🛡️ Risk Manager</button><button data-t="lab">Exit Lab</button><button data-t="tp">🎯 Take Profit Lab</button><button data-t="dexter">🧪 Dexter's Lab</button><button data-t="life">⟁ Trade Lifecycle</button><button data-t="ml">Machine learning</button><button data-t="research">📄 Research</button><button data-t="deploy">🚀 Deploy</button><button data-t="lego">Strategy Lego</button><button data-t="mission">🚀 Mission Control</button><button data-t="stress">🧯 Stress Lab</button><button data-t="validation">✅ Exit Lab's Validation</button></nav>
     <span class="info" id="infoTT"></span></div>
   <div class="panel" id="panelTT"></div>
 </section>
@@ -283,10 +373,17 @@
 <div id="toast"></div>
 <script src="/static/lightweight-charts.standalone.production.js"></script>
 <script src="/static/app.js"></script>
+<script src="/static/tplab.js"></script>
+<script src="/static/dexter.js"></script>
+<script src="/static/lifecycle.js"></script>
+<script src="/static/xlife.js"></script>
+<script src="/static/probe.js"></script>
 <script src="/static/exitlab.js"></script>
 <script src="/static/exitlab_draw.js"></script>
 <script src="/static/exitlab_research.js"></script>
 <script src="/static/ml.js"></script>
+<script src="/static/research.js"></script>
+<script src="/static/deploy.js"></script>
 <script src="/static/lego.js"></script>
 <script src="/static/mission.js"></script>
 <script src="/static/validation.js"></script>

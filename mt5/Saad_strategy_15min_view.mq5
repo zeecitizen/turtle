@@ -34,11 +34,20 @@
 //| 1 gold pip = 10 points ($0.10). Hours are broker server hours.   |
 //+------------------------------------------------------------------+
 #property copyright "turtle"
-#property version   "1.35"
+#property version   "1.40"
 #property strict
 
 #include <Trade/Trade.mqh>
 #resource "\\Indicators\\SaadEMAs.ex5"   // v1.22: EMA 9 (blue) + EMA 50 (red) drawn thick, embedded: no separate install
+#include "MlxFeatures.mqh"                // v1.39: the ML gate's per-bar features (monitor/saad_view/mlx/FEATURE_SPEC.md) - keep the .mqh beside the EA
+// v1.40 (2026-11-03, Zee: "pull the logs of history of trades taken on this EA on MT5 and bring the history including any skipped setups (and
+//        write if they would've been beneficial)"): InpSkipLog (off) follows every skipped entry as a virtual trade with the same entry, stop and TP
+//        until TP / stop / 72 h and writes Common\Files\Saad15_skips_<symbol>_<magic>.csv; Turtle TV's Deploy tab reads it ("Fetch History").
+// v1.39 (2026-11-01, Zee: the triple-barrier ML blueprint for the Turtle TV "Machine Learning" tab): InpMlFilter - an ONNX gate on the
+//        entries: the stacked classifier trained by monitor/saad_view/mlx (LightGBM + CatBoost -> LogisticRegression, triple-barrier labels,
+//        purged CV, SHAP-pruned features) runs at every M15 bar close on the features of mt5/MlxFeatures.mqh; a BUY needs P(upper barrier)
+//        > InpMlThresh, a SELL P(lower barrier) > InpMlThresh. InpMlDir = the model folder, InpMlLog = a probability row per bar for the
+//        parity check. OFF by default: trading identical to v1.38. Every Python number is a hypothesis - only MT5's tester promotes.
 // v1.34 (2026-10-22, Zee: "fix the EA to respond just like the tester"): InpXEntryWait - the next-EMA target (exit modes 1-2) also waits out
 //        the entry minute, as the Turtle TV Tester does (only the broker stop / TP act in that minute). Off by default (= v1.31). Matters on M1.
 // v1.31 (2026-10-21, Zee: "i want you to add a mode which helps reduce loss ... make it the most intelligent loss cutter possible"): three
@@ -196,6 +205,13 @@ input double InpMaxLots     = 50;     // InpMaxLots — upper limit for InpRiskP
 input int    InpModBackoffSec = 3;   // InpModBackoffSec — after the broker refuses a stop change, wait this many seconds before trying again (60 s when the market is closed)
 input double InpDayLossPct  = 0;      // InpDayLossPct — no new trades today after losing this % of the day's starting equity (0 = off)
 
+//--- Dexter's Lab experiments (all off = existing strategy behaviour)
+input bool   InpDexRiskSizing = false; // InpDexRiskSizing — size by OrderCalcProfit loss at the initial stop; skip if broker volume cannot respect the budget
+input double InpDexRiskPct    = 0.5;   // InpDexRiskPct — maximum initial-stop risk as a percentage of current equity
+input int    InpDexStopMethod = 0;     // InpDexStopMethod — 0 existing stop · 1 signal-candle (pin-bar) extreme · 2 ATR(14) on the last closed M15 candle
+input double InpDexPinBuffer  = 0.5;   // InpDexPinBuffer — price units beyond the signal candle's low/high
+input double InpDexAtrMult    = 1.7;   // InpDexAtrMult — M15 ATR(14) stop-distance multiplier
+
 //--- trading
 input double InpLots        = 2;   // InpLots — lot size [v1.17: 0.10 -> 1, Zee]
 input bool   InpBuys        = true;   // InpBuys — allow longs
@@ -206,6 +222,7 @@ input bool   InpVerbose     = false;  // InpVerbose — print every decision
 input bool   InpDraw        = true;   // InpDraw — labels on the chart (visual tester + live): setups, entries, stop moves, exits
 input bool   InpLog         = true;   // InpLog — print every trade event to the Experts tab (live + visual tester)
 input bool   InpLogCsv      = true;   // InpLogCsv — one CSV row per closed trade in Common\Files (live + visual tester)
+input bool   InpSkipLog     = false;  // InpSkipLog — v1.40: every skipped entry becomes a VIRTUAL trade (same entry, stop, TP) resolved on live ticks -> Common\Files Saad15_skips_<symbol>_<magic>.csv (Zee: "we wanna know whether we're skipping any genuinely profitable setups")
 input color  InpLongColor   = clrGreen; // InpLongColor — chart text/marks for LONG setups and trades (Zee: dark green)
 input color  InpShortColor  = clrRed;   // InpShortColor — chart text/marks for SHORT setups and trades
 input color  InpSetupTextColor = clrBlack; // InpSetupTextColor — the "SETUP LONG/SHORT: ..." label text (Zee: black); its box and break line keep the side colour
@@ -266,10 +283,53 @@ input double InpXLpFrac     = 0.5;    // InpXLpFrac — v1.31: ... the share of 
 input int    InpXDecayBars  = 0;      // InpXDecayBars — v1.31: after this many candles the stop tightens (0 = off)
 input bool   InpXEntryWait  = false;  // InpXEntryWait — v1.34: the next-EMA target waits out the entry minute (as the Turtle TV Tester)
 input double InpXDecayR     = -0.5;   // InpXDecayR — v1.31: ... to the entry + this R (negative = still in loss, 0 = breakeven)
+input group "Probe entry (v1.36, Zee 2026-10-27)"
+input int    InpProbeMode   = 0;      // InpProbeMode — v1.36: 0 off · 1 open InpProbeLots, add the rest of the lots once price moves InpProbeUsd our way · 2 add once it dipped InpProbeDipUsd against and came back to InpProbeUsd
+input double InpProbeLots   = 0.01;   // InpProbeLots — v1.36: the probe's size (the rest of the trade's lots wait for confirmation)
+input double InpProbeUsd    = 0.5;    // InpProbeUsd — v1.36: confirmation: $ of price in our favour from the probe's entry (0 = back at the entry)
+input double InpProbeDipUsd = 2;      // InpProbeDipUsd — v1.36: mode 2: the dip ($ of price against) that must come first
+input group "ER sizing (v1.37, Dexter's Lab cure hunt 2026-10-28)"
+input bool   InpErSize      = false;  // InpErSize — v1.37: size by the efficiency ratio of the last InpErSizeLook closed candles (with fixed InpLots only)
+input int    InpErSizeLook  = 16;     // InpErSizeLook — v1.37: efficiency ratio length
+input double InpErLo        = 0.12;   // InpErLo — v1.37: ER at or below this = a choppy setup...
+input double InpErLotsLo    = 3;      // InpErLotsLo — v1.37: ...traded with this many lots
+input double InpErHi        = 0.21;   // InpErHi — v1.37: ER at or above this = a clean setup...
+input double InpErLotsHi    = 0.5;    // InpErLotsHi — v1.37: ...traded with this many lots (between the two: InpLots)
+input group "Session hours (v1.37, Zee 2026-10-28)"
+input string InpHours       = "111111111111111111111111"; // InpHours — v1.37: broker hours 0-23 of the ENTRY, 1 = trade, 0 = skip (Turtle TV range-boxes page)
+input group "Microstructure gates (v1.38, Zee 2026-10-28) - models trained in Python (research/micro.py), files in Common Files"
+input bool   InpMicroDtw    = false;  // InpMicroDtw — v1.38: DTW - skip when the 15-min tick path before the entry looks like past LOSERS
+input double InpDtwThresh   = 0.2;    // InpDtwThresh — v1.38: ...skip when at least this share of the InpDtwK nearest training paths lost
+input int    InpDtwK        = 20;     // InpDtwK — v1.38: nearest training paths compared
+input string InpDtwFile     = "saad_dtw_paths.csv"; // InpDtwFile — v1.38: training paths (label, 32 points per row)
+input bool   InpMicroVpin   = false;  // InpMicroVpin — v1.38: synthetic VPIN - skip when flow toxicity is high AND the tick flow runs against the trade
+input double InpVpinMin     = 0.1;    // InpVpinMin — v1.38: VPIN (mean |up-down|/500 over 50 buckets of 500 ticks) at or above this...
+input double InpVpinFlow    = 0.05;   // InpVpinFlow — v1.38: ...and the last 10 buckets' flow at least this much against the trade
+input bool   InpMicroHmm    = false;  // InpMicroHmm — v1.38: Gaussian HMM regime - skip when P(toxic state) is above InpHmmThresh
+input double InpHmmThresh   = 0.75;   // InpHmmThresh — v1.38: probability of the toxic state that blocks an entry
+input string InpHmmFile     = "saad_hmm.csv"; // InpHmmFile — v1.38: the trained HMM (states, toxic state, scaling, pi, A, means, variances)
+input bool   InpMicroLog    = false;  // InpMicroLog — v1.38: write every entry's DTW / VPIN / HMM scores to Common Files saad_micro_log.csv
+input group "Range-box families (v1.38) - the Turtle TV range-boxes page; mask char 0 = skip entries in that box (never leave empty: the tester then reuses the last run's value)"
+input string TvBox_kelt_B   = "111111111111";     // TvBox_kelt_B — v1.38: BUY, Keltner EMA20 +- 2 ATR boxes: below, 0-10% ... 90-100%, above
+input string TvBox_kelt_S   = "111111111111";     // TvBox_kelt_S — v1.38: SELL, same boxes
+input string TvBox_va_B     = "1111111";     // TvBox_va_B — v1.38: BUY, value area of the last 40 M15 candles around its POC: below, low edge, low inside, AT POC, high inside, high edge, above
+input string TvBox_va_S     = "1111111";     // TvBox_va_S — v1.38: SELL, same boxes
+input string TvBox_vwap_B   = "11111111";     // TvBox_vwap_B — v1.38: BUY, daily VWAP bands: < -3 SD, -3..-2, -2..-1, -1..0, 0..1, 1..2, 2..3, > 3
+input string TvBox_vwap_S   = "11111111";     // TvBox_vwap_S — v1.38: SELL, same boxes
+input string TvBox_asia_B   = "11111111";     // TvBox_asia_B — v1.38: BUY, Asian range 00-08 server: far below, sweep below, low edge, middle, high edge, sweep above, far above, still forming
+input string TvBox_asia_S   = "11111111";     // TvBox_asia_S — v1.38: SELL, same boxes
+input string TvBox_ib_B     = "111111111";     // TvBox_ib_B — v1.38: BUY, Initial Balance (London 10:00 / NY 15:00 server, first hour): far below, just below, 0-25%, 25-50%, 50-75%, 75-100%, just above, far above, no IB yet
+input string TvBox_ib_S     = "111111111";     // TvBox_ib_S — v1.38: SELL, same boxes
+input group "ML gate (v1.39, 2026-11-01) - the triple-barrier stacked model of monitor/saad_view/mlx; model folder under MQL5/Files (Common Files as the fallback)"
+input bool   InpMlFilter    = false;  // InpMlFilter — v1.39: ONNX gate: a BUY needs P(upper barrier) > InpMlThresh, a SELL P(lower barrier) > InpMlThresh
+input double InpMlThresh    = 0.75;   // InpMlThresh — v1.39: the probability an entry must clear
+input string InpMlDir       = "MLX";  // InpMlDir — v1.39: folder with meta.json, base_1.onnx, base_2.onnx (MQL5/Files first, then Common Files)
+input bool   InpMlLog       = false;  // InpMlLog — v1.39: one row per M15 candle with P(down) / P(none) / P(up) to Common Files mlx_probs_<symbol>.csv (parity)
 
 CTrade   trade;
 int      hAdxX = INVALID_HANDLE;   // VIEWER: ADX for the export (the EA's own formula: MT5's iADX on its candles)
 int      hFast = INVALID_HANDLE, hSlow = INVALID_HANDLE, hAtr = INVALID_HANDLE, hHtf = INVALID_HANDLE, hAdx = INVALID_HANDLE;
+int      hDexAtr = INVALID_HANDLE;
 int      g_skipAdx = 0, g_skipVol = 0;   // v1.24
 // chart-test: the ghost trade of "stand aside"
 int      g_ck = -1;   // range bucket of this entry (0-20, BUY; +21 SELL) for the trade comment
@@ -299,7 +359,7 @@ int      g_skipDip = 0, g_skipSweep = 0, g_skipMinLot = 0, g_dayLossStop = 0, g_
 struct PosState { ulong ticket; int side; double entry; double tp; int exitE; bool noTp; bool ride; datetime entryTime; double best; bool usdTrail; double tpNext; int tpStage; bool resTp1;
                   string setup; double sl0; double risk; string tp1; datetime tp1At; string tps; datetime ctcAt; int moves; double mfe;
                   int num; double slNow; datetime slFrom; string why; int nxE;
-                  double xr0; double xltp; double xorl; bool xp1; bool xp2; int xcxn; int xfbn; bool xlp; };   // v1.30 Exit Lab: risk R, lab target, original lots, partials, counters (v1.31 xlp: the loss cut done)   // v1.25 nxE: 9 / 50 the EMA to touch, -1 none beyond (close back across the fast), -2 close back across the slow, 0 v1.23 exits
+                  double xr0; double xltp; double xorl; bool xp1; bool xp2; int xcxn; int xfbn; bool xlp; double pAdd; double pEn0; bool pDip; };   // v1.30 Exit Lab: risk R, lab target, original lots, partials, counters (v1.31 xlp: the loss cut done)   // v1.25 nxE: 9 / 50 the EMA to touch, -1 none beyond (close back across the fast), -2 close back across the slow, 0 v1.23 exits
 PosState g_pos[];
 
 int g_ctc = 0, g_skipClose = 0, g_closeLoss = 0;
@@ -308,6 +368,529 @@ int g_setups = 0, g_entries = 0, g_skipBreak = 0, g_skipGap = 0, g_skipRisk = 0,
 
 double Pip() { return InpPipPts * _Point; }
 double Buf(int h, int s) { double v[1]; return CopyBuffer(h, 0, s, 1, v) == 1 ? v[0] : 0.0; }
+
+
+// ---------------------------------------------------------------- v1.38 range-box families (same definitions as monitor/saad_view/rbox.py)
+// Judged at the entry against the last closed M15 candle. Box = how many of the family's edges the entry is at or above; mask char '0' = skip.
+double RbEdgesKelt[] = {0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0};
+double RbEdgesVa[]   = {-1, -0.5, -0.1, 0.1, 0.5, 1};
+double RbEdgesVwap[] = {-3, -2, -1, 0, 1, 2, 3};
+double RbEdgesAsia[] = {-0.5, 0, 0.25, 0.75, 1, 1.5};
+double RbEdgesIb[]   = {-1, 0, 0.25, 0.5, 0.75, 1, 2};
+int    g_rbEma = INVALID_HANDLE, g_rbAtr = INVALID_HANDLE;
+int    g_skipRb = 0;
+
+int RbBox(const double &edges[], double c, double s, double e)
+{
+   if (s == 0) return ArraySize(edges) + 1;                 // no data
+   double u = (e - c) / s; int b = 0;
+   for (int q = 0; q < ArraySize(edges); q++) if (u >= edges[q]) b = q + 1;
+   return b;
+}
+
+bool RbMasked(string mask, int box) { return box < StringLen(mask) && StringGetCharacter(mask, box) == '0'; }
+// any box unticked? (checked character by character: StringFind on an empty input string does not answer -1 in the tester)
+bool RbOn(string mask) { for (int i = 0; i < StringLen(mask); i++) if (StringGetCharacter(mask, i) == '0') return true; return false; }
+
+// ticks per minute for the minutes [from, to) (at least 1 each, as rbox.py)
+void RbMinuteTicks(datetime from, datetime to, double &w[])
+{
+   int nm = (int)((to - from) / 60); ArrayResize(w, MathMax(nm, 0)); ArrayInitialize(w, 0);
+   MqlTick tk[]; int n = CopyTicksRange(_Symbol, tk, COPY_TICKS_ALL, (ulong)from * 1000, (ulong)to * 1000 - 1);
+   for (int i = 0; i < n; i++) { int m = (int)((tk[i].time - from) / 60); if (m >= 0 && m < nm) w[m]++; }
+   for (int m = 0; m < nm; m++) if (w[m] < 1) w[m] = 1;
+}
+
+// the M1 candles in [from, to): typical price, low, high, tick weight (minutes without a candle are left out)
+int RbMinutes(datetime from, datetime to, double &tp[], double &lo[], double &hi[], double &wt[])
+{
+   MqlRates r[]; int n = CopyRates(_Symbol, PERIOD_M1, from, to - 1, r);
+   double w[]; RbMinuteTicks(from, to, w);
+   ArrayResize(tp, 0); ArrayResize(lo, 0); ArrayResize(hi, 0); ArrayResize(wt, 0);
+   int k = 0;
+   for (int i = 0; i < n; i++) {
+      if (r[i].time < from || r[i].time >= to) continue;
+      ArrayResize(tp, k + 1); ArrayResize(lo, k + 1); ArrayResize(hi, k + 1); ArrayResize(wt, k + 1);
+      tp[k] = (r[i].high + r[i].low + r[i].close) / 3.0; lo[k] = r[i].low; hi[k] = r[i].high;
+      int m = (int)((r[i].time - from) / 60); wt[k] = (m >= 0 && m < ArraySize(w)) ? w[m] : 1; k++;
+   }
+   return k;
+}
+
+// the family's (c, s) for the last closed M15 candle; s = 0 = no data
+void RbKelt(double &c, double &s)
+{
+   if (g_rbEma == INVALID_HANDLE) { g_rbEma = iMA(_Symbol, PERIOD_M15, 20, 0, MODE_EMA, PRICE_CLOSE); g_rbAtr = iATR(_Symbol, PERIOD_M15, 14); }
+   double em = Buf(g_rbEma, 1), at = Buf(g_rbAtr, 1);
+   c = em - 2 * at; s = at > 0 ? 4 * at : 0;
+}
+
+void RbAsia(double &c, double &s)
+{
+   c = 0; s = 0;
+   datetime tj = iTime(_Symbol, PERIOD_M15, 1); MqlDateTime d; TimeToStruct(tj, d);
+   if (d.hour < 8) return;
+   datetime d0 = tj - tj % 86400; double hi = -1e18, lo = 1e18;
+   for (int q = 1; q < 200; q++) {
+      datetime t = iTime(_Symbol, PERIOD_M15, q); if (t < d0 || t == 0) break;
+      if (t < d0 + 8 * 3600) { hi = MathMax(hi, iHigh(_Symbol, PERIOD_M15, q)); lo = MathMin(lo, iLow(_Symbol, PERIOD_M15, q)); }
+   }
+   if (hi > lo) { c = lo; s = hi - lo; }
+}
+
+void RbIb(double &c, double &s)
+{
+   c = 0; s = 0;
+   datetime tj = iTime(_Symbol, PERIOD_M15, 1); MqlDateTime d; TimeToStruct(tj, d);
+   datetime d0 = tj - tj % 86400, st = 0;
+   if (d.hour >= 16) st = d0 + 15 * 3600; else if (d.hour >= 11) st = d0 + 10 * 3600; else return;
+   double hi = -1e18, lo = 1e18;
+   for (int q = 1; q < 200; q++) {
+      datetime t = iTime(_Symbol, PERIOD_M15, q); if (t < st || t == 0) break;
+      if (t < st + 3600) { hi = MathMax(hi, iHigh(_Symbol, PERIOD_M15, q)); lo = MathMin(lo, iLow(_Symbol, PERIOD_M15, q)); }
+   }
+   if (hi > lo) { c = lo; s = hi - lo; }
+}
+
+void RbVwap(double &c, double &s)
+{
+   c = 0; s = 0;
+   datetime tj = iTime(_Symbol, PERIOD_M15, 1), d0 = tj - tj % 86400;
+   double tp[], lo[], hi[], wt[]; int n = RbMinutes(d0, tj + 900, tp, lo, hi, wt);
+   double sw = 0, swp = 0, swp2 = 0;
+   for (int i = 0; i < n; i++) { sw += wt[i]; swp += wt[i] * tp[i]; swp2 += wt[i] * tp[i] * tp[i]; }
+   if (sw <= 0) return;
+   double v = swp / sw, var = MathMax(swp2 / sw - v * v, 0.0);
+   c = v; s = var > 1e-12 ? MathSqrt(var) : 0;
+}
+
+void RbVa(double &c, double &s)
+{
+   c = 0; s = 0;
+   datetime tj = iTime(_Symbol, PERIOD_M15, 1), t40 = iTime(_Symbol, PERIOD_M15, 40);
+   if (t40 == 0) return;
+   double tp[], lo[], hi[], wt[]; int n = RbMinutes(t40, tj + 900, tp, lo, hi, wt);
+   if (n < 31) return;
+   double L = 1e18, H = -1e18;
+   for (int i = 0; i < n; i++) { L = MathMin(L, lo[i]); H = MathMax(H, hi[i]); }
+   int nb = (int)((H - L) / 0.1) + 1;
+   if (nb < 3 || nb > 20000) return;
+   double hist[]; ArrayResize(hist, nb); ArrayInitialize(hist, 0); double tot = 0;
+   for (int i = 0; i < n; i++) { int b = (int)((tp[i] - L) / 0.1); if (b >= 0 && b < nb) { hist[b] += wt[i]; tot += wt[i]; } }
+   int poc = 0; for (int b = 0; b < nb; b++) if (hist[b] > hist[poc]) poc = b;
+   int lb = poc, hb = poc; double acc = hist[poc];
+   while (acc < 0.7 * tot && (lb > 0 || hb < nb - 1)) {
+      double up = hb < nb - 1 ? hist[hb + 1] : -1.0, dn = lb > 0 ? hist[lb - 1] : -1.0;
+      if (up >= dn) { hb++; acc += up; } else { lb--; acc += dn; }
+   }
+   double half = (hb - lb + 1) * 0.1 / 2.0;
+   if (half > 0) { c = L + (poc + 0.5) * 0.1; s = half; }
+}
+
+// true = an unticked box of one of the four families holds this entry
+bool RbSkip(int side, double en, string &why)
+{
+   string mk = side > 0 ? TvBox_kelt_B : TvBox_kelt_S, mv = side > 0 ? TvBox_va_B : TvBox_va_S;
+   string mw = side > 0 ? TvBox_vwap_B : TvBox_vwap_S, ma = side > 0 ? TvBox_asia_B : TvBox_asia_S;
+   double c, s; int b;
+   if (RbOn(mk)) { RbKelt(c, s); b = RbBox(RbEdgesKelt, c, s, en); if (RbMasked(mk, b)) { why = StringFormat("Keltner box %d unticked", b); return true; } }
+   if (RbOn(mv)) { RbVa(c, s);   b = RbBox(RbEdgesVa, c, s, en);   if (RbMasked(mv, b)) { why = StringFormat("value-area box %d unticked", b); return true; } }
+   if (RbOn(mw)) { RbVwap(c, s); b = RbBox(RbEdgesVwap, c, s, en); if (RbMasked(mw, b)) { why = StringFormat("VWAP box %d unticked", b); return true; } }
+   string mi = side > 0 ? TvBox_ib_B : TvBox_ib_S;
+   if (RbOn(mi)) { RbIb(c, s);   b = RbBox(RbEdgesIb, c, s, en);   if (RbMasked(mi, b)) { why = StringFormat("Initial-Balance box %d unticked", b); return true; } }
+   if (RbOn(ma)) { RbAsia(c, s); b = RbBox(RbEdgesAsia, c, s, en); if (RbMasked(ma, b)) { why = StringFormat("Asian-range box %d unticked", b); return true; } }
+   return false;
+}
+
+// ---------------------------------------------------------------- v1.38 microstructure gates (same definitions as research/micro.py)
+double g_dtwP[][32]; double g_dtwL[]; int g_dtwN = -1;
+int    g_hS = 0, g_hTox = 0; double g_hMu0[3], g_hSd0[3], g_hPi[], g_hA[], g_hMu[], g_hVar[], g_hAl[]; datetime g_hLast = 0; bool g_hOk = false;
+int    g_skipDtw = 0, g_skipVpin = 0, g_skipHmm = 0;
+int    g_hF = INVALID_HANDLE, g_hSl = INVALID_HANDLE, g_hAt = INVALID_HANDLE;   // the HMM always reads M15 candles (it was trained on them), whatever the chart
+
+bool DtwLoad()
+{
+   if (g_dtwN >= 0) return g_dtwN > 0;
+   g_dtwN = 0;
+   int h = FileOpen(InpDtwFile, FILE_READ | FILE_CSV | FILE_COMMON | FILE_ANSI, ',');
+   if (h == INVALID_HANDLE) { PrintFormat("[MICRO] DTW file %s not found in Common Files - gate off", InpDtwFile); return false; }
+   while (!FileIsEnding(h)) {
+      double lab = FileReadNumber(h);
+      if (FileIsEnding(h)) break;
+      ArrayResize(g_dtwP, g_dtwN + 1, 4096); ArrayResize(g_dtwL, g_dtwN + 1, 4096);
+      g_dtwL[g_dtwN] = lab;
+      for (int i = 0; i < 32; i++) g_dtwP[g_dtwN][i] = FileReadNumber(h);
+      g_dtwN++;
+   }
+   FileClose(h);
+   PrintFormat("[MICRO] DTW: %d training paths loaded", g_dtwN);
+   return g_dtwN > 0;
+}
+
+// mid-price path of the 15 minutes before now, 32 steps, turned the trade's way, scaled to its range
+bool MicroPath(int side, double &x[])
+{
+   MqlTick last; long now = (long)TimeCurrent() * 1000;
+   if (SymbolInfoTick(_Symbol, last)) now = (long)last.time_msc;
+   long from = now - 900000;
+   MqlTick tk[];
+   int n = CopyTicksRange(_Symbol, tk, COPY_TICKS_ALL, (ulong)(from + 1), (ulong)now);
+   if (n < 2) return false;
+   ArrayResize(x, 32); int k = 0; double m0 = 0;
+   for (int i = 0; i < 32; i++) {
+      long g = from + (long)(900000.0 * (i + 1) / 32.0);
+      while (k + 1 < n && (long)tk[k + 1].time_msc <= g) k++;
+      double m = (tk[k].bid + tk[k].ask) / 2.0;
+      if (i == 0) m0 = m;
+      x[i] = side * (m - m0);
+   }
+   double mx = x[ArrayMaximum(x)], mn = x[ArrayMinimum(x)], r = mx - mn;
+   for (int i = 0; i < 32; i++) x[i] = r > 0 ? x[i] / r : 0.0;
+   return true;
+}
+
+double Dtw(const double &a[], int row)
+{
+   double D[33][33];
+   for (int i = 0; i <= 32; i++) for (int j = 0; j <= 32; j++) D[i][j] = 1e18;
+   D[0][0] = 0;
+   for (int i = 1; i <= 32; i++)
+      for (int j = MathMax(1, i - 4); j <= MathMin(32, i + 4); j++)
+         D[i][j] = MathAbs(a[i - 1] - g_dtwP[row][j - 1]) + MathMin(D[i - 1][j], MathMin(D[i][j - 1], D[i - 1][j - 1]));
+   return D[32][32];
+}
+
+// share of losers among the InpDtwK nearest training paths (-1 = no data)
+double DtwScore(int side)
+{
+   if (!DtwLoad()) return -1;
+   double x[]; if (!MicroPath(side, x)) return -1;
+   double d[]; int ix[]; ArrayResize(d, g_dtwN); ArrayResize(ix, g_dtwN);
+   for (int i = 0; i < g_dtwN; i++) { d[i] = Dtw(x, i); ix[i] = i; }
+   int k = MathMin(InpDtwK, g_dtwN); double bad = 0;
+   for (int q = 0; q < k; q++) {                       // partial selection of the k smallest
+      int b = q;
+      for (int i = q + 1; i < g_dtwN; i++) if (d[i] < d[b]) b = i;
+      double t = d[q]; d[q] = d[b]; d[b] = t; int ti = ix[q]; ix[q] = ix[b]; ix[b] = ti;
+      bad += g_dtwL[ix[q]];
+   }
+   return bad / k;
+}
+
+// synthetic VPIN on the last 25,000 ticks: vpin = mean |up-down|/500 of 50 buckets, flow = last 10 buckets' (up-down)/(up+down) the trade's way
+bool Vpin(int side, double &v, double &f)
+{
+   MqlTick tk[]; int n = CopyTicks(_Symbol, tk, COPY_TICKS_ALL, 0, 500 * 50 + 1);
+   if (n < 500 * 50 + 1) return false;
+   int prev = 0; double sumImb = 0; long upL = 0, dnL = 0;
+   for (int b = 0; b < 50; b++) {
+      int up = 0, dn = 0;
+      for (int i = 0; i < 500; i++) {
+         int k = 1 + b * 500 + i;
+         double d = (tk[k].bid + tk[k].ask) - (tk[k - 1].bid + tk[k - 1].ask);
+         int sg = d > 0 ? 1 : d < 0 ? -1 : prev;
+         prev = sg;
+         if (sg > 0) up++; else if (sg < 0) dn++;
+      }
+      sumImb += MathAbs(up - dn) / 500.0;
+      if (b >= 40) { upL += up; dnL += dn; }
+   }
+   v = sumImb / 50.0;
+   f = side * (double)(upL - dnL) / MathMax(1.0, (double)(upL + dnL));
+   return true;
+}
+
+bool HmmLoad()
+{
+   if (g_hS != 0) return g_hS > 0;
+   int h = FileOpen(InpHmmFile, FILE_READ | FILE_CSV | FILE_COMMON | FILE_ANSI, ',');
+   if (h == INVALID_HANDLE) { PrintFormat("[MICRO] HMM file %s not found in Common Files - gate off", InpHmmFile); g_hS = -1; return false; }
+   int S = (int)FileReadNumber(h); g_hTox = (int)FileReadNumber(h);
+   for (int i = 0; i < 3; i++) g_hMu0[i] = FileReadNumber(h);
+   for (int i = 0; i < 3; i++) g_hSd0[i] = FileReadNumber(h);
+   ArrayResize(g_hPi, S); ArrayResize(g_hA, S * S); ArrayResize(g_hMu, S * 3); ArrayResize(g_hVar, S * 3); ArrayResize(g_hAl, S);
+   for (int i = 0; i < S; i++) g_hPi[i] = FileReadNumber(h);
+   for (int i = 0; i < S * S; i++) g_hA[i] = FileReadNumber(h);
+   for (int i = 0; i < S * 3; i++) g_hMu[i] = FileReadNumber(h);
+   for (int i = 0; i < S * 3; i++) g_hVar[i] = FileReadNumber(h);
+   FileClose(h);
+   g_hS = S;
+   PrintFormat("[MICRO] HMM: %d states, toxic state %d", S, g_hTox);
+   return true;
+}
+
+// features of the closed M15 candle at shift s: log return, log std of tick-to-tick mid changes, (fast-slow EMA)/ATR - scaled like the training
+bool HmmFeat(int s, double &z[])
+{
+   if (g_hF == INVALID_HANDLE) {
+      g_hF = iMA(_Symbol, PERIOD_M15, InpEmaFast, 0, MODE_EMA, PRICE_CLOSE); g_hSl = iMA(_Symbol, PERIOD_M15, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
+      g_hAt = iATR(_Symbol, PERIOD_M15, 14);
+   }
+   datetime t0 = iTime(_Symbol, PERIOD_M15, s); if (t0 == 0) return false;
+   double c = iClose(_Symbol, PERIOD_M15, s), c1 = iClose(_Symbol, PERIOD_M15, s + 1);
+   if (c <= 0 || c1 <= 0) return false;
+   MqlTick tk[]; int n = CopyTicksRange(_Symbol, tk, COPY_TICKS_ALL, (ulong)t0 * 1000, (ulong)(t0 + 900) * 1000 - 1);
+   double sm = 0, s2 = 0; int cnt = 0;
+   for (int i = 1; i < n; i++) { double d = (tk[i].bid + tk[i].ask - tk[i - 1].bid - tk[i - 1].ask) / 2.0; sm += d; s2 += d * d; cnt++; }
+   double sdv = cnt > 1 ? MathSqrt(MathMax(s2 / cnt - (sm / cnt) * (sm / cnt), 0.0)) : 0.0;
+   double atr = Buf(g_hAt, s), ef = Buf(g_hF, s), es = Buf(g_hSl, s);
+   if (atr <= 0 || ef <= 0 || es <= 0) return false;
+   double x[3]; x[0] = MathLog(c / c1); x[1] = MathLog(sdv + 1e-4); x[2] = (ef - es) / atr;
+   ArrayResize(z, 3);
+   for (int i = 0; i < 3; i++) z[i] = (x[i] - g_hMu0[i]) / g_hSd0[i];
+   return true;
+}
+
+void HmmStep(const double &z[])
+{
+   int S = g_hS; double e[], a[]; ArrayResize(e, S); ArrayResize(a, S);
+   double mx = -1e300;
+   for (int k = 0; k < S; k++) {
+      double le = 0;
+      for (int i = 0; i < 3; i++) { double v = g_hVar[k * 3 + i], d = z[i] - g_hMu[k * 3 + i]; le += -0.5 * (MathLog(2 * M_PI * v) + d * d / v); }
+      e[k] = le; mx = MathMax(mx, le);
+   }
+   double sum = 0;
+   for (int k = 0; k < S; k++) {
+      double pr = 0;
+      if (!g_hOk) pr = g_hPi[k]; else for (int q = 0; q < S; q++) pr += g_hAl[q] * g_hA[q * S + k];
+      a[k] = pr * MathExp(e[k] - mx); sum += a[k];
+   }
+   for (int k = 0; k < S; k++) g_hAl[k] = sum > 0 ? a[k] / sum : 1.0 / S;
+   g_hOk = true;
+}
+
+// P(toxic state) after the last closed candle (-1 = no model); the filter catches up from the last candle it saw (300 candles warm-up)
+double HmmToxic()
+{
+   if (!HmmLoad()) return -1;
+   datetime last = iTime(_Symbol, PERIOD_M15, 1);
+   if (last != g_hLast) {
+      int from = g_hLast == 0 ? 300 : MathMin(300, iBarShift(_Symbol, PERIOD_M15, g_hLast) - 1);
+      for (int s = from; s >= 1; s--) { double z[]; if (HmmFeat(s, z)) HmmStep(z); }
+      g_hLast = last;
+   }
+   return g_hAl[g_hTox];
+}
+// ---------------------------------------------------------------- v1.39 ML gate: the triple-barrier stacked model (monitor/saad_view/mlx), features = MlxFeatures.mqh
+// MQL5\Files\<InpMlDir> (Common Files as the fallback - the tester's agent sees only those): meta.json = the kept feature names (-> columns BY
+// NAME), the StandardScaler, the LogisticRegression meta-learner (meta_coef 3 x 3n, meta_intercept 3, classes [-1, 0, 1]); base_<k>.onnx = the
+// base classifiers exported with zipmap OFF (output 0 the label, output 1 the class probabilities [1,3] in the order of "classes"). At every
+// M15 bar close: f = the features of the last closed candle -> keep + scale -> OnnxRun each base -> stacked in base order ->
+// softmax(meta_coef * p + meta_intercept) = P(down), P(none), P(up). A BUY needs P(up) > InpMlThresh, a SELL P(down) > InpMlThresh.
+int      g_mlKeep[]; double g_mlMean[], g_mlScale[], g_mlCoef[], g_mlB[];
+int      g_mlNk = 0, g_mlNb = 0, g_mlIdxDn = -1, g_mlIdxUp = -1;
+long     g_mlH[]; int g_mlOut[];           // per base model: the ONNX handle and its output form (2 label + [1,3] · 1 label + [3] · 3 [1,3] only · 4 [3] only)
+datetime g_mlBarT = 0; bool g_mlOk = false; double g_mlUp = 0, g_mlDn = 0, g_mlNone = 0, g_mlBase[];
+int      g_skipMl = 0, g_mlNoP = 0;
+
+// a file of the model folder: MQL5\Files first, then Common Files
+bool MlRead(const string rel, uchar &bytes[], string &where)
+{
+   for (int c = 0; c < 2; c++) {
+      int common = c == 1 ? FILE_COMMON : 0;
+      if (!FileIsExist(rel, common)) continue;
+      int h = FileOpen(rel, FILE_READ | FILE_BIN | FILE_SHARE_READ | common);
+      if (h == INVALID_HANDLE) continue;
+      ArrayResize(bytes, (int)FileSize(h));
+      FileReadArray(h, bytes, 0, ArraySize(bytes));
+      FileClose(h);
+      where = c == 1 ? "Common Files" : "MQL5 Files";
+      if (ArraySize(bytes) > 0) return true;
+   }
+   return false;
+}
+
+// the text inside the JSON array that follows "key": [ ... ] (nested arrays included); "" when the key is missing
+string MlJsonArr(const string js, const string key)
+{
+   int p = StringFind(js, "\"" + key + "\"");
+   if (p < 0) return "";
+   int a = StringFind(js, "[", p), depth = 0;
+   if (a < 0) return "";
+   for (int q = a; q < StringLen(js); q++) {
+      ushort ch = StringGetCharacter(js, q);
+      if (ch == '[') depth++;
+      else if (ch == ']') { depth--; if (depth == 0) return StringSubstr(js, a + 1, q - a - 1); }
+   }
+   return "";
+}
+
+string MlTrim(string s) { StringTrimLeft(s); StringTrimRight(s); return s; }
+
+// a JSON number, the exponent form included (json.dumps writes 1e-05)
+double MlNum(const string s)
+{
+   int e = StringFind(s, "e"); if (e < 0) e = StringFind(s, "E");
+   if (e < 0) return StringToDouble(s);
+   return StringToDouble(StringSubstr(s, 0, e)) * MathPow(10.0, (double)StringToInteger(StringSubstr(s, e + 1)));
+}
+
+// a flat JSON array body -> numbers (count)
+int MlJsonNums(const string body, double &out[])
+{
+   string parts[]; int n = StringSplit(body, ',', parts), k = 0;
+   ArrayResize(out, 0);
+   for (int i = 0; i < n; i++) { string s = MlTrim(parts[i]); if (s == "") continue; ArrayResize(out, k + 1); out[k++] = MlNum(s); }
+   return k;
+}
+
+// a flat JSON array body of strings -> the names without their quotes (count)
+int MlJsonStrs(const string body, string &out[])
+{
+   string parts[]; int n = StringSplit(body, ',', parts), k = 0;
+   ArrayResize(out, 0);
+   for (int i = 0; i < n; i++) {
+      string s = MlTrim(parts[i]);
+      if (s == "") continue;
+      if (StringLen(s) >= 2 && StringGetCharacter(s, 0) == '"') s = StringSubstr(s, 1, StringLen(s) - 2);
+      ArrayResize(out, k + 1); out[k++] = s;
+   }
+   return k;
+}
+
+// a JSON array of arrays -> one flat row-major array; returns the rows, ncol the columns (0 when ragged)
+int MlJsonRows(const string body, double &flat[], int &ncol)
+{
+   ArrayResize(flat, 0); ncol = 0;
+   int rows = 0, p = 0;
+   while (true) {
+      int a = StringFind(body, "[", p); if (a < 0) break;
+      int b = StringFind(body, "]", a); if (b < 0) break;
+      double v[]; int n = MlJsonNums(StringSubstr(body, a + 1, b - a - 1), v);
+      if (rows == 0) ncol = n; else if (n != ncol) { ncol = 0; return rows; }
+      int o = ArraySize(flat); ArrayResize(flat, o + n);
+      for (int i = 0; i < n; i++) flat[o + i] = v[i];
+      rows++; p = b + 1;
+   }
+   return rows;
+}
+
+// run base model b on the scaled features; p = its 3 class probabilities
+bool MlRunBase(int b, const vectorf &xin, double &p[])
+{
+   matrixf x(1, (ulong)g_mlNk); x.Row(xin, 0);
+   long lab[]; ArrayResize(lab, 1);
+   matrixf p2(1, 3); vectorf p1(3);
+   int form = g_mlOut[b]; bool ok = false;
+   ArrayResize(p, 3);
+   if (form == 2 || form == 3) {
+      ok = form == 2 ? OnnxRun(g_mlH[b], ONNX_DEFAULT, x, lab, p2) : OnnxRun(g_mlH[b], ONNX_DEFAULT, x, p2);
+      if (ok) for (int k = 0; k < 3; k++) p[k] = p2[0][k];
+   } else {
+      ok = form == 1 ? OnnxRun(g_mlH[b], ONNX_DEFAULT, x, lab, p1) : OnnxRun(g_mlH[b], ONNX_DEFAULT, x, p1);
+      if (ok) for (int k = 0; k < 3; k++) p[k] = p1[k];
+   }
+   return ok;
+}
+
+// which output form base model b answers to (a zero vector is run through each form); 0 = none worked
+int MlProbe(int b)
+{
+   int nout = (int)OnnxGetOutputCount(g_mlH[b]);
+   vectorf x((ulong)g_mlNk); x.Fill(0);
+   double p[];
+   ulong s1[] = {1};
+   ulong s13[] = {1, 3};
+   ulong s3[] = {3};
+   int forms[4], nf = 0;
+   if (nout == 2) { forms[nf++] = 2; forms[nf++] = 1; } else if (nout == 1) { forms[nf++] = 3; forms[nf++] = 4; } else return 0;
+   for (int q = 0; q < nf; q++) {
+      int form = forms[q], pi = nout == 2 ? 1 : 0;
+      if (nout == 2) OnnxSetOutputShape(g_mlH[b], 0, s1);
+      if (form == 2 || form == 3) OnnxSetOutputShape(g_mlH[b], pi, s13); else OnnxSetOutputShape(g_mlH[b], pi, s3);
+      ResetLastError();
+      g_mlOut[b] = form;
+      if (MlRunBase(b, x, p)) return form;
+      PrintFormat("[ML] base_%d: output form %d refused (error %d)", b + 1, form, GetLastError());
+   }
+   return 0;
+}
+
+// load meta.json and the base models; false = something is missing (OnInit fails loudly)
+bool MlInit()
+{
+   uchar js[]; string where = "";
+   if (!MlRead(InpMlDir + "\\meta.json", js, where)) { PrintFormat("[ML] %s\\meta.json: not in MQL5\\Files nor in Common Files", InpMlDir); return false; }
+   string j = CharArrayToString(js, 0, WHOLE_ARRAY, CP_UTF8);
+   string kept[]; g_mlNk = MlJsonStrs(MlJsonArr(j, "kept"), kept);
+   if (g_mlNk <= 0) { Print("[ML] meta.json: no \"kept\" feature list"); return false; }
+   ArrayResize(g_mlKeep, g_mlNk);
+   for (int k = 0; k < g_mlNk; k++) { g_mlKeep[k] = MlxIndex(kept[k]); if (g_mlKeep[k] < 0) { PrintFormat("[ML] meta.json: unknown feature \"%s\"", kept[k]); return false; } }
+   if (MlJsonNums(MlJsonArr(j, "mean"), g_mlMean) != g_mlNk || MlJsonNums(MlJsonArr(j, "scale"), g_mlScale) != g_mlNk) { Print("[ML] meta.json: scaler mean / scale do not match the kept features"); return false; }
+   string bn[]; g_mlNb = MlJsonStrs(MlJsonArr(j, "base_names"), bn);
+   int ncol = 0, nrow = MlJsonRows(MlJsonArr(j, "meta_coef"), g_mlCoef, ncol), nb_ = MlJsonNums(MlJsonArr(j, "meta_intercept"), g_mlB);
+   if (g_mlNb <= 0 || nrow != 3 || ncol != 3 * g_mlNb || nb_ != 3) { PrintFormat("[ML] meta.json: meta_coef %d x %d, meta_intercept %d, base models %d - expected 3 x %d and 3", nrow, ncol, nb_, g_mlNb, 3 * g_mlNb); return false; }
+   double cls[]; int nc = MlJsonNums(MlJsonArr(j, "classes"), cls);
+   g_mlIdxDn = -1; g_mlIdxUp = -1;
+   if (nc == 3) for (int k = 0; k < 3; k++) { if (cls[k] == -1) g_mlIdxDn = k; if (cls[k] == 1) g_mlIdxUp = k; }
+   if (g_mlIdxDn < 0 || g_mlIdxUp < 0) { Print("[ML] meta.json: classes must be [-1, 0, 1]"); return false; }
+   ArrayResize(g_mlH, g_mlNb); ArrayResize(g_mlOut, g_mlNb); ArrayResize(g_mlBase, 3 * g_mlNb);
+   for (int b = 0; b < g_mlNb; b++) g_mlH[b] = INVALID_HANDLE;
+   for (int b = 0; b < g_mlNb; b++) {
+      string fn = StringFormat("%s\\base_%d.onnx", InpMlDir, b + 1);
+      uchar bytes[];
+      if (!MlRead(fn, bytes, where)) { PrintFormat("[ML] %s: not found", fn); return false; }
+      g_mlH[b] = OnnxCreateFromBuffer(bytes, ONNX_DEFAULT);
+      if (g_mlH[b] == INVALID_HANDLE) { PrintFormat("[ML] %s: OnnxCreateFromBuffer failed (error %d)", fn, GetLastError()); return false; }
+      ulong shp[] = {1, 1}; shp[1] = (ulong)g_mlNk;
+      if (!OnnxSetInputShape(g_mlH[b], 0, shp)) { PrintFormat("[ML] %s: OnnxSetInputShape [1,%d] failed (error %d)", fn, g_mlNk, GetLastError()); return false; }
+      g_mlOut[b] = MlProbe(b);
+      if (g_mlOut[b] == 0) { PrintFormat("[ML] %s: no usable output form - export it with zipmap off (label + probabilities [1,3])", fn); return false; }
+      PrintFormat("[ML] %s = %s (%s, %d bytes): %d inputs, %d outputs, form %d", fn, bn[b], where, ArraySize(bytes), (int)OnnxGetInputCount(g_mlH[b]), (int)OnnxGetOutputCount(g_mlH[b]), g_mlOut[b]);
+   }
+   if (!MlxHandles(_Symbol)) { Print("[ML] MlxFeatures: the indicator handles could not be created"); return false; }
+   PrintFormat("[ML] v1.39 gate %s: %d of %d features kept, %d base models, threshold %.2f, model folder %s (%s)", InpMlFilter ? "ON" : "logging only", g_mlNk, MLX_N, g_mlNb, InpMlThresh, InpMlDir, where);
+   return true;
+}
+
+void MlRelease()
+{
+   for (int b = 0; b < ArraySize(g_mlH); b++) if (g_mlH[b] != INVALID_HANDLE) { OnnxRelease(g_mlH[b]); g_mlH[b] = INVALID_HANDLE; }
+   MlxRelease();
+}
+
+// the model's verdict for the last closed M15 candle (cached per candle): g_mlUp / g_mlDn / g_mlNone. false = no features yet or a model failed
+bool MlBar()
+{
+   datetime t1 = iTime(_Symbol, PERIOD_M15, 1);
+   if (t1 == 0) return false;
+   if (t1 == g_mlBarT) return g_mlOk;
+   double f[];
+   if (MlxFeatures(_Symbol, 1, f, (int)SymbolInfoInteger(_Symbol, SYMBOL_SPREAD)) != MLX_N) return false;   // not ready: again on the next tick
+   g_mlBarT = t1; g_mlOk = false;
+   vectorf x((ulong)g_mlNk);
+   for (int k = 0; k < g_mlNk; k++) {                            // sklearn StandardScaler on float32 rows: two float32 roundings, not one double step
+      float xs = (float)((double)(float)f[g_mlKeep[k]] - g_mlMean[k]);
+      x[k] = (float)((double)xs / (g_mlScale[k] != 0 ? g_mlScale[k] : 1.0));
+   }
+   double p[];
+   for (int b = 0; b < g_mlNb; b++) {
+      if (!MlRunBase(b, x, p)) { PrintFormat("[ML] base_%d: OnnxRun failed (error %d)", b + 1, GetLastError()); return false; }
+      for (int k = 0; k < 3; k++) g_mlBase[3 * b + k] = p[k];
+   }
+   double z[3], pr[3], mx = -DBL_MAX, sum = 0; int nf = 3 * g_mlNb;
+   for (int c = 0; c < 3; c++) { z[c] = g_mlB[c]; for (int q = 0; q < nf; q++) z[c] += g_mlCoef[c * nf + q] * g_mlBase[q]; mx = MathMax(mx, z[c]); }
+   for (int c = 0; c < 3; c++) { pr[c] = MathExp(z[c] - mx); sum += pr[c]; }
+   for (int c = 0; c < 3; c++) pr[c] /= sum;
+   g_mlDn = pr[g_mlIdxDn]; g_mlUp = pr[g_mlIdxUp]; g_mlNone = 1.0 - g_mlDn - g_mlUp; g_mlOk = true;
+   if (InpMlLog) {                                             // the parity row: Common Files mlx_probs_<symbol>.csv
+      int h = FileOpen("mlx_probs_" + _Symbol + ".csv", FILE_READ | FILE_WRITE | FILE_TXT | FILE_ANSI | FILE_COMMON | FILE_SHARE_READ);
+      if (h != INVALID_HANDLE) {
+         if (FileSize(h) == 0) {
+            string head = "time,bar,p_down,p_none,p_up";
+            for (int b = 0; b < g_mlNb; b++) head += StringFormat(",b%d_c0,b%d_c1,b%d_c2", b + 1, b + 1, b + 1);
+            FileWriteString(h, head + "\r\n");
+         }
+         FileSeek(h, 0, SEEK_END);
+         string row = StringFormat("%s,%s,%.6f,%.6f,%.6f", IntegerToString((long)t1), TimeToString(t1, TIME_DATE | TIME_MINUTES), g_mlDn, g_mlNone, g_mlUp);
+         for (int q = 0; q < nf; q++) row += StringFormat(",%.6f", g_mlBase[q]);
+         FileWriteString(h, row + "\r\n");
+         FileClose(h);
+      }
+   }
+   return true;
+}
 double Ema(int which, int s) { return Buf(which == 9 ? hFast : hSlow, s); }
 bool   TrailOn(int side) { return InpTrail && (InpTrailSide == 2 || (side > 0 && InpTrailSide == 0) || (side < 0 && InpTrailSide == 1)); }
 
@@ -327,6 +910,10 @@ int OnInit()
    hSlow = iMA(_Symbol, PERIOD_CURRENT, InpEmaSlow, 0, MODE_EMA, PRICE_CLOSE);
    hAtr  = iATR(_Symbol, PERIOD_CURRENT, 14);
    if (InpExport) hAdxX = iADX(_Symbol, PERIOD_CURRENT, InpAdxPeriod);
+   if (InpDexStopMethod == 2) {
+      hDexAtr = iATR(_Symbol, PERIOD_M15, 14);
+      if (hDexAtr == INVALID_HANDLE) return INIT_FAILED;
+   }
    if (InpAdxMin > 0 || InpXAdxExit > 0) { hAdx = iADX(_Symbol, PERIOD_CURRENT, InpAdxPeriod); if (hAdx == INVALID_HANDLE) return INIT_FAILED; }   // v1.24
    if (InpHtfMin > 0) {
       g_htf = InpHtfMin == 15 ? PERIOD_M15 : InpHtfMin == 30 ? PERIOD_M30 : InpHtfMin == 60 ? PERIOD_H1 : InpHtfMin == 240 ? PERIOD_H4 : PERIOD_M15;
@@ -334,6 +921,7 @@ int OnInit()
       if (hHtf == INVALID_HANDLE) return INIT_FAILED;
    }
    if (hFast == INVALID_HANDLE || hSlow == INVALID_HANDLE || hAtr == INVALID_HANDLE) return INIT_FAILED;
+   if ((InpMlFilter || InpMlLog) && !MlInit()) { Print("[ML] v1.39: the ML gate could not start - fix the model folder or switch InpMlFilter / InpMlLog off"); return INIT_FAILED; }
    trade.SetExpertMagicNumber(InpMagicNumber);
    if (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE)) trade.LogLevel(LOG_LEVEL_ERRORS);   // v1.12: agent logs were 381-866 MB
    PrintFormat("[SAAD-15min] v1.27 %s | stops level %d pts, freeze %d pts, spread now %d pts | SL %.0f pips, max risk $%.2f, ER %.2f/%d, hours %d-%d, trail %s N%d ride %s, maxPos %d",
@@ -414,6 +1002,9 @@ void OnDeinit(const int reason)
 {
    ExClose();
    if (reason != REASON_CHARTCHANGE && reason != REASON_PARAMETERS) ChartIndicatorDelete(0, 0, "SaadEMAs");
+   if (hDexAtr != INVALID_HANDLE) IndicatorRelease(hDexAtr);
+   MlRelease();   // v1.39
+   if (InpMlFilter) PrintFormat("[SAAD] v1.39 ML gate: %d entries skipped (P not above %.2f), %d without a probability", g_skipMl, InpMlThresh, g_mlNoP);
    if (InpAdxMin > 0 || InpAtrMinUsd > 0 || InpAtrMaxUsd > 0) PrintFormat("[SAAD] v1.24 gates: ADX %d, volatility %d", g_skipAdx, g_skipVol);
    PrintFormat("[SAAD] chart-test: stand-aside ghosts %d, unticked-box skips %d", g_ghosts, g_bandSkips);
    PrintFormat("[SAAD] v1.12: refused stop changes %d | no dip %d, no sweep %d, min-lot too risky %d, day loss stops %d, partial closes %d", g_modFails, g_skipDip, g_skipSweep, g_skipMinLot, g_dayLossStop, g_partials);
@@ -492,6 +1083,16 @@ double LastResistance(double above)
       if (piv) return h;
    }
    return 0.0;
+}
+
+// v1.37: efficiency ratio of the last n closed candles (the same formula as Choppy)
+double ErNow(int n)
+{
+   double net = MathAbs(iClose(_Symbol, PERIOD_CURRENT, 1) - iClose(_Symbol, PERIOD_CURRENT, n + 1));
+   double path = 0;
+   for (int i = 1; i <= n; i++)
+      path += MathAbs(iClose(_Symbol, PERIOD_CURRENT, i) - iClose(_Symbol, PERIOD_CURRENT, i + 1));
+   return path > 0 ? net / path : 0;
 }
 
 bool Choppy()
@@ -667,10 +1268,61 @@ void Callout(datetime t, double price, bool up, double lvl, string txt, color c,
    DText(t, ty, txt, c, size, up ? ANCHOR_LOWER : ANCHOR_UPPER, tip);
 }
 // a skipped setup: grey note under (long) / over (short) its candle
+// ---- v1.40 skip log: a skipped entry is followed as a virtual trade (its entry price, stop and TP at the moment of the skip) until TP, stop or 72 h,
+// then one CSV row says what the filter cost or saved. Setup-level skips (no entry price yet) are written at once with outcome "setup never triggered".
+struct Virt { datetime t; int side; double en, sl, tp, best, worst; string why; };
+Virt     g_virt[];
+double   g_vEn = 0, g_vSl = 0, g_vTp = 0;    // the entry DoEntry is deciding about (set at its start, cleared when an order is sent)
+string SkipFile() { return StringFormat("Saad15_skips_%s_%d%s.csv", _Symbol, InpMagicNumber, MQLInfoInteger(MQL_TESTER) ? "_tester" : ""); }
+void SkipRow(string row)
+{
+   if (!InpSkipLog || (MQLInfoInteger(MQL_TESTER) && !MQLInfoInteger(MQL_VISUAL_MODE))) return;
+   int h = FileOpen(SkipFile(), FILE_READ | FILE_WRITE | FILE_TXT | FILE_ANSI | FILE_COMMON | FILE_SHARE_READ);
+   if (h == INVALID_HANDLE) { Print("[SAAD-15min] cannot write ", SkipFile(), " error ", GetLastError()); return; }
+   if (FileSize(h) == 0)
+      FileWriteString(h, "skip_time,side,reason,setup,entry,sl,tp,outcome,exit_time,exit,pnl_usd,hold_min,best_usd,worst_usd,lots\r\n");
+   FileSeek(h, 0, SEEK_END);
+   FileWriteString(h, row + "\r\n");
+   FileClose(h);
+}
+string SkipCsv(string s) { StringReplace(s, ",", ";"); StringReplace(s, "\"", "'"); return s; }
+void VirtOpen(int side, string why)
+{
+   if (!InpSkipLog) return;
+   if (g_vEn <= 0) {                                        // a setup that never produced an entry (not broken, too close to the close, market closed)
+      SkipRow(StringFormat("%s,%s,%s,%s,,,,setup never triggered,,,,,,,%.2f", Ts(TimeCurrent()), side > 0 ? "BUY" : "SELL", SkipCsv(why), SkipCsv(g_pDesc), InpLots));
+      return;
+   }
+   int n = ArraySize(g_virt); ArrayResize(g_virt, n + 1);
+   g_virt[n].t = TimeCurrent(); g_virt[n].side = side; g_virt[n].en = g_vEn; g_virt[n].sl = g_vSl; g_virt[n].tp = g_vTp; g_virt[n].best = g_vEn; g_virt[n].worst = g_vEn; g_virt[n].why = why + " | " + g_pDesc;
+}
+void VirtClose(int i, string outcome, double px)
+{
+   double mult = InpLots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
+   double pnl = (px - g_virt[i].en) * g_virt[i].side * mult;
+   SkipRow(StringFormat("%s,%s,%s,,%s,%s,%s,%s,%s,%s,%.2f,%d,%.2f,%.2f,%.2f", Ts(g_virt[i].t), g_virt[i].side > 0 ? "BUY" : "SELL", SkipCsv(g_virt[i].why), Px(g_virt[i].en), Px(g_virt[i].sl), Px(g_virt[i].tp),
+                        outcome, Ts(TimeCurrent()), Px(px), pnl, (int)((TimeCurrent() - g_virt[i].t) / 60), (g_virt[i].best - g_virt[i].en) * g_virt[i].side * mult, (g_virt[i].worst - g_virt[i].en) * g_virt[i].side * mult, InpLots));
+   for (int k = i; k < ArraySize(g_virt) - 1; k++) g_virt[k] = g_virt[k + 1];
+   ArrayResize(g_virt, ArraySize(g_virt) - 1);
+}
+void VirtTick()
+{
+   if (!InpSkipLog || ArraySize(g_virt) == 0) return;
+   double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+   for (int i = ArraySize(g_virt) - 1; i >= 0; i--) {
+      double px = g_virt[i].side > 0 ? bid : ask;            // a long exits on the bid, a short on the ask - like the real trade
+      if ((px - g_virt[i].en) * g_virt[i].side > (g_virt[i].best - g_virt[i].en) * g_virt[i].side) g_virt[i].best = px;
+      if ((px - g_virt[i].en) * g_virt[i].side < (g_virt[i].worst - g_virt[i].en) * g_virt[i].side) g_virt[i].worst = px;
+      if (g_virt[i].sl > 0 && (g_virt[i].side > 0 ? px <= g_virt[i].sl : px >= g_virt[i].sl)) { VirtClose(i, "stop", g_virt[i].sl); continue; }
+      if (g_virt[i].tp > 0 && (g_virt[i].side > 0 ? px >= g_virt[i].tp : px <= g_virt[i].tp)) { VirtClose(i, "take profit", g_virt[i].tp); continue; }
+      if (TimeCurrent() - g_virt[i].t > 72 * 3600) VirtClose(i, "72h timeout", px);
+   }
+}
 void DSkip(int side, string why)
 {
    Log("SKIP: " + why + " | " + g_pDesc);
    EV("skip", TimeCurrent(), side, g_pHigh, g_pLow, 0, 0, g_pTime, 0, why);
+   VirtOpen(side, why);
    if (!InpDrawSkips || g_pTime == 0) return;
    double off = 2 * Pip();
    Callout(g_pTime, side > 0 ? g_pLow - off : g_pHigh + off, side < 0, 1.0, "skip: " + why, clrGray, 7, "skipped: " + why + " | " + g_pDesc);
@@ -753,8 +1405,39 @@ void SyncPos()
          bool b9 = p.side > 0 ? l9 > p.entry : l9 < p.entry, b50 = p.side > 0 ? l50 > p.entry : l50 < p.entry;
          p.nxE = b9 && b50 ? (MathAbs(l9 - p.entry) <= MathAbs(l50 - p.entry) ? 9 : 50) : b9 ? 9 : b50 ? 50 : -1;
       }
-      p.mfe = p.entry; p.xr0 = MathAbs(p.entry - p.slNow); p.xorl = PositionGetDouble(POSITION_VOLUME); p.xp1 = false; p.xp2 = false; p.xcxn = 0; p.xfbn = 0; p.xltp = 0; p.xlp = false;
+      p.mfe = p.entry; p.xr0 = MathAbs(p.entry - p.slNow); p.xorl = PositionGetDouble(POSITION_VOLUME); p.xp1 = false; p.xp2 = false; p.xcxn = 0; p.xfbn = 0; p.xltp = 0; p.xlp = false; p.pAdd = 0; p.pEn0 = 0; p.pDip = false;
       int n = ArraySize(g_pos); ArrayResize(g_pos, n + 1); g_pos[n] = p;
+   }
+}
+
+// v1.36 probe entry: the probe is confirmed -> the waiting lots join it. Netting: one more order on the same position.
+// Hedging: the probe is swapped for one position of the full size (same stop / TP), so every exit still manages ONE ticket.
+void ProbeTick()
+{
+   if (InpProbeMode <= 0) return;
+   for (int i = 0; i < ArraySize(g_pos); i++) {
+      if (g_pos[i].pAdd <= 0 || !PositionSelectByTicket(g_pos[i].ticket)) continue;
+      int sd = g_pos[i].side;
+      double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+      double fav = ((sd > 0 ? bid : ask) - g_pos[i].pEn0) * sd;
+      if (fav <= -InpProbeDipUsd) g_pos[i].pDip = true;
+      if (fav < InpProbeUsd || (InpProbeMode == 2 && !g_pos[i].pDip)) continue;
+      double sl = PositionGetDouble(POSITION_SL), tp = PositionGetDouble(POSITION_TP), vol = PositionGetDouble(POSITION_VOLUME);
+      double add = g_pos[i].pAdd;
+      g_pos[i].pAdd = 0;                                   // one attempt: a refused add leaves the probe running alone
+      bool netting = (ENUM_ACCOUNT_MARGIN_MODE)AccountInfoInteger(ACCOUNT_MARGIN_MODE) != ACCOUNT_MARGIN_MODE_RETAIL_HEDGING;
+      double size = netting ? add : NormalizeDouble(vol + add, 2);
+      bool ok = sd > 0 ? trade.Buy(size, _Symbol, 0, sl, tp, EA_COMMENT + " BUY+") : trade.Sell(size, _Symbol, 0, sl, tp, EA_COMMENT + " SELL+");
+      if (!ok) { PrintFormat("[PROBE ADD REJECTED] %.2f lots | Retcode: %d | %s", size, trade.ResultRetcode(), trade.ResultComment()); continue; }
+      if (!netting) {
+         ulong old = g_pos[i].ticket, t = trade.ResultOrder(), deal = trade.ResultDeal();
+         if (deal > 0 && HistoryDealSelect(deal)) t = (ulong)HistoryDealGetInteger(deal, DEAL_POSITION_ID);
+         g_pos[i].ticket = t;
+         if (trade.ResultPrice() > 0) g_pos[i].entry = trade.ResultPrice();
+         trade.PositionClose(old);
+      }
+      g_pos[i].xorl = vol + add;
+      PrintFormat("[PROBE] confirmed at %+.2f: %.2f lots added", fav, add);
    }
 }
 
@@ -1217,14 +1900,74 @@ void TryDip()
 double StopFor(int side, double en, double hi, double lo)
 {
    double pip = Pip();
+   if (InpDexStopMethod == 1) return side > 0 ? lo - InpDexPinBuffer : hi + InpDexPinBuffer;
+   if (InpDexStopMethod == 2) {
+      double atr = Buf(hDexAtr, 1);
+      if (atr <= 0 || InpDexAtrMult <= 0) return 0;
+      double distance = atr * InpDexAtrMult;
+      return side > 0 ? en - distance : en + distance;
+   }
    if (InpSlMode == 1) { double a = Buf(hAtr, 1) * InpSlAtrMult; return side > 0 ? en - a : en + a; }
    if (InpSlMode == 2) return side > 0 ? en - InpSlUsd : en + InpSlUsd;
    return side > 0 ? lo - InpSlPips * pip : hi + InpSlPips * pip;
 }
 
+int VolumeDigits(double step)
+{
+   for (int digits = 0; digits <= 8; digits++)
+      if (MathAbs(step - NormalizeDouble(step, digits)) < 1e-10) return digits;
+   return 8;
+}
+
+double DexterLotsFor(int side, double en, double sl, double &risk)
+{
+   risk = 0;
+   double equity = AccountInfoDouble(ACCOUNT_EQUITY);
+   double budget = equity * InpDexRiskPct / 100.0;
+   double minimum = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   double maximum = MathMin(SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX), InpMaxLots);
+   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   ENUM_ORDER_TYPE orderType = side > 0 ? ORDER_TYPE_BUY : ORDER_TYPE_SELL;
+   double oneLotPnl = 0;
+   if (equity <= 0 || budget <= 0 || minimum <= 0 || maximum < minimum || step <= 0 ||
+       !OrderCalcProfit(orderType, _Symbol, 1.0, en, sl, oneLotPnl) || oneLotPnl >= 0) {
+      PrintFormat("[DEXTER RISK SKIP] invalid risk inputs/calculation | equity %.2f | budget %.2f | entry %.5f | stop %.5f | error %d",
+                  equity, budget, en, sl, GetLastError());
+      return 0;
+   }
+
+   double lots = MathFloor(MathMin(maximum, budget / MathAbs(oneLotPnl)) / step + 1e-10) * step;
+   int digits = VolumeDigits(step);
+   lots = NormalizeDouble(lots, digits);
+   if (lots < minimum) {
+      PrintFormat("[DEXTER RISK SKIP] minimum lot %.8f would exceed budget %.2f | minimum-stop loss %.2f",
+                  minimum, budget, MathAbs(oneLotPnl) * minimum);
+      return 0;
+   }
+
+   double margin = 0;
+   while (lots >= minimum) {
+      double pnl = 0;
+      if (!OrderCalcProfit(orderType, _Symbol, lots, en, sl, pnl)) {
+         PrintFormat("[DEXTER RISK SKIP] OrderCalcProfit failed for %.8f lots | error %d", lots, GetLastError());
+         return 0;
+      }
+      if (MathAbs(pnl) <= budget + 1e-8 &&
+          OrderCalcMargin(orderType, _Symbol, lots, en, margin) &&
+          margin <= AccountInfoDouble(ACCOUNT_MARGIN_FREE) * 0.9) {
+         risk = MathAbs(pnl);
+         return lots;
+      }
+      lots = NormalizeDouble(lots - step, digits);
+   }
+   PrintFormat("[DEXTER RISK SKIP] no broker-valid volume fits risk budget %.2f and free margin", budget);
+   return 0;
+}
+
 // lots for this trade: fixed, or InpRiskPct of equity (0 = skip)
 double LotsFor(int side, double en, double sl)
 {
+   if (InpDexRiskSizing) { double risk = 0; return DexterLotsFor(side, en, sl, risk); }
    if (InpRiskPct <= 0) return InpLots;
    double eq = AccountInfoDouble(ACCOUNT_EQUITY);
    double tv = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE), ts = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
@@ -1251,6 +1994,13 @@ void DoEntry(int side, double sl, bool ghost = false)
    double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID), ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    double pip = Pip();
    double en = side > 0 ? ask : bid;
+   if (InpDexStopMethod > 0) sl = StopFor(side, en, g_pHigh, g_pLow);
+   g_vEn = en; g_vSl = sl; g_vTp = InpFixTpPips > 0 ? en + side * InpFixTpPips * pip : 0;   // v1.40: what a skip in this call would have traded
+   if (sl <= 0 || (side > 0 ? sl >= en : sl <= en)) {
+      DSkip(side, "experiment stop could not be calculated on the correct side of entry");
+      g_vEn = 0;
+      return;
+   }
    if (InpMaxRiskUsd > 0 && MathAbs(en - sl) > InpMaxRiskUsd) { g_skipRisk++; DSkip(side, StringFormat("stop too far ($%.2f > $%.2f)", MathAbs(en - sl), InpMaxRiskUsd)); return; }
    // v1.24 gates: trend strength (ADX) and the volatility band (ATR of the last closed candle)
    if (hAdx != INVALID_HANDLE && Buf(hAdx, 1) < InpAdxMin) { g_skipAdx++; DSkip(side, StringFormat("ADX %.1f below %.1f (ranging)", Buf(hAdx, 1), InpAdxMin)); return; }
@@ -1278,13 +2028,53 @@ void DoEntry(int side, double sl, bool ghost = false)
    bool rideShort = side < 0 && TrailOn(-1) && InpRide && InpFixTpPips <= 0;
    if (InpFixTpPips > 0) { tp = side > 0 ? en + InpFixTpPips * pip : en - InpFixTpPips * pip; noTp = false; }
    if (XOn() && InpXLossCap > 0 && nxE != 0 && MathAbs(en - sl) > InpXLossCap) sl = side > 0 ? en - InpXLossCap : en + InpXLossCap;   // v1.31: the stop never beyond $X
+   { MqlDateTime hd; TimeToStruct(TimeCurrent(), hd);          // v1.37 InpHours: this entry hour is unticked
+     if (StringLen(InpHours) >= 24 && StringGetCharacter(InpHours, hd.hour) == '0') { DSkip(side, "entry hour unticked (InpHours)"); return; } }
+   { string why = "";                                          // v1.38 range-box families (Turtle TV range-boxes page)
+     if (RbSkip(side, en, why)) { g_skipRb++; DSkip(side, why); return; } }
+   if (InpMicroLog) {                                         // v1.38: every entry's gate scores, for the Python parity check
+      double v = -1, f = 0; Vpin(side, v, f);
+      int h = FileOpen("saad_micro_log.csv", FILE_READ | FILE_WRITE | FILE_CSV | FILE_COMMON | FILE_ANSI, ',');
+      double c, sc_; RbKelt(c, sc_); int bk = RbBox(RbEdgesKelt, c, sc_, en); RbVa(c, sc_); int bv = RbBox(RbEdgesVa, c, sc_, en);
+      RbVwap(c, sc_); int bw = RbBox(RbEdgesVwap, c, sc_, en); RbAsia(c, sc_); int ba = RbBox(RbEdgesAsia, c, sc_, en); RbIb(c, sc_); int bi = RbBox(RbEdgesIb, c, sc_, en);
+      if (h != INVALID_HANDLE) { FileSeek(h, 0, SEEK_END); FileWrite(h, (long)TimeCurrent(), side, DtwScore(side), v, f, HmmToxic(), en, bk, bv, bw, ba, bi); FileClose(h); }
+   }
+   if (InpMicroDtw) {                                         // v1.38 microstructure gates
+      double sc = DtwScore(side);
+      if (sc >= InpDtwThresh) { g_skipDtw++; DSkip(side, StringFormat("DTW: %.0f%% of the %d nearest past paths lost", 100 * sc, InpDtwK)); return; }
+   }
+   if (InpMicroVpin) {
+      double v = 0, f = 0;
+      if (Vpin(side, v, f) && v >= InpVpinMin && f <= -InpVpinFlow) { g_skipVpin++; DSkip(side, StringFormat("VPIN %.3f, flow %.2f against", v, f)); return; }
+   }
+   if (InpMicroHmm) {
+      double pt = HmmToxic();
+      if (pt > InpHmmThresh) { g_skipHmm++; DSkip(side, StringFormat("HMM: P(toxic regime) %.2f", pt)); return; }
+   }
+   if (InpMlFilter) {                                          // v1.39 ML gate: the stacked model's verdict for the last closed M15 candle
+      if (!MlBar()) { g_mlNoP++; DSkip(side, "ML: no probability for this candle yet"); return; }
+      double pm = side > 0 ? g_mlUp : g_mlDn;
+      if (pm <= InpMlThresh) { g_skipMl++; DSkip(side, StringFormat("ML: P(%s) %.3f not above %.2f", side > 0 ? "up" : "down", pm, InpMlThresh)); return; }
+   }
+   g_vEn = 0;        // from here on this entry is traded (or ghosted), not skipped
    if (ghost) {      // chart-test: stand aside - the trade runs unseen (same stop and exit), no new trade until it ends
       g_gSide = side; g_gEntry = en; g_gSl = sl; g_gNxE = nxE; g_gExitE = g_pExit; g_gTp = tp; g_gNoTp = noTp; g_gTime = TimeCurrent(); g_ghosts++;
       EV("ghost", TimeCurrent(), side, en, sl, nxE, g_ck, g_pTime, 0, g_pDesc);
       return;
    }
-   double lots = LotsFor(side, en, sl);
+   double dexterRisk = 0;
+   double lots = InpDexRiskSizing ? DexterLotsFor(side, en, sl, dexterRisk) : LotsFor(side, en, sl);
    if (lots <= 0) { DSkip(side, "even the minimum lot risks too much of this account"); return; }
+   if (InpErSize && !InpDexRiskSizing && InpRiskPct <= 0) {   // v1.37 ER sizing: choppy setups bigger, clean ones smaller
+      double er = ErNow(InpErSizeLook);
+      lots = er <= InpErLo ? InpErLotsLo : er >= InpErHi ? InpErLotsHi : lots;
+   }
+   if (InpDexRiskSizing)
+      PrintFormat("[DEXTER RISK] %s | stop distance %.5f | stop %.5f | lots %.8f | estimated loss %.2f / budget %.2f",
+                  side > 0 ? "BUY" : "SELL", MathAbs(en - sl), sl, lots, dexterRisk,
+                  AccountInfoDouble(ACCOUNT_EQUITY) * InpDexRiskPct / 100.0);
+   double probeAdd = 0;   // v1.36 probe entry: open small, the rest waits for confirmation (ProbeTick)
+   if (InpProbeMode > 0 && InpProbeLots > 0 && lots > InpProbeLots + 0.005) { probeAdd = NormalizeDouble(lots - InpProbeLots, 2); lots = InpProbeLots; }
    bool ok = side > 0 ? trade.Buy(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), InpFixTpPips > 0 ? NormalizeDouble(tp, _Digits) : 0, EA_COMMENT + " BUY")
                       : trade.Sell(lots, _Symbol, 0, NormalizeDouble(sl, _Digits), rideShort ? 0 : NormalizeDouble(tp, _Digits), EA_COMMENT + " SELL");
    if (!ok) {        // v1.35: a refused order is never silent (the account ran out of margin in the tester and nothing said so)
@@ -1303,6 +2093,7 @@ void DoEntry(int side, double sl, bool ghost = false)
    p.num = ++g_num; p.slNow = NormalizeDouble(sl, _Digits); p.slFrom = p.entryTime; p.why = ""; p.usdTrail = false; p.tpNext = 0; p.tpStage = 1; p.setup = ""; p.sl0 = p.slNow; p.risk = 0; p.tp1 = ""; p.tp1At = 0; p.tps = ""; p.ctcAt = 0; p.moves = 0; p.mfe = 0;
    p.setup = g_pDesc; p.sl0 = p.slNow; p.mfe = p.entry;
    p.xr0 = MathAbs(p.entry - sl); p.xorl = lots; p.xp1 = false; p.xp2 = false; p.xcxn = 0; p.xfbn = 0; p.xltp = 0; p.xlp = false;
+   p.pAdd = probeAdd; p.pEn0 = p.entry; p.pDip = false;
    if (InpXTgt >= 2 && nxE != 0) p.xltp = p.entry + side * (InpXTgt == 2 ? InpXTgtK * p.xr0 : InpXTgt == 3 ? InpXTgtK * Buf(hAtr, 1) : InpXTgtK);
    p.risk = MathAbs(p.entry - sl) * lots * SymbolInfoDouble(_Symbol, SYMBOL_TRADE_CONTRACT_SIZE);
    p.tp1 = nxE > 0 ? StringFormat("touch of the %d EMA (now %.2f), all closed", nxE == 9 ? InpEmaFast : InpEmaSlow, Ema(nxE, 0))
@@ -1392,13 +2183,16 @@ void OnTick()
    SyncPos();
    DayCloseCheck();
    SyncPos();
+   ProbeTick();
    ManageTick();
    GhostTick();
+   VirtTick();
    SyncPos();
    datetime bar = iTime(_Symbol, PERIOD_CURRENT, 0);
    if (bar != g_lastBar) {
       g_lastBar = bar;
       ExBar();
+      if (InpMlFilter || InpMlLog) MlBar();   // v1.39: the model's verdict for the candle that just closed (a row per candle when InpMlLog)
       if (Bars(_Symbol, PERIOD_CURRENT) >= InpEmaSlow * 2 + 20) {
          ManageBar();
          GhostBar();

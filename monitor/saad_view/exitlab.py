@@ -215,7 +215,7 @@ def window_of(ds, inputs):
 def _part(r):
     n = len(r)
     if n == 0:
-        return {"n": 0, "net": 0.0, "wr": 0.0, "pf": 0.0, "dd": 0.0, "avg_win": 0.0, "avg_loss": 0.0, "streak": 0}
+        return {"n": 0, "net": 0.0, "wr": 0.0, "pf": 0.0, "dd": 0.0, "avg_win": 0.0, "avg_loss": 0.0, "worst": 0.0, "streak": 0}
     r = r[np.argsort(r[:, 4])]
     p = r[:, 6]
     gw, gl = p[p > 0].sum(), -p[p <= 0].sum()
@@ -228,7 +228,8 @@ def _part(r):
     w = p[p > 0]
     lo = p[p <= 0]
     return {"n": n, "net": round(float(p.sum())), "wr": round(float(100 * (p > 0).mean()), 1), "pf": round(float(gw / gl), 2) if gl > 0 else 99.0,
-            "dd": round(dd), "avg_win": round(float(w.mean())) if len(w) else 0, "avg_loss": round(float(lo.mean())) if len(lo) else 0, "streak": best}
+            "dd": round(dd), "avg_win": round(float(w.mean())) if len(w) else 0, "avg_loss": round(float(lo.mean())) if len(lo) else 0,
+            "worst": round(float(p.min())), "streak": best}
 
 
 def run(inputs, ds, lab=None, sets=None, worst=False, lego=None):
@@ -488,7 +489,7 @@ class Job:
     def __init__(self, action, inputs, ds, **kw):
         self.action, self.inputs, self.ds, self.kw = action, inputs, ("year" if ds == "tv" else ds), kw
         self.running, self.done, self.error, self.phase, self.progress, self.total = False, False, None, "starting", 0, 0
-        self.result, self.t0, self._stop = None, None, False
+        self.result, self.partial_result, self.t0, self._stop = None, None, None, False
         self.jid = f"{action}-{time.time_ns()}"
         self.window, self.labels = window_of(self.ds, inputs)
         mode = str(inputs.get("InpExitMode", "1"))
@@ -542,6 +543,7 @@ class Job:
         return {"action": self.action, "jid": self.jid, "req": getattr(self, "req", None), "running": self.running, "done": self.done, "error": self.error, "phase": self.phase,
                 "progress": self.progress,
                 "total": self.total, "seconds": round(time.time() - self.t0, 1) if self.t0 else 0, "ds": self.ds, "labels": self.labels,
+                "partial_result": self.partial_result,
                 "lab_sets": self.lab_sets, "result": self.result}
 
     # ---- diagnose

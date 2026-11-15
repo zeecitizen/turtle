@@ -12,6 +12,7 @@ import os
 os.environ.setdefault("NUMBA_CPU_NAME", "generic")
 import numpy as np                                     # noqa: E402
 from numba import njit                                 # noqa: E402
+from rbox import box_of as rbox_box_of                 # noqa: E402  (range-box families, Turtle TV)
 
 FULL = ["InpTrigBid", "InpLongExit", "InpLongTpPips", "InpSwingPivot", "InpSwingLook", "InpShortTpPips", "InpMinTpPips", "InpMaxTpPips", "InpBeUsd",
         "InpNoNewMins", "InpLongTouch", "InpLongTrailUsd", "InpLongResTp", "InpLongResTp1", "InpResTp1Ride", "InpShortTouch", "InpTrailStepUsd",
@@ -20,14 +21,21 @@ FULL = ["InpTrigBid", "InpLongExit", "InpLongTpPips", "InpSwingPivot", "InpSwing
         "InpSlopePips", "InpSlopeLook", "InpEmaGapPips", "InpMaxSpreadPts", "InpSkipDow", "InpLockAtUsd", "InpLockUsd", "InpFixTpPips",
         "InpMaxBars", "InpCoolBars", "InpMaxPos", "InpReplace", "InpExtraDir", "InpDayLossUsd", "InpDayTargetUsd", "InpEntryMode",
         "InpRetestFrac", "InpRetestBars", "InpSweepPips", "InpSweepBars", "InpSweepEntry", "InpSweepSlPips", "InpPartialPct", "InpTp1Be",
-        "InpRiskPct", "InpMinLotRiskPct", "InpMaxLots", "InpDayLossPct", "InpAdxPeriod", "InpSkipBothEma"]
+        "InpRiskPct", "InpMinLotRiskPct", "InpMaxLots", "InpDayLossPct", "InpAdxPeriod", "InpSkipBothEma",
+        "InpProbeMode", "InpProbeLots", "InpProbeUsd", "InpProbeDipUsd", "InpProbeBars", "InpProbeBe", "InpHours"]
 F = {n: 41 + i for i, n in enumerate(FULL)}            # indices in the parameter vector after sim.NAMES (41 entries)
+PR_MODE, PR_LOTS, PR_USD, PR_DIP, PR_BARS = F["InpProbeMode"], F["InpProbeLots"], F["InpProbeUsd"], F["InpProbeDipUsd"], F["InpProbeBars"]
+PR_BE = F["InpProbeBe"]
+HRS = F["InpHours"]                                   # v1.37 InpHours: 24 broker hours as a bit mask (sim.pvec_all)
 MAXP = 8
 # position fields
 SD, EN, SL, TP, EXE, NOTP, RIDE, EK, ET, BEST, USD, TPN, STG, RES1, NX, LOTS, REAL, SWP, BKT, BTP, CTC = range(21)
 # Exit Lab fields (exitlab.py): initial risk, ATR at entry, best / worst price reached, partials done, lab target, original lots, close counters
 R0, ATE, MFP, MAP, P1D, P2D, LTP, ORL, CXN, FBN, LPD = range(21, 32)          # LPD (v1.31): the loss cut (partial at -R) done
-NPS = 32
+# Probe entry (v1.36): add lots still waiting for confirmation, the probe's own entry price, the dip seen (mode 2)
+PRB, PEN0, PDIP = 32, 33, 34
+LCT = 35                           # the last tick point at which the stop was checked and survived: a moved stop's real-tick fill is searched from here, not from the entry
+NPS = 36
 # the Exit Lab's parameter vector E (all zero = the engine exactly as before). Only for exit modes 1 and 2 (the v1.25 exits).
 (E_ON, E_TGT, E_TGTK, E_FB, E_FBB, E_FBN, E_CX, E_CXB, E_CXN, E_CXW, E_CXA, E_P1R, E_P1F, E_P1BE, E_P2R, E_P2F, E_BER, E_BEO, E_LOCK,
  E_TR, E_TRK, E_TRA, E_TRB, E_MAXB, E_STB, E_STR, E_ADX, E_FRI, E_PESS, E_LCAP, E_LPR, E_LPF, E_DCB, E_DCR) = range(34)
@@ -195,16 +203,62 @@ F_TSIDE = 41 + FULL.index("InpTrailSide")
 
 
 @njit(cache=True)
+def _tick_fill(TT, TB, TA, t0, t1, lvl, use_ask, above):
+    """the first real tick in [t0, t1] whose ask (use_ask) or bid reaches lvl: above -> price >= lvl, else price <= lvl.
+    -> (price, time); (0, -1) when none. MT5 fills a broker stop or target at that tick when price gaps through it, not at the level."""
+    lo = 0
+    hi = TT.shape[0]
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if TT[mid] < t0:
+            lo = mid + 1
+        else:
+            hi = mid
+    k = lo
+    while k < TT.shape[0] and TT[k] <= t1:
+        pr = TA[k] if use_ask == 1 else TB[k]
+        if (pr >= lvl) if above == 1 else (pr <= lvl):
+            return pr, TT[k]
+        k += 1
+    return 0.0, -1.0
+
+
+@njit(cache=True)
+def _tick_fill_s(TT, TB, TA, t0, t1, lvl, use_ask, above, maxs):
+    """_tick_fill, but only ticks whose spread is within maxs points (0 = no limit): the EA's MaxSpreadPts gate is per tick."""
+    lo = 0
+    hi = TT.shape[0]
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if TT[mid] < t0:
+            lo = mid + 1
+        else:
+            hi = mid
+    k = lo
+    while k < TT.shape[0] and TT[k] <= t1:
+        pr = TA[k] if use_ask == 1 else TB[k]
+        ok_sp = maxs <= 0 or not ((TA[k] - TB[k]) / 0.01 > maxs)     # the EA's own test in double precision: (ask - bid) / _Point > MaxSpreadPts
+        if ok_sp and ((pr >= lvl) if above == 1 else (pr <= lvl)):
+            return pr, TT[k]
+        k += 1
+    return 0.0, -1.0
+
+
+@njit(cache=True)
 def _close(out, nt, ps, x, xp, tq, kout, why, lots_frac):
     """close lots_frac of position x at xp; returns (nt, banked pnl). lots_frac 1 = all (records the trade)."""
+    if out[out.shape[0] - 1, why] > 0.5:               # Trade Lifecycle: this exit is pruned (sim.simulate(prune=...)) - the trade stays open
+        if why == 1 or why == 6 or why == 7:           # a stop-type exit: drop the stop (0 = none), or it re-fires on every tick
+            ps[x, SL] = 0.0
+        return nt, 0.0
     side = ps[x, SD]
     part_lots = ps[x, LOTS] * lots_frac
     pn = (xp - ps[x, EN]) * side * part_lots * 100.0
     if lots_frac >= 0.999:
         tot = ps[x, REAL] + pn + ps[x, SWP]
-        if nt < out.shape[0]:
+        if nt < out.shape[0] - 1:
             out[nt, 0] = side; out[nt, 1] = ps[x, ET]; out[nt, 2] = ps[x, EN]; out[nt, 3] = ps[x, SL]; out[nt, 4] = tq; out[nt, 5] = xp
-            out[nt, 6] = tot; out[nt, 7] = ps[x, SWP]; out[nt, 8] = ps[x, BKT]; out[nt, 9] = ps[x, NX]; out[nt, 10] = 0
+            out[nt, 6] = tot; out[nt, 7] = ps[x, SWP]; out[nt, 8] = ps[x, BKT]; out[nt, 9] = ps[x, NX]; out[nt, 10] = 1 if ps[x, LOTS] <= 0 else 0   # a ghost probe never confirmed: not a trade
             out[nt, 11] = ps[x, EK]; out[nt, 12] = kout; out[nt, 13] = why; out[nt, 14] = ps[x, LOTS]
             if out.shape[1] >= 20:                     # Exit Lab: best / worst move ($ per ounce), initial risk, original lots, partials
                 out[nt, 15] = (ps[x, MFP] - ps[x, EN]) * side; out[nt, 16] = (ps[x, EN] - ps[x, MAP]) * side
@@ -216,9 +270,10 @@ def _close(out, nt, ps, x, xp, tq, kout, why, lots_frac):
     return nt, pn
 
 
-@njit(cache=True)
+@njit(cache=True, nogil=True)
 def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1, htfe2, t1, o1, h1, l1, c1, sp1, k1, first1, m2c, roll, day1,
-             P, X, E, bandB, bandS, OS, OL, out, setups, stats, hf, PBf, PAf, PTf, SA, SB):
+             P, X, E, bandB, bandS, OS, OL, out, setups, stats, hf, PBf, PAf, PTf, SA, SB, TT, TB, TA, skip_idle_ticks,
+             RBF, RBE, RBN, RBM, rb_on):
     """out rows: side, entry_t, entry, sl(final), exit_t, exit, pnl, swap, bucket, nxE, ghost, entry_k15, exit_k15, reason, lots
        reasons: 1 stop 2 next-EMA target 3 close-back 4 day close 5 TP 6 trailing stop 7 breakeven 8 time exit"""
     n1 = t1.shape[0]
@@ -288,6 +343,15 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
         if nq == 0:
             continue
         for q in range(nq):
+            # q=0 handles setup changes; without live state, later points in this minute cannot affect the run.
+            if skip_idle_ticks and q > 0 and gh == 0 and pSide == 0 and aSide == 0:
+                has_position = False
+                for x in range(MAXP):
+                    if ps[x, SD] != 0:
+                        has_position = True
+                        break
+                if not has_position:
+                    break
             cur = PBf[base + q]
             prv = PBf[base + q - 1] if q > 0 else cur
             spr = X[2] if X[2] > 0 else (PAf[base + q] - PBf[base + q]) * X[10]
@@ -298,6 +362,26 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                 for x in range(MAXP):
                     if ps[x, SD] != 0:
                         busy0 = True
+            # 0. Probe entry (v1.36): the probe is confirmed -> add the waiting lots at the market (buy at the ask, sell at the bid)
+            if P[PR_MODE] > 0.5:
+                for x in range(MAXP):
+                    if ps[x, SD] != 0 and ps[x, PRB] > 0:
+                        sd = ps[x, SD]
+                        fav = ((cur if sd > 0 else cur + spr) - ps[x, PEN0]) * sd
+                        if fav <= -P[PR_DIP]:
+                            ps[x, PDIP] = 1.0
+                        if P[PR_MODE] > 2.5:                       # mode 3: judged once, InpProbeBars candles after the entry
+                            if tq - ps[x, ET] < P[PR_BARS] * bar:
+                                continue
+                            if fav < P[PR_USD]:
+                                ps[x, PRB] = 0.0                   # not in profit then: the 2 lots never come
+                                continue
+                        if fav >= P[PR_USD] and (P[PR_MODE] < 1.5 or P[PR_MODE] > 2.5 or ps[x, PDIP] > 0.5):
+                            addpx = cur + spr if sd > 0 else cur
+                            ps[x, EN] = (ps[x, EN] * ps[x, LOTS] + addpx * ps[x, PRB]) / (ps[x, LOTS] + ps[x, PRB])
+                            ps[x, LOTS] += ps[x, PRB]; ps[x, ORL] = ps[x, LOTS]; ps[x, PRB] = 0.0
+                            if P[PR_BE] > 0.5:                         # the stop moves to the probe's (ghost's) entry price
+                                ps[x, SL] = ps[x, PEN0]
             # 1. DayCloseCheck
             inwin = (not blind) and P[36] > 0 and (m2c[j] < (P[36] + 1) * 60 or (m2c[j] == (P[36] + 1) * 60 and q > 0))
             if inwin:
@@ -355,6 +439,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                         if pn < 0:
                             coolUntil = tq + int(P[85]) * bar
                         continue
+                    t0s = ps[x, LCT] if ps[x, LCT] > ps[x, ET] else ps[x, ET]   # the stop's real-tick fill is searched from the last point it survived (a breakeven / lock / trail sits at a level price crossed earlier: searching from the entry filled it at the entry tick)
                     if s_ != 0 and (bid <= s_ if sd > 0 else ask >= s_):
                         xp = (s_ if (prv > s_ if sd > 0 else prv + spr < s_) else (bid if sd > 0 else ask)) - sd * X[9] - sd * X[8]
                         why = 1
@@ -364,16 +449,39 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                             why = 7
                         elif (s_ - en) * sd > 0:
                             why = 6
-                        nt, pn = _close(out, nt, ps, x, xp, tq, k, why, 1.0)
+                        xt = tq
+                        if TT.shape[0] > 0:                      # MT5 fills the stop at the first real tick past it (a gap fills there, not at the stop)
+                            tkp, tkt = _tick_fill(TT, TB, TA, t0s, tq + 1.0, s_, 1 if sd < 0 else 0, 1 if sd < 0 else 0)
+                            if tkt >= 0:
+                                xp = tkp - sd * X[9] - sd * X[8]
+                                xt = tkt
+                        nt, pn = _close(out, nt, ps, x, xp, xt, k, why, 1.0)
                         equity += pn; dayPnl += pn
                         if pn < 0:
                             coolUntil = tq + int(P[85]) * bar
                         continue
+                    ps[x, LCT] = tq                                  # the stop survived this point
                     # broker take profit
                     btp = ps[x, BTP]
                     if btp > 0 and (bid >= btp if sd > 0 else ask <= btp):
                         xp = (btp if (prv < btp if sd > 0 else prv + spr > btp) else (bid if sd > 0 else ask)) - sd * X[8]
-                        nt, pn = _close(out, nt, ps, x, xp, tq, k, 5, 1.0)
+                        xt = tq
+                        if TT.shape[0] > 0:                      # MT5 fills at the first real tick past the target (a gap fills there, not at the level)
+                            tkp, tkt = _tick_fill(TT, TB, TA, ps[x, ET], tq + 1.0, btp, 1 if sd < 0 else 0, 0 if sd < 0 else 1)
+                            if tkt >= 0:
+                                xp = tkp - sd * X[8]
+                                xt = tkt
+                                if s_ != 0:                       # the stop wins if its tick came first (same second, tick order)
+                                    spx, spt = _tick_fill(TT, TB, TA, t0s, tkt, s_, 1 if sd < 0 else 0, 1 if sd < 0 else 0)
+                                    if spt >= 0 and spt < tkt:
+                                        xp = spx - sd * X[9] - sd * X[8]
+                                        xt = spt
+                                        nt, pn = _close(out, nt, ps, x, xp, xt, k, 1 if (s_ - en) * sd <= 0 else 6, 1.0)
+                                        equity += pn; dayPnl += pn
+                                        if pn < 0:
+                                            coolUntil = tq + int(P[85]) * bar
+                                        continue
+                        nt, pn = _close(out, nt, ps, x, xp, xt, k, 5, 1.0)
                         equity += pn; dayPnl += pn
                         continue
                     if sd > 0:
@@ -587,7 +695,8 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                     if not end and gNx > 0 and k >= 1:
                         a_ = af if gNx == 9 else asl
                         ep = ef[k - 1] if gNx == 9 else es[k - 1]
-                        end = (cur >= ep and (X[1] < 0.5 or ep > gEn)) if gh > 0 else (cur <= ep - spr / (1.0 - a_))
+                        ep = ep + a_ * (cur - ep)                 # MT5 Ema(..., 0): the forming candle's EMA on the live bid, every tick
+                        end = (cur >= ep and (X[1] < 0.5 or ep > gEn)) if gh > 0 else (cur + spr <= ep)   # the EA: bid >= EMA (long) / ask <= EMA (short), live EMA
                     if not end and gNx == 0 and k >= 1:
                         if gh > 0 and not gNoTp:
                             a_ = af if gExitE == 9 else asl
@@ -640,7 +749,7 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                 ps[x, FBN] = ps[x, FBN] + 1.0 if beyond else 0.0
                                 if ps[x, FBN] >= max(1.0, E[E_FBN]):
                                     why = 3
-                            if why == 0 and E[E_CX] > 0.5 and i > ps[x, EK] + E[E_CXA]:
+                            if why == 0 and E[E_CX] > 0.5 and i > ps[x, EK] + E[E_CXA] and q == 0 and first1[j] == 1:   # the EA counts a close-based exit once per candle, on its first tick
                                 cm = int(E[E_CX])
                                 cb = E[E_CXB] * atr[i]
                                 hitc = False
@@ -913,11 +1022,21 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                         trigp = (cur if P[41] > 0.5 else cur + spr) if pSide > 0 else cur
                         prvp = (prv if P[41] > 0.5 else prv + spr) if pSide > 0 else prv
                         crossed = trigp > lvl if pSide > 0 else trigp < lvl
-                        if crossed and not (P[79] > 0 and spr / 0.01 > P[79]):
+                        tkb_p = 0.0
+                        tkb_t = -1.0
+                        spread_gate = not (P[79] > 0 and spr / 0.01 > P[79])
+                        if crossed and P[79] > 0 and TT.shape[0] > 0:
+                            # the EA's spread gate is per tick: the first tick through the level whose spread is within MaxSpreadPts
+                            tkb_p, tkb_t = _tick_fill_s(TT, TB, TA, tq, tq + 1.0, lvl + (1e-9 if pSide > 0 else -1e-9), 0, 1 if pSide > 0 else 0, P[79])   # strictly through the level: bid < level (short), bid > level (long)
+                            if tkb_t >= 0:
+                                spread_gate = True
+                        if crossed and spread_gate:
                             if pSide > 0:
                                 be = (lvl + 0.01 if prvp <= lvl else trigp) - (0.0 if P[41] > 0.5 else spr)
                             else:
                                 be = lvl - 0.01 if prvp >= lvl else cur
+                            if tkb_t >= 0:                       # MT5 fills the break at the first real tick through the level (a gap fills there)
+                                be = tkb_p - (0.0 if P[41] > 0.5 else spr) if pSide > 0 else tkb_p
                             side = pSide
                             pSide = 0
                             if P[91] == 1:
@@ -1002,6 +1121,12 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                     n_ = 50
                                 else:
                                     n_ = -1
+                                if ts_ > 0:                          # the EA: a LONG whose exit EMA is too close to / below the entry has no target (rides the trail)
+                                    ex9_ = pExit == 9
+                                    a_x_ = af if ex9_ else asl
+                                    ep_x_ = ef[k - 1] if ex9_ else es[k - 1]
+                                    livex_ = ep_x_ + a_x_ * (be - ep_x_)
+                                    noTp = livex_ - P[43] * pip < e_ + P[47] * pip
                             elif P[35] == 2:
                                 n_ = -2
                             elif ts_ < 0:
@@ -1022,6 +1147,13 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                     res = _resist(h15, k, e_ + P[47] * pip, int(P[44]), int(P[45]))
                                     if res > 0:
                                         tp_ = res; noTp = False; res1 = True
+                            if not skip and ((int(P[HRS]) >> int((tq // 3600) % 24)) & 1) == 0:
+                                skip = True                                     # v1.37 InpHours: this entry hour is unticked
+                            if not skip and rb_on > 0:                          # rbox.py: Turtle TV range-box families (TvBox_*), judged on the last closed candle
+                                for f_ in range(RBF.shape[1]):
+                                    if RBM[0 if ts_ > 0 else 1, f_, rbox_box_of(RBF, RBE, RBN, k - 1, f_, e_)] == 0:
+                                        skip = True
+                                        break
                             if not skip:
                                 if E[E_ON] > 0.5 and E[E_LCAP] > 0 and n_ != 0 and abs(e_ - s_) > E[E_LCAP]:
                                     s_ = e_ - ts_ * E[E_LCAP]                   # v1.31: the stop never further than $X from the entry
@@ -1051,9 +1183,12 @@ def run_full(t15, hr15, dow15, o15, h15, l15, c15, ef, es, atr, adx, htfc, htfe1
                                                 ps[x, :] = 0.0
                                                 ps[x, SD] = ts_; ps[x, EN] = e_; ps[x, SL] = s_; ps[x, TP] = tp_; ps[x, EXE] = pExit
                                                 ps[x, NOTP] = 1.0 if noTp else 0.0; ps[x, RES1] = 1.0 if res1 else 0.0; ps[x, NX] = n_
-                                                ps[x, EK] = k; ps[x, ET] = tq; ps[x, BEST] = e_; ps[x, LOTS] = lots; ps[x, BKT] = (bk + (0 if side > 0 else 21)) if bk >= 0 else -1
+                                                ps[x, EK] = k; ps[x, ET] = tq; ps[x, LCT] = tq; ps[x, BEST] = e_; ps[x, LOTS] = lots; ps[x, BKT] = (bk + (0 if side > 0 else 21)) if bk >= 0 else -1
                                                 ps[x, STG] = 1
                                                 ps[x, R0] = abs(e_ - s_); ps[x, ATE] = a_; ps[x, MFP] = e_; ps[x, MAP] = e_; ps[x, ORL] = lots
+                                                if P[PR_MODE] > 0.5 and lots > P[PR_LOTS] + 0.005:   # InpProbeLots 0 = a ghost probe: no money until confirmed
+                                                    ps[x, PRB] = lots - P[PR_LOTS]    # Probe entry: open small, the rest waits for confirmation
+                                                    ps[x, LOTS] = P[PR_LOTS]; ps[x, ORL] = P[PR_LOTS]; ps[x, PEN0] = e_
                                                 if E[E_ON] > 0.5 and E[E_TGT] > 1.5 and n_ != 0:
                                                     dist = E[E_TGTK] * abs(e_ - s_) if E[E_TGT] < 2.5 else (E[E_TGTK] * a_ if E[E_TGT] < 3.5 else E[E_TGTK])
                                                     ps[x, LTP] = e_ + ts_ * dist

@@ -14,10 +14,12 @@ let TT = null, MT = null;                                      // { kind, events
 let chart, candles, emaF, emaS, adxS, adxLine = null, TVL = null, focusLines = [], eq = {};
 let ACTIVE_LAB = null;                                         // an Exit Lab exit running on the main tester too (a saved Exit Lab exit, loaded)
 let MTWAIT = null;                                           // a "Check in MT5" in flight: the MT5 section shows its progress, then the new run
-let SEL = null, TAB = { tt: 'overview', mt: 'overview' }, firstView = true, simTimer = null, simSeq = 0, tvKey = null, ASK = [];
+let EXPORT_BUSY = false, EXPORT_PENDING = null, EXPORT_TIMER = null, EXPORT_PROGRESS = null;
+let SEL = null, TAB = { tt: 'overview', mt: 'overview' }, firstView = true, simTimer = null, simSeq = 0, settingsTouched = false, tvKey = null, ASK = [];
 const show = { trades: true, ghosts: true, setups: false, skips: false, mt5: false };
-const SRC = { ds: 'year', mode: 'ea' }, BARSET = {};             // the Turtle TV Tester's candles and rules (Zee: "find out why ... october ... and fix it")
+const SRC = { ds: 'm15', mode: 'ea' }, BARSET = {};                // the Turtle TV Tester's candles and rules
 async function getBars(ds) { if (!BARSET[ds]) BARSET[ds] = await api('/api/bars?ds=' + ds); return BARSET[ds]; }
+function mt5Period(ds = SRC.ds) { return ds === 'm5x' ? 'M5' : ds === 'year1' || ds === 'm1x' ? 'M1' : 'M15'; }
 
 // ---------- helpers ----------
 const money = (v, d = 0) => (v >= 0 ? '+$' : '−$') + Math.abs(v).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -42,7 +44,7 @@ function tickFmt(t, type) {
 function api(path, body) {
   return fetch(path, body ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {}).then((r) => r.json());
 }
-function toast(html, ms = 9000) { const t = $('#toast'); t.innerHTML = html; t.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(() => (t.style.display = 'none'), ms); }
+function toast(html, ms = 9000) { const t = $('#toast'); t.classList.remove('tp-applied', 'tp-failed'); t.innerHTML = html; t.style.display = 'block'; clearTimeout(toast.h); toast.h = setTimeout(() => (t.style.display = 'none'), ms); }
 function setStatus(txt, c = '') { const s = $('#status'); s.textContent = txt; s.className = c; }
 function box(k) { k = Math.round(k); if (!(k >= 0)) return '–'; const b = k % 21; return b === 20 ? '>100%' : `${b * 5}–${b * 5 + 5}%`; }
 function barIdx(t) { const a = BARS.t; let lo = 0, hi = a.length - 1, r = 0; while (lo <= hi) { const m = (lo + hi) >> 1; if (a[m] <= t) { r = m; lo = m + 1; } else hi = m - 1; } return r; }
@@ -387,7 +389,7 @@ function stats(list) {
   const gw = list.filter((t) => t.pnl > 0).reduce((s, t) => s + t.pnl, 0), gl = list.filter((t) => t.pnl <= 0).reduce((s, t) => s + t.pnl, 0);
   let eqv = 0, peak = 0, dd = 0;
   for (const t of [...list].sort((a, b) => a.tOut - b.tOut)) { eqv += t.pnl; peak = Math.max(peak, eqv); dd = Math.max(dd, peak - eqv); }
-  return { n, w, net: gw + gl, pf: gl < 0 ? (gw / -gl).toFixed(2) : n ? '∞' : '–', aw: w ? gw / w : 0, al: n - w ? gl / (n - w) : 0, dd };
+  return { n, w, net: gw + gl, pf: gl < 0 ? (gw / -gl).toFixed(2) : n ? '∞' : '–', aw: w ? gw / w : 0, al: n - w ? gl / (n - w) : 0, worst: n ? Math.min(...list.map((t) => t.pnl)) : 0, dd };
 }
 function groupBy(list, key) { const m = new Map(); for (const t of list) { const k = key(t); if (!m.has(k)) m.set(k, []); m.get(k).push(t); } return m; }
 const ym = (t) => { const d = new Date((t + TZ) * 1000); return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`; };
@@ -398,17 +400,22 @@ function ddTxt(dd) {
   const m = String(dd ?? '').match(/^([\d\s.,]+)\s*\(([\d.]+)%\)/);
   return m ? `$${Math.round(parseFloat(m[1].replace(/[\s,]/g, ''))).toLocaleString('en-US')} <small class="k">(${m[2]}%)</small>` : esc(dd ?? '–');
 }
-function pOverview(D) {
+function pOverviewStats(D) {
   const s = stats(D.TR), a = stats(half(D.TR, true)), b = stats(half(D.TR, false)), mt = D.kind === 'mt', R = mt ? D.run.report || {} : {};
   const Y26 = Date.UTC(2026, 0, 1) / 1000 - 3 * 3600, longA = D.TR.length && D.TR[0].tIn < Y26, y26 = stats(D.TR.filter((x) => x.tIn >= Y26));   // a multi-year tester: the first half is years, not Jan – Jun
-  let h = '<div class="row"><div><div class="cards">';
+  let h = '<div class="cards">';
   h += card(mt ? 'Net profit (MT5 report)' : 'Net profit', money(mt ? R.net ?? s.net : s.net), cls(s.net)) + card('Profit factor', mt ? R.pf ?? s.pf : s.pf) +
        card('Win rate', pct(s.w, s.n)) + card('Trades', `${s.n} <small class="k">(${s.w} won)</small>`);
+  h += card('Avg win', s.n ? `<span class="pos">${money(s.aw)}</span>` : '–') + card('Avg loss', s.n ? `<span class="neg">${money(s.al)}</span>` : '–') + card('Worst loss', s.n ? `<span class="neg">${money(s.worst)}</span>` : '–');
   h += card('Max drawdown', mt ? ddTxt(R.dd) : '$' + Math.round(s.dd).toLocaleString('en-US') + ' <small class="k">(closed trades)</small>') +
        card(longA ? `${new Date(D.TR[0].tIn * 1000).toLocaleString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' })} – Jun 2026` : 'Jan – Jun', a.n ? `<span class="${cls(a.net)}">${money(a.net)}</span> <small class="k">${pct(a.w, a.n)}</small>` : '<small class="k">no candles</small>') +
        (longA ? card('2026 only (= MT5 period)', y26.n ? `<span class="${cls(y26.net)}">${money(y26.net)}</span> <small class="k">${pct(y26.w, y26.n)} · ${y26.n} trades</small>` : '<small class="k">no trades</small>') : '') +
        card('Jul – Oct', b.n ? `<span class="${cls(b.net)}">${money(b.net)}</span> <small class="k">${pct(b.w, b.n)}</small>` : '<small class="k">no trades</small>') + card('Stood aside', D.GH.length);
-  h += '</div>';
+  return h + '</div>';
+}
+function pOverview(D) {
+  const mt = D.kind === 'mt', R = mt ? D.run.report || {} : {};
+  let h = '<div class="row"><div>' + pOverviewStats(D);
   if (mt) {
     const r = D.run;
     h += `<p class="note">${esc(r.from)} – ${esc(r.to)} · ${esc(r.symbol)} real ticks · ${r.delay === 'none' ? 'no delay' : 'random delay'} · ${esc(r.inputs.InpLots)} lots · history quality ${esc(R.quality ?? '?')} · run "${esc(r.label)}" ${esc(r.created)}</p>`;
@@ -471,6 +478,112 @@ function pWeekdays(D) {
   });
   return `<p class="note">By the weekday a trade opened (${TZ ? 'Pakistan time' : 'UTC'}).</p>` + table(['Day', 'Trades', 'Wins', 'Win rate', 'Net', 'PF', 'Per trade'], rows);
 }
+// Zee 2026-11-02 (Range boxes): "add these as checkboxes ... the filters that you found that can cut losers ... we can just check a box on any
+// setting to cut its losers". Each box = one of B's (2026-10-30 23-08-23) filter groups with B's exact values; ticking it writes those inputs into the
+// setting on the chart, unticking restores what was there. Beside each box: what it did to THIS setting's trades (losers / winners removed, net change)
+// and what it did to C's 1,615 trades in research/risk_assessor_C.py. Honest caveat: on C none of them is loser-selective (they remove winners at
+// nearly the same rate) - B's 99.75% is a volume filter. Turtle TV Tester = hypothesis; MT5 judges.
+let LCF = [
+  { key: 'gap', name: "EMA gap ≥ 22.5 pips", set: { InpEmaGapPips: '22.5' }, off: { InpEmaGapPips: '0' }, c: '18 of 46 losers (39%) · 509 of 1,569 winners (32%) · 1.2×' },
+  { key: 'sess', name: 'Session to 19:00 + hour 11 off', set: { InpSessTo: '19', InpHours: '111111111110111111111111' }, off: { InpSessTo: '24', InpHours: '111111111111111111111111' }, c: '11 losers (24%) · 268 winners (17%) · 1.4×' },
+  { key: 'bands', name: 'Price bands B/S + BandOff', set: { InpBandsB: '111111101111001111110', InpBandsS: '111110100000101001101', InpBandOff: '1' }, off: { InpBandsB: '111111111111111111111', InpBandsS: '111111111111111111111', InpBandOff: '0' }, c: '32 losers (70%) · 900 winners (57%) · 1.2×' },
+  { key: 'shape', name: 'Stricter hammer shape, no stars', set: { InpHamRatio: '2.25', InpHamNose: '0.8', InpNoseMax: '0.05', InpStar: 'false' }, off: { InpHamRatio: '1.25', InpHamNose: '0.5', InpNoseMax: '0.15', InpStar: 'true' }, c: '12 losers (26%) · 338 winners (22%) · 1.2×' },
+  { key: 'touch', name: 'Touch 3.5 pips + MinRangeAtr 0.8', set: { InpTouchPips: '3.5', InpMinRangeAtr: '0.8' }, off: { InpTouchPips: '6.5', InpMinRangeAtr: '0.75' }, c: '6 losers (13%) · 249 winners (16%) · 0.8×' },
+  { key: 'day', name: 'Day caps $2000 target / 2% loss', set: { InpDayTargetUsd: '2000', InpDayLossPct: '2' }, off: { InpDayTargetUsd: '0', InpDayLossPct: '0' }, c: '2 losers (4%) · 36 winners (2%)' },
+  { key: 'tvbox', name: 'TvBox kelt_S / vwap_B masks', set: { TvBox_kelt_S: '110111111111', TvBox_vwap_B: '11101111' }, off: { TvBox_kelt_S: '111111111111', TvBox_vwap_B: '11111111' }, c: '1 loser (2%) · 9 winners (0.6%)' },
+  { key: 'exits', name: "B's exits (Friday 22h exit, no candle exit)", set: { InpXFriHour: '22', InpXCx: '0', InpXCxN: '2' }, off: { InpXFriHour: '0', InpXCx: '0', InpXCxN: '2' }, c: '0 losers · 33 winners' },
+];
+const LCF_FALLBACK = LCF;
+let LCF_CAT = null;
+async function lcfCatalog() {                                    // GET /api/lcf_catalog: B's groups + the top-20 single filters from the all-saves scan on C (research/filter_scan_C.json)
+  try { const c = await api('/api/lcf_catalog'); if (c && c.groups && c.groups.length) { LCF = c.groups.map((g) => ({ key: g.key, name: g.name, set: g.set, off: g.off, source: g.source, c: g.on_c ? `${g.on_c.cut_losers} losers · ${g.on_c.cut_winners} winners · net of cut ${money(g.on_c.cut_net)} · ${g.on_c.selectivity == null ? '–' : g.on_c.selectivity + '×'}` : (LCF_FALLBACK.find((f) => f.key === g.key) || {}).c || '' })); LCF_CAT = c; } } catch (e) { LCF_CAT = { error: String(e) }; }
+  if (TAB.tt === 'range') renderPanel('tt');
+}
+const LCFS = { prev: {}, base: null, baseKey: '', m: null, polling: false, auto: (() => { try { return localStorage.getItem('lcfAuto') !== '0'; } catch (e) { return true; } })(), timer: null };       // m: the server's measurement of each box on this setting (GET /api/lcf)
+const lcfKey = () => JSON.stringify([CUR, SRC.ds]);              // the inputs on the chart, as the identity of a measurement
+async function lcfMeasure() {                                     // one tester run per box on the setting on the chart (~1 min), then the columns fill
+  let key = '';
+  try { const r = await api('/api/lcf', { inputs: CUR, ds: SRC.ds }); if (r.error) { toast('⚠ ' + esc(r.error)); return; } key = r.key; } catch (e) { toast('⚠ ' + esc(e.message || e)); return; }
+  lcfPoll(key);
+}
+function lcfAutoKick() {                                          // Zee: the table populates by itself on the Range boxes page and after every tick/untick (debounced; one measurement at a time)
+  if (!LCFS.auto) return;
+  clearTimeout(LCFS.timer);
+  LCFS.timer = setTimeout(async () => {
+    if (TAB.tt !== 'range' || !LCFS.auto) return;
+    const M = LCFS.m || {};
+    if (M.running) return;                                        // the running one finishes first; the next render re-kicks for the new inputs
+    if (M.rows && Object.keys(M.rows).length && !M.stale && LCFS.mKey === lcfKey()) return;   // already measured for exactly these inputs
+    lcfMeasure();
+  }, 1500);
+}
+async function lcfStop() {
+  LCFS.auto = false; try { localStorage.setItem('lcfAuto', '0'); } catch (e) { /* private window */ }
+  try { await api('/api/lcf', { stop: true }); } catch (e) { /* ignore */ }
+  renderPanel('tt');
+}
+async function lcfPoll(key) {                                     // rows are shown only when the server measured exactly the inputs on the chart (key)
+  if (LCFS.polling) return; LCFS.polling = true;
+  try {
+    if (!key) { try { key = (await api('/api/lcf', { inputs: CUR, ds: SRC.ds, probe: true })).key; } catch (e) { key = ''; } }
+    for (;;) { try { LCFS.m = await api('/api/lcf?key=' + encodeURIComponent(key || '')); } catch (e) { break; } if (TAB.tt === 'range') renderPanel('tt'); if (!LCFS.m.running) break; await new Promise((r) => setTimeout(r, 2000)); }
+  } finally { LCFS.polling = false; LCFS.mKey = lcfKey(); if (TAB.tt === 'range') renderPanel('tt'); }
+}                 // prev: the setting's own values before a box was ticked; base: trade list with no box ticked
+const lcfOn = (f) => Object.entries(f.set).every(([k, v]) => same(CUR[k], v));
+const lcfTrades = (D) => { const m = new Map(); (D.TR || []).forEach((t) => m.set(t.tIn + '|' + Math.sign(t.side), t.pnl || 0)); return m; };
+function pLoserCut(D) {
+  if (D.kind !== 'tt') return '';
+  const anyOn = LCF.some(lcfOn), cur = lcfTrades(D);
+  if (!anyOn) { LCFS.base = cur; LCFS.baseKey = `${CUR.InpEmaFast}/${CUR.InpEmaSlow}/${SRC.ds}`; }
+  else if (!LCFS.base) LCFS.base = cur;                           // the page opened with B's values already in place: the first comparison point is the current run
+  const base = LCFS.base, stale = base && LCFS.baseKey !== `${CUR.InpEmaFast}/${CUR.InpEmaSlow}/${SRC.ds}`;
+  let removedL = 0, removedW = 0, dNet = 0, added = 0;
+  if (base && anyOn) {
+    base.forEach((pnl, k) => { if (!cur.has(k)) { if (pnl > 0) removedW++; else removedL++; } });
+    cur.forEach((pnl, k) => { if (!base.has(k)) added++; });
+    dNet = [...cur.values()].reduce((a, b) => a + b, 0) - [...base.values()].reduce((a, b) => a + b, 0);
+  }
+  const baseL = base ? [...base.values()].filter((v) => v <= 0).length : 0, baseW = base ? base.size - baseL : 0;
+  if (!LCF_CAT) { LCF_CAT = { loading: true }; lcfCatalog(); }
+  if ((!LCFS.m || LCFS.mKey !== lcfKey()) && !LCFS.polling) lcfPoll();     // the inputs changed: re-check whether a measurement exists for them
+  lcfAutoKick();
+  const M = LCFS.m || {}, mrows = M.rows || {}, mb = M.base || {};
+  const mcell = (f) => { const r = mrows[f.key]; if (!r) return '<td></td>'.repeat(10);
+    const sel = r.selectivity == null ? '–' : r.selectivity >= 999 ? '∞' : r.selectivity.toFixed(2) + '×';
+    return `<td>${r.cut_n || ''}</td><td>${r.cut_n ? r.cut_wr + '%' : ''}</td><td class="${r.cut_n ? cls(r.cut_net) : ''}">${r.cut_n ? money(r.cut_net) : ''}</td>` +
+      `<td class="${r.removed_losers ? 'pos' : ''}">${r.removed_losers || ''}</td><td class="${r.removed_winners ? 'neg' : ''}">${r.removed_winners || ''}</td><td>${r.added_n ? `+${r.added_n}` : ''}</td>` +
+      `<td>${r.with_n}</td><td>${r.with_wr}%</td><td class="${cls(r.with_net)}" title="${r.already_on ? 'already unticked: these trades are blocked now' : 'the total if you untick this box'}">${money(r.with_net)}</td><td class="${cls(r.with_net - r.without_net)}">${r.with_net - r.without_net >= 0 ? '+' : ''}${money(r.with_net - r.without_net)}</td>` +
+      `<td class="${r.selectivity == null ? '' : r.selectivity >= 2.8 ? 'pos' : 'neg'}">${sel}</td>`; };
+  const rows = LCF.map((f) => `<tr class="${lcfOn(f) ? 'dim' : ''}"><td style="text-align:left" title="${esc(Object.entries(f.set).map(([k, v]) => `${k}=${v}`).join(' · '))} · on C: ${esc(f.c)}">${esc(f.name)}</td><td><input type="checkbox" data-lcf="${f.key}" ${lcfOn(f) ? '' : 'checked'}></td>${mcell(f)}</tr>`).join('') +
+    (mrows.all ? `<tr class="tot"><td style="text-align:left">All of B's entry filters together</td><td></td>${mcell({ key: 'all' })}</tr>` : '');
+  const mstate = M.running ? `⏳ measuring ${esc(M.phase || '')}…` : M.base && !M.stale ? `measured on THIS setting (${mb.n} trades, ${mb.losers} losers) in ${M.secs} s${M.error ? ' · ⚠ ' + esc(M.error) : ''}` : 'not measured yet for the inputs on the chart - press the button';
+  const sel = base && removedW && baseL && baseW ? (removedL / baseL) / (removedW / baseW) : null;     // rate ratio; > 2.8 adds money at $400-win / $4,900-loss geometry
+  const live = anyOn && base ? `<p class="note"><b>With the unticked boxes, this setting's trades:</b> <span class="${removedL ? 'pos' : ''}">${removedL} of ${baseL} losers removed</span> · <span class="${removedW ? 'neg' : ''}">${removedW} of ${baseW} winners removed</span>${sel != null ? ` · selectivity <b class="${sel >= 2.8 ? 'pos' : 'neg'}">${sel.toFixed(2)}×</b> (break-even 2.8×)` : removedL && !removedW ? ' · selectivity ∞ (no winner removed)' : ''}${added ? ` · ${added} new trades appeared (freed positions)` : ''} · net <b class="${cls(dNet)}">${dNet >= 0 ? '+' : ''}${money(dNet)}</b>${stale ? ' · <span class="neg">EMA periods or data changed since the no-box snapshot: untick everything once to refresh it</span>' : ''}</p>` :
+    `<p class="note">Like the other range boxes: ticked = those trades are allowed. <b>Untick a box to remove the trades it describes</b> (the filter's inputs go into the setting on the chart, the form shows them as changed, the tester re-runs, Overview updates); this line then shows how many of <b>this setting's</b> losers and winners disappeared and the net change. Re-ticking restores the setting's own values.</p>`;
+  const scanInfo = LCF_CAT && LCF_CAT.scan ? (LCF_CAT.scan.complete ? `${LCF_CAT.scan.candidates} filter values from every saved setting were measured on C; the top 20 by losing money cut are listed under B's groups` : LCF_CAT.scan.candidates ? `all-saves scan running: ${LCF_CAT.scan.candidates} of ~204 filter values measured so far` : 'all-saves scan not run yet (research/filter_scan_C.py)') : '';
+  return `<div><h4>✂ Loser-cutting filters - B's groups and the top filters of every saved setting, measured on C</h4>${scanInfo ? `<p class="note">${scanInfo}</p>` : ''}` +
+    `<p>${LCFS.auto ? `<button class="go" id="lcfStop">⏹ Stop auto-measuring</button>` : `<button class="go" id="lcfAutoOn">▶ Auto-measure on</button> <button id="lcfMeasure" ${M.running ? 'disabled' : ''}>Measure once</button>`} <span class="k">${mstate} · one tester run per box · hover a filter name for the inputs it writes and its numbers on C</span></p>` +
+    table(['Box = the trades this filter would remove', 'Ticked = they trade', 'Trades', 'Win rate', 'Net of those trades', 'Losers cut', 'Winners cut', 'New trades', 'Total trades if unticked', 'Win rate', 'Total', 'Change ±', 'Loss : Wins'], rows.split('</tr>').filter(Boolean).map((r) => r + '</tr>')) +
+    `<p class="note"><b>Loss : Wins</b> = share of this setting's losers the box removes ÷ share of its winners it removes (1× = a blind cut, ∞ = only losers). Unticking a box adds money only if it removes losers at ≥ 2.8× the rate it removes winners (1,569 × $400 ÷ 46 × $4,900 on C). B's run at 1.2-1.4×: they raise the win rate and lower the net (research/risk_assessor_C.json). Turtle TV tester = hypothesis; MT5 judges.</p>` + live + '</div>';
+}
+document.addEventListener('click', (e) => {
+  if (!e.target) return;
+  if (e.target.id === 'lcfMeasure') lcfMeasure();
+  if (e.target.id === 'lcfStop') lcfStop();
+  if (e.target.id === 'lcfAutoOn') { LCFS.auto = true; try { localStorage.setItem('lcfAuto', '1'); } catch (err) { /* private window */ } renderPanel('tt'); }
+});
+document.addEventListener('change', (e) => {
+  const k = e.target.dataset && e.target.dataset.lcf;
+  if (!k) return;
+  const f = LCF.find((x) => x.key === k);
+  if (!e.target.checked) { LCFS.prev[k] = Object.fromEntries(Object.keys(f.set).map((n) => [n, CUR[n]])); Object.assign(CUR, f.set); }   // untick = remove those trades = apply the filter
+  else {                                                        // re-tick = allow them again: restore what the setting had, else the group's neutral 'off' values
+    const prev = LCFS.prev[k] || {};
+    Object.keys(f.set).forEach((n) => { CUR[n] = prev[n] !== undefined && !same(prev[n], f.set[n]) ? prev[n] : f.off[n]; });
+    delete LCFS.prev[k];
+  }
+  settingsTouched = true; markForm(); scheduleSim(0);
+});
 function pRange(D) {
   const inp = D.kind === 'mt' ? D.run.inputs : CUR;
   const one = (side, bands, off) => {
@@ -487,10 +600,97 @@ function pRange(D) {
       table(['Box', 'Ticked', 'Trades', 'Win rate', 'Net', 'Stood aside', 'Would have made'], rows) + '</div>';
   };
   const allOn = (inp.InpBandsB + inp.InpBandsS).indexOf('0') < 0;
-  return (D.kind === 'tt' ? `<p><button class="go" data-bands="OFF" ${allOn ? 'disabled' : ''}>Turn ranges off</button> <span class="k">${allOn ? 'Ranges are off: every box trades.' : 'Ticks every box on both sides = no range filter.'}</span></p>` : '') +
+  return pLoserCut(D) + (D.kind === 'tt' ? `<p><button class="go" data-bands="OFF" ${allOn ? 'disabled' : ''}>Turn ranges off</button> <span class="k">${allOn ? 'Ranges are off: every box trades.' : 'Ticks every box on both sides = no range filter.'}</span></p>` : '') +
     `<p class="note">Unticked boxes are grey: there the EA ${(D.kind === 'tt' ? CUR : inp).InpBandOff === '0' ? 'skips the trade' : 'stood aside'}. "Would have made" = the stand-aside trades' result (same stop and exit, no swap).</p>` +
-    `<div class="row">${one('BUY', inp.InpBandsB, 0)}${one('SELL', inp.InpBandsS, 21)}</div>`;
+    `<div class="row">${one('BUY', inp.InpBandsB, 0)}${one('SELL', inp.InpBandsS, 21)}</div>` + pHours(D, inp) + pRbox(D);
 }
+// Session hours (EA v1.37 InpHours, Zee 2026-10-28: "add a session ranges filter where i can check box particular seesions with a higher winrate").
+// One box per server hour of the ENTRY. An unticked hour has no trades in the run, so its last numbers with every hour ticked are shown grey.
+let HOURSNAP = null;
+const SESS = { Asia: [1, 2, 3, 4, 5, 6, 7, 8, 9], London: [10, 11, 12, 13, 14, 15], 'New York': [15, 16, 17, 18, 19, 20, 21, 22] };
+function pHours(D, inp) {
+  const hrs = String(inp.InpHours || '1'.repeat(24)).padEnd(24, '1'), all = hrs.indexOf('0') < 0, tt = D.kind === 'tt';
+  const g = new Map(); for (const t of D.TR) { const h = Math.floor(t.tIn / 3600) % 24; if (!g.has(h)) g.set(h, []); g.get(h).push(t); }
+  const st = {}; for (let h = 0; h < 24; h++) st[h] = g.has(h) ? stats(g.get(h)) : null;
+  if (tt && all) HOURSNAP = st;
+  const tot = stats(D.TR), rows = [];
+  for (let h = 0; h < 24; h++) {
+    const on = hrs[h] !== '0', s = on ? st[h] : (HOURSNAP && HOURSNAP[h]);
+    const tick = tt ? `<input type="checkbox" data-hour="${h}" ${on ? 'checked' : ''}>` : (on ? '✓' : '–');
+    const sess = Object.entries(SESS).filter(([, v]) => v.includes(h)).map(([k]) => k).join(' · ');
+    const better = s && s.n && s.w / s.n > tot.w / Math.max(1, tot.n);
+    rows.push(`<tr class="${on ? '' : 'dim'}"><td>${String(h).padStart(2, '0')}:00</td><td class="k">${sess}</td><td>${tick}</td><td>${s && s.n ? s.n : ''}</td>` +
+      `<td class="${s && s.n ? (better ? 'pos' : 'neg') : ''}">${s && s.n ? pct(s.w, s.n) : ''}</td><td class="${s ? cls(s.net) : ''}">${s && s.n ? money(s.net) : ''}</td></tr>`);
+  }
+  const btns = tt ? ` <button data-hours="ALL">Select all</button> <button data-hours="LOW">Deselect hours below ${pct(tot.w, tot.n)} win rate</button> <button data-hours="LOSE">Deselect losing hours</button>` +
+    Object.keys(SESS).map((k) => ` <button data-hours="S:${k}">Only ${k}</button>`).join('') : '';
+  return `<h4 style="margin-top:16px">SESSION HOURS - server hour of the entry${btns}</h4>` +
+    `<p class="note">Untick an hour to stop new entries in it (EA input InpHours, v1.37). Green win rate = above the run's ${pct(tot.w, tot.n)}. ` +
+    `Unticked hours show grey, with their numbers from the last run where every hour was ticked${HOURSNAP ? '' : ' (tick all once to fill them)'}. Server time = the data's broker clock; check in MT5 before trusting it.</p>` +
+    table(['Hour', 'Session', 'Ticked', 'Trades', 'Win rate', 'Net'], rows);
+}
+// rbox.py range-box families (Zee 2026-10-28): VWAP bands, Initial Balance, premium / discount, Keltner, expansion, value area.
+// Turtle TV tester inputs TvBox_<family>_<B|S> ("1" = trade); unticked boxes stop new entries there, so the Overview changes with them.
+let RBSNAP = {};
+function pRbox(D) {
+  if (D.kind !== 'tt') return '';
+  const R = D.rbox;
+  if (!R) return `<p class="note">More range boxes (VWAP, Initial Balance, premium / discount, Keltner, expansion, value area) appear on the 15-minute datasets.</p>`;
+  if (R.error) return `<p class="note bad">Range-box families: ${esc(R.error)}</p>`;
+  const lab = new Map(R.rows.map((r) => [r[0] + '|' + r[1], r.slice(2)]));
+  let h = `<h3 style="margin-top:18px">MORE RANGE BOXES · where the entry sat in six other ranges</h3><p class="note">Tick / untick a box: entries in unticked boxes are skipped and the Overview, List of trades and every page re-run with it.
+    Unticked boxes show grey with their numbers from the last run where that family was all ticked. Turtle TV tester only for now (the EA does not have these yet) - hypothesis until MT5 checks it.</p>`;
+  R.spec.forEach((fam, f) => {
+    h += `<h4>${esc(fam.title)}</h4><div class="row">`;
+    for (const [sd, side] of [['B', 1], ['S', -1]]) {
+      const key = `TvBox_${fam.key}_${sd}`, mask = String(CUR[key] || '').padEnd(fam.boxes.length, '1'), all = mask.indexOf('0') < 0;
+      const st = fam.boxes.map((_, b) => stats(D.TR.filter((t) => Math.sign(t.side) === side && (lab.get(t.tIn + '|' + Math.sign(t.side)) || [])[f] === b)));
+      if (all) RBSNAP[key] = st;
+      const tot = stats(D.TR.filter((t) => Math.sign(t.side) === side));
+      const rows = fam.boxes.map((name, b) => {
+        const on = mask[b] !== '0', s = on ? st[b] : (RBSNAP[key] || [])[b];
+        const better = s && s.n && s.w / s.n > tot.w / Math.max(1, tot.n);
+        return `<tr class="${on ? '' : 'dim'}"><td>${esc(name)}</td><td><input type="checkbox" data-rb="${key}" data-rbi="${b}" data-rbn="${fam.boxes.length}" ${on ? 'checked' : ''}></td>` +
+          `<td>${s && s.n ? s.n : ''}</td><td class="${s && s.n ? (better ? 'pos' : 'neg') : ''}">${s && s.n ? pct(s.w, s.n) : ''}</td><td class="${s ? cls(s.net) : ''}">${s && s.n ? money(s.net) : ''}</td></tr>`;
+      }).join('');
+      h += `<div><h4>${side > 0 ? 'BUY' : 'SELL'} <button data-rball="${key}">Select all</button> <button data-rblow="${key}" data-rbf="${f}" data-rbside="${side}">Deselect below ${pct(tot.w, tot.n)} win rate</button></h4>` +
+        table(['Box', 'Ticked', 'Trades', 'Win rate', 'Net'], [rows]) + '</div>';
+    }
+    h += '</div>';
+  });
+  return h;
+}
+document.addEventListener('change', (e) => {
+  const k = e.target.dataset && e.target.dataset.rb;
+  if (!k) return;
+  const n = +e.target.dataset.rbn, m = String(CUR[k] || '').padEnd(n, '1').slice(0, n).split('');
+  m[+e.target.dataset.rbi] = e.target.checked ? '1' : '0'; CUR[k] = m.join(''); markForm(); scheduleSim(0);
+});
+document.addEventListener('click', (e) => {
+  const d = e.target.dataset || {};
+  if (d.rball) { CUR[d.rball] = '1'.repeat(+(document.querySelector(`[data-rb="${d.rball}"]`) || {}).dataset?.rbn || 16); markForm(); scheduleSim(0); }
+  if (d.rblow) {
+    const st = RBSNAP[d.rblow]; if (!st) { toast('Tick every box of this family once first, so each box has its numbers.'); return; }
+    const side = +d.rbside, tot = stats(TT.TR.filter((t) => Math.sign(t.side) === side)), wr = tot.w / Math.max(1, tot.n);
+    CUR[d.rblow] = st.map((s) => (s && s.n && s.w / s.n < wr ? '0' : '1')).join(''); markForm(); scheduleSim(0);
+  }
+});
+function setHours(s) { CUR.InpHours = s; markForm(); scheduleSim(0); }
+document.addEventListener('change', (e) => {
+  const h = e.target.dataset && e.target.dataset.hour;
+  if (h == null) return;
+  const s = String(CUR.InpHours || '1'.repeat(24)).padEnd(24, '1').split(''); s[+h] = e.target.checked ? '1' : '0'; setHours(s.join(''));
+});
+document.addEventListener('click', (e) => {
+  const a = e.target.dataset && e.target.dataset.hours;
+  if (!a) return;
+  if (a === 'ALL') return setHours('1'.repeat(24));
+  if (a.startsWith('S:')) { const v = SESS[a.slice(2)]; return setHours([...Array(24)].map((_, i) => v.includes(i) ? '1' : '0').join('')); }
+  const src = HOURSNAP; if (!src) { toast('Tick every hour once first, so each hour has its numbers.'); return; }
+  const tot = stats(TT.TR), wr = tot.w / Math.max(1, tot.n), cur = String(CUR.InpHours || '1'.repeat(24)).padEnd(24, '1').split('');
+  for (let i = 0; i < 24; i++) { const s = src[i]; if (!s || !s.n) continue; if (a === 'LOW' ? s.w / s.n < wr : s.net < 0) cur[i] = '0'; }
+  setHours(cur.join(''));
+});
 function pTrades(D) {
   const rows = D.TR.map((t) => `<tr class="click ${D.kind === 'tt' && SEL === t.num ? 'sel' : ''}" data-num="${t.num}" data-kind="${D.kind}"><td>#${t.num}</td><td style="color:${t.side > 0 ? C.up : C.down}">${t.side > 0 ? 'BUY' : 'SELL'}</td>` +
     `<td>${dt(t.tIn)}</td><td>${f2(t.en)}</td><td>${f2(t.sl)}</td><td>${dt(t.tOut)}</td><td>${f2(t.ex)}</td><td style="text-align:left">${esc(t.why)}</td><td class="${cls(t.pnl)}">${money(t.pnl, 2)}</td></tr>`);
@@ -521,17 +721,47 @@ function pSkips(D) {
     table(['Why the setup was not traded', 'Setups', 'Share'], rows);
 }
 let OPTS = null;
+let RISK_OPTS = null, RISK_REF = null, RISK_SCAN_INPUTS = null;
+const RISK_SLIDERS = [
+  ['InpSlMode', 0, 2, 1, 'Which stop formula is active: fixed pips, ATR distance, or price distance.', 'stop'],
+  ['InpSlPips', 5, 150, 5, 'Stop distance in pips; active only in stop mode 0.', 'stop', '0'],
+  ['InpSlAtrMult', 0.5, 3, 0.1, 'ATR stop multiplier; active only in stop mode 1.', 'stop', '1'],
+  ['InpSlUsd', 1, 50, 0.5, 'Price-distance stop from entry (not account-currency USD); active only in stop mode 2.', 'stop', '2'],
+  ['InpMaxRiskUsd', 0, 40, 1, 'Skips entries whose stop distance is wider than this price distance; it does not cap an open loss.', 'stop'],
+  ['InpXLossCap', 0, 25, 1, 'Optional price-distance clamp on the entry stop; applies when the Exit Lab module is active.', 'stop'],
+  ['InpFixTpPips', 0, 100, 5, 'Fixed broker target in pips (0.1 XAUUSD price units per pip).', 'target'],
+  ['InpXDecayBars', 0, 48, 4, 'After this many candles, tighten the stop to the selected R level; 0 disables it.', 'time'],
+  ['InpXDecayR', -1, 0.5, 0.25, 'Stop level in R after the decay timer; negative values still allow a loss.', 'time'],
+  ['InpXStaleBars', 0, 48, 4, 'Close if the configured progress is not reached by this many candles; 0 disables it.', 'time'],
+  ['InpXStaleR', 0, 2, 0.1, 'Minimum progress in R required by the stale-trade timer.', 'time'],
+  ['InpXMaxBars', 0, 48, 4, 'Maximum hold in candles; 0 disables the time exit.', 'time'],
+  ['InpCloseLossMins', 0, 120, 5, 'Close a losing trade this many minutes before session close; not time since entry.', 'session'],
+  ['InpBeUsd', 0, 50, 0.5, 'Legacy break-even setting; only applies in exit mode 0.', 'target', '0'],
+  ['InpLots', 0.01, 5, 0.01, 'Fixed lot size when InpRiskPct is 0.', 'size'],
+  ['InpRiskPct', 0, 5, 0.05, 'Position sizing as a percentage of equity; 0 uses fixed InpLots.', 'size'],
+  ['InpDayLossUsd', 0, 10000, 250, 'Stops new entries after this daily loss in account currency; does not close the open trade.', 'daily'],
+  ['InpDayLossPct', 0, 10, 0.25, 'Stops new entries after this percentage loss from the day-start equity.', 'daily'],
+];
+let RISK_GROUPS = ['stop', 'time'];
+let RISK_AUTO = true;
+try { RISK_AUTO = localStorage.getItem('riskAuto') !== '0'; } catch (error) {}
 const OPTUI = { obj: 'ret_dd', boxes: false, keep: false };   // the optimizer's controls, kept across redraws
 function pOpt() {
   const o = OPTS;
   const obj = OPTUI.obj;
+  const objectives = [['ret_dd', 'net ÷ max drawdown'], ['net', 'net profit'], ['pf', 'profit factor'], ['wr', 'win rate']];
+  if (o && Array.isArray(o.objectives) && o.objectives.includes('avg_loss')) objectives.push(['avg_loss', 'Cut down Avg Loss']);
+  if (o && Array.isArray(o.objectives) && o.objectives.includes('worst_loss')) objectives.push(['worst_loss', 'Cut down Worst Loss']);
+  objectives.push(['entries', 'Entries: try every entry setting'], ['exits', 'Exits: try every exit setting'], ['ranges', 'Range boxes: most boxes at 100%']);
   let h = `<div class="row" style="align-items:center;gap:10px"><b>Step optimizer</b>
-    <label>Score <select id="oObj">${[['ret_dd', 'net ÷ max drawdown'], ['net', 'net profit'], ['pf', 'profit factor'], ['wr', 'win rate'], ['entries', 'Entries: try every entry setting'], ['exits', 'Exits: try every exit setting'], ['ranges', 'Range boxes: most boxes at 100%']].map(([v, l]) => `<option value="${v}" ${v === obj ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
+    <label>Score <select id="oObj">${objectives.map(([v, l]) => `<option value="${v}" ${v === obj ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
     <label class="tog"><input type="checkbox" id="oBox" ${OPTUI.boxes ? 'checked' : ''}> include the range boxes</label>
     <label class="tog"><input type="checkbox" id="oKeep" ${OPTUI.keep ? 'checked' : ''}> keep optimizing (restarts)</label>
     <button id="oGo" class="primary">Optimize from the settings on screen</button><button id="oStop">Stop</button></div>
     <p class="note">Each setting is moved one step up and down; a step that helps is repeated until it stops helping; all settings, pass after pass, until nothing improves.
-    The score is measured on <b>Jan – Jun</b> only. <b>Jul – Oct</b> is shown beside it but never used to choose: if it gets worse while Jan – Jun improves, the settings are memorising the past.</p>`;
+    ${obj === 'avg_loss' ? '“Cut down Avg Loss” ranks settings by the average P&L of losing trades: a result closer to zero is better.' : ''}
+    ${obj === 'worst_loss' ? '“Cut down Worst Loss” ranks settings by the single largest losing trade in the training period: a result closer to zero is better. It cannot distinguish strategies with no losing trades, so compare trade counts and the held-out period as well.' : ''}
+    The score is measured on the training period only. The held-out period is shown beside it but never used to choose: if it gets worse while training improves, the settings are memorising the past.</p>`;
   if (!o || !o.baseline) return h;
   const [LA, LB] = o.labels || ['Jan – Jun', 'Jul – Oct'];
   if (o.kind === 'ranges') {
@@ -563,7 +793,7 @@ function pOpt() {
         `<td class="${cls(r.total)}"><b>${money(r.total)}</b></td><td class="${cls(r.total - tot0)}">${money(r.total - tot0)}</td><td><button data-surv="${i}">Apply this setting</button></td></tr>`; })) + '</div>';
     return h;
   }
-  const B = o.baseline, best = o.best, line = (x) => x ? `${money(x.net)} · WR ${x.wr}% · PF ${x.pf} · ${x.n} trades` : '–';
+  const B = o.baseline, best = o.best, line = (x) => x ? `${money(x.net)} · WR ${x.wr}% · PF ${x.pf} · ${x.n} trades${o.objective === 'avg_loss' ? ` · avg loss ${money(x.avg_loss)}` : ''}${o.objective === 'worst_loss' ? ` · worst loss ${money(x.worst_loss)}` : ''}` : '–';
   h += `<p class="note">${o.running ? '⏳ running' : o.error ? 'stopped: ' + esc(o.error) : '✓ done'} · ${o.evals.toLocaleString()} settings tried in ${o.seconds} s (each one a full run over ${o.ds === 'm15' ? 'all 4 years' : 'the year'}) · ${o.passes} passes${o.restarts ? ' · ' + o.restarts + ' restarts' : ''}</p>`;
   h += table(['', `${LA} (optimized on)`, `${LB} (unseen)`, 'All'], [
     `<tr><td>Your settings</td><td>${line(B.train)}</td><td>${line(B.test)}</td><td>${line(B.year)}</td></tr>`,
@@ -578,14 +808,123 @@ function pOpt() {
   const n0 = (B.train.n || 0) + (B.test.n || 0);                 // the trade count vs your settings': is the score bought by cutting trades?
   const ntd = (a, b) => { const n = (a.n || 0) + (b.n || 0), f = n0 ? n / n0 : 1;
     return `<td class="${f < 0.5 ? 'bad' : f < 0.8 ? 'warn' : ''}" title="${a.n} + ${b.n} trades; your settings: ${n0}">${n.toLocaleString()} <span class="k">(${Math.round(100 * f)}%)</span></td>`; };
-  const steps = o.log.map((l, i) => `<tr><td>${i + 1}</td><td style="text-align:left">${esc(l.run)}</td><td style="text-align:left">${esc(l.setting.replace(/^Inp/, ''))}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td>${(+l.score).toFixed(2)}</td>` +
+  const scoreText = (score) => o.objective === 'avg_loss' || o.objective === 'worst_loss' ? money(score) : (+score).toFixed(2);
+  const scoreLabel = o.objective === 'avg_loss' ? 'Avg loss score' : o.objective === 'worst_loss' ? 'Worst loss score' : 'Score';
+  const steps = o.log.map((l, i) => `<tr><td>${i + 1}</td><td style="text-align:left">${esc(l.run)}</td><td style="text-align:left">${esc(l.setting.replace(/^Inp/, ''))}</td><td>${esc(l.from)} → ${esc(l.to)}</td><td>${scoreText(l.score)}</td>` +
     `<td class="${cls(l.train.net)}">${money(l.train.net)} · ${l.train.wr}%</td><td class="${cls(l.test.net)}">${money(l.test.net)} · ${l.test.wr}%</td><td class="${cls(l.train.net + l.test.net)}"><b>${money(l.train.net + l.test.net)}</b></td>${ntd(l.train, l.test)}<td class="k">${l.t}s</td>` +
     `<td>${l.inputs ? `<button data-step="${o.log.length > 200 ? i + o.log.length - 200 : i}">Apply this setting</button>` : ''}</td></tr>`);
-  h += `<h4>Steps that helped</h4><div class="scroll">${table(['#', 'Run', 'Setting', 'Change', 'Score', LA, LB, 'Total', 'Trades (vs yours)', 'At', ''], steps)}</div>`;
-  if (o.board && o.board.length > 1) h += `<h4>Best of each restart</h4>` + table(['Score', LA, LB, 'Total', 'Trades (vs yours)', 'Changes', ''],
-    o.board.map((x, i) => `<tr><td>${(+x.score).toFixed(2)}</td><td>${money(x.train.net)} · ${x.train.wr}%</td><td class="${cls(x.test.net - B.test.net)}">${money(x.test.net)} · ${x.test.wr}%</td><td><b>${money(x.train.net + x.test.net)}</b></td>${ntd(x.train, x.test)}` +
+  h += `<h4>Steps that helped</h4><div class="scroll">${table(['#', 'Run', 'Setting', 'Change', scoreLabel, LA, LB, 'Total', 'Trades (vs yours)', 'At', ''], steps)}</div>`;
+  if (o.board && o.board.length > 1) h += `<h4>Best of each restart</h4>` + table([scoreLabel, LA, LB, 'Total', 'Trades (vs yours)', 'Changes', ''],
+    o.board.map((x, i) => `<tr><td>${scoreText(x.score)}</td><td>${money(x.train.net)} · ${x.train.wr}%${o.objective === 'avg_loss' ? ` · avg loss ${money(x.train.avg_loss)}` : ''}${o.objective === 'worst_loss' ? ` · worst loss ${money(x.train.worst_loss)}` : ''}</td><td class="${cls(x.test.net - B.test.net)}">${money(x.test.net)} · ${x.test.wr}%${o.objective === 'avg_loss' ? ` · avg loss ${money(x.test.avg_loss)}` : ''}${o.objective === 'worst_loss' ? ` · worst loss ${money(x.test.worst_loss)}` : ''}</td><td><b>${money(x.train.net + x.test.net)}</b></td>${ntd(x.train, x.test)}` +
       `<td style="text-align:left" class="k">${Object.entries(x.changed).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ')}</td><td><button data-board="${i}">show</button></td></tr>`));
   return h;
+}
+function pRisk() {
+  const ref = RISK_REF, inp = ref && ref.inputs || {}, report = ref && ref.report || {}, ts = report.trade_stats || {};
+  const run = ref && RUNS.find((x) => x.id === ref.id), mode = String(CUR.InpSlMode ?? inp.InpSlMode ?? '');
+  const stopName = mode === '2' ? 'InpSlUsd' : mode === '1' ? 'InpSlAtrMult' : 'InpSlPips';
+  const sameAsReport = ref && Object.entries(inp).every(([k, v]) => same(CUR[k], v));
+  const o = RISK_OPTS;
+  const scanInputs = RISK_SCAN_INPUTS || (o && o.risk_inputs);
+  const scanStale = !!(o && o.baseline) && (!scanInputs || Object.entries(scanInputs).some(([k, v]) => !same(CUR[k], v)));
+  const scanPct = o && o.running ? Math.min(95, Math.max(3, Math.round(100 * o.evals / (o.evals + Math.max(1, o.space_size || 30))))) : 100;
+  let h = `<div class="risk-hero dex"><div><div class="crth">DEXTER'S RISK MANAGER · TAIL-LOSS WORKSHOP</div>
+    <h3>One loss should not erase a long run of wins.</h3>
+    <p>Start with the loss mechanism MT5 actually used. Compare safeguards without quietly “winning” by throwing away almost all your trades.</p></div>
+    <div class="risk-stamp"><b>${ref ? esc(ref.id) : 'MT5 REPORT'}</b><span>${ref ? esc(ref.period || 'M15') + ' · ' + esc(ref.created || '') : 'loading measured report…'}</span></div></div>`;
+  if (typeof pProbe === 'function') h += pProbe();                 // 01 · Probe entry (v1.36): the first setting
+  h += `<section class="risk-card risk-overview"><h4>LIVE OVERVIEW · EFFECT OF YOUR SETTINGS</h4>
+    ${TT ? pOverviewStats(TT) : '<p class="note">Waiting for the Turtle TV preview…</p>'}
+    <p class="note">This is the current Turtle TV preview and refreshes when you finish changing a slider. Treat simulated results as a hypothesis; verify the settings in MT5 Strategy Tester before promoting them.</p></section>`;
+  if (!ref) return h + '<p class="note">Loading the reference MT5 report…</p>';
+  h += `<div class="risk-stats">
+    <div class="risk-stat"><span>MT5 net</span><b>${money(report.net || 0)}</b></div>
+    <div class="risk-stat"><span>Worst trade</span><b class="neg">${money(ts.largest_loss || run && run.worst || 0)}</b></div>
+    <div class="risk-stat"><span>Average win / loss</span><b>${money(ts.avg_win || run && run.avg_win || 0)} <i>/</i> <span class="neg">${money(ts.avg_loss || run && run.avg_loss || 0)}</span></b></div>
+    <div class="risk-stat"><span>Win rate · trades</span><b>${ref.execution_stats && ref.execution_stats.wr != null ? ref.execution_stats.wr + '%' : run && run.wr != null ? run.wr + '%' : '–'} · ${report.trades || '–'}</b></div>
+    <div class="risk-stat"><span>Max drawdown</span><b>${esc(report.dd || '–')}</b></div>
+    <div class="risk-stat"><span>One worst loss costs</span><b>${ts.avg_win ? (Math.abs(ts.largest_loss) / ts.avg_win).toFixed(1) : '–'} average wins</b></div></div>`;
+  h += `<div class="risk-alert"><b>Read the stop correctly:</b> In this run, <code>InpSlMode=2</code> makes <code>InpSlUsd=25</code> the active stop distance. At 2 lots, a $25 XAUUSD move is roughly <b>$5,000 nominal exposure</b> (25 × 100 oz × 2 lots), before spread, execution gaps or slippage. That lines up with the $${Math.abs(ts.largest_loss || 0).toLocaleString()} observed worst trade; it is not a guaranteed loss ceiling.</div>`;
+  const sliderGroups = [...new Set(RISK_SLIDERS.map((x) => x[5]))];
+  const sliderLabel = (name, value) => name === 'InpSlMode'
+    ? `${value} · ${['fixed pips', 'ATR distance', 'price distance'][Number(value)] || 'unknown'}`
+    : name === 'InpRiskPct' || name === 'InpDayLossPct' ? `${value}%`
+      : name === 'InpLots' ? `${Number(value).toFixed(2)} lots`
+        : value;
+  const sliders = sliderGroups.map((group) => `<div class="risk-slider-group"><h5>${esc(group === 'stop' ? 'STOP & ENTRY GUARDS' : group === 'time' ? 'TIME-BASED EXITS' : group === 'target' ? 'TARGET & BREAK-EVEN' : group === 'size' ? 'POSITION SIZE' : group === 'daily' ? 'DAILY CIRCUIT BREAKERS' : 'SESSION CLOSE')}</h5>` +
+    RISK_SLIDERS.filter((x) => x[5] === group).map(([name, min, max, step, help, _group, activeMode]) => {
+      const value = String(CUR[name] ?? inp[name] ?? 0), num = Number(value);
+      const lo = Math.min(min, Number.isFinite(num) ? num : min), hi = Math.max(max, Number.isFinite(num) ? num : max);
+      const inactive = (activeMode != null && activeMode !== mode) || (name === 'InpBeUsd' && String(CUR.InpExitMode ?? inp.InpExitMode) !== '0');
+      const status = activeMode != null ? (inactive ? `inactive in stop mode ${mode}` : 'active stop') :
+        name === 'InpBeUsd' && inactive ? 'inactive in this exit mode' : '';
+      return `<label class="risk-slider ${inactive ? 'inactive' : ''}"><span class="risk-slider-title"><b>${esc(name)}</b><strong id="riskValue_${name}">${esc(sliderLabel(name, value))}</strong></span>
+        <input type="range" data-risk-slider="${esc(name)}" min="${lo}" max="${hi}" step="${step}" value="${esc(value)}">
+        <span class="risk-slider-help">${status ? `<em>${esc(status)}</em> · ` : ''}${esc(help)}</span></label>`;
+    }).join('') + '</div>').join('');
+  h += `<div class="risk-pair"><section class="risk-card"><h4>THE SETTINGS THAT MATTER · LIVE SLIDERS</h4>
+    <p class="note">Each slider changes the chart settings and refreshes the Turtle TV preview. Inactive stop inputs remain visible so their values are clear, but only the selected stop mode’s input controls the active stop.</p>
+    <div class="risk-sliders">${sliders}</div>
+    <p class="note">For the reference report, the active stop is <code>InpSlUsd=25</code>. <code>InpSlAtrMult=1.7</code> and <code>InpSlPips=95</code> are inactive in mode 2. Also, <code>InpMaxRiskUsd</code> skips wide-stop entries; it is not an open-trade dollar-loss cap.</p></section>
+    <section class="risk-card"><h4>FOUR PRACTICAL LEVERS</h4>
+      <div class="risk-lever"><b>01 · Bound the active stop</b><span>Scan <code>${esc(stopName)}</code>; also test <code>InpXLossCap</code> and the entry-only <code>InpMaxRiskUsd</code>. Tighter stops can increase stop-outs.</span></div>
+      <div class="risk-lever"><b>02 · Cut a trade that stalls</b><span>Test <code>InpXDecayBars</code> + <code>InpXDecayR</code>, <code>InpXStaleBars</code>, and <code>InpXMaxBars</code>. On M15, 4 bars = 1 hour. These change exits, not just entries.</span></div>
+      <div class="risk-lever"><b>03 · Size to the stop</b><span><code>InpRiskPct</code> is currently 0, so fixed <code>InpLots=${esc(inp.InpLots)}</code> is used. Pick a conservative risk fraction to make wide stops use fewer lots.</span>
+        <div class="risk-size">Use the <code>InpRiskPct</code> slider in “The settings that matter” to tune sizing.</div></div>
+      <div class="risk-lever"><b>04 · Guard the day, not the open trade</b><span><code>InpDayLossUsd</code> stops new entries after the day’s loss threshold. It is a portfolio guard, not a per-trade stop. The report already has <code>InpDayLossPct=${esc(inp.InpDayLossPct)}</code>.</span></div>
+    </section></div>`;
+  h += `<section class="risk-card risk-scan"><div class="risk-head"><div><h4>RISK SCAN · KEEP THE STRATEGY IN THE TEST</h4>
+    <p>Tests every configured grid value for each selected lever, one control at a time, on <b>${esc(SRC.ds)}</b>. Candidates must retain at least <b>70% of baseline training trades</b>. The held-out period is reported, never used to select. No setting is applied automatically; nothing here changes your EA or saved defaults.</p></div>
+    <div class="risk-actions"><button id="riskScan" class="dexbtn" ${o && o.running ? 'disabled' : ''}>${o && o.running ? '⏳ SCANNING…' : '🔬 SCAN EVERY SELECTED SETTING'}</button>
+      <button id="riskStop" class="dexbtn sm" ${!o || !o.running ? 'disabled' : ''}>Stop scan</button></div></div>
+    <div class="risk-groups">
+      ${[['stop', 'Active stop + stop-distance guard'], ['time', 'Loss decay + stale/time exits'], ['target', 'Fixed target trade-off'], ['session', 'Session-close loss exit'], ['daily', 'Daily new-entry circuit breaker']]
+        .map(([value, label]) => `<label><input type="checkbox" class="riskGroup" value="${value}" ${RISK_GROUPS.includes(value) ? 'checked' : ''}> ${label}</label>`).join('')}
+    </div>
+    <label class="risk-auto"><input type="checkbox" id="riskAuto" ${RISK_AUTO ? 'checked' : ''}> scan again after every pick</label>
+    ${sameAsReport ? '<p class="risk-good">✓ Chart inputs match the MT5 reference run.' : `<p class="risk-warn">⚠ Chart settings do not match the MT5 reference. <button class="dexbtn sm" data-risk-load="1">Load ${esc(ref.id)} settings to chart</button> before scanning that exact configuration.</p>`}
+    <p class="note">The search objective is the least severe single losing trade, not net profit. Historical simulator results are hypotheses only. Review trades, drawdown, the held-out period and MT5 fills before deciding.</p>
+    ${!o ? '<p class="note">Choose risk levers and start a scan to compare candidates.</p>' : ''}
+    ${o && o.error ? `<p class="bad">Scan failed: ${esc(o.error)}</p>` : ''}
+    ${o && o.baseline ? `<div class="risk-progress"><b>${o.running ? '🧪 THE LAB IS TESTING EVERY SETTING' : o.error ? 'SCAN STOPPED' : '✓ SCAN COMPLETE'} · ${o.evals} simulations</b><div><i style="width:${scanPct}%"></i></div><span>${o.running ? 'Candidates update as the scan proceeds' : `${o.seconds}s · `}training trade floor ${o.trade_floor || 30}</span></div>
+      <div class="risk-results">${[['Your starting settings', o.baseline], ['Best candidate', o.best]].map(([title, x]) => x ? `<div class="risk-result"><h4>${title}</h4><p><b>${esc(o.labels && o.labels[0] || 'Train')}:</b> ${money(x.train.net)} · ${x.train.n} trades · worst ${money(x.train.worst_loss)} · avg loss ${money(x.train.avg_loss)}</p>
+        <p><b>${esc(o.labels && o.labels[1] || 'Test')}:</b> ${money(x.test.net)} · ${x.test.n} trades · worst ${money(x.test.worst_loss)} · avg loss ${money(x.test.avg_loss)}</p></div>` : '').join('')}</div>
+      ${scanStale ? '<p class="risk-warn">⚠ This scan has no matching chart-settings snapshot or the chart changed since it ran. Rescan before applying suggestions.</p>' : ''}
+      ${o.best && o.best.changed && Object.keys(o.best.changed).length ? `<p>Top combined training-period suggestion: <code>${Object.entries(o.best.changed).map(([k,v]) => `${esc(k)}=${esc(v)}`).join(' · ')}</code>
+        <button class="dexbtn sm" data-risk-best="1" ${scanStale ? 'disabled' : ''}>Apply combined candidate</button></p>` : ''}
+      ${o.log && o.log.length ? (() => {
+        const ranked = o.log.map((x, index) => ({ ...x, index })).filter((x) => x.year)
+          .sort((a, b) => b.train.worst_loss - a.train.worst_loss).slice(0, 12);
+        const baseline = o.baseline.year;
+        const stale = scanStale;
+        const delta = (value, base, suffix = '') => {
+          const d = value - base;
+          return `<span class="${cls(d)}">${d > 0 ? '+' : ''}${Number(d).toFixed(suffix === ' pts' ? 1 : 2)}${suffix}</span>`;
+        };
+        const deltaMoney = (value, base) => `<span class="${cls(value - base)}">${money(value - base)}</span>`;
+        return `<h4>RANKED SUGGESTIONS · PICK THE BEST RISK TRADE-OFF</h4><p class="note">Ranked by training worst loss. Each card shows full-period totals and both halves. Simulator output is a hypothesis; compare the trade-offs and validate picks in MT5.</p>
+          <div class="risk-suggestions">${ranked.map((x, i) => {
+            const yr = x.year, improvement = Math.abs(o.baseline.train.worst_loss) - Math.abs(x.train.worst_loss);
+            const sideEffects = [];
+            const netDelta = yr.net - baseline.net, wrDelta = yr.wr - baseline.wr, pfDelta = yr.pf - baseline.pf;
+            sideEffects.push(Math.abs(netDelta) < 1 ? 'net unchanged' : `${money(netDelta)} net`);
+            sideEffects.push(Math.abs(wrDelta) < 0.05 ? 'WR unchanged' : `${wrDelta < 0 ? '−' : '+'}${Math.abs(wrDelta).toFixed(1)} pts WR`);
+            sideEffects.push(Math.abs(pfDelta) < 0.005 ? 'PF unchanged' : `${pfDelta < 0 ? '−' : '+'}${Math.abs(pfDelta).toFixed(2)} PF`);
+            return `<article class="risk-suggestion" style="--rank:${i}"><span class="risk-rank">#${i + 1}</span>
+              <div class="risk-suggestion-main"><b>🛡 ${esc(x.setting.replace(/^Inp/, ''))} ${esc(x.from)} → ${esc(x.to)}</b>
+                <p class="risk-total"><strong>${money(yr.net)} net</strong> · WR ${yr.wr}% · PF ${yr.pf} · ${yr.n.toLocaleString()} trades · avg loss ${money(yr.avg_loss)} · worst ${money(yr.worst_loss)}</p>
+                <p class="risk-delta">vs yours: ${deltaMoney(yr.net, baseline.net)} net · ${delta(yr.wr, baseline.wr, ' pts')} WR · ${delta(yr.pf, baseline.pf, ' PF')} · ${yr.n - baseline.n > 0 ? '+' : ''}${yr.n - baseline.n} trades</p>
+                <p class="risk-halves"><b>${esc(o.labels && o.labels[0] || 'Train')}:</b> ${money(x.train.net)} · WR ${x.train.wr}% · PF ${x.train.pf} · ${x.train.n} trades · worst ${money(x.train.worst_loss)}<br>
+                  <b>${esc(o.labels && o.labels[1] || 'Held-out')}:</b> ${money(x.test.net)} · WR ${x.test.wr}% · PF ${x.test.pf} · ${x.test.n} trades · worst ${money(x.test.worst_loss)}</p>
+              </div><button class="risk-pick" data-risk-step="${x.index}" ${stale ? 'disabled' : ''}><span>TRADE FOR</span><b>${money(x.train.worst_loss)} train worst</b><small>${improvement > 0 ? `cuts tail by $${Math.round(improvement).toLocaleString()}` : 'worst-loss change'}<br>Side effect: ${sideEffects.join(' · ')}</small><strong>Pick this option →</strong></button></article>`;
+          }).join('')}</div>${!ranked.length ? '<p class="note">This scan predates full-period metrics. Run it again to get complete ranked cards.</p>' : ''}`;
+      })() : o.best && o.best.changed && Object.keys(o.best.changed).length ? '<p class="note">No individual improvement steps were recorded; use the top candidate when the scan finishes.</p>' : '<p class="note">No selected risk change improved the training worst-loss score while meeting the trade floor.</p>'}` : ''}</section>`;
+  h += `<p class="risk-foot">MT5 remains the judge. After applying a hypothesis, use <b>Check in MT5</b> in the header; compare the actual report before saving or exporting. No Python result is promoted here.</p>`;
+  return h;
+}
+function riskScanMatchesChart() {
+  const scanned = RISK_SCAN_INPUTS || (RISK_OPTS && RISK_OPTS.risk_inputs);
+  return !!scanned && Object.entries(scanned).every(([key, value]) => same(CUR[key], value));
 }
 function renderPanel(sec) {
   document.querySelectorAll(`nav[data-sec="${sec}"] button`).forEach((b) => b.classList.toggle('on', b.dataset.t === TAB[sec]));
@@ -594,11 +933,17 @@ function renderPanel(sec) {
   const back = () => el.querySelectorAll('.scroll').forEach((s, i) => { if (keep[i] != null) s.scrollTop = keep[i]; });
   if (sec === 'tt' && TAB.tt === 'opt') { el.innerHTML = pOpt(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'lab') { el.innerHTML = pLab(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'tp') { el.innerHTML = pTP(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'dexter') { el.innerHTML = pDex(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'life') { el.innerHTML = pLife(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'ml') { el.innerHTML = pML(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'research') { el.innerHTML = pResearch(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'deploy') { el.innerHTML = pDeploy(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'lego') { el.innerHTML = pLego(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'mission') { el.innerHTML = pMission(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'stress') { el.innerHTML = pStress(); back(); return; }
   if (sec === 'tt' && TAB.tt === 'validation') { el.innerHTML = pValidation(); back(); return; }
+  if (sec === 'tt' && TAB.tt === 'risk') { el.innerHTML = pRisk(); back(); if (typeof probeEval === 'function' && !PROBE.res) probeEval(); return; }
   if (sec === 'tt' && TAB.tt === 'validation') { el.innerHTML = pValidation(); back(); return; }
   if (sec === 'mt' && MTWAIT) { el.innerHTML = `<div class="dexprog"><div class="dexprog-t">⏳ MT5 IS RUNNING THE SETTINGS ON SCREEN</div><div class="dexprog-bar"><i style="width:${Math.min(95, 3 + (Date.now() - MTWAIT.t0) / 900)}%"></i></div>
     <div class="dexprog-s">${esc(MTWAIT.phase || 'starting')} · the result replaces this when it lands (about a minute)</div></div>`; return; }
@@ -614,20 +959,26 @@ function scheduleSim(ms = 120) { clearTimeout(simTimer); simTimer = setTimeout(r
 async function runSim() {
   const seq = ++simSeq;
   const emaKey = `${SRC.ds}/${CUR.InpEmaFast}/${CUR.InpEmaSlow}`, needEma = !TT || TT.emaKey !== emaKey;
-  const r = await api('/api/sim', { inputs: CUR, ema: needEma, setups: show.setups, ds: SRC.ds, mode: SRC.mode, lab: ACTIVE_LAB });   // EMAs / setups only when they are needed (smooth sliding)
-  if (seq !== simSeq) return;                                  // a newer change is already on its way
-  if (r.error) return toast('⚠ ' + esc(r.error));
+  const r = await api('/api/sim', { inputs: CUR, ema: needEma, setups: show.setups, ds: SRC.ds, mode: SRC.mode, lab: ACTIVE_LAB, prune: typeof LF_APPLIED !== 'undefined' ? LF_APPLIED.map((c) => c.r) : [] });   // EMAs / setups only when they are needed (smooth sliding)
+  if (seq !== simSeq) return false;                            // a newer change is already on its way
+  if (r.error) { toast('⚠ ' + esc(r.error)); return false; }
   const keep = TT && !needEma ? { ef: TT.ef, es: TT.es } : { ef: r.ef, es: r.es };
-  TT = Object.assign(derive('tt', r.events, parseFloat(CUR.InpLots || '1')), { ms: r.ms, stats: r.stats, year: r.year, emaKey, honest: r.honest, months: r.months, ...keep });
-  drawEmas(); redraw(); await pickMt5(); renderAll();
+  TT = Object.assign(derive('tt', r.events, parseFloat(CUR.InpLots || '1')), { ms: r.ms, stats: r.stats, year: r.year, rbox: r.rbox, emaKey, honest: r.honest, months: r.months, ...keep });
+  if (BARS) { drawEmas(); redraw(); }
+  renderAll();
+  await pickMt5();
   $('#simMs').textContent = `· Turtle TV Tester ${r.ms} ms`;
   $('#infoTT').textContent = `${SRC.ds === 'tv' ? "TradingView's candles" : 'Blueberry MT5 candles'} · ${{ ea: 'v1.27 rules', chart: "the chart's rules", chart_blind: "TradingView's way" }[SRC.mode]} · ` +
     `${r.year.n} trades · WR ${r.year.wr}% · ${money(r.year.net)} · PF ${r.year.pf} · ${r.ms} ms`;
   labBanner();
-  const n = BARS.t.length;
-  if (firstView) { chart.timeScale().setVisibleLogicalRange({ from: n - 1500, to: n + 5 }); firstView = false; }
-  legend(n - 1);
+  if (typeof lfBanner === 'function') lfBanner();
+  if (BARS) {
+    const n = BARS.t.length;
+    if (firstView) { chart.timeScale().setVisibleLogicalRange({ from: n - 1500, to: n + 5 }); firstView = false; }
+    legend(n - 1);
+  }
   markForm();
+  return true;
 }
 
 // ---------- settings panel: sliders for numbers, words for choices (Zee: "make all settings with numbers to be like sliders") ----------
@@ -654,9 +1005,11 @@ function sliderRange(i, v) {
 function buildForm() {
   const groups = new Map();
   for (const i of INPUTS.inputs) { if (!groups.has(i.group)) groups.set(i.group, []); groups.get(i.group).push(i); }
-  let h = '';
+  let h = `<div class="dexsearch"><input id="fSearch" placeholder="🔎 search a setting…" oninput="formFilter(this.value)">
+    <button class="dexbtn sm" onclick="formAll(true)">open all</button><button class="dexbtn sm" onclick="formAll(false)">close all</button></div>`;
   for (const [g, list] of groups) {
-    h += `<div class="igrp"><h5>${esc(g)}</h5>`;
+    const nChg = list.filter((i) => !same(CUR[i.name] ?? i.default, DFL[i.name])).length;
+    h += `<details class="igrp dexsec" open><summary><span>${esc(g).toUpperCase()}</span><span class="dexcount">${list.length}${nChg ? ` · <b class="chgn">${nChg} CHANGED</b>` : ''}</span></summary>`;
     for (const i of list) {
       const v = CUR[i.name] ?? i.default;
       let field;
@@ -670,11 +1023,20 @@ function buildForm() {
       h += `<div class="inp ${i.sim ? '' : 'mt5'}" title="${esc(i.name)}: ${esc(i.comment)}${i.sim ? '' : ' · MT5 only: the Turtle TV Tester does not use it'}">` +
            `<span class="n">${esc(i.name.replace(/^Inp/, ''))}${i.sim ? '' : ' <small>(MT5 only)</small>'}</span>${field}</div>`;
     }
-    h += '</div>';
+    h += '</details>';
   }
   $('#form').innerHTML = h;
   markForm();
 }
+function formFilter(q) {                                  // search: only the settings whose name or comment matches stay
+  q = q.trim().toLowerCase();
+  document.querySelectorAll('#form .igrp').forEach((g) => {
+    let any = false;
+    g.querySelectorAll('.inp').forEach((r) => { const hit = !q || r.title.toLowerCase().includes(q); r.style.display = hit ? '' : 'none'; any = any || hit; });
+    g.style.display = any ? '' : 'none'; if (q) g.open = true;
+  });
+}
+function formAll(open) { document.querySelectorAll('#form .igrp').forEach((g) => { g.open = open; }); }
 function markForm() {
   document.querySelectorAll('#form [data-n], #form [data-r]').forEach((el) => {
     const n = el.dataset.n || el.dataset.r;
@@ -688,6 +1050,21 @@ function markForm() {
 }
 function setBands(key, s) { CUR[key] = s; markForm(); scheduleSim(0); }
 document.addEventListener('change', (e) => {
+  if (e.target.closest && e.target.closest('#form')) settingsTouched = true;
+  if (e.target.classList && e.target.classList.contains('riskGroup')) {
+    RISK_GROUPS = [...document.querySelectorAll('.riskGroup:checked')].map((x) => x.value);
+  }
+  if (e.target.id === 'riskAuto') {
+    RISK_AUTO = e.target.checked;
+    try { localStorage.setItem('riskAuto', RISK_AUTO ? '1' : '0'); } catch (error) {}
+  }
+  if (e.target.dataset && e.target.dataset.riskSlider) {
+    CUR[e.target.dataset.riskSlider] = e.target.value;
+    settingsTouched = true;
+    markForm();
+    scheduleSim(0);
+    renderPanel('tt');
+  }
   const b = e.target.dataset && e.target.dataset.band;
   if (b) { const key = 'InpBands' + b[0], i = +b.slice(1), s = (CUR[key] || '').padEnd(21, '1').split(''); s[i] = e.target.checked ? '1' : '0'; setBands(key, s.join('')); }
   if (e.target.id === 'oObj') OPTUI.obj = e.target.value;
@@ -697,11 +1074,29 @@ document.addEventListener('change', (e) => {
 $('#form').addEventListener('input', (e) => {
   const el = e.target, n = el.dataset.n || el.dataset.r;
   if (!n || el.value === '') return;
+  settingsTouched = true;
   CUR[n] = el.value.trim();
   const twin = el.dataset.r ? el.parentElement.querySelector('[data-n]') : el.parentElement.querySelector('[data-r]');
   if (twin) twin.value = CUR[n];
   el.closest('.inp').classList.toggle('chg', !same(CUR[n], DFL[n]));
   scheduleSim(el.dataset.r ? 60 : 120);
+});
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  const name = el.dataset && el.dataset.riskSlider;
+  if (!name || el.value === '') return;
+  CUR[name] = el.value;
+  settingsTouched = true;
+  const out = document.getElementById(`riskValue_${name}`);
+  if (out) {
+    const value = el.value;
+    out.textContent = name === 'InpSlMode' ? `${value} · ${['fixed pips', 'ATR distance', 'price distance'][Number(value)]}` :
+      name === 'InpRiskPct' || name === 'InpDayLossPct' ? `${value}%` :
+        name === 'InpLots' ? `${Number(value).toFixed(2)} lots` : value;
+  }
+});
+document.addEventListener('change', (e) => {
+  if (e.target && e.target.dataset && e.target.dataset.riskSlider) scheduleSim(0);
 });
 async function setSource() {
   const ds = $('#srcDs').value, mode = $('#srcMode').value, keep = chart.timeScale().getVisibleRange();
@@ -725,13 +1120,25 @@ async function loadRuns() {
   RUNS = await api('/api/runs');
   $('#runSel').innerHTML = RUNS.length ? RUNS.map((r) => `<option value="${r.id}">${esc(r.label)} · ${money(r.net || 0)} · PF ${r.pf} · ${r.trades} trades · ${r.delay === 'none' ? 'no delay' : 'random delay'} · ${esc((r.created || '').slice(5))}</option>`).join('')
     : '<option>no MT5 runs yet</option>';
+  updateReportButton();
+  renderSaved();
+  resumeExportProgress();
+}
+function updateReportButton() {
+  const button = $('#btnReport');
+  if (!button) return;
+  const run = MT && MT.matches && RUNS.find((x) => x.id === MT.run.id && x.has_report);
+  button.disabled = !run;
+  button.title = run ? `Download the MT5 Strategy Tester HTML report for ${run.label} (${run.period || 'M15'})`
+    : 'Select settings with a completed MT5 run and an available tester report';
 }
 function runMatches(r) {
   const a = r.changed || {}, b = diffDfl(CUR);
-  return Object.keys(a).length === Object.keys(b).length && Object.entries(b).every(([k, v]) => k in a && same(a[k], v));
+  return (r.period || 'M15') === mt5Period() &&
+    Object.keys(a).length === Object.keys(b).length && Object.entries(b).every(([k, v]) => k in a && same(a[k], v));
 }
 async function pickMt5(forceId) {
-  if (!RUNS.length) { MT = null; renderPanel('mt'); return; }
+  if (!RUNS.length) { MT = null; updateReportButton(); renderPanel('mt'); return; }
   const want = forceId || (RUNS.find(runMatches) || {}).id || (MT && MT.run.id) || RUNS[0].id;
   if (!MT || MT.run.id !== want) {
     const run = await api('/api/run?id=' + encodeURIComponent(want));
@@ -739,29 +1146,45 @@ async function pickMt5(forceId) {
   }
   const diff = {};
   for (const [k, v] of Object.entries(MT.run.inputs)) if (k in CUR && !same(v, CUR[k])) diff[k] = [CUR[k], v];
-  MT.diff = diff; MT.matches = !Object.keys(diff).length;
+  MT.diff = diff; MT.matches = !Object.keys(diff).length && (MT.run.period || 'M15') === mt5Period();
+  updateReportButton();
   $('#runSel').value = MT.run.id;
   const s = stats(MT.TR);
-  $('#infoMT').innerHTML = MT.matches ? `${s.n} trades · WR ${pct(s.w, s.n)} · ${money(MT.run.report.net ?? s.net)} · PF ${MT.run.report.pf}` : '<span class="warn">⚠ different settings from the screen</span>';
+  $('#infoMT').innerHTML = MT.matches ? `${s.n} trades · WR ${pct(s.w, s.n)} · ${money(MT.run.report.net ?? s.net)} · PF ${MT.run.report.pf}` : '<span class="warn">⚠ different settings or timeframe from the screen</span>';
   renderPanel('mt'); redraw();
 }
 async function poll() {
   try {
     const s = await api('/api/status');
-    ['#btnCheck', '#btnExport'].forEach((b) => ($(b).disabled = !!s.busy));
+    $('#btnCheck').disabled = !!s.busy || EXPORT_BUSY || !!EXPORT_PENDING;
+    $('#btnExport').disabled = !!s.busy || EXPORT_BUSY || !!EXPORT_PENDING;
     if (s.busy) setStatus(`MT5 running "${s.label}" · ${s.phase} · ${s.elapsed ?? 0} s`, 'busy');
     else if (s.error) setStatus('last MT5 run failed: ' + s.error, 'err');
     else setStatus('');
     if (MTWAIT && s.busy) { MTWAIT.phase = `${s.phase} · ${s.elapsed ?? 0} s`; renderPanel('mt'); }
-    if (MTWAIT && !s.busy && s.error && Date.now() - MTWAIT.t0 > 4000) { MTWAIT = null; renderPanel('mt'); }
+    if (MTWAIT && !s.busy && s.error && Date.now() - MTWAIT.t0 > 4000) {
+      if (EXPORT_PENDING) {
+        EXPORT_PENDING = null;
+        $('#btnExport').disabled = false;
+        toast('⚠ Export stopped because the required MT5 Strategy Tester run failed: ' + esc(s.error), 14000);
+      }
+      MTWAIT = null; renderPanel('mt');
+    }
     if (!s.busy && s.last && (s.last !== lastSeen || (MTWAIT && s.last !== MTWAIT.prev && (!MT || MT.run.id !== s.last)))) {
       const first = lastSeen === undefined && !MTWAIT; lastSeen = s.last;
-      if (!first) { MTWAIT = null; await loadRuns(); MT = null; await pickMt5(s.last); loadSaved(); toast(`MT5 result in: <b>${esc(MT.run.label)}</b> · ${money(MT.run.report.net || 0)} · PF ${MT.run.report.pf}`); }
+      if (!first) {
+        MTWAIT = null; await loadRuns(); MT = null; await pickMt5(s.last); loadSaved();
+        toast(`MT5 result in: <b>${esc(MT.run.label)}</b> · ${money(MT.run.report.net || 0)} · PF ${MT.run.report.pf}`);
+        if (EXPORT_PENDING && EXPORT_PENDING.id === s.last) await finishExportAfterTest();
+      }
     }
     const busyUi = document.activeElement && document.activeElement.closest && document.activeElement.closest('#panelTT') && /SELECT|INPUT/.test(document.activeElement.tagName);
     if (!busyUi && TAB.tt === 'opt' && OPTS && (OPTS.running || (OPTS.mt5 && OPTS.mt5.run && !RUNS.find((x) => x.id === OPTS.mt5.run)))) { OPTS = await api('/api/opt'); renderPanel('tt'); }
+    const riskInputFocused = document.activeElement && document.activeElement.closest &&
+      document.activeElement.closest('#panelTT') && document.activeElement.matches('input[type=range], input[type=checkbox]');
+    if (TAB.tt === 'risk' && RISK_OPTS && RISK_OPTS.running && !riskInputFocused) { RISK_OPTS = await api('/api/risk_opt'); renderPanel('tt'); }
   } catch (e) { setStatus('Turtle TV server not reachable', 'err'); }
-  setTimeout(poll, OPTS && OPTS.running ? 700 : 2000);
+  setTimeout(poll, OPTS && OPTS.running || RISK_OPTS && RISK_OPTS.running ? 700 : 2000);
 }
 
 // ---------- TradingView ----------
@@ -845,9 +1268,87 @@ async function applySave(s) {
   ACTIVE_LAB = null; markForm();
   if (s.lab && Object.keys(s.lab).length && typeof labOpen === 'function') { await labOpen(); LABS.form = { ...LABS.spec.default, ...s.lab }; }   // its Exit Lab exit back on the bench
 }
-function saveRun(s) {                                          // the newest MT5 run of exactly this save's settings
+function matchingSaveRuns(s) {
   const want = diffDfl({ ...DFL, ...s.inputs });
-  return RUNS.find((x) => { const a = x.changed || {}; return Object.keys(a).length === Object.keys(want).length && Object.entries(want).every(([k, v]) => k in a && same(a[k], v)); });
+  return RUNS.filter((x) => { const a = x.changed || {}; return (x.period || 'M15') === mt5Period(s.ds) &&
+    Object.keys(a).length === Object.keys(want).length && Object.entries(want).every(([k, v]) => k in a && same(a[k], v)); });
+}
+function saveRun(s) { return matchingSaveRuns(s)[0]; }           // the newest MT5 run of exactly this save's settings
+function candidateRun(s) { return matchingSaveRuns(s).find((x) => x.has_candidate); }
+function exportProgressMarkup(progress) {
+  const stages = [
+    ['preparing', 'Preparing the complete EA settings'],
+    ['generating', 'Generating the separate EA source'],
+    ['waiting', 'Waiting for the isolated MT5 test rig'],
+    ['compiling', 'Compiling in MetaEditor'],
+    ['testing', 'Testing the compiled EA in MT5 Strategy Tester'],
+    ['installing', 'Installing source, binary, and preset in MT5'],
+    ['ready', 'Export complete'],
+  ];
+  const phase = String(progress.phase || 'working');
+  const index = Math.max(0, stages.findIndex(([key]) => phase.toLowerCase().includes(key)));
+  const percent = Math.round((index / (stages.length - 1)) * 100);
+  if (progress.error || phase === 'failed') {
+    return `<div class="warn"><b>EA export failed</b><br>${esc(progress.error || 'See the Export to MT5 error notification.')}</div>`;
+  }
+  return `<div data-ea-export-progress="${esc(progress.id)}" class="ea-export-progress">` +
+    `<b>EA generation · step ${index + 1} of ${stages.length - 1}</b>` +
+    `<progress value="${percent}" max="100" style="display:block;width:100%;height:9px;margin:4px 0"></progress>` +
+    `<span>${esc(phase)}</span><br><span class="k">${Math.round(progress.seconds || 0)} sec</span>` +
+    `${progress.candidate ? `<br><code>${esc(progress.candidate)}</code>` : ''}</div>`;
+}
+function candidateCell(s, run, progress) {
+  const savedExports = s.candidate_exports || [];
+  const records = savedExports.length ? savedExports : run && run.candidate ? [run.candidate] : [];
+  let html = '<td style="text-align:left;white-space:normal;min-width:300px">';
+  if (progress) html += exportProgressMarkup(progress);
+  if (!records.length) return html + (progress ? '</td>' : '<span class="k">No compiled EA recorded for this setting.</span></td>');
+  html += records.map((c) => {
+    const t = c.tester || {};
+    const paths = (c.compiled_paths || []).map((path) => `<code style="display:block;word-break:break-all">${esc(path)}</code>`).join('');
+    const presets = (c.preset_paths || []).map((path) => `<code style="display:block;word-break:break-all">${esc(path)}</code>`).join('');
+    const metrics = [
+      t.net != null ? `${money(Number(t.net))} net` : null,
+      t.pf != null ? `PF ${esc(t.pf)}` : null,
+      t.trades != null ? `${esc(t.trades)} trades` : null,
+      t.wr ? `${esc(t.wr)} WR` : null,
+      t.avg_win != null ? `Avg win ${money(Number(t.avg_win))}` : null,
+      t.avg_loss != null ? `Avg loss ${money(Number(t.avg_loss))}` : null,
+      t.dd ? `DD ${esc(t.dd)}` : null,
+    ].filter(Boolean).join(' · ') || 'Tester metrics unavailable';
+    const testPeriod = [c.tester_symbol, c.tester_period, c.tester_from && c.tester_to ? `${c.tester_from}–${c.tester_to}` : null]
+      .filter(Boolean).map(esc).join(' · ');
+    return `<div style="padding:5px 0;border-bottom:1px solid var(--line)">` +
+      `<b>${esc(c.name || 'Candidate EA')} v${esc(c.version || '?')}</b><br>` +
+      `<span class="k">Compiled: ${esc(c.compiled_at || 'date unavailable')}</span><br>` +
+      `<b>${metrics}</b>${t.quality ? `<br><span class="k">${esc(t.quality)}</span>` : ''}` +
+      `${testPeriod ? `<br><span class="k">Test: ${testPeriod}</span>` : ''}` +
+      `${c.tester_deposit != null ? `<br><span class="k">Deposit: ${money(Number(c.tester_deposit))}</span>` : ''}` +
+      `<br><span class="k">Compiled EA:</span>${paths || '<br><span class="k">Path unavailable</span>'}` +
+      `<span class="k">Source:</span><br><code style="word-break:break-all">${esc(c.source_path || 'unavailable')}</code>` +
+      (presets ? `<span class="k">Preset:</span>${presets}` : '') +
+      (c.report_url ? `<br><a href="${esc(c.report_url)}" target="_blank" rel="noopener">Open MT5 tester report</a>` : '') +
+      (!c.available ? '<br><span class="warn">Recorded path; compiled file is not currently present there.</span>' : '') +
+      `</div>`;
+  }).join('');
+  return html + '</td>';
+}
+function updateExportProgress(id, progress) {
+  EXPORT_PROGRESS = progress;
+  document.querySelectorAll('[data-ea-export-progress]').forEach((element) => {
+    if (element.dataset.eaExportProgress === id) element.outerHTML = exportProgressMarkup(progress);
+  });
+}
+function resumeExportProgress() {
+  const active = RUNS.find((run) => run.export_state && run.export_state.busy);
+  if (!active || (EXPORT_BUSY && EXPORT_PROGRESS && EXPORT_PROGRESS.id === active.id)) return;
+  const state = active.export_state;
+  EXPORT_BUSY = true;
+  EXPORT_PROGRESS = { ...state, id: active.id };
+  $('#btnExport').disabled = true;
+  clearInterval(EXPORT_TIMER);
+  EXPORT_TIMER = setInterval(() => pollExport(active.id, { candidate: state.candidate }), 1800);
+  pollExport(active.id, { candidate: state.candidate });
 }
 function mtWrCell(s) {
   const run = saveRun(s);
@@ -859,24 +1360,61 @@ function mtWrCell(s) {
     `Max drawdown: ${dd ? money(-Number(dd)) : '–'}, Break-even win rate: <b class="${run.be_wr != null && run.wr - run.be_wr < 10 ? 'bad' : ''}">${run.be_wr ?? '–'}%</b></td>`;
 }
 async function loadSaved() {
-  SAVEDS = await api('/api/saved'); RUNS = await api('/api/runs').catch(() => RUNS);
+  SAVEDS = await api('/api/saved');
+  renderSaved();
+}
+function renderSaved() {
   const dsName = { year: 'Blueberry 2026 (ticks)', tv: "TradingView's candles", m15: 'Blueberry 2023 → now' };
-  $('#panelSaved').innerHTML = SAVEDS.length ? table(['Saved', 'Candles', 'Trades', 'Win rate', 'MT5 Winrate', 'Net', 'PF', 'Changes from v1.27', ''],
+  $('#panelSaved').innerHTML = SAVEDS.length ? table(['Saved', 'Candles', 'Trades', 'Win rate', 'MT5 Winrate', 'Net', 'PF', 'Changes from v1.27', 'Compiled MT5 EA / final tester result', ''],
     SAVEDS.map((s, i) => { const r = s.result || {};
-      return `<tr><td>${esc(s.name)}</td><td>${esc(dsName[s.ds] || s.ds || '')}</td><td>${r.n ?? ''}</td><td>${r.wr != null ? r.wr + '%' : ''}</td>${mtWrCell(s)}<td class="${cls(r.net || 0)}">${r.net != null ? money(r.net) : ''}</td><td>${r.pf ?? ''}</td>` +
+      const exportRun = candidateRun(s);
+      const progressRun = EXPORT_PROGRESS && matchingSaveRuns(s).find((run) => run.id === EXPORT_PROGRESS.id);
+      const eaButton = exportRun && exportRun.has_candidate
+        ? `<button data-download-ea="${esc(exportRun.id)}" title="Download the tested source and compiled EA; open its MT5 folder">Download MT5 Compiled EA</button>`
+        : '<button disabled title="Export and test this setting with the top-menu Export to MT5 button first">Download MT5 Compiled EA</button>';
+      return `<tr><td>${esc(s.name)}${typeof rsBadge === 'function' ? rsBadge(s) : ''}</td><td>${esc(dsName[s.ds] || s.ds || '')}</td><td>${r.n ?? ''}</td><td>${r.wr != null ? r.wr + '%' : ''}</td>${mtWrCell(s)}<td class="${cls(r.net || 0)}">${r.net != null ? money(r.net) : ''}</td><td>${r.pf ?? ''}</td>` +
         `<td style="text-align:left;white-space:normal" class="k">${Object.entries(s.changed || {}).map(([k, v]) => `${esc(k.replace(/^Inp/, ''))}=${esc(v)}`).join(' ') || 'none (v1.27)'}${s.lab_describe ? `<br><span style="color:#ffb74d">⚗️ Exit Lab exit: ${esc(s.lab_describe)}</span>` : ''}</td>` +
+        candidateCell(s, exportRun, progressRun ? EXPORT_PROGRESS : null) +
         `<td><button data-load="${i}">Load</button> <button data-del="${i}">Delete</button> ` +
         (primName() === s.name ? `<button data-unprim="1" class="dexbtn sm" title="loads on every startup - click to stop">⭐ Primary (default on startup)</button>`
-          : `<button data-prim="${i}">Make Primary: Set as Default on Startup</button>`) + ` <button data-watch="${i}">Watch MT5 result</button></td></tr>`; }))
+          : `<button data-prim="${i}">Make Primary: Set as Default on Startup</button>`) + ` <button data-watch="${i}">Watch MT5 result</button> ${eaButton} <button data-deploy-ea="${esc(s.name)}" class="dexbtn sm" title="compile this setting into an EA and copy it to the server set on the Deploy tab" ${typeof DEP !== 'undefined' && DEP.st && DEP.st.running ? 'disabled' : ''}>🚀 Deploy EA to Server</button>${typeof depStatusLine === 'function' ? depStatusLine(s.name) : ''}</td></tr>`; }))
     : '<p class="note">Nothing saved yet - press "💾 Save settings".</p>';
 }
+
+async function downloadCandidateEA(id) {
+  const response = await fetch('/api/export_package?id=' + encodeURIComponent(id));
+  if (!response.ok) {
+    let message = 'Could not download the compiled EA.';
+    try { const body = await response.json(); message = body.error || message; } catch (e) { /* keep the explicit default error */ }
+    throw new Error(message);
+  }
+  const blob = await response.blob(), url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `Saad_strategy_15min_TurtleTV_${id}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  return response.headers.get('X-EA-Location');
+}
+
 $('#btnSave').onclick = async () => {
   const r = await api('/api/save', { inputs: CUR, ds: SRC.ds, mode: SRC.mode, result: TT ? TT.year : null });
   await loadSaved(); toast(`Saved as <b>${esc(r.name)}</b> (bottom of the page).`);
 };
 document.addEventListener('click', async (e) => {
   const d = e.target.dataset || {};
+  if (d.downloadEa != null) {
+    try {
+      const location = await downloadCandidateEA(d.downloadEa);
+      toast(`Downloading the <b>source + compiled EA</b>. Explorer opened at <code>${esc(location || 'the MT5 Experts folder')}</code>.`, 14000);
+    } catch (error) {
+      toast('⚠ ' + esc(error.message || error), 14000);
+    }
+  }
   if (d.load != null) {
+    settingsTouched = true;
     const s = SAVEDS[+d.load]; await applySave(s); scheduleSim(0);
     toast(`Loaded <b>${esc(s.name)}</b>.` + (s.lab_describe ? ` Its Exit Lab exit is back on the bench: ${esc(s.lab_describe)}.` : ''));
   }
@@ -886,7 +1424,7 @@ document.addEventListener('click', async (e) => {
     await loadRuns();
     const run = saveRun(s);
     if (run) { MT = null; await pickMt5(run.id); document.querySelector('#panelMT').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      toast(`MT5 result for <b>${esc(s.name)}</b>: ${money(run.net || 0)} · PF ${run.pf} · ${run.trades} trades (${esc(run.created || '')}).` + (runMatches(run) ? '' : ' Its settings differ from the chart - Load the save to compare them side by side.')); }
+      toast(`MT5 result for <b>${esc(s.name)}</b>: ${money(run.net || 0)} · PF ${run.pf} · ${run.trades} trades (${esc(run.created || '')}).` + (runMatches(run) ? '' : ' Its settings or timeframe differ from the chart - Load the save to compare them side by side.')); }
     else if (confirm(`MT5 has not run "${s.name}" yet. Load it and run it in MT5 now (about a minute)?`)) { await applySave(s); scheduleSim(0); $('#btnCheck').click(); }
   }
   if (d.prim != null) { const s = SAVEDS[+d.prim]; await setPrim(s.name); loadSaved();
@@ -896,19 +1434,132 @@ document.addEventListener('click', async (e) => {
 });
 
 // ---------- buttons ----------
-$('#btnCheck').onclick = async () => {
-  const r = await api('/api/run', { sets: CUR, delay: 'none', period: SRC.ds === 'm5x' ? 'M5' : SRC.ds === 'year1' || SRC.ds === 'm1x' ? 'M1' : 'M15', label: Object.keys(diffDfl(CUR)).length ? '' : 'v1.27 defaults (no delay)' });
-  if (r.error) return toast('⚠ ' + esc(r.error));
-  MTWAIT = { prev: MT && MT.run.id, t0: Date.now() }; renderPanel('mt');
-  toast('The settings on screen are running in the MT5 Strategy Tester (real ticks, no delay). The MT5 section updates when it is done, in about a minute.');
-};
+async function requestMt5Check(inputs, period) {
+  const r = await api('/api/run', { sets: inputs, delay: 'none', period,
+    label: Object.keys(diffDfl(inputs)).length ? '' : 'EA defaults (no delay)' });
+  if (r.error) {
+    toast('⚠ ' + esc(r.error));
+    return null;
+  }
+  MTWAIT = { prev: MT && MT.run.id, id: r.id, t0: Date.now() }; renderPanel('mt');
+  toast('The settings are running in the MT5 Strategy Tester on real ticks.');
+  return r.id;
+}
+
+$('#btnCheck').onclick = async () => { await requestMt5Check(CUR, mt5Period()); };
 $('#btnExport').onclick = async () => {
-  if (!MT || !MT.matches) return toast('First "Check in MT5": Export writes the settings together with their MT5 result.');
-  const r = await api('/api/export', { id: MT.run.id });
-  if (r.error) return toast('⚠ ' + esc(r.error));
-  const terms = r.written.filter((w) => /MQL5/.test(w)).length;
-  toast(`<b>Exported.</b> <code>${esc(r.json)}</code> (settings + MT5 result) and the preset <code>${esc(r.preset)}</code> in ${terms} MT5 terminal${terms === 1 ? '' : 's'} (EA inputs → Load).` +
-    (r.run ? (r.existing ? ' A random-delay result already exists.' : ' A random-delay MT5 run started.') : ''), 14000);
+  if (EXPORT_BUSY) return;
+  if (!MT || !MT.matches) {
+    const snapshot = JSON.parse(JSON.stringify(CUR));
+    const period = mt5Period();
+    EXPORT_PENDING = { id: null, inputs: snapshot, period };
+    try {
+      const started = await requestMt5Check(snapshot, period);
+      if (!started) { EXPORT_PENDING = null; return; }
+      EXPORT_PENDING.id = started;
+      $('#btnExport').disabled = true;
+      return toast('No matching completed MT5 run was selected. Running these settings first; the compiled EA export will continue automatically when that test finishes.', 30000);
+    } catch (error) {
+      EXPORT_PENDING = null;
+      $('#btnExport').disabled = false;
+      toast('⚠ Could not start the required MT5 test: ' + esc(error.message || error), 14000);
+      return;
+    }
+  }
+  await startExport(MT.run.id);
+};
+
+async function finishExportAfterTest() {
+  const pending = EXPORT_PENDING;
+  EXPORT_PENDING = null;
+  if (JSON.stringify(CUR) !== JSON.stringify(pending.inputs) || mt5Period() !== pending.period || !MT || !MT.matches) {
+    $('#btnExport').disabled = false;
+    toast('Export stopped: chart settings or timeframe changed while MT5 was testing. Check the current settings again before exporting.', 14000);
+    return;
+  }
+  await startExport(MT.run.id);
+}
+
+async function startExport(id) {
+  if (EXPORT_BUSY) return;
+  EXPORT_BUSY = true;
+  $('#btnExport').disabled = true;
+  EXPORT_PROGRESS = { id, busy: true, phase: 'preparing the complete production EA settings', seconds: 0 };
+  renderSaved();
+  try {
+    const r = await api('/api/export', { id });
+    if (r.error) throw new Error(r.error);
+    updateExportProgress(id, { id, candidate: r.candidate, busy: true, phase: 'preparing the complete production EA settings', seconds: 0 });
+    toast(`<b>EA export started.</b> <code>${esc(r.candidate)}.mq5</code> is being generated, compiled, and tested in MT5 Strategy Tester before it is copied to MT5.`, 30000);
+    clearInterval(EXPORT_TIMER);
+    EXPORT_TIMER = setInterval(() => pollExport(id, r), 1800);
+    await pollExport(id, r);
+  } catch (error) {
+    EXPORT_BUSY = false;
+    $('#btnExport').disabled = false;
+    updateExportProgress(id, { id, phase: 'failed', error: error.message || String(error) });
+    toast('⚠ EA export failed: ' + esc(error.message || error), 14000);
+  }
+};
+
+async function pollExport(id, started) {
+  if (!EXPORT_BUSY) return;
+  try {
+    const state = await api('/api/export_status?id=' + encodeURIComponent(id));
+    if (state.error && !state.phase) throw new Error(state.error);
+    if (state.busy) {
+      updateExportProgress(id, { ...state, id });
+      toast(`<b>EA export · ${esc(state.phase || 'working')}</b><br>${esc(started.candidate)} · ${Math.round(state.seconds || 0)} sec`, 30000);
+      return;
+    }
+    clearInterval(EXPORT_TIMER);
+    EXPORT_BUSY = false;
+    $('#btnExport').disabled = false;
+    if (state.error) {
+      updateExportProgress(id, { ...state, id, phase: 'failed' });
+      throw new Error(state.error);
+    }
+    EXPORT_PROGRESS = null;
+    const result = state.result, metrics = result.tester || {};
+    let refreshWarning = '';
+    try { await loadRuns(); await loadSaved(); }
+    catch (error) { refreshWarning = `<br><span class="warn">Saved-settings list could not refresh: ${esc(error.message || error)}</span>`; }
+    const terminals = result.installed.map((path) => `<code>${esc(path)}</code>`).join('<br>');
+    const warnings = result.install_errors.length ? `<br><span class="warn">Some terminals could not be updated: ${esc(result.install_errors.join('; '))}</span>` : '';
+    const random = result.random_run ? (result.random_existing
+      ? '<br>A random-delay MT5 run already exists for these settings.'
+      : `<br>Random-delay run ${esc(result.random_run)} started.`) : '';
+    toast(`<b>EA ready to attach.</b> <code>${esc(result.candidate)}.ex5</code> compiled and tested in MT5 Strategy Tester.<br>
+      Candidate result: ${money(metrics.net || 0)} · PF ${esc(metrics.pf ?? '–')} · ${esc(metrics.trades ?? '–')} trades · ${esc(metrics.quality || 'MT5 report saved')}.<br>
+      Installed in:<br>${terminals}${warnings}${random}${refreshWarning}<br><a href="${esc(result.report)}">Download candidate Strategy Tester report</a><br>
+      Source: <code>${esc(started.json)}</code> · original preset: <code>${esc(started.preset)}</code>`, 30000);
+  } catch (error) {
+    clearInterval(EXPORT_TIMER);
+    EXPORT_BUSY = false;
+    $('#btnExport').disabled = false;
+    updateExportProgress(id, { id, phase: 'failed', error: error.message || String(error) });
+    toast('⚠ EA export failed: ' + esc(error.message || error), 14000);
+  }
+}
+$('#btnReport').onclick = async () => {
+  if (!MT || !MT.matches) return toast('First select settings with a completed MT5 Strategy Tester run.');
+  try {
+    const response = await fetch('/api/mt5_report?id=' + encodeURIComponent(MT.run.id));
+    if (!response.ok) {
+      const error = await response.json();
+      return toast('⚠ ' + esc(error.error || 'Could not download the MT5 report.'));
+    }
+    const url = URL.createObjectURL(await response.blob());
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `MT5_Strategy_Tester_${MT.run.id}.htm`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  } catch (error) {
+    toast('⚠ Could not download the MT5 report: ' + esc(error.message || error));
+  }
 };
 $('#runSel').onchange = (e) => pickMt5(e.target.value);
 $('#btnDel').onclick = async () => {
@@ -930,11 +1581,24 @@ $('#jump').onkeydown = (e) => {
 document.querySelectorAll('nav[data-sec]').forEach((nav) => (nav.onclick = async (e) => {
   const t = e.target.dataset.t, sec = nav.dataset.sec;
   if (!t) return;
+  const previous = TAB[sec];
+  if (sec === 'tt' && t === 'tp' && previous !== t && typeof TPVIEW !== 'undefined') TPVIEW.selected = null;
   TAB[sec] = t;
   if (sec === 'tt' && t === 'opt') OPTS = await api('/api/opt');
+  if (sec === 'tt' && t === 'risk') {
+    try {
+      const [ref, state] = await Promise.all([RISK_REF ? Promise.resolve(RISK_REF) : api('/api/risk_reference'), api('/api/risk_opt')]);
+      if (ref.error) throw new Error(ref.error);
+      if (state.error) throw new Error(state.error);
+      RISK_REF = ref; RISK_OPTS = state;
+      if (state.groups && state.groups.length) RISK_GROUPS = state.groups;
+      if (state.risk_inputs) RISK_SCAN_INPUTS = { ...state.risk_inputs };
+    } catch (error) { toast('⚠ Risk Manager: ' + esc(error.message || error)); }
+  }
   renderPanel(sec);
   if (sec === 'tt' && t === 'lab') labOpen();
   if (sec === 'tt' && t === 'ml') mlOpen();
+  if (sec === 'tt' && t === 'research') resOpen();
   if (sec === 'tt' && t === 'mission') misOpen();
 }));
 document.addEventListener('click', async (e) => {
@@ -948,8 +1612,62 @@ document.addEventListener('click', async (e) => {
     chart.timeScale().setVisibleLogicalRange({ from: barIdx(Date.UTC(y, m - 1, 1) / 1000 - TZ), to: barIdx(Date.UTC(y, m, 1) / 1000 - TZ) });
   }
   if (e.target.id === 'oGo') {
-    await api('/api/optimize', { start: CUR, objective: $('#oObj').value, boxes: $('#oBox').checked, keep: $('#oKeep').checked, ds: SRC.ds === 'tv' ? 'year' : SRC.ds });
+    const started = await api('/api/optimize', { start: CUR, objective: $('#oObj').value, boxes: $('#oBox').checked, keep: $('#oKeep').checked, ds: SRC.ds === 'tv' ? 'year' : SRC.ds });
+    if (started.error) { toast('⚠ ' + esc(started.error)); return; }
     OPTS = await api('/api/opt'); renderPanel('tt');
+  }
+  if (e.target.id === 'riskScan') {
+    const groups = [...document.querySelectorAll('.riskGroup:checked')].map((x) => x.value);
+    RISK_GROUPS = groups;
+    RISK_SCAN_INPUTS = { ...CUR };
+    const r = await api('/api/risk_scan', { inputs: CUR, groups, ds: SRC.ds === 'tv' ? 'year' : SRC.ds });
+    if (r.error) { RISK_SCAN_INPUTS = null; toast('⚠ ' + esc(r.error)); return; }
+    RISK_GROUPS = r.groups || groups;
+    RISK_OPTS = await api('/api/risk_opt');
+    if (RISK_OPTS.groups && RISK_OPTS.groups.length) RISK_GROUPS = RISK_OPTS.groups;
+    renderPanel('tt');
+  }
+  if (e.target.id === 'riskStop') {
+    await api('/api/risk_stop', {}); RISK_OPTS = await api('/api/risk_opt'); renderPanel('tt');
+  }
+  if (e.target.dataset.riskLoad) {
+    if (!RISK_REF) return toast('⚠ The reference MT5 settings have not loaded yet.');
+    CUR = { ...DFL, ...RISK_REF.inputs }; ACTIVE_LAB = null; settingsTouched = true; markForm();
+    $('#srcDs').value = RISK_REF.period === 'M15' ? 'm15' : RISK_REF.period === 'M5' ? 'm5x' : 'year1';
+    await setSource(); renderPanel('tt');
+    toast(`Loaded the exact inputs from MT5 run ${esc(RISK_REF.id)} into the chart. This does not change saved settings or the EA.`);
+  }
+  if (e.target.dataset.riskBest && RISK_OPTS && RISK_OPTS.best) {
+    if (!riskScanMatchesChart()) return toast('⚠ These suggestions are stale because the chart settings changed. Scan again first.');
+    CUR = { ...DFL, ...RISK_OPTS.best.inputs }; ACTIVE_LAB = null; settingsTouched = true; markForm(); scheduleSim(0);
+    toast('Applied the risk scan candidate to the chart only. Verify it in MT5 before saving or exporting.');
+    if (RISK_AUTO) {
+      const groups = RISK_GROUPS.length ? RISK_GROUPS : (RISK_OPTS.groups || []);
+      RISK_SCAN_INPUTS = { ...CUR };
+      const scan = await api('/api/risk_scan', { inputs: CUR, groups, ds: SRC.ds === 'tv' ? 'year' : SRC.ds });
+      if (scan.error) { RISK_SCAN_INPUTS = null; toast('⚠ Could not rescan after the pick: ' + esc(scan.error)); return; }
+      RISK_GROUPS = scan.groups || groups;
+      RISK_OPTS = await api('/api/risk_opt');
+      renderPanel('tt');
+    }
+  }
+  if (e.target.dataset.riskStep != null && RISK_OPTS && RISK_OPTS.log) {
+    if (!riskScanMatchesChart()) return toast('⚠ These suggestions are stale because the chart settings changed. Scan again first.');
+    const step = RISK_OPTS.log[+e.target.dataset.riskStep];
+    if (step && step.inputs) { CUR = { ...DFL, ...step.inputs }; ACTIVE_LAB = null; settingsTouched = true; markForm(); scheduleSim(0);
+      toast('Applied this risk-scan suggestion to the chart only. Verify it in MT5 before saving or exporting.');
+      if (RISK_AUTO) {
+        const groups = RISK_GROUPS.length ? RISK_GROUPS : (RISK_OPTS.groups || []);
+        RISK_SCAN_INPUTS = { ...CUR };
+        const scan = await api('/api/risk_scan', { inputs: CUR, groups, ds: SRC.ds === 'tv' ? 'year' : SRC.ds });
+        if (scan.error) { RISK_SCAN_INPUTS = null; toast('⚠ Could not rescan after the pick: ' + esc(scan.error)); return; }
+        RISK_GROUPS = scan.groups || groups;
+        RISK_OPTS = await api('/api/risk_opt');
+        renderPanel('tt');
+      } else {
+        renderPanel('tt');
+      }
+    }
   }
   const bs = e.target.dataset && e.target.dataset.bands;
   if (bs === 'OFF') { CUR.InpBandsB = '1'.repeat(21); CUR.InpBandsS = '1'.repeat(21); markForm(); scheduleSim(0); }
@@ -977,33 +1695,68 @@ document.addEventListener('click', async (e) => {
 (async function init() {
   makeChart();
   renderAll();
-  setStatus('loading the year…', 'busy');
-  SRC.ds = 'm15'; SRC.mode = 'ea';                    // start where Zee tunes: TradingView's candles, TradingView's way (= its panel)
+  setStatus('loading settings…', 'busy');
+  SRC.ds = $('#srcDs').value; SRC.mode = $('#srcMode').value;
+  $('#srcDs').disabled = true;
   $('#srcDs').value = SRC.ds; $('#srcMode').value = SRC.mode;
-  const [bars, inputs] = await Promise.all([getBars(SRC.ds), api('/api/inputs')]);
-  BARS = bars; INPUTS = inputs;
-  for (const i of INPUTS.inputs) DFL[i.name] = i.default;
-  await loadRuns();
   const h = new URLSearchParams(location.hash.slice(1));
+  const [inputs, saved, primary] = await Promise.all([
+    api('/api/inputs'), api('/api/saved'), api('/api/primary').catch(() => ({})),
+  ]);
+  INPUTS = inputs;
+  for (const i of INPUTS.inputs) DFL[i.name] = i.default;
   CUR = { ...DFL };
-  drawBars(); buildForm();
-  try {                                                        // TradingView open? start from its settings, like the chart
-    const tv = await Promise.race([api('/api/tv'), new Promise((_, rej) => setTimeout(() => rej(new Error('slow')), 15000))]);
-    if (tv && tv.sets) { CUR = { ...DFL, ...tv.sets }; tvKey = JSON.stringify(tv.sets); $('#tvDot').className = 'dot ok'; $('#tvDot').title = `TradingView ${tv.symbol} · read at ${tv.at}`; markForm(); }
-  } catch (e) { /* TradingView not open: v1.27's defaults */ }
-  PRIM = (await api('/api/primary').catch(() => ({}))).name || null;
+  SAVEDS = Array.isArray(saved) ? saved : [];
+  PRIM = primary.name || null;
+  buildForm();
   const pn = PRIM;                                       // a primary save wins over TradingView and the defaults
   if (pn) {
-    const s = (await api('/api/saved').catch(() => [])).find((x) => x.name === pn);
-    if (s) { await applySave(s); setTimeout(() => toast(`⭐ Started from your primary settings <b>${esc(pn)}</b>.`), 500); }
+    const s = SAVEDS.find((x) => x.name === pn);
+    if (s) {
+      CUR = { ...DFL, ...s.inputs };
+      if (s.lab && Object.keys(s.lab).length) CUR = { ...CUR, ...labToX(s.lab) };
+      markForm(); setTimeout(() => toast(`⭐ Started from your primary settings <b>${esc(pn)}</b>.`), 500);
+    }
     else await setPrim(null);
   }
-  await runSim();
+  renderSaved();
   if (h.get('tab')) { TAB.tt = h.get('tab'); renderPanel('tt'); }
   if (h.get('mt')) { TAB.mt = h.get('mt'); renderPanel('mt'); }
-  if (h.get('trade')) { const t = TT.TR.find((x) => x.num === +h.get('trade')); if (t) focusTrade(t); }
   if (h.get('ask') === '1') document.body.classList.add('ask-open');
-  setStatus('');
-  loadSaved();
   poll();
+
+  (async () => {
+    try {
+      const tv = await Promise.race([api('/api/tv'), new Promise((_, rej) => setTimeout(() => rej(new Error('slow')), 15000))]);
+      if (!PRIM && !settingsTouched && tv && tv.sets) {
+        CUR = { ...DFL, ...tv.sets }; tvKey = JSON.stringify(tv.sets);
+        $('#tvDot').className = 'dot ok'; $('#tvDot').title = `TradingView ${tv.symbol} · read at ${tv.at}`; markForm();
+        scheduleSim(0);
+      }
+    } catch (e) { /* TradingView not open: use the defaults or primary save */ }
+  })();
+
+  setStatus('loading the candles…', 'busy');
+  const simTask = runSim();
+  let bars;
+  try {
+    bars = await getBars(SRC.ds);
+  } catch (e) {
+    $('#srcDs').disabled = false;
+    setStatus('chart data failed to load: ' + (e.message || e), 'err');
+    toast('⚠ Chart data failed to load: ' + esc(e.message || e));
+    return;
+  }
+  BARS = bars; drawBars();
+  $('#srcDs').disabled = false;
+  await simTask;
+  if (TT && firstView) {
+    drawEmas(); redraw();
+    const n = BARS.t.length;
+    chart.timeScale().setVisibleLogicalRange({ from: n - 1500, to: n + 5 }); firstView = false;
+    legend(n - 1);
+  }
+  if (h.get('trade')) { const t = TT.TR.find((x) => x.num === +h.get('trade')); if (t) focusTrade(t); }
+  setStatus('');
+  loadRuns().then(async () => { await pickMt5(); });
 })();

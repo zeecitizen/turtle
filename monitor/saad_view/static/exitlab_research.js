@@ -2,16 +2,41 @@
 // the profit if we drag diff things like drag the ATR slider, or choose an R:R ... i want it to be a claude intelligence ai based lab".
 'use strict';
 const RS = { sets: {}, reports: null, job: null, q: 'Why do my winners give back so much of their best move? Find the mechanism and design a better exit.' };
-const SLIDERS = [
-  { id: 'sl', label: 'Stop (x ATR)', min: 1, max: 30, step: 0.1, get: () => +(RS.sets.InpSlAtrMult || CUR.InpSlAtrMult), set: (v) => { RS.sets.InpSlAtrMult = String(v); }, ea: true },
-  { id: 'tg', label: 'Target R:R (0 = the EA’s EMA target)', min: 0, max: 30, step: 0.25, get: () => (+LABS.form.tgt === 2 ? +LABS.form.tgt_k : 0),
-    set: (v) => { if (v > 0) { LABS.form.tgt = 2; LABS.form.tgt_k = v; } else if (+LABS.form.tgt === 2) LABS.form.tgt = 0; } },
-  { id: 'tr', label: 'Trail (x ATR behind the best, 0 = off)', min: 0, max: 30, step: 0.25, get: () => (+LABS.form.tr === 2 ? +LABS.form.tr_k : 0),
-    set: (v) => { if (v > 0) { LABS.form.tr = 2; LABS.form.tr_k = v; } else if (+LABS.form.tr === 2) LABS.form.tr = 0; } },
-  { id: 'ta', label: 'Trail starts at +R', min: 0, max: 30, step: 0.25, get: () => +LABS.form.tr_act, set: (v) => { LABS.form.tr_act = v; } },
-  { id: 'be', label: 'Breakeven at +R (0 = off)', min: 0, max: 30, step: 0.25, get: () => +LABS.form.be_r, set: (v) => { LABS.form.be_r = v; } },
-  { id: 'p1', label: 'Half off at +R (0 = off)', min: 0, max: 30, step: 0.25, get: () => +LABS.form.p1_r, set: (v) => { LABS.form.p1_r = v; LABS.form.p1_frac = 0.5; } },
-];
+// the bench's levers follow the strategy on screen (Zee 2026-10-26: "sliders that modify what's relevant to the current strategy"):
+// its own stop type, its fixed take-profit, its target type and its trail type - and a lever beyond the fixed take-profit says so
+function eaNow() { return { ...CUR, ...RS.sets }; }
+function eaSet(k) { return (v) => { RS.sets[k] = String(v); }; }
+function benchSliders() {
+  const ea = eaNow(), f = LABS.form, L = [];
+  const slm = String(ea.InpSlMode);
+  if (slm === '2') L.push({ id: 'slu', label: 'Stop ($ from the entry)', min: 1, max: 60, step: 0.5, get: () => +ea.InpSlUsd, set: eaSet('InpSlUsd'), ea: true });
+  else if (slm === '1') L.push({ id: 'sla', label: 'Stop (x ATR from the entry)', min: 0.5, max: 10, step: 0.1, get: () => +ea.InpSlAtrMult, set: eaSet('InpSlAtrMult'), ea: true });
+  else L.push({ id: 'slp', label: 'Stop ($ beyond the setup candle)', min: 0, max: 60, step: 0.5, get: () => +ea.InpSlPips / 10, set: (v) => { RS.sets.InpSlPips = String(Math.round(v * 10)); }, ea: true });
+  L.push({ id: 'ftp', label: 'Fixed take-profit ($ from the entry, 0 = off)', min: 0, max: 60, step: 0.1, get: () => +ea.InpFixTpPips / 10, set: (v) => { RS.sets.InpFixTpPips = String(Math.round(v * 10)); }, ea: true });
+  const tg = +f.tgt;
+  if (tg === 4) L.push({ id: 'tgu', label: 'Target ($ from the entry)', min: 0.5, max: 100, step: 0.5, get: () => +f.tgt_k, set: (v) => { f.tgt_k = v; } });
+  else if (tg === 3) L.push({ id: 'tga', label: 'Target (x ATR)', min: 0.25, max: 20, step: 0.25, get: () => +f.tgt_k, set: (v) => { f.tgt_k = v; } });
+  else L.push({ id: 'tg', label: 'Target R:R (0 = the EA’s EMA target)', min: 0, max: 30, step: 0.25, get: () => (tg === 2 ? +f.tgt_k : 0),
+    set: (v) => { if (v > 0) { f.tgt = 2; f.tgt_k = v; } else if (+f.tgt === 2) f.tgt = 0; } });
+  const tr = +f.tr;
+  if (tr === 1) L.push({ id: 'tru', label: 'Trail ($ behind the best price)', min: 0.5, max: 60, step: 0.5, get: () => +f.tr_k, set: (v) => { f.tr_k = v; } });
+  else if (tr === 3) L.push({ id: 'trp', label: 'Trail (keep % of the best profit)', min: 10, max: 95, step: 1, get: () => +f.tr_k, set: (v) => { f.tr_k = v; } });
+  else if (tr === 4 || tr === 5) L.push({ id: 'tre', label: `Trail under the ${tr === 4 ? 'fast' : 'slow'} EMA ($ buffer)`, min: 0, max: 10, step: 0.1, get: () => +f.tr_buf, set: (v) => { f.tr_buf = v; } });
+  else L.push({ id: 'tr', label: 'Trail (x ATR behind the best, 0 = off)', min: 0, max: 30, step: 0.25, get: () => (tr === 2 ? +f.tr_k : 0),
+    set: (v) => { if (v > 0) { f.tr = 2; f.tr_k = v; } else if (+f.tr === 2) f.tr = 0; } });
+  L.push({ id: 'ta', label: 'Trail starts at +R', min: 0, max: 30, step: 0.25, get: () => +f.tr_act, set: (v) => { f.tr_act = v; } });
+  L.push({ id: 'be', label: 'Breakeven at +R (0 = off)', min: 0, max: 30, step: 0.25, get: () => +f.be_r, set: (v) => { f.be_r = v; } });
+  L.push({ id: 'p1', label: 'Half off at +R (0 = off)', min: 0, max: 30, step: 0.25, get: () => +f.p1_r, set: (v) => { f.p1_r = v; f.p1_frac = 0.5; } });
+  // a lever whose level lies beyond the fixed take-profit never acts
+  const fix = +ea.InpFixTpPips / 10, rUsd = slm === '2' ? +ea.InpSlUsd : 0;
+  for (const x of L) {
+    let usd = null;
+    if (x.id === 'tgu') usd = +f.tgt_k; else if (x.id === 'tg' && tg === 2) usd = +f.tgt_k * rUsd;
+    else if (['ta', 'be', 'p1'].includes(x.id) && x.get() > 0) usd = x.get() * rUsd;
+    x.dead = fix > 0 && rUsd > 0 && usd != null && usd > fix;
+  }
+  return L;
+}
 function spark(trades) {                                           // the equity curve of the tested exit
   if (!trades || !trades.length) return '';
   const t = trades.slice().sort((a, b) => a[4] - b[4]); let c = 0; const ys = t.map((x) => (c += x[6]));
@@ -21,13 +46,24 @@ function spark(trades) {                                           // the equity
     `<text x="10" y="16" class="lt chipt">EQUITY OF THIS EXIT · ${money(c)}</text></svg>`;
 }
 const T0describe = () => (LABS.test && LABS.test.describe) || 'lab exit';
-function gauges(T) {                                              // the result of the levers as lab dials: WR, PF, net, drawdown, trades, avg win / loss
-  const s = T.stats.all, b = T.base.all, dial = (lbl, val, now, base, good, fmt) => {
+function worstTrade(trades) {
+  if (!trades || !trades.length) return null;
+  const worst = trades.reduce((value, trade) => {
+    const pnl = Number(trade[6]);
+    return Number.isFinite(pnl) ? Math.min(value, pnl) : value;
+  }, Infinity);
+  return Number.isFinite(worst) ? worst : null;
+}
+function gauges(T) {                                              // the result of the levers as lab dials
+  const s = T.stats.all, b = T.base.all, worst = s.worst ?? worstTrade(T.trades) ?? 0, baseWorst = b.worst ?? (b.n ? null : 0);
+  const dial = (lbl, val, now, base, good, fmt) => {
+    if (base == null) return `<div class="gauge"><div class="acid"><b></b><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="gv">${val}</div><div class="gl">${lbl}</div></div>`;
     const d = now - base, up = good === 'up' ? d > 0 : d < 0, same = Math.abs(d) < 1e-9;
     return `<div class="gauge ${same ? '' : up ? 'g-up' : 'g-dn'}"><div class="acid"><b></b><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="gv">${val}</div><div class="gl">${lbl}</div><div class="gd">${same ? 'same as yours' : (d > 0 ? '▲ ' : '▼ ') + fmt(Math.abs(d))}</div></div>`; };
   return `<div class="gauges">` + dial('WIN RATE', s.wr + '%', s.wr, b.wr, 'up', (x) => x.toFixed(1) + ' pts') + dial('PROFIT FACTOR', s.pf, s.pf, b.pf, 'up', (x) => x.toFixed(2)) +
     dial('NET', money(T.stats.total), T.stats.total, T.base.total, 'up', (x) => '$' + Math.round(x).toLocaleString()) + dial('MAX DRAWDOWN', money(-s.dd), s.dd, b.dd, 'down', (x) => '$' + Math.round(x).toLocaleString()) +
-    dial('TRADES', s.n, s.n, b.n, 'up', (x) => String(Math.round(x))) + dial('AVG WIN / LOSS', `${money(s.avg_win)}<br>${money(s.avg_loss)}`, s.avg_win / Math.max(1, -s.avg_loss), b.avg_win / Math.max(1, -b.avg_loss), 'up', (x) => x.toFixed(2) + '× ratio') + '</div>';
+    dial('TRADES', s.n, s.n, b.n, 'up', (x) => String(Math.round(x))) + dial('AVG WIN / LOSS', `${money(s.avg_win)}<br>${money(s.avg_loss)}`, s.avg_win / Math.max(1, -s.avg_loss), b.avg_win / Math.max(1, -b.avg_loss), 'up', (x) => x.toFixed(2) + '× ratio') +
+    dial('WORST LOSS', money(worst), worst, baseWorst, 'up', (x) => '$' + Math.round(x).toLocaleString()) + '</div>';
 }
 // ---- the loss cutter (Zee 2026-10-21: "suggestions which -> help cut down the lossy trades to a minimum -> ... keeps the winrate while reducing:
 // Loss per trade / Break-even win rate / Avg loss, Worst loss"). The scan's numbers carry the loss side of every move (scan.py L / Lh); the
@@ -69,10 +105,10 @@ function lossCuts(W) {
   }
   return { list: kept, over };
 }
-function lossTips(W, busy) {
+function lossBench(W) {
+  if (!W || W.focus !== 'loss' || !W.autopsy) return '';
   const now = W.now, L0 = now.L, d = +RS.lossDrop;
   let h = '';
-  if (W.focus !== 'loss' || !W.autopsy) return h + `<p class="note">✂️ The loss cutter reads every trade on the bench first: press <b>✂️ SCAN FOR LOSS CUTS</b>.</p>`;
   if (!L0 || L0.margin == null) return h + '<p class="note">No trades on the bench to read.</p>';
   const ev0 = lcReal(L0, d), pc = (v) => `${v > 0 ? '−' : '+'}${Math.abs(Math.round(100 * v))}%`;
   h += `<div class="crt" style="margin:8px 0"><div class="crth">✂️ THE LOSS CUTTER · YOUR BENCH NOW (${now.n} trades)</div>
@@ -88,6 +124,14 @@ function lossTips(W, busy) {
     table(['Where', 'Trades', 'Win rate', 'Net', 'Avg loss', 'Margin (rest)'], bad.slice(0, 10).map((c) => `<tr><td style="text-align:left">${esc(c.label)} <span class="k">${esc(c.dim)}</span></td><td>${c.n}</td><td>${c.wr}%</td>` +
       `<td class="${cls(c.net)}">${money(c.net)}</td><td>${money(c.avg_loss)}</td><td>${c.margin ?? '–'} <span class="k">(${c.rest_margin ?? '–'})</span></td></tr>`));
   h += '</details>';
+  return h;
+}
+function lossTips(W, busy) {
+  let h = '';
+  if (!W || W.focus !== 'loss' || !W.autopsy) return h + `<p class="note">✂️ The loss cutter reads every trade on the bench first: press <b>✂️ SCAN FOR LOSS CUTS</b>.</p>`;
+  const now = W.now, L0 = now.L, d = +RS.lossDrop;
+  if (!L0 || L0.margin == null) return h + '<p class="note">No trades on the bench to read.</p>';
+  const ev0 = lcReal(L0, d), pc = (v) => `${v > 0 ? '−' : '+'}${Math.abs(Math.round(100 * v))}%`;
   const sel = (id, v, opts, fmt) => `<select id="${id}">${opts.map((o) => `<option value="${o}" ${+o === +v ? 'selected' : ''}>${fmt(o)}</option>`).join('')}</select>`;
   h += `<div class="bar lossctl">keep the win rate within ${sel('lcTol', RS.lossTol, [0.5, 1, 1.5, 2, 3, 5, 10], (o) => o + ' pts')} · keep at least
     ${sel('lcKeep', RS.lossKeep, [50, 70, 85, 95], (o) => o + '%')} of the trades · real trading costs ${sel('lcDrop', RS.lossDrop, [0, 5, 10, 13, 16], (o) => o + ' pts')} of win rate</div>`;
@@ -111,7 +155,7 @@ function lossTips(W, busy) {
     const costs = [[L.wr - L0.wr, `${(L.wr - L0.wr).toFixed(1).replace('-', '−')} pts win rate`], [(r.net - now.net) / Math.max(1, Math.abs(now.net)), `${money(r.net - now.net)} net`],
       [(r.n - now.n) / now.n, `${String(r.n - now.n).replace('-', '−')} trades`]].filter((x) => x[0] < -1e-9).sort((a, b) => a[0] - b[0]);
     const ev = lcReal(L, d);
-    return `<div class="sugrow ${anim ? 'anim' : ''} ${busy ? 'old' : ''}" style="--hue:${hue};animation-delay:${Math.min(i, 20) * 70}ms"><span class="sugrank">#${i + 1}</span>` +
+    return `<div class="sugrow ${anim ? 'anim' : ''} ${busy && !W.partial ? 'old' : ''}" style="--hue:${hue};animation-delay:${Math.min(i, 20) * 70}ms"><span class="sugrank">#${i + 1}</span>` +
       `<button class="labsug" data-mv="${W.moves.indexOf(m)}">${icon[m.group] || '•'} <b>${esc(m.label)}</b> ${esc(m.from)} → <b>${esc(m.to)}</b>${m.alts && m.alts.length ? ` <span class="k">(the same with ${esc(m.alts.join(', '))})</span>` : ''}${warn}${m.lboth ? ' <span class="tag ea">✓ both halves</span>' : ''}<br>` +
       `<span class="k">avg loss ${chg(c.avg, c.avg > 0, money(L.avg_loss) + ' (' + pc(c.avg) + ')')} · worst 5% ${chg(c.tail, c.tail > 0, money(L.tail))} · worst ${chg(c.worst, c.worst > 0, money(L.worst))} · ` +
       `losses/trade ${chg(c.lpt, c.lpt > 0, usd(L.lpt))} · break-even ${chg(L.be - L0.be, L.be < L0.be, L.be + '%')} · margin ${chg(m.dm, m.dm > 0, L.margin + ' pts (' + (m.dm >= 0 ? '+' : '') + m.dm.toFixed(2) + ')')}<br>` +
@@ -136,12 +180,47 @@ function lossLine(r, now) {                                       // the plain s
   return `<br><span class="k">win/loss ratio ${c(q - q0, q > q0, q.toFixed(2) + '×')} · avg win ${c(L.avg_win - L0.avg_win, L.avg_win > L0.avg_win, money(L.avg_win))} · avg loss ${c(L.avg_loss - L0.avg_loss, L.avg_loss > L0.avg_loss, money(L.avg_loss))}` +
     ` · break-even ${c(L.be - L0.be, L.be < L0.be, L.be + '%')} · margin ${c(L.margin - L0.margin, L.margin > L0.margin, L.margin + ' pts (' + (L.margin >= L0.margin ? '+' : '') + (L.margin - L0.margin).toFixed(2) + ')')}</span>`;
 }
-function lcScan() { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: RS.loss ? 'the loss autopsy' : 'warming up the beakers', progress: 0, total: 0, seconds: 0 };
-  renderPanel('tt'); labStart('sweep', { lab: labForm(), sets: RS.sets, focus: RS.loss ? 'loss' : undefined }); }
+function scanSuggestions(W) {
+  if (!W || !W.moves || !W.now) return [];
+  if (RS.loss) return lossCuts(W).list;
+  const now = W.now, rel = (a, b) => (a - b) / Math.max(1e-9, Math.abs(b));
+  const tot = Math.max(1, Math.abs(now.net)), sug = [];
+  for (const m of W.moves) {
+    const r = m.r;
+    if (!r || r.stuck || r.n < 20) continue;
+    const dMoney = Math.min(r.train - now.train, r.test - now.test);
+    const g = { net: dMoney / tot, wr: (r.wr - now.wr) / Math.max(1, now.wr), pf: (r.pf - now.pf) / Math.max(0.01, now.pf) };
+    if (!(dMoney > 500 || r.wr > now.wr + 0.4 || r.pf > now.pf + 0.02)) continue;
+    const kind = Object.entries(g).sort((a, b) => b[1] - a[1])[0][0];
+    m.score = g.net + 0.5 * g.wr + 0.5 * g.pf - 0.3 * rel(r.dd, now.dd);
+    m.kind = kind; m.both = r.train > now.train && r.test > now.test;
+    sug.push(m);
+  }
+  if (RS.ratio && now.L && now.L.avg_loss < 0) {
+    const q0 = now.L.avg_win / -now.L.avg_loss;
+    for (const m of sug) { const L = m.r.L; m.rq = L && L.avg_loss < 0 ? (L.avg_win / -L.avg_loss - q0) / q0 : 0; m.score += 3 * m.rq; }
+  }
+  const fav = rsFav();
+  sug.sort((a, b) => (fav ? (b.kind === fav) - (a.kind === fav) : 0) || b.score - a.score);
+  return sug;
+}
+function scanPriority(W, excludeKey) {
+  if (!scanFresh(W)) return [];
+  const seen = new Set(), priority = [];
+  for (const m of scanSuggestions(W)) {
+    if (!m.key || m.key === excludeKey || seen.has(m.key)) continue;
+    seen.add(m.key);
+    priority.push({ sets: m.sets || {}, lab: m.lab || {} });
+    if (priority.length === 9) break;
+  }
+  return priority;
+}
+function lcScan(priority = []) { RS.scanKey = JSON.stringify([labForm(), RS.sets]); LABS.main = { action: 'sweep', running: true, phase: RS.loss ? 'the loss autopsy' : 'rechecking recent suggestions', progress: 0, total: 0, seconds: 0 };
+  renderPanel('tt'); labStart('sweep', { lab: labForm(), sets: RS.sets, focus: RS.loss ? 'loss' : undefined, priority }); }
 function leverTips() {                                           // every setting the EA has, a few steps either way: ranked trades of one thing for another
-  const W = LABS.sweep, J = LABS.main;
-  RS.lossBlock = '';
-  const busy = J && J.running && J.action === 'sweep', pct = busy && J.total ? Math.round((100 * J.progress) / J.total) : 3;
+  const J = LABS.main, busy = J && J.running && J.action === 'sweep';
+  const W = busy && LABS.sweep && !scanFresh(LABS.sweep) ? null : LABS.sweep;
+  const pct = busy && J.total ? Math.round((100 * J.progress) / J.total) : 3;
   let h = `<div class="bar" style="margin-top:8px"><button data-rs="scan" class="dexbtn" ${busy ? 'disabled' : ''}>${busy ? '⏳ SCANNING…' : RS.loss ? '✂️ SCAN FOR LOSS CUTS' : '🔬 SCAN EVERY SETTING'}</button>
     <label class="tog" style="font-size:12px" title="rank the scan's moves by how much they cut your losses while keeping the win rate"><input type="checkbox" id="rsLoss" ${RS.loss ? 'checked' : ''}> ✂️ loss cutter</label>
     <br><label class="tog" style="font-size:12px" title="with the loss cutter off: suggestions that keep or grow avg win / avg loss rank higher, those that shrink it lower"><input type="checkbox" id="rsRatio" ${RS.ratio ? 'checked' : ''}> rank settings that keep a healthy avg win / avg loss ratio higher</label>
@@ -153,28 +232,12 @@ function leverTips() {                                           // every settin
   if (!W || !W.moves) return h + `<div class="k">${RS.loss ? 'reads every trade on the bench (how far winners dip, how long losers last, where the losses cluster), then tests every setting and ranks what cuts your losses while keeping the win rate'
     : 'moves every setting the EA has (lines, candle, location, trigger, filters, each range box, stop, exit, the 27 Exit Lab settings) a few steps either way and ranks what each move trades for what'}</div>`;
   if (!scanFresh(W) && !busy) h += '<p class="warn">the bench changed since this scan (or it was made for other settings) - scan again for fresh suggestions</p>';
-  if (RS.loss) { RS.lossBlock = lossTips(W, busy); return h + '<div class="k">✂️ the loss autopsy and the cuts are below the bench, full width</div>'; }
-  const now = W.now, rel = (a, b) => (a - b) / Math.max(1e-9, Math.abs(b));
-  const tot = Math.max(1, Math.abs(now.net));
-  const sug = [];
-  for (const m of W.moves) {
-    const r = m.r;
-    if (!r || r.stuck || r.n < 20) continue;
-    const dMoney = Math.min(r.train - now.train, r.test - now.test);   // money counts only when BOTH halves gain (no fitting the past)
-    const g = { net: dMoney / tot, wr: (r.wr - now.wr) / Math.max(1, now.wr), pf: (r.pf - now.pf) / Math.max(0.01, now.pf) };
-    if (!(dMoney > 500 || r.wr > now.wr + 0.4 || r.pf > now.pf + 0.02)) continue;
-    const kind = Object.entries(g).sort((a, b) => b[1] - a[1])[0][0];
-    m.score = g.net + 0.5 * g.wr + 0.5 * g.pf - 0.3 * rel(r.dd, now.dd);
-    m.kind = kind; m.both = r.train > now.train && r.test > now.test;
-    sug.push(m);
-  }
-  if (!sug.length) return h + `<p class="note">🏁 Nothing left to gain: no single setting improves the bench any more (${W.n} moves tried in ${W.seconds} s). This is the top of this hill.</p>`;
-  if (RS.ratio && now.L && now.L.avg_loss < 0) {                 // keep a healthy avg win / avg loss: moves that grow it rise, moves that shrink it sink
-    const q0 = now.L.avg_win / -now.L.avg_loss;
-    for (const m of sug) { const L = m.r.L; m.rq = L && L.avg_loss < 0 ? (L.avg_win / -L.avg_loss - q0) / q0 : 0; m.score += 3 * m.rq; }
-  }
+  if (RS.loss) return h + `<div class="lossblock">${lossTips(W, busy)}</div>`;
+  const now = W.now, sug = scanSuggestions(W), rel = (a, b) => (a - b) / Math.max(1e-9, Math.abs(b));
+  if (!sug.length) return h + (busy && W.partial
+    ? '<p class="note">Rechecking the earlier suggestions first. New ranked suggestions will appear as the other settings finish.</p>'
+    : `<p class="note">🏁 Nothing left to gain: no single setting improves the bench any more (${W.n} moves tried in ${W.seconds} s). This is the top of this hill.</p>`);
   const fav = rsFav();                                             // 2+ picks of one kind (win rate / PF / money): that kind goes to the top
-  sug.sort((a, b) => (fav ? (b.kind === fav) - (a.kind === fav) : 0) || b.score - a.score);
   const show = RS.all ? sug : sug.slice(0, 25), n = show.length;
   const anim = RS.animated !== W._id; RS.animated = W._id;          // slide in once per new scan, not on every refresh
   const gain = { net: (m) => `${money(m.r.net)} net`, wr: (m) => `${m.r.wr}% win rate`, pf: (m) => `PF ${m.r.pf}` };
@@ -189,13 +252,15 @@ function leverTips() {                                           // every settin
   };
   const icon = { 'the lines': '📈', 'the candle': '🕯️', where: '📍', 'the trigger': '🎯', filters: '🧹', 'range boxes': '📦', 'the stop': '🛑', 'the exit': '🚪', 'Exit Lab': '⚗️', 'v1.23 exits': '⚠️' };
   if (W.stopped) h += '<p class="warn">This scan was stopped early: some moves are missing.</p>';
-  h += `<div class="k" style="margin:6px 0 2px">${busy ? '(the previous scan, while the new one runs) · ' : ''}${sug.length} moves help something (of ${W.n} tried in ${W.seconds} s) · ranked best → worst for us: money only counts when BOTH halves gain, then win rate, PF, drawdown · green = good deal, red = it hurts</div>`;
+  const scanStatus = busy && W.partial ? `live · ${W.completed} of ${W.n} settings checked${W.priority_count ? ` · first rechecked ${W.priority_count} previous suggestions` : ''}` :
+    busy ? '(the previous scan, while the new one runs)' : `${W.n} settings checked in ${W.seconds} s`;
+  h += `<div class="k" style="margin:6px 0 2px">${scanStatus} · ${sug.length} suggestions ranked best → worst for us: money only counts when BOTH halves gain, then win rate, PF, drawdown · green = good deal, red = it hurts</div>`;
   if (fav) h += `<div class="k" style="margin:2px 0">🧠 You keep picking <b>${{ wr: 'win rate', pf: 'PF', net: 'money' }[fav]}</b> deals, so they come first · <a href="#" data-rs="untaste">rank normally again</a></div>`;
   h += show.map((m, i) => {
     const hue = n > 1 ? Math.round(120 * (1 - i / (n - 1))) : 120, [cv, ct] = cost(m), r = m.r;
     const warn = m.group === 'v1.23 exits' || (m.key === 'InpExitMode' && m.to === '0') || m.trust === 'opposite' ? ' <span class="tag unt" title="verify_settings.py: on this setting the tester and MT5 move the result in opposite directions">⚠ tester ≠ MT5</span>'
       : m.trust === 'differ' ? ' <span class="tag unt" title="verify_settings.py: on this setting the tester and MT5 differ in size">check in MT5</span>' : '';
-    return `<div class="sugrow ${anim ? 'anim' : ''} ${busy ? 'old' : ''}" style="--hue:${hue};animation-delay:${Math.min(i, 20) * 70}ms"><span class="sugrank">#${i + 1}</span>` +
+    return `<div class="sugrow ${anim ? 'anim' : ''} ${busy && !W.partial ? 'old' : ''}" style="--hue:${hue};animation-delay:${Math.min(i, 20) * 70}ms"><span class="sugrank">#${i + 1}</span>` +
       `<button class="labsug" data-mv="${W.moves.indexOf(m)}">${icon[m.group] || '•'} <b>${esc(m.label)}</b> ${esc(m.from)} → <b>${esc(m.to)}</b>${warn}<br>` +
       `<span class="k">${money(r.net)} · WR ${r.wr}% · PF ${r.pf} · ${r.n} trades${m.both ? ' · ✓ both halves' : ''}</span>${lossLine(r, now)}</button>` +
       `<button class="sugdeal ${cv < 0 ? 'cost' : 'free'}" data-mv="${W.moves.indexOf(m)}">Trade for <b>${gain[m.kind](m)}</b><br>${cv < 0 ? 'pay ' + ct : 'and ' + ct}</button></div>`;
@@ -217,16 +282,16 @@ function labResearch() {
   const key = JSON.stringify([diffDfl(CUR), SRC.ds]);                // settings loaded / changed since the bench last ran: run it again on them
   if ((!T || stale(T)) && RS.ranFor !== key && !(LABS.quick && LABS.quick.running)) { RS.ranFor = key; setTimeout(() => labStart('test', { lab: labForm(), sets: RS.sets }), 0); }
   let h = `<section class="dexlab"><h3 class="dexh">🧠 CLAUDE'S EXIT RESEARCH LAB</h3> <span class="k">drag a lever: the exit re-runs on the data and the drawing shows what it made</span>
-    <div class="row" style="gap:14px;margin-top:8px;align-items:flex-start"><div style="flex:1 1 440px;max-width:580px">${labSvg(exitParts(ea, Object.keys(lab).length ? { ...LABS.spec.default, ...f } : null), 'THE EXIT ON THE BENCH', '#ff9800')}`;
+    <div class="row" style="gap:14px;margin-top:8px;align-items:flex-start;width:100%"><div style="flex:1 1 440px;min-width:0">${labSvg(exitParts(ea, Object.keys(lab).length ? { ...LABS.spec.default, ...f } : null), 'THE EXIT ON THE BENCH', '#ff9800')}`;
   if (T) {
     const s = T.stats, b = T.base;
     h += `${stale(T) ? '<p class="warn">⏳ re-running on the settings on screen…</p>' : ''}<div class="dexres">${LABS.quick && LABS.quick.running ? '⏳ running…' : ''} <b class="${cls(s.total - b.total)}">${money(s.total)}</b> vs yours ${money(b.total)} ·
       WR <b>${s.all.wr}%</b> (yours ${b.all.wr}%) · ${labLabels()[0]} ${money(s.train.net)} · ${labLabels()[1]} ${money(s.test.net)}${s.stuck ? ' · <span class="bad">a trade never closed</span>' : ''}</div>${gauges(T)}${spark(T.trades)}${mt5Spark()}${picksHtml()}`;
   }
-  h += `</div><div class="levers dexpanel">${SLIDERS.filter((x) => !x.ea || String(CUR.InpSlMode) === '1').map((x) => { const v = x.get();
-    return `<label class="lever"><span>${esc(x.label)} <b id="lv_${x.id}">${v}</b>${x.ea ? ' <span class="tag ea">EA</span>' : ''}</span><input type="range" data-lever="${x.id}" min="${x.min}" max="${x.max}" step="${x.step}" value="${v}"></label>`; }).join('')}
+  if (RS.loss && scanFresh(LABS.sweep)) h += `<div class="lossblock">${lossBench(LABS.sweep)}</div>`;
+  h += `</div><div class="levers dexpanel">${benchSliders().map((x) => { const v = x.get();
+    return `<label class="lever"><span>${esc(x.label)} <b id="lv_${x.id}">${v}</b>${x.ea ? ' <span class="tag ea">EA</span>' : ''}${x.dead ? ' <span class="tag unt">NEVER REACHED · the fixed take-profit closes first</span>' : ''}</span><input type="range" data-lever="${x.id}" min="${x.min}" max="${x.max}" step="${x.step}" value="${v}"></label>`; }).join('')}
     <div class="bar"><button data-rs="save" class="dexbtn">💾 SAVE &amp; APPLY THIS EXIT</button><button data-rs="reset">Back to your exit</button></div>${leverTips()}${labTips(ea)}</div></div>`;
-  if (RS.loss && RS.lossBlock) h += `<div class="lossblock">${RS.lossBlock}</div>`;   // the loss cutter: full width under the bench
   const J = RS.job;
   h += `<h4 style="margin-top:14px">Ask Claude to research your exit</h4><div class="askBox" style="max-width:980px"><textarea id="rsQ" rows="2">${esc(RS.q)}</textarea>
     <button data-rs="go" class="dexbtn" ${J && J.running ? 'disabled' : ''}>${J && J.running ? '⏳ ' + esc(J.phase || 'researching') : '🧠 Research it'}</button></div>
@@ -263,7 +328,7 @@ async function saveExit() {                                     // the levers' e
 async function rsLoad() { RS.reports = await api('/api/exitlab_research').catch(() => []); if (TAB.tt === 'lab') renderPanel('tt'); }
 document.addEventListener('input', (e) => {
   const id = e.target.dataset && e.target.dataset.lever;
-  if (id) { const x = SLIDERS.find((s) => s.id === id); x.set(+e.target.value); const o = document.getElementById('lv_' + id); if (o) o.textContent = e.target.value; }
+  if (id) { const x = benchSliders().find((s) => s.id === id); x.set(+e.target.value); const o = document.getElementById('lv_' + id); if (o) o.textContent = e.target.value; }
 });
 document.addEventListener('toggle', (e) => { if (e.target.classList && e.target.classList.contains('lossaut')) RS.autOpen = e.target.open; }, true);
 document.addEventListener('change', (e) => {
@@ -311,7 +376,7 @@ async function runMt5Bench(label) {                                 // the exit 
   const r = await api('/api/run', { sets, delay: 'none', period: mt5Period(), label: 'Exit Lab: ' + label });
   if (r.error) { toast('⚠ MT5: ' + esc(r.error)); return; }
   const T = LABS.test && LABS.test.stats ? LABS.test : null;
-  RS.mt5 = { id: r.id, busy: true, label, t0: Date.now(), tester: T ? { net: T.stats.total, n: T.stats.all.n, wr: T.stats.all.wr, pf: T.stats.all.pf, dd: T.stats.all.dd, avg_win: T.stats.all.avg_win, avg_loss: T.stats.all.avg_loss } : null };
+  RS.mt5 = { id: r.id, busy: true, label, t0: Date.now(), tester: T ? { net: T.stats.total, n: T.stats.all.n, wr: T.stats.all.wr, pf: T.stats.all.pf, dd: T.stats.all.dd, avg_win: T.stats.all.avg_win, avg_loss: T.stats.all.avg_loss, worst: T.stats.all.worst ?? worstTrade(T.trades) } : null };
   renderPanel('tt');
   for (;;) {
     await new Promise((res) => setTimeout(res, 3000));
@@ -342,6 +407,7 @@ function mt5Gauges(M) {
   const P = {}; for (const e of M.run.events || []) if (e.type === 'exit') P[e.num] = (P[e.num] || 0) + e.v1;
   const v = Object.values(P), w = v.filter((x) => x > 0), lo = v.filter((x) => x <= 0);
   const aw = w.length ? w.reduce((a, b) => a + b, 0) / w.length : 0, al = lo.length ? lo.reduce((a, b) => a + b, 0) / lo.length : 0;
+  const worst = v.length ? v.reduce((a, b) => Math.min(a, b), Infinity) : 0;
   const wr = v.length ? 100 * w.length / v.length : 0, net = Number(rep.net || 0), pf = Number(rep.pf || 0), n = Number(rep.trades || v.length);
   const dd = parseFloat(String(rep.dd || '0').replace(/\s/g, '').split('(')[0]) || 0;
   const dial = (lbl, val, now, base, good, fmt) => {
@@ -356,7 +422,8 @@ function mt5Gauges(M) {
     dial('NET', money(net), net, b.net, 'up', (x) => '$' + Math.round(x).toLocaleString()) +
     dial('MAX DRAWDOWN', money(-dd), dd, b.dd, 'down', (x) => '$' + Math.round(x).toLocaleString()) +
     dial('TRADES', n, n, b.n, 'up', (x) => String(Math.round(x))) +
-    dial('AVG WIN / LOSS', `${money(aw)}<br>${money(al)}`, aw / Math.max(1, -al), b.avg_win != null ? b.avg_win / Math.max(1, -b.avg_loss) : null, 'up', (x) => x.toFixed(2) + '× ratio') + '</div>';
+    dial('AVG WIN / LOSS', `${money(aw)}<br>${money(al)}`, aw / Math.max(1, -al), b.avg_win != null ? b.avg_win / Math.max(1, -b.avg_loss) : null, 'up', (x) => x.toFixed(2) + '× ratio') +
+    dial('WORST LOSS', money(worst), worst, b.worst, 'up', (x) => '$' + Math.round(x).toLocaleString()) + '</div>';
 }
 function mt5Spark() {                                              // MT5's equity curve (the same graph as the tester's)
   const M = RS.mt5; if (!M) return '';
@@ -384,14 +451,16 @@ function picksHtml() {
 }
 function pickMove(i) {
   if (!(LABS.sweep && LABS.sweep.moves && LABS.sweep.moves[i])) return;
-  const m = LABS.sweep.moves[i];
-  logPick(m, LABS.sweep.now ? { net: LABS.sweep.now.net, wr: LABS.sweep.now.wr, n: LABS.sweep.now.n } : null);
+  const W = LABS.sweep, m = W.moves[i];
+  const priority = scanPriority(W, m.key);
+  LABS.sweep = null;
+  logPick(m, W.now ? { net: W.now.net, wr: W.now.wr, n: W.now.n } : null);
   if (!RS.loss && m.kind) { const T = rsTaste(); T[m.kind] = (T[m.kind] || 0) + 1; try { localStorage.setItem('rsTaste', JSON.stringify(T)); } catch (e) {} }   // loss cuts are not a win-rate / PF / money taste
   RS.sets = { ...RS.sets, ...m.sets }; LABS.form = { ...LABS.form, ...m.lab };
   toast(`On the bench: ${esc(m.label)} ${esc(m.from)} → ${esc(m.to)}.` + (RS.auto !== false ? ' Scanning again from here…' : ''));
   labStart('test', { lab: labForm(), sets: RS.sets });
   if (MT5CFG()) runMt5Bench(`${m.label} ${m.from} → ${m.to}`);
-  if (RS.auto !== false) { lcScan(); return; }
+  if (RS.auto !== false) { lcScan(priority); return; }
   renderPanel('tt');
 }
 document.addEventListener('click', async (e) => {

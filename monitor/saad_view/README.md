@@ -26,6 +26,12 @@ There is no strategy logic in Python or JavaScript (CLAUDE.md: a Python port is 
 - **Runs:** every MT5 run is kept (`runs/`, git-ignored) and can be picked from the header to compare.
 - **Speed:** a year takes about 45–60 s in MT5 (rig `axi7`).
 
+The four-year `m15.npz` candles use both the raw quotes and per-second paths from the downloaded XAUUSD tick CSV for the tester's intraminute execution and fills. Build them once on this PC with `py monitor/saad_view/build_m15_tick_points.py`; the default input is `data_15min_2015_onwards_xauusd/XAUUSD_202201030100_202610232021.csv`. The builder streams the CSV and writes disk-backed arrays under `simdata/`, so no full tick history is loaded into RAM. Minutes with no source ticks remain gaps; the tester does not fabricate quotes for them.
+
+The Exit Research Lab keeps the full tick path while a position, pending entry or stand-aside trade is active. After the first point of an otherwise idle minute, it skips the remaining seconds because setup changes are processed at that first point; the scan still tests every setting with the same execution rules.
+
+When a scan is repeated after a suggestion is picked, it re-tests up to nine of the other previously ranked settings first. Turtle TV publishes those results as soon as that batch finishes, then refreshes the ranking as the rest of the settings complete. A fresh scan without previous suggestions starts with one move per setting; intermediate updates are sent only when new results are ready.
+
 ## The flow
 
 1. **TradingView → Turtle TV.**
@@ -38,11 +44,19 @@ There is no strategy logic in Python or JavaScript (CLAUDE.md: a Python port is 
 2. **MT5:** the run uses `mt5/Saad_strategy_15min_view.mq5`, v1.27 verbatim plus the export. Trading is identical: no delay
    +$242,911 / 198 trades, exactly as v1.27.
 3. **Export to MT5:**
-   - writes `settings/Saad_strategy_15min_TurtleTV_<run>.json` (the settings + MT5's result);
-   - writes the preset `Saad_strategy_15min_TurtleTV.set` into every MT5 terminal that has the EA (EA inputs → Load);
-   - starts a random-delay run if the run on screen had none.
+   - if there is no completed MT5 run matching the current chart settings and timeframe, the button first starts that run and continues the export automatically when it finishes (it cancels the handoff if the chart settings change while testing);
+   - writes `settings/Saad_strategy_15min_TurtleTV_<run>.json` with every production EA input (current run values where shared, production defaults for the rest);
+   - writes the preset `Saad_strategy_15min_TurtleTV.set` into terminals that already have the production EA;
+   - generates a separate `Saad_strategy_15min_TurtleTV_<run>.mq5` candidate without overwriting the release EA, compiles it in the isolated MT5 rig, and runs that compiled candidate in MT5 Strategy Tester using the selected run's symbol, timeframe, dates, deposit, delay and settings;
+   - after compilation, tester report creation and a successful test, copies the candidate `.mq5`, `.ex5` and candidate-specific `.set` into MT5 terminals that have the production EA. The top-menu button reports failure instead of claiming the EA is ready if any required stage fails or no attachable terminal is updated;
+   - saves the candidate tester report as `runs/<run>_candidate.htm`, available from the completion notice;
+   - the matching saved-settings row enables **Download MT5 Compiled EA**. It downloads a ZIP containing the `.mq5` source and `.ex5` binary, and opens Explorer at the installed binary's MT5 Experts folder;
+   - the saved row permanently records each successful export's EA name/version, compile date, source/binary/preset paths, and final MT5 tester metrics/report. During generation, that row shows the current export stage and progress;
+   - starts the existing random-delay run on the same timeframe if the run on screen had none; matching still requires the same settings and timeframe.
+   - **Download MT5 Report** saves the actual HTML Strategy Tester report for the matching run.
 4. **EA maker:**
-   - `py monitor/saad_view/make_ea_from_settings.py <json> --out <name>` writes an EA whose **defaults** are those settings.
+   - `py monitor/saad_view/make_ea_from_settings.py <json> --out <name>` writes an EA whose **defaults** are those settings; it rejects missing/unknown inputs and keeps the trade-comment version aligned with `#property version`.
+   - MetaEditor compilation starts from a clean `.ex5` and log; an export proceeds only with a fresh zero-error, zero-warning compile and a non-empty binary. The Strategy Tester tests that compiled candidate before installation, and installed binaries are hash-checked against the tested build.
    - Shipping a version still needs `--in-place --version X.YY` plus the VERSION.md / VERSION_HISTORY.md rows.
 
 ## The settings file (`"format": "turtle-settings/1"`)
@@ -90,8 +104,10 @@ Zee: *"we want a faster few seconds running optimizer"* · *"its ok since we hav
 - **Optimizer** (`optimizer.py`, the Turtle TV Tester's "Optimizer" tab), Zee's method:
   - each setting ± one step; keep stepping while it helps (by at least 1%); passes until nothing changes;
   - scored on **Jan – Jun only**; Jul – Oct is shown but never chooses;
+  - **Cut down Avg Loss** and **Cut down Worst Loss** score the average and single largest losing trade respectively (closer to zero is better); Python results are hypotheses, and MT5 is the promotion check;
   - about 200 tries in 1.6 s; optional restarts; the range boxes only when ticked.
   - **First run from v1.27:** Jan – Jun +$159k → +$205k, but Jul – Oct +$91k → +$76k. It fitted the past, and the page says so.
+- **Risk Manager:** uses the actual MT5 run `r20261024_235213` as its diagnosis reference. In that report `InpSlMode=2`, so `InpSlUsd=25` is the active stop distance; `InpSlPips` and `InpSlAtrMult` do not set that stop. `InpMaxRiskUsd` filters entries by stop distance rather than capping an open trade. Numeric risk controls have chart-linked sliders. Its optional scan tests every configured grid value for each selected control, one setting at a time, and preserves at least 70% of baseline training trades. Ranked suggestion cards show full-period net, WR, PF, trades and loss metrics, plus train/held-out results and the trade-offs against the baseline; each can be applied individually. An optional “scan again after every pick” setting repeats the search from the updated chart. Held-out results are reported but never used to select; the scan does not apply settings automatically or start an MT5 run. Simulator output is a hypothesis only—verify any candidate with the MT5 Strategy Tester.
 - **Ask Claude:** sends the chart picture (`chart.takeScreenshot()`) and the data behind it (settings, both testers' results, the trades and candles in
   view) from the server to the Claude API (`claude-opus-5-5`; key `monitor/.claude_api_key`, never sent to the page).
   - 2026-10-20: the call reached the API, but the account had no credits ("credit balance is too low").

@@ -57,13 +57,24 @@ function labTake(s) {
   const take = (j) => {
     if (!(j && j.done && j.result && !j.error)) return;
     const slot = SLOT[j.action], prev = LABS[slot], id = j.jid || (j.action + j.seconds + JSON.stringify(j.req || {}) + JSON.stringify(j.result.sets || {}) + (j.result.describe || ''));
-    if (prev && prev._id === id) return;
-    LABS[slot] = Object.assign(j.result, { _id: id, _labels: j.labels, _ds: j.ds, _req: j.req });
+    if (prev && prev._id === id && !prev._partial) return;
+    LABS[slot] = Object.assign(j.result, { _id: id, _partial: false, _labels: j.labels, _ds: j.ds, _req: j.req });
     if (slot === 'test' && LABS.showLab) redraw();
     if (slot === 'test' && LABS.goResult) { LABS.goResult = false; setTimeout(() => { const e = document.querySelector('#labResult'); if (e) e.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 150); }
   };
   for (const j of Object.values((s && s.done) || {})) take(j);
-  for (const k of ['main', 'quick']) { const j = s && s[k]; if (j) { LABS[k] = j; take(j); } }
+  for (const k of ['main', 'quick']) {
+    const j = s && s[k];
+    if (!j) continue;
+    LABS[k] = j;
+    if (k === 'main' && j.action === 'sweep' && j.partial_result) {
+      const p = j.partial_result, prev = LABS.sweep;
+      if (!prev || prev._id !== j.jid || prev._partial_count !== p.completed) {
+        LABS.sweep = Object.assign({}, p, { _id: j.jid, _partial: true, _partial_count: p.completed, _req: j.req, _ds: j.ds });
+      }
+    }
+    take(j);
+  }
 }
 const labBusyUi = () => { const a = document.activeElement; return LABS.mouse || (a && a.closest && a.closest('#panelTT') && /SELECT|INPUT|TEXTAREA/.test(a.tagName)); };
 document.addEventListener('mousedown', () => { LABS.mouse = true; });      // a redraw between mouse-down and mouse-up would swallow the click
@@ -73,7 +84,9 @@ async function labPoll() {
   LABS.polling = true;
   try {
     for (;;) {
-      const s = await api('/api/exitlab').catch(() => null);
+      const main = LABS.main, count = LABS.sweep && LABS.sweep._partial_count || 0;
+      const cursor = main && main.action === 'sweep' && main.jid ? `?partial=${encodeURIComponent(`${main.jid}:${count}`)}` : '';
+      const s = await api('/api/exitlab' + cursor).catch(() => null);
       if (s) labTake(s);
       const running = s && ((s.main && s.main.running) || (s.quick && s.quick.running));
       if (TAB.tt === 'lab' && (!labBusyUi() || !running)) renderPanel('tt');
@@ -143,11 +156,11 @@ function pLab() {
   }
   h += labDrawings();                                          // the two specimens first (static/exitlab_draw.js)
   if (LABS.diag) h += labDiag(LABS.diag, LA, LB);
-  h += labBuilder(LA, LB);
   if (LABS.cat) h += labCatalogue(LABS.cat, LA, LB);
   if (LABS.search) h += labSearch(LABS.search, LA, LB);
   h += labHeat(LA, LB);
   if (typeof labResearch === 'function') { if (RS.reports === null) { RS.reports = []; rsLoad(); } h += labResearch(); }
+  h += labBuilder(LA, LB);
   return h + '</div>';
 }
 

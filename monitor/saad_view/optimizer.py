@@ -33,7 +33,29 @@ SPACE = [
     ("InpRangeLook", "int", (3, 20, 1)), ("InpRangeLookS", "int", (3, 20, 1)),
     ("InpExitMode", "enum", (1, 2)), ("InpBandOff", "enum", (0, 1)),
 ]
-OBJECTIVES = {"ret_dd": "net ÷ max drawdown", "net": "net profit", "pf": "profit factor", "wr": "win rate"}
+RISK_SPACE = {
+    "stop": [
+        ("InpMaxRiskUsd", "enum", (0, 5, 10, 15, 20, 25, 30)),
+        ("InpXLossCap", "enum", (0, 5, 10, 15, 20, 25)),
+    ],
+    "time": [
+        ("InpXDecayBars", "enum", (0, 4, 8, 12, 16, 24, 32)),
+        ("InpXDecayR", "num", (-1.0, 0.0, 0.25)),
+        ("InpXStaleBars", "enum", (0, 4, 8, 12, 16, 24, 32)),
+        ("InpXMaxBars", "enum", (0, 8, 12, 16, 24, 32, 48)),
+    ],
+    "target": [
+        ("InpFixTpPips", "enum", (0, 20, 40, 60, 80, 100)),
+    ],
+    "session": [
+        ("InpCloseLossMins", "enum", (0, 15, 30, 60, 120)),
+    ],
+    "daily": [
+        ("InpDayLossUsd", "enum", (0, 500, 1000, 1500, 2000, 3000, 4000, 5000)),
+    ],
+}
+OBJECTIVES = {"ret_dd": "net ÷ max drawdown", "net": "net profit", "pf": "profit factor", "wr": "win rate",
+              "avg_loss": "Cut down Avg Loss", "worst_loss": "Cut down Worst Loss"}
 
 
 def _fmt(kind, v):
@@ -75,14 +97,16 @@ def evaluate(inputs, objective="ret_dd", min_trades=30, window=None, ds="year"):
     else:
         trn, tst = tr[tr[:, 1] < TRAIN_END], tr[tr[:, 1] >= TRAIN_END]
     a, b, y = sim.score(trn, min_trades), sim.score(tst, 10), sim.score(tr, min_trades)
-    s = a["ret_dd"] if objective == "ret_dd" else (a["net"] if objective == "net" else a["pf"] if objective == "pf" else a["wr"])
+    s = (a["ret_dd"] if objective == "ret_dd" else a["net"] if objective == "net" else a["pf"] if objective == "pf"
+         else a["avg_loss"] if objective == "avg_loss" else a["worst_loss"] if objective == "worst_loss" else a["wr"])
     if a["n"] < min_trades:
         s = -1e9 + a["n"]
     return float(s), a, b, y
 
 
 class Optimizer:
-    def __init__(self, start, objective="ret_dd", boxes=False, keep_going=False, min_trades=30, window=None, ds="year"):
+    def __init__(self, start, objective="ret_dd", boxes=False, keep_going=False, min_trades=30, window=None, ds="year",
+                 space=None, trade_floor_ratio=0, exhaustive=False):
         self.ds = ds
         if window is None and ds in ("m15", "m1x"):                       # 4 years: tune on 2023 + 2024, judge on 2025 + 2026 (never seen while tuning)
             s, m = sim._ep(sim.datetime(2023, 1, 1)), sim._ep(sim.datetime(2025, 1, 1))
@@ -91,7 +115,10 @@ class Optimizer:
         self.window = window
         self.start = {k: str(v) for k, v in start.items()}
         self.objective, self.boxes, self.keep, self.min_trades = objective, boxes, keep_going, min_trades
-        self.space = list(SPACE) + ([(f"box{s}{b:02d}", "box", None) for s in "BS" for b in range(21)] if boxes else [])
+        self.space = list(SPACE if space is None else space) + ([(f"box{s}{b:02d}", "box", None) for s in "BS" for b in range(21)] if boxes else [])
+        self.trade_floor_ratio = trade_floor_ratio
+        self.trade_floor = min_trades
+        self.exhaustive = exhaustive
         self.log, self.best, self.board = [], None, []
         self.evals, self.passes, self.restarts, self.running, self.done, self.error = 0, 0, 0, False, False, None
         self.t0 = None
@@ -127,6 +154,35 @@ class Optimizer:
                 if self._stop:
                     break
                 key = self._key(name, kind)
+                if self.exhaustive and kind != "box":
+                    if kind == "bool":
+                        values = ("false", "true")
+                    elif kind == "enum":
+                        values = tuple(str(int(v)) for v in grid)
+                    else:
+                        lo, hi, step = grid
+                        values = tuple(_fmt(kind, lo + i * step) for i in range(int(round((hi - lo) / step)) + 1))
+                    best_step = None
+                    for value in values:
+                        try:
+                            unchanged = float(value) == float(inp[key]) if kind != "bool" else value == str(inp[key]).lower()
+                        except (TypeError, ValueError):
+                            unchanged = value == str(inp[key])
+                        if self._stop or unchanged:
+                            continue
+                        cand = dict(inp, **{key: value})
+                        s2, a2, b2, y2 = self._eval(cand)
+                        if s2 > sc + abs(sc) * MIN_GAIN and s2 > sc + 1e-9 and (best_step is None or s2 > best_step[0]):
+                            best_step = (s2, cand, a2, b2, y2, value)
+                    if best_step:
+                        s2, cand, a2, b2, y2, value = best_step
+                        with self._lock:
+                            self.log.append({"run": label, "setting": key, "from": inp[key], "to": value, "score": round(s2, 3),
+                                             "train": a2, "test": b2, "year": y2, "t": round(time.time() - self.t0, 2), "inputs": dict(cand)})
+                        inp, sc, a, b, y = cand, s2, a2, b2, y2
+                        changed = True
+                        self._offer(inp, sc, a, b, y, label)
+                    continue
                 for direction in (+1, -1):
                     moved = False
                     while not self._stop:
@@ -139,7 +195,7 @@ class Optimizer:
                             with self._lock:
                                 self.log.append({"run": label, "setting": key if kind != "box" else f"{'BUY' if name[3] == 'B' else 'SELL'} box {int(name[4:]) * 5}%",
                                                  "from": inp[key] if kind != "box" else str(inp[key])[int(name[4:])], "to": v if kind != "box" else v[int(name[4:])],
-                                                 "score": round(s2, 3), "train": a2, "test": b2, "t": round(time.time() - self.t0, 2), "inputs": dict(cand)})
+                                                 "score": round(s2, 3), "train": a2, "test": b2, "year": y2, "t": round(time.time() - self.t0, 2), "inputs": dict(cand)})
                             inp, sc, a, b, y = cand, s2, a2, b2, y2
                             moved = changed = True
                             self._offer(inp, sc, a, b, y, label)
@@ -158,6 +214,9 @@ class Optimizer:
         self.running, self.t0 = True, time.time()
         try:
             sc, a, b, y = self._eval(self.start)
+            if self.trade_floor_ratio:
+                self.trade_floor = max(self.min_trades, int(np.ceil(a["n"] * self.trade_floor_ratio)))
+                self.min_trades = self.trade_floor
             self.baseline = {"score": sc, "train": a, "test": b, "year": y}
             self._offer(self.start, sc, a, b, y, "start")
             inp, sc, a, b, y = self.descend(dict(self.start), "pass from your settings")
@@ -166,7 +225,7 @@ class Optimizer:
             while self.keep and not self._stop:
                 self.restarts += 1
                 shaken = dict(self.best["inputs"])
-                for name, kind, grid in rnd.sample([s for s in SPACE], 4):
+                for name, kind, grid in rnd.sample(self.space, min(4, len(self.space))):
                     for _ in range(rnd.randint(2, 6)):
                         v = neighbours(shaken, name, kind, grid, rnd.choice((1, -1)))
                         if v is not None:
@@ -193,7 +252,9 @@ class Optimizer:
         with self._lock:
             ch = lambda inp: {k: v for k, v in inp.items() if str(v) != str(self.start.get(k))}
             return {"running": self.running, "done": self.done, "error": self.error, "evals": self.evals, "passes": self.passes, "restarts": self.restarts,
-                    "seconds": round(time.time() - self.t0, 1) if self.t0 else 0, "objective": self.objective, "ds": self.ds, "labels": self.labels, "boxes": self.boxes, "keep": self.keep,
+                    "seconds": round(time.time() - self.t0, 1) if self.t0 else 0, "objective": self.objective, "objectives": list(OBJECTIVES),
+                    "ds": self.ds, "labels": self.labels, "boxes": self.boxes, "keep": self.keep, "trade_floor": self.trade_floor,
+                    "exhaustive": self.exhaustive,
                     "baseline": getattr(self, "baseline", None), "log": self.log[-200:], "mt5": getattr(self, "mt5", None),
                     "best": dict(self.best, changed=ch(self.best["inputs"])) if self.best else None,
                     "board": [dict(x, changed=ch(x["inputs"])) for x in self.board]}
@@ -265,12 +326,11 @@ class Survey:
         try:
             a, b = self._ev(self.start)
             self.baseline = {"train": a, "test": b}
+            jobs = []                                       # every (setting, value) to run, in the order the rows are shown
             for name, vals in SURVEY[self.group]:
                 if name not in self.start:
                     continue
                 for v in vals:
-                    if self._stop:
-                        return
                     extra = {}
                     if name in EXIT0 and self.start.get("InpExitMode") != "0":
                         extra["InpExitMode"] = "0"
@@ -280,14 +340,31 @@ class Survey:
                         continue                                  # the value on screen (with exit mode 0 added it is just the InpExitMode 0 row again)
                     inp = dict(self.start, **extra)
                     inp[name] = str(v)
-                    a, b = self._ev(inp)
-                    if a is None:
-                        continue
-                    B0 = self.baseline
-                    noop = abs(a["net"] - B0["train"]["net"]) < 1 and abs(b["net"] - B0["test"]["net"]) < 1 and a["n"] == B0["train"]["n"] and b["n"] == B0["test"]["n"]
-                    v123 = inp.get("InpExitMode") == "0"           # the v1.23 exits: where the tester and MT5 disagree (verify_settings.py)
-                    self.rows.append({"setting": name, "value": str(v), "with": extra, "train": a, "test": b, "noop": noop, "v123": v123,
-                                      "total": round(a["net"] + b["net"]), "inputs": inp})
+                    jobs.append((name, v, extra, inp))
+            # the runs are independent: the tester's numba core releases the lock, so they run side by side (8 cores)
+            from concurrent.futures import ThreadPoolExecutor
+            def one(job):
+                if self._stop:
+                    return None
+                name, v, extra, inp = job
+                self.evals += 1
+                _, ra, rb, _y = evaluate(inp, "net", 1, self.window, self.ds)
+                return ra, rb
+            with ThreadPoolExecutor(max_workers=6) as ex:
+                results = list(ex.map(one, jobs))
+            B0 = self.baseline
+            for (name, v, extra, inp), res in zip(jobs, results):
+                if self._stop:
+                    return
+                if res is None:
+                    continue
+                a, b = res
+                if a is None:
+                    continue
+                noop = abs(a["net"] - B0["train"]["net"]) < 1 and abs(b["net"] - B0["test"]["net"]) < 1 and a["n"] == B0["train"]["n"] and b["n"] == B0["test"]["n"]
+                v123 = inp.get("InpExitMode") == "0"           # the v1.23 exits: where the tester and MT5 disagree (verify_settings.py)
+                self.rows.append({"setting": name, "value": str(v), "with": extra, "train": a, "test": b, "noop": noop, "v123": v123,
+                                  "total": round(a["net"] + b["net"]), "inputs": inp})
         except Exception as e:                                           # noqa: BLE001
             self.error = str(e)
         finally:

@@ -16,6 +16,7 @@ setup's countdown and a new setup, then the break entry.
 Extras (X vector, all off by default = v1.27 in MT5): the TradingView chart's own rules (busy-at-close, BUY target above the entry, fixed spread,
 no swap, blind inside the entry candle before its 1-minute data, setup warm-up) and the stress tests' execution faults (reversed logic, slippage,
 stop overshoot, latency, wider spread, target trade-through, spread-spike rejection, worst-case order inside a minute)."""
+import json
 import os
 
 os.environ.setdefault("NUMBA_CPU_NAME", "generic")   # this laptop's ARM CPU crashes LLVM's scheduler unless numba targets a generic CPU
@@ -44,9 +45,11 @@ XNAMES = ["no_entry_exit_bar", "long_ema_above", "fixed_spread", "swap", "blind_
           "spread_mult", "latency", "tp_through", "reject_mult", "median_spread", "worst_case"]
 # slip_entry: MT5 fills the dip a median $0.054 (mean $0.118) better per oz than the simulator's level fill (2026, 5,802 matched entries);
 # -0.10 closes the full-year P&L gap (Jan-Jun gap +5k, Jul-Oct +10k). Negative = favourable. The TradingView chart keeps 0 (CHART_RULES).
-XDEFAULT = {"swap": 1.0, "spread_mult": 1.0, "slip_entry": -0.10}
+XDEFAULT = {"swap": 1.0, "spread_mult": 1.0, "slip_entry": 0.0}
 # TradingView's way: the Saad indicator's own rules on its own candles
-CHART_RULES = {"no_entry_exit_bar": 1.0, "long_ema_above": 1.0, "fixed_spread": 0.17, "swap": 0.0, "slip_entry": 0.0}
+# 2026-10-23: the chart rules now equal MT5's rules (real spread, swap, entry fill). The old chart-only restrictions (no entry on the exit bar,
+# long only above the 50 EMA, $0.17 spread) are not MT5 behaviour and made the tester disagree with MT5 (828 of 862 trades match without them).
+CHART_RULES = {"no_entry_exit_bar": 0.0, "long_ema_above": 0.0, "fixed_spread": 0.0, "swap": 1.0, "slip_entry": 0.0}
 
 
 def _b(v):
@@ -191,9 +194,18 @@ _D = {}
 
 
 def data(name="year"):
+    """the candles: year1 is read from memory-mapped .npy files (one copy shared by the scan's workers, through the OS cache)"""
     if name not in _D:
+        if name == "year1" and (SIMDATA / "year1_t15.npy").exists():
+            z = np.load(SIMDATA / f"{name}.npz", allow_pickle=True)
+            _D[name] = {k: (np.load(SIMDATA / f"{name}_{k}.npy", mmap_mode="r") if k != "events" else z[k]) for k in z.files}
+            return _D[name]
         z = np.load(SIMDATA / f"{name}.npz", allow_pickle=True)
         _D[name] = {k: z[k] for k in z.files}
+        if name == "year1":                                  # one-time: write the arrays out as .npy so the workers can map them
+            for k in z.files:
+                if k != "events":
+                    np.save(SIMDATA / f"{name}_{k}.npy", z[k])
     return _D[name]
 
 
@@ -568,18 +580,21 @@ def simulate(inputs, ds="year", chart=False, **extra):
 
 
 def score(tr, min_trades=40):
-    """Stats of the REAL trades (ghosts excluded): net, PF, WR, trades, max drawdown on closed trades, net / DD."""
+    """Stats of real trades (no ghosts): net, PF, WR, drawdown, average/worst loss and return/DD."""
     r = tr[tr[:, 10] == 0]
     r = r[np.argsort(r[:, 4])]
     n = len(r)
     if n == 0:
-        return {"n": 0, "net": 0.0, "pf": 0.0, "wr": 0.0, "dd": 0.0, "ret_dd": -1e9}
+        return {"n": 0, "net": 0.0, "pf": 0.0, "wr": 0.0, "dd": 0.0, "avg_loss": 0.0, "worst_loss": 0.0, "ret_dd": -1e9}
     p = r[:, 6]
     gw, gl = p[p > 0].sum(), -p[p <= 0].sum()
     eq = np.cumsum(p)
     dd = float(np.max(np.maximum.accumulate(np.concatenate([[0.0], eq]))[1:] - eq))
     net = float(p.sum())
+    losses = p[p < 0]
     return {"n": n, "net": round(net, 2), "pf": round(float(gw / gl), 3) if gl > 0 else 99.0, "wr": round(float(100.0 * (p > 0).mean()), 1),
+            "avg_loss": round(float(losses.mean()), 2) if len(losses) else 0.0,
+            "worst_loss": round(float(losses.min()), 2) if len(losses) else 0.0,
             "dd": round(dd, 2), "ret_dd": (net / max(dd, 1.0)) if n >= min_trades else -1e9 + n}
 
 
@@ -654,9 +669,15 @@ NAMES_ALL = NAMES + sim_full.FULL
 _ADX, _HTF = {}, {}
 
 
+def _hours(v):
+    """InpHours "1111..." (24 broker hours, 1 = trade) -> bit mask"""
+    v = str(v).ljust(24, "1")[:24]
+    return float(sum(1 << h for h in range(24) if v[h] != "0"))
+
+
 def pvec_all(inputs):
     dfl = {"InpTrigBid": "true", "InpMaxPos": "1", "InpSkipDow": "-1", "InpAdxPeriod": "14", "InpMaxLots": "50"}
-    P = np.array([_b(inputs.get(n, dfl.get(n, "0"))) for n in NAMES_ALL], dtype=np.float64)
+    P = np.array([_hours(inputs.get(n, "1" * 24)) if n == "InpHours" else _b(inputs.get(n, dfl.get(n, "0"))) for n in NAMES_ALL], dtype=np.float64)
     _, bb, bs = pvec(inputs)
     return P, bb, bs
 
@@ -761,26 +782,75 @@ _HF = {}
 _PTS = {}
 
 
+_TK = {}
+
+
+def _ticks(ds):
+    """Real quote ticks for tick-level exit fills."""
+    if ds == "year1" and not (SIMDATA / "ticks2026_t.bin").exists():
+        return np.zeros(0), np.zeros(0), np.zeros(0)
+    if ds == "m15":
+        manifest_path = SIMDATA / "m15_tick_points.json"
+        if not manifest_path.exists():
+            raise RuntimeError("four-year M15 raw ticks are missing; run py monitor/saad_view/build_m15_tick_points.py")
+        count = int(json.loads(manifest_path.read_text(encoding="utf-8"))["ticks"])
+        paths = {k: SIMDATA / f"m15_tick_raw_{k}.bin" for k in ("t", "bid", "ask")}
+        if not count or any(not paths[k].is_file() or paths[k].stat().st_size != count * 8 for k in paths):
+            raise RuntimeError("four-year M15 raw ticks are incomplete; rerun py monitor/saad_view/build_m15_tick_points.py")
+    elif ds != "year1":
+        return np.zeros(0), np.zeros(0), np.zeros(0)
+    if ds not in _TK:
+        prefix = "ticks2026" if ds == "year1" else "m15_tick_raw"
+        dtype = np.float64
+        if ds == "m15":
+            _TK[ds] = tuple(np.memmap(paths[k], dtype=dtype, mode="r", shape=(count,)) for k in ("t", "bid", "ask"))
+        else:
+            _TK[ds] = tuple(np.memmap(SIMDATA / f"{prefix}_{k}.bin", dtype=dtype, mode="r") for k in ("t", "bid", "ask"))
+    return _TK[ds]
+
+
 def _pts(ds, t1):
-    """v1.37: the 2026 ticks as 4 points per second (bid open, first extreme, second extreme, close) - flat arrays, cached.
-    Returns PBf (bid), PAf (ask), PTf (second), SA, SB (first / end second index of each minute)."""
-    if ds != "year1" or not (SIMDATA / "year1_sec.npz").exists():
+    """The real per-second bid/ask path, with minute offsets into it."""
+    if ds not in ("year1", "m15"):
         raise RuntimeError("the per-second tick points exist for year1 only")
-    if "P" not in _PTS:
-        z = np.load(SIMDATA / "year1_sec.npz")
-        st = z["t"]
-        bo, bc, bh, bl = z["bo"], z["bc"], z["bh"], z["bl"]
-        ao, ac, ah, al = z["ao"], z["ac"], z["ah"], z["al"]
-        hfirst = z["bh_ms"] <= z["bl_ms"]                 # the bid high came first in that second (from the ticks)
-        e1b = np.where(hfirst, bh, bl); e2b = np.where(hfirst, bl, bh)
-        e1a = np.where(hfirst, ah, al); e2a = np.where(hfirst, al, ah)
-        n = len(st)
-        PBf = np.empty(4 * n); PAf = np.empty(4 * n); PTf = np.empty(4 * n, dtype=np.int64)
-        PBf[0::4] = bo; PBf[1::4] = e1b; PBf[2::4] = e2b; PBf[3::4] = bc
-        PAf[0::4] = ao; PAf[1::4] = e1a; PAf[2::4] = e2a; PAf[3::4] = ac
-        PTf[0::4] = st; PTf[1::4] = st; PTf[2::4] = st; PTf[3::4] = st
-        _PTS["P"] = (PBf, PAf, PTf, st)
-    PBf, PAf, PTf, st = _PTS["P"]
+    if ds not in _PTS:
+        if ds == "year1":
+            if not (SIMDATA / "year1_sec.npz").exists():
+                raise RuntimeError("year1 per-second tick points are missing")
+            with np.load(SIMDATA / "year1_sec.npz") as z:
+                st = z["t"]
+                bo, bc, bh, bl = z["bo"], z["bc"], z["bh"], z["bl"]
+                ao, ac, ah, al = z["ao"], z["ac"], z["ah"], z["al"]
+                hfirst = z["bh_ms"] <= z["bl_ms"]
+                e1b = np.where(hfirst, bh, bl); e2b = np.where(hfirst, bl, bh)
+                e1a = np.where(hfirst, ah, al); e2a = np.where(hfirst, al, ah)
+                n = len(st)
+                PBf = np.empty(4 * n); PAf = np.empty(4 * n); PTf = np.empty(4 * n, dtype=np.int64)
+                PBf[0::4] = bo; PBf[1::4] = e1b; PBf[2::4] = e2b; PBf[3::4] = bc
+                PAf[0::4] = ao; PAf[1::4] = e1a; PAf[2::4] = e2a; PAf[3::4] = ac
+                PTf[0::4] = st; PTf[1::4] = st; PTf[2::4] = st; PTf[3::4] = st
+                _PTS[ds] = (PBf, PAf, PTf, st)
+        else:
+            manifest_path = SIMDATA / "m15_tick_points.json"
+            if not manifest_path.exists():
+                raise RuntimeError("four-year M15 tick points are missing; run py monitor/saad_view/build_m15_tick_points.py")
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            n = int(manifest["seconds"])
+            point_count = 4 * n
+            paths = {k: SIMDATA / f"m15_tick_{k}.bin" for k in ("bid4", "ask4", "time4", "sec")}
+            expected = {"bid4": point_count * 8, "ask4": point_count * 8, "time4": point_count * 8, "sec": n * 8}
+            if not n or any(not paths[k].is_file() or paths[k].stat().st_size != size for k, size in expected.items()):
+                raise RuntimeError("four-year M15 tick points are incomplete; rerun py monitor/saad_view/build_m15_tick_points.py")
+            st = np.memmap(paths["sec"], dtype=np.int64, mode="r", shape=(n,))
+            if st[0] >= np.min(t1) + 60 or st[-1] < np.max(t1):
+                raise RuntimeError("four-year M15 tick points do not cover the chart's minute data; rebuild them")
+            _PTS[ds] = (
+                np.memmap(paths["bid4"], dtype=np.float64, mode="r", shape=(point_count,)),
+                np.memmap(paths["ask4"], dtype=np.float64, mode="r", shape=(point_count,)),
+                np.memmap(paths["time4"], dtype=np.int64, mode="r", shape=(point_count,)),
+                st,
+            )
+    PBf, PAf, PTf, st = _PTS[ds]
     SA = np.searchsorted(st, t1).astype(np.int64)
     SB = np.searchsorted(st, t1 + 60).astype(np.int64)
     return PBf, PAf, PTf, SA, SB
@@ -805,7 +875,15 @@ def _hford(ds, n):
     return _HF[ds]
 
 
-def simulate(inputs, ds="year", chart=False, lab=None, lego=None, **extra):
+def _rbox(ds, D, inputs, ef, es):
+    """rbox.py range-box families: (features, edges, edge counts, masks, on). Features are built only when a box is unticked."""
+    import rbox
+    M, on = rbox.masks(inputs)
+    FB = rbox.with_disp(rbox.features(ds, D), ef, es, D["atr"]) if on else np.zeros((len(D["t15"]), rbox.NF, 2))
+    return FB, rbox.EDGES, rbox.NE, M, on
+
+
+def simulate(inputs, ds="year", chart=False, lab=None, lego=None, skip_idle_ticks=True, prune=(), **extra):
     """Every EA input (sim_full.run_full). lab = the Exit Lab's extra exits (exitlab.py; None = off). lego = Strategy Lego pieces (lego.py; None = the EA's). ds 'year' (Blueberry MT5 candles), 'tv' (TradingView's), 'm15' (Blueberry 2023 -> now)."""
     D = data(ds)
     P, bb, bs = pvec_all(inputs)
@@ -834,10 +912,13 @@ def simulate(inputs, ds="year", chart=False, lab=None, lego=None, **extra):
     day1 = (D["t1"] // 86400).astype(np.int64)
     big = len(D["t15"]) > 150000
     huge = len(D["t15"]) > 600000                                 # 4 years of 1-minute candles                                  # the 1-minute data: far more candles, setups and trades
-    out = np.zeros((160000 if huge else 40000 if big else 8000, 20)); setups = np.zeros((1600000 if huge else 400000 if big else 60000, 3)); stats = np.zeros(10)             # 15-19: the Exit Lab's columns (sim_full._close)
+    out = np.zeros((160000 if huge else 40000 if big or ds == "m15" else 8000, 20)); setups = np.zeros((1600000 if huge else 400000 if big else 60000, 3)); stats = np.zeros(10)             # 15-19: the Exit Lab's columns (sim_full._close)
+    for r in prune:                                               # Trade Lifecycle: exit reasons switched off (test only; the last row is the mask)
+        out[-1, int(r)] = 1.0
     hr_ea = ((clock // 3600) % 24).astype(np.int64) if ds == "year1" else D["hr15"]
     nt, ns = sim_full.run_full(D["t15"], hr_ea, dow, D["o15"], D["h15"], D["l15"], D["c15"], ef, es, D["atr"],
                                adx_for(ds, int(P[sim_full.F["InpAdxPeriod"]])), hc, h1_, h2_, D["t1"], D["o1"], D["h1"], D["l1"], D["c1"],
-                               D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab if lab is not None else sim_full.lab_from_inputs(inputs)), bb, bs, OS, OL, out, setups, stats, _hford(ds, len(D["t1"])), *_pts(ds, D["t1"]))
+                               D["sp1"], D["k1"], D["first1"], D["m2c"], D["roll"], day1, P, X, sim_full.evec(lab if lab is not None else sim_full.lab_from_inputs(inputs)), bb, bs, OS, OL, out, setups, stats, _hford(ds, len(D["t1"])), *_pts(ds, D["t1"]), *_ticks(ds), skip_idle_ticks,
+                               *_rbox(ds, D, inputs, ef, es))
     return out[:nt], setups[:ns], dict(zip(["setups", "no_break", "risk", "adx", "atr_band", "band_skip", "gap", "spread_reject", "open_at_end", "open_since"],
                                            stats.astype(np.int64).tolist()))

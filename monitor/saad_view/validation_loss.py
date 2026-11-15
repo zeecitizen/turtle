@@ -32,18 +32,21 @@ def main():
     W = j.result
     picks = cuts(W)[:top]
     rows = []
+    b0 = dict(base); rid0, n0, p0 = mt5(b0, "loss-cut baseline (primary save, MT5)")
+    bl = {"run": rid0, "trades": n0, "net": p0}
     for i, m in enumerate(picks):
         s = dict(base, **m["sets"], **m["xs"])
         import numpy as np
         tr, _, _ = sim.simulate(s, ds="year1"); r = tr[tr[:, 10] == 0]
         tn, tp = int(len(r)), round(float(r[:, 6].sum()))
         rid, mn, mp = mt5(s, f"loss-cut {m['key']} {m['to']}")
-        ok = mn is not None and abs(tn - mn) <= 0.10 * max(tn, 1) and (tp > 0) == (mp > 0)
+        d_mt5 = None if mp is None else mp - bl["net"]
         rows.append({"key": m["key"], "label": m["label"], "group": "the loss cutter", "from": m["from"], "to": m["to"],
-                     "tester": {"trades": tn, "net": tp}, "mt5": {"trades": mn, "net": mp, "run": rid}, "match": bool(ok),
+                     "tester": {"trades": tn, "net": tp}, "mt5": {"trades": mn, "net": mp, "run": rid}, "baseline": bl,
+                     "delta_mt5": d_mt5, "match": bool(d_mt5 is not None and d_mt5 > 0),
                      "at": dt.datetime.now().strftime("%Y-%m-%d %H:%M"), "why": m.get("why", "")})
         json.dump({"base": "2026-10-21 05-55-20", "count": len(rows), "of": len(picks), "rows": rows}, open(OUT, "w"), indent=1)
-        print(i + 1, len(picks), m["label"], tn, tp, mn, mp, "MATCH" if ok else "differs", flush=True)
+        print(i + 1, len(picks), m["label"], "MT5", mp, "vs baseline", bl["net"], "=", d_mt5, flush=True)
 
 if __name__ == "__main__":
     main()

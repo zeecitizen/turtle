@@ -6,3 +6,6 @@ settings/turtletv_export_latest.json
 simdata/
 __pycache__/
 asks/
+settings/deploy_target.json
+settings/.deploy_askpass.cmd
+settings/deploy_*.json

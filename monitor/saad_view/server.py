@@ -14,10 +14,17 @@ Export to MT5: the run's settings as a preset (.set) in every MT5 terminal that 
 
    py monitor/saad_view/server.py            -> http://127.0.0.1:8773
 API: GET /api/inputs · /api/runs · /api/run?id= · /api/status · /api/tv
-     POST /api/run {sets, from, to, delay, label} · /api/follow {on, delay} · /api/tv_take {delay} · /api/export {id} · /api/delete {id}"""
+     GET /api/mt5_report?id= · POST /api/run {sets, from, to, delay, label} · /api/follow {on, delay} · /api/tv_take {delay}
+     POST /api/export {id} · /api/delete {id}"""
+import base64
 import importlib.util
+import hashlib
+import io
 import json
+import math
+import os
 import re
+import shutil
 import subprocess
 import sys
 import threading
@@ -25,6 +32,7 @@ import time
 import traceback
 import urllib.error
 import urllib.request
+import zipfile
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -39,6 +47,11 @@ sys.path.insert(0, str(HERE))
 import sim  # noqa: E402  (the Turtle TV Tester: numba, sets NUMBA_CPU_NAME itself)
 import optimizer  # noqa: E402
 import exitlab  # noqa: E402
+import tplab  # noqa: E402
+import lifecycle  # noqa: E402
+import xlife
+import probe  # noqa: E402
+import dexlab  # noqa: E402
 import ml  # noqa: E402
 import mission  # noqa: E402
 import stress  # noqa: E402
@@ -55,11 +68,14 @@ SYMBOL, PERIOD = "XAUUSD_BB", "M15"           # Blueberry's real ticks (Zee's ch
 RIG = "axi7"                                  # one of the compare page's year-view rigs (idle while its 10-month view is off)
 DEPOSIT = 100000
 FROM, TO = "2026.01.01", "2026.10.17"
+DEXTER_REFERENCE_ID = "r20261024_235213"
 RUNS = HERE / "runs"
+DEXTER_FILE = RUNS / "dexter_experiments.json"
 SETTINGS = HERE / "settings"
 PRIMARY = HERE / "settings" / "primary.txt"         # the save that loads on every page start (Zee 2026-10-21)
 SAVED = HERE / "settings" / "saved"                   # the page's saved chart settings, one JSON per save                  # the JSON hand-off files (format "turtle-settings/1"; see settings_doc)
 STATIC = HERE / "static"
+EA_MAKER = HERE / "make_ea_from_settings.py"
 TERMINALS = Path.home() / "AppData" / "Roaming" / "MetaQuotes" / "Terminal"
 COMMON = TERMINALS / "Common" / "Files"
 HIDE = {"InpExport", "InpExportTag", "InpMagicNumber", "InpVerbose", "InpDraw", "InpLog", "InpLogCsv", "InpShowEmas", "InpDrawSkips",
@@ -67,10 +83,22 @@ HIDE = {"InpExport", "InpExportTag", "InpMagicNumber", "InpVerbose", "InpDraw", 
 RUNS.mkdir(exist_ok=True)
 SETTINGS.mkdir(exist_ok=True)
 STATE = {"busy": False, "id": None, "label": "", "started": None, "phase": "", "error": None, "last": None, "cancel": False, "source": ""}
+DEXTER_LOCK = threading.Lock()
+DEXTER = {"busy": False, "cancel": False, "phase": "ready", "current": 0, "total": 5, "reference_id": DEXTER_REFERENCE_ID,
+          "settings": {"risk_pct": 0.5, "pin_buffer": 0.5, "atr_mult": 1.7, "decay_bars": 4, "decay_r": -0.5, "tight_stop": 12.0, "time_bars": 4}, "results": [], "error": None}
+if DEXTER_FILE.is_file():
+    _saved_dexter = json.loads(DEXTER_FILE.read_text(encoding="utf-8"))
+    if isinstance(_saved_dexter, dict):
+        DEXTER.update(_saved_dexter)
+        DEXTER.update(busy=False, cancel=False, phase="saved results loaded")
+        if DEXTER.get("current") < DEXTER.get("total", 5) and DEXTER.get("results"):
+            DEXTER["error"] = "The server restarted before the experiment batch finished."
 # follow TradingView: delay "none" while tuning, so the same settings always give the same number (Export adds the random-delay result)
 FOLLOW = {"on": False, "delay": "none", "connected": False, "err": None, "at": None, "tv": None, "key": None, "changed_at": 0,
           "pending": None, "msg": ""}
 LOCK = threading.Lock()
+EXPORT_LOCK = threading.Lock()
+EXPORT_JOB = {"id": None, "busy": False, "phase": "", "error": None, "result": None, "started": None}
 
 
 LOG = HERE / "server.log"
@@ -85,7 +113,10 @@ def log(msg):
     except OSError:
         pass
     if sys.stdout:
-        print(line, flush=True)
+        try:
+            print(line, flush=True)
+        except UnicodeEncodeError:                           # a cp1252 console and a name with an emoji (the Research page's 📄 saves)
+            print(line.encode("ascii", "replace").decode(), flush=True)
 
 
 def same(a, b):
@@ -158,14 +189,14 @@ def settings_doc(inputs, notes=None, raw=None, chart=None, result=None):
     make_ea_from_settings.py turns it into an EA whose DEFAULTS are these settings."""
     info = ea_inputs()
     dfl = axi_rig.ea_defaults(LIVE_EA)
-    full = {i["name"]: str(inputs.get(i["name"], dfl.get(i["name"], i["default"]))) for i in info["inputs"] if i["name"] in dfl}
+    full = {name: str(inputs.get(name, default)) for name, default in dfl.items()}
     return {"format": "turtle-settings/1", "written_by": "Turtle TV", "written_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             "ea": LIVE_EA, "ea_version": info["version"], "ea_inputs": full,
             "changed_from_defaults": {k: v for k, v in full.items() if not same(v, dfl.get(k))},
             "chart_only": notes or [], "chart": chart, "tradingview": raw, "mt5_result": result}
 
 
-def run_matching(sets, delay):
+def run_matching(sets, delay, period=PERIOD):
     """The newest run that already has exactly these settings (and delay) - no need to run MT5 again. Every input is compared: the ones
     not in `sets` must be at the EA's defaults (a run with an extra change from the settings form is not a match)."""
     dfl = axi_rig.ea_defaults(EA)
@@ -174,7 +205,7 @@ def run_matching(sets, delay):
             d = json.loads(p.read_text(encoding="utf-8"))
         except Exception:                                   # noqa: BLE001
             continue
-        if d.get("delay") == delay and all(same(v, sets.get(k, dfl.get(k, v))) for k, v in d["inputs"].items()):
+        if d.get("delay") == delay and d.get("period", PERIOD) == period and all(same(v, sets.get(k, dfl.get(k, v))) for k, v in d["inputs"].items()):
             return d["id"]
     return None
 
@@ -200,7 +231,7 @@ def follow_loop():
         p = FOLLOW["pending"]
         if p and not STATE["busy"] and time.time() - FOLLOW["changed_at"] >= 5:
             FOLLOW["pending"] = None
-            have = run_matching(p["sets"], FOLLOW["delay"])
+            have = run_matching(p["sets"], FOLLOW["delay"], PERIOD)
             if have:
                 FOLLOW["msg"] = f"TradingView settings = run {have} (already in MT5)"
                 STATE["last"] = have
@@ -274,7 +305,7 @@ def build(rid, meta, rep):
         p.unlink(missing_ok=True)
 
 
-def run_job(rid, sets, frm, to, delay, label, notes, period=PERIOD):
+def run_job(rid, sets, frm, to, delay, label, notes, period=PERIOD, symbol=SYMBOL, deposit=DEPOSIT):
     try:
         STATE.update(phase="waiting for the MT5 rig to be free")
         for _ in range(600):
@@ -291,7 +322,7 @@ def run_job(rid, sets, frm, to, delay, label, notes, period=PERIOD):
         run_sets = dict(sets, InpLogCsv="false", InpExport="true", InpExportTag=rid)
         r = {}
         for attempt in range(3):
-            r = axi_rig.run(EA, SYMBOL, period, run_sets, frm=frm, to=to, deposit=DEPOSIT, rig=RIG, tag=f"view_{rid}",
+            r = axi_rig.run(EA, symbol, period, run_sets, frm=frm, to=to, deposit=deposit, rig=RIG, tag=f"view_{rid}",
                             exec_mode=0 if delay == "none" else -1, cancel=lambda: STATE["cancel"])
             if r.get("error") not in ("authorization failed", "no report"):
                 break
@@ -299,10 +330,15 @@ def run_job(rid, sets, frm, to, delay, label, notes, period=PERIOD):
         if r.get("error"):
             raise RuntimeError("cancelled" if r.get("error") == "cancelled" else f"MT5: {r.get('error')}")
         STATE.update(phase="reading the EA's export")
+        rig_root = Path(axi_rig.RIGS.get(RIG, RIG))
+        tester_report = rig_root / "reports" / f"view_{rid}.htm"
+        if not tester_report.is_file():
+            raise RuntimeError(f"MT5 report is missing: {tester_report}")
+        (RUNS / f"{rid}.htm").write_bytes(tester_report.read_bytes())
         rep = {k: r.get(k) for k in ("net", "pf", "trades", "dd", "quality", "months", "trade_stats", "day_stats")}
         info = ea_inputs()
         meta = {"id": rid, "label": label, "created": datetime.now().strftime("%Y-%m-%d %H:%M"), "ea": EA, "version": info["version"],
-                "symbol": SYMBOL, "period": period, "from": frm, "to": to, "delay": delay, "deposit": DEPOSIT, "changed": sets,
+                "symbol": symbol, "period": period, "from": frm, "to": to, "delay": delay, "deposit": deposit, "changed": sets,
                 "notes": notes or [], "source": STATE.get("source"), "tradingview": STATE.get("tv_raw"), "chart": STATE.get("tv_chart"),
                 "inputs": {i["name"]: sets.get(i["name"], defaults.get(i["name"], i["default"])) for i in info["inputs"]}}
         build(rid, meta, rep)
@@ -322,22 +358,323 @@ def start_run(body, source="page"):
     with LOCK:
         if STATE["busy"]:
             return None, "a run is already going"
+        if EXPORT_JOB["busy"]:
+            return None, "EA export is compiling and testing on the MT5 rig"
+        if DEXTER["busy"] and source != "dexter":
+            return None, "Dexter's Lab is running a controlled MT5 comparison"
+        period = body.get("period") if body.get("period") in ("M1", "M5", "M15") else PERIOD
+        symbol = str(body.get("symbol") or SYMBOL).strip()
+        if not re.fullmatch(r"[A-Za-z0-9_.-]{1,32}", symbol):
+            return None, "invalid MT5 symbol"
+        try:
+            deposit = float(body.get("deposit", DEPOSIT))
+        except (TypeError, ValueError):
+            return None, "invalid MT5 deposit"
+        if not math.isfinite(deposit) or deposit <= 0:
+            return None, "MT5 deposit must be a positive number"
+        delay = body.get("delay") or "random"
+        if delay not in ("none", "random"):
+            return None, "delay must be 'none' or 'random'"
+        frm, to = str(body.get("from") or FROM), str(body.get("to") or TO)
+        try:
+            if datetime.strptime(frm, "%Y.%m.%d") >= datetime.strptime(to, "%Y.%m.%d"):
+                return None, "MT5 test start date must be earlier than its end date"
+        except ValueError:
+            return None, "MT5 dates must use YYYY.MM.DD"
         rid = "r" + datetime.now().strftime("%Y%m%d_%H%M%S")
         defaults = axi_rig.ea_defaults(EA)
         sets = {k: str(v) for k, v in (body.get("sets") or {}).items() if k not in HIDE and not same(v, defaults.get(k))}
         label = (body.get("label") or "").strip() or ("v" + ea_inputs()["version"] + (" defaults" if not sets else " + " + ", ".join(f"{k[3:]} {v}" for k, v in sets.items())))
         STATE.update(busy=True, id=rid, label=label, started=time.time(), phase="starting", error=None, cancel=False, source=source,
                      tv_raw=body.get("tv_raw"), tv_chart=body.get("tv_chart"))
-        period = body.get("period") if body.get("period") in ("M1", "M5", "M15") else PERIOD          # M1: the EA on the 1-minute chart (Turtle TV's year1 data)
         if period != PERIOD:
             label = "M1 · " + label
             STATE["label"] = label
-        threading.Thread(target=run_job, args=(rid, sets, body.get("from") or FROM, body.get("to") or TO, body.get("delay") or "random", label,
-                                               body.get("notes"), period), daemon=True).start()
+        threading.Thread(target=run_job, args=(rid, sets, frm, to, delay, label, body.get("notes"), period, symbol, deposit), daemon=True).start()
         return rid, None
 
 
+def _persist_dexter():
+    with DEXTER_LOCK:
+        record = json.loads(json.dumps(DEXTER))
+    temporary = DEXTER_FILE.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(record, indent=2), encoding="utf-8")
+    temporary.replace(DEXTER_FILE)
+
+
+def dexter_status():
+    with DEXTER_LOCK:
+        state = json.loads(json.dumps(DEXTER))
+    reference_path = RUNS / f"{DEXTER_REFERENCE_ID}.json"
+    if reference_path.is_file():
+        reference = json.loads(reference_path.read_text(encoding="utf-8"))
+        state["reference"] = {key: reference.get(key) for key in ("id", "label", "created", "symbol", "period", "from", "to", "delay", "deposit", "version")}
+        state["reference"]["report"] = reference.get("report", {})
+    else:
+        state["reference"] = None
+    return state
+
+
+def dexter_start(body):
+    bounds = {
+        "risk_pct": (0.05, 5.0),
+        "pin_buffer": (0.0, 10.0),
+        "atr_mult": (0.1, 5.0),
+        "decay_bars": (1, 48),
+        "decay_r": (-2.0, 1.0),
+        "tight_stop": (2.0, 40.0),
+        "time_bars": (1, 48),
+    }
+    requested = body.get("settings") or {}
+    settings = {}
+    for name, (low, high) in bounds.items():
+        try:
+            value = float(requested.get(name, DEXTER["settings"].get(name, (low + high) / 2)))
+        except (TypeError, ValueError):
+            return {"error": f"{name} must be numeric"}
+        if not math.isfinite(value) or value < low or value > high:
+            return {"error": f"{name} must be between {low} and {high}"}
+        settings[name] = int(value) if name in ("decay_bars", "time_bars") else value
+
+    reference_path = RUNS / f"{DEXTER_REFERENCE_ID}.json"
+    if not reference_path.is_file():
+        return {"error": f"MT5 reference run {DEXTER_REFERENCE_ID} is unavailable"}
+    reference = json.loads(reference_path.read_text(encoding="utf-8"))
+    if not reference.get("inputs") or not reference.get("report"):
+        return {"error": f"MT5 reference run {DEXTER_REFERENCE_ID} has no complete inputs or result"}
+    with LOCK:
+        if STATE["busy"]:
+            return {"error": "an MT5 Strategy Tester run is already in progress"}
+        if EXPORT_JOB["busy"]:
+            return {"error": "EA export is compiling and testing on the MT5 rig"}
+        with DEXTER_LOCK:
+            if DEXTER["busy"]:
+                return {"error": "Dexter's Lab comparison is already running"}
+            DEXTER.update(busy=True, cancel=False, phase="starting controlled MT5 comparison", current=0, total=9,
+                          reference_id=DEXTER_REFERENCE_ID, settings=settings, results=[], error=None, started=datetime.now().isoformat(timespec="seconds"))
+    _persist_dexter()
+    threading.Thread(target=_dexter_worker, args=(reference, settings), daemon=True).start()
+    return {"ok": True, "reference_id": DEXTER_REFERENCE_ID}
+
+
+def _dexter_worker(reference, settings):
+    variants = [
+        ("baseline", "Baseline", "Current reference settings; experiments disabled.", {}),
+        ("risk-sizing", "A · ATR-based risk sizing", "Use OrderCalcProfit sizing at the configured equity-risk percentage; preserve the reference stop and exits.",
+         {"InpDexRiskSizing": "true", "InpDexRiskPct": f"{settings['risk_pct']:g}", "InpDexStopMethod": "0"}),
+        ("pinbar-stop", "B · Stop beyond signal candle", "Use the signal candle low/high plus the price buffer, sized to the same risk budget.",
+         {"InpDexRiskSizing": "true", "InpDexRiskPct": f"{settings['risk_pct']:g}", "InpDexStopMethod": "1",
+          "InpDexPinBuffer": f"{settings['pin_buffer']:g}"}),
+        ("atr-stop", "C · M15 ATR stop", "Use the last closed M15 ATR(14) × multiplier, sized to the same risk budget.",
+         {"InpDexRiskSizing": "true", "InpDexRiskPct": f"{settings['risk_pct']:g}", "InpDexStopMethod": "2",
+          "InpDexAtrMult": f"{settings['atr_mult']:g}"}),
+        ("time-decay", "D · Risk sizing + time-decay stop", "Combine risk sizing with the existing stop-decay rule after a losing trade stalls.",
+         {"InpDexRiskSizing": "true", "InpDexRiskPct": f"{settings['risk_pct']:g}", "InpDexStopMethod": "0",
+          "InpXDecayBars": str(settings["decay_bars"]), "InpXDecayR": f"{settings['decay_r']:g}"}),
+        # Claude's experiments (dexter_mae.py on the reference's own MT5 trades: winners close in a median 3 minutes and
+        # dip a median $3; losers drag a median 105 minutes to the full $25 stop - time and distance separate them)
+        ("tight-stop", "E · Tight stop (winners' 90-95% dip)", "Stop at the distance 90-95% of winners never reach; fixed lots, exits unchanged.",
+         {"InpSlMode": "2", "InpSlUsd": f"{settings['tight_stop']:g}"}),
+        ("time-stop", "F · Time stop", "Close a trade still open after N candles: winners resolve in minutes, losers drag.",
+         {"InpXMaxBars": str(settings["time_bars"])}),
+        ("tight-time", "G · Tight stop + time stop", "E and F together: caps the worst loss and cuts the slow losers.",
+         {"InpSlMode": "2", "InpSlUsd": f"{settings['tight_stop']:g}", "InpXMaxBars": str(settings["time_bars"])}),
+        ("tight-time-risk", "H · G + risk sizing", "G with Experiment A's OrderCalcProfit sizing at the same risk percentage.",
+         {"InpSlMode": "2", "InpSlUsd": f"{settings['tight_stop']:g}", "InpXMaxBars": str(settings["time_bars"]),
+          "InpDexRiskSizing": "true", "InpDexRiskPct": f"{settings['risk_pct']:g}", "InpDexStopMethod": "0"}),
+    ]
+    with DEXTER_LOCK:
+        DEXTER["total"] = len(variants)
+    try:
+        for index, (key, title, purpose, overrides) in enumerate(variants, 1):
+            with DEXTER_LOCK:
+                if DEXTER["cancel"]:
+                    break
+                DEXTER.update(current=index, phase=f"starting {title}")
+                DEXTER["results"].append({"key": key, "title": title, "purpose": purpose, "status": "running", "run_id": None})
+            _persist_dexter()
+            inputs = dict(reference["inputs"])
+            inputs.update(overrides)
+            run_id, error = start_run({
+                "sets": inputs,
+                "label": f"Dexter {title} · {DEXTER_REFERENCE_ID}",
+                "from": reference.get("from") or FROM,
+                "to": reference.get("to") or TO,
+                "period": reference.get("period") or PERIOD,
+                "symbol": reference.get("symbol") or SYMBOL,
+                "deposit": reference.get("deposit") or DEPOSIT,
+                "delay": reference.get("delay") or "none",
+            }, source="dexter")
+            if error:
+                with DEXTER_LOCK:
+                    DEXTER["results"][-1].update(status="failed", error=error)
+                    DEXTER["error"] = error
+                break
+            with DEXTER_LOCK:
+                DEXTER["results"][-1]["run_id"] = run_id
+                DEXTER["phase"] = f"MT5 Strategy Tester: {title}"
+            _persist_dexter()
+
+            while True:
+                with LOCK:
+                    running = STATE["busy"] and STATE["id"] == run_id
+                    cancelled = STATE["cancel"] or DEXTER["cancel"]
+                    run_error = STATE["error"] if STATE["id"] == run_id else None
+                if not running:
+                    break
+                if cancelled:
+                    with LOCK:
+                        if STATE["id"] == run_id:
+                            STATE["cancel"] = True
+                time.sleep(1)
+
+            if run_error:
+                with DEXTER_LOCK:
+                    DEXTER["results"][-1].update(status="failed", error=run_error)
+                    DEXTER["error"] = run_error
+                break
+            run_path = RUNS / f"{run_id}.json"
+            if not run_path.is_file():
+                error = f"MT5 completed without saving run {run_id}"
+                with DEXTER_LOCK:
+                    DEXTER["results"][-1].update(status="failed", error=error)
+                    DEXTER["error"] = error
+                break
+            saved = json.loads(run_path.read_text(encoding="utf-8"))
+            report = saved.get("report") or {}
+            trade_stats = report.get("trade_stats") or {}
+            result = {
+                "key": key, "title": title, "purpose": purpose, "status": "complete", "run_id": run_id,
+                "net": report.get("net"), "pf": report.get("pf"), "drawdown": report.get("dd"),
+                "largest_loss": trade_stats.get("largest_loss"), "trades": report.get("trades"),
+                "wr": trade_stats.get("wr"), "quality": report.get("quality"), "report_url": f"/api/mt5_report?id={run_id}",
+                "settings": overrides,
+            }
+            with DEXTER_LOCK:
+                DEXTER["results"][-1] = result
+                DEXTER["phase"] = f"finished {title}"
+            _persist_dexter()
+        with DEXTER_LOCK:
+            DEXTER.update(busy=False, cancel=False, phase="comparison stopped" if DEXTER["cancel"] else "comparison complete")
+    except Exception as error:
+        with DEXTER_LOCK:
+            DEXTER.update(busy=False, cancel=False, phase="comparison failed", error=str(error))
+        log("Dexter's Lab comparison failed:\n" + traceback.format_exc())
+    finally:
+        _persist_dexter()
+
+
+# ---- Dexter's Lab on the live setting: any experiment verified in MT5 (rig data: 2026), one after another
+DEXLAB_MT5_FILE = RUNS / "dexlab_mt5.json"
+DEXLAB_MT5 = {"busy": False, "phase": "", "current": 0, "total": 0, "queue": [], "results": [], "error": None, "cancel": False}
+if DEXLAB_MT5_FILE.is_file():
+    try:
+        DEXLAB_MT5["results"] = json.loads(DEXLAB_MT5_FILE.read_text(encoding="utf-8")).get("results", [])
+    except Exception:                                            # noqa: BLE001
+        pass
+
+
+def _dexlab_fp(inputs, ds):
+    import hashlib
+    return hashlib.sha1(json.dumps([diff_from_defaults(inputs), ds], sort_keys=True).encode()).hexdigest()[:16]
+
+
+def diff_from_defaults(inputs):
+    dfl = axi_rig.ea_defaults(EA)
+    return {k: str(v) for k, v in inputs.items() if str(dfl.get(k)) != str(v)}
+
+
+def dexlab_mt5_start(body):
+    inputs = full_inputs(body.get("inputs") or {})
+    ds = body.get("ds") or "year1"
+    items = [x for x in (body.get("items") or []) if isinstance(x, dict) and x.get("key")][:20]
+    if not items:
+        return {"error": "nothing to verify"}
+    with LOCK:
+        if STATE["busy"] or DEXTER["busy"] or DEXLAB_MT5["busy"]:
+            return {"error": "the MT5 rig is busy - try again when the current test finishes"}
+        DEXLAB_MT5.update(busy=True, phase="starting", current=0, total=len(items), queue=[x["key"] for x in items], error=None, cancel=False)
+    threading.Thread(target=_dexlab_mt5_worker, args=(inputs, ds, items), daemon=True).start()
+    return {"ok": True}
+
+
+def _dexlab_mt5_worker(inputs, ds, items):
+    period = "M1" if ds in ("year1", "m1x") else "M5" if ds == "m5x" else "M15"
+    fp = _dexlab_fp(inputs, ds)
+    try:
+        for i, it in enumerate(items, 1):
+            if DEXLAB_MT5["cancel"]:
+                break
+            title = str(it.get("title") or it["key"])
+            DEXLAB_MT5.update(current=i, phase=f"MT5 Strategy Tester: {title}")
+            sets = {k: str(v) for k, v in (it.get("sets") or {}).items()}
+            run_id, error = start_run({"sets": {**inputs, **sets}, "label": f"Dexter's Lab · {title}", "from": FROM, "to": TO, "period": period,
+                                       "symbol": SYMBOL, "deposit": DEPOSIT, "delay": str(it.get("delay") or "none")}, source="dexter")
+            rec = {"fp": fp, "key": it["key"], "title": title, "sets": sets, "period": period, "delay": str(it.get("delay") or "none"), "status": "failed", "run_id": run_id,
+                   "when": datetime.now().isoformat(timespec="seconds")}
+            if error:
+                rec["error"] = error
+            else:
+                while True:
+                    with LOCK:
+                        running = STATE["busy"] and STATE["id"] == run_id
+                        run_error = STATE["error"] if STATE["id"] == run_id else None
+                    if not running:
+                        break
+                    if DEXLAB_MT5["cancel"]:
+                        with LOCK:
+                            if STATE["id"] == run_id:
+                                STATE["cancel"] = True
+                    time.sleep(1)
+                path = RUNS / f"{run_id}.json"
+                if run_error:
+                    rec["error"] = run_error
+                elif path.is_file():
+                    rep = (json.loads(path.read_text(encoding="utf-8")).get("report") or {})
+                    ts = rep.get("trade_stats") or {}
+                    rec.update(status="complete", net=rep.get("net"), pf=rep.get("pf"), dd=rep.get("dd"), trades=rep.get("trades"),
+                               largest_loss=ts.get("largest_loss"), avg_win=ts.get("avg_win"), avg_loss=ts.get("avg_loss"))
+                else:
+                    rec["error"] = f"MT5 finished without saving run {run_id}"
+            DEXLAB_MT5["results"] = [r for r in DEXLAB_MT5["results"] if not (r["fp"] == fp and r["key"] == it["key"])] + [rec]
+            DEXLAB_MT5_FILE.write_text(json.dumps({"results": DEXLAB_MT5["results"][-400:]}, indent=1), encoding="utf-8")
+    except Exception as ex:                                      # noqa: BLE001
+        DEXLAB_MT5["error"] = str(ex)
+        log("Dexter's Lab MT5 verification failed: " + traceback.format_exc())
+    finally:
+        DEXLAB_MT5.update(busy=False, phase="done")
+
+
+def dexlab_mt5_status(body):
+    inputs = full_inputs(body.get("inputs") or {})
+    fp = _dexlab_fp(inputs, body.get("ds") or "year1")
+    st = {k: v for k, v in DEXLAB_MT5.items() if k != "results"}
+    st["results"] = [r for r in DEXLAB_MT5["results"] if r["fp"] == fp]
+    return st
+
+
+def dexter_stop():
+    with DEXTER_LOCK:
+        if not DEXTER["busy"]:
+            return {"error": "Dexter's Lab is not running"}
+        DEXTER["cancel"] = True
+        DEXTER["phase"] = "stopping after the current MT5 test"
+    with LOCK:
+        if STATE["source"] == "dexter":
+            STATE["cancel"] = True
+    _persist_dexter()
+    return {"ok": True}
+
+
 _RUN_WR = {}
+
+
+def mt5_report_path(rid):
+    saved = RUNS / f"{rid}.htm"
+    if saved.is_file():
+        return saved
+    legacy = Path(axi_rig.RIGS.get(RIG, RIG)) / "reports" / f"view_{rid}.htm"
+    return legacy if legacy.is_file() else None
 
 
 def run_wr(p, d):                                           # MT5's win rate: per trade, its exits (partials included) summed, cached per file version
@@ -356,10 +693,21 @@ def run_wr(p, d):                                           # MT5's win rate: pe
 
 def list_runs():
     out = []
+    with EXPORT_LOCK:
+        active_export = dict(EXPORT_JOB)
+    if active_export.get("started"):
+        active_export["seconds"] = round(time.time() - active_export["started"], 1)
     for p in sorted(RUNS.glob("r*.json"), reverse=True):
         try:
             d = json.loads(p.read_text(encoding="utf-8"))
-            out.append({k: d.get(k) for k in ("id", "label", "created", "from", "to", "delay", "changed", "source")} |
+            candidate = candidate_metadata(d["id"], d)
+            export_state = None
+            if active_export.get("id") == d["id"]:
+                export_state = {key: active_export.get(key) for key in ("id", "busy", "phase", "error", "candidate", "seconds")}
+            out.append({k: d.get(k) for k in ("id", "label", "created", "from", "to", "delay", "period", "changed", "source")} |
+                       {"has_report": mt5_report_path(d["id"]) is not None,
+                        "has_candidate": bool(candidate and candidate["available"]), "candidate": candidate,
+                        "export_state": export_state} |
                        {"net": d["report"].get("net"), "pf": d["report"].get("pf"), "trades": d["report"].get("trades"), "dd": d["report"].get("dd")} | run_wr(p, d))
         except Exception:                                   # noqa: BLE001
             continue
@@ -367,12 +715,151 @@ def list_runs():
 
 
 # ---------- Export to MT5: the run's settings as a preset for the real EA (+ a random-delay result) ----------
-def export(rid):
-    d = json.loads((RUNS / f"{rid}.json").read_text(encoding="utf-8"))
+def _export_status_update(rid, **updates):
+    with EXPORT_LOCK:
+        if EXPORT_JOB["id"] == rid:
+            EXPORT_JOB.update(updates)
+
+
+def _export_candidate(rid, d, doc, settings_path, candidate, text):
+    try:
+        _export_status_update(rid, phase="generating a separate EA from all production inputs")
+        generated = subprocess.run(
+            [sys.executable, str(EA_MAKER), str(settings_path), "--out", candidate],
+            capture_output=True, text=True, timeout=120, creationflags=axi_rig.NO_WINDOW,
+        )
+        if generated.returncode:
+            raise RuntimeError((generated.stderr or generated.stdout or "EA generation failed").strip()[-1200:])
+        candidate_src = ROOT / "mt5" / f"{candidate}.mq5"
+        if not candidate_src.is_file():
+            raise RuntimeError(f"EA generator did not create {candidate_src}")
+
+        _export_status_update(rid, phase="waiting for the isolated MT5 test rig")
+        for _ in range(600):
+            if not rig_busy():
+                break
+            time.sleep(2)
+        else:
+            raise RuntimeError("MT5 test rig stayed busy for 20 minutes")
+
+        _export_status_update(rid, phase="compiling the candidate EA in MetaEditor")
+        compile_result = axi_rig.compile_ea(candidate, rig=RIG)
+        if compile_result["warnings"]:
+            raise RuntimeError(f"MetaEditor reported {compile_result['warnings']} warning(s); see {compile_result['log']}")
+        rig_root = Path(axi_rig.RIGS.get(RIG, RIG))
+        candidate_ex5 = rig_root / "MQL5" / "Experts" / f"{candidate}.ex5"
+        if not candidate_ex5.is_file():
+            raise RuntimeError(f"MetaEditor did not create {candidate_ex5}")
+        compiled_hash = hashlib.sha256(candidate_ex5.read_bytes()).hexdigest()
+        source_hash = hashlib.sha256(candidate_src.read_bytes()).hexdigest()
+
+        _export_status_update(rid, phase="testing the compiled candidate in MT5 Strategy Tester")
+        ea_defaults = axi_rig.ea_defaults(candidate)
+        test_inputs = dict(doc["ea_inputs"])
+        for key, value in (("InpExport", "false"), ("InpLogCsv", "false")):
+            if key in ea_defaults:
+                test_inputs[key] = value
+        tested = axi_rig.run(
+            candidate, d["symbol"], d.get("period", PERIOD), test_inputs,
+            frm=d["from"], to=d["to"], deposit=d["deposit"],
+            exec_mode=0 if d.get("delay") == "none" else -1,
+            tag=f"export_{rid}", model=4, rig=RIG, timeout=21600,
+        )
+        if tested.get("error"):
+            raise RuntimeError(f"MT5 Strategy Tester: {tested['error']}")
+        report_src = rig_root / "reports" / f"export_{rid}.htm"
+        if not report_src.is_file() or report_src.stat().st_size == 0:
+            raise RuntimeError(f"MT5 Strategy Tester report is missing: {report_src}")
+        report_dst = RUNS / f"{rid}_candidate.htm"
+        report_dst.write_bytes(report_src.read_bytes())
+
+        _export_status_update(rid, phase="installing the compiled EA and preset in MT5 terminals")
+        installed, install_errors = [], []
+        for terminal in TERMINALS.iterdir():
+            experts = terminal / "MQL5" / "Experts"
+            if not ((experts / f"{LIVE_EA}.ex5").exists() or (experts / f"{LIVE_EA}.mq5").exists()):
+                continue
+            try:
+                experts.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(candidate_src, experts / candidate_src.name)
+                shutil.copy2(candidate_ex5, experts / candidate_ex5.name)
+                if hashlib.sha256((experts / candidate_ex5.name).read_bytes()).hexdigest() != compiled_hash:
+                    raise OSError(f"compiled EA copy verification failed in {terminal.name}")
+                (terminal / "MQL5" / "Presets").mkdir(parents=True, exist_ok=True)
+                (terminal / "MQL5" / "Presets" / f"{candidate}.set").write_text(text, encoding="utf-16")
+                installed.append(str(experts / candidate_ex5.name))
+            except OSError as error:
+                install_errors.append(f"{terminal.name}: {error}")
+        if not installed:
+            detail = "; ".join(install_errors) or "no MT5 terminal with the base EA was found"
+            raise RuntimeError(f"Candidate compiled and tested, but could not be installed in an attachable terminal: {detail}")
+
+        tester = {key: tested.get(key) for key in ("net", "pf", "trades", "wr", "dd", "quality")}
+        tester["avg_win"] = (tested.get("trade_stats") or {}).get("avg_win")
+        tester["avg_loss"] = (tested.get("trade_stats") or {}).get("avg_loss")
+        version = re.search(r'#property\s+version\s+"([^"]+)"', candidate_src.read_text(encoding="utf-8", errors="replace"))
+        compiled_at = datetime.fromtimestamp(candidate_ex5.stat().st_mtime).astimezone().isoformat(timespec="seconds")
+        metadata = {
+            "run_id": rid,
+            "name": candidate,
+            "version": version.group(1) if version else "unknown",
+            "compiled_at": compiled_at,
+            "source_path": str(candidate_src),
+            "source_sha256": source_hash,
+            "compiled_paths": installed,
+            "compiled_sha256": compiled_hash,
+            "compiler": {key: compile_result[key] for key in ("errors", "warnings", "process_exit_code", "log")},
+            "preset_paths": [str(Path(path).parent.parent / "Presets" / f"{candidate}.set") for path in installed],
+            "report_path": str(report_dst),
+            "report_url": f"/api/export_report?id={rid}",
+            "tester": tester,
+            "tester_symbol": d.get("symbol"),
+            "tester_period": d.get("period", PERIOD),
+            "tester_from": d.get("from"),
+            "tester_to": d.get("to"),
+            "tester_deposit": d.get("deposit"),
+            "settings_changed": d.get("changed") or {},
+            "available": True,
+        }
+        _write_candidate_manifest(rid, metadata)
+        _attach_candidate_to_saved(metadata)
+        result = {"candidate": candidate, "compiled": True, "tested": True, "tester": tester,
+                  "report": f"/api/export_report?id={rid}", "installed": installed, "install_errors": install_errors}
+        _export_status_update(rid, busy=False, phase="ready to attach", result=result, error=None)
+
+        if d.get("delay") != "random":
+            have = run_matching(doc["ea_inputs"], "random", d.get("period", PERIOD))
+            if have:
+                result["random_run"] = have
+                result["random_existing"] = True
+            else:
+                random_id, error = start_run(
+                    {"sets": doc["ea_inputs"], "delay": "random", "period": d.get("period", PERIOD),
+                     "from": d["from"], "to": d["to"], "label": f"Export: {d['label']}", "notes": d.get("notes")},
+                    source="export",
+                )
+                if error:
+                    result["random_error"] = error
+                else:
+                    result["random_run"] = random_id
+            _export_status_update(rid, result=result)
+    except (Exception, SystemExit) as error:
+        log(f"export {rid} failed:\n{traceback.format_exc()}")
+        _export_status_update(rid, busy=False, phase="failed", error=str(error), result=None)
+
+
+def _prepare_export(rid, d):
     live = axi_rig.ea_defaults(LIVE_EA)
     lines = [f"; {LIVE_EA} - settings from Turtle TV run {rid} '{d['label']}' ({d['created']})",
              f"; MT5 {d['symbol']} {d['from']} - {d['to']}, delay {d['delay']}: net {d['report'].get('net')}, PF {d['report'].get('pf')}, trades {d['report'].get('trades')}"]
-    lines += [f"{k}={v}" for k, v in d["inputs"].items() if k in live]
+    doc = settings_doc(d["inputs"], d.get("notes"), raw=d.get("tradingview"), chart=d.get("chart"),
+                       result={"run": rid, "label": d["label"], "symbol": d["symbol"], "period": d["period"], "from": d["from"], "to": d["to"],
+                               "delay": d["delay"], "deposit": d["deposit"], "net": d["report"].get("net"), "profit_factor": d["report"].get("pf"),
+                               "trades": d["report"].get("trades"), "max_drawdown": d["report"].get("dd")})
+    missing = sorted(set(live) - set(doc["ea_inputs"]))
+    if missing:
+        raise RuntimeError("Settings handoff omitted production EA inputs: " + ", ".join(missing))
+    lines += [f"{k}={v}" for k, v in doc["ea_inputs"].items()]
     text = "\r\n".join(lines) + "\r\n"
     name = f"{LIVE_EA}_TurtleTV.set"
     written = []
@@ -387,26 +874,228 @@ def export(rid):
             pre.mkdir(exist_ok=True)
             (pre / name).write_text(text, encoding="utf-16")
             written.append(str(pre / name))
-    rep = d["report"]
-    n = sum(1 for e in d["events"] if e["type"] == "exit")
-    w = sum(1 for e in d["events"] if e["type"] == "exit" and (e["v1"] or 0) > 0)
-    doc = settings_doc(d["inputs"], d.get("notes"), raw=d.get("tradingview"), chart=d.get("chart"),
-                       result={"run": rid, "label": d["label"], "symbol": d["symbol"], "period": d["period"], "from": d["from"], "to": d["to"],
-                               "delay": d["delay"], "deposit": d["deposit"], "net": rep.get("net"), "profit_factor": rep.get("pf"),
-                               "trades": n, "win_rate": round(100 * w / n, 1) if n else None, "max_drawdown": rep.get("dd"), "months": rep.get("months")})
+    candidate = f"{LIVE_EA}_TurtleTV_{rid}"
     jf = SETTINGS / f"{LIVE_EA}_TurtleTV_{rid}.json"
     jf.write_text(json.dumps(doc, indent=1), encoding="utf-8")
     (SETTINGS / "turtletv_export_latest.json").write_text(json.dumps(doc, indent=1), encoding="utf-8")
     written.insert(0, str(jf))
-    res = {"preset": name, "json": jf.name, "written": written, "run": None}
-    if d["delay"] != "random":
-        have = run_matching({k: v for k, v in d["inputs"].items()}, "random")
-        if have:
-            res["run"], res["existing"] = have, True
-        else:
-            rid2, err = start_run({"sets": d["inputs"], "delay": "random", "label": f"Export: {d['label']}", "notes": d.get("notes")}, source="export")
-            res["run"], res["error"] = rid2, err
-    return res
+    return {"preset": name, "json": jf.name, "candidate": candidate, "written": written,
+            "candidate_status": "compiling and testing"}, doc, text, candidate, jf
+
+
+def export(rid):
+    run_file = RUNS / f"{rid}.json"
+    if not run_file.is_file():
+        raise FileNotFoundError(f"MT5 run {rid} is unavailable")
+    d = json.loads(run_file.read_text(encoding="utf-8"))
+    with LOCK:
+        if STATE["busy"]:
+            raise RuntimeError("MT5 Strategy Tester is busy; wait for it to finish before exporting")
+        with EXPORT_LOCK:
+            if EXPORT_JOB["busy"]:
+                raise RuntimeError(f"Another EA export is still running ({EXPORT_JOB['id']})")
+            EXPORT_JOB.update(id=rid, busy=True, phase="preparing the complete production EA settings",
+                              error=None, result=None, started=time.time())
+    try:
+        response, doc, text, candidate, settings_path = _prepare_export(rid, d)
+    except Exception as error:
+        _export_status_update(rid, busy=False, phase="failed", error=str(error), result=None)
+        raise
+    _export_status_update(rid, candidate=candidate)
+    threading.Thread(target=_export_candidate, args=(rid, d, doc, settings_path, candidate, text), daemon=True).start()
+    return response
+
+
+def export_status(rid):
+    with EXPORT_LOCK:
+        if EXPORT_JOB["id"] != rid:
+            return {"id": rid, "busy": False, "error": "No active export job for this run"}
+        state = dict(EXPORT_JOB)
+    state["seconds"] = round(time.time() - state["started"], 1) if state["started"] else 0
+    return state
+
+
+def candidate_files(rid):
+    if not re.fullmatch(r"r\d{8}_\d{6}", rid):
+        return None
+    if not TERMINALS.is_dir():
+        return None
+    candidate = f"{LIVE_EA}_TurtleTV_{rid}"
+    source = ROOT / "mt5" / f"{candidate}.mq5"
+    report = RUNS / f"{rid}_candidate.htm"
+    if not source.is_file() or not report.is_file() or report.stat().st_size == 0:
+        return None
+    try:
+        for terminal in TERMINALS.iterdir():
+            compiled = terminal / "MQL5" / "Experts" / f"{candidate}.ex5"
+            if compiled.is_file() and compiled.stat().st_size:
+                return {"name": candidate, "source": source, "compiled": compiled, "report": report}
+    except OSError:
+        return None
+    return None
+
+
+def _candidate_installed_paths(name):
+    paths = []
+    try:
+        for terminal in TERMINALS.iterdir():
+            compiled = terminal / "MQL5" / "Experts" / f"{name}.ex5"
+            if compiled.is_file() and compiled.stat().st_size:
+                paths.append(str(compiled))
+    except OSError as error:
+        log(f"candidate {name}: could not inspect MT5 terminals: {error}")
+    return paths
+
+
+def _candidate_manifest_path(rid):
+    return RUNS / f"candidate_{rid}.json"
+
+
+def _write_candidate_manifest(rid, record):
+    manifest = _candidate_manifest_path(rid)
+    temporary = manifest.with_suffix(".json.tmp")
+    temporary.write_text(json.dumps(record, indent=2), encoding="utf-8")
+    temporary.replace(manifest)
+
+
+def _candidate_record_available(record):
+    try:
+        source = Path(record["source_path"])
+        report = Path(record["report_path"])
+        if not source.is_file() or not report.is_file() or report.stat().st_size == 0:
+            return False
+        source_hash = record.get("source_sha256")
+        if source_hash and hashlib.sha256(source.read_bytes()).hexdigest() != source_hash:
+            return False
+        expected_binary_hash = record.get("compiled_sha256")
+        for path in record.get("compiled_paths", []):
+            binary = Path(path)
+            if binary.is_file() and binary.stat().st_size:
+                if not expected_binary_hash or hashlib.sha256(binary.read_bytes()).hexdigest() == expected_binary_hash:
+                    return True
+        return False
+    except (KeyError, OSError, TypeError):
+        return False
+
+
+def candidate_metadata(rid, run=None):
+    if not re.fullmatch(r"r\d{8}_\d{6}", rid):
+        return None
+    manifest = _candidate_manifest_path(rid)
+    if manifest.is_file():
+        try:
+            record = json.loads(manifest.read_text(encoding="utf-8"))
+            record["available"] = _candidate_record_available(record)
+            source = Path(record["source_path"])
+            compiled = next((Path(path) for path in record.get("compiled_paths", [])
+                             if Path(path).is_file() and Path(path).stat().st_size), None)
+            changed = False
+            if not record.get("source_sha256") and source.is_file():
+                record["source_sha256"] = hashlib.sha256(source.read_bytes()).hexdigest()
+                changed = True
+            if not record.get("compiled_sha256") and compiled:
+                record["compiled_sha256"] = hashlib.sha256(compiled.read_bytes()).hexdigest()
+                changed = True
+            compiler = record.get("compiler") or {}
+            if "returncode" in compiler and "process_exit_code" not in compiler:
+                compiler["process_exit_code"] = compiler.pop("returncode")
+                record["compiler"] = compiler
+                changed = True
+            tester = record.setdefault("tester", {})
+            if "avg_win" not in tester or "avg_loss" not in tester:
+                try:
+                    report = axi_rig.parse(record["report_path"])
+                    trade_stats = report.get("trade_stats") or {}
+                    tester["avg_win"] = trade_stats.get("avg_win")
+                    tester["avg_loss"] = trade_stats.get("avg_loss")
+                    changed = True
+                except (OSError, ValueError, KeyError) as error:
+                    log(f"candidate {rid}: could not refresh tester averages: {error}")
+            if changed:
+                _write_candidate_manifest(rid, record)
+            _attach_candidate_to_saved(record)
+            return record
+        except (OSError, KeyError, TypeError, ValueError) as error:
+            log(f"candidate {rid}: invalid manifest {manifest}: {error}")
+
+    artifacts = candidate_files(rid)
+    if not artifacts:
+        return None
+    try:
+        report = axi_rig.parse(artifacts["report"])
+    except (OSError, ValueError, KeyError) as error:
+        log(f"candidate {rid}: could not read MT5 candidate report: {error}")
+        return None
+    paths = _candidate_installed_paths(artifacts["name"])
+    try:
+        compiled_at = datetime.fromtimestamp(Path(paths[0]).stat().st_mtime).astimezone().isoformat(timespec="seconds")
+    except (IndexError, OSError, ValueError):
+        compiled_at = datetime.fromtimestamp(artifacts["source"].stat().st_mtime).astimezone().isoformat(timespec="seconds")
+    source_text = artifacts["source"].read_text(encoding="utf-8", errors="replace")
+    version = re.search(r'#property\s+version\s+"([^"]+)"', source_text)
+    run = run or {}
+    record = {
+        "run_id": rid,
+        "name": artifacts["name"],
+        "version": version.group(1) if version else "unknown",
+        "compiled_at": compiled_at,
+        "source_path": str(artifacts["source"]),
+        "source_sha256": hashlib.sha256(artifacts["source"].read_bytes()).hexdigest(),
+        "compiled_paths": paths,
+        "compiled_sha256": hashlib.sha256(Path(paths[0]).read_bytes()).hexdigest() if paths else None,
+        "report_path": str(artifacts["report"]),
+        "report_url": f"/api/export_report?id={rid}",
+        "preset_paths": [str(Path(path).parent.parent / "Presets" / f"{artifacts['name']}.set") for path in paths],
+        "tester": {key: report.get(key) for key in ("net", "pf", "trades", "wr", "dd", "quality")} | {
+            "avg_win": (report.get("trade_stats") or {}).get("avg_win"),
+            "avg_loss": (report.get("trade_stats") or {}).get("avg_loss"),
+        },
+        "tester_symbol": run.get("symbol"),
+        "tester_period": run.get("period"),
+        "tester_from": run.get("from"),
+        "tester_to": run.get("to"),
+        "tester_deposit": run.get("deposit"),
+        "settings_changed": run.get("changed") or {},
+        "available": True,
+    }
+    try:
+        _write_candidate_manifest(rid, record)
+        _attach_candidate_to_saved(record)
+    except OSError as error:
+        log(f"candidate {rid}: could not persist export manifest: {error}")
+    return record
+
+
+def _saved_period(ds):
+    return "M5" if ds == "m5x" else "M1" if ds in ("year1", "m1x") else "M15"
+
+
+def _attach_candidate_to_saved(record):
+    changed = record.get("settings_changed") or {}
+    period = record.get("tester_period") or "M15"
+    for path in SAVED.glob("*.json"):
+        try:
+            saved = json.loads(path.read_text(encoding="utf-8"))
+            if _saved_period(saved.get("ds")) != period:
+                continue
+            saved_changed = saved.get("changed") or {}
+            if len(saved_changed) != len(changed) or not all(
+                key in saved_changed and same(saved_changed[key], value) for key, value in changed.items()
+            ):
+                continue
+            exports = saved.get("candidate_exports") or []
+            existing = next((item for item in exports if item.get("run_id") == record["run_id"]), None)
+            if existing == record:
+                continue
+            exports = [item for item in exports if item.get("run_id") != record["run_id"]]
+            exports.append(record)
+            exports.sort(key=lambda item: item.get("compiled_at", ""))
+            saved["candidate_exports"] = exports
+            temporary = path.with_suffix(".json.tmp")
+            temporary.write_text(json.dumps(saved, indent=2), encoding="utf-8")
+            temporary.replace(path)
+        except (OSError, ValueError, TypeError) as error:
+            log(f"candidate {record.get('run_id')}: could not save metadata to {path}: {error}")
 
 
 # ---------- the Turtle TV Tester (sim.py): instant results for any settings ----------
@@ -433,7 +1122,9 @@ def bars_json(ds="year"):
 
 def full_inputs(sets):
     dfl = axi_rig.ea_defaults(EA)
-    return {i["name"]: str(sets.get(i["name"], dfl.get(i["name"], i["default"]))) for i in ea_inputs()["inputs"]}
+    out = {i["name"]: str(sets.get(i["name"], dfl.get(i["name"], i["default"]))) for i in ea_inputs()["inputs"]}
+    out.update({k: str(v) for k, v in sets.items() if str(k).startswith("TvBox_")})   # rbox.py range boxes: Turtle TV tester inputs (not in the EA yet)
+    return out
 
 
 # ---------------------------------------------------------------- ask Claude about ONE trade (Zee 2026-10-20: "on the buy sell label of each candle,
@@ -650,7 +1341,7 @@ def _months(tr):
     return {k: {"n": v[0], "w": v[1], "net": round(v[2])} for k, v in sorted(m.items())}
 
 
-def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea", lab=None):
+def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea", lab=None, prune=()):
     """ds 'year' (Blueberry MT5 candles) / 'tv' (TradingView's candles); mode 'ea' (v1.27's rules, real spread + swap), 'chart' (the indicator's
     rules, $0.17 spread, no swap), 'chart_blind' (and blind inside the entry candle before Oct 12, like TradingView without 1-minute data)."""
     ds = ds if ds in ("year", "tv", "m15", "year1", "m1x", "m5x") else "year"
@@ -660,7 +1351,7 @@ def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea", lab=
     if lab and str(inp.get("InpExitMode")) not in ("1", "2"):
         inp["InpExitMode"] = "1"                          # the Exit Lab's exits sit on top of exit modes 1-2
     t0 = time.time()
-    tr, su, st = sim.simulate(inp, ds=ds, lab=lab, **MODES.get(mode, {}))
+    tr, su, st = sim.simulate(inp, ds=ds, lab=lab, prune=tuple(int(r) for r in (prune or ())), **MODES.get(mode, {}))   # prune: Trade Lifecycle cuts applied
     ms = round(1000 * (time.time() - t0), 1)
     D = sim.data(ds)
     nf, ns = int(float(inp["InpEmaFast"])), int(float(inp["InpEmaSlow"]))
@@ -688,6 +1379,13 @@ def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea", lab=
     ev.sort(key=lambda e: e["t"])
     trn, tst = tr[tr[:, 1] < optimizer.TRAIN_END], tr[tr[:, 1] >= optimizer.TRAIN_END]
     out = {"inputs": inp, "ms": ms, "events": ev, "stats": st, "year": sim.score(tr), "train": sim.score(trn, 1), "test": sim.score(tst, 1), "ds": ds, "mode": mode}
+    if ds in ("m15", "year", "tv"):                    # rbox.py range-box families: each trade's box (range-boxes page)
+        try:
+            import rbox
+            real = [x for x in tr if x[10] == 0]
+            out["rbox"] = {"spec": rbox.spec(), "rows": [[_utc(x[1]), int(x[0])] + b for x, b in zip(real, rbox.label_trades(ds, D, real, *sim.emas(nf, ns, ds)))]}
+        except Exception as ex:                       # noqa: BLE001
+            out["rbox"] = {"error": str(ex)}
     if mode == "chart_blind":                    # the same settings with 1-minute data everywhere: which trades TradingView scores wrongly
         tr2 = sim.simulate(inp, ds=ds, chart=True)[0]
         real = {(int(x[0]), int(x[1]) // 900): x for x in tr2 if x[10] == 0}
@@ -711,6 +1409,7 @@ def sim_result(sets, want_ema=True, want_setups=True, ds="year", mode="ea", lab=
 
 
 OPT = {"o": None}
+RISK_OPT = {"o": None}
 
 # ---------- Ask Claude (Zee 2026-10-20: "is there a way i can connect claude to this web page so it can read in realtime all charts and analyse etc
 # or suggest improvements in the strategy") - the chart picture + the data behind it go to Claude from here; the API key never reaches the page
@@ -766,24 +1465,58 @@ def ask_claude(body):
 
 
 def opt_start(body):
+    objective = body.get("objective") or "ret_dd"
+    if not isinstance(objective, str) or objective not in (*optimizer.OBJECTIVES, "entries", "exits", "ranges"):
+        return {"error": f"Unsupported optimizer objective: {objective}"}
+    if RISK_OPT["o"] and RISK_OPT["o"].running:
+        return {"error": "The Risk Manager scan is running. Stop it or wait for it to finish."}
     if OPT["o"] and OPT["o"].running:
         OPT["o"].stop()
         time.sleep(0.2)
-    if body.get("objective") == "ranges":                         # grow the number of 100%-win range boxes
+    if objective == "ranges":                                     # grow the number of 100%-win range boxes
         o = optimizer.RangeOpt(full_inputs(body.get("start") or {}), ds=body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x", "m5x") else "year")
         OPT["o"] = o
         threading.Thread(target=o.run, daemon=True).start()
         return {"ok": True}
-    if body.get("objective") in ("entries", "exits"):            # survey: every entry / exit setting one at a time, all results listed
-        o = optimizer.Survey(full_inputs(body.get("start") or {}), body["objective"], ds=body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x", "m5x") else "year")
+    if objective in ("entries", "exits"):                        # survey: every entry / exit setting one at a time, all results listed
+        o = optimizer.Survey(full_inputs(body.get("start") or {}), objective, ds=body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x", "m5x") else "year")
         OPT["o"] = o
         threading.Thread(target=o.run, daemon=True).start()
         return {"ok": True}
-    o = optimizer.Optimizer(full_inputs(body.get("start") or {}), objective=body.get("objective") or "ret_dd", boxes=bool(body.get("boxes")),
+    o = optimizer.Optimizer(full_inputs(body.get("start") or {}), objective=objective, boxes=bool(body.get("boxes")),
                             keep_going=bool(body.get("keep")), ds=body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x", "m5x") else "year")
     OPT["o"] = o
     threading.Thread(target=opt_run_and_check, args=(o,), daemon=True).start()
     return {"ok": True}
+
+
+def risk_start(body):
+    groups = body.get("groups") or []
+    if not isinstance(groups, list) or not groups:
+        return {"error": "Select at least one risk-control group to scan."}
+    if any(not isinstance(g, str) or g not in optimizer.RISK_SPACE for g in groups):
+        return {"error": "The risk scan contains an unsupported control group."}
+    if (OPT["o"] and OPT["o"].running) or (RISK_OPT["o"] and RISK_OPT["o"].running):
+        return {"error": "Another optimizer scan is already running. Stop it or wait for it to finish."}
+    start = full_inputs(body.get("inputs") or {})
+    spaces = list(optimizer.RISK_SPACE["stop"] if "stop" in groups else [])
+    mode = str(start.get("InpSlMode", "1"))
+    if "stop" in groups:
+        if mode == "0":
+            spaces.insert(0, ("InpSlPips", "num", (5, 95, 5)))
+        elif mode == "1":
+            spaces.insert(0, ("InpSlAtrMult", "num", (0.5, 3.0, 0.25)))
+        else:
+            spaces.insert(0, ("InpSlUsd", "num", (5, 25, 2.5)))
+    for group in dict.fromkeys(groups):
+        if group != "stop":
+            spaces.extend(optimizer.RISK_SPACE[group])
+    ds = body.get("ds") if body.get("ds") in ("year", "m15", "year1", "m1x", "m5x") else "year"
+    o = optimizer.Optimizer(start, objective="worst_loss", min_trades=30, ds=ds, space=spaces, trade_floor_ratio=0.70, exhaustive=True)
+    o.risk_groups = groups
+    RISK_OPT["o"] = o
+    threading.Thread(target=o.run, daemon=True).start()
+    return {"ok": True, "groups": groups}
 
 
 def opt_run_and_check(o):
@@ -820,7 +1553,7 @@ def lab_start(body):
         LAB[slot].stop()
     inputs = full_inputs(body.get("inputs") or {})
     ds = body.get("ds") if body.get("ds") in ("year", "m15", "tv", "year1", "m1x", "m5x") else "year"
-    kw = {k: body.get(k) for k in ("lab", "sets", "objective", "fx", "fy", "xs", "ys", "focus") if body.get(k) is not None}
+    kw = {k: body.get(k) for k in ("lab", "sets", "objective", "fx", "fy", "xs", "ys", "focus", "priority") if body.get(k) is not None}
     key = json.dumps([inputs, "year" if ds == "tv" else ds], sort_keys=True)
     if action == "search" and LAB["cat"] and LAB["cat"][0] == key:
         kw["cat_rows"] = LAB["cat"][1]                    # the catalogue of the same settings: the search starts from it
@@ -828,14 +1561,15 @@ def lab_start(body):
     j.key = key
     j.req = {"inputs": body.get("inputs") or {}, "ds": "year" if ds == "tv" else ds}     # what the page asked for: it warns when its settings moved on
     if action == "sweep":                                     # a scan is of a bench (settings + the bench's changes + its Exit Lab form): a page opened later must know which
-        j.req.update(lab=body.get("lab") or {}, sets=body.get("sets") or {}, focus=body.get("focus") or "")
+        j.req.update(lab=body.get("lab") or {}, sets=body.get("sets") or {}, focus=body.get("focus") or "", priority=body.get("priority") or [])
     LAB[slot] = j
     threading.Thread(target=j.run, daemon=True).start()
     return {"ok": True}
 
 
-def lab_state(full=False):
+def lab_state(full=False, partial=""):
     out = {}
+    seen_id, sep, seen_count = partial.rpartition(":")
     for slot, name in (("job", "main"), ("tjob", "quick")):
         j = LAB[slot]
         if not j:
@@ -847,7 +1581,14 @@ def lab_state(full=False):
         if j.error and not getattr(j, "logged", False):
             j.logged = True
             log(f"exit lab {j.action}: {getattr(j, 'tb', j.error)}")
-        out[name] = j.state()
+        state = j.state()
+        if not full and sep and slot == "job" and j.action == "sweep" and seen_id == j.jid and state["partial_result"]:
+            try:
+                if int(seen_count) >= state["partial_result"]["completed"]:
+                    state["partial_result"] = None
+            except ValueError:
+                pass
+        out[name] = state
     if full:
         out["done"] = {a: j.state() for a, j in LAB["done"].items()}
     return _jsonable(out)
@@ -1026,6 +1767,70 @@ def ml_state():
     return _jsonable(j.state())
 
 
+# ---------------------------------------------------------------- the Machine Learning tab, first block: the institutional entry filter (mlx/run.py)
+# Zee 2026-11-01: Triple Barrier labels -> Purged K-Fold CV (24-bar embargo) -> SHAP pruning -> LightGBM + CatBoost stacked into a
+# LogisticRegression -> ONNX -> the EA (OnnxRun at every M15 close, enters only when P > 0.75). The pipeline writes simdata/mlx_results.json;
+# this is its remote control: one job at a time, the page polls GET /api/mlx. Until the real file exists the page gets the fixture, "sample": true.
+MLX = {"running": False, "phase": "", "progress": 0, "total": 0, "t0": None, "seconds": 0, "error": None}
+MLX_RESULTS = HERE / "simdata" / "mlx_results.json"
+MLX_SAMPLE = HERE / "simdata" / "mlx_results.sample.json"
+MLX_SPEC = HERE / "mlx" / "FEATURE_SPEC.md"
+
+
+def mlx_state():
+    out = {k: MLX[k] for k in ("running", "phase", "progress", "total", "error")}
+    out["seconds"] = round(time.time() - MLX["t0"], 1) if MLX["running"] and MLX["t0"] else MLX["seconds"]
+    out["result"], out["sample"], out["built_module"] = None, False, (HERE / "mlx" / "run.py").is_file()
+    for f, sample in ((MLX_RESULTS, False), (MLX_SAMPLE, True)):
+        if f.is_file():
+            try:
+                out["result"], out["sample"] = json.loads(f.read_text(encoding="utf-8")), sample
+                break
+            except (OSError, ValueError) as e:
+                out["error"] = out["error"] or f"{f.name}: {e}"
+    return _jsonable(out)
+
+
+def mlx_start(body):
+    """POST /api/mlx {} -> the whole pipeline in a background thread: mlx.run.run(progress_cb)"""
+    if MLX["running"]:
+        return {"error": "the pipeline is already running"}
+    try:
+        import mlx.run as mlx_run                             # lazy: monitor/saad_view/mlx/run.py, built by the pipeline agent
+    except Exception as e:                                    # noqa: BLE001
+        if not (HERE / "mlx" / "run.py").is_file():
+            return {"error": "the pipeline is not built yet"}
+        return {"error": f"mlx.run does not import: {e}"[:400]}
+
+    def cb(phase=None, progress=None, total=None, **kw):     # tolerant: cb("phase", i, n) · cb(phase=.., progress=.., total=..) · cb({...})
+        if isinstance(phase, dict):
+            kw, phase = {**phase, **kw}, phase.get("phase")
+        if phase is not None:
+            MLX["phase"] = str(phase)[:200]
+        progress = kw.get("progress", kw.get("i", progress))
+        total = kw.get("total", kw.get("n", total))
+        if progress is not None:
+            MLX["progress"] = int(progress)
+        if total is not None:
+            MLX["total"] = int(total)
+
+    def go():
+        try:
+            res = mlx_run.run(cb)
+            if isinstance(res, dict) and res.get("built") and (not MLX_RESULTS.is_file() or MLX_RESULTS.stat().st_mtime < MLX["t0"]):
+                MLX_RESULTS.parent.mkdir(exist_ok=True)      # run.py writes the file itself; a returned dict is kept only if it did not
+                MLX_RESULTS.write_text(json.dumps(_jsonable(res), indent=1), encoding="utf-8")
+            MLX["phase"] = "done"
+        except Exception as e:                                # noqa: BLE001
+            MLX["error"] = str(e)[:400]
+            log("mlx: " + traceback.format_exc())
+        finally:
+            MLX["seconds"], MLX["running"] = round(time.time() - MLX["t0"], 1), False
+    MLX.update(running=True, t0=time.time(), seconds=0, error=None, phase="starting", progress=0, total=0)
+    threading.Thread(target=go, daemon=True).start()
+    return {"ok": True}
+
+
 # ---------------------------------------------------------------- Strategy Lego (lego.py): replace the core pieces of the strategy
 def lego_test(body):
     inputs = full_inputs(dict(body.get("inputs") or {}, **(body.get("sets") or {})))
@@ -1094,7 +1899,435 @@ def stress_state():
     return _jsonable(dict({k: v for k, v in ST.items() if k != "t0"}, seconds=round(time.time() - ST["t0"], 1) if ST["t0"] else 0))
 
 
+# ---------------------------------------------------------------- Research page (papers/): a PDF -> a headless Claude Fable 5.1 job -> a saved setting
+# Zee 2026-11-01: "i zeeshan reads a research paper on the internet -> downloads it -> gives it to claude via this webpage to parse and build into an EA
+# and test and validate and finally save the results in a list from which i can then pick it up by clicking Save setting". The runner is
+# papers/job.py (no server import); the store is papers/store/<id>/ (pdf, txt, meta, prompt, logs, result.json, setting.json - contract in papers/README.md).
+import papers.job as pjob  # noqa: E402
+import deploy as deploy_mod  # noqa: E402  (Zee 2026-11-02: the Deploy tab + "Deploy EA to Server")
+
+PAPERS = pjob.STORE
+SAVED_NAME_BAD = re.compile(r'[\\/:*?"<>|\x00-\x1f]|\.\.')      # a saved-setting name is a file name: nothing that leaves the folder
+
+
+def _safe_saved_name(n):
+    n = str(n or "").strip()
+    return bool(n) and len(n) <= 150 and not SAVED_NAME_BAD.search(n)
+
+
+def _paper_slug(name):
+    stem = re.sub(r"\.pdf$", "", str(name or "paper"), flags=re.I)
+    stem = re.sub(r"[^A-Za-z0-9._-]+", "_", stem).strip("._-") or "paper"
+    return stem[:40].rstrip("._-") or "paper"
+
+
+def _pdf_text(path):
+    """pypdf text of every page, pages separated by a form feed; ('', 0) when pypdf cannot read it."""
+    try:
+        import pypdf
+        r = pypdf.PdfReader(str(path))
+        pages = [(pg.extract_text() or "") for pg in r.pages]
+        return "\n\f\n".join(pages), len(pages)
+    except Exception as e:                                    # noqa: BLE001
+        log(f"research: pypdf failed on {path}: {e}")
+        return "", 0
+
+
+def _pdf_title(text):
+    """The title = the first non-empty lines of page 1 joined, until a blank line / an 'Author:' kind of line / 4 lines / 200 chars (pypdf wraps it)."""
+    lines = [ln.strip() for ln in text.split("")[0].splitlines()]
+    while lines and len(lines[0]) <= 3:
+        lines.pop(0)
+    out = []
+    stop = re.compile(r"^(author|authors|by|abstract|subject|date|keywords|department|university|institute|school|college|\d|.*@.*|.*et al)", re.I)
+    for ln in lines[:8]:
+        if not ln or (out and stop.match(ln)) or len(" ".join(out + [ln])) > 200 or len(out) >= 4:
+            break
+        out.append(ln)
+    return " ".join(out).strip()
+
+
+# ---------------------------------------------------------------- Range boxes: B's loser-cutting filters measured on any setting (Zee 2026-11-02)
+# Each group = inputs of 2026-10-30 23-08-23 that the setting may not have. For the setting on the chart the tester runs it once per group
+# (and once with every entry group on) and attributes every trade that disappears to winner / loser. Turtle TV Tester = hypothesis.
+LCF_GROUPS = [                                            # (key, B's values = box ON, neutral values = box OFF) - mirrors static/app.js LCF
+    ("gap", {"InpEmaGapPips": "22.5"}, {"InpEmaGapPips": "0"}),
+    ("sess", {"InpSessTo": "19", "InpHours": "111111111110111111111111"}, {"InpSessTo": "24", "InpHours": "1" * 24}),
+    ("bands", {"InpBandsB": "111111101111001111110", "InpBandsS": "111110100000101001101", "InpBandOff": "1"}, {"InpBandsB": "1" * 21, "InpBandsS": "1" * 21, "InpBandOff": "0"}),
+    ("shape", {"InpHamRatio": "2.25", "InpHamNose": "0.8", "InpNoseMax": "0.05", "InpStar": "false"}, {"InpHamRatio": "1.25", "InpHamNose": "0.5", "InpNoseMax": "0.15", "InpStar": "true"}),
+    ("touch", {"InpTouchPips": "3.5", "InpMinRangeAtr": "0.8"}, {"InpTouchPips": "6.5", "InpMinRangeAtr": "0.75"}),
+    ("day", {"InpDayTargetUsd": "2000", "InpDayLossPct": "2"}, {"InpDayTargetUsd": "0", "InpDayLossPct": "0"}),
+    ("tvbox", {"TvBox_kelt_S": "110111111111", "TvBox_vwap_B": "11101111"}, {"TvBox_kelt_S": "1" * 12, "TvBox_vwap_B": "1" * 8}),
+    ("exits", {"InpXFriHour": "22", "InpXCx": "0", "InpXCxN": "2"}, {"InpXFriHour": "0", "InpXCx": "0", "InpXCxN": "2"}),
+]
+LCF = {"running": False, "key": None, "phase": "", "rows": {}, "base": None, "error": None, "secs": 0}
+LCF_SCAN = HERE / "research" / "filter_scan_C.json"
+LCF_B_NAMES = {"gap": "B · EMA gap ≥ 22.5 pips", "sess": "B · session to 19:00 + hour 11 off", "bands": "B · price bands B/S + BandOff", "shape": "B · stricter hammer shape, no stars",
+               "touch": "B · touch 3.5 pips + MinRangeAtr 0.8", "day": "B · day caps $2000 target / 2% loss", "tvbox": "B · TvBox kelt_S / vwap_B masks", "exits": "B · exits (Friday 22h, no candle exit)"}
+
+
+def lcf_catalog(top=20):
+    """GET /api/lcf_catalog -> the boxes of the loser-cutting table: B's 8 groups + the top-N single filters of the all-saves scan on C
+    (ranked by the net of the trades they cut; off value = C's value for that input, else the EA default)"""
+    groups = [{"key": k, "name": LCF_B_NAMES[k], "set": on, "off": off, "source": "B 2026-10-30 23-08-23"} for k, on, off in LCF_GROUPS]
+    scan = None
+    if LCF_SCAN.is_file():
+        try:
+            scan = json.loads(LCF_SCAN.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            scan = None
+    if scan:
+        rows = [r for r in scan.get("rows", []) if "error" not in r and r.get("cut_losers", 0) >= 2]
+        rows.sort(key=lambda r: (r["cut_net"], -(r["selectivity"] or 0)))
+        seen = {tuple(sorted(on.items())) for _, on, _ in LCF_GROUPS}
+        for r in rows:
+            if len([g for g in groups if g["source"] == "scan"]) >= top:
+                break
+            on = {r["input"]: r["value"]}
+            if tuple(on.items()) in seen:
+                continue
+            groups.append({"key": f"scan_{r['input']}_{re.sub(r'[^A-Za-z0-9]', '', r['value'])[:24]}", "name": f"{r['input'].replace('Inp', '')} = {r['value']} (used by {r['used_by']} saves)",
+                           "set": on, "off": {r["input"]: r.get("c_value") if r.get("c_value") not in (None, "None") else r["default"]}, "source": "scan",
+                           "on_c": {k: r[k] for k in ("cut_n", "cut_losers", "cut_winners", "cut_net", "d_net", "selectivity")}})
+        info = {"candidates": len(scan.get("rows", [])), "secs": scan.get("secs"), "complete": "top20_by_cut_net" in scan}
+    else:
+        info = {"candidates": 0, "complete": False}
+    return {"groups": groups, "scan": info}
+
+
+def _lcf_trades(inputs, ds):
+    tr, _, _ = sim.simulate(full_inputs(inputs), ds=ds)
+    tr = tr[tr[:, 10] == 0]
+    return {(int(r[11]), 1 if r[0] > 0 else -1): float(r[6]) for r in tr}
+
+
+def lcf_start(body):
+    """POST /api/lcf {inputs, ds} -> runs B's filter groups on these inputs in a thread; GET /api/lcf polls"""
+    if body.get("stop"):                                         # the page's "stop auto-measuring": finish the current tester run, skip the rest
+        LCF["stop"] = True
+        return {"ok": True, "stopping": LCF["running"]}
+    if LCF["running"]:
+        return {"error": "already measuring"}
+    inputs = {k: str(v) for k, v in (body.get("inputs") or {}).items()}
+    ds = body.get("ds") or "m15"
+    key = hashlib.md5(json.dumps([inputs, ds], sort_keys=True).encode()).hexdigest()[:12]
+    if LCF["key"] == key and LCF["rows"]:
+        return {"ok": True, "cached": True, "key": key}
+    if body.get("probe"):                                        # the page asking "is there a measurement for these inputs?" without starting one
+        return {"ok": True, "key": key, "have": False}
+
+    def go():
+        t0 = time.time()
+        try:
+            base = _lcf_trades(inputs, ds)
+            losers = {k for k, p in base.items() if p <= 0}; winners = set(base) - losers
+            LCF.update(base={"n": len(base), "losers": len(losers), "winners": len(winners), "net": round(sum(base.values()))}, rows={})
+            cat = lcf_catalog()["groups"]
+            groups = [(g["key"], g["set"], g["off"]) for g in cat] + [("all", {k: v for g in LCF_GROUPS if g[0] != "exits" for k, v in g[1].items()}, {k: v for g in LCF_GROUPS if g[0] != "exits" for k, v in g[2].items()})]
+            for i, (name, on, off) in enumerate(groups):
+                if LCF.get("stop"):
+                    LCF["phase"] = f"stopped after {i} of {len(groups)}"; break
+                LCF["phase"] = f"{name} ({i + 1}/{len(groups)})"
+                already = all(str(inputs.get(k)) == v for k, v in on.items())
+                inp = dict(inputs); inp.update(off if already else on)      # a box the setting already has: measure what it is cutting NOW (run with it off)
+                t = _lcf_trades(inp, ds)
+                cut = {k: base[k] for k in set(base) - set(t)} if not already else {k: t[k] for k in set(t) - set(base)}   # the trades the box removes
+                new = {k: t[k] for k in set(t) - set(base)} if not already else {k: base[k] for k in set(base) - set(t)}   # trades that APPEAR when the box is applied (freed positions)
+                cl = {k for k, p in cut.items() if p <= 0}; cw = set(cut) - cl
+                nl, nw = (len(losers), len(winners)) if not already else (sum(p <= 0 for p in t.values()), sum(p > 0 for p in t.values()))
+                sel = (len(cl) / max(1, nl)) / (len(cw) / max(1, nw)) if cw else (float("inf") if cl else None)
+                LCF["rows"][name] = {"added_n": len(new), "added_net": round(sum(new.values())), "cut_n": len(cut), "cut_wr": round(100 * len(cw) / max(1, len(cut)), 1) if cut else None, "cut_net": round(sum(cut.values())),
+                                     "removed_losers": len(cl), "removed_winners": len(cw), "with_n": len(t) if not already else len(base), "with_wr": round(100 * sum(p > 0 for p in (t if not already else base).values()) / max(1, len(t if not already else base)), 2),
+                                     "with_net": round(sum((t if not already else base).values())), "without_net": round(sum((base if not already else t).values())),
+                                     "selectivity": None if sel is None else (999 if sel == float("inf") else round(sel, 2)), "already_on": already}
+            if not LCF.get("stop"):
+                LCF["phase"] = "done"
+        except Exception as e:                                    # noqa: BLE001
+            LCF["error"] = str(e)[:300]; log("lcf: " + traceback.format_exc())
+        finally:
+            LCF["secs"], LCF["running"] = round(time.time() - t0), False
+    LCF.update(running=True, key=key, phase="starting", rows={}, base=None, error=None, stop=False)
+    threading.Thread(target=go, daemon=True).start()
+    return {"ok": True, "key": key}
+
+
+def research_upload(body):
+    """POST /api/research_upload {name, b64} -> store entry (paper.pdf, paper.txt, meta.json) -> {ok, id, title, pages}"""
+    name = str(body.get("name") or "paper.pdf")
+    raw = base64.b64decode(str(body.get("b64") or "").split(",")[-1] or b"", validate=False)
+    if not raw:
+        return {"error": "empty upload"}
+    return _research_store(name, raw, source_url=None)
+
+
+RESEARCH_DIR = ROOT / "research"                            # Zee's own folder of downloaded papers (a copy of every URL fetch lands here too)
+
+
+def research_url(body):
+    """POST /api/research_url {url, base?, notes?, start?} -> downloads a .pdf URL, keeps a copy in turtle/research/, stores it like an upload
+    and (start true, the default) begins the build at once -> {ok, id, title, pages, saved_copy, build}"""
+    url = str(body.get("url") or "").strip()
+    if not re.match(r"^https?://", url, flags=re.I):
+        return {"error": "the URL must start with http:// or https://"}
+    if not re.search(r"\.pdf(\?|#|$)", url, flags=re.I):
+        return {"error": "the URL must end with .pdf"}
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (Turtle TV research fetch)"})
+        with urllib.request.urlopen(req, timeout=90) as r:
+            raw = r.read(61 * 1024 * 1024)
+    except Exception as e:                                    # noqa: BLE001
+        return {"error": f"download failed: {str(e)[:200]}"}
+    name = re.sub(r"[?#].*$", "", url.rsplit("/", 1)[-1]) or "paper.pdf"
+    name = re.sub(r"[^A-Za-z0-9._ -]", "_", urllib.parse.unquote(name))[:120]
+    if not name.lower().endswith(".pdf"):
+        name += ".pdf"
+    out = _research_store(name, raw, source_url=url)
+    if out.get("error"):
+        return out
+    try:                                                      # Zee: "download and keep it in the research folder"
+        RESEARCH_DIR.mkdir(exist_ok=True)
+        copy = RESEARCH_DIR / name
+        if copy.exists():
+            copy = RESEARCH_DIR / f"{copy.stem} {out['id'][:19]}{copy.suffix}"
+        copy.write_bytes(raw)
+        out["saved_copy"] = str(copy)
+    except OSError as e:
+        out["saved_copy_error"] = str(e)[:200]
+    if body.get("start", True):
+        out["build"] = research_build({"id": out["id"], "base": body.get("base"), "notes": body.get("notes")})
+    return out
+
+
+def _research_store(name, raw, source_url=None):
+    """a PDF's bytes -> papers/store/<id>/ (paper.pdf, paper.txt, meta.json) -> {ok, id, title, pages}"""
+    if not raw.startswith(b"%PDF"):
+        return {"error": "not a PDF (the file does not start with %PDF)"}
+    if len(raw) > 60 * 1024 * 1024:
+        return {"error": "PDF over 60 MB"}
+    pid = datetime.now().strftime("%Y-%m-%d %H-%M-%S") + "-" + _paper_slug(name)
+    d = PAPERS / pid
+    for _ in range(3):                                        # two uploads in the same second
+        if not d.exists():
+            break
+        time.sleep(1)
+        pid = datetime.now().strftime("%Y-%m-%d %H-%M-%S") + "-" + _paper_slug(name)
+        d = PAPERS / pid
+    d.mkdir(parents=True, exist_ok=False)
+    (d / "paper.pdf").write_bytes(raw)
+    text, pages = _pdf_text(d / "paper.pdf")
+    (d / "paper.txt").write_text(text, encoding="utf-8")
+    title = _pdf_title(text) or re.sub(r"\.pdf$", "", name, flags=re.I)
+    title = title.replace(",", " ")
+    meta = {"id": pid, "file": name, "title": title, "uploaded": pjob.now(), "pages": pages, "bytes": len(raw), "base_setting": None,
+            "status": "uploaded", "started": None, "finished": None, "error": None, "exit_code": None, "phase": "", "notes": "", "source_url": source_url}
+    pjob.write_json(d / "meta.json", meta)
+    log(f"research: {'fetched ' + source_url if source_url else 'uploaded'} {pid} ({pages} pages, {len(raw)} bytes)")
+    return {"ok": True, "id": pid, "title": title, "pages": pages}
+
+
+def research_list():
+    """GET /api/research -> {papers: [meta + result + has_setting], running, claude: {exe, found}, bases, default_base}"""
+    PAPERS.mkdir(parents=True, exist_ok=True)
+    out = []
+    for d in sorted(PAPERS.iterdir(), reverse=True):
+        if not d.is_dir() or not (d / "meta.json").is_file():
+            continue
+        m = pjob.read_json(d / "meta.json") or {"id": d.name}
+        res = pjob.read_json(d / "result.json")
+        if res and not res.get("base_mt5") and (res.get("base_setting") or {}).get("name"):     # fill the base's MT5 rows from mt5_years.json when the job did not
+            res["base_mt5"] = pjob.mt5_rows_for("save:" + res["base_setting"]["name"])
+        if res and not res.get("mt5") and not res.get("dry"):
+            res["mt5"] = pjob.mt5_rows_for("save:" + pjob.candidate_name(d.name))
+        m["result"] = res
+        m["has_setting"] = (d / "setting.json").is_file()
+        m["has_log"] = (d / "log.txt").is_file()
+        m["candidate_saved"] = (SAVED / f"{pjob.candidate_name(d.name)}.json").is_file()
+        out.append(m)
+    exe = pjob.find_claude()
+    return _jsonable({"papers": out, "running": pjob.state(), "claude": {"exe": exe, "found": bool(exe), "version": pjob.claude_version(exe)},
+                      "bases": pjob.saved_names(), "default_base": pjob.default_base(), "ea_version": pjob.ea_version()})
+
+
+def research_build(body):
+    """POST /api/research_build {id, base?, notes?, dry?} -> starts papers/job.py in a thread (one job at a time)"""
+    pid = str(body.get("id") or "")
+    if not pjob.ID_RE.match(pid) or not (PAPERS / pid / "meta.json").is_file():
+        return {"error": "no such paper"}
+    if pjob.busy():
+        return {"error": f"a research job is already running ({pjob.state()['id']}) - one at a time"}
+    dry = bool(body.get("dry"))
+    base = str(body.get("base") or "") or pjob.default_base()
+    if not base or not (SAVED / f"{base}.json").is_file():
+        return {"error": f"base saved setting not found: {base}"}
+    if not dry and not pjob.find_claude():
+        return {"error": "claude.exe not found (no anthropic.claude-code-* VS Code extension and no 'claude' on PATH)"}
+    notes = str(body.get("notes") or "")[:4000]
+
+    def go():
+        try:
+            pjob.run(pid, base, notes, dry=dry)
+        except Exception as e:                                # noqa: BLE001
+            log("research job: " + traceback.format_exc())
+            pjob.update_meta(pid, status="failed", error=str(e)[:400], finished=pjob.now())
+    threading.Thread(target=go, daemon=True).start()
+    for _ in range(20):                                       # let the thread claim the job so the page's next poll sees it running
+        if pjob.busy() or (pjob.read_json(PAPERS / pid / "meta.json") or {}).get("status") in ("done", "failed"):
+            break
+        time.sleep(0.05)
+    return {"ok": True, "id": pid, "base": base, "dry": dry}
+
+
+def research_assist(body):
+    """POST /api/research_assist {id, dry?} -> second Claude job: implement the EA code the candidate needs"""
+    pid = str(body.get("id") or "")
+    if not pjob.ID_RE.match(pid) or not (PAPERS / pid / "result.json").is_file():
+        return {"error": "no such paper or no result.json yet"}
+    if pjob.busy():
+        return {"error": f"a research job is already running ({pjob.state()['id']}) - one at a time"}
+    dry = bool(body.get("dry"))
+    if not dry and not pjob.find_claude():
+        return {"error": "claude.exe not found"}
+
+    def go():
+        try:
+            pjob.run(pid, None, (pjob.read_json(PAPERS / pid / "meta.json") or {}).get("notes", ""), dry=dry, kind="assist")
+        except Exception as e:                                # noqa: BLE001
+            log("research assist: " + traceback.format_exc())
+    threading.Thread(target=go, daemon=True).start()
+    for _ in range(20):
+        if pjob.busy():
+            break
+        time.sleep(0.05)
+    return {"ok": True, "id": pid, "dry": dry}
+
+
+def research_log(pid, n=200):
+    if not pjob.ID_RE.match(pid or "") or not (PAPERS / pid).is_dir():
+        return {"error": "no such paper"}
+    m = pjob.read_json(PAPERS / pid / "meta.json") or {}
+    lines = []
+    for f in ("log.txt", "log_assist.txt"):
+        p = PAPERS / pid / f
+        if p.is_file():
+            try:
+                lines += p.read_text(encoding="utf-8", errors="replace").splitlines()[-n:]
+            except OSError:
+                pass
+    st = pjob.state()
+    return {"lines": lines[-n:], "status": m.get("status"), "phase": (st or {}).get("phase") or m.get("phase", ""), "error": m.get("error"),
+            "running": bool(st and st["id"] == pid), "seconds": (st or {}).get("seconds") if st and st["id"] == pid else None, "assist": m.get("assist")}
+
+
+def research_save(body):
+    """POST /api/research_save {id} -> settings/saved/<stamp> 📄 <short title>.json with "source" provenance -> {ok, name, needs_code}"""
+    pid = str(body.get("id") or "")
+    d = PAPERS / pid
+    if not pjob.ID_RE.match(pid) or not (d / "setting.json").is_file():
+        return {"error": "no setting.json for this paper yet (the build has to finish first)"}
+    cand = pjob.read_json(d / "setting.json")
+    res = pjob.read_json(d / "result.json") or {}
+    meta = pjob.read_json(d / "meta.json") or {}
+    if not cand or not isinstance(cand.get("inputs"), dict):
+        return {"error": "setting.json has no inputs"}
+    title = str(res.get("title") or meta.get("title") or meta.get("file") or pid)
+    short = re.sub(r"\s+", " ", SAVED_NAME_BAD.sub(" ", title.replace(",", " "))).strip()[:48].strip()
+    SAVED.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+    name = f"{stamp} 📄 {short}".strip()
+    while (SAVED / f"{name}.json").exists():
+        time.sleep(1)
+        stamp = datetime.now().strftime("%Y-%m-%d %H-%M-%S")
+        name = f"{stamp} 📄 {short}".strip()
+    dfl = axi_rig.ea_defaults(EA)
+    inp = full_inputs(cand["inputs"])
+    needs = res.get("needs_code") or cand.get("needs_code") or {"required": False}
+    rec = {"name": name, "inputs": inp, "changed": {k: v for k, v in inp.items() if not same(v, dfl.get(k))},
+           "ds": cand.get("ds") or "m15", "mode": cand.get("mode") or "ea", "result": cand.get("result") or (res.get("tester") or None),
+           "lab": cand.get("lab") or {}, "lab_describe": cand.get("lab_describe") or "",
+           "note": cand.get("note") or f"from research paper {title}",
+           "source": {"kind": "research_paper", "paper": title, "id": pid, "pdf": meta.get("file"), "built": res.get("built") or meta.get("finished"),
+                      "needs_code": needs, "base_setting": (res.get("base_setting") or {}).get("name") or meta.get("base_setting"),
+                      "mt5": res.get("mt5"), "verdict": res.get("verdict"), "dry": bool(res.get("dry") or cand.get("dry"))}}
+    (SAVED / f"{name}.json").write_text(json.dumps(_jsonable(rec), indent=1, ensure_ascii=False), encoding="utf-8")
+    saved_as = list(meta.get("saved_as") or []) + [name]
+    pjob.update_meta(pid, saved_as=saved_as, saved_at=pjob.now())
+    log(f"research: saved {pid} as {name}")
+    return {"ok": True, "name": name, "needs_code": needs}
+
+
+def research_delete(body):
+    pid = str(body.get("id") or "")
+    if not pjob.ID_RE.match(pid):
+        return {"error": "bad id"}
+    st = pjob.state()
+    if st and st["id"] == pid:
+        pjob.stop(pid)
+        time.sleep(1)
+    d = PAPERS / pid
+    if d.is_dir():
+        shutil.rmtree(d, ignore_errors=True)
+    (SAVED / f"{pjob.candidate_name(pid)}.json").unlink(missing_ok=True)     # the job's MT5 candidate; the 📄 provenance copies are Zee's and stay
+    return {"ok": True, "removed": not d.exists()}
+
+
 # ---------- HTTP ----------
+# ---------------------------------------------------------------- reload speed (Zee 2026-11-03: "if the default setting is not changed ... pick up some
+# sort of cached values to quickly load the page"). The tester is deterministic: the encoded /api/sim answer is cached by a key of (inputs, ds, mode, lab,
+# prune, ema, setups) + the engine files' and data files' mtimes, in memory and on disk (simdata/sim_cache), so a reload with an unchanged setting
+# skips the 5-20 s run. gzip of the big answers is cached too.
+import gzip as _gzip
+SIM_CACHE_DIR = HERE / "simdata" / "sim_cache"
+_SIM_MEM = {}                                               # key -> encoded JSON bytes (newest 16)
+_GZ_MEM = {}                                                # id(bytes)/hash -> gzipped bytes
+
+
+def _engine_stamp():
+    files = [HERE / f for f in ("sim.py", "sim_full.py", "exitlab.py", "lifecycle.py", "lego.py")] + sorted((HERE / "simdata").glob("m15*.np*")) + sorted((HERE / "simdata").glob("year*.np*")) + sorted((HERE / "simdata").glob("tv*.np*"))
+    return "|".join(f"{f.name}:{int(f.stat().st_mtime)}" for f in files if f.is_file())
+
+
+def _gz(b):
+    h = hashlib.sha1(b).hexdigest()
+    g = _GZ_MEM.get(h)
+    if g is None:
+        g = _gzip.compress(b, compresslevel=3)
+        if len(_GZ_MEM) > 24:
+            _GZ_MEM.clear()
+        _GZ_MEM[h] = g
+    return g
+
+
+def sim_result_cached(inputs, ema, setups, ds, mode, lab, prune):
+    key = hashlib.sha1(json.dumps([inputs, ema, setups, ds, mode, lab, prune, _engine_stamp()], sort_keys=True, default=str).encode()).hexdigest()
+    b = _SIM_MEM.get(key)
+    if b is None:
+        f = SIM_CACHE_DIR / f"{key}.json"
+        if f.is_file():
+            try:
+                b = f.read_bytes()
+            except OSError:
+                b = None
+    if b is None:
+        t0 = time.time()
+        res = sim_result(inputs, ema, setups, ds, mode, lab, prune)
+        if isinstance(res, dict) and res.get("error"):
+            return res
+        b = json.dumps(res).encode("utf-8")
+        try:
+            SIM_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+            (SIM_CACHE_DIR / f"{key}.json").write_bytes(b)
+            old = sorted(SIM_CACHE_DIR.glob("*.json"), key=lambda x: x.stat().st_mtime)
+            for x in old[:-40]:                                 # keep the newest 40 answers on disk
+                x.unlink(missing_ok=True)
+        except OSError:
+            pass
+        log(f"sim cache: computed {len(b) // 1024} KB in {time.time() - t0:.1f}s -> {key[:10]}")
+    if len(_SIM_MEM) > 16:
+        _SIM_MEM.pop(next(iter(_SIM_MEM)))
+    _SIM_MEM[key] = b
+    return b
+
+
 class H(BaseHTTPRequestHandler):
     def log_message(self, *a):
         pass
@@ -1103,6 +2336,9 @@ class H(BaseHTTPRequestHandler):
         b = body if isinstance(body, bytes) else (json.dumps(body) if not isinstance(body, str) else body).encode("utf-8")
         self.send_response(code)
         self.send_header("Content-Type", ctype)
+        if len(b) > 64 * 1024 and "gzip" in (self.headers.get("Accept-Encoding") or ""):     # Zee 2026-11-03: faster reloads - the sim / bars payloads are MBs of JSON
+            b = _gz(b)
+            self.send_header("Content-Encoding", "gzip")
         self.send_header("Content-Length", str(len(b)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
@@ -1151,12 +2387,37 @@ class H(BaseHTTPRequestHandler):
             rows = []
             for f in sorted(SAVED.glob("*.json"), reverse=True):
                 try:
-                    rows.append(json.loads(f.read_text(encoding="utf-8")))
+                    row = json.loads(f.read_text(encoding="utf-8"))
+                    row["candidate_exports"] = [
+                        item | {"available": _candidate_record_available(item)}
+                        for item in row.get("candidate_exports", [])
+                    ]
+                    rows.append(row)
                 except Exception:                                # noqa: BLE001
                     pass
             return self.send(200, rows)
         if u.path == "/api/opt":
-            return self.send(200, OPT["o"].state() if OPT["o"] else {})
+            state = OPT["o"].state() if OPT["o"] else {}
+            state["objectives"] = list(optimizer.OBJECTIVES)
+            return self.send(200, state)
+        if u.path == "/api/risk_opt":
+            state = RISK_OPT["o"].state() if RISK_OPT["o"] else {}
+            if RISK_OPT["o"]:
+                state["groups"] = getattr(RISK_OPT["o"], "risk_groups", [])
+                state["risk_inputs"] = RISK_OPT["o"].start
+                state["space_size"] = len(RISK_OPT["o"].space)
+            else:
+                state["groups"] = []
+            return self.send(200, state)
+        if u.path == "/api/risk_reference":
+            rid = "r20261024_235213"
+            p = RUNS / f"{rid}.json"
+            if not p.is_file():
+                return self.send(404, {"error": f"MT5 reference run {rid} is unavailable"})
+            d = json.loads(p.read_text(encoding="utf-8"))
+            return self.send(200, {k: d.get(k) for k in ("id", "label", "created", "period", "deposit", "inputs")} |
+                             {"report": {k: d.get("report", {}).get(k) for k in ("net", "pf", "trades", "dd", "trade_stats", "day_stats")},
+                              "execution_stats": run_wr(p, d)})
         if u.path == "/api/tv":
             info = tv_settings()
             return self.send(200, {k: info[k] for k in ("symbol", "res", "sets", "notes", "at")})
@@ -1168,8 +2429,71 @@ class H(BaseHTTPRequestHandler):
             if not re.fullmatch(r"r\d{8}_\d{6}", rid) or not p.exists():
                 return self.send(404, {"error": "no such run"})
             return self.send(200, p.read_bytes())
+        if u.path == "/api/mt5_report":
+            rid = (q.get("id") or [""])[0]
+            if not re.fullmatch(r"r\d{8}_\d{6}", rid) or not (RUNS / f"{rid}.json").is_file():
+                return self.send(404, {"error": "no such MT5 run"})
+            report = mt5_report_path(rid)
+            if report is None:
+                return self.send(404, {"error": "MT5 Strategy Tester HTML report is unavailable for this run"})
+            content = report.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-16")
+            self.send_header("Content-Length", str(len(content)))
+            self.send_header("Content-Disposition", f'attachment; filename="MT5_Strategy_Tester_{rid}.htm"')
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+            self.wfile.write(content)
+            return
+        if u.path == "/api/export_status":
+            rid = (q.get("id") or [""])[0]
+            if not re.fullmatch(r"r\d{8}_\d{6}", rid):
+                return self.send(400, {"error": "bad id"})
+            state = export_status(rid)
+            return self.send(200 if state.get("id") == rid and state.get("phase") else 404, _jsonable(state))
+        if u.path == "/api/export_report":
+            rid = (q.get("id") or [""])[0]
+            report = RUNS / f"{rid}_candidate.htm"
+            if not re.fullmatch(r"r\d{8}_\d{6}", rid) or not report.is_file():
+                return self.send(404, {"error": "No candidate Strategy Tester report is available"})
+            content = report.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-16")
+            self.send_header("Content-Length", str(len(content)))
+            self.send_header("Content-Disposition", f'attachment; filename="MT5_Candidate_{rid}.htm"')
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+            self.wfile.write(content)
+            return
+        if u.path == "/api/export_package":
+            rid = (q.get("id") or [""])[0]
+            artifacts = candidate_files(rid)
+            if not artifacts:
+                return self.send(404, {"error": "No compiled and tested candidate EA is available for this run"})
+            package = io.BytesIO()
+            with zipfile.ZipFile(package, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+                archive.write(artifacts["source"], f"{artifacts['name']}/{artifacts['source'].name}")
+                archive.write(artifacts["compiled"], f"{artifacts['name']}/{artifacts['compiled'].name}")
+            try:
+                os.startfile(str(artifacts["compiled"].parent))
+            except (AttributeError, OSError) as error:
+                log(f"export {rid}: could not open Explorer for {artifacts['compiled']}: {error}")
+                return self.send(500, {"error": f"EA package is ready, but Explorer could not be opened: {error}"})
+            content = package.getvalue()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/zip")
+            self.send_header("Content-Length", str(len(content)))
+            self.send_header("Content-Disposition", f'attachment; filename="{artifacts["name"]}.zip"')
+            self.send_header("X-EA-Location", str(artifacts["compiled"]))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.end_headers()
+            self.wfile.write(content)
+            return
         if u.path == "/api/exitlab":
-            return self.send(200, lab_state(bool(q.get("full"))))
+            return self.send(200, lab_state(bool(q.get("full")), (q.get("partial") or [""])[0]))
         if u.path == "/api/exitlab_research":
             return self.send(200, _research_list())
         if u.path == "/api/ml":
@@ -1180,6 +2504,21 @@ class H(BaseHTTPRequestHandler):
             return self.send(200, stress_state())
         if u.path == "/api/ml_algos":
             return self.send(200, {"algos": ml.ALGOS})
+        if u.path == "/api/mlx":                          # the institutional entry filter: job state + simdata/mlx_results.json (or the sample fixture)
+            return self.send(200, mlx_state())
+        if u.path == "/api/mlx_spec":                     # the fixed feature spec (mlx/FEATURE_SPEC.md); ?raw=1 for the markdown itself
+            txt = MLX_SPEC.read_text(encoding="utf-8") if MLX_SPEC.is_file() else ""
+            if (q.get("raw") or [""])[0] == "1":
+                return self.send(200, txt, "text/markdown; charset=utf-8")
+            return self.send(200, {"path": "monitor/saad_view/mlx/FEATURE_SPEC.md", "text": txt})
+        if u.path == "/api/dexter":                       # Dexter's Lab: the controlled MT5 comparison's state and results
+            return self.send(200, _jsonable(dexter_status()))
+        if u.path == "/api/dexter_mae":                   # Dexter's Lab: the reference trades' excursions (dexter_mae.py)
+            import dexter_mae
+            f = HERE / "simdata" / "dexter_mae.json"
+            if (q.get("fresh") or [""])[0] == "1" or not f.is_file():
+                dexter_mae.analyse(DEXTER_REFERENCE_ID)
+            return self.send(200, json.loads(f.read_text(encoding="utf-8")))
         if u.path == "/api/exitlab_spec":
             return self.send(200, _jsonable({"groups": exitlab.GROUPS, "default": exitlab.DEFAULT, "why": exitlab.WHY, "trust": exitlab.ea_trust()}))
         if u.path == "/api/hyp_job":
@@ -1187,6 +2526,34 @@ class H(BaseHTTPRequestHandler):
             return self.send(200 if j else 404, j or {"error": "no such job"})
         if u.path == "/api/trade_notes":
             return self.send(200, _notes())
+        if u.path == "/api/research":                     # the Research page: papers + results + the running job
+            return self.send(200, research_list())
+        if u.path == "/api/deploy_target":
+            return self.send(200, deploy_mod.public_cfg())
+        if u.path == "/api/deploy":
+            return self.send(200, _jsonable(deploy_mod.state()))
+        if u.path == "/api/deploy_history":
+            return self.send(200, _jsonable(deploy_mod.last_history()))
+        if u.path == "/api/lcf_catalog":
+            return self.send(200, _jsonable(lcf_catalog()))
+        if u.path == "/api/lcf":                          # Range boxes: B's loser-cutting filters measured on the setting on the chart (?key= from POST: rows only when they match)
+            k = (q.get("key") or [""])[0]
+            out = {kk: v for kk, v in LCF.items() if kk != "thread"}
+            if not k or LCF["key"] != k:                      # no key (old page JS) or another setting's measurement: never show someone else's rows
+                out.update(rows={}, base=None, stale=True)
+            return self.send(200, _jsonable(out))
+        if u.path == "/api/mlx_meta":                     # the meta-labelling study (mlx/meta_train.py, mlx/meta_seq.py) for the Machine Learning tab
+            out = {}
+            for k, f in (("tab", "mlx_meta_results_tab.json"), ("seq", "mlx_meta_results_seq.json"), ("spec", "mlx_meta_spec.json")):
+                fp = HERE / "simdata" / f
+                try:
+                    out[k] = json.loads(fp.read_text(encoding="utf-8")) if fp.is_file() else None
+                except (OSError, ValueError) as e:
+                    out[k] = {"error": str(e)[:200]}
+            return self.send(200, _jsonable(out))
+        if u.path == "/api/research_log":
+            r = research_log((q.get("id") or [""])[0])
+            return self.send(404 if r.get("error") else 200, r)
         if u.path == "/api/status":
             s = dict(STATE)
             s["elapsed"] = round(time.time() - s["started"]) if s.get("started") and s.get("busy") else None
@@ -1223,7 +2590,7 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, {"ok": True})
             if u.path == "/api/saved_delete":
                 n = str(body.get("name", ""))
-                if re.fullmatch(r"[\d\- ]+", n):
+                if _safe_saved_name(n):
                     (SAVED / f"{n}.json").unlink(missing_ok=True)
                     if PRIMARY.exists() and PRIMARY.read_text(encoding="utf-8").strip() == n:
                         PRIMARY.unlink()
@@ -1246,6 +2613,41 @@ class H(BaseHTTPRequestHandler):
                 return self.send(200, lab_research(body))
             if u.path == "/api/ml":
                 return self.send(200, ml_start(body))
+            if u.path == "/api/mlx":
+                return self.send(200, mlx_start(body))
+            if u.path == "/api/research_upload":
+                r = research_upload(body)
+                return self.send(400 if r.get("error") else 200, r)
+            if u.path == "/api/lcf":
+                return self.send(200, lcf_start(body))
+            if u.path == "/api/deploy_target":
+                deploy_mod.save_cfg(body)
+                return self.send(200, deploy_mod.public_cfg())
+            if u.path == "/api/deploy_test":
+                return self.send(200, deploy_mod.test_target(body))
+            if u.path == "/api/deploy_history":
+                r = deploy_mod.fetch_history()
+                return self.send(400 if r.get("error") else 200, _jsonable(r))
+            if u.path == "/api/deploy":
+                r = deploy_mod.start(str(body.get("name") or ""), SAVED, rig_busy)
+                return self.send(409 if r.get("error") else 200, r)
+            if u.path == "/api/research_url":               # Zee: "input a pdf URL ending with .pdf to download and keep it in the research folder and begin processing"
+                r = research_url(body)
+                return self.send(400 if r.get("error") else 200, r)
+            if u.path == "/api/research_build":
+                r = research_build(body)
+                return self.send(409 if r.get("error") else 200, r)
+            if u.path == "/api/research_stop":
+                return self.send(200, {"ok": True, "stopped": pjob.stop(str(body.get("id") or ""))})
+            if u.path == "/api/research_save":
+                r = research_save(body)
+                return self.send(400 if r.get("error") else 200, r)
+            if u.path == "/api/research_assist":
+                r = research_assist(body)
+                return self.send(409 if r.get("error") else 200, r)
+            if u.path == "/api/research_delete":
+                r = research_delete(body)
+                return self.send(400 if r.get("error") else 200, r)
             if u.path == "/api/lego_test":
                 return self.send(200, lego_test(body))
             if u.path == "/api/mission":
@@ -1253,13 +2655,99 @@ class H(BaseHTTPRequestHandler):
             if u.path == "/api/stress":
                 return self.send(200, stress_start(body))
             if u.path == "/api/sim":
-                return self.send(200, sim_result(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
-                                                 body.get("ds") or "year", body.get("mode") or "ea", body.get("lab")))
+                return self.send(200, sim_result_cached(body.get("inputs") or {}, bool(body.get("ema", True)), bool(body.get("setups", True)),
+                                                        body.get("ds") or "year", body.get("mode") or "ea", body.get("lab"), body.get("prune") or []))
+            if u.path == "/api/dexlab_spec":                  # Dexter's Lab on the live setting
+                return self.send(200, _jsonable({"exps": dexlab.spec()}))
+            if u.path == "/api/dexlab_diag":
+                return self.send(200, _jsonable(dexlab.diagnose(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1", body.get("mode") or "ea")))
+            if u.path == "/api/dexlab_one":
+                return self.send(200, _jsonable(dexlab.run(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1", body.get("mode") or "ea",
+                                                           body.get("key") or "baseline", body.get("params") or {})))
+            if u.path == "/api/dexlab_sets":
+                return self.send(200, _jsonable({"stats": dexlab.run_sets(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1",
+                                                                          body.get("mode") or "ea", body.get("sets") or {})}))
+            if u.path == "/api/dexlab_start":
+                return self.send(200, _jsonable(dexlab.start(body, full_inputs)))
+            if u.path == "/api/dexlab_job":
+                return self.send(200, _jsonable(dexlab.job_state()))
+            if u.path == "/api/dexlab_stop":
+                return self.send(200, _jsonable(dexlab.stop()))
+            if u.path == "/api/dexlab_mt5":
+                return self.send(200, _jsonable(dexlab_mt5_start(body)))
+            if u.path == "/api/dexlab_mt5_status":
+                return self.send(200, _jsonable(dexlab_mt5_status(body)))
+            if u.path == "/api/dexlab_mt5_stop":
+                DEXLAB_MT5["cancel"] = True
+                return self.send(200, {"ok": True})
+            if u.path == "/api/dexter_start":                # Dexter's Lab: baseline + experiments in MT5, one after another
+                return self.send(200, _jsonable(dexter_start(body)))
+            if u.path == "/api/dexter_stop":
+                return self.send(200, _jsonable(dexter_stop()))
+            if u.path == "/api/tplab_controls":             # the tuner's list: every take-profit setting, its range and its choices
+                return self.send(200, _jsonable({"controls": tplab.TP_CONTROLS, "mode1_controls": tplab.MODE1_CONTROLS,
+                                                 "mode2_controls": tplab.MODE2_CONTROLS}))
+            if u.path == "/api/tplab_set":                  # the tuner: one setting changed, the tester's result
+                return self.send(200, _jsonable(tplab.one_set(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1", body.get("mode") or "ea", body.get("overrides") or {})))
+            if u.path == "/api/tplab_one":                  # Take Profit Lab slider: one run with the slider's target
+                return self.send(200, _jsonable(tplab.one(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1", body.get("mode") or "ea", body.get("overrides") or {})))
+            if u.path == "/api/tplab_paths":                # Take Profit Lab analysis: each trade's excursions and the target curve
+                return self.send(200, _jsonable(tplab.paths(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1", body.get("mode") or "ea")))
+            if u.path == "/api/tplab_scan":                 # Take Profit Lab scan: every take-profit setting
+                return self.send(200, _jsonable(tplab.scan_start(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1", body.get("mode") or "ea")))
+            if u.path == "/api/tplab_tune":
+                result = tplab.tune_start(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1",
+                                           body.get("mode") or "ea", body.get("name"), body.get("overrides") or {})
+                return self.send(409 if result.get("busy") else 400 if not result.get("ok") else 200, _jsonable(result))
+            if u.path.startswith("/api/xlife_"):           # the EXTENDED Trade Lifecycle: every exit as a switch
+                inp, ds_, md_ = full_inputs(body.get("inputs") or {}), body.get("ds") or "year1", body.get("mode") or "ea"
+                act = u.path[len("/api/xlife_"):]
+                if act == "spec":
+                    return self.send(200, _jsonable(xlife.spec(inp, ds_)))
+                if act == "eval":
+                    return self.send(200, _jsonable(xlife.evaluate(inp, ds_, md_, body.get("sel") or {})))
+                if act == "impacts":
+                    return self.send(200, _jsonable(xlife.impacts_start(inp, ds_, md_, body.get("sel") or {}, body.get("objective") or "net", body.get("guard", True))))
+                if act == "optimise":
+                    return self.send(200, _jsonable(xlife.optimise_start(inp, ds_, md_, body.get("objective") or "net", body.get("guard", True),
+                                                                         tuple(int(m) for m in (body.get("modes") or [1, 2])), body.get("sel"))))
+                if act == "job":
+                    return self.send(200, _jsonable(xlife.job()))
+                if act == "stop":
+                    return self.send(200, _jsonable(xlife.stop()))
+            if u.path == "/api/lifecycle":                  # Trade Lifecycle tree: branches per exit, prune forecasts
+                return self.send(200, _jsonable(lifecycle.tree(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1",
+                                                               body.get("mode") or "ea", body.get("pruned") or [])))
+            if u.path == "/api/probe_eval":                  # Risk Manager · Probe entry: the loaded setting with / without the probe
+                return self.send(200, _jsonable(probe.evaluate(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1", body.get("mode") or "ea", body.get("probe") or {})))
+            if u.path == "/api/probe_tune":
+                return self.send(200, _jsonable(probe.tune(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1", body.get("mode") or "ea", body.get("probe") or {})))
+            if u.path == "/api/tplab_auto":                 # auto-tune one box (group) or every box + the best combination
+                return self.send(200, _jsonable(tplab.auto_start(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1",
+                                                                 body.get("mode") or "ea", body.get("group"), body.get("start") or {},
+                                                                 body.get("guard", True))))
+            if u.path == "/api/tplab_auto_progress":
+                return self.send(200, _jsonable(tplab.auto_progress()))
+            if u.path == "/api/tplab_auto_stop":
+                return self.send(200, _jsonable(tplab.auto_stop()))
+            if u.path == "/api/tplab_tune_progress":
+                return self.send(200, _jsonable(tplab.tune_progress()))
+            if u.path == "/api/tplab_progress":             # the scan's progress: runs done, the setting now, the result when finished
+                return self.send(200, _jsonable(tplab.progress()))
+            if u.path == "/api/tplab":                       # Take Profit Lab: the tester at each take-profit distance
+                return self.send(200, _jsonable(tplab.run(full_inputs(body.get("inputs") or {}), body.get("ds") or "year1", body.get("mode") or "ea")))
             if u.path == "/api/optimize":
                 return self.send(200, opt_start(body))
             if u.path == "/api/opt_stop":
                 if OPT["o"]:
                     OPT["o"].stop()
+                return self.send(200, {"ok": True})
+            if u.path == "/api/risk_scan":
+                result = risk_start(body)
+                return self.send(409 if result.get("error") else 200, result)
+            if u.path == "/api/risk_stop":
+                if RISK_OPT["o"]:
+                    RISK_OPT["o"].stop()
                 return self.send(200, {"ok": True})
             if u.path == "/api/follow":
                 FOLLOW.update(on=bool(body.get("on")), delay=body.get("delay") or FOLLOW["delay"], key=None, pending=None, msg="")
@@ -1267,7 +2755,7 @@ class H(BaseHTTPRequestHandler):
             if u.path == "/api/tv_take":                     # one read of TradingView's settings -> run (or the run that already has them)
                 info = tv_settings()
                 delay = body.get("delay") or "none"
-                have = run_matching(info["sets"], delay)
+                have = run_matching(info["sets"], delay, PERIOD)
                 if have:
                     return self.send(200, {"id": have, "existing": True, "notes": info["notes"]})
                 rid, err = start_run({"sets": info["sets"], "delay": delay, "label": f"TradingView {info['at']}", "notes": info["notes"], "tv_raw": info["raw"],
@@ -1282,6 +2770,7 @@ class H(BaseHTTPRequestHandler):
                 rid = body.get("id", "")
                 if re.fullmatch(r"r\d{8}_\d{6}", rid):
                     (RUNS / f"{rid}.json").unlink(missing_ok=True)
+                    (RUNS / f"{rid}.htm").unlink(missing_ok=True)
                 return self.send(200, {"ok": True})
         except Exception as e:                              # noqa: BLE001
             log("POST " + self.path + " failed:\n" + traceback.format_exc())
